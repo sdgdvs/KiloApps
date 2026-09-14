@@ -323,6 +323,11 @@ typedef struct {
     int hydroTowers;
     int surfaceSolar;
 
+    // Logistics Infrastructure
+    int orbitalDocks;
+    int fuelDepots;
+    int massDrivers;
+
     // Camera
     float camX, camY;
     float zoom;
@@ -341,11 +346,28 @@ typedef struct {
     int logIsWarn;
 } Simulation;
 
+typedef struct {
+    char id[16];
+    char name[32];
+    char from[32];
+    char to[32];
+    char cargo[16];
+    int active;
+    int freighters;
+    int baseYield;
+    int costMin;
+    int costEnergy;
+    float progress;
+    float speed;
+    COLORREF color;
+} TradeRoute;
+
 static Simulation sim;
 static Star stars[STAR_COUNT];
 static Asteroid asteroids[ASTEROID_COUNT];
 // bodies points to current system bodies via macro above
 static Ship fleet[5];
+static TradeRoute g_tradeRoutes[4];
 
 static void SetLogMsg(const char* txt, int isWarn);
 
@@ -634,29 +656,40 @@ static void SimTick(void) {
     if (sim.paused || sim.speed <= 0) return;
     int rate = sim.speed;
 
+    // Logistics Multipliers & Automated Supply Trade Routes
+    float dockMult = 1.0f + (float)(sim.orbitalDocks - 1) * 0.20f;
+    float fuelMult = 1.0f + (float)(sim.fuelDepots - 1) * 0.25f;
+
+    int rMin = g_tradeRoutes[0].active ? (int)(g_tradeRoutes[0].baseYield * g_tradeRoutes[0].freighters * dockMult) : 0;
+    int rVol = g_tradeRoutes[1].active ? (int)(g_tradeRoutes[1].baseYield * g_tradeRoutes[1].freighters * dockMult) : 0;
+    int rFood = g_tradeRoutes[2].active ? (int)(g_tradeRoutes[2].baseYield * g_tradeRoutes[2].freighters * dockMult) : 0;
+    int rEnergy = g_tradeRoutes[3].active ? (int)(g_tradeRoutes[3].baseYield * g_tradeRoutes[3].freighters * fuelMult) : 0;
+    int massDriverMin = sim.massDrivers * 12;
+    int fuelDepotPower = sim.fuelDepots * 40;
+
     // Energy
-    int energyGen = 600 + (sim.surfaceSolar * 60);
+    int energyGen = 600 + (sim.surfaceSolar * 60) + rEnergy + fuelDepotPower;
     int energyDrain = 200 + (sim.solarMirrors * 75) + (sim.atmoProcessors * 60) + (sim.nitrogenExtractors * 85) + (sim.greenhouseStations * 70) + (sim.coreDynamos * 80) + (sim.colonists / 1000) * 5;
     sim.deltaEnergy = energyGen - energyDrain;
     sim.energy += (int)(sim.deltaEnergy * 0.05f * rate);
     if (sim.energy < 0) sim.energy = 0;
 
     // Minerals
-    int mineralGain = 20 + (strcmp(fleet[3].status, "Harvesting") == 0 || strcmp(fleet[3].status, "Mining Belt") == 0 ? 25 : 10);
+    int mineralGain = 20 + (strcmp(fleet[3].status, "Harvesting") == 0 || strcmp(fleet[3].status, "Mining Belt") == 0 ? 25 : 10) + rMin + massDriverMin;
     int mineralDrain = (sim.atmoProcessors * 3) + (sim.nitrogenExtractors * 2);
     sim.deltaMinerals = mineralGain - mineralDrain;
     sim.minerals += (int)(sim.deltaMinerals * 0.05f * rate);
     if (sim.minerals < 0) sim.minerals = 0;
 
     // Volatiles
-    int volGain = 14 + (strcmp(fleet[3].status, "Scooping Ring") == 0 ? 18 : 6);
+    int volGain = 14 + (strcmp(fleet[3].status, "Scooping Ring") == 0 ? 18 : 6) + rVol;
     int volDrain = (sim.solarMirrors * 2) + (sim.greenhouseStations * 2) + (sim.nitrogenExtractors * 3);
     sim.deltaVolatiles = volGain - volDrain;
     sim.volatiles += (int)(sim.deltaVolatiles * 0.05f * rate);
     if (sim.volatiles < 0) sim.volatiles = 0;
 
     // Food
-    int foodGain = 15 + (sim.hydroTowers * 12);
+    int foodGain = 15 + (sim.hydroTowers * 12) + rFood;
     int foodDrain = sim.colonists / 2000;
     sim.deltaFood = foodGain - foodDrain;
     sim.food += (int)(sim.deltaFood * 0.05f * rate);
@@ -1206,6 +1239,68 @@ static void InitSimulation(void) {
     fleet[4].color = COLOR_PURPLE;
     fleet[4].hull = 100;
     fleet[4].targetBelt = 0;
+
+    // Logistics Infrastructure
+    sim.orbitalDocks = 1;
+    sim.fuelDepots = 1;
+    sim.massDrivers = 1;
+
+    // Automated Supply Trade Routes
+    strcpy(g_tradeRoutes[0].id, "minerals");
+    strcpy(g_tradeRoutes[0].name, "Tartarus Mineral Corridor");
+    strcpy(g_tradeRoutes[0].from, "Tartarus Belt");
+    strcpy(g_tradeRoutes[0].to, "Surface Depot");
+    strcpy(g_tradeRoutes[0].cargo, "Minerals");
+    g_tradeRoutes[0].active = 1;
+    g_tradeRoutes[0].freighters = 2;
+    g_tradeRoutes[0].baseYield = 28;
+    g_tradeRoutes[0].costMin = 120;
+    g_tradeRoutes[0].costEnergy = 80;
+    g_tradeRoutes[0].progress = 0.15f;
+    g_tradeRoutes[0].speed = 0.007f;
+    g_tradeRoutes[0].color = COLOR_AMBER;
+
+    strcpy(g_tradeRoutes[1].id, "volatiles");
+    strcpy(g_tradeRoutes[1].name, "Boreas Cryo-Volatiles");
+    strcpy(g_tradeRoutes[1].from, "Boreas Ice Shell");
+    strcpy(g_tradeRoutes[1].to, "Zephyr Docks");
+    strcpy(g_tradeRoutes[1].cargo, "Volatiles");
+    g_tradeRoutes[1].active = 1;
+    g_tradeRoutes[1].freighters = 1;
+    g_tradeRoutes[1].baseYield = 20;
+    g_tradeRoutes[1].costMin = 100;
+    g_tradeRoutes[1].costEnergy = 90;
+    g_tradeRoutes[1].progress = 0.45f;
+    g_tradeRoutes[1].speed = 0.006f;
+    g_tradeRoutes[1].color = COLOR_BLUE;
+
+    strcpy(g_tradeRoutes[2].id, "food");
+    strcpy(g_tradeRoutes[2].name, "Agro-Dome Sustenance");
+    strcpy(g_tradeRoutes[2].from, "Ground Hydroponics");
+    strcpy(g_tradeRoutes[2].to, "Ark Flotilla");
+    strcpy(g_tradeRoutes[2].cargo, "Food");
+    g_tradeRoutes[2].active = 1;
+    g_tradeRoutes[2].freighters = 1;
+    g_tradeRoutes[2].baseYield = 22;
+    g_tradeRoutes[2].costMin = 110;
+    g_tradeRoutes[2].costEnergy = 70;
+    g_tradeRoutes[2].progress = 0.75f;
+    g_tradeRoutes[2].speed = 0.008f;
+    g_tradeRoutes[2].color = COLOR_EMERALD;
+
+    strcpy(g_tradeRoutes[3].id, "fuel");
+    strcpy(g_tradeRoutes[3].name, "Helios Plasma Skimmer");
+    strcpy(g_tradeRoutes[3].from, "Helios Corona");
+    strcpy(g_tradeRoutes[3].to, "He-3 Fuel Depot");
+    strcpy(g_tradeRoutes[3].cargo, "He-3 Fuel");
+    g_tradeRoutes[3].active = 1;
+    g_tradeRoutes[3].freighters = 1;
+    g_tradeRoutes[3].baseYield = 150;
+    g_tradeRoutes[3].costMin = 150;
+    g_tradeRoutes[3].costEnergy = 120;
+    g_tradeRoutes[3].progress = 0.30f;
+    g_tradeRoutes[3].speed = 0.005f;
+    g_tradeRoutes[3].color = COLOR_ORANGE;
 
     CalculateHabitability();
 }
@@ -1906,7 +2001,7 @@ typedef struct {
     int isEnabled;
 } UIButton;
 
-#define MAX_BUTTONS 64
+#define MAX_BUTTONS 128
 static UIButton g_buttons[MAX_BUTTONS];
 static int g_buttonCount = 0;
 
@@ -1982,6 +2077,19 @@ static void AddButton(int id, int x, int y, int w, int h, const char* txt, const
 #define BID_SEL_ACT1        80
 #define BID_SEL_ACT2        81
 #define BID_SEL_CLOSE       82
+
+#define BID_ROUTE_TOG_0     110
+#define BID_ROUTE_TOG_1     111
+#define BID_ROUTE_TOG_2     112
+#define BID_ROUTE_TOG_3     113
+#define BID_ROUTE_ADD_0     114
+#define BID_ROUTE_ADD_1     115
+#define BID_ROUTE_ADD_2     116
+#define BID_ROUTE_ADD_3     117
+#define BID_UPG_DOCKS       120
+#define BID_UPG_FUEL        121
+#define BID_UPG_MASS        122
+
 
 // --- Action Handlers ---
 static void HandleIntervention(int bid) {
@@ -2257,6 +2365,246 @@ static void HandleShipOrder(int bid) {
             break;
     }
 }
+
+static void HandleTradeRoute(int bid) {
+    char buf[128];
+    if (bid >= BID_ROUTE_TOG_0 && bid <= BID_ROUTE_TOG_3) {
+        int idx = bid - BID_ROUTE_TOG_0;
+        g_tradeRoutes[idx].active = !g_tradeRoutes[idx].active;
+        sprintf(buf, "%s %s.", g_tradeRoutes[idx].name, g_tradeRoutes[idx].active ? "resumed and active" : "suspended");
+        SetLogMsg(buf, 0);
+        PlaySoundFx(SFX_CLICK);
+    } else if (bid >= BID_ROUTE_ADD_0 && bid <= BID_ROUTE_ADD_3) {
+        int idx = bid - BID_ROUTE_ADD_0;
+        TradeRoute* r = &g_tradeRoutes[idx];
+        if (sim.minerals >= r->costMin && sim.energy >= r->costEnergy) {
+            sim.minerals -= r->costMin;
+            sim.energy -= r->costEnergy;
+            r->freighters++;
+            r->costMin += 35;
+            r->costEnergy += 25;
+            sprintf(buf, "Commissioned additional hauler for %s (Total: %d).", r->name, r->freighters);
+            SetLogMsg(buf, 0);
+            PlaySoundFx(SFX_DEPLOY);
+        } else {
+            sprintf(buf, "Insufficient resources (Req: %d Min, %d Energy).", r->costMin, r->costEnergy);
+            SetLogMsg(buf, 1);
+        }
+    }
+}
+
+static void HandleInfrastructure(int bid) {
+    char buf[128];
+    switch (bid) {
+        case BID_UPG_DOCKS: {
+            int costMin = 260 + (sim.orbitalDocks - 1) * 80;
+            int costEng = 180 + (sim.orbitalDocks - 1) * 60;
+            if (sim.minerals >= costMin && sim.energy >= costEng) {
+                sim.minerals -= costMin;
+                sim.energy -= costEng;
+                sim.orbitalDocks++;
+                sprintf(buf, "Zephyr Orbital Docks upgraded to Tier %d (+%d%% Throughput).", sim.orbitalDocks, sim.orbitalDocks * 20);
+                SetLogMsg(buf, 0);
+                PlaySoundFx(SFX_DEPLOY);
+            } else {
+                sprintf(buf, "Insufficient resources (Req: %d Min, %d Energy).", costMin, costEng);
+                SetLogMsg(buf, 1);
+            }
+            break;
+        }
+        case BID_UPG_FUEL: {
+            int costMin = 200 + (sim.fuelDepots - 1) * 70;
+            int costVol = 180 + (sim.fuelDepots - 1) * 60;
+            if (sim.minerals >= costMin && sim.volatiles >= costVol) {
+                sim.minerals -= costMin;
+                sim.volatiles -= costVol;
+                sim.fuelDepots++;
+                sprintf(buf, "He-3 Fuel Depot expanded to Tier %d (+%d kW, +%d%% Speed).", sim.fuelDepots, sim.fuelDepots * 40, sim.fuelDepots * 25);
+                SetLogMsg(buf, 0);
+                PlaySoundFx(SFX_DEPLOY);
+            } else {
+                sprintf(buf, "Insufficient resources (Req: %d Min, %d Volatiles).", costMin, costVol);
+                SetLogMsg(buf, 1);
+            }
+            break;
+        }
+        case BID_UPG_MASS: {
+            int costMin = 300 + (sim.massDrivers - 1) * 90;
+            int costEng = 200 + (sim.massDrivers - 1) * 70;
+            if (sim.minerals >= costMin && sim.energy >= costEng) {
+                sim.minerals -= costMin;
+                sim.energy -= costEng;
+                sim.massDrivers++;
+                sprintf(buf, "Surface Mass Driver expanded to Tier %d (+%d t/cyc catapult).", sim.massDrivers, sim.massDrivers * 12);
+                SetLogMsg(buf, 0);
+                PlaySoundFx(SFX_DEPLOY);
+            } else {
+                sprintf(buf, "Insufficient resources (Req: %d Min, %d Energy).", costMin, costEng);
+                SetLogMsg(buf, 1);
+            }
+            break;
+        }
+    }
+}
+
+static void DrawTradeRoutesGDI(HDC hdc, int cx, int cy, float z, float simTime) {
+    CelestialBody* actP = GetActivePlanet();
+    if (!actP) return;
+    int sunX = cx + (int)(-300.0f * z);
+    int sunY = cy;
+
+    // Endpoints:
+    // 0: Tartarus Belt -> Active Planet
+    float beltAngle = 2.1f;
+    float beltDist = 560.0f * z;
+    int beltX = sunX + (int)(cosf(beltAngle) * beltDist);
+    int beltY = sunY + (int)(sinf(beltAngle) * (beltDist * 0.7f));
+
+    // Active Planet
+    int pX = (int)actP->currX;
+    int pY = (int)actP->currY;
+
+    // Boreas and Zephyr
+    int mX = pX - (int)(70.0f * z);
+    int mY = pY - (int)(50.0f * z);
+    int zX = pX + (int)(60.0f * z);
+    int zY = pY + (int)(40.0f * z);
+
+    for (int i = 1; i < CURR_SYS.bodyCount; i++) {
+        if (strcmp(CURR_SYS.celestials[i].id, "boreas") == 0) {
+            mX = (int)CURR_SYS.celestials[i].currX;
+            mY = (int)CURR_SYS.celestials[i].currY;
+        } else if (strcmp(CURR_SYS.celestials[i].id, "zephyr") == 0) {
+            zX = (int)CURR_SYS.celestials[i].currX;
+            zY = (int)CURR_SYS.celestials[i].currY;
+        }
+    }
+
+    // Genesis Ark
+    int gX = (int)fleet[0].currX;
+    int gY = (int)fleet[0].currY;
+
+    // Helios Corona -> He-3 Depot
+    int sX = sunX + (int)(bodies[0].radius * z * 1.3f);
+    int sY = sunY;
+    int dX = zX + (int)(25.0f * z);
+    int dY = zY - (int)(20.0f * z);
+
+    struct { int sx, sy, ex, ey; const char* tag; } routes[4] = {
+        { beltX, beltY, pX, pY, "MINERALS" },
+        { mX, mY, zX, zY, "VOLATILES" },
+        { pX, pY, gX, gY, "FOOD" },
+        { sX, sY, dX, dY, "HE-3 FUEL" }
+    };
+
+    float fuelSpeedBonus = 1.0f + (float)(sim.fuelDepots - 1) * 0.20f;
+
+    for (int r = 0; r < 4; r++) {
+        if (!g_tradeRoutes[r].active) continue;
+
+        if (!sim.paused && sim.speed > 0) {
+            g_tradeRoutes[r].progress = fmodf(g_tradeRoutes[r].progress + g_tradeRoutes[r].speed * fuelSpeedBonus * sim.speed, 1.0f);
+        }
+
+        int sx = routes[r].sx;
+        int sy = routes[r].sy;
+        int ex = routes[r].ex;
+        int ey = routes[r].ey;
+
+        // Draw dotted conduit lane
+        HPEN hLanePen = CreatePen(PS_DOT, 1, g_tradeRoutes[r].color);
+        HPEN hOldP = (HPEN)SelectObject(hdc, hLanePen);
+        MoveToEx(hdc, sx, sy, NULL);
+        LineTo(hdc, ex, ey);
+        SelectObject(hdc, hOldP);
+        DeleteObject(hLanePen);
+
+        // Draw Convoy Freighters along route
+        int count = g_tradeRoutes[r].freighters;
+        if (count < 1) count = 1;
+        for (int f = 0; f < count; f++) {
+            float frac = fmodf(g_tradeRoutes[r].progress + ((float)f / (float)count), 1.0f);
+            float tPos;
+            int isOutbound;
+            if (frac < 0.5f) {
+                tPos = frac * 2.0f;
+                isOutbound = 1;
+            } else {
+                tPos = 1.0f - (frac - 0.5f) * 2.0f;
+                isOutbound = 0;
+            }
+
+            int fx = sx + (int)((ex - sx) * tPos);
+            int fy = sy + (int)((ey - sy) * tPos);
+
+            // Mini freighter barge (diamond/triangle)
+            int bsz = (int)(4.0f * z);
+            if (bsz < 2) bsz = 2;
+            HBRUSH hShipBrush = CreateSolidBrush(g_tradeRoutes[r].color);
+            HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hShipBrush);
+            POINT pts[4];
+            pts[0].x = fx; pts[0].y = fy - bsz;
+            pts[1].x = fx + bsz; pts[1].y = fy;
+            pts[2].x = fx; pts[2].y = fy + bsz;
+            pts[3].x = fx - bsz; pts[3].y = fy;
+            Polygon(hdc, pts, 4);
+
+            if (isOutbound) {
+                // Cargo container box in center
+                FillSolidRect(hdc, fx - 1, fy - 1, 3, 3, RGB(255, 255, 255));
+            }
+            SelectObject(hdc, hOldB);
+            DeleteObject(hShipBrush);
+        }
+
+        // Midpoint Route Label
+        int midX = (sx + ex) / 2;
+        int midY = (sy + ey) / 2;
+        SetTextColor(hdc, g_tradeRoutes[r].color);
+        TextOutA(hdc, midX - 20, midY - 6, routes[r].tag, (int)strlen(routes[r].tag));
+    }
+
+    // Draw Zephyr Orbital Docks Gantry Ring
+    HPEN hDockPen = CreatePen(PS_SOLID, 1, COLOR_CYAN);
+    HPEN hOldPen = (HPEN)SelectObject(hdc, hDockPen);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    int dockR = (int)((16 + sim.orbitalDocks * 3) * z);
+    Ellipse(hdc, zX - dockR, zY - dockR, zX + dockR, zY + dockR);
+
+    // Cross gantry spokes
+    MoveToEx(hdc, zX - dockR, zY, NULL); LineTo(hdc, zX + dockR, zY);
+    MoveToEx(hdc, zX, zY - dockR, NULL); LineTo(hdc, zX, zY + dockR);
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hDockPen);
+
+    // Draw Surface Mass Driver catapult on active planet limb
+    if (sim.massDrivers > 0 && actP) {
+        float launchAngle = -0.7f;
+        int pr = (int)(actP->radius * z);
+        int lx = pX + (int)(cosf(launchAngle) * pr);
+        int ly = pY + (int)(sinf(launchAngle) * pr);
+        int barrelLen = (int)((12 + sim.massDrivers * 4) * z);
+        int bx2 = lx + (int)(cosf(launchAngle) * barrelLen);
+        int by2 = ly + (int)(sinf(launchAngle) * barrelLen);
+
+        HPEN hDriverPen = CreatePen(PS_SOLID, 2, COLOR_EMERALD);
+        HPEN hOldDP = (HPEN)SelectObject(hdc, hDriverPen);
+        MoveToEx(hdc, lx, ly, NULL);
+        LineTo(hdc, bx2, by2);
+        SelectObject(hdc, hOldDP);
+        DeleteObject(hDriverPen);
+
+        // Animated launch slug
+        float pulseT = fmodf(simTime * 2.0f, 2.0f);
+        if (pulseT < 0.6f) {
+            float slugDist = barrelLen + (pulseT * 80.0f * z);
+            int sx = lx + (int)(cosf(launchAngle) * slugDist);
+            int sy = ly + (int)(sinf(launchAngle) * slugDist);
+            FillSolidRect(hdc, sx - 2, sy - 2, 5, 5, RGB(160, 255, 200));
+        }
+    }
+}
+
 
 // --- Render Implementation ---
 static void RenderUI(HDC hdc, int width, int height) {
@@ -2664,6 +3012,9 @@ static void RenderUI(HDC hdc, int width, int height) {
         TextOutA(hdc, sx + (int)(10 * z) + 4, sy - 5, fleet[i].name, (int)strlen(fleet[i].name));
     }
 
+    // G. Automated Supply Trade Routes & Logistics Infrastructure
+    DrawTradeRoutesGDI(hdc, cx, cy, z, sim.time);
+
     // I. Viewport Top Overlay Card
     int ovW = 340;
     int ovH = 68;
@@ -2968,7 +3319,7 @@ static void RenderUI(HDC hdc, int width, int height) {
         TextOutA(hdc, sbX + 12, contentY, "ARK FLEET ROSTER (5 ACTIVE)", 27);
 
         int sy = contentY + 18;
-        int shipCardH = 62;
+        int shipCardH = 40;
 
         for (int i = 0; i < 5; i++) {
             FillSolidRect(hdc, sbX + 12, sy, sidebarW - 24, shipCardH, COLOR_BG_CARD);
@@ -2976,45 +3327,133 @@ static void RenderUI(HDC hdc, int width, int height) {
 
             SetTextColor(hdc, fleet[i].color);
             SelectObject(hdc, hFontBold);
-            TextOutA(hdc, sbX + 18, sy + 6, fleet[i].name, (int)strlen(fleet[i].name));
+            TextOutA(hdc, sbX + 18, sy + 4, fleet[i].name, (int)strlen(fleet[i].name));
 
             SetTextColor(hdc, COLOR_TEXT_DIM);
             SelectObject(hdc, hFontSmall);
-            sprintf(buf, "Status: %s | Hull: %d%%", fleet[i].status, fleet[i].hull);
-            TextOutA(hdc, sbX + 18, sy + 22, buf, (int)strlen(buf));
-
-            sprintf(buf, "Role: %s // %s", fleet[i].role, fleet[i].mission);
-            TextOutA(hdc, sbX + 18, sy + 34, buf, (int)strlen(buf));
+            sprintf(buf, "%s | Hull: %d%% | %s", fleet[i].status, fleet[i].hull, fleet[i].role);
+            TextOutA(hdc, sbX + 18, sy + 20, buf, (int)strlen(buf));
 
             if (i == 0) {
-                AddButton(BID_ORDER_GEN_HOLD, sbX + sidebarW - 140, sy + 10, 56, 18, "Hold", NULL, 1);
-                AddButton(BID_ORDER_GEN_BOOST, sbX + sidebarW - 78, sy + 10, 56, 18, "Boost", NULL, 1);
+                AddButton(BID_ORDER_GEN_HOLD, sbX + sidebarW - 130, sy + 5, 52, 18, "Hold", NULL, 1);
+                AddButton(BID_ORDER_GEN_BOOST, sbX + sidebarW - 74, sy + 5, 52, 18, "Boost", NULL, 1);
             } else if (i == 1) {
-                AddButton(BID_ORDER_VAN_RATION, sbX + sidebarW - 140, sy + 10, 56, 18, "Opt Yield", NULL, 1);
-                AddButton(BID_ORDER_VAN_ORBIT, sbX + sidebarW - 78, sy + 10, 56, 18, "Low Orbit", NULL, 1);
+                AddButton(BID_ORDER_VAN_RATION, sbX + sidebarW - 130, sy + 5, 52, 18, "Yield", NULL, 1);
+                AddButton(BID_ORDER_VAN_ORBIT, sbX + sidebarW - 74, sy + 5, 52, 18, "Orbit", NULL, 1);
             } else if (i == 2) {
-                AddButton(BID_ORDER_AEO_SCAN, sbX + sidebarW - 84, sy + 10, 62, 18, "Scan Orbit", NULL, 1);
+                AddButton(BID_ORDER_AEO_SCAN, sbX + sidebarW - 74, sy + 5, 52, 18, "Scan", NULL, 1);
             } else if (i == 3) {
-                AddButton(BID_ORDER_DRA_MINE, sbX + sidebarW - 140, sy + 10, 56, 18, "Mine Belt", NULL, 1);
-                AddButton(BID_ORDER_DRA_SCOOP, sbX + sidebarW - 78, sy + 10, 56, 18, "Scoop Ice", NULL, 1);
+                AddButton(BID_ORDER_DRA_MINE, sbX + sidebarW - 130, sy + 5, 52, 18, "Mine", NULL, 1);
+                AddButton(BID_ORDER_DRA_SCOOP, sbX + sidebarW - 74, sy + 5, 52, 18, "Scoop", NULL, 1);
             } else if (i == 4) {
-                AddButton(BID_ORDER_TIT_LOOP, sbX + sidebarW - 140, sy + 10, 56, 18, "Route", NULL, 1);
-                AddButton(BID_ORDER_TIT_HOLD, sbX + sidebarW - 78, sy + 10, 56, 18, "Hold", NULL, 1);
+                AddButton(BID_ORDER_TIT_LOOP, sbX + sidebarW - 130, sy + 5, 52, 18, "Route", NULL, 1);
+                AddButton(BID_ORDER_TIT_HOLD, sbX + sidebarW - 74, sy + 5, 52, 18, "Hold", NULL, 1);
             }
 
-            sy += shipCardH + 6;
+            sy += shipCardH + 4;
         }
 
-        // Logistics lines
+        // Section: Automated Supply Trade Routes
+        sy += 4;
         SetTextColor(hdc, COLOR_BLUE);
         SelectObject(hdc, hFontBold);
-        TextOutA(hdc, sbX + 12, sy + 6, "AUTOMATED FREIGHT CONVEYORS", 27);
-        FillSolidRect(hdc, sbX + 12, sy + 22, sidebarW - 24, 48, COLOR_BG_CARD);
-        FrameSolidRect(hdc, sbX + 12, sy + 22, sidebarW - 24, 48, COLOR_BORDER);
+        int activeRoutes = 0;
+        for (int r = 0; r < 4; r++) if (g_tradeRoutes[r].active) activeRoutes++;
+        sprintf(buf, "AUTOMATED SUPPLY TRADE ROUTES (%d ACTIVE)", activeRoutes);
+        TextOutA(hdc, sbX + 12, sy, buf, (int)strlen(buf));
+
+        sy += 16;
+        int rCardH = 46;
+        for (int r = 0; r < 4; r++) {
+            TradeRoute* tr = &g_tradeRoutes[r];
+            FillSolidRect(hdc, sbX + 12, sy, sidebarW - 24, rCardH, COLOR_BG_CARD);
+            FrameSolidRect(hdc, sbX + 12, sy, sidebarW - 24, rCardH, COLOR_BORDER);
+            FillSolidRect(hdc, sbX + 12, sy, 3, rCardH, tr->color);
+
+            SelectObject(hdc, hFontBold);
+            SetTextColor(hdc, tr->color);
+            TextOutA(hdc, sbX + 18, sy + 4, tr->name, (int)strlen(tr->name));
+
+            SelectObject(hdc, hFontSmall);
+            SetTextColor(hdc, tr->active ? COLOR_EMERALD : COLOR_TEXT_DIM);
+            const char* stBadge = tr->active ? "ACTIVE" : "SUSPENDED";
+            TextOutA(hdc, sbX + sidebarW - 80, sy + 4, stBadge, (int)strlen(stBadge));
+
+            SetTextColor(hdc, COLOR_TEXT_PRI);
+            sprintf(buf, "%s -> %s | Yield: +%d %s",
+                    tr->from, tr->to, tr->baseYield * tr->freighters, tr->cargo);
+            TextOutA(hdc, sbX + 18, sy + 18, buf, (int)strlen(buf));
+
+            // Controls
+            AddButton(BID_ROUTE_TOG_0 + r, sbX + sidebarW - 162, sy + 24, 68, 18,
+                      tr->active ? "Suspend" : "Resume", NULL, 1);
+
+            char addTxt[32];
+            sprintf(addTxt, "+ Hauler (%dM)", tr->costMin);
+            AddButton(BID_ROUTE_ADD_0 + r, sbX + sidebarW - 90, sy + 24, 78, 18,
+                      addTxt, NULL, 1);
+
+            sy += rCardH + 4;
+        }
+
+        // Section: Orbital Docks & Logistics Depots
+        sy += 4;
+        SetTextColor(hdc, COLOR_BLUE);
+        SelectObject(hdc, hFontBold);
+        TextOutA(hdc, sbX + 12, sy, "ORBITAL DOCKS & LOGISTICS DEPOTS", 32);
+
+        sy += 16;
+        int infraH = 34;
+
+        // Infra 1: Orbital Docks
+        FillSolidRect(hdc, sbX + 12, sy, sidebarW - 24, infraH, COLOR_BG_CARD);
+        FrameSolidRect(hdc, sbX + 12, sy, sidebarW - 24, infraH, COLOR_BORDER);
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, COLOR_CYAN);
+        sprintf(buf, "Zephyr Docks (Tier %d)", sim.orbitalDocks);
+        TextOutA(hdc, sbX + 18, sy + 3, buf, (int)strlen(buf));
         SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COLOR_TEXT_DIM);
+        sprintf(buf, "+%d%% Throughput Multiplier", sim.orbitalDocks * 20);
+        TextOutA(hdc, sbX + 18, sy + 17, buf, (int)strlen(buf));
+        int dockCostMin = 260 + (sim.orbitalDocks - 1) * 80;
+        char upgDockTxt[32];
+        sprintf(upgDockTxt, "+ Upg (%dM)", dockCostMin);
+        AddButton(BID_UPG_DOCKS, sbX + sidebarW - 90, sy + 6, 78, 22, upgDockTxt, NULL, 1);
+        sy += infraH + 4;
+
+        // Infra 2: Fuel Depot
+        FillSolidRect(hdc, sbX + 12, sy, sidebarW - 24, infraH, COLOR_BG_CARD);
+        FrameSolidRect(hdc, sbX + 12, sy, sidebarW - 24, infraH, COLOR_BORDER);
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, COLOR_AMBER);
+        sprintf(buf, "He-3 Fuel Depot (Tier %d)", sim.fuelDepots);
+        TextOutA(hdc, sbX + 18, sy + 3, buf, (int)strlen(buf));
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COLOR_TEXT_DIM);
+        sprintf(buf, "+%d kW Power | +%d%% Speed", sim.fuelDepots * 40, sim.fuelDepots * 25);
+        TextOutA(hdc, sbX + 18, sy + 17, buf, (int)strlen(buf));
+        int fuelCostMin = 200 + (sim.fuelDepots - 1) * 70;
+        char upgFuelTxt[32];
+        sprintf(upgFuelTxt, "+ Upg (%dM)", fuelCostMin);
+        AddButton(BID_UPG_FUEL, sbX + sidebarW - 90, sy + 6, 78, 22, upgFuelTxt, NULL, 1);
+        sy += infraH + 4;
+
+        // Infra 3: Mass Driver
+        FillSolidRect(hdc, sbX + 12, sy, sidebarW - 24, infraH, COLOR_BG_CARD);
+        FrameSolidRect(hdc, sbX + 12, sy, sidebarW - 24, infraH, COLOR_BORDER);
+        SelectObject(hdc, hFontBold);
         SetTextColor(hdc, COLOR_EMERALD);
-        TextOutA(hdc, sbX + 20, sy + 28, "Tartarus Belt -> Planet Depot: Active (15 t/cyc)", 48);
-        TextOutA(hdc, sbX + 20, sy + 44, "Boreas Ice Rings -> Genesis: Active (10 t/cyc)", 46);
+        sprintf(buf, "Surface Mass Driver (Tier %d)", sim.massDrivers);
+        TextOutA(hdc, sbX + 18, sy + 3, buf, (int)strlen(buf));
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COLOR_TEXT_DIM);
+        sprintf(buf, "+%d t/cyc Catapult", sim.massDrivers * 12);
+        TextOutA(hdc, sbX + 18, sy + 17, buf, (int)strlen(buf));
+        int massCostMin = 300 + (sim.massDrivers - 1) * 90;
+        char upgMassTxt[32];
+        sprintf(upgMassTxt, "+ Upg (%dM)", massCostMin);
+        AddButton(BID_UPG_MASS, sbX + sidebarW - 90, sy + 6, 78, 22, upgMassTxt, NULL, 1);
     }
     // TAB 2: COLONY
     else if (sim.activeTab == 2) {
@@ -3067,31 +3506,36 @@ static void RenderUI(HDC hdc, int width, int height) {
 
         SelectObject(hdc, hFontSmall);
         SetTextColor(hdc, COLOR_EMERALD);
-        sprintf(buf, "ENERGY: +%d kW Gen  |  -%d kW Drain  ->  Net: %+d kW/cyc",
-                600 + (sim.surfaceSolar * 60),
-                200 + (sim.solarMirrors * 75) + (sim.atmoProcessors * 60) + (sim.coreDynamos * 80) + (sim.colonists / 1000) * 5,
-                sim.deltaEnergy);
+        float dockMult = 1.0f + (float)(sim.orbitalDocks - 1) * 0.20f;
+        float fuelMult = 1.0f + (float)(sim.fuelDepots - 1) * 0.25f;
+        int rMin = g_tradeRoutes[0].active ? (int)(g_tradeRoutes[0].baseYield * g_tradeRoutes[0].freighters * dockMult) : 0;
+        int rVol = g_tradeRoutes[1].active ? (int)(g_tradeRoutes[1].baseYield * g_tradeRoutes[1].freighters * dockMult) : 0;
+        int rFood = g_tradeRoutes[2].active ? (int)(g_tradeRoutes[2].baseYield * g_tradeRoutes[2].freighters * dockMult) : 0;
+        int rEnergy = g_tradeRoutes[3].active ? (int)(g_tradeRoutes[3].baseYield * g_tradeRoutes[3].freighters * fuelMult) : 0;
+        int massDriverMin = sim.massDrivers * 12;
+        int fuelDepotPower = sim.fuelDepots * 40;
+
+        int energyGen = 600 + (sim.surfaceSolar * 60) + rEnergy + fuelDepotPower;
+        int energyDrain = 200 + (sim.solarMirrors * 75) + (sim.atmoProcessors * 60) + (sim.nitrogenExtractors * 85) + (sim.greenhouseStations * 70) + (sim.coreDynamos * 80) + (sim.colonists / 1000) * 5;
+        sprintf(buf, "ENERGY: +%d kW Gen  |  -%d kW Drain  ->  Net: %+d kW/cyc", energyGen, energyDrain, sim.deltaEnergy);
         TextOutA(hdc, sbX + 20, ey + 12, buf, (int)strlen(buf));
 
         SetTextColor(hdc, COLOR_BLUE);
-        sprintf(buf, "MINERALS: +%d t Mined  |  -%d t Built  ->  Net: %+d t/cyc",
-                20 + (strcmp(fleet[3].status, "Mining Belt") == 0 ? 25 : 10),
-                sim.atmoProcessors * 3,
-                sim.deltaMinerals);
+        int mineralGain = 20 + (strcmp(fleet[3].status, "Harvesting") == 0 || strcmp(fleet[3].status, "Mining Belt") == 0 ? 25 : 10) + rMin + massDriverMin;
+        int mineralDrain = (sim.atmoProcessors * 3) + (sim.nitrogenExtractors * 2);
+        sprintf(buf, "MINERALS: +%d t Mined  |  -%d t Built  ->  Net: %+d t/cyc", mineralGain, mineralDrain, sim.deltaMinerals);
         TextOutA(hdc, sbX + 20, ey + 38, buf, (int)strlen(buf));
 
         SetTextColor(hdc, COLOR_PURPLE);
-        sprintf(buf, "VOLATILES: +%d t Scooped  |  -%d t Injected  ->  Net: %+d t/cyc",
-                14 + (strcmp(fleet[3].status, "Scooping Ring") == 0 ? 18 : 6),
-                sim.solarMirrors * 2,
-                sim.deltaVolatiles);
+        int volGain = 14 + (strcmp(fleet[3].status, "Scooping Ring") == 0 ? 18 : 6) + rVol;
+        int volDrain = (sim.solarMirrors * 2) + (sim.greenhouseStations * 2) + (sim.nitrogenExtractors * 3);
+        sprintf(buf, "VOLATILES: +%d t Scooped  |  -%d t Injected  ->  Net: %+d t/cyc", volGain, volDrain, sim.deltaVolatiles);
         TextOutA(hdc, sbX + 20, ey + 64, buf, (int)strlen(buf));
 
         SetTextColor(hdc, COLOR_AMBER);
-        sprintf(buf, "FOOD: +%d t Harvested  |  -%d t Eaten  ->  Net: %+d t/cyc",
-                15 + (sim.hydroTowers * 12),
-                sim.colonists / 2000,
-                sim.deltaFood);
+        int foodGain = 15 + (sim.hydroTowers * 12) + rFood;
+        int foodDrain = sim.colonists / 2000;
+        sprintf(buf, "FOOD: +%d t Harvested  |  -%d t Eaten  ->  Net: %+d t/cyc", foodGain, foodDrain, sim.deltaFood);
         TextOutA(hdc, sbX + 20, ey + 90, buf, (int)strlen(buf));
 
         int intelY = ey + 132;
@@ -3344,6 +3788,11 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         HandleColonyProject(bid);
                     } else if (bid >= BID_ORDER_GEN_HOLD && bid <= BID_ORDER_TIT_HOLD) {
                         HandleShipOrder(bid);
+                    } else if ((bid >= BID_ROUTE_TOG_0 && bid <= BID_ROUTE_TOG_3) ||
+                               (bid >= BID_ROUTE_ADD_0 && bid <= BID_ROUTE_ADD_3)) {
+                        HandleTradeRoute(bid);
+                    } else if (bid >= BID_UPG_DOCKS && bid <= BID_UPG_MASS) {
+                        HandleInfrastructure(bid);
                     } else if (bid == BID_SEL_CLOSE) {
                         sim.selectedType = 0;
                         PlaySoundFx(SFX_CLICK);

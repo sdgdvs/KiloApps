@@ -884,6 +884,70 @@
             background: linear-gradient(90deg, #d97706, #fbbf24);
             box-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
         }
+
+        /* Trade Routes & Freight Logistics */
+        .route-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-stellar);
+            border-left: 3px solid var(--accent-blue);
+            border-radius: 4px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+        .route-card:hover {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 2px 10px rgba(0, 240, 255, 0.15);
+        }
+        .route-card.minerals { border-left-color: var(--accent-amber); }
+        .route-card.volatiles { border-left-color: var(--accent-blue); }
+        .route-card.food { border-left-color: var(--accent-emerald); }
+        .route-card.fuel { border-left-color: #f59e0b; }
+        .route-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 4px;
+        }
+        .route-title {
+            font-weight: bold;
+            color: var(--text-bright);
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+        .route-sub {
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 1px;
+        }
+        .route-badge {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .route-badge.active {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid var(--accent-emerald);
+            color: var(--accent-emerald);
+        }
+        .route-badge.suspended {
+            background: rgba(244, 63, 94, 0.15);
+            border: 1px solid var(--accent-rose);
+            color: var(--accent-rose);
+        }
+        .route-desc {
+            font-size: 10px;
+            color: var(--text-primary);
+            line-height: 1.3;
+            margin-bottom: 6px;
+        }
+        .route-controls {
+            display: flex;
+            gap: 6px;
+        }
     </style>
 </head>
 <body>
@@ -1335,13 +1399,109 @@
                     </div>
                 </div>
 
-                <div class="section-header" style="margin-top: 10px;">
-                    <span>Fleet Automated Logistics</span>
+                <div class="section-header" style="margin-top: 14px;">
+                    <span>Automated Supply Trade Routes & Convoys</span>
+                    <span style="font-size:10px; color:var(--accent-cyan);" id="activeRoutesCountBadge">4 Routes Active</span>
                 </div>
+
+                <!-- Route 0: Tartarus Mineral Corridor -->
+                <div class="route-card minerals" id="cardRouteMinerals">
+                    <div class="route-header">
+                        <div>
+                            <span class="route-title">Tartarus Mineral Corridor</span>
+                            <div class="route-sub" id="subRouteMinerals">Belt Ore Depot → Surface Ground Silos | +28 t Min/cyc (2 Haulers)</div>
+                        </div>
+                        <span class="route-badge active" id="badgeRouteMinerals">ACTIVE</span>
+                    </div>
+                    <div class="route-desc">Automated ore barges transport heavy ferrous titanium, copper regolith, and structural minerals from the outer belt directly into planetary surface fabrication vaults.</div>
+                    <div class="route-controls">
+                        <button class="mini-btn btn-route-toggle" data-route="0" id="btnToggleRoute0">Suspend Route</button>
+                        <button class="mini-btn highlight btn-route-add" data-route="0" id="btnAddFreighter0">+ Add Hauler (120M, 80E)</button>
+                    </div>
+                </div>
+
+                <!-- Route 1: Boreas Cryo-Volatiles Route -->
+                <div class="route-card volatiles" id="cardRouteVolatiles">
+                    <div class="route-header">
+                        <div>
+                            <span class="route-title">Boreas Cryo-Volatiles Route</span>
+                            <div class="route-sub" id="subRouteVolatiles">Boreas Ice Shell → Zephyr Docks & Arks | +20 t Vol/cyc (1 Tanker)</div>
+                        </div>
+                        <span class="route-badge active" id="badgeRouteVolatiles">ACTIVE</span>
+                    </div>
+                    <div class="route-desc">Cryogenic tanker shuttles scooping atmospheric nitrogen, ammonia hydrates, and water ice glaciers to supply fleet reaction mass and planetary atmospheric injection banks.</div>
+                    <div class="route-controls">
+                        <button class="mini-btn btn-route-toggle" data-route="1" id="btnToggleRoute1">Suspend Route</button>
+                        <button class="mini-btn highlight btn-route-add" data-route="1" id="btnAddFreighter1">+ Add Tanker (100M, 90E)</button>
+                    </div>
+                </div>
+
+                <!-- Route 2: Agro-Dome Sustenance Run -->
+                <div class="route-card food" id="cardRouteFood">
+                    <div class="route-header">
+                        <div>
+                            <span class="route-title">Agro-Dome Sustenance Run</span>
+                            <div class="route-sub" id="subRouteFood">Ground Hydroponics → Orbital Arks & Yard | +22 t Food/cyc (1 Transport)</div>
+                        </div>
+                        <span class="route-badge active" id="badgeRouteFood">ACTIVE</span>
+                    </div>
+                    <div class="route-desc">Pressurized agronomy transports ferrying fresh synthesized biomass, spirulina concentrates, and rations from surface domes to orbital colony arks and construction crews.</div>
+                    <div class="route-controls">
+                        <button class="mini-btn btn-route-toggle" data-route="2" id="btnToggleRoute2">Suspend Route</button>
+                        <button class="mini-btn highlight btn-route-add" data-route="2" id="btnAddFreighter2">+ Add Transport (110M, 70E)</button>
+                    </div>
+                </div>
+
+                <!-- Route 3: Helios Plasma Skimmer -->
+                <div class="route-card fuel" id="cardRouteFuel">
+                    <div class="route-header">
+                        <div>
+                            <span class="route-title">Helios Plasma Skimmer</span>
+                            <div class="route-sub" id="subRouteFuel">Stellar Corona → Orbital He-3 Fuel Depot | +150 kW Energy/cyc (1 Ram-Scoop)</div>
+                        </div>
+                        <span class="route-badge active" id="badgeRouteFuel">ACTIVE</span>
+                    </div>
+                    <div class="route-desc">Magnetic ram-scoop freighters skimming upper stellar corona to harvest energetic Deuterium & Helium-3 isotopes, maintaining continuous orbital reactor charge.</div>
+                    <div class="route-controls">
+                        <button class="mini-btn btn-route-toggle" data-route="3" id="btnToggleRoute3">Suspend Route</button>
+                        <button class="mini-btn highlight btn-route-add" data-route="3" id="btnAddFreighter3">+ Add Ram-Scoop (150M, 120E)</button>
+                    </div>
+                </div>
+
+                <!-- Orbital Docks & Fuel Depots Infrastructure -->
+                <div class="section-header" style="margin-top: 14px;">
+                    <span>Orbital Docks & Logistics Depots</span>
+                    <span style="font-size:10px; color:var(--accent-cyan);">Fleet Infrastructure</span>
+                </div>
+
                 <div class="metric-card">
-                    <div class="metric-row"><span>Tartarus Belt → Planet Depot</span><strong style="color:var(--accent-emerald);">Active (45s cycle)</strong></div>
-                    <div class="metric-row"><span>Boreas Ice Rings → Genesis</span><strong style="color:var(--accent-emerald);">Active (60s cycle)</strong></div>
-                    <div class="metric-row"><span>Zephyr Orbital Station Fuel Link</span><strong style="color:var(--accent-blue);">Nominal</strong></div>
+                    <div class="module-header">
+                        <div>
+                            <strong style="color:var(--accent-cyan);">Zephyr Orbital Docks (Tier <span id="valDockTier">1</span>)</strong>
+                            <div class="module-sub" id="subDockInfo">Automated Cargo Cranes & 4 Berths | +20% Throughput</div>
+                        </div>
+                        <button class="mini-btn highlight" id="btnUpgradeDocks" title="Expand docking berths and gantry cranes">+ Upgrade Docks (260M, 180E)</button>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="module-header">
+                        <div>
+                            <strong style="color:var(--accent-amber);">Sub-orbital He-3 Fuel Depot (Tier <span id="valFuelTier">1</span>)</strong>
+                            <div class="module-sub" id="subFuelInfo">Cryo-Propellant Storage Cells | -20% Route Transit Time, +80 kW</div>
+                        </div>
+                        <button class="mini-btn highlight" id="btnUpgradeFuel" title="Expand cryogenic fuel storage capacity">+ Expand Depot (200M, 160V, 120E)</button>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="module-header">
+                        <div>
+                            <strong style="color:var(--accent-emerald);">Surface Mass Driver Depot (Tier <span id="valMassTier">1</span>)</strong>
+                            <div class="module-sub" id="subMassInfo">Electromagnetic Launch Catapult | +12 t Min/cyc Direct Orbit Launch</div>
+                        </div>
+                        <button class="mini-btn highlight" id="btnUpgradeMass" title="Construct magnetic mass driver catapult">+ Construct Driver (320M, 220E)</button>
+                    </div>
                 </div>
             </div>
 
@@ -1624,6 +1784,75 @@
             coreDynamos: 1,
             hydroTowers: 2,
             surfaceSolar: 3,
+
+            // Logistics Infrastructure (Orbital Docks, Fuel Depots, Mass Drivers)
+            orbitalDocks: 1,
+            fuelDepots: 1,
+            massDrivers: 1,
+
+            // Automated Supply Trade Routes
+            tradeRoutes: [
+                {
+                    id: 'minerals',
+                    name: 'Tartarus Mineral Corridor',
+                    from: 'Tartarus Belt',
+                    to: 'Surface Depot',
+                    cargo: 'minerals',
+                    active: true,
+                    freighters: 2,
+                    baseYield: 28,
+                    costMin: 120,
+                    costEnergy: 80,
+                    progress: 0.15,
+                    speed: 0.007,
+                    color: '#f59e0b'
+                },
+                {
+                    id: 'volatiles',
+                    name: 'Boreas Cryo-Volatiles Route',
+                    from: 'Boreas Ice Shell',
+                    to: 'Zephyr Docks',
+                    cargo: 'volatiles',
+                    active: true,
+                    freighters: 1,
+                    baseYield: 20,
+                    costMin: 100,
+                    costEnergy: 90,
+                    progress: 0.45,
+                    speed: 0.006,
+                    color: '#38bdf8'
+                },
+                {
+                    id: 'food',
+                    name: 'Agro-Dome Sustenance Run',
+                    from: 'Ground Hydroponics',
+                    to: 'Ark Flotilla',
+                    cargo: 'food',
+                    active: true,
+                    freighters: 1,
+                    baseYield: 22,
+                    costMin: 110,
+                    costEnergy: 70,
+                    progress: 0.75,
+                    speed: 0.008,
+                    color: '#10b981'
+                },
+                {
+                    id: 'fuel',
+                    name: 'Helios Plasma Skimmer',
+                    from: 'Helios Corona',
+                    to: 'He-3 Fuel Depot',
+                    cargo: 'energy',
+                    active: true,
+                    freighters: 1,
+                    baseYield: 150,
+                    costMin: 150,
+                    costEnergy: 120,
+                    progress: 0.30,
+                    speed: 0.005,
+                    color: '#fbbf24'
+                }
+            ],
 
             // Interactive Camera Viewport
             camX: 0,
@@ -2503,26 +2732,38 @@
             // Resource loops per cycle
             const rate = sim.speed;
 
+            // Trade Route & Infrastructure Multipliers
+            const dockMult = 1.0 + (sim.orbitalDocks - 1) * 0.20;
+            const fuelMult = 1.0 + (sim.fuelDepots - 1) * 0.25;
+
+            // Automated Route Yield Contributions
+            const rMin = sim.tradeRoutes[0].active ? Math.floor(sim.tradeRoutes[0].baseYield * sim.tradeRoutes[0].freighters * dockMult) : 0;
+            const rVol = sim.tradeRoutes[1].active ? Math.floor(sim.tradeRoutes[1].baseYield * sim.tradeRoutes[1].freighters * dockMult) : 0;
+            const rFood = sim.tradeRoutes[2].active ? Math.floor(sim.tradeRoutes[2].baseYield * sim.tradeRoutes[2].freighters * dockMult) : 0;
+            const rEnergy = sim.tradeRoutes[3].active ? Math.floor(sim.tradeRoutes[3].baseYield * sim.tradeRoutes[3].freighters * fuelMult) : 0;
+            const massDriverMin = sim.massDrivers * 12;
+            const fuelDepotPower = sim.fuelDepots * 40;
+
             // Energy loops
-            const energyGen = 600 + (sim.surfaceSolar * 60);
+            const energyGen = 600 + (sim.surfaceSolar * 60) + rEnergy + fuelDepotPower;
             const energyDrain = 200 + (sim.solarMirrors * 75) + (sim.atmoProcessors * 60) + (sim.nitrogenExtractors * 85) + (sim.greenhouseStations * 70) + (sim.coreDynamos * 80) + Math.floor(sim.colonists / 1000) * 5;
             sim.deltaEnergy = energyGen - energyDrain;
             sim.energy = Math.max(0, sim.energy + Math.floor(sim.deltaEnergy * 0.05 * rate));
 
             // Minerals loops
-            const mineralGain = 20 + (sim.drakeStatus === 'mining' ? 25 : 10);
+            const mineralGain = 20 + (sim.drakeStatus === 'mining' ? 25 : 10) + rMin + massDriverMin;
             const mineralDrain = (sim.atmoProcessors * 3) + (sim.nitrogenExtractors * 2);
             sim.deltaMinerals = mineralGain - mineralDrain;
             sim.minerals = Math.max(0, sim.minerals + Math.floor(sim.deltaMinerals * 0.05 * rate));
 
             // Volatiles loops
-            const volGain = 14 + (sim.drakeStatus === 'mining' ? 18 : 6);
+            const volGain = 14 + (sim.drakeStatus === 'mining' ? 18 : 6) + rVol;
             const volDrain = (sim.solarMirrors * 2) + (sim.greenhouseStations * 2) + (sim.nitrogenExtractors * 3);
             sim.deltaVolatiles = volGain - volDrain;
             sim.volatiles = Math.max(0, sim.volatiles + Math.floor(sim.deltaVolatiles * 0.05 * rate));
 
             // Food loops
-            const foodGain = 15 + (sim.hydroTowers * 12);
+            const foodGain = 15 + (sim.hydroTowers * 12) + rFood;
             const foodDrain = Math.floor(sim.colonists / 2000);
             sim.deltaFood = foodGain - foodDrain;
             sim.food = Math.max(0, sim.food + Math.floor(sim.deltaFood * 0.05 * rate));
@@ -3542,6 +3783,191 @@
             ctx.restore();
         }
 
+        // --- Draw Automated Supply Trade Routes & Freight Convoys ---
+        function drawTradeRoutes(ctx, cx, cy, z, time) {
+            const targetPlanet = celestialBodies.find(b => b.id === sim.activePlanetId) || celestialBodies.find(b => b.isPlanet);
+            const sunObj = celestialBodies[0];
+            const boreasObj = celestialBodies.find(b => b.id === 'boreas');
+            const zephyrObj = celestialBodies.find(b => b.id === 'zephyr');
+            const genesisObj = fleet[0];
+
+            if (!targetPlanet || !sunObj) return;
+
+            const sunX = cx + sunObj.x * z;
+            const sunY = cy + sunObj.y * z;
+
+            // Route Endpoints:
+            // 0: Tartarus Belt -> Active Planet
+            const beltAngle = 2.1;
+            const beltDist = 560 * z;
+            const beltX = sunX + Math.cos(beltAngle) * beltDist;
+            const beltY = sunY + Math.sin(beltAngle) * (beltDist * 0.7);
+
+            // 1: Boreas Moon -> Zephyr Station
+            const mX = (boreasObj && boreasObj.currX !== undefined) ? boreasObj.currX : (targetPlanet.currX - 70 * z);
+            const mY = (boreasObj && boreasObj.currY !== undefined) ? boreasObj.currY : (targetPlanet.currY - 50 * z);
+            const zX = (zephyrObj && zephyrObj.currX !== undefined) ? zephyrObj.currX : (targetPlanet.currX + 60 * z);
+            const zY = (zephyrObj && zephyrObj.currY !== undefined) ? zephyrObj.currY : (targetPlanet.currY + 40 * z);
+
+            // 2: Target Planet -> CSS Genesis Ark
+            const pX = targetPlanet.currX;
+            const pY = targetPlanet.currY;
+            const gX = (genesisObj && genesisObj.currX !== undefined) ? genesisObj.currX : (targetPlanet.currX + 50 * z);
+            const gY = (genesisObj && genesisObj.currY !== undefined) ? genesisObj.currY : (targetPlanet.currY - 40 * z);
+
+            // 3: Solar Corona -> Sub-orbital Fuel Depot (near Zephyr)
+            const sX = sunX + (sunObj.radius * z * 1.3);
+            const sY = sunY;
+            const dX = zX + 25 * z;
+            const dY = zY - 20 * z;
+
+            const routeCoords = [
+                { startX: beltX, startY: beltY, endX: pX, endY: pY, tag: 'MINERALS' },
+                { startX: mX, startY: mY, endX: zX, endY: zY, tag: 'VOLATILES' },
+                { startX: pX, startY: pY, endX: gX, endY: gY, tag: 'FOOD' },
+                { startX: sX, startY: sY, endX: dX, endY: dY, tag: 'HE-3 FUEL' }
+            ];
+
+            sim.tradeRoutes.forEach((route, rIdx) => {
+                if (!route.active) return;
+                const coords = routeCoords[rIdx];
+                if (!coords) return;
+
+                // Advance route transit progress
+                if (!sim.paused) {
+                    const fuelSpeedBonus = 1.0 + (sim.fuelDepots - 1) * 0.20;
+                    route.progress = (route.progress + route.speed * fuelSpeedBonus * sim.speed) % 1.0;
+                }
+
+                // Draw glowing trade route conduit lane
+                ctx.save();
+                ctx.strokeStyle = route.color;
+                ctx.lineWidth = Math.max(1, 1.2 * z);
+                ctx.globalAlpha = 0.35;
+                ctx.setLineDash([6, 6]);
+                ctx.lineDashOffset = -time * 25;
+                ctx.beginPath();
+                ctx.moveTo(coords.startX, coords.startY);
+                ctx.lineTo(coords.endX, coords.endY);
+                ctx.stroke();
+                ctx.restore();
+
+                // Draw Convoy Freighters along route
+                const numFreighters = Math.max(1, route.freighters);
+                for (let f = 0; f < numFreighters; f++) {
+                    const frac = (route.progress + (f / numFreighters)) % 1.0;
+                    let tPos, isOutbound;
+                    if (frac < 0.5) {
+                        tPos = frac * 2.0; // 0 to 1 outbound
+                        isOutbound = true;
+                    } else {
+                        tPos = 1.0 - (frac - 0.5) * 2.0; // 1 to 0 return
+                        isOutbound = false;
+                    }
+
+                    const fx = coords.startX + (coords.endX - coords.startX) * tPos;
+                    const fy = coords.startY + (coords.endY - coords.startY) * tPos;
+                    const angle = Math.atan2(coords.endY - coords.startY, coords.endX - coords.startX) + (isOutbound ? 0 : Math.PI);
+
+                    // Render mini freighter barge
+                    ctx.save();
+                    ctx.translate(fx, fy);
+                    ctx.rotate(angle);
+
+                    // Ion engine thruster plume
+                    ctx.fillStyle = route.color;
+                    const thrusterLen = (4 + Math.sin(time * 15 + f) * 3) * z;
+                    ctx.beginPath();
+                    ctx.moveTo(-5 * z, -2 * z);
+                    ctx.lineTo((-5 * z) - thrusterLen, 0);
+                    ctx.lineTo(-5 * z, 2 * z);
+                    ctx.fill();
+
+                    // Hull
+                    ctx.fillStyle = '#0f172a';
+                    ctx.strokeStyle = route.color;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(6 * z, 0);
+                    ctx.lineTo(-4 * z, -3.5 * z);
+                    ctx.lineTo(-2 * z, 0);
+                    ctx.lineTo(-4 * z, 3.5 * z);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // Cargo pod container (if laden)
+                    if (isOutbound) {
+                        ctx.fillStyle = route.color;
+                        ctx.fillRect(-1 * z, -2 * z, 4 * z, 4 * z);
+                    }
+
+                    ctx.restore();
+                }
+
+                // Route callout label midway
+                const midX = (coords.startX + coords.endX) / 2;
+                const midY = (coords.startY + coords.endY) / 2;
+                ctx.save();
+                ctx.fillStyle = route.color;
+                ctx.font = `${Math.max(7, 8 * z)}px monospace`;
+                ctx.textAlign = 'center';
+                ctx.fillText(`CONVOY: ${coords.tag}`, midX, midY - 6 * z);
+                ctx.restore();
+            });
+
+            // Draw Zephyr Orbital Docks Gantry & Berths
+            if (zephyrObj && zephyrObj.currX !== undefined) {
+                const zx = zephyrObj.currX;
+                const zy = zephyrObj.currY;
+                ctx.save();
+                ctx.strokeStyle = '#00f0ff';
+                ctx.lineWidth = 1;
+                const dockR = (16 + sim.orbitalDocks * 3) * z;
+                ctx.beginPath();
+                ctx.arc(zx, zy, dockR, 0, Math.PI * 2);
+                ctx.stroke();
+
+                for (let a = 0; a < 4; a++) {
+                    const ang = (a * Math.PI / 2) + (time * 0.1);
+                    ctx.beginPath();
+                    ctx.moveTo(zx + Math.cos(ang) * 8 * z, zy + Math.sin(ang) * 8 * z);
+                    ctx.lineTo(zx + Math.cos(ang) * dockR, zy + Math.sin(ang) * dockR);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
+
+            // Draw Surface Mass Driver on Active Target Planet limb
+            if (sim.massDrivers > 0 && targetPlanet && targetPlanet.currX !== undefined) {
+                const px = targetPlanet.currX;
+                const py = targetPlanet.currY;
+                const pr = targetPlanet.radius * z;
+                const launchAngle = -0.7; // 45 deg upper right
+                const lx = px + Math.cos(launchAngle) * pr;
+                const ly = py + Math.sin(launchAngle) * pr;
+                const barrelLen = (12 + sim.massDrivers * 4) * z;
+
+                ctx.save();
+                ctx.strokeStyle = '#10b981';
+                ctx.lineWidth = 2 * z;
+                ctx.beginPath();
+                ctx.moveTo(lx, ly);
+                ctx.lineTo(lx + Math.cos(launchAngle) * barrelLen, ly + Math.sin(launchAngle) * barrelLen);
+                ctx.stroke();
+
+                const pulseT = (time * 2) % 2.0;
+                if (pulseT < 0.6) {
+                    const slugDist = barrelLen + (pulseT * 80 * z);
+                    ctx.fillStyle = '#6ee7b7';
+                    ctx.beginPath();
+                    ctx.arc(lx + Math.cos(launchAngle) * slugDist, ly + Math.sin(launchAngle) * slugDist, 2.5 * z, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
         // --- Render Loop ---
         function render() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -3851,6 +4277,9 @@
                     }
                 }
             });
+
+            // 6.5. Automated Supply Trade Routes & Convoys
+            drawTradeRoutes(ctx, cx, cy, z, sim.time);
 
             // 7. Fleet Ships
             fleet.forEach((ship, idx) => {
@@ -4512,6 +4941,91 @@
             });
         });
 
+        // Trade Routes & Freight Convoys Handlers
+        document.querySelectorAll('.btn-route-toggle').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                initAudio();
+                const rIdx = parseInt(btn.dataset.route);
+                const route = sim.tradeRoutes[rIdx];
+                if (!route) return;
+                route.active = !route.active;
+                updateUI();
+                logMsg(`Supply trade route [${route.name}] ${route.active ? 'resumed and active' : 'suspended'}.`);
+                playSound(route.active ? 'deploy' : 'click');
+            });
+        });
+
+        document.querySelectorAll('.btn-route-add').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                initAudio();
+                const rIdx = parseInt(btn.dataset.route);
+                const route = sim.tradeRoutes[rIdx];
+                if (!route) return;
+
+                if (sim.minerals >= route.costMin && sim.energy >= route.costEnergy) {
+                    sim.minerals -= route.costMin;
+                    sim.energy -= route.costEnergy;
+                    route.freighters++;
+                    updateUI();
+                    logMsg(`Commissioned freighter #${route.freighters} for [${route.name}] supply run.`);
+                    playSound('deploy');
+                } else {
+                    logMsg(`Insufficient resources to commission freighter (Req: ${route.costMin} t Min, ${route.costEnergy} kW Energy).`, true);
+                }
+            });
+        });
+
+        // Orbital Docks & Logistics Depots Handlers
+        document.getElementById('btnUpgradeDocks').addEventListener('click', () => {
+            initAudio();
+            const costMin = 260 + (sim.orbitalDocks - 1) * 80;
+            const costEng = 180 + (sim.orbitalDocks - 1) * 60;
+            if (sim.minerals >= costMin && sim.energy >= costEng) {
+                sim.minerals -= costMin;
+                sim.energy -= costEng;
+                sim.orbitalDocks++;
+                updateUI();
+                logMsg(`Zephyr Orbital Docks upgraded to Tier ${sim.orbitalDocks}. Freight turnaround accelerated (+${sim.orbitalDocks * 20}% Throughput).`);
+                playSound('deploy');
+            } else {
+                logMsg(`Insufficient resources (Req: ${costMin} t Minerals, ${costEng} kW Energy).`, true);
+            }
+        });
+
+        document.getElementById('btnUpgradeFuel').addEventListener('click', () => {
+            initAudio();
+            const costMin = 200 + (sim.fuelDepots - 1) * 70;
+            const costVol = 160 + (sim.fuelDepots - 1) * 50;
+            const costEng = 120 + (sim.fuelDepots - 1) * 40;
+            if (sim.minerals >= costMin && sim.volatiles >= costVol && sim.energy >= costEng) {
+                sim.minerals -= costMin;
+                sim.volatiles -= costVol;
+                sim.energy -= costEng;
+                sim.fuelDepots++;
+                updateUI();
+                logMsg(`Sub-orbital He-3 Fuel Depot expanded to Tier ${sim.fuelDepots}. Convoy transit speed boosted (+${sim.fuelDepots * 20}% Speed, +${sim.fuelDepots * 40} kW).`);
+                playSound('deploy');
+            } else {
+                logMsg(`Insufficient resources (Req: ${costMin} t Min, ${costVol} t Vol, ${costEng} kW Energy).`, true);
+            }
+        });
+
+        document.getElementById('btnUpgradeMass').addEventListener('click', () => {
+            initAudio();
+            const costMin = 320 + (sim.massDrivers - 1) * 100;
+            const costEng = 220 + (sim.massDrivers - 1) * 80;
+            if (sim.minerals >= costMin && sim.energy >= costEng) {
+                sim.minerals -= costMin;
+                sim.energy -= costEng;
+                sim.massDrivers++;
+                updateUI();
+                logMsg(`Surface Mass Driver Catapult expanded to Tier ${sim.massDrivers}. Direct planetary mineral launch active (+${sim.massDrivers * 12} t Min/cyc).`);
+                playSound('deploy');
+            } else {
+                logMsg(`Insufficient resources (Req: ${costMin} t Minerals, ${costEng} kW Energy).`, true);
+            }
+        });
+
         // --- UI Updater ---
         function updateUI() {
             // Header stats
@@ -4595,9 +5109,48 @@
             const cntGHG = document.getElementById('cntGreenhouse');
             if (cntGHG) cntGHG.textContent = `${sim.greenhouseStations} Active (${sim.greenhouseMode === 'warm' ? 'Warm' : 'Cool'})`;
 
-            const magStatus = sim.magnet >= 0.5 ? 'Deflecting Solar Winds' : (sim.magnet >= 0.3 ? 'Moderate' : 'Lethal Radiation');
-            document.getElementById('valMagnet').textContent = `${sim.magnet.toFixed(2)} G (${magStatus})`;
-            document.getElementById('barMagnet').style.width = `${Math.min(100, (sim.magnet / 0.6) * 100)}%`;
+            // Automated Supply Trade Routes UI
+            const dockMult = 1.0 + (sim.orbitalDocks - 1) * 0.20;
+            const fuelMult = 1.0 + (sim.fuelDepots - 1) * 0.25;
+
+            let activeRouteCount = 0;
+            sim.tradeRoutes.forEach((r, idx) => {
+                if (r.active) activeRouteCount++;
+                const badgeEl = document.getElementById(`badgeRoute${idx === 0 ? 'Minerals' : idx === 1 ? 'Volatiles' : idx === 2 ? 'Food' : 'Fuel'}`);
+                const toggleBtn = document.getElementById(`btnToggleRoute${idx}`);
+                const subEl = document.getElementById(`subRoute${idx === 0 ? 'Minerals' : idx === 1 ? 'Volatiles' : idx === 2 ? 'Food' : 'Fuel'}`);
+                if (badgeEl) {
+                    badgeEl.textContent = r.active ? 'ACTIVE' : 'SUSPENDED';
+                    badgeEl.className = `route-badge ${r.active ? 'active' : 'suspended'}`;
+                }
+                if (toggleBtn) {
+                    toggleBtn.textContent = r.active ? 'Suspend Route' : 'Resume Route';
+                }
+                if (subEl) {
+                    const effYield = Math.floor(r.baseYield * r.freighters * (idx === 3 ? fuelMult : dockMult));
+                    const unit = (idx === 0 ? 't Min' : idx === 1 ? 't Vol' : idx === 2 ? 't Food' : 'kW Energy');
+                    subEl.textContent = `${r.from} → ${r.to} | +${effYield} ${unit}/cyc (${r.freighters} Convoy${r.freighters > 1 ? 's' : ''})`;
+                }
+            });
+
+            const activeRoutesBadge = document.getElementById('activeRoutesCountBadge');
+            if (activeRoutesBadge) activeRoutesBadge.textContent = `${activeRouteCount} of 4 Routes Active`;
+
+            // Logistics Infrastructure Tiers UI
+            const valDock = document.getElementById('valDockTier');
+            if (valDock) valDock.textContent = sim.orbitalDocks;
+            const subDock = document.getElementById('subDockInfo');
+            if (subDock) subDock.textContent = `Automated Cargo Cranes & ${sim.orbitalDocks * 4} Berths | +${sim.orbitalDocks * 20}% Throughput`;
+
+            const valFuel = document.getElementById('valFuelTier');
+            if (valFuel) valFuel.textContent = sim.fuelDepots;
+            const subFuel = document.getElementById('subFuelInfo');
+            if (subFuel) subFuel.textContent = `Cryo-Propellant Storage Cells | -${sim.fuelDepots * 20}% Transit Time, +${sim.fuelDepots * 40} kW`;
+
+            const valMass = document.getElementById('valMassTier');
+            if (valMass) valMass.textContent = sim.massDrivers;
+            const subMass = document.getElementById('subMassInfo');
+            if (subMass) subMass.textContent = `Electromagnetic Launch Catapult | +${sim.massDrivers * 12} t Min/cyc Direct Orbit Launch`;
 
             // Colony Tab
             document.getElementById('colonyPop').textContent = sim.colonists.toLocaleString();
