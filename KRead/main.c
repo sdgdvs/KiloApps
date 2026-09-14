@@ -9,7 +9,16 @@ void* __cdecl memset(void* p, int c, size_t sz) {
 }
 #pragma function(memset)
 
+void* __cdecl memcpy(void* dst, const void* src, size_t sz) {
+    char* d = (char*)dst;
+    const char* s = (const char*)src;
+    while (sz--) *d++ = *s++;
+    return dst;
+}
+#pragma function(memcpy)
+
 #define MAX_TABS 12
+#define TIMER_STATUS_RESET 101
 
 typedef struct {
     char szTitle[64];
@@ -25,6 +34,7 @@ static int g_ActiveTab = 0;
 static HWND g_hMainWnd = NULL;
 static HWND g_hTabCtrl = NULL;
 static HWND hEdit = NULL;
+static HWND g_hStatus = NULL;
 
 static HFONT hFont = NULL;
 static HBRUSH hBrush = NULL;
@@ -39,6 +49,116 @@ static FINDREPLACEA g_fr;
 static HWND g_hFindDlg = NULL;
 static char g_szFindWhat[128] = {0};
 static UINT g_uFindReplaceMsg = 0;
+
+static char g_szStatusToast[128] = {0};
+static BOOL g_bToastActive = FALSE;
+
+static const char* g_SampleCyberTitle = "Cyberpunk Manifesto.txt";
+static const char* g_SampleCyberText = 
+    "THE CYBERPUNK MANIFESTO\r\n"
+    "=======================\r\n\r\n"
+    "We are the electronic mind.\r\n"
+    "We create our own worlds with logic, silicon, and keystrokes.\r\n\r\n"
+    "We exist without skin color, without nationality, without religious bias.\r\n"
+    "Our only crime is curiosity, exploration, and the relentless pursuit of knowledge.\r\n\r\n"
+    "You build borders, fences, and firewalls.\r\n"
+    "We explore every gap, understand the underlying protocol, and bridge minds across oceans.\r\n\r\n"
+    "Information wants to be free.\r\n"
+    "Systems are meant to be understood.\r\n"
+    "Ideas cannot be locked in vaults.\r\n\r\n"
+    "Welcome to the new frontier.\r\n"
+    "Welcome to the KiloOS cyberspace.";
+
+static const char* g_SampleTimeTitle = "The Time Machine Excerpt.txt";
+static const char* g_SampleTimeText = 
+    "THE TIME MACHINE (Excerpt)\r\n"
+    "by H.G. Wells\r\n"
+    "==========================\r\n\r\n"
+    "The Time Traveller was expounding a recondite matter to us. His grey eyes\r\n"
+    "shone and twinkled, and his usually pale face was flushed and animated.\r\n"
+    "The fire burnt brightly, and the soft radiance of the incandescent lights\r\n"
+    "in the lilies of silver caught the bubbles that flashed and passed in our glasses.\r\n\r\n"
+    "\"You must follow me carefully. I shall have to controvert one or two ideas\r\n"
+    "that are almost universally accepted. The geometry, for instance, that you\r\n"
+    "were taught in school is founded on a misconception.\"\r\n\r\n"
+    "\"Is not that rather a large thing to expect us to begin upon?\" said Filby,\r\n"
+    "an argumentative person with red hair.\r\n\r\n"
+    "\"I do not mean to ask you to accept anything without reasonable ground for it.\r\n"
+    "You will soon admit as much as I need from you. You know of course that a\r\n"
+    "mathematical line, a line of thickness nil, has no real existence. Nor has a\r\n"
+    "mathematical plane. These things are mere abstractions.\"\r\n\r\n"
+    "\"That is all right,\" said the Psychologist.\r\n\r\n"
+    "\"Nor, having only length, breadth, and thickness, can a cube have a real existence.\"\r\n\r\n"
+    "\"There I object,\" said Filby. \"Of course a solid body may exist. All real things—\"\r\n\r\n"
+    "\"So most people think. But wait a moment. Can an instantaneous cube exist?\"\r\n"
+    "\"Don't follow you,\" said Filby.\r\n\r\n"
+    "\"Can a cube that does not exist for any time at all, have a real existence?\"";
+
+static const char* g_SampleKiloTitle = "KiloOS Architecture Guide.md";
+static const char* g_SampleKiloText = 
+    "# KiloOS System Architecture & Usage Guide\r\n\r\n"
+    "## Overview\r\n"
+    "KiloOS is a lightweight, high-performance web-native and retro-compatible\r\n"
+    "desktop operating environment designed for absolute speed and modularity.\r\n\r\n"
+    "## Core Principles\r\n"
+    "- Sub-999KB size budget for every native and web application.\r\n"
+    "- Multi-agent coordination with continuous integration.\r\n"
+    "- Instant load times and zero unnecessary runtime bloat.\r\n\r\n"
+    "## Built-in Productivity Apps\r\n"
+    "1. KRead: Multi-tab document e-reader with reading statistics & bookmarks.\r\n"
+    "2. KPad: Monospace text editor with syntax highlighting.\r\n"
+    "3. KJournal: Encrypted daily diary and thought logger.\r\n"
+    "4. KBase: Desktop database and record organizer.\r\n"
+    "5. KTerm: Cybernetic console emulator.\r\n\r\n"
+    "## Shortcuts Quick Reference\r\n"
+    "- Ctrl+T: New Tab in supported apps\r\n"
+    "- Ctrl+W: Close active Tab\r\n"
+    "- Ctrl+F: In-document Search\r\n"
+    "- F1 / H: Contextual Help";
+
+void UpdateStatusBar() {
+    if (!g_hStatus) return;
+    RECT rc;
+    GetClientRect(g_hMainWnd, &rc);
+    int width = rc.right - rc.left;
+    int parts[3];
+    parts[0] = (width > 600) ? 240 : 160;
+    parts[1] = (width > 600) ? 460 : 320;
+    parts[2] = -1;
+    SendMessageA(g_hStatus, SB_SETPARTS, 3, (LPARAM)parts);
+
+    char szPart0[128];
+    if (g_NumTabs > 0 && g_ActiveTab >= 0 && g_ActiveTab < g_NumTabs) {
+        wsprintfA(szPart0, "Tab %d/%d: %s", g_ActiveTab + 1, g_NumTabs, g_Tabs[g_ActiveTab].szTitle);
+    } else {
+        lstrcpyA(szPart0, "Ready");
+    }
+    SendMessageA(g_hStatus, SB_SETTEXTA, 0, (LPARAM)szPart0);
+
+    char szPart1[128];
+    int docLen = hEdit ? GetWindowTextLengthA(hEdit) : 0;
+    DWORD selStart = 0;
+    if (hEdit) SendMessageA(hEdit, EM_GETSEL, (WPARAM)&selStart, (LPARAM)NULL);
+    int lineIdx = (int)SendMessageA(hEdit, EM_LINEFROMCHAR, selStart, 0) + 1;
+    int lineStart = (int)SendMessageA(hEdit, EM_LINEINDEX, lineIdx - 1, 0);
+    int colIdx = (int)selStart - lineStart + 1;
+    wsprintfA(szPart1, "Ln %d, Col %d | %d ch | %dpt", lineIdx, colIdx, docLen, currentFontSize);
+    SendMessageA(g_hStatus, SB_SETTEXTA, 1, (LPARAM)szPart1);
+
+    if (g_bToastActive && g_szStatusToast[0]) {
+        SendMessageA(g_hStatus, SB_SETTEXTA, 2, (LPARAM)g_szStatusToast);
+    } else {
+        SendMessageA(g_hStatus, SB_SETTEXTA, 2, (LPARAM)"F1: Help | Ctrl+O: Open | Ctrl+T: Tab | Ctrl+B: Bookmark | Ctrl+S: Stats");
+    }
+}
+
+void ShowNativeStatus(const char* text) {
+    if (!g_hStatus || !text) return;
+    lstrcpynA(g_szStatusToast, text, sizeof(g_szStatusToast));
+    g_bToastActive = TRUE;
+    UpdateStatusBar();
+    SetTimer(g_hMainWnd, TIMER_STATUS_RESET, 3200, NULL);
+}
 
 void UpdateWindowTitle(HWND hwnd) {
     if (!hwnd) return;
@@ -118,6 +238,7 @@ void LoadTabState(int index) {
         TabCtrl_SetCurSel(g_hTabCtrl, index);
     }
     UpdateWindowTitle(g_hMainWnd);
+    UpdateStatusBar();
 }
 
 void SwitchToTab(HWND hwnd, int newIndex) {
@@ -128,7 +249,7 @@ void SwitchToTab(HWND hwnd, int newIndex) {
 
 void AddNewTab(HWND hwnd, const char* title, const char* initialText) {
     if (g_NumTabs >= MAX_TABS) {
-        MessageBoxA(hwnd, "Maximum number of tabs reached (12).", "KRead Tabs", MB_OK | MB_ICONWARNING);
+        ShowNativeStatus("Maximum number of tabs reached (12).");
         return;
     }
 
@@ -185,6 +306,8 @@ void CloseCurrentTab(HWND hwnd) {
         
         SetWindowTextA(hEdit, "");
         UpdateWindowTitle(hwnd);
+        UpdateStatusBar();
+        ShowNativeStatus("Document cleared [Ctrl+Del]");
         return;
     }
 
@@ -465,6 +588,27 @@ void OpenFindDialog(HWND hwnd) {
     g_hFindDlg = FindTextA(&g_fr);
 }
 
+void CopyTextToClipboard(HWND hwnd, const char* text, int len) {
+    if (!text || len <= 0) {
+        ShowNativeStatus("No text to copy.");
+        return;
+    }
+    if (!OpenClipboard(hwnd)) return;
+    EmptyClipboard();
+    HGLOBAL hGlob = GlobalAlloc(GMEM_MOVEABLE, len + 1);
+    if (hGlob) {
+        char* pDst = (char*)GlobalLock(hGlob);
+        if (pDst) {
+            for (int i = 0; i < len; i++) pDst[i] = text[i];
+            pDst[len] = 0;
+            GlobalUnlock(hGlob);
+            SetClipboardData(CF_TEXT, hGlob);
+            ShowNativeStatus("Text copied to clipboard! [Ctrl+C]");
+        }
+    }
+    CloseClipboard();
+}
+
 void ShowHelpDialog(HWND hwnd) {
     const char* szHelp = 
         "KRead Native E-Reader - User & Keyboard Guide\n"
@@ -479,15 +623,23 @@ void ShowHelpDialog(HWND hwnd) {
         "  Ctrl + Shift + Tab    : Switch to Previous Tab\n"
         "  Ctrl + 1 .. 9         : Jump Directly to Tab 1-9\n"
         "  Ctrl + A              : Select All Text in Active Tab\n"
+        "  Ctrl + C              : Copy Selected Text\n"
+        "  Ctrl + Shift + C      : Copy All Document Text\n"
         "  Ctrl + F              : Find Text (Windows Search Dialog)\n"
-        "  Ctrl + B              : Save Bookmark at Current Position\n"
+        "  Ctrl + B              : Save Bookmark at Position\n"
+        "  Ctrl + J              : Jump to Saved Bookmark\n"
         "  Ctrl + S              : Reading Statistics Engine & WPM\n"
-        "  Ctrl + '+' / '-'      : Increase / Decrease Font Size\n\n"
+        "  Ctrl + '+' / '-'      : Increase / Decrease Font Size\n"
+        "  Ctrl + 0              : Reset Font Size to Default (18pt)\n"
+        "  Alt + 1 .. 4          : Switch Theme (Light/Dark/Sepia/Contrast)\n"
+        "  Ctrl + Del            : Clear Document Content\n\n"
         "FEATURES:\n"
-        "  * Drag-and-Drop File Loading (single and multi-file)\n"
         "  * Multi-Tab Sessions (up to 12 concurrent docs)\n"
+        "  * Quick Document Starter Presets (Cyberpunk, Time Machine, KiloOS)\n"
+        "  * Real-time Interactive Status Bar with Reading Position & Statistics\n"
+        "  * Non-blocking Toast Status System (eliminates modal alert popups)\n"
         "  * Automatic Unix Newline Normalization (\\n to \\r\\n)\n"
-        "  * Per-tab Independent Cursor & Bookmarks\n"
+        "  * Per-tab Independent Reading Cursor & Bookmarks\n"
         "  * Reading Speed & Time Remaining Estimator\n"
         "  * High-DPI Crisp Font Scaling & Themes (Light/Dark/Sepia/Contrast)";
     MessageBoxA(hwnd, szHelp, "KRead Help (F1 / H)", MB_OK | MB_ICONINFORMATION);
@@ -518,10 +670,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HMENU hSubFile = CreatePopupMenu();
             AppendMenuA(hSubFile, MF_STRING, 1001, "Open File...\tCtrl+O");
             AppendMenuA(hSubFile, MF_STRING, 1009, "Open File in New Tab...\tCtrl+Shift+O");
+            
+            HMENU hSubSamples = CreatePopupMenu();
+            AppendMenuA(hSubSamples, MF_STRING, 1040, "🚀 Cyberpunk Manifesto");
+            AppendMenuA(hSubSamples, MF_STRING, 1041, "⏳ The Time Machine (Excerpt)");
+            AppendMenuA(hSubSamples, MF_STRING, 1042, "💻 KiloOS Architecture Guide");
+            AppendMenuA(hSubFile, MF_POPUP, (UINT_PTR)hSubSamples, "Load Sample Document");
+
+            AppendMenuA(hSubFile, MF_SEPARATOR, 0, NULL);
+            AppendMenuA(hSubFile, MF_STRING, 1000, "Clear Document\tCtrl+Del");
             AppendMenuA(hSubFile, MF_STRING, 1007, "Export Statistics...");
             AppendMenuA(hSubFile, MF_SEPARATOR, 0, NULL);
-            AppendMenuA(hSubFile, MF_STRING, 1002, "Exit");
+            AppendMenuA(hSubFile, MF_STRING, 1002, "Exit\tAlt+F4");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubFile, "File");
+
+            // Edit Menu
+            HMENU hSubEdit = CreatePopupMenu();
+            AppendMenuA(hSubEdit, MF_STRING, 1050, "Copy Selection\tCtrl+C");
+            AppendMenuA(hSubEdit, MF_STRING, 1051, "Copy All Text\tCtrl+Shift+C");
+            AppendMenuA(hSubEdit, MF_STRING, 1052, "Select All\tCtrl+A");
+            AppendMenuA(hSubEdit, MF_SEPARATOR, 0, NULL);
+            AppendMenuA(hSubEdit, MF_STRING, 1004, "Find Text...\tCtrl+F");
+            AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubEdit, "Edit");
 
             // Tabs Menu
             HMENU hSubTabs = CreatePopupMenu();
@@ -532,37 +702,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hSubTabs, MF_STRING, 1033, "Previous Tab\tCtrl+Shift+Tab");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubTabs, "Tabs");
 
-            // View Menu
-            HMENU hSubView = CreatePopupMenu();
-            AppendMenuA(hSubView, MF_STRING, 1003, "Reading Statistics Engine\tCtrl+S");
-            AppendMenuA(hSubView, MF_STRING, 1004, "Find Text...\tCtrl+F");
-            AppendMenuA(hSubView, MF_SEPARATOR, 0, NULL);
-            AppendMenuA(hSubView, MF_STRING, 1008, "Help Guide\tF1 / H");
-            AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubView, "View");
-
             // Bookmarks Menu
             HMENU hSubBM = CreatePopupMenu();
             AppendMenuA(hSubBM, MF_STRING, 1005, "Add Bookmark at Position\tCtrl+B");
-            AppendMenuA(hSubBM, MF_STRING, 1006, "Jump to Saved Bookmark");
+            AppendMenuA(hSubBM, MF_STRING, 1006, "Jump to Saved Bookmark\tCtrl+J");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubBM, "Bookmarks");
 
             // Theme Menu
             HMENU hSubTheme = CreatePopupMenu();
-            AppendMenuA(hSubTheme, MF_STRING, 1010, "☀️ Light Theme");
-            AppendMenuA(hSubTheme, MF_STRING, 1011, "🌙 Dark Theme");
-            AppendMenuA(hSubTheme, MF_STRING, 1012, "📜 Sepia Theme");
-            AppendMenuA(hSubTheme, MF_STRING, 1013, "⚡ High-Contrast Theme");
+            AppendMenuA(hSubTheme, MF_STRING, 1010, "☀️ Light Theme\tAlt+1");
+            AppendMenuA(hSubTheme, MF_STRING, 1011, "🌙 Dark Theme\tAlt+2");
+            AppendMenuA(hSubTheme, MF_STRING, 1012, "📜 Sepia Theme\tAlt+3");
+            AppendMenuA(hSubTheme, MF_STRING, 1013, "⚡ High-Contrast Theme\tAlt+4");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubTheme, "Themes");
 
             // Font Menu
             HMENU hSubFont = CreatePopupMenu();
             AppendMenuA(hSubFont, MF_STRING, 1020, "Font Size + (Ctrl++)");
             AppendMenuA(hSubFont, MF_STRING, 1021, "Font Size - (Ctrl+-)");
+            AppendMenuA(hSubFont, MF_STRING, 1025, "Reset Font Size (18pt)\tCtrl+0");
             AppendMenuA(hSubFont, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hSubFont, MF_STRING, 1022, "Georgia (Serif)");
             AppendMenuA(hSubFont, MF_STRING, 1023, "Segoe UI (Sans-Serif)");
             AppendMenuA(hSubFont, MF_STRING, 1024, "Consolas (Monospace)");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubFont, "Font");
+
+            // View Menu
+            HMENU hSubView = CreatePopupMenu();
+            AppendMenuA(hSubView, MF_STRING, 1003, "Reading Statistics Engine\tCtrl+S");
+            AppendMenuA(hSubView, MF_SEPARATOR, 0, NULL);
+            AppendMenuA(hSubView, MF_STRING, 1008, "Help Guide\tF1 / H");
+            AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubView, "View");
 
             SetMenu(hwnd, hMenu);
 
@@ -570,6 +740,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
             ReleaseDC(hwnd, hdc);
             int tabHeight = MulDiv(28, dpi, 96);
+            int statusHeight = MulDiv(22, dpi, 96);
 
             // Tab Control
             g_hTabCtrl = CreateWindowExA(0, WC_TABCONTROLA, "", 
@@ -580,10 +751,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Edit Control
             hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", 
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_NOHIDESEL | ES_WANTRETURN | ES_READONLY, 
-                0, tabHeight, 850, 550, hwnd, NULL, NULL, NULL);
+                0, tabHeight, 850, 520, hwnd, NULL, NULL, NULL);
 
             SendMessageA(hEdit, EM_SETLIMITTEXT, 0, 0);
             SendMessageA(hEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(16, 16));
+
+            // Status Bar
+            g_hStatus = CreateWindowExA(0, STATUSCLASSNAME, "", 
+                WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP, 
+                0, 0, 0, 0, hwnd, (HMENU)2002, GetModuleHandleA(NULL), NULL);
 
             UpdateFont(hwnd);
             SetTheme(hwnd, RGB(250, 250, 250), RGB(30, 30, 30));
@@ -599,12 +775,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 "  * Press Ctrl+T to open a new tab session.\r\n"
                 "  * Press Ctrl+1 through Ctrl+9 to quickly switch tabs.\r\n"
                 "  * Press Ctrl+A to select all text in the active document.\r\n"
+                "  * Press Ctrl+C to copy selected text to clipboard.\r\n"
+                "  * Press Ctrl+Shift+C to copy entire document to clipboard.\r\n"
                 "  * Press Ctrl+F to open the Windows Find Text dialog.\r\n"
                 "  * Press Ctrl+B to save your reading bookmark.\r\n"
+                "  * Press Ctrl+J to jump directly to saved bookmark.\r\n"
                 "  * Press Ctrl+S to view real-time reading stats and estimated time.\r\n"
+                "  * Use File -> Load Sample Document to explore classic texts.\r\n"
                 "  * Drag and drop any text/document files directly into this window.\r\n"
-                "  * Use Themes & Font menus to customize your reading environment.\r\n\r\n"
+                "  * Use Themes (Alt+1..4) & Font menus to customize your reader.\r\n\r\n"
                 "Happy Reading!");
+
+            ShowNativeStatus("Welcome to KRead! Press F1 for Help.");
             break;
         }
         case WM_DROPFILES: {
@@ -626,6 +808,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(hdc, &rc, hBrush);
             return 1;
         }
+        case WM_GETMINMAXINFO: {
+            LPMINMAXINFO lpMMI = (LPMINMAXINFO)lParam;
+            lpMMI->ptMinTrackSize.x = 480;
+            lpMMI->ptMinTrackSize.y = 350;
+            return 0;
+        }
         case WM_SIZE: {
             int w = LOWORD(lParam);
             int h = HIWORD(lParam);
@@ -633,12 +821,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
             ReleaseDC(hwnd, hdc);
             int tabHeight = MulDiv(28, dpi, 96);
+            int statusHeight = MulDiv(22, dpi, 96);
 
+            if (g_hStatus) {
+                SendMessageA(g_hStatus, WM_SIZE, 0, 0);
+            }
             if (g_hTabCtrl) {
                 MoveWindow(g_hTabCtrl, 0, 0, w, tabHeight, TRUE);
             }
             if (hEdit) {
-                MoveWindow(hEdit, 0, tabHeight, w, max(0, h - tabHeight), TRUE);
+                int editH = max(0, h - tabHeight - statusHeight);
+                MoveWindow(hEdit, 0, tabHeight, w, editH, TRUE);
+            }
+            UpdateStatusBar();
+            break;
+        }
+        case WM_TIMER: {
+            if (wParam == TIMER_STATUS_RESET) {
+                KillTimer(hwnd, TIMER_STATUS_RESET);
+                g_bToastActive = FALSE;
+                g_szStatusToast[0] = 0;
+                UpdateStatusBar();
+                return 0;
             }
             break;
         }
@@ -657,6 +861,68 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (id == 1001) OpenFileAndLoad(hwnd, FALSE);
             if (id == 1009) OpenFileAndLoad(hwnd, TRUE);
             if (id == 1002) PostQuitMessage(0);
+
+            // Samples
+            if (id == 1040) {
+                AddNewTab(hwnd, g_SampleCyberTitle, g_SampleCyberText);
+                ShowNativeStatus("Loaded Cyberpunk Manifesto sample!");
+            }
+            if (id == 1041) {
+                AddNewTab(hwnd, g_SampleTimeTitle, g_SampleTimeText);
+                ShowNativeStatus("Loaded The Time Machine sample!");
+            }
+            if (id == 1042) {
+                AddNewTab(hwnd, g_SampleKiloTitle, g_SampleKiloText);
+                ShowNativeStatus("Loaded KiloOS Architecture Guide sample!");
+            }
+
+            // Clear
+            if (id == 1000) {
+                SetWindowTextA(hEdit, "");
+                ShowNativeStatus("Document cleared [Ctrl+Del]");
+                UpdateStatusBar();
+            }
+
+            // Edit & Clipboard
+            if (id == 1050) {
+                DWORD start = 0, end = 0;
+                SendMessageA(hEdit, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
+                if (end > start) {
+                    int len = (int)(end - start);
+                    int totalLen = GetWindowTextLengthA(hEdit);
+                    char* fullText = (char*)VirtualAlloc(NULL, totalLen + 1, MEM_COMMIT, PAGE_READWRITE);
+                    if (fullText) {
+                        GetWindowTextA(hEdit, fullText, totalLen + 1);
+                        char* selText = (char*)VirtualAlloc(NULL, len + 1, MEM_COMMIT, PAGE_READWRITE);
+                        if (selText) {
+                            for (int i = 0; i < len; i++) selText[i] = fullText[start + i];
+                            selText[len] = 0;
+                            CopyTextToClipboard(hwnd, selText, len);
+                            VirtualFree(selText, 0, MEM_RELEASE);
+                        }
+                        VirtualFree(fullText, 0, MEM_RELEASE);
+                    }
+                } else {
+                    ShowNativeStatus("No text selected to copy.");
+                }
+            }
+            if (id == 1051) {
+                int totalLen = GetWindowTextLengthA(hEdit);
+                if (totalLen > 0) {
+                    char* fullText = (char*)VirtualAlloc(NULL, totalLen + 1, MEM_COMMIT, PAGE_READWRITE);
+                    if (fullText) {
+                        GetWindowTextA(hEdit, fullText, totalLen + 1);
+                        CopyTextToClipboard(hwnd, fullText, totalLen);
+                        VirtualFree(fullText, 0, MEM_RELEASE);
+                    }
+                } else {
+                    ShowNativeStatus("Document is empty.");
+                }
+            }
+            if (id == 1052) {
+                SendMessageA(hEdit, EM_SETSEL, 0, -1);
+                ShowNativeStatus("Selected all document text [Ctrl+A]");
+            }
 
             // Tab Commands
             if (id == 1030) AddNewTab(hwnd, "New Tab", "");
@@ -697,7 +963,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         VirtualFree(text, 0, MEM_RELEASE);
                     }
                 } else {
-                    MessageBoxA(hwnd, "Current tab document is empty.", "KRead Statistics Engine", MB_OK | MB_ICONINFORMATION);
+                    ShowNativeStatus("Current tab document is empty.");
                 }
             }
 
@@ -716,26 +982,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DWORD start = 0, end = 0;
                 SendMessageA(hEdit, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
                 g_Tabs[g_ActiveTab].dwBookmark = start;
-                MessageBoxA(hwnd, "Bookmark saved for current tab at text position!", "KRead Bookmarks", MB_OK | MB_ICONINFORMATION);
+                ShowNativeStatus("Bookmark saved for active tab! [Ctrl+B]");
             }
             if (id == 1006) {
                 DWORD bm = g_Tabs[g_ActiveTab].dwBookmark;
                 SendMessageA(hEdit, EM_SETSEL, bm, bm);
                 SendMessageA(hEdit, EM_SCROLLCARET, 0, 0);
+                ShowNativeStatus("Jumped to saved bookmark position! [Ctrl+J]");
             }
 
             // Themes
-            if (id == 1010) SetTheme(hwnd, RGB(250, 250, 250), RGB(30, 30, 30));     // Light
-            if (id == 1011) SetTheme(hwnd, RGB(24, 24, 28), RGB(228, 228, 231));      // Dark
-            if (id == 1012) SetTheme(hwnd, RGB(251, 240, 217), RGB(67, 52, 34));      // Sepia
-            if (id == 1013) SetTheme(hwnd, RGB(0, 0, 0), RGB(0, 255, 102));          // Contrast
+            if (id == 1010) { SetTheme(hwnd, RGB(250, 250, 250), RGB(30, 30, 30)); ShowNativeStatus("Theme: Light [Alt+1]"); }
+            if (id == 1011) { SetTheme(hwnd, RGB(24, 24, 28), RGB(228, 228, 231)); ShowNativeStatus("Theme: Dark [Alt+2]"); }
+            if (id == 1012) { SetTheme(hwnd, RGB(251, 240, 217), RGB(67, 52, 34)); ShowNativeStatus("Theme: Sepia [Alt+3]"); }
+            if (id == 1013) { SetTheme(hwnd, RGB(0, 0, 0), RGB(0, 255, 102)); ShowNativeStatus("Theme: High-Contrast [Alt+4]"); }
 
             // Fonts
-            if (id == 1020) { currentFontSize = min(currentFontSize + 2, 42); UpdateFont(hwnd); }
-            if (id == 1021) { currentFontSize = max(currentFontSize - 2, 12); UpdateFont(hwnd); }
-            if (id == 1022) { lstrcpyA(currentFontFace, "Georgia"); UpdateFont(hwnd); }
-            if (id == 1023) { lstrcpyA(currentFontFace, "Segoe UI"); UpdateFont(hwnd); }
-            if (id == 1024) { lstrcpyA(currentFontFace, "Consolas"); UpdateFont(hwnd); }
+            if (id == 1020) { currentFontSize = min(currentFontSize + 2, 42); UpdateFont(hwnd); ShowNativeStatus("Font size increased"); UpdateStatusBar(); }
+            if (id == 1021) { currentFontSize = max(currentFontSize - 2, 12); UpdateFont(hwnd); ShowNativeStatus("Font size decreased"); UpdateStatusBar(); }
+            if (id == 1025) { currentFontSize = 18; UpdateFont(hwnd); ShowNativeStatus("Font size reset to 18pt [Ctrl+0]"); UpdateStatusBar(); }
+            if (id == 1022) { lstrcpyA(currentFontFace, "Georgia"); UpdateFont(hwnd); ShowNativeStatus("Font: Georgia (Serif)"); UpdateStatusBar(); }
+            if (id == 1023) { lstrcpyA(currentFontFace, "Segoe UI"); UpdateFont(hwnd); ShowNativeStatus("Font: Segoe UI (Sans)"); UpdateStatusBar(); }
+            if (id == 1024) { lstrcpyA(currentFontFace, "Consolas"); UpdateFont(hwnd); ShowNativeStatus("Font: Consolas (Monospace)"); UpdateStatusBar(); }
+
+            if (HIWORD(wParam) == EN_CHANGE) {
+                UpdateStatusBar();
+            }
 
             break;
         }
@@ -795,9 +1067,20 @@ void __stdcall MainEntry() {
         if (msg.message == WM_KEYDOWN) {
             BOOL ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
             BOOL shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+            BOOL alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
 
             if (ctrl && (msg.wParam == 'A' || msg.wParam == 'a')) {
                 SendMessageA(hEdit, EM_SETSEL, 0, -1);
+                continue;
+            }
+            if (ctrl && (msg.wParam == 'C' || msg.wParam == 'c')) {
+                if (shift) {
+                    SendMessageA(hwnd, WM_COMMAND, 1051, 0); // Copy All
+                    continue;
+                }
+            }
+            if (ctrl && msg.wParam == VK_DELETE) {
+                SendMessageA(hwnd, WM_COMMAND, 1000, 0); // Clear
                 continue;
             }
             if (ctrl && (msg.wParam == 'T' || msg.wParam == 't')) {
@@ -824,6 +1107,10 @@ void __stdcall MainEntry() {
                 SendMessageA(hwnd, WM_COMMAND, 1005, 0);
                 continue;
             }
+            if (ctrl && (msg.wParam == 'J' || msg.wParam == 'j')) {
+                SendMessageA(hwnd, WM_COMMAND, 1006, 0);
+                continue;
+            }
             if (ctrl && (msg.wParam == 'S' || msg.wParam == 's')) {
                 SendMessageA(hwnd, WM_COMMAND, 1003, 0);
                 continue;
@@ -834,6 +1121,14 @@ void __stdcall MainEntry() {
             }
             if (ctrl && (msg.wParam == VK_OEM_MINUS || msg.wParam == VK_SUBTRACT)) {
                 SendMessageA(hwnd, WM_COMMAND, 1021, 0);
+                continue;
+            }
+            if (ctrl && (msg.wParam == '0' || msg.wParam == VK_NUMPAD0)) {
+                SendMessageA(hwnd, WM_COMMAND, 1025, 0);
+                continue;
+            }
+            if (alt && msg.wParam >= '1' && msg.wParam <= '4') {
+                SendMessageA(hwnd, WM_COMMAND, 1010 + (msg.wParam - '1'), 0);
                 continue;
             }
             if (ctrl && msg.wParam >= '1' && msg.wParam <= '9') {
@@ -861,3 +1156,4 @@ void __stdcall MainEntry() {
     }
     ExitProcess(0);
 }
+

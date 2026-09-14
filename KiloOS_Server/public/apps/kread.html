@@ -286,6 +286,51 @@
     white-space: nowrap;
   }
 
+  /* Quick Starter Presets Bar */
+  .quick-starter-bar {
+    background: var(--bg-toolbar);
+    border-bottom: 1px solid var(--border-color);
+    padding: 5px 12px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-family: system-ui, -apple-system, sans-serif;
+    user-select: none;
+    z-index: 5;
+  }
+  .quick-starter-lbl {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.75;
+    margin-right: 4px;
+  }
+  .btn-sm {
+    padding: 3px 8px;
+    font-size: 11px;
+    border-radius: 5px;
+  }
+  .toast-close {
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    opacity: 0.7;
+    margin-left: 8px;
+    padding: 0 4px;
+    line-height: 1;
+    border-radius: 3px;
+    transition: opacity 0.15s, background 0.15s;
+  }
+  .toast-close:hover {
+    opacity: 1 !important;
+    background: rgba(255, 255, 255, 0.2);
+  }
+
   /* Search Panel */
   .search-panel {
     background: var(--bg-toolbar);
@@ -358,6 +403,33 @@
     font-weight: bold;
     outline: 2px solid var(--mark-active);
   }
+
+  mark.user-highlight {
+    border-radius: 3px;
+    padding: 1px 2px;
+    cursor: pointer;
+    transition: filter 0.15s, outline 0.15s;
+  }
+  mark.user-highlight:hover {
+    filter: brightness(0.92);
+  }
+  mark.user-highlight.hl-yellow { background-color: #fef08a; color: #713f12; }
+  mark.user-highlight.hl-green  { background-color: #bbf7d0; color: #14532d; }
+  mark.user-highlight.hl-blue   { background-color: #bfdbfe; color: #1e3a8a; }
+  mark.user-highlight.hl-pink   { background-color: #fbcfe8; color: #831843; }
+  body.theme-dark mark.user-highlight.hl-yellow { background-color: #854d0e; color: #fef08a; }
+  body.theme-dark mark.user-highlight.hl-green  { background-color: #166534; color: #bbf7d0; }
+  body.theme-dark mark.user-highlight.hl-blue   { background-color: #1e40af; color: #bfdbfe; }
+  body.theme-dark mark.user-highlight.hl-pink   { background-color: #9d174d; color: #fbcfe8; }
+  body.theme-sepia mark.user-highlight.hl-yellow { background-color: #fcd34d; color: #78350f; }
+  body.theme-sepia mark.user-highlight.hl-green  { background-color: #a7f3d0; color: #064e3b; }
+  body.theme-sepia mark.user-highlight.hl-blue   { background-color: #bae6fd; color: #0c4a6e; }
+  body.theme-sepia mark.user-highlight.hl-pink   { background-color: #fbcfe8; color: #701a75; }
+  body.theme-contrast mark.user-highlight { outline: 1px solid #00ff66; }
+  body.theme-contrast mark.user-highlight.hl-yellow { background-color: #ffff00; color: #000; }
+  body.theme-contrast mark.user-highlight.hl-green  { background-color: #00ff66; color: #000; }
+  body.theme-contrast mark.user-highlight.hl-blue   { background-color: #00ffff; color: #000; }
+  body.theme-contrast mark.user-highlight.hl-pink   { background-color: #ff00ff; color: #000; }
 
   .empty-state {
     flex: 1;
@@ -616,15 +688,15 @@
         📁 Open <kbd>Ctrl+O</kbd>
         <input type="file" id="fileInp" class="file-input" accept=".txt,.md,.csv,.log,.json" multiple>
       </label>
-      <button class="btn" id="btnClear" title="Clear Active Tab Document">🗑️ Clear</button>
+      <button class="btn" id="btnClear" title="Clear Active Tab Document (Del)">🗑️ Clear <kbd>Del</kbd></button>
       <button class="btn" id="btnToggleSearch" title="Find Text (Ctrl+F)">🔍 Search <kbd>Ctrl+F</kbd></button>
       <button class="btn" id="btnBookmark" title="Add Bookmark at Current Position (Ctrl+B)">🔖 Bookmark <kbd>Ctrl+B</kbd></button>
-      <button class="btn" id="btnToggleBookmarks" title="Saved Bookmarks">📚 Bookmarks</button>
-      <button class="btn" id="btnToggleNotes" title="Highlights & Annotations">📝 Notes</button>
+      <button class="btn" id="btnToggleBookmarks" title="Saved Bookmarks (B)">📚 Bookmarks <kbd>B</kbd></button>
+      <button class="btn" id="btnToggleNotes" title="Highlights & Annotations (N)">📝 Notes <kbd>N</kbd></button>
     </div>
 
     <div class="toolbar-group">
-      <select class="btn" id="selTheme" title="Theme Selector">
+      <select class="btn" id="selTheme" title="Theme Selector (T to cycle)">
         <option value="theme-light">☀️ Light</option>
         <option value="theme-dark">🌙 Dark</option>
         <option value="theme-sepia">📜 Sepia</option>
@@ -637,8 +709,8 @@
         <option value="'Consolas', monospace">Monospace (Consolas)</option>
       </select>
 
-      <button class="btn" id="btnFontDown" title="Decrease Font Size (-)">A-</button>
-      <button class="btn" id="btnFontUp" title="Increase Font Size (+)">A+</button>
+      <button class="btn" id="btnFontDown" title="Decrease Font Size (-)">A- <kbd>-</kbd></button>
+      <button class="btn" id="btnFontUp" title="Increase Font Size (+)">A+ <kbd>+</kbd></button>
 
       <select class="btn" id="selLineHeight" title="Line Spacing">
         <option value="1.4">Line 1.4</option>
@@ -647,15 +719,27 @@
         <option value="2.0">Line 2.0</option>
       </select>
 
-      <button class="btn" id="btnStats" title="Reading Statistics Engine (Ctrl+S)">📊 Stats</button>
+      <button class="btn" id="btnStats" title="Reading Statistics Engine (Ctrl+S)">📊 Stats <kbd>Ctrl+S</kbd></button>
       <button class="btn" id="btnHelp" title="Help Guide (Press F1 / H)">❓ Help <kbd>F1</kbd></button>
     </div>
   </div>
 
   <!-- Multi-Tab Reading Bar -->
-  <div class="tabs-bar" id="tabsBar">
+  <div class="tabs-bar" id="tabsBar" role="tablist" aria-label="Document Tabs">
     <div class="tabs-list" id="tabsList"></div>
     <button class="btn btn-new-tab" id="btnNewTab" title="New Reading Tab (Ctrl+T)">+ Tab <kbd>Ctrl+T</kbd></button>
+  </div>
+
+  <!-- Quick Starter Presets Bar -->
+  <div class="quick-starter-bar" id="quickStarterBar">
+    <span class="quick-starter-lbl">Quick Load:</span>
+    <button class="btn btn-sm" id="qsCyber" title="Load Cyberpunk Manifesto">🚀 Cyberpunk</button>
+    <button class="btn btn-sm" id="qsTime" title="Load The Time Machine">⏳ Time Machine</button>
+    <button class="btn btn-sm" id="qsKilo" title="Load KiloOS System Guide">💻 KiloOS Guide</button>
+    <button class="btn btn-sm" id="qsAlice" title="Load Alice in Wonderland Excerpt">✨ Alice</button>
+    <span style="flex: 1;"></span>
+    <button class="btn btn-sm" id="btnQuickCopy" title="Copy Active Document Text (Ctrl+Shift+C)">📋 Copy Doc <kbd>^C</kbd></button>
+    <button class="btn btn-sm" id="btnQuickTheme" title="Cycle Reading Theme (T)">🎨 Theme <kbd>T</kbd></button>
   </div>
 
   <!-- Search Bar Panel -->
@@ -673,12 +757,13 @@
     <div class="empty-state" id="emptyState">
       <div class="empty-icon">📖</div>
       <h2>No Document Loaded</h2>
-      <p>Click <strong>Open (Ctrl+O)</strong> or drag & drop a text file here to start reading.</p>
+      <p>Click <strong>Open (Ctrl+O)</strong>, choose a preset below, or drag & drop a text file here to start reading.</p>
       
       <div class="sample-docs-grid">
         <button class="btn sample-doc-btn" id="btnSampleCyber">🚀 Cyberpunk Manifesto</button>
         <button class="btn sample-doc-btn" id="btnSampleTime">⏳ The Time Machine</button>
         <button class="btn sample-doc-btn" id="btnSampleKilo">💻 KiloOS System Guide</button>
+        <button class="btn sample-doc-btn" id="btnSampleAlice">✨ Alice in Wonderland</button>
       </div>
 
       <p style="font-size: 13px; opacity: 0.7; margin-top: 12px;">(Press <strong>F1</strong> or <strong>H</strong> anytime for shortcuts & help)</p>
@@ -697,10 +782,10 @@
   </div>
 
   <!-- Bookmarks Drawer -->
-  <div class="drawer" id="bookmarksDrawer">
+  <div class="drawer" id="bookmarksDrawer" role="dialog" aria-label="Bookmarks Drawer" aria-modal="false">
     <div class="drawer-header">
       <span class="drawer-title">🔖 Bookmarks</span>
-      <button class="btn" id="btnCloseBookmarks">✕</button>
+      <button class="btn" id="btnCloseBookmarks" aria-label="Close Bookmarks">✕</button>
     </div>
     <div class="drawer-body" id="bookmarksList">
       <p style="opacity: 0.6; font-size: 13px;">No bookmarks saved yet in this tab.</p>
@@ -708,25 +793,25 @@
   </div>
 
   <!-- Notes & Highlights Drawer -->
-  <div class="drawer" id="notesDrawer">
+  <div class="drawer" id="notesDrawer" role="dialog" aria-label="Highlights and Notes Drawer" aria-modal="false">
     <div class="drawer-header">
       <span class="drawer-title">📝 Highlights & Notes</span>
-      <button class="btn" id="btnCloseNotes">✕</button>
+      <button class="btn" id="btnCloseNotes" aria-label="Close Notes">✕</button>
     </div>
     <div class="drawer-body" id="notesList">
       <p style="opacity: 0.6; font-size: 13px;">No notes or highlights added.</p>
     </div>
     <div style="padding: 12px; border-top: 1px solid var(--border-color); display: flex; gap: 6px;">
-      <button class="btn" id="btnExportJSON" style="flex: 1; font-size: 12px;">📥 JSON</button>
-      <button class="btn" id="btnExportMD" style="flex: 1; font-size: 12px;">📝 Markdown</button>
-      <button class="btn" id="btnExportTXT" style="flex: 1; font-size: 12px;">📄 Text</button>
+      <button class="btn" id="btnExportJSON" style="flex: 1; font-size: 12px;" title="Export highlights and bookmarks to JSON">📥 JSON</button>
+      <button class="btn" id="btnExportMD" style="flex: 1; font-size: 12px;" title="Export highlights and bookmarks to Markdown">📝 Markdown</button>
+      <button class="btn" id="btnExportTXT" style="flex: 1; font-size: 12px;" title="Export highlights and bookmarks to Plain Text">📄 Text</button>
     </div>
   </div>
 
   <!-- Help Modal -->
-  <div class="modal-overlay" id="helpModal">
+  <div class="modal-overlay" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
     <div class="modal-content">
-      <div class="modal-title">❓ KRead User & Keyboard Guide</div>
+      <div class="modal-title" id="helpModalTitle">❓ KRead User & Keyboard Guide</div>
       <div style="font-size: 13px; line-height: 1.6; opacity: 0.9;">
         <p><strong>Keyboard Shortcuts:</strong></p>
         <ul style="margin-left: 20px; margin-bottom: 14px;">
@@ -734,19 +819,29 @@
           <li><kbd>Ctrl</kbd> + <kbd>O</kbd> - Open Document(s)</li>
           <li><kbd>Ctrl</kbd> + <kbd>T</kbd> - Open a New Tab</li>
           <li><kbd>Ctrl</kbd> + <kbd>W</kbd> - Close Active Tab</li>
-          <li><kbd>Ctrl</kbd> + <kbd>Tab</kbd> / <kbd>Ctrl+Shift+Tab</kbd> - Next / Previous Tab</li>
+          <li><kbd>Ctrl</kbd> + <kbd>Tab</kbd> / <kbd>Ctrl+Shift+Tab</kbd> or <kbd>[</kbd> / <kbd>]</kbd> - Next / Previous Tab</li>
           <li><kbd>Ctrl</kbd> + <kbd>1-9</kbd> - Switch to Tab 1 through 9</li>
+          <li><kbd>F2</kbd> - Rename Active Tab</li>
           <li><kbd>Ctrl</kbd> + <kbd>F</kbd> - Find Text in Document</li>
           <li><kbd>Ctrl</kbd> + <kbd>B</kbd> - Quick Add Bookmark</li>
+          <li><kbd>B</kbd> / <kbd>N</kbd> - Toggle Bookmarks / Notes Drawer</li>
+          <li><kbd>T</kbd> - Cycle Reading Theme (Light/Dark/Sepia/Contrast)</li>
+          <li><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd> - Copy Entire Document Text</li>
+          <li><kbd>Del</kbd> - Clear Active Document</li>
+          <li><kbd>Space</kbd> / <kbd>Shift+Space</kbd> - Page Scroll Down / Up</li>
+          <li><kbd>J</kbd> / <kbd>K</kbd> or <kbd>↓</kbd> / <kbd>↑</kbd> - Line Scroll</li>
+          <li><kbd>Home</kbd> / <kbd>End</kbd> - Jump to Document Start / End</li>
           <li><kbd>Ctrl</kbd> + <kbd>S</kbd> - Open Reading Statistics</li>
-          <li><kbd>+</kbd> / <kbd>-</kbd> - Zoom Font Size in/out</li>
+          <li><kbd>+</kbd> / <kbd>-</kbd> - Zoom Font Size in / out</li>
+          <li><kbd>0</kbd> - Reset Font Size to Default (18px)</li>
           <li><kbd>Esc</kbd> - Close Panels, Drawers, & Modals</li>
         </ul>
         <p><strong>Features:</strong></p>
         <ul style="margin-left: 20px;">
+          <li><strong>Quick Load Presets:</strong> Instant 1-click loading for Cyberpunk, Time Machine, KiloOS, and Alice in Wonderland.</li>
           <li><strong>Multi-Tab Sessions:</strong> Open multiple documents with preserved scroll, notes, and stats.</li>
-          <li><strong>Double-click Tab:</strong> Rename any tab with custom title.</li>
-          <li><strong>Annotation & Notes:</strong> Select text to highlight in 4 colors or attach notes.</li>
+          <li><strong>Double-click or F2 on Tab:</strong> Rename any tab with custom title.</li>
+          <li><strong>Annotation & Notes:</strong> Select text to highlight in 4 colors or attach notes; click in text to jump to note.</li>
           <li><strong>Reading Stats Engine:</strong> Real-time word count, line count, and WPM reading estimates.</li>
           <li><strong>Themes & Fonts:</strong> High-Contrast, Sepia, Dark, and Light themes with Serif/Sans/Mono typography.</li>
         </ul>
@@ -758,9 +853,9 @@
   </div>
 
   <!-- Reading Statistics Modal -->
-  <div class="modal-overlay" id="statsModal">
+  <div class="modal-overlay" id="statsModal" role="dialog" aria-modal="true" aria-labelledby="statsModalTitle">
     <div class="modal-content">
-      <div class="modal-title">📊 Reading Statistics Engine</div>
+      <div class="modal-title" id="statsModalTitle">📊 Reading Statistics Engine</div>
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-val" id="statWords">0</div>
@@ -794,9 +889,9 @@
   </div>
 
   <!-- Custom Rename Tab Modal -->
-  <div class="modal-overlay" id="renameModal">
+  <div class="modal-overlay" id="renameModal" role="dialog" aria-modal="true" aria-labelledby="renameModalTitle">
     <div class="modal-content" style="max-width: 400px;">
-      <div class="modal-title">🏷️ Rename Tab</div>
+      <div class="modal-title" id="renameModalTitle">🏷️ Rename Tab</div>
       <input type="text" class="modal-input" id="renameInput" placeholder="Tab title...">
       <div class="modal-actions">
         <button class="btn" id="btnCancelRename">Cancel</button>
@@ -806,9 +901,9 @@
   </div>
 
   <!-- Custom Add Note Modal -->
-  <div class="modal-overlay" id="noteModal">
+  <div class="modal-overlay" id="noteModal" role="dialog" aria-modal="true" aria-labelledby="noteModalTitle">
     <div class="modal-content" style="max-width: 440px;">
-      <div class="modal-title">📝 Add Annotation Note</div>
+      <div class="modal-title" id="noteModalTitle">📝 Add Annotation Note</div>
       <p id="noteSelectedTextPreview" style="font-size: 12px; font-style: italic; opacity: 0.8; border-left: 3px solid var(--accent); padding-left: 8px; max-height: 60px; overflow: hidden; text-overflow: ellipsis;"></p>
       <textarea class="modal-textarea" id="noteInput" placeholder="Write your thoughts or annotation here..."></textarea>
       <div class="modal-actions">
@@ -819,7 +914,7 @@
   </div>
 
   <!-- Custom Confirmation Modal -->
-  <div class="modal-overlay" id="confirmModal">
+  <div class="modal-overlay" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
     <div class="modal-content" style="max-width: 400px;">
       <div class="modal-title" id="confirmModalTitle">⚠️ Confirm Action</div>
       <p id="confirmModalMsg" style="font-size: 13px; opacity: 0.9; margin-top: 6px;"></p>
@@ -920,10 +1015,38 @@
     const btnAddNote = document.getElementById('btnAddNote');
     const toastContainer = document.getElementById('toastContainer');
 
-    // Samples
+    // Samples & Quick Starter Bar DOM elements
     const btnSampleCyber = document.getElementById('btnSampleCyber');
     const btnSampleTime = document.getElementById('btnSampleTime');
     const btnSampleKilo = document.getElementById('btnSampleKilo');
+    const btnSampleAlice = document.getElementById('btnSampleAlice');
+
+    const qsCyber = document.getElementById('qsCyber');
+    const qsTime = document.getElementById('qsTime');
+    const qsKilo = document.getElementById('qsKilo');
+    const qsAlice = document.getElementById('qsAlice');
+    const btnQuickCopy = document.getElementById('btnQuickCopy');
+    const btnQuickTheme = document.getElementById('btnQuickTheme');
+
+    // Built-in Sample Documents
+    const SAMPLES = {
+      cyber: {
+        title: 'Cyberpunk Manifesto.txt',
+        text: `THE CYBERPUNK MANIFESTO\n=======================\n\nWe are the electronic mind.\nWe create our own worlds with logic, silicon, and keystrokes.\n\nWe exist without skin color, without nationality, without religious bias.\nOur only crime is curiosity, exploration, and the relentless pursuit of knowledge.\n\nYou build borders, fences, and firewalls.\nWe explore every gap, understand the underlying protocol, and bridge minds across oceans.\n\nInformation wants to be free.\nSystems are meant to be understood.\nIdeas cannot be locked in vaults.\n\nWelcome to the new frontier.\nWelcome to the KiloOS cyberspace.`
+      },
+      time: {
+        title: 'The Time Machine Excerpt.txt',
+        text: `THE TIME MACHINE (Excerpt)\nby H.G. Wells\n==========================\n\nThe Time Traveller was expounding a recondite matter to us. His grey eyes shone and twinkled, and his usually pale face was flushed and animated. The fire burnt brightly, and the soft radiance of the incandescent lights in the lilies of silver caught the bubbles that flashed and passed in our glasses.\n\n"You must follow me carefully. I shall have to controvert one or two ideas that are almost universally accepted. The geometry, for instance, that you were taught in school is founded on a misconception."\n\n"Is not that rather a large thing to expect us to begin upon?" said Filby, an argumentative person with red hair.\n\n"I do not mean to ask you to accept anything without reasonable ground for it. You will soon admit as much as I need from you. You know of course that a mathematical line, a line of thickness nil, has no real existence. Nor has a mathematical plane. These things are mere abstractions."\n\n"That is all right," said the Psychologist.\n\n"Nor, having only length, breadth, and thickness, can a cube have a real existence."\n\n"There I object," said Filby. "Of course a solid body may exist. All real things—"\n\n"So most people think. But wait a moment. Can an instantaneous cube exist?"\n"Don't follow you," said Filby.\n\n"Can a cube that does not exist for any time at all, have a real existence?"`
+      },
+      kilo: {
+        title: 'KiloOS System Guide.md',
+        text: `# KiloOS System Architecture & Usage Guide\n\n## Overview\nKiloOS is a lightweight, high-performance web-native and retro-compatible desktop operating environment designed for absolute speed and modularity.\n\n## Core Principles\n- Sub-999KB size budget for every native and web application.\n- Multi-agent coordination with continuous integration.\n- Instant load times and zero unnecessary runtime bloat.\n\n## Built-in Productivity Apps\n1. **KRead**: Multi-tab document e-reader with reading statistics, bookmarks, and annotation export.\n2. **KPad**: Monospace text editor with syntax highlighting.\n3. **KJournal**: Encrypted daily diary and thought logger.\n4. **KBase**: Desktop database and record organizer.\n5. **KTerm**: Cybernetic console emulator.\n\n## Shortcuts Quick Reference\n- **Ctrl+T**: New Tab in supported apps\n- **Ctrl+W**: Close active Tab\n- **Ctrl+F**: In-document Search\n- **F1 / H**: Contextual Help`
+      },
+      alice: {
+        title: 'Alice in Wonderland Excerpt.txt',
+        text: `ALICE'S ADVENTURES IN WONDERLAND\nby Lewis Carroll\n================================\n\nAlice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, 'and what is the use of a book,' thought Alice 'without pictures or conversations?'\n\nSo she was considering in her own mind (as well as she could, for the hot day made her feel very sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.\n\nThere was nothing so VERY remarkable in that; nor did Alice think it so VERY much out of the way to hear the Rabbit say to itself, 'Oh dear! Oh dear! I shall be late!' (when she thought it over afterwards, it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural); but when the Rabbit actually TOOK A WATCH OUT OF ITS WAISTCOAT-POCKET, and looked at it, and then hurried on, Alice started to her feet, for it flashed across her mind that she had never before seen a rabbit with either a waistcoat-pocket, or a watch to take out of it, and burning with curiosity, she ran across the field after it...`
+      }
+    };
 
     // App Preferences
     let fontSize = 18;
@@ -949,12 +1072,23 @@
     let pendingNoteData = null;
     let pendingConfirmCallback = null;
 
-    // Non-blocking toast notification helper
+    // Non-blocking toast notification helper with click-to-dismiss [✕] button
     function showToast(msg, icon = 'ℹ️') {
       if (!toastContainer) return;
       const el = document.createElement('div');
       el.className = 'toast';
-      el.innerHTML = `<span>${icon}</span> <span>${escapeHtml(msg)}</span>`;
+      el.innerHTML = `
+        <span style="font-size: 14px;">${icon}</span>
+        <span style="flex: 1;">${escapeHtml(msg)}</span>
+        <button class="toast-close" title="Dismiss notification" aria-label="Dismiss notification">✕</button>
+      `;
+      const btnClose = el.querySelector('.toast-close');
+      if (btnClose) {
+        btnClose.onclick = (e) => {
+          e.stopPropagation();
+          if (el.parentNode) el.parentNode.removeChild(el);
+        };
+      }
       toastContainer.appendChild(el);
       setTimeout(() => {
         if (el.parentNode) el.parentNode.removeChild(el);
@@ -972,6 +1106,65 @@
       try { localStorage.setItem(k, typeof v === 'object' ? JSON.stringify(v) : v); } catch(e) {}
     }
 
+    function cycleTheme() {
+      const themes = ['theme-light', 'theme-dark', 'theme-sepia', 'theme-contrast'];
+      const curIdx = themes.indexOf(theme);
+      theme = themes[(curIdx + 1) % themes.length];
+      safeSetItem('kread_theme', theme);
+      applyStylesAndTheme();
+      const name = selTheme.options[selTheme.selectedIndex].text;
+      showToast(`Theme switched to ${name} [T]`, '🎨');
+    }
+
+    function copyActiveDocumentText() {
+      const tab = getActiveTab();
+      if (!tab || !tab.text) {
+        showToast('Document is empty, nothing to copy', '⚠️');
+        return;
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(tab.text).then(() => {
+          showToast(`Copied entire text of "${tab.title}" to clipboard!`, '📋');
+        }).catch(() => fallbackCopy(tab));
+      } else {
+        fallbackCopy(tab);
+      }
+    }
+
+    function fallbackCopy(tab) {
+      const ta = document.createElement('textarea');
+      ta.value = tab.text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast(`Copied text of "${tab.title}" to clipboard!`, '📋');
+      } catch(e) {
+        showToast('Clipboard copy not permitted by browser', '⚠️');
+      }
+      document.body.removeChild(ta);
+    }
+
+    function loadSampleDoc(sample) {
+      const currentTab = getActiveTab();
+      if (!currentTab.text || currentTab.title === 'Untitled') {
+        currentTab.title = sample.title;
+        currentTab.text = sample.text;
+        currentTab.scroll = 0;
+        currentTab.bookmarks = [];
+        currentTab.notes = [];
+        currentTab.timeSpent = 0;
+        saveTabsSession();
+        renderTabs();
+        renderContent();
+      } else {
+        createNewTab(sample.title, sample.text);
+      }
+      showToast(`Loaded sample "${sample.title}"`, '📖');
+    }
+
     // Load saved settings & tabs
     try {
       fontSize = parseInt(safeGetItem('kread_fontsize', '18'));
@@ -986,8 +1179,8 @@
       }
     } catch(e) { console.warn('Storage read error', e); }
 
-    // Migrate from legacy single-document state if tabs not initialized
-    if (!tabs || tabs.length === 0) {
+    // Migrate from legacy single-document state or auto-initialize with sample if empty
+    if (!tabs || tabs.length === 0 || (tabs.length === 1 && !tabs[0].text && tabs[0].title === 'Untitled')) {
       const legacyText = safeGetItem('kread_text', '');
       const legacyScroll = parseInt(safeGetItem('kread_scroll', '0'));
       const legacyBM = JSON.parse(safeGetItem('kread_bookmarks', '[]'));
@@ -996,8 +1189,8 @@
 
       tabs = [{
         id: 'tab_' + Date.now(),
-        title: legacyText ? 'Document 1' : 'Untitled',
-        text: legacyText,
+        title: legacyText ? 'Document 1' : SAMPLES.cyber.title,
+        text: legacyText || SAMPLES.cyber.text,
         scroll: legacyScroll,
         bookmarks: legacyBM,
         notes: legacyNotes,
@@ -1092,7 +1285,10 @@
         const item = document.createElement('div');
         item.className = 'tab-item' + (tab.id === activeTabId ? ' active' : '');
         item.setAttribute('data-id', tab.id);
-        item.title = `${tab.title} (Ctrl+${index + 1} | Double-click to rename)`;
+        item.setAttribute('role', 'tab');
+        item.setAttribute('tabindex', '0');
+        item.setAttribute('aria-selected', tab.id === activeTabId ? 'true' : 'false');
+        item.title = `${tab.title} (Ctrl+${index + 1} | Double-click or F2 to rename)`;
 
         const badge = document.createElement('span');
         badge.className = 'tab-badge';
@@ -1106,6 +1302,7 @@
         closeBtn.className = 'tab-close';
         closeBtn.innerHTML = '✕';
         closeBtn.title = 'Close Tab (Ctrl+W)';
+        closeBtn.setAttribute('aria-label', `Close ${tab.title}`);
         closeBtn.onclick = (e) => {
           e.stopPropagation();
           closeTab(tab.id);
@@ -1114,6 +1311,19 @@
         item.onclick = () => {
           if (tab.id !== activeTabId) {
             switchTab(tab.id);
+          }
+        };
+
+        item.onkeydown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (tab.id !== activeTabId) switchTab(tab.id);
+          } else if (e.key === 'Delete' || (e.ctrlKey && (e.key === 'w' || e.key === 'W'))) {
+            e.preventDefault();
+            closeTab(tab.id);
+          } else if (e.key === 'F2') {
+            e.preventDefault();
+            openRenameModal(tab.id, tab.title);
           }
         };
 
@@ -1246,8 +1456,69 @@
       if (!tab) return;
       if (searchMatches.length > 0) return;
       
-      let html = escapeHtml(tab.text);
+      const text = tab.text || '';
+      if (!tab.notes || tab.notes.length === 0) {
+        textContent.innerHTML = escapeHtml(text);
+        return;
+      }
+
+      // Collect intervals for valid highlighted note snippets
+      const intervals = [];
+      tab.notes.forEach(n => {
+        if (!n.text || n.text.length < 2) return;
+        let idx = text.indexOf(n.text);
+        let count = 0;
+        while (idx !== -1 && count < 8) {
+          intervals.push({ start: idx, end: idx + n.text.length, note: n });
+          count++;
+          idx = text.indexOf(n.text, idx + n.text.length);
+        }
+      });
+
+      // Sort intervals: start ascending, length descending
+      intervals.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
+
+      // Filter non-overlapping intervals
+      const nonOverlapping = [];
+      let lastEnd = 0;
+      for (const inv of intervals) {
+        if (inv.start >= lastEnd) {
+          nonOverlapping.push(inv);
+          lastEnd = inv.end;
+        }
+      }
+
+      let html = '';
+      let cursor = 0;
+      for (const inv of nonOverlapping) {
+        html += escapeHtml(text.substring(cursor, inv.start));
+        const snippet = escapeHtml(text.substring(inv.start, inv.end));
+        const colorClass = inv.note.color ? `hl-${inv.note.color}` : 'hl-yellow';
+        const titleText = inv.note.note ? `💬 ${escapeHtml(inv.note.note)}` : 'Highlighted text';
+        html += `<mark class="user-highlight ${colorClass}" data-note-id="${inv.note.id}" title="${titleText}">${snippet}</mark>`;
+        cursor = inv.end;
+      }
+      html += escapeHtml(text.substring(cursor));
       textContent.innerHTML = html;
+
+      // Click highlight to open note in notes drawer
+      textContent.querySelectorAll('mark.user-highlight').forEach(el => {
+        el.onclick = (e) => {
+          e.stopPropagation();
+          const noteId = parseInt(el.getAttribute('data-note-id'));
+          if (noteId) {
+            notesDrawer.classList.add('open');
+            btnToggleNotes.classList.add('active');
+            renderNotes();
+            const card = notesList.querySelector(`[data-card-note-id="${noteId}"]`);
+            if (card) {
+              card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              card.style.outline = '2px solid var(--accent)';
+              setTimeout(() => card.style.outline = '', 1500);
+            }
+          }
+        };
+      });
     }
 
     function escapeHtml(str) {
@@ -1358,24 +1629,32 @@
       files.forEach((file, index) => {
         const reader = new FileReader();
         reader.onload = (ev) => {
-          const content = ev.target.result;
-          const currentTab = getActiveTab();
-          
-          if (index === 0 && (!currentTab.text || currentTab.title === 'Untitled')) {
-            currentTab.title = file.name;
-            currentTab.text = content;
-            currentTab.scroll = 0;
-            currentTab.timeSpent = 0;
-            currentTab.bookmarks = [];
-            currentTab.notes = [];
-            clearSearchHighlights();
-            saveTabsSession();
-            renderTabs();
-            renderContent();
-            showToast(`Loaded "${file.name}"`, '📂');
-          } else {
-            createNewTab(file.name, content);
+          try {
+            const content = ev.target.result;
+            const currentTab = getActiveTab();
+            
+            if (index === 0 && (!currentTab.text || currentTab.title === 'Untitled')) {
+              currentTab.title = file.name;
+              currentTab.text = content;
+              currentTab.scroll = 0;
+              currentTab.timeSpent = 0;
+              currentTab.bookmarks = [];
+              currentTab.notes = [];
+              clearSearchHighlights();
+              saveTabsSession();
+              renderTabs();
+              renderContent();
+              showToast(`Loaded "${file.name}"`, '📂');
+            } else {
+              createNewTab(file.name, content);
+            }
+          } catch(err) {
+            console.error('Error processing file', err);
+            showToast(`Error reading "${file.name}"`, '⚠️');
           }
+        };
+        reader.onerror = () => {
+          showToast(`Failed to open "${file.name}"`, '⚠️');
         };
         reader.readAsText(file);
       });
@@ -1414,66 +1693,49 @@
         files.forEach((file, index) => {
           const reader = new FileReader();
           reader.onload = (ev) => {
-            const content = ev.target.result;
-            const currentTab = getActiveTab();
-            if (index === 0 && (!currentTab.text || currentTab.title === 'Untitled')) {
-              currentTab.title = file.name;
-              currentTab.text = content;
-              currentTab.scroll = 0;
-              currentTab.timeSpent = 0;
-              currentTab.bookmarks = [];
-              currentTab.notes = [];
-              clearSearchHighlights();
-              saveTabsSession();
-              renderTabs();
-              renderContent();
-              showToast(`Loaded "${file.name}"`, '📂');
-            } else {
-              createNewTab(file.name, content);
+            try {
+              const content = ev.target.result;
+              const currentTab = getActiveTab();
+              if (index === 0 && (!currentTab.text || currentTab.title === 'Untitled')) {
+                currentTab.title = file.name;
+                currentTab.text = content;
+                currentTab.scroll = 0;
+                currentTab.timeSpent = 0;
+                currentTab.bookmarks = [];
+                currentTab.notes = [];
+                clearSearchHighlights();
+                saveTabsSession();
+                renderTabs();
+                renderContent();
+                showToast(`Loaded "${file.name}"`, '📂');
+              } else {
+                createNewTab(file.name, content);
+              }
+            } catch(err) {
+              console.error('Error processing dropped file', err);
+              showToast(`Error reading "${file.name}"`, '⚠️');
             }
+          };
+          reader.onerror = () => {
+            showToast(`Failed to load "${file.name}"`, '⚠️');
           };
           reader.readAsText(file);
         });
       }
     });
 
-    // Sample Document Loaders
-    const SAMPLES = {
-      cyber: {
-        title: 'Cyberpunk Manifesto.txt',
-        text: `THE CYBERPUNK MANIFESTO\n=======================\n\nWe are the electronic mind.\nWe create our own worlds with logic, silicon, and keystrokes.\n\nWe exist without skin color, without nationality, without religious bias.\nOur only crime is curiosity, exploration, and the relentless pursuit of knowledge.\n\nYou build borders, fences, and firewalls.\nWe explore every gap, understand the underlying protocol, and bridge minds across oceans.\n\nInformation wants to be free.\nSystems are meant to be understood.\nIdeas cannot be locked in vaults.\n\nWelcome to the new frontier.\nWelcome to the KiloOS cyberspace.`
-      },
-      time: {
-        title: 'The Time Machine Excerpt.txt',
-        text: `THE TIME MACHINE (Excerpt)\nby H.G. Wells\n==========================\n\nThe Time Traveller was expounding a recondite matter to us. His grey eyes shone and twinkled, and his usually pale face was flushed and animated. The fire burnt brightly, and the soft radiance of the incandescent lights in the lilies of silver caught the bubbles that flashed and passed in our glasses.\n\n"You must follow me carefully. I shall have to controvert one or two ideas that are almost universally accepted. The geometry, for instance, that you were taught in school is founded on a misconception."\n\n"Is not that rather a large thing to expect us to begin upon?" said Filby, an argumentative person with red hair.\n\n"I do not mean to ask you to accept anything without reasonable ground for it. You will soon admit as much as I need from you. You know of course that a mathematical line, a line of thickness nil, has no real existence. Nor has a mathematical plane. These things are mere abstractions."\n\n"That is all right," said the Psychologist.\n\n"Nor, having only length, breadth, and thickness, can a cube have a real existence."\n\n"There I object," said Filby. "Of course a solid body may exist. All real things—"\n\n"So most people think. But wait a moment. Can an instantaneous cube exist?"\n"Don't follow you," said Filby.\n\n"Can a cube that does not exist for any time at all, have a real existence?"`
-      },
-      kilo: {
-        title: 'KiloOS System Guide.md',
-        text: `# KiloOS System Architecture & Usage Guide\n\n## Overview\nKiloOS is a lightweight, high-performance web-native and retro-compatible desktop operating environment designed for absolute speed and modularity.\n\n## Core Principles\n- Sub-999KB size budget for every native and web application.\n- Multi-agent coordination with continuous integration.\n- Instant load times and zero unnecessary runtime bloat.\n\n## Built-in Productivity Apps\n1. **KRead**: Multi-tab document e-reader with reading statistics, bookmarks, and annotation export.\n2. **KPad**: Monospace text editor with syntax highlighting.\n3. **KJournal**: Encrypted daily diary and thought logger.\n4. **KBase**: Desktop database and record organizer.\n5. **KTerm**: Cybernetic console emulator.\n\n## Shortcuts Quick Reference\n- **Ctrl+T**: New Tab in supported apps\n- **Ctrl+W**: Close active Tab\n- **Ctrl+F**: In-document Search\n- **F1 / H**: Contextual Help`
-      }
-    };
+    // Sample & Quick Starter Button Event Listeners
+    if (btnSampleCyber) btnSampleCyber.onclick = () => loadSampleDoc(SAMPLES.cyber);
+    if (btnSampleTime) btnSampleTime.onclick = () => loadSampleDoc(SAMPLES.time);
+    if (btnSampleKilo) btnSampleKilo.onclick = () => loadSampleDoc(SAMPLES.kilo);
+    if (btnSampleAlice) btnSampleAlice.onclick = () => loadSampleDoc(SAMPLES.alice);
 
-    btnSampleCyber.onclick = () => loadSampleDoc(SAMPLES.cyber);
-    btnSampleTime.onclick = () => loadSampleDoc(SAMPLES.time);
-    btnSampleKilo.onclick = () => loadSampleDoc(SAMPLES.kilo);
-
-    function loadSampleDoc(sample) {
-      const currentTab = getActiveTab();
-      if (!currentTab.text || currentTab.title === 'Untitled') {
-        currentTab.title = sample.title;
-        currentTab.text = sample.text;
-        currentTab.scroll = 0;
-        currentTab.bookmarks = [];
-        currentTab.notes = [];
-        currentTab.timeSpent = 0;
-        saveTabsSession();
-        renderTabs();
-        renderContent();
-      } else {
-        createNewTab(sample.title, sample.text);
-      }
-      showToast(`Loaded sample "${sample.title}"`, '📖');
-    }
+    if (qsCyber) qsCyber.onclick = () => loadSampleDoc(SAMPLES.cyber);
+    if (qsTime) qsTime.onclick = () => loadSampleDoc(SAMPLES.time);
+    if (qsKilo) qsKilo.onclick = () => loadSampleDoc(SAMPLES.kilo);
+    if (qsAlice) qsAlice.onclick = () => loadSampleDoc(SAMPLES.alice);
+    if (btnQuickCopy) btnQuickCopy.onclick = copyActiveDocumentText;
+    if (btnQuickTheme) btnQuickTheme.onclick = cycleTheme;
 
     // In-Document Real-Time Search & Highlight Navigation
     btnToggleSearch.onclick = toggleSearchPanel;
@@ -1583,7 +1845,9 @@
       const scrollable = readerContainer.scrollHeight - readerContainer.clientHeight;
       const pct = scrollable > 0 ? Math.round((readerContainer.scrollTop / scrollable) * 100) : 0;
       
-      const snippet = tab.text.substring(0, 120).replace(/\s+/g, ' ') + '...';
+      const charOffset = tab.text.length > 0 ? Math.floor((tab.text.length * pct) / 100) : 0;
+      const startOffset = Math.max(0, charOffset - 20);
+      const snippet = tab.text.substring(startOffset, startOffset + 120).replace(/\s+/g, ' ') + '...';
       const bm = {
         id: Date.now(),
         scroll: readerContainer.scrollTop,
@@ -1654,6 +1918,9 @@
 
     // Text Selection, Highlights & Notes
     readerContainer.onmouseup = handleTextSelection;
+    if (selectionPopover) {
+      selectionPopover.onmousedown = (e) => e.preventDefault();
+    }
 
     function handleTextSelection(e) {
       const sel = window.getSelection();
@@ -1671,8 +1938,16 @@
       const rect = range.getBoundingClientRect();
       const containerRect = readerContainer.getBoundingClientRect();
 
-      selectionPopover.style.top = (rect.top - containerRect.top - 44 + readerContainer.scrollTop) + 'px';
-      selectionPopover.style.left = (rect.left - containerRect.left + (rect.width / 2) - 80) + 'px';
+      let top = rect.top - containerRect.top - 44 + readerContainer.scrollTop;
+      if (top < readerContainer.scrollTop + 10) {
+        top = rect.bottom - containerRect.top + 10 + readerContainer.scrollTop;
+      }
+      let left = rect.left - containerRect.left + (rect.width / 2) - 80;
+      const maxLeft = containerRect.width - 230;
+      left = Math.max(10, Math.min(left, maxLeft));
+
+      selectionPopover.style.top = top + 'px';
+      selectionPopover.style.left = left + 'px';
       selectionPopover.style.display = 'flex';
     }
 
@@ -1713,6 +1988,7 @@
       if (!tab.notes) tab.notes = [];
       tab.notes.unshift(item);
       saveTabsSession();
+      renderTextWithHighlights();
       selectionPopover.style.display = 'none';
       if (sel) sel.removeAllRanges();
       renderNotes();
@@ -1730,7 +2006,7 @@
         return;
       }
       notesList.innerHTML = notes.map(n => `
-        <div class="note-card">
+        <div class="note-card" data-card-note-id="${n.id}">
           <div class="card-meta">
             <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${getHighlightColorCode(n.color)};"></span>
             <span>${n.date}</span>
@@ -1738,11 +2014,38 @@
           <div class="note-snippet">${escapeHtml(n.text)}</div>
           ${n.note ? `<div style="font-weight: 500; font-size: 12px; margin-top: 4px;">💬 ${escapeHtml(n.note)}</div>` : ''}
           <div class="card-actions">
+            <button class="btn" onclick="jumpToNote(${n.id})">Jump</button>
             <button class="btn" onclick="deleteNote(${n.id})">Delete</button>
           </div>
         </div>
       `).join('');
     }
+
+    window.jumpToNote = (id) => {
+      const tab = getActiveTab();
+      if (!tab || !tab.notes) return;
+      const n = tab.notes.find(x => x.id === id);
+      if (!n) return;
+
+      const markEl = textContent.querySelector(`mark.user-highlight[data-note-id="${id}"]`);
+      if (markEl) {
+        markEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        markEl.style.outline = '3px solid var(--mark-active)';
+        setTimeout(() => markEl.style.outline = '', 2000);
+        showToast('Jumped to highlight', '📍');
+      } else {
+        const idx = tab.text.indexOf(n.text);
+        if (idx !== -1) {
+          const scrollable = readerContainer.scrollHeight - readerContainer.clientHeight;
+          if (scrollable > 0 && tab.text.length > 0) {
+            readerContainer.scrollTop = Math.round((idx / tab.text.length) * scrollable);
+            showToast('Jumped to approximate location', '📍');
+          }
+        }
+      }
+      notesDrawer.classList.remove('open');
+      btnToggleNotes.classList.remove('active');
+    };
 
     function getHighlightColorCode(c) {
       switch(c) {
@@ -1758,6 +2061,7 @@
       if (!tab || !tab.notes) return;
       tab.notes = tab.notes.filter(n => n.id !== id);
       saveTabsSession();
+      renderTextWithHighlights();
       renderNotes();
       showToast('Annotation removed', '🗑️');
     };
@@ -1909,8 +2213,12 @@
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = filename;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(a.href);
+      setTimeout(() => {
+        URL.revokeObjectURL(a.href);
+        if (a.parentNode) a.parentNode.removeChild(a);
+      }, 1000);
     }
 
     // Modal Overlay Backdrop Dismissal
@@ -1935,6 +2243,56 @@
       }
       
       const ctrl = e.ctrlKey || e.metaKey;
+      const isModalOpen = helpModal.classList.contains('open') || 
+                          statsModal.classList.contains('open') || 
+                          renameModal.classList.contains('open') || 
+                          noteModal.classList.contains('open') || 
+                          confirmModal.classList.contains('open');
+
+      if (e.key === 'Escape') {
+        if (searchPanel.classList.contains('open')) toggleSearchPanel();
+        bookmarksDrawer.classList.remove('open');
+        notesDrawer.classList.remove('open');
+        statsModal.classList.remove('open');
+        if (helpModal) helpModal.classList.remove('open');
+        renameModal.classList.remove('open');
+        noteModal.classList.remove('open');
+        confirmModal.classList.remove('open');
+        selectionPopover.style.display = 'none';
+        btnToggleBookmarks.classList.remove('active');
+        btnToggleNotes.classList.remove('active');
+        return;
+      }
+
+      if (confirmModal.classList.contains('open')) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          btnOkConfirm.click();
+        }
+        return;
+      }
+
+      if (isModalOpen) return;
+
+      if (e.key === 'F2') {
+        e.preventDefault();
+        const tab = getActiveTab();
+        if (tab) openRenameModal(tab.id, tab.title);
+        return;
+      }
+
+      if (ctrl && (e.key === 'a' || e.key === 'A')) {
+        if (textContent && textContent.style.display !== 'none') {
+          const range = document.createRange();
+          range.selectNodeContents(textContent);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          e.preventDefault();
+        }
+        return;
+      }
+
       if (ctrl && (e.key === 't' || e.key === 'T')) {
         e.preventDefault();
         createNewTab();
@@ -1968,6 +2326,12 @@
           switchTab(tabs[num].id);
           showToast(`Switched to Tab ${num + 1}: "${tabs[num].title}"`, '📑');
         }
+      } else if (ctrl && (e.key === 'c' || e.key === 'C') && e.shiftKey) {
+        e.preventDefault();
+        copyActiveDocumentText();
+      } else if (e.key === 'Delete' && !ctrl && !e.altKey) {
+        e.preventDefault();
+        btnClear.click();
       } else if (ctrl && (e.key === 'f' || e.key === 'F')) {
         e.preventDefault();
         toggleSearchPanel();
@@ -1981,21 +2345,50 @@
           e.preventDefault();
           btnFontDown.click();
         }
+      } else if (e.key === '0' && !ctrl && !e.altKey) {
+        e.preventDefault();
+        fontSize = 18;
+        safeSetItem('kread_fontsize', fontSize);
+        applyStylesAndTheme();
+        showToast('Font size reset to default 18px [0]', '🔍');
+      } else if ((e.key === 't' || e.key === 'T') && !ctrl && !e.altKey) {
+        e.preventDefault();
+        cycleTheme();
+      } else if ((e.key === 'b' || e.key === 'B') && !ctrl && !e.altKey) {
+        e.preventDefault();
+        btnToggleBookmarks.click();
+      } else if ((e.key === 'n' || e.key === 'N') && !ctrl && !e.altKey) {
+        e.preventDefault();
+        btnToggleNotes.click();
+      } else if (e.key === '[' && !ctrl && !e.altKey) {
+        e.preventDefault();
+        if (tabs.length > 1) {
+          const curIdx = tabs.findIndex(t => t.id === activeTabId);
+          const prevIdx = (curIdx - 1 + tabs.length) % tabs.length;
+          switchTab(tabs[prevIdx].id);
+        }
+      } else if (e.key === ']' && !ctrl && !e.altKey) {
+        e.preventDefault();
+        if (tabs.length > 1) {
+          const curIdx = tabs.findIndex(t => t.id === activeTabId);
+          const nextIdx = (curIdx + 1) % tabs.length;
+          switchTab(tabs[nextIdx].id);
+        }
+      } else if (e.key === ' ' && !ctrl && !e.altKey) {
+        e.preventDefault();
+        const delta = readerContainer.clientHeight * 0.75;
+        readerContainer.scrollBy({ top: e.shiftKey ? -delta : delta, behavior: 'smooth' });
+      } else if ((e.key === 'j' || e.key === 'J' || e.key === 'ArrowDown') && !ctrl && !e.altKey) {
+        readerContainer.scrollBy({ top: 70, behavior: 'smooth' });
+      } else if ((e.key === 'k' || e.key === 'K' || e.key === 'ArrowUp') && !ctrl && !e.altKey) {
+        readerContainer.scrollBy({ top: -70, behavior: 'smooth' });
+      } else if (e.key === 'Home' && !ctrl && !e.altKey) {
+        readerContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (e.key === 'End' && !ctrl && !e.altKey) {
+        readerContainer.scrollTo({ top: readerContainer.scrollHeight, behavior: 'smooth' });
       } else if ((e.key.toLowerCase() === 'h' || e.key === 'F1') && !ctrl && !e.altKey) {
         if (e.key === 'F1') e.preventDefault();
         if (helpModal) helpModal.classList.add('open');
-      } else if (e.key === 'Escape') {
-        if (searchPanel.classList.contains('open')) toggleSearchPanel();
-        bookmarksDrawer.classList.remove('open');
-        notesDrawer.classList.remove('open');
-        statsModal.classList.remove('open');
-        if (helpModal) helpModal.classList.remove('open');
-        renameModal.classList.remove('open');
-        noteModal.classList.remove('open');
-        confirmModal.classList.remove('open');
-        selectionPopover.style.display = 'none';
-        btnToggleBookmarks.classList.remove('active');
-        btnToggleNotes.classList.remove('active');
       }
     });
 
