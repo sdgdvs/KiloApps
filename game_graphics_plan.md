@@ -111,7 +111,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **⚠️ PRIORITY: If ANY game in the queue is at Loop 0 (not yet processed), work on it FIRST before continuing higher-loop games.**
 
 
-- KAlchemy
 - KRogue
 - KChess
 - KPong
@@ -158,9 +157,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KColosseum
 - KCosmic
 - KFarm
+- KAlchemy
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
 
+- KAlchemy (Loop 8): Turn skipped per Director Directive — arcane themes, runic styling, and alchemy UI are complete and mature.
 - KFarm (Loop 6): Turn skipped per Director Directive — visuals, livestock/crop sprites, and seasonal ambiance are complete and mature.
 - KCosmic (Loop 1): Thematic procedural sprites for all 5 fleet ships with animated ion plumes, orbital shipyard station with rotating gantry, and planetary continents/ice caps.
 - KColosseum (Loop 2): Authentic Balteus belt, Manica and Galerus armor, slashing/thrusting weapon swing arcs, lion claw swipes, and defeat collapse with dropped gear.
@@ -203,7 +204,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KPong (Loop 8): Screen-shake, multi-layer particles, paddle specular sheen, and cybernetic HUD.
 - KChess (Loop 8): Screen-shake, marble/mahogany particles, classical filigree, and piece specular sweeps.
 - KRogue (Loop 8): Screen-shake, dungeon particles, Gothic RPG filigree, and biome-specific atmospheric motes.
-- KAlchemy (Loop 7): Arcane particle engine, shockwaves, alchemical filigree, and mystic dust motes.
 - KFortress (Loop 7): Procedural architectural tower sprites, animated multi-caste enemy sprites (Goblin, Orc, Hound, Gargoyle, Necromancer, Skeleton, Ogre, Wyvern, Golem), and knight/militia sprites.
 - KColony (Loop 7): 3 animated xeno-caste sprites (Swarmer, Spitter, Goliath) with tactical health gauges, hovering nanite repair drones, and overland logistics rovers.
 - KMaze (Loop 9): Themed Minotaur/Boss sprites and biome walls. Stripped annoying blinking HUD, pickaxe visual, and particle effects per user/director directive.
