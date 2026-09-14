@@ -56,15 +56,15 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KCosmic (Cosmic colony fleet logistics and interstellar planetary terraforming simulation)
-**Phase:** 6 (next to do)
-**Status:** In Progress (Phase 5 completed: Procedural star systems & exoplanet classification with 5 canonical types [barren rock, toxic greenhouse, frozen tundra, ocean world, primordial gaia], dedicated procedural shaders, multi-system catalog, sector scanner, target designation, and exoplanet classification dossier)
+**Phase:** 7 (next to do)
+**Status:** In Progress (Phase 6 completed: Planetary terraforming modules [troposphere atmospheric processors, orbital solar mirrors, nitrogen mantle extractors, greenhouse aerosol seeding] with dual-mode controls, continuous biometrics drift calculations, active visual effects [focus insolation beams, shade umbrellas, gas geyser plumes, stratospheric greenhouse haze], and full native Win32 C parity)
 
 - [x] Phase 1: Scaffold KCosmic directory (`KCosmic/`), create web HTML skeleton (`KiloOS/public/apps/kcosmic.html`), register in App.jsx.
 - [x] Phase 2: Core colony fleet simulation engine (orbital map, colony arks, terraforming parameters, life support, resource loops).
 - [x] Phase 3: Native C version (`KCosmic/main.c`, `build.bat`) using Win32 API with functional parity.
 - [x] Phase 4: Retro-futuristic stellar cartography theme, CRT vector phosphor shaders, and atmospheric planetary glow.
 - [x] Phase 5: Procedural star systems & exoplanet classification (barren rock, toxic greenhouse, frozen tundra, ocean world, primordial gaia).
-- [ ] Phase 6: Planetary terraforming modules (atmospheric processors, orbital solar mirrors, nitrogen extractors, greenhouse seeding).
+- [x] Phase 6: Planetary terraforming modules (atmospheric processors, orbital solar mirrors, nitrogen extractors, greenhouse seeding).
 - [ ] Phase 7: Fleet logistics & automated supply trade routes (freighter convoys, mineral shipments, fuel depots, orbital docks).
 - [ ] Phase 8: Colonist population demographics, morale, housing habitats, biosphere domed megacities, and hydroponic food farms.
 - [ ] Phase 9: Cosmic crisis events & hazards (solar flares, asteroid impacts, tectonic quakes, ecological collapses, magnetic storms).

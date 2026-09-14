@@ -193,6 +193,8 @@ typedef struct {
     float defaultTemp;
     float defaultWater;
     float defaultOxygen;
+    float defaultNitrogen;
+    float defaultGreenhouse;
     float defaultMagnet;
     float minHabitability;
     float maxHabitability;
@@ -201,11 +203,11 @@ typedef struct {
 } ExoplanetClassInfo;
 
 static ExoplanetClassInfo g_exoplanetClasses[5] = {
-    { CLASS_BARREN_ROCK, "BR-I", "Barren Rock", "Airless metallic crust, heavily cratered, basaltic ridges.", RGB(180, 110, 70), RGB(35, 20, 15), RGB(180, 110, 70), 0.05f, -65.0f, 0.0f, 0.2f, 0.05f, 0.0f, 35.0f, 2.2f, 0.2f },
-    { CLASS_TOXIC_GREENHOUSE, "TG-II", "Toxic Greenhouse", "Supercritical CO2/sulfur atmosphere, runaway thermal mantle.", RGB(245, 158, 11), RGB(40, 25, 5), RGB(245, 158, 11), 3.40f, 185.0f, 2.0f, 0.1f, 0.12f, 0.0f, 25.0f, 1.4f, 1.8f },
-    { CLASS_FROZEN_TUNDRA, "FT-III", "Frozen Tundra", "Sub-zero cryosphere, solid methane glaciers, permafrost sheets.", RGB(56, 189, 248), RGB(10, 25, 45), RGB(56, 189, 248), 0.45f, -88.0f, 68.0f, 2.4f, 0.35f, 5.0f, 55.0f, 0.9f, 2.5f },
-    { CLASS_OCEAN_WORLD, "OW-IV", "Ocean World", "Global hyper-deep pelagic abyss, subterranean thermal vents.", RGB(14, 165, 233), RGB(8, 28, 52), RGB(14, 165, 233), 1.15f, 18.0f, 98.0f, 11.5f, 0.48f, 30.0f, 85.0f, 0.7f, 2.0f },
-    { CLASS_PRIMORDIAL_GAIA, "PG-V", "Primordial Gaia", "Nascent biosphere, proto-chlorophyll flora, stable hydrosphere.", RGB(16, 185, 129), RGB(8, 38, 22), RGB(16, 185, 129), 0.98f, 14.2f, 54.0f, 18.8f, 0.52f, 60.0f, 100.0f, 1.2f, 1.3f }
+    { CLASS_BARREN_ROCK, "BR-I", "Barren Rock", "Airless metallic crust, heavily cratered, basaltic ridges.", RGB(180, 110, 70), RGB(35, 20, 15), RGB(180, 110, 70), 0.05f, -65.0f, 0.0f, 0.2f, 2.0f, 30.0f, 0.05f, 0.0f, 35.0f, 2.2f, 0.2f },
+    { CLASS_TOXIC_GREENHOUSE, "TG-II", "Toxic Greenhouse", "Supercritical CO2/sulfur atmosphere, runaway thermal mantle.", RGB(245, 158, 11), RGB(40, 25, 5), RGB(245, 158, 11), 3.40f, 185.0f, 2.0f, 0.1f, 3.5f, 320.0f, 0.12f, 0.0f, 25.0f, 1.4f, 1.8f },
+    { CLASS_FROZEN_TUNDRA, "FT-III", "Frozen Tundra", "Sub-zero cryosphere, solid methane glaciers, permafrost sheets.", RGB(56, 189, 248), RGB(10, 25, 45), RGB(56, 189, 248), 0.45f, -88.0f, 68.0f, 2.4f, 14.5f, 45.0f, 0.35f, 5.0f, 55.0f, 0.9f, 2.5f },
+    { CLASS_OCEAN_WORLD, "OW-IV", "Ocean World", "Global hyper-deep pelagic abyss, subterranean thermal vents.", RGB(14, 165, 233), RGB(8, 28, 52), RGB(14, 165, 233), 1.15f, 18.0f, 98.0f, 11.5f, 64.0f, 90.0f, 0.48f, 30.0f, 85.0f, 0.7f, 2.0f },
+    { CLASS_PRIMORDIAL_GAIA, "PG-V", "Primordial Gaia", "Nascent biosphere, proto-chlorophyll flora, stable hydrosphere.", RGB(16, 185, 129), RGB(8, 38, 22), RGB(16, 185, 129), 0.98f, 14.2f, 54.0f, 18.8f, 76.5f, 102.0f, 0.52f, 60.0f, 100.0f, 1.2f, 1.3f }
 };
 
 typedef struct {
@@ -230,6 +232,8 @@ typedef struct {
     float temp;
     float water;
     float oxygen;
+    float nitrogen;
+    float greenhouse;
     float magnet;
     float habitability;
 } CelestialBody;
@@ -301,12 +305,19 @@ typedef struct {
     float temp;
     float water;
     float oxygen;
+    float nitrogen;
+    float greenhouse;
     float magnet;
     float habitability;
 
-    // Active Facilities
+    // Active Facilities & Terraforming Modules
     int solarMirrors;
+    int mirrorMode;        // 0=Focus Insolation (Heat), 1=Solar Shade (Cool)
     int atmoProcessors;
+    int atmoMode;          // 0=Buffer Injection (+P), 1=Toxic Scrubbing (-P)
+    int nitrogenExtractors;
+    int greenhouseStations;
+    int greenhouseMode;    // 0=PFC Super-Warming (+GHG), 1=Aerosol Cloud (-GHG)
     int bioseedStations;
     int coreDynamos;
     int hydroTowers;
@@ -360,6 +371,8 @@ static void SyncSimToActivePlanet(void) {
         p->temp = sim.temp;
         p->water = sim.water;
         p->oxygen = sim.oxygen;
+        p->nitrogen = sim.nitrogen;
+        p->greenhouse = sim.greenhouse;
         p->magnet = sim.magnet;
         p->habitability = sim.habitability;
     }
@@ -382,6 +395,8 @@ static void SetActivePlanet(int bodyIdx) {
     sim.temp = p->temp;
     sim.water = p->water;
     sim.oxygen = p->oxygen;
+    sim.nitrogen = p->nitrogen;
+    sim.greenhouse = p->greenhouse;
     sim.magnet = p->magnet;
     CalculateHabitability();
 
@@ -402,6 +417,8 @@ static void LoadStarSystem(int sysIdx) {
     sim.temp = p->temp;
     sim.water = p->water;
     sim.oxygen = p->oxygen;
+    sim.nitrogen = p->nitrogen;
+    sim.greenhouse = p->greenhouse;
     sim.magnet = p->magnet;
     CalculateHabitability();
 
@@ -448,11 +465,21 @@ static void CalculateHabitability(void) {
     float oScore = (o / 20.9f) * 100.0f;
     if (oScore > 100.0f) oScore = 100.0f;
 
+    float n = sim.nitrogen;
+    float nScore = 100.0f - (float)fabs(78.0f - n) * 1.3f;
+    if (nScore < 0.0f) nScore = 0.0f;
+    if (nScore > 100.0f) nScore = 100.0f;
+
+    float ghg = sim.greenhouse;
+    float ghgScore = 100.0f - (float)fabs(100.0f - ghg) * 0.9f;
+    if (ghgScore < 0.0f) ghgScore = 0.0f;
+    if (ghgScore > 100.0f) ghgScore = 100.0f;
+
     float m = sim.magnet;
     float mScore = (m / 0.5f) * 100.0f;
     if (mScore > 100.0f) mScore = 100.0f;
 
-    float total = (pScore * 0.25f) + (tScore * 0.25f) + (wScore * 0.20f) + (oScore * 0.20f) + (mScore * 0.10f);
+    float total = (pScore * 0.20f) + (tScore * 0.20f) + (wScore * 0.15f) + (oScore * 0.15f) + (nScore * 0.15f) + (ghgScore * 0.10f) + (mScore * 0.05f);
     if (total < 0.0f) total = 0.0f;
     if (total > 100.0f) total = 100.0f;
     sim.habitability = total;
@@ -467,7 +494,7 @@ static void GenerateProceduralStarSystem(void) {
     static const char* greekLetters[] = { "b", "c", "d", "e", "f" };
 
     int sysSlot, pIdx, sIdx, spIdx, numPlanets, bCount, targetPlanet, p, cType;
-    float orbitDist, oldP, oldT, oldW, oldO, oldM;
+    float orbitDist, oldP, oldT, oldW, oldO, oldN, oldG, oldM;
     StarSystem* sys;
     CelestialBody* star;
     CelestialBody* pl;
@@ -510,13 +537,12 @@ static void GenerateProceduralStarSystem(void) {
     star->isStar = 1;
     star->parentIndex = -1;
 
-    // Generate 3 to 5 exoplanets
-    numPlanets = 3 + (rand() % 3);
+    numPlanets = (rand() % 3) + 3; // 3 to 5 planets
     bCount = 1;
-    orbitDist = 200.0f + (float)(rand() % 40);
+    orbitDist = 180.0f;
     targetPlanet = 1;
 
-    for (p = 0; p < numPlanets && bCount < MAX_SYSTEM_BODIES - 2; p++) {
+    for (p = 0; p < numPlanets && bCount < MAX_SYSTEM_BODIES; p++) {
         pl = &sys->celestials[bCount];
         cType = rand() % 5; // one of 5 canonical exoplanet classes
         cInfo = &g_exoplanetClasses[cType];
@@ -541,14 +567,19 @@ static void GenerateProceduralStarSystem(void) {
         if (pl->water > 100.0f) pl->water = 100.0f;
         pl->oxygen = cInfo->defaultOxygen + ((float)(rand() % 30) - 15.0f) * 0.1f;
         if (pl->oxygen < 0.0f) pl->oxygen = 0.0f;
+        pl->nitrogen = cInfo->defaultNitrogen + ((float)(rand() % 20) - 10.0f) * 0.1f;
+        if (pl->nitrogen < 0.0f) pl->nitrogen = 0.0f;
+        if (pl->nitrogen > 100.0f) pl->nitrogen = 100.0f;
+        pl->greenhouse = cInfo->defaultGreenhouse + ((float)(rand() % 30) - 15.0f);
+        if (pl->greenhouse < 10.0f) pl->greenhouse = 10.0f;
         pl->magnet = cInfo->defaultMagnet + ((float)(rand() % 20) - 10.0f) * 0.01f;
         if (pl->magnet < 0.02f) pl->magnet = 0.02f;
 
-        oldP = sim.pressure; oldT = sim.temp; oldW = sim.water; oldO = sim.oxygen; oldM = sim.magnet;
-        sim.pressure = pl->pressure; sim.temp = pl->temp; sim.water = pl->water; sim.oxygen = pl->oxygen; sim.magnet = pl->magnet;
+        oldP = sim.pressure; oldT = sim.temp; oldW = sim.water; oldO = sim.oxygen; oldN = sim.nitrogen; oldG = sim.greenhouse; oldM = sim.magnet;
+        sim.pressure = pl->pressure; sim.temp = pl->temp; sim.water = pl->water; sim.oxygen = pl->oxygen; sim.nitrogen = pl->nitrogen; sim.greenhouse = pl->greenhouse; sim.magnet = pl->magnet;
         CalculateHabitability();
         pl->habitability = sim.habitability;
-        sim.pressure = oldP; sim.temp = oldT; sim.water = oldW; sim.oxygen = oldO; sim.magnet = oldM;
+        sim.pressure = oldP; sim.temp = oldT; sim.water = oldW; sim.oxygen = oldO; sim.nitrogen = oldN; sim.greenhouse = oldG; sim.magnet = oldM;
 
         if (cType == CLASS_PRIMORDIAL_GAIA || cType == CLASS_OCEAN_WORLD || targetPlanet == 1) {
             targetPlanet = bCount;
@@ -605,21 +636,21 @@ static void SimTick(void) {
 
     // Energy
     int energyGen = 600 + (sim.surfaceSolar * 60);
-    int energyDrain = 200 + (sim.solarMirrors * 75) + (sim.atmoProcessors * 60) + (sim.coreDynamos * 80) + (sim.colonists / 1000) * 5;
+    int energyDrain = 200 + (sim.solarMirrors * 75) + (sim.atmoProcessors * 60) + (sim.nitrogenExtractors * 85) + (sim.greenhouseStations * 70) + (sim.coreDynamos * 80) + (sim.colonists / 1000) * 5;
     sim.deltaEnergy = energyGen - energyDrain;
     sim.energy += (int)(sim.deltaEnergy * 0.05f * rate);
     if (sim.energy < 0) sim.energy = 0;
 
     // Minerals
     int mineralGain = 20 + (strcmp(fleet[3].status, "Harvesting") == 0 || strcmp(fleet[3].status, "Mining Belt") == 0 ? 25 : 10);
-    int mineralDrain = (sim.atmoProcessors * 3);
+    int mineralDrain = (sim.atmoProcessors * 3) + (sim.nitrogenExtractors * 2);
     sim.deltaMinerals = mineralGain - mineralDrain;
     sim.minerals += (int)(sim.deltaMinerals * 0.05f * rate);
     if (sim.minerals < 0) sim.minerals = 0;
 
     // Volatiles
     int volGain = 14 + (strcmp(fleet[3].status, "Scooping Ring") == 0 ? 18 : 6);
-    int volDrain = (sim.solarMirrors * 2);
+    int volDrain = (sim.solarMirrors * 2) + (sim.greenhouseStations * 2) + (sim.nitrogenExtractors * 3);
     sim.deltaVolatiles = volGain - volDrain;
     sim.volatiles += (int)(sim.deltaVolatiles * 0.05f * rate);
     if (sim.volatiles < 0) sim.volatiles = 0;
@@ -631,10 +662,42 @@ static void SimTick(void) {
     sim.food += (int)(sim.deltaFood * 0.05f * rate);
     if (sim.food < 0) sim.food = 0;
 
-    // Slow planetary drifts
+    // Slow planetary drifts driven by active modules
     if (sim.energy > 500) {
-        sim.temp += (sim.solarMirrors * 0.012f * rate);
-        sim.pressure += (sim.atmoProcessors * 0.0003f * rate);
+        // 1. Troposphere Processors Drift
+        if (sim.atmoMode == 0) {
+            sim.pressure += (sim.atmoProcessors * 0.0004f * rate);
+        } else {
+            if (sim.pressure > 1.0f) {
+                sim.pressure -= (sim.atmoProcessors * 0.0007f * rate);
+                if (sim.pressure < 1.0f) sim.pressure = 1.0f;
+                sim.minerals += 1;
+            }
+        }
+
+        // 2. Orbital Solar Mirrors Drift
+        if (sim.mirrorMode == 0) {
+            sim.temp += (sim.solarMirrors * 0.015f * rate);
+        } else {
+            sim.temp -= (sim.solarMirrors * 0.018f * rate);
+        }
+
+        // 3. Nitrogen Extractors Drift
+        if (sim.nitrogen < 78.0f) {
+            sim.nitrogen += (sim.nitrogenExtractors * 0.025f * rate);
+            if (sim.nitrogen > 78.0f) sim.nitrogen = 78.0f;
+            sim.pressure += (sim.nitrogenExtractors * 0.00015f * rate);
+        }
+
+        // 4. Greenhouse Aerosol Seeding Drift
+        if (sim.greenhouseMode == 0) {
+            if (sim.greenhouse < 250.0f) sim.greenhouse += (sim.greenhouseStations * 0.04f * rate);
+        } else {
+            if (sim.greenhouse > 30.0f) sim.greenhouse -= (sim.greenhouseStations * 0.05f * rate);
+        }
+        sim.temp += (sim.greenhouse - 100.0f) * 0.0004f * rate;
+
+        // Biosphere & Hydrosphere drifts
         if (sim.temp > -20.0f && sim.water > 10.0f) {
             sim.oxygen += (sim.bioseedStations * 0.0008f * rate);
         }
@@ -680,11 +743,18 @@ static void InitSimulation(void) {
     sim.temp = -48.0f;
     sim.water = 12.8f;
     sim.oxygen = 3.1f;
+    sim.nitrogen = 14.5f;
+    sim.greenhouse = 45.0f;
     sim.magnet = 0.18f;
     sim.habitability = 18.4f;
 
     sim.solarMirrors = 2;
+    sim.mirrorMode = 0;       // 0=Heat
     sim.atmoProcessors = 3;
+    sim.atmoMode = 0;         // 0=Inject
+    sim.nitrogenExtractors = 1;
+    sim.greenhouseStations = 1;
+    sim.greenhouseMode = 0;   // 0=Warm
     sim.bioseedStations = 1;
     sim.coreDynamos = 1;
     sim.hydroTowers = 2;
@@ -1052,6 +1122,20 @@ static void InitSimulation(void) {
     g_systems[3].celestials[4].color = COLOR_EMERALD;
     g_systems[3].celestials[4].isStation = 1;
     g_systems[3].celestials[4].parentIndex = 2;
+
+    // Populate default nitrogen and greenhouse on all catalog planets
+    for (int s = 0; s < g_systemCount; s++) {
+        for (int b = 0; b < g_systems[s].bodyCount; b++) {
+            if (g_systems[s].celestials[b].isPlanet) {
+                PlanetClass pc = g_systems[s].celestials[b].pClass;
+                g_systems[s].celestials[b].nitrogen = g_exoplanetClasses[pc].defaultNitrogen;
+                g_systems[s].celestials[b].greenhouse = g_exoplanetClasses[pc].defaultGreenhouse;
+            }
+        }
+    }
+    // Set target planet values to match sim
+    g_systems[0].celestials[2].nitrogen = sim.nitrogen;
+    g_systems[0].celestials[2].greenhouse = sim.greenhouse;
 
     // Load Default System 0 (Kepler-186)
     g_currentSystem = 0;
@@ -1543,6 +1627,83 @@ static void DrawExoplanetGDI(HDC hdc, CelestialBody* b, int px, int py, int pr, 
     SelectClipRgn(hdc, hOldRgn);
     DeleteObject(hOldRgn);
     DeleteObject(hRgnPlanet);
+
+    // Active Target Terraforming Visual Effects
+    if (isActiveTarget) {
+        // 1. Stratospheric Greenhouse Aerosol Haze Ring
+        if (sim.greenhouseStations > 0 || sim.greenhouse > 5.0f) {
+            float pulse = sinf(simTime * 3.0f) * 2.0f * z;
+            int ghgR = pr + (int)(6 * z) + (int)pulse;
+            COLORREF ghgCol = (sim.greenhouseMode == 0) ? RGB(255, 140, 50) : RGB(100, 200, 255);
+            HPEN hGhgPen = CreatePen(PS_DOT, 1, ghgCol);
+            HPEN hOldP3 = (HPEN)SelectObject(hdc, hGhgPen);
+            SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Ellipse(hdc, px - ghgR, py - ghgR, px + ghgR, py + ghgR);
+            SelectObject(hdc, hOldP3);
+            DeleteObject(hGhgPen);
+        }
+
+        // 2. Tropospheric Gas Injector & Nitrogen Mantle Exhaust Plumes
+        if (sim.atmoProcessors > 0) {
+            HPEN hPlumePen = CreatePen(PS_SOLID, 2, (sim.atmoMode == 0) ? RGB(0, 240, 255) : RGB(255, 180, 80));
+            HPEN hOldP4 = (HPEN)SelectObject(hdc, hPlumePen);
+            float pAng = 0.85f;
+            int plx = px + (int)(cosf(pAng) * pr);
+            int ply = py + (int)(sinf(pAng) * pr);
+            float flen = 9.0f * z + sinf(simTime * 14.0f) * 2.5f * z;
+            MoveToEx(hdc, plx, ply, NULL);
+            LineTo(hdc, plx + (int)(cosf(pAng) * flen), ply + (int)(sinf(pAng) * flen));
+            SelectObject(hdc, hOldP4);
+            DeleteObject(hPlumePen);
+        }
+        if (sim.nitrogenExtractors > 0) {
+            HPEN hN2Pen = CreatePen(PS_SOLID, 2, RGB(180, 90, 255));
+            HPEN hOldP5 = (HPEN)SelectObject(hdc, hN2Pen);
+            float nAng = 2.45f;
+            int nlx = px + (int)(cosf(nAng) * pr);
+            int nly = py + (int)(sinf(nAng) * pr);
+            float nlen = 8.5f * z + sinf(simTime * 16.0f + 1.2f) * 2.0f * z;
+            MoveToEx(hdc, nlx, nly, NULL);
+            LineTo(hdc, nlx + (int)(cosf(nAng) * nlen), nly + (int)(sinf(nAng) * nlen));
+            SelectObject(hdc, hOldP5);
+            DeleteObject(hN2Pen);
+        }
+
+        // 3. Orbital Solar Mirrors & Insolation Beams / Shade Arcs
+        if (sim.solarMirrors > 0) {
+            int count = sim.solarMirrors;
+            if (count > 8) count = 8;
+            float mOrbitR = (float)pr + 20.0f * z;
+            for (int m = 0; m < count; m++) {
+                float mAng = simTime * 0.35f + (float)m * (6.2831853f / (float)count);
+                int mx = px + (int)(cosf(mAng) * mOrbitR);
+                int my = py + (int)(sinf(mAng) * (mOrbitR * 0.7f));
+
+                // Facet Statite Box
+                int msz = (int)(4 * z);
+                if (msz < 3) msz = 3;
+                FillSolidRect(hdc, mx - msz / 2, my - msz / 2, msz, msz, (sim.mirrorMode == 0) ? RGB(255, 230, 100) : RGB(100, 210, 255));
+
+                if (sim.mirrorMode == 0) {
+                    // Golden Focus Beam down to planetary target
+                    HPEN hBmPen = CreatePen(PS_SOLID, 1, RGB(255, 210, 50));
+                    HPEN hOldBm = (HPEN)SelectObject(hdc, hBmPen);
+                    MoveToEx(hdc, mx, my, NULL);
+                    LineTo(hdc, px + (int)(cosf(mAng) * pr * 0.45f), py + (int)(sinf(mAng) * pr * 0.45f));
+                    SelectObject(hdc, hOldBm);
+                    DeleteObject(hBmPen);
+                } else {
+                    // Cyan Deflection Shade Arc
+                    HPEN hShPen = CreatePen(PS_DOT, 1, RGB(100, 200, 255));
+                    HPEN hOldSh = (HPEN)SelectObject(hdc, hShPen);
+                    int shR = (int)(6 * z);
+                    Arc(hdc, mx - shR, my - shR, mx + shR, my + shR, mx - shR, my, mx + shR, my);
+                    SelectObject(hdc, hOldSh);
+                    DeleteObject(hShPen);
+                }
+            }
+        }
+    }
 }
 
 static void DrawPlanetGDI(HDC hdc, int px, int py, int pr, int sunX, int sunY, float z) {
@@ -1745,7 +1906,7 @@ typedef struct {
     int isEnabled;
 } UIButton;
 
-#define MAX_BUTTONS 48
+#define MAX_BUTTONS 64
 static UIButton g_buttons[MAX_BUTTONS];
 static int g_buttonCount = 0;
 
@@ -1791,16 +1952,21 @@ static void AddButton(int id, int x, int y, int w, int h, const char* txt, const
 #define BID_ROSTER_BASE     150
 
 #define BID_ACT_SOLAR_MIRROR 40
-#define BID_ACT_ATMO_PROC   41
-#define BID_ACT_COMET_DROP  42
-#define BID_ACT_BIOSEED     43
-#define BID_ACT_CORE_DYNAMO 44
-#define BID_ACT_ALGAE       45
+#define BID_TOG_MIRROR_MODE  41
+#define BID_ACT_ATMO_PROC    42
+#define BID_TOG_ATMO_MODE    43
+#define BID_ACT_N2_EXTRACTOR 44
+#define BID_ACT_GREENHOUSE   45
+#define BID_TOG_GHG_MODE     46
+#define BID_ACT_COMET_DROP   47
+#define BID_ACT_BIOSEED      48
+#define BID_ACT_CORE_DYNAMO  49
+#define BID_ACT_ALGAE        50
 
-#define BID_COL_AWAKEN      50
-#define BID_COL_DOME        51
-#define BID_COL_HYDRO       52
-#define BID_COL_SOLAR       53
+#define BID_COL_AWAKEN      55
+#define BID_COL_DOME        56
+#define BID_COL_HYDRO       57
+#define BID_COL_SOLAR       58
 
 #define BID_ORDER_GEN_HOLD  60
 #define BID_ORDER_GEN_BOOST 61
@@ -1819,36 +1985,104 @@ static void AddButton(int id, int x, int y, int w, int h, const char* txt, const
 
 // --- Action Handlers ---
 static void HandleIntervention(int bid) {
+    char buf[128];
     switch (bid) {
         case BID_ACT_SOLAR_MIRROR:
             if (sim.energy >= 350 && sim.minerals >= 150) {
                 sim.energy -= 350;
                 sim.minerals -= 150;
                 sim.solarMirrors++;
-                sim.temp += 1.8f;
+                if (sim.mirrorMode == 0) {
+                    sim.temp += 1.8f;
+                    sprintf(buf, "Orbital Solar Mirror #%d deployed (+1.8 C insolation).", sim.solarMirrors);
+                } else {
+                    sim.temp -= 2.2f;
+                    sprintf(buf, "Orbital Solar Shade #%d deployed (-2.2 C occultation).", sim.solarMirrors);
+                }
                 CalculateHabitability();
-                char buf[128];
-                sprintf(buf, "Orbital Solar Mirror #%d deployed (+1.8 C insolation).", sim.solarMirrors);
                 SetLogMsg(buf, 0);
                 PlaySoundFx(SFX_DEPLOY);
             } else {
                 SetLogMsg("Insufficient resources (Req: 350 kW Energy, 150 t Minerals).", 1);
             }
             break;
+        case BID_TOG_MIRROR_MODE:
+            sim.mirrorMode = !sim.mirrorMode;
+            sprintf(buf, "Solar Mirror Mode: %s", sim.mirrorMode == 0 ? "FOCUS INSOLATION (+T)" : "SOLAR SHADE COOLING (-T)");
+            SetLogMsg(buf, 0);
+            PlaySoundFx(SFX_CLICK);
+            break;
         case BID_ACT_ATMO_PROC:
             if (sim.minerals >= 180 && sim.energy >= 100) {
                 sim.minerals -= 180;
                 sim.energy -= 100;
                 sim.atmoProcessors++;
-                sim.pressure += 0.05f;
+                if (sim.atmoMode == 0) {
+                    sim.pressure += 0.05f;
+                    sprintf(buf, "Troposphere Gas Injector #%d constructed (+0.05 atm).", sim.atmoProcessors);
+                } else {
+                    sim.pressure -= 0.08f;
+                    if (sim.pressure < 1.0f) sim.pressure = 1.0f;
+                    sim.minerals += 25;
+                    sprintf(buf, "Catalytic Gas Scrubber #%d constructed (-0.08 atm toxic scrub).", sim.atmoProcessors);
+                }
                 CalculateHabitability();
-                char buf[128];
-                sprintf(buf, "Troposphere Gas Injector #%d constructed (+0.05 atm).", sim.atmoProcessors);
                 SetLogMsg(buf, 0);
                 PlaySoundFx(SFX_DEPLOY);
             } else {
                 SetLogMsg("Insufficient resources (Req: 180 t Minerals, 100 kW Energy).", 1);
             }
+            break;
+        case BID_TOG_ATMO_MODE:
+            sim.atmoMode = !sim.atmoMode;
+            sprintf(buf, "Atmo Processor Mode: %s", sim.atmoMode == 0 ? "BUFFER INJECTION (+P)" : "TOXIC SCRUBBING (-P)");
+            SetLogMsg(buf, 0);
+            PlaySoundFx(SFX_CLICK);
+            break;
+        case BID_ACT_N2_EXTRACTOR:
+            if (sim.energy >= 280 && sim.minerals >= 180 && sim.volatiles >= 80) {
+                sim.energy -= 280;
+                sim.minerals -= 180;
+                sim.volatiles -= 80;
+                sim.nitrogenExtractors++;
+                sim.nitrogen += 4.5f;
+                if (sim.nitrogen > 78.0f) sim.nitrogen = 78.0f;
+                sim.pressure += 0.02f;
+                CalculateHabitability();
+                sprintf(buf, "Nitrogen Mantle Bore #%d online (+4.5%% N2, +0.02 atm).", sim.nitrogenExtractors);
+                SetLogMsg(buf, 0);
+                PlaySoundFx(SFX_DEPLOY);
+            } else {
+                SetLogMsg("Insufficient resources (Req: 280 kW Energy, 180 t Min, 80 t Vol).", 1);
+            }
+            break;
+        case BID_ACT_GREENHOUSE:
+            if (sim.energy >= 200 && sim.volatiles >= 140 && sim.food >= 60) {
+                sim.energy -= 200;
+                sim.volatiles -= 140;
+                sim.food -= 60;
+                sim.greenhouseStations++;
+                if (sim.greenhouseMode == 0) {
+                    sim.greenhouse += 5.0f;
+                    if (sim.greenhouse > 250.0f) sim.greenhouse = 250.0f;
+                    sprintf(buf, "Greenhouse Seeding Grid #%d active (+5.0%% PFC warming).", sim.greenhouseStations);
+                } else {
+                    sim.greenhouse -= 6.0f;
+                    if (sim.greenhouse < 30.0f) sim.greenhouse = 30.0f;
+                    sprintf(buf, "Greenhouse Aerosol Veil #%d active (-6.0%% albedo cooling).", sim.greenhouseStations);
+                }
+                CalculateHabitability();
+                SetLogMsg(buf, 0);
+                PlaySoundFx(SFX_DEPLOY);
+            } else {
+                SetLogMsg("Insufficient resources (Req: 200 kW Energy, 140 t Vol, 60 t Food).", 1);
+            }
+            break;
+        case BID_TOG_GHG_MODE:
+            sim.greenhouseMode = !sim.greenhouseMode;
+            sprintf(buf, "Greenhouse Seeding Mode: %s", sim.greenhouseMode == 0 ? "PFC SUPER-WARMING (+GHG)" : "AEROSOL REFLECTIVE CLOUD (-GHG)");
+            SetLogMsg(buf, 0);
+            PlaySoundFx(SFX_CLICK);
             break;
         case BID_ACT_COMET_DROP:
             if (sim.volatiles >= 300 && sim.energy >= 150) {
@@ -1870,7 +2104,6 @@ static void HandleIntervention(int bid) {
                 sim.bioseedStations++;
                 sim.oxygen += 0.9f;
                 CalculateHabitability();
-                char buf[128];
                 sprintf(buf, "Lichen bioseeding distributed on barren crags (+0.9%% O2).", sim.bioseedStations);
                 SetLogMsg(buf, 0);
                 PlaySoundFx(SFX_SUCCESS);
@@ -1885,7 +2118,6 @@ static void HandleIntervention(int bid) {
                 sim.coreDynamos++;
                 sim.magnet += 0.08f;
                 CalculateHabitability();
-                char buf[128];
                 sprintf(buf, "Core Magnetic Dynamo #%d primed (+0.08 Gauss Shielding).", sim.coreDynamos);
                 SetLogMsg(buf, 0);
                 PlaySoundFx(SFX_DEPLOY);
@@ -2598,84 +2830,136 @@ static void RenderUI(HDC hdc, int width, int height) {
         TextOutA(hdc, sbX + sidebarW - 130, contentY, buf, (int)strlen(buf));
 
         // Metric 1: Pressure
-        int my = contentY + 22;
+        int my = contentY + 18;
         SelectObject(hdc, hFontSmall);
         SetTextColor(hdc, COLOR_TEXT_PRI);
         TextOutA(hdc, sbX + 12, my, "Atmospheric Pressure", 20);
         sprintf(buf, "%.2f atm", sim.pressure);
         SetTextColor(hdc, COLOR_CYAN);
         TextOutA(hdc, sbX + sidebarW - 75, my, buf, (int)strlen(buf));
-        DrawProgressBar(hdc, sbX + 12, my + 14, sidebarW - 24, 7, sim.pressure / 1.5f, COLOR_CYAN);
+        DrawProgressBar(hdc, sbX + 12, my + 13, sidebarW - 24, 5, sim.pressure / 1.5f, COLOR_CYAN);
 
         // Metric 2: Temperature
-        my += 28;
+        my += 20;
         SetTextColor(hdc, COLOR_TEXT_PRI);
         TextOutA(hdc, sbX + 12, my, "Equilibrium Surface Temp", 24);
         sprintf(buf, "%.1f C", sim.temp);
         SetTextColor(hdc, COLOR_AMBER);
         TextOutA(hdc, sbX + sidebarW - 75, my, buf, (int)strlen(buf));
-        DrawProgressBar(hdc, sbX + 12, my + 14, sidebarW - 24, 7, (sim.temp + 60.0f) / 100.0f, COLOR_AMBER);
+        DrawProgressBar(hdc, sbX + 12, my + 13, sidebarW - 24, 5, (sim.temp + 60.0f) / 100.0f, COLOR_AMBER);
 
         // Metric 3: Water
-        my += 28;
+        my += 20;
         SetTextColor(hdc, COLOR_TEXT_PRI);
         TextOutA(hdc, sbX + 12, my, "Hydrosphere / Liquid Water", 26);
         sprintf(buf, "%.1f%%", sim.water);
         SetTextColor(hdc, COLOR_BLUE);
         TextOutA(hdc, sbX + sidebarW - 75, my, buf, (int)strlen(buf));
-        DrawProgressBar(hdc, sbX + 12, my + 14, sidebarW - 24, 7, sim.water / 100.0f, COLOR_BLUE);
+        DrawProgressBar(hdc, sbX + 12, my + 13, sidebarW - 24, 5, sim.water / 100.0f, COLOR_BLUE);
 
         // Metric 4: Oxygen
-        my += 28;
+        my += 20;
         SetTextColor(hdc, COLOR_TEXT_PRI);
-        TextOutA(hdc, sbX + 12, my, "Oxygen (O2 Concentration)", 25);
+        TextOutA(hdc, sbX + 12, my, "Oxygen Concentration (O2)", 25);
         sprintf(buf, "%.1f%%", sim.oxygen);
         SetTextColor(hdc, COLOR_EMERALD);
         TextOutA(hdc, sbX + sidebarW - 75, my, buf, (int)strlen(buf));
-        DrawProgressBar(hdc, sbX + 12, my + 14, sidebarW - 24, 7, sim.oxygen / 21.0f, COLOR_EMERALD);
+        DrawProgressBar(hdc, sbX + 12, my + 13, sidebarW - 24, 5, sim.oxygen / 21.0f, COLOR_EMERALD);
 
-        // Metric 5: Magnetosphere
-        my += 28;
+        // Metric 5: Nitrogen Buffer
+        my += 20;
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        TextOutA(hdc, sbX + 12, my, "Nitrogen Buffer (N2)", 20);
+        sprintf(buf, "%.1f%%", sim.nitrogen);
+        SetTextColor(hdc, RGB(180, 100, 255));
+        TextOutA(hdc, sbX + sidebarW - 75, my, buf, (int)strlen(buf));
+        DrawProgressBar(hdc, sbX + 12, my + 13, sidebarW - 24, 5, sim.nitrogen / 78.0f, RGB(180, 100, 255));
+
+        // Metric 6: Greenhouse Factor
+        my += 20;
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        TextOutA(hdc, sbX + 12, my, "Greenhouse Factor (GHG)", 23);
+        sprintf(buf, "%.1f%%", sim.greenhouse);
+        SetTextColor(hdc, RGB(255, 150, 50));
+        TextOutA(hdc, sbX + sidebarW - 75, my, buf, (int)strlen(buf));
+        DrawProgressBar(hdc, sbX + 12, my + 13, sidebarW - 24, 5, sim.greenhouse / 150.0f, RGB(255, 150, 50));
+
+        // Metric 7: Magnetosphere
+        my += 20;
         SetTextColor(hdc, COLOR_TEXT_PRI);
         TextOutA(hdc, sbX + 12, my, "Magnetosphere / Shielding", 25);
         sprintf(buf, "%.2f Gauss", sim.magnet);
         SetTextColor(hdc, COLOR_PURPLE);
         TextOutA(hdc, sbX + sidebarW - 85, my, buf, (int)strlen(buf));
-        DrawProgressBar(hdc, sbX + 12, my + 14, sidebarW - 24, 7, sim.magnet / 0.6f, COLOR_PURPLE);
+        DrawProgressBar(hdc, sbX + 12, my + 13, sidebarW - 24, 5, sim.magnet / 0.6f, COLOR_PURPLE);
 
         // Interventions Section
-        my += 30;
+        my += 24;
         SetTextColor(hdc, COLOR_BLUE);
         SelectObject(hdc, hFontBold);
         TextOutA(hdc, sbX + 12, my, "ORBITAL & SURFACE INTERVENTIONS", 31);
 
-        int gridY = my + 18;
+        int gridY = my + 16;
         int btnW = (sidebarW - 30) / 2;
-        int btnH = 38;
+        int btnH = 34;
+        int btnStep = btnH + 4;
 
-        AddButton(BID_ACT_SOLAR_MIRROR, sbX + 12, gridY, btnW, btnH, "Orbital Solar Mirror", "+1.8C (350E, 150M)", 1);
-        AddButton(BID_ACT_ATMO_PROC, sbX + 18 + btnW, gridY, btnW, btnH, "Atmo Gas Injector", "+0.05atm (180M, 100E)", 1);
+        // Row 0: Solar Mirror Deploy & Mode Toggle
+        AddButton(BID_ACT_SOLAR_MIRROR, sbX + 12, gridY, btnW, btnH,
+                  "Solar Mirror Array", (sim.mirrorMode == 0) ? "+1.8C (350E, 150M)" : "-1.8C (350E, 150M)", 1);
+        AddButton(BID_TOG_MIRROR_MODE, sbX + 18 + btnW, gridY, btnW, btnH,
+                  (sim.mirrorMode == 0) ? "Mirror: [FOCUS/HEAT]" : "Mirror: [SHADE/COOL]", "Toggle Solar Mode", 1);
 
-        AddButton(BID_ACT_COMET_DROP, sbX + 12, gridY + btnH + 6, btnW, btnH, "Redirect Ice Comet", "+2.5% Water (300V)", 1);
-        AddButton(BID_ACT_BIOSEED, sbX + 18 + btnW, gridY + btnH + 6, btnW, btnH, "Extremophile Lichen", "+0.9% O2 (120F, 100E)", 1);
+        // Row 1: Troposphere Processor Deploy & Mode Toggle
+        AddButton(BID_ACT_ATMO_PROC, sbX + 12, gridY + btnStep, btnW, btnH,
+                  "Troposphere Proc", (sim.atmoMode == 0) ? "+0.05atm (180M, 100E)" : "-0.05atm (180M, 100E)", 1);
+        AddButton(BID_TOG_ATMO_MODE, sbX + 18 + btnW, gridY + btnStep, btnW, btnH,
+                  (sim.atmoMode == 0) ? "Atmo: [INJECT +P]" : "Atmo: [SCRUB -P]", "Toggle Buffer Mode", 1);
 
-        AddButton(BID_ACT_CORE_DYNAMO, sbX + 12, gridY + (btnH + 6) * 2, btnW, btnH, "Core Dynamo Ring", "+0.08G Mag (400M, 250E)", 1);
-        AddButton(BID_ACT_ALGAE, sbX + 18 + btnW, gridY + (btnH + 6) * 2, btnW, btnH, "Ocean Algae Seed", "+1.4% O2 (200V, 150F)", 1);
+        // Row 2: Nitrogen Extractor & Greenhouse Seeding
+        AddButton(BID_ACT_N2_EXTRACTOR, sbX + 12, gridY + btnStep * 2, btnW, btnH,
+                  "Nitrogen Extractor", "+0.6% N2 (220M, 140E)", 1);
+        AddButton(BID_ACT_GREENHOUSE, sbX + 18 + btnW, gridY + btnStep * 2, btnW, btnH,
+                  "Greenhouse Seeding", (sim.greenhouseMode == 0) ? "+1.2% GHG (160V, 120E)" : "-1.2% GHG (160V, 120E)", 1);
 
-        // Continuous Facilities
-        int facY = gridY + (btnH + 6) * 3 + 12;
+        // Row 3: Greenhouse Mode & Ice Comet Drop
+        AddButton(BID_TOG_GHG_MODE, sbX + 12, gridY + btnStep * 3, btnW, btnH,
+                  (sim.greenhouseMode == 0) ? "GHG: [WARMING +]" : "GHG: [COOLING -]", "Toggle Gas Formulation", 1);
+        AddButton(BID_ACT_COMET_DROP, sbX + 18 + btnW, gridY + btnStep * 3, btnW, btnH,
+                  "Redirect Ice Comet", "+2.5% Water (300V)", 1);
+
+        // Row 4: Lichen Bioseeding & Algae Seeding
+        AddButton(BID_ACT_BIOSEED, sbX + 12, gridY + btnStep * 4, btnW, btnH,
+                  "Extremophile Lichen", "+0.9% O2 (120F, 100E)", 1);
+        AddButton(BID_ACT_ALGAE, sbX + 18 + btnW, gridY + btnStep * 4, btnW, btnH,
+                  "Ocean Algae Seed", "+1.4% O2 (200V, 150F)", 1);
+
+        // Row 5: Core Magnetic Dynamo Ring
+        AddButton(BID_ACT_CORE_DYNAMO, sbX + 12, gridY + btnStep * 5, sidebarW - 24, btnH,
+                  "Core Magnetic Dynamo Ring", "+0.08G Magnetosphere (400M, 250E)", 1);
+
+        // Continuous Facilities Online Card
+        int facY = gridY + btnStep * 6 + 6;
         SetTextColor(hdc, COLOR_BLUE);
         TextOutA(hdc, sbX + 12, facY, "CONTINUOUS FACILITIES ONLINE", 28);
 
-        FillSolidRect(hdc, sbX + 12, facY + 16, sidebarW - 24, 60, COLOR_BG_CARD);
-        FrameSolidRect(hdc, sbX + 12, facY + 16, sidebarW - 24, 60, COLOR_BORDER);
+        FillSolidRect(hdc, sbX + 12, facY + 16, sidebarW - 24, 62, COLOR_BG_CARD);
+        FrameSolidRect(hdc, sbX + 12, facY + 16, sidebarW - 24, 62, COLOR_BORDER);
 
         SelectObject(hdc, hFontSmall);
         SetTextColor(hdc, COLOR_TEXT_PRI);
-        sprintf(buf, "Solar Mirrors: %d Deployed   |   Atmo Processors: %d Online", sim.solarMirrors, sim.atmoProcessors);
-        TextOutA(hdc, sbX + 20, facY + 24, buf, (int)strlen(buf));
-        sprintf(buf, "Bioseeding Stations: %d Active | Core Dynamos: %d Primed", sim.bioseedStations, sim.coreDynamos);
-        TextOutA(hdc, sbX + 20, facY + 44, buf, (int)strlen(buf));
+        sprintf(buf, "Mirrors: %d [%s]  |  Atmo Proc: %d [%s]",
+                sim.solarMirrors, (sim.mirrorMode == 0) ? "Focus" : "Shade",
+                sim.atmoProcessors, (sim.atmoMode == 0) ? "Inject" : "Scrub");
+        TextOutA(hdc, sbX + 18, facY + 22, buf, (int)strlen(buf));
+
+        sprintf(buf, "N2 Extractors: %d  |  Greenhouse: %d [%s]",
+                sim.nitrogenExtractors, sim.greenhouseStations, (sim.greenhouseMode == 0) ? "Warm" : "Cool");
+        TextOutA(hdc, sbX + 18, facY + 38, buf, (int)strlen(buf));
+
+        sprintf(buf, "Bioseed: %d  |  Dynamos: %d Primed",
+                sim.bioseedStations, sim.coreDynamos);
+        TextOutA(hdc, sbX + 18, facY + 54, buf, (int)strlen(buf));
     }
     // TAB 1: FLEET
     else if (sim.activeTab == 1) {

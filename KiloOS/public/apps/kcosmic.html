@@ -803,6 +803,87 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--accent-cyan);
         }
+
+        /* Terraforming Module Cards */
+        .module-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-stellar);
+            border-left: 3px solid var(--accent-cyan);
+            border-radius: 4px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+        .module-card:hover {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 2px 10px rgba(0, 240, 255, 0.15);
+        }
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 4px;
+        }
+        .module-title {
+            font-weight: bold;
+            color: var(--text-bright);
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+        .module-sub {
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 1px;
+        }
+        .module-badge {
+            font-size: 9px;
+            padding: 2px 5px;
+            border-radius: 3px;
+            background: rgba(0, 240, 255, 0.12);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .module-badge.warn {
+            background: rgba(245, 158, 11, 0.12);
+            border-color: var(--accent-amber);
+            color: var(--accent-amber);
+        }
+        .module-badge.cool {
+            background: rgba(56, 189, 248, 0.12);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+        .module-desc {
+            font-size: 10px;
+            color: var(--text-primary);
+            line-height: 1.3;
+            margin-bottom: 6px;
+        }
+        .module-controls {
+            display: flex;
+            gap: 6px;
+        }
+        .mini-btn.highlight {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            background: rgba(0, 240, 255, 0.08);
+            font-weight: bold;
+        }
+        .mini-btn.highlight:hover {
+            background: rgba(0, 240, 255, 0.2);
+            box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+        }
+        .progress-bar-fill.purple {
+            background: linear-gradient(90deg, #9333ea, #c084fc);
+            box-shadow: 0 0 8px rgba(192, 132, 252, 0.5);
+        }
+        .progress-bar-fill.amber {
+            background: linear-gradient(90deg, #d97706, #fbbf24);
+            box-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -1010,6 +1091,36 @@
                     </div>
                 </div>
 
+                <!-- Nitrogen Buffer -->
+                <div class="metric-card">
+                    <div class="metric-row">
+                        <span>Nitrogen Buffer (N2 Concentration)</span>
+                        <strong id="valNitrogen">14.5%</strong>
+                    </div>
+                    <div class="metric-row" style="color: var(--text-dim); font-size:10px;">
+                        <span>Target: 78.0% (Atmospheric Stability)</span>
+                        <span id="driftNitrogen">+0.025%/cyc</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill purple" id="barNitrogen" style="width: 18%;"></div>
+                    </div>
+                </div>
+
+                <!-- Greenhouse Factor -->
+                <div class="metric-card">
+                    <div class="metric-row">
+                        <span>Greenhouse Thermal Retention</span>
+                        <strong id="valGreenhouse">45.0%</strong>
+                    </div>
+                    <div class="metric-row" style="color: var(--text-dim); font-size:10px;">
+                        <span>Target: 95.0% - 105.0% (Equilibrium)</span>
+                        <span id="driftGreenhouse">+0.04%/cyc</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill amber" id="barGreenhouse" style="width: 45%;"></div>
+                    </div>
+                </div>
+
                 <!-- Radiation Shield / Magnetosphere -->
                 <div class="metric-card">
                     <div class="metric-row">
@@ -1025,21 +1136,83 @@
                     </div>
                 </div>
 
+                <!-- Dedicated Planetary Terraforming Modules Section -->
+                <div class="section-header" style="margin-top: 14px;">
+                    <span>Planetary Terraforming Modules</span>
+                    <span style="font-size:10px; color:var(--accent-cyan);">Active Facilities & Controls</span>
+                </div>
+
+                <!-- Module 1: Atmospheric Processors -->
+                <div class="module-card" id="cardAtmoProc">
+                    <div class="module-header">
+                        <div>
+                            <span class="module-title">Troposphere Processor Array</span>
+                            <div class="module-sub" id="subAtmoProc">3 Units Online | 180 kW, 9 t Min/cyc</div>
+                        </div>
+                        <span class="module-badge" id="badgeAtmoMode">MODE: INJECTION (+P)</span>
+                    </div>
+                    <div class="module-desc">Vaporizes crustal silicates into dense atmospheric buffer gas to build pressure, or catalytically scrubs runaway toxic acid cloud decks on hyper-dense worlds.</div>
+                    <div class="module-controls">
+                        <button class="mini-btn" id="btnToggleAtmoMode" title="Toggle between Buffer Injection (+P) and Toxic Scrubbing (-P)">Toggle Mode</button>
+                        <button class="mini-btn highlight" id="btnBuildAtmoProc" title="Deploy additional Atmospheric Processor">+ Deploy Processor (180M, 100E)</button>
+                    </div>
+                </div>
+
+                <!-- Module 2: Orbital Solar Mirrors -->
+                <div class="module-card" id="cardSolarMirror">
+                    <div class="module-header">
+                        <div>
+                            <span class="module-title">Orbital Solar Mirror Statites</span>
+                            <div class="module-sub" id="subSolarMirror">2 Arrays In Orbit | 150 kW, 4 t Vol/cyc</div>
+                        </div>
+                        <span class="module-badge" id="badgeMirrorMode">MODE: FOCUS INSOLATION (+T)</span>
+                    </div>
+                    <div class="module-desc">Gossamer statite solar concentrators in synchronous orbit. Concentrates stellar rays to melt frozen ice sheets or tilts to cast defensive occulting shade blankets over superheated worlds.</div>
+                    <div class="module-controls">
+                        <button class="mini-btn" id="btnToggleMirrorMode" title="Toggle between Focus Heating (+Temp) and Solar Shade Cooling (-Temp)">Toggle Mode</button>
+                        <button class="mini-btn highlight" id="btnBuildSolarMirror" title="Launch additional Orbital Solar Mirror">+ Deploy Mirror (350E, 150M)</button>
+                    </div>
+                </div>
+
+                <!-- Module 3: Nitrogen Extractors -->
+                <div class="module-card" id="cardNitrogen">
+                    <div class="module-header">
+                        <div>
+                            <span class="module-title">Deep-Mantle Nitrogen Extractors</span>
+                            <div class="module-sub" id="subNitrogen">1 Bore Active | 85 kW, 2 t Min, 3 t Vol/cyc</div>
+                        </div>
+                        <span class="module-badge" style="color:var(--accent-cyan);">DRIFT: +0.025% N2 / CYC</span>
+                    </div>
+                    <div class="module-desc">Subterranean cryo-fractionation drills tapping crustal nitrates & mantle vents to synthesize inert atmospheric N2, preventing hyperoxic combustion and stabilizing soil chemistry.</div>
+                    <div class="module-controls">
+                        <button class="mini-btn highlight" id="btnBuildNitrogen" title="Drill Subterranean Nitrogen Mantle Bore">+ Drill Mantle Bore (280E, 180M, 80V)</button>
+                    </div>
+                </div>
+
+                <!-- Module 4: Greenhouse Seeding -->
+                <div class="module-card" id="cardGreenhouse">
+                    <div class="module-header">
+                        <div>
+                            <span class="module-title">Greenhouse Aerosol Seeding Grids</span>
+                            <div class="module-sub" id="subGreenhouse">1 Complex Active | 70 kW, 2 t Vol/cyc</div>
+                        </div>
+                        <span class="module-badge" id="badgeGreenhouseMode">MODE: PFC SUPER-WARMING (+GHG)</span>
+                    </div>
+                    <div class="module-desc">High-altitude chemical dispersal stations synthesizing potent perfluorocarbons (PFCs) to trap thermal radiation or dispersing reflective aerosol veils to cool boiling worlds.</div>
+                    <div class="module-controls">
+                        <button class="mini-btn" id="btnToggleGreenhouseMode" title="Toggle between PFC Super-Warming (+GHG) and Aerosol Cloud Cooling (-GHG)">Toggle Mode</button>
+                        <button class="mini-btn highlight" id="btnBuildGreenhouse" title="Deploy Greenhouse Seeding Facility">+ Deploy Seeding Grid (200E, 140V, 60F)</button>
+                    </div>
+                </div>
+
                 <div class="section-header" style="margin-top: 12px;">
-                    <span>Orbital & Surface Interventions</span>
-                    <span style="font-size:10px; color:var(--text-dim);">Click to Deploy / Activate</span>
+                    <span>Secondary Planetary Interventions</span>
+                    <span style="font-size:10px; color:var(--text-dim);">Tug Comets & Biosphere Seeding</span>
                 </div>
 
                 <div class="action-grid">
-                    <button class="action-btn" id="btnSolarMirror" title="Position mirrors to concentrate sunlight onto the ice caps">
-                        <span class="btn-title">Orbital Solar Mirror</span>
-                        <span class="btn-desc">+1.8°C / trigger<br>Cost: 350 kW, 150 Min</span>
-                    </button>
-
-                    <button class="action-btn" id="btnAtmoProcessor" title="Vaporize minerals into dense atmospheric buffer gas">
-                        <span class="btn-title">Atmo Gas Injector</span>
-                        <span class="btn-desc">+0.05 atm / trigger<br>Cost: 180 Min, 100 kW</span>
-                    </button>
+                    <button class="action-btn" id="btnSolarMirror" style="display:none;"></button>
+                    <button class="action-btn" id="btnAtmoProcessor" style="display:none;"></button>
 
                     <button class="action-btn" id="btnCometDrop" title="Tug icy comets from the outer belt to collide softly into polar basins">
                         <span class="btn-title">Redirect Ice Comet</span>
@@ -1066,8 +1239,10 @@
                     <span>Continuous Facilities Online</span>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-row"><span>Solar Mirror Array</span><strong id="cntMirrors">2 Deployed</strong></div>
-                    <div class="metric-row"><span>Troposphere Processors</span><strong id="cntProcessors">3 Online</strong></div>
+                    <div class="metric-row"><span>Solar Mirror Array</span><strong id="cntMirrors">2 Deployed (Heat)</strong></div>
+                    <div class="metric-row"><span>Troposphere Processors</span><strong id="cntProcessors">3 Online (Inject)</strong></div>
+                    <div class="metric-row"><span>Nitrogen Mantle Bores</span><strong id="cntNitrogen">1 Active</strong></div>
+                    <div class="metric-row"><span>Greenhouse Seeding Grids</span><strong id="cntGreenhouse">1 Active (Warm)</strong></div>
                     <div class="metric-row"><span>Bioseeding Stations</span><strong id="cntBioseed">1 Active</strong></div>
                     <div class="metric-row"><span>Core Dynamo Rings</span><strong id="cntDynamo">1 Primed</strong></div>
                 </div>
@@ -1432,12 +1607,19 @@
             temp: -48.0,            // Target: ~15.0 °C
             water: 12.8,            // Target: 50 - 70%
             oxygen: 3.1,            // Target: 20.9%
+            nitrogen: 14.5,         // Target: 78.0% (Inert Atmospheric Stability)
+            greenhouseFactor: 45.0, // Target: 100.0% (Thermal Retention Factor)
             magnet: 0.18,           // Target: > 0.50 Gauss
             habitability: 18.4,
 
-            // Active Infrastructure
-            solarMirrors: 2,
+            // Active Terraforming Modules & Infrastructure
             atmoProcessors: 3,
+            atmoMode: 'inject',       // 'inject' (+P) vs 'scrub' (-P)
+            solarMirrors: 2,
+            mirrorMode: 'heat',       // 'heat' (+Temp) vs 'cool' (-Temp)
+            nitrogenExtractors: 1,
+            greenhouseStations: 1,
+            greenhouseMode: 'warm',   // 'warm' (+GHG) vs 'cool' (-GHG)
             bioseedStations: 1,
             coreDynamos: 1,
             hydroTowers: 2,
@@ -1480,6 +1662,8 @@
                 badgeClass: 'class-barren',
                 desc: 'Airless, heavily cratered regolith subject to stellar thermal extremes. Abundant in mineral ores and heavy metals, devoid of hydrosphere.',
                 trait: '+50% Mining Yield | Extreme Thermal Swings',
+                defaultNitrogen: 2.0,
+                defaultGreenhouse: 30.0,
                 mineralsMult: 1.5,
                 volatilesMult: 0.6
             },
@@ -1491,6 +1675,8 @@
                 badgeClass: 'class-toxic',
                 desc: 'Runaway greenhouse atmosphere with high surface pressure, sulfuric clouds, and corrosive acid precipitation.',
                 trait: '+80% Volatiles Extraction | Corrosive Atmosphere',
+                defaultNitrogen: 3.5,
+                defaultGreenhouse: 320.0,
                 mineralsMult: 1.0,
                 volatilesMult: 1.8
             },
@@ -1502,6 +1688,8 @@
                 badgeClass: 'class-frozen',
                 desc: 'Frigid cryo-world with continental nitrogen/water ice sheets, cryo-geysers, and deep subsurface oceans.',
                 trait: '+60% Ice Scooping | High Reflective Albedo',
+                defaultNitrogen: 14.5,
+                defaultGreenhouse: 45.0,
                 mineralsMult: 0.9,
                 volatilesMult: 1.6
             },
@@ -1513,6 +1701,8 @@
                 badgeClass: 'class-ocean',
                 desc: 'Global pelagic hyper-hydrosphere with deep oceans, volcanic archipelago chains, and violent cyclonic storms.',
                 trait: '+50% Hydroponics & Algae Efficacy | Minimal Landmass',
+                defaultNitrogen: 64.0,
+                defaultGreenhouse: 90.0,
                 mineralsMult: 0.8,
                 volatilesMult: 1.2
             },
@@ -1524,6 +1714,8 @@
                 badgeClass: 'class-gaia',
                 desc: 'Nascent fertile biosphere with liquid water oceans, continental tectonic plates, and thriving microbial flora.',
                 trait: '+50% Colonist Morale & Population Growth | Optimal Target',
+                defaultNitrogen: 76.5,
+                defaultGreenhouse: 102.0,
                 mineralsMult: 1.1,
                 volatilesMult: 1.1
             }
@@ -1958,6 +2150,8 @@
                     temp: p.temp,
                     water: p.water,
                     oxygen: p.oxygen,
+                    nitrogen: (p.nitrogen !== undefined) ? p.nitrogen : pClassInfo.defaultNitrogen,
+                    greenhouseFactor: (p.greenhouseFactor !== undefined) ? p.greenhouseFactor : pClassInfo.defaultGreenhouse,
                     magnet: p.magnet,
                     habitability: p.habitability,
                     colonists: p.colonists || 0,
@@ -2033,6 +2227,8 @@
                 oldPlanet.temp = sim.temp;
                 oldPlanet.water = sim.water;
                 oldPlanet.oxygen = sim.oxygen;
+                oldPlanet.nitrogen = sim.nitrogen;
+                oldPlanet.greenhouseFactor = sim.greenhouseFactor;
                 oldPlanet.magnet = sim.magnet;
                 oldPlanet.habitability = sim.habitability;
             }
@@ -2042,10 +2238,11 @@
             sim.temp = planet.temp;
             sim.water = planet.water;
             sim.oxygen = planet.oxygen;
+            const pClassInfo = EXOPLANET_CLASSES[planet.classification] || EXOPLANET_CLASSES.barren_rock;
+            sim.nitrogen = (planet.nitrogen !== undefined) ? planet.nitrogen : pClassInfo.defaultNitrogen;
+            sim.greenhouseFactor = (planet.greenhouseFactor !== undefined) ? planet.greenhouseFactor : pClassInfo.defaultGreenhouse;
             sim.magnet = planet.magnet;
             sim.habitability = planet.habitability;
-
-            const pClassInfo = EXOPLANET_CLASSES[planet.classification] || EXOPLANET_CLASSES.barren_rock;
 
             // Update HUD Target badge
             const targetEl = document.getElementById('hudTargetName');
@@ -2264,12 +2461,20 @@
             const o = sim.oxygen;
             let oScore = Math.min(100, (o / 20.9) * 100);
 
+            // Nitrogen score: optimal at 78.0% (atmospheric inert stability)
+            const n = sim.nitrogen;
+            let nScore = Math.max(0, Math.min(100, 100 - Math.abs(78.0 - n) * 1.3));
+
+            // Greenhouse factor score: optimal at 100.0% (thermal equilibrium)
+            const ghg = sim.greenhouseFactor;
+            let ghgScore = Math.max(0, Math.min(100, 100 - Math.abs(100.0 - ghg) * 0.9));
+
             // Magnetosphere score: optimal at >=0.5 Gauss
             const m = sim.magnet;
             let mScore = Math.min(100, (m / 0.5) * 100);
 
-            // Weighted average Habitability
-            const total = (pScore * 0.25) + (tScore * 0.25) + (wScore * 0.2) + (oScore * 0.2) + (mScore * 0.1);
+            // Weighted 7-parameter Habitability Index
+            const total = (pScore * 0.20) + (tScore * 0.20) + (wScore * 0.15) + (oScore * 0.15) + (nScore * 0.15) + (ghgScore * 0.10) + (mScore * 0.05);
             sim.habitability = +Math.max(0, Math.min(100, total)).toFixed(1);
 
             // Update badge text
@@ -2300,19 +2505,19 @@
 
             // Energy loops
             const energyGen = 600 + (sim.surfaceSolar * 60);
-            const energyDrain = 200 + (sim.solarMirrors * 75) + (sim.atmoProcessors * 60) + (sim.coreDynamos * 80) + Math.floor(sim.colonists / 1000) * 5;
+            const energyDrain = 200 + (sim.solarMirrors * 75) + (sim.atmoProcessors * 60) + (sim.nitrogenExtractors * 85) + (sim.greenhouseStations * 70) + (sim.coreDynamos * 80) + Math.floor(sim.colonists / 1000) * 5;
             sim.deltaEnergy = energyGen - energyDrain;
             sim.energy = Math.max(0, sim.energy + Math.floor(sim.deltaEnergy * 0.05 * rate));
 
             // Minerals loops
             const mineralGain = 20 + (sim.drakeStatus === 'mining' ? 25 : 10);
-            const mineralDrain = (sim.atmoProcessors * 3);
+            const mineralDrain = (sim.atmoProcessors * 3) + (sim.nitrogenExtractors * 2);
             sim.deltaMinerals = mineralGain - mineralDrain;
             sim.minerals = Math.max(0, sim.minerals + Math.floor(sim.deltaMinerals * 0.05 * rate));
 
             // Volatiles loops
             const volGain = 14 + (sim.drakeStatus === 'mining' ? 18 : 6);
-            const volDrain = (sim.solarMirrors * 2);
+            const volDrain = (sim.solarMirrors * 2) + (sim.greenhouseStations * 2) + (sim.nitrogenExtractors * 3);
             sim.deltaVolatiles = volGain - volDrain;
             sim.volatiles = Math.max(0, sim.volatiles + Math.floor(sim.deltaVolatiles * 0.05 * rate));
 
@@ -2322,10 +2527,45 @@
             sim.deltaFood = foodGain - foodDrain;
             sim.food = Math.max(0, sim.food + Math.floor(sim.deltaFood * 0.05 * rate));
 
-            // Natural Terraforming slow drifts driven by active structures
+            // Natural Terraforming slow drifts driven by active structures & modules
             if (sim.energy > 500) {
-                sim.temp = +(sim.temp + (sim.solarMirrors * 0.012 * rate)).toFixed(2);
-                sim.pressure = +(sim.pressure + (sim.atmoProcessors * 0.0003 * rate)).toFixed(3);
+                // 1. Troposphere Processors Drift
+                if (sim.atmoMode === 'inject') {
+                    sim.pressure = +(sim.pressure + (sim.atmoProcessors * 0.0004 * rate)).toFixed(3);
+                } else if (sim.atmoMode === 'scrub') {
+                    if (sim.pressure > 1.0) {
+                        sim.pressure = Math.max(1.0, +(sim.pressure - (sim.atmoProcessors * 0.0007 * rate)).toFixed(3));
+                        sim.minerals = Math.min(50000, sim.minerals + 1);
+                    }
+                }
+
+                // 2. Orbital Solar Mirrors Drift
+                if (sim.mirrorMode === 'heat') {
+                    sim.temp = +(sim.temp + (sim.solarMirrors * 0.015 * rate)).toFixed(2);
+                } else if (sim.mirrorMode === 'cool') {
+                    sim.temp = +(sim.temp - (sim.solarMirrors * 0.018 * rate)).toFixed(2);
+                }
+
+                // 3. Nitrogen Extractors Drift
+                if (sim.nitrogen < 78.0) {
+                    sim.nitrogen = Math.min(78.0, +(sim.nitrogen + (sim.nitrogenExtractors * 0.025 * rate)).toFixed(2));
+                    sim.pressure = +(sim.pressure + (sim.nitrogenExtractors * 0.00015 * rate)).toFixed(3);
+                }
+
+                // 4. Greenhouse Aerosol Seeding Drift
+                if (sim.greenhouseMode === 'warm') {
+                    if (sim.greenhouseFactor < 250.0) {
+                        sim.greenhouseFactor = Math.min(250.0, +(sim.greenhouseFactor + (sim.greenhouseStations * 0.04 * rate)).toFixed(1));
+                    }
+                } else if (sim.greenhouseMode === 'cool') {
+                    if (sim.greenhouseFactor > 30.0) {
+                        sim.greenhouseFactor = Math.max(30.0, +(sim.greenhouseFactor - (sim.greenhouseStations * 0.05 * rate)).toFixed(1));
+                    }
+                }
+                // Thermal equilibrium drift from greenhouse retention
+                sim.temp = +(sim.temp + ((sim.greenhouseFactor - 100.0) * 0.0004 * rate)).toFixed(2);
+
+                // Biosphere & Hydrosphere drifts
                 if (sim.temp > -20 && sim.water > 10) {
                     sim.oxygen = +(sim.oxygen + (sim.bioseedStations * 0.0008 * rate)).toFixed(3);
                 }
@@ -3467,6 +3707,91 @@
                     // Render Procedural Surface for this classification
                     drawExoplanet(ctx, b, px, py, pr, sunX, sunY, z, sim.time);
 
+                    // Render Active Planetary Terraforming Modules on Canvas
+                    if (isTarget) {
+                        // 1. Orbital Solar Mirrors
+                        if (sim.solarMirrors > 0) {
+                            const mirrorOrbitDist = pr + 30 * z;
+                            for (let m = 0; m < sim.solarMirrors; m++) {
+                                const mAngle = (sim.time * 0.4) + (m * (Math.PI * 2 / sim.solarMirrors));
+                                const mx = px + Math.cos(mAngle) * mirrorOrbitDist;
+                                const my = py + Math.sin(mAngle) * (mirrorOrbitDist * 0.7);
+
+                                ctx.save();
+                                if (sim.mirrorMode === 'heat') {
+                                    // Golden focus beam to planet
+                                    ctx.strokeStyle = 'rgba(251, 191, 36, 0.45)';
+                                    ctx.lineWidth = 1.2 * z;
+                                    ctx.beginPath();
+                                    ctx.moveTo(mx, my);
+                                    ctx.lineTo(px + Math.cos(mAngle) * pr * 0.7, py + Math.sin(mAngle) * pr * 0.5);
+                                    ctx.stroke();
+
+                                    // Mirror diamond facet
+                                    ctx.fillStyle = '#fef08a';
+                                    ctx.strokeStyle = '#f59e0b';
+                                } else {
+                                    // Blue/cyan shade umbrella deflection arc
+                                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+                                    ctx.lineWidth = 1.5 * z;
+                                    ctx.beginPath();
+                                    ctx.arc(mx, my, 8 * z, mAngle - 0.8, mAngle + 0.8);
+                                    ctx.stroke();
+
+                                    ctx.fillStyle = '#bae6fd';
+                                    ctx.strokeStyle = '#38bdf8';
+                                }
+                                ctx.lineWidth = 1;
+                                ctx.beginPath();
+                                ctx.moveTo(mx, my - 4 * z);
+                                ctx.lineTo(mx + 4 * z, my);
+                                ctx.lineTo(mx, my + 4 * z);
+                                ctx.lineTo(mx - 4 * z, my);
+                                ctx.closePath();
+                                ctx.fill();
+                                ctx.stroke();
+                                ctx.restore();
+                            }
+                        }
+
+                        // 2. Atmospheric Processor & Nitrogen Mantle Plumes
+                        if (sim.atmoProcessors > 0 || sim.nitrogenExtractors > 0) {
+                            ctx.save();
+                            const plumeCount = Math.min(6, sim.atmoProcessors + sim.nitrogenExtractors);
+                            for (let p = 0; p < plumeCount; p++) {
+                                const pAng = (p * 1.05) + 0.2;
+                                const pLimbX = px + Math.cos(pAng) * pr;
+                                const pLimbY = py + Math.sin(pAng) * pr;
+                                const pHeight = (8 + (Math.sin(sim.time * 4 + p) * 4) + 6) * z;
+                                const pTipX = px + Math.cos(pAng) * (pr + pHeight);
+                                const pTipY = py + Math.sin(pAng) * (pr + pHeight);
+
+                                ctx.strokeStyle = (p % 2 === 0) ? 'rgba(0, 240, 255, 0.6)' : 'rgba(192, 132, 252, 0.6)';
+                                ctx.lineWidth = 1.5 * z;
+                                ctx.beginPath();
+                                ctx.moveTo(pLimbX, pLimbY);
+                                ctx.lineTo(pTipX, pTipY);
+                                ctx.stroke();
+                            }
+                            ctx.restore();
+                        }
+
+                        // 3. Greenhouse Aerosol Seeding Stratospheric Ring
+                        if (sim.greenhouseStations > 0) {
+                            ctx.save();
+                            const ringR = pr + 8 * z;
+                            const pulse = (Math.sin(sim.time * 2) * 0.15 + 0.85);
+                            ctx.strokeStyle = (sim.greenhouseMode === 'warm') ? `rgba(251, 146, 60, ${0.35 * pulse})` : `rgba(56, 189, 248, ${0.35 * pulse})`;
+                            ctx.lineWidth = 2 * z;
+                            ctx.setLineDash([4, 4]);
+                            ctx.beginPath();
+                            ctx.arc(px, py, ringR, 0, Math.PI * 2);
+                            ctx.stroke();
+                            ctx.setLineDash([]);
+                            ctx.restore();
+                        }
+                    }
+
                     // Target Reticle if selected
                     if (sim.selected && sim.selected.id === b.id) {
                         ctx.strokeStyle = '#00f0ff';
@@ -3908,41 +4233,116 @@
             }
         }
 
-        // --- Intervention & Building Handlers ---
-        document.getElementById('btnSolarMirror').addEventListener('click', () => {
+        // --- Module & Intervention Handlers ---
+        // 1. Atmospheric Processors
+        document.getElementById('btnToggleAtmoMode').addEventListener('click', () => {
             initAudio();
-            if (sim.energy >= 350 && sim.minerals >= 150) {
-                sim.energy -= 350;
-                sim.minerals -= 150;
-                sim.solarMirrors++;
-                sim.temp = +(sim.temp + 1.8).toFixed(1);
-                document.getElementById('cntMirrors').textContent = `${sim.solarMirrors} Deployed`;
-                calculateHabitability();
-                updateUI();
-                logMsg(`Orbital Solar Mirror #${sim.solarMirrors} deployed. Focused insolation rising (+1.8°C).`);
-                playSound('deploy');
-            } else {
-                logMsg('Insufficient resources (Req: 350 kW Energy, 150 t Minerals).', true);
-            }
+            sim.atmoMode = (sim.atmoMode === 'inject') ? 'scrub' : 'inject';
+            updateUI();
+            logMsg(`Troposphere Processor array mode switched to: ${sim.atmoMode === 'inject' ? 'BUFFER INJECTION (+P)' : 'TOXIC SCRUBBING (-P)'}.`);
+            playSound('click');
         });
 
-        document.getElementById('btnAtmoProcessor').addEventListener('click', () => {
+        document.getElementById('btnBuildAtmoProc').addEventListener('click', () => {
             initAudio();
             if (sim.minerals >= 180 && sim.energy >= 100) {
                 sim.minerals -= 180;
                 sim.energy -= 100;
                 sim.atmoProcessors++;
-                sim.pressure = +(sim.pressure + 0.05).toFixed(2);
-                document.getElementById('cntProcessors').textContent = `${sim.atmoProcessors} Online`;
+                if (sim.atmoMode === 'inject') {
+                    sim.pressure = +(sim.pressure + 0.05).toFixed(2);
+                } else {
+                    sim.pressure = Math.max(1.0, +(sim.pressure - 0.08).toFixed(2));
+                    sim.minerals += 25; // Salvaged minerals from scrubbing
+                }
                 calculateHabitability();
                 updateUI();
-                logMsg(`Troposphere Injector #${sim.atmoProcessors} constructed. Gas pressure increasing (+0.05 atm).`);
+                logMsg(`Troposphere Processor #${sim.atmoProcessors} constructed (${sim.atmoMode === 'inject' ? '+0.05 atm buffer' : '-0.08 atm toxic scrub'}).`);
                 playSound('deploy');
             } else {
                 logMsg('Insufficient resources (Req: 180 t Minerals, 100 kW Energy).', true);
             }
         });
 
+        // 2. Orbital Solar Mirrors
+        document.getElementById('btnToggleMirrorMode').addEventListener('click', () => {
+            initAudio();
+            sim.mirrorMode = (sim.mirrorMode === 'heat') ? 'cool' : 'heat';
+            updateUI();
+            logMsg(`Orbital Solar Mirror array orientation flipped to: ${sim.mirrorMode === 'heat' ? 'FOCUS INSOLATION (+T)' : 'SOLAR SHADE COOLING (-T)'}.`);
+            playSound('click');
+        });
+
+        document.getElementById('btnBuildSolarMirror').addEventListener('click', () => {
+            initAudio();
+            if (sim.energy >= 350 && sim.minerals >= 150) {
+                sim.energy -= 350;
+                sim.minerals -= 150;
+                sim.solarMirrors++;
+                if (sim.mirrorMode === 'heat') {
+                    sim.temp = +(sim.temp + 1.8).toFixed(1);
+                } else {
+                    sim.temp = +(sim.temp - 2.2).toFixed(1);
+                }
+                calculateHabitability();
+                updateUI();
+                logMsg(`Orbital Solar Mirror #${sim.solarMirrors} statite deployed (${sim.mirrorMode === 'heat' ? '+1.8°C heating' : '-2.2°C solar occultation'}).`);
+                playSound('deploy');
+            } else {
+                logMsg('Insufficient resources (Req: 350 kW Energy, 150 t Minerals).', true);
+            }
+        });
+
+        // 3. Nitrogen Extractors
+        document.getElementById('btnBuildNitrogen').addEventListener('click', () => {
+            initAudio();
+            if (sim.energy >= 280 && sim.minerals >= 180 && sim.volatiles >= 80) {
+                sim.energy -= 280;
+                sim.minerals -= 180;
+                sim.volatiles -= 80;
+                sim.nitrogenExtractors++;
+                sim.nitrogen = Math.min(78.0, +(sim.nitrogen + 4.5).toFixed(1));
+                sim.pressure = +(sim.pressure + 0.02).toFixed(2);
+                calculateHabitability();
+                updateUI();
+                logMsg(`Subterranean Nitrogen Extractor #${sim.nitrogenExtractors} online. Deep crustal N2 degassing (+4.5% N2, +0.02 atm).`);
+                playSound('deploy');
+            } else {
+                logMsg('Insufficient resources (Req: 280 kW Energy, 180 t Minerals, 80 t Volatiles).', true);
+            }
+        });
+
+        // 4. Greenhouse Seeding
+        document.getElementById('btnToggleGreenhouseMode').addEventListener('click', () => {
+            initAudio();
+            sim.greenhouseMode = (sim.greenhouseMode === 'warm') ? 'cool' : 'warm';
+            updateUI();
+            logMsg(`Greenhouse aerosol seeding formula switched to: ${sim.greenhouseMode === 'warm' ? 'PFC SUPER-WARMING (+GHG)' : 'AEROSOL REFLECTIVE CLOUD (-GHG)'}.`);
+            playSound('click');
+        });
+
+        document.getElementById('btnBuildGreenhouse').addEventListener('click', () => {
+            initAudio();
+            if (sim.energy >= 200 && sim.volatiles >= 140 && sim.food >= 60) {
+                sim.energy -= 200;
+                sim.volatiles -= 140;
+                sim.food -= 60;
+                sim.greenhouseStations++;
+                if (sim.greenhouseMode === 'warm') {
+                    sim.greenhouseFactor = Math.min(250.0, +(sim.greenhouseFactor + 5.0).toFixed(1));
+                } else {
+                    sim.greenhouseFactor = Math.max(30.0, +(sim.greenhouseFactor - 6.0).toFixed(1));
+                }
+                calculateHabitability();
+                updateUI();
+                logMsg(`Greenhouse Seeding Facility #${sim.greenhouseStations} operational (${sim.greenhouseMode === 'warm' ? '+5.0% PFC greenhouse retention' : '-6.0% albedo reflective veil'}).`);
+                playSound('deploy');
+            } else {
+                logMsg('Insufficient resources (Req: 200 kW Energy, 140 t Volatiles, 60 t Biomass).', true);
+            }
+        });
+
+        // Legacy / Secondary Interventions
         document.getElementById('btnCometDrop').addEventListener('click', () => {
             initAudio();
             if (sim.volatiles >= 300 && sim.energy >= 150) {
@@ -4127,7 +4527,7 @@
             document.getElementById('rateVolatiles').textContent = `(${sim.deltaVolatiles >= 0 ? '+' : ''}${sim.deltaVolatiles})`;
             document.getElementById('rateFood').textContent = `(${sim.deltaFood >= 0 ? '+' : ''}${sim.deltaFood})`;
 
-            // Terraforming Tab
+            // Terraforming Tab Metrics
             document.getElementById('valPressure').textContent = `${sim.pressure.toFixed(2)} atm`;
             document.getElementById('barPressure').style.width = `${Math.min(100, (sim.pressure / 1.5) * 100)}%`;
 
@@ -4141,6 +4541,59 @@
             const o2status = sim.oxygen >= 16 ? 'Breathable' : (sim.oxygen >= 8 ? 'Hypoxic' : 'Anoxic');
             document.getElementById('valOxygen').textContent = `${sim.oxygen.toFixed(1)}% (${o2status})`;
             document.getElementById('barOxygen').style.width = `${Math.min(100, (sim.oxygen / 21) * 100)}%`;
+
+            // Nitrogen & Greenhouse
+            const n2El = document.getElementById('valNitrogen');
+            if (n2El) n2El.textContent = `${sim.nitrogen.toFixed(1)}% (${sim.nitrogen >= 70 ? 'Stabilized' : 'Sparse Buffer'})`;
+            const n2Bar = document.getElementById('barNitrogen');
+            if (n2Bar) n2Bar.style.width = `${Math.min(100, (sim.nitrogen / 78.0) * 100)}%`;
+
+            const ghgEl = document.getElementById('valGreenhouse');
+            if (ghgEl) ghgEl.textContent = `${sim.greenhouseFactor.toFixed(1)}% (${sim.greenhouseFactor > 120 ? 'Trapping' : (sim.greenhouseFactor < 80 ? 'Deficient' : 'Equilibrium')})`;
+            const ghgBar = document.getElementById('barGreenhouse');
+            if (ghgBar) ghgBar.style.width = `${Math.min(100, (sim.greenhouseFactor / 150.0) * 100)}%`;
+
+            const magStatus = sim.magnet >= 0.5 ? 'Deflecting Solar Winds' : (sim.magnet >= 0.3 ? 'Moderate' : 'Lethal Radiation');
+            document.getElementById('valMagnet').textContent = `${sim.magnet.toFixed(2)} G (${magStatus})`;
+            document.getElementById('barMagnet').style.width = `${Math.min(100, (sim.magnet / 0.6) * 100)}%`;
+
+            // Terraforming Modules UI
+            const subAtmo = document.getElementById('subAtmoProc');
+            if (subAtmo) subAtmo.textContent = `${sim.atmoProcessors} Units Online | ${sim.atmoProcessors * 60} kW, ${sim.atmoProcessors * 3} t Min/cyc`;
+            const badgeAtmo = document.getElementById('badgeAtmoMode');
+            if (badgeAtmo) {
+                badgeAtmo.textContent = sim.atmoMode === 'inject' ? 'MODE: INJECTION (+P)' : 'MODE: TOXIC SCRUB (-P)';
+                badgeAtmo.className = `module-badge ${sim.atmoMode === 'inject' ? '' : 'cool'}`;
+            }
+
+            const subMirror = document.getElementById('subSolarMirror');
+            if (subMirror) subMirror.textContent = `${sim.solarMirrors} Arrays In Orbit | ${sim.solarMirrors * 75} kW, ${sim.solarMirrors * 2} t Vol/cyc`;
+            const badgeMirror = document.getElementById('badgeMirrorMode');
+            if (badgeMirror) {
+                badgeMirror.textContent = sim.mirrorMode === 'heat' ? 'MODE: FOCUS INSOLATION (+T)' : 'MODE: SOLAR SHADE (-T)';
+                badgeMirror.className = `module-badge ${sim.mirrorMode === 'heat' ? 'warn' : 'cool'}`;
+            }
+
+            const subN2 = document.getElementById('subNitrogen');
+            if (subN2) subN2.textContent = `${sim.nitrogenExtractors} Bores Active | ${sim.nitrogenExtractors * 85} kW, ${sim.nitrogenExtractors * 2} t Min, ${sim.nitrogenExtractors * 3} t Vol/cyc`;
+
+            const subGHG = document.getElementById('subGreenhouse');
+            if (subGHG) subGHG.textContent = `${sim.greenhouseStations} Complexes Active | ${sim.greenhouseStations * 70} kW, ${sim.greenhouseStations * 2} t Vol/cyc`;
+            const badgeGHG = document.getElementById('badgeGreenhouseMode');
+            if (badgeGHG) {
+                badgeGHG.textContent = sim.greenhouseMode === 'warm' ? 'MODE: PFC SUPER-WARM (+GHG)' : 'MODE: AEROSOL CLOUD (-GHG)';
+                badgeGHG.className = `module-badge ${sim.greenhouseMode === 'warm' ? 'warn' : 'cool'}`;
+            }
+
+            // Facilities Online Summary Card
+            const cntMirr = document.getElementById('cntMirrors');
+            if (cntMirr) cntMirr.textContent = `${sim.solarMirrors} Deployed (${sim.mirrorMode === 'heat' ? 'Focus Heat' : 'Solar Shade'})`;
+            const cntProc = document.getElementById('cntProcessors');
+            if (cntProc) cntProc.textContent = `${sim.atmoProcessors} Online (${sim.atmoMode === 'inject' ? 'Inject' : 'Scrub'})`;
+            const cntN2 = document.getElementById('cntNitrogen');
+            if (cntN2) cntN2.textContent = `${sim.nitrogenExtractors} Active Bores`;
+            const cntGHG = document.getElementById('cntGreenhouse');
+            if (cntGHG) cntGHG.textContent = `${sim.greenhouseStations} Active (${sim.greenhouseMode === 'warm' ? 'Warm' : 'Cool'})`;
 
             const magStatus = sim.magnet >= 0.5 ? 'Deflecting Solar Winds' : (sim.magnet >= 0.3 ? 'Moderate' : 'Lethal Radiation');
             document.getElementById('valMagnet').textContent = `${sim.magnet.toFixed(2)} G (${magStatus})`;
