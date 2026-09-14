@@ -487,6 +487,269 @@ static void DrawProgressBar(HDC hdc, int x, int y, int w, int h, float percent, 
     }
 }
 
+// --- Procedural Sprite Rendering Engine (GDI) ---
+
+static void DrawPlanetGDI(HDC hdc, int px, int py, int pr, int sunX, int sunY, float z) {
+    // Atmosphere halo
+    int atmoR = pr + (int)(8 * z * (1.0f + sim.pressure * 0.4f));
+    HPEN hAtmoPen = CreatePen(PS_SOLID, 2, (sim.oxygen > 15.0f ? COLOR_EMERALD : COLOR_CYAN));
+    HPEN hOldPen = (HPEN)SelectObject(hdc, hAtmoPen);
+    HBRUSH hNullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+    HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hNullBrush);
+    Ellipse(hdc, px - atmoR, py - atmoR, px + atmoR, py + atmoR);
+    SelectObject(hdc, hOldBrush);
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hAtmoPen);
+
+    // Planet body clipped to disc
+    HRGN hRgnPlanet = CreateEllipticRgn(px - pr, py - pr, px + pr + 1, py + pr + 1);
+    HRGN hOldRgn = CreateRectRgn(0, 0, 0, 0);
+    GetClipRgn(hdc, hOldRgn);
+    ExtSelectClipRgn(hdc, hRgnPlanet, RGN_AND);
+
+    COLORREF seaColor;
+    COLORREF landColor;
+    if (sim.temp < -20.0f) {
+        seaColor = RGB(120, 180, 240);
+        landColor = RGB(220, 235, 255);
+    } else if (sim.water > 40.0f && sim.oxygen > 12.0f) {
+        seaColor = RGB(14, 120, 190);
+        landColor = RGB(22, 130, 60);
+    } else {
+        seaColor = RGB(40, 80, 150);
+        landColor = RGB(160, 80, 30);
+    }
+
+    FillSolidRect(hdc, px - pr, py - pr, pr * 2, pr * 2, seaColor);
+
+    // Continents
+    HBRUSH hLandBrush = CreateSolidBrush(landColor);
+    SelectObject(hdc, hLandBrush);
+    HPEN hLandPen = CreatePen(PS_SOLID, 1, landColor);
+    SelectObject(hdc, hLandPen);
+
+    float rot = sim.time * 0.04f;
+    for (int c = 0; c < 3; c++) {
+        float cLon = (c * 2.1f + rot);
+        int cxPos = px + (int)(sinf(cLon) * pr * 0.65f);
+        int cyPos = py + (int)(((c % 2 == 0) ? -0.2f : 0.2f) * pr);
+        int rw = (int)(pr * 0.45f * fabsf(cosf(cLon)) + 6);
+        int rh = (int)(pr * 0.35f);
+        Ellipse(hdc, cxPos - rw, cyPos - rh, cxPos + rw, cyPos + rh);
+    }
+    SelectObject(hdc, hOldBrush);
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hLandBrush);
+    DeleteObject(hLandPen);
+
+    // Polar Ice Caps
+    float iceCov = (15.0f - sim.temp) / 60.0f;
+    if (iceCov < 0.1f) iceCov = 0.1f;
+    if (iceCov > 0.6f) iceCov = 0.6f;
+    int iceH = (int)(pr * iceCov);
+    HBRUSH hIceBrush = CreateSolidBrush(RGB(245, 250, 255));
+    SelectObject(hdc, hIceBrush);
+    HPEN hIcePen = CreatePen(PS_SOLID, 1, RGB(220, 240, 255));
+    SelectObject(hdc, hIcePen);
+    Ellipse(hdc, px - pr, py - pr - iceH / 2, px + pr, py - pr + iceH * 2);
+    Ellipse(hdc, px - pr, py + pr - iceH * 2, px + pr, py + pr + iceH / 2);
+    SelectObject(hdc, hOldBrush);
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hIceBrush);
+    DeleteObject(hIcePen);
+
+    SelectClipRgn(hdc, hOldRgn);
+    DeleteObject(hOldRgn);
+    DeleteObject(hRgnPlanet);
+}
+
+static void DrawMoonGDI(HDC hdc, int mx, int my, int mr, int sunX, int sunY, float z) {
+    HRGN hRgnMoon = CreateEllipticRgn(mx - mr, my - mr, mx + mr + 1, my + mr + 1);
+    HRGN hOldRgn = CreateRectRgn(0, 0, 0, 0);
+    GetClipRgn(hdc, hOldRgn);
+    ExtSelectClipRgn(hdc, hRgnMoon, RGN_AND);
+
+    FillSolidRect(hdc, mx - mr, my - mr, mr * 2, mr * 2, RGB(225, 232, 242));
+
+    HBRUSH hCraterBrush = CreateSolidBrush(RGB(180, 195, 215));
+    HPEN hCraterPen = CreatePen(PS_SOLID, 1, RGB(245, 250, 255));
+    HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hCraterBrush);
+    HPEN hOldPen = (HPEN)SelectObject(hdc, hCraterPen);
+    Ellipse(hdc, mx - mr / 2, my - mr / 3, mx - mr / 6, my + mr / 6);
+    Ellipse(hdc, mx + mr / 8, my + mr / 6, mx + mr / 2, my + mr / 2);
+    SelectObject(hdc, hOldBrush);
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hCraterBrush);
+    DeleteObject(hCraterPen);
+
+    SelectClipRgn(hdc, hOldRgn);
+    DeleteObject(hOldRgn);
+    DeleteObject(hRgnMoon);
+}
+
+static void DrawStationGDI(HDC hdc, int stX, int stY, int stR, float z, float simTime) {
+    int sz = stR;
+    if (sz < 7) sz = 7;
+
+    // Solar Wings (Left and Right)
+    FillSolidRect(hdc, stX - sz * 2 - 4, stY - sz / 2, sz * 2, sz, RGB(15, 25, 48));
+    FrameSolidRect(hdc, stX - sz * 2 - 4, stY - sz / 2, sz * 2, sz, COLOR_AMBER);
+    FillSolidRect(hdc, stX + 4, stY - sz / 2, sz * 2, sz, RGB(15, 25, 48));
+    FrameSolidRect(hdc, stX + 4, stY - sz / 2, sz * 2, sz, COLOR_AMBER);
+
+    // Docking Ring
+    HPEN hRingPen = CreatePen(PS_SOLID, 1, COLOR_EMERALD);
+    HPEN hOldPen = (HPEN)SelectObject(hdc, hRingPen);
+    HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    int ringR = (int)(sz * 1.2f);
+    Ellipse(hdc, stX - ringR, stY - ringR, stX + ringR, stY + ringR);
+
+    // Central Station Hub
+    HBRUSH hHubBrush = CreateSolidBrush(RGB(28, 42, 65));
+    SelectObject(hdc, hHubBrush);
+    HPEN hHubPen = CreatePen(PS_SOLID, 1, COLOR_CYAN);
+    SelectObject(hdc, hHubPen);
+    Ellipse(hdc, stX - sz / 2, stY - sz / 2, stX + sz / 2, stY + sz / 2);
+    DeleteObject(hHubBrush);
+    DeleteObject(hHubPen);
+
+    // Blinking Docking Nav Light
+    if (sinf(simTime * 6.0f) > 0.0f) {
+        FillSolidRect(hdc, stX - 2, stY - sz - 4, 4, 4, COLOR_EMERALD);
+    }
+
+    SelectObject(hdc, hOldBrush);
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hRingPen);
+}
+
+static void DrawShipGDI(HDC hdc, Ship* s, int sx, int sy, float z, int i, float simTime) {
+    float heading;
+    if (s->targetBelt) {
+        heading = atan2f(s->vy, s->vx);
+    } else {
+        heading = s->angle + 1.5707963f; // PI/2
+    }
+
+    float cosH = cosf(heading);
+    float sinH = sinf(heading);
+
+    // Thruster exhaust flame
+    int flameLen = (int)(8 * z + sinf(simTime * 25.0f + sx) * 2.0f);
+    HPEN hFlamePen = CreatePen(PS_SOLID, 2, s->color);
+    HPEN hOldPen = (HPEN)SelectObject(hdc, hFlamePen);
+    MoveToEx(hdc, sx, sy, NULL);
+    LineTo(hdc, sx - (int)(cosH * flameLen), sy - (int)(sinH * flameLen));
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hFlamePen);
+
+    if (i == 0) {
+        // CSS Genesis: Flagship Ark with Command Spine & Habitat Ring
+        int hlen = (int)(10 * z);
+        int hwid = (int)(4 * z);
+        POINT pts[4];
+        pts[0].x = sx + (int)(cosH * hlen);
+        pts[0].y = sy + (int)(sinH * hlen);
+        pts[1].x = sx - (int)(cosH * (hlen / 2) + sinH * hwid);
+        pts[1].y = sy - (int)(sinH * (hlen / 2) - cosH * hwid);
+        pts[2].x = sx - (int)(cosH * hlen);
+        pts[2].y = sy - (int)(sinH * hlen);
+        pts[3].x = sx - (int)(cosH * (hlen / 2) - sinH * hwid);
+        pts[3].y = sy - (int)(sinH * (hlen / 2) + cosH * hwid);
+
+        HBRUSH hHullBrush = CreateSolidBrush(RGB(20, 36, 60));
+        HPEN hHullPen = CreatePen(PS_SOLID, 1, COLOR_CYAN);
+        HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hHullBrush);
+        HPEN hOldP = (HPEN)SelectObject(hdc, hHullPen);
+        Polygon(hdc, pts, 4);
+
+        // Habitat Torus
+        SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        int ringR = (int)(7 * z);
+        Ellipse(hdc, sx - ringR, sy - ringR, sx + ringR, sy + ringR);
+
+        SelectObject(hdc, hOldBrush);
+        SelectObject(hdc, hOldP);
+        DeleteObject(hHullBrush);
+        DeleteObject(hHullPen);
+
+    } else if (i == 1) {
+        // Ark Vanguard: Agronomy Ark with 3 Biodomes
+        int hlen = (int)(8 * z);
+        HPEN hSpinePen = CreatePen(PS_SOLID, 3, RGB(50, 70, 90));
+        HPEN hOldP = (HPEN)SelectObject(hdc, hSpinePen);
+        MoveToEx(hdc, sx - (int)(cosH * hlen), sy - (int)(sinH * hlen), NULL);
+        LineTo(hdc, sx + (int)(cosH * hlen), sy + (int)(sinH * hlen));
+        SelectObject(hdc, hOldP);
+        DeleteObject(hSpinePen);
+
+        // 3 Emerald domes
+        HBRUSH hDomeBrush = CreateSolidBrush(COLOR_EMERALD);
+        HPEN hDomePen = CreatePen(PS_SOLID, 1, RGB(160, 240, 200));
+        HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hDomeBrush);
+        hOldP = (HPEN)SelectObject(hdc, hDomePen);
+        int dr = (int)(3 * z);
+        if (dr < 2) dr = 2;
+        Ellipse(hdc, sx - dr, sy - dr, sx + dr, sy + dr);
+        int fOffX = (int)(cosH * (hlen * 0.6f));
+        int fOffY = (int)(sinH * (hlen * 0.6f));
+        Ellipse(hdc, sx + fOffX - dr, sy + fOffY - dr, sx + fOffX + dr, sy + fOffY + dr);
+        Ellipse(hdc, sx - fOffX - dr, sy - fOffY - dr, sx - fOffX + dr, sy - fOffY + dr);
+        SelectObject(hdc, hOldBrush);
+        SelectObject(hdc, hOldP);
+        DeleteObject(hDomeBrush);
+        DeleteObject(hDomePen);
+
+    } else if (i == 2) {
+        // Surveyor Aeon: Sleek Delta Dart
+        int dlen = (int)(11 * z);
+        int dwid = (int)(6 * z);
+        POINT pts[4];
+        pts[0].x = sx + (int)(cosH * dlen);
+        pts[0].y = sy + (int)(sinH * dlen);
+        pts[1].x = sx - (int)(cosH * dlen * 0.6f + sinH * dwid);
+        pts[1].y = sy - (int)(sinH * dlen * 0.6f - cosH * dwid);
+        pts[2].x = sx - (int)(cosH * dlen * 0.3f);
+        pts[2].y = sy - (int)(sinH * dlen * 0.3f);
+        pts[3].x = sx - (int)(cosH * dlen * 0.6f - sinH * dwid);
+        pts[3].y = sy - (int)(sinH * dlen * 0.6f + cosH * dwid);
+
+        HBRUSH hDartBrush = CreateSolidBrush(RGB(15, 30, 50));
+        HPEN hDartPen = CreatePen(PS_SOLID, 1, COLOR_BLUE);
+        HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hDartBrush);
+        HPEN hOldP = (HPEN)SelectObject(hdc, hDartPen);
+        Polygon(hdc, pts, 4);
+        SelectObject(hdc, hOldBrush);
+        SelectObject(hdc, hOldP);
+        DeleteObject(hDartBrush);
+        DeleteObject(hDartPen);
+
+    } else if (i == 3) {
+        // Harvester Drake: Industrial Mining Rig with Claws
+        int bsz = (int)(5 * z);
+        if (bsz < 3) bsz = 3;
+        FillSolidRect(hdc, sx - bsz, sy - bsz, bsz * 2, bsz * 2, RGB(25, 20, 15));
+        FrameSolidRect(hdc, sx - bsz, sy - bsz, bsz * 2, bsz * 2, COLOR_AMBER);
+        HPEN hClawPen = CreatePen(PS_SOLID, 2, COLOR_AMBER);
+        HPEN hOldP = (HPEN)SelectObject(hdc, hClawPen);
+        int cx1 = sx + (int)(cosH * bsz * 1.8f - sinH * bsz * 0.8f);
+        int cy1 = sy + (int)(sinH * bsz * 1.8f + cosH * bsz * 0.8f);
+        int cx2 = sx + (int)(cosH * bsz * 1.8f + sinH * bsz * 0.8f);
+        int cy2 = sy + (int)(sinH * bsz * 1.8f - cosH * bsz * 0.8f);
+        MoveToEx(hdc, sx, sy, NULL); LineTo(hdc, cx1, cy1);
+        MoveToEx(hdc, sx, sy, NULL); LineTo(hdc, cx2, cy2);
+        SelectObject(hdc, hOldP);
+        DeleteObject(hClawPen);
+
+    } else {
+        // Freighter Titan-1: Modular Container Hauler
+        int fwid = (int)(4 * z);
+        if (fwid < 3) fwid = 3;
+        FillSolidRect(hdc, sx - fwid * 2, sy - fwid, fwid * 4, fwid * 2, RGB(80, 40, 140));
+        FrameSolidRect(hdc, sx - fwid * 2, sy - fwid, fwid * 4, fwid * 2, COLOR_PURPLE);
+    }
+}
+
 // --- Button Hit Testing & Layout ---
 typedef struct {
     int id;
@@ -946,23 +1209,8 @@ static void RenderUI(HDC hdc, int width, int height) {
              sunX + (int)planetOrbitR, sunY + (int)(planetOrbitR * 0.7f), 0, 0, 0, 0);
     DeleteObject(hOrbitPen);
 
-    // Planet Atmospheric Halo
-    int atmoR = pr + (int)(8 * z * (1.0f + sim.pressure * 0.3f));
-    HPEN hAtmoPen = CreatePen(PS_SOLID, 2, (sim.oxygen > 15.0f ? COLOR_EMERALD : COLOR_CYAN));
-    SelectObject(hdc, hAtmoPen);
-    Arc(hdc, px - atmoR, py - atmoR, px + atmoR, py + atmoR, 0, 0, 0, 0);
-    DeleteObject(hAtmoPen);
-
-    // Planet Body
-    COLORREF planetBodyColor;
-    if (sim.temp < -20.0f) planetBodyColor = RGB(160, 205, 240); // Frozen
-    else if (sim.water > 40.0f && sim.oxygen > 12.0f) planetBodyColor = RGB(20, 140, 110); // Gaia
-    else planetBodyColor = RGB(70, 120, 180); // Barren Greenhouse
-
-    HBRUSH hPlanetBrush = CreateSolidBrush(planetBodyColor);
-    SelectObject(hdc, hPlanetBrush);
-    Ellipse(hdc, px - pr, py - pr, px + pr, py + pr);
-    DeleteObject(hPlanetBrush);
+    // Planet Body & Surface
+    DrawPlanetGDI(hdc, px, py, pr, sunX, sunY, z);
 
     // Selected reticle on planet
     if (sim.selectedType == 2) {
@@ -989,10 +1237,7 @@ static void RenderUI(HDC hdc, int width, int height) {
     bodies[2].currX = (float)mx;
     bodies[2].currY = (float)my;
 
-    HBRUSH hMoonBrush = CreateSolidBrush(bodies[2].color);
-    SelectObject(hdc, hMoonBrush);
-    Ellipse(hdc, mx - mr, my - mr, mx + mr, my + mr);
-    DeleteObject(hMoonBrush);
+    DrawMoonGDI(hdc, mx, my, mr, sunX, sunY, z);
 
     if (sim.selectedType == 3) {
         HPEN hSelPen = CreatePen(PS_SOLID, 1, COLOR_CYAN);
@@ -1014,7 +1259,7 @@ static void RenderUI(HDC hdc, int width, int height) {
     bodies[3].currX = (float)stX;
     bodies[3].currY = (float)stY;
 
-    FillSolidRect(hdc, stX - stR, stY - stR, stR * 2, stR * 2, bodies[3].color);
+    DrawStationGDI(hdc, stX, stY, stR, z, sim.time);
     if (sim.selectedType == 4) {
         FrameSolidRect(hdc, stX - stR - 3, stY - stR - 3, stR * 2 + 6, stR * 2 + 6, COLOR_CYAN);
     }
@@ -1045,24 +1290,17 @@ static void RenderUI(HDC hdc, int width, int height) {
         fleet[i].currX = (float)sx;
         fleet[i].currY = (float)sy;
 
-        // Thruster line
-        HPEN hThrustPen = CreatePen(PS_SOLID, 1, RGB(0, 240, 255));
-        SelectObject(hdc, hThrustPen);
-        MoveToEx(hdc, sx, sy, NULL);
-        LineTo(hdc, sx - (int)(cos(fleet[i].angle) * 7 * z), sy - (int)(sin(fleet[i].angle) * 7 * z));
-        DeleteObject(hThrustPen);
-
-        // Ship Icon
-        int shipSz = (int)(4 * z);
-        if (shipSz < 3) shipSz = 3;
-        FillSolidRect(hdc, sx - shipSz, sy - shipSz, shipSz * 2, shipSz * 2, fleet[i].color);
+        // Render Ship Sprite
+        DrawShipGDI(hdc, &fleet[i], sx, sy, z, i, sim.time);
 
         if (sim.selectedType == 5 && sim.selectedIndex == i) {
-            FrameSolidRect(hdc, sx - shipSz - 4, sy - shipSz - 4, shipSz * 2 + 8, shipSz * 2 + 8, fleet[i].color);
+            int retSz = (int)(10 * z);
+            if (retSz < 6) retSz = 6;
+            FrameSolidRect(hdc, sx - retSz, sy - retSz, retSz * 2, retSz * 2, fleet[i].color);
         }
 
         SetTextColor(hdc, fleet[i].color);
-        TextOutA(hdc, sx + 6, sy - 5, fleet[i].name, (int)strlen(fleet[i].name));
+        TextOutA(hdc, sx + (int)(10 * z) + 4, sy - 5, fleet[i].name, (int)strlen(fleet[i].name));
     }
 
     // I. Viewport Top Overlay Card

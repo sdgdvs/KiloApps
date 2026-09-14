@@ -157,9 +157,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KColony
 - KFortress
 - KColosseum
+- KCosmic
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
 
+- KCosmic (Loop 1): Thematic procedural sprites for all 5 fleet ships with animated ion plumes, orbital shipyard station with rotating gantry, and planetary continents/ice caps.
 - KColosseum (Loop 2): Authentic Balteus belt, Manica and Galerus armor, slashing/thrusting weapon swing arcs, lion claw swipes, and defeat collapse with dropped gear.
 - KTetris (Loop 9): Prismatic crystal gem facets per piece, armored steel bulkhead garbage, demolition ordnance bomb, holographic guide beams, plasma laser sweep, and graphical skill badges.
 - KSnake (Loop 9): Themed sprites for all 4 Bosses (Hydra, Basilisk, Inferno, Void) and CPU rivals with animated scanning visors, fangs, and pulsar capacitors.

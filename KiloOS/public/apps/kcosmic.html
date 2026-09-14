@@ -1529,6 +1529,472 @@
             updateUI();
         }
 
+        // --- Thematic Procedural Sprite Rendering Engine ---
+
+        // 1. Aethelgard Prime Planetary Surface with Continents, Ice Caps & Clouds
+        function drawPlanetAethelgard(ctx, px, py, pr, sunX, sunY, z, time) {
+            const sunAngle = Math.atan2(sunY - py, sunX - px);
+
+            // A. Outer Dynamic Atmosphere Glow
+            const atmoThickness = 8 * z * (1.0 + sim.pressure * 0.4);
+            const atmoGrad = ctx.createRadialGradient(px, py, pr * 0.9, px, py, pr + atmoThickness);
+            const atmoHue = sim.oxygen > 15 ? 'rgba(16, 185, 129,' : 'rgba(0, 240, 255,';
+            atmoGrad.addColorStop(0, atmoHue + '0.45)');
+            atmoGrad.addColorStop(0.6, atmoHue + '0.18)');
+            atmoGrad.addColorStop(1, atmoHue + '0)');
+            ctx.fillStyle = atmoGrad;
+            ctx.beginPath();
+            ctx.arc(px, py, pr + atmoThickness, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Clip all surface features to planet circle
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(px, py, pr, 0, Math.PI * 2);
+            ctx.clip();
+
+            // B. Ocean / Bedrock Base
+            let baseGrad = ctx.createRadialGradient(px - Math.cos(sunAngle) * pr * 0.3, py - Math.sin(sunAngle) * pr * 0.3, pr * 0.1, px, py, pr);
+            if (sim.temp < -20) {
+                // Glaciated ocean
+                baseGrad.addColorStop(0, '#93c5fd');
+                baseGrad.addColorStop(0.6, '#3b82f6');
+                baseGrad.addColorStop(1, '#1e3a8a');
+            } else if (sim.water > 40 && sim.oxygen > 12) {
+                // Deep gaia oceans
+                baseGrad.addColorStop(0, '#0ea5e9');
+                baseGrad.addColorStop(0.5, '#0284c7');
+                baseGrad.addColorStop(1, '#0c4a6e');
+            } else {
+                // Primordial volcanic/greenhouse seas
+                baseGrad.addColorStop(0, '#38bdf8');
+                baseGrad.addColorStop(0.5, '#1e40af');
+                baseGrad.addColorStop(1, '#0f172a');
+            }
+            ctx.fillStyle = baseGrad;
+            ctx.fill();
+
+            // C. Rotating Continents / Landmasses
+            const rot = time * 0.04;
+            const continentColor = (sim.temp < -20) ? '#dbeafe' : (sim.water > 40 && sim.oxygen > 12 ? '#15803d' : '#9a3412');
+            const highlandColor = (sim.temp < -20) ? '#eff6ff' : (sim.water > 40 && sim.oxygen > 12 ? '#ca8a04' : '#b45309');
+
+            // 4 Continental mass seeds across planetary longitude
+            const continents = [
+                { lon: 0.2, lat: -0.15, rw: 0.45, rh: 0.35, pts: [[-0.3,-0.2],[0.1,-0.3],[0.35,-0.1],[0.25,0.25],[-0.15,0.3],[-0.35,0.05]] },
+                { lon: 1.8, lat: 0.2, rw: 0.4, rh: 0.4, pts: [[-0.25,-0.3],[0.2,-0.25],[0.35,0.1],[0.1,0.35],[-0.3,0.2]] },
+                { lon: 3.4, lat: -0.1, rw: 0.5, rh: 0.3, pts: [[-0.4,-0.15],[0.0,-0.3],[0.4,-0.1],[0.3,0.2],[-0.1,0.25],[-0.35,0.1]] },
+                { lon: 4.9, lat: 0.15, rw: 0.38, rh: 0.35, pts: [[-0.2,-0.25],[0.25,-0.15],[0.3,0.25],[-0.05,0.3],[-0.25,0.05]] }
+            ];
+
+            continents.forEach(c => {
+                const cLon = (c.lon + rot) % (Math.PI * 2);
+                const cosLon = Math.cos(cLon);
+                if (cosLon > -0.25) {
+                    const cxPos = px + Math.sin(cLon) * pr * 0.85;
+                    const cyPos = py + c.lat * pr * 0.85;
+                    const scaleX = Math.max(0.15, cosLon);
+
+                    ctx.save();
+                    ctx.translate(cxPos, cyPos);
+                    ctx.scale(scaleX, 1.0);
+
+                    // Continent base
+                    ctx.fillStyle = continentColor;
+                    ctx.beginPath();
+                    c.pts.forEach((pt, idx) => {
+                        const kx = pt[0] * pr * c.rw * 2;
+                        const ky = pt[1] * pr * c.rh * 2;
+                        if (idx === 0) ctx.moveTo(kx, ky);
+                        else ctx.lineTo(kx, ky);
+                    });
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Mountain ridge highlight
+                    ctx.fillStyle = highlandColor;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, pr * c.rw * 0.4, pr * c.rh * 0.3, 0.2, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.restore();
+                }
+            });
+
+            // D. Polar Ice Caps (Scale with Temperature)
+            const iceCoverage = Math.max(0.08, Math.min(0.6, (15 - sim.temp) / 60));
+            const iceH = pr * iceCoverage;
+
+            // North Cap
+            ctx.fillStyle = '#f8fafc';
+            ctx.beginPath();
+            ctx.ellipse(px, py - pr + iceH * 0.5, pr * Math.sqrt(Math.max(0.1, 1 - Math.pow((pr - iceH)/pr, 2))), iceH, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // South Cap
+            ctx.beginPath();
+            ctx.ellipse(px, py + pr - iceH * 0.5, pr * Math.sqrt(Math.max(0.1, 1 - Math.pow((pr - iceH)/pr, 2))), iceH, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // E. Atmospheric Cloud Swirls
+            const cloudRot = time * 0.07;
+            ctx.fillStyle = 'rgba(255, 255, 255, ' + (0.2 + Math.min(0.3, sim.pressure * 0.2)) + ')';
+            for (let i = 0; i < 3; i++) {
+                const cloudLon = (i * 2.1 + cloudRot) % (Math.PI * 2);
+                if (Math.cos(cloudLon) > -0.2) {
+                    const clx = px + Math.sin(cloudLon) * pr * 0.8;
+                    const cly = py + (i - 1) * pr * 0.35;
+                    ctx.beginPath();
+                    ctx.ellipse(clx, cly, pr * 0.45 * Math.max(0.2, Math.cos(cloudLon)), pr * 0.08, 0.1 * (i - 1), 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // F. Sun Day/Night Terminator Shadow
+            const shadeGrad = ctx.createRadialGradient(
+                px + Math.cos(sunAngle) * pr * 0.4,
+                py + Math.sin(sunAngle) * pr * 0.4,
+                pr * 0.2,
+                px - Math.cos(sunAngle) * pr * 0.5,
+                py - Math.sin(sunAngle) * pr * 0.5,
+                pr * 1.05
+            );
+            shadeGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+            shadeGrad.addColorStop(0.55, 'rgba(3, 7, 18, 0.3)');
+            shadeGrad.addColorStop(1, 'rgba(3, 7, 18, 0.82)');
+            ctx.fillStyle = shadeGrad;
+            ctx.beginPath();
+            ctx.arc(px, py, pr, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        // 2. Boreas Minor Frozen Moon
+        function drawBoreasMoon(ctx, mx, my, mr, sunX, sunY, z) {
+            const sunAngle = Math.atan2(sunY - my, sunX - mx);
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(mx, my, mr, 0, Math.PI * 2);
+            ctx.clip();
+
+            // Base pale icy rock
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillRect(mx - mr, my - mr, mr * 2, mr * 2);
+
+            // Craters with sun-lit rim
+            const craters = [
+                { ox: -0.3, oy: -0.2, r: 0.28 },
+                { ox: 0.25, oy: 0.3, r: 0.2 },
+                { ox: -0.1, oy: 0.35, r: 0.16 }
+            ];
+            craters.forEach(c => {
+                const cx = mx + c.ox * mr;
+                const cy = my + c.oy * mr;
+                const cr = c.r * mr;
+                ctx.fillStyle = '#cbd5e1';
+                ctx.beginPath();
+                ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+                ctx.fill();
+                // Crater rim highlight
+                ctx.strokeStyle = '#f8fafc';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(cx + Math.cos(sunAngle) * cr * 0.3, cy + Math.sin(sunAngle) * cr * 0.3, cr * 0.8, 0, Math.PI * 2);
+                ctx.stroke();
+            });
+
+            // Sun shadow
+            const shadeGrad = ctx.createLinearGradient(
+                mx + Math.cos(sunAngle) * mr,
+                my + Math.sin(sunAngle) * mr,
+                mx - Math.cos(sunAngle) * mr,
+                my - Math.sin(sunAngle) * mr
+            );
+            shadeGrad.addColorStop(0, 'rgba(0,0,0,0)');
+            shadeGrad.addColorStop(1, 'rgba(10, 15, 26, 0.7)');
+            ctx.fillStyle = shadeGrad;
+            ctx.fillRect(mx - mr, my - mr, mr * 2, mr * 2);
+
+            ctx.restore();
+        }
+
+        // 3. Zephyr Orbital Shipyard Station
+        function drawStationSprite(ctx, stX, stY, stR, time, z) {
+            const sz = Math.max(8, stR);
+            ctx.save();
+            ctx.translate(stX, stY);
+
+            // Solar Array Wings (Left and Right)
+            ctx.fillStyle = '#0f172a';
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 1;
+
+            // Port Solar Wing
+            ctx.fillRect(-sz * 2.6, -sz * 0.5, sz * 1.6, sz);
+            ctx.strokeRect(-sz * 2.6, -sz * 0.5, sz * 1.6, sz);
+            // Solar Cell grid lines
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+            ctx.beginPath();
+            ctx.moveTo(-sz * 1.8, -sz * 0.5); ctx.lineTo(-sz * 1.8, sz * 0.5);
+            ctx.stroke();
+
+            // Starboard Solar Wing
+            ctx.fillStyle = '#0f172a';
+            ctx.strokeStyle = '#f59e0b';
+            ctx.fillRect(sz * 1.0, -sz * 0.5, sz * 1.6, sz);
+            ctx.strokeRect(sz * 1.0, -sz * 0.5, sz * 1.6, sz);
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+            ctx.beginPath();
+            ctx.moveTo(sz * 1.8, -sz * 0.5); ctx.lineTo(sz * 1.8, sz * 0.5);
+            ctx.stroke();
+
+            // Rotating Docking Ring / Gantry
+            const ringAngle = time * 0.8;
+            ctx.save();
+            ctx.rotate(ringAngle);
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(0, 0, sz * 1.1, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // 4 Docking clamps on ring
+            for (let i = 0; i < 4; i++) {
+                const a = (i * Math.PI / 2);
+                ctx.fillStyle = '#34d399';
+                ctx.fillRect(Math.cos(a) * sz * 1.05 - 2, Math.sin(a) * sz * 1.05 - 2, 4, 4);
+            }
+            ctx.restore();
+
+            // Central Station Hub
+            ctx.fillStyle = '#1e293b';
+            ctx.strokeStyle = '#00f0ff';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(0, 0, sz * 0.7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Core Observation Port
+            ctx.fillStyle = '#00f0ff';
+            ctx.beginPath();
+            ctx.arc(0, 0, sz * 0.25, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Blinking Nav Beacon
+            const beaconOn = (Math.sin(time * 6) > 0);
+            if (beaconOn) {
+                ctx.fillStyle = '#10b981';
+                ctx.beginPath();
+                ctx.arc(0, -sz * 1.2, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        // 4. Fleet Ship Sprites
+        function drawShipSprite(ctx, ship, sx, sy, z, time) {
+            let heading;
+            if (ship.targetBelt) {
+                heading = Math.atan2(ship.vy, ship.vx);
+            } else {
+                heading = ship.angle + Math.PI / 2;
+            }
+
+            const scale = Math.max(0.85, Math.min(1.8, z));
+            ctx.save();
+            ctx.translate(sx, sy);
+            ctx.rotate(heading);
+            ctx.scale(scale, scale);
+
+            const flicker = Math.sin(time * 25 + sx) * 1.5;
+
+            if (ship.id === 'genesis') {
+                // --- CSS Genesis: Flagship Ark ---
+                // Animated Ion Thruster Plumes
+                const flameGrad = ctx.createLinearGradient(0, 0, -14 - flicker, 0);
+                flameGrad.addColorStop(0, '#ffffff');
+                flameGrad.addColorStop(0.3, '#00f0ff');
+                flameGrad.addColorStop(1, 'rgba(0, 240, 255, 0)');
+                ctx.fillStyle = flameGrad;
+                // Port Engine
+                ctx.beginPath();
+                ctx.moveTo(-7, -4); ctx.lineTo(-14 - flicker, -4); ctx.lineTo(-7, -2);
+                ctx.fill();
+                // Starboard Engine
+                ctx.beginPath();
+                ctx.moveTo(-7, 2); ctx.lineTo(-14 - flicker, 4); ctx.lineTo(-7, 4);
+                ctx.fill();
+
+                // Rotating Habitat Torus (Simulated elliptical rotation)
+                const torusW = 6;
+                const torusH = 11;
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, torusW * Math.abs(Math.cos(time * 1.2)), torusH, 0, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Main Command Hull Spine
+                ctx.fillStyle = '#1e293b';
+                ctx.strokeStyle = '#00f0ff';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(12, 0);
+                ctx.lineTo(8, -3);
+                ctx.lineTo(-7, -4);
+                ctx.lineTo(-8, 0);
+                ctx.lineTo(-7, 4);
+                ctx.lineTo(8, 3);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Command Bridge Cupola
+                ctx.fillStyle = '#00f0ff';
+                ctx.beginPath();
+                ctx.arc(6, 0, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+            } else if (ship.id === 'vanguard') {
+                // --- Ark Vanguard: Agronomy Ark ---
+                // Teal/Emerald Engine Flame
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.8)';
+                ctx.beginPath();
+                ctx.moveTo(-8, -2); ctx.lineTo(-13 - flicker, 0); ctx.lineTo(-8, 2);
+                ctx.fill();
+
+                // Spine Truss
+                ctx.fillStyle = '#334155';
+                ctx.fillRect(-8, -2, 18, 4);
+
+                // 3 Biosphere Domes (Glowing Emerald Geodesic pods)
+                const domeCoords = [-4, 1, 6];
+                domeCoords.forEach((dx, i) => {
+                    ctx.fillStyle = 'rgba(16, 185, 129, 0.85)';
+                    ctx.strokeStyle = '#6ee7b7';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(dx, (i % 2 === 0 ? -3 : 3), 3.2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                });
+
+                // Solar Petals
+                ctx.strokeStyle = '#f59e0b';
+                ctx.beginPath();
+                ctx.moveTo(-2, -7); ctx.lineTo(-2, 7);
+                ctx.stroke();
+
+            } else if (ship.id === 'aeon') {
+                // --- Surveyor Aeon: Deep Scout ---
+                // High-velocity Twin Blue Jet
+                ctx.fillStyle = '#38bdf8';
+                ctx.beginPath();
+                ctx.moveTo(-6, -2); ctx.lineTo(-12 - flicker * 1.5, 0); ctx.lineTo(-6, 2);
+                ctx.fill();
+
+                // Sleek Delta Dart Hull
+                ctx.fillStyle = '#0f172a';
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(11, 0);       // Nose
+                ctx.lineTo(5, -2);
+                ctx.lineTo(-6, -7);      // Port wingtip
+                ctx.lineTo(-4, 0);       // Engine keel
+                ctx.lineTo(-6, 7);       // Stbd wingtip
+                ctx.lineTo(5, 2);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Sensor Booms
+                ctx.strokeStyle = '#e0f2fe';
+                ctx.beginPath();
+                ctx.moveTo(10, -1); ctx.lineTo(15, -1);
+                ctx.moveTo(10, 1); ctx.lineTo(15, 1);
+                ctx.stroke();
+
+                // Wingtip Beacons
+                ctx.fillStyle = '#ef4444'; // Red Port
+                ctx.fillRect(-6, -7, 1.5, 1.5);
+                ctx.fillStyle = '#22c55e'; // Green Stbd
+                ctx.fillRect(-6, 6, 1.5, 1.5);
+
+            } else if (ship.id === 'drake') {
+                // --- Harvester Drake: Mining Rig ---
+                // Orange/Amber Rocket Flare
+                ctx.fillStyle = '#f59e0b';
+                ctx.beginPath();
+                ctx.moveTo(-7, -4); ctx.lineTo(-13 - flicker, -3); ctx.lineTo(-7, -2);
+                ctx.moveTo(-7, 2); ctx.lineTo(-13 - flicker, 3); ctx.lineTo(-7, 4);
+                ctx.fill();
+
+                // Industrial Hull Box
+                ctx.fillStyle = '#1c1917';
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 1;
+                ctx.fillRect(-7, -4, 12, 8);
+                ctx.strokeRect(-7, -4, 12, 8);
+
+                // Hazard Chevron Markings
+                ctx.fillStyle = '#f59e0b';
+                ctx.fillRect(-3, -4, 2, 8);
+                ctx.fillRect(1, -4, 2, 8);
+
+                // Forward Hydraulic Mining Claws
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(5, -3); ctx.lineTo(10, -5); ctx.lineTo(12, -2);
+                ctx.moveTo(5, 3); ctx.lineTo(10, 5); ctx.lineTo(12, 2);
+                ctx.stroke();
+
+                // Plasma Mining Cutter Pulse (when harvesting)
+                if (Math.sin(time * 12) > 0.3) {
+                    ctx.strokeStyle = '#00f0ff';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(12, 0);
+                    ctx.lineTo(18 + Math.random() * 4, (Math.random() - 0.5) * 6);
+                    ctx.stroke();
+                }
+
+            } else if (ship.id === 'titan') {
+                // --- Freighter Titan-1: Heavy Hauler ---
+                // Heavy Violet Engine Burn
+                ctx.fillStyle = '#a855f7';
+                ctx.beginPath();
+                ctx.moveTo(-9, -3); ctx.lineTo(-15 - flicker, 0); ctx.lineTo(-9, 3);
+                ctx.fill();
+
+                // Spine Keel
+                ctx.fillStyle = '#1e1b4b';
+                ctx.fillRect(-8, -2, 20, 4);
+
+                // Tandem Modular Cargo Pods (Purple & Blue containers)
+                ctx.fillStyle = '#7c3aed';
+                ctx.fillRect(-5, -5, 5, 10);
+                ctx.fillStyle = '#6366f1';
+                ctx.fillRect(2, -5, 5, 10);
+
+                // Freight Module Borders
+                ctx.strokeStyle = '#c084fc';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(-5, -5, 5, 10);
+                ctx.strokeRect(2, -5, 5, 10);
+
+                // Bow Cabin
+                ctx.fillStyle = '#e0e7ff';
+                ctx.fillRect(8, -2, 4, 4);
+            }
+
+            ctx.restore();
+        }
+
         // --- Render Loop ---
         function render() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1626,41 +2092,8 @@
             ctx.ellipse(sunX, sunY, planetOrbitR, planetOrbitR * 0.7, 0, 0, Math.PI * 2);
             ctx.stroke();
 
-            // Planet Atmospheric Glow (Dynamic with Pressure & O2)
-            const atmoR = pr * (1.15 + (sim.pressure * 0.2));
-            const atmoGrad = ctx.createRadialGradient(px, py, pr * 0.85, px, py, atmoR);
-            const hue = sim.oxygen > 15 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(0, 240, 255, 0.35)';
-            atmoGrad.addColorStop(0, hue);
-            atmoGrad.addColorStop(0.7, 'rgba(56, 189, 248, 0.15)');
-            atmoGrad.addColorStop(1, 'rgba(0, 240, 255, 0)');
-            ctx.fillStyle = atmoGrad;
-            ctx.beginPath();
-            ctx.arc(px, py, atmoR, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Planet Surface (reflects temperature & water coverage)
-            const planetGrad = ctx.createRadialGradient(px - pr * 0.3, py - pr * 0.3, pr * 0.1, px, py, pr);
-            if (sim.temp < -20) {
-                // Frozen ice world
-                planetGrad.addColorStop(0, '#cce7ff');
-                planetGrad.addColorStop(0.5, '#4a6f99');
-                planetGrad.addColorStop(1, '#111d33');
-            } else if (sim.water > 40 && sim.oxygen > 12) {
-                // Thriving Gaia
-                planetGrad.addColorStop(0, '#38bdf8');
-                planetGrad.addColorStop(0.4, '#10b981');
-                planetGrad.addColorStop(0.8, '#1e3a8a');
-                planetGrad.addColorStop(1, '#070f1e');
-            } else {
-                // Barren greenhouse transition
-                planetGrad.addColorStop(0, '#60a5fa');
-                planetGrad.addColorStop(0.5, '#78716c');
-                planetGrad.addColorStop(1, '#1c1917');
-            }
-            ctx.fillStyle = planetGrad;
-            ctx.beginPath();
-            ctx.arc(px, py, pr, 0, Math.PI * 2);
-            ctx.fill();
+            // Render Dynamic Planetary Surface
+            drawPlanetAethelgard(ctx, px, py, pr, sunX, sunY, z, sim.time);
 
             // Target Reticle if selected
             if (sim.selected && sim.selected.id === planet.id) {
@@ -1690,10 +2123,8 @@
             ctx.ellipse(px, py, moonDist, moonDist * 0.6, 0, 0, Math.PI * 2);
             ctx.stroke();
 
-            ctx.fillStyle = moon.color;
-            ctx.beginPath();
-            ctx.arc(mx, my, mr, 0, Math.PI * 2);
-            ctx.fill();
+            // Render Boreas Moon Sprite
+            drawBoreasMoon(ctx, mx, my, mr, sunX, sunY, z);
 
             ctx.fillStyle = '#cbd5e1';
             ctx.font = `${Math.max(8, 9 * z)}px monospace`;
@@ -1709,8 +2140,8 @@
             station.currX = stX;
             station.currY = stY;
 
-            ctx.fillStyle = station.color;
-            ctx.fillRect(stX - stR, stY - stR, stR * 2, stR * 2);
+            // Render Zephyr Shipyard Station Sprite
+            drawStationSprite(ctx, stX, stY, stR, sim.time, z);
 
             // 8. Fleet Ships
             fleet.forEach((ship, idx) => {
@@ -1736,33 +2167,22 @@
                 ship.currX = sx;
                 ship.currY = sy;
 
-                // Thruster Vector Trail
-                ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
-                ctx.beginPath();
-                ctx.moveTo(sx, sy);
-                ctx.lineTo(sx - Math.cos(ship.angle || 0) * 8 * z, sy - Math.sin(ship.angle || 0) * 8 * z);
-                ctx.stroke();
-
-                // Ship Icon (Diamond / Chevron)
-                ctx.fillStyle = ship.color;
-                ctx.beginPath();
-                ctx.arc(sx, sy, 3.5 * z, 0, Math.PI * 2);
-                ctx.fill();
+                // Render Ship Sprite with animated thrusters
+                drawShipSprite(ctx, ship, sx, sy, z, sim.time);
 
                 // Selected Reticle
                 if (sim.selected && sim.selected.id === ship.id) {
                     ctx.strokeStyle = ship.color;
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.arc(sx, sy, 7 * z, 0, Math.PI * 2);
-                    ctx.stroke();
+                    ctx.lineWidth = 1.5;
+                    const reticleSz = 14 * Math.max(0.85, Math.min(1.8, z));
+                    ctx.strokeRect(sx - reticleSz, sy - reticleSz, reticleSz * 2, reticleSz * 2);
                 }
 
                 // Small Tag
                 ctx.fillStyle = ship.color;
                 ctx.font = `${Math.max(8, 9 * z)}px monospace`;
                 ctx.textAlign = 'left';
-                ctx.fillText(ship.name.split(' ')[0], sx + 6 * z, sy + 3 * z);
+                ctx.fillText(ship.name.split(' ')[0], sx + 12 * Math.max(0.85, Math.min(1.8, z)), sy + 3 * z);
             });
 
             // Step Time
