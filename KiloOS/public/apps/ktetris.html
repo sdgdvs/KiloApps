@@ -9,34 +9,83 @@
 </style>
 </head>
 <body>
-<div id="toast" onclick="this.style.opacity='0'" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(18, 22, 34, 0.96); border: 1px solid #00f0f0; color: #00f0f0; padding: 9px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 18px rgba(0,240,240,0.4); opacity: 0; pointer-events: auto; cursor: pointer; transition: opacity 0.25s ease; z-index: 1000; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; align-items: center; gap: 8px;"></div>
-<canvas id="gameCanvas"></canvas>
+<div id="toast" onclick="this.style.opacity='0'" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(18, 22, 34, 0.96); border: 1px solid #00f0f0; color: #00f0f0; padding: 9px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 18px rgba(0,240,240,0.4); opacity: 0; pointer-events: auto; cursor: pointer; transition: opacity 0.25s ease; z-index: 1000; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; align-items: center; gap: 8px;" role="status" aria-live="polite"></div>
+<canvas id="gameCanvas" tabindex="0" role="application" aria-label="KTetris Arcade Game"></canvas>
 <script>
   function showToast(msg, dur = 3500) {
       const t = document.getElementById('toast');
       if (!t) return;
-      t.innerHTML = `<span>${msg}</span><span style="opacity:0.6;font-size:11px;margin-left:8px;">[✕]</span>`;
+      t.textContent = '';
+      const s1 = document.createElement('span');
+      s1.textContent = msg;
+      const s2 = document.createElement('span');
+      s2.style.cssText = 'opacity:0.6;font-size:11px;margin-left:8px;';
+      s2.textContent = '[✕]';
+      t.appendChild(s1);
+      t.appendChild(s2);
       t.style.opacity = '1';
       clearTimeout(t._timer);
       t._timer = setTimeout(() => { t.style.opacity = '0'; }, dur);
   }
   setTimeout(() => showToast("Welcome to KTetris! Press [H] or F1 for Controls & Help", 4500), 400);
 
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  function safeGetJSON(key, fallback) {
+      try {
+          const val = localStorage.getItem(key);
+          return val ? JSON.parse(val) : fallback;
+      } catch(e) {
+          return fallback;
+      }
+  }
+  function safeSetStorage(key, val) {
+      try {
+          localStorage.setItem(key, val);
+      } catch(e) {}
+  }
+
+  let audioCtx = null;
+  function getAudioContext() {
+      if (!audioCtx) {
+          try {
+              audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          } catch(e) {}
+      }
+      return audioCtx;
+  }
+
   function playSound(freq, type, dur) {
       try {
-          if (audioCtx.state === 'suspended') audioCtx.resume();
-          let osc = audioCtx.createOscillator();
-          let gain = audioCtx.createGain();
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          if (ctx.state === 'suspended') ctx.resume();
+          let osc = ctx.createOscillator();
+          let gain = ctx.createGain();
           osc.type = type;
           osc.frequency.value = freq;
           osc.connect(gain);
-          gain.connect(audioCtx.destination);
+          gain.connect(ctx.destination);
           osc.start();
-          gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + dur);
-          osc.stop(audioCtx.currentTime + dur);
+          gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + dur);
+          osc.stop(ctx.currentTime + dur);
       } catch(e) {}
   }
+
+  window.addEventListener('beforeunload', () => {
+      try {
+          if (audioCtx && audioCtx.state !== 'closed') audioCtx.close();
+      } catch(e) {}
+  });
+
+  document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+          if (!isPaused && !gameOver && !startScreen && !winScreen && !showLeaderboard && !showHelp && !showKeybinds) {
+              isPaused = true;
+              showToast("Game Paused");
+          }
+      } else {
+          lastTime = performance.now();
+      }
+  });
 
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
@@ -116,16 +165,16 @@
   let gameMode = MODE_MARATHON, campaignLevel = 1;
   let statLines = [0, 0, 0, 0, 0];
 
-  let keybinds = JSON.parse(localStorage.getItem('ktetris_keys')) || {
+  let keybinds = safeGetJSON('ktetris_keys', {
       up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight',
       drop: ' ', hold: 'c', pause: 'p', nuke: 'b', swap: 's', freeze: 'f'
-  };
+  });
   let showKeybinds = false;
   let bindIndex = 0;
   let bindNames = Object.keys(keybinds);
 
   let currentReplay = { seed: 12345, inputs: [] };
-  let savedReplay = JSON.parse(localStorage.getItem('ktetris_replay'));
+  let savedReplay = safeGetJSON('ktetris_replay', null);
   let isReplaying = false;
   let replayIndex = 0;
   let replayTick = 0;
@@ -135,13 +184,27 @@
       let stats = { score, lines, piecesPlaced, time: formatTime(modeTimerMs), tetrisRate: tr, singles: statLines[0], doubles: statLines[1], triples: statLines[2], tetrises: statLines[3], pentrises: statLines[4] };
       let jStr = JSON.stringify(stats, null, 2);
       let cStr = `Score,Lines,Pieces,Time,TetrisRate,Single,Double,Triple,Tetris,Pentris\n${score},${lines},${piecesPlaced},${formatTime(modeTimerMs)},${tr},${statLines[0]},${statLines[1]},${statLines[2]},${statLines[3]},${statLines[4]}`;
-      let a1 = document.createElement('a'); a1.href = URL.createObjectURL(new Blob([jStr])); a1.download = 'ktetris_stats.json'; a1.click();
-      let a2 = document.createElement('a'); a2.href = URL.createObjectURL(new Blob([cStr])); a2.download = 'ktetris_stats.csv'; a2.click();
+      
+      let b1 = new Blob([jStr], { type: 'application/json' });
+      let u1 = URL.createObjectURL(b1);
+      let a1 = document.createElement('a'); a1.href = u1; a1.download = 'ktetris_stats.json';
+      document.body.appendChild(a1); a1.click(); document.body.removeChild(a1);
+      setTimeout(() => URL.revokeObjectURL(u1), 1500);
+
+      let b2 = new Blob([cStr], { type: 'text/csv' });
+      let u2 = URL.createObjectURL(b2);
+      let a2 = document.createElement('a'); a2.href = u2; a2.download = 'ktetris_stats.csv';
+      document.body.appendChild(a2); a2.click(); document.body.removeChild(a2);
+      setTimeout(() => URL.revokeObjectURL(u2), 1500);
       showToast("Match stats exported to CSV & JSON!");
   }
 
   function exportLeaderboard() {
-      let a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(leaderboard, null, 2)])); a.download = 'ktetris_hiscores.json'; a.click();
+      let b = new Blob([JSON.stringify(leaderboard, null, 2)], { type: 'application/json' });
+      let u = URL.createObjectURL(b);
+      let a = document.createElement('a'); a.href = u; a.download = 'ktetris_hiscores.json';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(u), 1500);
       showToast("Leaderboard exported to JSON!");
   }
   function importLeaderboard() {
@@ -164,7 +227,7 @@
                               }))
                               .sort((a, b) => b.score - a.score)
                               .slice(0, 5);
-                          localStorage.setItem('ktetris_leaderboard', JSON.stringify(leaderboard));
+                          safeSetStorage('ktetris_leaderboard', JSON.stringify(leaderboard));
                           showToast("Leaderboard imported successfully!");
                       }
                   } catch(err) {}
@@ -196,8 +259,8 @@
   let holdPc = -1, holdIsBomb = false, holdUsed = false;
 
   // Persistence
-  let highScore = parseInt(localStorage.getItem('ktetris_hiscore') || '0', 10);
-  let leaderboard = JSON.parse(localStorage.getItem('ktetris_leaderboard') || '[]');
+  let highScore = parseInt(safeGetJSON('ktetris_hiscore', '0') || '0', 10);
+  let leaderboard = safeGetJSON('ktetris_leaderboard', []);
 
   // FX & Animations
   let particles = [];
@@ -218,10 +281,10 @@
       leaderboard.push(entry);
       leaderboard.sort((a, b) => b.score - a.score);
       if (leaderboard.length > 5) leaderboard = leaderboard.slice(0, 5);
-      localStorage.setItem('ktetris_leaderboard', JSON.stringify(leaderboard));
+      safeSetStorage('ktetris_leaderboard', JSON.stringify(leaderboard));
       if (newScore > highScore) {
           highScore = newScore;
-          localStorage.setItem('ktetris_hiscore', highScore.toString());
+          safeSetStorage('ktetris_hiscore', highScore.toString());
       }
   }
 
@@ -235,17 +298,17 @@
           nextQueue, holdPc, holdIsBomb, holdUsed,
           nukeCharges, swapCharges, freezeCharges, freezeTimerMs
       };
-      localStorage.setItem('ktetris_saved_game', JSON.stringify(state));
+      safeSetStorage('ktetris_saved_game', JSON.stringify(state));
       addPopup(BOARD_W / 2 - 30, H * CELL / 2, "GAME SAVED!", "#00ffff");
       showToast("Game state saved!");
       playSound(800, 'sine', 0.15);
   }
 
   function loadGameState() {
-      let raw = localStorage.getItem('ktetris_saved_game');
+      let raw = safeGetJSON('ktetris_saved_game', null);
       if (!raw) return false;
       try {
-          let state = JSON.parse(raw);
+          let state = typeof raw === 'object' ? raw : JSON.parse(raw);
           grid = state.grid;
           pc = state.pc; rot = state.rot; cx = state.cx; cy = state.cy; isBomb = state.isBomb;
           score = state.score; lines = state.lines; level = state.level; combo = state.combo; piecesPlaced = state.piecesPlaced;
@@ -271,7 +334,7 @@
   }
 
   function hasSavedGame() {
-      return !!localStorage.getItem('ktetris_saved_game');
+      return !!safeGetJSON('ktetris_saved_game', null);
   }
 
   function triggerScreenShake(intensity, rotationalForce = 0.035) {
@@ -844,7 +907,7 @@
               if (my >= 180 && my <= 210) { startScreen = true; winScreen = false; gameOver = false; return; }
               if (my >= 210 && my <= 235) { exportStats(); return; }
               if (my >= 235 && my <= 265 && !isReplaying) {
-                  localStorage.setItem('ktetris_replay', JSON.stringify(currentReplay));
+                  safeSetStorage('ktetris_replay', JSON.stringify(currentReplay));
                   addPopup(BOARD_W / 2 - 25, H * CELL / 2, "REPLAY SAVED!", "#00ff00");
                   savedReplay = currentReplay;
                   showToast("Replay saved!");
@@ -923,13 +986,14 @@
   });
 
   document.addEventListener('keydown', e => {
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
       let key = e.key === ' ' ? ' ' : (e.key.length === 1 ? e.key.toLowerCase() : e.key);
 
       if (showKeybinds) {
           e.preventDefault();
           if (e.key === 'Escape') { showKeybinds = false; startScreen = true; return; }
           keybinds[bindNames[bindIndex]] = key;
-          localStorage.setItem('ktetris_keys', JSON.stringify(keybinds));
+          safeSetStorage('ktetris_keys', JSON.stringify(keybinds));
           bindIndex++;
           if (bindIndex >= bindNames.length) { showKeybinds = false; startScreen = true; showToast("Keybinds updated!"); }
           return;
@@ -963,7 +1027,7 @@
       if (winScreen || gameOver) {
           if (e.key === 'Enter') { startScreen = true; winScreen = false; gameOver = false; return; }
           if (e.key.toLowerCase() === 'e') { exportStats(); return; }
-          if (e.key.toLowerCase() === 's' && !isReplaying) { localStorage.setItem('ktetris_replay', JSON.stringify(currentReplay)); addPopup(BOARD_W/2-25, H*CELL/2, "REPLAY SAVED!", "#00ff00"); savedReplay = currentReplay; showToast("Replay saved!"); return; }
+          if (e.key.toLowerCase() === 's' && !isReplaying) { safeSetStorage('ktetris_replay', JSON.stringify(currentReplay)); addPopup(BOARD_W/2-25, H*CELL/2, "REPLAY SAVED!", "#00ff00"); savedReplay = currentReplay; showToast("Replay saved!"); return; }
           return;
       }
 
@@ -984,10 +1048,11 @@
       if (key === keybinds.freeze) { useGravityFreeze(); if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'freeze'}); return; }
       if (isPaused) return;
 
-      if (key === keybinds.left) { if (!checkCol(pc, rot, cx - 1, cy)) cx--; if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'left'}); }
-      if (key === keybinds.right) { if (!checkCol(pc, rot, cx + 1, cy)) cx++; if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'right'}); }
-      if (key === keybinds.down) { if (!checkCol(pc, rot, cx, cy + 1)) cy++; if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'down'}); }
+      if (key === keybinds.left) { e.preventDefault(); if (!checkCol(pc, rot, cx - 1, cy)) cx--; if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'left'}); }
+      if (key === keybinds.right) { e.preventDefault(); if (!checkCol(pc, rot, cx + 1, cy)) cx++; if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'right'}); }
+      if (key === keybinds.down) { e.preventDefault(); if (!checkCol(pc, rot, cx, cy + 1)) cy++; if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'down'}); }
       if (key === keybinds.up || key === 'x' || key === 'z') {
+          e.preventDefault();
           let nr = (rot + 1) % 4;
           if (!checkCol(pc, nr, cx, cy)) rot = nr;
           else if (!checkCol(pc, nr, cx - 1, cy)) { cx--; rot = nr; }
@@ -997,9 +1062,11 @@
           if(!isReplaying) currentReplay.inputs.push({t:replayTick, k:'up'});
       }
       if (key === keybinds.hold || e.key === 'Shift') {
+          e.preventDefault();
           useHold();
       }
       if (key === keybinds.drop) {
+          e.preventDefault();
           let startY = cy; let dropDist = 0;
           while (!checkCol(pc, rot, cx, cy + 1)) { cy++; dropDist++; }
           score += dropDist * 2; spawnDropParticles(cx, startY, cy, isBomb ? 15 : (pc + 1));
@@ -2204,7 +2271,7 @@
   let dropInterval = 500;
 
   function update(time = performance.now()) {
-      const deltaTime = time - lastTime;
+      const deltaTime = Math.min(Math.max(0, time - lastTime), 250);
       lastTime = time;
 
       if (!isPaused && !gameOver && !startScreen && !winScreen && !showLeaderboard && !showHelp && !showKeybinds) {

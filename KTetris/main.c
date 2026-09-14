@@ -102,6 +102,8 @@ void ShowNativeToast(const char* msg, int duration_ms) {
     g_toast_timer = duration_ms / 20;
 }
 
+void AddPopup(float x, float y, const char* text, COLORREF color);
+
 #pragma function(memcpy)
 void* __cdecl memcpy(void* dest, const void* src, size_t n) {
     char* d = (char*)dest;
@@ -111,6 +113,7 @@ void* __cdecl memcpy(void* dest, const void* src, size_t n) {
 }
 
 int my_atoi(const char* str) {
+    if (!str) return 0;
     int res = 0;
     while (*str == ' ' || *str == '\t') str++;
     while (*str >= '0' && *str <= '9') {
@@ -121,6 +124,7 @@ int my_atoi(const char* str) {
 }
 
 char* my_strstr(const char* haystack, const char* needle) {
+    if (!haystack || !needle) return NULL;
     if (!*needle) return (char*)haystack;
     for (; *haystack; haystack++) {
         const char* h = haystack;
@@ -214,9 +218,11 @@ void SaveReplay() {
 
 void ExportStats() {
     char csv[512], json[512];
-    float tr = (lines > 0) ? ((float)stat_lines[3] / lines * 100.0f) : 0.0f;
-    wsprintfA(csv, "Score,Lines,Pieces,Time,TetrisRate,Single,Double,Triple,Tetris,Pentris\n%d,%d,%d,%d,%.1f,%d,%d,%d,%d,%d", score, lines, pieces_placed, mode_timer_ms, tr, stat_lines[0], stat_lines[1], stat_lines[2], stat_lines[3], stat_lines[4]);
-    wsprintfA(json, "{\n  \"score\": %d,\n  \"lines\": %d,\n  \"pieces\": %d,\n  \"time\": %d,\n  \"tetrisRate\": %.1f,\n  \"singles\": %d,\n  \"doubles\": %d,\n  \"triples\": %d,\n  \"tetrises\": %d,\n  \"pentrises\": %d\n}", score, lines, pieces_placed, mode_timer_ms, tr, stat_lines[0], stat_lines[1], stat_lines[2], stat_lines[3], stat_lines[4]);
+    int tr_scaled = (lines > 0) ? (stat_lines[3] * 1000 / lines) : 0;
+    int tr_whole = tr_scaled / 10;
+    int tr_frac = tr_scaled % 10;
+    wsprintfA(csv, "Score,Lines,Pieces,Time,TetrisRate,Single,Double,Triple,Tetris,Pentris\n%d,%d,%d,%d,%d.%d,%d,%d,%d,%d,%d", score, lines, pieces_placed, mode_timer_ms, tr_whole, tr_frac, stat_lines[0], stat_lines[1], stat_lines[2], stat_lines[3], stat_lines[4]);
+    wsprintfA(json, "{\n  \"score\": %d,\n  \"lines\": %d,\n  \"pieces\": %d,\n  \"time\": %d,\n  \"tetrisRate\": %d.%d,\n  \"singles\": %d,\n  \"doubles\": %d,\n  \"triples\": %d,\n  \"tetrises\": %d,\n  \"pentrises\": %d\n}", score, lines, pieces_placed, mode_timer_ms, tr_whole, tr_frac, stat_lines[0], stat_lines[1], stat_lines[2], stat_lines[3], stat_lines[4]);
     
     HANDLE hc = CreateFileA("ktetris_stats.csv", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hc != INVALID_HANDLE_VALUE) { DWORD bw; WriteFile(hc, csv, lstrlenA(csv), &bw, NULL); CloseHandle(hc); }
@@ -242,14 +248,16 @@ void ImportLeaderboardJSON() {
         char json[2048] = {0}; DWORD br; ReadFile(h, json, 2047, &br, NULL); CloseHandle(h); 
         int new_hs = 0; num_leaderboard_entries = 0;
         char* ptr = json;
-        while ((ptr = my_strstr(ptr, "\"score\":")) != NULL) {
+        while (ptr && (ptr = my_strstr(ptr, "\"score\":")) != NULL) {
             ptr += 8; int sc = my_atoi(ptr);
             if (sc > new_hs) new_hs = sc;
             leaderboard[num_leaderboard_entries].score = sc;
-            ptr = my_strstr(ptr, "\"mode\":"); if(ptr) { ptr+=7; leaderboard[num_leaderboard_entries].mode = my_atoi(ptr); }
-            ptr = my_strstr(ptr, "\"lines\":"); if(ptr) { ptr+=8; leaderboard[num_leaderboard_entries].lines = my_atoi(ptr); }
+            char* m_ptr = my_strstr(ptr, "\"mode\":");
+            if (m_ptr) { leaderboard[num_leaderboard_entries].mode = my_atoi(m_ptr + 7); }
+            char* l_ptr = my_strstr(ptr, "\"lines\":");
+            if (l_ptr) { leaderboard[num_leaderboard_entries].lines = my_atoi(l_ptr + 8); }
             num_leaderboard_entries++;
-            if(num_leaderboard_entries >= 5) break;
+            if (num_leaderboard_entries >= 5) break;
         }
         high_score = new_hs;
     }
@@ -406,6 +414,9 @@ int LoadGameStateFromFile() {
     win_screen = 0;
     is_paused = 0;
     show_leaderboard = 0;
+    show_help = 0;
+    show_keybinds = 0;
+    is_replaying = 0;
     
     int new_speed = 500 - (level - 1) * 20;
     if (new_speed < 40) new_speed = 40;
@@ -413,6 +424,9 @@ int LoadGameStateFromFile() {
     
     last_level = level;
     level_up_timer_ms = 0;
+
+    ShowNativeToast("Game State Resumed!", 1500);
+    AddPopup((float)(W * CELL_SIZE / 2 - 35), (float)(H * CELL_SIZE / 2), "GAME RESUMED!", RGB(0, 255, 102));
 
     return 1;
 }
@@ -776,6 +790,7 @@ void FillNextQueue() {
 }
 
 int check_collision(int p, int rot, int px, int py) {
+    if (p < 0 || p >= 13 || rot < 0 || rot >= 4) return 1;
     unsigned int shape = tetrominos[p][rot];
     for (int y = 0; y < 5; y++) {
         for (int x = 0; x < 5; x++) {
@@ -1311,6 +1326,12 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int drawSt
     };
     Polygon(hdc, ptSh, 6);
 
+    SelectObject(hdc, oldBrush);
+    SelectObject(hdc, oldPen);
+    DeleteObject(hiBrush);
+    DeleteObject(shBrush);
+    DeleteObject(nullPen);
+
     COLORREF baseColor = colors[colorIdx];
     int lr = GetRValue(baseColor) + 70; if (lr > 255) lr = 255;
     int lg = GetGValue(baseColor) + 70; if (lg > 255) lg = 255;
@@ -1324,9 +1345,12 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int drawSt
         RECT rSlit2 = { px + bSize + 1, py + size - bSize - 4, px + size - bSize - 1, py + size - bSize - 2 };
         FillRect(hdc, &rSlit1, slitB);
         FillRect(hdc, &rSlit2, slitB);
+        DeleteObject(slitB);
         // Center diamond
         HBRUSH wB = CreateSolidBrush(RGB(255, 255, 255));
-        SelectObject(hdc, wB);
+        HPEN nP = CreatePen(PS_NULL, 0, 0);
+        HBRUSH oB = (HBRUSH)SelectObject(hdc, wB);
+        HPEN oP = (HPEN)SelectObject(hdc, nP);
         POINT ptDia[4] = {
             { px + size / 2, py + size / 2 - 3 },
             { px + size / 2 + 3, py + size / 2 },
@@ -1334,8 +1358,10 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int drawSt
             { px + size / 2 - 3, py + size / 2 }
         };
         Polygon(hdc, ptDia, 4);
+        SelectObject(hdc, oB);
+        SelectObject(hdc, oP);
         DeleteObject(wB);
-        DeleteObject(slitB);
+        DeleteObject(nP);
     } else if (colorIdx == 2) { // Blue: J - Stepped Sapphire Chevron Facet
         HPEN stepP = CreatePen(PS_SOLID, 2, lighterColor);
         HPEN oP = (HPEN)SelectObject(hdc, stepP);
@@ -1361,20 +1387,27 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int drawSt
         DeleteObject(wB);
     } else if (colorIdx == 4) { // Yellow: O - Topaz Brilliant Cut with 4 Corner Facets & Gold Crest
         HBRUSH topB = CreateSolidBrush(lighterColor);
-        SelectObject(hdc, topB);
+        HPEN nP = CreatePen(PS_NULL, 0, 0);
+        HBRUSH oB = (HBRUSH)SelectObject(hdc, topB);
+        HPEN oP = (HPEN)SelectObject(hdc, nP);
         int pad = bSize + 2;
         POINT ptCorner1[3] = { { px + pad, py + pad }, { px + size / 2, py + pad + 2 }, { px + pad + 2, py + size / 2 } };
         Polygon(hdc, ptCorner1, 3);
         POINT ptCorner2[3] = { { px + size - pad, py + pad }, { px + size / 2, py + pad + 2 }, { px + size - pad - 2, py + size / 2 } };
         Polygon(hdc, ptCorner2, 3);
+        SelectObject(hdc, oB);
+        SelectObject(hdc, oP);
         DeleteObject(topB);
+        DeleteObject(nP);
         HBRUSH wB = CreateSolidBrush(RGB(255, 255, 255));
         RECT rO = { px + size / 2 - 2, py + size / 2 - 2, px + size / 2 + 2, py + size / 2 + 2 };
         FillRect(hdc, &rO, wB);
         DeleteObject(wB);
     } else if (colorIdx == 5) { // Green: S - Emerald Table-Cut Pavilion
         HBRUSH emB = CreateSolidBrush(lighterColor);
-        SelectObject(hdc, emB);
+        HPEN nP = CreatePen(PS_NULL, 0, 0);
+        HBRUSH oB = (HBRUSH)SelectObject(hdc, emB);
+        HPEN oP = (HPEN)SelectObject(hdc, nP);
         POINT ptDia[4] = {
             { px + size / 2, py + bSize + 2 },
             { px + size - bSize - 2, py + size / 2 },
@@ -1382,18 +1415,26 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int drawSt
             { px + bSize + 2, py + size / 2 }
         };
         Polygon(hdc, ptDia, 4);
+        SelectObject(hdc, oB);
+        SelectObject(hdc, oP);
         DeleteObject(emB);
+        DeleteObject(nP);
         HBRUSH wB = CreateSolidBrush(RGB(255, 255, 255));
         RECT rS = { px + size / 2 - 1, py + size / 2 - 1, px + size / 2 + 1, py + size / 2 + 1 };
         FillRect(hdc, &rS, wB);
         DeleteObject(wB);
     } else if (colorIdx == 6) { // Purple: T - Royal Amethyst Crown Jewel with 3 Radiating Facet Arms
         HBRUSH amB = CreateSolidBrush(lighterColor);
-        SelectObject(hdc, amB);
+        HPEN nP = CreatePen(PS_NULL, 0, 0);
+        HBRUSH oB = (HBRUSH)SelectObject(hdc, amB);
+        HPEN oP = (HPEN)SelectObject(hdc, nP);
         Ellipse(hdc, px + size / 2 - 3, py + size / 2 - 3, px + size / 2 + 3, py + size / 2 + 3);
+        SelectObject(hdc, oB);
+        SelectObject(hdc, oP);
         DeleteObject(amB);
+        DeleteObject(nP);
         HPEN armP = CreatePen(PS_SOLID, 1, lighterColor);
-        HPEN oP = (HPEN)SelectObject(hdc, armP);
+        oP = (HPEN)SelectObject(hdc, armP);
         MoveToEx(hdc, px + size / 2, py + size / 2, NULL); LineTo(hdc, px + size / 2, py + bSize + 2);
         MoveToEx(hdc, px + size / 2, py + size / 2, NULL); LineTo(hdc, px + bSize + 2, py + size - bSize - 2);
         MoveToEx(hdc, px + size / 2, py + size / 2, NULL); LineTo(hdc, px + size - bSize - 2, py + size - bSize - 2);
@@ -1401,14 +1442,19 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int drawSt
         DeleteObject(armP);
     } else if (colorIdx == 7) { // Red: Z - Crimson Ruby Lattice Prism
         HBRUSH ruB = CreateSolidBrush(lighterColor);
-        SelectObject(hdc, ruB);
+        HPEN nP = CreatePen(PS_NULL, 0, 0);
+        HBRUSH oB = (HBRUSH)SelectObject(hdc, ruB);
+        HPEN oP = (HPEN)SelectObject(hdc, nP);
         POINT ptZ[3] = {
             { px + bSize + 2, py + bSize + 2 },
             { px + size - bSize - 2, py + size / 2 },
             { px + bSize + 2, py + size - bSize - 2 }
         };
         Polygon(hdc, ptZ, 3);
+        SelectObject(hdc, oB);
+        SelectObject(hdc, oP);
         DeleteObject(ruB);
+        DeleteObject(nP);
         HBRUSH wB = CreateSolidBrush(RGB(255, 255, 255));
         RECT rZ = { px + size / 2 - 1, py + size / 2 - 1, px + size / 2 + 1, py + size / 2 + 1 };
         FillRect(hdc, &rZ, wB);
@@ -1461,20 +1507,25 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int drawSt
         DeleteObject(strP);
     } else if (colorIdx == 15) { // Bomb: Demolition Ordnance Sprite
         HBRUSH ordB = CreateSolidBrush(RGB(40, 20, 20));
-        SelectObject(hdc, ordB);
+        HBRUSH oB = (HBRUSH)SelectObject(hdc, ordB);
         HPEN ordP = CreatePen(PS_SOLID, 1, RGB(255, 50, 50));
         HPEN oP = (HPEN)SelectObject(hdc, ordP);
         Ellipse(hdc, px + 2, py + 2, px + size - 2, py + size - 2);
         SelectObject(hdc, oP);
         DeleteObject(ordP);
-        DeleteObject(ordB);
 
         // Pulsing red explosive core
         int rPulse = (int)(2.0 * sin((tick % 1000) * 0.01));
         HBRUSH redBrush = CreateSolidBrush(RGB(255, 30, 0));
         SelectObject(hdc, redBrush);
+        HPEN nP = CreatePen(PS_NULL, 0, 0);
+        oP = (HPEN)SelectObject(hdc, nP);
         Ellipse(hdc, px + size / 2 - 3 - rPulse, py + size / 2 - 3 - rPulse, px + size / 2 + 3 + rPulse, py + size / 2 + 3 + rPulse);
+        SelectObject(hdc, oP);
+        SelectObject(hdc, oB);
         DeleteObject(redBrush);
+        DeleteObject(nP);
+        DeleteObject(ordB);
 
         // Live dynamic spark fuse at top-right
         HBRUSH sparkB = CreateSolidBrush((tick / 100) % 2 == 0 ? RGB(255, 255, 0) : RGB(255, 255, 255));
@@ -1527,12 +1578,6 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int drawSt
         SelectClipRgn(hdc, NULL);
         DeleteObject(rgn1);
     }
-
-    SelectObject(hdc, oldPen);
-    SelectObject(hdc, oldBrush);
-    DeleteObject(hiBrush);
-    DeleteObject(shBrush);
-    DeleteObject(nullPen);
 }
 
 void FormatTimeString(DWORD ms, char* buf, int bufSize) {
@@ -2875,7 +2920,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             EndPaint(hwnd, &ps);
             break;
         }
+        case WM_ERASEBKGND:
+            return 1;
         case WM_DESTROY:
+            KillTimer(hwnd, TIMER_ID);
             if (g_hFontMain) DeleteObject(g_hFontMain);
             if (g_hFontSmall) DeleteObject(g_hFontSmall);
             PostQuitMessage(0);
@@ -2893,7 +2941,7 @@ void MainEntry() {
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = "KTetrisApp";
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+    wc.hbrBackground = NULL;
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
     RegisterClass(&wc);
 
