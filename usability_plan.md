@@ -45,14 +45,13 @@
 
 ---
 
-**Target App:** KTimer
+**Target App:** KContacts
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KTimer
 - KContacts
 - KRead
 - KJournal
@@ -106,10 +105,13 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTodo
 - KConverter
 - KGraph
+- KTimer
 
 ## Progress Log
 
 > 📁 **Archived Progress Log**: Older entries have been archived to [archive/usability_plan_archive.md](archive/usability_plan_archive.md) to preserve token efficiency.
+
+- KTimer: Usability and UI issues fixed (moved #helpOverlay out of inactive interval panel to create a persistent fixed bottom help pill across all tabs, added numbered shortcut badges to nav tabs [[1] SW, [2] Timer, [3] Multi, [4] Pomo, [5] HIIT, Help [F1]], added 1-click [📋 Copy [C]] to clipboard button for Stopwatch lap splits alongside CSV/TXT exports, added quick duration nudge adjustments [-1m, +1m, +5m] to Countdown Timer, added 1-click Quick Add Presets [Tea 3m, Coffee 4m, Eggs 7m, Nap 20m, Laundry 35m] to Multi-Timer, added visual shortcut badges to all action buttons, expanded keyboard navigation with [C] copy/clear, [S] skip phase / start all, [P] pause all, [+/-] nudge duration, and updated Help modal guide in web; added non-blocking ShowNativeStatus notification system in native C replacing blocking modal alerts on exports/actions, added native [Copy [C]] to Windows clipboard for stopwatch laps, added [-1m, +1m, +5m] quick duration adjustments in native Timer, added 1-click quick add presets [+ Tea 3m, + Eggs 7m, + Nap 20m] in native Multi-Timer, added dynamic window title synchronization with active mode and hotkeys, expanded message loop accelerators for C/S/P/+/-/Del/Esc, and verified clean compilation across both builds).
 
 - KGraph: Usability and UI issues fixed (integrated interactive toast notification system with [✕] click-to-dismiss and startup welcome guide, built 1-click Quick Presets bar [🌊 sin(x), 🔔 Gaussian, 📉 x³-3x, 🧮 1/(1+x²), 🎯 4-Rose, 🦋 Butterfly] across sidebar, added 1-click function actions [✨ Defaults, 👁️ All, ✕ Clear] with quick clear [✕] buttons on each formula input row, added visual shortcut badges to header buttons [^S, E, O, F1, ↵], expanded keyboard navigation with arrow keys [← → ↑ ↓] for viewport panning, PgUp/PgDn for zooming, Home for origin reset, and updated Help modal guide in web; added non-blocking ShowNativeStatus notification system with auto-fade timer replacing blocking message alerts, built dedicated 1-click [Clr] expression wipe buttons for all function rows, added native [Save BMP [S]] high-res snapshot exporter and [Copy [C]] points clipboard copy, added WM_SIZE dynamic layout and WM_GETMINMAXINFO minimum window sizing, implemented global message loop accelerators for F1/Ctrl+S/Ctrl+C and EditSubclassProc Esc unfocus, added Arrow Keys / Home / PgUp / PgDn viewport panning and navigation, synchronized dynamic window title with active mode, and verified clean compilation across both builds).
 

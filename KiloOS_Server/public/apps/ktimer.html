@@ -732,23 +732,23 @@
 <body>
   <!-- Navigation Tabs -->
   <nav class="nav-tabs" role="tablist" aria-label="Timer Mode Tabs">
-    <button class="tab-btn active" id="tabStopwatch" role="tab" aria-selected="true" aria-controls="panelStopwatch" tabindex="0">
-      ⏱️ STOPWATCH
+    <button class="tab-btn active" id="tabStopwatch" role="tab" aria-selected="true" aria-controls="panelStopwatch" tabindex="0" title="Stopwatch Mode [1]">
+      [1] ⏱️ SW
     </button>
-    <button class="tab-btn" id="tabTimer" role="tab" aria-selected="false" aria-controls="panelTimer" tabindex="-1">
-      ⏳ TIMER
+    <button class="tab-btn" id="tabTimer" role="tab" aria-selected="false" aria-controls="panelTimer" tabindex="-1" title="Countdown Timer Mode [2]">
+      [2] ⏳ TIMER
     </button>
-    <button class="tab-btn" id="tabMulti" role="tab" aria-selected="false" aria-controls="panelMulti" tabindex="-1">
-      🎛️ MULTI-TIMER
+    <button class="tab-btn" id="tabMulti" role="tab" aria-selected="false" aria-controls="panelMulti" tabindex="-1" title="Multi-Timer Mode [3]">
+      [3] 🎛️ MULTI
     </button>
-    <button class="tab-btn" id="tabPomodoro" role="tab" aria-selected="false" aria-controls="panelPomodoro" tabindex="-1">
-      🍅 POMODORO
+    <button class="tab-btn" id="tabPomodoro" role="tab" aria-selected="false" aria-controls="panelPomodoro" tabindex="-1" title="Pomodoro Mode [4]">
+      [4] 🍅 POMO
     </button>
-    <button class="tab-btn" id="tabInterval" role="tab" aria-selected="false" aria-controls="panelInterval" tabindex="-1">
-      🏋️ INTERVAL / HIIT
+    <button class="tab-btn" id="tabInterval" role="tab" aria-selected="false" aria-controls="panelInterval" tabindex="-1" title="Interval / HIIT Mode [5]">
+      [5] 🏋️ HIIT
     </button>
     <button class="tab-btn help-btn" id="btnHelp" title="Help & Shortcuts (F1 / H)">
-      ❓ HELP
+      ❓ HELP [F1]
     </button>
   </nav>
   
@@ -766,15 +766,16 @@
     </div>
 
     <div class="controls-row">
-      <button class="btn primary" id="swBtnStart" aria-label="Start stopwatch">Start</button>
-      <button class="btn" id="swBtnLap" aria-label="Record lap time">Lap</button>
-      <button class="btn" id="swBtnReset" aria-label="Reset stopwatch">Reset</button>
+      <button class="btn primary" id="swBtnStart" aria-label="Start stopwatch">Start [Space]</button>
+      <button class="btn" id="swBtnLap" aria-label="Record lap time">Lap [L]</button>
+      <button class="btn" id="swBtnReset" aria-label="Reset stopwatch">Reset [R]</button>
     </div>
 
     <div class="section-box">
       <div class="section-title">
         <span>Lap Analysis & Export</span>
-        <div>
+        <div style="display:flex; gap:4px;">
+          <button class="btn sm" id="swBtnCopyLaps" title="Copy Laps to Clipboard [C]">📋 Copy [C]</button>
           <button class="btn sm" id="swBtnExportCsv" title="Export Laps CSV">CSV</button>
           <button class="btn sm" id="swBtnExportTxt" title="Export Laps TXT">TXT</button>
         </div>
@@ -819,8 +820,11 @@
     </div>
 
     <div class="controls-row">
-      <button class="btn primary" id="tmBtnStart" aria-label="Start timer">Start</button>
-      <button class="btn" id="tmBtnReset" aria-label="Reset timer">Reset</button>
+      <button class="btn primary" id="tmBtnStart" aria-label="Start timer">Start [Space]</button>
+      <button class="btn" id="tmBtnReset" aria-label="Reset timer">Reset [R]</button>
+      <button class="btn sm" id="tmBtnSub1m" title="Subtract 1 minute [-]">-1m</button>
+      <button class="btn sm" id="tmBtnAdd1m" title="Add 1 minute [+]">+1m</button>
+      <button class="btn sm" id="tmBtnAdd5m" title="Add 5 minutes">+5m</button>
     </div>
 
     <!-- Alarm Presets Library -->
@@ -861,18 +865,28 @@
 
   <!-- MULTI-TIMER PANEL -->
   <main class="view-panel" id="panelMulti" role="tabpanel" aria-labelledby="tabMulti">
+    <div style="width:100%; max-width:440px; margin-bottom:8px;">
+      <div style="font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:4px;">Quick Add Presets</div>
+      <div class="presets-chips" id="mtQuickChips">
+        <button class="chip-btn" data-name="Green Tea" data-time="03:00">🍵 Tea 3m</button>
+        <button class="chip-btn" data-name="Coffee" data-time="04:00">☕ Coffee 4m</button>
+        <button class="chip-btn" data-name="Boiled Eggs" data-time="07:00">🥚 Eggs 7m</button>
+        <button class="chip-btn" data-name="Power Nap" data-time="20:00">🧘 Nap 20m</button>
+        <button class="chip-btn" data-name="Laundry" data-time="35:00">🧺 Laundry 35m</button>
+      </div>
+    </div>
     <form class="multitimer-form" id="mtForm" onsubmit="return false;">
       <input type="text" id="mtNameInput" class="name-input" placeholder="Timer Name (e.g., Tea Steeping)" required>
       <input type="text" id="mtTimeInput" class="time-input" placeholder="MM:SS" value="05:00" required>
-      <button class="btn primary sm" type="submit" id="mtBtnAdd">+ Add</button>
+      <button class="btn primary sm" type="submit" id="mtBtnAdd">+ Add [Enter]</button>
     </form>
 
     <div class="controls-row" style="width:100%; max-width:440px; justify-content:space-between; margin-bottom:8px;">
       <div style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Active Timers</div>
       <div style="display:flex; gap:4px;">
-        <button class="btn sm" id="mtBtnStartAll">Start All</button>
-        <button class="btn sm" id="mtBtnPauseAll">Pause All</button>
-        <button class="btn sm danger" id="mtBtnClearFinished">Clear Done</button>
+        <button class="btn sm" id="mtBtnStartAll" title="Start All [S]">Start All [S]</button>
+        <button class="btn sm" id="mtBtnPauseAll" title="Pause All [P]">Pause All [P]</button>
+        <button class="btn sm danger" id="mtBtnClearFinished" title="Clear Done [C]">Clear Done [C]</button>
       </div>
     </div>
 
@@ -901,9 +915,9 @@
     </div>
 
     <div class="controls-row">
-      <button class="btn primary" id="pomoBtnStart" aria-label="Start Pomodoro">Start</button>
-      <button class="btn" id="pomoBtnSkip" aria-label="Skip Phase">Skip Phase</button>
-      <button class="btn" id="pomoBtnReset" aria-label="Reset Pomodoro">Reset</button>
+      <button class="btn primary" id="pomoBtnStart" aria-label="Start Pomodoro">Start [Space]</button>
+      <button class="btn" id="pomoBtnSkip" aria-label="Skip Phase">Skip Phase [S]</button>
+      <button class="btn" id="pomoBtnReset" aria-label="Reset Pomodoro">Reset [R]</button>
     </div>
 
     <div class="section-box">
@@ -963,9 +977,9 @@
     </div>
 
     <div class="controls-row">
-      <button class="btn primary" id="intBtnStart" aria-label="Start Interval Workout">Start</button>
-      <button class="btn" id="intBtnSkip" aria-label="Skip Phase">Skip Phase</button>
-      <button class="btn" id="intBtnReset" aria-label="Reset Interval">Reset</button>
+      <button class="btn primary" id="intBtnStart" aria-label="Start Interval Workout">Start [Space]</button>
+      <button class="btn" id="intBtnSkip" aria-label="Skip Phase">Skip Phase [S]</button>
+      <button class="btn" id="intBtnReset" aria-label="Reset Interval">Reset [R]</button>
     </div>
 
     <div class="section-box">
@@ -998,7 +1012,9 @@
         </div>
       </div>
     </div>
-  <div id="helpOverlay" style="position:absolute; bottom:12px; left:50%; transform:translateX(-50%); font-size:11px; font-weight:bold; color:var(--text-muted); background:rgba(0,0,0,0.6); padding:4px 12px; border-radius:12px; opacity:0.85; cursor:pointer; pointer-events:auto; z-index:100; backdrop-filter:blur(2px); border:1px solid rgba(255,255,255,0.08); transition:all 0.2s;" onmouseover="this.style.opacity='1'; this.style.color='var(--text-main)'" onmouseout="this.style.opacity='0.85'; this.style.color='var(--text-muted)'">Press 'H' or F1 for Help</div>
+  </main>
+
+  <div id="helpOverlay" style="position:fixed; bottom:8px; left:50%; transform:translateX(-50%); font-size:11px; font-weight:bold; color:var(--text-muted); background:rgba(10,12,18,0.85); padding:4px 14px; border-radius:12px; opacity:0.9; cursor:pointer; pointer-events:auto; z-index:100; backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.12); box-shadow: 0 4px 12px rgba(0,0,0,0.5); transition:all 0.2s;" onmouseover="this.style.opacity='1'; this.style.color='var(--text-main)'; this.style.borderColor='var(--primary-color)';" onmouseout="this.style.opacity='0.9'; this.style.color='var(--text-muted)'; this.style.borderColor='rgba(255,255,255,0.12)';">Press 'H' or F1 for Help</div>
 
   <!-- Toast Notification Container -->
   <div id="toastContainer" aria-live="polite"></div>
@@ -1017,6 +1033,10 @@
             <tr><td><kbd>Space</kbd></td><td>Start / Pause active timer</td></tr>
             <tr><td><kbd>1</kbd> - <kbd>5</kbd></td><td>Switch Mode Tabs (1:SW, 2:Timer, 3:Multi, 4:Pomo, 5:HIIT)</td></tr>
             <tr><td><kbd>L</kbd></td><td>Record lap (Stopwatch mode)</td></tr>
+            <tr><td><kbd>C</kbd></td><td>Copy laps (Stopwatch) / Clear done (Multi-Timer)</td></tr>
+            <tr><td><kbd>+</kbd> / <kbd>-</kbd></td><td>Quick adjust timer duration by ±1m (Timer mode)</td></tr>
+            <tr><td><kbd>S</kbd></td><td>Skip Phase (Pomo / HIIT) | Start All (Multi-Timer)</td></tr>
+            <tr><td><kbd>P</kbd></td><td>Pause All (Multi-Timer)</td></tr>
             <tr><td><kbd>R</kbd></td><td>Reset current timer</td></tr>
             <tr><td><kbd>Enter</kbd></td><td>Start timer / Add multi-timer / Save preset</td></tr>
             <tr><td><kbd>F1</kbd> / <kbd>H</kbd></td><td>Open / Close this Help dialog</td></tr>
@@ -1368,7 +1388,38 @@
       swRing.style.strokeDashoffset = RING_CIRCUMFERENCE;
     };
 
-    // CSV & TXT Exporters
+    // CSV & TXT & Clipboard Exporters
+    function copyLapsToClipboard() {
+      if (swLaps.length === 0) return showToast('No laps recorded to copy.', 'warning');
+      let txt = `=== KTimer Lap Splits (${swLaps.length} laps) ===\n`;
+      swLaps.forEach(l => {
+        txt += `Lap ${l.id.toString().padStart(2, ' ')} | Split: ${formatMs(l.splitMs, true)} | Total: ${formatMs(l.totalMs, true)}\n`;
+      });
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(() => {
+          showToast(`📋 Copied ${swLaps.length} laps to clipboard!`, 'success');
+        }).catch(() => {
+          fallbackCopy(txt);
+        });
+      } else {
+        fallbackCopy(txt);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      showToast(`📋 Copied ${swLaps.length} laps to clipboard!`, 'success');
+    }
+
+    document.getElementById('swBtnCopyLaps').onclick = copyLapsToClipboard;
+
     document.getElementById('swBtnExportCsv').onclick = () => {
       if (swLaps.length === 0) return showToast('No laps recorded to export.', 'warning');
       let csv = 'Lap,Split Time,Total Time,Split Seconds\n';
@@ -1544,6 +1595,31 @@
       tmRing.style.strokeDashoffset = 0;
     };
 
+    function adjustTimerDuration(deltaSeconds) {
+      const deltaMs = deltaSeconds * 1000;
+      if (tmInterval) {
+        tmRemaining = Math.max(1000, tmRemaining + deltaMs);
+        tmTotal = Math.max(tmTotal, tmRemaining);
+        tmTarget = Date.now() + tmRemaining;
+        updateTimer();
+        showToast(`${deltaSeconds > 0 ? '+' : ''}${Math.round(deltaSeconds/60)}m applied (${formatMs(tmRemaining)})`, 'info', 2000);
+      } else if (tmRemaining > 0 && tmInput.style.display === 'none') {
+        tmRemaining = Math.max(1000, tmRemaining + deltaMs);
+        tmTotal = Math.max(tmTotal, tmRemaining);
+        updateTimer();
+        showToast(`${deltaSeconds > 0 ? '+' : ''}${Math.round(deltaSeconds/60)}m applied (${formatMs(tmRemaining)})`, 'info', 2000);
+      } else {
+        let cur = parseTimeInput(tmInput.value);
+        let updated = Math.max(60000, cur + deltaMs);
+        tmInput.value = formatMs(updated);
+        showToast(`Timer set to ${tmInput.value}`, 'info', 2000);
+      }
+    }
+
+    document.getElementById('tmBtnSub1m').onclick = () => adjustTimerDuration(-60);
+    document.getElementById('tmBtnAdd1m').onclick = () => adjustTimerDuration(60);
+    document.getElementById('tmBtnAdd5m').onclick = () => adjustTimerDuration(300);
+
     // ==========================================
     // 3. MULTI-TIMER ENGINE
     // ==========================================
@@ -1696,6 +1772,27 @@
 
     renderMultiTimers();
     if (multiTimers.some(t => t.isRunning)) startMultiTick();
+
+    document.querySelectorAll('#mtQuickChips .chip-btn').forEach(btn => {
+      btn.onclick = () => {
+        const name = btn.getAttribute('data-name');
+        const timeVal = btn.getAttribute('data-time');
+        const ms = parseTimeInput(timeVal);
+        if (multiTimers.length >= 20) return showToast('Maximum of 20 timers reached.', 'warning');
+        multiTimers.push({
+          id: Date.now(),
+          name: name,
+          totalMs: ms,
+          remainingMs: ms,
+          isRunning: true,
+          lastTick: Date.now()
+        });
+        startMultiTick();
+        renderMultiTimers();
+        saveMultiTimers();
+        showToast(`Started timer "${name}" (${timeVal})`, 'success');
+      };
+    });
 
     // ==========================================
     // 4. POMODORO WORK/BREAK CYCLE ENGINE & STATS
@@ -2111,6 +2208,52 @@
         return;
       }
 
+      if (e.key.toLowerCase() === 'c') {
+        const activeTabObj = tabs.find(t => t.panel.classList.contains('active'));
+        if (activeTabObj && activeTabObj.name === 'stopwatch') {
+          copyLapsToClipboard();
+        } else if (activeTabObj && activeTabObj.name === 'multi') {
+          document.getElementById('mtBtnClearFinished').click();
+        }
+        return;
+      }
+
+      if (e.key.toLowerCase() === 's') {
+        const activeTabObj = tabs.find(t => t.panel.classList.contains('active'));
+        if (activeTabObj && activeTabObj.name === 'pomodoro') {
+          document.getElementById('pomoBtnSkip').click();
+        } else if (activeTabObj && activeTabObj.name === 'interval') {
+          document.getElementById('intBtnSkip').click();
+        } else if (activeTabObj && activeTabObj.name === 'multi') {
+          document.getElementById('mtBtnStartAll').click();
+        }
+        return;
+      }
+
+      if (e.key.toLowerCase() === 'p') {
+        const activeTabObj = tabs.find(t => t.panel.classList.contains('active'));
+        if (activeTabObj && activeTabObj.name === 'multi') {
+          document.getElementById('mtBtnPauseAll').click();
+        }
+        return;
+      }
+
+      if (e.key === '+' || e.key === '=') {
+        const activeTabObj = tabs.find(t => t.panel.classList.contains('active'));
+        if (activeTabObj && activeTabObj.name === 'timer') {
+          adjustTimerDuration(60);
+        }
+        return;
+      }
+
+      if (e.key === '-' || e.key === '_') {
+        const activeTabObj = tabs.find(t => t.panel.classList.contains('active'));
+        if (activeTabObj && activeTabObj.name === 'timer') {
+          adjustTimerDuration(-60);
+        }
+        return;
+      }
+
       if (e.key.toLowerCase() === 'r') {
         const activeTabObj = tabs.find(t => t.panel.classList.contains('active'));
         if (activeTabObj) {
@@ -2127,7 +2270,7 @@
     const savedTab = safeStorageGet('ktimer_active_tab', 'stopwatch');
     switchTab(savedTab);
     setTimeout(() => {
-      showToast("⏱️ Welcome to KTimer! [Space] Start/Pause, [1-5] Tabs, [F1] Help", "info", 4500);
+      showToast("⏱️ Welcome to KTimer! [Space] Start/Pause, [1-5] Tabs, [H/F1] Help", "info", 4500);
     }, 400);
   </script>
 </body>
