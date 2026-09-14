@@ -8,7 +8,7 @@
 
 #define M_PI 3.14159265358979323846
 
-// --- UI Colors ---
+// --- UI Colors & CRT Phosphor Palettes ---
 #define COLOR_BG_DEEP       RGB(5, 8, 17)
 #define COLOR_BG_PANEL      RGB(10, 17, 32)
 #define COLOR_BG_PANEL_DARK RGB(7, 11, 22)
@@ -26,6 +26,94 @@
 #define COLOR_TEXT_PRI      RGB(203, 213, 225)
 #define COLOR_TEXT_DIM      RGB(100, 116, 139)
 #define COLOR_ORANGE        RGB(255, 120, 50)
+
+typedef struct {
+    const char* name;
+    COLORREF bgDeep;
+    COLORREF bgPanel;
+    COLORREF bgPanelDark;
+    COLORREF bgCard;
+    COLORREF bgCardHov;
+    COLORREF border;
+    COLORREF primary;
+    COLORREF secondary;
+    COLORREF accent;
+    COLORREF textBright;
+    COLORREF textPri;
+    COLORREF textDim;
+    COLORREF grid;
+} CRTTheme;
+
+static CRTTheme g_crtThemes[] = {
+    {
+        "CRT: P4 Cyan",
+        RGB(5, 8, 17),
+        RGB(10, 17, 32),
+        RGB(7, 11, 22),
+        RGB(15, 28, 51),
+        RGB(22, 40, 74),
+        RGB(28, 49, 86),
+        RGB(0, 240, 255),
+        RGB(56, 189, 248),
+        RGB(16, 185, 129),
+        RGB(248, 250, 252),
+        RGB(203, 213, 225),
+        RGB(100, 116, 139),
+        RGB(20, 36, 64)
+    },
+    {
+        "CRT: P3 Amber",
+        RGB(10, 7, 3),
+        RGB(20, 14, 6),
+        RGB(13, 9, 4),
+        RGB(28, 20, 9),
+        RGB(42, 30, 13),
+        RGB(74, 48, 16),
+        RGB(245, 158, 11),
+        RGB(251, 191, 36),
+        RGB(251, 146, 60),
+        RGB(255, 251, 235),
+        RGB(254, 215, 170),
+        RGB(154, 106, 56),
+        RGB(58, 38, 14)
+    },
+    {
+        "CRT: P1 Green",
+        RGB(3, 13, 7),
+        RGB(6, 22, 12),
+        RGB(4, 15, 8),
+        RGB(10, 36, 20),
+        RGB(16, 54, 30),
+        RGB(19, 78, 42),
+        RGB(16, 185, 129),
+        RGB(52, 211, 153),
+        RGB(110, 231, 183),
+        RGB(236, 253, 245),
+        RGB(167, 243, 208),
+        RGB(61, 122, 88),
+        RGB(14, 52, 28)
+    },
+    {
+        "CRT: P7 White",
+        RGB(8, 10, 14),
+        RGB(15, 19, 26),
+        RGB(9, 12, 18),
+        RGB(24, 29, 38),
+        RGB(35, 42, 55),
+        RGB(51, 65, 85),
+        RGB(226, 232, 240),
+        RGB(148, 163, 184),
+        RGB(203, 213, 225),
+        RGB(255, 255, 255),
+        RGB(203, 213, 225),
+        RGB(100, 116, 139),
+        RGB(32, 40, 54)
+    }
+};
+
+static int g_crtTheme = 0;
+static int g_showGrid = 1;
+static int g_phosphorGlow = 1;
 
 // --- Sound Effects ---
 #define SFX_CLICK   1
@@ -490,16 +578,82 @@ static void DrawProgressBar(HDC hdc, int x, int y, int w, int h, float percent, 
 // --- Procedural Sprite Rendering Engine (GDI) ---
 
 static void DrawPlanetGDI(HDC hdc, int px, int py, int pr, int sunX, int sunY, float z) {
-    // Atmosphere halo
-    int atmoR = pr + (int)(8 * z * (1.0f + sim.pressure * 0.4f));
-    HPEN hAtmoPen = CreatePen(PS_SOLID, 2, (sim.oxygen > 15.0f ? COLOR_EMERALD : COLOR_CYAN));
-    HPEN hOldPen = (HPEN)SelectObject(hdc, hAtmoPen);
+    float sunAngle = atan2f((float)(sunY - py), (float)(sunX - px));
+
+    // A. Dynamic Multi-Tier Atmospheric Rayleigh & Mie Scattering Corona
+    COLORREF cHaloOuter, cHaloMid, cHaloInner;
+    if (sim.oxygen > 15.0f) {
+        // Biosphere: Rich Gaia cyan-emerald glow
+        cHaloOuter = RGB(0, 100, 110);
+        cHaloMid   = RGB(0, 180, 190);
+        cHaloInner = RGB(0, 240, 255);
+    } else if (sim.temp < -20.0f) {
+        // Glaciated: Electric violet & pale ice-blue
+        cHaloOuter = RGB(80, 40, 120);
+        cHaloMid   = RGB(120, 80, 190);
+        cHaloInner = RGB(160, 200, 255);
+    } else {
+        // Barren Greenhouse: Amber-copper Rayleigh haze
+        cHaloOuter = RGB(90, 45, 10);
+        cHaloMid   = RGB(180, 90, 20);
+        cHaloInner = RGB(245, 158, 11);
+    }
+
     HBRUSH hNullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
     HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hNullBrush);
-    Ellipse(hdc, px - atmoR, py - atmoR, px + atmoR, py + atmoR);
+
+    // Stepped Corona Rings
+    int atmoR3 = pr + (int)(14 * z * (1.0f + sim.pressure * 0.4f));
+    int atmoR2 = pr + (int)(9 * z * (1.0f + sim.pressure * 0.3f));
+    int atmoR1 = pr + (int)(4 * z * (1.0f + sim.pressure * 0.2f));
+
+    HPEN hPen3 = CreatePen(PS_SOLID, 1, cHaloOuter);
+    HPEN hOldP = (HPEN)SelectObject(hdc, hPen3);
+    Ellipse(hdc, px - atmoR3, py - atmoR3, px + atmoR3, py + atmoR3);
+    DeleteObject(hPen3);
+
+    HPEN hPen2 = CreatePen(PS_SOLID, 1, cHaloMid);
+    SelectObject(hdc, hPen2);
+    Ellipse(hdc, px - atmoR2, py - atmoR2, px + atmoR2, py + atmoR2);
+    DeleteObject(hPen2);
+
+    HPEN hPen1 = CreatePen(PS_SOLID, 2, cHaloInner);
+    SelectObject(hdc, hPen1);
+    Ellipse(hdc, px - atmoR1, py - atmoR1, px + atmoR1, py + atmoR1);
+    DeleteObject(hPen1);
+
+    // Sunward Mie Forward Scattering Limb Arc
+    HPEN hLimbPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+    SelectObject(hdc, hLimbPen);
+    int limbSX = px + (int)(cosf(sunAngle - 1.2f) * (pr + 2));
+    int limbSY = py + (int)(sinf(sunAngle - 1.2f) * (pr + 2));
+    int limbEX = px + (int)(cosf(sunAngle + 1.2f) * (pr + 2));
+    int limbEY = py + (int)(sinf(sunAngle + 1.2f) * (pr + 2));
+    Arc(hdc, px - pr - 2, py - pr - 2, px + pr + 2, py + pr + 2, limbSX, limbSY, limbEX, limbEY);
+    DeleteObject(hLimbPen);
+
+    // Polar Auroras (Undulating magnetic ribbons)
+    if (sim.magnet > 0.15f) {
+        float wave = sinf(sim.time * 3.5f) * 3.0f * z;
+        HPEN hAuroraPen1 = CreatePen(PS_SOLID, 2, RGB(16, 230, 160));
+        SelectObject(hdc, hAuroraPen1);
+        // North Pole Arc
+        Arc(hdc, px - (int)(pr * 0.6f) + (int)wave, py - pr - (int)(5 * z),
+                 px + (int)(pr * 0.6f) + (int)wave, py - pr + (int)(7 * z),
+                 px - (int)(pr * 0.5f), py - pr, px + (int)(pr * 0.5f), py - pr);
+        DeleteObject(hAuroraPen1);
+
+        HPEN hAuroraPen2 = CreatePen(PS_SOLID, 2, RGB(180, 90, 245));
+        SelectObject(hdc, hAuroraPen2);
+        // South Pole Arc
+        Arc(hdc, px - (int)(pr * 0.6f) - (int)wave, py + pr - (int)(7 * z),
+                 px + (int)(pr * 0.6f) - (int)wave, py + pr + (int)(5 * z),
+                 px + (int)(pr * 0.5f), py + pr, px - (int)(pr * 0.5f), py + pr);
+        DeleteObject(hAuroraPen2);
+    }
+
+    SelectObject(hdc, hOldP);
     SelectObject(hdc, hOldBrush);
-    SelectObject(hdc, hOldPen);
-    DeleteObject(hAtmoPen);
 
     // Planet body clipped to disc
     HRGN hRgnPlanet = CreateEllipticRgn(px - pr, py - pr, px + pr + 1, py + pr + 1);
@@ -538,7 +692,7 @@ static void DrawPlanetGDI(HDC hdc, int px, int py, int pr, int sunX, int sunY, f
         Ellipse(hdc, cxPos - rw, cyPos - rh, cxPos + rw, cyPos + rh);
     }
     SelectObject(hdc, hOldBrush);
-    SelectObject(hdc, hOldPen);
+    SelectObject(hdc, hOldP);
     DeleteObject(hLandBrush);
     DeleteObject(hLandPen);
 
@@ -554,9 +708,34 @@ static void DrawPlanetGDI(HDC hdc, int px, int py, int pr, int sunX, int sunY, f
     Ellipse(hdc, px - pr, py - pr - iceH / 2, px + pr, py - pr + iceH * 2);
     Ellipse(hdc, px - pr, py + pr - iceH * 2, px + pr, py + pr + iceH / 2);
     SelectObject(hdc, hOldBrush);
-    SelectObject(hdc, hOldPen);
+    SelectObject(hdc, hOldP);
     DeleteObject(hIceBrush);
     DeleteObject(hIcePen);
+
+    // Day/Night Terminator Shading (Darken unlit side)
+    float darkAngle = sunAngle + 3.14159265f;
+    int shadeDist = (int)(pr * 0.4f);
+    int shadeX = px + (int)(cosf(darkAngle) * shadeDist);
+    int shadeY = py + (int)(sinf(darkAngle) * shadeDist);
+
+    // Night-side Colony Settlement Lights (Bioluminescent clusters on darkened side)
+    if (sim.colonists > 0) {
+        int cityOffsets[4][2] = {
+            { (int)(pr * 0.35f), (int)(-pr * 0.15f) },
+            { (int)(pr * 0.45f), (int)(pr * 0.10f) },
+            { (int)(pr * 0.25f), (int)(pr * 0.28f) },
+            { (int)(pr * 0.52f), (int)(-pr * 0.05f) }
+        };
+        COLORREF cityCols[4] = { RGB(255, 220, 110), RGB(0, 240, 255), RGB(16, 230, 160), RGB(255, 180, 50) };
+
+        for (int i = 0; i < 4; i++) {
+            int cxDot = shadeX + cityOffsets[i][0] / 2;
+            int cyDot = shadeY + cityOffsets[i][1] / 2;
+            int dotSz = (int)(2 * z);
+            if (dotSz < 2) dotSz = 2;
+            FillSolidRect(hdc, cxDot - dotSz / 2, cyDot - dotSz / 2, dotSz, dotSz, cityCols[i]);
+        }
+    }
 
     SelectClipRgn(hdc, hOldRgn);
     DeleteObject(hOldRgn);
@@ -759,7 +938,7 @@ typedef struct {
     int isEnabled;
 } UIButton;
 
-#define MAX_BUTTONS 32
+#define MAX_BUTTONS 48
 static UIButton g_buttons[MAX_BUTTONS];
 static int g_buttonCount = 0;
 
@@ -790,6 +969,9 @@ static void AddButton(int id, int x, int y, int w, int h, const char* txt, const
 #define BID_ZOOM_IN         22
 #define BID_ZOOM_OUT        23
 #define BID_RESET_VIEW      24
+#define BID_THEME_TOGGLE    25
+#define BID_GRID_TOGGLE     26
+#define BID_GLOW_TOGGLE     27
 
 #define BID_SPEED_PAUSE     30
 #define BID_SPEED_1X        31
@@ -1046,8 +1228,10 @@ static void RenderUI(HDC hdc, int width, int height) {
     HFONT hOldFont = (HFONT)SelectObject(hdc, hFontMain);
     SetBkMode(hdc, TRANSPARENT);
 
+    CRTTheme* theme = &g_crtThemes[g_crtTheme];
+
     // 1. Fill Deep Space Background
-    FillSolidRect(hdc, 0, 0, width, height, COLOR_BG_DEEP);
+    FillSolidRect(hdc, 0, 0, width, height, theme->bgDeep);
 
     // Layout Dimensions
     int headerH = 46;
@@ -1058,15 +1242,15 @@ static void RenderUI(HDC hdc, int width, int height) {
     int viewportH = height - headerH - footerH;
 
     // 2. Draw Top Header Bar
-    FillSolidRect(hdc, 0, 0, width, headerH, COLOR_BG_PANEL_DARK);
-    FillSolidRect(hdc, 0, headerH - 1, width, 1, COLOR_BORDER);
+    FillSolidRect(hdc, 0, 0, width, headerH, theme->bgPanelDark);
+    FillSolidRect(hdc, 0, headerH - 1, width, 1, theme->border);
 
     // Brand Logo
     SelectObject(hdc, hFontTitle);
-    SetTextColor(hdc, COLOR_CYAN);
+    SetTextColor(hdc, theme->primary);
     TextOutA(hdc, 12, 6, "KCOSMIC", 7);
     SelectObject(hdc, hFontSmall);
-    SetTextColor(hdc, COLOR_TEXT_DIM);
+    SetTextColor(hdc, theme->textDim);
     TextOutA(hdc, 84, 9, "// Fleet Logistics & Terraforming", 33);
 
     // Header Badges
@@ -1078,7 +1262,7 @@ static void RenderUI(HDC hdc, int width, int height) {
     char buf[128];
     // Cycle
     sprintf(buf, "CYC: %.2f", sim.cycle);
-    SetTextColor(hdc, COLOR_CYAN);
+    SetTextColor(hdc, theme->primary);
     TextOutA(hdc, badgeX, 7, buf, (int)strlen(buf));
 
     // Energy
@@ -1103,7 +1287,7 @@ static void RenderUI(HDC hdc, int width, int height) {
 
     // Colonists
     sprintf(buf, "POP: %d", sim.colonists);
-    SetTextColor(hdc, COLOR_TEXT_BRIGHT);
+    SetTextColor(hdc, theme->textBright);
     TextOutA(hdc, badgeX + 240, 24, buf, (int)strlen(buf));
 
     // Food
@@ -1133,23 +1317,106 @@ static void RenderUI(HDC hdc, int width, int height) {
         }
     }
 
-    // B. Coordinate Grid
-    HPEN hGridPen = CreatePen(PS_SOLID, 1, RGB(20, 36, 64));
-    HPEN hOldPen = (HPEN)SelectObject(hdc, hGridPen);
-    int step = (int)(80 * z);
-    if (step < 30) step = 30;
-    int startX = (cx % step);
-    int startY = (cy % step);
-    for (int x = startX; x < viewportW; x += step) {
-        MoveToEx(hdc, x, headerH, NULL);
-        LineTo(hdc, x, headerH + viewportH);
+    // B. Astrometric Stellar Cartography Grid & Range Rings
+    if (g_showGrid) {
+        HPEN hGridPen = CreatePen(PS_SOLID, 1, theme->grid);
+        HPEN hOldPen = (HPEN)SelectObject(hdc, hGridPen);
+        int step = (int)(80 * z);
+        if (step < 30) step = 30;
+        int startX = (cx % step);
+        int startY = (cy % step);
+        for (int x = startX; x < viewportW; x += step) {
+            MoveToEx(hdc, x, headerH, NULL);
+            LineTo(hdc, x, headerH + viewportH);
+        }
+        for (int y = startY; y < headerH + viewportH; y += step) {
+            MoveToEx(hdc, 0, y, NULL);
+            LineTo(hdc, viewportW, y);
+        }
+        SelectObject(hdc, hOldPen);
+        DeleteObject(hGridPen);
+
+        // Concentric AU Range Rings centered on Kepler-186 Helios
+        int sunCenterOriginX = cx + (int)(-300.0f * z);
+        int sunCenterOriginY = cy;
+        HPEN hRingPen = CreatePen(PS_DOT, 1, theme->grid);
+        hOldPen = (HPEN)SelectObject(hdc, hRingPen);
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, theme->secondary);
+        SelectObject(hdc, hFontSmall);
+
+        int auDistances[5] = {100, 200, 300, 360, 500};
+        const char* auLabels[5] = {
+            "100 AU // INNER TRANSIT",
+            "200 AU // TARTARUS BELT",
+            "300 AU // STELLAR CORRIDOR",
+            "360 AU // HABITABLE ZONE",
+            "500 AU // PERIMETER ORBIT"
+        };
+
+        for (int ri = 0; ri < 5; ri++) {
+            int rad = (int)(auDistances[ri] * z);
+            Arc(hdc, sunCenterOriginX - rad, sunCenterOriginY - (int)(rad * 0.7f),
+                     sunCenterOriginX + rad, sunCenterOriginY + (int)(rad * 0.7f), 0, 0, 0, 0);
+
+            // Label at -35 degrees
+            int lx = sunCenterOriginX + (int)(cosf(-0.55f) * rad) + 4;
+            int ly = sunCenterOriginY + (int)(sinf(-0.55f) * rad * 0.7f) - 6;
+            if (lx > 10 && lx < viewportW - 140 && ly > headerH + 10 && ly < headerH + viewportH - 20) {
+                TextOutA(hdc, lx, ly, auLabels[ri], (int)strlen(auLabels[ri]));
+            }
+        }
+
+        // Radial azimuth bearing spokes every 45 deg
+        for (int deg = 0; deg < 360; deg += 45) {
+            float radAngle = (float)deg * 0.0174532925f;
+            int rx1 = sunCenterOriginX + (int)(cosf(radAngle) * 60 * z);
+            int ry1 = sunCenterOriginY + (int)(sinf(radAngle) * 60 * z * 0.7f);
+            int rx2 = sunCenterOriginX + (int)(cosf(radAngle) * 520 * z);
+            int ry2 = sunCenterOriginY + (int)(sinf(radAngle) * 520 * z * 0.7f);
+            MoveToEx(hdc, rx1, ry1, NULL);
+            LineTo(hdc, rx2, ry2);
+
+            int sx2 = sunCenterOriginX + (int)(cosf(radAngle) * 530 * z);
+            int sy2 = sunCenterOriginY + (int)(sinf(radAngle) * 530 * z * 0.7f);
+            if (sx2 > 15 && sx2 < viewportW - 50 && sy2 > headerH + 15 && sy2 < headerH + viewportH - 35) {
+                char degBuf[16];
+                sprintf(degBuf, "%03d deg", deg);
+                TextOutA(hdc, sx2, sy2, degBuf, (int)strlen(degBuf));
+            }
+        }
+        SelectObject(hdc, hOldPen);
+        DeleteObject(hRingPen);
+
+        // Corner Astrometric Registration Marks
+        HPEN hCornerPen = CreatePen(PS_SOLID, 2, theme->primary);
+        hOldPen = (HPEN)SelectObject(hdc, hCornerPen);
+        // Top-left
+        MoveToEx(hdc, 12, headerH + 12, NULL); LineTo(hdc, 24, headerH + 12);
+        MoveToEx(hdc, 12, headerH + 12, NULL); LineTo(hdc, 12, headerH + 24);
+        // Top-right
+        MoveToEx(hdc, viewportW - 12, headerH + 12, NULL); LineTo(hdc, viewportW - 24, headerH + 12);
+        MoveToEx(hdc, viewportW - 12, headerH + 12, NULL); LineTo(hdc, viewportW - 12, headerH + 24);
+        // Bottom-left
+        MoveToEx(hdc, 12, headerH + viewportH - 12, NULL); LineTo(hdc, 24, headerH + viewportH - 12);
+        MoveToEx(hdc, 12, headerH + viewportH - 12, NULL); LineTo(hdc, 12, headerH + viewportH - 24);
+        // Bottom-right
+        MoveToEx(hdc, viewportW - 12, headerH + viewportH - 12, NULL); LineTo(hdc, viewportW - 24, headerH + viewportH - 12);
+        MoveToEx(hdc, viewportW - 12, headerH + viewportH - 12, NULL); LineTo(hdc, viewportW - 12, headerH + viewportH - 24);
+        SelectObject(hdc, hOldPen);
+        DeleteObject(hCornerPen);
+
+        // Top-Right Astrometric Telemetry Badge
+        int tbW = 270;
+        int tbH = 20;
+        int tbX = viewportW - tbW - 12;
+        int tbY = headerH + 10;
+        FillSolidRect(hdc, tbX, tbY, tbW, tbH, theme->bgPanel);
+        FrameSolidRect(hdc, tbX, tbY, tbW, tbH, theme->border);
+        FillSolidRect(hdc, tbX, tbY, 2, tbH, theme->primary);
+        SetTextColor(hdc, theme->primary);
+        TextOutA(hdc, tbX + 8, tbY + 3, "RA 19h 54m | DEC +44 01' | ATLAS: ON", 36);
     }
-    for (int y = startY; y < headerH + viewportH; y += step) {
-        MoveToEx(hdc, 0, y, NULL);
-        LineTo(hdc, viewportW, y);
-    }
-    SelectObject(hdc, hOldPen);
-    DeleteObject(hGridPen);
 
     // C. Central Sun (Kepler-186 Helios)
     int sunX = cx + (int)(-300.0f * z);
@@ -1290,6 +1557,21 @@ static void RenderUI(HDC hdc, int width, int height) {
         fleet[i].currX = (float)sx;
         fleet[i].currY = (float)sy;
 
+        // Ship Velocity Trajectory Vector
+        if (g_showGrid) {
+            HPEN hVecPen = CreatePen(PS_DOT, 1, fleet[i].color);
+            HPEN hOldVec = (HPEN)SelectObject(hdc, hVecPen);
+            int vLen = (int)(22 * z);
+            float hAng = fleet[i].targetBelt ? atan2f(fleet[i].vy, fleet[i].vx) : (fleet[i].angle + 1.5707963f);
+            int vx2 = sx + (int)(cosf(hAng) * vLen);
+            int vy2 = sy + (int)(sinf(hAng) * vLen);
+            MoveToEx(hdc, sx, sy, NULL);
+            LineTo(hdc, vx2, vy2);
+            SelectObject(hdc, hOldVec);
+            DeleteObject(hVecPen);
+            FillSolidRect(hdc, vx2 - 1, vy2 - 1, 3, 3, fleet[i].color);
+        }
+
         // Render Ship Sprite
         DrawShipGDI(hdc, &fleet[i], sx, sy, z, i, sim.time);
 
@@ -1304,15 +1586,27 @@ static void RenderUI(HDC hdc, int width, int height) {
     }
 
     // I. Viewport Top Overlay Card
-    FillSolidRect(hdc, 10, headerH + 10, 270, 52, COLOR_BG_PANEL);
-    FrameSolidRect(hdc, 10, headerH + 10, 270, 52, COLOR_BORDER);
-    FillSolidRect(hdc, 10, headerH + 10, 3, 52, COLOR_CYAN);
-    SetTextColor(hdc, COLOR_CYAN);
+    FillSolidRect(hdc, 10, headerH + 10, 270, 52, theme->bgPanel);
+    FrameSolidRect(hdc, 10, headerH + 10, 270, 52, theme->border);
+    FillSolidRect(hdc, 10, headerH + 10, 3, 52, theme->primary);
+    SetTextColor(hdc, theme->primary);
     SelectObject(hdc, hFontSmall);
     TextOutA(hdc, 20, headerH + 15, "SECTOR: Kepler-186e / Prime Anchor", 34);
-    SetTextColor(hdc, COLOR_TEXT_BRIGHT);
+    SetTextColor(hdc, theme->textBright);
     TextOutA(hdc, 20, headerH + 30, "Target: Aethelgard Prime [Hostile IV]", 37);
     TextOutA(hdc, 20, headerH + 44, "Fleet: 5 Ships Active | Relics: Detected", 40);
+
+    // CRT Raster Scanlines Post-Effect
+    if (g_phosphorGlow) {
+        HPEN hScanlinePen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+        HPEN hOldScanPen = (HPEN)SelectObject(hdc, hScanlinePen);
+        for (int syScan = headerH; syScan < headerH + viewportH; syScan += 4) {
+            MoveToEx(hdc, 0, syScan, NULL);
+            LineTo(hdc, viewportW, syScan);
+        }
+        SelectObject(hdc, hOldScanPen);
+        DeleteObject(hScanlinePen);
+    }
 
     // J. Viewport Navigation Buttons (Bottom-Left of Viewport)
     int navY = headerH + viewportH - 30;
@@ -1321,13 +1615,16 @@ static void RenderUI(HDC hdc, int width, int height) {
     AddButton(BID_ZOOM_IN, 174, navY, 56, 22, "Zoom +", NULL, 1);
     AddButton(BID_ZOOM_OUT, 234, navY, 56, 22, "Zoom -", NULL, 1);
     AddButton(BID_RESET_VIEW, 294, navY, 52, 22, "Reset", NULL, 1);
+    AddButton(BID_THEME_TOGGLE, 350, navY, 96, 22, g_crtThemes[g_crtTheme].name, NULL, 1);
+    AddButton(BID_GRID_TOGGLE, 450, navY, 68, 22, g_showGrid ? "Grid: ON" : "Grid: OFF", NULL, 1);
+    AddButton(BID_GLOW_TOGGLE, 522, navY, 68, 22, g_phosphorGlow ? "Glow: ON" : "Glow: OFF", NULL, 1);
 
     // K. Viewport Selection Card (if something selected)
     if (sim.selectedType != 0) {
         int scX = viewportW - 220;
         int scY = headerH + 10;
-        FillSolidRect(hdc, scX, scY, 210, 110, COLOR_BG_PANEL);
-        FrameSolidRect(hdc, scX, scY, 210, 110, COLOR_BLUE);
+        FillSolidRect(hdc, scX, scY, 210, 110, theme->bgPanel);
+        FrameSolidRect(hdc, scX, scY, 210, 110, theme->secondary);
 
         const char* selName = "Object";
         const char* selType = "Target";
@@ -1340,11 +1637,11 @@ static void RenderUI(HDC hdc, int width, int height) {
             selType = fleet[sim.selectedIndex].role;
         }
 
-        SetTextColor(hdc, COLOR_CYAN);
+        SetTextColor(hdc, theme->primary);
         SelectObject(hdc, hFontBold);
         TextOutA(hdc, scX + 8, scY + 6, selName, (int)strlen(selName));
 
-        SetTextColor(hdc, COLOR_TEXT_DIM);
+        SetTextColor(hdc, theme->textDim);
         SelectObject(hdc, hFontSmall);
         TextOutA(hdc, scX + 8, scY + 22, selType, (int)strlen(selType));
 
@@ -1358,8 +1655,8 @@ static void RenderUI(HDC hdc, int width, int height) {
 
     // 4. Right Sidebar Area
     int sbX = viewportW;
-    FillSolidRect(hdc, sbX, headerH, sidebarW, viewportH, COLOR_BG_PANEL);
-    FillSolidRect(hdc, sbX, headerH, 1, viewportH, COLOR_BORDER);
+    FillSolidRect(hdc, sbX, headerH, sidebarW, viewportH, theme->bgPanel);
+    FillSolidRect(hdc, sbX, headerH, 1, viewportH, theme->border);
 
     // Tab Header
     int tabW = sidebarW / 4;
@@ -1791,6 +2088,20 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         sim.camX = 0;
                         sim.camY = 0;
                         sim.zoom = 1.0f;
+                        PlaySoundFx(SFX_CLICK);
+                    } else if (bid == BID_THEME_TOGGLE) {
+                        g_crtTheme = (g_crtTheme + 1) % 4;
+                        char buf[128];
+                        sprintf(buf, "CRT Phosphor mode changed to %s.", g_crtThemes[g_crtTheme].name);
+                        SetLogMsg(buf, 0);
+                        PlaySoundFx(SFX_CLICK);
+                    } else if (bid == BID_GRID_TOGGLE) {
+                        g_showGrid = !g_showGrid;
+                        SetLogMsg(g_showGrid ? "Astrometric Cartography Grid engaged." : "Cartography Grid dimmed.", 0);
+                        PlaySoundFx(SFX_CLICK);
+                    } else if (bid == BID_GLOW_TOGGLE) {
+                        g_phosphorGlow = !g_phosphorGlow;
+                        SetLogMsg(g_phosphorGlow ? "CRT Phosphor bloom shader online." : "Phosphor bloom disabled.", 0);
                         PlaySoundFx(SFX_CLICK);
                     } else if (bid == BID_SPEED_PAUSE) {
                         sim.paused = 1;

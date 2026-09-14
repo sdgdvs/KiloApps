@@ -26,6 +26,58 @@
             --font-mono: 'Consolas', 'Courier New', Courier, monospace;
         }
 
+        /* CRT Phosphor Themes */
+        body[data-theme="amber"] {
+            --bg-deep: #0a0703;
+            --bg-panel: #140e06;
+            --bg-panel-dark: #0d0904;
+            --bg-card: #1c1409;
+            --bg-card-hover: #2a1e0d;
+            --bg-card-active: #382812;
+            --border-stellar: #4a3010;
+            --border-highlight: #f59e0b;
+            --text-primary: #fed7aa;
+            --text-bright: #fffbeb;
+            --text-dim: #9a6a38;
+            --accent-cyan: #f59e0b;
+            --accent-blue: #fbbf24;
+            --accent-emerald: #fb923c;
+        }
+
+        body[data-theme="green"] {
+            --bg-deep: #030d07;
+            --bg-panel: #06160c;
+            --bg-panel-dark: #040f08;
+            --bg-card: #0a2414;
+            --bg-card-hover: #10361e;
+            --bg-card-active: #164828;
+            --border-stellar: #134e2a;
+            --border-highlight: #10b981;
+            --text-primary: #a7f3d0;
+            --text-bright: #ecfdf5;
+            --text-dim: #3d7a58;
+            --accent-cyan: #10b981;
+            --accent-blue: #34d399;
+            --accent-emerald: #6ee7b7;
+        }
+
+        body[data-theme="mono"] {
+            --bg-deep: #080a0e;
+            --bg-panel: #0f131a;
+            --bg-panel-dark: #090c12;
+            --bg-card: #181d26;
+            --bg-card-hover: #232a37;
+            --bg-card-active: #2f3849;
+            --border-stellar: #334155;
+            --border-highlight: #e2e8f0;
+            --text-primary: #cbd5e1;
+            --text-bright: #ffffff;
+            --text-dim: #64748b;
+            --accent-cyan: #e2e8f0;
+            --accent-blue: #94a3b8;
+            --accent-emerald: #cbd5e1;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -43,9 +95,10 @@
             flex-direction: column;
             height: 100vh;
             width: 100vw;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* Scanline Overlay */
+        /* CRT Raster Scanline Overlay */
         .scanlines {
             position: fixed;
             top: 0;
@@ -53,11 +106,57 @@
             width: 100vw;
             height: 100vh;
             pointer-events: none;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.28) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
             background-size: 100% 3px, 6px 100%;
             z-index: 999;
-            opacity: 0.55;
+            opacity: 0.65;
         }
+
+        /* CRT Screen Curvature & Vignette */
+        .crt-vignette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle at center, transparent 60%, rgba(3, 7, 18, 0.45) 88%, rgba(2, 4, 10, 0.82) 100%);
+            box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.7);
+            z-index: 6;
+        }
+
+        /* Astrometric Cartography Reticles & Badges */
+        .carto-badge {
+            position: absolute;
+            top: 10px;
+            right: 14px;
+            background: rgba(10, 17, 32, 0.88);
+            border: 1px solid var(--border-stellar);
+            border-left: 2px solid var(--accent-cyan);
+            border-radius: 3px;
+            padding: 4px 9px;
+            font-size: 10px;
+            letter-spacing: 1px;
+            color: var(--accent-cyan);
+            pointer-events: none;
+            z-index: 7;
+            text-transform: uppercase;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .carto-corner {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
+            z-index: 7;
+            opacity: 0.65;
+        }
+        .carto-corner.tl { top: 10px; left: 10px; border-top: 2px solid var(--accent-cyan); border-left: 2px solid var(--accent-cyan); }
+        .carto-corner.tr { top: 10px; right: 10px; border-top: 2px solid var(--accent-cyan); border-right: 2px solid var(--accent-cyan); }
+        .carto-corner.bl { bottom: 10px; left: 10px; border-bottom: 2px solid var(--accent-cyan); border-left: 2px solid var(--accent-cyan); }
+        .carto-corner.br { bottom: 10px; right: 10px; border-bottom: 2px solid var(--accent-cyan); border-right: 2px solid var(--accent-cyan); }
 
         /* Header */
         header {
@@ -700,6 +799,12 @@
         <!-- Center Orbital System Viewport -->
         <div class="viewport-container" id="canvasContainer">
             <canvas id="stellarCanvas"></canvas>
+            <div class="crt-vignette"></div>
+            <div class="carto-corner tl"></div>
+            <div class="carto-corner tr"></div>
+            <div class="carto-corner bl"></div>
+            <div class="carto-corner br"></div>
+            <div class="carto-badge" id="cartoBadge">RA 19h 54m 36s | DEC +44° 01' 00" | CARTOGRAPHY: ACTIVE</div>
 
             <!-- Top Left System HUD Overlay -->
             <div class="viewport-overlay">
@@ -722,6 +827,9 @@
                 <button class="nav-btn" id="btnZoomIn">Zoom +</button>
                 <button class="nav-btn" id="btnZoomOut">Zoom -</button>
                 <button class="nav-btn" id="btnResetView">Reset View</button>
+                <button class="nav-btn" id="btnCrtTheme" title="Cycle Retro CRT Phosphor Theme">CRT: P4 Cyan</button>
+                <button class="nav-btn" id="btnGridToggle" title="Toggle Cartography Grid & AU Range Rings">Grid: ON</button>
+                <button class="nav-btn" id="btnPhosphorGlow" title="Toggle CRT Phosphor Glow">Glow: ON</button>
             </div>
 
             <!-- Context Selection Inspector Panel (Appears on click) -->
@@ -1259,9 +1367,22 @@
             lastMouseX: 0,
             lastMouseY: 0,
 
+            // Retro CRT Phosphor Themes & Cartography
+            crtThemeIndex: 0,
+            showGrid: true,
+            phosphorGlow: true,
+
             // Selected entity on map
             selected: null
         };
+
+        // Retro CRT Phosphor Modes
+        const CRT_THEMES = [
+            { id: 'cyan', name: 'CRT: P4 Cyan', primary: '#00f0ff', secondary: '#38bdf8', glow: 'rgba(0, 240, 255, 0.45)', grid: 'rgba(28, 49, 86, 0.28)', bg: '#050811' },
+            { id: 'amber', name: 'CRT: P3 Amber', primary: '#f59e0b', secondary: '#fbbf24', glow: 'rgba(245, 158, 11, 0.45)', grid: 'rgba(74, 48, 16, 0.32)', bg: '#0a0703' },
+            { id: 'green', name: 'CRT: P1 Green', primary: '#10b981', secondary: '#34d399', glow: 'rgba(16, 185, 129, 0.45)', grid: 'rgba(19, 78, 42, 0.32)', bg: '#030d07' },
+            { id: 'mono', name: 'CRT: P7 White', primary: '#e2e8f0', secondary: '#94a3b8', glow: 'rgba(226, 232, 240, 0.4)', grid: 'rgba(51, 65, 85, 0.32)', bg: '#080a0e' }
+        ];
 
         // Star System Bodies
         const celestialBodies = [
@@ -1531,21 +1652,71 @@
 
         // --- Thematic Procedural Sprite Rendering Engine ---
 
-        // 1. Aethelgard Prime Planetary Surface with Continents, Ice Caps & Clouds
+        // 1. Aethelgard Prime Planetary Surface with Dynamic Atmosphere, Auroras & City Lights
         function drawPlanetAethelgard(ctx, px, py, pr, sunX, sunY, z, time) {
             const sunAngle = Math.atan2(sunY - py, sunX - px);
 
-            // A. Outer Dynamic Atmosphere Glow
-            const atmoThickness = 8 * z * (1.0 + sim.pressure * 0.4);
-            const atmoGrad = ctx.createRadialGradient(px, py, pr * 0.9, px, py, pr + atmoThickness);
-            const atmoHue = sim.oxygen > 15 ? 'rgba(16, 185, 129,' : 'rgba(0, 240, 255,';
-            atmoGrad.addColorStop(0, atmoHue + '0.45)');
-            atmoGrad.addColorStop(0.6, atmoHue + '0.18)');
-            atmoGrad.addColorStop(1, atmoHue + '0)');
-            ctx.fillStyle = atmoGrad;
+            // A. Dynamic Multi-layer Atmospheric Rayleigh & Mie Scattering Glow
+            const atmoThickness = 12 * z * (1.0 + sim.pressure * 0.5);
+            let atmoR, atmoG, atmoB;
+            if (sim.oxygen > 15) {
+                // Biosphere: Rich Gaia cyan-emerald Rayleigh scattering
+                atmoR = 0; atmoG = 240; atmoB = 220;
+            } else if (sim.temp < -20) {
+                // Glaciated: Pale electric ice-violet halo
+                atmoR = 140; atmoG = 190; atmoB = 255;
+            } else {
+                // Barren Greenhouse: Amber-copper Rayleigh haze
+                atmoR = 245; atmoG = 158; atmoB = 11;
+            }
+
+            // A1. Wide diffuse exospheric corona
+            const exoGrad = ctx.createRadialGradient(px, py, pr * 0.95, px, py, pr + atmoThickness);
+            exoGrad.addColorStop(0, `rgba(${atmoR}, ${atmoG}, ${atmoB}, 0.5)`);
+            exoGrad.addColorStop(0.45, `rgba(${atmoR}, ${atmoG}, ${atmoB}, 0.22)`);
+            exoGrad.addColorStop(1, `rgba(${atmoR}, ${atmoG}, ${atmoB}, 0)`);
+            ctx.fillStyle = exoGrad;
             ctx.beginPath();
             ctx.arc(px, py, pr + atmoThickness, 0, Math.PI * 2);
             ctx.fill();
+
+            // A2. Sunward Mie Limb Brightening (Anisotropic forward atmospheric scattering)
+            const sunwardArcGrad = ctx.createRadialGradient(
+                px + Math.cos(sunAngle) * pr * 0.9,
+                py + Math.sin(sunAngle) * pr * 0.9,
+                1,
+                px + Math.cos(sunAngle) * pr * 0.9,
+                py + Math.sin(sunAngle) * pr * 0.9,
+                pr * 0.55
+            );
+            sunwardArcGrad.addColorStop(0, `rgba(255, 255, 255, 0.6)`);
+            sunwardArcGrad.addColorStop(0.5, `rgba(${atmoR}, ${atmoG}, ${atmoB}, 0.35)`);
+            sunwardArcGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = sunwardArcGrad;
+            ctx.beginPath();
+            ctx.arc(px + Math.cos(sunAngle) * pr * 0.25, py + Math.sin(sunAngle) * pr * 0.25, pr + atmoThickness * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // A3. Polar Auroras (Shimmering magnetic arcs at North and South poles)
+            if (sim.magnet > 0.1) {
+                const auroraAlpha = Math.min(0.65, (sim.magnet / 0.5) * 0.65);
+                ctx.save();
+                // North Aurora
+                ctx.strokeStyle = `rgba(16, 185, 129, ${auroraAlpha * (0.7 + Math.sin(time * 3.5) * 0.3)})`;
+                ctx.lineWidth = Math.max(1.5, 2 * z);
+                ctx.beginPath();
+                const northWobble = Math.sin(time * 2.8) * 3 * z;
+                ctx.ellipse(px + northWobble, py - pr * 0.88, pr * 0.55, pr * 0.16, 0, Math.PI, Math.PI * 2);
+                ctx.stroke();
+
+                // South Aurora
+                ctx.strokeStyle = `rgba(168, 85, 247, ${auroraAlpha * (0.7 + Math.cos(time * 3.2) * 0.3)})`;
+                ctx.beginPath();
+                const southWobble = Math.cos(time * 2.5) * 3 * z;
+                ctx.ellipse(px + southWobble, py + pr * 0.88, pr * 0.55, pr * 0.16, 0, 0, Math.PI);
+                ctx.stroke();
+                ctx.restore();
+            }
 
             // Clip all surface features to planet circle
             ctx.save();
@@ -1660,12 +1831,40 @@
                 pr * 1.05
             );
             shadeGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
-            shadeGrad.addColorStop(0.55, 'rgba(3, 7, 18, 0.3)');
-            shadeGrad.addColorStop(1, 'rgba(3, 7, 18, 0.82)');
+            shadeGrad.addColorStop(0.55, 'rgba(3, 7, 18, 0.35)');
+            shadeGrad.addColorStop(1, 'rgba(3, 7, 18, 0.86)');
             ctx.fillStyle = shadeGrad;
             ctx.beginPath();
             ctx.arc(px, py, pr, 0, Math.PI * 2);
             ctx.fill();
+
+            // G. Night-side Bioluminescent Settlement Lights (Dome Clusters)
+            if (sim.colonists > 0) {
+                const darkAngle = sunAngle + Math.PI;
+                const nightDirX = Math.cos(darkAngle);
+                const nightDirY = Math.sin(darkAngle);
+                const cityClusters = [
+                    { ox: 0.35, oy: -0.15, sz: 2.2, color: 'rgba(255, 215, 100, 0.9)' }, // Dome Alpha
+                    { ox: 0.48, oy: 0.12, sz: 1.8, color: 'rgba(0, 240, 255, 0.85)' },  // Dome Beta
+                    { ox: 0.28, oy: 0.32, sz: 1.5, color: 'rgba(16, 185, 129, 0.85)' }, // Agronomy Complex
+                    { ox: 0.58, oy: -0.05, sz: 1.2, color: 'rgba(255, 180, 50, 0.8)' }  // Mining Depot
+                ];
+
+                cityClusters.forEach((c, idx) => {
+                    const cx = px + (nightDirX * pr * 0.55) + (c.ox * pr * 0.45);
+                    const cy = py + (nightDirY * pr * 0.55) + (c.oy * pr * 0.45);
+                    const flicker = 0.8 + Math.sin(time * 5 + idx * 2.1) * 0.2;
+                    ctx.fillStyle = c.color;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, c.sz * Math.min(1.5, z) * flicker, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Halo glow around city cluster
+                    ctx.fillStyle = c.color.replace('0.9', '0.2').replace('0.85', '0.18');
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, c.sz * 2.8 * Math.min(1.5, z), 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
 
             ctx.restore();
         }
@@ -2002,6 +2201,15 @@
             const cx = canvas.width / 2 + sim.camX;
             const cy = canvas.height / 2 + sim.camY;
             const z = sim.zoom;
+            const theme = CRT_THEMES[sim.crtThemeIndex];
+
+            // Setup Phosphor Glow Post-Effect
+            if (sim.phosphorGlow) {
+                ctx.shadowColor = theme.primary;
+                ctx.shadowBlur = 3.5;
+            } else {
+                ctx.shadowBlur = 0;
+            }
 
             // 1. Draw Starfield (Parallax with zoom)
             backgroundStars.forEach(s => {
@@ -2015,23 +2223,77 @@
                 }
             });
 
-            // 2. Draw Stellar Coordinate Grid
-            ctx.strokeStyle = 'rgba(28, 49, 86, 0.2)';
-            ctx.lineWidth = 1;
-            const step = 80 * z;
-            const startX = (cx % step);
-            const startY = (cy % step);
-            for (let x = startX; x < canvas.width; x += step) {
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, canvas.height);
-                ctx.stroke();
-            }
-            for (let y = startY; y < canvas.height; y += step) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(canvas.width, y);
-                ctx.stroke();
+            // 2. Draw Stellar Cartography & Astrometric Range Rings
+            if (sim.showGrid) {
+                // Cartography Grid lines
+                ctx.strokeStyle = theme.grid;
+                ctx.lineWidth = 1;
+                const step = 80 * z;
+                const startX = (cx % step);
+                const startY = (cy % step);
+                for (let x = startX; x < canvas.width; x += step) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height);
+                    ctx.stroke();
+                }
+                for (let y = startY; y < canvas.height; y += step) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                }
+
+                // Astrometric Range Rings centered on Kepler-186 Helios
+                const sunObj = celestialBodies[0];
+                const sX = cx + sunObj.x * z;
+                const sY = cy + sunObj.y * z;
+                const rangeRings = [
+                    { r: 100, label: '100 AU // INNER SYSTEM TRANSIT' },
+                    { r: 200, label: '200 AU // TARTARUS BELT' },
+                    { r: 300, label: '300 AU // STELLAR CORRIDOR' },
+                    { r: 360, label: '360 AU // HABITABLE ZONE (AETHELGARD)' },
+                    { r: 500, label: '500 AU // PERIMETER ORBIT' }
+                ];
+
+                ctx.save();
+                ctx.setLineDash([4, 6]);
+                ctx.strokeStyle = theme.grid.replace('0.28', '0.45').replace('0.32', '0.45');
+                ctx.fillStyle = theme.secondary;
+                ctx.font = `${Math.max(8, 9 * z)}px monospace`;
+                ctx.textAlign = 'left';
+
+                rangeRings.forEach(ring => {
+                    const radius = ring.r * z;
+                    ctx.beginPath();
+                    ctx.arc(sX, sY, radius, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Radial AU Callout text at 35 degrees
+                    const callAngle = -0.55;
+                    const tx = sX + Math.cos(callAngle) * radius + 6;
+                    const ty = sY + Math.sin(callAngle) * radius - 2;
+                    if (tx > 0 && tx < canvas.width && ty > 0 && ty < canvas.height) {
+                        ctx.fillText(ring.label, tx, ty);
+                    }
+                });
+
+                // Radial Azimuth Spokes (every 45 deg)
+                for (let deg = 0; deg < 360; deg += 45) {
+                    const rad = (deg * Math.PI) / 180;
+                    ctx.beginPath();
+                    ctx.moveTo(sX + Math.cos(rad) * 60 * z, sY + Math.sin(rad) * 60 * z);
+                    ctx.lineTo(sX + Math.cos(rad) * 520 * z, sY + Math.sin(rad) * 520 * z);
+                    ctx.stroke();
+
+                    // Degree notation at spoke tips
+                    const spkX = sX + Math.cos(rad) * 530 * z;
+                    const spkY = sY + Math.sin(rad) * 530 * z;
+                    if (spkX > 10 && spkX < canvas.width - 40 && spkY > 20 && spkY < canvas.height - 20) {
+                        ctx.fillText(`${String(deg).padStart(3, '0')}° AZ`, spkX, spkY);
+                    }
+                }
+                ctx.restore();
             }
 
             // 3. Central Sun (Kepler-186)
@@ -2166,6 +2428,34 @@
 
                 ship.currX = sx;
                 ship.currY = sy;
+
+                // Ship Trajectory Velocity Vector (Cartography Mode)
+                if (sim.showGrid) {
+                    ctx.save();
+                    ctx.strokeStyle = ship.color;
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([2, 3]);
+                    let vX, vY;
+                    if (ship.targetBelt) {
+                        vX = ship.vx * 18 * z;
+                        vY = ship.vy * 18 * z;
+                    } else {
+                        const hAngle = ship.angle + Math.PI / 2;
+                        vX = Math.cos(hAngle) * 22 * z;
+                        vY = Math.sin(hAngle) * 15 * z;
+                    }
+                    ctx.beginPath();
+                    ctx.moveTo(sx, sy);
+                    ctx.lineTo(sx + vX, sy + vY);
+                    ctx.stroke();
+
+                    // Small heading point
+                    ctx.fillStyle = ship.color;
+                    ctx.beginPath();
+                    ctx.arc(sx + vX, sy + vY, 1.8, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
 
                 // Render Ship Sprite with animated thrusters
                 drawShipSprite(ctx, ship, sx, sy, z, sim.time);
@@ -2352,6 +2642,36 @@
             sim.camX = 0;
             sim.camY = 0;
             sim.zoom = 1.0;
+            playSound('click');
+        });
+
+        // Retro CRT Theme Toggle
+        document.getElementById('btnCrtTheme').addEventListener('click', () => {
+            initAudio();
+            sim.crtThemeIndex = (sim.crtThemeIndex + 1) % CRT_THEMES.length;
+            const t = CRT_THEMES[sim.crtThemeIndex];
+            document.body.setAttribute('data-theme', t.id);
+            document.getElementById('btnCrtTheme').textContent = t.name;
+            logMsg(`CRT Phosphor profile switched to ${t.name}.`);
+            playSound('click');
+        });
+
+        // Astrometric Cartography Grid Toggle
+        document.getElementById('btnGridToggle').addEventListener('click', () => {
+            initAudio();
+            sim.showGrid = !sim.showGrid;
+            document.getElementById('btnGridToggle').textContent = sim.showGrid ? 'Grid: ON' : 'Grid: OFF';
+            document.getElementById('cartoBadge').textContent = sim.showGrid ? 'RA 19h 54m 36s | DEC +44° 01\' 00" | CARTOGRAPHY: ACTIVE' : 'RA 19h 54m 36s | DEC +44° 01\' 00" | ATLAS: MINIMAL';
+            logMsg(`Astrometric Cartography Grid ${sim.showGrid ? 'engaged' : 'dimmed'}.`);
+            playSound('click');
+        });
+
+        // CRT Phosphor Bloom / Glow Toggle
+        document.getElementById('btnPhosphorGlow').addEventListener('click', () => {
+            initAudio();
+            sim.phosphorGlow = !sim.phosphorGlow;
+            document.getElementById('btnPhosphorGlow').textContent = sim.phosphorGlow ? 'Glow: ON' : 'Glow: OFF';
+            logMsg(`Phosphor vector bloom shader ${sim.phosphorGlow ? 'active' : 'disabled'}.`);
             playSound('click');
         });
 
