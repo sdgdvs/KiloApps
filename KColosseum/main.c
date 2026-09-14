@@ -83,7 +83,7 @@ typedef struct {
     COLORREF color;
     int life;
     int maxLife;
-    int type; // 0: spark, 1: dust, 2: shard, 3: coin, 4: cross
+    int type; // 0: spark, 1: dust, 2: shard, 3: coin, 4: cross, 5: blood
     int rot;
 } Particle;
 
@@ -248,6 +248,10 @@ void SpawnParticles(int x, int y, int count, int type, COLORREF color) {
             p->vx = (my_rand() % 3) - 1;
             p->vy = -(my_rand() % 3) - 1;
             p->size = 6;
+        } else if (type == 5) { // Blood
+            p->vx = (my_rand() % 9) - 4;
+            p->vy = -(my_rand() % 5) - 1;
+            p->size = (my_rand() % 3) + 2;
         }
     }
 }
@@ -525,8 +529,13 @@ void CombatAction(int action) {
             PlaySoundAsync(1);
             g_enemyFlash = 8;
             AddScreenShake(dmg > 10 ? 8 : 5);
-            SpawnParticles(415, 95, 18, 0, RGB(255, 240, 150));
-            SpawnParticles(415, 95, 8, 2, RGB(212, 175, 55));
+            if (enemyDefending) {
+                SpawnParticles(415, 95, 18, 0, RGB(255, 240, 150));
+                SpawnParticles(415, 95, 8, 2, RGB(212, 175, 55));
+            } else {
+                SpawnParticles(415, 95, 15, 5, RGB(160, 20, 20)); // Blood
+                SpawnParticles(415, 95, 8, 1, RGB(180, 150, 110)); // Dust
+            }
             char dmgStr[16];
             wsprintfA(dmgStr, "-%d", dmg);
             AddFloatingText(dmgStr, 415, 70, RGB(255, 60, 60));
@@ -596,8 +605,13 @@ void CombatAction(int action) {
             PlaySoundAsync(1);
             g_playerFlash = 8;
             AddScreenShake(dmg > 10 ? 8 : 5);
-            SpawnParticles(135, 95, 18, 0, RGB(255, 240, 150));
-            SpawnParticles(135, 95, 8, 2, RGB(212, 175, 55));
+            if (playerDefending) {
+                SpawnParticles(135, 95, 18, 0, RGB(255, 240, 150));
+                SpawnParticles(135, 95, 8, 2, RGB(212, 175, 55));
+            } else {
+                SpawnParticles(135, 95, 15, 5, RGB(160, 20, 20)); // Blood
+                SpawnParticles(135, 95, 8, 1, RGB(180, 150, 110)); // Dust
+            }
             char dmgStr[16];
             wsprintfA(dmgStr, "-%d", dmg);
             AddFloatingText(dmgStr, 135, 70, RGB(255, 60, 60));
@@ -622,7 +636,11 @@ void CombatAction(int action) {
                 PlaySoundAsync(1);
                 g_playerFlash = 8;
                 AddScreenShake(5);
-                SpawnParticles(135, 95, 12, 0, RGB(255, 240, 150));
+                if (playerDefending) {
+                    SpawnParticles(135, 95, 14, 0, RGB(255, 240, 150));
+                } else {
+                    SpawnParticles(135, 95, 12, 5, RGB(160, 20, 20));
+                }
                 char dmgStr[16];
                 wsprintfA(dmgStr, "-%d", dmg);
                 AddFloatingText(dmgStr, 135, 70, RGB(255, 60, 60));
@@ -767,12 +785,59 @@ void DrawGladiatorGDI(HDC hdc, int x, int y, Gladiator* g, int isEnemy, int stan
     int drawX = x + (isEnemy ? -lunge : lunge);
     int drawY = y + bob;
 
-    if (stance == 4) { // Dead
-        HBRUSH hbrDead = CreateSolidBrush(RGB(80, 20, 20));
-        HGDIOBJ oldB = SelectObject(hdc, hbrDead);
-        Ellipse(hdc, drawX - 20, drawY + 20, drawX + 20, drawY + 34);
-        SelectObject(hdc, oldB);
-        DeleteObject(hbrDead);
+    if (stance == 4) { // Defeat Collapse Pose
+        // Bloodstain & ground shadow in sand
+        HBRUSH hbrBloodSand = CreateSolidBrush(RGB(70, 15, 15));
+        HGDIOBJ oldB0 = SelectObject(hdc, hbrBloodSand);
+        HPEN hpenNull0 = (HPEN)GetStockObject(NULL_PEN);
+        HGDIOBJ oldP0 = SelectObject(hdc, hpenNull0);
+        Ellipse(hdc, drawX - 26, drawY + 18, drawX + 26, drawY + 34);
+
+        // Slumped body
+        COLORREF tunicCol = isEnemy ? RGB(30, 65, 105) : RGB(139, 0, 0);
+        HBRUSH hbrTunicDead = CreateSolidBrush(tunicCol);
+        SelectObject(hdc, hbrTunicDead);
+        Ellipse(hdc, drawX - 16, drawY + 10, drawX + 16, drawY + 28);
+        DeleteObject(hbrTunicDead);
+
+        // Head resting on ground
+        HBRUSH hbrSkin = CreateSolidBrush(RGB(210, 154, 104));
+        SelectObject(hdc, hbrSkin);
+        Ellipse(hdc, drawX + 10, drawY + 12, drawX + 24, drawY + 24);
+
+        // Knocked-off helmet on sand
+        HBRUSH hbrHelm = CreateSolidBrush(RGB(184, 134, 11));
+        SelectObject(hdc, hbrHelm);
+        Ellipse(hdc, drawX + 22, drawY + 14, drawX + 36, drawY + 28);
+        DeleteObject(hbrHelm);
+
+        // Dropped weapon lying in sand
+        if (g->weapon == 1) { // Gladius on sand
+            HPEN hpenBlade = CreatePen(PS_SOLID, 2, RGB(230, 230, 240));
+            SelectObject(hdc, hpenBlade);
+            MoveToEx(hdc, drawX - 28, drawY + 28, NULL);
+            LineTo(hdc, drawX - 12, drawY + 24);
+            DeleteObject(hpenBlade);
+        } else if (g->weapon == 2) { // Trident on sand
+            HPEN hpenShaft = CreatePen(PS_SOLID, 2, RGB(139, 90, 43));
+            SelectObject(hdc, hpenShaft);
+            MoveToEx(hdc, drawX - 34, drawY + 28, NULL);
+            LineTo(hdc, drawX - 10, drawY + 24);
+            DeleteObject(hpenShaft);
+        }
+
+        // Dropped Shield face-up in sand
+        if (g->shield == 1) {
+            HBRUSH hbrShld = CreateSolidBrush(isEnemy ? RGB(30, 65, 105) : RGB(160, 0, 0));
+            SelectObject(hdc, hbrShld);
+            Ellipse(hdc, drawX - 8, drawY + 22, drawX + 14, drawY + 32);
+            DeleteObject(hbrShld);
+        }
+
+        SelectObject(hdc, oldB0);
+        SelectObject(hdc, oldP0);
+        DeleteObject(hbrBloodSand);
+        DeleteObject(hbrSkin);
         return;
     }
 
@@ -790,6 +855,14 @@ void DrawGladiatorGDI(HDC hdc, int x, int y, Gladiator* g, int isEnemy, int stan
     Rectangle(hdc, drawX + 3, drawY + 12, drawX + 8, drawY + 32);
     DeleteObject(hbrGreaves);
 
+    // Caligae leather strap lines
+    HPEN hpenStrap = CreatePen(PS_SOLID, 1, RGB(90, 45, 15));
+    SelectObject(hdc, hpenStrap);
+    MoveToEx(hdc, drawX - 8, drawY + 15, NULL); LineTo(hdc, drawX - 3, drawY + 20);
+    MoveToEx(hdc, drawX + 3, drawY + 15, NULL); LineTo(hdc, drawX + 8, drawY + 20);
+    DeleteObject(hpenStrap);
+    SelectObject(hdc, hpenNull);
+
     // Tunic (Red for player, Blue for enemy)
     COLORREF tunicCol = isEnemy ? (flash > 0 ? RGB(255, 60, 60) : RGB(30, 65, 105)) : (flash > 0 ? RGB(255, 60, 60) : RGB(139, 0, 0));
     HBRUSH hbrTunic = CreateSolidBrush(tunicCol);
@@ -801,16 +874,49 @@ void DrawGladiatorGDI(HDC hdc, int x, int y, Gladiator* g, int isEnemy, int stan
     Polygon(hdc, tunicPts, 4);
     DeleteObject(hbrTunic);
 
+    // Balteus (Gladiator studded leather belt)
+    HBRUSH hbrBelt = CreateSolidBrush(RGB(92, 51, 23));
+    SelectObject(hdc, hbrBelt);
+    Rectangle(hdc, drawX - 12, drawY + 12, drawX + 12, drawY + 16);
+    DeleteObject(hbrBelt);
+    HBRUSH hbrStud = CreateSolidBrush(RGB(255, 215, 0));
+    SelectObject(hdc, hbrStud);
+    Rectangle(hdc, drawX - 10, drawY + 13, drawX - 8, drawY + 15);
+    Rectangle(hdc, drawX - 4, drawY + 13, drawX - 2, drawY + 15);
+    Rectangle(hdc, drawX + 2, drawY + 13, drawX + 4, drawY + 15);
+    Rectangle(hdc, drawX + 8, drawY + 13, drawX + 10, drawY + 15);
+    DeleteObject(hbrStud);
+
     // Armor: Lorica Segmentata / Bronze Muscle Cuirass
     if (g->armor == 1) {
         HBRUSH hbrArmor = CreateSolidBrush(RGB(212, 175, 55));
         HPEN hpenArmor = CreatePen(PS_SOLID, 1, RGB(139, 101, 8));
         SelectObject(hdc, hbrArmor);
         SelectObject(hdc, hpenArmor);
-        RoundRect(hdc, drawX - 10, drawY - 2, drawX + 10, drawY + 14, 4, 4);
+        RoundRect(hdc, drawX - 10, drawY - 2, drawX + 10, drawY + 12, 4, 4);
         DeleteObject(hbrArmor);
         DeleteObject(hpenArmor);
     }
+
+    // Retiarius Galerus shoulder guard (raised plate when wielding trident)
+    if (g->weapon == 2) {
+        int galerusX = isEnemy ? drawX + 8 : drawX - 15;
+        HBRUSH hbrGal = CreateSolidBrush(RGB(205, 127, 50));
+        HPEN hpenGal = CreatePen(PS_SOLID, 1, RGB(212, 175, 55));
+        SelectObject(hdc, hbrGal);
+        SelectObject(hdc, hpenGal);
+        RoundRect(hdc, galerusX, drawY - 8, galerusX + 7, drawY + 6, 2, 2);
+        DeleteObject(hbrGal);
+        DeleteObject(hpenGal);
+    }
+
+    // Segmented Manica arm guard on weapon arm
+    int manicaX = isEnemy ? drawX - 14 : drawX + 8;
+    HBRUSH hbrMan = CreateSolidBrush(RGB(184, 134, 11));
+    SelectObject(hdc, hbrMan);
+    Rectangle(hdc, manicaX, drawY + 4, manicaX + 6, drawY + 7);
+    Rectangle(hdc, manicaX, drawY + 8, manicaX + 6, drawY + 11);
+    DeleteObject(hbrMan);
 
     // Head / Face
     HBRUSH hbrSkin = CreateSolidBrush(RGB(210, 154, 104));
@@ -864,6 +970,14 @@ void DrawGladiatorGDI(HDC hdc, int x, int y, Gladiator* g, int isEnemy, int stan
         if (stance == 1) {
             MoveToEx(hdc, weaponX, weaponY, NULL);
             LineTo(hdc, isEnemy ? weaponX - 20 : weaponX + 20, weaponY - 12);
+            // Slashing arc streak
+            HPEN hpenSlash = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+            SelectObject(hdc, hpenSlash);
+            Arc(hdc, isEnemy ? drawX - 35 : drawX + 5, drawY - 20, isEnemy ? drawX - 5 : drawX + 35, drawY + 16,
+                isEnemy ? drawX - 20 : drawX + 30, drawY - 18,
+                isEnemy ? drawX - 32 : drawX + 12, drawY + 12);
+            DeleteObject(hpenSlash);
+            SelectObject(hdc, hpenBlade);
         } else {
             MoveToEx(hdc, weaponX, weaponY, NULL);
             LineTo(hdc, weaponX, weaponY - 22);
@@ -883,6 +997,17 @@ void DrawGladiatorGDI(HDC hdc, int x, int y, Gladiator* g, int isEnemy, int stan
         MoveToEx(hdc, weaponX, weaponY - 24, NULL);     LineTo(hdc, weaponX, weaponY - 36);
         MoveToEx(hdc, weaponX + 5, weaponY - 24, NULL); LineTo(hdc, weaponX + 5, weaponY - 32);
         DeleteObject(hpenProng);
+
+        // Thrust piercing lines during attack
+        if (stance == 1) {
+            HPEN hpenThrust = CreatePen(PS_SOLID, 1, RGB(255, 215, 0));
+            SelectObject(hdc, hpenThrust);
+            int dir = isEnemy ? -1 : 1;
+            MoveToEx(hdc, weaponX, weaponY - 32, NULL); LineTo(hdc, weaponX + dir * 25, weaponY - 32);
+            MoveToEx(hdc, weaponX, weaponY - 36, NULL); LineTo(hdc, weaponX + dir * 28, weaponY - 36);
+            MoveToEx(hdc, weaponX, weaponY - 28, NULL); LineTo(hdc, weaponX + dir * 25, weaponY - 28);
+            DeleteObject(hpenThrust);
+        }
     }
 
     // Restore
@@ -936,6 +1061,16 @@ void DrawLionGDI(HDC hdc, int x, int y, int lunge, int flash) {
     SelectObject(hdc, hbrEye);
     Ellipse(hdc, drawX - 28, drawY - 8, drawX - 22, drawY - 2);
 
+    // Claw swipe arc during attack
+    if (lunge > 10) {
+        HPEN hpenClaw = CreatePen(PS_SOLID, 2, RGB(255, 235, 200));
+        SelectObject(hdc, hpenClaw);
+        MoveToEx(hdc, drawX - 25, drawY + 14, NULL); LineTo(hdc, drawX - 38, drawY + 22);
+        MoveToEx(hdc, drawX - 22, drawY + 18, NULL); LineTo(hdc, drawX - 35, drawY + 26);
+        MoveToEx(hdc, drawX - 19, drawY + 22, NULL); LineTo(hdc, drawX - 32, drawY + 30);
+        DeleteObject(hpenClaw);
+    }
+
     SelectObject(hdc, oldB);
     SelectObject(hdc, oldP);
     DeleteObject(hbrShadow);
@@ -987,6 +1122,21 @@ void DrawChariotGDI(HDC hdc, int x, int y, int lunge, int flash) {
     SelectObject(hdc, (HBRUSH)GetStockObject(NULL_BRUSH));
     SelectObject(hdc, hpenWheel);
     Ellipse(hdc, drawX - 2, drawY + 6, drawX + 22, drawY + 30);
+
+    // Sharp Wheel Scythe Blade
+    HPEN hpenScythe = CreatePen(PS_SOLID, 2, RGB(230, 230, 240));
+    SelectObject(hdc, hpenScythe);
+    MoveToEx(hdc, drawX + 10, drawY + 18, NULL);
+    LineTo(hdc, drawX + 28, drawY + 18);
+    DeleteObject(hpenScythe);
+
+    if (lunge > 10) {
+        HPEN hpenSpin = CreatePen(PS_DOT, 1, RGB(240, 240, 255));
+        SelectObject(hdc, (HBRUSH)GetStockObject(NULL_BRUSH));
+        SelectObject(hdc, hpenSpin);
+        Ellipse(hdc, drawX - 8, drawY, drawX + 28, drawY + 36);
+        DeleteObject(hpenSpin);
+    }
 
     SelectObject(hdc, oldB);
     SelectObject(hdc, oldP);
@@ -1043,6 +1193,8 @@ void DrawParticlesGDI(HDC hdc) {
         } else if (p->type == 4) { // Cross
             Rectangle(hdc, p->x - 1, p->y - 4, p->x + 2, p->y + 5);
             Rectangle(hdc, p->x - 4, p->y - 1, p->x + 5, p->y + 2);
+        } else if (p->type == 5) { // Blood
+            Ellipse(hdc, p->x - p->size, p->y - p->size, p->x + p->size, p->y + p->size);
         }
 
         SelectObject(hdc, oldB);
@@ -1210,7 +1362,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     Particle* p = &g_particles[i];
                     p->x += p->vx;
                     p->y += p->vy;
-                    if (p->type == 2 || p->type == 3) p->vy += 1; // Gravity
+                    if (p->type == 2 || p->type == 3 || p->type == 5) p->vy += 1; // Gravity
                     p->life--;
                     if (p->life <= 0) {
                         g_particles[i] = g_particles[--g_particleCount];

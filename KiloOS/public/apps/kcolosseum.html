@@ -321,6 +321,14 @@
       ctx.arc(22, 42, 14, Math.PI, 0);
       ctx.fill();
 
+      // Balteus (Gladiator studded belt)
+      ctx.fillStyle = '#5c3317';
+      ctx.fillRect(10, 38, 24, 4);
+      ctx.fillStyle = '#ffd700';
+      ctx.fillRect(14, 39, 2, 2);
+      ctx.fillRect(21, 39, 2, 2);
+      ctx.fillRect(28, 39, 2, 2);
+
       // Head
       ctx.fillStyle = g.skinTone || '#d29a68';
       ctx.beginPath();
@@ -339,9 +347,26 @@
       ctx.ellipse(22, 10, 8, 4, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Visor eye slit
+      // Visor eye slit and cheek grill
       ctx.fillStyle = '#111';
       ctx.fillRect(17, 20, 10, 2.5);
+      ctx.fillStyle = '#8b6508';
+      ctx.fillRect(16, 23, 3, 5);
+      ctx.fillRect(25, 23, 3, 5);
+
+      // Retiarius Galerus shoulder guard
+      if (g.weapon === 2) {
+        ctx.fillStyle = '#cd7f32';
+        ctx.strokeStyle = '#d4af37';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(7, 24, 4, 10);
+        ctx.fillRect(7, 24, 4, 10);
+      }
+
+      // Manica arm guard on right arm
+      ctx.fillStyle = '#b8860b';
+      ctx.fillRect(32, 28, 4, 2);
+      ctx.fillRect(32, 32, 4, 2);
 
       // Weapon badge on corner
       if (g.weapon === 1) { // Gladius
@@ -620,6 +645,19 @@
             decay: 0.025,
             type: 'cross'
           });
+        } else if (type === 'blood') {
+          particles.push({
+            x: x + (Math.random() - 0.5) * 18,
+            y: y + (Math.random() - 0.5) * 18,
+            vx: (Math.random() - 0.5) * 5,
+            vy: -Math.random() * 4 - 1,
+            size: Math.random() * 3 + 2,
+            color: Math.random() > 0.3 ? '#8b0000' : '#b22222',
+            alpha: 1.0,
+            decay: 0.035,
+            gravity: 0.35,
+            type: 'blood'
+          });
         }
       }
     }
@@ -650,15 +688,84 @@
       let drawY = y + (state.stance === 'dead' ? 25 : bob);
 
       if (state.stance === 'dead') {
-        // Collapsed pose
-        ctx.fillStyle = '#441111';
+        // Dramatic Defeat Collapse Pose: fallen gladiator, knocked-off helmet, dropped weapon on sand
+        ctx.fillStyle = 'rgba(50, 8, 8, 0.45)';
         ctx.beginPath();
-        ctx.ellipse(drawX, drawY + 15, 26, 8, 0, 0, Math.PI * 2);
+        ctx.ellipse(drawX, drawY + 18, 32, 10, 0, 0, Math.PI * 2);
         ctx.fill();
+
+        // Slumped legs / caligae
+        ctx.fillStyle = '#6b3010';
+        ctx.fillRect(drawX - 22, drawY + 14, 18, 6);
+        ctx.fillStyle = '#8b4513';
+        ctx.fillRect(drawX - 10, drawY + 16, 16, 6);
+
+        // Torso slumped forward
+        ctx.fillStyle = isEnemy ? '#1e3f66' : '#8b0000';
+        ctx.beginPath();
+        ctx.ellipse(drawX - 4, drawY + 10, 18, 9, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (g.armor === 1) {
+          ctx.fillStyle = '#d4af37';
+          ctx.beginPath();
+          ctx.ellipse(drawX - 4, drawY + 10, 14, 7, -0.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Head resting on sand
         ctx.fillStyle = g.skinTone || '#d29a68';
         ctx.beginPath();
-        ctx.arc(drawX - (isEnemy ? -16 : 16), drawY + 10, 9, 0, Math.PI * 2);
+        ctx.arc(drawX + 16, drawY + 11, 8, 0, Math.PI * 2);
         ctx.fill();
+
+        // Knocked-off bronze helmet lying on the sand
+        ctx.fillStyle = '#b8860b';
+        ctx.beginPath();
+        ctx.arc(drawX + 28, drawY + 15, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = isEnemy ? '#4a154b' : '#cc0000';
+        ctx.fillRect(drawX + 25, drawY + 22, 10, 4);
+
+        // Dropped weapon on the sand
+        if (g.weapon === 1) { // Dropped Gladius
+          ctx.save();
+          ctx.translate(drawX - 26, drawY + 20);
+          ctx.rotate(0.3);
+          ctx.fillStyle = '#f0f0f5';
+          ctx.fillRect(-2, -18, 4, 18);
+          ctx.fillStyle = '#d4af37';
+          ctx.fillRect(-5, -2, 10, 3);
+          ctx.restore();
+        } else if (g.weapon === 2) { // Dropped Trident
+          ctx.save();
+          ctx.translate(drawX - 32, drawY + 18);
+          ctx.rotate(-0.25);
+          ctx.fillStyle = '#8b5a2b';
+          ctx.fillRect(-2, -26, 3, 30);
+          ctx.fillStyle = '#cd7f32';
+          ctx.fillRect(-6, -26, 12, 3);
+          ctx.fillRect(-6, -34, 2, 8);
+          ctx.fillRect(-1, -37, 2, 11);
+          ctx.fillRect(4, -34, 2, 8);
+          ctx.restore();
+        }
+
+        // Dropped Shield face-up in sand
+        if (g.shield === 1) {
+          ctx.fillStyle = isEnemy ? '#1e3f66' : '#990000';
+          ctx.strokeStyle = '#d4af37';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.ellipse(drawX - 8, drawY + 24, 14, 6, 0.1, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#ffd700';
+          ctx.beginPath();
+          ctx.arc(drawX - 8, drawY + 24, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
         ctx.restore();
         return;
       }
@@ -669,14 +776,23 @@
       ctx.ellipse(x + (isEnemy ? -lungeX*0.6 : lungeX*0.6), y + 42, 24, 7, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Legs / Greaves
+      // Legs / Greaves with Caligae leather sandals
       ctx.fillStyle = '#8b4513';
       ctx.fillRect(drawX - 10, drawY + 18, 6, 22);
       ctx.fillRect(drawX + 4, drawY + 18, 6, 22);
-      // Bronze greaves
+      // Bronze greaves (Ocreae)
       ctx.fillStyle = '#cd7f32';
       ctx.fillRect(drawX - 10, drawY + 26, 6, 12);
       ctx.fillRect(drawX + 4, drawY + 26, 6, 12);
+      // Caligae leather strap cross-hatching
+      ctx.strokeStyle = '#5a2e0a';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(drawX - 10, drawY + 20); ctx.lineTo(drawX - 4, drawY + 25);
+      ctx.moveTo(drawX - 10, drawY + 25); ctx.lineTo(drawX - 4, drawY + 20);
+      ctx.moveTo(drawX + 4, drawY + 20); ctx.lineTo(drawX + 10, drawY + 25);
+      ctx.moveTo(drawX + 4, drawY + 25); ctx.lineTo(drawX + 10, drawY + 20);
+      ctx.stroke();
 
       // Torso / Tunic
       const tunicColor = isEnemy ? '#1e3f66' : '#8b0000';
@@ -689,21 +805,49 @@
       ctx.closePath();
       ctx.fill();
 
+      // Balteus (Gladiator studded leather war belt)
+      ctx.fillStyle = '#5c3317';
+      ctx.fillRect(drawX - 15, drawY + 16, 30, 6);
+      ctx.fillStyle = '#ffd700';
+      ctx.fillRect(drawX - 14, drawY + 17, 3, 4);
+      ctx.fillRect(drawX - 6, drawY + 17, 3, 4);
+      ctx.fillRect(drawX + 3, drawY + 17, 3, 4);
+      ctx.fillRect(drawX + 11, drawY + 17, 3, 4);
+
       // Armor: Bronze Lorica Segmentata / Breastplate
       if (g.armor === 1) {
         ctx.fillStyle = '#d4af37';
         ctx.strokeStyle = '#8b6508';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.roundRect(drawX - 12, drawY + 2, 24, 18, 3);
+        ctx.roundRect(drawX - 12, drawY + 2, 24, 16, 3);
         ctx.fill();
         ctx.stroke();
         // Muscle cuirass lines & specular highlight
         ctx.strokeStyle = 'rgba(255,255,255,0.6)';
         ctx.beginPath();
         ctx.moveTo(drawX - 8, drawY + 5);
-        ctx.lineTo(drawX - 8, drawY + 14);
+        ctx.lineTo(drawX - 8, drawY + 13);
         ctx.stroke();
+      }
+
+      // Retiarius Galerus shoulder guard (raised plate when wielding trident)
+      if (g.weapon === 2) {
+        let galerusX = isEnemy ? drawX + 10 : drawX - 18;
+        ctx.fillStyle = '#cd7f32';
+        ctx.strokeStyle = '#d4af37';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(galerusX, drawY - 6, 8, 14, 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      // Segmented Manica arm guard on weapon arm
+      let manicaX = isEnemy ? drawX - 18 : drawX + 10;
+      ctx.fillStyle = '#b8860b';
+      for (let s = 0; s < 3; s++) {
+        ctx.fillRect(manicaX, drawY + 6 + s * 4, 8, 3);
       }
 
       // Head & Skin
@@ -770,6 +914,45 @@
         ctx.moveTo(shieldX - 6, drawY + 4); ctx.lineTo(shieldX + 6, drawY + 20);
         ctx.moveTo(shieldX + 6, drawY + 4); ctx.lineTo(shieldX - 6, drawY + 20);
         ctx.stroke();
+        ctx.restore();
+      }
+
+      // Attack Swing / Thrust Dynamic Trail
+      if (state.stance === 'attack') {
+        ctx.save();
+        if (g.weapon === 1) { // Gladius slashing sweep arc
+          ctx.strokeStyle = 'rgba(240, 245, 255, 0.85)';
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          let arcCenter = isEnemy ? drawX - 10 : drawX + 10;
+          ctx.arc(arcCenter, drawY + 2, 34, isEnemy ? Math.PI * 0.6 : -Math.PI * 0.1, isEnemy ? Math.PI * 1.3 : Math.PI * 0.6, false);
+          ctx.stroke();
+          // Slash tip spark
+          ctx.fillStyle = '#ffffff';
+          let tipX = isEnemy ? arcCenter - 28 : arcCenter + 28;
+          let tipY = drawY - 14;
+          ctx.beginPath();
+          ctx.arc(tipX, tipY, 3, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (g.weapon === 2) { // Trident piercing thrust lines
+          ctx.strokeStyle = 'rgba(255, 215, 0, 0.85)';
+          ctx.lineWidth = 2.5;
+          let targetDir = isEnemy ? -1 : 1;
+          let thrustStart = drawX + targetDir * 18;
+          for (let offY of [-8, 0, 8]) {
+            ctx.beginPath();
+            ctx.moveTo(thrustStart, drawY - 8 + offY);
+            ctx.lineTo(thrustStart + targetDir * 38, drawY - 8 + offY);
+            ctx.stroke();
+          }
+        } else { // Bare fists punch shockwave
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+          ctx.lineWidth = 2;
+          let punchX = isEnemy ? drawX - 25 : drawX + 25;
+          ctx.beginPath();
+          ctx.arc(punchX, drawY, 14, 0, Math.PI * 2);
+          ctx.stroke();
+        }
         ctx.restore();
       }
 
@@ -938,6 +1121,17 @@
       ctx.moveTo(drawX - 32, drawY + 4); ctx.lineTo(drawX - 29, drawY + 11); ctx.lineTo(drawX - 26, drawY + 4);
       ctx.fill();
 
+      // Lion Claw Swipe Arc during attack
+      if (state.stance === 'attack' || state.lunge > 10) {
+        ctx.strokeStyle = 'rgba(255, 235, 200, 0.9)';
+        ctx.lineWidth = 2.5;
+        for (let c = 0; c < 3; c++) {
+          ctx.beginPath();
+          ctx.arc(drawX - 24, drawY + 6 + c * 7, 24, Math.PI * 0.75, Math.PI * 1.35, false);
+          ctx.stroke();
+        }
+      }
+
       ctx.restore();
     }
 
@@ -1056,6 +1250,13 @@
       ctx.lineTo(0, 4);
       ctx.closePath();
       ctx.fill();
+      if (state.stance === 'attack' || state.lunge > 10) {
+        ctx.strokeStyle = 'rgba(230, 230, 245, 0.7)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, 0, 25, 0, Math.PI * 2);
+        ctx.stroke();
+      }
       ctx.restore();
 
       ctx.restore();
@@ -1300,6 +1501,11 @@
           arenaCtx.fillStyle = p.color;
           arenaCtx.fillRect(p.x - 2, p.y - 6, 4, 12);
           arenaCtx.fillRect(p.x - 6, p.y - 2, 12, 4);
+        } else if (p.type === 'blood') {
+          arenaCtx.fillStyle = p.color;
+          arenaCtx.beginPath();
+          arenaCtx.ellipse(p.x, p.y, p.size, p.size * 0.7, 0, 0, Math.PI * 2);
+          arenaCtx.fill();
         }
         arenaCtx.restore();
       }
@@ -1516,8 +1722,13 @@
           
           enemyState.flash = 12;
           addScreenShake(dmg > 10 ? 10 : 6);
-          spawnParticles(eX, eY, 20, 'sparks');
-          spawnParticles(eX, eY, 8, 'shards');
+          if (enemyDefending) {
+            spawnParticles(eX, eY, 18, 'sparks');
+            spawnParticles(eX, eY, 8, 'shards');
+          } else {
+            spawnParticles(eX, eY, 15, 'blood');
+            spawnParticles(eX, eY, 10, 'dust');
+          }
           addFloatingText(`-${dmg}`, eX, eY - 30, '#ff2222');
           checkCrowdFavor();
         } else {
@@ -1583,8 +1794,13 @@
             
             playerState.flash = 12;
             addScreenShake(dmg > 10 ? 10 : 6);
-            spawnParticles(pX, pY, 20, 'sparks');
-            spawnParticles(pX, pY, 8, 'shards');
+            if (playerDefending) {
+              spawnParticles(pX, pY, 18, 'sparks');
+              spawnParticles(pX, pY, 8, 'shards');
+            } else {
+              spawnParticles(pX, pY, 15, 'blood');
+              spawnParticles(pX, pY, 10, 'dust');
+            }
             addFloatingText(`-${dmg}`, pX, pY - 30, '#ff2222');
           } else {
             logCombat(`<strong>${enemyFighter.name}</strong> misses!`);
@@ -1606,7 +1822,11 @@
                 playClash();
                 playerState.flash = 12;
                 addScreenShake(6);
-                spawnParticles(pX, pY, 15, 'sparks');
+                if (playerDefending) {
+                  spawnParticles(pX, pY, 14, 'sparks');
+                } else {
+                  spawnParticles(pX, pY, 12, 'blood');
+                }
                 addFloatingText(`-${dmg}`, pX, pY - 30, '#ff2222');
               } else {
                 logCombat(`<strong>${enemyFighter.name} (Twin 2)</strong> misses!`);

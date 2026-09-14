@@ -111,7 +111,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **⚠️ PRIORITY: If ANY game in the queue is at Loop 0 (not yet processed), work on it FIRST before continuing higher-loop games.**
 
 
-- KColosseum
 - KFarm
 - KAlchemy
 - KRogue
@@ -157,9 +156,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMaze
 - KColony
 - KFortress
+- KColosseum
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
 
+- KColosseum (Loop 2): Authentic Balteus belt, Manica and Galerus armor, slashing/thrusting weapon swing arcs, lion claw swipes, and defeat collapse with dropped gear.
 - KTetris (Loop 9): Prismatic crystal gem facets per piece, armored steel bulkhead garbage, demolition ordnance bomb, holographic guide beams, plasma laser sweep, and graphical skill badges.
 - KSnake (Loop 9): Themed sprites for all 4 Bosses (Hydra, Basilisk, Inferno, Void) and CPU rivals with animated scanning visors, fangs, and pulsar capacitors.
 - KAbyss (Loop 1): Hooded delver sprite with lantern/blade, animated monster sprites (Skeleton, Ghoul, Wraith, Acolyte, Leviathan), and custom dungeon sprites (Chest, Altar, Cauldron, Doors, Stairs).
@@ -201,7 +202,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KRogue (Loop 8): Screen-shake, dungeon particles, Gothic RPG filigree, and biome-specific atmospheric motes.
 - KAlchemy (Loop 7): Arcane particle engine, shockwaves, alchemical filigree, and mystic dust motes.
 - KFarm (Loop 6): Seasonal weather particles, roaming livestock sprites, windmill/scarecrow, and rustic filigree.
-- KColosseum (Loop 1): Gladiator sprites, lion/chariot enemies, Roman arena environment, and particle system.
 - KFortress (Loop 7): Procedural architectural tower sprites, animated multi-caste enemy sprites (Goblin, Orc, Hound, Gargoyle, Necromancer, Skeleton, Ogre, Wyvern, Golem), and knight/militia sprites.
 - KColony (Loop 7): 3 animated xeno-caste sprites (Swarmer, Spitter, Goliath) with tactical health gauges, hovering nanite repair drones, and overland logistics rovers.
 - KMaze (Loop 9): Themed Minotaur/Boss sprites and biome walls. Stripped annoying blinking HUD, pickaxe visual, and particle effects per user/director directive.
