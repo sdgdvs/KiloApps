@@ -608,7 +608,10 @@
     let a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'kmine_stats.json';
+    document.body.appendChild(a);
     a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     showToast("📤 Statistics exported as JSON!", "success");
   }
   function importStats(e) {
@@ -1354,6 +1357,7 @@
   window.addEventListener('keydown', (e) => {
     // If typing in any input, ignore game hotkeys
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
 
     if (e.key === 'h' || e.key === 'H') {
       giveHint();

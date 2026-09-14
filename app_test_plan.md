@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KMine
+**Target App:** KMines
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KMine
 - KMines
 - KMystery
 - KNet
@@ -173,10 +172,16 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KMaze
 - KMech
 - KMedia
+- KMine
 
 ## Test Reports
 
 > 📁 **Archived Reports**: Historical test reports have been archived to [archive/app_test_reports_archive.md](archive/app_test_reports_archive.md) to preserve token efficiency.
+
+- **KMine**: ISSUES FOUND ⚠️ (2 issues, 2 fixed inline)
+  - ✅ Core gameplay works (Minesweeper engine with 3 difficulty modes 10x10/16x16/30x16, guaranteed safe first click, recursive 0-cell flood fill, left-click chord revealing on fulfilled numbers, right-click flagging, safe move hint generator, quicksave and quickload states, frame-by-frame move replay system, personal best times tracker, Canvas particle explosion physics, and interactive help modal).
+  - 🔧 FIXED: In `exportStats()`, the created download anchor element was clicked without being attached to `document.body` (`a.click()`), causing statistics JSON exports to fail silently in Firefox and sandboxed iframe environments. Attached anchor to DOM before clicking and cleanly removed it afterwards.
+  - 🔧 FIXED: Global keyboard listener checked bare keys (`h`, `?`, `1`..`3`, `e`, `i`, `p`) without verifying `!e.ctrlKey && !e.altKey && !e.metaKey`, hijacking browser accelerators: `Ctrl+Shift+I` (developer tools hijacked to trigger JSON file import), `Ctrl+E` (browser search bar hijacked to export stats), `Ctrl+F5` (hard reload hijacked to quicksave), and `Alt+1`..`Alt+3` (browser tab switching hijacked to change difficulty). Added modifier key guards across keyboard shortcuts.
 
 - **KMedia**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
   - ✅ Core functionality works (Multi-format HTML5 audio/video player with playlist management, synthetic WAV audio generator for instant in-browser demo playback, real-time Web Audio API frequency/time-domain oscilloscope waveform visualizer, 3-band parametric DSP equalizer Bass/Mid/Treble, GPU video post-processing filters Brightness/Contrast/Saturation, SRT and WebVTT subtitle parser with real-time overlay, fullscreen presentation, and single-frame video snapshot PNG exporter).
