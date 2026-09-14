@@ -415,6 +415,66 @@
             color: var(--accent-cyan);
         }
 
+        /* Exoplanet Classification Badges & Roster */
+        .class-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .class-barren { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.5); }
+        .class-toxic { background: rgba(234, 179, 8, 0.2); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.5); }
+        .class-frozen { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.5); }
+        .class-ocean { background: rgba(6, 182, 212, 0.2); color: #06b6d4; border: 1px solid rgba(6, 182, 212, 0.5); }
+        .class-gaia { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.5); }
+
+        .planet-roster-strip {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 4px 2px 8px 2px;
+            margin-bottom: 8px;
+        }
+        .planet-roster-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-stellar);
+            border-radius: 4px;
+            padding: 6px 8px;
+            cursor: pointer;
+            min-width: 140px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .planet-roster-card:hover {
+            border-color: var(--accent-cyan);
+            background: var(--bg-card-hover);
+        }
+        .planet-roster-card.active {
+            border-color: var(--accent-cyan);
+            background: var(--bg-card-active);
+            box-shadow: 0 0 8px rgba(0, 240, 255, 0.25);
+        }
+        .roster-card-title {
+            font-weight: bold;
+            font-size: 11px;
+            color: var(--text-bright);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .roster-card-stats {
+            font-size: 10px;
+            color: var(--text-dim);
+            display: flex;
+            justify-content: space-between;
+        }
+
         /* Sidebar Tabs */
         .sidebar {
             width: 400px;
@@ -810,19 +870,21 @@
             <div class="viewport-overlay">
                 <div class="overlay-card">
                     <div class="overlay-title">
-                        <span>Sector: Kepler-186e / Prime Anchor</span>
-                        <span style="font-size:9px; color:var(--accent-emerald);">SCAN: NOMINAL</span>
+                        <span id="sectorTitle">Sector: Kepler-186 System</span>
+                        <span style="font-size:9px; color:var(--accent-emerald);" id="sectorScan">SCAN: NOMINAL</span>
                     </div>
-                    <div class="overlay-text">
-                        Primary Target: <strong>Aethelgard Prime</strong> (Class-IV Barren Greenhouse)<br>
-                        Anchor Fleet: <strong>5 Vessels Operational</strong> | Outpost Nodes: <strong>3 Detected</strong>
+                    <div class="overlay-text" id="sectorSubtext">
+                        Primary Target: <strong id="hudTargetName">Aethelgard Prime</strong> <span id="hudTargetBadge" class="class-badge class-toxic">Toxic Greenhouse</span><br>
+                        System Star: <strong id="hudStarName">Kepler-186 Helios</strong> (<span id="hudStarType">Red Dwarf M1V</span>) | Catalog: <strong id="hudPlanetCount">4 Worlds</strong>
                     </div>
                 </div>
             </div>
 
             <!-- Viewport Navigation Controls -->
             <div class="viewport-controls">
-                <button class="nav-btn" id="btnCenterPlanet">Focus Planet</button>
+                <select class="nav-btn" id="selSystem" title="Switch Star System"></select>
+                <button class="nav-btn" id="btnScanSector" title="Procedurally survey new star system">🎲 Scan Sector</button>
+                <button class="nav-btn" id="btnCenterPlanet">Focus Target</button>
                 <button class="nav-btn" id="btnCenterFleet">Focus Ark</button>
                 <button class="nav-btn" id="btnZoomIn">Zoom +</button>
                 <button class="nav-btn" id="btnZoomOut">Zoom -</button>
@@ -839,11 +901,13 @@
                     <button class="selection-close" id="selClose">✕</button>
                 </div>
                 <div id="selDetails">
-                    <div class="selection-row"><span>Type:</span><strong id="selType">Class-IV Exoplanet</strong></div>
+                    <div class="selection-row"><span>Type / Class:</span><strong id="selType">Class-II Toxic Greenhouse</strong></div>
                     <div class="selection-row"><span>Status:</span><span id="selStatus">Active Terraforming</span></div>
-                    <div class="selection-row"><span>Distance:</span><span id="selDist">280 AU</span></div>
+                    <div class="selection-row"><span>Orbit / Distance:</span><span id="selDist">360 AU</span></div>
+                    <div class="selection-row" id="selTraitRow" style="display:none;"><span style="color:var(--text-dim);">Classification:</span><span id="selTraitText" style="color:var(--accent-amber); font-size:10px;"></span></div>
                 </div>
                 <div class="selection-actions" id="selActions">
+                    <button class="sel-act-btn" id="selActTarget" style="display:none; border-color:var(--accent-cyan); color:var(--accent-cyan); font-weight:bold;">Set as Active Terraforming Target</button>
                     <button class="sel-act-btn" id="selAct1">Inspect Biometrics</button>
                     <button class="sel-act-btn" id="selAct2">Dispatch Vessel</button>
                 </div>
@@ -862,8 +926,28 @@
             <!-- Tab 1: Terraforming Parameters & Interventions -->
             <div class="tab-content active" id="tab-terra">
                 <div class="section-header">
-                    <span>Planetary Biometrics (Aethelgard)</span>
+                    <span>System Exoplanet Catalog</span>
+                    <span style="font-size:10px; color:var(--accent-cyan);" id="systemPlanetCountBadge">4 Cataloged</span>
+                </div>
+                <div class="planet-roster-strip" id="planetRosterStrip"></div>
+
+                <div class="section-header" style="margin-top:6px;">
+                    <span id="activePlanetHeader">Target Biometrics (Aethelgard Prime)</span>
                     <span style="color: var(--accent-cyan);" id="habitabilityBadge">Hostile (18.4%)</span>
+                </div>
+
+                <!-- Active Planet Classification Dossier Card -->
+                <div class="metric-card" id="classificationDossierCard" style="border-left: 3px solid var(--accent-amber); margin-bottom: 8px;">
+                    <div class="metric-row">
+                        <strong id="dossierClassTitle" style="color:var(--accent-amber);">Class-II: Toxic Greenhouse</strong>
+                        <span id="dossierClassCode" class="class-badge class-toxic">Class-II</span>
+                    </div>
+                    <div id="dossierClassDesc" style="font-size:10px; color:var(--text-primary); margin: 3px 0 5px 0; line-height: 1.3;">
+                        Superheated runaway greenhouse world with dense corrosive CO2/sulfuric cloud decks and intense surface pressure.
+                    </div>
+                    <div class="metric-row" style="font-size:10px; color:var(--accent-cyan); border-top: 1px solid var(--border-stellar); padding-top: 4px;">
+                        <span id="dossierClassTrait">Trait: +80% Volatiles Harvesting | Extreme Surface Heat</span>
+                    </div>
                 </div>
 
                 <!-- Atmospheric Pressure -->
@@ -1373,7 +1457,9 @@
             phosphorGlow: true,
 
             // Selected entity on map
-            selected: null
+            selected: null,
+            currentSystemIndex: 0,
+            activePlanetId: 'aethelgard'
         };
 
         // Retro CRT Phosphor Modes
@@ -1384,56 +1470,665 @@
             { id: 'mono', name: 'CRT: P7 White', primary: '#e2e8f0', secondary: '#94a3b8', glow: 'rgba(226, 232, 240, 0.4)', grid: 'rgba(51, 65, 85, 0.32)', bg: '#080a0e' }
         ];
 
-        // Star System Bodies
-        const celestialBodies = [
-            {
-                id: 'sun',
-                name: 'Kepler-186 Helios',
-                type: 'Red Dwarf Star',
-                x: -300,
-                y: 0,
-                radius: 52,
-                color: '#ff7733',
-                glowColor: 'rgba(255, 120, 50, 0.4)',
-                isStar: true
+        // --- Exoplanet Classifications (Canonical 5 Classes) ---
+        const EXOPLANET_CLASSES = {
+            barren_rock: {
+                id: 'barren_rock',
+                name: 'Barren Rock',
+                code: 'Class-I Rock',
+                color: '#f59e0b',
+                badgeClass: 'class-barren',
+                desc: 'Airless, heavily cratered regolith subject to stellar thermal extremes. Abundant in mineral ores and heavy metals, devoid of hydrosphere.',
+                trait: '+50% Mining Yield | Extreme Thermal Swings',
+                mineralsMult: 1.5,
+                volatilesMult: 0.6
             },
-            {
-                id: 'aethelgard',
-                name: 'Aethelgard Prime',
-                type: 'Class-IV Exoplanet',
-                orbitRadius: 360,
-                orbitSpeed: 0.08,
-                angle: 0.4,
-                radius: 40,
+            toxic_greenhouse: {
+                id: 'toxic_greenhouse',
+                name: 'Toxic Greenhouse',
+                code: 'Class-II Greenhouse',
+                color: '#eab308',
+                badgeClass: 'class-toxic',
+                desc: 'Runaway greenhouse atmosphere with high surface pressure, sulfuric clouds, and corrosive acid precipitation.',
+                trait: '+80% Volatiles Extraction | Corrosive Atmosphere',
+                mineralsMult: 1.0,
+                volatilesMult: 1.8
+            },
+            frozen_tundra: {
+                id: 'frozen_tundra',
+                name: 'Frozen Tundra',
+                code: 'Class-III Cryo',
                 color: '#38bdf8',
-                atmoColor: 'rgba(0, 240, 255, 0.35)',
-                isPlanet: true
+                badgeClass: 'class-frozen',
+                desc: 'Frigid cryo-world with continental nitrogen/water ice sheets, cryo-geysers, and deep subsurface oceans.',
+                trait: '+60% Ice Scooping | High Reflective Albedo',
+                mineralsMult: 0.9,
+                volatilesMult: 1.6
             },
-            {
-                id: 'boreas',
-                name: 'Boreas Minor',
-                type: 'Frozen Ice Moon',
-                parent: 'aethelgard',
-                orbitRadius: 90,
-                orbitSpeed: 0.25,
-                angle: 1.2,
-                radius: 12,
-                color: '#e0f2fe',
-                isMoon: true
+            ocean_world: {
+                id: 'ocean_world',
+                name: 'Ocean World',
+                code: 'Class-IV Pelagic',
+                color: '#06b6d4',
+                badgeClass: 'class-ocean',
+                desc: 'Global pelagic hyper-hydrosphere with deep oceans, volcanic archipelago chains, and violent cyclonic storms.',
+                trait: '+50% Hydroponics & Algae Efficacy | Minimal Landmass',
+                mineralsMult: 0.8,
+                volatilesMult: 1.2
             },
-            {
-                id: 'zephyr',
-                name: 'Zephyr Station',
-                type: 'Orbital Shipyard',
-                parent: 'aethelgard',
-                orbitRadius: 65,
-                orbitSpeed: -0.18,
-                angle: 3.0,
-                radius: 7,
+            primordial_gaia: {
+                id: 'primordial_gaia',
+                name: 'Primordial Gaia',
+                code: 'Class-V Gaia',
                 color: '#10b981',
-                isStation: true
+                badgeClass: 'class-gaia',
+                desc: 'Nascent fertile biosphere with liquid water oceans, continental tectonic plates, and thriving microbial flora.',
+                trait: '+50% Colonist Morale & Population Growth | Optimal Target',
+                mineralsMult: 1.1,
+                volatilesMult: 1.1
+            }
+        };
+
+        // --- Star Systems Catalog ---
+        const STAR_SYSTEMS = [
+            {
+                id: 'kepler-186',
+                name: 'Kepler-186 System',
+                starName: 'Kepler-186 Helios',
+                spectralType: 'Red Dwarf (M1V)',
+                starColor: '#ff7733',
+                starRadius: 52,
+                planets: [
+                    {
+                        id: 'kepler-186b',
+                        name: 'Kepler-186b (Vulcanis)',
+                        classification: 'barren_rock',
+                        orbitRadius: 180,
+                        orbitSpeed: 0.16,
+                        angle: 1.2,
+                        radius: 22,
+                        pressure: 0.02,
+                        temp: 112.0,
+                        water: 0.0,
+                        oxygen: 0.1,
+                        magnet: 0.05,
+                        habitability: 5.4,
+                        colonists: 0
+                    },
+                    {
+                        id: 'aethelgard',
+                        name: 'Aethelgard Prime',
+                        classification: 'toxic_greenhouse',
+                        orbitRadius: 360,
+                        orbitSpeed: 0.08,
+                        angle: 0.4,
+                        radius: 40,
+                        pressure: 0.32,
+                        temp: -48.0,
+                        water: 12.8,
+                        oxygen: 3.1,
+                        magnet: 0.18,
+                        habitability: 18.4,
+                        colonists: 25000,
+                        hasMoon: true,
+                        hasStation: true
+                    },
+                    {
+                        id: 'kepler-186f',
+                        name: 'Kepler-186f (Nereus)',
+                        classification: 'ocean_world',
+                        orbitRadius: 520,
+                        orbitSpeed: 0.05,
+                        angle: 2.8,
+                        radius: 34,
+                        pressure: 0.88,
+                        temp: 14.5,
+                        water: 86.4,
+                        oxygen: 6.8,
+                        magnet: 0.42,
+                        habitability: 52.0,
+                        colonists: 0
+                    },
+                    {
+                        id: 'kepler-186g',
+                        name: 'Kepler-186g (Cocytus)',
+                        classification: 'frozen_tundra',
+                        orbitRadius: 680,
+                        orbitSpeed: 0.035,
+                        angle: 4.5,
+                        radius: 28,
+                        pressure: 0.24,
+                        temp: -74.0,
+                        water: 26.0,
+                        oxygen: 1.1,
+                        magnet: 0.26,
+                        habitability: 14.0,
+                        colonists: 0
+                    }
+                ]
+            },
+            {
+                id: 'trappist-1',
+                name: 'Trappist-1 System',
+                starName: 'Trappist-1 Core',
+                spectralType: 'Ultra-Cool Red Dwarf (M8V)',
+                starColor: '#ff5522',
+                starRadius: 44,
+                planets: [
+                    {
+                        id: 'trappist-1b',
+                        name: 'Trappist-1b (Pyros)',
+                        classification: 'toxic_greenhouse',
+                        orbitRadius: 170,
+                        orbitSpeed: 0.18,
+                        angle: 0.8,
+                        radius: 25,
+                        pressure: 3.4,
+                        temp: 142.0,
+                        water: 3.2,
+                        oxygen: 0.0,
+                        magnet: 0.12,
+                        habitability: 4.8,
+                        colonists: 0
+                    },
+                    {
+                        id: 'trappist-1d',
+                        name: 'Trappist-1d (Khorne)',
+                        classification: 'barren_rock',
+                        orbitRadius: 270,
+                        orbitSpeed: 0.11,
+                        angle: 2.1,
+                        radius: 24,
+                        pressure: 0.04,
+                        temp: 38.0,
+                        water: 0.8,
+                        oxygen: 0.2,
+                        magnet: 0.08,
+                        habitability: 8.5,
+                        colonists: 0
+                    },
+                    {
+                        id: 'trappist-1e',
+                        name: 'Trappist-1e (New Eden)',
+                        classification: 'primordial_gaia',
+                        orbitRadius: 380,
+                        orbitSpeed: 0.075,
+                        angle: 3.6,
+                        radius: 36,
+                        pressure: 1.02,
+                        temp: 16.5,
+                        water: 62.0,
+                        oxygen: 18.4,
+                        magnet: 0.54,
+                        habitability: 76.5,
+                        colonists: 0
+                    },
+                    {
+                        id: 'trappist-1f',
+                        name: 'Trappist-1f (Frigida)',
+                        classification: 'frozen_tundra',
+                        orbitRadius: 530,
+                        orbitSpeed: 0.045,
+                        angle: 5.1,
+                        radius: 30,
+                        pressure: 0.35,
+                        temp: -62.0,
+                        water: 34.0,
+                        oxygen: 2.2,
+                        magnet: 0.32,
+                        habitability: 24.0,
+                        colonists: 0
+                    }
+                ]
+            },
+            {
+                id: 'gliese-667c',
+                name: 'Gliese-667C System',
+                starName: 'Gliese-667C Flare',
+                spectralType: 'Orange K-Dwarf (K3V)',
+                starColor: '#f97316',
+                starRadius: 48,
+                planets: [
+                    {
+                        id: 'gliese-667cb',
+                        name: 'Gliese-667Cb (Ignis)',
+                        classification: 'barren_rock',
+                        orbitRadius: 210,
+                        orbitSpeed: 0.14,
+                        angle: 0.3,
+                        radius: 24,
+                        pressure: 0.03,
+                        temp: 85.0,
+                        water: 0.0,
+                        oxygen: 0.0,
+                        magnet: 0.06,
+                        habitability: 5.0,
+                        colonists: 0
+                    },
+                    {
+                        id: 'gliese-667cc',
+                        name: 'Gliese-667Cc (Thalassa)',
+                        classification: 'ocean_world',
+                        orbitRadius: 370,
+                        orbitSpeed: 0.08,
+                        angle: 2.4,
+                        radius: 40,
+                        pressure: 1.12,
+                        temp: 18.0,
+                        water: 92.5,
+                        oxygen: 9.1,
+                        magnet: 0.48,
+                        habitability: 61.2,
+                        colonists: 0
+                    },
+                    {
+                        id: 'gliese-667ce',
+                        name: 'Gliese-667Ce (Boreal)',
+                        classification: 'frozen_tundra',
+                        orbitRadius: 560,
+                        orbitSpeed: 0.045,
+                        angle: 4.0,
+                        radius: 32,
+                        pressure: 0.28,
+                        temp: -52.0,
+                        water: 38.0,
+                        oxygen: 1.9,
+                        magnet: 0.34,
+                        habitability: 21.0,
+                        colonists: 0
+                    }
+                ]
+            },
+            {
+                id: 'tau-ceti',
+                name: 'Tau Ceti System',
+                starName: 'Tau Ceti Prime',
+                spectralType: 'Yellow G-Dwarf (G8V)',
+                starColor: '#fbbf24',
+                starRadius: 54,
+                planets: [
+                    {
+                        id: 'tau-ceti-b',
+                        name: 'Tau Ceti b (Hermes)',
+                        classification: 'barren_rock',
+                        orbitRadius: 190,
+                        orbitSpeed: 0.15,
+                        angle: 1.5,
+                        radius: 22,
+                        pressure: 0.01,
+                        temp: 125.0,
+                        water: 0.0,
+                        oxygen: 0.0,
+                        magnet: 0.04,
+                        habitability: 4.0,
+                        colonists: 0
+                    },
+                    {
+                        id: 'tau-ceti-e',
+                        name: 'Tau Ceti e (Aurelia)',
+                        classification: 'primordial_gaia',
+                        orbitRadius: 350,
+                        orbitSpeed: 0.085,
+                        angle: 3.1,
+                        radius: 39,
+                        pressure: 0.98,
+                        temp: 19.2,
+                        water: 58.0,
+                        oxygen: 19.5,
+                        magnet: 0.58,
+                        habitability: 84.0,
+                        colonists: 0
+                    },
+                    {
+                        id: 'tau-ceti-f',
+                        name: 'Tau Ceti f (Glacies)',
+                        classification: 'frozen_tundra',
+                        orbitRadius: 510,
+                        orbitSpeed: 0.05,
+                        angle: 4.8,
+                        radius: 33,
+                        pressure: 0.42,
+                        temp: -38.0,
+                        water: 44.0,
+                        oxygen: 3.4,
+                        magnet: 0.38,
+                        habitability: 35.0,
+                        colonists: 0
+                    },
+                    {
+                        id: 'tau-ceti-g',
+                        name: 'Tau Ceti g (Tartaros)',
+                        classification: 'toxic_greenhouse',
+                        orbitRadius: 660,
+                        orbitSpeed: 0.035,
+                        angle: 0.6,
+                        radius: 36,
+                        pressure: 2.1,
+                        temp: 72.0,
+                        water: 5.5,
+                        oxygen: 0.5,
+                        magnet: 0.18,
+                        habitability: 9.2,
+                        colonists: 0
+                    }
+                ]
             }
         ];
+
+        // Procedural Star System Generator
+        function generateProceduralStarSystem() {
+            const starNames = ['Procyon', 'Altair', 'Deneb', 'Arcturus', 'Vega', 'Sirius', 'Rigel', 'Polaris', 'Fomalhaut', 'Antares', 'Spica', 'Canopus', 'Capella', 'Aldebaran', 'Betelgeuse'];
+            const greekLetters = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta', 'Iota', 'Kappa'];
+            const classesList = ['barren_rock', 'toxic_greenhouse', 'frozen_tundra', 'ocean_world', 'primordial_gaia'];
+
+            const starBase = starNames[Math.floor(Math.random() * starNames.length)];
+            const romanNum = Math.floor(Math.random() * 20) + 1;
+            const sysId = `proc-${starBase.toLowerCase()}-${romanNum}`;
+            const sysName = `${starBase}-${romanNum} System`;
+            const starName = `${starBase}-${romanNum} Helios`;
+
+            const starTypes = [
+                { type: 'Blue Giant (B2V)', color: '#38bdf8', radius: 56 },
+                { type: 'Yellow Dwarf (G2V)', color: '#fbbf24', radius: 52 },
+                { type: 'Orange Dwarf (K5V)', color: '#f97316', radius: 48 },
+                { type: 'Red Dwarf (M3V)', color: '#ef4444', radius: 44 },
+                { type: 'White Dwarf (DA)', color: '#e2e8f0', radius: 36 }
+            ];
+            const chosenStar = starTypes[Math.floor(Math.random() * starTypes.length)];
+
+            const planetCount = 3 + Math.floor(Math.random() * 3); // 3 to 5 planets
+            const planets = [];
+            // Ensure diverse classifications
+            const shuffledClasses = [...classesList].sort(() => Math.random() - 0.5);
+
+            for (let i = 0; i < planetCount; i++) {
+                const pClass = shuffledClasses[i % shuffledClasses.length];
+                const letter = String.fromCharCode(98 + i); // b, c, d, e...
+                const pName = `${starBase}-${romanNum}${letter} (${greekLetters[i] || 'Major'})`;
+                const dist = 180 + i * 140 + Math.floor(Math.random() * 50);
+
+                let pressure, temp, water, oxygen, magnet, habitability;
+                if (pClass === 'barren_rock') {
+                    pressure = +(0.01 + Math.random() * 0.04).toFixed(3);
+                    temp = +(-20 + Math.random() * 140).toFixed(1);
+                    water = 0;
+                    oxygen = 0.1;
+                    magnet = +(0.02 + Math.random() * 0.08).toFixed(2);
+                    habitability = +(4.0 + Math.random() * 6).toFixed(1);
+                } else if (pClass === 'toxic_greenhouse') {
+                    pressure = +(2.0 + Math.random() * 4.0).toFixed(2);
+                    temp = +(70 + Math.random() * 90).toFixed(1);
+                    water = +(2 + Math.random() * 6).toFixed(1);
+                    oxygen = 0;
+                    magnet = +(0.1 + Math.random() * 0.2).toFixed(2);
+                    habitability = +(5.0 + Math.random() * 10).toFixed(1);
+                } else if (pClass === 'frozen_tundra') {
+                    pressure = +(0.2 + Math.random() * 0.3).toFixed(2);
+                    temp = +(-85 + Math.random() * 40).toFixed(1);
+                    water = +(20 + Math.random() * 25).toFixed(1);
+                    oxygen = +(1 + Math.random() * 3).toFixed(1);
+                    magnet = +(0.25 + Math.random() * 0.2).toFixed(2);
+                    habitability = +(15.0 + Math.random() * 15).toFixed(1);
+                } else if (pClass === 'ocean_world') {
+                    pressure = +(0.8 + Math.random() * 0.4).toFixed(2);
+                    temp = +(10 + Math.random() * 15).toFixed(1);
+                    water = +(80 + Math.random() * 16).toFixed(1);
+                    oxygen = +(5 + Math.random() * 6).toFixed(1);
+                    magnet = +(0.35 + Math.random() * 0.25).toFixed(2);
+                    habitability = +(50.0 + Math.random() * 20).toFixed(1);
+                } else { // primordial_gaia
+                    pressure = +(0.92 + Math.random() * 0.15).toFixed(2);
+                    temp = +(14 + Math.random() * 10).toFixed(1);
+                    water = +(55 + Math.random() * 15).toFixed(1);
+                    oxygen = +(17 + Math.random() * 4).toFixed(1);
+                    magnet = +(0.5 + Math.random() * 0.2).toFixed(2);
+                    habitability = +(75.0 + Math.random() * 18).toFixed(1);
+                }
+
+                planets.push({
+                    id: `${sysId}-p${i}`,
+                    name: pName,
+                    classification: pClass,
+                    orbitRadius: dist,
+                    orbitSpeed: +(0.18 - i * 0.03 + Math.random() * 0.02).toFixed(3),
+                    angle: +(Math.random() * Math.PI * 2).toFixed(2),
+                    radius: 26 + Math.floor(Math.random() * 16),
+                    pressure,
+                    temp,
+                    water,
+                    oxygen,
+                    magnet,
+                    habitability,
+                    colonists: (pClass === 'primordial_gaia' ? 10000 : 0)
+                });
+            }
+
+            const newSys = {
+                id: sysId,
+                name: sysName,
+                starName: starName,
+                spectralType: chosenStar.type,
+                starColor: chosenStar.color,
+                starRadius: chosenStar.radius,
+                planets
+            };
+
+            STAR_SYSTEMS.push(newSys);
+            return STAR_SYSTEMS.length - 1;
+        }
+
+        // Live Active Bodies Array
+        let celestialBodies = [];
+
+        function loadStarSystem(sysIndex) {
+            sim.currentSystemIndex = sysIndex;
+            const sys = STAR_SYSTEMS[sysIndex];
+
+            // Rebuild celestialBodies
+            celestialBodies = [];
+
+            // 0. Central Star
+            celestialBodies.push({
+                id: 'sun',
+                name: sys.starName,
+                type: sys.spectralType,
+                x: -300,
+                y: 0,
+                radius: sys.starRadius || 50,
+                color: sys.starColor || '#ff7733',
+                glowColor: (sys.starColor || '#ff7733') + '66',
+                isStar: true
+            });
+
+            // 1..N Planets
+            sys.planets.forEach(p => {
+                const pClassInfo = EXOPLANET_CLASSES[p.classification] || EXOPLANET_CLASSES.barren_rock;
+                celestialBodies.push({
+                    id: p.id,
+                    name: p.name,
+                    type: pClassInfo.code,
+                    classification: p.classification,
+                    orbitRadius: p.orbitRadius,
+                    orbitSpeed: p.orbitSpeed,
+                    angle: p.angle,
+                    radius: p.radius,
+                    color: pClassInfo.color,
+                    atmoColor: pClassInfo.color + '55',
+                    pressure: p.pressure,
+                    temp: p.temp,
+                    water: p.water,
+                    oxygen: p.oxygen,
+                    magnet: p.magnet,
+                    habitability: p.habitability,
+                    colonists: p.colonists || 0,
+                    isPlanet: true
+                });
+
+                // Add moon / station if specified
+                if (p.hasMoon) {
+                    celestialBodies.push({
+                        id: 'boreas',
+                        name: 'Boreas Minor',
+                        type: 'Frozen Ice Moon',
+                        parent: p.id,
+                        orbitRadius: 90,
+                        orbitSpeed: 0.25,
+                        angle: 1.2,
+                        radius: 12,
+                        color: '#e0f2fe',
+                        isMoon: true
+                    });
+                }
+                if (p.hasStation) {
+                    celestialBodies.push({
+                        id: 'zephyr',
+                        name: 'Zephyr Station',
+                        type: 'Orbital Shipyard',
+                        parent: p.id,
+                        orbitRadius: 65,
+                        orbitSpeed: -0.18,
+                        angle: 3.0,
+                        radius: 7,
+                        color: '#10b981',
+                        isStation: true
+                    });
+                }
+            });
+
+            // Set active planet to first planet or match activePlanetId
+            let targetP = sys.planets.find(p => p.id === sim.activePlanetId) || sys.planets[0];
+            setActivePlanet(targetP, false);
+
+            // Update System Selector UI
+            const selectEl = document.getElementById('selSystem');
+            if (selectEl) {
+                selectEl.innerHTML = '';
+                STAR_SYSTEMS.forEach((s, idx) => {
+                    const opt = document.createElement('option');
+                    opt.value = idx;
+                    opt.textContent = `${s.name} (${s.planets.length} worlds)`;
+                    if (idx === sysIndex) opt.selected = true;
+                    selectEl.appendChild(opt);
+                });
+            }
+
+            // Update HUD text
+            document.getElementById('sectorTitle').textContent = `Sector: ${sys.name}`;
+            document.getElementById('hudStarName').textContent = sys.starName;
+            document.getElementById('hudStarType').textContent = sys.spectralType;
+            document.getElementById('hudPlanetCount').textContent = `${sys.planets.length} Worlds`;
+            document.getElementById('systemPlanetCountBadge').textContent = `${sys.planets.length} Cataloged`;
+
+            renderPlanetRoster();
+            logMsg(`Navigated astrometric sensors to ${sys.name} (${sys.spectralType}).`);
+        }
+
+        function setActivePlanet(planet, announce = true) {
+            if (!planet) return;
+
+            // Save outgoing planet values
+            const oldPlanet = celestialBodies.find(b => b.id === sim.activePlanetId);
+            if (oldPlanet && oldPlanet.id !== planet.id) {
+                oldPlanet.pressure = sim.pressure;
+                oldPlanet.temp = sim.temp;
+                oldPlanet.water = sim.water;
+                oldPlanet.oxygen = sim.oxygen;
+                oldPlanet.magnet = sim.magnet;
+                oldPlanet.habitability = sim.habitability;
+            }
+
+            sim.activePlanetId = planet.id;
+            sim.pressure = planet.pressure;
+            sim.temp = planet.temp;
+            sim.water = planet.water;
+            sim.oxygen = planet.oxygen;
+            sim.magnet = planet.magnet;
+            sim.habitability = planet.habitability;
+
+            const pClassInfo = EXOPLANET_CLASSES[planet.classification] || EXOPLANET_CLASSES.barren_rock;
+
+            // Update HUD Target badge
+            const targetEl = document.getElementById('hudTargetName');
+            const badgeEl = document.getElementById('hudTargetBadge');
+            if (targetEl) targetEl.textContent = planet.name;
+            if (badgeEl) {
+                badgeEl.textContent = pClassInfo.name;
+                badgeEl.className = `class-badge ${pClassInfo.badgeClass}`;
+            }
+
+            // Update Active Planet Header and Dossier Card in Tab 1
+            const hdr = document.getElementById('activePlanetHeader');
+            if (hdr) hdr.textContent = `Target: ${planet.name}`;
+
+            const dCard = document.getElementById('classificationDossierCard');
+            if (dCard) dCard.style.borderLeftColor = pClassInfo.color;
+
+            const dTitle = document.getElementById('dossierClassTitle');
+            if (dTitle) {
+                dTitle.textContent = `${pClassInfo.code}: ${pClassInfo.name}`;
+                dTitle.style.color = pClassInfo.color;
+            }
+            const dCode = document.getElementById('dossierClassCode');
+            if (dCode) {
+                dCode.textContent = pClassInfo.code;
+                dCode.className = `class-badge ${pClassInfo.badgeClass}`;
+            }
+            const dDesc = document.getElementById('dossierClassDesc');
+            if (dDesc) dDesc.textContent = pClassInfo.desc;
+            const dTrait = document.getElementById('dossierClassTrait');
+            if (dTrait) dTrait.textContent = `Trait: ${pClassInfo.trait}`;
+
+            calculateHabitability();
+            updateUI();
+            renderPlanetRoster();
+
+            if (announce) {
+                logMsg(`Active terraforming target reassigned to ${planet.name} [${pClassInfo.name}].`);
+                playSound('deploy');
+            }
+        }
+
+        function renderPlanetRoster() {
+            const strip = document.getElementById('planetRosterStrip');
+            if (!strip) return;
+            strip.innerHTML = '';
+
+            const sys = STAR_SYSTEMS[sim.currentSystemIndex];
+            if (!sys) return;
+
+            sys.planets.forEach(p => {
+                const pClassInfo = EXOPLANET_CLASSES[p.classification] || EXOPLANET_CLASSES.barren_rock;
+                const card = document.createElement('div');
+                card.className = `planet-roster-card ${p.id === sim.activePlanetId ? 'active' : ''}`;
+                card.onclick = () => {
+                    initAudio();
+                    setActivePlanet(p);
+                    const bodyObj = celestialBodies.find(b => b.id === p.id);
+                    if (bodyObj) {
+                        selectEntity(bodyObj);
+                        centerOn(bodyObj);
+                    }
+                    playSound('click');
+                };
+
+                const titleRow = document.createElement('div');
+                titleRow.className = 'roster-card-title';
+                titleRow.textContent = p.name;
+                card.appendChild(titleRow);
+
+                const badge = document.createElement('span');
+                badge.className = `class-badge ${pClassInfo.badgeClass}`;
+                badge.textContent = pClassInfo.name;
+                card.appendChild(badge);
+
+                const statsRow = document.createElement('div');
+                statsRow.className = 'roster-card-stats';
+                statsRow.innerHTML = `<span>${p.orbitRadius} AU</span><span style="color:${pClassInfo.color}; font-weight:bold;">${(p.habitability || 0).toFixed(0)}% Hab</span>`;
+                card.appendChild(statsRow);
+
+                strip.appendChild(card);
+            });
+        }
 
         // Fleet Ships
         const fleet = [
@@ -1650,37 +2345,466 @@
             updateUI();
         }
 
-        // --- Thematic Procedural Sprite Rendering Engine ---
+        // --- Thematic Procedural Exoplanet Classification Rendering Engine ---
 
-        // 1. Aethelgard Prime Planetary Surface with Dynamic Atmosphere, Auroras & City Lights
-        function drawPlanetAethelgard(ctx, px, py, pr, sunX, sunY, z, time) {
+        // 1. Class-I: Barren Rock Procedural Shader (Airless, cratered, rugged topography)
+        function drawBarrenRock(ctx, planet, px, py, pr, sunX, sunY, z, time) {
             const sunAngle = Math.atan2(sunY - py, sunX - px);
 
-            // A. Dynamic Multi-layer Atmospheric Rayleigh & Mie Scattering Glow
-            const atmoThickness = 12 * z * (1.0 + sim.pressure * 0.5);
-            let atmoR, atmoG, atmoB;
-            if (sim.oxygen > 15) {
-                // Biosphere: Rich Gaia cyan-emerald Rayleigh scattering
-                atmoR = 0; atmoG = 240; atmoB = 220;
-            } else if (sim.temp < -20) {
-                // Glaciated: Pale electric ice-violet halo
-                atmoR = 140; atmoG = 190; atmoB = 255;
-            } else {
-                // Barren Greenhouse: Amber-copper Rayleigh haze
-                atmoR = 245; atmoG = 158; atmoB = 11;
+            // A. Faint mineral dust micro-haze (airless limb definition)
+            const dustGrad = ctx.createRadialGradient(px, py, pr * 0.98, px, py, pr + 4 * z);
+            dustGrad.addColorStop(0, 'rgba(245, 158, 11, 0.28)');
+            dustGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = dustGrad;
+            ctx.beginPath();
+            ctx.arc(px, py, pr + 4 * z, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Clip all surface features to planet circle
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(px, py, pr, 0, Math.PI * 2);
+            ctx.clip();
+
+            // B. Rocky Basalt / Copper Bedrock Base
+            const baseGrad = ctx.createRadialGradient(px + Math.cos(sunAngle) * pr * 0.4, py + Math.sin(sunAngle) * pr * 0.4, pr * 0.1, px, py, pr);
+            baseGrad.addColorStop(0, '#78716c');
+            baseGrad.addColorStop(0.5, '#44403c');
+            baseGrad.addColorStop(1, '#1c1917');
+            ctx.fillStyle = baseGrad;
+            ctx.fill();
+
+            // C. Procedural Impact Craters with Sunward Ejecta Rays
+            const craters = [
+                { ox: -0.25, oy: -0.2, r: 0.32, hasRays: true },
+                { ox: 0.35, oy: 0.15, r: 0.24, hasRays: false },
+                { ox: -0.05, oy: 0.38, r: 0.28, hasRays: true },
+                { ox: 0.15, oy: -0.35, r: 0.18, hasRays: false },
+                { ox: -0.42, oy: 0.12, r: 0.16, hasRays: false },
+                { ox: 0.48, oy: -0.18, r: 0.14, hasRays: false }
+            ];
+
+            // Craters and Ejecta
+            craters.forEach(c => {
+                const cx = px + c.ox * pr;
+                const cy = py + c.oy * pr;
+                const cr = c.r * pr;
+
+                // Ejecta Rays radiating outward
+                if (c.hasRays) {
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(214, 211, 209, 0.25)';
+                    ctx.lineWidth = 1;
+                    for (let a = 0; a < 6; a++) {
+                        const rayAngle = (a * Math.PI / 3) + 0.2;
+                        ctx.beginPath();
+                        ctx.moveTo(cx + Math.cos(rayAngle) * cr, cy + Math.sin(rayAngle) * cr);
+                        ctx.lineTo(cx + Math.cos(rayAngle) * cr * 2.4, cy + Math.sin(rayAngle) * cr * 2.4);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                }
+
+                // Crater Depression Bowl
+                ctx.fillStyle = '#292524';
+                ctx.beginPath();
+                ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Sunlit Rim Arc
+                ctx.strokeStyle = '#d6d3d1';
+                ctx.lineWidth = Math.max(1, 1.5 * z);
+                ctx.beginPath();
+                ctx.arc(cx, cy, cr, sunAngle - 1.2, sunAngle + 1.2);
+                ctx.stroke();
+
+                // Central Uplift Peak
+                ctx.fillStyle = '#a8a29e';
+                ctx.beginPath();
+                ctx.arc(cx - Math.cos(sunAngle) * cr * 0.15, cy - Math.sin(sunAngle) * cr * 0.15, cr * 0.22, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // D. Tectonic Fault Chasms / Graben Ridges
+            ctx.strokeStyle = 'rgba(28, 25, 23, 0.7)';
+            ctx.lineWidth = Math.max(1, 2 * z);
+            ctx.beginPath();
+            ctx.moveTo(px - pr * 0.7, py - pr * 0.1);
+            ctx.lineTo(px - pr * 0.1, py + pr * 0.15);
+            ctx.lineTo(px + pr * 0.6, py + pr * 0.05);
+            ctx.stroke();
+
+            // E. Stark Day/Night Terminator Shadow (Zero atmosphere = sharp darkness)
+            const shadeGrad = ctx.createRadialGradient(
+                px + Math.cos(sunAngle) * pr * 0.5,
+                py + Math.sin(sunAngle) * pr * 0.5,
+                pr * 0.1,
+                px - Math.cos(sunAngle) * pr * 0.5,
+                py - Math.sin(sunAngle) * pr * 0.5,
+                pr * 1.05
+            );
+            shadeGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+            shadeGrad.addColorStop(0.45, 'rgba(0, 0, 0, 0.1)');
+            shadeGrad.addColorStop(0.7, 'rgba(5, 5, 8, 0.82)');
+            shadeGrad.addColorStop(1, 'rgba(2, 3, 5, 0.98)');
+            ctx.fillStyle = shadeGrad;
+            ctx.beginPath();
+            ctx.arc(px, py, pr, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        // 2. Class-II: Toxic Greenhouse Procedural Shader (Superheated, sulfuric clouds, storm vortex, magma fissures)
+        function drawToxicGreenhouse(ctx, planet, px, py, pr, sunX, sunY, z, time) {
+            const sunAngle = Math.atan2(sunY - py, sunX - px);
+
+            // A. Dense Superheated Sulfuric Atmospheric Corona
+            const atmoThick = 14 * z * (1.0 + (planet.pressure || sim.pressure) * 0.2);
+            const exoGrad = ctx.createRadialGradient(px, py, pr * 0.95, px, py, pr + atmoThick);
+            exoGrad.addColorStop(0, 'rgba(234, 179, 8, 0.65)');
+            exoGrad.addColorStop(0.45, 'rgba(202, 138, 4, 0.3)');
+            exoGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = exoGrad;
+            ctx.beginPath();
+            ctx.arc(px, py, pr + atmoThick, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Sunward Mie Forward Scattering Limb
+            const sunwardArc = ctx.createRadialGradient(
+                px + Math.cos(sunAngle) * pr * 0.9,
+                py + Math.sin(sunAngle) * pr * 0.9,
+                1,
+                px + Math.cos(sunAngle) * pr * 0.9,
+                py + Math.sin(sunAngle) * pr * 0.9,
+                pr * 0.6
+            );
+            sunwardArc.addColorStop(0, 'rgba(254, 240, 138, 0.7)');
+            sunwardArc.addColorStop(0.5, 'rgba(234, 179, 8, 0.4)');
+            sunwardArc.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = sunwardArc;
+            ctx.beginPath();
+            ctx.arc(px + Math.cos(sunAngle) * pr * 0.25, py + Math.sin(sunAngle) * pr * 0.25, pr + atmoThick * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(px, py, pr, 0, Math.PI * 2);
+            ctx.clip();
+
+            // B. Superheated Bedrock Base (Dark volcanic ochre/copper)
+            ctx.fillStyle = '#451a03';
+            ctx.fillRect(px - pr, py - pr, pr * 2, pr * 2);
+
+            // C. Churning Zonal Cloud Bands (Atmospheric differential rotation)
+            const rotFast = time * 0.08;
+            const rotSlow = time * -0.04;
+            const bands = [
+                { yRel: -0.7, hRel: 0.25, color: 'rgba(234, 179, 8, 0.6)', rot: rotFast },
+                { yRel: -0.45, hRel: 0.28, color: 'rgba(202, 138, 4, 0.7)', rot: rotSlow },
+                { yRel: -0.15, hRel: 0.32, color: 'rgba(250, 204, 21, 0.65)', rot: rotFast * 1.2 },
+                { yRel: 0.15, hRel: 0.30, color: 'rgba(180, 83, 9, 0.75)', rot: rotSlow * 0.9 },
+                { yRel: 0.45, hRel: 0.26, color: 'rgba(234, 179, 8, 0.65)', rot: rotFast * 0.8 },
+                { yRel: 0.7, hRel: 0.22, color: 'rgba(161, 98, 7, 0.6)', rot: rotSlow }
+            ];
+
+            bands.forEach(b => {
+                ctx.fillStyle = b.color;
+                const by = py + b.yRel * pr;
+                const bh = b.hRel * pr;
+                ctx.beginPath();
+                ctx.rect(px - pr, by, pr * 2, bh);
+                ctx.fill();
+
+                // Swirling wave crests inside the cloud band
+                ctx.fillStyle = 'rgba(254, 240, 138, 0.3)';
+                for (let w = 0; w < 4; w++) {
+                    const wx = px - pr + (((w * 0.55 + b.rot) % 2.0) * pr);
+                    ctx.beginPath();
+                    ctx.ellipse(wx, by + bh * 0.5, pr * 0.25, bh * 0.35, 0.1, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+
+            // D. Great Sulfuric Storm Vortex (Giant Eye Cyclone)
+            const eyeLon = (time * 0.05) % (Math.PI * 2);
+            if (Math.cos(eyeLon) > -0.2) {
+                const eyex = px + Math.sin(eyeLon) * pr * 0.65;
+                const eyey = py + pr * 0.25;
+                ctx.fillStyle = 'rgba(180, 83, 9, 0.85)';
+                ctx.beginPath();
+                ctx.ellipse(eyex, eyey, pr * 0.3, pr * 0.16, 0.2, 0, Math.PI * 2);
+                ctx.fill();
+                // Inner eye vortex ring
+                ctx.strokeStyle = 'rgba(254, 240, 138, 0.7)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.ellipse(eyex, eyey, pr * 0.18, pr * 0.08, 0.2, 0, Math.PI * 2);
+                ctx.stroke();
             }
 
-            // A1. Wide diffuse exospheric corona
+            // E. Night-side Glowing Magma Fissures
+            const darkAngle = sunAngle + Math.PI;
+            const darkDist = pr * 0.45;
+            const fx = px + Math.cos(darkAngle) * darkDist;
+            const fy = py + Math.sin(darkAngle) * darkDist;
+            ctx.strokeStyle = 'rgba(249, 115, 22, 0.75)';
+            ctx.lineWidth = Math.max(1, 1.8 * z);
+            ctx.beginPath();
+            ctx.moveTo(fx - pr * 0.2, fy - pr * 0.1);
+            ctx.lineTo(fx, fy + pr * 0.08);
+            ctx.lineTo(fx + pr * 0.22, fy - pr * 0.05);
+            ctx.stroke();
+
+            // F. Terminator Shading (Diffuse dense greenhouse twilight)
+            const shadeGrad = ctx.createRadialGradient(
+                px + Math.cos(sunAngle) * pr * 0.35,
+                py + Math.sin(sunAngle) * pr * 0.35,
+                pr * 0.2,
+                px - Math.cos(sunAngle) * pr * 0.4,
+                py - Math.sin(sunAngle) * pr * 0.4,
+                pr * 1.05
+            );
+            shadeGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+            shadeGrad.addColorStop(0.55, 'rgba(20, 10, 4, 0.4)');
+            shadeGrad.addColorStop(1, 'rgba(10, 5, 2, 0.88)');
+            ctx.fillStyle = shadeGrad;
+            ctx.beginPath();
+            ctx.arc(px, py, pr, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        // 3. Class-III: Frozen Tundra Procedural Shader (Glaciated ice sheets, turquoise crevasses, cryo-geysers)
+        function drawFrozenTundra(ctx, planet, px, py, pr, sunX, sunY, z, time) {
+            const sunAngle = Math.atan2(sunY - py, sunX - px);
+
+            // A. Pale Electric-Cyan Cryo Atmospheric Corona
+            const atmoThick = 10 * z;
+            const exoGrad = ctx.createRadialGradient(px, py, pr * 0.95, px, py, pr + atmoThick);
+            exoGrad.addColorStop(0, 'rgba(56, 189, 248, 0.5)');
+            exoGrad.addColorStop(0.5, 'rgba(14, 165, 233, 0.2)');
+            exoGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = exoGrad;
+            ctx.beginPath();
+            ctx.arc(px, py, pr + atmoThick, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Polar Cryo-aurora ribbons
+            const auroraAlpha = 0.55 * (0.7 + Math.sin(time * 3.0) * 0.3);
+            ctx.save();
+            ctx.strokeStyle = `rgba(168, 85, 247, ${auroraAlpha})`;
+            ctx.lineWidth = Math.max(1, 1.8 * z);
+            ctx.beginPath();
+            ctx.ellipse(px, py - pr * 0.9, pr * 0.5, pr * 0.12, 0, Math.PI, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(px, py, pr, 0, Math.PI * 2);
+            ctx.clip();
+
+            // B. High-Albedo Ice Base (Ice sheet gradient)
+            const iceBase = ctx.createRadialGradient(px + Math.cos(sunAngle) * pr * 0.4, py + Math.sin(sunAngle) * pr * 0.4, pr * 0.1, px, py, pr);
+            iceBase.addColorStop(0, '#f8fafc');
+            iceBase.addColorStop(0.5, '#e0f2fe');
+            iceBase.addColorStop(1, '#7dd3fc');
+            ctx.fillStyle = iceBase;
+            ctx.fill();
+
+            // C. Turquoise Glacial Crevasses & Ice Fractures
+            ctx.strokeStyle = 'rgba(2, 132, 199, 0.65)';
+            ctx.lineWidth = Math.max(1, 1.5 * z);
+            const rifts = [
+                [[-0.4, -0.3], [-0.1, -0.15], [0.3, -0.2], [0.55, -0.05]],
+                [[-0.3, 0.2], [0.0, 0.1], [0.25, 0.35], [0.45, 0.25]],
+                [[-0.5, 0.0], [-0.2, 0.05], [0.1, -0.05]],
+                [[0.1, -0.4], [0.15, -0.15], [0.35, 0.05]]
+            ];
+            rifts.forEach(pts => {
+                ctx.beginPath();
+                pts.forEach((pt, idx) => {
+                    const rx = px + pt[0] * pr;
+                    const ry = py + pt[1] * pr;
+                    if (idx === 0) ctx.moveTo(rx, ry);
+                    else ctx.lineTo(rx, ry);
+                });
+                ctx.stroke();
+            });
+
+            // D. Massive Polar Ice Caps (North & South)
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.ellipse(px, py - pr * 0.8, pr * 0.75, pr * 0.28, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(px, py + pr * 0.8, pr * 0.75, pr * 0.28, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // E. Cryovolcanic Geyser Plumes (Active vapor vents along terminator)
+            if (Math.sin(time * 6) > 0.1) {
+                const plumeAngle = sunAngle + Math.PI * 0.45;
+                const gx = px + Math.cos(plumeAngle) * pr * 0.95;
+                const gy = py + Math.sin(plumeAngle) * pr * 0.95;
+                ctx.fillStyle = 'rgba(224, 242, 254, 0.8)';
+                ctx.beginPath();
+                ctx.arc(gx, gy, 2.5 * z, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // F. Terminator Shading
+            const shadeGrad = ctx.createRadialGradient(
+                px + Math.cos(sunAngle) * pr * 0.4,
+                py + Math.sin(sunAngle) * pr * 0.4,
+                pr * 0.2,
+                px - Math.cos(sunAngle) * pr * 0.4,
+                py - Math.sin(sunAngle) * pr * 0.4,
+                pr * 1.05
+            );
+            shadeGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+            shadeGrad.addColorStop(0.6, 'rgba(8, 20, 44, 0.35)');
+            shadeGrad.addColorStop(1, 'rgba(3, 8, 22, 0.85)');
+            ctx.fillStyle = shadeGrad;
+            ctx.beginPath();
+            ctx.arc(px, py, pr, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        // 4. Class-IV: Ocean World Procedural Shader (Hyper-hydrosphere, island chains, cyclonic storm spirals)
+        function drawOceanWorld(ctx, planet, px, py, pr, sunX, sunY, z, time) {
+            const sunAngle = Math.atan2(sunY - py, sunX - px);
+
+            // A. Deep Cerulean/Aqua Rayleigh Corona
+            const atmoThick = 12 * z;
+            const exoGrad = ctx.createRadialGradient(px, py, pr * 0.95, px, py, pr + atmoThick);
+            exoGrad.addColorStop(0, 'rgba(6, 182, 212, 0.55)');
+            exoGrad.addColorStop(0.5, 'rgba(2, 132, 199, 0.22)');
+            exoGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = exoGrad;
+            ctx.beginPath();
+            ctx.arc(px, py, pr + atmoThick, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Sunward Limb Specular Glint
+            const sunGlint = ctx.createRadialGradient(
+                px + Math.cos(sunAngle) * pr * 0.65,
+                py + Math.sin(sunAngle) * pr * 0.65,
+                1,
+                px + Math.cos(sunAngle) * pr * 0.65,
+                py + Math.sin(sunAngle) * pr * 0.65,
+                pr * 0.45
+            );
+            sunGlint.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+            sunGlint.addColorStop(0.4, 'rgba(56, 189, 248, 0.35)');
+            sunGlint.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = sunGlint;
+            ctx.beginPath();
+            ctx.arc(px, py, pr, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(px, py, pr, 0, Math.PI * 2);
+            ctx.clip();
+
+            // B. Deep Sapphire Pelagic Mantle
+            const oceanBase = ctx.createRadialGradient(px + Math.cos(sunAngle) * pr * 0.3, py + Math.sin(sunAngle) * pr * 0.3, pr * 0.1, px, py, pr);
+            oceanBase.addColorStop(0, '#0284c7');
+            oceanBase.addColorStop(0.5, '#0369a1');
+            oceanBase.addColorStop(1, '#0c4a6e');
+            ctx.fillStyle = oceanBase;
+            ctx.fill();
+
+            // C. Archipelago Island Chains & Coral Atoll Seamounts
+            const rot = time * 0.03;
+            const archipelagos = [
+                { lon: 0.6, lat: -0.2, atolls: [[0, 0], [4, -3], [-5, 4], [8, -5]] },
+                { lon: 2.2, lat: 0.15, atolls: [[0, 0], [-4, -3], [5, 2], [9, 5]] },
+                { lon: 3.8, lat: -0.1, atolls: [[0, 0], [3, 4], [-4, 3], [-8, 6]] }
+            ];
+
+            archipelagos.forEach(arch => {
+                const cLon = (arch.lon + rot) % (Math.PI * 2);
+                if (Math.cos(cLon) > -0.2) {
+                    const ax = px + Math.sin(cLon) * pr * 0.8;
+                    const ay = py + arch.lat * pr * 0.8;
+                    arch.atolls.forEach(atoll => {
+                        const ix = ax + atoll[0] * z;
+                        const iy = ay + atoll[1] * z;
+                        // Shallow turquoise reef
+                        ctx.fillStyle = '#2dd4bf';
+                        ctx.beginPath();
+                        ctx.arc(ix, iy, 3.2 * z, 0, Math.PI * 2);
+                        ctx.fill();
+                        // Emergent volcanic land
+                        ctx.fillStyle = '#15803d';
+                        ctx.beginPath();
+                        ctx.arc(ix, iy, 1.6 * z, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                }
+            });
+
+            // D. Spiraling White Cyclonic Storm Systems (Hurricanes)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+            ctx.lineWidth = 1.2;
+            const stormRot = time * 0.08;
+            for (let s = 0; s < 3; s++) {
+                const sLon = (s * 2.1 + stormRot) % (Math.PI * 2);
+                if (Math.cos(sLon) > -0.2) {
+                    const sx = px + Math.sin(sLon) * pr * 0.7;
+                    const sy = py + (s - 1) * pr * 0.38;
+                    // Spiral arms
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, pr * 0.22, 0, Math.PI * 1.5);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.ellipse(sx, sy, pr * 0.16, pr * 0.09, 0.3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // E. Terminator Shading
+            const shadeGrad = ctx.createRadialGradient(
+                px + Math.cos(sunAngle) * pr * 0.4,
+                py + Math.sin(sunAngle) * pr * 0.4,
+                pr * 0.2,
+                px - Math.cos(sunAngle) * pr * 0.4,
+                py - Math.sin(sunAngle) * pr * 0.4,
+                pr * 1.05
+            );
+            shadeGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+            shadeGrad.addColorStop(0.55, 'rgba(2, 6, 23, 0.35)');
+            shadeGrad.addColorStop(1, 'rgba(2, 6, 23, 0.88)');
+            ctx.fillStyle = shadeGrad;
+            ctx.beginPath();
+            ctx.arc(px, py, pr, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        // 5. Class-V: Primordial Gaia Procedural Shader (Continents, biomes, auroras, city lights)
+        function drawPrimordialGaia(ctx, planet, px, py, pr, sunX, sunY, z, time) {
+            const sunAngle = Math.atan2(sunY - py, sunX - px);
+
+            // A. Dynamic Rich Cyan-Emerald Rayleigh Scattering Glow
+            const atmoThickness = 12 * z * (1.0 + (planet.pressure || sim.pressure) * 0.5);
             const exoGrad = ctx.createRadialGradient(px, py, pr * 0.95, px, py, pr + atmoThickness);
-            exoGrad.addColorStop(0, `rgba(${atmoR}, ${atmoG}, ${atmoB}, 0.5)`);
-            exoGrad.addColorStop(0.45, `rgba(${atmoR}, ${atmoG}, ${atmoB}, 0.22)`);
-            exoGrad.addColorStop(1, `rgba(${atmoR}, ${atmoG}, ${atmoB}, 0)`);
+            exoGrad.addColorStop(0, 'rgba(0, 240, 220, 0.55)');
+            exoGrad.addColorStop(0.45, 'rgba(16, 185, 129, 0.25)');
+            exoGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
             ctx.fillStyle = exoGrad;
             ctx.beginPath();
             ctx.arc(px, py, pr + atmoThickness, 0, Math.PI * 2);
             ctx.fill();
 
-            // A2. Sunward Mie Limb Brightening (Anisotropic forward atmospheric scattering)
+            // Sunward Mie Limb Brightening
             const sunwardArcGrad = ctx.createRadialGradient(
                 px + Math.cos(sunAngle) * pr * 0.9,
                 py + Math.sin(sunAngle) * pr * 0.9,
@@ -1689,68 +2813,48 @@
                 py + Math.sin(sunAngle) * pr * 0.9,
                 pr * 0.55
             );
-            sunwardArcGrad.addColorStop(0, `rgba(255, 255, 255, 0.6)`);
-            sunwardArcGrad.addColorStop(0.5, `rgba(${atmoR}, ${atmoG}, ${atmoB}, 0.35)`);
+            sunwardArcGrad.addColorStop(0, 'rgba(255, 255, 255, 0.65)');
+            sunwardArcGrad.addColorStop(0.5, 'rgba(0, 240, 255, 0.35)');
             sunwardArcGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
             ctx.fillStyle = sunwardArcGrad;
             ctx.beginPath();
             ctx.arc(px + Math.cos(sunAngle) * pr * 0.25, py + Math.sin(sunAngle) * pr * 0.25, pr + atmoThickness * 0.5, 0, Math.PI * 2);
             ctx.fill();
 
-            // A3. Polar Auroras (Shimmering magnetic arcs at North and South poles)
-            if (sim.magnet > 0.1) {
-                const auroraAlpha = Math.min(0.65, (sim.magnet / 0.5) * 0.65);
-                ctx.save();
-                // North Aurora
-                ctx.strokeStyle = `rgba(16, 185, 129, ${auroraAlpha * (0.7 + Math.sin(time * 3.5) * 0.3)})`;
-                ctx.lineWidth = Math.max(1.5, 2 * z);
-                ctx.beginPath();
-                const northWobble = Math.sin(time * 2.8) * 3 * z;
-                ctx.ellipse(px + northWobble, py - pr * 0.88, pr * 0.55, pr * 0.16, 0, Math.PI, Math.PI * 2);
-                ctx.stroke();
+            // Polar Auroras
+            const auroraAlpha = 0.6 * (0.7 + Math.sin(time * 3.5) * 0.3);
+            ctx.save();
+            ctx.strokeStyle = `rgba(16, 185, 129, ${auroraAlpha})`;
+            ctx.lineWidth = Math.max(1.5, 2 * z);
+            ctx.beginPath();
+            const northWobble = Math.sin(time * 2.8) * 3 * z;
+            ctx.ellipse(px + northWobble, py - pr * 0.88, pr * 0.55, pr * 0.16, 0, Math.PI, Math.PI * 2);
+            ctx.stroke();
 
-                // South Aurora
-                ctx.strokeStyle = `rgba(168, 85, 247, ${auroraAlpha * (0.7 + Math.cos(time * 3.2) * 0.3)})`;
-                ctx.beginPath();
-                const southWobble = Math.cos(time * 2.5) * 3 * z;
-                ctx.ellipse(px + southWobble, py + pr * 0.88, pr * 0.55, pr * 0.16, 0, 0, Math.PI);
-                ctx.stroke();
-                ctx.restore();
-            }
+            ctx.strokeStyle = `rgba(168, 85, 247, ${auroraAlpha})`;
+            ctx.beginPath();
+            const southWobble = Math.cos(time * 2.5) * 3 * z;
+            ctx.ellipse(px + southWobble, py + pr * 0.88, pr * 0.55, pr * 0.16, 0, 0, Math.PI);
+            ctx.stroke();
+            ctx.restore();
 
-            // Clip all surface features to planet circle
             ctx.save();
             ctx.beginPath();
             ctx.arc(px, py, pr, 0, Math.PI * 2);
             ctx.clip();
 
-            // B. Ocean / Bedrock Base
-            let baseGrad = ctx.createRadialGradient(px - Math.cos(sunAngle) * pr * 0.3, py - Math.sin(sunAngle) * pr * 0.3, pr * 0.1, px, py, pr);
-            if (sim.temp < -20) {
-                // Glaciated ocean
-                baseGrad.addColorStop(0, '#93c5fd');
-                baseGrad.addColorStop(0.6, '#3b82f6');
-                baseGrad.addColorStop(1, '#1e3a8a');
-            } else if (sim.water > 40 && sim.oxygen > 12) {
-                // Deep gaia oceans
-                baseGrad.addColorStop(0, '#0ea5e9');
-                baseGrad.addColorStop(0.5, '#0284c7');
-                baseGrad.addColorStop(1, '#0c4a6e');
-            } else {
-                // Primordial volcanic/greenhouse seas
-                baseGrad.addColorStop(0, '#38bdf8');
-                baseGrad.addColorStop(0.5, '#1e40af');
-                baseGrad.addColorStop(1, '#0f172a');
-            }
-            ctx.fillStyle = baseGrad;
+            // B. Deep Gaia Oceans
+            const oceanGrad = ctx.createRadialGradient(px - Math.cos(sunAngle) * pr * 0.3, py - Math.sin(sunAngle) * pr * 0.3, pr * 0.1, px, py, pr);
+            oceanGrad.addColorStop(0, '#0ea5e9');
+            oceanGrad.addColorStop(0.5, '#0284c7');
+            oceanGrad.addColorStop(1, '#0c4a6e');
+            ctx.fillStyle = oceanGrad;
             ctx.fill();
 
-            // C. Rotating Continents / Landmasses
+            // C. Rotating Continents & Mountain Ranges
             const rot = time * 0.04;
-            const continentColor = (sim.temp < -20) ? '#dbeafe' : (sim.water > 40 && sim.oxygen > 12 ? '#15803d' : '#9a3412');
-            const highlandColor = (sim.temp < -20) ? '#eff6ff' : (sim.water > 40 && sim.oxygen > 12 ? '#ca8a04' : '#b45309');
-
-            // 4 Continental mass seeds across planetary longitude
+            const continentColor = '#15803d';
+            const highlandColor = '#ca8a04';
             const continents = [
                 { lon: 0.2, lat: -0.15, rw: 0.45, rh: 0.35, pts: [[-0.3,-0.2],[0.1,-0.3],[0.35,-0.1],[0.25,0.25],[-0.15,0.3],[-0.35,0.05]] },
                 { lon: 1.8, lat: 0.2, rw: 0.4, rh: 0.4, pts: [[-0.25,-0.3],[0.2,-0.25],[0.35,0.1],[0.1,0.35],[-0.3,0.2]] },
@@ -1770,7 +2874,6 @@
                     ctx.translate(cxPos, cyPos);
                     ctx.scale(scaleX, 1.0);
 
-                    // Continent base
                     ctx.fillStyle = continentColor;
                     ctx.beginPath();
                     c.pts.forEach((pt, idx) => {
@@ -1782,7 +2885,7 @@
                     ctx.closePath();
                     ctx.fill();
 
-                    // Mountain ridge highlight
+                    // Mountain Cordillera Ridge
                     ctx.fillStyle = highlandColor;
                     ctx.beginPath();
                     ctx.ellipse(0, 0, pr * c.rw * 0.4, pr * c.rh * 0.3, 0.2, 0, Math.PI * 2);
@@ -1792,24 +2895,20 @@
                 }
             });
 
-            // D. Polar Ice Caps (Scale with Temperature)
-            const iceCoverage = Math.max(0.08, Math.min(0.6, (15 - sim.temp) / 60));
+            // D. Polar Ice Caps
+            const iceCoverage = Math.max(0.08, Math.min(0.45, (18 - (planet.temp || sim.temp)) / 60));
             const iceH = pr * iceCoverage;
-
-            // North Cap
             ctx.fillStyle = '#f8fafc';
             ctx.beginPath();
             ctx.ellipse(px, py - pr + iceH * 0.5, pr * Math.sqrt(Math.max(0.1, 1 - Math.pow((pr - iceH)/pr, 2))), iceH, 0, 0, Math.PI * 2);
             ctx.fill();
-
-            // South Cap
             ctx.beginPath();
             ctx.ellipse(px, py + pr - iceH * 0.5, pr * Math.sqrt(Math.max(0.1, 1 - Math.pow((pr - iceH)/pr, 2))), iceH, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // E. Atmospheric Cloud Swirls
+            // E. Dynamic Cloud Swirls
             const cloudRot = time * 0.07;
-            ctx.fillStyle = 'rgba(255, 255, 255, ' + (0.2 + Math.min(0.3, sim.pressure * 0.2)) + ')';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
             for (let i = 0; i < 3; i++) {
                 const cloudLon = (i * 2.1 + cloudRot) % (Math.PI * 2);
                 if (Math.cos(cloudLon) > -0.2) {
@@ -1821,7 +2920,7 @@
                 }
             }
 
-            // F. Sun Day/Night Terminator Shadow
+            // F. Terminator Shading
             const shadeGrad = ctx.createRadialGradient(
                 px + Math.cos(sunAngle) * pr * 0.4,
                 py + Math.sin(sunAngle) * pr * 0.4,
@@ -1838,18 +2937,16 @@
             ctx.arc(px, py, pr, 0, Math.PI * 2);
             ctx.fill();
 
-            // G. Night-side Bioluminescent Settlement Lights (Dome Clusters)
-            if (sim.colonists > 0) {
+            // G. Settlement City Lights (if colonized)
+            if ((planet.colonists || sim.colonists) > 0) {
                 const darkAngle = sunAngle + Math.PI;
                 const nightDirX = Math.cos(darkAngle);
                 const nightDirY = Math.sin(darkAngle);
                 const cityClusters = [
-                    { ox: 0.35, oy: -0.15, sz: 2.2, color: 'rgba(255, 215, 100, 0.9)' }, // Dome Alpha
-                    { ox: 0.48, oy: 0.12, sz: 1.8, color: 'rgba(0, 240, 255, 0.85)' },  // Dome Beta
-                    { ox: 0.28, oy: 0.32, sz: 1.5, color: 'rgba(16, 185, 129, 0.85)' }, // Agronomy Complex
-                    { ox: 0.58, oy: -0.05, sz: 1.2, color: 'rgba(255, 180, 50, 0.8)' }  // Mining Depot
+                    { ox: 0.35, oy: -0.15, sz: 2.2, color: 'rgba(255, 215, 100, 0.9)' },
+                    { ox: 0.48, oy: 0.12, sz: 1.8, color: 'rgba(0, 240, 255, 0.85)' },
+                    { ox: 0.28, oy: 0.32, sz: 1.5, color: 'rgba(16, 185, 129, 0.85)' }
                 ];
-
                 cityClusters.forEach((c, idx) => {
                     const cx = px + (nightDirX * pr * 0.55) + (c.ox * pr * 0.45);
                     const cy = py + (nightDirY * pr * 0.55) + (c.oy * pr * 0.45);
@@ -1858,15 +2955,26 @@
                     ctx.beginPath();
                     ctx.arc(cx, cy, c.sz * Math.min(1.5, z) * flicker, 0, Math.PI * 2);
                     ctx.fill();
-                    // Halo glow around city cluster
-                    ctx.fillStyle = c.color.replace('0.9', '0.2').replace('0.85', '0.18');
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, c.sz * 2.8 * Math.min(1.5, z), 0, Math.PI * 2);
-                    ctx.fill();
                 });
             }
 
             ctx.restore();
+        }
+
+        // Master Procedural Exoplanet Classification Dispatcher
+        function drawExoplanet(ctx, planet, px, py, pr, sunX, sunY, z, time) {
+            const c = planet.classification || 'barren_rock';
+            if (c === 'barren_rock') {
+                drawBarrenRock(ctx, planet, px, py, pr, sunX, sunY, z, time);
+            } else if (c === 'toxic_greenhouse') {
+                drawToxicGreenhouse(ctx, planet, px, py, pr, sunX, sunY, z, time);
+            } else if (c === 'frozen_tundra') {
+                drawFrozenTundra(ctx, planet, px, py, pr, sunX, sunY, z, time);
+            } else if (c === 'ocean_world') {
+                drawOceanWorld(ctx, planet, px, py, pr, sunX, sunY, z, time);
+            } else {
+                drawPrimordialGaia(ctx, planet, px, py, pr, sunX, sunY, z, time);
+            }
         }
 
         // 2. Boreas Minor Frozen Moon
@@ -2336,76 +3444,90 @@
                 ctx.fill();
             });
 
-            // 5. Target Planet: Aethelgard Prime
-            const planet = celestialBodies[1];
-            if (!sim.paused) planet.angle += planet.orbitSpeed * 0.008 * sim.speed;
-            const planetOrbitR = planet.orbitRadius * z;
-            const px = sunX + Math.cos(planet.angle) * planetOrbitR;
-            const py = sunY + Math.sin(planet.angle) * (planetOrbitR * 0.7);
-            const pr = planet.radius * z;
+            // 5. System Exoplanets (Iterate through all cataloged planets in current system)
+            celestialBodies.forEach(b => {
+                if (b.isPlanet) {
+                    if (!sim.paused) b.angle += (b.orbitSpeed || 0.08) * 0.008 * sim.speed;
+                    const planetOrbitR = b.orbitRadius * z;
+                    const px = sunX + Math.cos(b.angle) * planetOrbitR;
+                    const py = sunY + Math.sin(b.angle) * (planetOrbitR * 0.7);
+                    const pr = b.radius * z;
 
-            planet.currX = px;
-            planet.currY = py;
+                    b.currX = px;
+                    b.currY = py;
 
-            // Draw Orbit Ellipse
-            ctx.strokeStyle = 'rgba(56, 189, 248, 0.2)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.ellipse(sunX, sunY, planetOrbitR, planetOrbitR * 0.7, 0, 0, Math.PI * 2);
-            ctx.stroke();
+                    // Draw Orbit Ellipse
+                    const isTarget = (b.id === sim.activePlanetId);
+                    ctx.strokeStyle = isTarget ? 'rgba(0, 240, 255, 0.38)' : 'rgba(56, 189, 248, 0.15)';
+                    ctx.lineWidth = isTarget ? 1.5 : 1;
+                    ctx.beginPath();
+                    ctx.ellipse(sunX, sunY, planetOrbitR, planetOrbitR * 0.7, 0, 0, Math.PI * 2);
+                    ctx.stroke();
 
-            // Render Dynamic Planetary Surface
-            drawPlanetAethelgard(ctx, px, py, pr, sunX, sunY, z, sim.time);
+                    // Render Procedural Surface for this classification
+                    drawExoplanet(ctx, b, px, py, pr, sunX, sunY, z, sim.time);
 
-            // Target Reticle if selected
-            if (sim.selected && sim.selected.id === planet.id) {
-                ctx.strokeStyle = '#00f0ff';
-                ctx.lineWidth = 1.5;
-                ctx.strokeRect(px - pr - 6, py - pr - 6, (pr + 6) * 2, (pr + 6) * 2);
-            }
+                    // Target Reticle if selected
+                    if (sim.selected && sim.selected.id === b.id) {
+                        ctx.strokeStyle = '#00f0ff';
+                        ctx.lineWidth = 1.8;
+                        ctx.strokeRect(px - pr - 6, py - pr - 6, (pr + 6) * 2, (pr + 6) * 2);
+                    } else if (isTarget) {
+                        ctx.strokeStyle = 'rgba(16, 185, 129, 0.8)';
+                        ctx.lineWidth = 1.2;
+                        ctx.setLineDash([3, 3]);
+                        ctx.strokeRect(px - pr - 5, py - pr - 5, (pr + 5) * 2, (pr + 5) * 2);
+                        ctx.setLineDash([]);
+                    }
 
-            // Planet Label
-            ctx.fillStyle = '#38bdf8';
-            ctx.font = `bold ${Math.max(10, 11 * z)}px monospace`;
-            ctx.textAlign = 'center';
-            ctx.fillText(`${planet.name} [Hab: ${sim.habitability}%]`, px, py + pr + 16 * z);
+                    // Planet Label with Classification Code & Live Habitability %
+                    const pClassInfo = EXOPLANET_CLASSES[b.classification] || EXOPLANET_CLASSES.barren_rock;
+                    ctx.fillStyle = pClassInfo.color;
+                    ctx.font = `bold ${Math.max(9, 10 * z)}px monospace`;
+                    ctx.textAlign = 'center';
+                    const targetTag = isTarget ? ' [TARGET]' : '';
+                    ctx.fillText(`${b.name}${targetTag}`, px, py + pr + 14 * z);
 
-            // 6. Boreas Minor Moon
-            const moon = celestialBodies[2];
-            if (!sim.paused) moon.angle += moon.orbitSpeed * 0.02 * sim.speed;
-            const moonDist = moon.orbitRadius * z;
-            const mx = px + Math.cos(moon.angle) * moonDist;
-            const my = py + Math.sin(moon.angle) * (moonDist * 0.6);
-            const mr = moon.radius * z;
-            moon.currX = mx;
-            moon.currY = my;
+                    ctx.font = `${Math.max(8, 8.5 * z)}px monospace`;
+                    ctx.fillStyle = 'rgba(203, 213, 225, 0.85)';
+                    const habVal = isTarget ? sim.habitability : (b.habitability || 0);
+                    ctx.fillText(`${pClassInfo.code} | Hab: ${habVal.toFixed(1)}%`, px, py + pr + 26 * z);
+                }
+            });
 
-            ctx.strokeStyle = 'rgba(224, 242, 254, 0.15)';
-            ctx.beginPath();
-            ctx.ellipse(px, py, moonDist, moonDist * 0.6, 0, 0, Math.PI * 2);
-            ctx.stroke();
+            // 6. Moons & Orbital Stations
+            celestialBodies.forEach(b => {
+                if (b.isMoon || b.isStation) {
+                    const parentPlanet = celestialBodies.find(p => p.id === b.parent);
+                    if (parentPlanet && parentPlanet.currX !== undefined) {
+                        if (!sim.paused) b.angle += (b.orbitSpeed || 0.2) * 0.02 * sim.speed;
+                        const mDist = b.orbitRadius * z;
+                        const mx = parentPlanet.currX + Math.cos(b.angle) * mDist;
+                        const my = parentPlanet.currY + Math.sin(b.angle) * (mDist * 0.6);
+                        const mr = b.radius * z;
+                        b.currX = mx;
+                        b.currY = my;
 
-            // Render Boreas Moon Sprite
-            drawBoreasMoon(ctx, mx, my, mr, sunX, sunY, z);
+                        ctx.strokeStyle = 'rgba(224, 242, 254, 0.15)';
+                        ctx.beginPath();
+                        ctx.ellipse(parentPlanet.currX, parentPlanet.currY, mDist, mDist * 0.6, 0, 0, Math.PI * 2);
+                        ctx.stroke();
 
-            ctx.fillStyle = '#cbd5e1';
-            ctx.font = `${Math.max(8, 9 * z)}px monospace`;
-            ctx.fillText(moon.name, mx, my + mr + 10 * z);
+                        if (b.isMoon) {
+                            drawBoreasMoon(ctx, mx, my, mr, sunX, sunY, z);
+                        } else {
+                            drawStationSprite(ctx, mx, my, mr, sim.time, z);
+                        }
 
-            // 7. Zephyr Orbital Station
-            const station = celestialBodies[3];
-            if (!sim.paused) station.angle += station.orbitSpeed * 0.02 * sim.speed;
-            const stDist = station.orbitRadius * z;
-            const stX = px + Math.cos(station.angle) * stDist;
-            const stY = py + Math.sin(station.angle) * (stDist * 0.6);
-            const stR = station.radius * z;
-            station.currX = stX;
-            station.currY = stY;
+                        ctx.fillStyle = '#cbd5e1';
+                        ctx.font = `${Math.max(8, 9 * z)}px monospace`;
+                        ctx.textAlign = 'center';
+                        ctx.fillText(b.name, mx, my + mr + 10 * z);
+                    }
+                }
+            });
 
-            // Render Zephyr Shipyard Station Sprite
-            drawStationSprite(ctx, stX, stY, stR, sim.time, z);
-
-            // 8. Fleet Ships
+            // 7. Fleet Ships
             fleet.forEach((ship, idx) => {
                 let sx, sy;
                 if (ship.targetBelt) {
@@ -2419,11 +3541,14 @@
                     sx = cx + ship.x * z;
                     sy = cy + ship.y * z;
                 } else {
-                    // In orbit around Aethelgard
+                    // In orbit around active target planet or designated anchor
+                    const anchorPlanet = celestialBodies.find(p => p.id === (ship.parent || sim.activePlanetId)) || celestialBodies.find(p => p.isPlanet);
+                    const ax = anchorPlanet ? anchorPlanet.currX : cx;
+                    const ay = anchorPlanet ? anchorPlanet.currY : cy;
                     if (!sim.paused) ship.angle += ship.orbitSpeed * 0.02 * sim.speed;
                     const dist = ship.orbitDist * z;
-                    sx = px + Math.cos(ship.angle) * dist;
-                    sy = py + Math.sin(ship.angle) * (dist * 0.7);
+                    sx = ax + Math.cos(ship.angle) * dist;
+                    sy = ay + Math.sin(ship.angle) * (dist * 0.7);
                 }
 
                 ship.currX = sx;
@@ -2555,47 +3680,77 @@
             const type = document.getElementById('selType');
             const status = document.getElementById('selStatus');
             const dist = document.getElementById('selDist');
+            const actTarget = document.getElementById('selActTarget');
             const act1 = document.getElementById('selAct1');
             const act2 = document.getElementById('selAct2');
+            const traitRow = document.getElementById('selTraitRow');
+            const traitText = document.getElementById('selTraitText');
 
             card.style.display = 'block';
             title.textContent = item.name;
-            type.textContent = item.role || item.type || 'Object';
-            status.textContent = item.status || 'Active';
-            dist.textContent = item.isPlanet ? '360 AU' : (item.parent ? 'Orbiting Anchor' : 'Deep Space');
 
             if (item.isPlanet) {
+                const pClassInfo = EXOPLANET_CLASSES[item.classification] || EXOPLANET_CLASSES.barren_rock;
+                type.textContent = `${pClassInfo.code} (${pClassInfo.name})`;
+                status.textContent = (item.id === sim.activePlanetId) ? 'Active Terraforming Target' : 'Surveyed Exoplanet';
+                dist.textContent = `${item.orbitRadius || 360} AU`;
+
+                if (traitRow && traitText) {
+                    traitRow.style.display = 'flex';
+                    traitText.textContent = pClassInfo.trait;
+                    traitText.style.color = pClassInfo.color;
+                }
+
+                if (actTarget) {
+                    actTarget.style.display = (item.id === sim.activePlanetId) ? 'none' : 'block';
+                    actTarget.textContent = `Designate ${item.name} as Target`;
+                    actTarget.onclick = () => {
+                        setActivePlanet(item);
+                        selectEntity(item);
+                    };
+                }
+
                 act1.textContent = 'Focus Planetary Biometrics';
                 act2.textContent = 'Deploy Orbital Satellite';
                 act1.onclick = () => {
+                    setActivePlanet(item);
                     switchTab('tab-terra');
                     playSound('click');
                 };
                 act2.onclick = () => {
                     document.getElementById('btnSolarMirror').click();
                 };
-            } else if (item.role) {
-                act1.textContent = 'Inspect Vessel Telemetry';
-                act2.textContent = 'Order Return to Orbit';
-                act1.onclick = () => {
-                    switchTab('tab-fleet');
-                    playSound('click');
-                };
-                act2.onclick = () => {
-                    item.status = 'Stationary Orbit';
-                    logMsg(`${item.name} repositioned to stable geosynchronous parking orbit.`);
-                    playSound('deploy');
-                };
             } else {
-                act1.textContent = 'Survey Body';
-                act2.textContent = 'Center Camera';
-                act1.onclick = () => {
-                    logMsg(`Telemetry scan completed for ${item.name}.`);
-                    playSound('success');
-                };
-                act2.onclick = () => {
-                    centerOn(item);
-                };
+                if (traitRow) traitRow.style.display = 'none';
+                if (actTarget) actTarget.style.display = 'none';
+
+                type.textContent = item.role || item.type || 'Object';
+                status.textContent = item.status || 'Active';
+                dist.textContent = item.parent ? 'Orbiting Anchor' : 'Deep Space';
+
+                if (item.role) {
+                    act1.textContent = 'Inspect Vessel Telemetry';
+                    act2.textContent = 'Order Return to Orbit';
+                    act1.onclick = () => {
+                        switchTab('tab-fleet');
+                        playSound('click');
+                    };
+                    act2.onclick = () => {
+                        item.status = 'Stationary Orbit';
+                        logMsg(`${item.name} repositioned to stable geosynchronous parking orbit.`);
+                        playSound('deploy');
+                    };
+                } else {
+                    act1.textContent = 'Survey Body';
+                    act2.textContent = 'Center Camera';
+                    act1.onclick = () => {
+                        logMsg(`Telemetry scan completed for ${item.name}.`);
+                        playSound('success');
+                    };
+                    act2.onclick = () => {
+                        centerOn(item);
+                    };
+                }
             }
         }
 
@@ -2615,9 +3770,11 @@
 
         // Navigation Buttons
         document.getElementById('btnCenterPlanet').addEventListener('click', () => {
-            const planet = celestialBodies[1];
-            centerOn(planet);
-            selectEntity(planet);
+            const planet = celestialBodies.find(b => b.id === sim.activePlanetId) || celestialBodies.find(b => b.isPlanet);
+            if (planet) {
+                centerOn(planet);
+                selectEntity(planet);
+            }
             playSound('click');
         });
 
@@ -2626,6 +3783,21 @@
             centerOn(genesis);
             selectEntity(genesis);
             playSound('click');
+        });
+
+        // Star System Switcher & Generator Controls
+        document.getElementById('selSystem').addEventListener('change', (e) => {
+            initAudio();
+            const idx = parseInt(e.target.value);
+            loadStarSystem(idx);
+            playSound('deploy');
+        });
+
+        document.getElementById('btnScanSector').addEventListener('click', () => {
+            initAudio();
+            const newIdx = generateProceduralStarSystem();
+            loadStarSystem(newIdx);
+            playSound('success');
         });
 
         document.getElementById('btnZoomIn').addEventListener('click', () => {
@@ -2985,6 +4157,7 @@
         }
 
         // Start render and initial update
+        loadStarSystem(0);
         calculateHabitability();
         updateUI();
         render();

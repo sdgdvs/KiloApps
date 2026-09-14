@@ -172,10 +172,47 @@ typedef struct {
     float alpha;
 } Asteroid;
 
+// --- Exoplanet Classification Canonical Types ---
+typedef enum {
+    CLASS_BARREN_ROCK = 0,
+    CLASS_TOXIC_GREENHOUSE = 1,
+    CLASS_FROZEN_TUNDRA = 2,
+    CLASS_OCEAN_WORLD = 3,
+    CLASS_PRIMORDIAL_GAIA = 4
+} PlanetClass;
+
+typedef struct {
+    PlanetClass pClass;
+    char code[8];
+    char name[32];
+    char desc[96];
+    COLORREF color;
+    COLORREF badgeBg;
+    COLORREF badgeBorder;
+    float defaultPressure;
+    float defaultTemp;
+    float defaultWater;
+    float defaultOxygen;
+    float defaultMagnet;
+    float minHabitability;
+    float maxHabitability;
+    float mineralMult;
+    float volatileMult;
+} ExoplanetClassInfo;
+
+static ExoplanetClassInfo g_exoplanetClasses[5] = {
+    { CLASS_BARREN_ROCK, "BR-I", "Barren Rock", "Airless metallic crust, heavily cratered, basaltic ridges.", RGB(180, 110, 70), RGB(35, 20, 15), RGB(180, 110, 70), 0.05f, -65.0f, 0.0f, 0.2f, 0.05f, 0.0f, 35.0f, 2.2f, 0.2f },
+    { CLASS_TOXIC_GREENHOUSE, "TG-II", "Toxic Greenhouse", "Supercritical CO2/sulfur atmosphere, runaway thermal mantle.", RGB(245, 158, 11), RGB(40, 25, 5), RGB(245, 158, 11), 3.40f, 185.0f, 2.0f, 0.1f, 0.12f, 0.0f, 25.0f, 1.4f, 1.8f },
+    { CLASS_FROZEN_TUNDRA, "FT-III", "Frozen Tundra", "Sub-zero cryosphere, solid methane glaciers, permafrost sheets.", RGB(56, 189, 248), RGB(10, 25, 45), RGB(56, 189, 248), 0.45f, -88.0f, 68.0f, 2.4f, 0.35f, 5.0f, 55.0f, 0.9f, 2.5f },
+    { CLASS_OCEAN_WORLD, "OW-IV", "Ocean World", "Global hyper-deep pelagic abyss, subterranean thermal vents.", RGB(14, 165, 233), RGB(8, 28, 52), RGB(14, 165, 233), 1.15f, 18.0f, 98.0f, 11.5f, 0.48f, 30.0f, 85.0f, 0.7f, 2.0f },
+    { CLASS_PRIMORDIAL_GAIA, "PG-V", "Primordial Gaia", "Nascent biosphere, proto-chlorophyll flora, stable hydrosphere.", RGB(16, 185, 129), RGB(8, 38, 22), RGB(16, 185, 129), 0.98f, 14.2f, 54.0f, 18.8f, 0.52f, 60.0f, 100.0f, 1.2f, 1.3f }
+};
+
 typedef struct {
     char id[16];
     char name[32];
     char type[32];
+    PlanetClass pClass;
     float orbitRadius;
     float orbitSpeed;
     float angle;
@@ -186,7 +223,38 @@ typedef struct {
     int isPlanet;
     int isMoon;
     int isStation;
+    int parentIndex; // -1 for star / sun-orbiting; index in bodies[] for moon/station
+
+    // Biometrics for this planet
+    float pressure;
+    float temp;
+    float water;
+    float oxygen;
+    float magnet;
+    float habitability;
 } CelestialBody;
+
+#define MAX_SYSTEM_BODIES 12
+#define MAX_STAR_SYSTEMS 8
+
+typedef struct {
+    char id[16];
+    char name[32];
+    char spectralClass[32];
+    char desc[96];
+    int bodyCount;
+    CelestialBody celestials[MAX_SYSTEM_BODIES];
+    int activePlanetIndex;
+    COLORREF starColor;
+    COLORREF starCorona;
+} StarSystem;
+
+static StarSystem g_systems[MAX_STAR_SYSTEMS];
+static int g_systemCount = 0;
+static int g_currentSystem = 0;
+
+#define CURR_SYS (g_systems[g_currentSystem])
+#define bodies (g_systems[g_currentSystem].celestials)
 
 typedef struct {
     char id[16];
@@ -265,8 +333,84 @@ typedef struct {
 static Simulation sim;
 static Star stars[STAR_COUNT];
 static Asteroid asteroids[ASTEROID_COUNT];
-static CelestialBody bodies[4];
+// bodies points to current system bodies via macro above
 static Ship fleet[5];
+
+static void SetLogMsg(const char* txt, int isWarn);
+
+// --- Star System & Planet Management Helpers ---
+static CelestialBody* GetActivePlanet(void) {
+    int i;
+    StarSystem* sys = &CURR_SYS;
+    if (sys->activePlanetIndex >= 0 && sys->activePlanetIndex < sys->bodyCount) {
+        return &sys->celestials[sys->activePlanetIndex];
+    }
+    for (i = 1; i < sys->bodyCount; i++) {
+        if (sys->celestials[i].isPlanet) return &sys->celestials[i];
+    }
+    return &sys->celestials[0];
+}
+
+static void SyncSimToActivePlanet(void) {
+    CelestialBody* p;
+    if (g_systemCount <= 0) return;
+    p = GetActivePlanet();
+    if (p && p->isPlanet) {
+        p->pressure = sim.pressure;
+        p->temp = sim.temp;
+        p->water = sim.water;
+        p->oxygen = sim.oxygen;
+        p->magnet = sim.magnet;
+        p->habitability = sim.habitability;
+    }
+}
+
+static void CalculateHabitability(void);
+
+static void SetActivePlanet(int bodyIdx) {
+    StarSystem* sys = &CURR_SYS;
+    CelestialBody* p;
+    char msg[128];
+    if (bodyIdx < 0 || bodyIdx >= sys->bodyCount) return;
+    if (!sys->celestials[bodyIdx].isPlanet) return;
+
+    SyncSimToActivePlanet();
+    sys->activePlanetIndex = bodyIdx;
+    p = &sys->celestials[bodyIdx];
+
+    sim.pressure = p->pressure;
+    sim.temp = p->temp;
+    sim.water = p->water;
+    sim.oxygen = p->oxygen;
+    sim.magnet = p->magnet;
+    CalculateHabitability();
+
+    sprintf(msg, "Active target set: %s [%s: %s]", p->name, g_exoplanetClasses[p->pClass].code, g_exoplanetClasses[p->pClass].name);
+    SetLogMsg(msg, 0);
+}
+
+static void LoadStarSystem(int sysIdx) {
+    CelestialBody* p;
+    char msg[128];
+    if (g_systemCount <= 0) return;
+    SyncSimToActivePlanet();
+    g_currentSystem = sysIdx % g_systemCount;
+    if (g_currentSystem < 0) g_currentSystem += g_systemCount;
+
+    p = GetActivePlanet();
+    sim.pressure = p->pressure;
+    sim.temp = p->temp;
+    sim.water = p->water;
+    sim.oxygen = p->oxygen;
+    sim.magnet = p->magnet;
+    CalculateHabitability();
+
+    sprintf(msg, "Sector warp: %s (%s) - Target: %s [%s]",
+        CURR_SYS.name, CURR_SYS.spectralClass, p->name, g_exoplanetClasses[p->pClass].code);
+    SetLogMsg(msg, 0);
+}
+
+static void GenerateProceduralStarSystem(void);
 
 static void SetLogMsg(const char* txt, int isWarn) {
     strncpy(sim.logMsg, txt, sizeof(sim.logMsg) - 1);
@@ -312,6 +456,147 @@ static void CalculateHabitability(void) {
     if (total < 0.0f) total = 0.0f;
     if (total > 100.0f) total = 100.0f;
     sim.habitability = total;
+}
+
+static void GenerateProceduralStarSystem(void) {
+    static const char* s_prefixes[] = { "Kepler", "Gliese", "HD", "Trappist", "Wolf", "Ross", "Tau", "Epsilon", "Vega", "Altair" };
+    static const char* s_suffixes[] = { "Prime", "Major", "Australis", "Borealis", "Echo", "Frontier", "Zenith", "Vanguard" };
+    static const char* s_spectrals[] = { "Red Dwarf (M-V)", "Orange K-Type", "Yellow G-Type", "White F-Type", "Blue Subgiant" };
+    static const COLORREF s_starCols[] = { RGB(255, 100, 40), RGB(255, 170, 50), RGB(255, 230, 110), RGB(220, 240, 255), RGB(130, 200, 255) };
+    static const COLORREF s_coronas[] = { RGB(80, 25, 10), RGB(90, 45, 15), RGB(100, 75, 20), RGB(50, 70, 110), RGB(30, 60, 130) };
+    static const char* greekLetters[] = { "b", "c", "d", "e", "f" };
+
+    int sysSlot, pIdx, sIdx, spIdx, numPlanets, bCount, targetPlanet, p, cType;
+    float orbitDist, oldP, oldT, oldW, oldO, oldM;
+    StarSystem* sys;
+    CelestialBody* star;
+    CelestialBody* pl;
+    CelestialBody* mn;
+    CelestialBody* st;
+    ExoplanetClassInfo* cInfo;
+    char log[128];
+
+    SyncSimToActivePlanet();
+
+    sysSlot = g_systemCount;
+    if (sysSlot >= MAX_STAR_SYSTEMS) {
+        sysSlot = MAX_STAR_SYSTEMS - 1; // overwrite last slot
+    } else {
+        g_systemCount++;
+    }
+
+    sys = &g_systems[sysSlot];
+    memset(sys, 0, sizeof(StarSystem));
+
+    pIdx = rand() % 10;
+    sIdx = rand() % 8;
+    spIdx = rand() % 5;
+    sprintf(sys->id, "proc_%d", rand() % 9000 + 1000);
+    sprintf(sys->name, "%s-%d %s", s_prefixes[pIdx], (rand() % 890) + 100, s_suffixes[sIdx]);
+    strncpy(sys->spectralClass, s_spectrals[spIdx], sizeof(sys->spectralClass) - 1);
+    sys->starColor = s_starCols[spIdx];
+    sys->starCorona = s_coronas[spIdx];
+
+    // Body 0: Central Star
+    star = &sys->celestials[0];
+    strcpy(star->id, "star");
+    sprintf(star->name, "%s Helios", sys->name);
+    strcpy(star->type, sys->spectralClass);
+    star->orbitRadius = 0.0f;
+    star->orbitSpeed = 0.0f;
+    star->angle = 0.0f;
+    star->radius = 42.0f + (float)(rand() % 16);
+    star->color = sys->starColor;
+    star->isStar = 1;
+    star->parentIndex = -1;
+
+    // Generate 3 to 5 exoplanets
+    numPlanets = 3 + (rand() % 3);
+    bCount = 1;
+    orbitDist = 200.0f + (float)(rand() % 40);
+    targetPlanet = 1;
+
+    for (p = 0; p < numPlanets && bCount < MAX_SYSTEM_BODIES - 2; p++) {
+        pl = &sys->celestials[bCount];
+        cType = rand() % 5; // one of 5 canonical exoplanet classes
+        cInfo = &g_exoplanetClasses[cType];
+
+        sprintf(pl->id, "p_%d", p);
+        sprintf(pl->name, "%s %s", sys->name, greekLetters[p]);
+        sprintf(pl->type, "%s (%s)", cInfo->name, cInfo->code);
+        pl->pClass = (PlanetClass)cType;
+        pl->orbitRadius = orbitDist;
+        pl->orbitSpeed = (0.05f + (float)(rand() % 50) / 1000.0f) * ((p % 2 == 0) ? 1.0f : 0.9f);
+        pl->angle = ((float)rand() / (float)RAND_MAX) * 6.28f;
+        pl->radius = 24.0f + (float)(rand() % 18);
+        pl->color = cInfo->color;
+        pl->isPlanet = 1;
+        pl->parentIndex = 0;
+
+        pl->pressure = cInfo->defaultPressure + ((float)(rand() % 30) - 15.0f) * 0.01f;
+        if (pl->pressure < 0.01f) pl->pressure = 0.01f;
+        pl->temp = cInfo->defaultTemp + ((float)(rand() % 40) - 20.0f);
+        pl->water = cInfo->defaultWater + ((float)(rand() % 20) - 10.0f);
+        if (pl->water < 0.0f) pl->water = 0.0f;
+        if (pl->water > 100.0f) pl->water = 100.0f;
+        pl->oxygen = cInfo->defaultOxygen + ((float)(rand() % 30) - 15.0f) * 0.1f;
+        if (pl->oxygen < 0.0f) pl->oxygen = 0.0f;
+        pl->magnet = cInfo->defaultMagnet + ((float)(rand() % 20) - 10.0f) * 0.01f;
+        if (pl->magnet < 0.02f) pl->magnet = 0.02f;
+
+        oldP = sim.pressure; oldT = sim.temp; oldW = sim.water; oldO = sim.oxygen; oldM = sim.magnet;
+        sim.pressure = pl->pressure; sim.temp = pl->temp; sim.water = pl->water; sim.oxygen = pl->oxygen; sim.magnet = pl->magnet;
+        CalculateHabitability();
+        pl->habitability = sim.habitability;
+        sim.pressure = oldP; sim.temp = oldT; sim.water = oldW; sim.oxygen = oldO; sim.magnet = oldM;
+
+        if (cType == CLASS_PRIMORDIAL_GAIA || cType == CLASS_OCEAN_WORLD || targetPlanet == 1) {
+            targetPlanet = bCount;
+        }
+
+        bCount++;
+        orbitDist += 130.0f + (float)(rand() % 60);
+    }
+
+    // Add 1 Moon orbiting target planet
+    if (bCount < MAX_SYSTEM_BODIES) {
+        mn = &sys->celestials[bCount];
+        sprintf(mn->id, "moon_0");
+        sprintf(mn->name, "%s-I", sys->celestials[targetPlanet].name);
+        strcpy(mn->type, "Silicate Moon");
+        mn->orbitRadius = 78.0f;
+        mn->orbitSpeed = 0.28f;
+        mn->angle = 1.0f;
+        mn->radius = 9.0f;
+        mn->color = RGB(210, 220, 235);
+        mn->isMoon = 1;
+        mn->parentIndex = targetPlanet;
+        bCount++;
+    }
+
+    // Add 1 Orbital Station orbiting target planet
+    if (bCount < MAX_SYSTEM_BODIES) {
+        st = &sys->celestials[bCount];
+        sprintf(st->id, "st_0");
+        sprintf(st->name, "Outpost %s", s_suffixes[sIdx]);
+        strcpy(st->type, "Orbital Waystation");
+        st->orbitRadius = 58.0f;
+        st->orbitSpeed = -0.22f;
+        st->angle = 2.8f;
+        st->radius = 7.0f;
+        st->color = COLOR_EMERALD;
+        st->isStation = 1;
+        st->parentIndex = targetPlanet;
+        bCount++;
+    }
+
+    sys->bodyCount = bCount;
+    sys->activePlanetIndex = targetPlanet;
+
+    LoadStarSystem(sysSlot);
+    sprintf(log, "Procedural Scan: %s discovered (%d Exoplanets classified).", sys->name, numPlanets);
+    SetLogMsg(log, 0);
+    PlaySoundFx(SFX_SUCCESS);
 }
 
 static void SimTick(void) {
@@ -434,50 +719,342 @@ static void InitSimulation(void) {
         asteroids[i].alpha = ((float)(rand() % 60) / 100.0f) + 0.4f;
     }
 
-    // Celestial Bodies
-    // 0: Sun
-    strcpy(bodies[0].id, "sun");
-    strcpy(bodies[0].name, "Kepler-186 Helios");
-    strcpy(bodies[0].type, "Red Dwarf Star");
-    bodies[0].orbitRadius = 0;
-    bodies[0].orbitSpeed = 0;
-    bodies[0].angle = 0;
-    bodies[0].radius = 48.0f;
-    bodies[0].color = COLOR_ORANGE;
-    bodies[0].isStar = 1;
+    // Initialize 4 Star Systems Catalog
+    g_systemCount = 4;
+    memset(g_systems, 0, sizeof(g_systems));
 
-    // 1: Aethelgard Prime
-    strcpy(bodies[1].id, "aethelgard");
-    strcpy(bodies[1].name, "Aethelgard Prime");
-    strcpy(bodies[1].type, "Class-IV Exoplanet");
-    bodies[1].orbitRadius = 350.0f;
-    bodies[1].orbitSpeed = 0.08f;
-    bodies[1].angle = 0.4f;
-    bodies[1].radius = 36.0f;
-    bodies[1].color = COLOR_BLUE;
-    bodies[1].isPlanet = 1;
+    // SYSTEM 0: Kepler-186
+    strcpy(g_systems[0].id, "kepler186");
+    strcpy(g_systems[0].name, "Kepler-186");
+    strcpy(g_systems[0].spectralClass, "Red Dwarf (M-V)");
+    strcpy(g_systems[0].desc, "Anchor frontier sector with habitable-zone rocky exoplanets.");
+    g_systems[0].starColor = COLOR_ORANGE;
+    g_systems[0].starCorona = RGB(120, 45, 10);
+    g_systems[0].bodyCount = 5;
+    g_systems[0].activePlanetIndex = 2; // Aethelgard Prime
 
-    // 2: Boreas Minor Moon
-    strcpy(bodies[2].id, "boreas");
-    strcpy(bodies[2].name, "Boreas Minor");
-    strcpy(bodies[2].type, "Frozen Ice Moon");
-    bodies[2].orbitRadius = 88.0f;
-    bodies[2].orbitSpeed = 0.25f;
-    bodies[2].angle = 1.2f;
-    bodies[2].radius = 11.0f;
-    bodies[2].color = RGB(224, 242, 254);
-    bodies[2].isMoon = 1;
+    // Star
+    strcpy(g_systems[0].celestials[0].id, "k_sun");
+    strcpy(g_systems[0].celestials[0].name, "Kepler-186 Helios");
+    strcpy(g_systems[0].celestials[0].type, "Red Dwarf Star");
+    g_systems[0].celestials[0].radius = 48.0f;
+    g_systems[0].celestials[0].color = COLOR_ORANGE;
+    g_systems[0].celestials[0].isStar = 1;
+    g_systems[0].celestials[0].parentIndex = -1;
 
-    // 3: Zephyr Station
-    strcpy(bodies[3].id, "zephyr");
-    strcpy(bodies[3].name, "Zephyr Station");
-    strcpy(bodies[3].type, "Orbital Shipyard");
-    bodies[3].orbitRadius = 64.0f;
-    bodies[3].orbitSpeed = -0.18f;
-    bodies[3].angle = 3.0f;
-    bodies[3].radius = 7.0f;
-    bodies[3].color = COLOR_EMERALD;
-    bodies[3].isStation = 1;
+    // Kepler-186b (Barren Rock)
+    strcpy(g_systems[0].celestials[1].id, "k_b");
+    strcpy(g_systems[0].celestials[1].name, "Kepler-186b");
+    strcpy(g_systems[0].celestials[1].type, "Barren Rock (BR-I)");
+    g_systems[0].celestials[1].pClass = CLASS_BARREN_ROCK;
+    g_systems[0].celestials[1].orbitRadius = 210.0f;
+    g_systems[0].celestials[1].orbitSpeed = 0.16f;
+    g_systems[0].celestials[1].angle = 1.8f;
+    g_systems[0].celestials[1].radius = 26.0f;
+    g_systems[0].celestials[1].color = RGB(180, 110, 70);
+    g_systems[0].celestials[1].isPlanet = 1;
+    g_systems[0].celestials[1].parentIndex = 0;
+    g_systems[0].celestials[1].pressure = 0.04f;
+    g_systems[0].celestials[1].temp = 145.0f;
+    g_systems[0].celestials[1].water = 0.0f;
+    g_systems[0].celestials[1].oxygen = 0.0f;
+    g_systems[0].celestials[1].magnet = 0.08f;
+    g_systems[0].celestials[1].habitability = 2.4f;
+
+    // Aethelgard Prime (Barren Rock / Terraforming Target)
+    strcpy(g_systems[0].celestials[2].id, "aethelgard");
+    strcpy(g_systems[0].celestials[2].name, "Aethelgard Prime");
+    strcpy(g_systems[0].celestials[2].type, "Barren Rock (BR-I)");
+    g_systems[0].celestials[2].pClass = CLASS_BARREN_ROCK;
+    g_systems[0].celestials[2].orbitRadius = 350.0f;
+    g_systems[0].celestials[2].orbitSpeed = 0.08f;
+    g_systems[0].celestials[2].angle = 0.4f;
+    g_systems[0].celestials[2].radius = 36.0f;
+    g_systems[0].celestials[2].color = COLOR_BLUE;
+    g_systems[0].celestials[2].isPlanet = 1;
+    g_systems[0].celestials[2].parentIndex = 0;
+    g_systems[0].celestials[2].pressure = sim.pressure;
+    g_systems[0].celestials[2].temp = sim.temp;
+    g_systems[0].celestials[2].water = sim.water;
+    g_systems[0].celestials[2].oxygen = sim.oxygen;
+    g_systems[0].celestials[2].magnet = sim.magnet;
+    g_systems[0].celestials[2].habitability = sim.habitability;
+
+    // Boreas Minor Moon (Orbiting Aethelgard)
+    strcpy(g_systems[0].celestials[3].id, "boreas");
+    strcpy(g_systems[0].celestials[3].name, "Boreas Minor");
+    strcpy(g_systems[0].celestials[3].type, "Frozen Ice Moon");
+    g_systems[0].celestials[3].orbitRadius = 88.0f;
+    g_systems[0].celestials[3].orbitSpeed = 0.25f;
+    g_systems[0].celestials[3].angle = 1.2f;
+    g_systems[0].celestials[3].radius = 11.0f;
+    g_systems[0].celestials[3].color = RGB(224, 242, 254);
+    g_systems[0].celestials[3].isMoon = 1;
+    g_systems[0].celestials[3].parentIndex = 2;
+
+    // Zephyr Station (Orbiting Aethelgard)
+    strcpy(g_systems[0].celestials[4].id, "zephyr");
+    strcpy(g_systems[0].celestials[4].name, "Zephyr Station");
+    strcpy(g_systems[0].celestials[4].type, "Orbital Shipyard");
+    g_systems[0].celestials[4].orbitRadius = 64.0f;
+    g_systems[0].celestials[4].orbitSpeed = -0.18f;
+    g_systems[0].celestials[4].angle = 3.0f;
+    g_systems[0].celestials[4].radius = 7.0f;
+    g_systems[0].celestials[4].color = COLOR_EMERALD;
+    g_systems[0].celestials[4].isStation = 1;
+    g_systems[0].celestials[4].parentIndex = 2;
+
+    // SYSTEM 1: TRAPPIST-1
+    strcpy(g_systems[1].id, "trappist1");
+    strcpy(g_systems[1].name, "TRAPPIST-1");
+    strcpy(g_systems[1].spectralClass, "Ultra-Cool Dwarf (M-VIII)");
+    strcpy(g_systems[1].desc, "Compact resonant system with 3 habitable-zone worlds.");
+    g_systems[1].starColor = RGB(255, 90, 30);
+    g_systems[1].starCorona = RGB(100, 30, 10);
+    g_systems[1].bodyCount = 5;
+    g_systems[1].activePlanetIndex = 2; // Trappist-1d Primordial Gaia
+
+    strcpy(g_systems[1].celestials[0].id, "t_sun");
+    strcpy(g_systems[1].celestials[0].name, "Trappist Helios");
+    strcpy(g_systems[1].celestials[0].type, "Ultra-Cool Red Dwarf");
+    g_systems[1].celestials[0].radius = 42.0f;
+    g_systems[1].celestials[0].color = RGB(255, 90, 30);
+    g_systems[1].celestials[0].isStar = 1;
+    g_systems[1].celestials[0].parentIndex = -1;
+
+    strcpy(g_systems[1].celestials[1].id, "t_b");
+    strcpy(g_systems[1].celestials[1].name, "Trappist-1b");
+    strcpy(g_systems[1].celestials[1].type, "Toxic Greenhouse (TG-II)");
+    g_systems[1].celestials[1].pClass = CLASS_TOXIC_GREENHOUSE;
+    g_systems[1].celestials[1].orbitRadius = 200.0f;
+    g_systems[1].celestials[1].orbitSpeed = 0.14f;
+    g_systems[1].celestials[1].angle = 0.8f;
+    g_systems[1].celestials[1].radius = 28.0f;
+    g_systems[1].celestials[1].color = RGB(245, 158, 11);
+    g_systems[1].celestials[1].isPlanet = 1;
+    g_systems[1].celestials[1].parentIndex = 0;
+    g_systems[1].celestials[1].pressure = 3.65f;
+    g_systems[1].celestials[1].temp = 195.0f;
+    g_systems[1].celestials[1].water = 1.5f;
+    g_systems[1].celestials[1].oxygen = 0.0f;
+    g_systems[1].celestials[1].magnet = 0.12f;
+    g_systems[1].celestials[1].habitability = 1.8f;
+
+    strcpy(g_systems[1].celestials[2].id, "t_d");
+    strcpy(g_systems[1].celestials[2].name, "Trappist-1d");
+    strcpy(g_systems[1].celestials[2].type, "Primordial Gaia (PG-V)");
+    g_systems[1].celestials[2].pClass = CLASS_PRIMORDIAL_GAIA;
+    g_systems[1].celestials[2].orbitRadius = 310.0f;
+    g_systems[1].celestials[2].orbitSpeed = 0.09f;
+    g_systems[1].celestials[2].angle = 2.4f;
+    g_systems[1].celestials[2].radius = 34.0f;
+    g_systems[1].celestials[2].color = RGB(16, 185, 129);
+    g_systems[1].celestials[2].isPlanet = 1;
+    g_systems[1].celestials[2].parentIndex = 0;
+    g_systems[1].celestials[2].pressure = 1.05f;
+    g_systems[1].celestials[2].temp = 16.5f;
+    g_systems[1].celestials[2].water = 58.0f;
+    g_systems[1].celestials[2].oxygen = 19.2f;
+    g_systems[1].celestials[2].magnet = 0.54f;
+    g_systems[1].celestials[2].habitability = 89.2f;
+
+    strcpy(g_systems[1].celestials[3].id, "t_e");
+    strcpy(g_systems[1].celestials[3].name, "Trappist-1e");
+    strcpy(g_systems[1].celestials[3].type, "Ocean World (OW-IV)");
+    g_systems[1].celestials[3].pClass = CLASS_OCEAN_WORLD;
+    g_systems[1].celestials[3].orbitRadius = 430.0f;
+    g_systems[1].celestials[3].orbitSpeed = 0.06f;
+    g_systems[1].celestials[3].angle = 4.1f;
+    g_systems[1].celestials[3].radius = 32.0f;
+    g_systems[1].celestials[3].color = RGB(14, 165, 233);
+    g_systems[1].celestials[3].isPlanet = 1;
+    g_systems[1].celestials[3].parentIndex = 0;
+    g_systems[1].celestials[3].pressure = 1.20f;
+    g_systems[1].celestials[3].temp = 12.0f;
+    g_systems[1].celestials[3].water = 96.0f;
+    g_systems[1].celestials[3].oxygen = 10.5f;
+    g_systems[1].celestials[3].magnet = 0.46f;
+    g_systems[1].celestials[3].habitability = 68.4f;
+
+    strcpy(g_systems[1].celestials[4].id, "t_nodus");
+    strcpy(g_systems[1].celestials[4].name, "Nodus Station");
+    strcpy(g_systems[1].celestials[4].type, "Orbital Haven");
+    g_systems[1].celestials[4].orbitRadius = 60.0f;
+    g_systems[1].celestials[4].orbitSpeed = 0.22f;
+    g_systems[1].celestials[4].angle = 0.5f;
+    g_systems[1].celestials[4].radius = 7.0f;
+    g_systems[1].celestials[4].color = COLOR_EMERALD;
+    g_systems[1].celestials[4].isStation = 1;
+    g_systems[1].celestials[4].parentIndex = 2;
+
+    // SYSTEM 2: Gliese-667C
+    strcpy(g_systems[2].id, "gliese667c");
+    strcpy(g_systems[2].name, "Gliese-667C");
+    strcpy(g_systems[2].spectralClass, "Red Dwarf Star");
+    strcpy(g_systems[2].desc, "Trinary system companion with deep abyssal ocean worlds.");
+    g_systems[2].starColor = RGB(255, 120, 50);
+    g_systems[2].starCorona = RGB(110, 40, 15);
+    g_systems[2].bodyCount = 5;
+    g_systems[2].activePlanetIndex = 2; // Gliese-667Cc Ocean World
+
+    strcpy(g_systems[2].celestials[0].id, "g_sun");
+    strcpy(g_systems[2].celestials[0].name, "Gliese Prime");
+    strcpy(g_systems[2].celestials[0].type, "Red Dwarf Star");
+    g_systems[2].celestials[0].radius = 44.0f;
+    g_systems[2].celestials[0].color = RGB(255, 120, 50);
+    g_systems[2].celestials[0].isStar = 1;
+    g_systems[2].celestials[0].parentIndex = -1;
+
+    strcpy(g_systems[2].celestials[1].id, "g_b");
+    strcpy(g_systems[2].celestials[1].name, "Gliese-667Cb");
+    strcpy(g_systems[2].celestials[1].type, "Toxic Greenhouse (TG-II)");
+    g_systems[2].celestials[1].pClass = CLASS_TOXIC_GREENHOUSE;
+    g_systems[2].celestials[1].orbitRadius = 200.0f;
+    g_systems[2].celestials[1].orbitSpeed = 0.15f;
+    g_systems[2].celestials[1].angle = 3.2f;
+    g_systems[2].celestials[1].radius = 30.0f;
+    g_systems[2].celestials[1].color = RGB(245, 158, 11);
+    g_systems[2].celestials[1].isPlanet = 1;
+    g_systems[2].celestials[1].parentIndex = 0;
+    g_systems[2].celestials[1].pressure = 2.90f;
+    g_systems[2].celestials[1].temp = 160.0f;
+    g_systems[2].celestials[1].water = 4.0f;
+    g_systems[2].celestials[1].oxygen = 0.2f;
+    g_systems[2].celestials[1].magnet = 0.15f;
+    g_systems[2].celestials[1].habitability = 4.2f;
+
+    strcpy(g_systems[2].celestials[2].id, "g_c");
+    strcpy(g_systems[2].celestials[2].name, "Gliese-667Cc");
+    strcpy(g_systems[2].celestials[2].type, "Ocean World (OW-IV)");
+    g_systems[2].celestials[2].pClass = CLASS_OCEAN_WORLD;
+    g_systems[2].celestials[2].orbitRadius = 320.0f;
+    g_systems[2].celestials[2].orbitSpeed = 0.08f;
+    g_systems[2].celestials[2].angle = 1.1f;
+    g_systems[2].celestials[2].radius = 35.0f;
+    g_systems[2].celestials[2].color = RGB(14, 165, 233);
+    g_systems[2].celestials[2].isPlanet = 1;
+    g_systems[2].celestials[2].parentIndex = 0;
+    g_systems[2].celestials[2].pressure = 1.12f;
+    g_systems[2].celestials[2].temp = 22.0f;
+    g_systems[2].celestials[2].water = 99.0f;
+    g_systems[2].celestials[2].oxygen = 12.8f;
+    g_systems[2].celestials[2].magnet = 0.50f;
+    g_systems[2].celestials[2].habitability = 74.5f;
+
+    strcpy(g_systems[2].celestials[3].id, "g_e");
+    strcpy(g_systems[2].celestials[3].name, "Gliese-667Ce");
+    strcpy(g_systems[2].celestials[3].type, "Frozen Tundra (FT-III)");
+    g_systems[2].celestials[3].pClass = CLASS_FROZEN_TUNDRA;
+    g_systems[2].celestials[3].orbitRadius = 440.0f;
+    g_systems[2].celestials[3].orbitSpeed = 0.05f;
+    g_systems[2].celestials[3].angle = 5.2f;
+    g_systems[2].celestials[3].radius = 31.0f;
+    g_systems[2].celestials[3].color = RGB(56, 189, 248);
+    g_systems[2].celestials[3].isPlanet = 1;
+    g_systems[2].celestials[3].parentIndex = 0;
+    g_systems[2].celestials[3].pressure = 0.40f;
+    g_systems[2].celestials[3].temp = -78.0f;
+    g_systems[2].celestials[3].water = 75.0f;
+    g_systems[2].celestials[3].oxygen = 3.5f;
+    g_systems[2].celestials[3].magnet = 0.30f;
+    g_systems[2].celestials[3].habitability = 22.1f;
+
+    strcpy(g_systems[2].celestials[4].id, "g_mn");
+    strcpy(g_systems[2].celestials[4].name, "Astraea Moon");
+    strcpy(g_systems[2].celestials[4].type, "Silicate Moon");
+    g_systems[2].celestials[4].orbitRadius = 76.0f;
+    g_systems[2].celestials[4].orbitSpeed = 0.26f;
+    g_systems[2].celestials[4].angle = 2.0f;
+    g_systems[2].celestials[4].radius = 10.0f;
+    g_systems[2].celestials[4].color = RGB(215, 225, 240);
+    g_systems[2].celestials[4].isMoon = 1;
+    g_systems[2].celestials[4].parentIndex = 2;
+
+    // SYSTEM 3: Tau Ceti
+    strcpy(g_systems[3].id, "tauceti");
+    strcpy(g_systems[3].name, "Tau Ceti");
+    strcpy(g_systems[3].spectralClass, "Yellow Dwarf (G-VIII)");
+    strcpy(g_systems[3].desc, "Sol-like system with massive ice sheets and cryo-reservoirs.");
+    g_systems[3].starColor = RGB(255, 230, 110);
+    g_systems[3].starCorona = RGB(120, 90, 25);
+    g_systems[3].bodyCount = 5;
+    g_systems[3].activePlanetIndex = 2; // Tau Ceti-f Frozen Tundra
+
+    strcpy(g_systems[3].celestials[0].id, "tc_sun");
+    strcpy(g_systems[3].celestials[0].name, "Tau Ceti Helios");
+    strcpy(g_systems[3].celestials[0].type, "Yellow Dwarf Star");
+    g_systems[3].celestials[0].radius = 50.0f;
+    g_systems[3].celestials[0].color = RGB(255, 230, 110);
+    g_systems[3].celestials[0].isStar = 1;
+    g_systems[3].celestials[0].parentIndex = -1;
+
+    strcpy(g_systems[3].celestials[1].id, "tc_e");
+    strcpy(g_systems[3].celestials[1].name, "Tau Ceti-e");
+    strcpy(g_systems[3].celestials[1].type, "Toxic Greenhouse (TG-II)");
+    g_systems[3].celestials[1].pClass = CLASS_TOXIC_GREENHOUSE;
+    g_systems[3].celestials[1].orbitRadius = 220.0f;
+    g_systems[3].celestials[1].orbitSpeed = 0.13f;
+    g_systems[3].celestials[1].angle = 0.3f;
+    g_systems[3].celestials[1].radius = 32.0f;
+    g_systems[3].celestials[1].color = RGB(245, 158, 11);
+    g_systems[3].celestials[1].isPlanet = 1;
+    g_systems[3].celestials[1].parentIndex = 0;
+    g_systems[3].celestials[1].pressure = 3.10f;
+    g_systems[3].celestials[1].temp = 175.0f;
+    g_systems[3].celestials[1].water = 3.0f;
+    g_systems[3].celestials[1].oxygen = 0.1f;
+    g_systems[3].celestials[1].magnet = 0.14f;
+    g_systems[3].celestials[1].habitability = 3.5f;
+
+    strcpy(g_systems[3].celestials[2].id, "tc_f");
+    strcpy(g_systems[3].celestials[2].name, "Tau Ceti-f");
+    strcpy(g_systems[3].celestials[2].type, "Frozen Tundra (FT-III)");
+    g_systems[3].celestials[2].pClass = CLASS_FROZEN_TUNDRA;
+    g_systems[3].celestials[2].orbitRadius = 360.0f;
+    g_systems[3].celestials[2].orbitSpeed = 0.07f;
+    g_systems[3].celestials[2].angle = 2.7f;
+    g_systems[3].celestials[2].radius = 36.0f;
+    g_systems[3].celestials[2].color = RGB(56, 189, 248);
+    g_systems[3].celestials[2].isPlanet = 1;
+    g_systems[3].celestials[2].parentIndex = 0;
+    g_systems[3].celestials[2].pressure = 0.52f;
+    g_systems[3].celestials[2].temp = -84.0f;
+    g_systems[3].celestials[2].water = 72.0f;
+    g_systems[3].celestials[2].oxygen = 2.8f;
+    g_systems[3].celestials[2].magnet = 0.38f;
+    g_systems[3].celestials[2].habitability = 28.5f;
+
+    strcpy(g_systems[3].celestials[3].id, "tc_g");
+    strcpy(g_systems[3].celestials[3].name, "Tau Ceti-g");
+    strcpy(g_systems[3].celestials[3].type, "Barren Rock (BR-I)");
+    g_systems[3].celestials[3].pClass = CLASS_BARREN_ROCK;
+    g_systems[3].celestials[3].orbitRadius = 480.0f;
+    g_systems[3].celestials[3].orbitSpeed = 0.05f;
+    g_systems[3].celestials[3].angle = 4.8f;
+    g_systems[3].celestials[3].radius = 26.0f;
+    g_systems[3].celestials[3].color = RGB(180, 110, 70);
+    g_systems[3].celestials[3].isPlanet = 1;
+    g_systems[3].celestials[3].parentIndex = 0;
+    g_systems[3].celestials[3].pressure = 0.03f;
+    g_systems[3].celestials[3].temp = -120.0f;
+    g_systems[3].celestials[3].water = 0.0f;
+    g_systems[3].celestials[3].oxygen = 0.0f;
+    g_systems[3].celestials[3].magnet = 0.04f;
+    g_systems[3].celestials[3].habitability = 0.8f;
+
+    strcpy(g_systems[3].celestials[4].id, "tc_depot");
+    strcpy(g_systems[3].celestials[4].name, "Horizon Depot");
+    strcpy(g_systems[3].celestials[4].type, "Orbital Waystation");
+    g_systems[3].celestials[4].orbitRadius = 64.0f;
+    g_systems[3].celestials[4].orbitSpeed = -0.20f;
+    g_systems[3].celestials[4].angle = 1.6f;
+    g_systems[3].celestials[4].radius = 7.0f;
+    g_systems[3].celestials[4].color = COLOR_EMERALD;
+    g_systems[3].celestials[4].isStation = 1;
+    g_systems[3].celestials[4].parentIndex = 2;
+
+    // Load Default System 0 (Kepler-186)
+    g_currentSystem = 0;
 
     // Fleet Ships
     strcpy(fleet[0].id, "genesis");
@@ -577,35 +1154,284 @@ static void DrawProgressBar(HDC hdc, int x, int y, int w, int h, float percent, 
 
 // --- Procedural Sprite Rendering Engine (GDI) ---
 
-static void DrawPlanetGDI(HDC hdc, int px, int py, int pr, int sunX, int sunY, float z) {
-    float sunAngle = atan2f((float)(sunY - py), (float)(sunX - px));
+// --- Procedural Exoplanet Visual Shaders (GDI) ---
 
-    // A. Dynamic Multi-Tier Atmospheric Rayleigh & Mie Scattering Corona
-    COLORREF cHaloOuter, cHaloMid, cHaloInner;
-    if (sim.oxygen > 15.0f) {
-        // Biosphere: Rich Gaia cyan-emerald glow
-        cHaloOuter = RGB(0, 100, 110);
-        cHaloMid   = RGB(0, 180, 190);
-        cHaloInner = RGB(0, 240, 255);
-    } else if (sim.temp < -20.0f) {
-        // Glaciated: Electric violet & pale ice-blue
-        cHaloOuter = RGB(80, 40, 120);
-        cHaloMid   = RGB(120, 80, 190);
-        cHaloInner = RGB(160, 200, 255);
-    } else {
-        // Barren Greenhouse: Amber-copper Rayleigh haze
-        cHaloOuter = RGB(90, 45, 10);
-        cHaloMid   = RGB(180, 90, 20);
-        cHaloInner = RGB(245, 158, 11);
+static void DrawBarrenRockGDI(HDC hdc, CelestialBody* b, int px, int py, int pr, int sunX, int sunY, float z, float rot) {
+    // 1. Basaltic Regolith Crust
+    FillSolidRect(hdc, px - pr, py - pr, pr * 2, pr * 2, RGB(88, 62, 50));
+
+    // 2. Dark Basaltic Maria Plains
+    HBRUSH hMareBrush = CreateSolidBrush(RGB(55, 38, 30));
+    HPEN hMarePen = CreatePen(PS_SOLID, 1, RGB(55, 38, 30));
+    HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hMareBrush);
+    HPEN hOldP = (HPEN)SelectObject(hdc, hMarePen);
+
+    for (int i = 0; i < 3; i++) {
+        float ang = rot * 0.4f + i * 2.1f;
+        int mx = px + (int)(sinf(ang) * pr * 0.55f);
+        int my = py + (int)(((i % 2 == 0) ? -0.25f : 0.25f) * pr);
+        int mw = (int)(pr * 0.35f * fabsf(cosf(ang)) + 4);
+        int mh = (int)(pr * 0.25f);
+        Ellipse(hdc, mx - mw, my - mh, mx + mw, my + mh);
     }
 
+    // 3. Impact Craters with 3D Lit Rims
+    HPEN hRimPen = CreatePen(PS_SOLID, 1, RGB(180, 145, 120));
+    HBRUSH hBowlBrush = CreateSolidBrush(RGB(35, 24, 18));
+    SelectObject(hdc, hRimPen);
+    SelectObject(hdc, hBowlBrush);
+
+    for (int c = 0; c < 5; c++) {
+        float cAng = rot * 0.5f + c * 1.35f;
+        int cx = px + (int)(sinf(cAng) * pr * 0.65f);
+        int cy = py + (int)(((c * 3) % 7 - 3) * 0.22f * pr);
+        int cr = (int)(pr * (0.12f + (c % 3) * 0.04f));
+        if (cr < 3) cr = 3;
+        Ellipse(hdc, cx - cr, cy - cr, cx + cr, cy + cr);
+    }
+
+    // 4. Equatorial Fracture Canyon / Rift
+    HPEN hRiftPen = CreatePen(PS_SOLID, 1, RGB(38, 26, 20));
+    SelectObject(hdc, hRiftPen);
+    int ry = py + (int)(pr * 0.1f);
+    MoveToEx(hdc, px - (int)(pr * 0.7f), ry, NULL);
+    LineTo(hdc, px - (int)(pr * 0.2f), ry + (int)(pr * 0.08f));
+    LineTo(hdc, px + (int)(pr * 0.3f), ry - (int)(pr * 0.05f));
+    LineTo(hdc, px + (int)(pr * 0.75f), ry + (int)(pr * 0.04f));
+
+    SelectObject(hdc, hOldB);
+    SelectObject(hdc, hOldP);
+    DeleteObject(hMareBrush);
+    DeleteObject(hMarePen);
+    DeleteObject(hRimPen);
+    DeleteObject(hBowlBrush);
+    DeleteObject(hRiftPen);
+}
+
+static void DrawToxicGreenhouseGDI(HDC hdc, CelestialBody* b, int px, int py, int pr, int sunX, int sunY, float z, float rot) {
+    // 1. Superheated Scorched Mantle
+    FillSolidRect(hdc, px - pr, py - pr, pr * 2, pr * 2, RGB(160, 70, 15));
+
+    // 2. Glowing Magma Veins & Thermal Fissures
+    HPEN hMagmaPen = CreatePen(PS_SOLID, 2, RGB(255, 95, 20));
+    HPEN hOldP = (HPEN)SelectObject(hdc, hMagmaPen);
+    for (int v = 0; v < 3; v++) {
+        int vy = py + (int)(((v - 1) * 0.45f) * pr);
+        MoveToEx(hdc, px - (int)(pr * 0.6f), vy, NULL);
+        LineTo(hdc, px - (int)(pr * 0.1f), vy + (int)(sinf(rot * 2.0f + v) * pr * 0.15f));
+        LineTo(hdc, px + (int)(pr * 0.5f), vy - (int)(cosf(rot * 2.0f + v) * pr * 0.12f));
+    }
+    SelectObject(hdc, hOldP);
+    DeleteObject(hMagmaPen);
+
+    // 3. Dense Supercritical Sulfur / Acid Cloud Bands
+    COLORREF bandCols[4] = { RGB(225, 155, 30), RGB(190, 115, 18), RGB(245, 190, 55), RGB(170, 95, 12) };
+    for (int i = 0; i < 4; i++) {
+        int by = py + (int)(((i - 1.5f) * 0.45f) * pr);
+        int bh = (int)(pr * 0.32f);
+        HBRUSH hBandBr = CreateSolidBrush(bandCols[i]);
+        HPEN hBandP = CreatePen(PS_SOLID, 1, bandCols[i]);
+        SelectObject(hdc, hBandBr);
+        SelectObject(hdc, hBandP);
+        Ellipse(hdc, px - pr - 5, by - bh / 2, px + pr + 5, by + bh / 2);
+        DeleteObject(hBandBr);
+        DeleteObject(hBandP);
+    }
+
+    // 4. Great Acid Storm Vortex
+    int svX = px + (int)(sinf(rot * 0.7f) * pr * 0.45f);
+    int svY = py + (int)(pr * 0.18f);
+    int sw = (int)(pr * 0.35f);
+    int sh = (int)(pr * 0.22f);
+    HBRUSH hStormBr = CreateSolidBrush(RGB(245, 95, 25));
+    HPEN hStormP = CreatePen(PS_SOLID, 2, RGB(255, 185, 40));
+    SelectObject(hdc, hStormBr);
+    SelectObject(hdc, hStormP);
+    Ellipse(hdc, svX - sw, svY - sh, svX + sw, svY + sh);
+    DeleteObject(hStormBr);
+    DeleteObject(hStormP);
+}
+
+static void DrawFrozenTundraGDI(HDC hdc, CelestialBody* b, int px, int py, int pr, int sunX, int sunY, float z, float rot) {
+    // 1. Cryosphere Permafrost / Solid Glacial Base
+    FillSolidRect(hdc, px - pr, py - pr, pr * 2, pr * 2, RGB(125, 180, 225));
+
+    // 2. Solid Ice Glaciers and Permafrost Sheets
+    HBRUSH hIceBr = CreateSolidBrush(RGB(235, 248, 255));
+    HPEN hIceP = CreatePen(PS_SOLID, 1, RGB(210, 238, 255));
+    HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hIceBr);
+    HPEN hOldP = (HPEN)SelectObject(hdc, hIceP);
+
+    for (int g = 0; g < 4; g++) {
+        float gAng = rot * 0.35f + g * 1.6f;
+        int gx = px + (int)(sinf(gAng) * pr * 0.6f);
+        int gy = py + (int)(((g % 2 == 0) ? -0.2f : 0.2f) * pr);
+        int gw = (int)(pr * 0.45f * fabsf(cosf(gAng)) + 5);
+        int gh = (int)(pr * 0.32f);
+        Ellipse(hdc, gx - gw, gy - gh, gx + gw, gy + gh);
+    }
+
+    // 3. Deep Blue Glacial Chasms & Crevasses
+    HPEN hCrevasseP = CreatePen(PS_SOLID, 1, RGB(45, 95, 165));
+    SelectObject(hdc, hCrevasseP);
+    for (int c = 0; c < 3; c++) {
+        int cy = py + (int)(((c - 1) * 0.35f) * pr);
+        MoveToEx(hdc, px - (int)(pr * 0.5f), cy, NULL);
+        LineTo(hdc, px - (int)(pr * 0.1f), cy + (int)(sinf(c * 2.0f) * pr * 0.1f));
+        LineTo(hdc, px + (int)(pr * 0.45f), cy - (int)(cosf(c * 1.5f) * pr * 0.08f));
+    }
+
+    // 4. Immense Polar Ice Caps (Extending across 55% of hemisphere)
+    int iceH = (int)(pr * 0.42f);
+    SelectObject(hdc, hIceBr);
+    SelectObject(hdc, hIceP);
+    Ellipse(hdc, px - pr, py - pr - iceH / 2, px + pr, py - pr + iceH * 2);
+    Ellipse(hdc, px - pr, py + pr - iceH * 2, px + pr, py + pr + iceH / 2);
+
+    SelectObject(hdc, hOldB);
+    SelectObject(hdc, hOldP);
+    DeleteObject(hIceBr);
+    DeleteObject(hIceP);
+    DeleteObject(hCrevasseP);
+}
+
+static void DrawOceanWorldGDI(HDC hdc, CelestialBody* b, int px, int py, int pr, int sunX, int sunY, float z, float rot) {
+    // 1. Deep Pelagic Cobalt Abyss Base
+    FillSolidRect(hdc, px - pr, py - pr, pr * 2, pr * 2, RGB(10, 48, 115));
+
+    // 2. Shallower Oceanic Ridges & Turquoise Ocean Currents
+    HBRUSH hRidgeBr = CreateSolidBrush(RGB(16, 115, 190));
+    HPEN hRidgeP = CreatePen(PS_SOLID, 1, RGB(16, 115, 190));
+    HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hRidgeBr);
+    HPEN hOldP = (HPEN)SelectObject(hdc, hRidgeP);
+
+    for (int r = 0; r < 3; r++) {
+        float rAng = rot * 0.45f + r * 2.1f;
+        int rx = px + (int)(sinf(rAng) * pr * 0.5f);
+        int ry = py + (int)(((r % 2 == 0) ? -0.22f : 0.22f) * pr);
+        int rw = (int)(pr * 0.5f * fabsf(cosf(rAng)) + 6);
+        int rh = (int)(pr * 0.28f);
+        Ellipse(hdc, rx - rw, ry - rh, rx + rw, ry + rh);
+    }
+
+    // 3. Swirling White Cyclonic Storm Arcs
+    HPEN hStormP = CreatePen(PS_SOLID, 2, RGB(240, 248, 255));
+    SelectObject(hdc, hStormP);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    for (int s = 0; s < 3; s++) {
+        float sAng = rot * 0.7f + s * 2.0f;
+        int sx = px + (int)(sinf(sAng) * pr * 0.4f);
+        int sy = py + (int)(((s - 1) * 0.35f) * pr);
+        int sr = (int)(pr * 0.26f);
+        Arc(hdc, sx - sr, sy - sr, sx + sr, sy + sr,
+                 sx - sr, sy, sx + sr, sy);
+    }
+
+    // 4. Underwater Hydrothermal Vent Glows
+    for (int v = 0; v < 4; v++) {
+        int vx = px + (int)(((v * 2) % 5 - 2) * 0.25f * pr);
+        int vy = py + (int)(((v * 3) % 7 - 3) * 0.18f * pr);
+        FillSolidRect(hdc, vx - 1, vy - 1, 3, 3, RGB(0, 245, 255));
+    }
+
+    SelectObject(hdc, hOldB);
+    SelectObject(hdc, hOldP);
+    DeleteObject(hRidgeBr);
+    DeleteObject(hRidgeP);
+    DeleteObject(hStormP);
+}
+
+static void DrawPrimordialGaiaGDI(HDC hdc, CelestialBody* b, int px, int py, int pr, int sunX, int sunY, float z, float rot) {
+    // 1. Rich Azure Sapphire Oceans
+    FillSolidRect(hdc, px - pr, py - pr, pr * 2, pr * 2, RGB(14, 90, 168));
+
+    // 2. Verdant Proto-Continents & Flora Landmasses
+    HBRUSH hLandBr = CreateSolidBrush(RGB(24, 135, 62));
+    HPEN hLandP = CreatePen(PS_SOLID, 1, RGB(42, 170, 85));
+    HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hLandBr);
+    HPEN hOldP = (HPEN)SelectObject(hdc, hLandP);
+
+    for (int c = 0; c < 3; c++) {
+        float cLon = (c * 2.1f + rot);
+        int cxPos = px + (int)(sinf(cLon) * pr * 0.65f);
+        int cyPos = py + (int)(((c % 2 == 0) ? -0.2f : 0.2f) * pr);
+        int rw = (int)(pr * 0.45f * fabsf(cosf(cLon)) + 6);
+        int rh = (int)(pr * 0.35f);
+        Ellipse(hdc, cxPos - rw, cyPos - rh, cxPos + rw, cyPos + rh);
+    }
+
+    // 3. Polar Ice Caps
+    int iceH = (int)(pr * 0.25f);
+    HBRUSH hIceBr = CreateSolidBrush(RGB(245, 250, 255));
+    HPEN hIceP = CreatePen(PS_SOLID, 1, RGB(220, 240, 255));
+    SelectObject(hdc, hIceBr);
+    SelectObject(hdc, hIceP);
+    Ellipse(hdc, px - pr, py - pr - iceH / 2, px + pr, py - pr + iceH * 2);
+    Ellipse(hdc, px - pr, py + pr - iceH * 2, px + pr, py + pr + iceH / 2);
+    DeleteObject(hIceBr);
+    DeleteObject(hIceP);
+
+    // 4. Swirling White Cloud Belts
+    HPEN hCloudP = CreatePen(PS_SOLID, 2, RGB(248, 252, 255));
+    SelectObject(hdc, hCloudP);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    for (int w = 0; w < 3; w++) {
+        float wAng = rot * 1.2f + w * 2.0f;
+        int wx = px + (int)(sinf(wAng) * pr * 0.4f);
+        int wy = py + (int)(((w - 1) * 0.38f) * pr);
+        int wr = (int)(pr * 0.24f);
+        Arc(hdc, wx - wr, wy - wr, wx + wr, wy + wr, wx - wr, wy, wx + wr, wy);
+    }
+
+    SelectObject(hdc, hOldB);
+    SelectObject(hdc, hOldP);
+    DeleteObject(hLandBr);
+    DeleteObject(hLandP);
+    DeleteObject(hCloudP);
+}
+
+static void DrawExoplanetGDI(HDC hdc, CelestialBody* b, int px, int py, int pr, int sunX, int sunY, float z, float simTime, int isActiveTarget) {
+    float sunAngle = atan2f((float)(sunY - py), (float)(sunX - px));
+    float rot = simTime * 0.04f;
+
+    // Atmospheric Corona Colors based on Classification
+    COLORREF cHaloOuter, cHaloMid, cHaloInner;
+    switch (b->pClass) {
+        case CLASS_BARREN_ROCK:
+            cHaloOuter = RGB(75, 45, 25);
+            cHaloMid   = RGB(130, 80, 45);
+            cHaloInner = RGB(190, 125, 75);
+            break;
+        case CLASS_TOXIC_GREENHOUSE:
+            cHaloOuter = RGB(110, 60, 10);
+            cHaloMid   = RGB(200, 110, 20);
+            cHaloInner = RGB(245, 165, 20);
+            break;
+        case CLASS_FROZEN_TUNDRA:
+            cHaloOuter = RGB(35, 75, 135);
+            cHaloMid   = RGB(65, 140, 210);
+            cHaloInner = RGB(160, 220, 255);
+            break;
+        case CLASS_OCEAN_WORLD:
+            cHaloOuter = RGB(10, 60, 140);
+            cHaloMid   = RGB(14, 130, 210);
+            cHaloInner = RGB(56, 195, 255);
+            break;
+        case CLASS_PRIMORDIAL_GAIA:
+        default:
+            cHaloOuter = RGB(0, 100, 110);
+            cHaloMid   = RGB(0, 180, 190);
+            cHaloInner = RGB(0, 240, 255);
+            break;
+    }
+
+    // Outer Stepped Corona Rings
     HBRUSH hNullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
     HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hNullBrush);
 
-    // Stepped Corona Rings
-    int atmoR3 = pr + (int)(14 * z * (1.0f + sim.pressure * 0.4f));
-    int atmoR2 = pr + (int)(9 * z * (1.0f + sim.pressure * 0.3f));
-    int atmoR1 = pr + (int)(4 * z * (1.0f + sim.pressure * 0.2f));
+    int atmoR3 = pr + (int)(14 * z * (1.0f + b->pressure * 0.4f));
+    int atmoR2 = pr + (int)(9 * z * (1.0f + b->pressure * 0.3f));
+    int atmoR1 = pr + (int)(4 * z * (1.0f + b->pressure * 0.2f));
 
     HPEN hPen3 = CreatePen(PS_SOLID, 1, cHaloOuter);
     HPEN hOldP = (HPEN)SelectObject(hdc, hPen3);
@@ -622,7 +1448,7 @@ static void DrawPlanetGDI(HDC hdc, int px, int py, int pr, int sunX, int sunY, f
     Ellipse(hdc, px - atmoR1, py - atmoR1, px + atmoR1, py + atmoR1);
     DeleteObject(hPen1);
 
-    // Sunward Mie Forward Scattering Limb Arc
+    // Sunward Mie Scattering Limb Arc
     HPEN hLimbPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
     SelectObject(hdc, hLimbPen);
     int limbSX = px + (int)(cosf(sunAngle - 1.2f) * (pr + 2));
@@ -632,12 +1458,11 @@ static void DrawPlanetGDI(HDC hdc, int px, int py, int pr, int sunX, int sunY, f
     Arc(hdc, px - pr - 2, py - pr - 2, px + pr + 2, py + pr + 2, limbSX, limbSY, limbEX, limbEY);
     DeleteObject(hLimbPen);
 
-    // Polar Auroras (Undulating magnetic ribbons)
-    if (sim.magnet > 0.15f) {
-        float wave = sinf(sim.time * 3.5f) * 3.0f * z;
+    // Polar Auroras
+    if (b->magnet > 0.15f) {
+        float wave = sinf(simTime * 3.5f) * 3.0f * z;
         HPEN hAuroraPen1 = CreatePen(PS_SOLID, 2, RGB(16, 230, 160));
         SelectObject(hdc, hAuroraPen1);
-        // North Pole Arc
         Arc(hdc, px - (int)(pr * 0.6f) + (int)wave, py - pr - (int)(5 * z),
                  px + (int)(pr * 0.6f) + (int)wave, py - pr + (int)(7 * z),
                  px - (int)(pr * 0.5f), py - pr, px + (int)(pr * 0.5f), py - pr);
@@ -645,7 +1470,6 @@ static void DrawPlanetGDI(HDC hdc, int px, int py, int pr, int sunX, int sunY, f
 
         HPEN hAuroraPen2 = CreatePen(PS_SOLID, 2, RGB(180, 90, 245));
         SelectObject(hdc, hAuroraPen2);
-        // South Pole Arc
         Arc(hdc, px - (int)(pr * 0.6f) - (int)wave, py + pr - (int)(7 * z),
                  px + (int)(pr * 0.6f) - (int)wave, py + pr + (int)(5 * z),
                  px + (int)(pr * 0.5f), py + pr, px - (int)(pr * 0.5f), py + pr);
@@ -655,71 +1479,51 @@ static void DrawPlanetGDI(HDC hdc, int px, int py, int pr, int sunX, int sunY, f
     SelectObject(hdc, hOldP);
     SelectObject(hdc, hOldBrush);
 
-    // Planet body clipped to disc
+    // Clip to Planet Disc
     HRGN hRgnPlanet = CreateEllipticRgn(px - pr, py - pr, px + pr + 1, py + pr + 1);
     HRGN hOldRgn = CreateRectRgn(0, 0, 0, 0);
     GetClipRgn(hdc, hOldRgn);
     ExtSelectClipRgn(hdc, hRgnPlanet, RGN_AND);
 
-    COLORREF seaColor;
-    COLORREF landColor;
-    if (sim.temp < -20.0f) {
-        seaColor = RGB(120, 180, 240);
-        landColor = RGB(220, 235, 255);
-    } else if (sim.water > 40.0f && sim.oxygen > 12.0f) {
-        seaColor = RGB(14, 120, 190);
-        landColor = RGB(22, 130, 60);
-    } else {
-        seaColor = RGB(40, 80, 150);
-        landColor = RGB(160, 80, 30);
+    // Dispatch Surface Shader
+    switch (b->pClass) {
+        case CLASS_BARREN_ROCK:
+            DrawBarrenRockGDI(hdc, b, px, py, pr, sunX, sunY, z, rot);
+            break;
+        case CLASS_TOXIC_GREENHOUSE:
+            DrawToxicGreenhouseGDI(hdc, b, px, py, pr, sunX, sunY, z, rot);
+            break;
+        case CLASS_FROZEN_TUNDRA:
+            DrawFrozenTundraGDI(hdc, b, px, py, pr, sunX, sunY, z, rot);
+            break;
+        case CLASS_OCEAN_WORLD:
+            DrawOceanWorldGDI(hdc, b, px, py, pr, sunX, sunY, z, rot);
+            break;
+        case CLASS_PRIMORDIAL_GAIA:
+        default:
+            DrawPrimordialGaiaGDI(hdc, b, px, py, pr, sunX, sunY, z, rot);
+            break;
     }
 
-    FillSolidRect(hdc, px - pr, py - pr, pr * 2, pr * 2, seaColor);
-
-    // Continents
-    HBRUSH hLandBrush = CreateSolidBrush(landColor);
-    SelectObject(hdc, hLandBrush);
-    HPEN hLandPen = CreatePen(PS_SOLID, 1, landColor);
-    SelectObject(hdc, hLandPen);
-
-    float rot = sim.time * 0.04f;
-    for (int c = 0; c < 3; c++) {
-        float cLon = (c * 2.1f + rot);
-        int cxPos = px + (int)(sinf(cLon) * pr * 0.65f);
-        int cyPos = py + (int)(((c % 2 == 0) ? -0.2f : 0.2f) * pr);
-        int rw = (int)(pr * 0.45f * fabsf(cosf(cLon)) + 6);
-        int rh = (int)(pr * 0.35f);
-        Ellipse(hdc, cxPos - rw, cyPos - rh, cxPos + rw, cyPos + rh);
-    }
-    SelectObject(hdc, hOldBrush);
-    SelectObject(hdc, hOldP);
-    DeleteObject(hLandBrush);
-    DeleteObject(hLandPen);
-
-    // Polar Ice Caps
-    float iceCov = (15.0f - sim.temp) / 60.0f;
-    if (iceCov < 0.1f) iceCov = 0.1f;
-    if (iceCov > 0.6f) iceCov = 0.6f;
-    int iceH = (int)(pr * iceCov);
-    HBRUSH hIceBrush = CreateSolidBrush(RGB(245, 250, 255));
-    SelectObject(hdc, hIceBrush);
-    HPEN hIcePen = CreatePen(PS_SOLID, 1, RGB(220, 240, 255));
-    SelectObject(hdc, hIcePen);
-    Ellipse(hdc, px - pr, py - pr - iceH / 2, px + pr, py - pr + iceH * 2);
-    Ellipse(hdc, px - pr, py + pr - iceH * 2, px + pr, py + pr + iceH / 2);
-    SelectObject(hdc, hOldBrush);
-    SelectObject(hdc, hOldP);
-    DeleteObject(hIceBrush);
-    DeleteObject(hIcePen);
-
-    // Day/Night Terminator Shading (Darken unlit side)
+    // Day/Night Terminator Darkening Shading
     float darkAngle = sunAngle + 3.14159265f;
-    int shadeDist = (int)(pr * 0.4f);
+    int shadeDist = (int)(pr * 0.45f);
     int shadeX = px + (int)(cosf(darkAngle) * shadeDist);
     int shadeY = py + (int)(sinf(darkAngle) * shadeDist);
 
-    // Night-side Colony Settlement Lights (Bioluminescent clusters on darkened side)
-    if (sim.colonists > 0) {
+    HBRUSH hDarkBr = CreateSolidBrush(RGB(4, 7, 14));
+    HPEN hDarkP = CreatePen(PS_SOLID, 1, RGB(4, 7, 14));
+    HBRUSH hOldBr2 = (HBRUSH)SelectObject(hdc, hDarkBr);
+    HPEN hOldP2 = (HPEN)SelectObject(hdc, hDarkP);
+    Ellipse(hdc, shadeX - (int)(pr * 0.95f), shadeY - (int)(pr * 0.95f),
+                 shadeX + (int)(pr * 0.95f), shadeY + (int)(pr * 0.95f));
+    SelectObject(hdc, hOldBr2);
+    SelectObject(hdc, hOldP2);
+    DeleteObject(hDarkBr);
+    DeleteObject(hDarkP);
+
+    // Night-Side Colony Settlement Lights
+    if (isActiveTarget && sim.colonists > 0) {
         int cityOffsets[4][2] = {
             { (int)(pr * 0.35f), (int)(-pr * 0.15f) },
             { (int)(pr * 0.45f), (int)(pr * 0.10f) },
@@ -727,7 +1531,6 @@ static void DrawPlanetGDI(HDC hdc, int px, int py, int pr, int sunX, int sunY, f
             { (int)(pr * 0.52f), (int)(-pr * 0.05f) }
         };
         COLORREF cityCols[4] = { RGB(255, 220, 110), RGB(0, 240, 255), RGB(16, 230, 160), RGB(255, 180, 50) };
-
         for (int i = 0; i < 4; i++) {
             int cxDot = shadeX + cityOffsets[i][0] / 2;
             int cyDot = shadeY + cityOffsets[i][1] / 2;
@@ -740,6 +1543,10 @@ static void DrawPlanetGDI(HDC hdc, int px, int py, int pr, int sunX, int sunY, f
     SelectClipRgn(hdc, hOldRgn);
     DeleteObject(hOldRgn);
     DeleteObject(hRgnPlanet);
+}
+
+static void DrawPlanetGDI(HDC hdc, int px, int py, int pr, int sunX, int sunY, float z) {
+    DrawExoplanetGDI(hdc, GetActivePlanet(), px, py, pr, sunX, sunY, z, sim.time, 1);
 }
 
 static void DrawMoonGDI(HDC hdc, int mx, int my, int mr, int sunX, int sunY, float z) {
@@ -978,6 +1785,10 @@ static void AddButton(int id, int x, int y, int w, int h, const char* txt, const
 #define BID_SPEED_2X        32
 #define BID_SPEED_5X        33
 #define BID_AUDIO_TOGGLE    34
+#define BID_SYS_CYCLE       35
+#define BID_SYS_SCAN        36
+#define BID_TARGET_PLANET   37
+#define BID_ROSTER_BASE     150
 
 #define BID_ACT_SOLAR_MIRROR 40
 #define BID_ACT_ATMO_PROC   41
@@ -1418,35 +2229,40 @@ static void RenderUI(HDC hdc, int width, int height) {
         TextOutA(hdc, tbX + 8, tbY + 3, "RA 19h 54m | DEC +44 01' | ATLAS: ON", 36);
     }
 
-    // C. Central Sun (Kepler-186 Helios)
+    // C. Central Sun of Current System
     int sunX = cx + (int)(-300.0f * z);
     int sunY = cy;
     int sunR = (int)(bodies[0].radius * z);
     bodies[0].currX = (float)sunX;
     bodies[0].currY = (float)sunY;
 
-    // Outer Glow Rings
-    HPEN hCoronaPen = CreatePen(PS_SOLID, 1, RGB(180, 70, 20));
-    SelectObject(hdc, hCoronaPen);
-    HBRUSH hCoronaBrush = CreateSolidBrush(RGB(50, 18, 5));
+    // Outer Glow Rings using System's Star Corona
+    HPEN hCoronaPen = CreatePen(PS_SOLID, 1, CURR_SYS.starCorona);
+    HPEN hOldP = (HPEN)SelectObject(hdc, hCoronaPen);
+    HBRUSH hCoronaBrush = CreateSolidBrush(RGB(
+        GetRValue(CURR_SYS.starCorona) / 3,
+        GetGValue(CURR_SYS.starCorona) / 3,
+        GetBValue(CURR_SYS.starCorona) / 3
+    ));
     HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hCoronaBrush);
     Ellipse(hdc, sunX - sunR * 2, sunY - sunR * 2, sunX + sunR * 2, sunY + sunR * 2);
     DeleteObject(hCoronaBrush);
 
-    // Sun Core
-    HBRUSH hSunBrush = CreateSolidBrush(COLOR_ORANGE);
+    // Sun Core using System's Star Color
+    HBRUSH hSunBrush = CreateSolidBrush(CURR_SYS.starColor);
     SelectObject(hdc, hSunBrush);
     Ellipse(hdc, sunX - sunR, sunY - sunR, sunX + sunR, sunY + sunR);
     SelectObject(hdc, hOldBrush);
+    SelectObject(hdc, hOldP);
     DeleteObject(hSunBrush);
     DeleteObject(hCoronaPen);
 
     // Sun Label
-    SetTextColor(hdc, RGB(255, 180, 100));
+    SetTextColor(hdc, RGB(255, 200, 140));
     SelectObject(hdc, hFontSmall);
     TextOutA(hdc, sunX - 45, sunY + sunR + 4, bodies[0].name, (int)strlen(bodies[0].name));
 
-    // D. Tartarus Asteroid Belt
+    // D. Asteroid Belt around Star
     for (int i = 0; i < ASTEROID_COUNT; i++) {
         if (!sim.paused && sim.speed > 0) {
             asteroids[i].angle += asteroids[i].speed * 0.005f * sim.speed;
@@ -1458,80 +2274,113 @@ static void RenderUI(HDC hdc, int width, int height) {
         FillSolidRect(hdc, ax, ay, asz, asz, RGB(160, 175, 200));
     }
 
-    // E. Target Planet: Aethelgard Prime
-    if (!sim.paused && sim.speed > 0) {
-        bodies[1].angle += bodies[1].orbitSpeed * 0.008f * sim.speed;
+    // E. Dynamic Rendering for All Celestial Bodies in Current Star System
+    for (int i = 1; i < CURR_SYS.bodyCount; i++) {
+        CelestialBody* b = &CURR_SYS.celestials[i];
+        if (b->isPlanet) {
+            if (!sim.paused && sim.speed > 0) {
+                b->angle += b->orbitSpeed * 0.008f * sim.speed;
+            }
+            float planetOrbitR = b->orbitRadius * z;
+            int px = sunX + (int)(cosf(b->angle) * planetOrbitR);
+            int py = sunY + (int)(sinf(b->angle) * (planetOrbitR * 0.7f));
+            int pr = (int)(b->radius * z);
+            b->currX = (float)px;
+            b->currY = (float)py;
+
+            // Orbit path ellipse
+            HPEN hOrbitPen = CreatePen(PS_DOT, 1, RGB(40, 70, 110));
+            HPEN hOldP2 = (HPEN)SelectObject(hdc, hOrbitPen);
+            Arc(hdc, sunX - (int)planetOrbitR, sunY - (int)(planetOrbitR * 0.7f),
+                     sunX + (int)planetOrbitR, sunY + (int)(planetOrbitR * 0.7f), 0, 0, 0, 0);
+            SelectObject(hdc, hOldP2);
+            DeleteObject(hOrbitPen);
+
+            // Draw Exoplanet with its procedural classification surface shader
+            DrawExoplanetGDI(hdc, b, px, py, pr, sunX, sunY, z, sim.time, (CURR_SYS.activePlanetIndex == i));
+
+            // Selected reticle on planet
+            if (sim.selectedType == 2 && sim.selectedIndex == i) {
+                HPEN hSelPen = CreatePen(PS_SOLID, 2, COLOR_CYAN);
+                HPEN hOldP3 = (HPEN)SelectObject(hdc, hSelPen);
+                SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                Rectangle(hdc, px - pr - 6, py - pr - 6, px + pr + 6, py + pr + 6);
+                SelectObject(hdc, hOldP3);
+                DeleteObject(hSelPen);
+            }
+
+            // Active Terraforming Target Reticle
+            if (CURR_SYS.activePlanetIndex == i) {
+                HPEN hTarPen = CreatePen(PS_SOLID, 1, COLOR_EMERALD);
+                HPEN hOldP4 = (HPEN)SelectObject(hdc, hTarPen);
+                int bk = pr + 8;
+                MoveToEx(hdc, px - bk, py - bk + 6, NULL); LineTo(hdc, px - bk, py - bk); LineTo(hdc, px - bk + 6, py - bk);
+                MoveToEx(hdc, px + bk, py - bk + 6, NULL); LineTo(hdc, px + bk, py - bk); LineTo(hdc, px + bk - 6, py - bk);
+                MoveToEx(hdc, px - bk, py + bk - 6, NULL); LineTo(hdc, px - bk, py + bk); LineTo(hdc, px - bk + 6, py + bk);
+                MoveToEx(hdc, px + bk, py + bk - 6, NULL); LineTo(hdc, px + bk, py + bk); LineTo(hdc, px + bk - 6, py + bk);
+                SelectObject(hdc, hOldP4);
+                DeleteObject(hTarPen);
+            }
+
+            // Planet Label
+            sprintf(buf, "%s [%s: %.1f%%]", b->name, g_exoplanetClasses[b->pClass].code, b->habitability);
+            SetTextColor(hdc, (CURR_SYS.activePlanetIndex == i) ? COLOR_EMERALD : COLOR_BLUE);
+            SelectObject(hdc, hFontSmall);
+            TextOutA(hdc, px - 45, py + pr + 4, buf, (int)strlen(buf));
+
+        } else if (b->isMoon) {
+            int parX = (b->parentIndex >= 0 && b->parentIndex < CURR_SYS.bodyCount) ? (int)CURR_SYS.celestials[b->parentIndex].currX : sunX;
+            int parY = (b->parentIndex >= 0 && b->parentIndex < CURR_SYS.bodyCount) ? (int)CURR_SYS.celestials[b->parentIndex].currY : sunY;
+            if (!sim.paused && sim.speed > 0) {
+                b->angle += b->orbitSpeed * 0.02f * sim.speed;
+            }
+            float moonDist = b->orbitRadius * z;
+            int mx = parX + (int)(cosf(b->angle) * moonDist);
+            int my = parY + (int)(sinf(b->angle) * (moonDist * 0.6f));
+            int mr = (int)(b->radius * z);
+            b->currX = (float)mx;
+            b->currY = (float)my;
+
+            DrawMoonGDI(hdc, mx, my, mr, sunX, sunY, z);
+
+            if (sim.selectedType == 3 && sim.selectedIndex == i) {
+                HPEN hSelPen = CreatePen(PS_SOLID, 1, COLOR_CYAN);
+                HPEN hOldP5 = (HPEN)SelectObject(hdc, hSelPen);
+                SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                Rectangle(hdc, mx - mr - 4, my - mr - 4, mx + mr + 4, my + mr + 4);
+                SelectObject(hdc, hOldP5);
+                DeleteObject(hSelPen);
+            }
+            SetTextColor(hdc, COLOR_TEXT_PRI);
+            TextOutA(hdc, mx - 30, my + mr + 2, b->name, (int)strlen(b->name));
+
+        } else if (b->isStation) {
+            int parX = (b->parentIndex >= 0 && b->parentIndex < CURR_SYS.bodyCount) ? (int)CURR_SYS.celestials[b->parentIndex].currX : sunX;
+            int parY = (b->parentIndex >= 0 && b->parentIndex < CURR_SYS.bodyCount) ? (int)CURR_SYS.celestials[b->parentIndex].currY : sunY;
+            if (!sim.paused && sim.speed > 0) {
+                b->angle += b->orbitSpeed * 0.02f * sim.speed;
+            }
+            float stDist = b->orbitRadius * z;
+            int stX = parX + (int)(cosf(b->angle) * stDist);
+            int stY = parY + (int)(sinf(b->angle) * (stDist * 0.6f));
+            int stR = (int)(b->radius * z);
+            b->currX = (float)stX;
+            b->currY = (float)stY;
+
+            DrawStationGDI(hdc, stX, stY, stR, z, sim.time);
+            if (sim.selectedType == 4 && sim.selectedIndex == i) {
+                FrameSolidRect(hdc, stX - stR - 3, stY - stR - 3, stR * 2 + 6, stR * 2 + 6, COLOR_CYAN);
+            }
+            SetTextColor(hdc, COLOR_EMERALD);
+            TextOutA(hdc, stX - 25, stY + stR + 2, b->name, (int)strlen(b->name));
+        }
     }
-    float planetOrbitR = bodies[1].orbitRadius * z;
-    int px = sunX + (int)(cos(bodies[1].angle) * planetOrbitR);
-    int py = sunY + (int)(sin(bodies[1].angle) * (planetOrbitR * 0.7f));
-    int pr = (int)(bodies[1].radius * z);
-    bodies[1].currX = (float)px;
-    bodies[1].currY = (float)py;
 
-    // Orbit ellipse
-    HPEN hOrbitPen = CreatePen(PS_DOT, 1, RGB(40, 70, 110));
-    SelectObject(hdc, hOrbitPen);
-    Arc(hdc, sunX - (int)planetOrbitR, sunY - (int)(planetOrbitR * 0.7f),
-             sunX + (int)planetOrbitR, sunY + (int)(planetOrbitR * 0.7f), 0, 0, 0, 0);
-    DeleteObject(hOrbitPen);
+    // F. Fleet Ships Anchored to Active Planet
+    CelestialBody* actP = GetActivePlanet();
+    int actPx = (int)actP->currX;
+    int actPy = (int)actP->currY;
 
-    // Planet Body & Surface
-    DrawPlanetGDI(hdc, px, py, pr, sunX, sunY, z);
-
-    // Selected reticle on planet
-    if (sim.selectedType == 2) {
-        HPEN hSelPen = CreatePen(PS_SOLID, 2, COLOR_CYAN);
-        SelectObject(hdc, hSelPen);
-        Rectangle(hdc, px - pr - 6, py - pr - 6, px + pr + 6, py + pr + 6);
-        DeleteObject(hSelPen);
-    }
-
-    // Planet Label
-    sprintf(buf, "%s [%.1f%%]", bodies[1].name, sim.habitability);
-    SetTextColor(hdc, COLOR_BLUE);
-    SelectObject(hdc, hFontSmall);
-    TextOutA(hdc, px - 45, py + pr + 4, buf, (int)strlen(buf));
-
-    // F. Boreas Minor Moon
-    if (!sim.paused && sim.speed > 0) {
-        bodies[2].angle += bodies[2].orbitSpeed * 0.02f * sim.speed;
-    }
-    float moonDist = bodies[2].orbitRadius * z;
-    int mx = px + (int)(cos(bodies[2].angle) * moonDist);
-    int my = py + (int)(sin(bodies[2].angle) * (moonDist * 0.6f));
-    int mr = (int)(bodies[2].radius * z);
-    bodies[2].currX = (float)mx;
-    bodies[2].currY = (float)my;
-
-    DrawMoonGDI(hdc, mx, my, mr, sunX, sunY, z);
-
-    if (sim.selectedType == 3) {
-        HPEN hSelPen = CreatePen(PS_SOLID, 1, COLOR_CYAN);
-        SelectObject(hdc, hSelPen);
-        Rectangle(hdc, mx - mr - 4, my - mr - 4, mx + mr + 4, my + mr + 4);
-        DeleteObject(hSelPen);
-    }
-    SetTextColor(hdc, COLOR_TEXT_PRI);
-    TextOutA(hdc, mx - 30, my + mr + 2, bodies[2].name, (int)strlen(bodies[2].name));
-
-    // G. Zephyr Station
-    if (!sim.paused && sim.speed > 0) {
-        bodies[3].angle += bodies[3].orbitSpeed * 0.02f * sim.speed;
-    }
-    float stDist = bodies[3].orbitRadius * z;
-    int stX = px + (int)(cos(bodies[3].angle) * stDist);
-    int stY = py + (int)(sin(bodies[3].angle) * (stDist * 0.6f));
-    int stR = (int)(bodies[3].radius * z);
-    bodies[3].currX = (float)stX;
-    bodies[3].currY = (float)stY;
-
-    DrawStationGDI(hdc, stX, stY, stR, z, sim.time);
-    if (sim.selectedType == 4) {
-        FrameSolidRect(hdc, stX - stR - 3, stY - stR - 3, stR * 2 + 6, stR * 2 + 6, COLOR_CYAN);
-    }
-
-    // H. Fleet Ships
     for (int i = 0; i < 5; i++) {
         int sx, sy;
         if (fleet[i].targetBelt) {
@@ -1547,11 +2396,9 @@ static void RenderUI(HDC hdc, int width, int height) {
             if (!sim.paused && sim.speed > 0) {
                 fleet[i].angle += fleet[i].orbitSpeed * 0.02f * sim.speed;
             }
-            int centerTargetX = (fleet[i].parentIndex == 2 ? mx : px);
-            int centerTargetY = (fleet[i].parentIndex == 2 ? my : py);
             float dist = fleet[i].orbitDist * z;
-            sx = centerTargetX + (int)(cos(fleet[i].angle) * dist);
-            sy = centerTargetY + (int)(sin(fleet[i].angle) * (dist * 0.7f));
+            sx = actPx + (int)(cosf(fleet[i].angle) * dist);
+            sy = actPy + (int)(sinf(fleet[i].angle) * (dist * 0.7f));
         }
 
         fleet[i].currX = (float)sx;
@@ -1586,15 +2433,40 @@ static void RenderUI(HDC hdc, int width, int height) {
     }
 
     // I. Viewport Top Overlay Card
-    FillSolidRect(hdc, 10, headerH + 10, 270, 52, theme->bgPanel);
-    FrameSolidRect(hdc, 10, headerH + 10, 270, 52, theme->border);
-    FillSolidRect(hdc, 10, headerH + 10, 3, 52, theme->primary);
+    int ovW = 340;
+    int ovH = 68;
+    FillSolidRect(hdc, 10, headerH + 10, ovW, ovH, theme->bgPanel);
+    FrameSolidRect(hdc, 10, headerH + 10, ovW, ovH, theme->border);
+    FillSolidRect(hdc, 10, headerH + 10, 3, ovH, theme->primary);
+
     SetTextColor(hdc, theme->primary);
     SelectObject(hdc, hFontSmall);
-    TextOutA(hdc, 20, headerH + 15, "SECTOR: Kepler-186e / Prime Anchor", 34);
+    sprintf(buf, "SECTOR: %s [%s]", CURR_SYS.name, CURR_SYS.spectralClass);
+    TextOutA(hdc, 20, headerH + 15, buf, (int)strlen(buf));
+
     SetTextColor(hdc, theme->textBright);
-    TextOutA(hdc, 20, headerH + 30, "Target: Aethelgard Prime [Hostile IV]", 37);
-    TextOutA(hdc, 20, headerH + 44, "Fleet: 5 Ships Active | Relics: Detected", 40);
+    sprintf(buf, "Target: %s [%s: %s]", actP->name, g_exoplanetClasses[actP->pClass].code, g_exoplanetClasses[actP->pClass].name);
+    TextOutA(hdc, 20, headerH + 30, buf, (int)strlen(buf));
+
+    SetTextColor(hdc, COLOR_EMERALD);
+    sprintf(buf, "Biometrics: %.2fatm | %.1fC | %.1f%% O2 | Hab: %.1f%%",
+        sim.pressure, sim.temp, sim.oxygen, sim.habitability);
+    TextOutA(hdc, 20, headerH + 46, buf, (int)strlen(buf));
+
+    // Next System & Scan Sector buttons
+    AddButton(BID_SYS_CYCLE, 10 + ovW + 8, headerH + 10, 100, 24, "Next Sys [S]", NULL, 1);
+    AddButton(BID_SYS_SCAN, 10 + ovW + 8, headerH + 38, 100, 24, "Scan Sector [G]", NULL, 1);
+
+    // Planet Roster Buttons across top
+    int rstX = 10 + ovW + 116;
+    for (int p = 1; p < CURR_SYS.bodyCount; p++) {
+        if (CURR_SYS.celestials[p].isPlanet && rstX < viewportW - 90) {
+            char rstTxt[32];
+            sprintf(rstTxt, "[%s] %s", g_exoplanetClasses[CURR_SYS.celestials[p].pClass].code, CURR_SYS.celestials[p].name);
+            AddButton(BID_ROSTER_BASE + p, rstX, headerH + 10, 95, 24, rstTxt, NULL, 1);
+            rstX += 100;
+        }
+    }
 
     // CRT Raster Scanlines Post-Effect
     if (g_phosphorGlow) {
@@ -1621,17 +2493,27 @@ static void RenderUI(HDC hdc, int width, int height) {
 
     // K. Viewport Selection Card (if something selected)
     if (sim.selectedType != 0) {
-        int scX = viewportW - 220;
+        int scX = viewportW - 225;
         int scY = headerH + 10;
-        FillSolidRect(hdc, scX, scY, 210, 110, theme->bgPanel);
-        FrameSolidRect(hdc, scX, scY, 210, 110, theme->secondary);
+        int scH = (sim.selectedType == 2) ? 134 : 110;
+        FillSolidRect(hdc, scX, scY, 215, scH, theme->bgPanel);
+        FrameSolidRect(hdc, scX, scY, 215, scH, theme->secondary);
 
         const char* selName = "Object";
         const char* selType = "Target";
         if (sim.selectedType == 1) { selName = bodies[0].name; selType = bodies[0].type; }
-        else if (sim.selectedType == 2) { selName = bodies[1].name; selType = bodies[1].type; }
-        else if (sim.selectedType == 3) { selName = bodies[2].name; selType = bodies[2].type; }
-        else if (sim.selectedType == 4) { selName = bodies[3].name; selType = bodies[3].type; }
+        else if (sim.selectedType == 2 && sim.selectedIndex >= 0 && sim.selectedIndex < CURR_SYS.bodyCount) {
+            selName = CURR_SYS.celestials[sim.selectedIndex].name;
+            selType = CURR_SYS.celestials[sim.selectedIndex].type;
+        }
+        else if (sim.selectedType == 3 && sim.selectedIndex >= 0 && sim.selectedIndex < CURR_SYS.bodyCount) {
+            selName = CURR_SYS.celestials[sim.selectedIndex].name;
+            selType = CURR_SYS.celestials[sim.selectedIndex].type;
+        }
+        else if (sim.selectedType == 4 && sim.selectedIndex >= 0 && sim.selectedIndex < CURR_SYS.bodyCount) {
+            selName = CURR_SYS.celestials[sim.selectedIndex].name;
+            selType = CURR_SYS.celestials[sim.selectedIndex].type;
+        }
         else if (sim.selectedType == 5 && sim.selectedIndex >= 0) {
             selName = fleet[sim.selectedIndex].name;
             selType = fleet[sim.selectedIndex].role;
@@ -1645,9 +2527,16 @@ static void RenderUI(HDC hdc, int width, int height) {
         SelectObject(hdc, hFontSmall);
         TextOutA(hdc, scX + 8, scY + 22, selType, (int)strlen(selType));
 
-        AddButton(BID_SEL_CLOSE, scX + 186, scY + 4, 18, 16, "X", NULL, 1);
-        AddButton(BID_SEL_ACT1, scX + 8, scY + 48, 194, 24, "Inspect Telemetry", NULL, 1);
-        AddButton(BID_SEL_ACT2, scX + 8, scY + 76, 194, 24, "Reposition Orbit", NULL, 1);
+        AddButton(BID_SEL_CLOSE, scX + 190, scY + 4, 18, 16, "X", NULL, 1);
+
+        if (sim.selectedType == 2) {
+            AddButton(BID_TARGET_PLANET, scX + 8, scY + 42, 198, 24, "Designate Target [T]", NULL, 1);
+            AddButton(BID_SEL_ACT1, scX + 8, scY + 70, 198, 24, "Inspect Biometrics", NULL, 1);
+            AddButton(BID_SEL_ACT2, scX + 8, scY + 98, 198, 24, "Solar Mirror Orbit", NULL, 1);
+        } else {
+            AddButton(BID_SEL_ACT1, scX + 8, scY + 48, 198, 24, "Inspect Telemetry", NULL, 1);
+            AddButton(BID_SEL_ACT2, scX + 8, scY + 76, 198, 24, "Reposition Orbit", NULL, 1);
+        }
     }
 
     SelectClipRgn(hdc, NULL);
@@ -1669,6 +2558,31 @@ static void RenderUI(HDC hdc, int width, int height) {
 
     // TAB 0: TERRAFORM
     if (sim.activeTab == 0) {
+        CelestialBody* curP = GetActivePlanet();
+        ExoplanetClassInfo* curInfo = &g_exoplanetClasses[curP->pClass];
+
+        // Classification Dossier Card
+        int dosH = 50;
+        FillSolidRect(hdc, sbX + 12, contentY, sidebarW - 24, dosH, curInfo->badgeBg);
+        FrameSolidRect(hdc, sbX + 12, contentY, sidebarW - 24, dosH, curInfo->badgeBorder);
+        FillSolidRect(hdc, sbX + 12, contentY, 4, dosH, curInfo->color);
+
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, curInfo->color);
+        sprintf(buf, "[%s] %s -- %s", curInfo->code, curInfo->name, curP->name);
+        TextOutA(hdc, sbX + 22, contentY + 6, buf, (int)strlen(buf));
+
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        TextOutA(hdc, sbX + 22, contentY + 20, curInfo->desc, (int)strlen(curInfo->desc));
+
+        SetTextColor(hdc, theme->secondary);
+        sprintf(buf, "Yields: Min x%.1f | Vol x%.1f | Range: %.0f%%-%.0f%%",
+            curInfo->mineralMult, curInfo->volatileMult, curInfo->minHabitability, curInfo->maxHabitability);
+        TextOutA(hdc, sbX + 22, contentY + 34, buf, (int)strlen(buf));
+
+        contentY += dosH + 8;
+
         SetTextColor(hdc, COLOR_BLUE);
         SelectObject(hdc, hFontBold);
         TextOutA(hdc, sbX + 12, contentY, "PLANETARY BIOMETRICS", 20);
@@ -2122,6 +3036,24 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     } else if (bid == BID_AUDIO_TOGGLE) {
                         g_soundEnabled = !g_soundEnabled;
                         PlaySoundFx(SFX_CLICK);
+                    } else if (bid == BID_SYS_CYCLE) {
+                        LoadStarSystem((g_currentSystem + 1) % g_systemCount);
+                        PlaySoundFx(SFX_SUCCESS);
+                    } else if (bid == BID_SYS_SCAN) {
+                        GenerateProceduralStarSystem();
+                    } else if (bid == BID_TARGET_PLANET) {
+                        if (sim.selectedType == 2 && sim.selectedIndex >= 0 && sim.selectedIndex < CURR_SYS.bodyCount) {
+                            SetActivePlanet(sim.selectedIndex);
+                            PlaySoundFx(SFX_SUCCESS);
+                        }
+                    } else if (bid >= BID_ROSTER_BASE && bid < BID_ROSTER_BASE + 20) {
+                        int rIdx = bid - BID_ROSTER_BASE;
+                        if (rIdx >= 0 && rIdx < CURR_SYS.bodyCount) {
+                            SetActivePlanet(rIdx);
+                            sim.selectedType = 2;
+                            sim.selectedIndex = rIdx;
+                            PlaySoundFx(SFX_CLICK);
+                        }
                     } else if (bid >= BID_ACT_SOLAR_MIRROR && bid <= BID_ACT_ALGAE) {
                         HandleIntervention(bid);
                     } else if (bid >= BID_COL_AWAKEN && bid <= BID_COL_SOLAR) {
@@ -2162,12 +3094,15 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         break;
                     }
                 }
-                // Check Celestial Bodies
+                // Check Celestial Bodies across current star system
                 if (!found) {
-                    for (int i = 1; i < 4; i++) {
-                        float dist = (float)hypot(bodies[i].currX - mx, bodies[i].currY - my);
-                        if (dist < bodies[i].radius * sim.zoom + 10.0f) {
-                            sim.selectedType = i + 1; // 2=planet, 3=moon, 4=station
+                    for (int i = 1; i < CURR_SYS.bodyCount; i++) {
+                        float dist = (float)hypot(CURR_SYS.celestials[i].currX - mx, CURR_SYS.celestials[i].currY - my);
+                        if (dist < CURR_SYS.celestials[i].radius * sim.zoom + 10.0f) {
+                            if (CURR_SYS.celestials[i].isPlanet) sim.selectedType = 2;
+                            else if (CURR_SYS.celestials[i].isMoon) sim.selectedType = 3;
+                            else if (CURR_SYS.celestials[i].isStation) sim.selectedType = 4;
+                            sim.selectedIndex = i;
                             found = 1;
                             PlaySoundFx(SFX_CLICK);
                             break;
@@ -2178,6 +3113,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     float dist = (float)hypot(bodies[0].currX - mx, bodies[0].currY - my);
                     if (dist < bodies[0].radius * sim.zoom + 10.0f) {
                         sim.selectedType = 1; // 1=sun
+                        sim.selectedIndex = 0;
                         found = 1;
                         PlaySoundFx(SFX_CLICK);
                     }
@@ -2251,18 +3187,37 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     g_soundEnabled = !g_soundEnabled;
                     PlaySoundFx(SFX_CLICK);
                     break;
+                case 'S':
+                case 's':
+                    LoadStarSystem((g_currentSystem + 1) % g_systemCount);
+                    PlaySoundFx(SFX_SUCCESS);
+                    break;
+                case 'G':
+                case 'g':
+                    GenerateProceduralStarSystem();
+                    break;
+                case 'T':
+                case 't':
+                    if (sim.selectedType == 2 && sim.selectedIndex >= 0 && sim.selectedIndex < CURR_SYS.bodyCount) {
+                        SetActivePlanet(sim.selectedIndex);
+                        PlaySoundFx(SFX_SUCCESS);
+                    }
+                    break;
                 case 'R':
                 case 'r':
                     sim.camX = 0; sim.camY = 0; sim.zoom = 1.0f;
                     PlaySoundFx(SFX_CLICK);
                     break;
                 case 'P':
-                case 'p':
+                case 'p': {
+                    CelestialBody* curActP = GetActivePlanet();
                     sim.selectedType = 2;
-                    sim.camX = -bodies[1].currX + (winW - 380) / 2 + sim.camX;
-                    sim.camY = -bodies[1].currY + (winH - 80) / 2 + sim.camY;
+                    sim.selectedIndex = CURR_SYS.activePlanetIndex;
+                    sim.camX = -curActP->currX + (winW - 380) / 2 + sim.camX;
+                    sim.camY = -curActP->currY + (winH - 80) / 2 + sim.camY;
                     PlaySoundFx(SFX_CLICK);
                     break;
+                }
                 case VK_ESCAPE:
                     sim.selectedType = 0;
                     break;
