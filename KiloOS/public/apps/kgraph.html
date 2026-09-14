@@ -255,6 +255,7 @@
     display: flex;
     gap: 6px;
     margin-bottom: 4px;
+    align-items: center;
   }
   .input-row:last-child {
     margin-bottom: 0;
@@ -275,7 +276,104 @@
     border-color: #38bdf8;
     box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
   }
-  
+  .input-clear-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    font-size: 16px;
+    line-height: 1;
+    width: 26px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .input-clear-btn:hover {
+    color: #f43f5e;
+    background: rgba(244, 63, 94, 0.15);
+    border-color: rgba(244, 63, 94, 0.35);
+  }
+
+  /* Quick Presets Bar */
+  .quick-presets-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 8px 12px;
+    background: rgba(15, 17, 26, 0.85);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    scrollbar-width: thin;
+  }
+  .quick-preset-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #38bdf8;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .preset-chip {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+  }
+  .preset-chip:hover {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: #38bdf8;
+    color: #38bdf8;
+    transform: translateY(-1px);
+  }
+
+  .funcs-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .funcs-toolbar {
+    display: flex;
+    gap: 4px;
+  }
+  .mini-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 7px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .mini-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #f1f5f9;
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  .shortcut-badge {
+    background: rgba(255, 255, 255, 0.14);
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-family: monospace;
+    margin-left: 4px;
+    opacity: 0.9;
+  }
+
   /* Form Controls & Tools */
   .control-group {
     background: rgba(30, 41, 59, 0.4);
@@ -474,31 +572,54 @@
     background: rgba(255, 255, 255, 0.2);
   }
   
-  /* Toast Message */
+  /* Interactive Toast Notification */
   .toast-msg {
     position: absolute;
     bottom: 16px;
     left: 16px;
-    background: rgba(19, 23, 36, 0.95);
-    border: 1px solid rgba(56, 189, 248, 0.4);
+    background: rgba(19, 23, 36, 0.96);
+    border: 1px solid rgba(56, 189, 248, 0.45);
     color: #f1f5f9;
-    padding: 12px 18px;
+    padding: 10px 14px;
     border-radius: 8px;
     font-size: 13px;
     font-weight: 500;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 12px rgba(56, 189, 248, 0.15);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 16px rgba(56, 189, 248, 0.2);
     opacity: 0;
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    transition: opacity 0.25s ease, transform 0.25s ease;
     transform: translateY(8px);
     pointer-events: none;
-    z-index: 20;
-    white-space: pre-line;
-    line-height: 1.5;
-    backdrop-filter: blur(8px);
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 480px;
+    backdrop-filter: blur(12px);
   }
   .toast-msg.visible {
     opacity: 1;
     transform: translateY(0);
+    pointer-events: auto;
+  }
+  .toast-text {
+    flex: 1;
+    white-space: pre-line;
+    line-height: 1.45;
+  }
+  .toast-close {
+    cursor: pointer;
+    color: #94a3b8;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    user-select: none;
+    line-height: 1;
+  }
+  .toast-close:hover {
+    color: #f43f5e;
+    background: rgba(244, 63, 94, 0.15);
   }
 
   /* Help Modal Dialog */
@@ -626,15 +747,15 @@
       <div class="app-title">KGraph Studio</div>
     </div>
     <div class="header-actions">
-      <button class="btn" onclick="exportPNG()">📷 Save PNG</button>
-      <button class="btn" onclick="exportCSV()">📊 Export CSV</button>
-      <button class="btn" onclick="exportJSON()">💾 Save Config</button>
-      <label class="btn" style="cursor:pointer">
-        📂 Load Config
+      <button class="btn" onclick="exportPNG()" title="Export PNG Snapshot (Ctrl+S)">📷 PNG <span class="shortcut-badge">^S</span></button>
+      <button class="btn" onclick="exportCSV()" title="Export CSV Data Points (E)">📊 CSV <span class="shortcut-badge">E</span></button>
+      <button class="btn" onclick="exportJSON()" title="Save Configuration to JSON">💾 Config</button>
+      <label class="btn" style="cursor:pointer" title="Load Configuration File (O)">
+        📂 Load <span class="shortcut-badge">O</span>
         <input type="file" id="jsonInput" accept=".json" style="display:none" onchange="importJSON(event)">
       </label>
-      <button class="btn" onclick="openHelpModal()">❓ Help (F1)</button>
-      <button class="btn btn-primary" onclick="replotAll()">▶ Plot [Enter]</button>
+      <button class="btn" onclick="openHelpModal()" title="Help & Reference Guide (F1 or H)">❓ Help <span class="shortcut-badge">F1</span></button>
+      <button class="btn btn-primary" onclick="replotAll()" title="Plot Graph (Enter)">▶ Plot <span class="shortcut-badge">↵</span></button>
     </div>
   </div>
 
@@ -651,6 +772,17 @@
         <div class="mode-btn" id="modeBtn_parametric" onclick="setPlotMode('parametric')">[M] (x,y)(t) Parametric</div>
       </div>
 
+      <!-- Quick Presets Carousel -->
+      <div class="quick-presets-bar">
+        <span class="quick-preset-label">Quick:</span>
+        <button class="preset-chip" onclick="loadCartesianPreset('sin(x)')" title="Load Sine Wave">🌊 sin(x)</button>
+        <button class="preset-chip" onclick="loadCartesianPreset('exp(-x^2)')" title="Load Gaussian Bell">🔔 Gaussian</button>
+        <button class="preset-chip" onclick="loadCartesianPreset('x^3 - 3*x')" title="Load Cubic Polynomial">📉 x³-3x</button>
+        <button class="preset-chip" onclick="loadCartesianPreset('1 / (1 + x^2)')" title="Load Witch of Agnesi">🧮 1/(1+x²)</button>
+        <button class="preset-chip" onclick="loadPolarPreset('3 * cos(4 * t)')" title="Load 4-Leaf Rose">🎯 4-Rose</button>
+        <button class="preset-chip" onclick="loadParametricPreset('sin(t)*(exp(cos(t))-2*cos(4*t))', 'cos(t)*(exp(cos(t))-2*cos(4*t))')" title="Load Butterfly Curve">🦋 Butterfly</button>
+      </div>
+
       <div class="tab-nav">
         <div class="tab-btn active" onclick="switchTab('tabFuncs')">[1] Functions</div>
         <div class="tab-btn" onclick="switchTab('tabCalc')">[2] Calculus</div>
@@ -660,7 +792,14 @@
       
       <!-- Functions Tab -->
       <div class="tab-content active" id="tabFuncs">
-        <div class="section-title" id="funcsSectionTitle">Functions (y1 - y5)</div>
+        <div class="funcs-header-row">
+          <div class="section-title" id="funcsSectionTitle" style="margin-bottom:0">Functions (y1 - y5)</div>
+          <div class="funcs-toolbar">
+            <button class="mini-btn" onclick="resetDefaultFuncs()" title="Reset to standard default functions">✨ Defaults</button>
+            <button class="mini-btn" onclick="enableAllFuncs(true)" title="Show all active functions">👁️ All</button>
+            <button class="mini-btn" onclick="clearAllFuncs()" title="Clear all expressions">✕ Clear</button>
+          </div>
+        </div>
         
         <!-- Mode Options Bar -->
         <div class="control-group" id="modeSettingsContainer">
@@ -794,12 +933,16 @@
           </thead>
           <tbody>
             <tr><td><span class="kbd-key">F1</span> / <span class="kbd-key">H</span></td><td>Toggle this Help & Reference guide</td></tr>
-            <tr><td><span class="kbd-key">Enter</span> (in input)</td><td>Immediately plot / re-evaluate expressions</td></tr>
+            <tr><td><span class="kbd-key">Enter</span></td><td>Plot / re-evaluate expressions immediately</td></tr>
+            <tr><td><span class="kbd-key">←</span> <span class="kbd-key">→</span> <span class="kbd-key">↑</span> <span class="kbd-key">↓</span></td><td>Smoothly pan viewport across canvas</td></tr>
             <tr><td><span class="kbd-key">1</span> / <span class="kbd-key">2</span> / <span class="kbd-key">3</span> / <span class="kbd-key">4</span></td><td>Switch tabs: Functions, Calculus, Analysis, Presets</td></tr>
             <tr><td><span class="kbd-key">C</span> / <span class="kbd-key">P</span> / <span class="kbd-key">M</span></td><td>Switch plot modes: [C]artesian, [P]olar, Para[M]etric</td></tr>
-            <tr><td><span class="kbd-key">+</span> / <span class="kbd-key">-</span></td><td>Zoom viewport in / out</td></tr>
-            <tr><td><span class="kbd-key">0</span> / <span class="kbd-key">R</span></td><td>Reset viewport to default [-10, 10] range</td></tr>
-            <tr><td><span class="kbd-key">Esc</span></td><td>Close any active modal dialog</td></tr>
+            <tr><td><span class="kbd-key">+</span> / <span class="kbd-key">-</span> (or <span class="kbd-key">PgUp</span>/<span class="kbd-key">PgDn</span>)</td><td>Zoom viewport in / out</td></tr>
+            <tr><td><span class="kbd-key">0</span> / <span class="kbd-key">R</span> / <span class="kbd-key">Home</span></td><td>Reset viewport to origin and default [-10, 10] range</td></tr>
+            <tr><td><span class="kbd-key">Ctrl+S</span> / <span class="kbd-key">S</span></td><td>Export high-res PNG graph snapshot</td></tr>
+            <tr><td><span class="kbd-key">E</span></td><td>Export sampled curve points to CSV</td></tr>
+            <tr><td><span class="kbd-key">Ctrl+O</span> / <span class="kbd-key">O</span></td><td>Load saved graph configuration JSON</td></tr>
+            <tr><td><span class="kbd-key">Esc</span></td><td>Unfocus input fields or close any active modal dialog</td></tr>
           </tbody>
         </table>
 
@@ -1000,18 +1143,19 @@
                 <span>y${idx+1}(x) =</span>
               </div>
               <div class="func-controls">
-                <label class="checkbox-label">
+                <label class="checkbox-label" title="Toggle visibility">
                   <input type="checkbox" ${f.enabled ? 'checked' : ''} onchange="toggleCartFunc(${idx}, this.checked)">
                   Show
                 </label>
-                <label class="checkbox-label">
+                <label class="checkbox-label" title="Show numerical derivative f'(x) curve">
                   <input type="checkbox" ${f.showDeriv ? 'checked' : ''} onchange="toggleCartDeriv(${idx}, this.checked)">
                   f'
                 </label>
               </div>
             </div>
             <div class="input-row">
-              <input type="text" class="func-input" value="${f.expr}" id="cartInput_${idx}" placeholder="e.g. sin(x)" oninput="updateCartExpr(${idx}, this.value)" onkeydown="if(event.key==='Enter'){replotAll(); showToast('Graph plotted!');}">
+              <input type="text" class="func-input" value="${f.expr}" id="cartInput_${idx}" placeholder="e.g. sin(x)" oninput="updateCartExpr(${idx}, this.value)" onkeydown="handleFuncInputKeyDown(event, ${idx})">
+              <button class="input-clear-btn" title="Clear expression" onclick="clearCartFunc(${idx})">&times;</button>
             </div>
           `;
           container.appendChild(card);
@@ -1054,7 +1198,8 @@
               </div>
             </div>
             <div class="input-row">
-              <input type="text" class="func-input" value="${f.expr}" id="polarInput_${idx}" placeholder="e.g. 3*cos(4*θ)" oninput="updatePolarExpr(${idx}, this.value)" onkeydown="if(event.key==='Enter'){replotAll(); showToast('Graph plotted!');}">
+              <input type="text" class="func-input" value="${f.expr}" id="polarInput_${idx}" placeholder="e.g. 3*cos(4*θ)" oninput="updatePolarExpr(${idx}, this.value)" onkeydown="handleFuncInputKeyDown(event, ${idx})">
+              <button class="input-clear-btn" title="Clear expression" onclick="clearPolarFunc(${idx})">&times;</button>
             </div>
           `;
           container.appendChild(card);
@@ -1092,15 +1237,108 @@
             </div>
             <div class="input-row">
               <span style="font-size:12px; width:35px; color:#94a3b8; align-self:center;">x(t)=</span>
-              <input type="text" class="func-input" value="${c.exprX}" id="paramInputX_${idx}" oninput="updateParamExpr(${idx}, 'X', this.value)" onkeydown="if(event.key==='Enter'){replotAll(); showToast('Graph plotted!');}">
+              <input type="text" class="func-input" value="${c.exprX}" id="paramInputX_${idx}" oninput="updateParamExpr(${idx}, 'X', this.value)" onkeydown="handleFuncInputKeyDown(event, ${idx})">
+              <button class="input-clear-btn" title="Clear x(t)" onclick="clearParamFunc(${idx}, 'X')">&times;</button>
             </div>
             <div class="input-row" style="margin-top:6px;">
               <span style="font-size:12px; width:35px; color:#94a3b8; align-self:center;">y(t)=</span>
-              <input type="text" class="func-input" value="${c.exprY}" id="paramInputY_${idx}" oninput="updateParamExpr(${idx}, 'Y', this.value)" onkeydown="if(event.key==='Enter'){replotAll(); showToast('Graph plotted!');}">
+              <input type="text" class="func-input" value="${c.exprY}" id="paramInputY_${idx}" oninput="updateParamExpr(${idx}, 'Y', this.value)" onkeydown="handleFuncInputKeyDown(event, ${idx})">
+              <button class="input-clear-btn" title="Clear y(t)" onclick="clearParamFunc(${idx}, 'Y')">&times;</button>
             </div>
           `;
           container.appendChild(card);
         });
+      }
+    }
+
+    function clearCartFunc(idx) {
+      cartesianFuncs[idx].expr = '';
+      const el = document.getElementById('cartInput_' + idx);
+      if (el) { el.value = ''; el.focus(); }
+      replotAll();
+      showToast(`Cleared y${idx+1}(x)`);
+    }
+
+    function clearPolarFunc(idx) {
+      polarFuncs[idx].expr = '';
+      const el = document.getElementById('polarInput_' + idx);
+      if (el) { el.value = ''; el.focus(); }
+      replotAll();
+      showToast(`Cleared r${idx+1}(θ)`);
+    }
+
+    function clearParamFunc(idx, axis) {
+      if (axis === 'X') {
+        parametricCurves[idx].exprX = '';
+        const el = document.getElementById('paramInputX_' + idx);
+        if (el) { el.value = ''; el.focus(); }
+      } else {
+        parametricCurves[idx].exprY = '';
+        const el = document.getElementById('paramInputY_' + idx);
+        if (el) { el.value = ''; el.focus(); }
+      }
+      replotAll();
+      showToast(`Cleared Curve ${idx+1} ${axis}(t)`);
+    }
+
+    function resetDefaultFuncs() {
+      if (currentMode === 'cartesian') {
+        cartesianFuncs = [
+          { expr: 'sin(x)', enabled: true, showDeriv: false },
+          { expr: 'cos(x)', enabled: true, showDeriv: false },
+          { expr: 'x^2 / 4 - 2', enabled: false, showDeriv: false },
+          { expr: 'exp(-x^2)', enabled: false, showDeriv: false },
+          { expr: 'x^3 - 3*x', enabled: false, showDeriv: false }
+        ];
+      } else if (currentMode === 'polar') {
+        polarFuncs = [
+          { expr: '3 * cos(4 * t)', enabled: true },
+          { expr: '2 * (1 - cos(t))', enabled: true },
+          { expr: 't / 2', enabled: false }
+        ];
+      } else if (currentMode === 'parametric') {
+        parametricCurves = [
+          { exprX: '4 * cos(3 * t)', exprY: '4 * sin(2 * t)', enabled: true },
+          { exprX: 'sin(t)*(exp(cos(t))-2*cos(4*t))', exprY: 'cos(t)*(exp(cos(t))-2*cos(4*t))', enabled: false }
+        ];
+      }
+      buildModeControls();
+      replotAll();
+      showToast('Reset to default functions');
+    }
+
+    function enableAllFuncs(enabled) {
+      if (currentMode === 'cartesian') {
+        cartesianFuncs.forEach(f => { if (f.expr && f.expr.trim()) f.enabled = enabled; });
+      } else if (currentMode === 'polar') {
+        polarFuncs.forEach(f => { if (f.expr && f.expr.trim()) f.enabled = enabled; });
+      } else if (currentMode === 'parametric') {
+        parametricCurves.forEach(c => { if ((c.exprX && c.exprX.trim()) || (c.exprY && c.exprY.trim())) c.enabled = enabled; });
+      }
+      buildModeControls();
+      replotAll();
+      showToast(enabled ? 'Enabled all non-empty functions' : 'Disabled all functions');
+    }
+
+    function clearAllFuncs() {
+      if (currentMode === 'cartesian') {
+        cartesianFuncs.forEach(f => { f.expr = ''; f.enabled = false; });
+      } else if (currentMode === 'polar') {
+        polarFuncs.forEach(f => { f.expr = ''; f.enabled = false; });
+      } else if (currentMode === 'parametric') {
+        parametricCurves.forEach(c => { c.exprX = ''; c.exprY = ''; c.enabled = false; });
+      }
+      buildModeControls();
+      replotAll();
+      showToast('Cleared all functions');
+    }
+
+    function handleFuncInputKeyDown(event, idx) {
+      if (event.key === 'Enter') {
+        replotAll();
+        showToast('Graph plotted!');
+      } else if (event.key === 'Escape') {
+        event.target.blur();
       }
     }
 
@@ -2069,12 +2307,20 @@
     }
     
     let toastTimeout;
-    function showToast(msg, duration = 4000) {
+    function showToast(msg, duration = 4500) {
       const t = document.getElementById('toastMsg');
-      t.innerText = msg;
+      if (!t) return;
+      t.innerHTML = `
+        <span class="toast-text">${msg}</span>
+        <span class="toast-close" onclick="hideToast()" title="Dismiss">&times;</span>
+      `;
       t.classList.add('visible');
       clearTimeout(toastTimeout);
-      toastTimeout = setTimeout(() => t.classList.remove('visible'), duration);
+      toastTimeout = setTimeout(() => hideToast(), duration);
+    }
+    function hideToast() {
+      const t = document.getElementById('toastMsg');
+      if (t) t.classList.remove('visible');
     }
     
     // Window Resize Event & High-DPI Observer
@@ -2090,19 +2336,41 @@
     buildModeControls();
     buildPresets();
     setTimeout(resizeCanvas, 100);
-    setTimeout(() => showToast("Welcome to KGraph Studio!\nPress F1 or H for Help & Shortcuts.\n[C]artesian, [P]olar, Para[M]etric", 5000), 500);
+    setTimeout(() => showToast("👋 Welcome to KGraph Studio!\nPress F1 or H for Help & Shortcuts.\nUse arrow keys to pan, scroll wheel or +/- to zoom, and click quick presets above.", 6000), 400);
 
     // Global Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        closeHelpModal();
-        return;
-      }
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
-      if (e.ctrlKey || e.altKey || e.metaKey) return;
-      
       const modal = document.getElementById('helpModal');
       const isModalOpen = modal && modal.classList.contains('active');
+
+      if (e.key === 'Escape') {
+        if (isModalOpen) {
+          closeHelpModal();
+        } else {
+          hideToast();
+        }
+        return;
+      }
+      
+      // If editing an input, only handle Escape/Enter handled in input listener
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+      
+      // Ctrl / Meta Hotkeys
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key.toLowerCase() === 's') {
+          e.preventDefault();
+          exportPNG();
+          return;
+        }
+        if (e.key.toLowerCase() === 'o') {
+          e.preventDefault();
+          const fileIn = document.getElementById('jsonInput');
+          if (fileIn) fileIn.click();
+          return;
+        }
+        return;
+      }
+      if (e.altKey) return;
       
       if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
         e.preventDefault();
@@ -2113,7 +2381,33 @@
       
       if (isModalOpen) return;
       
-      if (e.key === '1') {
+      // Arrow navigation / viewport panning
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        view_cx -= 0.15 * view_scale;
+        drawGraph();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        view_cx += 0.15 * view_scale;
+        drawGraph();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        view_cy += 0.15 * view_scale;
+        drawGraph();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        view_cy -= 0.15 * view_scale;
+        drawGraph();
+      } else if (e.key === 'PageUp') {
+        e.preventDefault();
+        zoomIn();
+      } else if (e.key === 'PageDown') {
+        e.preventDefault();
+        zoomOut();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        resetView();
+      } else if (e.key === '1') {
         switchTab('tabFuncs');
         showToast('Tab: [1] Functions');
       } else if (e.key === '2') {
@@ -2131,6 +2425,11 @@
         setPlotMode('polar');
       } else if (e.key.toLowerCase() === 'm') {
         setPlotMode('parametric');
+      } else if (e.key.toLowerCase() === 'e') {
+        exportCSV();
+      } else if (e.key.toLowerCase() === 'o') {
+        const fileIn = document.getElementById('jsonInput');
+        if (fileIn) fileIn.click();
       } else if (e.key === '+' || e.key === '=') {
         zoomIn();
       } else if (e.key === '-' || e.key === '_') {

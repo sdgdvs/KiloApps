@@ -45,14 +45,13 @@
 
 ---
 
-**Target App:** KGraph
+**Target App:** KTimer
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KGraph
 - KTimer
 - KContacts
 - KRead
@@ -106,10 +105,13 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KSys
 - KTodo
 - KConverter
+- KGraph
 
 ## Progress Log
 
 > 📁 **Archived Progress Log**: Older entries have been archived to [archive/usability_plan_archive.md](archive/usability_plan_archive.md) to preserve token efficiency.
+
+- KGraph: Usability and UI issues fixed (integrated interactive toast notification system with [✕] click-to-dismiss and startup welcome guide, built 1-click Quick Presets bar [🌊 sin(x), 🔔 Gaussian, 📉 x³-3x, 🧮 1/(1+x²), 🎯 4-Rose, 🦋 Butterfly] across sidebar, added 1-click function actions [✨ Defaults, 👁️ All, ✕ Clear] with quick clear [✕] buttons on each formula input row, added visual shortcut badges to header buttons [^S, E, O, F1, ↵], expanded keyboard navigation with arrow keys [← → ↑ ↓] for viewport panning, PgUp/PgDn for zooming, Home for origin reset, and updated Help modal guide in web; added non-blocking ShowNativeStatus notification system with auto-fade timer replacing blocking message alerts, built dedicated 1-click [Clr] expression wipe buttons for all function rows, added native [Save BMP [S]] high-res snapshot exporter and [Copy [C]] points clipboard copy, added WM_SIZE dynamic layout and WM_GETMINMAXINFO minimum window sizing, implemented global message loop accelerators for F1/Ctrl+S/Ctrl+C and EditSubclassProc Esc unfocus, added Arrow Keys / Home / PgUp / PgDn viewport panning and navigation, synchronized dynamic window title with active mode, and verified clean compilation across both builds).
 
 - KConverter: Usability and UI issues fixed (integrated interactive toast notification system with [✕] click-to-dismiss and startup welcome guide, built 1-click Quick Presets bar [🌡️ 25°C ➔ °F, 🚗 100 km/h ➔ mph, ⚖️ 1 kg ➔ lb, 📏 1 m ➔ ft, 💾 1 GB ➔ MB, 🎈 1 atm ➔ psi, 🥤 1 L ➔ gal, ⏱️ 1 hr ➔ min], added search clear [✕] buttons across Batch, Smart Parser, and History views, added interactive empty state with 1-click [✨ Load Standard Favorites] button, added visual shortcut badges and hotkeys [X/S for swap, P for pin, C for copy, I// for focus input, ArrowLeft/Right for tab cycling, Esc for clear/blur] with updated Help modal guide in web; fixed critical native Batch mode UX bug where input value and source unit controls were hidden and covered by batch output, repositioned batch output list below shared input controls for live batch calculations, added bottom status bar and non-blocking ShowNativeStatus notification system replacing blocking MessageBox modals for pin/export/favorites, added 1-click [📋 Copy [C]] to Windows clipboard and [✨ Defaults] favorites loader, implemented message loop accelerators for F1/H/1-5/X/P/C/Enter/Esc, updated window title with shortcut hints, and verified clean compilation across both builds).
 

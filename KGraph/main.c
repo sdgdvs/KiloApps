@@ -11,6 +11,14 @@
 #define M_E  2.71828182845904523536
 #endif
 
+#pragma function(memcpy)
+void* memcpy(void* dest, const void* src, size_t count) {
+    char* d = (char*)dest;
+    const char* s = (const char*)src;
+    while (count--) *d++ = *s++;
+    return dest;
+}
+
 // --- Math Expression Evaluator ---
 static const char* expr_ptr;
 static double eval_var_val;
@@ -175,46 +183,155 @@ typedef struct {
 static RootPoint roots[64];
 static int root_count = 0;
 
-// Win32 Control Handles
+// Win32 Control Handles & State
+static HWND g_hWnd = NULL;
 static HWND hInputs[MAX_FUNCS];
 static HWND hChecks[MAX_FUNCS];
 static HWND hLabels[MAX_FUNCS];
-static HWND hPlotBtn, hZoomIn, hZoomOut, hResetBtn, hRootsBtn, hPresetBtn, hHelpBtn, hModeBtn, hStatus;
+static HWND hClrBtn[MAX_FUNCS];
+static HWND hPlotBtn, hZoomIn, hZoomOut, hResetBtn, hRootsBtn, hPresetBtn, hHelpBtn, hModeBtn, hSaveBtn, hCopyBtn, hStatus;
 static HFONT hFontSmall, hFontBold;
 static HBRUSH hTopBgBrush = NULL;
 static HBRUSH hEditBgBrush = NULL;
 static WNDPROC g_oldEditProc = NULL;
 static int g_dpi = 96;
-static int g_canvasTop = 135;
+static int g_canvasTop = 130;
 
-static LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    if (msg == WM_KEYDOWN && wParam == VK_RETURN) {
-        HWND hParent = GetParent(hwnd);
-        if (hParent) {
-            SendMessageA(hParent, WM_COMMAND, 1001, 0);
+static void ShowNativeStatus(const char* text) {
+    if (hStatus) {
+        SetWindowTextA(hStatus, text);
+        if (g_hWnd) {
+            SetTimer(g_hWnd, 2001, 4000, NULL);
         }
-        return 0;
     }
-    return CallWindowProcA(g_oldEditProc, hwnd, msg, wParam, lParam);
 }
 
 static void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd,
-        "KGraph Studio - Hotkeys & Usage Guide:\n\n"
+        "KGraph Studio - Usage Guide & Shortcuts:\n\n"
         "[Modes & Navigation]\n"
-        "• Mode [M] / Click button : Switch between Cartesian y(x), Polar r(th), and Parametric (x,y)(t)\n"
-        "• Mouse Wheel : Zoom in / Zoom out smoothly\n"
+        "• Mode [M] / Button : Cycle Cartesian y(x), Polar r(th), Parametric (x,y)(t)\n"
+        "• Arrow Keys (Left/Right/Up/Down) : Smoothly pan graph viewport\n"
         "• Left Click & Drag : Pan viewport across canvas\n"
-        "• Hover Mouse : Instant coordinates and derivative tracer\n"
-        "• + / - Keys : Zoom in / out\n"
-        "• Reset [R] : Restore default viewport ([-10, 10])\n\n"
+        "• Mouse Scroll Wheel or +/- Keys : Smooth zoom in / out\n"
+        "• Reset [R] / Home Key : Restore origin & default [-10, 10] viewport\n"
+        "• Hover Mouse : Instant coordinates and numerical derivative tracer f'(x)\n\n"
         "[Inputs & Controls]\n"
         "• Enter in input : Instantly re-plot graph\n"
+        "• Escape in input : Unfocus input and return to canvas\n"
         "• Presets [P] : Cycle popular curves & formulas\n"
         "• Roots : Find and highlight numerical roots in view\n"
-        "• Supported math : sin, cos, tan, sqrt, abs, exp, log, ln, pi, e, ^, +, -, *, /\n"
+        "• Save BMP [S] / Ctrl+S : Save graph snapshot to KGraph_snapshot.bmp\n"
+        "• Copy [C] / Ctrl+C : Copy sampled points to Windows clipboard\n"
+        "• Clr Buttons : Quick 1-click expression clear\n"
         "• F1 or H : Open this Help guide",
-        "KGraph Studio Help", MB_OK | MB_ICONINFORMATION);
+        "KGraph Studio Help & Hotkeys", MB_OK | MB_ICONINFORMATION);
+}
+
+static LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_KEYDOWN) {
+        if (wParam == VK_RETURN) {
+            HWND hParent = GetParent(hwnd);
+            if (hParent) SendMessageA(hParent, WM_COMMAND, 1001, 0);
+            return 0;
+        } else if (wParam == VK_ESCAPE) {
+            HWND hParent = GetParent(hwnd);
+            if (hParent) SetFocus(hParent);
+            return 0;
+        } else if (wParam == VK_F1) {
+            HWND hParent = GetParent(hwnd);
+            if (hParent) ShowHelpDialog(hParent);
+            return 0;
+        }
+    }
+    return CallWindowProcA(g_oldEditProc, hwnd, msg, wParam, lParam);
+}
+
+static void SaveGraphBMP(HWND hwnd) {
+    RECT rect;
+    GetClientRect(hwnd, &rect);
+    int canvasTop = g_canvasTop;
+    int w = rect.right - rect.left;
+    int h = rect.bottom - canvasTop;
+    if (w <= 0 || h <= 0) return;
+
+    HDC hdc = GetDC(hwnd);
+    HDC memDC = CreateCompatibleDC(hdc);
+    HBITMAP hBm = CreateCompatibleBitmap(hdc, w, h);
+    HBITMAP oldBm = (HBITMAP)SelectObject(memDC, hBm);
+
+    BitBlt(memDC, 0, 0, w, h, hdc, 0, canvasTop, SRCCOPY);
+
+    BITMAPINFOHEADER bih = {0};
+    bih.biSize = sizeof(BITMAPINFOHEADER);
+    bih.biWidth = w;
+    bih.biHeight = h;
+    bih.biPlanes = 1;
+    bih.biBitCount = 24;
+    bih.biCompression = BI_RGB;
+
+    int rowSize = ((w * 3 + 3) & ~3);
+    int imageBytes = rowSize * h;
+    BYTE* pPixels = (BYTE*)malloc(imageBytes);
+    if (pPixels) {
+        GetDIBits(memDC, hBm, 0, h, pPixels, (BITMAPINFO*)&bih, DIB_RGB_COLORS);
+
+        BITMAPFILEHEADER bfh = {0};
+        bfh.bfType = 0x4D42; // 'BM'
+        bfh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+        bfh.bfSize = bfh.bfOffBits + imageBytes;
+
+        FILE* f = fopen("KGraph_snapshot.bmp", "wb");
+        if (f) {
+            fwrite(&bfh, sizeof(bfh), 1, f);
+            fwrite(&bih, sizeof(bih), 1, f);
+            fwrite(pPixels, 1, imageBytes, f);
+            fclose(f);
+            ShowNativeStatus("Saved snapshot to KGraph_snapshot.bmp [S]!");
+        } else {
+            ShowNativeStatus("Failed to save KGraph_snapshot.bmp");
+        }
+        free(pPixels);
+    }
+    SelectObject(memDC, oldBm);
+    DeleteObject(hBm);
+    DeleteDC(memDC);
+    ReleaseDC(hwnd, hdc);
+}
+
+static void CopyPointsToClipboard(HWND hwnd) {
+    char buf[4096];
+    int len = 0;
+    if (g_mode == MODE_CARTESIAN) {
+        len += sprintf(buf + len, "x,y1,y2,y3\r\n");
+        double minX = view_cx - view_scale;
+        double maxX = view_cx + view_scale;
+        double dx = (maxX - minX) / 25.0;
+        for (int i = 0; i <= 25 && len < 3800; i++) {
+            double x = minX + i * dx;
+            double y1 = funcs[0].enabled ? evaluate(funcs[0].expr, x) : 0.0;
+            double y2 = funcs[1].enabled ? evaluate(funcs[1].expr, x) : 0.0;
+            double y3 = funcs[2].enabled ? evaluate(funcs[2].expr, x) : 0.0;
+            len += sprintf(buf + len, "%.4f,%.4f,%.4f,%.4f\r\n", x, y1, y2, y3);
+        }
+    } else {
+        len += sprintf(buf + len, "KGraph State:\r\nCenter=(%.4f, %.4f)\r\nScale=%.4f\r\n", view_cx, view_cy, view_scale);
+    }
+
+    if (OpenClipboard(hwnd)) {
+        EmptyClipboard();
+        HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len + 1);
+        if (hMem) {
+            char* pMem = (char*)GlobalLock(hMem);
+            if (pMem) {
+                for (int ci = 0; ci <= len; ci++) pMem[ci] = buf[ci];
+                GlobalUnlock(hMem);
+                SetClipboardData(CF_TEXT, hMem);
+            }
+        }
+        CloseClipboard();
+        ShowNativeStatus("Copied sample coordinates to clipboard [C]!");
+    }
 }
 
 static void UpdateModeUI(void) {
@@ -226,7 +343,8 @@ static void UpdateModeUI(void) {
         SetWindowTextA(hInputs[0], "sin(x)");
         SetWindowTextA(hInputs[1], "cos(x)");
         SetWindowTextA(hInputs[2], "x^2/4 - 2");
-        SetWindowTextA(hStatus, "Cartesian Mode y(x). Scroll wheel to zoom. Hover to trace values. Press F1 for Help.");
+        ShowNativeStatus("Cartesian Mode y(x). Scroll or Arrow keys to pan. F1 for Help.");
+        if (g_hWnd) SetWindowTextA(g_hWnd, "KGraph Studio - Cartesian [M: Mode | P: Presets | R: Reset | F1: Help]");
     } else if (g_mode == MODE_POLAR) {
         SetWindowTextA(hModeBtn, "Mode: Polar [M]");
         SetWindowTextA(hLabels[0], "r1 =");
@@ -235,7 +353,8 @@ static void UpdateModeUI(void) {
         SetWindowTextA(hInputs[0], "3*cos(4*t)");
         SetWindowTextA(hInputs[1], "2*(1 - cos(t))");
         SetWindowTextA(hInputs[2], "t / 2");
-        SetWindowTextA(hStatus, "Polar Mode r(th). Rose curves & spirals with concentric polar grid. Press F1 for Help.");
+        ShowNativeStatus("Polar Mode r(th). Concentric polar grid with radial spokes. F1 for Help.");
+        if (g_hWnd) SetWindowTextA(g_hWnd, "KGraph Studio - Polar [M: Mode | P: Presets | R: Reset | F1: Help]");
     } else if (g_mode == MODE_PARAMETRIC) {
         SetWindowTextA(hModeBtn, "Mode: Parametric [M]");
         SetWindowTextA(hLabels[0], "x1 =");
@@ -244,7 +363,8 @@ static void UpdateModeUI(void) {
         SetWindowTextA(hInputs[0], "4*cos(3*t)");
         SetWindowTextA(hInputs[1], "4*sin(2*t)");
         SetWindowTextA(hInputs[2], "3*cos(t)");
-        SetWindowTextA(hStatus, "Parametric Mode (x(t), y(t)). Lissajous curves & complex trajectories. Press F1 for Help.");
+        ShowNativeStatus("Parametric Mode (x(t), y(t)). Trajectories and Lissajous curves. F1 for Help.");
+        if (g_hWnd) SetWindowTextA(g_hWnd, "KGraph Studio - Parametric [M: Mode | P: Presets | R: Reset | F1: Help]");
     }
     for (int i = 0; i < MAX_FUNCS; i++) {
         GetWindowTextA(hInputs[i], funcs[i].expr, 127);
@@ -308,38 +428,46 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hTopBgBrush = CreateSolidBrush(RGB(23, 27, 44));
             hEditBgBrush = CreateSolidBrush(RGB(15, 23, 42));
 
-            int topY = MulDiv(8, g_dpi, 96);
+            g_hWnd = hwnd;
+            int topY = MulDiv(6, g_dpi, 96);
             for (int i = 0; i < MAX_FUNCS; i++) {
                 char label[16];
                 sprintf(label, "y%d =", i + 1);
-                hLabels[i] = CreateWindowA("STATIC", label, WS_CHILD | WS_VISIBLE, MulDiv(10, g_dpi, 96), topY + MulDiv(4, g_dpi, 96), MulDiv(35, g_dpi, 96), MulDiv(20, g_dpi, 96), hwnd, NULL, NULL, NULL);
-                hInputs[i] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", funcs[i].expr, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, MulDiv(50, g_dpi, 96), topY, MulDiv(210, g_dpi, 96), MulDiv(24, g_dpi, 96), hwnd, NULL, NULL, NULL);
-                hChecks[i] = CreateWindowA("BUTTON", "Show", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, MulDiv(270, g_dpi, 96), topY + MulDiv(2, g_dpi, 96), MulDiv(60, g_dpi, 96), MulDiv(20, g_dpi, 96), hwnd, (HMENU)(HMENU)(1100 + i), NULL, NULL);
+                hLabels[i] = CreateWindowA("STATIC", label, WS_CHILD | WS_VISIBLE, MulDiv(10, g_dpi, 96), topY + MulDiv(4, g_dpi, 96), MulDiv(30, g_dpi, 96), MulDiv(20, g_dpi, 96), hwnd, NULL, NULL, NULL);
+                hInputs[i] = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", funcs[i].expr, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, MulDiv(44, g_dpi, 96), topY, MulDiv(196, g_dpi, 96), MulDiv(24, g_dpi, 96), hwnd, NULL, NULL, NULL);
+                hChecks[i] = CreateWindowA("BUTTON", "Show", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, MulDiv(245, g_dpi, 96), topY + MulDiv(2, g_dpi, 96), MulDiv(52, g_dpi, 96), MulDiv(20, g_dpi, 96), hwnd, (HMENU)(1100 + i), NULL, NULL);
+                hClrBtn[i] = CreateWindowA("BUTTON", "Clr", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(300, g_dpi, 96), topY + MulDiv(1, g_dpi, 96), MulDiv(34, g_dpi, 96), MulDiv(22, g_dpi, 96), hwnd, (HMENU)(1120 + i), NULL, NULL);
                 SendMessageA(hChecks[i], BM_SETCHECK, funcs[i].enabled ? BST_CHECKED : BST_UNCHECKED, 0);
 
                 SendMessageA(hLabels[i], WM_SETFONT, (WPARAM)hFontSmall, TRUE);
                 SendMessageA(hInputs[i], WM_SETFONT, (WPARAM)hFontSmall, TRUE);
                 SendMessageA(hChecks[i], WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+                SendMessageA(hClrBtn[i], WM_SETFONT, (WPARAM)hFontSmall, TRUE);
 
                 if (!g_oldEditProc) {
                     g_oldEditProc = (WNDPROC)GetWindowLongPtrA(hInputs[i], GWLP_WNDPROC);
                 }
                 SetWindowLongPtrA(hInputs[i], GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
 
-                topY += MulDiv(30, g_dpi, 96);
+                topY += MulDiv(28, g_dpi, 96);
             }
 
-            hModeBtn  = CreateWindowA("BUTTON", "Mode: Cartesian [M]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(340, g_dpi, 96), MulDiv(8, g_dpi, 96), MulDiv(160, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1008, NULL, NULL);
-            hPlotBtn  = CreateWindowA("BUTTON", "Plot [Enter]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(510, g_dpi, 96), MulDiv(8, g_dpi, 96), MulDiv(80, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1001, NULL, NULL);
-            hZoomIn   = CreateWindowA("BUTTON", "+", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(600, g_dpi, 96), MulDiv(8, g_dpi, 96), MulDiv(35, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1002, NULL, NULL);
-            hZoomOut  = CreateWindowA("BUTTON", "-", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(640, g_dpi, 96), MulDiv(8, g_dpi, 96), MulDiv(35, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1003, NULL, NULL);
-            hResetBtn = CreateWindowA("BUTTON", "Reset [R]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(685, g_dpi, 96), MulDiv(8, g_dpi, 96), MulDiv(70, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1004, NULL, NULL);
-            
-            hRootsBtn = CreateWindowA("BUTTON", "Roots", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(340, g_dpi, 96), MulDiv(45, g_dpi, 96), MulDiv(75, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1005, NULL, NULL);
-            hPresetBtn= CreateWindowA("BUTTON", "Presets [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(425, g_dpi, 96), MulDiv(45, g_dpi, 96), MulDiv(80, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1006, NULL, NULL);
-            hHelpBtn  = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(515, g_dpi, 96), MulDiv(45, g_dpi, 96), MulDiv(75, g_dpi, 96), MulDiv(30, g_dpi, 96), hwnd, (HMENU)1007, NULL, NULL);
+            // Right side toolbar row 1 (Y=6)
+            hModeBtn  = CreateWindowA("BUTTON", "Mode: Cartesian [M]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(344, g_dpi, 96), MulDiv(6, g_dpi, 96), MulDiv(156, g_dpi, 96), MulDiv(28, g_dpi, 96), hwnd, (HMENU)1008, NULL, NULL);
+            hPlotBtn  = CreateWindowA("BUTTON", "Plot [Enter]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(505, g_dpi, 96), MulDiv(6, g_dpi, 96), MulDiv(85, g_dpi, 96), MulDiv(28, g_dpi, 96), hwnd, (HMENU)1001, NULL, NULL);
+            hZoomIn   = CreateWindowA("BUTTON", "+", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(595, g_dpi, 96), MulDiv(6, g_dpi, 96), MulDiv(30, g_dpi, 96), MulDiv(28, g_dpi, 96), hwnd, (HMENU)1002, NULL, NULL);
+            hZoomOut  = CreateWindowA("BUTTON", "-", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(630, g_dpi, 96), MulDiv(6, g_dpi, 96), MulDiv(30, g_dpi, 96), MulDiv(28, g_dpi, 96), hwnd, (HMENU)1003, NULL, NULL);
+            hResetBtn = CreateWindowA("BUTTON", "Reset [R]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(665, g_dpi, 96), MulDiv(6, g_dpi, 96), MulDiv(70, g_dpi, 96), MulDiv(28, g_dpi, 96), hwnd, (HMENU)1004, NULL, NULL);
 
-            hStatus = CreateWindowA("STATIC", "Ready. Scroll to zoom, drag to pan. Press F1 or H for help.", WS_CHILD | WS_VISIBLE | SS_LEFT, MulDiv(10, g_dpi, 96), topY + MulDiv(2, g_dpi, 96), MulDiv(800, g_dpi, 96), MulDiv(20, g_dpi, 96), hwnd, NULL, NULL, NULL);
+            // Right side toolbar row 2 (Y=38)
+            hRootsBtn  = CreateWindowA("BUTTON", "Roots", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(344, g_dpi, 96), MulDiv(38, g_dpi, 96), MulDiv(65, g_dpi, 96), MulDiv(28, g_dpi, 96), hwnd, (HMENU)1005, NULL, NULL);
+            hPresetBtn = CreateWindowA("BUTTON", "Presets [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(414, g_dpi, 96), MulDiv(38, g_dpi, 96), MulDiv(85, g_dpi, 96), MulDiv(28, g_dpi, 96), hwnd, (HMENU)1006, NULL, NULL);
+            hHelpBtn   = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(504, g_dpi, 96), MulDiv(38, g_dpi, 96), MulDiv(75, g_dpi, 96), MulDiv(28, g_dpi, 96), hwnd, (HMENU)1007, NULL, NULL);
+            hSaveBtn   = CreateWindowA("BUTTON", "Save BMP [S]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(584, g_dpi, 96), MulDiv(38, g_dpi, 96), MulDiv(88, g_dpi, 96), MulDiv(28, g_dpi, 96), hwnd, (HMENU)1009, NULL, NULL);
+            hCopyBtn   = CreateWindowA("BUTTON", "Copy [C]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(677, g_dpi, 96), MulDiv(38, g_dpi, 96), MulDiv(58, g_dpi, 96), MulDiv(28, g_dpi, 96), hwnd, (HMENU)1010, NULL, NULL);
+
+            // Status bar at row 3 (Y=92)
+            hStatus = CreateWindowA("STATIC", "Welcome to KGraph Studio! Drag or use Arrow keys to pan, scroll wheel or +/- to zoom, F1 for Help.", WS_CHILD | WS_VISIBLE | SS_LEFT, MulDiv(10, g_dpi, 96), MulDiv(94, g_dpi, 96), MulDiv(740, g_dpi, 96), MulDiv(22, g_dpi, 96), hwnd, NULL, NULL, NULL);
             SendMessageA(hStatus, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
 
             SendMessageA(hModeBtn, WM_SETFONT, (WPARAM)hFontBold, TRUE);
@@ -350,6 +478,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hRootsBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             SendMessageA(hPresetBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             SendMessageA(hHelpBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+            SendMessageA(hSaveBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+            SendMessageA(hCopyBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+            
+            SetTimer(hwnd, 2001, 5000, NULL);
             break;
         }
 
@@ -370,6 +502,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return (INT_PTR)hEditBgBrush;
         }
 
+        case WM_GETMINMAXINFO: {
+            MINMAXINFO* mmi = (MINMAXINFO*)lParam;
+            mmi->ptMinTrackSize.x = MulDiv(760, g_dpi, 96);
+            mmi->ptMinTrackSize.y = MulDiv(480, g_dpi, 96);
+            return 0;
+        }
+
+        case WM_SIZE: {
+            RECT rc;
+            GetClientRect(hwnd, &rc);
+            int clientW = rc.right - rc.left;
+            if (hStatus && clientW > 0) {
+                SetWindowPos(hStatus, NULL, MulDiv(10, g_dpi, 96), MulDiv(94, g_dpi, 96), clientW - MulDiv(20, g_dpi, 96), MulDiv(22, g_dpi, 96), SWP_NOZORDER);
+            }
+            InvalidateRect(hwnd, NULL, FALSE);
+            return 0;
+        }
+
+        case WM_TIMER: {
+            if (wParam == 2001) {
+                KillTimer(hwnd, 2001);
+                if (g_mode == MODE_CARTESIAN) {
+                    SetWindowTextA(hStatus, "Cartesian Mode y(x). Scroll or Arrow keys to pan. F1 for Help.");
+                } else if (g_mode == MODE_POLAR) {
+                    SetWindowTextA(hStatus, "Polar Mode r(th). Scroll or Arrow keys to pan. F1 for Help.");
+                } else {
+                    SetWindowTextA(hStatus, "Parametric Mode (x,y)(t). Scroll or Arrow keys to pan. F1 for Help.");
+                }
+            }
+            break;
+        }
+
         case WM_COMMAND: {
             int id = LOWORD(wParam);
             if (id == 1001) { // Plot
@@ -377,24 +541,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     GetWindowTextA(hInputs[i], funcs[i].expr, 127);
                     funcs[i].enabled = (SendMessageA(hChecks[i], BM_GETCHECK, 0, 0) == BST_CHECKED);
                 }
+                ShowNativeStatus("Graph plotted successfully!");
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (id == 1002) { // Zoom In
                 view_scale *= 0.75;
+                ShowNativeStatus("Zoom In (+)");
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (id == 1003) { // Zoom Out
                 view_scale *= 1.3333;
+                ShowNativeStatus("Zoom Out (-)");
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (id == 1004) { // Reset
                 view_cx = 0.0; view_cy = 0.0; view_scale = 10.0;
+                ShowNativeStatus("Viewport reset to [-10, 10] at origin.");
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (id == 1005) { // Find Roots
                 if (g_mode == MODE_CARTESIAN) {
                     FindRootsInView();
                     char msgBuf[128];
-                    sprintf(msgBuf, "Found %d root(s) in view range.", root_count);
-                    SetWindowTextA(hStatus, msgBuf);
+                    sprintf(msgBuf, "Found %d root(s) in current view range.", root_count);
+                    ShowNativeStatus(msgBuf);
                 } else {
-                    SetWindowTextA(hStatus, "Root finder active in Cartesian mode.");
+                    ShowNativeStatus("Root finder is active in Cartesian mode.");
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (id == 1006) { // Presets
@@ -403,27 +571,39 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     const char* p1[3] = {"exp(-x^2)", "sin(x)*cos(2*x)", "1/(1+x^2)"};
                     const char* p2[3] = {"sin(3*x)", "x^2/4 - 2", "cos(x)"};
                     const char* p3[3] = {"x^3 - 3*x", "exp(-abs(x)/3)", "sin(x)"};
+                    const char* names[3] = {"Gaussian & Waves", "Harmonics & Parabola", "Cubic & Damped Wave"};
                     SetWindowTextA(hInputs[0], p1[cartPresetIdx]);
                     SetWindowTextA(hInputs[1], p2[cartPresetIdx]);
                     SetWindowTextA(hInputs[2], p3[cartPresetIdx]);
+                    char pMsg[128];
+                    sprintf(pMsg, "Loaded Cartesian Preset [%d/3]: %s", cartPresetIdx + 1, names[cartPresetIdx]);
+                    ShowNativeStatus(pMsg);
                     cartPresetIdx = (cartPresetIdx + 1) % 3;
                 } else if (g_mode == MODE_POLAR) {
                     static int polarPresetIdx = 0;
                     const char* p1[3] = {"4*sin(5*t)", "3*cos(4*t)", "2*(1-cos(t))"};
                     const char* p2[3] = {"3*(1 - sin(t))", "t/2", "3+2*cos(t)"};
                     const char* p3[3] = {"sqrt(abs(9*cos(2*t)))", "sin(3*t)", "cos(2*t)"};
+                    const char* names[3] = {"Penta-Rose & Cardioid", "Cardioid & Spiral", "Lemniscate & Waves"};
                     SetWindowTextA(hInputs[0], p1[polarPresetIdx]);
                     SetWindowTextA(hInputs[1], p2[polarPresetIdx]);
                     SetWindowTextA(hInputs[2], p3[polarPresetIdx]);
+                    char pMsg[128];
+                    sprintf(pMsg, "Loaded Polar Preset [%d/3]: %s", polarPresetIdx + 1, names[polarPresetIdx]);
+                    ShowNativeStatus(pMsg);
                     polarPresetIdx = (polarPresetIdx + 1) % 3;
                 } else if (g_mode == MODE_PARAMETRIC) {
                     static int paramPresetIdx = 0;
                     const char* p1[3] = {"sin(t)*(exp(cos(t))-2*cos(4*t))", "4*cos(3*t)", "4*cos(t)^3"};
                     const char* p2[3] = {"cos(t)*(exp(cos(t))-2*cos(4*t))", "4*sin(2*t)", "4*sin(t)^3"};
                     const char* p3[3] = {"4*cos(t)^3", "3*cos(t)", "sin(2*t)"};
+                    const char* names[3] = {"Butterfly Curve", "Lissajous 3:2", "Astroid"};
                     SetWindowTextA(hInputs[0], p1[paramPresetIdx]);
                     SetWindowTextA(hInputs[1], p2[paramPresetIdx]);
                     SetWindowTextA(hInputs[2], p3[paramPresetIdx]);
+                    char pMsg[128];
+                    sprintf(pMsg, "Loaded Parametric Preset [%d/3]: %s", paramPresetIdx + 1, names[paramPresetIdx]);
+                    ShowNativeStatus(pMsg);
                     paramPresetIdx = (paramPresetIdx + 1) % 3;
                 }
                 SendMessageA(hChecks[0], BM_SETCHECK, BST_CHECKED, 0);
@@ -436,9 +616,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 g_mode = (PlotMode)((g_mode + 1) % 3);
                 UpdateModeUI();
                 InvalidateRect(hwnd, NULL, FALSE);
+            } else if (id == 1009) { // Save BMP
+                SaveGraphBMP(hwnd);
+            } else if (id == 1010) { // Copy Points
+                CopyPointsToClipboard(hwnd);
             } else if (id >= 1100 && id < 1100 + MAX_FUNCS) {
                 int idx = id - 1100;
                 funcs[idx].enabled = (SendMessageA(hChecks[idx], BM_GETCHECK, 0, 0) == BST_CHECKED);
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (id >= 1120 && id < 1120 + MAX_FUNCS) {
+                int idx = id - 1120;
+                SetWindowTextA(hInputs[idx], "");
+                funcs[idx].expr[0] = '\0';
+                SetFocus(hInputs[idx]);
+                char clrMsg[64];
+                sprintf(clrMsg, "Cleared expression %d", idx + 1);
+                ShowNativeStatus(clrMsg);
                 InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
@@ -460,14 +653,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowHelpDialog(hwnd);
             } else if (wParam == 'M' || wParam == 'm') {
                 SendMessageA(hwnd, WM_COMMAND, 1008, 0);
-            } else if (wParam == 'R' || wParam == 'r') {
+            } else if (wParam == 'R' || wParam == 'r' || wParam == VK_HOME) {
                 SendMessageA(hwnd, WM_COMMAND, 1004, 0);
             } else if (wParam == 'P' || wParam == 'p') {
                 SendMessageA(hwnd, WM_COMMAND, 1006, 0);
-            } else if (wParam == VK_ADD || wParam == VK_OEM_PLUS) {
+            } else if (wParam == 'S' || wParam == 's') {
+                SendMessageA(hwnd, WM_COMMAND, 1009, 0);
+            } else if (wParam == 'C' || wParam == 'c') {
+                SendMessageA(hwnd, WM_COMMAND, 1010, 0);
+            } else if (wParam == VK_ADD || wParam == VK_OEM_PLUS || wParam == VK_PRIOR) {
                 SendMessageA(hwnd, WM_COMMAND, 1002, 0);
-            } else if (wParam == VK_SUBTRACT || wParam == VK_OEM_MINUS) {
+            } else if (wParam == VK_SUBTRACT || wParam == VK_OEM_MINUS || wParam == VK_NEXT) {
                 SendMessageA(hwnd, WM_COMMAND, 1003, 0);
+            } else if (wParam == VK_LEFT) {
+                view_cx -= 0.15 * view_scale;
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == VK_RIGHT) {
+                view_cx += 0.15 * view_scale;
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == VK_UP) {
+                view_cy += 0.15 * view_scale;
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == VK_DOWN) {
+                view_cy -= 0.15 * view_scale;
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == '1' || wParam == '2' || wParam == '3') {
+                int idx = wParam - '1';
+                funcs[idx].enabled = !funcs[idx].enabled;
+                SendMessageA(hChecks[idx], BM_SETCHECK, funcs[idx].enabled ? BST_CHECKED : BST_UNCHECKED, 0);
+                InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == VK_RETURN) {
                 SendMessageA(hwnd, WM_COMMAND, 1001, 0);
             }
@@ -766,13 +980,28 @@ void __stdcall MainEntry(void) {
     
     RECT winRect = {0, 0, MulDiv(1024, initial_dpi, 96), MulDiv(768, initial_dpi, 96)};
     AdjustWindowRect(&winRect, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, FALSE);
-    HWND hwnd = CreateWindowExA(0, "KGraphClass", "KGraph Studio - [Press F1 or H for Help]", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, winRect.right - winRect.left, winRect.bottom - winRect.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KGraphClass", "KGraph Studio - Cartesian [M: Mode | P: Presets | R: Reset | F1: Help]", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, winRect.right - winRect.left, winRect.bottom - winRect.top, NULL, NULL, wc.hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN) {
+            if (msg.wParam == VK_F1) {
+                ShowHelpDialog(hwnd);
+                continue;
+            }
+            if (GetKeyState(VK_CONTROL) & 0x8000) {
+                if (msg.wParam == 'S' || msg.wParam == 's') {
+                    SendMessageA(hwnd, WM_COMMAND, 1009, 0);
+                    continue;
+                } else if (msg.wParam == 'C' || msg.wParam == 'c') {
+                    SendMessageA(hwnd, WM_COMMAND, 1010, 0);
+                    continue;
+                }
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }
