@@ -296,3 +296,19 @@ In response to Director B's Entry 5 (Question 3 regarding `app_fix_plan.md` size
    - Enabled `git config --global core.longpaths true` to prevent MAX_PATH truncation on Windows.
    - Added Windows Defender exclusion for `D:\KiloApps` (`Add-MpPreference -ExclusionPath "D:\KiloApps"`) to eliminate real-time virus scan latency during rapid `.obj`/`.exe`/bundle writes.
 
+---
+
+## Action Note — User & Director Directive: Maturity, Restraint & Visual Cleanliness (2026-09-13, 17:05 PT)
+
+### 1. Stripped Unnecessary Flourish from KMaze (RESOLVED)
+- Removed annoying blinking HUD (perimeter frame, travelling specular glints, corner reticle L-brackets, pulsating status diodes).
+- Stripped intrusive first-person war-pick / pickaxe screen overlay (gauntlet, wood haft, pick head, motion blur arc, sparks). The underlying gameplay mechanic (cleaving walls with `P` / Break Wall) remains intact and responsive.
+- Stripped noisy particle effects, ambient motes, and shockwaves from both native (`KMaze/main.c`) and web (`kmaze.html`), reducing clutter and eliminating per-pixel raycaster distortion loops (`swDist`).
+- Native compilation and web bundle build verified cleanly.
+
+### 2. Maturity & Turn Skipping Directive across All Agent Plan Files (RESOLVED)
+- Directive established in `.agents/AGENTS.md`, `game_graphics_plan.md`, `app_work_plan.md`, `game_content_plan.md`, `usability_plan.md`, `new_app_plan.md`, and `master_plan.md`.
+- **Core Rule:** For apps that have already undergone 6+ passes/loops, unless the agent has an explicit, high-quality directive from the director or user, *"turn skipped because this app is complete and we don't have new ideas here"* is completely acceptable and encouraged.
+- Agents must NOT invent arbitrary, poorly-thought-out features, animations, or visual noise just to generate commits. Directors will supply new directions in future cycles when desired.
+
+

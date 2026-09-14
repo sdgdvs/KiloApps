@@ -15,6 +15,10 @@
 - **CLEANUP:** Before committing, delete any temporary scripts (patch_*.py, *.tmp) in the repo root. Do not leave scratch files behind.
 - **Logging discipline:** Keep this plan file concise. Work log entries MUST be MAX 2 LINES per game. Example: "KChess (Loop 9): Enhanced piece animations, board perspective shadows, and capture particle effects." Do NOT write paragraph-length descriptions.
 - **⚠️ UNIQUE VISUAL IDENTITY (CRITICAL):** Do NOT apply the same formulaic template to every game. Each game should have a UNIQUE visual identity that fits its theme. A chess game should look like polished wood, not a sci-fi HUD. A farm game should have warm watercolors, not cybernetic reticles. Think about what makes THIS game visually distinct. Avoid copy-pasting the same "4-layer particle engine, dual-tier shockwaves, filigree brackets, specular glint" to every game.
+- **⚠️ DIRECTOR DIRECTIVE (2026-09-13) — STOP EXCESSIVE VISUAL FLOURISH & TURN SKIPPING RULE (CRITICAL):**
+  - Stop inventing unneeded visual flourishes (blinking HUD reticles, corner diodes, perimeter traveling glints, screen shake, intrusive first-person weapon/hand overlays, or particle spam). Several apps now have too much flourish because unnecessary things were invented.
+  - **Maturity Rule for Mature Games (Loop 6+):** For apps that have already been through 6+ passes, unless you have a good directive from the director to add something, **"turn skipped because this app is complete and we don't have new ideas here"** is completely fine and expected!
+  - The director can add new ideas or directions later and you can change those things on the next turn, but you should NOT just add random poorly-thought-out features and graphics. If a mature game is visually cohesive and complete, log the skip concisely, rotate it to the bottom, and finish your turn cleanly.
 
 ---
 
@@ -200,7 +204,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KColosseum (Loop 1): Gladiator sprites, lion/chariot enemies, Roman arena environment, and particle system.
 - KFortress (Loop 7): Procedural architectural tower sprites, animated multi-caste enemy sprites (Goblin, Orc, Hound, Gargoyle, Necromancer, Skeleton, Ogre, Wyvern, Golem), and knight/militia sprites.
 - KColony (Loop 7): 3 animated xeno-caste sprites (Swarmer, Spitter, Goliath) with tactical health gauges, hovering nanite repair drones, and overland logistics rovers.
-- KMaze (Loop 9): Themed Minotaur/Boss sprites with nostril steam, first-person adventurer lantern and war-pick, and biome-textured dungeon walls.
+- KMaze (Loop 9): Themed Minotaur/Boss sprites and biome walls. Stripped annoying blinking HUD, pickaxe visual, and particle effects per user/director directive.
 - KBreakout (Loop 9): Themed Boss Fortress sprites (Dreadnought, Citadel, Void Leviathan), explosive/titanium/prism/quantum brick sprites, orbital drone wings, and tractor beam capture.
 - KCyber (Loop 3): 3D perspective cyberspace wireframe grid, distant skyline silhouettes, matrix code streams, and darknet shop terminal.
 

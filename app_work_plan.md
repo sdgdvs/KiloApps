@@ -32,6 +32,13 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 - **Do:** Add Save/Load states (F5/F9), High Score JSON Export/Import, Replay Viewers, PGN/FEN parsers, custom keybinding config.
 - **Don't:** DO NOT add campaigns, power-ups, new enemies, or bosses. Leave gameplay content to the Game Content agent!
 
+## DIRECTOR DIRECTIVE (2026-09-13): MATURITY & TURN SKIPPING FOR APPS WITH 6+ PASSES
+
+**⚠️ READ THIS BEFORE EVERY TURN:**
+- Unless you have a good, specific directive from the director or user to add something to an app, **"turn skipped because this app is complete and we don't have new ideas here"** is completely fine for apps that have already been through 6+ passes.
+- The director can add new ideas or directions later and you can implement those things on the next turn, but do NOT just add random, poorly-thought-out features just to make a commit.
+- If a mature app is functionally complete and has no active directive, log the skip concisely, rotate it to the bottom, and end your turn cleanly.
+
 ---
 
 ## Coordination Rules (DO NOT DELETE — required for subagent context)

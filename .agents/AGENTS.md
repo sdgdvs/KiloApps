@@ -45,3 +45,11 @@ Multiple agents operate on this codebase on overlapping schedules, potentially f
 - Keep plan files concise. A few lines per completed item is sufficient.
 - Do NOT duplicate file contents into log files.
 - Do NOT create growing log files that append data every turn. Track status, not history.
+
+## App Maturity, Restraint & Turn Skipping Protocol (CRITICAL)
+
+- **Stop Unnecessary Visual Flourish and Feature Bloat:** Agents must NOT invent random, unrequested, poorly-thought-out features, animations, or visual flourishes (such as blinking HUD reticles, specular glints, particle engines, screen shake, or obtrusive first-person weapon graphics) just to have something to do or commit. The lightweight, bloat-free philosophy of 1999 applies to visuals and UI clarity as well as code size.
+- **Turn Skipping for Mature Apps (6+ Passes):** For apps or games that have already been through 6+ passes/loops (e.g. Loop 6+, Pass 6+), unless an agent has a specific, clear directive from the director or user to add or change something:
+  *`turn skipped because this app is complete and we don't have new ideas here`* is completely fine and expected!
+- **Director Workflow:** The director can add new ideas or directions in subsequent review cycles, and the agent can implement those directives on the next turn. When there is no active directive for a mature app, do NOT invent arbitrary low-quality additions — simply log the skip concisely, rotate the app in the queue, and finish the turn cleanly.
+

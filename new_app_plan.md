@@ -16,6 +16,7 @@
 - **Conflict resolution:** If `git push` fails → `git pull --rebase` → resolve conservatively (prefer remote for code you didn't write) → push again.
 - **Logging discipline:** Keep this plan file concise. Brief notes per completed phase. Do NOT dump file contents.
 - **⚠️ QUALITY OVER QUANTITY:** The project has 95+ apps. Focus on making each app EXCELLENT rather than rushing through phases. Take time to add polish, edge cases, and depth. Each phase should feel like a real product improvement, not a checkbox exercise.
+- **⚠️ MATURITY & TURN SKIPPING DIRECTIVE (2026-09-13):** During deep expansion of existing apps, if an app has already undergone 6+ passes and is feature-complete, cohesive, and lacks a new specific directive from the director or user, **"turn skipped because this app is complete and we don't have new ideas here"** is fine and encouraged. Do not add arbitrary or poorly-thought-out features just to fill a turn.
 
 ## DIRECTOR NOTE (2026-07-22): DEEP FANTASY & SCI-FI GAMES
 

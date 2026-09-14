@@ -558,20 +558,7 @@
   let muzzleFlashTimer = 0;
   let recoilOffset = 0;
   let shockwaves = [];
-
-  // Ambient atmospheric dungeon motes
   const ambientMotes = [];
-  for (let i = 0; i < 28; i++) {
-      ambientMotes.push({
-          x: Math.random() * 320,
-          y: Math.random() * 240,
-          vx: (Math.random() - 0.5) * 0.35,
-          vy: -0.15 - Math.random() * 0.25,
-          size: 0.8 + Math.random() * 1.8,
-          phase: Math.random() * Math.PI * 2,
-          isGold: Math.random() > 0.45
-      });
-  }
 
   function addScreenShake(duration, intensity) {
       if (screenShakeTimer < duration) {
@@ -695,68 +682,9 @@
       e.target.value = '';
   }
 
-  // Multi-Layered Kinematic Particle System (4 Layers)
-  // Layer 0: Incandescent core needle sparks with velocity trails
-  // Layer 1: Expanding buoyant plasma/smoke puffs with negative gravity and drag
-  // Layer 2: Heavy kinematic stone & crystal shards with gravity, drag, tumbling rotation, and floor bounce
-  // Layer 3: Radiant golden/cyan celebration energy stars with pulsing scale
   let particles = [];
   function addParticles(x, y, color, count = 25) {
-      for (let i = 0; i < count; i++) {
-          let layerRoll = Math.random();
-          let angle = Math.random() * Math.PI * 2;
-          let p = {
-              x: x + (Math.random() - 0.5) * 14,
-              y: y + (Math.random() - 0.5) * 14,
-              color: color,
-              layer: 0,
-              rot: Math.random() * Math.PI * 2,
-              vrot: (Math.random() - 0.5) * 0.35,
-              size: 2
-          };
-
-          if (layerRoll < 0.40) {
-              // Layer 0: High-speed incandescent needle sparks
-              let speed = 3.5 + Math.random() * 5.5;
-              p.layer = 0;
-              p.vx = Math.cos(angle) * speed;
-              p.vy = Math.sin(angle) * speed;
-              p.life = 12 + Math.floor(Math.random() * 14);
-              p.maxLife = p.life;
-              p.size = 1.5 + Math.random() * 1.5;
-              p.sparkColor = (Math.random() > 0.4) ? '#ffffff' : color;
-          } else if (layerRoll < 0.65) {
-              // Layer 1: Expanding buoyant plasma/smoke puffs
-              let speed = 0.6 + Math.random() * 2.2;
-              p.layer = 1;
-              p.vx = Math.cos(angle) * speed;
-              p.vy = Math.sin(angle) * speed - 0.8;
-              p.life = 25 + Math.floor(Math.random() * 20);
-              p.maxLife = p.life;
-              p.size = 3.5 + Math.random() * 3.0;
-          } else if (layerRoll < 0.85) {
-              // Layer 2: Heavy kinematic debris & crystal/brick shards
-              let speed = 1.8 + Math.random() * 4.0;
-              p.layer = 2;
-              p.vx = Math.cos(angle) * speed;
-              p.vy = Math.sin(angle) * speed - 1.2;
-              p.life = 35 + Math.floor(Math.random() * 25);
-              p.maxLife = p.life;
-              p.size = 2.5 + Math.random() * 3.5;
-              p.polyType = Math.floor(Math.random() * 3); // triangle, diamond, quad
-          } else {
-              // Layer 3: Radiant celebration energy stars
-              let speed = 1.0 + Math.random() * 3.0;
-              p.layer = 3;
-              p.vx = Math.cos(angle) * speed;
-              p.vy = Math.sin(angle) * speed;
-              p.life = 28 + Math.floor(Math.random() * 22);
-              p.maxLife = p.life;
-              p.size = 4.0 + Math.random() * 3.0;
-              p.twinkleSpeed = 0.25 + Math.random() * 0.3;
-          }
-          particles.push(p);
-      }
+      // Particle effects stripped for visual clarity
   }
 
   // Procedural 16x16 Texture Generator (Loop 9 High-Fidelity Themed Assets)
@@ -1999,54 +1927,7 @@
 
       if (muzzleFlashTimer > 0) muzzleFlashTimer--;
       if (recoilOffset > 0) recoilOffset -= 1.5;
-      shockwaves = shockwaves.filter(sw => {
-          sw.radius += 0.35;
-          if (!sw.outerRadius) sw.outerRadius = sw.radius * 1.55;
-          sw.outerRadius += 0.55;
-          sw.life--;
-          return sw.life > 0;
-      });
 
-      // Update 4-layer particle physics
-      particles = particles.filter(p => {
-          if (p.layer === 0) {
-              // Incandescent needle sparks: drag
-              p.vx *= 0.94;
-              p.vy *= 0.94;
-          } else if (p.layer === 1) {
-              // Buoyant smoke/plasma: negative gravity and drag
-              p.vy -= 0.06;
-              p.vx *= 0.96;
-              p.size += 0.12;
-          } else if (p.layer === 2) {
-              // Heavy debris shards: gravity, drag, tumbling rotation, floor bounce
-              p.vy += 0.16;
-              p.vx *= 0.97;
-              p.rot += p.vrot;
-              if (p.y >= 235 && p.vy > 0) {
-                  p.y = 235;
-                  p.vy = -p.vy * 0.45;
-                  p.vrot *= 0.6;
-              }
-          } else if (p.layer === 3) {
-              // Radiant celebration energy stars: drag
-              p.vx *= 0.95;
-              p.vy *= 0.95;
-          }
-          p.x += p.vx;
-          p.y += p.vy;
-          p.life--;
-          return p.life > 0;
-      });
-
-      // Update ambient atmospheric motes
-      for (let m of ambientMotes) {
-          m.x += m.vx + Math.sin(frameCount * 0.05 + m.phase) * 0.2;
-          m.y += m.vy;
-          if (m.y < 0) { m.y = 240; m.x = Math.random() * 320; }
-          if (m.x < 0) m.x = 320;
-          if (m.x > 320) m.x = 0;
-      }
       
       minotaurTimer += 30;
       if (minotaurTimer >= 1000) {
@@ -2504,24 +2385,15 @@
                   let intensity = (4.5 - distToP) / 4.5 * (muzzleFlashTimer / 5.0);
                   lightR += intensity * 1.5; lightG += intensity * 1.2; lightB += intensity * 0.5;
               }
-              let swDist = 0;
-              for (let sw of shockwaves) {
-                  let dist = Math.sqrt((floorX - sw.x)**2 + (floorY - sw.y)**2);
-                  let dInner = Math.abs(dist - sw.radius);
-                  if (dInner < 0.45) swDist += (0.45 - dInner) * (sw.life / 20.0) * 1.5;
-                  let dOuter = Math.abs(dist - (sw.outerRadius || (sw.radius * 1.55)));
-                  if (dOuter < 0.65) swDist += (0.65 - dOuter) * (sw.life / 20.0) * 0.75;
-              }
-              
               floorX += floorStepX;
               floorY += floorStepY;
               
               let texIdx = isFloor ? 23 : 24;
               let srcCol = textures[texIdx][ty * 16 + tx];
               
-              let r = (srcCol & 0xFF) * lightR + swDist * 255;
-              let g = ((srcCol >> 8) & 0xFF) * lightG + swDist * 100;
-              let b = ((srcCol >> 16) & 0xFF) * lightB + swDist * 100;
+              let r = (srcCol & 0xFF) * lightR;
+              let g = ((srcCol >> 8) & 0xFF) * lightG;
+              let b = ((srcCol >> 16) & 0xFF) * lightB;
               buf32[y * W + x] = (255 << 24) | (Math.min(255, Math.max(0, b)) << 16) | (Math.min(255, Math.max(0, g)) << 8) | Math.min(255, Math.max(0, r));
           }
       }
@@ -2642,15 +2514,6 @@
               let intensity = (4.5 - distToPlayer) / 4.5 * (muzzleFlashTimer / 5.0);
               lightR += intensity * 1.5; lightG += intensity * 1.2; lightB += intensity * 0.5;
           }
-          let swDist = 0;
-          for (let sw of shockwaves) {
-              let dist = Math.sqrt((actualWX - sw.x)**2 + (actualWY - sw.y)**2);
-              let dInner = Math.abs(dist - sw.radius);
-              if (dInner < 0.45) swDist += (0.45 - dInner) * (sw.life / 20.0) * 1.5;
-              let dOuter = Math.abs(dist - (sw.outerRadius || (sw.radius * 1.55)));
-              if (dOuter < 0.65) swDist += (0.65 - dOuter) * (sw.life / 20.0) * 0.75;
-          }
-          
           for (let y = actualStart; y <= actualEnd; y++) {
               let texY = Math.floor(texPos) & 15;
               texPos += step;
@@ -2662,9 +2525,9 @@
                   if (varVal === 0) { tintR = 0.85; tintG = 0.9; tintB = 1.0; }
                   else if (varVal === 1) { tintR = 1.0; tintG = 0.9; tintB = 0.85; }
               }
-              let r = (srcCol & 0xFF) * sideMult * tintR * lightR + swDist * 255;
-              let g = ((srcCol >> 8) & 0xFF) * sideMult * tintG * lightG + swDist * 100;
-              let b = ((srcCol >> 16) & 0xFF) * sideMult * tintB * lightB + swDist * 100;
+              let r = (srcCol & 0xFF) * sideMult * tintR * lightR;
+              let g = ((srcCol >> 8) & 0xFF) * sideMult * tintG * lightG;
+              let b = ((srcCol >> 16) & 0xFF) * sideMult * tintB * lightB;
               
               buf32[y * W + x] = (255 << 24) | (Math.min(255, Math.max(0, b)) << 16) | (Math.min(255, Math.max(0, g)) << 8) | Math.min(255, Math.max(0, r));
           }
@@ -2677,161 +2540,7 @@
       uiCtx.save();
       uiCtx.scale(2.5, 2.5);
 
-      // Ambient atmospheric dungeon motes
-      for (let m of ambientMotes) {
-          let flicker = 0.35 + 0.35 * Math.sin(frameCount * 0.08 + m.phase);
-          uiCtx.fillStyle = m.isGold ? '#ffcc44' : '#a0e0ff';
-          uiCtx.globalAlpha = flicker;
-          uiCtx.beginPath();
-          uiCtx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
-          uiCtx.fill();
-      }
-
-      // Dual-tier 2D Concentric Shockwaves
-      for (let sw of shockwaves) {
-          if (sw.life > 0) {
-              let alpha = sw.life / 20.0;
-              // Inner compression wave
-              uiCtx.strokeStyle = 'rgba(255, 255, 255, ' + (alpha * 0.7) + ')';
-              uiCtx.lineWidth = 1.8;
-              uiCtx.beginPath();
-              uiCtx.arc(W / 2, H / 2, sw.radius * 24, 0, Math.PI * 2);
-              uiCtx.stroke();
-              // Outer dispersion halo
-              uiCtx.strokeStyle = 'rgba(0, 229, 255, ' + (alpha * 0.4) + ')';
-              uiCtx.lineWidth = 3.2;
-              uiCtx.beginPath();
-              uiCtx.arc(W / 2, H / 2, (sw.outerRadius || (sw.radius * 1.55)) * 24, 0, Math.PI * 2);
-              uiCtx.stroke();
-          }
-      }
-
-      // Multi-Layered Kinematic Particles
-      uiCtx.globalCompositeOperation = 'lighter';
-      for (let p of particles) {
-          let lifeRatio = p.life / p.maxLife;
-          if (p.layer === 0) {
-              // Layer 0: Incandescent needle velocity sparks
-              uiCtx.strokeStyle = p.sparkColor || '#ffffff';
-              uiCtx.globalAlpha = Math.min(1.0, lifeRatio * 1.4);
-              uiCtx.lineWidth = p.size;
-              uiCtx.beginPath();
-              uiCtx.moveTo(p.x, p.y);
-              uiCtx.lineTo(p.x - p.vx * 2.2, p.y - p.vy * 2.2);
-              uiCtx.stroke();
-          } else if (p.layer === 1) {
-              // Layer 1: Expanding buoyant plasma/smoke puffs
-              uiCtx.fillStyle = p.color;
-              uiCtx.globalAlpha = lifeRatio * 0.45;
-              uiCtx.beginPath();
-              uiCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-              uiCtx.fill();
-          } else if (p.layer === 2) {
-              // Layer 2: Heavy kinematic tumbling debris & stone/crystal shards
-              uiCtx.save();
-              uiCtx.translate(p.x, p.y);
-              uiCtx.rotate(p.rot);
-              uiCtx.fillStyle = p.color;
-              uiCtx.globalAlpha = Math.min(1.0, lifeRatio * 1.3);
-              let s = p.size;
-              uiCtx.beginPath();
-              if (p.polyType === 0) {
-                  uiCtx.moveTo(0, -s); uiCtx.lineTo(s * 0.86, s * 0.5); uiCtx.lineTo(-s * 0.86, s * 0.5);
-              } else if (p.polyType === 1) {
-                  uiCtx.moveTo(0, -s); uiCtx.lineTo(s * 0.6, 0); uiCtx.lineTo(0, s); uiCtx.lineTo(-s * 0.6, 0);
-              } else {
-                  uiCtx.moveTo(-s * 0.7, -s * 0.5); uiCtx.lineTo(s * 0.8, -s * 0.3); uiCtx.lineTo(s * 0.5, s * 0.6); uiCtx.lineTo(-s * 0.6, s * 0.4);
-              }
-              uiCtx.closePath();
-              uiCtx.fill();
-              uiCtx.restore();
-          } else if (p.layer === 3) {
-              // Layer 3: Radiant celebration energy stars
-              uiCtx.save();
-              uiCtx.translate(p.x, p.y);
-              let pulse = (0.7 + 0.5 * Math.sin(frameCount * (p.twinkleSpeed || 0.3) + p.life)) * lifeRatio;
-              let rad = p.size * pulse;
-              uiCtx.fillStyle = p.color;
-              uiCtx.globalAlpha = 0.9;
-              uiCtx.beginPath();
-              uiCtx.moveTo(0, -rad);
-              uiCtx.quadraticCurveTo(0, 0, rad, 0);
-              uiCtx.quadraticCurveTo(0, 0, 0, rad);
-              uiCtx.quadraticCurveTo(0, 0, -rad, 0);
-              uiCtx.quadraticCurveTo(0, 0, 0, -rad);
-              uiCtx.fill();
-              uiCtx.fillStyle = '#ffffff';
-              uiCtx.beginPath();
-              uiCtx.arc(0, 0, Math.max(0.5, rad * 0.3), 0, Math.PI * 2);
-              uiCtx.fill();
-              uiCtx.restore();
-          }
-      }
       uiCtx.globalCompositeOperation = 'source-over';
-
-      // Ornate Cybernetic / Dungeon Arcade HUD Corner Reticle L-Brackets & Perimeter Inlay
-      const frameAlpha = 0.4 + 0.2 * Math.sin(frameCount * 0.05);
-      uiCtx.strokeStyle = `rgba(0, 229, 255, ${frameAlpha * 0.4})`;
-      uiCtx.lineWidth = 1;
-      uiCtx.strokeRect(3.5, 3.5, W - 7, H - 7);
-
-      // Traveling Specular Glint along Perimeter Frame
-      const perim = 2 * (W - 7 + H - 7);
-      const glintDist = (frameCount * 3.5) % perim;
-      let gx = 3.5, gy = 3.5;
-      const wSide = W - 7, hSide = H - 7;
-      if (glintDist < wSide) { gx = 3.5 + glintDist; gy = 3.5; }
-      else if (glintDist < wSide + hSide) { gx = 3.5 + wSide; gy = 3.5 + (glintDist - wSide); }
-      else if (glintDist < 2 * wSide + hSide) { gx = 3.5 + wSide - (glintDist - wSide - hSide); gy = 3.5 + hSide; }
-      else { gx = 3.5; gy = 3.5 + hSide - (glintDist - 2 * wSide - hSide); }
-      
-      let glintGrad = uiCtx.createRadialGradient(gx, gy, 0, gx, gy, 5);
-      glintGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-      glintGrad.addColorStop(0.5, 'rgba(0, 229, 255, 0.6)');
-      glintGrad.addColorStop(1, 'rgba(0, 229, 255, 0)');
-      uiCtx.fillStyle = glintGrad;
-      uiCtx.beginPath();
-      uiCtx.arc(gx, gy, 5, 0, Math.PI * 2);
-      uiCtx.fill();
-
-      // Corner Reticle L-Brackets with Glowing Status Diodes
-      const corners = [
-          { x: 10, y: 10, dx: 1, dy: 1 },
-          { x: W - 10, y: 10, dx: -1, dy: 1 },
-          { x: 10, y: H - 10, dx: 1, dy: -1 },
-          { x: W - 10, y: H - 10, dx: -1, dy: -1 }
-      ];
-      const diodePulse = 0.65 + 0.35 * Math.sin(frameCount * 0.1);
-      for (let c of corners) {
-          // Double-line sculpted L-bracket arms
-          uiCtx.strokeStyle = 'rgba(0, 229, 255, 0.7)';
-          uiCtx.lineWidth = 2;
-          uiCtx.beginPath();
-          uiCtx.moveTo(c.x + c.dx * 14, c.y);
-          uiCtx.lineTo(c.x, c.y);
-          uiCtx.lineTo(c.x, c.y + c.dy * 14);
-          uiCtx.stroke();
-
-          // Tech notches
-          uiCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-          uiCtx.lineWidth = 1;
-          uiCtx.beginPath();
-          uiCtx.moveTo(c.x + c.dx * 7, c.y - c.dy * 2);
-          uiCtx.lineTo(c.x + c.dx * 7, c.y + c.dy * 2);
-          uiCtx.moveTo(c.x - c.dx * 2, c.y + c.dy * 7);
-          uiCtx.lineTo(c.x + c.dx * 2, c.y + c.dy * 7);
-          uiCtx.stroke();
-
-          // Pulsating Status Diode / Runic Gem
-          uiCtx.fillStyle = `rgba(0, 255, 180, ${diodePulse})`;
-          uiCtx.beginPath();
-          uiCtx.arc(c.x, c.y, 2.2, 0, Math.PI * 2);
-          uiCtx.fill();
-          uiCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-          uiCtx.beginPath();
-          uiCtx.arc(c.x, c.y, 1.0, 0, Math.PI * 2);
-          uiCtx.fill();
-      }
       
       // 4. Equipment HUD
       if (gameState === 1) {
@@ -2986,127 +2695,7 @@
               uiCtx.restore();
           }
           
-          if (hasPickaxe > 0) {
-              let swing = Math.sin(frameCount * 0.3) * 4;
-              let isStriking = recoilOffset > 0;
-              let strikeProg = recoilOffset / 15.0;
-              let bx = W - 48 + swing + bobX - swayX + recoilOffset * 0.5;
-              let by = H - 42 - swing + bobY + recoilOffset * 1.6;
-              
-              uiCtx.save();
-              uiCtx.translate(bx, by);
-              let rot = strikeProg * 0.55;
-              uiCtx.rotate(rot);
 
-              // 1. Motion Blur Arc Trail during strike
-              if (isStriking && recoilOffset > 4) {
-                  uiCtx.strokeStyle = 'rgba(220, 240, 255, ' + (strikeProg * 0.4) + ')';
-                  uiCtx.lineWidth = 4;
-                  uiCtx.beginPath();
-                  uiCtx.arc(16, 2, 28, -Math.PI * 0.6, -Math.PI * 0.1);
-                  uiCtx.stroke();
-              }
-
-              // 2. Adventurer's Forearm & Leather Gauntlet
-              uiCtx.fillStyle = '#4a2e18';
-              uiCtx.beginPath();
-              uiCtx.moveTo(25, 45);
-              uiCtx.lineTo(38, 55);
-              uiCtx.lineTo(15, 26);
-              uiCtx.lineTo(8, 22);
-              uiCtx.closePath();
-              uiCtx.fill();
-
-              uiCtx.fillStyle = '#7a4d28';
-              uiCtx.beginPath();
-              uiCtx.rect(8, 14, 12, 10);
-              uiCtx.fill();
-              uiCtx.strokeStyle = '#c8963e';
-              uiCtx.lineWidth = 1;
-              uiCtx.strokeRect(10, 16, 8, 2);
-
-              // 3. Carved Oak Wood Haft with Wood Grain
-              uiCtx.fillStyle = '#8b5a2b';
-              uiCtx.beginPath();
-              uiCtx.moveTo(18, 32);
-              uiCtx.lineTo(21, 30);
-              uiCtx.lineTo(7, -6);
-              uiCtx.lineTo(4, -4);
-              uiCtx.closePath();
-              uiCtx.fill();
-              uiCtx.strokeStyle = '#b87c3e';
-              uiCtx.lineWidth = 1;
-              uiCtx.beginPath();
-              uiCtx.moveTo(5, -4);
-              uiCtx.lineTo(19, 31);
-              uiCtx.stroke();
-
-              // Brass Ferrule Collar
-              uiCtx.fillStyle = '#e6b840';
-              uiCtx.fillRect(4, -8, 5, 4);
-
-              // 4. Heavy Forged Steel War-Pick Head
-              uiCtx.fillStyle = '#3a404a';
-              uiCtx.fillRect(3, -11, 7, 6);
-              uiCtx.fillStyle = '#788494';
-              uiCtx.fillRect(4, -10, 5, 4);
-
-              // Back Chisel / Hammer Poll
-              uiCtx.fillStyle = '#5a6270';
-              uiCtx.beginPath();
-              uiCtx.moveTo(10, -11);
-              uiCtx.lineTo(19, -8);
-              uiCtx.lineTo(18, -4);
-              uiCtx.lineTo(10, -5);
-              uiCtx.closePath();
-              uiCtx.fill();
-              uiCtx.fillStyle = '#8f9aa8';
-              uiCtx.fillRect(18, -8, 2, 4);
-
-              // Tapered Curved Armor-Piercing Pick Spike
-              uiCtx.fillStyle = '#687282';
-              uiCtx.beginPath();
-              uiCtx.moveTo(3, -11);
-              uiCtx.quadraticCurveTo(-6, -12, -18, -6);
-              uiCtx.quadraticCurveTo(-5, -7, 3, -5);
-              uiCtx.closePath();
-              uiCtx.fill();
-
-              // Top Specular Sheen Ridge
-              uiCtx.strokeStyle = '#e2e8f0';
-              uiCtx.lineWidth = 1.2;
-              uiCtx.beginPath();
-              uiCtx.moveTo(3, -11);
-              uiCtx.quadraticCurveTo(-6, -12, -18, -6);
-              uiCtx.stroke();
-
-              // Animated Specular Glint sweep
-              let sheenT = (frameCount * 0.08) % 1.0;
-              let glintX = 3 - (21 * sheenT);
-              let glintY = -11 + (5 * sheenT);
-              uiCtx.fillStyle = '#ffffff';
-              uiCtx.beginPath();
-              uiCtx.arc(glintX, glintY, 1.8, 0, Math.PI * 2);
-              uiCtx.fill();
-
-              // Trailing strike sparks when swinging or hitting
-              if ((isStriking || Math.abs(swing) > 2.5) && Math.random() > 0.35) {
-                  particles.push({
-                      x: bx - 18 + (Math.random() - 0.5) * 6,
-                      y: by - 6 + (Math.random() - 0.5) * 6,
-                      vx: (Math.random() - 0.5) * 2 - (isStriking ? 2.5 : 1),
-                      vy: (Math.random() - 0.5) * 2 + (isStriking ? 1.5 : 0),
-                      layer: 0,
-                      life: isStriking ? 12 : 8,
-                      maxLife: isStriking ? 12 : 8,
-                      size: isStriking ? 2.2 : 1.5,
-                      sparkColor: isStriking ? '#ffffff' : '#ffd700',
-                      color: isStriking ? '#ffaa00' : '#ffd700'
-                  });
-              }
-
-              uiCtx.restore();
-          }
       }
       
       // 5. Draw UI

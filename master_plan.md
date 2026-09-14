@@ -25,6 +25,7 @@ The project aims to return software development to the lightweight, compute-effi
 2. Loop 0 priority for Graphics — process unprocessed games first. ✅ DONE — all 4 Loop 0 games processed.
 3. User paused Feature Expander and Game Content for reliability.
 4. QA + Tester running deep quality passes (Pass 4).
+5. **Maturity & Restraint Policy (Sep 13):** Apps that have completed 6+ passes do not need artificial churn. Unless an agent has a specific directive from the director, "turn skipped because this app is complete and we don't have new ideas here" is expected. Stop unnecessary visual flourish (blinking HUDs, particle spam, intrusive weapon overlays). Directors provide new directions as needed.
 
 ### Game Library (43 titles)
 K2048, KAbyss, KAlchemy, KAsteroids, KBreakout, KChess, KColony, KColosseum, KConnect4, KCyber, KDarts, KDragon, KFarm, KFortress, KFreecell, KGo, KHangman, KMatch3, KMaze, KMech, KMines, KMystery, KPac, KPong, KQuest, KReversi, KRogue, KSanctuary, KSimon, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSudoku, KTetris, KTowers, KTrader, KVoid, KWizard, KWords.

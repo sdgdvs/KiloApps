@@ -51,6 +51,11 @@ For Classic Games: **DO NOT add more campaign stages, boss encounters, or active
 
 **When you pick a Classic Game from the queue, your job is a BALANCE & USABILITY pass, not more content.**
 
+### 🛑 MATURITY & TURN SKIPPING DIRECTIVE (2026-09-13 — CRITICAL)
+- Unless you have a good directive from the director or user to add something, **"turn skipped because this app is complete and we don't have new ideas here"** is fine for apps that have already been through 6+ passes.
+- The director can add new ideas or directions later and you can implement those on the next turn, but you should NOT just add random poorly-thought-out features, mechanics, or graphics.
+- If a game has had 6+ passes and is balanced, complete, and solid, skip the turn, log the skip concisely, rotate it to the bottom of the queue, and finish cleanly.
+
 ---
 
 ## ⏱️ TURN SCOPING & TERMINATION (CRITICAL — READ EVERY TURN)

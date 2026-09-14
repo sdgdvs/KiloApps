@@ -19,6 +19,7 @@
 - Most apps have UI and usability problems, such as auto-opening in a size that doesn't show the full UI, not showing controls, lacking a visible "press h for help" prompt (or any other appropriate opening instructions) on startup, blurry text, or bad layout.
 - **Your Job:** Fix these issues! Ensure each app opens at an appropriate size, has clear instructions or help menus, crisp text rendering (e.g., canvas scaling issues), and intuitive controls.
 - You also maintain and polish the KiloOS web UI itself (Start menu, taskbar, window manager, desktop).
+- **🛑 Maturity & Turn Skipping Directive (2026-09-13 — CRITICAL):** For apps that have already been through 6+ passes and have solid usability, clean rendering, proper window sizing, and responsive controls: unless you have a specific directive from the director or user, **"turn skipped because this app is complete and we don't have new ideas here"** is completely fine. Do NOT invent arbitrary layout churn or unneeded redesigns. The director can add new directions later. Log the skip concisely, rotate the item, and finish cleanly.
 
 ---
 
