@@ -45,14 +45,13 @@
 
 ---
 
-**Target App:** KJournal
+**Target App:** KBase
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KJournal
 - KBase
 - KPad
 - KImage
@@ -106,10 +105,14 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KTimer
 - KContacts
 - KRead
+- KJournal
 
 ## Progress Log
 
 > 📁 **Archived Progress Log**: Older entries have been archived to [archive/usability_plan_archive.md](archive/usability_plan_archive.md) to preserve token efficiency.
+
+- KJournal: Usability and UI issues fixed (integrated interactive toast notification system with [✕] click-to-dismiss and startup welcome guide, built 1-click day navigation bar [◀, Date, ▶, Today [^N]] in toolbar for fluid day-by-day browsing, added [📋 Copy [Alt+C]] button to copy formatted entry to clipboard, implemented rich empty state in entry list with 1-click [✨ Load Sample Demo Entries] and [✍️ Write Today's Entry] actions, added visual keyboard shortcut badges across all action buttons [Copy [Alt+C], Templates [^T], Data [^I], Delete [Del], Save [^S], Moods [Alt+1..6]], made footer word count goal clickable to cycle targets [50, 100, 150, 250, 500w], expanded global keyboard navigation [Alt+Left/Right, Alt+C, Ctrl+Shift+C, Ctrl+I, Alt+1..6, Del, Esc], updated Help modal and Settings modal in web; added Windows clipboard copy system in native C with dedicated [C] Copy Entry option in view_entries and calendar_view, added 1-click [D] Load Sample Demo Entries generator for instant multi-day streak and mood testing, added [T] jump to Today in calendar navigator, synchronized dynamic console title with entry count and daily word goal, updated main menu and help guide, and verified clean compilation across both builds).
+
 
 - KRead: Usability and UI issues fixed (resolved empty startup state by auto-loading sample document if starting unpopulated, built 1-click Quick Starter toolbar [🚀 Cyberpunk, ⏳ Time Machine, 💻 KiloOS Guide, ✨ Alice, 📋 Copy Doc [^C], 🎨 Theme [T]] for rapid sample access and one-click operations, added interactive toast notification system with [✕] click-to-dismiss and startup welcome guide, added 4th rich classic sample document [Alice in Wonderland], added visual keyboard shortcut badges across all action buttons [Clear [Del], Bookmarks [B], Notes [N], A- [-], A+ [+], Stats [Ctrl+S], Help [F1]], expanded keyboard shortcuts for T theme cycling, B/N drawer toggles, Space/Shift+Space smooth page scrolling, J/K line scrolling, Home/End document jumping, [ and ] tab cycling, 0 font reset, Ctrl+Shift+C full document copy, and updated Help modal guide in web; fixed critical MSVC unresolved external _memcpy intrinsic compilation error, integrated native Windows status bar with reading line/column position, character count, font size, and non-blocking ShowNativeStatus notification system eliminating modal message alerts, added File -> Load Sample Document submenu with Cyberpunk, Time Machine, and KiloOS presets, added Edit menu with Copy Selection [Ctrl+C], Copy All [Ctrl+Shift+C], Select All [Ctrl+A], and Clear [Ctrl+Del], added Alt+1..4 theme hotkeys, Ctrl+J jump to bookmark, Ctrl+0 font reset, dynamic window title synchronization, min track window sizing in WM_GETMINMAXINFO, and verified clean compilation across both builds).
 

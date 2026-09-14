@@ -434,10 +434,18 @@
   #toast {
     position: fixed; bottom: 20px; right: 20px;
     background: var(--accent-gold); color: #111; font-weight: 600;
-    padding: 10px 18px; border-radius: 8px; box-shadow: var(--card-shadow);
-    transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 2000;
+    padding: 10px 14px 10px 18px; border-radius: 8px; box-shadow: var(--card-shadow);
+    transform: translateY(100px); opacity: 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 2000; display: flex; align-items: center; gap: 12px; max-width: 420px;
   }
   #toast.show { transform: translateY(0); opacity: 1; }
+  #toast button {
+    background: rgba(0,0,0,0.15); border: none; color: #111; width: 22px; height: 22px;
+    border-radius: 50%; cursor: pointer; font-size: 11px; font-weight: bold;
+    display: flex; align-items: center; justify-content: center; transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  #toast button:hover { background: rgba(0,0,0,0.35); }
 </style>
 </head>
 <body>
@@ -532,22 +540,28 @@
   <div class="main-content">
     <div class="toolbar">
       <div class="toolbar-left">
-        <div class="date-title" id="currentDateDisplay">July 24, 2026</div>
-        <div class="mood-picker">
-          <button class="mood-opt" data-mood="😀" title="Happy [1]" onclick="selectMood('😀')">😀</button>
-          <button class="mood-opt" data-mood="😊" title="Calm [2]" onclick="selectMood('😊')">😊</button>
-          <button class="mood-opt" data-mood="😐" title="Neutral [3]" onclick="selectMood('😐')">😐</button>
-          <button class="mood-opt" data-mood="😔" title="Sad [4]" onclick="selectMood('😔')">😔</button>
-          <button class="mood-opt" data-mood="⚡" title="Energetic [5]" onclick="selectMood('⚡')">⚡</button>
-          <button class="mood-opt" data-mood="🧘" title="Focused [6]" onclick="selectMood('🧘')">🧘</button>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button class="icon-btn" onclick="navigateDay(-1)" title="Previous Day (Alt+Left)" style="padding:4px 8px; font-weight:bold;">◀</button>
+          <div class="date-title" id="currentDateDisplay" style="user-select:none; font-size:16px;">July 24, 2026</div>
+          <button class="icon-btn" onclick="navigateDay(1)" title="Next Day (Alt+Right)" style="padding:4px 8px; font-weight:bold;">▶</button>
+          <button class="icon-btn" onclick="jumpToToday()" title="Today's Entry (Ctrl+N)" style="padding:4px 8px; font-size:11px; font-weight:600; color:var(--accent-gold);">Today [^N]</button>
+        </div>
+        <div class="mood-picker" title="Quick Mood Selector (Alt+1 to Alt+6)">
+          <button class="mood-opt" data-mood="😀" title="Happy [Alt+1]" onclick="selectMood('😀')">😀</button>
+          <button class="mood-opt" data-mood="😊" title="Calm [Alt+2]" onclick="selectMood('😊')">😊</button>
+          <button class="mood-opt" data-mood="😐" title="Neutral [Alt+3]" onclick="selectMood('😐')">😐</button>
+          <button class="mood-opt" data-mood="😔" title="Sad [Alt+4]" onclick="selectMood('😔')">😔</button>
+          <button class="mood-opt" data-mood="⚡" title="Energetic [Alt+5]" onclick="selectMood('⚡')">⚡</button>
+          <button class="mood-opt" data-mood="🧘" title="Focused [Alt+6]" onclick="selectMood('🧘')">🧘</button>
         </div>
       </div>
 
       <div class="toolbar-right">
-        <button class="btn" onclick="openTemplatesModal()" title="Prompt Templates (Ctrl+T)">📋 Templates <span style="font-size:10px; opacity:0.75;">[Ctrl+T]</span></button>
-        <button class="btn" onclick="openImportExportModal()" title="Import / Export Data">📥 / 📤 Data</button>
-        <button class="btn btn-danger" onclick="deleteCurrentEntry()" title="Delete Current Entry">Delete</button>
-        <button class="btn btn-primary" onclick="saveEntry()" title="Save Entry (Ctrl+S)">Save Entry <span style="font-size:10px; opacity:0.85;">[Ctrl+S]</span></button>
+        <button class="btn" onclick="copyCurrentEntry()" title="Copy Entry to Clipboard (Alt+C)">📋 Copy <span style="font-size:10px; opacity:0.75;">[Alt+C]</span></button>
+        <button class="btn" onclick="openTemplatesModal()" title="Prompt Templates (Ctrl+T)">📋 Templates <span style="font-size:10px; opacity:0.75;">[^T]</span></button>
+        <button class="btn" onclick="openImportExportModal()" title="Import / Export Data (Ctrl+I)">📥/📤 Data <span style="font-size:10px; opacity:0.75;">[^I]</span></button>
+        <button class="btn btn-danger" onclick="deleteCurrentEntry()" title="Delete Current Entry (Del)">Delete <span style="font-size:10px; opacity:0.75;">[Del]</span></button>
+        <button class="btn btn-primary" onclick="saveEntry()" title="Save Entry (Ctrl+S)">Save Entry <span style="font-size:10px; opacity:0.85;">[^S]</span></button>
       </div>
     </div>
 
@@ -564,7 +578,7 @@
       <textarea id="journalArea" class="journal-editor" placeholder="Write your thoughts, ideas, or reflection for today... Use #hashtags to categorize. (Press 'H' or F1 for Help, Ctrl+S to Save)" oninput="onEditorInput()"></textarea>
       <div class="editor-footer">
         <div id="editorStats">0 words | 0 chars | ~0 min read</div>
-        <div id="goalProgressWrapper" class="goal-wrapper" title="Daily Writing Goal Progress">
+        <div id="goalProgressWrapper" class="goal-wrapper" title="Daily Writing Goal Progress - Click to cycle word goal" style="cursor:pointer;" onclick="cycleGoalTarget()">
           <span id="goalLabel" style="font-size: 11px; color: var(--accent-gold); font-weight: 500;">Goal: 0/150 words (0%)</span>
           <div class="goal-bar-bg">
             <div id="goalBarFill" class="goal-bar-fill"></div>
@@ -686,6 +700,16 @@
       <hr style="border:none; border-top:1px solid var(--border-color); margin: 16px 0;">
 
       <div class="form-group">
+        <label><strong>Sample Journal Data</strong></label>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+          Load rich starter entries across multiple days to explore streaks, analytics, hashtags, and moods.
+        </p>
+        <button class="btn btn-primary" onclick="loadSampleJournalData()">✨ Load Sample Demo Entries</button>
+      </div>
+
+      <hr style="border:none; border-top:1px solid var(--border-color); margin: 16px 0;">
+
+      <div class="form-group">
         <label><strong>Storage Information</strong></label>
         <p style="font-size:12px; color:var(--text-muted);" id="storageInfo">
           All data is stored privately inside browser LocalStorage.
@@ -736,7 +760,10 @@
 </div>
 
 <!-- Toast notification -->
-<div id="toast">Saved!</div>
+<div id="toast">
+  <span id="toastMsg">Saved!</span>
+  <button id="toastCloseBtn" onclick="hideToast()" aria-label="Close notification" title="Dismiss">✕</button>
+</div>
 
 <!-- Custom Confirmation Modal -->
 <div class="modal-backdrop" id="confirmModal">
@@ -768,19 +795,24 @@
         <li><strong style="color:var(--text-bright);">F1</strong> or <strong style="color:var(--text-bright);">H</strong> — Open this Help guide</li>
         <li><strong style="color:var(--text-bright);">Ctrl + S</strong> — Save current journal entry immediately</li>
         <li><strong style="color:var(--text-bright);">Ctrl + N</strong> — Jump to today's entry</li>
+        <li><strong style="color:var(--text-bright);">Alt + Left / Right</strong> — Navigate to previous / next calendar day</li>
+        <li><strong style="color:var(--text-bright);">Alt + C</strong> or <strong style="color:var(--text-bright);">Ctrl+Shift+C</strong> — Copy active journal entry to clipboard</li>
         <li><strong style="color:var(--text-bright);">Ctrl + T</strong> — Open Prompt Templates Library</li>
+        <li><strong style="color:var(--text-bright);">Ctrl + I</strong> — Open Data Import / Export modal</li>
         <li><strong style="color:var(--text-bright);">Ctrl + F</strong> — Focus Search & Hashtag filter bar</li>
-        <li><strong style="color:var(--text-bright);">1 - 6</strong> — Quick Mood selection (Happy, Calm, Neutral, Sad, Energetic, Focused)</li>
-        <li><strong style="color:var(--text-bright);">Esc</strong> — Close active dialog / modal</li>
+        <li><strong style="color:var(--text-bright);">Alt + 1..6</strong> (or <strong style="color:var(--text-bright);">1..6</strong>) — Select Mood (Happy, Calm, Neutral, Sad, Energetic, Focused)</li>
+        <li><strong style="color:var(--text-bright);">Delete</strong> — Delete current entry (when editor is unfocused)</li>
+        <li><strong style="color:var(--text-bright);">Esc</strong> — Close active dialog / modal or clear search</li>
       </ul>
       <p><strong>Core Features:</strong></p>
       <ul style="margin-left: 20px; margin-bottom: 12px; color: var(--text-muted);">
-        <li><strong>Calendar Navigator:</strong> Pick any day from the calendar to review, edit, or start an entry.</li>
-        <li><strong>Guided Prompts & Templates:</strong> Click '📋 Templates [Ctrl+T]' to choose from 6 structured journaling frameworks (Morning, Evening, Gratitude, Goals, Stoic, Brain Dump).</li>
+        <li><strong>Toolbar Day Navigator:</strong> Move between days with ◀ / ▶ buttons or jump straight to today.</li>
+        <li><strong>Calendar Navigator:</strong> Pick any day from the visual monthly grid to review or edit entries.</li>
+        <li><strong>Guided Prompts & Templates:</strong> Click '📋 Templates [^T]' to choose from 6 structured frameworks.</li>
         <li><strong>Quick Starters:</strong> When viewing an empty day, 1-click quick starter chips appear above the editor.</li>
-        <li><strong>Daily Writing Goal:</strong> Configure a target word count in Settings to track live visual progress and estimated reading time.</li>
-        <li><strong>Real-time Search & Hashtags:</strong> Use hashtags (e.g. #journal #work) in your text to filter them instantly.</li>
-        <li><strong>Analytics & Streaks:</strong> Track current writing streak, longest streak, total word count, and mood breakdown.</li>
+        <li><strong>Interactive Daily Word Goal:</strong> Click the goal progress bar in the footer or adjust in Settings.</li>
+        <li><strong>Real-time Search & Hashtags:</strong> Use hashtags (e.g. #gratitude #goals) to categorize and filter.</li>
+        <li><strong>Analytics & Streaks:</strong> Track current streak, best streak, total words, and mood breakdown charts.</li>
         <li><strong>PIN Lock Protection:</strong> Secure your personal entries with a 4-digit numeric PIN in Settings.</li>
         <li><strong>Data Portability:</strong> Export backups in JSON, Markdown, or TXT format and restore anytime.</li>
       </ul>
@@ -1062,12 +1094,25 @@
   }
 
   // Toast Notification
+  let toastTimer = null;
   function showToast(msg) {
     const t = document.getElementById('toast');
+    const m = document.getElementById('toastMsg');
     if (!t) return;
-    t.innerText = msg;
+    if (m) m.innerText = msg;
+    else t.innerText = msg;
     t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2200);
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, 2800);
+  }
+
+  function hideToast() {
+    const t = document.getElementById('toast');
+    if (t) t.classList.remove('show');
+    if (toastTimer) {
+      clearTimeout(toastTimer);
+      toastTimer = null;
+    }
   }
 
   // PIN Protection System
@@ -1373,7 +1418,24 @@
     });
 
     if (dates.length === 0) {
-      container.innerHTML = '<div style="padding:16px; text-align:center; font-size:13px; color:var(--text-muted);">No entries found</div>';
+      const hasAny = Object.keys(entries).some(d => entries[d] && entries[d].text && entries[d].text.trim());
+      if (!hasAny) {
+        container.innerHTML = `
+          <div style="padding: 24px 16px; text-align: center;">
+            <div style="font-size: 28px; margin-bottom: 8px;">📖</div>
+            <div style="font-size: 14px; font-weight: 700; color: var(--accent-gold); margin-bottom: 6px;">Welcome to KJournal!</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4;">
+              Your journal is clean and ready. Write today's reflection or explore with sample entries.
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <button class="btn btn-primary" onclick="loadSampleJournalData()" style="font-size: 12px; justify-content: center; width: 100%;">✨ Load Sample Demo Entries</button>
+              <button class="btn" onclick="jumpToToday()" style="font-size: 12px; justify-content: center; width: 100%;">✍️ Write Today's Entry</button>
+            </div>
+          </div>
+        `;
+      } else {
+        container.innerHTML = '<div style="padding:16px; text-align:center; font-size:13px; color:var(--text-muted);">No entries match your search or filter</div>';
+      }
       updateStreakWidget();
       return;
     }
@@ -1813,6 +1875,113 @@
     reader.readAsText(file);
   }
 
+  // Navigation, Copy & Sample Data Helpers
+  function copyCurrentEntry() {
+    const text = document.getElementById('journalArea').value.trim();
+    if (!text) {
+      showToast('No entry content to copy for this date');
+      return;
+    }
+    const formatted = `=== KJournal: ${formatReadableDate(selectedDate)} (Mood: ${selectedMood || '😊'}) ===\n\n${text}`;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(formatted).then(() => {
+        showToast('📋 Entry copied to clipboard!');
+      }).catch(() => {
+        fallbackCopy(formatted);
+      });
+    } else {
+      fallbackCopy(formatted);
+    }
+  }
+
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      showToast('📋 Entry copied to clipboard!');
+    } catch (e) {
+      showToast('Failed to copy to clipboard');
+    }
+    document.body.removeChild(ta);
+  }
+
+  function navigateDay(delta) {
+    if (isDirty) {
+      saveEntry(false);
+    }
+    const parts = selectedDate.split('-');
+    if (parts.length !== 3) return;
+    const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    d.setDate(d.getDate() + delta);
+    selectedDate = formatDateString(d.getFullYear(), d.getMonth() + 1, d.getDate());
+    loadSelectedEntry();
+    renderCalendar();
+  }
+
+  function jumpToToday() {
+    if (isDirty) {
+      saveEntry(false);
+    }
+    const d = new Date();
+    selectedDate = formatDateString(d.getFullYear(), d.getMonth() + 1, d.getDate());
+    calCurrentYear = d.getFullYear();
+    calCurrentMonth = d.getMonth();
+    loadSelectedEntry();
+    renderCalendar();
+    const area = document.getElementById('journalArea');
+    if (area) area.focus();
+    showToast("Jumped to today's entry");
+  }
+
+  function cycleGoalTarget() {
+    const targets = [50, 100, 150, 250, 500, 0];
+    const cur = settings.dailyGoal || 0;
+    let nextIdx = (targets.indexOf(cur) + 1) % targets.length;
+    updateDailyGoalSetting(targets[nextIdx]);
+  }
+
+  function loadSampleJournalData() {
+    const d0 = new Date();
+    const d1 = new Date(); d1.setDate(d0.getDate() - 1);
+    const d2 = new Date(); d2.setDate(d0.getDate() - 2);
+
+    const s0 = formatDateString(d0.getFullYear(), d0.getMonth() + 1, d0.getDate());
+    const s1 = formatDateString(d1.getFullYear(), d1.getMonth() + 1, d1.getDate());
+    const s2 = formatDateString(d2.getFullYear(), d2.getMonth() + 1, d2.getDate());
+
+    entries[s2] = {
+      text: `## 🌅 Morning Reflection\n\n### 🙏 3 Things I am Grateful For:\n1. Crisp early morning breeze and quiet coffee.\n2. Productive collaboration on KiloApps features.\n3. Good physical health and positive energy.\n\n### 🎯 What Would Make Today Great?\n- Shipping the next release with complete usability tests.\n- An evening walk in the neighborhood.\n\n### 💭 Daily Focus:\n> Small consistent habits create extraordinary long-term compounding results.\n\n#gratitude #morning #productivity`,
+      mood: '😀',
+      updatedAt: Date.now() - 172800000
+    };
+
+    entries[s1] = {
+      text: `## 🎯 Daily Goals & Priorities\n\n### 📌 Top 3 Non-Negotiable Priorities Today:\n1. [x] Refactor UI components and fix window boundaries\n2. [x] Implement non-blocking notification alerts\n3. [x] Document keyboard shortcuts & help guides\n\n### 🚧 Potential Obstacles & Mitigation Strategy:\n- Obstacle: Context switching across multiple apps.\n- Strategy: Focus on one app at a time with thorough verification.\n\n### ⚡ End-of-Day Key Deliverable / Milestone:\n- All test suites passing cleanly with zero warnings!\n\n#goals #coding #achievement`,
+      mood: '⚡',
+      updatedAt: Date.now() - 86400000
+    };
+
+    entries[s0] = {
+      text: `## 🏛️ Stoic Reflection\n\n### ⚖️ What Was Fully Within My Control Today?\n- My attitude toward challenges, attention to code quality, and deliberate practice.\n\n### 🍃 What Was Outside My Control (and how did I react)?\n- Unexpected network latency; took a deep breath and stayed patient and composed.\n\n### 🛡️ Core Virtue Practiced Today:\n- Wisdom and Moderation in work-life rhythm and sustained focus.\n\n#stoic #mindset #focus`,
+      mood: '🧘',
+      updatedAt: Date.now()
+    };
+
+    saveEntriesToStorage();
+    selectedDate = s0;
+    calCurrentYear = d0.getFullYear();
+    calCurrentMonth = d0.getMonth();
+    renderCalendar();
+    renderTagCloud();
+    renderEntryList();
+    loadSelectedEntry();
+    closeModal('settingsModal');
+    showToast('✨ Loaded 3 sample journal entries with tags & streaks!');
+  }
+
   // Utilities
   function formatDateString(year, month, day) {
     const y = String(year);
@@ -1895,9 +2064,7 @@
     }
     if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'n') {
       e.preventDefault();
-      todayCalMonth();
-      document.getElementById('journalArea').focus();
-      showToast("Jumped to today's entry");
+      jumpToToday();
       return;
     }
     if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'f') {
@@ -1911,6 +2078,33 @@
       openTemplatesModal();
       return;
     }
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'i') {
+      e.preventDefault();
+      openImportExportModal();
+      return;
+    }
+    if ((e.altKey && e.key.toLowerCase() === 'c') || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'c')) {
+      e.preventDefault();
+      copyCurrentEntry();
+      return;
+    }
+    if (e.altKey && e.key === 'ArrowLeft') {
+      e.preventDefault();
+      navigateDay(-1);
+      return;
+    }
+    if (e.altKey && e.key === 'ArrowRight') {
+      e.preventDefault();
+      navigateDay(1);
+      return;
+    }
+    if (e.altKey && e.key >= '1' && e.key <= '6') {
+      e.preventDefault();
+      const moods = ['😀', '😊', '😐', '😔', '⚡', '🧘'];
+      selectMood(moods[parseInt(e.key, 10) - 1]);
+      showToast(`Mood: ${moods[parseInt(e.key, 10) - 1]}`);
+      return;
+    }
     if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
       if (!e.ctrlKey && !e.altKey && !e.metaKey && (e.key.toLowerCase() === 'h' || e.key === '?')) {
         e.preventDefault();
@@ -1920,6 +2114,11 @@
       if (!e.ctrlKey && !e.altKey && !e.metaKey && e.key >= '1' && e.key <= '6') {
         const moods = ['😀', '😊', '😐', '😔', '⚡', '🧘'];
         selectMood(moods[parseInt(e.key, 10) - 1]);
+        return;
+      }
+      if (e.key === 'Delete') {
+        e.preventDefault();
+        deleteCurrentEntry();
         return;
       }
     }

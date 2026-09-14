@@ -84,6 +84,8 @@ static const JournalTemplate TEMPLATE_LIST[] = {
 void show_help();
 void templates_library_menu();
 void write_entry_flow(int preselected_template);
+void copy_to_clipboard_win32(const char *text);
+void load_demo_journal();
 
 int count_words_in_string(const char *str) {
     if (!str) return 0;
@@ -109,6 +111,93 @@ void clear_screen() {
 #else
     system("clear");
 #endif
+}
+
+void copy_to_clipboard_win32(const char *text) {
+    if (!text || strlen(text) == 0) {
+        printf("\nNothing to copy to clipboard.\n");
+        return;
+    }
+#ifdef _WIN32
+    if (!OpenClipboard(NULL)) {
+        printf("\nFailed to open Windows clipboard.\n");
+        return;
+    }
+    EmptyClipboard();
+    size_t len = strlen(text);
+    HGLOBAL hGlob = GlobalAlloc(GMEM_MOVEABLE, len + 1);
+    if (!hGlob) {
+        CloseClipboard();
+        printf("\nMemory allocation failed for clipboard.\n");
+        return;
+    }
+    char *pGlob = (char *)GlobalLock(hGlob);
+    if (pGlob) {
+        memcpy(pGlob, text, len + 1);
+        GlobalUnlock(hGlob);
+        SetClipboardData(CF_TEXT, hGlob);
+        printf("\n>>> Copied to Windows Clipboard! <<<\n");
+    }
+    CloseClipboard();
+#else
+    printf("\nClipboard copy is only supported on Windows.\n");
+#endif
+}
+
+void load_demo_journal() {
+    FILE *f = fopen(JOURNAL_FILE, "a");
+    if (!f) {
+        printf("Error opening %s\n", JOURNAL_FILE);
+        return;
+    }
+
+    time_t t_now = time(NULL);
+    struct tm tm_now = *localtime(&t_now);
+
+    char d0[32], d1[32], d2[32];
+    sprintf(d0, "%04d-%02d-%02d", tm_now.tm_year + 1900, tm_now.tm_mon + 1, tm_now.tm_mday);
+
+    time_t t1 = t_now - 86400;
+    struct tm tm1 = *localtime(&t1);
+    sprintf(d1, "%04d-%02d-%02d", tm1.tm_year + 1900, tm1.tm_mon + 1, tm1.tm_mday);
+
+    time_t t2 = t_now - 172800;
+    struct tm tm2 = *localtime(&t2);
+    sprintf(d2, "%04d-%02d-%02d", tm2.tm_year + 1900, tm2.tm_mon + 1, tm2.tm_mday);
+
+    fprintf(f, "\n=== Entry: %s 08:30:00 | Mood: Happy ===\n", d2);
+    fprintf(f, "## Morning Reflection\n\n");
+    fprintf(f, "### 3 Things I am Grateful For:\n");
+    fprintf(f, "1. Crisp early morning breeze and quiet coffee.\n");
+    fprintf(f, "2. Productive collaboration on KiloApps features.\n");
+    fprintf(f, "3. Good physical health and positive energy.\n\n");
+    fprintf(f, "### What Would Make Today Great?\n");
+    fprintf(f, "- Shipping the next release with complete usability tests.\n");
+    fprintf(f, "- An evening walk in the neighborhood.\n\n");
+    fprintf(f, "#gratitude #morning #productivity\n");
+
+    fprintf(f, "\n=== Entry: %s 19:15:00 | Mood: Energetic ===\n", d1);
+    fprintf(f, "## Daily Goals & Priorities\n\n");
+    fprintf(f, "### Top 3 Non-Negotiable Priorities Today:\n");
+    fprintf(f, "1. [x] Refactor UI components and fix window boundaries\n");
+    fprintf(f, "2. [x] Implement non-blocking notification alerts\n");
+    fprintf(f, "3. [x] Document keyboard shortcuts & help guides\n\n");
+    fprintf(f, "### End-of-Day Key Deliverable / Milestone:\n");
+    fprintf(f, "- All test suites passing cleanly with zero warnings!\n\n");
+    fprintf(f, "#goals #coding #achievement\n");
+
+    fprintf(f, "\n=== Entry: %s 21:45:00 | Mood: Focused ===\n", d0);
+    fprintf(f, "## Stoic Reflection\n\n");
+    fprintf(f, "### What Was Fully Within My Control Today?\n");
+    fprintf(f, "- My attitude toward challenges, attention to code quality, and deliberate practice.\n\n");
+    fprintf(f, "### What Was Outside My Control (and how did I react)?\n");
+    fprintf(f, "- Unexpected network latency; took a deep breath and stayed patient and composed.\n\n");
+    fprintf(f, "### Core Virtue Practiced Today:\n");
+    fprintf(f, "- Wisdom and Moderation in work-life rhythm and sustained focus.\n\n");
+    fprintf(f, "#stoic #mindset #focus\n");
+
+    fclose(f);
+    printf("\nSuccessfully loaded 3 sample demo entries spanning consecutive days!\n");
 }
 
 // Case-insensitive substring search helper
@@ -523,23 +612,50 @@ void view_entries() {
     int count = load_all_entries(entries, MAX_ENTRIES);
 
     if (count == 0) {
-        printf("No journal entries found.\n");
+        printf("No journal entries found.\n\n");
+        printf("Options: [D] Load Sample Demo Entries   [Enter] Return to Menu\nChoice: ");
+        char d_in[10];
+        if (fgets(d_in, sizeof(d_in), stdin)) {
+            if (d_in[0] == 'd' || d_in[0] == 'D') {
+                load_demo_journal();
+                printf("Press Enter to view entries...");
+                getchar();
+            }
+        }
     } else {
         printf("Total Entries: %d\n\n", count);
         for (int i = 0; i < count; i++) {
             int words = count_words_in_string(entries[i].content);
             int read_time = (words > 0) ? (words / 200 + 1) : 0;
-            printf("=== Entry: %s %s | Mood: %s | Words: %d (~%d min read) ===\n",
-                   entries[i].date_str, entries[i].time_str, entries[i].mood, words, read_time);
+            printf("[%d] === Entry: %s %s | Mood: %s | Words: %d (~%d min read) ===\n",
+                   i + 1, entries[i].date_str, entries[i].time_str, entries[i].mood, words, read_time);
             printf("%s\n\n", entries[i].content ? entries[i].content : "");
+        }
+        printf("-----------------------------------------\n");
+        printf("Options: [C] Copy Entry to Clipboard   [Enter] Return to Menu\nChoice: ");
+        char c_in[10];
+        if (fgets(c_in, sizeof(c_in), stdin)) {
+            if (c_in[0] == 'c' || c_in[0] == 'C') {
+                printf("Enter entry number (1-%d) to copy [Default %d]: ", count, count);
+                char num_in[10];
+                int target = count - 1;
+                if (fgets(num_in, sizeof(num_in), stdin)) {
+                    int val = atoi(num_in);
+                    if (val >= 1 && val <= count) target = val - 1;
+                }
+                char copy_buf[MAX_LINE * 4];
+                sprintf(copy_buf, "=== KJournal: %s %s (Mood: %s) ===\n\n%s",
+                        entries[target].date_str, entries[target].time_str, entries[target].mood,
+                        entries[target].content ? entries[target].content : "");
+                copy_to_clipboard_win32(copy_buf);
+                printf("Press Enter to return...");
+                getchar();
+            }
         }
     }
 
     free_entries(entries, count);
     free(entries);
-
-    printf("Press Enter to return to menu...");
-    getchar();
 }
 
 // Calendar Month Viewer
@@ -613,7 +729,7 @@ void calendar_view() {
         printf("\n-----------------------------------------\n");
         printf("(* indicates date has entry)\n\n");
         printf("Options:\n");
-        printf(" [P] Prev Month   [N] Next Month   [V] View Date Entry   [H] Help   [B] Back\n");
+        printf(" [P] Prev Month   [N] Next Month   [T] Today   [V] View Date Entry   [H] Help   [B] Back\n");
         printf("Choice: ");
 
         char opt[32];
@@ -625,6 +741,11 @@ void calendar_view() {
         } else if (opt[0] == 'n' || opt[0] == 'N') {
             cur_month++;
             if (cur_month > 12) { cur_month = 1; cur_year++; }
+        } else if (opt[0] == 't' || opt[0] == 'T') {
+            time_t t_now = time(NULL);
+            struct tm tm_now = *localtime(&t_now);
+            cur_year = tm_now.tm_year + 1900;
+            cur_month = tm_now.tm_mon + 1;
         } else if (opt[0] == 'v' || opt[0] == 'V') {
             printf("Enter day number (1-%d): ", max_d);
             char day_in[10];
@@ -637,18 +758,35 @@ void calendar_view() {
                     clear_screen();
                     printf("=== Entries for %s ===\n\n", target_date);
                     int found = 0;
+                    char combined[MAX_LINE * 4] = "";
                     for (int e = 0; e < entry_count; e++) {
                         if (strcmp(entries[e].date_str, target_date) == 0) {
                             printf("=== Entry: %s %s | Mood: %s ===\n%s\n",
                                    entries[e].date_str, entries[e].time_str, entries[e].mood,
                                    entries[e].content ? entries[e].content : "");
+                            char entry_header[128];
+                            sprintf(entry_header, "=== Entry: %s %s | Mood: %s ===\n",
+                                    entries[e].date_str, entries[e].time_str, entries[e].mood);
+                            strcat(combined, entry_header);
+                            if (entries[e].content) strcat(combined, entries[e].content);
+                            strcat(combined, "\n\n");
                             found = 1;
                         }
                     }
-                    if (!found) printf("No entry found for %s.\n", target_date);
-
-                    printf("\nPress Enter to return...");
-                    getchar();
+                    if (!found) {
+                        printf("No entry found for %s.\n\nPress Enter to return...", target_date);
+                        getchar();
+                    } else {
+                        printf("Options: [C] Copy Entry to Clipboard   [Enter] Return to Calendar\nChoice: ");
+                        char c_opt[10];
+                        if (fgets(c_opt, sizeof(c_opt), stdin)) {
+                            if (c_opt[0] == 'c' || c_opt[0] == 'C') {
+                                copy_to_clipboard_win32(combined);
+                                printf("Press Enter to continue...");
+                                getchar();
+                            }
+                        }
+                    }
                 }
             }
         } else if (opt[0] == 'h' || opt[0] == 'H') {
@@ -1113,13 +1251,16 @@ void show_help() {
     printf("Features & Navigation:\n");
     printf(" - [1] Write New Entry: Daily prompts, mood selection, and live word count.\n");
     printf("       (Finish entry by typing 'EOF' on a new line or Ctrl+Z then Enter)\n");
-    printf(" - [2] View All Entries: Browse all saved entries with reading time.\n");
+    printf(" - [2] View All Entries: Browse all saved entries with reading time and [C] Copy.\n");
     printf(" - [3] Calendar Navigator: Browse entries month by month on visual grid.\n");
+    printf("       (Use [T] to jump to Today, [V] to view date and [C] to Copy entry)\n");
     printf(" - [4] Search & #Hashtags: Real-time keyword, hashtag (#tag), or mood filter.\n");
     printf(" - [5] Mood & Streak Analytics: Track writing streaks, word counts, and mood charts.\n");
     printf(" - [6] Security & PIN Lock: Protect your journal with a 4-digit PIN.\n");
     printf(" - [7] Data Import & Export: Backup to Markdown or JSON, and restore anytime.\n");
     printf(" - [8] Prompts & Templates Library: Choose from 6 guided journaling frameworks.\n");
+    printf(" - [D] Load Sample Demo Entries: Populate starter entries across consecutive days.\n");
+    printf(" - [C] Copy to Clipboard: Available when viewing entries to copy formatted text.\n");
     printf(" - [H] Help / Instructions: Open this help guide anytime.\n\n");
     printf("Press Enter to return to the main menu...");
     getchar();
@@ -1168,10 +1309,26 @@ int main() {
     
     while (1) {
         clear_screen();
-        printf("=========================================\n");
-        printf("               KJOURNAL                  \n");
-        printf("=========================================\n");
-        printf("  (Press 'H' at any time for Help)       \n\n");
+
+        JournalEntry *temp_e = (JournalEntry *)malloc(sizeof(JournalEntry) * MAX_ENTRIES);
+        int entry_cnt = 0;
+        if (temp_e) {
+            entry_cnt = load_all_entries(temp_e, MAX_ENTRIES);
+            free_entries(temp_e, entry_cnt);
+            free(temp_e);
+        }
+
+#ifdef _WIN32
+        char title_buf[128];
+        sprintf(title_buf, "title KJournal - %d Entries | Goal: %d words [Press 'H' for Help]", entry_cnt, DAILY_WORD_GOAL);
+        system(title_buf);
+#endif
+
+        printf("====================================================\n");
+        printf("       KJOURNAL - Personal Journal & Analytics       \n");
+        printf("====================================================\n");
+        printf(" Total Entries: %d  |  Daily Word Goal: %d words\n", entry_cnt, DAILY_WORD_GOAL);
+        printf(" (Press 'H' at any time for Help & Shortcuts Guide)\n\n");
         printf("1. Write new entry\n");
         printf("2. View all entries\n");
         printf("3. Calendar Entry Navigator\n");
@@ -1180,9 +1337,10 @@ int main() {
         printf("6. Security & PIN Lock\n");
         printf("7. Import / Export Data\n");
         printf("8. Prompts & Templates Library\n");
+        printf("D. Load Sample / Demo Journal Entries\n");
         printf("H. Help / Instructions\n");
         printf("9. Exit\n");
-        printf("=========================================\n");
+        printf("====================================================\n");
         printf("Choice: ");
         
         if (!fgets(choice, sizeof(choice), stdin)) break;
@@ -1203,6 +1361,10 @@ int main() {
             export_import_menu();
         } else if (choice[0] == '8') {
             templates_library_menu();
+        } else if (choice[0] == 'd' || choice[0] == 'D') {
+            load_demo_journal();
+            printf("Press Enter to continue...");
+            getchar();
         } else if (choice[0] == 'h' || choice[0] == 'H') {
             show_help();
         } else if (choice[0] == '9') {
