@@ -27,6 +27,7 @@ int numCodeWords = 20;
 // --- Modes ---
 // 0: Arcade Cascade, 1: Timed Speed Test (30s), 2: Code Snippets, 3: Error Heatmap, 4: Help Screen
 int currentMode = 4;
+int prevMode = 0;
 
 // --- Arcade State ---
 #define MAX_FALLING 6
@@ -46,6 +47,7 @@ int targetWord = -1;
 
 // --- Speed Test State ---
 int testActive = 0;
+int testCompleted = 0;
 DWORD testStartTime = 0;
 int testDuration = 30;
 int testWordIndex = 0;
@@ -54,6 +56,8 @@ int totalTyped = 0;
 int correctTyped = 0;
 int testErrors = 0;
 int testWordPool[40];
+DWORD finalWPM = 0;
+DWORD finalAcc = 100;
 
 // --- Key Heatmap & Finger Stats ---
 int keyHits[26];
@@ -65,6 +69,7 @@ DWORD bestWPM = 0;
 
 DWORD lastKeyTime = 0;
 DWORD currentCadence = 0;
+static volatile LONG g_isBeeping = 0;
 
 // --- Helper Functions ---
 int randSeed = 12345;
@@ -147,12 +152,15 @@ void SpawnArcadeWord() {
 
 void ResetSpeedTest() {
     testActive = 0;
+    testCompleted = 0;
     testStartTime = 0;
     testWordIndex = 0;
     testCharIndex = 0;
     totalTyped = 0;
     correctTyped = 0;
     testErrors = 0;
+    finalWPM = 0;
+    finalAcc = 100;
 
     int i;
     int count = (currentMode == 2) ? numCodeWords : numCommonWords;
@@ -163,6 +171,7 @@ void ResetSpeedTest() {
 
 void StartSpeedTest() {
     testActive = 1;
+    testCompleted = 0;
     testStartTime = GetTickCount();
     lastKeyTime = GetTickCount();
 }
@@ -173,12 +182,16 @@ DWORD WINAPI SoundThread(LPVOID lpParam) {
     DWORD freq = params & 0xFFFF;
     DWORD dur = params >> 16;
     Beep(freq, dur);
+    InterlockedExchange(&g_isBeeping, 0);
     return 0;
 }
 void AsyncBeep(DWORD freq, DWORD dur) {
-    DWORD param = freq | (dur << 16);
-    HANDLE hThread = CreateThread(NULL, 0, SoundThread, (LPVOID)(UINT_PTR)param, 0, NULL);
-    if (hThread) CloseHandle(hThread);
+    if (InterlockedCompareExchange(&g_isBeeping, 1, 0) == 0) {
+        DWORD param = freq | (dur << 16);
+        HANDLE hThread = CreateThread(NULL, 0, SoundThread, (LPVOID)(UINT_PTR)param, 0, NULL);
+        if (hThread) CloseHandle(hThread);
+        else InterlockedExchange(&g_isBeeping, 0);
+    }
 }
 
 // --- Heatmap Export ---
@@ -230,26 +243,31 @@ void ExportHeatmapBMP(HWND hwnd) {
     DWORD dataSize = ((800 * 24 + 31) / 32) * 4 * 400;
     BYTE* pixels = (BYTE*)HeapAlloc(GetProcessHeap(), 0, dataSize);
     SelectObject(memDC, oldBM);
-    GetDIBits(hdc, hBitmap, 0, 400, pixels, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
-    
-    HANDLE hFile = CreateFileA("heatmap.bmp", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile != INVALID_HANDLE_VALUE) {
-        BITMAPFILEHEADER bmf = {0};
-        bmf.bfType = 0x4D42;
-        bmf.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + dataSize;
-        bmf.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
-        DWORD written;
-        WriteFile(hFile, &bmf, sizeof(bmf), &written, NULL);
-        WriteFile(hFile, &bi, sizeof(bi), &written, NULL);
-        WriteFile(hFile, pixels, dataSize, &written, NULL);
-        CloseHandle(hFile);
+    if (pixels) {
+        GetDIBits(hdc, hBitmap, 0, 400, pixels, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+        HANDLE hFile = CreateFileA("heatmap.bmp", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            BITMAPFILEHEADER bmf = {0};
+            bmf.bfType = 0x4D42;
+            bmf.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + dataSize;
+            bmf.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+            DWORD written;
+            WriteFile(hFile, &bmf, sizeof(bmf), &written, NULL);
+            WriteFile(hFile, &bi, sizeof(bi), &written, NULL);
+            WriteFile(hFile, pixels, dataSize, &written, NULL);
+            CloseHandle(hFile);
+            MessageBoxA(hwnd, "Heatmap exported to heatmap.bmp", "Export Success", MB_OK);
+        } else {
+            MessageBoxA(hwnd, "Failed to write heatmap.bmp file.", "Export Error", MB_OK | MB_ICONERROR);
+        }
+        HeapFree(GetProcessHeap(), 0, pixels);
+    } else {
+        MessageBoxA(hwnd, "Out of memory exporting heatmap.", "Export Error", MB_OK | MB_ICONERROR);
     }
     
-    HeapFree(GetProcessHeap(), 0, pixels);
     DeleteObject(hBitmap);
     DeleteDC(memDC);
     ReleaseDC(hwnd, hdc);
-    MessageBoxA(hwnd, "Heatmap exported to heatmap.bmp", "Export Success", MB_OK);
 }
 
 // --- Certificate Export ---
@@ -285,8 +303,9 @@ void ExportCertificateBMP(HWND hwnd) {
     HFONT fontScore = CreateFontA(80, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
     HFONT fontNormal = CreateFontA(20, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Arial");
 
+    HFONT oldFont = (HFONT)SelectObject(memDC, fontTitle);
+
     SetTextColor(memDC, RGB(0, 242, 254));
-    SelectObject(memDC, fontTitle);
     TextOutA(memDC, 140, 80, "KType Studio Certificate", 24);
     
     SetTextColor(memDC, RGB(248, 250, 252));
@@ -324,6 +343,12 @@ void ExportCertificateBMP(HWND hwnd) {
     char dateBuf[64] = "Authorized by KiloOS System";
     TextOutA(memDC, 280, 520, dateBuf, StrLen(dateBuf));
 
+    SelectObject(memDC, oldFont);
+    DeleteObject(fontTitle);
+    DeleteObject(fontSub);
+    DeleteObject(fontScore);
+    DeleteObject(fontNormal);
+
     BITMAPINFOHEADER bi = {0};
     bi.biSize = sizeof(BITMAPINFOHEADER);
     bi.biWidth = 800;
@@ -334,32 +359,32 @@ void ExportCertificateBMP(HWND hwnd) {
     
     DWORD dataSize = ((800 * 24 + 31) / 32) * 4 * 600;
     BYTE* pixels = (BYTE*)HeapAlloc(GetProcessHeap(), 0, dataSize);
-
-    DeleteObject(fontTitle);
-    DeleteObject(fontSub);
-    DeleteObject(fontScore);
-    DeleteObject(fontNormal);
     SelectObject(memDC, oldBM);
-    GetDIBits(hdc, hBitmap, 0, 600, pixels, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
-    
-    HANDLE hFile = CreateFileA("certificate.bmp", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile != INVALID_HANDLE_VALUE) {
-        BITMAPFILEHEADER bmf = {0};
-        bmf.bfType = 0x4D42;
-        bmf.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + dataSize;
-        bmf.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
-        DWORD written;
-        WriteFile(hFile, &bmf, sizeof(bmf), &written, NULL);
-        WriteFile(hFile, &bi, sizeof(bi), &written, NULL);
-        WriteFile(hFile, pixels, dataSize, &written, NULL);
-        CloseHandle(hFile);
+    if (pixels) {
+        GetDIBits(hdc, hBitmap, 0, 600, pixels, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+        HANDLE hFile = CreateFileA("certificate.bmp", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            BITMAPFILEHEADER bmf = {0};
+            bmf.bfType = 0x4D42;
+            bmf.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + dataSize;
+            bmf.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+            DWORD written;
+            WriteFile(hFile, &bmf, sizeof(bmf), &written, NULL);
+            WriteFile(hFile, &bi, sizeof(bi), &written, NULL);
+            WriteFile(hFile, pixels, dataSize, &written, NULL);
+            CloseHandle(hFile);
+            MessageBoxA(hwnd, "Certificate exported to certificate.bmp", "Export Success", MB_OK);
+        } else {
+            MessageBoxA(hwnd, "Failed to write certificate.bmp file.", "Export Error", MB_OK | MB_ICONERROR);
+        }
+        HeapFree(GetProcessHeap(), 0, pixels);
+    } else {
+        MessageBoxA(hwnd, "Out of memory exporting certificate.", "Export Error", MB_OK | MB_ICONERROR);
     }
     
-    HeapFree(GetProcessHeap(), 0, pixels);
     DeleteObject(hBitmap);
     DeleteDC(memDC);
     ReleaseDC(hwnd, hdc);
-    MessageBoxA(hwnd, "Certificate exported to certificate.bmp", "Export Success", MB_OK);
 }
 
 // --- Persistent Font Handles ---
@@ -393,6 +418,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (fWords[i].y > H - 80) {
                                 fWords[i].active = 0;
                                 arcadeLives--;
+                                if (arcadeLives < 0) arcadeLives = 0;
                                 if (targetWord == i) targetWord = -1;
                                 arcadeCombo = 0;
                             }
@@ -407,12 +433,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DWORD elapsedSec = (GetTickCount() - testStartTime) / 1000;
                     if (elapsedSec >= (DWORD)testDuration) {
                         testActive = 0;
-                        DWORD wpm = 0;
+                        testCompleted = 1;
+                        finalWPM = 0;
                         if (elapsedSec > 0) {
-                            wpm = (correctTyped / 5) * 60 / elapsedSec;
+                            finalWPM = (correctTyped / 5) * 60 / elapsedSec;
                         }
-                        if (wpm > bestWPM) {
-                            bestWPM = wpm;
+                        finalAcc = totalTyped > 0 ? (correctTyped * 100 / totalTyped) : 100;
+                        if (finalWPM > bestWPM) {
+                            bestWPM = finalWPM;
                             SaveRegistryData();
                         }
                     }
@@ -423,15 +451,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_KEYDOWN: {
-            // Mode switching via F1 - F4
+            // Mode switching via F1 - F5
             if (wParam == VK_F1) { currentMode = 0; InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_F2) { currentMode = 1; ResetSpeedTest(); InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_F3) { currentMode = 2; ResetSpeedTest(); InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_F4) { currentMode = 3; InvalidateRect(hwnd, NULL, TRUE); break; }
-            if (wParam == VK_F5) { currentMode = 4; InvalidateRect(hwnd, NULL, TRUE); break; }
+            if (wParam == VK_F5) {
+                if (currentMode == 4) currentMode = prevMode;
+                else { prevMode = currentMode; currentMode = 4; }
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
             if (wParam == VK_F6 && currentMode == 3) { ExportHeatmapBMP(hwnd); break; }
             if (wParam == VK_F7) { ExportCertificateBMP(hwnd); break; }
-            if (wParam == 'H' && currentMode != 0 && currentMode != 1 && currentMode != 2) { currentMode = 4; InvalidateRect(hwnd, NULL, TRUE); break; }
+            if (wParam == 'H') {
+                if (currentMode == 4) {
+                    currentMode = prevMode;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    break;
+                } else if (currentMode != 0 && currentMode != 1 && currentMode != 2) {
+                    prevMode = currentMode;
+                    currentMode = 4;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    break;
+                }
+            }
+            if (wParam == VK_BACK && (currentMode == 1 || currentMode == 2)) {
+                if (testCharIndex > 0) {
+                    testCharIndex--;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+                break;
+            }
             if (wParam == VK_ESCAPE) {
                 if (currentMode == 0) {
                     arcadeLives = 3; arcadeScore = 0; arcadeCombo = 0;
@@ -500,6 +551,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
             } else if (currentMode == 1 || currentMode == 2) { // Speed Test logic
+                if (testCompleted) {
+                    ResetSpeedTest();
+                }
                 if (!testActive) StartSpeedTest();
 
                 DWORD nowTime = GetTickCount();
@@ -642,13 +696,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, 510, H - 40, hBuf, StrLen(hBuf));
 
             } else if (currentMode == 1 || currentMode == 2) { // Speed Test Render
-                DWORD elapsedSec = testActive ? (GetTickCount() - testStartTime) / 1000 : 0;
-                DWORD remSec = (elapsedSec < (DWORD)testDuration) ? ((DWORD)testDuration - elapsedSec) : 0;
-
+                DWORD elapsedSec = 0;
+                DWORD remSec = testDuration;
                 DWORD wpm = 0;
-                if (elapsedSec > 0) wpm = (correctTyped / 5) * 60 / elapsedSec;
+                DWORD acc = 100;
 
-                DWORD acc = totalTyped > 0 ? (correctTyped * 100 / totalTyped) : 100;
+                if (testCompleted) {
+                    elapsedSec = testDuration;
+                    remSec = 0;
+                    wpm = finalWPM;
+                    acc = finalAcc;
+                } else if (testActive) {
+                    elapsedSec = (GetTickCount() - testStartTime) / 1000;
+                    remSec = (elapsedSec < (DWORD)testDuration) ? ((DWORD)testDuration - elapsedSec) : 0;
+                    if (elapsedSec > 0) wpm = (correctTyped / 5) * 60 / elapsedSec;
+                    acc = totalTyped > 0 ? (correctTyped * 100 / totalTyped) : 100;
+                }
 
                 char wpmBuf[32], accBuf[32], remBuf[32], bestBuf[32];
                 IntToStr(wpm, wpmBuf);
@@ -697,6 +760,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         SetTextColor(memDC, RGB(0, 242, 254));
                         TextOutA(memDC, 40, yPos, "> ", 2);
                         TextOutA(memDC, 65 + jitterX, yPos + jitterY, w, StrLen(w));
+                        int wLen = StrLen(w);
+                        int mLen = (testCharIndex <= wLen) ? testCharIndex : wLen;
+                        if (mLen > 0) {
+                            SetTextColor(memDC, RGB(16, 185, 129));
+                            TextOutA(memDC, 65 + jitterX, yPos + jitterY, w, mLen);
+                        }
                     } else if (i < testWordIndex) {
                         SetTextColor(memDC, RGB(16, 185, 129));
                         TextOutA(memDC, 65, yPos, w, StrLen(w));
@@ -707,7 +776,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     yPos += 30;
                 }
 
-                if (!testActive && elapsedSec == 0) {
+                if (testCompleted) {
+                    SetTextColor(memDC, RGB(16, 185, 129));
+                    TextOutA(memDC, 40, H - 40, "Test Complete! Press ESC to restart or start typing a new drill...", 67);
+                } else if (!testActive && elapsedSec == 0) {
                     SetTextColor(memDC, RGB(148, 163, 184));
                     TextOutA(memDC, 40, H - 40, "Start typing any key to begin 30s Speed Test...", 46);
                 }

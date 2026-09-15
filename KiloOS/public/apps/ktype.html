@@ -791,53 +791,55 @@ let soundEnabled = true;
 
 function playSound(type, cadence = 0) {
   if (!soundEnabled) return;
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
 
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
 
-  const now = audioCtx.currentTime;
+    const now = audioCtx.currentTime;
 
-  if (type === 'key') {
-    let baseFreq = 300 + (cadence * 15);
-    if (baseFreq > 800) baseFreq = 800;
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(baseFreq, now);
-    
-    let attack = 0.01;
-    let decay = 0.05;
-    let sustain = 0.02;
-    let release = 0.05;
-    
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.08, now + attack);
-    gain.gain.linearRampToValueAtTime(sustain, now + attack + decay);
-    gain.gain.linearRampToValueAtTime(0, now + attack + decay + release);
-    
-    osc.start(now);
-    osc.stop(now + attack + decay + release);
-  } else if (type === 'error') {
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(150, now);
-    gain.gain.setValueAtTime(0.08, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-    osc.start(now);
-    osc.stop(now + 0.12);
-  } else if (type === 'complete') {
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(523.25, now);
-    osc.frequency.setValueAtTime(659.25, now + 0.08);
-    osc.frequency.setValueAtTime(783.99, now + 0.16);
-    gain.gain.setValueAtTime(0.1, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-    osc.start(now);
-    osc.stop(now + 0.3);
-  }
+    if (type === 'key') {
+      let baseFreq = 300 + (cadence * 15);
+      if (baseFreq > 800) baseFreq = 800;
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(baseFreq, now);
+      
+      let attack = 0.01;
+      let decay = 0.05;
+      let sustain = 0.02;
+      let release = 0.05;
+      
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.08, now + attack);
+      gain.gain.linearRampToValueAtTime(sustain, now + attack + decay);
+      gain.gain.linearRampToValueAtTime(0, now + attack + decay + release);
+      
+      osc.start(now);
+      osc.stop(now + attack + decay + release);
+    } else if (type === 'error') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(150, now);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc.start(now);
+      osc.stop(now + 0.12);
+    } else if (type === 'complete') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(523.25, now);
+      osc.frequency.setValueAtTime(659.25, now + 0.08);
+      osc.frequency.setValueAtTime(783.99, now + 0.16);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    }
+  } catch (e) {}
 }
 
 function toggleSound() {
@@ -857,6 +859,7 @@ let testWords = [];
 let wordIndex = 0;
 let charIndex = 0;
 let isTestActive = false;
+let testCompleted = false;
 let testStartTime = null;
 
 let testTimer = null;
@@ -874,6 +877,7 @@ let chartDataAcc = [];
 
 let keyHeatmapData = {};
 let testHistory = [];
+let arcadeHighScore = 0;
 
 try {
   keyHeatmapData = JSON.parse(localStorage.getItem('ktype_heatmap') || '{}');
@@ -886,6 +890,22 @@ try {
 } catch (e) {
   testHistory = [];
 }
+
+try {
+  arcadeHighScore = Number(localStorage.getItem('ktype_arcade_high')) || 0;
+} catch (e) {
+  arcadeHighScore = 0;
+}
+
+try {
+  const savedLesson = localStorage.getItem('ktype_custom_lesson');
+  if (savedLesson) {
+    const parsed = JSON.parse(savedLesson);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      PRESETS.custom = parsed;
+    }
+  }
+} catch (e) {}
 
 // --- Helpers ---
 function escapeHtml(str) {
@@ -938,6 +958,7 @@ function toggleHelp() {
     modal.style.display = 'flex';
   } else {
     modal.style.display = 'none';
+    try { localStorage.setItem('ktype_tutorialSeen', '1'); } catch (e) {}
     if (currentTab === 'test') focusInput();
   }
 }
@@ -948,7 +969,7 @@ function setTestMode(evt, type, val) {
   testModeVal = val;
 
   document.querySelectorAll('#mode-chips .chip').forEach(c => c.classList.remove('active'));
-  const target = (evt && evt.target) ? evt.target : event.target;
+  const target = (evt && evt.currentTarget) ? evt.currentTarget : (evt && evt.target ? evt.target : null);
   if (target) target.classList.add('active');
 
   resetTest();
@@ -957,18 +978,21 @@ function setTestMode(evt, type, val) {
 function setPreset(evt, presetKey) {
   currentPreset = presetKey;
   document.querySelectorAll('#preset-chips .chip').forEach(c => c.classList.remove('active'));
-  const target = (evt && evt.target) ? evt.target : event.target;
+  const target = (evt && evt.currentTarget) ? evt.currentTarget : (evt && evt.target ? evt.target : null);
   if (target) target.classList.add('active');
 
   resetTest();
 }
 
 function generateTestWords() {
-  let source = PRESETS[currentPreset] || PRESETS.common;
+  let source = PRESETS[currentPreset];
+  if (!source || !Array.isArray(source) || source.length === 0) {
+    source = PRESETS.common;
+  }
   testWords = [];
   const targetCount = (testModeType === 'words') ? testModeVal : 100;
   for (let i = 0; i < targetCount; i++) {
-    const word = source[Math.floor(Math.random() * source.length)];
+    const word = source[Math.floor(Math.random() * source.length)] || 'practice';
     testWords.push(word);
   }
 }
@@ -993,6 +1017,31 @@ function renderWords() {
     container.appendChild(wordDiv);
   });
 
+  const area = document.getElementById('typing-area');
+  if (area) area.scrollTop = 0;
+  updateCaretPosition();
+}
+
+function appendWords(startIdx) {
+  const container = document.getElementById('words-container');
+  if (!container) return;
+
+  for (let wIdx = startIdx; wIdx < testWords.length; wIdx++) {
+    const word = testWords[wIdx];
+    const wordDiv = document.createElement('div');
+    wordDiv.className = 'word';
+    wordDiv.id = `w-${wIdx}`;
+
+    word.split('').forEach((ch, cIdx) => {
+      const charSpan = document.createElement('span');
+      charSpan.className = 'char';
+      charSpan.id = `c-${wIdx}-${cIdx}`;
+      charSpan.textContent = ch;
+      wordDiv.appendChild(charSpan);
+    });
+
+    container.appendChild(wordDiv);
+  }
   updateCaretPosition();
 }
 
@@ -1011,6 +1060,14 @@ function updateCaretPosition() {
   } else if (targetWord) {
     targetWord.appendChild(caret);
   }
+
+  const area = document.getElementById('typing-area');
+  if (targetWord && area) {
+    const offset = targetWord.offsetTop - area.offsetTop;
+    if (offset > 100) {
+      area.scrollTop = offset - 50;
+    }
+  }
 }
 
 function focusInput() {
@@ -1020,6 +1077,7 @@ function focusInput() {
 function resetTest() {
   clearInterval(testTimer);
   isTestActive = false;
+  testCompleted = false;
   testStartTime = null;
   wordIndex = 0;
   charIndex = 0;
@@ -1044,6 +1102,7 @@ function resetTest() {
 
 function startTest() {
   isTestActive = true;
+  testCompleted = false;
   testStartTime = Date.now();
 
   testTimer = setInterval(() => {
@@ -1086,6 +1145,7 @@ function updateMetrics(elapsedSec) {
 function finishTest() {
   clearInterval(testTimer);
   isTestActive = false;
+  testCompleted = true;
   playSound('complete');
 
   const elapsedSec = Math.max(0.1, (Date.now() - testStartTime) / 1000);
@@ -1121,6 +1181,10 @@ document.getElementById('hidden-input').addEventListener('input', (e) => {
   const inputVal = e.target.value;
   if (!inputVal) return;
 
+  if (testCompleted) {
+    resetTest();
+  }
+
   if (!isTestActive) startTest();
 
   const nowTime = Date.now();
@@ -1144,12 +1208,14 @@ document.getElementById('hidden-input').addEventListener('input', (e) => {
     charIndex = 0;
 
     if (testModeType === 'time' && wordIndex >= testWords.length - 10) {
-      // Replenish words dynamically for time mode
-      let source = PRESETS[currentPreset] || PRESETS.common;
+      // Replenish words dynamically for time mode without wiping existing DOM
+      let source = PRESETS[currentPreset];
+      if (!source || !Array.isArray(source) || source.length === 0) source = PRESETS.common;
+      const startIdx = testWords.length;
       for (let i = 0; i < 50; i++) {
-        testWords.push(source[Math.floor(Math.random() * source.length)]);
+        testWords.push(source[Math.floor(Math.random() * source.length)] || 'practice');
       }
-      renderWords();
+      appendWords(startIdx);
     } else if (wordIndex >= testWords.length) {
       finishTest();
     } else {
@@ -1221,11 +1287,12 @@ document.addEventListener('keydown', (e) => {
       }
       updateCaretPosition();
     }
-  } else if (currentTab === 'arcade' && arcadeRunning) {
+  } else if (currentTab === 'arcade') {
     if (e.key === 'Escape') {
       startArcadeGame();
       return;
     }
+    if (!arcadeRunning) return;
     const key = e.key.toLowerCase();
     if (key.length === 1 && key >= 'a' && key <= 'z') {
       if (!keyHeatmapData[key]) keyHeatmapData[key] = { hits: 0, errors: 0 };
@@ -1239,6 +1306,10 @@ document.addEventListener('keydown', (e) => {
           playSound('key');
           if (item.matchLen === item.word.length) {
             arcadeScore += 10 + arcadeCombo;
+            if (arcadeScore > arcadeHighScore) {
+              arcadeHighScore = arcadeScore;
+              try { localStorage.setItem('ktype_arcade_high', arcadeHighScore); } catch(e) {}
+            }
             arcadeWords.splice(arcadeTarget, 1);
             arcadeTarget = -1;
             playSound('complete');
@@ -1266,6 +1337,10 @@ document.addEventListener('keydown', (e) => {
           playSound('key');
           if (item.matchLen === item.word.length) {
             arcadeScore += 10 + arcadeCombo;
+            if (arcadeScore > arcadeHighScore) {
+              arcadeHighScore = arcadeScore;
+              try { localStorage.setItem('ktype_arcade_high', arcadeHighScore); } catch(e) {}
+            }
             arcadeWords.splice(arcadeTarget, 1);
             arcadeTarget = -1;
             playSound('complete');
@@ -1289,6 +1364,9 @@ function drawChart() {
   const dpr = window.devicePixelRatio || 1;
   const parentW = canvas.parentElement.clientWidth || 400;
   const parentH = canvas.parentElement.clientHeight || 200;
+
+  canvas.style.width = `${parentW}px`;
+  canvas.style.height = `${parentH}px`;
   
   if (canvas.width !== Math.floor(parentW * dpr) || canvas.height !== Math.floor(parentH * dpr)) {
     canvas.width = Math.floor(parentW * dpr);
@@ -1467,7 +1545,9 @@ function exportHeatmap() {
   const link = document.createElement('a');
   link.download = 'ktype_heatmap.png';
   link.href = canvas.toDataURL('image/png');
+  document.body.appendChild(link);
   link.click();
+  link.remove();
 }
 
 // --- Custom Lessons & Import/Export ---
@@ -1476,6 +1556,9 @@ function saveCustomLesson() {
   if (!text) return alert('Please enter some lesson text first.');
 
   PRESETS.custom = text.split(/\s+/).filter(w => w.length > 0);
+  try {
+    localStorage.setItem('ktype_custom_lesson', JSON.stringify(PRESETS.custom));
+  } catch(e) {}
   alert('Custom lesson loaded! Select "Custom Import" preset in Speed Test to practice.');
 }
 
@@ -1495,18 +1578,20 @@ function exportCustomLesson() {
 }
 
 function handleFileImport(e) {
-  const file = e.target.files[0];
+  const file = e.target.files ? e.target.files[0] : null;
   if (!file) return;
 
   const reader = new FileReader();
   reader.onload = (event) => {
     const content = event.target.result;
-    if (file.name.endsWith('.json')) {
+    const fname = file.name.toLowerCase();
+    if (fname.endsWith('.json')) {
       try {
         const parsed = JSON.parse(content);
         if (parsed.words && Array.isArray(parsed.words)) {
           PRESETS.custom = parsed.words;
           document.getElementById('custom-text-input').value = parsed.words.join(' ');
+          try { localStorage.setItem('ktype_custom_lesson', JSON.stringify(PRESETS.custom)); } catch(e) {}
         }
       } catch (err) {
         alert('Invalid JSON file format.');
@@ -1514,10 +1599,12 @@ function handleFileImport(e) {
     } else {
       document.getElementById('custom-text-input').value = content;
       PRESETS.custom = content.split(/\s+/).filter(w => w.length > 0);
+      try { localStorage.setItem('ktype_custom_lesson', JSON.stringify(PRESETS.custom)); } catch(e) {}
     }
     alert('File imported successfully!');
   };
   reader.readAsText(file);
+  if (e.target && e.target.value !== undefined) e.target.value = '';
 }
 
 function handleFontImport(e) {
@@ -1536,6 +1623,7 @@ function handleFontImport(e) {
     }
   };
   reader.readAsArrayBuffer(file);
+  if (e.target && e.target.value !== undefined) e.target.value = '';
 }
 
 document.getElementById('font-file-input').addEventListener('change', handleFontImport);
@@ -1545,9 +1633,10 @@ document.addEventListener('drop', e => {
   e.preventDefault(); 
   if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
     const file = e.dataTransfer.files[0];
-    if (file.name.endsWith('.ttf') || file.name.endsWith('.otf')) {
+    const fname = file.name.toLowerCase();
+    if (fname.endsWith('.ttf') || fname.endsWith('.otf')) {
       handleFontImport({ dataTransfer: e.dataTransfer });
-    } else if (file.name.endsWith('.json') || file.name.endsWith('.txt')) {
+    } else if (fname.endsWith('.json') || fname.endsWith('.txt')) {
       handleFileImport({ target: { files: [file] } });
     }
   }
@@ -1659,7 +1748,9 @@ function exportCertificate() {
   const link = document.createElement('a');
   link.download = 'ktype_certificate.png';
   link.href = canvas.toDataURL('image/png');
+  document.body.appendChild(link);
   link.click();
+  link.remove();
 }
 
 // --- Arcade Falling Words Game Canvas ---
@@ -1679,6 +1770,8 @@ function initArcadeCanvas() {
   const dpr = window.devicePixelRatio || 1;
   const logicalW = 600;
   const logicalH = 450;
+  canvas.style.width = `${logicalW}px`;
+  canvas.style.height = `${logicalH}px`;
   canvas.width = logicalW * dpr;
   canvas.height = logicalH * dpr;
   
@@ -1728,6 +1821,11 @@ function arcadeLoop() {
   const logicalW = 600;
   const logicalH = 450;
   
+  if (canvas.style.width !== `${logicalW}px`) {
+    canvas.style.width = `${logicalW}px`;
+    canvas.style.height = `${logicalH}px`;
+  }
+
   if (canvas.width !== logicalW * dpr) {
     canvas.width = logicalW * dpr;
     canvas.height = logicalH * dpr;
@@ -1771,12 +1869,12 @@ function arcadeLoop() {
     ctx.fillText(remaining, item.x + mWidth, item.y);
   }
 
-  if (Math.random() < 0.03) spawnArcadeWord();
+  if (arcadeWords.length === 0 || Math.random() < 0.03) spawnArcadeWord();
 
   // HUD
   ctx.fillStyle = '#94a3b8';
   ctx.font = '14px sans-serif';
-  ctx.fillText(`Score: ${arcadeScore}   Lives: ${arcadeLives}   Combo: ${arcadeCombo}`, 20, 25);
+  ctx.fillText(`Score: ${arcadeScore}   Lives: ${arcadeLives}   Combo: ${arcadeCombo}   Best: ${arcadeHighScore}`, 20, 25);
 
   if (arcadeLives <= 0) {
     ctx.fillStyle = '#ef4444';
@@ -1795,6 +1893,19 @@ window.addEventListener('load', () => {
   resetTest();
   renderHeatmap();
   renderHistoryTable();
+  try {
+    const savedLesson = localStorage.getItem('ktype_custom_lesson');
+    if (savedLesson) {
+      const parsed = JSON.parse(savedLesson);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const el = document.getElementById('custom-text-input');
+        if (el) el.value = parsed.join(' ');
+      }
+    }
+    if (!localStorage.getItem('ktype_tutorialSeen')) {
+      toggleHelp();
+    }
+  } catch (e) {}
 });
 </script>
 </body>

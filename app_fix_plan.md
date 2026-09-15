@@ -51,7 +51,7 @@
 
 ---
 
-**Target App:** KType
+**Target App:** KVault
 **Status:** Next (Pass 4)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -112,8 +112,10 @@ Focus on verifying tutorial and save system infrastructure across all games:
 - **KTodo**: Completed. Full notes in [archive/app_fix_pass4_archive.md](archive/app_fix_pass4_archive.md)
 - **KTowers**: Completed. Full notes in [archive/app_fix_pass4_archive.md](archive/app_fix_pass4_archive.md)
 - **KTrader**: Completed. Full notes in [archive/app_fix_pass4_archive.md](archive/app_fix_pass4_archive.md)
+- **KType**: Completed. Full notes in [archive/app_fix_pass4_archive.md](archive/app_fix_pass4_archive.md)
 
 ### Recent Completed Fixes (Terse Summary — ≤8 lines)
 - **KTodo**: ✅ Done. Guarded accelerators in web/native; monotonic IDs; storage validation; subtask text preservation. Native (21.5 KB) and web verified.
 - **KTowers**: ✅ Done. Dynamic Undo button enablement; modifier guards; GDI leak elimination; 30-bit state hash visited pruning. Native (156 KB) and web verified.
 - **KTrader**: ✅ Done. Resolved fuel softlock with shipyard refuel & emergency solar collector; fixed GDI leaks and button overlaps. Native (24 KB) and web verified.
+- **KType**: ✅ Done. Fixed GDI font leaks & memory checks in BMP export; eliminated speed test stat erasure & zombie loop; hardened word replenishment; added Esc arcade restart & tutorial flag. Native (19.5 KB) and web verified.
