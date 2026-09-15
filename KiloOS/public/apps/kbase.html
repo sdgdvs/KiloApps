@@ -258,6 +258,44 @@
     font-size: 0.75rem;
   }
 
+  .btn-xs {
+    padding: 2px 7px;
+    font-size: 0.72rem;
+    line-height: 1.2;
+    border-radius: 4px;
+  }
+
+  .preset-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+    padding: 8px 12px;
+    background: rgba(0, 240, 255, 0.04);
+    border: 1px dashed rgba(0, 240, 255, 0.2);
+    border-radius: 8px;
+  }
+
+  .preset-chip {
+    background: #161f30;
+    border: 1px solid var(--card-border);
+    color: var(--accent-cyan);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.76rem;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .preset-chip:hover {
+    background: rgba(0, 240, 255, 0.15);
+    border-color: var(--accent-cyan);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+
   /* 64-Bit Grid Interactive Component */
   .bitboard-container {
     display: flex;
@@ -446,21 +484,42 @@
     right: 20px;
     background: var(--accent-green);
     color: #000;
-    padding: 10px 18px;
+    padding: 10px 16px;
     border-radius: 6px;
     font-size: 0.85rem;
     font-weight: 700;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
     opacity: 0;
     transform: translateY(10px);
-    transition: all 0.3s ease;
+    transition: all 0.25s ease;
     pointer-events: none;
     z-index: 3000;
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
 
   .toast.show {
     opacity: 1;
     transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .toast-close {
+    background: transparent;
+    border: none;
+    color: #000;
+    font-weight: 900;
+    font-size: 1.1rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 3px;
+    opacity: 0.75;
+    transition: opacity 0.15s;
+  }
+
+  .toast-close:hover {
+    opacity: 1;
   }
 
   /* Cyber Modal Dialog */
@@ -606,11 +665,29 @@
         <span>Simultaneous Multi-Base Live Converter</span>
         <button class="btn btn-sm" id="btn-clear-bases">Clear All</button>
       </div>
+
+      <div class="preset-bar">
+        <span style="font-size:0.75rem; font-weight:bold; color:var(--text-muted); margin-right:4px;">⚡ Presets:</span>
+        <button class="preset-chip base-preset" data-val="42">42 (DEC)</button>
+        <button class="preset-chip base-preset" data-val="255">255 (0xFF)</button>
+        <button class="preset-chip base-preset" data-val="1024">1024 (1 KiB)</button>
+        <button class="preset-chip base-preset" data-val="65535">65535 (16-bit)</button>
+        <button class="preset-chip base-preset" data-val="0xDEADBEEF">0xDEADBEEF</button>
+        <button class="preset-chip base-preset" data-val="0xCAFEBABE">0xCAFEBABE</button>
+        <button class="preset-chip base-preset" data-val="0x7FFFFFFF">0x7FFFFFFF</button>
+        <button class="preset-chip base-preset" data-val="0xFFFFFFFFFFFFFFFF">Max 64-bit</button>
+        <button class="preset-chip base-preset" data-val="0x4B696C6F4F5321">"KiloOS!"</button>
+      </div>
+
       <div class="grid-2">
         <div class="input-group">
           <div class="input-header">
             <label>Binary (Base 2)</label>
-            <span class="badge">0b</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="badge">0b</span>
+              <button class="btn btn-xs btn-copy-field" data-target="base-bin" data-label="Binary" title="Copy Binary">📋 Copy</button>
+              <button class="btn btn-xs btn-clear-field" data-target="base-bin" title="Clear Binary">✕</button>
+            </div>
           </div>
           <input type="text" id="base-bin" placeholder="e.g. 101010" autocomplete="off">
         </div>
@@ -618,7 +695,11 @@
         <div class="input-group">
           <div class="input-header">
             <label>Octal (Base 8)</label>
-            <span class="badge">0o</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="badge">0o</span>
+              <button class="btn btn-xs btn-copy-field" data-target="base-oct" data-label="Octal" title="Copy Octal">📋 Copy</button>
+              <button class="btn btn-xs btn-clear-field" data-target="base-oct" title="Clear Octal">✕</button>
+            </div>
           </div>
           <input type="text" id="base-oct" placeholder="e.g. 52" autocomplete="off">
         </div>
@@ -626,7 +707,11 @@
         <div class="input-group">
           <div class="input-header">
             <label>Decimal (Base 10 - 64-bit)</label>
-            <span class="badge">DEC</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="badge">DEC</span>
+              <button class="btn btn-xs btn-copy-field" data-target="base-dec" data-label="Decimal" title="Copy Decimal">📋 Copy</button>
+              <button class="btn btn-xs btn-clear-field" data-target="base-dec" title="Clear Decimal">✕</button>
+            </div>
           </div>
           <input type="text" id="base-dec" placeholder="e.g. 42" autocomplete="off">
         </div>
@@ -634,7 +719,11 @@
         <div class="input-group">
           <div class="input-header">
             <label>Hexadecimal (Base 16)</label>
-            <span class="badge">0x</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="badge">0x</span>
+              <button class="btn btn-xs btn-copy-field" data-target="base-hex" data-label="Hexadecimal" title="Copy Hex">📋 Copy</button>
+              <button class="btn btn-xs btn-clear-field" data-target="base-hex" title="Clear Hex">✕</button>
+            </div>
           </div>
           <input type="text" id="base-hex" placeholder="e.g. 2A" autocomplete="off">
         </div>
@@ -644,7 +733,11 @@
         <div class="input-group">
           <div class="input-header">
             <label>Custom Base (<span id="custom-base-label">36</span>)</label>
-            <input type="range" id="custom-base-range" min="2" max="36" value="36" style="width:100px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <input type="range" id="custom-base-range" min="2" max="36" value="36" style="width:90px;">
+              <button class="btn btn-xs btn-copy-field" data-target="base-custom" data-label="Custom Base" title="Copy Custom Base">📋 Copy</button>
+              <button class="btn btn-xs btn-clear-field" data-target="base-custom" title="Clear Custom">✕</button>
+            </div>
           </div>
           <input type="text" id="base-custom" placeholder="Custom base result..." autocomplete="off">
         </div>
@@ -652,7 +745,11 @@
         <div class="input-group">
           <div class="input-header">
             <label>ASCII / UTF-8 String</label>
-            <span class="badge">TXT</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="badge">TXT</span>
+              <button class="btn btn-xs btn-copy-field" data-target="base-ascii" data-label="ASCII String" title="Copy Text">📋 Copy</button>
+              <button class="btn btn-xs btn-clear-field" data-target="base-ascii" title="Clear Text">✕</button>
+            </div>
           </div>
           <input type="text" id="base-ascii" placeholder="Single char / short text..." autocomplete="off">
         </div>
@@ -660,7 +757,13 @@
     </div>
 
     <div class="card">
-      <div class="card-title">Text & String Encoding Suite</div>
+      <div class="card-title">
+        <span>Text &amp; String Encoding Suite</span>
+        <div style="display:flex; gap:6px;">
+          <button class="btn btn-sm" id="btn-sample-text">✨ Sample</button>
+          <button class="btn btn-sm" id="btn-clear-text">Clear</button>
+        </div>
+      </div>
       <div class="input-group">
         <label>Input Buffer Text</label>
         <textarea id="str-input" placeholder="Type or paste arbitrary string here..."></textarea>
@@ -674,10 +777,14 @@
         <button class="btn btn-accent" id="btn-hex-enc">Hex Enc</button>
         <button class="btn" id="btn-hex-dec">Hex Dec</button>
         <button class="btn btn-primary" id="btn-sha256">SHA-256 Hash</button>
+        <button class="btn btn-accent" id="btn-copy-str-out">📋 Copy Result</button>
       </div>
 
       <div class="input-group">
-        <label>Result Buffer (Click to Copy)</label>
+        <div class="input-header">
+          <label>Result Buffer (Click or use button to copy)</label>
+          <button class="btn btn-xs btn-copy-field" data-target="str-output" data-label="String Result" title="Copy Result">📋 Copy</button>
+        </div>
         <textarea id="str-output" readonly style="cursor: pointer;" title="Click to copy to clipboard" placeholder="Output string will appear here..."></textarea>
       </div>
     </div>
@@ -688,7 +795,21 @@
     <div class="card">
       <div class="card-title">
         <span>Interactive 64-Bit Toggle Board</span>
-        <span class="badge" id="bitboard-hex-disp">0x0000000000000000</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="badge" id="bitboard-hex-disp">0x0000000000000000</span>
+          <button class="btn btn-xs btn-accent" id="btn-copy-bitboard" title="Copy 64-Bit Hex Value">📋 Copy Value</button>
+        </div>
+      </div>
+
+      <div class="preset-bar">
+        <span style="font-size:0.75rem; font-weight:bold; color:var(--text-muted); margin-right:4px;">🎯 Bit Patterns:</span>
+        <button class="preset-chip bb-preset" data-val="0">All 0s</button>
+        <button class="preset-chip bb-preset" data-val="0xFFFFFFFFFFFFFFFF">All 1s</button>
+        <button class="preset-chip bb-preset" data-val="0xAAAAAAAAAAAAAAAA">0xAAAA (Alt 1)</button>
+        <button class="preset-chip bb-preset" data-val="0x5555555555555555">0x5555 (Alt 2)</button>
+        <button class="preset-chip bb-preset" data-val="0x8000000000000000">Sign Bit (63)</button>
+        <button class="preset-chip bb-preset" data-val="0x0000000000000001">Low Bit (0)</button>
+        <button class="preset-chip bb-preset" data-val="0xDEADBEEFCAFEBABE">0xDEADBEEF...</button>
       </div>
 
       <div class="bitboard-container">
@@ -770,7 +891,10 @@
           </tr>
           <tr style="background: rgba(0, 240, 255, 0.05);">
             <td><strong id="mat-op-label" style="color:var(--accent-cyan);">Result (AND)</strong></td>
-            <td id="mat-res-val" style="color:var(--accent-cyan); font-weight:bold;">0x000F00F00F00F00</td>
+            <td style="color:var(--accent-cyan); font-weight:bold;">
+              <span id="mat-res-val">0x000F00F00F00F00</span>
+              <button class="btn btn-xs btn-accent" id="btn-copy-mat-res" style="margin-left:8px;" title="Copy Bitwise Result">📋 Copy</button>
+            </td>
             <td id="mat-res-bin" class="bit-stream"></td>
           </tr>
         </tbody>
@@ -985,13 +1109,14 @@
     </div>
   </div>
 
-  <!-- TAB 4: HISTORY LOG & EXPORT -->
+  <!-- TAB 5: HISTORY LOG & EXPORT -->
   <div id="tab-history" class="tab-content">
     <div class="card">
       <div class="card-title">
         <span>Activity & Calculation Log</span>
         <div class="btn-group">
           <button class="btn btn-sm" id="btn-clear-history">Clear History</button>
+          <button class="btn btn-sm btn-accent" id="btn-copy-history" title="Copy History as TSV table to clipboard">📋 Copy Table [Alt+C]</button>
           <button class="btn btn-sm btn-accent" id="btn-export-csv">Export CSV</button>
           <button class="btn btn-sm btn-primary" id="btn-export-json">Export JSON</button>
         </div>
@@ -1018,7 +1143,10 @@
   </div>
 </main>
 
-<div class="toast" id="toast">Copied to clipboard!</div>
+<div class="toast" id="toast">
+  <span id="toast-text">Copied to clipboard!</span>
+  <button class="toast-close" id="toast-dismiss" title="Dismiss">&times;</button>
+</div>
 
 <!-- Help Modal Dialog -->
 <div class="modal-backdrop" id="help-modal">
@@ -1033,18 +1161,22 @@
         <table class="shortcut-table">
           <tr><td><span class="kbd-key">F1</span> or <span class="kbd-key">H</span></td><td>Toggle this Help &amp; Shortcuts guide</td></tr>
           <tr><td><span class="kbd-key">1</span> &ndash; <span class="kbd-key">5</span></td><td>Switch tabs (1: Multi-Base, 2: 64-Bit Grid, 3: IEEE-754, 4: Varint, 5: History)</td></tr>
-          <tr><td><span class="kbd-key">Esc</span></td><td>Close modal dialogs</td></tr>
+          <tr><td><span class="kbd-key">[</span> &amp; <span class="kbd-key">]</span></td><td>Cycle previous / next tab</td></tr>
+          <tr><td><span class="kbd-key">Alt+C</span> or <span class="kbd-key">C</span></td><td>Copy active result or history table to clipboard</td></tr>
+          <tr><td><span class="kbd-key">D</span></td><td>Load 1-click sample demo presets</td></tr>
+          <tr><td><span class="kbd-key">X</span> or <span class="kbd-key">Del</span></td><td>Clear active input / reset tab</td></tr>
           <tr><td><span class="kbd-key">Enter</span></td><td>Recalculate / execute active conversion or bitwise operation</td></tr>
+          <tr><td><span class="kbd-key">Esc</span></td><td>Close modal dialogs</td></tr>
         </table>
       </div>
       <div>
         <div class="modal-section-title">💡 Feature Highlights</div>
         <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem; color: var(--text-muted);">
-          <li><strong style="color:var(--accent-cyan);">Multi-Base Live Converter:</strong> Real-time 64-bit synchronization between Binary (0b), Octal (0o), Decimal, Hex (0x), Custom base (2-36), and ASCII/Unicode characters.</li>
-          <li><strong style="color:var(--accent-green);">64-Bit Toggle Grid &amp; Ops:</strong> Interactive bit manipulation board with shift, rotate (ROL/ROR), reverse, byte swap (endianness), and bitwise AND/OR/XOR/NOT/SAR operations.</li>
+          <li><strong style="color:var(--accent-cyan);">Multi-Base Live Converter:</strong> Real-time 64-bit synchronization between Binary (0b), Octal (0o), Decimal, Hex (0x), Custom base (2-36), and ASCII/Unicode characters with 1-click [📋 Copy] and [✕ Clear] buttons for every field.</li>
+          <li><strong style="color:var(--accent-green);">64-Bit Toggle Grid &amp; Ops:</strong> Interactive bit manipulation board with instant bit patterns (All 0s, All 1s, Alternating 0xAA/0x55, Sign Bit, Low Bit) and bitwise AND/OR/XOR/NOT/SAR operations.</li>
           <li><strong style="color:var(--accent-amber);">IEEE-754 Inspector:</strong> Visual single (32-bit float) and double (64-bit double) breakdown with color-coded Sign, Exponent, and Mantissa bits and exact reconstruction formulas.</li>
           <li><strong style="color:var(--accent-purple);">Varint &amp; Bitfields:</strong> LEB128 / SLEB128 / Protobuf ZigZag encoder/decoder, multi-width (int8..64) two's complement inspector, and bitfield slicer with Popcount/CLZ/CTZ diagnostics.</li>
-          <li><strong style="color:var(--text-main);">Export &amp; History:</strong> Automatic calculation logging with instant CSV and JSON export.</li>
+          <li><strong style="color:var(--text-main);">Export &amp; History:</strong> Automatic calculation logging with instant TSV clipboard copy, CSV, and JSON export.</li>
         </ul>
       </div>
     </div>
@@ -1087,11 +1219,48 @@
     return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
+  let toastTimer = null;
   function showToast(msg) {
     const toast = document.getElementById('toast');
-    toast.textContent = msg;
+    const toastText = document.getElementById('toast-text');
+    if (!toast) return;
+    if (toastText) toastText.textContent = msg;
+    else toast.textContent = msg;
     toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 2000);
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+  }
+
+  function copyToClipboard(text, label) {
+    if (!text || text.trim() === '') {
+      showToast('Nothing to copy!');
+      return;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(`Copied ${label || 'value'} to clipboard!`);
+      }).catch(() => {
+        fallbackCopy(text, label);
+      });
+    } else {
+      fallbackCopy(text, label);
+    }
+  }
+
+  function fallbackCopy(text, label) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      showToast(`Copied ${label || 'value'} to clipboard!`);
+    } catch(e) {
+      showToast('Failed to copy');
+    }
+    document.body.removeChild(ta);
   }
 
   // Navigation Tab Switching
@@ -1247,11 +1416,67 @@
     updateBasesFromValue(null, null);
     bitboardVal = 0n;
     renderBitboard();
+    showToast('Cleared all bases');
   };
+
+  // 1-Click Base Copy & Clear
+  document.querySelectorAll('.btn-copy-field').forEach(btn => {
+    btn.onclick = () => {
+      const target = document.getElementById(btn.dataset.target);
+      if (target) copyToClipboard(target.value, btn.dataset.label || 'value');
+    };
+  });
+
+  document.querySelectorAll('.btn-clear-field').forEach(btn => {
+    btn.onclick = () => {
+      const target = document.getElementById(btn.dataset.target);
+      if (target) {
+        target.value = '';
+        target.focus();
+        updateBasesFromValue(null, null);
+        showToast('Field cleared');
+      }
+    };
+  });
+
+  // Base Presets
+  document.querySelectorAll('.base-preset').forEach(btn => {
+    btn.onclick = () => {
+      const val = btn.dataset.val;
+      let bigVal = BigInt(val);
+      updateBasesFromValue(bigVal, null);
+      bitboardVal = bigVal & 0xFFFFFFFFFFFFFFFFn;
+      renderBitboard();
+      showToast(`Loaded Preset: ${btn.textContent}`);
+    };
+  });
 
   // String Encoding Handlers
   const strInput = document.getElementById('str-input');
   const strOutput = document.getElementById('str-output');
+
+  const btnSampleText = document.getElementById('btn-sample-text');
+  if (btnSampleText) {
+    btnSampleText.onclick = () => {
+      strInput.value = 'Hello KiloOS! ⚡ 64-Bit Studio';
+      showToast('Loaded sample text');
+    };
+  }
+  const btnClearText = document.getElementById('btn-clear-text');
+  if (btnClearText) {
+    btnClearText.onclick = () => {
+      strInput.value = '';
+      strOutput.value = '';
+      strInput.focus();
+      showToast('Text cleared');
+    };
+  }
+  const btnCopyStrOut = document.getElementById('btn-copy-str-out');
+  if (btnCopyStrOut) {
+    btnCopyStrOut.onclick = () => {
+      copyToClipboard(strOutput.value, 'String Result');
+    };
+  }
 
   document.getElementById('btn-b64-enc').onclick = () => {
     try {
@@ -1314,19 +1539,7 @@
 
   strOutput.onclick = () => {
     if (strOutput.value && !strOutput.value.startsWith("Error")) {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(strOutput.value).then(() => {
-          showToast('Copied output to clipboard!');
-        }).catch(() => {
-          strOutput.select();
-          document.execCommand('copy');
-          showToast('Copied output to clipboard!');
-        });
-      } else {
-        strOutput.select();
-        document.execCommand('copy');
-        showToast('Copied output to clipboard!');
-      }
+      copyToClipboard(strOutput.value, 'String Result');
     }
   };
 
@@ -1429,6 +1642,33 @@
     renderBitboard();
     updateBasesFromValue(bitboardVal, null);
   };
+
+  // Bitboard Presets & Copy Listeners
+  document.querySelectorAll('.bb-preset').forEach(btn => {
+    btn.onclick = () => {
+      const valStr = btn.dataset.val;
+      bitboardVal = BigInt(valStr) & 0xFFFFFFFFFFFFFFFFn;
+      renderBitboard();
+      updateBasesFromValue(bitboardVal, null);
+      showToast(`Applied Bit Pattern: ${btn.textContent}`);
+    };
+  });
+
+  const btnCopyBitboard = document.getElementById('btn-copy-bitboard');
+  if (btnCopyBitboard) {
+    btnCopyBitboard.onclick = () => {
+      const hex = '0x' + (bitboardVal & 0xFFFFFFFFFFFFFFFFn).toString(16).padStart(16, '0').toUpperCase();
+      copyToClipboard(hex, 'Bitboard 64-Bit Hex');
+    };
+  }
+
+  const btnCopyMatRes = document.getElementById('btn-copy-mat-res');
+  if (btnCopyMatRes) {
+    btnCopyMatRes.onclick = () => {
+      const resVal = document.getElementById('mat-res-val').textContent;
+      copyToClipboard(resVal, 'Bitwise Result');
+    };
+  }
 
   // Bitwise Operator Matrix Calculator
   const opAInput = document.getElementById('op-a');
@@ -1918,6 +2158,21 @@
     downloadFile(jsonStr, 'kbase_history.json', 'application/json');
   };
 
+  const btnCopyHistory = document.getElementById('btn-copy-history');
+  if (btnCopyHistory) {
+    btnCopyHistory.onclick = () => {
+      if (historyLog.length === 0) {
+        showToast('History is empty!');
+        return;
+      }
+      let tsv = 'Timestamp\tCategory\tInput\tOutput\n';
+      historyLog.forEach(row => {
+        tsv += `${row.timestamp}\t${row.category}\t${row.input}\t${row.output}\n`;
+      });
+      copyToClipboard(tsv, 'History Table (TSV)');
+    };
+  }
+
   function downloadFile(content, fileName, contentType) {
     const a = document.createElement('a');
     const file = new Blob([content], { type: contentType });
@@ -1947,9 +2202,18 @@
       };
     });
 
+    const toastDismiss = document.getElementById('toast-dismiss');
+    if (toastDismiss) {
+      toastDismiss.onclick = (e) => {
+        e.stopPropagation();
+        const t = document.getElementById('toast');
+        if (t) t.classList.remove('show');
+      };
+    }
+
     // Startup Welcome Toast
     setTimeout(() => {
-      showToast("⚡ Welcome to KBase Studio! Press F1 or 'H' for Help, 1-5 for Tabs.");
+      showToast("⚡ Welcome to KBase Studio! Press F1 for Help, 1-5 for Tabs, [ / ] to Cycle.");
     }, 350);
   });
 
@@ -2017,6 +2281,59 @@
       if (e.key >= '1' && e.key <= '5') {
         const tabIdx = parseInt(e.key, 10) - 1;
         selectTab(tabIdx);
+        return;
+      }
+      if (e.key === '[' || e.key === '{') {
+        e.preventDefault();
+        const activeIdx = Array.from(tabs).findIndex(t => t.classList.contains('active'));
+        if (activeIdx > 0) selectTab(activeIdx - 1);
+        else selectTab(tabs.length - 1);
+        return;
+      }
+      if (e.key === ']' || e.key === '}') {
+        e.preventDefault();
+        const activeIdx = Array.from(tabs).findIndex(t => t.classList.contains('active'));
+        if (activeIdx < tabs.length - 1) selectTab(activeIdx + 1);
+        else selectTab(0);
+        return;
+      }
+      if (e.key === 'c' || e.key === 'C' || (e.altKey && (e.key === 'c' || e.key === 'C'))) {
+        e.preventDefault();
+        const activeTab = document.querySelector('.tab-content.active');
+        if (activeTab) {
+          if (activeTab.id === 'tab-converter') {
+            copyToClipboard(elDec.value || elHex.value, 'Active Base Value');
+          } else if (activeTab.id === 'tab-bitboard') {
+            const hex = '0x' + (bitboardVal & 0xFFFFFFFFFFFFFFFFn).toString(16).padStart(16, '0').toUpperCase();
+            copyToClipboard(hex, 'Bitboard 64-Bit Hex');
+          } else if (activeTab.id === 'tab-ieee') {
+            const fp32Hex = document.getElementById('fp32-hex').textContent;
+            copyToClipboard(fp32Hex, 'IEEE-754 Hex');
+          } else if (activeTab.id === 'tab-encodings') {
+            const uleb = document.getElementById('res-uleb-bytes').textContent;
+            copyToClipboard(uleb, 'ULEB128 Varint');
+          } else if (activeTab.id === 'tab-history') {
+            if (btnCopyHistory) btnCopyHistory.click();
+          }
+        }
+        return;
+      }
+      if (e.key === 'd' || e.key === 'D') {
+        e.preventDefault();
+        const firstPreset = document.querySelector('.base-preset');
+        if (firstPreset) firstPreset.click();
+        return;
+      }
+      if (e.key === 'x' || e.key === 'X' || e.key === 'Delete') {
+        e.preventDefault();
+        const activeTab = document.querySelector('.tab-content.active');
+        if (activeTab && activeTab.id === 'tab-converter') {
+          document.getElementById('btn-clear-bases').click();
+        } else if (activeTab && activeTab.id === 'tab-bitboard') {
+          document.getElementById('bb-clear').click();
+        } else if (activeTab && activeTab.id === 'tab-history') {
+          document.getElementById('btn-clear-history').click();
+        }
         return;
       }
     }
