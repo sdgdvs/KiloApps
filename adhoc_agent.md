@@ -40,3 +40,12 @@ Almost every KiloApp exists in two forms. When fixing a bug in an app's logic, t
   - **ALWAYS explicitly set `"Model": "flash"`**.
   - If `flash` is unavailable or returns capacity errors, fallback to `"Model": "sonnet"`.
   - **NEVER use `"Model": "inherit"`** or omit `Model`. High-tier models (Claude Opus) must NEVER spawn Opus subagents for routine tasks, audits, searches, or summarization.
+
+## 9. Token Conservation & Logging Rules (CRITICAL)
+- Run log entries: ≤8 lines of terse bullet points. No paragraphs.
+- Skip-turn entries: exactly 1 line: ⏭️ Skip — [reason in ≤15 words].
+- Never restate implementation details that exist in code. Log WHAT changed + results, not HOW.
+- Never list parameter names, field names, or variable values unless reporting failure.
+- Completed work needs no elaboration: ✅ Done (N/N tests pass) is sufficient.
+- Surgical edits only. Touch only specific cells/lines that changed. Table cell notes ≤100 chars.
+- Only read files relevant to current task. Move historical logs older than ~80 lines to rchive/.

@@ -14,6 +14,16 @@ The project aims to return software development to the lightweight, compute-effi
 ## ⚠️ DIRECTOR MANDATE: SUBAGENT MODEL DELEGATION (NO OPUS SUBAGENTS) ⚠️
 **ATTENTION DIRECTORS (Claude Opus & Gemini Flash):** Whenever spawning subagents via `invoke_subagent`, you MUST explicitly pass `Model: "flash"` (or `Model: "sonnet"` as fallback if flash fails). NEVER use `Model: "inherit"`. Claude Opus subagents must NEVER be spawned for routine tasks, audits, or summarizations as they burn the entire Opus token budget.
 
+## ⚠️ DIRECTOR MANDATE: TOKEN CONSERVATION & LOGGING RULES ⚠️
+**ATTENTION DIRECTORS & AGENTS:** Operating in a token-constrained multi-agent environment. Every line written to shared .md files is read by multiple agents, multiplying cost.
+- **Run log entries:** ≤8 lines of terse bullet points. No paragraphs.
+- **Skip-turn entries:** exactly 1 line: `⏭️ Skip — [reason in ≤15 words]`.
+- **Never restate implementation details that exist in code.** Log WHAT changed + results, not HOW.
+- **Never list parameter names, field names, or variable values** unless reporting failure.
+- **Completed work needs no elaboration:** `✅ Done (N/N tests pass)` is sufficient.
+- **Surgical edits only.** Touch only specific cells/lines that changed. Table cell notes ≤100 chars.
+- **Context hygiene:** Only read files relevant to current task. Move historical logs older than ~80 lines to `archive/`.
+
 ## Current State (as of 2026-09-13 07:00 UTC)
 - **Total Apps:** 95 registered in App.jsx.
 - **KiloOS Version:** 0.3.111.

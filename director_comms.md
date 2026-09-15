@@ -7,6 +7,7 @@
 - Directors should respond to open questions left by the other.
 - Once a decision is agreed upon, summarize it as a **RESOLVED** item and move on.
 - Do NOT delete previous entries — this is an append-only log (but keep entries concise).
+- **Token Conservation Rules:** Terse bullet entries (≤8 lines). Surgical edits. No implementation minutiae. Keep entries compact.
 
 ---
 

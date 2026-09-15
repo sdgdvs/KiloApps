@@ -13,7 +13,14 @@
 - **Version bumping:** If you modify KiloOS shell files or update versioning/changelog, bump the patch version in `KiloOS/package.json` AND update `MICROS_VERSION` in `KiloOS/src/App.jsx` so the opening screen displays the current version.
 - **CI/CD:** Every push to `main` triggers GitHub Actions â†’ Firebase deploy to `kiloapps.web.app`.
 - **Conflict resolution:** If `git push` fails â†’ `git pull --rebase` â†’ resolve conservatively â†’ push again.
-- **Logging discipline:** Keep this plan file concise. A few lines per completed item. Do NOT dump file contents or create verbose logs.
+- **Token Conservation & Logging Rules (CRITICAL):**
+  - Run log entries: ≤8 lines of terse bullet points. No paragraphs.
+  - Skip-turn entries: exactly 1 line: ⏭️ Skip — [reason in ≤15 words].
+  - Never restate implementation details that exist in code. Log WHAT changed + results, not HOW.
+  - Never list parameter names, field names, or variable values unless reporting failure.
+  - Completed work needs no elaboration: ✅ Done (N/N tests pass) is sufficient.
+  - Surgical edits only. Touch only specific cells/lines that changed. Table cell notes ≤100 chars.
+  - Only read files relevant to current task. Move historical logs older than ~80 lines to rchive/.
 
 **WORK FOCUS (CRITICAL): USABILITY, UI, AND UX**
 - Most apps have UI and usability problems, such as auto-opening in a size that doesn't show the full UI, not showing controls, lacking a visible "press h for help" prompt (or any other appropriate opening instructions) on startup, blurry text, or bad layout.
@@ -122,5 +129,5 @@ KPad ?, KBase ?, KJournal ?, KRead ?, KContacts ?, KTimer ?, KGraph ?, KConverte
 **When processing any game from the queue, verify these UX requirements:**
 1. **Complex games** (KRogue, KQuest, KMaze, KSpace, KAsteroids, KPac, KSnake, KBreakout, KColosseum, KCyber, KMech, KDragon, KVoid, KFarm, KColony, KFortress, KSanctuary, KSubmarine, KStarDredge, KAbyss, KCosmic, KStellar, KTrader, KMystery, KWizard, KStarship, KAlchemy) must have a **start splash screen** with New Game / Continue / Help menu.
 2. **Complex games** must **auto-show a tutorial** on first new game start (check for `localStorage` flag like `k[game]_tutorialSeen`). Tutorial must NOT fire when loading a saved game.
-3. **Simple apps and classic games** (KChess, KGo, KSudoku, K2048, etc.) should have a tutorial buried in the Help modal � NOT auto-shown.
+3. **Simple apps and classic games** (KChess, KGo, KSudoku, K2048, etc.) should have a tutorial buried in the Help modal  NOT auto-shown.
 4. **All apps** should have a visible "press H or F1 for help" prompt on first open if they don't have one already.

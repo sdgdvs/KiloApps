@@ -55,7 +55,14 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 - **Version bumping:** If you modify KiloOS shell files or update versioning/changelog, bump the patch version in `KiloOS/package.json` AND update `MICROS_VERSION` in `KiloOS/src/App.jsx` so the opening screen displays the current version.
 - **CI/CD:** Every push to `main` triggers GitHub Actions → Firebase deploy to `kiloapps.web.app`.
 - **Conflict resolution:** If `git push` fails → `git pull --rebase` → resolve conservatively (prefer remote for code you didn't write) → push again.
-- **Logging discipline:** Keep this plan file concise. A few lines per completed item. Do NOT dump file contents or create verbose logs.
+- **Token Conservation & Logging Rules (CRITICAL):**
+  - Run log entries: ≤8 lines of terse bullet points. No paragraphs.
+  - Skip-turn entries: exactly 1 line: ⏭️ Skip — [reason in ≤15 words].
+  - Never restate implementation details that exist in code. Log WHAT changed + results, not HOW.
+  - Never list parameter names, field names, or variable values unless reporting failure.
+  - Completed work needs no elaboration: ✅ Done (N/N tests pass) is sufficient.
+  - Surgical edits only. Touch only specific cells/lines that changed. Table cell notes ≤100 chars.
+  - Only read files relevant to current task. Move historical logs older than ~80 lines to rchive/.
 
 ---
 
@@ -97,6 +104,6 @@ KScript ✅, KMaze ✅, KMine ✅, KPac ✅, KQuest ✅, KNote ✅, KPass ✅, K
 ## DIRECTOR DIRECTIVE (2026-09-15): TUTORIAL SYSTEMS
 
 **NEW PRIORITY when processing apps from the queue:**
-- **Utility Apps**: If the app lacks a built-in tutorial or "How to Play/Use" section in its Help modal, add one. Tutorials for simple utility apps should be buried inside the Help menu (F1/H) � NOT auto-shown on startup.
+- **Utility Apps**: If the app lacks a built-in tutorial or "How to Play/Use" section in its Help modal, add one. Tutorials for simple utility apps should be buried inside the Help menu (F1/H)  NOT auto-shown on startup.
 - **Games**: If a game lacks a tutorial, add one. For complex/deep games (KRogue, KQuest, KMaze, KSpace, etc.), the tutorial should auto-start when beginning a NEW game but NOT when loading a saved game. Use a localStorage flag like `k[game]_tutorialSeen` to prevent repeated showing. For classic/simple games, bury the tutorial in the Help modal.
 - **Save Systems**: Verify all games have working quicksave (F5) / quickload (F9) with localStorage persistence. Verify save/load doesn't corrupt state.

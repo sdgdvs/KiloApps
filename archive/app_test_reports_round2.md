@@ -135,3 +135,13 @@
   - 🔧 FIXED: Numeric inputs (`#inputWidth`, `#inputHeight`, `#kernelDivisor`, `#kernelBias`, matrix weights `#k00`..`#k22`) lacked `Enter` key listeners, forcing users to click action buttons with the mouse. Wired `Enter` key handlers to trigger resize and convolution matrix application respectively.
   - 🔧 FIXED: In the Annotation Brush tool, single mouse/pointer clicks without drag movements produced no visible markings because `pointerdown` did not call `renderCanvas()` and single-point Canvas2D paths render nothing with `stroke()`. Added single-point arc/circle rendering, called `renderCanvas()` on `pointerdown`, and added an early return to `renderHistogram()` when the right Inspector panel is hidden to eliminate CPU lag during drawing and slider adjustments.
   - 🔧 FIXED: Activating Crop and Draw simultaneously caused UI conflict where crop overlay pointer capture obstructed drawing. Added mutual exclusion so enabling one tool deactivates the other, added WAI-ARIA `role="tablist"`/`role="tab"` with `ArrowLeft`/`ArrowRight` navigation across tool tabs, and synchronized live canvas dimensions to the EXIF & Property Inspector and Resize inputs upon rotation, cropping, and resizing.
+
+- **KPad**: PASS ✅ (8 issues, 8 fixed inline)
+  - Multi-tab text/code editing, syntax highlighting, templates, and AES-256-GCM encryption work smoothly.
+  - Fixed tab closing data corruption in closeTabDirect.
+  - Fixed tab context duplicate/close others live buffer sync.
+  - Ensured edit menu commands focus editor and sync syntax overlay.
+  - Refined replaceOne/findNext case matching and pattern count safety.
+  - Added fallback input/download triggers for Native File System Access API.
+  - Added clean timeout for VFS in standalone mode.
+  - Added localStorage persistence for theme, font size, and word wrap.

@@ -82,6 +82,15 @@ For Classic Games: **DO NOT add more campaign stages, boss encounters, or active
 
 ## Agent Rules & Guidelines
 
+- **Token Conservation & Logging Rules (CRITICAL):**
+  - Run log entries: ≤8 lines of terse bullet points. No paragraphs.
+  - Skip-turn entries: exactly 1 line: ⏭️ Skip — [reason in ≤15 words].
+  - Never restate implementation details that exist in code. Log WHAT changed + results, not HOW.
+  - Never list parameter names, field names, or variable values unless reporting failure.
+  - Completed work needs no elaboration: ✅ Done (N/N tests pass) is sufficient.
+  - Surgical edits only. Touch only specific cells/lines that changed. Table cell notes ≤100 chars.
+  - Only read files relevant to current task. Move historical logs older than ~80 lines to rchive/.
+
 **Perpetual Loop (NEVER STOP)**
 This agent loops forever. Pick the top game from the queue, do work appropriate to its category (see above), move it to the bottom, repeat.
 - For **Deep Games**: Add meaningful new content — new enemies, mechanics, story, levels, items.

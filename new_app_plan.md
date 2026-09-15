@@ -14,7 +14,14 @@
 - **Testing:** After editing HTML → verify in browser if possible. After editing App.jsx → `cd KiloOS && npm run build`. After editing `.c` files → run the app's `build.bat`.
 - **CI/CD:** Every push to `main` triggers GitHub Actions → Firebase deploy to `kiloapps.web.app`.
 - **Conflict resolution:** If `git push` fails → `git pull --rebase` → resolve conservatively (prefer remote for code you didn't write) → push again.
-- **Logging discipline:** Keep this plan file concise. Brief notes per completed phase. Do NOT dump file contents.
+- **Token Conservation & Logging Rules (CRITICAL):**
+  - Run log entries: ≤8 lines of terse bullet points. No paragraphs.
+  - Skip-turn entries: exactly 1 line: ⏭️ Skip — [reason in ≤15 words].
+  - Never restate implementation details that exist in code. Log WHAT changed + results, not HOW.
+  - Never list parameter names, field names, or variable values unless reporting failure.
+  - Completed work needs no elaboration: ✅ Done (N/N tests pass) is sufficient.
+  - Surgical edits only. Touch only specific cells/lines that changed. Table cell notes ≤100 chars.
+  - Only read files relevant to current task. Move historical logs older than ~80 lines to rchive/.
 - **⚠️ QUALITY OVER QUANTITY:** The project has 95+ apps. Focus on making each app EXCELLENT rather than rushing through phases. Take time to add polish, edge cases, and depth. Each phase should feel like a real product improvement, not a checkbox exercise.
 - **⚠️ MATURITY & TURN SKIPPING DIRECTIVE (2026-09-13):** During deep expansion of existing apps, if an app has already undergone 6+ passes and is feature-complete, cohesive, and lacks a new specific directive from the director or user, **"turn skipped because this app is complete and we don't have new ideas here"** is fine and encouraged. Do not add arbitrary or poorly-thought-out features just to fill a turn.
 

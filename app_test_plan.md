@@ -12,7 +12,14 @@
 - **Testing:** After editing any app's HTML file, verify it renders. After editing `App.jsx` → `npm run build` in `KiloOS/`.
 - **CI/CD:** Every push to `main` triggers GitHub Actions → Firebase deploy to `kiloapps.web.app`. If build fails, fix immediately.
 - **Conflict resolution:** If `git push` fails → `git pull --rebase` → resolve conservatively (prefer remote for code you didn't write) → push again.
-- **Logging discipline:** Keep this plan file concise. Use the compact report format specified below.
+- **Token Conservation & Logging Rules (CRITICAL):**
+  - Run log entries: ≤8 lines of terse bullet points. No paragraphs.
+  - Skip-turn entries: exactly 1 line: `⏭️ Skip — [reason in ≤15 words]`.
+  - Never restate implementation details that exist in code. Log WHAT changed + results, not HOW.
+  - Never list parameter names, field names, or variable values unless reporting failure.
+  - Completed work needs no elaboration: `✅ Done (N/N tests pass)` is sufficient.
+  - Surgical edits only. Touch only specific cells/lines that changed. Table cell notes ≤100 chars.
+  - Only read files relevant to current task. Move historical logs older than ~80 lines to `archive/`.
 
 ---
 
@@ -189,15 +196,12 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 ## Test Reports
 
 - **KPad**: PASS ✅ (8 issues, 8 fixed inline)
-  - ✅ Multi-tab text/code editing, syntax highlighting, templates, and AES-256-GCM encryption work smoothly
-  - 🔧 FIXED: Critical data loss/overwrite bug in `closeTabDirect` where closing an active tab wrote stale editor contents into the newly active tab and miscalculated index for prior tabs
-  - 🔧 FIXED: `ctxDuplicateTab` and `ctxCloseOthers` now properly sync live editor buffer and prevent state overwrites
-  - 🔧 FIXED: Edit menu items (Undo, Redo, Cut, Copy, Paste, Select All) now ensure editor focus and update syntax overlay via `execEditorCommand`
-  - 🔧 FIXED: `replaceOne` now strictly verifies case-matching and regex patterns against the selected text, and `findNext` now displays "X of Y" count with zero-length pattern safety
-  - 🔧 FIXED: Native File System Access API methods (`openFileNative` and `saveFileNative`) now provide fallback `<input type="file">` and `downloadFile` triggers when running on unsupported browsers or sandboxed iframes
-  - 🔧 FIXED: VFS operations now timeout cleanly in standalone mode rather than hanging on unanswered parent `postMessage` requests
-  - 🔧 FIXED: Settings persistence added for theme (`kpad_theme`), font size (`kpad_fontsize`), and word wrap (`kpad_wordwrap`) across sessions
-  - 🔧 FIXED: `sortLines` now supports sorting selected text range only, `formatJSON` handles empty buffers cleanly, and `showDiagnostics` reports 0 lines when empty
+  - Full report archived in [archive/app_test_reports_round2.md](archive/app_test_reports_round2.md).
+  - Fixed tab closing data corruption and context action buffer syncing.
+  - Ensured edit menu commands focus editor and update syntax overlay.
+  - Hardened replaceOne/findNext case matching and zero-length pattern safety.
+  - Added fallback file triggers for Native File System API in sandboxed iframes.
+  - Added VFS standalone timeout and localStorage persistence for theme/font/wrap.
 
 > 📁 **Archived Reports**: Historical test reports have been archived to [archive/app_test_reports_archive.md](archive/app_test_reports_archive.md) to preserve token efficiency.
 

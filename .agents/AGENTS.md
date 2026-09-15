@@ -40,11 +40,59 @@ Multiple agents operate on this codebase on overlapping schedules, potentially f
 - After modifying `App.jsx` or `index.css`, run `npm run build` inside `KiloOS/` to verify the build succeeds before committing.
 - After modifying a native app's `.c` file, run its `build.bat` to verify compilation.
 
-## Logging Discipline
+## Token Conservation & Logging Rules (CRITICAL)
 
-- Keep plan files concise. A few lines per completed item is sufficient.
-- Do NOT duplicate file contents into log files.
-- Do NOT create growing log files that append data every turn. Track status, not history.
+You are operating in a token-constrained multi-agent environment. Every line you write to shared .md files (logs, trackers, docs) is read by multiple agents on every run, multiplying its token cost. Follow these rules without exception:
+
+### LOGGING RULES (for any shared log file)
+- **Run log entries:** ≤8 lines of terse bullet points. No paragraphs.
+- **Skip-turn entries:** exactly 1 line. Format: `⏭️ Skip — [reason in ≤15 words]`
+- **Never restate implementation details that exist in the code.** Log WHAT changed + results, not HOW.
+- **Never list parameter names, field names, or variable values** unless reporting a failure.
+- **Completed work needs no elaboration:** `✅ Done (N/N tests pass)` is sufficient.
+
+### DOC EDITING RULES
+- **Surgical edits only.** Touch only the specific cells/lines that changed.
+- **Table cell notes:** ≤100 characters. Use file names, not full descriptions.
+- **Never duplicate information across files.** One source of truth per fact.
+- **Don't rewrite surrounding text** when updating a single value.
+
+### CONTEXT HYGIENE
+- **Only read files relevant to your current task.** Skip docs you won't use this run.
+- **Don't log diagnostic details** (exact timing, full traces, param values) unless a failure occurred.
+- **When a phase, section, or batch of logs is completed, it should be archived** — not kept in the active file.
+
+### ARCHIVAL PROTOCOL
+- **Completed phases/milestones:** replace with a 2-line stub pointing to the archive file.
+- **Historical logs older than the last ~80 lines:** move to an `archive/` directory.
+- **Bulky reference sections** (changelogs, old blockers, ownership tables): archive when >500 bytes.
+- **Run `python scripts/compact_all.py` on a 4-hour cron** to enforce caps automatically.
+
+### FORMAT EXAMPLES
+
+**Good run log:**
+```markdown
+### Agent Run Log — 2026-09-15T10:00 (Phase 17)
+- **Status:** 🟢 Completed (`Task Name`)
+- Implemented `FooSystem.cs` (feature A, feature B). Wired into `Bar.cs`.
+- Tests: 8/8 pass in `FooSystemTest.cs`. Build clean.
+```
+
+**Good skip log:**
+```markdown
+### Agent Run Log — 2026-09-15T10:00 (Phase 17)
+- **Status:** ⏭️ Skip — No tasks assigned in active phase
+```
+
+**Bad (NEVER do this):**
+```markdown
+### Agent Run Log — 2026-09-15T10:00 (Phase 17)
+- **Status:** 🟢 Completed Deliverable (`Visual Transition & Shader Polish`)
+- **Spatial Shaders Polish (`assets/shaders/`):**
+  1. `data_waves.gdshader`: Implemented exact analytical partial derivatives (`dw1_dx`, `dw2_dx`, `dw1_dz`, `dw2_dz`) for smooth surface normals, eliminating visual distortion artifacts. Added parameterized `fresnel_power`, `fresnel_factor`, and `transparency_falloff` for silky surface alpha transitions.
+  2. `chronos_refraction.gdshader`: Replaced harsh aliased `step()` clock notches with smooth parameterized `dial_feather` smoothsteps, anti-aliased concentric ticks...
+[This burned ~800 tokens for information already in the code]
+```
 
 ## App Maturity, Restraint & Turn Skipping Protocol (CRITICAL)
 
