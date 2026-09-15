@@ -60,6 +60,137 @@ BOOL g_bWordWrap = FALSE;
 #define ID_EDIT_ENCRYPT    9024
 #define ID_EDIT_DECRYPT    9025
 #define ID_VIEW_DIAGNOSTICS 9026
+#define ID_EDIT_COPYALL     9027
+#define ID_VIEW_ZOOMIN      9028
+#define ID_VIEW_ZOOMOUT     9029
+#define ID_VIEW_ZOOMRESET   9030
+#define ID_TPL_MARKDOWN     9031
+#define ID_TPL_C            9032
+#define ID_TPL_HTML         9033
+#define ID_TPL_JSON         9034
+void UpdateStatusBar(void);
+void UpdateTabTitle(int index);
+void AddTab(const char* name, const char* path);
+void SwitchTab(int index);
+
+int g_nFontSizePt = 12;
+char g_szCustomStatus[128] = {0};
+BOOL g_bCustomStatusActive = FALSE;
+
+void ShowNativeStatus(const char* text) {
+    if (!g_hStatus) return;
+    if (text && text[0]) {
+        lstrcpynA(g_szCustomStatus, text, sizeof(g_szCustomStatus));
+        g_bCustomStatusActive = TRUE;
+        SendMessageA(g_hStatus, SB_SETTEXTA, 0, (LPARAM)g_szCustomStatus);
+        if (g_hMainWnd) {
+            SetTimer(g_hMainWnd, 999, 3000, NULL);
+        }
+    }
+}
+
+void ApplyGlobalFont() {
+    HDC hdc = GetDC(NULL);
+    int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+    ReleaseDC(NULL, hdc);
+    int fontHeight = -MulDiv(g_nFontSizePt, dpi, 72);
+    HFONT hNewFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
+    if (hNewFont) {
+        HFONT hOld = g_hFontGlobal;
+        g_hFontGlobal = hNewFont;
+        for (int i = 0; i < g_NumTabs; i++) {
+            if (g_Tabs[i].hEdit) {
+                SendMessage(g_Tabs[i].hEdit, WM_SETFONT, (WPARAM)g_hFontGlobal, TRUE);
+            }
+        }
+        if (hOld) DeleteObject(hOld);
+    }
+}
+
+void ChangeFontSize(int delta) {
+    int newSize = g_nFontSizePt + delta;
+    if (newSize < 8) newSize = 8;
+    if (newSize > 36) newSize = 36;
+    if (newSize != g_nFontSizePt) {
+        g_nFontSizePt = newSize;
+        ApplyGlobalFont();
+        char buf[64];
+        wsprintfA(buf, "Font size: %d pt", g_nFontSizePt);
+        ShowNativeStatus(buf);
+    }
+}
+
+void ResetFontSize() {
+    g_nFontSizePt = 12;
+    ApplyGlobalFont();
+    ShowNativeStatus("Font size reset: 12 pt (100%)");
+}
+
+void CopyAllToClipboard() {
+    if (g_NumTabs == 0 || !g_Tabs[g_ActiveTab].hEdit) return;
+    HWND hEdit = g_Tabs[g_ActiveTab].hEdit;
+    int len = GetWindowTextLengthA(hEdit);
+    if (len <= 0) {
+        ShowNativeStatus("Document is empty (0 chars)");
+        return;
+    }
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len + 1);
+    if (hMem) {
+        char* p = (char*)GlobalLock(hMem);
+        if (p) {
+            GetWindowTextA(hEdit, p, len + 1);
+            GlobalUnlock(hMem);
+            if (OpenClipboard(g_hMainWnd)) {
+                EmptyClipboard();
+                SetClipboardData(CF_TEXT, hMem);
+                CloseClipboard();
+                char stat[64];
+                wsprintfA(stat, "Copied all %d chars to clipboard!", len);
+                ShowNativeStatus(stat);
+                return;
+            }
+        }
+        GlobalFree(hMem);
+    }
+}
+
+void InsertTemplateNative(int type) {
+    if (g_NumTabs == 0) return;
+    const char* title = "template.txt";
+    const char* text = "";
+    if (type == 0) {
+        title = "Notes.md";
+        text = "# Project Notes\r\n\r\n## Overview\r\nQuick notes and reminders created in KPad Pro.\r\n\r\n## Tasks\r\n- [ ] Task 1: Review specifications\r\n- [ ] Task 2: Implement core logic\r\n- [ ] Task 3: Verify and validate\r\n";
+    } else if (type == 1) {
+        title = "main.c";
+        text = "#include <stdio.h>\r\n\r\nint main(int argc, char* argv[]) {\r\n    printf(\"Welcome to KiloOS KPad Pro!\\r\\n\");\r\n    for (int i = 1; i <= 5; i++) {\r\n        printf(\"Step %d: Clean, fast C development\\r\\n\", i);\r\n    }\r\n    return 0;\r\n}\r\n";
+    } else if (type == 2) {
+        title = "index.html";
+        text = "<!DOCTYPE html>\r\n<html lang=\"en\">\r\n<head>\r\n  <meta charset=\"utf-8\">\r\n  <title>KiloOS App</title>\r\n</head>\r\n<body>\r\n  <h1>Welcome to KiloOS</h1>\r\n</body>\r\n</html>\r\n";
+    } else if (type == 3) {
+        title = "config.json";
+        text = "{\r\n  \"name\": \"kpad-project\",\r\n  \"version\": \"1.4.0\",\r\n  \"settings\": {\r\n    \"wordWrap\": false,\r\n    \"tabSize\": 4\r\n  }\r\n}\r\n";
+    }
+
+    HWND hEdit = g_Tabs[g_ActiveTab].hEdit;
+    int curLen = GetWindowTextLengthA(hEdit);
+    if (curLen == 0 && !g_Tabs[g_ActiveTab].isModified && g_Tabs[g_ActiveTab].szPath[0] == 0) {
+        SetWindowTextA(hEdit, text);
+        lstrcpynA(g_Tabs[g_ActiveTab].szTitle, title, sizeof(g_Tabs[g_ActiveTab].szTitle));
+        g_Tabs[g_ActiveTab].isModified = FALSE;
+        UpdateTabTitle(g_ActiveTab);
+        UpdateStatusBar();
+    } else {
+        AddTab(title, NULL);
+        SetWindowTextA(g_Tabs[g_ActiveTab].hEdit, text);
+        g_Tabs[g_ActiveTab].isModified = FALSE;
+        UpdateTabTitle(g_ActiveTab);
+        UpdateStatusBar();
+    }
+    char stat[64];
+    wsprintfA(stat, "Loaded template: %s", title);
+    ShowNativeStatus(stat);
+}
 
 void UpdateStatusBar() {
     if (!g_hStatus || g_NumTabs == 0) return;
@@ -87,7 +218,11 @@ void UpdateStatusBar() {
     }
     wsprintfA(stat3, "Lines: %d | Chars: %d", totalLines, totalChars);
 
-    SendMessageA(g_hStatus, SB_SETTEXTA, 0, (LPARAM)stat1);
+    if (g_bCustomStatusActive) {
+        SendMessageA(g_hStatus, SB_SETTEXTA, 0, (LPARAM)g_szCustomStatus);
+    } else {
+        SendMessageA(g_hStatus, SB_SETTEXTA, 0, (LPARAM)stat1);
+    }
     SendMessageA(g_hStatus, SB_SETTEXTA, 1, (LPARAM)stat2);
     SendMessageA(g_hStatus, SB_SETTEXTA, 2, (LPARAM)stat3);
     SendMessageA(g_hStatus, SB_SETTEXTA, 3, (LPARAM)"[F1] Help / Guide");
@@ -268,6 +403,10 @@ void OpenFileNative() {
                     UpdateStatusBar();
                 }
 
+                char statMsg[128];
+                wsprintfA(statMsg, "Opened: %s", title);
+                ShowNativeStatus(statMsg);
+
                 HeapFree(GetProcessHeap(), 0, buf);
             }
             CloseHandle(hFile);
@@ -316,6 +455,10 @@ void SaveFileNative(BOOL saveAs) {
             g_Tabs[g_ActiveTab].isModified = FALSE;
             UpdateTabTitle(g_ActiveTab);
             UpdateStatusBar();
+
+            char statMsg[128];
+            wsprintfA(statMsg, "Saved: %s", title);
+            ShowNativeStatus(statMsg);
         }
         CloseHandle(hFile);
     }
@@ -895,6 +1038,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hFileMenu, MF_STRING, ID_FILE_SAVE, "Save\tCtrl+S");
             AppendMenuA(hFileMenu, MF_STRING, ID_FILE_SAVEAS, "Save As...");
             AppendMenuA(hFileMenu, MF_SEPARATOR, 0, NULL);
+
+            HMENU hTplMenu = CreatePopupMenu();
+            AppendMenuA(hTplMenu, MF_STRING, ID_TPL_MARKDOWN, "Markdown Notes (.md)");
+            AppendMenuA(hTplMenu, MF_STRING, ID_TPL_C, "C Program Skeleton (.c)");
+            AppendMenuA(hTplMenu, MF_STRING, ID_TPL_HTML, "HTML5 Starter (.html)");
+            AppendMenuA(hTplMenu, MF_STRING, ID_TPL_JSON, "JSON Configuration (.json)");
+            AppendMenuA(hFileMenu, MF_POPUP, (UINT_PTR)hTplMenu, "Insert Template");
+
+            AppendMenuA(hFileMenu, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hFileMenu, MF_STRING, ID_FILE_EXPORT_ENC, "Export Encrypted (.enc)...");
             AppendMenuA(hFileMenu, MF_STRING, ID_FILE_OPEN_ENC, "Open Encrypted (.enc)...");
             AppendMenuA(hFileMenu, MF_SEPARATOR, 0, NULL);
@@ -906,6 +1058,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hEditMenu, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_CUT, "Cut\tCtrl+X");
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_COPY, "Copy\tCtrl+C");
+            AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_COPYALL, "Copy All Document\tCtrl+Shift+C");
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_PASTE, "Paste\tCtrl+V");
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_SELECTALL, "Select All\tCtrl+A");
             AppendMenuA(hEditMenu, MF_SEPARATOR, 0, NULL);
@@ -927,7 +1080,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HMENU hViewMenu = CreatePopupMenu();
             AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_STATS, "Document Stats...");
             AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_DIAGNOSTICS, "Detailed Diagnostics & Integrity...");
-            AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_WRAP, "Toggle Word Wrap");
+            AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_WRAP, "Toggle Word Wrap\tAlt+Z");
+            AppendMenuA(hViewMenu, MF_SEPARATOR, 0, NULL);
+            AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_ZOOMIN, "Zoom In\tCtrl++");
+            AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_ZOOMOUT, "Zoom Out\tCtrl+-");
+            AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_ZOOMRESET, "Reset Zoom\tCtrl+0");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hViewMenu, "View");
 
             HMENU hHelpMenu = CreatePopupMenu();
@@ -949,15 +1106,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_hTabCtrl = CreateWindowExA(0, WC_TABCONTROLA, "", WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE,
                                        0, 0, W, H, hwnd, NULL, GetModuleHandle(NULL), NULL);
 
-            HDC hdc = GetDC(NULL);
-            int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
-            ReleaseDC(NULL, hdc);
-            int fontHeight = -MulDiv(12, dpi, 72);
-            g_hFontGlobal = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Consolas");
+            ApplyGlobalFont();
 
             AddTab("Welcome", NULL);
             SetWindowTextA(g_Tabs[0].hEdit, "Welcome to KPad Pro!\r\n\r\nPress F1 for Help to view keyboard shortcuts.\r\n");
             g_Tabs[0].isModified = FALSE;
+            break;
+        }
+
+        case WM_TIMER: {
+            if (wParam == 999) {
+                KillTimer(hwnd, 999);
+                g_bCustomStatusActive = FALSE;
+                UpdateStatusBar();
+            }
             break;
         }
 
@@ -1014,6 +1176,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case ID_EDIT_COPY:
                     SendMessageA(g_Tabs[g_ActiveTab].hEdit, WM_COPY, 0, 0);
                     break;
+                case ID_EDIT_COPYALL:
+                    CopyAllToClipboard();
+                    break;
                 case ID_EDIT_PASTE:
                     SendMessageA(g_Tabs[g_ActiveTab].hEdit, WM_PASTE, 0, 0);
                     break;
@@ -1060,26 +1225,52 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         else style |= WS_HSCROLL;
                         SetWindowLongA(g_Tabs[i].hEdit, GWL_STYLE, style);
                     }
+                    ShowNativeStatus(g_bWordWrap ? "Word Wrap: ON" : "Word Wrap: OFF");
+                    break;
+                case ID_VIEW_ZOOMIN:
+                    ChangeFontSize(1);
+                    break;
+                case ID_VIEW_ZOOMOUT:
+                    ChangeFontSize(-1);
+                    break;
+                case ID_VIEW_ZOOMRESET:
+                    ResetFontSize();
+                    break;
+                case ID_TPL_MARKDOWN:
+                    InsertTemplateNative(0);
+                    break;
+                case ID_TPL_C:
+                    InsertTemplateNative(1);
+                    break;
+                case ID_TPL_HTML:
+                    InsertTemplateNative(2);
+                    break;
+                case ID_TPL_JSON:
+                    InsertTemplateNative(3);
                     break;
                 case ID_HELP_SHORTCUTS:
                     MessageBoxA(hwnd,
                         "KPad Pro - Keyboard Shortcuts Guide\n\n"
                         "DOCUMENT & TABS:\n"
-                        "  • Ctrl+N / Ctrl+T  : New Document / Tab\n"
-                        "  • Ctrl+O           : Open File\n"
-                        "  • Ctrl+S           : Save Document\n"
-                        "  • Ctrl+W           : Close Active Tab\n"
-                        "  • Ctrl+1 .. 9      : Switch to Tab 1-9\n"
-                        "  • Ctrl+Tab         : Next Tab Cycle\n\n"
+                        "  • Ctrl+N / Ctrl+T     : New Document / Tab\n"
+                        "  • Ctrl+O              : Open File\n"
+                        "  • Ctrl+S              : Save Document\n"
+                        "  • Ctrl+W              : Close Active Tab\n"
+                        "  • Ctrl+1 .. 9         : Switch to Tab 1-9\n"
+                        "  • Ctrl+Tab            : Next Tab Cycle\n\n"
                         "EDITING & SEARCH:\n"
-                        "  • Ctrl+F / Ctrl+H  : Find / Replace\n"
-                        "  • Ctrl+A           : Select All\n"
-                        "  • Alt+Z            : Toggle Word Wrap\n"
-                        "  • F5               : Insert Date & Time\n\n"
-                        "SECURITY & TOOLS:\n"
-                        "  • Ctrl+E           : Encrypt Document\n"
-                        "  • Ctrl+D           : Decrypt Document\n"
-                        "  • F1               : Show this Help Guide",
+                        "  • Ctrl+F / Ctrl+H     : Find / Replace\n"
+                        "  • Ctrl+A              : Select All\n"
+                        "  • Ctrl+Shift+C / Alt+C: Copy All Document\n"
+                        "  • Alt+Z               : Toggle Word Wrap\n"
+                        "  • Ctrl++ / Ctrl+-     : Zoom In / Out\n"
+                        "  • Ctrl+0              : Reset Zoom (100%)\n"
+                        "  • F5                  : Insert Date & Time\n\n"
+                        "SECURITY & TEMPLATES:\n"
+                        "  • File -> Templates   : MD, C, HTML5, JSON\n"
+                        "  • Ctrl+E              : Encrypt Document\n"
+                        "  • Ctrl+D              : Decrypt Document\n"
+                        "  • F1                  : Show this Help Guide",
                         "KPad Pro User Guide [F1]", MB_OK | MB_ICONINFORMATION);
                     break;
                 case ID_HELP_ABOUT:
@@ -1194,6 +1385,30 @@ void MainEntry() {
         }
         if (msg.message == WM_KEYDOWN) {
             BOOL ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+            BOOL alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
+            BOOL shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+
+            if (alt && (msg.wParam == 'Z' || msg.wParam == 'z')) {
+                SendMessage(hwnd, WM_COMMAND, ID_VIEW_WRAP, 0);
+                continue;
+            }
+            if ((ctrl && shift && (msg.wParam == 'C' || msg.wParam == 'c')) ||
+                (alt && (msg.wParam == 'C' || msg.wParam == 'c'))) {
+                SendMessage(hwnd, WM_COMMAND, ID_EDIT_COPYALL, 0);
+                continue;
+            }
+            if (ctrl && (msg.wParam == VK_OEM_PLUS || msg.wParam == VK_ADD)) {
+                SendMessage(hwnd, WM_COMMAND, ID_VIEW_ZOOMIN, 0);
+                continue;
+            }
+            if (ctrl && (msg.wParam == VK_OEM_MINUS || msg.wParam == VK_SUBTRACT)) {
+                SendMessage(hwnd, WM_COMMAND, ID_VIEW_ZOOMOUT, 0);
+                continue;
+            }
+            if (ctrl && (msg.wParam == '0' || msg.wParam == VK_NUMPAD0)) {
+                SendMessage(hwnd, WM_COMMAND, ID_VIEW_ZOOMRESET, 0);
+                continue;
+            }
             if (msg.wParam == VK_F5) {
                 SendMessage(hwnd, WM_COMMAND, ID_EDIT_TIME_DATE, 0);
                 continue;
@@ -1211,7 +1426,6 @@ void MainEntry() {
             }
             if (ctrl && msg.wParam == VK_TAB) {
                 if (g_NumTabs > 1) {
-                    BOOL shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
                     int nextTab = shift ? (g_ActiveTab - 1 + g_NumTabs) % g_NumTabs : (g_ActiveTab + 1) % g_NumTabs;
                     SwitchTab(nextTab);
                 }

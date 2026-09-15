@@ -45,14 +45,13 @@
 
 ---
 
-**Target App:** KPad
+**Target App:** KImage
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KPad
 - KImage
 - KCalc
 - KHex
@@ -106,10 +105,13 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KRead
 - KJournal
 - KBase
+- KPad
 
 ## Progress Log
 
 > 📁 **Archived Progress Log**: Older entries have been archived to [archive/usability_plan_archive.md](archive/usability_plan_archive.md) to preserve token efficiency.
+
+- KPad: Usability and UI issues fixed (integrated quick actions and templates toolbar with 1-click starters [📝 Notes, ⚡ JS, 🌐 HTML5, ⚙️ C/C++, 📦 JSON], built 1-click [📋 Copy All [Alt+C / Ctrl+Shift+C]], [🔤 Wrap [Alt+Z]], [🔍 Find [Ctrl+F]], [🔄 Replace [Ctrl+H]], [A- / 14px / A+ [Ctrl++ / Ctrl+- / Ctrl+0]], and [✕ Clear [Alt+X]] actions with visual active wrap badge and zoom indicator, added helpful placeholder guide to editor textarea, updated File -> Insert Template submenu and Edit menu with Copy All and Clear, expanded global keyboard shortcuts with updated Help & Shortcuts modal guide in web; added non-blocking ShowNativeStatus notification system in native C status bar with auto-reset timer replacing blocking alerts on file open/save/copy, built native File -> Insert Template submenu with instant Markdown/C/HTML5/JSON loaders, added native Windows clipboard Copy All Document [Ctrl+Shift+C / Alt+C], added dynamic font zoom scaling [Ctrl++ / Ctrl+- / Ctrl+0] with Consolas recalculation across all open tabs, handled Alt+Z word wrap toggle with status confirmation, implemented global message loop accelerators for Alt+Z/Alt+C/Ctrl+Shift+C/Ctrl++/Ctrl+-/Ctrl+0, updated F1 Help dialog with full shortcut guide, and verified clean compilation across both builds).
 
 - KBase: Usability and UI issues fixed (integrated interactive toast notification system with [✕] click-to-dismiss and startup guide, built 1-click Quick Presets bar [42, 255, 1024, 65535, 0xDEADBEEF, 0xCAFEBABE, 0x7FFFFFFF, Max 64-bit, "KiloOS!"] on Multi-Base Live Converter, added individual [📋 Copy] and [✕] clear buttons to all base input rows [Binary, Octal, Decimal, Hex, Custom Base, ASCII], added [✨ Sample Text], [Clear], and [📋 Copy Result] to String Encoding Suite, added 1-click Bit Pattern Presets [All 0s, All 1s, 0xAAAA, 0x5555, Sign Bit, Low Bit, 0xDEADBEEF...] and [📋 Copy Value] to 64-bit Toggle Grid, added [📋 Copy] to Bitwise Matrix results, added [📋 Copy Table [Alt+C]] for TSV clipboard export in History, expanded global keyboard shortcuts [C/Alt+C to copy active output, D for presets, X/Del to clear, [/] for tab cycling, F1/H for Help, Enter to calc] with updated Help modal guide in web; implemented native Windows clipboard copy system in C with dedicated [Copy Out [C]] button, added 1-click [✨ Demo [D]] presets loader, added [Clear [X]] wipe button, added non-blocking bottom status bar and title synchronization replacing blocking alerts, updated button shortcut badges [Convert [Enter], Varint [V], Int Formats [I], Bitfield Slice [S]], added message loop accelerators for F1/H/C/D/X/V/I/S/Enter/Esc, and verified clean compilation across both builds).
 

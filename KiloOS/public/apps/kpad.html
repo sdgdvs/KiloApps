@@ -231,13 +231,89 @@
   }
   .add-tab-btn:hover { color: var(--accent); }
 
+  /* Quick Actions & Templates Toolbar */
+  .quick-toolbar {
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-glass);
+    padding: 4px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 11px;
+    z-index: 90;
+    user-select: none;
+  }
+  .quick-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+  .quick-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-glass);
+    color: var(--text-primary);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+  }
+  .quick-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .quick-btn.active {
+    background: rgba(59, 130, 246, 0.25);
+    border-color: var(--accent);
+    color: var(--accent-hover);
+    font-weight: 600;
+  }
+  .quick-label {
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 11px;
+    margin-right: 2px;
+  }
+  .quick-chip {
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: var(--accent-hover);
+    padding: 2px 7px;
+    border-radius: 12px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .quick-chip:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .kbd-hint {
+    font-size: 9px;
+    opacity: 0.75;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 1px 3px;
+    border-radius: 3px;
+    margin-left: 2px;
+    font-family: monospace;
+  }
+
   /* Find & Replace Floating Panel */
   .find-replace-panel {
     display: none;
     flex-direction: column;
     gap: 8px;
     position: absolute;
-    top: 65px;
+    top: 80px;
     right: 25px;
     background: rgba(15, 23, 42, 0.95);
     backdrop-filter: blur(16px);
@@ -649,6 +725,12 @@
         <div onclick="openFileNative()"><span>Open Local File</span><span class="shortcut">Ctrl+O</span></div>
         <div onclick="saveFileNative()"><span>Save As Local</span></div>
         <div class="divider"></div>
+        <div onclick="loadTemplate('markdown')"><span>Insert Template: Notes (.md)</span></div>
+        <div onclick="loadTemplate('js')"><span>Insert Template: JavaScript (.js)</span></div>
+        <div onclick="loadTemplate('html')"><span>Insert Template: HTML5 (.html)</span></div>
+        <div onclick="loadTemplate('c')"><span>Insert Template: C / C++ (.c)</span></div>
+        <div onclick="loadTemplate('json')"><span>Insert Template: JSON (.json)</span></div>
+        <div class="divider"></div>
         <div onclick="exportDocument('txt')"><span>Export Plain Text (.txt)</span></div>
         <div onclick="exportDocument('html')"><span>Export HTML (.html)</span></div>
         <div onclick="exportDocument('json')"><span>Export Session (.json)</span></div>
@@ -665,8 +747,10 @@
         <div class="divider"></div>
         <div onclick="document.execCommand('cut')"><span>Cut</span><span class="shortcut">Ctrl+X</span></div>
         <div onclick="document.execCommand('copy')"><span>Copy</span><span class="shortcut">Ctrl+C</span></div>
+        <div onclick="copyAllDocument()"><span>Copy All Document</span><span class="shortcut">Alt+C</span></div>
         <div onclick="document.execCommand('paste')"><span>Paste</span><span class="shortcut">Ctrl+V</span></div>
         <div onclick="selectAll()"><span>Select All</span><span class="shortcut">Ctrl+A</span></div>
+        <div onclick="clearCurrentDocument()"><span>Clear Document</span><span class="shortcut">Alt+X</span></div>
         <div class="divider"></div>
         <div onclick="openFind(false)"><span>Find...</span><span class="shortcut">Ctrl+F</span></div>
         <div onclick="openFind(true)"><span>Replace...</span><span class="shortcut">Ctrl+H</span></div>
@@ -696,9 +780,9 @@
         <div onclick="toggleWordWrap()"><span>Toggle Word Wrap</span><span class="shortcut">Alt+Z</span></div>
         <div onclick="toggleGutter()"><span>Toggle Line Numbers</span></div>
         <div class="divider"></div>
-        <div onclick="changeFontSize(1)"><span>Increase Font Size</span></div>
-        <div onclick="changeFontSize(-1)"><span>Decrease Font Size</span></div>
-        <div onclick="resetFontSize()"><span>Reset Font Size</span></div>
+        <div onclick="changeFontSize(1)"><span>Increase Font Size</span><span class="shortcut">Ctrl++</span></div>
+        <div onclick="changeFontSize(-1)"><span>Decrease Font Size</span><span class="shortcut">Ctrl+-</span></div>
+        <div onclick="resetFontSize()"><span>Reset Font Size</span><span class="shortcut">Ctrl+0</span></div>
       </div>
     </div>
 
@@ -715,6 +799,38 @@
     </div>
 
     <div class="brand-badge">KPad Pro</div>
+  </div>
+
+  <!-- Quick Action & Templates Toolbar -->
+  <div class="quick-toolbar">
+    <div class="quick-group">
+      <button class="quick-btn" onclick="copyAllDocument()" title="Copy entire document to clipboard (Alt+C / Ctrl+Shift+C)">
+        📋 Copy All <span class="kbd-hint">Alt+C</span>
+      </button>
+      <button class="quick-btn" id="btn-quick-wrap" onclick="toggleWordWrap()" title="Toggle word wrap (Alt+Z)">
+        🔤 Wrap <span class="kbd-hint">Alt+Z</span>
+      </button>
+      <button class="quick-btn" onclick="openFind(false)" title="Find in Document (Ctrl+F)">
+        🔍 Find <span class="kbd-hint">Ctrl+F</span>
+      </button>
+      <button class="quick-btn" onclick="openFind(true)" title="Find & Replace (Ctrl+H)">
+        🔄 Replace <span class="kbd-hint">Ctrl+H</span>
+      </button>
+      <button class="quick-btn" onclick="changeFontSize(-1)" title="Decrease font size (Ctrl+-)">A-</button>
+      <button class="quick-btn" onclick="resetFontSize()" title="Reset font size (Ctrl+0)" id="zoom-badge">14px</button>
+      <button class="quick-btn" onclick="changeFontSize(1)" title="Increase font size (Ctrl+=)">A+</button>
+      <button class="quick-btn" onclick="clearCurrentDocument()" title="Clear document (Alt+X)">
+        ✕ Clear <span class="kbd-hint">Alt+X</span>
+      </button>
+    </div>
+    <div class="quick-group">
+      <span class="quick-label">🚀 Templates:</span>
+      <button class="quick-chip" onclick="loadTemplate('markdown')" title="Markdown Notes (.md)">📝 Notes</button>
+      <button class="quick-chip" onclick="loadTemplate('js')" title="JavaScript Sandbox (.js)">⚡ JS</button>
+      <button class="quick-chip" onclick="loadTemplate('html')" title="HTML5 Starter (.html)">🌐 HTML5</button>
+      <button class="quick-chip" onclick="loadTemplate('c')" title="C/C++ Skeleton (.c)">⚙️ C/C++</button>
+      <button class="quick-chip" onclick="loadTemplate('json')" title="JSON Config (.json)">📦 JSON</button>
+    </div>
   </div>
 
   <!-- Multi-Tab Strip -->
@@ -743,7 +859,7 @@
     <div class="gutter" id="gutter"></div>
     <div class="code-container">
       <pre id="highlight-pre" aria-hidden="true"><code id="highlight-code"></code></pre>
-      <textarea id="editor" spellcheck="false" wrap="off" aria-label="Text Editor"></textarea>
+      <textarea id="editor" spellcheck="false" wrap="off" aria-label="Text Editor" placeholder="Start typing or click a template above (📝 Notes, ⚡ JS, 🌐 HTML5, ⚙️ C, 📦 JSON)..."></textarea>
     </div>
   </div>
 
@@ -1339,6 +1455,8 @@
       editor.setAttribute('wrap', wrapVal);
       highlightPre.style.whiteSpace = wordWrap ? 'pre-wrap' : 'pre';
       highlightPre.style.wordWrap = wordWrap ? 'break-word' : 'normal';
+      const btn = document.getElementById('btn-quick-wrap');
+      if (btn) btn.classList.toggle('active', wordWrap);
       showToast(`Word wrap ${wordWrap ? 'enabled' : 'disabled'}`, 'info', 1800);
     }
 
@@ -1353,12 +1471,105 @@
       editor.style.fontSize = currentFontSize + 'px';
       highlightPre.style.fontSize = currentFontSize + 'px';
       gutter.style.fontSize = currentFontSize + 'px';
+      const badge = document.getElementById('zoom-badge');
+      if (badge) badge.innerText = currentFontSize + 'px';
       showToast(`Font size: ${currentFontSize}px`, 'info', 1500);
     }
 
     function resetFontSize() {
       currentFontSize = 14;
-      changeFontSize(0);
+      editor.style.fontSize = '14px';
+      highlightPre.style.fontSize = '14px';
+      gutter.style.fontSize = '14px';
+      const badge = document.getElementById('zoom-badge');
+      if (badge) badge.innerText = '14px';
+      showToast('Font size reset to 14px', 'info', 1500);
+    }
+
+    function copyAllDocument() {
+      if (!editor.value) {
+        showToast('Document is empty', 'warning', 1800);
+        return;
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(editor.value).then(() => {
+          showToast(`📋 Copied all ${editor.value.length} chars to clipboard!`, 'success', 2200);
+        }).catch(() => {
+          editor.select();
+          document.execCommand('copy');
+          showToast(`📋 Copied all to clipboard!`, 'success', 2200);
+        });
+      } else {
+        editor.select();
+        document.execCommand('copy');
+        showToast(`📋 Copied all to clipboard!`, 'success', 2200);
+      }
+    }
+
+    function clearCurrentDocument() {
+      if (!editor.value) {
+        showToast('Document already empty', 'info', 1500);
+        return;
+      }
+      if (confirm('Clear current document content?')) {
+        editor.value = '';
+        updateEditor();
+        if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
+          tabs[activeTabIndex].content = '';
+          tabs[activeTabIndex].isModified = true;
+          renderTabs();
+        }
+        showToast('Document cleared', 'info', 1800);
+      }
+    }
+
+    const TEMPLATES = {
+      markdown: {
+        name: "Notes.md",
+        lang: "markdown",
+        content: `# Project Notes\n\n## Overview\nQuick notes and reminders created in KPad Pro.\n\n## Tasks\n- [ ] Review requirements and specifications\n- [ ] Implement core logic and features\n- [ ] Test and verify responsiveness\n\n## Snippet\n\`\`\`javascript\nconsole.log("KiloOS Suite Active!");\n\`\`\`\n`
+      },
+      js: {
+        name: "sandbox.js",
+        lang: "javascript",
+        content: `// JavaScript Scratchpad\nfunction calculateStats(items) {\n  const sum = items.reduce((acc, x) => acc + x, 0);\n  const avg = sum / (items.length || 1);\n  return { count: items.length, sum, avg };\n}\n\nconst sampleData = [10, 25, 42, 68, 99];\nconsole.log("Results:", calculateStats(sampleData));\n`
+      },
+      html: {
+        name: "index.html",
+        lang: "html",
+        content: `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>KiloOS App</title>\n  <style>\n    body { font-family: system-ui, sans-serif; background: #0b0f19; color: #f8fafc; padding: 2rem; }\n    h1 { color: #38bdf8; }\n  </style>\n</head>\n<body>\n  <h1>Welcome to KiloOS</h1>\n  <p>Lightweight, high-performance web and native suite.</p>\n</body>\n</html>\n`
+      },
+      c: {
+        name: "main.c",
+        lang: "c",
+        content: `#include <stdio.h>\n\nint main(int argc, char* argv[]) {\n    printf("Welcome to KiloOS KPad Pro!\\n");\n    for (int i = 1; i <= 5; i++) {\n        printf("Step %d: Clean, fast C development\\n", i);\n    }\n    return 0;\n}\n`
+      },
+      json: {
+        name: "config.json",
+        lang: "json",
+        content: `{\n  "appName": "KPad Pro",\n  "version": "1.4.0",\n  "settings": {\n    "theme": "dark",\n    "wordWrap": false,\n    "tabSize": 4,\n    "autoSave": true\n  },\n  "features": [\n    "tabs",\n    "encryption",\n    "diagnostics",\n    "templates"\n  ]\n}\n`
+      }
+    };
+
+    function loadTemplate(type) {
+      const tpl = TEMPLATES[type];
+      if (!tpl) return;
+      if (editor.value.trim().length > 0) {
+        createTab(tpl.name, tpl.content, null, tpl.lang);
+        showToast(`Loaded ${tpl.name} in a new tab`, 'success', 2200);
+      } else {
+        editor.value = tpl.content;
+        setLanguage(tpl.lang);
+        if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
+          tabs[activeTabIndex].name = tpl.name;
+          tabs[activeTabIndex].content = tpl.content;
+          tabs[activeTabIndex].language = tpl.lang;
+          tabs[activeTabIndex].isModified = false;
+          renderTabs();
+        }
+        updateEditor();
+        showToast(`Loaded template: ${tpl.name}`, 'success', 2200);
+      }
     }
 
     function setTheme(theme) {
@@ -1845,12 +2056,14 @@
       ];
 
       const editShortcuts = [
+        { label: 'Copy All Document', key: 'Alt + C / Ctrl+Shift+C' },
+        { label: 'Clear Document', key: 'Alt + X' },
         { label: 'Find in Document', key: 'Ctrl + F' },
         { label: 'Find & Replace', key: 'Ctrl + H' },
         { label: 'Select All', key: 'Ctrl + A' },
         { label: 'Insert Date / Time', key: 'F5' },
         { label: 'Toggle Word Wrap', key: 'Alt + Z' },
-        { label: 'Indent / Tab', key: 'Tab' }
+        { label: 'Zoom In / Out / Reset', key: 'Ctrl++ / Ctrl+- / Ctrl+0' }
       ];
 
       const securityShortcuts = [
@@ -1891,10 +2104,11 @@
           <div style="font-size:24px; font-weight:800; background: linear-gradient(135deg, var(--accent), var(--accent-hover)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 6px;">KPad Pro</div>
           <div style="color: var(--text-muted); font-size:12px; margin-bottom: 16px;">Version 1.4 • KiloOS Suite</div>
           <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px;">
-            A high-performance text and code editor with AES-256 document encryption, multi-tab sessions, non-blocking notifications, and auto-save recovery.
+            A high-performance text and code editor with AES-256 document encryption, multi-tab sessions, non-blocking notifications, quick starter templates, and auto-save recovery.
           </p>
           <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 8px; padding: 12px; text-align: left; font-size: 12px; line-height: 1.6;">
             <div>🔒 <strong>Document Security:</strong> 256-bit AES-GCM encryption with PBKDF2 password protection, encrypted file exports (.kpad.enc), auto-save recovery, and live SHA-256 diagnostics.</div>
+            <div style="margin-top:6px;">🚀 <strong>Quick Templates:</strong> Instant starter code for Markdown Notes, JavaScript, HTML5, C/C++, and JSON.</div>
             <div style="margin-top:6px;">⌨️ <strong>Quick Tab Navigation:</strong> Use <code>Ctrl+1</code> through <code>Ctrl+9</code> or <code>Ctrl+T</code> / <code>Ctrl+W</code> to manage document tabs with zero friction.</div>
           </div>
         </div>
@@ -1921,7 +2135,13 @@
       if (e.ctrlKey && (e.key === 'o' || e.key === 'O')) { e.preventDefault(); openFileNative(); }
       if (e.ctrlKey && (e.key === 'e' || e.key === 'E')) { e.preventDefault(); promptEncryptDocument(); }
       if (e.ctrlKey && (e.key === 'd' || e.key === 'D')) { e.preventDefault(); promptDecryptDocument(); }
+      if (e.ctrlKey && e.shiftKey && (e.key === 'c' || e.key === 'C')) { e.preventDefault(); copyAllDocument(); }
+      if (e.altKey && (e.key === 'c' || e.key === 'C')) { e.preventDefault(); copyAllDocument(); }
+      if (e.altKey && (e.key === 'x' || e.key === 'X')) { e.preventDefault(); clearCurrentDocument(); }
       if (e.altKey && (e.key === 'z' || e.key === 'Z')) { e.preventDefault(); toggleWordWrap(); }
+      if (e.ctrlKey && (e.key === '=' || e.key === '+')) { e.preventDefault(); changeFontSize(1); }
+      if (e.ctrlKey && (e.key === '-' || e.key === '_')) { e.preventDefault(); changeFontSize(-1); }
+      if (e.ctrlKey && e.key === '0') { e.preventDefault(); resetFontSize(); }
       if (e.key === 'F5') { e.preventDefault(); insertDateTime(); }
       if (e.key === 'F1') { e.preventDefault(); showHelp(); }
     });
