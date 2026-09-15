@@ -369,6 +369,12 @@
                 </div>
             </div>
             
+            <div id="game-over-area" class="hidden" style="text-align:center; padding:16px; background:rgba(18,18,24,0.9); border:1px solid #d4af37; border-radius:4px; margin-top:8px;">
+                <h3 id="game-over-title" style="color:#d4af37; font-size:16px; margin-top:0;">Case Concluded</h3>
+                <p id="game-over-msg" style="color:#dfd8c8; font-size:13px; line-height:1.5; margin:10px 0; white-space:pre-line;"></p>
+                <button onclick="returnToTitle()" class="btn-gold" style="font-size:14px; padding:8px 22px;">Start New Case</button>
+            </div>
+            
             <div id="travel-container">
                 <h3 style="font-size: 13px; margin-bottom: 6px;">Travel to Crime Scene & Locations</h3>
                 <div id="travel-buttons"></div>
@@ -641,12 +647,7 @@
             if (state.timeLeft <= 0) {
                 triggerScreenShake(20);
                 playDramaticChord();
-                alert("Time's up! The killer has escaped. GAME OVER. (Refresh to restart)");
-                document.getElementById('action-area').classList.add('hidden');
-                document.getElementById('travel-container').classList.add('hidden');
-                document.getElementById('interrogation-area').classList.add('hidden');
-                document.getElementById('lab-area').classList.add('hidden');
-                document.getElementById('accusation-area').classList.add('hidden');
+                showGameOver("Time Expired", "Time's up! The killer has slipped into the shadows and escaped.\nThe trail has gone cold. (Case Failed)");
                 return true;
             }
             return false;
@@ -696,6 +697,18 @@
             }
         }
         
+        function renderInterrogationUI(suspect, dialogue) {
+            const intArea = document.getElementById('interrogation-area');
+            intArea.innerHTML = `<h3>Interrogating ${suspect}</h3>
+            <div id="dialogue-text">${dialogue}</div>
+            <div class="dialogue-options">
+                <button onclick="askAlibi()">Ask for Alibi</button>
+                <button onclick="presentClue()">Present Clue</button>
+                <button onclick="endInterrogation()">End Interrogation</button>
+            </div>`;
+            intArea.classList.remove('hidden');
+        }
+
         function startInterrogation() {
             if (advanceTime(1)) return;
             document.getElementById('action-area').classList.add('hidden');
@@ -707,51 +720,58 @@
             state.interrogationMood = 'normal';
             state.inLab = false;
             
-            const intArea = document.getElementById('interrogation-area');
-            intArea.innerHTML = `<h3>Interrogating ${suspect}</h3>
-            <div id="dialogue-text">"What do you want, Detective?"</div>
-            <div class="dialogue-options">
-                <button onclick="askAlibi()">Ask for Alibi</button>
-                <button onclick="presentClue()">Present Clue</button>
-                <button onclick="endInterrogation()">End Interrogation</button>
-            </div>`;
-            intArea.classList.remove('hidden');
+            renderInterrogationUI(suspect, '"What do you want, Detective?"');
         }
         
         function askAlibi() {
             const suspect = state.locations[state.currentLocation].suspect;
             if (state.patience[suspect] <= 0) {
                 state.interrogationMood = 'angry';
-                document.getElementById('dialogue-text').textContent = '"I told you, I want my lawyer! No more questions!"';
+                renderInterrogationUI(suspect, '"I told you, I want my lawyer! No more questions!"');
                 return;
             }
             state.interrogationMood = 'normal';
-            document.getElementById('dialogue-text').textContent = state.alibis[suspect];
+            renderInterrogationUI(suspect, state.alibis[suspect]);
         }
         
         function presentClue() {
+            const suspect = state.locations[state.currentLocation].suspect;
+            if (state.patience[suspect] <= 0) {
+                state.interrogationMood = 'angry';
+                renderInterrogationUI(suspect, '"I told you, I want my lawyer! No more questions!"');
+                return;
+            }
             if (state.foundClues.length === 0) {
-                document.getElementById('dialogue-text').textContent = '"You don\'t even have any clues, Detective!"';
+                renderInterrogationUI(suspect, '"You don\'t even have any clues, Detective!"');
                 return;
             }
             
-            let html = `<h3>Select a clue to present:</h3><div class="dialogue-options">`;
+            let html = `<h3>Select a clue to present to ${suspect}:</h3><div class="dialogue-options">`;
             state.foundClues.forEach((c, idx) => {
                 html += `<button onclick="submitClue(${idx})">${c}</button>`;
             });
-            html += `<button onclick="startInterrogation()">Back</button></div>`;
+            html += `<button onclick="backFromClues()">Back</button></div>`;
             
             const intArea = document.getElementById('interrogation-area');
             intArea.innerHTML = html;
         }
+
+        function backFromClues() {
+            const suspect = state.locations[state.currentLocation].suspect;
+            renderInterrogationUI(suspect, '"What else, Detective?"');
+        }
         
         function submitClue(idx) {
-            const clueStr = state.foundClues[idx];
             const suspect = state.locations[state.currentLocation].suspect;
-            
             if (state.patience[suspect] <= 0) {
                 state.interrogationMood = 'angry';
-                document.getElementById('dialogue-text').textContent = '"I told you, I want my lawyer! No more questions!"';
+                renderInterrogationUI(suspect, '"I told you, I want my lawyer! No more questions!"');
+                return;
+            }
+
+            const clueStr = state.foundClues[idx];
+            if (!clueStr) {
+                backFromClues();
                 return;
             }
             
@@ -801,14 +821,7 @@
                 }
             }
             
-            const intArea = document.getElementById('interrogation-area');
-            intArea.innerHTML = `<h3>Interrogating ${suspect}</h3>
-            <div id="dialogue-text">${response}</div>
-            <div class="dialogue-options">
-                <button onclick="askAlibi()">Ask for Alibi</button>
-                <button onclick="presentClue()">Present Clue</button>
-                <button onclick="endInterrogation()">End Interrogation</button>
-            </div>`;
+            renderInterrogationUI(suspect, response);
         }
         
         function endInterrogation() {
@@ -834,6 +847,7 @@
             const listDiv = document.getElementById('lab-list');
             document.getElementById('scanner-game').classList.add('hidden');
             state.analyzingIdx = -1;
+            analysisState = null;
             
             if (state.unanalyzedClues.length === 0) {
                 listDiv.innerHTML = '<p style="color:#888; font-style:italic;">No unanalyzed evidence in custody.</p>';
@@ -864,18 +878,24 @@
         }
 
         function updateScannerUI() {
+            if (!analysisState) return;
             document.getElementById('scanner-target').textContent = analysisState.target;
             document.getElementById('scanner-current').textContent = analysisState.current;
             document.getElementById('scanner-moves').textContent = analysisState.moves;
         }
 
         function adjScanner(val) {
+            if (!analysisState) return;
             analysisState.current += val;
             analysisState.moves--;
             triggerScreenShake(3);
             
             if (analysisState.current === analysisState.target) {
                 const item = state.unanalyzedClues[analysisState.idx];
+                if (!item) {
+                    renderLabList();
+                    return;
+                }
                 state.unanalyzedClues.splice(analysisState.idx, 1);
                 state.foundClues.push(`[${item.locName}] ${item.realClue}`);
                 playDramaticChord();
@@ -896,6 +916,7 @@
         function closeLab() {
             state.inLab = false;
             state.analyzingIdx = -1;
+            analysisState = null;
             document.getElementById('lab-area').classList.add('hidden');
             document.getElementById('action-area').classList.remove('hidden');
             document.getElementById('travel-container').classList.remove('hidden');
@@ -975,20 +996,61 @@
                 
                 let msg = `Case Closed, Detective! ${suspect} broke down and signed a full confession.\n\nMotive: ${motive}\nWeapon: ${weapon}\nTime Taken: ${hoursTaken}h\n`;
                 if (penaltyFree) msg += "★ PERFECT INVESTIGATION! ★ (No failed labs, no angered suspects)\n";
-                msg += "\nGAME OVER - YOU WIN! (Refresh to play again)";
-                alert(msg);
+                msg += "\nCongratulations - You cracked the case!";
+                showGameOver("Case Solved! ★", msg);
             } else {
                 playDramaticChord();
                 triggerScreenShake(25);
-                alert(`Catastrophic failure! You indicted ${suspect}, but the real culprit was ${state.solution.killer} (Motive: ${state.solution.motive}, Weapon: ${state.solution.weapon}). The Commissioner has revoked your badge.\nGAME OVER.`);
+                showGameOver("Catastrophic Failure", `You indicted ${suspect}, but the real culprit was ${state.solution.killer} (Motive: ${state.solution.motive}, Weapon: ${state.solution.weapon}).\nThe Commissioner has revoked your badge.`);
             }
-            
+        }
+
+        function showGameOver(title, msg) {
             document.getElementById('accusation-area').classList.add('hidden');
             document.getElementById('action-area').classList.add('hidden');
             document.getElementById('travel-container').classList.add('hidden');
             document.getElementById('interrogation-area').classList.add('hidden');
             document.getElementById('lab-area').classList.add('hidden');
+            
+            const goArea = document.getElementById('game-over-area');
+            document.getElementById('game-over-title').textContent = title;
+            document.getElementById('game-over-msg').textContent = msg;
+            goArea.classList.remove('hidden');
         }
+
+        function returnToTitle() {
+            document.getElementById('game-over-area').classList.add('hidden');
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+            document.getElementById('action-area').classList.remove('hidden');
+            document.getElementById('travel-container').classList.remove('hidden');
+            updateStatsUI();
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const helpModal = document.getElementById('help-modal');
+                if (!helpModal.classList.contains('hidden')) {
+                    hideHelp();
+                    return;
+                }
+                const labArea = document.getElementById('lab-area');
+                if (!labArea.classList.contains('hidden')) {
+                    closeLab();
+                    return;
+                }
+                const accArea = document.getElementById('accusation-area');
+                if (!accArea.classList.contains('hidden')) {
+                    cancelAccusation();
+                    return;
+                }
+                const intArea = document.getElementById('interrogation-area');
+                if (!intArea.classList.contains('hidden')) {
+                    endInterrogation();
+                    return;
+                }
+            }
+        });
 
         // ==========================================
         // GRAPHICS & CANVAS PROCEDURAL RENDERING

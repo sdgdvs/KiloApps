@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KMystery
+**Target App:** KNet
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KMystery
 - KNet
 - KNote
 - KPac
@@ -173,10 +172,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KMedia
 - KMine
 - KMines
+- KMystery
 
 ## Test Reports
 
 > 📁 **Archived Reports**: Historical test reports have been archived to [archive/app_test_reports_archive.md](archive/app_test_reports_archive.md) to preserve token efficiency.
+
+- **KMystery**: ISSUES FOUND ⚠️ (5 issues, 5 fixed inline)
+  - ✅ Core gameplay works (Noir murder mystery investigation with 3 difficulty modes Easy/Medium/Hard, procedural crime scene generation, evidence discovery and forensic lab spectral waveform tuning minigame, multi-suspect interrogations with patience meters and alibi contradictions, grand jury accusation indictment system, persistent detective rank tracking from Rookie to Sherlock, canvas noir art scenes, and atmospheric sound effects).
+  - 🔧 FIXED: In `submitClue()`, presenting a clue when suspect patience was depleted (`patience <= 0`) attempted to update `dialogue-text.textContent`. Because `presentClue()` had replaced the interrogation DOM with the clue selection buttons list, `#dialogue-text` was null, throwing a runtime `TypeError` and crashing the interrogation. Routed interrogation dialogues through a unified `renderInterrogationUI()` helper.
+  - 🔧 FIXED: In `presentClue()`, the "Back" button called `startInterrogation()`, which invoked `advanceTime(1)`, deducting 1 hour of investigation time simply for navigating back from the clue selection menu. Created a dedicated `backFromClues()` helper that restores the interrogation menu without penalizing time.
+  - 🔧 FIXED: In `presentClue()`, if suspect patience had reached 0, the clue selection list was still rendered despite the suspect refusing to talk. Added early return with lawyer refusal dialogue, and added safety guards against undefined clue clicks.
+  - 🔧 FIXED: In the Evidence Lab, `analysisState` was never reset to `null` upon completing an analysis, failing calibration, or clicking "Leave Lab" (`renderLabList()` / `closeLab()`), causing the canvas to permanently render stale waveform oscillations over the idle spectral scanner view. Reset `analysisState = null` and added null-safety guards in `adjScanner()`.
+  - 🔧 FIXED: When time expired or an accusation was delivered (win or loss), all interactive action panels were hidden, soft-locking the player on a static screen with no option to restart without a full browser reload. Added a `#game-over-area` panel with a "Start New Case" button to return to the title screen and start new cases seamlessly, and added `Escape` key support to dismiss the manual and submenus.
 
 - **KMines**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
   - ✅ Core gameplay works (arcade/cyber minesweeper with 3 classic difficulty modes Easy 9x9/Medium 16x16/Hard 16x30, 60-second Rush mode with combo multipliers up to 8x, 20-stage tactical Campaign mode with speedrun timers and hidden treasure chests, 3 active power-ups Detector Bot/Sonar Radar Scan/Blast Shield, touch Dig/Flag mode toggle, dual-tier particle and shockwave explosion physics, procedural screen shake, and retro Web Audio sound effects).
