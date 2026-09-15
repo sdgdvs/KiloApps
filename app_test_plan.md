@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KNote
+**Target App:** KPac
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KNote
 - KPac
 - KPad
 - KPaint
@@ -173,10 +172,21 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KMines
 - KMystery
 - KNet
+- KNote
 
 ## Test Reports
 
 > 📁 **Archived Reports**: Historical test reports have been archived to [archive/app_test_reports_archive.md](archive/app_test_reports_archive.md) to preserve token efficiency.
+
+- **KNote**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
+  - ✅ Core functionality works (cybernetic personal notepad with #tag organization, real-time lines/words/chars stats with 6,000 char capacity indicator, 5 quick-starter templates To-Do/Meeting/Pitch/Code/Cheatsheet, live Markdown preview with code fences and checklists, Web Crypto AES-GCM password encryption and decryption, note pinning to top, TXT and Markdown export, full mailbox JSON backup export and import, and keyboard accelerators).
+  - 🔧 FIXED: When editing an unlocked encrypted note, typing or applying templates updated `cur.unlockedText` in memory without re-encrypting `cur.text`. Re-locking or closing the session wiped out all changes back to the stale original ciphertext; implemented debounced session re-encryption and synchronized re-encryption on save, export, and re-lock.
+  - 🔧 FIXED: In `openPasswordModal()`, once a note was encrypted, there was no way to permanently remove encryption or decrypt the note; added "Note Encryption Options" with a "Remove Password" action to cleanly restore notes to plaintext.
+  - 🔧 FIXED: In `exportJsonBtn`, unlocked encrypted notes exported decrypted plaintext with `encrypted: true`, creating a privacy leak in backups and causing permanent decrypt failures on re-import; ensured exported JSON always preserves valid AES ciphertext.
+  - 🔧 FIXED: In `renderMarkdown()`, regex for lists used greedy dotAll matching `(<li>.*<\/li>)/s` and unconditionally wrapped whole blocks in `<p><br>...</p>`, breaking multi-list documents, destroying block formatting, and failing to parse fenced code blocks ````lang...```` and task checklists `- [ ]` / `- [x]`; overhauled parser to properly render code blocks, blockquotes, checklists, and clean HTML blocks.
+  - 🔧 FIXED: Applying a template chip while in Markdown Preview Mode (`isPreviewMode === true`) updated the hidden textarea without refreshing the preview pane, leaving users looking at an unchanged screen; added live preview re-rendering upon applying templates.
+  - 🔧 FIXED: Global keyboard listener checked hotkeys without verifying whether modal dialogs (Password, Delete, Help) were open, allowing background actions (such as `Ctrl+N` creating notes or `Ctrl+D` deleting notes) to trigger behind active modals; added modal suppression guard and `!e.altKey && !e.metaKey` guards across shortcuts.
+  - 🔧 FIXED: In `#delBtn` toolbar button, label read `[Del]` despite the global shortcut being `Ctrl+D`; synchronized label to `[Ctrl+D]`, added `Enter` and `ArrowDown` support to `#searchInput` to focus/select notes, added roving `tabindex` across `#noteList`, and added focus management when opening/closing modals.
 
 - **KNet**: ISSUES FOUND ⚠️ (3 issues, 3 fixed inline)
   - ✅ Core functionality works (HTTP Inspector with proxy fetching and in-response search, real-time ICMP ping and jitter analysis with canvas latency wave chart, custom multi-port and subnet scanner, JSON/CSV traffic logging and import/export, advanced network utilities for DNS/WHOIS/Traceroute/Interfaces, and simulated packet sniffer).
