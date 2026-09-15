@@ -1107,14 +1107,17 @@ Ready. Select a target URL above and click Execute (or press Enter in URL box).
     if (!url) return;
     
     if (url.startsWith('ping:')) {
-      const target = url.split('ping:')[1];
+      const target = url.slice(5).trim();
+      if (target) document.getElementById('pingTargetInput').value = target;
       urlInput.value = url;
       document.querySelector('[data-tab="tab-ping"]').click();
       runPingOnce(target);
       return;
     }
 
-    if (url.toLowerCase() === 'scan' || url.toLowerCase() === 'netscan') {
+    if (url.startsWith('scan:') || url.toLowerCase() === 'scan' || url.toLowerCase() === 'netscan') {
+      const target = url.startsWith('scan:') ? url.slice(5).trim() : '';
+      if (target) document.getElementById('scanTargetInput').value = target;
       urlInput.value = url;
       document.querySelector('[data-tab="tab-scan"]').click();
       runPortScan();
@@ -1524,12 +1527,16 @@ Ready. Select a target URL above and click Execute (or press Enter in URL box).
         const imported = JSON.parse(evt.target.result);
         if (Array.isArray(imported)) {
           trafficLogs = imported.concat(trafficLogs);
+          totalBytesTransferred = trafficLogs.reduce((sum, l) => sum + (l.bytes || 0), 0);
+          lblLogCount.textContent = trafficLogs.length;
+          lblTotalBytes.textContent = formatBytes(totalBytesTransferred);
           renderLogs();
           showToast(`Imported ${imported.length} traffic log records!`, 'info');
         }
       } catch (err) {
         showToast('Failed to parse log file. Ensure valid JSON array format.', 'error');
       }
+      e.target.value = '';
     };
     reader.readAsText(file);
   };
@@ -1594,20 +1601,20 @@ Ready. Select a target URL above and click Execute (or press Enter in URL box).
     snifferTimer = setInterval(() => {
       const protocols = ['TCP', 'UDP', 'HTTP', 'TLSv1.2', 'DNS', 'ICMP', 'ARP'];
       const proto = protocols[Math.floor(Math.random() * protocols.length)];
-      const src = \`192.168.1.\${Math.floor(Math.random() * 254) + 1}\`;
-      const dst = (Math.random() > 0.5) ? \`192.168.1.\${Math.floor(Math.random() * 254) + 1}\` : \`104.21.3.\${Math.floor(Math.random() * 254) + 1}\`;
+      const src = `192.168.1.${Math.floor(Math.random() * 254) + 1}`;
+      const dst = (Math.random() > 0.5) ? `192.168.1.${Math.floor(Math.random() * 254) + 1}` : `104.21.3.${Math.floor(Math.random() * 254) + 1}`;
       const len = Math.floor(Math.random() * 1400) + 64;
       const time = new Date().toISOString().split('T')[1].slice(0, -1);
       
       let info = '';
-      if (proto === 'TCP') info = \`\${Math.floor(Math.random() * 60000)} > 443 [ACK] Seq=1 Ack=1 Win=65535 Len=\${len}\`;
-      else if (proto === 'DNS') info = \`Standard query 0x\${Math.floor(Math.random() * 0xffff).toString(16)} A example.com\`;
-      else if (proto === 'HTTP') info = \`GET / HTTP/1.1\`;
-      else if (proto === 'TLSv1.2') info = \`Application Data\`;
-      else info = \`Payload size \${len} bytes\`;
+      if (proto === 'TCP') info = `${Math.floor(Math.random() * 60000)} > 443 [ACK] Seq=1 Ack=1 Win=65535 Len=${len}`;
+      else if (proto === 'DNS') info = `Standard query 0x${Math.floor(Math.random() * 0xffff).toString(16)} A example.com`;
+      else if (proto === 'HTTP') info = `GET / HTTP/1.1`;
+      else if (proto === 'TLSv1.2') info = `Application Data`;
+      else info = `Payload size ${len} bytes`;
 
       const tr = document.createElement('tr');
-      tr.innerHTML = \`<td>\${time}</td><td>\${src}</td><td>\${dst}</td><td><span class="badge badge-info">\${proto}</span></td><td>\${len}</td><td>\${info}</td>\`;
+      tr.innerHTML = `<td>${time}</td><td>${src}</td><td>${dst}</td><td><span class="badge badge-info">${proto}</span></td><td>${len}</td><td>${info}</td>`;
       snifferTbody.prepend(tr);
       if (snifferTbody.children.length > 100) {
         snifferTbody.removeChild(snifferTbody.lastChild);
@@ -1623,7 +1630,7 @@ Ready. Select a target URL above and click Execute (or press Enter in URL box).
   };
 
   document.getElementById('btnClearSniffer').onclick = () => {
-    snifferTbody.innerHTML = \`<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Sniffer inactive.</td></tr>\`;
+    snifferTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Sniffer inactive.</td></tr>`;
   };
 
 </script>

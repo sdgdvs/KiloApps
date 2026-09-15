@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KNet
+**Target App:** KNote
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KNet
 - KNote
 - KPac
 - KPad
@@ -173,10 +172,17 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KMine
 - KMines
 - KMystery
+- KNet
 
 ## Test Reports
 
 > 📁 **Archived Reports**: Historical test reports have been archived to [archive/app_test_reports_archive.md](archive/app_test_reports_archive.md) to preserve token efficiency.
+
+- **KNet**: ISSUES FOUND ⚠️ (3 issues, 3 fixed inline)
+  - ✅ Core functionality works (HTTP Inspector with proxy fetching and in-response search, real-time ICMP ping and jitter analysis with canvas latency wave chart, custom multi-port and subnet scanner, JSON/CSV traffic logging and import/export, advanced network utilities for DNS/WHOIS/Traceroute/Interfaces, and simulated packet sniffer).
+  - 🔧 FIXED: Severe syntax error in packet sniffer simulator (`\`` and `\${` escaped with backslashes in script block) prevented entire JavaScript engine from evaluating on page load, rendering all tabs, buttons, hotkeys, and diagnostic tools completely non-functional. Stripped invalid backslash escapes to restore complete script execution.
+  - 🔧 FIXED: In `fetchUrl()`, entering `scan:<host>` (advertised in Help manual shortcuts) fell through to HTTP GET and threw a fetch error; now properly detects the `scan:` prefix, updates `scanTargetInput`, switches to Tab 3, and runs port scan. Also synced `pingTargetInput` value when `ping:<host>` is executed.
+  - 🔧 FIXED: In `fileImport.onchange`, importing traffic log files updated table entries but failed to recalculate `lblLogCount` and `lblTotalBytes` in the status footer, leaving metrics at 0, and did not clear `input.value`, preventing re-importing the same file consecutively.
 
 - **KMystery**: ISSUES FOUND ⚠️ (5 issues, 5 fixed inline)
   - ✅ Core gameplay works (Noir murder mystery investigation with 3 difficulty modes Easy/Medium/Hard, procedural crime scene generation, evidence discovery and forensic lab spectral waveform tuning minigame, multi-suspect interrogations with patience meters and alibi contradictions, grand jury accusation indictment system, persistent detective rank tracking from Rookie to Sherlock, canvas noir art scenes, and atmospheric sound effects).
