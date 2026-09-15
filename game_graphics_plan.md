@@ -111,7 +111,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **⚠️ PRIORITY: If ANY game in the queue is at Loop 0 (not yet processed), work on it FIRST before continuing higher-loop games.**
 
 
-- KRogue
 - KChess
 - KPong
 - KMines
@@ -158,8 +157,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KCosmic
 - KFarm
 - KAlchemy
+- KRogue
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
+
+- KRogue (Loop 9): Turn skipped per Director Directive — roguelike ASCII styling, dungeon UI, and class/inventory visuals are complete and mature.
 
 - KAlchemy (Loop 8): Turn skipped per Director Directive — arcane themes, runic styling, and alchemy UI are complete and mature.
 - KFarm (Loop 6): Turn skipped per Director Directive — visuals, livestock/crop sprites, and seasonal ambiance are complete and mature.
@@ -203,7 +205,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMines (Loop 8): Multi-layer particles, dual shockwaves, tile highlights, and cybernetic arcade HUD.
 - KPong (Loop 8): Screen-shake, multi-layer particles, paddle specular sheen, and cybernetic HUD.
 - KChess (Loop 8): Screen-shake, marble/mahogany particles, classical filigree, and piece specular sweeps.
-- KRogue (Loop 8): Screen-shake, dungeon particles, Gothic RPG filigree, and biome-specific atmospheric motes.
 - KFortress (Loop 7): Procedural architectural tower sprites, animated multi-caste enemy sprites (Goblin, Orc, Hound, Gargoyle, Necromancer, Skeleton, Ogre, Wyvern, Golem), and knight/militia sprites.
 - KColony (Loop 7): 3 animated xeno-caste sprites (Swarmer, Spitter, Goliath) with tactical health gauges, hovering nanite repair drones, and overland logistics rovers.
 - KMaze (Loop 9): Themed Minotaur/Boss sprites and biome walls. Stripped annoying blinking HUD, pickaxe visual, and particle effects per user/director directive.
