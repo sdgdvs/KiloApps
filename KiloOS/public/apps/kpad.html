@@ -399,7 +399,8 @@
   }
   .gutter-line {
     padding-right: 10px;
-    height: 22.4px; /* line-height 1.6 * font-size 14px */
+    line-height: 1.6;
+    box-sizing: border-box;
   }
   .gutter-line.active {
     color: var(--gutter-active);
@@ -839,12 +840,12 @@
   <!-- Floating Find & Replace Panel -->
   <div class="find-replace-panel" id="find-panel" role="search">
     <div class="find-row">
-      <input type="text" class="find-input" id="find-input" placeholder="Find..." aria-label="Find input" onkeydown="if(event.key==='Enter') findNext(false)">
+      <input type="text" class="find-input" id="find-input" placeholder="Find..." aria-label="Find input" onkeydown="if(event.key==='Enter') findNext(event.shiftKey)">
       <button class="find-toggle" id="btn-match-case" onclick="toggleFindOpt('matchCase')" title="Match Case (Aa)">Aa</button>
       <button class="find-toggle" id="btn-regex" onclick="toggleFindOpt('regex')" title="Regular Expression (.*)">.*</button>
       <span class="find-stats" id="find-stats">0 of 0</span>
-      <button class="find-btn" onclick="findNext(false)">▲</button>
-      <button class="find-btn" onclick="findNext(true)">▼</button>
+      <button class="find-btn" onclick="findNext(true)" title="Previous (Shift+Enter)">▲</button>
+      <button class="find-btn" onclick="findNext(false)" title="Next (Enter)">▼</button>
       <button class="find-toggle" onclick="closeFind()">✕</button>
     </div>
     <div class="find-row" id="replace-row" style="display:none;">

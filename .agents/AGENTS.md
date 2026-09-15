@@ -53,3 +53,38 @@ Multiple agents operate on this codebase on overlapping schedules, potentially f
   *`turn skipped because this app is complete and we don't have new ideas here`* is completely fine and expected!
 - **Director Workflow:** The director can add new ideas or directions in subsequent review cycles, and the agent can implement those directives on the next turn. When there is no active directive for a mature app, do NOT invent arbitrary low-quality additions — simply log the skip concisely, rotate the app in the queue, and finish the turn cleanly.
 
+## Subagent Delegation & Model Selection Protocol (CRITICAL - NO OPUS SUBAGENTS)
+
+- **Strict Model Enforcement:** Whenever calling `invoke_subagent`, agents MUST explicitly set `"Model": "flash"` (or `"Model": "sonnet"` as fallback if `flash` encounters capacity/API errors).
+- **Prohibition on Inherit / Opus Subagents:** NEVER use `"Model": "inherit"` or omit the `Model` parameter (which defaults to `inherit`). When high-tier director models like Claude Opus spawn subagents with `inherit`, it creates Claude Opus subagents that rapidly deplete token budgets, exhaust rate limits, and burn costly compute on routine tasks, summarizations, file inspections, and audits.
+- **Prepackaged Subagents (`self` and `research`):**
+  - Even when using the prepackaged `"self"` or `"research"` subagent type, ALWAYS pass `"Model": "flash"`. Do NOT rely on the default inheritance behavior.
+  - If `flash` fails due to 503 capacity limits or outages, retry immediately with `"Model": "sonnet"`. Under NO circumstances should Opus or Pro subagents be spawned for routine tasks.
+- **Example Subagent Call:**
+  ```json
+  {
+    "Subagents": [
+      {
+        "TypeName": "self",
+        "Role": "App Auditor",
+        "Prompt": "...",
+        "Model": "flash"
+      }
+    ]
+  }
+  ```
+  *Fallback on flash error:*
+  ```json
+  {
+    "Subagents": [
+      {
+        "TypeName": "self",
+        "Role": "App Auditor",
+        "Prompt": "...",
+        "Model": "sonnet"
+      }
+    ]
+  }
+  ```
+- **Task Scoping:** Routine coding, testing, file auditing, searching, report formatting, and summarization must ALWAYS run on `flash` (or `sonnet`). Claude Opus is strictly reserved for parent director-level reviews and high-level architectural decisions.
+

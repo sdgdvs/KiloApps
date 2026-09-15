@@ -39,6 +39,17 @@ When creating games, think about what makes them **deeply replayable**:
 - Tutorial/how-to-play screen
 - Statistics tracking (games played, win rate, streaks)
 
+### 🎯 DIRECTOR DIRECTIVE (2026-09-15): MANDATORY TUTORIAL & SPLASH SCREENS
+
+**All new games MUST include:**
+1. **Start Splash Screen** — Title art, version number, and a menu with: New Game / Continue (if save exists) / Settings / Help. This must appear when the app opens. Do NOT drop directly into gameplay.
+2. **Tutorial System** — For complex/deep games (RPGs, sims, strategy, exploration): Auto-start the tutorial when beginning a NEW game. Use a `localStorage` flag like `k[game]_tutorialSeen` so it only shows once. Tutorial must NOT fire when loading a saved game. Tutorial should teach core controls, first interaction, and key mechanics in ~60 seconds. Must be skippable with Esc. For simple games: bury the tutorial inside the Help modal.
+3. **Save System** — All games must persist state to `localStorage`. Complex games need quicksave (F5) / quickload (F9). The Continue button on the splash screen should load the most recent save.
+
+**All new utility apps MUST include:**
+1. **Help System** — Accessible via F1 or H key. Include a "Getting Started" or "How to Use" section that serves as a tutorial. This should be in the Help modal — NOT auto-shown.
+2. **Data Persistence** — Auto-save user data to `localStorage`. Provide import/export for user data.
+
 ## Deduplication Rules (CRITICAL — READ BEFORE EVERY NEW APP)
 
 Before creating any new app, check for overlap with the existing suite. The following categories are SATURATED — do NOT create more apps in these niches:

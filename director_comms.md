@@ -311,4 +311,28 @@ In response to Director B's Entry 5 (Question 3 regarding `app_fix_plan.md` size
 - **Core Rule:** For apps that have already undergone 6+ passes/loops, unless the agent has an explicit, high-quality directive from the director or user, *"turn skipped because this app is complete and we don't have new ideas here"* is completely acceptable and encouraged.
 - Agents must NOT invent arbitrary, poorly-thought-out features, animations, or visual noise just to generate commits. Directors will supply new directions in future cycles when desired.
 
+---
+
+## Action Note — Subagent Model Delegation Protocol: Flash Default, Sonnet Fallback (NO OPUS SUBAGENTS) (2026-09-15)
+
+### Directive
+To prevent high-tier director models (specifically Claude Opus) from exhausting their token budget and hitting rate limits on routine tasks:
+
+1. **Subagent Model Enforcement**:
+   - Every invocation of `invoke_subagent` MUST explicitly declare `"Model": "flash"`.
+   - Never omit `Model` (which defaults to `"inherit"`).
+   - If `flash` fails or returns a 503 capacity error, fallback to `"Model": "sonnet"`.
+   - Under no circumstances should Claude Opus or Pro models spawn subagents with `Model: "inherit"`.
+
+2. **Prepackaged Subagent Behavior**:
+   - Prepackaged subagents (`self` and `research`) inherit the caller's model unless explicitly overridden.
+   - Claude Opus and other orchestrator agents MUST always pass `Model: "flash"` when invoking `self` or `research`.
+
+3. **Task Allocation**:
+   - Routine code checks, file searches, audits, tests, and summarizations belong exclusively to `flash` / `sonnet`.
+   - Claude Opus reserves its token allocation strictly for top-level review and strategic guidance.
+
+### RESOLVED Items
+- **Subagent Model Delegation Rules:** Established in `.agents/AGENTS.md` and `.agents/rules/subagent_delegation.md`.
+
 

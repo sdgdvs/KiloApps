@@ -34,3 +34,9 @@ Almost every KiloApp exists in two forms. When fixing a bug in an app's logic, t
 - Always use `rg` to search for text across files instead of `grep` or `findstr`.
 - Always use `fd` to find files instead of `ls`, `dir`, or `Get-ChildItem`.
 - Always use `uv` for Python package management instead of `pip`.
+
+## 8. Subagent Delegation & Model Selection (CRITICAL)
+- When invoking subagents via `invoke_subagent`:
+  - **ALWAYS explicitly set `"Model": "flash"`**.
+  - If `flash` is unavailable or returns capacity errors, fallback to `"Model": "sonnet"`.
+  - **NEVER use `"Model": "inherit"`** or omit `Model`. High-tier models (Claude Opus) must NEVER spawn Opus subagents for routine tasks, audits, searches, or summarization.

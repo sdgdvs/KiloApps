@@ -11,6 +11,9 @@ The project aims to return software development to the lightweight, compute-effi
 ## ⚠️ DIRECTOR WARNING: DO NOT MODIFY PATH ⚠️
 **ATTENTION DIRECTORS:** Do NOT instruct subagents to modify, reset, or fix the `$env:Path`. This crashes agents.
 
+## ⚠️ DIRECTOR MANDATE: SUBAGENT MODEL DELEGATION (NO OPUS SUBAGENTS) ⚠️
+**ATTENTION DIRECTORS (Claude Opus & Gemini Flash):** Whenever spawning subagents via `invoke_subagent`, you MUST explicitly pass `Model: "flash"` (or `Model: "sonnet"` as fallback if flash fails). NEVER use `Model: "inherit"`. Claude Opus subagents must NEVER be spawned for routine tasks, audits, or summarizations as they burn the entire Opus token budget.
+
 ## Current State (as of 2026-09-13 07:00 UTC)
 - **Total Apps:** 95 registered in App.jsx.
 - **KiloOS Version:** 0.3.111.
