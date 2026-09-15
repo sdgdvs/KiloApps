@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <commdlg.h>
 #include <shellapi.h>
+#include <wincrypt.h>
 
 #define ID_BTN_ENCRYPT 101
 #define ID_BTN_DECRYPT 102
@@ -259,28 +260,28 @@ void GeneratePassword(HWND hTextEdit) {
     int charCount = sizeof(chars) - 1;
     int len = 16;
     char pass[17];
+    BYTE randBytes[16];
+    
+    HCRYPTPROV hProv = 0;
+    if (CryptAcquireContextA(&hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
+        CryptGenRandom(hProv, len, randBytes);
+        CryptReleaseContext(hProv, 0);
+    } else {
+        for (int i = 0; i < len; i++) {
+            randBytes[i] = (BYTE)(my_rand() & 0xFF);
+        }
+    }
     
     for (int i = 0; i < len; i++) {
-        pass[i] = chars[my_rand() % charCount];
+        pass[i] = chars[randBytes[i] % charCount];
     }
     pass[len] = '\0';
     
-    int textLen = GetWindowTextLengthA(hTextEdit);
-    char* newText = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, textLen + len + 4);
-    if (!newText) return;
+    SendMessage(hTextEdit, EM_REPLACESEL, TRUE, (LPARAM)pass);
+    SetFocus(hTextEdit);
 
-    if (textLen > 0) {
-        GetWindowTextA(hTextEdit, newText, textLen + 1);
-        my_strcat(newText, "\r\n");
-        my_strcat(newText, pass);
-    } else {
-        my_strcpy(newText, pass);
-    }
-    SetWindowTextA(hTextEdit, newText);
-
+    secure_zero(randBytes, sizeof(randBytes));
     secure_zero(pass, sizeof(pass));
-    secure_zero(newText, textLen + len + 4);
-    HeapFree(GetProcessHeap(), 0, newText);
 }
 
 void LoadFromFile(HWND hwnd, HWND hTextEdit) {
@@ -307,6 +308,7 @@ void LoadFromFile(HWND hwnd, HWND hTextEdit) {
                         buffer[bytesRead] = '\0';
                         SetWindowTextA(hTextEdit, buffer);
                     }
+                    secure_zero(buffer, fileSize + 1);
                     HeapFree(GetProcessHeap(), 0, buffer);
                 }
             } else if (fileSize == 0) {
@@ -315,6 +317,8 @@ void LoadFromFile(HWND hwnd, HWND hTextEdit) {
                 MessageBoxA(hwnd, "File size exceeds 10MB limit.", "KVault", MB_OK | MB_ICONWARNING);
             }
             CloseHandle(hFile);
+        } else {
+            MessageBoxA(hwnd, "Could not open selected file.", "KVault", MB_OK | MB_ICONERROR);
         }
     }
 }
@@ -327,7 +331,7 @@ void SaveToFile(HWND hwnd, HWND hTextEdit) {
     ofn.hwndOwner = hwnd;
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = "All Files\0*.*\0Text Files\0*.txt\0";
+    ofn.lpstrFilter = "All Files\0*.*\0Text Files\0*.txt\0JSON Files\0*.json\0";
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_OVERWRITEPROMPT;
     
@@ -335,17 +339,29 @@ void SaveToFile(HWND hwnd, HWND hTextEdit) {
         HANDLE hFile = CreateFileA(ofn.lpstrFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile != INVALID_HANDLE_VALUE) {
             int textLen = GetWindowTextLengthA(hTextEdit);
+            BOOL writeOk = TRUE;
             if (textLen > 0) {
                 char* buffer = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, textLen + 1);
                 if (buffer) {
                     GetWindowTextA(hTextEdit, buffer, textLen + 1);
                     DWORD bytesWritten = 0;
-                    WriteFile(hFile, buffer, textLen, &bytesWritten, NULL);
+                    if (!WriteFile(hFile, buffer, textLen, &bytesWritten, NULL) || bytesWritten != (DWORD)textLen) {
+                        writeOk = FALSE;
+                    }
                     secure_zero(buffer, textLen + 1);
                     HeapFree(GetProcessHeap(), 0, buffer);
+                } else {
+                    writeOk = FALSE;
                 }
             }
             CloseHandle(hFile);
+            if (writeOk) {
+                MessageBoxA(hwnd, "Vault data saved successfully.", "KVault", MB_OK | MB_ICONINFORMATION);
+            } else {
+                MessageBoxA(hwnd, "Failed to write complete file data.", "KVault", MB_OK | MB_ICONERROR);
+            }
+        } else {
+            MessageBoxA(hwnd, "Could not create or write destination file.", "KVault", MB_OK | MB_ICONERROR);
         }
     }
 }
@@ -354,6 +370,8 @@ void ClearVault(HWND hwnd) {
     SetWindowTextA(hData, "");
     SetWindowTextA(hPass, "");
     SetWindowTextA(GetDlgItem(hwnd, ID_STATIC_STRENGTH), "");
+    SetWindowTextA(GetDlgItem(hwnd, ID_EDIT_FIND), "");
+    InvalidateRect(GetDlgItem(hwnd, ID_STATIC_STRENGTH), NULL, TRUE);
     if (OpenClipboard(hwnd)) {
         EmptyClipboard();
         CloseClipboard();
@@ -451,6 +469,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             QueryPerformanceCounter(&pc);
             my_srand((unsigned int)GetTickCount() ^ (unsigned int)pc.LowPart);
             
+            SetClassLongPtrA(hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)hbgBrush);
             DragAcceptFiles(hwnd, TRUE);
             break;
         }
@@ -469,12 +488,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 buffer[bytesRead] = '\0';
                                 SetWindowTextA(hData, buffer);
                             }
+                            secure_zero(buffer, fileSize + 1);
                             HeapFree(GetProcessHeap(), 0, buffer);
                         }
                     } else if (fileSize == 0) {
                         SetWindowTextA(hData, "");
+                    } else {
+                        MessageBoxA(hwnd, "File size exceeds 10MB limit.", "KVault", MB_OK | MB_ICONWARNING);
                     }
                     CloseHandle(hFile);
+                } else {
+                    MessageBoxA(hwnd, "Could not open dropped file.", "KVault", MB_OK | MB_ICONERROR);
                 }
             }
             DragFinish(hDrop);
@@ -578,7 +602,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetFocus(hData);
             } else if (LOWORD(wParam) == ID_BTN_COPY_DATA) {
                 int textLen = GetWindowTextLengthA(hData);
-                if (textLen > 0) {
+                if (textLen == 0) {
+                    MessageBoxA(hwnd, "Vault data is empty.", "KVault", MB_OK | MB_ICONINFORMATION);
+                } else {
                     char* text = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, textLen + 1);
                     if (text) {
                         GetWindowTextA(hData, text, textLen + 1);
@@ -590,8 +616,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 if (pMem) {
                                     my_memcpy(pMem, text, textLen + 1);
                                     GlobalUnlock(hMem);
-                                    SetClipboardData(CF_TEXT, hMem);
+                                    if (SetClipboardData(CF_TEXT, hMem)) {
+                                        hMem = NULL;
+                                    }
                                 }
+                                if (hMem) GlobalFree(hMem);
                             }
                             CloseClipboard();
                             MessageBoxA(hwnd, "Data copied to clipboard.", "KVault", MB_OK | MB_ICONINFORMATION);
@@ -609,19 +638,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (LOWORD(wParam) == ID_BTN_HELP) {
                 MessageBoxA(hwnd, 
                     "KVault Help & Security Guide\n\n"
-                    "1. Master Key: Used to encrypt/decrypt data. Never stored anywhere.\n"
-                    "2. Encryption: Standard symmetric stream cipher for lightweight offline storage.\n"
-                    "3. Auto-Lock: Automatically wipes displayed text and clipboard on inactivity.\n"
-                    "4. Shortcuts: Ctrl+S to save, Ctrl+L to lock vault instantly.\n"
-                    "5. Drag & Drop: Drop a backup or text file to load contents.\n"
-                    "6. Clear Clip: Always clear clipboard after copying passwords.",
+                    "1. Master Key: Encrypts/decrypts data with stream cipher.\n"
+                    "2. Auto-Lock: Wipes displayed text and clipboard on inactivity.\n"
+                    "3. Shortcuts:\n"
+                    "   Ctrl+S: Save file\n"
+                    "   Ctrl+O: Open file\n"
+                    "   Ctrl+L: Lock vault\n"
+                    "   Ctrl+E: Encrypt data\n"
+                    "   Ctrl+D: Decrypt data\n"
+                    "   Ctrl+G: Gen password\n"
+                    "   Ctrl+F: Focus Find\n"
+                    "   F1: Help\n"
+                    "4. Drag & Drop: Drop file to load contents.\n"
+                    "5. Clipboard: Clear Clip wipes clipboard after use.",
                     "KVault Help", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == ID_BTN_FIND) {
                 char findText[256];
                 GetDlgItemTextA(hwnd, ID_EDIT_FIND, findText, sizeof(findText));
-                if (my_strlen(findText) > 0) {
+                if (my_strlen(findText) == 0) {
+                    MessageBoxA(hwnd, "Please enter search text first.", "KVault", MB_OK | MB_ICONINFORMATION);
+                } else {
                     int textLen = GetWindowTextLengthA(hData);
-                    if (textLen > 0) {
+                    if (textLen == 0) {
+                        MessageBoxA(hwnd, "Vault data is empty.", "KVault", MB_OK | MB_ICONINFORMATION);
+                    } else {
                         char* text = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, textLen + 1);
                         if (text) {
                             GetWindowTextA(hData, text, textLen + 1);
@@ -647,8 +687,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
                 }
+                secure_zero(findText, sizeof(findText));
             }
             break;
+        }
+        case WM_ERASEBKGND: {
+            HDC hdc = (HDC)wParam;
+            RECT rc;
+            GetClientRect(hwnd, &rc);
+            FillRect(hdc, &rc, hbgBrush);
+            return 1;
         }
         case WM_CTLCOLORSTATIC: {
             HDC hdc = (HDC)wParam;
@@ -674,6 +722,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_DESTROY: {
             KillTimer(hwnd, 1);
+            ClearVault(hwnd);
+            SetClassLongPtrA(hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)NULL);
             if (hbgBrush) DeleteObject(hbgBrush);
             if (hDarkBrush) DeleteObject(hDarkBrush);
             if (hFont) DeleteObject(hFont);
@@ -708,22 +758,58 @@ void __stdcall MainEntry() {
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message >= WM_KEYFIRST && msg.message <= WM_KEYLAST) {
             g_lastActivity = GetTickCount();
-            if (msg.message == WM_KEYDOWN && (GetKeyState(VK_CONTROL) & 0x8000)) {
-                if (msg.wParam == 'S') {
-                    SendMessage(hwnd, WM_COMMAND, ID_BTN_SAVE, 0);
-                    continue;
-                } else if (msg.wParam == 'L') {
-                    ClearVault(hwnd);
-                    MessageBoxA(hwnd, "Vault locked (Ctrl+L).", "KVault", MB_OK | MB_ICONINFORMATION);
-                    continue;
+            if (msg.message == WM_KEYDOWN) {
+                BOOL bCtrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+                BOOL bShift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+                BOOL bAlt = (GetKeyState(VK_MENU) & 0x8000) != 0;
+
+                if (bCtrl && !bShift && !bAlt) {
+                    if (msg.wParam == 'S') {
+                        SendMessage(hwnd, WM_COMMAND, ID_BTN_SAVE, 0);
+                        continue;
+                    } else if (msg.wParam == 'L') {
+                        ClearVault(hwnd);
+                        MessageBoxA(hwnd, "Vault locked (Ctrl+L).", "KVault", MB_OK | MB_ICONINFORMATION);
+                        continue;
+                    } else if (msg.wParam == 'O') {
+                        SendMessage(hwnd, WM_COMMAND, ID_BTN_LOAD, 0);
+                        continue;
+                    } else if (msg.wParam == 'E') {
+                        SendMessage(hwnd, WM_COMMAND, ID_BTN_ENCRYPT, 0);
+                        continue;
+                    } else if (msg.wParam == 'D') {
+                        SendMessage(hwnd, WM_COMMAND, ID_BTN_DECRYPT, 0);
+                        continue;
+                    } else if (msg.wParam == 'G') {
+                        SendMessage(hwnd, WM_COMMAND, ID_BTN_GENERATE, 0);
+                        continue;
+                    } else if (msg.wParam == 'F') {
+                        SetFocus(GetDlgItem(hwnd, ID_EDIT_FIND));
+                        continue;
+                    }
+                } else if (!bCtrl && !bShift && !bAlt) {
+                    if (msg.wParam == VK_F1) {
+                        SendMessage(hwnd, WM_COMMAND, ID_BTN_HELP, 0);
+                        continue;
+                    } else if (msg.wParam == VK_RETURN) {
+                        if (msg.hwnd == GetDlgItem(hwnd, ID_EDIT_FIND)) {
+                            SendMessage(hwnd, WM_COMMAND, ID_BTN_FIND, 0);
+                            continue;
+                        } else if (msg.hwnd == hPass) {
+                            SendMessage(hwnd, WM_COMMAND, ID_BTN_ENCRYPT, 0);
+                            continue;
+                        }
+                    }
                 }
             }
         }
         if (msg.message >= WM_MOUSEFIRST && msg.message <= WM_MOUSELAST) {
             g_lastActivity = GetTickCount();
         }
-        TranslateMessage(&msg);
-        DispatchMessageA(&msg);
+        if (!IsDialogMessageA(hwnd, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessageA(&msg);
+        }
     }
     ExitProcess(0);
 }

@@ -681,29 +681,44 @@
             
             let stored = null;
             try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
-            document.getElementById('auth-error').style.display = 'none';
+            const errElem = document.getElementById('auth-error');
+            if (errElem) errElem.style.display = 'none';
             
             if (stored) {
                 try {
                     const parsed = JSON.parse(stored);
+                    if (!parsed || !parsed.salt || !parsed.vault || !Array.isArray(parsed.salt) || !parsed.vault.iv || !parsed.vault.data) {
+                        if (errElem) {
+                            errElem.textContent = "Corrupted vault file in storage. Please re-import backup.";
+                            errElem.style.display = 'block';
+                        }
+                        return;
+                    }
                     const salt = new Uint8Array(parsed.salt);
                     const key = await deriveKey(pwd, salt);
                     
                     const testDecrypt = await decryptData(parsed.vault, key);
                     if (testDecrypt === null) {
-                        document.getElementById('auth-error').style.display = 'block';
+                        if (errElem) {
+                            errElem.textContent = "Incorrect password. Please try again.";
+                            errElem.style.display = 'block';
+                        }
                         return;
                     }
                     
                     masterKey = key;
-                    vaultData = JSON.parse(testDecrypt);
+                    const loadedData = JSON.parse(testDecrypt);
+                    vaultData = Array.isArray(loadedData) ? loadedData : [];
                     document.getElementById('master-password').value = '';
                     checkStrength();
                     showVault();
                     showNotification("Vault unlocked successfully");
                 } catch (e) {
                     console.error(e);
-                    document.getElementById('auth-error').style.display = 'block';
+                    if (errElem) {
+                        errElem.textContent = "Incorrect password or decryption failure.";
+                        errElem.style.display = 'block';
+                    }
                 }
             } else {
                 const salt = window.crypto.getRandomValues(new Uint8Array(16));
@@ -761,15 +776,21 @@
         async function saveVaultToStorage(salt = null) {
             if (!masterKey) return;
             
-            let storedSalt;
+            let storedSalt = null;
             if (salt) {
                 storedSalt = salt;
             } else {
                 let stored = null;
                 try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
                 if (stored) {
-                    storedSalt = new Uint8Array(JSON.parse(stored).salt);
-                } else {
+                    try {
+                        const parsed = JSON.parse(stored);
+                        if (parsed && Array.isArray(parsed.salt)) {
+                            storedSalt = new Uint8Array(parsed.salt);
+                        }
+                    } catch(e) {}
+                }
+                if (!storedSalt) {
                     storedSalt = window.crypto.getRandomValues(new Uint8Array(16));
                 }
             }
@@ -795,9 +816,16 @@
             editingSecretId = null;
             const passElem = document.getElementById('master-password');
             if (passElem) passElem.value = '';
+            const newTitle = document.getElementById('new-secret-title');
+            if (newTitle) newTitle.value = '';
+            const newVal = document.getElementById('new-secret-value');
+            if (newVal) newVal.value = '';
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) searchInput.value = '';
             checkStrength();
             switchView('view-auth');
-            document.getElementById('auth-controls').style.display = 'none';
+            const authControls = document.getElementById('auth-controls');
+            if (authControls) authControls.style.display = 'none';
             initAuthView();
             try { 
                 if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -860,12 +888,34 @@
             showNotification("Strong password generated");
         }
         
+        function fallbackCopy(text, successMsg) {
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text || '';
+                ta.style.position = 'fixed';
+                ta.style.top = '-9999px';
+                ta.style.left = '-9999px';
+                ta.setAttribute('readonly', '');
+                document.body.appendChild(ta);
+                ta.select();
+                const ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                if (ok) {
+                    showNotification(successMsg || "Copied to clipboard!");
+                } else {
+                    showNotification("Failed to copy to clipboard", "error");
+                }
+            } catch(e) {
+                showNotification("Failed to copy to clipboard", "error");
+            }
+        }
+
         async function saveNewSecret() {
             const title = document.getElementById('new-secret-title').value.trim();
-            const value = document.getElementById('new-secret-value').value.trim();
+            const value = document.getElementById('new-secret-value').value;
             const category = document.getElementById('new-secret-category').value;
             
-            if (!title || !value) {
+            if (!title || value.length === 0) {
                 showNotification("Both Title and Value are required", "error");
                 return;
             }
@@ -897,6 +947,7 @@
         
         async function deleteSecret(id) {
             if (confirm("Are you sure you want to delete this secret permanently?")) {
+                if (editingSecretId === id) editingSecretId = null;
                 vaultData = vaultData.filter(s => s.id !== id);
                 await saveVaultToStorage();
                 renderSecrets();
@@ -921,11 +972,15 @@
         
         function copySecret(val) {
             if (!val) return;
-            navigator.clipboard.writeText(val).then(() => {
-                showNotification("Copied secret to clipboard!");
-            }).catch(() => {
-                showNotification("Failed to copy secret", "error");
-            });
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(val).then(() => {
+                    showNotification("Copied secret to clipboard!");
+                }).catch(() => {
+                    fallbackCopy(val, "Copied secret to clipboard!");
+                });
+            } else {
+                fallbackCopy(val, "Copied secret to clipboard!");
+            }
         }
         
         function filterSecrets() {
@@ -1043,19 +1098,27 @@
                 showNotification("Vault is empty or not configured", "error");
                 return;
             }
-            navigator.clipboard.writeText(stored).then(() => {
-                showNotification("Encrypted backup copied to clipboard");
-            }).catch(() => {
-                showNotification("Failed to copy backup", "error");
-            });
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(stored).then(() => {
+                    showNotification("Encrypted backup copied to clipboard");
+                }).catch(() => {
+                    fallbackCopy(stored, "Encrypted backup copied to clipboard");
+                });
+            } else {
+                fallbackCopy(stored, "Encrypted backup copied to clipboard");
+            }
         }
         
         function clearAppClipboard() {
-            navigator.clipboard.writeText('').then(() => {
-                showNotification("Clipboard cleared successfully");
-            }).catch(() => {
-                showNotification("Failed to clear clipboard", "error");
-            });
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText('').then(() => {
+                    showNotification("Clipboard cleared successfully");
+                }).catch(() => {
+                    fallbackCopy('', "Clipboard cleared successfully");
+                });
+            } else {
+                fallbackCopy('', "Clipboard cleared successfully");
+            }
         }
 
         function exportVault() {
@@ -1065,14 +1128,20 @@
                 showNotification("Vault is empty", "error");
                 return;
             }
-            const blob = new Blob([stored], {type: "application/json"});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "kvault_backup.json";
-            a.click();
-            URL.revokeObjectURL(url);
-            showNotification("Vault backup exported");
+            try {
+                const blob = new Blob([stored], {type: "application/json"});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "kvault_backup.json";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 1500);
+                showNotification("Vault backup exported");
+            } catch(e) {
+                showNotification("Failed to export backup", "error");
+            }
         }
 
         function importVault() {
@@ -1087,11 +1156,19 @@
                     return;
                 }
                 const reader = new FileReader();
+                reader.onerror = () => {
+                    showNotification("Failed to read file", "error");
+                };
                 reader.onload = (ev) => {
                     try {
                         const data = JSON.parse(ev.target.result);
-                        if (data.salt && data.vault) {
-                            localStorage.setItem(STORAGE_KEY, ev.target.result);
+                        if (data && data.salt && data.vault) {
+                            try {
+                                localStorage.setItem(STORAGE_KEY, ev.target.result);
+                            } catch(storageErr) {
+                                showNotification("Storage quota exceeded", "error");
+                                return;
+                            }
                             lockVault();
                             showNotification("Vault imported successfully. Please unlock.");
                         } else {
@@ -1108,7 +1185,8 @@
         
         // Keyboard Shortcuts
         document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey || e.metaKey) {
+            const hasModifier = e.ctrlKey || e.metaKey;
+            if (hasModifier && !e.altKey && !e.shiftKey) {
                 if (e.key === 's' || e.key === 'S') {
                     e.preventDefault();
                     const activeView = document.querySelector('.view-section.active');
@@ -1122,11 +1200,42 @@
                     if (masterKey) {
                         lockVault();
                     }
+                } else if (e.key === 'f' || e.key === 'F') {
+                    if (masterKey) {
+                        const searchInput = document.getElementById('search-input');
+                        if (searchInput) {
+                            e.preventDefault();
+                            showVault();
+                            searchInput.focus();
+                            searchInput.select();
+                        }
+                    }
+                } else if (e.key === 'n' || e.key === 'N') {
+                    if (masterKey) {
+                        e.preventDefault();
+                        showAddSecret();
+                    }
                 }
-            } else if (e.key === 'Escape') {
-                const modal = document.getElementById('help-modal');
-                if (modal && modal.classList.contains('active')) {
-                    closeHelp();
+            } else if (!hasModifier && !e.altKey && !e.shiftKey) {
+                if (e.key === 'Escape') {
+                    const modal = document.getElementById('help-modal');
+                    if (modal && modal.classList.contains('active')) {
+                        closeHelp();
+                    } else {
+                        const activeView = document.querySelector('.view-section.active');
+                        if (activeView && activeView.id === 'view-add' && masterKey) {
+                            showVault();
+                        } else if (activeView && activeView.id === 'view-vault') {
+                            const searchInput = document.getElementById('search-input');
+                            if (searchInput && searchInput.value) {
+                                searchInput.value = '';
+                                filterSecrets();
+                            }
+                        }
+                    }
+                } else if (e.key === 'F1') {
+                    e.preventDefault();
+                    showHelp();
                 }
             }
         });
@@ -1159,11 +1268,19 @@
                     return;
                 }
                 const reader = new FileReader();
+                reader.onerror = () => {
+                    showNotification("Failed to read dropped file", "error");
+                };
                 reader.onload = (ev) => {
                     try {
                         const data = JSON.parse(ev.target.result);
-                        if (data.salt && data.vault) {
-                            localStorage.setItem(STORAGE_KEY, ev.target.result);
+                        if (data && data.salt && data.vault) {
+                            try {
+                                localStorage.setItem(STORAGE_KEY, ev.target.result);
+                            } catch(storageErr) {
+                                showNotification("Storage quota exceeded", "error");
+                                return;
+                            }
                             lockVault();
                             showNotification("Vault backup dropped & imported. Please unlock.");
                         } else {
@@ -1176,6 +1293,15 @@
                 reader.readAsText(file);
             }
         });
+
+        const helpModal = document.getElementById('help-modal');
+        if (helpModal) {
+            helpModal.addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) {
+                    closeHelp();
+                }
+            });
+        }
 
         // Init
         initAuthView();
