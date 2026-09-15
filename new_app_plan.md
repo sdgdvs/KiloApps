@@ -56,8 +56,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KCosmic (Cosmic colony fleet logistics and interstellar planetary terraforming simulation)
-**Phase:** 8 (next to do)
-**Status:** In Progress (Phase 7 completed: Fleet logistics & automated supply trade routes [4 trade route convoys, freighter commissioning, Zephyr orbital docks, He-3 fuel depots, surface mass driver catapult, animated route conduit lanes and freighters on space map, and full native Win32 C parity])
+**Phase:** 9 (next to do)
+**Status:** In Progress (Phase 8 completed: Colonist population demographics, morale, housing habitats, biosphere domed megacities, and hydroponic food farms [4 specialist workforce strata with dynamic focus presets, multi-factor morale and productivity simulation, 3-tier rationing policies, tiered housing infrastructure with geodesic domes, subterranean vaults, and biosphere domed megacity arcologies, vertical hydroponic towers, aeroponic mega-farms, algal protein synthesis vats, and canvas/GDI rendering of illuminated domes and agricultural arrays])
 
 - [x] Phase 1: Scaffold KCosmic directory (`KCosmic/`), create web HTML skeleton (`KiloOS/public/apps/kcosmic.html`), register in App.jsx.
 - [x] Phase 2: Core colony fleet simulation engine (orbital map, colony arks, terraforming parameters, life support, resource loops).
@@ -66,7 +66,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 5: Procedural star systems & exoplanet classification (barren rock, toxic greenhouse, frozen tundra, ocean world, primordial gaia).
 - [x] Phase 6: Planetary terraforming modules (atmospheric processors, orbital solar mirrors, nitrogen extractors, greenhouse seeding).
 - [x] Phase 7: Fleet logistics & automated supply trade routes (freighter convoys, mineral shipments, fuel depots, orbital docks).
-- [ ] Phase 8: Colonist population demographics, morale, housing habitats, biosphere domed megacities, and hydroponic food farms.
+- [x] Phase 8: Colonist population demographics, morale, housing habitats, biosphere domed megacities, and hydroponic food farms.
 - [ ] Phase 9: Cosmic crisis events & hazards (solar flares, asteroid impacts, tectonic quakes, ecological collapses, magnetic storms).
 - [ ] Phase 10: Interstellar research tree & terraforming breakthroughs (antimatter drives, genetic adapted biomes, climate stabilization).
 - [ ] Phase 11: Orbital megastructures & planetary defense stations (orbital rings, star elevators, planetary shield grids).

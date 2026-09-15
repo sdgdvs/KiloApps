@@ -294,6 +294,19 @@ typedef struct {
     int housingCap;
     float morale;
 
+    // Phase 8: Demographics & Colony Infrastructure
+    int pctLaborers;
+    int pctAgronomists;
+    int pctEngineers;
+    int pctScientists;
+    int demoFocus;         // 0=Balanced, 1=Agronomy, 2=Geo-Eng, 3=Research
+    int rationPolicy;      // 0=Spartan, 1=Standard, 2=Abundant
+    int geodesicDomes;
+    int subterraneanVaults;
+    int domedMegacities;
+    int aeroponicFarms;
+    int algalVats;
+
     // Net Deltas
     int deltaEnergy;
     int deltaMinerals;
@@ -667,15 +680,40 @@ static void SimTick(void) {
     int massDriverMin = sim.massDrivers * 12;
     int fuelDepotPower = sim.fuelDepots * 40;
 
+    // Phase 8: Housing Capacity Sync
+    sim.housingCap = (sim.geodesicDomes * 15000) + (sim.subterraneanVaults * 30000) + (sim.domedMegacities * 50000);
+
+    // Phase 8: Demographic Specialization Multipliers
+    float agroMult = 1.0f + ((float)(sim.pctAgronomists - 25) * 0.012f);
+    int laborerMin = (int)(sim.colonists * ((float)sim.pctLaborers / 100.0f) * 0.0008f);
+    float engTerraMult = 1.0f + ((float)(sim.pctEngineers - 20) * 0.01f);
+
+    // Rationing Multipliers
+    float rationMult = 1.0f;
+    float rationMoraleMod = 0.0f;
+    float rationGrowth = 1.0f;
+    if (sim.rationPolicy == 0) {
+        rationMult = 0.6f;
+        rationMoraleMod = -12.0f;
+        rationGrowth = 0.5f;
+    } else if (sim.rationPolicy == 2) {
+        rationMult = 1.5f;
+        rationMoraleMod = 15.0f;
+        rationGrowth = 2.0f;
+    }
+
     // Energy
-    int energyGen = 600 + (sim.surfaceSolar * 60) + rEnergy + fuelDepotPower;
-    int energyDrain = 200 + (sim.solarMirrors * 75) + (sim.atmoProcessors * 60) + (sim.nitrogenExtractors * 85) + (sim.greenhouseStations * 70) + (sim.coreDynamos * 80) + (sim.colonists / 1000) * 5;
+    int energyGen = 600 + (sim.surfaceSolar * 60) + (sim.domedMegacities * 30) + rEnergy + fuelDepotPower;
+    int baseEnergyDrain = 200 + (sim.solarMirrors * 75) + (sim.atmoProcessors * 60) + (sim.nitrogenExtractors * 85) + (sim.greenhouseStations * 70) + (sim.coreDynamos * 80) + (sim.colonists / 1000) * 5;
+    int engEnergySavings = (int)(baseEnergyDrain * ((float)sim.pctEngineers / 100.0f) * 0.25f);
+    int energyDrain = baseEnergyDrain - engEnergySavings;
+    if (energyDrain < 80) energyDrain = 80;
     sim.deltaEnergy = energyGen - energyDrain;
     sim.energy += (int)(sim.deltaEnergy * 0.05f * rate);
     if (sim.energy < 0) sim.energy = 0;
 
     // Minerals
-    int mineralGain = 20 + (strcmp(fleet[3].status, "Harvesting") == 0 || strcmp(fleet[3].status, "Mining Belt") == 0 ? 25 : 10) + rMin + massDriverMin;
+    int mineralGain = 20 + laborerMin + (strcmp(fleet[3].status, "Harvesting") == 0 || strcmp(fleet[3].status, "Mining Belt") == 0 ? 25 : 10) + rMin + massDriverMin;
     int mineralDrain = (sim.atmoProcessors * 3) + (sim.nitrogenExtractors * 2);
     sim.deltaMinerals = mineralGain - mineralDrain;
     sim.minerals += (int)(sim.deltaMinerals * 0.05f * rate);
@@ -688,9 +726,10 @@ static void SimTick(void) {
     sim.volatiles += (int)(sim.deltaVolatiles * 0.05f * rate);
     if (sim.volatiles < 0) sim.volatiles = 0;
 
-    // Food
-    int foodGain = 15 + (sim.hydroTowers * 12) + rFood;
-    int foodDrain = sim.colonists / 2000;
+    // Food (Phase 8 Advanced Agronomy)
+    int baseFoodGain = 15 + (sim.hydroTowers * 25) + (sim.aeroponicFarms * 80) + (sim.algalVats * 45) + (sim.domedMegacities * 20) + rFood;
+    int foodGain = (int)(baseFoodGain * agroMult);
+    int foodDrain = (int)((sim.colonists / 1200) * rationMult);
     sim.deltaFood = foodGain - foodDrain;
     sim.food += (int)(sim.deltaFood * 0.05f * rate);
     if (sim.food < 0) sim.food = 0;
@@ -699,10 +738,10 @@ static void SimTick(void) {
     if (sim.energy > 500) {
         // 1. Troposphere Processors Drift
         if (sim.atmoMode == 0) {
-            sim.pressure += (sim.atmoProcessors * 0.0004f * rate);
+            sim.pressure += (sim.atmoProcessors * 0.0004f * rate * engTerraMult);
         } else {
             if (sim.pressure > 1.0f) {
-                sim.pressure -= (sim.atmoProcessors * 0.0007f * rate);
+                sim.pressure -= (sim.atmoProcessors * 0.0007f * rate * engTerraMult);
                 if (sim.pressure < 1.0f) sim.pressure = 1.0f;
                 sim.minerals += 1;
             }
@@ -739,13 +778,39 @@ static void SimTick(void) {
         }
     }
 
-    // Morale
-    if (sim.food <= 100 || sim.energy <= 200) {
-        sim.morale -= (0.2f * rate);
-        if (sim.morale < 10.0f) sim.morale = 10.0f;
-    } else if (sim.habitability > 25.0f && sim.morale < 95.0f) {
-        sim.morale += (0.05f * rate);
-        if (sim.morale > 99.0f) sim.morale = 99.0f;
+    // Phase 8: Multi-factor Morale Simulation
+    float targetMorale = 65.0f;
+    if (sim.food <= 0) targetMorale -= 35.0f;
+    else if (sim.food < 300) targetMorale -= 15.0f;
+    else if (sim.food > 2000) targetMorale += 10.0f;
+
+    targetMorale += rationMoraleMod;
+
+    float occ = (sim.housingCap > 0) ? ((float)sim.colonists / (float)sim.housingCap) : 2.0f;
+    if (occ > 1.0f) targetMorale -= 30.0f;
+    else if (occ > 0.85f) targetMorale -= 10.0f;
+    else if (occ < 0.70f) targetMorale += 8.0f;
+
+    targetMorale += (sim.habitability * 0.25f);
+    targetMorale += (sim.domedMegacities * 6.0f);
+    targetMorale += (sim.pctScientists * 0.2f);
+
+    if (targetMorale < 10.0f) targetMorale = 10.0f;
+    if (targetMorale > 99.0f) targetMorale = 99.0f;
+
+    sim.morale += (targetMorale - sim.morale) * 0.05f * rate;
+    if (sim.morale < 10.0f) sim.morale = 10.0f;
+    if (sim.morale > 99.0f) sim.morale = 99.0f;
+
+    // Population Growth / Attrition
+    if (sim.food > 50 && sim.morale >= 50.0f && sim.colonists < sim.housingCap) {
+        int growth = (int)(sim.colonists * (sim.morale - 40.0f) * 0.00004f * rate * rationGrowth);
+        sim.colonists += growth;
+        if (sim.colonists > sim.housingCap) sim.colonists = sim.housingCap;
+    } else if (sim.food <= 0) {
+        int loss = (int)(sim.colonists * 0.003f * rate) + 1;
+        sim.colonists -= loss;
+        if (sim.colonists < 0) sim.colonists = 0;
     }
 
     CalculateHabitability();
@@ -764,8 +829,22 @@ static void InitSimulation(void) {
     sim.food = 5800;
     sim.colonists = 25000;
     sim.cryoSleepers = 75000;
-    sim.housingCap = 30000;
     sim.morale = 86.0f;
+
+    // Phase 8 Demographics & Infrastructure defaults
+    sim.pctLaborers = 40;
+    sim.pctAgronomists = 25;
+    sim.pctEngineers = 20;
+    sim.pctScientists = 15;
+    sim.demoFocus = 0;
+    sim.rationPolicy = 1; // Standard
+    sim.geodesicDomes = 2;
+    sim.subterraneanVaults = 0;
+    sim.domedMegacities = 0;
+    sim.hydroTowers = 2;
+    sim.aeroponicFarms = 0;
+    sim.algalVats = 0;
+    sim.housingCap = (sim.geodesicDomes * 15000) + (sim.subterraneanVaults * 30000) + (sim.domedMegacities * 50000);
 
     sim.deltaEnergy = 120;
     sim.deltaMinerals = 15;
@@ -1701,7 +1780,7 @@ static void DrawExoplanetGDI(HDC hdc, CelestialBody* b, int px, int py, int pr, 
     DeleteObject(hDarkBr);
     DeleteObject(hDarkP);
 
-    // Night-Side Colony Settlement Lights
+    // Night-Side Colony Settlement Lights & Megacity Arcologies (Phase 8)
     if (isActiveTarget && sim.colonists > 0) {
         int cityOffsets[4][2] = {
             { (int)(pr * 0.35f), (int)(-pr * 0.15f) },
@@ -1716,6 +1795,33 @@ static void DrawExoplanetGDI(HDC hdc, CelestialBody* b, int px, int py, int pr, 
             int dotSz = (int)(2 * z);
             if (dotSz < 2) dotSz = 2;
             FillSolidRect(hdc, cxDot - dotSz / 2, cyDot - dotSz / 2, dotSz, dotSz, cityCols[i]);
+        }
+
+        // Domed Megacity Arcology rings
+        if (sim.domedMegacities > 0) {
+            HPEN hMegaPen = CreatePen(PS_SOLID, 1, RGB(0, 240, 255));
+            HPEN hOldP4 = (HPEN)SelectObject(hdc, hMegaPen);
+            for (int m = 0; m < sim.domedMegacities && m < 3; m++) {
+                int mx = shadeX + (int)(pr * (0.20f + m * 0.15f));
+                int my = shadeY + (int)(pr * (-0.10f + m * 0.18f));
+                int mr = (int)((4 + m) * z);
+                if (mr < 3) mr = 3;
+                Arc(hdc, mx - mr, my - mr, mx + mr, my + mr, mx - mr, my, mx + mr, my);
+                FillSolidRect(hdc, mx - 1, my - 1, 3, 3, RGB(255, 220, 120));
+            }
+            SelectObject(hdc, hOldP4);
+            DeleteObject(hMegaPen);
+        }
+
+        // Agricultural Arrays (Hydroponics / Aeroponics)
+        if ((sim.hydroTowers + sim.aeroponicFarms) > 0) {
+            int fx = shadeX + (int)(pr * 0.30f);
+            int fy = shadeY + (int)(pr * 0.08f);
+            int fSz = (int)(2 * z);
+            if (fSz < 2) fSz = 2;
+            for (int f = 0; f < 4 && f < (sim.hydroTowers + sim.aeroponicFarms); f++) {
+                FillSolidRect(hdc, fx + (f % 2) * (fSz + 1), fy + (f / 2) * (fSz + 1), fSz, fSz, RGB(16, 230, 130));
+            }
         }
     }
 
@@ -2062,6 +2168,17 @@ static void AddButton(int id, int x, int y, int w, int h, const char* txt, const
 #define BID_COL_DOME        56
 #define BID_COL_HYDRO       57
 #define BID_COL_SOLAR       58
+#define BID_COL_MEGACITY    85
+#define BID_COL_LAVATUBES   86
+#define BID_COL_AERO_FARM   87
+#define BID_COL_ALGAL_VAT   88
+#define BID_COL_RATION_0    89
+#define BID_COL_RATION_1    90
+#define BID_COL_RATION_2    91
+#define BID_COL_FOCUS_0     92
+#define BID_COL_FOCUS_1     93
+#define BID_COL_FOCUS_2     94
+#define BID_COL_FOCUS_3     95
 
 #define BID_ORDER_GEN_HOLD  60
 #define BID_ORDER_GEN_BOOST 61
@@ -2253,6 +2370,7 @@ static void HandleIntervention(int bid) {
 }
 
 static void HandleColonyProject(int bid) {
+    char buf[128];
     switch (bid) {
         case BID_COL_AWAKEN:
             if (sim.colonists + 2500 > sim.housingCap) {
@@ -2273,11 +2391,40 @@ static void HandleColonyProject(int bid) {
             if (sim.minerals >= 450 && sim.energy >= 150) {
                 sim.minerals -= 450;
                 sim.energy -= 150;
-                sim.housingCap += 15000;
-                SetLogMsg("Pressurized Geodesic Dome Beta completed (+15,000 Housing).", 0);
+                sim.geodesicDomes++;
+                sim.housingCap = (sim.geodesicDomes * 15000) + (sim.subterraneanVaults * 30000) + (sim.domedMegacities * 50000);
+                sprintf(buf, "Geodesic Dome #%d constructed (+15,000 Housing Capacity).", sim.geodesicDomes);
+                SetLogMsg(buf, 0);
                 PlaySoundFx(SFX_DEPLOY);
             } else {
                 SetLogMsg("Insufficient resources (Req: 450 t Minerals, 150 kW Energy).", 1);
+            }
+            break;
+        case BID_COL_LAVATUBES:
+            if (sim.minerals >= 650 && sim.energy >= 100) {
+                sim.minerals -= 650;
+                sim.energy -= 100;
+                sim.subterraneanVaults++;
+                sim.housingCap = (sim.geodesicDomes * 15000) + (sim.subterraneanVaults * 30000) + (sim.domedMegacities * 50000);
+                sprintf(buf, "Subterranean Lava Tube Vault #%d sealed (+30,000 Shielded Housing).", sim.subterraneanVaults);
+                SetLogMsg(buf, 0);
+                PlaySoundFx(SFX_DEPLOY);
+            } else {
+                SetLogMsg("Insufficient resources (Req: 650 t Minerals, 100 kW Energy).", 1);
+            }
+            break;
+        case BID_COL_MEGACITY:
+            if (sim.minerals >= 1200 && sim.energy >= 450 && sim.volatiles >= 300) {
+                sim.minerals -= 1200;
+                sim.energy -= 450;
+                sim.volatiles -= 300;
+                sim.domedMegacities++;
+                sim.housingCap = (sim.geodesicDomes * 15000) + (sim.subterraneanVaults * 30000) + (sim.domedMegacities * 50000);
+                sprintf(buf, "Biosphere Domed Megacity Arcology #%d inaugurated (+50,000 Housing, +6%% Morale).", sim.domedMegacities);
+                SetLogMsg(buf, 0);
+                PlaySoundFx(SFX_SUCCESS);
+            } else {
+                SetLogMsg("Insufficient resources (Req: 1,200 Min, 450 kW, 300 Volatiles).", 1);
             }
             break;
         case BID_COL_HYDRO:
@@ -2285,7 +2432,6 @@ static void HandleColonyProject(int bid) {
                 sim.minerals -= 200;
                 sim.volatiles -= 100;
                 sim.hydroTowers++;
-                char buf[128];
                 sprintf(buf, "Vertical Hydroponic Agronomy Tower #%d operational (+25 Food/cyc).", sim.hydroTowers);
                 SetLogMsg(buf, 0);
                 PlaySoundFx(SFX_DEPLOY);
@@ -2293,17 +2439,80 @@ static void HandleColonyProject(int bid) {
                 SetLogMsg("Insufficient resources (Req: 200 t Minerals, 100 t Volatiles).", 1);
             }
             break;
+        case BID_COL_AERO_FARM:
+            if (sim.minerals >= 550 && sim.volatiles >= 250 && sim.energy >= 120) {
+                sim.minerals -= 550;
+                sim.volatiles -= 250;
+                sim.energy -= 120;
+                sim.aeroponicFarms++;
+                sprintf(buf, "Aeroponic Biosphere Mega-Farm #%d commissioned (+80 Food/cyc).", sim.aeroponicFarms);
+                SetLogMsg(buf, 0);
+                PlaySoundFx(SFX_DEPLOY);
+            } else {
+                SetLogMsg("Insufficient resources (Req: 550 Min, 250 Vol, 120 kW).", 1);
+            }
+            break;
+        case BID_COL_ALGAL_VAT:
+            if (sim.minerals >= 320 && sim.energy >= 180) {
+                sim.minerals -= 320;
+                sim.energy -= 180;
+                sim.algalVats++;
+                sprintf(buf, "Algal Protein Synthesis Bio-Vat #%d online (+45 Food/cyc).", sim.algalVats);
+                SetLogMsg(buf, 0);
+                PlaySoundFx(SFX_DEPLOY);
+            } else {
+                SetLogMsg("Insufficient resources (Req: 320 Min, 180 kW).", 1);
+            }
+            break;
         case BID_COL_SOLAR:
             if (sim.minerals >= 220) {
                 sim.minerals -= 220;
                 sim.surfaceSolar++;
-                char buf[128];
                 sprintf(buf, "Surface Photovoltaic Field #%d connected to power grid (+180 kW).", sim.surfaceSolar);
                 SetLogMsg(buf, 0);
                 PlaySoundFx(SFX_DEPLOY);
             } else {
                 SetLogMsg("Insufficient resources (Req: 220 t Minerals).", 1);
             }
+            break;
+        case BID_COL_RATION_0:
+            sim.rationPolicy = 0;
+            SetLogMsg("Rations Policy set to SPARTAN (0.6x Food, -12% Morale, 0.5x Growth).", 0);
+            PlaySoundFx(SFX_CLICK);
+            break;
+        case BID_COL_RATION_1:
+            sim.rationPolicy = 1;
+            SetLogMsg("Rations Policy set to STANDARD SUSTENANCE (1.0x Food, Baseline Morale).", 0);
+            PlaySoundFx(SFX_CLICK);
+            break;
+        case BID_COL_RATION_2:
+            sim.rationPolicy = 2;
+            SetLogMsg("Rations Policy set to ABUNDANT FEASTS (1.5x Food, +15% Morale, 2.0x Growth).", 0);
+            PlaySoundFx(SFX_CLICK);
+            break;
+        case BID_COL_FOCUS_0:
+            sim.demoFocus = 0;
+            sim.pctLaborers = 40; sim.pctAgronomists = 25; sim.pctEngineers = 20; sim.pctScientists = 15;
+            SetLogMsg("Demographics Focus: BALANCED (40% Lab, 25% Agro, 20% Eng, 15% Sci).", 0);
+            PlaySoundFx(SFX_CLICK);
+            break;
+        case BID_COL_FOCUS_1:
+            sim.demoFocus = 1;
+            sim.pctLaborers = 25; sim.pctAgronomists = 50; sim.pctEngineers = 15; sim.pctScientists = 10;
+            SetLogMsg("Demographics Focus: AGRONOMY & BIOSPHERE (50% Agro, +30% Food Yield).", 0);
+            PlaySoundFx(SFX_CLICK);
+            break;
+        case BID_COL_FOCUS_2:
+            sim.demoFocus = 2;
+            sim.pctLaborers = 25; sim.pctAgronomists = 20; sim.pctEngineers = 40; sim.pctScientists = 15;
+            SetLogMsg("Demographics Focus: GEO-ENGINEERING (40% Eng, Power Savings & Faster Terraforming).", 0);
+            PlaySoundFx(SFX_CLICK);
+            break;
+        case BID_COL_FOCUS_3:
+            sim.demoFocus = 3;
+            sim.pctLaborers = 25; sim.pctAgronomists = 20; sim.pctEngineers = 15; sim.pctScientists = 40;
+            SetLogMsg("Demographics Focus: XENOSCIENCE & RESEARCH (40% Sci, Morale Buffer & Fast Integration).", 0);
+            PlaySoundFx(SFX_CLICK);
             break;
     }
 }
@@ -3455,44 +3664,142 @@ static void RenderUI(HDC hdc, int width, int height) {
         sprintf(upgMassTxt, "+ Upg (%dM)", massCostMin);
         AddButton(BID_UPG_MASS, sbX + sidebarW - 90, sy + 6, 78, 22, upgMassTxt, NULL, 1);
     }
-    // TAB 2: COLONY
+    // TAB 2: COLONY (PHASE 8 DEMOGRAPHICS, MORALE, HOUSING & FOOD FARMS)
     else if (sim.activeTab == 2) {
+        int cy = contentY;
+
+        // 1. Colony Overview & Morale
         SetTextColor(hdc, COLOR_BLUE);
         SelectObject(hdc, hFontBold);
-        TextOutA(hdc, sbX + 12, contentY, "SURFACE HABITAT DOMES", 21);
+        TextOutA(hdc, sbX + 12, cy, "ACTIVE SURFACE COLONY & MORALE", 30);
 
-        FillSolidRect(hdc, sbX + 12, contentY + 18, sidebarW - 24, 76, COLOR_BG_CARD);
-        FrameSolidRect(hdc, sbX + 12, contentY + 18, sidebarW - 24, 76, COLOR_BORDER);
+        int card1H = 74;
+        FillSolidRect(hdc, sbX + 12, cy + 16, sidebarW - 24, card1H, COLOR_BG_CARD);
+        FrameSolidRect(hdc, sbX + 12, cy + 16, sidebarW - 24, card1H, COLOR_BORDER);
 
         SelectObject(hdc, hFontSmall);
         SetTextColor(hdc, COLOR_TEXT_PRI);
-        sprintf(buf, "Active Colonists: %d / %d Housing Capacity", sim.colonists, sim.housingCap);
-        TextOutA(hdc, sbX + 20, contentY + 26, buf, (int)strlen(buf));
-        DrawProgressBar(hdc, sbX + 20, contentY + 42, sidebarW - 40, 7, (float)sim.colonists / (float)sim.housingCap, COLOR_EMERALD);
+        float occPct = (sim.housingCap > 0) ? (((float)sim.colonists / (float)sim.housingCap) * 100.0f) : 100.0f;
+        sprintf(buf, "Active Population: %d / %d Housing (%.0f%%)", sim.colonists, sim.housingCap, occPct);
+        TextOutA(hdc, sbX + 20, cy + 22, buf, (int)strlen(buf));
+        DrawProgressBar(hdc, sbX + 20, cy + 36, sidebarW - 40, 6, (float)sim.colonists / (float)sim.housingCap, COLOR_EMERALD);
 
-        sprintf(buf, "Cryo-Sleepers in Genesis Vaults: %d", sim.cryoSleepers);
-        TextOutA(hdc, sbX + 20, contentY + 54, buf, (int)strlen(buf));
-        sprintf(buf, "Colonist Morale: %.0f%% (Optimistic) | Life Support: 99.4%% Stable", sim.morale);
-        TextOutA(hdc, sbX + 20, contentY + 68, buf, (int)strlen(buf));
+        // Growth / Famine
+        if (sim.food <= 0) {
+            SetTextColor(hdc, COLOR_ROSE);
+            sprintf(buf, "FAMINE ALERT! Colonists starving (-0.3%%/cyc) | Cryo: %d", sim.cryoSleepers);
+        } else {
+            SetTextColor(hdc, COLOR_EMERALD);
+            float rGrowth = (sim.rationPolicy == 0) ? 0.5f : (sim.rationPolicy == 2 ? 2.0f : 1.0f);
+            int estGrowth = (int)(sim.colonists * (sim.morale - 40.0f) * 0.00004f * rGrowth);
+            if (estGrowth < 0) estGrowth = 0;
+            sprintf(buf, "Net Growth: +%d/cyc | Ark Cryo-Sleepers: %d", estGrowth, sim.cryoSleepers);
+        }
+        TextOutA(hdc, sbX + 20, cy + 47, buf, (int)strlen(buf));
 
-        // Expansion Projects
-        int expY = contentY + 104;
+        // Morale status
+        const char* mTag = "Content";
+        COLORREF mCol = COLOR_BLUE;
+        if (sim.morale >= 88.0f) { mTag = "Euphoric"; mCol = COLOR_EMERALD; }
+        else if (sim.morale >= 70.0f) { mTag = "Optimistic"; mCol = COLOR_CYAN; }
+        else if (sim.morale >= 50.0f) { mTag = "Content"; mCol = COLOR_BLUE; }
+        else if (sim.morale >= 30.0f) { mTag = "Discontent"; mCol = COLOR_AMBER; }
+        else { mTag = "Despondent"; mCol = COLOR_ROSE; }
+
+        SetTextColor(hdc, mCol);
+        sprintf(buf, "Morale: %.0f%% [%s] | Rations:%s, Megacities:+%d%%",
+            sim.morale, mTag,
+            sim.rationPolicy == 0 ? "Spartan" : (sim.rationPolicy == 2 ? "Abundant" : "Standard"),
+            sim.domedMegacities * 6);
+        TextOutA(hdc, sbX + 20, cy + 61, buf, (int)strlen(buf));
+
+        // 2. Workforce Demographics
+        cy += card1H + 22;
         SetTextColor(hdc, COLOR_BLUE);
         SelectObject(hdc, hFontBold);
-        TextOutA(hdc, sbX + 12, expY, "COLONY INFRASTRUCTURE EXPANSION", 32);
+        const char* fTitle = sim.demoFocus == 1 ? "AGRONOMY" : (sim.demoFocus == 2 ? "GEO-ENG" : (sim.demoFocus == 3 ? "SCIENCE" : "BALANCED"));
+        sprintf(buf, "WORKFORCE DEMOGRAPHICS [%s ROSTER]", fTitle);
+        TextOutA(hdc, sbX + 12, cy, buf, (int)strlen(buf));
 
-        int btnW = (sidebarW - 30) / 2;
-        int btnH = 38;
-        AddButton(BID_COL_AWAKEN, sbX + 12, expY + 18, btnW, btnH, "Awaken 2,500 Sleepers", "+2.5k Pop (-100 Food)", 1);
-        AddButton(BID_COL_DOME, sbX + 18 + btnW, expY + 18, btnW, btnH, "Expand Habitats", "+15k Housing (450M, 150E)", 1);
+        int demoCardH = 68;
+        FillSolidRect(hdc, sbX + 12, cy + 16, sidebarW - 24, demoCardH, COLOR_BG_CARD);
+        FrameSolidRect(hdc, sbX + 12, cy + 16, sidebarW - 24, demoCardH, COLOR_BORDER);
 
-        AddButton(BID_COL_HYDRO, sbX + 12, expY + 18 + btnH + 6, btnW, btnH, "Hydroponic Tower", "+25 Food/cyc (200M, 100V)", 1);
-        AddButton(BID_COL_SOLAR, sbX + 18 + btnW, expY + 18 + btnH + 6, btnW, btnH, "Surface Solar Grid", "+180 kW (220 Min)", 1);
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COLOR_AMBER);
+        sprintf(buf, "Pioneers/Laborers (%d%%): %d Pop (+%d t Min/cyc)",
+            sim.pctLaborers, (int)(sim.colonists * sim.pctLaborers / 100), (int)(sim.colonists * (sim.pctLaborers / 100.0f) * 0.0008f));
+        TextOutA(hdc, sbX + 20, cy + 22, buf, (int)strlen(buf));
 
-        int bioY = expY + 18 + (btnH + 6) * 2 + 10;
+        SetTextColor(hdc, COLOR_EMERALD);
+        sprintf(buf, "Agronomists (%d%%): %d Pop (+%d%% Crop Yield)",
+            sim.pctAgronomists, (int)(sim.colonists * sim.pctAgronomists / 100), (int)((sim.pctAgronomists - 25) * 1.2f));
+        TextOutA(hdc, sbX + 20, cy + 34, buf, (int)strlen(buf));
+
+        SetTextColor(hdc, COLOR_CYAN);
+        sprintf(buf, "Geo-Engineers (%d%%): %d Pop (-%d%% Energy Drain)",
+            sim.pctEngineers, (int)(sim.colonists * sim.pctEngineers / 100), (int)(sim.pctEngineers * 0.25f));
+        TextOutA(hdc, sbX + 20, cy + 46, buf, (int)strlen(buf));
+
+        SetTextColor(hdc, COLOR_PURPLE);
+        sprintf(buf, "Xenoscientists (%d%%): %d Pop (+Telemetry & Morale Buffer)",
+            sim.pctScientists, (int)(sim.colonists * sim.pctScientists / 100));
+        TextOutA(hdc, sbX + 20, cy + 58, buf, (int)strlen(buf));
+
+        // 4 Focus Presets
+        cy += demoCardH + 18;
+        int fBtnW = (sidebarW - 36) / 4;
+        AddButton(BID_COL_FOCUS_0, sbX + 12 + 0 * (fBtnW + 4), cy, fBtnW, 18, sim.demoFocus == 0 ? "[Balanced]" : "Balanced", NULL, 1);
+        AddButton(BID_COL_FOCUS_1, sbX + 12 + 1 * (fBtnW + 4), cy, fBtnW, 18, sim.demoFocus == 1 ? "[Agronomy]" : "Agronomy", NULL, 1);
+        AddButton(BID_COL_FOCUS_2, sbX + 12 + 2 * (fBtnW + 4), cy, fBtnW, 18, sim.demoFocus == 2 ? "[Geo-Eng]" : "Geo-Eng", NULL, 1);
+        AddButton(BID_COL_FOCUS_3, sbX + 12 + 3 * (fBtnW + 4), cy, fBtnW, 18, sim.demoFocus == 3 ? "[Science]" : "Science", NULL, 1);
+
+        // 3. Food Reserves & Rationing
+        cy += 24;
         SetTextColor(hdc, COLOR_BLUE);
-        TextOutA(hdc, sbX + 12, bioY, "BIOSPHERE INTEGRATION", 21);
-        DrawProgressBar(hdc, sbX + 12, bioY + 18, sidebarW - 24, 8, sim.habitability * 0.009f, COLOR_CYAN);
+        SelectObject(hdc, hFontBold);
+        sprintf(buf, "FOOD SUPPLY: %d t (%+d/cyc)", sim.food, sim.deltaFood);
+        TextOutA(hdc, sbX + 12, cy, buf, (int)strlen(buf));
+
+        cy += 16;
+        int rBtnW = (sidebarW - 32) / 3;
+        AddButton(BID_COL_RATION_0, sbX + 12 + 0 * (rBtnW + 4), cy, rBtnW, 18, sim.rationPolicy == 0 ? "[Spartan 0.6x]" : "Spartan 0.6x", NULL, 1);
+        AddButton(BID_COL_RATION_1, sbX + 12 + 1 * (rBtnW + 4), cy, rBtnW, 18, sim.rationPolicy == 1 ? "[Standard 1.0x]" : "Standard 1.0x", NULL, 1);
+        AddButton(BID_COL_RATION_2, sbX + 12 + 2 * (rBtnW + 4), cy, rBtnW, 18, sim.rationPolicy == 2 ? "[Abundant 1.5x]" : "Abundant 1.5x", NULL, 1);
+
+        // 4. Housing Habitats & Megacities
+        cy += 24;
+        SetTextColor(hdc, COLOR_BLUE);
+        SelectObject(hdc, hFontBold);
+        sprintf(buf, "HABITATS: %d Domes | %d Vaults | %d Megacities",
+            sim.geodesicDomes, sim.subterraneanVaults, sim.domedMegacities);
+        TextOutA(hdc, sbX + 12, cy, buf, (int)strlen(buf));
+
+        cy += 16;
+        int btnW = (sidebarW - 30) / 2;
+        int btnH = 28;
+        AddButton(BID_COL_AWAKEN, sbX + 12, cy, btnW, btnH, "Awaken 2.5k Sleepers", "+2.5k Pop (-100 Food)", 1);
+        AddButton(BID_COL_DOME, sbX + 18 + btnW, cy, btnW, btnH, "+ Geodesic Dome", "+15k Housing (450M, 150E)", 1);
+
+        cy += btnH + 4;
+        AddButton(BID_COL_LAVATUBES, sbX + 12, cy, btnW, btnH, "+ Subterranean Vaults", "+30k Shielded (650M, 100E)", 1);
+        AddButton(BID_COL_MEGACITY, sbX + 18 + btnW, cy, btnW, btnH, "+ Domed Megacity", "+50k Housing (1200M, 450E)", 1);
+
+        // 5. Agronomy & Food Farms
+        cy += btnH + 8;
+        SetTextColor(hdc, COLOR_BLUE);
+        SelectObject(hdc, hFontBold);
+        sprintf(buf, "FOOD FARMS: %d Hydro | %d Aero | %d Algal Vats",
+            sim.hydroTowers, sim.aeroponicFarms, sim.algalVats);
+        TextOutA(hdc, sbX + 12, cy, buf, (int)strlen(buf));
+
+        cy += 16;
+        AddButton(BID_COL_HYDRO, sbX + 12, cy, btnW, btnH, "+ Hydroponic Tower", "+25 Food/cyc (200M, 100V)", 1);
+        AddButton(BID_COL_AERO_FARM, sbX + 18 + btnW, cy, btnW, btnH, "+ Aeroponic Mega-Farm", "+80 Food (550M, 250V, 120E)", 1);
+
+        cy += btnH + 4;
+        AddButton(BID_COL_ALGAL_VAT, sbX + 12, cy, btnW, btnH, "+ Algal Protein Vats", "+45 Food (320M, 180E)", 1);
+        AddButton(BID_COL_SOLAR, sbX + 18 + btnW, cy, btnW, btnH, "+ Surface Solar Grid", "+180 kW Grid (220 Min)", 1);
     }
     // TAB 3: ECONOMY
     else if (sim.activeTab == 3) {
@@ -3784,7 +4091,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         }
                     } else if (bid >= BID_ACT_SOLAR_MIRROR && bid <= BID_ACT_ALGAE) {
                         HandleIntervention(bid);
-                    } else if (bid >= BID_COL_AWAKEN && bid <= BID_COL_SOLAR) {
+                    } else if ((bid >= BID_COL_AWAKEN && bid <= BID_COL_SOLAR) ||
+                               (bid >= BID_COL_MEGACITY && bid <= BID_COL_FOCUS_3)) {
                         HandleColonyProject(bid);
                     } else if (bid >= BID_ORDER_GEN_HOLD && bid <= BID_ORDER_TIT_HOLD) {
                         HandleShipOrder(bid);

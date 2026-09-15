@@ -948,6 +948,112 @@
             display: flex;
             gap: 6px;
         }
+
+        /* Phase 8: Demographics & Colony Megacities Styles */
+        .demo-focus-bar {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+        }
+        .demo-btn {
+            flex: 1;
+            padding: 4px 2px;
+            font-size: 9px;
+            font-family: var(--font-mono);
+            background: var(--bg-card);
+            border: 1px solid var(--border-stellar);
+            color: var(--text-dim);
+            border-radius: 3px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .demo-btn:hover {
+            color: var(--text-bright);
+            border-color: var(--accent-cyan);
+        }
+        .demo-btn.active {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            font-weight: bold;
+            background: rgba(0, 240, 255, 0.12);
+        }
+        .ration-btn-bar {
+            display: flex;
+            gap: 5px;
+            margin-top: 6px;
+        }
+        .ration-btn {
+            flex: 1;
+            padding: 5px 3px;
+            font-size: 10px;
+            font-family: var(--font-mono);
+            background: var(--bg-card);
+            border: 1px solid var(--border-stellar);
+            color: var(--text-dim);
+            border-radius: 3px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .ration-btn:hover {
+            color: var(--text-bright);
+            border-color: var(--accent-emerald);
+        }
+        .ration-btn.active {
+            border-color: var(--accent-emerald);
+            color: var(--accent-emerald);
+            font-weight: bold;
+            background: rgba(16, 185, 129, 0.14);
+        }
+        .morale-badge {
+            padding: 2px 7px;
+            font-size: 10px;
+            border-radius: 3px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .morale-badge.euphoric {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-emerald);
+            border: 1px solid var(--accent-emerald);
+        }
+        .morale-badge.optimistic {
+            background: rgba(0, 240, 255, 0.15);
+            color: var(--accent-cyan);
+            border: 1px solid var(--accent-cyan);
+        }
+        .morale-badge.content {
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-blue);
+            border: 1px solid var(--accent-blue);
+        }
+        .morale-badge.discontent {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent-amber);
+            border: 1px solid var(--accent-amber);
+        }
+        .morale-badge.despondent {
+            background: rgba(244, 63, 94, 0.2);
+            color: var(--accent-rose);
+            border: 1px solid var(--accent-rose);
+        }
+        .sub-stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 6px;
+            font-size: 10px;
+        }
+        .sub-stat-item {
+            background: var(--bg-panel-dark);
+            padding: 4px 6px;
+            border-radius: 3px;
+            border: 1px solid rgba(28, 49, 86, 0.6);
+            display: flex;
+            justify-content: space-between;
+        }
     </style>
 </head>
 <body>
@@ -1505,24 +1611,29 @@
                 </div>
             </div>
 
-            <!-- Tab 3: Colony Habitats & Life Support -->
+            <!-- Tab 3: Colony Habitats & Life Support (Demographics, Morale & Food Farms) -->
             <div class="tab-content" id="tab-colony">
                 <div class="section-header">
-                    <span>Ground Settlement Dome Alpha</span>
-                    <span style="color: var(--accent-emerald);">Pressurized</span>
+                    <span>Active Surface Colony</span>
+                    <span id="badgeColonyState" class="morale-badge optimistic">Pressurized Biosphere</span>
                 </div>
 
+                <!-- Colony Population & Housing Overview -->
                 <div class="metric-card">
                     <div class="metric-row">
                         <span>Active Surface Population</span>
-                        <strong id="colonyPop">25,000</strong>
+                        <strong id="colonyPop" style="color:var(--accent-cyan);">25,000</strong>
+                    </div>
+                    <div class="metric-row">
+                        <span>Colony Growth / Migration</span>
+                        <span id="colonyGrowthRate" style="color:var(--accent-emerald);">+32 Colonists / cyc</span>
                     </div>
                     <div class="metric-row">
                         <span>Cryo-Sleepers in Ark Vaults</span>
                         <strong id="colonyCryo">75,000</strong>
                     </div>
                     <div class="metric-row">
-                        <span>Dome Housing Capacity</span>
+                        <span>Total Housing Capacity</span>
                         <strong id="colonyCapacity">30,000</strong>
                     </div>
                     <div class="progress-bar-container">
@@ -1530,59 +1641,172 @@
                     </div>
                 </div>
 
+                <!-- Morale & Living Conditions -->
                 <div class="section-header">
-                    <span>Life Support Demographics</span>
+                    <span>Colonist Morale & Welfare</span>
+                    <span id="badgeMoraleStatus" class="morale-badge optimistic">86% Optimistic</span>
                 </div>
 
                 <div class="metric-card">
                     <div class="metric-row">
-                        <span>Colonist Morale</span>
-                        <strong style="color: var(--accent-emerald);" id="valMorale">86% (Optimistic)</strong>
+                        <span>Morale Index</span>
+                        <strong id="valMorale" style="color: var(--accent-emerald);">86% (Productivity: +16%)</strong>
                     </div>
-                    <div class="metric-row">
-                        <span>Life Support Integrity</span>
-                        <strong style="color: var(--accent-cyan);">99.4% (Stable)</strong>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="barMorale" style="width: 86%;"></div>
                     </div>
-                    <div class="metric-row">
-                        <span>O2 Filtration Consumption</span>
-                        <span>-12.5 kW / cyc</span>
-                    </div>
-                    <div class="metric-row">
-                        <span>Water Recycling Efficiency</span>
-                        <span>97.2% closed loop</span>
-                    </div>
-                    <div class="metric-row">
-                        <span>Daily Food Rationing</span>
-                        <span>Full Sustenance (Normal)</span>
+                    <div class="sub-stat-grid">
+                        <div class="sub-stat-item"><span>Rations:</span><strong id="tagMoraleRations" style="color:var(--accent-cyan);">Standard (+0%)</strong></div>
+                        <div class="sub-stat-item"><span>Housing:</span><strong id="tagMoraleHousing" style="color:var(--accent-emerald);">Optimal (+8%)</strong></div>
+                        <div class="sub-stat-item"><span>Biosphere:</span><strong id="tagMoraleAtmo" style="color:var(--accent-blue);">+5% Outside</strong></div>
+                        <div class="sub-stat-item"><span>Megacities:</span><strong id="tagMoraleCities" style="color:var(--accent-amber);">+0% Parks</strong></div>
                     </div>
                 </div>
 
+                <!-- Demographics & Specialist Strata -->
+                <div class="section-header">
+                    <span>Workforce Demographics</span>
+                    <span id="badgeDemoFocus" style="color:var(--accent-cyan); font-size:10px;">Balanced Roster</span>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-row">
+                        <span>Pioneers & Laborers (<span id="pctLaborers">40</span>%)</span>
+                        <span id="cntLaborers">10,000 Pop (+8 t Min/cyc)</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="barLaborers" style="width: 40%; background: var(--accent-amber);"></div>
+                    </div>
+
+                    <div class="metric-row" style="margin-top:6px;">
+                        <span>Biosphere Agronomists (<span id="pctAgronomists">25</span>%)</span>
+                        <span id="cntAgronomists">6,250 Pop (+15% Crops)</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="barAgronomists" style="width: 25%; background: var(--accent-emerald);"></div>
+                    </div>
+
+                    <div class="metric-row" style="margin-top:6px;">
+                        <span>Geo-Engineers (<span id="pctEngineers">20</span>%)</span>
+                        <span id="cntEngineers">5,000 Pop (-12% Energy Drain)</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="barEngineers" style="width: 20%; background: var(--accent-cyan);"></div>
+                    </div>
+
+                    <div class="metric-row" style="margin-top:6px;">
+                        <span>Xenoscientists (<span id="pctScientists">15</span>%)</span>
+                        <span id="cntScientists">3,750 Pop (+Biosphere Telemetry)</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="barScientists" style="width: 15%; background: var(--accent-purple);"></div>
+                    </div>
+
+                    <div class="demo-focus-bar">
+                        <button class="demo-btn active" id="btnFocusBalanced" title="Balanced Workforce">Balanced</button>
+                        <button class="demo-btn" id="btnFocusAgro" title="Agronomy Focus (+Crop Yields)">Agronomy</button>
+                        <button class="demo-btn" id="btnFocusEng" title="Geo-Engineering Focus (Energy Savings & Terraforming)">Geo-Eng</button>
+                        <button class="demo-btn" id="btnFocusSci" title="Xenoscience Focus (Morale & Biosphere)">Science</button>
+                    </div>
+                </div>
+
+                <!-- Food Supply & Rationing Policies -->
+                <div class="section-header">
+                    <span>Food Supply & Rations</span>
+                    <span id="valFoodNet" style="color:var(--accent-emerald);">+25 t / cyc</span>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-row">
+                        <span>Reserves In Silos</span>
+                        <strong id="colonyFoodStock" style="color:var(--accent-emerald);">5,800 t</strong>
+                    </div>
+                    <div class="metric-row">
+                        <span>Harvest vs Demand</span>
+                        <span id="colonyFoodRates">46 t Produced - 21 t Eaten</span>
+                    </div>
+                    <div class="ration-btn-bar">
+                        <button class="ration-btn" id="btnRationSpartan" title="0.6x Food Consumption, -12% Morale, 0.5x Growth">Spartan (0.6x)</button>
+                        <button class="ration-btn active" id="btnRationStandard" title="1.0x Food Consumption, Standard Morale & Growth">Standard (1.0x)</button>
+                        <button class="ration-btn" id="btnRationAbundant" title="1.5x Food Consumption, +15% Morale, 2.0x Growth">Abundant (1.5x)</button>
+                    </div>
+                </div>
+
+                <!-- Housing Habitats & Biosphere Megacities -->
                 <div class="section-header" style="margin-top: 10px;">
-                    <span>Colony Expansion Projects</span>
+                    <span>Housing Habitats & Megacities</span>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-row">
+                        <span>Geodesic Domes: <strong id="cntDomes">2</strong> (+30k Cap)</span>
+                        <span>Lava Vaults: <strong id="cntVaults">0</strong> (+0 Cap)</span>
+                    </div>
+                    <div class="metric-row" style="margin-top:3px;">
+                        <span>Domed Megacities: <strong id="cntMegacities" style="color:var(--accent-cyan);">0</strong> (+0 Cap, +0% Morale)</span>
+                    </div>
                 </div>
 
                 <div class="action-grid">
                     <button class="action-btn" id="btnAwakenSleepers">
                         <span class="btn-title">Awaken 2,500 Sleepers</span>
-                        <span class="btn-desc">+2,500 Pop, -100 Food<br>Req: Dome Capacity</span>
+                        <span class="btn-desc">+2,500 Pop, -100 Food<br>Req: Housing Capacity</span>
                     </button>
 
                     <button class="action-btn" id="btnBuildDome">
-                        <span class="btn-title">Expand Habitat Domes</span>
-                        <span class="btn-desc">+15,000 Housing Cap<br>Cost: 450 Min, 150 kW</span>
+                        <span class="btn-title">+ Geodesic Dome</span>
+                        <span class="btn-desc">+15,000 Housing<br>Cost: 450 Min, 150 kW</span>
                     </button>
 
+                    <button class="action-btn" id="btnBuildVaults">
+                        <span class="btn-title">+ Subterranean Vaults</span>
+                        <span class="btn-desc">+30,000 Shielded Cap<br>Cost: 650 Min, 100 kW</span>
+                    </button>
+
+                    <button class="action-btn" id="btnBuildMegacity">
+                        <span class="btn-title">+ Domed Megacity</span>
+                        <span class="btn-desc">+50k Cap, +6% Morale, +20 Food<br>Cost: 1,200 Min, 450 kW, 300 Vol</span>
+                    </button>
+                </div>
+
+                <!-- Hydroponic Food Farms & Vertical Agronomy -->
+                <div class="section-header" style="margin-top: 10px;">
+                    <span>Agronomy & Hydroponic Food Farms</span>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-row">
+                        <span>Vertical Hydro Towers: <strong id="cntHydro">2</strong> (+50 Food)</span>
+                        <span>Aeroponic Mega-Farms: <strong id="cntAero">0</strong> (+0 Food)</span>
+                    </div>
+                    <div class="metric-row" style="margin-top:3px;">
+                        <span>Algal Protein Vats: <strong id="cntAlgae">0</strong> (+0 Food)</span>
+                    </div>
+                </div>
+
+                <div class="action-grid">
                     <button class="action-btn" id="btnHydroponics">
-                        <span class="btn-title">Hydroponic Tower</span>
+                        <span class="btn-title">+ Hydroponic Tower</span>
                         <span class="btn-desc">+25 Food/cyc<br>Cost: 200 Min, 100 Vol</span>
                     </button>
 
+                    <button class="action-btn" id="btnAeroponics">
+                        <span class="btn-title">+ Aeroponic Mega-Farm</span>
+                        <span class="btn-desc">+80 Food/cyc<br>Cost: 550 Min, 250 Vol, 120 kW</span>
+                    </button>
+
+                    <button class="action-btn" id="btnAlgalVats">
+                        <span class="btn-title">+ Algal Protein Vats</span>
+                        <span class="btn-desc">+45 Food/cyc<br>Cost: 320 Min, 180 kW</span>
+                    </button>
+
                     <button class="action-btn" id="btnSolarFarm">
-                        <span class="btn-title">Surface Solar Grid</span>
+                        <span class="btn-title">+ Surface Solar Grid</span>
                         <span class="btn-desc">+180 kW Base Power<br>Cost: 220 Minerals</span>
                     </button>
                 </div>
 
+                <!-- Biosphere Integration Progress -->
                 <div class="metric-card">
                     <div class="metric-row"><span>Biosphere Integration Progress</span><strong id="valBioProgress">14.2%</strong></div>
                     <div class="progress-bar-container">
@@ -1755,6 +1979,19 @@
             cryoSleepers: 75000,
             housingCap: 30000,
             morale: 86,
+
+            // Phase 8: Demographics & Colony Infrastructure
+            pctLaborers: 40,
+            pctAgronomists: 25,
+            pctEngineers: 20,
+            pctScientists: 15,
+            demoFocus: 'balanced',
+            rationPolicy: 'standard', // 'spartan', 'standard', 'abundant'
+            geodesicDomes: 2,
+            subterraneanVaults: 0,
+            domedMegacities: 0,
+            aeroponicFarms: 0,
+            algalVats: 0,
 
             // Resource Deltas (per cycle)
             deltaEnergy: 120,
@@ -2744,14 +2981,38 @@
             const massDriverMin = sim.massDrivers * 12;
             const fuelDepotPower = sim.fuelDepots * 40;
 
+            // Phase 8: Housing Capacity Calculation
+            sim.housingCap = (sim.geodesicDomes * 15000) + (sim.subterraneanVaults * 30000) + (sim.domedMegacities * 50000);
+
+            // Phase 8: Demographic Specialization Multipliers
+            const agroMult = 1.0 + ((sim.pctAgronomists - 25) * 0.012);
+            const laborerMin = Math.floor(sim.colonists * (sim.pctLaborers / 100) * 0.0008);
+            const engTerraMult = 1.0 + ((sim.pctEngineers - 20) * 0.01);
+
+            // Rationing Multipliers
+            let rationMult = 1.0;
+            let rationMoraleMod = 0;
+            let rationGrowth = 1.0;
+            if (sim.rationPolicy === 'spartan') {
+                rationMult = 0.6;
+                rationMoraleMod = -12;
+                rationGrowth = 0.5;
+            } else if (sim.rationPolicy === 'abundant') {
+                rationMult = 1.5;
+                rationMoraleMod = 15;
+                rationGrowth = 2.0;
+            }
+
             // Energy loops
-            const energyGen = 600 + (sim.surfaceSolar * 60) + rEnergy + fuelDepotPower;
-            const energyDrain = 200 + (sim.solarMirrors * 75) + (sim.atmoProcessors * 60) + (sim.nitrogenExtractors * 85) + (sim.greenhouseStations * 70) + (sim.coreDynamos * 80) + Math.floor(sim.colonists / 1000) * 5;
+            const energyGen = 600 + (sim.surfaceSolar * 60) + (sim.domedMegacities * 30) + rEnergy + fuelDepotPower;
+            const baseEnergyDrain = 200 + (sim.solarMirrors * 75) + (sim.atmoProcessors * 60) + (sim.nitrogenExtractors * 85) + (sim.greenhouseStations * 70) + (sim.coreDynamos * 80) + Math.floor(sim.colonists / 1000) * 5;
+            const engEnergySavings = Math.floor(baseEnergyDrain * (sim.pctEngineers / 100) * 0.25);
+            const energyDrain = Math.max(80, baseEnergyDrain - engEnergySavings);
             sim.deltaEnergy = energyGen - energyDrain;
             sim.energy = Math.max(0, sim.energy + Math.floor(sim.deltaEnergy * 0.05 * rate));
 
             // Minerals loops
-            const mineralGain = 20 + (sim.drakeStatus === 'mining' ? 25 : 10) + rMin + massDriverMin;
+            const mineralGain = 20 + laborerMin + (sim.drakeStatus === 'mining' ? 25 : 10) + rMin + massDriverMin;
             const mineralDrain = (sim.atmoProcessors * 3) + (sim.nitrogenExtractors * 2);
             sim.deltaMinerals = mineralGain - mineralDrain;
             sim.minerals = Math.max(0, sim.minerals + Math.floor(sim.deltaMinerals * 0.05 * rate));
@@ -2762,20 +3023,21 @@
             sim.deltaVolatiles = volGain - volDrain;
             sim.volatiles = Math.max(0, sim.volatiles + Math.floor(sim.deltaVolatiles * 0.05 * rate));
 
-            // Food loops
-            const foodGain = 15 + (sim.hydroTowers * 12) + rFood;
-            const foodDrain = Math.floor(sim.colonists / 2000);
+            // Food loops (Phase 8 Advanced Agronomy)
+            const baseFoodGain = 15 + (sim.hydroTowers * 25) + (sim.aeroponicFarms * 80) + (sim.algalVats * 45) + (sim.domedMegacities * 20) + rFood;
+            const foodGain = Math.floor(baseFoodGain * agroMult);
+            const foodDrain = Math.floor((sim.colonists / 1200) * rationMult);
             sim.deltaFood = foodGain - foodDrain;
             sim.food = Math.max(0, sim.food + Math.floor(sim.deltaFood * 0.05 * rate));
 
-            // Natural Terraforming slow drifts driven by active structures & modules
+            // Natural Terraforming slow drifts driven by active structures & modules (boosted by Geo-Engineers)
             if (sim.energy > 500) {
                 // 1. Troposphere Processors Drift
                 if (sim.atmoMode === 'inject') {
-                    sim.pressure = +(sim.pressure + (sim.atmoProcessors * 0.0004 * rate)).toFixed(3);
+                    sim.pressure = +(sim.pressure + (sim.atmoProcessors * 0.0004 * rate * engTerraMult)).toFixed(3);
                 } else if (sim.atmoMode === 'scrub') {
                     if (sim.pressure > 1.0) {
-                        sim.pressure = Math.max(1.0, +(sim.pressure - (sim.atmoProcessors * 0.0007 * rate)).toFixed(3));
+                        sim.pressure = Math.max(1.0, +(sim.pressure - (sim.atmoProcessors * 0.0007 * rate * engTerraMult)).toFixed(3));
                         sim.minerals = Math.min(50000, sim.minerals + 1);
                     }
                 }
@@ -2815,11 +3077,33 @@
                 }
             }
 
-            // Morale adjustments
-            if (sim.food <= 100 || sim.energy <= 200) {
-                sim.morale = Math.max(10, +(sim.morale - 0.2 * rate).toFixed(1));
-            } else if (sim.habitability > 25 && sim.morale < 95) {
-                sim.morale = Math.min(99, +(sim.morale + 0.05 * rate).toFixed(1));
+            // Phase 8: Multi-factor Morale Simulation
+            let targetMorale = 65.0;
+            if (sim.food <= 0) targetMorale -= 35;
+            else if (sim.food < 300) targetMorale -= 15;
+            else if (sim.food > 2000) targetMorale += 10;
+
+            targetMorale += rationMoraleMod;
+
+            const occ = sim.colonists / sim.housingCap;
+            if (occ > 1.0) targetMorale -= 30;
+            else if (occ > 0.85) targetMorale -= 10;
+            else if (occ < 0.70) targetMorale += 8;
+
+            targetMorale += (sim.habitability * 0.25);
+            targetMorale += (sim.domedMegacities * 6.0);
+            targetMorale += (sim.pctScientists * 0.2);
+
+            targetMorale = Math.max(10, Math.min(99, targetMorale));
+            sim.morale = Math.max(10, Math.min(99, +(sim.morale + (targetMorale - sim.morale) * 0.05 * rate).toFixed(1)));
+
+            // Phase 8: Natural Population Growth & Famine Dynamics
+            if (sim.food > 50 && sim.morale >= 50 && sim.colonists < sim.housingCap) {
+                const growth = Math.floor(sim.colonists * (sim.morale - 40) * 0.00004 * rate * rationGrowth);
+                sim.colonists = Math.min(sim.housingCap, sim.colonists + growth);
+            } else if (sim.food <= 0) {
+                const loss = Math.floor(sim.colonists * 0.003 * rate) + 1;
+                sim.colonists = Math.max(0, sim.colonists - loss);
             }
 
             calculateHabitability();
@@ -3418,7 +3702,7 @@
             ctx.arc(px, py, pr, 0, Math.PI * 2);
             ctx.fill();
 
-            // G. Settlement City Lights (if colonized)
+            // G. Settlement City Lights, Domed Megacities & Agricultural Arrays (Phase 8)
             if ((planet.colonists || sim.colonists) > 0) {
                 const darkAngle = sunAngle + Math.PI;
                 const nightDirX = Math.cos(darkAngle);
@@ -3437,6 +3721,47 @@
                     ctx.arc(cx, cy, c.sz * Math.min(1.5, z) * flicker, 0, Math.PI * 2);
                     ctx.fill();
                 });
+
+                // Phase 8 Biosphere Domed Megacity Arcologies (cyan geodesic ring with inner amber arcology hub)
+                if (sim.domedMegacities > 0) {
+                    for (let m = 0; m < Math.min(3, sim.domedMegacities); m++) {
+                        const mAngle = darkAngle + (m - 1) * 0.35;
+                        const mx = px + Math.cos(mAngle) * pr * 0.62;
+                        const my = py + Math.sin(mAngle) * pr * 0.62;
+                        const domeR = (4.5 + m * 0.8) * Math.min(1.8, z);
+
+                        // Geodesic Dome Hull
+                        ctx.strokeStyle = 'rgba(0, 240, 255, 0.85)';
+                        ctx.lineWidth = 1.2;
+                        ctx.beginPath();
+                        ctx.arc(mx, my, domeR, 0, Math.PI * 2);
+                        ctx.stroke();
+
+                        // Inner Biosphere Glow
+                        const bioGlow = ctx.createRadialGradient(mx, my, 0, mx, my, domeR);
+                        bioGlow.addColorStop(0, 'rgba(255, 230, 120, 0.7)');
+                        bioGlow.addColorStop(0.6, 'rgba(16, 185, 129, 0.4)');
+                        bioGlow.addColorStop(1, 'rgba(0, 240, 255, 0.1)');
+                        ctx.fillStyle = bioGlow;
+                        ctx.beginPath();
+                        ctx.arc(mx, my, domeR, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                // Phase 8 Hydroponic & Aeroponic Food Agronomy Arrays (Emerald illuminated terraced grid)
+                if ((sim.hydroTowers + sim.aeroponicFarms) > 0) {
+                    const farmAngle = darkAngle + 0.55;
+                    const fx = px + Math.cos(farmAngle) * pr * 0.48;
+                    const fy = py + Math.sin(farmAngle) * pr * 0.48;
+                    const pulse = 0.7 + Math.sin(time * 3) * 0.3;
+                    ctx.fillStyle = `rgba(16, 185, 129, ${0.75 * pulse})`;
+                    for (let f = 0; f < Math.min(4, sim.hydroTowers + sim.aeroponicFarms); f++) {
+                        const gx = fx + (f % 2) * 3 * z;
+                        const gy = fy + Math.floor(f / 2) * 3 * z;
+                        ctx.fillRect(gx - 1.5 * z, gy - 1.5 * z, 2.5 * z, 2.5 * z);
+                    }
+                }
             }
 
             ctx.restore();
@@ -4841,7 +5166,7 @@
             }
         });
 
-        // Colony Habitats Actions
+        // Colony Habitats Actions (Phase 8)
         document.getElementById('btnAwakenSleepers').addEventListener('click', () => {
             initAudio();
             if (sim.colonists + 2500 > sim.housingCap) {
@@ -4853,7 +5178,7 @@
                 sim.colonists += 2500;
                 sim.food -= 100;
                 updateUI();
-                logMsg('2,500 colonists revived from CSS Genesis cryo-stasis and assigned to Dome Alpha.');
+                logMsg('2,500 colonists revived from CSS Genesis cryo-stasis and assigned to surface domes.');
                 playSound('success');
             } else {
                 logMsg('Insufficient stored sleepers or food reserves for revivification.', true);
@@ -4865,12 +5190,44 @@
             if (sim.minerals >= 450 && sim.energy >= 150) {
                 sim.minerals -= 450;
                 sim.energy -= 150;
-                sim.housingCap += 15000;
+                sim.geodesicDomes++;
+                sim.housingCap = (sim.geodesicDomes * 15000) + (sim.subterraneanVaults * 30000) + (sim.domedMegacities * 50000);
                 updateUI();
-                logMsg('Pressurized Geodesic Dome Beta completed (+15,000 housing capacity).');
+                logMsg(`Pressurized Geodesic Dome #${sim.geodesicDomes} completed (+15,000 housing capacity).`);
                 playSound('deploy');
             } else {
                 logMsg('Insufficient resources (Req: 450 t Minerals, 150 kW Energy).', true);
+            }
+        });
+
+        document.getElementById('btnBuildVaults').addEventListener('click', () => {
+            initAudio();
+            if (sim.minerals >= 650 && sim.energy >= 100) {
+                sim.minerals -= 650;
+                sim.energy -= 100;
+                sim.subterraneanVaults++;
+                sim.housingCap = (sim.geodesicDomes * 15000) + (sim.subterraneanVaults * 30000) + (sim.domedMegacities * 50000);
+                updateUI();
+                logMsg(`Subterranean Lava Tube Vault #${sim.subterraneanVaults} sealed (+30,000 radiation-shielded housing).`);
+                playSound('deploy');
+            } else {
+                logMsg('Insufficient resources (Req: 650 t Minerals, 100 kW Energy).', true);
+            }
+        });
+
+        document.getElementById('btnBuildMegacity').addEventListener('click', () => {
+            initAudio();
+            if (sim.minerals >= 1200 && sim.energy >= 450 && sim.volatiles >= 300) {
+                sim.minerals -= 1200;
+                sim.energy -= 450;
+                sim.volatiles -= 300;
+                sim.domedMegacities++;
+                sim.housingCap = (sim.geodesicDomes * 15000) + (sim.subterraneanVaults * 30000) + (sim.domedMegacities * 50000);
+                updateUI();
+                logMsg(`Biosphere Domed Megacity Arcology #${sim.domedMegacities} operational (+50,000 Housing, +6% Morale, internal ecology).`);
+                playSound('success');
+            } else {
+                logMsg('Insufficient resources (Req: 1,200 t Minerals, 450 kW Energy, 300 t Volatiles).', true);
             }
         });
 
@@ -4888,6 +5245,35 @@
             }
         });
 
+        document.getElementById('btnAeroponics').addEventListener('click', () => {
+            initAudio();
+            if (sim.minerals >= 550 && sim.volatiles >= 250 && sim.energy >= 120) {
+                sim.minerals -= 550;
+                sim.volatiles -= 250;
+                sim.energy -= 120;
+                sim.aeroponicFarms++;
+                updateUI();
+                logMsg(`Aeroponic Biosphere Mega-Farm #${sim.aeroponicFarms} commissioned (+80 Food/cyc).`);
+                playSound('deploy');
+            } else {
+                logMsg('Insufficient resources (Req: 550 t Minerals, 250 t Volatiles, 120 kW Energy).', true);
+            }
+        });
+
+        document.getElementById('btnAlgalVats').addEventListener('click', () => {
+            initAudio();
+            if (sim.minerals >= 320 && sim.energy >= 180) {
+                sim.minerals -= 320;
+                sim.energy -= 180;
+                sim.algalVats++;
+                updateUI();
+                logMsg(`Algal Protein Synthesis Bio-Vat #${sim.algalVats} online (+45 Food/cyc).`);
+                playSound('deploy');
+            } else {
+                logMsg('Insufficient resources (Req: 320 t Minerals, 180 kW Energy).', true);
+            }
+        });
+
         document.getElementById('btnSolarFarm').addEventListener('click', () => {
             initAudio();
             if (sim.minerals >= 220) {
@@ -4899,6 +5285,63 @@
             } else {
                 logMsg('Insufficient resources (Req: 220 t Minerals).', true);
             }
+        });
+
+        // Demographic Focus Presets
+        document.getElementById('btnFocusBalanced').addEventListener('click', () => {
+            initAudio();
+            sim.demoFocus = 'balanced';
+            sim.pctLaborers = 40; sim.pctAgronomists = 25; sim.pctEngineers = 20; sim.pctScientists = 15;
+            updateUI();
+            logMsg('Workforce Demographics: BALANCED roster assigned.');
+            playSound('click');
+        });
+        document.getElementById('btnFocusAgro').addEventListener('click', () => {
+            initAudio();
+            sim.demoFocus = 'agronomy';
+            sim.pctLaborers = 25; sim.pctAgronomists = 50; sim.pctEngineers = 15; sim.pctScientists = 10;
+            updateUI();
+            logMsg('Workforce Demographics: AGRONOMY focus active (+30% crop yields).');
+            playSound('click');
+        });
+        document.getElementById('btnFocusEng').addEventListener('click', () => {
+            initAudio();
+            sim.demoFocus = 'engineering';
+            sim.pctLaborers = 25; sim.pctAgronomists = 20; sim.pctEngineers = 40; sim.pctScientists = 15;
+            updateUI();
+            logMsg('Workforce Demographics: GEO-ENGINEERING focus active (power savings & faster terraforming).');
+            playSound('click');
+        });
+        document.getElementById('btnFocusSci').addEventListener('click', () => {
+            initAudio();
+            sim.demoFocus = 'science';
+            sim.pctLaborers = 25; sim.pctAgronomists = 20; sim.pctEngineers = 15; sim.pctScientists = 40;
+            updateUI();
+            logMsg('Workforce Demographics: XENOSCIENCE & RESEARCH focus active (morale buffer & telemetry).');
+            playSound('click');
+        });
+
+        // Rations Policies
+        document.getElementById('btnRationSpartan').addEventListener('click', () => {
+            initAudio();
+            sim.rationPolicy = 'spartan';
+            updateUI();
+            logMsg('Rations Policy: SPARTAN rationing enacted (0.6x Food, -12% Morale).');
+            playSound('click');
+        });
+        document.getElementById('btnRationStandard').addEventListener('click', () => {
+            initAudio();
+            sim.rationPolicy = 'standard';
+            updateUI();
+            logMsg('Rations Policy: STANDARD sustenance restored (1.0x Food).');
+            playSound('click');
+        });
+        document.getElementById('btnRationAbundant').addEventListener('click', () => {
+            initAudio();
+            sim.rationPolicy = 'abundant';
+            updateUI();
+            logMsg('Rations Policy: ABUNDANT feasts distributed (1.5x Food, +15% Morale, fast growth).');
+            playSound('click');
         });
 
         // Ship Orders Handlers
@@ -5152,12 +5595,139 @@
             const subMass = document.getElementById('subMassInfo');
             if (subMass) subMass.textContent = `Electromagnetic Launch Catapult | +${sim.massDrivers * 12} t Min/cyc Direct Orbit Launch`;
 
-            // Colony Tab
+            // Colony Tab (Phase 8 Demographics, Morale, Housing & Agronomy)
             document.getElementById('colonyPop').textContent = sim.colonists.toLocaleString();
             document.getElementById('colonyCryo').textContent = sim.cryoSleepers.toLocaleString();
             document.getElementById('colonyCapacity').textContent = sim.housingCap.toLocaleString();
             document.getElementById('barHousing').style.width = `${Math.min(100, (sim.colonists / sim.housingCap) * 100)}%`;
-            document.getElementById('valMorale').textContent = `${sim.morale.toFixed(0)}% (${sim.morale > 75 ? 'Optimistic' : (sim.morale > 50 ? 'Steady' : 'Despondent')})`;
+
+            // Growth / Famine
+            const growthEl = document.getElementById('colonyGrowthRate');
+            if (growthEl) {
+                if (sim.food <= 0) {
+                    growthEl.textContent = 'FAMINE! Population suffering attrition';
+                    growthEl.style.color = 'var(--accent-rose)';
+                } else if (sim.colonists >= sim.housingCap) {
+                    growthEl.textContent = 'Housing Capped (Construct Megacities / Domes)';
+                    growthEl.style.color = 'var(--accent-amber)';
+                } else {
+                    const estGrowth = Math.floor(sim.colonists * Math.max(0, sim.morale - 40) * 0.00004 * (sim.rationPolicy === 'abundant' ? 2.0 : (sim.rationPolicy === 'spartan' ? 0.5 : 1.0)));
+                    growthEl.textContent = `+${estGrowth} Colonists / cyc (Net Expansion)`;
+                    growthEl.style.color = 'var(--accent-emerald)';
+                }
+            }
+
+            // Morale & Status Badge
+            const moraleBadge = document.getElementById('badgeMoraleStatus');
+            const moraleVal = document.getElementById('valMorale');
+            const moraleBar = document.getElementById('barMorale');
+            let mTier = 'content';
+            let mLabel = 'Content';
+            if (sim.morale >= 88) { mTier = 'euphoric'; mLabel = 'Euphoric'; }
+            else if (sim.morale >= 70) { mTier = 'optimistic'; mLabel = 'Optimistic'; }
+            else if (sim.morale >= 50) { mTier = 'content'; mLabel = 'Content'; }
+            else if (sim.morale >= 30) { mTier = 'discontent'; mLabel = 'Discontent'; }
+            else { mTier = 'despondent'; mLabel = 'Despondent'; }
+
+            if (moraleBadge) {
+                moraleBadge.textContent = `${sim.morale.toFixed(0)}% ${mLabel}`;
+                moraleBadge.className = `morale-badge ${mTier}`;
+            }
+            if (moraleVal) {
+                const prodMod = Math.round((sim.morale - 50) * 0.5);
+                moraleVal.textContent = `${sim.morale.toFixed(0)}% (${prodMod >= 0 ? '+' : ''}${prodMod}% Efficiency)`;
+            }
+            if (moraleBar) {
+                moraleBar.style.width = `${Math.min(100, sim.morale)}%`;
+            }
+
+            // Morale Breakdown Tags
+            const tagRations = document.getElementById('tagMoraleRations');
+            if (tagRations) {
+                tagRations.textContent = sim.rationPolicy === 'abundant' ? 'Abundant (+15%)' : (sim.rationPolicy === 'spartan' ? 'Spartan (-12%)' : 'Standard (+0%)');
+                tagRations.style.color = sim.rationPolicy === 'abundant' ? 'var(--accent-emerald)' : (sim.rationPolicy === 'spartan' ? 'var(--accent-rose)' : 'var(--accent-cyan)');
+            }
+            const tagHousing = document.getElementById('tagMoraleHousing');
+            if (tagHousing) {
+                const occ = sim.colonists / sim.housingCap;
+                tagHousing.textContent = occ > 1.0 ? 'Overcrowded (-30%)' : (occ > 0.85 ? 'Crowded (-10%)' : 'Optimal (+8%)');
+                tagHousing.style.color = occ > 0.85 ? 'var(--accent-amber)' : 'var(--accent-emerald)';
+            }
+            const tagAtmo = document.getElementById('tagMoraleAtmo');
+            if (tagAtmo) tagAtmo.textContent = `+${Math.floor(sim.habitability * 0.25)}% Outside`;
+            const tagCities = document.getElementById('tagMoraleCities');
+            if (tagCities) tagCities.textContent = `+${sim.domedMegacities * 6}% Arcologies`;
+
+            // Demographics UI
+            document.getElementById('pctLaborers').textContent = sim.pctLaborers;
+            document.getElementById('cntLaborers').textContent = `${Math.floor(sim.colonists * sim.pctLaborers / 100).toLocaleString()} Pop (+${Math.floor(sim.colonists * (sim.pctLaborers / 100) * 0.0008)} t Min/cyc)`;
+            document.getElementById('barLaborers').style.width = `${sim.pctLaborers}%`;
+
+            document.getElementById('pctAgronomists').textContent = sim.pctAgronomists;
+            document.getElementById('cntAgronomists').textContent = `${Math.floor(sim.colonists * sim.pctAgronomists / 100).toLocaleString()} Pop (+${Math.round((sim.pctAgronomists - 25) * 1.2)}% Food Yield)`;
+            document.getElementById('barAgronomists').style.width = `${sim.pctAgronomists}%`;
+
+            document.getElementById('pctEngineers').textContent = sim.pctEngineers;
+            document.getElementById('cntEngineers').textContent = `${Math.floor(sim.colonists * sim.pctEngineers / 100).toLocaleString()} Pop (-${Math.round(sim.pctEngineers * 0.25)}% Energy Drain)`;
+            document.getElementById('barEngineers').style.width = `${sim.pctEngineers}%`;
+
+            document.getElementById('pctScientists').textContent = sim.pctScientists;
+            document.getElementById('cntScientists').textContent = `${Math.floor(sim.colonists * sim.pctScientists / 100).toLocaleString()} Pop (+Biosphere Stability)`;
+            document.getElementById('barScientists').style.width = `${sim.pctScientists}%`;
+
+            // Demographic Focus Buttons Active State
+            ['btnFocusBalanced', 'btnFocusAgro', 'btnFocusEng', 'btnFocusSci'].forEach(bId => {
+                const b = document.getElementById(bId);
+                if (!b) return;
+                const match = (bId === 'btnFocusBalanced' && sim.demoFocus === 'balanced') ||
+                              (bId === 'btnFocusAgro' && sim.demoFocus === 'agronomy') ||
+                              (bId === 'btnFocusEng' && sim.demoFocus === 'engineering') ||
+                              (bId === 'btnFocusSci' && sim.demoFocus === 'science');
+                b.className = `demo-btn ${match ? 'active' : ''}`;
+            });
+
+            // Rations Buttons Active State
+            ['btnRationSpartan', 'btnRationStandard', 'btnRationAbundant'].forEach(rId => {
+                const b = document.getElementById(rId);
+                if (!b) return;
+                const match = (rId === 'btnRationSpartan' && sim.rationPolicy === 'spartan') ||
+                              (rId === 'btnRationStandard' && sim.rationPolicy === 'standard') ||
+                              (rId === 'btnRationAbundant' && sim.rationPolicy === 'abundant');
+                b.className = `ration-btn ${match ? 'active' : ''}`;
+            });
+
+            // Food Stock & Rates
+            const foodStockEl = document.getElementById('colonyFoodStock');
+            if (foodStockEl) foodStockEl.textContent = `${sim.food.toLocaleString()} t`;
+            const foodRatesEl = document.getElementById('colonyFoodRates');
+            if (foodRatesEl) {
+                const rMult = sim.rationPolicy === 'spartan' ? 0.6 : (sim.rationPolicy === 'abundant' ? 1.5 : 1.0);
+                const eaten = Math.floor((sim.colonists / 1200) * rMult);
+                const prod = sim.deltaFood + eaten;
+                foodRatesEl.textContent = `${prod} t Harvested - ${eaten} t Eaten`;
+            }
+            const foodNetEl = document.getElementById('valFoodNet');
+            if (foodNetEl) {
+                foodNetEl.textContent = `${sim.deltaFood >= 0 ? '+' : ''}${sim.deltaFood} t / cyc`;
+                foodNetEl.style.color = sim.deltaFood >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)';
+            }
+
+            // Housing Habitats Counts
+            const cntDomes = document.getElementById('cntDomes');
+            if (cntDomes) cntDomes.textContent = sim.geodesicDomes;
+            const cntVaults = document.getElementById('cntVaults');
+            if (cntVaults) cntVaults.textContent = sim.subterraneanVaults;
+            const cntMegacities = document.getElementById('cntMegacities');
+            if (cntMegacities) cntMegacities.textContent = sim.domedMegacities;
+
+            // Agronomy Farms Counts
+            const cntHydro = document.getElementById('cntHydro');
+            if (cntHydro) cntHydro.textContent = sim.hydroTowers;
+            const cntAero = document.getElementById('cntAero');
+            if (cntAero) cntAero.textContent = sim.aeroponicFarms;
+            const cntAlgae = document.getElementById('cntAlgae');
+            if (cntAlgae) cntAlgae.textContent = sim.algalVats;
+
             document.getElementById('valBioProgress').textContent = `${(sim.habitability * 0.9).toFixed(1)}%`;
             document.getElementById('barBioProgress').style.width = `${Math.min(100, sim.habitability * 0.9)}%`;
         }
