@@ -105,13 +105,12 @@ For every game audited, also verify:
 
 ---
 
-**Target App:** KPing
+**Target App:** KPong
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KPing
 - KPong
 - KQuest
 - KRadio
@@ -192,8 +191,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KPad
 - KPaint
 - KPass
+- KPing
 
 ## Test Reports
+
+- **KPing**: PASS ✅ (8 issues, 8 fixed inline)
+  - Prevented textarea selection clashing where Ctrl+C dumped full log instead of copying selection.
+  - Guarded against accidental console clearing via 'C' hotkey when text was highlighted in log.
+  - Linked preset dropdown with host input and locked preset switches during active scans.
+  - Connected route tracing to telemetry canvas to plot latency hop progression.
+  - Eliminated delayed interval completion across ping, route trace, and MTU sweep passes.
+  - Added route trace cancellation messaging and toast feedback matching PMTU sweep.
+  - Unlocked canvas flexbox shrinkage on smaller viewports and added modal focus trapping.
+  - Sanitized target host input against protocol prefixes, trailing slashes, and port suffixes.
 
 - **KPass**: PASS ✅ (7 issues, 7 fixed inline)
   - Shifted revealed keys index map on entry deletion to prevent credential mask desync.
@@ -226,5 +236,5 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 > 📁 **Archived Round 2 Reports**: Recent detailed audit reports (KPac through KImage) have been archived to [archive/app_test_reports_round2.md](archive/app_test_reports_round2.md).
 
 ### Round 2 Completed Index
-- KPass ✅ (7 fixed), KPaint ✅ (7 fixed), KPad ✅ (8 fixed), KPac ✅ (8 fixed), KNote ✅ (7 fixed), KNet ✅ (3 fixed), KMystery ✅ (5 fixed), KMines ✅ (8 fixed), KMine ✅ (2 fixed), KMedia ✅ (8 fixed), KMech ✅ (6 fixed), KMaze ✅ (7 fixed), KMatch3 ✅ (8 fixed), KMandel ✅ (6 fixed), KMail ✅ (7 fixed), KJournal ✅ (7 fixed), KImage ✅ (8 fixed)
+- KPing ✅ (8 fixed), KPass ✅ (7 fixed), KPaint ✅ (7 fixed), KPad ✅ (8 fixed), KPac ✅ (8 fixed), KNote ✅ (7 fixed), KNet ✅ (3 fixed), KMystery ✅ (5 fixed), KMines ✅ (8 fixed), KMine ✅ (2 fixed), KMedia ✅ (8 fixed), KMech ✅ (6 fixed), KMaze ✅ (7 fixed), KMatch3 ✅ (8 fixed), KMandel ✅ (6 fixed), KMail ✅ (7 fixed), KJournal ✅ (7 fixed), KImage ✅ (8 fixed)
 

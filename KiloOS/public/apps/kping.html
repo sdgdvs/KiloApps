@@ -129,7 +129,7 @@
   .stats-box span { font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
   .stats-box strong { font-size: 19px; color: var(--text); margin-top: 2px; font-family: "Consolas", monospace; }
   .graph-box {
-    flex: 1; position: relative; display: flex; flex-direction: column;
+    flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column;
   }
   canvas { flex: 1; width: 100%; height: 100%; border-radius: 6px; background: rgba(0,0,0,0.25); }
 
@@ -535,6 +535,14 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
     if (!soundMuted) playTone(600, 'sine', 0.08, 0.15);
   }
 
+  function cleanHost(val) {
+    let h = (val || '').trim();
+    h = h.replace(/^https?:\/\//i, '');
+    h = h.replace(/\/.*$/, '');
+    h = h.replace(/:\d+$/, '');
+    return h || '127.0.0.1';
+  }
+
   // Persistent settings
   function loadConfig() {
     const cfg = safeGetStorage('kping_config_v1', null);
@@ -549,6 +557,9 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       }
       if (typeof cfg.hexdump === 'boolean') hexdumpCheck.checked = cfg.hexdump;
       if (typeof cfg.dfbit === 'boolean') dfCheck.checked = cfg.dfbit;
+    }
+    if (presetSelect) {
+      presetSelect.value = hostInput.value.trim();
     }
   }
 
@@ -568,7 +579,17 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
     el.addEventListener('change', saveConfig);
   });
 
+  hostInput.addEventListener('input', () => {
+    if (presetSelect.value && presetSelect.value !== hostInput.value.trim()) {
+      presetSelect.value = "";
+    }
+    saveConfig();
+  });
+
   function showToast(messageHtml, type = 'info', duration = 4000) {
+    while (toastContainer.children.length >= 3) {
+      toastContainer.removeChild(toastContainer.firstChild);
+    }
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     toast.setAttribute('role', 'status');
@@ -623,7 +644,21 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
     if (e.target === helpModal) closeHelpModal();
   };
 
+  helpModal.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+      const focusables = [modalCloseBtn, btnModalGotIt];
+      if (e.shiftKey && document.activeElement === focusables[0]) {
+        e.preventDefault();
+        focusables[focusables.length - 1].focus();
+      } else if (!e.shiftKey && document.activeElement === focusables[focusables.length - 1]) {
+        e.preventDefault();
+        focusables[0].focus();
+      }
+    }
+  });
+
   presetSelect.addEventListener('change', () => {
+    if (isBusy()) return;
     if (presetSelect.value) {
       hostInput.value = presetSelect.value;
       saveConfig();
@@ -632,6 +667,7 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
   });
 
   function selectPresetByIndex(idx) {
+    if (isBusy()) return;
     if (idx >= 1 && idx < presetSelect.options.length) {
       presetSelect.selectedIndex = idx;
       hostInput.value = presetSelect.value;
@@ -642,12 +678,10 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
 
   function resizeCanvas() {
     const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.parentElement.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    canvas.style.width = `${rect.width}px`;
-    canvas.style.height = `${rect.height}px`;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     drawGraph();
   }
@@ -661,7 +695,8 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
   function append(text, type = "info", rawObj = null) {
       out.value += text;
       if (out.value.length > 30000) {
-          out.value = out.value.substring(out.value.length - 20000);
+          const cutIdx = out.value.indexOf('\n', out.value.length - 20000);
+          out.value = cutIdx !== -1 ? out.value.substring(cutIdx + 1) : out.value.substring(out.value.length - 20000);
       }
       out.scrollTop = out.scrollHeight;
       if (rawObj) {
@@ -676,9 +711,12 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       out.value = "";
       logEntries = [];
       historyData = [];
+      stats = { sent: 0, recv: 0, lost: 0, min: Infinity, max: -Infinity, sum: 0 };
       valJitter.textContent = "0ms";
       valLoss.textContent = "0%";
       valMTU.textContent = "-";
+      currentHoverIdx = -1;
+      graphTooltip.style.display = 'none';
       drawGraph();
       showToast("Terminal output and telemetry cleared", "info", 2000);
   }
@@ -702,6 +740,8 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       const ta = document.createElement('textarea');
       ta.value = text;
       ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      ta.style.top = '-9999px';
       ta.style.opacity = '0';
       document.body.appendChild(ta);
       ta.select();
@@ -746,11 +786,15 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
 
   function startPing() {
       if (isBusy()) return;
-      currentHost = hostInput.value.trim() || '127.0.0.1';
+      currentHost = cleanHost(hostInput.value);
+      hostInput.value = currentHost;
       saveConfig();
       const size = Math.max(1, Math.min(65500, parseInt(sizeInput.value) || 32));
       const count = Math.max(1, Math.min(1000, parseInt(countInput.value) || 4));
       const ttl = Math.max(1, Math.min(255, parseInt(ttlInput.value) || 115));
+      sizeInput.value = size;
+      countInput.value = count;
+      ttlInput.value = ttl;
       const continuous = continuousCheck.checked;
       const df = dfCheck.checked;
       
@@ -779,11 +823,6 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       
       if (pingInterval) clearInterval(pingInterval);
       pingInterval = setInterval(() => {
-          if (!continuous && stats.sent >= count) {
-              stopPing();
-              return;
-          }
-          
           stats.sent++;
           if (df && size > 1472 && currentHost !== '127.0.0.1' && currentHost !== 'localhost') {
               stats.lost++;
@@ -814,6 +853,10 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
           }
           updateAnalytics();
           drawGraph();
+
+          if (!continuous && stats.sent >= count) {
+              stopPing();
+          }
       }, 1000);
   }
   
@@ -837,10 +880,14 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       valJitter.textContent = `${avgJitter}ms`;
   }
 
-  function drawGraph(hoverIdx = -1) {
-      const rect = canvas.parentElement.getBoundingClientRect();
+  let currentHoverIdx = -1;
+
+  function drawGraph(hoverIdx = currentHoverIdx) {
+      currentHoverIdx = hoverIdx;
+      const rect = canvas.getBoundingClientRect();
       const w = rect.width;
       const h = rect.height;
+      if (w <= 0 || h <= 0) return;
       ctx.clearRect(0, 0, w, h);
 
       const paddingLeft = 32;
@@ -849,6 +896,7 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       const paddingBottom = 16;
       const plotW = w - paddingLeft - paddingRight;
       const plotH = h - paddingTop - paddingBottom;
+      if (plotW <= 0 || plotH <= 0) return;
 
       const valid = historyData.filter(d => d !== null);
       let maxTime = valid.length > 0 ? Math.max(...valid) : 40;
@@ -944,6 +992,11 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
               // Packet loss indicator
               ctx.fillStyle = '#ef4444';
               ctx.fillRect(x - 3, paddingTop + plotH - 3, 6, 6);
+              if (isHovered) {
+                  ctx.strokeStyle = '#ffffff';
+                  ctx.lineWidth = 1.5;
+                  ctx.strokeRect(x - 4, paddingTop + plotH - 4, 8, 8);
+              }
           } else {
               const y = paddingTop + plotH - ((val / maxTime) * plotH);
               ctx.fillStyle = isHovered ? '#60a5fa' : '#3b82f6';
@@ -988,12 +1041,14 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
           const packetNum = closestIdx + 1;
           const x = paddingLeft + closestIdx * stepX;
           graphTooltip.style.display = 'block';
-          graphTooltip.style.left = `${Math.min(rect.width - 110, Math.max(10, x - 40))}px`;
+          graphTooltip.style.left = `${Math.min(rect.width - 120, Math.max(10, x - 45))}px`;
           graphTooltip.style.top = `${Math.max(5, mouseY - 28)}px`;
+          const prefix = isTracing ? `Hop #${packetNum}` : (isMtuSweeping ? `Probe #${packetNum}` : `#${packetNum}`);
           if (val === null) {
-              graphTooltip.innerHTML = `<span style="color:#f87171;">#${packetNum}: Lost (Timeout)</span>`;
+              const reason = isMtuSweeping ? 'Exceeds MTU' : 'Lost (Timeout)';
+              graphTooltip.innerHTML = `<span style="color:#f87171;">${prefix}: ${reason}</span>`;
           } else {
-              graphTooltip.innerHTML = `<span>#${packetNum}: <strong>${val}ms</strong></span>`;
+              graphTooltip.innerHTML = `<span>${prefix}: <strong>${val}ms</strong></span>`;
           }
           drawGraph(closestIdx);
       } else {
@@ -1036,7 +1091,8 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
 
   function startMtuSweep() {
       if (isBusy()) return;
-      currentHost = hostInput.value.trim() || '127.0.0.1';
+      currentHost = cleanHost(hostInput.value);
+      hostInput.value = currentHost;
       saveConfig();
       out.value = "";
       logEntries = [];
@@ -1069,11 +1125,6 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
 
       if (pingInterval) clearInterval(pingInterval);
       pingInterval = setInterval(() => {
-          if (pIndex >= probeSizes.length) {
-              finishMtuSweep(maxPass);
-              return;
-          }
-
           const curSize = probeSizes[pIndex];
           const totalIpSize = curSize + 28;
           pIndex++;
@@ -1090,6 +1141,10 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
               playPmtuSound(false);
           }
           drawGraph();
+
+          if (pIndex >= probeSizes.length) {
+              finishMtuSweep(maxPass);
+          }
       }, 700);
   }
 
@@ -1142,7 +1197,8 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
 
   function startTrace() {
       if (isBusy()) return;
-      currentHost = hostInput.value.trim() || '127.0.0.1';
+      currentHost = cleanHost(hostInput.value);
+      hostInput.value = currentHost;
       saveConfig();
       out.value = "";
       logEntries = [];
@@ -1167,17 +1223,13 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       
       if (pingInterval) clearInterval(pingInterval);
       pingInterval = setInterval(() => {
-          if (hop > maxHops) {
-              append(`\nTrace complete.\n`, 'trace_complete');
-              stopTrace();
-              playCompleteSound();
-              showToast("Route Trace complete", "success", 3000);
-              return;
-          }
-          
           const t1 = Math.floor(Math.random() * 15) + 1;
           const t2 = Math.floor(Math.random() * 15) + 1;
           const t3 = Math.floor(Math.random() * 15) + 1;
+          const avgHopLatency = Math.round((t1 + t2 + t3) / 3);
+          historyData.push(avgHopLatency);
+          if (historyData.length > 200) historyData.shift();
+          drawGraph();
           
           let ip = "";
           if (hop === maxHops) {
@@ -1190,10 +1242,17 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
           }
           playTraceSound();
           hop++;
+
+          if (hop > maxHops) {
+              append(`\nTrace complete.\n`, 'trace_complete');
+              stopTrace(false);
+              playCompleteSound();
+              showToast("Route Trace complete", "success", 3000);
+          }
       }, 1000);
   }
 
-  function stopTrace() {
+  function stopTrace(manual = true) {
       if (!isTracing) return;
       clearInterval(pingInterval);
       pingInterval = null;
@@ -1204,6 +1263,10 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       btnAction.disabled = false;
       btnMTU.disabled = false;
       setInputsDisabled(false);
+      if (manual) {
+          append(`\n[!] Route trace cancelled by user.\n\n`, 'warning');
+          showToast("Route trace cancelled", "warning", 2500);
+      }
   }
 
   btnAction.onclick = () => {
@@ -1217,28 +1280,35 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
   };
 
   btnTrace.onclick = () => {
-      if (isTracing) stopTrace();
+      if (isTracing) stopTrace(true);
       else startTrace();
   };
 
   function exportLog() {
       const payload = JSON.stringify({
-          host: hostInput.value.trim(),
+          app: "KPing Network Diagnostics",
+          version: "1.0",
+          host: currentHost || hostInput.value.trim() || '127.0.0.1',
           timestamp: new Date().toISOString(),
           stats,
+          rawConsole: out.value,
           logs: logEntries
       }, null, 2);
 
-      const blob = new Blob([payload], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-      anchor.setAttribute("href", url);
-      anchor.setAttribute("download", `kping_log_${Date.now()}.json`);
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-      showToast("Log exported as <strong>kping_log.json</strong>", "success", 3000);
+      try {
+          const blob = new Blob([payload], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const anchor = document.createElement('a');
+          anchor.setAttribute("href", url);
+          anchor.setAttribute("download", `kping_log_${Date.now()}.json`);
+          document.body.appendChild(anchor);
+          anchor.click();
+          anchor.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 2000);
+          showToast("Log exported as <strong>kping_log.json</strong>", "success", 3000);
+      } catch (e) {
+          showToast("Export failed: " + e.message, "error", 3000);
+      }
   }
 
   btnExport.onclick = exportLog;
@@ -1273,6 +1343,9 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
 
       // Copy Console hotkey (Ctrl+C when not selecting in text/inputs)
       if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
+          if (active.id === 'out' && active.selectionStart !== active.selectionEnd) {
+              return; // Allow native copy of selected text
+          }
           if (!isInput && window.getSelection().toString().length === 0) {
               e.preventDefault();
               copyLog();
@@ -1287,7 +1360,7 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
               return;
           }
           if (isPinging) stopPing();
-          if (isTracing) stopTrace();
+          if (isTracing) stopTrace(true);
           if (isMtuSweeping) stopMtuSweep();
           return;
       }
@@ -1295,7 +1368,11 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       // Help hotkey
       if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H' || e.key === '?') && !isInput)) {
           e.preventDefault();
-          openHelpModal();
+          if (helpModal.classList.contains('active')) {
+              closeHelpModal();
+          } else {
+              openHelpModal();
+          }
           return;
       }
 
@@ -1305,7 +1382,7 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
               if (isPinging) stopPing(); else startPing();
           } else if (e.key === 't' || e.key === 'T') {
               e.preventDefault();
-              if (isTracing) stopTrace(); else startTrace();
+              if (isTracing) stopTrace(true); else startTrace();
           } else if (e.key === 'm' || e.key === 'M') {
               e.preventDefault();
               if (isMtuSweeping) stopMtuSweep(); else startMtuSweep();
@@ -1313,6 +1390,9 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
               e.preventDefault();
               exportLog();
           } else if (e.key === 'c' || e.key === 'C') {
+              if (active.id === 'out' && active.selectionStart !== active.selectionEnd) {
+                  return;
+              }
               e.preventDefault();
               clearOutput();
           } else if (e.key === 'u' || e.key === 'U') {
@@ -1327,6 +1407,8 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
 
   // Initialize
   loadConfig();
+  resizeCanvas();
+  window.addEventListener('DOMContentLoaded', resizeCanvas);
   setTimeout(resizeCanvas, 100);
 
   // Startup Welcome Toast
