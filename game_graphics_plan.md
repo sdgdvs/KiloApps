@@ -1,4 +1,4 @@
-# Game Graphics Plan
+﻿# Game Graphics Plan
 
 ## Coordination Rules (DO NOT DELETE — required for subagent context)
 
@@ -13,7 +13,12 @@
 - **CI/CD:** Every push to `main` triggers GitHub Actions → Firebase deploy to `kiloapps.web.app`.
 - **Conflict resolution:** If `git push` fails → `git pull --rebase` → resolve conservatively (prefer remote for code you didn't write) → push again.
 - **CLEANUP:** Before committing, delete any temporary scripts (patch_*.py, *.tmp) in the repo root. Do not leave scratch files behind.
-- **Logging discipline:** Keep this plan file concise. Work log entries MUST be MAX 2 LINES per game. Example: "KChess (Loop 9): Enhanced piece animations, board perspective shadows, and capture particle effects." Do NOT write paragraph-length descriptions.
+- **Token Conservation & Logging Rules (CRITICAL):**
+  - Work log entries: ≤2 lines per game. No paragraphs.
+  - Skip-turn entries: exactly 1 line: "⏭️ Skip — [reason in ≤15 words]."
+  - Never restate implementation details that exist in code. Log WHAT changed, not HOW.
+  - Completed work: "✅ Done" is sufficient. Move entries older than ~30 to archive/.
+  - Surgical edits only. Only read files relevant to current task.
 - **⚠️ UNIQUE VISUAL IDENTITY (CRITICAL):** Do NOT apply the same formulaic template to every game. Each game should have a UNIQUE visual identity that fits its theme. A chess game should look like polished wood, not a sci-fi HUD. A farm game should have warm watercolors, not cybernetic reticles. Think about what makes THIS game visually distinct. Avoid copy-pasting the same "4-layer particle engine, dual-tier shockwaves, filigree brackets, specular glint" to every game.
 - **⚠️ DIRECTOR DIRECTIVE (2026-09-13) — STOP EXCESSIVE VISUAL FLOURISH & TURN SKIPPING RULE (CRITICAL):**
   - Stop inventing unneeded visual flourishes (blinking HUD reticles, corner diodes, perimeter traveling glints, screen shake, intrusive first-person weapon/hand overlays, or particle spam). Several apps now have too much flourish because unnecessary things were invented.
@@ -160,54 +165,36 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KChess
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
+## Completed Work Log
 
-- KChess (Loop 9): Turn skipped per Director Directive — classical Staunton piece styling, board presentation, and animations are complete and mature.
-- KRogue (Loop 9): Turn skipped per Director Directive — roguelike ASCII styling, dungeon UI, and class/inventory visuals are complete and mature.
+> Archived: Pre-Loop 6 entries moved to archive/. Only latest loop per game shown.
 
-- KAlchemy (Loop 8): Turn skipped per Director Directive — arcane themes, runic styling, and alchemy UI are complete and mature.
-- KFarm (Loop 6): Turn skipped per Director Directive — visuals, livestock/crop sprites, and seasonal ambiance are complete and mature.
-- KCosmic (Loop 1): Thematic procedural sprites for all 5 fleet ships with animated ion plumes, orbital shipyard station with rotating gantry, and planetary continents/ice caps.
-- KColosseum (Loop 2): Authentic Balteus belt, Manica and Galerus armor, slashing/thrusting weapon swing arcs, lion claw swipes, and defeat collapse with dropped gear.
-- KTetris (Loop 9): Prismatic crystal gem facets per piece, armored steel bulkhead garbage, demolition ordnance bomb, holographic guide beams, plasma laser sweep, and graphical skill badges.
-- KSnake (Loop 9): Themed sprites for all 4 Bosses (Hydra, Basilisk, Inferno, Void) and CPU rivals with animated scanning visors, fangs, and pulsar capacitors.
-- KAbyss (Loop 1): Hooded delver sprite with lantern/blade, animated monster sprites (Skeleton, Ghoul, Wraith, Acolyte, Leviathan), and custom dungeon sprites (Chest, Altar, Cauldron, Doors, Stairs).
-- KStarDredge (Loop 1): The Iron Dredge industrial salvage barge with animated plasma thrusters, hazard-striped hydraulic claws, craggy volumetric asteroids with glowing mineral veins, and raider warships.
-- KSubmarine (Loop 1): Submersible bathyscaphe sprite with spinning propeller & cavitation bubbles, animated abyssal Leviathan, Architeuthis squid, siphonophore, and anglerfish sprites.
-- KSanctuary (Loop 1): Sub-mountain cross-section cutaway canvas with animated dwellers and reactor telemetry, pixel-art facility icons, dweller portraits, and wasteland landmark sprites.
-- Icon Audit Pass: Created distinctive procedural ICO and vector SVG icons for all 10 missing web apps (KColony, KFarm, KWizard, KVoid, KDragon, KMech, KCyber, KTrader, KMystery, KStellar).
-- KPac (Loop 9): 3D Pac-Man with ambient aura, animated wavy-skirt ghosts with tracking pupils, high-detail fruits, energizers, and cybernetic circuit walls.
-- KSpace (Loop 9): Multi-chassis player fighter, custom projectile types, detailed enemy sprites across 14 types, capital boss encounters, and companion drones.
-- KQuest (Loop 8): Procedural screen-shake, 4-layer particle engine, ground shockwaves, Medieval RPG filigree HUD, weapon specular sheen, and biome-specific atmospheric motes.
-- KReversi (Loop 8): 60fps canvas loop, ambient motes, traveling specular glint, dual shockwaves, and double-buffered rendering.
-- KMystery (Loop 1): Initial detective-themed sprites and crime scene art.
-- KWizard (Loop 1): Initial wizard sprites and spell effect particles.
-- KWords (Loop 8): 4-layer particle physics, shockwave ripples, ice/wood shard debris, and Art Deco filigree on mahogany frames.
-- KTowers (Loop 8): 4-layer particles, shockwave ripples, screen shake, Art Deco filigree, and rooftop searchlight beacons.
-- KGo (Loop 8): Multi-layer particles, placement shockwave rings, Japanese gold leaf filigree, obsidian/shell stone sheen.
-- KSudoku (Loop 8): Multi-layer particle explosions, golden border shimmer on solved blocks, and corner filigree brackets.
-- KFreecell (Loop 8): Procedural screen-shake, multi-layer particles, golden border shimmer, and filigree brackets.
-- KMatch3 (Loop 8): Physics-driven screen-shake, multi-layer particles, and special gem visual variations.
-- KMech (Loop 1): Initial mech sprites with combat animations.
-- KHangman (Loop 8): Procedural screen-shake, 4-layer particles, dual shockwaves, and atmospheric motes.
-- KConnect4 (Loop 8): Procedural screen-shake, disc drop particles, dual shockwaves, and ornate frame.
-- KStarship (Loop 1): Initial starship sprites and space environment.
-- KVoid (Loop 1): Initial void-themed sprites and dark atmospheric effects.
-- KMandel (Loop 3): Fractal-themed visuals with zoom animations and color cycling.
-- KMine (Loop 3): Mining-themed sprites with terrain variety and atmospheric effects.
-- KStellar (Loop 1): Initial starship dashboard sprites and galaxy visuals.
-- KHex (Loop 3): Hex editor themed visuals with byte highlighting effects.
-- KSolitaire (Loop 8): Screen-shake on card snaps, casino particle engine, filigree brackets, and specular sheen sweeps.
-- KDragon (Loop 3): Atmospheric effects, screen shake, particle engine, and medieval gold filigree.
-- KTrader (Loop 2): Multi-frame ship sprites, parallax starfield, planet rendering, laser projectiles, and particle engine.
-- KSimon (Loop 8): Screen-shake, 4-layer particles, dual shockwaves, cyber dust, and retro-arcade filigree.
-- KDarts (Loop 8): Multi-layer particles, dual shockwaves, brass filigree, specular sweeps, and tavern dust motes.
-- K2048 (Loop 8): Multi-layer particles, dual shockwaves, tile specular sheen, and cybernetic arcade HUD.
-- KAsteroids (Loop 8): Screen-shake, multi-layer particles, dual shockwaves, and cybernetic Sci-Fi HUD.
-- KMines (Loop 8): Multi-layer particles, dual shockwaves, tile highlights, and cybernetic arcade HUD.
-- KPong (Loop 8): Screen-shake, multi-layer particles, paddle specular sheen, and cybernetic HUD.
-- KFortress (Loop 7): Procedural architectural tower sprites, animated multi-caste enemy sprites (Goblin, Orc, Hound, Gargoyle, Necromancer, Skeleton, Ogre, Wyvern, Golem), and knight/militia sprites.
-- KColony (Loop 7): 3 animated xeno-caste sprites (Swarmer, Spitter, Goliath) with tactical health gauges, hovering nanite repair drones, and overland logistics rovers.
-- KMaze (Loop 9): Themed Minotaur/Boss sprites and biome walls. Stripped annoying blinking HUD, pickaxe visual, and particle effects per user/director directive.
-- KBreakout (Loop 9): Themed Boss Fortress sprites (Dreadnought, Citadel, Void Leviathan), explosive/titanium/prism/quantum brick sprites, orbital drone wings, and tractor beam capture.
-- KCyber (Loop 3): 3D perspective cyberspace wireframe grid, distant skyline silhouettes, matrix code streams, and darknet shop terminal.
+**Skipped (mature — no work needed):**
+- KPong (L9), KChess (L9), KRogue (L9), KAlchemy (L8), KFarm (L6) — skip per Director Directive.
 
+**Recent work (Loop 7+):**
+- KTetris (L9): Crystal gem facets, steel bulkhead garbage, demolition bomb, holographic guides, plasma sweep.
+- KSnake (L9): Themed boss sprites (Hydra, Basilisk, Inferno, Void) and CPU rival sprites.
+- KPac (L9): 3D Pac-Man aura, animated ghosts with tracking pupils, cybernetic circuit walls.
+- KSpace (L9): Multi-chassis fighter, 14 enemy types, capital bosses, companion drones.
+- KMaze (L9): Themed Minotaur/Boss sprites and biome walls. Stripped annoying HUD/particles per directive.
+- KBreakout (L9): Boss fortress sprites, themed brick types, orbital drones, tractor beam.
+- KQuest (L8): Particle engine, Medieval RPG filigree HUD, weapon sheen, biome motes.
+- KFortress (L7): Procedural tower sprites, animated enemy sprites (9 types), knight/militia.
+- KColony (L7): Xeno-caste sprites (3 types), repair drones, logistics rovers.
+- KColosseum (L2): Balteus belt, Manica/Galerus armor, weapon arcs, lion claws, defeat collapse.
+
+**Loop 1 (initial sprite passes):**
+- KCosmic (L1): Fleet ships, shipyard station, planetary sprites.
+- KAbyss (L1): Delver sprite, monster sprites (5 types), dungeon object sprites.
+- KStarDredge (L1): Salvage barge, asteroids, raider warships.
+- KSubmarine (L1): Bathyscaphe, abyssal creatures (4 types).
+- KSanctuary (L1): Cross-section cutaway, dweller portraits, facility icons.
+- KMystery (L1), KWizard (L1), KMech (L1), KStarship (L1), KVoid (L1), KStellar (L1): Initial sprites.
+
+**Classic games (Loop 8 — all similar: particles, shockwaves, filigree):**
+- K2048, KAsteroids, KMines, KWords, KTowers, KGo, KSudoku, KFreecell, KMatch3, KHangman, KConnect4, KSimon, KDarts, KSolitaire, KReversi: All at Loop 8 with themed particle engines.
+- KDragon (L3), KTrader (L2), KMandel (L3), KMine (L3), KHex (L3), KCyber (L3): Themed visuals.
+
+**Other:**
+- Icon Audit Pass: Created ICO/SVG icons for 10 apps missing web icons.
