@@ -105,13 +105,12 @@ For every game audited, also verify:
 
 ---
 
-**Target App:** KPass
+**Target App:** KPing
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KPass
 - KPing
 - KPong
 - KQuest
@@ -192,8 +191,18 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KPac
 - KPad
 - KPaint
+- KPass
 
 ## Test Reports
+
+- **KPass**: PASS ✅ (7 issues, 7 fixed inline)
+  - Shifted revealed keys index map on entry deletion to prevent credential mask desync.
+  - Hardened CSV parser column mapping, supporting username integration and headerless files.
+  - Isolated strength calculation from generator DOM to prevent edit/import UI clobbering.
+  - Added localStorage preference persistence for character sets, length, and sort modes.
+  - Added double-click vault row copying matching status bar and inline button feedback.
+  - Added backdrop dismissal for edit/delete modals and global Ctrl+S inside label input.
+  - Guaranteed character representation across selected pools with cryptographic shuffling.
 
 - **KPaint**: PASS ✅ (7 issues, 7 fixed inline)
   - Composited all visible layers into VFS save payload instead of saving base layer only.
@@ -217,5 +226,5 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 > 📁 **Archived Round 2 Reports**: Recent detailed audit reports (KPac through KImage) have been archived to [archive/app_test_reports_round2.md](archive/app_test_reports_round2.md).
 
 ### Round 2 Completed Index
-- KPaint ✅ (7 fixed), KPad ✅ (8 fixed), KPac ✅ (8 fixed), KNote ✅ (7 fixed), KNet ✅ (3 fixed), KMystery ✅ (5 fixed), KMines ✅ (8 fixed), KMine ✅ (2 fixed), KMedia ✅ (8 fixed), KMech ✅ (6 fixed), KMaze ✅ (7 fixed), KMatch3 ✅ (8 fixed), KMandel ✅ (6 fixed), KMail ✅ (7 fixed), KJournal ✅ (7 fixed), KImage ✅ (8 fixed)
+- KPass ✅ (7 fixed), KPaint ✅ (7 fixed), KPad ✅ (8 fixed), KPac ✅ (8 fixed), KNote ✅ (7 fixed), KNet ✅ (3 fixed), KMystery ✅ (5 fixed), KMines ✅ (8 fixed), KMine ✅ (2 fixed), KMedia ✅ (8 fixed), KMech ✅ (6 fixed), KMaze ✅ (7 fixed), KMatch3 ✅ (8 fixed), KMandel ✅ (6 fixed), KMail ✅ (7 fixed), KJournal ✅ (7 fixed), KImage ✅ (8 fixed)
 

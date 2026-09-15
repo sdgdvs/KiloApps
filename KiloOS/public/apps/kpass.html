@@ -777,6 +777,8 @@
     }
     document.addEventListener('mousemove', resetAutoLock);
     document.addEventListener('keydown', resetAutoLock);
+    document.addEventListener('pointerdown', resetAutoLock);
+    document.addEventListener('touchstart', resetAutoLock);
 
     function lockVault() {
         currentMasterPass = null;
@@ -784,7 +786,19 @@
         revealedKeys.clear();
         lockScreen.style.display = 'flex';
         masterPassInput.value = '';
+        masterPassInput.type = 'password';
+        if (btnToggleMasterPass) {
+            btnToggleMasterPass.innerText = '👁';
+            btnToggleMasterPass.title = 'Show Master Password';
+        }
         lockError.innerText = '';
+        if (safeGetStorage('kpass_vault_enc')) {
+            setupMsg.style.display = 'none';
+            btnUnlock.innerText = "Unlock Vault";
+        } else {
+            setupMsg.style.display = 'block';
+            btnUnlock.innerText = "Unlock / Setup [Enter]";
+        }
         closeModals();
         renderVault();
         updateVaultCount();
@@ -795,9 +809,13 @@
 
     async function saveVault() {
         if(!currentMasterPass) return;
-        const jsonStr = JSON.stringify(vault);
-        const encData = await encryptData(currentMasterPass, jsonStr);
-        safeSetStorage('kpass_vault_enc', JSON.stringify(encData));
+        try {
+            const jsonStr = JSON.stringify(vault);
+            const encData = await encryptData(currentMasterPass, jsonStr);
+            safeSetStorage('kpass_vault_enc', JSON.stringify(encData));
+        } catch(e) {
+            showToast("Failed to save encrypted vault.", false);
+        }
     }
 
     btnUnlock.addEventListener('click', async () => {
@@ -904,6 +922,12 @@
     helpOverlay.addEventListener('click', (e) => {
         if (e.target === helpOverlay) toggleHelp(false);
     });
+    editModal.addEventListener('click', (e) => {
+        if (e.target === editModal) { editModal.style.display = 'none'; editingIndex = -1; }
+    });
+    deleteModal.addEventListener('click', (e) => {
+        if (e.target === deleteModal) { deleteModal.style.display = 'none'; deletingIndex = -1; }
+    });
 
     // Edit modal listeners
     btnCancelEdit.addEventListener('click', () => { editModal.style.display = 'none'; editingIndex = -1; });
@@ -916,7 +940,7 @@
             showToast("Label and password cannot be empty.", false);
             return;
         }
-        const strInfo = evaluateStrength(newPass);
+        const strInfo = calcStrength(newPass);
         vault[editingIndex].label = newLabel;
         vault[editingIndex].category = newCat;
         vault[editingIndex].pass = newPass;
@@ -939,7 +963,13 @@
     btnConfirmDelete.addEventListener('click', async () => {
         if (deletingIndex < 0 || deletingIndex >= vault.length) return;
         vault.splice(deletingIndex, 1);
-        revealedKeys.delete(deletingIndex);
+        const nextRevealed = new Set();
+        revealedKeys.forEach(idx => {
+            if (idx < deletingIndex) nextRevealed.add(idx);
+            else if (idx > deletingIndex) nextRevealed.add(idx - 1);
+        });
+        revealedKeys.clear();
+        nextRevealed.forEach(idx => revealedKeys.add(idx));
         deleteModal.style.display = 'none';
         deletingIndex = -1;
         await saveVault();
@@ -962,8 +992,22 @@
             }
         }
 
+        // Global Ctrl+S shortcut (works even when typing in label input)
+        if (e.ctrlKey && e.key.toLowerCase() === 's') {
+            e.preventDefault();
+            if (lockScreen.style.display === 'none' && contentGen.style.display !== 'none') {
+                handleSave();
+            }
+            return;
+        }
+
         const isInput = ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName);
         if (!isInput && lockScreen.style.display === 'none') {
+            if (e.key === 'Enter' && contentGen.style.display !== 'none') {
+                e.preventDefault();
+                generate();
+                return;
+            }
             if (e.key === '1') { switchTab(true); return; }
             if (e.key === '2') { switchTab(false); return; }
             if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
@@ -982,13 +1026,6 @@
                 e.preventDefault();
                 switchTab(true);
                 generate();
-                return;
-            }
-            if (e.ctrlKey && e.key.toLowerCase() === 's') {
-                e.preventDefault();
-                if (contentGen.style.display !== 'none') {
-                    handleSave();
-                }
                 return;
             }
             if ((e.ctrlKey && e.key.toLowerCase() === 'c') || (!isInput && e.key.toLowerCase() === 'c')) {
@@ -1029,32 +1066,59 @@
     const rngLen = document.getElementById('rngLen');
     const lenVal = document.getElementById('lenVal');
 
+    function savePreferences() {
+        const prefs = {
+            len: rngLen.value,
+            upper: chkUpper.checked,
+            lower: chkLower.checked,
+            num: chkNum.checked,
+            sym: chkSym.checked,
+            ambiguous: chkAmbiguous.checked,
+            sort: vaultSort ? vaultSort.value : 'date-desc',
+            cat: catInput ? catInput.value : 'Personal'
+        };
+        safeSetStorage('kpass_prefs', JSON.stringify(prefs));
+    }
+
+    function loadPreferences() {
+        const raw = safeGetStorage('kpass_prefs');
+        if (!raw) return;
+        try {
+            const p = JSON.parse(raw);
+            if (p.len) { rngLen.value = p.len; lenVal.innerText = p.len; }
+            if (p.upper !== undefined) chkUpper.checked = !!p.upper;
+            if (p.lower !== undefined) chkLower.checked = !!p.lower;
+            if (p.num !== undefined) chkNum.checked = !!p.num;
+            if (p.sym !== undefined) chkSym.checked = !!p.sym;
+            if (p.ambiguous !== undefined) chkAmbiguous.checked = !!p.ambiguous;
+            if (p.sort && vaultSort && vaultSort.querySelector(`option[value="${p.sort}"]`)) vaultSort.value = p.sort;
+            if (p.cat && catInput && catInput.querySelector(`option[value="${p.cat}"]`)) catInput.value = p.cat;
+        } catch(e) {}
+    }
+
     rngLen.addEventListener('input', () => {
         lenVal.innerText = rngLen.value;
+        savePreferences();
         generate();
     });
-    [chkUpper, chkLower, chkNum, chkSym, chkAmbiguous].forEach(chk => chk.addEventListener('change', generate));
+    [chkUpper, chkLower, chkNum, chkSym, chkAmbiguous].forEach(chk => chk.addEventListener('change', () => {
+        savePreferences();
+        generate();
+    }));
 
     // Preset buttons
     document.querySelectorAll('.btn-preset').forEach(btn => {
         btn.addEventListener('click', () => {
             rngLen.value = btn.dataset.len;
             lenVal.innerText = btn.dataset.len;
+            savePreferences();
             generate();
         });
     });
 
-    function evaluateStrength(pass) {
-        const lblStrength = document.getElementById('lblStrength');
-        const lblEntropy = document.getElementById('lblEntropy');
-        const barStrength = document.getElementById('barStrength');
+    function calcStrength(pass) {
         if(!pass || pass === '...') {
-            lblStrength.innerText = "Strength: -";
-            lblEntropy.innerText = "0 bits";
-            barStrength.style.width = "0%";
-            barStrength.style.backgroundColor = "#e74c3c";
-            barStrength.setAttribute('aria-valuenow', '0');
-            return { rating: "-", entropy: 0 };
+            return { rating: "-", entropy: 0, pct: 0, color: "#e74c3c" };
         }
         let pool = 0;
         if(/[A-Z]/.test(pass)) pool += 26;
@@ -1072,16 +1136,24 @@
         else if(entropy >= 60) { rating = "Strong"; color = "#2ecc71"; }
         else if(entropy >= 40) { rating = "Fair"; color = "#f39c12"; }
 
-        lblStrength.innerText = "Strength: " + rating;
-        lblEntropy.innerText = entropy + " bits";
-        barStrength.style.width = pct + "%";
-        barStrength.style.backgroundColor = color;
-        barStrength.setAttribute('aria-valuenow', String(pct));
-        return { rating, entropy };
+        return { rating, entropy, pct, color };
+    }
+
+    function evaluateStrength(pass) {
+        const lblStrength = document.getElementById('lblStrength');
+        const lblEntropy = document.getElementById('lblEntropy');
+        const barStrength = document.getElementById('barStrength');
+        const info = calcStrength(pass);
+        lblStrength.innerText = "Strength: " + info.rating;
+        lblEntropy.innerText = info.entropy + " bits";
+        barStrength.style.width = info.pct + "%";
+        barStrength.style.backgroundColor = info.color;
+        barStrength.setAttribute('aria-valuenow', String(info.pct));
+        return info;
     }
 
     function generate() {
-        let chars = "";
+        let poolSets = [];
         let upperChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         let lowerChars = "abcdefghijklmnopqrstuvwxyz";
         let numChars = "0123456789";
@@ -1093,19 +1165,49 @@
             numChars = numChars.replace(/[01]/g, '');
         }
 
-        if (chkUpper.checked) chars += upperChars;
-        if (chkLower.checked) chars += lowerChars;
-        if (chkNum.checked) chars += numChars;
-        if (chkSym.checked) chars += symChars;
-        if (chars === "") { chars = lowerChars || "abcdefghjkmnpqrstuvwxyz"; chkLower.checked = true; }
-        
-        let pass = "";
-        let len = parseInt(rngLen.value) || 16;
-        let array = new Uint32Array(len);
-        crypto.getRandomValues(array);
-        for(let i=0; i<len; i++) {
-            pass += chars[array[i] % chars.length];
+        if (chkUpper.checked) poolSets.push(upperChars);
+        if (chkLower.checked) poolSets.push(lowerChars);
+        if (chkNum.checked) poolSets.push(numChars);
+        if (chkSym.checked) poolSets.push(symChars);
+        if (poolSets.length === 0) {
+            chkLower.checked = true;
+            poolSets.push(lowerChars || "abcdefghjkmnpqrstuvwxyz");
         }
+
+        let allChars = poolSets.join('');
+        let len = parseInt(rngLen.value) || 16;
+        let passChars = [];
+
+        // Guarantee at least one character from each selected set
+        if (len >= poolSets.length) {
+            for (let set of poolSets) {
+                let randBuf = new Uint32Array(1);
+                crypto.getRandomValues(randBuf);
+                passChars.push(set[randBuf[0] % set.length]);
+            }
+        }
+
+        // Fill remaining length
+        let remaining = len - passChars.length;
+        if (remaining > 0) {
+            let randArr = new Uint32Array(remaining);
+            crypto.getRandomValues(randArr);
+            for (let i = 0; i < remaining; i++) {
+                passChars.push(allChars[randArr[i] % allChars.length]);
+            }
+        }
+
+        // Fisher-Yates crypto shuffle
+        for (let i = passChars.length - 1; i > 0; i--) {
+            let randBuf = new Uint32Array(1);
+            crypto.getRandomValues(randBuf);
+            let j = randBuf[0] % (i + 1);
+            let tmp = passChars[i];
+            passChars[i] = passChars[j];
+            passChars[j] = tmp;
+        }
+
+        let pass = passChars.join('');
         pwdDisplay.innerHTML = escapeHtml(pass) + '<div class="display-hint">Click password to copy</div>';
         evaluateStrength(pass);
     }
@@ -1120,13 +1222,19 @@
         const pwd = getCurrentPassword();
         if (pwd && pwd !== '...') {
             copyText(pwd, "Password copied to clipboard!");
+            pwdDisplay.style.borderColor = '#2ecc71';
+            setTimeout(() => { pwdDisplay.style.borderColor = '#333'; }, 400);
         }
     });
     pwdDisplay.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             const pwd = getCurrentPassword();
-            if (pwd && pwd !== '...') copyText(pwd, "Password copied to clipboard!");
+            if (pwd && pwd !== '...') {
+                copyText(pwd, "Password copied to clipboard!");
+                pwdDisplay.style.borderColor = '#2ecc71';
+                setTimeout(() => { pwdDisplay.style.borderColor = '#333'; }, 400);
+            }
         }
     });
 
@@ -1141,11 +1249,16 @@
     });
 
     async function handleSave() {
+        if (!currentMasterPass) {
+            showToast("Vault is locked. Please unlock or set up master password.", false);
+            lockVault();
+            return;
+        }
         const label = labelInput.value.trim();
         const pass = getCurrentPassword();
         const cat = catInput.value;
         if (label && pass && pass !== '...') {
-            const strInfo = evaluateStrength(pass);
+            const strInfo = calcStrength(pass);
             vault.push({
                 label,
                 category: cat,
@@ -1165,6 +1278,7 @@
     labelInput.addEventListener('keydown', (e) => {
         if(e.key === 'Enter') handleSave();
     });
+    catInput.addEventListener('change', savePreferences);
 
     vaultSearch.addEventListener('input', () => {
         btnClearSearch.style.display = vaultSearch.value ? 'block' : 'none';
@@ -1177,7 +1291,10 @@
         renderVault();
     });
     vaultCatFilter.addEventListener('change', renderVault);
-    vaultSort.addEventListener('change', renderVault);
+    vaultSort.addEventListener('change', () => {
+        savePreferences();
+        renderVault();
+    });
 
     function escapeHtml(str) {
         if(!str) return '';
@@ -1198,7 +1315,8 @@
         let filtered = vault.map((item, idx) => ({ ...item, originalIndex: idx })).filter(item => {
             const itemLabel = (item.label || '').toLowerCase();
             const itemPass = (item.pass || '').toLowerCase();
-            const matchQ = itemLabel.includes(query) || itemPass.includes(query);
+            const itemCat = (item.category || '').toLowerCase();
+            const matchQ = itemLabel.includes(query) || itemPass.includes(query) || itemCat.includes(query);
             const matchCat = catQuery ? (item.category === catQuery) : true;
             return matchQ && matchCat;
         });
@@ -1255,6 +1373,12 @@
                 if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); copyText(item.pass, "Vault password copied!"); }
             });
 
+            div.addEventListener('dblclick', (e) => {
+                if (!e.target.closest('.item-btns') && !e.target.closest('.vault-pass')) {
+                    copyText(item.pass, "Vault password copied!");
+                }
+            });
+
             div.querySelector('.btn-reveal').addEventListener('click', () => {
                 if (revealedKeys.has(realIndex)) {
                     revealedKeys.delete(realIndex);
@@ -1273,10 +1397,18 @@
                 editLabel.focus();
             });
 
-            div.querySelector('.btn-copy').addEventListener('click', () => copyText(item.pass, "Vault password copied!"));
+            const itemCopyBtn = div.querySelector('.btn-copy');
+            itemCopyBtn.addEventListener('click', () => {
+                copyText(item.pass, "Vault password copied!");
+                const old = itemCopyBtn.innerText;
+                itemCopyBtn.innerText = 'Copied!';
+                setTimeout(() => { itemCopyBtn.innerText = old; }, 1400);
+            });
+
             div.querySelector('.btn-del').addEventListener('click', () => {
                 deletingIndex = realIndex;
-                deletePrompt.textContent = `Are you sure you want to delete "${vault[realIndex].label}"?`;
+                const entryLabel = vault[realIndex].label ? `"${vault[realIndex].label}"` : 'this credential';
+                deletePrompt.textContent = `Are you sure you want to delete ${entryLabel}?`;
                 deleteModal.style.display = 'flex';
                 btnConfirmDelete.focus();
             });
@@ -1387,38 +1519,58 @@
                 }
             } else if(fileName.endsWith('.csv')) {
                 const rows = parseCSV(text);
-                if (rows.length > 1) {
-                    // Check if row 0 is header
-                    const headers = rows[0].map(h => h.toLowerCase().trim());
-                    let labelIdx = headers.indexOf('label');
-                    if(labelIdx === -1) labelIdx = headers.indexOf('name');
-                    if(labelIdx === -1) labelIdx = headers.indexOf('title');
-                    if(labelIdx === -1) labelIdx = 0;
+                if (rows.length > 0) {
+                    const firstRow = rows[0].map(h => (h || '').toLowerCase().trim());
+                    let labelIdx = -1, passIdx = -1, catIdx = -1, userIdx = -1, strIdx = -1, dateIdx = -1;
 
-                    let catIdx = headers.indexOf('category');
-                    if(catIdx === -1) catIdx = headers.indexOf('folder');
-                    if(catIdx === -1) catIdx = 1;
+                    firstRow.forEach((h, idx) => {
+                        if (labelIdx === -1 && ['label', 'name', 'title', 'service', 'account', 'website', 'url'].includes(h)) labelIdx = idx;
+                        else if (passIdx === -1 && ['pass', 'password', 'secret', 'key'].includes(h)) passIdx = idx;
+                        else if (catIdx === -1 && ['category', 'cat', 'folder', 'group'].includes(h)) catIdx = idx;
+                        else if (userIdx === -1 && ['username', 'user', 'login', 'email'].includes(h)) userIdx = idx;
+                        else if (strIdx === -1 && ['strength'].includes(h)) strIdx = idx;
+                        else if (dateIdx === -1 && ['date', 'created'].includes(h)) dateIdx = idx;
+                    });
 
-                    let passIdx = headers.indexOf('pass');
-                    if(passIdx === -1) passIdx = headers.indexOf('password');
-                    if(passIdx === -1) passIdx = 2;
+                    let startRow = 1;
+                    if (labelIdx === -1 && passIdx === -1) {
+                        startRow = 0;
+                        labelIdx = 0;
+                        passIdx = rows[0].length > 1 ? 1 : 0;
+                    } else {
+                        if (labelIdx === -1) labelIdx = 0;
+                        if (passIdx === -1) {
+                            for (let i = 0; i < rows[0].length; i++) {
+                                if (i !== labelIdx && i !== userIdx && i !== catIdx) {
+                                    passIdx = i;
+                                    break;
+                                }
+                            }
+                            if (passIdx === -1) passIdx = 1;
+                        }
+                    }
 
-                    let strIdx = headers.indexOf('strength');
-                    let dateIdx = headers.indexOf('date');
-
-                    for(let i = 1; i < rows.length; i++) {
+                    for(let i = startRow; i < rows.length; i++) {
                         const r = rows[i];
-                        const label = (r[labelIdx] || '').trim();
+                        let label = (r[labelIdx] || '').trim();
                         const pass = (r[passIdx] || '').trim();
-                        if(!label && !pass) continue;
-                        const category = catIdx >= 0 && r[catIdx] ? r[catIdx].trim() : 'Other';
-                        const strength = strIdx >= 0 && r[strIdx] ? r[strIdx].trim() : evaluateStrength(pass).rating;
-                        const date = dateIdx >= 0 && r[dateIdx] ? r[dateIdx].trim() : new Date().toLocaleDateString();
+                        const user = userIdx >= 0 && r[userIdx] ? r[userIdx].trim() : '';
+                        if (!label && !pass) continue;
+                        if (user && !label.includes(user)) {
+                            label = label ? `${label} (${user})` : user;
+                        }
+                        const category = catIdx >= 0 && r[catIdx] && r[catIdx].trim() ? r[catIdx].trim() : 'Other';
+                        const strength = strIdx >= 0 && r[strIdx] && r[strIdx].trim() ? r[strIdx].trim() : calcStrength(pass).rating;
+                        const date = dateIdx >= 0 && r[dateIdx] && r[dateIdx].trim() ? r[dateIdx].trim() : new Date().toLocaleDateString();
                         imported.push({ label, category, pass, strength, date });
                     }
                 }
             }
             if(imported.length > 0) {
+                if(!currentMasterPass) {
+                    showToast("Vault is locked. Unlock before importing.", false);
+                    return;
+                }
                 vault = vault.concat(imported);
                 await saveVault();
                 renderVault();
@@ -1432,6 +1584,7 @@
         fileImport.value = ''; // Reset
     });
 
+    loadPreferences();
     generate();
     showToast("Welcome to KPass! Press F1 for Help & Shortcuts");
   </script>
