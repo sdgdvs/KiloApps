@@ -98,13 +98,12 @@ For every game audited, also verify:
 
 ---
 
-**Target App:** KPad
+**Target App:** KPaint
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KPad
 - KPaint
 - KPass
 - KPing
@@ -185,13 +184,25 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KNet
 - KNote
 - KPac
+- KPad
 
 ## Test Reports
+
+- **KPad**: PASS ✅ (8 issues, 8 fixed inline)
+  - ✅ Multi-tab text/code editing, syntax highlighting, templates, and AES-256-GCM encryption work smoothly
+  - 🔧 FIXED: Critical data loss/overwrite bug in `closeTabDirect` where closing an active tab wrote stale editor contents into the newly active tab and miscalculated index for prior tabs
+  - 🔧 FIXED: `ctxDuplicateTab` and `ctxCloseOthers` now properly sync live editor buffer and prevent state overwrites
+  - 🔧 FIXED: Edit menu items (Undo, Redo, Cut, Copy, Paste, Select All) now ensure editor focus and update syntax overlay via `execEditorCommand`
+  - 🔧 FIXED: `replaceOne` now strictly verifies case-matching and regex patterns against the selected text, and `findNext` now displays "X of Y" count with zero-length pattern safety
+  - 🔧 FIXED: Native File System Access API methods (`openFileNative` and `saveFileNative`) now provide fallback `<input type="file">` and `downloadFile` triggers when running on unsupported browsers or sandboxed iframes
+  - 🔧 FIXED: VFS operations now timeout cleanly in standalone mode rather than hanging on unanswered parent `postMessage` requests
+  - 🔧 FIXED: Settings persistence added for theme (`kpad_theme`), font size (`kpad_fontsize`), and word wrap (`kpad_wordwrap`) across sessions
+  - 🔧 FIXED: `sortLines` now supports sorting selected text range only, `formatJSON` handles empty buffers cleanly, and `showDiagnostics` reports 0 lines when empty
 
 > 📁 **Archived Reports**: Historical test reports have been archived to [archive/app_test_reports_archive.md](archive/app_test_reports_archive.md) to preserve token efficiency.
 
 > 📁 **Archived Round 2 Reports**: Recent detailed audit reports (KPac through KImage) have been archived to [archive/app_test_reports_round2.md](archive/app_test_reports_round2.md).
 
 ### Round 2 Completed Index
-- KPac ✅ (8 fixed), KNote ✅ (7 fixed), KNet ✅ (3 fixed), KMystery ✅ (5 fixed), KMines ✅ (8 fixed), KMine ✅ (2 fixed), KMedia ✅ (8 fixed), KMech ✅ (6 fixed), KMaze ✅ (7 fixed), KMatch3 ✅ (8 fixed), KMandel ✅ (6 fixed), KMail ✅ (7 fixed), KJournal ✅ (7 fixed), KImage ✅ (8 fixed)
+- KPad ✅ (8 fixed), KPac ✅ (8 fixed), KNote ✅ (7 fixed), KNet ✅ (3 fixed), KMystery ✅ (5 fixed), KMines ✅ (8 fixed), KMine ✅ (2 fixed), KMedia ✅ (8 fixed), KMech ✅ (6 fixed), KMaze ✅ (7 fixed), KMatch3 ✅ (8 fixed), KMandel ✅ (6 fixed), KMail ✅ (7 fixed), KJournal ✅ (7 fixed), KImage ✅ (8 fixed)
 

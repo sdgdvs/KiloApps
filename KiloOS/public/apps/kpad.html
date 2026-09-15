@@ -743,13 +743,13 @@
 
     <div class="menu-btn">Edit
       <div class="dropdown">
-        <div onclick="document.execCommand('undo')"><span>Undo</span><span class="shortcut">Ctrl+Z</span></div>
-        <div onclick="document.execCommand('redo')"><span>Redo</span><span class="shortcut">Ctrl+Y</span></div>
+        <div onclick="execEditorCommand('undo')"><span>Undo</span><span class="shortcut">Ctrl+Z</span></div>
+        <div onclick="execEditorCommand('redo')"><span>Redo</span><span class="shortcut">Ctrl+Y</span></div>
         <div class="divider"></div>
-        <div onclick="document.execCommand('cut')"><span>Cut</span><span class="shortcut">Ctrl+X</span></div>
-        <div onclick="document.execCommand('copy')"><span>Copy</span><span class="shortcut">Ctrl+C</span></div>
+        <div onclick="execEditorCommand('cut')"><span>Cut</span><span class="shortcut">Ctrl+X</span></div>
+        <div onclick="execEditorCommand('copy')"><span>Copy</span><span class="shortcut">Ctrl+C</span></div>
         <div onclick="copyAllDocument()"><span>Copy All Document</span><span class="shortcut">Alt+C</span></div>
-        <div onclick="document.execCommand('paste')"><span>Paste</span><span class="shortcut">Ctrl+V</span></div>
+        <div onclick="execEditorCommand('paste')"><span>Paste</span><span class="shortcut">Ctrl+V</span></div>
         <div onclick="selectAll()"><span>Select All</span><span class="shortcut">Ctrl+A</span></div>
         <div onclick="clearCurrentDocument()"><span>Clear Document</span><span class="shortcut">Alt+X</span></div>
         <div class="divider"></div>
@@ -840,7 +840,7 @@
   <!-- Floating Find & Replace Panel -->
   <div class="find-replace-panel" id="find-panel" role="search">
     <div class="find-row">
-      <input type="text" class="find-input" id="find-input" placeholder="Find..." aria-label="Find input" onkeydown="if(event.key==='Enter') findNext(event.shiftKey)">
+      <input type="text" class="find-input" id="find-input" placeholder="Find..." aria-label="Find input" oninput="findNext(false)" onkeydown="if(event.key==='Enter') findNext(event.shiftKey)">
       <button class="find-toggle" id="btn-match-case" onclick="toggleFindOpt('matchCase')" title="Match Case (Aa)">Aa</button>
       <button class="find-toggle" id="btn-regex" onclick="toggleFindOpt('regex')" title="Regular Expression (.*)">.*</button>
       <span class="find-stats" id="find-stats">0 of 0</span>
@@ -1050,12 +1050,23 @@
     }
 
     function closeTabDirect(index) {
+      if (index < 0 || index >= tabs.length) return;
+      const wasActive = (activeTabIndex === index);
       tabs.splice(index, 1);
       if (tabs.length === 0) {
+        activeTabIndex = -1;
         createTab("Untitled 1", "");
       } else {
-        if (activeTabIndex >= tabs.length) activeTabIndex = tabs.length - 1;
-        switchTab(activeTabIndex);
+        if (wasActive) {
+          activeTabIndex = -1;
+          const nextActive = Math.min(index, tabs.length - 1);
+          switchTab(nextActive);
+        } else {
+          if (activeTabIndex > index) {
+            activeTabIndex--;
+          }
+          renderTabs();
+        }
       }
       saveSession();
     }
@@ -1120,18 +1131,23 @@
       document.getElementById('tab-context-menu').style.display = 'none';
     });
 
-    function ctxNewTab() { newTab(); }
     function ctxDuplicateTab() {
       if (ctxTabIndex >= 0 && ctxTabIndex < tabs.length) {
         const t = tabs[ctxTabIndex];
-        createTab(`${t.name} (Copy)`, t.content, null, t.language);
+        const content = (ctxTabIndex === activeTabIndex) ? editor.value : t.content;
+        createTab(`${t.name} (Copy)`, content, null, t.language);
         showToast(`Duplicated tab: ${t.name}`, 'info', 2000);
       }
     }
     function ctxCloseTab() { if (ctxTabIndex >= 0) promptCloseTab(ctxTabIndex); }
     function ctxCloseOthers() {
-      if (ctxTabIndex >= 0) {
-        tabs = [tabs[ctxTabIndex]];
+      if (ctxTabIndex >= 0 && ctxTabIndex < tabs.length) {
+        const kept = tabs[ctxTabIndex];
+        if (ctxTabIndex === activeTabIndex) {
+          kept.content = editor.value;
+        }
+        tabs = [kept];
+        activeTabIndex = -1;
         switchTab(0);
         saveSession();
         showToast('Closed other tabs', 'info', 2000);
@@ -1295,6 +1311,7 @@
       const input = document.getElementById('find-input');
       input.focus();
       input.select();
+      if (input.value) findNext(false);
     }
 
     function closeFind() {
@@ -1311,7 +1328,10 @@
 
     function findNext(reverse = false) {
       const query = document.getElementById('find-input').value;
-      if (!query) return;
+      if (!query) {
+        document.getElementById('find-stats').innerText = "0 of 0";
+        return;
+      }
       
       const text = editor.value;
       let regex;
@@ -1327,10 +1347,11 @@
         return;
       }
 
-      const matches = [...text.matchAll(regex)];
-      document.getElementById('find-stats').innerText = `${matches.length} matches`;
-
-      if (matches.length === 0) return;
+      const matches = [...text.matchAll(regex)].filter(m => m[0].length > 0);
+      if (matches.length === 0) {
+        document.getElementById('find-stats').innerText = "0 of 0";
+        return;
+      }
 
       const pos = reverse ? editor.selectionStart : editor.selectionEnd;
       let targetMatch = null;
@@ -1338,10 +1359,13 @@
       if (!reverse) {
         targetMatch = matches.find(m => m.index >= pos) || matches[0];
       } else {
-        targetMatch = matches.reverse().find(m => m.index < editor.selectionStart) || matches[0];
+        const revMatches = [...matches].reverse();
+        targetMatch = revMatches.find(m => m.index < editor.selectionStart) || revMatches[0];
       }
 
       if (targetMatch) {
+        const matchIdx = matches.indexOf(targetMatch);
+        document.getElementById('find-stats').innerText = `${matchIdx + 1} of ${matches.length}`;
         editor.setSelectionRange(targetMatch.index, targetMatch.index + targetMatch[0].length);
         editor.focus();
         updateEditor();
@@ -1357,7 +1381,15 @@
       const selEnd = editor.selectionEnd;
       const selectedText = editor.value.substring(selStart, selEnd);
 
-      if (selectedText.toLowerCase() === query.toLowerCase() || findOpts.regex) {
+      let isMatch = false;
+      try {
+        const flags = findOpts.matchCase ? '' : 'i';
+        const pattern = findOpts.regex ? query : query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const rx = new RegExp('^(?:' + pattern + ')$', flags);
+        isMatch = rx.test(selectedText);
+      } catch (e) {}
+
+      if (isMatch) {
         editor.value = editor.value.substring(0, selStart) + replaceStr + editor.value.substring(selEnd);
         editor.setSelectionRange(selStart, selStart + replaceStr.length);
         updateEditor();
@@ -1384,6 +1416,14 @@
     }
 
     // --- Tools & Transformations ---
+    function execEditorCommand(cmd) {
+      editor.focus();
+      try {
+        document.execCommand(cmd);
+        updateEditor();
+      } catch (e) {}
+    }
+
     function transformText(type) {
       const start = editor.selectionStart;
       const end = editor.selectionEnd;
@@ -1414,6 +1454,10 @@
     }
 
     function formatJSON() {
+      if (!editor.value.trim()) {
+        showToast('Editor is empty', 'warning', 1500);
+        return;
+      }
       try {
         const parsed = JSON.parse(editor.value);
         editor.value = JSON.stringify(parsed, null, 2);
@@ -1427,11 +1471,25 @@
     }
 
     function sortLines() {
-      const lines = editor.value.split('\n');
-      lines.sort((a, b) => a.localeCompare(b));
-      editor.value = lines.join('\n');
-      updateEditor();
-      showToast(`Sorted ${lines.length} lines alphabetically`, 'success', 2000);
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      const text = editor.value;
+      if (start !== end) {
+        const sel = text.substring(start, end);
+        const lines = sel.split('\n');
+        lines.sort((a, b) => a.localeCompare(b));
+        const sorted = lines.join('\n');
+        editor.value = text.substring(0, start) + sorted + text.substring(end);
+        editor.setSelectionRange(start, start + sorted.length);
+        updateEditor();
+        showToast(`Sorted ${lines.length} selected lines alphabetically`, 'success', 2000);
+      } else {
+        const lines = text.split('\n');
+        lines.sort((a, b) => a.localeCompare(b));
+        editor.value = lines.join('\n');
+        updateEditor();
+        showToast(`Sorted ${lines.length} lines alphabetically`, 'success', 2000);
+      }
     }
 
     function insertDateTime() {
@@ -1447,6 +1505,7 @@
     }
 
     function selectAll() {
+      editor.focus();
       editor.select();
     }
 
@@ -1458,6 +1517,7 @@
       highlightPre.style.wordWrap = wordWrap ? 'break-word' : 'normal';
       const btn = document.getElementById('btn-quick-wrap');
       if (btn) btn.classList.toggle('active', wordWrap);
+      try { localStorage.setItem('kpad_wordwrap', wordWrap ? '1' : '0'); } catch (e) {}
       showToast(`Word wrap ${wordWrap ? 'enabled' : 'disabled'}`, 'info', 1800);
     }
 
@@ -1474,6 +1534,7 @@
       gutter.style.fontSize = currentFontSize + 'px';
       const badge = document.getElementById('zoom-badge');
       if (badge) badge.innerText = currentFontSize + 'px';
+      try { localStorage.setItem('kpad_fontsize', currentFontSize); } catch (e) {}
       showToast(`Font size: ${currentFontSize}px`, 'info', 1500);
     }
 
@@ -1484,6 +1545,7 @@
       gutter.style.fontSize = '14px';
       const badge = document.getElementById('zoom-badge');
       if (badge) badge.innerText = '14px';
+      try { localStorage.setItem('kpad_fontsize', '14'); } catch (e) {}
       showToast('Font size reset to 14px', 'info', 1500);
     }
 
@@ -1575,6 +1637,7 @@
 
     function setTheme(theme) {
       document.documentElement.setAttribute('data-theme', theme);
+      try { localStorage.setItem('kpad_theme', theme); } catch (e) {}
       showToast(`Theme changed to ${theme.toUpperCase()}`, 'info', 1800);
     }
 
@@ -1720,7 +1783,10 @@
       }
     }
 
+    let pendingDecryptText = null;
+
     function promptDecryptDocument(armored = null) {
+      pendingDecryptText = armored || null;
       const currentText = armored || editor.value;
       if (!currentText.includes("-----BEGIN KPAD ENCRYPTED DOCUMENT-----")) {
         showToast("Current document is not an encrypted container (missing armor header).", "warning");
@@ -1749,9 +1815,11 @@
       const pass = document.getElementById('dec-pass').value;
       if (!pass) { showToast("Please enter the password.", "warning"); return; }
 
+      const cipherText = pendingDecryptText || editor.value;
       try {
-        const plain = await decryptDocumentText(editor.value, pass);
+        const plain = await decryptDocumentText(cipherText, pass);
         editor.value = plain;
+        pendingDecryptText = null;
         closeModal();
         updateEditor();
         document.getElementById('file-status').innerText = "🔓 Decrypted";
@@ -1832,7 +1900,7 @@
     // --- Document Diagnostics & Hashes ---
     async function showDiagnostics() {
       const text = editor.value;
-      const lines = text.split('\n').length;
+      const lines = text.length === 0 ? 0 : text.split('\n').length;
       const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
       const chars = text.length;
       const charsNoSpace = text.replace(/\s/g, '').length;
@@ -1880,7 +1948,7 @@
 
     // --- Export / Import Engine ---
     function exportDocument(format) {
-      const tab = tabs[activeTabIndex];
+      const tab = (activeTabIndex >= 0 && activeTabIndex < tabs.length) ? tabs[activeTabIndex] : { name: 'document' };
       let content = editor.value;
       let filename = (tab.name || 'document').replace(/\.[^/.]+$/, "");
       let mime = 'text/plain';
@@ -1890,8 +1958,11 @@
       } else if (format === 'html') {
         filename += '.html';
         mime = 'text/html';
-        content = `<!DOCTYPE html>\n<html>\n<head>\n<meta charset="utf-8">\n<title>${escapeHtml(tab.name)}</title>\n</head>\n<body>\n<pre>${escapeHtml(content)}</pre>\n</body>\n</html>`;
+        content = `<!DOCTYPE html>\n<html>\n<head>\n<meta charset="utf-8">\n<title>${escapeHtml(tab.name || 'Document')}</title>\n</head>\n<body>\n<pre>${escapeHtml(content)}</pre>\n</body>\n</html>`;
       } else if (format === 'json') {
+        if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
+          tabs[activeTabIndex].content = editor.value;
+        }
         filename = 'kpad_session_backup.json';
         mime = 'application/json';
         content = JSON.stringify(tabs, null, 2);
@@ -1932,16 +2003,26 @@
 
     function sendToOS(msg) {
       return new Promise((resolve) => {
+        if (window.parent === window) {
+          resolve(null);
+          return;
+        }
         const id = ++currentReqId;
         callbacks[id] = resolve;
         window.parent.postMessage({ ...msg, requestId: id }, '*');
+        setTimeout(() => {
+          if (callbacks[id]) {
+            delete callbacks[id];
+            resolve(null);
+          }
+        }, 4000);
       });
     }
 
     async function loadVFSFile(path) {
       const res = await sendToOS({ type: 'VFS_READ', path });
       const filename = path.split('/').pop() || 'file';
-      const text = res.data || '';
+      const text = res && res.data ? res.data : '';
       createTab(filename, text, path, detectLanguage(filename));
       if (text.includes("-----BEGIN KPAD ENCRYPTED DOCUMENT-----")) {
         promptDecryptDocument(text);
@@ -1952,15 +2033,27 @@
 
     async function openVFS() {
       const res = await sendToOS({ type: 'VFS_SHOW_OPEN' });
-      if (res && res.path) loadVFSFile(res.path);
+      if (res && res.path) {
+        loadVFSFile(res.path);
+      } else if (!res && window.parent === window) {
+        showToast("VFS requires KiloOS environment. Opening local file...", "info", 2000);
+        openFileNative();
+      }
     }
 
     async function saveVFS() {
+      if (activeTabIndex < 0 || !tabs[activeTabIndex]) return;
       const tab = tabs[activeTabIndex];
       let path = tab.path;
       if (!path) {
         const res = await sendToOS({ type: 'VFS_SHOW_SAVE' });
-        if (!res || !res.path) return;
+        if (!res || !res.path) {
+          if (!res && window.parent === window) {
+            showToast("VFS requires KiloOS environment. Saving local file...", "info", 2000);
+            saveFileNative();
+          }
+          return;
+        }
         path = res.path;
       }
       tab.content = editor.value;
@@ -1975,38 +2068,70 @@
     }
 
     async function openFileNative() {
-      try {
-        const [fileHandle] = await window.showOpenFilePicker();
-        const file = await fileHandle.getFile();
-        const content = await file.text();
-        createTab(file.name, content, null, detectLanguage(file.name));
-        if (content.includes("-----BEGIN KPAD ENCRYPTED DOCUMENT-----")) {
-          promptDecryptDocument(content);
-        } else {
-          showToast(`Opened ${file.name}`, 'success');
-        }
-      } catch (e) {}
+      if (window.showOpenFilePicker) {
+        try {
+          const [fileHandle] = await window.showOpenFilePicker();
+          const file = await fileHandle.getFile();
+          const content = await file.text();
+          createTab(file.name, content, null, detectLanguage(file.name));
+          if (content.includes("-----BEGIN KPAD ENCRYPTED DOCUMENT-----")) {
+            promptDecryptDocument(content);
+          } else {
+            showToast(`Opened ${file.name}`, 'success');
+          }
+        } catch (e) {}
+      } else {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.onchange = async e => {
+          if (e.target.files && e.target.files.length > 0) {
+            const file = e.target.files[0];
+            const content = await file.text();
+            createTab(file.name, content, null, detectLanguage(file.name));
+            if (content.includes("-----BEGIN KPAD ENCRYPTED DOCUMENT-----")) {
+              promptDecryptDocument(content);
+            } else {
+              showToast(`Opened ${file.name}`, 'success');
+            }
+          }
+        };
+        input.click();
+      }
     }
 
     async function saveFileNative() {
-      try {
-        const fileHandle = await window.showSaveFilePicker();
-        const writable = await fileHandle.createWritable();
-        await writable.write(editor.value);
-        await writable.close();
-        
-        const tab = tabs[activeTabIndex];
-        tab.name = fileHandle.name;
+      if (activeTabIndex < 0 || !tabs[activeTabIndex]) return;
+      const tab = tabs[activeTabIndex];
+      if (window.showSaveFilePicker) {
+        try {
+          const fileHandle = await window.showSaveFilePicker({
+            suggestedName: tab.name || 'document.txt'
+          });
+          const writable = await fileHandle.createWritable();
+          await writable.write(editor.value);
+          await writable.close();
+          
+          tab.name = fileHandle.name;
+          tab.isModified = false;
+          renderTabs();
+          saveSession();
+          showToast(`Saved local file: ${fileHandle.name}`, 'success');
+        } catch (e) {}
+      } else {
+        downloadFile(editor.value, tab.name || 'document.txt', 'text/plain');
         tab.isModified = false;
         renderTabs();
         saveSession();
-        showToast(`Saved local file: ${fileHandle.name}`, 'success');
-      } catch (e) {}
+        showToast(`Saved local file: ${tab.name || 'document.txt'}`, 'success');
+      }
     }
 
     // --- Session Persistence ---
     function saveSession() {
       try {
+        if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
+          tabs[activeTabIndex].content = editor.value;
+        }
         const sessionData = tabs.map(t => ({
           name: t.name,
           content: t.content,
@@ -2161,6 +2286,23 @@
 
     // Startup Initialization
     window.onload = () => {
+      try {
+        const savedTheme = localStorage.getItem('kpad_theme');
+        if (savedTheme) {
+          document.documentElement.setAttribute('data-theme', savedTheme);
+          const sel = document.getElementById('theme-selector');
+          if (sel) sel.value = savedTheme;
+        }
+        const savedWrap = localStorage.getItem('kpad_wordwrap');
+        if (savedWrap === '1') {
+          toggleWordWrap();
+        }
+        const savedSize = parseInt(localStorage.getItem('kpad_fontsize'), 10);
+        if (savedSize && savedSize >= 10 && savedSize <= 32 && savedSize !== 14) {
+          changeFontSize(savedSize - 14);
+        }
+      } catch (e) {}
+
       if (window.location.hash) {
         const path = window.location.hash.substring(1);
         if (path) { loadVFSFile(path); return; }
