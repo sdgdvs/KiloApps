@@ -105,13 +105,12 @@ For every game audited, also verify:
 
 ---
 
-**Target App:** KPaint
+**Target App:** KPass
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KPaint
 - KPass
 - KPing
 - KPong
@@ -192,8 +191,18 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KNote
 - KPac
 - KPad
+- KPaint
 
 ## Test Reports
+
+- **KPaint**: PASS ✅ (7 issues, 7 fixed inline)
+  - Composited all visible layers into VFS save payload instead of saving base layer only.
+  - Guarded base canvas layer from deletion in deleteLayer when multiple layers exist.
+  - Resolved mobile touch coordinate NaN in touchend by reading changedTouches.
+  - Hardened floodFill against similar-shade loops and added pre-index bounds checking.
+  - Added deleteSelection via Del/Bksp keys to erase magic wand and lasso regions.
+  - Synchronized canvas transforms (rotation/flip) across all layers and updated emboss offset.
+  - Added click/keyboard toggle for export menu and localStorage preferences persistence.
 
 - **KPad**: PASS ✅ (8 issues, 8 fixed inline)
   - Full report archived in [archive/app_test_reports_round2.md](archive/app_test_reports_round2.md).
@@ -208,5 +217,5 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 > 📁 **Archived Round 2 Reports**: Recent detailed audit reports (KPac through KImage) have been archived to [archive/app_test_reports_round2.md](archive/app_test_reports_round2.md).
 
 ### Round 2 Completed Index
-- KPad ✅ (8 fixed), KPac ✅ (8 fixed), KNote ✅ (7 fixed), KNet ✅ (3 fixed), KMystery ✅ (5 fixed), KMines ✅ (8 fixed), KMine ✅ (2 fixed), KMedia ✅ (8 fixed), KMech ✅ (6 fixed), KMaze ✅ (7 fixed), KMatch3 ✅ (8 fixed), KMandel ✅ (6 fixed), KMail ✅ (7 fixed), KJournal ✅ (7 fixed), KImage ✅ (8 fixed)
+- KPaint ✅ (7 fixed), KPad ✅ (8 fixed), KPac ✅ (8 fixed), KNote ✅ (7 fixed), KNet ✅ (3 fixed), KMystery ✅ (5 fixed), KMines ✅ (8 fixed), KMine ✅ (2 fixed), KMedia ✅ (8 fixed), KMech ✅ (6 fixed), KMaze ✅ (7 fixed), KMatch3 ✅ (8 fixed), KMandel ✅ (6 fixed), KMail ✅ (7 fixed), KJournal ✅ (7 fixed), KImage ✅ (8 fixed)
 
