@@ -120,6 +120,18 @@ static int g_phosphorGlow = 1;
 #define SFX_SUCCESS 2
 #define SFX_WARN    3
 #define SFX_DEPLOY  4
+#define SFX_ALARM   5
+#define SFX_EXPLODE 6
+
+// Phase 9: Cosmic Crisis Types
+typedef enum {
+    CRISIS_NONE = 0,
+    CRISIS_FLARE,
+    CRISIS_ASTEROID,
+    CRISIS_QUAKE,
+    CRISIS_BLIGHT,
+    CRISIS_STORM
+} CrisisType;
 
 static int g_soundEnabled = 1;
 
@@ -143,6 +155,15 @@ static DWORD WINAPI SoundThread(LPVOID lpParam) {
             Beep(330, 40);
             Beep(587, 70);
             Beep(880, 90);
+            break;
+        case SFX_ALARM:
+            Beep(750, 70);
+            Beep(920, 70);
+            Beep(750, 70);
+            break;
+        case SFX_EXPLODE:
+            Beep(180, 120);
+            Beep(120, 180);
             break;
     }
     return 0;
@@ -341,6 +362,18 @@ typedef struct {
     int fuelDepots;
     int massDrivers;
 
+    // Phase 9: Cosmic Crisis & Hazards
+    int crisisActive;
+    int crisisType;        // CrisisType
+    float crisisTimer;
+    float crisisMaxTime;
+    int crisisSeverity;    // 1 to 5
+    int crisisMitigated;
+    float crisisShake;
+    int earlyWarningRadar; // Tier
+    int shieldDeflector;   // Tier
+    int repairDrones;      // Tier
+
     // Camera
     float camX, camY;
     float zoom;
@@ -351,7 +384,7 @@ typedef struct {
     int selectedType; // 0=none, 1=sun, 2=planet, 3=moon, 4=station, 5=ship
     int selectedIndex;
 
-    // Tab: 0=Terraform, 1=Fleet, 2=Colony, 3=Economy
+    // Tab: 0=Terraform, 1=Fleet, 2=Colony, 3=Hazards, 4=Economy
     int activeTab;
 
     // Log message
@@ -665,6 +698,281 @@ static void GenerateProceduralStarSystem(void) {
     PlaySoundFx(SFX_SUCCESS);
 }
 
+// Phase 9: Crisis & Hazards Buttons
+#define BID_CRISIS_QUICK    160
+#define BID_MIT_FLARE       161
+#define BID_MIT_ASTEROID    162
+#define BID_MIT_QUAKE       163
+#define BID_MIT_BLIGHT      164
+#define BID_MIT_STORM       165
+#define BID_CRISIS_REPAIR   166
+#define BID_UPG_RADAR       167
+#define BID_UPG_SHIELD      168
+#define BID_UPG_DRONES      169
+#define BID_DRILL_FLARE     170
+#define BID_DRILL_ASTEROID  171
+#define BID_DRILL_QUAKE     172
+#define BID_DRILL_BLIGHT    173
+#define BID_DRILL_STORM     174
+
+// --- Phase 9: Cosmic Crisis & Planetary Hazards Logic ---
+static void TriggerCrisis(int type) {
+    char msg[128];
+    const char* names[] = {"None", "Coronal Mass Ejection", "Chondrite Asteroid Impact", "Deep Crustal Tectonic Quake", "Virulent Xeno-Blight", "Ionospheric Magnetic Tempest"};
+    if (type <= CRISIS_NONE || type > CRISIS_STORM) return;
+    sim.crisisActive = 1;
+    sim.crisisType = type;
+    sim.crisisSeverity = 2 + (rand() % 3);
+    sim.crisisMitigated = 0;
+    sim.crisisMaxTime = 25.0f + (float)(sim.earlyWarningRadar * 8);
+    if (type == CRISIS_ASTEROID) sim.crisisMaxTime += 8.0f;
+    sim.crisisTimer = sim.crisisMaxTime;
+    sim.crisisShake = 6.0f;
+    PlaySoundFx(SFX_ALARM);
+
+    sprintf(msg, "CRISIS ALERT: Class-%d %s detected on collision course!", sim.crisisSeverity, names[type]);
+    SetLogMsg(msg, 1);
+}
+
+static void MitigateCrisis(int type) {
+    int target = (type > CRISIS_NONE) ? type : sim.crisisType;
+    char msg[128];
+    if (!sim.crisisActive || target <= CRISIS_NONE) return;
+
+    if (target == CRISIS_FLARE) {
+        if (sim.energy >= 350 && sim.volatiles >= 150) {
+            sim.energy -= 350;
+            sim.volatiles -= 150;
+            sim.crisisMitigated = 1;
+            sim.crisisActive = 0;
+            sim.crisisShake = 0.0f;
+            sprintf(msg, "Solar Flare deflected! Superconducting magnetic dipole deflected coronal blast.");
+            SetLogMsg(msg, 0);
+            PlaySoundFx(SFX_SUCCESS);
+        } else {
+            SetLogMsg("Insufficient resources for Magnetic Surge (Req: 350 kW Energy, 150 t Volatiles).", 1);
+        }
+    } else if (target == CRISIS_ASTEROID) {
+        if (sim.minerals >= 400 && sim.energy >= 200) {
+            sim.minerals -= 400;
+            sim.energy -= 200;
+            sim.crisisMitigated = 1;
+            sim.crisisActive = 0;
+            sim.crisisShake = 0.0f;
+            sprintf(msg, "Asteroid shattered! Orbital kinetic railguns neutralized impactor in high orbit.");
+            SetLogMsg(msg, 0);
+            PlaySoundFx(SFX_SUCCESS);
+        } else {
+            SetLogMsg("Insufficient resources for Kinetic Deflection (Req: 400 t Min, 200 kW Energy).", 1);
+        }
+    } else if (target == CRISIS_QUAKE) {
+        if (sim.energy >= 300 && sim.minerals >= 150) {
+            sim.energy -= 300;
+            sim.minerals -= 150;
+            sim.crisisMitigated = 1;
+            sim.crisisActive = 0;
+            sim.crisisShake = 0.0f;
+            sprintf(msg, "Tectonic stress relieved! Geothermal relief shafts dispersed tectonic shockwaves.");
+            SetLogMsg(msg, 0);
+            PlaySoundFx(SFX_SUCCESS);
+        } else {
+            SetLogMsg("Insufficient resources for Geothermal Fracturing (Req: 300 kW Energy, 150 t Min).", 1);
+        }
+    } else if (target == CRISIS_BLIGHT) {
+        if (sim.volatiles >= 250 && sim.food >= 150) {
+            sim.volatiles -= 250;
+            sim.food -= 150;
+            sim.crisisMitigated = 1;
+            sim.crisisActive = 0;
+            sim.crisisShake = 0.0f;
+            sprintf(msg, "Xeno-blight cured! Broad-spectrum antiviral aerosol neutralized spores.");
+            SetLogMsg(msg, 0);
+            PlaySoundFx(SFX_SUCCESS);
+        } else {
+            SetLogMsg("Insufficient resources for Bio-Antidote (Req: 250 t Vol, 150 t Food).", 1);
+        }
+    } else if (target == CRISIS_STORM) {
+        if (sim.energy >= 250 && sim.minerals >= 100) {
+            sim.energy -= 250;
+            sim.minerals -= 100;
+            sim.energy += 300; // Energy surge absorption bonus
+            sim.crisisMitigated = 1;
+            sim.crisisActive = 0;
+            sim.crisisShake = 0.0f;
+            sprintf(msg, "Ion storm absorbed! High-capacity ground grids routed surge (+300 kW stored).");
+            SetLogMsg(msg, 0);
+            PlaySoundFx(SFX_SUCCESS);
+        } else {
+            SetLogMsg("Insufficient resources for Grounding Surge (Req: 250 kW Energy, 100 t Min).", 1);
+        }
+    }
+}
+
+static void ResolveCrisisImpact(void) {
+    char msg[128];
+    float shieldRed;
+    float droneDamp;
+    if (!sim.crisisActive) return;
+    sim.crisisActive = 0;
+    if (sim.crisisMitigated) return;
+
+    PlaySoundFx(SFX_EXPLODE);
+    sim.crisisShake = 20.0f;
+
+    shieldRed = (sim.shieldDeflector > 0) ? (0.30f * (float)sim.shieldDeflector) : 0.0f;
+    droneDamp = (sim.repairDrones > 0) ? 0.40f : 1.0f;
+
+    if (sim.crisisType == CRISIS_FLARE) {
+        int drain = (int)(850.0f * (1.0f - shieldRed));
+        sim.energy = (sim.energy > drain) ? (sim.energy - drain) : 0;
+        sim.magnet = (sim.magnet > 0.06f) ? (sim.magnet - 0.06f) : 0.02f;
+        sim.morale = (sim.morale > 22.0f) ? (sim.morale - 12.0f) : 10.0f;
+        sprintf(msg, "CRISIS IMPACT: Coronal blast struck colony! Lost %d kW, Magnetosphere stripped.", drain);
+        SetLogMsg(msg, 1);
+    } else if (sim.crisisType == CRISIS_ASTEROID) {
+        int domeLost = 0;
+        int casualties;
+        if (sim.geodesicDomes > 1 && (((float)rand() / (float)RAND_MAX) < droneDamp)) {
+            sim.geodesicDomes--;
+            domeLost = 1;
+        }
+        casualties = (int)(1200.0f * (1.0f - ((float)sim.subterraneanVaults * 0.15f)));
+        sim.colonists = (sim.colonists > casualties) ? (sim.colonists - casualties) : 0;
+        sim.morale = (sim.morale > 32.0f) ? (sim.morale - 22.0f) : 10.0f;
+        sim.temp -= 4.5f;
+        sprintf(msg, "CRISIS IMPACT: Asteroid detonated! %s%d casualties reported.", domeLost ? "Dome breached! " : "", casualties);
+        SetLogMsg(msg, 1);
+    } else if (sim.crisisType == CRISIS_QUAKE) {
+        int minLost = 400;
+        sim.minerals = (sim.minerals > minLost) ? (sim.minerals - minLost) : 0;
+        sim.water = (sim.water > 1.5f) ? (sim.water - 1.5f) : 0.0f;
+        sim.morale = (sim.morale > 26.0f) ? (sim.morale - 16.0f) : 10.0f;
+        sprintf(msg, "CRISIS IMPACT: Tectonic quake ruptured bedrock! Lost %d t Minerals, water cracked.", minLost);
+        SetLogMsg(msg, 1);
+    } else if (sim.crisisType == CRISIS_BLIGHT) {
+        int foodLost = (sim.food > 1400) ? 1400 : sim.food;
+        sim.food -= foodLost;
+        sim.oxygen = (sim.oxygen > 2.5f) ? (sim.oxygen - 2.5f) : 0.0f;
+        sim.morale = (sim.morale > 30.0f) ? (sim.morale - 20.0f) : 10.0f;
+        CalculateHabitability();
+        sprintf(msg, "CRISIS IMPACT: Xeno-blight struck crops! Lost %d t Food, atmospheric O2 depleted.", foodLost);
+        SetLogMsg(msg, 1);
+    } else if (sim.crisisType == CRISIS_STORM) {
+        int drain = (int)(650.0f * (1.0f - shieldRed));
+        sim.energy = (sim.energy > drain) ? (sim.energy - drain) : 0;
+        sim.pressure = (sim.pressure > 0.15f) ? (sim.pressure - 0.05f) : 0.10f;
+        sim.morale = (sim.morale > 20.0f) ? (sim.morale - 10.0f) : 10.0f;
+        sprintf(msg, "CRISIS IMPACT: Ion storm fried grid! Lost %d kW Energy.", drain);
+        SetLogMsg(msg, 1);
+    }
+
+    if (sim.repairDrones > 0) {
+        SetLogMsg("Nanite Repair Drones deployed: surface structural integrity restored.", 0);
+    }
+}
+
+static void HandleCrisisAction(int bid) {
+    char buf[128];
+    switch (bid) {
+        case BID_CRISIS_QUICK:
+            MitigateCrisis(sim.crisisType);
+            break;
+        case BID_MIT_FLARE:
+            MitigateCrisis(CRISIS_FLARE);
+            break;
+        case BID_MIT_ASTEROID:
+            MitigateCrisis(CRISIS_ASTEROID);
+            break;
+        case BID_MIT_QUAKE:
+            MitigateCrisis(CRISIS_QUAKE);
+            break;
+        case BID_MIT_BLIGHT:
+            MitigateCrisis(CRISIS_BLIGHT);
+            break;
+        case BID_MIT_STORM:
+            MitigateCrisis(CRISIS_STORM);
+            break;
+        case BID_CRISIS_REPAIR: {
+            if (sim.energy >= 200 && sim.minerals >= 150) {
+                sim.energy -= 200;
+                sim.minerals -= 150;
+                sim.crisisShake = 0.0f;
+                sim.morale = (sim.morale < 92.0f) ? (sim.morale + 8.0f) : 100.0f;
+                SetLogMsg("Emergency Engineering Corps deployed: structural damage patched (+8% Morale).", 0);
+                PlaySoundFx(SFX_SUCCESS);
+            } else {
+                SetLogMsg("Insufficient resources (Req: 150 t Min, 200 kW Energy).", 1);
+            }
+            break;
+        }
+        case BID_UPG_RADAR: {
+            int costMin = 250 + (sim.earlyWarningRadar * 100);
+            int costEng = 180 + (sim.earlyWarningRadar * 80);
+            if (sim.minerals >= costMin && sim.energy >= costEng) {
+                sim.minerals -= costMin;
+                sim.energy -= costEng;
+                sim.earlyWarningRadar++;
+                sprintf(buf, "Astrometric Early Warning Radar upgraded to Tier %d (+%ds warning window).", sim.earlyWarningRadar, sim.earlyWarningRadar * 8);
+                SetLogMsg(buf, 0);
+                PlaySoundFx(SFX_DEPLOY);
+            } else {
+                sprintf(buf, "Insufficient resources (Req: %d Min, %d Energy).", costMin, costEng);
+                SetLogMsg(buf, 1);
+            }
+            break;
+        }
+        case BID_UPG_SHIELD: {
+            int costMin = 350 + (sim.shieldDeflector * 150);
+            int costEng = 300 + (sim.shieldDeflector * 120);
+            if (sim.minerals >= costMin && sim.energy >= costEng) {
+                sim.minerals -= costMin;
+                sim.energy -= costEng;
+                sim.shieldDeflector++;
+                sprintf(buf, "Planetary Magnetic Deflector upgraded to Tier %d (-%d%% crisis impact damage).", sim.shieldDeflector, sim.shieldDeflector * 30);
+                SetLogMsg(buf, 0);
+                PlaySoundFx(SFX_DEPLOY);
+            } else {
+                sprintf(buf, "Insufficient resources (Req: %d Min, %d Energy).", costMin, costEng);
+                SetLogMsg(buf, 1);
+            }
+            break;
+        }
+        case BID_UPG_DRONES: {
+            int costMin = 300 + (sim.repairDrones * 120);
+            int costVol = 200 + (sim.repairDrones * 80);
+            int costEng = 150 + (sim.repairDrones * 60);
+            if (sim.minerals >= costMin && sim.volatiles >= costVol && sim.energy >= costEng) {
+                sim.minerals -= costMin;
+                sim.volatiles -= costVol;
+                sim.energy -= costEng;
+                sim.repairDrones++;
+                sprintf(buf, "Automated Nanite Repair Drones expanded to Tier %d (automatic post-crisis reconstruction).", sim.repairDrones);
+                SetLogMsg(buf, 0);
+                PlaySoundFx(SFX_DEPLOY);
+            } else {
+                sprintf(buf, "Insufficient resources (Req: %d Min, %d Vol, %d Energy).", costMin, costVol, costEng);
+                SetLogMsg(buf, 1);
+            }
+            break;
+        }
+        case BID_DRILL_FLARE:
+            TriggerCrisis(CRISIS_FLARE);
+            break;
+        case BID_DRILL_ASTEROID:
+            TriggerCrisis(CRISIS_ASTEROID);
+            break;
+        case BID_DRILL_QUAKE:
+            TriggerCrisis(CRISIS_QUAKE);
+            break;
+        case BID_DRILL_BLIGHT:
+            TriggerCrisis(CRISIS_BLIGHT);
+            break;
+        case BID_DRILL_STORM:
+            TriggerCrisis(CRISIS_STORM);
+            break;
+    }
+}
+
 static void SimTick(void) {
     if (sim.paused || sim.speed <= 0) return;
     int rate = sim.speed;
@@ -813,6 +1121,19 @@ static void SimTick(void) {
         if (sim.colonists < 0) sim.colonists = 0;
     }
 
+    // Phase 9: Crisis Events & Hazards
+    if (sim.crisisActive) {
+        sim.crisisTimer -= 0.1f * rate;
+        if (sim.crisisTimer <= 0.0f) {
+            ResolveCrisisImpact();
+        }
+    } else {
+        if ((rand() % 500) == 0) {
+            int cType = 1 + (rand() % 5);
+            TriggerCrisis(cType);
+        }
+    }
+
     CalculateHabitability();
 }
 
@@ -845,6 +1166,18 @@ static void InitSimulation(void) {
     sim.aeroponicFarms = 0;
     sim.algalVats = 0;
     sim.housingCap = (sim.geodesicDomes * 15000) + (sim.subterraneanVaults * 30000) + (sim.domedMegacities * 50000);
+
+    // Phase 9 Crisis & Defense Infrastructure defaults
+    sim.earlyWarningRadar = 1;
+    sim.shieldDeflector = 0;
+    sim.repairDrones = 0;
+    sim.crisisActive = 0;
+    sim.crisisType = CRISIS_NONE;
+    sim.crisisTimer = 0.0f;
+    sim.crisisMaxTime = 30.0f;
+    sim.crisisSeverity = 1;
+    sim.crisisMitigated = 0;
+    sim.crisisShake = 0.0f;
 
     sim.deltaEnergy = 120;
     sim.deltaMinerals = 15;
@@ -2131,7 +2464,8 @@ static void AddButton(int id, int x, int y, int w, int h, const char* txt, const
 #define BID_TAB_TERRA       10
 #define BID_TAB_FLEET       11
 #define BID_TAB_COLONY      12
-#define BID_TAB_ECONOMY     13
+#define BID_TAB_HAZARDS     13
+#define BID_TAB_ECONOMY     14
 
 #define BID_FOCUS_PLANET    20
 #define BID_FOCUS_ARK       21
@@ -2206,7 +2540,6 @@ static void AddButton(int id, int x, int y, int w, int h, const char* txt, const
 #define BID_UPG_DOCKS       120
 #define BID_UPG_FUEL        121
 #define BID_UPG_MASS        122
-
 
 // --- Action Handlers ---
 static void HandleIntervention(int bid) {
@@ -2896,8 +3229,15 @@ static void RenderUI(HDC hdc, int width, int height) {
     TextOutA(hdc, badgeX + 380, 24, buf, (int)strlen(buf));
 
     // 3. Viewport Stellar Canvas (Left Area)
-    int cx = viewportW / 2 + (int)sim.camX;
-    int cy = headerH + viewportH / 2 + (int)sim.camY;
+    int shakeX = 0, shakeY = 0;
+    if (sim.crisisShake > 0.0f) {
+        shakeX = (int)((((float)rand() / (float)RAND_MAX) - 0.5f) * sim.crisisShake);
+        shakeY = (int)((((float)rand() / (float)RAND_MAX) - 0.5f) * sim.crisisShake);
+        sim.crisisShake *= 0.92f;
+        if (sim.crisisShake < 0.1f) sim.crisisShake = 0.0f;
+    }
+    int cx = viewportW / 2 + (int)sim.camX + shakeX;
+    int cy = headerH + viewportH / 2 + (int)sim.camY + shakeY;
     float z = sim.zoom;
 
     // Viewport Clipping
@@ -3331,6 +3671,100 @@ static void RenderUI(HDC hdc, int width, int height) {
         }
     }
 
+    // Phase 9: Crisis Viewport Overlays & Top Alert Card
+    if (sim.crisisActive && sim.crisisType > CRISIS_NONE) {
+        CelestialBody* p = GetActivePlanet();
+        int px = cx + (int)(p->currX - cx);
+        int py = cy + (int)(p->currY - cy);
+        float progress = 1.0f - (sim.crisisTimer / sim.crisisMaxTime);
+        HPEN hAlertPen, hOldP;
+        HBRUSH hOldB;
+        if (progress < 0.0f) progress = 0.0f;
+        if (progress > 1.0f) progress = 1.0f;
+
+        // Viewport Perimeter Alert Border
+        hAlertPen = CreatePen(PS_SOLID, 4, COLOR_ROSE);
+        hOldP = (HPEN)SelectObject(hdc, hAlertPen);
+        hOldB = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Rectangle(hdc, 2, headerH + 2, viewportW - 2, headerH + viewportH - 2);
+        SelectObject(hdc, hOldB);
+        SelectObject(hdc, hOldP);
+        DeleteObject(hAlertPen);
+
+        if (sim.crisisType == CRISIS_FLARE) {
+            int sx = cx + (int)(-300.0f * z);
+            int sy = cy;
+            int dist = (int)hypot(px - sx, py - sy);
+            int waveR = (int)(dist * (progress * 1.1f));
+            HPEN hWavePen = CreatePen(PS_SOLID, 3, COLOR_ORANGE);
+            hOldP = (HPEN)SelectObject(hdc, hWavePen);
+            hOldB = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Ellipse(hdc, sx - waveR, sy - waveR, sx + waveR, sy + waveR);
+            SelectObject(hdc, hOldB);
+            SelectObject(hdc, hOldP);
+            DeleteObject(hWavePen);
+        } else if (sim.crisisType == CRISIS_ASTEROID) {
+            int startDist = (int)(320.0f * z);
+            int curDist = (int)(startDist * (1.0f - progress));
+            int ax = px - curDist;
+            int ay = py - curDist;
+            HPEN hAstPen = CreatePen(PS_DOT, 1, COLOR_ROSE);
+            hOldP = (HPEN)SelectObject(hdc, hAstPen);
+            MoveToEx(hdc, px - startDist, py - startDist, NULL);
+            LineTo(hdc, px, py);
+            SelectObject(hdc, hOldP);
+            DeleteObject(hAstPen);
+
+            FillSolidRect(hdc, ax - 4, ay - 4, 8, 8, COLOR_ROSE);
+            FrameSolidRect(hdc, px - 20, py - 20, 40, 40, COLOR_ROSE);
+        } else if (sim.crisisType == CRISIS_QUAKE) {
+            int qR = (int)(p->radius * z + 12.0f);
+            HPEN hQPen = CreatePen(PS_SOLID, 2, COLOR_ORANGE);
+            hOldP = (HPEN)SelectObject(hdc, hQPen);
+            hOldB = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Ellipse(hdc, px - qR, py - qR, px + qR, py + qR);
+            SelectObject(hdc, hOldB);
+            SelectObject(hdc, hOldP);
+            DeleteObject(hQPen);
+        } else if (sim.crisisType == CRISIS_BLIGHT) {
+            int bR = (int)(p->radius * z + 16.0f);
+            HPEN hBPen = CreatePen(PS_SOLID, 2, COLOR_EMERALD);
+            hOldP = (HPEN)SelectObject(hdc, hBPen);
+            hOldB = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Ellipse(hdc, px - bR, py - bR, px + bR, py + bR);
+            SelectObject(hdc, hOldB);
+            SelectObject(hdc, hOldP);
+            DeleteObject(hBPen);
+        } else if (sim.crisisType == CRISIS_STORM) {
+            int sR = (int)(p->radius * z + 14.0f);
+            HPEN hSPen = CreatePen(PS_SOLID, 2, COLOR_PURPLE);
+            hOldP = (HPEN)SelectObject(hdc, hSPen);
+            hOldB = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Ellipse(hdc, px - sR, py - sR, px + sR, py + sR);
+            SelectObject(hdc, hOldB);
+            SelectObject(hdc, hOldP);
+            DeleteObject(hSPen);
+        }
+
+        // Viewport Top Crisis Banner
+        {
+            int banW = 420;
+            int banH = 36;
+            int banX = (viewportW - banW) / 2;
+            int banY = headerH + 12;
+            const char* cNames[] = {"None", "CORONAL MASS EJECTION", "ASTEROID IMPACT", "TECTONIC QUAKE", "XENO-BLIGHT", "IONIC STORM"};
+            FillSolidRect(hdc, banX, banY, banW, banH, RGB(45, 10, 20));
+            FrameSolidRect(hdc, banX, banY, banW, banH, COLOR_ROSE);
+
+            SelectObject(hdc, hFontBold);
+            SetTextColor(hdc, COLOR_ROSE);
+            sprintf(buf, "[CRISIS ALERT] %s -- %.1fs", cNames[sim.crisisType], (sim.crisisTimer > 0.0f ? sim.crisisTimer : 0.0f));
+            TextOutA(hdc, banX + 12, banY + 9, buf, (int)strlen(buf));
+
+            AddButton(BID_CRISIS_QUICK, banX + banW - 105, banY + 6, 95, 24, "MITIGATE", NULL, 1);
+        }
+    }
+
     SelectClipRgn(hdc, NULL);
     DeleteObject(hRgnViewport);
 
@@ -3339,12 +3773,13 @@ static void RenderUI(HDC hdc, int width, int height) {
     FillSolidRect(hdc, sbX, headerH, sidebarW, viewportH, theme->bgPanel);
     FillSolidRect(hdc, sbX, headerH, 1, viewportH, theme->border);
 
-    // Tab Header
-    int tabW = sidebarW / 4;
-    AddButton(BID_TAB_TERRA, sbX, headerH, tabW, 28, "TERRAFORM", NULL, 1);
+    // Tab Header: 5 Tabs
+    int tabW = sidebarW / 5;
+    AddButton(BID_TAB_TERRA, sbX, headerH, tabW, 28, "TERRA", NULL, 1);
     AddButton(BID_TAB_FLEET, sbX + tabW, headerH, tabW, 28, "FLEET", NULL, 1);
     AddButton(BID_TAB_COLONY, sbX + tabW * 2, headerH, tabW, 28, "COLONY", NULL, 1);
-    AddButton(BID_TAB_ECONOMY, sbX + tabW * 3, headerH, tabW, 28, "ECONOMY", NULL, 1);
+    AddButton(BID_TAB_HAZARDS, sbX + tabW * 3, headerH, tabW, 28, "HAZARD", NULL, 1);
+    AddButton(BID_TAB_ECONOMY, sbX + tabW * 4, headerH, sidebarW - tabW * 4, 28, "ECON", NULL, 1);
 
     int contentY = headerH + 34;
 
@@ -3801,8 +4236,104 @@ static void RenderUI(HDC hdc, int width, int height) {
         AddButton(BID_COL_ALGAL_VAT, sbX + 12, cy, btnW, btnH, "+ Algal Protein Vats", "+45 Food (320M, 180E)", 1);
         AddButton(BID_COL_SOLAR, sbX + 18 + btnW, cy, btnW, btnH, "+ Surface Solar Grid", "+180 kW Grid (220 Min)", 1);
     }
-    // TAB 3: ECONOMY
+    // TAB 3: HAZARDS & CRISIS MANAGEMENT
     else if (sim.activeTab == 3) {
+        SetTextColor(hdc, COLOR_ROSE);
+        SelectObject(hdc, hFontBold);
+        TextOutA(hdc, sbX + 12, contentY, "ASTROMETRIC THREAT RADAR", 24);
+
+        int ry = contentY + 18;
+        COLORREF radarBg = sim.crisisActive ? RGB(40, 12, 18) : COLOR_BG_CARD;
+        COLORREF radarBorder = sim.crisisActive ? COLOR_ROSE : COLOR_BORDER;
+        FillSolidRect(hdc, sbX + 12, ry, sidebarW - 24, 80, radarBg);
+        FrameSolidRect(hdc, sbX + 12, ry, sidebarW - 24, 80, radarBorder);
+
+        SelectObject(hdc, hFontBold);
+        if (sim.crisisActive) {
+            const char* names[] = {"None", "SOLAR FLARE / CORONAL WAVE", "ASTEROID / CHONDRITE IMPACT", "TECTONIC CRUSTAL QUAKE", "VIRULENT XENO-BLIGHT", "IONOSPHERIC MAGNETIC TEMPEST"};
+            SetTextColor(hdc, COLOR_ROSE);
+            sprintf(buf, "[CRITICAL ALERT] %s", names[sim.crisisType]);
+            TextOutA(hdc, sbX + 20, ry + 10, buf, (int)strlen(buf));
+
+            SelectObject(hdc, hFontSmall);
+            SetTextColor(hdc, COLOR_TEXT_BRIGHT);
+            sprintf(buf, "Class-%d Event | Time to Impact: %.1fs", sim.crisisSeverity, (sim.crisisTimer > 0.0f ? sim.crisisTimer : 0.0f));
+            TextOutA(hdc, sbX + 20, ry + 32, buf, (int)strlen(buf));
+
+            // Countdown progress bar
+            FillSolidRect(hdc, sbX + 20, ry + 54, sidebarW - 40, 10, RGB(50, 15, 20));
+            float pct = (sim.crisisMaxTime > 0.0f) ? (sim.crisisTimer / sim.crisisMaxTime) : 0.0f;
+            if (pct < 0.0f) pct = 0.0f; if (pct > 1.0f) pct = 1.0f;
+            FillSolidRect(hdc, sbX + 20, ry + 54, (int)((sidebarW - 40) * pct), 10, COLOR_ROSE);
+        } else {
+            SetTextColor(hdc, COLOR_EMERALD);
+            TextOutA(hdc, sbX + 20, ry + 12, "[STATUS] THREAT LEVEL: NOMINAL", 30);
+            SelectObject(hdc, hFontSmall);
+            SetTextColor(hdc, COLOR_TEXT_PRI);
+            TextOutA(hdc, sbX + 20, ry + 34, "Astrometric sensor telemetry: No imminent", 41);
+            TextOutA(hdc, sbX + 20, ry + 50, "solar flares, chondrites, or quakes detected.", 45);
+        }
+
+        // Tactical Countermeasures Section
+        int cty = ry + 88;
+        SetTextColor(hdc, COLOR_AMBER);
+        SelectObject(hdc, hFontBold);
+        TextOutA(hdc, sbX + 12, cty, "TACTICAL COUNTERMEASURES", 24);
+
+        int my = cty + 18;
+        if (sim.crisisActive) {
+            AddButton(BID_CRISIS_QUICK, sbX + 12, my, sidebarW - 24, 26, "EXECUTE EMERGENCY MITIGATION", NULL, 1);
+            my += 30;
+        }
+
+        AddButton(BID_MIT_FLARE, sbX + 12, my, (sidebarW - 28) / 2, 24, "Flare Deflect (350E,150V)", NULL, 1);
+        AddButton(BID_MIT_ASTEROID, sbX + 12 + (sidebarW - 28) / 2 + 4, my, (sidebarW - 28) / 2, 24, "Kinetic Railgun (400M,200E)", NULL, 1);
+
+        AddButton(BID_MIT_QUAKE, sbX + 12, my + 28, (sidebarW - 28) / 2, 24, "Geothermal Frac (300E,150M)", NULL, 1);
+        AddButton(BID_MIT_BLIGHT, sbX + 12 + (sidebarW - 28) / 2 + 4, my + 28, (sidebarW - 28) / 2, 24, "Bio-Antidote (250V,150F)", NULL, 1);
+
+        AddButton(BID_MIT_STORM, sbX + 12, my + 56, (sidebarW - 28) / 2, 24, "Ion Grounding (250E,100M)", NULL, 1);
+        AddButton(BID_CRISIS_REPAIR, sbX + 12 + (sidebarW - 28) / 2 + 4, my + 56, (sidebarW - 28) / 2, 24, "Repair Corps (150M,200E)", NULL, 1);
+
+        // Defense Infrastructure Section
+        int dfy = my + 88;
+        SetTextColor(hdc, COLOR_BLUE);
+        SelectObject(hdc, hFontBold);
+        TextOutA(hdc, sbX + 12, dfy, "PLANETARY DEFENSE INFRASTRUCTURE", 32);
+
+        int dy = dfy + 18;
+        FillSolidRect(hdc, sbX + 12, dy, sidebarW - 24, 110, COLOR_BG_CARD);
+        FrameSolidRect(hdc, sbX + 12, dy, sidebarW - 24, 110, COLOR_BORDER);
+
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        sprintf(buf, "Astrometric Warning Radar: Tier %d (+%ds window)", sim.earlyWarningRadar, sim.earlyWarningRadar * 8);
+        TextOutA(hdc, sbX + 20, dy + 10, buf, (int)strlen(buf));
+        AddButton(BID_UPG_RADAR, sbX + sidebarW - 120, dy + 6, 96, 20, "+ Upg Radar", NULL, 1);
+
+        sprintf(buf, "Magnetic Deflector: Tier %d (-%d%% dmg)", sim.shieldDeflector, sim.shieldDeflector * 30);
+        TextOutA(hdc, sbX + 20, dy + 42, buf, (int)strlen(buf));
+        AddButton(BID_UPG_SHIELD, sbX + sidebarW - 120, dy + 38, 96, 20, "+ Upg Shield", NULL, 1);
+
+        sprintf(buf, "Automated Nanite Drones: Tier %d (Auto-reconstruction)", sim.repairDrones);
+        TextOutA(hdc, sbX + 20, dy + 74, buf, (int)strlen(buf));
+        AddButton(BID_UPG_DRONES, sbX + sidebarW - 120, dy + 70, 96, 20, "+ Upg Drones", NULL, 1);
+
+        // Crisis Drills Section
+        int dry = dy + 118;
+        SetTextColor(hdc, COLOR_TEXT_DIM);
+        SelectObject(hdc, hFontBold);
+        TextOutA(hdc, sbX + 12, dry, "HAZARD DRILLS & CRISIS SIMULATOR", 32);
+
+        int drillW = (sidebarW - 32) / 5;
+        AddButton(BID_DRILL_FLARE, sbX + 12, dry + 18, drillW, 22, "Flare", NULL, 1);
+        AddButton(BID_DRILL_ASTEROID, sbX + 12 + drillW + 2, dry + 18, drillW, 22, "Asteroid", NULL, 1);
+        AddButton(BID_DRILL_QUAKE, sbX + 12 + (drillW + 2) * 2, dry + 18, drillW, 22, "Quake", NULL, 1);
+        AddButton(BID_DRILL_BLIGHT, sbX + 12 + (drillW + 2) * 3, dry + 18, drillW, 22, "Blight", NULL, 1);
+        AddButton(BID_DRILL_STORM, sbX + 12 + (drillW + 2) * 4, dry + 18, drillW, 22, "Storm", NULL, 1);
+    }
+    // TAB 4: ECONOMY
+    else if (sim.activeTab == 4) {
         SetTextColor(hdc, COLOR_BLUE);
         SelectObject(hdc, hFontBold);
         TextOutA(hdc, sbX + 12, contentY, "SECTOR RESOURCE LOOPS", 21);
@@ -4101,6 +4632,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         HandleTradeRoute(bid);
                     } else if (bid >= BID_UPG_DOCKS && bid <= BID_UPG_MASS) {
                         HandleInfrastructure(bid);
+                    } else if (bid >= BID_CRISIS_QUICK && bid <= BID_DRILL_STORM) {
+                        HandleCrisisAction(bid);
                     } else if (bid == BID_SEL_CLOSE) {
                         sim.selectedType = 0;
                         PlaySoundFx(SFX_CLICK);

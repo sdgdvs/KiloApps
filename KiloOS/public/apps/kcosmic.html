@@ -1054,6 +1054,125 @@
             display: flex;
             justify-content: space-between;
         }
+
+        /* Phase 9: Cosmic Crisis Events & Hazards Styles */
+        .crisis-hud-banner {
+            position: absolute;
+            top: 75px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 82%;
+            max-width: 800px;
+            background: rgba(26, 6, 12, 0.94);
+            border: 1px solid #f43f5e;
+            border-left: 5px solid #f43f5e;
+            border-radius: 4px;
+            padding: 8px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 9;
+            box-shadow: 0 0 20px rgba(244, 63, 94, 0.5), inset 0 0 15px rgba(244, 63, 94, 0.2);
+            animation: crisisPulse 1.6s infinite ease-in-out;
+            backdrop-filter: blur(6px);
+        }
+        @keyframes crisisPulse {
+            0%, 100% { border-color: #f43f5e; box-shadow: 0 0 16px rgba(244, 63, 94, 0.4); }
+            50% { border-color: #fb7185; box-shadow: 0 0 26px rgba(244, 63, 94, 0.7); }
+        }
+        .crisis-hud-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .crisis-hud-pulse {
+            font-size: 20px;
+            animation: blink 0.8s infinite;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .crisis-hud-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #fca5a5;
+            letter-spacing: 0.5px;
+        }
+        .crisis-hud-desc {
+            font-size: 11px;
+            color: #fecdd3;
+            margin-top: 2px;
+        }
+        .crisis-hud-right {
+            display: flex;
+            gap: 6px;
+        }
+        .crisis-hud-btn {
+            background: rgba(244, 63, 94, 0.2);
+            border: 1px solid #f43f5e;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 3px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .crisis-hud-btn:hover {
+            background: #f43f5e;
+            color: #fff;
+            box-shadow: 0 0 12px rgba(244, 63, 94, 0.6);
+        }
+        .crisis-hud-btn.sec {
+            background: rgba(10, 17, 32, 0.8);
+            border-color: var(--border-stellar);
+            color: var(--text-primary);
+        }
+        .crisis-hud-btn.sec:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+        .crisis-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-stellar);
+            border-left: 3px solid var(--accent-rose);
+            border-radius: 4px;
+            padding: 9px 11px;
+            margin-bottom: 8px;
+        }
+        .crisis-badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .crisis-badge.critical { background: rgba(244, 63, 94, 0.2); color: #f43f5e; border: 1px solid #f43f5e; }
+        .crisis-badge.warning { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b; }
+        .crisis-badge.safe { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
+        .drill-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        .drill-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-stellar);
+            color: var(--text-primary);
+            padding: 6px 6px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+        .drill-btn:hover {
+            border-color: var(--accent-amber);
+            color: var(--accent-amber);
+            background: rgba(245, 158, 11, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -1163,6 +1282,21 @@
                     <button class="sel-act-btn" id="selAct2">Dispatch Vessel</button>
                 </div>
             </div>
+
+            <!-- Cosmic Crisis Alert HUD Banner (Shows during active threat/countdown) -->
+            <div class="crisis-hud-banner" id="crisisHudBanner" style="display:none;">
+                <div class="crisis-hud-left">
+                    <span class="crisis-hud-pulse">⚠️</span>
+                    <div>
+                        <div class="crisis-hud-title" id="crisisHudTitle">COSMIC CRISIS: CORONAL MASS EJECTION IMMINENT</div>
+                        <div class="crisis-hud-desc" id="crisisHudDesc">Intense solar flare radiation storm sweeping system. Impact in: <strong id="crisisHudTimer" style="color:#fff;">15.0s</strong></div>
+                    </div>
+                </div>
+                <div class="crisis-hud-right">
+                    <button class="crisis-hud-btn" id="btnCrisisQuickMitigate">EXECUTE COUNTERMEASURE</button>
+                    <button class="crisis-hud-btn sec" id="btnCrisisViewHazards">HAZARDS TAB</button>
+                </div>
+            </div>
         </div>
 
         <!-- Right Management Sidebar -->
@@ -1171,6 +1305,7 @@
                 <button class="tab-btn active" data-tab="tab-terra">Terraform</button>
                 <button class="tab-btn" data-tab="tab-fleet">Logistics</button>
                 <button class="tab-btn" data-tab="tab-colony">Colony</button>
+                <button class="tab-btn" data-tab="tab-hazards" id="tabBtnHazards">Hazards</button>
                 <button class="tab-btn" data-tab="tab-economy">Economy</button>
             </div>
 
@@ -1815,6 +1950,125 @@
                 </div>
             </div>
 
+            <!-- Tab: Cosmic Crisis Events & Planetary Hazards -->
+            <div class="tab-content" id="tab-hazards">
+                <div class="section-header">
+                    <span>Cosmic Hazard Threat Radar</span>
+                    <span id="badgeHazardStatus" class="crisis-badge safe">THREAT LEVEL: LOW</span>
+                </div>
+
+                <!-- Active Crisis Incident Card -->
+                <div class="crisis-card" id="activeCrisisCard">
+                    <div class="metric-row">
+                        <strong id="cardCrisisTitle" style="color:var(--accent-rose); font-size:12px;">No Active Cosmic Threats</strong>
+                        <span id="cardCrisisBadge" class="crisis-badge safe">ALL NOMINAL</span>
+                    </div>
+                    <div id="cardCrisisDesc" style="font-size:10px; color:var(--text-primary); margin: 4px 0 6px 0; line-height: 1.35;">
+                        Astrometric sensor telemetry detects no imminent solar flares, hazardous chondrite trajectories, mantle fault shifts, ecological blights, or ion surges.
+                    </div>
+                    <div class="metric-row" style="font-size:10px; color:var(--text-dim);">
+                        <span>Countdown to Event:</span>
+                        <strong id="cardCrisisTimer" style="color:var(--accent-cyan);">--:--</strong>
+                    </div>
+                    <div class="progress-bar-container" style="margin-top:4px;">
+                        <div class="progress-bar-fill danger" id="barCrisisCountdown" style="width: 0%;"></div>
+                    </div>
+                    <div id="cardCrisisEffects" style="font-size:10px; color:var(--accent-amber); margin-top:6px; border-top:1px solid var(--border-stellar); padding-top:4px;">
+                        Forecast Impact: Standard solar wind conditions across the heliosphere.
+                    </div>
+                </div>
+
+                <!-- Emergency Tactical Countermeasures -->
+                <div class="section-header" style="margin-top: 10px;">
+                    <span>Emergency Tactical Countermeasures</span>
+                    <span style="font-size:10px; color:var(--accent-cyan);">Crisis Mitigations</span>
+                </div>
+
+                <div class="action-grid">
+                    <button class="action-btn" id="btnMitigateFlare" title="Divert emergency power into planetary magnetosphere to deflect Coronal Mass Ejection">
+                        <span class="btn-title">Magneto-Coil Deflector</span>
+                        <span class="btn-desc">Deflects Solar CME Flare<br>Cost: 300 kW Energy</span>
+                    </button>
+
+                    <button class="action-btn" id="btnMitigateAsteroid" title="Launch high-velocity kinetic impactors from orbital silos to obliterate incoming asteroid">
+                        <span class="btn-title">Kinetic Missile Intercept</span>
+                        <span class="btn-desc">Obliterate Impactor<br>Cost: 250 Min, 180 kW</span>
+                    </button>
+
+                    <button class="action-btn" id="btnMitigateQuake" title="Transmit harmonic acoustic shear dampeners to stabilize tectonic fault slips">
+                        <span class="btn-title">Seismic Dampener Wave</span>
+                        <span class="btn-desc">Neutralize Crustal Quake<br>Cost: 200 kW, 180 Min</span>
+                    </button>
+
+                    <button class="action-btn" id="btnMitigateBlight" title="Disperse aerosol antibiotic neutralizing catalysts to arrest virulent plant/algae pathogen">
+                        <span class="btn-title">Bio-Catalyst Dispersal</span>
+                        <span class="btn-desc">Eradicate Bio-Pathogen<br>Cost: 150 Vol, 100 Food</span>
+                    </button>
+
+                    <button class="action-btn" id="btnMitigateStorm" title="Engage superconducting grounding shunt capacitor network to absorb ion storm surge">
+                        <span class="btn-title">Ion Surge Shunts</span>
+                        <span class="btn-desc">Absorb Magnetic Storm (+Power)<br>Cost: 150 Min, 120 kW</span>
+                    </button>
+
+                    <button class="action-btn" id="btnRepairAll" title="Deploy automated engineering teams to reconstruct cracked domes and breached infrastructure">
+                        <span class="btn-title">Rapid Structural Repair</span>
+                        <span class="btn-desc">Repair Damaged Domes<br>Cost: 200 Min, 120 kW</span>
+                    </button>
+                </div>
+
+                <!-- Planetary Defense Infrastructure & Hardening -->
+                <div class="section-header" style="margin-top: 10px;">
+                    <span>Planetary Defense Infrastructure</span>
+                    <span style="font-size:10px; color:var(--accent-cyan);">Hardening & Early Warning</span>
+                </div>
+
+                <div class="metric-card">
+                    <div class="module-header">
+                        <div>
+                            <strong style="color:var(--accent-cyan);">Deep-Space Early Warning Radar (Tier <span id="valRadarTier">1</span>)</strong>
+                            <div class="module-sub" id="subRadarInfo">+5s Crisis Warning Response Window per Tier</div>
+                        </div>
+                        <button class="mini-btn highlight" id="btnUpgradeRadar">+ Upgrade Radar (220M, 140E)</button>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="module-header">
+                        <div>
+                            <strong style="color:var(--accent-blue);">Planetary Shield Deflector Grid (Tier <span id="valShieldTier">0</span>)</strong>
+                            <div class="module-sub" id="subShieldInfo">Passively absorbs 30% Solar Flare & Ion Storm Energy Drains</div>
+                        </div>
+                        <button class="mini-btn highlight" id="btnUpgradeShield">+ Construct Grid (380M, 240E)</button>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="module-header">
+                        <div>
+                            <strong style="color:var(--accent-emerald);">Rapid Repair Drone Hub (Tier <span id="valDroneTier">0</span>)</strong>
+                            <div class="module-sub" id="subDroneInfo">Automated structural nanite swarms auto-patch damaged domes</div>
+                        </div>
+                        <button class="mini-btn highlight" id="btnUpgradeDrones">+ Deploy Drones (280M, 160E)</button>
+                    </div>
+                </div>
+
+                <!-- Tactical Crisis Drill Simulator -->
+                <div class="section-header" style="margin-top: 12px;">
+                    <span>Hazard Drill & Crisis Simulator</span>
+                    <span style="font-size:10px; color:var(--accent-amber);">Manual Fleet Readiness Drills</span>
+                </div>
+                <div style="font-size:10px; color:var(--text-dim); margin-bottom:4px;">
+                    Initiate controlled crisis simulations to stress-test defense protocols and fleet emergency countermeasures:
+                </div>
+                <div class="drill-grid">
+                    <button class="drill-btn" id="btnDrillFlare">⚡ Solar Flare (CME)</button>
+                    <button class="drill-btn" id="btnDrillAsteroid">☄️ Asteroid Impact</button>
+                    <button class="drill-btn" id="btnDrillQuake">🌋 Tectonic Quake</button>
+                    <button class="drill-btn" id="btnDrillBlight">🦠 Ecological Collapse</button>
+                    <button class="drill-btn" id="btnDrillStorm" style="grid-column: span 2;">🌀 Geomagnetic Ion Storm</button>
+                </div>
+            </div>
+
             <!-- Tab 4: Economy & Sector Intel -->
             <div class="tab-content" id="tab-economy">
                 <div class="section-header">
@@ -1957,6 +2211,22 @@
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
                     osc.start(now);
                     osc.stop(now + 0.25);
+                } else if (type === 'alarm') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(880, now);
+                    osc.frequency.exponentialRampToValueAtTime(440, now + 0.18);
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+                    osc.start(now);
+                    osc.stop(now + 0.22);
+                } else if (type === 'explosion') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(140, now);
+                    osc.frequency.exponentialRampToValueAtTime(25, now + 0.45);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
                 }
             } catch (e) {
                 // Audio safely ignored if restricted
@@ -2091,6 +2361,21 @@
                 }
             ],
 
+            // Phase 9: Cosmic Crisis Events & Hazards
+            crisisActive: false,
+            crisisType: null,       // 'flare', 'asteroid', 'quake', 'blight', 'storm'
+            crisisTimer: 0,
+            crisisMaxTime: 0,
+            crisisSeverity: 1,      // 1=Minor, 2=Major, 3=Cataclysmic
+            crisisMitigated: false,
+            crisisShake: 0,
+            nextCrisisCycle: 2.3,   // Next scheduled event check
+            earlyWarningRadar: 1,
+            shieldDeflector: 0,
+            repairDrones: 0,
+            asteroidAnim: null,     // { x, y, progress, startX, startY }
+            flareWave: 0,           // Coronal shockwave radius
+
             // Interactive Camera Viewport
             camX: 0,
             camY: 0,
@@ -2108,6 +2393,70 @@
             selected: null,
             currentSystemIndex: 0,
             activePlanetId: 'aethelgard'
+        };
+
+        // --- Canonical Cosmic Crisis Definitions ---
+        const CRISIS_TYPES = {
+            flare: {
+                id: 'flare',
+                name: 'Coronal Mass Ejection (CME)',
+                shortName: 'Solar Flare',
+                badge: 'SOLAR FLARE',
+                desc: 'Hyper-energetic coronal plasma ejection from system star sweeping planetary orbit. Threatens electrical grid burnout and magnetosphere erosion.',
+                effects: '-850 kW Energy Drain, -0.06 Gauss Shielding, Fleet sensor telemetry scrambled.',
+                baseDuration: 18,
+                mitigateCost: { energy: 300, minerals: 0, volatiles: 0, food: 0 },
+                mitigateAction: 'Magneto-Coil Deflector Pulse',
+                mitigateSuccessMsg: 'Magneto-coil pulse deflected Coronal Mass Ejection. Power grid stabilized!'
+            },
+            asteroid: {
+                id: 'asteroid',
+                name: 'Class-IV Chondrite Impactor',
+                shortName: 'Asteroid Impact',
+                badge: 'ASTEROID THREAT',
+                desc: 'Massive nickel-iron chondrite asteroid on direct planetary collision trajectory. Catastrophic surface impact and dome breach imminent.',
+                effects: 'Breaches 1 Geodesic Dome, causes 1,200 casualties, drops Morale (-20%).',
+                baseDuration: 22,
+                mitigateCost: { energy: 180, minerals: 250, volatiles: 0, food: 0 },
+                mitigateAction: 'Kinetic Missile Intercept',
+                mitigateSuccessMsg: 'Kinetic interceptor missiles detonated asteroid into harmless meteoric dust!'
+            },
+            quake: {
+                id: 'quake',
+                name: 'Mantle Fault Rupture',
+                shortName: 'Tectonic Quake',
+                badge: 'SEISMIC RUPTURE',
+                desc: 'Violent tectonic crustal shearing and volcanic fault slips propagating beneath colony foundations.',
+                effects: 'Destroys surface infrastructure, cracks dome seals, drains 400 t Minerals, -16% Morale.',
+                baseDuration: 16,
+                mitigateCost: { energy: 200, minerals: 180, volatiles: 0, food: 0 },
+                mitigateAction: 'Seismic Dampener Wave',
+                mitigateSuccessMsg: 'Harmonic dampener waves absorbed mantle shear stress. Fault rupture halted!'
+            },
+            blight: {
+                id: 'blight',
+                name: 'Virulent Xeno-Blight',
+                shortName: 'Ecological Collapse',
+                badge: 'BIO-COLLAPSE',
+                desc: 'Aggressive virulent pathogen mutating rapidly across hydroponic crop towers and pelagic algae cultures.',
+                effects: '-1,400 t Food Reserves, -2.5% Atmospheric Oxygen, -8% Habitability, -20% Morale.',
+                baseDuration: 20,
+                mitigateCost: { energy: 0, minerals: 0, volatiles: 150, food: 100 },
+                mitigateAction: 'Bio-Catalyst Antidote Dispersal',
+                mitigateSuccessMsg: 'Aerosol bio-catalyst successfully neutralized pathogenic spore vector!'
+            },
+            storm: {
+                id: 'storm',
+                name: 'Ionospheric Super-Surge',
+                shortName: 'Geomagnetic Storm',
+                badge: 'ION SURGE',
+                desc: 'Extreme flux of solar wind charged particles saturating the upper ionosphere, triggering massive electromagnetic grounding surges.',
+                effects: '-650 kW Energy Drain, de-pressurizes troposphere (-0.05 atm), trips orbital relays.',
+                baseDuration: 18,
+                mitigateCost: { energy: 120, minerals: 150, volatiles: 0, food: 0 },
+                mitigateAction: 'Ion Surge Shunt Grounding',
+                mitigateSuccessMsg: 'Surge shunts grounded ion currents, recharging battery banks (+300 kW Energy)!'
+            }
         };
 
         // Retro CRT Phosphor Modes
@@ -3106,8 +3455,218 @@
                 sim.colonists = Math.max(0, sim.colonists - loss);
             }
 
+            // Phase 9: Crisis Simulation Progression
+            if (sim.crisisActive) {
+                sim.crisisTimer -= (0.033 * rate * 30);
+                if (sim.crisisTimer <= 0) {
+                    resolveCrisisImpact();
+                } else {
+                    const timerEl = document.getElementById('crisisHudTimer');
+                    if (timerEl) timerEl.textContent = `${Math.max(0, sim.crisisTimer).toFixed(1)}s`;
+                    const barEl = document.getElementById('barCrisisCountdown');
+                    if (barEl) {
+                        const pct = Math.max(0, Math.min(100, (sim.crisisTimer / sim.crisisMaxTime) * 100));
+                        barEl.style.width = `${pct}%`;
+                    }
+                }
+            } else {
+                // Procedural crisis check
+                if (sim.cycle >= sim.nextCrisisCycle) {
+                    const types = ['flare', 'asteroid', 'quake', 'blight', 'storm'];
+                    const chosen = types[Math.floor(Math.random() * types.length)];
+                    triggerCrisis(chosen, true);
+                    sim.nextCrisisCycle = +(sim.cycle + 1.4 + Math.random() * 1.6).toFixed(2);
+                }
+            }
+
             calculateHabitability();
             updateUI();
+        }
+
+        // --- Phase 9: Cosmic Crisis Management Engine ---
+        function triggerCrisis(typeKey, announce = true) {
+            const crisis = CRISIS_TYPES[typeKey];
+            if (!crisis) return;
+
+            sim.crisisActive = true;
+            sim.crisisType = typeKey;
+            sim.crisisMitigated = false;
+            const radarBonus = (sim.earlyWarningRadar || 1) * 5;
+            sim.crisisMaxTime = crisis.baseDuration + radarBonus;
+            sim.crisisTimer = sim.crisisMaxTime;
+            sim.crisisSeverity = 1 + Math.floor(Math.random() * 3);
+            sim.crisisShake = 0;
+            sim.flareWave = 0;
+
+            const hud = document.getElementById('crisisHudBanner');
+            if (hud) {
+                hud.style.display = 'flex';
+                document.getElementById('crisisHudTitle').textContent = `COSMIC CRISIS: ${crisis.name.toUpperCase()} (CLASS-${sim.crisisSeverity})`;
+                document.getElementById('crisisHudDesc').textContent = `${crisis.desc} Impact in: `;
+                document.getElementById('crisisHudTimer').textContent = `${sim.crisisTimer.toFixed(1)}s`;
+                document.getElementById('btnCrisisQuickMitigate').textContent = `COUNTERMEASURE: ${crisis.mitigateAction}`;
+            }
+
+            updateCrisisUI();
+
+            if (announce) {
+                logMsg(`EMERGENCY: ${crisis.name} detected! Tactical response required!`, true);
+                playSound('alarm');
+            }
+        }
+
+        function mitigateCrisis(typeKey) {
+            const targetType = typeKey || sim.crisisType;
+            if (!sim.crisisActive || !targetType) return;
+            const crisis = CRISIS_TYPES[targetType];
+            if (!crisis) return;
+
+            initAudio();
+            const cost = crisis.mitigateCost;
+            if (sim.energy >= cost.energy && sim.minerals >= cost.minerals && sim.volatiles >= cost.volatiles && sim.food >= cost.food) {
+                sim.energy -= cost.energy;
+                sim.minerals -= cost.minerals;
+                sim.volatiles -= cost.volatiles;
+                sim.food -= cost.food;
+
+                sim.crisisMitigated = true;
+                sim.crisisActive = false;
+                sim.crisisShake = 0;
+
+                const hud = document.getElementById('crisisHudBanner');
+                if (hud) hud.style.display = 'none';
+
+                if (targetType === 'storm') {
+                    sim.energy += 300; // Energy surge absorption bonus
+                }
+
+                logMsg(crisis.mitigateSuccessMsg);
+                playSound('success');
+                updateUI();
+                updateCrisisUI();
+            } else {
+                logMsg(`Insufficient resources for ${crisis.mitigateAction}!`, true);
+            }
+        }
+
+        function resolveCrisisImpact() {
+            if (!sim.crisisActive) return;
+            const crisis = CRISIS_TYPES[sim.crisisType];
+            sim.crisisActive = false;
+
+            const hud = document.getElementById('crisisHudBanner');
+            if (hud) hud.style.display = 'none';
+
+            if (sim.crisisMitigated) {
+                updateCrisisUI();
+                return;
+            }
+
+            initAudio();
+            playSound('explosion');
+            sim.crisisShake = 18;
+
+            const shieldReduction = (sim.shieldDeflector > 0) ? (0.3 * sim.shieldDeflector) : 0;
+            const droneDampening = (sim.repairDrones > 0) ? 0.4 : 1.0;
+
+            if (sim.crisisType === 'flare') {
+                const drain = Math.floor(850 * (1.0 - shieldReduction));
+                sim.energy = Math.max(0, sim.energy - drain);
+                sim.magnet = Math.max(0.02, +(sim.magnet - 0.06).toFixed(2));
+                sim.morale = Math.max(10, +(sim.morale - 12).toFixed(1));
+                logMsg(`CRISIS IMPACT: Coronal Mass Ejection struck the colony! Lost ${drain} kW Energy, Magnetosphere stripped.`, true);
+            } else if (sim.crisisType === 'asteroid') {
+                let domeLost = 0;
+                if (sim.geodesicDomes > 1 && Math.random() < droneDampening) {
+                    sim.geodesicDomes--;
+                    domeLost = 1;
+                }
+                const casualties = Math.floor(1200 * (1.0 - (sim.subterraneanVaults * 0.15)));
+                sim.colonists = Math.max(0, sim.colonists - casualties);
+                sim.morale = Math.max(10, +(sim.morale - 22).toFixed(1));
+                sim.temp = +(sim.temp - 4.5).toFixed(1);
+                logMsg(`CRISIS IMPACT: Asteroid impact detonated on surface! ${domeLost ? 'Dome breached! ' : ''}${casualties} casualties reported.`, true);
+            } else if (sim.crisisType === 'quake') {
+                const minLost = 400;
+                sim.minerals = Math.max(0, sim.minerals - minLost);
+                sim.morale = Math.max(10, +(sim.morale - 16).toFixed(1));
+                sim.water = Math.max(0, +(sim.water - 1.5).toFixed(1));
+                logMsg(`CRISIS IMPACT: Tectonic quake ruptured crustal foundations! Lost ${minLost} t Minerals, water conduits cracked.`, true);
+            } else if (sim.crisisType === 'blight') {
+                const foodLost = Math.min(sim.food, 1400);
+                sim.food -= foodLost;
+                sim.oxygen = Math.max(0, +(sim.oxygen - 2.5).toFixed(1));
+                sim.morale = Math.max(10, +(sim.morale - 20).toFixed(1));
+                calculateHabitability();
+                logMsg(`CRISIS IMPACT: Virulent xeno-blight decimated crops! Lost ${foodLost} t Food, atmospheric O2 depleted.`, true);
+            } else if (sim.crisisType === 'storm') {
+                const drain = Math.floor(650 * (1.0 - shieldReduction));
+                sim.energy = Math.max(0, sim.energy - drain);
+                sim.pressure = Math.max(0.1, +(sim.pressure - 0.05).toFixed(2));
+                sim.morale = Math.max(10, +(sim.morale - 10).toFixed(1));
+                logMsg(`CRISIS IMPACT: Ionospheric storm surge fried grid circuits! Lost ${drain} kW Energy.`, true);
+            }
+
+            if (sim.repairDrones > 0) {
+                setTimeout(() => {
+                    logMsg(`Automated Nanite Repair Drones deployed: surface structural integrity restored.`);
+                    playSound('success');
+                }, 3000);
+            }
+
+            updateUI();
+            updateCrisisUI();
+        }
+
+        function updateCrisisUI() {
+            const statusBadge = document.getElementById('badgeHazardStatus');
+            const cardTitle = document.getElementById('cardCrisisTitle');
+            const cardBadge = document.getElementById('cardCrisisBadge');
+            const cardDesc = document.getElementById('cardCrisisDesc');
+            const cardTimer = document.getElementById('cardCrisisTimer');
+            const cardBar = document.getElementById('barCrisisCountdown');
+            const cardEffects = document.getElementById('cardCrisisEffects');
+
+            if (sim.crisisActive && sim.crisisType) {
+                const c = CRISIS_TYPES[sim.crisisType];
+                if (statusBadge) {
+                    statusBadge.textContent = `ALERT: CLASS-${sim.crisisSeverity} ${c.badge}`;
+                    statusBadge.className = 'crisis-badge critical';
+                }
+                if (cardTitle) cardTitle.textContent = `${c.name} (Class-${sim.crisisSeverity})`;
+                if (cardBadge) {
+                    cardBadge.textContent = `IMMINENT IMPACT`;
+                    cardBadge.className = 'crisis-badge critical';
+                }
+                if (cardDesc) cardDesc.textContent = c.desc;
+                if (cardTimer) cardTimer.textContent = `${Math.max(0, sim.crisisTimer).toFixed(1)}s`;
+                if (cardBar) {
+                    const pct = Math.max(0, Math.min(100, (sim.crisisTimer / sim.crisisMaxTime) * 100));
+                    cardBar.style.width = `${pct}%`;
+                }
+                if (cardEffects) cardEffects.textContent = `Forecast Damage: ${c.effects}`;
+            } else {
+                if (statusBadge) {
+                    statusBadge.textContent = 'THREAT LEVEL: LOW';
+                    statusBadge.className = 'crisis-badge safe';
+                }
+                if (cardTitle) cardTitle.textContent = 'No Active Cosmic Threats';
+                if (cardBadge) {
+                    cardBadge.textContent = 'ALL NOMINAL';
+                    cardBadge.className = 'crisis-badge safe';
+                }
+                if (cardDesc) cardDesc.textContent = 'Astrometric sensor telemetry detects no imminent solar flares, hazardous chondrite trajectories, mantle fault shifts, ecological blights, or ion surges.';
+                if (cardTimer) cardTimer.textContent = '--:--';
+                if (cardBar) cardBar.style.width = '0%';
+                if (cardEffects) cardEffects.textContent = 'Forecast Impact: Standard solar wind conditions across the heliosphere.';
+            }
+
+            const rEl = document.getElementById('valRadarTier');
+            if (rEl) rEl.textContent = sim.earlyWarningRadar;
+            const sEl = document.getElementById('valShieldTier');
+            if (sEl) sEl.textContent = sim.shieldDeflector;
+            const dEl = document.getElementById('valDroneTier');
+            if (dEl) dEl.textContent = sim.repairDrones;
         }
 
         // --- Thematic Procedural Exoplanet Classification Rendering Engine ---
@@ -4297,8 +4856,16 @@
         function render() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            const cx = canvas.width / 2 + sim.camX;
-            const cy = canvas.height / 2 + sim.camY;
+            let shakeX = 0, shakeY = 0;
+            if (sim.crisisShake > 0) {
+                shakeX = (Math.random() - 0.5) * sim.crisisShake;
+                shakeY = (Math.random() - 0.5) * sim.crisisShake;
+                sim.crisisShake *= 0.92;
+                if (sim.crisisShake < 0.1) sim.crisisShake = 0;
+            }
+
+            const cx = canvas.width / 2 + sim.camX + shakeX;
+            const cy = canvas.height / 2 + sim.camY + shakeY;
             const z = sim.zoom;
             const theme = CRT_THEMES[sim.crtThemeIndex];
 
@@ -4678,6 +5245,83 @@
                 ctx.textAlign = 'left';
                 ctx.fillText(ship.name.split(' ')[0], sx + 12 * Math.max(0.85, Math.min(1.8, z)), sy + 3 * z);
             });
+
+            // Crisis Viewport Overlays & Visual FX
+            if (sim.crisisActive && sim.crisisType) {
+                const p = celestialBodies.find(b => b.id === sim.activePlanetId) || celestialBodies[1];
+                const px = cx + (p ? p.x * z : 0);
+                const py = cy + (p ? p.y * z : 0);
+                const progress = 1.0 - (sim.crisisTimer / sim.crisisMaxTime);
+
+                ctx.save();
+                if (sim.crisisType === 'flare') {
+                    const star = celestialBodies[0];
+                    const sx = cx + star.x * z;
+                    const sy = cy + star.y * z;
+                    const dist = Math.hypot(px - sx, py - sy);
+                    const waveR = dist * Math.min(1.0, progress * 1.1);
+
+                    ctx.strokeStyle = `rgba(255, 100, 30, ${0.4 + Math.sin(sim.time * 8) * 0.3})`;
+                    ctx.lineWidth = 4 * z;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, waveR, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    ctx.strokeStyle = `rgba(255, 200, 50, ${0.7 + Math.sin(sim.time * 12) * 0.2})`;
+                    ctx.lineWidth = 2 * z;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, Math.max(10, waveR - 15 * z), 0, Math.PI * 2);
+                    ctx.stroke();
+                } else if (sim.crisisType === 'asteroid') {
+                    const angle = -Math.PI / 4;
+                    const startDist = 300 * z;
+                    const curDist = startDist * (1.0 - progress);
+                    const ax = px + Math.cos(angle) * curDist;
+                    const ay = py + Math.sin(angle) * curDist;
+
+                    ctx.setLineDash([4, 4]);
+                    ctx.strokeStyle = 'rgba(255, 60, 60, 0.7)';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(px + Math.cos(angle) * startDist, py + Math.sin(angle) * startDist);
+                    ctx.lineTo(px, py);
+                    ctx.stroke();
+
+                    ctx.setLineDash([]);
+                    ctx.fillStyle = '#ff4444';
+                    ctx.beginPath();
+                    ctx.arc(ax, ay, 6 * z, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    const rSize = (24 + Math.sin(sim.time * 6) * 6) * z;
+                    ctx.strokeStyle = '#ff3333';
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(px - rSize, py - rSize, rSize * 2, rSize * 2);
+                } else if (sim.crisisType === 'quake') {
+                    const pulseR = (p.radius * z) + (Math.sin(sim.time * 6) + 1) * 12 * z;
+                    ctx.strokeStyle = `rgba(255, 120, 0, ${0.6 + Math.sin(sim.time * 10) * 0.3})`;
+                    ctx.lineWidth = 2 * z;
+                    ctx.beginPath();
+                    ctx.arc(px, py, pulseR, 0, Math.PI * 2);
+                    ctx.stroke();
+                } else if (sim.crisisType === 'blight') {
+                    ctx.fillStyle = `rgba(140, 255, 40, ${0.15 + Math.sin(sim.time * 4) * 0.08})`;
+                    ctx.beginPath();
+                    ctx.arc(px, py, (p.radius * 1.5) * z, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (sim.crisisType === 'storm') {
+                    ctx.strokeStyle = `rgba(180, 70, 255, ${0.5 + Math.sin(sim.time * 7) * 0.3})`;
+                    ctx.lineWidth = 3 * z;
+                    ctx.beginPath();
+                    ctx.arc(px, py, (p.radius * 1.3) * z, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                ctx.strokeStyle = `rgba(255, 30, 30, ${0.15 + Math.sin(sim.time * 4) * 0.1})`;
+                ctx.lineWidth = 8;
+                ctx.strokeRect(0, 0, canvas.width, canvas.height);
+                ctx.restore();
+            }
 
             // Step Time
             if (!sim.paused) {
@@ -5468,6 +6112,133 @@
                 logMsg(`Insufficient resources (Req: ${costMin} t Minerals, ${costEng} kW Energy).`, true);
             }
         });
+
+        // Phase 9: Cosmic Crisis & Planetary Hazards Handlers
+        const btnCrisisQuick = document.getElementById('btnCrisisQuickMitigate');
+        if (btnCrisisQuick) {
+            btnCrisisQuick.addEventListener('click', () => {
+                mitigateCrisis();
+            });
+        }
+
+        const btnCrisisView = document.getElementById('btnCrisisViewHazards');
+        if (btnCrisisView) {
+            btnCrisisView.addEventListener('click', () => {
+                switchTab('tab-hazards');
+                playSound('click');
+            });
+        }
+
+        const btnMitFlare = document.getElementById('btnMitigateFlare');
+        if (btnMitFlare) btnMitFlare.addEventListener('click', () => mitigateCrisis('flare'));
+
+        const btnMitAsteroid = document.getElementById('btnMitigateAsteroid');
+        if (btnMitAsteroid) btnMitAsteroid.addEventListener('click', () => mitigateCrisis('asteroid'));
+
+        const btnMitQuake = document.getElementById('btnMitigateQuake');
+        if (btnMitQuake) btnMitQuake.addEventListener('click', () => mitigateCrisis('quake'));
+
+        const btnMitBlight = document.getElementById('btnMitigateBlight');
+        if (btnMitBlight) btnMitBlight.addEventListener('click', () => mitigateCrisis('blight'));
+
+        const btnMitStorm = document.getElementById('btnMitigateStorm');
+        if (btnMitStorm) btnMitStorm.addEventListener('click', () => mitigateCrisis('storm'));
+
+        const btnRepairAll = document.getElementById('btnRepairAll');
+        if (btnRepairAll) {
+            btnRepairAll.addEventListener('click', () => {
+                initAudio();
+                if (sim.energy >= 200 && sim.minerals >= 150) {
+                    sim.energy -= 200;
+                    sim.minerals -= 150;
+                    sim.crisisShake = 0;
+                    sim.morale = Math.min(100, +(sim.morale + 8).toFixed(1));
+                    updateUI();
+                    logMsg('Emergency Nanite Engineering Corps deployed: structural damage patched (+8% Morale).');
+                    playSound('success');
+                } else {
+                    logMsg('Insufficient resources for emergency engineering corps (Req: 150 t Min, 200 kW Energy).', true);
+                }
+            });
+        }
+
+        const btnUpgRadar = document.getElementById('btnUpgradeRadar');
+        if (btnUpgRadar) {
+            btnUpgRadar.addEventListener('click', () => {
+                initAudio();
+                const costMin = 250 + (sim.earlyWarningRadar * 100);
+                const costEng = 180 + (sim.earlyWarningRadar * 80);
+                if (sim.minerals >= costMin && sim.energy >= costEng) {
+                    sim.minerals -= costMin;
+                    sim.energy -= costEng;
+                    sim.earlyWarningRadar++;
+                    updateCrisisUI();
+                    updateUI();
+                    logMsg(`Early Warning Astrometric Radar upgraded to Tier ${sim.earlyWarningRadar} (+${sim.earlyWarningRadar * 8}s crisis warning window).`);
+                    playSound('deploy');
+                } else {
+                    logMsg(`Insufficient resources (Req: ${costMin} t Minerals, ${costEng} kW Energy).`, true);
+                }
+            });
+        }
+
+        const btnUpgShield = document.getElementById('btnUpgradeShield');
+        if (btnUpgShield) {
+            btnUpgShield.addEventListener('click', () => {
+                initAudio();
+                const costMin = 350 + (sim.shieldDeflector * 150);
+                const costEng = 300 + (sim.shieldDeflector * 120);
+                if (sim.minerals >= costMin && sim.energy >= costEng) {
+                    sim.minerals -= costMin;
+                    sim.energy -= costEng;
+                    sim.shieldDeflector++;
+                    updateCrisisUI();
+                    updateUI();
+                    logMsg(`Orbital Planetary Magnetic Deflector upgraded to Tier ${sim.shieldDeflector} (-${sim.shieldDeflector * 30}% crisis impact damage).`);
+                    playSound('deploy');
+                } else {
+                    logMsg(`Insufficient resources (Req: ${costMin} t Minerals, ${costEng} kW Energy).`, true);
+                }
+            });
+        }
+
+        const btnUpgDrones = document.getElementById('btnUpgradeDrones');
+        if (btnUpgDrones) {
+            btnUpgDrones.addEventListener('click', () => {
+                initAudio();
+                const costMin = 300 + (sim.repairDrones * 120);
+                const costVol = 200 + (sim.repairDrones * 80);
+                const costEng = 150 + (sim.repairDrones * 60);
+                if (sim.minerals >= costMin && sim.volatiles >= costVol && sim.energy >= costEng) {
+                    sim.minerals -= costMin;
+                    sim.volatiles -= costVol;
+                    sim.energy -= costEng;
+                    sim.repairDrones++;
+                    updateCrisisUI();
+                    updateUI();
+                    logMsg(`Automated Nanite Repair Drones expanded to Tier ${sim.repairDrones} (Surface habitats automatically salvaged after catastrophes).`);
+                    playSound('deploy');
+                } else {
+                    logMsg(`Insufficient resources (Req: ${costMin} t Min, ${costVol} t Vol, ${costEng} kW Energy).`, true);
+                }
+            });
+        }
+
+        // Drill Buttons
+        const btnDrillFl = document.getElementById('btnDrillFlare');
+        if (btnDrillFl) btnDrillFl.addEventListener('click', () => triggerCrisis('flare'));
+
+        const btnDrillAst = document.getElementById('btnDrillAsteroid');
+        if (btnDrillAst) btnDrillAst.addEventListener('click', () => triggerCrisis('asteroid'));
+
+        const btnDrillQk = document.getElementById('btnDrillQuake');
+        if (btnDrillQk) btnDrillQk.addEventListener('click', () => triggerCrisis('quake'));
+
+        const btnDrillBl = document.getElementById('btnDrillBlight');
+        if (btnDrillBl) btnDrillBl.addEventListener('click', () => triggerCrisis('blight'));
+
+        const btnDrillStm = document.getElementById('btnDrillStorm');
+        if (btnDrillStm) btnDrillStm.addEventListener('click', () => triggerCrisis('storm'));
 
         // --- UI Updater ---
         function updateUI() {
