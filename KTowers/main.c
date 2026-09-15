@@ -75,12 +75,21 @@ typedef struct {
 StageSaveData stageStats[TOTAL_STAGES + 1];
 
 void LoadStats() {
+    memset(stageStats, 0, sizeof(stageStats));
     FILE* fp = fopen("ktowers_stats.dat", "rb");
     if (fp) {
-        fread(stageStats, sizeof(StageSaveData), TOTAL_STAGES + 1, fp);
+        size_t readCount = fread(stageStats, sizeof(StageSaveData), TOTAL_STAGES + 1, fp);
+        if (readCount < TOTAL_STAGES + 1) {
+            for (size_t i = readCount; i <= TOTAL_STAGES; i++) {
+                memset(&stageStats[i], 0, sizeof(StageSaveData));
+            }
+        }
+        for (int i = 0; i <= TOTAL_STAGES; i++) {
+            if (stageStats[i].stars < 0 || stageStats[i].stars > 3) stageStats[i].stars = 0;
+            if (stageStats[i].moves < 0) stageStats[i].moves = 0;
+            if (stageStats[i].time < 0) stageStats[i].time = 0;
+        }
         fclose(fp);
-    } else {
-        memset(stageStats, 0, sizeof(stageStats));
     }
 }
 
@@ -202,7 +211,10 @@ DWORD WINAPI SoundThread(LPVOID lpParam) {
 }
 
 void PlaySoundEffect(int type) {
-    CreateThread(NULL, 0, SoundThread, (LPVOID)(INT_PTR)type, 0, NULL);
+    HANDLE hThread = CreateThread(NULL, 0, SoundThread, (LPVOID)(INT_PTR)type, 0, NULL);
+    if (hThread) {
+        CloseHandle(hThread);
+    }
 }
 
 // ----------------------------------------------------
@@ -278,10 +290,16 @@ typedef struct {
 
 BFSState bfsQueue[5000];
 
+#define BFS_VISITED_SIZE 8192
+static unsigned int bfsVisited[BFS_VISITED_SIZE];
+static unsigned char bfsUsed[BFS_VISITED_SIZE];
+
 BOOL GetBFSNextMove(int* outFrom, int* outTo) {
     StageConfig cfg = GetCurrentConfig();
     int targetPeg = numPegs - 1;
     if (pegCounts[targetPeg] == numDiscs) return FALSE;
+
+    memset(bfsUsed, 0, sizeof(bfsUsed));
 
     int head = 0, tail = 0;
 
@@ -290,6 +308,22 @@ BOOL GetBFSNextMove(int* outFrom, int* outTo) {
     bfsQueue[tail].depth = 0;
     memcpy(bfsQueue[tail].pegs, pegs, sizeof(pegs));
     memcpy(bfsQueue[tail].pegCounts, pegCounts, sizeof(pegCounts));
+
+    unsigned int initKey = 0;
+    for (int d = 1; d <= numDiscs; d++) {
+        for (int p = 0; p < numPegs; p++) {
+            for (int k = 0; k < pegCounts[p]; k++) {
+                if (pegs[p][k] == d) {
+                    initKey |= ((unsigned int)p << (3 * (d - 1)));
+                    goto found_init_d;
+                }
+            }
+        }
+    found_init_d:;
+    }
+    unsigned int hInit = (initKey * 2654435761u) & (BFS_VISITED_SIZE - 1);
+    bfsUsed[hInit] = 1;
+    bfsVisited[hInit] = initKey;
     tail++;
 
     while (head < tail && tail < 4800) {
@@ -327,6 +361,33 @@ BOOL GetBFSNextMove(int* outFrom, int* outTo) {
                         nextState.firstFrom = f;
                         nextState.firstTo = t;
                     }
+
+                    unsigned int stateKey = 0;
+                    for (int d = 1; d <= numDiscs; d++) {
+                        for (int p = 0; p < numPegs; p++) {
+                            for (int k = 0; k < nextState.pegCounts[p]; k++) {
+                                if (nextState.pegs[p][k] == d) {
+                                    stateKey |= ((unsigned int)p << (3 * (d - 1)));
+                                    goto found_d;
+                                }
+                            }
+                        }
+                    found_d:;
+                    }
+
+                    unsigned int h = (stateKey * 2654435761u) & (BFS_VISITED_SIZE - 1);
+                    BOOL seen = FALSE;
+                    while (bfsUsed[h]) {
+                        if (bfsVisited[h] == stateKey) {
+                            seen = TRUE;
+                            break;
+                        }
+                        h = (h + 1) & (BFS_VISITED_SIZE - 1);
+                    }
+                    if (seen) continue;
+
+                    bfsUsed[h] = 1;
+                    bfsVisited[h] = stateKey;
 
                     bfsQueue[tail++] = nextState;
                     if (tail >= 4800) break;
@@ -618,14 +679,17 @@ void CheckWinOrLoss(HWND hwnd) {
 
         if (mode == 0) {
             int sid = cfg.id;
-            if (stars > stageStats[sid].stars || (stars == stageStats[sid].stars && moves < stageStats[sid].moves)) {
-                stageStats[sid].stars = stars;
-                stageStats[sid].moves = moves;
-                stageStats[sid].time = elapsedSeconds;
-                SaveStats();
+            if (sid >= 0 && sid <= TOTAL_STAGES) {
+                if (stars > stageStats[sid].stars || (stars == stageStats[sid].stars && moves < stageStats[sid].moves)) {
+                    stageStats[sid].stars = stars;
+                    stageStats[sid].moves = moves;
+                    stageStats[sid].time = elapsedSeconds;
+                    SaveStats();
+                }
             }
         }
 
+        UpdateControlsVisibility();
         SpawnFireworks();
         PlaySoundEffect(5);
         sprintf(statusMessage, "STAGE CLEARED! Stars: %d | Moves: %d | Time: %02d:%02d", stars, moves, elapsedSeconds/60, elapsedSeconds%60);
@@ -635,6 +699,7 @@ void CheckWinOrLoss(HWND hwnd) {
             KillTimer(hwnd, 1);
             timerRunning = FALSE;
         }
+        UpdateControlsVisibility();
         PlaySoundEffect(3);
         sprintf(statusMessage, "STAGE FAILED! Exceeded move limit of %d!", cfg.moveLimit);
     }
@@ -668,6 +733,12 @@ void PerformPegClick(HWND hwnd, int clickedPeg) {
         selectedPeg = -1;
         PlaySoundEffect(2);
     } else {
+        if (selectedPeg < 0 || selectedPeg >= numPegs || pegCounts[selectedPeg] <= 0) {
+            selectedPeg = -1;
+            InvalidateRect(hwnd, NULL, FALSE);
+            return;
+        }
+
         if (cfg.adjOnly && abs(selectedPeg - clickedPeg) != 1) {
             strcpy(statusMessage, "Adjacent Pegs Only!");
             selectedPeg = -1;
@@ -703,10 +774,12 @@ void PerformPegClick(HWND hwnd, int clickedPeg) {
             }
         }
 
-        if (canMove) {
-            historyFrom[historyCount] = selectedPeg;
-            historyTo[historyCount] = clickedPeg;
-            historyCount++;
+        if (canMove && pegCounts[clickedPeg] < MAX_DISCS) {
+            if (historyCount < 4096) {
+                historyFrom[historyCount] = selectedPeg;
+                historyTo[historyCount] = clickedPeg;
+                historyCount++;
+            }
             pegCounts[selectedPeg]--;
             pegs[clickedPeg][pegCounts[clickedPeg]++] = movingDisc;
             moves++;
@@ -739,10 +812,12 @@ void UndoMove(HWND hwnd) {
     int f = historyFrom[historyCount];
     int t = historyTo[historyCount];
 
-    int disc = pegs[t][pegCounts[t] - 1];
-    pegCounts[t]--;
-    pegs[f][pegCounts[f]++] = disc;
-    moves--;
+    if (f >= 0 && f < numPegs && t >= 0 && t < numPegs && pegCounts[t] > 0 && pegCounts[f] < MAX_DISCS) {
+        int disc = pegs[t][pegCounts[t] - 1];
+        pegCounts[t]--;
+        pegs[f][pegCounts[f]++] = disc;
+        if (moves > 0) moves--;
+    }
     selectedPeg = -1;
     hintFrom = -1; hintTo = -1;
     strcpy(statusMessage, "");
@@ -794,7 +869,7 @@ void UseDiskSwap(HWND hwnd) {
     StageConfig cfg = GetCurrentConfig();
     int srcPeg = -1, targetPeg = -1;
 
-    if (selectedPeg != -1 && pegCounts[selectedPeg] > 0) {
+    if (selectedPeg != -1 && selectedPeg >= 0 && selectedPeg < numPegs && pegCounts[selectedPeg] > 0) {
         srcPeg = selectedPeg;
         int topDisc = pegs[srcPeg][pegCounts[srcPeg] - 1];
         int defaultTarget = numPegs - 1;
@@ -823,11 +898,14 @@ void UseDiskSwap(HWND hwnd) {
         }
     }
 
-    if (srcPeg != -1 && targetPeg != -1) {
+    if (srcPeg >= 0 && srcPeg < numPegs && targetPeg >= 0 && targetPeg < numPegs &&
+        pegCounts[srcPeg] > 0 && pegCounts[targetPeg] < MAX_DISCS) {
         int movingDisc = pegs[srcPeg][pegCounts[srcPeg] - 1];
-        historyFrom[historyCount] = srcPeg;
-        historyTo[historyCount] = targetPeg;
-        historyCount++;
+        if (historyCount < 4096) {
+            historyFrom[historyCount] = srcPeg;
+            historyTo[historyCount] = targetPeg;
+            historyCount++;
+        }
         pegCounts[srcPeg]--;
         pegs[targetPeg][pegCounts[targetPeg]++] = movingDisc;
         moves++;
@@ -872,6 +950,7 @@ void Draw3DSkyscraperBlockGDI(HDC hdc, int x, int y, int width, int height, Disc
     HPEN nullPen = CreatePen(PS_NULL, 0, 0);
     HGDIOBJ oldPen = SelectObject(hdc, nullPen);
     Ellipse(hdc, x - shadowW/2, sy - shadowH/2, x + shadowW/2, sy + shadowH/2);
+    SelectObject(hdc, oldBrush);
     DeleteObject(shadowBrush);
 
     BOOL isGlass = (discSize % 2 == 0);
@@ -886,6 +965,8 @@ void Draw3DSkyscraperBlockGDI(HDC hdc, int x, int y, int width, int height, Disc
     HBRUSH sideBrush = CreateSolidBrush(theme.side);
     SelectObject(hdc, sideBrush);
     Polygon(hdc, sidePts, 4);
+    SelectObject(hdc, oldBrush);
+    DeleteObject(sideBrush);
 
     // 2. Top Roof Facade Polygon
     POINT topPts[4] = {
@@ -897,22 +978,24 @@ void Draw3DSkyscraperBlockGDI(HDC hdc, int x, int y, int width, int height, Disc
     HBRUSH topBrush = CreateSolidBrush(theme.top);
     SelectObject(hdc, topBrush);
     Polygon(hdc, topPts, 4);
+    SelectObject(hdc, oldBrush);
     DeleteObject(topBrush);
-    DeleteObject(sideBrush);
 
     // Antenna Spire & Rotating Searchlight on top block
     if (isTopDisc || discSize == 1) {
         HPEN spirePen = CreatePen(PS_SOLID, 2, RGB(203, 213, 225));
-        SelectObject(hdc, spirePen);
+        HGDIOBJ prevP = SelectObject(hdc, spirePen);
         MoveToEx(hdc, x, y - depth, NULL);
         LineTo(hdc, x, y - depth - 16);
+        SelectObject(hdc, prevP);
         DeleteObject(spirePen);
 
         // Blinking Beacon
         BOOL blink = ((animTick / 10) % 2 == 0);
         HBRUSH bBrush = CreateSolidBrush(blink ? RGB(239, 68, 68) : RGB(127, 29, 29));
-        SelectObject(hdc, bBrush);
+        HGDIOBJ prevB = SelectObject(hdc, bBrush);
         Ellipse(hdc, x - 3, y - depth - 19, x + 3, y - depth - 13);
+        SelectObject(hdc, prevB);
         DeleteObject(bBrush);
 
         // Rotating Searchlight Beam Cone into the night sky
@@ -922,11 +1005,12 @@ void Draw3DSkyscraperBlockGDI(HDC hdc, int x, int y, int width, int height, Disc
         float bx2 = x + cosf(beamAngle + 0.25f) * 60.0f;
         float by2 = (y - depth - 16) - fabsf(sinf(beamAngle)) * 40.0f - 15.0f;
         HPEN beamPen = CreatePen(PS_SOLID, 1, RGB(165, 243, 252));
-        SelectObject(hdc, beamPen);
+        prevP = SelectObject(hdc, beamPen);
         MoveToEx(hdc, x, y - depth - 16, NULL);
         LineTo(hdc, (int)bx1, (int)by1);
         MoveToEx(hdc, x, y - depth - 16, NULL);
         LineTo(hdc, (int)bx2, (int)by2);
+        SelectObject(hdc, prevP);
         DeleteObject(beamPen);
     }
 
@@ -937,28 +1021,32 @@ void Draw3DSkyscraperBlockGDI(HDC hdc, int x, int y, int width, int height, Disc
     DeleteObject(mainBrush);
 
     HPEN borderPen = CreatePen(PS_SOLID, 1, RGB(15, 23, 42));
-    SelectObject(hdc, borderPen);
-    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    HGDIOBJ prevBorderPen = SelectObject(hdc, borderPen);
+    HGDIOBJ prevBorderBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
     Rectangle(hdc, fRect.left, fRect.top, fRect.right, fRect.bottom);
+    SelectObject(hdc, prevBorderPen);
+    SelectObject(hdc, prevBorderBrush);
     DeleteObject(borderPen);
 
     if (isGlass) {
         // Sweeping animated specular glass reflection sheen
         int sweepX = (x - width/2) + ((animTick * 2 + discSize * 15) % (width + 40)) - 20;
         HPEN sheenPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
-        SelectObject(hdc, sheenPen);
+        HGDIOBJ prevP = SelectObject(hdc, sheenPen);
         if (sweepX >= fRect.left && sweepX <= fRect.right) {
             MoveToEx(hdc, sweepX, fRect.bottom, NULL);
             LineTo(hdc, min(fRect.right, sweepX + 15), fRect.top);
         }
+        SelectObject(hdc, prevP);
         DeleteObject(sheenPen);
     } else {
         HPEN concPen = CreatePen(PS_SOLID, 1, theme.main);
-        SelectObject(hdc, concPen);
+        HGDIOBJ prevP = SelectObject(hdc, concPen);
         for (int ty = y + 4; ty < y + height; ty += 4) {
             MoveToEx(hdc, x - width/2, ty, NULL);
             LineTo(hdc, x + width/2, ty);
         }
+        SelectObject(hdc, prevP);
         DeleteObject(concPen);
     }
 
@@ -996,9 +1084,10 @@ void Draw3DSkyscraperBlockGDI(HDC hdc, int x, int y, int width, int height, Disc
     // 5. Text Label / Locked Overlay
     if (isLocked) {
         HPEN cagePen = CreatePen(PS_SOLID, 2, RGB(239, 68, 68));
-        SelectObject(hdc, cagePen);
+        HGDIOBJ prevP = SelectObject(hdc, cagePen);
         MoveToEx(hdc, fRect.left, fRect.top, NULL); LineTo(hdc, fRect.right, fRect.bottom);
         MoveToEx(hdc, fRect.left, fRect.bottom, NULL); LineTo(hdc, fRect.right, fRect.top);
+        SelectObject(hdc, prevP);
         DeleteObject(cagePen);
 
         SetTextColor(hdc, RGB(239, 68, 68));
@@ -1161,7 +1250,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
+        case WM_ERASEBKGND:
+            return 1;
         case WM_KEYDOWN: {
+            BOOL ctrlDown = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+            BOOL altDown = (GetKeyState(VK_MENU) & 0x8000) != 0;
+            if (ctrlDown || altDown) break;
+
             if (wParam >= '1' && wParam <= '5') {
                 int p = (int)(wParam - '1');
                 if (p < numPegs) PerformPegClick(hwnd, p);
@@ -1176,28 +1271,44 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_MOUSEMOVE: {
-            int x = LOWORD(lParam);
-            int y = HIWORD(lParam);
+            short x = (short)LOWORD(lParam);
+            short y = (short)HIWORD(lParam);
             if (y > 140 && numPegs > 0) {
                 RECT rc;
                 GetClientRect(hwnd, &rc);
                 int w = rc.right - rc.left;
-                hoverPeg = x / (w / numPegs);
+                if (w >= numPegs) {
+                    int pegAreaW = w / numPegs;
+                    if (pegAreaW > 0) {
+                        int p = x / pegAreaW;
+                        hoverPeg = (p >= 0 && p < numPegs) ? p : -1;
+                    } else {
+                        hoverPeg = -1;
+                    }
+                } else {
+                    hoverPeg = -1;
+                }
             } else {
                 hoverPeg = -1;
             }
             break;
         }
         case WM_LBUTTONDOWN: {
-            int x = LOWORD(lParam);
-            int y = HIWORD(lParam);
-            if (y > 140) {
+            short x = (short)LOWORD(lParam);
+            short y = (short)HIWORD(lParam);
+            if (y > 140 && numPegs > 0) {
                 RECT rc;
                 GetClientRect(hwnd, &rc);
                 int w = rc.right - rc.left;
-                int pegAreaW = w / numPegs;
-                int clickedPeg = x / pegAreaW;
-                PerformPegClick(hwnd, clickedPeg);
+                if (w >= numPegs) {
+                    int pegAreaW = w / numPegs;
+                    if (pegAreaW > 0) {
+                        int clickedPeg = x / pegAreaW;
+                        if (clickedPeg >= 0 && clickedPeg < numPegs) {
+                            PerformPegClick(hwnd, clickedPeg);
+                        }
+                    }
+                }
             }
             break;
         }
@@ -1415,9 +1526,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 if (i == numPegs - 1 || selectedPeg == i) {
                     HPEN shimPen = CreatePen(PS_SOLID, 1, (i == numPegs - 1) ? RGB(56, 189, 248) : RGB(250, 204, 21));
-                    SelectObject(memDC, shimPen);
+                    HGDIOBJ oldShim = SelectObject(memDC, shimPen);
                     MoveToEx(memDC, bLeft + 8, bTop + 1, NULL);
                     LineTo(memDC, bRight - 8, bTop + 1);
+                    SelectObject(memDC, oldShim);
                     DeleteObject(shimPen);
                 }
                 SelectObject(memDC, oldGold);
@@ -1717,6 +1829,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            KillTimer(hwnd, 1);
+            KillTimer(hwnd, 2);
+            KillTimer(hwnd, 3);
             PostQuitMessage(0);
             break;
         default:
@@ -1727,9 +1842,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     WNDCLASS wc = {0};
+    HBRUSH hBg = CreateSolidBrush(RGB(15, 23, 42));
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
-    wc.hbrBackground = CreateSolidBrush(RGB(15, 23, 42));
+    wc.hbrBackground = hBg;
     wc.lpszClassName = "KTowersClass";
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 
@@ -1747,5 +1863,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+    DeleteObject(hBg);
     return msg.wParam;
 }

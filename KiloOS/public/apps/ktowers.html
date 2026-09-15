@@ -478,7 +478,18 @@
         let hoverPeg = -1;
 
         // Local Storage
-        let campaignStats = JSON.parse(localStorage.getItem('ktowers_campaign_v2') || '{}');
+        let campaignStats = {};
+        try {
+            const raw = localStorage.getItem('ktowers_campaign_v2');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                    campaignStats = parsed;
+                }
+            }
+        } catch (e) {
+            campaignStats = {};
+        }
 
         // Audio System
         let audioCtx = null;
@@ -785,8 +796,10 @@
         function undoMove() {
             if (moveHistory.length === 0 || won || gameOver) return;
             const lastMove = moveHistory.pop();
-            pegs[lastMove.from].push(pegs[lastMove.to].pop());
-            moves--;
+            if (pegs[lastMove.to] && pegs[lastMove.to].length > 0 && pegs[lastMove.from]) {
+                pegs[lastMove.from].push(pegs[lastMove.to].pop());
+                if (moves > 0) moves--;
+            }
             selectedPeg = null;
             hintHighlight = null;
             render();
@@ -904,23 +917,24 @@
             }
 
             const initialCode = encodeState(pegs);
-            queue.push({ state: pegs.map(p => [...p]), path: [] });
+            queue.push({ state: pegs.map(p => [...p]), firstMove: null, depth: 0 });
             visited.add(initialCode);
 
-            let steps = 0;
-            while (queue.length > 0 && steps < 4000) {
-                steps++;
-                const { state, path } = queue.shift();
+            let qHead = 0;
+            while (qHead < queue.length && qHead < 4000) {
+                const curr = queue[qHead++];
 
-                if (state[targetPeg].length === numDiscs) {
-                    return path[0];
+                if (curr.state[targetPeg].length === numDiscs) {
+                    return curr.firstMove;
                 }
 
-                for (let from = 0; from < numPegs; from++) {
-                    if (state[from].length === 0) continue;
-                    const topDisc = state[from][state[from].length - 1];
+                if (curr.depth > 30) continue;
 
-                    if (config.lockedDisk > 0 && topDisc === config.lockedDisk && (moves + path.length) < config.lockDuration) {
+                for (let from = 0; from < numPegs; from++) {
+                    if (curr.state[from].length === 0) continue;
+                    const topDisc = curr.state[from][curr.state[from].length - 1];
+
+                    if (config.lockedDisk > 0 && topDisc === config.lockedDisk && (moves + curr.depth) < config.lockDuration) {
                         continue;
                     }
 
@@ -930,14 +944,18 @@
                         if (config.cyclic && ((from + 1) % numPegs !== to)) continue;
                         if (config.colorRestr === 1 && to === 1 && (topDisc % 2 !== 0)) continue;
 
-                        if (state[to].length === 0 || state[to][state[to].length - 1] > topDisc) {
-                            const nextState = state.map(p => [...p]);
+                        if (curr.state[to].length === 0 || curr.state[to][curr.state[to].length - 1] > topDisc) {
+                            const nextState = curr.state.map(p => [...p]);
                             nextState[to].push(nextState[from].pop());
                             const nextCode = encodeState(nextState);
 
                             if (!visited.has(nextCode)) {
                                 visited.add(nextCode);
-                                queue.push({ state: nextState, path: [...path, { from, to }] });
+                                queue.push({
+                                    state: nextState,
+                                    firstMove: curr.firstMove || { from, to },
+                                    depth: curr.depth + 1
+                                });
                             }
                         }
                     }
@@ -991,6 +1009,11 @@
                 won = true;
                 if (timerInterval) clearInterval(timerInterval);
                 timerInterval = null;
+                if (autoSolveInterval) {
+                    clearInterval(autoSolveInterval);
+                    autoSolveInterval = null;
+                    document.getElementById('autoBtn').innerText = "🤖 Auto-Solve [A]";
+                }
 
                 const config = getCurrentStageConfig();
                 let stars = 1;
@@ -1001,7 +1024,9 @@
                     const existing = campaignStats[config.id];
                     if (!existing || stars > existing.stars || (stars === existing.stars && moves < existing.moves)) {
                         campaignStats[config.id] = { stars, moves, time: elapsedSeconds };
-                        localStorage.setItem('ktowers_campaign_v2', JSON.stringify(campaignStats));
+                        try {
+                            localStorage.setItem('ktowers_campaign_v2', JSON.stringify(campaignStats));
+                        } catch (e) {}
                         populateStageDropdown();
                     }
                 }
@@ -1010,6 +1035,7 @@
                 spawnVictoryFireworks();
 
                 playSound('win');
+                render();
                 showWinModal(stars);
                 return true;
             }
@@ -1020,7 +1046,13 @@
             gameOver = true;
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = null;
+            if (autoSolveInterval) {
+                clearInterval(autoSolveInterval);
+                autoSolveInterval = null;
+                document.getElementById('autoBtn').innerText = "🤖 Auto-Solve [A]";
+            }
             playSound('error');
+            render();
 
             document.getElementById('modalTitle').innerText = "STAGE FAILED!";
             document.getElementById('modalTitle').style.color = "var(--danger-color)";
@@ -1314,19 +1346,30 @@
 
         canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
+            if (rect.width <= 0) return;
             const mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
             const pegAreaW = canvas.width / numPegs;
-            hoverPeg = Math.floor(mouseX / pegAreaW);
+            if (pegAreaW > 0) {
+                const p = Math.floor(mouseX / pegAreaW);
+                hoverPeg = (p >= 0 && p < numPegs) ? p : -1;
+            } else {
+                hoverPeg = -1;
+            }
         });
 
         canvas.addEventListener('mouseleave', () => { hoverPeg = -1; });
 
         canvas.addEventListener('click', (e) => {
             const rect = canvas.getBoundingClientRect();
+            if (rect.width <= 0) return;
             const mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
             const pegAreaW = canvas.width / numPegs;
-            const clickedPeg = Math.floor(mouseX / pegAreaW);
-            handlePegClick(clickedPeg);
+            if (pegAreaW > 0) {
+                const clickedPeg = Math.floor(mouseX / pegAreaW);
+                if (clickedPeg >= 0 && clickedPeg < numPegs) {
+                    handlePegClick(clickedPeg);
+                }
+            }
         });
 
         function render() {
@@ -2096,9 +2139,12 @@
         // Keyboard Hotkeys
         // ----------------------------------------------------
         document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.altKey || e.metaKey) return;
+            if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) return;
+
             if (e.key >= '1' && e.key <= '5') {
                 const idx = parseInt(e.key, 10) - 1;
-                if (idx < numPegs) handlePegClick(idx);
+                if (idx >= 0 && idx < numPegs) handlePegClick(idx);
             } else if (e.key === 'u' || e.key === 'U') {
                 undoMove();
             } else if (e.key === 'h' || e.key === 'H') {
@@ -2111,6 +2157,28 @@
                 initGame();
             } else if (e.key === 'a' || e.key === 'A') {
                 toggleAutoSolve();
+            } else if (e.key === 'Escape') {
+                const modal = document.getElementById('modalOverlay');
+                if (modal && modal.style.display !== 'none' && !won && !gameOver) {
+                    modal.style.display = 'none';
+                }
+            }
+        });
+
+        const modalEl = document.getElementById('modalOverlay');
+        if (modalEl) {
+            modalEl.addEventListener('click', (e) => {
+                if (e.target === modalEl && !won && !gameOver) {
+                    modalEl.style.display = 'none';
+                }
+            });
+        }
+
+        window.addEventListener('beforeunload', () => {
+            if (timerInterval) clearInterval(timerInterval);
+            if (autoSolveInterval) clearInterval(autoSolveInterval);
+            if (audioCtx && audioCtx.state !== 'closed') {
+                audioCtx.close().catch(() => {});
             }
         });
 
