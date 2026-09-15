@@ -1095,9 +1095,24 @@
     function showToast(msg, type = 'info', duration = 3200) {
       const container = document.getElementById('toastContainer');
       if (!container) return;
+      while (container.children.length >= 5) {
+        container.firstElementChild.remove();
+      }
       const toast = document.createElement('div');
       toast.className = `toast ${type}`;
-      toast.innerHTML = `<span>${escapeHtml(msg)}</span><span style="opacity:0.6; cursor:pointer; font-size:14px; margin-left:8px;" onclick="this.parentElement.remove()">&times;</span>`;
+
+      const spanMsg = document.createElement('span');
+      spanMsg.textContent = msg;
+
+      const closeBtn = document.createElement('span');
+      closeBtn.style.cssText = 'opacity:0.6; cursor:pointer; font-size:14px; margin-left:8px;';
+      closeBtn.textContent = '×';
+      closeBtn.setAttribute('role', 'button');
+      closeBtn.setAttribute('aria-label', 'Dismiss notification');
+      closeBtn.onclick = () => toast.remove();
+
+      toast.appendChild(spanMsg);
+      toast.appendChild(closeBtn);
       container.appendChild(toast);
 
       setTimeout(() => {
@@ -1130,15 +1145,25 @@
     };
 
     // --- Web Audio Synthesizer ---
+    let sharedAudioCtx = null;
+    function getAudioCtx() {
+      if (!sharedAudioCtx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) sharedAudioCtx = new AudioCtx();
+      }
+      if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
+        sharedAudioCtx.resume();
+      }
+      return sharedAudioCtx;
+    }
+
     function playAudioAlert(soundType) {
       try {
         const type = soundType || document.getElementById('soundTypeSelect').value;
         if (type === 'mute') return;
 
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        const ctx = new AudioCtx();
-        if (ctx.state === 'suspended') ctx.resume();
+        const ctx = getAudioCtx();
+        if (!ctx) return;
 
         const now = ctx.currentTime;
 
@@ -1221,10 +1246,6 @@
             osc.stop(now + idx * 0.12 + 0.3);
           });
         }
-
-        setTimeout(() => {
-          try { ctx.close(); } catch(e) {}
-        }, 1500);
       } catch (e) {}
     }
 
@@ -1431,8 +1452,12 @@
       const a = document.createElement('a');
       a.href = url;
       a.download = `ktimer_laps_${Date.now()}.csv`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      setTimeout(() => {
+        a.remove();
+        URL.revokeObjectURL(url);
+      }, 1500);
       showToast('Exported laps to CSV file', 'success');
     };
 
@@ -1453,8 +1478,12 @@
       const a = document.createElement('a');
       a.href = url;
       a.download = `ktimer_laps_${Date.now()}.txt`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      setTimeout(() => {
+        a.remove();
+        URL.revokeObjectURL(url);
+      }, 1500);
       showToast('Exported laps to TXT report', 'success');
     };
 
@@ -1476,6 +1505,12 @@
       { name: 'Tea Steeping', time: '00:03:00' },
       { name: 'Workout Rest', time: '00:01:30' }
     ]);
+    if (!Array.isArray(customPresets)) {
+      customPresets = [
+        { name: 'Tea Steeping', time: '00:03:00' },
+        { name: 'Workout Rest', time: '00:01:30' }
+      ];
+    }
 
     function renderCustomPresets() {
       const container = document.getElementById('customPresetsChips');
@@ -1624,6 +1659,7 @@
     // 3. MULTI-TIMER ENGINE
     // ==========================================
     let multiTimers = safeStorageGet('ktimer_multi_list', []);
+    if (!Array.isArray(multiTimers)) multiTimers = [];
     let mtTickInterval = null;
 
     function saveMultiTimers() {
@@ -1680,10 +1716,15 @@
 
       renderMultiTimers();
       saveMultiTimers();
+
+      if (!hasActive && mtTickInterval) {
+        clearInterval(mtTickInterval);
+        mtTickInterval = null;
+      }
     }
 
     function startMultiTick() {
-      if (!mtTickInterval) {
+      if (!mtTickInterval && multiTimers.some(t => t.isRunning)) {
         mtTickInterval = setInterval(tickMultiTimers, 200);
       }
     }
@@ -1811,6 +1852,15 @@
       todaySessions: 0,
       lastDate: new Date().toDateString()
     });
+
+    if (!pomoStats || typeof pomoStats !== 'object') {
+      pomoStats = {
+        completedSessions: 0,
+        totalFocusMins: 0,
+        todaySessions: 0,
+        lastDate: new Date().toDateString()
+      };
+    }
 
     if (pomoStats.lastDate !== new Date().toDateString()) {
       pomoStats.todaySessions = 0;
@@ -1976,10 +2026,15 @@
     const intBtnStart = document.getElementById('intBtnStart');
 
     function readIntervalConfig() {
-      intWorkMs = (Math.max(1, parseInt(document.getElementById('intCfgWork').value, 10) || 20)) * 1000;
-      intRestMs = (Math.max(0, parseInt(document.getElementById('intCfgRest').value, 10) || 10)) * 1000;
-      intTotalSets = Math.max(1, parseInt(document.getElementById('intCfgSets').value, 10) || 8);
-      intPrepMs = (Math.max(0, parseInt(document.getElementById('intCfgPrep').value, 10) || 5)) * 1000;
+      const workVal = parseInt(document.getElementById('intCfgWork').value, 10);
+      const restVal = parseInt(document.getElementById('intCfgRest').value, 10);
+      const setsVal = parseInt(document.getElementById('intCfgSets').value, 10);
+      const prepVal = parseInt(document.getElementById('intCfgPrep').value, 10);
+
+      intWorkMs = Math.max(1, isNaN(workVal) ? 20 : workVal) * 1000;
+      intRestMs = Math.max(0, isNaN(restVal) ? 10 : restVal) * 1000;
+      intTotalSets = Math.max(1, isNaN(setsVal) ? 8 : setsVal);
+      intPrepMs = Math.max(0, isNaN(prepVal) ? 5 : prepVal) * 1000;
     }
 
     function renderIntervalUI() {
@@ -2179,6 +2234,7 @@
         return;
       }
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
 
       if (e.code === 'Space' || e.key === ' ') {
         e.preventDefault();
@@ -2263,6 +2319,18 @@
           else if (activeTabObj.name === 'interval') document.getElementById('intBtnReset').click();
         }
         return;
+      }
+    });
+
+    // Lifecycle Teardown
+    window.addEventListener('beforeunload', () => {
+      if (swInterval) clearInterval(swInterval);
+      if (tmInterval) clearInterval(tmInterval);
+      if (mtTickInterval) clearInterval(mtTickInterval);
+      if (pomoInterval) clearInterval(pomoInterval);
+      if (intInterval) clearInterval(intInterval);
+      if (sharedAudioCtx && sharedAudioCtx.close) {
+        try { sharedAudioCtx.close(); } catch (e) {}
       }
     });
 

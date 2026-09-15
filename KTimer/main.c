@@ -199,6 +199,8 @@ static void FormatMsToTimer(DWORD totalMs, char* outBuf, size_t bufSize) {
 }
 
 static int SimpleStrToInt(const char* p) {
+    if (!p) return 0;
+    while (*p == ' ' || *p == '\t') p++;
     int val = 0;
     while (*p >= '0' && *p <= '9') {
         val = val * 10 + (*p - '0');
@@ -208,6 +210,8 @@ static int SimpleStrToInt(const char* p) {
 }
 
 static DWORD ParseTimerInput(const char* str) {
+    if (!str) return 0;
+    while (*str == ' ' || *str == '\t') str++;
     int h = 0, m = 0, s = 0;
     int colons = 0;
     const char* p = str;
@@ -232,7 +236,17 @@ static DWORD ParseTimerInput(const char* str) {
         m = SimpleStrToInt(part1);
         s = SimpleStrToInt(part2);
     } else {
-        s = SimpleStrToInt(part1);
+        int hasM = 0;
+        p = str;
+        while (*p) {
+            if (*p == 'm' || *p == 'M') hasM = 1;
+            p++;
+        }
+        if (hasM) {
+            m = SimpleStrToInt(part1);
+        } else {
+            s = SimpleStrToInt(part1);
+        }
     }
 
     if (h < 0) h = 0;
@@ -298,7 +312,11 @@ static void UpdateTimerDisplay() {
 
     FormatMsToTimer(g_tmRemainingMs, g_tmTimeBuf, sizeof(g_tmTimeBuf));
     if (g_mode == MODE_TIMER && g_tmIsRunning) {
-        SetWindowTextA(hDisplay, g_tmTimeBuf);
+        static char s_lastTmBuf[32] = {0};
+        if (lstrcmpA(s_lastTmBuf, g_tmTimeBuf) != 0) {
+            lstrcpyA(s_lastTmBuf, g_tmTimeBuf);
+            SetWindowTextA(hDisplay, g_tmTimeBuf);
+        }
     }
 }
 
@@ -337,7 +355,13 @@ static void UpdatePomodoroDisplay() {
     FormatMsToTimer(g_pomoRemainingMs, pomoBuf, sizeof(pomoBuf));
 
     if (g_mode == MODE_POMODORO) {
-        SetWindowTextA(hDisplay, pomoBuf + 3); // MM:SS
+        static char s_lastPomoDisp[32] = {0};
+        static char s_lastPomoStats[128] = {0};
+
+        if (lstrcmpA(s_lastPomoDisp, pomoBuf + 3) != 0) {
+            lstrcpyA(s_lastPomoDisp, pomoBuf + 3);
+            SetWindowTextA(hDisplay, pomoBuf + 3); // MM:SS
+        }
 
         const char* stateName = "WORK SESSION";
         if (g_pomoState == POMO_SHORT_BREAK) stateName = "SHORT BREAK";
@@ -345,7 +369,10 @@ static void UpdatePomodoroDisplay() {
 
         char statsBuf[128];
         wsprintfA(statsBuf, "%s (Cycle %d/4)\nDone: %d | Focus: %u mins", stateName, g_pomoCycleCount, g_pomoCompletedSessions, g_pomoTotalFocusMins);
-        SetWindowTextA(hStaticStats, statsBuf);
+        if (lstrcmpA(s_lastPomoStats, statsBuf) != 0) {
+            lstrcpyA(s_lastPomoStats, statsBuf);
+            SetWindowTextA(hStaticStats, statsBuf);
+        }
     }
 }
 
@@ -392,7 +419,13 @@ static void UpdateIntervalDisplay() {
     FormatMsToTimer(g_intRemainingMs, timeBuf, sizeof(timeBuf));
 
     if (g_mode == MODE_INTERVAL) {
-        SetWindowTextA(hDisplay, timeBuf + 3); // MM:SS
+        static char s_lastIntDisp[32] = {0};
+        static char s_lastIntStats[128] = {0};
+
+        if (lstrcmpA(s_lastIntDisp, timeBuf + 3) != 0) {
+            lstrcpyA(s_lastIntDisp, timeBuf + 3);
+            SetWindowTextA(hDisplay, timeBuf + 3); // MM:SS
+        }
 
         const char* phaseStr = "PREPARE";
         if (g_intPhase == INT_PHASE_WORK) phaseStr = "WORK!";
@@ -401,13 +434,17 @@ static void UpdateIntervalDisplay() {
 
         char statsBuf[128];
         wsprintfA(statsBuf, "%s (Set %d/%d)\nWork: %ds | Rest: %ds", phaseStr, g_intCurrentSet, g_intTotalSets, (int)(g_intWorkMs/1000), (int)(g_intRestMs/1000));
-        SetWindowTextA(hStaticIntStats, statsBuf);
+        if (lstrcmpA(s_lastIntStats, statsBuf) != 0) {
+            lstrcpyA(s_lastIntStats, statsBuf);
+            SetWindowTextA(hStaticIntStats, statsBuf);
+        }
     }
 }
 
 static void UpdateMultiTimers() {
     DWORD now = GetTickCount();
     int needRefresh = 0;
+    static DWORD s_lastMtListTick = 0;
 
     for (int i = 0; i < g_multiTimerCount; i++) {
         if (g_multiTimers[i].isRunning) {
@@ -424,7 +461,12 @@ static void UpdateMultiTimers() {
         }
     }
 
-    if (needRefresh && g_mode == MODE_MULTI) {
+    if (needRefresh && g_mode == MODE_MULTI && (now - s_lastMtListTick >= 250)) {
+        s_lastMtListTick = now;
+        int curSel = (int)SendMessageA(hListMt, LB_GETCURSEL, 0, 0);
+        int topIdx = (int)SendMessageA(hListMt, LB_GETTOPINDEX, 0, 0);
+
+        SendMessageA(hListMt, WM_SETREDRAW, FALSE, 0);
         SendMessageA(hListMt, LB_RESETCONTENT, 0, 0);
         for (int i = 0; i < g_multiTimerCount; i++) {
             char itemBuf[128];
@@ -434,6 +476,14 @@ static void UpdateMultiTimers() {
             wsprintfA(itemBuf, "%s - %s %s", g_multiTimers[i].name, timeBuf, status);
             SendMessageA(hListMt, LB_ADDSTRING, 0, (LPARAM)itemBuf);
         }
+        if (curSel >= 0 && curSel < g_multiTimerCount) {
+            SendMessageA(hListMt, LB_SETCURSEL, curSel, 0);
+        }
+        if (topIdx >= 0) {
+            SendMessageA(hListMt, LB_SETTOPINDEX, topIdx, 0);
+        }
+        SendMessageA(hListMt, WM_SETREDRAW, TRUE, 0);
+        InvalidateRect(hListMt, NULL, FALSE);
     }
 }
 
@@ -447,13 +497,15 @@ static void CopyLapsToClipboard() {
     if (!hMem) return;
     char* p = (char*)GlobalLock(hMem);
     if (!p) { GlobalFree(hMem); return; }
-    wsprintfA(p, "=== KTimer Lap Report (%d laps) ===\r\n\r\n", g_lapCount);
+    char* cur = p;
+    wsprintfA(cur, "=== KTimer Lap Report (%d laps) ===\r\n\r\n", g_lapCount);
+    cur += lstrlenA(cur);
     for (int i = 0; i < g_lapCount; i++) {
-        char sBuf[32], tBuf[32], line[128];
+        char sBuf[32], tBuf[32];
         FormatMsToStopwatch(g_laps[i].splitMs, sBuf, sizeof(sBuf));
         FormatMsToStopwatch(g_laps[i].totalMs, tBuf, sizeof(tBuf));
-        wsprintfA(line, "Lap %d | Split: %s | Total: %s\r\n", g_laps[i].id, sBuf, tBuf);
-        lstrcatA(p, line);
+        wsprintfA(cur, "Lap %d | Split: %s | Total: %s\r\n", g_laps[i].id, sBuf, tBuf);
+        cur += lstrlenA(cur);
     }
     GlobalUnlock(hMem);
     if (OpenClipboard(hMainWnd)) {
@@ -1195,6 +1247,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
+        case WM_ERASEBKGND:
+            return 1;
         case WM_CTLCOLORSTATIC: {
             HDC hdc = (HDC)wParam;
             HWND hCtrl = (HWND)lParam;
@@ -1280,6 +1334,19 @@ void __stdcall MainEntry() {
             }
 
             if (!isEdit) {
+                int hasModifier = (GetKeyState(VK_CONTROL) < 0) || (GetKeyState(VK_MENU) < 0);
+                if (hasModifier) {
+                    if ((GetKeyState(VK_CONTROL) < 0) && (msg.wParam == 'C' || msg.wParam == 'c') && g_mode == MODE_STOPWATCH) {
+                        SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_COPY_LAPS, 0), (LPARAM)hBtnCopyLaps);
+                        continue;
+                    }
+                    if (!IsDialogMessage(hwnd, &msg)) {
+                        TranslateMessage(&msg);
+                        DispatchMessageA(&msg);
+                    }
+                    continue;
+                }
+
                 if (msg.wParam >= '1' && msg.wParam <= '5') {
                     if (msg.wParam == '1') SwitchMode(MODE_STOPWATCH);
                     else if (msg.wParam == '2') SwitchMode(MODE_TIMER);
