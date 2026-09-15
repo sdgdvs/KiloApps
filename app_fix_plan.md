@@ -33,6 +33,7 @@
 - If the timer fires (subagent hasn't finished in 8 min), KILL the subagent using `manage_subagents`, log a one-line failure note in your plan file, commit, push, and STOP.
 - NEVER spawn more than ONE subagent at a time.
 - NEVER spawn a second subagent if the first one failed. Stop and let the next cron turn retry.
+- **Model Selection (MANDATORY):** ALWAYS spawn subagents using `Model: "flash"` (or `Model: "sonnet"` if flash fails). NEVER use `Model: "inherit"` or spawn Claude Opus/Pro subagents for routine tasks, audits, or summarization.
 
 **Graceful Termination Checklist (do this EVERY turn before stopping):**
 1. Processed one item
@@ -43,7 +44,7 @@
 
 ---
 
-**Target App:** KTrader
+**Target App:** KType
 **Status:** Next (Pass 4)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -68,6 +69,14 @@ Start over again. By now other agents have added new features and new apps. Ther
 - Performance (slow renders, memory leaks, unnecessary repaints)
 - Security (XSS, injection, unsafe eval)
 - Testing newly created apps that didn't exist during previous passes
+
+### Pass 5+: Tutorial & Save System Integrity (DIRECTOR DIRECTIVE 2026-09-15)
+Focus on verifying tutorial and save system infrastructure across all games:
+- **Save/Load corruption**: Does quicksave/quickload preserve ALL game state? Test after multiple saves, after browser refresh, after clearing other localStorage keys.
+- **Tutorial localStorage flags**: Verify `k[game]_tutorialSeen` flags work correctly — tutorial fires on new game, NOT on saved game load.
+- **Splash screen buttons**: Verify New Game / Continue / Help buttons are all wired and functional.
+- **Complex games must have auto-start tutorials** that teach core mechanics in ~60 seconds. Skippable with Esc.
+- **Classic/simple games**: Tutorial should be in Help modal only.
 
 **This agent NEVER runs out of work. After each pass, start the next pass.**
 
@@ -95,8 +104,11 @@ Start over again. By now other agents have added new features and new apps. Ther
 - **KTimer**: Completed. Full notes in [archive/app_fix_pass4_archive.md](archive/app_fix_pass4_archive.md)
 - **KTodo**: Completed. Full notes below.
 - **KTowers**: Completed. Full notes below.
+- **KTrader**: Completed. Full notes below.
 
 ### Recent Completed Fixes (Full Detail)
 - **KTodo**: In `ktodo.html`, guarded global keyboard event listeners against browser accelerators (`ctrlKey`, `altKey`, `metaKey`) to prevent browser shortcuts (Ctrl+C, Ctrl+S, Ctrl+F, Ctrl+N, Ctrl+I) from accidentally clearing completed tasks, toggling stats, or hijacking browser tab actions; implemented `getUniqueId()` with monotonic counter to eliminate task and subtask timestamp ID collisions during rapid creation and imports; fortified `loadTasks()` with deep array and object validation protecting subtasks and legacy migrations from unhandled crashes on corrupted storage; fortified Markdown, CSV, and JSON exports with Blob URLs, body attachment, and deferred revocation (`setTimeout(() => URL.revokeObjectURL(url), 1500)`) to eliminate memory leaks and ensure reliable downloads in sandboxed iframe contexts; reset `e.target.value = ''` on file input to allow re-importing the same file; and hardened task sorting against non-numeric IDs and null values. In `KTodo/main.c`, guarded `MainEntry` message loop accelerators against modifier keys (`ctrlDown` and `altDown`) preventing accidental deletion, stats display, or clearing completed tasks on Ctrl+C / Alt shortcuts; implemented `json_escape()` and updated `DoExportData()` to serialize valid escaped JSON including all subtask checklist arrays; enhanced `DoAddSubtask()` to detect text entered in the Task input field and use it to add custom named checklist items directly without discarding user input; synchronized subtask completed states in `DoToggleTask()` when toggling main task completion; updated `DoImportMarkdown()` to prompt user to replace or append when tasks already exist, avoiding duplicate task floods; and refined `StripTagsFromText` to preserve numeric hashtags (e.g. `#1`, `#42`) while stripping category tags. Recompiled native `KTodo.exe` (21.5 KB) and verified Vite web build.
 
 - **KTowers**: In `ktowers.html`, enabled the Undo button by updating its disabled state dynamically in `render()` (`disabled = moveHistory.length === 0 || won || gameOver`), fixing a bug where Undo was permanently greyed out and unclickable in the web UI; guarded global keyboard shortcuts against browser accelerators (`ctrlKey`, `altKey`, `metaKey`) and form input targets, preventing unintended resets on browser shortcuts (Ctrl+R, Ctrl+S, Ctrl+F, Ctrl+A, Ctrl+U); added Escape key handling to dismiss modals; fortified `campaignStats` loading and saving with `try/catch` and object type validation to prevent crashes on corrupted storage; optimized BFS solver with $O(1)$ index pointer `qHead` and single-level `firstMove` references, eliminating $O(N)$ array shift overhead and thousands of array clones; fortified canvas click and hover handlers against zero/negative dimensions and bounds-checked peg indices; and added `beforeunload` cleanup to terminate audio context and interval timers. In `KTowers/main.c`, eliminated severe GDI resource leaks in `Draw3DSkyscraperBlockGDI` (deselected pens and brushes back to `oldBrush`/`oldPen` prior to calling `DeleteObject`, stopping exhaustion of the 10,000 GDI handle limit); fixed thread handle leak in `PlaySoundEffect` by closing `CreateThread` handle; added `WM_ERASEBKGND` returning 1 to eliminate screen repaint flicker; guarded `WM_KEYDOWN` against Ctrl/Alt modifiers; guarded `WM_MOUSEMOVE` and `WM_LBUTTONDOWN` against negative coordinates and integer division by zero (`w / numPegs`); fortified `historyCount` and `pegs` arrays against buffer overflows (> 4096 moves and > 10 discs); added visited state pruning hash table to native BFS solver to prevent queue overflow and redundant loops; and added `UpdateControlsVisibility` to `CheckWinOrLoss` so earned stars appear immediately on the stage banner. Recompiled native `KTowers.exe` (156 KB) cleanly and verified Vite web build.
+
+- **KTrader**: In `ktrader.html`, resolved critical fuel exhaustion softlock by adding a dedicated Refuel Ship button to the Shipyard (supporting both full top-off and partial fuel purchase based on available credits) as well as an emergency Solar Collector deployment fallback (+25 fuel) when stranded with 0 fuel and insufficient credits; hardened `AudioContext` with lazy instantiation and user-gesture resumption in `getAudioContext()` avoiding browser autoplay warnings and added cleanup on `beforeunload`; ensured galaxy warp gate connections are bidirectional and enforce minimum stellar separation, eliminating one-way dead ends; implemented robust save/load persistence (`localStorage.getItem('ktrader_save_v1')`) and a "New Game" reset button; debounced combat actions with `combatActionPending` to prevent double-firing during animation timeouts; clamped shield values and restored shields on combat exit; and added modifier-guarded keyboard shortcuts (Escape, 1-3 for warp destinations, Space/F, E, B). In `KTrader/main.c`, eliminated severe GDI handle leaks in `WM_PAINT` by restoring `origBrush` and `origPen` into `memDC` prior to all `DeleteObject` calls (resolving ~500 leaked handles per second); fixed UI control overlap by relocating mission board buttons (`hBtnMission[0..2]`) from `y = 370 + i*22` (which stomped on destination travel and market buttons) down to `y = 525 + i*20` under the Mission Board header; added Shipyard Refuel button (`hBtnRefuel`, `ID_BTN_REFUEL 305`); implemented binary save/load persistence (`SaveGame()` / `LoadGame()` using `ktrader.dat` with magic `0x4B545244`); added emergency Solar Collector deploy fallback; added `#pragma function(memset)` and `#pragma function(memcpy)` intrinsics to eliminate CRT link errors with `/ENTRY:MainEntry`; and guarded keyboard shortcuts against Alt/Ctrl modifiers in `MainEntry`. Recompiled native `KTrader.exe` (24 KB) cleanly and verified web syntax.

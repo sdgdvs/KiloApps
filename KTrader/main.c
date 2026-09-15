@@ -2,6 +2,25 @@
 #include <stdio.h>
 #include <string.h>
 
+#pragma function(memset)
+void* memset(void* dest, int c, size_t count) {
+    char* bytes = (char*)dest;
+    while (count--) {
+        *bytes++ = (char)c;
+    }
+    return dest;
+}
+
+#pragma function(memcpy)
+void* memcpy(void* dest, const void* src, size_t count) {
+    char* d = (char*)dest;
+    const char* s = (const char*)src;
+    while (count--) {
+        *d++ = *s++;
+    }
+    return dest;
+}
+
 #define ID_BTN_DEST1 101
 #define ID_BTN_DEST2 102
 #define ID_BTN_DEST3 104
@@ -206,8 +225,8 @@ int planetDistances[NUM_PLANETS][3];
 void GenerateGalaxy() {
     for (int i = 0; i < NUM_PLANETS; i++) {
         lstrcpy(planets[i].name, namePool[i]);
-        planets[i].x = SimpleRand() % 100;
-        planets[i].y = SimpleRand() % 100;
+        planets[i].x = 10 + (SimpleRand() % 80);
+        planets[i].y = 10 + (SimpleRand() % 80);
         planets[i].ecoType = SimpleRand() % 5;
         planets[i].techLevel = 1 + (SimpleRand() % 5);
     }
@@ -226,12 +245,70 @@ void GenerateGalaxy() {
                 if(dists[j] < minDist) { minDist = dists[j]; bestJ = j; }
             }
             planetLinks[i][k] = bestJ;
-            int r = 0;
+            int r = 10;
             while(r*r <= minDist) r++;
             planetDistances[i][k] = r;
             dists[bestJ] = 999999;
         }
     }
+}
+
+#define SAVE_MAGIC 0x4B545244 // 'KTRD'
+typedef struct {
+    DWORD magic;
+    DWORD version;
+    GameState state;
+    Planet planets[NUM_PLANETS];
+    int planetLinks[NUM_PLANETS][3];
+    int planetDistances[NUM_PLANETS][3];
+    int currentPrices[8];
+    int availMissionType[3];
+    int availMissionTarget[3];
+    int availMissionReward[3];
+} SaveData;
+
+void SaveGame() {
+    HANDLE hFile = CreateFileA("ktrader.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        SaveData data;
+        ZeroMemory(&data, sizeof(data));
+        data.magic = SAVE_MAGIC;
+        data.version = 1;
+        data.state = state;
+        data.state.inCombat = 0;
+        CopyMemory(data.planets, planets, sizeof(planets));
+        CopyMemory(data.planetLinks, planetLinks, sizeof(planetLinks));
+        CopyMemory(data.planetDistances, planetDistances, sizeof(planetDistances));
+        CopyMemory(data.currentPrices, currentPrices, sizeof(currentPrices));
+        CopyMemory(data.availMissionType, availMissionType, sizeof(availMissionType));
+        CopyMemory(data.availMissionTarget, availMissionTarget, sizeof(availMissionTarget));
+        CopyMemory(data.availMissionReward, availMissionReward, sizeof(availMissionReward));
+        DWORD written = 0;
+        WriteFile(hFile, &data, sizeof(data), &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+int LoadGame() {
+    HANDLE hFile = CreateFileA("ktrader.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+    SaveData data;
+    DWORD readBytes = 0;
+    BOOL ok = ReadFile(hFile, &data, sizeof(data), &readBytes, NULL);
+    CloseHandle(hFile);
+    if (ok && readBytes == sizeof(data) && data.magic == SAVE_MAGIC && data.version == 1) {
+        state = data.state;
+        state.inCombat = 0;
+        CopyMemory(planets, data.planets, sizeof(planets));
+        CopyMemory(planetLinks, data.planetLinks, sizeof(planetLinks));
+        CopyMemory(planetDistances, data.planetDistances, sizeof(planetDistances));
+        CopyMemory(currentPrices, data.currentPrices, sizeof(currentPrices));
+        CopyMemory(availMissionType, data.availMissionType, sizeof(availMissionType));
+        CopyMemory(availMissionTarget, data.availMissionTarget, sizeof(availMissionTarget));
+        CopyMemory(availMissionReward, data.availMissionReward, sizeof(availMissionReward));
+        return 1;
+    }
+    return 0;
 }
 
 void GenerateMissions() {
@@ -269,7 +346,8 @@ HWND hListLog;
 #define ID_BTN_UPG_ENGINE 302
 #define ID_BTN_UPG_WEAPON 303
 #define ID_BTN_UPG_DREAD 304
-HWND hBtnUpgCargo, hBtnUpgEngine, hBtnUpgWeapon, hBtnUpgDread;
+#define ID_BTN_REFUEL 305
+HWND hBtnUpgCargo, hBtnUpgEngine, hBtnUpgWeapon, hBtnUpgDread, hBtnRefuel;
 
 #define ID_BTN_FIRE 401
 #define ID_BTN_FLEE 402
@@ -431,6 +509,32 @@ void UpdateUI(HWND hwnd) {
         EnableWindow(hBtnUpgDread, FALSE);
     }
 
+    int fuelNeeded = state.maxFuel - state.fuel;
+    if (fuelNeeded <= 0) {
+        SetWindowText(hBtnRefuel, "Refuel: Full");
+        EnableWindow(hBtnRefuel, FALSE);
+    } else {
+        int fuelCost = fuelNeeded * 2;
+        if (state.credits < 2) {
+            wsprintf(buf, "Refuel (%d cr)", fuelCost);
+            SetWindowText(hBtnRefuel, buf);
+            EnableWindow(hBtnRefuel, FALSE);
+        } else {
+            int affordableFuel = fuelNeeded;
+            int costToPay = fuelCost;
+            if (state.credits < fuelCost) {
+                affordableFuel = state.credits / 2;
+                costToPay = affordableFuel * 2;
+                wsprintf(buf, "Refuel +%d (%d cr)", affordableFuel, costToPay);
+            } else {
+                wsprintf(buf, "Refuel Full (%d cr)", costToPay);
+            }
+            SetWindowText(hBtnRefuel, buf);
+            EnableWindow(hBtnRefuel, !state.inCombat);
+        }
+    }
+    ShowWindow(hBtnRefuel, state.inCombat ? SW_HIDE : SW_SHOW);
+
     // Update Market
     for (int i = 0; i < 8; i++) {
         int visible = 1;
@@ -569,11 +673,24 @@ void Travel(int btnIdx, HWND hwnd) {
             }
         }
 
+        SaveGame();
         UpdateUI(hwnd);
         InvalidateRect(hwnd, NULL, FALSE);
     } else {
         PlaySoundEffect(5); // fail
         LogMessage("> Insufficient fuel!");
+
+        int canTravel = 0;
+        for (int i = 0; i < 3; i++) {
+            if (state.fuel >= destCost[i]) canTravel = 1;
+        }
+        if (!canTravel && state.credits < 2) {
+            state.fuel = (state.maxFuel >= 25) ? 25 : state.maxFuel;
+            LogMessage("> Emergency Solar Collector deployed. Gathered 25 fuel units.");
+            PlaySoundEffect(3);
+            SaveGame();
+            UpdateUI(hwnd);
+        }
     }
 }
 
@@ -596,6 +713,8 @@ void EnemyTurn(HWND hwnd) {
         wsprintf(buf, "> Pirates looted %d credits and left you drifting.", lost);
         LogMessage(buf);
         state.inCombat = 0;
+        state.playerShields = 50 + state.cargoLevel * 10;
+        SaveGame();
     }
 }
 
@@ -604,9 +723,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_CREATE: {
             rngState = GetTickCount();
             if (rngState == 0) rngState = 0x1234;
-            GenerateGalaxy();
-            GeneratePrices();
-            GenerateMissions();
+            if (!LoadGame()) {
+                GenerateGalaxy();
+                GeneratePrices();
+                GenerateMissions();
+                SaveGame();
+            }
 
             for (int i = 0; i < MAX_STARS; i++) {
                 stars[i].x = SimpleRand() % 600;
@@ -656,8 +778,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hBtnFlee, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnBribe, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            HWND hStatShipyard = CreateWindow("STATIC", "Shipyard", WS_CHILD | WS_VISIBLE, 20, 430, 100, 20, hwnd, NULL, NULL, NULL);
+            HWND hStatShipyard = CreateWindow("STATIC", "Shipyard", WS_CHILD | WS_VISIBLE, 20, 430, 80, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hStatShipyard, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hBtnRefuel = CreateWindow("BUTTON", "Refuel", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 110, 426, 150, 26, hwnd, (HMENU)ID_BTN_REFUEL, NULL, NULL);
+            SendMessage(hBtnRefuel, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hBtnUpgCargo = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 460, 140, 30, hwnd, (HMENU)ID_BTN_UPG_CARGO, NULL, NULL);
             hBtnUpgEngine = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 170, 460, 140, 30, hwnd, (HMENU)ID_BTN_UPG_ENGINE, NULL, NULL);
@@ -678,7 +803,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hBtnAbandonMission, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             for(int i=0; i<3; i++) {
-                hBtnMission[i] = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 370 + i*22, 560, 20, hwnd, (HMENU)(ID_BTN_MISSION1 + i), NULL, NULL);
+                hBtnMission[i] = CreateWindow("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 525 + i*20, 560, 20, hwnd, (HMENU)(ID_BTN_MISSION1 + i), NULL, NULL);
                 SendMessage(hBtnMission[i], WM_SETFONT, (WPARAM)hFont, TRUE);
             }
 
@@ -785,6 +910,24 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     "- Weapons: Increases combat damage.\n"
                     "- Dreadnought: Ultimate end-game goal!", 
                     "Help", MB_OK | MB_ICONINFORMATION);
+            } else if (LOWORD(wParam) == ID_BTN_REFUEL) {
+                int fuelNeeded = state.maxFuel - state.fuel;
+                if (fuelNeeded > 0 && state.credits >= 2 && !state.inCombat) {
+                    int affordableFuel = fuelNeeded;
+                    int costToPay = fuelNeeded * 2;
+                    if (state.credits < costToPay) {
+                        affordableFuel = state.credits / 2;
+                        costToPay = affordableFuel * 2;
+                    }
+                    state.credits -= costToPay;
+                    state.fuel += affordableFuel;
+                    PlaySoundEffect(3); // chime
+                    char buf[128];
+                    wsprintf(buf, "> Refueled +%d fuel for %d cr.", affordableFuel, costToPay);
+                    LogMessage(buf);
+                    SaveGame();
+                    UpdateUI(hwnd);
+                }
             } else if (LOWORD(wParam) == ID_BTN_DEST1) {
                 Travel(0, hwnd);
             } else if (LOWORD(wParam) == ID_BTN_DEST2) {
@@ -798,11 +941,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     PlaySoundEffect(3); // chime
                     state.credits -= price;
                     state.inventory[good]++;
-                    state.cargo++;
+                    state.cargo = 0;
+                    for (int g = 0; g < 8; g++) state.cargo += state.inventory[g];
                     state.repTraders++;
                     char buf[128];
                     wsprintf(buf, "> Bought 1 %s for %d cr.", goodNames[good], price);
                     LogMessage(buf);
+                    SaveGame();
                     UpdateUI(hwnd);
                 }
             } else if (LOWORD(wParam) >= ID_BTN_SELL_START && LOWORD(wParam) < ID_BTN_SELL_START + 8) {
@@ -812,11 +957,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     PlaySoundEffect(3); // chime
                     state.credits += price;
                     state.inventory[good]--;
-                    state.cargo--;
+                    state.cargo = 0;
+                    for (int g = 0; g < 8; g++) state.cargo += state.inventory[g];
                     state.repTraders++;
                     char buf[128];
                     wsprintf(buf, "> Sold 1 %s for %d cr.", goodNames[good], price);
                     LogMessage(buf);
+                    SaveGame();
                     UpdateUI(hwnd);
                 }
             } else if (LOWORD(wParam) == ID_BTN_UPG_CARGO) {
@@ -831,6 +978,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     char buf[128];
                     wsprintf(buf, "> Cargo Bay upgraded! Max cargo now %d.", state.maxCargo);
                     LogMessage(buf);
+                    SaveGame();
                     UpdateUI(hwnd);
                 }
             } else if (LOWORD(wParam) == ID_BTN_UPG_ENGINE) {
@@ -840,9 +988,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     state.credits -= cost;
                     state.engineLevel++;
                     state.maxFuel += 50;
+                    state.fuel += 50;
+                    if (state.fuel > state.maxFuel) state.fuel = state.maxFuel;
                     SpawnParticleBurst(100, 75, 3, 16);
                     TriggerScreenShake(3);
                     LogMessage("> Engine upgraded! Less fuel used for travel.");
+                    SaveGame();
                     UpdateUI(hwnd);
                 }
             } else if (LOWORD(wParam) == ID_BTN_UPG_WEAPON) {
@@ -856,6 +1007,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     char buf[128];
                     wsprintf(buf, "> Weapons upgraded to level %d!", state.weaponLevel);
                     LogMessage(buf);
+                    SaveGame();
                     UpdateUI(hwnd);
                 }
             } else if (LOWORD(wParam) == ID_BTN_UPG_DREAD) {
@@ -866,6 +1018,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SpawnParticleBurst(100, 75, 3, 40);
                     TriggerScreenShake(12);
                     LogMessage("> YOU WIN! You purchased the legendary Dreadnought! The galaxy is yours!");
+                    SaveGame();
                     UpdateUI(hwnd);
                 }
             } else if (LOWORD(wParam) >= ID_BTN_MISSION1 && LOWORD(wParam) <= ID_BTN_MISSION3) {
@@ -875,6 +1028,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     state.activeMissionTarget = availMissionTarget[idx];
                     state.activeMissionReward = availMissionReward[idx];
                     LogMessage("> Mission accepted.");
+                    SaveGame();
                     UpdateUI(hwnd);
                 }
             } else if (LOWORD(wParam) == ID_BTN_ABANDON) {
@@ -882,6 +1036,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     PlaySoundEffect(5); // fail
                     state.activeMissionType = 0;
                     LogMessage("> Mission abandoned.");
+                    SaveGame();
                     UpdateUI(hwnd);
                 }
             } else if (LOWORD(wParam) == ID_BTN_FIRE) {
@@ -914,6 +1069,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         state.bountyTarget = 0;
                     }
                     state.inCombat = 0;
+                    state.playerShields = 50 + state.cargoLevel * 10;
+                    SaveGame();
                 } else {
                     EnemyTurn(hwnd);
                 }
@@ -923,6 +1080,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     LogMessage("> Successfully fled from the pirates!");
                     TriggerJumpFX();
                     state.inCombat = 0;
+                    state.playerShields = 50 + state.cargoLevel * 10;
+                    SaveGame();
                 } else {
                     LogMessage("> Failed to escape!");
                     TriggerScreenShake(4);
@@ -934,8 +1093,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     state.credits -= 100;
                     state.repPirates += 5;
                     state.inCombat = 0;
+                    state.playerShields = 50 + state.cargoLevel * 10;
                     SpawnParticleBurst(300, 75, 3, 10);
                     LogMessage("> Paid 100 cr toll to pirates. Pirates Rep +5.");
+                    SaveGame();
                     UpdateUI(hwnd);
                 }
             }
@@ -950,6 +1111,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP memBmp = CreateCompatibleBitmap(hdc, 600, 150);
             HBITMAP oldBmp = (HBITMAP)SelectObject(memDC, memBmp);
+
+            HBRUSH origBrush = (HBRUSH)GetCurrentObject(memDC, OBJ_BRUSH);
+            HPEN origPen = (HPEN)GetCurrentObject(memDC, OBJ_PEN);
 
             // Background fill
             RECT rcBox = { 0, 0, 600, 150 };
@@ -1031,6 +1195,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 MoveToEx(memDC, sheenX - 8, py - 14, NULL);
                 LineTo(memDC, sheenX + 8, py + 14);
 
+                SelectObject(memDC, origBrush);
+                SelectObject(memDC, origPen);
                 DeleteObject(hVBrush); DeleteObject(hVPen);
                 DeleteObject(hTitanBrush); DeleteObject(hTitanPen);
                 DeleteObject(hGunBrush); DeleteObject(hGunPen);
@@ -1080,6 +1246,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 MoveToEx(memDC, sheenX - 6, py - 10, NULL);
                 LineTo(memDC, sheenX + 6, py + 10);
 
+                SelectObject(memDC, origBrush);
+                SelectObject(memDC, origPen);
                 DeleteObject(hEngBrush); DeleteObject(hEngPen);
                 DeleteObject(hShipBrush); DeleteObject(hShipPen);
                 DeleteObject(hCanopyBrush); DeleteObject(hCyanPen);
@@ -1093,6 +1261,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SelectObject(memDC, hNullBrush);
                 SelectObject(memDC, hShieldPen);
                 Ellipse(memDC, 54, py - 32, 146, py + 32);
+                SelectObject(memDC, origBrush);
+                SelectObject(memDC, origPen);
                 DeleteObject(hShieldPen);
             }
 
@@ -1132,6 +1302,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 Rectangle(memDC, 478, ey - 16, 490, ey - 13);
                 Rectangle(memDC, 478, ey + 13, 490, ey + 16);
 
+                SelectObject(memDC, origBrush);
+                SelectObject(memDC, origPen);
                 DeleteObject(hPEng); DeleteObject(hPEngPen);
                 DeleteObject(hPirateBrush); DeleteObject(hPiratePen);
                 DeleteObject(hVisor); DeleteObject(hDisr);
@@ -1143,6 +1315,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SelectObject(memDC, hNullBrush);
                     SelectObject(memDC, hEShieldPen);
                     Ellipse(memDC, 454, ey - 32, 546, ey + 32);
+                    SelectObject(memDC, origBrush);
+                    SelectObject(memDC, origPen);
                     DeleteObject(hEShieldPen);
                 }
             } else {
@@ -1160,6 +1334,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SelectObject(memDC, hNull);
                 SelectObject(memDC, hAtmPen);
                 Ellipse(memDC, 450, 25, 550, 125);
+                SelectObject(memDC, origPen);
                 DeleteObject(hAtmPen);
 
                 // Planet Body
@@ -1168,12 +1343,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SelectObject(memDC, hPlanet);
                 SelectObject(memDC, hPlanetPen);
                 Ellipse(memDC, 460, 35, 540, 115);
+                SelectObject(memDC, origBrush);
+                SelectObject(memDC, origPen);
                 DeleteObject(hPlanet); DeleteObject(hPlanetPen);
 
                 // Shadow crescent
                 HBRUSH hShadow = CreateSolidBrush(RGB(10, 15, 30));
                 SelectObject(memDC, hShadow);
                 Ellipse(memDC, 475, 45, 542, 117);
+                SelectObject(memDC, origBrush);
                 DeleteObject(hShadow);
 
                 // Planetary Craters / Surface features
@@ -1182,6 +1360,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 Ellipse(memDC, 480, 55, 496, 71);
                 Ellipse(memDC, 505, 80, 525, 100);
                 Ellipse(memDC, 485, 92, 497, 104);
+                SelectObject(memDC, origBrush);
                 DeleteObject(hDet);
 
                 // Planetary Rings for Mining & Tech
@@ -1190,6 +1369,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SelectObject(memDC, hNull);
                     SelectObject(memDC, hRingPen);
                     Arc(memDC, 440, 65, 560, 85, 440, 75, 560, 75);
+                    SelectObject(memDC, origPen);
                     DeleteObject(hRingPen);
                 }
 
@@ -1201,6 +1381,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SelectObject(memDC, hSatBrush);
                 SelectObject(memDC, hSatPen);
                 Rectangle(memDC, satX - 2, satY - 2, satX + 3, satY + 3);
+                SelectObject(memDC, origBrush);
+                SelectObject(memDC, origPen);
                 DeleteObject(hSatBrush); DeleteObject(hSatPen);
             }
 
@@ -1214,6 +1396,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SelectObject(memDC, hLaserPen);
                     MoveToEx(memDC, curX, curY, NULL);
                     LineTo(memDC, curX + dir * 20, curY);
+                    SelectObject(memDC, origPen);
                     DeleteObject(hLaserPen);
                 }
             }
@@ -1229,16 +1412,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             SelectObject(memDC, hSpkPen);
                             MoveToEx(memDC, px, py, NULL);
                             LineTo(memDC, px - particles[p].vx * 2, py - particles[p].vy * 2);
+                            SelectObject(memDC, origPen);
                             DeleteObject(hSpkPen);
                         } else if (particles[p].layer == 1) { // smoke
                             HBRUSH hSmk = CreateSolidBrush(particles[p].color);
                             SelectObject(memDC, hSmk);
                             Ellipse(memDC, px - particles[p].size, py - particles[p].size, px + particles[p].size, py + particles[p].size);
+                            SelectObject(memDC, origBrush);
                             DeleteObject(hSmk);
                         } else if (particles[p].layer == 2) { // debris
                             HBRUSH hDeb = CreateSolidBrush(particles[p].color);
                             SelectObject(memDC, hDeb);
                             Rectangle(memDC, px - particles[p].size / 2, py - particles[p].size / 2, px + particles[p].size / 2, py + particles[p].size / 2);
+                            SelectObject(memDC, origBrush);
                             DeleteObject(hDeb);
                         } else if (particles[p].layer == 3) { // celebration star
                             HPEN hStarPen = CreatePen(PS_SOLID, 2, particles[p].color);
@@ -1247,6 +1433,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             LineTo(memDC, px + particles[p].size, py);
                             MoveToEx(memDC, px, py - particles[p].size, NULL);
                             LineTo(memDC, px, py + particles[p].size);
+                            SelectObject(memDC, origPen);
                             DeleteObject(hStarPen);
                         }
                     }
@@ -1275,6 +1462,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HBRUSH hGlint = CreateSolidBrush(RGB(255, 255, 255));
             SelectObject(memDC, hGlint);
             Rectangle(memDC, gx - 2, gy - 2, gx + 3, gy + 3);
+            SelectObject(memDC, origBrush);
+            SelectObject(memDC, origPen);
             DeleteObject(hGlint);
             DeleteObject(hHudPen);
 
@@ -1287,6 +1476,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             BitBlt(hdc, 20 + offX, 45 + offY, 600, 150, memDC, 0, 0, SRCCOPY);
 
             // Clean up
+            SelectObject(memDC, origBrush);
+            SelectObject(memDC, origPen);
             SelectObject(memDC, oldBmp);
             DeleteObject(memBmp);
             DeleteDC(memDC);
@@ -1346,6 +1537,31 @@ void __stdcall MainEntry() {
 
         MSG msg;
         while (GetMessage(&msg, NULL, 0, 0)) {
+            if (msg.message == WM_KEYDOWN) {
+                int ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+                int alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
+                if (!ctrl && !alt) {
+                    if (state.inCombat) {
+                        if (msg.wParam == 'F' || msg.wParam == VK_SPACE) {
+                            SendMessage(hwnd, WM_COMMAND, ID_BTN_FIRE, 0);
+                        } else if (msg.wParam == 'E') {
+                            SendMessage(hwnd, WM_COMMAND, ID_BTN_FLEE, 0);
+                        } else if (msg.wParam == 'B') {
+                            SendMessage(hwnd, WM_COMMAND, ID_BTN_BRIBE, 0);
+                        }
+                    } else {
+                        if (msg.wParam == '1') {
+                            SendMessage(hwnd, WM_COMMAND, ID_BTN_DEST1, 0);
+                        } else if (msg.wParam == '2') {
+                            SendMessage(hwnd, WM_COMMAND, ID_BTN_DEST2, 0);
+                        } else if (msg.wParam == '3') {
+                            SendMessage(hwnd, WM_COMMAND, ID_BTN_DEST3, 0);
+                        } else if (msg.wParam == 'R') {
+                            SendMessage(hwnd, WM_COMMAND, ID_BTN_REFUEL, 0);
+                        }
+                    }
+                }
+            }
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }

@@ -78,6 +78,7 @@
   </style>
 </head>
 <body>
+  <button onclick="resetGame()" style="position: absolute; top: 20px; right: 115px; font-size: 1.2em; z-index: 50;">New Game</button>
   <button onclick="showHelp()" style="position: absolute; top: 20px; right: 20px; font-size: 1.2em; z-index: 50;">Help</button>
   <h1>KTrader Space Trading Sim</h1>
   <canvas id="gfx-canvas" width="600" height="150" style="display:block; margin: 10px auto; background: rgba(0,20,30,0.5); border: 1px solid #0ff; box-shadow: 0 0 10px #0ff;"></canvas>
@@ -179,60 +180,74 @@
     function showHelp() { document.getElementById('help-modal').style.display = 'block'; }
     function hideHelp() { document.getElementById('help-modal').style.display = 'none'; }
 
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let audioCtx = null;
+    function getAudioContext() {
+        if (!audioCtx) {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (AudioContextClass) {
+                audioCtx = new AudioContextClass();
+            }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume().catch(() => {});
+        }
+        return audioCtx;
+    }
     
     function playSound(type) {
-        if (!audioCtx) return;
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        const now = audioCtx.currentTime;
-        
-        if (type === 'jump') {
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(100, now);
-            osc.frequency.exponentialRampToValueAtTime(800, now + 1.0);
-            gain.gain.setValueAtTime(0, now);
-            gain.gain.linearRampToValueAtTime(0.5, now + 0.1);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 1.0);
-            osc.start(now);
-            osc.stop(now + 1.0);
-        } else if (type === 'laser') {
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(800, now);
-            osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-            osc.start(now);
-            osc.stop(now + 0.2);
-        } else if (type === 'chime') {
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(600, now);
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-            osc.start(now);
-            osc.stop(now + 0.3);
-        } else if (type === 'alert') {
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(400, now);
-            osc.frequency.linearRampToValueAtTime(600, now + 0.2);
-            osc.frequency.linearRampToValueAtTime(400, now + 0.4);
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.linearRampToValueAtTime(0.1, now + 0.3);
-            gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
-            osc.start(now);
-            osc.stop(now + 0.4);
-        } else if (type === 'fail') {
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(200, now);
-            osc.frequency.linearRampToValueAtTime(100, now + 0.5);
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
-            osc.start(now);
-            osc.stop(now + 0.5);
-        }
+        try {
+            const ctx = getAudioContext();
+            if (!ctx) return;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            const now = ctx.currentTime;
+            
+            if (type === 'jump') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 1.0);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.5, now + 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 1.0);
+                osc.start(now);
+                osc.stop(now + 1.0);
+            } else if (type === 'laser') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'chime') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, now);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'alert') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.linearRampToValueAtTime(600, now + 0.2);
+                osc.frequency.linearRampToValueAtTime(400, now + 0.4);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0.1, now + 0.3);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'fail') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.5);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            }
+        } catch (e) {}
     }
 
     const goods = ["Food", "Water", "Ore", "Tech", "Meds", "Luxury", "Contraband", "Military"];
@@ -252,12 +267,73 @@
       enemyShields: 30,
       enemyMaxShields: 30,
       repTraders: 0,
+      repPirates: 0,
       repNavy: 0,
       availableMissions: [],
       activeMission: null,
       bountyTarget: false,
       hasDreadnought: false
     };
+
+    const STORAGE_KEY = 'ktrader_save_v1';
+
+    function saveGame() {
+      try {
+        const payload = {
+          state: {
+            credits: state.credits,
+            fuel: state.fuel,
+            maxFuel: state.maxFuel,
+            cargo: state.cargo,
+            maxCargo: state.maxCargo,
+            location: state.location,
+            inventory: state.inventory,
+            engineLevel: state.engineLevel,
+            cargoLevel: state.cargoLevel,
+            weaponLevel: state.weaponLevel,
+            repTraders: state.repTraders,
+            repPirates: state.repPirates,
+            repNavy: state.repNavy,
+            hasDreadnought: state.hasDreadnought,
+            activeMission: state.activeMission,
+            availableMissions: state.availableMissions
+          },
+          planets,
+          currentPrices
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      } catch (err) {}
+    }
+
+    function loadGame() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+        const data = JSON.parse(raw);
+        if (data && data.state && data.planets && typeof data.state.credits === 'number') {
+          Object.assign(state, data.state);
+          planets = data.planets;
+          if (data.currentPrices && Object.keys(data.currentPrices).length > 0) {
+            currentPrices = data.currentPrices;
+          }
+          state.inCombat = false;
+          if (!state.inventory) state.inventory = {};
+          for (const g of goods) {
+            if (typeof state.inventory[g] !== 'number' || state.inventory[g] < 0) state.inventory[g] = 0;
+          }
+          state.cargo = Object.values(state.inventory).reduce((a, b) => a + b, 0);
+          return true;
+        }
+      } catch (err) {}
+      return false;
+    }
+
+    function resetGame() {
+      if (confirm('Start a new voyage? Current captain profile and credits will be reset.')) {
+        try { localStorage.removeItem(STORAGE_KEY); } catch (err) {}
+        location.reload();
+      }
+    }
 
     const namePool = ["Terra", "Ares", "Aphrodite", "Zion", "Helios", "Nova", "Eden", "Hades", "Atlantis", "Olympus", "Kronos", "Tarsus", "Vulkan", "Ryloth", "Dune"];
     const ecoTypes = ["Agri", "Mining", "Tech", "Industrial", "Balanced"];
@@ -267,12 +343,13 @@
     function generateGalaxy() {
       let shuffledNames = [...namePool].sort(() => 0.5 - Math.random());
       let selectedNames = shuffledNames.slice(0, NUM_PLANETS);
+      planets = {};
       
       for (let i = 0; i < NUM_PLANETS; i++) {
         let name = selectedNames[i];
         planets[name] = {
-          x: Math.floor(Math.random() * 100),
-          y: Math.floor(Math.random() * 100),
+          x: 10 + Math.floor(Math.random() * 80),
+          y: 10 + Math.floor(Math.random() * 80),
           ecoType: ecoTypes[Math.floor(Math.random() * ecoTypes.length)],
           techLevel: 1 + Math.floor(Math.random() * 5),
           distance: {}
@@ -285,13 +362,22 @@
           if (p1 !== p2) {
             let dx = planets[p1].x - planets[p2].x;
             let dy = planets[p1].y - planets[p2].y;
-            let dist = Math.floor(Math.sqrt(dx*dx + dy*dy));
+            let dist = Math.max(12, Math.floor(Math.sqrt(dx*dx + dy*dy)));
             dists.push({name: p2, d: dist});
           }
         }
         dists.sort((a,b) => a.d - b.d);
         for (let i = 0; i < 3; i++) {
           planets[p1].distance[dists[i].name] = dists[i].d;
+        }
+      }
+
+      // Ensure bidirectional route connectivity so jump gates are never one-way traps
+      for (let p1 of selectedNames) {
+        for (let [p2, d] of Object.entries(planets[p1].distance)) {
+          if (!planets[p2].distance[p1]) {
+            planets[p2].distance[p1] = d;
+          }
         }
       }
       
@@ -1051,14 +1137,22 @@
       ctx.restore();
     }
 
+    let combatActionPending = false;
+
     function updateUI() {
       if (state.inCombat) {
         document.getElementById('ui-main-panel').style.display = 'none';
         document.getElementById('ui-shipyard-panel').style.display = 'none';
         document.getElementById('ui-mission-panel').style.display = 'none';
         document.getElementById('ui-combat-panel').style.display = 'block';
-        document.getElementById('ui-combat-pshields').textContent = `Shields: ${state.playerShields}`;
-        document.getElementById('ui-combat-eshields').textContent = `Shields: ${state.enemyShields} / ${state.enemyMaxShields}`;
+        document.getElementById('ui-combat-pshields').textContent = `Shields: ${Math.max(0, state.playerShields)}`;
+        document.getElementById('ui-combat-eshields').textContent = `Shields: ${Math.max(0, state.enemyShields)} / ${state.enemyMaxShields}`;
+        
+        const combatBtns = document.querySelectorAll('#ui-combat-panel button');
+        if (combatBtns[0]) combatBtns[0].disabled = combatActionPending;
+        if (combatBtns[1]) combatBtns[1].disabled = combatActionPending;
+        const bribeBtn = document.getElementById('ui-combat-bribe');
+        if (bribeBtn) bribeBtn.disabled = combatActionPending || state.credits < 100;
       } else {
         document.getElementById('ui-main-panel').style.display = 'flex';
         document.getElementById('ui-shipyard-panel').style.display = 'block';
@@ -1069,30 +1163,41 @@
       document.getElementById('ui-fuel').textContent = `Fuel: ${state.fuel} / ${state.maxFuel}`;
       document.getElementById('ui-cargo').textContent = `Cargo: ${state.cargo} / ${state.maxCargo}`;
       document.getElementById('ui-weapons').textContent = `Weapons: Lv ${state.weaponLevel}`;
-      document.getElementById('ui-location').textContent = `${state.location} (${planets[state.location].ecoType} Economy, Tech Lv ${planets[state.location].techLevel})`;
+      
+      const currentP = planets[state.location] || { ecoType: 'Balanced', techLevel: 3, distance: {} };
+      document.getElementById('ui-location').textContent = `${state.location} (${currentP.ecoType} Economy, Tech Lv ${currentP.techLevel})`;
       
       document.getElementById('ui-rep-traders').textContent = `Traders Rep: ${state.repTraders}`;
       document.getElementById('ui-rep-pirates').textContent = `Pirates Rep: ${state.repPirates}`;
       document.getElementById('ui-rep-navy').textContent = `Navy Rep: ${state.repNavy}`;
 
-      const bribeBtn = document.getElementById('ui-combat-bribe');
-      if (bribeBtn) bribeBtn.disabled = state.credits < 100;
-
       const destContainer = document.getElementById('destinations');
       destContainer.innerHTML = '';
       
-      const currentPlanet = planets[state.location];
-      for (const [target, cost] of Object.entries(currentPlanet.distance)) {
+      let canTravelAnywhere = false;
+      let destIndex = 1;
+      for (const [target, cost] of Object.entries(currentP.distance || {})) {
         let actualCost = cost - state.engineLevel * 2;
         if (actualCost < 1) actualCost = 1;
+        if (state.fuel >= actualCost) canTravelAnywhere = true;
 
         const btn = document.createElement('button');
-        btn.textContent = `Travel to ${target} (${actualCost} fuel)`;
+        btn.textContent = `[${destIndex}] Travel to ${target} (${actualCost} fuel)`;
         if (state.fuel < actualCost) {
           btn.disabled = true;
         }
         btn.onclick = () => travel(target, actualCost);
         destContainer.appendChild(btn);
+        destIndex++;
+      }
+
+      if (!canTravelAnywhere && state.credits < 2) {
+        const btnEmergency = document.createElement('button');
+        btnEmergency.textContent = '⚡ Deploy Emergency Solar Collector (+25 Fuel)';
+        btnEmergency.style.borderColor = '#ff0';
+        btnEmergency.style.color = '#ff0';
+        btnEmergency.onclick = () => emergencyRecharge();
+        destContainer.appendChild(btnEmergency);
       }
 
       const marketBody = document.getElementById('market-body');
@@ -1102,8 +1207,8 @@
         if (good === "Contraband" && state.repPirates < 50 && state.inventory[good] === 0) continue;
         if (good === "Military" && state.repNavy < 50 && state.inventory[good] === 0) continue;
 
-        const price = currentPrices[good];
-        const owned = state.inventory[good];
+        const price = currentPrices[good] || 50;
+        const owned = state.inventory[good] || 0;
         
         const tr = document.createElement('tr');
         
@@ -1144,6 +1249,29 @@
       const shipyard = document.getElementById('ui-shipyard');
       shipyard.innerHTML = '';
       
+      const fuelNeeded = state.maxFuel - state.fuel;
+      const fuelCostPerUnit = 2;
+      const fullFuelCost = fuelNeeded * fuelCostPerUnit;
+      const btnRefuel = document.createElement('button');
+      if (fuelNeeded <= 0) {
+        btnRefuel.textContent = 'Fuel: Full';
+        btnRefuel.disabled = true;
+      } else {
+        const affordableFuel = Math.min(fuelNeeded, Math.floor(state.credits / fuelCostPerUnit));
+        const costToPay = (affordableFuel === fuelNeeded) ? fullFuelCost : (affordableFuel * fuelCostPerUnit);
+        if (state.credits < fuelCostPerUnit) {
+          btnRefuel.textContent = `Refuel (${fullFuelCost} cr)`;
+          btnRefuel.disabled = true;
+        } else if (affordableFuel < fuelNeeded) {
+          btnRefuel.textContent = `Refuel +${affordableFuel} (${costToPay} cr)`;
+          btnRefuel.onclick = () => refuelShip(affordableFuel, costToPay);
+        } else {
+          btnRefuel.textContent = `Refuel Full (${fullFuelCost} cr)`;
+          btnRefuel.onclick = () => refuelShip(fuelNeeded, fullFuelCost);
+        }
+      }
+      shipyard.appendChild(btnRefuel);
+
       const cargoCost = 500 * (state.cargoLevel + 1);
       const engineCost = 1000 * (state.engineLevel + 1);
       const weaponCost = 1500 * (state.weaponLevel + 1);
@@ -1203,10 +1331,30 @@
       drawGraphics();
     }
 
+    function refuelShip(amount, cost) {
+      if (state.credits >= cost && amount > 0) {
+        state.credits -= cost;
+        state.fuel = Math.min(state.maxFuel, state.fuel + amount);
+        log(`Refueled +${amount} fuel for ${cost} cr.`);
+        playSound('chime');
+        saveGame();
+        updateUI();
+      }
+    }
+
+    function emergencyRecharge() {
+      state.fuel = Math.min(state.maxFuel, state.fuel + 25);
+      log('⚡ Deployed Emergency Solar Collector. Gathered 25 fuel units.');
+      playSound('chime');
+      saveGame();
+      updateUI();
+    }
+
     function acceptMission(idx) {
-        if (!state.activeMission) {
+        if (!state.activeMission && state.availableMissions[idx]) {
             state.activeMission = state.availableMissions[idx];
             log(`Mission accepted: ${state.activeMission.desc}`);
+            saveGame();
             updateUI();
         }
     }
@@ -1216,6 +1364,7 @@
             state.activeMission = null;
             log(`Mission abandoned.`);
             playSound('fail');
+            saveGame();
             updateUI();
         }
     }
@@ -1223,23 +1372,25 @@
     function buyGood(good, price) {
       if (state.credits >= price && state.cargo < state.maxCargo) {
         state.credits -= price;
-        state.inventory[good]++;
-        state.cargo++;
+        state.inventory[good] = (state.inventory[good] || 0) + 1;
+        state.cargo = Object.values(state.inventory).reduce((a, b) => a + b, 0);
         state.repTraders++;
         log(`Bought 1 ${good} for ${price} cr.`);
         playSound('chime');
+        saveGame();
         updateUI();
       }
     }
 
     function sellGood(good, price) {
-      if (state.inventory[good] > 0) {
+      if ((state.inventory[good] || 0) > 0) {
         state.credits += price;
         state.inventory[good]--;
-        state.cargo--;
+        state.cargo = Object.values(state.inventory).reduce((a, b) => a + b, 0);
         state.repTraders++;
         log(`Sold 1 ${good} for ${price} cr.`);
         playSound('chime');
+        saveGame();
         updateUI();
       }
     }
@@ -1256,6 +1407,7 @@
         } else if (type === 'engine') {
           state.engineLevel++;
           state.maxFuel += 50;
+          state.fuel = Math.min(state.maxFuel, state.fuel + 50);
           log(`Engine upgraded to level ${state.engineLevel}! Less fuel used for travel.`);
         } else if (type === 'weapons') {
           state.weaponLevel++;
@@ -1268,6 +1420,7 @@
           document.getElementById('ui-log').style.borderColor = '#f0f';
         }
         playSound('chime');
+        saveGame();
         updateUI();
       }
     }
@@ -1336,6 +1489,7 @@
             state.activeMission = null;
         }
 
+        saveGame();
         updateUI();
       } else {
         playSound('fail');
@@ -1346,18 +1500,22 @@
     function startCombat() {
       playSound('alert');
       state.inCombat = true;
+      combatActionPending = false;
       state.playerShields = 50 + state.cargoLevel * 10;
       state.enemyMaxShields = 20 + Math.floor(Math.random() * 40);
       state.enemyShields = state.enemyMaxShields;
       triggerScreenShake(5);
       log("🚨 RED ALERT: PIRATE VESSEL INTERCEPTED YOU! 🚨", true);
+      updateUI();
     }
 
     function combatFire() {
+      if (combatActionPending || !state.inCombat) return;
+      combatActionPending = true;
       playSound('laser');
       spawnLaserBolt(true);
       const dmg = 10 + state.weaponLevel * 15 + Math.floor(Math.random() * 10);
-      state.enemyShields -= dmg;
+      state.enemyShields = Math.max(0, state.enemyShields - dmg);
       log(`You fired! Pirate shields took ${dmg} damage.`);
       
       if (state.enemyShields <= 0) {
@@ -1380,59 +1538,128 @@
         }
         
         state.inCombat = false;
+        combatActionPending = false;
+        state.playerShields = 50 + state.cargoLevel * 10;
+        saveGame();
+        updateUI();
       } else {
         enemyTurn();
       }
-      updateUI();
     }
 
     function combatFlee() {
+      if (combatActionPending || !state.inCombat) return;
+      combatActionPending = true;
       if (Math.random() < 0.5) {
         log("Successfully fled from the pirates!");
         triggerJumpFX();
         state.inCombat = false;
+        combatActionPending = false;
+        state.playerShields = 50 + state.cargoLevel * 10;
+        saveGame();
+        updateUI();
       } else {
         log("Failed to escape!", true);
         triggerScreenShake(4);
         enemyTurn();
       }
-      updateUI();
     }
 
     function combatBribe() {
+      if (combatActionPending || !state.inCombat) return;
       if (state.credits >= 100) {
+        combatActionPending = true;
         state.credits -= 100;
         state.repPirates += 5;
         state.inCombat = false;
+        combatActionPending = false;
+        state.playerShields = 50 + state.cargoLevel * 10;
         spawnParticleBurst(300, 75, 'celebration', 10);
         log("Paid 100 cr toll to pirates. Pirates Rep +5.");
+        saveGame();
         updateUI();
       }
     }
 
     function enemyTurn() {
+      updateUI();
       setTimeout(() => {
         playSound('laser');
         spawnLaserBolt(false);
-      }, 300);
-      const dmg = 5 + Math.floor(Math.random() * 15);
-      state.playerShields -= dmg;
-      log(`Pirates fired! Your shields took ${dmg} damage.`, true);
-      
-      if (state.playerShields <= 0) {
-        log("Your shields failed!", true);
-        spawnParticleBurst(100, 75, 'explosion', 30);
-        triggerScreenShake(9);
-        const creditsLost = Math.min(state.credits, Math.floor(state.credits * 0.2) + 50);
-        state.credits -= creditsLost;
-        log(`Pirates looted ${creditsLost} credits and left you drifting.`, true);
-        state.inCombat = false;
-      }
+      }, 250);
+
+      setTimeout(() => {
+        if (!state.inCombat) {
+          combatActionPending = false;
+          updateUI();
+          return;
+        }
+        const dmg = 5 + Math.floor(Math.random() * 15);
+        state.playerShields = Math.max(0, state.playerShields - dmg);
+        log(`Pirates fired! Your shields took ${dmg} damage.`, true);
+        
+        if (state.playerShields <= 0) {
+          log("Your shields failed!", true);
+          spawnParticleBurst(100, 75, 'explosion', 30);
+          triggerScreenShake(9);
+          const creditsLost = Math.min(state.credits, Math.floor(state.credits * 0.2) + 50);
+          state.credits -= creditsLost;
+          log(`Pirates looted ${creditsLost} credits and left you drifting.`, true);
+          state.inCombat = false;
+          state.playerShields = 50 + state.cargoLevel * 10;
+        }
+        combatActionPending = false;
+        saveGame();
+        updateUI();
+      }, 450);
     }
 
-    generateGalaxy();
-    generatePrices();
-    generateMissions();
+    // Keyboard controls with modifier protection
+    window.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+      
+      if (e.key === 'Escape') {
+        hideHelp();
+        return;
+      }
+      if (document.getElementById('help-modal').style.display === 'block') return;
+
+      if (state.inCombat) {
+        if (e.key === ' ' || e.key === 'f' || e.key === 'F') {
+          e.preventDefault();
+          combatFire();
+        } else if (e.key === 'e' || e.key === 'E') {
+          e.preventDefault();
+          combatFlee();
+        } else if (e.key === 'b' || e.key === 'B') {
+          e.preventDefault();
+          combatBribe();
+        }
+      } else {
+        if (e.key === '1' || e.key === '2' || e.key === '3') {
+          const idx = parseInt(e.key, 10) - 1;
+          const destButtons = document.getElementById('destinations').querySelectorAll('button');
+          if (destButtons[idx] && !destButtons[idx].disabled) {
+            destButtons[idx].click();
+          }
+        }
+      }
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+      if (audioCtx && audioCtx.state !== 'closed') {
+        try { audioCtx.close(); } catch (err) {}
+      }
+    });
+
+    if (!loadGame()) {
+      generateGalaxy();
+      generatePrices();
+      generateMissions();
+      saveGame();
+    }
     updateUI();
     requestAnimationFrame(renderLoop);
   </script>
