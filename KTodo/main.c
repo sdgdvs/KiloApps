@@ -105,6 +105,26 @@ char* my_find_str(const char* haystack, const char* needle) {
     return NULL;
 }
 
+void json_escape(char* dest, const char* src, int maxLen) {
+    if (!dest || !src || maxLen <= 0) return;
+    int o = 0;
+    for (int i = 0; src[i] && o < maxLen - 2; i++) {
+        if (src[i] == '"' || src[i] == '\\') {
+            if (o < maxLen - 3) {
+                dest[o++] = '\\';
+                dest[o++] = src[i];
+            }
+        } else if (src[i] == '\r' || src[i] == '\n') {
+            if (o < maxLen - 3) {
+                dest[o++] = ' ';
+            }
+        } else {
+            dest[o++] = src[i];
+        }
+    }
+    dest[o] = '\0';
+}
+
 void StripTagsFromText(char* dest, const char* src, int maxLen) {
     if (!dest || !src || maxLen <= 0) return;
     int outIdx = 0;
@@ -126,8 +146,11 @@ void StripTagsFromText(char* dest, const char* src, int maxLen) {
             }
         }
         if (src[i] == '#' && (i == 0 || src[i-1] == ' ')) {
-            while (src[i] && src[i] != ' ' && src[i] != '\t') i++;
-            continue;
+            char nextC = src[i + 1];
+            if ((nextC >= 'a' && nextC <= 'z') || (nextC >= 'A' && nextC <= 'Z')) {
+                while (src[i] && src[i] != ' ' && src[i] != '\t') i++;
+                continue;
+            }
         }
         dest[outIdx++] = src[i++];
     }
@@ -418,6 +441,10 @@ void DoToggleTask() {
     if (idx >= 0) {
         int sel = SendMessageA(hList, LB_GETCURSEL, 0, 0);
         g_tasks[idx].completed = !g_tasks[idx].completed;
+        // Synchronize subtasks with task completion state
+        for (int s = 0; s < g_tasks[idx].subtaskCount; s++) {
+            g_tasks[idx].subtasks[s].completed = g_tasks[idx].completed;
+        }
         RefreshTaskList();
         if (sel != LB_ERR && sel < SendMessageA(hList, LB_GETCOUNT, 0, 0)) {
             SendMessageA(hList, LB_SETCURSEL, sel, 0);
@@ -474,8 +501,24 @@ void DoAddSubtask() {
         return;
     }
 
+    char inputBuf[128] = {0};
+    GetWindowTextA(hInput, inputBuf, sizeof(inputBuf) - 1);
+    char* p = inputBuf;
+    while (*p == ' ' || *p == '\t') p++;
+
+    if (my_strlen(p) > 0) {
+        SubTask* st = &t->subtasks[t->subtaskCount];
+        my_strncpy(st->text, p, sizeof(st->text));
+        st->completed = 0;
+        t->subtaskCount++;
+        SetWindowTextA(hInput, "");
+        RefreshTaskList();
+        ShowNativeToast("Checklist item added to task!");
+        return;
+    }
+
     char promptMsg[256];
-    wsprintfA(promptMsg, "Add subtask to: '%s'\n(Subtask will be added as 'Checklist item %d')", t->text, t->subtaskCount + 1);
+    wsprintfA(promptMsg, "Add subtask to: '%s'\n(Tip: Type item name in the Task field first to set custom name)\n\nAdd default checklist item?", t->text);
     
     int res = MessageBoxA(g_hWnd, promptMsg, "Add Subtask", MB_OKCANCEL | MB_ICONQUESTION);
     if (res == IDOK) {
@@ -536,13 +579,36 @@ void DoExportData() {
 
         for (int i = 0; i < g_taskCount; i++) {
             Task* t = &g_tasks[i];
-            char line[512];
-            wsprintfA(line, "  {\n    \"text\": \"%s\",\n    \"category\": \"%s\",\n    \"priority\": \"%s\",\n    \"dueDate\": \"%s\",\n    \"completed\": %s\n  }%s\n",
-                t->text, t->category, t->priority, t->dueDate,
-                t->completed ? "true" : "false",
-                (i == g_taskCount - 1) ? "" : ","
+            char escText[256];
+            json_escape(escText, t->text, sizeof(escText));
+            char escCat[64];
+            json_escape(escCat, t->category, sizeof(escCat));
+
+            char line[1024];
+            wsprintfA(line, "  {\n    \"text\": \"%s\",\n    \"category\": \"%s\",\n    \"priority\": \"%s\",\n    \"dueDate\": \"%s\",\n    \"completed\": %s,\n    \"subtasks\": [",
+                escText, escCat, t->priority, t->dueDate,
+                t->completed ? "true" : "false"
             );
             WriteFile(hFile, line, my_strlen(line), &written, NULL);
+
+            for (int s = 0; s < t->subtaskCount; s++) {
+                char escSub[256];
+                json_escape(escSub, t->subtasks[s].text, sizeof(escSub));
+                char subBuf[512];
+                wsprintfA(subBuf, "%s{\"text\": \"%s\", \"completed\": %s}",
+                    (s > 0) ? ", " : " ",
+                    escSub,
+                    t->subtasks[s].completed ? "true" : "false"
+                );
+                WriteFile(hFile, subBuf, my_strlen(subBuf), &written, NULL);
+            }
+
+            char endLine[32];
+            wsprintfA(endLine, "%s\n  }%s\n",
+                (t->subtaskCount > 0) ? " ]" : "]",
+                (i == g_taskCount - 1) ? "" : ","
+            );
+            WriteFile(hFile, endLine, my_strlen(endLine), &written, NULL);
         }
 
         char footer[] = "]\n";
@@ -606,6 +672,17 @@ void DoImportMarkdown() {
         CloseHandle(hFile);
         MessageBoxA(g_hWnd, "File 'ktodo_export.md' is empty or too large.", "Import Error", MB_OK | MB_ICONERROR);
         return;
+    }
+
+    if (g_taskCount > 0) {
+        int res = MessageBoxA(g_hWnd, "Replace existing tasks with imported tasks?\n\n- Click 'Yes' to replace all existing tasks.\n- Click 'No' to append to existing tasks.", "Import Markdown", MB_YESNOCANCEL | MB_ICONQUESTION);
+        if (res == IDCANCEL) {
+            CloseHandle(hFile);
+            return;
+        }
+        if (res == IDYES) {
+            g_taskCount = 0;
+        }
     }
 
     char* buffer = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, fileSize + 1);
@@ -998,11 +1075,14 @@ void __stdcall MainEntry() {
             if (hFocus) GetClassNameA(hFocus, className, sizeof(className));
             int isEdit = (my_strcmp(className, "Edit") == 0 || my_strcmp(className, "EDIT") == 0);
 
-            if (msg.wParam == VK_F1 || (!isEdit && (msg.wParam == 'H' || msg.wParam == 'h'))) {
+            BOOL ctrlDown = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+            BOOL altDown = (GetKeyState(VK_MENU) & 0x8000) != 0;
+
+            if (msg.wParam == VK_F1 || (!isEdit && !ctrlDown && !altDown && (msg.wParam == 'H' || msg.wParam == 'h'))) {
                 ShowHelpDialog(hwnd);
                 continue;
             }
-            if (!isEdit) {
+            if (!isEdit && !ctrlDown && !altDown) {
                 if (msg.wParam == 'N' || msg.wParam == 'n') {
                     SetFocus(hInput);
                     SendMessageA(hInput, EM_SETSEL, 0, -1);

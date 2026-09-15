@@ -1111,6 +1111,11 @@
     let statsVisible = true;
     let selectedTaskId = null;
     let editingTaskId = null;
+    let taskCounter = 0;
+
+    function getUniqueId() {
+      return Date.now() + (++taskCounter);
+    }
 
     const CATEGORIES = ['all', 'General', 'Work', 'Personal', 'Project', 'Health', 'Shopping'];
 
@@ -1119,22 +1124,44 @@
       try {
         const saved = localStorage.getItem('ktodo_v2_tasks');
         if (saved) {
-          tasks = JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            tasks = parsed.filter(t => t && typeof t === 'object').map(t => ({
+              id: t.id || getUniqueId(),
+              text: typeof t.text === 'string' ? t.text : 'Task',
+              category: typeof t.category === 'string' ? t.category : 'General',
+              priority: typeof t.priority === 'string' ? t.priority : 'Medium',
+              dueDate: typeof t.dueDate === 'string' ? t.dueDate : '',
+              completed: !!t.completed,
+              subtasks: Array.isArray(t.subtasks) ? t.subtasks.filter(s => s && typeof s === 'object').map(s => ({
+                id: s.id || getUniqueId(),
+                text: typeof s.text === 'string' ? s.text : '',
+                completed: !!s.completed
+              })) : [],
+              createdAt: t.createdAt || new Date().toISOString()
+            }));
+          } else {
+            tasks = [];
+          }
         } else {
           // Legacy check
           const legacy = localStorage.getItem('ktodo_tasks');
           if (legacy) {
             const parsed = JSON.parse(legacy);
-            tasks = parsed.map((t, idx) => ({
-              id: Date.now() + idx,
-              text: t.text || 'Task',
-              category: 'General',
-              priority: t.priority || 'Medium',
-              dueDate: '',
-              completed: !!t.completed,
-              subtasks: [],
-              createdAt: new Date().toISOString()
-            }));
+            if (Array.isArray(parsed)) {
+              tasks = parsed.filter(t => t && typeof t === 'object').map(t => ({
+                id: getUniqueId(),
+                text: typeof t.text === 'string' ? t.text : 'Task',
+                category: 'General',
+                priority: typeof t.priority === 'string' ? t.priority : 'Medium',
+                dueDate: '',
+                completed: !!t.completed,
+                subtasks: [],
+                createdAt: new Date().toISOString()
+              }));
+            } else {
+              tasks = [];
+            }
           }
         }
       } catch (e) {
@@ -1172,7 +1199,7 @@
 
     function quickAddTask(text, category, priority) {
       const newTask = {
-        id: Date.now(),
+        id: getUniqueId(),
         text: text,
         category: category || 'General',
         priority: priority || 'Medium',
@@ -1328,7 +1355,7 @@
       const dueDate = document.getElementById('dueDateInput').value || '';
 
       const newTask = {
-        id: Date.now(),
+        id: getUniqueId(),
         text: text,
         category: category,
         priority: priority,
@@ -1394,7 +1421,7 @@
       if (task) {
         if (!task.subtasks) task.subtasks = [];
         task.subtasks.push({
-          id: Date.now() + Math.floor(Math.random() * 100000),
+          id: getUniqueId(),
           text: text,
           completed: false
         });
@@ -1458,9 +1485,9 @@
 
         // Search text
         if (searchQuery) {
-          const matchText = t.text.toLowerCase().includes(searchQuery);
+          const matchText = (t.text || '').toLowerCase().includes(searchQuery);
           const matchCat = (t.category || '').toLowerCase().includes(searchQuery);
-          const matchSub = t.subtasks && t.subtasks.some(s => s.text.toLowerCase().includes(searchQuery));
+          const matchSub = t.subtasks && t.subtasks.some(s => (s.text || '').toLowerCase().includes(searchQuery));
           if (!matchText && !matchCat && !matchSub) return false;
         }
 
@@ -1477,9 +1504,9 @@
           const weight = { High: 3, Medium: 2, Low: 1 };
           return (weight[b.priority] || 2) - (weight[a.priority] || 2);
         } else if (sortBy === 'alpha') {
-          return a.text.localeCompare(b.text);
+          return (a.text || '').localeCompare(b.text || '');
         } else {
-          return b.id - a.id;
+          return (Number(b.id) || 0) - (Number(a.id) || 0);
         }
       });
 
@@ -1726,6 +1753,7 @@
       document.body.appendChild(link);
       link.click();
       link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
       showToast('Exported tasks to Markdown (.md)!');
     }
 
@@ -1739,13 +1767,15 @@
     }
 
     function exportJSON() {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(tasks, null, 2));
+      const blob = new Blob([JSON.stringify(tasks, null, 2)], { type: 'application/json;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
       const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("href", url);
       downloadAnchor.setAttribute("download", `ktodo_backup_${getTodayString()}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
       showToast('Exported tasks to JSON!');
     }
 
@@ -1765,6 +1795,7 @@
       document.body.appendChild(link);
       link.click();
       link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
       showToast('Exported tasks to CSV!');
     }
 
@@ -1890,7 +1921,7 @@
     }
 
     function importData(e) {
-      const file = e.target.files[0];
+      const file = e.target.files && e.target.files[0];
       if (!file) return;
 
       const reader = new FileReader();
@@ -1910,7 +1941,20 @@
           } else if (file.name.endsWith('.json')) {
             const imported = JSON.parse(content);
             if (Array.isArray(imported)) {
-              tasks = imported;
+              tasks = imported.filter(t => t && typeof t === 'object').map(t => ({
+                id: t.id || getUniqueId(),
+                text: typeof t.text === 'string' ? t.text : 'Task',
+                category: typeof t.category === 'string' ? t.category : 'General',
+                priority: typeof t.priority === 'string' ? t.priority : 'Medium',
+                dueDate: typeof t.dueDate === 'string' ? t.dueDate : '',
+                completed: !!t.completed,
+                subtasks: Array.isArray(t.subtasks) ? t.subtasks.filter(s => s && typeof s === 'object').map(s => ({
+                  id: s.id || getUniqueId(),
+                  text: typeof s.text === 'string' ? s.text : '',
+                  completed: !!s.completed
+                })) : [],
+                createdAt: t.createdAt || new Date().toISOString()
+              }));
               saveTasks();
               showToast(`Successfully imported ${tasks.length} tasks!`);
               closeIOModal();
@@ -1925,8 +1969,8 @@
                 const cols = parseCSVLine(lines[i]);
                 if (cols.length >= 2) {
                   imported.push({
-                    id: Date.now() + i,
-                    text: cols[1].replace(/^"|"$/g, '').trim(),
+                    id: getUniqueId(),
+                    text: cols[1] ? cols[1].replace(/^"|"$/g, '').trim() : 'Task',
                     category: cols[2] ? cols[2].replace(/^"|"$/g, '').trim() : 'General',
                     priority: cols[3] ? cols[3].replace(/^"|"$/g, '').trim() : 'Medium',
                     dueDate: cols[4] ? cols[4].replace(/^"|"$/g, '').trim() : '',
@@ -1935,10 +1979,16 @@
                   });
                 }
               }
-              tasks = imported;
-              saveTasks();
-              showToast(`Successfully imported ${tasks.length} tasks from CSV!`);
-              closeIOModal();
+              if (imported.length > 0) {
+                tasks = imported;
+                saveTasks();
+                showToast(`Successfully imported ${tasks.length} tasks from CSV!`);
+                closeIOModal();
+              } else {
+                showToast('⚠️ No valid tasks found in CSV file.');
+              }
+            } else {
+              showToast('⚠️ CSV file is empty.');
             }
           }
         } catch (err) {
@@ -1946,6 +1996,7 @@
         }
       };
       reader.readAsText(file);
+      e.target.value = '';
     }
 
     function loadSampleTasks() {
@@ -2020,6 +2071,7 @@
         hideToast();
       }
       if (!isInput) {
+        if (e.ctrlKey || e.altKey || e.metaKey) return;
         if (e.key === 'F1' || e.key.toLowerCase() === 'h') {
           if (e.key === 'F1') e.preventDefault();
           const help = document.getElementById('helpModal');
