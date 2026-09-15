@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KPac
+**Target App:** KPad
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KPac
 - KPad
 - KPaint
 - KPass
@@ -173,10 +172,22 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KMystery
 - KNet
 - KNote
+- KPac
 
 ## Test Reports
 
 > 📁 **Archived Reports**: Historical test reports have been archived to [archive/app_test_reports_archive.md](archive/app_test_reports_archive.md) to preserve token efficiency.
+
+- **KPac**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
+  - ✅ Core gameplay works (Classic + Cyber arcade Pac-Man engine with 20 unique Campaign levels, Boss Stage 20 King Ghost fight, endless procedural wave arcade mode, 4 companion pets Blinky Jr/Inky/Pinky/Gold Kinglet with leveling and ultimate skills, 4 active cyber abilities Freeze/Sprint/Magnet/Shield, Cyber-Forge crafting 4 consumables and 5 mythic relics, 3 difficulty settings Easy/Normal/Hard, Web Audio API sound effects, dual-tier shockwaves, 4-tier kinematic particle physics, and quicksave/load).
+  - 🔧 FIXED: In `exportJSON()`, the download anchor element was clicked without being attached to `document.body` (`a.click()`), causing statistics JSON exports to fail silently in Firefox and sandboxed iframe environments. Attached anchor to DOM before clicking and cleanly removed it afterwards.
+  - 🔧 FIXED: Global keyboard listener checked bare keys (`F`, `Z`, `M`, `B`, `U`, `P`, `C`, `O`, `1`..`3`, `V`, `L`, `E`, `I`, `W`, `A`, `S`, `D`, arrows, `H`, `?`) without verifying `!e.ctrlKey && !e.altKey && !e.metaKey`, hijacking browser accelerators: `Ctrl+C` (copy hijacked to open Forge), `Ctrl+P` (print hijacked to cycle pets), `Ctrl+F` (find hijacked to freeze ghosts), `Ctrl+Z` (undo hijacked to sprint), `Ctrl+M` (mute hijacked to activate magnet), `Ctrl+B` (bookmarks hijacked to activate shield), `Ctrl+U` (view source hijacked to trigger pet ultimate), `Ctrl+H` (browser history hijacked to toggle Help), `Ctrl+1`..`Ctrl+3` / `Alt+1`..`Alt+3` (tab switching hijacked to change difficulty), `Alt+ArrowLeft`/`Alt+ArrowRight` (history navigation hijacked to steer), and `Ctrl+Shift+I` (DevTools hijacked to import JSON). Added modifier guards across all shortcuts while cleanly preserving `Ctrl+S` / `Ctrl+O`.
+  - 🔧 FIXED: When the Cyber-Forge modal was open, pressing `C` was ignored because modal suppression returned early before reaching the `C` key handler, despite the canvas HUD promising `[C] Close`. Moved `C` modal toggle before early return so pressing `C` smoothly toggles the Forge modal open and closed.
+  - 🔧 FIXED: `statsRelicsForged` was omitted from `loadHighScore()`, `saveHighScore()`, `exportJSON()`, and `handleFileImport()`, resetting the relic counter on page reload and losing it in data exports. Additionally, `handleFileImport()` omitted `statsGamesPlayed`, `statsGhostsEaten`, and `statsMaxScore` from being restored; added full persistence and bidirectional import/export.
+  - 🔧 FIXED: `attemptSkill('s1'..'s4')` lacked `!gameOver && !paused` guards, permitting clicks and hotkeys while paused or dead to consume cooldowns and trigger sound effects. Added early return guard.
+  - 🔧 FIXED: `saveGame()` lacked a `!gameOver` guard, allowing quicksaves to record a dead 0-life state and corrupt saved games. Added Game Over warning toast.
+  - 🔧 FIXED: In `init(true)`, starting a level or loading a game reset `shieldActive = 0` and `shieldHits = 0` even if the Sun Titan Aegis relic was forged, stripping the player's shield at the start of each level. Initialized shield to 3 hits when Sun Titan Aegis is forged, and clamped tile 8 secret room level progression to level 20 max.
+  - 🔧 FIXED: Virtual D-Pad buttons only listened to `mousedown` and `touchstart`, lacking `onclick` handlers which broke activation via keyboard navigation (`Enter`) and assistive tools. Added `onclick` handlers, and dynamically synchronized `#btnMode` (`Camp [O]` / `Endless [O]`) and `#btnPetType` button text in `updateUIBadges()`.
 
 - **KNote**: ISSUES FOUND ⚠️ (7 issues, 7 fixed inline)
   - ✅ Core functionality works (cybernetic personal notepad with #tag organization, real-time lines/words/chars stats with 6,000 char capacity indicator, 5 quick-starter templates To-Do/Meeting/Pitch/Code/Cheatsheet, live Markdown preview with code fences and checklists, Web Crypto AES-GCM password encryption and decryption, note pinning to top, TXT and Markdown export, full mailbox JSON backup export and import, and keyboard accelerators).

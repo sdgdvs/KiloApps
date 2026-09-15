@@ -364,11 +364,11 @@
 
   <!-- Virtual D-Pad -->
   <div style="display: flex; flex-direction: column; align-items: center; margin-top: 5px; gap: 3px;">
-    <button class="dpad-btn" onmousedown="ndx=0;ndy=-1" ontouchstart="ndx=0;ndy=-1;event.preventDefault()" title="Move Up [Up/W]">▲ [W]</button>
+    <button class="dpad-btn" onclick="ndx=0;ndy=-1" onmousedown="ndx=0;ndy=-1" ontouchstart="ndx=0;ndy=-1;event.preventDefault()" title="Move Up [Up/W]">▲ [W]</button>
     <div style="display: flex; gap: 4px;">
-      <button class="dpad-btn" onmousedown="ndx=-1;ndy=0" ontouchstart="ndx=-1;ndy=0;event.preventDefault()" title="Move Left [Left/A]">◀ [A]</button>
-      <button class="dpad-btn" onmousedown="ndx=0;ndy=1" ontouchstart="ndx=0;ndy=1;event.preventDefault()" title="Move Down [Down/S]">▼ [S]</button>
-      <button class="dpad-btn" onmousedown="ndx=1;ndy=0" ontouchstart="ndx=1;ndy=0;event.preventDefault()" title="Move Right [Right/D]">▶ [D]</button>
+      <button class="dpad-btn" onclick="ndx=-1;ndy=0" onmousedown="ndx=-1;ndy=0" ontouchstart="ndx=-1;ndy=0;event.preventDefault()" title="Move Left [Left/A]">◀ [A]</button>
+      <button class="dpad-btn" onclick="ndx=0;ndy=1" onmousedown="ndx=0;ndy=1" ontouchstart="ndx=0;ndy=1;event.preventDefault()" title="Move Down [Down/S]">▼ [S]</button>
+      <button class="dpad-btn" onclick="ndx=1;ndy=0" onmousedown="ndx=1;ndy=0" ontouchstart="ndx=1;ndy=0;event.preventDefault()" title="Move Right [Right/D]">▶ [D]</button>
     </div>
   </div>
 
@@ -987,6 +987,13 @@
           const diffs = ['EASY', 'NORM', 'HARD'];
           diffBadge.textContent = diffs[diffMode] || 'NORM';
       }
+      const btnMode = document.getElementById('btnMode');
+      if (btnMode) btnMode.textContent = gameMode === 1 ? 'Endless [O]' : 'Camp [O]';
+      const btnPet = document.getElementById('btnPetType');
+      if (btnPet) {
+          const petNames = ['Blinky [P]', 'Inky [P]', 'Pinky [P]', 'Kinglet [P]'];
+          btnPet.textContent = petNames[petType] || 'Type [P]';
+      }
       const invEcto = document.getElementById('invEcto');
       if (invEcto) invEcto.textContent = craftEctoplasm;
       const invEss = document.getElementById('invEss');
@@ -1062,6 +1069,10 @@
   }
 
   function saveGame() {
+      if (gameOver) {
+          showToast('Cannot save during Game Over!', 'warning');
+          return;
+      }
       try {
           const saveState = {
               score, highScore, level, endlessWave, endlessHighWave, lives, diffMode, gameMode,
@@ -1118,14 +1129,16 @@
           const data = {
               highScore, endlessHighWave, craftEctoplasm, craftFruitEssence, craftStarDust,
               relicCrown, relicHourglass, relicOrb, relicAegis, relicStone,
-              petType, petLevel, statsGamesPlayed, statsGhostsEaten, statsMaxScore
+              petType, petLevel, statsGamesPlayed, statsGhostsEaten, statsMaxScore, statsRelicsForged
           };
           const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = 'kpac_data.json';
+          document.body.appendChild(a);
           a.click();
+          document.body.removeChild(a);
           URL.revokeObjectURL(url);
           showToast('📤 Exported JSON file!', 'success');
       } catch(e) {
@@ -1157,6 +1170,10 @@
               if (data.relicStone !== undefined) relicStone = data.relicStone;
               if (data.petType !== undefined) petType = data.petType;
               if (data.petLevel !== undefined) petLevel = data.petLevel;
+              if (data.statsRelicsForged !== undefined) statsRelicsForged = Math.max(statsRelicsForged, data.statsRelicsForged);
+              if (data.statsGamesPlayed !== undefined) statsGamesPlayed = Math.max(statsGamesPlayed, data.statsGamesPlayed);
+              if (data.statsGhostsEaten !== undefined) statsGhostsEaten = Math.max(statsGhostsEaten, data.statsGhostsEaten);
+              if (data.statsMaxScore !== undefined) statsMaxScore = Math.max(statsMaxScore, data.statsMaxScore);
               saveHighScore();
               updateUIBadges();
               showToast('📥 JSON data imported successfully!', 'success');
@@ -1289,6 +1306,7 @@
           statsGamesPlayed = parseInt(localStorage.getItem('kpac_stat_games') || '0', 10);
           statsGhostsEaten = parseInt(localStorage.getItem('kpac_stat_ghosts') || '0', 10);
           statsMaxScore = parseInt(localStorage.getItem('kpac_stat_maxsc') || '0', 10);
+          statsRelicsForged = parseInt(localStorage.getItem('kpac_stat_relics') || '0', 10);
       } catch(e) {}
   }
 
@@ -1309,6 +1327,7 @@
           localStorage.setItem('kpac_stat_games', statsGamesPlayed);
           localStorage.setItem('kpac_stat_ghosts', statsGhostsEaten);
           localStorage.setItem('kpac_stat_maxsc', statsMaxScore);
+          localStorage.setItem('kpac_stat_relics', statsRelicsForged);
       } catch(e) {}
   }
 
@@ -1447,7 +1466,7 @@
       freezeSkillTimer = 0; freezeCooldown = 0;
       speedSkillTimer = 0; speedCooldown = 0;
       magnetSkillTimer = 0; magnetCooldown = 0;
-      shieldActive = 0; shieldCooldown = 0; shieldHits = 0;
+      shieldActive = relicAegis ? 1 : 0; shieldHits = relicAegis ? 3 : 0; shieldCooldown = 0;
       fruitActive = 0; fruitTimer = 0;
       shockwaves = []; particles = []; popups = [];
       showCraftMenu = false;
@@ -1569,6 +1588,7 @@
   }
 
   function attemptSkill(s) {
+      if (gameOver || paused) return;
       if (s === 's1') {
           if (freezeCooldown === 0) {
               freezeSkillTimer = 60; freezeCooldown = 150;
@@ -1680,18 +1700,40 @@
   // Global Input bindings
   window.addEventListener('keydown', e => {
       let key = e.key.toUpperCase();
+      const hasModifier = e.ctrlKey || e.altKey || e.metaKey;
       const helpOpen = document.getElementById('helpModal')?.style.display === 'flex';
       const craftOpen = document.getElementById('craftModal')?.style.display === 'flex';
+
+      if (e.key === 'Escape') {
+          if (helpOpen) { toggleHelpModal(false); return; }
+          if (craftOpen) { toggleCraftModal(false); return; }
+          togglePause();
+          return;
+      }
+
+      // Quick save / load with Ctrl modifier
+      if (e.ctrlKey && !e.altKey && !e.metaKey && key === 'S') {
+          e.preventDefault();
+          saveGame();
+          return;
+      }
+      if (e.ctrlKey && !e.altKey && !e.metaKey && key === 'O') {
+          e.preventDefault();
+          loadGame();
+          return;
+      }
+
+      // Block all other hotkeys if modifier keys (Ctrl/Alt/Meta) are active to protect browser accelerators
+      if (hasModifier) return;
 
       if (e.key === 'F1' || key === 'H' || key === '?') {
           e.preventDefault();
           toggleHelpModal();
           return;
       }
-      if (e.key === 'Escape') {
-          if (helpOpen) { toggleHelpModal(false); return; }
-          if (craftOpen) { toggleCraftModal(false); return; }
-          togglePause();
+      if (key === 'C') {
+          e.preventDefault();
+          toggleCraftModal();
           return;
       }
       if (e.key === 'Tab' && craftOpen) {
@@ -1699,12 +1741,12 @@
           setForgePage(craftMenuPage === 0 ? 1 : 0);
           return;
       }
-      if (e.key === 'F5' || (e.ctrlKey && key === 'S')) {
+      if (e.key === 'F5' || key === 'V') {
           e.preventDefault();
           saveGame();
           return;
       }
-      if (e.key === 'F9' || (e.ctrlKey && key === 'O')) {
+      if (e.key === 'F9' || key === 'L') {
           e.preventDefault();
           loadGame();
           return;
@@ -1738,16 +1780,13 @@
       else if (key === 'B') attemptSkill('s4');
       else if (key === 'U') triggerPetUltimate();
       else if (key === 'P') cyclePetCompanion();
-      else if (key === 'C') toggleCraftModal(true);
       else if (key === 'O') toggleGameMode();
       else if (key === '1') { diffMode = 0; showToast("⚔️ Difficulty: EASY (5 Lives, Slower Ghosts)", "warning"); updateUIBadges(); }
       else if (key === '2') { diffMode = 1; showToast("⚔️ Difficulty: NORMAL (3 Lives)", "warning"); updateUIBadges(); }
       else if (key === '3') { diffMode = 2; showToast("⚔️ Difficulty: HARD (2 Lives, Fast Ghosts)", "warning"); updateUIBadges(); }
-      else if (key === 'V') saveGame();
-      else if (key === 'L') loadGame();
       else if (key === 'E') exportJSON();
       else if (key === 'I') triggerImport();
-      else if (key === ' ') { togglePause(); }
+      else if (key === ' ') { e.preventDefault(); togglePause(); }
       else if (key === 'ENTER' && gameOver) init(false);
       else if (key === '7') craftItem(1);
       else if (key === '8') craftItem(2);
@@ -2033,7 +2072,7 @@
                   map[py][px] = 0; dotCount--;
                   if (dotCount === 0) { victoryTimer = 30; playSound(600, 0.4, 'sine', 300); }
               } else if (map[py][px] === 8) {
-                  level += Math.floor(Math.random() * 3) + 1; score += 1000; craftFruitEssence += 2;
+                  level = Math.min(20, level + Math.floor(Math.random() * 3) + 1); score += 1000; craftFruitEssence += 2;
                   init(true); return;
               }
           }
