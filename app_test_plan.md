@@ -86,13 +86,12 @@ Add an entry to the Test Reports section below using this format:
 
 ---
 
-**Target App:** KMines
+**Target App:** KMystery
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KMines
 - KMystery
 - KNet
 - KNote
@@ -173,10 +172,22 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KMech
 - KMedia
 - KMine
+- KMines
 
 ## Test Reports
 
 > 📁 **Archived Reports**: Historical test reports have been archived to [archive/app_test_reports_archive.md](archive/app_test_reports_archive.md) to preserve token efficiency.
+
+- **KMines**: ISSUES FOUND ⚠️ (8 issues, 8 fixed inline)
+  - ✅ Core gameplay works (arcade/cyber minesweeper with 3 classic difficulty modes Easy 9x9/Medium 16x16/Hard 16x30, 60-second Rush mode with combo multipliers up to 8x, 20-stage tactical Campaign mode with speedrun timers and hidden treasure chests, 3 active power-ups Detector Bot/Sonar Radar Scan/Blast Shield, touch Dig/Flag mode toggle, dual-tier particle and shockwave explosion physics, procedural screen shake, and retro Web Audio sound effects).
+  - 🔧 FIXED: In Rush Mode, clicking the restart smiley face button (`#face`) called `setDiff(currentDiff)` via `resetLevel()`, immediately terminating Rush Mode and switching back to Freeplay Easy. Added `else if (rushMode) startRush()` to restart Rush Mode properly.
+  - 🔧 FIXED: Global keyboard listener checked bare keys (`1`..`4`, `c`, `r`, `d`, `s`, `h`, `q`, arrows) without verifying `!e.ctrlKey && !e.altKey && !e.metaKey`, hijacking browser accelerators: `Ctrl+C` (copy text hijacked to toggle Campaign), `Ctrl+R` (browser reload hijacked to fire Sonar scan), `Ctrl+S` (save page hijacked to activate Blast Shield), `Ctrl+D` (bookmark hijacked to deploy Detector), `Ctrl+H` (browser history hijacked to open Help), `Ctrl+1`..`Ctrl+4` / `Alt+1`..`Alt+4` (tab switching hijacked to switch difficulty/modes), and `Alt+ArrowLeft`/`Alt+ArrowRight` (browser navigation hijacked to move cursor). Added modifier guards across all shortcuts.
+  - 🔧 FIXED: Keyboard listener intercepted `Space` and `Enter` even when toolbar buttons (`#btn-detector`, `#btn-sonar`, `#btn-help`, etc.) were focused, overriding native button activation and triggering unintended tile reveals/flags on the grid. Added `e.target.tagName` check to preserve standard button activation.
+  - 🔧 FIXED: Pressing `Escape` when the Help modal was closed triggered `toggleHelpModal()`, popping open the manual when users pressed Esc to cancel or clear focus. Restricted `Escape` to closing the Help modal when displayed.
+  - 🔧 FIXED: In Help modal shortcut manual, the table promised `WASD` for cursor navigation, which directly conflicted with `S` (Blast Shield) and `D` (Detector Bot) and was unhandled for `W` and `A`. Removed conflicting WASD notation and clarified arrow key navigation and Escape dismissal.
+  - 🔧 FIXED: Power-up buttons (Detector, Sonar, Blast Shield) and right-click flagging before first tile reveal silently failed without feedback when charges were 0 or before game initialization. Added informative status banner notices and error buzz audio.
+  - 🔧 FIXED: In `ontouchend`, lack of `e.preventDefault()` allowed mobile browsers to synthesize a secondary `mousedown` on the newly revealed cell, triggering an unintended chord reveal that could detonate adjacent unflagged mines immediately after tapping. Added `e.preventDefault()`, added middle-click mouse button (`e.button === 1`) chord reveal, and cleared stale question mark bit (`& ~16`) when Detector Bot flags a cell.
+  - 🔧 FIXED: Every grid cell was initialized with `tabindex="0"`, creating up to 480 redundant tab stops across the board. Implemented ARIA roving tabindex (`tabindex="0"` on focused cell, `"-1"` on others), and synchronized initial Campaign button text (`Camp (C)` vs `Camp X/20 (C)`).
 
 - **KMine**: ISSUES FOUND ⚠️ (2 issues, 2 fixed inline)
   - ✅ Core gameplay works (Minesweeper engine with 3 difficulty modes 10x10/16x16/30x16, guaranteed safe first click, recursive 0-cell flood fill, left-click chord revealing on fulfilled numbers, right-click flagging, safe move hint generator, quicksave and quickload states, frame-by-frame move replay system, personal best times tracker, Canvas particle explosion physics, and interactive help modal).

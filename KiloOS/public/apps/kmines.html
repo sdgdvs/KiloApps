@@ -221,7 +221,7 @@
       <button id="btn-med" onclick="setDiff('med')" aria-label="Medium difficulty 16x16">Medium (2)</button>
       <button id="btn-hard" onclick="setDiff('hard')" aria-label="Hard difficulty 16x30">Hard (3)</button>
       <button id="btn-rush" onclick="startRush()" aria-label="Rush mode 60s timer">Rush (4)</button>
-      <button id="btn-camp" onclick="toggleCampaign()" aria-label="Campaign mode 20 stages">Camp 1/20 (C)</button>
+      <button id="btn-camp" onclick="toggleCampaign()" aria-label="Campaign mode 20 stages">Camp (C)</button>
       <button id="btn-detector" onclick="useDetectorBot()" style="background:#818cf8; color:#000;" aria-label="Detector Bot auto-flags one mine">Detector [D] (0)</button>
       <button id="btn-sonar" onclick="useSonarScan()" style="background:var(--success); color:#000;" aria-label="Sonar Scan reveals 3x3 safe area">Sonar [R] (0)</button>
       <button id="btn-shield" onclick="useBlastShield()" style="background:var(--primary); color:#000;" aria-label="Blast Shield absorbs mine detonation">Shield [S] (0)</button>
@@ -272,14 +272,14 @@
       <div class="modal-section">
         <h4>Controls &amp; Keyboard Shortcuts</h4>
         <table class="shortcuts-table">
-          <tr><td><span class="key-badge">&uarr; &darr; &larr; &rarr;</span> / <span class="key-badge">WASD</span></td><td>Navigate board cursor</td></tr>
+          <tr><td><span class="key-badge">&uarr; &darr; &larr; &rarr;</span></td><td>Navigate board cursor</td></tr>
           <tr><td><span class="key-badge">Enter</span> / Left-Click</td><td>Reveal cell (or chord revealed number)</td></tr>
           <tr><td><span class="key-badge">Space</span> / <span class="key-badge">F</span> / Right-Click</td><td>Toggle Flag / Question mark</td></tr>
           <tr><td><span class="key-badge">Q</span> / <span class="key-badge">?</span></td><td>Toggle Question mark directly</td></tr>
           <tr><td><span class="key-badge">1</span> / <span class="key-badge">2</span> / <span class="key-badge">3</span></td><td>Easy / Medium / Hard difficulty</td></tr>
           <tr><td><span class="key-badge">4</span> / <span class="key-badge">C</span></td><td>Rush Mode / Campaign Mode</td></tr>
           <tr><td><span class="key-badge">D</span> / <span class="key-badge">R</span> / <span class="key-badge">S</span></td><td>Detector / Sonar / Blast Shield</td></tr>
-          <tr><td><span class="key-badge">H</span> / <span class="key-badge">F1</span> / <span class="key-badge">Esc</span></td><td>Open / Close Help Manual</td></tr>
+          <tr><td><span class="key-badge">H</span> / <span class="key-badge">F1</span> (<span class="key-badge">Esc</span>)</td><td>Open / Close Help Manual</td></tr>
         </table>
       </div>
       <div style="text-align:right; margin-top:10px;">
@@ -965,6 +965,7 @@
       document.getElementById('btn-detector').innerText = `Detector [D] (${detectors})`;
       document.getElementById('btn-sonar').innerText = `Sonar [R] (${sonars})`;
       document.getElementById('btn-shield').innerText = `Shield [S] (${shields})`;
+      document.getElementById('btn-camp').innerText = campaignMode ? `Camp ${campaignLevel}/20 (C)` : "Camp (C)";
 
       if (rushMode) {
         document.getElementById('status-text').innerText = `RUSH MODE: Score ${rushScore} | Combo x${comboMultiplier}! | Best ${bestRush}`;
@@ -1054,7 +1055,16 @@
     }
 
     function useSonarScan() {
-      if (sonars <= 0 || gameOver || !initialized) return;
+      if (gameOver) return;
+      if (!initialized) {
+        document.getElementById('status-text').innerText = "Dig a tile first to deploy Sonar!";
+        return;
+      }
+      if (sonars <= 0) {
+        document.getElementById('status-text').innerText = "No Sonar charges remaining!";
+        playSound(150, 0.1, 'sawtooth');
+        return;
+      }
       let targetR = -1, targetC = -1;
       for (let i = 0; i < 1000; i++) {
         let r = Math.floor(Math.random() * ROWS);
@@ -1085,10 +1095,20 @@
     }
 
     function useDetectorBot() {
-      if (detectors <= 0 || gameOver || !initialized) return;
+      if (gameOver) return;
+      if (!initialized) {
+        document.getElementById('status-text').innerText = "Dig a tile first to deploy Detector!";
+        return;
+      }
+      if (detectors <= 0) {
+        document.getElementById('status-text').innerText = "No Detector charges remaining!";
+        playSound(150, 0.1, 'sawtooth');
+        return;
+      }
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
           if ((grid[r][c] & 8) && !(grid[r][c] & 4) && !(grid[r][c] & 2)) {
+            grid[r][c] &= ~16;
             grid[r][c] |= 4;
             flags++;
             detectors--;
@@ -1105,10 +1125,20 @@
           }
         }
       }
+      document.getElementById('status-text').innerText = "All hidden mines are already flagged!";
     }
 
     function useBlastShield() {
-      if (shields <= 0 || gameOver || !initialized) return;
+      if (gameOver) return;
+      if (!initialized) {
+        document.getElementById('status-text').innerText = "Dig a tile first to deploy Shield!";
+        return;
+      }
+      if (shields <= 0) {
+        document.getElementById('status-text').innerText = "No Blast Shield charges remaining!";
+        playSound(150, 0.1, 'sawtooth');
+        return;
+      }
       playSound(1200, 0.1, 'sine');
       document.getElementById('status-text').innerText = `BLAST SHIELD ACTIVE (${shields} Charges)`;
       triggerScreenShake(4, 200);
@@ -1116,13 +1146,14 @@
 
     function resetLevel() {
       if (campaignMode) initCampaignLevel();
+      else if (rushMode) startRush();
       else setDiff(currentDiff);
     }
 
     function toggleCampaign() {
       campaignMode = !campaignMode;
       rushMode = false;
-      document.getElementById('btn-camp').innerText = campaignMode ? `Camp ${campaignLevel}/20 (C)` : "Camp: Off (C)";
+      document.getElementById('btn-camp').innerText = campaignMode ? `Camp ${campaignLevel}/20 (C)` : "Camp (C)";
       document.getElementById('btn-camp').classList.toggle('active', campaignMode);
       if (campaignMode) {
         campaignLevel = 1;
@@ -1144,7 +1175,7 @@
         sonars = 1 + Math.floor(campaignLevel / 3);
       } else {
         campaignMode = false;
-        document.getElementById('btn-camp').innerText = "Camp: Off (C)";
+        document.getElementById('btn-camp').innerText = "Camp (C)";
         document.getElementById('btn-camp').classList.remove('active');
         setDiff('easy');
         alert("CAMPAIGN COMPLETE! You cleared all 20 stages!");
@@ -1166,7 +1197,7 @@
       rushScore = 0;
       ROWS = 9; COLS = 9; MINES = 10;
       shields = 0; detectors = 0; sonars = 0; isSpeedrun = false; chestsToPlace = 0;
-      document.getElementById('btn-camp').innerText = "Camp: Off (C)";
+      document.getElementById('btn-camp').innerText = "Camp (C)";
       init();
     }
 
@@ -1177,7 +1208,7 @@
       rushMode = false;
       isSpeedrun = false;
       chestsToPlace = 0;
-      document.getElementById('btn-camp').innerText = "Camp: Off (C)";
+      document.getElementById('btn-camp').innerText = "Camp (C)";
       document.getElementById('btn-camp').classList.remove('active');
       
       currentDiff = level;
@@ -1454,7 +1485,11 @@
     }
 
     function handleRightClick(r, c) {
-      if (gameOver || !initialized) return;
+      if (gameOver) return;
+      if (!initialized) {
+        document.getElementById('status-text').innerText = "Dig a tile first to uncover the field!";
+        return;
+      }
       if (!(grid[r][c] & 2)) {
         const cellSize = COLS > 18 ? 22 : 26;
         if (grid[r][c] & 4) {
@@ -1482,9 +1517,11 @@
         let c = idx % COLS;
         if (r === cursorR && c === cursorC) {
           el.classList.add('keyboard-focused');
+          el.setAttribute('tabindex', '0');
           el.focus();
         } else {
           el.classList.remove('keyboard-focused');
+          el.setAttribute('tabindex', '-1');
         }
       });
     }
@@ -1497,6 +1534,11 @@
           e.preventDefault();
         }
         return;
+      }
+
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+      if (e.target && (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT')) {
+        if (e.key === ' ' || e.key === 'Enter') return;
       }
 
       if (e.key === 'ArrowUp') {
@@ -1534,7 +1576,6 @@
       else if (e.key === 'd' || e.key === 'D') { useDetectorBot(); }
       else if (e.key === 's' || e.key === 'S') { useBlastShield(); }
       else if (e.key === 'h' || e.key === 'H' || e.key === 'F1') { toggleHelpModal(); e.preventDefault(); }
-      else if (e.key === 'Escape') { toggleHelpModal(); }
     });
 
     window.addEventListener('mousedown', (e) => {
@@ -1572,7 +1613,7 @@
             div.classList.add('keyboard-focused');
           }
           div.setAttribute('role', 'gridcell');
-          div.setAttribute('tabindex', '0');
+          div.setAttribute('tabindex', (r === cursorR && c === cursorC) ? '0' : '-1');
           div.style.width = cellSize + 'px';
           div.style.height = cellSize + 'px';
           
@@ -1620,6 +1661,7 @@
               if (touchMode === 'flag') handleRightClick(r, c);
               else handleLeftClick(r, c);
             }
+            else if (e.button === 1) handleLeftClick(r, c);
             else if (e.button === 2) handleRightClick(r, c);
           };
 
@@ -1638,6 +1680,7 @@
               if (touchMode === 'flag') handleRightClick(r, c);
               else handleLeftClick(r, c);
             }
+            e.preventDefault();
           };
 
           div.ontouchcancel = () => {
