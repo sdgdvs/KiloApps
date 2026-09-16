@@ -116,7 +116,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **⚠️ PRIORITY: If ANY game in the queue is at Loop 0 (not yet processed), work on it FIRST before continuing higher-loop games.**
 
 
-- KAsteroids
 - K2048
 - KDarts
 - KSimon
@@ -163,13 +162,15 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KChess
 - KPong
 - KMines
+- KAsteroids
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
 
 > Archived: Pre-Loop 6 entries moved to archive/. Only latest loop per game shown.
 
 **Skipped (mature — no work needed):**
-- KMines (L8), KPong (L9), KChess (L9), KRogue (L9), KAlchemy (L8), KFarm (L6) — skip per Director Directive.
+- KMines (L8), KPong (L9), KChess (L9), KRogue (L9), KAlchemy (L8), KFarm (L6), KAsteroids (L8) — skip per Director Directive.
+- KAsteroids (Loop 8): ⏭️ Skip — mature app complete with visual assets; skipped per Director Directive.
 
 
 **Recent work (Loop 7+):**
