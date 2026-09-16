@@ -105,13 +105,12 @@ For every game audited, also verify:
 
 ---
 
-**Target App:** KRadio
+**Target App:** KRead
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KRadio
 - KRead
 - KReversi
 - KRogue
@@ -192,8 +191,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KPing
 - KPong
 - KQuest
+- KRadio
 
 ## Test Reports
+
+- **KRadio**: PASS ✅ (8 issues, 8 fixed inline)
+  - Fixed hotkey collision where typing `?` or `h` in URL input triggered Help modal.
+  - Handled browser autoplay rejection gracefully without triggering false red error badge.
+  - Prevented live stream pause/resume buffering stalls by reconnecting fresh live stream.
+  - Eliminated browser error events on stream stop by clearing src with load reset.
+  - Synchronized visualizer bar animation with volume and muted status.
+  - Added localStorage persistence for station selection, custom URL, and volume level.
+  - Added ArrowLeft/ArrowRight keyboard shortcuts for cycling through station presets.
+  - Sanitized empty URL input on Tune and synchronized dynamic station title in document.
 
 - **KQuest**: PASS ✅ (8 issues, 8 fixed inline)
   - Fixed updateHeroUI runtime crash in Tavern ale and side quest completion handlers.
@@ -256,5 +266,5 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 > 📁 **Archived Round 2 Reports**: Recent detailed audit reports (KPac through KImage) have been archived to [archive/app_test_reports_round2.md](archive/app_test_reports_round2.md).
 
 ### Round 2 Completed Index
-- KQuest ✅ (8 fixed), KPong ✅ (8 fixed), KPing ✅ (8 fixed), KPass ✅ (7 fixed), KPaint ✅ (7 fixed), KPad ✅ (8 fixed), KPac ✅ (8 fixed), KNote ✅ (7 fixed), KNet ✅ (3 fixed), KMystery ✅ (5 fixed), KMines ✅ (8 fixed), KMine ✅ (2 fixed), KMedia ✅ (8 fixed), KMech ✅ (6 fixed), KMaze ✅ (7 fixed), KMatch3 ✅ (8 fixed), KMandel ✅ (6 fixed), KMail ✅ (7 fixed), KJournal ✅ (7 fixed), KImage ✅ (8 fixed)
+- KRadio ✅ (8 fixed), KQuest ✅ (8 fixed), KPong ✅ (8 fixed), KPing ✅ (8 fixed), KPass ✅ (7 fixed), KPaint ✅ (7 fixed), KPad ✅ (8 fixed), KPac ✅ (8 fixed), KNote ✅ (7 fixed), KNet ✅ (3 fixed), KMystery ✅ (5 fixed), KMines ✅ (8 fixed), KMine ✅ (2 fixed), KMedia ✅ (8 fixed), KMech ✅ (6 fixed), KMaze ✅ (7 fixed), KMatch3 ✅ (8 fixed), KMandel ✅ (6 fixed), KMail ✅ (7 fixed), KJournal ✅ (7 fixed), KImage ✅ (8 fixed)
 

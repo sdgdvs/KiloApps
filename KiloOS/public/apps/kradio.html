@@ -698,6 +698,7 @@
         <footer class="footer-hint">
             <span>[Space] Play/Pause</span>
             <span>[1-6] Presets</span>
+            <span>[←/→] Prev/Next</span>
             <span>[M] Mute</span>
             <span>[F1] Help</span>
         </footer>
@@ -733,6 +734,10 @@
                     <tr>
                         <td>1 – 6</td>
                         <td>Select Station Preset</td>
+                    </tr>
+                    <tr>
+                        <td>← / →</td>
+                        <td>Previous / Next Station Preset</td>
                     </tr>
                     <tr>
                         <td>M</td>
@@ -802,8 +807,9 @@
         let activePresetIndex = 0;
         let isPlaying = false;
         let isMuted = false;
-        let lastVolume = 0.8;
+        let lastVolume = 80;
         let visualizerTimer = null;
+        let isStopping = false;
 
         // Initialize Visualizer Bars
         const NUM_BARS = 24;
@@ -872,10 +878,15 @@
                     stopVisualizer();
                     return;
                 }
+                const effectiveVolume = isMuted ? 0 : (parseInt(volumeSlider.value, 10) / 100);
                 bars.forEach((bar) => {
-                    // Generate random rhythmic height
-                    const h = Math.floor(Math.random() * 22) + 4;
-                    bar.style.height = `${h}px`;
+                    if (effectiveVolume === 0) {
+                        bar.style.height = '4px';
+                    } else {
+                        // Generate rhythmic height scaled by volume
+                        const h = Math.floor((Math.random() * 22 + 4) * Math.max(0.2, effectiveVolume));
+                        bar.style.height = `${Math.max(4, Math.min(26, h))}px`;
+                    }
                 });
             }, 120);
         }
@@ -906,6 +917,11 @@
             displayStation.textContent = `${preset.name} (${preset.genre})`;
             displayBitrate.textContent = 'Live Preset';
             
+            try {
+                localStorage.setItem('kradio_active_preset', String(index));
+                localStorage.setItem('kradio_station_url', preset.url);
+            } catch (e) {}
+
             renderPresets();
             showToast(`Selected Station: ${preset.name}`, 'info', 2000);
 
@@ -922,14 +938,16 @@
                 return;
             }
 
+            isStopping = false;
             setStatus('Connecting...', 'buffering');
             
-            if (audio.src !== url) {
+            // Reconnect fresh live stream if src changed or previously stopped/paused
+            if (audio.src !== url || audio.paused) {
                 audio.src = url;
                 audio.load();
             }
 
-            audio.volume = isMuted ? 0 : (volumeSlider.value / 100);
+            audio.volume = isMuted ? 0 : (parseInt(volumeSlider.value, 10) / 100);
 
             const playPromise = audio.play();
             if (playPromise !== undefined) {
@@ -938,16 +956,24 @@
                     playIcon.textContent = '⏸';
                     playLabel.textContent = 'Pause';
                     setStatus('Live', 'playing');
+                    document.title = `▶ ${displayStation.textContent} - KRadio`;
                     startVisualizer();
                     showToast(`Tuned in: ${displayStation.textContent}`, 'success');
                 }).catch(err => {
                     isPlaying = false;
                     playIcon.textContent = '▶';
                     playLabel.textContent = 'Play';
-                    setStatus('Error', 'error');
+                    document.title = 'KRadio - Retro Stream Player';
                     stopVisualizer();
-                    showToast('Playback blocked or stream offline. Click Play.', 'warning');
-                    console.warn('Audio playback error:', err);
+
+                    if (err && err.name === 'NotAllowedError') {
+                        // Browser autoplay policy blocked unprompted playback
+                        setStatus('Ready', 'ready');
+                    } else {
+                        setStatus('Error', 'error');
+                        showToast('Playback blocked or stream offline. Click Play.', 'warning');
+                        console.warn('Audio playback error:', err);
+                    }
                 });
             }
         }
@@ -960,6 +986,7 @@
                 playIcon.textContent = '▶';
                 playLabel.textContent = 'Play';
                 setStatus('Paused', 'ready');
+                document.title = 'KRadio - Retro Stream Player';
                 stopVisualizer();
                 showToast('Playback paused', 'info', 1500);
             } else {
@@ -969,12 +996,15 @@
 
         // Stop Stream
         function stopStream() {
+            isStopping = true;
             audio.pause();
-            audio.src = '';
+            audio.removeAttribute('src');
+            audio.load();
             isPlaying = false;
             playIcon.textContent = '▶';
             playLabel.textContent = 'Play';
             setStatus('Stopped', 'ready');
+            document.title = 'KRadio - Retro Stream Player';
             stopVisualizer();
             showToast('Stream stopped', 'info', 1500);
         }
@@ -985,6 +1015,10 @@
             volumeSlider.value = val;
             volumePercent.textContent = `${val}%`;
             
+            try {
+                localStorage.setItem('kradio_volume', String(val));
+            } catch (e) {}
+
             if (val === 0) {
                 isMuted = true;
                 btnMute.textContent = '🔇';
@@ -1024,8 +1058,15 @@
         btnPlay.addEventListener('click', togglePlay);
         btnStop.addEventListener('click', stopStream);
         btnTune.addEventListener('click', () => {
-            // Find if custom url matches a preset
             const url = stationUrl.value.trim();
+            if (!url) {
+                showToast('Please enter a valid stream URL', 'warning');
+                return;
+            }
+            try {
+                localStorage.setItem('kradio_station_url', url);
+            } catch (e) {}
+
             const matchedIndex = PRESETS.findIndex(p => p.url === url);
             if (matchedIndex !== -1) {
                 selectPreset(matchedIndex, true);
@@ -1034,6 +1075,9 @@
                 renderPresets();
                 displayStation.textContent = 'Custom Stream';
                 displayBitrate.textContent = 'Direct URL';
+                try {
+                    localStorage.setItem('kradio_active_preset', '-1');
+                } catch (e) {}
                 playStream();
             }
         });
@@ -1057,6 +1101,7 @@
             playIcon.textContent = '⏸';
             playLabel.textContent = 'Pause';
             setStatus('Live', 'playing');
+            document.title = `▶ ${displayStation.textContent} - KRadio`;
             startVisualizer();
         });
 
@@ -1065,11 +1110,13 @@
         });
 
         audio.addEventListener('error', () => {
+            if (isStopping) return;
             if (audio.src && audio.src !== window.location.href) {
                 isPlaying = false;
                 playIcon.textContent = '▶';
                 playLabel.textContent = 'Play';
                 setStatus('Stream Offline', 'error');
+                document.title = 'KRadio - Retro Stream Player';
                 stopVisualizer();
                 showToast('Unable to connect to stream server', 'error');
             }
@@ -1079,8 +1126,8 @@
         window.addEventListener('keydown', (e) => {
             const isInputFocused = document.activeElement === stationUrl;
 
-            // Global modal handling
-            if (e.key === 'F1' || e.key === '?' || (e.key === 'h' || e.key === 'H') && !isInputFocused) {
+            // Global modal handling: F1 always works; ? / h only when input is not focused
+            if (e.key === 'F1' || (!isInputFocused && (e.key === '?' || e.key === 'h' || e.key === 'H'))) {
                 e.preventDefault();
                 if (helpModal.classList.contains('active')) {
                     closeHelp();
@@ -1121,6 +1168,14 @@
             } else if (e.key >= '1' && e.key <= '6') {
                 const presetNum = parseInt(e.key, 10);
                 selectPreset(presetNum - 1, true);
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                let nextIndex = activePresetIndex <= 0 ? PRESETS.length - 1 : activePresetIndex - 1;
+                selectPreset(nextIndex, true);
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                let nextIndex = activePresetIndex >= PRESETS.length - 1 ? 0 : activePresetIndex + 1;
+                selectPreset(nextIndex, true);
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 updateVolume(parseInt(volumeSlider.value, 10) + 5);
@@ -1134,11 +1189,45 @@
 
         // Initialization
         window.addEventListener('DOMContentLoaded', () => {
-            renderPresets();
-            updateVolume(80);
-            
+            // Restore volume preference
+            let savedVolume = 80;
+            try {
+                const storedVol = localStorage.getItem('kradio_volume');
+                if (storedVol !== null) {
+                    const parsed = parseInt(storedVol, 10);
+                    if (!isNaN(parsed) && parsed >= 0 && parsed <= 100) {
+                        savedVolume = parsed;
+                    }
+                }
+            } catch (e) {}
+            updateVolume(savedVolume);
+
+            // Restore station / preset preference
+            let presetIdx = 0;
+            try {
+                const storedPreset = localStorage.getItem('kradio_active_preset');
+                const storedUrl = localStorage.getItem('kradio_station_url');
+                if (storedPreset !== null) {
+                    const parsedPreset = parseInt(storedPreset, 10);
+                    if (parsedPreset >= 0 && parsedPreset < PRESETS.length) {
+                        presetIdx = parsedPreset;
+                    } else if (parsedPreset === -1 && storedUrl) {
+                        activePresetIndex = -1;
+                        stationUrl.value = storedUrl;
+                        displayStation.textContent = 'Custom Stream';
+                        displayBitrate.textContent = 'Direct URL';
+                    }
+                }
+            } catch (e) {}
+
+            if (activePresetIndex !== -1) {
+                selectPreset(presetIdx, false);
+            } else {
+                renderPresets();
+            }
+
             // Startup welcome toast
-            showToast('📻 Welcome to KRadio! Select a preset [1-6] or enter a URL. Press [F1] for help.', 'info', 5000);
+            showToast('📻 Welcome to KRadio! Select a preset [1-6] or enter a URL. Press [F1] for help.', 'info', 4000);
 
             // Attempt auto play
             playStream();
