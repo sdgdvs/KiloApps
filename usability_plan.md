@@ -52,14 +52,13 @@
 
 ---
 
-**Target App:** KChat
+**Target App:** KChess
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KChat
 - KChess
 - KDragon
 - KMech
@@ -113,11 +112,13 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KHex
 - KCalendar
 - KChart
+- KChat
 
 ## Progress Log
 
 > 📁 **Archived Progress Log**: Older entries have been archived to [archive/usability_plan_archive.md](archive/usability_plan_archive.md) to preserve token efficiency.
 
+- **2026-09-16 - KChat**: Added Quick-Start Tutorial in Help modal & dialog, visible [F1] tutorial tip badge, clipboard copy button [Ctrl+C] for channel transcript & message cards, instant search clear [✕], DPI layout scaling, and enhanced keyboard hotkeys.
 - **2026-09-16 - KChart**: Added Quick-Start Tutorial in Help modal, Presets [P] cycling in web/native, Clipboard Copy [Ctrl+C] data & stats export, interactive data point navigation [←/→] and value nudging [↑/↓], DPI scaling alignment, and empty-state restore.
 - **2026-09-16 - KCalendar**: Added Quick Start Tutorial in Help guide, Export ▾ dropdown menu, month/year direct picker, clearable search with [/] shortcut, event duplication, and native dynamic header with cues, hotkeys, and safe delete confirmation.
 - **2026-09-16 - KHex**: Added Presets loader & shortcut [P], clipboard Copy Output [Ctrl+C], Clear/Reset, responsive bitfield byte grouping, live byte editor in hex view, hex stream importer, signed 32-bit dec, and click-to-copy inspector cards for web and native.
@@ -125,7 +126,7 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - **2026-09-15 - KImage**: Fixed native 2-row toolbar overlap/clipping & added in-memory Demo canvas with 'N' shortcut; added web toolbar Demo button, thumbnail image removal with playlist clearing, drag-over highlight, and responsive panel styles.
 
 ### Recent Completed Index
-KChart ✅, KCalendar ✅, KHex ✅, KCalc ✅, KImage ✅, KPad ✅, KBase ✅, KJournal ✅, KRead ✅, KContacts ✅, KTimer ✅, KGraph ✅, KConverter ✅, KTodo ✅, KSys ✅, KRogue ✅, KTask ✅, KSynth ✅, KTerm ✅, KSpace ✅, KTetris ✅
+KChat ✅, KChart ✅, KCalendar ✅, KHex ✅, KCalc ✅, KImage ✅, KPad ✅, KBase ✅, KJournal ✅, KRead ✅, KContacts ✅, KTimer ✅, KGraph ✅, KConverter ✅, KTodo ✅, KSys ✅, KRogue ✅, KTask ✅, KSynth ✅, KTerm ✅, KSpace ✅, KTetris ✅
 
 ## DIRECTOR DIRECTIVE (2026-09-15): TUTORIAL & SPLASH SCREEN UX PASS
 

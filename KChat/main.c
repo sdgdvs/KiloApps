@@ -33,8 +33,11 @@ typedef struct {
     char topic[128];
 } RoomTopic;
 
+static int g_dpi = 96;
+#define SCALE(x) MulDiv((x), g_dpi, 96)
+
 SOCKET s = INVALID_SOCKET;
-HWND hLog, hIp, hPort, hBtn, hInput, hSend, hClear, hSave;
+HWND hLog, hIp, hPort, hBtn, hInput, hSend, hClear, hSave, hCopyBtn;
 HWND hRoomCombo, hPersonaCombo, hAskAI, hSearchInput, hPinBtn, hReactBtn, hExportJson, hImportBtn;
 HWND hTopicLabel, hPollBtn, hVoteBtn, hStatsBtn, hHelpBtn;
 
@@ -365,16 +368,52 @@ void EscapeJsonString(const char* src, char* dst, int maxDst) {
     dst[j] = '\0';
 }
 
+void CopyLogToClipboard(HWND hwnd) {
+    int textLen = (int)SendMessageA(hLog, WM_GETTEXTLENGTH, 0, 0);
+    if (textLen <= 0) {
+        AddMessage("System", "Chat log is empty, nothing to copy.", currentRoom, 0);
+        return;
+    }
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, textLen + 1);
+    if (hMem) {
+        char* ptr = (char*)GlobalLock(hMem);
+        if (ptr) {
+            SendMessageA(hLog, WM_GETTEXT, textLen + 1, (LPARAM)ptr);
+            GlobalUnlock(hMem);
+            if (OpenClipboard(hwnd)) {
+                EmptyClipboard();
+                SetClipboardData(CF_TEXT, hMem);
+                CloseClipboard();
+                AddMessage("System", "Copied channel chat log to clipboard!", currentRoom, 0);
+                return;
+            }
+        }
+        GlobalFree(hMem);
+    }
+}
+
 void ShowHelpDialog(HWND hwnd) {
     const char* helpText =
         "=== KChat Native Pro User Guide & Reference ===\r\n\r\n"
+        "[QUICK-START TUTORIAL]\r\n"
+        "  1. Switch Channels : Use [Ctrl+1]..[Ctrl+4] or the Room dropdown to toggle\r\n"
+        "                       between #general, #dev, #random, and #ai-lounge.\r\n"
+        "  2. Chat & AI       : Type your message in the bottom box and hit [Enter].\r\n"
+        "                       Click [Ask AI] or press [Ctrl+A] to prompt the active AI Persona.\r\n"
+        "  3. Interactive Poll: Click [+ Poll] or type /poll to launch a vote; click [Vote] to vote.\r\n"
+        "  4. Search & Filter : Type in the Search box to filter messages; press [Esc] to reset.\r\n"
+        "  5. Export & Copy   : Click [Copy] or press [Ctrl+C] to copy log to clipboard;\r\n"
+        "                       click [Save TXT] or [JSON] to archive conversation history.\r\n\r\n"
         "[KEYBOARD SHORTCUTS]\r\n"
-        "  F1, H            : Open this comprehensive Help & Command guide\r\n"
+        "  F1, H            : Open this comprehensive Help & Tutorial guide\r\n"
         "  Ctrl+1 .. Ctrl+4 : Quick switch channel (#general, #dev, #random, #ai-lounge)\r\n"
         "  Ctrl+A           : Query active AI Persona with current input\r\n"
+        "  Ctrl+C           : Copy channel chat log to clipboard\r\n"
+        "  Ctrl+F           : Focus and select Search filter box\r\n"
         "  Ctrl+P           : Pin / Unpin latest message in channel\r\n"
         "  Ctrl+S           : Save chat log to chat_log.txt\r\n"
         "  Ctrl+J           : Export structured JSON chat history\r\n"
+        "  P, V, S, R, C    : Direct hotkeys for Poll, Vote, Stats, React, Connect (outside inputs)\r\n"
         "  Enter            : Send message (when focused in input box)\r\n"
         "  Esc              : Clear input field or reset search filter\r\n\r\n"
         "[SLASH COMMANDS]\r\n"
@@ -394,7 +433,7 @@ void ShowHelpDialog(HWND hwnd) {
         "  Assistant, Cyberpunk AI, CodeBot, Sarcastic Hacker, Cerberus Security\r\n\r\n"
         "[SERVER CONNECTIVITY]\r\n"
         "  Connect to TCP chat server at specified IP:Port.";
-    MessageBoxA(hwnd, helpText, "KChat Pro - Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
+    MessageBoxA(hwnd, helpText, "KChat Pro - Help & Tutorial", MB_OK | MB_ICONINFORMATION);
 }
 
 void SwitchToRoom(HWND hwnd, const char* room) {
@@ -444,6 +483,13 @@ LRESULT CALLBACK InputSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
         SendMessageA(hParent, WM_COMMAND, 112, 0);
         return 0;
     }
+    if (msg == WM_KEYDOWN && (GetKeyState(VK_CONTROL) & 0x8000)) {
+        if (wParam == 'A' || wParam == 'a') {
+            HWND hParent = GetParent(hwnd);
+            SendMessageA(hParent, WM_COMMAND, 106, 0);
+            return 0;
+        }
+    }
     return CallWindowProcA(oldInputProc, hwnd, msg, wParam, lParam);
 }
 
@@ -454,24 +500,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             WSAStartup(MAKEWORD(2,2), &wsa);
 
             // Row 1: Network & Room & Persona controls
-            CreateWindowA("STATIC", "IP:", WS_CHILD|WS_VISIBLE, 10, 10, 20, 20, hwnd, 0, 0, 0);
-            hIp = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "127.0.0.1", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, 32, 8, 75, 22, hwnd, 0, 0, 0);
+            CreateWindowA("STATIC", "IP:", WS_CHILD|WS_VISIBLE, SCALE(10), SCALE(10), SCALE(22), SCALE(20), hwnd, 0, 0, 0);
+            hIp = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "127.0.0.1", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, SCALE(34), SCALE(8), SCALE(72), SCALE(24), hwnd, 0, 0, 0);
             
-            CreateWindowA("STATIC", "Port:", WS_CHILD|WS_VISIBLE, 112, 10, 30, 20, hwnd, 0, 0, 0);
-            hPort = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "6667", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, 145, 8, 42, 22, hwnd, 0, 0, 0);
+            CreateWindowA("STATIC", "Port:", WS_CHILD|WS_VISIBLE, SCALE(112), SCALE(10), SCALE(30), SCALE(20), hwnd, 0, 0, 0);
+            hPort = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "6667", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, SCALE(144), SCALE(8), SCALE(42), SCALE(24), hwnd, 0, 0, 0);
             
-            hBtn = CreateWindowA("BUTTON", "Connect [C]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 192, 8, 78, 23, hwnd, (HMENU)100, 0, 0);
+            hBtn = CreateWindowA("BUTTON", "Connect [C]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(192), SCALE(8), SCALE(78), SCALE(24), hwnd, (HMENU)100, 0, 0);
             
-            CreateWindowA("STATIC", "Room:", WS_CHILD|WS_VISIBLE, 276, 10, 40, 20, hwnd, 0, 0, 0);
-            hRoomCombo = CreateWindowA("COMBOBOX", "", WS_CHILD|WS_VISIBLE|CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP, 318, 8, 88, 150, hwnd, (HMENU)104, 0, 0);
+            CreateWindowA("STATIC", "Room:", WS_CHILD|WS_VISIBLE, SCALE(276), SCALE(10), SCALE(40), SCALE(20), hwnd, 0, 0, 0);
+            hRoomCombo = CreateWindowA("COMBOBOX", "", WS_CHILD|WS_VISIBLE|CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP, SCALE(318), SCALE(8), SCALE(88), SCALE(150), hwnd, (HMENU)104, 0, 0);
             SendMessageA(hRoomCombo, CB_ADDSTRING, 0, (LPARAM)"#general");
             SendMessageA(hRoomCombo, CB_ADDSTRING, 0, (LPARAM)"#dev");
             SendMessageA(hRoomCombo, CB_ADDSTRING, 0, (LPARAM)"#random");
             SendMessageA(hRoomCombo, CB_ADDSTRING, 0, (LPARAM)"#ai-lounge");
             SendMessageA(hRoomCombo, CB_SETCURSEL, 0, 0);
 
-            CreateWindowA("STATIC", "AI:", WS_CHILD|WS_VISIBLE, 412, 10, 22, 20, hwnd, 0, 0, 0);
-            hPersonaCombo = CreateWindowA("COMBOBOX", "", WS_CHILD|WS_VISIBLE|CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP, 436, 8, 105, 150, hwnd, (HMENU)105, 0, 0);
+            CreateWindowA("STATIC", "AI:", WS_CHILD|WS_VISIBLE, SCALE(412), SCALE(10), SCALE(22), SCALE(20), hwnd, 0, 0, 0);
+            hPersonaCombo = CreateWindowA("COMBOBOX", "", WS_CHILD|WS_VISIBLE|CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP, SCALE(436), SCALE(8), SCALE(105), SCALE(150), hwnd, (HMENU)105, 0, 0);
             SendMessageA(hPersonaCombo, CB_ADDSTRING, 0, (LPARAM)"Assistant");
             SendMessageA(hPersonaCombo, CB_ADDSTRING, 0, (LPARAM)"Cyberpunk");
             SendMessageA(hPersonaCombo, CB_ADDSTRING, 0, (LPARAM)"CodeBot");
@@ -479,42 +525,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hPersonaCombo, CB_ADDSTRING, 0, (LPARAM)"Cerberus");
             SendMessageA(hPersonaCombo, CB_SETCURSEL, 0, 0);
 
-            hPollBtn = CreateWindowA("BUTTON", "+ Poll [P]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 547, 8, 65, 23, hwnd, (HMENU)113, 0, 0);
-            hVoteBtn = CreateWindowA("BUTTON", "Vote [V]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 616, 8, 58, 23, hwnd, (HMENU)114, 0, 0);
-            hStatsBtn = CreateWindowA("BUTTON", "Stats [S]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 678, 8, 58, 23, hwnd, (HMENU)115, 0, 0);
-            hHelpBtn = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 740, 8, 65, 23, hwnd, (HMENU)112, 0, 0);
+            hPollBtn = CreateWindowA("BUTTON", "+ Poll [P]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(547), SCALE(8), SCALE(65), SCALE(24), hwnd, (HMENU)113, 0, 0);
+            hVoteBtn = CreateWindowA("BUTTON", "Vote [V]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(616), SCALE(8), SCALE(58), SCALE(24), hwnd, (HMENU)114, 0, 0);
+            hStatsBtn = CreateWindowA("BUTTON", "Stats [S]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(678), SCALE(8), SCALE(58), SCALE(24), hwnd, (HMENU)115, 0, 0);
+            hHelpBtn = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(740), SCALE(8), SCALE(70), SCALE(24), hwnd, (HMENU)112, 0, 0);
 
             // Row 2: Search, Pin, Reaction, Export/Import controls + Topic Header
-            CreateWindowA("STATIC", "Search:", WS_CHILD|WS_VISIBLE, 10, 38, 45, 20, hwnd, 0, 0, 0);
-            hSearchInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, 58, 36, 105, 22, hwnd, (HMENU)111, 0, 0);
+            CreateWindowA("STATIC", "Search:", WS_CHILD|WS_VISIBLE, SCALE(10), SCALE(38), SCALE(45), SCALE(20), hwnd, 0, 0, 0);
+            hSearchInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, SCALE(58), SCALE(36), SCALE(100), SCALE(24), hwnd, (HMENU)111, 0, 0);
             
-            hPinBtn = CreateWindowA("BUTTON", "Pin [P]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 168, 36, 50, 23, hwnd, (HMENU)107, 0, 0);
-            hReactBtn = CreateWindowA("BUTTON", "React [R]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 222, 36, 62, 23, hwnd, (HMENU)108, 0, 0);
-            hExportJson = CreateWindowA("BUTTON", "JSON", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 288, 36, 46, 23, hwnd, (HMENU)109, 0, 0);
-            hImportBtn = CreateWindowA("BUTTON", "Import", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 338, 36, 50, 23, hwnd, (HMENU)110, 0, 0);
-            hClear = CreateWindowA("BUTTON", "Clear", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 392, 36, 46, 23, hwnd, (HMENU)102, 0, 0);
+            hPinBtn = CreateWindowA("BUTTON", "Pin [Ctrl+P]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(164), SCALE(36), SCALE(74), SCALE(24), hwnd, (HMENU)107, 0, 0);
+            hReactBtn = CreateWindowA("BUTTON", "React [R]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(242), SCALE(36), SCALE(60), SCALE(24), hwnd, (HMENU)108, 0, 0);
+            hExportJson = CreateWindowA("BUTTON", "JSON", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(306), SCALE(36), SCALE(46), SCALE(24), hwnd, (HMENU)109, 0, 0);
+            hImportBtn = CreateWindowA("BUTTON", "Import", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(356), SCALE(36), SCALE(48), SCALE(24), hwnd, (HMENU)110, 0, 0);
+            hClear = CreateWindowA("BUTTON", "Clear", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(408), SCALE(36), SCALE(46), SCALE(24), hwnd, (HMENU)102, 0, 0);
 
-            hTopicLabel = CreateWindowA("STATIC", "Topic: General discussions & community hub", WS_CHILD|WS_VISIBLE|SS_LEFTNOWORDWRAP, 444, 38, 375, 20, hwnd, 0, 0, 0);
+            hTopicLabel = CreateWindowA("STATIC", "Topic: General discussions & community hub", WS_CHILD|WS_VISIBLE|SS_LEFTNOWORDWRAP, SCALE(460), SCALE(38), SCALE(350), SCALE(20), hwnd, 0, 0, 0);
 
             // Row 3: Log area
-            hLog = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_MULTILINE|ES_AUTOVSCROLL|ES_READONLY|WS_TABSTOP, 10, 65, 810, 510, hwnd, 0, 0, 0);
+            hLog = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_MULTILINE|ES_AUTOVSCROLL|ES_READONLY|WS_TABSTOP, SCALE(10), SCALE(66), SCALE(810), SCALE(508), hwnd, 0, 0, 0);
             
             // Row 4: Send & Input area
-            hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, 10, 585, 520, 24, hwnd, 0, 0, 0);
-            hSend = CreateWindowA("BUTTON", "Send [Enter]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 536, 585, 82, 24, hwnd, (HMENU)101, 0, 0);
-            hAskAI = CreateWindowA("BUTTON", "Ask AI [Ctrl+A]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 622, 585, 96, 24, hwnd, (HMENU)106, 0, 0);
-            hSave = CreateWindowA("BUTTON", "Save TXT [Ctrl+S]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, 722, 585, 102, 24, hwnd, (HMENU)103, 0, 0);
+            hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, SCALE(10), SCALE(584), SCALE(430), SCALE(26), hwnd, 0, 0, 0);
+            hSend = CreateWindowA("BUTTON", "Send [Enter]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(446), SCALE(584), SCALE(84), SCALE(26), hwnd, (HMENU)101, 0, 0);
+            hCopyBtn = CreateWindowA("BUTTON", "Copy [Ctrl+C]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(534), SCALE(584), SCALE(88), SCALE(26), hwnd, (HMENU)116, 0, 0);
+            hAskAI = CreateWindowA("BUTTON", "Ask AI [Ctrl+A]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(626), SCALE(584), SCALE(98), SCALE(26), hwnd, (HMENU)106, 0, 0);
+            hSave = CreateWindowA("BUTTON", "Save TXT", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(728), SCALE(584), SCALE(92), SCALE(26), hwnd, (HMENU)103, 0, 0);
             
             oldInputProc = (WNDPROC)SetWindowLongPtrA(hInput, GWLP_WNDPROC, (LONG_PTR)InputSubclassProc);
             oldSearchProc = (WNDPROC)SetWindowLongPtrA(hSearchInput, GWLP_WNDPROC, (LONG_PTR)SearchSubclassProc);
 
-            int dpi = 96;
-            HDC hdc = GetDC(NULL);
-            if (hdc) {
-                dpi = GetDeviceCaps(hdc, LOGPIXELSY);
-                ReleaseDC(NULL, hdc);
-            }
-            int fontHeight = -MulDiv(12, dpi, 72);
+            int fontHeight = -MulDiv(11, g_dpi, 72);
             hUIFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             
             SendMessageA(hIp, WM_SETFONT, (WPARAM)hUIFont, TRUE);
@@ -535,6 +576,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hLog, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hInput, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hSend, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hCopyBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hAskAI, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hClear, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hSave, WM_SETFONT, (WPARAM)hUIFont, TRUE);
@@ -544,7 +586,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             const char* sampleOpts[] = { "C/Win32 Native App", "HTML5/JS Web App", "Both with Full Parity" };
             AddPollMessage("KChatBot", "What is your favorite KiloApp architecture style?", sampleOpts, 3, "#general");
 
-            AddMessage("System", "Press [F1] or 'H' for Help Guide, Slash Commands, and Shortcuts. Press [Ctrl+1..4] to switch channels.", "#general", 0);
+            AddMessage("System", "Press [F1] or 'H' for Quick-Start Tutorial, Help Guide, and Shortcuts. Press [Ctrl+1..4] to switch channels.", "#general", 0);
             UpdateTopicDisplay();
             break;
         }
@@ -921,6 +963,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     CloseHandle(hFile);
                     AddMessage("System", "Saved chat to chat_log.txt", currentRoom, 0);
                 }
+            } else if (wmId == 116) { // Copy Chat Log
+                CopyLogToClipboard(hwnd);
             }
             break;
         }
@@ -983,6 +1027,13 @@ void __stdcall MainEntry() {
         SetProcessDPIAwareFunc setDpiAware = (SetProcessDPIAwareFunc)GetProcAddress(hUser32, "SetProcessDPIAware");
         if (setDpiAware) setDpiAware();
     }
+    HDC hdc = GetDC(NULL);
+    if (hdc) {
+        g_dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+        ReleaseDC(NULL, hdc);
+    }
+    if (g_dpi < 96) g_dpi = 96;
+
     hBgBrush = CreateSolidBrush(RGB(15, 23, 42));
     wc.lpfnWndProc = WndProc;
     wc.hInstance = GetModuleHandleA(NULL);
@@ -991,7 +1042,7 @@ void __stdcall MainEntry() {
     wc.hbrBackground = hBgBrush;
 
     RegisterClassA(&wc);
-    RECT rect = { 0, 0, 850, 650 };
+    RECT rect = { 0, 0, SCALE(850), SCALE(650) };
     AdjustWindowRect(&rect, (WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN) & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
     HWND hwnd = CreateWindowExA(0, "KChatClass", "KChat Native Pro - [F1] Help", (WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN) & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wc.hInstance, NULL);
     
@@ -1005,6 +1056,9 @@ void __stdcall MainEntry() {
                 ShowHelpDialog(hwnd);
                 continue;
             }
+            HWND focus = GetFocus();
+            int isTyping = (focus == hInput || focus == hSearchInput || focus == hIp || focus == hPort);
+
             if (GetKeyState(VK_CONTROL) & 0x8000) {
                 if (msg.wParam == '1') {
                     SwitchToRoom(hwnd, "#general");
@@ -1021,6 +1075,15 @@ void __stdcall MainEntry() {
                 } else if (msg.wParam == 'A' || msg.wParam == 'a') {
                     SendMessageA(hwnd, WM_COMMAND, 106, 0);
                     continue;
+                } else if (msg.wParam == 'C' || msg.wParam == 'c') {
+                    if (focus != hInput && focus != hSearchInput) {
+                        SendMessageA(hwnd, WM_COMMAND, 116, 0);
+                        continue;
+                    }
+                } else if (msg.wParam == 'F' || msg.wParam == 'f') {
+                    SetFocus(hSearchInput);
+                    SendMessageA(hSearchInput, EM_SETSEL, 0, -1);
+                    continue;
                 } else if (msg.wParam == 'P' || msg.wParam == 'p') {
                     SendMessageA(hwnd, WM_COMMAND, 107, 0);
                     continue;
@@ -1029,6 +1092,38 @@ void __stdcall MainEntry() {
                     continue;
                 } else if (msg.wParam == 'J' || msg.wParam == 'j') {
                     SendMessageA(hwnd, WM_COMMAND, 109, 0);
+                    continue;
+                }
+            } else if (!isTyping) {
+                if (msg.wParam == 'H' || msg.wParam == 'h') {
+                    ShowHelpDialog(hwnd);
+                    continue;
+                } else if (msg.wParam == 'P' || msg.wParam == 'p') {
+                    SendMessageA(hwnd, WM_COMMAND, 113, 0);
+                    continue;
+                } else if (msg.wParam == 'V' || msg.wParam == 'v') {
+                    SendMessageA(hwnd, WM_COMMAND, 114, 0);
+                    continue;
+                } else if (msg.wParam == 'S' || msg.wParam == 's') {
+                    SendMessageA(hwnd, WM_COMMAND, 115, 0);
+                    continue;
+                } else if (msg.wParam == 'R' || msg.wParam == 'r') {
+                    SendMessageA(hwnd, WM_COMMAND, 108, 0);
+                    continue;
+                } else if (msg.wParam == 'C' || msg.wParam == 'c') {
+                    SendMessageA(hwnd, WM_COMMAND, 100, 0);
+                    continue;
+                } else if (msg.wParam == '1') {
+                    SwitchToRoom(hwnd, "#general");
+                    continue;
+                } else if (msg.wParam == '2') {
+                    SwitchToRoom(hwnd, "#dev");
+                    continue;
+                } else if (msg.wParam == '3') {
+                    SwitchToRoom(hwnd, "#random");
+                    continue;
+                } else if (msg.wParam == '4') {
+                    SwitchToRoom(hwnd, "#ai-lounge");
                     continue;
                 }
             }
