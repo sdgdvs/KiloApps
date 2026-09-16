@@ -210,13 +210,15 @@ struct KBBS_SETTINGS {
     int usePalette;
     COLORREF palette[16];
     int baudRate;
+    char lastHost[128];
+    int lastPort;
 };
-struct KBBS_SETTINGS kbbsSettings = { 16, 500, 0, 0, {0}, 0 };
+struct KBBS_SETTINGS kbbsSettings = { 16, 500, 0, 0, {0}, 0, "", 23 };
 
 void LoadSettings(void) {
     HANDLE hFile = CreateFileA("kbbs_settings.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
-        DWORD readBytes;
+        DWORD readBytes = 0;
         ReadFile(hFile, &kbbsSettings, sizeof(kbbsSettings), &readBytes, NULL);
         CloseHandle(hFile);
     }
@@ -1998,24 +2000,92 @@ void StreamAnsiString(const char* str) {
     }
 }
 
+struct DoorSaveState {
+    int lordLevel;
+    int lordHp;
+    int lordMaxHp;
+    int lordGold;
+    int lordBank;
+    int lordFights;
+    int twSector;
+    int twCredits;
+    int twHolds;
+    int twShields;
+};
+static struct DoorSaveState gDoorState = { 1, 20, 20, 100, 0, 15, 1, 1000, 10, 100 };
+
+void LoadDoorState(void) {
+    HANDLE hFile = CreateFileA("kbbs_door.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD rb = 0;
+        ReadFile(hFile, &gDoorState, sizeof(gDoorState), &rb, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+void SaveDoorState(void) {
+    HANDLE hFile = CreateFileA("kbbs_door.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD wr = 0;
+        WriteFile(hFile, &gDoorState, sizeof(gDoorState), &wr, NULL);
+        CloseHandle(hFile);
+    }
+}
+
 void RunDoorGameStream(int choice) {
+    LoadDoorState();
     ClearScreen();
+    char statBuf[256];
     if (choice == 0) {
+        if (gDoorState.lordFights > 0) {
+            gDoorState.lordFights--;
+            gDoorState.lordGold += 35;
+            if (gDoorState.lordGold >= 250 && gDoorState.lordLevel < 2) {
+                gDoorState.lordLevel = 2;
+                gDoorState.lordMaxHp = 35;
+                gDoorState.lordHp = 35;
+            }
+        }
+        SaveDoorState();
         StreamAnsiString("\x1B[1;31m=====================================================\r\n");
         StreamAnsiString("\x1B[1;33m       LEGEND OF THE RED DRAGON (L.O.R.D.)           \r\n");
         StreamAnsiString("\x1B[1;31m=====================================================\r\n\x1B[0;37m");
-        StreamAnsiString("Warrior: Level 1 | HP: 20/20 | Gold: 100 | Fights: 15\r\n\r\n");
+        wsprintfA(statBuf, "Warrior: Level %d | HP: %d/%d | Gold: %d (Bank: %d) | Fights: %d\r\n\r\n",
+            gDoorState.lordLevel, gDoorState.lordHp, gDoorState.lordMaxHp, gDoorState.lordGold, gDoorState.lordBank, gDoorState.lordFights);
+        StreamAnsiString(statBuf);
         StreamAnsiString("\x1B[1;32m(F)orest Hunt  (I)nn & Tavern  (A)rmory  (B)ank  (Q)uit\r\n");
         StreamAnsiString("\x1B[1;36m-> You enter the dark forest... A Forest Goblin appears!\r\n");
-        StreamAnsiString("\x1B[1;33m-> You strike the goblin with your Stick! +30 Gold!\r\n\x1B[0m");
+        StreamAnsiString("\x1B[1;33m-> You strike the goblin! +35 Gold! [Saved to kbbs_door.dat]\r\n\x1B[0m");
     } else {
+        gDoorState.twSector = (gDoorState.twSector % 10) + 1;
+        gDoorState.twCredits += 250;
+        SaveDoorState();
         StreamAnsiString("\x1B[1;34m=====================================================\r\n");
         StreamAnsiString("\x1B[1;36m          TRADEWARS 2015 SPACE ADVENTURE            \r\n");
         StreamAnsiString("\x1B[1;34m=====================================================\r\n\x1B[0;37m");
-        StreamAnsiString("Sector 1 (Sol) | Credits: $1,000 | Holds: 10 | Shields: 100%\r\n\r\n");
+        wsprintfA(statBuf, "Sector %d | Credits: $%d | Holds: %d | Shields: %d%%\r\n\r\n",
+            gDoorState.twSector, gDoorState.twCredits, gDoorState.twHolds, gDoorState.twShields);
+        StreamAnsiString(statBuf);
         StreamAnsiString("\x1B[1;35m(W)arp Sector  (P)ort Trade  (C)ombat Pirates  (Q)uit\r\n");
-        StreamAnsiString("\x1B[1;32m-> Warping to Sector 5... Space Port detected!\r\n\x1B[0m");
+        wsprintfA(statBuf, "\x1B[1;32m-> Warping to Sector %d... Space Port detected! +$250 Credits! [Saved]\r\n\x1B[0m", gDoorState.twSector);
+        StreamAnsiString(statBuf);
     }
+}
+
+void CheckFirstRunTutorial(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kbbs_tutorial.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFile);
+        return;
+    }
+    hFile = CreateFileA("kbbs_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char marker = '1';
+        DWORD wr = 0;
+        WriteFile(hFile, &marker, 1, &wr, NULL);
+        CloseHandle(hFile);
+    }
+    DialogBoxParamA(GetModuleHandleA(NULL), MAKEINTRESOURCEA(IDD_HELP), hwnd, HelpProc, 0);
 }
 
 void RunAnsiArtStream(void) {
@@ -2146,7 +2216,30 @@ LRESULT CALLBACK WndProc
             SendMessageA(hBtnMsg, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hStatus, WM_SETFONT, (WPARAM)hUIFont, TRUE);
 
+            if (kbbsSettings.lastHost[0]) {
+                SetWindowTextA(hHost, kbbsSettings.lastHost);
+                char pBuf[16];
+                my_itoa(kbbsSettings.lastPort ? kbbsSettings.lastPort : 23, pBuf);
+                SetWindowTextA(hPort, pBuf);
+            } else {
+                LoadBBSList();
+                if (numBbs > 0) {
+                    SetWindowTextA(hHost, dynBbsList[0].host);
+                    char pBuf[16];
+                    my_itoa(dynBbsList[0].port, pBuf);
+                    SetWindowTextA(hPort, pBuf);
+                }
+            }
+
             ClearScreen();
+            StreamAnsiString("\x1B[1;36m==============================================================================\r\n");
+            StreamAnsiString("\x1B[1;32m   _  _____ _    ____  ____  ____  ____  \r\n");
+            StreamAnsiString("  | |/ /  _/ /   / __ \\/ __ )/ __ )/ ___/  \x1B[1;33mKiloBBS Terminal Suite v2.0\r\n");
+            StreamAnsiString("  | ' // // /   / / / / __  / __  /\\__ \\   \x1B[0;37mNative Win32 Edition\r\n");
+            StreamAnsiString("  | . \\/ // /___/ /_/ / /_/ / /_/ /___/ /  \r\n");
+            StreamAnsiString("  |_|\\_\\___/_____/\\____/_____/_____//____/   \x1B[1;35m[Press F1 or 'H' for Help]\r\n");
+            StreamAnsiString("\x1B[1;36m==============================================================================\r\n\x1B[0;37m");
+            StreamAnsiString("Ready to connect. Press [D] for Directory, [G] for Doors, or [M] for Macros.\r\n\r\n");
             break;
         }
         case WM_COMMAND: {
@@ -2170,6 +2263,10 @@ LRESULT CALLBACK WndProc
                     SetStatusText("Enter host and port");
                     break;
                 }
+
+                lstrcpynA(kbbsSettings.lastHost, host, sizeof(kbbsSettings.lastHost));
+                kbbsSettings.lastPort = port;
+                SaveSettings();
 
                 WSAStartup(MAKEWORD(2, 2), &wsa);
                 sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -2969,6 +3066,7 @@ void __stdcall MainEntry() {
     GetClientRect(hMain, &cr);
     PostMessage(hMain, WM_SIZE, 0, MAKELPARAM(cr.right, cr.bottom));
     UpdateWindow(hMain);
+    CheckFirstRunTutorial(hMain);
 
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
