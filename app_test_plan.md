@@ -195,11 +195,7 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 
 ## Test Reports
 
-- **KReversi**: PASS ✅ (8 issues, 8 fixed inline)
-  - Decoupled loadGame from changeGameMode/initGame to prevent overwriting loaded board state and history.
-  - Implemented active AI turn skipping in Freeze AI with active button indicator and cancel refund.
-  - Added checkEndGame to bomb disc placement branch to prevent game hangs on board completion.
-  - Added status bar notifications when either player has no legal moves and their turn is passed.
+> 📁 **Archived Records**: Historical entries older than 80 lines moved to [app_test_reports_round2.md](archive/app_test_reports_round2.md).
   - Preserved custom timer in campaign mode and eliminated forced untimed reset on stage initialization.
   - Fixed stage 10 bonus, stage 14 bonus, and stage 16 hole overlaps with starting center discs.
   - Added F5 quicksave and F9 quickload shortcuts alongside JSON save file export and import parity.

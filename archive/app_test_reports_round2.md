@@ -145,3 +145,12 @@
   - Added fallback input/download triggers for Native File System Access API.
   - Added clean timeout for VFS in standalone mode.
   - Added localStorage persistence for theme, font size, and word wrap.
+
+
+<!-- Archived from app_test_plan.md -->
+
+- **KReversi**: PASS ✅ (8 issues, 8 fixed inline)
+  - Decoupled loadGame from changeGameMode/initGame to prevent overwriting loaded board state and history.
+  - Implemented active AI turn skipping in Freeze AI with active button indicator and cancel refund.
+  - Added checkEndGame to bomb disc placement branch to prevent game hangs on board completion.
+  - Added status bar notifications when either player has no legal moves and their turn is passed.
