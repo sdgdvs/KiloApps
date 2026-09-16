@@ -1173,6 +1173,145 @@
             color: var(--accent-amber);
             background: rgba(245, 158, 11, 0.1);
         }
+
+        /* Phase 10: Interstellar Research Tree & Terraforming Breakthroughs Styles */
+        .tech-branch-header {
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--accent-purple);
+            margin: 12px 0 6px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(168, 85, 247, 0.3);
+            padding-bottom: 3px;
+        }
+        .tech-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-stellar);
+            border-radius: 4px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            position: relative;
+            transition: all 0.25s;
+        }
+        .tech-card:hover {
+            border-color: rgba(168, 85, 247, 0.6);
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.15);
+        }
+        .tech-card.active-research {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 14px rgba(0, 240, 255, 0.3);
+            background: rgba(15, 28, 51, 0.95);
+        }
+        .tech-card.researched {
+            border-color: rgba(16, 185, 129, 0.6);
+            background: rgba(16, 185, 129, 0.06);
+        }
+        .tech-card.breakthrough {
+            border: 1px solid #f59e0b;
+            background: linear-gradient(135deg, rgba(28, 20, 9, 0.9) 0%, rgba(15, 28, 51, 0.8) 100%);
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.2);
+        }
+        .tech-card.breakthrough.researched {
+            border-color: #10b981;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, rgba(10, 17, 32, 0.92) 100%);
+            box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
+        }
+        .tech-badge {
+            font-size: 9px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .tech-badge.t1 { background: rgba(56, 189, 248, 0.2); color: var(--accent-blue); border: 1px solid var(--accent-blue); }
+        .tech-badge.t2 { background: rgba(168, 85, 247, 0.2); color: var(--accent-purple); border: 1px solid var(--accent-purple); }
+        .tech-badge.breakthrough { background: rgba(245, 158, 11, 0.25); color: #f59e0b; border: 1px solid #f59e0b; animation: goldGlow 2s infinite ease-in-out; }
+        @keyframes goldGlow { 0%, 100% { box-shadow: 0 0 4px rgba(245, 158, 11, 0.3); } 50% { box-shadow: 0 0 12px rgba(245, 158, 11, 0.7); } }
+        .tech-title {
+            font-weight: bold;
+            font-size: 11px;
+            color: var(--text-bright);
+        }
+        .tech-desc {
+            font-size: 10px;
+            color: var(--text-primary);
+            line-height: 1.35;
+            margin: 4px 0 6px 0;
+        }
+        .tech-effects {
+            font-size: 10px;
+            color: var(--accent-emerald);
+            background: rgba(16, 185, 129, 0.08);
+            padding: 4px 6px;
+            border-radius: 3px;
+            margin-bottom: 6px;
+            border-left: 2px solid var(--accent-emerald);
+        }
+        .tech-btn-row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            margin-top: 6px;
+        }
+        .tech-act-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-stellar);
+            color: var(--text-bright);
+            padding: 4px 8px;
+            font-size: 10px;
+            font-family: var(--font-mono);
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tech-act-btn:hover:not(:disabled) {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            background: rgba(0, 240, 255, 0.12);
+        }
+        .tech-act-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            border-color: var(--border-stellar);
+            color: var(--text-dim);
+        }
+        .tech-act-btn.primary {
+            background: rgba(168, 85, 247, 0.2);
+            border-color: var(--accent-purple);
+            color: #d8b4fe;
+            font-weight: bold;
+        }
+        .tech-act-btn.primary:hover:not(:disabled) {
+            background: rgba(168, 85, 247, 0.35);
+            border-color: #c084fc;
+            color: #fff;
+        }
+        .breakthrough-alert {
+            position: fixed;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 15, 30, 0.96);
+            border: 2px solid #f59e0b;
+            border-radius: 6px;
+            padding: 14px 24px;
+            color: #fff;
+            z-index: 1000;
+            box-shadow: 0 0 35px rgba(245, 158, 11, 0.8), inset 0 0 20px rgba(245, 158, 11, 0.2);
+            text-align: center;
+            animation: bannerPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(8px);
+            max-width: 520px;
+        }
+        @keyframes bannerPop {
+            0% { opacity: 0; transform: translateX(-50%) scale(0.7); }
+            100% { opacity: 1; transform: translateX(-50%) scale(1.0); }
+        }
     </style>
 </head>
 <body>
@@ -1212,6 +1351,11 @@
                 <span class="label">Food:</span>
                 <span class="val green" id="statFood">5,800 t</span>
                 <span style="font-size:9px; color:var(--text-dim);" id="rateFood">(+25)</span>
+            </div>
+            <div class="stat-badge" title="Scientific Research & Breakthrough Data">
+                <span class="label">Science:</span>
+                <span class="val purple" id="statScience">850 SP</span>
+                <span style="font-size:9px; color:var(--text-dim);" id="rateScience">(+18)</span>
             </div>
             <div class="stat-badge" title="Exoplanet Habitability Index">
                 <span class="label">Habitability:</span>
@@ -1305,6 +1449,7 @@
                 <button class="tab-btn active" data-tab="tab-terra">Terraform</button>
                 <button class="tab-btn" data-tab="tab-fleet">Logistics</button>
                 <button class="tab-btn" data-tab="tab-colony">Colony</button>
+                <button class="tab-btn" data-tab="tab-research" id="tabBtnResearch">Research</button>
                 <button class="tab-btn" data-tab="tab-hazards" id="tabBtnHazards">Hazards</button>
                 <button class="tab-btn" data-tab="tab-economy">Economy</button>
             </div>
@@ -1950,6 +2095,56 @@
                 </div>
             </div>
 
+            <!-- Tab: Research Tree & Terraforming Breakthroughs -->
+            <div class="tab-content" id="tab-research">
+                <div class="section-header">
+                    <span>Science Directorate & Tech Tree</span>
+                    <span style="font-size:10px; color:var(--accent-purple);" id="valSciRateBadge">+18 SP/cyc</span>
+                </div>
+
+                <!-- Active Research HUD Card -->
+                <div class="metric-card" style="border-left: 3px solid var(--accent-cyan); margin-bottom: 8px;">
+                    <div class="metric-row">
+                        <span style="font-size:10px; text-transform:uppercase; color:var(--text-dim);">Active Project:</span>
+                        <span id="hudActiveTechTier" class="tech-badge t1">TIER I</span>
+                    </div>
+                    <div class="metric-row" style="margin-top:2px;">
+                        <strong id="hudActiveTechName" style="color:var(--accent-cyan); font-size:12px;">Bussard Ramjets</strong>
+                        <span id="hudActiveTechCost" style="font-size:10px; color:var(--accent-purple); font-weight:bold;">120 / 400 SP</span>
+                    </div>
+                    <div class="progress-bar-container" style="margin-top:4px;">
+                        <div class="progress-bar-fill" id="barActiveTech" style="width: 30%; background: linear-gradient(90deg, #a855f7, #00f0ff);"></div>
+                    </div>
+                    <div class="metric-row" style="font-size:10px; color:var(--text-dim); margin-top:4px;">
+                        <span>Est. Completion: <strong id="hudActiveTechEta" style="color:var(--text-bright);">16.0 cyc</strong></span>
+                        <span id="hudActiveTechBonus" style="color:var(--accent-emerald);">+30% Fleet Transit Velocity</span>
+                    </div>
+                </div>
+
+                <!-- Dynamic Tech Tree Branches -->
+                <div id="techTreeContainer"></div>
+
+                <!-- Breakthrough Mastery Status Card -->
+                <div class="section-header" style="margin-top:10px;">
+                    <span>Active Planetary Breakthroughs</span>
+                    <span style="font-size:10px; color:var(--accent-amber);" id="badgeBreakthroughCount">0 / 3 Active</span>
+                </div>
+                <div class="metric-card" id="breakthroughSummaryCard" style="border: 1px solid rgba(245, 158, 11, 0.4); background: rgba(28, 20, 9, 0.5);">
+                    <div class="metric-row" style="font-size:10px; margin-bottom:4px;">
+                        <span>🚀 Antimatter Drives:</span>
+                        <strong id="statusBtAntimatter" style="color:var(--text-dim);">LOCKED (Req. Alcubierre Warp)</strong>
+                    </div>
+                    <div class="metric-row" style="font-size:10px; margin-bottom:4px;">
+                        <span>🧬 Genetic Adapted Biomes:</span>
+                        <strong id="statusBtBiomes" style="color:var(--text-dim);">LOCKED (Req. Cryo-Aquifers)</strong>
+                    </div>
+                    <div class="metric-row" style="font-size:10px;">
+                        <span>🌐 Climate Stabilization Matrix:</span>
+                        <strong id="statusBtStabilization" style="color:var(--text-dim);">LOCKED (Req. Orbital Sunshade)</strong>
+                    </div>
+                </div>
+            </div>
+
             <!-- Tab: Cosmic Crisis Events & Planetary Hazards -->
             <div class="tab-content" id="tab-hazards">
                 <div class="section-header">
@@ -2227,6 +2422,20 @@
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
                     osc.start(now);
                     osc.stop(now + 0.5);
+                } else if (type === 'breakthrough') {
+                    const freqs = [523.25, 659.25, 783.99, 1046.50];
+                    freqs.forEach((f, idx) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.type = 'triangle';
+                        o.frequency.setValueAtTime(f, now + idx * 0.08);
+                        g.gain.setValueAtTime(0.12, now + idx * 0.08);
+                        g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.45);
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.start(now + idx * 0.08);
+                        o.stop(now + idx * 0.08 + 0.45);
+                    });
                 }
             } catch (e) {
                 // Audio safely ignored if restricted
@@ -2249,6 +2458,13 @@
             cryoSleepers: 75000,
             housingCap: 30000,
             morale: 86,
+
+            // Phase 10: Interstellar Research Tree & Terraforming Breakthroughs
+            science: 850,
+            deltaScience: 18,
+            activeTechId: 'prop_ramjets',
+            techProgress: { 'prop_ramjets': 120 },
+            researchedTechs: [],
 
             // Phase 8: Demographics & Colony Infrastructure
             pctLaborers: 40,
@@ -2394,6 +2610,159 @@
             currentSystemIndex: 0,
             activePlanetId: 'aethelgard'
         };
+
+        // --- Phase 10: Canonical Interstellar Research Tree & Breakthroughs ---
+        const TECH_TREE = [
+            // Branch 1: Propulsion & Fleet Engineering
+            {
+                id: 'prop_ramjets',
+                branch: 'propulsion',
+                branchName: 'Interstellar Propulsion',
+                branchIcon: '🚀',
+                tier: 1,
+                name: 'Bussard Ramjets',
+                code: 'PROP-T1',
+                desc: 'Magnetic scoop fields harvesting interstellar hydrogen. Increases fleet transit velocity by +30% and trims trade fuel consumption.',
+                cost: 400,
+                costEnergy: 150,
+                costMin: 100,
+                prereq: null,
+                breakthrough: false,
+                buffs: '+30% Fleet Velocity, -20% Route Transit Time'
+            },
+            {
+                id: 'prop_warp',
+                branch: 'propulsion',
+                branchName: 'Interstellar Propulsion',
+                branchIcon: '🚀',
+                tier: 2,
+                name: 'Alcubierre Warp Harmonics',
+                code: 'PROP-T2',
+                desc: 'Metric spacetime curvature coils enabling rapid sub-warp jumps, swift astrometric surveys, and boosted freighter capacities.',
+                cost: 950,
+                costEnergy: 300,
+                costMin: 250,
+                prereq: 'prop_ramjets',
+                breakthrough: false,
+                buffs: '2x Fleet Velocity, +50% Trade Route Freight Capacity'
+            },
+            {
+                id: 'prop_antimatter',
+                branch: 'propulsion',
+                branchName: 'Interstellar Propulsion',
+                branchIcon: '🚀',
+                tier: 3,
+                name: 'Antimatter Drives',
+                code: 'PROP-T3 [BREAKTHROUGH]',
+                desc: 'Positron-antiproton annihilation propulsion matrix. Unlocks relativistic interstellar velocity, halving transit cycles and doubling all convoy yields.',
+                cost: 2200,
+                costEnergy: 600,
+                costMin: 400,
+                prereq: 'prop_warp',
+                breakthrough: true,
+                buffs: '⭐ BREAKTHROUGH: 3x Fleet Speed, -50% Route Transit, +100% Trade Yields'
+            },
+
+            // Branch 2: Biosphere & Terraforming
+            {
+                id: 'bio_catalysts',
+                branch: 'biosphere',
+                branchName: 'Biosphere & Genetic Engineering',
+                branchIcon: '🧬',
+                tier: 1,
+                name: 'Atmospheric Catalysts',
+                code: 'BIO-T1',
+                desc: 'Engineered synthetic catalytic compounds accelerating tropospheric oxygenation and subterranean nitrogen buffer fixation.',
+                cost: 450,
+                costEnergy: 120,
+                costMin: 80,
+                prereq: null,
+                breakthrough: false,
+                buffs: '+40% Atmo Processor O2 Output, +25% N2 Extraction'
+            },
+            {
+                id: 'bio_thermal',
+                branch: 'biosphere',
+                branchName: 'Biosphere & Genetic Engineering',
+                branchIcon: '🧬',
+                tier: 2,
+                name: 'Cryo-Aquifer Hydro-Thermal Melting',
+                code: 'BIO-T2',
+                desc: 'Sub-surface geothermal induction coils to unlock deep cryo-ice aquifers into global pelagic hydrospheres.',
+                cost: 1000,
+                costEnergy: 250,
+                costMin: 200,
+                prereq: 'bio_catalysts',
+                breakthrough: false,
+                buffs: '+50% Hydrosphere Expansion, +35% Farm Crop Yields'
+            },
+            {
+                id: 'bio_adapted',
+                branch: 'biosphere',
+                branchName: 'Biosphere & Genetic Engineering',
+                branchIcon: '🧬',
+                tier: 3,
+                name: 'Genetic Adapted Biomes',
+                code: 'BIO-T3 [BREAKTHROUGH]',
+                desc: 'Synthetic extremophile biology and genomic-adapted flora that flourish in toxic, frigid, or barren terrain without biodomes.',
+                cost: 2400,
+                costEnergy: 350,
+                costMin: 300,
+                prereq: 'bio_thermal',
+                breakthrough: true,
+                buffs: '⭐ BREAKTHROUGH: +20% Habitability Ceiling, +100% Food Production, +15 Morale'
+            },
+
+            // Branch 3: Planetary Geo-Engineering & Climate Mastery
+            {
+                id: 'geo_dynamo',
+                branch: 'geoengineering',
+                branchName: 'Planetary Geo-Engineering',
+                branchIcon: '🌐',
+                tier: 1,
+                name: 'Ionospheric Dynamo Super-Coils',
+                code: 'GEO-T1',
+                desc: 'Superconducting planetary core induction coils generating a dense magnetosphere shield against solar winds.',
+                cost: 500,
+                costEnergy: 200,
+                costMin: 200,
+                prereq: null,
+                breakthrough: false,
+                buffs: '+60% Magnetosphere Generation, -50% Flare Damage'
+            },
+            {
+                id: 'geo_sunshade',
+                branch: 'geoengineering',
+                branchName: 'Planetary Geo-Engineering',
+                branchIcon: '🌐',
+                tier: 2,
+                name: 'Orbital Sunshade Constellation',
+                code: 'GEO-T2',
+                desc: 'Swarm array of synchronized orbital occultation shades and fresnel lenses for micro-tuned planetary thermoregulation.',
+                cost: 1100,
+                costEnergy: 350,
+                costMin: 350,
+                prereq: 'geo_dynamo',
+                breakthrough: false,
+                buffs: '+75% Solar Mirror Heat/Cool Efficacy, -15°C Greenhouse Heat'
+            },
+            {
+                id: 'geo_stabilization',
+                branch: 'geoengineering',
+                branchName: 'Planetary Geo-Engineering',
+                branchIcon: '🌐',
+                tier: 3,
+                name: 'Climate Stabilization Matrix',
+                code: 'GEO-T3 [BREAKTHROUGH]',
+                desc: 'Planetary-scale atmospheric nanite grid stabilizing tropospheric pressure, climate swings, and eliminating ecological crisis volatility.',
+                cost: 2600,
+                costEnergy: 650,
+                costMin: 500,
+                prereq: 'geo_sunshade',
+                breakthrough: true,
+                buffs: '⭐ BREAKTHROUGH: Climate Volatility Neutralized, Permanent +15% Habitability, +20 Morale'
+            }
+        ];
 
         // --- Canonical Cosmic Crisis Definitions ---
         const CRISIS_TYPES = {
@@ -3289,7 +3658,14 @@
             let mScore = Math.min(100, (m / 0.5) * 100);
 
             // Weighted 7-parameter Habitability Index
-            const total = (pScore * 0.20) + (tScore * 0.20) + (wScore * 0.15) + (oScore * 0.15) + (nScore * 0.15) + (ghgScore * 0.10) + (mScore * 0.05);
+            let total = (pScore * 0.20) + (tScore * 0.20) + (wScore * 0.15) + (oScore * 0.15) + (nScore * 0.15) + (ghgScore * 0.10) + (mScore * 0.05);
+
+            // Phase 10 Breakthrough Bonuses
+            if (typeof isTechUnlocked === 'function') {
+                if (isTechUnlocked('bio_adapted')) total += 20.0;
+                if (isTechUnlocked('geo_stabilization')) total += 15.0;
+            }
+
             sim.habitability = +Math.max(0, Math.min(100, total)).toFixed(1);
 
             // Update badge text
@@ -3318,9 +3694,13 @@
             // Resource loops per cycle
             const rate = sim.speed;
 
+            // Phase 10 Breakthrough & Technology Multipliers
+            const antiDriveMult = (typeof isTechUnlocked === 'function' && isTechUnlocked('prop_antimatter')) ? 2.0 : 1.0;
+            const bioAdaptedFoodMult = (typeof isTechUnlocked === 'function' && isTechUnlocked('bio_adapted')) ? 2.0 : 1.0;
+
             // Trade Route & Infrastructure Multipliers
-            const dockMult = 1.0 + (sim.orbitalDocks - 1) * 0.20;
-            const fuelMult = 1.0 + (sim.fuelDepots - 1) * 0.25;
+            const dockMult = (1.0 + (sim.orbitalDocks - 1) * 0.20) * antiDriveMult;
+            const fuelMult = (1.0 + (sim.fuelDepots - 1) * 0.25) * antiDriveMult;
 
             // Automated Route Yield Contributions
             const rMin = sim.tradeRoutes[0].active ? Math.floor(sim.tradeRoutes[0].baseYield * sim.tradeRoutes[0].freighters * dockMult) : 0;
@@ -3372,18 +3752,22 @@
             sim.deltaVolatiles = volGain - volDrain;
             sim.volatiles = Math.max(0, sim.volatiles + Math.floor(sim.deltaVolatiles * 0.05 * rate));
 
-            // Food loops (Phase 8 Advanced Agronomy)
-            const baseFoodGain = 15 + (sim.hydroTowers * 25) + (sim.aeroponicFarms * 80) + (sim.algalVats * 45) + (sim.domedMegacities * 20) + rFood;
-            const foodGain = Math.floor(baseFoodGain * agroMult);
+            // Food loops (Phase 8 & 10 Advanced Agronomy & Breakthroughs)
+            const farmThermalBoost = (typeof isTechUnlocked === 'function' && isTechUnlocked('bio_thermal')) ? 110 : 80;
+            const baseFoodGain = 15 + (sim.hydroTowers * 25) + (sim.aeroponicFarms * farmThermalBoost) + (sim.algalVats * 45) + (sim.domedMegacities * 20) + rFood;
+            const foodGain = Math.floor(baseFoodGain * agroMult * bioAdaptedFoodMult);
             const foodDrain = Math.floor((sim.colonists / 1200) * rationMult);
             sim.deltaFood = foodGain - foodDrain;
             sim.food = Math.max(0, sim.food + Math.floor(sim.deltaFood * 0.05 * rate));
 
-            // Natural Terraforming slow drifts driven by active structures & modules (boosted by Geo-Engineers)
+            // Natural Terraforming slow drifts driven by active structures & modules (boosted by Geo-Engineers & Tech)
+            const catalystBoost = (typeof isTechUnlocked === 'function' && isTechUnlocked('bio_catalysts')) ? 1.4 : 1.0;
+            const sunshadeBoost = (typeof isTechUnlocked === 'function' && isTechUnlocked('geo_sunshade')) ? 1.75 : 1.0;
+
             if (sim.energy > 500) {
                 // 1. Troposphere Processors Drift
                 if (sim.atmoMode === 'inject') {
-                    sim.pressure = +(sim.pressure + (sim.atmoProcessors * 0.0004 * rate * engTerraMult)).toFixed(3);
+                    sim.pressure = +(sim.pressure + (sim.atmoProcessors * 0.0004 * rate * engTerraMult * catalystBoost)).toFixed(3);
                 } else if (sim.atmoMode === 'scrub') {
                     if (sim.pressure > 1.0) {
                         sim.pressure = Math.max(1.0, +(sim.pressure - (sim.atmoProcessors * 0.0007 * rate * engTerraMult)).toFixed(3));
@@ -3393,14 +3777,14 @@
 
                 // 2. Orbital Solar Mirrors Drift
                 if (sim.mirrorMode === 'heat') {
-                    sim.temp = +(sim.temp + (sim.solarMirrors * 0.015 * rate)).toFixed(2);
+                    sim.temp = +(sim.temp + (sim.solarMirrors * 0.015 * rate * sunshadeBoost)).toFixed(2);
                 } else if (sim.mirrorMode === 'cool') {
-                    sim.temp = +(sim.temp - (sim.solarMirrors * 0.018 * rate)).toFixed(2);
+                    sim.temp = +(sim.temp - (sim.solarMirrors * 0.018 * rate * sunshadeBoost)).toFixed(2);
                 }
 
                 // 3. Nitrogen Extractors Drift
                 if (sim.nitrogen < 78.0) {
-                    sim.nitrogen = Math.min(78.0, +(sim.nitrogen + (sim.nitrogenExtractors * 0.025 * rate)).toFixed(2));
+                    sim.nitrogen = Math.min(78.0, +(sim.nitrogen + (sim.nitrogenExtractors * 0.025 * rate * catalystBoost)).toFixed(2));
                     sim.pressure = +(sim.pressure + (sim.nitrogenExtractors * 0.00015 * rate)).toFixed(3);
                 }
 
@@ -3418,15 +3802,26 @@
                 sim.temp = +(sim.temp + ((sim.greenhouseFactor - 100.0) * 0.0004 * rate)).toFixed(2);
 
                 // Biosphere & Hydrosphere drifts
+                const hydroThermalBoost = (typeof isTechUnlocked === 'function' && isTechUnlocked('bio_thermal')) ? 1.5 : 1.0;
                 if (sim.temp > -20 && sim.water > 10) {
-                    sim.oxygen = +(sim.oxygen + (sim.bioseedStations * 0.0008 * rate)).toFixed(3);
+                    sim.oxygen = +(sim.oxygen + (sim.bioseedStations * 0.0008 * rate * catalystBoost)).toFixed(3);
                 }
                 if (sim.temp > 0 && sim.water < 65) {
-                    sim.water = +(sim.water + 0.001 * rate).toFixed(2);
+                    sim.water = +(sim.water + 0.001 * rate * hydroThermalBoost).toFixed(2);
                 }
             }
 
-            // Phase 8: Multi-factor Morale Simulation
+            // Phase 10: Climate Stabilization Matrix Atmospheric Lock
+            if (typeof isTechUnlocked === 'function' && isTechUnlocked('geo_stabilization')) {
+                if (sim.pressure < 1.00) sim.pressure = +(sim.pressure + 0.0004 * rate).toFixed(3);
+                else if (sim.pressure > 1.05) sim.pressure = +(sim.pressure - 0.0004 * rate).toFixed(3);
+                if (sim.temp < 14.5) sim.temp = +(sim.temp + 0.015 * rate).toFixed(2);
+                else if (sim.temp > 18.0) sim.temp = +(sim.temp - 0.015 * rate).toFixed(2);
+                if (sim.oxygen < 20.9) sim.oxygen = +(sim.oxygen + 0.0015 * rate).toFixed(3);
+                if (sim.nitrogen < 78.0) sim.nitrogen = +(sim.nitrogen + 0.015 * rate).toFixed(2);
+            }
+
+            // Phase 8 & 10: Multi-factor Morale Simulation
             let targetMorale = 65.0;
             if (sim.food <= 0) targetMorale -= 35;
             else if (sim.food < 300) targetMorale -= 15;
@@ -3443,6 +3838,12 @@
             targetMorale += (sim.domedMegacities * 6.0);
             targetMorale += (sim.pctScientists * 0.2);
 
+            // Breakthrough Morale Buffs
+            if (typeof isTechUnlocked === 'function') {
+                if (isTechUnlocked('bio_adapted')) targetMorale += 15.0;
+                if (isTechUnlocked('geo_stabilization')) targetMorale += 20.0;
+            }
+
             targetMorale = Math.max(10, Math.min(99, targetMorale));
             sim.morale = Math.max(10, Math.min(99, +(sim.morale + (targetMorale - sim.morale) * 0.05 * rate).toFixed(1)));
 
@@ -3453,6 +3854,27 @@
             } else if (sim.food <= 0) {
                 const loss = Math.floor(sim.colonists * 0.003 * rate) + 1;
                 sim.colonists = Math.max(0, sim.colonists - loss);
+            }
+
+            // Phase 10: Scientific Research Points Generation & Progress
+            const sciBase = Math.floor(sim.colonists * (sim.pctScientists / 100) * 0.0012);
+            const sciMult = (sim.demoFocus === 'science') ? 1.75 : 1.0;
+            const surveyorBonus = (fleet[2] && (fleet[2].status === 'Scanning Orbit' || fleet[2].status === 'Long-Range Scan')) ? 10 : 0;
+            const megacityBonus = sim.domedMegacities * 12;
+            sim.deltaScience = Math.max(1, Math.floor((sciBase + surveyorBonus + megacityBonus) * sciMult));
+            const sciGenerated = Math.floor(sim.deltaScience * 0.05 * rate);
+            sim.science += sciGenerated;
+
+            // Advance active technology progress if research in progress
+            if (sim.activeTechId && typeof isTechUnlocked === 'function' && !isTechUnlocked(sim.activeTechId)) {
+                const curTech = TECH_TREE.find(t => t.id === sim.activeTechId);
+                if (curTech) {
+                    if (sim.techProgress[curTech.id] === undefined) sim.techProgress[curTech.id] = 0;
+                    sim.techProgress[curTech.id] += (sim.deltaScience * 0.05 * rate);
+                    if (sim.techProgress[curTech.id] >= curTech.cost) {
+                        unlockTech(curTech.id, false);
+                    }
+                }
             }
 
             // Phase 9: Crisis Simulation Progression
@@ -6501,10 +6923,297 @@
 
             document.getElementById('valBioProgress').textContent = `${(sim.habitability * 0.9).toFixed(1)}%`;
             document.getElementById('barBioProgress').style.width = `${Math.min(100, sim.habitability * 0.9)}%`;
+
+            // Phase 10: Research Stats & Tech Tree UI Sync
+            const statSci = document.getElementById('statScience');
+            if (statSci) statSci.textContent = `${sim.science.toLocaleString()} SP`;
+            const rateSci = document.getElementById('rateScience');
+            if (rateSci) rateSci.textContent = `(${sim.deltaScience >= 0 ? '+' : ''}${sim.deltaScience})`;
+            if (typeof updateTechTreeUI === 'function') updateTechTreeUI();
+        }
+
+        // --- Phase 10: Interstellar Research Tree & Breakthrough Engine ---
+        function isTechUnlocked(id) {
+            return sim.researchedTechs && sim.researchedTechs.includes(id);
+        }
+
+        function canResearchTech(id) {
+            if (isTechUnlocked(id)) return false;
+            const t = TECH_TREE.find(x => x.id === id);
+            if (!t) return false;
+            if (t.prereq && !isTechUnlocked(t.prereq)) return false;
+            return true;
+        }
+
+        function setActiveResearch(id) {
+            initAudio();
+            if (isTechUnlocked(id)) return;
+            const t = TECH_TREE.find(x => x.id === id);
+            if (!t) return;
+            if (t.prereq && !isTechUnlocked(t.prereq)) {
+                const pre = TECH_TREE.find(x => x.id === t.prereq);
+                logMsg(`Cannot research ${t.name}: Prerequisite [${pre ? pre.name : t.prereq}] required.`, true);
+                playSound('warn');
+                return;
+            }
+            sim.activeTechId = id;
+            if (sim.techProgress[id] === undefined) sim.techProgress[id] = 0;
+            updateUI();
+            logMsg(`Active Science Directive: Labs focused on [${t.name}].`);
+            playSound('click');
+        }
+
+        function unlockTech(id, instant = false) {
+            if (isTechUnlocked(id)) return;
+            const t = TECH_TREE.find(x => x.id === id);
+            if (!t) return;
+
+            if (instant) {
+                if (sim.science < t.cost || sim.energy < t.costEnergy || sim.minerals < t.costMin) {
+                    logMsg(`Insufficient resources to fast-track ${t.name} (Req: ${t.cost} SP, ${t.costEnergy} kW, ${t.costMin} t Min).`, true);
+                    playSound('warn');
+                    return;
+                }
+                sim.science -= t.cost;
+                sim.energy -= t.costEnergy;
+                sim.minerals -= t.costMin;
+            }
+
+            sim.researchedTechs.push(id);
+            sim.techProgress[id] = t.cost;
+            if (sim.activeTechId === id) {
+                // Find next available technology in tree
+                const nextTech = TECH_TREE.find(x => canResearchTech(x.id));
+                sim.activeTechId = nextTech ? nextTech.id : null;
+            }
+
+            // Apply immediate breakthrough effects & celebration
+            if (t.breakthrough) {
+                triggerBreakthroughFanfare(t);
+            } else {
+                logMsg(`RESEARCH COMPLETED: [${t.name}] online! ${t.buffs}`);
+                playSound('success');
+            }
+
+            calculateHabitability();
+            updateUI();
+        }
+
+        function triggerBreakthroughFanfare(tech) {
+            playSound('breakthrough');
+            logMsg(`⭐ TERRAFORMING BREAKTHROUGH: [${tech.name}] UNLOCKED! ${tech.buffs}`);
+
+            const alertEl = document.createElement('div');
+            alertEl.className = 'breakthrough-alert';
+            alertEl.innerHTML = `
+                <div style="font-size:10px; color:#f59e0b; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:4px;">⭐ SCIENTIFIC BREAKTHROUGH ACHIEVED ⭐</div>
+                <div style="font-size:16px; font-weight:bold; color:#fff; text-shadow:0 0 10px #f59e0b; margin-bottom:6px;">${tech.name}</div>
+                <div style="font-size:11px; color:#cbd5e1; margin-bottom:8px; line-height:1.4;">${tech.desc}</div>
+                <div style="font-size:11px; color:#10b981; font-weight:bold; background:rgba(16,185,129,0.15); border:1px solid #10b981; padding:4px 8px; border-radius:4px;">
+                    ${tech.buffs}
+                </div>
+            `;
+            document.body.appendChild(alertEl);
+            setTimeout(() => {
+                alertEl.style.transition = 'opacity 0.6s ease';
+                alertEl.style.opacity = '0';
+                setTimeout(() => alertEl.remove(), 600);
+            }, 5500);
+        }
+
+        function renderTechTree() {
+            const container = document.getElementById('techTreeContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const branches = [
+                { id: 'propulsion', name: 'Interstellar Propulsion', icon: '🚀' },
+                { id: 'biosphere', name: 'Biosphere Engineering', icon: '🧬' },
+                { id: 'geoengineering', name: 'Planetary Geo-Engineering', icon: '🌐' }
+            ];
+
+            branches.forEach(b => {
+                const bHdr = document.createElement('div');
+                bHdr.className = 'tech-branch-header';
+                bHdr.innerHTML = `<span>${b.icon} ${b.name}</span><span style="font-size:9px; color:var(--text-dim);">Tiers I - III</span>`;
+                container.appendChild(bHdr);
+
+                const branchTechs = TECH_TREE.filter(t => t.branch === b.id);
+                branchTechs.forEach(t => {
+                    const card = document.createElement('div');
+                    card.id = `tech-card-${t.id}`;
+                    card.className = `tech-card ${t.breakthrough ? 'breakthrough' : ''}`;
+
+                    const tierClass = t.tier === 1 ? 't1' : (t.tier === 2 ? 't2' : 'breakthrough');
+                    const tierLabel = t.breakthrough ? 'BREAKTHROUGH' : `TIER ${t.tier === 1 ? 'I' : 'II'}`;
+
+                    card.innerHTML = `
+                        <div class="metric-row">
+                            <span class="tech-title">${t.name}</span>
+                            <span class="tech-badge ${tierClass}">${tierLabel}</span>
+                        </div>
+                        <div class="tech-desc">${t.desc}</div>
+                        <div class="tech-effects">${t.buffs}</div>
+                        <div class="metric-row" style="font-size:10px; color:var(--text-dim);">
+                            <span>Cost: <strong style="color:var(--accent-purple);">${t.cost} SP</strong>, ${t.costEnergy} kW, ${t.costMin} t Min</span>
+                            <span id="tech-status-badge-${t.id}" style="font-weight:bold;"></span>
+                        </div>
+                        <div class="progress-bar-container" style="margin-top:4px;">
+                            <div class="progress-bar-fill" id="tech-prog-bar-${t.id}" style="width:0%; background:linear-gradient(90deg, #a855f7, #00f0ff);"></div>
+                        </div>
+                        <div class="tech-btn-row">
+                            <button class="tech-act-btn primary" id="btn-focus-${t.id}">Set Active Focus</button>
+                            <button class="tech-act-btn" id="btn-unlock-${t.id}">Fast-Track (${t.cost} SP)</button>
+                        </div>
+                    `;
+
+                    container.appendChild(card);
+
+                    // Bind button actions
+                    const btnFocus = card.querySelector(`#btn-focus-${t.id}`);
+                    if (btnFocus) {
+                        btnFocus.addEventListener('click', () => setActiveResearch(t.id));
+                    }
+                    const btnUnlock = card.querySelector(`#btn-unlock-${t.id}`);
+                    if (btnUnlock) {
+                        btnUnlock.addEventListener('click', () => {
+                            initAudio();
+                            unlockTech(t.id, true);
+                        });
+                    }
+                });
+            });
+        }
+
+        function updateTechTreeUI() {
+            // Update Active Research HUD
+            const activeTech = TECH_TREE.find(t => t.id === sim.activeTechId);
+            const hudName = document.getElementById('hudActiveTechName');
+            const hudTier = document.getElementById('hudActiveTechTier');
+            const hudCost = document.getElementById('hudActiveTechCost');
+            const hudBar = document.getElementById('barActiveTech');
+            const hudEta = document.getElementById('hudActiveTechEta');
+            const hudBonus = document.getElementById('hudActiveTechBonus');
+            const rateBadge = document.getElementById('valSciRateBadge');
+
+            if (rateBadge) rateBadge.textContent = `+${sim.deltaScience} SP/cyc`;
+
+            if (activeTech && !isTechUnlocked(activeTech.id)) {
+                const prog = sim.techProgress[activeTech.id] || 0;
+                const pct = Math.min(100, (prog / activeTech.cost) * 100);
+                if (hudName) hudName.textContent = activeTech.name;
+                if (hudTier) {
+                    hudTier.textContent = activeTech.breakthrough ? 'BREAKTHROUGH' : `TIER ${activeTech.tier === 1 ? 'I' : 'II'}`;
+                    hudTier.className = `tech-badge ${activeTech.tier === 1 ? 't1' : (activeTech.tier === 2 ? 't2' : 'breakthrough')}`;
+                }
+                if (hudCost) hudCost.textContent = `${Math.floor(prog)} / ${activeTech.cost} SP (${pct.toFixed(0)}%)`;
+                if (hudBar) hudBar.style.width = `${pct}%`;
+                const rem = Math.max(0, activeTech.cost - prog);
+                const eta = sim.deltaScience > 0 ? (rem / (sim.deltaScience * 0.05)).toFixed(1) : '--';
+                if (hudEta) hudEta.textContent = `${eta} cyc`;
+                if (hudBonus) hudBonus.textContent = activeTech.buffs;
+            } else {
+                if (hudName) hudName.textContent = 'No Active Research Project';
+                if (hudTier) { hudTier.textContent = 'IDLE'; hudTier.className = 'tech-badge t1'; }
+                if (hudCost) hudCost.textContent = '-- / -- SP';
+                if (hudBar) hudBar.style.width = '0%';
+                if (hudEta) hudEta.textContent = '--';
+                if (hudBonus) hudBonus.textContent = 'Select a technology below to assign Science Directorate focus';
+            }
+
+            // Update each tech card
+            TECH_TREE.forEach(t => {
+                const card = document.getElementById(`tech-card-${t.id}`);
+                const statusBadge = document.getElementById(`tech-status-badge-${t.id}`);
+                const progBar = document.getElementById(`tech-prog-bar-${t.id}`);
+                const btnFocus = document.getElementById(`btn-focus-${t.id}`);
+                const btnUnlock = document.getElementById(`btn-unlock-${t.id}`);
+
+                if (!card) return;
+
+                const unlocked = isTechUnlocked(t.id);
+                const isActive = (sim.activeTechId === t.id);
+                const available = canResearchTech(t.id);
+                const prog = sim.techProgress[t.id] || 0;
+                const pct = Math.min(100, (prog / t.cost) * 100);
+
+                if (progBar) progBar.style.width = `${pct}%`;
+
+                if (unlocked) {
+                    card.className = `tech-card researched ${t.breakthrough ? 'breakthrough' : ''}`;
+                    if (statusBadge) {
+                        statusBadge.textContent = '✅ RESEARCHED';
+                        statusBadge.style.color = 'var(--accent-emerald)';
+                    }
+                    if (btnFocus) { btnFocus.disabled = true; btnFocus.textContent = 'Completed'; }
+                    if (btnUnlock) { btnUnlock.disabled = true; btnUnlock.textContent = 'Unlocked'; }
+                } else if (isActive) {
+                    card.className = `tech-card active-research ${t.breakthrough ? 'breakthrough' : ''}`;
+                    if (statusBadge) {
+                        statusBadge.textContent = `⚡ RESEARCHING (${pct.toFixed(0)}%)`;
+                        statusBadge.style.color = 'var(--accent-cyan)';
+                    }
+                    if (btnFocus) { btnFocus.disabled = true; btnFocus.textContent = 'Current Focus'; }
+                    if (btnUnlock) {
+                        btnUnlock.disabled = (sim.science < t.cost || sim.energy < t.costEnergy || sim.minerals < t.costMin);
+                        btnUnlock.textContent = `Fast-Track (${t.cost} SP)`;
+                    }
+                } else if (available) {
+                    card.className = `tech-card ${t.breakthrough ? 'breakthrough' : ''}`;
+                    card.style.opacity = '1.0';
+                    if (statusBadge) {
+                        statusBadge.textContent = 'AVAILABLE';
+                        statusBadge.style.color = 'var(--accent-amber)';
+                    }
+                    if (btnFocus) { btnFocus.disabled = false; btnFocus.textContent = 'Set Active Focus'; }
+                    if (btnUnlock) {
+                        btnUnlock.disabled = (sim.science < t.cost || sim.energy < t.costEnergy || sim.minerals < t.costMin);
+                        btnUnlock.textContent = `Fast-Track (${t.cost} SP)`;
+                    }
+                } else {
+                    card.className = `tech-card ${t.breakthrough ? 'breakthrough' : ''}`;
+                    card.style.opacity = '0.55';
+                    if (statusBadge) {
+                        const prereqTech = TECH_TREE.find(x => x.id === t.prereq);
+                        statusBadge.textContent = `🔒 LOCKED (Req: ${prereqTech ? prereqTech.name : t.prereq})`;
+                        statusBadge.style.color = 'var(--text-dim)';
+                    }
+                    if (btnFocus) { btnFocus.disabled = true; btnFocus.textContent = 'Locked'; }
+                    if (btnUnlock) { btnUnlock.disabled = true; btnUnlock.textContent = 'Prereq Missing'; }
+                }
+            });
+
+            // Update Breakthroughs Summary Card
+            const btAnti = isTechUnlocked('prop_antimatter');
+            const btBio = isTechUnlocked('bio_adapted');
+            const btStab = isTechUnlocked('geo_stabilization');
+            const btCount = (btAnti ? 1 : 0) + (btBio ? 1 : 0) + (btStab ? 1 : 0);
+
+            const countBadge = document.getElementById('badgeBreakthroughCount');
+            if (countBadge) countBadge.textContent = `${btCount} / 3 Active`;
+
+            const elAnti = document.getElementById('statusBtAntimatter');
+            if (elAnti) {
+                elAnti.textContent = btAnti ? '⭐ ACTIVE (+200% Fleet Speed, +100% Trade)' : (isTechUnlocked('prop_warp') ? 'READY TO RESEARCH' : 'LOCKED (Req. Alcubierre Warp)');
+                elAnti.style.color = btAnti ? 'var(--accent-emerald)' : (isTechUnlocked('prop_warp') ? 'var(--accent-amber)' : 'var(--text-dim)');
+            }
+
+            const elBio = document.getElementById('statusBtBiomes');
+            if (elBio) {
+                elBio.textContent = btBio ? '⭐ ACTIVE (+20% Hab, 2x Food, +15 Morale)' : (isTechUnlocked('bio_thermal') ? 'READY TO RESEARCH' : 'LOCKED (Req. Cryo-Aquifers)');
+                elBio.style.color = btBio ? 'var(--accent-emerald)' : (isTechUnlocked('bio_thermal') ? 'var(--accent-amber)' : 'var(--text-dim)');
+            }
+
+            const elStab = document.getElementById('statusBtStabilization');
+            if (elStab) {
+                elStab.textContent = btStab ? '⭐ ACTIVE (+15% Hab, Climate Stability, +20 Morale)' : (isTechUnlocked('geo_sunshade') ? 'READY TO RESEARCH' : 'LOCKED (Req. Orbital Sunshade)');
+                elStab.style.color = btStab ? 'var(--accent-emerald)' : (isTechUnlocked('geo_sunshade') ? 'var(--accent-amber)' : 'var(--text-dim)');
+            }
         }
 
         // Start render and initial update
         loadStarSystem(0);
+        renderTechTree();
         calculateHabitability();
         updateUI();
         render();

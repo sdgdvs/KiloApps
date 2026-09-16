@@ -384,8 +384,17 @@ typedef struct {
     int selectedType; // 0=none, 1=sun, 2=planet, 3=moon, 4=station, 5=ship
     int selectedIndex;
 
-    // Tab: 0=Terraform, 1=Fleet, 2=Colony, 3=Hazards, 4=Economy
+    // Tab: 0=Terraform, 1=Fleet, 2=Colony, 3=Research, 4=Hazards, 5=Economy
     int activeTab;
+
+    // Phase 10: Interstellar Research Tree & Terraforming Breakthroughs
+    int science;
+    int deltaScience;
+    int activeTech;
+    float techProgress[9];
+    int techResearched[9];
+    int breakthroughFanfare;
+    char lastBreakthrough[48];
 
     // Log message
     char logMsg[128];
@@ -407,6 +416,49 @@ typedef struct {
     float speed;
     COLORREF color;
 } TradeRoute;
+
+#define MAX_TECHS 9
+
+typedef enum {
+    TECH_PROP_RAMJETS = 0,
+    TECH_PROP_WARP,
+    TECH_PROP_ANTIMATTER,
+    TECH_BIO_CATALYSTS,
+    TECH_BIO_THERMAL,
+    TECH_BIO_ADAPTED,
+    TECH_GEO_DYNAMO,
+    TECH_GEO_SUNSHADE,
+    TECH_GEO_STABILIZATION
+} TechId;
+
+typedef struct {
+    int id;
+    int branch; // 0=Propulsion, 1=Biosphere, 2=Geo-Eng
+    int tier;   // 1, 2, 3
+    int isBreakthrough;
+    char name[36];
+    char code[24];
+    char desc[96];
+    char effect[96];
+    int costScience;
+    int costEnergy;
+    int costMinerals;
+    int prereq;
+} TechDef;
+
+static TechDef g_techs[MAX_TECHS] = {
+    { TECH_PROP_RAMJETS, 0, 1, 0, "Bussard Ramjets", "PROP-T1", "Magnetic scoop fields harvesting stellar H2.", "+30% Fleet Speed, -20% Transit Cycles", 400, 150, 100, -1 },
+    { TECH_PROP_WARP, 0, 2, 0, "Alcubierre Warp Harmonics", "PROP-T2", "Spacetime curvature coils for interstellar jumps.", "2x Fleet Velocity, +50% Freighter Capacity", 950, 300, 250, TECH_PROP_RAMJETS },
+    { TECH_PROP_ANTIMATTER, 0, 3, 1, "Antimatter Drives", "PROP-T3", "Positron-antiproton annihilation propulsion matrix.", "BREAKTHROUGH: 3x Speed, -50% Transit, +100% Trade", 2200, 600, 400, TECH_PROP_WARP },
+
+    { TECH_BIO_CATALYSTS, 1, 1, 0, "Atmospheric Catalysts", "BIO-T1", "Synthetic catalysts accelerating tropospheric O2.", "+40% Processor O2/N2 Production", 450, 120, 80, -1 },
+    { TECH_BIO_THERMAL, 1, 2, 0, "Cryo-Aquifer Hydro-Melting", "BIO-T2", "Geothermal coils melting sub-surface ice aquifers.", "+50% Water Conversion, +35% Farm Yield", 1000, 250, 200, TECH_BIO_CATALYSTS },
+    { TECH_BIO_ADAPTED, 1, 3, 1, "Genetic Adapted Biomes", "BIO-T3", "Engineered extremophile synthetic xenobiotic flora.", "BREAKTHROUGH: +20% Habitation, 2x Food, +15 Morale", 2400, 350, 300, TECH_BIO_THERMAL },
+
+    { TECH_GEO_DYNAMO, 2, 1, 0, "Ionospheric Dynamo Coils", "GEO-T1", "Core induction coils generating planetary magnetosphere.", "+60% Magnetosphere, -50% Flare Damage", 500, 200, 200, -1 },
+    { TECH_GEO_SUNSHADE, 2, 2, 0, "Orbital Sunshade Array", "GEO-T2", "Occultation array for fine-tuned planetary cooling.", "+75% Mirror Thermal Power, -15C Hot Worlds", 1100, 350, 350, TECH_GEO_DYNAMO },
+    { TECH_GEO_STABILIZATION, 2, 3, 1, "Climate Stabilization Matrix", "GEO-T3", "Planetary nanite grid locking atmospheric stability.", "BREAKTHROUGH: Climate Lock, +15% Hab, +20 Morale", 2600, 650, 500, TECH_GEO_SUNSHADE }
+};
 
 static Simulation sim;
 static Star stars[STAR_COUNT];
@@ -548,6 +600,8 @@ static void CalculateHabitability(void) {
     if (mScore > 100.0f) mScore = 100.0f;
 
     float total = (pScore * 0.20f) + (tScore * 0.20f) + (wScore * 0.15f) + (oScore * 0.15f) + (nScore * 0.15f) + (ghgScore * 0.10f) + (mScore * 0.05f);
+    if (sim.techResearched[TECH_BIO_ADAPTED]) total += 20.0f;
+    if (sim.techResearched[TECH_GEO_STABILIZATION]) total += 15.0f;
     if (total < 0.0f) total = 0.0f;
     if (total > 100.0f) total = 100.0f;
     sim.habitability = total;
@@ -977,9 +1031,17 @@ static void SimTick(void) {
     if (sim.paused || sim.speed <= 0) return;
     int rate = sim.speed;
 
+    // Phase 10 Breakthrough Multipliers
+    float antiDriveMult = sim.techResearched[TECH_PROP_ANTIMATTER] ? 2.0f : 1.0f;
+    float bioAdaptedFoodMult = sim.techResearched[TECH_BIO_ADAPTED] ? 2.0f : 1.0f;
+    float catalystBoost = sim.techResearched[TECH_BIO_CATALYSTS] ? 1.4f : 1.0f;
+    float sunshadeBoost = sim.techResearched[TECH_GEO_SUNSHADE] ? 1.75f : 1.0f;
+    float hydroBoost = sim.techResearched[TECH_BIO_THERMAL] ? 1.5f : 1.0f;
+    int aeroYield = sim.techResearched[TECH_BIO_THERMAL] ? 110 : 80;
+
     // Logistics Multipliers & Automated Supply Trade Routes
-    float dockMult = 1.0f + (float)(sim.orbitalDocks - 1) * 0.20f;
-    float fuelMult = 1.0f + (float)(sim.fuelDepots - 1) * 0.25f;
+    float dockMult = (1.0f + (float)(sim.orbitalDocks - 1) * 0.20f) * antiDriveMult;
+    float fuelMult = (1.0f + (float)(sim.fuelDepots - 1) * 0.25f) * antiDriveMult;
 
     int rMin = g_tradeRoutes[0].active ? (int)(g_tradeRoutes[0].baseYield * g_tradeRoutes[0].freighters * dockMult) : 0;
     int rVol = g_tradeRoutes[1].active ? (int)(g_tradeRoutes[1].baseYield * g_tradeRoutes[1].freighters * dockMult) : 0;
@@ -1034,9 +1096,9 @@ static void SimTick(void) {
     sim.volatiles += (int)(sim.deltaVolatiles * 0.05f * rate);
     if (sim.volatiles < 0) sim.volatiles = 0;
 
-    // Food (Phase 8 Advanced Agronomy)
-    int baseFoodGain = 15 + (sim.hydroTowers * 25) + (sim.aeroponicFarms * 80) + (sim.algalVats * 45) + (sim.domedMegacities * 20) + rFood;
-    int foodGain = (int)(baseFoodGain * agroMult);
+    // Food (Phase 8 & 10 Advanced Agronomy & Breakthroughs)
+    int baseFoodGain = 15 + (sim.hydroTowers * 25) + (sim.aeroponicFarms * aeroYield) + (sim.algalVats * 45) + (sim.domedMegacities * 20) + rFood;
+    int foodGain = (int)(baseFoodGain * agroMult * bioAdaptedFoodMult);
     int foodDrain = (int)((sim.colonists / 1200) * rationMult);
     sim.deltaFood = foodGain - foodDrain;
     sim.food += (int)(sim.deltaFood * 0.05f * rate);
@@ -1046,7 +1108,7 @@ static void SimTick(void) {
     if (sim.energy > 500) {
         // 1. Troposphere Processors Drift
         if (sim.atmoMode == 0) {
-            sim.pressure += (sim.atmoProcessors * 0.0004f * rate * engTerraMult);
+            sim.pressure += (sim.atmoProcessors * 0.0004f * rate * engTerraMult * catalystBoost);
         } else {
             if (sim.pressure > 1.0f) {
                 sim.pressure -= (sim.atmoProcessors * 0.0007f * rate * engTerraMult);
@@ -1057,14 +1119,14 @@ static void SimTick(void) {
 
         // 2. Orbital Solar Mirrors Drift
         if (sim.mirrorMode == 0) {
-            sim.temp += (sim.solarMirrors * 0.015f * rate);
+            sim.temp += (sim.solarMirrors * 0.015f * rate * sunshadeBoost);
         } else {
-            sim.temp -= (sim.solarMirrors * 0.018f * rate);
+            sim.temp -= (sim.solarMirrors * 0.018f * rate * sunshadeBoost);
         }
 
         // 3. Nitrogen Extractors Drift
         if (sim.nitrogen < 78.0f) {
-            sim.nitrogen += (sim.nitrogenExtractors * 0.025f * rate);
+            sim.nitrogen += (sim.nitrogenExtractors * 0.025f * rate * catalystBoost);
             if (sim.nitrogen > 78.0f) sim.nitrogen = 78.0f;
             sim.pressure += (sim.nitrogenExtractors * 0.00015f * rate);
         }
@@ -1079,14 +1141,24 @@ static void SimTick(void) {
 
         // Biosphere & Hydrosphere drifts
         if (sim.temp > -20.0f && sim.water > 10.0f) {
-            sim.oxygen += (sim.bioseedStations * 0.0008f * rate);
+            sim.oxygen += (sim.bioseedStations * 0.0008f * rate * catalystBoost);
         }
         if (sim.temp > 0.0f && sim.water < 65.0f) {
-            sim.water += (0.001f * rate);
+            sim.water += (0.001f * rate * hydroBoost);
         }
     }
 
-    // Phase 8: Multi-factor Morale Simulation
+    // Phase 10: Climate Stabilization Matrix Atmospheric Lock
+    if (sim.techResearched[TECH_GEO_STABILIZATION]) {
+        if (sim.pressure < 1.00f) sim.pressure += (0.0004f * rate);
+        else if (sim.pressure > 1.05f) sim.pressure -= (0.0004f * rate);
+        if (sim.temp < 14.5f) sim.temp += (0.015f * rate);
+        else if (sim.temp > 18.0f) sim.temp -= (0.015f * rate);
+        if (sim.oxygen < 20.9f) sim.oxygen += (0.0015f * rate);
+        if (sim.nitrogen < 78.0f) sim.nitrogen += (0.015f * rate);
+    }
+
+    // Phase 8 & 10: Multi-factor Morale Simulation
     float targetMorale = 65.0f;
     if (sim.food <= 0) targetMorale -= 35.0f;
     else if (sim.food < 300) targetMorale -= 15.0f;
@@ -1102,6 +1174,10 @@ static void SimTick(void) {
     targetMorale += (sim.habitability * 0.25f);
     targetMorale += (sim.domedMegacities * 6.0f);
     targetMorale += (sim.pctScientists * 0.2f);
+
+    // Breakthrough Morale Buffs
+    if (sim.techResearched[TECH_BIO_ADAPTED]) targetMorale += 15.0f;
+    if (sim.techResearched[TECH_GEO_STABILIZATION]) targetMorale += 20.0f;
 
     if (targetMorale < 10.0f) targetMorale = 10.0f;
     if (targetMorale > 99.0f) targetMorale = 99.0f;
@@ -1119,6 +1195,45 @@ static void SimTick(void) {
         int loss = (int)(sim.colonists * 0.003f * rate) + 1;
         sim.colonists -= loss;
         if (sim.colonists < 0) sim.colonists = 0;
+    }
+
+    // Phase 10: Science Data Generation & Research Progress
+    int sciBase = (int)(sim.colonists * ((float)sim.pctScientists / 100.0f) * 0.0012f);
+    float sciMult = (sim.demoFocus == 3) ? 1.75f : 1.0f;
+    int surveyorBonus = (strcmp(fleet[2].status, "Scanning Orbit") == 0 || strcmp(fleet[2].status, "Long-Range Scan") == 0) ? 10 : 0;
+    int megacityBonus = sim.domedMegacities * 12;
+    sim.deltaScience = (int)((sciBase + surveyorBonus + megacityBonus) * sciMult);
+    if (sim.deltaScience < 1) sim.deltaScience = 1;
+    sim.science += (int)(sim.deltaScience * 0.05f * rate);
+
+    // Advance active tech
+    if (sim.activeTech >= 0 && sim.activeTech < MAX_TECHS && !sim.techResearched[sim.activeTech]) {
+        sim.techProgress[sim.activeTech] += (sim.deltaScience * 0.05f * rate);
+        if (sim.techProgress[sim.activeTech] >= (float)g_techs[sim.activeTech].costScience) {
+            sim.techProgress[sim.activeTech] = (float)g_techs[sim.activeTech].costScience;
+            sim.techResearched[sim.activeTech] = 1;
+            char lBuf[128];
+            if (g_techs[sim.activeTech].isBreakthrough) {
+                sim.breakthroughFanfare = 60;
+                strncpy(sim.lastBreakthrough, g_techs[sim.activeTech].name, sizeof(sim.lastBreakthrough) - 1);
+                sprintf(lBuf, "BREAKTHROUGH: [%s] UNLOCKED! %s", g_techs[sim.activeTech].name, g_techs[sim.activeTech].effect);
+                SetLogMsg(lBuf, 0);
+            } else {
+                sprintf(lBuf, "RESEARCH COMPLETED: [%s] online! %s", g_techs[sim.activeTech].name, g_techs[sim.activeTech].effect);
+                SetLogMsg(lBuf, 0);
+            }
+            CalculateHabitability();
+            int nextT = -1;
+            for (int k = 0; k < MAX_TECHS; k++) {
+                if (!sim.techResearched[k]) {
+                    if (g_techs[k].prereq < 0 || sim.techResearched[g_techs[k].prereq]) {
+                        nextT = k;
+                        break;
+                    }
+                }
+            }
+            sim.activeTech = nextT;
+        }
     }
 
     // Phase 9: Crisis Events & Hazards
@@ -1151,6 +1266,18 @@ static void InitSimulation(void) {
     sim.colonists = 25000;
     sim.cryoSleepers = 75000;
     sim.morale = 86.0f;
+
+    // Phase 10: Interstellar Research Tree & Breakthroughs
+    sim.science = 850;
+    sim.deltaScience = 18;
+    sim.activeTech = 0; // TECH_PROP_RAMJETS
+    for (int t = 0; t < MAX_TECHS; t++) {
+        sim.techProgress[t] = 0.0f;
+        sim.techResearched[t] = 0;
+    }
+    sim.techProgress[0] = 120.0f;
+    sim.breakthroughFanfare = 0;
+    sim.lastBreakthrough[0] = '\0';
 
     // Phase 8 Demographics & Infrastructure defaults
     sim.pctLaborers = 40;
@@ -2440,7 +2567,7 @@ typedef struct {
     int isEnabled;
 } UIButton;
 
-#define MAX_BUTTONS 128
+#define MAX_BUTTONS 160
 static UIButton g_buttons[MAX_BUTTONS];
 static int g_buttonCount = 0;
 
@@ -2464,8 +2591,12 @@ static void AddButton(int id, int x, int y, int w, int h, const char* txt, const
 #define BID_TAB_TERRA       10
 #define BID_TAB_FLEET       11
 #define BID_TAB_COLONY      12
-#define BID_TAB_HAZARDS     13
-#define BID_TAB_ECONOMY     14
+#define BID_TAB_RESEARCH    13
+#define BID_TAB_HAZARDS     14
+#define BID_TAB_ECONOMY     15
+
+#define BID_TECH_FOCUS_BASE 1500
+#define BID_TECH_UNLOCK_BASE 1520
 
 #define BID_FOCUS_PLANET    20
 #define BID_FOCUS_ARK       21
@@ -3201,32 +3332,61 @@ static void RenderUI(HDC hdc, int width, int height) {
     // Energy
     sprintf(buf, "ENG: %d kW (%+d)", sim.energy, sim.deltaEnergy);
     SetTextColor(hdc, COLOR_EMERALD);
-    TextOutA(hdc, badgeX + 90, 7, buf, (int)strlen(buf));
+    TextOutA(hdc, badgeX + 85, 7, buf, (int)strlen(buf));
 
     // Minerals
     sprintf(buf, "MIN: %d t (%+d)", sim.minerals, sim.deltaMinerals);
     SetTextColor(hdc, COLOR_BLUE);
-    TextOutA(hdc, badgeX + 240, 7, buf, (int)strlen(buf));
+    TextOutA(hdc, badgeX + 225, 7, buf, (int)strlen(buf));
 
     // Volatiles
     sprintf(buf, "VOL: %d t (%+d)", sim.volatiles, sim.deltaVolatiles);
     SetTextColor(hdc, COLOR_PURPLE);
-    TextOutA(hdc, badgeX + 380, 7, buf, (int)strlen(buf));
+    TextOutA(hdc, badgeX + 365, 7, buf, (int)strlen(buf));
+
+    // Science (Phase 10)
+    sprintf(buf, "SCI: %d SP (%+d)", sim.science, sim.deltaScience);
+    SetTextColor(hdc, RGB(216, 180, 254));
+    TextOutA(hdc, badgeX, 24, buf, (int)strlen(buf));
 
     // Habitability
     sprintf(buf, "HAB: %.1f%%", sim.habitability);
     SetTextColor(hdc, COLOR_AMBER);
-    TextOutA(hdc, badgeX + 90, 24, buf, (int)strlen(buf));
+    TextOutA(hdc, badgeX + 85, 24, buf, (int)strlen(buf));
 
     // Colonists
     sprintf(buf, "POP: %d", sim.colonists);
     SetTextColor(hdc, theme->textBright);
-    TextOutA(hdc, badgeX + 240, 24, buf, (int)strlen(buf));
+    TextOutA(hdc, badgeX + 225, 24, buf, (int)strlen(buf));
 
     // Food
     sprintf(buf, "FOOD: %d t (%+d)", sim.food, sim.deltaFood);
     SetTextColor(hdc, COLOR_EMERALD);
-    TextOutA(hdc, badgeX + 380, 24, buf, (int)strlen(buf));
+    TextOutA(hdc, badgeX + 365, 24, buf, (int)strlen(buf));
+
+    // Phase 10: Breakthrough Fanfare Banner
+    if (sim.breakthroughFanfare > 0) {
+        sim.breakthroughFanfare--;
+        int bannerW = 460;
+        int bannerH = 58;
+        int bx = (width - bannerW) / 2;
+        int by = headerH + 18;
+        FillSolidRect(hdc, bx, by, bannerW, bannerH, RGB(25, 18, 8));
+        FrameSolidRect(hdc, bx, by, bannerW, bannerH, RGB(245, 158, 11));
+        FrameSolidRect(hdc, bx + 1, by + 1, bannerW - 2, bannerH - 2, RGB(255, 215, 60));
+
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, RGB(245, 158, 11));
+        TextOutA(hdc, bx + 14, by + 6, "⭐ SCIENTIFIC BREAKTHROUGH ACHIEVED ⭐", 41);
+
+        SelectObject(hdc, hFontMain);
+        SetTextColor(hdc, COLOR_TEXT_BRIGHT);
+        TextOutA(hdc, bx + 14, by + 22, sim.lastBreakthrough, (int)strlen(sim.lastBreakthrough));
+
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COLOR_EMERALD);
+        TextOutA(hdc, bx + 14, by + 38, "Permanent Interstellar Bonus Engaged Across Fleet & Colonies", 60);
+    }
 
     // 3. Viewport Stellar Canvas (Left Area)
     int shakeX = 0, shakeY = 0;
@@ -3512,10 +3672,15 @@ static void RenderUI(HDC hdc, int width, int height) {
 
     for (int i = 0; i < 5; i++) {
         int sx, sy;
+        float fleetSpeedMult = 1.0f;
+        if (sim.techResearched[TECH_PROP_ANTIMATTER]) fleetSpeedMult = 3.0f;
+        else if (sim.techResearched[TECH_PROP_WARP]) fleetSpeedMult = 2.0f;
+        else if (sim.techResearched[TECH_PROP_RAMJETS]) fleetSpeedMult = 1.3f;
+
         if (fleet[i].targetBelt) {
             if (!sim.paused && sim.speed > 0) {
-                fleet[i].x += fleet[i].vx * sim.speed;
-                fleet[i].y += fleet[i].vy * sim.speed;
+                fleet[i].x += fleet[i].vx * sim.speed * fleetSpeedMult;
+                fleet[i].y += fleet[i].vy * sim.speed * fleetSpeedMult;
                 if (fleet[i].x > 350.0f || fleet[i].x < -100.0f) fleet[i].vx *= -1.0f;
                 if (fleet[i].y > 200.0f || fleet[i].y < -200.0f) fleet[i].vy *= -1.0f;
             }
@@ -3523,7 +3688,7 @@ static void RenderUI(HDC hdc, int width, int height) {
             sy = cy + (int)(fleet[i].y * z);
         } else {
             if (!sim.paused && sim.speed > 0) {
-                fleet[i].angle += fleet[i].orbitSpeed * 0.02f * sim.speed;
+                fleet[i].angle += fleet[i].orbitSpeed * 0.02f * sim.speed * fleetSpeedMult;
             }
             float dist = fleet[i].orbitDist * z;
             sx = actPx + (int)(cosf(fleet[i].angle) * dist);
@@ -3773,13 +3938,14 @@ static void RenderUI(HDC hdc, int width, int height) {
     FillSolidRect(hdc, sbX, headerH, sidebarW, viewportH, theme->bgPanel);
     FillSolidRect(hdc, sbX, headerH, 1, viewportH, theme->border);
 
-    // Tab Header: 5 Tabs
-    int tabW = sidebarW / 5;
+    // Tab Header: 6 Tabs
+    int tabW = sidebarW / 6;
     AddButton(BID_TAB_TERRA, sbX, headerH, tabW, 28, "TERRA", NULL, 1);
     AddButton(BID_TAB_FLEET, sbX + tabW, headerH, tabW, 28, "FLEET", NULL, 1);
     AddButton(BID_TAB_COLONY, sbX + tabW * 2, headerH, tabW, 28, "COLONY", NULL, 1);
-    AddButton(BID_TAB_HAZARDS, sbX + tabW * 3, headerH, tabW, 28, "HAZARD", NULL, 1);
-    AddButton(BID_TAB_ECONOMY, sbX + tabW * 4, headerH, sidebarW - tabW * 4, 28, "ECON", NULL, 1);
+    AddButton(BID_TAB_RESEARCH, sbX + tabW * 3, headerH, tabW, 28, "TECH", NULL, 1);
+    AddButton(BID_TAB_HAZARDS, sbX + tabW * 4, headerH, tabW, 28, "HAZARD", NULL, 1);
+    AddButton(BID_TAB_ECONOMY, sbX + tabW * 5, headerH, sidebarW - tabW * 5, 28, "ECON", NULL, 1);
 
     int contentY = headerH + 34;
 
@@ -4236,8 +4402,125 @@ static void RenderUI(HDC hdc, int width, int height) {
         AddButton(BID_COL_ALGAL_VAT, sbX + 12, cy, btnW, btnH, "+ Algal Protein Vats", "+45 Food (320M, 180E)", 1);
         AddButton(BID_COL_SOLAR, sbX + 18 + btnW, cy, btnW, btnH, "+ Surface Solar Grid", "+180 kW Grid (220 Min)", 1);
     }
-    // TAB 3: HAZARDS & CRISIS MANAGEMENT
+    // TAB 3: RESEARCH & BREAKTHROUGHS (Phase 10)
     else if (sim.activeTab == 3) {
+        int ry = contentY;
+
+        // 1. Science Directorate HUD Card
+        int hudH = 50;
+        FillSolidRect(hdc, sbX + 12, ry, sidebarW - 24, hudH, COLOR_BG_CARD);
+        FrameSolidRect(hdc, sbX + 12, ry, sidebarW - 24, hudH, COLOR_BORDER);
+        FillSolidRect(hdc, sbX + 12, ry, 4, hudH, RGB(168, 85, 247)); // Purple accent
+
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, RGB(216, 180, 254));
+        sprintf(buf, "SCIENCE DIRECTORATE: %d SP (+%d/cyc)", sim.science, sim.deltaScience);
+        TextOutA(hdc, sbX + 22, ry + 6, buf, (int)strlen(buf));
+
+        SelectObject(hdc, hFontSmall);
+        if (sim.activeTech >= 0 && sim.activeTech < MAX_TECHS && !sim.techResearched[sim.activeTech]) {
+            TechDef* at = &g_techs[sim.activeTech];
+            SetTextColor(hdc, COLOR_TEXT_PRI);
+            sprintf(buf, "Active Focus: [%s] %s (%.0f/%d SP - %.0f%%)",
+                at->code, at->name, sim.techProgress[sim.activeTech], at->costScience,
+                (sim.techProgress[sim.activeTech] / (float)at->costScience) * 100.0f);
+            TextOutA(hdc, sbX + 22, ry + 22, buf, (int)strlen(buf));
+            DrawProgressBar(hdc, sbX + 22, ry + 37, sidebarW - 44, 6,
+                sim.techProgress[sim.activeTech] / (float)at->costScience, RGB(168, 85, 247));
+        } else {
+            SetTextColor(hdc, COLOR_EMERALD);
+            TextOutA(hdc, sbX + 22, ry + 22, "Active Focus: None (Click 'Focus' below to direct science)", 57);
+            SetTextColor(hdc, COLOR_TEXT_DIM);
+            TextOutA(hdc, sbX + 22, ry + 36, "Breakthrough technologies unlock permanent interstellar bonuses.", 64);
+        }
+
+        ry += hudH + 6;
+
+        // 2. Render 9 Tech Cards
+        for (int t = 0; t < MAX_TECHS; t++) {
+            TechDef* td = &g_techs[t];
+            int isResearched = sim.techResearched[t];
+            int isActive = (!isResearched && sim.activeTech == t);
+            int canUnlock = (!isResearched && (td->prereq < 0 || sim.techResearched[td->prereq]));
+            int cardH = 37;
+
+            COLORREF cardBg = isResearched ? RGB(10, 26, 18) : (isActive ? RGB(28, 20, 10) : COLOR_BG_CARD);
+            COLORREF cardBorder = isResearched ? RGB(16, 100, 60) : (isActive ? RGB(245, 158, 11) : (canUnlock ? COLOR_BORDER : RGB(30, 41, 59)));
+            COLORREF accentCol = isResearched ? COLOR_EMERALD : (isActive ? RGB(245, 158, 11) : (canUnlock ? RGB(168, 85, 247) : RGB(75, 85, 99)));
+
+            FillSolidRect(hdc, sbX + 12, ry, sidebarW - 24, cardH, cardBg);
+            FrameSolidRect(hdc, sbX + 12, ry, sidebarW - 24, cardH, cardBorder);
+            FillSolidRect(hdc, sbX + 12, ry, 3, cardH, accentCol);
+
+            // Title & Tier
+            SelectObject(hdc, hFontBold);
+            if (td->isBreakthrough) {
+                SetTextColor(hdc, isResearched ? COLOR_EMERALD : RGB(245, 158, 11));
+                sprintf(buf, "⭐ [%s] %s", td->code, td->name);
+            } else {
+                SetTextColor(hdc, isResearched ? COLOR_EMERALD : (canUnlock ? COLOR_TEXT_BRIGHT : COLOR_TEXT_DIM));
+                sprintf(buf, "[%s] %s", td->code, td->name);
+            }
+            TextOutA(hdc, sbX + 20, ry + 4, buf, (int)strlen(buf));
+
+            // Status label or Cost on right of title
+            SelectObject(hdc, hFontSmall);
+            if (isResearched) {
+                SetTextColor(hdc, COLOR_EMERALD);
+                TextOutA(hdc, sbX + sidebarW - 95, ry + 4, "[ONLINE]", 8);
+            } else if (isActive) {
+                SetTextColor(hdc, RGB(245, 158, 11));
+                sprintf(buf, "%.0f%%", (sim.techProgress[t] / (float)td->costScience) * 100.0f);
+                TextOutA(hdc, sbX + sidebarW - 65, ry + 4, buf, (int)strlen(buf));
+            } else if (canUnlock) {
+                SetTextColor(hdc, RGB(216, 180, 254));
+                sprintf(buf, "%d SP", td->costScience);
+                TextOutA(hdc, sbX + sidebarW - 75, ry + 4, buf, (int)strlen(buf));
+            } else {
+                SetTextColor(hdc, RGB(100, 116, 139));
+                TextOutA(hdc, sbX + sidebarW - 85, ry + 4, "[LOCKED]", 8);
+            }
+
+            // Effect / Desc on second line
+            SelectObject(hdc, hFontSmall);
+            SetTextColor(hdc, isResearched ? COLOR_TEXT_PRI : (canUnlock ? COLOR_TEXT_DIM : RGB(71, 85, 105)));
+            TextOutA(hdc, sbX + 20, ry + 18, td->effect, (int)strlen(td->effect));
+
+            // Interactive Buttons on the right
+            if (!isResearched && canUnlock) {
+                AddButton(BID_TECH_FOCUS_BASE + t, sbX + sidebarW - 122, ry + 16, 44, 17, isActive ? "[Active]" : "Focus", NULL, 1);
+                AddButton(BID_TECH_UNLOCK_BASE + t, sbX + sidebarW - 74, ry + 16, 54, 17, "Unlock", NULL, (sim.science >= td->costScience ? 1 : 0));
+            }
+
+            // Progress bar at bottom of card if active
+            if (isActive) {
+                DrawProgressBar(hdc, sbX + 15, ry + cardH - 3, sidebarW - 30, 2, sim.techProgress[t] / (float)td->costScience, RGB(245, 158, 11));
+            }
+
+            ry += cardH + 3;
+        }
+
+        // 3. Breakthrough Matrix Summary Card
+        ry += 4;
+        FillSolidRect(hdc, sbX + 12, ry, sidebarW - 24, 60, RGB(18, 20, 32));
+        FrameSolidRect(hdc, sbX + 12, ry, sidebarW - 24, 60, COLOR_BORDER);
+
+        SelectObject(hdc, hFontBold);
+        SetTextColor(hdc, RGB(245, 158, 11));
+        TextOutA(hdc, sbX + 20, ry + 4, "TERRAFORMING BREAKTHROUGH STATUS", 32);
+
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, sim.techResearched[TECH_PROP_ANTIMATTER] ? COLOR_EMERALD : COLOR_TEXT_DIM);
+        TextOutA(hdc, sbX + 20, ry + 18, sim.techResearched[TECH_PROP_ANTIMATTER] ? "[x] Antimatter: 3x Speed & 2x Trade Yields" : "[ ] Antimatter Drives: 3x Speed & 2x Trade (Offline)", sim.techResearched[TECH_PROP_ANTIMATTER] ? 42 : 51);
+
+        SetTextColor(hdc, sim.techResearched[TECH_BIO_ADAPTED] ? COLOR_EMERALD : COLOR_TEXT_DIM);
+        TextOutA(hdc, sbX + 20, ry + 31, sim.techResearched[TECH_BIO_ADAPTED] ? "[x] Adapted Biomes: +20% Hab & 2x Agronomy" : "[ ] Genetic Biomes: +20% Hab & 2x Food (Offline)", sim.techResearched[TECH_BIO_ADAPTED] ? 42 : 47);
+
+        SetTextColor(hdc, sim.techResearched[TECH_GEO_STABILIZATION] ? COLOR_EMERALD : COLOR_TEXT_DIM);
+        TextOutA(hdc, sbX + 20, ry + 44, sim.techResearched[TECH_GEO_STABILIZATION] ? "[x] Climate Matrix: Atmo Locked & +15% Hab" : "[ ] Climate Matrix: Locks Atmo & +15% Hab (Offline)", sim.techResearched[TECH_GEO_STABILIZATION] ? 42 : 50);
+    }
+    // TAB 4: HAZARDS & CRISIS MANAGEMENT
+    else if (sim.activeTab == 4) {
         SetTextColor(hdc, COLOR_ROSE);
         SelectObject(hdc, hFontBold);
         TextOutA(hdc, sbX + 12, contentY, "ASTROMETRIC THREAT RADAR", 24);
@@ -4332,8 +4615,8 @@ static void RenderUI(HDC hdc, int width, int height) {
         AddButton(BID_DRILL_BLIGHT, sbX + 12 + (drillW + 2) * 3, dry + 18, drillW, 22, "Blight", NULL, 1);
         AddButton(BID_DRILL_STORM, sbX + 12 + (drillW + 2) * 4, dry + 18, drillW, 22, "Storm", NULL, 1);
     }
-    // TAB 4: ECONOMY
-    else if (sim.activeTab == 4) {
+    // TAB 5: ECONOMY
+    else if (sim.activeTab == 5) {
         SetTextColor(hdc, COLOR_BLUE);
         SelectObject(hdc, hFontBold);
         TextOutA(hdc, sbX + 12, contentY, "SECTOR RESOURCE LOOPS", 21);
@@ -4634,6 +4917,55 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         HandleInfrastructure(bid);
                     } else if (bid >= BID_CRISIS_QUICK && bid <= BID_DRILL_STORM) {
                         HandleCrisisAction(bid);
+                    } else if (bid >= BID_TECH_FOCUS_BASE && bid < BID_TECH_FOCUS_BASE + MAX_TECHS) {
+                        int tIdx = bid - BID_TECH_FOCUS_BASE;
+                        if (!sim.techResearched[tIdx]) {
+                            sim.activeTech = tIdx;
+                            char lBuf[128];
+                            sprintf(lBuf, "Science Directorate focus set to: %s", g_techs[tIdx].name);
+                            SetLogMsg(lBuf, 0);
+                            PlaySoundFx(SFX_CLICK);
+                        }
+                    } else if (bid >= BID_TECH_UNLOCK_BASE && bid < BID_TECH_UNLOCK_BASE + MAX_TECHS) {
+                        int tIdx = bid - BID_TECH_UNLOCK_BASE;
+                        if (!sim.techResearched[tIdx]) {
+                            int canUnlock = (g_techs[tIdx].prereq < 0 || sim.techResearched[g_techs[tIdx].prereq]);
+                            int cost = g_techs[tIdx].costScience;
+                            if (canUnlock && sim.science >= cost) {
+                                sim.science -= cost;
+                                sim.techProgress[tIdx] = (float)cost;
+                                sim.techResearched[tIdx] = 1;
+                                char lBuf[128];
+                                if (g_techs[tIdx].isBreakthrough) {
+                                    sim.breakthroughFanfare = 60;
+                                    strncpy(sim.lastBreakthrough, g_techs[tIdx].name, sizeof(sim.lastBreakthrough) - 1);
+                                    sprintf(lBuf, "BREAKTHROUGH: [%s] INSTANTLY UNLOCKED! %s", g_techs[tIdx].name, g_techs[tIdx].effect);
+                                    SetLogMsg(lBuf, 0);
+                                    PlaySoundFx(SFX_SUCCESS);
+                                } else {
+                                    sprintf(lBuf, "RESEARCH COMPLETED: [%s] online! %s", g_techs[tIdx].name, g_techs[tIdx].effect);
+                                    SetLogMsg(lBuf, 0);
+                                    PlaySoundFx(SFX_CLICK);
+                                }
+                                CalculateHabitability();
+                                if (sim.activeTech == tIdx) {
+                                    int nextT = -1;
+                                    for (int k = 0; k < MAX_TECHS; k++) {
+                                        if (!sim.techResearched[k] && (g_techs[k].prereq < 0 || sim.techResearched[g_techs[k].prereq])) {
+                                            nextT = k;
+                                            break;
+                                        }
+                                    }
+                                    sim.activeTech = nextT;
+                                }
+                            } else if (!canUnlock) {
+                                SetLogMsg("Prerequisite technology required before researching this tier.", 1);
+                                PlaySoundFx(SFX_WARN);
+                            } else {
+                                SetLogMsg("Insufficient Science Points (SP) to instant-fund breakthrough.", 1);
+                                PlaySoundFx(SFX_WARN);
+                            }
+                        }
                     } else if (bid == BID_SEL_CLOSE) {
                         sim.selectedType = 0;
                         PlaySoundFx(SFX_CLICK);
@@ -4753,7 +5085,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     PlaySoundFx(SFX_CLICK);
                     break;
                 case VK_TAB:
-                    sim.activeTab = (sim.activeTab + 1) % 4;
+                    sim.activeTab = (sim.activeTab + 1) % 6;
                     PlaySoundFx(SFX_CLICK);
                     break;
                 case 'M':
