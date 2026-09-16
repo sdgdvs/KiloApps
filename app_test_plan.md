@@ -105,13 +105,12 @@ For every game audited, also verify:
 
 ---
 
-**Target App:** KRogue
+**Target App:** KScript
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KRogue
 - KScript
 - KSimon
 - KSnake
@@ -192,8 +191,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KRadio
 - KRead
 - KReversi
+- KRogue
 
 ## Test Reports
+
+- **KRogue**: PASS ✅ (8 issues, 8 fixed inline)
+  - Added tutorial auto-trigger on new game via krogue_tutorialSeen while skipping on load.
+  - Eliminated WASD/Save/Ability key collision and added Numpad & Y/U/B/N diagonal controls.
+  - Fixed high-DPI canvas click distortion by scaling coordinates with logical canvas dimensions.
+  - Resolved dropped food corruption where missing values caused NaN hunger and starvation death.
+  - Restored Magic Shrine blessings and Crafting Anvil upgrades instead of broken inventory slots.
+  - Fixed Quest NPC so interactions award gold/XP without combat or monster turn retaliation.
+  - Built gainXP level-up progression system with stat increases, heals, and celebratory effects.
+  - Added floor gold spawns, monster gold drops, and functional stat bonuses for equipped rings.
 
 > 📁 **Archived Records**: Historical entries older than 80 lines moved to [app_test_reports_round2.md](archive/app_test_reports_round2.md).
   - Preserved custom timer in campaign mode and eliminated forced untimed reset on stage initialization.
@@ -274,5 +284,5 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 > 📁 **Archived Round 2 Reports**: Recent detailed audit reports (KPad through KImage) have been archived to [archive/app_test_reports_round2.md](archive/app_test_reports_round2.md).
 
 ### Round 2 Completed Index
-- KReversi ✅ (8 fixed), KRead ✅ (8 fixed), KRadio ✅ (8 fixed), KQuest ✅ (8 fixed), KPong ✅ (8 fixed), KPing ✅ (8 fixed), KPass ✅ (7 fixed), KPaint ✅ (7 fixed), KPad ✅ (8 fixed), KPac ✅ (8 fixed), KNote ✅ (7 fixed), KNet ✅ (3 fixed), KMystery ✅ (5 fixed), KMines ✅ (8 fixed), KMine ✅ (2 fixed), KMedia ✅ (8 fixed), KMech ✅ (6 fixed), KMaze ✅ (7 fixed), KMatch3 ✅ (8 fixed), KMandel ✅ (6 fixed), KMail ✅ (7 fixed), KJournal ✅ (7 fixed), KImage ✅ (8 fixed)
+- KRogue ✅ (8 fixed), KReversi ✅ (8 fixed), KRead ✅ (8 fixed), KRadio ✅ (8 fixed), KQuest ✅ (8 fixed), KPong ✅ (8 fixed), KPing ✅ (8 fixed), KPass ✅ (7 fixed), KPaint ✅ (7 fixed), KPad ✅ (8 fixed), KPac ✅ (8 fixed), KNote ✅ (7 fixed), KNet ✅ (3 fixed), KMystery ✅ (5 fixed), KMines ✅ (8 fixed), KMine ✅ (2 fixed), KMedia ✅ (8 fixed), KMech ✅ (6 fixed), KMaze ✅ (7 fixed), KMatch3 ✅ (8 fixed), KMandel ✅ (6 fixed), KMail ✅ (7 fixed), KJournal ✅ (7 fixed), KImage ✅ (8 fixed)
 

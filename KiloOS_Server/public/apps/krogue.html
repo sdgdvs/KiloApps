@@ -850,6 +850,26 @@
             startNewGame(selectedClass, selectedRace, seedVal, selectedLoadout);
         }
 
+        function gainXP(amount) {
+            player.xp += amount;
+            let xpNeeded = player.level * 25;
+            if (player.xp >= xpNeeded) {
+                player.level++;
+                player.max_hp += 5;
+                player.hp = player.max_hp;
+                player.max_mp += 5;
+                player.mp = player.max_mp;
+                player.str += 1;
+                player.dex += 1;
+                player.atk += 1;
+                player.def += 1;
+                addMsg(`LEVEL UP! Welcome to level ${player.level}! (+5 Max HP/MP, +1 ATK/DEF)`, 'msg-good');
+                showToast(`LEVEL UP! Welcome to Level ${player.level}!`, 'success');
+                addFloatText(player.x, player.y, `LEVEL ${player.level}!`, '#ecc94b');
+                addStarParticles(player.x, player.y, '#ecc94b', 20);
+            }
+        }
+
         function startNewGame(cls, race, seedStr, loadout = 0) {
             dlevel = 1;
             total_kills = 0;
@@ -866,6 +886,12 @@
                 invisible_turns: 0, poisoned_turns: 0, rooted_turns: 0, berserk_turns: 0,
                 turn_parity: 0
             };
+
+            let seenTutorial = localStorage.getItem('krogue_tutorialSeen');
+            if (!seenTutorial) {
+                localStorage.setItem('krogue_tutorialSeen', 'true');
+                setTimeout(() => { openHelp(); }, 350);
+            }
 
             equipment = { weapon: null, armor: null, shield: null, ring: null };
 
@@ -973,14 +999,18 @@
                 addMsg("TRUE ASTAROTH AWAITS AT THE CENTER OF THE SANCTUARY!", 'msg-combat');
             }
 
-            // Shrines, Food & Equipment Drops
+            // Shrines, Food, Gold & Equipment Drops
             if (rng() < 0.45) {
                 let sx = rngRange(2, COLS - 3), sy = rngRange(2, ROWS - 3);
-                items.push({ x: sx, y: sy, ch: '^', type: 'shrine' });
+                items.push({ x: sx, y: sy, ch: '^', type: 'shrine', name: 'Magic Shrine', fg: '#00ffff' });
             }
             for (let f = 0; f < 3; f++) {
                 let fx = rngRange(2, COLS - 3), fy = rngRange(2, ROWS - 3);
-                items.push({ x: fx, y: fy, ch: '%', type: 'food' });
+                items.push({ x: fx, y: fy, ch: '%', type: 'food', name: 'Food Ration', val: 200, fg: '#ed8936' });
+            }
+            for (let g = 0; g < 2; g++) {
+                let gx = rngRange(2, COLS - 3), gy = rngRange(2, ROWS - 3);
+                items.push({ x: gx, y: gy, ch: '$', type: 'gold', name: 'Gold Pile', val: rngRange(5, 15 + dlevel * 5), fg: '#f6e05e' });
             }
             if (rng() < 0.6) {
                 let ix = rngRange(2, COLS - 3), iy = rngRange(2, ROWS - 3);
@@ -990,7 +1020,7 @@
             // Traps
             if (rng() < 0.05) { // Anvil
                 let cx = rngRange(2, COLS - 3), cy = rngRange(2, ROWS - 3);
-                items.push({ x: cx, y: cy, ch: 'T', type: 'anvil', name: 'Crafting Anvil' });
+                items.push({ x: cx, y: cy, ch: 'T', type: 'anvil', name: 'Crafting Anvil', fg: '#ecc94b' });
             }
             if (rng() < 0.1) { // NPC
                 let nx = rngRange(2, COLS - 3), ny = rngRange(2, ROWS - 3);
@@ -1057,11 +1087,13 @@
         function generateRandomLoot(x, y) {
             let r = rng();
             let it;
-            if (r < 0.3) {
+            if (r < 0.22) {
+                it = { x: x, y: y, ch: '!', type: 'heal', name: 'Health Potion', val: 30 + dlevel * 5, fg: '#f56565' };
+            } else if (r < 0.48) {
                 it = { x: x, y: y, ch: '(', type: 'weapon', name: `Mythic Sword +${dlevel}`, val: 3 + dlevel, fg: '#63b3ed' };
-            } else if (r < 0.6) {
+            } else if (r < 0.70) {
                 it = { x: x, y: y, ch: ']', type: 'armor', name: `Plate Armor +${dlevel}`, val: 2 + dlevel, fg: '#cbd5e0' };
-            } else if (r < 0.8) {
+            } else if (r < 0.85) {
                 it = { x: x, y: y, ch: '[', type: 'shield', name: `Tower Shield +${dlevel}`, val: 2 + Math.floor(dlevel/2), fg: '#ecc94b' };
             } else {
                 let spellKeys = ['fireball', 'icestorm', 'meteor', 'heal'];
@@ -1069,7 +1101,7 @@
                 let sKey = spellKeys[Math.floor(rng() * spellKeys.length)];
                 it = { x: x, y: y, ch: '?', type: 'spellbook', spellKey: sKey, name: spellNames[sKey], fg: "#b794f4" };
             }
-            if(it.type !== 'spellbook' && it.type !== 'food' && it.type !== 'heal' && it.type !== 'shrine' && rng() < 0.15) {
+            if(it.type !== 'spellbook' && it.type !== 'food' && it.type !== 'heal' && it.type !== 'shrine' && it.type !== 'gold' && rng() < 0.15) {
                 it.cursed = true;
                 it.val = -(1 + rngRange(0, 2));
                 it.name = "Cursed " + it.name;
@@ -1525,6 +1557,11 @@
             } else if (type === 'r') { // Rat
                 ctx.fillStyle = '#d69e2e'; ctx.beginPath(); ctx.ellipse(cx, cy + 2 + bob, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
                 ctx.fillStyle = '#fc8181'; ctx.fillRect(cx + 4, cy + bob, 2, 2); // Pink snout
+            } else if (m.npc || type === 'N') { // Friendly Quest NPC
+                ctx.fillStyle = '#4fd1c5'; ctx.fillRect(cx - 5, cy - 6 + bob, 10, 12);
+                ctx.fillStyle = '#f6e05e'; ctx.beginPath(); ctx.arc(cx, cy - 8 + bob, 4.5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#ffffff'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText(m.reward_ready ? '!' : '✓', cx, cy - 12 + bob);
             } else {
                 ctx.fillStyle = '#fc8181'; ctx.fillRect(cx - 5, cy - 5 + bob, 10, 10);
             }
@@ -1563,10 +1600,14 @@
                 ctx.fillText("Deep Utility Roguelike - Classes, Gear, Spells & Leaderboard", C_WIDTH / 2, 160);
 
                 ctx.fillStyle = '#68d391'; ctx.font = 'bold 20px sans-serif';
-                ctx.fillText("Press [ENTER] to Select Hero & Start Run", C_WIDTH / 2, 260);
+                ctx.fillText("Press [ENTER / Click] to Select Hero & Start New Run", C_WIDTH / 2, 250);
+
+                let hasSave = !!localStorage.getItem('krogue_save');
+                ctx.fillStyle = hasSave ? '#ecc94b' : '#718096'; ctx.font = 'bold 15px sans-serif';
+                ctx.fillText(hasSave ? "Press [L / F9] to Resume Saved Run" : "No saved run active", C_WIDTH / 2, 290);
 
                 ctx.fillStyle = '#a0aec0'; ctx.font = '14px sans-serif';
-                ctx.fillText("Press [T] Leaderboard  |  Press [H / F1] Help  |  Press [K] Keybinds  |  Press [L] Resume Run", C_WIDTH / 2, 310);
+                ctx.fillText("Press [H / F1] How to Play  |  Press [T] Leaderboard  |  Press [K] Controls", C_WIDTH / 2, 330);
                 ctx.restore();
                 return;
             }
@@ -1832,7 +1873,10 @@
 
         // Class Abilities
         function useClassAbility() {
-            if (state !== 1) return;
+            if (state !== 1) {
+                showToast("Start or resume a run first to use abilities!", "warning");
+                return;
+            }
             if (player.class === 'warrior') {
                 if (player.mp < 8) { addMsg("Not enough MP for Berserk Cleave (8 MP required)!"); return; }
                 player.mp -= 8; player.berserk_turns = 5;
@@ -1852,7 +1896,7 @@
                             addParticles(monsters[mIdx].x, monsters[mIdx].y, '#f56565', 10);
                             if (monsters[mIdx].hp <= 0) {
                                 addMsg(`${monsters[mIdx].name} is cleaved in two!`, 'good');
-                                player.xp += 10; total_kills++;
+                                gainXP(10); player.gold += rngRange(2, 5 + dlevel); total_kills++;
                                 monsters.splice(mIdx, 1);
                             }
                         }
@@ -1882,7 +1926,7 @@
                             }
                             if (monsters[mIdx].hp <= 0) {
                                 addMsg(`${monsters[mIdx].name} dissolves into arcane dust!`, 'good');
-                                player.xp += 10; total_kills++;
+                                gainXP(10); player.gold += rngRange(2, 5 + dlevel); total_kills++;
                                 monsters.splice(mIdx, 1);
                             }
                         }
@@ -1909,10 +1953,14 @@
 
         // Inventory & Equipment UI
         function openInventory() {
+            if (state !== 1) {
+                showToast("Start or resume a run first to access inventory!", "warning");
+                return;
+            }
             let eqWeapon = equipment.weapon ? `${equipment.weapon.name} (+${equipment.weapon.val} ATK)` : "None";
             let eqArmor = equipment.armor ? `${equipment.armor.name} (+${equipment.armor.val} DEF)` : "None";
             let eqShield = equipment.shield ? `${equipment.shield.name} (+${equipment.shield.val} DEF)` : "None";
-            let eqRing = equipment.ring ? `${equipment.ring.name}` : "None";
+            let eqRing = equipment.ring ? `${equipment.ring.name}${equipment.ring.val ? ' (+' + equipment.ring.val + ')' : ''}` : "None";
 
             document.getElementById('eq-weapon').innerText = eqWeapon;
             document.getElementById('eq-armor').innerText = eqArmor;
@@ -1944,7 +1992,7 @@
                 addMsg(`Drank ${it.name}. Restored HP!`, 'good');
                 inventory.splice(idx, 1);
             } else if (it.type === 'food') {
-                player.hunger = Math.min(player.max_hunger, player.hunger + it.val);
+                player.hunger = Math.min(player.max_hunger, (player.hunger || 0) + (it.val || 200));
                 addMsg(`Ate ${it.name}. Satisfied hunger!`, 'good');
                 inventory.splice(idx, 1);
             } else if (it.type === 'spellbook') {
@@ -1959,8 +2007,19 @@
                     addMsg(`Your equipped ${slot} is cursed and cannot be removed!`);
                     return;
                 }
-                if (equipment[slot]) inventory.push(equipment[slot]);
+                let old = equipment[slot];
+                if (old) {
+                    if (slot === 'ring') {
+                        if (old.name.includes('Vitality')) { player.max_hp -= old.val; player.hp = Math.min(player.hp, player.max_hp); }
+                        if (old.name.includes('Wisdom')) { player.max_mp -= old.val; player.mp = Math.min(player.mp, player.max_mp); }
+                    }
+                    inventory.push(old);
+                }
                 equipment[slot] = it;
+                if (slot === 'ring') {
+                    if (it.name.includes('Vitality')) { player.max_hp += it.val; player.hp += it.val; }
+                    if (it.name.includes('Wisdom')) { player.max_mp += it.val; player.mp += it.val; }
+                }
                 inventory.splice(idx, 1);
                 addMsg(`Equipped ${it.name}!`, 'good');
             }
@@ -1973,8 +2032,13 @@
                     addMsg(`Your equipped ${slot} is cursed and cannot be removed!`);
                     return;
                 }
-                inventory.push(equipment[slot]);
-                addMsg(`Unequipped ${equipment[slot].name}.`, 'good');
+                let old = equipment[slot];
+                if (slot === 'ring') {
+                    if (old.name.includes('Vitality')) { player.max_hp = Math.max(10, player.max_hp - old.val); player.hp = Math.min(player.hp, player.max_hp); }
+                    if (old.name.includes('Wisdom')) { player.max_mp = Math.max(10, player.max_mp - old.val); player.mp = Math.min(player.mp, player.max_mp); }
+                }
+                inventory.push(old);
+                addMsg(`Unequipped ${old.name}.`, 'good');
                 equipment[slot] = null;
                 openInventory();
             }
@@ -1992,6 +2056,10 @@
 
         // Spellbook UI
         function openSpellbook() {
+            if (state !== 1) {
+                showToast("Start or resume a run first to view spells!", "warning");
+                return;
+            }
             let container = document.getElementById('spell-list-container');
             let spells = [
                 { key: 'missile', name: 'Magic Missile', cost: 3, desc: 'Single target energy bolt' },
@@ -2124,7 +2192,7 @@
 
         function isActionKey(e, actionName) {
             if (!keybinds[actionName]) return false;
-            return keybinds[actionName].keys.includes(e.key);
+            return keybinds[actionName].keys.some(k => k.toLowerCase() === e.key.toLowerCase());
         }
 
         let rebindingAction = null;
@@ -2288,8 +2356,14 @@
             if (player.poisoned_turns > 0) { player.hp--; player.poisoned_turns--; if (player.hp <= 0) { triggerGameOver(); return; } }
             if (player.rooted_turns > 0) player.rooted_turns--;
 
-            if (player.hunger > 0) player.hunger--;
-            else { player.hp--; if (player.hp <= 0) { triggerGameOver(); return; } }
+            if (player.hunger > 0) {
+                player.hunger--;
+                if (player.hunger === 50) addMsg("You are growing weak with hunger! Eat some food!", 'msg-combat');
+            } else {
+                player.hp--;
+                addMsg("You take damage from starvation!", 'msg-combat');
+                if (player.hp <= 0) { triggerGameOver(); return; }
+            }
 
             for (let i = monsters.length - 1; i >= 0; i--) {
                 let m = monsters[i];
@@ -2302,15 +2376,20 @@
                     }
                     addMsg(`${m.name} dies!`, 'good');
                     decals.push({x: m.x, y: m.y, color: (m.ch === 's' ? '#3182ce' : '#8a0303'), life: 100});
-                    player.xp += 8; total_kills++;
+                    gainXP(8 + Math.floor(dlevel * 1.5));
+                    let goldDrop = rngRange(1, 3 + dlevel);
+                    player.gold += goldDrop;
+                    total_kills++;
                     monsters.splice(i, 1);
                     continue;
                 }
+                if (m.npc) continue;
                 m.turn++;
                 let mdx = Math.sign(player.x - m.x), mdy = Math.sign(player.y - m.y);
                 if (m.x + mdx === player.x && m.y + mdy === player.y) {
                     if (player.class === 'rogue') {
                         let dodgeChance = player.loadout === 2 ? 0.25 : 0.15;
+                        if (equipment.ring && equipment.ring.name.includes('Agility')) dodgeChance += 0.05;
                         if (Math.random() < dodgeChance) {
                             addMsg(`You acrobatically DODGE ${m.name}'s attack!`, 'good');
                             addFloatText(player.x, player.y, 'DODGE!', '#68d391');
@@ -2354,10 +2433,14 @@
         }
 
         function saveGame() {
+            if (state !== 1) {
+                showToast("You can only save during an active run!", "warning");
+                return;
+            }
             try {
                 localStorage.setItem('krogue_save', JSON.stringify({ 
                     player, equipment, inventory, dlevel, total_kills, msgs,
-                    map, monsters, items, traps, knownSpells
+                    map, monsters, items, traps, knownSpells, currentSeedVal, difficulty
                 }));
                 addMsg("Run Saved to Storage!", 'good');
                 showToast("Run Saved to Storage!", 'success');
@@ -2372,7 +2455,14 @@
                 let s = localStorage.getItem('krogue_save');
                 if (s) {
                     let d = JSON.parse(s);
-                    player = d.player; equipment = d.equipment; inventory = d.inventory; dlevel = d.dlevel; total_kills = d.total_kills;
+                    player = d.player;
+                    equipment = d.equipment || { weapon: null, armor: null, shield: null, ring: null };
+                    inventory = d.inventory || [];
+                    dlevel = d.dlevel || 1;
+                    total_kills = d.total_kills || 0;
+                    if (d.msgs) msgs = d.msgs;
+                    if (d.currentSeedVal) currentSeedVal = d.currentSeedVal;
+                    if (d.difficulty !== undefined) difficulty = d.difficulty;
                     if (d.knownSpells) knownSpells = d.knownSpells;
                     if (d.map && d.monsters) {
                         map = d.map;
@@ -2382,8 +2472,11 @@
                     } else {
                         initMap();
                     }
+                    localStorage.setItem('krogue_tutorialSeen', 'true');
                     updateAbilityButton();
-                    state = 1; addMsg("Run Resumed!", 'good');
+                    updateMsgBox();
+                    state = 1;
+                    addMsg("Run Resumed!", 'good');
                     showToast("Run Resumed!", 'success');
                 } else {
                     addMsg("No saved run found.");
@@ -2406,7 +2499,26 @@
 
             let mIdx = monsters.findIndex(m => m.x === nx && m.y === ny);
             if (mIdx >= 0) {
+                if (monsters[mIdx].npc) {
+                    if (monsters[mIdx].reward_ready) {
+                        monsters[mIdx].reward_ready = false;
+                        let goldRw = 50 * dlevel;
+                        let xpRw = 100 * dlevel;
+                        player.gold += goldRw;
+                        gainXP(xpRw);
+                        addMsg(`Quest NPC: Thank you for finding me! Here's a reward! (+${goldRw} Gold, +${xpRw} XP)`, 'good');
+                        showToast(`NPC: Reward received! +${goldRw} Gold, +${xpRw} XP!`, 'success');
+                        addFloatText(nx, ny, `+${goldRw}G`, '#f6e05e');
+                        addStarParticles(nx, ny, '#4fd1c5', 14);
+                    } else {
+                        addMsg("Quest NPC: Good luck descending through the Caverns of Chaos!");
+                    }
+                    endTurn();
+                    return;
+                }
+
                 let calcAtk = player.atk + (equipment.weapon ? equipment.weapon.val : 0);
+                if (equipment.ring && equipment.ring.name.includes('Agility')) calcAtk += Math.floor(equipment.ring.val / 2);
                 if (player.berserk_turns > 0) calcAtk = Math.floor(calcAtk * 2);
                 if (player.class === 'warrior' && player.loadout === 1) { // Blood Fury
                     let missing = player.max_hp - player.hp;
@@ -2416,6 +2528,7 @@
                     calcAtk = Math.floor(calcAtk * 1.5);
                 }
                 let critChance = player.class === 'rogue' ? (player.loadout === 0 ? 0.35 : 0.25) : 0.15;
+                if (equipment.ring && equipment.ring.name.includes('Agility')) critChance += 0.05;
                 let isCrit = Math.random() < critChance;
                 let isStealth = false;
                 if (player.invisible_turns > 0) {
@@ -2460,7 +2573,10 @@
                     }
                     addMsg(`${monsters[mIdx].name} dies!`, 'good');
                     decals.push({x: monsters[mIdx].x, y: monsters[mIdx].y, color: (monsters[mIdx].ch === 's' ? '#3182ce' : '#8a0303'), life: 100});
-                    player.xp += 8; total_kills++;
+                    gainXP(8 + Math.floor(dlevel * 1.5));
+                    let goldDrop = rngRange(1, 3 + dlevel);
+                    player.gold += goldDrop;
+                    total_kills++;
                     monsters.splice(mIdx, 1);
                 }
             } else {
@@ -2468,8 +2584,57 @@
                 let itIdx = items.findIndex(i => i.x === nx && i.y === ny);
                 if (itIdx >= 0) {
                     let it = items[itIdx];
-                    if (it.type === 'stairs') { dlevel++; initMap(); return; }
-                    else { inventory.push(it); items.splice(itIdx, 1); addMsg(`Picked up ${it.name}`, 'good'); }
+                    if (it.type === 'stairs') {
+                        dlevel++;
+                        addMsg(`You descend deeper into floor ${dlevel}...`, 'msg-good');
+                        showToast(`Descended to Floor ${dlevel}`, 'info');
+                        initMap();
+                        return;
+                    } else if (it.type === 'shrine') {
+                        items.splice(itIdx, 1);
+                        let buff = Math.floor(Math.random() * 3);
+                        if (buff === 0) {
+                            player.max_hp += 10; player.hp = player.max_hp;
+                            addMsg("The shrine glows! You feel much healthier! (+10 Max HP)", 'msg-good');
+                            addFloatText(nx, ny, '+10 Max HP', '#68d391');
+                        } else if (buff === 1) {
+                            gainXP(50);
+                            addMsg("The shrine glows! You feel wiser! (+50 XP)", 'msg-good');
+                            addFloatText(nx, ny, '+50 XP', '#b794f4');
+                        } else {
+                            player.str += 2; player.atk += 1;
+                            addMsg("The shrine glows! You feel stronger! (+2 STR, +1 ATK)", 'msg-good');
+                            addFloatText(nx, ny, '+2 STR', '#ecc94b');
+                        }
+                        addParticles(nx, ny, '#ecc94b', 25);
+                        showToast("Magic Shrine Blessing!", 'success');
+                    } else if (it.type === 'anvil') {
+                        items.splice(itIdx, 1);
+                        if (equipment.weapon) {
+                            equipment.weapon.val += 2;
+                            addMsg(`You use the Crafting Anvil! ${equipment.weapon.name} upgraded (+2 ATK)!`, 'good');
+                            showToast("Weapon upgraded at Anvil!", 'success');
+                        } else if (equipment.armor) {
+                            equipment.armor.val += 2;
+                            addMsg(`You use the Crafting Anvil! ${equipment.armor.name} upgraded (+2 DEF)!`, 'good');
+                            showToast("Armor upgraded at Anvil!", 'success');
+                        } else {
+                            player.atk += 2;
+                            addMsg("You use the Crafting Anvil! Your fists are reinforced (+2 ATK)!", 'good');
+                            showToast("Fists reinforced at Anvil!", 'success');
+                        }
+                        addParticles(nx, ny, '#63b3ed', 20);
+                    } else if (it.type === 'gold') {
+                        let gVal = it.val || rngRange(5, 15);
+                        player.gold += gVal;
+                        items.splice(itIdx, 1);
+                        addMsg(`Picked up ${gVal} gold pieces!`, 'good');
+                        addFloatText(nx, ny, `+${gVal}G`, '#f6e05e');
+                    } else {
+                        inventory.push(it);
+                        items.splice(itIdx, 1);
+                        addMsg(`Picked up ${it.name || 'item'}`, 'good');
+                    }
                 }
                 let trapIdx = traps.findIndex(t => t.x === nx && t.y === ny);
                 if (trapIdx >= 0 && !traps[trapIdx].revealed) {
@@ -2588,20 +2753,28 @@
                 }
 
                 let dx = 0, dy = 0, turn = false;
-                if (isActionKey(e, 'moveUp') || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === 'Numpad8') { dy = -1; turn = true; e.preventDefault(); }
-                else if (isActionKey(e, 'moveDown') || e.key === 'ArrowDown' || e.key === 's' || e.key === 'S' || e.key === 'Numpad2') { dy = 1; turn = true; e.preventDefault(); }
-                else if (isActionKey(e, 'moveLeft') || e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A' || e.key === 'Numpad4') { dx = -1; turn = true; e.preventDefault(); }
-                else if (isActionKey(e, 'moveRight') || e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D' || e.key === 'Numpad6') { dx = 1; turn = true; e.preventDefault(); }
+                if (isActionKey(e, 'moveUp') || e.key === 'ArrowUp' || e.key === 'Numpad8') { dy = -1; turn = true; e.preventDefault(); }
+                else if (isActionKey(e, 'moveDown') || e.key === 'ArrowDown' || e.key === 'Numpad2') { dy = 1; turn = true; e.preventDefault(); }
+                else if (isActionKey(e, 'moveLeft') || e.key === 'ArrowLeft' || e.key === 'Numpad4') { dx = -1; turn = true; e.preventDefault(); }
+                else if (isActionKey(e, 'moveRight') || e.key === 'ArrowRight' || e.key === 'Numpad6') { dx = 1; turn = true; e.preventDefault(); }
+                else if (e.key === 'Numpad7' || e.key === 'y' || e.key === 'Y') { dx = -1; dy = -1; turn = true; e.preventDefault(); }
+                else if (e.key === 'Numpad9' || e.key === 'u' || e.key === 'U') { dx = 1; dy = -1; turn = true; e.preventDefault(); }
+                else if (e.key === 'Numpad1' || e.key === 'b' || e.key === 'B') { dx = -1; dy = 1; turn = true; e.preventDefault(); }
+                else if (e.key === 'Numpad3' || e.key === 'n' || e.key === 'N') { dx = 1; dy = 1; turn = true; e.preventDefault(); }
 
                 if (turn && (dx !== 0 || dy !== 0)) {
                     handlePlayerMove(dx, dy);
                 }
             } else if (state === 4) {
-                if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === 'Numpad8') { targetY = Math.max(1, targetY - 1); e.preventDefault(); }
-                if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S' || e.key === 'Numpad2') { targetY = Math.min(ROWS - 2, targetY + 1); e.preventDefault(); }
-                if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A' || e.key === 'Numpad4') { targetX = Math.max(1, targetX - 1); e.preventDefault(); }
-                if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D' || e.key === 'Numpad6') { targetX = Math.min(COLS - 2, targetX + 1); e.preventDefault(); }
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); executeTargetSpell(); }
+                if (e.key === 'ArrowUp' || e.key === 'Numpad8') { targetY = Math.max(1, targetY - 1); e.preventDefault(); }
+                else if (e.key === 'ArrowDown' || e.key === 'Numpad2') { targetY = Math.min(ROWS - 2, targetY + 1); e.preventDefault(); }
+                else if (e.key === 'ArrowLeft' || e.key === 'Numpad4') { targetX = Math.max(1, targetX - 1); e.preventDefault(); }
+                else if (e.key === 'ArrowRight' || e.key === 'Numpad6') { targetX = Math.min(COLS - 2, targetX + 1); e.preventDefault(); }
+                else if (e.key === 'Numpad7' || e.key === 'y' || e.key === 'Y') { targetX = Math.max(1, targetX - 1); targetY = Math.max(1, targetY - 1); e.preventDefault(); }
+                else if (e.key === 'Numpad9' || e.key === 'u' || e.key === 'U') { targetX = Math.min(COLS - 2, targetX + 1); targetY = Math.max(1, targetY - 1); e.preventDefault(); }
+                else if (e.key === 'Numpad1' || e.key === 'b' || e.key === 'B') { targetX = Math.max(1, targetX - 1); targetY = Math.min(ROWS - 2, targetY + 1); e.preventDefault(); }
+                else if (e.key === 'Numpad3' || e.key === 'n' || e.key === 'N') { targetX = Math.min(COLS - 2, targetX + 1); targetY = Math.min(ROWS - 2, targetY + 1); e.preventDefault(); }
+                else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); executeTargetSpell(); }
             } else if (state === 2 || state === 3) {
                 if (e.key === 'r' || e.key === 'R' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCharSelect(); }
                 if (e.key === 't' || e.key === 'T') openLeaderboard();
@@ -2611,10 +2784,8 @@
         // Canvas Mouse / Touch Interaction
         canvas.addEventListener('click', e => {
             const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            const clickX = Math.floor((e.clientX - rect.left) * scaleX / TILE);
-            const clickY = Math.floor((e.clientY - rect.top) * scaleY / TILE);
+            const clickX = Math.floor(((e.clientX - rect.left) / rect.width * C_WIDTH) / TILE);
+            const clickY = Math.floor(((e.clientY - rect.top) / rect.height * C_HEIGHT) / TILE);
 
             if (state === 0 || state === 2 || state === 3) {
                 openCharSelect();
