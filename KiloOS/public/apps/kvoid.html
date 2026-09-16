@@ -131,12 +131,13 @@
         </div>
         <div id="message">Use WASD to move. Space to use EMP. Press H for Help.</div>
         <div id="help-modal" style="display:none;">
-            <h2>Survival Guide (Press H to close)</h2>
+            <h2>Survival Guide (Press H or Esc to close)</h2>
             <div class="help-section">
                 <h3>Controls & How to Play</h3>
                 <p><b>WASD / Arrows:</b> Move<br>
                 <b>Space:</b> Use EMP (Stuns nearby aliens)<br>
-                <b>H:</b> Toggle Help<br>
+                <b>H / Esc:</b> Toggle / Close Help<br>
+                <b>R:</b> Restart (when game over)<br>
                 Survive, find the elevator to the next deck. Watch your Oxygen and Battery. If either hits zero, you die.</p>
             </div>
             <div class="help-section">
@@ -210,20 +211,34 @@
             }
         }
 
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let audioCtx = null;
+        function getAudioContext() {
+            if (!audioCtx) {
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {}
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume().catch(() => {});
+            }
+            return audioCtx;
+        }
         
         function playBeep(freq, type, duration, vol=0.1) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            let osc = audioCtx.createOscillator();
-            let gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
+            try {
+                let actx = getAudioContext();
+                if (!actx) return;
+                let osc = actx.createOscillator();
+                let gain = actx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, actx.currentTime);
+                gain.gain.setValueAtTime(vol, actx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(actx.destination);
+                osc.start();
+                osc.stop(actx.currentTime + duration);
+            } catch (e) {}
         }
 
         function playHeartbeat() {
@@ -237,18 +252,21 @@
         }
 
         function playAlienScreech() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            let osc = audioCtx.createOscillator();
-            let gain = audioCtx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(2000, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.5);
-            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.5);
+            try {
+                let actx = getAudioContext();
+                if (!actx) return;
+                let osc = actx.createOscillator();
+                let gain = actx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(2000, actx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, actx.currentTime + 0.5);
+                gain.gain.setValueAtTime(0.3, actx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + 0.5);
+                osc.connect(gain);
+                gain.connect(actx.destination);
+                osc.start();
+                osc.stop(actx.currentTime + 0.5);
+            } catch (e) {}
         }
 
         function generateMap() {
@@ -327,69 +345,141 @@
 
             for (let i = 0; i < 3; i++) {
                 let placed = false;
-                while (!placed) {
+                let att = 0;
+                while (!placed && att < 1000) {
                     let rx = Math.floor(Math.random() * COLS);
                     let ry = Math.floor(Math.random() * ROWS);
                     if (map[ry][rx] === 0 && (rx !== player.x || ry !== player.y)) {
                         map[ry][rx] = 6 + i;
                         placed = true;
                     }
+                    att++;
+                }
+                if (!placed) {
+                    for (let y = 1; y < ROWS - 1 && !placed; y++) {
+                        for (let x = 1; x < COLS - 1 && !placed; x++) {
+                            if (map[y][x] === 0 && (x !== player.x || y !== player.y)) {
+                                map[y][x] = 6 + i;
+                                placed = true;
+                            }
+                        }
+                    }
                 }
             }
 
             for (let i = 0; i < 3; i++) {
                 let placed = false;
-                while (!placed) {
+                let att = 0;
+                while (!placed && att < 1000) {
                     let rx = Math.floor(Math.random() * COLS);
                     let ry = Math.floor(Math.random() * ROWS);
                     if (map[ry][rx] === 0 && (rx !== player.x || ry !== player.y)) {
                         map[ry][rx] = 9; // Terminal
                         placed = true;
                     }
+                    att++;
+                }
+                if (!placed) {
+                    for (let y = 1; y < ROWS - 1 && !placed; y++) {
+                        for (let x = 1; x < COLS - 1 && !placed; x++) {
+                            if (map[y][x] === 0 && (x !== player.x || y !== player.y)) {
+                                map[y][x] = 9;
+                                placed = true;
+                            }
+                        }
+                    }
                 }
             }
 
             for (let i = 0; i < 5; i++) {
                 let placed = false;
-                while (!placed) {
+                let att = 0;
+                while (!placed && att < 1000) {
                     let rx = Math.floor(Math.random() * COLS);
                     let ry = Math.floor(Math.random() * ROWS);
                     if (map[ry][rx] === 0 && (rx !== player.x || ry !== player.y)) {
                         map[ry][rx] = 11; // Locker
                         placed = true;
                     }
+                    att++;
+                }
+                if (!placed) {
+                    for (let y = 1; y < ROWS - 1 && !placed; y++) {
+                        for (let x = 1; x < COLS - 1 && !placed; x++) {
+                            if (map[y][x] === 0 && (x !== player.x || y !== player.y)) {
+                                map[y][x] = 11;
+                                placed = true;
+                            }
+                        }
+                    }
                 }
             }
 
             for (let i = 0; i < 3; i++) {
                 let placed = false;
-                while (!placed) {
+                let att = 0;
+                while (!placed && att < 1000) {
                     let rx = Math.floor(Math.random() * COLS);
                     let ry = Math.floor(Math.random() * ROWS);
                     if (map[ry][rx] === 0 && (rx !== player.x || ry !== player.y)) {
                         map[ry][rx] = 12; // EMP
                         placed = true;
                     }
+                    att++;
+                }
+                if (!placed) {
+                    for (let y = 1; y < ROWS - 1 && !placed; y++) {
+                        for (let x = 1; x < COLS - 1 && !placed; x++) {
+                            if (map[y][x] === 0 && (x !== player.x || y !== player.y)) {
+                                map[y][x] = 12;
+                                placed = true;
+                            }
+                        }
+                    }
                 }
             }
 
             if (deck === 5) {
                 let placed = false;
-                while (!placed) {
+                let att = 0;
+                while (!placed && att < 1000) {
                     let rx = Math.floor(Math.random() * COLS);
                     let ry = Math.floor(Math.random() * ROWS);
                     if (map[ry][rx] === 0 && (Math.abs(rx - player.x) > 10 || Math.abs(ry - player.y) > 10)) {
                         map[ry][rx] = 14; // Escape Pod
                         placed = true;
                     }
+                    att++;
+                }
+                if (!placed) {
+                    for (let y = 1; y < ROWS - 1 && !placed; y++) {
+                        for (let x = 1; x < COLS - 1 && !placed; x++) {
+                            if (map[y][x] === 0 && (x !== player.x || y !== player.y)) {
+                                map[y][x] = 14;
+                                placed = true;
+                            }
+                        }
+                    }
                 }
                 placed = false;
-                while (!placed) {
+                att = 0;
+                while (!placed && att < 1000) {
                     let rx = Math.floor(Math.random() * COLS);
                     let ry = Math.floor(Math.random() * ROWS);
                     if (map[ry][rx] === 0 && (Math.abs(rx - player.x) > 10 || Math.abs(ry - player.y) > 10)) {
                         map[ry][rx] = 15; // Self Destruct
                         placed = true;
+                    }
+                    att++;
+                }
+                if (!placed) {
+                    for (let y = 1; y < ROWS - 1 && !placed; y++) {
+                        for (let x = 1; x < COLS - 1 && !placed; x++) {
+                            if (map[y][x] === 0 && (x !== player.x || y !== player.y)) {
+                                map[y][x] = 15;
+                                placed = true;
+                            }
+                        }
                     }
                 }
             } else {
@@ -420,12 +510,24 @@
             let numAliens = Math.min(20, 3 + deck);
             for (let i = 0; i < numAliens; i++) {
                 let placed = false;
-                while (!placed) {
+                let att = 0;
+                while (!placed && att < 1000) {
                     let rx = Math.floor(Math.random() * COLS);
                     let ry = Math.floor(Math.random() * ROWS);
                     if (map[ry][rx] === 0 && (Math.abs(rx - player.x) > 5 || Math.abs(ry - player.y) > 5)) {
                         aliens.push({x: rx, y: ry, state: 'patrol', stunTimer: 0});
                         placed = true;
+                    }
+                    att++;
+                }
+                if (!placed) {
+                    for (let y = 1; y < ROWS - 1 && !placed; y++) {
+                        for (let x = 1; x < COLS - 1 && !placed; x++) {
+                            if (map[y][x] === 0 && (x !== player.x || y !== player.y)) {
+                                aliens.push({x, y, state: 'patrol', stunTimer: 0});
+                                placed = true;
+                            }
+                        }
                     }
                 }
             }
@@ -1006,7 +1108,7 @@
                     [7, 0, 11 + legWave, 0],
                     [6, 4, 10 - legWave, 8]
                 ];
-                for (let lp of lpPairs = legPairs) {
+                for (let lp of legPairs) {
                     ctx.beginPath();
                     ctx.moveTo(ax + lp[0], ay + lp[1]);
                     ctx.lineTo(ax + lp[2], ay + lp[3]);
@@ -1086,20 +1188,25 @@
             ctx.restore();
 
             if (wonGame) {
-                ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                ctx.fillStyle = 'rgba(0,0,0,0.85)';
                 ctx.fillRect(0,0,canvas.width,canvas.height);
                 ctx.fillStyle = '#0f0';
                 ctx.font = '16px Courier New';
                 ctx.textAlign = 'center';
-                ctx.fillText(winEnding, canvas.width/2, canvas.height/2);
+                ctx.fillText(winEnding, canvas.width/2, canvas.height/2 - 15);
+                ctx.font = '14px Courier New';
+                ctx.fillText("Press 'R' to play again", canvas.width/2, canvas.height/2 + 20);
             }
             if (isDead) {
-                ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                ctx.fillStyle = 'rgba(0,0,0,0.85)';
                 ctx.fillRect(0,0,canvas.width,canvas.height);
                 ctx.fillStyle = '#f00';
                 ctx.font = '30px Courier New';
                 ctx.textAlign = 'center';
-                ctx.fillText("SIGNAL LOST", canvas.width/2, canvas.height/2);
+                ctx.fillText("SIGNAL LOST", canvas.width/2, canvas.height/2 - 15);
+                ctx.fillStyle = '#0f0';
+                ctx.font = '14px Courier New';
+                ctx.fillText("Press 'R' to restart", canvas.width/2, canvas.height/2 + 25);
             }
         }
 
@@ -1124,13 +1231,15 @@
                 if (a.state === 'chase') {
                     if (Math.abs(player.x - a.x) > Math.abs(player.y - a.y)) {
                         dx = Math.sign(player.x - a.x);
-                        let nextTarget = map[a.y][a.x + dx];
+                        let testX = a.x + dx;
+                        let nextTarget = (testX >= 0 && testX < COLS) ? map[a.y][testX] : 1;
                         if (nextTarget !== 0 && (nextTarget < 6 || nextTarget > 8)) {
                             dx = 0; dy = Math.sign(player.y - a.y);
                         }
                     } else {
                         dy = Math.sign(player.y - a.y);
-                        let nextTarget = map[a.y + dy][a.x];
+                        let testY = a.y + dy;
+                        let nextTarget = (testY >= 0 && testY < ROWS) ? map[testY][a.x] : 1;
                         if (nextTarget !== 0 && (nextTarget < 6 || nextTarget > 8)) {
                             dy = 0; dx = Math.sign(player.x - a.x);
                         }
@@ -1271,7 +1380,7 @@
                     player.x = newX;
                     player.y = newY;
                     for (let a of aliens) {
-                        if (a.x === player.x && a.y === player.y && map[player.y][player.x] !== 11) {
+                        if (a.x === player.x && a.y === player.y && map[player.y][player.x] !== 11 && a.state !== 'stunned') {
                             playAlienScreech();
                             die("CAUGHT BY ALIEN. YOU ARE DEAD.");
                             return;
@@ -1291,11 +1400,53 @@
             }
         }
 
+        function resetGame() {
+            deck = 1;
+            player = { x: 2, y: 2 };
+            playerDir = 0;
+            oxygen = 100.0;
+            battery = 100.0;
+            isDead = false;
+            wonGame = false;
+            winEnding = "";
+            keys = { r: false, g: false, b: false };
+            emps = 0;
+            totalTime = 0;
+            selfDestructActive = false;
+            selfDestructTimer = 0;
+            particles = [];
+            shockwaves = [];
+            screenShake = 0;
+            generateMap();
+            updateInventoryDisplay();
+            updateStatsDisplay();
+            startAlienInterval();
+            showMessage("Use WASD to move. Space to use EMP. Press H for Help.");
+            draw();
+        }
+
         window.addEventListener('keydown', (e) => {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+            if (e.key === 'Escape') {
+                if (showHelp) {
+                    showHelp = false;
+                    document.getElementById('help-modal').style.display = 'none';
+                    try { localStorage.setItem('kvoid_tutorialSeen', '1'); } catch (err) {}
+                    return;
+                }
+            }
             if (e.key === 'h' || e.key === 'H') {
                 showHelp = !showHelp;
                 document.getElementById('help-modal').style.display = showHelp ? 'block' : 'none';
+                if (!showHelp) {
+                    try { localStorage.setItem('kvoid_tutorialSeen', '1'); } catch (err) {}
+                }
+                return;
+            }
+            if (isDead || wonGame) {
+                if (e.key === 'r' || e.key === 'R') {
+                    resetGame();
+                }
                 return;
             }
             if (showHelp) return;
@@ -1340,6 +1491,13 @@
                     break;
             }
         });
+
+        try {
+            if (!localStorage.getItem('kvoid_tutorialSeen')) {
+                showHelp = true;
+                document.getElementById('help-modal').style.display = 'block';
+            }
+        } catch (err) {}
 
         let renderLoopId;
         function renderLoop(time) {

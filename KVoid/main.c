@@ -1,7 +1,27 @@
 #include <windows.h>
-#include <stdlib.h>
-#include <time.h>
-#include <stdint.h>
+
+#pragma function(memset)
+void* __cdecl memset(void* dest, int c, size_t count) {
+    char* bytes = (char*)dest;
+    while (count--) {
+        *bytes++ = (char)c;
+    }
+    return dest;
+}
+
+int _fltused = 1;
+
+static unsigned long s_rng = 1;
+void srand(unsigned int seed) {
+    s_rng = seed;
+}
+int rand(void) {
+    s_rng = s_rng * 214013L + 2531011L;
+    return (int)((s_rng >> 16) & 0x7FFF);
+}
+int abs(int v) {
+    return (v < 0) ? -v : v;
+}
 
 DWORD WINAPI SoundThread(LPVOID lpParam) {
     int type = (int)(intptr_t)lpParam;
@@ -18,7 +38,10 @@ DWORD WINAPI SoundThread(LPVOID lpParam) {
     return 0;
 }
 void PlaySoundEffect(int type) {
-    CreateThread(NULL, 0, SoundThread, (LPVOID)(intptr_t)type, 0, NULL);
+    HANDLE hThread = CreateThread(NULL, 0, SoundThread, (LPVOID)(intptr_t)type, 0, NULL);
+    if (hThread) {
+        CloseHandle(hThread);
+    }
 }
 
 
@@ -117,7 +140,8 @@ typedef struct {
     int stunTimer;
 } Alien;
 
-Alien aliens[5];
+#define MAX_ALIENS 32
+Alien aliens[MAX_ALIENS];
 int alienCount = 0;
 
 void GenerateMap() {
@@ -199,53 +223,101 @@ void GenerateMap() {
         playerY = rooms[0].y + rooms[0].h / 2;
     }
 
+    // Keycards
     for (int i = 0; i < 3; i++) {
-        while (1) {
+        int placed = 0;
+        for (int att = 0; att < 1000 && !placed; att++) {
             int rx = rand() % COLS;
             int ry = rand() % ROWS;
             if (map[ry][rx] == 0 && (rx != playerX || ry != playerY)) {
                 map[ry][rx] = 6 + i;
-                break;
+                placed = 1;
+            }
+        }
+        if (!placed) {
+            for (int y = 1; y < ROWS - 1 && !placed; y++) {
+                for (int x = 1; x < COLS - 1 && !placed; x++) {
+                    if (map[y][x] == 0 && (x != playerX || y != playerY)) {
+                        map[y][x] = 6 + i;
+                        placed = 1;
+                    }
+                }
             }
         }
     }
 
+    // Terminals
     for (int i = 0; i < 3; i++) {
-        while (1) {
+        int placed = 0;
+        for (int att = 0; att < 1000 && !placed; att++) {
             int rx = rand() % COLS;
             int ry = rand() % ROWS;
             if (map[ry][rx] == 0 && (rx != playerX || ry != playerY)) {
                 map[ry][rx] = 9;
-                break;
+                placed = 1;
+            }
+        }
+        if (!placed) {
+            for (int y = 1; y < ROWS - 1 && !placed; y++) {
+                for (int x = 1; x < COLS - 1 && !placed; x++) {
+                    if (map[y][x] == 0 && (x != playerX || y != playerY)) {
+                        map[y][x] = 9;
+                        placed = 1;
+                    }
+                }
             }
         }
     }
 
+    // Lockers
     for (int i = 0; i < 5; i++) {
-        while (1) {
+        int placed = 0;
+        for (int att = 0; att < 1000 && !placed; att++) {
             int rx = rand() % COLS;
             int ry = rand() % ROWS;
             if (map[ry][rx] == 0 && (rx != playerX || ry != playerY)) {
                 map[ry][rx] = 11; // Locker
-                break;
+                placed = 1;
+            }
+        }
+        if (!placed) {
+            for (int y = 1; y < ROWS - 1 && !placed; y++) {
+                for (int x = 1; x < COLS - 1 && !placed; x++) {
+                    if (map[y][x] == 0 && (x != playerX || y != playerY)) {
+                        map[y][x] = 11;
+                        placed = 1;
+                    }
+                }
             }
         }
     }
 
+    // EMPs
     for (int i = 0; i < 3; i++) {
-        while (1) {
+        int placed = 0;
+        for (int att = 0; att < 1000 && !placed; att++) {
             int rx = rand() % COLS;
             int ry = rand() % ROWS;
             if (map[ry][rx] == 0 && (rx != playerX || ry != playerY)) {
                 map[ry][rx] = 12; // EMP
-                break;
+                placed = 1;
+            }
+        }
+        if (!placed) {
+            for (int y = 1; y < ROWS - 1 && !placed; y++) {
+                for (int x = 1; x < COLS - 1 && !placed; x++) {
+                    if (map[y][x] == 0 && (x != playerX || y != playerY)) {
+                        map[y][x] = 12;
+                        placed = 1;
+                    }
+                }
             }
         }
     }
 
     if (deck == 5) {
         int placed = 0;
-        while (!placed) {
+        for (int att = 0; att < 1000 && !placed; att++) {
             int rx = rand() % COLS;
             int ry = rand() % ROWS;
             if (map[ry][rx] == 0 && (abs(rx - playerX) > 10 || abs(ry - playerY) > 10)) {
@@ -253,13 +325,33 @@ void GenerateMap() {
                 placed = 1;
             }
         }
+        if (!placed) {
+            for (int y = 1; y < ROWS - 1 && !placed; y++) {
+                for (int x = 1; x < COLS - 1 && !placed; x++) {
+                    if (map[y][x] == 0 && (x != playerX || y != playerY)) {
+                        map[y][x] = 14;
+                        placed = 1;
+                    }
+                }
+            }
+        }
         placed = 0;
-        while (!placed) {
+        for (int att = 0; att < 1000 && !placed; att++) {
             int rx = rand() % COLS;
             int ry = rand() % ROWS;
             if (map[ry][rx] == 0 && (abs(rx - playerX) > 10 || abs(ry - playerY) > 10)) {
                 map[ry][rx] = 15;
                 placed = 1;
+            }
+        }
+        if (!placed) {
+            for (int y = 1; y < ROWS - 1 && !placed; y++) {
+                for (int x = 1; x < COLS - 1 && !placed; x++) {
+                    if (map[y][x] == 0 && (x != playerX || y != playerY)) {
+                        map[y][x] = 15;
+                        placed = 1;
+                    }
+                }
             }
         }
     } else {
@@ -287,21 +379,63 @@ void GenerateMap() {
 
     alienCount = 0;
     int numAliens = 3 + deck;
-    if (numAliens > 15) numAliens = 15;
+    if (numAliens > MAX_ALIENS) numAliens = MAX_ALIENS;
     for (int i = 0; i < numAliens; i++) {
-        while (1) {
+        int placed = 0;
+        for (int att = 0; att < 1000 && !placed; att++) {
             int rx = rand() % COLS;
             int ry = rand() % ROWS;
             if (map[ry][rx] == 0 && (abs(rx - playerX) > 5 || abs(ry - playerY) > 5)) {
-                aliens[alienCount].x = rx;
-                aliens[alienCount].y = ry;
-                aliens[alienCount].state = 0;
-                aliens[alienCount].stunTimer = 0;
-                alienCount++;
-                break;
+                if (alienCount < MAX_ALIENS) {
+                    aliens[alienCount].x = rx;
+                    aliens[alienCount].y = ry;
+                    aliens[alienCount].state = 0;
+                    aliens[alienCount].stunTimer = 0;
+                    alienCount++;
+                }
+                placed = 1;
+            }
+        }
+        if (!placed && alienCount < MAX_ALIENS) {
+            for (int y = 1; y < ROWS - 1 && !placed; y++) {
+                for (int x = 1; x < COLS - 1 && !placed; x++) {
+                    if (map[y][x] == 0 && (x != playerX || y != playerY)) {
+                        aliens[alienCount].x = x;
+                        aliens[alienCount].y = y;
+                        aliens[alienCount].state = 0;
+                        aliens[alienCount].stunTimer = 0;
+                        alienCount++;
+                        placed = 1;
+                    }
+                }
             }
         }
     }
+}
+
+void ResetGame() {
+    deck = 1;
+    playerX = 2;
+    playerY = 2;
+    playerDir = 0;
+    oxygen = 100.0f;
+    battery = 100.0f;
+    isDead = 0;
+    wonGame = 0;
+    winEnding[0] = '\0';
+    hasRedKey = 0;
+    hasGreenKey = 0;
+    hasBlueKey = 0;
+    emps = 0;
+    totalTime = 0;
+    selfDestructActive = 0;
+    selfDestructTimer = 0;
+    sysMsg[0] = '\0';
+    msgTimer = 0;
+    screenShake = 0;
+    for (int i = 0; i < MAX_PARTICLES; i++) particles[i].life = 0;
+    for (int i = 0; i < MAX_SHOCKWAVES; i++) shockwaves[i].life = 0;
+    GenerateMap();
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -384,14 +518,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         if (aliens[i].state == 1) {
                             if (abs(playerX - aliens[i].x) > abs(playerY - aliens[i].y)) {
                                 dx = (playerX > aliens[i].x) ? 1 : -1;
-                                int target = map[aliens[i].y][aliens[i].x + dx];
+                                int testX = aliens[i].x + dx;
+                                int target = (testX >= 0 && testX < COLS) ? map[aliens[i].y][testX] : 1;
                                 if (target != 0 && (target < 6 || target > 8)) {
                                     dx = 0; 
                                     dy = (playerY > aliens[i].y) ? 1 : (playerY < aliens[i].y ? -1 : 0);
                                 }
                             } else {
                                 dy = (playerY > aliens[i].y) ? 1 : -1;
-                                int target = map[aliens[i].y + dy][aliens[i].x];
+                                int testY = aliens[i].y + dy;
+                                int target = (testY >= 0 && testY < ROWS) ? map[testY][aliens[i].x] : 1;
                                 if (target != 0 && (target < 6 || target > 8)) {
                                     dy = 0; 
                                     dx = (playerX > aliens[i].x) ? 1 : (playerX < aliens[i].x ? -1 : 0);
@@ -972,11 +1108,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             if (wonGame) {
                 SetTextColor(hdcMem, RGB(0, 255, 0));
-                TextOut(hdcMem, WINDOW_WIDTH / 2 - lstrlen(winEnding) * 4, WINDOW_HEIGHT / 2, winEnding, lstrlen(winEnding));
+                TextOut(hdcMem, WINDOW_WIDTH / 2 - lstrlen(winEnding) * 4, WINDOW_HEIGHT / 2 - 10, winEnding, lstrlen(winEnding));
+                char* restartMsg = "PRESS 'R' TO PLAY AGAIN";
+                TextOut(hdcMem, WINDOW_WIDTH / 2 - lstrlen(restartMsg) * 4, WINDOW_HEIGHT / 2 + 15, restartMsg, lstrlen(restartMsg));
             } else if (isDead) {
                 SetTextColor(hdcMem, RGB(255, 0, 0));
                 char* deadMsg = "SIGNAL LOST";
-                TextOut(hdcMem, WINDOW_WIDTH / 2 - 40, WINDOW_HEIGHT / 2, deadMsg, lstrlen(deadMsg));
+                TextOut(hdcMem, WINDOW_WIDTH / 2 - 40, WINDOW_HEIGHT / 2 - 10, deadMsg, lstrlen(deadMsg));
+                char* restartMsg = "PRESS 'R' TO RESTART";
+                TextOut(hdcMem, WINDOW_WIDTH / 2 - lstrlen(restartMsg) * 4, WINDOW_HEIGHT / 2 + 15, restartMsg, lstrlen(restartMsg));
             }
 
             if (showHelp) {
@@ -996,17 +1136,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SetTextColor(hdcMem, RGB(0, 255, 0));
                 SetBkMode(hdcMem, TRANSPARENT);
                 int y = 50;
-                TextOut(hdcMem, WINDOW_WIDTH / 2 - 110, y, "SURVIVAL GUIDE (Press H to close)", 33);
-                y += 40;
+                TextOut(hdcMem, WINDOW_WIDTH / 2 - 110, y, "SURVIVAL GUIDE (Press H or Esc to close)", 40);
+                y += 35;
                 TextOut(hdcMem, 60, y, "Controls & How to Play:", 23); y += 20;
                 TextOut(hdcMem, 70, y, "WASD / Arrows: Move", 19); y += 20;
                 TextOut(hdcMem, 70, y, "Space: Use EMP (Stuns nearby aliens)", 36); y += 20;
-                TextOut(hdcMem, 70, y, "H: Toggle Help", 14); y += 30;
-                TextOut(hdcMem, 70, y, "Survive, find elevator. Watch Oxygen & Battery.", 47); y += 40;
+                TextOut(hdcMem, 70, y, "H / Esc: Toggle / Close Help", 28); y += 20;
+                TextOut(hdcMem, 70, y, "R: Restart (when game over)", 27); y += 25;
+                TextOut(hdcMem, 70, y, "Survive, find elevator. Watch Oxygen & Battery.", 47); y += 35;
                 
                 TextOut(hdcMem, 60, y, "Lore Index:", 11); y += 20;
                 TextOut(hdcMem, 70, y, "Trapped on a derelict station. The crew was", 43); y += 20;
-                TextOut(hdcMem, 70, y, "experimenting on aliens... it didn't go well.", 45); y += 40;
+                TextOut(hdcMem, 70, y, "experimenting on aliens... it didn't go well.", 45); y += 35;
                 
                 TextOut(hdcMem, 60, y, "Enemy Bestiary:", 15); y += 20;
                 TextOut(hdcMem, 70, y, "Entities: Sensitive to noise & movement.", 40); y += 20;
@@ -1032,6 +1173,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
 
             // Copy to screen with screen shake
+            if (shakeX != 0 || shakeY != 0) {
+                RECT bgR = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
+                FillRect(hdc, &bgR, (HBRUSH)GetStockObject(BLACK_BRUSH));
+            }
             BitBlt(hdc, shakeX, shakeY, WINDOW_WIDTH, WINDOW_HEIGHT, hdcMem, 0, 0, SRCCOPY);
             
             // Cleanup
@@ -1048,7 +1193,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
-            if (isDead || wonGame || showHelp) return 0;
+            if (wParam == VK_ESCAPE && showHelp) {
+                showHelp = 0;
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (isDead || wonGame) {
+                if (wParam == 'R') {
+                    ResetGame();
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+                return 0;
+            }
+            if (showHelp) return 0;
             int newX = playerX;
             int newY = playerY;
             
@@ -1188,7 +1345,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     playerX = newX;
                     playerY = newY;
                     for (int i = 0; i < alienCount; i++) {
-                        if (aliens[i].x == playerX && aliens[i].y == playerY && map[playerY][playerX] != 11) {
+                        if (aliens[i].x == playerX && aliens[i].y == playerY && map[playerY][playerX] != 11 && aliens[i].state != 2) {
                             PlaySoundEffect(3);
                             SpawnParticles(playerX * TILE_SIZE + TILE_SIZE / 2.0f, playerY * TILE_SIZE + TILE_SIZE / 2.0f + UI_HEIGHT, RGB(255, 0, 0), 50);
                             isDead = 1;
@@ -1221,7 +1378,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-    srand((unsigned int)time(NULL));
+    srand((unsigned int)GetTickCount());
     GenerateMap();
     const char CLASS_NAME[] = "KVoid Class";
 
