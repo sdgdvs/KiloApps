@@ -116,7 +116,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **⚠️ PRIORITY: If ANY game in the queue is at Loop 0 (not yet processed), work on it FIRST before continuing higher-loop games.**
 
 
-- KMines
 - KAsteroids
 - K2048
 - KDarts
@@ -163,13 +162,15 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KRogue
 - KChess
 - KPong
+- KMines
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
 
 > Archived: Pre-Loop 6 entries moved to archive/. Only latest loop per game shown.
 
 **Skipped (mature — no work needed):**
-- KPong (L9), KChess (L9), KRogue (L9), KAlchemy (L8), KFarm (L6) — skip per Director Directive.
+- KMines (L8), KPong (L9), KChess (L9), KRogue (L9), KAlchemy (L8), KFarm (L6) — skip per Director Directive.
+
 
 **Recent work (Loop 7+):**
 - KTetris (L9): Crystal gem facets, steel bulkhead garbage, demolition bomb, holographic guides, plasma sweep.
