@@ -51,7 +51,7 @@
 
 ---
 
-**Target App:** KMaze
+**Target App:** KSnake
 **Status:** Next (Pass 5: Tutorial & Save System Integrity)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -120,10 +120,10 @@ Focus on verifying tutorial and save system infrastructure across all games:
 - **KZip**: Completed. Full notes in [archive/app_fix_pass4_archive.md](archive/app_fix_pass4_archive.md)
 
 ### Recent Completed Fixes (Terse Summary — ≤8 lines)
-- **KVoid**: ✅ Done. Restored native build; alien buffer overflow (MAX_ALIENS 32) fixed; softlock restart; tutorial persistence. Native (22.5 KB) and web verified.
 - **KWizard**: ✅ Done. Restored native build; eliminated per-frame GDI leaks; campaign opponentMaxHp clamping; Esc/shortcuts & tutorial persistence. Native (29.6 KB) and web verified.
 - **KWords**: ✅ Done. Closed sound thread handle leaks; hoisted cell fonts in WM_PAINT; clamped EndSelection buffer; added Esc modal/drag cancel & SetCapture; hardened full save/load state & tutorial persistence. Native (161 KB) and web verified.
 - **KZip**: ✅ Done. Sort selection desync fixed; standalone web/batch fallbacks & storage persistence added; native OpenArchive bounds & dialog Enter routing hardened; dotfile traversal fixed. Native (23.0 KB) and web verified.
 - **K2048**: ✅ Done (Pass 5). Full game state save/load implemented for web & native; tutorialSeen flag wired (fires on new game only); false game-over on bomb merges fixed; duplicate campaign stage alert removed; F1 help & backdrop click added. Native (38.5 KB) and web verified.
 - **KAudio**: ✅ Done (Pass 5). Full workstation session save/load implemented for web & native; kaudio_tutorialSeen flag wired (fires on new session only); hoisted GDI pen/brushes in FFT spectrum loop; Ctrl/Alt/Meta modifier guards added; sound preset node leaks and URL revocation lifetime fixed. Native (20.9 KB) and web verified.
 - **KBBS**: ✅ Done (Pass 5). Persistent door game save/load (LORD & TradeWars) & quicksave/quickload implemented for web & native; kbbs_tutorialSeen flag wired with 4-tab interactive guide; host/port session persistence added; welcome banner displayed; object URL revocations fixed. Native (101.8 KB) and web verified.
+- **KMaze**: ✅ Done (Pass 5). Full checkpoint save/load hardened (isCrouching, bossHP, timers); kmaze_tutorialSeen wired (fires on new game only); splash screen overlay & New Game/Continue/Help buttons wired; start screen keyboard shortcuts (N, L) restored. Native (64.0 KB) and web verified.

@@ -1347,6 +1347,15 @@ void SaveCheckpoint() {
         int savedMap[45][45];
         for (int i = 0; i < 45; i++) for (int j = 0; j < 45; j++) savedMap[i][j] = GetMapValue(i, j);
         WriteFile(hSave, savedMap, sizeof(savedMap), &written, NULL);
+        int extra[7];
+        extra[0] = isCrouching;
+        extra[1] = bossHP;
+        extra[2] = pathfinderTimer;
+        extra[3] = speedShoesTimer;
+        extra[4] = stunSprayTimer;
+        extra[5] = timeFreezeTimer;
+        extra[6] = torchTimer;
+        WriteFile(hSave, extra, sizeof(extra), &written, NULL);
         CloseHandle(hSave);
     }
 }
@@ -1380,6 +1389,25 @@ void LoadCheckpoint() {
         int savedMap[45][45];
         if (ReadFile(hLoad, savedMap, sizeof(savedMap), &readBytes, NULL) && readBytes == sizeof(savedMap)) {
             for (int i = 0; i < 45; i++) for (int j = 0; j < 45; j++) SetMapValue(i, j, savedMap[i][j]);
+        }
+        int extra[7];
+        DWORD extraBytes = 0;
+        if (ReadFile(hLoad, extra, sizeof(extra), &extraBytes, NULL) && extraBytes == sizeof(extra)) {
+            isCrouching = extra[0];
+            bossHP = extra[1];
+            pathfinderTimer = extra[2];
+            speedShoesTimer = extra[3];
+            stunSprayTimer = extra[4];
+            timeFreezeTimer = extra[5];
+            torchTimer = extra[6];
+        } else {
+            isCrouching = 0;
+            bossHP = (currentLevel >= 40) ? 4 : 3;
+            pathfinderTimer = 0;
+            speedShoesTimer = 0;
+            stunSprayTimer = 0;
+            timeFreezeTimer = 0;
+            torchTimer = 0;
         }
         CloseHandle(hLoad);
         if (gameState == 0 || gameState == 2) gameState = 1;
@@ -1518,6 +1546,46 @@ void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd, helpMsg, "KMaze Help & Dungeon Codex", MB_OK | MB_ICONINFORMATION);
 }
 
+int HasCheckpoint(void) {
+    HANDLE h = CreateFileA("kmaze_save.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h != INVALID_HANDLE_VALUE) {
+        CloseHandle(h);
+        return 1;
+    }
+    return 0;
+}
+
+void CheckFirstRunTutorial(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kmaze_tutorial.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFile);
+        return;
+    }
+    hFile = CreateFileA("kmaze_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char marker = '1';
+        DWORD wr = 0;
+        WriteFile(hFile, &marker, 1, &wr, NULL);
+        CloseHandle(hFile);
+    }
+    ShowHelpDialog(hwnd);
+}
+
+static int activeKeyCooldown = 0;
+
+void StartNewGame(HWND hwnd) {
+    gameState = 1;
+    startTime = GetTickCount();
+    currentLevel = -1;
+    score = 0;
+    totalGames++;
+    SaveBest();
+    ResetMaps();
+    NextLevel();
+    activeKeyCooldown = 300;
+    if (hwnd) CheckFirstRunTutorial(hwnd);
+}
+
 static HBRUSH s_frameB = NULL;
 static HBRUSH s_mWall, s_mExit, s_mKey, s_mDoor, s_mFloor, s_mPlayer, s_mCoin;
 static HBRUSH s_mTrap, s_mComp, s_mSpeed, s_mTele, s_mPath, s_mBoss, s_mMono;
@@ -1569,7 +1637,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             UpdateTextures();
             UpdateParticles();
             static int minotaurTimer = 0;
-            static int activeKeyCooldown = 0;
             if (activeKeyCooldown > 0) activeKeyCooldown -= 30;
 
             if (pathfinderTimer > 0) {
@@ -1681,18 +1748,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 gameState = 3;
                 replayCurFrame = 0;
                 activeKeyCooldown = 300;
-            } else if (GetAsyncKeyState(VK_RETURN) & 0x8000) {
+            } else if ((GetAsyncKeyState(VK_RETURN) & 0x8000) || (GetAsyncKeyState(VK_SPACE) & 0x8000) || (gameState == 0 && (GetAsyncKeyState('N') & 0x8000))) {
                 if (gameState == 0 || gameState == 2) {
-                    gameState = 1;
-                    startTime = GetTickCount();
-                    currentLevel = -1;
-                    score = 0;
-                    totalGames++;
-                    SaveBest();
-                    ResetMaps();
-                    NextLevel();
-                    activeKeyCooldown = 300;
+                    StartNewGame(hwnd);
                 }
+            }
+            if (gameState == 0 && (GetAsyncKeyState('L') & 0x8000) && activeKeyCooldown <= 0) {
+                LoadCheckpoint();
+                activeKeyCooldown = 500;
             }
             
             if (gameState == 1 && activeKeyCooldown <= 0) {
@@ -2584,20 +2647,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkMode(hdc, TRANSPARENT);
             if (gameState == 0) {
                 const char* t1 = "KMAZE - DUNGEON DESCENT";
-                const char* t2 = "Press ENTER to start";
-                const char* t3 = "Press F1 or H for Help | L to Load Checkpoint";
+                const char* t2 = "[ENTER] or [N]: Start New Game";
+                char t3[128];
+                if (HasCheckpoint()) {
+                    wsprintfA(t3, "[L]: Continue Saved Checkpoint | [F1]/[H]: Help Codex");
+                } else {
+                    wsprintfA(t3, "[L]: Continue (No Save) | [F1]/[H]: Help Codex");
+                }
                 char t4[64]; wsprintfA(t4, "Games: %d Escapes: %d Best: %ds", totalGames, totalEscapes, (int)bestTime);
                 
                 SetTextColor(hdc, RGB(0, 0, 0));
-                TextOutA(hdc, clientRect.right/2 - 90 + 2, clientRect.bottom/2 - 40 + 2, t1, lstrlenA(t1));
-                TextOutA(hdc, clientRect.right/2 - 110 + 2, clientRect.bottom/2 - 10 + 2, t2, lstrlenA(t2));
-                TextOutA(hdc, clientRect.right/2 - 170 + 2, clientRect.bottom/2 + 20 + 2, t3, lstrlenA(t3));
+                TextOutA(hdc, clientRect.right/2 - 100 + 2, clientRect.bottom/2 - 40 + 2, t1, lstrlenA(t1));
+                TextOutA(hdc, clientRect.right/2 - 120 + 2, clientRect.bottom/2 - 10 + 2, t2, lstrlenA(t2));
+                TextOutA(hdc, clientRect.right/2 - 190 + 2, clientRect.bottom/2 + 20 + 2, t3, lstrlenA(t3));
                 TextOutA(hdc, clientRect.right/2 - 130 + 2, clientRect.bottom/2 + 50 + 2, t4, lstrlenA(t4));
                 
+                SetTextColor(hdc, RGB(0, 240, 255));
+                TextOutA(hdc, clientRect.right/2 - 100, clientRect.bottom/2 - 40, t1, lstrlenA(t1));
                 SetTextColor(hdc, RGB(255, 255, 255));
-                TextOutA(hdc, clientRect.right/2 - 90, clientRect.bottom/2 - 40, t1, lstrlenA(t1));
-                TextOutA(hdc, clientRect.right/2 - 110, clientRect.bottom/2 - 10, t2, lstrlenA(t2));
-                TextOutA(hdc, clientRect.right/2 - 170, clientRect.bottom/2 + 20, t3, lstrlenA(t3));
+                TextOutA(hdc, clientRect.right/2 - 120, clientRect.bottom/2 - 10, t2, lstrlenA(t2));
+                SetTextColor(hdc, RGB(255, 255, 120));
+                TextOutA(hdc, clientRect.right/2 - 190, clientRect.bottom/2 + 20, t3, lstrlenA(t3));
+                SetTextColor(hdc, RGB(180, 200, 220));
                 TextOutA(hdc, clientRect.right/2 - 130, clientRect.bottom/2 + 50, t4, lstrlenA(t4));
             } else if (gameState == 2) {
                 DWORD elapsedSec = (endTime - startTime) / 1000;
@@ -2681,6 +2752,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_LBUTTONDOWN: {
+            if (gameState == 0) {
+                StartNewGame(hwnd);
+                break;
+            }
             if (gameState == 4) {
                 int y = HIWORD(lParam);
                 int idx = (y - 80) / 30;
@@ -2689,9 +2764,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_KEYDOWN: {
-            if (wParam == VK_F1 || wParam == 'H') {
+            if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
                 ShowHelpDialog(hwnd);
                 break;
+            }
+            if (gameState == 0) {
+                if (wParam == VK_RETURN || wParam == VK_SPACE || wParam == 'N' || wParam == 'n') {
+                    StartNewGame(hwnd);
+                    break;
+                }
+                if (wParam == 'L' || wParam == 'l') {
+                    LoadCheckpoint();
+                    break;
+                }
+            }
+            if (gameState == 2) {
+                if (wParam == VK_RETURN || wParam == VK_SPACE || wParam == 'N' || wParam == 'n') {
+                    StartNewGame(hwnd);
+                    break;
+                }
             }
             if (gameState == 0 || gameState == 1 || gameState == 2) {
                 if (wParam == 'E') ExportStats();

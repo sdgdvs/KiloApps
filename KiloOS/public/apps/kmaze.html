@@ -264,6 +264,81 @@
     display: inline-block;
     flex-shrink: 0;
   }
+  /* Splash Screen Overlay */
+  #splashOverlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(6, 10, 20, 0.88);
+    backdrop-filter: blur(5px);
+    z-index: 50;
+    color: #e2e8f0;
+    text-align: center;
+    padding: 24px;
+    box-sizing: border-box;
+  }
+  .splashTitle {
+    font-size: 28px;
+    font-weight: 800;
+    color: #00f0ff;
+    text-shadow: 0 0 18px rgba(0, 240, 255, 0.65);
+    margin-bottom: 8px;
+    letter-spacing: 1.5px;
+  }
+  .splashSubtitle {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-bottom: 24px;
+    max-width: 540px;
+  }
+  .splashBtnGroup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  .splashBtn {
+    background: #142036;
+    color: #00f0ff;
+    border: 1px solid #00f0ff88;
+    padding: 10px 18px;
+    font-size: 13.5px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    transition: all 0.15s ease;
+  }
+  .splashBtn:hover {
+    background: #004d66;
+    color: #ffffff;
+    border-color: #00f0ff;
+    box-shadow: 0 0 14px rgba(0, 240, 255, 0.6);
+    transform: translateY(-1px);
+  }
+  .splashBtn.primary {
+    background: linear-gradient(135deg, #005577, #0088aa);
+    color: #fff;
+    border-color: #00ffff;
+  }
+  .splashBtn.primary:hover {
+    background: linear-gradient(135deg, #0077aa, #00bbdd);
+    box-shadow: 0 0 18px rgba(0, 255, 255, 0.8);
+  }
+  .splashStats {
+    color: #64748b;
+    font-size: 12px;
+    margin-top: 10px;
+    line-height: 1.6;
+  }
 </style>
 </head>
 <body>
@@ -272,8 +347,21 @@
   <div id="canvasWrapper">
     <canvas id="gameCanvas" width="320" height="240"></canvas>
     <canvas id="uiCanvas" width="800" height="600"></canvas>
+    <div id="splashOverlay">
+      <div class="splashTitle">🛡️ KMAZE - DUNGEON DESCENT</div>
+      <div class="splashSubtitle">Tactical 3D Raycaster Labyrinth • 45 Challenging Chambers</div>
+      <div class="splashBtnGroup">
+        <button id="btnSplashNew" class="splashBtn primary" onclick="startNewGame()"><span class="badge">Enter / N</span> ⚔️ New Game</button>
+        <button id="btnSplashContinue" class="splashBtn" onclick="loadCheckpointGame()"><span class="badge">L</span> 💾 Continue Checkpoint</button>
+        <button id="btnSplashHelp" class="splashBtn" onclick="toggleHelpModal(true)"><span class="badge">F1 / H</span> 📖 Codex & Guide</button>
+        <button id="btnSplashKeys" class="splashBtn" onclick="toggleKeybinds()"><span class="badge">K</span> ⌨️ Keybinds</button>
+      </div>
+      <div id="splashSaveStatus" style="font-size: 13px; color: #38bdf8; margin-bottom: 8px;"></div>
+      <div id="splashStats" class="splashStats"></div>
+    </div>
   </div>
   <div id="hudControls">
+    <button id="btnNew" class="hudBtn" onclick="startNewGame()" title="Start a fresh dungeon descent"><span class="badge">N</span> New Game</button>
     <button id="btnPickaxe" class="hudBtn" onclick="usePickaxe()" title="Cleave cracked or illusionary walls & attack monsters"><span class="badge">P</span> Break Wall</button>
     <button id="btnPathfinder" class="hudBtn" onclick="usePathfinder()" title="Reveal shortest path to key and exit (10s)"><span class="badge">C</span> Pathfinder</button>
     <button id="btnSpeed" class="hudBtn" onclick="useSpeedShoes()" title="Double movement speed (8s)"><span class="badge">S/B</span> Speed</button>
@@ -281,7 +369,7 @@
     <button id="btnFreeze" class="hudBtn" onclick="useTimeFreeze()" title="Halt all monsters in the dungeon (10s)"><span class="badge">T</span> Time Freeze</button>
     <button id="btnCrouch" class="hudBtn" onclick="toggleCrouch()" title="Stealth crouch: silence footsteps and cushion trap damage"><span class="badge">X/Ctrl</span> Crouch</button>
     <button id="btnSave" class="hudBtn" onclick="saveCheckpointGame()" title="Save current dungeon descent to checkpoint"><span class="badge">V</span> Save</button>
-    <button id="btnLoad" class="hudBtn" onclick="loadCheckpointGame()" title="Load last saved checkpoint descent"><span class="badge">L</span> Load</button>
+    <button id="btnLoad" class="hudBtn" onclick="loadCheckpointGame()" title="Continue last saved checkpoint descent"><span class="badge">L</span> Continue</button>
     <button id="btnHelp" class="hudBtn" onclick="toggleHelpModal()" title="View comprehensive guide, tile codex, and tips"><span class="badge">F1/H</span> Guide</button>
     <button id="btnKeys" class="hudBtn" onclick="toggleKeybinds()" title="Rebind control keys"><span class="badge">K</span> Keybinds</button>
     <button id="btnExport" class="hudBtn" onclick="exportStats()" title="Export best times and statistics to JSON"><span class="badge">E</span> Export</button>
@@ -595,7 +683,43 @@
           gameState = 4;
       }
   }
-  function startGame() {
+  function updateSplashOverlay() {
+      const splash = document.getElementById('splashOverlay');
+      if (!splash) return;
+      if (gameState === 0) {
+          splash.style.display = 'flex';
+          const statsEl = document.getElementById('splashStats');
+          if (statsEl) {
+              let bestStr = bestTime < 9999 ? bestTime.toFixed(1) + 's' : '--';
+              statsEl.innerHTML = `Descent Records — Expeditions: <b>${totalGames}</b> | Escapes: <b>${totalEscapes}</b> | Best Record: <b>${bestStr}</b> | Lifetime Score: <b>${totalScore}</b>`;
+          }
+          const saveStatus = document.getElementById('splashSaveStatus');
+          const continueBtn = document.getElementById('btnSplashContinue');
+          let sd = safeGetStorage('kmaze_save', null);
+          if (sd) {
+              try {
+                  let parsed = JSON.parse(sd);
+                  if (saveStatus) saveStatus.innerHTML = `💾 Saved Checkpoint: <b>Level ${parsed.currentLevel + 1}</b> • Score: <b>${parsed.score || 0}</b> • Keys: <b>${parsed.keysHeld || 0}</b>`;
+                  if (continueBtn) {
+                      continueBtn.style.opacity = '1';
+                      continueBtn.title = `Resume descent at Level ${parsed.currentLevel + 1}`;
+                  }
+              } catch (e) {
+                  if (saveStatus) saveStatus.textContent = "⚠️ Checkpoint data corrupted";
+              }
+          } else {
+              if (saveStatus) saveStatus.innerHTML = "<span style='color:#64748b;'>No saved checkpoint found. Start a New Game to begin descent!</span>";
+              if (continueBtn) {
+                  continueBtn.style.opacity = '0.75';
+                  continueBtn.title = "No checkpoint saved yet";
+              }
+          }
+      } else {
+          splash.style.display = 'none';
+      }
+  }
+
+  function startNewGame() {
       gameState = 1;
       startTime = Date.now();
       currentLevel = -1;
@@ -604,7 +728,21 @@
       safeSetStorage('kmaze_games', totalGames);
       replayLevels = [];
       nextLevel();
-      showToast("Descent Begun! Press F1 or H for Guide", "info");
+      updateSplashOverlay();
+
+      // Pass 5 tutorial flag integrity: fires on new game, NOT on saved game load
+      let tutorialSeen = safeGetStorage('kmaze_tutorialSeen') === '1';
+      if (!tutorialSeen) {
+          safeSetStorage('kmaze_tutorialSeen', '1');
+          toggleHelpModal(true);
+          showToast("Welcome to KMaze! Codex Opened. Press Esc to Start.", "info", 5000);
+      } else {
+          showToast("Descent Begun! Press F1 or H for Guide", "info");
+      }
+  }
+
+  function startGame() {
+      startNewGame();
   }
 
   function showToast(text, type = 'info', duration = 3200) {
@@ -640,6 +778,9 @@
           modal.classList.add('open');
       } else {
           modal.classList.remove('open');
+      }
+      if (!modal.classList.contains('open')) {
+          safeSetStorage('kmaze_tutorialSeen', '1');
       }
   }
 
@@ -1529,7 +1670,8 @@
       let saveData = {
           currentLevel, score, keysHeld, hasCompass, speedBoost, hasPickaxe,
           pathfinderCharges, speedShoesCharges, stunSprayCharges, timeFreezeCharges,
-          pX, pY, dX, dY, planeX, planeY, map, isCrouching,
+          pX, pY, dX, dY, planeX, planeY, map, isCrouching, bossHP,
+          torchTimer, pathfinderTimer, speedShoesTimer, stunSprayTimer, timeFreezeTimer,
           elapsed: Date.now() - startTime
       };
       safeSetStorage('kmaze_save', JSON.stringify(saveData));
@@ -1537,6 +1679,7 @@
       msgTimer = 60;
       playTone(900, 'sine', 0.2);
       showToast(`Checkpoint descent saved at Level ${currentLevel + 1}!`, "success");
+      updateSplashOverlay();
   }
 
   function loadCheckpointGame() {
@@ -1563,12 +1706,19 @@
               planeY = Number.isFinite(saveData.planeY) ? saveData.planeY : 0.66;
               map = saveData.map;
               isCrouching = !!saveData.isCrouching;
+              bossHP = Number.isFinite(saveData.bossHP) ? saveData.bossHP : ((currentLevel >= 40) ? 4 : 3);
+              torchTimer = Number.isFinite(saveData.torchTimer) ? saveData.torchTimer : 0;
+              pathfinderTimer = Number.isFinite(saveData.pathfinderTimer) ? saveData.pathfinderTimer : 0;
+              speedShoesTimer = Number.isFinite(saveData.speedShoesTimer) ? saveData.speedShoesTimer : 0;
+              stunSprayTimer = Number.isFinite(saveData.stunSprayTimer) ? saveData.stunSprayTimer : 0;
+              timeFreezeTimer = Number.isFinite(saveData.timeFreezeTimer) ? saveData.timeFreezeTimer : 0;
               startTime = Date.now() - (Number.isFinite(saveData.elapsed) ? saveData.elapsed : 0);
               gameState = 1;
               msgText = "Checkpoint / Save Loaded!";
               msgTimer = 60;
               playTone(900, 'sine', 0.2);
               showToast(`Resumed descent at Level ${currentLevel + 1}!`, "success");
+              updateSplashOverlay();
           } catch (err) {
               msgText = "Corrupted checkpoint!";
               msgTimer = 60;
@@ -1745,10 +1895,12 @@
           gameState = 3;
           replayLevelIdx = replayLevels.length - 1;
           replayFrameIdx = 0;
-      } else if (!hasMod && (e.key === 'Enter' || (gameState === 0 && e.key === ' '))) {
+      } else if (!hasMod && (e.key === 'Enter' || (gameState === 0 && (e.key === ' ' || e.key === 'n' || e.key === 'N')) || (gameState === 2 && (e.key === 'n' || e.key === 'N')))) {
           if (gameState === 0 || gameState === 2) {
-              startGame();
+              startNewGame();
           }
+      } else if (gameState === 0 && !hasMod && (e.key === 'l' || e.key === 'L')) {
+          loadCheckpointGame();
       } else if (e.key === 'F1' || (!hasMod && (e.key === 'h' || e.key === 'H'))) {
           if (e.key === 'F1') e.preventDefault();
           toggleHelpModal();
@@ -2823,6 +2975,16 @@
       uiCanvas.height = 600 * dpr;
       uiCtx.scale(dpr, dpr);
   });
+
+  // Auto-save descent before page unload
+  window.addEventListener('beforeunload', () => {
+      if (gameState === 1) {
+          saveCheckpointGame();
+      }
+  });
+
+  // Initialize Splash Screen overlay
+  updateSplashOverlay();
 
   // Welcome Toast Notification
   setTimeout(() => {
