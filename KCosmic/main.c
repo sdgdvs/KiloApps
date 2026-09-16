@@ -384,8 +384,15 @@ typedef struct {
     int selectedType; // 0=none, 1=sun, 2=planet, 3=moon, 4=station, 5=ship
     int selectedIndex;
 
-    // Tab: 0=Terraform, 1=Fleet, 2=Colony, 3=Research, 4=Megas, 5=Hazards, 6=Economy
+    // Tab: 0=Terraform, 1=Fleet, 2=Colony, 3=Research, 4=Megas, 5=Xeno, 6=Hazards, 7=Economy
     int activeTab;
+
+    // Phase 12: Alien Xenobiology & Ancient Precursor Relics
+    int xenoSiteStatus[4];    // 0=Surveyed, 1=Excavating, 2=Excavated
+    int xenoSiteProgress[4];  // 0 to 100%
+    int xenoRelicFound[4];    // 0 or 1
+    int precursorTech[4];     // 0 or 1
+    float xenoScanAnim;
 
     // Phase 11: Orbital Megastructures & Planetary Defense Stations
     int orbitalRingStage;     // 0 to 3
@@ -614,6 +621,8 @@ static void CalculateHabitability(void) {
     if (sim.techResearched[TECH_BIO_ADAPTED]) total += 20.0f;
     if (sim.techResearched[TECH_GEO_STABILIZATION]) total += 15.0f;
     if (sim.shieldGridStage == 3) total += 10.0f;
+    if (sim.precursorTech[0]) total += 10.0f;
+    if (sim.precursorTech[1]) total += 5.0f;
     if (total < 0.0f) total = 0.0f;
     if (total > 100.0f) total = 100.0f;
     sim.habitability = total;
@@ -1075,10 +1084,12 @@ static void SimTick(void) {
     if (sim.paused || sim.speed <= 0) return;
     int rate = sim.speed;
 
-    // Phase 10 Breakthrough Multipliers
+    // Phase 10 & 12 Breakthrough Multipliers
     float antiDriveMult = sim.techResearched[TECH_PROP_ANTIMATTER] ? 2.0f : 1.0f;
     float bioAdaptedFoodMult = sim.techResearched[TECH_BIO_ADAPTED] ? 2.0f : 1.0f;
-    float catalystBoost = sim.techResearched[TECH_BIO_CATALYSTS] ? 1.4f : 1.0f;
+    float xenoTerraMult = sim.precursorTech[0] ? 1.5f : 1.0f;
+    float xenoFoodMult = sim.precursorTech[0] ? 1.4f : 1.0f;
+    float catalystBoost = (sim.techResearched[TECH_BIO_CATALYSTS] ? 1.4f : 1.0f) * xenoTerraMult;
     float sunshadeBoost = sim.techResearched[TECH_GEO_SUNSHADE] ? 1.75f : 1.0f;
     float hydroBoost = sim.techResearched[TECH_BIO_THERMAL] ? 1.5f : 1.0f;
     int aeroYield = sim.techResearched[TECH_BIO_THERMAL] ? 110 : 80;
@@ -1127,9 +1138,10 @@ static void SimTick(void) {
         rationGrowth = 2.0f;
     }
 
-    // Energy (Surface Solar + Domed Megacities + Orbital Ring Power)
+    // Energy (Surface Solar + Domed Megacities + Orbital Ring Power + Zero-Point Tap)
     int ringPower = (sim.orbitalRingStage == 2 ? 50 : (sim.orbitalRingStage == 3 ? 140 : 0));
-    int energyGen = 600 + (sim.surfaceSolar * 60) + (sim.domedMegacities * 30) + ringPower + rEnergy + fuelDepotPower;
+    int zeroPointPower = sim.precursorTech[3] ? 450 : 0;
+    int energyGen = 600 + (sim.surfaceSolar * 60) + (sim.domedMegacities * 30) + ringPower + rEnergy + fuelDepotPower + zeroPointPower;
     int baseEnergyDrain = 200 + (sim.solarMirrors * 75) + (sim.atmoProcessors * 60) + (sim.nitrogenExtractors * 85) + (sim.greenhouseStations * 70) + (sim.coreDynamos * 80) + (sim.colonists / 1000) * 5;
     int engEnergySavings = (int)(baseEnergyDrain * ((float)sim.pctEngineers / 100.0f) * 0.25f);
     int energyDrain = baseEnergyDrain - engEnergySavings;
@@ -1146,8 +1158,9 @@ static void SimTick(void) {
     sim.minerals += (int)(sim.deltaMinerals * 0.05f * rate);
     if (sim.minerals < 0) sim.minerals = 0;
 
-    // Phase 11: Planetary Shield Grid Maintenance & Recharge
+    // Phase 11 & 12: Planetary Shield Grid Maintenance & Recharge
     sim.shieldMaxHP = (sim.shieldGridStage == 1 ? 400 : (sim.shieldGridStage == 2 ? 900 : (sim.shieldGridStage == 3 ? 1800 : 0)));
+    if (sim.precursorTech[1]) sim.shieldMaxHP += 500;
     if (sim.shieldMode == 1) sim.shieldMaxHP = (int)(sim.shieldMaxHP * 1.5f);
     if (sim.shieldGridStage > 0) {
         if (sim.shieldMode == 0 && sim.energy > 200) {
@@ -1174,9 +1187,9 @@ static void SimTick(void) {
     sim.volatiles += (int)(sim.deltaVolatiles * 0.05f * rate);
     if (sim.volatiles < 0) sim.volatiles = 0;
 
-    // Food (Phase 8 & 10 Advanced Agronomy & Breakthroughs)
+    // Food (Phase 8 & 10 Advanced Agronomy & Breakthroughs & Phase 12 Xenobiology)
     int baseFoodGain = 15 + (sim.hydroTowers * 25) + (sim.aeroponicFarms * aeroYield) + (sim.algalVats * 45) + (sim.domedMegacities * 20) + rFood;
-    int foodGain = (int)(baseFoodGain * agroMult * bioAdaptedFoodMult);
+    int foodGain = (int)(baseFoodGain * agroMult * bioAdaptedFoodMult * xenoFoodMult);
     int foodDrain = (int)((sim.colonists / 1200) * rationMult);
     sim.deltaFood = foodGain - foodDrain;
     sim.food += (int)(sim.deltaFood * 0.05f * rate);
@@ -1257,6 +1270,7 @@ static void SimTick(void) {
     if (sim.techResearched[TECH_BIO_ADAPTED]) targetMorale += 15.0f;
     if (sim.techResearched[TECH_GEO_STABILIZATION]) targetMorale += 20.0f;
     if (sim.orbitalRingStage == 3) targetMorale += 15.0f;
+    if (sim.precursorTech[0]) targetMorale += 15.0f;
 
     if (targetMorale < 10.0f) targetMorale = 10.0f;
     if (targetMorale > 99.0f) targetMorale = 99.0f;
@@ -1315,6 +1329,31 @@ static void SimTick(void) {
         }
     }
 
+    // Phase 12: Alien Xenobiology & Precursor Excavations
+    for (int i = 0; i < 4; i++) {
+        if (sim.xenoSiteStatus[i] == 1) { // Excavating
+            if (sim.energy > 30) {
+                sim.xenoSiteProgress[i] += (int)(2 * rate);
+                if (sim.xenoSiteProgress[i] >= 100) {
+                    sim.xenoSiteProgress[i] = 100;
+                    sim.xenoSiteStatus[i] = 2; // Excavated
+                    sim.xenoRelicFound[i] = 1;
+                    sim.science += 250;
+                    const char* rNames[] = {
+                        "Tachyon Crystalline Matrix",
+                        "Precursor Xenobiotic Genome",
+                        "Autonomous Nanite Core",
+                        "Zero-Point Flux Resonator"
+                    };
+                    char xBuf[160];
+                    sprintf(xBuf, "EXCAVATION SUCCESS! Unearthed [%s]! +250 SP.", rNames[i]);
+                    SetLogMsg(xBuf, 0);
+                    PlaySoundFx(SFX_SUCCESS);
+                }
+            }
+        }
+    }
+
     // Phase 9: Crisis Events & Hazards
     if (sim.crisisActive) {
         sim.crisisTimer -= 0.1f * rate;
@@ -1337,6 +1376,7 @@ static void InitSimulation(void) {
     sim.speed = 1;
     sim.paused = 0;
     sim.time = 0.0f;
+    sim.activeTab = 0;
 
     sim.energy = 14250;
     sim.minerals = 8400;
@@ -1357,6 +1397,15 @@ static void InitSimulation(void) {
     sim.techProgress[0] = 120.0f;
     sim.breakthroughFanfare = 0;
     sim.lastBreakthrough[0] = '\0';
+
+    // Phase 12: Alien Xenobiology & Ancient Precursor Relics
+    for (int i = 0; i < 4; i++) {
+        sim.xenoSiteStatus[i] = 0;   // 0=Surveyed, 1=Excavating, 2=Excavated
+        sim.xenoSiteProgress[i] = 0;
+        sim.xenoRelicFound[i] = 0;
+        sim.precursorTech[i] = 0;
+    }
+    sim.xenoScanAnim = 0.0f;
 
     // Phase 11: Orbital Megastructures & Planetary Defense Stations
     sim.orbitalRingStage = 0;
@@ -2545,6 +2594,60 @@ static void DrawExoplanetGDI(HDC hdc, CelestialBody* b, int px, int py, int pr, 
                 }
             }
         }
+
+        // Phase 12: 8. Ancient Precursor Ruins & Xenobiology Sites
+        static const float s_xenoAngles[4] = { -0.85f, 0.60f, 2.05f, 3.50f };
+        for (int x = 0; x < 4; x++) {
+            float xAng = s_xenoAngles[x];
+            int sx = px + (int)(cosf(xAng) * (float)pr);
+            int sy = py + (int)(sinf(xAng) * (float)pr);
+
+            if (sim.xenoSiteStatus[x] == 2) {
+                // Excavated Golden / Tachyon Crystalline Spire
+                int spireTipX = px + (int)(cosf(xAng) * (float)(pr + (int)(10.0f * z)));
+                int spireTipY = py + (int)(sinf(xAng) * (float)(pr + (int)(10.0f * z)));
+
+                HPEN hSpire = CreatePen(PS_SOLID, 2, RGB(245, 158, 11));
+                HPEN hOldSpire = (HPEN)SelectObject(hdc, hSpire);
+                MoveToEx(hdc, sx, sy, NULL);
+                LineTo(hdc, spireTipX, spireTipY);
+                SelectObject(hdc, hOldSpire);
+                DeleteObject(hSpire);
+
+                FillSolidRect(hdc, spireTipX - 2, spireTipY - 2, 5, 5, RGB(251, 191, 36));
+
+                // Pulsing Tachyon Halo
+                int pulseR = (int)((4.0f + sinf(simTime * 3.0f + (float)x) * 2.0f) * z);
+                HPEN hHalo = CreatePen(PS_SOLID, 1, RGB(168, 85, 247));
+                HPEN hOldHalo = (HPEN)SelectObject(hdc, hHalo);
+                SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                Ellipse(hdc, spireTipX - pulseR, spireTipY - pulseR, spireTipX + pulseR, spireTipY + pulseR);
+                SelectObject(hdc, hOldHalo);
+                DeleteObject(hHalo);
+            } else if (sim.xenoSiteStatus[x] == 1) {
+                // Active Excavation Drone & Laser Beam
+                FillSolidRect(hdc, sx - 2, sy - 2, 5, 5, RGB(245, 158, 11));
+
+                float droneDist = (float)pr + 32.0f * z;
+                int droneX = px + (int)(cosf(xAng) * droneDist);
+                int droneY = py + (int)(sinf(xAng) * droneDist);
+
+                FillSolidRect(hdc, droneX - 3, droneY - 2, 6, 4, RGB(56, 189, 248));
+
+                HPEN hLaser = CreatePen(PS_SOLID, 1, RGB(0, 240, 255));
+                HPEN hOldLaser = (HPEN)SelectObject(hdc, hLaser);
+                MoveToEx(hdc, droneX, droneY, NULL);
+                LineTo(hdc, sx, sy);
+                SelectObject(hdc, hOldLaser);
+                DeleteObject(hLaser);
+
+                // Laser impact spark
+                FillSolidRect(hdc, sx - 1, sy - 1, 3, 3, RGB(255, 255, 255));
+            } else {
+                // Surveyed Ruin Anomaly Marker
+                FillSolidRect(hdc, sx - 2, sy - 2, 4, 4, RGB(168, 85, 247));
+            }
+        }
     }
 }
 
@@ -2774,8 +2877,23 @@ static void AddButton(int id, int x, int y, int w, int h, const char* txt, const
 #define BID_TAB_COLONY      12
 #define BID_TAB_RESEARCH    13
 #define BID_TAB_MEGAS       14
-#define BID_TAB_HAZARDS     15
-#define BID_TAB_ECONOMY     16
+#define BID_TAB_XENO        15
+#define BID_TAB_HAZARDS     16
+#define BID_TAB_ECONOMY     17
+
+#define BID_XENO_SCAN           1700
+#define BID_XENO_EXCAV_1        1701
+#define BID_XENO_EXCAV_2        1702
+#define BID_XENO_EXCAV_3        1703
+#define BID_XENO_EXCAV_4        1704
+#define BID_XENO_FAST_1         1705
+#define BID_XENO_FAST_2         1706
+#define BID_XENO_FAST_3         1707
+#define BID_XENO_FAST_4         1708
+#define BID_XENO_TECH_1         1711
+#define BID_XENO_TECH_2         1712
+#define BID_XENO_TECH_3         1713
+#define BID_XENO_TECH_4         1714
 
 #define BID_MEGA_RING_UPG       1601
 #define BID_MEGA_ELEV_UPG       1602
@@ -3314,6 +3432,11 @@ static void HandleInfrastructure(int bid) {
             else if (sim.orbitalRingStage == 2) { costMin = 5500; costEng = 1800; }
             else if (sim.orbitalRingStage >= 3) break;
 
+            if (sim.precursorTech[2]) {
+                costMin = (int)(costMin * 0.75f);
+                costEng = (int)(costEng * 0.75f);
+            }
+
             if (sim.minerals >= costMin && sim.energy >= costEng) {
                 sim.minerals -= costMin;
                 sim.energy -= costEng;
@@ -3333,6 +3456,11 @@ static void HandleInfrastructure(int bid) {
             else if (sim.starElevatorStage == 2) { costMin = 4800; costEng = 1500; }
             else if (sim.starElevatorStage >= 3) break;
 
+            if (sim.precursorTech[2]) {
+                costMin = (int)(costMin * 0.75f);
+                costEng = (int)(costEng * 0.75f);
+            }
+
             if (sim.minerals >= costMin && sim.energy >= costEng) {
                 sim.minerals -= costMin;
                 sim.energy -= costEng;
@@ -3351,11 +3479,17 @@ static void HandleInfrastructure(int bid) {
             if (sim.shieldGridStage == 2) { costMin = 6000; costEng = 2200; }
             else if (sim.shieldGridStage >= 3) break;
 
+            if (sim.precursorTech[2]) {
+                costMin = (int)(costMin * 0.75f);
+                costEng = (int)(costEng * 0.75f);
+            }
+
             if (sim.minerals >= costMin && sim.energy >= costEng) {
                 sim.minerals -= costMin;
                 sim.energy -= costEng;
                 sim.shieldGridStage++;
                 sim.shieldMaxHP = (sim.shieldGridStage == 2 ? 900 : 1800);
+                if (sim.precursorTech[1]) sim.shieldMaxHP += 500;
                 if (sim.shieldMode == 1) sim.shieldMaxHP = (int)(sim.shieldMaxHP * 1.5f);
                 sim.shieldHP = sim.shieldMaxHP;
                 sim.shieldFlareAnim = 1.0f;
@@ -3374,6 +3508,11 @@ static void HandleInfrastructure(int bid) {
             if (sim.defenseStationStage == 1) { costMin = 2600; costEng = 800; }
             else if (sim.defenseStationStage == 2) { costMin = 5200; costEng = 1600; }
             else if (sim.defenseStationStage >= 3) break;
+
+            if (sim.precursorTech[2]) {
+                costMin = (int)(costMin * 0.75f);
+                costEng = (int)(costEng * 0.75f);
+            }
 
             if (sim.minerals >= costMin && sim.energy >= costEng) {
                 sim.minerals -= costMin;
@@ -3404,6 +3543,7 @@ static void HandleInfrastructure(int bid) {
         case BID_MEGA_SHIELD_MODE: {
             sim.shieldMode = (sim.shieldMode + 1) % 3;
             sim.shieldMaxHP = (sim.shieldGridStage == 1 ? 400 : (sim.shieldGridStage == 2 ? 900 : (sim.shieldGridStage == 3 ? 1800 : 0)));
+            if (sim.precursorTech[1]) sim.shieldMaxHP += 500;
             if (sim.shieldMode == 1) sim.shieldMaxHP = (int)(sim.shieldMaxHP * 1.5f);
             if (sim.shieldHP > sim.shieldMaxHP) sim.shieldHP = sim.shieldMaxHP;
             const char* mNames[] = { "BALANCED (30 kW, +15 HP)", "FORTIFIED (+50% Cap, 80 kW, +35 HP)", "STANDBY (0 kW, Passive)" };
@@ -3419,6 +3559,114 @@ static void HandleInfrastructure(int bid) {
                 PlaySoundFx(SFX_DEPLOY);
             } else {
                 SetLogMsg("No orbital defense stations commissioned yet.", 1);
+            }
+            break;
+        }
+        // Phase 12: Alien Xenobiology & Precursor Handlers
+        case BID_XENO_SCAN: {
+            if (sim.energy >= 60) {
+                sim.energy -= 60;
+                sim.science += 20;
+                sim.xenoScanAnim = 1.0f;
+                SetLogMsg("Astrometric resonance bioscan completed! Detected precursor signatures. +20 SP.", 0);
+                PlaySoundFx(SFX_SUCCESS);
+            } else {
+                SetLogMsg("Insufficient energy for bioscan (Req: 60 kW).", 1);
+            }
+            break;
+        }
+        case BID_XENO_EXCAV_1:
+        case BID_XENO_EXCAV_2:
+        case BID_XENO_EXCAV_3:
+        case BID_XENO_EXCAV_4: {
+            int sIdx = bid - BID_XENO_EXCAV_1;
+            static const int s_costMin[4] = { 400, 600, 900, 1400 };
+            static const int s_costEng[4] = { 250, 350, 500, 800 };
+            static const int s_costSci[4] = { 30, 50, 80, 120 };
+            static const char* s_names[4] = { "Sunken Monolith", "Biosphere Vault", "Nanite Citadel", "Zero-Point Conduit" };
+
+            int cMin = sim.precursorTech[2] ? (int)(s_costMin[sIdx] * 0.75f) : s_costMin[sIdx];
+            int cEng = sim.precursorTech[2] ? (int)(s_costEng[sIdx] * 0.75f) : s_costEng[sIdx];
+            int cSci = s_costSci[sIdx];
+
+            if (sim.xenoSiteStatus[sIdx] == 0) {
+                if (sim.minerals >= cMin && sim.energy >= cEng && sim.science >= cSci) {
+                    sim.minerals -= cMin;
+                    sim.energy -= cEng;
+                    sim.science -= cSci;
+                    sim.xenoSiteStatus[sIdx] = 1; // Excavating
+                    sim.xenoSiteProgress[sIdx] = 15;
+                    sprintf(buf, "Expedition team deployed to %s! Automated laser excavation begun.", s_names[sIdx]);
+                    SetLogMsg(buf, 0);
+                    PlaySoundFx(SFX_DEPLOY);
+                } else {
+                    sprintf(buf, "Insufficient resources (Req: %d Min, %d kW, %d SP).", cMin, cEng, cSci);
+                    SetLogMsg(buf, 1);
+                }
+            }
+            break;
+        }
+        case BID_XENO_FAST_1:
+        case BID_XENO_FAST_2:
+        case BID_XENO_FAST_3:
+        case BID_XENO_FAST_4: {
+            int sIdx = bid - BID_XENO_FAST_1;
+            int fMin = sim.precursorTech[2] ? 110 : 150;
+            int fEng = sim.precursorTech[2] ? 75 : 100;
+            if (sim.xenoSiteStatus[sIdx] != 2) {
+                if (sim.minerals >= fMin && sim.energy >= fEng) {
+                    sim.minerals -= fMin;
+                    sim.energy -= fEng;
+                    sim.xenoSiteProgress[sIdx] += 25;
+                    if (sim.xenoSiteProgress[sIdx] >= 100) {
+                        sim.xenoSiteProgress[sIdx] = 100;
+                        sim.xenoSiteStatus[sIdx] = 2;
+                        sim.xenoRelicFound[sIdx] = 1;
+                        sim.science += 250;
+                        static const char* s_relics[4] = { "Tachyon Matrix", "Xenobiotic Genome", "Nanite Core", "Zero-Point Resonator" };
+                        sprintf(buf, "EXCAVATION SUCCESS! Unearthed [%s]! +250 SP.", s_relics[sIdx]);
+                        SetLogMsg(buf, 0);
+                        PlaySoundFx(SFX_SUCCESS);
+                    } else {
+                        sprintf(buf, "Sonic drill advanced excavation progress to %d%%.", sim.xenoSiteProgress[sIdx]);
+                        SetLogMsg(buf, 0);
+                        PlaySoundFx(SFX_DEPLOY);
+                    }
+                } else {
+                    sprintf(buf, "Insufficient resources for sonic drill (Req: %d Min, %d kW).", fMin, fEng);
+                    SetLogMsg(buf, 1);
+                }
+            }
+            break;
+        }
+        case BID_XENO_TECH_1:
+        case BID_XENO_TECH_2:
+        case BID_XENO_TECH_3:
+        case BID_XENO_TECH_4: {
+            int pIdx = bid - BID_XENO_TECH_1;
+            static const char* s_techTitles[4] = {
+                "Xenobiological Bio-Catalysis",
+                "Crystalline Deflector Harmonics",
+                "Molecular Nanite Assemblers",
+                "Zero-Point Resonant Tap"
+            };
+            if (!sim.precursorTech[pIdx]) {
+                if (!sim.xenoRelicFound[pIdx]) {
+                    SetLogMsg("Cannot synthesize: Corresponding ancient precursor relic required.", 1);
+                } else if (sim.science >= 150) {
+                    sim.science -= 150;
+                    sim.precursorTech[pIdx] = 1;
+                    if (pIdx == 1) {
+                        sim.shieldMaxHP += 500;
+                        sim.shieldHP += 500;
+                    }
+                    CalculateHabitability();
+                    sprintf(buf, "PRECURSOR BREAKTHROUGH: [%s] Synthesized!", s_techTitles[pIdx]);
+                    SetLogMsg(buf, 0);
+                    PlaySoundFx(SFX_SUCCESS);
+                } else {
+                    SetLogMsg("Insufficient Science Data for precursor synthesis (Req: 150 SP).", 1);
+                }
             }
             break;
         }
@@ -4243,15 +4491,16 @@ static void RenderUI(HDC hdc, int width, int height) {
     FillSolidRect(hdc, sbX, headerH, sidebarW, viewportH, theme->bgPanel);
     FillSolidRect(hdc, sbX, headerH, 1, viewportH, theme->border);
 
-    // Tab Header: 7 Tabs
-    int tabW = sidebarW / 7;
+    // Tab Header: 8 Tabs
+    int tabW = sidebarW / 8;
     AddButton(BID_TAB_TERRA, sbX, headerH, tabW, 28, "TERRA", NULL, 1);
     AddButton(BID_TAB_FLEET, sbX + tabW, headerH, tabW, 28, "FLEET", NULL, 1);
     AddButton(BID_TAB_COLONY, sbX + tabW * 2, headerH, tabW, 28, "COLONY", NULL, 1);
     AddButton(BID_TAB_RESEARCH, sbX + tabW * 3, headerH, tabW, 28, "TECH", NULL, 1);
     AddButton(BID_TAB_MEGAS, sbX + tabW * 4, headerH, tabW, 28, "MEGAS", NULL, 1);
-    AddButton(BID_TAB_HAZARDS, sbX + tabW * 5, headerH, tabW, 28, "HAZARD", NULL, 1);
-    AddButton(BID_TAB_ECONOMY, sbX + tabW * 6, headerH, sidebarW - tabW * 6, 28, "ECON", NULL, 1);
+    AddButton(BID_TAB_XENO, sbX + tabW * 5, headerH, tabW, 28, "XENO", NULL, 1);
+    AddButton(BID_TAB_HAZARDS, sbX + tabW * 6, headerH, tabW, 28, "HAZARD", NULL, 1);
+    AddButton(BID_TAB_ECONOMY, sbX + tabW * 7, headerH, sidebarW - tabW * 7, 28, "ECON", NULL, 1);
 
     int contentY = headerH + 34;
 
@@ -4970,8 +5219,110 @@ static void RenderUI(HDC hdc, int width, int height) {
         }
         AddButton(BID_MEGA_DEF_TEST, sbX + 26 + defBtnW, my + 38, defBtnW, 22, "Test Fire Citadel", NULL, sim.defenseStationStage > 0 ? 1 : 0);
     }
-    // TAB 5: HAZARDS & CRISIS MANAGEMENT
+    // TAB 5: ALIEN XENOBIOLOGY & PRECURSOR RELICS
     else if (sim.activeTab == 5) {
+        SetTextColor(hdc, COLOR_CYAN);
+        SelectObject(hdc, hFontBold);
+        TextOutA(hdc, sbX + 12, contentY, "PRECURSOR RUINS & ARTIFACT VAULT", 32);
+
+        int ry = contentY + 18;
+        FillSolidRect(hdc, sbX + 12, ry, sidebarW - 24, 72, COLOR_BG_CARD);
+        FrameSolidRect(hdc, sbX + 12, ry, sidebarW - 24, 72, COLOR_BORDER);
+
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COLOR_AMBER);
+        int relicsCount = 0;
+        for (int r = 0; r < 4; r++) if (sim.xenoRelicFound[r]) relicsCount++;
+        sprintf(buf, "Relics Recovered: %d / 4 Precursor Artifacts", relicsCount);
+        TextOutA(hdc, sbX + 20, ry + 8, buf, (int)strlen(buf));
+
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        sprintf(buf, "Resonance Sensor Array: %s | Vault Matrix: Online",
+            sim.xenoScanAnim > 0.0f ? "SCANNING ACTIVE..." : "STANDBY");
+        TextOutA(hdc, sbX + 20, ry + 24, buf, (int)strlen(buf));
+
+        AddButton(BID_XENO_SCAN, sbX + 20, ry + 42, sidebarW - 40, 22, "Sub-Surface Bioscan (100 kW)", NULL, sim.energy >= 100 ? 1 : 0);
+
+        int my = ry + 80;
+
+        // 1. Excavation Sites Header
+        SetTextColor(hdc, COLOR_PURPLE);
+        SelectObject(hdc, hFontBold);
+        TextOutA(hdc, sbX + 12, my, "EXCAVATION SECTORS", 18);
+        my += 16;
+
+        const char* siteNames[4] = { "Site Alpha (Tachyon Monolith)", "Site Beta (Sub-Crustal Biosphere)", "Site Gamma (Orbital Lattice)", "Site Delta (Primordial Gate)" };
+        const char* relicNames[4] = { "Zero-Point Siphon Core", "Hyper-Spore Bio-Catalyst", "Crystalline Harmonics Lattice", "Precursor Nanite Core" };
+
+        for (int i = 0; i < 4; i++) {
+            int cardH = 58;
+            FillSolidRect(hdc, sbX + 12, my, sidebarW - 24, cardH, COLOR_BG_CARD);
+            FrameSolidRect(hdc, sbX + 12, my, sidebarW - 24, cardH, COLOR_BORDER);
+
+            SelectObject(hdc, hFontSmall);
+            SetTextColor(hdc, COLOR_CYAN);
+            sprintf(buf, "%s", siteNames[i]);
+            TextOutA(hdc, sbX + 20, my + 4, buf, (int)strlen(buf));
+
+            SetTextColor(hdc, COLOR_TEXT_PRI);
+            if (sim.xenoRelicFound[i]) {
+                SetTextColor(hdc, COLOR_EMERALD);
+                sprintf(buf, "[EXCAVATED] %s secured!", relicNames[i]);
+                TextOutA(hdc, sbX + 20, my + 18, buf, (int)strlen(buf));
+                AddButton(BID_XENO_EXCAV_1 + i, sbX + 20, my + 32, sidebarW - 40, 20, "[RELIC SECURED IN VAULT]", NULL, 0);
+            } else if (sim.xenoSiteStatus[i] == 1) {
+                SetTextColor(hdc, COLOR_AMBER);
+                sprintf(buf, "Excavation Progress: %d%%", sim.xenoSiteProgress[i]);
+                TextOutA(hdc, sbX + 20, my + 18, buf, (int)strlen(buf));
+                DrawProgressBar(hdc, sbX + 20, my + 32, (sidebarW - 46) / 2, 18, sim.xenoSiteProgress[i] / 100.0f, RGB(220, 160, 40));
+                AddButton(BID_XENO_FAST_1 + i, sbX + 26 + (sidebarW - 46) / 2, my + 32, (sidebarW - 46) / 2, 20, "Sonic Drill (+25% / 200E)", NULL, sim.energy >= 200 ? 1 : 0);
+            } else {
+                SetTextColor(hdc, COLOR_TEXT_DIM);
+                sprintf(buf, "Sub-surface relic signal detected. Requires expedition team.");
+                TextOutA(hdc, sbX + 20, my + 18, buf, (int)strlen(buf));
+                int canDig = (sim.minerals >= 300 && sim.energy >= 150) ? 1 : 0;
+                AddButton(BID_XENO_EXCAV_1 + i, sbX + 20, my + 32, sidebarW - 40, 20, "Begin Excavation (300 Min, 150 kW)", NULL, canDig);
+            }
+
+            my += cardH + 6;
+        }
+
+        // 2. Precursor Technologies Header
+        my += 4;
+        SetTextColor(hdc, COLOR_EMERALD);
+        SelectObject(hdc, hFontBold);
+        TextOutA(hdc, sbX + 12, my, "PRECURSOR TECH ARTIFACT SYNTHESIS", 33);
+        my += 16;
+
+        const char* techNames[4] = { "Zero-Point Tap (+450 kW Power)", "Bio-Catalysis (+25% Terra/Food)", "Crystalline Harmonics (+500 Shield HP)", "Nanite Assemblers (-25% Megastructure Cost)" };
+        for (int i = 0; i < 4; i++) {
+            int cardH = 52;
+            FillSolidRect(hdc, sbX + 12, my, sidebarW - 24, cardH, COLOR_BG_CARD);
+            FrameSolidRect(hdc, sbX + 12, my, sidebarW - 24, cardH, COLOR_BORDER);
+
+            SelectObject(hdc, hFontSmall);
+            SetTextColor(hdc, COLOR_TEXT_PRI);
+            sprintf(buf, "%s", techNames[i]);
+            TextOutA(hdc, sbX + 20, my + 4, buf, (int)strlen(buf));
+
+            if (sim.precursorTech[i]) {
+                SetTextColor(hdc, COLOR_EMERALD);
+                AddButton(BID_XENO_TECH_1 + i, sbX + 20, my + 24, sidebarW - 40, 20, "[TECHNOLOGY ACTIVE]", NULL, 0);
+            } else if (!sim.xenoRelicFound[i]) {
+                SetTextColor(hdc, COLOR_TEXT_DIM);
+                sprintf(buf, "Requires %s excavated first", relicNames[i]);
+                TextOutA(hdc, sbX + 20, my + 20, buf, (int)strlen(buf));
+                AddButton(BID_XENO_TECH_1 + i, sbX + 20, my + 24, sidebarW - 40, 20, "[LOCKED - RELIC REQUIRED]", NULL, 0);
+            } else {
+                int canSyn = (sim.energy >= 500 && sim.volatiles >= 250) ? 1 : 0;
+                AddButton(BID_XENO_TECH_1 + i, sbX + 20, my + 24, sidebarW - 40, 20, "Synthesize Matrix (500 kW, 250 Vol)", NULL, canSyn);
+            }
+
+            my += cardH + 6;
+        }
+    }
+    // TAB 6: HAZARDS & CRISIS MANAGEMENT
+    else if (sim.activeTab == 6) {
         SetTextColor(hdc, COLOR_ROSE);
         SelectObject(hdc, hFontBold);
         TextOutA(hdc, sbX + 12, contentY, "ASTROMETRIC THREAT RADAR", 24);
@@ -5066,8 +5417,8 @@ static void RenderUI(HDC hdc, int width, int height) {
         AddButton(BID_DRILL_BLIGHT, sbX + 12 + (drillW + 2) * 3, dry + 18, drillW, 22, "Blight", NULL, 1);
         AddButton(BID_DRILL_STORM, sbX + 12 + (drillW + 2) * 4, dry + 18, drillW, 22, "Storm", NULL, 1);
     }
-    // TAB 6: ECONOMY
-    else if (sim.activeTab == 6) {
+    // TAB 7: ECONOMY
+    else if (sim.activeTab == 7) {
         SetTextColor(hdc, COLOR_BLUE);
         SelectObject(hdc, hFontBold);
         TextOutA(hdc, sbX + 12, contentY, "SECTOR RESOURCE LOOPS", 21);
@@ -5536,7 +5887,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     PlaySoundFx(SFX_CLICK);
                     break;
                 case VK_TAB:
-                    sim.activeTab = (sim.activeTab + 1) % 7;
+                    sim.activeTab = (sim.activeTab + 1) % 8;
                     PlaySoundFx(SFX_CLICK);
                     break;
                 case 'M':

@@ -1372,6 +1372,83 @@
             transition: width 0.3s ease;
             box-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
         }
+
+        /* Phase 12: Alien Xenobiology & Ancient Precursor Relics */
+        .xeno-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-stellar);
+            border-left: 3px solid var(--accent-purple);
+            border-radius: 4px;
+            padding: 9px 10px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+        .xeno-card:hover {
+            border-color: rgba(168, 85, 247, 0.6);
+            box-shadow: 0 0 12px rgba(168, 85, 247, 0.15);
+        }
+        .relic-vault-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin: 8px 0;
+        }
+        .relic-slot {
+            background: var(--bg-panel-dark);
+            border: 1px dashed var(--border-stellar);
+            border-radius: 4px;
+            padding: 8px;
+            transition: all 0.25s;
+            position: relative;
+        }
+        .relic-slot.discovered {
+            border-style: solid;
+            border-color: var(--accent-purple);
+            background: rgba(168, 85, 247, 0.08);
+            box-shadow: inset 0 0 8px rgba(168, 85, 247, 0.2);
+        }
+        .relic-icon {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        .relic-name {
+            font-size: 10px;
+            font-weight: bold;
+            color: var(--text-bright);
+        }
+        .relic-status {
+            font-size: 9px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+        .relic-slot.discovered .relic-status {
+            color: var(--accent-cyan);
+            font-weight: bold;
+        }
+        .xeno-badge {
+            font-size: 9px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .xeno-badge.surveyed { background: rgba(56, 189, 248, 0.15); color: var(--accent-blue); border: 1px solid var(--accent-blue); }
+        .xeno-badge.excavating { background: rgba(245, 158, 11, 0.18); color: var(--accent-amber); border: 1px solid var(--accent-amber); }
+        .xeno-badge.excavated { background: rgba(16, 185, 129, 0.2); color: var(--accent-emerald); border: 1px solid var(--accent-emerald); }
+        .xeno-tech-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-stellar);
+            border-left: 3px solid var(--accent-cyan);
+            border-radius: 4px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            transition: all 0.2s;
+        }
+        .xeno-tech-card.unlocked {
+            border-left-color: var(--accent-emerald);
+            background: rgba(16, 185, 129, 0.05);
+        }
     </style>
 </head>
 <body>
@@ -1506,13 +1583,14 @@
         <!-- Right Management Sidebar -->
         <div class="sidebar">
             <div class="sidebar-tabs">
-                <button class="tab-btn active" data-tab="tab-terra">Terraform</button>
-                <button class="tab-btn" data-tab="tab-fleet">Logistics</button>
+                <button class="tab-btn active" data-tab="tab-terra">Terra</button>
+                <button class="tab-btn" data-tab="tab-fleet">Fleet</button>
                 <button class="tab-btn" data-tab="tab-colony">Colony</button>
-                <button class="tab-btn" data-tab="tab-research" id="tabBtnResearch">Research</button>
+                <button class="tab-btn" data-tab="tab-research" id="tabBtnResearch">Tech</button>
                 <button class="tab-btn" data-tab="tab-megas" id="tabBtnMegas">Megas</button>
-                <button class="tab-btn" data-tab="tab-hazards" id="tabBtnHazards">Hazards</button>
-                <button class="tab-btn" data-tab="tab-economy">Economy</button>
+                <button class="tab-btn" data-tab="tab-xeno" id="tabBtnXeno">Xeno</button>
+                <button class="tab-btn" data-tab="tab-hazards" id="tabBtnHazards">Hazard</button>
+                <button class="tab-btn" data-tab="tab-economy">Econ</button>
             </div>
 
             <!-- Tab 1: Terraforming Parameters & Interventions -->
@@ -2319,6 +2397,243 @@
                 </div>
             </div>
 
+            <!-- Tab: Alien Xenobiology & Precursor Relics -->
+            <div class="tab-content" id="tab-xeno">
+                <div class="section-header">
+                    <span>Alien Xenobiology & Precursor Relics</span>
+                    <span style="font-size:10px; color:var(--accent-purple);" id="badgeXenoSummary">0/4 Relics Secured</span>
+                </div>
+
+                <!-- Xenobiology & Bioscan Telemetry Card -->
+                <div class="xeno-card" style="margin-bottom: 8px;">
+                    <div class="metric-row">
+                        <strong style="color:var(--accent-purple); font-size:12px;">Xeno-Archaeological Telemetry</strong>
+                        <span id="badgeXenoScanStatus" class="xeno-badge surveyed">SCANNER ACTIVE</span>
+                    </div>
+                    <div style="font-size:10px; color:var(--text-primary); margin:4px 0;" id="descXenoScan">
+                        Sub-crust tachyon resonators and orbital biosensors tracking ancient precursor ruins, hyper-adaptive extremophile strains, and dormant alien relics across the sector.
+                    </div>
+                    <div class="metric-row" style="font-size:10px; color:var(--accent-cyan); background:rgba(168,85,247,0.08); padding:3px 6px; border-radius:3px;">
+                        <span id="txtXenoTelemetry">Unearthed Relics: <strong>0 / 4</strong> | Precursor Breakthroughs: <strong>0 / 4</strong></span>
+                    </div>
+                    <div class="metric-row" style="margin-top:6px;">
+                        <button class="tech-act-btn primary" id="btnScanXenoAnomalies" style="flex:1;">📡 DEEP RESONANCE BIOSCAN (+20 Science, 60 kW)</button>
+                    </div>
+                </div>
+
+                <!-- Precursor Relic Vault -->
+                <div class="section-header" style="margin-top:8px;">
+                    <span>Precursor Relic Vault</span>
+                    <span style="font-size:10px; color:var(--text-dim);" id="badgeVaultCount">0 Unearthed</span>
+                </div>
+                <div class="relic-vault-grid" id="relicVaultGrid">
+                    <!-- Relic 1 -->
+                    <div class="relic-slot" id="slotRelic0">
+                        <div class="relic-icon">💠</div>
+                        <div class="relic-name">Tachyon Matrix</div>
+                        <div class="relic-status" id="statusRelic0">BURIED / UNEXPLORED</div>
+                    </div>
+                    <!-- Relic 2 -->
+                    <div class="relic-slot" id="slotRelic1">
+                        <div class="relic-icon">🧬</div>
+                        <div class="relic-name">Xenobiotic Genome</div>
+                        <div class="relic-status" id="statusRelic1">BURIED / UNEXPLORED</div>
+                    </div>
+                    <!-- Relic 3 -->
+                    <div class="relic-slot" id="slotRelic2">
+                        <div class="relic-icon">⚙️</div>
+                        <div class="relic-name">Nanite Core</div>
+                        <div class="relic-status" id="statusRelic2">BURIED / UNEXPLORED</div>
+                    </div>
+                    <!-- Relic 4 -->
+                    <div class="relic-slot" id="slotRelic3">
+                        <div class="relic-icon">🌀</div>
+                        <div class="relic-name">Zero-Point Resonator</div>
+                        <div class="relic-status" id="statusRelic3">BURIED / UNEXPLORED</div>
+                    </div>
+                </div>
+
+                <!-- Ancient Ruin Excavation Sites List -->
+                <div class="section-header" style="margin-top:8px;">
+                    <span>Ancient Ruin Excavation Sites</span>
+                    <span style="font-size:10px; color:var(--accent-cyan);">Target World</span>
+                </div>
+
+                <!-- Site 1: Monolith -->
+                <div class="xeno-card" id="cardSite0">
+                    <div class="metric-row">
+                        <div>
+                            <strong style="color:var(--accent-blue); font-size:11px;">Sunken Monolith Vault</strong>
+                            <div style="font-size:9px; color:var(--text-dim);">Target: Tachyon Crystalline Matrix</div>
+                        </div>
+                        <span id="badgeSite0" class="xeno-badge surveyed">SURVEYED</span>
+                    </div>
+                    <div style="font-size:10px; color:var(--text-primary); margin:3px 0;">
+                        Sub-crustal crystalline obelisk humming at tachyon frequencies. Enshrouded by vitreous basalt.
+                    </div>
+                    <div class="progress-bar-container" style="margin-top:3px;">
+                        <div class="progress-bar-fill" id="barSite0" style="width:0%; background:linear-gradient(90deg, #38bdf8, #818cf8);"></div>
+                    </div>
+                    <div class="metric-row" style="font-size:10px; color:var(--text-dim); margin-top:2px;">
+                        <span>Progress: <strong id="valSiteProg0" style="color:var(--text-bright);">0%</strong></span>
+                        <span>Req: 400 Min, 250 kW, 30 SP</span>
+                    </div>
+                    <div class="metric-row" style="margin-top:5px; gap:4px;">
+                        <button class="tech-act-btn primary" id="btnLaunchSite0" style="flex:1;">EXCAVATE EXPEDITION</button>
+                        <button class="tech-act-btn" id="btnFastSite0" style="flex:1;">SONIC DRILL (+25%)</button>
+                    </div>
+                </div>
+
+                <!-- Site 2: Bio Vault -->
+                <div class="xeno-card" id="cardSite1">
+                    <div class="metric-row">
+                        <div>
+                            <strong style="color:var(--accent-emerald); font-size:11px;">Progenitor Biosphere Vault</strong>
+                            <div style="font-size:9px; color:var(--text-dim);">Target: Precursor Xenobiotic Genome</div>
+                        </div>
+                        <span id="badgeSite1" class="xeno-badge surveyed">SURVEYED</span>
+                    </div>
+                    <div style="font-size:10px; color:var(--text-primary); margin:3px 0;">
+                        Sub-terranean stasis nursery preserving extremophile symbiotes and terra-adaptive genetic code.
+                    </div>
+                    <div class="progress-bar-container" style="margin-top:3px;">
+                        <div class="progress-bar-fill" id="barSite1" style="width:0%; background:linear-gradient(90deg, #10b981, #00f0ff);"></div>
+                    </div>
+                    <div class="metric-row" style="font-size:10px; color:var(--text-dim); margin-top:2px;">
+                        <span>Progress: <strong id="valSiteProg1" style="color:var(--text-bright);">0%</strong></span>
+                        <span>Req: 600 Min, 350 kW, 50 SP</span>
+                    </div>
+                    <div class="metric-row" style="margin-top:5px; gap:4px;">
+                        <button class="tech-act-btn primary" id="btnLaunchSite1" style="flex:1;">EXCAVATE EXPEDITION</button>
+                        <button class="tech-act-btn" id="btnFastSite1" style="flex:1;">BIO-EXTRACTOR (+25%)</button>
+                    </div>
+                </div>
+
+                <!-- Site 3: Nanite Citadel -->
+                <div class="xeno-card" id="cardSite2">
+                    <div class="metric-row">
+                        <div>
+                            <strong style="color:var(--accent-purple); font-size:11px;">Sub-Surface Nanite Citadel</strong>
+                            <div style="font-size:9px; color:var(--text-dim);">Target: Autonomous Nanite Core</div>
+                        </div>
+                        <span id="badgeSite2" class="xeno-badge surveyed">SURVEYED</span>
+                    </div>
+                    <div style="font-size:10px; color:var(--text-primary); margin:3px 0;">
+                        Buried precursor factory matrix housing dormant self-replicating molecular constructor lattices.
+                    </div>
+                    <div class="progress-bar-container" style="margin-top:3px;">
+                        <div class="progress-bar-fill" id="barSite2" style="width:0%; background:linear-gradient(90deg, #a855f7, #f43f5e);"></div>
+                    </div>
+                    <div class="metric-row" style="font-size:10px; color:var(--text-dim); margin-top:2px;">
+                        <span>Progress: <strong id="valSiteProg2" style="color:var(--text-bright);">0%</strong></span>
+                        <span>Req: 900 Min, 500 kW, 80 SP</span>
+                    </div>
+                    <div class="metric-row" style="margin-top:5px; gap:4px;">
+                        <button class="tech-act-btn primary" id="btnLaunchSite2" style="flex:1;">EXCAVATE EXPEDITION</button>
+                        <button class="tech-act-btn" id="btnFastSite2" style="flex:1;">THERMAL BLASTER (+25%)</button>
+                    </div>
+                </div>
+
+                <!-- Site 4: Zero-Point Conduit -->
+                <div class="xeno-card" id="cardSite3">
+                    <div class="metric-row">
+                        <div>
+                            <strong style="color:var(--accent-amber); font-size:11px;">Astrometric Zero-Point Conduit</strong>
+                            <div style="font-size:9px; color:var(--text-dim);">Target: Zero-Point Flux Resonator</div>
+                        </div>
+                        <span id="badgeSite3" class="xeno-badge surveyed">SURVEYED</span>
+                    </div>
+                    <div style="font-size:10px; color:var(--text-primary); margin:3px 0;">
+                        Hyper-dimensional spire piercing local vacuum geometry. Emits intense zero-point harmonics.
+                    </div>
+                    <div class="progress-bar-container" style="margin-top:3px;">
+                        <div class="progress-bar-fill" id="barSite3" style="width:0%; background:linear-gradient(90deg, #f59e0b, #ec4899);"></div>
+                    </div>
+                    <div class="metric-row" style="font-size:10px; color:var(--text-dim); margin-top:2px;">
+                        <span>Progress: <strong id="valSiteProg3" style="color:var(--text-bright);">0%</strong></span>
+                        <span>Req: 1400 Min, 800 kW, 120 SP</span>
+                    </div>
+                    <div class="metric-row" style="margin-top:5px; gap:4px;">
+                        <button class="tech-act-btn primary" id="btnLaunchSite3" style="flex:1;">EXCAVATE EXPEDITION</button>
+                        <button class="tech-act-btn" id="btnFastSite3" style="flex:1;">FLUX TAP DRILL (+25%)</button>
+                    </div>
+                </div>
+
+                <!-- Precursor Technologies Chamber -->
+                <div class="section-header" style="margin-top:8px;">
+                    <span>Ancient Precursor Technologies</span>
+                    <span style="font-size:10px; color:var(--accent-emerald);" id="badgePrecursorTechSummary">0/4 Synthesized</span>
+                </div>
+
+                <!-- Precursor Tech 1: Bio-Catalysis -->
+                <div class="xeno-tech-card" id="cardPTech0">
+                    <div class="metric-row">
+                        <strong style="color:var(--accent-emerald); font-size:11px;">Xenobiological Bio-Catalysis</strong>
+                        <span id="badgePTech0" class="xeno-badge surveyed">REQUIRES RELIC</span>
+                    </div>
+                    <div style="font-size:10px; color:var(--text-primary); margin:3px 0;">
+                        Synthesizes hyper-resilient precursor microorganisms that rapidly terraform atmospheric gas mixes and boost agricultural crops.
+                    </div>
+                    <div class="metric-row" style="font-size:10px; color:var(--accent-emerald); background:rgba(16,185,129,0.08); padding:3px 6px; border-radius:3px;">
+                        <span>Benefits: +50% Terraforming Rate, +40% Food Crop Yield, +15 Morale</span>
+                    </div>
+                    <div class="metric-row" style="margin-top:5px;">
+                        <button class="tech-act-btn primary" id="btnUnlockPTech0" style="flex:1;">SYNTHESIZE (Req: Genome Relic, 150 SP)</button>
+                    </div>
+                </div>
+
+                <!-- Precursor Tech 2: Crystalline Deflector Harmonics -->
+                <div class="xeno-tech-card" id="cardPTech1">
+                    <div class="metric-row">
+                        <strong style="color:var(--accent-cyan); font-size:11px;">Crystalline Deflector Harmonics</strong>
+                        <span id="badgePTech1" class="xeno-badge surveyed">REQUIRES RELIC</span>
+                    </div>
+                    <div style="font-size:10px; color:var(--text-primary); margin:3px 0;">
+                        Infuses planetary deflector shields with self-polarizing tachyon lattices, greatly expanding barrier envelope capacity.
+                    </div>
+                    <div class="metric-row" style="font-size:10px; color:var(--accent-cyan); background:rgba(0,240,255,0.08); padding:3px 6px; border-radius:3px;">
+                        <span>Benefits: +500 Planetary Shield Max HP, +25% Hazard Deflection</span>
+                    </div>
+                    <div class="metric-row" style="margin-top:5px;">
+                        <button class="tech-act-btn primary" id="btnUnlockPTech1" style="flex:1;">SYNTHESIZE (Req: Tachyon Matrix, 150 SP)</button>
+                    </div>
+                </div>
+
+                <!-- Precursor Tech 3: Molecular Nanite Assemblers -->
+                <div class="xeno-tech-card" id="cardPTech2">
+                    <div class="metric-row">
+                        <strong style="color:var(--accent-purple); font-size:11px;">Molecular Nanite Assemblers</strong>
+                        <span id="badgePTech2" class="xeno-badge surveyed">REQUIRES RELIC</span>
+                    </div>
+                    <div style="font-size:10px; color:var(--text-primary); margin:3px 0;">
+                        Re-programs autonomous precursor nanites into planetary construction swarms that weave structures at atomic speed.
+                    </div>
+                    <div class="metric-row" style="font-size:10px; color:var(--accent-purple); background:rgba(168,85,247,0.08); padding:3px 6px; border-radius:3px;">
+                        <span>Benefits: -25% Construction & Upgrade Costs on all modules & megastructures</span>
+                    </div>
+                    <div class="metric-row" style="margin-top:5px;">
+                        <button class="tech-act-btn primary" id="btnUnlockPTech2" style="flex:1;">SYNTHESIZE (Req: Nanite Core, 150 SP)</button>
+                    </div>
+                </div>
+
+                <!-- Precursor Tech 4: Zero-Point Resonant Tap -->
+                <div class="xeno-tech-card" id="cardPTech3">
+                    <div class="metric-row">
+                        <strong style="color:var(--accent-amber); font-size:11px;">Zero-Point Resonant Tap</strong>
+                        <span id="badgePTech3" class="xeno-badge surveyed">REQUIRES RELIC</span>
+                    </div>
+                    <div style="font-size:10px; color:var(--text-primary); margin:3px 0;">
+                        Harnesses quantum vacuum fluctuation manifolds, extracting inexhaustible clean power without relying on stellar radiation.
+                    </div>
+                    <div class="metric-row" style="font-size:10px; color:var(--accent-amber); background:rgba(245,158,11,0.08); padding:3px 6px; border-radius:3px;">
+                        <span>Benefits: +450 kW Perpetual Clean Energy Output per cycle (0 Fuel Upkeep)</span>
+                    </div>
+                    <div class="metric-row" style="margin-top:5px;">
+                        <button class="tech-act-btn primary" id="btnUnlockPTech3" style="flex:1;">SYNTHESIZE (Req: Resonator Relic, 150 SP)</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Tab: Cosmic Crisis Events & Planetary Hazards -->
             <div class="tab-content" id="tab-hazards">
                 <div class="section-header">
@@ -2627,6 +2942,20 @@
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
                     osc.start(now);
                     osc.stop(now + 0.2);
+                } else if (type === 'xeno') {
+                    const chord = [440, 554.37, 659.25, 830.61, 1108.73];
+                    chord.forEach((f, idx) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.type = 'sine';
+                        o.frequency.setValueAtTime(f, now + idx * 0.05);
+                        g.gain.setValueAtTime(0.09, now + idx * 0.05);
+                        g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.6);
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.start(now + idx * 0.05);
+                        o.stop(now + idx * 0.05 + 0.6);
+                    });
                 }
             } catch (e) {
                 // Audio safely ignored if restricted
@@ -2649,6 +2978,17 @@
             cryoSleepers: 75000,
             housingCap: 30000,
             morale: 86,
+
+            // Phase 12: Alien Xenobiology & Ancient Precursor Relics
+            xenoSites: [
+                { id: 'site_monolith', name: 'Sunken Monolith Vault', relicId: 0, relicName: 'Tachyon Crystalline Matrix', angle: -0.85, costMin: 400, costEnergy: 250, costScience: 30, progress: 0, status: 'surveyed' },
+                { id: 'site_biovault', name: 'Progenitor Biosphere Vault', relicId: 1, relicName: 'Precursor Xenobiotic Genome', angle: 0.60, costMin: 600, costEnergy: 350, costScience: 50, progress: 0, status: 'surveyed' },
+                { id: 'site_nanite', name: 'Sub-Surface Nanite Citadel', relicId: 2, relicName: 'Autonomous Nanite Core', angle: 2.05, costMin: 900, costEnergy: 500, costScience: 80, progress: 0, status: 'surveyed' },
+                { id: 'site_zeropoint', name: 'Astrometric Zero-Point Conduit', relicId: 3, relicName: 'Zero-Point Flux Resonator', angle: 3.50, costMin: 1400, costEnergy: 800, costScience: 120, progress: 0, status: 'surveyed' }
+            ],
+            relicsDiscovered: [false, false, false, false],
+            precursorTechs: [false, false, false, false],
+            xenoScanAnim: 0,
 
             // Phase 11: Orbital Megastructures & Planetary Defense Stations
             orbitalRingStage: 0,
@@ -3868,6 +4208,10 @@
                 if (isTechUnlocked('geo_stabilization')) total += 15.0;
             }
 
+            // Phase 12 Precursor Breakthrough Bonuses
+            if (sim.precursorTechs && sim.precursorTechs[0]) total += 10.0;
+            if (sim.precursorTechs && sim.precursorTechs[1]) total += 5.0;
+
             sim.habitability = +Math.max(0, Math.min(100, total)).toFixed(1);
 
             // Update badge text
@@ -3944,9 +4288,10 @@
                 rationGrowth = 2.0;
             }
 
-            // Energy loops (Surface Solar + Domed Megacities + Orbital Ring Power)
+            // Energy loops (Surface Solar + Domed Megacities + Orbital Ring Power + Zero-Point Tap)
             const ringPower = (sim.orbitalRingStage === 2 ? 50 : (sim.orbitalRingStage === 3 ? 140 : 0));
-            const energyGen = 600 + (sim.surfaceSolar * 60) + (sim.domedMegacities * 30) + ringPower + rEnergy + fuelDepotPower;
+            const zeroPointPower = (sim.precursorTechs && sim.precursorTechs[3]) ? 450 : 0;
+            const energyGen = 600 + (sim.surfaceSolar * 60) + (sim.domedMegacities * 30) + ringPower + rEnergy + fuelDepotPower + zeroPointPower;
             const baseEnergyDrain = 200 + (sim.solarMirrors * 75) + (sim.atmoProcessors * 60) + (sim.nitrogenExtractors * 85) + (sim.greenhouseStations * 70) + (sim.coreDynamos * 80) + Math.floor(sim.colonists / 1000) * 5;
             const engEnergySavings = Math.floor(baseEnergyDrain * (sim.pctEngineers / 100) * 0.25);
             const energyDrain = Math.max(80, baseEnergyDrain - engEnergySavings);
@@ -3960,8 +4305,9 @@
             sim.deltaMinerals = mineralGain - mineralDrain;
             sim.minerals = Math.max(0, sim.minerals + Math.floor(sim.deltaMinerals * 0.05 * rate));
 
-            // Phase 11: Planetary Shield Grid Maintenance & Recharge
+            // Phase 11 & 12: Planetary Shield Grid Maintenance & Recharge
             sim.shieldMaxHP = (sim.shieldGridStage === 1 ? 400 : (sim.shieldGridStage === 2 ? 900 : (sim.shieldGridStage === 3 ? 1800 : 0)));
+            if (sim.precursorTechs && sim.precursorTechs[1]) sim.shieldMaxHP += 500;
             if (sim.shieldMode === 'fortified') sim.shieldMaxHP = Math.floor(sim.shieldMaxHP * 1.5);
             if (sim.shieldGridStage > 0) {
                 if (sim.shieldMode === 'balanced' && sim.energy > 200) {
@@ -3981,16 +4327,18 @@
             sim.deltaVolatiles = volGain - volDrain;
             sim.volatiles = Math.max(0, sim.volatiles + Math.floor(sim.deltaVolatiles * 0.05 * rate));
 
-            // Food loops (Phase 8 & 10 Advanced Agronomy & Breakthroughs)
+            // Food loops (Phase 8 & 10 Advanced Agronomy & Breakthroughs & Phase 12 Xenobiology)
             const farmThermalBoost = (typeof isTechUnlocked === 'function' && isTechUnlocked('bio_thermal')) ? 110 : 80;
             const baseFoodGain = 15 + (sim.hydroTowers * 25) + (sim.aeroponicFarms * farmThermalBoost) + (sim.algalVats * 45) + (sim.domedMegacities * 20) + rFood;
-            const foodGain = Math.floor(baseFoodGain * agroMult * bioAdaptedFoodMult);
+            const xenoFoodMult = (sim.precursorTechs && sim.precursorTechs[0]) ? 1.4 : 1.0;
+            const foodGain = Math.floor(baseFoodGain * agroMult * bioAdaptedFoodMult * xenoFoodMult);
             const foodDrain = Math.floor((sim.colonists / 1200) * rationMult);
             sim.deltaFood = foodGain - foodDrain;
             sim.food = Math.max(0, sim.food + Math.floor(sim.deltaFood * 0.05 * rate));
 
-            // Natural Terraforming slow drifts driven by active structures & modules (boosted by Geo-Engineers & Tech)
-            const catalystBoost = (typeof isTechUnlocked === 'function' && isTechUnlocked('bio_catalysts')) ? 1.4 : 1.0;
+            // Natural Terraforming slow drifts driven by active structures & modules (boosted by Geo-Engineers, Tech & Xenobiology)
+            const xenoTerraMult = (sim.precursorTechs && sim.precursorTechs[0]) ? 1.5 : 1.0;
+            const catalystBoost = (typeof isTechUnlocked === 'function' && isTechUnlocked('bio_catalysts')) ? (1.4 * xenoTerraMult) : xenoTerraMult;
             const sunshadeBoost = (typeof isTechUnlocked === 'function' && isTechUnlocked('geo_sunshade')) ? 1.75 : 1.0;
 
             if (sim.energy > 500) {
@@ -4105,6 +4453,24 @@
                         unlockTech(curTech.id, false);
                     }
                 }
+            }
+
+            // Phase 12: Alien Xenobiology & Precursor Excavations
+            if (sim.xenoSites) {
+                sim.xenoSites.forEach(site => {
+                    if (site.status === 'excavating') {
+                        if (sim.energy > 30) {
+                            site.progress = Math.min(100, site.progress + 2 * rate);
+                            if (site.progress >= 100) {
+                                site.status = 'excavated';
+                                sim.relicsDiscovered[site.relicId] = true;
+                                sim.science += 250;
+                                logMsg(`⭐ EXCAVATION COMPLETE: Discovered [${site.relicName}] at ${site.name}! +250 Science Data.`);
+                                playSound('xeno');
+                            }
+                        }
+                    }
+                });
             }
 
             // Phase 9: Crisis Simulation Progression
@@ -5931,6 +6297,93 @@
                                     ctx.stroke();
                                 }
                             }
+                            ctx.restore();
+                        }
+
+                        // Phase 12: 8. Ancient Precursor Ruins & Xenobiology Sites
+                        if (sim.xenoSites && isTarget) {
+                            ctx.save();
+                            sim.xenoSites.forEach((site, sIdx) => {
+                                const sAng = site.angle;
+                                const sx = px + Math.cos(sAng) * pr;
+                                const sy = py + Math.sin(sAng) * pr;
+
+                                if (site.status === 'excavated') {
+                                    // Golden/Tachyon Spire Monolith
+                                    const spireH = 10 * z;
+                                    const spireTipX = px + Math.cos(sAng) * (pr + spireH);
+                                    const spireTipY = py + Math.sin(sAng) * (pr + spireH);
+
+                                    ctx.strokeStyle = '#f59e0b';
+                                    ctx.lineWidth = 2 * z;
+                                    ctx.beginPath();
+                                    ctx.moveTo(sx, sy);
+                                    ctx.lineTo(spireTipX, spireTipY);
+                                    ctx.stroke();
+
+                                    // Glowing crystal apex
+                                    ctx.fillStyle = '#fbbf24';
+                                    ctx.beginPath();
+                                    ctx.arc(spireTipX, spireTipY, 2.5 * z, 0, Math.PI * 2);
+                                    ctx.fill();
+
+                                    // Pulsing tachyon aura ring
+                                    const pulseR = (4 + Math.sin(sim.time * 3 + sIdx) * 2) * z;
+                                    ctx.strokeStyle = 'rgba(245, 158, 11, 0.6)';
+                                    ctx.lineWidth = 1;
+                                    ctx.beginPath();
+                                    ctx.arc(spireTipX, spireTipY, pulseR, 0, Math.PI * 2);
+                                    ctx.stroke();
+
+                                    // Rotating precursor glyph runes orbiting the spire
+                                    const glyphAng = sim.time * 1.5 + sIdx * 1.57;
+                                    const gx = spireTipX + Math.cos(glyphAng) * (7 * z);
+                                    const gy = spireTipY + Math.sin(glyphAng) * (7 * z);
+                                    ctx.fillStyle = '#a855f7';
+                                    ctx.fillRect(gx - z, gy - z, 2 * z, 2 * z);
+                                } else if (site.status === 'excavating') {
+                                    // Active excavation marker + orbital scanning laser
+                                    ctx.fillStyle = '#f59e0b';
+                                    ctx.fillRect(sx - 2 * z, sy - 2 * z, 4 * z, 4 * z);
+
+                                    // Orbital excavator drone coordinates
+                                    const droneDist = pr + 32 * z;
+                                    const droneX = px + Math.cos(sAng) * droneDist;
+                                    const droneY = py + Math.sin(sAng) * droneDist;
+
+                                    // Drone chassis
+                                    ctx.fillStyle = '#38bdf8';
+                                    ctx.fillRect(droneX - 3 * z, droneY - 2 * z, 6 * z, 4 * z);
+
+                                    // Laser excavation beam to ground
+                                    ctx.strokeStyle = `rgba(0, 240, 255, ${0.6 + Math.sin(sim.time * 8) * 0.3})`;
+                                    ctx.lineWidth = 1.5 * z;
+                                    ctx.beginPath();
+                                    ctx.moveTo(droneX, droneY);
+                                    ctx.lineTo(sx, sy);
+                                    ctx.stroke();
+
+                                    // Impact excavation sparks
+                                    const sparkR = (3 + Math.sin(sim.time * 12) * 2) * z;
+                                    ctx.strokeStyle = '#fff';
+                                    ctx.beginPath();
+                                    ctx.arc(sx, sy, sparkR, 0, Math.PI * 2);
+                                    ctx.stroke();
+                                } else {
+                                    // Surveyed Anomaly Ruin Marker
+                                    ctx.fillStyle = '#a855f7';
+                                    ctx.beginPath();
+                                    ctx.arc(sx, sy, 2 * z, 0, Math.PI * 2);
+                                    ctx.fill();
+
+                                    // Subtle sensor scan blink
+                                    if (Math.sin(sim.time * 2 + sIdx) > 0.3) {
+                                        ctx.strokeStyle = 'rgba(168, 85, 247, 0.5)';
+                                        ctx.lineWidth = 1;
+                                        ctx.strokeRect(sx - 3 * z, sy - 3 * z, 6 * z, 6 * z);
+                                    }
+                                }
+                            });
                             ctx.restore();
                         }
                     }
@@ -7775,6 +8228,92 @@
                 const totalStages = (sim.orbitalRingStage || 0) + (sim.starElevatorStage || 0) + (sim.shieldGridStage || 1) + (sim.defenseStationStage || 0);
                 badgeSummary.textContent = `${totalStages}/12 Milestones`;
             }
+
+            // Phase 12: Update Alien Xenobiology & Precursor Relics UI
+            if (sim.xenoSites) {
+                const unearthedCount = sim.relicsDiscovered.filter(Boolean).length;
+                const techsCount = sim.precursorTechs.filter(Boolean).length;
+
+                const badgeXeno = document.getElementById('badgeXenoSummary');
+                if (badgeXeno) badgeXeno.textContent = `${unearthedCount}/4 Relics Secured`;
+
+                const badgeVault = document.getElementById('badgeVaultCount');
+                if (badgeVault) badgeVault.textContent = `${unearthedCount} Unearthed`;
+
+                const txtTelem = document.getElementById('txtXenoTelemetry');
+                if (txtTelem) txtTelem.innerHTML = `Unearthed Relics: <strong>${unearthedCount} / 4</strong> | Precursor Breakthroughs: <strong>${techsCount} / 4</strong>`;
+
+                const badgePTechSum = document.getElementById('badgePrecursorTechSummary');
+                if (badgePTechSum) badgePTechSum.textContent = `${techsCount}/4 Synthesized`;
+
+                // Update Relic Vault Slots
+                for (let r = 0; r < 4; r++) {
+                    const slotEl = document.getElementById(`slotRelic${r}`);
+                    const statusEl = document.getElementById(`statusRelic${r}`);
+                    if (slotEl && statusEl) {
+                        const isDisc = sim.relicsDiscovered[r];
+                        slotEl.classList.toggle('discovered', isDisc);
+                        statusEl.textContent = isDisc ? 'UNEARTHED & SECURED' : 'BURIED / UNEXPLORED';
+                    }
+                }
+
+                // Update Ruin Excavation Site Cards
+                sim.xenoSites.forEach((site, idx) => {
+                    const bar = document.getElementById(`barSite${idx}`);
+                    const valProg = document.getElementById(`valSiteProg${idx}`);
+                    const badge = document.getElementById(`badgeSite${idx}`);
+                    const btnLaunch = document.getElementById(`btnLaunchSite${idx}`);
+                    const btnFast = document.getElementById(`btnFastSite${idx}`);
+
+                    if (bar) bar.style.width = `${site.progress}%`;
+                    if (valProg) valProg.textContent = `${site.progress}%`;
+
+                    const minCost = (sim.precursorTechs[2]) ? Math.floor(site.costMin * 0.75) : site.costMin;
+                    const engCost = (sim.precursorTechs[2]) ? Math.floor(site.costEnergy * 0.75) : site.costEnergy;
+
+                    if (site.status === 'excavated') {
+                        if (badge) { badge.textContent = 'EXCAVATED'; badge.className = 'xeno-badge excavated'; }
+                        if (btnLaunch) { btnLaunch.textContent = 'RELIC UNEARTHED'; btnLaunch.disabled = true; }
+                        if (btnFast) { btnFast.textContent = 'EXCAVATED'; btnFast.disabled = true; }
+                    } else if (site.status === 'excavating') {
+                        if (badge) { badge.textContent = `EXCAVATING (${site.progress}%)`; badge.className = 'xeno-badge excavating'; }
+                        if (btnLaunch) { btnLaunch.textContent = 'EXPEDITION ACTIVE'; btnLaunch.disabled = true; }
+                        if (btnFast) { btnFast.textContent = 'SONIC DRILL (+25%)'; btnFast.disabled = false; }
+                    } else {
+                        if (badge) { badge.textContent = 'SURVEYED'; badge.className = 'xeno-badge surveyed'; }
+                        if (btnLaunch) { btnLaunch.textContent = `EXCAVATE (${minCost}M, ${engCost}kW, ${site.costScience}SP)`; btnLaunch.disabled = false; }
+                        if (btnFast) { btnFast.textContent = 'SONIC DRILL (+25%)'; btnFast.disabled = false; }
+                    }
+                });
+
+                // Update Precursor Tech Cards
+                const pTechRelicNames = ['Genome Relic', 'Tachyon Matrix', 'Nanite Core', 'Resonator Relic'];
+                for (let t = 0; t < 4; t++) {
+                    const card = document.getElementById(`cardPTech${t}`);
+                    const badge = document.getElementById(`badgePTech${t}`);
+                    const btn = document.getElementById(`btnUnlockPTech${t}`);
+
+                    if (sim.precursorTechs[t]) {
+                        if (card) card.classList.add('unlocked');
+                        if (badge) { badge.textContent = 'SYNTHESIZED'; badge.className = 'xeno-badge excavated'; }
+                        if (btn) { btn.textContent = 'PRECURSOR TECH ACTIVE'; btn.disabled = true; }
+                    } else if (sim.relicsDiscovered[t]) {
+                        if (card) card.classList.remove('unlocked');
+                        if (badge) { badge.textContent = 'READY TO UNLOCK'; badge.className = 'xeno-badge surveyed'; }
+                        if (btn) {
+                            btn.textContent = 'SYNTHESIZE (150 SP)';
+                            btn.disabled = sim.science < 150;
+                        }
+                    } else {
+                        if (card) card.classList.remove('unlocked');
+                        if (badge) { badge.textContent = 'REQUIRES RELIC'; badge.className = 'xeno-badge surveyed'; }
+                        if (btn) {
+                            btn.textContent = `REQUIRES ${pTechRelicNames[t].toUpperCase()}`;
+                            btn.disabled = true;
+                        }
+                    }
+                }
+            }
         }
 
         // Megastructure Button Listeners
@@ -7784,6 +8323,11 @@
             if (sim.orbitalRingStage === 1) { costMin = 2800; costEng = 900; }
             else if (sim.orbitalRingStage === 2) { costMin = 5500; costEng = 1800; }
             else if (sim.orbitalRingStage >= 3) return;
+
+            if (sim.precursorTechs && sim.precursorTechs[2]) {
+                costMin = Math.floor(costMin * 0.75);
+                costEng = Math.floor(costEng * 0.75);
+            }
 
             if (sim.minerals >= costMin && sim.energy >= costEng) {
                 sim.minerals -= costMin;
@@ -7805,6 +8349,11 @@
             else if (sim.starElevatorStage === 2) { costMin = 4800; costEng = 1500; }
             else if (sim.starElevatorStage >= 3) return;
 
+            if (sim.precursorTechs && sim.precursorTechs[2]) {
+                costMin = Math.floor(costMin * 0.75);
+                costEng = Math.floor(costEng * 0.75);
+            }
+
             if (sim.minerals >= costMin && sim.energy >= costEng) {
                 sim.minerals -= costMin;
                 sim.energy -= costEng;
@@ -7824,11 +8373,17 @@
             if (sim.shieldGridStage === 2) { costMin = 6000; costEng = 2200; }
             else if (sim.shieldGridStage >= 3) return;
 
+            if (sim.precursorTechs && sim.precursorTechs[2]) {
+                costMin = Math.floor(costMin * 0.75);
+                costEng = Math.floor(costEng * 0.75);
+            }
+
             if (sim.minerals >= costMin && sim.energy >= costEng) {
                 sim.minerals -= costMin;
                 sim.energy -= costEng;
                 sim.shieldGridStage++;
                 sim.shieldMaxHP = (sim.shieldGridStage === 2 ? 900 : 1800);
+                if (sim.precursorTechs && sim.precursorTechs[1]) sim.shieldMaxHP += 500;
                 if (sim.shieldMode === 'fortified') sim.shieldMaxHP = Math.floor(sim.shieldMaxHP * 1.5);
                 sim.shieldHP = sim.shieldMaxHP;
                 sim.shieldFlareAnim = 1.0;
@@ -7848,6 +8403,11 @@
             if (sim.defenseStationStage === 1) { costMin = 2600; costEng = 800; }
             else if (sim.defenseStationStage === 2) { costMin = 5200; costEng = 1600; }
             else if (sim.defenseStationStage >= 3) return;
+
+            if (sim.precursorTechs && sim.precursorTechs[2]) {
+                costMin = Math.floor(costMin * 0.75);
+                costEng = Math.floor(costEng * 0.75);
+            }
 
             if (sim.minerals >= costMin && sim.energy >= costEng) {
                 sim.minerals -= costMin;
@@ -7912,6 +8472,117 @@
                 playSound('warn');
             }
         });
+
+        // Phase 12: Alien Xenobiology & Precursor Button Listeners
+        document.getElementById('btnScanXenoAnomalies').addEventListener('click', () => {
+            initAudio();
+            if (sim.energy >= 60) {
+                sim.energy -= 60;
+                sim.science += 20;
+                sim.xenoScanAnim = 1.0;
+                logMsg('📡 Deep resonance bioscan completed! Detected precursor tachyon harmonic signatures across sub-crustal strata. +20 Science Data.');
+                playSound('xeno');
+                updateUI();
+            } else {
+                logMsg('Insufficient energy for resonance bioscan (Req: 60 kW).', true);
+                playSound('warn');
+            }
+        });
+
+        sim.xenoSites.forEach((site, idx) => {
+            const btnLaunch = document.getElementById(`btnLaunchSite${idx}`);
+            if (btnLaunch) {
+                btnLaunch.addEventListener('click', () => {
+                    initAudio();
+                    if (site.status === 'excavated') return;
+                    const minCost = (sim.precursorTechs[2]) ? Math.floor(site.costMin * 0.75) : site.costMin;
+                    const engCost = (sim.precursorTechs[2]) ? Math.floor(site.costEnergy * 0.75) : site.costEnergy;
+                    if (sim.minerals >= minCost && sim.energy >= engCost && sim.science >= site.costScience) {
+                        sim.minerals -= minCost;
+                        sim.energy -= engCost;
+                        sim.science -= site.costScience;
+                        site.status = 'excavating';
+                        site.progress = Math.max(site.progress, 15);
+                        logMsg(`Expedition team dispatched to ${site.name}! Automated excavation lasers deployed.`);
+                        playSound('deploy');
+                        updateUI();
+                    } else {
+                        logMsg(`Insufficient resources for expedition (Req: ${minCost} Min, ${engCost} kW, ${site.costScience} SP).`, true);
+                        playSound('warn');
+                    }
+                });
+            }
+            const btnFast = document.getElementById(`btnFastSite${idx}`);
+            if (btnFast) {
+                btnFast.addEventListener('click', () => {
+                    initAudio();
+                    if (site.status === 'excavated') return;
+                    const fMin = (sim.precursorTechs[2]) ? 110 : 150;
+                    const fEng = (sim.precursorTechs[2]) ? 75 : 100;
+                    if (sim.minerals >= fMin && sim.energy >= fEng) {
+                        sim.minerals -= fMin;
+                        sim.energy -= fEng;
+                        site.progress = Math.min(100, site.progress + 25);
+                        if (site.progress >= 100) {
+                            site.status = 'excavated';
+                            sim.relicsDiscovered[site.relicId] = true;
+                            sim.science += 250;
+                            logMsg(`⭐ EXCAVATION COMPLETE: Recovered [${site.relicName}] at ${site.name}! +250 Science Data.`);
+                            playSound('xeno');
+                        } else {
+                            logMsg(`Sonic drilling advanced ${site.name} excavation to ${site.progress}%.`);
+                            playSound('laser');
+                        }
+                        updateUI();
+                    } else {
+                        logMsg(`Insufficient resources for sonic drill (Req: ${fMin} Min, ${fEng} kW).`, true);
+                        playSound('warn');
+                    }
+                });
+            }
+        });
+
+        const pTechTitles = [
+            'Xenobiological Bio-Catalysis',
+            'Crystalline Deflector Harmonics',
+            'Molecular Nanite Assemblers',
+            'Zero-Point Resonant Tap'
+        ];
+        const pTechDetails = [
+            '+50% Terraforming Speed, +40% Food Crop Yield, +15 Morale',
+            '+500 Planetary Shield Max HP, +25% Hazard Deflection',
+            '-25% Construction & Upgrade Costs on all modules & megastructures',
+            '+450 kW Perpetual Clean Energy Output per cycle'
+        ];
+        for (let i = 0; i < 4; i++) {
+            const btn = document.getElementById(`btnUnlockPTech${i}`);
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    initAudio();
+                    if (sim.precursorTechs[i]) return;
+                    if (!sim.relicsDiscovered[i]) {
+                        logMsg('Cannot synthesize: Ancient relic required. Excavate ruin site first.', true);
+                        playSound('warn');
+                        return;
+                    }
+                    if (sim.science >= 150) {
+                        sim.science -= 150;
+                        sim.precursorTechs[i] = true;
+                        if (i === 1) {
+                            sim.shieldMaxHP += 500;
+                            sim.shieldHP += 500;
+                        }
+                        calculateHabitability();
+                        updateUI();
+                        logMsg(`⭐ PRECURSOR BREAKTHROUGH: [${pTechTitles[i]}] SYNTHESIZED! ${pTechDetails[i]}`);
+                        playSound('breakthrough');
+                    } else {
+                        logMsg('Insufficient Science Data for precursor synthesis (Req: 150 SP).', true);
+                        playSound('warn');
+                    }
+                });
+            }
+        }
 
         // Start render and initial update
         loadStarSystem(0);
