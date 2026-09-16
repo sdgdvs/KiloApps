@@ -32,7 +32,8 @@
     background: linear-gradient(135deg, #090d16 0%, #111827 50%, #1e1b4b 100%);
     color: var(--text-primary);
     min-height: 100vh;
-    min-width: 800px;
+    min-width: 320px;
+    max-width: 100%;
     display: flex;
     flex-direction: column;
     gap: 14px;
@@ -51,6 +52,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
     backdrop-filter: blur(16px);
     box-shadow: var(--shadow-main);
   }
@@ -304,12 +307,35 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+
+  .inspector-item:hover {
+    border-color: var(--accent-cyan);
+    background: rgba(30, 41, 64, 0.95);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
   }
 
   .inspector-label {
     font-size: 0.7rem;
     color: var(--text-secondary);
     font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .inspector-label::after {
+    content: '📋';
+    font-size: 0.65rem;
+    opacity: 0.4;
+    transition: opacity 0.15s;
+  }
+
+  .inspector-item:hover .inspector-label::after {
+    opacity: 1;
   }
 
   .inspector-value {
@@ -317,18 +343,48 @@
     font-size: 0.88rem;
     color: var(--accent-cyan);
     word-break: break-all;
-    user-select: all;
   }
 
-  /* Binary Bit Grid */
+  /* Binary Bit Grid with 4 Byte Groups */
   .bit-grid {
     display: grid;
-    grid-template-columns: repeat(32, 1fr);
-    gap: 2px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px;
+    background: transparent;
+    padding: 0;
+    border: none;
+  }
+
+  .byte-group {
     background: var(--input-bg);
-    padding: 8px;
-    border-radius: 8px;
     border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: border-color 0.2s ease;
+  }
+
+  .byte-group:hover {
+    border-color: rgba(6, 182, 212, 0.4);
+  }
+
+  .byte-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    padding-bottom: 2px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .byte-bits-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 3px;
   }
 
   .bit-box {
@@ -683,7 +739,21 @@
       <div class="panel">
         <div class="panel-title">
           <div class="title-left">🔄 Base Converter</div>
-          <button class="btn btn-sm" onclick="resetConverter()">Reset</button>
+          <div class="form-row" style="gap: 6px;">
+            <select id="converterPresets" onchange="loadConverterPreset(this.value)" style="width: auto; padding: 4px 8px; font-size: 0.75rem; border-radius: 6px; background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
+              <option value="">⚡ Presets...</option>
+              <option value="0x12345678">32-bit Counter (0x12345678)</option>
+              <option value="0x89504E47">PNG Image (0x89504E47)</option>
+              <option value="0x504B0304">ZIP Archive (0x504B0304)</option>
+              <option value="0x7F454C46">ELF Executable (0x7F454C46)</option>
+              <option value="0x00005A4D">DOS / PE Header (0x00005A4D)</option>
+              <option value="0xCAFEBABE">Java Class (0xCAFEBABE)</option>
+              <option value="0x6D736100">WebAssembly (0x6D736100)</option>
+              <option value="0x40490FDB">Float Pi 3.14159 (0x40490FDB)</option>
+              <option value="0xFFFFFFFF">All Bits Set (0xFFFFFFFF)</option>
+            </select>
+            <button class="btn btn-sm" onclick="resetConverter()">Reset</button>
+          </div>
         </div>
         <div class="form-group">
           <label>Hexadecimal (0x)</label>
@@ -692,6 +762,10 @@
         <div class="form-group">
           <label>Decimal (Unsigned 32-bit)</label>
           <input type="text" id="decInput" value="305419896" spellcheck="false" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>Decimal (Signed 32-bit)</label>
+          <input type="text" id="decSignedInput" value="305419896" spellcheck="false" autocomplete="off">
         </div>
         <div class="form-group">
           <label>Binary</label>
@@ -732,7 +806,7 @@
     <!-- 32-bit Interactive Bit Grid Panel -->
     <div class="panel">
       <div class="panel-title">
-        <div class="title-left">🔢 32-Bit Bitfield Manipulator (Click bits to toggle)</div>
+        <div class="title-left">🔢 32-Bit Bitfield Manipulator (Grouped by Byte, click bits to toggle)</div>
         <button class="btn btn-sm" onclick="clearBits()">Clear All</button>
       </div>
       <div class="bit-grid" id="bitGrid"></div>
@@ -748,11 +822,12 @@
           <input type="file" id="fileInput" style="display:none" onchange="handleFileSelect(event)">
           <button class="btn btn-cyan btn-sm" onclick="document.getElementById('fileInput').click()">Open File</button>
           <button class="btn btn-sm" onclick="loadSampleBuffer()">Load Sample Data</button>
+          <button class="btn btn-purple btn-sm" onclick="loadHexBuffer()">Load Hex Bytes</button>
         </div>
       </div>
       <div class="form-group">
-        <label>Input Text / ASCII Stream to load into Buffer</label>
-        <textarea id="rawTextBuffer" placeholder="Type or paste text here to update binary buffer...">Hello KHex World! Press 'h' for Help.</textarea>
+        <label>Input Text / ASCII Stream (or paste Hex Bytes to load into Buffer)</label>
+        <textarea id="rawTextBuffer" placeholder="Type text or paste hex bytes here...">Hello KHex World! Press 'h' for Help.</textarea>
       </div>
     </div>
 
@@ -761,6 +836,16 @@
         <div class="title-left">🖥️ Interactive Hex View (16 Bytes / Row)</div>
         <div class="form-row">
           <span style="font-size:0.75rem; color:var(--text-secondary);" id="bufferSizeLabel">Buffer Size: 0 Bytes</span>
+        </div>
+      </div>
+      <!-- Selected Byte Editor Toolbar -->
+      <div id="byteEditBar" style="display:flex; align-items:center; gap:10px; background:var(--input-bg); padding:8px 12px; border-radius:8px; border:1px solid var(--border-color); font-size:0.8rem; font-family:monospace; flex-wrap:wrap;">
+        <span id="byteEditOffset" style="color:var(--accent-cyan); font-weight:bold;">Offset: 0x00000000 (0)</span>
+        <span id="byteEditCurrent" style="color:var(--text-secondary);">Current: 0x48 ('H', 72)</span>
+        <div style="display:flex; align-items:center; gap:6px; margin-left:auto;">
+          <label style="font-size:0.75rem; color:var(--text-secondary); text-transform:none;">Edit Byte (Hex):</label>
+          <input type="text" id="byteEditHexInput" value="48" maxlength="2" style="width:50px; text-align:center; padding:4px 6px; font-weight:bold; color:var(--accent-cyan);">
+          <button class="btn btn-sm btn-cyan" onclick="applyByteEdit()">Set Byte</button>
         </div>
       </div>
       <div class="hex-container" id="hexViewContainer"></div>
@@ -1058,6 +1143,24 @@
     if (rp) rp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { executeReplaceAll(); e.preventDefault(); } });
     const oa = document.getElementById('opArg');
     if (oa) oa.addEventListener('keydown', (e) => { if (e.key === 'Enter') { applyByteOperation(); e.preventDefault(); } });
+    const beh = document.getElementById('byteEditHexInput');
+    if (beh) beh.addEventListener('keydown', (e) => { if (e.key === 'Enter') { applyByteEdit(); e.preventDefault(); } });
+
+    // Click-to-copy for all inspector items
+    document.querySelectorAll('.inspector-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const valEl = item.querySelector('.inspector-value');
+        const lblEl = item.querySelector('.inspector-label');
+        if (valEl) {
+          const textToCopy = valEl.innerText.trim();
+          navigator.clipboard.writeText(textToCopy).then(() => {
+            showToast('Copied to Clipboard', (lblEl ? lblEl.innerText.replace('📋', '').trim() : 'Value') + ': ' + textToCopy, 'success', 2500);
+          }).catch(() => {
+            showToast('Value Copied', textToCopy, 'info', 2000);
+          });
+        }
+      });
+    });
 
     // WAI-ARIA tab arrow navigation
     const tabBtns = Array.from(document.querySelectorAll('.tab-btn'));
@@ -1112,6 +1215,15 @@
         showToast('Endianness Switched', `Active: ${isLittleEndian ? 'Little Endian (LE)' : 'Big Endian (BE)'}`, 'info');
         e.preventDefault();
       }
+      else if (e.key === 'p' || e.key === 'P') {
+        const presets = ['0x12345678', '0x89504E47', '0x504B0304', '0x7F454C46', '0x00005A4D', '0xCAFEBABE', '0x6D736100', '0x40490FDB'];
+        let cur = hexInput.value.replace(/[^0-9a-fA-F]/g, '');
+        let curVal = '0x' + parseInt(cur, 16).toString(16).toUpperCase();
+        let idx = presets.findIndex(p => p.toUpperCase() === curVal);
+        let nextP = presets[(idx + 1) % presets.length];
+        loadConverterPreset(nextP);
+        e.preventDefault();
+      }
     }
   });
 
@@ -1160,8 +1272,11 @@
   const octInput = document.getElementById('octInput');
   const ascInput = document.getElementById('ascInput');
 
+  const decSignedInput = document.getElementById('decSignedInput');
+
   hexInput.addEventListener('input', () => updateFromHex(hexInput.value));
   decInput.addEventListener('input', () => updateFromDec(decInput.value));
+  if (decSignedInput) decSignedInput.addEventListener('input', () => updateFromDecSigned(decSignedInput.value));
   binInput.addEventListener('input', () => updateFromBin(binInput.value));
   octInput.addEventListener('input', () => updateFromOct(octInput.value));
   ascInput.addEventListener('input', () => updateFromAsc(ascInput.value));
@@ -1183,6 +1298,16 @@
     let val = parseInt(clean, 10) || 0;
     val = val >>> 0;
     setAllInputs(val, 'dec');
+    isUpdating = false;
+  }
+
+  function updateFromDecSigned(valStr) {
+    if (isUpdating) return;
+    isUpdating = true;
+    let clean = valStr.replace(/[^0-9\-]/g, '');
+    let val = parseInt(clean, 10) || 0;
+    val = (val | 0) >>> 0;
+    setAllInputs(val, 'decsigned');
     isUpdating = false;
   }
 
@@ -1221,6 +1346,7 @@
   function setAllInputs(val, src) {
     if (src !== 'hex') hexInput.value = '0x' + val.toString(16).toUpperCase();
     if (src !== 'dec') decInput.value = val.toString(10);
+    if (src !== 'decsigned' && decSignedInput) decSignedInput.value = (val | 0).toString(10);
     if (src !== 'bin') binInput.value = val.toString(2).padStart(32, '0');
     if (src !== 'oct') octInput.value = val.toString(8);
     if (src !== 'asc') {
@@ -1240,6 +1366,14 @@
   function resetConverter() {
     updateFromHex('0');
     showToast('Converter Reset', 'All base values have been reset to 0.', 'info');
+  }
+
+  function loadConverterPreset(valStr) {
+    if (!valStr) return;
+    updateFromHex(valStr);
+    showToast('Preset Loaded', `Loaded preset ${valStr} into Base Converter.`, 'success');
+    let sel = document.getElementById('converterPresets');
+    if (sel) sel.value = '';
   }
 
   // --- SHANNON ENTROPY & FILE SIGNATURE ENGINE ---
@@ -1477,11 +1611,16 @@
     document.getElementById('valUint16').innerText = view.getUint16(0, isLittleEndian);
     document.getElementById('valInt32').innerText = view.getInt32(0, isLittleEndian);
     document.getElementById('valUint32').innerText = view.getUint32(0, isLittleEndian);
-    document.getElementById('valFloat').innerText = view.getFloat32(0, isLittleEndian).toExponential(5);
+
+    let f32 = view.getFloat32(0, isLittleEndian);
+    let f32Str = (Math.abs(f32) < 1e-4 || Math.abs(f32) >= 1e7) && f32 !== 0 ? f32.toExponential(5) : Number(f32.toPrecision(7)).toString();
+    document.getElementById('valFloat').innerText = f32Str;
     
     // Fill 64-bit with pattern
     view.setUint32(4, val32, isLittleEndian);
-    document.getElementById('valDouble').innerText = view.getFloat64(0, isLittleEndian).toExponential(8);
+    let f64 = view.getFloat64(0, isLittleEndian);
+    let f64Str = (Math.abs(f64) < 1e-5 || Math.abs(f64) >= 1e9) && f64 !== 0 ? f64.toExponential(8) : Number(f64.toPrecision(10)).toString();
+    document.getElementById('valDouble').innerText = f64Str;
 
     // 4-byte Entropy & PopCount for inspector
     let fourBytes = new Uint8Array(4);
@@ -1506,36 +1645,52 @@
     updateInspectorFromVal(val >>> 0);
   }
 
-  // --- BIT GRID LOGIC ---
+  // --- BIT GRID LOGIC (4 Byte Groups) ---
   function initBitGrid() {
     const grid = document.getElementById('bitGrid');
     grid.innerHTML = '';
-    for (let i = 31; i >= 0; i--) {
-      const box = document.createElement('div');
-      box.className = 'bit-box';
-      box.id = 'bit-' + i;
-      box.tabIndex = 0;
-      box.setAttribute('role', 'button');
-      box.setAttribute('aria-label', 'Bit ' + i);
-      box.onclick = () => toggleBit(i);
-      box.onkeydown = (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          toggleBit(i);
-          e.preventDefault();
-        }
-      };
+    const byteNames = ['Byte 3 (MSB: 31-24)', 'Byte 2 (Bits 23-16)', 'Byte 1 (Bits 15-8)', 'Byte 0 (LSB: 7-0)'];
+    for (let b = 3; b >= 0; b--) {
+      const byteCard = document.createElement('div');
+      byteCard.className = 'byte-group';
+      
+      const header = document.createElement('div');
+      header.className = 'byte-group-header';
+      header.innerHTML = `<span>${byteNames[3 - b]}</span><span id="byteValLabel-${b}" style="color:var(--accent-cyan); font-family:monospace;">0x00</span>`;
+      byteCard.appendChild(header);
 
-      const num = document.createElement('div');
-      num.className = 'bit-num';
-      num.innerText = i;
+      const bitsGrid = document.createElement('div');
+      bitsGrid.className = 'byte-bits-grid';
 
-      const val = document.createElement('div');
-      val.className = 'bit-val';
-      val.innerText = '0';
+      for (let i = b * 8 + 7; i >= b * 8; i--) {
+        const box = document.createElement('div');
+        box.className = 'bit-box';
+        box.id = 'bit-' + i;
+        box.tabIndex = 0;
+        box.setAttribute('role', 'button');
+        box.setAttribute('aria-label', 'Bit ' + i);
+        box.onclick = () => toggleBit(i);
+        box.onkeydown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            toggleBit(i);
+            e.preventDefault();
+          }
+        };
 
-      box.appendChild(num);
-      box.appendChild(val);
-      grid.appendChild(box);
+        const num = document.createElement('div');
+        num.className = 'bit-num';
+        num.innerText = i;
+
+        const val = document.createElement('div');
+        val.className = 'bit-val';
+        val.innerText = '0';
+
+        box.appendChild(num);
+        box.appendChild(val);
+        bitsGrid.appendChild(box);
+      }
+      byteCard.appendChild(bitsGrid);
+      grid.appendChild(byteCard);
     }
   }
 
@@ -1548,6 +1703,11 @@
         else el.classList.remove('on');
         el.querySelector('.bit-val').innerText = bit;
       }
+    }
+    for (let b = 0; b < 4; b++) {
+      let byteVal = (val32 >>> (b * 8)) & 0xFF;
+      let lbl = document.getElementById('byteValLabel-' + b);
+      if (lbl) lbl.innerText = '0x' + byteVal.toString(16).padStart(2, '0').toUpperCase() + ' (' + byteVal + ')';
     }
   }
 
@@ -1697,9 +1857,21 @@
   }
 
   function selectByte(idx) {
+    if (idx < 0 || idx >= binaryBuffer.length) return;
     selectedOffset = idx;
+    let b = binaryBuffer[idx];
+    let bHex = b.toString(16).padStart(2, '0').toUpperCase();
+    let bAsc = (b >= 32 && b <= 126) ? "'" + String.fromCharCode(b) + "'" : "·";
+
     document.getElementById('statusOffset').innerText = 'Offset: 0x' + idx.toString(16).padStart(8, '0').toUpperCase() + ' (' + idx + ')';
-    document.getElementById('statusSelected').innerText = 'Byte: 0x' + binaryBuffer[idx].toString(16).toUpperCase() + ' (' + binaryBuffer[idx] + ')';
+    document.getElementById('statusSelected').innerText = 'Byte: 0x' + bHex + ' (' + b + ')';
+
+    const boEl = document.getElementById('byteEditOffset');
+    if (boEl) boEl.innerText = 'Offset: 0x' + idx.toString(16).padStart(8, '0').toUpperCase() + ' (' + idx + ')';
+    const bcEl = document.getElementById('byteEditCurrent');
+    if (bcEl) bcEl.innerText = 'Current: 0x' + bHex + ' (' + bAsc + ', ' + b + ')';
+    const bhIn = document.getElementById('byteEditHexInput');
+    if (bhIn) bhIn.value = bHex;
     
     // Read 4 bytes from selected byte for Data Inspector
     let val = 0;
@@ -1712,6 +1884,49 @@
     }
     updateFromHex('0x' + (val >>> 0).toString(16));
     renderHexView();
+  }
+
+  function applyByteEdit() {
+    if (!binaryBuffer || binaryBuffer.length === 0) {
+      showToast('Empty Buffer', 'Buffer is empty. Load or enter data first.', 'warning');
+      return;
+    }
+    const bhIn = document.getElementById('byteEditHexInput');
+    if (!bhIn) return;
+    let clean = bhIn.value.trim().replace(/[^0-9a-fA-F]/g, '');
+    if (!clean) {
+      showToast('Invalid Hex', 'Please enter a valid 2-character hex byte (e.g. 41 or FF).', 'error');
+      return;
+    }
+    let newByte = parseInt(clean, 16) & 0xFF;
+    binaryBuffer[selectedOffset] = newByte;
+    renderHexView();
+    selectByte(selectedOffset);
+    showToast('Byte Updated', `Offset 0x${selectedOffset.toString(16).toUpperCase()} set to 0x${newByte.toString(16).padStart(2, '0').toUpperCase()}`, 'success');
+  }
+
+  function loadHexBuffer() {
+    const tb = document.getElementById('rawTextBuffer');
+    if (!tb || !tb.value.trim()) {
+      showToast('Input Empty', 'Enter or paste hexadecimal bytes into the text box.', 'warning');
+      return;
+    }
+    let clean = tb.value.replace(/0x/gi, '').replace(/[^0-9a-fA-F]/g, '');
+    if (clean.length === 0) {
+      showToast('Invalid Hex', 'No valid hexadecimal characters found in text box.', 'error');
+      return;
+    }
+    if (clean.length % 2 !== 0) clean = '0' + clean;
+    let byteCount = clean.length / 2;
+    let bytes = new Uint8Array(byteCount);
+    for (let i = 0; i < byteCount; i++) {
+      bytes[i] = parseInt(clean.substr(i * 2, 2), 16);
+    }
+    binaryBuffer = bytes;
+    selectedOffset = 0;
+    renderHexView();
+    if (binaryBuffer.length > 0) selectByte(0);
+    showToast('Hex Bytes Loaded', `Successfully parsed and loaded ${byteCount.toLocaleString()} bytes.`, 'success');
   }
 
   // --- TAB 3: SEARCH & REPLACE LOGIC ---

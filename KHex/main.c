@@ -19,6 +19,10 @@
 #define ID_BTN_CARRAY 15
 #define ID_BTN_DUMP 16
 #define ID_BTN_DISSECT 17
+#define ID_BTN_RESET 18
+#define ID_BTN_PRESET 19
+#define ID_BTN_COPYOUT 20
+#define ID_BTN_CLEAROUT 21
 
 HWND hHex, hDec, hBin, hOct, hAscii;
 HWND hInt8, hUint8, hInt16, hUint16, hInt32, hUint32, hFloat;
@@ -472,6 +476,48 @@ void ExportDissection(unsigned int val) {
     SetWindowTextA(hExportEdit, out);
 }
 
+static int g_presetIdx = 0;
+static const struct {
+    const char* name;
+    unsigned int val;
+} PRESETS[] = {
+    { "32-bit Counter (0x12345678)", 0x12345678 },
+    { "PNG Image Header (0x89504E47)", 0x89504E47 },
+    { "ZIP Archive Header (0x504B0304)", 0x504B0304 },
+    { "ELF Binary Header (0x7F454C46)", 0x7F454C46 },
+    { "DOS / PE Executable (0x00005A4D)", 0x00005A4D },
+    { "Java Class Bytecode (0xCAFEBABE)", 0xCAFEBABE },
+    { "WebAssembly Binary (0x6D736100)", 0x6D736100 },
+    { "Float Pi 3.14159 (0x40490FDB)", 0x40490FDB }
+};
+#define NUM_PRESETS (sizeof(PRESETS) / sizeof(PRESETS[0]))
+
+void CopyExportToClipboard(HWND hwnd) {
+    int len = GetWindowTextLengthA(hExportEdit);
+    if (len <= 0) return;
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len + 1);
+    if (!hMem) return;
+    char* ptr = (char*)GlobalLock(hMem);
+    if (!ptr) { GlobalFree(hMem); return; }
+    GetWindowTextA(hExportEdit, ptr, len + 1);
+    GlobalUnlock(hMem);
+    if (OpenClipboard(hwnd)) {
+        EmptyClipboard();
+        SetClipboardData(CF_TEXT, hMem);
+        CloseClipboard();
+    } else {
+        GlobalFree(hMem);
+    }
+}
+
+void ApplyNextPreset(HWND hwnd) {
+    g_presetIdx = (g_presetIdx + 1) % NUM_PRESETS;
+    SetCurrentVal(PRESETS[g_presetIdx].val);
+    char msg[256];
+    wsprintfA(msg, "=== PRESET LOADED: %s ===\r\n\r\nHex: 0x%08X\r\nType in any base field to inspect or modify.\r\nPress Ctrl+1..7 for byte operations & exports.", PRESETS[g_presetIdx].name, PRESETS[g_presetIdx].val);
+    SetWindowTextA(hExportEdit, msg);
+}
+
 void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd,
         "=== KHEX UTILITY SUITE — USER GUIDE ===\n\n"
@@ -480,9 +526,11 @@ void ShowHelpDialog(HWND hwnd) {
         " • Multi-Type Inspector: Signed/Unsigned Int8/16/32, Float32, PopCount, Shannon Entropy & File Signature.\n"
         " • Checksum Suite: Instant Sum8, Sum16, Sum32, XOR8, and IEEE CRC32.\n"
         " • Byte Operations: Swap16, Swap32, Invert (~), and XOR 0xFF mask.\n"
-        " • Export Suite: C/C++ byte arrays, formatted HexDump, and deep Shannon Entropy reports.\n\n"
+        " • Export Suite: C/C++ byte arrays, formatted HexDump, and deep Shannon Entropy reports.\n"
+        " • Clipboard: One-click 'Copy Output' to export your results instantly.\n\n"
         "KEYBOARD SHORTCUTS:\n"
         " • [F1]               : Open this Help Dialog\n"
+        " • [P]                : Cycle Presets (PNG, ZIP, ELF, MZ, Wasm, Float Pi)\n"
         " • [Ctrl+E]           : Toggle Endianness (LE / BE)\n"
         " • [Ctrl+1]           : Endian Swap 16-bit Words\n"
         " • [Ctrl+2]           : Endian Swap 32-bit Words\n"
@@ -490,7 +538,8 @@ void ShowHelpDialog(HWND hwnd) {
         " • [Ctrl+4]           : XOR 0xFF Mask\n"
         " • [Ctrl+5]           : Export as C Array\n"
         " • [Ctrl+6]           : Export as HexDump\n"
-        " • [Ctrl+7]           : Deep Dissection & Entropy Report\n\n"
+        " • [Ctrl+7]           : Deep Dissection & Entropy Report\n"
+        " • [Ctrl+C]           : Copy Output to Clipboard\n\n"
         "Tip: Type in any base field to instantly update all representations.",
         "KHex Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
 }
@@ -734,22 +783,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Section 1: Base Converter
             CreateWindowEx(0, "STATIC", "--- BASE CONVERTER ---", WS_CHILD | WS_VISIBLE, 10, 8, 200, 16, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Preset [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 560, 8, 85, 24, hwnd, (HMENU)ID_BTN_PRESET, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 650, 8, 85, 24, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
             CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 740, 8, 80, 24, hwnd, (HMENU)100, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Hex:", WS_CHILD | WS_VISIBLE, 10, 28, 35, 20, hwnd, NULL, NULL, NULL);
-            hHex = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00000000", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 50, 28, 160, 22, hwnd, (HMENU)ID_HEX, NULL, NULL);
+            hHex = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x12345678", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 50, 28, 160, 22, hwnd, (HMENU)ID_HEX, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Dec:", WS_CHILD | WS_VISIBLE, 10, 53, 35, 20, hwnd, NULL, NULL, NULL);
-            hDec = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 50, 53, 160, 22, hwnd, (HMENU)ID_DEC, NULL, NULL);
+            hDec = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "305419896", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 50, 53, 160, 22, hwnd, (HMENU)ID_DEC, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Bin:", WS_CHILD | WS_VISIBLE, 10, 78, 35, 20, hwnd, NULL, NULL, NULL);
-            hBin = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "00000000000000000000000000000000", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 50, 78, 260, 22, hwnd, (HMENU)ID_BIN, NULL, NULL);
+            hBin = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "00010010001101000101011001111000", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 50, 78, 260, 22, hwnd, (HMENU)ID_BIN, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Oct:", WS_CHILD | WS_VISIBLE, 320, 28, 35, 20, hwnd, NULL, NULL, NULL);
-            hOct = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 360, 28, 180, 22, hwnd, (HMENU)ID_OCT, NULL, NULL);
+            hOct = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "2215053170", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 360, 28, 180, 22, hwnd, (HMENU)ID_OCT, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Asc:", WS_CHILD | WS_VISIBLE, 320, 53, 35, 20, hwnd, NULL, NULL, NULL);
-            hAscii = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", ".", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 360, 53, 180, 22, hwnd, (HMENU)ID_ASC, NULL, NULL);
+            hAscii = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "4Vx", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 360, 53, 180, 22, hwnd, (HMENU)ID_ASC, NULL, NULL);
 
             // Section 2: Data Inspector Panel
             CreateWindowEx(0, "STATIC", "--- MULTI-TYPE DATA INSPECTOR & ENTROPY ---", WS_CHILD | WS_VISIBLE, 10, 108, 320, 16, hwnd, NULL, NULL, NULL);
@@ -813,10 +864,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             CreateWindowEx(0, "BUTTON", "C Array [^5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 345, 305, 80, 24, hwnd, (HMENU)ID_BTN_CARRAY, NULL, NULL);
             CreateWindowEx(0, "BUTTON", "HexDump [^6]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 430, 305, 85, 24, hwnd, (HMENU)ID_BTN_DUMP, NULL, NULL);
             CreateWindowEx(0, "BUTTON", "Dissect & Entropy [^7]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 520, 305, 140, 24, hwnd, (HMENU)ID_BTN_DISSECT, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Copy Output", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 665, 305, 90, 24, hwnd, (HMENU)ID_BTN_COPYOUT, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 760, 305, 60, 24, hwnd, (HMENU)ID_BTN_CLEAROUT, NULL, NULL);
 
-            hExportEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KHex Suite!\r\nPress F1 or click 'Help' for user guide & shortcuts.\r\n\r\nResult / Export & Deep Dissection preview area...", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_READONLY | WS_TABSTOP, 10, 335, 810, 320, hwnd, NULL, NULL, NULL);
+            hExportEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KHex Suite!\r\nPress F1 or click 'Help' for user guide & shortcuts.\r\n\r\nInitial test value 0x12345678 loaded.\r\nClick 'Preset [P]' to cycle famous signatures, or type in any base field.\r\nClick 'Copy Output' or press Ctrl+C to copy results to clipboard.", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_READONLY | WS_TABSTOP, 10, 335, 810, 355, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "Shortcuts: F1 (Help), Ctrl+E (Endian), Ctrl+1..7 (Operations)", WS_CHILD | WS_VISIBLE, 10, 665, 400, 16, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Shortcuts: F1 (Help), P (Preset), Ctrl+E (Endian), Ctrl+1..7 (Ops), Ctrl+C (Copy Output)", WS_CHILD | WS_VISIBLE, 10, 698, 620, 18, hwnd, NULL, NULL, NULL);
 
             // Initialize Motes
             if (!g_motesInit) {
@@ -880,6 +933,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     ExportDissection(GetCurrentVal());
                     SpawnParticles(590, 315, RGB(6, 182, 212), 32);
                     SpawnShockwave(590, 315, RGB(6, 182, 212));
+                } else if (id == ID_BTN_RESET) {
+                    SetCurrentVal(0);
+                    SpawnParticles(690, 20, RGB(239, 68, 68), 20);
+                } else if (id == ID_BTN_PRESET) {
+                    ApplyNextPreset(hwnd);
+                    SpawnParticles(600, 20, RGB(6, 182, 212), 24);
+                    SpawnShockwave(600, 20, RGB(6, 182, 212));
+                } else if (id == ID_BTN_COPYOUT) {
+                    CopyExportToClipboard(hwnd);
+                    SpawnParticles(710, 315, RGB(16, 185, 129), 24);
+                    SpawnShockwave(710, 315, RGB(16, 185, 129));
+                } else if (id == ID_BTN_CLEAROUT) {
+                    SetWindowTextA(hExportEdit, "");
+                    SpawnParticles(790, 315, RGB(239, 68, 68), 16);
                 } else if (id == 100) {
                     SpawnParticles(780, 20, RGB(6, 182, 212), 24);
                     ShowHelpDialog(hwnd);
@@ -1159,6 +1226,16 @@ void MainEntry() {
                 if (msg.wParam == 'E' || msg.wParam == 'e') {
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_ENDIAN, BN_CLICKED), 0);
                     continue;
+                } else if (msg.wParam == 'C' || msg.wParam == 'c') {
+                    HWND hFocus = GetFocus();
+                    DWORD selStart = 0, selEnd = 0;
+                    if (hFocus == hExportEdit) {
+                        SendMessage(hFocus, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
+                    }
+                    if (hFocus != hExportEdit || selStart == selEnd) {
+                        SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_COPYOUT, BN_CLICKED), 0);
+                        continue;
+                    }
                 } else if (msg.wParam == '1') {
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SWAP16, BN_CLICKED), 0);
                     continue;
@@ -1180,6 +1257,18 @@ void MainEntry() {
                 } else if (msg.wParam == '7') {
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DISSECT, BN_CLICKED), 0);
                     continue;
+                }
+            } else {
+                HWND hFocus = GetFocus();
+                BOOL isEditing = (hFocus == hHex || hFocus == hDec || hFocus == hBin || hFocus == hOct || hFocus == hAscii);
+                if (!isEditing) {
+                    if (msg.wParam == 'P' || msg.wParam == 'p') {
+                        SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_PRESET, BN_CLICKED), 0);
+                        continue;
+                    } else if (msg.wParam == 'H' || msg.wParam == 'h') {
+                        ShowHelpDialog(hwnd);
+                        continue;
+                    }
                 }
             }
         }
