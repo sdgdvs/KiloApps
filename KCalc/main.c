@@ -97,6 +97,7 @@ int historyCount = 0;
 // View Handles
 HWND hModeBtns[5];
 HWND hHelpBtn;
+HWND hCopyBtn;
 HWND hSciBtns[42];
 HWND hFinControls[14];
 HWND hStatsControls[14];
@@ -110,6 +111,7 @@ HWND hHistControls[4];
 #define ID_MODE_CONST 3003
 #define ID_MODE_HIST  3004
 #define ID_HELP       3006
+#define ID_COPY       3007
 
 #define ID_FIN_CALC_PMT  4001
 #define ID_FIN_CALC_FV   4002
@@ -153,6 +155,56 @@ int ParsePointList(const char* s, double* outX, double* outY, int maxCount) {
     return count;
 }
 
+void CopyToClipboard(HWND hwnd, const char* text) {
+    if (!text || !*text) return;
+    int len = my_strlen(text);
+    HGLOBAL hGlob = GlobalAlloc(GMEM_MOVEABLE, len + 1);
+    if (!hGlob) return;
+    char* pDest = (char*)GlobalLock(hGlob);
+    if (pDest) {
+        my_strcpy(pDest, text);
+        GlobalUnlock(hGlob);
+        if (OpenClipboard(hwnd)) {
+            EmptyClipboard();
+            SetClipboardData(CF_TEXT, hGlob);
+            CloseClipboard();
+            char statusBuf[80];
+            m_sprintf(statusBuf, "[Copied: %s] | Press 'H' / F1 for Help", text);
+            SetWindowTextA(hStatusText, statusBuf);
+        }
+    }
+}
+
+void PasteFromClipboard(HWND hwnd) {
+    if (OpenClipboard(hwnd)) {
+        HANDLE hData = GetClipboardData(CF_TEXT);
+        if (hData) {
+            char* pText = (char*)GlobalLock(hData);
+            if (pText) {
+                int i = 0, j = 0;
+                char cleanBuf[64];
+                while (pText[i] && j < 60) {
+                    char c = pText[i++];
+                    if ((c >= '0' && c <= '9') || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E') {
+                        cleanBuf[j++] = c;
+                    }
+                }
+                cleanBuf[j] = 0;
+                GlobalUnlock(hData);
+                if (j > 0) {
+                    my_strcpy(displayBuffer, cleanBuf);
+                    SetWindowTextA(hDisplay, displayBuffer);
+                    isNewOperand = 0;
+                    char statusBuf[80];
+                    m_sprintf(statusBuf, "[Pasted: %s] | Press 'H' / F1 for Help", cleanBuf);
+                    SetWindowTextA(hStatusText, statusBuf);
+                }
+            }
+        }
+        CloseClipboard();
+    }
+}
+
 void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd,
         "KCalc Pro — Scientific & Financial Suite\n\n"
@@ -165,10 +217,13 @@ void ShowHelpDialog(HWND hwnd) {
         "Keyboard Shortcuts:\n"
         "  0-9, .        : Input numbers and decimals\n"
         "  +, -, *, /, ^ : Arithmetic and powers\n"
-        "  Enter or =    : Calculate result\n"
+        "  Enter or =    : Calculate result / evaluate form\n"
         "  Backspace     : Delete last character\n"
         "  Esc           : Clear all / Reset\n"
         "  D             : Toggle DEG / RAD mode\n"
+        "  F9            : Toggle +/- sign\n"
+        "  Ctrl+C        : Copy display to clipboard\n"
+        "  Ctrl+V        : Paste number from clipboard\n"
         "  F1 or H       : Open this Help Guide\n"
         "  Ctrl+1 to 5   : Switch Calculator Modes\n\n"
         "Memory Registers:\n"
@@ -188,11 +243,11 @@ void FormatDisplay(double val) {
 }
 
 void UpdateStatusText() {
-    char statusBuf[64];
+    char statusBuf[80];
     if (memoryStore != 0.0) {
-        m_sprintf(statusBuf, "[%s] [M: %.6g] | Press 'H' or F1 for Help", isDeg ? "DEG" : "RAD", memoryStore);
+        m_sprintf(statusBuf, "[%s] [M: %.6g] [Ctrl+C: Copy] | F1: Help", isDeg ? "DEG" : "RAD", memoryStore);
     } else {
-        m_sprintf(statusBuf, "[%s] | Press 'H' or F1 for Help", isDeg ? "DEG" : "RAD");
+        m_sprintf(statusBuf, "[%s] [Ctrl+C: Copy] | Press 'H' / F1 for Help", isDeg ? "DEG" : "RAD");
     }
     SetWindowTextA(hStatusText, statusBuf);
 }
@@ -445,18 +500,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hDisplayBgBrush = CreateSolidBrush(RGB(15, 23, 42));
             hEditBgBrush = CreateSolidBrush(RGB(30, 41, 59));
 
-            // Mode Selector Bar & Help Button
-            hModeBtns[0] = CreateWindowA("BUTTON", "[1] Sci",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(10), S(8), S(52), S(26), hwnd, (HMENU)ID_MODE_SCI, NULL, NULL);
-            hModeBtns[1] = CreateWindowA("BUTTON", "[2] Fin",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(64), S(8), S(52), S(26), hwnd, (HMENU)ID_MODE_FIN, NULL, NULL);
-            hModeBtns[2] = CreateWindowA("BUTTON", "[3] Stat", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(118), S(8), S(54), S(26), hwnd, (HMENU)ID_MODE_STATS, NULL, NULL);
-            hModeBtns[3] = CreateWindowA("BUTTON", "[4] Const",WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(174), S(8), S(56), S(26), hwnd, (HMENU)ID_MODE_CONST, NULL, NULL);
-            hModeBtns[4] = CreateWindowA("BUTTON", "[5] Hist", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(232), S(8), S(52), S(26), hwnd, (HMENU)ID_MODE_HIST, NULL, NULL);
-            hHelpBtn     = CreateWindowA("BUTTON", "? [F1]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(286), S(8), S(54), S(26), hwnd, (HMENU)ID_HELP, NULL, NULL);
+            // Mode Selector Bar, Copy, and Help Button
+            hModeBtns[0] = CreateWindowA("BUTTON", "[1] Sci",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(10),  S(8), S(46), S(26), hwnd, (HMENU)ID_MODE_SCI, NULL, NULL);
+            hModeBtns[1] = CreateWindowA("BUTTON", "[2] Fin",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(58),  S(8), S(46), S(26), hwnd, (HMENU)ID_MODE_FIN, NULL, NULL);
+            hModeBtns[2] = CreateWindowA("BUTTON", "[3] Stat", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(106), S(8), S(48), S(26), hwnd, (HMENU)ID_MODE_STATS, NULL, NULL);
+            hModeBtns[3] = CreateWindowA("BUTTON", "[4] Const",WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(156), S(8), S(50), S(26), hwnd, (HMENU)ID_MODE_CONST, NULL, NULL);
+            hModeBtns[4] = CreateWindowA("BUTTON", "[5] Hist", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(208), S(8), S(46), S(26), hwnd, (HMENU)ID_MODE_HIST, NULL, NULL);
+            hCopyBtn     = CreateWindowA("BUTTON", "Copy",     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(256), S(8), S(44), S(26), hwnd, (HMENU)ID_COPY, NULL, NULL);
+            hHelpBtn     = CreateWindowA("BUTTON", "? [F1]",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, S(302), S(8), S(38), S(26), hwnd, (HMENU)ID_HELP, NULL, NULL);
 
             // Displays
             hSubDisplay = CreateWindowExA(0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_RIGHT, S(10), S(38), S(324), S(18), hwnd, NULL, NULL, NULL);
             hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "0", WS_CHILD | WS_VISIBLE | SS_RIGHT, S(10), S(58), S(324), S(34), hwnd, NULL, NULL, NULL);
-            hStatusText = CreateWindowExA(0, "STATIC", "[DEG] | Press 'H' or F1 for Help", WS_CHILD | WS_VISIBLE | SS_LEFT, S(10), S(94), S(300), S(16), hwnd, NULL, NULL, NULL);
+            hStatusText = CreateWindowExA(0, "STATIC", "[DEG] [Ctrl+C: Copy] | Press 'H' / F1 for Help", WS_CHILD | WS_VISIBLE | SS_LEFT, S(10), S(94), S(330), S(16), hwnd, NULL, NULL, NULL);
 
             hFontMain = CreateFontA(-MulDiv(24, dpiX, 72), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5, DEFAULT_PITCH | FF_SWISS, "Consolas");
             hFontSub = CreateFontA(-MulDiv(14, dpiX, 72), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
@@ -470,7 +526,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             char labels[40][6] = {
                 "MC",  "MR",  "MS",  "M+",  "M-",
                 "sin", "cos", "tan", "pi",  "C",
-                "ln",  "log", "sqrt", "e",  "<",
+                "ln",  "log", "sqrt", "e",  "<-",
                 "n!",  "abs", "rnd", "x^2", "10^x",
                 "exp", "7",   "8",   "9",   "/",
                 "^",   "4",   "5",   "6",   "*",
@@ -577,6 +633,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id == ID_MODE_CONST) SetViewMode(3);
             else if (id == ID_MODE_HIST) SetViewMode(4);
             else if (id == ID_HELP) ShowHelpDialog(hwnd);
+            else if (id == ID_COPY) CopyToClipboard(hwnd, displayBuffer);
 
             else if ((id >= '0' && id <= '9') || id == '.') {
                 AppendChar(id);
@@ -835,13 +892,43 @@ void __stdcall MainEntry() {
                 continue;
             }
 
-            // Ctrl+1 through Ctrl+5 mode switching
+            // Enter key inside Edit controls to calculate immediately
+            if (isEditFocused && key == VK_RETURN) {
+                if (hFocus == hFinControls[1] || hFocus == hFinControls[3] || hFocus == hFinControls[5]) {
+                    SendMessageA(hwnd, WM_COMMAND, ID_FIN_CALC_PMT, 0);
+                    continue;
+                } else if (hFocus == hFinControls[9] || hFocus == hFinControls[11]) {
+                    SendMessageA(hwnd, WM_COMMAND, ID_FIN_CALC_MARG, 0);
+                    continue;
+                } else if (hFocus == hStatsControls[1]) {
+                    SendMessageA(hwnd, WM_COMMAND, ID_STATS_CALC_1VAR, 0);
+                    continue;
+                } else if (hFocus == hStatsControls[6]) {
+                    SendMessageA(hwnd, WM_COMMAND, ID_STATS_CALC_2VAR, 0);
+                    continue;
+                }
+            }
+
+            // Ctrl+1 through Ctrl+5 mode switching, plus Ctrl+C and Ctrl+V
             if (GetKeyState(VK_CONTROL) & 0x8000) {
                 if (key == '1') { SendMessageA(hwnd, WM_COMMAND, ID_MODE_SCI, 0); continue; }
                 if (key == '2') { SendMessageA(hwnd, WM_COMMAND, ID_MODE_FIN, 0); continue; }
                 if (key == '3') { SendMessageA(hwnd, WM_COMMAND, ID_MODE_STATS, 0); continue; }
                 if (key == '4') { SendMessageA(hwnd, WM_COMMAND, ID_MODE_CONST, 0); continue; }
                 if (key == '5') { SendMessageA(hwnd, WM_COMMAND, ID_MODE_HIST, 0); continue; }
+                if ((key == 'C' || key == 'c') && !isEditFocused) {
+                    CopyToClipboard(hwnd, displayBuffer);
+                    continue;
+                }
+                if ((key == 'V' || key == 'v') && !isEditFocused) {
+                    PasteFromClipboard(hwnd);
+                    continue;
+                }
+            }
+
+            if (key == VK_F9 && !isEditFocused && currentMode == 0) {
+                SendMessageA(hwnd, WM_COMMAND, 1008, 0); // +/- negate
+                continue;
             }
 
             if ((key == 'D' || key == 'd') && !isEditFocused && currentMode == 0) {
