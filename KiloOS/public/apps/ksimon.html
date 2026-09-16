@@ -182,7 +182,7 @@
     Campaign Stage: <span id="stage-val">1</span>/20 [<span id="stage-mod-val">NORMAL</span>] (Target: <span id="stage-target-val">4</span> | Btns: <span id="stage-btns-val">4</span>)
   </div>
   <div id="powerups-display">
-    Hints (H): <span id="hints-val">3</span> | Slow (S): <span id="slowmo-val">2</span> | Shields (B): <span id="shields-val">1</span> | Freeze (F): <span id="freeze-val">2</span>
+    Hints (H): <span id="hints-val">3</span> | Slow (L): <span id="slowmo-val">2</span> | Shields (B): <span id="shields-val">1</span> | Freeze (T): <span id="freeze-val">2</span>
   </div>
 
   <div id="arcade-canvas-wrap">
@@ -215,15 +215,18 @@
     <button id="start-btn">Start Game</button>
     <div style="margin-top: 8px;">
       <button id="hint-btn" class="action-btn pwr-btn" disabled>Hint (H)</button>
-      <button id="slowmo-btn" class="action-btn pwr-btn" disabled>Slow (S)</button>
+      <button id="slowmo-btn" class="action-btn pwr-btn" disabled>Slow (L)</button>
       <button id="shield-btn" class="action-btn pwr-btn" disabled>Shield (B)</button>
-      <button id="freeze-btn" class="action-btn pwr-btn" disabled>Freeze (F)</button>
+      <button id="freeze-btn" class="action-btn pwr-btn" disabled>Freeze (T)</button>
     </div>
     <div style="margin-top: 6px;">
-      <button id="save-btn" class="action-btn" disabled>Save Game</button>
-      <button id="load-btn" class="action-btn">Load Game</button>
+      <button id="save-btn" class="action-btn" disabled>Save (F5)</button>
+      <button id="load-btn" class="action-btn">Load (F9)</button>
+      <button id="export-btn" class="action-btn">Export</button>
+      <button id="import-btn" class="action-btn">Import</button>
       <button id="reset-btn" class="action-btn">Reset Stats</button>
       <button id="help-btn" class="action-btn">Help</button>
+      <input type="file" id="import-file" style="display:none;" accept=".json">
     </div>
   </div>
   <div id="status">Press Start (or Space)</div>
@@ -239,13 +242,15 @@
     <p><strong>Rules:</strong> Watch the sequence of LED buttons & pitch tones and repeat it back. The sequence grows each round.</p>
     <p><strong>Controls:</strong></p>
     <ul>
-      <li>Mouse: Click the 3D glossy console buttons.</li>
+      <li>Mouse / Touch: Click or tap the 3D console buttons.</li>
       <li>Keyboard: Q, W, E, R (Top Row) / A, S, D, F (Bottom Row) or 1-8 keys.</li>
       <li>Space: Start game.</li>
       <li>H: Hint (Replays current sequence at slow speed).</li>
-      <li>S / L: Slow-Mo (Halves playback speed for stage).</li>
-      <li>B / J: Strike Shield (Protects against 1 wrong button press).</li>
-      <li>F / T: Time Freeze (Pauses stage input countdown).</li>
+      <li>L: Slow-Mo (Halves playback speed for stage).</li>
+      <li>B / J: Strike Shield Status (Passive: auto-absorbs 1 mistake or timeout).</li>
+      <li>T / F: Time Freeze (Pauses stage input countdown).</li>
+      <li>F5 / F9: Quick Save / Quick Load.</li>
+      <li>Esc / Click Outside: Dismiss Help.</li>
     </ul>
     <p><strong>Modes:</strong></p>
     <ul>
@@ -289,6 +294,9 @@
 
   const saveBtn = document.getElementById('save-btn');
   const loadBtn = document.getElementById('load-btn');
+  const exportBtn = document.getElementById('export-btn');
+  const importBtn = document.getElementById('import-btn');
+  const importFile = document.getElementById('import-file');
   const resetBtn = document.getElementById('reset-btn');
   const helpBtn = document.getElementById('help-btn');
   const hintBtn = document.getElementById('hint-btn');
@@ -548,10 +556,12 @@
 
       const bx = buttonStates[index].x;
       const by = buttonStates[index].y;
-      const bColor = buttonStates[index].glowColor;
+      const isSoundOnly = (currentMode === 'pitch_audio' && isPlayingSequence);
+      const bColor = isSoundOnly ? '#666677' : buttonStates[index].glowColor;
+      const fColor = isSoundOnly ? '#888899' : buttonStates[index].flashColor;
 
       triggerDualShockwave(bx, by, bColor);
-      trigger4LayerBurst(bx, by, buttonStates[index].flashColor, 0.9);
+      trigger4LayerBurst(bx, by, fColor, 0.9);
     }
   }
 
@@ -1272,11 +1282,12 @@
   }
   requestAnimationFrame(renderCanvas);
 
-  canvas.addEventListener('mousedown', (e) => {
+  function handleCanvasPointerDown(clientX, clientY) {
     if (isPlayingSequence || sequence.length === 0) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
     const rect = canvas.getBoundingClientRect();
-    const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+    const mx = (clientX - rect.left) * (canvas.width / rect.width);
+    const my = (clientY - rect.top) * (canvas.height / rect.height);
 
     const activeCount = getActiveButtonCount();
     for (let i = 0; i < activeCount; i++) {
@@ -1288,11 +1299,25 @@
         break;
       }
     }
+  }
+
+  canvas.addEventListener('mousedown', (e) => {
+    handleCanvasPointerDown(e.clientX, e.clientY);
   });
+  canvas.addEventListener('touchstart', (e) => {
+    if (e.touches && e.touches.length > 0) {
+      e.preventDefault();
+      handleCanvasPointerDown(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  }, { passive: false });
 
   canvas.addEventListener('mouseup', () => {
     buttonStates.forEach((_, i) => releaseButtonFlash(i));
   });
+  canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    buttonStates.forEach((_, i) => releaseButtonFlash(i));
+  }, { passive: false });
 
   function playTone(freq, duration) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -1338,19 +1363,36 @@
     layoutButtons();
   }
 
-  modeSelect.addEventListener('change', updateHighScoreDisplay);
+  modeSelect.addEventListener('change', () => {
+    if (sequence.length === 0) {
+      currentMode = modeSelect.value;
+    }
+    updateHighScoreDisplay();
+  });
   updateHighScoreDisplay();
+
+  function closeHelp() {
+    helpModal.style.display = 'none';
+    localStorage.setItem('ksimon_tutorialSeen', '1');
+  }
 
   startBtn.addEventListener('click', startGame);
   saveBtn.addEventListener('click', saveGameState);
   loadBtn.addEventListener('click', loadGameState);
+  exportBtn.addEventListener('click', exportSave);
+  importBtn.addEventListener('click', () => importFile.click());
+  importFile.addEventListener('change', importSave);
   resetBtn.addEventListener('click', resetStats);
   helpBtn.addEventListener('click', () => { helpModal.style.display = 'flex'; });
-  closeHelpBtn.addEventListener('click', () => { helpModal.style.display = 'none'; });
+  closeHelpBtn.addEventListener('click', closeHelp);
+  helpModal.addEventListener('click', (e) => {
+    if (e.target === helpModal) closeHelp();
+  });
 
   function useHint() {
       if (!isPlayingSequence && sequence.length > 0 && hintsRemaining > 0) {
           hintsRemaining--;
+          playerSequence = [];
           addTrauma(0.35);
           triggerDualShockwave(canvas.width / 2, canvas.height / 2, '#ffd700');
           trigger4LayerBurst(canvas.width / 2, canvas.height / 2, '#ffd700', 1.0);
@@ -1363,6 +1405,7 @@
   function useSlowmo() {
       if (!isPlayingSequence && sequence.length > 0 && slowmoRemaining > 0) {
           slowmoRemaining--;
+          playerSequence = [];
           isSlowmoActive = true;
           addTrauma(0.35);
           triggerDualShockwave(canvas.width / 2, canvas.height / 2, '#00b3b3');
@@ -1378,7 +1421,7 @@
           addTrauma(0.25);
           triggerDualShockwave(canvas.width / 2, canvas.height / 2, '#33aaff');
           trigger4LayerBurst(canvas.width / 2, canvas.height / 2, '#33aaff', 0.8);
-          statusDisplay.innerText = `Shield Ready! (${shieldsRemaining} available)`;
+          statusDisplay.innerText = `Passive Shield Active: Auto-absorbs next error! (${shieldsRemaining} left)`;
       }
   }
 
@@ -1439,7 +1482,7 @@
       elapsedTime: Date.now() - startTime
     };
     localStorage.setItem('KSimon_GameState', JSON.stringify(gameState));
-    statusDisplay.innerText = "Game Saved!";
+    statusDisplay.innerText = "Game Saved! (F5)";
   }
 
   function loadGameState() {
@@ -1448,28 +1491,111 @@
       statusDisplay.innerText = "No saved game found.";
       return;
     }
-    const gameState = JSON.parse(saved);
-    sequence = gameState.sequence;
-    currentMode = gameState.currentMode;
-    currentStage = gameState.currentStage || 1;
-    hintsRemaining = gameState.hintsRemaining !== undefined ? gameState.hintsRemaining : 3;
-    slowmoRemaining = gameState.slowmoRemaining !== undefined ? gameState.slowmoRemaining : 2;
-    shieldsRemaining = gameState.shieldsRemaining !== undefined ? gameState.shieldsRemaining : 1;
-    freezesRemaining = gameState.freezesRemaining !== undefined ? gameState.freezesRemaining : 2;
-    startTime = Date.now() - gameState.elapsedTime;
-    
-    modeSelect.value = currentMode;
-    modeSelect.disabled = true;
-    startBtn.disabled = true;
-    saveBtn.disabled = true;
-    
-    scoreDisplay.innerText = (sequence.length - 1).toString();
-    updateDisplays();
-    updateHighScoreDisplay();
-    
-    playerSequence = [];
-    statusDisplay.innerText = "Game Loaded! Watch...";
-    playSequence();
+    try {
+      const gameState = JSON.parse(saved);
+      if (!gameState || !Array.isArray(gameState.sequence) || gameState.sequence.length === 0) {
+        statusDisplay.innerText = "Saved game has no active sequence.";
+        return;
+      }
+      sequence = gameState.sequence;
+      currentMode = gameState.currentMode || '4btn';
+      currentStage = gameState.currentStage || 1;
+      hintsRemaining = gameState.hintsRemaining !== undefined ? gameState.hintsRemaining : 3;
+      slowmoRemaining = gameState.slowmoRemaining !== undefined ? gameState.slowmoRemaining : 2;
+      shieldsRemaining = gameState.shieldsRemaining !== undefined ? gameState.shieldsRemaining : 1;
+      freezesRemaining = gameState.freezesRemaining !== undefined ? gameState.freezesRemaining : 2;
+      startTime = Date.now() - (gameState.elapsedTime || 0);
+      
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      
+      modeSelect.value = currentMode;
+      modeSelect.disabled = true;
+      startBtn.disabled = true;
+      saveBtn.disabled = true;
+      
+      scoreDisplay.innerText = (sequence.length - 1).toString();
+      updateDisplays();
+      updateHighScoreDisplay();
+      
+      playerSequence = [];
+      statusDisplay.innerText = "Game Loaded! Watch...";
+      playSequence();
+    } catch (err) {
+      statusDisplay.innerText = "Corrupt saved game state.";
+    }
+  }
+
+  function exportSave() {
+    const data = {
+      app: 'KSimon',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      gameState: localStorage.getItem('KSimon_GameState'),
+      highScores: {
+        '4btn': getHighScore('4btn'),
+        '6btn': getHighScore('6btn'),
+        '8btn': getHighScore('8btn'),
+        'chaos_rev': getHighScore('chaos_rev'),
+        'pitch_audio': getHighScore('pitch_audio'),
+        'speed': getHighScore('speed'),
+        'endless': getHighScore('endless'),
+        'campaign': getHighScore('campaign'),
+        'chaos': getHighScore('chaos')
+      },
+      stats: {
+        gamesPlayed: statsGamesPlayed,
+        longestStreak: statsLongestStreak,
+        bestTime: statsBestTime
+      }
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ksimon_save.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    statusDisplay.innerText = "Game & Stats Exported!";
+  }
+
+  function importSave(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = JSON.parse(evt.target.result);
+        if (data.gameState) {
+          localStorage.setItem('KSimon_GameState', data.gameState);
+        }
+        if (data.highScores) {
+          Object.keys(data.highScores).forEach(mode => {
+            setHighScore(mode, data.highScores[mode]);
+          });
+        }
+        if (data.stats) {
+          if (data.stats.gamesPlayed !== undefined) {
+            statsGamesPlayed = data.stats.gamesPlayed;
+            setStat('gamesPlayed', statsGamesPlayed);
+          }
+          if (data.stats.longestStreak !== undefined) {
+            statsLongestStreak = data.stats.longestStreak;
+            setStat('longestStreak', statsLongestStreak);
+          }
+          if (data.stats.bestTime !== undefined) {
+            statsBestTime = data.stats.bestTime;
+            setStat('bestTime', statsBestTime);
+          }
+          updateStatsDisplay();
+        }
+        updateHighScoreDisplay();
+        statusDisplay.innerText = "Save imported! Click Load Game or F9.";
+      } catch (err) {
+        statusDisplay.innerText = "Invalid JSON save file.";
+      }
+      importFile.value = '';
+    };
+    reader.readAsText(file);
   }
 
   function resetStats() {
@@ -1493,6 +1619,22 @@
   });
 
   document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (helpModal.style.display === 'flex') {
+        closeHelp();
+        return;
+      }
+    }
+    if (e.key === 'F5') {
+      e.preventDefault();
+      saveGameState();
+      return;
+    }
+    if (e.key === 'F9') {
+      e.preventDefault();
+      loadGameState();
+      return;
+    }
     if (e.key === ' ' && sequence.length === 0) {
         e.preventDefault();
         startGame();
@@ -1500,10 +1642,6 @@
     }
     if (e.key.toLowerCase() === 'h') {
         useHint();
-        return;
-    }
-    if (e.key.toLowerCase() === 's' && isPlayingSequence) {
-        useSlowmo();
         return;
     }
     if (e.key.toLowerCase() === 'l') {
@@ -1514,14 +1652,14 @@
         useShield();
         return;
     }
-    if (e.key.toLowerCase() === 't') {
+    const numBtns = getActiveButtonCount();
+    if (e.key.toLowerCase() === 't' || (e.key.toLowerCase() === 'f' && numBtns < 8)) {
         useFreeze();
         return;
     }
     if (isPlayingSequence || sequence.length === 0) return;
     
     let index = -1;
-    const numBtns = getActiveButtonCount();
     const k = e.key.toLowerCase();
     
     if (numBtns === 4) {
@@ -1588,12 +1726,19 @@
       slowmoBtn.disabled = slowmoRemaining <= 0 || isPlayingSequence || sequence.length === 0;
       shieldBtn.disabled = shieldsRemaining <= 0 || sequence.length === 0;
       freezeBtn.disabled = freezesRemaining <= 0 || isPlayingSequence || sequence.length === 0 || isTimeFrozen;
+      layoutButtons();
   }
 
   function startGame() {
     if (audioCtx.state === 'suspended') {
       audioCtx.resume();
     }
+    if (!localStorage.getItem('ksimon_tutorialSeen')) {
+      localStorage.setItem('ksimon_tutorialSeen', '1');
+      helpModal.style.display = 'flex';
+      return;
+    }
+    clearInterval(inputTimer);
     startTime = Date.now();
     currentMode = modeSelect.value;
     modeSelect.disabled = true;
