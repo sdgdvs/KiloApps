@@ -789,6 +789,50 @@
             border-color: var(--accent-cyan);
         }
 
+        .soundscape-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-stellar);
+            color: var(--accent-emerald);
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+
+        .soundscape-btn:hover {
+            border-color: var(--accent-emerald);
+            background: rgba(16, 185, 129, 0.15);
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .soundscape-btn.off {
+            color: var(--text-dim);
+            border-color: var(--border-stellar);
+            background: transparent;
+        }
+
+        .soundscape-btn.sfx-trigger {
+            color: var(--accent-amber);
+            border-color: rgba(245, 158, 11, 0.4);
+        }
+
+        .soundscape-btn.sfx-trigger:hover {
+            border-color: var(--accent-amber);
+            background: rgba(245, 158, 11, 0.15);
+        }
+
+        canvas#audioVisualizer {
+            display: inline-block;
+            vertical-align: middle;
+            background: #02050b;
+            border: 1px solid var(--border-stellar);
+            border-radius: 3px;
+            box-shadow: inset 0 0 6px rgba(0, 240, 255, 0.15);
+        }
+
         /* Custom Scrollbars */
         ::-webkit-scrollbar {
             width: 5px;
@@ -2822,11 +2866,15 @@
     <footer>
         <div class="footer-controls">
             <span>TIME WARP:</span>
-            <button class="time-btn" id="btnPause">PAUSE</button>
-            <button class="time-btn active" id="btnSpeed1">1x</button>
-            <button class="time-btn" id="btnSpeed2">2x</button>
-            <button class="time-btn" id="btnSpeed5">5x</button>
-            <button class="audio-toggle active" id="btnAudioToggle">AUDIO: ON</button>
+            <button class="time-btn" id="btnPause" title="Pause simulation (Space)">PAUSE</button>
+            <button class="time-btn active" id="btnSpeed1" title="1x Real-time (Key 1)">1x</button>
+            <button class="time-btn" id="btnSpeed2" title="2x High Warp (Key 2)">2x</button>
+            <button class="time-btn" id="btnSpeed5" title="5x Maximum Warp (Key 5)">5x</button>
+            <button class="audio-toggle active" id="btnAudioToggle" title="Toggle audio mute (Key M)">AUDIO: ON</button>
+            <button class="soundscape-btn" id="btnSoundscapeMode" title="Cycle procedural cosmic soundscapes: Void Drone, Planetary Atmo, Ark Engine, Precursor Resonance, Off (Key A)">SOUND: VOID</button>
+            <button class="soundscape-btn sfx-trigger" id="btnTestAtmoRoar" title="Atmospheric orbital entry roar">🚀 ATMO ROAR</button>
+            <button class="soundscape-btn sfx-trigger" id="btnTestBioscan" title="Planetary resonance bioscan crystal chimes">📡 BIOSCAN</button>
+            <canvas id="audioVisualizer" width="76" height="22" title="Real-time procedural audio telemetry spectrum"></canvas>
         </div>
 
         <div class="log-line" id="logBanner">
@@ -2837,15 +2885,40 @@
     </footer>
 
     <script>
-        // --- Web Audio Synthesizer Engine ---
+        // =========================================================================
+        // --- PHASE 13: PROCEDURAL COSMIC AUDIO & ATMOSPHERIC SOUNDSCAPES ENGINE ---
+        // =========================================================================
         let audioCtx = null;
         let audioEnabled = true;
+        let soundscapeMode = 'void'; // 'void' | 'atmo' | 'engine' | 'precursor' | 'off'
+        let masterGain = null;
+        let soundscapeGain = null;
+        let analyserNode = null;
+        let soundscapeNodes = [];
+        let engineHumOsc = null;
+        let engineHumGain = null;
 
         function initAudio() {
             if (!audioCtx) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                if (AudioContext) {
-                    audioCtx = new AudioContext();
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) {
+                    audioCtx = new AudioContextClass();
+
+                    masterGain = audioCtx.createGain();
+                    masterGain.gain.setValueAtTime(audioEnabled ? 0.8 : 0.0, audioCtx.currentTime);
+
+                    analyserNode = audioCtx.createAnalyser();
+                    analyserNode.fftSize = 64;
+                    analyserNode.smoothingTimeConstant = 0.8;
+
+                    soundscapeGain = audioCtx.createGain();
+                    soundscapeGain.gain.setValueAtTime(0.22, audioCtx.currentTime);
+
+                    soundscapeGain.connect(masterGain);
+                    masterGain.connect(analyserNode);
+                    analyserNode.connect(audioCtx.destination);
+
+                    startSoundscape();
                 }
             }
             if (audioCtx && audioCtx.state === 'suspended') {
@@ -2853,14 +2926,435 @@
             }
         }
 
-        function playSound(type) {
+        // Procedural Noise Generator Buffer (White / Pink Noise for atmospheric drag & solar wind)
+        function createNoiseBuffer(duration = 2.5) {
+            if (!audioCtx) return null;
+            const bufferSize = Math.floor(audioCtx.sampleRate * duration);
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+            for (let i = 0; i < bufferSize; i++) {
+                const white = Math.random() * 2 - 1;
+                // Paul Kellet's filtered pink noise algorithm
+                b0 = 0.99886 * b0 + white * 0.0555179;
+                b1 = 0.99332 * b1 + white * 0.0750759;
+                b2 = 0.96900 * b2 + white * 0.1538520;
+                b3 = 0.86650 * b3 + white * 0.3104856;
+                b4 = 0.55000 * b4 + white * 0.5329522;
+                b5 = -0.7616 * b5 - white * 0.0168980;
+                data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+                b6 = white * 0.115926;
+            }
+            return buffer;
+        }
+
+        // Clean up previous continuous soundscape nodes
+        function clearSoundscapeNodes() {
+            soundscapeNodes.forEach(node => {
+                try {
+                    if (node.stop) node.stop();
+                    if (node.disconnect) node.disconnect();
+                } catch (e) {}
+            });
+            soundscapeNodes = [];
+            engineHumOsc = null;
+            engineHumGain = null;
+        }
+
+        // Procedural Ambient Soundscapes
+        function startSoundscape() {
+            if (!audioCtx || !soundscapeGain) return;
+            clearSoundscapeNodes();
+
+            if (!audioEnabled || soundscapeMode === 'off') {
+                soundscapeGain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.2);
+                return;
+            }
+
+            const now = audioCtx.currentTime;
+            soundscapeGain.gain.setTargetAtTime(0.24, now, 0.4);
+
+            if (soundscapeMode === 'void') {
+                // 1. Interstellar Drone Synthesizer (Cosmic sub-bass & slow resonant LFO sweeps)
+                // Root pitch adapted to active star system spectral class
+                let baseFreq = 55.0; // Default A1
+                if (typeof CURR_SYS !== 'undefined' && CURR_SYS && CURR_SYS.starSpectral) {
+                    const sp = CURR_SYS.starSpectral[0];
+                    if (sp === 'O' || sp === 'B') baseFreq = 73.4; // D2
+                    else if (sp === 'A' || sp === 'F') baseFreq = 65.4; // C2
+                    else if (sp === 'G') baseFreq = 55.0; // A1
+                    else if (sp === 'K') baseFreq = 49.0; // G1
+                    else if (sp === 'M') baseFreq = 41.2; // E1
+                }
+
+                // Sub drone
+                const oscSub = audioCtx.createOscillator();
+                oscSub.type = 'sine';
+                oscSub.frequency.setValueAtTime(baseFreq * 0.5, now);
+
+                // Fundamental drone
+                const osc1 = audioCtx.createOscillator();
+                osc1.type = 'triangle';
+                osc1.frequency.setValueAtTime(baseFreq, now);
+
+                // Detuned overtone (+6 cents, fifth harmonic)
+                const osc2 = audioCtx.createOscillator();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(baseFreq * 1.5, now);
+                osc2.detune.setValueAtTime(6, now);
+
+                // High ethereal shimmer
+                const osc3 = audioCtx.createOscillator();
+                osc3.type = 'sine';
+                osc3.frequency.setValueAtTime(baseFreq * 3.0, now);
+                osc3.detune.setValueAtTime(-8, now);
+
+                // Dynamic Lowpass Filter with slow LFO modulation
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(260, now);
+                filter.Q.setValueAtTime(3.2, now);
+
+                // LFO for breathing planetary orbit sweep
+                const lfo = audioCtx.createOscillator();
+                const lfoGain = audioCtx.createGain();
+                lfo.frequency.setValueAtTime(0.04, now); // ~25 sec cycle
+                lfoGain.gain.setValueAtTime(140, now);
+                lfo.connect(lfoGain);
+                lfoGain.connect(filter.frequency);
+
+                const subGain = audioCtx.createGain();
+                subGain.gain.setValueAtTime(0.45, now);
+
+                const droneGain = audioCtx.createGain();
+                droneGain.gain.setValueAtTime(0.35, now);
+
+                const shimmerGain = audioCtx.createGain();
+                shimmerGain.gain.setValueAtTime(0.08, now);
+
+                oscSub.connect(subGain);
+                osc1.connect(droneGain);
+                osc2.connect(droneGain);
+                osc3.connect(shimmerGain);
+
+                subGain.connect(filter);
+                droneGain.connect(filter);
+                shimmerGain.connect(filter);
+                filter.connect(soundscapeGain);
+
+                oscSub.start(now);
+                osc1.start(now);
+                osc2.start(now);
+                osc3.start(now);
+                lfo.start(now);
+
+                soundscapeNodes.push(oscSub, osc1, osc2, osc3, lfo, lfoGain, subGain, droneGain, shimmerGain, filter);
+
+            } else if (soundscapeMode === 'atmo') {
+                // 2. Planetary Atmospheric Ionosphere & Solar Wind Soundscape
+                const noiseBuf = createNoiseBuffer(4.0);
+                if (noiseBuf) {
+                    const noiseSrc = audioCtx.createBufferSource();
+                    noiseSrc.buffer = noiseBuf;
+                    noiseSrc.loop = true;
+
+                    const atmoFilter = audioCtx.createBiquadFilter();
+                    atmoFilter.type = 'bandpass';
+                    atmoFilter.frequency.setValueAtTime(420, now);
+                    atmoFilter.Q.setValueAtTime(1.8, now);
+
+                    // Sweeping wind LFO
+                    const windLfo = audioCtx.createOscillator();
+                    const windLfoGain = audioCtx.createGain();
+                    windLfo.frequency.setValueAtTime(0.08, now);
+                    windLfoGain.gain.setValueAtTime(220, now);
+                    windLfo.connect(windLfoGain);
+                    windLfoGain.connect(atmoFilter.frequency);
+
+                    // Ethereal singing ionosphere tone
+                    const atmoTone = audioCtx.createOscillator();
+                    atmoTone.type = 'sine';
+                    atmoTone.frequency.setValueAtTime(220, now);
+                    const atmoToneGain = audioCtx.createGain();
+                    atmoToneGain.gain.setValueAtTime(0.06, now);
+
+                    const atmoNoiseGain = audioCtx.createGain();
+                    atmoNoiseGain.gain.setValueAtTime(0.5, now);
+
+                    noiseSrc.connect(atmoFilter);
+                    atmoFilter.connect(atmoNoiseGain);
+                    atmoNoiseGain.connect(soundscapeGain);
+
+                    atmoTone.connect(atmoToneGain);
+                    atmoToneGain.connect(soundscapeGain);
+
+                    noiseSrc.start(now);
+                    windLfo.start(now);
+                    atmoTone.start(now);
+
+                    soundscapeNodes.push(noiseSrc, atmoFilter, windLfo, windLfoGain, atmoTone, atmoToneGain, atmoNoiseGain);
+                }
+            } else if (soundscapeMode === 'engine') {
+                // 3. Colony Ark Engine & Fusion Core Hum
+                const eng1 = audioCtx.createOscillator();
+                eng1.type = 'sawtooth';
+                eng1.frequency.setValueAtTime(65.4, now); // C2
+
+                const eng2 = audioCtx.createOscillator();
+                eng2.type = 'triangle';
+                eng2.frequency.setValueAtTime(130.8, now); // C3
+                eng2.detune.setValueAtTime(-5, now);
+
+                const engSub = audioCtx.createOscillator();
+                engSub.type = 'sine';
+                engSub.frequency.setValueAtTime(32.7, now); // C1
+
+                // Engine turbine vibration LFO
+                const vibrato = audioCtx.createOscillator();
+                const vibratoGain = audioCtx.createGain();
+                vibrato.frequency.setValueAtTime(1.8, now);
+                vibratoGain.gain.setValueAtTime(3.2, now);
+                vibrato.connect(vibratoGain);
+                vibratoGain.connect(eng1.frequency);
+                vibratoGain.connect(eng2.frequency);
+
+                const engFilter = audioCtx.createBiquadFilter();
+                engFilter.type = 'lowpass';
+                engFilter.frequency.setValueAtTime(160, now);
+                engFilter.Q.setValueAtTime(2.0, now);
+
+                const engGain = audioCtx.createGain();
+                engGain.gain.setValueAtTime(0.35, now);
+
+                eng1.connect(engFilter);
+                eng2.connect(engFilter);
+                engSub.connect(engFilter);
+                engFilter.connect(engGain);
+                engGain.connect(soundscapeGain);
+
+                eng1.start(now);
+                eng2.start(now);
+                engSub.start(now);
+                vibrato.start(now);
+
+                engineHumOsc = eng1;
+                engineHumGain = engGain;
+
+                soundscapeNodes.push(eng1, eng2, engSub, vibrato, vibratoGain, engFilter, engGain);
+
+            } else if (soundscapeMode === 'precursor') {
+                // 4. Precursor Tachyon Harmonic Lattice
+                const freqs = [432, 648, 864, 1080];
+                freqs.forEach((f, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(f, now);
+                    osc.detune.setValueAtTime((idx % 2 === 0 ? 3 : -3), now);
+
+                    // Subtle tremolo
+                    const trem = audioCtx.createOscillator();
+                    const tremGain = audioCtx.createGain();
+                    trem.frequency.setValueAtTime(0.2 + idx * 0.1, now);
+                    tremGain.gain.setValueAtTime(0.04, now);
+                    trem.connect(tremGain);
+
+                    const g = audioCtx.createGain();
+                    g.gain.setValueAtTime(0.09 / (idx + 1), now);
+                    tremGain.connect(g.gain);
+
+                    osc.connect(g);
+                    g.connect(soundscapeGain);
+
+                    osc.start(now);
+                    trem.start(now);
+                    soundscapeNodes.push(osc, trem, tremGain, g);
+                });
+            }
+        }
+
+        // Modulate engine hum when warp speed changes
+        function updateEngineHumSpeed(speed) {
+            if (!audioCtx || !engineHumOsc) return;
+            const now = audioCtx.currentTime;
+            const targetFreq = 65.4 * (speed === 5 ? 1.4 : speed === 2 ? 1.2 : 1.0);
+            engineHumOsc.frequency.setTargetAtTime(targetFreq, now, 0.3);
+            if (engineHumGain) {
+                const targetGain = speed === 5 ? 0.5 : speed === 2 ? 0.42 : 0.35;
+                engineHumGain.gain.setTargetAtTime(targetGain, now, 0.3);
+            }
+        }
+
+        // --- Procedural Sound Effects ---
+
+        // 1. Atmospheric Entry Roar: Hypersonic aerodynamic shockwave & thermal rumble
+        function playAtmosphericEntryRoar() {
+            if (!audioEnabled || !audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+                const duration = 2.2;
+                const noiseBuf = createNoiseBuffer(duration);
+                if (!noiseBuf) return;
+
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = noiseBuf;
+
+                // Sweeping bandpass & lowpass filter for shockwave roar
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(3200, now);
+                filter.frequency.exponentialRampToValueAtTime(110, now + duration);
+                filter.Q.setValueAtTime(3.5, now);
+
+                const noiseGain = audioCtx.createGain();
+                noiseGain.gain.setValueAtTime(0.001, now);
+                noiseGain.gain.linearRampToValueAtTime(0.32, now + 0.25);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+                // Sub-bass aerodynamic shockwave rumble
+                const rumble = audioCtx.createOscillator();
+                rumble.type = 'triangle';
+                rumble.frequency.setValueAtTime(85, now);
+                rumble.frequency.exponentialRampToValueAtTime(32, now + duration);
+
+                const rumbleGain = audioCtx.createGain();
+                rumbleGain.gain.setValueAtTime(0.001, now);
+                rumbleGain.gain.linearRampToValueAtTime(0.38, now + 0.3);
+                rumbleGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+                noise.connect(filter);
+                filter.connect(noiseGain);
+                noiseGain.connect(masterGain || audioCtx.destination);
+
+                rumble.connect(rumbleGain);
+                rumbleGain.connect(masterGain || audioCtx.destination);
+
+                noise.start(now);
+                rumble.start(now);
+                noise.stop(now + duration);
+                rumble.stop(now + duration);
+            } catch (e) {
+                console.warn('Atmospheric roar audio error:', e);
+            }
+        }
+
+        // 2. Bioscan Chimes: Shimmering crystalline pentatonic arpeggio
+        function playBioscanChimes() {
+            if (!audioEnabled || !audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+                // Pentatonic crystal celestial scale (C5, Eb5, G5, Bb5, C6, Eb6)
+                const pitches = [523.25, 622.25, 783.99, 932.33, 1046.50, 1244.51];
+                pitches.forEach((f, idx) => {
+                    const noteTime = now + idx * 0.055;
+                    // Fundamental crystal bell
+                    const osc = audioCtx.createOscillator();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(f, noteTime);
+
+                    // High crystalline bell overtone (2.75x ratio)
+                    const overtone = audioCtx.createOscillator();
+                    overtone.type = 'sine';
+                    overtone.frequency.setValueAtTime(f * 2.75, noteTime);
+
+                    const gain = audioCtx.createGain();
+                    gain.gain.setValueAtTime(0.12, noteTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0005, noteTime + 0.85);
+
+                    const overGain = audioCtx.createGain();
+                    overGain.gain.setValueAtTime(0.04, noteTime);
+                    overGain.gain.exponentialRampToValueAtTime(0.0005, noteTime + 0.45);
+
+                    osc.connect(gain);
+                    overtone.connect(overGain);
+                    gain.connect(masterGain || audioCtx.destination);
+                    overGain.connect(masterGain || audioCtx.destination);
+
+                    osc.start(noteTime);
+                    overtone.start(noteTime);
+                    osc.stop(noteTime + 0.85);
+                    overtone.stop(noteTime + 0.45);
+                });
+            } catch (e) {
+                console.warn('Bioscan chimes audio error:', e);
+            }
+        }
+
+        // 3. Engine Hum Burst: Sub-light propulsion burn / freighter dispatch
+        function playEngineHumBurst(duration = 1.0) {
             if (!audioEnabled || !audioCtx) return;
             try {
                 const now = audioCtx.currentTime;
                 const osc = audioCtx.createOscillator();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(55, now);
+                osc.frequency.exponentialRampToValueAtTime(95, now + duration * 0.4);
+                osc.frequency.exponentialRampToValueAtTime(45, now + duration);
+
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(140, now);
+                filter.frequency.linearRampToValueAtTime(240, now + duration * 0.4);
+                filter.frequency.linearRampToValueAtTime(110, now + duration);
+
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0.01, now);
+                gain.gain.linearRampToValueAtTime(0.22, now + 0.15);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(masterGain || audioCtx.destination);
+
+                osc.start(now);
+                osc.stop(now + duration);
+            } catch (e) {}
+        }
+
+        // 4. Precursor Resonance Shimmer
+        function playPrecursorHarmonics() {
+            if (!audioEnabled || !audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+                const chord = [432, 540, 648, 810, 1080];
+                chord.forEach((f, idx) => {
+                    const o = audioCtx.createOscillator();
+                    const g = audioCtx.createGain();
+                    o.type = 'sine';
+                    o.frequency.setValueAtTime(f, now + idx * 0.04);
+                    g.gain.setValueAtTime(0.08, now + idx * 0.04);
+                    g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.9);
+                    o.connect(g);
+                    g.connect(masterGain || audioCtx.destination);
+                    o.start(now + idx * 0.04);
+                    o.stop(now + idx * 0.04 + 0.9);
+                });
+            } catch (e) {}
+        }
+
+        // Master Dispatcher for Sound Effects
+        function playSound(type) {
+            if (!audioEnabled || !audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+
+                if (type === 'entry' || type === 'atmo_roar' || type === 'roar') {
+                    playAtmosphericEntryRoar();
+                    return;
+                } else if (type === 'bioscan' || type === 'chimes') {
+                    playBioscanChimes();
+                    return;
+                } else if (type === 'engine' || type === 'thrust') {
+                    playEngineHumBurst(1.2);
+                    return;
+                } else if (type === 'xeno' || type === 'precursor') {
+                    playPrecursorHarmonics();
+                    return;
+                }
+
+                const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.connect(gain);
-                gain.connect(audioCtx.destination);
+                gain.connect(masterGain || audioCtx.destination);
 
                 if (type === 'click') {
                     osc.type = 'triangle';
@@ -2921,7 +3415,7 @@
                         g.gain.setValueAtTime(0.12, now + idx * 0.08);
                         g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.45);
                         o.connect(g);
-                        g.connect(audioCtx.destination);
+                        g.connect(masterGain || audioCtx.destination);
                         o.start(now + idx * 0.08);
                         o.stop(now + idx * 0.08 + 0.45);
                     });
@@ -2942,23 +3436,52 @@
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
                     osc.start(now);
                     osc.stop(now + 0.2);
-                } else if (type === 'xeno') {
-                    const chord = [440, 554.37, 659.25, 830.61, 1108.73];
-                    chord.forEach((f, idx) => {
-                        const o = audioCtx.createOscillator();
-                        const g = audioCtx.createGain();
-                        o.type = 'sine';
-                        o.frequency.setValueAtTime(f, now + idx * 0.05);
-                        g.gain.setValueAtTime(0.09, now + idx * 0.05);
-                        g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.6);
-                        o.connect(g);
-                        g.connect(audioCtx.destination);
-                        o.start(now + idx * 0.05);
-                        o.stop(now + idx * 0.05 + 0.6);
-                    });
                 }
             } catch (e) {
                 // Audio safely ignored if restricted
+            }
+        }
+
+        // Draw Real-time CRT Audio Visualizer
+        function drawAudioVisualizer() {
+            const vizCanvas = document.getElementById('audioVisualizer');
+            if (!vizCanvas) return;
+            const ctx = vizCanvas.getContext('2d');
+            const w = vizCanvas.width;
+            const h = vizCanvas.height;
+
+            ctx.fillStyle = '#02060f';
+            ctx.fillRect(0, 0, w, h);
+
+            if (!audioEnabled || soundscapeMode === 'off' || !analyserNode) {
+                // Idle flat telemetry baseline
+                ctx.strokeStyle = '#1e3a5f';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(0, h / 2);
+                ctx.lineTo(w, h / 2);
+                ctx.stroke();
+                return;
+            }
+
+            const bufferLength = analyserNode.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyserNode.getByteFrequencyData(dataArray);
+
+            const barCount = 14;
+            const barWidth = (w - 4) / barCount;
+            for (let i = 0; i < barCount; i++) {
+                const dataIndex = Math.floor((i / barCount) * (bufferLength / 2));
+                const val = dataArray[dataIndex] || 0;
+                const barHeight = Math.max(2, (val / 255) * (h - 4));
+
+                let color = '#00f0ff';
+                if (soundscapeMode === 'atmo') color = '#38bdf8';
+                else if (soundscapeMode === 'engine') color = '#f59e0b';
+                else if (soundscapeMode === 'precursor') color = '#a855f7';
+
+                ctx.fillStyle = color;
+                ctx.fillRect(2 + i * barWidth, h - 2 - barHeight, barWidth - 1, barHeight);
             }
         }
 
@@ -6614,6 +7137,7 @@
                 }
             }
 
+            drawAudioVisualizer();
             requestAnimationFrame(render);
         }
 
@@ -6798,7 +7322,7 @@
             initAudio();
             const newIdx = generateProceduralStarSystem();
             loadStarSystem(newIdx);
-            playSound('success');
+            playSound('bioscan');
         });
 
         document.getElementById('btnZoomIn').addEventListener('click', () => {
@@ -6877,6 +7401,7 @@
             playSound('click');
             sim.speed = speed;
             sim.paused = isPause;
+            updateEngineHumSpeed(isPause ? 0 : speed);
             [pauseBtn, sp1Btn, sp2Btn, sp5Btn].forEach(b => b.classList.remove('active'));
             if (isPause) pauseBtn.classList.add('active');
             else if (speed === 1) sp1Btn.classList.add('active');
@@ -6894,9 +7419,86 @@
         audioBtn.addEventListener('click', () => {
             initAudio();
             audioEnabled = !audioEnabled;
+            if (masterGain && audioCtx) {
+                masterGain.gain.setTargetAtTime(audioEnabled ? 0.8 : 0.0, audioCtx.currentTime, 0.05);
+            }
             audioBtn.textContent = audioEnabled ? 'AUDIO: ON' : 'AUDIO: OFF';
             audioBtn.classList.toggle('active', audioEnabled);
-            if (audioEnabled) playSound('click');
+            if (audioEnabled) {
+                startSoundscape();
+                playSound('click');
+            } else {
+                clearSoundscapeNodes();
+            }
+        });
+
+        // Soundscape Mode Cycle
+        const soundscapeBtn = document.getElementById('btnSoundscapeMode');
+        const soundscapeModes = ['void', 'atmo', 'engine', 'precursor', 'off'];
+        const soundscapeLabels = {
+            'void': 'SOUND: VOID',
+            'atmo': 'SOUND: ATMO',
+            'engine': 'SOUND: ENGINE',
+            'precursor': 'SOUND: PRECURSOR',
+            'off': 'SOUND: OFF'
+        };
+
+        function cycleSoundscapeMode() {
+            initAudio();
+            const curIdx = soundscapeModes.indexOf(soundscapeMode);
+            soundscapeMode = soundscapeModes[(curIdx + 1) % soundscapeModes.length];
+            if (soundscapeBtn) {
+                soundscapeBtn.textContent = soundscapeLabels[soundscapeMode];
+                soundscapeBtn.classList.toggle('off', soundscapeMode === 'off');
+            }
+            startSoundscape();
+            playSound('click');
+            logMsg(`Cosmic Soundscape Synthesizer shifted to: [${soundscapeLabels[soundscapeMode]}].`);
+        }
+
+        if (soundscapeBtn) {
+            soundscapeBtn.addEventListener('click', cycleSoundscapeMode);
+        }
+
+        const btnAtmoRoar = document.getElementById('btnTestAtmoRoar');
+        if (btnAtmoRoar) {
+            btnAtmoRoar.addEventListener('click', () => {
+                initAudio();
+                playAtmosphericEntryRoar();
+                logMsg('🚀 Atmospheric orbital entry roar triggered. Hypersonic compression wavefront simulated.');
+            });
+        }
+
+        const btnBioscan = document.getElementById('btnTestBioscan');
+        if (btnBioscan) {
+            btnBioscan.addEventListener('click', () => {
+                initAudio();
+                playBioscanChimes();
+                logMsg('📡 Resonance bioscan crystal chimes triggered. Crystalline pentatonic arpeggio broadcast.');
+            });
+        }
+
+        // Global Keyboard Navigation & Audio Hotkeys
+        window.addEventListener('keydown', (e) => {
+            if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+            const key = e.key.toLowerCase();
+            if (key === 'm') {
+                if (audioBtn) audioBtn.click();
+            } else if (key === 'a') {
+                cycleSoundscapeMode();
+            } else if (e.code === 'Space') {
+                e.preventDefault();
+                setSpeed(0, !sim.paused);
+            } else if (key === '1') {
+                setSpeed(1);
+            } else if (key === '2') {
+                setSpeed(2);
+            } else if (key === '5') {
+                setSpeed(5);
+            } else if (key === 'r') {
+                sim.camX = 0; sim.camY = 0; sim.zoom = 1.0;
+                playSound('click');
+            }
         });
 
         function logMsg(txt, isWarn = false) {
@@ -6934,7 +7536,7 @@
                 calculateHabitability();
                 updateUI();
                 logMsg(`Troposphere Processor #${sim.atmoProcessors} constructed (${sim.atmoMode === 'inject' ? '+0.05 atm buffer' : '-0.08 atm toxic scrub'}).`);
-                playSound('deploy');
+                playSound('entry');
             } else {
                 logMsg('Insufficient resources (Req: 180 t Minerals, 100 kW Energy).', true);
             }
@@ -8481,7 +9083,7 @@
                 sim.science += 20;
                 sim.xenoScanAnim = 1.0;
                 logMsg('📡 Deep resonance bioscan completed! Detected precursor tachyon harmonic signatures across sub-crustal strata. +20 Science Data.');
-                playSound('xeno');
+                playSound('bioscan');
                 updateUI();
             } else {
                 logMsg('Insufficient energy for resonance bioscan (Req: 60 kW).', true);

@@ -115,13 +115,31 @@ static int g_crtTheme = 0;
 static int g_showGrid = 1;
 static int g_phosphorGlow = 1;
 
-// --- Sound Effects ---
-#define SFX_CLICK   1
-#define SFX_SUCCESS 2
-#define SFX_WARN    3
-#define SFX_DEPLOY  4
-#define SFX_ALARM   5
-#define SFX_EXPLODE 6
+// --- Sound Effects & Procedural Cosmic Audio Engine ---
+#define SFX_CLICK           1
+#define SFX_SUCCESS         2
+#define SFX_WARN            3
+#define SFX_DEPLOY          4
+#define SFX_ALARM           5
+#define SFX_EXPLODE         6
+#define SFX_DRONE           7
+#define SFX_ENGINE_HUM      8
+#define SFX_ENTRY_ROAR      9
+#define SFX_BIOSCAN_CHIME   10
+#define SFX_PRECURSOR_TUNE  11
+
+typedef enum {
+    SOUNDSCAPE_OFF = 0,
+    SOUNDSCAPE_VOID = 1,
+    SOUNDSCAPE_ATMO = 2,
+    SOUNDSCAPE_ENGINE = 3,
+    SOUNDSCAPE_PRECURSOR = 4
+} SoundscapeMode;
+
+static SoundscapeMode g_soundscapeMode = SOUNDSCAPE_VOID;
+static int g_soundscapeActive = 1;
+static volatile LONG g_soundscapeRunning = 1;
+static HANDLE g_hSoundscapeThread = NULL;
 
 // Phase 9: Cosmic Crisis Types
 typedef enum {
@@ -165,14 +183,106 @@ static DWORD WINAPI SoundThread(LPVOID lpParam) {
             Beep(180, 120);
             Beep(120, 180);
             break;
+        case SFX_DRONE:
+            Beep(65, 120);
+            Beep(82, 140);
+            Beep(110, 160);
+            break;
+        case SFX_ENGINE_HUM:
+            Beep(55, 90);
+            Beep(73, 110);
+            Beep(65, 140);
+            break;
+        case SFX_ENTRY_ROAR:
+            Beep(1100, 35);
+            Beep(750, 45);
+            Beep(480, 60);
+            Beep(260, 90);
+            Beep(130, 130);
+            Beep(65, 180);
+            break;
+        case SFX_BIOSCAN_CHIME:
+            Beep(523, 40);
+            Beep(659, 45);
+            Beep(784, 50);
+            Beep(988, 55);
+            Beep(1175, 70);
+            break;
+        case SFX_PRECURSOR_TUNE:
+            Beep(432, 50);
+            Beep(648, 60);
+            Beep(864, 75);
+            Beep(1296, 110);
+            break;
     }
     return 0;
 }
 
 static void PlaySoundFx(int type) {
     if (g_soundEnabled) {
-        CreateThread(NULL, 0, SoundThread, (LPVOID)(intptr_t)type, 0, NULL);
+        HANDLE h = CreateThread(NULL, 0, SoundThread, (LPVOID)(intptr_t)type, 0, NULL);
+        if (h) CloseHandle(h);
     }
+}
+
+// Background Ambient Procedural Soundscape Generator
+static DWORD WINAPI SoundscapeThread(LPVOID lpParam) {
+    (void)lpParam;
+    while (g_soundscapeRunning) {
+        // Sleep in increments for responsive shutdown
+        for (int i = 0; i < 45 && g_soundscapeRunning; i++) {
+            Sleep(100);
+        }
+        if (!g_soundscapeRunning) break;
+        if (!g_soundEnabled || !g_soundscapeActive || g_soundscapeMode == SOUNDSCAPE_OFF) {
+            continue;
+        }
+
+        switch (g_soundscapeMode) {
+            case SOUNDSCAPE_VOID:
+                // Interstellar Void Drone: Deep sub-harmonic pulse
+                Beep(65, 200);
+                Sleep(50);
+                Beep(98, 220);
+                break;
+            case SOUNDSCAPE_ATMO:
+                // Atmospheric Ionosphere Whistle: Gentle breeze & ionization
+                Beep(330, 140);
+                Sleep(40);
+                Beep(220, 180);
+                break;
+            case SOUNDSCAPE_ENGINE:
+                // Ark Engine Propulsion Hum: Low mechanical rotor rumble
+                Beep(55, 180);
+                Sleep(30);
+                Beep(73, 150);
+                break;
+            case SOUNDSCAPE_PRECURSOR:
+                // Precursor Harmonic Resonance: Shimmering tachyon bell
+                Beep(528, 90);
+                Sleep(50);
+                Beep(792, 120);
+                break;
+            default:
+                break;
+        }
+    }
+    return 0;
+}
+
+static const char* GetSoundscapeLabel(void) {
+    switch (g_soundscapeMode) {
+        case SOUNDSCAPE_VOID: return "SOUND: VOID";
+        case SOUNDSCAPE_ATMO: return "SOUND: ATMO";
+        case SOUNDSCAPE_ENGINE: return "SOUND: ENGINE";
+        case SOUNDSCAPE_PRECURSOR: return "SOUND: PRECURSOR";
+        default: return "SOUND: OFF";
+    }
+}
+
+static void CycleSoundscapeMode(void) {
+    g_soundscapeMode = (SoundscapeMode)((g_soundscapeMode + 1) % 5);
+    PlaySoundFx(SFX_CLICK);
 }
 
 // --- Data Structures ---
@@ -2919,10 +3029,13 @@ static void AddButton(int id, int x, int y, int w, int h, const char* txt, const
 #define BID_SPEED_1X        31
 #define BID_SPEED_2X        32
 #define BID_SPEED_5X        33
-#define BID_AUDIO_TOGGLE    34
-#define BID_SYS_CYCLE       35
-#define BID_SYS_SCAN        36
-#define BID_TARGET_PLANET   37
+#define BID_AUDIO_TOGGLE        34
+#define BID_SOUNDSCAPE_TOGGLE   38
+#define BID_TEST_ATMO_ROAR      39
+#define BID_TEST_BIOSCAN        149
+#define BID_SYS_CYCLE           35
+#define BID_SYS_SCAN            36
+#define BID_TARGET_PLANET       37
 #define BID_ROSTER_BASE     150
 
 #define BID_ACT_SOLAR_MIRROR 40
@@ -3025,7 +3138,7 @@ static void HandleIntervention(int bid) {
                 }
                 CalculateHabitability();
                 SetLogMsg(buf, 0);
-                PlaySoundFx(SFX_DEPLOY);
+                PlaySoundFx(SFX_ENTRY_ROAR);
             } else {
                 SetLogMsg("Insufficient resources (Req: 180 t Minerals, 100 kW Energy).", 1);
             }
@@ -3569,7 +3682,7 @@ static void HandleInfrastructure(int bid) {
                 sim.science += 20;
                 sim.xenoScanAnim = 1.0f;
                 SetLogMsg("Astrometric resonance bioscan completed! Detected precursor signatures. +20 SP.", 0);
-                PlaySoundFx(SFX_SUCCESS);
+                PlaySoundFx(SFX_BIOSCAN_CHIME);
             } else {
                 SetLogMsg("Insufficient energy for bioscan (Req: 60 kW).", 1);
             }
@@ -5534,13 +5647,16 @@ static void RenderUI(HDC hdc, int width, int height) {
     AddButton(BID_SPEED_2X, 98, footY + 5, 34, 22, "2x", NULL, 1);
     AddButton(BID_SPEED_5X, 136, footY + 5, 34, 22, "5x", NULL, 1);
     AddButton(BID_AUDIO_TOGGLE, 176, footY + 5, 84, 22, g_soundEnabled ? "AUDIO: ON" : "AUDIO: OFF", NULL, 1);
+    AddButton(BID_SOUNDSCAPE_TOGGLE, 265, footY + 5, 115, 22, GetSoundscapeLabel(), NULL, 1);
+    AddButton(BID_TEST_ATMO_ROAR, 385, footY + 5, 80, 22, "ATMO ROAR", NULL, 1);
+    AddButton(BID_TEST_BIOSCAN, 470, footY + 5, 75, 22, "BIOSCAN", NULL, 1);
 
     // Footer Log Message Banner
     SetTextColor(hdc, sim.logIsWarn ? COLOR_ROSE : COLOR_CYAN);
     SelectObject(hdc, hFontSmall);
-    TextOutA(hdc, 276, footY + 9, sim.logIsWarn ? "[ALERT] " : "[FLEET DISPATCH] ", (int)strlen(sim.logIsWarn ? "[ALERT] " : "[FLEET DISPATCH] "));
+    TextOutA(hdc, 555, footY + 9, sim.logIsWarn ? "[ALERT] " : "[FLEET DISPATCH] ", (int)strlen(sim.logIsWarn ? "[ALERT] " : "[FLEET DISPATCH] "));
     SetTextColor(hdc, COLOR_TEXT_PRI);
-    TextOutA(hdc, 396, footY + 9, sim.logMsg, (int)strlen(sim.logMsg));
+    TextOutA(hdc, 675, footY + 9, sim.logMsg, (int)strlen(sim.logMsg));
 
     // Right-aligned engine tag
     SetTextColor(hdc, COLOR_TEXT_DIM);
@@ -5568,6 +5684,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             InitSimulation();
             SetTimer(hwnd, 1, 33, NULL); // ~30 FPS timer
             lastTickTime = GetTickCount();
+            g_soundscapeRunning = 1;
+            g_hSoundscapeThread = CreateThread(NULL, 0, SoundscapeThread, NULL, 0, NULL);
             return 0;
         }
 
@@ -5679,19 +5797,31 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     } else if (bid == BID_SPEED_2X) {
                         sim.paused = 0;
                         sim.speed = 2;
-                        PlaySoundFx(SFX_CLICK);
+                        PlaySoundFx(SFX_ENGINE_HUM);
                     } else if (bid == BID_SPEED_5X) {
                         sim.paused = 0;
                         sim.speed = 5;
-                        PlaySoundFx(SFX_CLICK);
+                        PlaySoundFx(SFX_ENGINE_HUM);
                     } else if (bid == BID_AUDIO_TOGGLE) {
                         g_soundEnabled = !g_soundEnabled;
                         PlaySoundFx(SFX_CLICK);
+                    } else if (bid == BID_SOUNDSCAPE_TOGGLE) {
+                        CycleSoundscapeMode();
+                        char msgBuf[96];
+                        sprintf(msgBuf, "Cosmic Soundscape Synthesizer shifted to: [%s].", GetSoundscapeLabel());
+                        SetLogMsg(msgBuf, 0);
+                    } else if (bid == BID_TEST_ATMO_ROAR) {
+                        PlaySoundFx(SFX_ENTRY_ROAR);
+                        SetLogMsg("Atmospheric orbital entry roar triggered. Hypersonic compression wavefront simulated.", 0);
+                    } else if (bid == BID_TEST_BIOSCAN) {
+                        PlaySoundFx(SFX_BIOSCAN_CHIME);
+                        SetLogMsg("Resonance bioscan crystal chimes triggered. Crystalline pentatonic arpeggio broadcast.", 0);
                     } else if (bid == BID_SYS_CYCLE) {
                         LoadStarSystem((g_currentSystem + 1) % g_systemCount);
                         PlaySoundFx(SFX_SUCCESS);
                     } else if (bid == BID_SYS_SCAN) {
                         GenerateProceduralStarSystem();
+                        PlaySoundFx(SFX_BIOSCAN_CHIME);
                     } else if (bid == BID_TARGET_PLANET) {
                         if (sim.selectedType == 2 && sim.selectedIndex >= 0 && sim.selectedIndex < CURR_SYS.bodyCount) {
                             SetActivePlanet(sim.selectedIndex);
@@ -5880,11 +6010,11 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     break;
                 case '2':
                     sim.paused = 0; sim.speed = 2;
-                    PlaySoundFx(SFX_CLICK);
+                    PlaySoundFx(SFX_ENGINE_HUM);
                     break;
                 case '5':
                     sim.paused = 0; sim.speed = 5;
-                    PlaySoundFx(SFX_CLICK);
+                    PlaySoundFx(SFX_ENGINE_HUM);
                     break;
                 case VK_TAB:
                     sim.activeTab = (sim.activeTab + 1) % 8;
@@ -5895,6 +6025,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     g_soundEnabled = !g_soundEnabled;
                     PlaySoundFx(SFX_CLICK);
                     break;
+                case 'A':
+                case 'a': {
+                    CycleSoundscapeMode();
+                    char msgBuf[96];
+                    sprintf(msgBuf, "Cosmic Soundscape Synthesizer shifted to: [%s].", GetSoundscapeLabel());
+                    SetLogMsg(msgBuf, 0);
+                    break;
+                }
                 case 'S':
                 case 's':
                     LoadStarSystem((g_currentSystem + 1) % g_systemCount);
@@ -5936,6 +6074,12 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 
         case WM_DESTROY: {
             KillTimer(hwnd, 1);
+            g_soundscapeRunning = 0;
+            if (g_hSoundscapeThread) {
+                WaitForSingleObject(g_hSoundscapeThread, 200);
+                CloseHandle(g_hSoundscapeThread);
+                g_hSoundscapeThread = NULL;
+            }
             if (memDC) {
                 SelectObject(memDC, oldBmp);
                 DeleteObject(memBmp);
