@@ -494,18 +494,19 @@
 
         .tab-btn {
             flex: 1;
-            padding: 9px 4px;
+            padding: 9px 2px;
             background: transparent;
             border: none;
             border-bottom: 2px solid transparent;
             color: var(--text-dim);
             font-family: var(--font-mono);
-            font-size: 11px;
+            font-size: 10px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             cursor: pointer;
             transition: all 0.2s;
             text-align: center;
+            white-space: nowrap;
         }
 
         .tab-btn:hover {
@@ -1308,9 +1309,68 @@
             backdrop-filter: blur(8px);
             max-width: 520px;
         }
-        @keyframes bannerPop {
-            0% { opacity: 0; transform: translateX(-50%) scale(0.7); }
-            100% { opacity: 1; transform: translateX(-50%) scale(1.0); }
+        /* Phase 11: Orbital Megastructures & Planetary Defense */
+        .mega-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-stellar);
+            border-radius: 4px;
+            padding: 9px 10px;
+            margin-bottom: 8px;
+            position: relative;
+            transition: all 0.25s;
+        }
+        .mega-card:hover {
+            border-color: rgba(0, 240, 255, 0.5);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.12);
+        }
+        .mega-badge {
+            font-size: 9px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .mega-badge.s0 { background: rgba(100, 116, 139, 0.2); color: var(--text-dim); border: 1px solid var(--text-dim); }
+        .mega-badge.s1 { background: rgba(56, 189, 248, 0.2); color: var(--accent-blue); border: 1px solid var(--accent-blue); }
+        .mega-badge.s2 { background: rgba(168, 85, 247, 0.2); color: var(--accent-purple); border: 1px solid var(--accent-purple); }
+        .mega-badge.s3 { background: rgba(245, 158, 11, 0.25); color: #f59e0b; border: 1px solid #f59e0b; }
+        .shield-mode-btn {
+            background: var(--bg-panel-dark);
+            border: 1px solid var(--border-stellar);
+            color: var(--text-dim);
+            padding: 4px 7px;
+            font-size: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: var(--font-mono);
+        }
+        .shield-mode-btn:hover {
+            color: var(--text-bright);
+            border-color: var(--accent-cyan);
+        }
+        .shield-mode-btn.active {
+            color: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            background: rgba(0, 240, 255, 0.12);
+            font-weight: bold;
+        }
+        .shield-bar-container {
+            width: 100%;
+            height: 10px;
+            background: rgba(10, 17, 32, 0.9);
+            border: 1px solid var(--border-stellar);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 4px 0;
+        }
+        .shield-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #00f0ff, #38bdf8, #818cf8);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
         }
     </style>
 </head>
@@ -1450,6 +1510,7 @@
                 <button class="tab-btn" data-tab="tab-fleet">Logistics</button>
                 <button class="tab-btn" data-tab="tab-colony">Colony</button>
                 <button class="tab-btn" data-tab="tab-research" id="tabBtnResearch">Research</button>
+                <button class="tab-btn" data-tab="tab-megas" id="tabBtnMegas">Megas</button>
                 <button class="tab-btn" data-tab="tab-hazards" id="tabBtnHazards">Hazards</button>
                 <button class="tab-btn" data-tab="tab-economy">Economy</button>
             </div>
@@ -2145,6 +2206,119 @@
                 </div>
             </div>
 
+            <!-- Tab: Orbital Megastructures & Planetary Defense Stations -->
+            <div class="tab-content" id="tab-megas">
+                <div class="section-header">
+                    <span>Orbital Megastructures & Defense</span>
+                    <span style="font-size:10px; color:var(--accent-cyan);" id="badgeMegasSummary">Grid Online</span>
+                </div>
+
+                <!-- Planetary Shield Grid HUD Card -->
+                <div class="metric-card" style="border-left: 3px solid var(--accent-cyan); margin-bottom: 8px;">
+                    <div class="metric-row">
+                        <strong style="color:var(--accent-cyan); font-size:12px;">Planetary Shield Grid</strong>
+                        <span id="badgeShieldStatus" class="mega-badge s1">ACTIVE (400 / 400 HP)</span>
+                    </div>
+                    <div class="shield-bar-container">
+                        <div class="shield-bar-fill" id="barShieldHP" style="width: 100%;"></div>
+                    </div>
+                    <div class="metric-row" style="font-size:10px; color:var(--text-dim); margin-top:2px;">
+                        <span>Deflection: <strong id="valShieldDeflect" style="color:var(--text-bright);">40% Cosmic Hazards</strong></span>
+                        <span>Recharge: <strong id="valShieldRecharge" style="color:var(--accent-emerald);">+15 HP/cyc (30 kW)</strong></span>
+                    </div>
+                    <div class="metric-row" style="margin-top:6px; gap:4px; justify-content: flex-start;">
+                        <span style="font-size:10px; color:var(--text-dim); margin-right:4px;">Grid Mode:</span>
+                        <button class="shield-mode-btn active" id="btnShieldModeBal">BALANCED</button>
+                        <button class="shield-mode-btn" id="btnShieldModeFort">FORTIFIED</button>
+                        <button class="shield-mode-btn" id="btnShieldModeStby">STANDBY</button>
+                    </div>
+                    <div style="margin-top:6px;">
+                        <button class="tech-act-btn primary" id="btnShieldOvercharge" style="width:100%; font-size:10px; padding:5px 0;">⚡ EMERGENCY OVERCHARGE (+300 HP / 180 Energy)</button>
+                    </div>
+                </div>
+
+                <!-- Megastructure Marvel 1: Orbital Ring -->
+                <div class="mega-card" id="cardMegaRing">
+                    <div class="metric-row">
+                        <div>
+                            <strong style="color:var(--accent-blue); font-size:12px;">Orbital Ring Array</strong>
+                            <div style="font-size:9px; color:var(--text-dim);" id="subRingName">Equatorial Ring Truss (Stage 0: Unbuilt)</div>
+                        </div>
+                        <span id="badgeRingStage" class="mega-badge s0">UNBUILT</span>
+                    </div>
+                    <div style="font-size:10px; color:var(--text-primary); margin:4px 0;" id="descRing">
+                        Super-structural ring encircling the exoplanet equator, housing orbital docks, solar collector arrays, and modular city habitats.
+                    </div>
+                    <div class="metric-row" style="font-size:10px; color:var(--accent-emerald); background:rgba(16,185,129,0.08); padding:3px 6px; border-radius:3px;">
+                        <span id="effectsRing">Benefits: +1,000 Habitation, +15% Trade Route Yield</span>
+                    </div>
+                    <div class="metric-row" style="margin-top:6px;">
+                        <button class="tech-act-btn primary" id="btnUpgradeRing" style="flex:1;">CONSTRUCT RING (1200 Min, 400 kW)</button>
+                    </div>
+                </div>
+
+                <!-- Megastructure Marvel 2: Star Elevator -->
+                <div class="mega-card" id="cardMegaElevator">
+                    <div class="metric-row">
+                        <div>
+                            <strong style="color:var(--accent-cyan); font-size:12px;">Star Elevator (Space Elevator)</strong>
+                            <div style="font-size:9px; color:var(--text-dim);" id="subElevName">Graphene Carbon Tether (Stage 0: Unbuilt)</div>
+                        </div>
+                        <span id="badgeElevStage" class="mega-badge s0">UNBUILT</span>
+                    </div>
+                    <div style="font-size:10px; color:var(--text-primary); margin:4px 0;" id="descElev">
+                        Planetary-to-orbital ribbon connecting surface spaceports directly to geostationary docks. Eliminates rocket fuel burns.
+                    </div>
+                    <div class="metric-row" style="font-size:10px; color:var(--accent-emerald); background:rgba(16,185,129,0.08); padding:3px 6px; border-radius:3px;">
+                        <span id="effectsElev">Benefits: -25% Launch Energy Drain, +50 Colonists Migration/cyc</span>
+                    </div>
+                    <div class="metric-row" style="margin-top:6px;">
+                        <button class="tech-act-btn primary" id="btnUpgradeElevator" style="flex:1;">CONSTRUCT ELEVATOR (1000 Min, 350 kW)</button>
+                    </div>
+                </div>
+
+                <!-- Megastructure Marvel 3: Planetary Shield Grid Upgrade -->
+                <div class="mega-card" id="cardMegaShield">
+                    <div class="metric-row">
+                        <div>
+                            <strong style="color:var(--accent-purple); font-size:12px;">Planetary Shield Grid Core</strong>
+                            <div style="font-size:9px; color:var(--text-dim);" id="subShieldName">Sub-Atmospheric Deflector (Stage 1)</div>
+                        </div>
+                        <span id="badgeShieldStage" class="mega-badge s1">STAGE I</span>
+                    </div>
+                    <div style="font-size:10px; color:var(--text-primary); margin:4px 0;" id="descShield">
+                        Sub-space energy envelope locking cosmic radiation, deflection grids, and asteroid barrier fields.
+                    </div>
+                    <div class="metric-row" style="font-size:10px; color:var(--accent-emerald); background:rgba(16,185,129,0.08); padding:3px 6px; border-radius:3px;">
+                        <span id="effectsShield">Current: 400 Max HP, 40% Deflection | Next: 900 Max HP, 75% Deflection</span>
+                    </div>
+                    <div class="metric-row" style="margin-top:6px;">
+                        <button class="tech-act-btn primary" id="btnUpgradeShield" style="flex:1;">UPGRADE TO STAGE II (3200 Min, 1200 kW)</button>
+                    </div>
+                </div>
+
+                <!-- Megastructure Marvel 4: Planetary Defense Citadel -->
+                <div class="mega-card" id="cardMegaDefense">
+                    <div class="metric-row">
+                        <div>
+                            <strong style="color:var(--accent-rose); font-size:12px;">Planetary Defense Bastion</strong>
+                            <div style="font-size:9px; color:var(--text-dim);" id="subDefName">Orbital Kinetic Battery (Stage 0: Unbuilt)</div>
+                        </div>
+                        <span id="badgeDefStage" class="mega-badge s0">UNBUILT</span>
+                    </div>
+                    <div style="font-size:10px; color:var(--text-primary); margin:4px 0;" id="descDef">
+                        Heavily armed orbital fortresses equipped with kinetic railguns, tachyon pulse lances, and antimatter beam arrays.
+                    </div>
+                    <div class="metric-row" style="font-size:10px; color:var(--accent-emerald); background:rgba(16,185,129,0.08); padding:3px 6px; border-radius:3px;">
+                        <span id="effectsDef">Benefits: Intercepts rogue asteroids, +15 t Min/cyc Debris Harvest</span>
+                    </div>
+                    <div class="metric-row" style="margin-top:6px; gap:6px;">
+                        <button class="tech-act-btn primary" id="btnUpgradeDefense" style="flex:2;">COMMISSION BATTERY (1100 Min, 300 kW)</button>
+                        <button class="tech-act-btn" id="btnTestFireDefense" style="flex:1;">TEST FIRE</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Tab: Cosmic Crisis Events & Planetary Hazards -->
             <div class="tab-content" id="tab-hazards">
                 <div class="section-header">
@@ -2436,6 +2610,23 @@
                         o.start(now + idx * 0.08);
                         o.stop(now + idx * 0.08 + 0.45);
                     });
+                } else if (type === 'shield') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(320, now);
+                    osc.frequency.exponentialRampToValueAtTime(640, now + 0.15);
+                    osc.frequency.exponentialRampToValueAtTime(280, now + 0.35);
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } else if (type === 'laser') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(1200, now);
+                    osc.frequency.exponentialRampToValueAtTime(200, now + 0.18);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
                 }
             } catch (e) {
                 // Audio safely ignored if restricted
@@ -2458,6 +2649,17 @@
             cryoSleepers: 75000,
             housingCap: 30000,
             morale: 86,
+
+            // Phase 11: Orbital Megastructures & Planetary Defense Stations
+            orbitalRingStage: 0,
+            starElevatorStage: 0,
+            shieldGridStage: 1,
+            defenseStationStage: 0,
+            shieldHP: 400,
+            shieldMaxHP: 400,
+            shieldMode: 'balanced',
+            shieldFlareAnim: 0,
+            defenseFireAnim: 0,
 
             // Phase 10: Interstellar Research Tree & Terraforming Breakthroughs
             science: 850,
@@ -3697,10 +3899,11 @@
             // Phase 10 Breakthrough & Technology Multipliers
             const antiDriveMult = (typeof isTechUnlocked === 'function' && isTechUnlocked('prop_antimatter')) ? 2.0 : 1.0;
             const bioAdaptedFoodMult = (typeof isTechUnlocked === 'function' && isTechUnlocked('bio_adapted')) ? 2.0 : 1.0;
+            const ringTradeMult = 1.0 + (sim.orbitalRingStage === 1 ? 0.15 : (sim.orbitalRingStage === 2 ? 0.35 : (sim.orbitalRingStage === 3 ? 0.75 : 0)));
 
             // Trade Route & Infrastructure Multipliers
-            const dockMult = (1.0 + (sim.orbitalDocks - 1) * 0.20) * antiDriveMult;
-            const fuelMult = (1.0 + (sim.fuelDepots - 1) * 0.25) * antiDriveMult;
+            const dockMult = (1.0 + (sim.orbitalDocks - 1) * 0.20) * antiDriveMult * ringTradeMult;
+            const fuelMult = (1.0 + (sim.fuelDepots - 1) * 0.25) * antiDriveMult * ringTradeMult;
 
             // Automated Route Yield Contributions
             const rMin = sim.tradeRoutes[0].active ? Math.floor(sim.tradeRoutes[0].baseYield * sim.tradeRoutes[0].freighters * dockMult) : 0;
@@ -3710,13 +3913,22 @@
             const massDriverMin = sim.massDrivers * 12;
             const fuelDepotPower = sim.fuelDepots * 40;
 
-            // Phase 8: Housing Capacity Calculation
-            sim.housingCap = (sim.geodesicDomes * 15000) + (sim.subterraneanVaults * 30000) + (sim.domedMegacities * 50000);
+            // Phase 8 & 11: Housing Capacity Calculation (Geodesic Domes, Vaults, Megacities, Orbital Ring)
+            const ringHousing = (sim.orbitalRingStage === 1 ? 1000 : (sim.orbitalRingStage === 2 ? 3000 : (sim.orbitalRingStage === 3 ? 8000 : 0)));
+            sim.housingCap = (sim.geodesicDomes * 15000) + (sim.subterraneanVaults * 30000) + (sim.domedMegacities * 50000) + ringHousing;
 
             // Phase 8: Demographic Specialization Multipliers
             const agroMult = 1.0 + ((sim.pctAgronomists - 25) * 0.012);
             const laborerMin = Math.floor(sim.colonists * (sim.pctLaborers / 100) * 0.0008);
             const engTerraMult = 1.0 + ((sim.pctEngineers - 20) * 0.01);
+
+            // Phase 11: Star Elevator Immigration Flow
+            if (sim.starElevatorStage > 0 && sim.cryoSleepers > 0) {
+                const elevMig = Math.floor((sim.starElevatorStage === 1 ? 5 : (sim.starElevatorStage === 2 ? 15 : 35)) * rate);
+                const actualMig = Math.min(sim.cryoSleepers, elevMig);
+                sim.cryoSleepers -= actualMig;
+                sim.colonists = Math.min(sim.housingCap, sim.colonists + actualMig);
+            }
 
             // Rationing Multipliers
             let rationMult = 1.0;
@@ -3732,19 +3944,36 @@
                 rationGrowth = 2.0;
             }
 
-            // Energy loops
-            const energyGen = 600 + (sim.surfaceSolar * 60) + (sim.domedMegacities * 30) + rEnergy + fuelDepotPower;
+            // Energy loops (Surface Solar + Domed Megacities + Orbital Ring Power)
+            const ringPower = (sim.orbitalRingStage === 2 ? 50 : (sim.orbitalRingStage === 3 ? 140 : 0));
+            const energyGen = 600 + (sim.surfaceSolar * 60) + (sim.domedMegacities * 30) + ringPower + rEnergy + fuelDepotPower;
             const baseEnergyDrain = 200 + (sim.solarMirrors * 75) + (sim.atmoProcessors * 60) + (sim.nitrogenExtractors * 85) + (sim.greenhouseStations * 70) + (sim.coreDynamos * 80) + Math.floor(sim.colonists / 1000) * 5;
             const engEnergySavings = Math.floor(baseEnergyDrain * (sim.pctEngineers / 100) * 0.25);
             const energyDrain = Math.max(80, baseEnergyDrain - engEnergySavings);
             sim.deltaEnergy = energyGen - energyDrain;
             sim.energy = Math.max(0, sim.energy + Math.floor(sim.deltaEnergy * 0.05 * rate));
 
-            // Minerals loops
-            const mineralGain = 20 + laborerMin + (sim.drakeStatus === 'mining' ? 25 : 10) + rMin + massDriverMin;
+            // Minerals loops (Laborers + Mining Rigs + Defense Debris Salvage)
+            const defSalvage = (sim.defenseStationStage === 1 ? 2 : (sim.defenseStationStage === 2 ? 4 : (sim.defenseStationStage === 3 ? 8 : 0)));
+            const mineralGain = 20 + laborerMin + (sim.drakeStatus === 'mining' ? 25 : 10) + rMin + massDriverMin + defSalvage;
             const mineralDrain = (sim.atmoProcessors * 3) + (sim.nitrogenExtractors * 2);
             sim.deltaMinerals = mineralGain - mineralDrain;
             sim.minerals = Math.max(0, sim.minerals + Math.floor(sim.deltaMinerals * 0.05 * rate));
+
+            // Phase 11: Planetary Shield Grid Maintenance & Recharge
+            sim.shieldMaxHP = (sim.shieldGridStage === 1 ? 400 : (sim.shieldGridStage === 2 ? 900 : (sim.shieldGridStage === 3 ? 1800 : 0)));
+            if (sim.shieldMode === 'fortified') sim.shieldMaxHP = Math.floor(sim.shieldMaxHP * 1.5);
+            if (sim.shieldGridStage > 0) {
+                if (sim.shieldMode === 'balanced' && sim.energy > 200) {
+                    sim.shieldHP = Math.min(sim.shieldMaxHP, sim.shieldHP + Math.floor(3 * rate));
+                    sim.energy = Math.max(0, sim.energy - 1);
+                } else if (sim.shieldMode === 'fortified' && sim.energy > 300) {
+                    sim.shieldHP = Math.min(sim.shieldMaxHP, sim.shieldHP + Math.floor(7 * rate));
+                    sim.energy = Math.max(0, sim.energy - 3);
+                }
+            }
+            if (sim.shieldFlareAnim > 0) sim.shieldFlareAnim = Math.max(0, sim.shieldFlareAnim - 0.05 * rate);
+            if (sim.defenseFireAnim > 0) sim.defenseFireAnim = Math.max(0, sim.defenseFireAnim - 0.08 * rate);
 
             // Volatiles loops
             const volGain = 14 + (sim.drakeStatus === 'mining' ? 18 : 6) + rVol;
@@ -3838,11 +4067,12 @@
             targetMorale += (sim.domedMegacities * 6.0);
             targetMorale += (sim.pctScientists * 0.2);
 
-            // Breakthrough Morale Buffs
+            // Breakthrough & Megastructure Morale Buffs
             if (typeof isTechUnlocked === 'function') {
                 if (isTechUnlocked('bio_adapted')) targetMorale += 15.0;
                 if (isTechUnlocked('geo_stabilization')) targetMorale += 20.0;
             }
+            if (sim.orbitalRingStage === 3) targetMorale += 15.0;
 
             targetMorale = Math.max(10, Math.min(99, targetMorale));
             sim.morale = Math.max(10, Math.min(99, +(sim.morale + (targetMorale - sim.morale) * 0.05 * rate).toFixed(1)));
@@ -3985,6 +4215,43 @@
             }
 
             initAudio();
+
+            // Phase 11: Planetary Defense Citadel Interception
+            if (sim.crisisType === 'asteroid' && sim.defenseStationStage > 0) {
+                const interceptChance = (sim.defenseStationStage === 1) ? 0.50 : ((sim.defenseStationStage === 2) ? 0.85 : 1.0);
+                if (Math.random() < interceptChance) {
+                    sim.defenseFireAnim = 1.0;
+                    sim.minerals += 60;
+                    playSound('laser');
+                    logMsg(`ORBITAL DEFENSE CITADEL: High-energy defense battery obliterated rogue asteroid in high orbit! +60 t mineral salvage.`);
+                    updateUI();
+                    updateCrisisUI();
+                    return;
+                }
+            }
+
+            // Phase 11: Planetary Shield Grid Absorption
+            if (sim.shieldGridStage > 0 && sim.shieldHP > 0) {
+                let shieldDmg = 250;
+                if (sim.crisisType === 'asteroid') shieldDmg = 500;
+                else if (sim.crisisType === 'flare') shieldDmg = 400;
+                else if (sim.crisisType === 'storm') shieldDmg = 300;
+                else if (sim.crisisType === 'quake') shieldDmg = 150;
+
+                sim.shieldFlareAnim = 1.0;
+                playSound('shield');
+                if (sim.shieldHP >= shieldDmg) {
+                    sim.shieldHP -= shieldDmg;
+                    logMsg(`PLANETARY SHIELD GRID: Sub-space forcefield absorbed ${crisis.name} impact energy! Zero surface casualties or facility damage.`);
+                    updateUI();
+                    updateCrisisUI();
+                    return;
+                } else {
+                    sim.shieldHP = 0;
+                    logMsg(`PLANETARY SHIELD GRID: Deflector barrier overwhelmed! Dampened shockwave reached surface atmosphere.`, true);
+                }
+            }
+
             playSound('explosion');
             sim.crisisShake = 18;
 
@@ -5530,6 +5797,142 @@
                             ctx.setLineDash([]);
                             ctx.restore();
                         }
+
+                        // Phase 11: 4. Planetary Shield Grid Forcefield Envelope
+                        if (sim.shieldGridStage > 0 && sim.shieldHP > 0) {
+                            const shieldR = pr + 14 * z;
+                            ctx.save();
+                            const sPulse = 0.85 + Math.sin(sim.time * 3) * 0.15;
+                            ctx.strokeStyle = (sim.shieldMode === 'fortified') ? `rgba(168, 85, 247, ${0.75 * sPulse})` : `rgba(0, 240, 255, ${0.65 * sPulse})`;
+                            ctx.lineWidth = 1.5 * z;
+                            ctx.setLineDash([6, 6]);
+                            ctx.beginPath();
+                            ctx.arc(px, py, shieldR, 0, Math.PI * 2);
+                            ctx.stroke();
+                            ctx.setLineDash([]);
+                            ctx.fillStyle = (sim.shieldMode === 'fortified') ? 'rgba(168, 85, 247, 0.08)' : 'rgba(0, 240, 255, 0.06)';
+                            ctx.fill();
+
+                            if (sim.shieldFlareAnim > 0) {
+                                ctx.strokeStyle = `rgba(255, 255, 255, ${sim.shieldFlareAnim})`;
+                                ctx.lineWidth = 3 * z;
+                                ctx.beginPath();
+                                ctx.arc(px, py, shieldR + (1.0 - sim.shieldFlareAnim) * 22 * z, 0, Math.PI * 2);
+                                ctx.stroke();
+                            }
+                            ctx.restore();
+                        }
+
+                        // Phase 11: 5. Equatorial Orbital Ring
+                        if (sim.orbitalRingStage > 0) {
+                            const oRingR = pr + 28 * z;
+                            ctx.save();
+                            ctx.strokeStyle = (sim.orbitalRingStage === 3) ? '#f59e0b' : '#38bdf8';
+                            ctx.lineWidth = (sim.orbitalRingStage === 3) ? 2.2 * z : 1.5 * z;
+                            ctx.beginPath();
+                            ctx.ellipse(px, py, oRingR, oRingR * 0.38, -0.25, 0, Math.PI * 2);
+                            ctx.stroke();
+
+                            // Inner ring concentric line
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.ellipse(px, py, oRingR - 3 * z, (oRingR - 3 * z) * 0.38, -0.25, 0, Math.PI * 2);
+                            ctx.stroke();
+
+                            // Structural tether struts down to planet
+                            for (let s = 0; s < 4; s++) {
+                                const sAng = (s * Math.PI / 2) - 0.25;
+                                const ox = px + Math.cos(sAng) * oRingR;
+                                const oy = py + Math.sin(sAng) * (oRingR * 0.38);
+                                const ix = px + Math.cos(sAng) * pr;
+                                const iy = py + Math.sin(sAng) * pr;
+                                ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
+                                ctx.beginPath();
+                                ctx.moveTo(ix, iy);
+                                ctx.lineTo(ox, oy);
+                                ctx.stroke();
+                            }
+
+                            // Modular Hubs along the ring
+                            const hubCount = (sim.orbitalRingStage === 3) ? 8 : 4;
+                            for (let h = 0; h < hubCount; h++) {
+                                const hAng = (sim.time * 0.1) + (h * (Math.PI * 2 / hubCount));
+                                const hx = px + Math.cos(hAng - 0.25) * oRingR;
+                                const hy = py + Math.sin(hAng - 0.25) * (oRingR * 0.38);
+                                ctx.fillStyle = (sim.orbitalRingStage === 3) ? '#fbbf24' : '#00f0ff';
+                                ctx.fillRect(hx - 2 * z, hy - 2 * z, 4 * z, 4 * z);
+                            }
+                            ctx.restore();
+                        }
+
+                        // Phase 11: 6. Star Elevator (Space Elevator Ribbon)
+                        if (sim.starElevatorStage > 0) {
+                            ctx.save();
+                            const elTopY = py - (pr + 36 * z);
+                            ctx.strokeStyle = 'rgba(0, 255, 200, 0.7)';
+                            ctx.lineWidth = 1.4 * z;
+                            ctx.beginPath();
+                            ctx.moveTo(px, py - pr);
+                            ctx.lineTo(px, elTopY);
+                            ctx.stroke();
+
+                            // Geostationary anchor terminal
+                            ctx.fillStyle = '#00f0ff';
+                            ctx.fillRect(px - 3 * z, elTopY - 3 * z, 6 * z, 6 * z);
+
+                            // Moving climber transport pod
+                            const podProgress = (sim.time * 0.35) % 1.0;
+                            const podY = (py - pr) - (36 * z * podProgress);
+                            ctx.fillStyle = '#fef08a';
+                            ctx.beginPath();
+                            ctx.arc(px, podY, 2.5 * z, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.restore();
+                        }
+
+                        // Phase 11: 7. Armed Planetary Defense Bastions
+                        if (sim.defenseStationStage > 0) {
+                            ctx.save();
+                            const numDef = sim.defenseStationStage;
+                            for (let d = 0; d < numDef; d++) {
+                                const dAng = (sim.time * 0.22) + (d * (Math.PI * 2 / numDef));
+                                const dx = px + Math.cos(dAng) * (pr + 44 * z);
+                                const dy = py + Math.sin(dAng) * ((pr + 44 * z) * 0.7);
+
+                                // Defense station diamond chassis
+                                ctx.fillStyle = '#f43f5e';
+                                ctx.strokeStyle = '#fda4af';
+                                ctx.lineWidth = 1;
+                                ctx.beginPath();
+                                ctx.moveTo(dx, dy - 5 * z);
+                                ctx.lineTo(dx + 5 * z, dy);
+                                ctx.lineTo(dx, dy + 5 * z);
+                                ctx.lineTo(dx - 5 * z, dy);
+                                ctx.closePath();
+                                ctx.fill();
+                                ctx.stroke();
+
+                                // Rotating radar target beam
+                                const radarAng = sim.time * 3 + d;
+                                ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
+                                ctx.beginPath();
+                                ctx.moveTo(dx, dy);
+                                ctx.lineTo(dx + Math.cos(radarAng) * 16 * z, dy + Math.sin(radarAng) * 16 * z);
+                                ctx.stroke();
+
+                                // Defense battery weapon beam when firing
+                                if (sim.defenseFireAnim > 0) {
+                                    ctx.strokeStyle = `rgba(255, 60, 60, ${sim.defenseFireAnim})`;
+                                    ctx.lineWidth = 3 * z;
+                                    ctx.beginPath();
+                                    ctx.moveTo(dx, dy);
+                                    ctx.lineTo(dx + Math.cos(dAng) * 140 * z, dy + Math.sin(dAng) * 140 * z);
+                                    ctx.stroke();
+                                }
+                            }
+                            ctx.restore();
+                        }
                     }
 
                     // Target Reticle if selected
@@ -6930,6 +7333,7 @@
             const rateSci = document.getElementById('rateScience');
             if (rateSci) rateSci.textContent = `(${sim.deltaScience >= 0 ? '+' : ''}${sim.deltaScience})`;
             if (typeof updateTechTreeUI === 'function') updateTechTreeUI();
+            if (typeof updateMegasUI === 'function') updateMegasUI();
         }
 
         // --- Phase 10: Interstellar Research Tree & Breakthrough Engine ---
@@ -7210,6 +7614,304 @@
                 elStab.style.color = btStab ? 'var(--accent-emerald)' : (isTechUnlocked('geo_sunshade') ? 'var(--accent-amber)' : 'var(--text-dim)');
             }
         }
+
+        // --- Phase 11: Orbital Megastructures & Defense UI & Handlers ---
+        function updateMegasUI() {
+            const shieldHP = sim.shieldHP || 0;
+            const shieldMax = sim.shieldMaxHP || 400;
+            const hpPct = Math.max(0, Math.min(100, (shieldHP / shieldMax) * 100));
+
+            const barShield = document.getElementById('barShieldHP');
+            if (barShield) barShield.style.width = `${hpPct}%`;
+
+            const badgeShield = document.getElementById('badgeShieldStatus');
+            if (badgeShield) {
+                if (sim.shieldGridStage === 0) {
+                    badgeShield.textContent = 'OFFLINE';
+                    badgeShield.className = 'mega-badge s0';
+                } else if (shieldHP <= 0) {
+                    badgeShield.textContent = 'DEPLETED (RECHARGING)';
+                    badgeShield.className = 'mega-badge s0';
+                } else if (sim.shieldMode === 'fortified') {
+                    badgeShield.textContent = `FORTIFIED (${shieldHP} / ${shieldMax} HP)`;
+                    badgeShield.className = 'mega-badge s2';
+                } else {
+                    badgeShield.textContent = `ACTIVE (${shieldHP} / ${shieldMax} HP)`;
+                    badgeShield.className = 'mega-badge s1';
+                }
+            }
+
+            const valDeflect = document.getElementById('valShieldDeflect');
+            if (valDeflect) {
+                const defPct = sim.shieldGridStage === 1 ? 40 : (sim.shieldGridStage === 2 ? 75 : (sim.shieldGridStage === 3 ? 100 : 0));
+                valDeflect.textContent = `${defPct}% Cosmic Hazards`;
+            }
+
+            const valRecharge = document.getElementById('valShieldRecharge');
+            if (valRecharge) {
+                if (sim.shieldMode === 'balanced') valRecharge.textContent = '+15 HP/cyc (30 kW)';
+                else if (sim.shieldMode === 'fortified') valRecharge.textContent = '+35 HP/cyc (80 kW)';
+                else valRecharge.textContent = '0 HP (Standby, 0 kW)';
+            }
+
+            const btnBal = document.getElementById('btnShieldModeBal');
+            const btnFort = document.getElementById('btnShieldModeFort');
+            const btnStby = document.getElementById('btnShieldModeStby');
+            if (btnBal && btnFort && btnStby) {
+                btnBal.classList.toggle('active', sim.shieldMode === 'balanced');
+                btnFort.classList.toggle('active', sim.shieldMode === 'fortified');
+                btnStby.classList.toggle('active', sim.shieldMode === 'standby');
+            }
+
+            // Orbital Ring Card
+            const subRing = document.getElementById('subRingName');
+            const badgeRing = document.getElementById('badgeRingStage');
+            const effRing = document.getElementById('effectsRing');
+            const btnRing = document.getElementById('btnUpgradeRing');
+
+            if (sim.orbitalRingStage === 0) {
+                if (subRing) subRing.textContent = 'Equatorial Ring Truss (Stage 0: Unbuilt)';
+                if (badgeRing) { badgeRing.textContent = 'UNBUILT'; badgeRing.className = 'mega-badge s0'; }
+                if (effRing) effRing.textContent = 'Next Stage: +1,000 Habitation, +15% Trade Route Yield';
+                if (btnRing) btnRing.textContent = 'CONSTRUCT RING (1200 Min, 400 kW)';
+            } else if (sim.orbitalRingStage === 1) {
+                if (subRing) subRing.textContent = 'Equatorial Truss Scaffold (Stage 1)';
+                if (badgeRing) { badgeRing.textContent = 'STAGE I'; badgeRing.className = 'mega-badge s1'; }
+                if (effRing) effRing.textContent = 'Current: +1k Hab, +15% Trade | Next: +3k Hab, +35% Trade, +50 kW';
+                if (btnRing) btnRing.textContent = 'UPGRADE TO HAB RING (2800 Min, 900 kW)';
+            } else if (sim.orbitalRingStage === 2) {
+                if (subRing) subRing.textContent = 'Encircled Habitation Ring (Stage 2)';
+                if (badgeRing) { badgeRing.textContent = 'STAGE II'; badgeRing.className = 'mega-badge s2'; }
+                if (effRing) effRing.textContent = 'Current: +3k Hab, +35% Trade, +50 kW | Next: +8k Hab, +75% Trade, +140 kW, +15 Morale';
+                if (btnRing) btnRing.textContent = 'UPGRADE TO ZENITH FOUNDRY (5500 Min, 1800 kW)';
+            } else {
+                if (subRing) subRing.textContent = 'Zenith Dyson Foundry Ring (Stage 3)';
+                if (badgeRing) { badgeRing.textContent = 'MAX STAGE'; badgeRing.className = 'mega-badge s3'; }
+                if (effRing) effRing.textContent = 'Current: +8,000 Habitation, +75% Trade, +140 kW Power, +15 Morale';
+                if (btnRing) { btnRing.textContent = 'ZENITH FOUNDRY COMPLETED'; btnRing.disabled = true; }
+            }
+
+            // Star Elevator Card
+            const subElev = document.getElementById('subElevName');
+            const badgeElev = document.getElementById('badgeElevStage');
+            const effElev = document.getElementById('effectsElev');
+            const btnElev = document.getElementById('btnUpgradeElevator');
+
+            if (sim.starElevatorStage === 0) {
+                if (subElev) subElev.textContent = 'Graphene Carbon Tether (Stage 0: Unbuilt)';
+                if (badgeElev) { badgeElev.textContent = 'UNBUILT'; badgeElev.className = 'mega-badge s0'; }
+                if (effElev) effElev.textContent = 'Next Stage: -25% Launch Energy Drain, +50 Colonists/cyc';
+                if (btnElev) btnElev.textContent = 'CONSTRUCT ELEVATOR (1000 Min, 350 kW)';
+            } else if (sim.starElevatorStage === 1) {
+                if (subElev) subElev.textContent = 'Tether Anchor & Line (Stage 1)';
+                if (badgeElev) { badgeElev.textContent = 'STAGE I'; badgeElev.className = 'mega-badge s1'; }
+                if (effElev) effElev.textContent = 'Current: -25% Launch, +50 Migr | Next: -60% Launch, +150 Migr';
+                if (btnElev) btnElev.textContent = 'UPGRADE TO CLIMBER ARRAY (2400 Min, 750 kW)';
+            } else if (sim.starElevatorStage === 2) {
+                if (subElev) subElev.textContent = 'Dual Climber Array (Stage 2)';
+                if (badgeElev) { badgeElev.textContent = 'STAGE II'; badgeElev.className = 'mega-badge s2'; }
+                if (effElev) effElev.textContent = 'Current: -60% Launch, +150 Migr | Next: Zero Launch Cost, +350 Migr';
+                if (btnElev) btnElev.textContent = 'UPGRADE TO HYPERLOOP (4800 Min, 1500 kW)';
+            } else {
+                if (subElev) subElev.textContent = 'Superconducting Orbital Hyperloop (Stage 3)';
+                if (badgeElev) { badgeElev.textContent = 'MAX STAGE'; badgeElev.className = 'mega-badge s3'; }
+                if (effElev) effElev.textContent = 'Current: Zero Launch Costs, +350 Colonists Migration/cyc';
+                if (btnElev) { btnElev.textContent = 'ORBITAL HYPERLOOP COMPLETED'; btnElev.disabled = true; }
+            }
+
+            // Planetary Shield Grid Card
+            const subShield = document.getElementById('subShieldName');
+            const badgeShieldSt = document.getElementById('badgeShieldStage');
+            const effShield = document.getElementById('effectsShield');
+            const btnShield = document.getElementById('btnUpgradeShield');
+
+            if (sim.shieldGridStage === 1) {
+                if (subShield) subShield.textContent = 'Sub-Atmospheric Deflector (Stage 1)';
+                if (badgeShieldSt) { badgeShieldSt.textContent = 'STAGE I'; badgeShieldSt.className = 'mega-badge s1'; }
+                if (effShield) effShield.textContent = 'Current: 400 Max HP, 40% Deflection | Next: 900 Max HP, 75% Deflection';
+                if (btnShield) btnShield.textContent = 'UPGRADE TO FLUX LATTICE (3200 Min, 1200 kW)';
+            } else if (sim.shieldGridStage === 2) {
+                if (subShield) subShield.textContent = 'Ionospheric Flux Lattice (Stage 2)';
+                if (badgeShieldSt) { badgeShieldSt.textContent = 'STAGE II'; badgeShieldSt.className = 'mega-badge s2'; }
+                if (effShield) effShield.textContent = 'Current: 900 Max HP, 75% Deflection | Next: 1800 Max HP, 100% Deflection, +10% Hab';
+                if (btnShield) btnShield.textContent = 'UPGRADE TO AEGIS BARRIER (6000 Min, 2200 kW)';
+            } else {
+                if (subShield) subShield.textContent = 'Aegis Sub-Space Planetary Barrier (Stage 3)';
+                if (badgeShieldSt) { badgeShieldSt.textContent = 'MAX STAGE'; badgeShieldSt.className = 'mega-badge s3'; }
+                if (effShield) effShield.textContent = 'Current: 1,800 Max HP, 100% Deflection, +10% Habitability Radiation Shielding';
+                if (btnShield) { btnShield.textContent = 'AEGIS BARRIER AT MAXIMUM'; btnShield.disabled = true; }
+            }
+
+            // Planetary Defense Citadel Card
+            const subDef = document.getElementById('subDefName');
+            const badgeDef = document.getElementById('badgeDefStage');
+            const effDef = document.getElementById('effectsDef');
+            const btnDef = document.getElementById('btnUpgradeDefense');
+
+            if (sim.defenseStationStage === 0) {
+                if (subDef) subDef.textContent = 'Orbital Kinetic Battery (Stage 0: Unbuilt)';
+                if (badgeDef) { badgeDef.textContent = 'UNBUILT'; badgeDef.className = 'mega-badge s0'; }
+                if (effDef) effDef.textContent = 'Next Stage: 50% Asteroid Intercept, +15 t Min/cyc Debris Harvest';
+                if (btnDef) btnDef.textContent = 'COMMISSION BATTERY (1100 Min, 300 kW)';
+            } else if (sim.defenseStationStage === 1) {
+                if (subDef) subDef.textContent = 'Kinetic Railgun Platform (Stage 1)';
+                if (badgeDef) { badgeDef.textContent = 'STAGE I'; badgeDef.className = 'mega-badge s1'; }
+                if (effDef) effDef.textContent = 'Current: 50% Intercept, +15 t Min | Next: 85% Intercept, +30 t Min';
+                if (btnDef) btnDef.textContent = 'UPGRADE TO TACHYON CANNON (2600 Min, 800 kW)';
+            } else if (sim.defenseStationStage === 2) {
+                if (subDef) subDef.textContent = 'Tachyon Pulse Battery (Stage 2)';
+                if (badgeDef) { badgeDef.textContent = 'STAGE II'; badgeDef.className = 'mega-badge s2'; }
+                if (effDef) effDef.textContent = 'Current: 85% Intercept, +30 t Min | Next: 100% Intercept, +60 t Min';
+                if (btnDef) btnDef.textContent = 'UPGRADE TO ANTIMATTER CITADEL (5200 Min, 1600 kW)';
+            } else {
+                if (subDef) subDef.textContent = 'Nova Antimatter Beam Citadel (Stage 3)';
+                if (badgeDef) { badgeDef.textContent = 'MAX STAGE'; badgeDef.className = 'mega-badge s3'; }
+                if (effDef) effDef.textContent = 'Current: 100% Intercept of Rogues, +60 t Min/cyc Heavy Salvage';
+                if (btnDef) { btnDef.textContent = 'ANTIMATTER CITADEL ACTIVE'; btnDef.disabled = true; }
+            }
+
+            const badgeSummary = document.getElementById('badgeMegasSummary');
+            if (badgeSummary) {
+                const totalStages = (sim.orbitalRingStage || 0) + (sim.starElevatorStage || 0) + (sim.shieldGridStage || 1) + (sim.defenseStationStage || 0);
+                badgeSummary.textContent = `${totalStages}/12 Milestones`;
+            }
+        }
+
+        // Megastructure Button Listeners
+        document.getElementById('btnUpgradeRing').addEventListener('click', () => {
+            initAudio();
+            let costMin = 1200, costEng = 400;
+            if (sim.orbitalRingStage === 1) { costMin = 2800; costEng = 900; }
+            else if (sim.orbitalRingStage === 2) { costMin = 5500; costEng = 1800; }
+            else if (sim.orbitalRingStage >= 3) return;
+
+            if (sim.minerals >= costMin && sim.energy >= costEng) {
+                sim.minerals -= costMin;
+                sim.energy -= costEng;
+                sim.orbitalRingStage++;
+                updateUI();
+                logMsg(`Orbital Ring advanced to Stage ${sim.orbitalRingStage}! Structural hab modules deployed.`);
+                playSound('breakthrough');
+            } else {
+                logMsg(`Insufficient resources for Orbital Ring (Req: ${costMin} t Minerals, ${costEng} kW Energy).`, true);
+                playSound('warn');
+            }
+        });
+
+        document.getElementById('btnUpgradeElevator').addEventListener('click', () => {
+            initAudio();
+            let costMin = 1000, costEng = 350;
+            if (sim.starElevatorStage === 1) { costMin = 2400; costEng = 750; }
+            else if (sim.starElevatorStage === 2) { costMin = 4800; costEng = 1500; }
+            else if (sim.starElevatorStage >= 3) return;
+
+            if (sim.minerals >= costMin && sim.energy >= costEng) {
+                sim.minerals -= costMin;
+                sim.energy -= costEng;
+                sim.starElevatorStage++;
+                updateUI();
+                logMsg(`Star Elevator advanced to Stage ${sim.starElevatorStage}! Ground-to-orbit tether line active.`);
+                playSound('breakthrough');
+            } else {
+                logMsg(`Insufficient resources for Star Elevator (Req: ${costMin} t Minerals, ${costEng} kW Energy).`, true);
+                playSound('warn');
+            }
+        });
+
+        document.getElementById('btnUpgradeShield').addEventListener('click', () => {
+            initAudio();
+            let costMin = 3200, costEng = 1200;
+            if (sim.shieldGridStage === 2) { costMin = 6000; costEng = 2200; }
+            else if (sim.shieldGridStage >= 3) return;
+
+            if (sim.minerals >= costMin && sim.energy >= costEng) {
+                sim.minerals -= costMin;
+                sim.energy -= costEng;
+                sim.shieldGridStage++;
+                sim.shieldMaxHP = (sim.shieldGridStage === 2 ? 900 : 1800);
+                if (sim.shieldMode === 'fortified') sim.shieldMaxHP = Math.floor(sim.shieldMaxHP * 1.5);
+                sim.shieldHP = sim.shieldMaxHP;
+                sim.shieldFlareAnim = 1.0;
+                calculateHabitability();
+                updateUI();
+                logMsg(`Planetary Shield Grid upgraded to Stage ${sim.shieldGridStage}! Deflector capacity: ${sim.shieldMaxHP} HP.`);
+                playSound('shield');
+            } else {
+                logMsg(`Insufficient resources for Shield Grid (Req: ${costMin} t Minerals, ${costEng} kW Energy).`, true);
+                playSound('warn');
+            }
+        });
+
+        document.getElementById('btnUpgradeDefense').addEventListener('click', () => {
+            initAudio();
+            let costMin = 1100, costEng = 300;
+            if (sim.defenseStationStage === 1) { costMin = 2600; costEng = 800; }
+            else if (sim.defenseStationStage === 2) { costMin = 5200; costEng = 1600; }
+            else if (sim.defenseStationStage >= 3) return;
+
+            if (sim.minerals >= costMin && sim.energy >= costEng) {
+                sim.minerals -= costMin;
+                sim.energy -= costEng;
+                sim.defenseStationStage++;
+                updateUI();
+                logMsg(`Planetary Defense Bastion commissioned at Stage ${sim.defenseStationStage}! Orbital interceptors armed.`);
+                playSound('deploy');
+            } else {
+                logMsg(`Insufficient resources for Defense Battery (Req: ${costMin} t Minerals, ${costEng} kW Energy).`, true);
+                playSound('warn');
+            }
+        });
+
+        document.getElementById('btnShieldOvercharge').addEventListener('click', () => {
+            initAudio();
+            if (sim.energy >= 180) {
+                sim.energy -= 180;
+                sim.shieldHP = Math.min(sim.shieldMaxHP, sim.shieldHP + 300);
+                sim.shieldFlareAnim = 1.0;
+                updateUI();
+                logMsg(`Planetary Shield Grid overcharged! +300 HP forcefield boost infused.`);
+                playSound('shield');
+            } else {
+                logMsg('Insufficient energy for shield overcharge (Req: 180 kW).', true);
+                playSound('warn');
+            }
+        });
+
+        document.getElementById('btnShieldModeBal').addEventListener('click', () => {
+            initAudio();
+            sim.shieldMode = 'balanced';
+            updateUI();
+            logMsg('Planetary Shield Grid set to BALANCED mode (Standard 30 kW upkeep, +15 HP/cyc).');
+            playSound('click');
+        });
+
+        document.getElementById('btnShieldModeFort').addEventListener('click', () => {
+            initAudio();
+            sim.shieldMode = 'fortified';
+            updateUI();
+            logMsg('Planetary Shield Grid set to FORTIFIED mode (+50% Capacity, 80 kW upkeep, +35 HP/cyc).');
+            playSound('click');
+        });
+
+        document.getElementById('btnShieldModeStby').addEventListener('click', () => {
+            initAudio();
+            sim.shieldMode = 'standby';
+            updateUI();
+            logMsg('Planetary Shield Grid set to STANDBY mode (0 kW energy upkeep, shields passive).');
+            playSound('click');
+        });
+
+        document.getElementById('btnTestFireDefense').addEventListener('click', () => {
+            initAudio();
+            if (sim.defenseStationStage > 0) {
+                sim.defenseFireAnim = 1.0;
+                logMsg(`Planetary defense citadel: test fire burst discharged across orbital coordinates.`);
+                playSound('laser');
+            } else {
+                logMsg('No orbital defense batteries commissioned yet. Construct Stage 1 battery first.', true);
+                playSound('warn');
+            }
+        });
 
         // Start render and initial update
         loadStarSystem(0);

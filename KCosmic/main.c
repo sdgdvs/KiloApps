@@ -384,8 +384,19 @@ typedef struct {
     int selectedType; // 0=none, 1=sun, 2=planet, 3=moon, 4=station, 5=ship
     int selectedIndex;
 
-    // Tab: 0=Terraform, 1=Fleet, 2=Colony, 3=Research, 4=Hazards, 5=Economy
+    // Tab: 0=Terraform, 1=Fleet, 2=Colony, 3=Research, 4=Megas, 5=Hazards, 6=Economy
     int activeTab;
+
+    // Phase 11: Orbital Megastructures & Planetary Defense Stations
+    int orbitalRingStage;     // 0 to 3
+    int starElevatorStage;    // 0 to 3
+    int shieldGridStage;      // 0 to 3
+    int defenseStationStage;  // 0 to 3
+    int shieldHP;
+    int shieldMaxHP;
+    int shieldMode;           // 0=Balanced, 1=Fortified, 2=Standby
+    float shieldFlareAnim;
+    float defenseFireAnim;
 
     // Phase 10: Interstellar Research Tree & Terraforming Breakthroughs
     int science;
@@ -602,6 +613,7 @@ static void CalculateHabitability(void) {
     float total = (pScore * 0.20f) + (tScore * 0.20f) + (wScore * 0.15f) + (oScore * 0.15f) + (nScore * 0.15f) + (ghgScore * 0.10f) + (mScore * 0.05f);
     if (sim.techResearched[TECH_BIO_ADAPTED]) total += 20.0f;
     if (sim.techResearched[TECH_GEO_STABILIZATION]) total += 15.0f;
+    if (sim.shieldGridStage == 3) total += 10.0f;
     if (total < 0.0f) total = 0.0f;
     if (total > 100.0f) total = 100.0f;
     sim.habitability = total;
@@ -870,6 +882,38 @@ static void ResolveCrisisImpact(void) {
     sim.crisisActive = 0;
     if (sim.crisisMitigated) return;
 
+    // Phase 11: Planetary Defense Citadel Interception
+    if (sim.crisisType == CRISIS_ASTEROID && sim.defenseStationStage > 0) {
+        float interceptChance = (sim.defenseStationStage == 1) ? 0.50f : ((sim.defenseStationStage == 2) ? 0.85f : 1.0f);
+        if (((float)rand() / (float)RAND_MAX) < interceptChance) {
+            sim.defenseFireAnim = 1.0f;
+            sim.minerals += 60;
+            PlaySoundFx(SFX_SUCCESS);
+            SetLogMsg("ORBITAL DEFENSE CITADEL: Defense batteries obliterated rogue asteroid in high orbit! +60 t salvage.", 0);
+            return;
+        }
+    }
+
+    // Phase 11: Planetary Shield Grid Absorption
+    if (sim.shieldGridStage > 0 && sim.shieldHP > 0) {
+        int shieldDmg = 250;
+        if (sim.crisisType == CRISIS_ASTEROID) shieldDmg = 500;
+        else if (sim.crisisType == CRISIS_FLARE) shieldDmg = 400;
+        else if (sim.crisisType == CRISIS_STORM) shieldDmg = 300;
+        else if (sim.crisisType == CRISIS_QUAKE) shieldDmg = 150;
+
+        sim.shieldFlareAnim = 1.0f;
+        PlaySoundFx(SFX_SUCCESS);
+        if (sim.shieldHP >= shieldDmg) {
+            sim.shieldHP -= shieldDmg;
+            SetLogMsg("PLANETARY SHIELD GRID: Sub-space barrier absorbed cosmic crisis impact! Zero surface casualties.", 0);
+            return;
+        } else {
+            sim.shieldHP = 0;
+            SetLogMsg("PLANETARY SHIELD GRID: Shield collapsed under kinetic impact! Shockwave reached surface.", 1);
+        }
+    }
+
     PlaySoundFx(SFX_EXPLODE);
     sim.crisisShake = 20.0f;
 
@@ -1040,8 +1084,9 @@ static void SimTick(void) {
     int aeroYield = sim.techResearched[TECH_BIO_THERMAL] ? 110 : 80;
 
     // Logistics Multipliers & Automated Supply Trade Routes
-    float dockMult = (1.0f + (float)(sim.orbitalDocks - 1) * 0.20f) * antiDriveMult;
-    float fuelMult = (1.0f + (float)(sim.fuelDepots - 1) * 0.25f) * antiDriveMult;
+    float ringTradeMult = 1.0f + (sim.orbitalRingStage == 1 ? 0.15f : (sim.orbitalRingStage == 2 ? 0.35f : (sim.orbitalRingStage == 3 ? 0.75f : 0.0f)));
+    float dockMult = (1.0f + (float)(sim.orbitalDocks - 1) * 0.20f) * antiDriveMult * ringTradeMult;
+    float fuelMult = (1.0f + (float)(sim.fuelDepots - 1) * 0.25f) * antiDriveMult * ringTradeMult;
 
     int rMin = g_tradeRoutes[0].active ? (int)(g_tradeRoutes[0].baseYield * g_tradeRoutes[0].freighters * dockMult) : 0;
     int rVol = g_tradeRoutes[1].active ? (int)(g_tradeRoutes[1].baseYield * g_tradeRoutes[1].freighters * dockMult) : 0;
@@ -1050,13 +1095,23 @@ static void SimTick(void) {
     int massDriverMin = sim.massDrivers * 12;
     int fuelDepotPower = sim.fuelDepots * 40;
 
-    // Phase 8: Housing Capacity Sync
-    sim.housingCap = (sim.geodesicDomes * 15000) + (sim.subterraneanVaults * 30000) + (sim.domedMegacities * 50000);
+    // Phase 8 & 11: Housing Capacity Sync (Domes, Vaults, Megacities, Orbital Ring)
+    int ringHousing = (sim.orbitalRingStage == 1 ? 1000 : (sim.orbitalRingStage == 2 ? 3000 : (sim.orbitalRingStage == 3 ? 8000 : 0)));
+    sim.housingCap = (sim.geodesicDomes * 15000) + (sim.subterraneanVaults * 30000) + (sim.domedMegacities * 50000) + ringHousing;
 
     // Phase 8: Demographic Specialization Multipliers
     float agroMult = 1.0f + ((float)(sim.pctAgronomists - 25) * 0.012f);
     int laborerMin = (int)(sim.colonists * ((float)sim.pctLaborers / 100.0f) * 0.0008f);
     float engTerraMult = 1.0f + ((float)(sim.pctEngineers - 20) * 0.01f);
+
+    // Phase 11: Star Elevator Immigration Flow
+    if (sim.starElevatorStage > 0 && sim.cryoSleepers > 0) {
+        int elevMig = (int)((sim.starElevatorStage == 1 ? 5 : (sim.starElevatorStage == 2 ? 15 : 35)) * rate);
+        if (elevMig > sim.cryoSleepers) elevMig = sim.cryoSleepers;
+        sim.cryoSleepers -= elevMig;
+        sim.colonists += elevMig;
+        if (sim.colonists > sim.housingCap) sim.colonists = sim.housingCap;
+    }
 
     // Rationing Multipliers
     float rationMult = 1.0f;
@@ -1072,8 +1127,9 @@ static void SimTick(void) {
         rationGrowth = 2.0f;
     }
 
-    // Energy
-    int energyGen = 600 + (sim.surfaceSolar * 60) + (sim.domedMegacities * 30) + rEnergy + fuelDepotPower;
+    // Energy (Surface Solar + Domed Megacities + Orbital Ring Power)
+    int ringPower = (sim.orbitalRingStage == 2 ? 50 : (sim.orbitalRingStage == 3 ? 140 : 0));
+    int energyGen = 600 + (sim.surfaceSolar * 60) + (sim.domedMegacities * 30) + ringPower + rEnergy + fuelDepotPower;
     int baseEnergyDrain = 200 + (sim.solarMirrors * 75) + (sim.atmoProcessors * 60) + (sim.nitrogenExtractors * 85) + (sim.greenhouseStations * 70) + (sim.coreDynamos * 80) + (sim.colonists / 1000) * 5;
     int engEnergySavings = (int)(baseEnergyDrain * ((float)sim.pctEngineers / 100.0f) * 0.25f);
     int energyDrain = baseEnergyDrain - engEnergySavings;
@@ -1082,12 +1138,34 @@ static void SimTick(void) {
     sim.energy += (int)(sim.deltaEnergy * 0.05f * rate);
     if (sim.energy < 0) sim.energy = 0;
 
-    // Minerals
-    int mineralGain = 20 + laborerMin + (strcmp(fleet[3].status, "Harvesting") == 0 || strcmp(fleet[3].status, "Mining Belt") == 0 ? 25 : 10) + rMin + massDriverMin;
+    // Minerals (Laborers + Mining Rigs + Defense Debris Salvage)
+    int defSalvage = (sim.defenseStationStage == 1 ? 2 : (sim.defenseStationStage == 2 ? 4 : (sim.defenseStationStage == 3 ? 8 : 0)));
+    int mineralGain = 20 + laborerMin + (strcmp(fleet[3].status, "Harvesting") == 0 || strcmp(fleet[3].status, "Mining Belt") == 0 ? 25 : 10) + rMin + massDriverMin + defSalvage;
     int mineralDrain = (sim.atmoProcessors * 3) + (sim.nitrogenExtractors * 2);
     sim.deltaMinerals = mineralGain - mineralDrain;
     sim.minerals += (int)(sim.deltaMinerals * 0.05f * rate);
     if (sim.minerals < 0) sim.minerals = 0;
+
+    // Phase 11: Planetary Shield Grid Maintenance & Recharge
+    sim.shieldMaxHP = (sim.shieldGridStage == 1 ? 400 : (sim.shieldGridStage == 2 ? 900 : (sim.shieldGridStage == 3 ? 1800 : 0)));
+    if (sim.shieldMode == 1) sim.shieldMaxHP = (int)(sim.shieldMaxHP * 1.5f);
+    if (sim.shieldGridStage > 0) {
+        if (sim.shieldMode == 0 && sim.energy > 200) {
+            if (sim.shieldHP < sim.shieldMaxHP) {
+                sim.shieldHP += (int)(3.0f * (float)rate);
+                if (sim.shieldHP > sim.shieldMaxHP) sim.shieldHP = sim.shieldMaxHP;
+                sim.energy = (sim.energy > 1) ? (sim.energy - 1) : 0;
+            }
+        } else if (sim.shieldMode == 1 && sim.energy > 300) {
+            if (sim.shieldHP < sim.shieldMaxHP) {
+                sim.shieldHP += (int)(7.0f * (float)rate);
+                if (sim.shieldHP > sim.shieldMaxHP) sim.shieldHP = sim.shieldMaxHP;
+                sim.energy = (sim.energy > 3) ? (sim.energy - 3) : 0;
+            }
+        }
+    }
+    if (sim.shieldFlareAnim > 0.0f) { sim.shieldFlareAnim -= 0.05f * (float)rate; if (sim.shieldFlareAnim < 0.0f) sim.shieldFlareAnim = 0.0f; }
+    if (sim.defenseFireAnim > 0.0f) { sim.defenseFireAnim -= 0.08f * (float)rate; if (sim.defenseFireAnim < 0.0f) sim.defenseFireAnim = 0.0f; }
 
     // Volatiles
     int volGain = 14 + (strcmp(fleet[3].status, "Scooping Ring") == 0 ? 18 : 6) + rVol;
@@ -1175,9 +1253,10 @@ static void SimTick(void) {
     targetMorale += (sim.domedMegacities * 6.0f);
     targetMorale += (sim.pctScientists * 0.2f);
 
-    // Breakthrough Morale Buffs
+    // Breakthrough & Megastructure Morale Buffs
     if (sim.techResearched[TECH_BIO_ADAPTED]) targetMorale += 15.0f;
     if (sim.techResearched[TECH_GEO_STABILIZATION]) targetMorale += 20.0f;
+    if (sim.orbitalRingStage == 3) targetMorale += 15.0f;
 
     if (targetMorale < 10.0f) targetMorale = 10.0f;
     if (targetMorale > 99.0f) targetMorale = 99.0f;
@@ -1278,6 +1357,17 @@ static void InitSimulation(void) {
     sim.techProgress[0] = 120.0f;
     sim.breakthroughFanfare = 0;
     sim.lastBreakthrough[0] = '\0';
+
+    // Phase 11: Orbital Megastructures & Planetary Defense Stations
+    sim.orbitalRingStage = 0;
+    sim.starElevatorStage = 0;
+    sim.shieldGridStage = 1;
+    sim.defenseStationStage = 0;
+    sim.shieldHP = 400;
+    sim.shieldMaxHP = 400;
+    sim.shieldMode = 0;
+    sim.shieldFlareAnim = 0.0f;
+    sim.defenseFireAnim = 0.0f;
 
     // Phase 8 Demographics & Infrastructure defaults
     sim.pctLaborers = 40;
@@ -2364,6 +2454,97 @@ static void DrawExoplanetGDI(HDC hdc, CelestialBody* b, int px, int py, int pr, 
                 }
             }
         }
+
+        // Phase 11: 4. Planetary Shield Grid Forcefield Envelope
+        if (sim.shieldGridStage > 0 && sim.shieldHP > 0) {
+            int sR = pr + (int)(14 * z);
+            COLORREF cShield = (sim.shieldMode == 1) ? RGB(168, 85, 247) : RGB(0, 240, 255);
+            HPEN hSPen = CreatePen(PS_DOT, 1, cShield);
+            HPEN hOldSP = (HPEN)SelectObject(hdc, hSPen);
+            SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Ellipse(hdc, px - sR, py - sR, px + sR, py + sR);
+            SelectObject(hdc, hOldSP);
+            DeleteObject(hSPen);
+
+            if (sim.shieldFlareAnim > 0.01f) {
+                int flR = sR + (int)((1.0f - sim.shieldFlareAnim) * 22.0f * z);
+                HPEN hFlPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+                HPEN hOldFl = (HPEN)SelectObject(hdc, hFlPen);
+                Ellipse(hdc, px - flR, py - flR, px + flR, py + flR);
+                SelectObject(hdc, hOldFl);
+                DeleteObject(hFlPen);
+            }
+        }
+
+        // Phase 11: 5. Equatorial Orbital Ring
+        if (sim.orbitalRingStage > 0) {
+            int rW = pr + (int)(28 * z);
+            int rH = (int)(rW * 0.38f);
+            COLORREF cRing = (sim.orbitalRingStage == 3) ? RGB(245, 158, 11) : RGB(56, 189, 248);
+            HPEN hRingPen = CreatePen(PS_SOLID, (sim.orbitalRingStage == 3) ? 2 : 1, cRing);
+            HPEN hOldRing = (HPEN)SelectObject(hdc, hRingPen);
+            SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Ellipse(hdc, px - rW, py - rH, px + rW, py + rH);
+            Ellipse(hdc, px - (rW - 3), py - (rH - 2), px + (rW - 3), py + (rH - 2));
+
+            // Spokes to planet
+            MoveToEx(hdc, px, py - rH, NULL); LineTo(hdc, px, py - pr);
+            MoveToEx(hdc, px, py + rH, NULL); LineTo(hdc, px, py + pr);
+            MoveToEx(hdc, px - rW, py, NULL); LineTo(hdc, px - pr, py);
+            MoveToEx(hdc, px + rW, py, NULL); LineTo(hdc, px + pr, py);
+            SelectObject(hdc, hOldRing);
+            DeleteObject(hRingPen);
+
+            // Ring Hub Nodes
+            int hubCount = (sim.orbitalRingStage == 3) ? 8 : 4;
+            for (int h = 0; h < hubCount; h++) {
+                float hAng = simTime * 0.1f + (float)h * (6.2831853f / (float)hubCount);
+                int hx = px + (int)(cosf(hAng) * (float)rW);
+                int hy = py + (int)(sinf(hAng) * (float)rH);
+                FillSolidRect(hdc, hx - 2, hy - 2, 5, 5, (sim.orbitalRingStage == 3) ? RGB(251, 191, 36) : RGB(0, 240, 255));
+            }
+        }
+
+        // Phase 11: 6. Star Elevator (Space Elevator Ribbon)
+        if (sim.starElevatorStage > 0) {
+            int elTopY = py - (pr + (int)(36 * z));
+            HPEN hElPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 200));
+            HPEN hOldEl = (HPEN)SelectObject(hdc, hElPen);
+            MoveToEx(hdc, px, py - pr, NULL);
+            LineTo(hdc, px, elTopY);
+            SelectObject(hdc, hOldEl);
+            DeleteObject(hElPen);
+
+            // Geostationary anchor terminal
+            FillSolidRect(hdc, px - 3, elTopY - 3, 6, 6, RGB(0, 240, 255));
+
+            // Climber pod
+            float podProg = fmodf(simTime * 0.35f, 1.0f);
+            int podY = (py - pr) - (int)((36.0f * z) * podProg);
+            FillSolidRect(hdc, px - 2, podY - 2, 4, 4, RGB(254, 240, 138));
+        }
+
+        // Phase 11: 7. Armed Planetary Defense Bastions
+        if (sim.defenseStationStage > 0) {
+            int numDef = sim.defenseStationStage;
+            float defDist = (float)pr + 44.0f * z;
+            for (int d = 0; d < numDef; d++) {
+                float dAng = simTime * 0.22f + (float)d * (6.2831853f / (float)numDef);
+                int dx = px + (int)(cosf(dAng) * defDist);
+                int dy = py + (int)(sinf(dAng) * (defDist * 0.7f));
+                FillSolidRect(hdc, dx - 3, dy - 3, 6, 6, RGB(244, 63, 94));
+                FrameSolidRect(hdc, dx - 4, dy - 4, 8, 8, RGB(253, 164, 175));
+
+                if (sim.defenseFireAnim > 0.01f) {
+                    HPEN hBm = CreatePen(PS_SOLID, 2, RGB(255, 60, 60));
+                    HPEN hOldBm = (HPEN)SelectObject(hdc, hBm);
+                    MoveToEx(hdc, dx, dy, NULL);
+                    LineTo(hdc, dx + (int)(cosf(dAng) * 140.0f * z), dy + (int)(sinf(dAng) * 140.0f * z));
+                    SelectObject(hdc, hOldBm);
+                    DeleteObject(hBm);
+                }
+            }
+        }
     }
 }
 
@@ -2592,8 +2773,17 @@ static void AddButton(int id, int x, int y, int w, int h, const char* txt, const
 #define BID_TAB_FLEET       11
 #define BID_TAB_COLONY      12
 #define BID_TAB_RESEARCH    13
-#define BID_TAB_HAZARDS     14
-#define BID_TAB_ECONOMY     15
+#define BID_TAB_MEGAS       14
+#define BID_TAB_HAZARDS     15
+#define BID_TAB_ECONOMY     16
+
+#define BID_MEGA_RING_UPG       1601
+#define BID_MEGA_ELEV_UPG       1602
+#define BID_MEGA_SHIELD_UPG     1603
+#define BID_MEGA_DEF_UPG        1604
+#define BID_MEGA_SHIELD_CHARGE  1605
+#define BID_MEGA_SHIELD_MODE    1606
+#define BID_MEGA_DEF_TEST       1607
 
 #define BID_TECH_FOCUS_BASE 1500
 #define BID_TECH_UNLOCK_BASE 1520
@@ -3114,6 +3304,121 @@ static void HandleInfrastructure(int bid) {
             } else {
                 sprintf(buf, "Insufficient resources (Req: %d Min, %d Energy).", costMin, costEng);
                 SetLogMsg(buf, 1);
+            }
+            break;
+        }
+        // Phase 11: Orbital Megastructures & Planetary Defense Handlers
+        case BID_MEGA_RING_UPG: {
+            int costMin = 1200, costEng = 400;
+            if (sim.orbitalRingStage == 1) { costMin = 2800; costEng = 900; }
+            else if (sim.orbitalRingStage == 2) { costMin = 5500; costEng = 1800; }
+            else if (sim.orbitalRingStage >= 3) break;
+
+            if (sim.minerals >= costMin && sim.energy >= costEng) {
+                sim.minerals -= costMin;
+                sim.energy -= costEng;
+                sim.orbitalRingStage++;
+                sprintf(buf, "Orbital Ring upgraded to Stage %d! Habitation & trade expanded.", sim.orbitalRingStage);
+                SetLogMsg(buf, 0);
+                PlaySoundFx(SFX_SUCCESS);
+            } else {
+                sprintf(buf, "Insufficient resources for Orbital Ring (Req: %d Min, %d kW).", costMin, costEng);
+                SetLogMsg(buf, 1);
+            }
+            break;
+        }
+        case BID_MEGA_ELEV_UPG: {
+            int costMin = 1000, costEng = 350;
+            if (sim.starElevatorStage == 1) { costMin = 2400; costEng = 750; }
+            else if (sim.starElevatorStage == 2) { costMin = 4800; costEng = 1500; }
+            else if (sim.starElevatorStage >= 3) break;
+
+            if (sim.minerals >= costMin && sim.energy >= costEng) {
+                sim.minerals -= costMin;
+                sim.energy -= costEng;
+                sim.starElevatorStage++;
+                sprintf(buf, "Star Elevator advanced to Stage %d! Ground-to-orbit tether online.", sim.starElevatorStage);
+                SetLogMsg(buf, 0);
+                PlaySoundFx(SFX_SUCCESS);
+            } else {
+                sprintf(buf, "Insufficient resources for Star Elevator (Req: %d Min, %d kW).", costMin, costEng);
+                SetLogMsg(buf, 1);
+            }
+            break;
+        }
+        case BID_MEGA_SHIELD_UPG: {
+            int costMin = 3200, costEng = 1200;
+            if (sim.shieldGridStage == 2) { costMin = 6000; costEng = 2200; }
+            else if (sim.shieldGridStage >= 3) break;
+
+            if (sim.minerals >= costMin && sim.energy >= costEng) {
+                sim.minerals -= costMin;
+                sim.energy -= costEng;
+                sim.shieldGridStage++;
+                sim.shieldMaxHP = (sim.shieldGridStage == 2 ? 900 : 1800);
+                if (sim.shieldMode == 1) sim.shieldMaxHP = (int)(sim.shieldMaxHP * 1.5f);
+                sim.shieldHP = sim.shieldMaxHP;
+                sim.shieldFlareAnim = 1.0f;
+                CalculateHabitability();
+                sprintf(buf, "Planetary Shield Grid advanced to Stage %d! Deflector Max: %d HP.", sim.shieldGridStage, sim.shieldMaxHP);
+                SetLogMsg(buf, 0);
+                PlaySoundFx(SFX_SUCCESS);
+            } else {
+                sprintf(buf, "Insufficient resources for Shield Grid (Req: %d Min, %d kW).", costMin, costEng);
+                SetLogMsg(buf, 1);
+            }
+            break;
+        }
+        case BID_MEGA_DEF_UPG: {
+            int costMin = 1100, costEng = 300;
+            if (sim.defenseStationStage == 1) { costMin = 2600; costEng = 800; }
+            else if (sim.defenseStationStage == 2) { costMin = 5200; costEng = 1600; }
+            else if (sim.defenseStationStage >= 3) break;
+
+            if (sim.minerals >= costMin && sim.energy >= costEng) {
+                sim.minerals -= costMin;
+                sim.energy -= costEng;
+                sim.defenseStationStage++;
+                sprintf(buf, "Planetary Defense Citadel upgraded to Stage %d! Orbital weapons armed.", sim.defenseStationStage);
+                SetLogMsg(buf, 0);
+                PlaySoundFx(SFX_DEPLOY);
+            } else {
+                sprintf(buf, "Insufficient resources for Defense Station (Req: %d Min, %d kW).", costMin, costEng);
+                SetLogMsg(buf, 1);
+            }
+            break;
+        }
+        case BID_MEGA_SHIELD_CHARGE: {
+            if (sim.energy >= 180) {
+                sim.energy -= 180;
+                sim.shieldHP += 300;
+                if (sim.shieldHP > sim.shieldMaxHP) sim.shieldHP = sim.shieldMaxHP;
+                sim.shieldFlareAnim = 1.0f;
+                SetLogMsg("Emergency power dumped into deflector lattice! +300 Shield HP infused.", 0);
+                PlaySoundFx(SFX_SUCCESS);
+            } else {
+                SetLogMsg("Insufficient energy for shield overcharge (Req: 180 kW).", 1);
+            }
+            break;
+        }
+        case BID_MEGA_SHIELD_MODE: {
+            sim.shieldMode = (sim.shieldMode + 1) % 3;
+            sim.shieldMaxHP = (sim.shieldGridStage == 1 ? 400 : (sim.shieldGridStage == 2 ? 900 : (sim.shieldGridStage == 3 ? 1800 : 0)));
+            if (sim.shieldMode == 1) sim.shieldMaxHP = (int)(sim.shieldMaxHP * 1.5f);
+            if (sim.shieldHP > sim.shieldMaxHP) sim.shieldHP = sim.shieldMaxHP;
+            const char* mNames[] = { "BALANCED (30 kW, +15 HP)", "FORTIFIED (+50% Cap, 80 kW, +35 HP)", "STANDBY (0 kW, Passive)" };
+            sprintf(buf, "Shield Grid Mode: %s", mNames[sim.shieldMode]);
+            SetLogMsg(buf, 0);
+            PlaySoundFx(SFX_CLICK);
+            break;
+        }
+        case BID_MEGA_DEF_TEST: {
+            if (sim.defenseStationStage > 0) {
+                sim.defenseFireAnim = 1.0f;
+                SetLogMsg("Defense citadel: test fire burst discharged across orbital coordinates.", 0);
+                PlaySoundFx(SFX_DEPLOY);
+            } else {
+                SetLogMsg("No orbital defense stations commissioned yet.", 1);
             }
             break;
         }
@@ -3938,14 +4243,15 @@ static void RenderUI(HDC hdc, int width, int height) {
     FillSolidRect(hdc, sbX, headerH, sidebarW, viewportH, theme->bgPanel);
     FillSolidRect(hdc, sbX, headerH, 1, viewportH, theme->border);
 
-    // Tab Header: 6 Tabs
-    int tabW = sidebarW / 6;
+    // Tab Header: 7 Tabs
+    int tabW = sidebarW / 7;
     AddButton(BID_TAB_TERRA, sbX, headerH, tabW, 28, "TERRA", NULL, 1);
     AddButton(BID_TAB_FLEET, sbX + tabW, headerH, tabW, 28, "FLEET", NULL, 1);
     AddButton(BID_TAB_COLONY, sbX + tabW * 2, headerH, tabW, 28, "COLONY", NULL, 1);
     AddButton(BID_TAB_RESEARCH, sbX + tabW * 3, headerH, tabW, 28, "TECH", NULL, 1);
-    AddButton(BID_TAB_HAZARDS, sbX + tabW * 4, headerH, tabW, 28, "HAZARD", NULL, 1);
-    AddButton(BID_TAB_ECONOMY, sbX + tabW * 5, headerH, sidebarW - tabW * 5, 28, "ECON", NULL, 1);
+    AddButton(BID_TAB_MEGAS, sbX + tabW * 4, headerH, tabW, 28, "MEGAS", NULL, 1);
+    AddButton(BID_TAB_HAZARDS, sbX + tabW * 5, headerH, tabW, 28, "HAZARD", NULL, 1);
+    AddButton(BID_TAB_ECONOMY, sbX + tabW * 6, headerH, sidebarW - tabW * 6, 28, "ECON", NULL, 1);
 
     int contentY = headerH + 34;
 
@@ -4519,8 +4825,153 @@ static void RenderUI(HDC hdc, int width, int height) {
         SetTextColor(hdc, sim.techResearched[TECH_GEO_STABILIZATION] ? COLOR_EMERALD : COLOR_TEXT_DIM);
         TextOutA(hdc, sbX + 20, ry + 44, sim.techResearched[TECH_GEO_STABILIZATION] ? "[x] Climate Matrix: Atmo Locked & +15% Hab" : "[ ] Climate Matrix: Locks Atmo & +15% Hab (Offline)", sim.techResearched[TECH_GEO_STABILIZATION] ? 42 : 50);
     }
-    // TAB 4: HAZARDS & CRISIS MANAGEMENT
+    // TAB 4: ORBITAL MEGASTRUCTURES & PLANETARY DEFENSE
     else if (sim.activeTab == 4) {
+        int my = contentY;
+
+        // 1. Planetary Shield Grid Status Card
+        SetTextColor(hdc, COLOR_CYAN);
+        SelectObject(hdc, hFontBold);
+        TextOutA(hdc, sbX + 12, my, "PLANETARY SHIELD GRID ARRAY", 27);
+
+        int shieldCardH = 76;
+        FillSolidRect(hdc, sbX + 12, my + 16, sidebarW - 24, shieldCardH, COLOR_BG_CARD);
+        FrameSolidRect(hdc, sbX + 12, my + 16, sidebarW - 24, shieldCardH, COLOR_BORDER);
+
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        float shieldPct = (sim.shieldMaxHP > 0) ? ((float)sim.shieldHP / (float)sim.shieldMaxHP) : 0.0f;
+        if (shieldPct < 0.0f) shieldPct = 0.0f;
+        if (shieldPct > 1.0f) shieldPct = 1.0f;
+        const char* mNames[] = { "BALANCED", "FORTIFIED", "STANDBY" };
+        sprintf(buf, "Lattice Integrity: %d / %d HP (%.0f%%) [%s]",
+            sim.shieldHP, sim.shieldMaxHP, shieldPct * 100.0f, mNames[sim.shieldMode]);
+        TextOutA(hdc, sbX + 20, my + 20, buf, (int)strlen(buf));
+        DrawProgressBar(hdc, sbX + 20, my + 34, sidebarW - 40, 6, shieldPct, RGB(0, 240, 255));
+
+        SetTextColor(hdc, COLOR_CYAN);
+        sprintf(buf, "Drain: %d kW/cyc | Flare/Impact Deflection: %s",
+            (sim.shieldMode == 0 ? 30 : (sim.shieldMode == 1 ? 80 : 0)),
+            sim.shieldHP > 0 ? "ONLINE" : "DEPLETED");
+        TextOutA(hdc, sbX + 20, my + 44, buf, (int)strlen(buf));
+
+        int btnW = (sidebarW - 46) / 2;
+        AddButton(BID_MEGA_SHIELD_MODE, sbX + 20, my + 60, btnW, 22, "Shield Mode", NULL, sim.shieldGridStage > 0 ? 1 : 0);
+        AddButton(BID_MEGA_SHIELD_CHARGE, sbX + 26 + btnW, my + 60, btnW, 22, "+300HP (180kW)", NULL, (sim.shieldGridStage > 0 && sim.energy >= 180) ? 1 : 0);
+
+        my += shieldCardH + 24;
+
+        // 2. Megastructure Engineering Projects Header
+        SetTextColor(hdc, COLOR_BLUE);
+        SelectObject(hdc, hFontBold);
+        TextOutA(hdc, sbX + 12, my, "MEGA-ENGINEERING PROJECTS", 25);
+        my += 16;
+
+        // Project 1: Orbital Ring Array
+        int cardH = 64;
+        FillSolidRect(hdc, sbX + 12, my, sidebarW - 24, cardH, COLOR_BG_CARD);
+        FrameSolidRect(hdc, sbX + 12, my, sidebarW - 24, cardH, COLOR_BORDER);
+        SelectObject(hdc, hFontSmall);
+        SetTextColor(hdc, COLOR_CYAN);
+        const char* ringNames[] = { "Unbuilt", "Equatorial Truss", "Habitation Torus", "Sovereign Ringworld" };
+        sprintf(buf, "Orbital Ring Array [Stage %d/3: %s]", sim.orbitalRingStage, ringNames[sim.orbitalRingStage]);
+        TextOutA(hdc, sbX + 20, my + 6, buf, (int)strlen(buf));
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        if (sim.orbitalRingStage == 0) sprintf(buf, "Equatorial ring: +1k Housing, +50kW, +15%% Trade");
+        else if (sim.orbitalRingStage == 1) sprintf(buf, "Torus ring: +3k Housing, +140kW, +35%% Trade");
+        else if (sim.orbitalRingStage == 2) sprintf(buf, "Full Ringworld: +8k Housing, +300kW, +75%% Trade, +15%% Morale");
+        else sprintf(buf, "Full Ringworld active: +8k Housing, +300kW, +75%% Trade, +15%% Morale");
+        TextOutA(hdc, sbX + 20, my + 20, buf, (int)strlen(buf));
+
+        int ringCostMin = sim.orbitalRingStage == 0 ? 1200 : (sim.orbitalRingStage == 1 ? 2800 : 5500);
+        int ringCostEng = sim.orbitalRingStage == 0 ? 400 : (sim.orbitalRingStage == 1 ? 900 : 1800);
+        if (sim.orbitalRingStage < 3) {
+            sprintf(buf, "Upgrade (%d Min, %d kW)", ringCostMin, ringCostEng);
+            int canUpg = (sim.minerals >= ringCostMin && sim.energy >= ringCostEng) ? 1 : 0;
+            AddButton(BID_MEGA_RING_UPG, sbX + 20, my + 36, sidebarW - 40, 20, buf, NULL, canUpg);
+        } else {
+            AddButton(BID_MEGA_RING_UPG, sbX + 20, my + 36, sidebarW - 40, 20, "[MAX STAGE REACHED]", NULL, 0);
+        }
+        my += cardH + 6;
+
+        // Project 2: Star Elevator Tether
+        FillSolidRect(hdc, sbX + 12, my, sidebarW - 24, cardH, COLOR_BG_CARD);
+        FrameSolidRect(hdc, sbX + 12, my, sidebarW - 24, cardH, COLOR_BORDER);
+        SetTextColor(hdc, COLOR_CYAN);
+        const char* elevNames[] = { "Unbuilt", "Carbon Nano-Ribbon", "Dual Climber Track", "Skyhook Super-Tether" };
+        sprintf(buf, "Star Elevator Tether [Stage %d/3: %s]", sim.starElevatorStage, elevNames[sim.starElevatorStage]);
+        TextOutA(hdc, sbX + 20, my + 6, buf, (int)strlen(buf));
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        if (sim.starElevatorStage == 0) sprintf(buf, "Ground-orbit tether: +5 Cryo colonists/cyc, Zero-g lifts");
+        else if (sim.starElevatorStage == 1) sprintf(buf, "Dual track climber: +15 Cryo colonists/cyc, Free logistics");
+        else if (sim.starElevatorStage == 2) sprintf(buf, "Apex Skyhook: +35 Cryo colonists/cyc, Rapid planetfall");
+        else sprintf(buf, "Apex Skyhook active: +35 Cryo colonists/cyc, Instant surface transit");
+        TextOutA(hdc, sbX + 20, my + 20, buf, (int)strlen(buf));
+
+        int elevCostMin = sim.starElevatorStage == 0 ? 1000 : (sim.starElevatorStage == 1 ? 2400 : 4800);
+        int elevCostEng = sim.starElevatorStage == 0 ? 350 : (sim.starElevatorStage == 1 ? 750 : 1500);
+        if (sim.starElevatorStage < 3) {
+            sprintf(buf, "Upgrade (%d Min, %d kW)", elevCostMin, elevCostEng);
+            int canUpg = (sim.minerals >= elevCostMin && sim.energy >= elevCostEng) ? 1 : 0;
+            AddButton(BID_MEGA_ELEV_UPG, sbX + 20, my + 36, sidebarW - 40, 20, buf, NULL, canUpg);
+        } else {
+            AddButton(BID_MEGA_ELEV_UPG, sbX + 20, my + 36, sidebarW - 40, 20, "[MAX STAGE REACHED]", NULL, 0);
+        }
+        my += cardH + 6;
+
+        // Project 3: Planetary Shield Grid
+        FillSolidRect(hdc, sbX + 12, my, sidebarW - 24, cardH, COLOR_BG_CARD);
+        FrameSolidRect(hdc, sbX + 12, my, sidebarW - 24, cardH, COLOR_BORDER);
+        SetTextColor(hdc, COLOR_CYAN);
+        const char* shieldNames[] = { "Unbuilt", "Sub-Atmo Deflector (400HP)", "Flux Lattice (900HP)", "Aegis Barrier (1800HP, +10% Hab)" };
+        sprintf(buf, "Planetary Shield Grid [Stage %d/3]", sim.shieldGridStage);
+        TextOutA(hdc, sbX + 20, my + 6, buf, (int)strlen(buf));
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        if (sim.shieldGridStage == 1) sprintf(buf, "Flux Lattice Upg: 900 Max HP, 75%% deflection absorption");
+        else if (sim.shieldGridStage == 2) sprintf(buf, "Aegis Barrier Upg: 1800 Max HP, 100%% deflection, +10%% Hab");
+        else sprintf(buf, "Aegis Barrier active: 1800 Max HP envelope, +10%% Habitability");
+        TextOutA(hdc, sbX + 20, my + 20, buf, (int)strlen(buf));
+
+        int shCostMin = (sim.shieldGridStage == 1) ? 3200 : 6000;
+        int shCostEng = (sim.shieldGridStage == 1) ? 1200 : 2200;
+        if (sim.shieldGridStage < 3) {
+            sprintf(buf, "Upgrade (%d Min, %d kW)", shCostMin, shCostEng);
+            int canUpg = (sim.minerals >= shCostMin && sim.energy >= shCostEng) ? 1 : 0;
+            AddButton(BID_MEGA_SHIELD_UPG, sbX + 20, my + 36, sidebarW - 40, 20, buf, NULL, canUpg);
+        } else {
+            AddButton(BID_MEGA_SHIELD_UPG, sbX + 20, my + 36, sidebarW - 40, 20, "[MAX STAGE REACHED]", NULL, 0);
+        }
+        my += cardH + 6;
+
+        // Project 4: Planetary Defense Bastion
+        int defCardH = 74;
+        FillSolidRect(hdc, sbX + 12, my, sidebarW - 24, defCardH, COLOR_BG_CARD);
+        FrameSolidRect(hdc, sbX + 12, my, sidebarW - 24, defCardH, COLOR_BORDER);
+        SetTextColor(hdc, COLOR_ROSE);
+        const char* defNames[] = { "Unbuilt", "Point-Defense Turrets", "Orbital Lance Battery", "Hyper-Kinetic Citadel" };
+        sprintf(buf, "Planetary Defense Citadel [Stage %d/3: %s]", sim.defenseStationStage, defNames[sim.defenseStationStage]);
+        TextOutA(hdc, sbX + 20, my + 6, buf, (int)strlen(buf));
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        if (sim.defenseStationStage == 0) sprintf(buf, "1 Citadel: 50%% Asteroid intercept, +2t Debris salvage");
+        else if (sim.defenseStationStage == 1) sprintf(buf, "2 Citadels: 85%% Asteroid intercept, +4t Debris salvage");
+        else if (sim.defenseStationStage == 2) sprintf(buf, "3 Citadels: 100%% Asteroid intercept, +8t Debris salvage");
+        else sprintf(buf, "3 Citadels: 100%% Asteroid intercept, +8t Debris salvage/cyc");
+        TextOutA(hdc, sbX + 20, my + 20, buf, (int)strlen(buf));
+
+        int defCostMin = sim.defenseStationStage == 0 ? 1100 : (sim.defenseStationStage == 1 ? 2600 : 5200);
+        int defCostEng = sim.defenseStationStage == 0 ? 300 : (sim.defenseStationStage == 1 ? 800 : 1600);
+        int defBtnW = (sidebarW - 46) / 2;
+        if (sim.defenseStationStage < 3) {
+            sprintf(buf, "Upgrade (%d Min)", defCostMin);
+            int canUpg = (sim.minerals >= defCostMin && sim.energy >= defCostEng) ? 1 : 0;
+            AddButton(BID_MEGA_DEF_UPG, sbX + 20, my + 38, defBtnW, 22, buf, NULL, canUpg);
+        } else {
+            AddButton(BID_MEGA_DEF_UPG, sbX + 20, my + 38, defBtnW, 22, "[MAX STAGE]", NULL, 0);
+        }
+        AddButton(BID_MEGA_DEF_TEST, sbX + 26 + defBtnW, my + 38, defBtnW, 22, "Test Fire Citadel", NULL, sim.defenseStationStage > 0 ? 1 : 0);
+    }
+    // TAB 5: HAZARDS & CRISIS MANAGEMENT
+    else if (sim.activeTab == 5) {
         SetTextColor(hdc, COLOR_ROSE);
         SelectObject(hdc, hFontBold);
         TextOutA(hdc, sbX + 12, contentY, "ASTROMETRIC THREAT RADAR", 24);
@@ -4615,8 +5066,8 @@ static void RenderUI(HDC hdc, int width, int height) {
         AddButton(BID_DRILL_BLIGHT, sbX + 12 + (drillW + 2) * 3, dry + 18, drillW, 22, "Blight", NULL, 1);
         AddButton(BID_DRILL_STORM, sbX + 12 + (drillW + 2) * 4, dry + 18, drillW, 22, "Storm", NULL, 1);
     }
-    // TAB 5: ECONOMY
-    else if (sim.activeTab == 5) {
+    // TAB 6: ECONOMY
+    else if (sim.activeTab == 6) {
         SetTextColor(hdc, COLOR_BLUE);
         SelectObject(hdc, hFontBold);
         TextOutA(hdc, sbX + 12, contentY, "SECTOR RESOURCE LOOPS", 21);
@@ -5085,7 +5536,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     PlaySoundFx(SFX_CLICK);
                     break;
                 case VK_TAB:
-                    sim.activeTab = (sim.activeTab + 1) % 6;
+                    sim.activeTab = (sim.activeTab + 1) % 7;
                     PlaySoundFx(SFX_CLICK);
                     break;
                 case 'M':
