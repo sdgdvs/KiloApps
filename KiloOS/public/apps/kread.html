@@ -822,7 +822,7 @@
           <li><kbd>Ctrl</kbd> + <kbd>Tab</kbd> / <kbd>Ctrl+Shift+Tab</kbd> or <kbd>[</kbd> / <kbd>]</kbd> - Next / Previous Tab</li>
           <li><kbd>Ctrl</kbd> + <kbd>1-9</kbd> - Switch to Tab 1 through 9</li>
           <li><kbd>F2</kbd> - Rename Active Tab</li>
-          <li><kbd>Ctrl</kbd> + <kbd>F</kbd> - Find Text in Document</li>
+          <li><kbd>Ctrl</kbd> + <kbd>F</kbd> or <kbd>/</kbd> - Find Text in Document</li>
           <li><kbd>Ctrl</kbd> + <kbd>B</kbd> - Quick Add Bookmark</li>
           <li><kbd>B</kbd> / <kbd>N</kbd> - Toggle Bookmarks / Notes Drawer</li>
           <li><kbd>T</kbd> - Cycle Reading Theme (Light/Dark/Sepia/Contrast)</li>
@@ -1075,6 +1075,9 @@
     // Non-blocking toast notification helper with click-to-dismiss [✕] button
     function showToast(msg, icon = 'ℹ️') {
       if (!toastContainer) return;
+      while (toastContainer.children.length >= 4) {
+        toastContainer.removeChild(toastContainer.firstChild);
+      }
       const el = document.createElement('div');
       el.className = 'toast';
       el.innerHTML = `
@@ -1378,6 +1381,8 @@
         saveTabsSession();
         renderTabs();
         renderContent();
+        if (bookmarksDrawer.classList.contains('open')) renderBookmarks();
+        if (notesDrawer.classList.contains('open')) renderNotes();
         showToast('Active document cleared', '🗑️');
         return;
       }
@@ -1398,6 +1403,8 @@
       saveTabsSession();
       renderTabs();
       renderContent();
+      if (bookmarksDrawer.classList.contains('open')) renderBookmarks();
+      if (notesDrawer.classList.contains('open')) renderNotes();
       showToast(`Closed "${closedTitle}"`, '✕');
     }
 
@@ -1412,6 +1419,9 @@
 
       if (bookmarksDrawer.classList.contains('open')) renderBookmarks();
       if (notesDrawer.classList.contains('open')) renderNotes();
+      if (searchPanel.classList.contains('open') && searchInput.value.trim()) {
+        executeSearch();
+      }
     }
 
     btnNewTab.onclick = () => createNewTab();
@@ -1456,9 +1466,11 @@
       if (!tab) return;
       if (searchMatches.length > 0) return;
       
+      const savedScroll = readerContainer.scrollTop;
       const text = tab.text || '';
       if (!tab.notes || tab.notes.length === 0) {
         textContent.innerHTML = escapeHtml(text);
+        if (savedScroll > 0) readerContainer.scrollTop = savedScroll;
         return;
       }
 
@@ -1500,6 +1512,7 @@
       }
       html += escapeHtml(text.substring(cursor));
       textContent.innerHTML = html;
+      if (savedScroll > 0) readerContainer.scrollTop = savedScroll;
 
       // Click highlight to open note in notes drawer
       textContent.querySelectorAll('mark.user-highlight').forEach(el => {
@@ -1523,7 +1536,11 @@
 
     function escapeHtml(str) {
       if (!str) return '';
-      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      return str.replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
     }
 
     // Scroll & Progress Tracking
@@ -1555,7 +1572,17 @@
     // Reading Statistics Engine
     function updateStats() {
       const tab = getActiveTab();
-      if (!tab || !tab.text) return;
+      if (!tab || !tab.text) {
+        document.getElementById('statWords').textContent = '0';
+        document.getElementById('statChars').textContent = '0';
+        document.getElementById('statLines').textContent = '0';
+        document.getElementById('statWPM').textContent = '200';
+        document.getElementById('statTimeRemaining').textContent = '0 min';
+        document.getElementById('sbTimeRem').textContent = 'Remaining: --';
+        document.getElementById('sbWords').textContent = 'Words: 0';
+        document.getElementById('sbLines').textContent = 'Lines: 0';
+        return;
+      }
       const text = tab.text;
       const chars = text.length;
       const lines = chars > 0 ? text.split(/\r\n|\r|\n/).length : 0;
@@ -1568,14 +1595,28 @@
       document.getElementById('sbWords').textContent = `Words: ${wordsCount.toLocaleString()}`;
       document.getElementById('sbLines').textContent = `Lines: ${lines.toLocaleString()}`;
 
-      const wpm = 200;
       const scrollable = readerContainer.scrollHeight - readerContainer.clientHeight;
-      const pctRemaining = scrollable > 0 ? (1 - (readerContainer.scrollTop / scrollable)) : 0;
-      const wordsRemaining = Math.round(wordsCount * pctRemaining);
-      const minsRem = Math.ceil(wordsRemaining / wpm);
+      const pctRemaining = scrollable > 0 ? (1 - (readerContainer.scrollTop / scrollable)) : (tab.timeSpent > 0 ? 0 : 1);
+      const wordsRemaining = Math.max(0, Math.round(wordsCount * pctRemaining));
 
-      document.getElementById('statTimeRemaining').textContent = `${minsRem} min`;
-      document.getElementById('sbTimeRem').textContent = `Remaining: ~${minsRem}m`;
+      let wpm = 200;
+      if (tab.timeSpent >= 20 && wordsCount > 0 && scrollable > 0) {
+        const pctRead = Math.max(0, Math.min(1, readerContainer.scrollTop / scrollable));
+        const wordsRead = Math.round(wordsCount * pctRead);
+        if (wordsRead >= 15) {
+          const calculatedWpm = Math.round((wordsRead / tab.timeSpent) * 60);
+          if (calculatedWpm >= 60 && calculatedWpm <= 800) {
+            wpm = calculatedWpm;
+          }
+        }
+      }
+      document.getElementById('statWPM').textContent = wpm;
+
+      const minsRem = wordsCount > 0 ? Math.max(1, Math.ceil(wordsRemaining / wpm)) : 0;
+      const remText = wordsRemaining === 0 ? 'Finished' : `${minsRem} min`;
+
+      document.getElementById('statTimeRemaining').textContent = remText;
+      document.getElementById('sbTimeRem').textContent = `Remaining: ${remText}`;
     }
 
     function startReadingTimer() {
@@ -1585,6 +1626,9 @@
         if (document.visibilityState === 'visible' && tab && tab.text) {
           tab.timeSpent = (tab.timeSpent || 0) + 1;
           formatTimeSpent();
+          if (tab.timeSpent % 15 === 0) {
+            saveTabsSession();
+          }
         }
       }, 1000);
     }
@@ -1672,14 +1716,18 @@
         `Are you sure you want to clear the content and annotations of "${tab.title}"?`,
         () => {
           tab.text = '';
+          tab.title = 'Untitled';
           tab.scroll = 0;
           tab.bookmarks = [];
           tab.notes = [];
           tab.timeSpent = 0;
           clearSearchHighlights();
           saveTabsSession();
+          renderTabs();
           renderContent();
-          showToast(`Cleared "${tab.title}"`, '🗑️');
+          if (bookmarksDrawer.classList.contains('open')) renderBookmarks();
+          if (notesDrawer.classList.contains('open')) renderNotes();
+          showToast('Document cleared', '🗑️');
         }
       );
     };
@@ -1781,16 +1829,31 @@
       }
 
       const flags = isCaseSensitive ? 'g' : 'gi';
-      let html = escapeHtml(tab.text);
-      let matchCount = 0;
-      
-      const queryEscaped = escapeHtml(query);
-      const regexEscaped = new RegExp(escapeRegex(queryEscaped), flags);
+      let regex;
+      try {
+        regex = new RegExp(escapeRegex(query), flags);
+      } catch(e) {
+        return;
+      }
 
-      html = html.replace(regexEscaped, (m) => {
-        matchCount++;
-        return `<mark class="search-match" data-idx="${matchCount - 1}">${m}</mark>`;
-      });
+      const text = tab.text;
+      let match;
+      let html = '';
+      let cursor = 0;
+      let count = 0;
+
+      while ((match = regex.exec(text)) !== null) {
+        if (match[0].length === 0) {
+          regex.lastIndex++;
+          continue;
+        }
+        html += escapeHtml(text.substring(cursor, match.index));
+        html += `<mark class="search-match" data-idx="${count}">${escapeHtml(match[0])}</mark>`;
+        cursor = match.index + match[0].length;
+        count++;
+        if (count >= 2000) break;
+      }
+      html += escapeHtml(text.substring(cursor));
 
       textContent.innerHTML = html;
       searchMatches = Array.from(textContent.querySelectorAll('mark.search-match'));
@@ -1918,9 +1981,20 @@
 
     // Text Selection, Highlights & Notes
     readerContainer.onmouseup = handleTextSelection;
+    readerContainer.onkeyup = (e) => {
+      if (e.shiftKey || e.key === 'Shift') handleTextSelection(e);
+    };
     if (selectionPopover) {
       selectionPopover.onmousedown = (e) => e.preventDefault();
     }
+    document.addEventListener('mousedown', (e) => {
+      if (selectionPopover && selectionPopover.style.display !== 'none') {
+        if (!selectionPopover.contains(e.target) && !textContent.contains(e.target)) {
+          selectionPopover.style.display = 'none';
+          pendingNoteData = null;
+        }
+      }
+    });
 
     function handleTextSelection(e) {
       const sel = window.getSelection();
@@ -2027,6 +2101,10 @@
       const n = tab.notes.find(x => x.id === id);
       if (!n) return;
 
+      if (searchMatches.length > 0) {
+        clearSearchHighlights();
+      }
+
       const markEl = textContent.querySelector(`mark.user-highlight[data-note-id="${id}"]`);
       if (markEl) {
         markEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2096,7 +2174,12 @@
 
     function saveRenameModal() {
       const newTitle = renameInput.value.trim();
-      if (newTitle && renameTargetTabId) {
+      if (!newTitle) {
+        showToast('Tab title cannot be empty', '⚠️');
+        renameInput.focus();
+        return;
+      }
+      if (renameTargetTabId) {
         const tab = tabs.find(t => t.id === renameTargetTabId);
         if (tab) {
           tab.title = newTitle;
@@ -2193,17 +2276,28 @@
     btnExportTXT.onclick = () => {
       const tab = getActiveTab();
       const notes = (tab && tab.notes) ? tab.notes : [];
-      if (notes.length === 0) {
-        showToast('No notes to export in this tab', '⚠️');
+      const bookmarks = (tab && tab.bookmarks) ? tab.bookmarks : [];
+      if (notes.length === 0 && bookmarks.length === 0) {
+        showToast('No notes or bookmarks to export in this tab', '⚠️');
         return;
       }
       let txt = `KREAD HIGHLIGHTS & NOTES - ${tab.title}\n===============================\n\n`;
-      notes.forEach((n, i) => {
-        txt += `[${i + 1}] Date: ${n.date}\n`;
-        txt += `Text: "${n.text}"\n`;
-        if (n.note) txt += `Note: ${n.note}\n`;
-        txt += `-------------------------------\n`;
-      });
+      if (bookmarks.length > 0) {
+        txt += `BOOKMARKS:\n`;
+        bookmarks.forEach(bm => {
+          txt += `[${bm.pct}% Read] (${bm.date}): ${bm.snippet}\n`;
+        });
+        txt += `\n-------------------------------\n\n`;
+      }
+      if (notes.length > 0) {
+        txt += `HIGHLIGHTS & NOTES:\n`;
+        notes.forEach((n, i) => {
+          txt += `[${i + 1}] Date: ${n.date} (${n.color})\n`;
+          txt += `Text: "${n.text}"\n`;
+          if (n.note) txt += `Note: ${n.note}\n`;
+          txt += `-------------------------------\n`;
+        });
+      }
       downloadFile(`${tab.title.replace(/[^a-zA-Z0-9_-]/g, '_')}_notes.txt`, txt, 'text/plain');
       showToast('Exported TXT successfully', '📄');
     };
@@ -2227,6 +2321,8 @@
         modal.addEventListener('click', (e) => {
           if (e.target === modal) {
             modal.classList.remove('open');
+            if (modal === noteModal) pendingNoteData = null;
+            if (modal === confirmModal) pendingConfirmCallback = null;
           }
         });
       }
@@ -2261,6 +2357,8 @@
         selectionPopover.style.display = 'none';
         btnToggleBookmarks.classList.remove('active');
         btnToggleNotes.classList.remove('active');
+        pendingNoteData = null;
+        pendingConfirmCallback = null;
         return;
       }
 
@@ -2323,8 +2421,10 @@
         const num = parseInt(e.key) - 1;
         if (tabs[num]) {
           e.preventDefault();
-          switchTab(tabs[num].id);
-          showToast(`Switched to Tab ${num + 1}: "${tabs[num].title}"`, '📑');
+          if (tabs[num].id !== activeTabId) {
+            switchTab(tabs[num].id);
+            showToast(`Switched to Tab ${num + 1}: "${tabs[num].title}"`, '📑');
+          }
         }
       } else if (ctrl && (e.key === 'c' || e.key === 'C') && e.shiftKey) {
         e.preventDefault();
@@ -2332,7 +2432,7 @@
       } else if (e.key === 'Delete' && !ctrl && !e.altKey) {
         e.preventDefault();
         btnClear.click();
-      } else if (ctrl && (e.key === 'f' || e.key === 'F')) {
+      } else if ((ctrl && (e.key === 'f' || e.key === 'F')) || (e.key === '/' && !ctrl && !e.altKey)) {
         e.preventDefault();
         toggleSearchPanel();
       } else if ((e.key === '+' || e.key === '=')) {

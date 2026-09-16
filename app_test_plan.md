@@ -105,13 +105,12 @@ For every game audited, also verify:
 
 ---
 
-**Target App:** KRead
+**Target App:** KReversi
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KRead
 - KReversi
 - KRogue
 - KScript
@@ -192,8 +191,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KPong
 - KQuest
 - KRadio
+- KRead
 
 ## Test Reports
+
+- **KRead**: PASS ✅ (8 issues, 8 fixed inline)
+  - Raw-text search regex engine built to prevent HTML entity corruption and tag mutation.
+  - Restored scroll position preservation in highlight and note DOM renderer to prevent viewport jumping.
+  - Added empty tab statistics reset and active dynamic reading speed (WPM) telemetry calculation.
+  - Periodic localStorage session auto-save added to reading timer to preserve active reading time.
+  - Tab title reset to 'Untitled' and open drawers refreshed on document clear.
+  - Synchronized search highlight state on tab switching and refreshed open drawers on tab close.
+  - Tab rename modal hardened with empty title validation and autofocus retention.
+  - Exported TXT format upgraded to include bookmarks matching JSON and Markdown export parity.
 
 - **KRadio**: PASS ✅ (8 issues, 8 fixed inline)
   - Fixed hotkey collision where typing `?` or `h` in URL input triggered Help modal.
@@ -253,18 +263,10 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
   - Synchronized canvas transforms (rotation/flip) across all layers and updated emboss offset.
   - Added click/keyboard toggle for export menu and localStorage preferences persistence.
 
-- **KPad**: PASS ✅ (8 issues, 8 fixed inline)
-  - Full report archived in [archive/app_test_reports_round2.md](archive/app_test_reports_round2.md).
-  - Fixed tab closing data corruption and context action buffer syncing.
-  - Ensured edit menu commands focus editor and update syntax overlay.
-  - Hardened replaceOne/findNext case matching and zero-length pattern safety.
-  - Added fallback file triggers for Native File System API in sandboxed iframes.
-  - Added VFS standalone timeout and localStorage persistence for theme/font/wrap.
-
 > 📁 **Archived Reports**: Historical test reports have been archived to [archive/app_test_reports_archive.md](archive/app_test_reports_archive.md) to preserve token efficiency.
 
-> 📁 **Archived Round 2 Reports**: Recent detailed audit reports (KPac through KImage) have been archived to [archive/app_test_reports_round2.md](archive/app_test_reports_round2.md).
+> 📁 **Archived Round 2 Reports**: Recent detailed audit reports (KPad through KImage) have been archived to [archive/app_test_reports_round2.md](archive/app_test_reports_round2.md).
 
 ### Round 2 Completed Index
-- KRadio ✅ (8 fixed), KQuest ✅ (8 fixed), KPong ✅ (8 fixed), KPing ✅ (8 fixed), KPass ✅ (7 fixed), KPaint ✅ (7 fixed), KPad ✅ (8 fixed), KPac ✅ (8 fixed), KNote ✅ (7 fixed), KNet ✅ (3 fixed), KMystery ✅ (5 fixed), KMines ✅ (8 fixed), KMine ✅ (2 fixed), KMedia ✅ (8 fixed), KMech ✅ (6 fixed), KMaze ✅ (7 fixed), KMatch3 ✅ (8 fixed), KMandel ✅ (6 fixed), KMail ✅ (7 fixed), KJournal ✅ (7 fixed), KImage ✅ (8 fixed)
+- KRead ✅ (8 fixed), KRadio ✅ (8 fixed), KQuest ✅ (8 fixed), KPong ✅ (8 fixed), KPing ✅ (8 fixed), KPass ✅ (7 fixed), KPaint ✅ (7 fixed), KPad ✅ (8 fixed), KPac ✅ (8 fixed), KNote ✅ (7 fixed), KNet ✅ (3 fixed), KMystery ✅ (5 fixed), KMines ✅ (8 fixed), KMine ✅ (2 fixed), KMedia ✅ (8 fixed), KMech ✅ (6 fixed), KMaze ✅ (7 fixed), KMatch3 ✅ (8 fixed), KMandel ✅ (6 fixed), KMail ✅ (7 fixed), KJournal ✅ (7 fixed), KImage ✅ (8 fixed)
 
