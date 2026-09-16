@@ -569,6 +569,7 @@
     </select>
 
     <button id="btnHelp" aria-label="Help"><span class="kbd-badge">F1</span> Help</button>
+    <button id="btnCopyData" title="Copy dataset & statistics to clipboard (Ctrl+C)"><span class="kbd-badge">Ctrl+C</span> 📋 Copy</button>
     <button id="btnExportSvg" title="Export Scalable Vector Graphic">📐 SVG</button>
     <button id="btnExportPng">📷 PNG</button>
     <button id="btnExportCsv">📄 CSV</button>
@@ -669,12 +670,22 @@
     </div>
     <div class="modal-body">
       <div>
-        <div class="help-section-title">📊 1. Visualization Modes</div>
+        <div class="help-section-title">🚀 1. Quick-Start 4-Step Tutorial</div>
+        <ol style="padding-left: 20px; margin-top: 4px; display: flex; flex-direction: column; gap: 6px;">
+          <li><strong>Choose or Load Data:</strong> Pick a preset from the dropdown (or press <span class="kbd-badge">P</span>), drag &amp; drop a CSV/JSON file, or edit labels and values in the Data Table.</li>
+          <li><strong>Select Visualization Engine:</strong> Press <span class="kbd-badge">1</span>&ndash;<span class="kbd-badge">6</span> or click the toolbar buttons to switch between Bar, Line, Area Gradient, Pie, Doughnut, and Radar views.</li>
+          <li><strong>Analyze Trends &amp; Metrics:</strong> Press <span class="kbd-badge">T</span> to cycle regression overlays (Linear OLS Fit $y=mx+b$, Moving Average, Mean Baseline), and view real-time statistics (Mean, Median, StdDev, $R^2$).</li>
+          <li><strong>Tweak, Copy &amp; Export:</strong> Use <span class="kbd-badge">←</span>/<span class="kbd-badge">→</span> and <span class="kbd-badge">↑</span>/<span class="kbd-badge">↓</span> to inspect and nudge values; press <span class="kbd-badge">Ctrl+C</span> to copy data and summary, or export publication-grade SVG, PNG, CSV, or JSON.</li>
+        </ol>
+      </div>
+
+      <div>
+        <div class="help-section-title">📊 2. Visualization Modes</div>
         <p>Switch between 6 distinct visualization rendering engines: <strong>Bar Chart</strong> [1], <strong>Line Graph</strong> [2], <strong>Area Gradient</strong> [3], <strong>Pie Chart</strong> [4], <strong>Doughnut Chart</strong> [5], and multi-axial <strong>Radar / Spider Chart</strong> [6]. Hover over any bar, point, slice, or vertex to inspect precise values in the interactive HUD tooltip.</p>
       </div>
 
       <div>
-        <div class="help-section-title">📈 2. Trendlines &amp; Regression Analysis</div>
+        <div class="help-section-title">📈 3. Trendlines &amp; Regression Analysis</div>
         <p>Overlay mathematical and statistical regressions onto cartesian charts (Press 'T' to cycle):
         <ul style="padding-left: 20px; margin-top: 4px;">
           <li><strong>Linear Fit:</strong> Ordinary Least Squares ($y = mx + b$) regression with live slope and $R^2$ goodness-of-fit.</li>
@@ -685,28 +696,32 @@
       </div>
 
       <div>
-        <div class="help-section-title">🧮 3. Statistical Analysis Suite</div>
+        <div class="help-section-title">🧮 4. Statistical Analysis Suite</div>
         <p>Real-time metrics compute automatically: <strong>Count</strong>, <strong>Total Sum</strong>, <strong>Mean</strong>, <strong>Median</strong>, <strong>Standard Deviation</strong>, <strong>Min / Max Extrema</strong>, <strong>Slope ($m$)</strong>, and <strong>$R^2$ Fit</strong>.</p>
       </div>
 
       <div>
-        <div class="help-section-title">📁 4. Import, Export &amp; Customization</div>
+        <div class="help-section-title">📁 5. Import, Export &amp; Customization</div>
         <p>Easily drag and drop CSV or JSON datasets directly onto the workspace. Export high-resolution vector SVG (scalable for publication), raster PNG, clean CSV tables, or JSON structures with one click.</p>
       </div>
 
       <div>
-        <div class="help-section-title">⌨️ 5. Keyboard Shortcuts</div>
+        <div class="help-section-title">⌨️ 6. Keyboard Shortcuts</div>
         <table class="shortcut-table">
           <tbody>
             <tr><td>F1 / H</td><td>Open / Close this Help Guide</td></tr>
             <tr><td>1 – 6</td><td>Select Chart Mode (Bar, Line, Area, Pie, Donut, Radar)</td></tr>
+            <tr><td>P</td><td>Cycle through Sample Presets</td></tr>
             <tr><td>M</td><td>Cycle through Chart Modes sequentially</td></tr>
             <tr><td>T</td><td>Cycle Trendline overlays (Off, Linear Fit, MovAvg, Mean)</td></tr>
             <tr><td>C</td><td>Cycle Color Themes (Cyber Teal, Neon Sunset, Emerald, etc.)</td></tr>
             <tr><td>R</td><td>Generate Random Dataset with smooth animation</td></tr>
             <tr><td>S</td><td>Sort data points in Ascending order</td></tr>
             <tr><td>D / Shift+S</td><td>Sort data points in Descending order</td></tr>
+            <tr><td>Ctrl + C</td><td>Copy dataset table and summary statistics to Clipboard</td></tr>
             <tr><td>Ctrl + S</td><td>Quick Export High-Resolution SVG Vector</td></tr>
+            <tr><td>← / →</td><td>Select previous / next data point on chart</td></tr>
+            <tr><td>↑ / ↓ (+ / -)</td><td>Nudge selected value (+5 / -5)</td></tr>
             <tr><td>Escape</td><td>Close Help Dialog / Unfocus inputs</td></tr>
           </tbody>
         </table>
@@ -890,6 +905,10 @@
 
   function renderTable() {
     tableBody.innerHTML = '';
+    if (data.length === 0) {
+      tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 24px 10px; color: var(--text-muted); font-size:12px;">No data points.<br><span style="color:#60a5fa; font-size:11px;">Click <strong>+ Add Point</strong> or press <span class="kbd-badge">P</span> for presets</span></td></tr>`;
+      return;
+    }
     data.forEach((item, index) => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -1699,10 +1718,83 @@
   };
 
   document.getElementById('btnClear').onclick = () => {
-    data = [];
-    updateAll();
-    showToast('Cleared all data points', 'info', '🗑️');
+    if (data.length === 0) {
+      data = [
+        { label: "Q1", value: 20 },
+        { label: "Q2", value: 60 },
+        { label: "Q3", value: 45 },
+        { label: "Q4", value: 80 },
+        { label: "Q5", value: 30 }
+      ];
+      updateAll();
+      showToast('Loaded starter dataset', 'success', '📊');
+    } else {
+      data = [];
+      updateAll();
+      showToast('Cleared all data points (Click Clear again to restore starter)', 'info', '🗑️');
+    }
   };
+
+  function copyDataToClipboard() {
+    if (data.length === 0) {
+      showToast("No data to copy.", "warning", "⚠️");
+      return;
+    }
+    let text = `KChart Studio Dataset\nChart Type: ${chartType.toUpperCase()} | Theme: ${currentTheme}\n\nLabel\tValue\n`;
+    data.forEach(d => {
+      text += `${d.label}\t${d.value}\n`;
+    });
+    text += `\nStatistics:\n`;
+    text += `Count: ${statCount.textContent} | Total: ${statTotal.textContent} | Mean: ${statMean.textContent} | Median: ${statMedian.textContent} | StdDev: ${statStdDev.textContent} | Min/Max: ${statMinMax ? statMinMax.textContent : ''}\n`;
+    if (trendStats && trendStats.slope !== 0) {
+      text += `Slope: ${trendStats.slope.toFixed(2)} | R² Fit: ${trendStats.r2.toFixed(3)}\n`;
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("Copied dataset and statistics to clipboard!", "success", "📋");
+      }).catch(() => {
+        fallbackCopyText(text);
+      });
+    } else {
+      fallbackCopyText(text);
+    }
+  }
+
+  function fallbackCopyText(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      document.execCommand('copy');
+      showToast("Copied dataset and statistics to clipboard!", "success", "📋");
+    } catch(err) {
+      showToast("Clipboard access denied.", "error", "❌");
+    }
+    document.body.removeChild(ta);
+  }
+
+  const copyBtn = document.getElementById('btnCopyData');
+  if (copyBtn) copyBtn.onclick = copyDataToClipboard;
+
+  let lastLoadedPreset = 'sales';
+  function cyclePreset() {
+    const presetKeys = Object.keys(PRESETS);
+    let curIdx = presetKeys.indexOf(lastLoadedPreset || '');
+    const nextIdx = (curIdx + 1) % presetKeys.length;
+    const nextKey = presetKeys[nextIdx];
+    lastLoadedPreset = nextKey;
+    data = JSON.parse(JSON.stringify(PRESETS[nextKey]));
+    const selectElem = document.getElementById('presetSelect');
+    if (selectElem) selectElem.value = nextKey;
+    updateAll();
+    const name = selectElem?.selectedOptions[0]?.text || nextKey;
+    showToast(`Loaded Preset: ${name}`, 'success', '📊');
+  }
 
   // Export handlers
   document.getElementById('btnExportSvg').onclick = () => {
@@ -2094,6 +2186,12 @@
       return;
     }
 
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
+      e.preventDefault();
+      copyDataToClipboard();
+      return;
+    }
+
     if (e.key === 'F1' || e.key === 'h' || e.key === 'H') {
       e.preventDefault();
       toggleHelpModal();
@@ -2109,6 +2207,8 @@
       setChartType('donut');
     } else if (e.key === '6') {
       setChartType('radar');
+    } else if (e.key === 'p' || e.key === 'P') {
+      cyclePreset();
     } else if (e.key === 't' || e.key === 'T') {
       const modes = ['none', 'linear', 'movavg', 'mean'];
       const nextIdx = (modes.indexOf(trendMode) + 1) % modes.length;
@@ -2137,6 +2237,30 @@
       }
     } else if (e.key === 'd' || e.key === 'D') {
       document.getElementById('btnSortDesc').click();
+    } else if (e.key === 'ArrowLeft') {
+      if (data.length > 0) {
+        hoveredIndex = (hoveredIndex - 1 + data.length) % data.length;
+        renderChart();
+      }
+    } else if (e.key === 'ArrowRight') {
+      if (data.length > 0) {
+        hoveredIndex = (hoveredIndex + 1) % data.length;
+        renderChart();
+      }
+    } else if (e.key === 'ArrowUp' || e.key === '+' || e.key === '=') {
+      if (data.length > 0) {
+        const idx = (hoveredIndex >= 0 && hoveredIndex < data.length) ? hoveredIndex : 0;
+        data[idx].value = Math.round((Number(data[idx].value) || 0) + 5);
+        updateAll();
+        showToast(`Nudged ${data[idx].label}: ${data[idx].value}`, 'info', '▲');
+      }
+    } else if (e.key === 'ArrowDown' || e.key === '-' || e.key === '_') {
+      if (data.length > 0) {
+        const idx = (hoveredIndex >= 0 && hoveredIndex < data.length) ? hoveredIndex : 0;
+        data[idx].value = Math.max(0, Math.round((Number(data[idx].value) || 0) - 5));
+        updateAll();
+        showToast(`Nudged ${data[idx].label}: ${data[idx].value}`, 'info', '▼');
+      }
     } else if (e.key === 'Escape') {
       if (helpModal && helpModal.classList.contains('open')) {
         closeHelpModal();

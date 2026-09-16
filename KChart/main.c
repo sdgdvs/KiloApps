@@ -66,17 +66,70 @@ COLORREF themes[NUM_THEMES][NUM_ITEMS] = {
 
 int currentTheme = 0;
 
+#define NUM_PRESETS 5
+const char* presetNames[NUM_PRESETS] = {
+    "Quarterly Revenue",
+    "Tech Stack Share",
+    "Monthly Temp",
+    "Exam Score Dist",
+    "Weekly Activity"
+};
+
+const char* presetLabels[NUM_PRESETS][NUM_ITEMS] = {
+    { "Q1", "Q2", "Q3", "Q4", "Q5" },
+    { "React", "Vue", "Svelte", "Node", "Python" },
+    { "Jan", "Apr", "Jul", "Oct", "Dec" },
+    { "A", "B", "C", "D", "F" },
+    { "Mon", "Tue", "Wed", "Thu", "Fri" }
+};
+
+int presetValues[NUM_PRESETS][NUM_ITEMS] = {
+    { 25, 65, 45, 90, 35 },
+    { 42, 28, 18, 55, 60 },
+    { 14, 22, 35, 20, 10 },
+    { 28, 45, 32, 14, 6 },
+    { 30, 45, 15, 50, 40 }
+};
+
+int currentPreset = 0;
+
+void LoadPreset(int idx) {
+    if (idx < 0 || idx >= NUM_PRESETS) return;
+    currentPreset = idx;
+    for (int i = 0; i < NUM_ITEMS; i++) {
+        labels[i] = presetLabels[idx][i];
+        target[i] = presetValues[idx][i];
+    }
+}
+
+int selectedIndex = 0;
+
+char statusText[128] = "Press [F1] Help | [P] Presets | [1-6] Mode | [T] Trend | [C] Theme | [R] Rand | [Up/Down] Nudge | [Ctrl+C] Copy";
+DWORD statusExpiry = 0;
+
+void SetStatus(const char* msg) {
+    int i = 0;
+    while (msg[i] && i < sizeof(statusText) - 1) {
+        statusText[i] = msg[i];
+        i++;
+    }
+    statusText[i] = '\0';
+    statusExpiry = GetTickCount() + 3500;
+}
+
 int randSeed = 42;
 int MyRand() {
     randSeed = randSeed * 1103515245 + 12345;
     return (unsigned int)(randSeed / 65536) % 32768;
 }
 
+HWND hBtnPreset;
 HWND hBtnRandomize;
 HWND hBtnToggle;
 HWND hBtnTheme;
 HWND hBtnTrend;
 HWND hBtnSort;
+HWND hBtnCopy;
 HWND hBtnHelp;
 HFONT hBtnFont = NULL;
 
@@ -193,22 +246,53 @@ void CalculateStats() {
     }
 }
 
+void CopyDataToClipboard(HWND hwnd) {
+    char buf[512];
+    int len = wsprintfA(buf, "KChart Studio Data Export\r\nMode: %s | Theme: %s\r\n\r\nLabel\tValue\r\n",
+        modeNames[chartMode], themeNames[currentTheme]);
+    for (int i = 0; i < NUM_ITEMS; i++) {
+        len += wsprintfA(buf + len, "%s\t%d\r\n", labels[i], values[i]);
+    }
+    len += wsprintfA(buf + len, "\r\nStats:\r\nMean: %d | Median: %d | StdDev: %d | Min: %d | Max: %d | Total: %d\r\n",
+        statMean, statMedian, statStdDev, statMin, statMax, statTotal);
+    
+    if (OpenClipboard(hwnd)) {
+        EmptyClipboard();
+        HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len + 1);
+        if (hMem) {
+            char* ptr = (char*)GlobalLock(hMem);
+            if (ptr) {
+                for (int i = 0; i <= len; i++) ptr[i] = buf[i];
+                GlobalUnlock(hMem);
+                SetClipboardData(CF_TEXT, hMem);
+            }
+        }
+        CloseClipboard();
+        SetStatus("Copied dataset & stats to clipboard!");
+    }
+}
+
 void ShowHelpDialog(HWND hwnd) {
     MessageBox(hwnd,
         "KChart Studio - Advanced Data Visualization & Regression Suite\n\n"
-        "KEYBOARD SHORTCUTS & CONTROLS:\n"
+        "QUICK-START TUTORIAL:\n"
+        "  1. Direct Mode: Press 1-6 or click [Mode] to switch Bar, Line, Area, Pie, Donut, Radar views.\n"
+        "  2. Presets: Press [P] or click [Preset] to cycle realistic business, tech, & scientific datasets.\n"
+        "  3. Interactive Tweaking: Press [Left]/[Right] to select a bar; press [Up]/[Down] or [+/-] to nudge value.\n"
+        "  4. Regression Overlays: Press [T] or click [Trend] for Linear Fit (OLS y=mx+b), Moving Avg, or Mean.\n"
+        "  5. Export & Copy: Press [Ctrl+C] or click [Copy] to copy data and statistics to the Windows clipboard.\n\n"
+        "KEYBOARD SHORTCUTS:\n"
         "  [F1] or [H]   : Open this Help & Feature Guide\n"
         "  [1] - [6]     : Direct Mode (1:Bar, 2:Line, 3:Area, 4:Pie, 5:Donut, 6:Radar)\n"
+        "  [P]           : Cycle Sample Presets (Revenue, Tech, Temp, Scores, Activity)\n"
         "  [M]           : Cycle Chart Modes sequentially\n"
         "  [T]           : Cycle Trendline Overlays (Off, Linear Fit, MovAvg, Mean)\n"
         "  [C]           : Cycle Color Themes (Cyber Teal, Neon Sunset, Emerald, etc.)\n"
         "  [R]           : Generate Randomized Dataset with animation\n"
-        "  [S]           : Sort Dataset Ascending\n\n"
-        "STATISTICAL ANALYSIS & REGRESSION:\n"
-        "  - Ordinary Least Squares (OLS) Linear Fit y = mx + b with live R2 fit\n"
-        "  - 3-point rolling Moving Average\n"
-        "  - Arithmetic Mean baseline\n"
-        "  - Real-time Total, Mean, Median, StdDev, Min / Max metrics\n\n"
+        "  [S]           : Sort Dataset Ascending\n"
+        "  [Left]/[Right]: Select / Navigate data point\n"
+        "  [Up]/[Down]   : Nudge selected value (+5 / -5)\n"
+        "  [Ctrl+C]      : Copy dataset and summary statistics to Clipboard\n\n"
         "MOUSE CONTROLS:\n"
         "  - Hover over chart bars, line vertices, slices, or radar nodes for interactive tooltips\n"
         "  - Click toolbar buttons at bottom to switch views & controls",
@@ -222,22 +306,26 @@ void LayoutButtons(HWND hwnd) {
     int clientW = rc.right - rc.left;
     int clientH = rc.bottom - rc.top;
 
-    if (hBtnRandomize && hBtnToggle && hBtnTheme && hBtnTrend && hBtnSort && hBtnHelp) {
-        int btnW = SCALE(95);
+    if (hBtnPreset && hBtnRandomize && hBtnToggle && hBtnTheme && hBtnTrend && hBtnSort && hBtnCopy && hBtnHelp) {
+        int btnCount = 8;
+        int btnW = SCALE(86);
         int btnH = SCALE(28);
-        int gap = SCALE(8);
-        int btnY = clientH - SCALE(40);
+        int gap = SCALE(6);
+        int totalW = btnCount * btnW + (btnCount - 1) * gap;
+        if (totalW > clientW - SCALE(16)) {
+            btnW = (clientW - SCALE(16) - (btnCount - 1) * gap) / btnCount;
+            if (btnW < SCALE(46)) btnW = SCALE(46);
+            totalW = btnCount * btnW + (btnCount - 1) * gap;
+        }
+        int btnY = clientH - SCALE(38);
         if (btnY < 10) btnY = 10;
-        int totalW = 6 * btnW + 5 * gap;
         int startX = (clientW - totalW) / 2;
-        if (startX < 5) startX = 5;
+        if (startX < 4) startX = 4;
 
-        SetWindowPos(hBtnRandomize, NULL, startX, btnY, btnW, btnH, SWP_NOZORDER);
-        SetWindowPos(hBtnToggle, NULL, startX + btnW + gap, btnY, btnW, btnH, SWP_NOZORDER);
-        SetWindowPos(hBtnTheme, NULL, startX + (btnW + gap) * 2, btnY, btnW, btnH, SWP_NOZORDER);
-        SetWindowPos(hBtnTrend, NULL, startX + (btnW + gap) * 3, btnY, btnW, btnH, SWP_NOZORDER);
-        SetWindowPos(hBtnSort, NULL, startX + (btnW + gap) * 4, btnY, btnW, btnH, SWP_NOZORDER);
-        SetWindowPos(hBtnHelp, NULL, startX + (btnW + gap) * 5, btnY, btnW, btnH, SWP_NOZORDER);
+        HWND btns[8] = { hBtnPreset, hBtnRandomize, hBtnToggle, hBtnTheme, hBtnTrend, hBtnSort, hBtnCopy, hBtnHelp };
+        for (int i = 0; i < btnCount; i++) {
+            SetWindowPos(btns[i], NULL, startX + i * (btnW + gap), btnY, btnW, btnH, SWP_NOZORDER);
+        }
     }
 }
 
@@ -245,32 +333,40 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
             randSeed = GetTickCount();
-            hBtnRandomize = CreateWindowEx(0, "BUTTON", "Randomize [R]",
+            hBtnPreset = CreateWindowEx(0, "BUTTON", "Preset [P]",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-                0, 0, 95, 28, hwnd, (HMENU)1, NULL, NULL);
+                0, 0, 86, 28, hwnd, (HMENU)7, NULL, NULL);
+            hBtnRandomize = CreateWindowEx(0, "BUTTON", "Rand [R]",
+                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
+                0, 0, 86, 28, hwnd, (HMENU)1, NULL, NULL);
             hBtnToggle = CreateWindowEx(0, "BUTTON", "Mode [M]",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-                0, 0, 95, 28, hwnd, (HMENU)2, NULL, NULL);
+                0, 0, 86, 28, hwnd, (HMENU)2, NULL, NULL);
             hBtnTheme = CreateWindowEx(0, "BUTTON", "Theme [C]",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-                0, 0, 95, 28, hwnd, (HMENU)3, NULL, NULL);
+                0, 0, 86, 28, hwnd, (HMENU)3, NULL, NULL);
             hBtnTrend = CreateWindowEx(0, "BUTTON", "Trend [T]",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-                0, 0, 95, 28, hwnd, (HMENU)6, NULL, NULL);
+                0, 0, 86, 28, hwnd, (HMENU)6, NULL, NULL);
             hBtnSort = CreateWindowEx(0, "BUTTON", "Sort [S]",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-                0, 0, 95, 28, hwnd, (HMENU)4, NULL, NULL);
+                0, 0, 86, 28, hwnd, (HMENU)4, NULL, NULL);
+            hBtnCopy = CreateWindowEx(0, "BUTTON", "Copy [^C]",
+                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
+                0, 0, 86, 28, hwnd, (HMENU)8, NULL, NULL);
             hBtnHelp = CreateWindowEx(0, "BUTTON", "Help [F1]",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-                0, 0, 95, 28, hwnd, (HMENU)5, NULL, NULL);
+                0, 0, 86, 28, hwnd, (HMENU)5, NULL, NULL);
             
-            int fontHeight = -MulDiv(12, dpi, 72);
+            int fontHeight = -MulDiv(11, dpi, 72);
             hBtnFont = CreateFontA(fontHeight, 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            SendMessage(hBtnPreset, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnRandomize, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnToggle, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnTheme, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnTrend, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnSort, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
+            SendMessage(hBtnCopy, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             
             LayoutButtons(hwnd);
@@ -295,12 +391,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int newHover = -1;
 
             if (chartMode == 3 || chartMode == 4) { // Pie or Donut
-                int cx = W / 2 - 50;
-                int cy = (H - 80) / 2 + 35;
+                int cx = W / 2 - SCALE(50);
+                int cy = (H - SCALE(100)) / 2 + SCALE(45);
                 int dx = mouseX - cx;
                 int dy = mouseY - cy;
                 int distSq = dx * dx + dy * dy;
-                int outerR = (W < H - 80 ? W : H - 80) * 35 / 100;
+                int outerR = (W < H - SCALE(100) ? W : H - SCALE(100)) * 34 / 100;
                 int innerR = chartMode == 4 ? outerR * 55 / 100 : 0;
 
                 if (distSq >= innerR * innerR && distSq <= (outerR + 10) * (outerR + 10)) {
@@ -324,8 +420,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (chartMode == 5) { // Radar
                 int cx = W / 2;
-                int cy = (H - 80) / 2 + 35;
-                int radius = (W < H - 80 ? W : H - 80) * 35 / 100;
+                int cy = (H - SCALE(100)) / 2 + SCALE(45);
+                int radius = (W < H - SCALE(100) ? W : H - SCALE(100)) * 34 / 100;
                 double angleStep = (MY_PI * 2.0) / NUM_ITEMS;
                 int dx = mouseX - cx;
                 int dy = mouseY - cy;
@@ -347,10 +443,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
             } else { // Bar, Line, Area
-                int chartX = 50;
-                int chartY = 45;
-                int chartW = W - 75;
-                int chartH = H - 95;
+                int chartX = SCALE(50);
+                int chartY = SCALE(66);
+                int chartW = W - SCALE(75);
+                int chartH = H - SCALE(115);
                 if (chartW < 50) chartW = 50;
                 if (chartH < 50) chartH = 50;
 
@@ -358,7 +454,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 for (int i = 0; i < NUM_ITEMS; i++) if (values[i] > maxVal) maxVal = values[i];
                 if (maxVal <= 0) maxVal = 1;
 
-                int barW = 30;
+                int barW = SCALE(32);
                 int spacing = (chartW - (NUM_ITEMS * barW)) / (NUM_ITEMS + 1);
 
                 for (int i = 0; i < NUM_ITEMS; i++) {
@@ -390,35 +486,77 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_KEYDOWN: {
-            if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
+            int isCtrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+            if (isCtrl && (wParam == 'C' || wParam == 'c')) {
+                CopyDataToClipboard(hwnd);
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
                 ShowHelpDialog(hwnd);
             } else if (wParam >= '1' && wParam <= '6') {
                 chartMode = (int)(wParam - '1');
+                char buf[64];
+                wsprintfA(buf, "Chart View: %s", modeNames[chartMode]);
+                SetStatus(buf);
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 'P' || wParam == 'p') {
+                currentPreset = (currentPreset + 1) % NUM_PRESETS;
+                LoadPreset(currentPreset);
+                char buf[64];
+                wsprintfA(buf, "Loaded Preset: %s", presetNames[currentPreset]);
+                SetStatus(buf);
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 'T' || wParam == 't') {
                 trendMode = (trendMode + 1) % 4;
+                char buf[64];
+                wsprintfA(buf, "Overlay: %s", trendNames[trendMode]);
+                SetStatus(buf);
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 'M' || wParam == 'm') {
                 chartMode = (chartMode + 1) % 6;
+                char buf[64];
+                wsprintfA(buf, "Chart View: %s", modeNames[chartMode]);
+                SetStatus(buf);
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 'C' || wParam == 'c') {
                 currentTheme = (currentTheme + 1) % NUM_THEMES;
+                char buf[64];
+                wsprintfA(buf, "Color Theme: %s", themeNames[currentTheme]);
+                SetStatus(buf);
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 'R' || wParam == 'r') {
                 for (int i = 0; i < NUM_ITEMS; i++) {
                     target[i] = 10 + (MyRand() % 90);
                 }
+                SetStatus("Generated randomized dataset");
             } else if (wParam == 'S' || wParam == 's') {
-                for (int i = 0; i < NUM_ITEMS - 1; i++) {
-                    for (int j = 0; j < NUM_ITEMS - i - 1; j++) {
-                        if (target[j] > target[j + 1]) {
-                            int t = target[j]; target[j] = target[j + 1]; target[j + 1] = t;
-                            int tv = values[j]; values[j] = values[j + 1]; values[j + 1] = tv;
-                            const char* tl = labels[j]; labels[j] = labels[j + 1]; labels[j + 1] = tl;
-                        }
-                    }
-                }
+                SendMessage(hwnd, WM_COMMAND, 4, 0);
+            } else if (wParam == VK_LEFT) {
+                selectedIndex = (selectedIndex + NUM_ITEMS - 1) % NUM_ITEMS;
+                hoveredIndex = selectedIndex;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == VK_RIGHT) {
+                selectedIndex = (selectedIndex + 1) % NUM_ITEMS;
+                hoveredIndex = selectedIndex;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == VK_UP || wParam == VK_ADD || wParam == VK_OEM_PLUS) {
+                int idx = (hoveredIndex >= 0 && hoveredIndex < NUM_ITEMS) ? hoveredIndex : selectedIndex;
+                if (target[idx] <= 95) target[idx] += 5;
+                else target[idx] = 100;
+                values[idx] = target[idx];
                 CalculateStats();
+                char buf[64];
+                wsprintfA(buf, "Nudged %s: %d", labels[idx], values[idx]);
+                SetStatus(buf);
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == VK_DOWN || wParam == VK_SUBTRACT || wParam == VK_OEM_MINUS) {
+                int idx = (hoveredIndex >= 0 && hoveredIndex < NUM_ITEMS) ? hoveredIndex : selectedIndex;
+                if (target[idx] >= 5) target[idx] -= 5;
+                else target[idx] = 0;
+                values[idx] = target[idx];
+                CalculateStats();
+                char buf[64];
+                wsprintfA(buf, "Nudged %s: %d", labels[idx], values[idx]);
+                SetStatus(buf);
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             break;
@@ -449,14 +587,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 for (int i = 0; i < NUM_ITEMS; i++) {
                     target[i] = 10 + (MyRand() % 90);
                 }
+                SetStatus("Generated randomized dataset");
             } else if (cmdId == 2) { // Toggle Mode
                 chartMode = (chartMode + 1) % 6;
+                char buf[64];
+                wsprintfA(buf, "Chart View: %s", modeNames[chartMode]);
+                SetStatus(buf);
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (cmdId == 3) { // Toggle Theme
                 currentTheme = (currentTheme + 1) % NUM_THEMES;
+                char buf[64];
+                wsprintfA(buf, "Color Theme: %s", themeNames[currentTheme]);
+                SetStatus(buf);
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (cmdId == 6) { // Toggle Trendline Overlay
                 trendMode = (trendMode + 1) % 4;
+                char buf[64];
+                wsprintfA(buf, "Overlay: %s", trendNames[trendMode]);
+                SetStatus(buf);
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (cmdId == 4) { // Sort
                 for (int i = 0; i < NUM_ITEMS - 1; i++) {
@@ -469,9 +617,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
                 CalculateStats();
+                SetStatus("Sorted data points ascending");
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (cmdId == 5) { // Help
                 ShowHelpDialog(hwnd);
+            } else if (cmdId == 7) { // Preset
+                currentPreset = (currentPreset + 1) % NUM_PRESETS;
+                LoadPreset(currentPreset);
+                char buf[64];
+                wsprintfA(buf, "Loaded Preset: %s", presetNames[currentPreset]);
+                SetStatus(buf);
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (cmdId == 8) { // Copy
+                CopyDataToClipboard(hwnd);
+                InvalidateRect(hwnd, NULL, TRUE);
             }
             break;
         }
@@ -507,7 +666,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Title & Mode & Theme Header
             SetTextColor(memDC, RGB(244, 244, 245));
             char titleStr[128];
-            wsprintfA(titleStr, "%s | %s | %s | Press 'H' Help / 'T' Trend", modeNames[chartMode], themeNames[currentTheme], trendNames[trendMode]);
+            wsprintfA(titleStr, "KChart Studio | %s | %s | %s", modeNames[chartMode], themeNames[currentTheme], trendNames[trendMode]);
             RECT titleR = { SCALE(15), SCALE(8), W - SCALE(15), SCALE(26) };
             DrawTextA(memDC, titleStr, -1, &titleR, DT_LEFT | DT_SINGLELINE);
 
@@ -516,15 +675,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             wsprintfA(statsStr, "Mean: %d  Med: %d  StdDev: %d  Min: %d  Max: %d  Total: %d",
                 statMean, statMedian, statStdDev, statMin, statMax, statTotal);
             SetTextColor(memDC, RGB(161, 161, 170));
-            RECT statsR = { SCALE(15), SCALE(24), W - SCALE(15), SCALE(38) };
+            RECT statsR = { SCALE(15), SCALE(26), W - SCALE(15), SCALE(42) };
             DrawTextA(memDC, statsStr, -1, &statsR, DT_LEFT | DT_SINGLELINE);
+
+            // Status Bar & Shortcut Cue
+            if (statusExpiry != 0 && GetTickCount() > statusExpiry) {
+                statusExpiry = 0;
+                char* def = "Press [F1] Help | [P] Presets | [1-6] Mode | [T] Trend | [C] Theme | [R] Rand | [Up/Down] Nudge | [Ctrl+C] Copy";
+                int idx = 0;
+                while (def[idx] && idx < sizeof(statusText) - 1) {
+                    statusText[idx] = def[idx];
+                    idx++;
+                }
+                statusText[idx] = '\0';
+            }
+            SetTextColor(memDC, statusExpiry != 0 ? RGB(96, 165, 250) : RGB(113, 113, 122));
+            RECT statusR = { SCALE(15), SCALE(44), W - SCALE(15), SCALE(60) };
+            DrawTextA(memDC, statusText, -1, &statusR, DT_LEFT | DT_SINGLELINE);
 
             COLORREF* palette = themes[currentTheme];
 
             if (chartMode == 3 || chartMode == 4) { // Pie / Donut
-                int cx = W / 2 - 50;
-                int cy = (H - 80) / 2 + 35;
-                int outerR = (W < H - 80 ? W : H - 80) * 35 / 100;
+                int cx = W / 2 - SCALE(50);
+                int cy = (H - SCALE(100)) / 2 + SCALE(45);
+                int outerR = (W < H - SCALE(100) ? W : H - SCALE(100)) * 34 / 100;
                 int innerR = chartMode == 4 ? outerR * 55 / 100 : 0;
                 if (outerR < 20) outerR = 20;
 
@@ -572,25 +746,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
 
                 // Legend
-                int legX = W - 110;
-                int legY = cy - 45;
+                int legX = W - SCALE(115);
+                int legY = cy - SCALE(45);
                 for (int i = 0; i < NUM_ITEMS; i++) {
-                    int ly = legY + i * 20;
+                    int ly = legY + i * SCALE(20);
                     HBRUSH legBrush = CreateSolidBrush(palette[i]);
-                    RECT legDot = { legX, ly + 3, legX + 10, ly + 13 };
+                    RECT legDot = { legX, ly + SCALE(3), legX + SCALE(10), ly + SCALE(13) };
                     FillRect(memDC, &legDot, legBrush);
                     DeleteObject(legBrush);
 
                     char ltxt[32];
                     wsprintfA(ltxt, "%s: %d", labels[i], values[i]);
-                    RECT legTxtR = { legX + 15, ly, W - 5, ly + 18 };
+                    RECT legTxtR = { legX + SCALE(15), ly, W - SCALE(5), ly + SCALE(18) };
                     SetTextColor(memDC, hoveredIndex == i ? RGB(255, 255, 255) : RGB(161, 161, 170));
                     DrawTextA(memDC, ltxt, -1, &legTxtR, DT_LEFT | DT_SINGLELINE);
                 }
             } else if (chartMode == 5) { // Radar View
                 int cx = W / 2;
-                int cy = (H - 80) / 2 + 35;
-                int radius = (W < H - 80 ? W : H - 80) * 35 / 100;
+                int cy = (H - SCALE(100)) / 2 + SCALE(45);
+                int radius = (W < H - SCALE(100) ? W : H - SCALE(100)) * 34 / 100;
                 double angleStep = (MY_PI * 2.0) / NUM_ITEMS;
 
                 // Web Grid
@@ -664,10 +838,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DeleteObject(noPen);
                 }
             } else { // Bar, Line, Area
-                int chartX = 50;
-                int chartY = 45;
-                int chartW = W - 75;
-                int chartH = H - 95;
+                int chartX = SCALE(50);
+                int chartY = SCALE(66);
+                int chartW = W - SCALE(75);
+                int chartH = H - SCALE(115);
                 if (chartW < 50) chartW = 50;
                 if (chartH < 50) chartH = 50;
 
@@ -688,7 +862,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int valNum = maxVal - (maxVal / 4) * i;
                     char vstr[16];
                     wsprintfA(vstr, "%d", valNum);
-                    RECT vr = { chartX - 42, y - 7, chartX - 5, y + 10 };
+                    RECT vr = { chartX - SCALE(42), y - SCALE(7), chartX - SCALE(5), y + SCALE(10) };
                     DrawTextA(memDC, vstr, -1, &vr, DT_RIGHT | DT_SINGLELINE);
                 }
                 SelectObject(memDC, oldGridPen);
@@ -703,7 +877,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SelectObject(memDC, oldAxisPen);
                 DeleteObject(axisPen);
 
-                int barW = 30;
+                int barW = SCALE(32);
                 int spacing = (chartW - (NUM_ITEMS * barW)) / (NUM_ITEMS + 1);
 
                 if (chartMode == 0) { // Bar Chart
@@ -718,8 +892,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         FillRect(memDC, &br, brBrush);
                         DeleteObject(brBrush);
 
+                        if (hoveredIndex == i) {
+                            HPEN hPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+                            HGDIOBJ oldHPen = SelectObject(memDC, hPen);
+                            HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
+                            HGDIOBJ oldHBr = SelectObject(memDC, nullBr);
+                            Rectangle(memDC, bx - 1, by - 1, bx + barW + 2, chartY + chartH + 1);
+                            SelectObject(memDC, oldHBr);
+                            SelectObject(memDC, oldHPen);
+                            DeleteObject(hPen);
+                        }
+
                         SetTextColor(memDC, hoveredIndex == i ? RGB(255, 255, 255) : RGB(161, 161, 170));
-                        RECT lr = { bx - 10, chartY + chartH + 6, bx + barW + 10, chartY + chartH + 24 };
+                        RECT lr = { bx - SCALE(10), chartY + chartH + SCALE(6), bx + barW + SCALE(10), chartY + chartH + SCALE(24) };
                         DrawTextA(memDC, labels[i], -1, &lr, DT_CENTER | DT_SINGLELINE);
                     }
                 } else if (chartMode == 1 || chartMode == 2) { // Line / Area Chart
@@ -814,7 +999,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     // Formula Badge
                     char eqStr[64];
                     FormatTrendEq(eqStr, trendSlope, trendIntercept, trendR2);
-                    RECT eqR = { chartX + chartW - 220, chartY + 6, chartX + chartW - 5, chartY + 24 };
+                    RECT eqR = { chartX + chartW - SCALE(230), chartY + SCALE(6), chartX + chartW - SCALE(5), chartY + SCALE(24) };
                     HBRUSH bgR = CreateSolidBrush(RGB(24, 24, 30));
                     FillRect(memDC, &eqR, bgR);
                     DeleteObject(bgR);
@@ -857,7 +1042,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         DeleteObject(noPen);
                     }
 
-                    RECT maR = { chartX + chartW - 190, chartY + 6, chartX + chartW - 5, chartY + 24 };
+                    RECT maR = { chartX + chartW - SCALE(200), chartY + SCALE(6), chartX + chartW - SCALE(5), chartY + SCALE(24) };
                     HBRUSH bgR = CreateSolidBrush(RGB(24, 24, 30));
                     FillRect(memDC, &maR, bgR);
                     DeleteObject(bgR);
@@ -874,7 +1059,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     char mStr[32];
                     wsprintfA(mStr, "Mean Line: %d", statMean);
-                    RECT mR = { chartX + chartW - 140, yMean - 18, chartX + chartW - 5, yMean - 2 };
+                    RECT mR = { chartX + chartW - SCALE(150), yMean - SCALE(18), chartX + chartW - SCALE(5), yMean - SCALE(2) };
                     HBRUSH bgR = CreateSolidBrush(RGB(24, 24, 30));
                     FillRect(memDC, &mR, bgR);
                     DeleteObject(bgR);
@@ -951,6 +1136,14 @@ void* __cdecl memset(void* dest, int c, size_t count) {
     return dest;
 }
 
+#pragma function(memcpy)
+void* __cdecl memcpy(void* dest, const void* src, size_t count) {
+    char* d = (char*)dest;
+    const char* s = (const char*)src;
+    while (count--) *d++ = *s++;
+    return dest;
+}
+
 void MainEntry() {
     SetProcessDPIAware();
     HDC hdc = GetDC(NULL);
@@ -980,35 +1173,8 @@ void MainEntry() {
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
         if (msg.message == WM_KEYDOWN) {
-            WPARAM k = msg.wParam;
-            if (k == VK_F1 || k == 'H' || k == 'h') {
-                ShowHelpDialog(hwnd);
-                continue;
-            } else if (k >= '1' && k <= '6') {
-                chartMode = (int)(k - '1');
-                InvalidateRect(hwnd, NULL, TRUE);
-                continue;
-            } else if (k == 'M' || k == 'm') {
-                chartMode = (chartMode + 1) % 6;
-                InvalidateRect(hwnd, NULL, TRUE);
-                continue;
-            } else if (k == 'T' || k == 't') {
-                trendMode = (trendMode + 1) % 4;
-                InvalidateRect(hwnd, NULL, TRUE);
-                continue;
-            } else if (k == 'C' || k == 'c') {
-                currentTheme = (currentTheme + 1) % NUM_THEMES;
-                InvalidateRect(hwnd, NULL, TRUE);
-                continue;
-            } else if (k == 'R' || k == 'r') {
-                for (int i = 0; i < NUM_ITEMS; i++) {
-                    target[i] = 10 + (MyRand() % 90);
-                }
-                continue;
-            } else if (k == 'S' || k == 's') {
-                SendMessage(hwnd, WM_COMMAND, 4, 0);
-                continue;
-            }
+            SendMessage(hwnd, WM_KEYDOWN, msg.wParam, msg.lParam);
+            continue;
         }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
