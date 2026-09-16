@@ -105,13 +105,12 @@ For every game audited, also verify:
 
 ---
 
-**Target App:** KReversi
+**Target App:** KRogue
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KReversi
 - KRogue
 - KScript
 - KSimon
@@ -192,8 +191,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KQuest
 - KRadio
 - KRead
+- KReversi
 
 ## Test Reports
+
+- **KReversi**: PASS ✅ (8 issues, 8 fixed inline)
+  - Decoupled loadGame from changeGameMode/initGame to prevent overwriting loaded board state and history.
+  - Implemented active AI turn skipping in Freeze AI with active button indicator and cancel refund.
+  - Added checkEndGame to bomb disc placement branch to prevent game hangs on board completion.
+  - Added status bar notifications when either player has no legal moves and their turn is passed.
+  - Preserved custom timer in campaign mode and eliminated forced untimed reset on stage initialization.
+  - Fixed stage 10 bonus, stage 14 bonus, and stage 16 hole overlaps with starting center discs.
+  - Added F5 quicksave and F9 quickload shortcuts alongside JSON save file export and import parity.
+  - Added localStorage preferences persistence for audio, hints, timer, board size, and AI difficulty.
 
 - **KRead**: PASS ✅ (8 issues, 8 fixed inline)
   - Raw-text search regex engine built to prevent HTML entity corruption and tag mutation.
@@ -268,5 +278,5 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 > 📁 **Archived Round 2 Reports**: Recent detailed audit reports (KPad through KImage) have been archived to [archive/app_test_reports_round2.md](archive/app_test_reports_round2.md).
 
 ### Round 2 Completed Index
-- KRead ✅ (8 fixed), KRadio ✅ (8 fixed), KQuest ✅ (8 fixed), KPong ✅ (8 fixed), KPing ✅ (8 fixed), KPass ✅ (7 fixed), KPaint ✅ (7 fixed), KPad ✅ (8 fixed), KPac ✅ (8 fixed), KNote ✅ (7 fixed), KNet ✅ (3 fixed), KMystery ✅ (5 fixed), KMines ✅ (8 fixed), KMine ✅ (2 fixed), KMedia ✅ (8 fixed), KMech ✅ (6 fixed), KMaze ✅ (7 fixed), KMatch3 ✅ (8 fixed), KMandel ✅ (6 fixed), KMail ✅ (7 fixed), KJournal ✅ (7 fixed), KImage ✅ (8 fixed)
+- KReversi ✅ (8 fixed), KRead ✅ (8 fixed), KRadio ✅ (8 fixed), KQuest ✅ (8 fixed), KPong ✅ (8 fixed), KPing ✅ (8 fixed), KPass ✅ (7 fixed), KPaint ✅ (7 fixed), KPad ✅ (8 fixed), KPac ✅ (8 fixed), KNote ✅ (7 fixed), KNet ✅ (3 fixed), KMystery ✅ (5 fixed), KMines ✅ (8 fixed), KMine ✅ (2 fixed), KMedia ✅ (8 fixed), KMech ✅ (6 fixed), KMaze ✅ (7 fixed), KMatch3 ✅ (8 fixed), KMandel ✅ (6 fixed), KMail ✅ (7 fixed), KJournal ✅ (7 fixed), KImage ✅ (8 fixed)
 

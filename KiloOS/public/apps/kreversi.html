@@ -102,7 +102,8 @@
         button { padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; background: #2d2d2d; color: #fff; border: 1px solid #444; border-radius: 5px; transition: background 0.2s, transform 0.1s; }
         button:hover { background: #3d3d3d; border-color: #666; }
         button:active { transform: scale(0.97); }
-        button.active-btn { background: #b84c00; border-color: #ff6600; color: #fff; box-shadow: 0 0 8px rgba(255,102,0,0.5); }
+        button.active-btn { background: #b84c00 !important; border-color: #ff6600 !important; color: #fff !important; box-shadow: 0 0 8px rgba(255,102,0,0.5) !important; }
+        button.active-freeze { background: #004d40 !important; border-color: #00f5d4 !important; color: #e0f2f1 !important; box-shadow: 0 0 8px rgba(0,245,212,0.6) !important; }
         
         /* Themes */
         body.theme-classic {
@@ -244,14 +245,14 @@
                 </select>
             </label>
             <label id="board-size-label" for="board-size-select" style="display: none;">Size:
-                <select id="board-size-select" onchange="initGame()">
+                <select id="board-size-select" onchange="changeBoardSize()">
                     <option value="6">6x6</option>
                     <option value="8" selected>8x8</option>
                     <option value="10">10x10</option>
                 </select>
             </label>
             <label id="ai-diff-label" for="ai-difficulty" style="display: none;">AI:
-                <select id="ai-difficulty">
+                <select id="ai-difficulty" onchange="changeDifficulty()">
                     <option value="rookie">Rookie</option>
                     <option value="greedy">Greedy</option>
                     <option value="positional" selected>Positional</option>
@@ -267,17 +268,17 @@
                 </select>
             </label>
             <label for="time-mode">Timer:
-                <select id="time-mode" onchange="initGame()">
+                <select id="time-mode" onchange="changeTimer()">
                     <option value="0" selected>Untimed</option>
                     <option value="5">Blitz (5s)</option>
                     <option value="15">Rapid (15s)</option>
                 </select>
             </label>
             <label>
-                <input type="checkbox" id="sound-toggle" checked style="margin-right: 2px;"> Sound
+                <input type="checkbox" id="sound-toggle" checked onchange="toggleSound(event)" style="margin-right: 2px;"> Sound
             </label>
             <label>
-                <input type="checkbox" id="hint-toggle" checked onchange="renderBoard()" style="margin-right: 2px;"> Hints
+                <input type="checkbox" id="hint-toggle" checked onchange="toggleHints(event)" style="margin-right: 2px;"> Hints
             </label>
         </div>
     </div>
@@ -297,12 +298,15 @@
         <button id="bomb-btn" onclick="toggleBomb()" style="border-color: #ff6600; color: #ff9933;">Bomb Disc (B)</button>
         <button id="freeze-btn" onclick="useFreezeAI()" style="border-color: #00f5d4; color: #00f5d4;">Freeze AI (F)</button>
         <button onclick="undoMove()">Undo (U)</button>
-        <button onclick="saveGame()">Save</button>
-        <button onclick="loadGame()">Load</button>
+        <button onclick="saveGame()">Save (F5)</button>
+        <button onclick="loadGame()">Load (F9)</button>
+        <button onclick="exportSave()">Export</button>
+        <button onclick="importSave()">Import</button>
         <button onclick="initGame()">Restart (R)</button>
         <button onclick="showStats()">Stats</button>
-        <button onclick="showHelp()">Help</button>
+        <button onclick="showHelp()">Help (?)</button>
     </div>
+    <input type="file" id="import-file-input" style="display: none;" accept=".json" onchange="handleImportFile(event)">
 
     <script>
         const boardEl = document.getElementById('board');
@@ -377,13 +381,13 @@
             { stage: 7, name: "Vanguard Siege", width: 8, height: 8, ai: "grandmaster", bombs: 2, freezes: 1, desc: "Face Grandmaster AI! You start with 2 extra discs.", holes: [], bonus: [], custom: [[2,3,BLACK],[5,4,BLACK]] },
             { stage: 8, name: "Great Colosseum", width: 10, height: 10, ai: "rookie", bombs: 2, freezes: 2, desc: "Massive 10x10 arena! Control the expansive board.", holes: [], bonus: [[3,3],[3,6],[6,3],[6,6]], custom: [] },
             { stage: 9, name: "Greedy Leviathan", width: 10, height: 10, ai: "greedy", bombs: 2, freezes: 2, desc: "10x10 board vs high-disc Greedy AI.", holes: [], bonus: [[2,4],[4,7],[7,5],[5,2]], custom: [] },
-            { stage: 10, name: "Citadel Runes", width: 10, height: 10, ai: "positional", bombs: 2, freezes: 2, desc: "10x10 board with 8 corner & subcorner holes.", holes: [[0,0],[0,9],[9,0],[9,9],[1,1],[1,8],[8,1],[8,8]], bonus: [[3,4],[4,5],[5,4],[6,5]], custom: [] },
+            { stage: 10, name: "Citadel Runes", width: 10, height: 10, ai: "positional", bombs: 2, freezes: 2, desc: "10x10 board with 8 corner & subcorner holes.", holes: [[0,0],[0,9],[9,0],[9,9],[1,1],[1,8],[8,1],[8,8]], bonus: [[3,4],[3,5],[6,4],[6,5]], custom: [] },
             { stage: 11, name: "Diamond Ring", width: 8, height: 8, ai: "positional", bombs: 2, freezes: 2, desc: "8x8 board with an outer ring of obstacles.", holes: [[1,3],[1,4],[3,1],[4,1],[3,6],[4,6],[6,3],[6,4]], bonus: [[2,2],[2,5],[5,2],[5,5]], custom: [] },
             { stage: 12, name: "Labyrinth Grid", width: 10, height: 10, ai: "grandmaster", bombs: 2, freezes: 2, desc: "10x10 maze layout with 8 obstacle blocks vs Grandmaster.", holes: [[2,2],[2,7],[7,2],[7,7],[4,2],[4,7],[2,4],[7,4]], bonus: [[3,3],[3,6],[6,3],[6,6]], custom: [] },
             { stage: 13, name: "Blitz Trench", width: 6, height: 6, ai: "grandmaster", bombs: 2, freezes: 2, desc: "Fast 6x6 board with 5s Blitz timer vs Grandmaster!", holes: [], bonus: [[1,2],[4,3]], custom: [], timeMode: 5 },
-            { stage: 14, name: "Dragon's Den", width: 8, height: 8, ai: "grandmaster", bombs: 2, freezes: 2, desc: "8x8 board with 4 dragon holes on edge centers.", holes: [[0,3],[3,0],[4,7],[7,4]], bonus: [[2,3],[3,5],[5,2],[4,4]], custom: [] },
+            { stage: 14, name: "Dragon's Den", width: 8, height: 8, ai: "grandmaster", bombs: 2, freezes: 2, desc: "8x8 board with 4 dragon holes on edge centers.", holes: [[0,3],[3,0],[4,7],[7,4]], bonus: [[2,3],[3,5],[5,2],[5,4]], custom: [] },
             { stage: 15, name: "Eclipse Chamber", width: 10, height: 10, ai: "positional", bombs: 2, freezes: 2, desc: "10x10 board with 12 obstacles surrounding center.", holes: [[1,1],[1,8],[8,1],[8,8],[3,1],[6,1],[3,8],[6,8],[1,3],[1,6],[8,3],[8,6]], bonus: [[4,2],[5,7],[2,5],[7,4]], custom: [] },
-            { stage: 16, name: "Phantom Matrix", width: 8, height: 8, ai: "grandmaster", bombs: 2, freezes: 2, desc: "8x8 board with 6 staggered holes and 4 bonus tiles.", holes: [[0,2],[2,7],[5,0],[7,5],[3,3],[4,4]], bonus: [[1,1],[1,6],[6,1],[6,6]], custom: [] },
+            { stage: 16, name: "Phantom Matrix", width: 8, height: 8, ai: "grandmaster", bombs: 2, freezes: 2, desc: "8x8 board with 6 staggered holes and 4 bonus tiles.", holes: [[0,2],[2,7],[5,0],[7,5],[3,2],[4,5]], bonus: [[1,1],[1,6],[6,1],[6,6]], custom: [] },
             { stage: 17, name: "Warlord's Gambit", width: 10, height: 10, ai: "positional", bombs: 3, freezes: 2, desc: "10x10 battlefield with 8 holes and 6 bonus tiles.", holes: [[0,4],[4,0],[5,9],[9,5],[2,2],[2,7],[7,2],[7,7]], bonus: [[3,2],[2,3],[6,7],[7,6],[3,7],[7,3]], custom: [] },
             { stage: 18, name: "Titan Crucible", width: 10, height: 10, ai: "grandmaster", bombs: 3, freezes: 2, desc: "10x10 arena with 10 holes vs Grandmaster Minimax.", holes: [[1,4],[1,5],[8,4],[8,5],[4,1],[5,1],[4,8],[5,8],[0,0],[9,9]], bonus: [[2,4],[7,5],[4,2],[5,7],[3,3],[6,6]], custom: [] },
             { stage: 19, name: "Iron Apex", width: 8, height: 8, ai: "grandmaster", bombs: 3, freezes: 2, desc: "Tight 8x8 board with 4 holes vs ruthless Grandmaster AI.", holes: [[1,2],[2,5],[5,2],[6,5]], bonus: [[0,1],[1,6],[6,1],[7,6]], custom: [] },
@@ -404,6 +408,7 @@
         let bombCount = 2;
         let freezeCount = 1;
         let isBombActive = false;
+        let aiFrozen = false;
 
         let aiTimeoutId = null;
         let moveTimerInterval = null;
@@ -412,17 +417,51 @@
         let stats = { wins: 0, losses: 0, draws: 0 };
         let gameEnded = false;
 
+        function unlockAudio() {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            } catch(e) {}
+        }
+        window.addEventListener('click', unlockAudio, { once: true });
+        window.addEventListener('keydown', unlockAudio, { once: true });
+
         function getWeightMatrix(w, h) {
             if (w === 6) return WEIGHTS_6;
             if (w === 10) return WEIGHTS_10;
             return WEIGHTS_8;
         }
 
-        function loadThemePref() {
-            const saved = localStorage.getItem('kreversi_theme');
-            if (saved && THEMES[saved]) currentThemeKey = saved;
+        function loadPrefs() {
+            const savedTheme = localStorage.getItem('kreversi_theme');
+            if (savedTheme && THEMES[savedTheme]) currentThemeKey = savedTheme;
             document.getElementById('theme-select').value = currentThemeKey;
             document.body.className = 'theme-' + currentThemeKey;
+
+            const savedSound = localStorage.getItem('kreversi_sound');
+            if (savedSound !== null) {
+                document.getElementById('sound-toggle').checked = (savedSound === 'true');
+            }
+
+            const savedHints = localStorage.getItem('kreversi_hints');
+            if (savedHints !== null) {
+                document.getElementById('hint-toggle').checked = (savedHints === 'true');
+            }
+
+            const savedTimer = localStorage.getItem('kreversi_timer');
+            if (savedTimer !== null) {
+                document.getElementById('time-mode').value = savedTimer;
+            }
+
+            const savedSize = localStorage.getItem('kreversi_board_size');
+            if (savedSize !== null) {
+                document.getElementById('board-size-select').value = savedSize;
+            }
+
+            const savedDiff = localStorage.getItem('kreversi_ai_diff');
+            if (savedDiff !== null) {
+                document.getElementById('ai-difficulty').value = savedDiff;
+            }
         }
 
         function changeTheme() {
@@ -433,9 +472,34 @@
             renderBoard();
         }
 
+        function toggleSound(e) {
+            localStorage.setItem('kreversi_sound', e.target.checked);
+        }
+
+        function toggleHints(e) {
+            localStorage.setItem('kreversi_hints', e.target.checked);
+            renderBoard();
+        }
+
+        function changeTimer() {
+            localStorage.setItem('kreversi_timer', document.getElementById('time-mode').value);
+            resetTimer();
+        }
+
+        function changeBoardSize() {
+            localStorage.setItem('kreversi_board_size', document.getElementById('board-size-select').value);
+            initGame();
+        }
+
+        function changeDifficulty() {
+            localStorage.setItem('kreversi_ai_diff', document.getElementById('ai-difficulty').value);
+        }
+
         function loadStats() {
             const saved = localStorage.getItem('kreversi_stats');
-            if (saved) stats = JSON.parse(saved);
+            if (saved) {
+                try { stats = JSON.parse(saved); } catch (e) {}
+            }
             const savedStage = localStorage.getItem('kreversi_campaign_unlocked');
             if (savedStage) maxUnlockedStage = parseInt(savedStage, 10);
             updateStageDropdown();
@@ -470,18 +534,25 @@
 
         function changeStage() {
             currentStage = parseInt(document.getElementById('stage-select').value, 10);
+            const stageData = CAMPAIGN_STAGES[currentStage - 1];
+            if (stageData && stageData.timeMode) document.getElementById('time-mode').value = stageData.timeMode;
             initGame();
         }
 
         function showStats() {
             const total = stats.wins + stats.losses + stats.draws;
-            alert(`KReversi Statistics\n\nGames Played: ${total}\nWins: ${stats.wins}\nLosses: ${stats.losses}\nDraws: ${stats.draws}\nMax Campaign Stage: ${maxUnlockedStage} / 20`);
+            const winRate = total > 0 ? ((stats.wins / total) * 100).toFixed(1) : '0.0';
+            alert(`KReversi Statistics\n\nGames Played: ${total}\nWins: ${stats.wins}\nLosses: ${stats.losses}\nDraws: ${stats.draws}\nWin Rate: ${winRate}%\nMax Campaign Stage: ${maxUnlockedStage} / 20`);
         }
 
         function saveGame() {
             const state = {
                 boardState, boardWidth, boardHeight, currentPlayer, history,
-                gameEnded, bombCount, freezeCount, isBombActive, gameMode, currentStage, theme: currentThemeKey
+                gameEnded, bombCount, freezeCount, isBombActive, aiFrozen, gameMode, currentStage,
+                theme: currentThemeKey,
+                timeMode: document.getElementById('time-mode').value,
+                moveTimeLeft,
+                aiDifficulty: document.getElementById('ai-difficulty').value
             };
             localStorage.setItem('kreversi_save', JSON.stringify(state));
             messageEl.textContent = 'Game Saved!';
@@ -490,36 +561,103 @@
         function loadGame() {
             const saved = localStorage.getItem('kreversi_save');
             if (saved) {
-                const state = JSON.parse(saved);
-                boardState = state.boardState;
-                boardWidth = state.boardWidth;
-                boardHeight = state.boardHeight;
-                currentPlayer = state.currentPlayer;
-                history = state.history || [];
-                gameEnded = state.gameEnded || false;
-                bombCount = state.bombCount || 2;
-                freezeCount = state.freezeCount || 1;
-                isBombActive = state.isBombActive || false;
-                gameMode = state.gameMode || 'campaign';
-                currentStage = state.currentStage || 1;
-                
-                if (state.theme && THEMES[state.theme]) {
-                    currentThemeKey = state.theme;
-                    document.getElementById('theme-select').value = currentThemeKey;
-                    document.body.className = 'theme-' + currentThemeKey;
-                }
-                document.getElementById('mode-select').value = gameMode;
-                changeGameMode();
+                try {
+                    const state = JSON.parse(saved);
+                    boardState = state.boardState;
+                    boardWidth = state.boardWidth;
+                    boardHeight = state.boardHeight;
+                    currentPlayer = state.currentPlayer;
+                    history = state.history || [];
+                    gameEnded = state.gameEnded || false;
+                    bombCount = state.bombCount !== undefined ? state.bombCount : 2;
+                    freezeCount = state.freezeCount !== undefined ? state.freezeCount : 1;
+                    isBombActive = state.isBombActive || false;
+                    aiFrozen = state.aiFrozen || false;
+                    gameMode = state.gameMode || 'campaign';
+                    currentStage = state.currentStage || 1;
+                    
+                    if (state.theme && THEMES[state.theme]) {
+                        currentThemeKey = state.theme;
+                        document.getElementById('theme-select').value = currentThemeKey;
+                        document.body.className = 'theme-' + currentThemeKey;
+                    }
+                    if (state.timeMode !== undefined) {
+                        document.getElementById('time-mode').value = state.timeMode;
+                    }
+                    if (state.aiDifficulty && document.getElementById('ai-difficulty')) {
+                        document.getElementById('ai-difficulty').value = state.aiDifficulty;
+                    }
+                    
+                    document.getElementById('mode-select').value = gameMode;
+                    const isCampaign = gameMode === 'campaign';
+                    document.getElementById('stage-select-label').style.display = isCampaign ? 'inline-flex' : 'none';
+                    document.getElementById('board-size-label').style.display = isCampaign ? 'none' : 'inline-flex';
+                    document.getElementById('ai-diff-label').style.display = isCampaign ? 'none' : 'inline-flex';
+                    if (isCampaign) {
+                        updateStageDropdown();
+                        document.getElementById('stage-select').value = currentStage;
+                    } else {
+                        document.getElementById('board-size-select').value = boardWidth.toString();
+                    }
 
-                if (aiTimeoutId) { clearTimeout(aiTimeoutId); aiTimeoutId = null; }
-                stopTimer();
-                messageEl.textContent = 'Game Loaded!';
-                initBoardDOM();
-                renderBoard();
-                resetTimer();
+                    if (aiTimeoutId) { clearTimeout(aiTimeoutId); aiTimeoutId = null; }
+                    stopTimer();
+                    initBoardDOM();
+                    renderBoard();
+                    
+                    if (state.moveTimeLeft !== undefined) {
+                        moveTimeLeft = state.moveTimeLeft;
+                    }
+                    resetTimer();
+                    
+                    messageEl.textContent = 'Game Loaded!';
+                    if (currentPlayer === WHITE && !gameEnded) {
+                        aiTimeoutId = setTimeout(makeAIMove, 400);
+                    }
+                } catch (e) {
+                    messageEl.textContent = 'Failed to load save.';
+                }
             } else {
                 messageEl.textContent = 'No save found.';
             }
+        }
+
+        function exportSave() {
+            saveGame();
+            const saved = localStorage.getItem('kreversi_save');
+            if (!saved) { messageEl.textContent = 'No save data to export.'; return; }
+            const blob = new Blob([saved], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `kreversi_save_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            messageEl.textContent = 'Save exported to JSON!';
+        }
+
+        function importSave() {
+            const input = document.getElementById('import-file-input');
+            if (input) input.click();
+        }
+
+        function handleImportFile(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!data || !data.boardState || !data.boardWidth) throw new Error('Invalid format');
+                    localStorage.setItem('kreversi_save', JSON.stringify(data));
+                    loadGame();
+                    messageEl.textContent = 'Save file imported!';
+                } catch (err) {
+                    messageEl.textContent = 'Error: Invalid save file.';
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
         }
 
         function playSound(type) {
@@ -604,6 +742,7 @@
             updateClockDisplay();
             if (moveTimeLeft <= 0) {
                 stopTimer();
+                if (aiTimeoutId) { clearTimeout(aiTimeoutId); aiTimeoutId = null; }
                 gameEnded = true;
                 const themeInfo = THEMES[currentThemeKey] || THEMES.classic;
                 const timedOutPlayer = currentPlayer === BLACK ? themeInfo.p1 : themeInfo.p2;
@@ -623,8 +762,8 @@
                 boardHeight = stageData.height;
                 bombCount = stageData.bombs;
                 freezeCount = stageData.freezes || 1;
+                aiFrozen = false;
                 if (stageData.timeMode) document.getElementById('time-mode').value = stageData.timeMode;
-                else document.getElementById('time-mode').value = "0";
 
                 boardState = Array(boardWidth * boardHeight).fill(EMPTY);
 
@@ -659,6 +798,7 @@
                 boardHeight = size;
                 bombCount = 2;
                 freezeCount = 2;
+                aiFrozen = false;
                 boardState = Array(boardWidth * boardHeight).fill(EMPTY);
 
                 const midR = Math.floor(boardHeight / 2), midC = Math.floor(boardWidth / 2);
@@ -675,6 +815,7 @@
             history = [];
             gameEnded = false;
             isBombActive = false;
+            aiFrozen = false;
             if (aiTimeoutId) { clearTimeout(aiTimeoutId); aiTimeoutId = null; }
             
             if (gameMode === 'campaign') {
@@ -1111,6 +1252,15 @@
             }, 50);
         }
 
+        window.addEventListener('resize', () => {
+            const wrapper = document.getElementById('board-wrapper');
+            const canvas = document.getElementById('fx-canvas');
+            if (wrapper && canvas) {
+                canvas.width = wrapper.clientWidth;
+                canvas.height = wrapper.clientHeight;
+            }
+        });
+
         function pushHistory() {
             history.push({
                 board: [...boardState],
@@ -1118,6 +1268,7 @@
                 bombCount,
                 freezeCount,
                 isBombActive,
+                aiFrozen,
                 gameEnded
             });
         }
@@ -1131,37 +1282,54 @@
                 lastState = history.pop();
             }
             boardState = lastState.board;
-            currentPlayer = lastState.player;
+            currentPlayer = BLACK;
             bombCount = lastState.bombCount;
-            freezeCount = lastState.freezeCount || 1;
+            freezeCount = lastState.freezeCount !== undefined ? lastState.freezeCount : 1;
             isBombActive = false;
+            aiFrozen = lastState.aiFrozen || false;
             gameEnded = false;
-            messageEl.textContent = '';
+            messageEl.textContent = 'Move undone.';
             renderBoard();
             resetTimer();
         }
 
         function toggleBomb() {
-            if (bombCount > 0 && !gameEnded && currentPlayer === BLACK) {
-                isBombActive = !isBombActive;
-                if (isBombActive) messageEl.textContent = '💣 BOMB ACTIVE: Click ANY empty cell to detonate 3x3 explosion!';
-                else messageEl.textContent = '';
+            if (gameEnded || currentPlayer !== BLACK) return;
+            if (isBombActive) {
+                isBombActive = false;
+                messageEl.textContent = '';
                 renderBoard();
+                return;
+            }
+            if (bombCount > 0) {
+                isBombActive = true;
+                messageEl.textContent = '💣 BOMB ACTIVE: Click ANY empty cell to detonate 3x3 explosion!';
+                renderBoard();
+            } else {
+                messageEl.textContent = 'No bombs remaining!';
             }
         }
 
         function useFreezeAI() {
-            if (freezeCount > 0 && !gameEnded && currentPlayer === BLACK) {
+            if (gameEnded || currentPlayer !== BLACK) return;
+            if (aiFrozen) {
+                aiFrozen = false;
+                freezeCount++;
+                messageEl.textContent = '❄️ AI Freeze cancelled.';
+                renderBoard();
+                return;
+            }
+            if (freezeCount > 0) {
                 freezeCount--;
-                if (aiTimeoutId) { clearTimeout(aiTimeoutId); aiTimeoutId = null; }
-                currentPlayer = BLACK;
-                messageEl.textContent = '❄️ AI FROZEN! You get an extra turn!';
+                aiFrozen = true;
+                messageEl.textContent = '❄️ AI FROZEN: Your next move will skip AI\'s turn!';
                 playSound('freeze');
                 const wrapper = document.getElementById('board-wrapper');
                 if (wrapper) spawnSparks(wrapper.clientWidth / 2, wrapper.clientHeight / 2, 35, '#00f5d4');
                 triggerScreenShake(4.0);
                 renderBoard();
-                resetTimer();
+            } else {
+                messageEl.textContent = 'No freezes remaining!';
             }
         }
 
@@ -1230,6 +1398,7 @@
         }
 
         function checkEndGame() {
+            if (gameEnded) return true;
             const movesB = getValidMoves(BLACK);
             const movesW = getValidMoves(WHITE);
             if (movesB.length === 0 && movesW.length === 0) {
@@ -1238,7 +1407,9 @@
                 
                 if (b > w) {
                     if (gameMode === 'campaign') {
-                        messageEl.textContent = `🎉 STAGE ${currentStage} CLEARED! WINNER!`;
+                        messageEl.textContent = currentStage < 20
+                            ? `🎉 STAGE ${currentStage} CLEARED! WINNER! Select Stage ${currentStage + 1} to continue!`
+                            : `🏆 ALL 20 STAGES CONQUERED! REVERSI GRANDMASTER!`;
                         if (currentStage === maxUnlockedStage && maxUnlockedStage < 20) {
                             maxUnlockedStage++;
                             saveStats();
@@ -1260,6 +1431,7 @@
                     playSound('over');
                 }
                 stopTimer();
+                renderBoard();
                 return true;
             }
             return false;
@@ -1300,10 +1472,23 @@
                         spawnMultiLayerExplosion(cx, cy, 'bomb', 2.0);
                     }
                     
-                    currentPlayer = WHITE;
-                    if (getValidMoves(WHITE).length === 0) currentPlayer = BLACK;
+                    const themeInfo = THEMES[currentThemeKey] || THEMES.classic;
+                    if (aiFrozen) {
+                        aiFrozen = false;
+                        currentPlayer = BLACK;
+                        messageEl.textContent = '❄️ AI was skipped! Your turn again!';
+                    } else {
+                        currentPlayer = WHITE;
+                        if (getValidMoves(WHITE).length === 0) {
+                            currentPlayer = BLACK;
+                            if (getValidMoves(BLACK).length > 0) {
+                                messageEl.textContent = `${themeInfo.p2} has no legal moves. Turn passed!`;
+                            }
+                        }
+                    }
                     renderBoard(flipped, index);
                     resetTimer();
+                    if (checkEndGame()) return;
                     if (currentPlayer === WHITE) aiTimeoutId = setTimeout(makeAIMove, 400);
                 }
                 return;
@@ -1351,13 +1536,27 @@
                     spawnMultiLayerExplosion(cx, cy, currentPlayer === BLACK ? 'gold' : 'cyan', 0.7);
                 }
                 
-                currentPlayer = currentPlayer === BLACK ? WHITE : BLACK;
-                if (getValidMoves(currentPlayer).length === 0) {
-                    currentPlayer = currentPlayer === BLACK ? WHITE : BLACK;
-                    if (getValidMoves(currentPlayer).length === 0) {
+                const themeInfo = THEMES[currentThemeKey] || THEMES.classic;
+                if (aiFrozen) {
+                    aiFrozen = false;
+                    currentPlayer = BLACK;
+                    messageEl.textContent = '❄️ AI was skipped! Your turn again!';
+                    if (getValidMoves(BLACK).length === 0) {
                         renderBoard(flips, index);
                         checkEndGame();
                         return;
+                    }
+                } else {
+                    currentPlayer = WHITE;
+                    if (getValidMoves(WHITE).length === 0) {
+                        currentPlayer = BLACK;
+                        if (getValidMoves(BLACK).length === 0) {
+                            renderBoard(flips, index);
+                            checkEndGame();
+                            return;
+                        } else {
+                            messageEl.textContent = `${themeInfo.p2} has no legal moves. Turn passed!`;
+                        }
                     }
                 }
                 renderBoard(flips, index);
@@ -1528,6 +1727,8 @@
                 if (getValidMoves(BLACK).length === 0) {
                     currentPlayer = WHITE;
                     if (getValidMoves(WHITE).length > 0) {
+                        const themeInfo = THEMES[currentThemeKey] || THEMES.classic;
+                        messageEl.textContent = `${themeInfo.p1} has no legal moves. Turn passed!`;
                         aiTimeoutId = setTimeout(makeAIMove, 400);
                     }
                 }
@@ -1602,6 +1803,8 @@
             bombTextEl.textContent = `Bombs: ${bombCount}`;
             freezeTextEl.textContent = `Freezes: ${freezeCount}`;
             bombBtnEl.className = isBombActive ? 'active-btn' : '';
+            const freezeBtnEl = document.getElementById('freeze-btn');
+            if (freezeBtnEl) freezeBtnEl.className = aiFrozen ? 'active-freeze' : '';
 
             const evalScore = evaluateBoardState(boardState, boardWidth, boardHeight, BLACK);
             const evalScoreEl = document.getElementById('eval-score');
@@ -1624,18 +1827,27 @@
         function closeHelp() { document.getElementById('help-modal').style.display = 'none'; }
 
         window.addEventListener('keydown', (e) => {
+            if (e.target && ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
             if (e.key === 'Escape') closeHelp();
-            else if (e.key === 'b' || e.key === 'B') toggleBomb();
+            else if (e.key === 'F5' || (e.ctrlKey && (e.key === 's' || e.key === 'S'))) {
+                e.preventDefault();
+                saveGame();
+            } else if (e.key === 'F9' || (e.ctrlKey && (e.key === 'o' || e.key === 'O'))) {
+                e.preventDefault();
+                loadGame();
+            } else if (e.key === 'b' || e.key === 'B') toggleBomb();
             else if (e.key === 'f' || e.key === 'F') useFreezeAI();
             else if (e.key === 'h' || e.key === 'H') {
                 const chk = document.getElementById('hint-toggle');
                 chk.checked = !chk.checked;
+                localStorage.setItem('kreversi_hints', chk.checked);
                 renderBoard();
             } else if (e.key === 'u' || e.key === 'U') undoMove();
             else if (e.key === 'r' || e.key === 'R') initGame();
+            else if (e.key === '?' || (e.shiftKey && e.key === '/')) showHelp();
         });
 
-        loadThemePref();
+        loadPrefs();
         loadStats();
         changeGameMode();
     </script>
@@ -1662,7 +1874,11 @@
                 <p><strong>Undo Move (U):</strong> Reverts last move pair against AI.</p>
                 <p><strong>Bomb Disc (B):</strong> Detonates a 3x3 explosion flipping surrounding enemy discs!</p>
                 <p><strong>Freeze AI (F):</strong> Forces the AI to skip 1 turn, giving you an extra turn!</p>
+                <p><strong>Save / Load (F5 / F9):</strong> Quick save and load game state (survives refresh).</p>
+                <p><strong>Export / Import:</strong> Save to and restore from JSON backup files.</p>
+                <p><strong>Restart (R):</strong> Reset current stage or board.</p>
             </div>
+
         </div>
     </div>
 </body>
