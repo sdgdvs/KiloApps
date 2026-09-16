@@ -747,6 +747,8 @@
     <button id="redo-btn" class="btn" onclick="redoMove()" disabled title="Redo Move [Ctrl+Y]" aria-label="Redo move">↪ Redo [Ctrl+Y]</button>
     <button class="btn btn-warning" onclick="giveHint()" title="Smart Hint [H / Ctrl+H]" aria-label="Show hint">💡 Hint [H]</button>
     <button id="autofinish-btn" class="btn btn-success" onclick="autoFinish()" disabled title="Auto-Finish remaining cards [Ctrl+F]" aria-label="Auto finish game">✨ Finish [Ctrl+F]</button>
+    <button class="btn" onclick="quickSave()" title="Quicksave Game [F5]" aria-label="Quicksave game">💾 Save [F5]</button>
+    <button class="btn" onclick="quickLoad()" title="Quickload Game [F9]" aria-label="Quickload game">📂 Load [F9]</button>
 
     <select id="theme-select" class="btn" onchange="changeTheme(this.value)" title="Deck Theme [T to cycle]" aria-label="Select card deck theme">
       <option value="theme-navy">Deck: Navy [T]</option>
@@ -805,7 +807,11 @@
 <div id="win-banner">
   <div id="win-title">🏆 VICTORY! 🏆</div>
   <div style="font-size: 16px; font-weight: 600; margin-top: 10px;" id="win-details">Score: 0 | Time: 0s</div>
-  <button id="next-stage-btn" class="btn btn-primary" style="margin-top:14px; font-size:16px; padding:8px 18px; display:none;" onclick="advanceNextStage()">Next Stage ➔</button>
+  <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:14px;">
+    <button id="next-stage-btn" class="btn btn-primary" style="font-size:16px; padding:8px 18px; display:none;" onclick="advanceNextStage()">Next Stage ➔</button>
+    <button id="play-again-btn" class="btn btn-success" style="font-size:16px; padding:8px 18px;" onclick="newGame()">Play Again ⚡</button>
+    <button class="btn btn-warning" style="font-size:16px; padding:8px 18px;" onclick="dismissWinBanner()">Close ✕</button>
+  </div>
 </div>
 
 <!-- Stats Modal -->
@@ -827,12 +833,15 @@
       <div class="stat-card"><div class="lbl">Best Time (D1)</div><div id="st-besttime1" class="val">--</div></div>
       <div class="stat-card"><div class="lbl">Best Time (D3)</div><div id="st-besttime3" class="val">--</div></div>
     </div>
-    <div style="display:flex; justify-content: space-between; gap: 8px;">
-      <div style="display:flex; gap: 8px;">
+    <div style="display:flex; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+      <div style="display:flex; gap: 6px; flex-wrap: wrap;">
         <button class="btn btn-warning" onclick="resetStats()" aria-label="Reset statistics">Clear</button>
-        <button class="btn btn-primary" onclick="exportStats()" aria-label="Export statistics JSON">Export</button>
-        <button class="btn btn-primary" onclick="document.getElementById('import-file').click()" aria-label="Import statistics JSON">Import</button>
+        <button class="btn btn-primary" onclick="exportStats()" aria-label="Export statistics JSON">Export Stats</button>
+        <button class="btn btn-primary" onclick="document.getElementById('import-file').click()" aria-label="Import statistics JSON">Import Stats</button>
         <input type="file" id="import-file" style="display:none;" accept=".json" onchange="importStats(event)">
+        <button class="btn btn-primary" onclick="exportSaveFile()" aria-label="Export game save JSON">Export Save</button>
+        <button class="btn btn-primary" onclick="document.getElementById('import-save-file').click()" aria-label="Import game save JSON">Import Save</button>
+        <input type="file" id="import-save-file" style="display:none;" accept=".json" onchange="importSaveFile(event)">
       </div>
       <button class="btn btn-primary" onclick="closeStatsModal()" aria-label="Close dialog">Close</button>
     </div>
@@ -865,11 +874,12 @@
       <div><strong>• Double-Click / Right-Click:</strong> Fast auto-move card to foundation.</div>
       <div><strong>• [Space] / [D]:</strong> Draw card from stock pile / recycle stock.</div>
       <div><strong>• [F1] / [?]:</strong> Open/Close Help | <strong>[H] / [Ctrl+H]:</strong> Smart Hint</div>
-      <div><strong>• [F2] / [N]:</strong> New Game | <strong>[1-3]:</strong> Modes (Classic, Vegas, Campaign)</div>
+      <div><strong>• [F2] / [N]:</strong> New Game | <strong>[F5 / Ctrl+S]:</strong> Quick Save | <strong>[F9]:</strong> Quick Load</div>
+      <div><strong>• [1-3]:</strong> Modes (Classic, Vegas, Campaign)</div>
       <div><strong>• [W] Wand:</strong> Move card | <strong>[X] X-Ray:</strong> Reveal | <strong>[S]:</strong> Shuffle Stock</div>
-      <div><strong>• [U] / [Ctrl+Z]:</strong> Undo | <strong>[Ctrl+Y]:</strong> Redo | <strong>[Ctrl+F]:</strong> Auto-Finish</div>
+      <div><strong>• [U] / [Ctrl+Z]:</strong> Undo | <strong>[Ctrl+Y / Ctrl+Shift+Z]:</strong> Redo | <strong>[Ctrl+F]:</strong> Auto-Finish</div>
       <div><strong>• [M]:</strong> Toggle Audio Mute | <strong>[T]:</strong> Cycle Card Deck Theme</div>
-      <div><strong>• [Esc]:</strong> Close Modals, Clear Selection / Dismiss Toast Notification.</div>
+      <div><strong>• [Esc]:</strong> Close Modals / Victory Banner, Clear Selection, Dismiss Toast.</div>
     </div>
     <div style="display:flex; justify-content: flex-end; margin-top: 14px;">
       <button class="btn btn-primary" onclick="closeHelpModal()">Got it!</button>
@@ -1141,6 +1151,11 @@ function init() {
         toast.classList.remove('show');
         if (toastTimeout) clearTimeout(toastTimeout);
       }
+      let winBanner = document.getElementById('win-banner');
+      if (winBanner && winBanner.classList.contains('active')) {
+        winBanner.classList.remove('active');
+        return;
+      }
       if (anyModal) {
         closeHelpModal();
         closeStatsModal();
@@ -1158,6 +1173,18 @@ function init() {
       return;
     }
 
+    if (e.key === 'F5') {
+      e.preventDefault();
+      quickSave();
+      return;
+    }
+
+    if (e.key === 'F9') {
+      e.preventDefault();
+      quickLoad();
+      return;
+    }
+
     // Suppress hotkeys if user is typing in an input/select or if a modal dialog is open
     let tag = e.target?.tagName?.toLowerCase();
     if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
@@ -1172,10 +1199,11 @@ function init() {
     }
 
     if (e.ctrlKey && !e.altKey && !e.metaKey) {
-      if (k === 'z') { e.preventDefault(); undoMove(); }
-      else if (k === 'y') { e.preventDefault(); redoMove(); }
+      if (k === 'z' && !e.shiftKey) { e.preventDefault(); undoMove(); }
+      else if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); redoMove(); }
       else if (k === 'h') { e.preventDefault(); giveHint(); }
       else if (k === 'f') { e.preventDefault(); autoFinish(); }
+      else if (k === 's') { e.preventDefault(); quickSave(); }
       return;
     }
 
@@ -1304,6 +1332,7 @@ function newGame() {
     autoFinishInterval = null;
   }
   timerSeconds = 0;
+  updateTimerDisplay();
   movesCount = 0;
   stockPasses = 1;
   gameStarted = false;
@@ -1334,6 +1363,8 @@ function newGame() {
     maxStockPasses = vegasRules ? (drawMode === 1 ? 1 : 3) : (cfg.stage === 2 ? 2 : 0);
     document.getElementById('mode-desc').textContent = `Campaign Stage ${campaignStage}/20: ${cfg.name} (Press [H] or [F1] for Hint)`;
     document.getElementById('sub-info').textContent = cfg.desc;
+    let stageSel = document.getElementById('stage-select');
+    if (stageSel) stageSel.value = campaignStage;
   } else if (gameMode === 'vegas') {
     vegasRules = true;
     suitLocked = false;
@@ -1438,7 +1469,7 @@ function updateUIStats() {
   document.getElementById('autofinish-btn').disabled = !canAutoFinish();
 }
 
-// --- Save / Resume State ---
+// --- Save / Resume State & Quicksave/Quickload ---
 function saveState(recordUndo = false) {
   let snapshot = {
     stock: JSON.parse(JSON.stringify(stock)),
@@ -1449,10 +1480,19 @@ function saveState(recordUndo = false) {
     scoreCount,
     timerSeconds,
     gameStarted,
+    gameWon,
     stockPasses,
     wandCharges,
     xrayCharges,
-    shuffleCharges
+    shuffleCharges,
+    gameMode,
+    campaignStage,
+    drawMode,
+    vegasRules,
+    suitLocked,
+    targetCards,
+    maxStockPasses,
+    undoStack: undoStack.slice(-25)
   };
 
   if (recordUndo) {
@@ -1470,7 +1510,7 @@ function loadSavedGame() {
     let d = safeGetStorage('ksolitaire_savestate');
     if (d) {
       let snapshot = typeof d === 'string' ? JSON.parse(d) : d;
-      if (snapshot && snapshot.stock && snapshot.tableau) {
+      if (snapshot && snapshot.stock && snapshot.tableau && snapshot.foundations) {
         stock = snapshot.stock;
         waste = snapshot.waste;
         foundations = snapshot.foundations;
@@ -1479,12 +1519,47 @@ function loadSavedGame() {
         scoreCount = snapshot.scoreCount || 0;
         timerSeconds = snapshot.timerSeconds || 0;
         gameStarted = !!snapshot.gameStarted;
+        gameWon = !!snapshot.gameWon;
         stockPasses = snapshot.stockPasses || 0;
         wandCharges = snapshot.wandCharges !== undefined ? snapshot.wandCharges : 3;
         xrayCharges = snapshot.xrayCharges !== undefined ? snapshot.xrayCharges : 3;
         shuffleCharges = snapshot.shuffleCharges !== undefined ? snapshot.shuffleCharges : 3;
 
-        if (gameStarted) startTimer();
+        gameMode = snapshot.gameMode || 'classic';
+        campaignStage = snapshot.campaignStage || 1;
+        drawMode = snapshot.drawMode || 1;
+        vegasRules = snapshot.vegasRules !== undefined ? snapshot.vegasRules : (gameMode === 'vegas');
+        suitLocked = snapshot.suitLocked !== undefined ? snapshot.suitLocked : false;
+        targetCards = snapshot.targetCards || 52;
+        maxStockPasses = snapshot.maxStockPasses || 0;
+        if (Array.isArray(snapshot.undoStack)) undoStack = snapshot.undoStack;
+
+        // Synchronize UI dropdowns and labels
+        let modeSel = document.getElementById('mode-select');
+        if (modeSel) modeSel.value = gameMode;
+        let stgSel = document.getElementById('stage-select');
+        if (stgSel) {
+          stgSel.style.display = (gameMode === 'campaign') ? 'inline-flex' : 'none';
+          stgSel.value = campaignStage;
+        }
+        let drawSel = document.getElementById('draw-mode-select');
+        if (drawSel) drawSel.value = drawMode;
+        let scLbl = document.getElementById('score-label');
+        if (scLbl) scLbl.textContent = vegasRules ? "Cash" : "Score";
+
+        if (gameMode === 'campaign') {
+          let cfg = CAMPAIGN_STAGES[campaignStage - 1] || CAMPAIGN_STAGES[0];
+          document.getElementById('mode-desc').textContent = `Campaign Stage ${campaignStage}/20: ${cfg.name} (Press [H] or [F1] for Hint)`;
+          document.getElementById('sub-info').textContent = cfg.desc;
+        } else if (gameMode === 'vegas') {
+          document.getElementById('mode-desc').textContent = "Vegas Money Mode - Buy-in -$52 ($5/foundation card) (Press [H] or [F1] for Hint)";
+          document.getElementById('sub-info').textContent = `Total Vegas Cash: $${stats.vegasCash}`;
+        } else {
+          document.getElementById('mode-desc').textContent = "Classic Solitaire - Standard Klondike Rules (Press [H] or [F1] for Hint)";
+          document.getElementById('sub-info').textContent = "";
+        }
+
+        if (gameStarted && !gameWon) startTimer();
         updateTimerDisplay();
         render();
         return;
@@ -1492,6 +1567,168 @@ function loadSavedGame() {
     }
   } catch(e){}
   newGame();
+}
+
+function getGameStateSnapshot() {
+  return {
+    version: 1,
+    timestamp: Date.now(),
+    stock: JSON.parse(JSON.stringify(stock)),
+    waste: JSON.parse(JSON.stringify(waste)),
+    foundations: JSON.parse(JSON.stringify(foundations)),
+    tableau: JSON.parse(JSON.stringify(tableau)),
+    movesCount,
+    scoreCount,
+    timerSeconds,
+    gameStarted,
+    gameWon,
+    stockPasses,
+    wandCharges,
+    xrayCharges,
+    shuffleCharges,
+    gameMode,
+    campaignStage,
+    drawMode,
+    vegasRules,
+    suitLocked,
+    targetCards,
+    maxStockPasses,
+    undoStack: undoStack.slice(-30),
+    redoStack: redoStack.slice(-30)
+  };
+}
+
+function restoreGameState(snapshot) {
+  if (!snapshot || !snapshot.stock || !snapshot.tableau || !snapshot.foundations) return false;
+  stopTimer();
+  stopXRay();
+  if (winAnimId) { cancelAnimationFrame(winAnimId); winAnimId = null; }
+  if (autoFinishInterval) { clearInterval(autoFinishInterval); autoFinishInterval = null; }
+
+  stock = snapshot.stock;
+  waste = snapshot.waste;
+  foundations = snapshot.foundations;
+  tableau = snapshot.tableau;
+  movesCount = snapshot.movesCount || 0;
+  scoreCount = snapshot.scoreCount || 0;
+  timerSeconds = snapshot.timerSeconds || 0;
+  gameStarted = !!snapshot.gameStarted;
+  gameWon = !!snapshot.gameWon;
+  stockPasses = snapshot.stockPasses || 0;
+  wandCharges = snapshot.wandCharges !== undefined ? snapshot.wandCharges : 3;
+  xrayCharges = snapshot.xrayCharges !== undefined ? snapshot.xrayCharges : 3;
+  shuffleCharges = snapshot.shuffleCharges !== undefined ? snapshot.shuffleCharges : 3;
+  gameMode = snapshot.gameMode || 'classic';
+  campaignStage = snapshot.campaignStage || 1;
+  drawMode = snapshot.drawMode || 1;
+  vegasRules = snapshot.vegasRules !== undefined ? snapshot.vegasRules : (gameMode === 'vegas');
+  suitLocked = snapshot.suitLocked !== undefined ? snapshot.suitLocked : false;
+  targetCards = snapshot.targetCards || 52;
+  maxStockPasses = snapshot.maxStockPasses || 0;
+  undoStack = Array.isArray(snapshot.undoStack) ? snapshot.undoStack : [];
+  redoStack = Array.isArray(snapshot.redoStack) ? snapshot.redoStack : [];
+  selectedSelection = null;
+  clearHints();
+
+  let modeSel = document.getElementById('mode-select');
+  if (modeSel) modeSel.value = gameMode;
+  let stgSel = document.getElementById('stage-select');
+  if (stgSel) {
+    stgSel.style.display = (gameMode === 'campaign') ? 'inline-flex' : 'none';
+    stgSel.value = campaignStage;
+  }
+  let drawSel = document.getElementById('draw-mode-select');
+  if (drawSel) drawSel.value = drawMode;
+  let scLbl = document.getElementById('score-label');
+  if (scLbl) scLbl.textContent = vegasRules ? "Cash" : "Score";
+
+  if (gameMode === 'campaign') {
+    let cfg = CAMPAIGN_STAGES[campaignStage - 1] || CAMPAIGN_STAGES[0];
+    document.getElementById('mode-desc').textContent = `Campaign Stage ${campaignStage}/20: ${cfg.name} (Press [H] or [F1] for Hint)`;
+    document.getElementById('sub-info').textContent = cfg.desc;
+  } else if (gameMode === 'vegas') {
+    document.getElementById('mode-desc').textContent = "Vegas Money Mode - Buy-in -$52 ($5/foundation card) (Press [H] or [F1] for Hint)";
+    document.getElementById('sub-info').textContent = `Total Vegas Cash: $${stats.vegasCash}`;
+  } else {
+    document.getElementById('mode-desc').textContent = "Classic Solitaire - Standard Klondike Rules (Press [H] or [F1] for Hint)";
+    document.getElementById('sub-info').textContent = "";
+  }
+
+  if (gameStarted && !gameWon) startTimer();
+  updateTimerDisplay();
+  render();
+  saveState();
+  return true;
+}
+
+function quickSave() {
+  let snap = getGameStateSnapshot();
+  safeSetStorage('ksolitaire_quicksave', snap);
+  playSound('place');
+  showToast("💾 Game quicksaved! [F5]");
+}
+
+function quickLoad() {
+  let d = safeGetStorage('ksolitaire_quicksave');
+  if (!d) {
+    playSound('error');
+    showToast("No quicksave file found! Press [F5] to save.");
+    return;
+  }
+  let snap = typeof d === 'string' ? JSON.parse(d) : d;
+  if (restoreGameState(snap)) {
+    playSound('flip');
+    showToast("📂 Game quickloaded! [F9]");
+  } else {
+    playSound('error');
+    showToast("Failed to load quicksave file.");
+  }
+}
+
+function exportSaveFile() {
+  try {
+    const snap = getGameStateSnapshot();
+    const jsonStr = JSON.stringify(snap, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const dl = document.createElement('a');
+    dl.href = url;
+    dl.download = `ksolitaire_save_${gameMode}.json`;
+    document.body.appendChild(dl);
+    dl.click();
+    document.body.removeChild(dl);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast("Game save exported to JSON.");
+  } catch(e) {
+    showToast("Error exporting game save.");
+  }
+}
+
+function importSaveFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onerror = () => showToast("Error reading save file.");
+  reader.onload = (e) => {
+    try {
+      const snap = JSON.parse(e.target.result);
+      if (restoreGameState(snap)) {
+        closeStatsModal();
+        showToast("Game save loaded successfully!");
+      } else {
+        showToast("Invalid game save file.");
+      }
+    } catch(err) {
+      showToast("Error parsing save JSON.");
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function dismissWinBanner() {
+  let banner = document.getElementById('win-banner');
+  if (banner) banner.classList.remove('active');
 }
 
 function undoMove() {
@@ -1510,10 +1747,18 @@ function undoMove() {
     scoreCount,
     timerSeconds,
     gameStarted,
+    gameWon,
     stockPasses,
     wandCharges,
     xrayCharges,
-    shuffleCharges
+    shuffleCharges,
+    gameMode,
+    campaignStage,
+    drawMode,
+    vegasRules,
+    suitLocked,
+    targetCards,
+    maxStockPasses
   };
   redoStack.push(currentSnapshot);
 
@@ -1526,6 +1771,7 @@ function undoMove() {
   scoreCount = prev.scoreCount;
   timerSeconds = prev.timerSeconds;
   gameStarted = prev.gameStarted;
+  gameWon = !!prev.gameWon;
   stockPasses = prev.stockPasses || 0;
   wandCharges = prev.wandCharges !== undefined ? prev.wandCharges : 3;
   xrayCharges = prev.xrayCharges !== undefined ? prev.xrayCharges : 3;
@@ -1534,6 +1780,7 @@ function undoMove() {
   selectedSelection = null;
   clearHints();
   playSound('flip');
+  updateTimerDisplay();
   render();
   saveState();
 }
@@ -1550,10 +1797,18 @@ function redoMove() {
     scoreCount,
     timerSeconds,
     gameStarted,
+    gameWon,
     stockPasses,
     wandCharges,
     xrayCharges,
-    shuffleCharges
+    shuffleCharges,
+    gameMode,
+    campaignStage,
+    drawMode,
+    vegasRules,
+    suitLocked,
+    targetCards,
+    maxStockPasses
   };
   undoStack.push(currentSnapshot);
 
@@ -1566,6 +1821,7 @@ function redoMove() {
   scoreCount = next.scoreCount;
   timerSeconds = next.timerSeconds;
   gameStarted = next.gameStarted;
+  gameWon = !!next.gameWon;
   stockPasses = next.stockPasses || 0;
   wandCharges = next.wandCharges !== undefined ? next.wandCharges : 3;
   xrayCharges = next.xrayCharges !== undefined ? next.xrayCharges : 3;
@@ -1574,6 +1830,7 @@ function redoMove() {
   selectedSelection = null;
   clearHints();
   playSound('flip');
+  updateTimerDisplay();
   render();
   saveState();
 }
@@ -1628,6 +1885,8 @@ function useMagicWand() {
       if (card.faceUp && !card.isFrozen) {
         for (let f = 0; f < 4; f++) {
           if (canMoveToFoundation(card, f)) {
+            if (!gameStarted) { gameStarted = true; startTimer(); }
+            saveState(true);
             wandCharges--;
             if (vegasRules) {
               scoreCount -= 10;
@@ -1635,7 +1894,7 @@ function useMagicWand() {
               scoreCount -= 50;
               if (scoreCount < 0) scoreCount = 0;
             }
-            attemptMove({ type: 'tableau', pileIdx: t, cardIdx: tableau[t].length - 1 }, 'foundation', f);
+            attemptMove({ type: 'tableau', pileIdx: t, cardIdx: tableau[t].length - 1 }, 'foundation', f, false);
             playSound('skill');
             showToast("🪄 Magic Wand moved a card to Foundation!");
             return;
@@ -1650,6 +1909,8 @@ function useMagicWand() {
     let card = waste[waste.length - 1];
     for (let f = 0; f < 4; f++) {
       if (canMoveToFoundation(card, f)) {
+        if (!gameStarted) { gameStarted = true; startTimer(); }
+        saveState(true);
         wandCharges--;
         if (vegasRules) {
           scoreCount -= 10;
@@ -1657,7 +1918,7 @@ function useMagicWand() {
           scoreCount -= 50;
           if (scoreCount < 0) scoreCount = 0;
         }
-        attemptMove({ type: 'waste', pileIdx: 0, cardIdx: waste.length - 1 }, 'foundation', f);
+        attemptMove({ type: 'waste', pileIdx: 0, cardIdx: waste.length - 1 }, 'foundation', f, false);
         playSound('skill');
         showToast("🪄 Magic Wand moved waste card to Foundation!");
         return;
@@ -1716,6 +1977,7 @@ function useShuffleStock() {
     return;
   }
 
+  if (!gameStarted) { gameStarted = true; startTimer(); }
   saveState(true);
   shuffleCharges--;
   if (vegasRules) {
@@ -1735,6 +1997,7 @@ function useShuffleStock() {
   isDealing = true;
   render();
   isDealing = false;
+  saveState();
 }
 
 // --- Player Actions ---
@@ -1749,6 +2012,7 @@ function handleStockClick() {
     if (waste.length === 0) return;
     if (maxStockPasses > 0 && stockPasses >= maxStockPasses) {
       playSound('error');
+      showToast(`Deck pass limit reached (${maxStockPasses} pass${maxStockPasses > 1 ? 'es' : ''} max in this mode)!`);
       return;
     }
     stockPasses++;
@@ -1803,9 +2067,15 @@ function handleCardClick(type, pileIdx, cardIdx, event) {
 
   if (selectedSelection) {
     if (selectedSelection.type === type && selectedSelection.pileIdx === pileIdx) {
-      selectedSelection = null;
-      render();
-      return;
+      if (selectedSelection.cardIdx === cardIdx) {
+        selectedSelection = null;
+        render();
+        return;
+      } else {
+        selectedSelection = { type, pileIdx, cardIdx };
+        render();
+        return;
+      }
     }
     let moved = attemptMove(selectedSelection, type, pileIdx);
     if (moved) {
@@ -1852,7 +2122,9 @@ function handleCardDoubleClick(type, pileIdx, cardIdx, event) {
     return;
   }
 
-  for (let f = 0; f < 4; f++) {
+  // Check matching suit foundation first, then others
+  let foundationOrder = [card.suit, 0, 1, 2, 3].filter((v, i, a) => a.indexOf(v) === i);
+  for (let f of foundationOrder) {
     if (canMoveToFoundation(card, f)) {
       saveState(true);
       if (type === 'waste') waste.pop();
@@ -1872,13 +2144,14 @@ function handleCardDoubleClick(type, pileIdx, cardIdx, event) {
       selectedSelection = null;
       spawnParticles(f, 'foundation');
       render();
+      saveState();
       checkWin();
       return;
     }
   }
 }
 
-function attemptMove(src, dstType, dstPileIdx) {
+function attemptMove(src, dstType, dstPileIdx, recordUndo = true) {
   let cardsToMove = [];
 
   if (src.type === 'waste') {
@@ -1907,7 +2180,7 @@ function attemptMove(src, dstType, dstPileIdx) {
 
   if (!legal) return false;
 
-  saveState(true);
+  if (recordUndo) saveState(true);
 
   if (src.type === 'waste') waste.pop();
   else if (src.type === 'tableau') tableau[src.pileIdx].splice(src.cardIdx);
@@ -1944,6 +2217,7 @@ function attemptMove(src, dstType, dstPileIdx) {
   movesCount++;
   if (dstType === 'foundation') spawnParticles(dstPileIdx, 'foundation');
   render();
+  saveState();
   checkWin();
   return true;
 }
@@ -1965,7 +2239,8 @@ function giveHint() {
     if (tableau[t].length > 0) {
       let card = tableau[t][tableau[t].length - 1];
       if (card.faceUp && !card.isFrozen) {
-        for (let f = 0; f < 4; f++) {
+        let fOrder = [card.suit, 0, 1, 2, 3].filter((v, i, a) => a.indexOf(v) === i);
+        for (let f of fOrder) {
           if (canMoveToFoundation(card, f)) {
             activeHint = { srcType: 'tableau', srcPile: t, srcCardIdx: tableau[t].length - 1, dstType: 'foundation', dstPile: f };
             highlightHint();
@@ -1978,7 +2253,8 @@ function giveHint() {
 
   if (waste.length > 0) {
     let card = waste[waste.length - 1];
-    for (let f = 0; f < 4; f++) {
+    let fOrder = [card.suit, 0, 1, 2, 3].filter((v, i, a) => a.indexOf(v) === i);
+    for (let f of fOrder) {
       if (canMoveToFoundation(card, f)) {
         activeHint = { srcType: 'waste', srcPile: 0, srcCardIdx: waste.length - 1, dstType: 'foundation', dstPile: f };
         highlightHint();
@@ -1991,12 +2267,18 @@ function giveHint() {
     let pile = tableau[srcT];
     let firstFaceUpIdx = pile.findIndex(c => c.faceUp && !c.isFrozen);
     if (firstFaceUpIdx >= 0) {
-      let cardToMove = pile[firstFaceUpIdx];
-      for (let dstT = 0; dstT < 7; dstT++) {
-        if (srcT !== dstT && canMoveToTableau([cardToMove], dstT)) {
-          activeHint = { srcType: 'tableau', srcPile: srcT, srcCardIdx: firstFaceUpIdx, dstType: 'tableau', dstPile: dstT };
-          highlightHint();
-          return;
+      for (let cIdx = firstFaceUpIdx; cIdx < pile.length; cIdx++) {
+        let cardsToMove = pile.slice(cIdx);
+        let topMoveCard = cardsToMove[0];
+        // Avoid suggesting pointless King move to empty tableau column
+        if (cIdx === 0 && topMoveCard.rank === 13) continue;
+
+        for (let dstT = 0; dstT < 7; dstT++) {
+          if (srcT !== dstT && canMoveToTableau(cardsToMove, dstT)) {
+            activeHint = { srcType: 'tableau', srcPile: srcT, srcCardIdx: cIdx, dstType: 'tableau', dstPile: dstT };
+            highlightHint();
+            return;
+          }
         }
       }
     }
