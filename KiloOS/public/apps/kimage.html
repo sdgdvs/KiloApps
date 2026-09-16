@@ -20,7 +20,7 @@
     --accent-active: #2563eb;
     --danger: #ef4444;
     --success: #22c55e;
-    --panel-width: 310px;
+    --panel-width: 275px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
   body {
@@ -225,6 +225,11 @@
     background: repeating-conic-gradient(#161e2e 0% 25%, #0f172a 0% 50%) 50% / 20px 20px;
     align-items: center;
     justify-content: center;
+    transition: background 0.2s ease;
+  }
+  .workspace.drag-over {
+    box-shadow: inset 0 0 0 3px var(--accent);
+    background: rgba(59, 130, 246, 0.12) !important;
   }
 
   .canvas-wrapper {
@@ -316,6 +321,31 @@
   }
   .thumb-item img { width: 100%; height: 100%; object-fit: cover; }
   .thumb-item.active { border-color: var(--accent); }
+  .thumb-item .thumb-del {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 15px;
+    height: 15px;
+    background: rgba(0, 0, 0, 0.75);
+    color: #ef4444;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    line-height: 1;
+    z-index: 5;
+    transition: background 0.15s ease;
+  }
+  .thumb-item:hover .thumb-del {
+    display: flex;
+  }
+  .thumb-item .thumb-del:hover {
+    background: #ef4444;
+    color: #fff;
+  }
 
   /* Histogram Canvas */
   #histCanvas {
@@ -519,9 +549,22 @@
     font-family: monospace;
   }
 
-  /* Utility classes */
-  .row { display: flex; gap: 8px; align-items: center; }
-  .hidden { display: none !important; }
+  /* Responsive media queries */
+  @media (max-width: 900px) {
+    :root { --panel-width: 240px; }
+    .toolbar { padding: 6px 10px; gap: 8px; }
+    .app-title { font-size: 13px; }
+    .side-panel { font-size: 12px; }
+  }
+  @media (max-width: 768px) {
+    .side-panel.right-panel {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      box-shadow: -10px 0 25px rgba(0,0,0,0.6);
+    }
+  }
 </style>
 </head>
 <body>
@@ -538,6 +581,10 @@
         Open Image(s)
       </button>
       <input type="file" id="fileInput" multiple accept="image/*" style="display:none;" />
+      <button id="btnDemo" aria-label="Demo Studio Image" title="Load Demo Sample Studio Image (N)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Demo [N]
+      </button>
       <button id="btnSaveModal" class="hidden" aria-label="Export Image">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Export / Save
@@ -862,6 +909,7 @@
 
     <div class="row">
       <span id="playlistCounter" style="font-size:12px; color:var(--text-muted);">0 / 0</span>
+      <button id="btnClearPlaylist" class="danger" title="Clear Playlist & Reset" style="padding:3px 8px; font-size:11px;">Clear</button>
       <button id="btnFullscreen" class="icon-btn" title="Toggle Fullscreen (F)">⛶</button>
     </div>
   </div>
@@ -884,8 +932,10 @@
           </div>
           <div class="shortcut-list">
             <div class="shortcut-item"><span>Help Guide</span><kbd>H</kbd> / <kbd>F1</kbd></div>
+            <div class="shortcut-item"><span>Demo Studio Image</span><kbd>N</kbd></div>
             <div class="shortcut-item"><span>Open Image(s)</span><kbd>O</kbd> / <kbd>Ctrl+O</kbd></div>
             <div class="shortcut-item"><span>Export / Save</span><kbd>Ctrl+S</kbd></div>
+            <div class="shortcut-item"><span>Remove Current Image</span><kbd>X</kbd></div>
             <div class="shortcut-item"><span>Toggle Crop Tool</span><kbd>C</kbd></div>
             <div class="shortcut-item"><span>Toggle Annotation Brush</span><kbd>D</kbd></div>
             <div class="shortcut-item"><span>Rotate CCW / CW</span><kbd>[</kbd> / <kbd>]</kbd></div>
@@ -1106,6 +1156,15 @@
     img.src = dataUrl;
   }
   document.getElementById('btnLoadSample')?.addEventListener('click', loadSampleImage);
+  document.getElementById('btnDemo')?.addEventListener('click', loadSampleImage);
+
+  document.getElementById('btnClearPlaylist')?.addEventListener('click', () => {
+    if (state.playlist.length === 0) return;
+    state.playlist = [];
+    state.currentIndex = -1;
+    updatePlaylistUI();
+    showToast("Playlist cleared", "info");
+  });
 
   // Setup Event Listeners
   ui.btnOpen.onclick = () => ui.fileInput.click();
@@ -1118,9 +1177,12 @@
   }
 
   // Drag & Drop
-  ui.workspace.ondragover = (e) => { e.preventDefault(); };
+  ui.workspace.ondragenter = (e) => { e.preventDefault(); ui.workspace.classList.add('drag-over'); };
+  ui.workspace.ondragover = (e) => { e.preventDefault(); ui.workspace.classList.add('drag-over'); };
+  ui.workspace.ondragleave = (e) => { e.preventDefault(); ui.workspace.classList.remove('drag-over'); };
   ui.workspace.ondrop = (e) => {
     e.preventDefault();
+    ui.workspace.classList.remove('drag-over');
     if (e.dataTransfer.files.length) loadFiles(e.dataTransfer.files);
   };
 
@@ -1184,6 +1246,12 @@
     if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
       e.preventDefault();
       openHelpModal();
+    } else if (e.key === 'n' || e.key === 'N') {
+      loadSampleImage();
+    } else if (e.key === 'x' || e.key === 'X') {
+      if (state.playlist.length > 0) {
+        removeImage(state.currentIndex);
+      }
     } else if (e.key === 'o' || e.key === 'O') {
       ui.fileInput.click();
     } else if (e.key === '1') {
@@ -1310,13 +1378,39 @@
     });
   }
 
+  function removeImage(idx) {
+    if (idx < 0 || idx >= state.playlist.length) return;
+    state.playlist.splice(idx, 1);
+    if (state.playlist.length === 0) {
+      state.currentIndex = -1;
+      updatePlaylistUI();
+      showToast("Playlist cleared", "info");
+    } else {
+      if (state.currentIndex >= state.playlist.length) {
+        state.currentIndex = state.playlist.length - 1;
+      }
+      selectImage(state.currentIndex);
+    }
+  }
+
   function updatePlaylistUI() {
     ui.playlistStrip.innerHTML = '';
     state.playlist.forEach((item, idx) => {
       const thumb = document.createElement('div');
       thumb.className = `thumb-item ${idx === state.currentIndex ? 'active' : ''}`;
-      thumb.innerHTML = `<img src="${item.img.src}">`;
+      thumb.title = item.name || `Image ${idx + 1}`;
+      thumb.innerHTML = `
+        <img src="${item.img.src}" alt="${item.name || ''}">
+        <span class="thumb-del" title="Remove from playlist">✕</span>
+      `;
       thumb.onclick = () => selectImage(idx);
+      const delBtn = thumb.querySelector('.thumb-del');
+      if (delBtn) {
+        delBtn.onclick = (e) => {
+          e.stopPropagation();
+          removeImage(idx);
+        };
+      }
       ui.playlistStrip.appendChild(thumb);
     });
 
@@ -1328,6 +1422,14 @@
       ui.btnSaveModal.classList.remove('hidden');
       ui.emptyState.classList.add('hidden');
       ui.canvasWrapper.classList.remove('hidden');
+    } else {
+      ui.bottomBar.classList.add('hidden');
+      ui.leftPanel.classList.add('hidden');
+      ui.viewTools.classList.add('hidden');
+      ui.btnSaveModal.classList.add('hidden');
+      ui.emptyState.classList.remove('hidden');
+      ui.canvasWrapper.classList.add('hidden');
+      state.currentIndex = -1;
     }
   }
 

@@ -52,14 +52,13 @@
 
 ---
 
-**Target App:** KImage
+**Target App:** KCalc
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
 Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
-- KImage
 - KCalc
 - KHex
 - KCalendar
@@ -113,16 +112,16 @@ Pick the top app from this list, identify and fix usability and UI problems (upd
 - KJournal
 - KBase
 - KPad
+- KImage
 
 ## Progress Log
 
 > 📁 **Archived Progress Log**: Older entries have been archived to [archive/usability_plan_archive.md](archive/usability_plan_archive.md) to preserve token efficiency.
 
-
-> ?? **Archived Sep 15 Progress**: Recent entries (KPad through KTetris) archived to [archive/usability_plan_archive.md](archive/usability_plan_archive.md).
+- **2026-09-15 - KImage**: Fixed native 2-row toolbar overlap/clipping & added in-memory Demo canvas with 'N' shortcut; added web toolbar Demo button, thumbnail image removal with playlist clearing, drag-over highlight, and responsive panel styles.
 
 ### Recent Completed Index
-KPad ?, KBase ?, KJournal ?, KRead ?, KContacts ?, KTimer ?, KGraph ?, KConverter ?, KTodo ?, KSys ?, KRogue ?, KTask ?, KSynth ?, KTerm ?, KSpace ?, KTetris ?
+KImage ✅, KPad ✅, KBase ✅, KJournal ✅, KRead ✅, KContacts ✅, KTimer ✅, KGraph ✅, KConverter ✅, KTodo ✅, KSys ✅, KRogue ✅, KTask ✅, KSynth ✅, KTerm ✅, KSpace ✅, KTetris ✅
 
 ## DIRECTOR DIRECTIVE (2026-09-15): TUTORIAL & SPLASH SCREEN UX PASS
 
