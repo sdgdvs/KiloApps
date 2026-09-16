@@ -1071,6 +1071,168 @@ void SaveStats() {
     }
 }
 
+typedef struct {
+    int magic; // 0x32303438 ("2048")
+    int version;
+    int grid_size;
+    int grid[MAX_GRID][MAX_GRID];
+    int frozen[MAX_GRID][MAX_GRID];
+    int score;
+    int bestScore;
+    int ruleset;
+    int timeAttackEnabled;
+    int timeRemaining;
+    int gameStarted;
+    int obstaclesEnabled;
+    int frozenTilesEnabled;
+    int bombsEnabled;
+    int moveCount;
+    int movesLeft;
+    int movesMax;
+    int campaignMode;
+    int campaignLevel;
+    int powerups_shuffles;
+    int powerups_hammers;
+    int powerups_rotates;
+    int powerups_upgrades;
+    int powerups_undos;
+} SavedGameState;
+
+void SaveGameState() {
+    if (gameOver || win || (!gameStarted && score == 0 && moveCount == 0)) {
+        DeleteFileA("k2048_state.dat");
+        return;
+    }
+    SavedGameState s;
+    memset(&s, 0, sizeof(s));
+    s.magic = 0x32303438;
+    s.version = 1;
+    s.grid_size = grid_size;
+    memcpy(s.grid, grid, sizeof(grid));
+    memcpy(s.frozen, frozen, sizeof(frozen));
+    s.score = score;
+    s.bestScore = bestScore;
+    s.ruleset = ruleset;
+    s.timeAttackEnabled = timeAttackEnabled;
+    s.timeRemaining = timeRemaining;
+    s.gameStarted = gameStarted;
+    s.obstaclesEnabled = obstaclesEnabled;
+    s.frozenTilesEnabled = frozenTilesEnabled;
+    s.bombsEnabled = bombsEnabled;
+    s.moveCount = moveCount;
+    s.movesLeft = movesLeft;
+    s.movesMax = movesMax;
+    s.campaignMode = campaignMode;
+    s.campaignLevel = campaignLevel;
+    s.powerups_shuffles = powerups_shuffles;
+    s.powerups_hammers = powerups_hammers;
+    s.powerups_rotates = powerups_rotates;
+    s.powerups_upgrades = powerups_upgrades;
+    s.powerups_undos = powerups_undos;
+
+    HANDLE hFile = CreateFileA("k2048_state.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, &s, sizeof(s), &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+int LoadGameState() {
+    HANDLE hFile = CreateFileA("k2048_state.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+
+    SavedGameState s;
+    DWORD readBytes = 0;
+    BOOL ok = ReadFile(hFile, &s, sizeof(s), &readBytes, NULL);
+    CloseHandle(hFile);
+
+    if (!ok || readBytes != sizeof(s) || s.magic != 0x32303438) {
+        DeleteFileA("k2048_state.dat");
+        return 0;
+    }
+
+    if (s.grid_size < 3 || s.grid_size > 6) return 0;
+    grid_size = s.grid_size;
+    memcpy(grid, s.grid, sizeof(grid));
+    memcpy(frozen, s.frozen, sizeof(frozen));
+    memset(mergePop, 0, sizeof(mergePop));
+    memset(squashTimer, 0, sizeof(squashTimer));
+    memset(squashDir, 0, sizeof(squashDir));
+    score = s.score;
+    bestScore = s.bestScore;
+    ruleset = s.ruleset;
+    timeAttackEnabled = s.timeAttackEnabled;
+    timeRemaining = s.timeRemaining;
+    gameStarted = s.gameStarted;
+    obstaclesEnabled = s.obstaclesEnabled;
+    frozenTilesEnabled = s.frozenTilesEnabled;
+    bombsEnabled = s.bombsEnabled;
+    moveCount = s.moveCount;
+    movesLeft = s.movesLeft;
+    movesMax = s.movesMax;
+    campaignMode = s.campaignMode;
+    campaignLevel = s.campaignLevel;
+    powerups_shuffles = s.powerups_shuffles;
+    powerups_hammers = s.powerups_hammers;
+    powerups_rotates = s.powerups_rotates;
+    powerups_upgrades = s.powerups_upgrades;
+    powerups_undos = s.powerups_undos;
+    gameOver = 0;
+    win = 0;
+    hasWon = 0;
+    historyCount = 0;
+    particleCount = 0;
+
+    if (timeAttackEnabled && gameStarted && timeRemaining > 0 && mainHwnd) {
+        SetTimer(mainHwnd, 1, 1000, NULL);
+        timerActive = 1;
+    }
+    return 1;
+}
+
+void CheckFirstRunTutorial(HWND hwnd, int savedGameLoaded) {
+    HANDLE hFile = CreateFileA("k2048_tutorial.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFile);
+        return;
+    }
+    hFile = CreateFileA("k2048_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char val = '1';
+        DWORD written = 0;
+        WriteFile(hFile, &val, 1, &written, NULL);
+        CloseHandle(hFile);
+    }
+    if (!savedGameLoaded) {
+        char helpText[1024];
+        wsprintfA(helpText,
+            "Welcome to K2048!\n\n"
+            "Controls: Arrow Keys or WASD to slide tiles.\n\n"
+            "Active Skills / Hotkeys:\n"
+            "U: Tile Upgrade (Doubles lowest tile)\n"
+            "R: Grid Rotate 90 deg clockwise\n"
+            "H: Hammer (Smashes obstacle / lowest tile)\n"
+            "Z: Free Undo (Reverts last move)\n"
+            "N: New Game / Restart Level\n"
+            "C: Toggle Campaign Mode (30 Stages)\n"
+            "M: Time Attack Mode Toggle\n"
+            "P: Auto-Play Toggle\n"
+            "F: Cycle Ruleset (Classic/Fib/Threes)\n"
+            "T: Change Theme (Dark/Classic/Pastel)\n"
+            "I: View Statistics\n"
+            "F1 / ?: Show this Help Dialog\n"
+            "3, 4, 5, 6: Change Grid Size\n\n"
+            "Special Tiles:\n"
+            "ICE (Frozen): Must be merged twice to thaw!\n"
+            "B (Bomb): Merging explodes 3x3 surrounding tiles!\n"
+            "W (Wildcard): Merges with any matching pair!\n"
+            "X (Stone): Impassable obstacle block."
+        );
+        MessageBoxA(hwnd, helpText, "How to Play", MB_OK | MB_ICONINFORMATION);
+    }
+}
+
 void AddRandomTile() {
     int emptyCount = 0;
     for (int i = 0; i < grid_size; i++) {
@@ -1119,6 +1281,7 @@ void AddRandomTile() {
 }
 
 void InitGame() {
+    DeleteFileA("k2048_state.dat");
     // Generate cascading debris
     for (int i = 0; i < grid_size; i++) {
         for (int j = 0; j < grid_size; j++) {
@@ -1189,14 +1352,19 @@ void StartCampaignLevel() {
     InitGame();
 
     if (s->obstacles > 0) {
-        for (int k = 0; k < s->obstacles; k++) {
+        int placed = 0;
+        int attempts = 0;
+        while (placed < s->obstacles && attempts < 100) {
+            attempts++;
             int r = my_rand() % grid_size;
             int c = my_rand() % grid_size;
             if (grid[r][c] == 0) {
                 grid[r][c] = -1;
+                placed++;
             }
         }
     }
+    SaveGameState();
 }
 
 int GetMergeResult(int a, int b) {
@@ -1243,8 +1411,8 @@ int CheckGameOver() {
     for (int i = 0; i < grid_size; i++) {
         for (int j = 0; j < grid_size; j++) {
             if (grid[i][j] == 0) return 0;
-            if (i < grid_size - 1 && GetMergeResult(grid[i][j], grid[i+1][j]) > 0) return 0;
-            if (j < grid_size - 1 && GetMergeResult(grid[i][j], grid[i][j+1]) > 0) return 0;
+            if (i < grid_size - 1 && GetMergeResult(grid[i][j], grid[i+1][j]) != 0) return 0;
+            if (j < grid_size - 1 && GetMergeResult(grid[i][j], grid[i][j+1]) != 0) return 0;
         }
     }
     return 1;
@@ -1285,6 +1453,7 @@ void DoTileUpgrade() {
         SpawnMergeParticles(px, py, RGB(255, 215, 0), nextVal);
         if (screenShakeTime < 10) screenShakeTime = 10;
         Beep(880, 40);
+        SaveGameState();
         InvalidateRect(mainHwnd, NULL, TRUE);
     }
 }
@@ -1302,8 +1471,12 @@ void DoGridRotate() {
     }
     memcpy(grid, tempGrid, sizeof(grid));
     memcpy(frozen, tempFrozen, sizeof(frozen));
+    memset(mergePop, 0, sizeof(mergePop));
+    memset(squashTimer, 0, sizeof(squashTimer));
+    memset(squashDir, 0, sizeof(squashDir));
     if (screenShakeTime < 12) screenShakeTime = 12;
     Beep(600, 35);
+    SaveGameState();
     InvalidateRect(mainHwnd, NULL, TRUE);
 }
 
@@ -1340,6 +1513,7 @@ void DoTileHammer() {
         mergePop[targetI][targetJ] = 0;
         squashTimer[targetI][targetJ] = 0;
         Beep(300, 45);
+        SaveGameState();
         InvalidateRect(mainHwnd, NULL, TRUE);
     }
 }
@@ -1362,6 +1536,7 @@ void DoFreeUndo() {
         timerActive = 1;
     }
     Beep(500, 30);
+    SaveGameState();
     InvalidateRect(mainHwnd, NULL, TRUE);
 }
 
@@ -1836,12 +2011,16 @@ int Move(int dx, int dy) {
             SaveStats();
             if (timerActive) { KillTimer(mainHwnd, 1); timerActive = 0; }
             SaveBest();
+            DeleteFileA("k2048_state.dat");
         } else if (CheckGameOver()) {
             gameOver = 1;
             stats_gamesPlayed++;
             SaveStats();
             if (timerActive) { KillTimer(mainHwnd, 1); timerActive = 0; }
             SaveBest();
+            DeleteFileA("k2048_state.dat");
+        } else {
+            SaveGameState();
         }
     }
     return moved;
@@ -1849,14 +2028,19 @@ int Move(int dx, int dy) {
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
-        case WM_CREATE:
+        case WM_CREATE: {
             mainHwnd = hwnd;
             LoadTheme();
             LoadStats();
-            InitGame();
+            int loadedSave = LoadGameState();
+            if (!loadedSave) {
+                InitGame();
+            }
+            CheckFirstRunTutorial(hwnd, loadedSave);
             SetTimer(hwnd, 3, 1000, NULL);
             SetTimer(hwnd, 4, 30, NULL);
             return 0;
+        }
         case WM_ERASEBKGND:
             return 1;
         case WM_TIMER:
@@ -1899,6 +2083,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     timeOut = 1;
                     stats_gamesPlayed++;
                     SaveStats();
+                    DeleteFileA("k2048_state.dat");
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 2) {
@@ -1931,6 +2116,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (wParam == 'Z' || wParam == 'z') {
                 DoFreeUndo();
             } else if (wParam == 'N' || wParam == 'n') {
+                DeleteFileA("k2048_state.dat");
                 if (campaignMode) StartCampaignLevel(); else InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 'C' || wParam == 'c') {
@@ -1964,7 +2150,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 wsprintfA(statsBuf, "Games Played: %d\nTiles Merged: %d\nHighest Tile: %d\nTime Played: %dm %ds", 
                     stats_gamesPlayed, stats_tilesMerged, stats_highestTile, stats_timePlayed / 60, stats_timePlayed % 60);
                 MessageBoxA(hwnd, statsBuf, "Statistics", MB_OK | MB_ICONINFORMATION);
-            } else if (wParam == VK_OEM_2) { // ? key
+            } else if (wParam == VK_F1 || wParam == VK_OEM_2) { // F1 or ? key
                 char helpText[1024];
                 wsprintfA(helpText,
                     "K2048 Loop 7 Edition\n\n"
@@ -1981,6 +2167,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     "F: Cycle Ruleset (Classic/Fib/Threes)\n"
                     "T: Change Theme (Dark/Classic/Pastel)\n"
                     "I: View Statistics\n"
+                    "F1 / ?: Show Help\n"
                     "3, 4, 5, 6: Change Grid Size\n\n"
                     "Special Tiles:\n"
                     "ICE (Frozen): Must be merged twice to thaw!\n"
@@ -2055,6 +2242,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             KillTimer(hwnd, 4);
             SaveBest();
             SaveStats();
+            SaveGameState();
             PostQuitMessage(0);
             return 0;
     }

@@ -51,7 +51,7 @@
 
 ---
 
-**Target App:** K2048
+**Target App:** KAudio
 **Status:** Next (Pass 5: Tutorial & Save System Integrity)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -126,3 +126,4 @@ Focus on verifying tutorial and save system infrastructure across all games:
 - **KWizard**: ✅ Done. Restored native build; eliminated per-frame GDI leaks; campaign opponentMaxHp clamping; Esc/shortcuts & tutorial persistence. Native (29.6 KB) and web verified.
 - **KWords**: ✅ Done. Closed sound thread handle leaks; hoisted cell fonts in WM_PAINT; clamped EndSelection buffer; added Esc modal/drag cancel & SetCapture; hardened full save/load state & tutorial persistence. Native (161 KB) and web verified.
 - **KZip**: ✅ Done. Sort selection desync fixed; standalone web/batch fallbacks & storage persistence added; native OpenArchive bounds & dialog Enter routing hardened; dotfile traversal fixed. Native (23.0 KB) and web verified.
+- **K2048**: ✅ Done (Pass 5). Full game state save/load implemented for web & native; tutorialSeen flag wired (fires on new game only); false game-over on bomb merges fixed; duplicate campaign stage alert removed; F1 help & backdrop click added. Native (38.5 KB) and web verified.
