@@ -535,8 +535,8 @@
       <div class="filigree-br"></div>
       <canvas id="confetti-canvas"></canvas>
       <div id="secret-banner">SECRET WORD FOUND! (+500 PTS)</div>
-      <div class="grid" id="grid"></div>
-      <div id="win-message">
+      <div class="grid" id="grid" role="grid" aria-label="Word search puzzle grid"></div>
+      <div id="win-message" role="dialog" aria-modal="true" aria-labelledby="win-title">
         <h2 id="win-title" style="margin:0 0 8px 0; color:#48bb78;">You Win!</h2>
         <p style="font-size: 16px; margin: 0 0 12px 0;">Final Score: <strong id="final-score">0</strong></p>
         <button onclick="initGame()">Play Again</button>
@@ -544,21 +544,21 @@
     </div>
     <div class="words-list">
       <h3 style="margin-top:0; margin-bottom:8px; font-size:15px; color:#e2e8f0;" id="stage-title-text">Words to Find</h3>
-      <ul id="word-list-items"></ul>
+      <ul id="word-list-items" role="list" aria-label="Words to find"></ul>
     </div>
   </div>
 
-  <div id="stats-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100;">
+  <div id="stats-modal" role="dialog" aria-modal="true" aria-labelledby="stats-title" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100;">
     <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:#1e212b; border:2px solid #2d3748; padding:20px; width:420px; max-height:80%; overflow-y:auto; border-radius:10px;">
-      <h2 style="margin-top:0; color:#63b3ed;">Statistics</h2>
+      <h2 id="stats-title" style="margin-top:0; color:#63b3ed;">Statistics</h2>
       <div id="stats-content"></div>
       <button onclick="document.getElementById('stats-modal').style.display='none'" style="margin-top:15px; width:100%;">Close</button>
     </div>
   </div>
 
-  <div id="help-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100;">
+  <div id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100;">
     <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:#1e212b; border:2px solid #2d3748; padding:20px; width:480px; max-height:85%; overflow-y:auto; border-radius:10px; line-height: 1.4; font-size:13px;">
-      <h2 style="margin-top:0; color:#63b3ed;">How to Play KWords - Loop 8 Edition</h2>
+      <h2 id="help-title" style="margin-top:0; color:#63b3ed;">How to Play KWords - Loop 8 Edition</h2>
       <p><strong>Goal:</strong> Find all hidden target words and secret bonus words in the grid!</p>
       <ul style="list-style-type: disc; padding-left: 18px;">
         <li style="width: auto;">Words can be horizontal, vertical, or diagonal (forwards or backwards).</li>
@@ -587,10 +587,25 @@
   </div>
 
   <script>
+    function safeGetStorage(key, fallback = null) {
+      try {
+        const val = localStorage.getItem(key);
+        return val !== null ? val : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+    function safeSetStorage(key, value) {
+      try {
+        localStorage.setItem(key, value);
+      } catch (e) {}
+    }
+
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
 
     function playSound(type) {
+      try {
         if (!audioCtx) audioCtx = new AudioContext();
         if (audioCtx.state === 'suspended') audioCtx.resume();
         
@@ -608,6 +623,7 @@
             gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
             osc.start(now);
             osc.stop(now + 0.05);
+            osc.onended = () => { try { osc.disconnect(); gainNode.disconnect(); } catch (e) {} };
         } else if (type === 'chime') {
             osc.type = 'sine';
             osc.frequency.setValueAtTime(523.25, now); 
@@ -618,6 +634,7 @@
             gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
             osc.start(now);
             osc.stop(now + 0.4);
+            osc.onended = () => { try { osc.disconnect(); gainNode.disconnect(); } catch (e) {} };
         } else if (type === 'fanfare') {
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(440, now); 
@@ -626,11 +643,13 @@
             osc.frequency.setValueAtTime(880, now + 0.45); 
             gainNode.gain.setValueAtTime(0, now);
             gainNode.gain.linearRampToValueAtTime(0.2, now + 0.05);
-            gainNode.setValueAtTime ? gainNode.gain.setValueAtTime(0.2, now + 0.45) : null;
+            gainNode.gain.setValueAtTime(0.2, now + 0.45);
             gainNode.gain.exponentialRampToValueAtTime(0.01, now + 1.0);
             osc.start(now);
             osc.stop(now + 1.0);
+            osc.onended = () => { try { osc.disconnect(); gainNode.disconnect(); } catch (e) {} };
         }
+      } catch (e) {}
     }
 
     const THEMES = {
@@ -722,12 +741,25 @@
     let comboMultiplier = 1;
 
     document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+      if (e.key === 'Escape') {
+        const statsM = document.getElementById('stats-modal');
+        const helpM = document.getElementById('help-modal');
+        if (statsM && statsM.style.display === 'block') { statsM.style.display = 'none'; return; }
+        if (helpM && helpM.style.display === 'block') { helpM.style.display = 'none'; return; }
+        if (isSelecting) {
+          isSelecting = false;
+          currentSelection = [];
+          highlightSelection();
+        }
+        return;
+      }
       if (document.getElementById('stats-modal').style.display === 'block' || document.getElementById('help-modal').style.display === 'block') return;
       const key = e.key.toLowerCase();
       if (key === 'r' || key === 'w') useRadar();
       else if (key === 'p') usePathfinder();
       else if (key === 'f') useFreeze();
-      else if (key === 'h') useHint();
+      else if (key === 'h' || key === '?') useHint();
       else if (key === 's') saveGame();
       else if (key === 'l') loadGame();
     });
@@ -1283,6 +1315,13 @@
         document.getElementById('score').textContent = score;
 
         if (foundWords.length === wordsToFind.length) {
+            let comp = parseInt(safeGetStorage('kwords_completed', '0')) + 1;
+            safeSetStorage('kwords_completed', comp.toString());
+            let hs = parseInt(safeGetStorage('kwords_highscore', '0'));
+            if (score > hs) {
+                safeSetStorage('kwords_highscore', score.toString());
+            }
+
             if (gameMode === "campaign" && campaignStage < CAMPAIGN_STAGES.length) {
                 campaignStage++;
                 playSound('fanfare');
@@ -1302,9 +1341,11 @@
 
     function showSecretBanner(msg) {
         const b = document.getElementById('secret-banner');
+        if (!b) return;
         b.textContent = msg;
         b.style.display = 'block';
-        setTimeout(() => { b.style.display = 'none'; }, 3000);
+        clearTimeout(b._timer);
+        b._timer = setTimeout(() => { b.style.display = 'none'; }, 2500);
     }
 
     function useRadar() {
@@ -1458,48 +1499,124 @@
         const data = {
             gridSize, numWordsToFind, currentTheme, gameMode, campaignStage,
             radarCharges, pathfinderCharges, freezeCharges, hintCharges,
-            score, seconds, grid, frozenGrid, unfoggedGrid, wordsToFind,
-            foundWords: foundWords.map(f => f.word)
+            score, seconds, freezeTimer, isFogStage,
+            grid, frozenGrid, unfoggedGrid, premiumGrid, radarGrid, pathfinderGrid, secretGrid,
+            wordsToFind,
+            foundWords: foundWords.map(f => ({ word: f.word, cells: f.cells || [] })),
+            secretWords, secretFound, hintedWords
         };
-        localStorage.setItem('kwords_save', JSON.stringify(data));
-        alert('Game Saved successfully!');
+        safeSetStorage('kwords_save', JSON.stringify(data));
+        showSecretBanner('GAME SAVED LOCALLY!');
     }
 
     function loadGame() {
-        const saved = localStorage.getItem('kwords_save');
-        if (saved) {
+        const saved = safeGetStorage('kwords_save');
+        if (!saved) {
+            showSecretBanner('NO SAVED GAME FOUND');
+            return;
+        }
+        try {
             const data = JSON.parse(saved);
-            gridSize = data.gridSize;
-            numWordsToFind = data.numWordsToFind;
-            currentTheme = data.currentTheme;
-            gameMode = data.gameMode;
-            campaignStage = data.campaignStage;
-            radarCharges = data.radarCharges || 3;
-            pathfinderCharges = data.pathfinderCharges || 3;
-            freezeCharges = data.freezeCharges || 3;
-            hintCharges = data.hintCharges || 3;
-            score = data.score;
-            seconds = data.seconds;
+            gridSize = data.gridSize || 15;
+            numWordsToFind = data.numWordsToFind || 8;
+            currentTheme = data.currentTheme || 'Elements';
+            gameMode = data.gameMode || 'classic';
+            campaignStage = data.campaignStage || 1;
+            radarCharges = data.radarCharges ?? 3;
+            pathfinderCharges = data.pathfinderCharges ?? 3;
+            freezeCharges = data.freezeCharges ?? 3;
+            hintCharges = data.hintCharges ?? 3;
+            score = data.score || 0;
+            seconds = data.seconds || 0;
+            freezeTimer = data.freezeTimer || 0;
+            isFogStage = !!data.isFogStage;
             grid = data.grid;
             frozenGrid = data.frozenGrid || Array(gridSize).fill(null).map(() => Array(gridSize).fill(0));
             unfoggedGrid = data.unfoggedGrid || Array(gridSize).fill(null).map(() => Array(gridSize).fill(true));
-            wordsToFind = data.wordsToFind;
-            foundWords = (data.foundWords || []).map(w => ({ word: w, cells: [] }));
+            premiumGrid = data.premiumGrid || Array(gridSize).fill(null).map(() => Array(gridSize).fill(0));
+            radarGrid = data.radarGrid || Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
+            pathfinderGrid = data.pathfinderGrid || Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
+            secretGrid = data.secretGrid || Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
+            wordsToFind = data.wordsToFind || [];
+            secretWords = data.secretWords || [];
+            secretFound = data.secretFound || [];
+            hintedWords = data.hintedWords || [];
             
+            // Reconstitute found words and their cell coordinates
+            foundWords = (data.foundWords || []).map(fw => {
+                if (typeof fw === 'string') {
+                    return { word: fw, cells: [] };
+                }
+                return { word: fw.word, cells: fw.cells || [] };
+            });
+
+            // If any foundWord has empty cells, locate them on grid so they highlight properly
+            const dirs = [[0,1], [1,0], [1,1], [-1,1], [1,-1], [-1,-1], [0,-1], [-1,0]];
+            foundWords.forEach(fw => {
+                if (!fw.cells || fw.cells.length === 0) {
+                    for (let r = 0; r < gridSize; r++) {
+                        for (let c = 0; c < gridSize; c++) {
+                            if (grid[r][c] === fw.word[0]) {
+                                for (let dir of dirs) {
+                                    let match = true;
+                                    let cells = [];
+                                    for (let i = 0; i < fw.word.length; i++) {
+                                        let nr = r + i * dir[0];
+                                        let nc = c + i * dir[1];
+                                        if (nr < 0 || nr >= gridSize || nc < 0 || nc >= gridSize || grid[nr][nc] !== fw.word[i]) {
+                                            match = false; break;
+                                        }
+                                        cells.push({ r: nr, c: nc });
+                                    }
+                                    if (match) {
+                                        fw.cells = cells;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (fw.cells && fw.cells.length > 0) break;
+                        }
+                        if (fw.cells && fw.cells.length > 0) break;
+                    }
+                }
+            });
+
+            // Sync UI dropdowns and indicators
+            if (document.getElementById('mode-select')) document.getElementById('mode-select').value = gameMode;
+            if (document.getElementById('theme-select') && currentTheme !== 'Polyglot') document.getElementById('theme-select').value = currentTheme;
+            if (gameMode === 'campaign') {
+                document.getElementById('stg-info').style.display = 'inline';
+                document.getElementById('stage-num').textContent = campaignStage;
+                let stgObj = CAMPAIGN_STAGES[Math.min(19, campaignStage - 1)];
+                document.getElementById('stage-title-text').textContent = stgObj ? stgObj.title : 'Stage ' + campaignStage;
+            } else {
+                document.getElementById('stg-info').style.display = 'none';
+                document.getElementById('stage-title-text').textContent = 'Words to Find';
+                const diff = (gridSize <= 10) ? 'easy' : (gridSize <= 15) ? 'medium' : 'hard';
+                document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+                const btnD = document.getElementById('btn-' + diff);
+                if (btnD) btnD.classList.add('active');
+            }
+
+            document.getElementById('found-count').textContent = foundWords.length;
+            document.getElementById('total').textContent = wordsToFind.length;
+            document.getElementById('score').textContent = score;
+            document.getElementById('win-message').style.display = 'none';
+
             updateTimerDisplay();
             renderGrid();
             renderWordList();
-            alert('Game Loaded successfully!');
-        } else {
-            alert('No save file found.');
+            showSecretBanner('GAME LOADED SUCCESSFULLY!');
+        } catch (err) {
+            showSecretBanner('SAVE FILE CORRUPTED');
         }
     }
 
     function showStatsModal() {
         const content = document.getElementById('stats-content');
         content.innerHTML = `
-            <p>Puzzles Completed: <strong>${localStorage.getItem('kwords_completed') || 0}</strong></p>
-            <p>High Score: <strong>${localStorage.getItem('kwords_highscore') || 0}</strong></p>
+            <p>Puzzles Completed: <strong>${safeGetStorage('kwords_completed', 0)}</strong></p>
+            <p>High Score: <strong>${safeGetStorage('kwords_highscore', 0)}</strong></p>
             <p>Campaign Stage: <strong>${campaignStage} / 20</strong></p>
         `;
         document.getElementById('stats-modal').style.display = 'block';
@@ -1862,7 +1979,16 @@
         spawnParticles(0, 0, 'confetti');
     }
 
+    window.addEventListener('mouseup', handleMouseUp);
+
     initGame();
+    
+    // First-run tutorial persistence
+    if (!safeGetStorage('kwords_tutorialSeen')) {
+        safeSetStorage('kwords_tutorialSeen', '1');
+        const helpM = document.getElementById('help-modal');
+        if (helpM) helpM.style.display = 'block';
+    }
     
     // Spawn ambient dust motes
     setTimeout(() => {

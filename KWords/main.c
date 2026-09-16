@@ -669,7 +669,9 @@ void DrawConfettiFX(HDC hdc, int width, int height) {
 void LoadStats() {
     FILE* fp = fopen("kwords_stats.dat", "rb");
     if (fp) {
-        fread(&gameStats, sizeof(Stats), 1, fp);
+        if (fread(&gameStats, sizeof(Stats), 1, fp) != 1) {
+            memset(&gameStats, 0, sizeof(Stats));
+        }
         fclose(fp);
     } else {
         memset(&gameStats, 0, sizeof(Stats));
@@ -706,9 +708,11 @@ DWORD WINAPI SoundChime(LPVOID lpParam) { Beep(523, 100); Beep(659, 100); Beep(7
 DWORD WINAPI SoundFanfare(LPVOID lpParam) { Beep(440, 150); Beep(554, 150); Beep(659, 150); Beep(880, 400); return 0; }
 
 void PlaySoundEffect(int type) {
-    if (type == 0) CreateThread(NULL, 0, SoundTick, NULL, 0, NULL);
-    else if (type == 1) CreateThread(NULL, 0, SoundChime, NULL, 0, NULL);
-    else if (type == 2) CreateThread(NULL, 0, SoundFanfare, NULL, 0, NULL);
+    HANDLE hThread = NULL;
+    if (type == 0) hThread = CreateThread(NULL, 0, SoundTick, NULL, 0, NULL);
+    else if (type == 1) hThread = CreateThread(NULL, 0, SoundChime, NULL, 0, NULL);
+    else if (type == 2) hThread = CreateThread(NULL, 0, SoundFanfare, NULL, 0, NULL);
+    if (hThread) CloseHandle(hThread);
 }
 
 void UnfogArea(int centerR, int centerC, int radius) {
@@ -927,10 +931,12 @@ void GetLineCells(int r1, int c1, int r2, int c2, int* outR, int* outC, int* cou
 void EndSelection(HWND hwnd) {
     if (!isSelecting) return;
     isSelecting = false;
+    ReleaseCapture();
     
     int selR[MAX_GRID_SIZE*2], selC[MAX_GRID_SIZE*2];
-    int count;
+    int count = 0;
     GetLineCells(startR, startC, curR, curC, selR, selC, &count);
+    if (count > 31) count = 31;
     
     if (count > 0) {
         for (int i=0; i<count; i++) scanAnim[selR[i]][selC[i]] = 1.0f;
@@ -1259,6 +1265,15 @@ void SaveGame(HWND hwnd) {
         fwrite(wordsToFind, sizeof(char), MAX_WORDS * 32, fp);
         fwrite(wordsFoundStatus, sizeof(bool), MAX_WORDS, fp);
         fwrite(wordsHintedStatus, sizeof(bool), MAX_WORDS, fp);
+        fwrite(secretWords, sizeof(char), 2 * 32, fp);
+        fwrite(secretFoundStatus, sizeof(bool), 2, fp);
+        fwrite(&secretCount, sizeof(int), 1, fp);
+        fwrite(secretGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
+        fwrite(radarGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
+        fwrite(pathfinderGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
+        fwrite(premiumGrid, sizeof(int), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
+        fwrite(&isFogStage, sizeof(bool), 1, fp);
+        fwrite(&freezeTimer, sizeof(int), 1, fp);
         fclose(fp);
         MessageBox(hwnd, "Game Saved successfully!", "Save", MB_OK);
     } else {
@@ -1269,7 +1284,7 @@ void SaveGame(HWND hwnd) {
 void LoadGame(HWND hwnd) {
     FILE* fp = fopen("kwords_save.dat", "rb");
     if (fp) {
-        fread(&gridSize, sizeof(int), 1, fp);
+        if (fread(&gridSize, sizeof(int), 1, fp) != 1) { fclose(fp); return; }
         fread(&numWordsToFind, sizeof(int), 1, fp);
         fread(&currentDifficulty, sizeof(int), 1, fp);
         fread(&currentThemeIdx, sizeof(int), 1, fp);
@@ -1293,7 +1308,36 @@ void LoadGame(HWND hwnd) {
         fread(wordsToFind, sizeof(char), MAX_WORDS * 32, fp);
         fread(wordsFoundStatus, sizeof(bool), MAX_WORDS, fp);
         fread(wordsHintedStatus, sizeof(bool), MAX_WORDS, fp);
+
+        if (fread(secretWords, sizeof(char), 2 * 32, fp) == 2 * 32) {
+            fread(secretFoundStatus, sizeof(bool), 2, fp);
+            fread(&secretCount, sizeof(int), 1, fp);
+            fread(secretGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
+            fread(radarGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
+            fread(pathfinderGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
+            fread(premiumGrid, sizeof(int), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
+            fread(&isFogStage, sizeof(bool), 1, fp);
+            fread(&freezeTimer, sizeof(int), 1, fp);
+        } else {
+            memset(secretGrid, 0, sizeof(secretGrid));
+            memset(radarGrid, 0, sizeof(radarGrid));
+            memset(pathfinderGrid, 0, sizeof(pathfinderGrid));
+            memset(premiumGrid, 0, sizeof(premiumGrid));
+            secretCount = 0;
+            isFogStage = false;
+            freezeTimer = 0;
+        }
         fclose(fp);
+
+        if (gridSize < 10 || gridSize > MAX_GRID_SIZE) gridSize = 15;
+        if (numWordsToFind < 1 || numWordsToFind > MAX_WORDS) numWordsToFind = 8;
+        if (wordCount < 1 || wordCount > MAX_WORDS) wordCount = numWordsToFind;
+        if (currentThemeIdx < 0 || currentThemeIdx >= NUM_THEMES) currentThemeIdx = 0;
+        if (currentDifficulty < 0 || currentDifficulty > 2) currentDifficulty = 1;
+        if (currentGameMode < 0 || currentGameMode > 3) currentGameMode = 0;
+        if (campaignStage < 1 || campaignStage > NUM_CAMPAIGN_STAGES) campaignStage = 1;
+        if (foundCount < 0 || foundCount > wordCount) foundCount = 0;
+        if (secretCount < 0 || secretCount > 2) secretCount = 0;
         
         memset(cellAnim, 0, sizeof(cellAnim));
         memset(strikeAnim, 0, sizeof(strikeAnim));
@@ -1399,10 +1443,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         case WM_KEYDOWN:
+            if (wParam == VK_ESCAPE) {
+                if (showStats) { showStats = false; InvalidateRect(hwnd, NULL, TRUE); }
+                else if (showHelp) { showHelp = false; InvalidateRect(hwnd, NULL, TRUE); }
+                else if (isSelecting) { isSelecting = false; ReleaseCapture(); InvalidateRect(hwnd, NULL, FALSE); }
+                break;
+            }
+            if (showStats || showHelp) break;
+            if (GetKeyState(VK_CONTROL) < 0 || GetKeyState(VK_MENU) < 0) {
+                if (wParam == 'S' || wParam == 's') SaveGame(hwnd);
+                else if (wParam == 'L' || wParam == 'l') LoadGame(hwnd);
+                break;
+            }
             if (wParam == 'R' || wParam == 'r' || wParam == 'W' || wParam == 'w') UseRadar(hwnd);
             else if (wParam == 'P' || wParam == 'p') UsePathfinder(hwnd);
             else if (wParam == 'F' || wParam == 'f') UseFreeze(hwnd);
-            else if (wParam == 'H' || wParam == 'h') UseHint(hwnd);
+            else if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) UseHint(hwnd);
             else if (wParam == 'S' || wParam == 's') SaveGame(hwnd);
             else if (wParam == 'L' || wParam == 'l') LoadGame(hwnd);
             break;
@@ -1463,6 +1519,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (isFogStage) UnfogArea(r, c, 2);
 
                 isSelecting = true;
+                SetCapture(hwnd);
                 startR = curR = r;
                 startC = curC = c;
                 PlaySoundEffect(0);
@@ -1735,6 +1792,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(hdc, oldGold);
             DeleteObject(goldPen);
 
+            int basePad = 2;
+            int baseTH = cellPx - basePad * 2;
+            if (baseTH < 10) baseTH = 10;
+            HFONT letterFont = CreateFont(baseTH * 3 / 5, 0, 0, 0, FW_HEAVY, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+                OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Georgia");
+            HFONT pFont = CreateFont(baseTH / 4 > 6 ? baseTH / 4 : 7, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+                OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Segoe UI");
+            HFONT ptsFont = CreateFont(baseTH / 3 > 7 ? baseTH / 3 : 8, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+                OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Segoe UI");
+
             for(int r=0; r<gridSize; r++) {
                 for(int c=0; c<gridSize; c++) {
                     int tileX = boardLeft + 6 + c * cellPx;
@@ -1863,8 +1930,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SelectObject(hdc, oldP2);
                     DeleteObject(sheenPen);
 
-                    HFONT letterFont = CreateFont(curH * 3 / 5, 0, 0, 0, FW_HEAVY, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-                        OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Georgia");
                     HFONT oldF1 = (HFONT)SelectObject(hdc, letterFont);
                     SetTextColor(hdc, textColor);
                     
@@ -1872,35 +1937,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     RECT textRc = { tileRc.left, tileRc.top + 1, tileRc.right, tileRc.bottom - 4 };
                     DrawText(hdc, letterStr, 1, &textRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                     SelectObject(hdc, oldF1);
-                    DeleteObject(letterFont);
 
                     if (!isFogged) {
                         if (!foundGrid[r][c] && premiumGrid[r][c] > 0) {
                             const char* pLbl = (premiumGrid[r][c]==1)?"DL":((premiumGrid[r][c]==2)?"TL":((premiumGrid[r][c]==3)?"DW":"TW"));
-                            HFONT pFont = CreateFont(curH / 4, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-                                OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Segoe UI");
                             HFONT oldPF = (HFONT)SelectObject(hdc, pFont);
                             SetTextColor(hdc, textColor);
                             RECT pRc = { tileRc.left + 2, tileRc.top + 1, tileRc.right, tileRc.bottom };
                             DrawText(hdc, pLbl, 2, &pRc, DT_LEFT | DT_TOP | DT_SINGLELINE);
                             SelectObject(hdc, oldPF);
-                            DeleteObject(pFont);
                         }
 
                         int pts = GetLetterScore(grid[r][c]);
                         char ptsStr[8];
                         sprintf(ptsStr, "%d", pts);
-                        HFONT ptsFont = CreateFont(curH / 3, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-                            OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Segoe UI");
                         HFONT oldF2 = (HFONT)SelectObject(hdc, ptsFont);
                         SetTextColor(hdc, textColor);
                         RECT ptsRc = { tileRc.right - (curW * 4 / 9), tileRc.bottom - (curH * 2 / 5), tileRc.right - 2, tileRc.bottom - 1 };
                         DrawText(hdc, ptsStr, strlen(ptsStr), &ptsRc, DT_RIGHT | DT_BOTTOM | DT_SINGLELINE);
                         SelectObject(hdc, oldF2);
-                        DeleteObject(ptsFont);
                     }
                 }
             }
+            DeleteObject(letterFont);
+            DeleteObject(pFont);
+            DeleteObject(ptsFont);
             DeleteObject(socketBg);
             
             int listX = boardRight + 30;
