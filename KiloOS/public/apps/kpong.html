@@ -310,6 +310,17 @@
   let soundEnabled = safeGetStorage('kpong_sound_enabled', true);
   let audioCtx = null;
 
+  function initAudioOnGesture() {
+      try {
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+      } catch (e) {}
+      window.removeEventListener('pointerdown', initAudioOnGesture);
+      window.removeEventListener('keydown', initAudioOnGesture);
+  }
+  window.addEventListener('pointerdown', initAudioOnGesture);
+  window.addEventListener('keydown', initAudioOnGesture);
+
   function toggleSound() {
       soundEnabled = !soundEnabled;
       safeSetStorage('kpong_sound_enabled', soundEnabled);
@@ -359,15 +370,17 @@
 
   // Game Modes
   // 0: Classic, 1: Obstacle Arena, 2: Power-Up Frenzy, 3: Multi-Ball, 4: Campaign
-  let gameMode = 0; 
+  let gameMode = safeGetStorage('kpong_mode', 0); 
   const MODE_NAMES = ["Classic", "Obstacle Arena", "Power-Up Frenzy", "Multi-Ball", "Campaign"];
+  if (gameMode < 0 || gameMode >= MODE_NAMES.length) gameMode = 0;
   
   // PvP vs AI
   let isPvP = false; // false: 1P vs AI, true: 2P Local PvP
 
   // Themes: 0: Cyberpunk, 1: Retro, 2: Vaporwave, 3: Matrix
-  let themeIndex = 0;
+  let themeIndex = safeGetStorage('kpong_theme', 0);
   const THEME_CLASSES = ['theme-cyberpunk', 'theme-retro', 'theme-vaporwave', 'theme-matrix'];
+  if (themeIndex < 0 || themeIndex >= THEME_CLASSES.length) themeIndex = 0;
 
   let p1PadH = 50, p2PadH = 50;
   let campaignLevel = 1;
@@ -427,7 +440,8 @@
   let p1Vy = 0, p2Vy = 0;
   let s1 = 0, s2 = 0;
   let rally = 0;
-  let difficulty = 2; // 1: Easy, 2: Normal, 3: Hard
+  let difficulty = safeGetStorage('kpong_difficulty', 2); // 1: Easy, 2: Normal, 3: Hard
+  if (difficulty < 1 || difficulty > 3) difficulty = 2;
   const aiSpeeds = [0, 2, 4, 6];
   const startSpeeds = [0, 4, 5, 7];
   let gameOver = false;
@@ -438,7 +452,7 @@
 
   function resetBalls() {
       balls = [];
-      let baseSpd = (gameMode === 4) ? Math.min(11, 4 + Math.floor(campaignLevel / 2)) : startSpeeds[difficulty];
+      let baseSpd = (gameMode === 4) ? Math.min(11, 4 + Math.floor(campaignLevel / 2)) : (startSpeeds[difficulty] || 5);
       let ballCount = (gameMode === 3) ? 3 : 1;
       
       for (let i = 0; i < ballCount; i++) {
@@ -616,6 +630,7 @@
 
   function cycleDifficulty() {
       difficulty = (difficulty % 3) + 1;
+      safeSetStorage('kpong_difficulty', difficulty);
       const btn = document.getElementById('btn-diff');
       if (btn) btn.innerText = `⚡ Diff: ${DIFF_NAMES[difficulty]} [1-3]`;
       updateBadge();
@@ -625,6 +640,7 @@
   function setDifficulty(d) {
       if (d < 1 || d > 3) return;
       difficulty = d;
+      safeSetStorage('kpong_difficulty', difficulty);
       const btn = document.getElementById('btn-diff');
       if (btn) btn.innerText = `⚡ Diff: ${DIFF_NAMES[difficulty]} [1-3]`;
       updateBadge();
@@ -640,6 +656,8 @@
 
   function cycleGameMode() {
       gameMode = (gameMode + 1) % MODE_NAMES.length;
+      safeSetStorage('kpong_mode', gameMode);
+      if (gameMode === 4 && campaignLevel > 20) campaignLevel = 1;
       document.getElementById('btn-mode').innerText = "🎮 Mode: " + MODE_NAMES[gameMode] + " [M]";
       s1 = 0; s2 = 0; rally = 0; gameOver = false; winScreen = false;
       document.getElementById('s1').innerText = s1;
@@ -657,6 +675,7 @@
 
   function cycleTheme() {
       themeIndex = (themeIndex + 1) % THEME_CLASSES.length;
+      safeSetStorage('kpong_theme', themeIndex);
       document.body.className = THEME_CLASSES[themeIndex];
       const themeNames = ["Cyberpunk", "Retro CRT", "Vaporwave", "Matrix Code"];
       showToast("Theme: " + themeNames[themeIndex]);
@@ -710,6 +729,9 @@
   }
 
   function toggleReplayPause() {
+      if (replayPaused && replayCurFrame >= replayFrames.length - 1) {
+          replayCurFrame = 0;
+      }
       replayPaused = !replayPaused;
       updateReplayUI();
   }
@@ -789,8 +811,9 @@
               if (typeof data.high_rally === 'number' && data.high_rally >= 0) stats.highRally = Math.floor(data.high_rally);
               else if (typeof data.highRally === 'number' && data.highRally >= 0) stats.highRally = Math.floor(data.highRally);
 
-              if (Array.isArray(data.top_scores)) {
-                  leaderboard = data.top_scores.filter(item => item && typeof item.rally === 'number');
+              const importedScores = data.top_scores || data.leaderboard;
+              if (Array.isArray(importedScores)) {
+                  leaderboard = importedScores.filter(item => item && typeof item.rally === 'number');
               }
               safeSetStorage('kpong_stats_v2', stats);
               safeSetStorage('kpong_leaderboard_v2', leaderboard);
@@ -887,20 +910,68 @@
       if (e.target === this) closeStatsModal();
   });
 
-  // Canvas Mouse & Touch Drag Controls for Player 1
+  function restartGame() {
+      s1 = 0; s2 = 0; rally = 0; winScreen = false;
+      if (gameMode === 4 && campaignLevel > 20) campaignLevel = 1;
+      skillSlowTimer = 0; skillSlowCooldown = 0;
+      skillMegaTimer = 0; skillMegaCooldown = 0;
+      skillFireballReady = false; skillFireballCooldown = 0;
+      bossShieldHp = 3; bossShieldTimer = 0;
+      obs1Active = true; obs2Active = true;
+      p1BuffTimer = 0; p2BuffTimer = 0;
+      p1DebuffTimer = 0; p2DebuffTimer = 0;
+      p1FreezeTimer = 0; p2FreezeTimer = 0;
+      p1ShieldTimer = 0; p2ShieldTimer = 0;
+      particles = []; shockwaves = [];
+      document.getElementById('s1').innerText = s1;
+      document.getElementById('s2').innerText = s2;
+      gameOver = false;
+      resetBalls();
+  }
+
+  // Canvas Mouse & Touch Drag Controls for Player 1 & Player 2
   function handleCanvasPointer(e) {
-      if (isPaused || gameOver || isReplaying) return;
+      if (isPaused || isReplaying) return;
+      if (gameOver) {
+          restartGame();
+          return;
+      }
       const rect = canvas.getBoundingClientRect();
-      if (!rect || rect.height <= 0) return;
-      const clientY = (e.touches && e.touches.length > 0) ? e.touches[0].clientY : e.clientY;
-      if (clientY === undefined) return;
+      if (!rect || rect.height <= 0 || rect.width <= 0) return;
       const scaleY = H / rect.height;
-      const canvasY = (clientY - rect.top) * scaleY;
-      if (p1FreezeTimer === 0) {
-          let targetY = canvasY - p1PadH / 2;
-          p1y = Math.max(0, Math.min(H - p1PadH, targetY));
+
+      if (e.touches && e.touches.length > 0) {
+          for (let i = 0; i < e.touches.length; i++) {
+              const t = e.touches[i];
+              const tX = t.clientX - rect.left;
+              const tY = (t.clientY - rect.top) * scaleY;
+              if (isPvP && tX >= rect.width / 2) {
+                  if (p2FreezeTimer === 0) {
+                      p2y = Math.max(0, Math.min(H - p2PadH, tY - p2PadH / 2));
+                  }
+              } else {
+                  if (p1FreezeTimer === 0) {
+                      p1y = Math.max(0, Math.min(H - p1PadH, tY - p1PadH / 2));
+                  }
+              }
+          }
+      } else if (e.clientY !== undefined) {
+          const mX = e.clientX - rect.left;
+          const mY = (e.clientY - rect.top) * scaleY;
+          if (isPvP && mX >= rect.width / 2) {
+              if (p2FreezeTimer === 0) {
+                  p2y = Math.max(0, Math.min(H - p2PadH, mY - p2PadH / 2));
+              }
+          } else {
+              if (p1FreezeTimer === 0) {
+                  p1y = Math.max(0, Math.min(H - p1PadH, mY - p1PadH / 2));
+              }
+          }
       }
   }
+  canvas.addEventListener('click', () => {
+      if (gameOver) restartGame();
+  });
   canvas.addEventListener('mousemove', e => {
       if (e.buttons === 1 || !isPvP) handleCanvasPointer(e);
   });
@@ -928,7 +999,8 @@
       const state = {
           s1, s2, rally, p1y, p2y, gameMode, isPvP, campaignLevel,
           balls, difficulty, themeIndex,
-          p1BuffTimer, p2BuffTimer, p1FreezeTimer, p2FreezeTimer, p1ShieldTimer, p2ShieldTimer,
+          p1BuffTimer, p2BuffTimer, p1DebuffTimer, p2DebuffTimer,
+          p1FreezeTimer, p2FreezeTimer, p1ShieldTimer, p2ShieldTimer,
           skillSlowTimer, skillSlowCooldown, skillMegaTimer, skillMegaCooldown, skillFireballReady, skillFireballCooldown
       };
       safeSetStorage('kpong_saved_state', state);
@@ -947,6 +1019,7 @@
           difficulty = state.difficulty || 2;
           themeIndex = state.themeIndex || 0;
           p1BuffTimer = state.p1BuffTimer || 0; p2BuffTimer = state.p2BuffTimer || 0;
+          p1DebuffTimer = state.p1DebuffTimer || 0; p2DebuffTimer = state.p2DebuffTimer || 0;
           p1FreezeTimer = state.p1FreezeTimer || 0; p2FreezeTimer = state.p2FreezeTimer || 0;
           p1ShieldTimer = state.p1ShieldTimer || 0; p2ShieldTimer = state.p2ShieldTimer || 0;
           skillSlowTimer = state.skillSlowTimer || 0; skillSlowCooldown = state.skillSlowCooldown || 0;
@@ -958,21 +1031,33 @@
           document.getElementById('s2').innerText = s2;
           document.getElementById('btn-pvp').innerText = isPvP ? "👥 2P Local PvP [V]" : "👤 1P vs AI [V]";
           document.getElementById('btn-mode').innerText = "🎮 Mode: " + MODE_NAMES[gameMode] + " [M]";
+          const btnDiff = document.getElementById('btn-diff');
+          if (btnDiff) btnDiff.innerText = `⚡ Diff: ${DIFF_NAMES[difficulty]} [1-3]`;
           updateBadge();
+          if (activeBallCount() === 0) resetBalls();
           gameOver = false; isPaused = false;
+          safeSetStorage('kpong_has_played', true);
           showToast("Game State Loaded (F9)!");
       } catch (e) {
           showToast("Failed to load saved state.");
       }
   }
 
-  // Record Leaderboard Entry
-  function recordScore(scoreRally) {
-      stats.games++;
-      if (scoreRally > stats.highRally) stats.highRally = scoreRally;
-      
+  // Record Leaderboard Entry on Completed Rally
+  function checkHighRally(currentRally) {
+      if (currentRally > stats.highRally) {
+          stats.highRally = currentRally;
+          safeSetStorage('kpong_stats_v2', stats);
+      }
+  }
+
+  function recordCompletedRally(finalRally) {
+      if (finalRally <= 0) return;
+      if (finalRally > stats.highRally) {
+          stats.highRally = finalRally;
+      }
       const newEntry = {
-          rally: scoreRally,
+          rally: finalRally,
           mode: MODE_NAMES[gameMode],
           date: new Date().toLocaleDateString()
       };
@@ -985,6 +1070,10 @@
   }
 
   function openStatsModal() {
+      if (stats.games < stats.wins + stats.losses) {
+          stats.games = stats.wins + stats.losses;
+          safeSetStorage('kpong_stats_v2', stats);
+      }
       document.getElementById('stat-games').innerText = stats.games;
       document.getElementById('stat-wins').innerText = stats.wins;
       document.getElementById('stat-losses').innerText = stats.losses;
@@ -1057,21 +1146,7 @@
               return;
           }
           if (keys['r'] || keys['R']) {
-              s1 = 0; s2 = 0; rally = 0; winScreen = false;
-              skillSlowTimer = 0; skillSlowCooldown = 0;
-              skillMegaTimer = 0; skillMegaCooldown = 0;
-              skillFireballReady = false; skillFireballCooldown = 0;
-              bossShieldHp = 3; bossShieldTimer = 0;
-              obs1Active = true; obs2Active = true;
-              p1BuffTimer = 0; p2BuffTimer = 0;
-              p1DebuffTimer = 0; p2DebuffTimer = 0;
-              p1FreezeTimer = 0; p2FreezeTimer = 0;
-              p1ShieldTimer = 0; p2ShieldTimer = 0;
-              particles = []; shockwaves = [];
-              document.getElementById('s1').innerText = s1;
-              document.getElementById('s2').innerText = s2;
-              gameOver = false;
-              resetBalls();
+              restartGame();
           }
           return;
       }
@@ -1295,7 +1370,12 @@
               b.x + BALL_SIZE >= W - 55 && b.x <= W - 45 &&
               b.y + BALL_SIZE >= bossShieldY && b.y <= bossShieldY + bossShieldH && b.dx > 0) {
               if (b.isFireball) { bossShieldHp = 0; bossShieldTimer = 360; createShockwave(W - 50, b.y + BALL_SIZE/2, '#ff3200'); }
-              else { bossShieldHp--; b.dx = -b.dx; createShockwave(W - 50, b.y + BALL_SIZE/2, '#ffd700'); }
+              else {
+                  bossShieldHp--;
+                  if (bossShieldHp <= 0) bossShieldTimer = 300;
+                  b.dx = -b.dx;
+                  createShockwave(W - 50, b.y + BALL_SIZE/2, '#ffd700');
+              }
               playSound(850, 'hit');
           }
 
@@ -1322,7 +1402,7 @@
               if (b.dy > 11) b.dy = 11; if (b.dy < -11) b.dy = -11;
               b.dx *= 1.08;
               rally++;
-              recordScore(rally);
+              checkHighRally(rally);
               let pColor = b.isFireball ? '#ff6400' : getPrimaryColor();
               createParticles(b.x, b.y + BALL_SIZE/2, pColor, 18, 9);
               createShockwave(b.x, b.y + BALL_SIZE/2, pColor);
@@ -1343,7 +1423,7 @@
               if (b.dy > 12) b.dy = 12; if (b.dy < -12) b.dy = -12;
               b.dx *= 1.08;
               rally++;
-              recordScore(rally);
+              checkHighRally(rally);
               createParticles(b.x + BALL_SIZE, b.y + BALL_SIZE/2, getSecondaryColor(), 18, 9);
               createShockwave(b.x + BALL_SIZE, b.y + BALL_SIZE/2, getSecondaryColor());
               if (Math.abs(hitPos) > 0.8) {
@@ -1355,14 +1435,18 @@
 
           // Out of Bounds / Scoring
           if (b.x < -15) {
-              b.active = false; s2++; rally = 0; screenShake = 12;
+              b.active = false; s2++;
+              recordCompletedRally(rally);
+              rally = 0; screenShake = 12;
               createParticles(0, b.y + BALL_SIZE/2, getSecondaryColor(), 36, 12);
               playSound(200, 'score');
               document.getElementById('s2').innerText = s2;
               if (activeBallCount() === 0) resetBalls();
           }
           if (b.x > W + 15) {
-              b.active = false; s1++; rally = 0; screenShake = 12;
+              b.active = false; s1++;
+              recordCompletedRally(rally);
+              rally = 0; screenShake = 12;
               createParticles(W, b.y + BALL_SIZE/2, getPrimaryColor(), 36, 12);
               playSound(200, 'score');
               document.getElementById('s1').innerText = s1;
@@ -1398,15 +1482,15 @@
               campaignLevel++; s1 = 0; s2 = 0; rally = 0; bossShieldHp = 3; bossShieldTimer = 0;
               document.getElementById('s1').innerText = s1; document.getElementById('s2').innerText = s2;
               if (campaignLevel > 20) {
-                  winScreen = true; gameOver = true; stats.wins++;
+                  winScreen = true; gameOver = true; stats.wins++; stats.games++;
               } else { resetBalls(); }
           } else {
-              gameOver = true; stats.wins++;
+              gameOver = true; stats.wins++; stats.games++;
           }
           safeSetStorage('kpong_stats_v2', stats);
       }
       if (s2 >= targetScore) {
-          gameOver = true; stats.losses++;
+          gameOver = true; stats.losses++; stats.games++;
           safeSetStorage('kpong_stats_v2', stats);
       }
 
@@ -1618,7 +1702,7 @@
           ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]);
 
           // Obstacles from frame
-          const hasObstacles = (rf.gameMode === 1 || (rf.gameMode === 4 && campaignLevel >= 5));
+          const hasObstacles = (rf.gameMode === 1 || (rf.gameMode === 4 && rf.campaignLevel >= 5));
           if (hasObstacles) {
               if (rf.obs1Active) {
                   ctx.save(); ctx.fillStyle = 'rgba(255, 120, 0, 0.85)'; ctx.shadowBlur = 15; ctx.shadowColor = '#ff7800';
@@ -1992,11 +2076,17 @@
               ctx.fillText(s1 > s2 ? (isPvP ? "PLAYER 1 WINS!" : "YOU WIN!") : (isPvP ? "PLAYER 2 WINS!" : "CPU WINS!"), W/2, H/2 - 10);
           }
           ctx.shadowBlur = 0; ctx.fillStyle = 'white'; ctx.font = '14px Inter';
-          ctx.fillText("Press 'P' for Match Replay  |  'R' to Restart", W/2, H/2 + 35);
+          ctx.fillText("Press 'P' for Match Replay  |  'R' / Tap Canvas to Restart", W/2, H/2 + 35);
       }
       ctx.restore();
   }
 
+  document.body.className = THEME_CLASSES[themeIndex];
+  const btnDiffInit = document.getElementById('btn-diff');
+  if (btnDiffInit) btnDiffInit.innerText = `⚡ Diff: ${DIFF_NAMES[difficulty]} [1-3]`;
+  const btnModeInit = document.getElementById('btn-mode');
+  if (btnModeInit) btnModeInit.innerText = "🎮 Mode: " + MODE_NAMES[gameMode] + " [M]";
+  updateBadge();
   updateSoundUI();
   resetBalls();
   let lastTime = 0;
