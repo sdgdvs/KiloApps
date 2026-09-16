@@ -1,4 +1,4 @@
-﻿# Game Graphics Plan
+# Game Graphics Plan
 
 ## Coordination Rules (DO NOT DELETE — required for subagent context)
 
@@ -116,7 +116,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **⚠️ PRIORITY: If ANY game in the queue is at Loop 0 (not yet processed), work on it FIRST before continuing higher-loop games.**
 
 
-- KPong
 - KMines
 - KAsteroids
 - K2048
@@ -163,9 +162,9 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KAlchemy
 - KRogue
 - KChess
+- KPong
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
-## Completed Work Log
 
 > Archived: Pre-Loop 6 entries moved to archive/. Only latest loop per game shown.
 
