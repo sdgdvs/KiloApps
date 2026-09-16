@@ -37,14 +37,19 @@ static SYSTEMTIME selected_date;
 static HWND hMonthCal, hBtnToday, hListEvents, hEditEvent, hBtnAdd, hBtnDel;
 static HWND hComboCategory, hComboRecur, hComboPriority, hComboFilter, hComboPrioFilter, hEditSearch;
 static HWND hBtnExportIcs, hBtnExportCsv, hBtnExportMd, hBtnStats, hBtnHelp;
+static HWND hStaticHeader = NULL;
+static HWND hStaticHelpPrompt = NULL;
 static HBRUSH hBgBrush = NULL;
 static HBRUSH hEditBrush = NULL;
 static WNDPROC oldEditProc = NULL;
+static WNDPROC oldSearchProc = NULL;
 static HFONT hFont = NULL;
+static HFONT hFontBold = NULL;
 
 const char* CATEGORIES[] = { "Work", "Personal", "Health", "Important", "Other" };
 const char* RECURRENCES[] = { "None", "Daily", "Weekly", "Monthly", "Yearly" };
 const char* PRIORITIES[] = { "Low", "Normal", "High", "Urgent" };
+const char* DAYS_OF_WEEK[] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 
 static BOOL CALLBACK SetFontCallback(HWND hwnd, LPARAM lParam) {
     SendMessage(hwnd, WM_SETFONT, (WPARAM)lParam, TRUE);
@@ -301,29 +306,24 @@ static void ExportToMarkdown() {
 
 static void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd,
-        "=== KCalendar User Guide ===\r\n\r\n"
-        "NAVIGATION & DATES:\r\n"
-        "- Month Calendar: Click any date to view and manage its schedule\r\n"
-        "- Go to Today [T]: Jump directly to current date\r\n\r\n"
-        "MANAGING EVENTS:\r\n"
-        "- Add Event [Enter]: Type description, select category/recurrence/priority, and press Add or Enter in the input box\r\n"
-        "- Delete [Del]: Select an event in the list and press Delete key or double-click to remove\r\n\r\n"
-        "FILTERING & SEARCH:\r\n"
-        "- Search: Type keyword to filter events in real-time\r\n"
-        "- Category Filter: Filter by Work, Personal, Health, Important, Other\r\n"
-        "- Priority Filter: Filter by Urgent [!], High [^], Normal [-], Low [v]\r\n\r\n"
-        "ANALYTICS & EXPORT:\r\n"
-        "- Analytics [S]: View breakdown of events by priority, category, and month\r\n"
-        "- Export .ics: Generate standard iCalendar file\r\n"
-        "- Export CSV: Generate spreadsheet data file\r\n"
-        "- Export MD: Generate formatted Markdown agenda report\r\n\r\n"
+        "=== KCalendar User Guide & Tutorial ===\r\n\r\n"
+        "QUICK START TUTORIAL:\r\n"
+        "1. Select a Date: Click any date on the month calendar to view its schedule.\r\n"
+        "2. Add an Event: Type the title in the input box, pick category/priority/recurrence, and press Enter or 'Add Event'.\r\n"
+        "3. Search & Filter: Filter events instantly using the search box or category/priority dropdowns.\r\n"
+        "4. Manage Events: Select an event from the list and press Delete [Del] to remove it.\r\n"
+        "5. Export & Share: Click 'Export .ics' for calendar apps, 'Export CSV' for spreadsheets, or 'Export MD' for Markdown agendas.\r\n"
+        "6. Analytics: Press [S] or click 'Analytics' to view a summary breakdown of your commitments.\r\n\r\n"
         "KEYBOARD SHORTCUTS:\r\n"
         "- [F1] or [H]: Open this Help Guide\r\n"
         "- [T]: Jump to Today\r\n"
         "- [S]: Open Analytics & Statistics\r\n"
+        "- [N]: Focus Add Event input box\r\n"
+        "- [/] or [F]: Focus Search box\r\n"
         "- [Enter]: Add event when focused in input box\r\n"
-        "- [Delete] / [Backspace]: Delete selected event in listbox",
-        "KCalendar Help & Shortcut Reference", MB_OK | MB_ICONINFORMATION);
+        "- [Delete] / [Backspace]: Delete selected event in listbox\r\n"
+        "- [Esc]: Clear search filter / return focus",
+        "KCalendar Help & Tutorial Reference", MB_OK | MB_ICONINFORMATION);
 }
 
 static void ShowStatistics(HWND hwnd) {
@@ -390,6 +390,7 @@ static void RefreshList() {
 
     int filterSel = (int)SendMessage(hComboFilter, CB_GETCURSEL, 0, 0);
     int prioFilterSel = (int)SendMessage(hComboPrioFilter, CB_GETCURSEL, 0, 0);
+    int matchedCount = 0;
 
     for (int i = 0; i < event_count; i++) {
         if (IsEventOnDate(&events[i], selected_date.wYear, selected_date.wMonth, selected_date.wDay)) {
@@ -421,7 +422,28 @@ static void RefreshList() {
                 events[i].text, 
                 events[i].recurring > 0 ? "(🔄)" : "");
             SendMessage(hListEvents, LB_ADDSTRING, 0, (LPARAM)displayStr);
+            matchedCount++;
         }
+    }
+
+    if (matchedCount == 0) {
+        if (searchBuf[0] || filterSel > 0 || prioFilterSel > 0) {
+            SendMessage(hListEvents, LB_ADDSTRING, 0, (LPARAM)"  (No events matching current search/filter)");
+        } else {
+            SendMessage(hListEvents, LB_ADDSTRING, 0, (LPARAM)"  (No events scheduled. Type below & press Add)");
+        }
+    }
+
+    if (hStaticHeader) {
+        int dow = DayOfWeek(selected_date.wYear, selected_date.wMonth, selected_date.wDay);
+        if (dow < 0 || dow > 6) dow = 0;
+        char headerBuf[256];
+        wsprintfA(headerBuf, "%s, %04d-%02d-%02d   (%d event%s)",
+            DAYS_OF_WEEK[dow],
+            selected_date.wYear, selected_date.wMonth, selected_date.wDay,
+            matchedCount,
+            matchedCount == 1 ? "" : "s");
+        SetWindowTextA(hStaticHeader, headerBuf);
     }
 }
 
@@ -451,11 +473,16 @@ static int GetEventIndexFromListIndex(int selIndex) {
     return -1;
 }
 
-static void DeleteSelectedEvent() {
+static void DeleteSelectedEvent(HWND hwnd) {
     int sel = (int)SendMessage(hListEvents, LB_GETCURSEL, 0, 0);
     if (sel == LB_ERR) return;
     int idx = GetEventIndexFromListIndex(sel);
     if (idx >= 0 && idx < event_count) {
+        char prompt[300];
+        wsprintfA(prompt, "Are you sure you want to delete this event?\r\n\r\n\"%s\"", events[idx].text);
+        if (MessageBoxA(hwnd, prompt, "Confirm Delete", MB_YESNO | MB_ICONQUESTION) != IDYES) {
+            return;
+        }
         for (int i = idx; i < event_count - 1; i++) {
             events[i] = events[i + 1];
         }
@@ -497,17 +524,37 @@ static LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
     if (msg == WM_GETDLGCODE) {
         return DLGC_WANTALLKEYS | DLGC_WANTARROWS;
     }
-    if (msg == WM_KEYDOWN && wParam == VK_RETURN) {
-        AddEventFromInput();
-        return 0;
+    if (msg == WM_KEYDOWN) {
+        if (wParam == VK_RETURN) {
+            AddEventFromInput();
+            return 0;
+        }
+        if (wParam == VK_ESCAPE) {
+            SetWindowTextA(hwnd, "");
+            SetFocus(hListEvents);
+            return 0;
+        }
     }
     return CallWindowProc(oldEditProc, hwnd, msg, wParam, lParam);
+}
+
+static LRESULT CALLBACK SearchSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_GETDLGCODE) {
+        return DLGC_WANTALLKEYS | DLGC_WANTARROWS;
+    }
+    if (msg == WM_KEYDOWN && wParam == VK_ESCAPE) {
+        SetWindowTextA(hwnd, "");
+        RefreshList();
+        SetFocus(hListEvents);
+        return 0;
+    }
+    return CallWindowProc(oldSearchProc, hwnd, msg, wParam, lParam);
 }
 
 static WNDPROC oldListProc = NULL;
 static LRESULT CALLBACK ListSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == WM_KEYDOWN && (wParam == VK_DELETE || wParam == VK_BACK)) {
-        DeleteSelectedEvent();
+        DeleteSelectedEvent(GetParent(hwnd));
         return 0;
     }
     return CallWindowProc(oldListProc, hwnd, msg, wParam, lParam);
@@ -528,6 +575,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             int fontHeight = -MulDiv(12, dpiY, 72);
             hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            hFontBold = CreateFontA(fontHeight - SCALE(2), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             hBgBrush = CreateSolidBrush(RGB(15, 23, 42));
             hEditBrush = CreateSolidBrush(RGB(15, 23, 42));
 
@@ -551,7 +599,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             int listX = pad + rc.right + SCALE(15);
             int rightW = winWidth - listX - SCALE(15);
-            int listH = winHeight - SCALE(40) - SCALE(130);
 
             // Left column buttons
             int btnY = pad + rc.bottom + SCALE(10);
@@ -579,17 +626,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 pad + exportW + SCALE(5), btnY, exportW, btnH, hwnd, (HMENU)ID_BTN_STATS, GetModuleHandle(NULL), NULL);
 
             btnY += btnH + spacing;
-            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, pad, btnY, rc.right, btnH, hwnd, (HMENU)ID_BTN_HELP, GetModuleHandle(NULL), NULL);
+            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help & Tutorial [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, pad, btnY, rc.right, btnH, hwnd, (HMENU)ID_BTN_HELP, GetModuleHandle(NULL), NULL);
+
+            // Visible help & hotkeys prompt in left column
+            hStaticHelpPrompt = CreateWindowEx(0, "STATIC",
+                "Hotkeys:\n[F1] Help / Tutorial\n[T] Today  |  [S] Stats\n[N] New Event  |  [/] Search\n[Enter] Add  |  [Del] Delete",
+                WS_CHILD | WS_VISIBLE,
+                pad, btnY + btnH + SCALE(10), rc.right, SCALE(100),
+                hwnd, NULL, GetModuleHandle(NULL), NULL);
+
+            // Right column: Date and event counter header
+            hStaticHeader = CreateWindowEx(0, "STATIC", "",
+                WS_CHILD | WS_VISIBLE,
+                listX, pad, rightW, SCALE(22), hwnd, NULL, GetModuleHandle(NULL), NULL);
+            SendMessage(hStaticHeader, WM_SETFONT, (WPARAM)hFontBold, TRUE);
 
             // Search & Category / Priority Filter bar
+            int searchBarY = pad + SCALE(26);
             int searchW = rightW - SCALE(235);
             hEditSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL,
-                listX, pad, searchW, editH, hwnd, (HMENU)ID_EDIT_SEARCH, GetModuleHandle(NULL), NULL);
+                listX, searchBarY, searchW, editH, hwnd, (HMENU)ID_EDIT_SEARCH, GetModuleHandle(NULL), NULL);
 
             hComboFilter = CreateWindowEx(0, "COMBOBOX", "",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST | WS_VSCROLL,
-                listX + searchW + SCALE(5), pad, SCALE(110), SCALE(140), hwnd, (HMENU)ID_COMBO_FILTER, GetModuleHandle(NULL), NULL);
+                listX + searchW + SCALE(5), searchBarY, SCALE(110), SCALE(140), hwnd, (HMENU)ID_COMBO_FILTER, GetModuleHandle(NULL), NULL);
             
             SendMessage(hComboFilter, CB_ADDSTRING, 0, (LPARAM)"All Cats");
             for (int i = 0; i < 5; i++) SendMessage(hComboFilter, CB_ADDSTRING, 0, (LPARAM)CATEGORIES[i]);
@@ -597,7 +658,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             hComboPrioFilter = CreateWindowEx(0, "COMBOBOX", "",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST | WS_VSCROLL,
-                listX + searchW + SCALE(120), pad, SCALE(110), SCALE(140), hwnd, (HMENU)ID_COMBO_PRIO_FILTER, GetModuleHandle(NULL), NULL);
+                listX + searchW + SCALE(120), searchBarY, SCALE(110), SCALE(140), hwnd, (HMENU)ID_COMBO_PRIO_FILTER, GetModuleHandle(NULL), NULL);
             SendMessage(hComboPrioFilter, CB_ADDSTRING, 0, (LPARAM)"All Prios");
             SendMessage(hComboPrioFilter, CB_ADDSTRING, 0, (LPARAM)"[!] Urgent");
             SendMessage(hComboPrioFilter, CB_ADDSTRING, 0, (LPARAM)"[^] High");
@@ -605,18 +666,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hComboPrioFilter, CB_ADDSTRING, 0, (LPARAM)"[v] Low");
             SendMessage(hComboPrioFilter, CB_SETCURSEL, 0, 0);
 
+            // Cue banner for search (EM_SETCUEBANNER = 0x1501)
+            SendMessageW(hEditSearch, 0x1501, FALSE, (LPARAM)L"Search events... [/]");
+
             // Event List Box
+            int listY = searchBarY + editH + spacing;
+            int btmAreaH = SCALE(108);
+            int listH = winHeight - listY - btmAreaH;
             hListEvents = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL | LBS_NOTIFY,
-                listX, pad + editH + spacing, rightW, listH, hwnd, (HMENU)ID_LIST_EVENTS, GetModuleHandle(NULL), NULL);
+                listX, listY, rightW, listH, hwnd, (HMENU)ID_LIST_EVENTS, GetModuleHandle(NULL), NULL);
 
             // New event input controls
-            int btmY = pad + editH + spacing + listH + SCALE(10);
+            int btmY = listY + listH + SCALE(8);
             hEditEvent = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL,
                 listX, btmY, rightW, editH, hwnd, (HMENU)ID_EDIT_EVENT, GetModuleHandle(NULL), NULL);
+            SendMessageW(hEditEvent, 0x1501, FALSE, (LPARAM)L"Enter new event title... [N]");
 
-            btmY += editH + SCALE(8);
+            btmY += editH + SCALE(6);
             int comboW = (rightW - SCALE(10)) / 3;
             hComboCategory = CreateWindowEx(0, "COMBOBOX", "",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST | WS_VSCROLL,
@@ -636,7 +704,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             for (int i = 0; i < 4; i++) SendMessage(hComboPriority, CB_ADDSTRING, 0, (LPARAM)PRIORITIES[i]);
             SendMessage(hComboPriority, CB_SETCURSEL, 1, 0); // Default: Normal (index 1)
 
-            btmY += SCALE(32);
+            btmY += SCALE(30);
             int btnW = (rightW - SCALE(5)) / 2;
             hBtnAdd = CreateWindowEx(0, "BUTTON", "Add Event [Enter]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
@@ -647,6 +715,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 listX + btnW + SCALE(5), btmY, btnW, btnH, hwnd, (HMENU)ID_BTN_DEL, GetModuleHandle(NULL), NULL);
 
             oldEditProc = (WNDPROC)SetWindowLongPtr(hEditEvent, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
+            oldSearchProc = (WNDPROC)SetWindowLongPtr(hEditSearch, GWLP_WNDPROC, (LONG_PTR)SearchSubclassProc);
             oldListProc = (WNDPROC)SetWindowLongPtr(hListEvents, GWLP_WNDPROC, (LONG_PTR)ListSubclassProc);
 
             EnumChildWindows(hwnd, SetFontCallback, (LPARAM)hFont);
@@ -708,7 +777,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (LOWORD(wParam) == ID_BTN_ADD) {
                 AddEventFromInput();
             } else if (LOWORD(wParam) == ID_BTN_DEL) {
-                DeleteSelectedEvent();
+                DeleteSelectedEvent(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_EXPORT_ICS) {
                 ExportToIcs();
             } else if (LOWORD(wParam) == ID_BTN_EXPORT_CSV) {
@@ -720,9 +789,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (LOWORD(wParam) == ID_BTN_HELP) {
                 ShowHelpDialog(hwnd);
             } else if (LOWORD(wParam) == ID_LIST_EVENTS && HIWORD(wParam) == LBN_DBLCLK) {
-                DeleteSelectedEvent();
+                DeleteSelectedEvent(hwnd);
             }
             break;
+        case WM_CTLCOLORSTATIC: {
+            HDC hdc = (HDC)wParam;
+            HWND hCtrl = (HWND)lParam;
+            SetBkColor(hdc, RGB(15, 23, 42));
+            if (hCtrl == hStaticHeader) {
+                SetTextColor(hdc, RGB(245, 158, 11)); // Amber gold
+            } else {
+                SetTextColor(hdc, RGB(148, 163, 184)); // Muted slate
+            }
+            return (LRESULT)hBgBrush;
+        }
         case WM_CTLCOLORLISTBOX:
         case WM_CTLCOLOREDIT: {
             HDC hdc = (HDC)wParam;
@@ -734,6 +814,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (hBgBrush) { DeleteObject(hBgBrush); hBgBrush = NULL; }
             if (hEditBrush) { DeleteObject(hEditBrush); hEditBrush = NULL; }
             if (hFont) { DeleteObject(hFont); hFont = NULL; }
+            if (hFontBold) { DeleteObject(hFontBold); hFontBold = NULL; }
             PostQuitMessage(0);
             break;
         default:
@@ -787,6 +868,10 @@ void MainEntry() {
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_TODAY, BN_CLICKED), (LPARAM)hBtnToday);
             } else if (!inEdit && (msg.wParam == 'S' || msg.wParam == 's')) {
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_STATS, BN_CLICKED), (LPARAM)hBtnStats);
+            } else if (!inEdit && (msg.wParam == 'N' || msg.wParam == 'n')) {
+                SetFocus(hEditEvent);
+            } else if (!inEdit && (msg.wParam == '/' || msg.wParam == 'F' || msg.wParam == 'f')) {
+                SetFocus(hEditSearch);
             }
         }
         if (!IsDialogMessage(hwnd, &msg)) {

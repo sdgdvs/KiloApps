@@ -252,10 +252,76 @@
     border-color: var(--accent);
   }
 
+  /* Dropdown Menu for Export */
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  .dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    background: #1e1b4b;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    min-width: 190px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+    z-index: 60;
+    overflow: hidden;
+    padding: 4px 0;
+    backdrop-filter: blur(12px);
+  }
+
+  .dropdown-menu.show {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dropdown-item {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    padding: 8px 14px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    transition: background 0.15s ease;
+  }
+
+  .dropdown-item:hover, .dropdown-item:focus {
+    background: var(--bg-card-hover);
+    color: var(--accent);
+    outline: none;
+  }
+
+  /* Clear search button inside search-box */
+  .clear-search-btn {
+    position: absolute;
+    right: 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 2px 4px;
+    display: none;
+    line-height: 1;
+    border-radius: 4px;
+  }
+  .clear-search-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+
   .action-menu {
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
+    align-items: center;
   }
 
   /* Main Content Views */
@@ -265,6 +331,7 @@
     flex-direction: column;
     padding: 14px 20px;
     overflow-y: auto;
+    min-height: 0;
   }
 
   /* Month View */
@@ -272,6 +339,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    min-height: 0;
   }
 
   .weekdays {
@@ -289,9 +357,10 @@
   .days-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    grid-auto-rows: minmax(80px, 1fr);
+    grid-auto-rows: minmax(0, 1fr);
     flex: 1;
     gap: 6px;
+    min-height: 0;
   }
 
   .day-cell {
@@ -738,16 +807,23 @@
     <button class="btn" id="nextBtn" title="Next (Right Arrow)" aria-label="Next">&gt;</button>
   </div>
   <div class="header-title-container">
-    <h2 class="header-title" id="headerTitle">Calendar</h2>
+    <h2 class="header-title" id="headerTitle" title="Click to jump to Month/Year" style="cursor:pointer;">Calendar ▾</h2>
+    <input type="month" id="monthJumpInput" style="position:absolute; opacity:0; pointer-events:none; width:0; height:0;" />
   </div>
   <div class="action-menu">
     <button class="btn btn-accent" id="newEventBtn" title="Create New Event [N]">+ New <span class="key-badge" style="background:rgba(0,0,0,0.2); border-color:rgba(0,0,0,0.3); color:#0f172a;">N</span></button>
-    <button class="btn" id="exportIcsBtn" title="Export iCalendar (.ics)">Export .ics</button>
-    <button class="btn" id="exportCsvBtn" title="Export CSV">Export CSV</button>
-    <button class="btn" id="exportMdBtn" title="Export Markdown Agenda (.md)">Export .md</button>
+    <div class="dropdown" id="exportDropdown">
+      <button class="btn" id="exportMenuBtn" title="Export Calendar (ICS, CSV, MD, JSON)">Export ▾</button>
+      <div class="dropdown-menu" id="exportMenuContent">
+        <button class="dropdown-item" id="exportIcsBtn">📅 iCalendar (.ics)</button>
+        <button class="dropdown-item" id="exportCsvBtn">📊 Spreadsheet (.csv)</button>
+        <button class="dropdown-item" id="exportMdBtn">📝 Markdown Agenda (.md)</button>
+        <button class="dropdown-item" id="exportJsonDropdownBtn">💾 JSON Backup</button>
+      </div>
+    </div>
     <button class="btn" id="statsBtn" title="Calendar Analytics & Overview [S]">📊 Stats <span class="key-badge">S</span></button>
     <button class="btn" id="importBtn" title="Import .ics, .csv, or .json">Import</button>
-    <button class="btn" id="helpBtn" title="Help Guide [F1/H]">Help <span class="key-badge">F1</span></button>
+    <button class="btn" id="helpBtn" title="Help Guide & Tutorial [F1/H]">Help <span class="key-badge">F1</span></button>
     <input type="file" id="importFileInput" accept=".ics,.csv,.json" />
   </div>
 </div>
@@ -764,7 +840,8 @@
   <div class="filter-controls">
     <div class="search-box">
       <span class="search-icon">🔍</span>
-      <input type="text" class="search-input" id="searchInput" placeholder="Search events..." aria-label="Search events" />
+      <input type="text" class="search-input" id="searchInput" placeholder="Search events... [/]" aria-label="Search events" />
+      <button id="clearSearchBtn" class="clear-search-btn" title="Clear Search" aria-label="Clear Search">&times;</button>
     </div>
 
     <select class="category-select" id="categoryFilter" aria-label="Filter by Category">
@@ -853,7 +930,10 @@
     </div>
 
     <div class="modal-actions">
-      <button class="btn btn-danger" id="deleteEventBtn" style="display:none;">Delete</button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-danger" id="deleteEventBtn" style="display:none;">Delete</button>
+        <button class="btn" id="duplicateEventBtn" style="display:none;" title="Duplicate this event">Duplicate</button>
+      </div>
       <div style="display:flex; gap:8px; margin-left:auto;">
         <button class="btn" id="cancelModalBtn">Cancel</button>
         <button class="btn btn-accent" id="saveEventBtn">Save Event</button>
@@ -882,12 +962,23 @@
 
 <!-- Cybernetic Help Modal -->
 <div class="modal-overlay" id="helpModalOverlay" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
-  <div class="modal" style="width: 560px; max-width: 95vw;">
+  <div class="modal" style="width: 580px; max-width: 95vw;">
     <div class="modal-header">
-      <h3 class="modal-title" id="helpModalTitle">💡 KCalendar User Guide</h3>
+      <h3 class="modal-title" id="helpModalTitle">💡 KCalendar User Guide & Tutorial</h3>
       <button class="close-icon" id="closeHelpModalBtn" aria-label="Close">&times;</button>
     </div>
     <div style="display:flex; flex-direction:column; gap:14px; font-size:13px; max-height:68vh; overflow-y:auto; padding-right:4px;">
+      <div class="help-card" style="border-left: 3px solid var(--accent);">
+        <h4>🚀 Quick Start Tutorial</h4>
+        <ol style="margin: 0; padding-left: 18px; color: var(--text-muted); font-size: 12px; line-height: 1.6;">
+          <li><strong>Select & Navigate:</strong> Click any day or time slot to view or schedule events. Use <span class="key-badge">&lt;</span> / <span class="key-badge">&gt;</span> or arrow keys to browse dates. Click the header month title to pick any month directly!</li>
+          <li><strong>Create Events:</strong> Press <span class="key-badge">N</span> or click <strong>+ New</strong> to open the event dialog. Assign title, time, category, priority (🔴 Urgent to ⚪ Low), and recurrence (Daily, Weekly, Monthly, Yearly).</li>
+          <li><strong>Multiple Views:</strong> Switch seamlessly between Month <span class="key-badge">1</span>, Week <span class="key-badge">2</span>, Day <span class="key-badge">3</span>, and Agenda <span class="key-badge">4</span> views.</li>
+          <li><strong>Search & Filter:</strong> Press <span class="key-badge">/</span> to search events instantly. Use category and priority filters to isolate tasks.</li>
+          <li><strong>Export & Backup:</strong> Use the <strong>Export ▾</strong> dropdown to generate <code>.ics</code> (Calendar apps), <code>.csv</code> (Spreadsheets), <code>.md</code> (Markdown agendas), or JSON backups.</li>
+        </ol>
+      </div>
+
       <div class="help-grid">
         <div class="help-card">
           <h4>⌨️ View Hotkeys</h4>
@@ -923,6 +1014,10 @@
             <span class="shortcut-desc">Analytics & Stats</span>
           </div>
           <div class="shortcut-row">
+            <span class="key-badge">/</span>
+            <span class="shortcut-desc">Focus Search Box</span>
+          </div>
+          <div class="shortcut-row">
             <span class="key-badge">F1 / H</span>
             <span class="shortcut-desc">Show this Help Guide</span>
           </div>
@@ -932,7 +1027,7 @@
           </div>
           <div class="shortcut-row">
             <span class="key-badge">Esc</span>
-            <span class="shortcut-desc">Close any Open Modal</span>
+            <span class="shortcut-desc">Close Modal / Clear</span>
           </div>
         </div>
       </div>
@@ -943,6 +1038,7 @@
           • <strong>Interactive Views:</strong> Click any day or time slot to instantly schedule an event.<br/>
           • <strong>Recurrence:</strong> Support for Daily, Weekly, Monthly, and Yearly recurring schedules.<br/>
           • <strong>Priorities:</strong> Flag critical events with Urgent (🔴), High (🟠), Normal (🔵), or Low (⚪) priority tags.<br/>
+          • <strong>Duplicate Events:</strong> Easily clone existing events to save re-typing.<br/>
           • <strong>Import / Export:</strong> Full support for standard iCalendar (<span style="color:var(--accent);">.ics</span>), Spreadsheets (<span style="color:var(--accent);">.csv</span>), Markdown agendas (<span style="color:var(--accent);">.md</span>), and JSON backups.<br/>
           • <strong>Analytics:</strong> Real-time category breakdown and priority distribution metrics.
         </div>
@@ -1174,16 +1270,20 @@
     const monthName = selectedDate.toLocaleString('default', { month: 'long' });
 
     if (currentView === 'month') {
-      titleElem.textContent = `${monthName} ${year}`;
+      titleElem.textContent = `${monthName} ${year} ▾`;
+      titleElem.title = 'Click to jump to Month/Year';
     } else if (currentView === 'week') {
       const startOfWeek = getStartOfWeek(selectedDate);
       const endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(endOfWeek.getDate() + 6);
       titleElem.textContent = `${startOfWeek.toLocaleDateString(undefined, {month:'short', day:'numeric'})} - ${endOfWeek.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}`;
+      titleElem.title = 'Current Week Range';
     } else if (currentView === 'day') {
       titleElem.textContent = selectedDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+      titleElem.title = 'Current Day';
     } else if (currentView === 'agenda') {
       titleElem.textContent = `Agenda (${events.length} events)`;
+      titleElem.title = 'Full Event Agenda';
     }
   }
 
@@ -1522,6 +1622,7 @@
   const eventRecurrenceSelect = document.getElementById('eventRecurrenceSelect');
   const eventDescInput = document.getElementById('eventDescInput');
   const deleteEventBtn = document.getElementById('deleteEventBtn');
+  const duplicateEventBtn = document.getElementById('duplicateEventBtn');
 
   function openModal(eventId = null, defaultDateStr = null, defaultTimeStr = '') {
     editingEventId = eventId;
@@ -1538,6 +1639,7 @@
       eventRecurrenceSelect.value = ev.recurring || 'none';
       eventDescInput.value = ev.description || '';
       deleteEventBtn.style.display = 'inline-block';
+      duplicateEventBtn.style.display = 'inline-block';
     } else {
       document.getElementById('modalTitle').textContent = 'Create Event';
       eventTitleInput.value = '';
@@ -1548,6 +1650,7 @@
       eventRecurrenceSelect.value = 'none';
       eventDescInput.value = '';
       deleteEventBtn.style.display = 'none';
+      duplicateEventBtn.style.display = 'none';
     }
 
     eventModalOverlay.classList.add('active');
@@ -2066,9 +2169,52 @@
     btn.onclick = () => switchView(btn.dataset.view);
   });
 
-  document.getElementById('searchInput').oninput = (e) => {
+  const searchInputElem = document.getElementById('searchInput');
+  const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+  searchInputElem.oninput = (e) => {
     searchQuery = e.target.value;
+    clearSearchBtn.style.display = searchQuery ? 'inline-block' : 'none';
     renderApp();
+  };
+
+  clearSearchBtn.onclick = () => {
+    searchInputElem.value = '';
+    searchQuery = '';
+    clearSearchBtn.style.display = 'none';
+    renderApp();
+    searchInputElem.focus();
+  };
+
+  searchInputElem.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (searchQuery) {
+        searchInputElem.value = '';
+        searchQuery = '';
+        clearSearchBtn.style.display = 'none';
+        renderApp();
+      }
+      searchInputElem.blur();
+    }
+  });
+
+  // Month / Year Quick Jump Picker
+  const monthJumpInput = document.getElementById('monthJumpInput');
+  document.getElementById('headerTitle').onclick = () => {
+    monthJumpInput.value = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}`;
+    if (monthJumpInput.showPicker) {
+      monthJumpInput.showPicker();
+    } else {
+      monthJumpInput.click();
+    }
+  };
+  monthJumpInput.onchange = (e) => {
+    if (e.target.value) {
+      const parts = e.target.value.split('-').map(Number);
+      selectedDate = new Date(parts[0], parts[1] - 1, 1);
+      renderApp();
+      showToast(`Jumped to ${selectedDate.toLocaleString('default', { month: 'long', year: 'numeric' })}`, 'info', 2000);
+    }
   };
 
   document.getElementById('categoryFilter').onchange = (e) => {
@@ -2087,6 +2233,25 @@
   document.getElementById('saveEventBtn').onclick = saveEventFromModal;
   document.getElementById('deleteEventBtn').onclick = deleteEventFromModal;
 
+  duplicateEventBtn.onclick = () => {
+    const title = (eventTitleInput.value.trim() || 'Untitled') + ' (Copy)';
+    const date = eventDateInput.value;
+    events.push({
+      id: generateId(),
+      title: title,
+      date: date,
+      time: eventTimeInput.value,
+      category: eventCategorySelect.value,
+      priority: eventPrioritySelect.value,
+      recurring: eventRecurrenceSelect.value,
+      description: eventDescInput.value
+    });
+    saveEvents();
+    closeModal();
+    renderApp();
+    showToast(`Duplicated event as "${title}"`, 'success');
+  };
+
   [eventTitleInput, eventDateInput, eventTimeInput].forEach(inp => {
     inp.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
@@ -2096,9 +2261,36 @@
     });
   });
 
-  document.getElementById('exportIcsBtn').onclick = exportIcs;
-  document.getElementById('exportCsvBtn').onclick = exportCsv;
-  document.getElementById('exportMdBtn').onclick = exportMarkdownAgenda;
+  // Export dropdown controls
+  const exportMenuBtn = document.getElementById('exportMenuBtn');
+  const exportMenuContent = document.getElementById('exportMenuContent');
+  exportMenuBtn.onclick = (e) => {
+    e.stopPropagation();
+    exportMenuContent.classList.toggle('show');
+  };
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#exportDropdown')) {
+      exportMenuContent.classList.remove('show');
+    }
+  });
+
+  document.getElementById('exportIcsBtn').onclick = () => {
+    exportMenuContent.classList.remove('show');
+    exportIcs();
+  };
+  document.getElementById('exportCsvBtn').onclick = () => {
+    exportMenuContent.classList.remove('show');
+    exportCsv();
+  };
+  document.getElementById('exportMdBtn').onclick = () => {
+    exportMenuContent.classList.remove('show');
+    exportMarkdownAgenda();
+  };
+  document.getElementById('exportJsonDropdownBtn').onclick = () => {
+    exportMenuContent.classList.remove('show');
+    exportJsonBackup();
+  };
+
   document.getElementById('statsBtn').onclick = openStatsModal;
   document.getElementById('closeStatsModalBtn').onclick = closeStatsModal;
   document.getElementById('closeStatsBtn').onclick = closeStatsModal;
@@ -2132,6 +2324,10 @@
   // Global Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+      if (exportMenuContent.classList.contains('show')) {
+        exportMenuContent.classList.remove('show');
+        return;
+      }
       if (deleteModalOverlay.classList.contains('active')) {
         closeDeleteModal();
         return;
@@ -2168,6 +2364,11 @@
       }
       else if (e.key === 's' || e.key === 'S') { openStatsModal(); }
       else if (e.key === 'h' || e.key === 'H') { openHelpModal(); }
+      else if (e.key === '/') {
+        e.preventDefault();
+        searchInputElem.focus();
+        searchInputElem.select();
+      }
       else if (e.key === 'ArrowLeft') { navigateDate(-1); }
       else if (e.key === 'ArrowRight') { navigateDate(1); }
     }
