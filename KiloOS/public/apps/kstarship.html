@@ -123,6 +123,31 @@
   .action-btn:hover { background: #ffffff; box-shadow: 0 0 12px #00ffff; }
   .action-btn.super { background: #ffaa00; color: #000; }
   .action-btn.super:hover { background: #ffee66; box-shadow: 0 0 12px #ffaa00; }
+  #toast {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(4, 12, 28, 0.95);
+    border: 1px solid #00ffff;
+    color: #00ffff;
+    padding: 6px 16px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    border-radius: 4px;
+    box-shadow: 0 0 16px rgba(0, 255, 255, 0.6);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    z-index: 300;
+    white-space: nowrap;
+    text-shadow: 0 0 5px #00ffff;
+  }
+  @keyframes sosPulse {
+    0% { box-shadow: 0 0 4px #ff3333; }
+    50% { box-shadow: 0 0 14px #ff0000; }
+    100% { box-shadow: 0 0 4px #ff3333; }
+  }
 </style>
 </head>
 <body>
@@ -151,7 +176,7 @@
       </div>
       <div class="info-box">
         <div class="label">CARGO & SYSTEMS</div>
-        <div>Min: <span id="cargo-minerals" class="value">0</span> | Tech: <span id="cargo-tech" class="value">0</span></div>
+        <div>Cargo: <span id="cargo-minerals" class="value">0</span>M / <span id="cargo-tech" class="value">0</span>T (<span id="cargo-total" class="value">0</span>/<span id="cargo-max" class="value">10</span>)</div>
         <div style="font-size:11px; display:flex; justify-content:space-between; margin-top:2px;">
           <span>W:<span id="upg-wpn">1</span> S:<span id="upg-shd">1</span></span>
           <span>E:<span id="upg-eng">1</span> C:<span id="upg-car">1</span></span>
@@ -159,18 +184,33 @@
       </div>
       <div class="info-box">
         <div class="label">DEEP SPACE SCANNER</div>
-        <div id="scanner-info" style="font-size:11px;">No objects nearby.</div>
+        <div id="scanner-info" style="font-size:11px; min-height:28px;">No objects nearby.</div>
       </div>
       <div class="controls">
-        <button id="btn-up">▲ W</button>
-        <button id="btn-left">◀ A</button>
-        <button id="btn-down">▼ S</button>
-        <button id="btn-right">▶ D</button>
+        <button id="btn-up" title="Move Up (W / ArrowUp)">▲ W</button>
+        <button id="btn-left" title="Move Left (A / ArrowLeft)">◀ A</button>
+        <button id="btn-down" title="Move Down (S / ArrowDown)">▼ S</button>
+        <button id="btn-right" title="Move Right (D / ArrowRight)">▶ D</button>
       </div>
-      <button id="btn-crew" style="width:100%; margin-top:6px; font-size:12px;">CREW ROSTER (C)</button>
-      <button id="btn-help" style="width:100%; margin-top:4px; font-size:12px;">MANUAL (H)</button>
-      <button id="btn-land" style="width:100%; margin-top:4px; font-size:12px; display:none; color: #00ff66; border-color: #00ff66;">LAND ON PLANET (L)</button>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-top:6px;">
+        <button id="btn-crew" style="font-size:11px; padding:6px 2px;">CREW (C)</button>
+        <button id="btn-help" style="font-size:11px; padding:6px 2px;">MANUAL (H)</button>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:4px;">
+        <button id="btn-save" style="font-size:10px; padding:5px 2px;" title="Quick Save (F5)">💾 F5</button>
+        <button id="btn-load" style="font-size:10px; padding:5px 2px;" title="Quick Load (F9)">📂 F9</button>
+        <button id="btn-mute" style="font-size:10px; padding:5px 2px;" title="Toggle Sound (M)">🔊 SND</button>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-top:4px;">
+        <button id="btn-export" style="font-size:10px; padding:4px 2px;" title="Export Save File">EXP JSON</button>
+        <button id="btn-import" style="font-size:10px; padding:4px 2px;" title="Import Save File">IMP JSON</button>
+      </div>
+      <input type="file" id="import-file" accept=".json" style="display:none;" />
+      <button id="btn-dock" style="width:100%; margin-top:4px; font-size:11px; padding:5px 2px; display:none; color:#ffaa00; border-color:#ffaa00;">DOCK / INTERACT (E)</button>
+      <button id="btn-land" style="width:100%; margin-top:4px; font-size:11px; padding:5px 2px; display:none; color:#00ff66; border-color:#00ff66;">LAND ON PLANET (L)</button>
+      <button id="btn-beacon" style="width:100%; margin-top:4px; font-size:11px; padding:5px 2px; display:none; color:#ff4444; border-color:#ff4444; animation:sosPulse 1.2s infinite; font-weight:bold;">SOS BEACON (B)</button>
     </div>
+    <div id="toast"></div>
   </div>
 
   <div id="modal">
@@ -204,10 +244,42 @@
     const upgCar = document.getElementById('upg-car');
     const scannerInfo = document.getElementById('scanner-info');
     const btnLand = document.getElementById('btn-land');
+    const btnDock = document.getElementById('btn-dock');
+    const btnBeacon = document.getElementById('btn-beacon');
+    const btnSave = document.getElementById('btn-save');
+    const btnLoad = document.getElementById('btn-load');
+    const btnMute = document.getElementById('btn-mute');
+    const btnExport = document.getElementById('btn-export');
+    const btnImport = document.getElementById('btn-import');
+    const importFileInput = document.getElementById('import-file');
+    const toastEl = document.getElementById('toast');
+
+    let toastTimer = null;
+    function showToast(msg) {
+      if (!toastEl) return;
+      toastEl.innerText = msg;
+      toastEl.style.opacity = '1';
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toastEl.style.opacity = '0';
+      }, 2400);
+    }
 
     // Audio system
+    let soundMuted = false;
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function toggleSound() {
+      soundMuted = !soundMuted;
+      if (btnMute) btnMute.innerText = soundMuted ? '🔇 MUTED' : '🔊 SND';
+      if (soundMuted) {
+        setHum(false);
+      }
+      showToast(soundMuted ? 'Audio muted' : 'Audio enabled');
+    }
+
     function playLaser() {
+      if (soundMuted) return;
       if(audioCtx.state === 'suspended') audioCtx.resume();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
@@ -222,6 +294,7 @@
       osc.stop(audioCtx.currentTime + 0.2);
     }
     function playSuperweapon() {
+      if (soundMuted) return;
       if(audioCtx.state === 'suspended') audioCtx.resume();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
@@ -236,6 +309,7 @@
       osc.stop(audioCtx.currentTime + 0.5);
     }
     function playAlarm() {
+      if (soundMuted) return;
       if(audioCtx.state === 'suspended') audioCtx.resume();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
@@ -255,6 +329,14 @@
     let humOsc = null;
     let humGain = null;
     function setHum(active) {
+      if (soundMuted) {
+        if (humOsc) {
+          try { humOsc.stop(); humOsc.disconnect(); } catch(e) {}
+          humOsc = null;
+          humGain = null;
+        }
+        return;
+      }
       if(audioCtx.state === 'suspended') audioCtx.resume();
       if(active && !humOsc) {
         humOsc = audioCtx.createOscillator();
@@ -307,11 +389,15 @@
         let start = (current === -1) ? 0 : current + 1;
         for(let i=0; i<state.crew.length; i++) {
             let idx = (start + i) % state.crew.length;
+            if (idx === current) continue;
             if (state.crew[idx].role === 0) {
                 if (current !== -1) state.crew[current].role = 0;
                 state.crew[idx].role = role;
                 return;
             }
+        }
+        if (current !== -1) {
+            state.crew[current].role = 0;
         }
     }
 
@@ -321,11 +407,22 @@
             let c = state.crew[idx];
             if (c.level >= 5) return;
             c.xp += amt;
-            if (c.xp >= c.level * 100) {
+            while (c.level < 5 && c.xp >= c.level * 100) {
                 c.xp -= c.level * 100;
                 c.level++;
+                showToast(`Officer ${c.name} promoted to Level ${c.level}!`);
             }
+            if (c.level >= 5) c.xp = 0;
         }
+    }
+
+    function removeCrewMember() {
+      if (state.crew.length <= 0) return null;
+      let unassignedIdx = state.crew.findIndex(c => c.role === 0);
+      if (unassignedIdx !== -1) {
+        return state.crew.splice(unassignedIdx, 1)[0];
+      }
+      return state.crew.pop();
     }
 
     function spawnExplosion(x, y, count, color1, color2) {
@@ -1191,16 +1288,29 @@
       upgEng.innerText = state.upgrades.engines;
       upgCar.innerText = state.upgrades.cargo;
 
+      const maxCargo = state.upgrades.cargo * 10;
+      const curCargo = state.cargo.minerals + state.cargo.tech;
+      const cargoTotalEl = document.getElementById('cargo-total');
+      const cargoMaxEl = document.getElementById('cargo-max');
+      if (cargoTotalEl) cargoTotalEl.innerText = curCargo;
+      if (cargoMaxEl) cargoMaxEl.innerText = maxCargo;
+
+      if (state.resources.fuel <= 0) {
+        if (btnBeacon) btnBeacon.style.display = 'block';
+      } else {
+        if (btnBeacon) btnBeacon.style.display = 'none';
+      }
+
       const nearby = state.stars.filter(s => 
         Math.hypot(s.x - state.ship.x, s.y - state.ship.y) < 55
       );
       if (nearby.length > 0) {
         const sys = nearby[0];
         let pText = sys.planets.length > 0 ? sys.planets.join(', ') : 'None';
-        scannerInfo.innerHTML = `Star: ${sys.name}<br>Faction: ${sys.faction}<br>Planets: ${sys.planets.length}<br><span style="font-size:11px;color:#88cccc">${pText}</span>`;
+        scannerInfo.innerHTML = `Star: ${sys.name}<br>Faction: ${sys.faction}<br>Planets: ${sys.planets.length} (<span style="font-size:10px;color:#88cccc">${pText}</span>)`;
         scannerInfo.style.color = "#00ffff";
-        if (sys.planets.length > 0) btnLand.style.display = 'block';
-        else btnLand.style.display = 'none';
+        if (btnLand) btnLand.style.display = sys.planets.length > 0 ? 'block' : 'none';
+        if (btnDock) btnDock.style.display = 'block';
 
         if (!sys.visited && !state.modalOpen) {
           sys.visited = true;
@@ -1209,13 +1319,42 @@
           }
         }
       } else {
-        scannerInfo.innerText = "Deep space. Nothing nearby.";
-        scannerInfo.style.color = "#888888";
-        btnLand.style.display = 'none';
+        if (btnLand) btnLand.style.display = 'none';
+        if (btnDock) btnDock.style.display = 'none';
+
+        let nearest = null;
+        let minDist = Infinity;
+        for (let i = 0; i < state.stars.length; i++) {
+          let s = state.stars[i];
+          let d = Math.hypot(s.x - state.ship.x, s.y - state.ship.y);
+          if (d < minDist) {
+            minDist = d;
+            nearest = s;
+          }
+        }
+        if (nearest) {
+          let dx = nearest.x - state.ship.x;
+          let dy = nearest.y - state.ship.y;
+          let angle = Math.atan2(dy, dx) * 180 / Math.PI;
+          let dir = 'E';
+          if (angle >= -22.5 && angle < 22.5) dir = 'E';
+          else if (angle >= 22.5 && angle < 67.5) dir = 'SE';
+          else if (angle >= 67.5 && angle < 112.5) dir = 'S';
+          else if (angle >= 112.5 && angle < 157.5) dir = 'SW';
+          else if (angle >= 157.5 || angle < -157.5) dir = 'W';
+          else if (angle >= -157.5 && angle < -112.5) dir = 'NW';
+          else if (angle >= -112.5 && angle < -67.5) dir = 'N';
+          else if (angle >= -67.5 && angle < -22.5) dir = 'NE';
+          scannerInfo.innerHTML = `Nearest System: ${nearest.name}<br>Bearing: ${dir} (${Math.round(minDist)}u)<br><span style="font-size:10px;color:#7799aa">Faction: ${nearest.faction}</span>`;
+          scannerInfo.style.color = "#88cccc";
+        } else {
+          scannerInfo.innerText = "Deep space. Nothing nearby.";
+          scannerInfo.style.color = "#888888";
+        }
       }
     }
 
-    function triggerEncounter(type) {
+    function triggerEncounter(type, fromStation = false) {
       state.modalOpen = true;
       state.currentEncounter = type;
       state.bossHp = (type === 'Fleet' ? 160 : (type === 'Pirates' ? 50 : 0));
@@ -1240,6 +1379,7 @@
         addBtn('Continue', () => {
           modal.style.display = 'none';
           state.modalOpen = false;
+          updateUI();
         });
       };
 
@@ -1264,6 +1404,7 @@
                 });
             } else if (state.resources.hull <= 0) {
                 desc.innerText = "Your ship has been destroyed. Game Over.";
+                actions.innerHTML = '';
                 addBtn('Restart', () => { location.reload(); });
             } else {
                 addBtn('Fire Lasers', () => {
@@ -1319,7 +1460,14 @@
                     let sDmg = Math.max(0, 15 - state.upgrades.shields * 2);
                     state.resources.hull -= sDmg;
                     state.resources.morale = Math.max(0, state.resources.morale - Math.floor(sDmg/2));
-                    if (state.resources.hull < 0) state.resources.hull = 0;
+                    if (state.resources.hull <= 0) {
+                        state.resources.hull = 0;
+                        desc.innerText = "Hostile torpedoes destroyed your vessel as you fled! Game Over.";
+                        actions.innerHTML = '';
+                        addBtn('Restart', () => location.reload());
+                        updateUI();
+                        return;
+                    }
                     desc.innerText = `You fled! Took ${sDmg} damage while escaping.\nYour Hull: ${state.resources.hull}%`;
                     actions.innerHTML = '';
                     closeBtn();
@@ -1353,7 +1501,15 @@
                 state.cargo.minerals += 2; state.cargo.tech += 1;
                 desc.innerText = "Daring salvage successful! Gained 2 Minerals and 1 Tech.";
             } else {
-                state.resources.hull -= 20; if (state.resources.hull < 0) state.resources.hull = 0;
+                state.resources.hull -= 20;
+                if (state.resources.hull <= 0) {
+                    state.resources.hull = 0;
+                    desc.innerText = "Torpedo crossfire obliterated your starship! Game Over.";
+                    actions.innerHTML = '';
+                    addBtn('Restart', () => location.reload());
+                    updateUI();
+                    return;
+                }
                 desc.innerText = "Stray torpedo barrage hit! Lost 20 Hull.";
             }
             actions.innerHTML = '';
@@ -1389,7 +1545,15 @@
                 addXP(2, 25);
                 desc.innerText = "Security sweep successful! Alien intruders eliminated. (+1 Tech)";
             } else {
-                state.resources.hull -= 15; if (state.resources.hull < 0) state.resources.hull = 0;
+                state.resources.hull -= 15;
+                if (state.resources.hull <= 0) {
+                    state.resources.hull = 0;
+                    desc.innerText = "Intruders breached the reactor core! Game Over.";
+                    actions.innerHTML = '';
+                    addBtn('Restart', () => location.reload());
+                    updateUI();
+                    return;
+                }
                 desc.innerText = "Fierce corridor firefight! Repelled intruders with 15 Hull damage.";
             }
             actions.innerHTML = '';
@@ -1423,9 +1587,9 @@
         });
         addBtn('Hand-to-Hand Crew Assault (High Risk / High Reward)', () => {
             if (state.crew.length > 1 && Math.random() < 0.5) {
-                state.crew.pop();
+                let lost = removeCrewMember();
                 state.cargo.tech += 2;
-                desc.innerText = "Alien leader slain and xenotech captured, but a crew member was lost.";
+                desc.innerText = `Alien leader slain and xenotech captured, but ${lost ? lost.name : 'a crew member'} was lost.`;
             } else {
                 state.cargo.tech += 2;
                 state.resources.credits += 100;
@@ -1473,9 +1637,13 @@
                     }
                 }
             });
-            addBtn('Exit Forge', () => {
-                modal.style.display = 'none';
-                state.modalOpen = false;
+            addBtn(fromStation ? 'Back to Station' : 'Exit Forge', () => {
+                if (fromStation) {
+                    triggerEncounter('Station');
+                } else {
+                    modal.style.display = 'none';
+                    state.modalOpen = false;
+                }
             });
         };
         updateForge();
@@ -1510,7 +1678,14 @@
             } else {
                 state.resources.hull -= 20;
                 state.resources.morale = Math.max(0, state.resources.morale - 10);
-                if (state.resources.hull < 0) state.resources.hull = 0;
+                if (state.resources.hull <= 0) {
+                    state.resources.hull = 0;
+                    desc.innerText = "The anomaly collapsed your hull structure! Game Over.";
+                    actions.innerHTML = '';
+                    addBtn('Restart', () => location.reload());
+                    updateUI();
+                    return;
+                }
                 desc.innerText = "The anomaly surged! Lost 20 Hull.";
             }
             actions.innerHTML = '';
@@ -1522,8 +1697,15 @@
                 state.resources.fuel += 800;
                 desc.innerText = "Harvest successful! Gained 800 Fuel.";
             } else {
-                if (state.crew.length > 0) state.crew.pop();
-                desc.innerText = "Radiation leak! Lost 1 crew member.";
+                let lost = removeCrewMember();
+                if (state.crew.length <= 0) {
+                    desc.innerText = "Radiation leak annihilated the remaining crew! Game Over.";
+                    actions.innerHTML = '';
+                    addBtn('Restart', () => location.reload());
+                    updateUI();
+                    return;
+                }
+                desc.innerText = `Radiation leak! ${lost ? lost.name : 'A crew member'} perished.`;
             }
             actions.innerHTML = '';
             closeBtn();
@@ -1598,7 +1780,7 @@
                     }
                 });
                 addBtn(`Superweapon Bay`, () => {
-                    triggerEncounter('Superweapon');
+                    triggerEncounter('Superweapon', true);
                 }, true);
                 addBtn(`Shipyard (Upgrades)`, () => {
                     updateStationBtns('shipyard');
@@ -1669,7 +1851,14 @@
                     desc.innerText = "You successfully salvaged tech and minerals!";
                 } else {
                     state.resources.hull -= 15;
-                    if (state.resources.hull < 0) state.resources.hull = 0;
+                    if (state.resources.hull <= 0) {
+                        state.resources.hull = 0;
+                        desc.innerText = "Antimatter booby trap triggered fatal blast! Game Over.";
+                        actions.innerHTML = '';
+                        addBtn('Restart', () => location.reload());
+                        updateUI();
+                        return;
+                    }
                     desc.innerText = "A booby trap exploded! Lost 15 Hull.";
                 }
                 actions.innerHTML = '';
@@ -1710,12 +1899,15 @@
                     state.cargo.tech += 2;
                     desc.innerText = "You found valuable ancient technology!";
                 } else {
-                    if (state.crew.length > 0) {
-                        state.crew.pop();
-                        desc.innerText = "A cave-in occurred. You lost a crew member.";
-                    } else {
-                        desc.innerText = "You explored but found nothing.";
+                    let lost = removeCrewMember();
+                    if (state.crew.length <= 0) {
+                        desc.innerText = "Catastrophic temple cave-in claimed the entire crew! Game Over.";
+                        actions.innerHTML = '';
+                        addBtn('Restart', () => location.reload());
+                        updateUI();
+                        return;
                     }
+                    desc.innerText = `A cave-in occurred. ${lost ? lost.name : 'A crew member'} was lost.`;
                 }
                 actions.innerHTML = '';
                 closeBtn();
@@ -1756,6 +1948,99 @@
       modal.style.display = 'block';
       keys.w = keys.a = keys.s = keys.d = false;
       updateUI();
+    }
+
+    function triggerEmergencyBeacon() {
+      if (state.modalOpen) return;
+      state.modalOpen = true;
+      state.currentEncounter = 'Beacon';
+      const modal = document.getElementById('modal');
+      const title = document.getElementById('modal-title');
+      const desc = document.getElementById('modal-desc');
+      const actions = document.getElementById('modal-actions');
+
+      title.innerText = "EMERGENCY DISTRESS BEACON";
+      desc.innerText = "CRITICAL: Fuel reserves completely depleted! Vessel is adrift in deep space.\nBroadcast emergency distress beacon?";
+      actions.innerHTML = '';
+      renderModalPreview('Station');
+
+      const addBtn = (text, onClick) => {
+        const btn = document.createElement('button');
+        btn.className = 'action-btn';
+        btn.innerText = text;
+        btn.onclick = onClick;
+        actions.appendChild(btn);
+      };
+
+      if (state.resources.credits >= 150) {
+        addBtn('Contract Tug Refuel (150C for 800 Fuel)', () => {
+          state.resources.credits -= 150;
+          state.resources.fuel += 800;
+          desc.innerText = "A civilian tug responds and transfers 800 Fuel.";
+          actions.innerHTML = '';
+          addBtn('Resume Flight', () => { modal.style.display = 'none'; state.modalOpen = false; updateUI(); });
+          updateUI();
+        });
+      }
+      if (state.cargo.tech >= 1) {
+        addBtn('Jettison 1 Tech for Emergency Burn (+500 Fuel)', () => {
+          state.cargo.tech -= 1;
+          state.resources.fuel += 500;
+          desc.innerText = "Engineers converted xenotech power cells into 500 Fuel.";
+          actions.innerHTML = '';
+          addBtn('Resume Flight', () => { modal.style.display = 'none'; state.modalOpen = false; updateUI(); });
+          updateUI();
+        });
+      }
+      if (state.cargo.minerals >= 2) {
+        addBtn('Refine 2 Minerals into Reactor Fuel (+400 Fuel)', () => {
+          state.cargo.minerals -= 2;
+          state.resources.fuel += 400;
+          desc.innerText = "Crude minerals refined into 400 Fuel units.";
+          actions.innerHTML = '';
+          addBtn('Resume Flight', () => { modal.style.display = 'none'; state.modalOpen = false; updateUI(); });
+          updateUI();
+        });
+      }
+      addBtn('Broadcast General Distress (Risk Ambush or Patrol)', () => {
+        if (Math.random() < 0.6) {
+          state.resources.fuel += 300;
+          state.factions.Federation = Math.max(0, state.factions.Federation - 5);
+          desc.innerText = "Federation patrol answers and provides 300 emergency fuel (-5 Rep).";
+          actions.innerHTML = '';
+          addBtn('Resume Flight', () => { modal.style.display = 'none'; state.modalOpen = false; updateUI(); });
+        } else {
+          desc.innerText = "Pirates intercepted the distress broadcast and ambushed your adrift vessel!";
+          actions.innerHTML = '';
+          addBtn('Defend Ship', () => { triggerEncounter('Pirates'); });
+        }
+        updateUI();
+      });
+      if (state.resources.credits < 150 && state.cargo.tech === 0 && state.cargo.minerals < 2) {
+        addBtn('Abandon Ship (Game Over)', () => {
+          desc.innerText = "With no fuel, cargo, or credits, the crew abandoned ship in escape pods.";
+          actions.innerHTML = '';
+          addBtn('Restart', () => { location.reload(); });
+        });
+      }
+
+      modal.style.display = 'block';
+      keys.w = keys.a = keys.s = keys.d = false;
+      updateUI();
+    }
+
+    function interactWithStar() {
+      const nearby = state.stars.filter(s => Math.hypot(s.x - state.ship.x, s.y - state.ship.y) < 55);
+      if (nearby.length > 0 && !state.modalOpen) {
+        const sys = nearby[0];
+        if (sys.encounter && sys.encounter !== 'None') {
+          triggerEncounter(sys.encounter);
+        } else if (sys.planets && sys.planets.length > 0) {
+          triggerEncounter('Land');
+        } else {
+          showToast(`Scanners report ${sys.name} is quiet.`);
+        }
+      }
     }
 
     const keys = { w: false, a: false, s: false, d: false };
@@ -1835,10 +2120,15 @@
     }
 
     function openCrewModal() {
-        if (state.modalOpen) return;
-        state.modalOpen = true;
         const modal = document.getElementById('modal');
         const title = document.getElementById('modal-title');
+        if (state.modalOpen && title && title.innerText.includes('CREW')) {
+            modal.style.display = 'none';
+            state.modalOpen = false;
+            return;
+        }
+        if (state.modalOpen) return;
+        state.modalOpen = true;
         const desc = document.getElementById('modal-desc');
         const actions = document.getElementById('modal-actions');
         
@@ -1862,10 +2152,10 @@
                 actions.appendChild(btn);
             };
             
-            addBtn('Cycle Pilot', () => { cycleOfficer(1); renderCrew(); updateUI(); });
-            addBtn('Cycle Gunner', () => { cycleOfficer(2); renderCrew(); updateUI(); });
-            addBtn('Cycle Engineer', () => { cycleOfficer(3); renderCrew(); updateUI(); });
-            addBtn('Close', () => {
+            addBtn('Cycle Pilot (Role 1)', () => { cycleOfficer(1); renderCrew(); updateUI(); });
+            addBtn('Cycle Gunner (Role 2)', () => { cycleOfficer(2); renderCrew(); updateUI(); });
+            addBtn('Cycle Engineer (Role 3)', () => { cycleOfficer(3); renderCrew(); updateUI(); });
+            addBtn('Close Roster', () => {
                 modal.style.display = 'none';
                 state.modalOpen = false;
             });
@@ -1877,10 +2167,15 @@
     }
 
     function openHelpModal() {
-        if (state.modalOpen) return;
-        state.modalOpen = true;
         const modal = document.getElementById('modal');
         const title = document.getElementById('modal-title');
+        if (state.modalOpen && title && title.innerText.includes('MANUAL')) {
+            modal.style.display = 'none';
+            state.modalOpen = false;
+            return;
+        }
+        if (state.modalOpen) return;
+        state.modalOpen = true;
         const desc = document.getElementById('modal-desc');
         const actions = document.getElementById('modal-actions');
         
@@ -1889,53 +2184,303 @@
             <b>SUPERWEAPONS:</b> Synthesize Tachyon Beams, Antimatter Torpedoes, & Nova Obliterators at Stations or Forges. Fire in combat for devastating damage!<br>
             <b>FACTION WARS:</b> Intervene in battles between Federation and Syndicate fleets. Choose sides to gain rep and rewards.<br>
             <b>BOARDING PARTIES:</b> Aliens may breach your ship! Repel intruders with Security Sweeps, Atmospheric Venting, or Overcharged Defenses.<br>
-            <b>CONTROLS:</b> W/A/S/D to fly, C for Crew, H for Help, L to Land on Planets.<br>
+            <b>CONTROLS:</b> W/A/S/D or Arrows to fly | [E] Dock/Interact | [L] Land | [C] Crew | [H] Manual | [M] Sound.<br>
+            <b>SAVE SYSTEM:</b> [F5] Quick Save | [F9] Quick Load (persists across reloads).<br>
             <b>RESOURCES:</b> Fuel (movement), Hull (health), Morale (diplomacy bonus), Credits, Minerals & Tech (crafting).
             </div>`;
         actions.innerHTML = '';
+
+        const addBtn = (text, onClick) => {
+            const btn = document.createElement('button');
+            btn.className = 'action-btn';
+            btn.innerText = text;
+            btn.onclick = onClick;
+            actions.appendChild(btn);
+        };
         
-        const btn = document.createElement('button');
-        btn.className = 'action-btn';
-        btn.innerText = 'Close Manual';
-        btn.onclick = () => {
+        addBtn('Quick Save [F5]', () => { saveGame(); });
+        addBtn('Quick Load [F9]', () => { loadGame(); });
+        addBtn('Export Mission Log [JSON]', () => { exportSaveFile(); });
+        addBtn('Replay Onboarding Briefing', () => {
             modal.style.display = 'none';
             state.modalOpen = false;
-        };
-        actions.appendChild(btn);
+            openTutorialBriefing();
+        });
+        addBtn('Close Manual', () => {
+            modal.style.display = 'none';
+            state.modalOpen = false;
+        });
         
         renderModalPreview('Station');
         modal.style.display = 'block';
         keys.w = keys.a = keys.s = keys.d = false;
     }
 
+    function getSaveState() {
+      return {
+        version: 1,
+        timestamp: Date.now(),
+        ship: {
+          x: state.ship.x,
+          y: state.ship.y,
+          angle: state.ship.angle,
+          targetAngle: state.ship.targetAngle
+        },
+        resources: { ...state.resources },
+        cargo: { ...state.cargo },
+        upgrades: { ...state.upgrades },
+        superweapon: { ...state.superweapon },
+        factions: { ...state.factions },
+        crew: JSON.parse(JSON.stringify(state.crew)),
+        stars: state.stars.map(s => ({
+          x: s.x,
+          y: s.y,
+          size: s.size,
+          color: s.color,
+          corona: s.corona,
+          name: s.name,
+          planets: s.planets,
+          faction: s.faction,
+          encounter: s.encounter,
+          visited: s.visited,
+          pulsePhase: s.pulsePhase
+        }))
+      };
+    }
+
+    function applySaveState(data, showFeedback = true) {
+      if (!data || !data.ship || !data.resources || !Array.isArray(data.crew)) {
+        if (showFeedback) showToast('Invalid save format!');
+        return false;
+      }
+      state.ship.x = data.ship.x || 0;
+      state.ship.y = data.ship.y || 0;
+      state.ship.angle = data.ship.angle || 0;
+      state.ship.targetAngle = data.ship.targetAngle || 0;
+      state.ship.moving = false;
+      state.ship.shieldAlpha = 0;
+
+      if (data.resources) {
+        state.resources.fuel = data.resources.fuel ?? 10000;
+        state.resources.hull = data.resources.hull ?? 100;
+        state.resources.morale = data.resources.morale ?? 100;
+        state.resources.credits = data.resources.credits ?? 1000;
+      }
+      if (data.cargo) {
+        state.cargo.minerals = data.cargo.minerals ?? 0;
+        state.cargo.tech = data.cargo.tech ?? 0;
+      }
+      if (data.upgrades) {
+        state.upgrades.weapons = data.upgrades.weapons ?? 1;
+        state.upgrades.shields = data.upgrades.shields ?? 1;
+        state.upgrades.engines = data.upgrades.engines ?? 1;
+        state.upgrades.cargo = data.upgrades.cargo ?? 1;
+      }
+      if (data.superweapon) {
+        state.superweapon.type = data.superweapon.type ?? 1;
+        state.superweapon.name = data.superweapon.name || 'Tachyon Beam';
+        state.superweapon.charges = data.superweapon.charges ?? 3;
+        state.superweapon.maxCharges = data.superweapon.maxCharges ?? 5;
+      }
+      if (data.factions) {
+        state.factions.Federation = data.factions.Federation ?? 50;
+        state.factions.Syndicate = data.factions.Syndicate ?? 30;
+        state.factions.Xenon = data.factions.Xenon ?? 10;
+        state.factions.Independent = data.factions.Independent ?? 50;
+      }
+      if (Array.isArray(data.crew) && data.crew.length > 0) {
+        state.crew = data.crew;
+      }
+      if (Array.isArray(data.stars) && data.stars.length > 0) {
+        state.stars = data.stars;
+      }
+      const modal = document.getElementById('modal');
+      if (modal) modal.style.display = 'none';
+      state.modalOpen = false;
+      updateUI();
+      if (showFeedback) showToast('Game loaded successfully (F9)!');
+      return true;
+    }
+
+    function saveGame(showFeedback = true) {
+      try {
+        const data = getSaveState();
+        localStorage.setItem('kstarship_save', JSON.stringify(data));
+        if (showFeedback) showToast('Game state saved (F5)!');
+        return true;
+      } catch (e) {
+        if (showFeedback) showToast('Failed to save game!');
+        return false;
+      }
+    }
+
+    function loadGame(showFeedback = true) {
+      try {
+        const raw = localStorage.getItem('kstarship_save');
+        if (!raw) {
+          if (showFeedback) showToast('No saved game found (F5 to save)!');
+          return false;
+        }
+        const data = JSON.parse(raw);
+        return applySaveState(data, showFeedback);
+      } catch (e) {
+        if (showFeedback) showToast('Save data corrupted!');
+        return false;
+      }
+    }
+
+    function exportSaveFile() {
+      const data = getSaveState();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kstarship_mission_${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Mission log exported!');
+    }
+
+    function importSaveFile(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (applySaveState(data, true)) {
+            saveGame(false);
+            showToast('Mission log imported & restored!');
+          }
+        } catch (err) {
+          showToast('Failed to parse save file!');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function checkFirstTimeTutorial() {
+      let seen = false;
+      try {
+        seen = localStorage.getItem('kstarship_tutorialSeen') === '1';
+      } catch (e) {}
+
+      if (!seen) {
+        try {
+          localStorage.setItem('kstarship_tutorialSeen', '1');
+        } catch (e) {}
+        openTutorialBriefing();
+      }
+    }
+
+    function openTutorialBriefing() {
+      if (state.modalOpen) return;
+      state.modalOpen = true;
+      const modal = document.getElementById('modal');
+      const title = document.getElementById('modal-title');
+      const desc = document.getElementById('modal-desc');
+      const actions = document.getElementById('modal-actions');
+
+      title.innerText = "COMMANDER ONBOARDING BRIEFING";
+      desc.innerHTML = `<div style="text-align:left; font-size:11px; line-height:1.4;">
+        <b>WELCOME TO COMMAND, CAPTAIN!</b><br>
+        Your mission: explore the sector, trade cargo, upgrade systems, and survive.<br><br>
+        <b>FLIGHT:</b> W/A/S/D or Arrow Keys to pilot. Engines consume Fuel.<br>
+        <b>DOCKING & LANDING:</b> Fly within range of stars. Press <b>[E]</b> to Dock/Interact, <b>[L]</b> to Land.<br>
+        <b>COMBAT & SUPERWEAPONS:</b> Fire lasers or superweapons in encounters. Craft weapons at Stations.<br>
+        <b>CREW ROSTER:</b> Press <b>[C]</b> to assign Pilot, Gunner & Engineer to gain stat bonuses.<br>
+        <b>QUICKSAVE:</b> Press <b>[F5]</b> to Quick Save, <b>[F9]</b> to Quick Load anytime.
+      </div>`;
+      actions.innerHTML = '';
+
+      const btn = document.createElement('button');
+      btn.className = 'action-btn';
+      btn.innerText = 'Begin Mission';
+      btn.onclick = () => {
+        modal.style.display = 'none';
+        state.modalOpen = false;
+      };
+      actions.appendChild(btn);
+
+      renderModalPreview('Station');
+      modal.style.display = 'block';
+      keys.w = keys.a = keys.s = keys.d = false;
+    }
+
     document.getElementById('btn-crew').addEventListener('click', openCrewModal);
     document.getElementById('btn-help').addEventListener('click', openHelpModal);
-    document.getElementById('btn-land').addEventListener('click', () => {
+    if (btnDock) btnDock.addEventListener('click', interactWithStar);
+    if (btnLand) btnLand.addEventListener('click', () => {
       const nearby = state.stars.filter(s => Math.hypot(s.x - state.ship.x, s.y - state.ship.y) < 55);
       if (nearby.length > 0 && nearby[0].planets.length > 0 && !state.modalOpen) {
           triggerEncounter('Land');
       }
     });
+    if (btnBeacon) btnBeacon.addEventListener('click', triggerEmergencyBeacon);
+    if (btnSave) btnSave.addEventListener('click', () => saveGame());
+    if (btnLoad) btnLoad.addEventListener('click', () => loadGame());
+    if (btnMute) btnMute.addEventListener('click', toggleSound);
+    if (btnExport) btnExport.addEventListener('click', exportSaveFile);
+    if (btnImport) btnImport.addEventListener('click', () => importFileInput.click());
+    if (importFileInput) {
+      importFileInput.addEventListener('change', e => {
+        if (e.target.files && e.target.files[0]) {
+          importSaveFile(e.target.files[0]);
+          e.target.value = '';
+        }
+      });
+    }
 
     window.addEventListener('keydown', e => {
       const k = e.key.toLowerCase();
-      if (['w','a','s','d'].includes(k)) { keys[k] = true; }
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'f5', 'f9'].includes(k)) {
+        e.preventDefault();
+      }
+      if (k === 'w' || e.key === 'ArrowUp') { keys.w = true; }
+      if (k === 's' || e.key === 'ArrowDown') { keys.s = true; }
+      if (k === 'a' || e.key === 'ArrowLeft') { keys.a = true; }
+      if (k === 'd' || e.key === 'ArrowRight') { keys.d = true; }
       if (k === 'c') { openCrewModal(); }
       if (k === 'h') { openHelpModal(); }
-      if (k === 'l') {
-        const nearby = state.stars.filter(s => Math.hypot(s.x - state.ship.x, s.y - state.ship.y) < 55);
-        if (nearby.length > 0 && nearby[0].planets.length > 0 && !state.modalOpen) {
-            triggerEncounter('Land');
+      if (k === 'm') { toggleSound(); }
+      if (k === 'e') { interactWithStar(); }
+      if (k === 'b' && state.resources.fuel <= 0) { triggerEmergencyBeacon(); }
+      if (e.key === 'F5' || (e.ctrlKey && k === 's')) {
+        e.preventDefault();
+        saveGame();
+      }
+      if (e.key === 'F9' || (e.ctrlKey && k === 'o')) {
+        e.preventDefault();
+        loadGame();
+      }
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('modal');
+        if (state.modalOpen && state.resources.hull > 0 && state.currentEncounter !== 'Pirates' && state.currentEncounter !== 'Fleet') {
+          modal.style.display = 'none';
+          state.modalOpen = false;
+        }
+      }
+      if (state.modalOpen && ['1','2','3','4'].includes(e.key)) {
+        const btns = document.querySelectorAll('#modal-actions button');
+        const idx = parseInt(e.key, 10) - 1;
+        if (btns && btns[idx]) {
+          btns[idx].click();
         }
       }
     });
+
     window.addEventListener('keyup', e => {
       const k = e.key.toLowerCase();
-      if (['w','a','s','d'].includes(k)) { keys[k] = false; }
+      if (k === 'w' || e.key === 'ArrowUp') { keys.w = false; }
+      if (k === 's' || e.key === 'ArrowDown') { keys.s = false; }
+      if (k === 'a' || e.key === 'ArrowLeft') { keys.a = false; }
+      if (k === 'd' || e.key === 'ArrowRight') { keys.d = false; }
     });
 
     function setupButton(id, key) {
       const btn = document.getElementById(id);
+      if (!btn) return;
       btn.addEventListener('mousedown', () => keys[key] = true);
       btn.addEventListener('mouseup', () => keys[key] = false);
       btn.addEventListener('mouseleave', () => keys[key] = false);
@@ -1950,6 +2495,18 @@
 
     generateStars();
     generateEnvironment();
+
+    let loaded = false;
+    try {
+      if (localStorage.getItem('kstarship_save')) {
+        loaded = loadGame(false);
+      }
+    } catch (e) {}
+
+    if (!loaded) {
+      checkFirstTimeTutorial();
+    }
+
     update();
   </script>
 </body>
