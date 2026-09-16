@@ -66,7 +66,7 @@ You are operating in a token-constrained multi-agent environment. Every line you
 - **Completed phases/milestones:** replace with a 2-line stub pointing to the archive file.
 - **Historical logs older than the last ~80 lines:** move to an `archive/` directory.
 - **Bulky reference sections** (changelogs, old blockers, ownership tables): archive when >500 bytes.
-- **Run `python scripts/compact_all.py` on a 4-hour cron** to enforce caps automatically.
+- **Run `python scripts/compact_all.py` on a daily cron** to enforce caps automatically.
 
 ### FORMAT EXAMPLES
 
