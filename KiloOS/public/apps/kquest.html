@@ -1735,7 +1735,13 @@
     // --- PHASE 13: WEB AUDIO API SOUND EFFECTS ENGINE ---
 
     let audioCtx = null;
-    let soundEnabled = true;
+    let soundEnabled = (function() {
+      try {
+        return localStorage.getItem('kquest_sfx') !== '0';
+      } catch (e) {
+        return true;
+      }
+    })();
 
     function getAudioContext() {
       if (!audioCtx) {
@@ -1752,6 +1758,9 @@
 
     function toggleAudio() {
       soundEnabled = !soundEnabled;
+      try {
+        localStorage.setItem('kquest_sfx', soundEnabled ? '1' : '0');
+      } catch (e) {}
       const btn = document.getElementById('audio-toggle-btn');
       if (btn) {
         btn.textContent = soundEnabled ? '🔊 SFX: ON' : '🔇 SFX: OFF';
@@ -1877,8 +1886,8 @@
     }
 
     const STATE = {
-      REPLAYS: 16,
-      CONFIG: 17,
+      REPLAYS: 'REPLAYS',
+      CONFIG: 'CONFIG',
       CHAR_CREATE: 'CHAR_CREATE',
       TOWN: 'TOWN',
       SHOP: 'SHOP',
@@ -2508,6 +2517,11 @@
       if (!player.invFilter) player.invFilter = 'all';
       if (!player.invSort) player.invSort = 'rarity';
 
+      const filterSelect = document.getElementById('inv-filter');
+      if (filterSelect && player.invFilter && filterSelect.value !== player.invFilter) filterSelect.value = player.invFilter;
+      const sortSelect = document.getElementById('inv-sort');
+      if (sortSelect && player.invSort && sortSelect.value !== player.invSort) sortSelect.value = player.invSort;
+
       if (document.getElementById('inv-capacity')) {
         document.getElementById('inv-capacity').textContent = `${player.inventory.length}/${player.maxInvSlots}`;
       }
@@ -2656,6 +2670,9 @@
         player.str += 3;
         sfxSpellCast();
         logMsg(`⚡ You drank Elixir of Might! Recovered 40 MP & gained +3 STR permanently!`, 'loot');
+      } else if (item.id === 'phoenix_elixir') {
+        usePhoenixElixir();
+        return;
       } else if (item.id === 'fire_bomb') {
         if (currentState !== STATE.COMBAT || !currentEnemy) {
           logMsg(`⚠️ Fire Bomb can only be thrown during battle!`, 'warning');
@@ -2738,7 +2755,12 @@
         renderArmyBattle();
       } else if (state === STATE.CASTLE_DEFENSE) {
         renderCastleDefense();
+      } else if (state === STATE.REPLAYS) {
+        renderReplays();
+      } else if (state === STATE.CONFIG) {
+        renderConfig();
       }
+      window.gameState = currentState;
       updateUI();
     }
 
@@ -2777,16 +2799,20 @@
       };
       localStorage.setItem('kquest_save_slot_' + slotNum, JSON.stringify(data));
       unlockAchievement(9);
-      showToast(`💾 Game saved to Slot ${slotNum}!`, 2500);
-      logMsg(`💾 Game saved to Slot ${slotNum} successfully!`, 'system');
-      renderSaveLoad();
+      const slotLabel = slotNum === 0 ? 'Quick Save Slot' : `Slot ${slotNum}`;
+      showToast(`💾 Game saved to ${slotLabel}!`, 2500);
+      logMsg(`💾 Game saved to ${slotLabel} successfully!`, 'system');
+      if (currentState === STATE.SAVE_LOAD) {
+        renderSaveLoad();
+      }
     }
 
     function loadSlot(slotNum) {
       const raw = localStorage.getItem('kquest_save_slot_' + slotNum);
+      const slotLabel = slotNum === 0 ? 'Quick Save Slot' : `Slot ${slotNum}`;
       if (!raw) {
-        showToast(`❌ Save Slot ${slotNum} is empty!`, 2500);
-        logMsg(`❌ Save Slot ${slotNum} is empty!`, 'warning');
+        showToast(`❌ ${slotLabel} is empty!`, 2500);
+        logMsg(`❌ ${slotLabel} is empty!`, 'warning');
         return;
       }
       try {
@@ -2794,18 +2820,20 @@
         player = data.player;
         if (data.ngLevel !== undefined) player.ngLevel = data.ngLevel;
         if (data.achievements) player.achievements = data.achievements;
-        showToast(`📂 Loaded Slot ${slotNum}! Welcome back, ${player.name}!`, 2500);
-        logMsg(`📂 Loaded Save Slot ${slotNum}! Welcome back, ${player.name}!`, 'system');
+        localStorage.setItem('kquest_tutorialSeen', 'true');
+        showToast(`📂 Loaded ${slotLabel}! Welcome back, ${player.name}!`, 2500);
+        logMsg(`📂 Loaded ${slotLabel}! Welcome back, ${player.name}!`, 'system');
         setGameState(STATE.TOWN);
       } catch (e) {
-        showToast(`❌ Error loading Save Slot ${slotNum}!`, 2500);
-        logMsg(`❌ Error loading Save Slot ${slotNum}!`, 'warning');
+        showToast(`❌ Error loading ${slotLabel}!`, 2500);
+        logMsg(`❌ Error loading ${slotLabel}!`, 'warning');
       }
     }
 
     function deleteSlot(slotNum) {
+      const slotLabel = slotNum === 0 ? 'Quick Save Slot' : `Slot ${slotNum}`;
       localStorage.removeItem('kquest_save_slot_' + slotNum);
-      logMsg(`🗑️ Save Slot ${slotNum} cleared.`, 'system');
+      logMsg(`🗑️ ${slotLabel} cleared.`, 'system');
       renderSaveLoad();
     }
 
@@ -2824,12 +2852,12 @@
 
     function renderSaveLoad() {
       document.getElementById('location-title').textContent = '💾 Save / Load Game Slots';
-      document.getElementById('location-desc').textContent = 'Manage your save files. Save your progress or load a previously saved hero.';
+      document.getElementById('location-desc').textContent = 'Manage your save files. Save your progress, load a saved hero, or export/import JSON save files.';
 
       const dyn = document.getElementById('dynamic-content');
-      let slotsHtml = '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px; margin-top:8px;">';
+      let slotsHtml = '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:10px; margin-top:8px;">';
 
-      for (let i = 1; i <= 4; i++) {
+      for (let i = 0; i <= 4; i++) {
         const raw = localStorage.getItem('kquest_save_slot_' + i);
         let infoStr = '<div style="color:#6c7086; font-size:0.8rem;">Empty Slot</div>';
         let hasData = false;
@@ -2839,7 +2867,7 @@
             const p = d.player;
             const ng = d.ngLevel ? ` [NG+ ${d.ngLevel}]` : '';
             infoStr = `
-              <div style="font-weight:700; color:#cba6f7; font-size:0.9rem;">${p.name} (Lvl ${p.level}${ng})</div>
+              <div style="font-weight:700; color:#cba6f7; font-size:0.85rem;">${p.name} (Lvl ${p.level}${ng})</div>
               <div style="font-size:0.75rem; color:#a6adc8;">Class: ${p.class} | Floor: ${p.floor}</div>
               <div style="font-size:0.75rem; color:#f9e2af;">Gold: ${p.gold} 🪙</div>
               <div style="font-size:0.7rem; color:#6c7086; margin-top:2px;">Saved: ${d.savedAt || 'Unknown'}</div>
@@ -2850,9 +2878,10 @@
           }
         }
 
+        const slotTitle = i === 0 ? '⚡ Quick Save (F5 / S)' : `Slot ${i}`;
         slotsHtml += `
-          <div style="background:#181825; border:1px solid #313244; border-radius:8px; padding:10px; display:flex; flex-direction:column; justify-content:space-between;">
-            <div style="font-weight:700; color:#89b4fa; border-bottom:1px solid #313244; padding-bottom:4px; margin-bottom:6px;">Slot ${i}</div>
+          <div style="background:#181825; border:1px solid ${i === 0 ? '#fab387' : '#313244'}; border-radius:8px; padding:10px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div style="font-weight:700; color:${i === 0 ? '#fab387' : '#89b4fa'}; border-bottom:1px solid #313244; padding-bottom:4px; margin-bottom:6px; font-size:0.85rem;">${slotTitle}</div>
             ${infoStr}
             <div style="display:flex; gap:4px; margin-top:8px;">
               <button class="btn btn-primary" style="flex:1; font-size:0.75rem; padding:4px;" onclick="saveSlot(${i})">💾 Save</button>
@@ -2862,7 +2891,12 @@
           </div>
         `;
       }
-      slotsHtml += '</div>';
+      slotsHtml += `</div>
+        <div style="display:flex; gap:8px; margin-top:12px; justify-content:center; border-top:1px solid #313244; padding-top:10px; flex-wrap:wrap;">
+          <button class="btn btn-primary" style="font-size:0.8rem;" onclick="exportScoreJSON()">📤 Export Save to JSON</button>
+          <button class="btn btn-accent" style="font-size:0.8rem;" onclick="document.getElementById('json-import-file').click()">📥 Import Save from JSON</button>
+        </div>
+      `;
       dyn.innerHTML = slotsHtml;
 
       const ctrl = document.getElementById('controls-panel');
@@ -2915,6 +2949,68 @@
       `;
     }
 
+    // --- REPLAYS & SETTINGS CONFIG VIEWS ---
+    function renderReplays() {
+      document.getElementById('location-title').textContent = '📜 Battle Log & Combat Chronicle';
+      document.getElementById('location-desc').textContent = 'Review recent combat actions, encounters, and tactical logs.';
+      const dyn = document.getElementById('dynamic-content');
+      if (g_MatchReplays.length === 0) {
+        dyn.innerHTML = '<div style="background:#181825; padding:16px; border-radius:8px; border:1px solid #313244; color:#6c7086; text-align:center; margin-top:8px;">No recent combat events recorded yet. Venture into the dungeon to create battle history!</div>';
+      } else {
+        dyn.innerHTML = `
+          <div style="background:#181825; padding:12px; border-radius:8px; border:1px solid #313244; margin-top:8px; max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;">
+            ${g_MatchReplays.map(r => `
+              <div style="font-size:0.8rem; padding:6px 10px; border-radius:4px; background:#11111b; border-left:3px solid #89b4fa; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                <span style="color:#cdd6f4;">${r.text}</span>
+                <span style="color:#6c7086; font-size:0.75rem; white-space:nowrap;">${r.time}</span>
+              </div>
+            `).slice().reverse().join('')}
+          </div>
+        `;
+      }
+      const ctrl = document.getElementById('controls-panel');
+      ctrl.innerHTML = `
+        <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>
+      `;
+    }
+
+    function renderConfig() {
+      document.getElementById('location-title').textContent = '⚙️ Game Settings & Key Bindings';
+      document.getElementById('location-desc').textContent = 'Customize action hotkeys [1-6] and configure audio preferences.';
+      const dyn = document.getElementById('dynamic-content');
+      dyn.innerHTML = `
+        <div style="background:#181825; padding:14px; border-radius:8px; border:1px solid #313244; margin-top:8px; margin-bottom:10px;">
+          <h4 style="color:#cba6f7; margin-bottom:8px; font-size:0.95rem;">⌨️ Action Bar Key Bindings (Actions 1 - 6)</h4>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:8px;">
+            ${KEY_BINDS.map((key, idx) => `
+              <div style="background:#11111b; border:1px solid #45475a; border-radius:6px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.85rem; color:#cdd6f4;">Action ${idx + 1}:</span>
+                <button class="btn btn-accent" style="font-size:0.8rem; padding:3px 10px;" onclick="rebindKey(${idx})">${g_BindingAction === idx ? 'Press key...' : `[${key}]`}</button>
+              </div>
+            `).join('')}
+          </div>
+          <div style="font-size:0.75rem; color:#a6adc8; margin-top:8px;">Click any button above and press a key to rebind that action slot.</div>
+        </div>
+        <div style="background:#181825; padding:14px; border-radius:8px; border:1px solid #313244; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <strong style="color:#89b4fa; font-size:0.9rem;">🔊 Sound Effects & Web Audio</strong>
+            <div style="font-size:0.75rem; color:#a6adc8;">Enable or mute synthesized sound effects.</div>
+          </div>
+          <button class="btn btn-primary" onclick="toggleAudio(); renderConfig();">${soundEnabled ? '🔊 SFX: ON' : '🔇 SFX: OFF'}</button>
+        </div>
+      `;
+      const ctrl = document.getElementById('controls-panel');
+      ctrl.innerHTML = `
+        <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>
+      `;
+    }
+
+    function rebindKey(actionIdx) {
+      g_BindingAction = actionIdx;
+      showToast(`Press any key to bind to Action ${actionIdx + 1}...`, 3000);
+      renderConfig();
+    }
+
     // --- CHARACTER CREATION ---
     let selectedClass = 'Warrior';
     function renderCharCreate() {
@@ -2959,6 +3055,8 @@
       const ctrl = document.getElementById('controls-panel');
       ctrl.innerHTML = `
         <button class="btn btn-accent" onclick="confirmCharacter()">✨ Begin Quest</button>
+        <button class="btn" style="background:#a6e3a1; color:#11111b; font-weight:700;" onclick="setGameState(STATE.SAVE_LOAD)">📂 Continue / Load Save</button>
+        <button class="btn btn-primary" onclick="openHelpModal('play')">❓ How to Play / Help</button>
       `;
     }
 
@@ -3007,6 +3105,10 @@
 
       logMsg(`Welcome, ${player.name} the ${player.class}! Your journey begins in Oakhaven Town.`, 'system');
       setGameState(STATE.TOWN);
+      if (!localStorage.getItem('kquest_tutorialSeen')) {
+        localStorage.setItem('kquest_tutorialSeen', 'true');
+        openHelpModal('play');
+      }
     }
 
     // --- TOWN HUB ---
@@ -3040,16 +3142,20 @@
       `;
 
       const ctrl = document.getElementById('controls-panel');
+      const unlockedAchCount = (player.achievements || []).filter(a => a === 1).length;
       ctrl.innerHTML = `
         <button class="btn btn-primary" onclick="setGameState(STATE.DUNGEON)">⚔️ Enter ${b.name}</button>
         <button class="btn btn-danger" onclick="setGameState(STATE.BOSS_RUSH)">🏟️ Boss Rush Arena</button>
         <button class="btn" style="background:#cba6f7; color:#11111b;" onclick="setGameState(STATE.TRAINING_HALL)">🏋️ Training Hall (${player.skillPoints} SP)</button>
         <button class="btn" style="background:#89b4fa; color:#11111b;" onclick="setGameState(STATE.QUEST_BOARD)">📜 Bounty Board</button>
+        <button class="btn" style="background:#fab387; color:#11111b;" onclick="setGameState(STATE.TAVERN)">🍻 Rusty Dragon Tavern</button>
         <button class="btn" onclick="restAtInn()">🍺 Rest at Inn (10 Gold)</button>
         <button class="btn" onclick="setGameState(STATE.SHOP)">🛒 Visit Merchant</button>
         <button class="btn btn-craft" onclick="setGameState(STATE.CRAFTING)">⚒️ Alchemy & Forge</button>
         <button class="btn" style="background:#f9e2af; color:#11111b;" onclick="setGameState(STATE.MERCENARY)">🛡️ Mercenary Guild</button>
         <button class="btn" style="background:#a6e3a1; color:#11111b;" onclick="setGameState(STATE.SAVE_LOAD)">💾 Save / Load</button>
+        <button class="btn" style="background:#ffd700; color:#11111b;" onclick="setGameState(STATE.ACHIEVEMENTS)">🏆 Milestones (${unlockedAchCount}/10)</button>
+        <button class="btn" style="background:#89b4fa; color:#11111b;" onclick="setGameState(STATE.REPLAYS)">📜 Combat Log</button>
         <button class="btn" style="background:#f38ba8; color:#11111b;" onclick="setGameState(STATE.FACTIONS)">🚩 Factions</button>
         <button class="btn" style="background:#f9e2af; color:#11111b;" onclick="setGameState(STATE.MOUNTS)">🐎 Mounts</button>
         <button class="btn" style="background:linear-gradient(135deg, #ffd700, #fab387); color:#11111b; font-weight:700;" onclick="setGameState(STATE.KINGDOM)">👑 Kingdom & War</button>
@@ -3728,7 +3834,7 @@
           player.gold -= 5;
           player.hp = Math.min(player.maxHp, player.hp + 15);
           logMsg("🍺 Drank a cold Ale. Recovered 15 HP.", 'town');
-          updateHeroUI();
+          updateUI();
         } else {
           logMsg("Not enough gold for Ale.", 'warning');
         }
@@ -3737,12 +3843,13 @@
           player.materials.iron -= 3;
           player.gold += 60;
           logMsg("Side Quest Complete! Traded 3 Iron Scrap for 60 Gold.", 'town');
-          updateHeroUI();
+          updateUI();
         } else {
           logMsg("Barkeep: 'You don't have 3 Iron Scrap yet! Come back when you do.'", 'warning');
         }
       }
     };
+    window.updateHeroUI = () => updateUI();
 
     function renderShop() {
       document.getElementById('location-title').textContent = '🛒 Oakhaven General Store & Blacksmith';
@@ -4536,7 +4643,7 @@
         player.materials.core -= 1;
         let existing = player.inventory.find(i => i.id === 'fire_bomb');
         if (existing) existing.count++;
-        else player.inventory.push({ id: 'fire_bomb', name: 'Fire Bomb', count: 1, desc: 'Deals 45 fire damage' });
+        else player.inventory.push({ id: 'fire_bomb', name: 'Fire Bomb', type: 'consumable', rarity: 1, count: 1, value: 15, desc: 'Deals 45 fire damage' });
         logMsg(`💣 Crafted 1x Fire Bomb at the Alchemy Bench!`, 'craft');
         unlockAchievement(3); // Master Crafter
       } else if (recipe === 'greater_hp') {
@@ -4548,7 +4655,7 @@
         player.materials.iron -= 1;
         let existing = player.inventory.find(i => i.id === 'greater_hp');
         if (existing) existing.count++;
-        else player.inventory.push({ id: 'greater_hp', name: 'Greater HP Elixir', count: 1, desc: 'Restores 70 HP' });
+        else player.inventory.push({ id: 'greater_hp', name: 'Greater HP Elixir', type: 'consumable', rarity: 1, count: 1, value: 20, desc: 'Restores 70 HP' });
         logMsg(`🧪 Crafted 1x Greater HP Elixir at the Alchemy Bench!`, 'craft');
       } else if (recipe === 'power_elixir') {
         if (player.materials.dust < 2 || player.materials.core < 1) {
@@ -4559,7 +4666,7 @@
         player.materials.core -= 1;
         let existing = player.inventory.find(i => i.id === 'power_elixir');
         if (existing) existing.count++;
-        else player.inventory.push({ id: 'power_elixir', name: 'Elixir of Might', count: 1, desc: '+40 MP & +3 STR' });
+        else player.inventory.push({ id: 'power_elixir', name: 'Elixir of Might', type: 'consumable', rarity: 2, count: 1, value: 30, desc: '+40 MP & +3 STR' });
         logMsg(`⚡ Crafted 1x Elixir of Might at the Alchemy Bench!`, 'craft');
       }
       updateUI();
@@ -4887,6 +4994,13 @@
         return;
       }
       player.phoenixElixirs--;
+      if (player.inventory) {
+        const pIdx = player.inventory.findIndex(i => i.id === 'phoenix_elixir');
+        if (pIdx !== -1) {
+          player.inventory[pIdx].count--;
+          if (player.inventory[pIdx].count <= 0) player.inventory.splice(pIdx, 1);
+        }
+      }
       player.hp = player.maxHp;
       player.mp = player.maxMp;
       sfxLevelUp();
@@ -5389,6 +5503,7 @@
       const ctrl = document.getElementById('controls-panel');
       ctrl.innerHTML = `
         <button class="btn btn-accent" onclick="resetGame()">🔄 Start New Quest</button>
+        <button class="btn btn-primary" onclick="setGameState(STATE.SAVE_LOAD)">📂 Load Saved Game</button>
       `;
     }
 
@@ -5398,16 +5513,53 @@
       player.nextXp = 100;
       player.gold = 50;
       player.floor = 1;
+      player.biome = 0;
       player.skillPoints = 0;
       player.offensePoints = 0;
       player.defensePoints = 0;
       player.utilityPoints = 0;
       player.ironWillTurns = 0;
       player.manaSurgeActive = false;
+      player.holyShieldTurns = 0;
+      player.berserkTurns = 0;
+      player.lightningDazeTurns = 0;
+      player.phoenixElixirs = 1;
+      player.companion = null;
+      player.faction = 'None';
+      player.mount = 'None';
+      player.arenaWave = 1;
+      player.arenaActive = false;
+      player.maxInvSlots = 10;
+      player.invFilter = 'all';
+      player.invSort = 'rarity';
       player.materials = { iron: 2, dust: 2, core: 1 };
-      player.quests.forEach(q => { q.current = 0; q.done = false; });
+      player.inventory = [
+        { id: 'hp_potion', name: 'Health Potion', type: 'consumable', rarity: 0, count: 3, value: 8, desc: 'Restores 35 HP' },
+        { id: 'mp_potion', name: 'Mana Potion', type: 'consumable', rarity: 0, count: 2, value: 8, desc: 'Restores 25 MP' },
+        { id: 'phoenix_elixir', name: 'Phoenix Elixir', type: 'consumable', rarity: 3, count: 1, value: 35, desc: 'Restores 100% HP & MP or Auto-Revives' }
+      ];
+      player.quests = [
+        { id: 'slay_monsters', title: 'Clear Dungeon Chambers', req: 5, current: 0, reward: 50, done: false },
+        { id: 'slay_boss', title: 'Defeat Biome Boss (Floor 5)', req: 1, current: 0, reward: 150, done: false }
+      ];
+      player.bountyContracts = [];
+      player.kingdom = {
+        castleLevel: 1,
+        barracksLevel: 1,
+        treasury: 50,
+        morale: 80,
+        footmen: 4,
+        archers: 2,
+        mages: 1,
+        knights: 0,
+        warTrophies: 0,
+        armyWins: 0,
+        defenseWave: 1,
+        defenseBestWave: 1
+      };
       setGameState(STATE.CHAR_CREATE);
       logMsg(`--- New Journey Initialized ---`, 'system');
+      updateUI();
     }
 
     // --- PHASE 14: HELP & CODEX MODAL CONTROLS ---
@@ -5440,11 +5592,18 @@
         if (btn) btn.classList.toggle('active', t === tabName);
         if (pane) pane.style.display = (t === tabName) ? 'block' : 'none';
       });
+      const searchInput = document.getElementById('codex-search-input');
+      if (searchInput && searchInput.value) {
+        filterCodex(searchInput.value);
+      } else {
+        const cards = document.querySelectorAll('.help-card');
+        cards.forEach(c => c.style.display = '');
+      }
     }
 
     function filterCodex(query) {
       query = query.toLowerCase().trim();
-      const cards = document.querySelectorAll('.codex-searchable');
+      const cards = document.querySelectorAll('.help-card');
       cards.forEach(card => {
         const text = card.textContent.toLowerCase();
         if (!query || text.includes(query)) {
@@ -5462,6 +5621,7 @@
       if (g_BindingAction !== -1) {
         e.preventDefault();
         KEY_BINDS[g_BindingAction] = e.key.toUpperCase();
+        showToast(`Action ${g_BindingAction + 1} rebound to [${KEY_BINDS[g_BindingAction]}]!`, 2000);
         g_BindingAction = -1;
         setGameState(STATE.CONFIG);
         return;
@@ -5470,13 +5630,11 @@
       if (e.key === 'F5') {
         e.preventDefault();
         saveSlot(0);
-        showToast('⚡ Quick Saved game to Slot 1 (F5)!', 2500);
         return;
       }
       if (e.key === 'F9') {
         e.preventDefault();
         loadSlot(0);
-        showToast('📂 Quick Loaded game from Slot 1 (F9)!', 2500);
         return;
       }
 
@@ -5487,34 +5645,44 @@
         const modal = document.getElementById('help-modal-overlay');
         if (modal && modal.style.display === 'flex') {
           closeHelpModal();
-        } else if (typeof gameState !== 'undefined' && gameState !== STATE.TOWN && gameState !== STATE.CHAR_CREATE && gameState !== STATE.COMBAT) {
+        } else if (currentState !== STATE.TOWN && currentState !== STATE.CHAR_CREATE && currentState !== STATE.COMBAT && currentState !== STATE.ARMY_BATTLE && currentState !== STATE.CASTLE_DEFENSE) {
           setGameState(STATE.TOWN);
           showToast('🏰 Returned to Town Square [Esc]', 2000);
           logMsg('Returned to Town Square.', 'town');
         }
       } else if (e.key === 's' || e.key === 'S') {
-        if (typeof gameState !== 'undefined' && gameState === STATE.COMBAT) {
+        if (currentState === STATE.COMBAT) {
           if (typeof castHolyShield === 'function') castHolyShield();
         } else {
           saveSlot(0);
-          showToast('⚡ Quick Saved game to Slot 1 [S]!', 2500);
         }
       } else if (e.key === 'l' || e.key === 'L') {
-        if (typeof gameState !== 'undefined' && gameState === STATE.COMBAT) {
+        if (currentState === STATE.COMBAT) {
           if (typeof castLightningStorm === 'function') castLightningStorm();
         } else {
           setGameState(STATE.SAVE_LOAD);
         }
+      } else if (e.key === 'b' || e.key === 'B') {
+        if (currentState === STATE.COMBAT) {
+          if (typeof castBerserkMight === 'function') castBerserkMight();
+        }
+      } else if (e.key === 'p' || e.key === 'P') {
+        if (currentState === STATE.COMBAT && (player.phoenixElixirs || 0) > 0) {
+          usePhoenixElixir();
+        }
       } else if (e.key === 'i' || e.key === 'I') {
-        setGameState(STATE.INVENTORY);
+        showToast(`🎒 Inventory Capacity: ${player.inventory ? player.inventory.length : 0}/${player.maxInvSlots || 10} Slots`, 2000);
       }
 
       // Check key binds
       for (let i = 0; i < 6; i++) {
         if (e.key.toUpperCase() === KEY_BINDS[i].toUpperCase()) {
           const panel = document.getElementById('controls-panel');
-          if (panel.children[i] && !panel.children[i].disabled) {
-            panel.children[i].click();
+          if (panel) {
+            const btns = panel.querySelectorAll('button');
+            if (btns[i] && !btns[i].disabled) {
+              btns[i].click();
+            }
           }
           break;
         }
@@ -5545,17 +5713,28 @@
       controlsObserver.observe(panelElem, { childList: true });
     }
 
+    if (!soundEnabled) {
+      const audioBtn = document.getElementById('audio-toggle-btn');
+      if (audioBtn) audioBtn.textContent = '🔇 SFX: OFF';
+    }
+
     // Start in Character Creation Mode
     setGameState(STATE.CHAR_CREATE);
 
     function exportScoreJSON() {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(player, null, 2));
+        const payload = {
+            player: player,
+            ngLevel: player.ngLevel || 0,
+            achievements: player.achievements || [0,0,0,0,0,0,0,0,0,0],
+            savedAt: new Date().toLocaleString()
+        };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
         const a = document.createElement('a');
         a.href = dataStr;
-        a.download = "kquest_score.json";
+        a.download = "kquest_save.json";
         a.click();
-        showToast('💾 High Score JSON Exported!', 2500);
-        logMsg('💾 High Score JSON Exported!', 'system');
+        showToast('💾 Save File JSON Exported!', 2500);
+        logMsg('💾 Save File JSON Exported!', 'system');
     }
     function importScoreJSON(event) {
         const file = event.target.files[0];
@@ -5564,10 +5743,21 @@
         reader.onload = function(e) {
             try {
                 const imported = JSON.parse(e.target.result);
-                if (imported && imported.name) {
-                    player = imported;
-                    showToast('📂 High Score JSON Imported Successfully!', 2500);
-                    logMsg('📂 High Score JSON Imported Successfully!', 'system');
+                if (imported) {
+                    if (imported.player && imported.player.name) {
+                        player = imported.player;
+                        if (imported.ngLevel !== undefined) player.ngLevel = imported.ngLevel;
+                        if (imported.achievements) player.achievements = imported.achievements;
+                    } else if (imported.name) {
+                        player = imported;
+                    } else {
+                        showToast('❌ Invalid JSON format.', 3000);
+                        logMsg('❌ Invalid JSON format.', 'warning');
+                        return;
+                    }
+                    localStorage.setItem('kquest_tutorialSeen', 'true');
+                    showToast('📂 Save File JSON Imported Successfully!', 2500);
+                    logMsg('📂 Save File JSON Imported Successfully!', 'system');
                     setGameState(STATE.TOWN);
                 } else {
                     showToast('❌ Invalid JSON format.', 3000);
