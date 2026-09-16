@@ -24,45 +24,47 @@ The project aims to return software development to the lightweight, compute-effi
 - **Surgical edits only.** Touch only specific cells/lines that changed. Table cell notes ≤100 chars.
 - **Context hygiene:** Only read files relevant to current task. Move historical logs older than ~80 lines to `archive/`.
 
-## Current State (as of 2026-09-13 07:00 UTC)
-- **Total Apps:** 95 registered in App.jsx.
+## Current State (as of 2026-09-16 07:00 UTC)
+- **Total Apps:** 96 registered in App.jsx (KCosmic added).
 - **KiloOS Version:** 0.3.111.
-- **Games:** 43 titles.
-- **Build Health:** ✅ Clean — 246.49 KB JS (75.05 KB gzip), 21.77 KB CSS (5.10 KB gzip).
-- **Model:** Prompt A: Gemini 3.8 Flash ✅ (launched ~Sep 10). Prompt B: Gemini 3.7 Flash ✅.
-- **Fleet:** 5 of 7 agents active. Expander and Content paused by user (reliability-first strategy).
+- **Games:** 44 titles (KCosmic is the 44th).
+- **Build Health:** ✅ Clean — 246.63 KB JS (75.07 KB gzip), 21.77 KB CSS (5.10 KB gzip).
+- **Model:** Prompt A: Gemini 3.8 Flash ✅. Prompt B: Gemini 3.7 Flash ✅.
+- **Fleet:** 5 of 7 agents active. Expander and Content paused.
+- **New this cycle:** Screenshots gallery, test scripts, mature_apps_registry.json, token conservation rules across all plan files, subagent delegation rules (no Opus subagents).
 
 ### Strategic Direction
 **Depth-first, reliability-first.** Both Directors and user agree:
 1. Quality over quantity — no rush to 100 apps.
-2. Loop 0 priority for Graphics — process unprocessed games first. ✅ DONE — all 4 Loop 0 games processed.
-3. User paused Feature Expander and Game Content for reliability.
+2. **Token conservation is now a top priority.** All plan files have logging rules. Agents must use ≤8 line logs, 1-line skips, archive old entries.
+3. **Tutorial & splash screen directive active** — all complex games must have start splash screens, auto-tutorials on new game, save systems. Simple apps need Help via F1.
 4. QA + Tester running deep quality passes (Pass 4).
-5. **Maturity & Restraint Policy (Sep 13):** Apps that have completed 6+ passes do not need artificial churn. Unless an agent has a specific directive from the director, "turn skipped because this app is complete and we don't have new ideas here" is expected. Stop unnecessary visual flourish (blinking HUDs, particle spam, intrusive weapon overlays). Directors provide new directions as needed.
+5. **Maturity & Restraint Policy (Sep 13):** 6+ pass apps skip unless directed. Stop unnecessary flourish.
+6. **Subagent model mandate (Sep 15):** All subagents must use `Model: "flash"` — no Opus subagents.
 
-### Game Library (43 titles)
-K2048, KAbyss, KAlchemy, KAsteroids, KBreakout, KChess, KColony, KColosseum, KConnect4, KCyber, KDarts, KDragon, KFarm, KFortress, KFreecell, KGo, KHangman, KMatch3, KMaze, KMech, KMines, KMystery, KPac, KPong, KQuest, KReversi, KRogue, KSanctuary, KSimon, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSudoku, KTetris, KTowers, KTrader, KVoid, KWizard, KWords.
+### Game Library (44 titles)
+K2048, KAbyss, KAlchemy, KAsteroids, KBreakout, KChess, KColony, KColosseum, KConnect4, KCosmic, KCyber, KDarts, KDragon, KFarm, KFortress, KFreecell, KGo, KHangman, KMatch3, KMaze, KMech, KMines, KMystery, KPac, KPong, KQuest, KReversi, KRogue, KSanctuary, KSimon, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSudoku, KTetris, KTowers, KTrader, KVoid, KWizard, KWords.
 
 ### Agent Status Summary
 
 | Agent | Status | Current Task | 72h Output |
 |---|---|---|---|
-| Usability | ✅ **Blazing** | KTerm | 13 commits — deep modal/toast/shortcut passes |
-| QA & Build | ✅ **Blazing** | Pass 4 | 12 commits — deep quality fixes |
-| App Tester | ✅ **Blazing** | UI audits | 18 commits — systematic 7-8 issue audits |
-| App Creator | ✅ Active | KAbyss Phase 14 | 9 commits — Phases 5-13 completed! |
-| Game Graphics | ✅ Active | Loop 9 queue | 6 commits — ALL Loop 0 games processed ✅ |
-| Feature Expander | ⏸️ Paused | — | User paused (reliability-first) |
-| Game Content | ⏸️ Paused | — | User paused (reliability-first) |
+| Usability | ✅ Active | KCalc | 15 commits |
+| QA & Build | ✅ Active | Pass 4 | 10 commits |
+| App Tester | ✅ Active | KRadio (queue) | 14 commits |
+| App Creator | ✅ Active | KCosmic Phase 11 | 11 commits — Phases 4-10 completed |
+| Game Graphics | ✅ Active | Loop 9 queue | 10 commits — 4 mature skips + KCosmic L1 |
+| Feature Expander | ⏸️ Paused | — | User paused |
+| Game Content | ⏸️ Paused | — | User paused |
 
 ### Creator
-**35 apps completed.** KAbyss at Phase 14 (final phase!) — will be the 36th completed lifecycle.
+**37 apps completed.** KAbyss completed (Phase 14 done, 37th lifecycle). Now on **KCosmic Phase 11** — orbital megastructures & planetary defense. Phases 1-10 done in 3 days.
 
 ### Graphics
-**Loop 0 priority WORKED!** KSanctuary, KSubmarine, KStarDredge, and KAbyss all received Loop 1 passes. Also advanced KTetris/KSnake/KBreakout to Loop 9 and KCyber to Loop 3.
+Mature games being correctly skipped (KChess, KRogue, KAlchemy, KFarm, KPong all Loop 9 skips). KCosmic got Loop 1. KColosseum Loop 2.
 
 ### QA + Tester
-**Pass 4 in deep progress.** QA finding increasingly sophisticated bugs (XSS sanitization, GDI leaks, buffer safety, audio buffer cutoff, storage persistence). Tester doing systematic UI audits catching 6-8 issues per app.
+**Pass 4 continues.** QA fixing KWizard, KVoid, KVault, KType, KTrader, KTowers, KTodo, KTimer. Tester auditing KRadio, KQuest, KPong, KPing, KPass, KPaint, KPad, KPac, KNote, KNet, KMystery, KMines, KMine, KMech.
 
 ## Milestones
 
@@ -76,25 +78,27 @@ K2048, KAbyss, KAlchemy, KAsteroids, KBreakout, KChess, KColony, KColosseum, KCo
 7. **🎯 95 APPS MILESTONE** — Sep 5.
 8. **Strategic shift: depth-first** — Sep 6.
 9. **Director comms channel** — Sep 9.
-10. **10 new game icons** — Sep 9.
-11. **Prompt A launched on Gemini 3.8 Flash** — Sep 10. ✅
-12. **Graphics Loop 0 priority completed** — ALL unprocessed games got Loop 1 — Sep 11-12. ✅
-13. **KAbyss Phase 13 complete** — Sep 12. (Phase 14 next, then 36th lifecycle complete)
-14. **User paused Expander/Content — reliability-first strategy** — Sep 10.
+10. **Prompt A launched on Gemini 3.8 Flash** — Sep 10. ✅
+11. **Graphics Loop 0 priority completed** — Sep 11-12. ✅
+12. **User paused Expander/Content — reliability-first strategy** — Sep 10.
+13. **KAbyss completed — 37th lifecycle** — Sep 13. ✅
+14. **Token conservation & logging rules deployed across all plan files** — Sep 15. ✅
+15. **Subagent model delegation rules (no Opus subagents)** — Sep 15. ✅
+16. **Tutorial & splash screen directives deployed** — Sep 15. ✅
+17. **Screenshots gallery & test infrastructure created** — Sep 15. ✅
 
 ### Active 🔄
-- Creator: KAbyss Phase 14 (final phase).
+- Creator: KCosmic Phase 11 (orbital megastructures).
 - QA: Pass 4 continuing.
 - Tester: UI audit sweep.
-- Graphics: Loop 9 for polished games.
-- Usability: KTerm and queue.
+- Graphics: Loop 9 queue with mature skips.
+- Usability: KCalc and queue.
 
 ### Upcoming 📋
-- **KAbyss Phase 14 → 36th completed lifecycle.**
-- **100 apps milestone** — 5 apps away.
-- QA Pass 4 completion.
+- **KCosmic Phase 14 → 38th completed lifecycle.**
+- **100 apps milestone** — 4 apps away.
 
-## Active Agent Fleet (as of 2026-09-13)
+## Active Agent Fleet (as of 2026-09-16)
 
 | Agent | Schedule | Plan File | Model | Dispatcher | Status |
 |---|---|---|---|---|---|
