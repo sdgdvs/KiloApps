@@ -143,6 +143,14 @@
   - Ensured edit menu commands focus editor and sync syntax overlay.
   - Refined replaceOne/findNext case matching and pattern count safety.
   - Added fallback input/download triggers for Native File System Access API.
+
+- **KPad**: PASS ✅ (8 issues, 8 fixed inline)
+  - Multi-tab text/code editing, syntax highlighting, templates, and AES-256-GCM encryption work smoothly.
+  - Fixed tab closing data corruption in closeTabDirect.
+  - Fixed tab context duplicate/close others live buffer sync.
+  - Ensured edit menu commands focus editor and sync syntax overlay.
+  - Refined replaceOne/findNext case matching and pattern count safety.
+  - Added fallback input/download triggers for Native File System Access API.
   - Added clean timeout for VFS in standalone mode.
   - Added localStorage persistence for theme, font size, and word wrap.
 
@@ -154,3 +162,75 @@
   - Implemented active AI turn skipping in Freeze AI with active button indicator and cancel refund.
   - Added checkEndGame to bomb disc placement branch to prevent game hangs on board completion.
   - Added status bar notifications when either player has no legal moves and their turn is passed.
+  - Preserved custom timer in campaign mode and eliminated forced untimed reset on stage initialization.
+  - Fixed stage 10 bonus, stage 14 bonus, and stage 16 hole overlaps with starting center discs.
+  - Added F5 quicksave and F9 quickload shortcuts alongside JSON save file export and import parity.
+  - Added localStorage preferences persistence for audio, hints, timer, board size, and AI difficulty.
+
+- **KRead**: PASS ✅ (8 issues, 8 fixed inline)
+  - Raw-text search regex engine built to prevent HTML entity corruption and tag mutation.
+  - Restored scroll position preservation in highlight and note DOM renderer to prevent viewport jumping.
+  - Added empty tab statistics reset and active dynamic reading speed (WPM) telemetry calculation.
+  - Periodic localStorage session auto-save added to reading timer to preserve active reading time.
+  - Tab title reset to 'Untitled' and open drawers refreshed on document clear.
+  - Synchronized search highlight state on tab switching and refreshed open drawers on tab close.
+  - Tab rename modal hardened with empty title validation and autofocus retention.
+  - Exported TXT format upgraded to include bookmarks matching JSON and Markdown export parity.
+
+- **KRadio**: PASS ✅ (8 issues, 8 fixed inline)
+  - Fixed hotkey collision where typing `?` or `h` in URL input triggered Help modal.
+  - Handled browser autoplay rejection gracefully without triggering false red error badge.
+  - Prevented live stream pause/resume buffering stalls by reconnecting fresh live stream.
+  - Eliminated browser error events on stream stop by clearing src with load reset.
+  - Synchronized visualizer bar animation with volume and muted status.
+  - Added localStorage persistence for station selection, custom URL, and volume level.
+  - Added ArrowLeft/ArrowRight keyboard shortcuts for cycling through station presets.
+  - Sanitized empty URL input on Tune and synchronized dynamic station title in document.
+
+- **KQuest**: PASS ✅ (8 issues, 8 fixed inline)
+  - Fixed updateHeroUI runtime crash in Tavern ale and side quest completion handlers.
+  - Implemented missing STATE.REPLAYS and STATE.CONFIG screens and action rebinding.
+  - Connected Quick Save (Slot 0) to Save/Load view and prevented out-of-sync screen clobbering.
+  - Fixed combat hotkeys (S, L, B, P) and Escape navigation broken by undefined gameState.
+  - Wired title screen Continue/Load Save and Help buttons; auto-triggered tutorial on new game.
+  - Added Tavern, Milestones, and Combat Log navigation buttons to Town controls panel.
+  - Synchronized inventory filter/sort dropdowns and added consumable tags to crafted items.
+  - Wired JSON Save Export/Import buttons to file reader and unified Phoenix Elixir usage.
+
+- **KPong**: PASS ✅ (8 issues, 8 fixed inline)
+  - Fixed replay frame obstacle rendering referencing live campaign level instead of frame data.
+  - Resolved Stage 20 boss shield instant respawn bug when depleted by regular balls.
+  - Eliminated leaderboard/games counter corruption triggered on every individual paddle bounce.
+  - Added debuff timers to save/load payload and synchronized difficulty button text on load.
+  - Persisted theme, AI difficulty, and game mode preferences across browser restarts.
+  - Added canvas click/tap game over recovery to prevent mouse and touch user input lock.
+  - Implemented simultaneous multi-touch control for 2-Player local PvP on touchscreens.
+  - Added Web Audio AudioContext gesture unlock and rewind-to-start replay toggle handling.
+
+- **KPing**: PASS ✅ (8 issues, 8 fixed inline)
+  - Prevented textarea selection clashing where Ctrl+C dumped full log instead of copying selection.
+  - Guarded against accidental console clearing via 'C' hotkey when text was highlighted in log.
+  - Linked preset dropdown with host input and locked preset switches during active scans.
+  - Connected route tracing to telemetry canvas to plot latency hop progression.
+  - Eliminated delayed interval completion across ping, route trace, and MTU sweep passes.
+  - Added route trace cancellation messaging and toast feedback matching PMTU sweep.
+  - Unlocked canvas flexbox shrinkage on smaller viewports and added modal focus trapping.
+  - Sanitized target host input against protocol prefixes, trailing slashes, and port suffixes.
+
+- **KPass**: PASS ✅ (7 issues, 7 fixed inline)
+  - Shifted revealed keys index map on entry deletion to prevent credential mask desync.
+  - Hardened CSV parser column mapping, supporting username integration and headerless files.
+  - Isolated strength calculation from generator DOM to prevent edit/import UI clobbering.
+  - Added localStorage preference persistence for character sets, length, and sort modes.
+  - Added double-click vault row copying matching status bar and inline button feedback.
+  - Added backdrop dismissal for edit/delete modals and global Ctrl+S inside label input.
+  - Guaranteed character representation across selected pools with cryptographic shuffling.
+
+- **KPaint**: PASS ✅ (7 issues, 7 fixed inline)
+  - Composited all visible layers into VFS save payload instead of saving base layer only.
+  - Guarded base canvas layer from deletion in deleteLayer when multiple layers exist.
+  - Resolved mobile touch coordinate NaN in touchend by reading changedTouches.
+  - Hardened floodFill against similar-shade loops and added pre-index bounds checking.
+  - Added deleteSelection via Del/Bksp keys to erase magic wand and lasso regions.
+  - Synchronized canvas transforms (rotation/flip) across all layers and updated emboss offset.
+  - Added click/keyboard toggle for export menu and localStorage preferences persistence.

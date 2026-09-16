@@ -105,13 +105,12 @@ For every game audited, also verify:
 
 ---
 
-**Target App:** KSpace
+**Target App:** KStarship
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KSpace
 - KStarship
 - KStellar
 - KSudoku
@@ -192,8 +191,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KSimon
 - KSnake
 - KSolitaire
+- KSpace
 
 ## Test Reports
+
+- **KSpace**: PASS ✅ (8 issues, 8 fixed inline)
+  - Added first-time tutorial auto-trigger via kspace_tutorialSeen while skipping on save load.
+  - Implemented F5 quicksave and F9 quickload shortcuts with browser refresh prevention.
+  - Upgraded saveGameState and loadGameState preserving complete state, upgrades, and seed.
+  - Added JSON mission save export and import file reader with structure validation.
+  - Wired missing replay skill recording for hyper-jump, drone wing, and overcharge hyper-mode.
+  - Fixed keybinds screen bounds for all 13 bindings and added pointer click and Escape cancellation.
+  - Added interactive buttons and pointerdown handlers for leaderboard, game over, and victory screens.
+  - Expanded pause menu options and blurred skill bar buttons to prevent spacebar focus collision.
 
 - **KSolitaire**: PASS ✅ (8 issues, 8 fixed inline)
   - Preserved full game mode, stage, draw rules, and card states across browser refresh.
@@ -244,84 +254,9 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
   - Built gainXP level-up progression system with stat increases, heals, and celebratory effects.
   - Added floor gold spawns, monster gold drops, and functional stat bonuses for equipped rings.
 
-> 📁 **Archived Records**: Historical entries older than 80 lines moved to [app_test_reports_round2.md](archive/app_test_reports_round2.md).
-  - Preserved custom timer in campaign mode and eliminated forced untimed reset on stage initialization.
-  - Fixed stage 10 bonus, stage 14 bonus, and stage 16 hole overlaps with starting center discs.
-  - Added F5 quicksave and F9 quickload shortcuts alongside JSON save file export and import parity.
-  - Added localStorage preferences persistence for audio, hints, timer, board size, and AI difficulty.
-
-- **KRead**: PASS ✅ (8 issues, 8 fixed inline)
-  - Raw-text search regex engine built to prevent HTML entity corruption and tag mutation.
-  - Restored scroll position preservation in highlight and note DOM renderer to prevent viewport jumping.
-  - Added empty tab statistics reset and active dynamic reading speed (WPM) telemetry calculation.
-  - Periodic localStorage session auto-save added to reading timer to preserve active reading time.
-  - Tab title reset to 'Untitled' and open drawers refreshed on document clear.
-  - Synchronized search highlight state on tab switching and refreshed open drawers on tab close.
-  - Tab rename modal hardened with empty title validation and autofocus retention.
-  - Exported TXT format upgraded to include bookmarks matching JSON and Markdown export parity.
-
-- **KRadio**: PASS ✅ (8 issues, 8 fixed inline)
-  - Fixed hotkey collision where typing `?` or `h` in URL input triggered Help modal.
-  - Handled browser autoplay rejection gracefully without triggering false red error badge.
-  - Prevented live stream pause/resume buffering stalls by reconnecting fresh live stream.
-  - Eliminated browser error events on stream stop by clearing src with load reset.
-  - Synchronized visualizer bar animation with volume and muted status.
-  - Added localStorage persistence for station selection, custom URL, and volume level.
-  - Added ArrowLeft/ArrowRight keyboard shortcuts for cycling through station presets.
-  - Sanitized empty URL input on Tune and synchronized dynamic station title in document.
-
-- **KQuest**: PASS ✅ (8 issues, 8 fixed inline)
-  - Fixed updateHeroUI runtime crash in Tavern ale and side quest completion handlers.
-  - Implemented missing STATE.REPLAYS and STATE.CONFIG screens and action rebinding.
-  - Connected Quick Save (Slot 0) to Save/Load view and prevented out-of-sync screen clobbering.
-  - Fixed combat hotkeys (S, L, B, P) and Escape navigation broken by undefined gameState.
-  - Wired title screen Continue/Load Save and Help buttons; auto-triggered tutorial on new game.
-  - Added Tavern, Milestones, and Combat Log navigation buttons to Town controls panel.
-  - Synchronized inventory filter/sort dropdowns and added consumable tags to crafted items.
-  - Wired JSON Save Export/Import buttons to file reader and unified Phoenix Elixir usage.
-
-- **KPong**: PASS ✅ (8 issues, 8 fixed inline)
-  - Fixed replay frame obstacle rendering referencing live campaign level instead of frame data.
-  - Resolved Stage 20 boss shield instant respawn bug when depleted by regular balls.
-  - Eliminated leaderboard/games counter corruption triggered on every individual paddle bounce.
-  - Added debuff timers to save/load payload and synchronized difficulty button text on load.
-  - Persisted theme, AI difficulty, and game mode preferences across browser restarts.
-  - Added canvas click/tap game over recovery to prevent mouse and touch user input lock.
-  - Implemented simultaneous multi-touch control for 2-Player local PvP on touchscreens.
-  - Added Web Audio AudioContext gesture unlock and rewind-to-start replay toggle handling.
-
-- **KPing**: PASS ✅ (8 issues, 8 fixed inline)
-  - Prevented textarea selection clashing where Ctrl+C dumped full log instead of copying selection.
-  - Guarded against accidental console clearing via 'C' hotkey when text was highlighted in log.
-  - Linked preset dropdown with host input and locked preset switches during active scans.
-  - Connected route tracing to telemetry canvas to plot latency hop progression.
-  - Eliminated delayed interval completion across ping, route trace, and MTU sweep passes.
-  - Added route trace cancellation messaging and toast feedback matching PMTU sweep.
-  - Unlocked canvas flexbox shrinkage on smaller viewports and added modal focus trapping.
-  - Sanitized target host input against protocol prefixes, trailing slashes, and port suffixes.
-
-- **KPass**: PASS ✅ (7 issues, 7 fixed inline)
-  - Shifted revealed keys index map on entry deletion to prevent credential mask desync.
-  - Hardened CSV parser column mapping, supporting username integration and headerless files.
-  - Isolated strength calculation from generator DOM to prevent edit/import UI clobbering.
-  - Added localStorage preference persistence for character sets, length, and sort modes.
-  - Added double-click vault row copying matching status bar and inline button feedback.
-  - Added backdrop dismissal for edit/delete modals and global Ctrl+S inside label input.
-  - Guaranteed character representation across selected pools with cryptographic shuffling.
-
-- **KPaint**: PASS ✅ (7 issues, 7 fixed inline)
-  - Composited all visible layers into VFS save payload instead of saving base layer only.
-  - Guarded base canvas layer from deletion in deleteLayer when multiple layers exist.
-  - Resolved mobile touch coordinate NaN in touchend by reading changedTouches.
-  - Hardened floodFill against similar-shade loops and added pre-index bounds checking.
-  - Added deleteSelection via Del/Bksp keys to erase magic wand and lasso regions.
-  - Synchronized canvas transforms (rotation/flip) across all layers and updated emboss offset.
-  - Added click/keyboard toggle for export menu and localStorage preferences persistence.
-
-> 📁 **Archived Reports**: Historical test reports have been archived to [archive/app_test_reports_archive.md](archive/app_test_reports_archive.md) to preserve token efficiency.
-
-> 📁 **Archived Round 2 Reports**: Recent detailed audit reports (KPad through KImage) have been archived to [archive/app_test_reports_round2.md](archive/app_test_reports_round2.md).
+> 📁 **Archived Reports**: Historical test reports have been archived to [archive/app_test_reports_round2.md](archive/app_test_reports_round2.md) and [archive/app_test_reports_archive.md](archive/app_test_reports_archive.md) to preserve token efficiency.
 
 ### Round 2 Completed Index
-- KSolitaire ✅ (8 fixed), KSnake ✅ (8 fixed), KSimon ✅ (8 fixed), KScript ✅ (7 fixed), KRogue ✅ (8 fixed), KReversi ✅ (8 fixed), KRead ✅ (8 fixed), KRadio ✅ (8 fixed), KQuest ✅ (8 fixed), KPong ✅ (8 fixed), KPing ✅ (8 fixed), KPass ✅ (7 fixed), KPaint ✅ (7 fixed), KPad ✅ (8 fixed), KPac ✅ (8 fixed), KNote ✅ (7 fixed), KNet ✅ (3 fixed), KMystery ✅ (5 fixed), KMines ✅ (8 fixed), KMine ✅ (2 fixed), KMedia ✅ (8 fixed), KMech ✅ (6 fixed), KMaze ✅ (7 fixed), KMatch3 ✅ (8 fixed), KMandel ✅ (6 fixed), KMail ✅ (7 fixed), KJournal ✅ (7 fixed), KImage ✅ (8 fixed)
+- KSpace ✅ (8 fixed), KSolitaire ✅ (8 fixed), KSnake ✅ (8 fixed), KSimon ✅ (8 fixed), KScript ✅ (7 fixed), KRogue ✅ (8 fixed), KReversi ✅ (8 fixed), KRead ✅ (8 fixed), KRadio ✅ (8 fixed), KQuest ✅ (8 fixed), KPong ✅ (8 fixed), KPing ✅ (8 fixed), KPass ✅ (7 fixed), KPaint ✅ (7 fixed), KPad ✅ (8 fixed), KPac ✅ (8 fixed), KNote ✅ (7 fixed), KNet ✅ (3 fixed), KMystery ✅ (5 fixed), KMines ✅ (8 fixed), KMine ✅ (2 fixed), KMedia ✅ (8 fixed), KMech ✅ (6 fixed), KMaze ✅ (7 fixed), KMatch3 ✅ (8 fixed), KMandel ✅ (6 fixed), KMail ✅ (7 fixed), KJournal ✅ (7 fixed), KImage ✅ (8 fixed)
+
 
