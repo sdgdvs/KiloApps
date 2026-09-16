@@ -815,8 +815,6 @@
                 return;
             }
 
-            const today = getTodayStr();
-
             filteredHabits.forEach(habit => {
                 const streak = calculateStreak(habit.completions);
                 const isCompletedToday = habit.completions && habit.completions.includes(today);

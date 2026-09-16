@@ -1450,6 +1450,16 @@
       ctx.restore();
   }
 
+  function draw3DPanel(c, x, y, w, h) {
+      c.save();
+      c.fillStyle = '#141720';
+      c.fillRect(x, y, w, h);
+      c.strokeStyle = '#282d3d';
+      c.lineWidth = 1;
+      c.strokeRect(x, y, w, h);
+      c.restore();
+  }
+
   function draw() {
       // Background base
       ctx.fillStyle = '#0a0a14'; // Dark space background

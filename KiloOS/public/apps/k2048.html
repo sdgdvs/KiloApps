@@ -710,20 +710,25 @@
             }
         }, 1000);
 
+        const fxCanvas = document.getElementById('fx-canvas');
+        const fxCtx = fxCanvas ? fxCanvas.getContext('2d') : null;
+        const boardBgCanvas = document.getElementById('board-bg-canvas');
+        const boardBgCtx = boardBgCanvas ? boardBgCanvas.getContext('2d') : null;
+
         function setTheme(themeName) {
             document.body.className = themeName === 'default' ? '' : `theme-${themeName}`;
             safeSetStorage('k2048_theme', themeName);
             themeSelect.value = themeName;
             updateBoardBackground();
         }
-        let savedTheme = safeGetStorage('k2048_theme', 'default');
-        setTheme(savedTheme);
-
         let gridSize = 4;
         let grid = [];
         let score = 0;
         let ruleset = 'classic';
         let bestScore = parseInt(safeGetStorage('k2048_best_score_4', '0')) || parseInt(safeGetStorage('k2048_best_score', '0')) || 0;
+
+        let savedTheme = safeGetStorage('k2048_theme', 'default');
+        setTheme(savedTheme);
         
         function setRuleset(r) {
             ruleset = r;
@@ -1037,10 +1042,6 @@
             });
         }
 
-        const fxCanvas = document.getElementById('fx-canvas');
-        const fxCtx = fxCanvas ? fxCanvas.getContext('2d') : null;
-        const boardBgCanvas = document.getElementById('board-bg-canvas');
-        const boardBgCtx = boardBgCanvas ? boardBgCanvas.getContext('2d') : null;
         let webParticles = [];
         let shockwaves = [];
         let ambientDust = [];

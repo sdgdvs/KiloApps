@@ -1,0 +1,164 @@
+{
+  "version": "1.0.0",
+  "description": "Registry of mature KiloApps that have completed 6+ iterative loops/passes. Governed by user alignment directive on 2026-09-15.",
+  "policy": {
+    "status": "LOCKED_STABLE",
+    "rule": "Agents shall NOT modify apps listed in this registry unless an explicit critical defect or user directive is issued. All listed apps must be removed from active plan queues."
+  },
+  "locked_apps": [
+    {
+      "name": "K2048",
+      "type": "game",
+      "category": "classic_puzzle",
+      "loops_completed": "Pass 4 QA, Classic Balance, Loop 8 Graphics",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KChess",
+      "type": "game",
+      "category": "classic_board",
+      "loops_completed": "Pass 4 QA, Classic Balance, Loop 9 Graphics, AI Tuning",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KConnect4",
+      "type": "game",
+      "category": "classic_board",
+      "loops_completed": "Pass 4 QA, Classic Balance, C4N Notation, Loop 8 Graphics",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KDarts",
+      "type": "game",
+      "category": "classic_skill",
+      "loops_completed": "Pass 4 QA, Classic Balance, Loop 8 Graphics",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KFreecell",
+      "type": "game",
+      "category": "classic_card",
+      "loops_completed": "Pass 4 QA, Classic Balance, Card Solver, Loop 8 Graphics",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KGo",
+      "type": "game",
+      "category": "classic_board",
+      "loops_completed": "Pass 4 QA, Classic Balance, Territory Scoring, Loop 8 Graphics",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KHangman",
+      "type": "game",
+      "category": "classic_word",
+      "loops_completed": "Pass 4 QA, Classic Balance, Dictionary Audits, Loop 8 Graphics",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KMatch3",
+      "type": "game",
+      "category": "classic_puzzle",
+      "loops_completed": "Pass 4 QA, Classic Balance, Cascade Physics, Loop 8 Graphics",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KMaze",
+      "type": "game",
+      "category": "exploration",
+      "loops_completed": "Pass 4 QA, Restraint & De-clutter Pass, Raycaster Polish",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KMines",
+      "type": "game",
+      "category": "classic_puzzle",
+      "loops_completed": "Pass 4 QA, Classic Balance, First-Click Safety, Loop 8 Graphics",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KPong",
+      "type": "game",
+      "category": "classic_arcade",
+      "loops_completed": "Pass 4 QA, Classic Balance, Spin Physics, Loop 8 Graphics",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KReversi",
+      "type": "game",
+      "category": "classic_board",
+      "loops_completed": "Pass 4 QA, Classic Balance, Mobility Heuristics, Loop 8 Graphics",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KSimon",
+      "type": "game",
+      "category": "classic_memory",
+      "loops_completed": "Pass 4 QA, Classic Balance, Audio Tone Tuning, Loop 8 Graphics",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KSolitaire",
+      "type": "game",
+      "category": "classic_card",
+      "loops_completed": "Pass 4 QA, Classic Balance, Klondike Logic, Loop 8 Graphics",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KSudoku",
+      "type": "game",
+      "category": "classic_puzzle",
+      "loops_completed": "Pass 4 QA, Classic Balance, Unique Solution Generator, Loop 8 Graphics",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KTetris",
+      "type": "game",
+      "category": "classic_arcade",
+      "loops_completed": "Pass 4 QA, Classic Balance, SRS Rotation, Loop 9 Graphics",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KTowers",
+      "type": "game",
+      "category": "classic_puzzle",
+      "loops_completed": "Pass 4 QA, Classic Balance, Move Counter, Loop 8 Graphics",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KWords",
+      "type": "game",
+      "category": "classic_word",
+      "loops_completed": "Pass 4 QA, Classic Balance, Scrabble Dictionary, Loop 8 Graphics",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KCalc",
+      "type": "utility",
+      "category": "math",
+      "loops_completed": "Pass 4 QA, Precision Math, Usability Modal/Shortcuts",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KClock",
+      "type": "utility",
+      "category": "system",
+      "loops_completed": "Pass 4 QA, Precision Timers, Usability Modal/Shortcuts",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KConverter",
+      "type": "utility",
+      "category": "conversion",
+      "loops_completed": "Pass 4 QA, Unit Ratio Audits, Usability Pass",
+      "date_locked": "2026-09-15"
+    },
+    {
+      "name": "KColor",
+      "type": "utility",
+      "category": "graphics",
+      "loops_completed": "Pass 4 QA, Palette Audits, Usability Pass",
+      "date_locked": "2026-09-15"
+    }
+  ]
+}

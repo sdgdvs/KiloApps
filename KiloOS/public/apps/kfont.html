@@ -348,6 +348,7 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       ctx.font = getFontString();
       
       const szPx = parseFloat(sizeList.value) || 48;
+      const metrics = ctx.measureText("Hg");
       const asc = metrics.fontBoundingBoxAscent || metrics.actualBoundingBoxAscent || (szPx * 0.8);
       const desc = metrics.fontBoundingBoxDescent || metrics.actualBoundingBoxDescent || (szPx * 0.2);
       const aAsc = metrics.actualBoundingBoxAscent || (asc * 0.9);

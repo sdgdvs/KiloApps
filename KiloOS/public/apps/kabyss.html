@@ -7683,7 +7683,8 @@
             document.getElementById('statMight').innerText = `${finalMight} (+${Math.floor((finalMight - 10) / 2)})`;
             document.getElementById('statWarding').innerText = `${finalWarding} (+${Math.floor((finalWarding - 10) / 2)})`;
             document.getElementById('statArcana').innerText = `${finalArcana} (+${Math.floor((finalArcana - 10) / 2)})`;
-            document.getElementById('statLightRad').innerText = `${effectiveLight} Tiles`;
+            const elLightRad = document.getElementById('statLightRad');
+            if (elLightRad) elLightRad.innerText = `${effectiveLight} Tiles`;
 
             // Hunger & Torch Fuel & Curse HUD updates
             const elStatHunger = document.getElementById('statHunger');
