@@ -567,8 +567,14 @@ print a * b + 5"></textarea>
     const modalClose = document.getElementById('modalClose');
     const toastContainer = document.getElementById('toastContainer');
 
-    // Default script template
-    exprInput.value = "// Welcome to KScript!\n// Press F1 for Help & Shortcuts\na = 10\nb = 20\nprint a * b + 5\nprint a % 3";
+    // Default script template & localStorage initialization
+    const DEFAULT_SCRIPT = "// Welcome to KScript!\n// Press F1 for Help & Shortcuts\na = 10\nb = 20\nprint a * b + 5\nprint a % 3";
+    try {
+        const savedCode = localStorage.getItem('kscript_code');
+        exprInput.value = (savedCode !== null && savedCode.trim().length > 0) ? savedCode : DEFAULT_SCRIPT;
+    } catch(e) {
+        exprInput.value = DEFAULT_SCRIPT;
+    }
 
     // Presets definitions
     const PRESETS = {
@@ -582,6 +588,7 @@ print a * b + 5"></textarea>
     function loadPreset(name) {
         if (PRESETS[name]) {
             exprInput.value = PRESETS[name];
+            try { localStorage.setItem('kscript_code', exprInput.value); } catch(e) {}
             showToast("Loaded preset: " + name, "info");
             btnRun.click();
         }
@@ -632,18 +639,26 @@ print a * b + 5"></textarea>
             e.preventDefault();
             const start = exprInput.selectionStart;
             const end = exprInput.selectionEnd;
-            exprInput.value = exprInput.value.substring(0, start) + "  " + exprInput.value.substring(end);
-            exprInput.selectionStart = exprInput.selectionEnd = start + 2;
+            exprInput.setRangeText('  ', start, end, 'end');
+            exprInput.dispatchEvent(new Event('input'));
+            if (isRecording) {
+                macroKeys.push('  ');
+            }
         }
     });
 
-    // Reset stepper on code modification
+    // Reset stepper on code modification & auto-save to localStorage
     exprInput.addEventListener('input', () => {
         if (debugGen) {
             debugGen = null;
+        }
+        if (statusBadge.textContent !== "READY" && !isRecording && !isPlaying) {
             statusBadge.textContent = "READY";
             statusBadge.className = "status-badge";
         }
+        try {
+            localStorage.setItem('kscript_code', exprInput.value);
+        } catch(e) {}
     });
 
     // Global Hotkeys
@@ -809,7 +824,7 @@ print a * b + 5"></textarea>
             let varIdx = -1;
             let startIdx = idx;
             
-            if (str.substring(idx, idx + 5) === "print") {
+            if (str.substring(idx, idx + 5).toLowerCase() === "print") {
                 let after = str[idx + 5];
                 if (after === ' ' || after === '\t' || after === '(' || after === undefined || after === '\r' || after === '\n' || after === ';') {
                     idx += 5;
@@ -844,16 +859,22 @@ print a * b + 5"></textarea>
                 outStr += `${String.fromCharCode(varIdx + 65)} = ${val}\n`;
             }
             lastVal = val;
+            if (idx === startIdx) advance();
             yield {vars, assigned, outStr, nodeCount, lastVal};
         }
         
-        outStr += `\nReturn: ${lastVal}`;
+        if (outStr) {
+            outStr += `\nReturn: ${lastVal}`;
+        } else {
+            outStr = `Return: ${lastVal}`;
+        }
         return {vars, assigned, outStr, nodeCount, lastVal};
     }
 
     function updateUI(state) {
         if (!state) return;
         outputArea.textContent = state.outStr;
+        outputArea.scrollTop = outputArea.scrollHeight;
         let mem = `AST Nodes: ${state.nodeCount}\n\n`;
         let activeCount = 0;
         for (let i = 0; i < 26; i++) {
@@ -864,7 +885,7 @@ print a * b + 5"></textarea>
             }
         }
         if (activeCount === 0) {
-            mem += "(no non-zero variables)";
+            mem += "(no active variables)";
         }
         memoryArea.textContent = mem;
     }
@@ -929,7 +950,7 @@ print a * b + 5"></textarea>
         showToast("Console cleared.", "info", 1500);
     };
 
-    // Regex Replace with /pattern/flags and raw pattern support
+    // Regex Replace with /pattern/flags and raw pattern fallback
     btnRep.onclick = () => {
         try {
             let pat = document.getElementById('regexFind').value;
@@ -944,11 +965,16 @@ print a * b + 5"></textarea>
                 const flags = matchSlash[2].includes('g') ? matchSlash[2] : matchSlash[2] + 'g';
                 regex = new RegExp(matchSlash[1], flags);
             } else {
-                regex = new RegExp(pat, 'g');
+                try {
+                    regex = new RegExp(pat, 'g');
+                } catch {
+                    regex = new RegExp(pat.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+                }
             }
             const before = exprInput.value;
             exprInput.value = exprInput.value.replace(regex, rep);
             if (before !== exprInput.value) {
+                exprInput.dispatchEvent(new Event('input'));
                 showToast("Replacements applied successfully.", "success");
             } else {
                 showToast("Pattern not found in editor.", "info");
@@ -973,7 +999,12 @@ print a * b + 5"></textarea>
 
     // Macro Engine
     let isRecording = false;
+    let isPlaying = false;
     let macroKeys = [];
+    try {
+        const savedMacro = localStorage.getItem('kscript_macro');
+        if (savedMacro) macroKeys = JSON.parse(savedMacro);
+    } catch(e) {}
     
     exprInput.addEventListener('keydown', (e) => {
         if (isRecording && !e.ctrlKey && !e.altKey && !e.metaKey) {
@@ -984,6 +1015,7 @@ print a * b + 5"></textarea>
     });
 
     btnRec.onclick = () => {
+        if (isPlaying) return;
         isRecording = !isRecording;
         if (isRecording) {
             btnRec.innerHTML = '<span>⏹ Stop</span> <span class="btn-key">Alt+M</span>';
@@ -997,34 +1029,46 @@ print a * b + 5"></textarea>
             btnRec.style.opacity = '1';
             statusBadge.textContent = "READY";
             statusBadge.className = "status-badge";
+            try { localStorage.setItem('kscript_macro', JSON.stringify(macroKeys)); } catch(e) {}
             showToast(`Macro saved (${macroKeys.length} keys).`, "success");
         }
     };
 
     btnPlay.onclick = async () => {
+        if (isPlaying) return;
         if (isRecording) btnRec.click();
         if (macroKeys.length === 0) {
             showToast("No macro recorded yet. Click 'Rec' to record keystrokes.", "warning");
             return;
         }
+        isPlaying = true;
+        statusBadge.textContent = "PLAYING MACRO";
+        statusBadge.className = "status-badge";
         exprInput.focus();
         showToast("Replaying macro...", "info", 1500);
-        for (let key of macroKeys) {
-            const start = exprInput.selectionStart;
-            const end = exprInput.selectionEnd;
-            if (key === 'Enter') {
-                exprInput.setRangeText('\n', start, end, 'end');
-            } else if (key === 'Backspace') {
-                if (start > 0 || start !== end) {
-                    const delStart = (start === end) ? start - 1 : start;
-                    exprInput.setRangeText('', delStart, end, 'end');
+        try {
+            for (let key of macroKeys) {
+                const start = exprInput.selectionStart;
+                const end = exprInput.selectionEnd;
+                if (key === 'Enter') {
+                    exprInput.setRangeText('\n', start, end, 'end');
+                } else if (key === 'Backspace') {
+                    if (start > 0 || start !== end) {
+                        const delStart = (start === end) ? start - 1 : start;
+                        exprInput.setRangeText('', delStart, end, 'end');
+                    }
+                } else {
+                    exprInput.setRangeText(key, start, end, 'end');
                 }
-            } else {
-                exprInput.setRangeText(key, start, end, 'end');
+                await new Promise(r => setTimeout(r, 20));
             }
-            await new Promise(r => setTimeout(r, 20));
+            exprInput.dispatchEvent(new Event('input'));
+            showToast("Macro replay finished.", "success", 2000);
+        } finally {
+            isPlaying = false;
+            statusBadge.textContent = "READY";
+            statusBadge.className = "status-badge";
         }
-        showToast("Macro replay finished.", "success", 2000);
     };
 
     btnLoad.onclick = () => {
@@ -1037,6 +1081,7 @@ print a * b + 5"></textarea>
             const reader = new FileReader();
             reader.onload = ev => { 
                 exprInput.value = ev.target.result;
+                exprInput.dispatchEvent(new Event('input'));
                 showToast(`Loaded "${file.name}"`, "success");
                 btnRun.click();
             };
@@ -1074,6 +1119,7 @@ print a * b + 5"></textarea>
         const reader = new FileReader();
         reader.onload = ev => {
             exprInput.value = ev.target.result;
+            exprInput.dispatchEvent(new Event('input'));
             showToast(`Loaded "${file.name}"`, "success");
             btnRun.click();
         };
