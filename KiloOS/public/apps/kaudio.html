@@ -684,15 +684,26 @@
     }, duration);
   }
 
+  function safeGetStorage(key) {
+    try { return localStorage.getItem(key); } catch (e) { return null; }
+  }
+  function safeSetStorage(key, val) {
+    try { localStorage.setItem(key, val); } catch (e) {}
+  }
+
   function toggleHelp() {
     const m = document.getElementById('helpModal');
     m.style.display = (m.style.display === 'none' || !m.style.display) ? 'flex' : 'none';
+    if (m.style.display === 'none') {
+      safeSetStorage('kaudio_tutorialSeen', '1');
+    }
   }
 
   // Dismiss help modal when clicking backdrop
   document.getElementById('helpModal').addEventListener('click', (e) => {
     if (e.target === document.getElementById('helpModal')) {
       document.getElementById('helpModal').style.display = 'none';
+      safeSetStorage('kaudio_tutorialSeen', '1');
     }
   });
   // Audio Context & Nodes Initialization
@@ -760,21 +771,55 @@
   const valDriveAmount = document.getElementById('valDriveAmount');
   const btnVisMode = document.getElementById('btnVisMode');
 
+  function saveAudioState() {
+    const state = {
+      waveType: waveSelect ? waveSelect.value : 'sine',
+      adsr: {
+        attack: envA ? envA.value : '0.05',
+        decay: envD ? envD.value : '0.1',
+        sustain: envS ? envS.value : '0.7',
+        release: envR ? envR.value : '0.2'
+      },
+      filter: {
+        type: filterType ? filterType.value : 'lowpass',
+        cutoff: filterCutoff ? filterCutoff.value : '4000',
+        q: filterQ ? filterQ.value : '1'
+      },
+      effects: {
+        delay: chkDelay ? chkDelay.checked : false,
+        delayTime: delayTime ? delayTime.value : '0.25',
+        delayFeedback: delayFeedback ? delayFeedback.value : '0.45',
+        delayMix: delayMix ? delayMix.value : '0.3',
+        drive: chkDrive ? chkDrive.checked : false,
+        driveAmount: driveAmount ? driveAmount.value : '15'
+      },
+      visMode: visMode,
+      octaveShift: octaveShift,
+      bpm: (typeof seqBpmEl !== 'undefined' && seqBpmEl) ? seqBpmEl.value : '120',
+      tracks: (typeof seqTracks !== 'undefined' && seqTracks) ? seqTracks.map(t => ({ name: t.name, grid: t.grid })) : []
+    };
+    safeSetStorage('kaudio_state', JSON.stringify(state));
+  }
+
   // Slider & FX Event Listeners
-  envA.oninput = () => valA.textContent = parseFloat(envA.value).toFixed(2) + 's';
-  envD.oninput = () => valD.textContent = parseFloat(envD.value).toFixed(2) + 's';
-  envS.oninput = () => valS.textContent = parseFloat(envS.value).toFixed(2);
-  envR.oninput = () => valR.textContent = parseFloat(envR.value).toFixed(2) + 's';
+  waveSelect.onchange = () => saveAudioState();
+  envA.oninput = () => { valA.textContent = parseFloat(envA.value).toFixed(2) + 's'; saveAudioState(); };
+  envD.oninput = () => { valD.textContent = parseFloat(envD.value).toFixed(2) + 's'; saveAudioState(); };
+  envS.oninput = () => { valS.textContent = parseFloat(envS.value).toFixed(2); saveAudioState(); };
+  envR.oninput = () => { valR.textContent = parseFloat(envR.value).toFixed(2) + 's'; saveAudioState(); };
   filterCutoff.oninput = () => {
     valCutoff.textContent = filterCutoff.value + 'Hz';
     if (filterNode && ctx) filterNode.frequency.setValueAtTime(parseFloat(filterCutoff.value), ctx.currentTime);
+    saveAudioState();
   };
   filterQ.oninput = () => {
     valQ.textContent = parseFloat(filterQ.value).toFixed(1);
     if (filterNode && ctx) filterNode.Q.setValueAtTime(parseFloat(filterQ.value), ctx.currentTime);
+    saveAudioState();
   };
   filterType.onchange = () => {
     if (filterNode) filterNode.type = filterType.value;
+    saveAudioState();
   };
   masterVol.oninput = () => {
     if (masterGain && ctx) masterGain.gain.setValueAtTime(parseFloat(masterVol.value), ctx.currentTime);
@@ -784,18 +829,22 @@
     if (delayWetGainNode && ctx) {
       delayWetGainNode.gain.setValueAtTime(chkDelay.checked ? parseFloat(delayMix.value) : 0, ctx.currentTime);
     }
+    saveAudioState();
   };
   delayTime.oninput = () => {
     valDelayTime.textContent = parseFloat(delayTime.value).toFixed(2) + 's';
     if (delayNode && ctx) delayNode.delayTime.setValueAtTime(parseFloat(delayTime.value), ctx.currentTime);
+    saveAudioState();
   };
   delayFeedback.oninput = () => {
     valDelayFeedback.textContent = Math.round(parseFloat(delayFeedback.value) * 100) + '%';
     if (delayFeedbackNode && ctx) delayFeedbackNode.gain.setValueAtTime(parseFloat(delayFeedback.value), ctx.currentTime);
+    saveAudioState();
   };
   delayMix.oninput = () => {
     valDelayMix.textContent = Math.round(parseFloat(delayMix.value) * 100) + '%';
     if (delayWetGainNode && ctx && chkDelay.checked) delayWetGainNode.gain.setValueAtTime(parseFloat(delayMix.value), ctx.currentTime);
+    saveAudioState();
   };
 
   function makeDistortionCurve(amount = 15) {
@@ -814,17 +863,20 @@
     if (driveNode) {
       driveNode.curve = chkDrive.checked ? makeDistortionCurve(parseFloat(driveAmount.value)) : null;
     }
+    saveAudioState();
   };
   driveAmount.oninput = () => {
     valDriveAmount.textContent = driveAmount.value + 'x';
     if (driveNode && chkDrive.checked) {
       driveNode.curve = makeDistortionCurve(parseFloat(driveAmount.value));
     }
+    saveAudioState();
   };
 
   btnVisMode.onclick = () => {
     visMode = (visMode === 'scope' ? 'spectrum' : 'scope');
     btnVisMode.textContent = (visMode === 'scope' ? 'Mode: Scope (V)' : 'Mode: Spectrum (V)');
+    saveAudioState();
   };
 
   octaveBadge.style.cursor = 'pointer';
@@ -833,6 +885,7 @@
     octaveShift = (octaveShift >= 4) ? -4 : octaveShift + 1;
     octaveBadge.textContent = 'Octave: ' + (octaveShift > 0 ? '+' : '') + octaveShift;
     showToast(`Octave shifted: ${octaveShift > 0 ? '+' : ''}${octaveShift}`, 'info', 1400);
+    saveAudioState();
   };
 
   recStatus.style.cursor = 'pointer';
@@ -1063,7 +1116,11 @@
       noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
       noise.connect(noiseGain);
       noiseGain.connect(filterNode);
+      noise.onended = () => {
+        try { noise.disconnect(); noiseGain.disconnect(); } catch (e) {}
+      };
       noise.start(now);
+      noise.stop(now + 0.3);
       return;
     }
 
@@ -1071,6 +1128,9 @@
     let gain = ctx.createGain();
     osc.connect(gain);
     gain.connect(filterNode);
+    osc.onended = () => {
+      try { osc.disconnect(); gain.disconnect(); } catch (e) {}
+    };
 
     if (type === 'jump') {
       waveSelect.value = 'square';
@@ -1253,7 +1313,9 @@
         document.getElementById('btnExportWav').click();
         return;
       }
+      return;
     }
+    if (e.altKey || e.metaKey) return;
 
     // Sound FX Presets via 1-8 Numeric Keys
     if (!e.ctrlKey && !e.altKey && !e.metaKey && e.key >= '1' && e.key <= '8') {
@@ -1273,6 +1335,7 @@
       const m = document.getElementById('helpModal');
       if (m && m.style.display === 'flex') {
         m.style.display = 'none';
+        safeSetStorage('kaudio_tutorialSeen', '1');
         return;
       }
     }
@@ -1372,6 +1435,7 @@
 
   document.addEventListener('keyup', e => {
     if (!e.key) return;
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
     if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
     let idx = binds.indexOf(e.key.toUpperCase());
     if (idx !== -1) stopNote(idx);
@@ -1427,6 +1491,7 @@
 
   seqBpmEl.oninput = () => {
     valBpmEl.textContent = seqBpmEl.value;
+    saveAudioState();
     if (seqPlaying) {
       clearInterval(seqInterval);
       runSequencer();
@@ -1456,6 +1521,7 @@
         btn.onclick = () => {
           track.grid[st] = !track.grid[st];
           btn.classList.toggle('active', track.grid[st]);
+          saveAudioState();
         };
         stepsContainer.appendChild(btn);
       }
@@ -1506,6 +1572,7 @@
     } else {
       btnSeqPlay.textContent = '▶ Play Sequencer [P]';
       clearInterval(seqInterval);
+      seqInterval = null;
       seqTracks.forEach((_, trIdx) => stopNote('seq_' + trIdx, true));
       document.querySelectorAll('.step-btn.current').forEach(el => el.classList.remove('current'));
       showToast('⏸ Sequencer paused [P]', 'info', 1800);
@@ -1518,6 +1585,7 @@
       stopNote('seq_' + trIdx, true);
     });
     buildSequencerGrid();
+    saveAudioState();
     showToast('🗑 16-step sequencer pattern cleared [C]', 'info', 2000);
   };
 
@@ -1544,7 +1612,7 @@
     a.href = url;
     a.download = 'kaudio_project.json';
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
     showToast('📄 Saved synthesizer project to kaudio_project.json [Ctrl+S]', 'success', 3000);
   };
 
@@ -1600,6 +1668,7 @@
           });
           buildSequencerGrid();
         }
+        saveAudioState();
         showToast(`📂 Project "${file.name}" loaded successfully!`, 'success', 3500);
       } catch(err) {
         showToast('❌ Failed to parse JSON Project file!', 'danger', 4000);
@@ -1696,13 +1765,119 @@
     a.href = url;
     a.download = 'kaudio_render.wav';
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
     showToast('💾 Exported DSP WAV master to kaudio_render.wav! [Ctrl+E]', 'success', 3500);
   };
 
+  function loadAudioState() {
+    const raw = safeGetStorage('kaudio_state');
+    if (!raw) return false;
+    try {
+      const data = JSON.parse(raw);
+      if (!data || typeof data !== 'object') return false;
+
+      if (data.waveType && waveSelect) waveSelect.value = data.waveType;
+      if (data.adsr) {
+        if (data.adsr.attack !== undefined && envA && valA) {
+          envA.value = data.adsr.attack;
+          valA.textContent = parseFloat(data.adsr.attack).toFixed(2) + 's';
+        }
+        if (data.adsr.decay !== undefined && envD && valD) {
+          envD.value = data.adsr.decay;
+          valD.textContent = parseFloat(data.adsr.decay).toFixed(2) + 's';
+        }
+        if (data.adsr.sustain !== undefined && envS && valS) {
+          envS.value = data.adsr.sustain;
+          valS.textContent = parseFloat(data.adsr.sustain).toFixed(2);
+        }
+        if (data.adsr.release !== undefined && envR && valR) {
+          envR.value = data.adsr.release;
+          valR.textContent = parseFloat(data.adsr.release).toFixed(2) + 's';
+        }
+      }
+      if (data.filter) {
+        if (data.filter.type && filterType) filterType.value = data.filter.type;
+        if (data.filter.cutoff !== undefined && filterCutoff && valCutoff) {
+          filterCutoff.value = data.filter.cutoff;
+          valCutoff.textContent = data.filter.cutoff + 'Hz';
+        }
+        if (data.filter.q !== undefined && filterQ && valQ) {
+          filterQ.value = data.filter.q;
+          valQ.textContent = parseFloat(data.filter.q).toFixed(1);
+        }
+      }
+      if (data.effects) {
+        if (typeof data.effects.delay !== 'undefined' && chkDelay) {
+          chkDelay.checked = !!data.effects.delay;
+          if (data.effects.delayTime && delayTime && valDelayTime) {
+            delayTime.value = data.effects.delayTime;
+            valDelayTime.textContent = parseFloat(delayTime.value).toFixed(2) + 's';
+          }
+          if (data.effects.delayFeedback && delayFeedback && valDelayFeedback) {
+            delayFeedback.value = data.effects.delayFeedback;
+            valDelayFeedback.textContent = Math.round(parseFloat(delayFeedback.value) * 100) + '%';
+          }
+          if (data.effects.delayMix && delayMix && valDelayMix) {
+            delayMix.value = data.effects.delayMix;
+            valDelayMix.textContent = Math.round(parseFloat(delayMix.value) * 100) + '%';
+          }
+        }
+        if (typeof data.effects.drive !== 'undefined' && chkDrive) {
+          chkDrive.checked = !!data.effects.drive;
+          if (data.effects.driveAmount && driveAmount && valDriveAmount) {
+            driveAmount.value = data.effects.driveAmount;
+            valDriveAmount.textContent = driveAmount.value + 'x';
+          }
+        }
+      }
+      if (data.visMode) {
+        visMode = data.visMode;
+        if (btnVisMode) {
+          btnVisMode.textContent = (visMode === 'scope' ? 'Mode: Scope (V)' : 'Mode: Spectrum (V)');
+        }
+      }
+      if (typeof data.octaveShift === 'number' && data.octaveShift >= -4 && data.octaveShift <= 4) {
+        octaveShift = data.octaveShift;
+        if (octaveBadge) {
+          octaveBadge.textContent = 'Octave: ' + (octaveShift > 0 ? '+' : '') + octaveShift;
+        }
+      }
+      if (data.bpm && seqBpmEl && valBpmEl) {
+        seqBpmEl.value = data.bpm;
+        valBpmEl.textContent = data.bpm;
+      }
+      if (data.tracks && Array.isArray(data.tracks)) {
+        data.tracks.forEach((tData, i) => {
+          if (seqTracks[i] && Array.isArray(tData.grid)) {
+            seqTracks[i].grid = tData.grid.slice(0, 16).map(Boolean);
+          }
+        });
+        buildSequencerGrid();
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Restore saved workstation state or trigger first-run tutorial
+  const hasSavedState = loadAudioState();
+  if (!hasSavedState) {
+    if (!safeGetStorage('kaudio_tutorialSeen')) {
+      safeSetStorage('kaudio_tutorialSeen', '1');
+      const m = document.getElementById('helpModal');
+      if (m) m.style.display = 'flex';
+    }
+  }
+  window.addEventListener('beforeunload', saveAudioState);
+
   // Welcome startup toast with help guide prompt
   setTimeout(() => {
-    showToast('🎹 Welcome to KAudio Pro! Press [F1] or [?] for Help & Controls', 'info', 4500);
+    if (hasSavedState) {
+      showToast('📂 Restored saved workstation session! Press [F1] for Help', 'info', 3500);
+    } else {
+      showToast('🎹 Welcome to KAudio Pro! Press [F1] or [?] for Help & Controls', 'info', 4500);
+    }
   }, 400);
 
   // Convert AudioBuffer to WAV File Blob

@@ -51,7 +51,7 @@
 
 ---
 
-**Target App:** KAudio
+**Target App:** KBBS
 **Status:** Next (Pass 5: Tutorial & Save System Integrity)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -120,10 +120,10 @@ Focus on verifying tutorial and save system infrastructure across all games:
 - **KZip**: Completed. Full notes in [archive/app_fix_pass4_archive.md](archive/app_fix_pass4_archive.md)
 
 ### Recent Completed Fixes (Terse Summary — ≤8 lines)
-- **KType**: ✅ Done. GDI font leaks fixed; speed test stat preservation; word replenishment; Esc arcade restart & tutorial flag. Native (19.5 KB) and web verified.
 - **KVault**: ✅ Done. Hardened crypto random passgen; secure_zero memory; IsDialogMessage guards; web clipboard fallbacks & download revocations. Native (15.3 KB) and web verified.
 - **KVoid**: ✅ Done. Restored native build; alien buffer overflow (MAX_ALIENS 32) fixed; softlock restart; tutorial persistence. Native (22.5 KB) and web verified.
 - **KWizard**: ✅ Done. Restored native build; eliminated per-frame GDI leaks; campaign opponentMaxHp clamping; Esc/shortcuts & tutorial persistence. Native (29.6 KB) and web verified.
 - **KWords**: ✅ Done. Closed sound thread handle leaks; hoisted cell fonts in WM_PAINT; clamped EndSelection buffer; added Esc modal/drag cancel & SetCapture; hardened full save/load state & tutorial persistence. Native (161 KB) and web verified.
 - **KZip**: ✅ Done. Sort selection desync fixed; standalone web/batch fallbacks & storage persistence added; native OpenArchive bounds & dialog Enter routing hardened; dotfile traversal fixed. Native (23.0 KB) and web verified.
 - **K2048**: ✅ Done (Pass 5). Full game state save/load implemented for web & native; tutorialSeen flag wired (fires on new game only); false game-over on bomb merges fixed; duplicate campaign stage alert removed; F1 help & backdrop click added. Native (38.5 KB) and web verified.
+- **KAudio**: ✅ Done (Pass 5). Full workstation session save/load implemented for web & native; kaudio_tutorialSeen flag wired (fires on new session only); hoisted GDI pen/brushes in FFT spectrum loop; Ctrl/Alt/Meta modifier guards added; sound preset node leaks and URL revocation lifetime fixed. Native (20.9 KB) and web verified.

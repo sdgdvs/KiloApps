@@ -90,6 +90,84 @@ typedef struct {
 } WavHeader;
 #pragma pack(pop)
 
+#pragma pack(push, 1)
+typedef struct {
+    DWORD magic;       // 0x4B415544 ("KAUD")
+    DWORD version;     // 1
+    int instrument;
+    int octaveShift;
+    int delayEnabled;
+    int delayTimeMs;
+    int delayFeedback;
+    int driveEnabled;
+    int visMode;
+    int seqPattern[16];
+} AudioSaveState;
+#pragma pack(pop)
+
+void SaveAudioState() {
+    AudioSaveState st;
+    st.magic = 0x4B415544;
+    st.version = 1;
+    st.instrument = instrument;
+    st.octaveShift = octaveShift;
+    st.delayEnabled = delayEnabled;
+    st.delayTimeMs = delayTimeMs;
+    st.delayFeedback = delayFeedback;
+    st.driveEnabled = driveEnabled;
+    st.visMode = visMode;
+    for (int i = 0; i < 16; i++) st.seqPattern[i] = seqPattern[i];
+
+    HANDLE hFile = CreateFileA("kaudio_state.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, &st, sizeof(AudioSaveState), &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+int LoadAudioState() {
+    AudioSaveState st;
+    HANDLE hFile = CreateFileA("kaudio_state.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+    DWORD bytesRead = 0;
+    BOOL res = ReadFile(hFile, &st, sizeof(AudioSaveState), &bytesRead, NULL);
+    CloseHandle(hFile);
+    if (!res || bytesRead < sizeof(AudioSaveState)) return 0;
+    if (st.magic != 0x4B415544 || st.version != 1) return 0;
+
+    if (st.instrument >= 0 && st.instrument < 128) instrument = st.instrument;
+    if (st.octaveShift >= -4 && st.octaveShift <= 4) octaveShift = st.octaveShift;
+    delayEnabled = (st.delayEnabled != 0);
+    if (st.delayTimeMs >= 50 && st.delayTimeMs <= 1000) delayTimeMs = st.delayTimeMs;
+    if (st.delayFeedback >= 0 && st.delayFeedback <= 95) delayFeedback = st.delayFeedback;
+    driveEnabled = (st.driveEnabled != 0);
+    visMode = (st.visMode != 0);
+    for (int i = 0; i < 16; i++) seqPattern[i] = (st.seqPattern[i] != 0);
+
+    return 1;
+}
+
+void CheckFirstRunTutorial(HWND hwnd, int savedStateLoaded) {
+    HANDLE hFile = CreateFileA("kaudio_tutorial.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFile);
+        return;
+    }
+    hFile = CreateFileA("kaudio_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char val = '1';
+        DWORD written = 0;
+        WriteFile(hFile, &val, 1, &written, NULL);
+        CloseHandle(hFile);
+    }
+    if (!savedStateLoaded) {
+        showHelp = 1;
+        SetStatus(hwnd, "Welcome to KAudio Pro! First-run tutorial active [F1/Esc]", 5000);
+        InvalidateRect(hwnd, NULL, FALSE);
+    }
+}
+
 void PlayNote(int index, int on) {
     if (hMidi) {
         int actualNote = notes[index] + octaveShift * 12;
@@ -281,12 +359,19 @@ int GetKeyAtPoint(int x, int y) {
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
-        case WM_CREATE:
+        case WM_CREATE: {
             midiOutOpen(&hMidi, (UINT)-1, 0, 0, CALLBACK_NULL);
-            if (hMidi) midiOutShortMsg(hMidi, 0x000000C0);
+            int loaded = LoadAudioState();
+            if (hMidi) midiOutShortMsg(hMidi, 0x000000C0 | (instrument << 8));
             SetTimer(hwnd, 1, 30, NULL);
-            SetStatus(hwnd, "Welcome to KAudio Pro! Press [F1] for Help & Shortcuts", 4500);
+            if (loaded) {
+                SetStatus(hwnd, "Restored saved workstation session! [F1] for Help", 3500);
+            } else {
+                SetStatus(hwnd, "Welcome to KAudio Pro! Press [F1] for Help & Shortcuts", 4500);
+            }
+            CheckFirstRunTutorial(hwnd, loaded);
             break;
+        }
 
         case WM_KILLFOCUS:
         case WM_ACTIVATE:
@@ -399,9 +484,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (x >= 215 && x <= 265) { PlaySoundFX(4); SetStatus(hwnd, "🪙 [4] Coin FX Triggered", 1600); }
                 else if (x >= 270 && x <= 340) { PlaySoundFX(5); SetStatus(hwnd, "⚡ [5] Powerup FX Triggered", 1600); }
                 else if (x >= 350 && x <= 460) { ExportWavFile(hwnd); }
-                else if (x >= 470 && x <= 580) { delayEnabled = !delayEnabled; SetStatus(hwnd, delayEnabled ? "Delay / Echo Enabled [L]" : "Delay / Echo Disabled [L]", 1800); }
-                else if (x >= 590 && x <= 700) { driveEnabled = !driveEnabled; SetStatus(hwnd, driveEnabled ? "Overdrive Enabled [O]" : "Overdrive Disabled [O]", 1800); }
-                else if (x >= 710 && x <= 860) { visMode = !visMode; SetStatus(hwnd, visMode ? "Visualizer: FFT Spectrum [V]" : "Visualizer: Oscilloscope [V]", 1800); }
+                else if (x >= 470 && x <= 580) { delayEnabled = !delayEnabled; SetStatus(hwnd, delayEnabled ? "Delay / Echo Enabled [L]" : "Delay / Echo Disabled [L]", 1800); SaveAudioState(); }
+                else if (x >= 590 && x <= 700) { driveEnabled = !driveEnabled; SetStatus(hwnd, driveEnabled ? "Overdrive Enabled [O]" : "Overdrive Disabled [O]", 1800); SaveAudioState(); }
+                else if (x >= 710 && x <= 860) { visMode = !visMode; SetStatus(hwnd, visMode ? "Visualizer: FFT Spectrum [V]" : "Visualizer: Oscilloscope [V]", 1800); SaveAudioState(); }
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
@@ -410,6 +495,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (y >= 175 && y <= 198 && x >= 95 && x <= 140) {
                 for (int s = 0; s < 16; s++) seqPattern[s] = 0;
                 SetStatus(hwnd, "🗑 Sequencer Pattern Cleared [C]", 2000);
+                SaveAudioState();
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
@@ -419,6 +505,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int stepIdx = (x - 150) / 28;
                 if (stepIdx >= 0 && stepIdx < 16) {
                     seqPattern[stepIdx] = !seqPattern[stepIdx];
+                    SaveAudioState();
                     InvalidateRect(hwnd, NULL, FALSE);
                     break;
                 }
@@ -521,6 +608,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == 'C' && !isRepeat) {
                 for (int s = 0; s < 16; s++) seqPattern[s] = 0;
                 SetStatus(hwnd, "🗑 Sequencer Pattern Cleared [C]", 2000);
+                SaveAudioState();
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
@@ -542,18 +630,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == 'V' && !isRepeat) {
                 visMode = !visMode;
                 SetStatus(hwnd, visMode ? "Visualizer: FFT Spectrum [V]" : "Visualizer: Oscilloscope [V]", 1800);
+                SaveAudioState();
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
             if (wParam == 'L' && !isRepeat) {
                 delayEnabled = !delayEnabled;
                 SetStatus(hwnd, delayEnabled ? "🔄 Delay / Echo Enabled [L]" : "Delay / Echo Disabled [L]", 1800);
+                SaveAudioState();
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
             if (wParam == 'O' && !isRepeat) {
                 driveEnabled = !driveEnabled;
                 SetStatus(hwnd, driveEnabled ? "🔥 Overdrive Enabled [O]" : "Overdrive Disabled [O]", 1800);
+                SaveAudioState();
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
@@ -604,6 +695,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 char imsg[64];
                 wsprintfA(imsg, "MIDI Instrument #%d", instrument);
                 SetStatus(hwnd, imsg, 1400);
+                SaveAudioState();
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
@@ -613,6 +705,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 char imsg[64];
                 wsprintfA(imsg, "MIDI Instrument #%d", instrument);
                 SetStatus(hwnd, imsg, 1400);
+                SaveAudioState();
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
@@ -624,6 +717,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     char omsg[64];
                     wsprintfA(omsg, "Octave Shift: %+d", octaveShift);
                     SetStatus(hwnd, omsg, 1400);
+                    SaveAudioState();
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
                 break;
@@ -636,6 +730,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     char omsg[64];
                     wsprintfA(omsg, "Octave Shift: %+d", octaveShift);
                     SetStatus(hwnd, omsg, 1400);
+                    SaveAudioState();
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
                 break;
@@ -758,6 +853,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int barW = barSlotW - 4;
                 if (barW < 4) barW = 4;
 
+                HBRUSH cyanBrush = CreateSolidBrush(RGB(56, 189, 248));       // Cyan (Bass)
+                HBRUSH indigoBrush = CreateSolidBrush(RGB(129, 140, 248));    // Indigo/Purple (Mids)
+                HBRUSH roseBrush = CreateSolidBrush(RGB(244, 63, 94));        // Rose/Red (Highs)
+                HPEN capPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+                HPEN oldP = (HPEN)SelectObject(memDC, capPen);
+
                 for (int b = 0; b < 32; b++) {
                     int barH = (int)(spectrumBars[b] * 74.0f);
                     if (barH < 3) barH = 3;
@@ -766,24 +867,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int bx = 12 + b * barSlotW;
                     int by = 158 - barH;
 
-                    COLORREF barColor;
-                    if (b < 10) barColor = RGB(56, 189, 248);       // Cyan (Bass)
-                    else if (b < 20) barColor = RGB(129, 140, 248); // Indigo/Purple (Mids)
-                    else barColor = RGB(244, 63, 94);               // Rose/Red (Highs)
-
-                    HBRUSH barBrush = CreateSolidBrush(barColor);
+                    HBRUSH barBrush = (b < 10) ? cyanBrush : ((b < 20) ? indigoBrush : roseBrush);
                     RECT barRc = {bx, by, bx + barW, 158};
                     FillRect(memDC, &barRc, barBrush);
-                    DeleteObject(barBrush);
 
                     // Peak cap line
-                    HPEN capPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-                    HPEN oldP = (HPEN)SelectObject(memDC, capPen);
                     MoveToEx(memDC, bx, by, NULL);
                     LineTo(memDC, bx + barW, by);
-                    SelectObject(memDC, oldP);
-                    DeleteObject(capPen);
                 }
+
+                SelectObject(memDC, oldP);
+                DeleteObject(capPen);
+                DeleteObject(cyanBrush);
+                DeleteObject(indigoBrush);
+                DeleteObject(roseBrush);
             }
 
             // Draw 16-Step Pattern Sequencer Row (y: 175-200)
@@ -903,6 +1000,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_DESTROY:
             KillTimer(hwnd, 1);
+            SaveAudioState();
             if (hMidi) {
                 midiOutReset(hMidi);
                 midiOutClose(hMidi);
