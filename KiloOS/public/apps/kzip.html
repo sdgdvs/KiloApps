@@ -407,6 +407,7 @@
 </div>
 <input type="file" id="batchInput" multiple accept=".kza" style="display:none">
 <input type="file" id="localFileInput" multiple style="display:none">
+<input type="file" id="kzaFileInput" accept=".kza" style="display:none">
 
 <div class="table-container" id="dropZone" tabindex="0" aria-label="Archive file list. Press Delete to remove selected files.">
   <table>
@@ -512,10 +513,25 @@
 
 <script>
   let files = [];
-  let selectedIndices = new Set();
+  let selectedFiles = new Set();
   let currentReqId = 0;
   const callbacks = {};
   const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB max per file
+
+  // Safe localStorage Helpers
+  function safeGetStorage(key, fallback = null) {
+    try {
+      const val = localStorage.getItem(key);
+      return val !== null ? val : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+  function safeSetStorage(key, val) {
+    try {
+      localStorage.setItem(key, val);
+    } catch (e) {}
+  }
 
   const fileTableBody = document.getElementById('fileTableBody');
   const searchInput = document.getElementById('searchInput');
@@ -546,6 +562,22 @@
   const btnCloseModal = document.getElementById('btnCloseModal');
   const btnOkModal = document.getElementById('btnOkModal');
   const localFileInput = document.getElementById('localFileInput');
+  const kzaFileInput = document.getElementById('kzaFileInput');
+
+  // Restore stored preferences
+  if (compMethod) {
+    compMethod.value = safeGetStorage('kzip_method', '1');
+    compMethod.onchange = () => {
+      safeSetStorage('kzip_method', compMethod.value);
+    };
+  }
+  if (regexCheck) {
+    regexCheck.checked = safeGetStorage('kzip_regex', '0') === '1';
+    regexCheck.onchange = () => {
+      safeSetStorage('kzip_regex', regexCheck.checked ? '1' : '0');
+      renderTable();
+    };
+  }
 
   let toastTimer = null;
   function showToast(msg, isError = false) {
@@ -658,7 +690,7 @@
 
   function loadDemoArchive() {
     files = [];
-    selectedIndices.clear();
+    selectedFiles.clear();
     addSampleText();
     addSampleJson();
     addSampleRLE();
@@ -726,11 +758,12 @@
       .replace(/'/g, '&#039;');
   }
 
-  // Safe Filename Extraction (Prevents Path Traversal)
+  // Safe Filename Extraction (Preserves valid dotfiles while blocking path traversal)
   function sanitizeFilename(filename) {
     if (!filename) return 'unnamed_file';
-    let safeName = filename.replace(/^.*[\\\/]/, '').replace(/\.\./g, '').trim();
-    safeName = safeName.replace(/[<>:"|?*]/g, '_');
+    let safeName = filename.replace(/^.*[\\\/]/, '').trim();
+    if (safeName === '.' || safeName === '..' || safeName === '') return 'unnamed_file';
+    safeName = safeName.replace(/[<>:"|?*\x00-\x1f]/g, '_');
     return safeName || 'unnamed_file';
   }
 
@@ -743,11 +776,36 @@
   });
 
   function sendToOS(msg) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const id = ++currentReqId;
-      callbacks[id] = resolve;
-      window.parent.postMessage({ ...msg, requestId: id }, '*');
+      const timer = setTimeout(() => {
+        delete callbacks[id];
+        reject(new Error("OS communication timeout"));
+      }, 2500);
+      callbacks[id] = (res) => {
+        clearTimeout(timer);
+        resolve(res);
+      };
+      try {
+        window.parent.postMessage({ ...msg, requestId: id }, '*');
+      } catch (err) {
+        clearTimeout(timer);
+        delete callbacks[id];
+        reject(err);
+      }
     });
+  }
+
+  // Standalone Direct File Download Helper
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
   }
 
   // CRC32 Calculation
@@ -859,7 +917,8 @@
 
     files.forEach((f, idx) => {
       f.offset = currentOffset;
-      currentOffset += 4 + f.name.length + 1 + 16 + f.compSize;
+      const nameByteLen = (new TextEncoder().encode(f.name)).length;
+      currentOffset += 4 + nameByteLen + 1 + 16 + f.compSize;
       
       totalRaw += f.uncompSize;
       totalPacked += f.compSize;
@@ -881,23 +940,23 @@
       const tr = document.createElement('tr');
       tr.setAttribute('tabindex', '0');
       tr.setAttribute('data-idx', String(idx));
-      tr.setAttribute('aria-selected', selectedIndices.has(idx) ? 'true' : 'false');
-      if (selectedIndices.has(idx)) {
+      tr.setAttribute('aria-selected', selectedFiles.has(f) ? 'true' : 'false');
+      if (selectedFiles.has(f)) {
         tr.classList.add('selected');
       }
 
       tr.ondblclick = () => {
-        selectedIndices.clear();
-        selectedIndices.add(idx);
+        selectedFiles.clear();
+        selectedFiles.add(f);
         btnPreview.click();
       };
 
       tr.onclick = (e) => {
         if (e.target.type === 'checkbox') return;
-        if (selectedIndices.has(idx)) {
-          selectedIndices.delete(idx);
+        if (selectedFiles.has(f)) {
+          selectedFiles.delete(f);
         } else {
-          selectedIndices.add(idx);
+          selectedFiles.add(f);
         }
         renderTable();
       };
@@ -905,8 +964,8 @@
       tr.onkeydown = (e) => {
         if (e.key === ' ' || e.key === 'Enter') {
           e.preventDefault();
-          if (selectedIndices.has(idx)) selectedIndices.delete(idx);
-          else selectedIndices.add(idx);
+          if (selectedFiles.has(f)) selectedFiles.delete(f);
+          else selectedFiles.add(f);
           renderTable();
         }
       };
@@ -915,7 +974,7 @@
       const safeName = escapeHtml(f.name);
 
       tr.innerHTML = `
-        <td><input type="checkbox" ${selectedIndices.has(idx) ? 'checked' : ''} data-idx="${idx}" aria-label="Select ${safeName}"></td>
+        <td><input type="checkbox" ${selectedFiles.has(f) ? 'checked' : ''} aria-label="Select ${safeName}"></td>
         <td style="font-weight: 500;">${safeName}</td>
         <td>${formatBytes(f.uncompSize)}</td>
         <td>${formatBytes(f.compSize)}</td>
@@ -926,8 +985,8 @@
 
       const cb = tr.querySelector('input[type="checkbox"]');
       cb.onchange = (e) => {
-        if (e.target.checked) selectedIndices.add(idx);
-        else selectedIndices.delete(idx);
+        if (e.target.checked) selectedFiles.add(f);
+        else selectedFiles.delete(f);
         renderTable();
       };
 
@@ -966,7 +1025,7 @@
     }
 
     if (selectAll) {
-      selectAll.checked = files.length > 0 && selectedIndices.size === files.length;
+      selectAll.checked = files.length > 0 && selectedFiles.size === files.length;
     }
 
     statsPill.textContent = `${files.length} Files | ${formatBytes(totalRaw)}`;
@@ -981,24 +1040,23 @@
   }
 
   searchInput.oninput = () => renderTable();
-  regexCheck.onchange = () => renderTable();
 
   selectAll.onchange = (e) => {
     if (e.target.checked) {
-      files.forEach((_, idx) => selectedIndices.add(idx));
+      files.forEach(f => selectedFiles.add(f));
     } else {
-      selectedIndices.clear();
+      selectedFiles.clear();
     }
     renderTable();
   };
 
   btnRemove.onclick = () => {
-    if (selectedIndices.size === 0) {
+    if (selectedFiles.size === 0) {
       return showToast("Select files to remove first.", true);
     }
-    const count = selectedIndices.size;
-    files = files.filter((_, idx) => !selectedIndices.has(idx));
-    selectedIndices.clear();
+    const count = selectedFiles.size;
+    files = files.filter(f => !selectedFiles.has(f));
+    selectedFiles.clear();
     if (selectAll) selectAll.checked = false;
     renderTable();
     showToast(`Removed ${count} file(s).`);
@@ -1059,50 +1117,61 @@
 
   btnPack.onclick = async () => {
     if (files.length === 0) return showToast("Archive is empty - nothing to pack!", true);
-    try {
-      const res = await sendToOS({ type: 'VFS_SHOW_SAVE' });
-      if (res && res.path) {
-        let path = res.path;
-        if (!path.endsWith('.kza')) path += '.kza';
+    const pass = passwordInput.value;
+    const pwdHashNum = pass ? parseInt(calculateCRC32(new TextEncoder().encode(pass)), 16) : 0;
 
-        const pass = passwordInput.value;
-        const pwdHashNum = pass ? parseInt(calculateCRC32(new TextEncoder().encode(pass)), 16) : 0;
-
-        const exportFiles = files.map(f => {
-          let payload = f.packedBytes;
-          if (pwdHashNum) {
-            payload = cryptXOR(payload, pwdHashNum);
-          }
-          return {
-            name: sanitizeFilename(f.name),
-            uncompSize: f.uncompSize,
-            compSize: f.compSize,
-            crc32: f.crc32,
-            method: f.method,
-            data: uint8ToBase64(payload)
-          };
-        });
-
-        const archiveData = {
-          magic: 'KZA2',
-          flags: pwdHashNum ? 1 : 0,
-          pwdHash: pwdHashNum,
-          files: exportFiles
-        };
-
-        const jsonStr = JSON.stringify(archiveData);
-        const b64 = 'data:application/json;base64,' + btoa(jsonStr);
-        await sendToOS({ type: 'VFS_WRITE', path: path, data: b64 });
-        showToast("Packed archive successfully to " + path);
+    const exportFiles = files.map(f => {
+      let payload = f.packedBytes;
+      if (pwdHashNum) {
+        payload = cryptXOR(payload, pwdHashNum);
       }
-    } catch (err) {
-      showToast("Failed to pack archive: " + err.message, true);
+      return {
+        name: sanitizeFilename(f.name),
+        uncompSize: f.uncompSize,
+        compSize: f.compSize,
+        crc32: f.crc32,
+        method: f.method,
+        data: uint8ToBase64(payload)
+      };
+    });
+
+    const archiveData = {
+      magic: 'KZA2',
+      flags: pwdHashNum ? 1 : 0,
+      pwdHash: pwdHashNum,
+      files: exportFiles
+    };
+
+    const jsonStr = JSON.stringify(archiveData);
+
+    if (window.parent !== window) {
+      try {
+        const res = await sendToOS({ type: 'VFS_SHOW_SAVE' });
+        if (res && res.path) {
+          let path = res.path;
+          if (!path.endsWith('.kza')) path += '.kza';
+          const b64 = 'data:application/json;base64,' + btoa(jsonStr);
+          await sendToOS({ type: 'VFS_WRITE', path: path, data: b64 });
+          showToast("Packed archive successfully to " + path);
+          return;
+        }
+      } catch (err) {
+        // Fallback to standalone direct download
+      }
+    }
+
+    try {
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      downloadBlob(blob, 'archive.kza');
+      showToast("Packed and downloaded archive.kza");
+    } catch (e) {
+      showToast("Failed to pack archive: " + e.message, true);
     }
   };
 
   function loadArchiveData(parsed) {
     files = [];
-    selectedIndices.clear();
+    selectedFiles.clear();
 
     if (parsed.magic === 'KZA2') {
       const pwdHashNum = parsed.pwdHash || 0;
@@ -1163,45 +1232,84 @@
     showToast(`Loaded archive (${files.length} file(s))`);
   }
 
-  btnOpen.onclick = async () => {
-    try {
-      const res = await sendToOS({ type: 'VFS_SHOW_OPEN' });
-      if (res && res.path) {
-        const readRes = await sendToOS({ type: 'VFS_READ', path: res.path });
-        if (readRes && readRes.data) {
-          const jsonStr = atob(readRes.data.includes(',') ? readRes.data.split(',')[1] : readRes.data);
-          const parsed = JSON.parse(jsonStr);
+  if (kzaFileInput) {
+    kzaFileInput.onchange = (e) => {
+      if (!e.target.files || e.target.files.length === 0) return;
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const parsed = JSON.parse(evt.target.result);
           loadArchiveData(parsed);
+        } catch (err) {
+          showToast("Failed to parse archive: " + err.message, true);
         }
+      };
+      reader.readAsText(file);
+      kzaFileInput.value = '';
+    };
+  }
+
+  btnOpen.onclick = async () => {
+    if (window.parent !== window) {
+      try {
+        const res = await sendToOS({ type: 'VFS_SHOW_OPEN' });
+        if (res && res.path) {
+          const readRes = await sendToOS({ type: 'VFS_READ', path: res.path });
+          if (readRes && readRes.data) {
+            const jsonStr = atob(readRes.data.includes(',') ? readRes.data.split(',')[1] : readRes.data);
+            const parsed = JSON.parse(jsonStr);
+            loadArchiveData(parsed);
+            return;
+          }
+        }
+      } catch (e) {
+        // Fallback to local file input
       }
-    } catch (e) {
-      showToast("Failed to parse archive format: " + e.message, true);
     }
+    if (kzaFileInput) kzaFileInput.click();
   };
 
   btnExtractSel.onclick = async () => {
-    if (selectedIndices.size === 0) return showToast("Select at least one file to extract.", true);
+    if (selectedFiles.size === 0) return showToast("Select at least one file to extract.", true);
     let count = 0;
-    for (const idx of selectedIndices) {
-      const f = files[idx];
+    const isVfs = (window.parent !== window);
+    for (const f of selectedFiles) {
       const safeName = sanitizeFilename(f.name);
-      const b64 = 'data:application/octet-stream;base64,' + uint8ToBase64(f.rawBytes);
-      await sendToOS({ type: 'VFS_WRITE', path: '/' + safeName, data: b64 });
+      if (isVfs) {
+        try {
+          const b64 = 'data:application/octet-stream;base64,' + uint8ToBase64(f.rawBytes);
+          await sendToOS({ type: 'VFS_WRITE', path: '/' + safeName, data: b64 });
+          count++;
+          continue;
+        } catch (err) {}
+      }
+      const blob = new Blob([f.rawBytes], { type: 'application/octet-stream' });
+      downloadBlob(blob, safeName);
       count++;
     }
-    showToast(`Extracted ${count} selected file(s) to root directory!`);
+    showToast(`Extracted ${count} selected file(s)!`);
   };
 
   btnExtractAll.onclick = async () => {
     if (files.length === 0) return showToast("Archive is empty - nothing to extract!", true);
     let count = 0;
+    const isVfs = (window.parent !== window);
     for (const f of files) {
       const safeName = sanitizeFilename(f.name);
-      const b64 = 'data:application/octet-stream;base64,' + uint8ToBase64(f.rawBytes);
-      await sendToOS({ type: 'VFS_WRITE', path: '/' + safeName, data: b64 });
+      if (isVfs) {
+        try {
+          const b64 = 'data:application/octet-stream;base64,' + uint8ToBase64(f.rawBytes);
+          await sendToOS({ type: 'VFS_WRITE', path: '/' + safeName, data: b64 });
+          count++;
+          continue;
+        } catch (err) {}
+      }
+      const blob = new Blob([f.rawBytes], { type: 'application/octet-stream' });
+      downloadBlob(blob, safeName);
       count++;
     }
-    showToast(`Extracted ${count} file(s) to root directory!`);
+    showToast(`Extracted ${count} file(s)!`);
   };
 
   btnVerify.onclick = () => {
@@ -1245,11 +1353,11 @@
   btnOkModal.onclick = closeModal;
 
   btnPreview.onclick = () => {
-    if (selectedIndices.size !== 1) return showToast("Select exactly one file to preview.", true);
-    const idx = Array.from(selectedIndices)[0];
-    const f = files[idx];
+    if (selectedFiles.size !== 1) return showToast("Select exactly one file to preview.", true);
+    const f = Array.from(selectedFiles)[0];
     
-    // Metadata
+    // Header & Metadata
+    document.getElementById('previewTitle').textContent = `File Preview: ${f.name}`;
     document.getElementById('deepMetadata').innerHTML = `
       <div><strong>Offset (Internal):</strong> 0x${f.offset ? f.offset.toString(16).toUpperCase() : '0000'}</div>
       <div><strong>Original Size:</strong> ${formatBytes(f.uncompSize)} (${f.uncompSize} B)</div>
@@ -1289,12 +1397,13 @@
         }
         if (j === 7) hex += ' ';
       }
-      hexOut += hex + ' |' + escapeHtml(ascii) + '|\\n';
+      hexOut += hex + ' |' + escapeHtml(ascii) + '|\n';
     }
-    if (raw.length > len) hexOut += '\\n... (truncated)';
+    if (raw.length > len) hexOut += '\n... (truncated)';
     
     document.getElementById('hexView').innerHTML = hexOut;
     document.getElementById('previewModal').classList.add('active');
+    document.getElementById('btnOkPreview').focus();
   };
 
   document.getElementById('btnClosePreview').onclick = () => document.getElementById('previewModal').classList.remove('active');
@@ -1303,6 +1412,7 @@
   btnBatchExtract.onclick = () => batchInput.click();
   batchInput.onchange = async (e) => {
     let count = 0;
+    const isVfs = (window.parent !== window);
     for (const file of e.target.files) {
       if (!file.name.endsWith('.kza')) continue;
       const jsonStr = await file.text();
@@ -1324,8 +1434,17 @@
               if (pwdHashNum) payload = cryptXOR(payload, pwdHashNum);
               let raw = payload;
               if (f.method === 1) raw = decompressRLE(payload, f.uncompSize);
-              const b64 = 'data:application/octet-stream;base64,' + uint8ToBase64(raw);
-              await sendToOS({ type: 'VFS_WRITE', path: '/' + sanitizeFilename(f.name), data: b64 });
+              const safeName = sanitizeFilename(f.name);
+              if (isVfs) {
+                try {
+                  const b64 = 'data:application/octet-stream;base64,' + uint8ToBase64(raw);
+                  await sendToOS({ type: 'VFS_WRITE', path: '/' + safeName, data: b64 });
+                  count++;
+                  continue;
+                } catch(vfsErr) {}
+              }
+              const blob = new Blob([raw], { type: 'application/octet-stream' });
+              downloadBlob(blob, safeName);
               count++;
            }
         }
@@ -1333,6 +1452,7 @@
         console.error("Batch extract failed for", file.name, err);
       }
     }
+    batchInput.value = '';
     showToast(`Batch extraction complete: ${count} files extracted.`);
   };
 
@@ -1343,7 +1463,10 @@
   
   function toggleHelp() {
     helpModal.classList.toggle('active');
-    if (helpModal.classList.contains('active')) btnOkHelp.focus();
+    if (helpModal.classList.contains('active')) {
+      safeSetStorage('kzip_tutorialSeen', '1');
+      btnOkHelp.focus();
+    }
   }
 
   btnCloseHelp.onclick = () => helpModal.classList.remove('active');
@@ -1396,7 +1519,7 @@
         renderTable();
       }
     } else if (!inInput) {
-      if (e.key === 'Delete' && selectedIndices.size > 0) {
+      if (e.key === 'Delete' && selectedFiles.size > 0) {
         btnRemove.click();
       } else if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
         if (e.key === 'F1') e.preventDefault();
@@ -1410,8 +1533,8 @@
       } else if (e.key === 'd' || e.key === 'D') {
         loadDemoArchive();
       } else if (e.key === 'Enter') {
-        if (selectedIndices.size === 1) btnPreview.click();
-        else if (selectedIndices.size > 1) btnExtractSel.click();
+        if (selectedFiles.size === 1) btnPreview.click();
+        else if (selectedFiles.size > 1) btnExtractSel.click();
       }
     }
   });

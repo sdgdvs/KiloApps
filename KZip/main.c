@@ -60,13 +60,15 @@ void SanitizeFilename(const char* inName, char* outBuf, size_t outSize) {
     for (int i = 0; inName[i]; i++) {
         if (inName[i] == '\\' || inName[i] == '/') p = inName + i + 1;
     }
-    while (*p == '.' || *p == ' ' || *p == '/' || *p == '\\') p++;
-    if (!*p) p = "extracted_file";
+    while (*p == ' ' || *p == '/' || *p == '\\') p++;
+    if (!*p || (p[0] == '.' && (p[1] == '\0' || (p[1] == '.' && p[2] == '\0')))) {
+        p = "extracted_file";
+    }
 
     size_t idx = 0;
     for (; p[idx] && idx < outSize - 1; idx++) {
         char c = p[idx];
-        if (c == '<' || c == '>' || c == ':' || c == '"' || c == '|' || c == '?' || c == '*') c = '_';
+        if (c == '<' || c == '>' || c == ':' || c == '"' || c == '|' || c == '?' || c == '*' || (unsigned char)c < 32) c = '_';
         outBuf[idx] = c;
     }
     outBuf[idx] = '\0';
@@ -445,11 +447,11 @@ void PackArchive(const char* filepath) {
     MessageBoxA(NULL, "Archive packed successfully!", "KZip", MB_OK | MB_ICONINFORMATION);
 }
 
-void OpenArchive(const char* filepath) {
+BOOL OpenArchive(const char* filepath) {
     HANDLE hFile = CreateFileA(filepath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
         MessageBoxA(NULL, "Failed to open archive file.", "Error", MB_OK | MB_ICONERROR);
-        return;
+        return FALSE;
     }
 
     char magic[4] = {0};
@@ -462,7 +464,7 @@ void OpenArchive(const char* filepath) {
     if (!isV1 && !isV2) {
         CloseHandle(hFile);
         MessageBoxA(NULL, "Invalid or unsupported KZA archive format.", "Error", MB_OK | MB_ICONERROR);
-        return;
+        return FALSE;
     }
 
     DWORD flags = 0, pwdHash = 0, fileCount = 0;
@@ -478,8 +480,9 @@ void OpenArchive(const char* filepath) {
             DWORD userHash = CalculateCRC32((const unsigned char*)userPass, lstrlenA(userPass));
             if (userHash != pwdHash) {
                 CloseHandle(hFile);
-                MessageBoxA(NULL, "Archive is password protected! Please enter the correct password in the Pass field.", "Access Denied", MB_OK | MB_ICONERROR);
-                return;
+                SetFocus(hEditPassword);
+                MessageBoxA(NULL, "Archive is password protected! Please enter the correct password in the Password field.", "Access Denied", MB_OK | MB_ICONERROR);
+                return FALSE;
             }
         }
     } else {
@@ -491,9 +494,10 @@ void OpenArchive(const char* filepath) {
     for (DWORD i = 0; i < fileCount && i < MAX_FILES; i++) {
         DWORD nameLen = 0;
         ReadFile(hFile, &nameLen, sizeof(DWORD), &read, NULL);
-        if (nameLen > sizeof(archive[i].name) || nameLen == 0) break;
+        if (nameLen > sizeof(archive[i].name) || nameLen == 0 || read != sizeof(DWORD)) break;
 
         ReadFile(hFile, archive[i].name, nameLen, &read, NULL);
+        if (read != nameLen) break;
         archive[i].name[sizeof(archive[i].name) - 1] = '\0';
 
         if (isV2) {
@@ -547,6 +551,7 @@ void OpenArchive(const char* filepath) {
 
     CloseHandle(hFile);
     RefreshList();
+    return TRUE;
 }
 
 void ExtractSingleFile(int realIndex) {
@@ -605,7 +610,12 @@ void ShowPreview(int realIdx) {
     char tempPath[MAX_PATH];
     GetTempPathA(MAX_PATH, tempPath);
     char filePath[MAX_PATH];
-    wsprintfA(filePath, "%s\\kzip_preview.txt", tempPath);
+    int tLen = lstrlenA(tempPath);
+    if (tLen > 0 && tempPath[tLen - 1] == '\\') {
+        wsprintfA(filePath, "%skzip_preview.txt", tempPath);
+    } else {
+        wsprintfA(filePath, "%s\\kzip_preview.txt", tempPath);
+    }
     
     HANDLE hFile = CreateFileA(filePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -897,10 +907,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int id = LOWORD(wParam);
             int code = HIWORD(wParam);
 
-            if (id == 100 && code == LBN_DBLCLK) { // Double-click list item to extract
+            if (id == 100 && code == LBN_DBLCLK) { // Double-click list item to preview
                 int sel = (int)SendMessage(hListBox, LB_GETCURSEL, 0, 0);
                 if (sel != LB_ERR && sel < numVisible) {
-                    ExtractSingleFile(visibleIndices[sel]);
+                    ShowPreview(visibleIndices[sel]);
                 }
             } else if (id == 101 && code == EN_CHANGE) {
                 RefreshList();
@@ -954,6 +964,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         archive[i] = archive[i + 1];
                     }
                     numFiles--;
+                    memset(&archive[numFiles], 0, sizeof(KFile));
                     RefreshList();
                     if (numVisible > 0) {
                         int newSel = sel < numVisible ? sel : numVisible - 1;
@@ -979,16 +990,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     char* p = file + lstrlenA(file) + 1;
                     if (*p == '\0') {
                         // Single file selected
-                        OpenArchive(file);
-                        ExtractAll(0);
+                        if (OpenArchive(file)) {
+                            ExtractAll(0);
+                        }
                     } else {
                         // Multiple files
                         int totalExtracted = 0;
                         while (*p) {
                             char fullPath[MAX_PATH];
                             wsprintfA(fullPath, "%s\\%s", dir, p);
-                            OpenArchive(fullPath);
-                            totalExtracted += ExtractAll(1);
+                            if (OpenArchive(fullPath)) {
+                                totalExtracted += ExtractAll(1);
+                            }
                             p += lstrlenA(p) + 1;
                         }
                         char msg[128];
@@ -1133,14 +1146,21 @@ void MainEntry() {
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(5, BN_CLICKED), (LPARAM)hBtnRemove);
                     continue;
                 } else if (msg.wParam == VK_RETURN) {
-                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(9, BN_CLICKED), (LPARAM)hBtnPreview);
-                    continue;
+                    if (hFocus == hListBox || hFocus == hwnd) {
+                        SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(9, BN_CLICKED), (LPARAM)hBtnPreview);
+                        continue;
+                    }
                 }
             } else {
                 if (msg.wParam == VK_ESCAPE) {
-                    SetWindowTextA(hEditSearch, "");
-                    RefreshList();
-                    SetFocus(hListBox);
+                    if (hFocus == hEditSearch) {
+                        SetWindowTextA(hEditSearch, "");
+                        RefreshList();
+                        SetFocus(hListBox);
+                    } else if (hFocus == hEditPassword) {
+                        SetWindowTextA(hEditPassword, "");
+                        SetFocus(hListBox);
+                    }
                     continue;
                 }
             }
