@@ -1,5 +1,57 @@
 #include <windows.h>
-#include <math.h>
+
+#define MY_PI 3.14159265358979323846f
+
+static float my_sin(float x) {
+    while (x < -MY_PI) x += 2.0f * MY_PI;
+    while (x > MY_PI) x -= 2.0f * MY_PI;
+    float x2 = x * x;
+    return x * (1.0f - x2 / 6.0f + (x2 * x2) / 120.0f - (x2 * x2 * x2) / 5040.0f);
+}
+
+static float my_cos(float x) {
+    return my_sin(x + MY_PI / 2.0f);
+}
+
+#define sinf(x) my_sin(x)
+#define cosf(x) my_cos(x)
+
+#pragma function(memset)
+void* memset(void* dest, int c, size_t count) {
+    unsigned char* p = (unsigned char*)dest;
+    while (count--) {
+        *p++ = (unsigned char)c;
+    }
+    return dest;
+}
+
+static int my_strcmp(const char* s1, const char* s2) {
+    if (!s1 || !s2) return (s1 == s2) ? 0 : (s1 ? 1 : -1);
+    while (*s1 && (*s1 == *s2)) {
+        s1++;
+        s2++;
+    }
+    return *(const unsigned char*)s1 - *(const unsigned char*)s2;
+}
+#define strcmp my_strcmp
+
+static const char* my_strstr(const char* haystack, const char* needle) {
+    if (!haystack || !needle) return NULL;
+    if (!*needle) return haystack;
+    for (; *haystack; haystack++) {
+        if (*haystack == *needle) {
+            const char* h = haystack;
+            const char* n = needle;
+            while (*h && *n && (*h == *n)) {
+                h++;
+                n++;
+            }
+            if (!*n) return haystack;
+        }
+    }
+    return NULL;
+}
+#define strstr my_strstr
 
 #define BTN_DRAW 101
 #define BTN_RESET 102
@@ -80,6 +132,7 @@ int playerDeckCount = 20;
 
 int playerHp = 30;
 int opponentHp = 30;
+int opponentMaxHp = 30;
 int gameState = 0; // 0 = playing, 1 = player win, 2 = opponent win, 3 = deck builder, 4 = help
 
 int campaignLevel = 0;
@@ -384,13 +437,15 @@ void DrawCard(int isOpponent) {
         if (opponentCount < 7) {
             if (campaignLevel > 0) {
                 MageDef m = mages[campaignLevel - 1];
-                opponentHand[opponentCount++] = m.deck[my_rand() % m.deckSize];
+                if (m.deckSize > 0) {
+                    opponentHand[opponentCount++] = m.deck[my_rand() % m.deckSize];
+                }
             } else {
                 opponentHand[opponentCount++] = my_rand() % NUM_SAMPLE_CARDS;
             }
         }
     } else {
-        if (playerCount < 7) {
+        if (playerCount < 7 && playerDeckCount > 0) {
             playerHand[playerCount++] = playerDeck[my_rand() % playerDeckCount];
         }
     }
@@ -400,6 +455,7 @@ void InitGame(int oppHp) {
     playerCount = 0;
     opponentCount = 0;
     playerHp = 30;
+    opponentMaxHp = oppHp;
     opponentHp = oppHp;
     gameState = 0;
     playerMaxMana = 1;
@@ -510,12 +566,19 @@ void PlayOpponentTurn(int cw, int ch) {
                 if (gameState != 2) PlaySoundEffect("lose");
                 gameState = 2; // opponent win
             }
-            if (opponentHp > 30) opponentHp = 30;
+            if (opponentHp > opponentMaxHp) opponentHp = opponentMaxHp;
 
             if (playedAny) {
-                lstrcatA(playedStr, ", ");
+                int curLen = lstrlenA(playedStr);
+                if (curLen + 2 < (int)sizeof(playedStr) - 1) {
+                    lstrcatA(playedStr, ", ");
+                }
             }
-            lstrcatA(playedStr, cd.name);
+            int curLen = lstrlenA(playedStr);
+            int nameLen = lstrlenA(cd.name);
+            if (curLen + nameLen < (int)sizeof(playedStr) - 1) {
+                lstrcatA(playedStr, cd.name);
+            }
             playedAny = 1;
             
             for (int j = i; j < opponentCount - 1; j++) {
@@ -816,7 +879,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (opponentBurn > 0) { DealDamageToOpponent(opponentBurn, cw, ch); opponentBurn--; }
                     if (opponentPoison > 0) { DealDamageToOpponent(opponentPoison, cw, ch); opponentPoison--; }
                     if (opponentRegen > 0) { opponentHp += opponentRegen; opponentRegen--; }
-                    if (opponentHp > 30) opponentHp = 30;
+                    if (opponentHp > opponentMaxHp) opponentHp = opponentMaxHp;
                     
                     if (opponentHp <= 0) {
                         if (gameState != 1) PlaySoundEffect("win");
@@ -1133,6 +1196,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     HBRUSH pBr = CreateSolidBrush(projCol);
                     SelectObject(memDC, pBr);
                     Ellipse(memDC, (int)px - 6, (int)py - 6, (int)px + 6, (int)py + 6);
+                    SelectObject(memDC, oldB);
                     DeleteObject(pBr);
                 }
             }
@@ -1143,6 +1207,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SelectObject(memDC, swPen);
                 int ir = (int)shockwaves[i].r;
                 Ellipse(memDC, (int)shockwaves[i].x - ir, (int)shockwaves[i].y - ir/2, (int)shockwaves[i].x + ir, (int)shockwaves[i].y + ir/2);
+                SelectObject(memDC, oldP);
                 DeleteObject(swPen);
             }
 
@@ -1157,6 +1222,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 } else {
                     Ellipse(memDC, (int)particles[i].x - sz, (int)particles[i].y - sz, (int)particles[i].x + sz, (int)particles[i].y + sz);
                 }
+                SelectObject(memDC, oldB);
                 DeleteObject(ptBr);
             }
 
@@ -1164,6 +1230,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HPEN borderPen = CreatePen(PS_SOLID, 3, RGB(184, 153, 71));
             SelectObject(memDC, borderPen);
             Rectangle(memDC, arenaRect.left, arenaRect.top, arenaRect.right, arenaRect.bottom);
+            SelectObject(memDC, oldP);
             DeleteObject(borderPen);
 
             // Ornate Gold Corner Filigree L-Brackets
@@ -1186,6 +1253,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             MoveToEx(memDC, arenaRect.right - 6 - bLen, arenaRect.bottom - 6, NULL);
             LineTo(memDC, arenaRect.right - 6, arenaRect.bottom - 6);
             LineTo(memDC, arenaRect.right - 6, arenaRect.bottom - 6 - bLen);
+            SelectObject(memDC, oldP);
             DeleteObject(filigreePen);
 
             // Floaters
@@ -1243,6 +1311,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 RECT textRect = {cx, oppY + 50, cx + cardW, oppY + 70};
                 DrawText(memDC, "[GRIMOIRE]", -1, &textRect, DT_CENTER | DT_SINGLELINE);
             }
+            SelectObject(memDC, oldB);
+            SelectObject(memDC, oldP);
             DeleteObject(oppBrush);
             DeleteObject(oppPen);
 
@@ -1267,6 +1337,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SelectObject(memDC, pCardBr);
                 SelectObject(memDC, pCardPen);
                 RoundRect(memDC, cx, playerY, cx + cardW, playerY + cardH, 8, 8);
+                SelectObject(memDC, oldB);
+                SelectObject(memDC, oldP);
                 DeleteObject(pCardBr);
                 DeleteObject(pCardPen);
 
@@ -1276,6 +1348,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SelectObject(memDC, manaBr);
                 SelectObject(memDC, manaPen);
                 Ellipse(memDC, cx + 5, playerY + 5, cx + 23, playerY + 23);
+                SelectObject(memDC, oldB);
+                SelectObject(memDC, oldP);
                 DeleteObject(manaBr);
                 DeleteObject(manaPen);
 
@@ -1293,6 +1367,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 HBRUSH artBg = CreateSolidBrush(RGB(10, 5, 18));
                 SelectObject(memDC, artBg);
                 Rectangle(memDC, cx + 12, playerY + 28, cx + cardW - 12, playerY + 75);
+                SelectObject(memDC, oldB);
                 DeleteObject(artBg);
 
                 DrawSpellIconGDI(memDC, cx + cardW / 2, playerY + 51, cd.type);
@@ -1330,6 +1405,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             SelectObject(memDC, oldFont);
             DeleteObject(hFont);
+            SelectObject(memDC, oldB);
             SelectObject(memDC, oldP);
             DeleteObject(runePen1);
 
@@ -1349,6 +1425,43 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             EndPaint(hwnd, &ps);
             return 0;
         }
+
+        case WM_KEYDOWN:
+            if (wParam == VK_ESCAPE) {
+                if (gameState == 3 || gameState == 4) {
+                    gameState = 0;
+                    ShowWindow(hwndAvail, SW_HIDE);
+                    ShowWindow(hwndDeck, SW_HIDE);
+                    ShowWindow(hwndDeckClose, SW_HIDE);
+                    ShowWindow(hwndHelp, SW_HIDE);
+                    ShowWindow(hwndHelpClose, SW_HIDE);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+            } else if (wParam == 'H') {
+                if (gameState == 4) {
+                    SendMessage(hwnd, WM_COMMAND, BTN_HELP_CLOSE, 0);
+                } else {
+                    SendMessage(hwnd, WM_COMMAND, BTN_HELP, 0);
+                }
+                return 0;
+            } else if (wParam == 'D') {
+                if (gameState == 3) {
+                    SendMessage(hwnd, WM_COMMAND, BTN_DECK_CLOSE, 0);
+                } else {
+                    SendMessage(hwnd, WM_COMMAND, BTN_DECK, 0);
+                }
+                return 0;
+            } else if (wParam == 'R') {
+                SendMessage(hwnd, WM_COMMAND, BTN_RESET, 0);
+                return 0;
+            } else if (wParam == 'E' || wParam == VK_SPACE) {
+                if (gameState == 0) {
+                    SendMessage(hwnd, WM_COMMAND, BTN_END_TURN, 0);
+                    return 0;
+                }
+            }
+            break;
 
         case WM_DESTROY:
             PostQuitMessage(0);

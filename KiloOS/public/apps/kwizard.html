@@ -379,13 +379,16 @@
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         function playSound(type) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
+            try {
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume().catch(() => {});
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
 
-            const now = audioCtx.currentTime;
+                const now = audioCtx.currentTime;
             
             if (type === 'fire') {
                 osc.type = 'sawtooth';
@@ -440,7 +443,8 @@
                 osc.start(now);
                 osc.stop(now + 0.8);
             }
-        }
+        } catch (e) {}
+    }
 
         const sampleCards = [
             { name: "Fireball", cost: 3, effect: "Deals 4 Fire damage", type: "fire", damage: 4, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 0 },
@@ -522,10 +526,11 @@
 
         let playerMana = 1, playerMaxMana = 1;
         let opponentMana = 1, opponentMaxMana = 1;
-        let playerHp = 30, opponentHp = 30;
+        let playerHp = 30, opponentHp = 30, opponentMaxHp = 30;
         let gameState = 0; // 0 = playing, 1 = win, 2 = loss
         let opponentCards = [];
         let campaignLevel = 0;
+        let campaignTimer = null;
         const campaignMages = [
             { name: "Novice Pyromancer", diff: "easy", hp: 20, deck: [0, 1, 3, 7], color: "#ef4444", staff: "#ff7700" },
             { name: "Apprentice Cryomancer", diff: "easy", hp: 25, deck: [8, 9, 12, 14], color: "#06b6d4", staff: "#a5f3fc" },
@@ -540,6 +545,15 @@
         ];
 
         let playerDeck = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
+        try {
+            const savedDeck = localStorage.getItem('kwizard_playerDeck');
+            if (savedDeck) {
+                const parsed = JSON.parse(savedDeck);
+                if (Array.isArray(parsed) && parsed.length === 20 && parsed.every(i => typeof i === 'number' && i >= 0 && i < sampleCards.length)) {
+                    playerDeck = parsed;
+                }
+            }
+        } catch (e) {}
 
         let playerBurn = 0, playerFreeze = 0, playerShield = 0, playerRegen = 0, playerPoison = 0;
         let opponentBurn = 0, opponentFreeze = 0, opponentShield = 0, opponentRegen = 0, opponentPoison = 0;
@@ -562,9 +576,10 @@
         let ambientMotes = [];
 
         function resizeCanvas() {
+            if (!arenaCanvas || !arenaCanvas.parentElement) return;
             const rect = arenaCanvas.parentElement.getBoundingClientRect();
-            arenaCanvas.width = rect.width;
-            arenaCanvas.height = rect.height;
+            arenaCanvas.width = Math.max(300, rect.width || 800);
+            arenaCanvas.height = Math.max(150, rect.height || 220);
         }
         window.addEventListener('resize', resizeCanvas);
         setTimeout(resizeCanvas, 50);
@@ -1097,10 +1112,13 @@
                 alert("You must have exactly 20 cards in your deck.");
                 return;
             }
+            try {
+                localStorage.setItem('kwizard_playerDeck', JSON.stringify(playerDeck));
+            } catch (e) {}
             deckModal.style.display = 'none';
         };
 
-        helpBtn.onclick = () => {
+        function openHelp() {
             spellIndexList.innerHTML = '';
             sampleCards.forEach(c => {
                 let el = document.createElement('div');
@@ -1114,11 +1132,17 @@
                 spellIndexList.appendChild(el);
             });
             helpModal.style.display = 'flex';
-        };
+        }
 
-        closeHelpBtn.onclick = () => {
+        function closeHelp() {
             helpModal.style.display = 'none';
-        };
+            try {
+                localStorage.setItem('kwizard_tutorialSeen', '1');
+            } catch (e) {}
+        }
+
+        helpBtn.onclick = openHelp;
+        closeHelpBtn.onclick = closeHelp;
 
         function updateManaDisplay() {
             document.getElementById('opp-mana-display').innerText = ` | HP: ${opponentHp} | Mana: ${opponentMana}/${opponentMaxMana}`;
@@ -1211,8 +1235,9 @@
                 if (campaignLevel < 10) {
                     arenaBannerMsg = `VICTORY! ${campaignMages[campaignLevel-1].name} defeated! Next battle in 3s...`;
                     arenaBannerColor = "#4ade80";
-                    setTimeout(() => {
-                        if (gameState === 1) {
+                    if (campaignTimer) clearTimeout(campaignTimer);
+                    campaignTimer = setTimeout(() => {
+                        if (gameState === 1 && campaignLevel > 0) {
                             campaignLevel++;
                             startCampaignBattle();
                         }
@@ -1386,10 +1411,12 @@
                         if (gameState !== 2) playSound('lose');
                         gameState = 2;
                     }
-                    if (opponentHp > 30) opponentHp = 30;
+                    if (opponentHp > opponentMaxHp) opponentHp = opponentMaxHp;
                     playedCards.push(cardData);
                     opponentCards.splice(i, 1);
-                    opponentHand.removeChild(opponentHand.children[i]);
+                    if (opponentHand.children[i]) {
+                        opponentHand.removeChild(opponentHand.children[i]);
+                    }
                     if (gameState !== 0) break;
                 } else {
                     i++;
@@ -1427,7 +1454,7 @@
                 if (opponentBurn > 0) { dealDamageToOpponent(opponentBurn); opponentBurn--; }
                 if (opponentPoison > 0) { dealDamageToOpponent(opponentPoison); opponentPoison--; }
                 if (opponentRegen > 0) { opponentHp += opponentRegen; opponentRegen--; }
-                if (opponentHp > 30) opponentHp = 30;
+                if (opponentHp > opponentMaxHp) opponentHp = opponentMaxHp;
                 
                 if (opponentHp <= 0) {
                     if (gameState !== 1) playSound('win');
@@ -1470,6 +1497,7 @@
             opponentMaxMana = 1;
             opponentMana = 1;
             playerHp = 30;
+            opponentMaxHp = oppHp;
             opponentHp = oppHp;
             gameState = 0;
             opponentCards = [];
@@ -1492,6 +1520,7 @@
         }
 
         resetBtn.onclick = () => {
+            if (campaignTimer) { clearTimeout(campaignTimer); campaignTimer = null; }
             campaignLevel = 0;
             initGame(30);
         };
@@ -1501,11 +1530,49 @@
         }
 
         campaignBtn.onclick = () => {
+            if (campaignTimer) { clearTimeout(campaignTimer); campaignTimer = null; }
             campaignLevel = 1;
             startCampaignBattle();
         };
 
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (deckModal && deckModal.style.display === 'flex') {
+                    if (playerDeck.length === 20) {
+                        try { localStorage.setItem('kwizard_playerDeck', JSON.stringify(playerDeck)); } catch (err) {}
+                        deckModal.style.display = 'none';
+                    }
+                    return;
+                }
+                if (helpModal && helpModal.style.display === 'flex') {
+                    closeHelp();
+                    return;
+                }
+            }
+            if (deckModal && deckModal.style.display === 'flex') return;
+            if (helpModal && helpModal.style.display === 'flex') return;
+
+            if (e.key === 'h' || e.key === 'H') {
+                openHelp();
+            } else if (e.key === 'd' || e.key === 'D') {
+                renderDeckBuilder();
+                deckModal.style.display = 'flex';
+            } else if (e.key === 'r' || e.key === 'R') {
+                resetBtn.click();
+            } else if (e.key === 'e' || e.key === 'E' || e.key === ' ') {
+                if (gameState === 0) {
+                    endTurnBtn.click();
+                }
+            }
+        });
+
         resetBtn.click();
+
+        try {
+            if (!localStorage.getItem('kwizard_tutorialSeen')) {
+                openHelp();
+            }
+        } catch (e) {}
     </script>
 </body>
 </html>
