@@ -105,13 +105,12 @@ For every game audited, also verify:
 
 ---
 
-**Target App:** KStellar
+**Target App:** KSudoku
 **Status:** Next in queue
 
 ## Round-Robin Testing Queue (NEVER STOP — loop forever)
 Pick the top app, audit it, write a test report, move it to bottom. One app per turn.
 
-- KStellar
 - KSudoku
 - KSynth
 - KSys
@@ -192,8 +191,19 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 - KSolitaire
 - KSpace
 - KStarship
+- KStellar
 
 ## Test Reports
+
+- **KStellar**: PASS ✅ (8 issues, 8 fixed inline)
+  - Added first-time tutorial onboarding via kstellar_tutorialSeen while skipping on save load.
+  - Implemented F5 quicksave and F9 quickload shortcuts preserving galaxy, ship, and missions.
+  - Added JSON game save export and import file reader with payload validation.
+  - Resolved zero-fuel soft-lock with interactive emergency distress beacon rescue mechanic.
+  - Added station hull maintenance repair and reactor refueling services with credit scaling.
+  - Added 1-4 numeric and A/E/T/F hotkeys for combat actions and animated button hotkey cues.
+  - Added combatEnding action locking to prevent re-entrant clicks during battle resolution.
+  - Added non-blocking floating HUD toast notifications and backdrop click modal dismissal.
 
 - **KStarship**: PASS ✅ (8 issues, 8 fixed inline)
   - Added first-time onboarding briefing via kstarship_tutorialSeen while skipping on save load.
@@ -267,6 +277,6 @@ Pick the top app, audit it, write a test report, move it to bottom. One app per 
 > 📁 **Archived Reports**: Historical test reports have been archived to [archive/app_test_reports_round2.md](archive/app_test_reports_round2.md) and [archive/app_test_reports_archive.md](archive/app_test_reports_archive.md) to preserve token efficiency.
 
 ### Round 2 Completed Index
-- KStarship ✅ (8 fixed), KSpace ✅ (8 fixed), KSolitaire ✅ (8 fixed), KSnake ✅ (8 fixed), KSimon ✅ (8 fixed), KScript ✅ (7 fixed), KRogue ✅ (8 fixed), KReversi ✅ (8 fixed), KRead ✅ (8 fixed), KRadio ✅ (8 fixed), KQuest ✅ (8 fixed), KPong ✅ (8 fixed), KPing ✅ (8 fixed), KPass ✅ (7 fixed), KPaint ✅ (7 fixed), KPad ✅ (8 fixed), KPac ✅ (8 fixed), KNote ✅ (7 fixed), KNet ✅ (3 fixed), KMystery ✅ (5 fixed), KMines ✅ (8 fixed), KMine ✅ (2 fixed), KMedia ✅ (8 fixed), KMech ✅ (6 fixed), KMaze ✅ (7 fixed), KMatch3 ✅ (8 fixed), KMandel ✅ (6 fixed), KMail ✅ (7 fixed), KJournal ✅ (7 fixed), KImage ✅ (8 fixed)
+- KStellar ✅ (8 fixed), KStarship ✅ (8 fixed), KSpace ✅ (8 fixed), KSolitaire ✅ (8 fixed), KSnake ✅ (8 fixed), KSimon ✅ (8 fixed), KScript ✅ (7 fixed), KRogue ✅ (8 fixed), KReversi ✅ (8 fixed), KRead ✅ (8 fixed), KRadio ✅ (8 fixed), KQuest ✅ (8 fixed), KPong ✅ (8 fixed), KPing ✅ (8 fixed), KPass ✅ (7 fixed), KPaint ✅ (7 fixed), KPad ✅ (8 fixed), KPac ✅ (8 fixed), KNote ✅ (7 fixed), KNet ✅ (3 fixed), KMystery ✅ (5 fixed), KMines ✅ (8 fixed), KMine ✅ (2 fixed), KMedia ✅ (8 fixed), KMech ✅ (6 fixed), KMaze ✅ (7 fixed), KMatch3 ✅ (8 fixed), KMandel ✅ (6 fixed), KMail ✅ (7 fixed), KJournal ✅ (7 fixed), KImage ✅ (8 fixed)
 
 

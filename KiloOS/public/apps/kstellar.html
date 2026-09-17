@@ -180,17 +180,25 @@
 </head>
 <body>
     <div id="app" style="display: flex; flex-direction: column; height: 100%;">
-        <div id="dashboard">
-            <div class="stat">HULL: <span id="hull">100</span>/<span id="max-hull">100</span></div>
-            <div class="stat">FUEL: <span id="fuel">100</span>%</div>
-            <div class="stat">CREDITS: ₭<span id="credits">1,000</span></div>
-            <div class="stat">CARGO: <span id="cargo-used">0</span>/<span id="cargo-max">50</span> TONS</div>
-            <div style="display:flex; gap:8px; align-items:center;">
+        <div id="dashboard" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+                <div class="stat">HULL: <span id="hull">100</span>/<span id="max-hull">100</span></div>
+                <div class="stat">FUEL: <span id="fuel">100</span>%</div>
+                <div class="stat">CREDITS: ₭<span id="credits">1,000</span></div>
+                <div class="stat">CARGO: <span id="cargo-used">0</span>/<span id="cargo-max">50</span> TONS</div>
+            </div>
+            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                <button id="save-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#00ffcc; color:#00ffcc;" onclick="quickSave()" title="Quicksave (F5)">💾 SAVE (F5)</button>
+                <button id="load-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#00ffcc; color:#00ffcc;" onclick="quickLoad()" title="Quickload (F9)">📂 LOAD (F9)</button>
+                <button id="export-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#88ccff; color:#88ccff;" onclick="exportSaveFile()" title="Export JSON Save">⏏ EXPORT</button>
+                <button id="import-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#88ccff; color:#88ccff;" onclick="document.getElementById('import-file-input').click()" title="Import JSON Save">📥 IMPORT</button>
+                <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importSaveFile(event)">
                 <button id="manual-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#ffff00; color:#ffff00;" onclick="openManual()">📖 MANUAL (M)</button>
                 <button id="audio-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="toggleAudio()">🔊 AUDIO: ON</button>
                 <button id="drone-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="toggleDrone()">🌌 DRONE: ON</button>
             </div>
         </div>
+        <div id="toast" style="display:none; position:fixed; bottom:20px; right:20px; background:rgba(0,30,45,0.95); border:1px solid #00ffcc; color:#00ffcc; padding:10px 18px; border-radius:4px; font-size:13px; font-weight:bold; z-index:9999; box-shadow:0 0 15px rgba(0,255,204,0.5); pointer-events:none; transition:opacity 0.3s;"></div>
         <div id="faction-bar" style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:10px; padding:6px 10px; border:1px solid #00ffcc; background:rgba(0,25,35,0.7); box-shadow: 0 0 10px rgba(0,255,204,0.2);">
             <span>FEDERATION: <span id="rep-fed" style="color:#00ffff; font-weight:bold;">+10 (Neutral)</span></span>
             <span>TRADERS GUILD: <span id="rep-trd" style="color:#00ff00; font-weight:bold;">+15 (Friendly)</span></span>
@@ -226,14 +234,14 @@
 
                 <div id="combat-log" style="width:100%; height:110px; border:1px solid #00ffcc; overflow-y:auto; padding:8px 12px; margin-bottom:12px; font-size:13px; background:rgba(0,20,30,0.85); box-sizing:border-box; line-height:1.4;"></div>
                 <div style="display:flex; gap:12px; width:100%; justify-content:center;">
-                    <button class="action-btn" style="flex:1; margin:0; border-color:#00ffff; color:#00ffff;" onclick="combatAction('attack')">⚔ ATTACK</button>
-                    <button class="action-btn" style="flex:1; margin:0; border-color:#00ff88; color:#00ff88;" onclick="combatAction('evade')">🛡 EVADE</button>
-                    <button class="action-btn" style="flex:1; margin:0; border-color:#ff00ff; color:#ff00ff;" onclick="combatAction('tech')">⚡ USE TECH (EMP)</button>
-                    <button class="action-btn" style="flex:1; margin:0; border-color:#ffaa00; color:#ffaa00;" onclick="combatAction('flee')">🚀 FLEE</button>
+                    <button id="combat-btn-attack" class="action-btn" style="flex:1; margin:0; border-color:#00ffff; color:#00ffff;" onclick="combatAction('attack')">⚔ ATTACK [1/A]</button>
+                    <button id="combat-btn-evade" class="action-btn" style="flex:1; margin:0; border-color:#00ff88; color:#00ff88;" onclick="combatAction('evade')">🛡 EVADE [2/E]</button>
+                    <button id="combat-btn-tech" class="action-btn" style="flex:1; margin:0; border-color:#ff00ff; color:#ff00ff;" onclick="combatAction('tech')">⚡ USE TECH [3/T]</button>
+                    <button id="combat-btn-flee" class="action-btn" style="flex:1; margin:0; border-color:#ffaa00; color:#ffaa00;" onclick="combatAction('flee')">🚀 FLEE [4/F]</button>
                 </div>
             </div>
         </div>
-        <div id="manual-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(3,8,16,0.96); z-index:150; flex-direction:column; padding:20px; box-sizing:border-box;">
+        <div id="manual-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(3,8,16,0.96); z-index:150; flex-direction:column; padding:20px; box-sizing:border-box;" onclick="if (event.target === this) closeManual()">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #00ffcc; padding-bottom:8px; margin-bottom:10px;">
                 <h2 style="margin:0; color:#00ffcc; font-size:18px; letter-spacing:1px; text-shadow:0 0 10px #00ffcc;">★ STAR CAPTAIN'S MANUAL &amp; CODEX</h2>
                 <button class="action-btn" style="margin:0; padding:4px 12px; font-size:12px; border-color:#ffff00; color:#ffff00;" onclick="closeManual()">[X] CLOSE (ESC)</button>
@@ -260,8 +268,8 @@
     <script>
         // --- Web Audio Synthesizer & Sound Effects System ---
         let audioCtx = null;
-        let soundEnabled = true;
-        let droneEnabled = true;
+        let soundEnabled = localStorage.getItem('kstellar_soundEnabled') !== 'false';
+        let droneEnabled = localStorage.getItem('kstellar_droneEnabled') !== 'false';
         let droneGain = null;
         let droneOsc1 = null;
         let droneOsc2 = null;
@@ -326,6 +334,7 @@
 
         window.toggleAudio = function() {
             soundEnabled = !soundEnabled;
+            localStorage.setItem('kstellar_soundEnabled', soundEnabled);
             const btn = document.getElementById('audio-toggle-btn');
             if (soundEnabled) {
                 initAudio();
@@ -340,6 +349,7 @@
 
         window.toggleDrone = function() {
             droneEnabled = !droneEnabled;
+            localStorage.setItem('kstellar_droneEnabled', droneEnabled);
             const btn = document.getElementById('drone-toggle-btn');
             if (droneEnabled) {
                 initAudio();
@@ -556,6 +566,7 @@
         const sectorNames = ["Alpha", "Beta", "Gamma", "Delta", "Omega"];
 
         function generateGalaxy() {
+            systems = [];
             systems.push({
                 id: 1, name: "Sol", sector: "Alpha", x: 50, y: 50, 
                 desc: "Cradle of humanity. Highly developed planetary system.", economy: "Trading Hub", 
@@ -713,6 +724,182 @@
         }
         generateStationMissions();
 
+        let toastTimer = null;
+        function showToast(msg, duration = 2500) {
+            const el = document.getElementById('toast');
+            if (!el) return;
+            el.innerText = msg;
+            el.style.display = 'block';
+            el.style.opacity = '1';
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                el.style.opacity = '0';
+                setTimeout(() => { if (el.style.opacity === '0') el.style.display = 'none'; }, 300);
+            }, duration);
+        }
+
+        window.quickSave = function() {
+            saveGameState(true);
+        };
+
+        window.quickLoad = function() {
+            loadGameState(true);
+        };
+
+        function saveGameState(isQuick = false) {
+            const saveData = {
+                version: 1,
+                timestamp: Date.now(),
+                hull,
+                maxHull,
+                fuel,
+                credits,
+                cargo: { ...cargo },
+                cargoMax,
+                engineLevel,
+                cargoLevel,
+                weaponLevel,
+                shieldLevel,
+                currentSystemId,
+                selectedSystem,
+                repFed,
+                repTraders,
+                repPirates,
+                activeMission,
+                currentStationMissions,
+                systems,
+                soundEnabled,
+                droneEnabled
+            };
+            try {
+                const json = JSON.stringify(saveData);
+                localStorage.setItem('kstellar_save', json);
+                if (isQuick) {
+                    localStorage.setItem('kstellar_quicksave', json);
+                    showToast("★ QUICK-SAVE RECORDED (F5)");
+                } else {
+                    showToast("★ GAME SAVED (LOCAL STORAGE)");
+                }
+                localStorage.setItem('kstellar_tutorialSeen', 'true');
+                playBlip();
+                return true;
+            } catch (e) {
+                showToast("⚠ SAVE FAILED: Storage quota exceeded");
+                return false;
+            }
+        }
+
+        function loadGameState(isQuick = false) {
+            try {
+                const key = isQuick ? 'kstellar_quicksave' : 'kstellar_save';
+                let json = localStorage.getItem(key);
+                if (!json && isQuick) json = localStorage.getItem('kstellar_save');
+                if (!json) {
+                    showToast("⚠ NO SAVE DATA FOUND");
+                    playBlip();
+                    return false;
+                }
+                const data = JSON.parse(json);
+                if (!data || typeof data !== 'object') throw new Error("Invalid save structure");
+
+                hull = typeof data.hull === 'number' ? data.hull : 100;
+                maxHull = typeof data.maxHull === 'number' ? data.maxHull : 100;
+                fuel = typeof data.fuel === 'number' ? data.fuel : 100;
+                credits = typeof data.credits === 'number' ? data.credits : 1000;
+                cargo = data.cargo && typeof data.cargo === 'object' ? {
+                    food: data.cargo.food || 0,
+                    minerals: data.cargo.minerals || 0,
+                    tech: data.cargo.tech || 0
+                } : { food: 0, minerals: 0, tech: 0 };
+                cargoMax = typeof data.cargoMax === 'number' ? data.cargoMax : 50;
+                engineLevel = typeof data.engineLevel === 'number' ? data.engineLevel : 1;
+                cargoLevel = typeof data.cargoLevel === 'number' ? data.cargoLevel : 1;
+                weaponLevel = typeof data.weaponLevel === 'number' ? data.weaponLevel : 1;
+                shieldLevel = typeof data.shieldLevel === 'number' ? data.shieldLevel : 1;
+                currentSystemId = typeof data.currentSystemId === 'number' ? data.currentSystemId : 1;
+                selectedSystem = typeof data.selectedSystem === 'number' ? data.selectedSystem : currentSystemId;
+                repFed = typeof data.repFed === 'number' ? data.repFed : 10;
+                repTraders = typeof data.repTraders === 'number' ? data.repTraders : 15;
+                repPirates = typeof data.repPirates === 'number' ? data.repPirates : -15;
+                activeMission = data.activeMission || null;
+                currentStationMissions = Array.isArray(data.currentStationMissions) ? data.currentStationMissions : [];
+                if (Array.isArray(data.systems) && data.systems.length > 0) {
+                    systems = data.systems;
+                }
+                if (typeof data.soundEnabled === 'boolean') {
+                    soundEnabled = data.soundEnabled;
+                    localStorage.setItem('kstellar_soundEnabled', soundEnabled);
+                    const btn = document.getElementById('audio-toggle-btn');
+                    if (btn) btn.innerText = soundEnabled ? "🔊 AUDIO: ON" : "🔇 AUDIO: OFF";
+                }
+                if (typeof data.droneEnabled === 'boolean') {
+                    droneEnabled = data.droneEnabled;
+                    localStorage.setItem('kstellar_droneEnabled', droneEnabled);
+                    const btn = document.getElementById('drone-toggle-btn');
+                    if (btn) btn.innerText = droneEnabled ? "🌌 DRONE: ON" : "🌌 DRONE: OFF";
+                }
+
+                localStorage.setItem('kstellar_tutorialSeen', 'true');
+
+                if (inCombat) endCombat();
+                updateDashboard();
+                renderMap();
+                showSystemInfo(systems.find(s => s.id === currentSystemId));
+                showToast(isQuick ? "★ QUICK-SAVE LOADED (F9)" : "★ GAME LOADED");
+                playUpgrade();
+                return true;
+            } catch (e) {
+                showToast("⚠ CORRUPTED SAVE FILE");
+                playBlip();
+                return false;
+            }
+        }
+
+        window.exportSaveFile = function() {
+            const saveData = {
+                version: 1,
+                timestamp: Date.now(),
+                hull, maxHull, fuel, credits, cargo: { ...cargo }, cargoMax,
+                engineLevel, cargoLevel, weaponLevel, shieldLevel,
+                currentSystemId, selectedSystem,
+                repFed, repTraders, repPirates,
+                activeMission, currentStationMissions,
+                systems, soundEnabled, droneEnabled
+            };
+            const blob = new Blob([JSON.stringify(saveData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `kstellar_save_${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("★ SAVE EXPORTED TO FILE");
+            playBlip();
+        };
+
+        window.importSaveFile = function(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!data || typeof data !== 'object' || typeof data.credits !== 'number') {
+                        throw new Error("Invalid save file structure");
+                    }
+                    localStorage.setItem('kstellar_save', JSON.stringify(data));
+                    loadGameState(false);
+                    showToast("★ SAVE IMPORTED SUCCESSFULLY");
+                } catch (err) {
+                    alert("Failed to import save: invalid JSON structure.");
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        };
+
         function getCargoUsed() {
             return cargo.food + cargo.minerals + cargo.tech;
         }
@@ -748,6 +935,81 @@
                 mStatus.innerText = '';
             }
         }
+
+        window.repairShip = function() {
+            const sys = systems.find(s => s.id === currentSystemId);
+            if (hull >= maxHull) {
+                playBlip();
+                showToast("Hull integrity already at 100%!");
+                return;
+            }
+            const needed = maxHull - hull;
+            const costPerHp = 4;
+            const totalCost = needed * costPerHp;
+            if (credits >= totalCost) {
+                credits -= totalCost;
+                hull = maxHull;
+                playHeal();
+                showToast(`★ Hull fully repaired to ${maxHull} HP (-₭${totalCost})`);
+            } else {
+                const canAffordHp = Math.floor(credits / costPerHp);
+                if (canAffordHp > 0) {
+                    credits -= canAffordHp * costPerHp;
+                    hull += canAffordHp;
+                    playHeal();
+                    showToast(`★ Partial repair: +${canAffordHp} HP (-₭${canAffordHp * costPerHp})`);
+                } else {
+                    playBlip();
+                    alert("Not enough credits to repair hull!");
+                    return;
+                }
+            }
+            updateDashboard();
+            showSystemInfo(sys);
+        };
+
+        window.refuelShip = function() {
+            const sys = systems.find(s => s.id === currentSystemId);
+            if (fuel >= 100) {
+                playBlip();
+                showToast("Fuel tanks are already 100% full!");
+                return;
+            }
+            const needed = 100 - fuel;
+            const costPerPercent = 1.5;
+            const totalCost = Math.round(needed * costPerPercent);
+            if (credits >= totalCost) {
+                credits -= totalCost;
+                fuel = 100;
+                playBlip();
+                showToast(`★ Reactor refueled to 100% (-₭${totalCost})`);
+            } else {
+                const canAfford = Math.floor(credits / costPerPercent);
+                if (canAfford > 0) {
+                    credits -= Math.round(canAfford * costPerPercent);
+                    fuel += canAfford;
+                    playBlip();
+                    showToast(`★ Partial refuel: +${canAfford}% (-₭${Math.round(canAfford * costPerPercent)})`);
+                } else {
+                    playBlip();
+                    emergencyBeacon();
+                    return;
+                }
+            }
+            updateDashboard();
+            showSystemInfo(sys);
+        };
+
+        window.emergencyBeacon = function() {
+            playWarp();
+            const rescueFuel = 30;
+            fuel = Math.max(fuel, rescueFuel);
+            adjustRep(-3, 0, 0);
+            showToast("★ DISTRESS BEACON: Auxiliary fuel delivered (-3 Fed Rep)");
+            alert("[EMERGENCY DISTRESS BEACON ACTIVATED]\n\nA Federation naval auxiliary answered your emergency transponder.\nThey transferred 30% reactor fuel to prevent system stranding.\nFederation authorities recorded an emergency dispatch fee (-3 Federation Standing).");
+            updateDashboard();
+            showSystemInfo(systems.find(s => s.id === currentSystemId));
+        };
 
         window.upgrade = function(type) {
             let cost = 0;
@@ -821,7 +1083,9 @@
             
             if (fuel < fuelCost) {
                 playBlip();
-                alert("Not enough fuel! You need " + fuelCost + "% fuel to reach " + target.name + ".");
+                if (confirm(`Not enough fuel! You need ${fuelCost}% fuel to reach ${target.name} (Current: ${fuel}%).\n\nWould you like to deploy an Emergency Distress Beacon for auxiliary refueling?`)) {
+                    emergencyBeacon();
+                }
                 return;
             }
             
@@ -898,6 +1162,7 @@
             if (hull <= 0) {
                 msg += "\n\nCRITICAL: Hull integrity lost during transit! Emergency tow to Sol.";
                 hull = maxHull;
+                fuel = Math.max(fuel, 25);
                 credits = Math.max(0, credits - 500);
                 currentSystemId = 1;
                 selectedSystem = 1;
@@ -912,10 +1177,12 @@
         // --- Combat System with Visual Battle Arena ---
         let playerShipState = { x: 180, y: 120, targetX: 180, targetY: 120, tilt: 0, shieldGlow: 0, flash: 0 };
         let enemyShipState = { x: 620, y: 120, targetX: 620, targetY: 120, tilt: 0, flash: 0 };
+        let combatEnding = false;
 
         function startCombat() {
             playEnemyLaser();
             inCombat = true;
+            combatEnding = false;
             enemyMaxHull = 30 + currentSystemId * 20;
             enemyHull = enemyMaxHull;
             playerShipState = { x: 180, y: 120, targetX: 180, targetY: 120, tilt: 0, shieldGlow: 0, flash: 0 };
@@ -943,7 +1210,7 @@
         }
 
         window.combatAction = function(action) {
-            if (!inCombat) return;
+            if (!inCombat || combatEnding) return;
             let playerEvading = false;
             
             if (action === 'attack') {
@@ -987,6 +1254,7 @@
                 }
             } else if (action === 'flee') {
                 if (Math.random() < 0.5 + (engineLevel * 0.1)) {
+                    combatEnding = true;
                     playWarp();
                     logCombat(`★ Hyperdrive overcharged! Successfully escaped pirate encounter.`);
                     setTimeout(endCombat, 1500);
@@ -998,6 +1266,7 @@
             }
             
             if (enemyHull <= 0) {
+                combatEnding = true;
                 playExplosion();
                 triggerScreenShake(12);
                 addParticleBurst(enemyShipState.x, enemyShipState.y, '#ff9900', 35, 7, 'spark');
@@ -1044,12 +1313,14 @@
             updateCombatUI();
             
             if (hull <= 0) {
+                combatEnding = true;
                 playExplosion();
                 triggerScreenShake(18);
                 addParticleBurst(playerShipState.x, playerShipState.y, '#ff0000', 40, 8, 'debris');
                 logCombat(`★ CRITICAL FAILURE: Hull integrity lost! Emergency distress beacon activated.`);
                 setTimeout(() => {
                     hull = maxHull;
+                    fuel = Math.max(fuel, 25);
                     credits = Math.max(0, credits - 500);
                     currentSystemId = 1;
                     selectedSystem = 1;
@@ -1060,6 +1331,7 @@
 
         function endCombat() {
             inCombat = false;
+            combatEnding = false;
             document.getElementById('combat-overlay').style.display = 'none';
             updateDashboard();
             renderMap();
@@ -1230,7 +1502,14 @@
                         </div>
                     </div>
                 </div>
-                <p style="color:#00ffff; font-weight:bold; margin-bottom:5px; margin-top:15px;">Orbital Shipyard Upgrades</p>
+                let repairCost = Math.max(0, (maxHull - hull) * 4);
+                let refuelCost = Math.max(0, Math.round((100 - fuel) * 1.5));
+                html += `<p style="color:#00ffff; font-weight:bold; margin-bottom:5px; margin-top:14px;">Station Maintenance &amp; Fuel</p>
+                <div style="display:flex; gap:6px;">
+                    <button class="action-btn" style="flex:1; margin:0; padding:6px; font-size:11px; border-color:#00ff88; color:#00ff88;" onclick="repairShip()">🔧 Repair (₭${repairCost}) [${hull}/${maxHull}]</button>
+                    <button class="action-btn" style="flex:1; margin:0; padding:6px; font-size:11px; border-color:#ffaa00; color:#ffaa00;" onclick="refuelShip()">⛽ Refuel (₭${refuelCost}) [${fuel}%]</button>
+                </div>
+                <p style="color:#00ffff; font-weight:bold; margin-bottom:5px; margin-top:14px;">Orbital Shipyard Upgrades</p>
                 <div style="display:flex; flex-direction:column; gap:5px;">
                     <button class="action-btn" style="margin:0; padding:6px; font-size:11px;" onclick="upgrade('engine')">🚀 Upg Engine (₭${(1000*engineLevel).toLocaleString()}) [Lvl ${engineLevel}]</button>
                     <button class="action-btn" style="margin:0; padding:6px; font-size:11px;" onclick="upgrade('cargo')">📦 Upg Cargo (₭${(1500*cargoLevel).toLocaleString()}) [Lvl ${cargoLevel} - ${cargoMax}t]</button>
@@ -1238,7 +1517,7 @@
                     <button class="action-btn" style="margin:0; padding:6px; font-size:11px;" onclick="upgrade('shield')">🛡 Upg Shields (₭${(2000*shieldLevel).toLocaleString()}) [Lvl ${shieldLevel} - ${maxHull}HP]</button>
                 </div>
                 ${phenomAction}
-                <p style="color:#ff00ff; font-weight:bold; margin-bottom:5px; margin-top:15px;">Station Services</p>
+                <p style="color:#ff00ff; font-weight:bold; margin-bottom:5px; margin-top:14px;">Station Services</p>
                 <div style="display:flex; gap:10px;">
                     <button class="action-btn" style="flex:1; margin:0; padding:8px; border-color:#ff00ff; color:#ff00ff;" onclick="viewMissions()">MISSIONS</button>
                     <button class="action-btn" style="flex:1; margin:0; padding:8px; border-color:#00ffff; color:#00ffff;" onclick="viewFactions()">FACTIONS</button>
@@ -1771,11 +2050,13 @@
                         <li><strong>Warp Jump:</strong> Click <em>"SET HYPERSPACE COURSE"</em> to engage your hyperdrive. Warp travel consumes fuel proportional to distance and inversely proportional to your <strong>Engine Level</strong>.</li>
                         <li><strong>Orbital Docking:</strong> Click your current system (highlighted in cyan) to dock at the local orbital space station, granting access to trading, shipyards, mission boards, and diplomacy.</li>
                     </ul>
-                    <h3 style="color:#00ffcc;">SHIP STATUS &amp; EMERGENCY TOW</h3>
+                    <h3 style="color:#00ffcc;">SHIP STATUS, REFUELLING &amp; EMERGENCY BEACON</h3>
                     <ul style="padding-left:20px;">
-                        <li><strong>Hull Integrity:</strong> Your ship's primary structural armor. Hostile attacks and severe stellar anomalies damage hull integrity.</li>
-                        <li><strong>Catastrophic Failure:</strong> If Hull reaches 0, automated emergency distress beacons fire. An emergency salvage tug rescues your escape capsule and tows your vessel back to <strong>Sol</strong>, incurring an emergency tow fee of up to ₭500!</li>
-                        <li><strong>Fuel Management:</strong> Warp jumps require adequate fuel reserves. Refuel by harvesting solar flare plasma, docking at stations, or salvaging derelict fuel tanks. Always keep sufficient fuel for escape jumps!</li>
+                        <li><strong>Hull Integrity:</strong> Your ship's primary structural armor. Damage can be repaired at any docked station shipyard for ₭4 per HP.</li>
+                        <li><strong>Refueling:</strong> Warp jumps consume fuel. Refuel reactor tanks at any docked station shipyard for ₭1.5 per %, or deploy solar collector scoops in Solar Flare anomalies.</li>
+                        <li><strong>Emergency Distress Beacon:</strong> If stranded in space without fuel or credits, launch an emergency beacon to summon a Federation auxiliary tanker (+30% fuel, -3 Federation standing).</li>
+                        <li><strong>Quicksave &amp; Quickload:</strong> Press <strong>F5</strong> anytime to Quicksave your progress, and <strong>F9</strong> to Quickload. Use <strong>EXPORT</strong> / <strong>IMPORT</strong> buttons on the dashboard for JSON save backups.</li>
+                        <li><strong>Catastrophic Failure:</strong> If Hull reaches 0, an emergency salvage tug rescues your escape capsule and tows your vessel back to <strong>Sol</strong> with emergency fuel, charging an emergency tow fee of up to ₭500.</li>
                     </ul>
                 `
             },
@@ -1848,8 +2129,9 @@
                         <li><strong>USE TECH (EMP BURST):</strong> Discharges an overloaded electronic counter-measure pulse. Uses 1 ton of Tech cargo to restore 40 hull and EMP stun!</li>
                         <li><strong>FLEE:</strong> Overcharges sub-light engines for an emergency disengage. Success chance: <code>50% + (Engine Level * 10%)</code>. Higher engine upgrades guarantee reliable escapes!</li>
                     </ul>
-                    <h3 style="color:#00ffcc;">COMBAT SURVIVAL TIPS</h3>
+                    <h3 style="color:#00ffcc;">COMBAT HOTKEYS &amp; SURVIVAL TIPS</h3>
                     <ul style="padding-left:20px;">
+                        <li><strong>Tactical Hotkeys:</strong> Press <strong>1 or A</strong> (Attack), <strong>2 or E</strong> (Evade), <strong>3 or T</strong> (Use Tech EMP), <strong>4 or F</strong> (Flee) during combat.</li>
                         <li>If your hull is low, lead with <strong>Evade</strong> or <strong>Flee</strong> to preserve your ship.</li>
                         <li>Keep at least 1-2 tons of Tech in your hold as emergency EMP ammunition for tough skirmishes.</li>
                         <li>Befriending the <strong>Pirate Syndicate</strong> (+15 rep) turns hostile ambushes into peaceful salutes with ₭150 tribute payments!</li>
@@ -1912,6 +2194,7 @@
 
         window.closeManual = function() {
             playBlip();
+            localStorage.setItem('kstellar_tutorialSeen', 'true');
             document.getElementById('manual-modal').style.display = 'none';
         };
 
@@ -1950,6 +2233,45 @@
 
         window.addEventListener('keydown', (e) => {
             const modal = document.getElementById('manual-modal');
+
+            // Quicksave F5
+            if (e.key === 'F5') {
+                e.preventDefault();
+                quickSave();
+                return;
+            }
+
+            // Quickload F9
+            if (e.key === 'F9') {
+                e.preventDefault();
+                quickLoad();
+                return;
+            }
+
+            // Combat Tactical Hotkeys
+            if (inCombat && !combatEnding) {
+                if (e.key === '1' || e.key === 'a' || e.key === 'A') {
+                    e.preventDefault();
+                    combatAction('attack');
+                    return;
+                }
+                if (e.key === '2' || e.key === 'e' || e.key === 'E') {
+                    e.preventDefault();
+                    combatAction('evade');
+                    return;
+                }
+                if (e.key === '3' || e.key === 't' || e.key === 'T') {
+                    e.preventDefault();
+                    combatAction('tech');
+                    return;
+                }
+                if (e.key === '4' || e.key === 'f' || e.key === 'F') {
+                    e.preventDefault();
+                    combatAction('flee');
+                    return;
+                }
+            }
+
             if (e.key === 'm' || e.key === 'M' || e.key === 'h' || e.key === 'H') {
                 if (modal.style.display === 'flex') {
                     closeManual();
@@ -1963,10 +2285,25 @@
             }
         });
 
+        // Restore Audio button states on page load
+        const audioBtn = document.getElementById('audio-toggle-btn');
+        if (audioBtn) audioBtn.innerText = soundEnabled ? "🔊 AUDIO: ON" : "🔇 AUDIO: OFF";
+        const droneBtn = document.getElementById('drone-toggle-btn');
+        if (droneBtn) droneBtn.innerText = droneEnabled ? "🌌 DRONE: ON" : "🌌 DRONE: OFF";
+
         renderMap();
         updateDashboard();
         showSystemInfo(systems.find(s => s.id === 1));
         requestAnimationFrame(renderCanvasLoop);
+
+        // Auto-show tutorial manual on first visit
+        const tutorialSeen = localStorage.getItem('kstellar_tutorialSeen');
+        if (!tutorialSeen) {
+            setTimeout(() => {
+                openManual();
+                localStorage.setItem('kstellar_tutorialSeen', 'true');
+            }, 300);
+        }
     </script>
 </body>
 </html>
