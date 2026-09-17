@@ -487,10 +487,13 @@
           <ul style="list-style:none; padding-left:0; display:flex; flex-direction:column; gap:5px; font-size:12px;">
             <li><b>[Space] / [P]</b> : Play / Pause 16-step pattern sequencer</li>
             <li><b>[1] - [6]</b> : Switch to Preset 1-6 (Lead, Bass, Pad, Chiptune, Bell, Pluck)</li>
-            <li><b>[Z] / [X]</b> : Shift keyboard octave down / up (-2 to +2)</li>
+            <li><b>[Z] / [X] / [◄] / [►]</b> : Shift keyboard octave down / up (-2 to +2)</li>
+            <li><b>[▲] / [▼]</b> : Adjust Master Volume (+5% / -5%)</li>
+            <li><b>[Enter]</b> : Preview synth patch chord</li>
             <li><b>[L]</b> : Toggle Arpeggiator Latch (Hold notes)</li>
             <li><b>[C]</b> : Clear active 16-step sequencer</li>
             <li><b>[R]</b> : Randomize sequencer pattern notes</li>
+            <li><b>[F5] / [F9]</b> : Quicksave / Quickload entire synth workstation state</li>
             <li><b>[Ctrl+S]</b> : Export synth patch preset as JSON</li>
             <li><b>[Ctrl+O]</b> : Import synth patch preset JSON</li>
             <li><b>[Ctrl+E]</b> : Export 16-bit 44.1 kHz WAV audio preview</li>
@@ -530,8 +533,12 @@
         <option value="chiptune">4: 8-Bit Chiptune</option>
         <option value="bell">5: Glass Bell</option>
         <option value="pluck">6: Plucked Synth</option>
+        <option value="custom" disabled hidden>Custom Patch</option>
       </select>
       
+      <button id="btnQuickSave" class="btn" title="Quicksave Synth State to Local Storage [F5]">💾 Quicksave [F5]</button>
+      <button id="btnQuickLoad" class="btn" title="Quickload Saved State [F9]">📂 Quickload [F9]</button>
+
       <button id="btnSavePreset" class="btn" title="Export Synth Preset as JSON [Ctrl+S]">💾 Save [Ctrl+S]</button>
       <button id="btnLoadPreset" class="btn" title="Import Synth Preset JSON [Ctrl+O]">📂 Load [Ctrl+O]</button>
       <input type="file" id="presetFileInput" accept=".json" style="display:none;">
@@ -798,6 +805,7 @@
   function toggleHelp(show) {
     const hm = document.getElementById('helpModal');
     if (!hm) return;
+    try { localStorage.setItem('ksynth_tutorialSeen', '1'); } catch (e) {}
     if (show === undefined) {
       hm.style.display = (hm.style.display === 'none' || !hm.style.display) ? 'flex' : 'none';
     } else {
@@ -806,9 +814,18 @@
   }
 
   window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-      showToast("🎵 Welcome to KSynth! Press [A-K] to play, [Space] for sequencer, [1-6] for presets, [F1] for Help", "info", 5000);
-    }, 400);
+    let seen = false;
+    try { seen = localStorage.getItem('ksynth_tutorialSeen') === '1'; } catch (e) {}
+    if (!seen) {
+      setTimeout(() => {
+        toggleHelp(true);
+        showToast("🎹 Welcome to KSynth Workstation Pro! Review keyboard controls & quickstart guide below.", "info", 5000);
+      }, 350);
+    } else {
+      setTimeout(() => {
+        showToast("🎵 Welcome to KSynth! Press [A-K] to play, [Space] for sequencer, [F5] Quicksave, [F1] Help", "info", 4000);
+      }, 400);
+    }
   });
 
   // ----------------------------------------------------
@@ -1011,6 +1028,9 @@
       label.innerText = v;
       drawADSR();
     });
+    slider.addEventListener('change', () => {
+      if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
+    });
   }
 
   bindSlider('osc1Oct', 'osc1OctVal');
@@ -1057,6 +1077,13 @@
   });
   document.getElementById('filterType').addEventListener('change', (e) => {
     if (filterNode) filterNode.type = e.target.value;
+    if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
+  });
+  document.getElementById('osc1Wave').addEventListener('change', () => {
+    if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
+  });
+  document.getElementById('osc2Wave').addEventListener('change', () => {
+    if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
   });
 
   // ----------------------------------------------------
@@ -1119,11 +1146,13 @@
     visMode = 'scope';
     document.getElementById('visModeScope').classList.add('active');
     document.getElementById('visModeSpectrum').classList.remove('active');
+    if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
   });
   document.getElementById('visModeSpectrum').addEventListener('click', () => {
     visMode = 'spectrum';
     document.getElementById('visModeSpectrum').classList.add('active');
     document.getElementById('visModeScope').classList.remove('active');
+    if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
   });
 
   function renderVisualizer() {
@@ -1204,6 +1233,7 @@
   let arpInterval = null;
   const arpHeldNotes = new Set();
   let currentArpIndex = 0;
+  let lastArpNote = null;
 
   const btnArpToggle = document.getElementById('btnArpToggle');
   const btnArpHold = document.getElementById('btnArpHold');
@@ -1224,6 +1254,7 @@
       btnArpToggle.style.color = '';
       stopArp();
     }
+    if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
   });
 
   btnArpHold.addEventListener('click', () => {
@@ -1231,6 +1262,7 @@
     btnArpHold.innerText = arpHold ? "Latch: ON" : "Latch: OFF";
     btnArpHold.style.borderColor = arpHold ? "var(--accent-cyan)" : "";
     btnArpHold.style.color = arpHold ? "var(--accent-cyan)" : "";
+    if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
   });
 
   function startArp() {
@@ -1240,8 +1272,6 @@
     const bpm = parseInt(document.getElementById('seqBpm').value);
     const division = parseInt(document.getElementById('arpRate').value); // 4, 8, 16, 32
     const intervalMs = (60000 / bpm) / (division / 4);
-
-    let lastNotePlayed = null;
 
     arpInterval = setInterval(() => {
       if (arpHeldNotes.size === 0) return;
@@ -1276,17 +1306,20 @@
         noteToPlay = fullPattern[Math.floor(Math.random() * fullPattern.length)];
       }
 
-      if (lastNotePlayed !== null) {
-        triggerNoteOff(lastNotePlayed);
-        highlightPianoKey(lastNotePlayed, false);
+      if (lastArpNote !== null) {
+        triggerNoteOff(lastArpNote);
+        highlightPianoKey(lastArpNote, false);
       }
       triggerNoteOn(noteToPlay);
       highlightPianoKey(noteToPlay, true);
-      lastNotePlayed = noteToPlay;
+      lastArpNote = noteToPlay;
 
       setTimeout(() => {
-        triggerNoteOff(noteToPlay);
-        highlightPianoKey(noteToPlay, false);
+        if (lastArpNote === noteToPlay) {
+          triggerNoteOff(noteToPlay);
+          highlightPianoKey(noteToPlay, false);
+          lastArpNote = null;
+        }
       }, intervalMs * 0.8);
 
     }, intervalMs);
@@ -1296,6 +1329,11 @@
     if (arpInterval) {
       clearInterval(arpInterval);
       arpInterval = null;
+    }
+    if (lastArpNote !== null) {
+      triggerNoteOff(lastArpNote);
+      highlightPianoKey(lastArpNote, false);
+      lastArpNote = null;
     }
     pianoContainer.querySelectorAll('.key.active').forEach(k => k.classList.remove('active'));
   }
@@ -1314,7 +1352,7 @@
   }));
 
   const seqGrid = document.getElementById('seqGrid');
-  let currentSeqStep = 0;
+  let currentSeqStep = -1;
   let seqTimer = null;
   let isSeqPlaying = false;
 
@@ -1340,6 +1378,7 @@
       select.addEventListener('change', (e) => {
         e.stopPropagation();
         step.note = e.target.value;
+        if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
       });
 
       stepEl.appendChild(led);
@@ -1349,6 +1388,7 @@
         if (e.target.tagName === 'SELECT') return;
         step.on = !step.on;
         stepEl.classList.toggle('on', step.on);
+        if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
       });
 
       seqGrid.appendChild(stepEl);
@@ -1396,7 +1436,9 @@
 
   document.getElementById('btnSeqClear').addEventListener('click', () => {
     seqStepsData.forEach(s => s.on = false);
+    currentSeqStep = -1;
     updateSeqGridActive();
+    if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
   });
 
   document.getElementById('btnSeqRandom').addEventListener('click', () => {
@@ -1405,20 +1447,29 @@
       s.note = noteOptions[Math.floor(Math.random() * noteOptions.length)];
     });
     updateSeqGridActive();
+    if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
   });
 
   document.getElementById('seqBpm').addEventListener('input', () => {
     if (isSeqPlaying) startSequencer();
     if (arpEnabled) startArp();
   });
+  document.getElementById('seqBpm').addEventListener('change', () => {
+    if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
+  });
   document.getElementById('arpRate').addEventListener('change', () => {
     if (arpEnabled) startArp();
+    if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
   });
   document.getElementById('arpMode').addEventListener('change', () => {
     if (arpEnabled) startArp();
+    if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
   });
   document.getElementById('arpOctaves').addEventListener('input', () => {
     if (arpEnabled) startArp();
+  });
+  document.getElementById('arpOctaves').addEventListener('change', () => {
+    if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
   });
 
   function startSequencer() {
@@ -1510,9 +1561,16 @@
           }
         };
 
+        const handleMouseEnter = (e) => {
+          if (e.buttons === 1) {
+            handleNoteStart(e);
+          }
+        };
+
         keyEl.addEventListener('mousedown', handleNoteStart);
         keyEl.addEventListener('mouseup', handleNoteEnd);
         keyEl.addEventListener('mouseleave', handleNoteEnd);
+        keyEl.addEventListener('mouseenter', handleMouseEnter);
 
         keyEl.addEventListener('touchstart', handleNoteStart, { passive: false });
         keyEl.addEventListener('touchend', handleNoteEnd, { passive: false });
@@ -1569,6 +1627,16 @@
       toggleHelp();
       return;
     }
+    if (e.key === 'F5') {
+      e.preventDefault();
+      quickSave();
+      return;
+    }
+    if (e.key === 'F9') {
+      e.preventDefault();
+      quickLoad();
+      return;
+    }
 
     const key = e.key.toLowerCase();
     if (e.ctrlKey || e.metaKey) {
@@ -1594,6 +1662,46 @@
 
     const hm = document.getElementById('helpModal');
     if (hm && hm.style.display !== 'none') return;
+
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const mv = document.getElementById('masterVol');
+      mv.value = Math.min(1, parseFloat(mv.value) + 0.05);
+      mv.dispatchEvent(new Event('input'));
+      mv.dispatchEvent(new Event('change'));
+      showToast(`Master Volume: ${Math.round(mv.value * 100)}%`, 'info', 1000);
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const mv = document.getElementById('masterVol');
+      mv.value = Math.max(0, parseFloat(mv.value) - 0.05);
+      mv.dispatchEvent(new Event('input'));
+      mv.dispatchEvent(new Event('change'));
+      showToast(`Master Volume: ${Math.round(mv.value * 100)}%`, 'info', 1000);
+      return;
+    }
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      currentOctaveShift = Math.max(-2, currentOctaveShift - 1);
+      renderPiano();
+      if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
+      showToast(`Octave shifted: ${currentOctaveShift >= 0 ? '+' : ''}${currentOctaveShift}`, 'info', 1200);
+      return;
+    }
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      currentOctaveShift = Math.min(2, currentOctaveShift + 1);
+      renderPiano();
+      if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
+      showToast(`Octave shifted: ${currentOctaveShift >= 0 ? '+' : ''}${currentOctaveShift}`, 'info', 1200);
+      return;
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      quickPlayChord();
+      return;
+    }
 
     if (e.code === 'Space' || key === ' ') {
       e.preventDefault();
@@ -1627,12 +1735,14 @@
     if (key === 'z') {
       currentOctaveShift = Math.max(-2, currentOctaveShift - 1);
       renderPiano();
+      if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
       showToast(`Octave shifted: ${currentOctaveShift >= 0 ? '+' : ''}${currentOctaveShift}`, 'info', 1200);
       return;
     }
     if (key === 'x') {
       currentOctaveShift = Math.min(2, currentOctaveShift + 1);
       renderPiano();
+      if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
       showToast(`Octave shifted: ${currentOctaveShift >= 0 ? '+' : ''}${currentOctaveShift}`, 'info', 1200);
       return;
     }
@@ -1809,6 +1919,14 @@
 
   function quickDemoBeat() {
     ensureAudioActive();
+    const hasActive = seqStepsData.some(s => s.on);
+    if (!hasActive) {
+      seqStepsData.forEach((s, i) => {
+        s.on = (i % 2 === 0);
+      });
+      updateSeqGridActive();
+      saveCurrentPatch();
+    }
     if (!isSeqPlaying) {
       document.getElementById('btnSeqPlay').click();
       showToast('16-Step Beat Playing! [Space] to Pause', 'info', 2000);
@@ -1872,6 +1990,7 @@
       sustain: 0.2 + Math.random() * 0.6,
       release: 0.1 + Math.random() * 0.8
     };
+    document.getElementById('presetSelect').value = 'custom';
     applyPreset(p);
     saveCurrentPatch();
     showToast('Random patch generated!', 'info', 1500);
@@ -2168,39 +2287,107 @@
 
     let offset = 44;
     for (let i = 0; i < samples.length; i++, offset += 2) {
-      const s = Math.max(-1, Math.min(1, samples[i]));
+      const val = isNaN(samples[i]) ? 0 : samples[i];
+      const s = Math.max(-1, Math.min(1, val));
       view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
     }
     return new Blob([view], { type: 'audio/wav' });
   }
 
-  // LocalStorage Persistence
+  // ----------------------------------------------------
+  // LocalStorage Persistence & Full State Management
+  // ----------------------------------------------------
+  function getCurrentState() {
+    return {
+      preset: document.getElementById('presetSelect').value,
+      osc1Wave: document.getElementById('osc1Wave').value,
+      osc1Oct: parseInt(document.getElementById('osc1Oct').value),
+      osc1Detune: parseInt(document.getElementById('osc1Detune').value),
+      osc1Vol: parseFloat(document.getElementById('osc1Vol').value),
+      osc2Wave: document.getElementById('osc2Wave').value,
+      osc2Oct: parseInt(document.getElementById('osc2Oct').value),
+      osc2Detune: parseInt(document.getElementById('osc2Detune').value),
+      osc2Vol: parseFloat(document.getElementById('osc2Vol').value),
+      filterType: document.getElementById('filterType').value,
+      filterCutoff: parseFloat(document.getElementById('filterCutoff').value),
+      filterRes: parseFloat(document.getElementById('filterRes').value),
+      masterVol: parseFloat(document.getElementById('masterVol').value),
+      delayTime: parseFloat(document.getElementById('delayTime').value),
+      delayFdbk: parseFloat(document.getElementById('delayFdbk').value),
+      delayMix: parseFloat(document.getElementById('delayMix').value),
+      attack: parseFloat(document.getElementById('attack').value),
+      decay: parseFloat(document.getElementById('decay').value),
+      sustain: parseFloat(document.getElementById('sustain').value),
+      release: parseFloat(document.getElementById('release').value),
+      bpm: parseInt(document.getElementById('seqBpm').value),
+      seqSteps: seqStepsData.map(s => ({ on: !!s.on, note: s.note })),
+      arpEnabled: arpEnabled,
+      arpHold: arpHold,
+      arpMode: document.getElementById('arpMode').value,
+      arpRate: document.getElementById('arpRate').value,
+      arpOctaves: parseInt(document.getElementById('arpOctaves').value),
+      octaveShift: currentOctaveShift,
+      visMode: visMode,
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  function applyState(config) {
+    if (!config || typeof config !== 'object') return;
+    applyPreset(config);
+
+    if (config.preset && document.getElementById('presetSelect').querySelector(`option[value="${config.preset}"]`)) {
+      document.getElementById('presetSelect').value = config.preset;
+    } else {
+      document.getElementById('presetSelect').value = 'custom';
+    }
+
+    if (config.bpm) {
+      const bpm = Math.max(50, Math.min(220, parseInt(config.bpm)));
+      document.getElementById('seqBpm').value = bpm;
+      document.getElementById('bpmVal').innerText = bpm;
+    }
+
+    if (Array.isArray(config.seqSteps) && config.seqSteps.length === 16) {
+      config.seqSteps.forEach((s, idx) => {
+        if (s && typeof s === 'object') {
+          seqStepsData[idx].on = !!s.on;
+          if (typeof s.note === 'string' && noteOptions.includes(s.note)) {
+            seqStepsData[idx].note = s.note;
+          }
+        }
+      });
+      updateSeqGridActive();
+    }
+
+    if (config.octaveShift !== undefined && !isNaN(config.octaveShift)) {
+      currentOctaveShift = Math.max(-2, Math.min(2, parseInt(config.octaveShift)));
+      renderPiano();
+    }
+
+    if (config.arpMode) document.getElementById('arpMode').value = config.arpMode;
+    if (config.arpRate) document.getElementById('arpRate').value = config.arpRate;
+    if (config.arpOctaves) {
+      document.getElementById('arpOctaves').value = config.arpOctaves;
+      document.getElementById('arpOctVal').innerText = config.arpOctaves;
+    }
+
+    if (config.arpHold !== undefined && config.arpHold !== arpHold) {
+      btnArpHold.click();
+    }
+    if (config.arpEnabled !== undefined && config.arpEnabled !== arpEnabled) {
+      btnArpToggle.click();
+    }
+
+    if (config.visMode && config.visMode !== visMode) {
+      if (config.visMode === 'spectrum') document.getElementById('visModeSpectrum').click();
+      else document.getElementById('visModeScope').click();
+    }
+  }
+
   function saveCurrentPatch() {
     try {
-      const config = {
-        preset: document.getElementById('presetSelect').value,
-        osc1Wave: document.getElementById('osc1Wave').value,
-        osc1Oct: document.getElementById('osc1Oct').value,
-        osc1Detune: document.getElementById('osc1Detune').value,
-        osc1Vol: document.getElementById('osc1Vol').value,
-        osc2Wave: document.getElementById('osc2Wave').value,
-        osc2Oct: document.getElementById('osc2Oct').value,
-        osc2Detune: document.getElementById('osc2Detune').value,
-        osc2Vol: document.getElementById('osc2Vol').value,
-        filterType: document.getElementById('filterType').value,
-        filterCutoff: document.getElementById('filterCutoff').value,
-        filterRes: document.getElementById('filterRes').value,
-        masterVol: document.getElementById('masterVol').value,
-        delayTime: document.getElementById('delayTime').value,
-        delayFdbk: document.getElementById('delayFdbk').value,
-        delayMix: document.getElementById('delayMix').value,
-        attack: document.getElementById('attack').value,
-        decay: document.getElementById('decay').value,
-        sustain: document.getElementById('sustain').value,
-        release: document.getElementById('release').value,
-        bpm: document.getElementById('seqBpm').value,
-        seqSteps: seqStepsData
-      };
+      const config = getCurrentState();
       localStorage.setItem('ksynth_state_v1', JSON.stringify(config));
     } catch (e) {}
   }
@@ -2210,28 +2397,40 @@
       const saved = localStorage.getItem('ksynth_state_v1');
       if (!saved) return;
       const config = JSON.parse(saved);
-      if (config && typeof config === 'object') {
-        applyPreset(config);
-        if (config.preset) document.getElementById('presetSelect').value = config.preset;
-        if (config.bpm) {
-          const bpm = Math.max(50, Math.min(220, parseInt(config.bpm)));
-          document.getElementById('seqBpm').value = bpm;
-          document.getElementById('bpmVal').innerText = bpm;
-        }
-        if (Array.isArray(config.seqSteps) && config.seqSteps.length === 16) {
-          config.seqSteps.forEach((s, idx) => {
-            if (s && typeof s === 'object') {
-              seqStepsData[idx].on = !!s.on;
-              if (typeof s.note === 'string' && noteOptions.includes(s.note)) {
-                seqStepsData[idx].note = s.note;
-              }
-            }
-          });
-          updateSeqGridActive();
-        }
-      }
+      applyState(config);
     } catch (e) {}
   }
+
+  function quickSave() {
+    try {
+      const state = getCurrentState();
+      localStorage.setItem('ksynth_quicksave', JSON.stringify(state));
+      localStorage.setItem('ksynth_state_v1', JSON.stringify(state));
+      showToast('💾 Quicksave complete! [F5]', 'success', 2500);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to quicksave state.', 'error');
+    }
+  }
+
+  function quickLoad() {
+    try {
+      const raw = localStorage.getItem('ksynth_quicksave') || localStorage.getItem('ksynth_state_v1');
+      if (!raw) {
+        showToast('No quicksave found. Press [F5] to save state.', 'info', 3000);
+        return;
+      }
+      const state = JSON.parse(raw);
+      applyState(state);
+      showToast('📂 State quickloaded! [F9]', 'success', 2500);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to quickload state.', 'error');
+    }
+  }
+
+  document.getElementById('btnQuickSave').addEventListener('click', quickSave);
+  document.getElementById('btnQuickLoad').addEventListener('click', quickLoad);
 
   // Load saved patch on initial start
   loadSavedPatch();

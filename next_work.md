@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -14,14 +14,14 @@ status: ready
 current_targets:
   kilo_creator: "KChrono (Phase 1: Project Scaffolding & Core Paradox Engine)"
   kilo_graphics: KQuest
-  kilo_tester: KSynth
+  kilo_tester: KSys
   kilo_usability: KChess
   kilo_qa: KSolitaire
   kilo_expander: KScript
 last_run:
-  agent: kilo-graphics
-  app: KRogue
-  timestamp: "2026-09-17T06:40:07Z"
+  agent: kilo-tester
+  app: KSynth
+  timestamp: "2026-09-17T08:44:00Z"
 last_planner_run: "2026-09-16T19:00:00Z"
 ---
 
@@ -63,9 +63,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KStarship`, `KFortress`, `KAlchemy`, `KColony`, `KSpace`, `KAsteroids`, `KMaze`, `KPac`, `KBreakout`, `KSnake`, `KRogue`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KSynth`
+- **Current Target**: `KSys`
 - **Upcoming Queue**:
-  `KSys`, `KTask`, `KTerm`, `KTetris`, `KTimer`, `KTodo`, `KTowers`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KWords`, `KZip`, `K2048`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalc`, `KCalendar`, `KChart`, `KChess`, `KClock`, `KCode`, `KDiff`, `KDnD`, `KDraw`, `KDrum`, `KEdit`, `KExcel`, `KFiles`, `KFit`, `KFlash`, `KFlight`, `KFont`, `KForm`, `KFormula`, `KForth`, `KFractal`, `KGraph`, `KHex`, `KIcon`, `KImage`, `KInvoice`, `KKanban`, `KLife`, `KLogic`, `KMail`, `KMarkdown`, `KMaze`, `KMidi`, `KMines`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KPong`, `KQuest`, `KRadio`, `KRead`, `KReversi`, `KRogue`, `KScript`, `KSimon`, `KSnake`, `KSolitaire`, `KSpace`, `KStarship`, `KStellar`, `KSudoku`.
+  `KTask`, `KTerm`, `KTetris`, `KTimer`, `KTodo`, `KTowers`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KWords`, `KZip`, `K2048`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalc`, `KCalendar`, `KChart`, `KChess`, `KClock`, `KCode`, `KDiff`, `KDnD`, `KDraw`, `KDrum`, `KEdit`, `KExcel`, `KFiles`, `KFit`, `KFlash`, `KFlight`, `KFont`, `KForm`, `KFormula`, `KForth`, `KFractal`, `KGraph`, `KHex`, `KIcon`, `KImage`, `KInvoice`, `KKanban`, `KLife`, `KLogic`, `KMail`, `KMarkdown`, `KMaze`, `KMidi`, `KMines`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KPong`, `KQuest`, `KRadio`, `KRead`, `KReversi`, `KRogue`, `KScript`, `KSimon`, `KSnake`, `KSolitaire`, `KSpace`, `KStarship`, `KStellar`, `KSudoku`, `KSynth`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KChess`
@@ -86,6 +86,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-17T08:44:00Z — kilo-tester: KSynth**
+  - Status: PASS ✅ (9 issues fixed inline).
+  - Highlights: Tutorial onboarding (`ksynth_tutorialSeen`), F5/F9 quicksave/quickload, full workstation state persistence (Dual Osc, Filter, ADSR, Arp, Sequencer), mouse glissando on virtual keys, arrow/Enter/hotkey navigation, safe WAV audio rendering, HUD toasts. Builds clean.
+
 - **2026-09-17T06:40:07Z — kilo-graphics: KRogue**
   - Status: PASS ✅ (Content expansion & visual polish).
   - Highlights: Enchanting Altar socketing with 5 elemental gems (Ruby, Sapphire, Emerald, Amethyst, Topaz), 4 companion pets (Wolf, Wisp, Golem, Phoenix) with leveling and feeding, 3 branching challenge vaults (Void Rift, Trial, Hoard) with Vault Guardians and Relics. Fixed MSVC compilation ordering. Native (76 KB) and Web (196 KB) clean.
@@ -101,7 +105,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-09-17T01:34:20Z — kilo-tester: KStellar**
   - Status: PASS ✅ (8 issues fixed inline).
   - Highlights: Tutorial onboarding (`kstellar_tutorialSeen`), F5/F9 quicksave/quickload, JSON save import/export, emergency rescue beacon, combat hotkeys, action locks, HUD toasts. Build clean.
-
-- **2026-09-17T01:08:31Z — kilo-qa: KSnake (Pass 5)**
-  - Status: 🟢 Pass 5 Completed.
-  - Highlights: Hardened full state quicksave/load in web and native (boss, rivals, skills, hazards), fixed native quickload file deletion bug, first-run tutorial flag, F5/F9 hotkeys. Native (53.5 KB) and web clean.
