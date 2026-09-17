@@ -5,6 +5,12 @@ import glob
 # 999 KB in bytes
 MAX_SIZE = 999 * 1024
 
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 def check_sizes():
     print("Checking KiloApps executable sizes...")
     failed = False

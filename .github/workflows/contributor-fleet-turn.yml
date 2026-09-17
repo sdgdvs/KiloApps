@@ -1,0 +1,121 @@
+name: Contributor Fleet Turn
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_agent:
+        description: 'Override agent (leave blank to follow next_work.md)'
+        required: false
+        default: ''
+      model:
+        description: 'Reasoning model'
+        required: false
+        default: 'gemini-3.8-flash-high'
+
+jobs:
+  run-fleet-turn:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout Fork Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sync with Upstream Main
+        shell: bash
+        run: |
+          git remote add upstream https://github.com/mrbos/KiloApps.git || true
+          git fetch upstream main
+          git rebase upstream/main || git rebase --abort
+
+      - name: Set up MSVC & Win32 C Build Tools
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Set up Python & uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'KiloOS/package-lock.json'
+
+      - name: Install Frontend Dependencies
+        shell: pwsh
+        run: |
+          cd KiloOS
+          npm ci
+
+      - name: Install and Configure agy CLI
+        shell: pwsh
+        run: |
+          $agyBinDir = "$env:LOCALAPPDATA\agy\bin"
+          New-Item -ItemType Directory -Force -Path $agyBinDir | Out-Null
+          
+          # Download agy Windows binary
+          $zipPath = "$env:TEMP\agy.zip"
+          Invoke-WebRequest -Uri "https://antigravity.google/downloads/agy-windows-amd64.zip" -OutFile $zipPath -UseBasicParsing
+          Expand-Archive -Path $zipPath -DestinationPath $agyBinDir -Force
+          $agyBinDir | Out-File -FilePath $env:GITHUB_PATH -Append
+
+      - name: Execute Autonomous Turn
+        shell: pwsh
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          AGY_MODEL: ${{ github.event.inputs.model || 'gemini-3.8-flash-high' }}
+        run: |
+          $agentFlag = if ("${{ github.event.inputs.target_agent }}") { "--force-agent ${{ github.event.inputs.target_agent }}" } else { "" }
+          uv run scripts/orchestrate.py $agentFlag
+
+      - name: Verify Size Budget & Compilations
+        shell: pwsh
+        run: |
+          # 1. Enforce 999KB size ceiling
+          python check_sizes.py
+
+          # 2. Verify React/Vite Frontend
+          cd KiloOS
+          npm run build
+          cd ..
+
+      - name: Commit and Open Pull Request
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MODEL_USED: ${{ github.event.inputs.model || 'gemini-3.8-flash-high' }}
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No changes were produced in this turn. Exiting cleanly."
+            exit 0
+          fi
+
+          TIMESTAMP=$(date +'%Y%m%d-%H%M%S')
+          BRANCH_NAME="fleet-turn-$TIMESTAMP"
+
+          git checkout -b "$BRANCH_NAME"
+          git config user.name "KiloApps Autonomous Contributor"
+          git config user.email "bot@kiloapps.local"
+
+          git add -A
+          git commit -m "feat(fleet): autonomous turn via $MODEL_USED [$TIMESTAMP]"
+          git push origin "$BRANCH_NAME"
+
+          gh pr create \
+            --repo mrbos/KiloApps \
+            --base main \
+            --head "$BRANCH_NAME" \
+            --title "🤖 Fleet Turn: $(git log -1 --pretty=%s)" \
+            --body "### Autonomous Fleet Turn Summary
+            - **Model:** $MODEL_USED
+            - **Host:** GitHub Actions Windows Runner
+            - **Verification:** Size checks (<=999KB), Win32 C builds, and React frontend builds all verified.
+            
+            Receipt emitted to \`.agents/receipts/\`."

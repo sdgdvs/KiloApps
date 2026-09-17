@@ -32,6 +32,7 @@ LOCK_FILE = REPO_ROOT / ".agents" / ".orchestrator.lock"
 NEXT_WORK_FILE = REPO_ROOT / "next_work.md"
 LOG_DIR = REPO_ROOT / "logs"
 LOG_FILE = LOG_DIR / "orchestrator.log"
+RECEIPTS_DIR = REPO_ROOT / ".agents" / "receipts"
 
 DEFAULT_AGY_PATH = (
     Path(os.environ.get("LOCALAPPDATA", "")) / "agy" / "bin" / "agy.exe"
@@ -218,10 +219,35 @@ def build_agent_prompt(agent: str, targets: dict) -> str:
         )
 
 
+def write_turn_receipt(agent: str, model: str, duration: float, returncode: int, target: str = "") -> Path:
+    """Emits an atomic, immutable JSON turn receipt to avoid git merge conflicts."""
+    RECEIPTS_DIR.mkdir(parents=True, exist_ok=True)
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
+    ts_slug = now_utc.strftime("%Y%m%d_%H%M%S")
+    receipt_file = RECEIPTS_DIR / f"receipt_{agent}_{ts_slug}.json"
+    data = {
+        "timestamp": now_utc.isoformat(),
+        "agent": agent,
+        "model": model,
+        "target": target,
+        "duration_seconds": round(duration, 2),
+        "returncode": returncode,
+        "success": returncode == 0,
+    }
+    try:
+        receipt_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        log(f"Emitted turn receipt: {receipt_file.name}")
+        return receipt_file
+    except Exception as e:
+        log(f"Warning: Failed to write turn receipt: {e}")
+        return None
+
+
 def main():
     parser = argparse.ArgumentParser(description="KiloApps Fleet Master Orchestrator")
     parser.add_argument("--dry-run", action="store_true", help="Inspect and validate without executing agy")
     parser.add_argument("--force-agent", type=str, help="Override active agent (e.g. kilo-tester, kilo-qa, kilo-creator)")
+    parser.add_argument("--no-receipt", action="store_true", help="Skip emitting turn receipt")
     args = parser.parse_args()
 
     log("=" * 60)
@@ -265,7 +291,7 @@ def main():
             agent = args.force_agent or frontmatter.get("current_agent", "kilo-tester")
 
         status = frontmatter.get("status", "ready")
-        model = frontmatter.get("model", "gemini-3.8-flash-high")
+        model = os.environ.get("AGY_MODEL") or frontmatter.get("model", "gemini-3.8-flash-high")
         timeout_min = int(frontmatter.get("timeout_minutes", 15))
         targets = frontmatter.get("current_targets", {})
         if isinstance(targets, str):
@@ -316,6 +342,16 @@ def main():
         if process.stderr:
             stderr_sample = process.stderr.strip()[-500:]
             log(f"Stderr (tail):\n{stderr_sample}")
+
+        target_app = str(targets.get(agent.replace("-", "_"), ""))
+        if not args.no_receipt:
+            write_turn_receipt(
+                agent=agent,
+                model=model,
+                duration=duration,
+                returncode=process.returncode,
+                target=target_app,
+            )
 
         if process.returncode != 0:
             log(f"Agent turn exited with non-zero code {process.returncode}. Investigation required.")

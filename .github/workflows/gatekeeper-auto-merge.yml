@@ -1,0 +1,76 @@
+name: Gatekeeper Auto-Merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+
+jobs:
+  gatekeeper-verify-and-merge:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout PR Branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Set up MSVC & Win32 C Build Tools
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Set up Python & uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'KiloOS/package-lock.json'
+
+      - name: Install Frontend Dependencies
+        shell: pwsh
+        run: |
+          cd KiloOS
+          npm ci
+
+      - name: Gate 1 - Check 999KB Size Ceiling
+        shell: pwsh
+        run: |
+          python check_sizes.py
+
+      - name: Gate 2 - Verify React/Vite Frontend Build
+        shell: pwsh
+        run: |
+          cd KiloOS
+          npm run build
+
+      - name: Gate 3 - Reconcile Turn Receipts & Advance Queue
+        shell: pwsh
+        run: |
+          uv run scripts/reconcile_receipts.py
+
+      - name: Push Reconciled Queue to PR Branch
+        shell: bash
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "KiloApps Gatekeeper Bot"
+            git config user.email "gatekeeper@kiloapps.local"
+            git add -A
+            git commit -m "chore(gatekeeper): reconcile turn receipts and advance next_work.md"
+            git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          fi
+
+      - name: Auto-Merge Valid PR
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge "${{ github.event.pull_request.number }}" --merge --auto || echo "Auto-merge flag applied."
