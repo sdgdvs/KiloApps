@@ -775,7 +775,8 @@
       screenShakeIntensity: 0,
       shakeAmp: 0,
       shakeAngle: 0,
-      redFlashTimer: 0
+      redFlashTimer: 0,
+      slashAnim: null
     };
 
     function initGFX() {
@@ -796,6 +797,16 @@
 
     function triggerScreenShake(intensity) {
       GFX.shakeAmp = Math.max(GFX.shakeAmp, intensity);
+    }
+
+    function triggerSlashFX(x, y, isCrit = false) {
+      GFX.slashAnim = {
+        x: x,
+        y: y,
+        isCrit: isCrit,
+        frame: 0,
+        maxFrames: isCrit ? 14 : 10
+      };
     }
 
     function addShockwave(x, y, color = '#f9e2af', maxRadius = 75) {
@@ -1094,6 +1105,59 @@
         }
       }
 
+      // 5.5 Dynamic Crescent Blade Slash FX
+      if (GFX.slashAnim) {
+        GFX.slashAnim.frame++;
+        const sa = GFX.slashAnim;
+        const prog = sa.frame / sa.maxFrames;
+        const alpha = Math.max(0, 1 - prog);
+        ctx.save();
+        ctx.translate(sa.x, sa.y);
+        ctx.globalAlpha = alpha;
+        ctx.shadowBlur = sa.isCrit ? 20 : 12;
+        ctx.shadowColor = sa.isCrit ? '#f9e2af' : '#89dceb';
+        ctx.strokeStyle = sa.isCrit ? '#ffd700' : '#89dceb';
+        ctx.lineWidth = sa.isCrit ? 5 : 3.5;
+        ctx.lineCap = 'round';
+
+        const arcLen = (sa.isCrit ? 65 : 45) * (0.4 + 0.6 * prog);
+        // Primary sweeping crescent blade
+        ctx.beginPath();
+        ctx.moveTo(-arcLen * 0.7, -arcLen * 0.8);
+        ctx.quadraticCurveTo(arcLen * 0.35, 0, arcLen * 0.7, arcLen * 0.8);
+        ctx.stroke();
+
+        // Inner white hot core
+        ctx.beginPath();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = sa.isCrit ? 2.5 : 1.8;
+        ctx.moveTo(-arcLen * 0.5, -arcLen * 0.6);
+        ctx.quadraticCurveTo(arcLen * 0.2, 0, arcLen * 0.5, arcLen * 0.6);
+        ctx.stroke();
+
+        // If Crit, crossed cross-cutting golden crescent slash
+        if (sa.isCrit) {
+          ctx.beginPath();
+          ctx.strokeStyle = '#fab387';
+          ctx.lineWidth = 4.5;
+          ctx.moveTo(arcLen * 0.7, -arcLen * 0.7);
+          ctx.quadraticCurveTo(-arcLen * 0.3, 0, -arcLen * 0.7, arcLen * 0.7);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2.2;
+          ctx.moveTo(arcLen * 0.5, -arcLen * 0.5);
+          ctx.quadraticCurveTo(-arcLen * 0.15, 0, -arcLen * 0.5, arcLen * 0.5);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        if (sa.frame >= sa.maxFrames) {
+          GFX.slashAnim = null;
+        }
+      }
+
       // 6. Render Particles across 4 distinct layers
       for (let i = GFX.particles.length - 1; i >= 0; i--) {
         const pt = GFX.particles[i];
@@ -1369,6 +1433,7 @@
       else if (b.id === 'crypt' || b.id === 'blood_citadel') { bgTop = '#1c1c2e'; bgBot = '#2b1c38'; }
       else if (b.id === 'frostpeak') { bgTop = '#182438'; bgBot = '#24384a'; }
       else if (b.id === 'forest' || b.id === 'serpent_swamp') { bgTop = '#182e22'; bgBot = '#1c3d2a'; }
+      else if (b.id === 'astral_nexus') { bgTop = '#090814'; bgBot = '#22153b'; }
 
       let grad = ctx.createLinearGradient(0, 0, 0, h);
       grad.addColorStop(0, bgTop);
@@ -1376,7 +1441,7 @@
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);
 
-      ctx.strokeStyle = '#313244';
+      ctx.strokeStyle = (b.id === 'astral_nexus') ? '#453266' : '#313244';
       ctx.lineWidth = 1;
       for (let y = 10; y < 160; y += 24) {
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
@@ -1386,25 +1451,69 @@
         }
       }
 
-      // Draw Flickering Torchlight Ambient Glow
+      // Draw Flickering Ambient Glow (Torchlight or Cosmic Singularity)
       const flicker = Math.sin(GFX.frame * 0.2) * 5 + Math.random() * 5;
       const torchGrad = ctx.createRadialGradient(w/2, 80, 20 + flicker, w/2, 80, 200 + flicker);
-      torchGrad.addColorStop(0, 'rgba(250, 179, 135, 0.15)');
-      torchGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      if (b.id === 'astral_nexus') {
+        torchGrad.addColorStop(0, 'rgba(203, 166, 247, 0.22)');
+        torchGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      } else {
+        torchGrad.addColorStop(0, 'rgba(250, 179, 135, 0.15)');
+        torchGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      }
       ctx.fillStyle = torchGrad;
       ctx.fillRect(0, 0, w, 160);
 
-      // Atmospheric Dust Motes
-      ctx.fillStyle = 'rgba(205, 214, 244, 0.3)';
-      for (let i = 0; i < 20; i++) {
-        let px = (Math.sin(GFX.frame * 0.02 + i) * 100 + i * 37) % w;
-        if (px < 0) px += w;
-        let py = (Math.cos(GFX.frame * 0.015 + i) * 50 + i * 23) % 160;
-        if (py < 0) py += 160;
-        ctx.beginPath(); ctx.arc(px, py, (i%2)+1, 0, Math.PI * 2); ctx.fill();
+      // Biome-Specific Weather & Atmospheric Motes
+      if (b.id === 'infernal_volcano' || b.id === 'spire') {
+        // Ascending embers
+        ctx.fillStyle = '#fab387';
+        for (let i = 0; i < 18; i++) {
+          let px = (w * 0.2 + (i * 47 + Math.sin(GFX.frame * 0.05 + i) * 30)) % w;
+          let py = 160 - ((GFX.frame * 1.5 + i * 28) % 160);
+          ctx.fillRect(px, py, 2, 2);
+        }
+      } else if (b.id === 'frostpeak') {
+        // Falling snowflakes
+        ctx.fillStyle = '#cdd6f4';
+        for (let i = 0; i < 20; i++) {
+          let px = (i * 38 + Math.sin(GFX.frame * 0.03 + i) * 20) % w;
+          let py = (GFX.frame * 1.2 + i * 31) % 160;
+          ctx.beginPath(); ctx.arc(px, py, 1.5, 0, Math.PI * 2); ctx.fill();
+        }
+      } else if (b.id === 'serpent_swamp' || b.id === 'forest') {
+        // Drifting toxic spores
+        ctx.fillStyle = '#a6e3a1';
+        for (let i = 0; i < 16; i++) {
+          let px = (Math.sin(GFX.frame * 0.02 + i) * 80 + i * 43) % w;
+          if (px < 0) px += w;
+          let py = (Math.cos(GFX.frame * 0.015 + i) * 40 + i * 25) % 160;
+          if (py < 0) py += 160;
+          ctx.beginPath(); ctx.arc(px, py, 2, 0, Math.PI * 2); ctx.fill();
+        }
+      } else if (b.id === 'astral_nexus') {
+        // Cosmic Singularity Stars & Void Motes
+        for (let i = 0; i < 22; i++) {
+          const ang = GFX.frame * 0.015 + i * 0.55;
+          const dist = 30 + (i * 11) % 100;
+          const px = w/2 + Math.cos(ang) * dist * 1.8;
+          const py = 75 + Math.sin(ang) * dist * 0.7;
+          ctx.fillStyle = (i % 2 === 0) ? '#cba6f7' : '#89dceb';
+          ctx.fillRect(px, py, (i % 3 === 0) ? 2.5 : 1.5, (i % 3 === 0) ? 2.5 : 1.5);
+        }
+      } else {
+        // Standard atmospheric dust motes
+        ctx.fillStyle = 'rgba(205, 214, 244, 0.3)';
+        for (let i = 0; i < 20; i++) {
+          let px = (Math.sin(GFX.frame * 0.02 + i) * 100 + i * 37) % w;
+          if (px < 0) px += w;
+          let py = (Math.cos(GFX.frame * 0.015 + i) * 50 + i * 23) % 160;
+          if (py < 0) py += 160;
+          ctx.beginPath(); ctx.arc(px, py, (i%2)+1, 0, Math.PI * 2); ctx.fill();
+        }
       }
 
-      ctx.fillStyle = '#1e1e2e';
+      ctx.fillStyle = (b.id === 'astral_nexus') ? '#18122b' : '#1e1e2e';
       ctx.fillRect(0, 160, w, 60);
 
       if (b.id === 'infernal_volcano' || b.id === 'spire') {
@@ -1416,6 +1525,9 @@
         ctx.fillRect(0, 198, w, 22);
       } else if (b.id === 'serpent_swamp' || b.id === 'crypt') {
         ctx.fillStyle = '#a6e3a1';
+        ctx.fillRect(0, 198, w, 22);
+      } else if (b.id === 'astral_nexus') {
+        ctx.fillStyle = '#cba6f7';
         ctx.fillRect(0, 198, w, 22);
       }
     }
@@ -1590,6 +1702,92 @@
         ctx.fillRect(x - 25, sy - 10, 50, 50);
       }
 
+      // Orbiting Holy Shield Aegis Runes (3 rotating glowing golden shields)
+      if (player.holyShieldTurns > 0) {
+        for (let k = 0; k < 3; k++) {
+          const ang = frame * 0.09 + k * (Math.PI * 2 / 3);
+          const rx = x + Math.cos(ang) * 32;
+          const ry = sy + Math.sin(ang) * 18;
+          ctx.save();
+          ctx.fillStyle = '#f9e2af';
+          ctx.shadowColor = '#fab387';
+          ctx.shadowBlur = 9;
+          ctx.beginPath();
+          ctx.moveTo(rx, ry - 7);
+          ctx.lineTo(rx + 6, ry);
+          ctx.lineTo(rx, ry + 7);
+          ctx.lineTo(rx - 6, ry);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      // Berserk Pulsing Crimson Aura
+      if (player.berserkTurns > 0) {
+        ctx.save();
+        const bPulse = Math.sin(frame * 0.25) * 4;
+        ctx.fillStyle = 'rgba(243, 139, 168, 0.22)';
+        ctx.strokeStyle = '#f38ba8';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x, sy + 6, 28 + bPulse, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        if (Math.random() < 0.25) addParticles(x + (Math.random() - 0.5) * 26, sy + 22, '#f38ba8', 1);
+        ctx.restore();
+      }
+
+      // Mana Surge Electric Arcs
+      if (player.manaSurgeActive) {
+        ctx.save();
+        ctx.strokeStyle = '#89dceb';
+        ctx.lineWidth = 1.5;
+        ctx.shadowColor = '#89dceb';
+        ctx.shadowBlur = 6;
+        for (let a = 0; a < 2; a++) {
+          const ang = Math.random() * Math.PI * 2;
+          const r1 = 18 + Math.random() * 6;
+          const r2 = 26 + Math.random() * 8;
+          ctx.beginPath();
+          ctx.moveTo(x + Math.cos(ang) * r1, sy + Math.sin(ang) * r1);
+          ctx.lineTo(x + Math.cos(ang) * r2, sy + Math.sin(ang) * r2);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      // Iron Will Translucent Bastion Barrier
+      if (player.ironWillTurns > 0) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(137, 180, 250, 0.18)';
+        ctx.strokeStyle = '#89b4fa';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.arc(x, sy + 8, 34, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Weapon Rune Glow
+      if (player.weaponRune) {
+        let rColor = '#f9e2af';
+        if (player.weaponRune === 'Ignis') rColor = '#fab387';
+        else if (player.weaponRune === 'Glacies') rColor = '#89dceb';
+        else if (player.weaponRune === 'Fulgur') rColor = '#f9e2af';
+        else if (player.weaponRune === 'Venenum') rColor = '#a6e3a1';
+        ctx.save();
+        ctx.strokeStyle = rColor;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = rColor;
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(x + 20, sy - 14, 6 + Math.sin(frame * 0.2) * 2, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
       ctx.restore();
     }
 
@@ -1677,19 +1875,55 @@
         ctx.beginPath(); ctx.arc(x + 14, my - 10, 8, 0, Math.PI * 2); ctx.fill();
       }
 
+      // Status Debuffs Visual FX
       if (poisonedTurns > 0) {
-        ctx.fillStyle = 'rgba(166, 227, 161, 0.4)';
-        ctx.beginPath(); ctx.arc(x, my, 40, 0, Math.PI * 2); ctx.fill();
-        if (Math.random() < 0.1) addParticles(x, my, '#a6e3a1', 1);
+        ctx.fillStyle = 'rgba(166, 227, 161, 0.35)';
+        ctx.beginPath(); ctx.arc(x, my, 42, 0, Math.PI * 2); ctx.fill();
+        // Venom droplets dripping down
+        ctx.fillStyle = '#a6e3a1';
+        for (let i = 0; i < 3; i++) {
+          const vx = x - 18 + i * 18;
+          const vy = my + 15 + ((frame * 2 + i * 14) % 35);
+          ctx.beginPath(); ctx.arc(vx, vy, 2.5, 0, Math.PI * 2); ctx.fill();
+        }
+        if (Math.random() < 0.2) addParticles(x, my, '#a6e3a1', 1);
       }
       if (burningTurns > 0) {
-        ctx.fillStyle = 'rgba(243, 139, 168, 0.4)';
-        ctx.beginPath(); ctx.arc(x, my, 40, 0, Math.PI * 2); ctx.fill();
-        if (Math.random() < 0.2) addParticles(x, my, '#fab387', 1);
+        ctx.fillStyle = 'rgba(243, 139, 168, 0.3)';
+        ctx.beginPath(); ctx.arc(x, my, 42, 0, Math.PI * 2); ctx.fill();
+        // Animated licking flame tongues
+        for (let i = 0; i < 4; i++) {
+          const fx = x - 24 + i * 16;
+          const fh = 14 + Math.sin(frame * 0.3 + i * 1.5) * 8;
+          ctx.fillStyle = (i % 2 === 0) ? '#f38ba8' : '#fab387';
+          ctx.beginPath();
+          ctx.moveTo(fx - 5, my + 30);
+          ctx.lineTo(fx + 5, my + 30);
+          ctx.lineTo(fx, my + 30 - fh);
+          ctx.closePath();
+          ctx.fill();
+        }
+        if (Math.random() < 0.3) addParticles(x, my, '#fab387', 2);
       }
       if (frozenTurns > 0) {
-        ctx.fillStyle = 'rgba(137, 220, 235, 0.5)';
-        ctx.fillRect(x - 30, my - 30, 60, 60);
+        // Crystalline ice encasement with angular spikes
+        ctx.fillStyle = 'rgba(137, 220, 235, 0.45)';
+        ctx.strokeStyle = '#89dceb';
+        ctx.lineWidth = 2;
+        ctx.fillRect(x - 34, my - 34, 68, 68);
+        ctx.strokeRect(x - 34, my - 34, 68, 68);
+        // Frost crystal spikes
+        ctx.fillStyle = '#cdd6f4';
+        for (let a = 0; a < 4; a++) {
+          const sx = (a < 2) ? x - 34 : x + 34;
+          const sySpike = my - 20 + (a % 2) * 40;
+          ctx.beginPath();
+          ctx.moveTo(sx, sySpike - 6);
+          ctx.lineTo(sx + (a < 2 ? -10 : 10), sySpike);
+          ctx.lineTo(sx, sySpike + 6);
+          ctx.closePath();
+          ctx.fill();
+        }
       }
 
       ctx.restore();
@@ -2201,6 +2435,23 @@
           { name: 'Fallen King', hp: 380, str: 65, def: 37, xp: 650, gold: 340 }
         ],
         boss: { name: '👑 King\'s Wraith (Boss)', hp: 1100, str: 110, def: 50, xp: 4000, gold: 2500 }
+      },
+      {
+        id: 'astral_nexus',
+        name: 'The Astral Nexus',
+        icon: '🌌',
+        desc: 'A transcendent rift beyond spacetime where temporal anomalies and cosmic sovereigns converge.',
+        hazard: 'Singularity Pull',
+        hazardIcon: '🕳️',
+        maxPhases: 3,
+        monsters: [
+          { name: 'Astral Phantom', hp: 380, str: 65, def: 35, xp: 400, gold: 220 },
+          { name: 'Nexus Chrono-Drake', hp: 440, str: 72, def: 40, xp: 520, gold: 280 },
+          { name: 'Voidwarp Archon', hp: 510, str: 80, def: 44, xp: 650, gold: 360 },
+          { name: 'Prismatic Behemoth Alpha', hp: 600, str: 88, def: 50, xp: 800, gold: 450 },
+          { name: 'Singularity Overlord', hp: 700, str: 96, def: 55, xp: 1000, gold: 600 }
+        ],
+        boss: { name: '⏳ Chronos, Sovereign of Eternity (Boss)', hp: 1500, str: 135, def: 65, xp: 5000, gold: 3000 }
       }
     ];
 
@@ -2236,6 +2487,12 @@
       arenaBestWave: 0,
       arenaActive: false,
       arenaTokens: 0,
+      weaponRune: '',
+      armorRune: '',
+      runeIgnis: 0,
+      runeGlacies: 0,
+      runeFulgur: 0,
+      runeVenenum: 0,
       weapon: { name: 'Iron Shortsword', bonusStr: 4, prefix: '' },
       armor: { name: 'Leather Armor', bonusDef: 3, prefix: '' },
       materials: {
@@ -3169,11 +3426,16 @@
       { wave: 2, name: '☠️ Lich Lord Revenant (Boss Rush)', hp: 200, str: 30, def: 14, xp: 400, gold: 350, trophies: 3, desc: 'Master of necromancy risen from the grave.' },
       { wave: 3, name: '🐲 Infernal Obsidian Dragon (Boss Rush)', hp: 280, str: 38, def: 18, xp: 700, gold: 550, trophies: 4, desc: 'Volcanic apex predator breathing ruinous fire.' },
       { wave: 4, name: '⚡ Storm Titan Sovereign (Boss Rush)', hp: 360, str: 45, def: 22, xp: 1000, gold: 800, trophies: 5, desc: 'Colossal elemental giant wielding thunderbolts.' },
-      { wave: 5, name: '🌌 Void Overlord Malakor (Boss Rush)', hp: 480, str: 54, def: 26, xp: 1600, gold: 1200, trophies: 8, desc: 'Cosmic entity of pure dark power.' }
+      { wave: 5, name: '🌌 Void Overlord Malakor (Boss Rush)', hp: 480, str: 54, def: 26, xp: 1600, gold: 1200, trophies: 8, desc: 'Cosmic entity of pure dark power.' },
+      { wave: 6, name: '✨ Prismatic Archon Prime (Boss Rush)', hp: 600, str: 64, def: 30, xp: 2200, gold: 1500, trophies: 10, desc: 'Refractive celestial entity bending harmonic light into deadly laser barrages.' },
+      { wave: 7, name: '🐙 Abyssal Leviathan Emperor (Boss Rush)', hp: 750, str: 74, def: 35, xp: 2800, gold: 1800, trophies: 12, desc: 'Tidal dread-monarch commanding ocean crushing pressures.' },
+      { wave: 8, name: '🔥 Infernal Titan Ignis Prime (Boss Rush)', hp: 920, str: 85, def: 40, xp: 3500, gold: 2200, trophies: 15, desc: 'Molten earth-shaker wreathed in cataclysmic volcanic fire.' },
+      { wave: 9, name: '🌑 Shadow Monarch Erebus Rex (Boss Rush)', hp: 1150, str: 98, def: 45, xp: 4400, gold: 2700, trophies: 18, desc: 'Ancient monarch of the shadow realm wielding lethal void daggers.' },
+      { wave: 10, name: '⏳ Chronos, Apex Colosseum Grandmaster', hp: 1500, str: 120, def: 55, xp: 6000, gold: 4000, trophies: 25, desc: 'Supreme arena immortal warping the flow of combat time.' }
     ];
 
     function getArenaBoss(wave) {
-      if (wave <= 5) return { ...ARENA_BOSSES[wave - 1] };
+      if (wave <= 10) return { ...ARENA_BOSSES[wave - 1] };
       return {
         wave: wave,
         name: `🌌 Wave ${wave} Apex Titan (Boss Rush)`,
@@ -4599,12 +4861,102 @@
             </div>
           </div>
         </div>
+
+        <!-- Ancient Runesmithing & Inscription Altar -->
+        <div style="margin-top:14px;">
+          <h4 style="color:#f9e2af; font-size:0.9rem; margin-bottom:6px;">🔮 Ancient Runesmithing & Inscription Altar</h4>
+          <div style="font-size:0.8rem; color:#a6adc8; margin-bottom:8px;">
+            Current Weapon Rune: <strong style="color:#fab387;">${player.weaponRune || 'None'}</strong> | Current Armor Inscription: <strong style="color:#89dceb;">${player.armorRune || 'None'}</strong>
+          </div>
+          <div class="craft-grid">
+            <div class="craft-card" style="border-color:#f38ba8;">
+              <h3 style="color:#f38ba8;">🔴 Rune of Ignis & Aegis of Flame</h3>
+              <p>Weapon: +10 Fire Dmg & Burn. Armor: Absorbs 15% dmg & sets attacker ablaze.</p>
+              <div class="mats-req">Req: 2 Elemental Cores, 2 Arcane Dust</div>
+              <button class="btn btn-primary" onclick="inscribeRune('Ignis')">Inscribe Ignis</button>
+            </div>
+            <div class="craft-card" style="border-color:#89dceb;">
+              <h3 style="color:#89dceb;">🔵 Rune of Glacies & Glacial Ward</h3>
+              <p>Weapon: +8 Frost Dmg & 35% Freeze. Armor: -6 incoming damage dampener.</p>
+              <div class="mats-req">Req: 2 Arcane Dust, 2 Iron Scrap</div>
+              <button class="btn btn-accent" onclick="inscribeRune('Glacies')">Inscribe Glacies</button>
+            </div>
+            <div class="craft-card" style="border-color:#f9e2af;">
+              <h3 style="color:#f9e2af;">⚡ Rune of Fulgur & Static Barrier</h3>
+              <p>Weapon: +12 Shock Dmg & 30% Daze. Armor: 15 lightning reflect retaliation.</p>
+              <div class="mats-req">Req: 2 Elemental Cores, 2 Iron Scrap</div>
+              <button class="btn btn-primary" onclick="inscribeRune('Fulgur')">Inscribe Fulgur</button>
+            </div>
+            <div class="craft-card" style="border-color:#a6e3a1;">
+              <h3 style="color:#a6e3a1;">🟢 Rune of Venenum & Inscribed Thorns</h3>
+              <p>Weapon: +6 Dmg & 4-turn Neurotoxin. Armor: 35% thorn damage return.</p>
+              <div class="mats-req">Req: 1 Core, 2 Dust, 1 Iron Scrap</div>
+              <button class="btn btn-accent" onclick="inscribeRune('Venenum')">Inscribe Venenum</button>
+            </div>
+          </div>
+        </div>
       `;
 
       const ctrl = document.getElementById('controls-panel');
       ctrl.innerHTML = `
         <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>
       `;
+    }
+
+    function inscribeRune(type) {
+      if (type === 'Ignis') {
+        if (player.materials.core < 2 || player.materials.dust < 2) {
+          logMsg(`Requires 2 Elemental Cores & 2 Arcane Dust for Rune of Ignis!`, 'warning');
+          return;
+        }
+        player.materials.core -= 2;
+        player.materials.dust -= 2;
+        player.weaponRune = 'Ignis';
+        player.armorRune = 'Aegis';
+        player.runeIgnis = 1;
+        sfxMagicHeal();
+        logMsg(`🔮 RUNESMITH: Inscribed Rune of Ignis (+10 Fire Burn) & Aegis of Flame (15% Absorb & Burn)! 🔥`, 'craft');
+      } else if (type === 'Glacies') {
+        if (player.materials.dust < 2 || player.materials.iron < 2) {
+          logMsg(`Requires 2 Arcane Dust & 2 Iron Scrap for Rune of Glacies!`, 'warning');
+          return;
+        }
+        player.materials.dust -= 2;
+        player.materials.iron -= 2;
+        player.weaponRune = 'Glacies';
+        player.armorRune = 'Glacies';
+        player.runeGlacies = 1;
+        sfxMagicHeal();
+        logMsg(`🔮 RUNESMITH: Inscribed Rune of Glacies (+8 Frost, 35% Freeze) & Glacial Ward (+6 DEF)! ❄️`, 'craft');
+      } else if (type === 'Fulgur') {
+        if (player.materials.core < 2 || player.materials.iron < 2) {
+          logMsg(`Requires 2 Elemental Cores & 2 Iron Scrap for Rune of Fulgur!`, 'warning');
+          return;
+        }
+        player.materials.core -= 2;
+        player.materials.iron -= 2;
+        player.weaponRune = 'Fulgur';
+        player.armorRune = 'Barrier';
+        player.runeFulgur = 1;
+        sfxMagicHeal();
+        logMsg(`⚡ RUNESMITH: Inscribed Rune of Fulgur (+12 Shock Daze) & Static Barrier (15 Shock Reflect)! ⚡`, 'craft');
+      } else if (type === 'Venenum') {
+        if (player.materials.core < 1 || player.materials.dust < 2 || player.materials.iron < 1) {
+          logMsg(`Requires 1 Core, 2 Arcane Dust & 1 Iron Scrap for Rune of Venenum!`, 'warning');
+          return;
+        }
+        player.materials.core -= 1;
+        player.materials.dust -= 2;
+        player.materials.iron -= 1;
+        player.weaponRune = 'Venenum';
+        player.armorRune = 'Thorns';
+        player.runeVenenum = 1;
+        sfxMagicHeal();
+        logMsg(`🌿 RUNESMITH: Inscribed Rune of Venenum (+6 Neurotoxin) & Inscribed Thorns (35% Reflect)! 🌵`, 'craft');
+      }
+      unlockAchievement(3); // Master Crafter
+      updateUI();
+      renderCrafting();
     }
 
     function craftMasterwork() {
@@ -5123,7 +5475,7 @@
       addParticles(520, 110, isCrit ? '#f9e2af' : '#f38ba8', isCrit ? 25 : 12, isCrit);
       addShockwave(520, 130, isCrit ? '#f9e2af' : '#f38ba8', isCrit ? 80 : 55);
       triggerScreenShake(isCrit ? 12 : 6);
-
+      triggerSlashFX(520, 110, isCrit);
 
       // Weapon Enchantment Bonuses
       if (player.weapon && player.weapon.prefix === 'Flaming') {
@@ -5142,6 +5494,54 @@
           dmg += sparkDmg;
           logMsg(`⚡ Thunderous Lightning bolt strikes for +${sparkDmg} bonus damage!`, 'spell');
         }
+      }
+
+      // Weapon Rune Inscriptions & Elemental Combos
+      const isFireAtk = (player.weapon && player.weapon.prefix === 'Flaming') || (player.weaponRune === 'Ignis');
+      const isLtAtk = (player.weapon && player.weapon.prefix === 'Thunderous') || (player.weaponRune === 'Fulgur');
+
+      if (player.weaponRune === 'Ignis') {
+        dmg += 10;
+        currentEnemy.burningTurns = 3;
+        logMsg(`🔴 Rune of Ignis sets target ablaze (+10 Fire Dmg, Burning 3 turns)!`, 'spell');
+      } else if (player.weaponRune === 'Glacies') {
+        dmg += 8;
+        if (Math.random() < 0.35) {
+          currentEnemy.frozenTurns = 1;
+          logMsg(`🔵 Rune of Glacies encases enemy in deep frost (+8 Frost Dmg, FROZEN 1 turn)!`, 'spell');
+        } else {
+          logMsg(`🔵 Rune of Glacies chills target (+8 Frost Dmg)!`, 'spell');
+        }
+      } else if (player.weaponRune === 'Fulgur') {
+        dmg += 12;
+        if (Math.random() < 0.30) {
+          player.lightningDazeTurns = 1;
+          logMsg(`⚡ Rune of Fulgur discharges a shockwave (+12 Lightning Dmg, DAZED 1 turn)!`, 'spell');
+        } else {
+          logMsg(`⚡ Rune of Fulgur shocks target (+12 Lightning Dmg)!`, 'spell');
+        }
+      } else if (player.weaponRune === 'Venenum') {
+        dmg += 6;
+        currentEnemy.poisonedTurns = 4;
+        logMsg(`🟢 Rune of Venenum injects deadly neurotoxin (+6 Dmg, Poisoned 4 turns)!`, 'spell');
+      }
+
+      // Elemental Combo Reactions
+      if (currentEnemy.frozenTurns > 0 && isFireAtk) {
+        const shatter = Math.max(10, Math.floor(dmg * 0.60));
+        dmg += shatter;
+        currentEnemy.frozenTurns = 0;
+        logMsg(`❄️🔥 THERMAL SHATTER! Heat differential explodes frozen defenses for +${shatter} bonus damage!`, 'combat');
+        addFloatingText('SHATTER! -' + shatter, 520, 50, '#fab387', 22, true);
+        addShockwave(520, 110, '#fab387', 85);
+        triggerScreenShake(14);
+      } else if (currentEnemy.poisonedTurns > 0 && isLtAtk) {
+        const overload = Math.max(8, Math.floor(dmg * 0.45));
+        dmg += overload;
+        logMsg(`⚡💥 TOXIC OVERLOAD! Electrical lightning arcs detonate venom reserves for +${overload} burst damage!`, 'combat');
+        addFloatingText('OVERLOAD! -' + overload, 520, 50, '#89dceb', 22, true);
+        addShockwave(520, 110, '#a6e3a1', 80);
+        triggerScreenShake(10);
       }
 
       currentEnemy.hp -= dmg;
@@ -5275,7 +5675,18 @@
 
         if (player.holyShieldTurns > 0) {
           player.holyShieldTurns--;
+          const retrib = player.int * 2 + 12;
+          currentEnemy.hp -= retrib;
           logMsg(`🛡️ HOLY SHIELD completely absorbs incoming attack! (0 Damage taken)`, 'spell');
+          logMsg(`⚡ RETRIBUTION PULSE! Consecrated aura pulses for ${retrib} holy damage back to ${currentEnemy.name}!`, 'combat');
+          addFloatingText('PULSE! -' + retrib, 520, 70, '#f9e2af', 18);
+          addShockwave(140, 140, '#f9e2af', 65);
+          triggerScreenShake(6);
+          if (currentEnemy.hp <= 0) {
+            currentEnemy.hp = 0;
+            combatVictory();
+            return;
+          }
           updateUI();
           return;
         }
@@ -5291,6 +5702,36 @@
         const totalDef = player.def + (player.armor ? player.armor.bonusDef : 0) + bonusDef;
         let enemyDmg = Math.max(2, Math.floor(currentEnemy.str - totalDef * 0.4));
         if (player.defensePoints >= 2) enemyDmg = Math.max(1, Math.floor(enemyDmg * 0.90));
+
+        // Armor Inscription Effects
+        if (player.armorRune === 'Aegis') {
+          const absorbed = Math.floor(enemyDmg * 0.15);
+          enemyDmg -= absorbed;
+          currentEnemy.burningTurns = 2;
+          logMsg(`🔴 Aegis of Flame absorbs 15% damage and ignites attacker!`, 'spell');
+        } else if (player.armorRune === 'Glacies') {
+          enemyDmg = Math.max(1, enemyDmg - 6);
+          logMsg(`🔵 Glacial Ward dampens physical blow (-6 Damage)!`, 'spell');
+        } else if (player.armorRune === 'Barrier') {
+          currentEnemy.hp -= 15;
+          logMsg(`⚡ Static Discharge shocks attacker for 15 lightning damage!`, 'spell');
+          addFloatingText('-15', 520, 80, '#89dceb', 16);
+          if (currentEnemy.hp <= 0) {
+            currentEnemy.hp = 0;
+            combatVictory();
+            return;
+          }
+        } else if (player.armorRune === 'Thorns') {
+          const thornDmg = Math.max(2, Math.floor(enemyDmg * 0.35));
+          currentEnemy.hp -= thornDmg;
+          logMsg(`🌵 Inscribed Thorns reflects ${thornDmg} damage back to ${currentEnemy.name}!`, 'warning');
+          addFloatingText('-' + thornDmg, 520, 80, '#a6e3a1', 16);
+          if (currentEnemy.hp <= 0) {
+            currentEnemy.hp = 0;
+            combatVictory();
+            return;
+          }
+        }
 
         if (player.ironWillTurns > 0) {
           enemyDmg = Math.max(1, Math.floor(enemyDmg * 0.50));

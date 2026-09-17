@@ -57,6 +57,7 @@ void AddGdiShockwave(int x, int y, COLORREF color, int maxRadius);
 void AddGdiParticles(int x, int y, COLORREF color, int count, int multilayer);
 void AddGdiFloatText(const char* text, int x, int y, COLORREF color, int isCrit);
 void TriggerGdiSpellFX(int type);
+void TriggerGdiSlash(int x, int y, int isCrit);
 
 #define MAX_INV_SLOTS 30
 
@@ -82,12 +83,17 @@ typedef struct {
     int trophies;
 } ArenaBossDef;
 
-static const ArenaBossDef g_ArenaBosses[5] = {
+static const ArenaBossDef g_ArenaBosses[10] = {
     {"👑 Goblin King Prime (Boss Rush)", 150, 150, 24, 10, 250, 200, 2},
     {"☠️ Lich Lord Revenant (Boss Rush)", 200, 200, 30, 14, 400, 350, 3},
     {"🐲 Infernal Dragon (Boss Rush)", 280, 280, 38, 18, 700, 550, 4},
     {"⚡ Storm Titan Sovereign (Boss Rush)", 360, 360, 45, 22, 1000, 800, 5},
-    {"🌌 Void Overlord Malakor (Boss Rush)", 480, 480, 54, 26, 1600, 1200, 8}
+    {"🌌 Void Overlord Malakor (Boss Rush)", 480, 480, 54, 26, 1600, 1200, 8},
+    {"💎 Prismatic Archon Prime (Boss Rush)", 600, 600, 64, 30, 2200, 1500, 10},
+    {"⚓ Abyssal Leviathan Emperor (Boss Rush)", 750, 750, 74, 35, 2800, 1800, 12},
+    {"🔥 Infernal Titan Ignis Prime (Boss Rush)", 920, 920, 85, 40, 3500, 2200, 15},
+    {"🌑 Shadow Monarch Erebus Rex (Boss Rush)", 1150, 1150, 98, 45, 4400, 2700, 18},
+    {"🌌 Chronos, Apex Colosseum Grandmaster", 1500, 1500, 120, 55, 6000, 4000, 25}
 };
 
 typedef struct {
@@ -131,6 +137,8 @@ void ArmyVictory();
 void StartCastleDefense(int waveIdx);
 void SiegeEnemyTurn();
 void SiegeVictory();
+void CombatVictory();
+void EnemyTurn();
 
 typedef struct {
     int id;
@@ -166,21 +174,21 @@ static int ContainsSubstr(const char* str, const char* sub) {
 }
 
 typedef struct {
-    char name[32];
+    char name[48];
     int hp, maxHp;
     int str, def;
     int xp, gold;
 } MonsterDef;
 
 typedef struct {
-    char name[32];
+    char name[48];
     char hazardName[32];
     MonsterDef monsters[5];
     MonsterDef boss;
     int maxPhases;
 } BiomeDef;
 
-static const BiomeDef g_Biomes[17] = {
+static const BiomeDef g_Biomes[18] = {
     {
         "Goblin Outpost", "Cave-In",
         {
@@ -384,6 +392,18 @@ static const BiomeDef g_Biomes[17] = {
         },
         {"King's Wraith (Boss)", 1100, 1100, 110, 50, 4000, 2500},
         2
+    },
+    {
+        "Astral Nexus", "Singularity Pull",
+        {
+            {"Astral Phantom", 380, 380, 65, 35, 400, 220},
+            {"Nexus Chrono-Drake", 440, 440, 72, 40, 520, 280},
+            {"Voidwarp Archon", 510, 510, 80, 44, 650, 360},
+            {"Prismatic Behemoth Alpha", 600, 600, 88, 50, 800, 450},
+            {"Singularity Overlord", 700, 700, 96, 55, 1000, 600}
+        },
+        {"Chronos, Sovereign of Eternity (Boss)", 1500, 1500, 135, 65, 5000, 3000},
+        3
     }
 };
 
@@ -466,6 +486,12 @@ typedef struct {
     int burningTurns;
     int frozenTurns;
     int ngLevel;
+    char weaponRune[16];
+    char armorRune[16];
+    int runeIgnis;
+    int runeGlacies;
+    int runeFulgur;
+    int runeVenenum;
 } Hero;
 
 typedef struct {
@@ -1050,6 +1076,12 @@ void InitHero(int classIdx) {
     player.elementalCore = 1;
     player.weaponPrefix[0] = '\0';
     player.armorPrefix[0] = '\0';
+    player.weaponRune[0] = '\0';
+    player.armorRune[0] = '\0';
+    player.runeIgnis = 0;
+    player.runeGlacies = 0;
+    player.runeFulgur = 0;
+    player.runeVenenum = 0;
     player.questMonstersKilled = 0;
     player.questMonstersDone = 0;
     player.questBossKilled = 0;
@@ -1621,7 +1653,7 @@ void SetupButtons() {
             SetBtn(hBtn1, 1, "Factions");
             SetBtn(hBtn2, 2, "Mounts");
             SetBtn(hBtn3, 3, "Kingdom & War");
-            SetBtn(hBtn4, 4, "System Utils");
+            SetBtn(hBtn4, 4, "Map & Biomes");
             SetBtn(hBtn5, 5, "Achievements");
             SetBtn(hBtn6, 6, "Back to Town");
             break;
@@ -1795,7 +1827,7 @@ void SetupButtons() {
             SetBtn(hBtn2, 2, "Fire Bomb");
             SetBtn(hBtn3, 3, "Greater HP");
             SetBtn(hBtn4, 4, "Masterwork");
-            SetBtn(hBtn5, 5, "Imbue Equip");
+            SetBtn(hBtn5, 5, "Inscribe Rune");
             SetBtn(hBtn6, 6, "Back to Town");
             break;
 
@@ -2149,7 +2181,16 @@ void EnemyTurn() {
 
     if (player.holyShieldTurns > 0) {
         player.holyShieldTurns--;
+        int retrib = player.intStat * 2 + 12;
+        currentEnemy.hp -= retrib;
         LogMessage("🛡️ HOLY SHIELD completely absorbs incoming attack! (0 Damage taken)");
+        char rmsg[128];
+        wsprintfA(rmsg, "✨ RETRIBUTION PULSE! Consecrated aura pulses for %d holy damage back to %s!", retrib, currentEnemy.name);
+        LogMessage(rmsg);
+        AddGdiFloatText("PULSE!", 560, 45, RGB(249, 226, 175), 1);
+        AddGdiShockwave(140, 80, RGB(249, 226, 175), 65);
+        TriggerGdiScreenShake(6);
+        if (currentEnemy.hp <= 0) { currentEnemy.hp = 0; CombatVictory(); return; }
         UpdateUI();
         return;
     }
@@ -2159,6 +2200,31 @@ void EnemyTurn() {
     int totalDef = player.def + player.armorBonusDef + bonusDef;
     int dmg = currentEnemy.str - (totalDef / 2);
     if (player.defensePoints >= 2) dmg = (dmg * 90) / 100;
+
+    // Armor Inscription Effects
+    if (lstrcmpA(player.armorRune, "Aegis") == 0) {
+        int absorbed = (dmg * 15) / 100;
+        dmg -= absorbed;
+        currentEnemy.burningTurns = 2;
+        LogMessage("🔴 Aegis of Flame absorbs 15% damage and ignites attacker!");
+    } else if (lstrcmpA(player.armorRune, "Glacies") == 0) {
+        dmg -= 6;
+        if (dmg < 1) dmg = 1;
+        LogMessage("🔵 Glacial Ward dampens physical blow (-6 Damage)!");
+    } else if (lstrcmpA(player.armorRune, "Barrier") == 0) {
+        currentEnemy.hp -= 15;
+        LogMessage("⚡ Static Discharge shocks attacker for 15 lightning damage!");
+        if (currentEnemy.hp <= 0) { currentEnemy.hp = 0; CombatVictory(); return; }
+    } else if (lstrcmpA(player.armorRune, "Thorns") == 0) {
+        int thornDmg = (dmg * 35) / 100;
+        if (thornDmg < 2) thornDmg = 2;
+        currentEnemy.hp -= thornDmg;
+        char tmsg[128];
+        wsprintfA(tmsg, "🌵 Inscribed Thorns reflects %d damage back to %s!", thornDmg, currentEnemy.name);
+        LogMessage(tmsg);
+        if (currentEnemy.hp <= 0) { currentEnemy.hp = 0; CombatVictory(); return; }
+    }
+
     if (dmg < 2) dmg = 2;
 
     if (player.ironWillTurns > 0) {
@@ -2320,7 +2386,7 @@ void CombatVictory() {
     CheckLevelUp();
 
     if (player.arenaActive) {
-        int trophies = (player.arenaWave <= 5) ? g_ArenaBosses[player.arenaWave - 1].trophies : (player.arenaWave + 3);
+        int trophies = (player.arenaWave <= 10) ? g_ArenaBosses[player.arenaWave - 1].trophies : (player.arenaWave + 5);
         player.arenaTokens += trophies;
         if (player.arenaWave > player.arenaBestWave) player.arenaBestWave = player.arenaWave;
         if (player.arenaWave >= 5) UnlockAchievement(5); // Arena Champion
@@ -2580,7 +2646,7 @@ void HandleButton1() {
     if (gameState == STATE_BOSS_RUSH) {
         if (!player.arenaWave) player.arenaWave = 1;
         player.arenaActive = 1;
-        if (player.arenaWave <= 5) {
+        if (player.arenaWave <= 10) {
             const ArenaBossDef* b = &g_ArenaBosses[player.arenaWave - 1];
             lstrcpyA(currentEnemy.name, b->name);
             currentEnemy.maxHp = b->hp; currentEnemy.hp = b->hp;
@@ -2588,9 +2654,9 @@ void HandleButton1() {
             currentEnemy.xp = b->xp; currentEnemy.gold = b->gold;
         } else {
             wsprintfA(currentEnemy.name, "Wave %d Apex Titan (Boss Rush)", player.arenaWave);
-            currentEnemy.maxHp = 200 + player.arenaWave * 70; currentEnemy.hp = currentEnemy.maxHp;
-            currentEnemy.str = 20 + player.arenaWave * 7; currentEnemy.def = 10 + player.arenaWave * 3;
-            currentEnemy.xp = player.arenaWave * 350; currentEnemy.gold = player.arenaWave * 250;
+            currentEnemy.maxHp = 400 + player.arenaWave * 90; currentEnemy.hp = currentEnemy.maxHp;
+            currentEnemy.str = 35 + player.arenaWave * 8; currentEnemy.def = 15 + player.arenaWave * 4;
+            currentEnemy.xp = player.arenaWave * 450; currentEnemy.gold = player.arenaWave * 300;
         }
         gameState = STATE_COMBAT;
         Beep(523, 120); Beep(659, 120);
@@ -2816,8 +2882,9 @@ void HandleButton1() {
         AddGdiParticles(560, 65, isCrit ? RGB(249, 226, 175) : RGB(243, 139, 168), isCrit ? 25 : 12, isCrit);
         AddGdiShockwave(560, 80, isCrit ? RGB(249, 226, 175) : RGB(243, 139, 168), isCrit ? 75 : 50);
         TriggerGdiScreenShake(isCrit ? 12 : 6);
+        TriggerGdiSlash(560, 65, isCrit);
 
-        // Weapon Enchantment Effects
+        // Weapon Prefix Enchantment Effects
         if (lstrcmpA(player.weaponPrefix, "Flaming") == 0) {
             dmg += 6;
             LogMessage("🔥 Flaming Enchantment scorches target for +6 fire damage!");
@@ -2835,6 +2902,60 @@ void HandleButton1() {
                 dmg += 8;
                 LogMessage("⚡ Thunderous Lightning strikes for +8 bonus damage!");
             }
+        }
+
+        // Weapon Rune Inscriptions
+        int isFireAtk = (lstrcmpA(player.weaponPrefix, "Flaming") == 0 || lstrcmpA(player.weaponRune, "Ignis") == 0);
+        int isLtAtk = (lstrcmpA(player.weaponPrefix, "Thunderous") == 0 || lstrcmpA(player.weaponRune, "Fulgur") == 0);
+
+        if (lstrcmpA(player.weaponRune, "Ignis") == 0) {
+            dmg += 10;
+            currentEnemy.burningTurns = 3;
+            LogMessage("🔴 Rune of Ignis sets target ablaze (+10 Fire Dmg, Burning 3 turns)!");
+        } else if (lstrcmpA(player.weaponRune, "Glacies") == 0) {
+            dmg += 8;
+            if ((xrand() % 100) < 35) {
+                currentEnemy.frozenTurns = 1;
+                LogMessage("🔵 Rune of Glacies encases enemy in deep frost (+8 Frost Dmg, FROZEN 1 turn)!");
+            } else {
+                LogMessage("🔵 Rune of Glacies chills target (+8 Frost Dmg)!");
+            }
+        } else if (lstrcmpA(player.weaponRune, "Fulgur") == 0) {
+            dmg += 12;
+            if ((xrand() % 100) < 30) {
+                player.lightningDazeTurns = 1;
+                LogMessage("⚡ Rune of Fulgur discharges a shockwave (+12 Lightning Dmg, DAZED 1 turn)!");
+            } else {
+                LogMessage("⚡ Rune of Fulgur shocks target (+12 Lightning Dmg)!");
+            }
+        } else if (lstrcmpA(player.weaponRune, "Venenum") == 0) {
+            dmg += 6;
+            currentEnemy.poisonedTurns = 4;
+            LogMessage("🟢 Rune of Venenum injects deadly neurotoxin (+6 Dmg, Poisoned 4 turns)!");
+        }
+
+        // Elemental Combo Reactions
+        if (currentEnemy.frozenTurns > 0 && isFireAtk) {
+            int shatter = dmg * 6 / 10;
+            if (shatter < 10) shatter = 10;
+            dmg += shatter;
+            currentEnemy.frozenTurns = 0;
+            char shmsg[128];
+            wsprintfA(shmsg, "❄️🔥 THERMAL SHATTER! Heat differential explodes frozen defenses for +%d bonus damage!", shatter);
+            LogMessage(shmsg);
+            AddGdiFloatText("SHATTER!", 560, 45, RGB(250, 179, 135), 1);
+            AddGdiShockwave(560, 80, RGB(250, 179, 135), 85);
+            TriggerGdiScreenShake(14);
+        } else if (currentEnemy.poisonedTurns > 0 && isLtAtk) {
+            int overload = dmg * 45 / 100;
+            if (overload < 8) overload = 8;
+            dmg += overload;
+            char ovmsg[128];
+            wsprintfA(ovmsg, "⚡💥 TOXIC OVERLOAD! Electrical lightning arcs detonate venom reserves for +%d burst damage!", overload);
+            LogMessage(ovmsg);
+            AddGdiFloatText("OVERLOAD!", 560, 45, RGB(137, 220, 235), 1);
+            AddGdiShockwave(560, 80, RGB(166, 227, 161), 80);
+            TriggerGdiScreenShake(10);
         }
 
         currentEnemy.hp -= dmg;
@@ -3304,12 +3425,8 @@ void HandleButton3() {
         LogMessage("Selected Class: Rogue (High Agility & Crits).");
         UpdateUI();
     } else if (gameState == STATE_TOWN) {
-        player.biome = (player.biome + 1) % 15;
-        player.floor = 1;
-        SfxDoorOpen();
-        char msg[128];
-        wsprintfA(msg, "MAP Selected Dungeon Biome: %s (Hazard: %s)", g_Biomes[player.biome].name, g_Biomes[player.biome].hazardName);
-        LogMessage(msg);
+        gameState = STATE_INVENTORY;
+        LogMessage("🎒 Opened Hero Backpack & Inventory.");
         SetupButtons();
         UpdateUI();
     } else if (gameState == STATE_MERCENARY) {
@@ -3389,8 +3506,12 @@ void HandleButton4() {
     }
 
     if (gameState == STATE_TOWN_PAGE2) {
-        gameState = STATE_UTILS;
-        LogMessage("⚙️ System Utilities Opened.");
+        player.biome = (player.biome + 1) % 18;
+        player.floor = 1;
+        SfxDoorOpen();
+        char msg[128];
+        wsprintfA(msg, "🗺️ Destination Set: %s (Hazard: %s).", g_Biomes[player.biome].name, g_Biomes[player.biome].hazardName);
+        LogMessage(msg);
         SetupButtons();
         UpdateUI();
         return;
@@ -3723,36 +3844,54 @@ void HandleButton5() {
         SetupButtons();
         UpdateUI();
     } else if (gameState == STATE_CRAFTING) {
-        // Imbue Equipment - Cycles through enchantments
-        if (lstrcmpA(player.weaponPrefix, "Flaming") != 0 && player.elementalCore >= 2 && player.arcaneDust >= 1) {
+        // Ancient Runesmithing & Inscription Altar
+        if (lstrcmpA(player.weaponRune, "Ignis") != 0 && player.elementalCore >= 2 && player.arcaneDust >= 2) {
             player.elementalCore -= 2;
-            player.arcaneDust -= 1;
-            lstrcpyA(player.weaponPrefix, "Flaming");
+            player.arcaneDust -= 2;
+            lstrcpyA(player.weaponRune, "Ignis");
+            lstrcpyA(player.armorRune, "Aegis");
+            player.runeIgnis = 1;
             SfxSpellCast();
-            LogMessage("🔥 Imbued weapon with Flaming Enchantment (+6 Fire Dmg)!");
-        } else if (lstrcmpA(player.weaponPrefix, "Vampiric") != 0 && player.arcaneDust >= 2 && player.ironScrap >= 1) {
+            LogMessage("🔴 RUNESMITH: Inscribed Rune of Ignis (+10 Fire Burn) & Aegis of Flame (15% Absorb & Burn)! 🔥");
+        } else if (lstrcmpA(player.weaponRune, "Glacies") != 0 && player.arcaneDust >= 2 && player.ironScrap >= 2) {
+            player.arcaneDust -= 2;
+            player.ironScrap -= 2;
+            lstrcpyA(player.weaponRune, "Glacies");
+            lstrcpyA(player.armorRune, "Glacies");
+            player.runeGlacies = 1;
+            SfxSpellCast();
+            LogMessage("🔵 RUNESMITH: Inscribed Rune of Glacies (+8 Frost, 35% Freeze) & Glacial Ward (+6 DEF)! ❄️");
+        } else if (lstrcmpA(player.weaponRune, "Fulgur") != 0 && player.elementalCore >= 2 && player.ironScrap >= 2) {
+            player.elementalCore -= 2;
+            player.ironScrap -= 2;
+            lstrcpyA(player.weaponRune, "Fulgur");
+            lstrcpyA(player.armorRune, "Barrier");
+            player.runeFulgur = 1;
+            SfxSpellCast();
+            LogMessage("⚡ RUNESMITH: Inscribed Rune of Fulgur (+12 Shock Daze) & Static Discharge (15 Reflect)! ⚡");
+        } else if (lstrcmpA(player.weaponRune, "Venenum") != 0 && player.elementalCore >= 1 && player.arcaneDust >= 2 && player.ironScrap >= 1) {
+            player.elementalCore -= 1;
             player.arcaneDust -= 2;
             player.ironScrap -= 1;
-            lstrcpyA(player.weaponPrefix, "Vampiric");
+            lstrcpyA(player.weaponRune, "Venenum");
+            lstrcpyA(player.armorRune, "Thorns");
+            player.runeVenenum = 1;
             SfxSpellCast();
-            LogMessage("🩸 Imbued weapon with Vampiric Enchantment (25% Lifesteal)!");
-        } else if (lstrcmpA(player.armorPrefix, "Fortified") != 0 && player.ironScrap >= 2 && player.arcaneDust >= 1) {
-            player.ironScrap -= 2;
-            player.arcaneDust -= 1;
-            lstrcpyA(player.armorPrefix, "Fortified");
-            player.armorBonusDef += 5;
-            player.maxHp += 20; player.hp += 20;
-            SfxSpellCast();
-            LogMessage("🛡️ Imbued armor with Fortified Enchantment (+5 DEF, +20 Max HP)!");
-        } else if (lstrcmpA(player.armorPrefix, "Spiked") != 0 && player.ironScrap >= 2 && player.elementalCore >= 1) {
-            player.ironScrap -= 2;
-            player.elementalCore -= 1;
-            lstrcpyA(player.armorPrefix, "Spiked");
-            player.armorBonusDef += 3;
-            SfxSpellCast();
-            LogMessage("🌵 Imbued armor with Spiked Enchantment (Reflects 35% damage)!");
+            LogMessage("🟢 RUNESMITH: Inscribed Rune of Venenum (+14 Neurotoxin) & Inscribed Thorns (35% Reflect)! 🐍");
         } else {
-            LogMessage("Need materials for next imbuing tier (e.g. 2 Cores/Dust & 1 Scrap/Dust)!");
+            if (lstrcmpA(player.weaponPrefix, "Flaming") != 0 && player.elementalCore >= 1 && player.arcaneDust >= 1) {
+                player.elementalCore -= 1; player.arcaneDust -= 1;
+                lstrcpyA(player.weaponPrefix, "Flaming");
+                SfxSpellCast();
+                LogMessage("🔥 Imbued weapon with Flaming Enchantment (+6 Fire Dmg)!");
+            } else if (lstrcmpA(player.weaponPrefix, "Vampiric") != 0 && player.arcaneDust >= 1 && player.ironScrap >= 1) {
+                player.arcaneDust -= 1; player.ironScrap -= 1;
+                lstrcpyA(player.weaponPrefix, "Vampiric");
+                SfxSpellCast();
+                LogMessage("🩸 Imbued weapon with Vampiric Enchantment (25% Lifesteal)!");
+            } else {
+                LogMessage("Need materials for Ancient Rune Inscription (e.g. 2 Cores + 2 Dust or 2 Dust + 2 Iron)!");
+            }
         }
         UpdateUI();
     } else if (gameState == STATE_DUNGEON) {
@@ -4022,6 +4161,23 @@ typedef struct {
 static GdiShockwave g_GdiShockwaves[16];
 static int g_GdiShockwaveCount = 0;
 
+typedef struct {
+    int active;
+    int timer, maxTimer;
+    int isCrit;
+    int x, y;
+} GdiSlashAnim;
+static GdiSlashAnim g_GdiSlash = {0};
+
+void TriggerGdiSlash(int x, int y, int isCrit) {
+    g_GdiSlash.active = 1;
+    g_GdiSlash.timer = 0;
+    g_GdiSlash.maxTimer = 10;
+    g_GdiSlash.isCrit = isCrit;
+    g_GdiSlash.x = x;
+    g_GdiSlash.y = y;
+}
+
 static const signed char s_SinTable[16] = {
     0, 48, 90, 117, 127, 117, 90, 48,
     0, -48, -90, -117, -127, -117, -90, -48
@@ -4271,6 +4427,72 @@ void DrawGdiHeroSprite(HDC hdc, int x, int y, const char* heroClass, int frame, 
         SelectObject(hdc, hOldGP); DeleteObject(hGlintP);
     }
 
+    // Weapon Rune / Prefix Sheen
+    if (lstrcmpA(player.weaponRune, "Ignis") == 0 || lstrcmpA(player.weaponPrefix, "Flaming") == 0) {
+        HBRUSH hIgB = CreateSolidBrush(RGB(250, 179, 135));
+        HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hIgB);
+        Ellipse(hdc, x + 10, sy - 25, x + 18, sy - 17);
+        SelectObject(hdc, hOldB); DeleteObject(hIgB);
+    } else if (lstrcmpA(player.weaponRune, "Glacies") == 0) {
+        HBRUSH hGlB = CreateSolidBrush(RGB(137, 220, 235));
+        HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hGlB);
+        Ellipse(hdc, x + 11, sy - 25, x + 17, sy - 17);
+        SelectObject(hdc, hOldB); DeleteObject(hGlB);
+    } else if (lstrcmpA(player.weaponRune, "Fulgur") == 0 || lstrcmpA(player.weaponPrefix, "Thunderous") == 0) {
+        HPEN hSpkP = CreatePen(PS_SOLID, 2, RGB(249, 226, 175));
+        HPEN hOldP = (HPEN)SelectObject(hdc, hSpkP);
+        MoveToEx(hdc, x + 14, sy - 25, NULL); LineTo(hdc, x + 11, sy - 18); LineTo(hdc, x + 16, sy - 12);
+        SelectObject(hdc, hOldP); DeleteObject(hSpkP);
+    } else if (lstrcmpA(player.weaponRune, "Venenum") == 0) {
+        HBRUSH hVnB = CreateSolidBrush(RGB(166, 227, 161));
+        HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hVnB);
+        Ellipse(hdc, x + 11, sy - 24, x + 17, sy - 18);
+        SelectObject(hdc, hOldB); DeleteObject(hVnB);
+    }
+
+    // Orbiting Holy Shield Aegis Runes (3 rotating shields)
+    if (player.holyShieldTurns > 0) {
+        for (int k = 0; k < 3; k++) {
+            int ang = (frame * 4 + k * 85) & 15;
+            int rx = x + (FastCos(ang) * 26) / 127;
+            int ry = sy + (FastSin(ang) * 16) / 127;
+            HBRUSH hShlB = CreateSolidBrush(RGB(249, 226, 175));
+            HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hShlB);
+            POINT sp[4] = {{rx, ry - 6}, {rx + 5, ry}, {rx, ry + 6}, {rx - 5, ry}};
+            Polygon(hdc, sp, 4);
+            SelectObject(hdc, hOldB); DeleteObject(hShlB);
+        }
+    }
+
+    // Pulsing Crimson Berserk Aura
+    if (player.berserkTurns > 0) {
+        HPEN hBzkP = CreatePen(PS_SOLID, 2, (frame % 2 == 0) ? RGB(243, 139, 168) : RGB(250, 179, 135));
+        HPEN hOldP = (HPEN)SelectObject(hdc, hBzkP);
+        for (int i = -14; i <= 14; i += 7) {
+            int fH = 8 + ((frame * 3 + i) % 9);
+            MoveToEx(hdc, x + i, sy + 25, NULL);
+            LineTo(hdc, x + i + ((frame % 3) - 1), sy + 25 - fH);
+        }
+        SelectObject(hdc, hOldP); DeleteObject(hBzkP);
+    }
+
+    // Mana Surge Electric Crackle
+    if (player.manaSurgeActive) {
+        HPEN hMrgP = CreatePen(PS_SOLID, 2, RGB(137, 220, 235));
+        HPEN hOldP = (HPEN)SelectObject(hdc, hMrgP);
+        MoveToEx(hdc, x - 18, sy + 10, NULL); LineTo(hdc, x - 12, sy); LineTo(hdc, x - 15, sy - 12);
+        MoveToEx(hdc, x + 18, sy + 5, NULL); LineTo(hdc, x + 23, sy - 4); LineTo(hdc, x + 19, sy - 15);
+        SelectObject(hdc, hOldP); DeleteObject(hMrgP);
+    }
+
+    // Iron Will Translucent Bastion Barrier
+    if (player.ironWillTurns > 0) {
+        HPEN hIwP = CreatePen(PS_SOLID, 3, RGB(180, 190, 254));
+        HPEN hOldP = (HPEN)SelectObject(hdc, hIwP);
+        Arc(hdc, x - 26, sy - 28, x + 26, sy + 32, x + 15, sy - 28, x + 20, sy + 32);
+        SelectObject(hdc, hOldP); DeleteObject(hIwP);
+    }
+
     if (player.poisonedTurns > 0) {
         HBRUSH hP = CreateSolidBrush(RGB(166, 227, 161));
         HBRUSH hOP = (HBRUSH)SelectObject(hdc, hP);
@@ -4379,21 +4601,30 @@ void DrawGdiMonsterSprite(HDC hdc, int x, int y, const char* name, int frame, in
     if (poisonedTurns > 0) {
         HBRUSH hP = CreateSolidBrush(RGB(166, 227, 161));
         HBRUSH hOP = (HBRUSH)SelectObject(hdc, hP);
-        Ellipse(hdc, x - 8, my - 35, x + 8, my - 25);
+        Ellipse(hdc, x - 10, my - 36, x - 2, my - 26);
+        Ellipse(hdc, x + 4, my - 32, x + 12, my - 24);
+        Ellipse(hdc, x - 3, my - 44, x + 3, my - 38);
         SelectObject(hdc, hOP); DeleteObject(hP);
     }
     if (burningTurns > 0) {
-        HBRUSH hP = CreateSolidBrush(RGB(243, 139, 168));
-        HBRUSH hOP = (HBRUSH)SelectObject(hdc, hP);
-        Ellipse(hdc, x - 8, my - 35, x + 8, my - 25);
-        SelectObject(hdc, hOP); DeleteObject(hP);
+        HPEN hFlmP = CreatePen(PS_SOLID, 2, (frame % 2 == 0) ? RGB(250, 179, 135) : RGB(243, 139, 168));
+        HPEN hOldP = (HPEN)SelectObject(hdc, hFlmP);
+        for (int i = -16; i <= 16; i += 8) {
+            int fh = 10 + ((frame * 4 + i) % 12);
+            MoveToEx(hdc, x + i, my - 15, NULL);
+            LineTo(hdc, x + i + ((frame % 3) - 1), my - 15 - fh);
+        }
+        SelectObject(hdc, hOldP); DeleteObject(hFlmP);
     }
     if (frozenTurns > 0) {
-        HBRUSH hP = CreateSolidBrush(RGB(137, 220, 235));
-        HBRUSH hOP = (HBRUSH)SelectObject(hdc, hP);
+        HPEN hFrzP = CreatePen(PS_SOLID, 2, RGB(137, 220, 235));
+        HPEN hOldP = (HPEN)SelectObject(hdc, hFrzP);
         RECT fR = {x - 30, my - 30, x + 30, my + 40};
-        FrameRect(hdc, &fR, hP);
-        SelectObject(hdc, hOP); DeleteObject(hP);
+        FrameRect(hdc, &fR, (HBRUSH)GetStockObject(NULL_BRUSH));
+        MoveToEx(hdc, x - 30, my - 10, NULL); LineTo(hdc, x - 40, my - 10); LineTo(hdc, x - 30, my);
+        MoveToEx(hdc, x + 30, my - 10, NULL); LineTo(hdc, x + 40, my - 10); LineTo(hdc, x + 30, my);
+        MoveToEx(hdc, x - 10, my - 30, NULL); LineTo(hdc, x, my - 42); LineTo(hdc, x + 10, my - 30);
+        SelectObject(hdc, hOldP); DeleteObject(hFrzP);
     }
 }
 
@@ -4434,6 +4665,11 @@ void RenderGdiScene(HDC hdc, int w, int h) {
         else if (player.biome == 1 || player.biome == 12) { bgTop = RGB(28, 28, 46); bgBot = RGB(43, 28, 56); }
         else if (player.biome == 6) { bgTop = RGB(24, 36, 56); bgBot = RGB(36, 56, 74); }
         else if (player.biome == 3 || player.biome == 7) { bgTop = RGB(24, 46, 34); bgBot = RGB(28, 61, 42); }
+        else if (player.biome == 10 || player.biome == 14) { bgTop = RGB(30, 18, 46); bgBot = RGB(45, 24, 68); }
+        else if (player.biome == 11) { bgTop = RGB(48, 44, 26); bgBot = RGB(68, 62, 36); }
+        else if (player.biome == 15) { bgTop = RGB(24, 40, 52); bgBot = RGB(36, 60, 78); }
+        else if (player.biome == 16) { bgTop = RGB(32, 30, 40); bgBot = RGB(48, 42, 54); }
+        else if (player.biome == 17) { bgTop = RGB(38, 20, 58); bgBot = RGB(58, 28, 88); }
     }
 
     RECT bgRect = {0, 0, w, h};
@@ -4452,14 +4688,49 @@ void RenderGdiScene(HDC hdc, int w, int h) {
     }
     SelectObject(hdc, hOldPen); DeleteObject(hGridPen);
 
-    HBRUSH hDustB = CreateSolidBrush(RGB(205, 214, 244));
-    HBRUSH hOldDB = (HBRUSH)SelectObject(hdc, hDustB);
-    for (int i = 0; i < 15; i++) {
-        int px = (g_GfxFrame * 2 + i * 37) % w;
-        int py = ((g_GfxFrame / 2) + i * 23) % 90;
-        Ellipse(hdc, px, py, px + 2, py + 2);
+    // Dynamic Atmospheric Weather & Ambient Particles
+    COLORREF moteColor = RGB(205, 214, 244);
+    int moteType = 0; // 0: dust, 1: ember, 2: snow, 3: spore, 4: void, 5: celestial, 6: bubble
+    if (gameState == STATE_DUNGEON || gameState == STATE_COMBAT) {
+        if (player.biome == 8 || player.biome == 9) { moteColor = RGB(250, 179, 135); moteType = 1; }
+        else if (player.biome == 6) { moteColor = RGB(230, 233, 239); moteType = 2; }
+        else if (player.biome == 3 || player.biome == 7) { moteColor = RGB(166, 227, 161); moteType = 3; }
+        else if (player.biome == 10 || player.biome == 14 || player.biome == 17) { moteColor = RGB(203, 166, 247); moteType = 4; }
+        else if (player.biome == 11) { moteColor = RGB(249, 226, 175); moteType = 5; }
+        else if (player.biome == 2 || player.biome == 13) { moteColor = RGB(137, 180, 250); moteType = 6; }
     }
-    SelectObject(hdc, hOldDB); DeleteObject(hDustB);
+
+    HBRUSH hMoteB = CreateSolidBrush(moteColor);
+    HBRUSH hOldMB = (HBRUSH)SelectObject(hdc, hMoteB);
+    for (int i = 0; i < 18; i++) {
+        int px, py;
+        if (moteType == 1) {
+            px = (g_GfxFrame * 2 + i * 43 + (FastSin(g_GfxFrame + i) * 6) / 127) % w;
+            py = 90 - ((g_GfxFrame * 2 + i * 27) % 90);
+            Ellipse(hdc, px, py, px + 3, py + 3);
+        } else if (moteType == 2) {
+            px = ((g_GfxFrame + i * 39) + (FastSin(g_GfxFrame + i * 3) * 8) / 127) % w;
+            py = (g_GfxFrame * 2 + i * 21) % 90;
+            Ellipse(hdc, px, py, px + 2, py + 2);
+        } else if (moteType == 3) {
+            px = (i * 47 + (FastCos(g_GfxFrame / 2 + i) * 12) / 127) % w;
+            py = (i * 29 + (FastSin(g_GfxFrame / 2 + i) * 8) / 127) % 90;
+            Ellipse(hdc, px, py, px + 3, py + 3);
+        } else if (moteType == 4) {
+            px = (g_GfxFrame + i * 51) % w;
+            py = ((g_GfxFrame / 2) + i * 31) % 90;
+            Ellipse(hdc, px - 1, py - 1, px + 3, py + 3);
+        } else if (moteType == 6) {
+            px = (i * 53 + (FastSin(g_GfxFrame + i) * 5) / 127) % w;
+            py = 90 - ((g_GfxFrame + i * 19) % 90);
+            Ellipse(hdc, px, py, px + 4, py + 4);
+        } else {
+            px = (g_GfxFrame * 2 + i * 37) % w;
+            py = ((g_GfxFrame / 2) + i * 23) % 90;
+            Ellipse(hdc, px, py, px + 2, py + 2);
+        }
+    }
+    SelectObject(hdc, hOldMB); DeleteObject(hMoteB);
 
     RECT floorRect = {0, 90, w, h};
     HBRUSH hFloorB = CreateSolidBrush(RGB(30, 30, 46));
@@ -4670,6 +4941,30 @@ void RenderGdiScene(HDC hdc, int w, int h) {
         }
     }
     SelectObject(hdc, hOldFont); DeleteObject(hFont);
+
+    // Render Dynamic Slash Arc Animation across target
+    if (g_GdiSlash.active) {
+        g_GdiSlash.timer++;
+        int sx = g_GdiSlash.x;
+        int sy = g_GdiSlash.y;
+        float progress = (float)g_GdiSlash.timer / (float)g_GdiSlash.maxTimer;
+        if (progress < 1.0f) {
+            COLORREF slashCol = g_GdiSlash.isCrit ? RGB(249, 226, 175) : RGB(137, 220, 235);
+            HPEN hSlashPen = CreatePen(PS_SOLID, g_GdiSlash.isCrit ? 6 : 4, slashCol);
+            HPEN hOldP = (HPEN)SelectObject(hdc, hSlashPen);
+            int arcOffset = (int)(progress * 40.0f);
+            MoveToEx(hdc, sx - 35 + arcOffset, sy - 30 + arcOffset, NULL);
+            LineTo(hdc, sx + 25 - arcOffset / 2, sy + 30 - arcOffset / 2);
+            if (g_GdiSlash.isCrit) {
+                MoveToEx(hdc, sx + 30 - arcOffset, sy - 30 + arcOffset, NULL);
+                LineTo(hdc, sx - 25 + arcOffset / 2, sy + 30 - arcOffset / 2);
+            }
+            SelectObject(hdc, hOldP);
+            DeleteObject(hSlashPen);
+        } else {
+            g_GdiSlash.active = 0;
+        }
+    }
 
     SetViewportOrgEx(hdc, 0, 0, NULL); // Reset shake
 

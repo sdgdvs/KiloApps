@@ -43,3 +43,7 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - Status: PASS ✅ (Content expansion & visual polish).
   - Highlights: Enchanting Altar socketing with 5 elemental gems (Ruby, Sapphire, Emerald, Amethyst, Topaz), 4 companion pets (Wolf, Wisp, Golem, Phoenix) with leveling and feeding, 3 branching challenge vaults (Void Rift, Trial, Hoard) with Vault Guardians and Relics. Fixed MSVC compilation ordering. Native (76 KB) and Web (196 KB) clean.
 
+- **2026-09-17T08:44:00Z — kilo-tester: KSynth**
+  - Status: PASS ✅ (9 issues fixed inline).
+  - Highlights: Tutorial onboarding (`ksynth_tutorialSeen`), F5/F9 quicksave/quickload, full workstation state persistence (Dual Osc, Filter, ADSR, Arp, Sequencer), mouse glissando on virtual keys, arrow/Enter/hotkey navigation, safe WAV audio rendering, HUD toasts. Builds clean.
+

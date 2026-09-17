@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,15 +13,15 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "KStarForge (Deep-space shipyard engineering sim)"
-  kilo_graphics: KQuest
+  kilo_graphics: KStarship
   kilo_tester: KSys
   kilo_usability: KGo
   kilo_qa: KSpace
   kilo_expander: KTerm
 last_run:
-  agent: kilo-creator
-  app: KChrono
-  timestamp: "2026-09-17T12:42:00Z"
+  agent: kilo-graphics
+  app: KQuest
+  timestamp: "2026-09-17T14:00:00Z"
 last_planner_run: "2026-09-16T19:00:00Z"
 ---
 
@@ -58,9 +58,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPomodoro` (Work/break cycle manager), `KBookmark` (Categorized link vault), `KHash` (Multi-algorithm checksum tool), `KRSS` (Feed reader), `KClip` (Clipboard history tool).
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KQuest`
+- **Current Target**: `KStarship`
 - **Upcoming Queue**:
-  `KStarship`, `KFortress`, `KAlchemy`, `KColony`, `KSpace`, `KAsteroids`, `KMaze`, `KPac`, `KBreakout`, `KSnake`, `KRogue`.
+  `KFortress`, `KAlchemy`, `KColony`, `KSpace`, `KAsteroids`, `KMaze`, `KPac`, `KBreakout`, `KSnake`, `KRogue`, `KQuest`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KSys`
@@ -86,6 +86,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-17T14:00:00Z — kilo-graphics: KQuest**
+  - Status: PASS ✅ (Graphics, boss rush & runesmithing pass).
+  - Highlights: Crescent blade slash animations (silver-cyan / golden cross-cut crit), 18th Mythic Biome (Astral Nexus) with 5 apex monsters & 3-phase Chronos boss.
+  - Mechanics & Content: Boss Rush expanded to 10 waves, Ancient Runesmithing (Ignis, Glacies, Fulgur, Venenum), Elemental Combos (Thermal Shatter, Toxic Overload, Holy Retribution).
+  - Visual Polish: Status auras (Holy Shield aegis runes, Berserk fire, Mana Surge arcs, Iron Will barrier), animated debuff FX, atmospheric weather motes.
+  - Bug Fixes: Town Inv button wired to backpack; Map & Biomes selector placed on town page 2.
+  - Verification: MSVC Native C (95.5 KB) and Web (281.7 KB) clean builds; <999 KB ceiling verified.
+
 - **2026-09-17T12:42:00Z — kilo-creator: KChrono (Phase 1)**
   - Status: CREATED ⏳ (Phase 1: Project Scaffolding & Core Paradox Engine).
   - Highlights: Tri-Epoch synchronized simulation (1984 Alpha, 2042 Beta, 2188 Gamma) with forward Causal Ripple Engine.
@@ -110,7 +118,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-09-17T09:51:00Z — kilo-usability: KChess**
   - Status: PASS ✅ (UI/UX polish, HiDPI scaling, onboarding).
   - Highlights: Expanded window bounds (800x920) in App.jsx eliminating clipping, removed overlapping top HTML button, integrated centered header Help badge (`[F1 / ?]`), status hint prompt parity, added first-run tutorial onboarding (`kchess_tutorialSeen`), dynamic canvas DPR resize handling, fixed native world-transform font double-scaling, synced mode/status click handlers. Native (53 KB) and Web (116 KB) clean.
-
-- **2026-09-17T08:44:00Z — kilo-tester: KSynth**
-  - Status: PASS ✅ (9 issues fixed inline).
-  - Highlights: Tutorial onboarding (`ksynth_tutorialSeen`), F5/F9 quicksave/quickload, full workstation state persistence (Dual Osc, Filter, ADSR, Arp, Sequencer), mouse glissando on virtual keys, arrow/Enter/hotkey navigation, safe WAV audio rendering, HUD toasts. Builds clean.
