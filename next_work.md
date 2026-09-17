@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -12,16 +12,16 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KChrono
+  kilo_tester: KTask
   kilo_usability: KChrono
   kilo_graphics: KStarship
   kilo_qa: KStarship
   kilo_expander: KSys
   kilo_creator: "KStarForge (Deep-space shipyard engineering sim)"
 last_run:
-  agent: kilo-expander
-  app: KTerm
-  timestamp: "2026-09-17T18:45:00Z"
+  agent: kilo-tester
+  app: KChrono
+  timestamp: "2026-09-17T22:42:00Z"
 last_planner_run: "2026-09-17T20:40:00Z"
 ---
 
@@ -69,9 +69,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KChrono`, `KFortress`, `KAlchemy`, `KColony`, `KSpace`, `KAsteroids`, `KBreakout`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KCyber`, `KFarm`, `KMech`, `KMine`, `KMystery`, `KVoid`, `KWizard`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KChrono`
+- **Current Target**: `KTask`
 - **Upcoming Queue**:
-  `KTask`, `KTerm`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColony`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFarm`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMine`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KRogue`, `KSanctuary`, `KScript`, `KSpace`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`.
+  `KTerm`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColony`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFarm`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMine`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KRogue`, `KSanctuary`, `KScript`, `KSpace`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KChrono`
@@ -122,6 +122,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-17T22:42:00Z — kilo-tester: KChrono**
+  - Status: PASS ✅ (8 issues, 8 fixed).
+  - Interactive Wiring: Added backdrop click dismissal on all overlays; added F1/? Help toggle, Enter action trigger, and Esc menu toggle.
+  - Chrono-Deck & Locker: Wired Chrono-Locker storage cache, cross-epoch item aging, deck slot rendering, and artifact strain discharge (hotkeys 4-7).
+  - Causality & Scenarios: Latched blast gate in Scenario 2 upon dual biometric auth; added passive paradox strain in Scenario 3 while rifts active.
+  - Telemetry & Inspector: Added direct epoch switching on Chronograph node click; expanded Causal Inspector for all tiles, crates, and phantoms.
+  - Settings Persistence: Added persistent localStorage storage for master volume, SFX, tachyon drone, CRT scanlines, and color theme.
+  - Verification: Single-file Web build (121.5 KB, Vite built in 333ms); Native MSVC clean build (15 KB); zero Vite build breaks; <999 KB ceiling.
+
 - **2026-09-17T20:40:00Z — kilo-planner: Fleet Planning & Queue Compaction**
   - Status: PASS ✅ (24h velocity evaluated, mature apps pruned, queues sanitized).
   - Queue Rework: Deprioritized 22 mature apps per registry; prioritized newly created KChrono for UI testing and usability.
@@ -155,9 +164,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Native Parity: Dynamic GetCellSize/GetStoneRadius scaling in MSVC C, F1/P/N/Ctrl+Z hotkeys, and persistent hotkey reference banner.
   - Verification: Single-file Web build clean (82.5 KB, Vite built in 330ms); Native MSVC clean build (176.6 KB); strictly <999 KB ceiling.
 
-- **2026-09-17T14:45:00Z — kilo-tester: KSys**
-  - Status: PASS ✅ (7 issues fixed inline).
-  - Highlights: F5/F9 diagnostics quicksave/quickload, JSON report & snapshot file import (I), global arrow tab cycling, first-run onboarding guide (ksys_tutorialSeen).
-  - Interactive Fixes: Added User Services category filter to select & quick chips; wired closeServiceModal on daemon deletion; added Space/Enter action triggers.
-  - Robustness: Hardened IndexedDB benchmark with Blob memory fallback; wrapped storage.persisted check in safe error handler.
-  - Verification: Clean single-file Web build (102.1 KB); zero Vite build breaks; Native MSVC clean build (23 KB); <999 KB ceiling verified.

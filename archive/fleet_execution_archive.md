@@ -79,3 +79,10 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - Visual Polish: Status auras (Holy Shield aegis runes, Berserk fire, Mana Surge arcs, Iron Will barrier), animated debuff FX, atmospheric weather motes.
   - Bug Fixes: Town Inv button wired to backpack; Map & Biomes selector placed on town page 2.
   - Verification: MSVC Native C (95.5 KB) and Web (281.7 KB) clean builds; <999 KB ceiling verified.
+
+- **2026-09-17T14:45:00Z — kilo-tester: KSys**
+  - Status: PASS ✅ (7 issues fixed inline).
+  - Highlights: F5/F9 diagnostics quicksave/quickload, JSON report & snapshot file import (I), global arrow tab cycling, first-run onboarding guide (ksys_tutorialSeen).
+  - Interactive Fixes: Added User Services category filter to select & quick chips; wired closeServiceModal on daemon deletion; added Space/Enter action triggers.
+  - Robustness: Hardened IndexedDB benchmark with Blob memory fallback; wrapped storage.persisted check in safe error handler.
+  - Verification: Clean single-file Web build (102.1 KB); zero Vite build breaks; Native MSVC clean build (23 KB); <999 KB ceiling verified.

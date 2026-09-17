@@ -1306,8 +1306,10 @@
                     seedPlanted: false,
                     betaCoreAccessed: false,
                     echoVaultUnlocked: false,
+                    dualAuthUnlocked: false,
                     riftsClosed: 0,
-                    omegaCoreAccessed: false
+                    omegaCoreAccessed: false,
+                    lockerItem: null
                 };
                 this.history = [];
                 this.ripples = [];
@@ -1476,11 +1478,16 @@
                     const plate2Active = this.isPlatePressed(5, 10, 'beta');
 
                     if (plate1Active && plate2Active) {
-                        if (this.grids.beta[7][12] === TILES.BLAST_GATE) {
-                            this.grids.beta[7][12] = TILES.FLOOR;
-                            this.logEvent("DUAL BIOMETRIC AUTH DETECTED: Blast Gate Alpha-07 Opened!", "success");
+                        if (!this.flags.dualAuthUnlocked) {
+                            this.flags.dualAuthUnlocked = true;
+                            this.logEvent("DUAL BIOMETRIC AUTH DETECTED: Blast Gate Alpha-07 Locked OPEN!", "success");
                             audio.playDoorOpen();
                             ripplesTriggered++;
+                        }
+                    }
+                    if (this.flags.dualAuthUnlocked) {
+                        if (this.grids.beta[7][12] === TILES.BLAST_GATE) {
+                            this.grids.beta[7][12] = TILES.FLOOR;
                         }
                     } else {
                         if (this.grids.beta[7][12] === TILES.FLOOR) {
@@ -1596,6 +1603,11 @@
                             interacted = true;
                             break;
                         }
+                    } else if (tile === TILES.CHRONO_LOCKER) {
+                        this.saveUndoState();
+                        this.accessChronoLocker();
+                        interacted = true;
+                        break;
                     } else if (tile === TILES.TACHYON_RIFT) {
                         this.saveUndoState();
                         currentGrid[c.y][c.x] = TILES.FLOOR;
@@ -1709,6 +1721,11 @@
                     }
                 });
 
+                // Scenario 3: Passive paradox strain accumulation until rifts are sealed
+                if (this.currentScenario.id === 3 && (this.flags.riftsClosed || 0) < 3) {
+                    this.addParadoxStrain(1, "Uncontained Tachyon Rift singularity flux");
+                }
+
                 // Check for paradox collapse threshold
                 if (this.paradoxStrain >= 100) {
                     this.triggerParadoxBreach();
@@ -1789,6 +1806,91 @@
                 });
             }
 
+            accessChronoLocker() {
+                if (!this.flags.lockerItem) {
+                    if (this.currentEpoch === 'alpha') {
+                        const item = {
+                            id: 'cell_alpha',
+                            name: 'Precursor Cell (1984)',
+                            icon: '🔋',
+                            epoch: 'alpha',
+                            desc: 'Uncharged precursor power cell. Deposit in locker to age across timelines.'
+                        };
+                        if (this.inventory.length < 4) {
+                            this.inventory.push(item);
+                            this.flags.lockerDiscovered = true;
+                            this.logEvent("[CHRONO-LOCKER] Retrieved Precursor Cell from 1984 locker!", "success");
+                            audio.playTone(550, 0.2, 'triangle', 0.2);
+                            showToast("Retrieved Precursor Cell [🔋]. Click slot to discharge or store.");
+                        } else {
+                            showToast("Chrono-Deck full! Free a slot first.");
+                        }
+                    } else if (this.currentEpoch === 'beta') {
+                        const item = {
+                            id: 'cell_beta',
+                            name: 'Chrono-Battery (2042)',
+                            icon: '⚡',
+                            epoch: 'beta',
+                            desc: 'Energized cell aged 58 years. Click slot to discharge -25% Paradox Strain.'
+                        };
+                        if (this.inventory.length < 4) {
+                            this.inventory.push(item);
+                            this.flags.lockerDiscovered = true;
+                            this.logEvent("[CHRONO-LOCKER] Found energized Chrono-Battery in 2042 locker!", "success");
+                            audio.playTone(700, 0.2, 'sine', 0.2);
+                            showToast("Retrieved Chrono-Battery [⚡]. Use to discharge -25% Paradox Strain.");
+                        } else {
+                            showToast("Chrono-Deck full!");
+                        }
+                    } else {
+                        const item = {
+                            id: 'cell_gamma',
+                            name: 'Singularity Core (2188)',
+                            icon: '🔮',
+                            epoch: 'gamma',
+                            desc: 'Overcharged core aged 204 years. Click slot to discharge -40% Paradox Strain.'
+                        };
+                        if (this.inventory.length < 4) {
+                            this.inventory.push(item);
+                            this.flags.lockerDiscovered = true;
+                            this.logEvent("[CHRONO-LOCKER] Extracted Singularity Core aged 204 years!", "success");
+                            audio.playTone(880, 0.25, 'sine', 0.25);
+                            showToast("Retrieved Singularity Core [🔮]. Super-discharges Paradox Strain!");
+                        } else {
+                            showToast("Chrono-Deck full!");
+                        }
+                    }
+                } else {
+                    if (this.inventory.length < 4) {
+                        const itm = this.flags.lockerItem;
+                        this.flags.lockerItem = null;
+                        this.inventory.push(itm);
+                        this.logEvent(`[CHRONO-LOCKER] Retrieved ${itm.name} from locker.`, 'success');
+                        audio.playTone(600, 0.2, 'sine', 0.2);
+                        showToast(`Retrieved ${itm.name}!`);
+                    } else {
+                        showToast("Chrono-Deck full!");
+                    }
+                }
+            }
+
+            useInventoryItem(index) {
+                if (index < 0 || index >= this.inventory.length) return;
+                const item = this.inventory[index];
+                if (!item) return;
+
+                let relief = 25;
+                if (item.epoch === 'alpha') relief = 15;
+                else if (item.epoch === 'gamma') relief = 40;
+
+                this.addParadoxStrain(-relief, `Discharged ${item.name}`);
+                audio.playTone(660, 0.2, 'sine', 0.2);
+                setTimeout(() => audio.playTone(880, 0.2, 'sine', 0.2), 100);
+                this.logEvent(`[ARTIFACT DISCHARGED] ${item.name} absorbed ${relief}% Paradox Strain.`, 'success');
+                showToast(`Stabilized timeline (-${relief}% Paradox Strain)`);
+                this.inventory.splice(index, 1);
+            }
+
             /* --- Undo & State History --- */
             saveUndoState() {
                 const snapshot = {
@@ -1796,7 +1898,7 @@
                     turn: this.turn,
                     paradoxStrain: this.paradoxStrain,
                     player: { ...this.player },
-                    inventory: [...this.inventory],
+                    inventory: this.inventory.map(i => ({ ...i })),
                     flags: { ...this.flags },
                     grids: {
                         alpha: this.grids.alpha.map(r => [...r]),
@@ -2261,6 +2363,25 @@
                 playBtn.classList.remove('echo-active');
                 playBtn.innerHTML = "<span>▶</span> Execute Echo";
             }
+
+            // Inventory Chrono-Deck rendering
+            const deckCountEl = document.getElementById('deckCount');
+            if (deckCountEl) {
+                deckCountEl.textContent = `${engine.inventory.length} / 4`;
+            }
+            const slots = document.querySelectorAll('.deck-slot');
+            slots.forEach((slot, idx) => {
+                const item = engine.inventory[idx];
+                if (item) {
+                    slot.classList.add('filled');
+                    slot.innerHTML = `<span class="deck-slot-icon">${item.icon}</span><span style="font-size: 8px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60px;">${item.name}</span>`;
+                    slot.title = `[Slot ${idx + 1}] ${item.name}: Click or press ${idx + 4} to discharge.`;
+                } else {
+                    slot.classList.remove('filled');
+                    slot.innerHTML = `<span class="deck-slot-icon">∅</span><span>Empty</span>`;
+                    slot.title = `Slot ${idx + 1} Empty`;
+                }
+            });
         }
 
         function showToast(msg) {
@@ -2287,15 +2408,32 @@
                 engine.quickload();
                 return;
             }
+            if (e.key === 'F1' || e.key === '?') {
+                e.preventDefault();
+                const help = document.getElementById('helpOverlay');
+                if (help.classList.contains('active')) {
+                    help.classList.remove('active');
+                } else {
+                    closeAllOverlays();
+                    help.classList.add('active');
+                }
+                return;
+            }
             if (e.key === 'Escape') {
-                closeAllOverlays();
+                const activeModal = document.querySelector('.overlay.active');
+                if (activeModal) {
+                    if (activeModal.id !== 'splashOverlay') {
+                        closeAllOverlays();
+                    }
+                } else {
+                    document.getElementById('settingsOverlay').classList.add('active');
+                }
                 return;
             }
 
             // If an overlay is open, don't pass keys to game
             const activeModal = document.querySelector('.overlay.active');
-            if (activeModal && activeModal.id !== 'splashOverlay') return;
-            if (activeModal && activeModal.id === 'splashOverlay') return;
+            if (activeModal) return;
 
             if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
                 e.preventDefault(); engine.move(0, -1);
@@ -2305,7 +2443,7 @@
                 e.preventDefault(); engine.move(-1, 0);
             } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
                 e.preventDefault(); engine.move(1, 0);
-            } else if (e.key === ' ') {
+            } else if (e.key === ' ' || e.key === 'Enter') {
                 e.preventDefault(); engine.interact();
             } else if (e.key === 'Tab') {
                 e.preventDefault();
@@ -2317,6 +2455,9 @@
                 engine.switchEpoch('beta');
             } else if (e.key === '3') {
                 engine.switchEpoch('gamma');
+            } else if (e.key >= '4' && e.key <= '7') {
+                const slotIdx = parseInt(e.key, 10) - 4;
+                engine.useInventoryItem(slotIdx);
             } else if (e.key === 'r' || e.key === 'R') {
                 engine.toggleRecordEcho();
             } else if (e.key === 'p' || e.key === 'P') {
@@ -2351,7 +2492,22 @@
             let name = "Standard Floor";
             let causality = "Coherent floor plate. No divergent timeline events detected.";
 
-            if (tile === TILES.WALL) {
+            const entity = engine.entities[engine.currentEpoch].find(e => e.x === x && e.y === y);
+            if (entity) {
+                if (entity.type === 'crate') {
+                    name = "Lead Heavy Alloy Crate";
+                    causality = "Displaceable mass container. Pushing alters future inertial trajectory.";
+                } else if (entity.type === 'phantom') {
+                    name = "Tachyon Phantom Anomaly";
+                    causality = "Hostile timeline rupture entity generated by excessive Paradox Strain.";
+                }
+            } else if (engine.echoGhost && engine.echoGhost.epoch === engine.currentEpoch && engine.echoGhost.x === x && engine.echoGhost.y === y) {
+                name = "Chrono-Echo Ghost";
+                causality = "Active temporal projection of your prior footsteps.";
+            } else if (engine.player.x === x && engine.player.y === y) {
+                name = "Temporal Architect (You)";
+                causality = "Active causal locus navigating the tri-epoch timeline.";
+            } else if (tile === TILES.WALL) {
                 name = "Heavy Alloy Bulkhead";
                 causality = "Impenetrable across all known spacetime dimensions.";
             } else if (tile === TILES.PRECURSOR_RELAY) {
@@ -2362,10 +2518,25 @@
                 causality = "Locked by security circuit. Requires upstream power or active pressure plate.";
             } else if (tile === TILES.PRESSURE_PLATE) {
                 name = "Temporal Biometric Plate";
-                causality = "Requires persistent physical weight to bridge circuit.";
+                causality = "Requires persistent physical weight or echo ghost to bridge circuit.";
             } else if (tile === TILES.SAPLING_VAULT) {
                 name = "Genetic Seed Vault";
                 causality = engine.flags.seedPlanted ? "PLANTED: Chronal bio-matter growing across timelines." : "DORMANT: Contains unplanted chronoseeds.";
+            } else if (tile === TILES.CHRONO_LOCKER) {
+                name = "Chrono-Locker Cache";
+                causality = engine.flags.lockerItem ? `CONTAINED: Houses ${engine.flags.lockerItem.name} aging across eras.` : "OPEN: Cross-epoch storage matrix for timeline artifacts.";
+            } else if (tile === TILES.BIO_BRIDGE) {
+                name = "Petrified Bio-Archway";
+                causality = "Ancient reinforced root system grown from 1984 seed planting.";
+            } else if (tile === TILES.PLASMA_PIT) {
+                name = "Superheated Plasma Pit";
+                causality = "Lethal thermal hazard. Extinguishable via upstream cryogenic floodgate diversion.";
+            } else if (tile === TILES.ICE_BRIDGE) {
+                name = "Cryo-Crystallized Bridge";
+                causality = "Flash-frozen coolant flow bridging the hazardous abyss.";
+            } else if (tile === TILES.TACHYON_RIFT) {
+                name = "Unstable Tachyon Rift";
+                causality = "Localized singularity tearing spacetime fabric. Interact to seal.";
             } else if (tile === TILES.QUANTUM_CORE) {
                 name = "Quantum Station Chrono-Core";
                 causality = "Target terminal of the active mission scenario.";
@@ -2378,6 +2549,40 @@
         function closeAllOverlays() {
             document.querySelectorAll('.overlay').forEach(el => el.classList.remove('active'));
         }
+
+        // Backdrop click to dismiss modal
+        document.querySelectorAll('.overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay && overlay.id !== 'splashOverlay') {
+                    closeAllOverlays();
+                }
+            });
+        });
+
+        // Chronograph direct click navigation
+        chronoCanvas.addEventListener('click', (e) => {
+            audio.init();
+            const rect = chronoCanvas.getBoundingClientRect();
+            const scaleX = chronoCanvas.width / rect.width;
+            const clickX = (e.clientX - rect.left) * scaleX;
+            if (clickX < 95) {
+                engine.switchEpoch('alpha');
+            } else if (clickX < 200) {
+                engine.switchEpoch('beta');
+            } else {
+                engine.switchEpoch('gamma');
+            }
+        });
+
+        // Chrono-Deck inventory click listener
+        document.querySelectorAll('.deck-slot').forEach(slot => {
+            slot.addEventListener('click', () => {
+                const idx = parseInt(slot.dataset.slot, 10);
+                if (!isNaN(idx)) {
+                    engine.useInventoryItem(idx);
+                }
+            });
+        });
 
         // Epoch switch buttons
         document.getElementById('btnEpochAlpha').addEventListener('click', () => { audio.init(); engine.switchEpoch('alpha'); });
@@ -2405,7 +2610,10 @@
 
         document.getElementById('btnSplashContinue').addEventListener('click', () => {
             audio.init();
-            if (engine.quickload()) {
+            if (engine.turn > 0) {
+                closeAllOverlays();
+                showToast("Resumed active timeline.");
+            } else if (engine.quickload()) {
                 closeAllOverlays();
             }
         });
@@ -2477,16 +2685,62 @@
             engine.initScenario(SCENARIOS[selectedScenarioIndex]);
         });
 
+        // Settings persistence functions
+        function saveSettings() {
+            try {
+                const s = {
+                    vol: document.getElementById('volSlider').value,
+                    sfx: document.getElementById('chkSfx').checked,
+                    drone: document.getElementById('chkDrone').checked,
+                    crt: document.getElementById('chkCrt').checked,
+                    theme: document.getElementById('selTheme').value
+                };
+                localStorage.setItem('kchrono_settings', JSON.stringify(s));
+            } catch(e) {}
+        }
+
+        function loadSettings() {
+            try {
+                const raw = localStorage.getItem('kchrono_settings');
+                if (!raw) return;
+                const s = JSON.parse(raw);
+                if (s.vol !== undefined) {
+                    document.getElementById('volSlider').value = s.vol;
+                    audio.setVolume(s.vol / 100);
+                }
+                if (s.sfx !== undefined) {
+                    document.getElementById('chkSfx').checked = s.sfx;
+                    audio.sfxEnabled = s.sfx;
+                }
+                if (s.drone !== undefined) {
+                    document.getElementById('chkDrone').checked = s.drone;
+                    audio.droneEnabled = s.drone;
+                }
+                if (s.crt !== undefined) {
+                    document.getElementById('chkCrt').checked = s.crt;
+                    if (s.crt) document.body.classList.remove('no-crt');
+                    else document.body.classList.add('no-crt');
+                }
+                if (s.theme !== undefined) {
+                    document.getElementById('selTheme').value = s.theme;
+                    document.body.dataset.theme = s.theme;
+                }
+            } catch(e) {}
+        }
+
         // Settings events
         document.getElementById('volSlider').addEventListener('input', (e) => {
             audio.setVolume(e.target.value / 100);
+            saveSettings();
         });
         document.getElementById('chkSfx').addEventListener('change', (e) => {
             audio.sfxEnabled = e.target.checked;
+            saveSettings();
         });
         document.getElementById('chkDrone').addEventListener('change', (e) => {
             audio.droneEnabled = e.target.checked;
             audio.setVolume(document.getElementById('volSlider').value / 100);
+            saveSettings();
         });
         document.getElementById('chkCrt').addEventListener('change', (e) => {
             if (e.target.checked) {
@@ -2494,9 +2748,11 @@
             } else {
                 document.body.classList.add('no-crt');
             }
+            saveSettings();
         });
         document.getElementById('selTheme').addEventListener('change', (e) => {
             document.body.dataset.theme = e.target.value;
+            saveSettings();
         });
         document.getElementById('btnResetTutorial').addEventListener('click', () => {
             localStorage.removeItem('kchrono_tutorialSeen');
@@ -2511,6 +2767,7 @@
                 turn: engine.turn,
                 paradoxStrain: engine.paradoxStrain,
                 player: engine.player,
+                inventory: engine.inventory,
                 flags: engine.flags,
                 grids: engine.grids,
                 entities: engine.entities,
@@ -2550,6 +2807,9 @@
             };
             input.click();
         });
+
+        // Restore saved settings on startup
+        loadSettings();
 
         // Check if quicksave exists on page load
         if (localStorage.getItem('kchrono_quicksave')) {
