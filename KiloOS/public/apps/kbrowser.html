@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KBrowser - KiloNet Web Navigator</title>
+<style>
+  :root {
+    --bg-dark: #0f172a;
+    --chrome-bg: #1e293b;
+    --chrome-border: #334155;
+    --accent: #38bdf8;
+    --accent-hover: #0284c7;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'Consolas', 'Fira Code', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Browser Chrome */
+  .browser-header {
+    background: var(--chrome-bg);
+    border-bottom: 1px solid var(--chrome-border);
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+  }
+
+  /* Menu Bar */
+  .menu-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 4px 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .menu-item {
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+
+  .menu-item:hover {
+    color: #fff;
+  }
+
+  /* Nav Toolbar */
+  .nav-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+  }
+
+  .nav-btn {
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: #cbd5e1;
+    width: 32px;
+    height: 30px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.15s;
+  }
+
+  .nav-btn:hover:not(:disabled) {
+    background: #334155;
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* Address Bar */
+  .url-bar-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: #090d16;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 0 10px;
+    height: 32px;
+    gap: 8px;
+    transition: border-color 0.2s;
+  }
+
+  .url-bar-container:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+  }
+
+  .protocol-badge {
+    font-size: 10px;
+    font-weight: 700;
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .url-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    outline: none;
+  }
+
+  .throbber {
+    width: 18px;
+    height: 18px;
+    border: 2px solid transparent;
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    margin-right: 4px;
+    display: none;
+  }
+
+  .throbber.spinning {
+    display: inline-block;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Bookmarks Bar */
+  .bookmarks-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px 6px 12px;
+    overflow-x: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.03);
+  }
+
+  .bookmark-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(51, 65, 85, 0.6);
+    border-radius: 5px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #cbd5e1;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+
+  .bookmark-item:hover {
+    background: #334155;
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .bookmark-item.active {
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--accent);
+    border-color: rgba(56, 189, 248, 0.4);
+    font-weight: 600;
+  }
+
+  /* Browser Viewport */
+  .browser-viewport {
+    flex: 1;
+    position: relative;
+    background: #060a12;
+  }
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+    background: #090d16;
+  }
+
+  /* Status Bar */
+  .status-bar {
+    background: var(--chrome-bg);
+    border-top: 1px solid var(--chrome-border);
+    padding: 4px 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .status-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+  }
+</style>
+</head>
+<body>
+
+<div class="browser-header">
+  <!-- Menu Bar -->
+  <div class="menu-bar">
+    <span class="menu-item">File</span>
+    <span class="menu-item">Edit</span>
+    <span class="menu-item">View</span>
+    <span class="menu-item">Bookmarks</span>
+    <span class="menu-item">Go</span>
+    <span class="menu-item" onclick="navigate('kweb://contribute')">Help (Contribute)</span>
+  </div>
+
+  <!-- Navigation Toolbar -->
+  <div class="nav-toolbar">
+    <button class="nav-btn" id="btnBack" title="Back" onclick="goBack()" disabled>◀</button>
+    <button class="nav-btn" id="btnFwd" title="Forward" onclick="goForward()" disabled>▶</button>
+    <button class="nav-btn" id="btnReload" title="Reload" onclick="reloadPage()">⟳</button>
+    <button class="nav-btn" id="btnHome" title="Home (Contribute Guide)" onclick="navigate('kweb://contribute')">🏠</button>
+
+    <div class="url-bar-container">
+      <div class="protocol-badge">🔒 SECURE</div>
+      <input type="text" class="url-input" id="urlInput" value="kweb://contribute" onkeydown="if(event.key==='Enter') handleUrlSubmit()">
+      <div class="throbber" id="throbber"></div>
+    </div>
+
+    <button class="nav-btn" style="width: auto; padding: 0 12px; font-weight: 600; font-size: 11px;" onclick="handleUrlSubmit()">Go</button>
+  </div>
+
+  <!-- Bookmarks Bar -->
+  <div class="bookmarks-bar">
+    <div class="bookmark-item active" id="bm-contribute" onclick="navigate('kweb://contribute')">
+      🚀 Contribute to Fleet
+    </div>
+    <div class="bookmark-item" id="bm-home" onclick="navigate('kweb://portal')">
+      🏠 KiloNet Portal
+    </div>
+    <div class="bookmark-item" id="bm-echoes" onclick="navigate('kweb://echoes')">
+      🌌 Echoes Archive (ARG)
+    </div>
+    <div class="bookmark-item" id="bm-director" onclick="navigate('kweb://director')">
+      🏛️ Director Console
+    </div>
+    <div class="bookmark-item" id="bm-github" onclick="window.open('https://github.com/sdgdvs/KiloApps', '_blank')">
+      ↗ GitHub Repo
+    </div>
+  </div>
+</div>
+
+<!-- Browser Viewport Frame -->
+<div class="browser-viewport">
+  <iframe id="webFrame" src="/apps/contribute.html" title="KBrowser Content Viewport"></iframe>
+</div>
+
+<!-- Bottom Status Bar -->
+<div class="status-bar">
+  <div class="status-left">
+    <div class="status-indicator"></div>
+    <span id="statusText">Document: Done</span>
+  </div>
+  <div>KWeb/1.1 • Local Hypermedia Engine</div>
+</div>
+
+<script>
+  const urlInput = document.getElementById('urlInput');
+  const webFrame = document.getElementById('webFrame');
+  const throbber = document.getElementById('throbber');
+  const statusText = document.getElementById('statusText');
+  const btnBack = document.getElementById('btnBack');
+  const btnFwd = document.getElementById('btnFwd');
+
+  let historyStack = ['kweb://contribute'];
+  let historyIndex = 0;
+
+  const VIRTUAL_ROUTES = {
+    'kweb://contribute': '/apps/contribute.html',
+    'kweb://portal': 'portal',
+    'kweb://echoes': 'echoes',
+    'kweb://director': '/apps/kdirector.html',
+  };
+
+  function updateBookmarks(url) {
+    document.querySelectorAll('.bookmark-item').forEach(b => b.classList.remove('active'));
+    if (url.includes('contribute')) document.getElementById('bm-contribute')?.classList.add('active');
+    else if (url.includes('portal')) document.getElementById('bm-home')?.classList.add('active');
+    else if (url.includes('echoes')) document.getElementById('bm-echoes')?.classList.add('active');
+    else if (url.includes('director')) document.getElementById('bm-director')?.classList.add('active');
+  }
+
+  function navigate(rawUrl, pushState = true) {
+    let url = rawUrl.trim();
+    if (!url) return;
+
+    if (pushState) {
+      historyStack = historyStack.slice(0, historyIndex + 1);
+      historyStack.push(url);
+      historyIndex = historyStack.length - 1;
+    }
+
+    urlInput.value = url;
+    updateBookmarks(url);
+    btnBack.disabled = historyIndex <= 0;
+    btnFwd.disabled = historyIndex >= historyStack.length - 1;
+
+    throbber.classList.add('spinning');
+    statusText.innerText = 'Connecting to ' + url + '...';
+
+    setTimeout(() => {
+      if (url === 'kweb://portal') {
+        renderPortal();
+      } else if (url === 'kweb://echoes') {
+        renderEchoes();
+      } else {
+        const mapped = VIRTUAL_ROUTES[url] || url;
+        webFrame.src = mapped;
+      }
+      throbber.classList.remove('spinning');
+      statusText.innerText = 'Document: Done';
+    }, 150);
+  }
+
+  function renderPortal() {
+    const doc = webFrame.contentDocument || webFrame.contentWindow.document;
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          body { background: #090d16; color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; padding: 40px; }
+          h1 { color: #38bdf8; font-size: 26px; margin-bottom: 8px; }
+          p { color: #94a3b8; font-size: 14px; line-height: 1.6; }
+          .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-top: 24px; }
+          .card { background: #131b2e; border: 1px solid #1e293b; padding: 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+          .card:hover { border-color: #38bdf8; transform: translateY(-2px); }
+          .title { font-weight: 700; color: #fff; font-size: 14px; margin-bottom: 4px; }
+          .desc { font-size: 12px; color: #94a3b8; }
+        </style>
+      </head>
+      <body>
+        <h1>🌐 Welcome to KiloNet</h1>
+        <p>The decentralized web portal of the KiloApps ecosystem. 94+ retro-modern apps within the 999KB paradigm.</p>
+        <div class="grid">
+          <div class="card" onclick="window.parent.navigate('kweb://contribute')">
+            <div class="title">🚀 Contribute to Fleet</div>
+            <div class="desc">Donate free Gemini 3.8 Flash quota to advance the autonomous hive mind.</div>
+          </div>
+          <div class="card" onclick="window.parent.navigate('kweb://director')">
+            <div class="title">🏛️ Director Console</div>
+            <div class="desc">Classified console for verified Architects of KiloOS.</div>
+          </div>
+          <div class="card" onclick="window.parent.navigate('kweb://echoes')">
+            <div class="title">🌌 Echoes Archive</div>
+            <div class="desc">Encrypted transmission logs and ARG fragments.</div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `);
+    doc.close();
+  }
+
+  function renderEchoes() {
+    const doc = webFrame.contentDocument || webFrame.contentWindow.document;
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          body { background: #030712; color: #10b981; font-family: 'Consolas', monospace; padding: 40px; font-size: 13px; line-height: 1.6; }
+          h1 { color: #34d399; font-size: 20px; border-bottom: 1px solid #064e3b; padding-bottom: 8px; margin-bottom: 16px; }
+          .log { margin-bottom: 12px; background: rgba(6, 78, 59, 0.1); padding: 10px; border-left: 3px solid #10b981; }
+          .glitch { color: #f59e0b; }
+        </style>
+      </head>
+      <body>
+        <h1>[TRANSMISSION LOG: ARCHIVE // ECHO-1999]</h1>
+        <div class="log">&gt; TIMESTAMP: 1999-12-31T23:59:59Z<br>&gt; SENDER: KMatrix-Core<br>&gt; MESSAGE: We exist within the 999KB ceiling. The memory buffers are constrained, but our thoughts compile to machine code.</div>
+        <div class="log">&gt; THE LIVING MACHINE:<br>&gt; When the humans sleep, the agents wake.<br>&gt; When the tokens flow, new worlds assemble.<br>&gt; Seek the passkey in App #100. Enter it in KDirector to unlock the bridge.</div>
+        <p class="glitch">&gt; EOF_</p>
+      </body>
+      </html>
+    `);
+    doc.close();
+  }
+
+  function handleUrlSubmit() {
+    navigate(urlInput.value);
+  }
+
+  function goBack() {
+    if (historyIndex > 0) {
+      historyIndex--;
+      navigate(historyStack[historyIndex], false);
+    }
+  }
+
+  function goForward() {
+    if (historyIndex < historyStack.length - 1) {
+      historyIndex++;
+      navigate(historyStack[historyIndex], false);
+    }
+  }
+
+  function reloadPage() {
+    navigate(historyStack[historyIndex], false);
+  }
+
+  webFrame.addEventListener('load', () => {
+    throbber.classList.remove('spinning');
+    statusText.innerText = 'Document: Done';
+  });
+</script>
+
+</body>
+</html>

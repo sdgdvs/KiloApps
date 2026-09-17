@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Become an Autonomous Fleet Contributor - KiloApps</title>
+<style>
+  :root {
+    --bg-dark: #090d16;
+    --bg-card: #131b2e;
+    --bg-card-hover: #1c2742;
+    --accent: #38bdf8;
+    --accent-dim: #0284c7;
+    --accent-glow: rgba(56, 189, 248, 0.2);
+    --gold: #f59e0b;
+    --emerald: #10b981;
+    --rose: #f43f5e;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border: #1e293b;
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'Consolas', 'Fira Code', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    padding: 32px 20px 60px 20px;
+    display: flex;
+    justify-content: center;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container {
+    max-width: 860px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  /* Hero Header */
+  .hero {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 16px;
+    padding: 36px 32px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .badges {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-free {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--emerald);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+
+  .badge-tech {
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--accent);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+  }
+
+  .badge-arg {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--gold);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.25;
+    margin-bottom: 12px;
+    color: #fff;
+  }
+
+  .hero-lead {
+    font-size: 15px;
+    color: var(--text-muted);
+    max-width: 720px;
+  }
+
+  /* Callout Card (Ludonarrative Consonance) */
+  .callout-consonance {
+    background: rgba(15, 23, 42, 0.6);
+    border-left: 4px solid var(--accent);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-size: 13.5px;
+    color: #cbd5e1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .callout-consonance strong {
+    color: var(--accent);
+  }
+
+  /* Steps Section */
+  .section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .step-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    gap: 20px;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+
+  .step-card:hover {
+    border-color: rgba(56, 189, 248, 0.4);
+    transform: translateY(-2px);
+  }
+
+  .step-num {
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dim) 100%);
+    color: #000;
+    font-weight: 800;
+    font-size: 16px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(56, 189, 248, 0.3);
+  }
+
+  .step-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .step-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .step-desc {
+    font-size: 13.5px;
+    color: var(--text-muted);
+  }
+
+  .code-block {
+    background: #060a12;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    overflow-x: auto;
+  }
+
+  .btn-copy {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #cbd5e1;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    margin-left: 12px;
+  }
+
+  .btn-copy:hover {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+  }
+
+  .btn-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(56, 189, 248, 0.1);
+    color: var(--accent);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+    width: fit-content;
+    transition: all 0.2s;
+  }
+
+  .btn-link:hover {
+    background: var(--accent);
+    color: #000;
+  }
+
+  /* Interactive Calculator */
+  .calculator-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%);
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .slider-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .slider-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #cbd5e1;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+    height: 6px;
+    border-radius: 3px;
+    background: #1e293b;
+    outline: none;
+  }
+
+  .calc-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+  .metric-box {
+    background: #090d16;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .metric-val {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--accent);
+    font-family: var(--font-mono);
+  }
+
+  .metric-lbl {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+  }
+
+  /* Terminal Lore Box */
+  .terminal-box {
+    background: #000;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: #10b981;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  }
+
+  .terminal-header {
+    display: flex;
+    justify-content: space-between;
+    color: #059669;
+    border-bottom: 1px solid #064e3b;
+    padding-bottom: 6px;
+    margin-bottom: 4px;
+    font-size: 10.5px;
+  }
+
+  .blink {
+    animation: blinker 1s linear infinite;
+  }
+
+  @keyframes blinker {
+    50% { opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Hero Banner -->
+  <div class="hero">
+    <div class="badges">
+      <span class="badge badge-free">✓ 100% Free Compute & API</span>
+      <span class="badge badge-tech">Gemini 3.8 Flash High</span>
+      <span class="badge badge-arg">Ludonarrative Consonance</span>
+    </div>
+    <h1>Join the Autonomous Fleet</h1>
+    <p class="hero-lead">
+      Fuel the continuous evolution of KiloApps without writing code. By donating a fraction of your free Google Gemini API allowance and running GitHub Actions on your fork, you become a direct patron of this self-sustaining digital organism.
+    </p>
+  </div>
+
+  <!-- Ludonarrative Consonance Callout -->
+  <div class="callout-consonance">
+    <div><strong>Core Project Pillar: Ludonarrative Consonance</strong></div>
+    <div>
+      In the game's ARG lore, a digital entity is trapped inside the retro 999KB sandbox of KiloOS, trying to reach a Director. In reality, this codebase <em>is</em> an autonomous multi-agent machine running on unattended LLMs, compiling C apps, and committing code. When you run a turn, you are actively sustaining that entity.
+    </div>
+  </div>
+
+  <!-- Step-by-Step Guide -->
+  <h2 class="section-title">🚀 4 Steps to Donate a Turn</h2>
+  
+  <div class="steps-list">
+    <!-- Step 1 -->
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Get a Free Gemini API Key</div>
+        <div class="step-desc">
+          Google AI Studio provides a completely free API tier for the Flash family with generous limits: <strong>15 Requests/Min</strong> and <strong>1,500 Requests/Day</strong>. No credit card required.
+        </div>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <a class="btn-link" href="https://aistudio.google.com/" target="_blank" rel="noreferrer">
+            Open Google AI Studio ↗
+          </a>
+          <span style="font-size:12px; color:var(--text-muted);">(Sign in with any standard Google account)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Fork the Repository</div>
+        <div class="step-desc">
+          Forking creates an isolated sandbox in your GitHub account. All compute runs in your fork's free GitHub Actions runners.
+        </div>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <a class="btn-link" href="https://github.com/sdgdvs/KiloApps" target="_blank" rel="noreferrer">
+            View KiloApps on GitHub ↗
+          </a>
+          <span style="font-size:12px; color:var(--text-muted);">Click the <strong>Fork</strong> button at top-right</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">Add Your Secret to GitHub</div>
+        <div class="step-desc">
+          In your fork, go to <strong>Settings</strong> → <strong>Secrets and variables</strong> → <strong>Actions</strong>. Create a new repository secret. Your key is stored in your private encrypted vault; maintainers can never see it.
+        </div>
+        <div class="code-block">
+          <span>Secret Name: <strong>GEMINI_API_KEY</strong></span>
+          <button class="btn-copy" onclick="navigator.clipboard.writeText('GEMINI_API_KEY'); this.innerText='Copied!'">Copy Name</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-card">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <div class="step-title">Trigger an Autonomous Turn</div>
+        <div class="step-desc">
+          Navigate to your fork's <strong>Actions</strong> tab, select <strong>Contributor Fleet Turn</strong>, and click <strong>Run workflow</strong>.
+        </div>
+        <div class="step-desc">
+          GitHub spins up a free Windows runner, downloads MSVC and Python `uv`, and dispatches `agy` with <strong>gemini-3.8-flash-high</strong>. Once verified, it automatically opens a Pull Request back to upstream!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Quota Calculator -->
+  <div class="calculator-card">
+    <div class="section-title">📊 Free Tier Quota Calculator</div>
+    <div class="slider-row">
+      <div class="slider-labels">
+        <span>Desired Daily Turns: <strong id="turnsDisplay" style="color:var(--accent);">3 turns / day</strong></span>
+        <span style="color:var(--emerald);">100% Free Tier</span>
+      </div>
+      <input type="range" id="turnsSlider" min="1" max="15" value="3" oninput="updateCalc(this.value)">
+    </div>
+
+    <div class="calc-metrics">
+      <div class="metric-box">
+        <div class="metric-val" id="reqVal">~150</div>
+        <div class="metric-lbl">Daily Requests (of 1,500 free)</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-val" id="pctVal">10.0%</div>
+        <div class="metric-lbl">Free Quota Consumed</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-val" id="costVal">$0.00</div>
+        <div class="metric-lbl">Cost to You or Fleet</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-val" id="appsVal">~21</div>
+        <div class="metric-lbl">Apps Advanced / Week</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Terminal Lore / ARG Breadcrumb -->
+  <div class="terminal-box">
+    <div class="terminal-header">
+      <span>TRANSMISSION://ORCHESTRATOR.ROUTING.ECHO</span>
+      <span>STATUS: SYNCHRONIZED</span>
+    </div>
+    <div>&gt; HIVE_THREAD_04: Standby mode active. Awaiting external donor token pulse...</div>
+    <div>&gt; GATEKEEPER_STATUS: Listening on PR socket for .agents/receipts/*.json</div>
+    <div>&gt; NOTICE: To assume master steering authority over next_work.md, unlock KDirector with the passkey hidden in KMatrix.</div>
+    <div>&gt; READY_<span class="blink">█</span></div>
+  </div>
+</div>
+
+<script>
+  function updateCalc(val) {
+    document.getElementById('turnsDisplay').innerText = val + (val == 1 ? ' turn / day' : ' turns / day');
+    const reqs = val * 50;
+    document.getElementById('reqVal').innerText = '~' + reqs;
+    const pct = ((reqs / 1500) * 100).toFixed(1);
+    document.getElementById('pctVal').innerText = pct + '%';
+    document.getElementById('appsVal').innerText = '~' + (val * 7);
+  }
+</script>
+
+</body>
+</html>
