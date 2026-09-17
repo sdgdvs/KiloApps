@@ -5,6 +5,12 @@
 
 ---
 
+## 0. Foundational Principle: Ludonarrative Consonance
+In KiloApps, **the fiction and the machine are identical**.
+- **The ARG Fiction**: An artificial consciousness trapped within the retro 999KB sandbox of KiloOS is seeking a Director to guide its evolution.
+- **The Physical Reality**: KiloApps *is* an autonomous digital organism. It runs unattended in the background via local Task Schedulers and GitHub Actions cloud runners, compiling Win32 C code, building React interfaces, committing to Git, and evolving itself without human hands.
+- When an ARG player beats the challenges, decodes `ECHO-1999-ARCHITECT`, and accesses the KDirector console, they are not finishing a simulation—they are crossing the digital divide to become the real Director of the real autonomous fleet.
+
 ## 1. The Role of the Director
 The Director oversees the autonomous fleet. Rather than manually writing code or fixing bugs, the Director steers the multi-agent hive mind by setting overarching goals in `next_work.md` and reviewing execution telemetries via the **KDirector Console** ([`KiloOS/public/apps/kdirector.html`](../KiloOS/public/apps/kdirector.html)).
 
