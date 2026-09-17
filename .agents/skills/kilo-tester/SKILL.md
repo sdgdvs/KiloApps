@@ -40,7 +40,7 @@ This skill executes a self-contained interactive UI audit and repair on exactly 
 5. **Queue Handoff & Terse Logging (CRITICAL)**:
    - Edit [next_work.md](../../next_work.md):
      - Update YAML frontmatter:
-       - Set `current_agent: kilo-qa` (hand off to QA for the next turn).
+       - Set `current_agent` to the next scheduled agent in `agent_rotation` (or `kilo-qa` if critical defects were found).
        - Advance `current_targets.kilo_tester` to the next app in the queue list.
        - Set `status: ready`.
        - Update `last_run.agent: kilo-tester`, `last_run.app: <TargetApp>`, and `last_run.timestamp`.

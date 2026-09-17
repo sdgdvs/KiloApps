@@ -1,12 +1,23 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-tester
+current_agent: kilo-creator
+next_agent: kilo-graphics
+agent_rotation:
+  - kilo-creator
+  - kilo-graphics
+  - kilo-tester
+  - kilo-usability
+  - kilo-qa
+  - kilo-expander
 model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
+  kilo_creator: "KCosmic (Phase 14: Comprehensive Help & Fleet Codex)"
+  kilo_graphics: KRogue
   kilo_tester: KSynth
+  kilo_usability: KChess
   kilo_qa: KSolitaire
+  kilo_expander: KScript
 last_run:
   agent: kilo-tester
   app: KSudoku
@@ -20,31 +31,56 @@ This document is the single active source of truth for autonomous agent dispatch
 The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YAML frontmatter above on every tick to dispatch the active skill.
 
 ## Fleet Directives & Rules
-1. **Single-App-Per-Turn**: Every agent run audits/fixes exactly ONE application, updates this file, commits, and pushes.
+1. **Single-App-Per-Turn**: Every agent run audits/fixes/creates exactly ONE application, updates this file, commits, and pushes.
 2. **Token Conservation (CRITICAL)**:
    - Run log entries: ≤8 lines of terse bullet points. No paragraphs.
    - Never restate implementation details that exist in code. Log WHAT changed + results, not HOW.
    - Never list parameter names, field names, or variable values unless reporting failure.
    - Keep only the 5 most recent log entries in this file. Older entries are automatically moved to [archive/fleet_execution_archive.md](archive/fleet_execution_archive.md).
-3. **Queue Handoff Protocol**:
-   - When `kilo-tester` finishes, it sets `current_agent: kilo-qa` and advances `current_targets.kilo_tester`.
-   - When `kilo-qa` finishes, it sets `current_agent: kilo-tester` and advances `current_targets.kilo_qa`.
-   - When daily `kilo-planner` runs, it compacts this file and synchronizes phase objectives.
-4. **App Size Ceiling**: No app binary (.exe) or web HTML file may exceed 999 KB.
+3. **Queue Handoff & Rotation Protocol**:
+   - The master fleet rotates across 6 specialized worker skills:
+     `kilo-creator` ➔ `kilo-graphics` ➔ `kilo-tester` ➔ `kilo-usability` ➔ `kilo-qa` ➔ `kilo-expander`.
+   - When an agent finishes its single-app turn, it sets `current_agent` to the next scheduled agent in `agent_rotation` and advances its own `current_targets` queue item.
+   - Agents may also hand off directly to a specific skill when their work logically requires immediate follow-up (e.g., `kilo-creator` handing off a brand-new app directly to `kilo-graphics` or `kilo-tester`, or `kilo-tester` finding critical bugs handing off to `kilo-qa`).
+4. **24-Hour Master Planner Tick**:
+   - `scripts/orchestrate.py` automatically checks `last_planner_run`.
+   - When ≥ 24 hours have passed since `last_planner_run`, the orchestrator intercepts the tick and dispatches `kilo-planner`.
+   - `kilo-planner` assesses fleet velocity, reviews completed passes, re-balances target queues, compacts execution logs, updates `last_planner_run` to now, and resets `current_agent` to the start of the rotation.
+5. **App Size Ceiling**: No app binary (.exe) or web HTML file may exceed 999 KB.
 
 ---
 
 ## Active Target Queues
 
-### App Tester Queue (`kilo-tester`)
+### 1. App Creator & Deep Expander Queue (`kilo-creator`)
+- **Current Target**: `KCosmic` (Phase 14: Comprehensive Help & Fleet Codex)
+- **Upcoming Concepts**:
+  `KChrono` (Time-loop archaeology RPG), `KStarForge` (Deep-space shipyard engineering sim), `KPomodoro` (Work/break cycle manager), `KBookmark` (Categorized link vault), `KHash` (Multi-algorithm checksum tool), `KRSS` (Feed reader), `KClip` (Clipboard history tool).
+
+### 2. Game Content & Graphics Queue (`kilo-graphics`)
+- **Current Target**: `KRogue` (Enchanting altar socketing, companion pets, branching secret challenge vaults)
+- **Upcoming Queue**:
+  `KQuest`, `KStarship`, `KFortress`, `KAlchemy`, `KColony`, `KSpace`, `KAsteroids`, `KMaze`, `KPac`, `KBreakout`, `KSnake`.
+
+### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KSynth`
 - **Upcoming Queue**:
   `KSys`, `KTask`, `KTerm`, `KTetris`, `KTimer`, `KTodo`, `KTowers`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KWords`, `KZip`, `K2048`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalc`, `KCalendar`, `KChart`, `KChess`, `KClock`, `KCode`, `KDiff`, `KDnD`, `KDraw`, `KDrum`, `KEdit`, `KExcel`, `KFiles`, `KFit`, `KFlash`, `KFlight`, `KFont`, `KForm`, `KFormula`, `KForth`, `KFractal`, `KGraph`, `KHex`, `KIcon`, `KImage`, `KInvoice`, `KKanban`, `KLife`, `KLogic`, `KMail`, `KMarkdown`, `KMaze`, `KMidi`, `KMines`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KPong`, `KQuest`, `KRadio`, `KRead`, `KReversi`, `KRogue`, `KScript`, `KSimon`, `KSnake`, `KSolitaire`, `KSpace`, `KStarship`, `KStellar`, `KSudoku`.
 
-### QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
+### 4. Usability & UX Queue (`kilo-usability`)
+- **Current Target**: `KChess`
+- **Upcoming Queue**:
+  `KGo`, `KReversi`, `KConnect4`, `KTerm`, `KPad`, `KCalc`, `KPaint`, `KAudio`, `KEdit`, `KExcel`, `KFiles`, `KFit`, `KFlash`, `KFlight`, `KFont`, `KForm`, `KFormula`, `KForth`, `KFractal`, `KGraph`, `KHex`, `KIcon`, `KImage`, `KInvoice`, `KKanban`, `KLife`, `KLogic`, `KMail`, `KMarkdown`, `KMaze`, `KMidi`, `KMines`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KPong`.
+
+### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KSolitaire`
 - **Upcoming Queue**:
   `KSpace`, `KStarship`, `KStellar`, `KSudoku`, `KSynth`, `KSys`, `KTask`, `KTerm`, `KTetris`, `KTimer`, `KTodo`, `KTowers`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KWords`, `KZip`, `K2048`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KMaze`, `KSnake` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake)*.
+
+### 6. Feature Expander Queue (`kilo-expander`)
+- **Current Target**: `KScript`
+- **Upcoming Queue**:
+  `KTerm`, `KSys`, `KTask`, `KNet`, `KPing`, `KHex`, `KBase`, `KConverter`, `KCalc`, `KZip`, `KFont`, `KPad`, `KNote`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`.
 
 ---
 

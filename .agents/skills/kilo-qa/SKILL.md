@@ -34,9 +34,9 @@ This skill executes a self-contained Pass 5 QA and build audit on exactly ONE ap
 4. **Queue Handoff & Terse Logging (CRITICAL)**:
    - Edit [next_work.md](../../next_work.md):
      - Update YAML frontmatter:
-       - Set `current_agent: kilo-tester` (hand off to App Tester for the next turn).
-       - Advance `current_targets.kilo_qa` to the next app in the queue list.
-       - Set `status: ready`.
+        - Set `current_agent` to the next scheduled agent in `agent_rotation` (or `kilo-tester` / `kilo-creator` if specific follow-up is needed).
+        - Advance `current_targets.kilo_qa` to the next app in the queue list.
+        - Set `status: ready`.
        - Update `last_run.agent: kilo-qa`, `last_run.app: <TargetApp>`, and `last_run.timestamp`.
      - In the Execution Log section of `next_work.md`, append a run entry:
        - **Strict limit**: ≤8 lines of terse bullet points. No paragraphs.

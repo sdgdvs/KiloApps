@@ -176,11 +176,40 @@ def build_agent_prompt(agent: str, targets: dict) -> str:
             f"Perform Pass 5 audit and fixes for target app '{target}' per next_work.md. "
             f"Verify builds, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
         )
+    elif agent == "kilo-creator":
+        target = targets.get("kilo_creator", "the next app concept per next_work.md")
+        return (
+            f"Activate skill 'kilo-creator'. "
+            f"Design and implement new application or deep expansion for '{target}' per next_work.md. "
+            f"Verify builds (<999KB), register in App.jsx, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
+        )
+    elif agent == "kilo-graphics":
+        target = targets.get("kilo_graphics", "the next game in queue")
+        return (
+            f"Activate skill 'kilo-graphics'. "
+            f"Perform game content, visual polish, and balance pass for '{target}' per next_work.md. "
+            f"Verify builds, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
+        )
+    elif agent == "kilo-usability":
+        target = targets.get("kilo_usability", "the next app in queue")
+        return (
+            f"Activate skill 'kilo-usability'. "
+            f"Perform UI/UX and usability pass for target app '{target}' per next_work.md. "
+            f"Verify builds, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
+        )
+    elif agent == "kilo-expander":
+        target = targets.get("kilo_expander", "the next app in queue")
+        return (
+            f"Activate skill 'kilo-expander'. "
+            f"Perform deep feature expansion for target app '{target}' per next_work.md. "
+            f"Verify builds, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
+        )
     elif agent == "kilo-planner":
         return (
             "Activate skill 'kilo-planner'. "
-            "Perform daily fleet maintenance, compact execution logs in next_work.md to archive, "
-            "verify queue health, git commit/push, then STOP."
+            "Perform 24-hour fleet planning: evaluate project velocity, review queue health, "
+            "rework the daily agent rotation schedule and active targets in next_work.md, "
+            "compact execution logs to archive, update last_planner_run timestamp, git commit/push, then STOP."
         )
     else:
         return (
@@ -192,7 +221,7 @@ def build_agent_prompt(agent: str, targets: dict) -> str:
 def main():
     parser = argparse.ArgumentParser(description="KiloApps Fleet Master Orchestrator")
     parser.add_argument("--dry-run", action="store_true", help="Inspect and validate without executing agy")
-    parser.add_argument("--force-agent", type=str, help="Override active agent (e.g. kilo-tester, kilo-qa)")
+    parser.add_argument("--force-agent", type=str, help="Override active agent (e.g. kilo-tester, kilo-qa, kilo-creator)")
     args = parser.parse_args()
 
     log("=" * 60)
@@ -213,7 +242,28 @@ def main():
         content = NEXT_WORK_FILE.read_text(encoding="utf-8")
         frontmatter = parse_frontmatter(content)
 
-        agent = args.force_agent or frontmatter.get("current_agent", "kilo-tester")
+        # Check if 24 hours have elapsed since last planner run
+        last_planner_str = frontmatter.get("last_planner_run")
+        should_run_planner = False
+        if not args.force_agent and last_planner_str:
+            try:
+                ts_str = str(last_planner_str).strip()
+                if ts_str.endswith("Z"):
+                    ts_str = ts_str[:-1] + "+00:00"
+                last_planner_dt = datetime.datetime.fromisoformat(ts_str)
+                now_dt = datetime.datetime.now(datetime.timezone.utc)
+                elapsed_sec = (now_dt - last_planner_dt).total_seconds()
+                if elapsed_sec >= 24 * 3600:
+                    should_run_planner = True
+                    log(f"Daily Planner interval reached ({elapsed_sec / 3600:.1f}h >= 24h since {last_planner_str}). Triggering kilo-planner.")
+            except Exception as e:
+                log(f"Warning parsing last_planner_run timestamp '{last_planner_str}': {e}")
+
+        if should_run_planner:
+            agent = "kilo-planner"
+        else:
+            agent = args.force_agent or frontmatter.get("current_agent", "kilo-tester")
+
         status = frontmatter.get("status", "ready")
         model = frontmatter.get("model", "gemini-3.8-flash-high")
         timeout_min = int(frontmatter.get("timeout_minutes", 15))
@@ -223,7 +273,7 @@ def main():
 
         log(f"Queue State: agent='{agent}', status='{status}', model='{model}', timeout={timeout_min}m")
 
-        if status != "ready" and not args.force_agent:
+        if status != "ready" and not args.force_agent and not should_run_planner:
             log(f"Task status is '{status}' (not 'ready'). Skipping dispatch.")
             return
 
