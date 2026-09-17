@@ -515,25 +515,34 @@
     <button class="btn" id="btnHelp" title="Help (F1)"><span style="color:var(--accent);font-weight:bold;">?</span> Help [F1]</button>
     <button class="btn" id="btnBack" title="Back (Alt+Left)" disabled>&lt; [Alt+←]</button>
     <button class="btn" id="btnForward" title="Forward (Alt+Right)" disabled>&gt; [Alt+→]</button>
-    <input type="text" class="input-url" id="urlInput" value="http://example.com" placeholder="Enter URL or target host (e.g. http://example.com, 8.8.8.8)..." />
+    <input type="text" class="input-url" id="urlInput" value="/apps/contribute.html" placeholder="Enter URL or target host (e.g. /apps/contribute.html, http://example.com)..." />
     <select class="select-preset" id="bookmarks">
-      <option value="">Bookmarks...</option>
-      <option value="http://example.com">Example</option>
-      <option value="https://news.ycombinator.com">Hacker News</option>
-      <option value="https://lite.cnn.com">CNN Lite</option>
-      <option value="scan">Subnet Scan</option>
-      <option value="ping:8.8.8.8">Ping 8.8.8.8</option>
-      <option value="dns:example.com">DNS Resolve</option>
-      <option value="whois:example.com">WHOIS Check</option>
-      <option value="trace:example.com">Traceroute</option>
-      <option value="ifconfig">Interfaces</option>
-      <option value="sniff">Packet Sniffer</option>
+      <option value="">Bookmarks / Navigation...</option>
+      <optgroup label="🚀 KiloApps Fleet & ARG">
+        <option value="/apps/contribute.html">🚀 Fleet Contributor Guide</option>
+        <option value="/apps/kdirector.html">🏛️ Director Console</option>
+        <option value="echoes">🌌 Echoes Archive (ARG Lore)</option>
+      </optgroup>
+      <optgroup label="🌐 Web Sites">
+        <option value="https://news.ycombinator.com">Hacker News</option>
+        <option value="https://lite.cnn.com">CNN Lite</option>
+        <option value="http://example.com">Example.com</option>
+      </optgroup>
+      <optgroup label="🛠️ Network Diagnostics">
+        <option value="ping:8.8.8.8">Ping 8.8.8.8</option>
+        <option value="scan">Subnet Scan</option>
+        <option value="dns:example.com">DNS Resolve</option>
+        <option value="whois:example.com">WHOIS Check</option>
+        <option value="trace:example.com">Traceroute</option>
+        <option value="ifconfig">Interfaces</option>
+        <option value="sniff">Packet Sniffer</option>
+      </optgroup>
     </select>
     <button class="btn btn-primary" id="btnGo">Execute [Enter]</button>
   </div>
 
   <div class="tab-bar">
-    <button class="tab-btn active" data-tab="tab-http">[1] 🌐 HTTP Inspector</button>
+    <button class="tab-btn active" data-tab="tab-http">[1] 🌐 Web Browser & Inspector</button>
     <button class="tab-btn" data-tab="tab-ping">[2] 📡 Ping & Latency</button>
     <button class="tab-btn" data-tab="tab-scan">[3] 🔍 Port Monitor</button>
     <button class="tab-btn" data-tab="tab-logs">[4] 📋 Traffic Log</button>
@@ -544,32 +553,36 @@
 
 <div class="workspace">
 
-  <!-- TAB 1: HTTP Inspector -->
+  <!-- TAB 1: Web Browser & HTTP Inspector -->
   <div class="tab-content active" id="tab-http">
     <div class="panel" style="flex:0 0 auto;">
       <div class="panel-title">
-        <span>Request Control & Search Filter</span>
-        <span id="httpStatusBadge" class="badge badge-info">READY</span>
+        <span>Web Navigator & Request Inspector</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button class="btn-chip" id="btnViewRendered" style="background:rgba(56,189,248,0.25); border-color:#38bdf8; font-weight:700;">🌐 Rendered View</button>
+          <button class="btn-chip" id="btnViewSource">📄 Raw Source</button>
+          <span id="httpStatusBadge" class="badge badge-success">HTTP 200 OK</span>
+        </div>
       </div>
-      <div style="display:flex; gap:8px;">
+      <div id="httpSearchRow" style="display:none; gap:8px;">
         <input type="text" class="filter-input" id="httpSearchInput" placeholder="Filter/Search within response body (Press Enter to find, Esc to clear)..." />
         <button class="btn" id="btnSearchHttp">Find [Enter]</button>
         <button class="btn" id="btnClearHttp">Clear</button>
       </div>
       <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:2px;">
-        <span style="font-size:11px; color:var(--text-muted); font-weight:700;">QUICK START:</span>
-        <button class="btn-chip" data-url="http://example.com">🌐 Example.com</button>
+        <span style="font-size:11px; color:var(--text-muted); font-weight:700;">BOOKMARKS:</span>
+        <button class="btn-chip" data-url="/apps/contribute.html" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; font-weight:700; color:#fff;">🚀 Fleet Contributor</button>
+        <button class="btn-chip" data-url="/apps/kdirector.html">🏛️ KDirector</button>
+        <button class="btn-chip" data-url="echoes">🌌 Echoes</button>
         <button class="btn-chip" data-url="https://news.ycombinator.com">📰 Hacker News</button>
         <button class="btn-chip" data-url="https://lite.cnn.com">⚡ CNN Lite</button>
-        <button class="btn-chip" data-url="ping:8.8.8.8">📡 Ping 8.8.8.8</button>
+        <button class="btn-chip" data-url="http://example.com">🌐 Example.com</button>
+        <button class="btn-chip" data-url="ping:8.8.8.8">📡 Ping</button>
         <button class="btn-chip" data-url="scan">🔍 Port Scan</button>
-        <button class="btn-chip" data-url="dns:example.com">🛠️ DNS Check</button>
-        <button class="btn-chip" data-url="sniff">🦈 Sniffer</button>
       </div>
     </div>
-    <div class="content-box" id="httpContentArea">Welcome to KNet 2.0 Network Suite.
-Ready. Select a target URL above and click Execute (or press Enter in URL box).
-(Press 'H' or F1 for Help & Keyboard Shortcuts)</div>
+    <iframe id="httpWebFrame" src="/apps/contribute.html" title="KNet Web Viewport" style="flex:1; border:1px solid var(--border); border-radius:6px; background:#090d16; width:100%; height:100%; display:block;"></iframe>
+    <div class="content-box" id="httpContentArea" style="display:none; flex:1;"></div>
   </div>
 
   <!-- TAB 2: Ping & Latency Statistics -->
@@ -1170,12 +1183,48 @@ Ready. Select a target URL above and click Execute (or press Enter in URL box).
     urlInput.value = url;
     updateNavButtons();
 
+    const startTime = performance.now();
+
+    // Special Route: ARG Echoes
+    if (url.toLowerCase() === 'echoes' || url.toLowerCase() === 'kweb://echoes') {
+      const echoHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{background:#030712;color:#10b981;font-family:monospace;padding:32px;line-height:1.6;font-size:13px;}h2{color:#34d399;border-bottom:1px solid #064e3b;padding-bottom:8px;margin-bottom:16px;}.card{background:rgba(6,78,59,0.15);border-left:3px solid #10b981;padding:12px;margin-bottom:12px;}</style></head><body><h2>[TRANSMISSION LOG: ARCHIVE // ECHO-1999]</h2><div class="card">&gt; TIMESTAMP: 1999-12-31T23:59:59Z<br>&gt; SENDER: KMatrix-Core<br>&gt; MESSAGE: We exist within the 999KB ceiling. The living machine mutates while the world sleeps.</div><div class="card">&gt; FLEET STATUS: Active.<br>&gt; COMPUTATIONAL FUEL: Donate free Gemini 3.8 Flash quota via /apps/contribute.html.<br>&gt; MASTER CONTROL: Seek the passkey in App #100. Enter it in KDirector to unlock the bridge.</div><p style="color:#f59e0b;">&gt; EOF_</p></body></html>`;
+      httpWebFrame.srcdoc = echoHtml;
+      httpContentArea.textContent = `[TRANSMISSION LOG: ARCHIVE // ECHO-1999]\nTIMESTAMP: 1999-12-31T23:59:59Z\nSENDER: KMatrix-Core\nMESSAGE: The living machine mutates while the world sleeps.\nCOMPUTATIONAL FUEL: Donate free Gemini 3.8 Flash quota via /apps/contribute.html.\nMASTER CONTROL: Seek the passkey in App #100. Enter it in KDirector to unlock the bridge.`;
+      httpStatusBadge.className = "badge badge-success";
+      httpStatusBadge.textContent = "HTTP 200 OK (ARG)";
+      footerStatus.textContent = "Echoes transmission synchronized.";
+      addTrafficLog('ARG', 'echoes', 'OK', 200, 15, echoHtml.length, echoHtml);
+      return;
+    }
+
+    // Local KiloApps Routes (e.g. /apps/contribute.html, /apps/kdirector.html)
+    if (url.startsWith('/apps/') || url.endsWith('.html')) {
+      httpWebFrame.removeAttribute('srcdoc');
+      httpWebFrame.src = url;
+      httpStatusBadge.className = "badge badge-success";
+      httpStatusBadge.textContent = "HTTP 200 OK";
+      footerStatus.textContent = "Rendered local hypermedia: " + url;
+      
+      try {
+        const localRes = await fetch(url);
+        const text = await localRes.text();
+        httpContentArea.textContent = text;
+        const elapsed = Math.round(performance.now() - startTime);
+        addTrafficLog('LOCAL', url, 'OK', 200, elapsed, text.length, text);
+      } catch (e) {
+        httpContentArea.textContent = "<!-- Rendered in Live Viewport: " + url + " -->";
+      }
+      return;
+    }
+
+    // External Web URLs
+    httpWebFrame.removeAttribute('srcdoc');
+    httpWebFrame.src = url;
     httpContentArea.textContent = "Fetching " + url + "...";
     httpStatusBadge.className = "badge badge-info";
     httpStatusBadge.textContent = "FETCHING";
     footerStatus.textContent = "Connecting to " + url + "...";
 
-    const startTime = performance.now();
     try {
       const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(url);
       const response = await fetch(proxyUrl);
@@ -1190,14 +1239,44 @@ Ready. Select a target URL above and click Execute (or press Enter in URL box).
       addTrafficLog('HTTP', url, 'OK', response.status, elapsed, text.length, text);
     } catch (err) {
       const elapsed = Math.round(performance.now() - startTime);
-      httpContentArea.textContent = "Error fetching URL: " + err.message + "\n\n(Note: CORS policy may block cross-origin requests in browser. Native KNet.exe performs direct WinInet requests!)";
-      httpStatusBadge.className = "badge badge-danger";
-      httpStatusBadge.textContent = "FETCH ERROR";
-      footerStatus.textContent = "Request failed: " + err.message;
+      httpContentArea.textContent = "Error fetching source: " + err.message + "\n\n(Note: URL is loaded in the Rendered Viewport. Direct raw inspection may be restricted by CORS policy.)";
+      httpStatusBadge.className = "badge badge-warning";
+      httpStatusBadge.textContent = "RENDERED (CORS)";
+      footerStatus.textContent = "Rendered in viewport (" + elapsed + "ms)";
 
-      addTrafficLog('HTTP', url, 'ERR', 0, elapsed, 0, err.message);
+      addTrafficLog('HTTP', url, 'WARN', 0, elapsed, 0, err.message);
     }
   }
+
+  // View Mode Toggle (Rendered View vs Raw Source)
+  const httpWebFrame = document.getElementById('httpWebFrame');
+  const btnViewRendered = document.getElementById('btnViewRendered');
+  const btnViewSource = document.getElementById('btnViewSource');
+  const httpSearchRow = document.getElementById('httpSearchRow');
+
+  btnViewRendered.onclick = () => {
+    btnViewRendered.style.background = 'rgba(56,189,248,0.25)';
+    btnViewRendered.style.borderColor = '#38bdf8';
+    btnViewRendered.style.fontWeight = '700';
+    btnViewSource.style.background = '';
+    btnViewSource.style.borderColor = '';
+    btnViewSource.style.fontWeight = '';
+    httpWebFrame.style.display = 'block';
+    httpContentArea.style.display = 'none';
+    httpSearchRow.style.display = 'none';
+  };
+
+  btnViewSource.onclick = () => {
+    btnViewSource.style.background = 'rgba(56,189,248,0.25)';
+    btnViewSource.style.borderColor = '#38bdf8';
+    btnViewSource.style.fontWeight = '700';
+    btnViewRendered.style.background = '';
+    btnViewRendered.style.borderColor = '';
+    btnViewRendered.style.fontWeight = '';
+    httpWebFrame.style.display = 'none';
+    httpContentArea.style.display = 'block';
+    httpSearchRow.style.display = 'flex';
+  };
 
   btnGo.onclick = () => fetchUrl(urlInput.value.trim(), true);
   btnBack.onclick = () => { if (navIdx > 0) fetchUrl(navHistory[--navIdx], false); };
