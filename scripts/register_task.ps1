@@ -3,40 +3,24 @@
 
 $TaskName = "KiloApps-Fleet-Orchestrator"
 $ScriptPath = "d:\KiloApps\scripts\run_orchestrator.bat"
-$WorkingDir = "d:\KiloApps"
 
-Write-Host "Registering Windows Scheduled Task: $TaskName..." -ForegroundColor Cyan
+Write-Host "Configuring Windows Scheduled Task: $TaskName..." -ForegroundColor Cyan
 
-# Define Action
-$Action = New-ScheduledTaskAction -Execute $ScriptPath -WorkingDirectory $WorkingDir
+# Create base task using schtasks.exe (runs every 2 hours indefinitely)
+$CreateOutput = & schtasks.exe /create /tn $TaskName /tr "`"$ScriptPath`"" /sc HOURLY /mo 2 /f 2>&1
+Write-Host "schtasks: $CreateOutput"
 
-# Define Trigger: Run daily, repeating every 2 hours indefinitely
-$Trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(2) -RepetitionInterval (New-TimeSpan -Hours 2)
-
-# Define Settings
-$Settings = New-ScheduledTaskSettingsSet `
-    -AllowStartIfOnBatteries `
-    -DontStopIfGoingOnBatteries `
-    -StartWhenAvailable `
-    -MultipleInstances IgnoreNew `
-    -ExecutionTimeLimit (New-TimeSpan -Minutes 30)
-
-# Register or update task
+# Refine settings via PowerShell CIM (allow battery, catch-up missed runs, 30m timeout)
 try {
-    # Unregister existing task if present
-    Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
-
-    Register-ScheduledTask `
-        -TaskName $TaskName `
-        -Action $Action `
-        -Trigger $Trigger `
-        -Settings $Settings `
-        -Description "Autonomous KiloApps fleet orchestrator invoking Gemini Skills via agy CLI" | Out-Null
-
-    Write-Host "Task successfully registered!" -ForegroundColor Green
-    Get-ScheduledTask -TaskName $TaskName | Format-Table TaskName, State
+    $Task = Get-ScheduledTask -TaskName $TaskName
+    $Task.Settings.DisallowStartIfOnBatteries = $false
+    $Task.Settings.StopIfGoingOnBatteries = $false
+    $Task.Settings.StartWhenAvailable = $true
+    $Task.Settings.ExecutionTimeLimit = "PT30M"
+    $Task | Set-ScheduledTask | Out-Null
+    Write-Host "Optimized settings applied: battery allowed, start when available enabled, 30m timeout." -ForegroundColor Green
 } catch {
-    Write-Warning "PowerShell cmdlet failed ($($_.Exception.Message)). Falling back to schtasks.exe..."
-    $SchCmd = "schtasks /create /tn `"$TaskName`" /tr `"`"$ScriptPath`"`" /sc HOURLY /mo 2 /f /it"
-    Invoke-Expression $SchCmd
+    Write-Warning "Could not modify extended settings: $($_.Exception.Message)"
 }
+
+Get-ScheduledTask -TaskName $TaskName | Format-Table TaskName, State
