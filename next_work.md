@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,11 +17,11 @@ current_targets:
   kilo_tester: KSys
   kilo_usability: KGo
   kilo_qa: KSpace
-  kilo_expander: KScript
+  kilo_expander: KTerm
 last_run:
-  agent: kilo-qa
-  app: KSolitaire
-  timestamp: "2026-09-17T10:44:00Z"
+  agent: kilo-expander
+  app: KScript
+  timestamp: "2026-09-17T11:52:00Z"
 last_planner_run: "2026-09-16T19:00:00Z"
 ---
 
@@ -78,13 +78,21 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KStarship`, `KStellar`, `KSudoku`, `KSynth`, `KSys`, `KTask`, `KTerm`, `KTetris`, `KTimer`, `KTodo`, `KTowers`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KWords`, `KZip`, `K2048`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KMaze`, `KSnake`, `KSolitaire` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KScript`
+- **Current Target**: `KTerm`
 - **Upcoming Queue**:
-  `KTerm`, `KSys`, `KTask`, `KNet`, `KPing`, `KHex`, `KBase`, `KConverter`, `KCalc`, `KZip`, `KFont`, `KPad`, `KNote`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`.
+  `KSys`, `KTask`, `KNet`, `KPing`, `KHex`, `KBase`, `KConverter`, `KCalc`, `KZip`, `KFont`, `KPad`, `KNote`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`.
 
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-09-17T11:52:00Z — kilo-expander: KScript**
+  - Status: PASS ✅ (Deep functional feature expansion).
+  - Highlights: Multi-char variables, bitwise (&, |, ^, ~, <<, >>), comparison (==, !=, <, <=, >, >=), and logical (&&, ||, !) operators.
+  - Math & Control Flow: Built-ins (abs, min, max, clamp, sqrt, gcd, fact, rand, pow), if/elif/else/endif, and while loops.
+  - Diagnostics & Benchmarking: Real-time telemetry bar, iteration benchmarking suite (F6), and gutter line numbers with breakpoints (F8 continue).
+  - Inspection & Export: Multi-base Memory Inspector (Dec/Hex/Bin), JSON state snapshot export, CSV variable export, and plain text trace log.
+  - Verification: Native MSVC C (21.5 KB) and Web (86 KB) clean builds; <999 KB ceiling verified.
 
 - **2026-09-17T10:44:00Z — kilo-qa: KSolitaire**
   - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial integrity, overlays).
@@ -101,7 +109,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-09-17T06:40:07Z — kilo-graphics: KRogue**
   - Status: PASS ✅ (Content expansion & visual polish).
   - Highlights: Enchanting Altar socketing with 5 elemental gems (Ruby, Sapphire, Emerald, Amethyst, Topaz), 4 companion pets (Wolf, Wisp, Golem, Phoenix) with leveling and feeding, 3 branching challenge vaults (Void Rift, Trial, Hoard) with Vault Guardians and Relics. Fixed MSVC compilation ordering. Native (76 KB) and Web (196 KB) clean.
-
-- **2026-09-17T03:55:00Z — kilo-creator: KCosmic (Phase 14)**
-  - Status: COMPLETE 🚀 (All 14 phases finished).
-  - Highlights: Fleet Admiral's Codex with 6 CRT tabs (Commands, Planet Dossiers, Terra Formulas, Logistics, Crisis Manual, Xenobiology), v1.14 start splash screen, 7-step tutorial (`kcosmic_tutorialSeen`), F5/F9 quicksave/quickload, JSON save backup/restore, HUD toast alerts. Web (524 KB) and Native C (259 KB) builds clean.
