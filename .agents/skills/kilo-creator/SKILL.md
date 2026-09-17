@@ -32,6 +32,11 @@ This skill designs and implements new applications or deep game worlds on exactl
    - Add new app descriptor to the `APPS` array in `KiloOS/src/App.jsx` with appropriate folder (`Games`, `System`, `Media`, `Office`, `Network`, `Dev`).
    - Run `npm run build` inside `KiloOS/` to confirm zero Vite build breaks.
 
+4. **KMatrix & Project-Wide ARG Mandate (App #100 Milestone)**:
+   - For the 100th milestone app (`KMatrix`), build it as the central narrative meta-terminal and ARG climax resolving "The Kilo Project Echoes" and "Rogue AI" lore.
+   - Connect it to cross-project ARG clues: corrupted logs in KTerm, ghost audio in KSynth/KAudio, memory hex offsets in KHex, and precursor relics in KAbyss/KCosmic/KChrono.
+   - Successfully solving KMatrix must reward the player with the Master Director Passkey (`ECHO-1999-ARCHITECT`) to unlock the in-OS `KDirector` console!
+
 ## Queue Handoff & Terse Logging (CRITICAL)
 1. **Edit [next_work.md](../../next_work.md)**:
    - Advance `current_targets.kilo_creator` to the next concept.

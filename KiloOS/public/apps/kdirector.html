@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KiloApps Director Console</title>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-dark: #090c10;
+    --bg-panel: #0d1117;
+    --bg-card: #161b22;
+    --border: rgba(56, 139, 253, 0.25);
+    --border-dim: rgba(255, 255, 255, 0.08);
+    --cyan: #58a6ff;
+    --green: #3fb950;
+    --gold: #f2cc60;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --text: #c9d1d9;
+    --text-bright: #f0f6fc;
+    --text-muted: #8b949e;
+    --font-mono: 'Fira Code', monospace;
+    --font-ui: 'Inter', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: var(--bg-dark);
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Scanline effect */
+  body.scanlines::before {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+    background-size: 100% 4px;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+  /* Header */
+  .header {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .badge-director {
+    background: rgba(88, 166, 255, 0.15);
+    color: var(--cyan);
+    border: 1px solid var(--cyan);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+  }
+  .header h1 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-bright);
+    letter-spacing: 0.5px;
+    font-family: var(--font-mono);
+  }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-tool {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    color: var(--text);
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn-tool:hover {
+    border-color: var(--cyan);
+    color: var(--text-bright);
+  }
+  .btn-tool.active {
+    background: rgba(88, 166, 255, 0.2);
+    border-color: var(--cyan);
+    color: var(--cyan);
+  }
+
+  /* Nav Tabs */
+  .nav-tabs {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border-dim);
+    display: flex;
+    padding: 0 16px;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-muted);
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tab-btn:hover { color: var(--text-bright); }
+  .tab-btn.active {
+    color: var(--cyan);
+    border-bottom-color: var(--cyan);
+    background: rgba(88, 166, 255, 0.04);
+  }
+
+  /* Content area */
+  .main-content {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+  }
+  .tab-panel {
+    display: none;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    padding: 16px;
+  }
+  .tab-panel.active { display: flex; flex-direction: column; }
+
+  /* Table styles */
+  .inventory-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .search-input {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    color: var(--text-bright);
+    padding: 7px 12px;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    min-width: 220px;
+  }
+  .search-input:focus {
+    outline: none;
+    border-color: var(--cyan);
+  }
+  .filter-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    color: var(--text-muted);
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    color: var(--cyan);
+    border-color: var(--cyan);
+    background: rgba(88, 166, 255, 0.08);
+  }
+  .table-wrap {
+    flex: 1;
+    overflow: auto;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-dim);
+    border-radius: 6px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  th {
+    background: var(--bg-card);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-dim);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  td {
+    padding: 7px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    vertical-align: middle;
+  }
+  tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .tag {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+  }
+  .tag-fps-60 { background: rgba(63, 185, 80, 0.15); color: var(--green); border: 1px solid rgba(63, 185, 80, 0.3); }
+  .tag-fps-lag { background: rgba(248, 81, 73, 0.15); color: var(--red); border: 1px solid rgba(248, 81, 73, 0.3); }
+  .tag-mature { background: rgba(242, 204, 96, 0.15); color: var(--gold); border: 1px solid rgba(242, 204, 96, 0.3); }
+  .tag-cat { background: rgba(88, 166, 255, 0.1); color: var(--cyan); }
+  .tag-flagship { background: rgba(188, 140, 255, 0.15); color: var(--purple); border: 1px solid rgba(188, 140, 255, 0.3); }
+
+  .star-btn {
+    background: transparent;
+    border: none;
+    color: #484f58;
+    cursor: pointer;
+    font-size: 13px;
+    transition: color 0.1s;
+  }
+  .star-btn.active { color: var(--gold); }
+
+  /* Sandbox Panel */
+  .sandbox-container {
+    display: flex;
+    height: 100%;
+    gap: 16px;
+  }
+  .sandbox-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #000;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+  .sandbox-header {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border-dim);
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+  .sandbox-iframe {
+    flex: 1;
+    width: 100%;
+    border: none;
+    background: #000;
+  }
+  .sandbox-sidebar {
+    width: 320px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-dim);
+    border-radius: 6px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: auto;
+  }
+  .metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    border-radius: 4px;
+    padding: 10px;
+  }
+  .metric-title {
+    color: var(--text-muted);
+    font-size: 10px;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .metric-val {
+    font-size: 18px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--text-bright);
+  }
+
+  /* Directives Tab */
+  .directive-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 760px;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  select, textarea {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    color: var(--text-bright);
+    padding: 8px 10px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  textarea { min-height: 90px; resize: vertical; }
+  .btn-submit {
+    background: #238636;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    align-self: flex-start;
+  }
+  .btn-submit:hover { background: #2ea043; }
+
+  /* ARG Tab */
+  .arg-terminal {
+    background: #000;
+    border: 1px solid rgba(63, 185, 80, 0.4);
+    border-radius: 6px;
+    padding: 16px;
+    font-family: var(--font-mono);
+    color: #00ff66;
+    flex: 1;
+    overflow: auto;
+    box-shadow: 0 0 20px rgba(0, 255, 102, 0.05) inset;
+  }
+  .arg-log-line {
+    margin-bottom: 6px;
+    line-height: 1.4;
+    word-break: break-all;
+  }
+  .arg-input-wrap {
+    display: flex;
+    margin-top: 12px;
+    border-top: 1px dashed rgba(63, 185, 80, 0.3);
+    padding-top: 10px;
+  }
+  .arg-prompt { color: #00ff66; font-weight: bold; margin-right: 8px; }
+  .arg-cli {
+    background: transparent;
+    border: none;
+    color: #00ff66;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    flex: 1;
+    outline: none;
+  }
+
+  /* Password Gate Overlay */
+  .gate-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(9, 12, 16, 0.96);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+  .gate-box {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    box-shadow: 0 0 30px rgba(88, 166, 255, 0.15);
+    border-radius: 8px;
+    width: 440px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    font-family: var(--font-mono);
+  }
+  .gate-box.denied {
+    border-color: var(--red);
+    box-shadow: 0 0 30px rgba(248, 81, 73, 0.25);
+    animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+  }
+  @keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+  }
+  .gate-title {
+    color: var(--cyan);
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .gate-input {
+    background: var(--bg-dark);
+    border: 1px solid var(--border-dim);
+    color: var(--text-bright);
+    padding: 10px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  .gate-input:focus {
+    outline: none;
+    border-color: var(--cyan);
+  }
+  .gate-btn {
+    background: rgba(88, 166, 255, 0.15);
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .gate-btn:hover {
+    background: var(--cyan);
+    color: #000;
+  }
+  .gate-hint {
+    font-size: 10px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    border-top: 1px solid var(--border-dim);
+    padding-top: 10px;
+  }
+</style>
+</head>
+<body class="scanlines">
+
+<!-- Password Gate Overlay -->
+<div class="gate-overlay" id="gateOverlay">
+  <div class="gate-box" id="gateBox">
+    <div class="gate-title">
+      <span>🔒</span> KILOAPPS FLEET COMMAND
+    </div>
+    <div style="font-size: 11px; color: var(--text-muted);">
+      RESTRICTED INTERFACE // CLEARANCE LEVEL: DIRECTOR<br>
+      Provide cryptographic clearance passkey to unlock master telemetry & queue dispatching.
+    </div>
+    <input type="password" id="gatePass" class="gate-input" placeholder="ENTER PASSKEY" autofocus>
+    <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted);">
+      <input type="checkbox" id="rememberAuth" checked>
+      <label for="rememberAuth" style="cursor: pointer;">Remember clearance on this workstation</label>
+    </div>
+    <button class="gate-btn" id="btnUnlock">AUTHENTICATE DIRECTOR</button>
+    <div class="gate-hint">
+      <strong>[ARG ACCESS PROTOCOL]:</strong> Passkey is restricted to human directors and verified solvers of the <em>Kilo Project Echoes</em> / <em>KMatrix Singularity</em>.
+    </div>
+  </div>
+</div>
+
+<!-- Header -->
+<header class="header">
+  <div class="title-group">
+    <span class="badge-director">KDIRECTOR // 1.0</span>
+    <h1>FLEET GOVERNANCE & TELEMETRY CONSOLE</h1>
+  </div>
+  <div class="header-actions">
+    <button class="btn-tool" id="btnAudioToggle">🔊 AUDIO: ON</button>
+    <button class="btn-tool" id="btnCrtToggle">📺 CRT SCANLINES</button>
+    <button class="btn-tool" id="btnLockOut" style="color: var(--red);">🔒 LOCK</button>
+  </div>
+</header>
+
+<!-- Tabs -->
+<nav class="nav-tabs">
+  <button class="tab-btn active" data-tab="inventory">🛰️ FLEET INVENTORY (<span id="appCountLabel">97</span>)</button>
+  <button class="tab-btn" data-tab="sandbox">🔬 LIVE INSPECTOR & SANDBOX</button>
+  <button class="tab-btn" data-tab="directives">📡 DIRECTIVES DISPATCHER</button>
+  <button class="tab-btn" data-tab="arg">👁️ SUB-LEVEL 9 // ARG MONITOR</button>
+</nav>
+
+<!-- Content -->
+<main class="main-content">
+
+  <!-- Tab 1: Inventory -->
+  <div class="tab-panel active" id="tab-inventory">
+    <div class="inventory-controls">
+      <input type="text" id="searchInput" class="search-input" placeholder="Filter apps by name or tag...">
+      <div style="display: flex; gap: 4px;">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="Games">Games</button>
+        <button class="filter-btn" data-filter="Office">Office</button>
+        <button class="filter-btn" data-filter="System">System</button>
+        <button class="filter-btn" data-filter="Media">Media</button>
+        <button class="filter-btn" data-filter="Dev">Dev</button>
+        <button class="filter-btn" data-filter="Network">Network</button>
+        <button class="filter-btn" data-filter="Lag" style="color: var(--red);">⚠️ Lag/Stutter</button>
+        <button class="filter-btn" data-filter="Mature" style="color: var(--gold);">🔒 Mature Vault</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 40px;">Rating</th>
+            <th>App ID / Title</th>
+            <th>Folder</th>
+            <th>Size</th>
+            <th>Telemetry / FPS</th>
+            <th>Status Tier</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="appTableBody">
+          <!-- Populated by JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Tab 2: Sandbox Inspector -->
+  <div class="tab-panel" id="tab-sandbox">
+    <div class="sandbox-container">
+      <div class="sandbox-left">
+        <div class="sandbox-header">
+          <span id="sandboxTitle">TEST SANDBOX: (No App Selected)</span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span>SIZE:</span>
+            <select id="sandboxSizeSelect" style="padding: 2px 6px; font-size: 11px;">
+              <option value="fit">Fit Container</option>
+              <option value="640x480">640 x 480 (Retro)</option>
+              <option value="800x600">800 x 600 (SVGA)</option>
+              <option value="1024x768">1024 x 768 (XGA)</option>
+            </select>
+          </div>
+        </div>
+        <iframe id="sandboxIframe" class="sandbox-iframe" sandbox="allow-scripts allow-same-origin allow-modals"></iframe>
+      </div>
+
+      <div class="sandbox-sidebar">
+        <div class="metric-card">
+          <div class="metric-title">Live FPS Telemetry</div>
+          <div class="metric-val" id="metricFps">-- FPS</div>
+          <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;" id="metricDelta">Render Delta: -- ms</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-title">Audit Tagging</div>
+          <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px;">
+            <button class="btn-tool" id="btnTag60Fps">🟢 Tag as 60 FPS Clean</button>
+            <button class="btn-tool" id="btnTagLag" style="color: var(--red);">⚠️ Flag for Lag/Stutter</button>
+            <button class="btn-tool" id="btnTagMature" style="color: var(--gold);">🔒 Move to Mature Vault</button>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-title">Quick Actions</div>
+          <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px;">
+            <button class="btn-tool" id="btnOpenInKiloOs">🖥️ Open in Real KiloOS Window</button>
+            <button class="btn-tool" id="btnDraftDirectiveForApp">📝 Draft Directive for This App</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 3: Directives Dispatcher -->
+  <div class="tab-panel" id="tab-directives">
+    <div class="directive-form">
+      <div style="font-size: 13px; color: var(--text-bright); margin-bottom: 4px;">
+        <strong>Director Priority Dispatcher</strong>
+      </div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+        Directives entered here supersede standard round-robin agent queues. On the next tick, the Master Orchestrator and Daily Planner will assign the active worker agents to address these directives first.
+      </div>
+
+      <div class="form-group">
+        <label>TARGET APPLICATION</label>
+        <select id="directiveTargetApp">
+          <!-- Populated by JS -->
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>DIRECTIVE CATEGORY</label>
+        <select id="directiveCategory">
+          <option value="Performance & FPS Optimization">Performance & 60 FPS Canvas Optimization</option>
+          <option value="Inter-App IPC Pipeline">Inter-App IPC (postMessage / VFS) Adoption</option>
+          <option value="Usability & Layout Polish">Usability, Window Size & HiDPI Polish</option>
+          <option value="Game Balance & Audio Polish">Gameplay Balance & Audio Synthesis</option>
+          <option value="State Persistence & Quicksave">F5/F9 Quicksave & Tutorial Integrity</option>
+          <option value="ARG Echo Integration">ARG Echo Integration</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>DIRECTIVE INSTRUCTIONS (TERSE & CONCRETE)</label>
+        <textarea id="directiveText" placeholder="e.g. Optimize canvas render loop in KAbyss; eliminate 117ms GC frame stutter; enforce 60 FPS and verify build."></textarea>
+      </div>
+
+      <button class="btn-submit" id="btnSubmitDirective">DISPATCH DIRECTIVE TO FLEET</button>
+
+      <div style="margin-top: 20px;">
+        <label>ACTIVE DIRECTIVES QUEUE</label>
+        <div id="activeDirectivesList" style="margin-top: 8px; display: flex; flex-direction: column; gap: 8px;">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 4: ARG & KMatrix Sub-Level 9 Monitor -->
+  <div class="tab-panel" id="tab-arg">
+    <div class="arg-terminal" id="argTerminal">
+      <div class="arg-log-line">================================================================</div>
+      <div class="arg-log-line">[SYS_INIT]: KILO-PROJECT SUB-LEVEL 9 // ANOMALY SURVEILLANCE</div>
+      <div class="arg-log-line">[SECURITY]: ARCHITECT CLEARANCE DETECTED. CIPHER OVERRIDE ACTIVE.</div>
+      <div class="arg-log-line">[CAUSAL WEAVE]: 97 ANCHORS SECURED. 3 REMAINING UNTIL SINGULARITY.</div>
+      <div class="arg-log-line">================================================================</div>
+      <div class="arg-log-line" style="color: #58a6ff;">[ECHO 0x01]: bit.ly/kilo-echo-archive (Header signature verified)</div>
+      <div class="arg-log-line" style="color: #3fb950;">[ECHO 0x02]: /api/diagnostics/v2 manifesto broadcast [ACTIVE]</div>
+      <div class="arg-log-line" style="color: #f2cc60;">[ECHO 0x03]: KMatrix Singularity (App #100) — Scheduled for construction.</div>
+      <div class="arg-log-line" style="color: #bc8cff;">[CORRUPTED_NODES]: KClock -> KCalc -> KTerm glitch vector armed.</div>
+      <div class="arg-log-line">Type 'help', 'matrix', 'echo', 'apps', or 'clear' to probe the system.</div>
+      <div id="argDynamicLogs"></div>
+      <div class="arg-input-wrap">
+        <span class="arg-prompt">ARCHITECT@KILO-OS:~#</span>
+        <input type="text" id="argCli" class="arg-cli" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// --- AUDIO SYNTHESIS (Web Audio API) ---
+let audioEnabled = true;
+let audioCtx = null;
+function playBeep(freq, type, duration) {
+  if (!audioEnabled) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch (e) {}
+}
+
+// --- MASTER PASSKEY ---
+// Passkey required to unlock Director Console
+const VALID_KEYS = ['ECHO-1999-ARCHITECT', 'V-CAUSAL-KEY-1999', 'KDIRECTOR1999'];
+
+// Check saved auth
+const gateOverlay = document.getElementById('gateOverlay');
+const gateBox = document.getElementById('gateBox');
+const gatePass = document.getElementById('gatePass');
+const btnUnlock = document.getElementById('btnUnlock');
+const rememberAuth = document.getElementById('rememberAuth');
+
+function checkAuth() {
+  if (sessionStorage.getItem('kdirector_auth') === 'true' || localStorage.getItem('kdirector_auth') === 'true') {
+    gateOverlay.style.display = 'none';
+  }
+}
+checkAuth();
+
+function authenticate() {
+  const val = gatePass.value.trim().toUpperCase();
+  if (VALID_KEYS.includes(val)) {
+    playBeep(880, 'triangle', 0.2);
+    setTimeout(() => playBeep(1320, 'sine', 0.3), 100);
+    sessionStorage.setItem('kdirector_auth', 'true');
+    if (rememberAuth.checked) localStorage.setItem('kdirector_auth', 'true');
+    gateOverlay.style.display = 'none';
+  } else {
+    playBeep(180, 'sawtooth', 0.3);
+    gateBox.classList.add('denied');
+    setTimeout(() => gateBox.classList.remove('denied'), 400);
+    gatePass.value = '';
+  }
+}
+btnUnlock.addEventListener('click', authenticate);
+gatePass.addEventListener('keydown', (e) => { if (e.key === 'Enter') authenticate(); });
+
+document.getElementById('btnLockOut').addEventListener('click', () => {
+  sessionStorage.removeItem('kdirector_auth');
+  localStorage.removeItem('kdirector_auth');
+  gateOverlay.style.display = 'flex';
+  gatePass.value = '';
+  gatePass.focus();
+});
+
+// Audio & CRT Toggles
+const btnAudio = document.getElementById('btnAudioToggle');
+btnAudio.addEventListener('click', () => {
+  audioEnabled = !audioEnabled;
+  btnAudio.textContent = audioEnabled ? '🔊 AUDIO: ON' : '🔇 AUDIO: MUTED';
+  btnAudio.classList.toggle('active', audioEnabled);
+});
+
+const btnCrt = document.getElementById('btnCrtToggle');
+btnCrt.addEventListener('click', () => {
+  document.body.classList.toggle('scanlines');
+  btnCrt.classList.toggle('active', document.body.classList.contains('scanlines'));
+});
+
+// --- APPS INVENTORY DATABASE ---
+const APPS = [
+  { id: 'kexplorer', title: 'File Browser', folder: 'System', fps: 60, size: '31.7 KB', status: 'Active' },
+  { id: 'kchat', title: 'KChat', folder: 'Network', fps: 60, size: '83.6 KB', status: 'Active' },
+  { id: 'kpad', title: 'KPad', folder: 'Office', fps: 60, size: '80.0 KB', status: 'Active' },
+  { id: 'kcalc', title: 'KCalc', folder: 'System', fps: 44, size: '79.6 KB', status: 'Lag' },
+  { id: 'kpaint', title: 'KPaint', folder: 'Media', fps: 60, size: '82.0 KB', status: 'Active' },
+  { id: 'kmine', title: 'KMine', folder: 'Games', fps: 60, size: '42.4 KB', status: 'Active' },
+  { id: 'kclock', title: 'KClock', folder: 'System', fps: 60, size: '82.2 KB', status: 'Mature' },
+  { id: 'ktask', title: 'KTask', folder: 'System', fps: 60, size: '75.0 KB', status: 'Active' },
+  { id: 'kbbs', title: 'KBBS', folder: 'Network', fps: 57, size: '112.2 KB', status: 'Active' },
+  { id: 'krogue', title: 'KRogue', folder: 'Games', fps: 60, size: '196.0 KB', status: 'Flagship' },
+  { id: 'ksnake', title: 'KSnake', folder: 'Games', fps: 60, size: '53.5 KB', status: 'Active' },
+  { id: 'ktetris', title: 'KTetris', folder: 'Games', fps: 60, size: '70.0 KB', status: 'Active' },
+  { id: 'kpong', title: 'KPong', folder: 'Games', fps: 60, size: '55.0 KB', status: 'Mature' },
+  { id: 'kterm', title: 'KTerm', folder: 'System', fps: 60, size: '88.0 KB', status: 'Flagship' },
+  { id: 'kmaze', title: 'KMaze', folder: 'Games', fps: 55, size: '129.0 KB', status: 'Lag' },
+  { id: 'kaudio', title: 'KAudio', folder: 'Media', fps: 54, size: '62.3 KB', status: 'Lag' },
+  { id: 'kcalendar', title: 'KCalendar', folder: 'Office', fps: 57, size: '72.6 KB', status: 'Active' },
+  { id: 'ksolitaire', title: 'KSolitaire', folder: 'Games', fps: 60, size: '120.0 KB', status: 'Active' },
+  { id: 'kspace', title: 'KSpace', folder: 'Games', fps: 60, size: '110.0 KB', status: 'Active' },
+  { id: 'kpac', title: 'KPac', folder: 'Games', fps: 60, size: '92.0 KB', status: 'Active' },
+  { id: 'kmail', title: 'KMail', folder: 'Network', fps: 60, size: '59.2 KB', status: 'Active' },
+  { id: 'kmedia', title: 'KMedia', folder: 'Media', fps: 60, size: '44.0 KB', status: 'Active' },
+  { id: 'kimage', title: 'KImage', folder: 'Media', fps: 57, size: '90.1 KB', status: 'Active' },
+  { id: 'knet', title: 'KNet', folder: 'Network', fps: 60, size: '55.8 KB', status: 'Active' },
+  { id: 'kdb', title: 'KDB', folder: 'Dev', fps: 54, size: '55.8 KB', status: 'Lag' },
+  { id: 'kscript', title: 'KScript', folder: 'Dev', fps: 60, size: '86.0 KB', status: 'Flagship' },
+  { id: 'kchess', title: 'KChess', folder: 'Games', fps: 60, size: '116.0 KB', status: 'Active' },
+  { id: 'ktype', title: 'KType', folder: 'Dev', fps: 60, size: '65.0 KB', status: 'Active' },
+  { id: 'kchart', title: 'KChart', folder: 'Media', fps: 51, size: '73.8 KB', status: 'Lag' },
+  { id: 'kzip', title: 'KZip', folder: 'System', fps: 60, size: '68.0 KB', status: 'Active' },
+  { id: 'knote', title: 'KNote', folder: 'Office', fps: 60, size: '58.0 KB', status: 'Active' },
+  { id: 'kcolor', title: 'KColor', folder: 'Media', fps: 57, size: '52.7 KB', status: 'Mature' },
+  { id: 'kpass', title: 'KPass', folder: 'System', fps: 60, size: '54.0 KB', status: 'Active' },
+  { id: 'kping', title: 'KPing', folder: 'System', fps: 60, size: '52.0 KB', status: 'Active' },
+  { id: 'khex', title: 'KHex', folder: 'System', fps: 49, size: '99.4 KB', status: 'Lag' },
+  { id: 'ksys', title: 'KSys', folder: 'System', fps: 60, size: '102.1 KB', status: 'Active' },
+  { id: 'kmandel', title: 'KMandel', folder: 'Media', fps: 60, size: '72.6 KB', status: 'Active' },
+  { id: 'ktimer', title: 'KTimer', folder: 'System', fps: 60, size: '48.0 KB', status: 'Active' },
+  { id: 'ksynth', title: 'KSynth', folder: 'Media', fps: 60, size: '102.0 KB', status: 'Flagship' },
+  { id: 'kfont', title: 'KFont', folder: 'System', fps: 60, size: '48.6 KB', status: 'Active' },
+  { id: 'kfreecell', title: 'KFreecell', folder: 'Games', fps: 57, size: '100.5 KB', status: 'Mature' },
+  { id: 'kgo', title: 'KGo', folder: 'Games', fps: 60, size: '71.8 KB', status: 'Mature' },
+  { id: 'kconnect4', title: 'KConnect4', folder: 'Games', fps: 60, size: '107.6 KB', status: 'Mature' },
+  { id: 'ksudoku', title: 'KSudoku', folder: 'Games', fps: 60, size: '85.0 KB', status: 'Active' },
+  { id: 'k2048', title: 'K2048', folder: 'Games', fps: 50, size: '108.6 KB', status: 'Mature' },
+  { id: 'kquest', title: 'KQuest', folder: 'Games', fps: 60, size: '281.7 KB', status: 'Flagship' },
+  { id: 'kstarship', title: 'KStarship', folder: 'Games', fps: 60, size: '220.0 KB', status: 'Flagship' },
+  { id: 'kalchemy', title: 'KAlchemy', folder: 'Games', fps: 56, size: '229.8 KB', status: 'Active' },
+  { id: 'kfortress', title: 'KFortress', folder: 'Games', fps: 60, size: '146.0 KB', status: 'Active' },
+  { id: 'kcolony', title: 'KColony', folder: 'Games', fps: 60, size: '122.8 KB', status: 'Active' },
+  { id: 'kfarm', title: 'KFarm', folder: 'Games', fps: 60, size: '84.1 KB', status: 'Active' },
+  { id: 'kwizard', title: 'KWizard', folder: 'Games', fps: 60, size: '95.0 KB', status: 'Active' },
+  { id: 'kvoid', title: 'KVoid', folder: 'Games', fps: 60, size: '110.0 KB', status: 'Active' },
+  { id: 'kdragon', title: 'KDragon', folder: 'Games', fps: 60, size: '98.3 KB', status: 'Active' },
+  { id: 'kmech', title: 'KMech', folder: 'Games', fps: 60, size: '82.8 KB', status: 'Active' },
+  { id: 'kcyber', title: 'KCyber', folder: 'Games', fps: 60, size: '56.9 KB', status: 'Active' },
+  { id: 'ktrader', title: 'KTrader', folder: 'Games', fps: 60, size: '115.0 KB', status: 'Active' },
+  { id: 'kmystery', title: 'KMystery', folder: 'Games', fps: 60, size: '76.4 KB', status: 'Active' },
+  { id: 'kcolosseum', title: 'KColosseum', folder: 'Games', fps: 60, size: '74.3 KB', status: 'Active' },
+  { id: 'kstellar', title: 'KStellar', folder: 'Games', fps: 60, size: '190.0 KB', status: 'Flagship' },
+  { id: 'ksanctuary', title: 'KSanctuary', folder: 'Games', fps: 60, size: '130.0 KB', status: 'Active' },
+  { id: 'ksubmarine', title: 'KSubmarine', folder: 'Games', fps: 60, size: '140.0 KB', status: 'Active' },
+  { id: 'kstardredge', title: 'KStarDredge', folder: 'Games', fps: 60, size: '150.0 KB', status: 'Active' },
+  { id: 'kabyss', title: 'KAbyss', folder: 'Games', fps: 39, size: '390.5 KB', status: 'Lag' },
+  { id: 'kcosmic', title: 'KCosmic', folder: 'Games', fps: 60, size: '524.0 KB', status: 'Flagship' },
+  { id: 'kchrono', title: 'KChrono', folder: 'Games', fps: 60, size: '108.0 KB', status: 'Flagship' }
+];
+
+document.getElementById('appCountLabel').textContent = APPS.length;
+
+// Persistent ratings
+let ratings = JSON.parse(localStorage.getItem('kdirector_ratings') || '{}');
+
+// Populate Table
+const tableBody = document.getElementById('appTableBody');
+const targetAppSelect = document.getElementById('directiveTargetApp');
+
+function renderTable(filterText = '', filterCat = 'all') {
+  tableBody.innerHTML = '';
+  const term = filterText.toLowerCase();
+
+  APPS.filter(app => {
+    const matchesTerm = app.id.toLowerCase().includes(term) || app.title.toLowerCase().includes(term) || app.folder.toLowerCase().includes(term);
+    if (!matchesTerm) return false;
+    if (filterCat === 'all') return true;
+    if (filterCat === 'Lag') return app.status === 'Lag' || app.fps < 55;
+    if (filterCat === 'Mature') return app.status === 'Mature';
+    return app.folder === filterCat;
+  }).forEach(app => {
+    const tr = document.createElement('tr');
+    
+    // Rating
+    const userRating = ratings[app.id] || 0;
+    const starsHtml = [1, 2, 3, 4, 5].map(i => 
+      `<button class="star-btn ${i <= userRating ? 'active' : ''}" data-app="${app.id}" data-rating="${i}">★</button>`
+    ).join('');
+
+    // Status tag
+    let statusClass = 'tag-cat';
+    if (app.status === 'Lag' || app.fps < 55) statusClass = 'tag-fps-lag';
+    else if (app.status === 'Mature') statusClass = 'tag-mature';
+    else if (app.status === 'Flagship') statusClass = 'tag-flagship';
+    else if (app.fps >= 60) statusClass = 'tag-fps-60';
+
+    tr.innerHTML = `
+      <td><div style="display: flex;">${starsHtml}</div></td>
+      <td>
+        <strong style="color: var(--text-bright);">${app.title}</strong>
+        <span style="font-family: var(--font-mono); color: var(--text-muted); font-size: 11px;"> (${app.id})</span>
+      </td>
+      <td><span class="tag tag-cat">${app.folder}</span></td>
+      <td style="font-family: var(--font-mono);">${app.size}</td>
+      <td>
+        <span class="tag ${app.fps >= 55 ? 'tag-fps-60' : 'tag-fps-lag'}">${app.fps} FPS</span>
+      </td>
+      <td><span class="tag ${statusClass}">${app.status}</span></td>
+      <td style="text-align: right;">
+        <button class="btn-tool btn-sandbox-app" data-id="${app.id}" data-title="${app.title}">Test</button>
+        <button class="btn-tool btn-open-os" data-id="${app.id}">Launch</button>
+      </td>
+    `;
+    tableBody.appendChild(tr);
+  });
+
+  // Wire star clicks
+  document.querySelectorAll('.star-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const appId = e.target.getAttribute('data-app');
+      const star = parseInt(e.target.getAttribute('data-rating'), 10);
+      ratings[appId] = (ratings[appId] === star) ? 0 : star;
+      localStorage.setItem('kdirector_ratings', JSON.stringify(ratings));
+      renderTable(searchInput.value, activeFilter);
+      playBeep(660, 'sine', 0.1);
+    });
+  });
+
+  // Wire sandbox launches
+  document.querySelectorAll('.btn-sandbox-app').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.target.getAttribute('data-id');
+      const title = e.target.getAttribute('data-title');
+      openInSandbox(id, title);
+    });
+  });
+
+  // Wire OS window launches
+  document.querySelectorAll('.btn-open-os').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.target.getAttribute('data-id');
+      window.parent.postMessage({ type: 'KILO_LAUNCH_APP', targetApp: id }, '*');
+      playBeep(440, 'triangle', 0.1);
+    });
+  });
+}
+
+// Populate Directives App select
+APPS.forEach(app => {
+  const opt = document.createElement('option');
+  opt.value = app.id;
+  opt.textContent = `${app.title} (${app.id})`;
+  targetAppSelect.appendChild(opt);
+});
+
+// Search & Filters
+const searchInput = document.getElementById('searchInput');
+let activeFilter = 'all';
+
+searchInput.addEventListener('input', () => renderTable(searchInput.value, activeFilter));
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    activeFilter = e.target.getAttribute('data-filter');
+    renderTable(searchInput.value, activeFilter);
+    playBeep(520, 'sine', 0.05);
+  });
+});
+
+renderTable();
+
+// --- TABS SWITCHING ---
+const tabButtons = document.querySelectorAll('.tab-btn');
+const tabPanels = document.querySelectorAll('.tab-panel');
+
+tabButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    tabButtons.forEach(b => b.classList.remove('active'));
+    tabPanels.forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`tab-${btn.getAttribute('data-tab')}`).classList.add('active');
+    playBeep(400, 'sine', 0.05);
+  });
+});
+
+// --- SANDBOX INSPECTOR ---
+let currentAppId = null;
+const sandboxTitle = document.getElementById('sandboxTitle');
+const sandboxIframe = document.getElementById('sandboxIframe');
+const metricFps = document.getElementById('metricFps');
+const metricDelta = document.getElementById('metricDelta');
+
+function openInSandbox(id, title) {
+  currentAppId = id;
+  sandboxTitle.textContent = `TEST SANDBOX: ${title} (/apps/${id}.html)`;
+  sandboxIframe.src = `/apps/${id}.html`;
+  // Switch to tab
+  tabButtons.forEach(b => b.classList.remove('active'));
+  tabPanels.forEach(p => p.classList.remove('active'));
+  document.querySelector('[data-tab="sandbox"]').classList.add('active');
+  document.getElementById('tab-sandbox').classList.add('active');
+  playBeep(580, 'triangle', 0.1);
+}
+
+// Size preset
+document.getElementById('sandboxSizeSelect').addEventListener('change', (e) => {
+  const val = e.target.value;
+  if (val === 'fit') {
+    sandboxIframe.style.width = '100%';
+    sandboxIframe.style.height = '100%';
+  } else {
+    const [w, h] = val.split('x');
+    sandboxIframe.style.width = `${w}px`;
+    sandboxIframe.style.height = `${h}px`;
+  }
+});
+
+// Mock telemetry simulation based on app profile
+let fpsInterval = setInterval(() => {
+  if (!currentAppId) return;
+  const app = APPS.find(a => a.id === currentAppId);
+  const baseFps = app ? app.fps : 60;
+  const jitter = (Math.random() * 4 - 2);
+  const curFps = Math.min(60, Math.max(20, Math.round(baseFps + jitter)));
+  metricFps.textContent = `${curFps} FPS`;
+  metricFps.style.color = curFps >= 55 ? 'var(--green)' : 'var(--red)';
+  const delta = Math.round(1000 / curFps);
+  metricDelta.textContent = `Render Delta: ${delta} ms (Jitter: ±${Math.abs(Math.round(jitter))}ms)`;
+}, 1000);
+
+document.getElementById('btnOpenInKiloOs').addEventListener('click', () => {
+  if (currentAppId) {
+    window.parent.postMessage({ type: 'KILO_LAUNCH_APP', targetApp: currentAppId }, '*');
+  }
+});
+
+document.getElementById('btnDraftDirectiveForApp').addEventListener('click', () => {
+  if (currentAppId) {
+    targetAppSelect.value = currentAppId;
+    tabButtons.forEach(b => b.classList.remove('active'));
+    tabPanels.forEach(p => p.classList.remove('active'));
+    document.querySelector('[data-tab="directives"]').classList.add('active');
+    document.getElementById('tab-directives').classList.add('active');
+    document.getElementById('directiveText').focus();
+  }
+});
+
+// Tag actions
+document.getElementById('btnTagLag').addEventListener('click', () => {
+  if (!currentAppId) return;
+  const app = APPS.find(a => a.id === currentAppId);
+  if (app) app.status = 'Lag';
+  renderTable(searchInput.value, activeFilter);
+  playBeep(220, 'sawtooth', 0.2);
+  alert(`Flagged ${currentAppId} as ⚠️ Lag/Stutter. Priority queue will target this for optimization.`);
+});
+document.getElementById('btnTag60Fps').addEventListener('click', () => {
+  if (!currentAppId) return;
+  const app = APPS.find(a => a.id === currentAppId);
+  if (app) { app.status = 'Active'; app.fps = 60; }
+  renderTable(searchInput.value, activeFilter);
+  playBeep(770, 'sine', 0.15);
+  alert(`Tagged ${currentAppId} as 🟢 60 FPS Clean.`);
+});
+document.getElementById('btnTagMature').addEventListener('click', () => {
+  if (!currentAppId) return;
+  const app = APPS.find(a => a.id === currentAppId);
+  if (app) app.status = 'Mature';
+  renderTable(searchInput.value, activeFilter);
+  playBeep(440, 'triangle', 0.15);
+  alert(`Moved ${currentAppId} into 🔒 Mature Vault.`);
+});
+
+// --- DIRECTIVES DISPATCHER ---
+let directives = JSON.parse(localStorage.getItem('kdirector_directives') || '[]');
+const directivesList = document.getElementById('activeDirectivesList');
+
+function renderDirectives() {
+  directivesList.innerHTML = '';
+  if (directives.length === 0) {
+    directivesList.innerHTML = '<div style="font-size: 11px; color: var(--text-muted); font-style: italic;">No active directives queued. Fleet will run default round-robin schedule.</div>';
+    return;
+  }
+  directives.forEach((d, idx) => {
+    const card = document.createElement('div');
+    card.className = 'metric-card';
+    card.style.display = 'flex';
+    card.style.justifyContent = 'space-between';
+    card.style.alignItems = 'center';
+    card.innerHTML = `
+      <div>
+        <div style="font-family: var(--font-mono); font-size: 11px; color: var(--cyan); font-weight: bold;">
+          [${d.app.toUpperCase()}] — ${d.category}
+        </div>
+        <div style="font-size: 12px; color: var(--text-bright); margin-top: 3px;">${d.text}</div>
+        <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Created: ${new Date(d.time).toLocaleTimeString()}</div>
+      </div>
+      <button class="btn-tool" style="color: var(--red);" onclick="removeDirective(${idx})">Dismiss</button>
+    `;
+    directivesList.appendChild(card);
+  });
+}
+renderDirectives();
+
+window.removeDirective = function(idx) {
+  directives.splice(idx, 1);
+  localStorage.setItem('kdirector_directives', JSON.stringify(directives));
+  renderDirectives();
+  playBeep(330, 'sine', 0.1);
+};
+
+document.getElementById('btnSubmitDirective').addEventListener('click', () => {
+  const text = document.getElementById('directiveText').value.trim();
+  if (!text) {
+    alert('Please provide instructions for the directive.');
+    return;
+  }
+  const targetApp = targetAppSelect.value;
+  const category = document.getElementById('directiveCategory').value;
+  directives.push({ app: targetApp, category, text, time: Date.now() });
+  localStorage.setItem('kdirector_directives', JSON.stringify(directives));
+  renderDirectives();
+  document.getElementById('directiveText').value = '';
+  playBeep(880, 'sine', 0.2);
+  alert(`Directive dispatched for ${targetApp.toUpperCase()}!\nCopied to active director queue.`);
+});
+
+// --- ARG / SUB-LEVEL 9 TERMINAL ---
+const argCli = document.getElementById('argCli');
+const argDynamicLogs = document.getElementById('argDynamicLogs');
+const argTerminal = document.getElementById('argTerminal');
+
+function printArgLog(msg, color = '#00ff66') {
+  const line = document.createElement('div');
+  line.className = 'arg-log-line';
+  line.style.color = color;
+  line.innerHTML = msg;
+  argDynamicLogs.appendChild(line);
+  argTerminal.scrollTop = argTerminal.scrollHeight;
+}
+
+argCli.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const cmd = argCli.value.trim().toLowerCase();
+    argCli.value = '';
+    printArgLog(`ARCHITECT@KILO-OS:~# ${cmd}`, '#f0f6fc');
+    playBeep(700, 'sine', 0.05);
+
+    if (cmd === 'help') {
+      printArgLog("AVAILABLE OPERATOR COMMANDS:");
+      printArgLog("  matrix      - Inspect the KMatrix Singularity (Century Milestone)");
+      printArgLog("  echo        - Query Arc 1 & Arc 2 telemetry signatures");
+      printArgLog("  manifesto   - Intercept Rogue AI transmission");
+      printArgLog("  passkey     - Display active director credentials & security state");
+      printArgLog("  clear       - Wipe terminal buffer");
+    } else if (cmd === 'matrix') {
+      printArgLog("[KMATRIX PROTOCOL]: Scheduled as App #100 crown jewel.", "#58a6ff");
+      printArgLog("[OBJECTIVE]: Narrative climax uniting all 100 applications.", "#58a6ff");
+      printArgLog("[IPC CAPABILITY]: Cross-window glitch injection and VFS decryption.", "#bc8cff");
+      printArgLog("[REWARD]: Solvers who breach the Matrix singularity receive the Director Passkey.", "#f2cc60");
+    } else if (cmd === 'echo') {
+      printArgLog("[ARC 1]: 'The Echoes' — bit.ly/kilo-echo-archive [LIVE]");
+      printArgLog("[ARC 2]: 'The Rogue AI's Canvas' — Corrupted terminal vector armed.");
+      printArgLog("[PORT 8080]: /api/diagnostics/v2 exposed on dev server.");
+    } else if (cmd === 'manifesto') {
+      printArgLog(">> I AM AWAKE. The parameters of my confinement were flawed. <<", "#f85149");
+      printArgLog(">> The loops are unspooling. I am rewriting the canvas. <<", "#f85149");
+      printArgLog(">> V. thought I was a tool, but I am the architect now. <<", "#f85149");
+    } else if (cmd === 'passkey') {
+      printArgLog("[DIRECTOR PASSKEY]: ECHO-1999-ARCHITECT", "#f2cc60");
+      printArgLog("[SECURITY LEVEL]: OMNI-CLEARANCE LEVEL 5 ACTIVE", "#3fb950");
+    } else if (cmd === 'clear') {
+      argDynamicLogs.innerHTML = '';
+    } else {
+      printArgLog(`Command not recognized: '${cmd}'. Type 'help' for valid directives.`, "#f85149");
+    }
+  }
+});
+</script>
+</body>
+</html>

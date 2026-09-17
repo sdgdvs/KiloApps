@@ -82,7 +82,7 @@ const APPS = [
   { id: 'kfreecell', title: 'KFreecell', url: '/apps/kfreecell.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kfreecell.ico', w: 800, h: 600, folder: 'Games' },
   { id: 'kmatch3', title: 'KMatch3', url: '/apps/kmatch3.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmatch3.ico', w: 600, h: 600, folder: 'Games' },
   { id: 'kwords', title: 'KWords', url: '/apps/kwords.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kwords.ico', w: 600, h: 600, folder: 'Games' },
-  { id: 'kgo', title: 'KGo', url: '/apps/kgo.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kgo.ico', w: 600, h: 600, folder: 'Games' },
+  { id: 'kgo', title: 'KGo', url: '/apps/kgo.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kgo.ico', w: 700, h: 760, folder: 'Games' },
   { id: 'kdarts', title: 'KDarts', url: '/apps/kdarts.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kdarts.ico', w: 600, h: 600, folder: 'Games' },
   { id: 'ktowers', title: 'KTowers', url: '/apps/ktowers.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktowers.ico', w: 600, h: 500, folder: 'Games' },
   { id: 'kreversi', title: 'KReversi', url: '/apps/kreversi.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kreversi.ico', w: 600, h: 600, folder: 'Games' },
@@ -106,7 +106,8 @@ const APPS = [
   { id: 'kstardredge', title: 'KStarDredge', url: '/apps/kstardredge.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kstardredge.ico', w: 900, h: 680, folder: 'Games' },
   { id: 'kabyss', title: 'KAbyss', url: '/apps/kabyss.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kabyss.ico', w: 920, h: 680, folder: 'Games' },
   { id: 'kcosmic', title: 'KCosmic', url: '/apps/kcosmic.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcosmic.ico', w: 940, h: 680, folder: 'Games' },
-  { id: 'kchrono', title: 'KChrono', url: '/apps/kchrono.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchrono.ico', w: 1040, h: 720, folder: 'Games' }
+  { id: 'kchrono', title: 'KChrono', url: '/apps/kchrono.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchrono.ico', w: 1040, h: 720, folder: 'Games' },
+  { id: 'kdirector', title: 'Director Console', url: '/apps/kdirector.html', icon: '/assets/icons/kdirector.ico', w: 1080, h: 720, folder: 'System' }
 ];
 
 function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModal, openApps, closeApp }) {
@@ -272,10 +273,9 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
           e.source.postMessage({ type: 'VFS_SHOW_SAVE_DONE', requestId, path: selectedPath }, '*');
         });
       }
-      else if (type === 'OS_LAUNCH_APP') {
-        // e.g. File Explorer launching an app
-        // Dispatched as a custom event so App can catch it
-        window.dispatchEvent(new CustomEvent('os-launch-app', { detail: e.data }));
+      else if (type === 'OS_LAUNCH_APP' || type === 'KILO_LAUNCH_APP') {
+        const payload = e.data.targetApp ? { appId: e.data.targetApp, ...e.data } : e.data;
+        window.dispatchEvent(new CustomEvent('os-launch-app', { detail: payload }));
       }
       else if (type === 'OS_LIST_TASKS') {
         const tasks = openApps.map(a => ({ id: a.instanceId, title: a.title }));
