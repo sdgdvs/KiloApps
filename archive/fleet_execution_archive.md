@@ -32,3 +32,7 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - Status: PASS ✅ (8 issues fixed inline).
   - Highlights: Tutorial onboarding (`kstellar_tutorialSeen`), F5/F9 quicksave/quickload, JSON save import/export, emergency rescue beacon, combat hotkeys, action locks, HUD toasts. Build clean.
 
+- **2026-09-17T02:22:42Z — kilo-tester: KSudoku**
+  - Status: PASS ✅ (9 issues fixed inline).
+  - Highlights: Tutorial onboarding (`ksudoku_tutorialSeen`), F5/F9 quicksave/quickload, JSON save import/export, restored difficulty state persistence, responsive difficulty selector, 16x16 generation safety guard, modal backdrop/Esc dismissal, HUD toasts. Build clean.
+

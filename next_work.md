@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,12 +16,12 @@ current_targets:
   kilo_graphics: KQuest
   kilo_tester: KSys
   kilo_usability: KGo
-  kilo_qa: KSolitaire
+  kilo_qa: KSpace
   kilo_expander: KScript
 last_run:
-  agent: kilo-usability
-  app: KChess
-  timestamp: "2026-09-17T09:51:00Z"
+  agent: kilo-qa
+  app: KSolitaire
+  timestamp: "2026-09-17T10:44:00Z"
 last_planner_run: "2026-09-16T19:00:00Z"
 ---
 
@@ -73,9 +73,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KReversi`, `KConnect4`, `KTerm`, `KPad`, `KCalc`, `KPaint`, `KAudio`, `KEdit`, `KExcel`, `KFiles`, `KFit`, `KFlash`, `KFlight`, `KFont`, `KForm`, `KFormula`, `KForth`, `KFractal`, `KGraph`, `KHex`, `KIcon`, `KImage`, `KInvoice`, `KKanban`, `KLife`, `KLogic`, `KMail`, `KMarkdown`, `KMaze`, `KMidi`, `KMines`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KPong`, `KChess`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KSolitaire`
+- **Current Target**: `KSpace`
 - **Upcoming Queue**:
-  `KSpace`, `KStarship`, `KStellar`, `KSudoku`, `KSynth`, `KSys`, `KTask`, `KTerm`, `KTetris`, `KTimer`, `KTodo`, `KTowers`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KWords`, `KZip`, `K2048`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KMaze`, `KSnake` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake)*.
+  `KStarship`, `KStellar`, `KSudoku`, `KSynth`, `KSys`, `KTask`, `KTerm`, `KTetris`, `KTimer`, `KTodo`, `KTowers`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KWords`, `KZip`, `K2048`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KMaze`, `KSnake`, `KSolitaire` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KScript`
@@ -85,6 +85,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-09-17T10:44:00Z — kilo-qa: KSolitaire**
+  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial integrity, overlays).
+  - Highlights: Full state F5 quicksave and F9 quickload persistence in web and native, synchronized with autosave, first-run tutorial onboarding (`ksolitaire_tutorialSeen` / `ksolitaire_tutorial.dat`) protecting restored saves, win overlay reload button and Esc/Enter/Space controls, auto-save beforeunload, storage quota resilience. Native (49.6 KB) and Web (120 KB) clean builds.
 
 - **2026-09-17T09:51:00Z — kilo-usability: KChess**
   - Status: PASS ✅ (UI/UX polish, HiDPI scaling, onboarding).
@@ -101,7 +105,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-09-17T03:55:00Z — kilo-creator: KCosmic (Phase 14)**
   - Status: COMPLETE 🚀 (All 14 phases finished).
   - Highlights: Fleet Admiral's Codex with 6 CRT tabs (Commands, Planet Dossiers, Terra Formulas, Logistics, Crisis Manual, Xenobiology), v1.14 start splash screen, 7-step tutorial (`kcosmic_tutorialSeen`), F5/F9 quicksave/quickload, JSON save backup/restore, HUD toast alerts. Web (524 KB) and Native C (259 KB) builds clean.
-
-- **2026-09-17T02:22:42Z — kilo-tester: KSudoku**
-  - Status: PASS ✅ (9 issues fixed inline).
-  - Highlights: Tutorial onboarding (`ksudoku_tutorialSeen`), F5/F9 quicksave/quickload, JSON save import/export, restored difficulty state persistence, responsive difficulty selector, 16x16 generation safety guard, modal backdrop/Esc dismissal, HUD toasts. Build clean.

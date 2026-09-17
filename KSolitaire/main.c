@@ -464,6 +464,51 @@ int LoadGameState() {
     return 0;
 }
 
+int QuickSaveGame(HWND hwnd) {
+    HANDLE hFile = CreateFileA("ksolitaire_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, &state, sizeof(SolitaireState), &written, NULL);
+        CloseHandle(hFile);
+        ShowNativeToast(hwnd, "Quicksaved to ksolitaire_save.dat [F5]", 2200);
+        return 1;
+    }
+    ShowNativeToast(hwnd, "Quicksave Failed!", 2000);
+    return 0;
+}
+
+int QuickLoadGame(HWND hwnd) {
+    HANDLE hFile = CreateFileA("ksolitaire_save.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        hFile = CreateFileA("ksolitaire.sav", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    }
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD readBytes = 0;
+        ReadFile(hFile, &state, sizeof(SolitaireState), &readBytes, NULL);
+        CloseHandle(hFile);
+
+        gameWon = 0;
+        autoFinishActive = 0;
+        cascadeActive = 0;
+        particleActive = 0;
+        shockwaveActive = 0;
+        flipAnimActive = 0;
+        selectedType = -1;
+        hintSrcType = -1;
+        undoCount = 0;
+        redoCount = 0;
+
+        SaveGameState();
+        PlayGameBeep(MB_OK);
+        ShowNativeToast(hwnd, "Quicksave Loaded! [F9]", 2200);
+        UpdateWindowTitle(hwnd);
+        if (hwnd) InvalidateRect(hwnd, NULL, FALSE);
+        return 1;
+    }
+    ShowNativeToast(hwnd, "No Saved Game Found [F9]", 2000);
+    return 0;
+}
+
 // --- Undo / Redo Snapshot ---
 void PushUndoState() {
     if (undoCount < 256) {
@@ -1884,12 +1929,31 @@ void ShowHelpDialog(HWND hwnd) {
         "- [F1]: Help & Rules\n"
         "- [H] / [Ctrl+H]: Smart Hint\n"
         "- [F2] / [N]: New Game\n"
+        "- [F5] / [Ctrl+S]: Quicksave Game | [F9]: Quickload Game\n"
         "- [1] Classic | [2] Vegas | [3] Campaign Mode\n"
         "- [U] / [Ctrl+Z]: Undo Move | [Ctrl+Y]: Redo Move\n"
         "- [Ctrl+F]: Auto-Finish remaining cards\n"
         "- [T]: Cycle Deck Theme | [M]: Toggle Audio Mute\n"
         "- [Esc]: Clear Selection, Hints & Dismiss Toast";
     MessageBoxA(hwnd, helpText, "KSolitaire - Help & Rules", MB_OK | MB_ICONINFORMATION);
+}
+
+void CheckFirstRunTutorial(HWND hwnd, int savedGameLoaded) {
+    HANDLE hFile = CreateFileA("ksolitaire_tutorial.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFile);
+        return;
+    }
+    hFile = CreateFileA("ksolitaire_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char val = '1';
+        DWORD written = 0;
+        WriteFile(hFile, &val, 1, &written, NULL);
+        CloseHandle(hFile);
+    }
+    if (!savedGameLoaded) {
+        ShowHelpDialog(hwnd);
+    }
 }
 
 // --- Window Procedure ---
@@ -1900,6 +1964,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             HMENU hGameMenu = CreatePopupMenu();
             AppendMenu(hGameMenu, MF_STRING, ID_NEW_GAME, "New Game\tF2");
+            AppendMenu(hGameMenu, MF_SEPARATOR, 0, NULL);
+            AppendMenu(hGameMenu, MF_STRING, ID_SAVE_GAME, "Quicksave Game\tF5");
+            AppendMenu(hGameMenu, MF_STRING, ID_LOAD_GAME, "Quickload Game\tF9");
             AppendMenu(hGameMenu, MF_SEPARATOR, 0, NULL);
             AppendMenu(hGameMenu, MF_STRING, ID_UNDO, "Undo\tCtrl+Z");
             AppendMenu(hGameMenu, MF_STRING, ID_REDO, "Redo\tCtrl+Y");
@@ -1958,14 +2025,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             seed = GetTickCount();
             LoadStats();
-            if (!LoadGameState()) {
+            int loaded = LoadGameState();
+            if (!loaded) {
                 state.gameMode = 0;
                 state.campaignStage = 1;
                 state.drawMode = 1;
                 NewGame(hwnd);
             }
+            CheckFirstRunTutorial(hwnd, loaded);
             UpdateWindowTitle(hwnd);
-            ShowNativeToast(hwnd, "Welcome! [F1] Help | [H] Hint | [F2] New | [Space] Draw | [W/X/S] Skills", 5000);
+            ShowNativeToast(hwnd, "Welcome! [F1] Help | [H] Hint | [F2] New | [F5/F9] Save/Load | [Space] Draw", 5000);
             SetTimer(hwnd, 1, 1000, NULL);
             SetTimer(hwnd, 5, 40, NULL); // Animation loop timer
             break;
@@ -1973,6 +2042,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_COMMAND: {
             int id = LOWORD(wParam);
             if (id == ID_NEW_GAME) { NewGame(hwnd); ShowNativeToast(hwnd, "New Game Started [F2]", 2000); }
+            else if (id == ID_SAVE_GAME) { SaveGameState(); QuickSaveGame(hwnd); }
+            else if (id == ID_LOAD_GAME) { QuickLoadGame(hwnd); }
             else if (id == ID_DRAW_1) { state.drawMode = 1; NewGame(hwnd); ShowNativeToast(hwnd, "Draw Mode: 1 Card", 2000); }
             else if (id == ID_DRAW_3) { state.drawMode = 3; NewGame(hwnd); ShowNativeToast(hwnd, "Draw Mode: 3 Cards", 2000); }
             else if (id == ID_MODE_CLASSIC) { state.gameMode = 0; NewGame(hwnd); ShowNativeToast(hwnd, "Mode: Classic Solitaire [1]", 2200); }
@@ -2036,23 +2107,61 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (wParam == 'Z' || wParam == 'z') PerformUndo(hwnd);
                 else if (wParam == 'Y' || wParam == 'y') PerformRedo(hwnd);
                 else if (wParam == 'H' || wParam == 'h') GiveHint(hwnd);
+                else if (wParam == 'S' || wParam == 's') {
+                    SaveGameState();
+                    QuickSaveGame(hwnd);
+                }
                 else if (wParam == 'F' || wParam == 'f') {
                     if (CanAutoFinish()) { autoFinishActive = 1; SetTimer(hwnd, 2, 100, NULL); }
                 }
             } else {
-                if (wParam == VK_F2 || wParam == 'N' || wParam == 'n') {
+                if (wParam == VK_F5) {
+                    SaveGameState();
+                    QuickSaveGame(hwnd);
+                }
+                else if (wParam == VK_F9) {
+                    QuickLoadGame(hwnd);
+                }
+                else if (wParam == VK_RETURN || wParam == VK_SPACE) {
+                    if (gameWon) {
+                        if (winMsgPending) {
+                            KillTimer(hwnd, 6);
+                            winMsgPending = 0;
+                        }
+                        if (state.gameMode == 1 && state.campaignStage < 20) {
+                            state.campaignStage++;
+                            NewGame(hwnd);
+                        } else {
+                            NewGame(hwnd);
+                        }
+                        ShowNativeToast(hwnd, "New Game Started", 2000);
+                    } else if (wParam == VK_SPACE) {
+                        PerformStockDraw(hwnd);
+                    }
+                }
+                else if (wParam == VK_F2 || wParam == 'N' || wParam == 'n') {
                     NewGame(hwnd);
                     ShowNativeToast(hwnd, "New Game Started [F2]", 2000);
                 }
                 else if (wParam == VK_F1 || wParam == VK_HELP) ShowHelpDialog(hwnd);
                 else if (wParam == VK_ESCAPE) {
-                    if (GetTickCount() < nativeToastExpire) {
-                        nativeToastExpire = 0;
-                        nativeToastMsg[0] = '\0';
+                    if (gameWon) {
+                        if (winMsgPending) {
+                            KillTimer(hwnd, 6);
+                            winMsgPending = 0;
+                        }
+                        cascadeActive = 0;
+                        NewGame(hwnd);
+                        ShowNativeToast(hwnd, "New Game Started", 2000);
+                    } else {
+                        if (GetTickCount() < nativeToastExpire) {
+                            nativeToastExpire = 0;
+                            nativeToastMsg[0] = '\0';
+                        }
+                        ClearSelectionAndHints();
                     }
-                    ClearSelectionAndHints();
                 }
-                else if (wParam == VK_SPACE || wParam == 'D' || wParam == 'd') PerformStockDraw(hwnd);
+                else if (wParam == 'D' || wParam == 'd') PerformStockDraw(hwnd);
                 else if (wParam == '1') {
                     state.gameMode = 0;
                     NewGame(hwnd);

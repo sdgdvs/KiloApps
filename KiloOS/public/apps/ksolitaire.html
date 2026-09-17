@@ -810,6 +810,7 @@
   <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:14px;">
     <button id="next-stage-btn" class="btn btn-primary" style="font-size:16px; padding:8px 18px; display:none;" onclick="advanceNextStage()">Next Stage ➔</button>
     <button id="play-again-btn" class="btn btn-success" style="font-size:16px; padding:8px 18px;" onclick="newGame()">Play Again ⚡</button>
+    <button id="win-quickload-btn" class="btn btn-primary" style="font-size:16px; padding:8px 18px; display:none;" onclick="quickLoad()">Reload Quicksave [F9]</button>
     <button class="btn btn-warning" style="font-size:16px; padding:8px 18px;" onclick="dismissWinBanner()">Close ✕</button>
   </div>
 </div>
@@ -1106,6 +1107,15 @@ function safeGetStorage(key, defVal = null) {
   }
 }
 
+function safeGetJSON(key, defVal = null) {
+  try {
+    let val = localStorage.getItem(key);
+    return val !== null ? JSON.parse(val) : defVal;
+  } catch (e) {
+    return defVal;
+  }
+}
+
 function safeSetStorage(key, val) {
   try {
     localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
@@ -1136,11 +1146,22 @@ function init() {
   let soundIcon = document.getElementById('sound-icon');
   if (soundIcon) soundIcon.textContent = soundEnabled ? '🔊' : '🔇';
 
-  loadSavedGame();
+  const hasSavedGame = loadSavedGame();
 
-  showToast("Welcome to KSolitaire! Press [F1] for Help & Rules, [H] for Hint, [F2] New Game, [Space/D] Draw.", 4500);
+  let tutorialSeen = safeGetStorage('ksolitaire_tutorialSeen') === '1';
+  if (!tutorialSeen && !hasSavedGame) {
+    safeSetStorage('ksolitaire_tutorialSeen', '1');
+    openHelpModal();
+    showToast("Welcome to KSolitaire! Review rules & shortcuts [F1/Esc/Enter].", 5000);
+  } else {
+    showToast("Welcome to KSolitaire! Press [F1] for Help & Rules, [H] for Hint, [F2] New Game, [Space/D] Draw.", 4500);
+  }
+
+  window.addEventListener('beforeunload', () => saveState());
 
   window.addEventListener('keydown', (e) => {
+    let winBanner = document.getElementById('win-banner');
+    let isWinBannerActive = winBanner && winBanner.classList.contains('active');
     let helpActive = document.getElementById('help-modal')?.classList.contains('active');
     let statsActive = document.getElementById('stats-modal')?.classList.contains('active');
     let anyModal = helpActive || statsActive;
@@ -1151,9 +1172,8 @@ function init() {
         toast.classList.remove('show');
         if (toastTimeout) clearTimeout(toastTimeout);
       }
-      let winBanner = document.getElementById('win-banner');
-      if (winBanner && winBanner.classList.contains('active')) {
-        winBanner.classList.remove('active');
+      if (isWinBannerActive) {
+        dismissWinBanner();
         return;
       }
       if (anyModal) {
@@ -1165,6 +1185,25 @@ function init() {
         render();
       }
       return;
+    }
+
+    if (e.key === 'Enter' || e.key === ' ') {
+      if (isWinBannerActive) {
+        e.preventDefault();
+        let nextBtn = document.getElementById('next-stage-btn');
+        if (nextBtn && nextBtn.style.display !== 'none') {
+          advanceNextStage();
+        } else {
+          newGame();
+        }
+        return;
+      }
+      if (anyModal) {
+        e.preventDefault();
+        closeHelpModal();
+        closeStatsModal();
+        return;
+      }
     }
 
     if (e.key === 'F1' || (e.key === '?' && !e.ctrlKey && !e.altKey && !e.metaKey)) {
@@ -1500,7 +1539,11 @@ function saveState(recordUndo = false) {
     redoStack = [];
   }
 
-  safeSetStorage('ksolitaire_savestate', snapshot);
+  let ok = safeSetStorage('ksolitaire_savestate', snapshot);
+  if (!ok && snapshot.undoStack.length > 5) {
+    snapshot.undoStack = snapshot.undoStack.slice(-5);
+    safeSetStorage('ksolitaire_savestate', snapshot);
+  }
 
   updateUIStats();
 }
@@ -1562,11 +1605,12 @@ function loadSavedGame() {
         if (gameStarted && !gameWon) startTimer();
         updateTimerDisplay();
         render();
-        return;
+        return true;
       }
     }
   } catch(e){}
   newGame();
+  return false;
 }
 
 function getGameStateSnapshot() {
@@ -1654,6 +1698,11 @@ function restoreGameState(snapshot) {
     document.getElementById('sub-info').textContent = "";
   }
 
+  let banner = document.getElementById('win-banner');
+  if (banner) banner.classList.remove('active');
+  const canvas = document.getElementById('win-canvas');
+  if (canvas) canvas.style.display = 'none';
+
   if (gameStarted && !gameWon) startTimer();
   updateTimerDisplay();
   render();
@@ -1663,19 +1712,22 @@ function restoreGameState(snapshot) {
 
 function quickSave() {
   let snap = getGameStateSnapshot();
-  safeSetStorage('ksolitaire_quicksave', snap);
-  playSound('place');
-  showToast("💾 Game quicksaved! [F5]");
+  let ok = safeSetStorage('ksolitaire_quicksave', snap);
+  if (ok) {
+    playSound('place');
+    showToast("💾 Game quicksaved! [F5]");
+  } else {
+    showToast("⚠️ Storage full: quicksave failed!");
+  }
 }
 
 function quickLoad() {
-  let d = safeGetStorage('ksolitaire_quicksave');
-  if (!d) {
+  let snap = safeGetJSON('ksolitaire_quicksave', null);
+  if (!snap || !snap.stock || !snap.tableau || !snap.foundations) {
     playSound('error');
     showToast("No quicksave file found! Press [F5] to save.");
     return;
   }
-  let snap = typeof d === 'string' ? JSON.parse(d) : d;
   if (restoreGameState(snap)) {
     playSound('flip');
     showToast("📂 Game quickloaded! [F9]");
@@ -1729,6 +1781,12 @@ function importSaveFile(event) {
 function dismissWinBanner() {
   let banner = document.getElementById('win-banner');
   if (banner) banner.classList.remove('active');
+  if (winAnimId) {
+    cancelAnimationFrame(winAnimId);
+    winAnimId = null;
+  }
+  const canvas = document.getElementById('win-canvas');
+  if (canvas) canvas.style.display = 'none';
 }
 
 function undoMove() {
@@ -2924,6 +2982,10 @@ function checkWin() {
       document.getElementById('win-details').textContent = `Score: ${scoreCount} | Time: ${m}:${s} | Moves: ${movesCount}`;
     }
 
+    let qlBtn = document.getElementById('win-quickload-btn');
+    let hasQuickSave = !!safeGetJSON('ksolitaire_quicksave', null);
+    if (qlBtn) qlBtn.style.display = hasQuickSave ? 'inline-block' : 'none';
+
     document.getElementById('win-banner').classList.add('active');
     startWinCascade();
   }
@@ -3266,6 +3328,7 @@ function closeStatsModal() {
 }
 
 function openHelpModal() {
+  safeSetStorage('ksolitaire_tutorialSeen', '1');
   document.getElementById('help-modal').classList.add('active');
 }
 
