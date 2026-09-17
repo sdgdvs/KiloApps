@@ -30,10 +30,14 @@ if hasattr(sys.stdout, "reconfigure"):
 PROTECTED_PATHS = [
     ".github/",
     "scripts/",
+    ".agents/skills/",
+    "docs/DIRECTOR_PROTOCOL.md",
     "check_sizes.py",
     "firebase.json",
     ".firebaserc",
     ".gitignore",
+    "next_work.md",
+    "arg_plan.md",
 ]
 
 # 2. Globally Banned Win32 / C APIs (Instant rejection across ALL applications)
@@ -46,7 +50,14 @@ GLOBAL_BANNED_C_APIS = {
     "shell_winexec": (r"\bWinExec\b", "Deprecated arbitrary command execution"),
     "shell_system": (r"\bsystem\s*\(", "Arbitrary shell invocation"),
     "process_create": (r"\bCreateProcess(A|W)?\s*\(", "Process creation (restricted to whitelisted tools)"),
+    "token_paste": (r"##", "Preprocessor token pasting (potential API name obfuscation)"),
 }
+
+# Banned strings resolved via GetProcAddress (dynamic resolution of dangerous APIs)
+DYNAMIC_RESOLVE_TARGETS = [
+    "VirtualAllocEx", "WriteProcessMemory", "CreateRemoteThread",
+    "SetWindowsHookEx", "URLDownloadToFile", "WinExec",
+]
 
 # Whitelist for apps with legitimate, bounded reasons to use specific APIs
 APP_SPECIFIC_WHITELISTS = {
@@ -70,6 +81,11 @@ SOCKET_APIS = {
 BANNED_WEB_PATTERNS = {
     "web_eval": (r"\beval\s*\(", "Dynamic string evaluation (eval)"),
     "web_new_function": (r"\bnew\s+Function\s*\(", "Dynamic function compilation (new Function)"),
+    "web_func_constructor": (r"Function\.prototype\.constructor", "Function constructor bypass"),
+    "web_settimeout_string": (r"\bsetTimeout\s*\(\s*['\"]", "setTimeout with string argument (eval equivalent)"),
+    "web_setinterval_string": (r"\bsetInterval\s*\(\s*['\"]", "setInterval with string argument (eval equivalent)"),
+    "web_javascript_uri": (r"""(?:href|src|action)\s*=\s*['"]?\s*javascript:""", "javascript: URI protocol (injection vector)"),
+    "web_data_html_uri": (r"""(?:href|src)\s*=\s*['"]?\s*data:text/html""", "data:text/html URI (payload embedding)"),
     "web_doc_write_unescape": (r"document\.write\s*\(\s*unescape\b", "Obfuscated document injection"),
     "web_doc_write_atob": (r"document\.write\s*\(\s*atob\b", "Base64 payload injection"),
     "web_external_script": (r"<script[^>]+src\s*=\s*['\"]https?://", "External script import (must be bundled/inline)"),
@@ -88,14 +104,32 @@ def log(msg: str):
 
 
 def strip_c_syntax(content: str) -> str:
-    """Removes comments and string literals to prevent false positives."""
+    """Removes comments, string/char literals, and preprocessor noise to prevent false positives."""
     # Strip block comments
     clean = re.sub(r"/\*.*?\*/", "", content, flags=re.DOTALL)
     # Strip line comments
     clean = re.sub(r"//.*", "", clean)
     # Strip string literals ("...")
     clean = re.sub(r'"(?:\\.|[^"\\])*"', '""', clean)
+    # Strip character literals ('x', '\n', '\x41', etc.)
+    clean = re.sub(r"'(?:\\.|[^'\\])'", "' '", clean)
     return clean
+
+
+def extract_macro_bodies(content: str) -> str:
+    """Extracts #define macro bodies for separate banned-API scanning.
+
+    This catches attempts to alias banned APIs behind macros, e.g.:
+        #define MyAlloc VirtualAllocEx
+    The main code scan sees 'MyAlloc(...)' which passes, but the macro
+    body 'VirtualAllocEx' is caught here.
+    """
+    bodies = []
+    for m in re.finditer(r"#\s*define\s+\w+(?:\([^)]*\))?\s+(.*)", content):
+        body = m.group(1).strip()
+        if body:
+            bodies.append(body)
+    return "\n".join(bodies)
 
 
 def get_pr_diff_files(base_ref: str = "origin/main") -> list[str]:
@@ -164,6 +198,25 @@ def check_c_file(file_path: Path) -> list[str]:
     if "HKEY_CURRENT_USER" in clean_content or "HKEY_LOCAL_MACHINE" in clean_content:
         if re.search(r"CurrentVersion\\Run", clean_content, re.IGNORECASE):
             violations.append(f"[{app_name}] Persistence vulnerability in {file_path.name}: Targets Windows Run/RunOnce autostart keys")
+
+    # 4. Scan #define macro bodies for aliased banned APIs
+    macro_text = extract_macro_bodies(content)
+    if macro_text:
+        for rule_key, (pattern, reason) in GLOBAL_BANNED_C_APIS.items():
+            if rule_key in whitelisted_rules or rule_key == "token_paste":
+                continue
+            if re.search(pattern, macro_text):
+                violations.append(f"[{app_name}] Banned API aliased via #define in {file_path.name}: {reason}")
+
+    # 5. Catch dynamic resolution of banned APIs via GetProcAddress
+    #    Scans raw content (with strings intact) to find the API name string argument.
+    for target_api in DYNAMIC_RESOLVE_TARGETS:
+        pattern = rf'GetProcAddress\s*\([^,]*,\s*["\']' + re.escape(target_api) + r'["\']'
+        if re.search(pattern, content):
+            violations.append(
+                f"[{app_name}] Dynamic resolution of banned API in {file_path.name}: "
+                f"GetProcAddress resolves '{target_api}'"
+            )
 
     return violations
 

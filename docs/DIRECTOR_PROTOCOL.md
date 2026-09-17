@@ -132,25 +132,35 @@ Because KiloApps accepts pull requests from distributed autonomous forks and aut
 Contributors and autonomous worker agents have permission to modify applications (`K*/**/*`, `KiloOS/public/apps/*`), assets, and tests. They are strictly forbidden from modifying:
 - `.github/` (all workflow files and Gatekeeper actions)
 - `scripts/` (`orchestrate.py`, `security_lint.py`, `reconcile_receipts.py`)
+- `.agents/skills/` (Gemini skill definitions that control agent behavior)
+- `docs/DIRECTOR_PROTOCOL.md` (this file)
+- `next_work.md`, `arg_plan.md` (fleet queue state and ARG plan)
 - `check_sizes.py`, `firebase.json`, `.firebaserc`, `.gitignore`
 
 Any PR attempting to touch protected paths is rejected by [`scripts/security_lint.py`](../scripts/security_lint.py).
 
 ### Layer 2: Win32 C Malware & Persistence Banlist
-All native C code is stripped of comments and string literals, then statically evaluated against dangerous API signatures:
+All native C code is pre-processed to strip block/line comments, double-quoted string literals, and single-character literals, then statically evaluated against dangerous API signatures:
 - **Memory Injection**: `VirtualAllocEx`, `WriteProcessMemory`, `CreateRemoteThread`.
 - **Spyware / Surveillance**: `SetWindowsHookEx` (keyboard/mouse hooks).
 - **Stealth Payload Fetching**: `URLDownloadToFile`.
 - **Arbitrary Command Execution**: `WinExec`, `system()`.
 - **Persistence**: Registry autostart keys (`CurrentVersion\Run`, `CurrentVersion\RunOnce`).
 - **Raw Sockets**: `WSAStartup`, `socket()`, `connect()` are banned in all offline apps (games, office, utilities), and permitted only in designated network applications (`KBBS`, `KChat`, `KChatServer`, `KNet`).
+- **Token Pasting**: Preprocessor `##` operator is banned to prevent assembling banned API names from fragments.
+- **Dynamic Resolution**: `GetProcAddress` calls are scanned for string arguments matching banned API names (e.g. `GetProcAddress(h, "VirtualAllocEx")`), blocking runtime evasion of static bans.
+- **Macro Aliasing**: `#define` macro bodies are independently scanned for banned API names, catching alias-based evasion (e.g. `#define MyAlloc VirtualAllocEx`).
 
 *Whitelisted exceptions* (e.g. `KPing` executing `ping.exe`, `KZip` opening `notepad.exe`, `KJournal` invoking console `cls`) are strictly bounded and tracked in `APP_SPECIFIC_WHITELISTS`.
 
 ### Layer 3: Web & JavaScript Obfuscation Ban
 Web applications under `KiloOS/public/apps/` are scanned for dynamic code injection and cryptomining:
-- Banned: `eval()`, `document.write(unescape(...))`, `document.write(atob(...))`.
-- Banned: External script tags `<script src="https://...">` (all libraries and assets must be bundled locally or inlined to preserve the offline retro sandbox).
+- **Dynamic Execution**: `eval()`, `new Function()`, `Function.prototype.constructor`.
+- **Eval Equivalents**: `setTimeout("string")`, `setInterval("string")` with string arguments.
+- **Injection Vectors**: `javascript:` URI protocols, `data:text/html` URIs.
+- **Obfuscated Payloads**: `document.write(unescape(...))`, `document.write(atob(...))`.
+- **External Dependencies**: `<script src="https://...">` tags — all code must be bundled locally or inlined.
+- **Cryptomining**: `coinhive`, `crypto-loot`.
 - Whitelisted: `new Function()` is permitted only in `kcalc.html` and `kgraph.html` for mathematical expression parsing.
 
 ### Layer 4: Turn Receipt & Provenance Attestation
