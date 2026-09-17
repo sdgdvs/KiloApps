@@ -72,15 +72,19 @@ typedef struct { float x; int timer, delay, active; int width; } OrbitalStrike;
 
 typedef struct {
     int score, wave, mode;
-    int playerHp, shieldActive, hyperShieldTimer, hyperShieldCooldown, bombs, weaponType;
+    int playerHp, shieldActive, hyperShieldTimer, hyperShieldCooldown, bombs, weaponType, weaponLevel;
     int spreadTimer, laserTimer, rapidTimer, timeStopTimer, timeStopCooldown, dashCooldown, invincibleTimer;
     int overchargeEnergy, overchargeTimer, bombardmentActive;
     float px, py;
-    int enemiesKilled;
+    int enemiesKilled, comboMultiplier, comboTimer;
+    int shotsFired, shotsHit, timeSurvivedFrames;
     int bossActive, bossHp, bossMaxHp, bossLevel, bossIsMothership;
     float bossX, bossY;
     int turretHp[4], turretActive[4];
     int bossIsDreadnought, dreadGenL, dreadGenR, droneCount, hyperJumpEnergy;
+    int escortActive, escortHp;
+    float escortX, escortY;
+    int pathGatesActive, eliteSquadActive, eliteSquadTimer;
 } SaveState;
 
 // --- GLOBAL GAME DATA ---
@@ -555,6 +559,8 @@ void AddScoreToLeaderboard(int newScore, int newWave, int mode) {
 }
 
 int HasSavedGame() {
+    DWORD attr = GetFileAttributesA("kspace_save.dat");
+    if (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY)) return 1;
     HKEY hKey;
     int found = 0;
     if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\KSpace\\Save", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
@@ -565,120 +571,205 @@ int HasSavedGame() {
 }
 
 void SaveGameState() {
+    SaveState s;
+    BYTE* pByte = (BYTE*)&s;
+    for (int i = 0; i < (int)sizeof(SaveState); i++) pByte[i] = 0;
+    s.score = score;
+    s.wave = wave;
+    s.mode = modeIndex;
+    s.playerHp = p.hp;
+    s.shieldActive = shieldActive;
+    s.hyperShieldTimer = hyperShieldTimer;
+    s.hyperShieldCooldown = hyperShieldCooldown;
+    s.bombs = bombCount;
+    s.weaponType = weaponType;
+    s.weaponLevel = weaponLevel;
+    s.spreadTimer = spreadTimer;
+    s.laserTimer = laserTimer;
+    s.rapidTimer = rapidTimer;
+    s.timeStopTimer = timeStopTimer;
+    s.timeStopCooldown = timeStopCooldown;
+    s.dashCooldown = dashCooldown;
+    s.invincibleTimer = invincibleTimer;
+    s.overchargeEnergy = overchargeEnergy;
+    s.overchargeTimer = overchargeTimer;
+    s.bombardmentActive = bombardmentActive;
+    s.px = p.x;
+    s.py = p.y;
+    s.enemiesKilled = enemiesKilled;
+    s.comboMultiplier = comboMultiplier > 0 ? comboMultiplier : 1;
+    s.comboTimer = comboTimer;
+    s.shotsFired = shotsFired;
+    s.shotsHit = shotsHit;
+    s.timeSurvivedFrames = timeSurvivedFrames;
+    s.bossActive = bossActive;
+    s.bossHp = bossHp;
+    s.bossMaxHp = bossMaxHp;
+    s.bossLevel = bossLevel;
+    s.bossIsMothership = bossIsMothership;
+    s.bossX = bossX;
+    s.bossY = bossY;
+    for (int i = 0; i < 4; i++) {
+        s.turretHp[i] = turretHp[i];
+        s.turretActive[i] = turretActive[i];
+    }
+    s.bossIsDreadnought = bossIsDreadnought;
+    s.dreadGenL = dreadGenL;
+    s.dreadGenR = dreadGenR;
+    s.droneCount = droneCount;
+    s.hyperJumpEnergy = hyperJumpEnergy;
+    s.escortActive = escort.active;
+    s.escortHp = escort.hp;
+    s.escortX = escort.x;
+    s.escortY = escort.y;
+    s.pathGatesActive = pathGatesActive;
+    s.eliteSquadActive = eliteSquadActive;
+    s.eliteSquadTimer = eliteSquadTimer;
+
+    HANDLE hFile = CreateFileA("kspace_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, &s, sizeof(SaveState), &written, NULL);
+        CloseHandle(hFile);
+    }
+
     HKEY hKey;
     if (RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\KSpace\\Save", 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS) {
-        SaveState s;
-        s.score = score;
-        s.wave = wave;
-        s.mode = modeIndex;
-        s.playerHp = p.hp;
-        s.shieldActive = shieldActive;
-        s.hyperShieldTimer = hyperShieldTimer;
-        s.hyperShieldCooldown = hyperShieldCooldown;
-        s.bombs = bombCount;
-        s.weaponType = weaponType;
-        s.spreadTimer = spreadTimer;
-        s.laserTimer = laserTimer;
-        s.rapidTimer = rapidTimer;
-        s.timeStopTimer = timeStopTimer;
-        s.timeStopCooldown = timeStopCooldown;
-        s.dashCooldown = dashCooldown;
-        s.invincibleTimer = invincibleTimer;
-        s.overchargeEnergy = overchargeEnergy;
-        s.overchargeTimer = overchargeTimer;
-        s.bombardmentActive = bombardmentActive;
-        s.px = p.x;
-        s.py = p.y;
-        s.enemiesKilled = enemiesKilled;
-        s.bossActive = bossActive;
-        s.bossHp = bossHp;
-        s.bossMaxHp = bossMaxHp;
-        s.bossLevel = bossLevel;
-        s.bossIsMothership = bossIsMothership;
-        s.bossX = bossX;
-        s.bossY = bossY;
-        for (int i = 0; i < 4; i++) {
-            s.turretHp[i] = turretHp[i];
-            s.turretActive[i] = turretActive[i];
-        }
-        s.bossIsDreadnought = bossIsDreadnought;
-        s.dreadGenL = dreadGenL;
-        s.dreadGenR = dreadGenR;
-        s.droneCount = droneCount;
-        s.hyperJumpEnergy = hyperJumpEnergy;
-
         RegSetValueExA(hKey, "Data", 0, REG_BINARY, (const BYTE*)&s, sizeof(SaveState));
         RegCloseKey(hKey);
-        PlaySnd(2);
-        ShowNativeToast("Game progress saved!", 1, 150);
     }
+    PlaySnd(2);
+    ShowNativeToast("Quicksave created! [F5]", 1, 150);
 }
 
 int LoadGameState() {
-    HKEY hKey;
-    if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\KSpace\\Save", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
-        SaveState s;
-        DWORD type = REG_BINARY;
-        DWORD size = sizeof(SaveState);
-        if (RegQueryValueExA(hKey, "Data", NULL, &type, (LPBYTE)&s, &size) == ERROR_SUCCESS) {
-            score = s.score;
-            wave = s.wave;
-            modeIndex = s.mode;
-            p.hp = s.playerHp;
-            shieldActive = s.shieldActive;
-            hyperShieldTimer = s.hyperShieldTimer;
-            hyperShieldCooldown = s.hyperShieldCooldown;
-            bombCount = s.bombs;
-            weaponType = s.weaponType;
-            spreadTimer = s.spreadTimer;
-            laserTimer = s.laserTimer;
-            rapidTimer = s.rapidTimer;
-            timeStopTimer = s.timeStopTimer;
-            timeStopCooldown = s.timeStopCooldown;
-            dashCooldown = s.dashCooldown;
-            invincibleTimer = s.invincibleTimer;
-            overchargeEnergy = s.overchargeEnergy;
-            overchargeTimer = s.overchargeTimer;
-            bombardmentActive = s.bombardmentActive;
-            p.x = s.px;
-            p.y = s.py;
-            enemiesKilled = s.enemiesKilled;
-            bossActive = s.bossActive;
-            bossHp = s.bossHp;
-            bossMaxHp = s.bossMaxHp;
-            bossLevel = s.bossLevel;
-            bossIsMothership = s.bossIsMothership;
-            bossX = s.bossX;
-            bossY = s.bossY;
-            for (int i = 0; i < 4; i++) {
-                turretHp[i] = s.turretHp[i];
-                turretActive[i] = s.turretActive[i];
+    SaveState s;
+    int success = 0;
+    HANDLE hFile = CreateFileA("kspace_save.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD readBytes = 0;
+        if (ReadFile(hFile, &s, sizeof(SaveState), &readBytes, NULL) && readBytes >= sizeof(int) * 10) {
+            success = 1;
+        }
+        CloseHandle(hFile);
+    }
+    if (!success) {
+        HKEY hKey;
+        if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\KSpace\\Save", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+            DWORD type = REG_BINARY;
+            DWORD size = sizeof(SaveState);
+            if (RegQueryValueExA(hKey, "Data", NULL, &type, (LPBYTE)&s, &size) == ERROR_SUCCESS) {
+                success = 1;
             }
-            bossIsDreadnought = s.bossIsDreadnought;
-            dreadGenL = s.dreadGenL;
-            dreadGenR = s.dreadGenR;
-            droneCount = s.droneCount;
-            hyperJumpEnergy = s.hyperJumpEnergy;
-
-            for (int i = 0; i < MAX_ENEMIES; i++) e[i].active = 0;
-            for (int i = 0; i < MAX_BULLETS; i++) b[i].active = 0;
-            for (int i = 0; i < MAX_EBULLETS; i++) eb[i].active = 0;
-            for (int i = 0; i < MAX_POWERUPS; i++) pu[i].active = 0;
-            for (int i = 0; i < MAX_PARTICLES; i++) particles[i].life = 0;
-
-            gameState = STATE_PLAYING;
             RegCloseKey(hKey);
-            PlaySnd(3);
-            ShowNativeToast("Game progress loaded!", 1, 150);
+        }
+    }
+    if (success) {
+        score = s.score;
+        wave = s.wave;
+        modeIndex = s.mode;
+        p.hp = s.playerHp;
+        p.maxHp = 3;
+        shieldActive = s.shieldActive;
+        hyperShieldTimer = s.hyperShieldTimer;
+        hyperShieldCooldown = s.hyperShieldCooldown;
+        bombCount = s.bombs;
+        weaponType = s.weaponType;
+        weaponLevel = s.weaponLevel;
+        spreadTimer = s.spreadTimer;
+        laserTimer = s.laserTimer;
+        rapidTimer = s.rapidTimer;
+        timeStopTimer = s.timeStopTimer;
+        timeStopCooldown = s.timeStopCooldown;
+        dashCooldown = s.dashCooldown;
+        invincibleTimer = s.invincibleTimer;
+        overchargeEnergy = s.overchargeEnergy;
+        overchargeTimer = s.overchargeTimer;
+        bombardmentActive = s.bombardmentActive;
+        p.x = s.px;
+        p.y = s.py;
+        enemiesKilled = s.enemiesKilled;
+        comboMultiplier = s.comboMultiplier > 0 ? s.comboMultiplier : 1;
+        comboTimer = s.comboTimer;
+        shotsFired = s.shotsFired;
+        shotsHit = s.shotsHit;
+        timeSurvivedFrames = s.timeSurvivedFrames;
+        bossActive = s.bossActive;
+        bossHp = s.bossHp;
+        bossMaxHp = s.bossMaxHp;
+        bossLevel = s.bossLevel;
+        bossIsMothership = s.bossIsMothership;
+        bossX = s.bossX;
+        bossY = s.bossY;
+        for (int i = 0; i < 4; i++) {
+            turretHp[i] = s.turretHp[i];
+            turretActive[i] = s.turretActive[i];
+        }
+        bossIsDreadnought = s.bossIsDreadnought;
+        dreadGenL = s.dreadGenL;
+        dreadGenR = s.dreadGenR;
+        droneCount = s.droneCount;
+        hyperJumpEnergy = s.hyperJumpEnergy;
+        escort.active = s.escortActive;
+        escort.hp = s.escortHp;
+        escort.x = s.escortX;
+        escort.y = s.escortY;
+        pathGatesActive = s.pathGatesActive;
+        eliteSquadActive = s.eliteSquadActive;
+        eliteSquadTimer = s.eliteSquadTimer;
+
+        for (int i = 0; i < MAX_ENEMIES; i++) e[i].active = 0;
+        for (int i = 0; i < MAX_BULLETS; i++) b[i].active = 0;
+        for (int i = 0; i < MAX_EBULLETS; i++) eb[i].active = 0;
+        for (int i = 0; i < MAX_POWERUPS; i++) pu[i].active = 0;
+        for (int i = 0; i < MAX_PARTICLES; i++) particles[i].life = 0;
+        for (int i = 0; i < MAX_SHOCKWAVES; i++) shockwaves[i].life = 0;
+        for (int i = 0; i < MAX_DEBRIS; i++) debris[i].life = 0.0f;
+        for (int i = 0; i < MAX_RIPPLES; i++) ripples[i].life = 0;
+        for (int i = 0; i < MAX_FLASHES; i++) flashes[i].life = 0;
+
+        gameState = STATE_PLAYING;
+        PlaySnd(3);
+        ShowNativeToast("Quicksave restored! [F9]", 1, 150);
+        return 1;
+    }
+    ShowNativeToast("No saved game found! [F9]", 2, 150);
+    return 0;
+}
+
+int HasSeenTutorial() {
+    DWORD attr = GetFileAttributesA("kspace_tutorial.dat");
+    if (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY)) return 1;
+    HKEY hKey;
+    if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\KSpace", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+        DWORD val = 0, size = sizeof(DWORD);
+        if (RegQueryValueExA(hKey, "TutorialSeen", NULL, NULL, (LPBYTE)&val, &size) == ERROR_SUCCESS && val == 1) {
+            RegCloseKey(hKey);
             return 1;
         }
         RegCloseKey(hKey);
     }
-    ShowNativeToast("No saved game found!", 2, 150);
     return 0;
 }
 
+void MarkTutorialSeen() {
+    HANDLE hFile = CreateFileA("kspace_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char val = '1';
+        DWORD written = 0;
+        WriteFile(hFile, &val, 1, &written, NULL);
+        CloseHandle(hFile);
+    }
+    HKEY hKey;
+    if (RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\KSpace", 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS) {
+        DWORD val = 1;
+        RegSetValueExA(hKey, "TutorialSeen", 0, REG_DWORD, (const BYTE*)&val, sizeof(DWORD));
+        RegCloseKey(hKey);
+    }
+}
+
 void ClearSavedGame() {
+    DeleteFileA("kspace_save.dat");
     RegDeleteKeyA(HKEY_CURRENT_USER, "Software\\KSpace\\Save");
 }
 
@@ -1289,6 +1380,13 @@ void StartNewGame(int modeIdx) {
     PlaySnd(3);
 
     if (modeIndex == MODE_BOSS_RUSH) SpawnBoss(1);
+
+    if (!HasSeenTutorial()) {
+        MarkTutorialSeen();
+        previousState = STATE_PLAYING;
+        gameState = STATE_HELP;
+        ShowNativeToast("Welcome Commander! Review controls & systems.", 0, 240);
+    }
 }
 
 void PlayerHit() {
@@ -1306,7 +1404,6 @@ void PlayerHit() {
         PlaySnd(1);
         if (p.hp <= 0) {
             gameState = STATE_GAMEOVER;
-            ClearSavedGame();
             AddScoreToLeaderboard(score, wave, modeIndex);
         }
     }
@@ -2854,10 +2951,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 stars[i].size = (layer == 0) ? 1 : ((layer == 1) ? 1 : 2);
             }
             SetTimer(hwnd, 1, 16, NULL);
-            ShowNativeToast("KSPACE: Press [H] or [F1] for Controls", 0, 240);
+            int savedOnBoot = HasSavedGame();
+            if (!HasSeenTutorial() && !savedOnBoot) {
+                MarkTutorialSeen();
+                previousState = STATE_MENU;
+                gameState = STATE_HELP;
+                ShowNativeToast("Welcome Commander! Review controls [F1/Esc]", 0, 300);
+            } else {
+                ShowNativeToast("KSPACE: [F1] Controls | [F5] Save | [F9] Load", 0, 240);
+            }
             break;
 
         case WM_KEYDOWN:
+            if (wParam == VK_F5) {
+                if (gameState == STATE_PLAYING || gameState == STATE_PAUSED) {
+                    SaveGameState();
+                } else {
+                    ShowNativeToast("Quicksave only during mission [F5]", 2, 120);
+                }
+                break;
+            }
+            if (wParam == VK_F9) {
+                LoadGameState();
+                break;
+            }
             if (wParam == 'M') {
                 soundMuted = !soundMuted;
                 ShowNativeToast(soundMuted ? "Sound: MUTED" : "Sound: ON", 0, 90);
@@ -2912,9 +3029,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     else if (menuIndex == 4) gameState = STATE_MENU;
                 } else if (wParam == 'P' || wParam == VK_ESCAPE) gameState = STATE_PLAYING;
             } else if (gameState == STATE_LEADERBOARD || gameState == STATE_GAMEOVER || gameState == STATE_VICTORY) {
+                if (wParam == VK_F9 && HasSavedGame()) {
+                    LoadGameState();
+                    break;
+                }
                 if (wParam == VK_RETURN || wParam == VK_SPACE || wParam == VK_ESCAPE) gameState = STATE_MENU;
-                if ((gameState == STATE_GAMEOVER || gameState == STATE_VICTORY) && wParam == 'E') { ExportStatsCSV(); }
-                if ((gameState == STATE_GAMEOVER || gameState == STATE_VICTORY) && wParam == 'J') { ExportStatsJSON(); }
+                if ((gameState == STATE_GAMEOVER || gameState == STATE_VICTORY) && (wParam == 'E' || wParam == 'e')) { ExportStatsCSV(); }
+                if ((gameState == STATE_GAMEOVER || gameState == STATE_VICTORY) && (wParam == 'J' || wParam == 'j')) { ExportStatsJSON(); }
             }
             break;
 
@@ -3000,6 +3121,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (gameState == STATE_HELP) {
                 gameState = (previousState == STATE_PLAYING || previousState == STATE_PAUSED) ? STATE_PAUSED : STATE_MENU;
             } else if (gameState == STATE_LEADERBOARD || gameState == STATE_GAMEOVER || gameState == STATE_VICTORY) {
+                if ((gameState == STATE_GAMEOVER || gameState == STATE_VICTORY) && HasSavedGame() && my >= H/2 && my <= H/2 + 25) {
+                    LoadGameState();
+                    break;
+                }
                 gameState = STATE_MENU;
             }
             break;
@@ -3557,7 +3682,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         SetTextColor(memDC, RGB(255, 234, 0));
                         TextOutA(memDC, W/2 - 60, 100, "SYSTEM PAUSED", 13);
                         SelectObject(memDC, hFontMenu);
-                        char* opts[] = {"RESUME GAME", "HOW TO PLAY", "SAVE GAME STATE", "LOAD GAME STATE", "QUIT TO MENU"};
+                        char* opts[] = {"RESUME GAME [P]", "HOW TO PLAY [H]", "QUICKSAVE [F5]", "QUICKLOAD [F9]", "QUIT TO MENU"};
                         for (int i = 0; i < 5; i++) {
                             int y = 160 + i * 34;
                             if (i == menuIndex) {
@@ -3581,7 +3706,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         char finalStr[64];
                         wsprintfA(finalStr, "FINAL SCORE: %d", score);
                         TextOutA(memDC, W/2 - lstrlenA(finalStr)*3, H/2 - 10, finalStr, lstrlenA(finalStr));
-                        TextOutA(memDC, W/2 - 80, H/2 + 25, "ENTER:Menu E:CSV J:JSON", 23);
+                        if (HasSavedGame()) {
+                            SetTextColor(memDC, RGB(0, 230, 118));
+                            TextOutA(memDC, W/2 - 80, H/2 + 10, "[F9] RELOAD QUICKSAVE", 21);
+                            SetTextColor(memDC, RGB(255, 255, 255));
+                            TextOutA(memDC, W/2 - 80, H/2 + 32, "ENTER:Menu E:CSV J:JSON", 23);
+                        } else {
+                            TextOutA(memDC, W/2 - 80, H/2 + 25, "ENTER:Menu E:CSV J:JSON", 23);
+                        }
                     } else if (gameState == STATE_VICTORY) {
                         SelectObject(memDC, hFontTitle);
                         SetTextColor(memDC, RGB(0, 230, 118));
@@ -3593,7 +3725,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         char finalStr[64];
                         wsprintfA(finalStr, "FINAL SCORE: %d", score);
                         TextOutA(memDC, W/2 - lstrlenA(finalStr)*3, H/2 + 5, finalStr, lstrlenA(finalStr));
-                        TextOutA(memDC, W/2 - 80, H/2 + 35, "ENTER:Menu E:CSV J:JSON", 23);
+                        if (HasSavedGame()) {
+                            SetTextColor(memDC, RGB(0, 230, 118));
+                            TextOutA(memDC, W/2 - 80, H/2 + 25, "[F9] RELOAD QUICKSAVE", 21);
+                            SetTextColor(memDC, RGB(255, 255, 255));
+                            TextOutA(memDC, W/2 - 80, H/2 + 45, "ENTER:Menu E:CSV J:JSON", 23);
+                        } else {
+                            TextOutA(memDC, W/2 - 80, H/2 + 35, "ENTER:Menu E:CSV J:JSON", 23);
+                        }
                     }
                 }
             }
@@ -3650,6 +3789,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 1;
 
         case WM_DESTROY:
+            if (gameState == STATE_PLAYING || gameState == STATE_PAUSED) {
+                SaveGameState();
+            }
             SaveLeaderboard();
             if (hFontTitle) DeleteObject(hFontTitle);
             if (hFontMenu) DeleteObject(hFontMenu);
@@ -3676,7 +3818,7 @@ void MainEntry() {
 
     RECT wr = {0, 0, W, H};
     AdjustWindowRect(&wr, (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN, FALSE);
-    HWND hwnd = CreateWindowEx(0, "KSpaceApp", "KSpace - Deep Space Shooter [F1/H: Help | P: Pause | Click: Fire]", (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN,
+    HWND hwnd = CreateWindowEx(0, "KSpaceApp", "KSpace - Deep Space Shooter [F1: Help | F5: Save | F9: Load]", (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX) | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);

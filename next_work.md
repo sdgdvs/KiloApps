@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,12 +16,12 @@ current_targets:
   kilo_graphics: KStarship
   kilo_tester: KTask
   kilo_usability: KReversi
-  kilo_qa: KSpace
+  kilo_qa: KStarship
   kilo_expander: KTerm
 last_run:
-  agent: kilo-usability
-  app: KGo
-  timestamp: "2026-09-17T15:52:00Z"
+  agent: kilo-qa
+  app: KSpace
+  timestamp: "2026-09-17T16:45:00Z"
 last_planner_run: "2026-09-16T19:00:00Z"
 ---
 
@@ -73,9 +73,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KConnect4`, `KTerm`, `KPad`, `KCalc`, `KPaint`, `KAudio`, `KEdit`, `KExcel`, `KFiles`, `KFit`, `KFlash`, `KFlight`, `KFont`, `KForm`, `KFormula`, `KForth`, `KFractal`, `KGraph`, `KHex`, `KIcon`, `KImage`, `KInvoice`, `KKanban`, `KLife`, `KLogic`, `KMail`, `KMarkdown`, `KMaze`, `KMidi`, `KMines`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KPong`, `KChess`, `KGo`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KSpace`
+- **Current Target**: `KStarship`
 - **Upcoming Queue**:
-  `KStarship`, `KStellar`, `KSudoku`, `KSynth`, `KSys`, `KTask`, `KTerm`, `KTetris`, `KTimer`, `KTodo`, `KTowers`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KWords`, `KZip`, `K2048`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KMaze`, `KSnake`, `KSolitaire` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire)*.
+  `KStellar`, `KSudoku`, `KSynth`, `KSys`, `KTask`, `KTerm`, `KTetris`, `KTimer`, `KTodo`, `KTowers`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KWords`, `KZip`, `K2048`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KMaze`, `KSnake`, `KSolitaire`, `KSpace` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KTerm`
@@ -85,6 +85,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-09-17T16:45:00Z — kilo-qa: KSpace**
+  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial integrity, overlays).
+  - Highlights: Complete mission quicksave (F5) and quickload (F9) across web and native with quota fallback.
+  - Tutorial Integrity: Fresh-session tutorial onboarding (`kspace_tutorialSeen` / `kspace_tutorial.dat`) protecting restored saves.
+  - Overlay & Controls: Game over and victory screens now feature working `[F9] Reload Quicksave` actions and shortcuts.
+  - Bug Fixes: Removed save deletion on death; fixed help overlay click-through returning to menu instead of resuming game.
+  - Verification: Clean single-file Web build (139 KB, Vite built in 319ms); Native MSVC clean build (72.7 KB); strictly <999 KB ceiling.
 
 - **2026-09-17T15:52:00Z — kilo-usability: KGo**
   - Status: PASS ✅ (UX, responsive scaling, layout, hotkeys, and onboarding pass).
@@ -118,11 +126,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - UX & Persistence: v1.0.0 splash screen, 5-step onboarding tutorial (`kchrono_tutorialSeen`), F5/F9 save/load, JSON backup/restore.
   - Content: 5 operations/scenarios (The Genesis Core, Echo Protocol, Singularity Rupture, Grandfather's Cipher, Chrono Sandbox).
   - Verification: MSVC Native C (15 KB) and Single-File Web (108 KB) clean builds; <999 KB hard ceiling verified.
-
-- **2026-09-17T11:52:00Z — kilo-expander: KScript**
-  - Status: PASS ✅ (Deep functional feature expansion).
-  - Highlights: Multi-char variables, bitwise (&, |, ^, ~, <<, >>), comparison (==, !=, <, <=, >, >=), and logical (&&, ||, !) operators.
-  - Math & Control Flow: Built-ins (abs, min, max, clamp, sqrt, gcd, fact, rand, pow), if/elif/else/endif, and while loops.
-  - Diagnostics & Benchmarking: Real-time telemetry bar, iteration benchmarking suite (F6), and gutter line numbers with breakpoints (F8 continue).
-  - Inspection & Export: Multi-base Memory Inspector (Dec/Hex/Bin), JSON state snapshot export, CSV variable export, and plain text trace log.
-  - Verification: Native MSVC C (21.5 KB) and Web (86 KB) clean builds; <999 KB ceiling verified.

@@ -8,10 +8,24 @@ window.addEventListener('load', () => {
     if (window.resizeTo) window.resizeTo(340, 520);
     if (window.parent) window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 340, height: 520 }, '*');
     setTimeout(() => {
-      if (typeof showToast === 'function') {
-        showToast('🚀 KSPACE: Press [H] or [F1] for Controls', 'info', 4000);
+      let tutorialSeen = safeGetStorage('kspace_tutorialSeen') === '1';
+      let hasSaved = typeof hasSavedGame === 'function' ? hasSavedGame() : false;
+      if (!tutorialSeen && !hasSaved) {
+        safeSetStorage('kspace_tutorialSeen', '1');
+        previousState = STATE_MENU;
+        gameState = STATE_HELP;
+        if (typeof showToast === 'function') {
+          showToast('🚀 Welcome Commander! Review mission controls [F1/Esc/Enter].', 'info', 4500);
+        }
+      } else if (typeof showToast === 'function') {
+        showToast('🚀 KSPACE: [F1] Controls | [F5] Quicksave | [F9] Quickload', 'info', 4000);
       }
     }, 400);
+});
+window.addEventListener('beforeunload', () => {
+  if (gameState === STATE_PLAYING || gameState === STATE_PAUSED) {
+    if (typeof saveGameState === 'function') saveGameState();
+  }
 });
 </script>
 <style>
@@ -185,11 +199,20 @@ window.addEventListener('load', () => {
       return fallback;
     }
   }
+  function safeGetJSON(key, fallback = null) {
+    try {
+      const val = localStorage.getItem(key);
+      return val !== null ? JSON.parse(val) : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
   function safeSetStorage(key, val) {
     try {
-      localStorage.setItem(key, val);
+      localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
       return true;
     } catch (e) {
+      console.warn("Storage write failed (quota exceeded):", e);
       return false;
     }
   }
@@ -529,7 +552,8 @@ window.addEventListener('load', () => {
   }
 
   function hasSavedGame() {
-    return safeGetStorage('kspace_save') !== null;
+    let s = safeGetJSON('kspace_save');
+    return s !== null && typeof s === 'object' && !!s.p;
   }
 
   function saveGameState() {
@@ -539,6 +563,7 @@ window.addEventListener('load', () => {
       wave: wave,
       modeIndex: modeIndex,
       enemiesKilled: enemiesKilled,
+      totalKills: totalKills,
       spreadTimer: spreadTimer,
       laserTimer: laserTimer,
       rapidTimer: rapidTimer,
@@ -553,6 +578,12 @@ window.addEventListener('load', () => {
       hyperJumpTimer: hyperJumpTimer,
       overchargeEnergy: overchargeEnergy,
       overchargeTimer: overchargeTimer,
+      bombardmentActive: bombardmentActive,
+      bombardmentTimer: bombardmentTimer,
+      bombardmentBanner: bombardmentBanner,
+      eliteSquadActive: eliteSquadActive,
+      eliteSquadTimer: eliteSquadTimer,
+      eliteSquadName: eliteSquadName,
       weaponLevel: weaponLevel,
       comboMultiplier: comboMultiplier,
       comboTimer: comboTimer,
@@ -560,23 +591,38 @@ window.addEventListener('load', () => {
       shotsHit: shotsHit,
       timeSurvivedFrames: timeSurvivedFrames,
       seed: seed,
-      boss: boss
+      boss: boss,
+      escort: escort,
+      pathGatesActive: pathGatesActive,
+      pathGatesY: pathGatesY,
+      enemies: enemies.slice(0, 30),
+      powerups: powerups.slice(0, 20)
     };
-    if (safeSetStorage('kspace_save', JSON.stringify(saveObj))) {
+    let ok = safeSetStorage('kspace_save', saveObj);
+    if (!ok) {
+      delete saveObj.enemies;
+      delete saveObj.powerups;
+      ok = safeSetStorage('kspace_save', saveObj);
+    }
+    if (ok) {
       playSound(2);
+      return true;
+    } else {
+      showToast('⚠️ Storage quota full: save failed!', 'warning');
+      return false;
     }
   }
 
   function loadGameState() {
     try {
-      let str = safeGetStorage('kspace_save');
-      if (!str) return false;
-      let saveObj = JSON.parse(str);
+      let saveObj = safeGetJSON('kspace_save', null);
+      if (!saveObj || !saveObj.p) return false;
       p = saveObj.p;
-      score = saveObj.score;
-      wave = saveObj.wave;
-      modeIndex = saveObj.modeIndex;
-      enemiesKilled = saveObj.enemiesKilled;
+      score = saveObj.score || 0;
+      wave = saveObj.wave || 1;
+      modeIndex = (typeof saveObj.modeIndex === 'number') ? saveObj.modeIndex : 0;
+      enemiesKilled = saveObj.enemiesKilled || 0;
+      totalKills = saveObj.totalKills || enemiesKilled;
       spreadTimer = saveObj.spreadTimer || 0;
       laserTimer = saveObj.laserTimer || 0;
       rapidTimer = saveObj.rapidTimer || 0;
@@ -591,6 +637,12 @@ window.addEventListener('load', () => {
       hyperJumpTimer = saveObj.hyperJumpTimer || 0;
       overchargeEnergy = saveObj.overchargeEnergy || 0;
       overchargeTimer = saveObj.overchargeTimer || 0;
+      bombardmentActive = !!saveObj.bombardmentActive;
+      bombardmentTimer = saveObj.bombardmentTimer || 0;
+      bombardmentBanner = saveObj.bombardmentBanner || 0;
+      eliteSquadActive = !!saveObj.eliteSquadActive;
+      eliteSquadTimer = saveObj.eliteSquadTimer || 0;
+      eliteSquadName = saveObj.eliteSquadName || "";
       weaponLevel = saveObj.weaponLevel || 0;
       comboMultiplier = saveObj.comboMultiplier || 1;
       comboTimer = saveObj.comboTimer || 0;
@@ -600,6 +652,11 @@ window.addEventListener('load', () => {
       if (typeof saveObj.seed === 'number') seed = saveObj.seed;
       boss = saveObj.boss || null;
 
+      if (saveObj.escort) escort = saveObj.escort;
+      else escort = { active: false, x: 0, y: 0, dy: 0, hp: 0, maxHp: 0 };
+      pathGatesActive = !!saveObj.pathGatesActive;
+      pathGatesY = saveObj.pathGatesY || 0;
+
       drones = [];
       for (let i = 0; i < droneCount; i++) {
         drones.push({ x: p.x + (i === 0 ? -22 : 22), y: p.y + 6, shootTimer: i * 7 });
@@ -607,9 +664,16 @@ window.addEventListener('load', () => {
 
       bullets = [];
       eBullets = [];
-      enemies = [];
-      powerups = [];
       explosions = [];
+      shockwaves = [];
+      debris = [];
+      shieldRipples = [];
+      muzzleFlashes = [];
+      comets = [];
+
+      enemies = Array.isArray(saveObj.enemies) ? saveObj.enemies : [];
+      powerups = Array.isArray(saveObj.powerups) ? saveObj.powerups : [];
+
       gameState = STATE_PLAYING;
       playSound(3);
       return true;
@@ -1316,6 +1380,12 @@ window.addEventListener('load', () => {
       gameState = STATE_MENU;
       return;
     } else if (gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) {
+      if (hasSavedGame() && my >= 258 && my <= 292 && mx >= 35 && mx <= W - 35) {
+        if (loadGameState()) {
+          showToast('Quicksave restored! [F9]', 'success');
+          return;
+        }
+      }
       if (my >= 315 && my <= 350) {
         if (mx >= 15 && mx <= 100) { exportCSV(); return; }
         if (mx >= 105 && mx <= 200) { exportStats(); return; }
@@ -2291,7 +2361,6 @@ window.addEventListener('load', () => {
       playSound(1);
       if (p.hp <= 0) {
         gameState = STATE_GAMEOVER;
-        clearSavedGame();
         addScoreToLeaderboard(score, wave, MODES[modeIndex].name);
         if (!isReplaying) lastReplaySaved = currentReplay;
       }
@@ -3230,6 +3299,7 @@ window.addEventListener('load', () => {
       "ARROWS / DRAG : Move Ship",
       "SPACE / CLICK : Fire Weapon",
       "[P] / [||]    : Pause Game",
+      "[F5] / [F9]   : Quicksave / Quickload",
       "[M]           : Toggle Audio Mute",
       "",
       "--- LOOP 11 SYSTEMS ---",
@@ -3247,12 +3317,12 @@ window.addEventListener('load', () => {
       "W:Drone Pod O:Overcharge Core"
     ];
     for (let i = 0; i < instructions.length; i++) {
-      ctx.fillText(instructions[i], W / 2, 75 + i * 17);
+      ctx.fillText(instructions[i], W / 2, 72 + i * 16);
     }
 
     ctx.fillStyle = '#ffea00';
-    ctx.font = 'bold 13px monospace';
-    ctx.fillText('Press [H], [ESC], or Click to return', W / 2, H - 25);
+    ctx.font = 'bold 12px monospace';
+    ctx.fillText('Press [H], [ESC], [ENTER] or Click to return', W / 2, H - 22);
     ctx.textAlign = 'left';
   }
 
@@ -3404,6 +3474,17 @@ window.addEventListener('load', () => {
     ctx.font = '12px monospace';
     ctx.fillText(`Kills: ${enemiesKilled} | Accuracy: ${acc}%`, W / 2, 220);
 
+    // Quicksave reload checkpoint if save exists
+    if (hasSavedGame()) {
+      ctx.fillStyle = 'rgba(0, 230, 118, 0.18)';
+      ctx.fillRect(35, 260, W - 70, 28);
+      ctx.strokeStyle = '#00e676';
+      ctx.strokeRect(35, 260, W - 70, 28);
+      ctx.fillStyle = '#00e676';
+      ctx.font = 'bold 12px monospace';
+      ctx.fillText('[F9] RELOAD QUICKSAVE', W / 2, 278);
+    }
+
     // Interactive button boxes
     ctx.fillStyle = 'rgba(0, 229, 255, 0.15)';
     ctx.fillRect(15, 315, 85, 26);
@@ -3447,6 +3528,17 @@ window.addEventListener('load', () => {
     ctx.fillStyle = '#80d8ff';
     ctx.font = '12px monospace';
     ctx.fillText(`Kills: ${enemiesKilled} | Accuracy: ${acc}%`, W / 2, 235);
+
+    // Quicksave reload checkpoint if save exists
+    if (hasSavedGame()) {
+      ctx.fillStyle = 'rgba(0, 230, 118, 0.18)';
+      ctx.fillRect(35, 260, W - 70, 28);
+      ctx.strokeStyle = '#00e676';
+      ctx.strokeRect(35, 260, W - 70, 28);
+      ctx.fillStyle = '#00e676';
+      ctx.font = 'bold 12px monospace';
+      ctx.fillText('[F9] RELOAD QUICKSAVE', W / 2, 278);
+    }
 
     // Interactive button boxes
     ctx.fillStyle = 'rgba(0, 229, 255, 0.15)';

@@ -55,3 +55,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial integrity, overlays).
   - Highlights: Full state F5 quicksave and F9 quickload persistence in web and native, synchronized with autosave, first-run tutorial onboarding (`ksolitaire_tutorialSeen` / `ksolitaire_tutorial.dat`) protecting restored saves, win overlay reload button and Esc/Enter/Space controls, auto-save beforeunload, storage quota resilience. Native (49.6 KB) and Web (120 KB) clean builds.
 
+- **2026-09-17T11:52:00Z — kilo-expander: KScript**
+  - Status: PASS ✅ (Deep functional feature expansion).
+  - Highlights: Multi-char variables, bitwise (&, |, ^, ~, <<, >>), comparison (==, !=, <, <=, >, >=), and logical (&&, ||, !) operators.
+  - Math & Control Flow: Built-ins (abs, min, max, clamp, sqrt, gcd, fact, rand, pow), if/elif/else/endif, and while loops.
+  - Diagnostics & Benchmarking: Real-time telemetry bar, iteration benchmarking suite (F6), and gutter line numbers with breakpoints (F8 continue).
+  - Inspection & Export: Multi-base Memory Inspector (Dec/Hex/Bin), JSON state snapshot export, CSV variable export, and plain text trace log.
+  - Verification: Native MSVC C (21.5 KB) and Web (86 KB) clean builds; <999 KB ceiling verified.
+
+
