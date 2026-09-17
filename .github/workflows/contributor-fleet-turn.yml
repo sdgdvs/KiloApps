@@ -29,7 +29,7 @@ jobs:
       - name: Sync with Upstream Main
         shell: bash
         run: |
-          git remote add upstream https://github.com/mrbos/KiloApps.git || true
+          git remote add upstream https://github.com/sdgdvs/KiloApps.git || true
           git fetch upstream main
           git rebase upstream/main || git rebase --abort
 
@@ -109,7 +109,7 @@ jobs:
           git push origin "$BRANCH_NAME"
 
           gh pr create \
-            --repo mrbos/KiloApps \
+            --repo sdgdvs/KiloApps \
             --base main \
             --head "$BRANCH_NAME" \
             --title "🤖 Fleet Turn: $(git log -1 --pretty=%s)" \
