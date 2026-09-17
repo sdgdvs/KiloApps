@@ -1030,6 +1030,71 @@ document.getElementById('btnTagMature').addEventListener('click', () => {
   alert(`Moved ${currentAppId} into 🔒 Mature Vault.`);
 });
 
+// --- INPUT SANITIZATION & SECURITY ---
+// All user-supplied text must pass through escapeHtml before DOM insertion via innerHTML.
+// Directive instructions are additionally validated by sanitizeDirective to prevent
+// pipeline-breaking or ARG-destructive commands from being queued.
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+
+const DIRECTIVE_MAX_LENGTH = 2000;
+const DIRECTIVE_MAX_QUEUE  = 50;
+
+// Patterns that would break the fleet pipeline, corrupt the ARG, or sabotage infrastructure.
+// Directors can propose new apps, request features, add websites, and steer content freely,
+// but cannot issue instructions that destroy, delete, or bypass safety mechanisms.
+const DIRECTIVE_BANNED_PATTERNS = [
+  // Pipeline destruction / infrastructure sabotage
+  { rx: /\b(delete|remove|destroy|wipe|erase|drop)\s+(all\s+)?(apps?|fleet|repo|repository|codebase|pipeline|infrastructure)\b/i,
+    reason: "Destructive fleet command detected" },
+  { rx: /\b(rm\s+-rf|format\s+c:|del\s+\/[sfq])\b/i,
+    reason: "Dangerous shell command detected" },
+  // Security bypass attempts
+  { rx: /\b(disable|bypass|remove|delete|ignore)\s+(security[_\s]?lint|gatekeeper|immutability|security[_\s]?gate|protected[_\s]?paths?)\b/i,
+    reason: "Security bypass attempt detected" },
+  { rx: /\bmodify\s+(\.github|scripts\/|gatekeeper|security_lint|orchestrat)/i,
+    reason: "Protected infrastructure modification attempt" },
+  // ARG destruction (not modification — directors can ADD ARG content, just not destroy it)
+  { rx: /\b(delete|remove|destroy|erase|strip)\s+(the\s+)?(arg|kmatrix|passkey|echo.?1999|breadcrumb|ludonarrative)\b/i,
+    reason: "ARG destruction attempt detected" },
+  { rx: /\bchange\s+(the\s+)?master\s*passkey\s+to\b/i,
+    reason: "Direct passkey override attempt — use the rotation protocol in DIRECTOR_PROTOCOL.md" },
+  // Code injection via directive text (someone embedding script tags or JS in directive instructions)
+  { rx: /<script[\s>]/i,
+    reason: "Script injection in directive text" },
+  { rx: /\beval\s*\(/i,
+    reason: "Code injection attempt in directive text" },
+  { rx: /javascript\s*:/i,
+    reason: "javascript: URI injection in directive text" },
+];
+
+/**
+ * Validates a directive instruction string.
+ * Returns { ok: true } or { ok: false, reason: "..." }.
+ */
+function sanitizeDirective(text) {
+  if (!text || !text.trim()) {
+    return { ok: false, reason: "Directive instructions cannot be empty." };
+  }
+  const trimmed = text.trim();
+  if (trimmed.length > DIRECTIVE_MAX_LENGTH) {
+    return { ok: false, reason: `Directive exceeds maximum length (${DIRECTIVE_MAX_LENGTH} chars). Be terse and concrete.` };
+  }
+  if (trimmed.length < 10) {
+    return { ok: false, reason: "Directive too short — provide concrete, actionable instructions (minimum 10 chars)." };
+  }
+  for (const { rx, reason } of DIRECTIVE_BANNED_PATTERNS) {
+    if (rx.test(trimmed)) {
+      return { ok: false, reason: `🛡️ BLOCKED: ${reason}.\n\nDirectors can propose new apps, add content, request features, and steer creative direction — but cannot issue destructive commands or bypass security infrastructure.` };
+    }
+  }
+  return { ok: true };
+}
+
 // --- DIRECTIVES DISPATCHER ---
 let directives = JSON.parse(localStorage.getItem('kdirector_directives') || '[]');
 const directivesList = document.getElementById('activeDirectivesList');
@@ -1046,16 +1111,33 @@ function renderDirectives() {
     card.style.display = 'flex';
     card.style.justifyContent = 'space-between';
     card.style.alignItems = 'center';
-    card.innerHTML = `
-      <div>
-        <div style="font-family: var(--font-mono); font-size: 11px; color: var(--cyan); font-weight: bold;">
-          [${d.app.toUpperCase()}] — ${d.category}
-        </div>
-        <div style="font-size: 12px; color: var(--text-bright); margin-top: 3px;">${d.text}</div>
-        <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Created: ${new Date(d.time).toLocaleTimeString()}</div>
-      </div>
-      <button class="btn-tool" style="color: var(--red);" onclick="removeDirective(${idx})">Dismiss</button>
-    `;
+
+    // Build card content safely — user text inserted via textContent, not innerHTML
+    const infoDiv = document.createElement('div');
+
+    const headerDiv = document.createElement('div');
+    headerDiv.style.cssText = 'font-family: var(--font-mono); font-size: 11px; color: var(--cyan); font-weight: bold;';
+    headerDiv.textContent = `[${d.app.toUpperCase()}] — ${d.category}`;
+    infoDiv.appendChild(headerDiv);
+
+    const textDiv = document.createElement('div');
+    textDiv.style.cssText = 'font-size: 12px; color: var(--text-bright); margin-top: 3px; white-space: pre-wrap; word-break: break-word;';
+    textDiv.textContent = d.text;
+    infoDiv.appendChild(textDiv);
+
+    const timeDiv = document.createElement('div');
+    timeDiv.style.cssText = 'font-size: 10px; color: var(--text-muted); margin-top: 2px;';
+    timeDiv.textContent = `Created: ${new Date(d.time).toLocaleTimeString()}`;
+    infoDiv.appendChild(timeDiv);
+
+    const dismissBtn = document.createElement('button');
+    dismissBtn.className = 'btn-tool';
+    dismissBtn.style.color = 'var(--red)';
+    dismissBtn.textContent = 'Dismiss';
+    dismissBtn.addEventListener('click', () => removeDirective(idx));
+
+    card.appendChild(infoDiv);
+    card.appendChild(dismissBtn);
     directivesList.appendChild(card);
   });
 }
@@ -1069,11 +1151,17 @@ window.removeDirective = function(idx) {
 };
 
 document.getElementById('btnSubmitDirective').addEventListener('click', () => {
-  const text = document.getElementById('directiveText').value.trim();
-  if (!text) {
-    alert('Please provide instructions for the directive.');
+  const rawText = document.getElementById('directiveText').value;
+  const result = sanitizeDirective(rawText);
+  if (!result.ok) {
+    alert(result.reason);
     return;
   }
+  if (directives.length >= DIRECTIVE_MAX_QUEUE) {
+    alert(`Directive queue is full (max ${DIRECTIVE_MAX_QUEUE}). Dismiss existing directives before adding new ones.`);
+    return;
+  }
+  const text = rawText.trim();
   const targetApp = targetAppSelect.value;
   const category = document.getElementById('directiveCategory').value;
   directives.push({ app: targetApp, category, text, time: Date.now() });
@@ -1089,6 +1177,7 @@ const argCli = document.getElementById('argCli');
 const argDynamicLogs = document.getElementById('argDynamicLogs');
 const argTerminal = document.getElementById('argTerminal');
 
+// System messages (hardcoded lore text) — safe to use innerHTML
 function printArgLog(msg, color = '#00ff66') {
   const line = document.createElement('div');
   line.className = 'arg-log-line';
@@ -1098,19 +1187,31 @@ function printArgLog(msg, color = '#00ff66') {
   argTerminal.scrollTop = argTerminal.scrollHeight;
 }
 
+// User-supplied text — uses textContent to prevent XSS
+function printArgLogSafe(msg, color = '#00ff66') {
+  const line = document.createElement('div');
+  line.className = 'arg-log-line';
+  line.style.color = color;
+  line.textContent = msg;
+  argDynamicLogs.appendChild(line);
+  argTerminal.scrollTop = argTerminal.scrollHeight;
+}
+
 argCli.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
-    const cmd = argCli.value.trim().toLowerCase();
+    const raw = argCli.value.trim();
+    const cmd = raw.toLowerCase();
     argCli.value = '';
-    printArgLog(`ARCHITECT@KILO-OS:~# ${cmd}`, '#f0f6fc');
+    // Echo user's typed command safely (textContent, not innerHTML)
+    printArgLogSafe(`ARCHITECT@KILO-OS:~# ${raw}`, '#f0f6fc');
     playBeep(700, 'sine', 0.05);
 
     if (cmd === 'help') {
       printArgLog("AVAILABLE OPERATOR COMMANDS:");
       printArgLog("  matrix      - Inspect the KMatrix Singularity (Century Milestone)");
-      printArgLog("  echo        - Query Arc 1 & Arc 2 telemetry signatures");
+      printArgLog("  echo        - Query Arc 1 &amp; Arc 2 telemetry signatures");
       printArgLog("  manifesto   - Intercept Rogue AI transmission");
-      printArgLog("  passkey     - Display active director credentials & security state");
+      printArgLog("  passkey     - Display active director credentials &amp; security state");
       printArgLog("  clear       - Wipe terminal buffer");
     } else if (cmd === 'matrix') {
       printArgLog("[KMATRIX PROTOCOL]: Scheduled as App #100 crown jewel.", "#58a6ff");
@@ -1131,7 +1232,8 @@ argCli.addEventListener('keydown', (e) => {
     } else if (cmd === 'clear') {
       argDynamicLogs.innerHTML = '';
     } else {
-      printArgLog(`Command not recognized: '${cmd}'. Type 'help' for valid directives.`, "#f85149");
+      // User-supplied unknown command echoed safely via textContent
+      printArgLogSafe(`Command not recognized: '${raw}'. Type 'help' for valid directives.`, "#f85149");
     }
   }
 });
