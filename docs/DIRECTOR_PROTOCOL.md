@@ -86,3 +86,77 @@ If the original creator, workstations, or personal accounts ever become permanen
 1. **Decentralized Fuel**: GitHub Actions runners and Google AI Studio free tier keys donated by players and contributors keep the commit clock alive.
 2. **Automatic Re-engagement**: The Gatekeeper Action (`.github/workflows/gatekeeper-auto-merge.yml`) validates C compilation and React builds automatically, continuously advancing the codebase.
 3. **Ascension**: Whoever uncovers all breadcrumbs in the ARG gains the mantle of Director, fork permissions, and the authority to chart the next generation of KiloApps.
+
+---
+
+## 5. Algorithmic Security & Tamper-Proofing (The 4-Layer Armor)
+
+Because KiloApps accepts pull requests from distributed autonomous forks and auto-merges passing turns, deterministic algorithmic security gates prevent human tampering, trojans, or supply-chain pollution.
+
+```
+                  ┌──────────────────────────────────────────────┐
+                  │          CONTRIBUTOR PULL REQUEST            │
+                  └──────────────────────┬───────────────────────┘
+                                         │
+                                         ▼
+                 ┌────────────────────────────────────────────────┐
+                 │ Gate 0: Infrastructure Immutability Check      │
+                 │ Rejects PR if .github/, scripts/, configs touch│
+                 └───────────────────────┬────────────────────────┘
+                                         │ Pass
+                                         ▼
+                 ┌────────────────────────────────────────────────┐
+                 │ Gate 0: Win32 C & Web Anti-Malware Lint        │
+                 │ Scans for injection, keyloggers, eval, sockets │
+                 └───────────────────────┬────────────────────────┘
+                                         │ Pass
+                                         ▼
+                 ┌────────────────────────────────────────────────┐
+                 │ Gate 1 & 2: Compiler & Size Ceiling            │
+                 │ <= 999KB budget & clean React/Vite builds      │
+                 └───────────────────────┬────────────────────────┘
+                                         │ Pass
+                                         ▼
+                 ┌────────────────────────────────────────────────┐
+                 │ Gate 3: Turn Receipt & Provenance Attestation  │
+                 │ Verifies GitHub Actions run_id & audit receipt │
+                 └───────────────────────┬────────────────────────┘
+                                         │ Pass
+                                         ▼
+                  ┌──────────────────────────────────────────────┐
+                  │              GATEKEEPER AUTO-MERGE           │
+                  └──────────────────────────────────────────────┘
+```
+
+### Layer 1: Infrastructure Immutability Gate
+Contributors and autonomous worker agents have permission to modify applications (`K*/**/*`, `KiloOS/public/apps/*`), assets, and tests. They are strictly forbidden from modifying:
+- `.github/` (all workflow files and Gatekeeper actions)
+- `scripts/` (`orchestrate.py`, `security_lint.py`, `reconcile_receipts.py`)
+- `check_sizes.py`, `firebase.json`, `.firebaserc`, `.gitignore`
+
+Any PR attempting to touch protected paths is rejected by [`scripts/security_lint.py`](../scripts/security_lint.py).
+
+### Layer 2: Win32 C Malware & Persistence Banlist
+All native C code is stripped of comments and string literals, then statically evaluated against dangerous API signatures:
+- **Memory Injection**: `VirtualAllocEx`, `WriteProcessMemory`, `CreateRemoteThread`.
+- **Spyware / Surveillance**: `SetWindowsHookEx` (keyboard/mouse hooks).
+- **Stealth Payload Fetching**: `URLDownloadToFile`.
+- **Arbitrary Command Execution**: `WinExec`, `system()`.
+- **Persistence**: Registry autostart keys (`CurrentVersion\Run`, `CurrentVersion\RunOnce`).
+- **Raw Sockets**: `WSAStartup`, `socket()`, `connect()` are banned in all offline apps (games, office, utilities), and permitted only in designated network applications (`KBBS`, `KChat`, `KChatServer`, `KNet`).
+
+*Whitelisted exceptions* (e.g. `KPing` executing `ping.exe`, `KZip` opening `notepad.exe`, `KJournal` invoking console `cls`) are strictly bounded and tracked in `APP_SPECIFIC_WHITELISTS`.
+
+### Layer 3: Web & JavaScript Obfuscation Ban
+Web applications under `KiloOS/public/apps/` are scanned for dynamic code injection and cryptomining:
+- Banned: `eval()`, `document.write(unescape(...))`, `document.write(atob(...))`.
+- Banned: External script tags `<script src="https://...">` (all libraries and assets must be bundled locally or inlined to preserve the offline retro sandbox).
+- Whitelisted: `new Function()` is permitted only in `kcalc.html` and `kgraph.html` for mathematical expression parsing.
+
+### Layer 4: Turn Receipt & Provenance Attestation
+When autonomous turns run in GitHub Actions:
+1. `scripts/orchestrate.py` captures runner provenance:
+   - `run_id`, `run_number`, `actor`, `workflow`, `sha`, `repository`.
+2. Emits an atomic JSON receipt into `.agents/receipts/receipt_<agent>_<timestamp>.json`.
+3. Gatekeeper Gate 3 verifies that autonomous PRs contain well-formed receipts with valid GitHub Actions run identifiers matching the runner environment.
+

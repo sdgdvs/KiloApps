@@ -225,6 +225,17 @@ def write_turn_receipt(agent: str, model: str, duration: float, returncode: int,
     now_utc = datetime.datetime.now(datetime.timezone.utc)
     ts_slug = now_utc.strftime("%Y%m%d_%H%M%S")
     receipt_file = RECEIPTS_DIR / f"receipt_{agent}_{ts_slug}.json"
+    provenance = None
+    if os.environ.get("GITHUB_ACTIONS"):
+        provenance = {
+            "run_id": os.environ.get("GITHUB_RUN_ID", ""),
+            "run_number": os.environ.get("GITHUB_RUN_NUMBER", ""),
+            "actor": os.environ.get("GITHUB_ACTOR", ""),
+            "workflow": os.environ.get("GITHUB_WORKFLOW", ""),
+            "sha": os.environ.get("GITHUB_SHA", ""),
+            "repository": os.environ.get("GITHUB_REPOSITORY", ""),
+        }
+
     data = {
         "timestamp": now_utc.isoformat(),
         "agent": agent,
@@ -233,6 +244,7 @@ def write_turn_receipt(agent: str, model: str, duration: float, returncode: int,
         "duration_seconds": round(duration, 2),
         "returncode": returncode,
         "success": returncode == 0,
+        "provenance": provenance,
     }
     try:
         receipt_file.write_text(json.dumps(data, indent=2), encoding="utf-8")

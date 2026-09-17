@@ -71,6 +71,13 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           AGY_MODEL: ${{ github.event.inputs.model || 'gemini-3.8-flash-high' }}
+          GITHUB_ACTIONS: "true"
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_WORKFLOW: ${{ github.workflow }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           $agentFlag = if ("${{ github.event.inputs.target_agent }}") { "--force-agent ${{ github.event.inputs.target_agent }}" } else { "" }
           uv run scripts/orchestrate.py $agentFlag
@@ -81,7 +88,10 @@ jobs:
           # 1. Enforce 999KB size ceiling
           python check_sizes.py
 
-          # 2. Verify React/Vite Frontend
+          # 2. Enforce Algorithmic Security Lint
+          python scripts/security_lint.py
+
+          # 3. Verify React/Vite Frontend
           cd KiloOS
           npm run build
           cd ..

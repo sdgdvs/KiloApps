@@ -21,6 +21,12 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
+      - name: Set up Upstream Tracking Remote
+        shell: bash
+        run: |
+          git remote add upstream https://github.com/${{ github.repository }}.git || true
+          git fetch upstream main
+
       - name: Set up MSVC & Win32 C Build Tools
         uses: ilammy/msvc-dev-cmd@v1
 
@@ -42,6 +48,11 @@ jobs:
           cd KiloOS
           npm ci
 
+      - name: Gate 0 - Algorithmic Security Lint & Immutability Check
+        shell: pwsh
+        run: |
+          python scripts/security_lint.py --pr --base upstream/main
+
       - name: Gate 1 - Check 999KB Size Ceiling
         shell: pwsh
         run: |
@@ -53,14 +64,29 @@ jobs:
           cd KiloOS
           npm run build
 
-      - name: Gate 3 - Validate Turn Receipt
+      - name: Gate 3 - Validate Turn Receipt & Provenance
         shell: pwsh
         run: |
           $receipts = Get-ChildItem -Path ".agents/receipts" -Filter "receipt_*.json" -ErrorAction SilentlyContinue
           if (-not $receipts -or $receipts.Count -eq 0) {
-            Write-Warning "No turn receipts found in .agents/receipts/"
+            Write-Host "Notice: No turn receipts found in .agents/receipts/ (non-autonomous or manual PR)."
           } else {
-            Write-Host "Found $($receipts.Count) valid turn receipt(s)."
+            Write-Host "Found $($receipts.Count) turn receipt(s). Validating provenance & schema..."
+            foreach ($r in $receipts) {
+              $data = Get-Content $r.FullName -Raw | ConvertFrom-Json
+              if (-not $data.agent -or -not $data.timestamp) {
+                Write-Error "Invalid receipt schema in $($r.Name)"
+                exit 1
+              }
+              if ($data.provenance) {
+                if (-not $data.provenance.run_id) {
+                  Write-Error "Receipt $($r.Name) has malformed provenance: missing run_id"
+                  exit 1
+                }
+                Write-Host "Receipt $($r.Name) verified with GitHub Actions Run ID: $($data.provenance.run_id)"
+              }
+            }
+            Write-Host "Receipt validation passed."
           }
 
       - name: Auto-Merge Valid PR
@@ -79,9 +105,9 @@ jobs:
           # Checkout latest main with write credentials
           git config user.name "KiloApps Gatekeeper Bot"
           git config user.email "gatekeeper@kiloapps.local"
-          git fetch origin main
-          git checkout main
-          git reset --hard origin/main
+          git fetch upstream main
+          git checkout main || git checkout -B main upstream/main
+          git reset --hard upstream/main
 
           # Reconcile turn receipts and advance next_work.md
           uv run scripts/reconcile_receipts.py
@@ -90,5 +116,5 @@ jobs:
           if [ -n "$(git status --porcelain)" ]; then
             git add -A
             git commit -m "chore(gatekeeper): reconcile turn receipts and advance fleet rotation"
-            git push origin main
+            git push "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" main
           fi
