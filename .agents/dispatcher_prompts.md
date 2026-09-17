@@ -1,6 +1,11 @@
 # Fleet Cron Dispatcher Prompts (Model Delegation Standard)
 
-This file contains the canonical cron dispatcher prompts for Antigravity agents operating in the KiloApps fleet.
+> [!NOTE]
+> Fleet scheduling has migrated to **Windows Task Scheduler** calling `scripts/orchestrate.py` and Gemini Skills (`.agents/skills/`).
+> State and active queues are centralized in [`next_work.md`](../next_work.md).
+> In-chat LLM crons are deprecated in favor of zero-token OS-level scheduling.
+
+This file contains historical reference prompts for Antigravity agents operating in the KiloApps fleet.
 
 ## Mandate
 All dispatcher prompts and orchestrators **MUST** explicitly specify `Model: "flash"` (or fallback `Model: "sonnet"`) when calling `invoke_subagent`. Under **NO CIRCUMSTANCES** should a dispatcher omit `Model` or use `Model: "inherit"`, as this causes Claude Opus and Pro models to spawn Opus subagents, burning through the token budget on routine tasks.

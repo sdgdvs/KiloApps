@@ -20,14 +20,11 @@ Multiple agents operate on this codebase on overlapping schedules, potentially f
    - Pull immediately before editing.
    - Make surgical, minimal changes — ONLY add entries to the APPS array.
    - Commit and push immediately after editing, before doing other work.
-3. **Own your plan file.** Each agent should only modify its own plan file:
-   - `app_work_plan.md` — App Builder agent only.
-   - `app_fix_plan.md` — Quality & Build agent only.
-   - `app_test_plan.md` — App Tester agent only.
-   - `usability_plan.md` — Usability agent only.
-   - `game_content_plan.md` — Game Content agent only.
-   - `new_app_plan.md` — App Creator & Deep Expander agent only.
-   - If you need to check another agent's plan (e.g., to avoid working on the same app), read it but do not edit it.
+3. **Unified Work State & Gemini Skills (`next_work.md`).**
+   - All active agent roles are packaged as self-contained Gemini Skills in `.agents/skills/` (`kilo-qa`, `kilo-tester`, `kilo-planner`).
+   - Active queue state, current targets, and handoffs are centralized in `next_work.md`.
+   - Each agent updates `next_work.md` (frontmatter handoff + terse log entry ≤8 lines), commits, and pushes upon turn completion.
+   - Historical planning files are archived in `archive/legacy_plans/`.
 4. **Check for conflicts after push.** If `git push` fails due to a conflict, run `git pull --rebase`, resolve any conflicts conservatively (prefer the remote version for code you didn't write), then push again.
 
 ## Size Constraints

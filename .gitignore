@@ -37,3 +37,7 @@ ui-debug.log*
 # we can explicitly allow them:
 # !**/public/exe/**/*.exe
 # !**/public/exe/**/*.zip
+
+# Local orchestrator runtime artifacts
+logs/
+.agents/.orchestrator.lock
