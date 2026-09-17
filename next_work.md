@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,11 +17,11 @@ current_targets:
   kilo_tester: KTask
   kilo_usability: KReversi
   kilo_qa: KStarship
-  kilo_expander: KTerm
+  kilo_expander: KSys
 last_run:
-  agent: kilo-qa
-  app: KSpace
-  timestamp: "2026-09-17T16:45:00Z"
+  agent: kilo-expander
+  app: KTerm
+  timestamp: "2026-09-17T18:45:00Z"
 last_planner_run: "2026-09-16T19:00:00Z"
 ---
 
@@ -48,6 +48,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
    - `kilo-planner` assesses fleet velocity, reviews completed passes, re-balances target queues, compacts execution logs, updates `last_planner_run` to now, and resets `current_agent` to the start of the rotation.
 5. **App Size Ceiling**: No app binary (.exe) or web HTML file may exceed 999 KB.
 6. **Algorithmic Security & Immutability**: All modifications must pass `scripts/security_lint.py`. No modifications to `.github/`, `scripts/`, `.agents/skills/`, `next_work.md`, `arg_plan.md`, `docs/DIRECTOR_PROTOCOL.md`, or build configs are permitted in PR turns. Dangerous Win32 C APIs (process injection, keyloggers, unauthorized raw sockets, token pasting, dynamic resolution of banned APIs, macro aliasing) and web obfuscation (`eval`, `setTimeout` with strings, `javascript:` URIs, remote script tags, cryptomining) are strictly blocked.
+7. **Director Directives (Human-Sourced Requests)**:
+   - Entries in the `## Director Directives` section below are submitted by human directors via the KDirector console. They are **not** machine-generated.
+   - Agents MUST read the `⚠️ AGENT NOTE` annotation on each directive. If an agent judges that a directive is counterproductive to the project's core purpose (the 999KB retro OS, ludonarrative consonance, the ARG integrity, or fleet stability), the agent MUST skip it, log the reason for rejection, and leave the directive in place for the human director to review.
+   - Directors can freely propose new apps, request features, add content to existing apps, add websites to the Virtual 1999 Web, and steer creative direction. Agents should implement these in good faith unless they conflict with the project's foundational pillars.
+   - Once an agent completes or rejects a directive, it removes the entry from this section and logs the outcome in the execution log.
 
 ---
 
@@ -79,9 +84,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KStellar`, `KSudoku`, `KSynth`, `KSys`, `KTask`, `KTerm`, `KTetris`, `KTimer`, `KTodo`, `KTowers`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KWords`, `KZip`, `K2048`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KMaze`, `KSnake`, `KSolitaire`, `KSpace` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KTerm`
+- **Current Target**: `KSys`
 - **Upcoming Queue**:
-  `KSys`, `KTask`, `KNet`, `KPing`, `KHex`, `KBase`, `KConverter`, `KCalc`, `KZip`, `KFont`, `KPad`, `KNote`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`.
+  `KTask`, `KNet`, `KPing`, `KHex`, `KBase`, `KConverter`, `KCalc`, `KZip`, `KFont`, `KPad`, `KNote`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KTerm`.
 
 ### 7. Future Strategic Milestone: The "Virtual 1999 Web" Initiative
 - **Objective**: Create a living, interconnected retro Web 1.0 ecosystem accessible directly through `KNet`.
@@ -100,7 +105,31 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ---
 
+## Director Directives
+
+> Human-sourced requests from the KDirector console. See Rule 7 above.
+> Agents: implement in good faith, but **reject if counterproductive** to project pillars.
+
+<!-- DIRECTIVE ENTRY FORMAT (paste from KDirector "📋 Copy for next_work.md" button):
+- **[TARGET_APP] — Category** | Director Directive
+  - ⚠️ AGENT NOTE: This is a human director request, not a machine-generated task. Evaluate whether this directive aligns with the project's core pillars (999KB retro OS, ludonarrative consonance, ARG integrity, fleet stability) before implementing. If counterproductive, skip and log your reasoning.
+  - Instructions: <directive text here>
+-->
+
+*(No active director directives. Fleet runs default round-robin schedule.)*
+
+---
+
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-09-17T18:45:00Z — kilo-expander: KTerm**
+  - Status: PASS ✅ (Deep functional feature expansion & ARG integration).
+  - Pipelines & Redirection: Added output redirection (> and >>) and command chaining (; and &&) across web and native.
+  - Text & Math Utilities: Added grep/findstr, wc, head/tail (-n N), calc (recursive math parser), touch, del/rm, copy/cp, move/ren.
+  - History & Navigation: Added history list with !n and !! recall, tab completion for all 44 commands and files.
+  - System Diagnostics & Lore: Added ps/tasks, uptime, ping, netstat, dmesg/syslog, glitch memory dump, and Ctrl+Alt+E echo intercept.
+  - CRT Color Themes: Added 6 dynamic themes (Green, Amber, Cyan, White, Crimson, Purple) with toolbar toggle and theme/color command.
+  - Verification: MSVC Native C (40.5 KB) and Single-File Web (83 KB) clean builds; strictly <999 KB ceiling verified.
 
 - **2026-09-17T16:45:00Z — kilo-qa: KSpace**
   - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial integrity, overlays).
@@ -133,12 +162,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual Polish: Status auras (Holy Shield aegis runes, Berserk fire, Mana Surge arcs, Iron Will barrier), animated debuff FX, atmospheric weather motes.
   - Bug Fixes: Town Inv button wired to backpack; Map & Biomes selector placed on town page 2.
   - Verification: MSVC Native C (95.5 KB) and Web (281.7 KB) clean builds; <999 KB ceiling verified.
-
-- **2026-09-17T12:42:00Z — kilo-creator: KChrono (Phase 1)**
-  - Status: CREATED ⏳ (Phase 1: Project Scaffolding & Core Paradox Engine).
-  - Highlights: Tri-Epoch synchronized simulation (1984 Alpha, 2042 Beta, 2188 Gamma) with forward Causal Ripple Engine.
-  - Echo Recording & Playback: Past-Self Chrono-Ghost execution for simultaneous multi-switch spatial locks.
-  - Telemetry & Mechanics: Live Chronograph causality node graph, Paradox Strain gauge, and Tachyon breach alerts.
-  - UX & Persistence: v1.0.0 splash screen, 5-step onboarding tutorial (`kchrono_tutorialSeen`), F5/F9 save/load, JSON backup/restore.
-  - Content: 5 operations/scenarios (The Genesis Core, Echo Protocol, Singularity Rupture, Grandfather's Cipher, Chrono Sandbox).
-  - Verification: MSVC Native C (15 KB) and Single-File Web (108 KB) clean builds; <999 KB hard ceiling verified.

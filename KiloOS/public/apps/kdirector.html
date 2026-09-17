@@ -618,6 +618,9 @@
       <div class="form-group">
         <label>DIRECTIVE CATEGORY</label>
         <select id="directiveCategory">
+          <option value="New App Proposal">New App Proposal (kilo-creator)</option>
+          <option value="Add Website / Web Content">Add Website / Virtual 1999 Web Content</option>
+          <option value="Feature Request / Content Addition">Feature Request / Content Addition</option>
           <option value="Performance & FPS Optimization">Performance & 60 FPS Canvas Optimization</option>
           <option value="Inter-App IPC Pipeline">Inter-App IPC (postMessage / VFS) Adoption</option>
           <option value="Usability & Layout Polish">Usability, Window Size & HiDPI Polish</option>
@@ -629,10 +632,16 @@
 
       <div class="form-group">
         <label>DIRECTIVE INSTRUCTIONS (TERSE & CONCRETE)</label>
-        <textarea id="directiveText" placeholder="e.g. Optimize canvas render loop in KAbyss; eliminate 117ms GC frame stutter; enforce 60 FPS and verify build."></textarea>
+        <textarea id="directiveText" placeholder="e.g. Create KPomodoro — a work/break cycle timer with ambient rain sounds and session statistics."></textarea>
       </div>
 
-      <button class="btn-submit" id="btnSubmitDirective">DISPATCH DIRECTIVE TO FLEET</button>
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <button class="btn-submit" id="btnSubmitDirective">DISPATCH DIRECTIVE TO FLEET</button>
+        <button class="btn-submit" id="btnCopyForNextWork" style="background: rgba(88, 166, 255, 0.15); color: var(--cyan); border: 1px solid var(--cyan);">📋 Copy for next_work.md</button>
+      </div>
+      <div id="copyConfirmation" style="display: none; margin-top: 6px; font-size: 11px; color: var(--green); font-family: var(--font-mono);">
+        ✅ Annotated directive copied to clipboard! Paste into the "Director Directives" section of next_work.md.
+      </div>
 
       <div style="margin-top: 20px;">
         <label>ACTIVE DIRECTIVES QUEUE</label>

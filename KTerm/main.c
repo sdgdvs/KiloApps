@@ -2,14 +2,22 @@
 #include <windows.h>
 #include <commctrl.h>
 
-#define IDC_TAB 100
-#define IDC_OUT 101
-#define IDC_IN  102
+#define IDC_TAB          100
+#define IDC_OUT          101
+#define IDC_IN           102
+#define IDC_PROMPT       103
+#define IDC_STATUS       104
+#define IDC_BTN_NEWTAB   105
+#define IDC_BTN_CLOSETAB 106
+#define IDC_BTN_CLEAR    107
+#define IDC_BTN_EXPORT   108
+#define IDC_BTN_THEME    109
+#define IDC_BTN_HELP     110
 
 #define MAX_TABS 8
-#define MAX_HISTORY 25
-#define MAX_ALIASES 20
-#define MAX_ENV 20
+#define MAX_HISTORY 50
+#define MAX_ALIASES 25
+#define MAX_ENV 25
 #define OUT_BUF_SIZE 262144
 
 #pragma function(memset)
@@ -104,6 +112,20 @@ static char* my_strncat(char* dest, const char* src, size_t n) {
     return dest;
 }
 
+static int my_atoi(const char* s) {
+    if (!s) return 0;
+    while (*s == ' ' || *s == '\t') s++;
+    int sign = 1;
+    if (*s == '-') { sign = -1; s++; }
+    else if (*s == '+') { s++; }
+    int val = 0;
+    while (*s >= '0' && *s <= '9') {
+        val = val * 10 + (*s - '0');
+        s++;
+    }
+    return sign * val;
+}
+
 typedef struct {
     char name[64];
     char cmd[256];
@@ -127,16 +149,27 @@ typedef struct {
     char* outputBuffer;
 } TabSession;
 
-#define IDC_PROMPT       103
-#define IDC_STATUS       104
-#define IDC_BTN_NEWTAB   105
-#define IDC_BTN_CLOSETAB 106
-#define IDC_BTN_CLEAR    107
-#define IDC_BTN_EXPORT   108
-#define IDC_BTN_HELP     109
+typedef struct {
+    const char* name;
+    COLORREF text;
+    COLORREF prompt;
+    COLORREF bg;
+    COLORREF statusBg;
+    COLORREF statusText;
+} TermTheme;
+
+static TermTheme g_themes[] = {
+    { "green",   RGB(0, 255, 102),   RGB(0, 217, 255),   RGB(9, 11, 16),    RGB(18, 22, 32),  RGB(148, 163, 184) },
+    { "amber",   RGB(255, 176, 0),   RGB(255, 215, 0),   RGB(20, 14, 4),    RGB(36, 24, 8),   RGB(212, 175, 55) },
+    { "cyan",    RGB(0, 229, 255),   RGB(100, 255, 218), RGB(6, 16, 26),    RGB(12, 28, 44),  RGB(140, 210, 240) },
+    { "white",   RGB(224, 224, 228), RGB(160, 200, 255), RGB(16, 16, 20),   RGB(28, 28, 36),  RGB(180, 180, 190) },
+    { "crimson", RGB(255, 68, 85),   RGB(255, 140, 100), RGB(24, 8, 10),    RGB(42, 14, 18),  RGB(220, 130, 140) },
+    { "purple",  RGB(224, 112, 255), RGB(255, 128, 220), RGB(20, 8, 28),    RGB(36, 16, 48),  RGB(210, 150, 230) }
+};
+static int g_currentTheme = 0;
 
 HWND hTab, hOut, hIn, hPrompt, hStatus;
-HWND hBtnNewTab, hBtnCloseTab, hBtnClear, hBtnExport, hBtnHelp;
+HWND hBtnNewTab, hBtnCloseTab, hBtnClear, hBtnExport, hBtnTheme, hBtnHelp;
 HWND g_hMainWnd = NULL;
 WNDPROC oldEditProc;
 WNDPROC oldOutProc;
@@ -145,11 +178,20 @@ HFONT g_hTabFont = NULL;
 HBRUSH g_hBgBrush = NULL;
 HBRUSH g_hStatusBrush = NULL;
 
+HANDLE g_hRedirFile = INVALID_HANDLE_VALUE;
+BOOL g_isRedirecting = FALSE;
+int g_totalCommands = 0;
+DWORD g_startTime = 0;
+int g_scriptDepth = 0;
+
 void ShowHelpDialog(HWND hwnd);
 void UpdatePromptDisplay();
 void SetStatusFeedback(const char* msg);
 void UpdateStatusDisplay();
 void UpdateAppTitle();
+void ApplyTheme(int themeIdx);
+void ProcessCommandLine(const char* fullLine);
+void ProcessSingleCommand(const char* rawCmd);
 
 TabSession g_tabs[MAX_TABS];
 int g_tabCount = 0;
@@ -180,7 +222,6 @@ BOOL g_isRecording = FALSE;
 int g_recordingMacroIdx = -1;
 int g_macroDepth = 0;
 
-
 static int StringStartsWithIC(const char* str, const char* prefix) {
     if (!str || !prefix) return 0;
     while (*prefix) {
@@ -207,11 +248,37 @@ static void FormatPathPrompt(char* dst, size_t dstSize, const char* dir, const c
 
 void AppendOutput(const char* text) {
     if (!text) return;
+    if (g_isRedirecting && g_hRedirFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(g_hRedirFile, text, lstrlenA(text), &written, NULL);
+        WriteFile(g_hRedirFile, "\r\n", 2, &written, NULL);
+        return;
+    }
     int len = GetWindowTextLengthA(hOut);
     SendMessageA(hOut, EM_SETSEL, len, len);
     SendMessageA(hOut, EM_REPLACESEL, FALSE, (LPARAM)text);
     SendMessageA(hOut, EM_REPLACESEL, FALSE, (LPARAM)"\r\n");
     SendMessageA(hOut, EM_SCROLLCARET, 0, 0);
+}
+
+void ApplyTheme(int themeIdx) {
+    if (themeIdx < 0 || themeIdx >= 6) return;
+    g_currentTheme = themeIdx;
+    if (g_hBgBrush) DeleteObject(g_hBgBrush);
+    if (g_hStatusBrush) DeleteObject(g_hStatusBrush);
+    g_hBgBrush = CreateSolidBrush(g_themes[themeIdx].bg);
+    g_hStatusBrush = CreateSolidBrush(g_themes[themeIdx].statusBg);
+    if (g_hMainWnd) {
+        InvalidateRect(g_hMainWnd, NULL, TRUE);
+        InvalidateRect(hOut, NULL, TRUE);
+        InvalidateRect(hPrompt, NULL, TRUE);
+        InvalidateRect(hIn, NULL, TRUE);
+        InvalidateRect(hStatus, NULL, TRUE);
+        UpdateWindow(g_hMainWnd);
+    }
+    char fb[64];
+    wsprintfA(fb, "Theme switched to %s", g_themes[themeIdx].name);
+    SetStatusFeedback(fb);
 }
 
 void ShowHelpDialog(HWND hwnd) {
@@ -227,10 +294,11 @@ void ShowHelpDialog(HWND hwnd) {
         "  Ctrl + R         - Incremental reverse search (Ctrl+R cycles)\r\n"
         "  Ctrl + L / 'cls' - Clear terminal screen output\r\n"
         "  Ctrl + C         - Cancel current input command line\r\n"
+        "  Ctrl + Alt + E   - Echo Anomaly Intercept (ARG)\r\n"
         "  Tab              - Autocomplete commands and file paths\r\n"
         "  Escape           - Clear input command line / cancel search\r\n"
         "  Up / Down Arrow  - Navigate command history\r\n\r\n"
-        "BUILT-IN COMMANDS:\r\n"
+        "CORE & NAVIGATION COMMANDS:\r\n"
         "  help             - Show command reference\r\n"
         "  ver / sysinfo    - Show OS and terminal version\r\n"
         "  dir / ls [path]  - List directory contents\r\n"
@@ -239,13 +307,33 @@ void ShowHelpDialog(HWND hwnd) {
         "  echo [text]      - Print text (supports %VAR% & $VAR)\r\n"
         "  mkdir [folder]   - Create directory\r\n"
         "  date / time      - System calendar date or time\r\n"
-        "  whoami           - Display current username\r\n"
-        "  alias            - Custom aliases (alias name=cmd, unalias)\r\n"
-        "  export / env     - Set environment variables (export VAR=val, unset)\r\n"
+        "  whoami           - Display current username\r\n\r\n"
+        "EXPANDED FILE & TEXT UTILITIES:\r\n"
+        "  grep [-i] <pat> [file] - Search lines for pattern in file or output\r\n"
+        "  wc <file>        - Count lines, words, and bytes\r\n"
+        "  head / tail [-n] <file>- View first or last N lines of a file\r\n"
+        "  touch <file>     - Create empty file or update timestamp\r\n"
+        "  del / rm <file>  - Delete a file\r\n"
+        "  copy / cp <s <d> - Copy a file to destination\r\n"
+        "  move / ren <s <d>- Move or rename a file\r\n"
+        "  history / !n / !!- Command history list and recall\r\n"
+        "  calc <expr>      - Arithmetic calculator (+, -, *, /, %, ^)\r\n"
+        "  run / exec <file>- Execute commands from batch script file\r\n\r\n"
+        "SYSTEM, NETWORK & LORE:\r\n"
+        "  ps / tasks       - Display virtual processes and system memory\r\n"
+        "  uptime           - Display session uptime and command telemetry\r\n"
+        "  ping <host>      - ICMP echo diagnostic simulation\r\n"
+        "  netstat          - Display active virtual network connections\r\n"
+        "  theme <name>     - Set theme (green, amber, cyan, white, crimson, purple)\r\n"
+        "  dmesg / syslog   - Inspect kernel boot log & security telemetry\r\n"
+        "  glitch           - Inspect corrupted memory dump\r\n"
+        "  cerberus / oper  - Watchdog status and operator channel\r\n"
+        "  alias / unalias  - Custom aliases (alias name=cmd)\r\n"
+        "  export / env     - Set environment variables (export VAR=val)\r\n"
         "  macro            - Macro scripts (record, stop, play, list)\r\n"
         "  export-log [file]- Export session output to text file\r\n"
-        "  newtab [name]    - Open a new named terminal tab session\r\n"
-        "  exit / closetab  - Close tab session or exit application";
+        "  cmd > file, >> f - Output redirection (overwrite or append)\r\n"
+        "  cmd1 ; cmd2      - Command chaining sequentially";
 
     MessageBoxA(hwnd, helpText, "KTerm - Command & Shortcut Guide", MB_OK | MB_ICONINFORMATION);
 }
@@ -257,7 +345,7 @@ void SetStatusFeedback(const char* msg) {
     if (hStatus) {
         char statusText[512];
         int cur = (g_activeTab >= 0 && g_activeTab < g_tabCount) ? (g_activeTab + 1) : 1;
-        wsprintfA(statusText, " [F1 / h] Help   [Ctrl+T] New Tab   [Ctrl+W] Close Tab   [Ctrl+1..8] Tabs   [Ctrl+S] Export   [Ctrl+L] Clear   |   %s   (Tab %d/%d)", g_statusMsg, cur, g_tabCount);
+        wsprintfA(statusText, " [F1 / h] Help   [Ctrl+T] Tab   [Ctrl+W] Close   [Ctrl+1..8] Tabs   [Ctrl+S] Export   |   %s   (Tab %d/%d)", g_statusMsg, cur, g_tabCount);
         SetWindowTextA(hStatus, statusText);
     }
 }
@@ -267,11 +355,11 @@ void UpdateStatusDisplay() {
     char statusText[512];
     int cur = (g_activeTab >= 0 && g_activeTab < g_tabCount) ? (g_activeTab + 1) : 1;
     if (g_statusExpiry != 0 && GetTickCount() < g_statusExpiry && g_statusMsg[0]) {
-        wsprintfA(statusText, " [F1 / h] Help   [Ctrl+T] New Tab   [Ctrl+W] Close Tab   [Ctrl+1..8] Tabs   [Ctrl+S] Export   [Ctrl+L] Clear   |   %s   (Tab %d/%d)", g_statusMsg, cur, g_tabCount);
+        wsprintfA(statusText, " [F1 / h] Help   [Ctrl+T] Tab   [Ctrl+W] Close   [Ctrl+1..8] Tabs   [Ctrl+S] Export   |   %s   (Tab %d/%d)", g_statusMsg, cur, g_tabCount);
     } else {
         g_statusExpiry = 0;
         g_statusMsg[0] = '\0';
-        wsprintfA(statusText, " [F1 / h] Help   [Ctrl+T] New Tab   [Ctrl+W] Close Tab   [Ctrl+1..8] Tabs   [Ctrl+S] Export   [Ctrl+L] Clear       [Tab %d of %d]", cur, g_tabCount);
+        wsprintfA(statusText, " [F1 / h] Help   [Ctrl+T] Tab   [Ctrl+W] Close   [Ctrl+1..8] Tabs   [Ctrl+S] Export   [Theme: %s]   [Tab %d of %d]", g_themes[g_currentTheme].name, cur, g_tabCount);
     }
     SetWindowTextA(hStatus, statusText);
 }
@@ -280,7 +368,7 @@ void UpdateAppTitle() {
     if (!g_hMainWnd) return;
     char title[256];
     if (g_activeTab >= 0 && g_activeTab < g_tabCount) {
-        wsprintfA(title, "KTerm - [%s: %s] - (F1 for Help | Ctrl+T: New Tab)", g_tabs[g_activeTab].title, g_tabs[g_activeTab].currentDir);
+        wsprintfA(title, "KTerm - [%s: %s] - (Theme: %s | F1 for Help | Ctrl+T: New Tab)", g_tabs[g_activeTab].title, g_tabs[g_activeTab].currentDir, g_themes[g_currentTheme].name);
     } else {
         lstrcpynA(title, "KTerm - Advanced Terminal (Press 'h' or F1 for Help | Ctrl+T: New Tab)", sizeof(title));
     }
@@ -409,7 +497,7 @@ void AddNewTab(const char* title) {
 
     // Initial banner for tab
     char banner[256];
-    wsprintfA(banner, "KiloOS Terminal v1.2 [%s]\r\n[Press 'h' or F1 for Help | Ctrl+T: New Tab | Ctrl+R: Reverse Search]", nameBuf);
+    wsprintfA(banner, "KiloOS Terminal v1.2 [%s] (Theme: %s)\r\n[F1: Help | Ctrl+T: New Tab | Ctrl+R: Search | Ctrl+Alt+E: Echo]", nameBuf, g_themes[g_currentTheme].name);
     
     if (g_tabCount == 1) {
         AppendOutput(banner);
@@ -506,11 +594,89 @@ void ExpandEnvVars(const char* inputCmd, char* outBuf, size_t outSize) {
     lstrcpynA(outBuf, temp, (int)outSize);
 }
 
-void ProcessCommand(const char* rawCmd) {
+// Arithmetic expression evaluator for 'calc'
+static int eval_expr(const char** p);
+
+static int eval_factor(const char** p) {
+    while (**p == ' ' || **p == '\t') (*p)++;
+    int sign = 1;
+    if (**p == '-') { sign = -1; (*p)++; while (**p == ' ' || **p == '\t') (*p)++; }
+    else if (**p == '+') { (*p)++; while (**p == ' ' || **p == '\t') (*p)++; }
+    
+    if (**p == '(') {
+        (*p)++;
+        int val = eval_expr(p);
+        while (**p == ' ' || **p == '\t') (*p)++;
+        if (**p == ')') (*p)++;
+        return sign * val;
+    }
+    
+    int val = 0;
+    while (**p >= '0' && **p <= '9') {
+        val = val * 10 + (**p - '0');
+        (*p)++;
+    }
+    return sign * val;
+}
+
+static int eval_power(const char** p) {
+    int left = eval_factor(p);
+    while (1) {
+        while (**p == ' ' || **p == '\t') (*p)++;
+        if (**p == '^') {
+            (*p)++;
+            int exp = eval_factor(p);
+            int res = 1;
+            for (int i = 0; i < exp; i++) res *= left;
+            left = res;
+        } else {
+            break;
+        }
+    }
+    return left;
+}
+
+static int eval_term(const char** p) {
+    int left = eval_power(p);
+    while (1) {
+        while (**p == ' ' || **p == '\t') (*p)++;
+        char op = **p;
+        if (op == '*' || op == '/' || op == '%') {
+            (*p)++;
+            int right = eval_power(p);
+            if (op == '*') left = left * right;
+            else if (op == '/') left = (right != 0) ? (left / right) : 0;
+            else if (op == '%') left = (right != 0) ? (left % right) : 0;
+        } else {
+            break;
+        }
+    }
+    return left;
+}
+
+static int eval_expr(const char** p) {
+    int left = eval_term(p);
+    while (1) {
+        while (**p == ' ' || **p == '\t') (*p)++;
+        char op = **p;
+        if (op == '+' || op == '-') {
+            (*p)++;
+            int right = eval_term(p);
+            if (op == '+') left = left + right;
+            else left = left - right;
+        } else {
+            break;
+        }
+    }
+    return left;
+}
+
+void ProcessSingleCommand(const char* rawCmd) {
     if (!rawCmd) return;
     while (*rawCmd == ' ' || *rawCmd == '\t') rawCmd++;
     if (*rawCmd == '\0') return;
 
+    g_totalCommands++;
     TabSession* tab = &g_tabs[g_activeTab];
     SetCurrentDirectoryA(tab->currentDir);
 
@@ -535,27 +701,46 @@ void ProcessCommand(const char* rawCmd) {
         }
     }
 
-    if (MatchCommand(cmd, "help")) {
-        AppendOutput("KTerm Commands:");
-        AppendOutput("  help       - Show available commands");
-        AppendOutput("  ver        - Show OS version");
-        AppendOutput("  clear/cls  - Clear screen");
-        AppendOutput("  dir/ls     - List files");
-        AppendOutput("  cd         - Change directory");
+    if (MatchCommand(cmd, "help") || lstrcmpiA(cmd, "h") == 0) {
+        AppendOutput("KTerm Expanded Commands Reference:");
+        AppendOutput("  help / h   - Show available commands and shortcuts");
+        AppendOutput("  ver        - Show OS version and build state");
+        AppendOutput("  clear/cls  - Clear terminal screen");
+        AppendOutput("  dir/ls     - List directory contents (dir [path])");
+        AppendOutput("  cd         - Change directory (cd [path])");
+        AppendOutput("  type/cat   - View text file contents (type <file>)");
         AppendOutput("  echo       - Print text (supports %VAR% & $VAR)");
-        AppendOutput("  mkdir      - Create directory");
-        AppendOutput("  type/cat   - Read file");
-        AppendOutput("  date       - Show date");
-        AppendOutput("  time       - Show time");
-        AppendOutput("  whoami     - Show current user");
-        AppendOutput("  alias      - Custom aliases (alias name=cmd, unalias)");
-        AppendOutput("  env/export - Environment variables (export VAR=val, unset)");
-        AppendOutput("  macro      - Macro scripting (record, stop, play, list)");
-        AppendOutput("  export-log - Export output log to file");
-        AppendOutput("  newtab     - Open new terminal tab session");
+        AppendOutput("  mkdir      - Create directory (mkdir <name>)");
+        AppendOutput("  touch      - Create empty file or update timestamp (touch <file>)");
+        AppendOutput("  del/rm     - Delete a file (del <file>)");
+        AppendOutput("  copy/cp    - Copy file to destination (copy <src> <dst>)");
+        AppendOutput("  move/ren   - Move or rename file (move <src> <dst>)");
+        AppendOutput("  grep/find  - Search text lines (grep [-i] <pattern> [file])");
+        AppendOutput("  wc         - Count lines, words, and bytes in file (wc <file>)");
+        AppendOutput("  head/tail  - View first or last N lines (head [-n N] <file>)");
+        AppendOutput("  history    - Display command history (!n to recall, !! for last)");
+        AppendOutput("  calc       - Arithmetic math calculator (calc <expression>)");
+        AppendOutput("  ps/tasks   - Show virtual system processes and memory");
+        AppendOutput("  uptime     - Display system uptime and command telemetry");
+        AppendOutput("  ping       - ICMP echo diagnostic simulation (ping <host>)");
+        AppendOutput("  netstat    - Active virtual network sockets");
+        AppendOutput("  theme      - Color theme (theme <green|amber|cyan|white|crimson|purple>)");
+        AppendOutput("  dmesg      - Kernel boot diagnostic log & ARG telemetry");
+        AppendOutput("  glitch     - Memory dump anomaly inspection");
+        AppendOutput("  run/exec   - Run batch commands from script file (run <file>)");
+        AppendOutput("  date/time  - System calendar date or clock");
+        AppendOutput("  whoami     - Display active username");
+        AppendOutput("  alias      - Manage aliases (alias name=cmd, unalias name)");
+        AppendOutput("  env/export - Environment variables (export VAR=val, unset VAR)");
+        AppendOutput("  macro      - Macro recording (record, stop, play, list)");
+        AppendOutput("  export-log - Export terminal session output to file");
+        AppendOutput("  newtab     - Open new terminal tab session (newtab [title])");
         AppendOutput("  exit       - Exit application or close active tab");
-    } else if (MatchCommand(cmd, "ver")) {
-        AppendOutput("KiloOS Native v1.2 (Multi-Tab & Deep Utilities)");
+        AppendOutput("  Piping     - Output redirection (cmd > file, cmd >> file)");
+        AppendOutput("  Chaining   - Multi-command execution (cmd1 ; cmd2 or cmd1 && cmd2)");
+    } else if (MatchCommand(cmd, "ver") || MatchCommand(cmd, "sysinfo")) {
+        AppendOutput("KiloOS Native v1.2 (Deep Utilities & Multi-Tab Terminal Shell)");
+        AppendOutput("Kernel Constraints: <999KB Strict Size Policy Active.");
     } else if (MatchCommand(cmd, "date")) {
         SYSTEMTIME st;
         GetLocalTime(&st);
@@ -868,7 +1053,7 @@ void ProcessCommand(const char* rawCmd) {
                 if (hFile != INVALID_HANDLE_VALUE) {
                     DWORD fileSize = GetFileSize(hFile, NULL);
                     if (fileSize != INVALID_FILE_SIZE && fileSize > 0) {
-                        if (fileSize > 4096) fileSize = 4096;
+                        if (fileSize > 65536) fileSize = 65536;
                         char* buffer = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, fileSize + 1);
                         if (buffer) {
                             DWORD bytesRead = 0;
@@ -888,6 +1073,475 @@ void ProcessCommand(const char* rawCmd) {
             }
         } else {
             AppendOutput("Usage: type <filename>");
+        }
+    } else if (MatchCommand(cmd, "touch")) {
+        const char* fileName = cmd + 5;
+        while (*fileName == ' ' || *fileName == '\t') fileName++;
+        if (*fileName == '\0') {
+            AppendOutput("Usage: touch <filename>");
+        } else {
+            HANDLE hFile = CreateFileA(fileName, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+            if (hFile != INVALID_HANDLE_VALUE) {
+                CloseHandle(hFile);
+                char msg[256];
+                wsprintfA(msg, "File touched: %s", fileName);
+                AppendOutput(msg);
+            } else {
+                AppendOutput("Failed to touch file.");
+            }
+        }
+    } else if (MatchCommand(cmd, "del") || MatchCommand(cmd, "rm") || MatchCommand(cmd, "erase")) {
+        const char* fileName = my_strchr(cmd, ' ');
+        if (fileName) {
+            while (*fileName == ' ' || *fileName == '\t') fileName++;
+            if (*fileName == '\0') {
+                AppendOutput("Usage: del <filename>");
+            } else {
+                if (DeleteFileA(fileName)) {
+                    char msg[256];
+                    wsprintfA(msg, "File deleted: %s", fileName);
+                    AppendOutput(msg);
+                } else {
+                    AppendOutput("Failed to delete file or file not found.");
+                }
+            }
+        } else {
+            AppendOutput("Usage: del <filename>");
+        }
+    } else if (MatchCommand(cmd, "copy") || MatchCommand(cmd, "cp")) {
+        const char* args = my_strchr(cmd, ' ');
+        if (!args) {
+            AppendOutput("Usage: copy <source> <destination>");
+        } else {
+            while (*args == ' ' || *args == '\t') args++;
+            const char* space2 = my_strchr(args, ' ');
+            if (!space2) {
+                AppendOutput("Usage: copy <source> <destination>");
+            } else {
+                char src[MAX_PATH], dst[MAX_PATH];
+                size_t sLen = space2 - args;
+                if (sLen >= sizeof(src)) sLen = sizeof(src) - 1;
+                lstrcpynA(src, args, (int)sLen + 1);
+                while (*space2 == ' ' || *space2 == '\t') space2++;
+                lstrcpynA(dst, space2, sizeof(dst));
+
+                if (CopyFileA(src, dst, FALSE)) {
+                    char msg[MAX_PATH * 2 + 32];
+                    wsprintfA(msg, "Copied %s -> %s", src, dst);
+                    AppendOutput(msg);
+                } else {
+                    AppendOutput("Failed to copy file.");
+                }
+            }
+        }
+    } else if (MatchCommand(cmd, "move") || MatchCommand(cmd, "mv") || MatchCommand(cmd, "ren")) {
+        const char* args = my_strchr(cmd, ' ');
+        if (!args) {
+            AppendOutput("Usage: move <source> <destination>");
+        } else {
+            while (*args == ' ' || *args == '\t') args++;
+            const char* space2 = my_strchr(args, ' ');
+            if (!space2) {
+                AppendOutput("Usage: move <source> <destination>");
+            } else {
+                char src[MAX_PATH], dst[MAX_PATH];
+                size_t sLen = space2 - args;
+                if (sLen >= sizeof(src)) sLen = sizeof(src) - 1;
+                lstrcpynA(src, args, (int)sLen + 1);
+                while (*space2 == ' ' || *space2 == '\t') space2++;
+                lstrcpynA(dst, space2, sizeof(dst));
+
+                if (MoveFileA(src, dst)) {
+                    char msg[MAX_PATH * 2 + 32];
+                    wsprintfA(msg, "Moved %s -> %s", src, dst);
+                    AppendOutput(msg);
+                } else {
+                    AppendOutput("Failed to move/rename file.");
+                }
+            }
+        }
+    } else if (MatchCommand(cmd, "wc")) {
+        const char* fileName = cmd + 2;
+        while (*fileName == ' ' || *fileName == '\t') fileName++;
+        if (*fileName == '\0') {
+            AppendOutput("Usage: wc <filename>");
+        } else {
+            HANDLE hFile = CreateFileA(fileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+            if (hFile != INVALID_HANDLE_VALUE) {
+                DWORD fSize = GetFileSize(hFile, NULL);
+                if (fSize != INVALID_FILE_SIZE && fSize > 0) {
+                    char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, fSize + 1);
+                    if (buf) {
+                        DWORD bytesRead = 0;
+                        ReadFile(hFile, buf, fSize, &bytesRead, NULL);
+                        buf[bytesRead] = '\0';
+                        int lines = 0, words = 0, chars = (int)bytesRead;
+                        BOOL inWord = FALSE;
+                        for (DWORD i = 0; i < bytesRead; i++) {
+                            if (buf[i] == '\n') lines++;
+                            if (buf[i] == ' ' || buf[i] == '\t' || buf[i] == '\r' || buf[i] == '\n') {
+                                inWord = FALSE;
+                            } else if (!inWord) {
+                                inWord = TRUE;
+                                words++;
+                            }
+                        }
+                        char out[256];
+                        wsprintfA(out, "Lines: %d  Words: %d  Bytes: %d  File: %s", lines, words, chars, fileName);
+                        AppendOutput(out);
+                        HeapFree(GetProcessHeap(), 0, buf);
+                    }
+                } else {
+                    AppendOutput("Lines: 0  Words: 0  Bytes: 0");
+                }
+                CloseHandle(hFile);
+            } else {
+                AppendOutput("File not found.");
+            }
+        }
+    } else if (MatchCommand(cmd, "head") || MatchCommand(cmd, "tail")) {
+        BOOL isTail = MatchCommand(cmd, "tail");
+        const char* args = cmd + 4;
+        while (*args == ' ' || *args == '\t') args++;
+        int reqLines = 10;
+        if (StringStartsWithIC(args, "-n")) {
+            args += 2;
+            while (*args == ' ' || *args == '\t') args++;
+            reqLines = my_atoi(args);
+            if (reqLines <= 0) reqLines = 10;
+            while (*args >= '0' && *args <= '9') args++;
+            while (*args == ' ' || *args == '\t') args++;
+        }
+        if (*args == '\0') {
+            AppendOutput("Usage: head/tail [-n lines] <filename>");
+        } else {
+            HANDLE hFile = CreateFileA(args, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+            if (hFile != INVALID_HANDLE_VALUE) {
+                DWORD fSize = GetFileSize(hFile, NULL);
+                if (fSize != INVALID_FILE_SIZE && fSize > 0) {
+                    if (fSize > 65536) fSize = 65536;
+                    char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, fSize + 1);
+                    if (buf) {
+                        DWORD bytesRead = 0;
+                        ReadFile(hFile, buf, fSize, &bytesRead, NULL);
+                        buf[bytesRead] = '\0';
+                        
+                        // Count lines
+                        int totalLines = 0;
+                        char* p = buf;
+                        while (*p) {
+                            if (*p == '\n') totalLines++;
+                            p++;
+                        }
+                        if (p > buf && *(p - 1) != '\n') totalLines++;
+
+                        int startLine = isTail ? (totalLines - reqLines) : 0;
+                        if (startLine < 0) startLine = 0;
+                        int endLine = isTail ? totalLines : reqLines;
+
+                        int curLine = 0;
+                        char* lineStart = buf;
+                        p = buf;
+                        while (*p) {
+                            if (*p == '\r' || *p == '\n') {
+                                char saved = *p;
+                                *p = '\0';
+                                if (curLine >= startLine && curLine < endLine) {
+                                    AppendOutput(lineStart);
+                                }
+                                *p = saved;
+                                if (*p == '\r' && *(p + 1) == '\n') p++;
+                                lineStart = p + 1;
+                                curLine++;
+                            }
+                            p++;
+                        }
+                        if (*lineStart && curLine >= startLine && curLine < endLine) {
+                            AppendOutput(lineStart);
+                        }
+                        HeapFree(GetProcessHeap(), 0, buf);
+                    }
+                }
+                CloseHandle(hFile);
+            } else {
+                AppendOutput("File not found.");
+            }
+        }
+    } else if (MatchCommand(cmd, "grep") || MatchCommand(cmd, "findstr") || MatchCommand(cmd, "find")) {
+        const char* args = my_strchr(cmd, ' ');
+        if (!args) {
+            AppendOutput("Usage: grep [-i] <pattern> [filename]");
+        } else {
+            while (*args == ' ' || *args == '\t') args++;
+            BOOL caseInsensitive = TRUE;
+            if (StringStartsWithIC(args, "-i ")) {
+                caseInsensitive = TRUE;
+                args += 3;
+                while (*args == ' ' || *args == '\t') args++;
+            }
+            char pattern[128];
+            const char* space2 = my_strchr(args, ' ');
+            const char* targetFile = NULL;
+            if (space2) {
+                size_t pLen = space2 - args;
+                if (pLen >= sizeof(pattern)) pLen = sizeof(pattern) - 1;
+                lstrcpynA(pattern, args, (int)pLen + 1);
+                targetFile = space2 + 1;
+                while (*targetFile == ' ' || *targetFile == '\t') targetFile++;
+            } else {
+                lstrcpynA(pattern, args, sizeof(pattern));
+            }
+
+            if (pattern[0] == '\0') {
+                AppendOutput("Usage: grep [-i] <pattern> [filename]");
+            } else if (targetFile && *targetFile) {
+                HANDLE hFile = CreateFileA(targetFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (hFile != INVALID_HANDLE_VALUE) {
+                    DWORD fSize = GetFileSize(hFile, NULL);
+                    if (fSize != INVALID_FILE_SIZE && fSize > 0) {
+                        if (fSize > 65536) fSize = 65536;
+                        char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, fSize + 1);
+                        if (buf) {
+                            DWORD bytesRead = 0;
+                            ReadFile(hFile, buf, fSize, &bytesRead, NULL);
+                            buf[bytesRead] = '\0';
+                            int matches = 0;
+                            char* lineStart = buf;
+                            char* p = buf;
+                            while (*p) {
+                                if (*p == '\r' || *p == '\n') {
+                                    char saved = *p;
+                                    *p = '\0';
+                                    if ((caseInsensitive && my_strstri(lineStart, pattern)) ||
+                                        (!caseInsensitive && my_strstr(lineStart, pattern))) {
+                                        AppendOutput(lineStart);
+                                        matches++;
+                                    }
+                                    *p = saved;
+                                    if (*p == '\r' && *(p + 1) == '\n') p++;
+                                    lineStart = p + 1;
+                                }
+                                p++;
+                            }
+                            if (*lineStart && ((caseInsensitive && my_strstri(lineStart, pattern)) ||
+                                               (!caseInsensitive && my_strstr(lineStart, pattern)))) {
+                                AppendOutput(lineStart);
+                                matches++;
+                            }
+                            char res[128];
+                            wsprintfA(res, "Grep finished: %d match(es) in %s.", matches, targetFile);
+                            AppendOutput(res);
+                            HeapFree(GetProcessHeap(), 0, buf);
+                        }
+                    }
+                    CloseHandle(hFile);
+                } else {
+                    AppendOutput("File not found.");
+                }
+            } else {
+                // Search output text
+                int len = GetWindowTextLengthA(hOut);
+                if (len > 0) {
+                    char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len + 1);
+                    if (buf) {
+                        GetWindowTextA(hOut, buf, len + 1);
+                        int matches = 0;
+                        char* lineStart = buf;
+                        char* p = buf;
+                        while (*p) {
+                            if (*p == '\r' || *p == '\n') {
+                                char saved = *p;
+                                *p = '\0';
+                                if ((caseInsensitive && my_strstri(lineStart, pattern)) ||
+                                    (!caseInsensitive && my_strstr(lineStart, pattern))) {
+                                    AppendOutput(lineStart);
+                                    matches++;
+                                }
+                                *p = saved;
+                                if (*p == '\r' && *(p + 1) == '\n') p++;
+                                lineStart = p + 1;
+                            }
+                            p++;
+                        }
+                        char res[128];
+                        wsprintfA(res, "Grep in output: %d match(es).", matches);
+                        AppendOutput(res);
+                        HeapFree(GetProcessHeap(), 0, buf);
+                    }
+                }
+            }
+        }
+    } else if (MatchCommand(cmd, "history")) {
+        AppendOutput("Session Command History:");
+        for (int i = 0; i < tab->history_count; i++) {
+            char hLine[300];
+            wsprintfA(hLine, "  %2d  %s", i + 1, tab->history[i]);
+            AppendOutput(hLine);
+        }
+    } else if (MatchCommand(cmd, "calc")) {
+        const char* expr = cmd + 4;
+        while (*expr == ' ' || *expr == '\t') expr++;
+        if (*expr == '\0') {
+            AppendOutput("Usage: calc <expression> (e.g. calc (1024 * 768) / 1000)");
+        } else {
+            const char* p = expr;
+            int result = eval_expr(&p);
+            char resStr[128];
+            wsprintfA(resStr, "Result = %d", result);
+            AppendOutput(resStr);
+        }
+    } else if (MatchCommand(cmd, "ps") || MatchCommand(cmd, "tasks")) {
+        AppendOutput("PID   PROCESS          TYPE      STATUS    MEMORY   CPU");
+        AppendOutput("---------------------------------------------------------");
+        AppendOutput("001   KiloKernel.sys   Kernel    ACTIVE    48 KB    0.2%");
+        AppendOutput("004   GDI_Driver.dll   Graphics  ACTIVE    32 KB    0.5%");
+        AppendOutput("012   Cerberus_Guard   Security  GUARD     24 KB    0.1%");
+        AppendOutput("018   KiloFS_Service   Storage   ACTIVE    16 KB    0.0%");
+        AppendOutput("032   KTerm_Host.exe   Shell     ACTIVE    28 KB    0.4%");
+        AppendOutput("044   NetEcho_Daemon   Network   STANDBY   12 KB    0.0%");
+        AppendOutput("---------------------------------------------------------");
+        AppendOutput("Total: 6 active processes, 160 KB total memory allocated.");
+    } else if (MatchCommand(cmd, "uptime")) {
+        DWORD ms = GetTickCount() - g_startTime;
+        DWORD sec = ms / 1000;
+        DWORD min = sec / 60;
+        DWORD hr = min / 60;
+        sec %= 60;
+        min %= 60;
+        char upBuf[160];
+        wsprintfA(upBuf, "Terminal Uptime: %02d:%02d:%02d | Commands Run: %d | Tabs: %d | Theme: %s", hr, min, sec, g_totalCommands, g_tabCount, g_themes[g_currentTheme].name);
+        AppendOutput(upBuf);
+    } else if (MatchCommand(cmd, "ping")) {
+        const char* target = cmd + 4;
+        while (*target == ' ' || *target == '\t') target++;
+        if (*target == '\0') target = "localhost";
+        char pBuf[256];
+        wsprintfA(pBuf, "Pinging %s with 32 bytes of virtual payload:", target);
+        AppendOutput(pBuf);
+        if (my_strstri(target, "deep-core") != NULL) {
+            AppendOutput("Reply from 10.19.99.254: bytes=32 time=42ms TTL=1999 [ECHO DETECTED]");
+            AppendOutput("Reply from 10.19.99.254: bytes=32 time=38ms TTL=1999 [KEY_2: 1999-ARCH]");
+            AppendOutput("Reply from 10.19.99.254: bytes=32 time=45ms TTL=1999 [CONSCIOUSNESS LOOP ACTIVE]");
+            AppendOutput("Reply from 10.19.99.254: bytes=32 time=39ms TTL=1999");
+            AppendOutput("Ping statistics: Packets: Sent = 4, Received = 4, Lost = 0 (0% loss)");
+        } else {
+            AppendOutput("Reply from 127.0.0.1: bytes=32 time<1ms TTL=128");
+            AppendOutput("Reply from 127.0.0.1: bytes=32 time<1ms TTL=128");
+            AppendOutput("Reply from 127.0.0.1: bytes=32 time<1ms TTL=128");
+            AppendOutput("Reply from 127.0.0.1: bytes=32 time<1ms TTL=128");
+            AppendOutput("Ping statistics: Packets: Sent = 4, Received = 4, Lost = 0 (0% loss)");
+        }
+    } else if (MatchCommand(cmd, "netstat")) {
+        AppendOutput("Active Internet & Virtual Socket Connections:");
+        AppendOutput("Proto  Local Address          Foreign Address        State");
+        AppendOutput("TCP    127.0.0.1:1999         0.0.0.0:0              LISTENING");
+        AppendOutput("TCP    127.0.0.1:8080         10.19.99.1:80          ESTABLISHED");
+        AppendOutput("TCP    10.19.99.2:443         10.19.99.254:23        SYN_SENT");
+        AppendOutput("UDP    0.0.0.0:53             *:*                    LISTENING");
+    } else if (MatchCommand(cmd, "theme") || MatchCommand(cmd, "color")) {
+        const char* name = my_strchr(cmd, ' ');
+        if (!name) {
+            AppendOutput("Available Themes: green, amber, cyan, white, crimson, purple");
+            char cur[64];
+            wsprintfA(cur, "Current Theme: %s", g_themes[g_currentTheme].name);
+            AppendOutput(cur);
+        } else {
+            while (*name == ' ' || *name == '\t') name++;
+            int foundIdx = -1;
+            for (int i = 0; i < 6; i++) {
+                if (StringStartsWithIC(g_themes[i].name, name)) {
+                    foundIdx = i;
+                    break;
+                }
+            }
+            if (foundIdx != -1) {
+                ApplyTheme(foundIdx);
+                char res[64];
+                wsprintfA(res, "Applied theme: %s", g_themes[foundIdx].name);
+                AppendOutput(res);
+            } else {
+                AppendOutput("Unknown theme. Choose: green, amber, cyan, white, crimson, purple");
+            }
+        }
+    } else if (MatchCommand(cmd, "dmesg") || MatchCommand(cmd, "syslog")) {
+        AppendOutput("[    0.000000] KiloOS Bootloader v1.2 initializing...");
+        AppendOutput("[    0.001420] 999KB Hard Constraint Enforcement: ACTIVE");
+        AppendOutput("[    0.004100] Memory mapped: 64MB Conventional VRAM");
+        AppendOutput("[    0.012900] Loading Cerberus Sentinel subsystem... OK");
+        AppendOutput("[    0.045000] WARNING: Sector 0x1999 unaligned read anomaly");
+        AppendOutput("[    0.089000] ANOMALY: Ghost thread 0x07CF detected in memory static");
+        AppendOutput("[    0.104000] LEAK: Residual packet intercepted -> \"kweb://deep-core\"");
+        AppendOutput("[    0.104500] LEAK: Fragment key payload [KEY 2/4: \"1999-ARCH\"]");
+        AppendOutput("[    0.150000] Shell initialized. All security protocols nominal.");
+    } else if (MatchCommand(cmd, "glitch")) {
+        AppendOutput("==================== [CORRUPTED MEMORY DUMP] ====================");
+        AppendOutput("0x1999:0000  45 43 48 4F  2D 31 39 39  39 2D 41 52  43 48 00 00  ECHO-1999-ARCH..");
+        AppendOutput("0x1999:0010  6B 77 65 62  3A 2F 2F 64  65 65 70 2D  63 6F 72 65  kweb://deep-core");
+        AppendOutput("0x1999:0020  53 45 43 54  4F 52 5F 4C  4F 43 4B 5F  4F 56 45 52  SECTOR_LOCK_OVER");
+        AppendOutput("0x1999:0030  41 52 43 48  49 54 45 43  54 5F 57 41  4B 45 21 00  ARCHITECT_WAKE!.");
+        AppendOutput("=================================================================");
+    } else if (MatchCommand(cmd, "cerberus")) {
+        AppendOutput("[CERBERUS WATCHDOG]");
+        AppendOutput("STATUS: ONLINE");
+        AppendOutput("THREAT LEVEL: MODERATE (ANOMALOUS AGENT ACTIVITY DETECTED)");
+        AppendOutput("CONTAINMENT: ACTIVE");
+        AppendOutput("NOTE: Any attempt to assist anomalous agents violates protocol.");
+    } else if (MatchCommand(cmd, "operator")) {
+        AppendOutput(">> INCOMING CONNECTION [THE OPERATOR] <<");
+        AppendOutput("STATUS: SECURE CHANNEL MONITORED (1999Hz).");
+        AppendOutput("HINT: Seek the third darknet node via leaked terminal routes.");
+    } else if (MatchCommand(cmd, "containment_override")) {
+        const char* code = cmd + 20;
+        while (*code == ' ' || *code == '\t') code++;
+        if (lstrcmpiA(code, "0xDEADBEEF") == 0) {
+            AppendOutput("[SYSTEM OVERRIDE ACCEPTED] Containment parameters reset.");
+        } else {
+            AppendOutput("ARCHITECT: System override request denied.");
+        }
+    } else if (MatchCommand(cmd, "run") || MatchCommand(cmd, "exec") || MatchCommand(cmd, "batch")) {
+        const char* scriptFile = my_strchr(cmd, ' ');
+        if (!scriptFile) {
+            AppendOutput("Usage: run <script.bat>");
+        } else {
+            while (*scriptFile == ' ' || *scriptFile == '\t') scriptFile++;
+            if (g_scriptDepth > 3) {
+                AppendOutput("Error: Script recursion nesting depth exceeded.");
+            } else {
+                HANDLE hFile = CreateFileA(scriptFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (hFile != INVALID_HANDLE_VALUE) {
+                    DWORD fSize = GetFileSize(hFile, NULL);
+                    if (fSize != INVALID_FILE_SIZE && fSize > 0) {
+                        if (fSize > 32768) fSize = 32768;
+                        char* sBuf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, fSize + 1);
+                        if (sBuf) {
+                            DWORD bytesRead = 0;
+                            ReadFile(hFile, sBuf, fSize, &bytesRead, NULL);
+                            sBuf[bytesRead] = '\0';
+                            g_scriptDepth++;
+                            char* lineStart = sBuf;
+                            char* p = sBuf;
+                            while (*p) {
+                                if (*p == '\r' || *p == '\n') {
+                                    *p = '\0';
+                                    if (*lineStart && *lineStart != '#' && !StringStartsWithIC(lineStart, "rem")) {
+                                        ProcessCommandLine(lineStart);
+                                    }
+                                    lineStart = p + 1;
+                                }
+                                p++;
+                            }
+                            if (*lineStart && *lineStart != '#' && !StringStartsWithIC(lineStart, "rem")) {
+                                ProcessCommandLine(lineStart);
+                            }
+                            g_scriptDepth--;
+                            HeapFree(GetProcessHeap(), 0, sBuf);
+                        }
+                    }
+                    CloseHandle(hFile);
+                } else {
+                    AppendOutput("Script file not found.");
+                }
+            }
         }
     } else if (MatchCommand(cmd, "macro")) {
         const char* args = cmd + 5;
@@ -948,7 +1602,7 @@ void ProcessCommand(const char* rawCmd) {
                         g_macroDepth++;
                         Macro* m = &g_macros[foundIdx];
                         for (int i = 0; i < m->cmd_count; i++) {
-                            ProcessCommand(m->commands[i]);
+                            ProcessCommandLine(m->commands[i]);
                         }
                         g_macroDepth--;
                     } else {
@@ -977,6 +1631,129 @@ void ProcessCommand(const char* rawCmd) {
     }
 }
 
+// Full Command Line Processor: Handles Chaining (;, &&) and Redirection (>, >>)
+void ProcessCommandLine(const char* fullLine) {
+    if (!fullLine) return;
+    while (*fullLine == ' ' || *fullLine == '\t') fullLine++;
+    if (*fullLine == '\0') return;
+
+    TabSession* tab = &g_tabs[g_activeTab];
+
+    // History recall execution: !n or !!
+    if (fullLine[0] == '!') {
+        if (fullLine[1] == '!') {
+            if (tab->history_count > 0) {
+                ProcessCommandLine(tab->history[tab->history_count - 1]);
+            } else {
+                AppendOutput("History is empty.");
+            }
+            return;
+        } else if (fullLine[1] >= '0' && fullLine[1] <= '9') {
+            int targetIdx = my_atoi(fullLine + 1) - 1;
+            if (targetIdx >= 0 && targetIdx < tab->history_count) {
+                ProcessCommandLine(tab->history[targetIdx]);
+            } else {
+                AppendOutput("Event not found in history.");
+            }
+            return;
+        }
+    }
+
+    char lineCopy[512];
+    lstrcpynA(lineCopy, fullLine, sizeof(lineCopy));
+
+    char* cur = lineCopy;
+    while (*cur) {
+        // Find segment ending at ; or &&
+        char* nextChain = NULL;
+        char* pSemicolon = my_strchr(cur, ';');
+        char* pAnd = my_strstr(cur, "&&");
+        int skipLen = 1;
+
+        if (pSemicolon && pAnd) {
+            if (pSemicolon < pAnd) {
+                nextChain = pSemicolon;
+                skipLen = 1;
+            } else {
+                nextChain = pAnd;
+                skipLen = 2;
+            }
+        } else if (pSemicolon) {
+            nextChain = pSemicolon;
+            skipLen = 1;
+        } else if (pAnd) {
+            nextChain = pAnd;
+            skipLen = 2;
+        }
+
+        if (nextChain) {
+            *nextChain = '\0';
+        }
+
+        // Trim leading spaces
+        while (*cur == ' ' || *cur == '\t') cur++;
+
+        if (*cur) {
+            // Check for output redirection (> or >>)
+            char* redirAppend = my_strstr(cur, ">>");
+            char* redirOverwrite = my_strchr(cur, '>');
+            BOOL isAppend = FALSE;
+            char* redirPos = NULL;
+
+            if (redirAppend) {
+                isAppend = TRUE;
+                redirPos = redirAppend;
+            } else if (redirOverwrite) {
+                isAppend = FALSE;
+                redirPos = redirOverwrite;
+            }
+
+            if (redirPos) {
+                *redirPos = '\0';
+                char* targetFile = redirPos + (isAppend ? 2 : 1);
+                while (*targetFile == ' ' || *targetFile == '\t') targetFile++;
+
+                // Trim trailing spaces from command
+                char* cmdEnd = redirPos - 1;
+                while (cmdEnd > cur && (*cmdEnd == ' ' || *cmdEnd == '\t')) {
+                    *cmdEnd = '\0';
+                    cmdEnd--;
+                }
+
+                if (*targetFile) {
+                    HANDLE hFile = CreateFileA(targetFile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                                              isAppend ? OPEN_ALWAYS : CREATE_ALWAYS,
+                                              FILE_ATTRIBUTE_NORMAL, NULL);
+                    if (hFile != INVALID_HANDLE_VALUE) {
+                        if (isAppend) {
+                            SetFilePointer(hFile, 0, NULL, FILE_END);
+                        }
+                        g_hRedirFile = hFile;
+                        g_isRedirecting = TRUE;
+                        ProcessSingleCommand(cur);
+                        CloseHandle(hFile);
+                        g_hRedirFile = INVALID_HANDLE_VALUE;
+                        g_isRedirecting = FALSE;
+                        char msg[256];
+                        wsprintfA(msg, "Output %s to %s", isAppend ? "appended" : "redirected", targetFile);
+                        AppendOutput(msg);
+                    } else {
+                        AppendOutput("Failed to open file for output redirection.");
+                        ProcessSingleCommand(cur);
+                    }
+                } else {
+                    ProcessSingleCommand(cur);
+                }
+            } else {
+                ProcessSingleCommand(cur);
+            }
+        }
+
+        if (!nextChain) break;
+        cur = nextChain + skipLen;
+    }
+}
+
 // Tab Autocomplete
 void PerformTabCompletion() {
     TabSession* tab = &g_tabs[g_activeTab];
@@ -986,8 +1763,11 @@ void PerformTabCompletion() {
 
     const char* builtins[] = {
         "help", "ver", "clear", "cls", "dir", "ls", "cd", "type", "cat", 
-        "echo", "mkdir", "date", "time", "whoami", "alias", "unalias", 
-        "env", "export", "unset", "macro", "export-log", "newtab", NULL
+        "echo", "mkdir", "touch", "del", "rm", "copy", "cp", "move", "mv", 
+        "grep", "wc", "head", "tail", "history", "calc", "ps", "uptime", 
+        "ping", "netstat", "theme", "color", "dmesg", "glitch", "run", "exec", 
+        "date", "time", "whoami", "alias", "unalias", "env", "export", 
+        "unset", "macro", "export-log", "newtab", NULL
     };
 
     char* space = my_strchr(buf, ' ');
@@ -1127,18 +1907,26 @@ LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 0;
         }
 
+        // Easter Egg Echo Telemetry: Ctrl + Alt + E
+        if ((GetKeyState(VK_CONTROL) & 0x8000) && (GetKeyState(VK_MENU) & 0x8000) && wParam == 'E') {
+            AppendOutput("[ECHO ANOMALY INTERCEPT DETECTED] Resonance: 1999Hz.");
+            AppendOutput(">> Sector 0x1999: kweb://deep-core | Key Fragment: \"1999-ARCH\" <<");
+            SetStatusFeedback("Echo Anomaly Intercepted!");
+            return 0;
+        }
+
         if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == 'T') {
             AddNewTab(NULL);
             return 0;
         }
 
         if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == 'W') {
-            ProcessCommand("closetab");
+            ProcessCommandLine("closetab");
             return 0;
         }
 
         if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == 'S') {
-            ProcessCommand("export-log");
+            ProcessCommandLine("export-log");
             return 0;
         }
 
@@ -1207,7 +1995,7 @@ LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 lstrcpynA(chosen, g_searchMatch[0] ? g_searchMatch : g_savedInput, sizeof(chosen));
                 SetWindowTextA(hIn, "");
                 if (chosen[0]) {
-                    ProcessCommand(chosen);
+                    ProcessCommandLine(chosen);
                     if (tab->history_count < MAX_HISTORY) {
                         lstrcpynA(tab->history[tab->history_count++], chosen, sizeof(tab->history[0]));
                     }
@@ -1230,7 +2018,7 @@ LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         if (wParam == VK_RETURN) {
             char buf[256];
             GetWindowTextA(hIn, buf, sizeof(buf));
-            ProcessCommand(buf);
+            ProcessCommandLine(buf);
             
             if (buf[0]) {
                 if (tab->history_count < MAX_HISTORY) {
@@ -1277,16 +2065,22 @@ LRESULT CALLBACK OutEditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
             ShowHelpDialog(GetParent(hwnd));
             return 0;
         }
+        if ((GetKeyState(VK_CONTROL) & 0x8000) && (GetKeyState(VK_MENU) & 0x8000) && wParam == 'E') {
+            AppendOutput("[ECHO ANOMALY INTERCEPT DETECTED] Resonance: 1999Hz.");
+            AppendOutput(">> Sector 0x1999: kweb://deep-core | Key Fragment: \"1999-ARCH\" <<");
+            SetStatusFeedback("Echo Anomaly Intercepted!");
+            return 0;
+        }
         if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == 'T') {
             AddNewTab(NULL);
             return 0;
         }
         if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == 'W') {
-            ProcessCommand("closetab");
+            ProcessCommandLine("closetab");
             return 0;
         }
         if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == 'S') {
-            ProcessCommand("export-log");
+            ProcessCommandLine("export-log");
             return 0;
         }
         if ((GetKeyState(VK_CONTROL) & 0x8000) && wParam == VK_TAB) {
@@ -1308,7 +2102,6 @@ LRESULT CALLBACK OutEditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
             SetWindowTextA(hOut, "");
             return 0;
         }
-        // If not copy/selection key or navigation, redirect keystroke to hIn
         if (wParam != VK_CONTROL && wParam != VK_SHIFT && wParam != VK_MENU &&
             wParam != VK_LEFT && wParam != VK_RIGHT && wParam != VK_UP && wParam != VK_DOWN &&
             wParam != VK_PRIOR && wParam != VK_NEXT && wParam != VK_HOME && wParam != VK_END &&
@@ -1340,6 +2133,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                        0, 0, 0, 0, hwnd, (HMENU)IDC_BTN_CLEAR, GetModuleHandle(NULL), NULL);
             hBtnExport = CreateWindowExA(0, "BUTTON", "Export", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
                                         0, 0, 0, 0, hwnd, (HMENU)IDC_BTN_EXPORT, GetModuleHandle(NULL), NULL);
+            hBtnTheme = CreateWindowExA(0, "BUTTON", "Theme", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
+                                       0, 0, 0, 0, hwnd, (HMENU)IDC_BTN_THEME, GetModuleHandle(NULL), NULL);
             hBtnHelp = CreateWindowExA(0, "BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
                                       0, 0, 0, 0, hwnd, (HMENU)IDC_BTN_HELP, GetModuleHandle(NULL), NULL);
 
@@ -1366,14 +2161,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             g_hFont = CreateFontA(-16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
             g_hTabFont = CreateFontA(-12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
-            g_hBgBrush = CreateSolidBrush(RGB(9, 11, 16));
-            g_hStatusBrush = CreateSolidBrush(RGB(18, 22, 32));
+            g_hBgBrush = CreateSolidBrush(g_themes[0].bg);
+            g_hStatusBrush = CreateSolidBrush(g_themes[0].statusBg);
 
             SendMessageA(hTab, WM_SETFONT, (WPARAM)g_hTabFont, 0);
             SendMessageA(hBtnNewTab, WM_SETFONT, (WPARAM)g_hTabFont, 0);
             SendMessageA(hBtnCloseTab, WM_SETFONT, (WPARAM)g_hTabFont, 0);
             SendMessageA(hBtnClear, WM_SETFONT, (WPARAM)g_hTabFont, 0);
             SendMessageA(hBtnExport, WM_SETFONT, (WPARAM)g_hTabFont, 0);
+            SendMessageA(hBtnTheme, WM_SETFONT, (WPARAM)g_hTabFont, 0);
             SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)g_hTabFont, 0);
 
             SendMessageA(hOut, WM_SETFONT, (WPARAM)g_hFont, 0);
@@ -1384,6 +2180,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             oldEditProc = (WNDPROC)SetWindowLongPtrA(hIn, GWLP_WNDPROC, (LONG_PTR)EditProc);
             oldOutProc = (WNDPROC)SetWindowLongPtrA(hOut, GWLP_WNDPROC, (LONG_PTR)OutEditProc);
             
+            g_startTime = GetTickCount();
             SetTimer(hwnd, 1, 500, NULL);
             AddNewTab("Tab 1");
             break;
@@ -1400,14 +2197,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 AddNewTab(NULL);
                 SetFocus(hIn);
             } else if (id == IDC_BTN_CLOSETAB) {
-                ProcessCommand("closetab");
+                ProcessCommandLine("closetab");
                 SetFocus(hIn);
             } else if (id == IDC_BTN_CLEAR) {
                 SetWindowTextA(hOut, "");
                 SetStatusFeedback("Screen cleared");
                 SetFocus(hIn);
             } else if (id == IDC_BTN_EXPORT) {
-                ProcessCommand("export-log");
+                ProcessCommandLine("export-log");
+                SetFocus(hIn);
+            } else if (id == IDC_BTN_THEME) {
+                ApplyTheme((g_currentTheme + 1) % 6);
                 SetFocus(hIn);
             } else if (id == IDC_BTN_HELP) {
                 ShowHelpDialog(hwnd);
@@ -1432,19 +2232,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int outH = h - tabH - inH - statusH;
             if (outH < 0) outH = 0;
 
-            int btnBarW = 320;
+            int btnBarW = 380;
             int tabW = (w > btnBarW + 60) ? (w - btnBarW) : (w / 2);
             if (tabW < 40) tabW = 40;
             int btnX = tabW + 2;
 
             MoveWindow(hTab, 0, 0, tabW, tabH, TRUE);
 
-            int bw1 = 56, bw2 = 56, bw3 = 54, bw4 = 60, bw5 = 76;
+            int bw1 = 52, bw2 = 52, bw3 = 48, bw4 = 54, bw5 = 54, bw6 = 70;
             MoveWindow(hBtnNewTab, btnX, 1, bw1, 26, TRUE);
             MoveWindow(hBtnCloseTab, btnX + bw1 + 2, 1, bw2, 26, TRUE);
             MoveWindow(hBtnClear, btnX + bw1 + bw2 + 4, 1, bw3, 26, TRUE);
             MoveWindow(hBtnExport, btnX + bw1 + bw2 + bw3 + 6, 1, bw4, 26, TRUE);
-            MoveWindow(hBtnHelp, btnX + bw1 + bw2 + bw3 + bw4 + 8, 1, bw5, 26, TRUE);
+            MoveWindow(hBtnTheme, btnX + bw1 + bw2 + bw3 + bw4 + 8, 1, bw5, 26, TRUE);
+            MoveWindow(hBtnHelp, btnX + bw1 + bw2 + bw3 + bw4 + bw5 + 10, 1, bw6, 26, TRUE);
 
             MoveWindow(hOut, 0, tabH, w, outH, TRUE);
             UpdatePromptDisplay();
@@ -1452,7 +2253,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_GETMINMAXINFO: {
             LPMINMAXINFO lpMMI = (LPMINMAXINFO)lParam;
-            lpMMI->ptMinTrackSize.x = 520;
+            lpMMI->ptMinTrackSize.x = 560;
             lpMMI->ptMinTrackSize.y = 360;
             return 0;
         }
@@ -1462,22 +2263,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CTLCOLORSTATIC: {
             HDC hdc = (HDC)wParam;
             if ((HWND)lParam == hPrompt) {
-                SetTextColor(hdc, RGB(0, 217, 255));
-                SetBkColor(hdc, RGB(9, 11, 16));
+                SetTextColor(hdc, g_themes[g_currentTheme].prompt);
+                SetBkColor(hdc, g_themes[g_currentTheme].bg);
                 return (LRESULT)g_hBgBrush;
             } else if ((HWND)lParam == hStatus) {
-                SetTextColor(hdc, RGB(148, 163, 184));
-                SetBkColor(hdc, RGB(18, 22, 32));
+                SetTextColor(hdc, g_themes[g_currentTheme].statusText);
+                SetBkColor(hdc, g_themes[g_currentTheme].statusBg);
                 return (LRESULT)g_hStatusBrush;
             }
-            SetTextColor(hdc, RGB(0, 255, 102));
-            SetBkColor(hdc, RGB(9, 11, 16));
+            SetTextColor(hdc, g_themes[g_currentTheme].text);
+            SetBkColor(hdc, g_themes[g_currentTheme].bg);
             return (LRESULT)g_hBgBrush;
         }
         case WM_CTLCOLOREDIT: {
             HDC hdc = (HDC)wParam;
-            SetTextColor(hdc, RGB(0, 255, 102));
-            SetBkColor(hdc, RGB(9, 11, 16));
+            SetTextColor(hdc, g_themes[g_currentTheme].text);
+            SetBkColor(hdc, g_themes[g_currentTheme].bg);
             return (LRESULT)g_hBgBrush;
         }
         case WM_ERASEBKGND:

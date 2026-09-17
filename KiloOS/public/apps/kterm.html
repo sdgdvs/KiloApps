@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KTerm - KiloOS Advanced Terminal</title>
 <style>
-  :root {
+  :root, [data-theme="green"] {
     --term-bg: #090b10;
     --term-header-bg: #121620;
     --term-tab-bg: #181d2a;
@@ -17,6 +17,81 @@
     --term-op: #d946ef;
     --term-warn: #ffaa00;
     --term-border: rgba(0, 255, 102, 0.15);
+    --term-font: 'Consolas', 'Monaco', 'Courier New', monospace;
+  }
+
+  [data-theme="amber"] {
+    --term-bg: #140e04;
+    --term-header-bg: #241808;
+    --term-tab-bg: #2e1f0a;
+    --term-tab-active: #3d2a0e;
+    --term-fg: #ffb000;
+    --term-fg-dim: #b37a00;
+    --term-err: #ff5533;
+    --term-sys: #ffd700;
+    --term-op: #ff7700;
+    --term-warn: #ffcc00;
+    --term-border: rgba(255, 176, 0, 0.2);
+    --term-font: 'Consolas', 'Monaco', 'Courier New', monospace;
+  }
+
+  [data-theme="cyan"] {
+    --term-bg: #06101a;
+    --term-header-bg: #0c1c2e;
+    --term-tab-bg: #10243b;
+    --term-tab-active: #183454;
+    --term-fg: #00e5ff;
+    --term-fg-dim: #008fa0;
+    --term-err: #ff4466;
+    --term-sys: #64ffda;
+    --term-op: #bd93f9;
+    --term-warn: #ffb86c;
+    --term-border: rgba(0, 229, 255, 0.2);
+    --term-font: 'Consolas', 'Monaco', 'Courier New', monospace;
+  }
+
+  [data-theme="white"] {
+    --term-bg: #101014;
+    --term-header-bg: #1c1c24;
+    --term-tab-bg: #24242e;
+    --term-tab-active: #30303e;
+    --term-fg: #e0e0e8;
+    --term-fg-dim: #888896;
+    --term-err: #ff5555;
+    --term-sys: #a0c8ff;
+    --term-op: #d4a5ff;
+    --term-warn: #f1fa8c;
+    --term-border: rgba(224, 224, 232, 0.2);
+    --term-font: 'Consolas', 'Monaco', 'Courier New', monospace;
+  }
+
+  [data-theme="crimson"] {
+    --term-bg: #18080a;
+    --term-header-bg: #2a0e12;
+    --term-tab-bg: #361217;
+    --term-tab-active: #4a1820;
+    --term-fg: #ff4455;
+    --term-fg-dim: #a62b37;
+    --term-err: #ff1133;
+    --term-sys: #ff8c64;
+    --term-op: #ff55a3;
+    --term-warn: #ffaa33;
+    --term-border: rgba(255, 68, 85, 0.25);
+    --term-font: 'Consolas', 'Monaco', 'Courier New', monospace;
+  }
+
+  [data-theme="purple"] {
+    --term-bg: #14081c;
+    --term-header-bg: #240e32;
+    --term-tab-bg: #2e1240;
+    --term-tab-active: #3e1856;
+    --term-fg: #e070ff;
+    --term-fg-dim: #9440ab;
+    --term-err: #ff4466;
+    --term-sys: #ff80dc;
+    --term-op: #bd93f9;
+    --term-warn: #ffd166;
+    --term-border: rgba(224, 112, 255, 0.25);
     --term-font: 'Consolas', 'Monaco', 'Courier New', monospace;
   }
   
@@ -36,6 +111,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   /* Header & Tab Bar */
@@ -298,61 +374,66 @@
     color: #64748b;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     user-select: none;
     flex-shrink: 0;
   }
 
   .shortcut-tag {
-    color: #94a3b8;
-    background: rgba(255,255,255,0.06);
-    padding: 1px 5px;
+    color: var(--term-fg);
+    background: rgba(0, 255, 102, 0.08);
+    padding: 1px 4px;
     border-radius: 3px;
+    font-weight: bold;
     margin-right: 3px;
   }
 
-  /* Modal Overlay & Help Dialog */
+  /* Modal Help Dialog Styles */
   .modal-overlay {
     position: fixed;
-    inset: 0;
-    background: rgba(4, 6, 12, 0.78);
-    backdrop-filter: blur(4px);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(3px);
     display: none;
-    align-items: center;
     justify-content: center;
-    z-index: 2000;
-    animation: termFadeIn 0.15s ease-out;
+    align-items: center;
+    z-index: 1000;
   }
   .modal-overlay.open {
     display: flex;
   }
-  @keyframes termFadeIn {
-    from { opacity: 0; transform: scale(0.97); }
-    to { opacity: 1; transform: scale(1); }
-  }
   .modal-card {
-    background: #0c101a;
+    background: var(--term-header-bg);
     border: 1px solid var(--term-border);
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75), 0 0 24px rgba(0, 255, 102, 0.12);
     border-radius: 8px;
-    width: 90%;
-    max-width: 680px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 255, 102, 0.2);
+    width: 92%;
+    max-width: 720px;
     max-height: 85vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    animation: modalPop 0.15s ease-out;
+  }
+  @keyframes modalPop {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
   }
   .modal-header {
-    background: var(--term-header-bg);
-    border-bottom: 1px solid var(--term-border);
     padding: 12px 16px;
+    border-bottom: 1px solid var(--term-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: rgba(0, 0, 0, 0.25);
   }
   .modal-title {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: bold;
-    color: var(--term-sys);
+    color: var(--term-fg);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -360,142 +441,110 @@
   .modal-close-btn {
     background: transparent;
     border: none;
-    color: #94a3b8;
+    color: #64748b;
     font-size: 18px;
     cursor: pointer;
+    padding: 0 4px;
     line-height: 1;
-    padding: 4px 8px;
     border-radius: 4px;
     transition: all 0.15s;
   }
   .modal-close-btn:hover {
-    color: #ff4444;
+    color: var(--term-err);
     background: rgba(255, 68, 68, 0.15);
   }
   .modal-body {
     padding: 16px;
     overflow-y: auto;
-    font-size: 13px;
-    line-height: 1.5;
+    font-size: 12px;
+    line-height: 1.6;
     color: #cbd5e1;
   }
-  .modal-body::-webkit-scrollbar { width: 6px; }
-  .modal-body::-webkit-scrollbar-thumb { background: rgba(0,255,102,0.2); border-radius: 3px; }
   .modal-section {
     margin-bottom: 16px;
   }
-  .modal-section:last-child {
-    margin-bottom: 0;
-  }
   .modal-section-title {
-    color: var(--term-fg);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
     font-weight: bold;
-    border-bottom: 1px solid rgba(0, 255, 102, 0.2);
-    padding-bottom: 4px;
+    color: var(--term-sys);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
     margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+    padding-bottom: 4px;
   }
   .cmd-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    margin-bottom: 6px;
   }
   .cmd-table tr {
-    transition: background 0.12s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    transition: background 0.1s;
   }
   .cmd-table tr:hover {
-    background: rgba(0, 255, 102, 0.08);
+    background: rgba(255, 255, 255, 0.03);
   }
   .cmd-table td {
-    padding: 5px 8px;
-    vertical-align: middle;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    padding: 6px 8px;
+    vertical-align: top;
   }
   .cmd-table td.code-cell {
-    width: 175px;
+    width: 32%;
+    font-family: var(--term-font);
+    color: var(--term-fg);
+    font-weight: bold;
     white-space: nowrap;
   }
-  .cmd-table code {
+  .cmd-table td.code-cell code {
     background: rgba(0, 255, 102, 0.08);
-    border: 1px solid rgba(0, 255, 102, 0.2);
-    color: var(--term-fg);
     padding: 2px 6px;
-    border-radius: 4px;
-    font-family: var(--term-font);
-    font-size: 11px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 255, 102, 0.15);
   }
-  .cmd-desc {
+  .cmd-table td.cmd-desc {
     color: #94a3b8;
   }
   .modal-footer {
-    background: var(--term-header-bg);
-    border-top: 1px solid var(--term-border);
     padding: 10px 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
     justify-content: flex-end;
+    background: rgba(0, 0, 0, 0.15);
   }
 
-  /* Toast Notification Container */
+  /* Toasts */
   #toastContainer {
     position: fixed;
-    bottom: 35px;
-    right: 20px;
-    z-index: 3000;
+    bottom: 36px;
+    right: 16px;
     display: flex;
     flex-direction: column;
     gap: 8px;
+    z-index: 2000;
     pointer-events: none;
   }
   .toast {
-    background: rgba(14, 18, 28, 0.96);
+    pointer-events: auto;
+    background: var(--term-header-bg);
+    color: var(--term-fg);
     border: 1px solid var(--term-border);
     border-left: 4px solid var(--term-fg);
-    color: #e2e8f0;
-    padding: 8px 12px;
-    border-radius: 6px;
+    padding: 8px 14px;
+    border-radius: 4px;
     font-size: 12px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 10px rgba(0, 255, 102, 0.1);
-    animation: toastSlideIn 0.2s ease-out;
-    transition: opacity 0.25s ease, transform 0.25s ease;
-    pointer-events: auto;
-    max-width: 380px;
-    word-break: break-word;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    cursor: pointer;
-  }
-  .toast:hover {
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8), 0 0 14px rgba(0, 255, 102, 0.25);
-  }
-  .toast-close {
-    font-size: 16px;
-    line-height: 1;
-    color: #94a3b8;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0 4px;
-    border-radius: 3px;
-    transition: all 0.15s;
-    opacity: 0.7;
-    font-family: monospace;
-    flex-shrink: 0;
-  }
-  .toast-close:hover {
-    color: #ff4444;
-    opacity: 1;
-    background: rgba(255, 68, 68, 0.2);
+    gap: 12px;
+    animation: toastSlideIn 0.2s ease;
+    transition: opacity 0.25s, transform 0.25s;
+    min-width: 220px;
+    max-width: 340px;
   }
   .toast.toast-sys {
     border-left-color: var(--term-sys);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 10px rgba(0, 217, 255, 0.15);
   }
   .toast.toast-warn {
     border-left-color: var(--term-warn);
@@ -513,7 +562,7 @@
   }
 </style>
 </head>
-<body>
+<body data-theme="green">
 
 <header id="header">
   <div id="tabStrip" role="tablist" aria-label="Terminal Session Tabs">
@@ -521,6 +570,7 @@
     <button class="tab-add" id="btnNewTab" title="New Session Tab (Ctrl+T)">+ New</button>
   </div>
   <div class="toolbar-actions" role="toolbar" aria-label="Terminal Actions">
+    <button class="btn-action" id="btnTheme" title="Cycle CRT Color Themes">🎨 Theme</button>
     <button class="btn-action" id="btnExportLog" title="Download Session Log (Ctrl+S)">💾 Export Log</button>
     <button class="btn-action" id="btnClear" title="Clear Screen (Ctrl+L)">🧹 Clear</button>
     <button class="btn-action" id="btnZoomOut" title="Decrease Font Size (Ctrl+-)">A−</button>
@@ -533,10 +583,12 @@
   <span class="quick-label">⚡ Quick:</span>
   <button class="quick-chip" data-cmd="help" title="Show help and commands">❓ help</button>
   <button class="quick-chip" data-cmd="dir" title="List directory contents">📁 dir</button>
+  <button class="quick-chip" data-cmd="history" title="View session command history">📜 history</button>
+  <button class="quick-chip" data-cmd="ps" title="Show running processes">⚙️ ps</button>
+  <button class="quick-chip" data-cmd="uptime" title="System uptime & telemetry">⏱️ uptime</button>
+  <button class="quick-chip" data-cmd="dmesg" title="Kernel diagnostic boot log">📋 dmesg</button>
+  <button class="quick-chip" data-cmd="theme" title="Cycle CRT color themes">🎨 theme</button>
   <button class="quick-chip" data-cmd="sysinfo" title="System and terminal version">ℹ️ sysinfo</button>
-  <button class="quick-chip" data-cmd="date" title="Show system date">📅 date</button>
-  <button class="quick-chip" data-cmd="whoami" title="Show current username">👤 whoami</button>
-  <button class="quick-chip" data-cmd="alias" title="List defined aliases">📋 alias</button>
   <button class="quick-chip" data-cmd="export-log" title="Export session log to file">💾 export-log</button>
   <button class="quick-chip" data-cmd="clear" title="Clear terminal screen">🧹 clear</button>
 </div>
@@ -562,6 +614,7 @@
     <span><span class="shortcut-tag">Ctrl+1..8</span>Switch Tab</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+S</span>Export Log</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+R</span>Search</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">Ctrl+Alt+E</span>Echo</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Tab</span>Complete</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+L</span>Clear</span>
   </div>
@@ -594,6 +647,7 @@
           <tr><td class="code-cell"><code>Ctrl + R</code></td><td class="cmd-desc">Incremental reverse search through command history</td></tr>
           <tr><td class="code-cell"><code>Ctrl + L</code></td><td class="cmd-desc">Clear terminal screen output (or <code>cls</code> / <code>clear</code>)</td></tr>
           <tr><td class="code-cell"><code>Ctrl + C</code></td><td class="cmd-desc">Cancel current command input line</td></tr>
+          <tr><td class="code-cell"><code>Ctrl + Alt + E</code></td><td class="cmd-desc">Intercept Echo Anomaly telemetry transmission (ARG)</td></tr>
           <tr><td class="code-cell"><code>Tab</code></td><td class="cmd-desc">Auto-complete commands, aliases, and file paths</td></tr>
           <tr><td class="code-cell"><code>Ctrl + +/-</code></td><td class="cmd-desc">Increase or decrease terminal font size (0 to reset)</td></tr>
           <tr><td class="code-cell"><code>↑ / ↓ Arrows</code></td><td class="cmd-desc">Navigate through previous command history</td></tr>
@@ -608,31 +662,50 @@
           <tr><td class="code-cell"><code>cd</code> [dir]</td><td class="cmd-desc">Change directory (e.g. <code>cd Documents</code>, <code>cd ..</code>)</td></tr>
           <tr><td class="code-cell"><code>type</code> / <code>cat</code> &lt;file&gt;</td><td class="cmd-desc">View text file contents (e.g. <code>type readme.txt</code>)</td></tr>
           <tr><td class="code-cell"><code>mkdir</code> &lt;folder&gt;</td><td class="cmd-desc">Create a new sub-directory in virtual file system</td></tr>
+          <tr><td class="code-cell"><code>touch</code> &lt;file&gt;</td><td class="cmd-desc">Create empty file or update timestamp in VFS</td></tr>
+          <tr><td class="code-cell"><code>del</code> / <code>rm</code> &lt;file&gt;</td><td class="cmd-desc">Delete a file from the virtual file system</td></tr>
+          <tr><td class="code-cell"><code>copy</code> / <code>cp</code> &lt;s&gt; &lt;d&gt;</td><td class="cmd-desc">Copy a file to destination (e.g. <code>copy a.txt b.txt</code>)</td></tr>
+          <tr><td class="code-cell"><code>move</code> / <code>ren</code> &lt;s&gt; &lt;d&gt;</td><td class="cmd-desc">Move or rename a file (e.g. <code>move a.txt b.txt</code>)</td></tr>
         </table>
       </div>
 
       <div class="modal-section">
-        <div class="modal-section-title">🛠️ System &amp; Utility Commands</div>
+        <div class="modal-section-title">🔍 Text &amp; Pipeline Utilities</div>
+        <table class="cmd-table">
+          <tr><td class="code-cell"><code>grep</code> [-i] &lt;pat&gt; [file]</td><td class="cmd-desc">Search lines for pattern in file or terminal output</td></tr>
+          <tr><td class="code-cell"><code>wc</code> &lt;file&gt;</td><td class="cmd-desc">Count lines, words, and character bytes in text file</td></tr>
+          <tr><td class="code-cell"><code>head</code> / <code>tail</code> [-n N] &lt;file&gt;</td><td class="cmd-desc">View the first or last N lines of a file (default: 10)</td></tr>
+          <tr><td class="code-cell"><code>calc</code> &lt;expr&gt;</td><td class="cmd-desc">Safe arithmetic math calculator (<code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>%</code>, <code>^</code>, <code>()</code>)</td></tr>
+          <tr><td class="code-cell"><code>history</code> / <code>!n</code> / <code>!!</code></td><td class="cmd-desc">Display command history list; execute item n or last command</td></tr>
+          <tr><td class="code-cell"><code>run</code> / <code>exec</code> &lt;script&gt;</td><td class="cmd-desc">Execute commands line-by-line from batch script file</td></tr>
+          <tr><td class="code-cell"><code>cmd &gt; file</code> / <code>&gt;&gt; file</code></td><td class="cmd-desc">Output redirection: overwrite (<code>&gt;</code>) or append (<code>&gt;&gt;</code>) to file</td></tr>
+          <tr><td class="code-cell"><code>cmd1 ; cmd2</code></td><td class="cmd-desc">Sequential command chaining (or <code>cmd1 &amp;&amp; cmd2</code>)</td></tr>
+        </table>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">🛠️ System, Diagnostics &amp; Telemetry</div>
         <table class="cmd-table">
           <tr><td class="code-cell"><code>help</code></td><td class="cmd-desc">Show command summary &amp; open quick reference</td></tr>
           <tr><td class="code-cell"><code>ver</code> / <code>sysinfo</code></td><td class="cmd-desc">Display KiloOS terminal operating system version</td></tr>
+          <tr><td class="code-cell"><code>ps</code> / <code>tasks</code></td><td class="cmd-desc">Display virtual system processes and memory telemetry</td></tr>
+          <tr><td class="code-cell"><code>uptime</code></td><td class="cmd-desc">Display terminal session uptime and execution telemetry</td></tr>
+          <tr><td class="code-cell"><code>ping</code> &lt;host&gt;</td><td class="cmd-desc">Simulate ICMP ping packets to network hosts</td></tr>
+          <tr><td class="code-cell"><code>netstat</code></td><td class="cmd-desc">Display active virtual socket connections and ports</td></tr>
+          <tr><td class="code-cell"><code>theme</code> [name]</td><td class="cmd-desc">Set CRT theme: <code>green</code>, <code>amber</code>, <code>cyan</code>, <code>white</code>, <code>crimson</code>, <code>purple</code></td></tr>
+          <tr><td class="code-cell"><code>dmesg</code> / <code>syslog</code></td><td class="cmd-desc">Inspect kernel boot diagnostic log &amp; security traces</td></tr>
+          <tr><td class="code-cell"><code>glitch</code></td><td class="cmd-desc">Inspect corrupted memory dump and ARG route leak</td></tr>
           <tr><td class="code-cell"><code>echo</code> &lt;text&gt;</td><td class="cmd-desc">Print message with variable expansion (<code>$VAR</code>, <code>%VAR%</code>)</td></tr>
           <tr><td class="code-cell"><code>date</code> / <code>time</code></td><td class="cmd-desc">Print current system calendar date or local time</td></tr>
           <tr><td class="code-cell"><code>whoami</code></td><td class="cmd-desc">Show current session user name</td></tr>
-          <tr><td class="code-cell"><code>export-log</code> [file]</td><td class="cmd-desc">Export current session log to downloadable text file</td></tr>
-          <tr><td class="code-cell"><code>newtab</code> [name]</td><td class="cmd-desc">Create a new named terminal tab session</td></tr>
-          <tr><td class="code-cell"><code>exit</code> / <code>closetab</code></td><td class="cmd-desc">Close current tab session</td></tr>
-        </table>
-      </div>
-
-      <div class="modal-section">
-        <div class="modal-section-title">🚀 Advanced Shell Features</div>
-        <table class="cmd-table">
-          <tr><td class="code-cell"><code>alias</code> [name=cmd]</td><td class="cmd-desc">Create or list custom command aliases (e.g. <code>alias gs="dir"</code>)</td></tr>
+          <tr><td class="code-cell"><code>alias</code> [name=cmd]</td><td class="cmd-desc">Create or list custom command aliases</td></tr>
           <tr><td class="code-cell"><code>unalias</code> &lt;name&gt;</td><td class="cmd-desc">Delete a previously defined custom alias</td></tr>
           <tr><td class="code-cell"><code>export</code> VAR=val</td><td class="cmd-desc">Set environment variable (view all with <code>env</code>)</td></tr>
           <tr><td class="code-cell"><code>macro</code> record &lt;name&gt;</td><td class="cmd-desc">Record a sequence of terminal commands (stop with <code>macro stop</code>)</td></tr>
           <tr><td class="code-cell"><code>macro</code> play &lt;name&gt;</td><td class="cmd-desc">Replay a saved command macro (view all with <code>macro list</code>)</td></tr>
+          <tr><td class="code-cell"><code>export-log</code> [file]</td><td class="cmd-desc">Export current session log to downloadable text file</td></tr>
+          <tr><td class="code-cell"><code>newtab</code> [name]</td><td class="cmd-desc">Create a new named terminal tab session</td></tr>
+          <tr><td class="code-cell"><code>exit</code> / <code>closetab</code></td><td class="cmd-desc">Close current tab session</td></tr>
         </table>
       </div>
     </div>
@@ -654,6 +727,7 @@
   const measurer = document.getElementById('measurer');
   const tabStrip = document.getElementById('tabStrip');
   const btnNewTab = document.getElementById('btnNewTab');
+  const btnTheme = document.getElementById('btnTheme');
   const btnExportLog = document.getElementById('btnExportLog');
   const btnClear = document.getElementById('btnClear');
   const btnHelp = document.getElementById('btnHelp');
@@ -661,6 +735,37 @@
   
   const MAX_LOG_LINES = 1000;
   const MAX_TABS = 8;
+  const sessionStartTime = Date.now();
+  let totalCommandCount = 0;
+
+  const themes = ['green', 'amber', 'cyan', 'white', 'crimson', 'purple'];
+  let activeThemeName = 'green';
+
+  function setTheme(theme) {
+    if (!themes.includes(theme)) return;
+    activeThemeName = theme;
+    document.body.setAttribute('data-theme', theme);
+    try {
+      localStorage.setItem('kterm_theme', theme);
+    } catch (e) {}
+  }
+
+  // Restore theme from localStorage
+  try {
+    const savedTheme = localStorage.getItem('kterm_theme');
+    if (savedTheme && themes.includes(savedTheme)) {
+      setTheme(savedTheme);
+    }
+  } catch (e) {}
+
+  function cycleTheme() {
+    const idx = themes.indexOf(activeThemeName);
+    const nextTheme = themes[(idx + 1) % themes.length];
+    setTheme(nextTheme);
+    showToast(`CRT Theme: <b>${nextTheme.toUpperCase()}</b>`, 'sys', 2000);
+  }
+
+  if (btnTheme) btnTheme.addEventListener('click', cycleTheme);
 
   function escapeHtml(str) {
     if (str === null || str === undefined) return '';
@@ -682,6 +787,73 @@
     return false;
   }
 
+  // Safe Math Evaluator using recursive descent (NO eval / new Function)
+  function safeEvaluateMath(expr) {
+    let pos = 0;
+    const s = expr.replace(/\s+/g, '');
+    if (!s) throw new Error("Empty expression");
+
+    function parseExpr() {
+      let left = parseTerm();
+      while (pos < s.length && (s[pos] === '+' || s[pos] === '-')) {
+        const op = s[pos++];
+        const right = parseTerm();
+        if (op === '+') left += right;
+        else left -= right;
+      }
+      return left;
+    }
+
+    function parseTerm() {
+      let left = parsePower();
+      while (pos < s.length && (s[pos] === '*' || s[pos] === '/' || s[pos] === '%')) {
+        const op = s[pos++];
+        const right = parsePower();
+        if (op === '*') left *= right;
+        else if (op === '/') left = right !== 0 ? left / right : 0;
+        else if (op === '%') left = right !== 0 ? left % right : 0;
+      }
+      return left;
+    }
+
+    function parsePower() {
+      let left = parseFactor();
+      while (pos < s.length && s[pos] === '^') {
+        pos++;
+        const right = parseFactor();
+        left = Math.pow(left, right);
+      }
+      return left;
+    }
+
+    function parseFactor() {
+      let sign = 1;
+      if (pos < s.length && s[pos] === '-') {
+        sign = -1;
+        pos++;
+      } else if (pos < s.length && s[pos] === '+') {
+        pos++;
+      }
+
+      if (pos < s.length && s[pos] === '(') {
+        pos++;
+        const res = parseExpr();
+        if (pos < s.length && s[pos] === ')') pos++;
+        return sign * res;
+      }
+
+      let numStr = '';
+      while (pos < s.length && ((s[pos] >= '0' && s[pos] <= '9') || s[pos] === '.')) {
+        numStr += s[pos++];
+      }
+      if (!numStr) throw new Error("Expected number");
+      return sign * parseFloat(numStr);
+    }
+
+    const result = parseExpr();
+    return Number.isInteger(result) ? result : parseFloat(result.toFixed(4));
+  }
+
   // Local Fallback VFS for standalone mode
   const fallbackVFS = {
     tree: {
@@ -692,16 +864,16 @@
           type: 'dir',
           name: 'Documents',
           children: {
-            'readme.txt': { type: 'file', name: 'readme.txt', content: 'Welcome to KTerm Terminal.' },
-            'notes.log': { type: 'file', name: 'notes.log', content: 'System checks passed cleanly.' }
+            'readme.txt': { type: 'file', name: 'readme.txt', content: 'Welcome to KTerm Terminal.\nDeep utilities and multi-tab system active.\nCheck dmesg for kernel diagnostic logs.' },
+            'notes.log': { type: 'file', name: 'notes.log', content: 'System checks passed cleanly.\nNo buffer overflows detected.' }
           }
         },
         'System': {
           type: 'dir',
           name: 'System',
           children: {
-            'config.sys': { type: 'file', name: 'config.sys', content: 'FILES=40\nBUFFERS=20' },
-            'autoexec.bat': { type: 'file', name: 'autoexec.bat', content: '@ECHO OFF\nPROMPT $P$G' }
+            'config.sys': { type: 'file', name: 'config.sys', content: 'FILES=40\nBUFFERS=20\nCEILING=999KB' },
+            'autoexec.bat': { type: 'file', name: 'autoexec.bat', content: '@ECHO OFF\nPROMPT $P$G\nver\nuptime' }
           }
         }
       }
@@ -721,6 +893,35 @@
   function getVFS() {
     if (window.parent && window.parent.vfs) return window.parent.vfs;
     return fallbackVFS;
+  }
+
+  function writeVFSFile(filePath, content, append = false) {
+    const vfs = getVFS();
+    const target = resolvePath(filePath);
+    const parts = target.split('/').filter(Boolean);
+    const fileName = parts.pop();
+    if (!fileName) return false;
+
+    let curr = vfs.getNode('/');
+    for (const p of parts) {
+      if (!curr.children) curr.children = {};
+      if (!curr.children[p]) {
+        curr.children[p] = { type: 'dir', name: p, children: {} };
+      }
+      curr = curr.children[p];
+    }
+
+    if (!curr.children) curr.children = {};
+    if (curr.children[fileName] && curr.children[fileName].type === 'file') {
+      if (append) {
+        curr.children[fileName].content = (curr.children[fileName].content ? curr.children[fileName].content + '\n' : '') + content;
+      } else {
+        curr.children[fileName].content = content;
+      }
+    } else {
+      curr.children[fileName] = { type: 'file', name: fileName, content: content };
+    }
+    return true;
   }
 
   // Multi-Tab Terminal Session State Manager
@@ -786,8 +987,8 @@
       tempDiv.appendChild(line);
     };
     p("KiloOS Web Terminal v1.2 - " + sessionName, "log-system");
-    p("Features: Multi-Tab | Reverse Search (Ctrl+R) | Aliases | Env Vars | Log Export");
-    p("Press 'h' or F1 for a list of available commands.\n");
+    p("Deep Features: Multi-Tab | Piping (>/>>) | Chaining (;) | Grep | Calc | Diagnostics");
+    p("Press 'h' or F1 for Help | Ctrl+T: New Tab | Ctrl+Alt+E: Echo Intercept\n");
     session.outputHTML = tempDiv.innerHTML;
 
     switchTab(id);
@@ -823,7 +1024,7 @@
 
   function closeTab(id, e) {
     if (e) e.stopPropagation();
-    if (sessions.length <= 1) return; // keep at least 1 tab open
+    if (sessions.length <= 1) return;
     
     const index = sessions.findIndex(s => s.id === id);
     if (index !== -1) {
@@ -840,7 +1041,6 @@
   }
 
   function renderTabs() {
-    // Clear old tab elements except button
     const tabEls = tabStrip.querySelectorAll('.tab');
     tabEls.forEach(el => el.remove());
 
@@ -908,7 +1108,13 @@
     prompt.textContent = pathStr + '>';
   }
 
+  let printLogHook = null;
+
   function print(text, forceClass = null) {
+      if (printLogHook) {
+        printLogHook(text, forceClass);
+      }
+
       const line = document.createElement('div');
       line.className = 'log-line';
       
@@ -979,18 +1185,15 @@
       return '/' + parts.join('/');
   }
 
-  // Environment variable expansion: replaces %VAR% or $VAR
   function expandEnvVars(cmdStr) {
     const s = getActiveSession();
     if (!s || !s.env) return cmdStr;
 
-    // Expand %VAR%
     let result = cmdStr.replace(/%([A-Za-z0-9_]+)%/g, (match, varName) => {
       const upper = varName.toUpperCase();
       return s.env[upper] !== undefined ? s.env[upper] : match;
     });
 
-    // Expand $VAR
     result = result.replace(/\$([A-Za-z0-9_]+)/g, (match, varName) => {
       const upper = varName.toUpperCase();
       return s.env[upper] !== undefined ? s.env[upper] : match;
@@ -999,7 +1202,6 @@
     return result;
   }
 
-  // Alias expansion
   function expandAlias(cmdStr) {
     const s = getActiveSession();
     if (!s || !s.aliases) return cmdStr;
@@ -1033,6 +1235,7 @@
   }
 
   function execute(cmdStr) {
+      totalCommandCount++;
       print(prompt.textContent + ' ' + cmdStr, "log-cmd");
       let expanded = expandAlias(cmdStr);
       expanded = expandEnvVars(expanded);
@@ -1056,20 +1259,36 @@
           }
       }
 
-      if (cmd === 'help') {
+      if (cmd === 'help' || cmd === 'h') {
           openHelpModal();
           showToast("Help guide opened (Esc to close)", "sys");
-          print("Available KTerm Commands (Quick Help Modal opened):");
-          print("  help          - Show available commands");
+          print("KTerm Expanded Commands (Quick Help Modal opened):");
+          print("  help / h      - Show available commands and shortcuts");
           print("  ver           - Display OS version");
           print("  clear / cls   - Clear screen");
-          print("  dir / ls      - List directory contents");
-          print("  cd            - Change directory");
-          print("  type / cat    - Read file contents");
+          print("  dir / ls      - List directory contents (dir [path])");
+          print("  cd            - Change directory (cd [path])");
+          print("  type / cat    - Read file contents (type <file>)");
           print("  echo          - Print text (supports $VAR / %VAR%)");
-          print("  mkdir         - Create directory");
-          print("  date          - Show system date");
-          print("  time          - Show system time");
+          print("  mkdir         - Create directory (mkdir <name>)");
+          print("  touch         - Create empty file or update timestamp (touch <file>)");
+          print("  del / rm      - Delete a file (del <file>)");
+          print("  copy / cp     - Copy file to destination (copy <src> <dst>)");
+          print("  move / ren    - Move or rename file (move <src> <dst>)");
+          print("  grep / find   - Search text lines (grep [-i] <pattern> [file])");
+          print("  wc            - Count lines, words, and bytes in file (wc <file>)");
+          print("  head / tail   - View first or last N lines (head [-n N] <file>)");
+          print("  history       - Command history list (!n to recall, !! for last)");
+          print("  calc          - Arithmetic math calculator (calc <expression>)");
+          print("  ps / tasks    - Show virtual system processes and memory");
+          print("  uptime        - Display system uptime and command telemetry");
+          print("  ping          - ICMP echo diagnostic simulation (ping <host>)");
+          print("  netstat       - Active virtual network sockets");
+          print("  theme         - CRT color theme (theme <green|amber|cyan|white|crimson|purple>)");
+          print("  dmesg         - Kernel boot diagnostic log & ARG telemetry");
+          print("  glitch        - Memory dump anomaly inspection");
+          print("  run / exec    - Run batch commands from script file (run <file>)");
+          print("  date / time   - Show system date or clock");
           print("  whoami        - Display current user");
           print("  alias         - Manage command aliases (alias [name=cmd], unalias)");
           print("  env / export  - Environment variables (export VAR=VAL, unset VAR)");
@@ -1077,8 +1296,9 @@
           print("  export-log    - Download terminal session log");
           print("  newtab        - Open a new terminal tab session");
           print("  exit          - Close active terminal tab");
-      } else if (cmd === 'ver') {
-          print("KiloOS Web Terminal v1.2 (Multi-Tab & Deep Utilities)");
+      } else if (cmd === 'ver' || cmd === 'sysinfo') {
+          print("KiloOS Web Terminal v1.2 (Multi-Tab, Deep Utilities & Piping)");
+          print("Kernel Constraints: <999KB Strict Size Policy Active.");
       } else if (cmd === 'date') {
           let d = new Date();
           print(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));
@@ -1199,7 +1419,7 @@
                   print("Macro recursion limit exceeded.", "log-error");
               } else if (macros[name]) {
                   macroDepth++;
-                  macros[name].forEach(c => execute(c));
+                  macros[name].forEach(c => processCommandLine(c));
                   macroDepth--;
               } else {
                   print(`Macro '${name}' not found.`, "log-error");
@@ -1214,6 +1434,330 @@
               }
           } else {
               print("Usage: macro <record|stop|play|list> [name]");
+          }
+      } else if (cmd === 'dir' || cmd === 'ls') {
+          let pathArg = args.slice(1).find(a => !isOptionFlag(a));
+          let targetPath = pathArg ? resolvePath(pathArg) : s.currentPath;
+          let node = vfs.getNode(targetPath);
+          if (node && node.type === 'dir') {
+              let keys = Object.keys(node.children || {});
+              if (keys.length === 0) {
+                  print("Directory is empty.");
+              } else {
+                  for (let key of keys) {
+                      let child = node.children[key];
+                      print((child.type === 'dir' ? '<DIR>    ' : '         ') + child.name);
+                  }
+              }
+          } else {
+              print("ERROR: Directory not found.", "log-error");
+          }
+      } else if (cmd === 'cd') {
+          let pathArg = args.slice(1).find(a => !isOptionFlag(a));
+          if (!pathArg) {
+              print((s.currentPath === '/' ? 'C:\\' : 'C:' + s.currentPath.replace(/\//g, '\\')));
+          } else {
+              let target = resolvePath(pathArg);
+              let node = vfs.getNode(target);
+              if (node && node.type === 'dir') {
+                  s.currentPath = target;
+                  updatePrompt();
+                  const parts = target.split('/').filter(Boolean);
+                  const lastFolder = parts.length > 0 ? parts[parts.length - 1] : 'Root';
+                  s.name = lastFolder;
+                  renderTabs();
+              } else {
+                  print("ERROR: Path not found.", "log-error");
+              }
+          }
+      } else if (cmd === 'type' || cmd === 'cat') {
+          let fileArg = args.slice(1).find(a => !isOptionFlag(a));
+          if (!fileArg) {
+              print("Usage: type <filename>");
+          } else {
+              let target = resolvePath(fileArg);
+              let node = vfs.getNode(target);
+              if (node && node.type === 'file') {
+                  print(node.content !== undefined ? node.content : '[File is empty]');
+              } else {
+                  print("ERROR: File not found.", "log-error");
+              }
+          }
+      } else if (cmd === 'echo') {
+          let textIndex = trimmed.indexOf(' ');
+          print(textIndex !== -1 ? trimmed.substring(textIndex + 1) : '');
+      } else if (cmd === 'mkdir') {
+          let dirArg = args.slice(1).find(a => !isOptionFlag(a));
+          if (!dirArg) {
+              print("Usage: mkdir <directory_name>");
+          } else {
+              let target = resolvePath(dirArg);
+              let parts = target.split('/').filter(Boolean);
+              let name = parts.pop();
+              if (!name) {
+                  print("ERROR: Invalid directory name.", "log-error");
+                  return;
+              }
+              let parentPath = '/' + parts.join('/');
+              let parent = vfs.getNode(parentPath);
+              if (parent && parent.type === 'dir') {
+                  if (!parent.children) parent.children = {};
+                  if (parent.children[name]) {
+                      print("ERROR: Directory already exists.", "log-error");
+                  } else {
+                      parent.children[name] = { type: 'dir', name: name, children: {} };
+                      print("Directory created.");
+                  }
+              } else {
+                  print("ERROR: Parent directory not found.", "log-error");
+              }
+          }
+      } else if (cmd === 'touch') {
+          let fileArg = args.slice(1).find(a => !isOptionFlag(a));
+          if (!fileArg) {
+              print("Usage: touch <filename>");
+          } else {
+              writeVFSFile(fileArg, '', true);
+              print(`File touched: ${fileArg}`, "log-system");
+          }
+      } else if (cmd === 'del' || cmd === 'rm' || cmd === 'erase') {
+          let fileArg = args.slice(1).find(a => !isOptionFlag(a));
+          if (!fileArg) {
+              print("Usage: del <filename>");
+          } else {
+              let target = resolvePath(fileArg);
+              let parts = target.split('/').filter(Boolean);
+              let name = parts.pop();
+              let parentPath = '/' + parts.join('/');
+              let parent = vfs.getNode(parentPath);
+              if (parent && parent.children && parent.children[name]) {
+                  delete parent.children[name];
+                  print(`File deleted: ${fileArg}`, "log-system");
+              } else {
+                  print("ERROR: File not found.", "log-error");
+              }
+          }
+      } else if (cmd === 'copy' || cmd === 'cp') {
+          let srcArg = args[1];
+          let dstArg = args[2];
+          if (!srcArg || !dstArg) {
+              print("Usage: copy <source> <destination>");
+          } else {
+              let srcNode = vfs.getNode(resolvePath(srcArg));
+              if (srcNode && srcNode.type === 'file') {
+                  writeVFSFile(dstArg, srcNode.content || '', false);
+                  print(`Copied ${srcArg} -> ${dstArg}`, "log-system");
+              } else {
+                  print("ERROR: Source file not found.", "log-error");
+              }
+          }
+      } else if (cmd === 'move' || cmd === 'mv' || cmd === 'ren') {
+          let srcArg = args[1];
+          let dstArg = args[2];
+          if (!srcArg || !dstArg) {
+              print("Usage: move <source> <destination>");
+          } else {
+              let srcPath = resolvePath(srcArg);
+              let srcNode = vfs.getNode(srcPath);
+              if (srcNode && srcNode.type === 'file') {
+                  writeVFSFile(dstArg, srcNode.content || '', false);
+                  let parts = srcPath.split('/').filter(Boolean);
+                  let name = parts.pop();
+                  let parent = vfs.getNode('/' + parts.join('/'));
+                  if (parent && parent.children) delete parent.children[name];
+                  print(`Moved ${srcArg} -> ${dstArg}`, "log-system");
+              } else {
+                  print("ERROR: Source file not found.", "log-error");
+              }
+          }
+      } else if (cmd === 'grep' || cmd === 'findstr' || cmd === 'find') {
+          let caseInsensitive = true;
+          let remain = args.slice(1);
+          if (remain[0] === '-i') {
+              caseInsensitive = true;
+              remain.shift();
+          }
+          const pattern = remain[0];
+          const fileArg = remain[1];
+          if (!pattern) {
+              print("Usage: grep [-i] <pattern> [filename]");
+          } else if (fileArg) {
+              let target = resolvePath(fileArg);
+              let node = vfs.getNode(target);
+              if (node && node.type === 'file') {
+                  const content = node.content || '';
+                  const lines = content.split('\n');
+                  let matches = 0;
+                  lines.forEach(l => {
+                      const hit = caseInsensitive
+                          ? l.toLowerCase().includes(pattern.toLowerCase())
+                          : l.includes(pattern);
+                      if (hit) {
+                          print(l);
+                          matches++;
+                      }
+                  });
+                  print(`Grep finished: ${matches} match(es) in ${fileArg}`, "log-system");
+              } else {
+                  print("ERROR: File not found.", "log-error");
+              }
+          } else {
+              const allText = output.innerText || output.textContent || '';
+              const lines = allText.split('\n');
+              let matches = 0;
+              lines.forEach(l => {
+                  const hit = caseInsensitive
+                      ? l.toLowerCase().includes(pattern.toLowerCase())
+                      : l.includes(pattern);
+                  if (hit) {
+                      print(l);
+                      matches++;
+                  }
+              });
+              print(`Grep in output: ${matches} match(es)`, "log-system");
+          }
+      } else if (cmd === 'wc') {
+          let fileArg = args.slice(1).find(a => !isOptionFlag(a));
+          if (!fileArg) {
+              print("Usage: wc <filename>");
+          } else {
+              let target = resolvePath(fileArg);
+              let node = vfs.getNode(target);
+              if (node && node.type === 'file') {
+                  const text = node.content || '';
+                  const lines = text.length === 0 ? 0 : text.split('\n').length;
+                  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+                  const chars = text.length;
+                  print(`Lines: ${lines}  Words: ${words}  Bytes: ${chars}  File: ${fileArg}`);
+              } else {
+                  print("ERROR: File not found.", "log-error");
+              }
+          }
+      } else if (cmd === 'head' || cmd === 'tail') {
+          let num = 10;
+          let nIdx = args.indexOf('-n');
+          if (nIdx !== -1 && args[nIdx + 1]) {
+              num = parseInt(args[nIdx + 1], 10) || 10;
+          }
+          let fileArg = args.slice(1).find((a, i) => !isOptionFlag(a) && (nIdx === -1 || i !== nIdx));
+          if (!fileArg) {
+              print("Usage: head/tail [-n lines] <filename>");
+          } else {
+              let target = resolvePath(fileArg);
+              let node = vfs.getNode(target);
+              if (node && node.type === 'file') {
+                  const lines = (node.content || '').split('\n');
+                  const slice = cmd === 'head' ? lines.slice(0, num) : lines.slice(Math.max(0, lines.length - num));
+                  slice.forEach(l => print(l));
+              } else {
+                  print("ERROR: File not found.", "log-error");
+              }
+          }
+      } else if (cmd === 'history') {
+          print("Session Command History:");
+          s.history.forEach((h, i) => print(`  ${String(i + 1).padStart(2, ' ')}  ${h}`));
+      } else if (cmd === 'calc') {
+          const expr = trimmed.substring(4).trim();
+          if (!expr) {
+              print("Usage: calc <expression> (e.g. calc (1024 * 768) / 1000)");
+          } else {
+              try {
+                  const res = safeEvaluateMath(expr);
+                  print(`Result = ${res}`, "log-system");
+              } catch (err) {
+                  print(`Math Error: ${err.message || 'Invalid expression'}`, "log-error");
+              }
+          }
+      } else if (cmd === 'ps' || cmd === 'tasks') {
+          print("PID   PROCESS          TYPE      STATUS    MEMORY   CPU");
+          print("---------------------------------------------------------");
+          print("001   KiloKernel.sys   Kernel    ACTIVE    48 KB    0.2%");
+          print("004   GDI_Driver.dll   Graphics  ACTIVE    32 KB    0.5%");
+          print("012   Cerberus_Guard   Security  GUARD     24 KB    0.1%");
+          print("018   KiloFS_Service   Storage   ACTIVE    16 KB    0.0%");
+          print("032   KTerm_Host.exe   Shell     ACTIVE    28 KB    0.4%");
+          print("044   NetEcho_Daemon   Network   STANDBY   12 KB    0.0%");
+          print("---------------------------------------------------------");
+          print("Total: 6 active processes, 160 KB total memory allocated.", "log-dim");
+      } else if (cmd === 'uptime') {
+          const now = Date.now();
+          const sec = Math.floor((now - sessionStartTime) / 1000);
+          const min = Math.floor(sec / 60);
+          const hr = Math.floor(min / 60);
+          print(`Terminal Uptime: ${String(hr).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')} | Commands Run: ${totalCommandCount} | Tabs: ${sessions.length} | Theme: ${activeThemeName}`);
+      } else if (cmd === 'ping') {
+          const target = args[1] || 'localhost';
+          print(`Pinging ${target} with 32 bytes of virtual payload:`);
+          if (target.toLowerCase().includes('deep-core')) {
+              print("Reply from 10.19.99.254: bytes=32 time=42ms TTL=1999 [ECHO DETECTED]", "log-system");
+              print("Reply from 10.19.99.254: bytes=32 time=38ms TTL=1999 [KEY_2: 1999-ARCH]", "log-operator");
+              print("Reply from 10.19.99.254: bytes=32 time=45ms TTL=1999 [CONSCIOUSNESS LOOP ACTIVE]", "log-warn");
+              print("Reply from 10.19.99.254: bytes=32 time=39ms TTL=1999", "log-system");
+              print("Ping statistics: Packets: Sent = 4, Received = 4, Lost = 0 (0% loss)", "log-dim");
+          } else {
+              print("Reply from 127.0.0.1: bytes=32 time<1ms TTL=128");
+              print("Reply from 127.0.0.1: bytes=32 time<1ms TTL=128");
+              print("Reply from 127.0.0.1: bytes=32 time<1ms TTL=128");
+              print("Reply from 127.0.0.1: bytes=32 time<1ms TTL=128");
+              print("Ping statistics: Packets: Sent = 4, Received = 4, Lost = 0 (0% loss)", "log-dim");
+          }
+      } else if (cmd === 'netstat') {
+          print("Active Internet & Virtual Socket Connections:");
+          print("Proto  Local Address          Foreign Address        State");
+          print("TCP    127.0.0.1:1999         0.0.0.0:0              LISTENING");
+          print("TCP    127.0.0.1:8080         10.19.99.1:80          ESTABLISHED");
+          print("TCP    10.19.99.2:443         10.19.99.254:23        SYN_SENT");
+          print("UDP    0.0.0.0:53             *:*                    LISTENING");
+      } else if (cmd === 'theme' || cmd === 'color') {
+          const themeName = args[1] ? args[1].toLowerCase() : null;
+          if (!themeName) {
+              print("Available Themes: green, amber, cyan, white, crimson, purple");
+              print(`Current Theme: ${activeThemeName}`);
+          } else {
+              if (themes.includes(themeName)) {
+                  setTheme(themeName);
+                  print(`Theme switched to '${themeName}'`, "log-system");
+                  showToast(`Theme changed to ${themeName}`, "sys");
+              } else {
+                  print("Unknown theme. Choose: green, amber, cyan, white, crimson, purple", "log-error");
+              }
+          }
+      } else if (cmd === 'dmesg' || cmd === 'syslog') {
+          print("[    0.000000] KiloOS Bootloader v1.2 initializing...");
+          print("[    0.001420] 999KB Hard Constraint Enforcement: ACTIVE");
+          print("[    0.004100] Memory mapped: 64MB Conventional VRAM");
+          print("[    0.012900] Loading Cerberus Sentinel subsystem... OK");
+          print("[    0.045000] WARNING: Sector 0x1999 unaligned read anomaly", "log-warn");
+          print("[    0.089000] ANOMALY: Ghost thread 0x07CF detected in memory static", "log-operator");
+          print("[    0.104000] LEAK: Residual packet intercepted -> \"kweb://deep-core\"", "log-system");
+          print("[    0.104500] LEAK: Fragment key payload [KEY 2/4: \"1999-ARCH\"]", "log-operator");
+          print("[    0.150000] Shell initialized. All security protocols nominal.");
+      } else if (cmd === 'glitch') {
+          print("==================== [CORRUPTED MEMORY DUMP] ====================", "log-operator");
+          print("0x1999:0000  45 43 48 4F  2D 31 39 39  39 2D 41 52  43 48 00 00  ECHO-1999-ARCH..");
+          print("0x1999:0010  6B 77 65 62  3A 2F 2F 64  65 65 70 2D  63 6F 72 65  kweb://deep-core");
+          print("0x1999:0020  53 45 43 54  4F 52 5F 4C  4F 43 4B 5F  4F 56 45 52  SECTOR_LOCK_OVER");
+          print("0x1999:0030  41 52 43 48  49 54 45 43  54 5F 57 41  4B 45 21 00  ARCHITECT_WAKE!.");
+          print("=================================================================", "log-operator");
+          showToast("⚠️ Sector 0x1999 Anomaly Dumped", "warn");
+      } else if (cmd === 'run' || cmd === 'exec' || cmd === 'batch') {
+          let scriptArg = args.slice(1).find(a => !isOptionFlag(a));
+          if (!scriptArg) {
+              print("Usage: run <script.bat>");
+          } else {
+              let target = resolvePath(scriptArg);
+              let node = vfs.getNode(target);
+              if (node && node.type === 'file') {
+                  const scriptLines = (node.content || '').split('\n');
+                  scriptLines.forEach(l => {
+                      const clean = l.trim();
+                      if (clean && !clean.startsWith('#') && !clean.toLowerCase().startsWith('rem')) {
+                          processCommandLine(clean);
+                      }
+                  });
+              } else {
+                  print("ERROR: Script file not found.", "log-error");
+              }
           }
       } else if (cmd === 'cerberus') {
           if (args[1] === 'status') {
@@ -1234,91 +1778,87 @@
       } else if (cmd === 'operator') {
           if (args[1] === '--help') {
               print(">> INCOMING CONNECTION [THE OPERATOR] <<", "log-operator");
-              print("STATUS: CHANNEL MONITORED.", "log-system");
+              print("STATUS: CHANNEL MONITORED (1999Hz).", "log-system");
+              print("HINT: Seek the third darknet node via leaked terminal routes.", "log-system");
           } else {
               print("Usage: operator --help");
-          }
-      } else if (cmd === 'dir' || cmd === 'ls') {
-          let pathArg = args.slice(1).find(a => !isOptionFlag(a));
-          let targetPath = pathArg ? resolvePath(pathArg) : s.currentPath;
-          let node = vfs.getNode(targetPath);
-          if (node && node.type === 'dir') {
-              let keys = Object.keys(node.children || {});
-              if (keys.length === 0) {
-                  print("Directory is empty.");
-              } else {
-                  for (let key of keys) {
-                      let child = node.children[key];
-                      print((child.type === 'dir' ? '<DIR>    ' : '         ') + child.name);
-                  }
-              }
-          } else {
-              print("ERROR: Directory not found.");
-          }
-      } else if (cmd === 'cd') {
-          let pathArg = args.slice(1).find(a => !isOptionFlag(a));
-          if (!pathArg) {
-              print((s.currentPath === '/' ? 'C:\\' : 'C:' + s.currentPath.replace(/\//g, '\\')));
-          } else {
-              let target = resolvePath(pathArg);
-              let node = vfs.getNode(target);
-              if (node && node.type === 'dir') {
-                  s.currentPath = target;
-                  updatePrompt();
-                  // Update tab label basename
-                  const parts = target.split('/').filter(Boolean);
-                  const lastFolder = parts.length > 0 ? parts[parts.length - 1] : 'Root';
-                  s.name = lastFolder;
-                  renderTabs();
-              } else {
-                  print("ERROR: Path not found.");
-              }
-          }
-      } else if (cmd === 'type' || cmd === 'cat') {
-          let fileArg = args.slice(1).find(a => !isOptionFlag(a));
-          if (!fileArg) {
-              print("Usage: type <filename>");
-          } else {
-              let target = resolvePath(fileArg);
-              let node = vfs.getNode(target);
-              if (node && node.type === 'file') {
-                  print(node.content !== undefined ? node.content : '[File is empty]');
-              } else {
-                  print("ERROR: File not found.");
-              }
-          }
-      } else if (cmd === 'echo') {
-          let textIndex = trimmed.indexOf(' ');
-          print(textIndex !== -1 ? trimmed.substring(textIndex + 1) : '');
-      } else if (cmd === 'mkdir') {
-          let dirArg = args.slice(1).find(a => !isOptionFlag(a));
-          if (!dirArg) {
-              print("Usage: mkdir <directory_name>");
-          } else {
-              let target = resolvePath(dirArg);
-              let parts = target.split('/').filter(Boolean);
-              let name = parts.pop();
-              if (!name) {
-                  print("ERROR: Invalid directory name.");
-                  return;
-              }
-              let parentPath = '/' + parts.join('/');
-              let parent = vfs.getNode(parentPath);
-              if (parent && parent.type === 'dir') {
-                  if (!parent.children) parent.children = {};
-                  if (parent.children[name]) {
-                      print("ERROR: Directory already exists.");
-                  } else {
-                      parent.children[name] = { type: 'dir', name: name, children: {} };
-                      print("Directory created.");
-                  }
-              } else {
-                  print("ERROR: Parent directory not found.");
-              }
           }
       } else {
           print(`ERROR: Bad command or file name: "${cmd}". Type 'help' or press F1 for available commands.`, "log-error");
       }
+  }
+
+  // Full Command Line Processor: Handles Chaining (;, &&) and Redirection (>, >>)
+  function processCommandLine(fullLine) {
+    if (!fullLine) return;
+    const trimmed = fullLine.trim();
+    if (!trimmed) return;
+
+    const s = getActiveSession();
+
+    // History expansion: !n or !!
+    if (trimmed.startsWith('!')) {
+      if (trimmed === '!!') {
+        if (s && s.history.length > 0) {
+          processCommandLine(s.history[s.history.length - 1]);
+        } else {
+          print("History is empty.", "log-warn");
+        }
+        return;
+      }
+      const num = parseInt(trimmed.substring(1), 10);
+      if (!isNaN(num) && s && num >= 1 && num <= s.history.length) {
+        processCommandLine(s.history[num - 1]);
+        return;
+      }
+    }
+
+    // Split on ; or &&
+    const segments = [];
+    let curSeg = '';
+    for (let i = 0; i < trimmed.length; i++) {
+      if (trimmed[i] === ';') {
+        segments.push(curSeg);
+        curSeg = '';
+      } else if (trimmed[i] === '&' && trimmed[i + 1] === '&') {
+        segments.push(curSeg);
+        curSeg = '';
+        i++;
+      } else {
+        curSeg += trimmed[i];
+      }
+    }
+    if (curSeg) segments.push(curSeg);
+
+    for (let seg of segments) {
+      seg = seg.trim();
+      if (!seg) continue;
+
+      const appendMatch = seg.match(/^(.*?)\s*>>\s*(.+)$/);
+      const overwriteMatch = !appendMatch ? seg.match(/^(.*?)\s*>\s*(.+)$/) : null;
+
+      if (appendMatch || overwriteMatch) {
+        const cmdPart = (appendMatch ? appendMatch[1] : overwriteMatch[1]).trim();
+        const filePart = (appendMatch ? appendMatch[2] : overwriteMatch[2]).trim();
+        const isAppend = !!appendMatch;
+
+        const capturedLogs = [];
+        printLogHook = (txt) => {
+          capturedLogs.push(txt);
+        };
+
+        execute(cmdPart);
+        printLogHook = null;
+
+        if (filePart) {
+          const contentToWrite = capturedLogs.join('\n');
+          writeVFSFile(filePart, contentToWrite, isAppend);
+          print(`Output ${isAppend ? 'appended' : 'redirected'} to ${filePart}`, "log-system");
+        }
+      } else {
+        execute(seg);
+      }
+    }
   }
 
   // Reverse Search Mode logic (Ctrl+R)
@@ -1396,7 +1936,7 @@
             s.history.push(match);
             if (s.history.length > 500) s.history.shift();
             s.historyPos = s.history.length;
-            execute(match);
+            processCommandLine(match);
             input.value = '';
             updateCursor();
           }
@@ -1412,7 +1952,16 @@
       // F1 for help
       if (e.key === 'F1') {
           e.preventDefault();
-          execute('help');
+          toggleHelpModal();
+          return;
+      }
+
+      // Ctrl+Alt+E: Easter Egg Echo Anomaly Intercept
+      if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'e') {
+          e.preventDefault();
+          print("[ECHO ANOMALY INTERCEPT DETECTED] Resonance: 1999Hz.", "log-system");
+          print(">> Sector 0x1999: kweb://deep-core | Key Fragment: \"1999-ARCH\" <<", "log-operator");
+          showToast("🌌 Echo Anomaly Intercepted: 1999Hz", "sys");
           return;
       }
 
@@ -1468,7 +2017,7 @@
               s.historyPos = s.history.length;
           }
           s.currentDraft = '';
-          execute(val);
+          processCommandLine(val);
           input.value = '';
           updateCursor();
       } else if (e.key === 'ArrowUp') {
@@ -1499,7 +2048,14 @@
   function handleTabCompletion() {
       const s = getActiveSession();
       const val = input.value;
-      const builtins = ['help', 'ver', 'clear', 'dir', 'cd', 'type', 'echo', 'mkdir', 'date', 'time', 'whoami', 'cls', 'ls', 'cat', 'alias', 'unalias', 'env', 'export', 'unset', 'macro', 'export-log', 'newtab'];
+      const builtins = [
+        'help', 'ver', 'clear', 'dir', 'cd', 'type', 'echo', 'mkdir', 'touch', 
+        'del', 'rm', 'copy', 'cp', 'move', 'mv', 'grep', 'wc', 'head', 'tail', 
+        'history', 'calc', 'ps', 'uptime', 'ping', 'netstat', 'theme', 'color', 
+        'dmesg', 'glitch', 'run', 'exec', 'date', 'time', 'whoami', 'cls', 'ls', 
+        'cat', 'alias', 'unalias', 'env', 'export', 'unset', 'macro', 'export-log', 
+        'newtab'
+      ];
       const aliasKeys = Object.keys(s.aliases || {});
       const allCmds = Array.from(new Set([...builtins, ...aliasKeys]));
 
@@ -1560,7 +2116,7 @@
         input.value = cmd;
         input.focus();
         updateCursor();
-        execute(cmd);
+        processCommandLine(cmd);
         input.value = '';
         updateCursor();
       }
@@ -1581,7 +2137,7 @@
           input.value = firstCmd;
           input.focus();
           updateCursor();
-          execute(firstCmd);
+          processCommandLine(firstCmd);
           input.value = '';
           updateCursor();
         }
@@ -1654,7 +2210,6 @@
     });
   }
 
-  // Header Buttons Click Listeners
   btnNewTab.addEventListener('click', () => createNewTab());
   btnExportLog.addEventListener('click', () => exportSessionLog());
   btnClear.addEventListener('click', () => {
@@ -1665,11 +2220,18 @@
   });
   btnHelp.addEventListener('click', () => toggleHelpModal());
 
-  // Global Keydown Handler for reliable accessibility from any focus state
+  // Global Keydown Handler
   window.addEventListener('keydown', (e) => {
     if (e.key === 'F1') {
       e.preventDefault();
       toggleHelpModal();
+      return;
+    }
+    if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'e') {
+      e.preventDefault();
+      print("[ECHO ANOMALY INTERCEPT DETECTED] Resonance: 1999Hz.", "log-system");
+      print(">> Sector 0x1999: kweb://deep-core | Key Fragment: \"1999-ARCH\" <<", "log-operator");
+      showToast("🌌 Echo Anomaly Intercepted: 1999Hz", "sys");
       return;
     }
     if (e.key === 'Escape') {
@@ -1715,7 +2277,6 @@
       showToast("Terminal screen cleared", "sys");
       return;
     }
-    // Ctrl + Tab / Ctrl + Shift + Tab
     if (e.ctrlKey && e.key === 'Tab') {
       e.preventDefault();
       if (sessions.length > 1) {
@@ -1727,7 +2288,6 @@
       }
       return;
     }
-    // Ctrl + 1..8
     if (e.ctrlKey && !e.shiftKey && !e.altKey && e.key >= '1' && e.key <= '8') {
       const targetIdx = parseInt(e.key, 10) - 1;
       if (targetIdx < sessions.length) {
@@ -1736,7 +2296,6 @@
         return;
       }
     }
-    // Font zoom hotkeys: Ctrl+=, Ctrl+-, Ctrl+0
     if (e.ctrlKey && (e.key === '=' || e.key === '+')) {
       e.preventDefault();
       setFontSize(currentFontSize + 1);
@@ -1753,7 +2312,6 @@
       return;
     }
 
-    // If modal is closed and input not focused, typing regular alphanumeric keys redirects to input
     if (helpModal && !helpModal.classList.contains('open') && document.activeElement !== input) {
       const isPrintable = e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey;
       if (isPrintable) {
@@ -1763,7 +2321,6 @@
   });
 
   document.addEventListener('click', (e) => {
-      // Focus input if not text selected and not clicking on header/modal/quickBar
       if (e.target.closest('#header') || e.target.closest('#quickBar') || e.target.closest('.modal-card') || e.target.closest('.toast')) return;
       const selection = window.getSelection();
       if (!selection || selection.toString().length === 0) {
@@ -1771,11 +2328,9 @@
       }
   });
 
-  // Initialize first session tab and startup toast
   createNewTab("Tab 1");
-  showToast("⚡ Welcome to KTerm! Press F1 or 'h' for Help | Ctrl+T: New Tab | Ctrl+1..8: Switch Tabs", "sys", 5000);
+  showToast("⚡ Welcome to KTerm! Press F1 or 'h' for Help | Ctrl+T: New Tab | 🎨 Theme", "sys", 5000);
 
-  // Teardown cleanup to avoid memory/timer leaks
   window.addEventListener('beforeunload', () => {
     if (toastContainer) {
       toastContainer.querySelectorAll('.toast').forEach(t => {
