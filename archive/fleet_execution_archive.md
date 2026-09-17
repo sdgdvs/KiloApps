@@ -4,6 +4,10 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-16T23:36:11Z — kilo-tester: KStarship**
+  - Status: PASS ✅ (8 issues fixed inline).
+  - Highlights: F5/F9 quicksave/load, JSON mission save import/export, emergency distress beacon, station docking action, hotkeys (1-4, Escape, Arrows), audio mute. Build clean.
+
 - **2026-09-16T19:48:07Z — kilo-tester: KSolitaire**
   - Status: PASS ✅ (8 issues fixed inline).
   - Highlights: Quicksave/load F5/F9, JSON game backup/restore parity, Smart Hint engine enhancements, undo refund integrity, clean build.

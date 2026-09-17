@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,15 +13,15 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "KChrono (Phase 1: Project Scaffolding & Core Paradox Engine)"
-  kilo_graphics: KRogue
+  kilo_graphics: KQuest
   kilo_tester: KSynth
   kilo_usability: KChess
   kilo_qa: KSolitaire
   kilo_expander: KScript
 last_run:
-  agent: kilo-creator
-  app: KCosmic
-  timestamp: "2026-09-17T03:55:00Z"
+  agent: kilo-graphics
+  app: KRogue
+  timestamp: "2026-09-17T06:40:07Z"
 last_planner_run: "2026-09-16T19:00:00Z"
 ---
 
@@ -58,9 +58,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KStarForge` (Deep-space shipyard engineering sim), `KPomodoro` (Work/break cycle manager), `KBookmark` (Categorized link vault), `KHash` (Multi-algorithm checksum tool), `KRSS` (Feed reader), `KClip` (Clipboard history tool).
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KRogue` (Enchanting altar socketing, companion pets, branching secret challenge vaults)
+- **Current Target**: `KQuest`
 - **Upcoming Queue**:
-  `KQuest`, `KStarship`, `KFortress`, `KAlchemy`, `KColony`, `KSpace`, `KAsteroids`, `KMaze`, `KPac`, `KBreakout`, `KSnake`.
+  `KStarship`, `KFortress`, `KAlchemy`, `KColony`, `KSpace`, `KAsteroids`, `KMaze`, `KPac`, `KBreakout`, `KSnake`, `KRogue`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KSynth`
@@ -86,6 +86,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-17T06:40:07Z — kilo-graphics: KRogue**
+  - Status: PASS ✅ (Content expansion & visual polish).
+  - Highlights: Enchanting Altar socketing with 5 elemental gems (Ruby, Sapphire, Emerald, Amethyst, Topaz), 4 companion pets (Wolf, Wisp, Golem, Phoenix) with leveling and feeding, 3 branching challenge vaults (Void Rift, Trial, Hoard) with Vault Guardians and Relics. Fixed MSVC compilation ordering. Native (76 KB) and Web (196 KB) clean.
+
 - **2026-09-17T03:55:00Z — kilo-creator: KCosmic (Phase 14)**
   - Status: COMPLETE 🚀 (All 14 phases finished).
   - Highlights: Fleet Admiral's Codex with 6 CRT tabs (Commands, Planet Dossiers, Terra Formulas, Logistics, Crisis Manual, Xenobiology), v1.14 start splash screen, 7-step tutorial (`kcosmic_tutorialSeen`), F5/F9 quicksave/quickload, JSON save backup/restore, HUD toast alerts. Web (524 KB) and Native C (259 KB) builds clean.
@@ -101,7 +105,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-09-17T01:08:31Z — kilo-qa: KSnake (Pass 5)**
   - Status: 🟢 Pass 5 Completed.
   - Highlights: Hardened full state quicksave/load in web and native (boss, rivals, skills, hazards), fixed native quickload file deletion bug, first-run tutorial flag, F5/F9 hotkeys. Native (53.5 KB) and web clean.
-
-- **2026-09-16T23:36:11Z — kilo-tester: KStarship**
-  - Status: PASS ✅ (8 issues fixed inline).
-  - Highlights: F5/F9 quicksave/load, JSON mission save import/export, emergency distress beacon, station docking action, hotkeys (1-4, Escape, Arrows), audio mute. Build clean.

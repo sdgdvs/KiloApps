@@ -96,6 +96,9 @@ typedef struct {
     int subtype; // 0=sword, 1=hammer, 2=spear, 3=bow
     int val;
     int cursed;
+    int socket1; // gem type (0=none, 1=ruby, 2=sapphire, 3=emerald, 4=amethyst, 5=topaz)
+    int socket2; // gem type
+    int vault_type; // 0=void, 1=trial, 2=gold
 } Item;
 
 typedef struct {
@@ -133,14 +136,58 @@ typedef struct {
 #define TYPE_FOOD 9
 #define TYPE_ANVIL 10
 #define TYPE_NPC_ITEM 11
+#define TYPE_GEM 12
+#define TYPE_ALTAR 13
+#define TYPE_PET_NEST 14
+#define TYPE_VAULT_GATE 15
+#define TYPE_VAULT_EXIT 16
+#define TYPE_VAULT_RELIC 17
+
+#define GEM_NONE 0
+#define GEM_RUBY 1
+#define GEM_SAPPHIRE 2
+#define GEM_EMERALD 3
+#define GEM_AMETHYST 4
+#define GEM_TOPAZ 5
+
+#define PET_NONE 0
+#define PET_WOLF 1
+#define PET_WISP 2
+#define PET_GOLEM 3
+#define PET_PHOENIX 4
+
+#define VAULT_VOID 0
+#define VAULT_TRIAL 1
+#define VAULT_GOLD 2
+
+typedef struct {
+    int active;
+    int type;
+    char name[32];
+    int hp, max_hp;
+    int atk;
+    int level;
+    int xp;
+    int x, y;
+    int used_rebirth;
+} Pet;
+
+#define MAX_ENTITIES 200
+#define MAX_ITEMS 200
+
+typedef struct {
+    Tile map[H][W];
+    Entity entities[MAX_ENTITIES];
+    Item items[MAX_ITEMS];
+    int player_x, player_y;
+    int dlevel;
+} SavedFloor;
 
 #define W_SWORD 0
 #define W_HAMMER 1
 #define W_SPEAR 2
 #define W_BOW 3
 
-#define MAX_ENTITIES 200
-#define MAX_ITEMS 200
 #define MAX_INVENTORY 26
 #define MAX_MSGS 50
 #define MAX_SPELLS 10
@@ -561,6 +608,10 @@ typedef struct {
     Entity* active_shopkeeper;
     int difficulty; // 0=Normal, 1=Hard, 2=Nightmare
     int total_kills;
+    Pet pet;
+    int in_vault;
+    int current_vault_type;
+    SavedFloor saved_floor;
 } GameState;
 
 typedef struct {
@@ -589,6 +640,13 @@ int char_w = 12, char_h = 20;
 
 void calc_stats(Entity* e);
 void generate_random_item(Item* it);
+void pet_turn();
+void adopt_pet(int type);
+void feed_pet();
+void enter_challenge_vault(int vault_type);
+void exit_challenge_vault();
+void socket_gem_into_gear(int gear_slot, int inv_idx);
+void unsocket_gear(int gear_slot);
 
 // Minimal LCG Random
 unsigned int g_seed = 12345;
@@ -1066,11 +1124,23 @@ void spawn_monster(int x, int y) {
 
 void generate_random_item(Item* it) {
     int r = rand_range(0, 100);
-    if(r < 25) {
+    if(r < 16) {
+        it->ch = '*'; it->type = TYPE_GEM;
+        int g_type = rand_range(0, 4);
+        it->subtype = g_type;
+        it->val = 1;
+        if(g_type == 0) { str_cpy(it->name, "Ruby of Flame"); it->fg = RGB(229, 62, 62); }
+        else if(g_type == 1) { str_cpy(it->name, "Sapphire of Frost"); it->fg = RGB(99, 179, 237); }
+        else if(g_type == 2) { str_cpy(it->name, "Emerald of Venom"); it->fg = RGB(72, 187, 120); }
+        else if(g_type == 3) { str_cpy(it->name, "Amethyst of the Void"); it->fg = RGB(183, 148, 244); }
+        else { str_cpy(it->name, "Topaz of Shock"); it->fg = RGB(236, 201, 75); }
+        return;
+    }
+    if(r < 35) {
         it->ch = '!'; it->fg = C_POTION; it->type = TYPE_HEAL;
         it->val = 15 + g.dlevel * 5;
         str_cpy(it->name, "Healing Potion");
-    } else if(r < 40) {
+    } else if(r < 48) {
         it->ch = '%'; it->fg = RGB(139, 69, 19); it->type = TYPE_FOOD;
         it->val = 400;
         str_cpy(it->name, "Food Ration");
@@ -1323,6 +1393,39 @@ void generate_map() {
                             e->active = 1; e->x = x; e->y = y;
                             e->ch = 'N'; e->fg = RGB(0, 255, 255); str_cpy(e->name, "Quest NPC");
                             e->hp = e->max_hp = 100; e->behavior = B_NPC;
+                            break;
+                        }
+                    }
+                } else if(rand_range(0, 100) < 2) {
+                    for(int i=0; i<MAX_ITEMS; i++) {
+                        if(!g.items[i].active) {
+                            Item* it = &g.items[i];
+                            it->active = 1; it->x = x; it->y = y;
+                            it->ch = 'A'; it->fg = RGB(183, 148, 244); it->type = TYPE_ALTAR;
+                            str_cpy(it->name, "Mystic Enchanting Altar");
+                            break;
+                        }
+                    }
+                } else if(rand_range(0, 100) < 2) {
+                    for(int i=0; i<MAX_ITEMS; i++) {
+                        if(!g.items[i].active) {
+                            Item* it = &g.items[i];
+                            it->active = 1; it->x = x; it->y = y;
+                            it->ch = 'P'; it->fg = RGB(246, 173, 85); it->type = TYPE_PET_NEST;
+                            str_cpy(it->name, "Warm Pet Sanctuary Nest");
+                            break;
+                        }
+                    }
+                } else if(!g.in_vault && g.dlevel >= 3 && rand_range(0, 100) < 2) {
+                    for(int i=0; i<MAX_ITEMS; i++) {
+                        if(!g.items[i].active) {
+                            Item* it = &g.items[i];
+                            it->active = 1; it->x = x; it->y = y;
+                            it->ch = 'O'; it->fg = RGB(236, 201, 75); it->type = TYPE_VAULT_GATE;
+                            it->vault_type = rand_range(0, 2);
+                            if(it->vault_type == VAULT_VOID) str_cpy(it->name, "Astral Gate: Vault of the Void");
+                            else if(it->vault_type == VAULT_TRIAL) str_cpy(it->name, "Astral Gate: Trial of the Colosseum");
+                            else str_cpy(it->name, "Astral Gate: Crypt of the Midas King");
                             break;
                         }
                     }
@@ -1590,6 +1693,15 @@ void handle_death(Entity* e, Entity* killer) {
     add_msg(buf);
     
     if(e == get_player()) {
+        if(g.pet.active && g.pet.hp > 0 && g.pet.type == PET_PHOENIX && !g.pet.used_rebirth) {
+            e->hp = e->max_hp / 2;
+            e->active = 1;
+            g.pet.used_rebirth = 1;
+            spawn_explosion(e->x, e->y, 3);
+            add_msg("✦ PHOENIX REBIRTH! Ember sacrifices vital essence to revive you at half HP!");
+            show_toast("PHOENIX REBIRTH!", RGB(255, 120, 40), 3000);
+            return;
+        }
         g.state = 1; // dead
         add_msg("You have perished! Game Over.");
         record_run(0);
@@ -1660,6 +1772,16 @@ void combat(Entity* attacker, Entity* defender) {
             atk += g.equip_weapon.val;
             if(g.equip_weapon.subtype == W_HAMMER) def = def / 2;
             if(g.equip_weapon.subtype == W_SPEAR && (defender->behavior == B_FAST || defender->behavior == B_ERRATIC)) atk *= 2;
+            
+            // Weapon Gem Sockets
+            int socks[2] = { g.equip_weapon.socket1, g.equip_weapon.socket2 };
+            for(int sk=0; sk<2; sk++) {
+                if(socks[sk] == GEM_RUBY) atk += 4;
+                else if(socks[sk] == GEM_SAPPHIRE) atk += 3;
+                else if(socks[sk] == GEM_EMERALD) atk += 3;
+                else if(socks[sk] == GEM_AMETHYST) atk += 4;
+                else if(socks[sk] == GEM_TOPAZ) atk += 4;
+            }
         }
         if(attacker->status_effect == STATUS_BERSERK) {
             atk += 4;
@@ -1678,6 +1800,9 @@ void combat(Entity* attacker, Entity* defender) {
     if(defender == get_player()) {
         if(g.equip_armor.active) def += g.equip_armor.val;
         if(g.equip_shield.active) def += g.equip_shield.val;
+        if(g.pet.active && g.pet.hp > 0 && g.pet.type == PET_GOLEM) {
+            def += 2; // Stone Golem Guard Aura
+        }
         if(defender->class_id == CLASS_FIGHTER && g.char_loadout == 0) { // Vanguard Shield Bastion
             def += 2;
         }
@@ -1738,6 +1863,63 @@ void combat(Entity* attacker, Entity* defender) {
     else if (is_crit) wsprintfA(buf, "CRITICAL HIT! %s hits %s for %d dmg.", attacker->name, defender->name, dmg);
     else wsprintfA(buf, "%s hits %s for %d dmg.", attacker->name, defender->name, dmg);
     add_msg(buf);
+
+    if(attacker == get_player() && g.equip_weapon.active) {
+        int wsocks[2] = { g.equip_weapon.socket1, g.equip_weapon.socket2 };
+        for(int sk=0; sk<2; sk++) {
+            if(wsocks[sk] == GEM_RUBY && rand_range(0, 100) < 40) {
+                defender->status_effect = STATUS_POISON;
+                defender->status_duration = 3;
+                add_msg("Ruby Flame incinerates the enemy!");
+            } else if(wsocks[sk] == GEM_SAPPHIRE && rand_range(0, 100) < 35) {
+                defender->status_effect = STATUS_ROOTED;
+                defender->status_duration = 3;
+                add_msg("Sapphire Frost freezes and roots the enemy!");
+            } else if(wsocks[sk] == GEM_EMERALD) {
+                defender->status_effect = STATUS_POISON;
+                defender->status_duration = 4;
+                add_msg("Emerald Venom infects the wound!");
+            } else if(wsocks[sk] == GEM_AMETHYST) {
+                int siphon = dmg / 4; if(siphon < 2) siphon = 2;
+                attacker->hp += siphon; if(attacker->hp > attacker->max_hp) attacker->hp = attacker->max_hp;
+                add_msg("Amethyst Void siphons vitality!");
+            } else if(wsocks[sk] == GEM_TOPAZ) {
+                for(int i=1; i<MAX_ENTITIES; i++) {
+                    Entity* n = &g.entities[i];
+                    if(n->active && n != defender && n->behavior != B_NPC && n->behavior != B_SHOPKEEPER && dist2(n->x, n->y, defender->x, defender->y) <= 8) {
+                        n->hp -= 5;
+                        spawn_particles(n->x, n->y, RGB(236, 201, 75), 8);
+                        add_msg("Topaz Lightning arcs to a nearby foe!");
+                        if(n->hp <= 0) handle_death(n, attacker);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    if(defender == get_player() && g.equip_armor.active) {
+        int asocks[2] = { g.equip_armor.socket1, g.equip_armor.socket2 };
+        for(int sk=0; sk<2; sk++) {
+            if(asocks[sk] == GEM_RUBY) {
+                attacker->hp -= 4;
+                add_msg("Flame Aura burns attacker for 4 dmg!");
+                if(attacker->hp <= 0) handle_death(attacker, defender);
+            } else if(asocks[sk] == GEM_SAPPHIRE && rand_range(0, 100) < 30) {
+                attacker->status_effect = STATUS_ROOTED;
+                attacker->status_duration = 2;
+                add_msg("Frost Barrier chills attacker!");
+            } else if(asocks[sk] == GEM_EMERALD) {
+                attacker->status_effect = STATUS_POISON;
+                attacker->status_duration = 3;
+                add_msg("Toxic Retaliation poisons attacker!");
+            } else if(asocks[sk] == GEM_TOPAZ) {
+                attacker->hp -= 3;
+                add_msg("Shock Reflect zaps attacker for 3 dmg!");
+                if(attacker->hp <= 0) handle_death(attacker, defender);
+            }
+        }
+    }
 
     if(attacker == get_player() && attacker->class_id == CLASS_WIZARD && g.char_loadout == 0 && rand_range(0, 100) < 40) {
         defender->status_effect = STATUS_POISON;
@@ -1973,6 +2155,7 @@ void monsters_turn() {
     do_monsters_turn(0);
     do_monsters_turn(1);
     process_status_effects(get_player());
+    pet_turn();
     
     if(p->hunger > 0) {
         p->hunger--;
@@ -2051,8 +2234,32 @@ void move_player(int dx, int dy) {
                 else if(g.equip_armor.active) { g.equip_armor.val += 2; add_msg("Armor upgraded!"); }
                 it->active = 0;
                 return;
-            }
-            if(it->type == TYPE_SHRINE) {
+            } else if(it->type == TYPE_ALTAR) {
+                g.state = 13;
+                add_msg("You step before the Mystic Enchanting Altar! Infuse gems into sockets [E].");
+                show_toast("Mystic Altar [E]", RGB(183, 148, 244), 2500);
+                return;
+            } else if(it->type == TYPE_PET_NEST) {
+                g.state = 14;
+                add_msg("You discover a Warm Pet Sanctuary Nest! Recruit or manage your companion pet [P].");
+                show_toast("Pet Sanctuary [P]", RGB(246, 173, 85), 2500);
+                return;
+            } else if(it->type == TYPE_VAULT_GATE) {
+                enter_challenge_vault(it->vault_type);
+                return;
+            } else if(it->type == TYPE_VAULT_EXIT) {
+                exit_challenge_vault();
+                return;
+            } else if(it->type == TYPE_VAULT_RELIC) {
+                it->active = 0;
+                p->max_hp += 25; p->hp = p->max_hp;
+                p->atk += 5; p->def += 5; p->gold += 500;
+                gain_xp(p, 300);
+                spawn_explosion(p->x, p->y, 3);
+                add_msg("✦ GRAND ASTRAL RELIC CLAIMED! Power surges (+25 HP, +5 ATK/DEF, +500 Gold, +300 XP)!");
+                show_toast("GRAND RELIC CLAIMED!", RGB(255, 215, 0), 3500);
+                return;
+            } else if(it->type == TYPE_SHRINE) {
                 it->active = 0;
                 int buff = rand_range(0, 2);
                 if(buff == 0) {
@@ -2202,6 +2409,333 @@ void equip_item(int inv_idx) {
     calc_stats(get_player());
     add_msg(buf);
     monsters_turn();
+}
+
+void adopt_pet(int type) {
+    g.pet.active = 1;
+    g.pet.type = type;
+    g.pet.level = 1;
+    g.pet.xp = 0;
+    g.pet.used_rebirth = 0;
+    Entity* p = get_player();
+    g.pet.x = p->x - 1;
+    g.pet.y = p->y;
+    if(g.pet.x < 1 || !g.map[g.pet.y][g.pet.x].walkable) { g.pet.x = p->x; g.pet.y = p->y; }
+    if(type == PET_WOLF) {
+        str_cpy(g.pet.name, "Fang the Wolf Pup");
+        g.pet.max_hp = g.pet.hp = 25;
+        g.pet.atk = 6;
+        show_toast("Fang recruited! Sniffs traps & bites foes.", RGB(246, 173, 85), 3000);
+    } else if(type == PET_WISP) {
+        str_cpy(g.pet.name, "Lumi the Arcane Wisp");
+        g.pet.max_hp = g.pet.hp = 18;
+        g.pet.atk = 5;
+        show_toast("Lumi recruited! Ranged sparks & MP regen.", RGB(99, 179, 237), 3000);
+    } else if(type == PET_GOLEM) {
+        str_cpy(g.pet.name, "Rocco the Stone Golem");
+        g.pet.max_hp = g.pet.hp = 40;
+        g.pet.atk = 4;
+        show_toast("Rocco recruited! Tanky guard & +2 DEF aura.", RGB(180, 180, 200), 3000);
+    } else if(type == PET_PHOENIX) {
+        str_cpy(g.pet.name, "Ember the Phoenix Chick");
+        g.pet.max_hp = g.pet.hp = 22;
+        g.pet.atk = 5;
+        show_toast("Ember recruited! Fire aura & Phoenix Rebirth!", RGB(255, 120, 40), 3000);
+    }
+    char buf[100];
+    wsprintfA(buf, "%s is now by your side!", g.pet.name);
+    add_msg(buf);
+}
+
+void feed_pet() {
+    if(!g.pet.active) { add_msg("You have no companion pet to feed!"); return; }
+    int food_idx = -1;
+    for(int i=0; i<MAX_INVENTORY; i++) {
+        if(g.inventory[i].active && g.inventory[i].type == TYPE_FOOD) {
+            food_idx = i;
+            break;
+        }
+    }
+    if(food_idx == -1) {
+        add_msg("You have no Food Rations in inventory to feed your pet!");
+        show_toast("No Food Rations in inventory!", RGB(255, 100, 100), 2000);
+        return;
+    }
+    g.inventory[food_idx].active = 0;
+    g.pet.hp += 25;
+    if(g.pet.hp > g.pet.max_hp) g.pet.hp = g.pet.max_hp;
+    g.pet.xp += 30;
+    char buf[100];
+    wsprintfA(buf, "Fed %s a ration! (+25 HP, +30 XP)", g.pet.name);
+    add_msg(buf);
+    if(g.pet.xp >= g.pet.level * 35) {
+        g.pet.level++;
+        g.pet.max_hp += 6;
+        g.pet.hp = g.pet.max_hp;
+        g.pet.atk += 2;
+        wsprintfA(buf, "%s grew to Level %d! (+6 Max HP, +2 ATK)", g.pet.name, g.pet.level);
+        add_msg(buf);
+        show_toast("Pet Leveled Up!", RGB(100, 255, 100), 2500);
+    }
+}
+
+void pet_turn() {
+    if(!g.pet.active || g.pet.hp <= 0) return;
+    Entity* p = get_player();
+    
+    // Passive perks
+    if(g.pet.type == PET_WOLF) {
+        // Sniff out traps within 4 tiles
+        for(int dy=-3; dy<=3; dy++) {
+            for(int dx=-3; dx<=3; dx++) {
+                int tx = p->x + dx, ty = p->y + dy;
+                if(tx >= 0 && tx < W && ty >= 0 && ty < H && g.map[ty][tx].has_trap) {
+                    g.map[ty][tx].has_trap = 0;
+                    add_msg("Fang sniffs out and disarms a hidden trap!");
+                    show_toast("Fang disarmed a trap!", RGB(246, 173, 85), 1800);
+                }
+            }
+        }
+    } else if(g.pet.type == PET_WISP) {
+        if((p->turn_parity % 3 == 0) && p->mp < p->max_mp) {
+            p->mp++;
+            if(p->mp > p->max_mp) p->mp = p->max_mp;
+        }
+    }
+    
+    // Combat / Follow
+    Entity* target = NULL;
+    int min_d = 999;
+    for(int i=1; i<MAX_ENTITIES; i++) {
+        Entity* e = &g.entities[i];
+        if(!e->active || e->behavior == B_NPC || e->behavior == B_SHOPKEEPER) continue;
+        int d = dist2(g.pet.x, g.pet.y, e->x, e->y);
+        if(d < min_d) {
+            min_d = d;
+            target = e;
+        }
+    }
+    
+    // Wisp ranged attack (up to 3 tiles = dist2 <= 10)
+    if(g.pet.type == PET_WISP && target && min_d <= 10 && g.map[target->y][target->x].visible) {
+        int dmg = rand_range(4, 7) + g.pet.level;
+        target->hp -= dmg;
+        spawn_particles(target->x, target->y, RGB(99, 179, 237), 10);
+        char buf[100];
+        wsprintfA(buf, "Lumi zaps %s with an arcane spark for %d dmg!", target->name, dmg);
+        add_msg(buf);
+        g.pet.xp += 3;
+        if(target->hp <= 0) handle_death(target, p);
+        return;
+    }
+    
+    // Melee attack for adjacent enemies
+    if(target && min_d <= 2) {
+        int dmg = rand_range(3, g.pet.atk) + g.pet.level;
+        target->hp -= dmg;
+        spawn_particles(target->x, target->y, RGB(255, 180, 50), 8);
+        char buf[100];
+        if(g.pet.type == PET_WOLF) {
+            wsprintfA(buf, "Fang bites %s for %d dmg!", target->name, dmg);
+        } else if(g.pet.type == PET_GOLEM) {
+            wsprintfA(buf, "Rocco slams %s for %d dmg!", target->name, dmg);
+            if(rand_range(0, 100) < 30) { target->status_effect = STATUS_ROOTED; target->status_duration = 3; }
+        } else {
+            wsprintfA(buf, "Ember scorches %s for %d dmg!", target->name, dmg);
+            if(rand_range(0, 100) < 40) { target->status_effect = STATUS_POISON; target->status_duration = 3; }
+        }
+        add_msg(buf);
+        g.pet.xp += 3;
+        if(target->hp <= 0) handle_death(target, p);
+        return;
+    }
+    
+    // Follow player
+    int pd = dist2(g.pet.x, g.pet.y, p->x, p->y);
+    if(pd > 64) {
+        // Teleport adjacent to player
+        g.pet.x = p->x - 1; g.pet.y = p->y;
+        if(!g.map[g.pet.y][g.pet.x].walkable) { g.pet.x = p->x; g.pet.y = p->y; }
+    } else if(pd > 2) {
+        int best_x = g.pet.x, best_y = g.pet.y, best_dist = pd;
+        for(int dy=-1; dy<=1; dy++) {
+            for(int dx=-1; dx<=1; dx++) {
+                if(dx==0 && dy==0) continue;
+                int nx = g.pet.x + dx, ny = g.pet.y + dy;
+                if(nx >= 0 && nx < W && ny >= 0 && ny < H && g.map[ny][nx].walkable && !get_entity_at(nx, ny) && (nx != p->x || ny != p->y)) {
+                    int nd = dist2(nx, ny, p->x, p->y);
+                    if(nd < best_dist) {
+                        best_dist = nd;
+                        best_x = nx;
+                        best_y = ny;
+                    }
+                }
+            }
+        }
+        g.pet.x = best_x;
+        g.pet.y = best_y;
+    }
+}
+
+void socket_gem_into_gear(int gear_slot, int inv_idx) {
+    if(inv_idx < 0 || inv_idx >= MAX_INVENTORY || !g.inventory[inv_idx].active || g.inventory[inv_idx].type != TYPE_GEM) {
+        add_msg("Invalid gem selection!");
+        return;
+    }
+    Item* gear = (gear_slot == 1) ? &g.equip_weapon : &g.equip_armor;
+    if(!gear->active) {
+        add_msg(gear_slot == 1 ? "No weapon equipped to socket!" : "No armor equipped to socket!");
+        return;
+    }
+    int gem_type = g.inventory[inv_idx].subtype + 1; // 1=ruby..5=topaz
+    if(gear->socket1 == 0) {
+        gear->socket1 = gem_type;
+    } else if(gear->socket2 == 0) {
+        gear->socket2 = gem_type;
+    } else {
+        add_msg("All sockets in this gear piece are full! Press 'U' to unsocket.");
+        show_toast("Sockets Full! Press 'U' to purge", RGB(255, 100, 100), 2000);
+        return;
+    }
+    char buf[120];
+    wsprintfA(buf, "✦ Mystic Altar infuses %s into %s!", g.inventory[inv_idx].name, gear->name);
+    add_msg(buf);
+    show_toast("Gem Socketed Successfully!", RGB(183, 148, 244), 2500);
+    g.inventory[inv_idx].active = 0;
+    spawn_particles(get_player()->x, get_player()->y, RGB(183, 148, 244), 20);
+}
+
+void unsocket_gear(int gear_slot) {
+    Item* gear = (gear_slot == 1) ? &g.equip_weapon : &g.equip_armor;
+    if(!gear->active || (gear->socket1 == 0 && gear->socket2 == 0)) {
+        add_msg("No socketed gems found in this gear piece.");
+        return;
+    }
+    gear->socket1 = 0;
+    gear->socket2 = 0;
+    add_msg("Purged socketed gems from equipment upon the altar.");
+    show_toast("Gear Sockets Cleared", RGB(100, 200, 255), 2000);
+}
+
+void enter_challenge_vault(int vault_type) {
+    Entity* p = get_player();
+    g.saved_floor.dlevel = g.dlevel;
+    g.saved_floor.player_x = p->x;
+    g.saved_floor.player_y = p->y;
+    memcpy(g.saved_floor.map, g.map, sizeof(g.map));
+    memcpy(g.saved_floor.entities, g.entities, sizeof(g.entities));
+    memcpy(g.saved_floor.items, g.items, sizeof(g.items));
+    
+    g.in_vault = 1;
+    g.current_vault_type = vault_type;
+    
+    // Clear floor
+    for(int y=0; y<H; y++) {
+        for(int x=0; x<W; x++) {
+            g.map[y][x].ch = '#';
+            g.map[y][x].fg = RGB(45, 0, 75);
+            g.map[y][x].walkable = 0;
+            g.map[y][x].transparent = 0;
+            g.map[y][x].explored = 0;
+            g.map[y][x].visible = 0;
+        }
+    }
+    for(int i=1; i<MAX_ENTITIES; i++) g.entities[i].active = 0;
+    for(int i=0; i<MAX_ITEMS; i++) g.items[i].active = 0;
+    
+    // Carve vault arena
+    for(int y=3; y<=18; y++) {
+        for(int x=8; x<=72; x++) {
+            g.map[y][x].ch = '.';
+            g.map[y][x].fg = (vault_type == VAULT_GOLD) ? RGB(60, 45, 10) : ((vault_type == VAULT_TRIAL) ? RGB(40, 20, 20) : RGB(30, 15, 45));
+            g.map[y][x].walkable = 1;
+            g.map[y][x].transparent = 1;
+        }
+    }
+    // Decorative pillars
+    g.map[7][24].ch = '#'; g.map[7][24].walkable = 0; g.map[7][24].transparent = 0;
+    g.map[14][24].ch = '#'; g.map[14][24].walkable = 0; g.map[14][24].transparent = 0;
+    g.map[7][56].ch = '#'; g.map[7][56].walkable = 0; g.map[7][56].transparent = 0;
+    g.map[14][56].ch = '#'; g.map[14][56].walkable = 0; g.map[14][56].transparent = 0;
+    
+    // Player spawn
+    p->x = 14; p->y = 11;
+    if(g.pet.active) { g.pet.x = 13; g.pet.y = 11; }
+    
+    // Exit Portal at entrance
+    g.items[0].active = 1; g.items[0].x = 14; g.items[0].y = 11;
+    g.items[0].ch = 'O'; g.items[0].fg = RGB(99, 179, 237); g.items[0].type = TYPE_VAULT_EXIT;
+    str_cpy(g.items[0].name, "Astral Exit Portal");
+    
+    // Grand Relic Pedestal at back
+    g.items[1].active = 1; g.items[1].x = 66; g.items[1].y = 11;
+    g.items[1].ch = 'R'; g.items[1].fg = RGB(255, 215, 0); g.items[1].type = TYPE_VAULT_RELIC;
+    str_cpy(g.items[1].name, "Grand Astral Relic");
+    
+    // 3 Guaranteed Gems and Gold
+    for(int j=0; j<3; j++) {
+        g.items[2+j].active = 1; g.items[2+j].x = 35 + j * 10; g.items[2+j].y = 7 + j * 3;
+        g.items[2+j].ch = '*'; g.items[2+j].type = TYPE_GEM; g.items[2+j].subtype = j % 5;
+        if(g.items[2+j].subtype == 0) { str_cpy(g.items[2+j].name, "Ruby of Flame"); g.items[2+j].fg = RGB(229, 62, 62); }
+        else if(g.items[2+j].subtype == 1) { str_cpy(g.items[2+j].name, "Sapphire of Frost"); g.items[2+j].fg = RGB(99, 179, 237); }
+        else { str_cpy(g.items[2+j].name, "Amethyst of the Void"); g.items[2+j].fg = RGB(183, 148, 244); }
+    }
+    
+    // Vault Guardian Boss
+    Entity* boss = &g.entities[1];
+    boss->active = 1; boss->x = 56; boss->y = 11;
+    boss->behavior = B_SMART; boss->level = g.dlevel + 2;
+    if(vault_type == VAULT_VOID) {
+        boss->ch = 'E'; boss->fg = RGB(183, 148, 244); str_cpy(boss->name, "Void Beholder Sovereign");
+        boss->hp = boss->max_hp = 180 + g.dlevel * 10; boss->atk = 20 + g.dlevel; boss->def = 10; boss->xp = 250;
+        boss->special_ability = ABILITY_SUMMON;
+    } else if(vault_type == VAULT_TRIAL) {
+        boss->ch = 'U'; boss->fg = RGB(255, 100, 50); str_cpy(boss->name, "Colosseum Grand Behemoth");
+        boss->hp = boss->max_hp = 260 + g.dlevel * 12; boss->atk = 25 + g.dlevel; boss->def = 14; boss->xp = 300;
+    } else {
+        boss->ch = 'B'; boss->fg = RGB(255, 215, 0); str_cpy(boss->name, "Midas King Dragon");
+        boss->hp = boss->max_hp = 200 + g.dlevel * 10; boss->atk = 22 + g.dlevel; boss->def = 12; boss->xp = 350;
+        boss->special_ability = ABILITY_BREATHE_FIRE;
+    }
+    
+    // 4 Minions
+    for(int k=0; k<4; k++) {
+        Entity* m = &g.entities[2+k];
+        m->active = 1; m->x = 30 + k * 8; m->y = (k % 2 == 0) ? 6 : 15;
+        m->ch = 'x'; m->fg = RGB(220, 220, 220); str_cpy(m->name, "Vault Sentinel");
+        m->hp = m->max_hp = 30 + g.dlevel * 3; m->atk = 8 + g.dlevel; m->def = 4; m->xp = 30;
+        m->behavior = B_FAST;
+    }
+    
+    calc_fov_bresenham();
+    const char* vname = (vault_type == VAULT_VOID) ? "Vault of the Void" : ((vault_type == VAULT_TRIAL) ? "Trial of the Colosseum" : "Crypt of the Midas King");
+    char buf[120];
+    wsprintfA(buf, "✦ You cross the Astral Rift into the %s!", vname);
+    add_msg(buf);
+    show_toast("ASTRAL VAULT UNLOCKED!", RGB(255, 215, 0), 3500);
+}
+
+void exit_challenge_vault() {
+    if(!g.in_vault) return;
+    Entity* p = get_player();
+    p->x = g.saved_floor.player_x;
+    p->y = g.saved_floor.player_y;
+    g.dlevel = g.saved_floor.dlevel;
+    memcpy(g.map, g.saved_floor.map, sizeof(g.map));
+    memcpy(g.entities, g.saved_floor.entities, sizeof(g.entities));
+    memcpy(g.items, g.saved_floor.items, sizeof(g.items));
+    
+    if(g.pet.active) { g.pet.x = p->x - 1; g.pet.y = p->y; }
+    
+    // Remove used vault gate at entrance
+    Item* gate = get_item_at(p->x, p->y);
+    if(gate && gate->type == TYPE_VAULT_GATE) gate->active = 0;
+    
+    g.in_vault = 0;
+    gain_xp(p, 200 + g.dlevel * 25);
+    add_msg("✦ You step through the Exit Portal back to the main dungeon! (+Bonus XP)");
+    show_toast("CHALLENGE VAULT CONQUERED!", RGB(100, 255, 100), 3000);
+    calc_fov_bresenham();
 }
 
 void save_game() {
@@ -2398,8 +2932,52 @@ void draw_item_gdi(HDC memDC, int x, int y, Item* it) {
         HBRUSH oldB = (HBRUSH)SelectObject(memDC, b);
         POINT pts[3] = { {cx - 4, cy - 4}, {cx + 4, cy - 4}, {cx, cy + 5} };
         Polygon(memDC, pts, 3);
+    } else if (it->type == TYPE_GEM) {
+        POINT pts[4] = { {cx, py + 3}, {cx + 4, cy}, {cx, py + char_h - 4}, {cx - 4, cy} };
+        HBRUSH b = CreateSolidBrush(it->fg);
+        HBRUSH oldB = (HBRUSH)SelectObject(memDC, b);
+        Polygon(memDC, pts, 4);
         SelectObject(memDC, oldB);
         DeleteObject(b);
+        SetPixel(memDC, cx, cy - 1, RGB(255, 255, 255));
+    } else if (it->type == TYPE_ALTAR) {
+        HBRUSH pb = CreateSolidBrush(RGB(65, 55, 80));
+        RECT pr = { px + 1, py + char_h - 6, px + char_w - 1, py + char_h - 1 };
+        FillRect(memDC, &pr, pb);
+        DeleteObject(pb);
+        HBRUSH orb = CreateSolidBrush(RGB(183, 148, 244));
+        HBRUSH oldB = (HBRUSH)SelectObject(memDC, orb);
+        Ellipse(memDC, cx - 4, py + 2, cx + 5, py + 11);
+        SelectObject(memDC, oldB);
+        DeleteObject(orb);
+        SetPixel(memDC, cx, py + 5, RGB(255, 255, 255));
+    } else if (it->type == TYPE_PET_NEST) {
+        HBRUSH nb = CreateSolidBrush(RGB(116, 66, 16));
+        RECT nr = { px + 1, py + char_h - 6, px + char_w - 1, py + char_h - 1 };
+        FillRect(memDC, &nr, nb);
+        DeleteObject(nb);
+        HBRUSH ob = CreateSolidBrush(RGB(246, 173, 85));
+        HBRUSH oldB = (HBRUSH)SelectObject(memDC, ob);
+        Ellipse(memDC, cx - 3, py + 4, cx + 4, py + 11);
+        SelectObject(memDC, oldB);
+        DeleteObject(ob);
+    } else if (it->type == TYPE_VAULT_GATE || it->type == TYPE_VAULT_EXIT) {
+        COLORREF ringCol = (it->type == TYPE_VAULT_EXIT) ? RGB(99, 179, 237) : RGB(236, 201, 75);
+        HPEN pen = CreatePen(PS_SOLID, 2, ringCol);
+        HPEN oldP = (HPEN)SelectObject(memDC, pen);
+        HBRUSH oldB = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
+        Ellipse(memDC, cx - 5, cy - 6, cx + 6, cy + 7);
+        SelectObject(memDC, oldP);
+        SelectObject(memDC, oldB);
+        DeleteObject(pen);
+        SetPixel(memDC, cx, cy, RGB(255, 255, 255));
+    } else if (it->type == TYPE_VAULT_RELIC) {
+        HBRUSH b = CreateSolidBrush(RGB(255, 215, 0));
+        HBRUSH oldB = (HBRUSH)SelectObject(memDC, b);
+        Ellipse(memDC, cx - 5, cy - 5, cx + 6, cy + 6);
+        SelectObject(memDC, oldB);
+        DeleteObject(b);
+        SetPixel(memDC, cx, cy, RGB(255, 255, 255));
     } else {
         SetTextColor(memDC, it->fg);
         SetBkMode(memDC, TRANSPARENT);
@@ -2609,13 +3187,53 @@ void draw_game(HDC hdc) {
             }
         }
         
+        // Draw Companion Pet
+        Entity* p = get_player();
+        if(g.pet.active && g.pet.hp > 0 && (g.map[g.pet.y][g.pet.x].visible || dist2(g.pet.x, g.pet.y, p->x, p->y) <= 16)) {
+            int ppx = g.pet.x * char_w;
+            int ppy = g.pet.y * char_h;
+            int pcx = ppx + char_w / 2;
+            int pcy = ppy + char_h / 2;
+            COLORREF petCol = RGB(246, 173, 85);
+            if(g.pet.type == PET_WISP) petCol = RGB(99, 179, 237);
+            else if(g.pet.type == PET_GOLEM) petCol = RGB(160, 160, 180);
+            else if(g.pet.type == PET_PHOENIX) petCol = RGB(255, 100, 30);
+            HBRUSH pb = CreateSolidBrush(petCol);
+            HBRUSH oldB = (HBRUSH)SelectObject(memDC, pb);
+            Ellipse(memDC, pcx - 4, pcy - 4, pcx + 5, pcy + 5);
+            SelectObject(memDC, oldB);
+            DeleteObject(pb);
+            SetPixel(memDC, pcx, pcy - 1, RGB(255, 255, 255));
+        }
+        
         draw_ambient_particles(memDC, g.dlevel);
         draw_particles(memDC);
+
+        // Challenge Vault Shimmering Banner
+        if(g.in_vault) {
+            RECT vr = { W * char_w / 4, 4, W * char_w * 3 / 4, 28 };
+            HBRUSH vb = CreateSolidBrush(RGB(45, 0, 75));
+            FillRect(memDC, &vr, vb);
+            DeleteObject(vb);
+            HPEN vp = CreatePen(PS_SOLID, 1, RGB(236, 201, 75));
+            HPEN oldP = (HPEN)SelectObject(memDC, vp);
+            HBRUSH nullB = (HBRUSH)GetStockObject(NULL_BRUSH);
+            HBRUSH oldB = (HBRUSH)SelectObject(memDC, nullB);
+            Rectangle(memDC, vr.left, vr.top, vr.right, vr.bottom);
+            SelectObject(memDC, oldP);
+            SelectObject(memDC, oldB);
+            DeleteObject(vp);
+            SetBkMode(memDC, TRANSPARENT);
+            SetTextColor(memDC, RGB(254, 252, 191));
+            const char* vname = (g.current_vault_type == VAULT_VOID) ? "VAULT OF THE VOID" : ((g.current_vault_type == VAULT_TRIAL) ? "TRIAL OF THE COLOSSEUM" : "CRYPT OF THE MIDAS KING");
+            char vbuf[120];
+            wsprintfA(vbuf, "⚡ %s — DEFEAT GUARDIAN TO CLAIM RELIC ⚡", vname);
+            TextOutA(memDC, W * char_w / 4 + 14, 8, vbuf, str_len(vbuf));
+        }
 
         // UI
         SetTextColor(memDC, RGB(200,200,200));
         SetBkColor(memDC, RGB(0,0,0));
-        Entity* p = get_player();
         char buf[200];
         int eff_atk = p->atk;
         int eff_def = p->def;
@@ -2657,6 +3275,15 @@ void draw_game(HDC hdc) {
         SelectObject(memDC, sh);
         MoveToEx(memDC, mp_px + mfill_w, py, NULL); LineTo(memDC, mp_px + mfill_w, py + bar_h); LineTo(memDC, mp_px, py + bar_h);
         SelectObject(memDC, oldP); DeleteObject(hl); DeleteObject(sh);
+
+        // Pet HUD Badge
+        if(g.pet.active && g.pet.hp > 0) {
+            char pbuf[64];
+            const char* pshort = (g.pet.type == PET_WOLF) ? "Fang" : ((g.pet.type == PET_WISP) ? "Lumi" : ((g.pet.type == PET_GOLEM) ? "Rocco" : "Ember"));
+            wsprintfA(pbuf, "[🐾 %s HP:%d/%d]", pshort, g.pet.hp, g.pet.max_hp);
+            SetTextColor(memDC, RGB(246, 173, 85));
+            TextOutA(memDC, 230, py, pbuf, str_len(pbuf));
+        }
         
         char status_str[50] = "";
         if(p->status_effect == STATUS_POISON) str_cpy(status_str, "[POISONED]");
@@ -2689,10 +3316,12 @@ void draw_game(HDC hdc) {
             {"[F5] Save",   RGB(100, 100, 140),RGB(200, 200, 220), 440, 80},
             {"[F9] Load",   RGB(100, 100, 140),RGB(200, 200, 220), 524, 80},
             {"[F1] Help",   RGB(50, 120, 200), RGB(120, 200, 255), 608, 80},
+            {"[E] Altar",   RGB(183, 148, 244),RGB(214, 188, 250), 692, 80},
+            {"[P] Pet",     RGB(217, 119, 6),  RGB(246, 173, 85),  776, 74},
         };
         int by = (H + 5) * char_h;
         int bh = char_h - 2;
-        for (int b = 0; b < 8; b++) {
+        for (int b = 0; b < 10; b++) {
             RECT br = {hud_btns[b].x, by, hud_btns[b].x + hud_btns[b].w, by + bh};
             HBRUSH bb = CreateSolidBrush(RGB(22, 28, 40));
             FillRect(memDC, &br, bb);
@@ -2710,8 +3339,8 @@ void draw_game(HDC hdc) {
             TextOutA(memDC, hud_btns[b].x + 6, by + 1, hud_btns[b].label, str_len(hud_btns[b].label));
         }
         SetTextColor(memDC, RGB(140, 140, 140));
-        const char* nav_hint = "[Click/Arrows]:Move | [K]:Keys";
-        TextOutA(memDC, 694, by + 1, nav_hint, str_len(nav_hint));
+        const char* nav_hint = "[K]:Keys";
+        TextOutA(memDC, 856, by + 1, nav_hint, str_len(nav_hint));
         
         if(g.state == 3) {
             SetTextColor(memDC, RGB(255,0,0));
@@ -3033,6 +3662,94 @@ void draw_game(HDC hdc) {
         y += 10;
         SetTextColor(memDC, RGB(255, 255, 0));
         TextOutA(memDC, 20, y, "Press ESC, H, or ? to return.", 29);
+    } else if(g.state == 13) { // Altar screen
+        HBRUSH bg = CreateSolidBrush(RGB(21, 17, 36));
+        RECT bgr = {0, 0, W * char_w, TOTAL_H * char_h};
+        FillRect(memDC, &bgr, bg);
+        DeleteObject(bg);
+        SetBkMode(memDC, TRANSPARENT);
+        SetTextColor(memDC, RGB(214, 188, 250));
+        TextOutA(memDC, 20, 16, "=== MYSTIC ENCHANTING & SOCKETING ALTAR ===", 43);
+        SetTextColor(memDC, RGB(160, 174, 192));
+        TextOutA(memDC, 20, 36, "Press 1 for Weapon, 2 for Armor. Press a-z to socket gem. [U]: Purge | ESC: Return", 83);
+        
+        const char* gnames[] = {"Empty", "Ruby (Fire +4)", "Sapphire (Frost +3)", "Emerald (Venom +3)", "Amethyst (Void +4)", "Topaz (Shock +4)"};
+        int y = 65;
+        char buf[140];
+        
+        SetTextColor(memDC, RGB(255, 220, 100));
+        TextOutA(memDC, 20, y, "EQUIPPED GEAR SOCKETS:", 22); y += char_h;
+        
+        if(g.equip_weapon.active) {
+            wsprintfA(buf, "1. Weapon: %s | Socket 1: [%s] | Socket 2: [%s]", g.equip_weapon.name, gnames[g.equip_weapon.socket1], gnames[g.equip_weapon.socket2]);
+            SetTextColor(memDC, RGB(200, 240, 255));
+            TextOutA(memDC, 30, y, buf, str_len(buf)); y += char_h;
+        } else {
+            SetTextColor(memDC, RGB(120, 120, 120));
+            TextOutA(memDC, 30, y, "1. Weapon: (None equipped)", 26); y += char_h;
+        }
+        
+        if(g.equip_armor.active) {
+            wsprintfA(buf, "2. Armor: %s  | Socket 1: [%s] | Socket 2: [%s]", g.equip_armor.name, gnames[g.equip_armor.socket1], gnames[g.equip_armor.socket2]);
+            SetTextColor(memDC, RGB(200, 240, 255));
+            TextOutA(memDC, 30, y, buf, str_len(buf)); y += char_h + 10;
+        } else {
+            SetTextColor(memDC, RGB(120, 120, 120));
+            TextOutA(memDC, 30, y, "2. Armor: (None equipped)", 25); y += char_h + 10;
+        }
+        
+        SetTextColor(memDC, RGB(100, 255, 150));
+        TextOutA(memDC, 20, y, "AVAILABLE UNCUT GEMS IN INVENTORY (Press slot letter to socket into gear):", 74); y += char_h;
+        
+        int gem_count = 0;
+        for(int i=0; i<MAX_INVENTORY; i++) {
+            if(g.inventory[i].active && g.inventory[i].type == TYPE_GEM) {
+                gem_count++;
+                wsprintfA(buf, "[%c] %s — Infuses Primordial Energy", 'a'+i, g.inventory[i].name);
+                SetTextColor(memDC, g.inventory[i].fg);
+                TextOutA(memDC, 30, y, buf, str_len(buf)); y += char_h;
+            }
+        }
+        if(gem_count == 0) {
+            SetTextColor(memDC, RGB(160, 160, 160));
+            TextOutA(memDC, 30, y, "No uncut elemental gems in inventory. Discover gems in dungeons and challenge vaults!", 85);
+            y += char_h;
+        }
+    } else if(g.state == 14) { // Pet Sanctuary screen
+        HBRUSH bg = CreateSolidBrush(RGB(35, 24, 13));
+        RECT bgr = {0, 0, W * char_w, TOTAL_H * char_h};
+        FillRect(memDC, &bgr, bg);
+        DeleteObject(bg);
+        SetBkMode(memDC, TRANSPARENT);
+        SetTextColor(memDC, RGB(246, 173, 85));
+        TextOutA(memDC, 20, 16, "=== COMPANION PET SANCTUARY ===", 31);
+        SetTextColor(memDC, RGB(200, 200, 200));
+        TextOutA(memDC, 20, 36, "Press 1-4 to recruit/switch pet. [F]: Feed Food (+25 HP, +30 XP). ESC: Return", 77);
+        
+        int y = 65;
+        char buf[140];
+        if(g.pet.active) {
+            SetTextColor(memDC, RGB(255, 215, 0));
+            wsprintfA(buf, "ACTIVE COMPANION: %s | Level %d | HP: %d/%d | ATK: %d | XP: %d/%d",
+                g.pet.name, g.pet.level, g.pet.hp, g.pet.max_hp, g.pet.atk, g.pet.xp, g.pet.level * 35);
+            TextOutA(memDC, 20, y, buf, str_len(buf)); y += char_h + 10;
+        } else {
+            SetTextColor(memDC, RGB(180, 180, 180));
+            TextOutA(memDC, 20, y, "ACTIVE COMPANION: (None - Select an animal companion below)", 58); y += char_h + 10;
+        }
+        
+        const char* pets[] = {
+            "1. Fang the Wolf Pup       (HP: 25, ATK: 6) - Hunter Beast: Bites adjacent foes for 6-10 dmg, sniffs traps.",
+            "2. Lumi the Arcane Wisp    (HP: 18, ATK: 5) - Aether Entity: Ranged sparks up to 3 tiles, passive MP regen.",
+            "3. Rocco the Stone Golem   (HP: 40, ATK: 4) - Guardian Automaton: Tanky guard, heavy slam, grants +2 DEF aura.",
+            "4. Ember the Phoenix Chick (HP: 22, ATK: 5) - Primordial Bird: Scorches foes, PHOENIX REBIRTH on lethal damage!"
+        };
+        COLORREF pcols[] = { RGB(246, 173, 85), RGB(99, 179, 237), RGB(180, 180, 200), RGB(255, 120, 40) };
+        for(int k=0; k<4; k++) {
+            SetTextColor(memDC, pcols[k]);
+            TextOutA(memDC, 30, y, pets[k], str_len(pets[k]));
+            y += char_h * 3 / 2;
+        }
     }
     
     draw_gothic_filigree_corners(memDC, W * char_w, TOTAL_H * char_h);
@@ -3410,7 +4127,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     else if (px >= 440 && px <= 520) { save_game(); }
                     else if (px >= 524 && px <= 604) { load_game(); }
                     else if (px >= 608 && px <= 688) { g.state = 7; }
-                    else if (px >= 694) { g.state = 12; }
+                    else if (px >= 692 && px <= 772) { g.state = 13; }
+                    else if (px >= 776 && px <= 850) { g.state = 14; }
+                    else if (px >= 854) { g.state = 12; }
                     InvalidateRect(hwnd, NULL, FALSE);
                     return 0;
                 }
@@ -3526,6 +4245,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 else if(wParam == g_keybinds.keybinds_menu || wParam == 'K') g.state = 12;
                 else if(wParam == g_keybinds.save || wParam == VK_F5) save_game();
                 else if(wParam == g_keybinds.load || wParam == VK_F9) load_game();
+                else if(wParam == 'E') g.state = 13;
+                else if(wParam == 'P') g.state = 14;
                 else if(wParam == 'F') {
                     if(g.equip_weapon.active && g.equip_weapon.subtype == W_BOW) {
                         g.state = 3; 
@@ -3729,6 +4450,32 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if(wParam == VK_ESCAPE || wParam == VK_OEM_2 || wParam == 'H' || wParam == VK_F1) g.state = g.dlevel == 0 ? 4 : 0;
             } else if(g.state == 8) { // message log
                 if(wParam == VK_ESCAPE || wParam == 'V') g.state = 0;
+            } else if(g.state == 13) { // altar
+                static int altar_sel = 1;
+                if(wParam == VK_ESCAPE || wParam == 'E') {
+                    g.state = 0;
+                } else if(wParam == '1') {
+                    altar_sel = 1;
+                    add_msg("Altar: Weapon selected for socketing.");
+                    show_toast("Weapon Selected", RGB(200, 240, 255), 1500);
+                } else if(wParam == '2') {
+                    altar_sel = 2;
+                    add_msg("Altar: Armor selected for socketing.");
+                    show_toast("Armor Selected", RGB(200, 240, 255), 1500);
+                } else if(wParam == 'U') {
+                    unsocket_gear(altar_sel);
+                } else if(wParam >= 'A' && wParam <= 'Z') {
+                    int idx = wParam - 'A';
+                    socket_gem_into_gear(altar_sel, idx);
+                }
+            } else if(g.state == 14) { // pet sanctuary
+                if(wParam == VK_ESCAPE || wParam == 'P') {
+                    g.state = 0;
+                } else if(wParam >= '1' && wParam <= '4') {
+                    adopt_pet((int)(wParam - '0'));
+                } else if(wParam == 'F') {
+                    feed_pet();
+                }
             }
             InvalidateRect(hwnd, NULL, FALSE);
             return 0;
