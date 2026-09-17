@@ -647,6 +647,29 @@
         .settings-group label { display: block; margin-bottom: 8px; font-weight: 600; }
         .settings-group select, .settings-group input[type="checkbox"] { margin-bottom: 12px; }
         .settings-group select { width: 100%; }
+        .settings-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .settings-actions button { flex: 1; min-width: 90px; }
+
+        #toast {
+            display: none;
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.96);
+            border: 1px solid var(--accent);
+            color: #f8fafc;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            z-index: 9999;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6), 0 0 10px var(--accent);
+            pointer-events: none;
+            transition: opacity 0.25s;
+            text-align: center;
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -671,6 +694,7 @@
             <button id="btn-daily">Daily</button>
             <button id="btn-stats">Stats</button>
             <button id="btn-settings">Settings</button>
+            <button id="btn-help" title="Rules & Help (?)">Help (?)</button>
         </div>
         <div class="controls">
             <button id="btn-notes">Notes: OFF</button>
@@ -722,9 +746,72 @@
                     Sound Effects
                 </label>
             </div>
+            <div class="settings-group">
+                <label>Data &amp; Backup:</label>
+                <div class="settings-actions">
+                    <button id="btn-export-save" title="Export progress to JSON">📥 Export Save</button>
+                    <button id="btn-import-save" title="Import progress from JSON">📤 Import Save</button>
+                    <button id="btn-reset-stats" style="border-color: rgba(239, 68, 68, 0.4); color: #f87171;" title="Reset statistics">⚠️ Reset Stats</button>
+                    <input type="file" id="file-import-save" accept=".json" style="display:none">
+                </div>
+            </div>
             <button class="modal-close" id="btn-close-settings">Close</button>
         </div>
     </div>
+
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <h2>KSudoku Guide &amp; Rules</h2>
+            <div style="font-size: 0.85rem; line-height: 1.5; color: var(--text-main);">
+                <div class="stat-diff">Sudoku Rules &amp; Grids</div>
+                <p style="margin: 6px 0;">Fill every row, column, and block with unique values without repeating:</p>
+                <ul style="padding-left: 18px; margin: 0 0 10px 0;">
+                    <li><strong>4x4:</strong> Numbers 1–4. Fast introduction rounds.</li>
+                    <li><strong>9x9:</strong> Classic Sudoku (1–9). Easy, Medium, and Hard.</li>
+                    <li><strong>16x16 Hexadoku:</strong> Numbers 1–9 and letters A–G (10–16).</li>
+                </ul>
+
+                <div class="stat-diff">Game Modes</div>
+                <ul style="padding-left: 18px; margin: 6px 0 10px 0;">
+                    <li><strong>Classic:</strong> Relaxed play with customizable difficulty.</li>
+                    <li><strong>Campaign:</strong> 20 progressive stages with expanding grids, Fog of War, Killer Cages, and a 3-strike limit!</li>
+                    <li><strong>Rush Mode:</strong> 3-minute survival sprint! Correct cells grant +10s; mistakes penalize -15s!</li>
+                    <li><strong>Daily Challenge:</strong> Unique seeded puzzle each calendar day with streak tracking.</li>
+                </ul>
+
+                <div class="stat-diff">Special Mechanics</div>
+                <ul style="padding-left: 18px; margin: 6px 0 10px 0;">
+                    <li><strong>Killer Cages:</strong> Outlined dashed cells must sum to the number shown in the top-left corner.</li>
+                    <li><strong>Fog of War:</strong> Hidden cells marked '?'. Correct adjacent values reveal the mystery.</li>
+                    <li><strong>Pencil Notes:</strong> Toggle notes (N or Space) to pencil in candidate numbers.</li>
+                </ul>
+
+                <div class="stat-diff">Powerups &amp; Abilities</div>
+                <ul style="padding-left: 18px; margin: 6px 0 10px 0;">
+                    <li><strong>Hint (H):</strong> Solves the selected cell (-150 pts).</li>
+                    <li><strong>Magic Wand (W):</strong> Arcane lightning solves a random empty cell (+50 pts).</li>
+                    <li><strong>Mistake Shield (S):</strong> Shields against next wrong placement without penalty.</li>
+                    <li><strong>Auto-Fill (P):</strong> Automatically pencils valid candidate notes in all empty cells.</li>
+                    <li><strong>Time Freeze (F):</strong> Freezes the game timer for 20 seconds.</li>
+                </ul>
+
+                <div class="stat-diff">Keyboard Shortcuts</div>
+                <ul style="padding-left: 18px; margin: 6px 0 10px 0;">
+                    <li><strong>1–9 / A–G:</strong> Place number or hex letter</li>
+                    <li><strong>Backspace / Del / 0:</strong> Clear cell or notes</li>
+                    <li><strong>Arrow Keys:</strong> Move grid cursor</li>
+                    <li><strong>N / Space:</strong> Toggle Pencil Notes mode</li>
+                    <li><strong>Ctrl+Z / Ctrl+Y:</strong> Undo / Redo</li>
+                    <li><strong>F5 / F9:</strong> Quicksave / Quickload</li>
+                    <li><strong>? / M:</strong> Toggle this Help manual</li>
+                    <li><strong>Esc:</strong> Close modal or deselect cell</li>
+                </ul>
+            </div>
+            <button class="modal-close" id="btn-close-help">Got it!</button>
+        </div>
+    </div>
+    
+    <div id="toast"></div>
     
     <script>
         const boardEl = document.getElementById('board');
@@ -750,6 +837,30 @@
         const selTheme = document.getElementById('sel-theme');
         const chkHighlight = document.getElementById('chk-highlight');
         const chkSound = document.getElementById('chk-sound');
+        const btnHelp = document.getElementById('btn-help');
+        const helpModal = document.getElementById('help-modal');
+        const btnCloseHelp = document.getElementById('btn-close-help');
+        const selDifficulty = document.getElementById('sel-difficulty');
+        const btnExportSave = document.getElementById('btn-export-save');
+        const btnImportSave = document.getElementById('btn-import-save');
+        const btnResetStats = document.getElementById('btn-reset-stats');
+        const fileImportSave = document.getElementById('file-import-save');
+        const toastEl = document.getElementById('toast');
+
+        let toastTimer = null;
+        function showToast(msg, duration = 2400) {
+            if (!toastEl) return;
+            toastEl.textContent = msg;
+            toastEl.style.display = 'block';
+            toastEl.style.opacity = '1';
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toastEl.style.opacity = '0';
+                setTimeout(() => {
+                    if (toastEl.style.opacity === '0') toastEl.style.display = 'none';
+                }, 250);
+            }, duration);
+        }
 
         // Web Audio Synthesizer
         let audioCtx = null;
@@ -757,6 +868,7 @@
             if (!settings.soundEnabled) return;
             try {
                 if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
                 let osc = audioCtx.createOscillator();
                 let gain = audioCtx.createGain();
                 osc.connect(gain);
@@ -938,7 +1050,7 @@
             }
             const state = {
                 gridSize, boxW, boxH, board, solution, notes, fog, cageId, cageSum, cageTopLeft, elapsedTime, freezeTime, score, awarded, originalBoard, undoStack, redoStack, isDailyGame,
-                isCampaignMode, campaignStage, magicWands, shields, shieldActive, freezeCharges, strikes, isRushMode
+                isCampaignMode, campaignStage, magicWands, shields, shieldActive, freezeCharges, strikes, isRushMode, currentDifficulty, notesMode
             };
             localStorage.setItem('ksudoku_save', JSON.stringify(state));
         }
@@ -961,8 +1073,10 @@
                 elapsedTime = state.elapsedTime;
                 freezeTime = state.freezeTime || 0;
                 score = state.score;
-                currentDifficulty = state.currentDifficulty;
-                awarded = state.awarded;
+                currentDifficulty = state.currentDifficulty || 40;
+                notesMode = !!state.notesMode;
+                btnNotes.textContent = notesMode ? 'Notes: ON' : 'Notes: OFF';
+                awarded = state.awarded || Array(gridSize).fill().map(() => Array(gridSize).fill(false));
                 originalBoard = state.originalBoard;
                 undoStack = state.undoStack || [];
                 redoStack = state.redoStack || [];
@@ -987,6 +1101,126 @@
             } catch(e) {
                 return false;
             }
+        }
+
+        function quickSave(isQuick = true) {
+            if (!gameActive) {
+                showToast("⚠ NO ACTIVE GAME TO SAVE");
+                return;
+            }
+            saveGameState();
+            const state = {
+                gridSize, boxW, boxH, board, solution, notes, fog, cageId, cageSum, cageTopLeft, elapsedTime, freezeTime, score, awarded, originalBoard, undoStack, redoStack, isDailyGame,
+                isCampaignMode, campaignStage, magicWands, shields, shieldActive, freezeCharges, strikes, isRushMode, currentDifficulty, notesMode,
+                savedAt: new Date().toISOString()
+            };
+            localStorage.setItem('ksudoku_quicksave', JSON.stringify(state));
+            playSound('powerup');
+            showToast(isQuick ? "★ QUICK-SAVE RECORDED (F5)" : "★ GAME SAVED");
+        }
+
+        function quickLoad(isQuick = true) {
+            const raw = localStorage.getItem('ksudoku_quicksave') || localStorage.getItem('ksudoku_save');
+            if (!raw) {
+                showToast("⚠ NO SAVE DATA FOUND");
+                return;
+            }
+            try {
+                localStorage.setItem('ksudoku_save', raw);
+                if (loadGameState()) {
+                    playSound('correct');
+                    showToast(isQuick ? "★ QUICK-SAVE LOADED (F9)" : "★ GAME LOADED");
+                } else {
+                    showToast("⚠ FAILED TO LOAD SAVE");
+                }
+            } catch (err) {
+                showToast("⚠ CORRUPTED SAVE DATA");
+            }
+        }
+
+        function exportSave() {
+            try {
+                saveGameState();
+                const backup = {
+                    version: 1,
+                    app: 'KSudoku',
+                    exportedAt: new Date().toISOString(),
+                    save: localStorage.getItem('ksudoku_save'),
+                    quicksave: localStorage.getItem('ksudoku_quicksave'),
+                    stats: stats,
+                    prefs: settings
+                };
+                const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ksudoku_backup_${new Date().toISOString().slice(0, 10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                playSound('select');
+                showToast("★ SAVE EXPORTED TO JSON");
+            } catch (e) {
+                showToast("⚠ EXPORT FAILED");
+            }
+        }
+
+        function importSaveFile(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!data || (data.app !== 'KSudoku' && !data.stats && !data.save)) {
+                        throw new Error("Invalid format");
+                    }
+                    if (data.stats) {
+                        stats = data.stats;
+                        saveStats();
+                    }
+                    if (data.prefs) {
+                        settings = data.prefs;
+                        savePrefs();
+                    }
+                    if (data.save) {
+                        localStorage.setItem('ksudoku_save', typeof data.save === 'string' ? data.save : JSON.stringify(data.save));
+                    }
+                    if (data.quicksave) {
+                        localStorage.setItem('ksudoku_quicksave', typeof data.quicksave === 'string' ? data.quicksave : JSON.stringify(data.quicksave));
+                    }
+                    if (!loadGameState()) {
+                        generateBoard(9, false, false);
+                    }
+                    applySettings();
+                    playSound('win');
+                    showToast("★ SAVE IMPORTED SUCCESSFULLY");
+                    settingsModal.style.display = 'none';
+                } catch (err) {
+                    playSound('error');
+                    showToast("⚠ INVALID OR CORRUPTED FILE");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function resetStats() {
+            if (!confirm("Are you sure you want to reset all your statistics and streaks? This cannot be undone.")) return;
+            stats = {
+                30: { played: 0, won: 0, bestTime: Infinity, bestScore: 0 },
+                40: { played: 0, won: 0, bestTime: Infinity, bestScore: 0 },
+                50: { played: 0, won: 0, bestTime: Infinity, bestScore: 0 },
+                rush: { played: 0, won: 0, bestTime: 0, bestScore: 0 },
+                dailyStreak: 0,
+                lastDailyDate: 0,
+                maxCampaignStage: 0,
+                totalWandsUsed: 0,
+                totalShieldsUsed: 0
+            };
+            saveStats();
+            playSound('select');
+            showToast("★ STATISTICS RESET");
+            if (statsModal.style.display === 'flex') showStats();
         }
 
         function startTimer() {
@@ -1256,7 +1490,7 @@
             board = JSON.parse(JSON.stringify(grid));
             let empties = [];
             let removalTarget = removal;
-            let requireUnique = (removalTarget <= (gridSize * gridSize) / 2);
+            let requireUnique = (gridSize <= 9 && removalTarget <= (gridSize * gridSize) / 2);
             
             let pos = [];
             for(let i=0; i<gridSize*gridSize; i++) pos.push(i);
@@ -2228,6 +2462,43 @@
         });
         
         window.addEventListener('keydown', (e) => {
+            // Escape key dismisses open modals or clears selection
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                let closedAny = false;
+                [statsModal, settingsModal, helpModal].forEach(m => {
+                    if (m && m.style.display === 'flex') {
+                        m.style.display = 'none';
+                        closedAny = true;
+                        if (m === helpModal) localStorage.setItem('ksudoku_tutorialSeen', 'true');
+                    }
+                });
+                if (closedAny) {
+                    playSound('select');
+                } else if (selectedCell) {
+                    selectedCell = null;
+                    updateHighlights();
+                }
+                return;
+            }
+
+            // Quicksave F5
+            if (e.key === 'F5') {
+                e.preventDefault();
+                quickSave();
+                return;
+            }
+
+            // Quickload F9
+            if (e.key === 'F9') {
+                e.preventDefault();
+                quickLoad();
+                return;
+            }
+
+            // Ignore gameplay hotkeys if typing in inputs/selects
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
             if (e.ctrlKey && e.key === 'z') {
                 e.preventDefault();
                 doUndo();
@@ -2238,6 +2509,20 @@
                 doRedo();
                 return;
             }
+
+            // Spacebar toggles pencil notes mode
+            if (e.key === ' ') {
+                e.preventDefault();
+                btnNotes.click();
+                return;
+            }
+
+            // Enter validates current grid
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                btnValidate.click();
+                return;
+            }
             
             let keyUpper = e.key.toUpperCase();
             if (keyUpper === 'H') { btnHint.click(); return; }
@@ -2246,6 +2531,17 @@
             if (keyUpper === 'F' && !e.shiftKey) { btnFreeze.click(); return; }
             if (keyUpper === 'W') { btnMagic.click(); return; }
             if (keyUpper === 'N') { btnNotes.click(); return; }
+            if (e.key === '?' || keyUpper === 'M') {
+                e.preventDefault();
+                if (helpModal && helpModal.style.display === 'flex') {
+                    helpModal.style.display = 'none';
+                    localStorage.setItem('ksudoku_tutorialSeen', 'true');
+                } else if (helpModal) {
+                    helpModal.style.display = 'flex';
+                }
+                playSound('select');
+                return;
+            }
 
             let val = 0;
             if (e.key >= '1' && e.key <= '9') val = parseInt(e.key);
@@ -2271,15 +2567,18 @@
         });
         
         btnNew.addEventListener('click', () => {
+            playSound('select');
             isCampaignMode = false;
             isRushMode = false;
             generateBoard(9, false, false);
             selectedCell = null;
             updateHighlights();
+            showToast("★ NEW PUZZLE STARTED");
         });
 
         if (btnRush) {
             btnRush.addEventListener('click', () => {
+                playSound('select');
                 isCampaignMode = false;
                 isRushMode = true;
                 shields = 1;
@@ -2291,13 +2590,16 @@
                 generateBoard(9, false, true);
                 selectedCell = null;
                 updateHighlights();
+                showToast("★ RUSH MODE STARTED (180s)");
             });
         }
 
         document.getElementById('btn-daily').addEventListener('click', () => {
+            playSound('select');
             let d = new Date();
             let todayStr = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
             if (stats.lastDailyDate === todayStr) {
+                showToast("Already completed today's challenge!");
                 alert("You have already completed today's challenge!");
             } else {
                 isCampaignMode = false;
@@ -2305,8 +2607,21 @@
                 generateBoard(9, true, false);
                 selectedCell = null;
                 updateHighlights();
+                showToast("★ DAILY CHALLENGE STARTED");
             }
         });
+
+        if (selDifficulty) {
+            selDifficulty.addEventListener('change', () => {
+                playSound('select');
+                isCampaignMode = false;
+                isRushMode = false;
+                generateBoard(9, false, false);
+                selectedCell = null;
+                updateHighlights();
+                showToast(`★ DIFFICULTY: ${selDifficulty.options[selDifficulty.selectedIndex].text.toUpperCase()}`);
+            });
+        }
 
         function startCampaignStage(stage) {
             isCampaignMode = true;
@@ -2325,7 +2640,10 @@
         }
 
         btnCampaign.addEventListener('click', () => {
-            startCampaignStage(stats.maxCampaignStage > 19 ? 19 : stats.maxCampaignStage);
+            playSound('select');
+            let st = stats.maxCampaignStage > 19 ? 19 : stats.maxCampaignStage;
+            startCampaignStage(st);
+            showToast(`★ CAMPAIGN STAGE ${st + 1}/20`);
         });
 
         btnNotes.addEventListener('click', () => {
@@ -2458,10 +2776,46 @@
 
         btnUndo.addEventListener('click', doUndo);
         btnRedo.addEventListener('click', doRedo);
-        btnStats.addEventListener('click', showStats);
-        btnCloseStats.addEventListener('click', () => statsModal.style.display = 'none');
-        btnSettings.addEventListener('click', () => settingsModal.style.display = 'flex');
-        btnCloseSettings.addEventListener('click', () => settingsModal.style.display = 'none');
+        btnStats.addEventListener('click', () => { playSound('select'); showStats(); });
+        btnCloseStats.addEventListener('click', () => { playSound('select'); statsModal.style.display = 'none'; });
+        btnSettings.addEventListener('click', () => { playSound('select'); settingsModal.style.display = 'flex'; });
+        btnCloseSettings.addEventListener('click', () => { playSound('select'); settingsModal.style.display = 'none'; });
+        if (btnHelp) {
+            btnHelp.addEventListener('click', () => {
+                playSound('select');
+                helpModal.style.display = 'flex';
+            });
+        }
+        if (btnCloseHelp) {
+            btnCloseHelp.addEventListener('click', () => {
+                playSound('select');
+                helpModal.style.display = 'none';
+                localStorage.setItem('ksudoku_tutorialSeen', 'true');
+            });
+        }
+
+        // Modal backdrop click dismissal
+        [statsModal, settingsModal, helpModal].forEach(modal => {
+            if (!modal) return;
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    playSound('select');
+                    modal.style.display = 'none';
+                    if (modal === helpModal) localStorage.setItem('ksudoku_tutorialSeen', 'true');
+                }
+            });
+        });
+
+        // Backup & Save Controls
+        if (btnExportSave) btnExportSave.addEventListener('click', exportSave);
+        if (btnImportSave) btnImportSave.addEventListener('click', () => fileImportSave.click());
+        if (fileImportSave) {
+            fileImportSave.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) importSaveFile(e.target.files[0]);
+                e.target.value = '';
+            });
+        }
+        if (btnResetStats) btnResetStats.addEventListener('click', resetStats);
 
         selTheme.addEventListener('change', (e) => { settings.theme = e.target.value; savePrefs(); });
         chkHighlight.addEventListener('change', (e) => { settings.highlightSame = e.target.checked; savePrefs(); });
@@ -2472,6 +2826,15 @@
             applySettings();
         } else {
             applySettings();
+        }
+
+        // Auto-show tutorial guide on first visit
+        const tutorialSeen = localStorage.getItem('ksudoku_tutorialSeen');
+        if (!tutorialSeen) {
+            setTimeout(() => {
+                if (helpModal) helpModal.style.display = 'flex';
+                localStorage.setItem('ksudoku_tutorialSeen', 'true');
+            }, 350);
         }
 
         // Dust Motes Animation
