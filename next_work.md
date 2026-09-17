@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,13 +15,13 @@ current_targets:
   kilo_creator: "KStarForge (Deep-space shipyard engineering sim)"
   kilo_graphics: KStarship
   kilo_tester: KTask
-  kilo_usability: KGo
+  kilo_usability: KReversi
   kilo_qa: KSpace
   kilo_expander: KTerm
 last_run:
-  agent: kilo-tester
-  app: KSys
-  timestamp: "2026-09-17T14:45:00Z"
+  agent: kilo-usability
+  app: KGo
+  timestamp: "2026-09-17T15:52:00Z"
 last_planner_run: "2026-09-16T19:00:00Z"
 ---
 
@@ -68,9 +68,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTerm`, `KTetris`, `KTimer`, `KTodo`, `KTowers`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KWords`, `KZip`, `K2048`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalc`, `KCalendar`, `KChart`, `KChess`, `KClock`, `KCode`, `KDiff`, `KDnD`, `KDraw`, `KDrum`, `KEdit`, `KExcel`, `KFiles`, `KFit`, `KFlash`, `KFlight`, `KFont`, `KForm`, `KFormula`, `KForth`, `KFractal`, `KGraph`, `KHex`, `KIcon`, `KImage`, `KInvoice`, `KKanban`, `KLife`, `KLogic`, `KMail`, `KMarkdown`, `KMaze`, `KMidi`, `KMines`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KPong`, `KQuest`, `KRadio`, `KRead`, `KReversi`, `KRogue`, `KScript`, `KSimon`, `KSnake`, `KSolitaire`, `KSpace`, `KStarship`, `KStellar`, `KSudoku`, `KSynth`, `KSys`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KGo`
+- **Current Target**: `KReversi`
 - **Upcoming Queue**:
-  `KReversi`, `KConnect4`, `KTerm`, `KPad`, `KCalc`, `KPaint`, `KAudio`, `KEdit`, `KExcel`, `KFiles`, `KFit`, `KFlash`, `KFlight`, `KFont`, `KForm`, `KFormula`, `KForth`, `KFractal`, `KGraph`, `KHex`, `KIcon`, `KImage`, `KInvoice`, `KKanban`, `KLife`, `KLogic`, `KMail`, `KMarkdown`, `KMaze`, `KMidi`, `KMines`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KPong`, `KChess`.
+  `KConnect4`, `KTerm`, `KPad`, `KCalc`, `KPaint`, `KAudio`, `KEdit`, `KExcel`, `KFiles`, `KFit`, `KFlash`, `KFlight`, `KFont`, `KForm`, `KFormula`, `KForth`, `KFractal`, `KGraph`, `KHex`, `KIcon`, `KImage`, `KInvoice`, `KKanban`, `KLife`, `KLogic`, `KMail`, `KMarkdown`, `KMaze`, `KMidi`, `KMines`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KPong`, `KChess`, `KGo`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KSpace`
@@ -85,6 +85,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-09-17T15:52:00Z — kilo-usability: KGo**
+  - Status: PASS ✅ (UX, responsive scaling, layout, hotkeys, and onboarding pass).
+  - Window & Layout: Expanded KiloOS window (700x760); eliminated 19x19 board clipping and vertical scrolling.
+  - Responsive Goban: Dynamic CSS custom property `--cell-size` (9x9: 34px, 13x13: 28px, 19x19: 22px); scalable stones, aura, badges, rings.
+  - Onboarding & Ergonomics: First-run onboarding banner (`kgo_onboarded`), permanent hotkey quick-strip, and tooltips on all controls.
+  - Keyboard & Modal: Added F1/? help toggle, N new game confirmation, R resign confirmation, Ctrl+Z/U undo, and reorganized help cards.
+  - Native Parity: Dynamic GetCellSize/GetStoneRadius scaling in MSVC C, F1/P/N/Ctrl+Z hotkeys, and persistent hotkey reference banner.
+  - Verification: Single-file Web build clean (82.5 KB, Vite built in 330ms); Native MSVC clean build (176.6 KB); strictly <999 KB ceiling.
 
 - **2026-09-17T14:45:00Z — kilo-tester: KSys**
   - Status: PASS ✅ (7 issues fixed inline).
@@ -117,7 +126,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Diagnostics & Benchmarking: Real-time telemetry bar, iteration benchmarking suite (F6), and gutter line numbers with breakpoints (F8 continue).
   - Inspection & Export: Multi-base Memory Inspector (Dec/Hex/Bin), JSON state snapshot export, CSV variable export, and plain text trace log.
   - Verification: Native MSVC C (21.5 KB) and Web (86 KB) clean builds; <999 KB ceiling verified.
-
-- **2026-09-17T10:44:00Z — kilo-qa: KSolitaire**
-  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial integrity, overlays).
-  - Highlights: Full state F5 quicksave and F9 quickload persistence in web and native, synchronized with autosave, first-run tutorial onboarding (`ksolitaire_tutorialSeen` / `ksolitaire_tutorial.dat`) protecting restored saves, win overlay reload button and Esc/Enter/Space controls, auto-save beforeunload, storage quota resilience. Native (49.6 KB) and Web (120 KB) clean builds.

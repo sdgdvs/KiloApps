@@ -129,6 +129,14 @@ int redoCount = 0;
 int consecutivePasses = 0;
 
 int boardSize = 9;
+int GetCellSize() {
+    if (boardSize == 19) return 28;
+    if (boardSize == 13) return 34;
+    return 42;
+}
+int GetStoneRadius() {
+    return GetCellSize() * 13 / 30;
+}
 char board[19][19] = {0}; // 0 = empty, 1 = black, 2 = white
 char prevBoard[19][19] = {0};
 int currentPlayer = 1;
@@ -857,18 +865,20 @@ void PlaceStone(HWND hwnd, int x, int y) {
         TriggerScreenShake(2.0f);
     }
     
+    int cellSize = GetCellSize();
+    int stoneRadius = GetStoneRadius();
     animX = x;
     animY = y;
     animRadius = 0;
-    rippleRadius = 13;
+    rippleRadius = stoneRadius;
     SetTimer(hwnd, 1, 16, NULL);
     
     if (caps > 0) {
-        captureAnimRadius = 13;
+        captureAnimRadius = stoneRadius;
         TriggerScreenShake(6.0f + (float)caps * 3.5f);
         for (int i = 0; i < capturedAnimCount; i++) {
-            int cx = 40 + capturedAnimStones[i].x * 30;
-            int cy = 40 + capturedAnimStones[i].y * 30;
+            int cx = 40 + capturedAnimStones[i].x * cellSize;
+            int cy = 40 + capturedAnimStones[i].y * cellSize;
             SpawnCaptureExplosion(cx, cy, capturedAnimColor[i]);
         }
         SetTimer(hwnd, 3, 16, NULL);
@@ -1133,7 +1143,7 @@ void CalculateScore(HWND hwnd) {
     RecordGameEnd(winner, hwnd);
 
     int pad = 40;
-    int cSize = 30;
+    int cSize = GetCellSize();
     for (int i = 0; i < 8; i++) {
         int rx = pad + (rand() % boardSize) * cSize;
         int ry = pad + (rand() % boardSize) * cSize;
@@ -1247,15 +1257,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
         case WM_TIMER:
             if (wParam == 1) {
-                if (animRadius < 13) animRadius += 2;
-                if (animRadius > 13) animRadius = 13;
+                int maxRad = GetStoneRadius();
+                if (animRadius < maxRad) animRadius += 2;
+                if (animRadius > maxRad) animRadius = maxRad;
                 
                 if (rippleRadius > 0) {
                     rippleRadius += 2;
-                    if (rippleRadius > 44) rippleRadius = 0;
+                    if (rippleRadius > maxRad + 30) rippleRadius = 0;
                 }
                 
-                if (animRadius == 13 && rippleRadius == 0) {
+                if (animRadius == maxRad && rippleRadius == 0) {
                     KillTimer(hwnd, 1);
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
@@ -1352,6 +1363,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (wParam == 'S' || wParam == 's') {
                 showAnalyzer = !showAnalyzer;
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 'P' || wParam == 'p') {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_PASS, 0), 0);
+            } else if (wParam == 'N' || wParam == 'n') {
+                if (MessageBox(hwnd, "Start a new game? Current match progress will be reset.", "New Game", MB_YESNO | MB_ICONQUESTION) == IDYES) {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_NEW, 0), 0);
+                }
+            } else if (wParam == VK_F1) {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_HELP, 0), 0);
+            } else if ((wParam == 'Z' || wParam == 'z') && (GetKeyState(VK_CONTROL) & 0x8000)) {
+                DoUndo(hwnd);
             }
             return 0;
 
@@ -1359,7 +1380,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             int x = (short)LOWORD(lParam);
             int y = (short)HIWORD(lParam);
             int padding = 40;
-            int cellSize = 30;
+            int cellSize = GetCellSize();
             
             if (x >= padding - cellSize/2 && x <= padding + (boardSize-1)*cellSize + cellSize/2 &&
                 y >= padding - cellSize/2 && y <= padding + (boardSize-1)*cellSize + cellSize/2) {
@@ -1385,7 +1406,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             int x = (short)LOWORD(lParam);
             int y = (short)HIWORD(lParam);
             int padding = 40;
-            int cellSize = 30;
+            int cellSize = GetCellSize();
             
             int col = (x - padding + cellSize / 2) / cellSize;
             int row = (y - padding + cellSize / 2) / cellSize;
@@ -1441,7 +1462,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
 
             int padding = 40;
-            int cellSize = 30;
+            int cellSize = GetCellSize();
             int boardW = (boardSize - 1) * cellSize;
             
             ComputeKoOverlay();
@@ -1689,10 +1710,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 HPEN grpPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 200));
                 HPEN oldP = SelectObject(memDC, grpPen);
                 HBRUSH oldB = SelectObject(memDC, hollowB);
+                int grpRad = GetStoneRadius() + 1;
                 for (int i = 0; i < grpSize; i++) {
                     int cx = padding + grpStones[i].x * cellSize;
                     int cy = padding + grpStones[i].y * cellSize;
-                    Ellipse(memDC, cx - 14, cy - 14, cx + 14, cy + 14);
+                    Ellipse(memDC, cx - grpRad, cy - grpRad, cx + grpRad, cy + grpRad);
                 }
                 SelectObject(memDC, oldP);
                 SelectObject(memDC, oldB);
@@ -1730,7 +1752,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (board[r][c] != 0) {
                         int cx = padding + c * cellSize;
                         int cy = padding + r * cellSize;
-                        int radius = (r == animY && c == animX) ? animRadius : 13;
+                        int radius = (r == animY && c == animX) ? animRadius : GetStoneRadius();
                         
                         // Dynamic 3D drop shadow based on board position
                         int shX = (int)((c - (boardSize-1)/2.0f) * 0.4f) + 2;
@@ -1981,10 +2003,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (hintX != -1 && hintY != -1 && board[hintY][hintX] == 0) {
                 int cx = padding + hintX * cellSize;
                 int cy = padding + hintY * cellSize;
+                int hRad = GetStoneRadius() + 1;
                 HPEN hintPen = CreatePen(PS_SOLID, 3, RGB(255, 215, 0));
                 HPEN oldPen = SelectObject(memDC, hintPen);
                 HBRUSH oldBrush = SelectObject(memDC, hollowB);
-                Ellipse(memDC, cx - 14, cy - 14, cx + 14, cy + 14);
+                Ellipse(memDC, cx - hRad, cy - hRad, cx + hRad, cy + hRad);
                 SelectObject(memDC, oldBrush);
                 SelectObject(memDC, oldPen);
                 DeleteObject(hintPen);
@@ -1993,10 +2016,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (hoverX != -1 && hoverY != -1 && board[hoverY][hoverX] == 0) {
                 int cx = padding + hoverX * cellSize;
                 int cy = padding + hoverY * cellSize;
+                int gRad = GetStoneRadius();
                 HPEN ghostPen = CreatePen(PS_SOLID, 2, currentPlayer == 1 ? RGB(100, 100, 100) : RGB(200, 200, 200));
                 HPEN oldPen = SelectObject(memDC, ghostPen);
                 HBRUSH oldBrush = SelectObject(memDC, hollowB);
-                Ellipse(memDC, cx - 13, cy - 13, cx + 13, cy + 13);
+                Ellipse(memDC, cx - gRad, cy - gRad, cx + gRad, cy + gRad);
                 SelectObject(memDC, oldBrush);
                 SelectObject(memDC, oldPen);
                 DeleteObject(ghostPen);
@@ -2031,6 +2055,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 sprintf(hintStr, "AI Hint: Optimal Move at (%d, %d) with score %d", hintX, hintY, hintScore);
                 SetTextColor(memDC, RGB(255, 215, 0));
                 TextOut(memDC, 20, 595, hintStr, strlen(hintStr));
+            } else {
+                const char *hotkeyHelp = "Shortcuts: [F1] Help  [H] Hint  [S] Analyzer  [T] Territory  [U] Undo  [P] Pass  [N] New";
+                SetTextColor(memDC, RGB(180, 190, 200));
+                TextOut(memDC, 20, 595, hotkeyHelp, strlen(hotkeyHelp));
             }
 
             // Atmospheric falling cherry blossom petals
@@ -2167,18 +2195,25 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 MessageBox(hwnd, smsg, "Statistics", MB_OK);
             } else if (LOWORD(wParam) == ID_BTN_HELP) {
                 MessageBox(hwnd, 
-                    "Goal: Control more territory (empty points) than your opponent.\n\n"
-                    "- Players (Black & White) take turns placing stones on intersections.\n"
-                    "- Stones must have at least one empty adjacent point (liberty).\n"
-                    "- If surrounded, stones are captured and removed.\n"
-                    "- Superko Rule: Cannot recreate ANY previous board position.\n"
-                    "- Suicide Rule: Cannot place a stone with no liberties unless it captures.\n\n"
-                    "Active Skills & Assistance:\n"
-                    "- Press 'U' (or Undo): Revert last turn move pair.\n"
-                    "- Press 'H' (or Hint): Calculate & highlight optimal AI candidate move.\n"
-                    "- Press 'T' (or Est): Toggle Territory map overlay & group danger warning.\n"
-                    "- Press 'S' (or Analyzer): Toggle Group Liberty Analyzer overlay & numbered liberties.\n"
-                    "- Click 'Tsumego': Practice life-and-death Tsumego puzzles.",
+                    "Goal: Control more territory (empty intersections) than your opponent.\n\n"
+                    "Rules & Mechanics:\n"
+                    "- Alternating turns: Black plays first, then White.\n"
+                    "- Liberties: Orthogonal empty adjacent points keep stones alive.\n"
+                    "- Capture: Surrounding all liberties of an opposing group captures it.\n"
+                    "- Superko Rule: Recreating ANY previous board position is strictly prohibited.\n"
+                    "- Suicide Rule: A stone cannot be played with 0 liberties unless capturing.\n"
+                    "- Scoring: Controlled Territory + Captured Stones + Komi (White bonus).\n\n"
+                    "Keyboard Shortcuts & Assistance:\n"
+                    "- F1 : Open this Help & Rules Guide\n"
+                    "- H (Hint) : Calculate & highlight optimal AI candidate move\n"
+                    "- S (Analyzer) : Toggle Group Liberty Analyzer overlay with numbered liberties\n"
+                    "- T (Territory) : Toggle territory ownership map & Atari warnings\n"
+                    "- U / Ctrl+Z (Undo) : Revert previous turn move pair\n"
+                    "- P (Pass) : Pass current turn (2 consecutive passes trigger scoring)\n"
+                    "- N (New) : Start a fresh new match\n\n"
+                    "Game Modes:\n"
+                    "- Campaign: 20 progressive historical Baduk stages\n"
+                    "- Tsumego: Life-and-death tactical puzzle solver",
                     "How to Play KGo", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == ID_CB_SIZE && HIWORD(wParam) == CBN_SELCHANGE) {
                 int sel = SendMessage(hCbSize, CB_GETCURSEL, 0, 0);

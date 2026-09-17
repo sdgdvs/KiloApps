@@ -51,3 +51,7 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - Status: PASS ✅ (UI/UX polish, HiDPI scaling, onboarding).
   - Highlights: Expanded window bounds (800x920) in App.jsx eliminating clipping, removed overlapping top HTML button, integrated centered header Help badge (`[F1 / ?]`), status hint prompt parity, added first-run tutorial onboarding (`kchess_tutorialSeen`), dynamic canvas DPR resize handling, fixed native world-transform font double-scaling, synced mode/status click handlers. Native (53 KB) and Web (116 KB) clean.
 
+- **2026-09-17T10:44:00Z — kilo-qa: KSolitaire**
+  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial integrity, overlays).
+  - Highlights: Full state F5 quicksave and F9 quickload persistence in web and native, synchronized with autosave, first-run tutorial onboarding (`ksolitaire_tutorialSeen` / `ksolitaire_tutorial.dat`) protecting restored saves, win overlay reload button and Esc/Enter/Space controls, auto-save beforeunload, storage quota resilience. Native (49.6 KB) and Web (120 KB) clean builds.
+
