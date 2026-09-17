@@ -33,7 +33,11 @@ NEXT_WORK_FILE = REPO_ROOT / "next_work.md"
 LOG_DIR = REPO_ROOT / "logs"
 LOG_FILE = LOG_DIR / "orchestrator.log"
 
-DEFAULT_AGY_PATH = Path(r"C:\Users\mrbos\AppData\Local\agy\bin\agy.exe")
+DEFAULT_AGY_PATH = (
+    Path(os.environ.get("LOCALAPPDATA", "")) / "agy" / "bin" / "agy.exe"
+    if os.environ.get("LOCALAPPDATA")
+    else Path(r"C:\Users\mrbos\AppData\Local\agy\bin\agy.exe")
+)
 
 
 def log(msg: str):

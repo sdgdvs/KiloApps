@@ -5,7 +5,7 @@ param(
 )
 
 $TaskName = "KiloApps-Fleet-Orchestrator"
-$ScriptPath = "d:\KiloApps\scripts\run_orchestrator.bat"
+$ScriptPath = Join-Path $PSScriptRoot "run_orchestrator.bat"
 $StartTime = (Get-Date).AddMinutes($OffsetMinutes).ToString("HH:mm")
 
 Write-Host "Configuring Windows Scheduled Task: $TaskName (Start Time: $StartTime, Interval: 2h)..." -ForegroundColor Cyan
