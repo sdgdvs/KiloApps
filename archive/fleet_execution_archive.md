@@ -47,3 +47,7 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - Status: PASS ✅ (9 issues fixed inline).
   - Highlights: Tutorial onboarding (`ksynth_tutorialSeen`), F5/F9 quicksave/quickload, full workstation state persistence (Dual Osc, Filter, ADSR, Arp, Sequencer), mouse glissando on virtual keys, arrow/Enter/hotkey navigation, safe WAV audio rendering, HUD toasts. Builds clean.
 
+- **2026-09-17T09:51:00Z — kilo-usability: KChess**
+  - Status: PASS ✅ (UI/UX polish, HiDPI scaling, onboarding).
+  - Highlights: Expanded window bounds (800x920) in App.jsx eliminating clipping, removed overlapping top HTML button, integrated centered header Help badge (`[F1 / ?]`), status hint prompt parity, added first-run tutorial onboarding (`kchess_tutorialSeen`), dynamic canvas DPR resize handling, fixed native world-transform font double-scaling, synced mode/status click handlers. Native (53 KB) and Web (116 KB) clean.
+

@@ -629,13 +629,17 @@
           <h3 style="color: var(--accent-blue); font-size: 13px; margin-bottom: 6px;">⌨️ Keyboard Shortcuts</h3>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; font-family: Consolas, monospace;">
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">1 - 5</kbd> Switch Tabs 1 to 5</div>
-            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">← / →</kbd> Cycle Previous/Next Tab</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">← / →</kbd> Cycle Tabs (Global)</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">F1 / H</kbd> Open this Help Dialog</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">Esc</kbd> Dismiss Dialogs / Clear Search</div>
-            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">R / F5</kbd> Run Benchmarks / Refresh</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">F5</kbd> Quicksave Snapshot</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">F9</kbd> Quickload Snapshot</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">R</kbd> Refresh Live Telemetry</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">Space</kbd> Execute Tab Action / Bench</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">C / M / D</kbd> CPU / RAM / Disk Bench</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">S</kbd> Cycle Service Filter Mode</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">L</kbd> Clear Event Logs (Logs Tab)</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">I</kbd> Import JSON Snapshot</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">E / J / T</kbd> Export TXT / JSON / HTML</div>
           </div>
         </div>
@@ -646,9 +650,10 @@
         <h4 style="color: var(--accent-purple); font-size: 13px; margin: 10px 0 4px 0;">⚙️ 3. Services & Telemetry</h4>
         <p>Monitors real-time CPU load and JS Heap memory with live sparklines. Manage, start, stop, restart, inspect, or register custom system daemons.</p>
         <h4 style="color: var(--accent-blue); font-size: 13px; margin: 10px 0 4px 0;">📋 4. Event Logs & 💾 5. Report Export</h4>
-        <p>Track system lifecycle logs and export detailed reports in TXT, JSON, HTML, or copy directly to clipboard.</p>
+        <p>Track system lifecycle logs, manage persistent Quicksave snapshots (F5/F9), import JSON audits (I), and export detailed reports in TXT, JSON, or HTML.</p>
       </div>
-      <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+        <button class="btn btn-outline btn-sm" onclick="resetTutorialFlag()" title="Re-enable first-run onboarding banner">↺ Reset Onboarding Flag</button>
         <button class="btn btn-outline" onclick="closeHelpModal()">Close (Esc)</button>
       </div>
     </div>
@@ -740,8 +745,11 @@
   <!-- Quick Actions Toolbar -->
   <div class="quick-actions-bar">
     <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-right: 4px;">⚡ Quick Actions:</span>
-    <button class="quick-chip" onclick="switchTab('benchmarks'); runAllBenchmarks();" title="Run full benchmark suite (Hotkey: 2, then R)">▶ Run Benchmarks <kbd>[2/R]</kbd></button>
-    <button class="quick-chip" onclick="refreshActiveView()" title="Refresh live telemetry and hardware metrics (Hotkey: R or F5)">🔄 Refresh <kbd>[R]</kbd></button>
+    <button class="quick-chip" onclick="switchTab('benchmarks'); runAllBenchmarks();" title="Run full benchmark suite (Hotkey: 2, then Space/R)">▶ Run Benchmarks <kbd>[2/R]</kbd></button>
+    <button class="quick-chip" onclick="refreshActiveView()" title="Refresh live telemetry and hardware metrics (Hotkey: R)">🔄 Refresh <kbd>[R]</kbd></button>
+    <button class="quick-chip" onclick="quicksaveSnapshot()" title="Quicksave diagnostics snapshot to local storage (Hotkey: F5)">💾 Quicksave <kbd>[F5]</kbd></button>
+    <button class="quick-chip" onclick="quickloadSnapshot()" title="Quickload diagnostics snapshot from local storage (Hotkey: F9)">📂 Quickload <kbd>[F9]</kbd></button>
+    <button class="quick-chip" onclick="triggerImportJson()" title="Import JSON diagnostics snapshot or report (Hotkey: I)">📥 Import <kbd>[I]</kbd></button>
     <button class="quick-chip" onclick="switchTab('services')" title="Manage system services and background daemons (Hotkey: 3)">⚙️ Services <kbd>[3]</kbd></button>
     <button class="quick-chip" onclick="quickExportTxt()" title="Export text diagnostics report (Hotkey: E)">📄 Export TXT <kbd>[E]</kbd></button>
     <button class="quick-chip" onclick="quickCopyReport()" title="Copy diagnostics report to clipboard">📋 Copy Report</button>
@@ -944,6 +952,7 @@
             <option value="ALL">All Categories</option>
             <option value="Core System">Core System Services</option>
             <option value="Drivers">Hardware Drivers</option>
+            <option value="User Services">User Services</option>
           </select>
           <select id="svc-filter-status" class="select-input" onchange="renderServices()">
             <option value="ALL">All Statuses</option>
@@ -957,6 +966,7 @@
           <button class="quick-chip" onclick="setServiceFilter('ALL', 'ALL')">All Services</button>
           <button class="quick-chip" onclick="setServiceFilter('Core System', 'ALL')">Core System</button>
           <button class="quick-chip" onclick="setServiceFilter('Drivers', 'ALL')">Drivers</button>
+          <button class="quick-chip" onclick="setServiceFilter('User Services', 'ALL')">User Services</button>
           <button class="quick-chip" onclick="setServiceFilter('ALL', 'RUNNING')">⚡ Running Only</button>
           <button class="quick-chip" onclick="setServiceFilter('ALL', 'STOPPED')">⏹ Stopped Only</button>
         </div>
@@ -1011,12 +1021,18 @@
     <section id="tab-export" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-export">
       <div class="card">
         <div class="card-header">
-          <h2>💾 Detailed System Information Report</h2>
-          <button class="btn btn-outline" onclick="generateReport()">🔄 Refresh Audit Report</button>
+          <h2>💾 Detailed System Information Report & State Management</h2>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn btn-outline btn-sm" onclick="quicksaveSnapshot()" title="Quicksave diagnostics snapshot [F5]">💾 Quicksave [F5]</button>
+            <button class="btn btn-outline btn-sm" onclick="quickloadSnapshot()" title="Quickload diagnostics snapshot [F9]">📂 Quickload [F9]</button>
+            <button class="btn btn-accent btn-sm" onclick="triggerImportJson()" title="Import diagnostics snapshot JSON file [I]">📥 Import JSON [I]</button>
+            <button class="btn btn-outline btn-sm" onclick="generateReport()" title="Refresh audit report text">🔄 Refresh Audit</button>
+          </div>
         </div>
         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
           Comprehensive snapshot of hardware specifications, telemetry, system services, and diagnostic scores.
         </p>
+        <input type="file" id="import-json-file" accept=".json,application/json" style="display: none;" onchange="handleImportJson(event)">
         <textarea id="report-preview" class="report-preview" readonly aria-label="System Report Preview"></textarea>
         <div class="export-actions">
           <button class="btn btn-outline" onclick="copyReportToClipboard()">📋 Copy to Clipboard</button>
@@ -1235,9 +1251,15 @@
   }
   function closeHelpModal() {
     document.getElementById('help-modal').style.display = 'none';
+    safeSetStorage('ksys_tutorialSeen', '1');
+  }
+  function resetTutorialFlag() {
+    safeSetStorage('ksys_tutorialSeen', null);
+    showToast('Onboarding flag reset. Welcome guide will display on next launch.', 'info');
   }
   function handleModalBackdropClick(e, modalId) {
     if (e.target.id === modalId) {
+      if (modalId === 'help-modal') safeSetStorage('ksys_tutorialSeen', '1');
       document.getElementById(modalId).style.display = 'none';
     }
   }
@@ -1248,6 +1270,172 @@
   }
   function closeAddServiceModal() {
     document.getElementById('add-service-modal').style.display = 'none';
+  }
+
+  function getActiveTabId() {
+    const activeContent = document.querySelector('.tab-content.active');
+    return activeContent ? activeContent.id.replace('tab-', '') : 'inspector';
+  }
+
+  // --- Quicksave (F5) & Quickload (F9) State Persistence ---
+  function quicksaveSnapshot() {
+    try {
+      const activeTabId = getActiveTabId();
+      const snapshot = {
+        version: 1,
+        savedAt: new Date().toISOString(),
+        benchResults: { ...benchResults },
+        customServices: systemServices.filter(s => s.id.startsWith('custom_')),
+        serviceStates: systemServices.map(s => ({ id: s.id, status: s.status, mem: s.mem })),
+        eventLogs: eventLogs.slice(0, 50),
+        activeTab: activeTabId
+      };
+      safeSetStorage('ksys_quicksave_v1', snapshot);
+      logEvent('INFO', `[QUICKSAVE] Diagnostics snapshot saved (Tab: ${activeTabId}, ${snapshot.customServices.length} custom daemons)`);
+      showToast('Diagnostics snapshot quicksaved! [F5]', 'success');
+    } catch(err) {
+      logEvent('ERROR', `Quicksave failed: ${err.message}`);
+      showToast('Failed to quicksave snapshot', 'error');
+    }
+  }
+
+  function quickloadSnapshot() {
+    try {
+      const snapshot = safeGetStorage('ksys_quicksave_v1', null);
+      if (!snapshot) {
+        showToast('No quicksave snapshot found. Press F5 to save one.', 'warn');
+        return;
+      }
+      applySnapshotData(snapshot);
+      logEvent('INFO', `[QUICKLOAD] Diagnostics snapshot restored from ${new Date(snapshot.savedAt).toLocaleTimeString()}`);
+      showToast('Diagnostics snapshot quickloaded! [F9]', 'success');
+    } catch(err) {
+      logEvent('ERROR', `Quickload failed: ${err.message}`);
+      showToast('Failed to quickload snapshot', 'error');
+    }
+  }
+
+  function applySnapshotData(snapshot) {
+    if (!snapshot) return;
+
+    if (snapshot.benchResults) {
+      benchResults = { ...snapshot.benchResults };
+      if (benchResults.cpuScore) document.getElementById('cpu-score').textContent = benchResults.cpuScore;
+      if (benchResults.ramScore) document.getElementById('ram-score').textContent = benchResults.ramScore.split(' ')[0] + ' MB/s';
+      if (benchResults.diskScore) document.getElementById('disk-score').textContent = benchResults.diskScore.split(' ')[0] + ' MB/s';
+      const cpuProg = document.getElementById('cpu-bench-progress');
+      if (cpuProg && benchResults.cpuScore) cpuProg.style.width = '100%';
+      const ramProg = document.getElementById('ram-bench-progress');
+      if (ramProg && benchResults.ramScore) ramProg.style.width = '100%';
+      const diskProg = document.getElementById('disk-bench-progress');
+      if (diskProg && benchResults.diskScore) diskProg.style.width = '100%';
+    }
+
+    if (Array.isArray(snapshot.customServices)) {
+      snapshot.customServices.forEach(cs => {
+        if (!systemServices.some(s => s.id === cs.id)) {
+          systemServices.push(cs);
+        }
+      });
+      saveCustomServices();
+    }
+
+    if (Array.isArray(snapshot.serviceStates)) {
+      snapshot.serviceStates.forEach(st => {
+        const s = systemServices.find(item => item.id === st.id);
+        if (s) {
+          s.status = st.status;
+          if (st.mem) s.mem = st.mem;
+        }
+      });
+    }
+
+    if (Array.isArray(snapshot.eventLogs) && snapshot.eventLogs.length > 0) {
+      eventLogs.length = 0;
+      snapshot.eventLogs.forEach(l => eventLogs.push(l));
+    }
+
+    renderServices();
+    renderLogs();
+    generateReport();
+    if (snapshot.activeTab) {
+      switchTab(snapshot.activeTab);
+    }
+  }
+
+  // --- JSON Diagnostics Snapshot Import ---
+  function triggerImportJson() {
+    const fileInput = document.getElementById('import-json-file');
+    if (fileInput) {
+      fileInput.value = '';
+      fileInput.click();
+    }
+  }
+
+  function handleImportJson(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (!data || typeof data !== 'object') {
+          throw new Error('Invalid JSON format');
+        }
+
+        if (data.benchmarks || data.benchResults) {
+          const b = data.benchmarks || data.benchResults;
+          if (b.cpuScore) benchResults.cpuScore = b.cpuScore;
+          if (b.ramScore) benchResults.ramScore = b.ramScore;
+          if (b.diskScore) benchResults.diskScore = b.diskScore;
+          if (benchResults.cpuScore) document.getElementById('cpu-score').textContent = benchResults.cpuScore;
+          if (benchResults.ramScore) document.getElementById('ram-score').textContent = benchResults.ramScore;
+          if (benchResults.diskScore) document.getElementById('disk-score').textContent = benchResults.diskScore;
+          const cpuProg = document.getElementById('cpu-bench-progress');
+          if (cpuProg && benchResults.cpuScore) cpuProg.style.width = '100%';
+          const ramProg = document.getElementById('ram-bench-progress');
+          if (ramProg && benchResults.ramScore) ramProg.style.width = '100%';
+          const diskProg = document.getElementById('disk-bench-progress');
+          if (diskProg && benchResults.diskScore) diskProg.style.width = '100%';
+        }
+
+        if (Array.isArray(data.customServices)) {
+          data.customServices.forEach(cs => {
+            if (!systemServices.some(s => s.id === cs.id)) {
+              systemServices.push(cs);
+            }
+          });
+          saveCustomServices();
+        }
+
+        if (Array.isArray(data.serviceStates)) {
+          data.serviceStates.forEach(st => {
+            const s = systemServices.find(item => item.id === st.id);
+            if (s) {
+              s.status = st.status;
+              if (st.mem) s.mem = st.mem;
+            }
+          });
+        }
+
+        if (Array.isArray(data.eventLogs)) {
+          data.eventLogs.forEach(l => {
+            if (l && l.timestamp && l.message) eventLogs.push(l);
+          });
+        }
+
+        renderServices();
+        renderLogs();
+        generateReport();
+        logEvent('INFO', `Imported diagnostics snapshot file: ${file.name}`);
+        showToast(`Imported ${file.name} successfully!`, 'success');
+      } catch(err) {
+        logEvent('ERROR', `Failed to parse import file ${file.name}: ${err.message}`);
+        showToast(`Import failed: ${err.message}`, 'error');
+      }
+    };
+    reader.readAsText(file);
   }
 
   window.addEventListener('keydown', (e) => {
@@ -1274,8 +1462,34 @@
       return;
     }
 
-    // Block background shortcuts while modals are active
-    if (isAnyModalOpen()) return;
+    // Modal active handling
+    if (isAnyModalOpen()) {
+      if (e.key === 'Enter') {
+        const addModal = document.getElementById('add-service-modal');
+        if (addModal && addModal.style.display !== 'none') {
+          submitCustomService();
+        } else {
+          closeAllModals();
+        }
+      }
+      return;
+    }
+
+    // Tab cycle navigation via ArrowLeft and ArrowRight (Global)
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      const currentIdx = TAB_ORDER.indexOf(getActiveTabId());
+      const nextIdx = (currentIdx + 1) % TAB_ORDER.length;
+      switchTab(TAB_ORDER[nextIdx]);
+      return;
+    }
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const currentIdx = TAB_ORDER.indexOf(getActiveTabId());
+      const prevIdx = (currentIdx - 1 + TAB_ORDER.length) % TAB_ORDER.length;
+      switchTab(TAB_ORDER[prevIdx]);
+      return;
+    }
 
     // Guard all shortcuts against browser modifier keys (Ctrl/Alt/Meta)
     if (!e.ctrlKey && !e.altKey && !e.metaKey) {
@@ -1289,37 +1503,73 @@
         showHelp();
         return;
       }
-      if (e.key.toLowerCase() === 'r' || e.key === 'F5') {
-        if (e.key === 'F5') e.preventDefault();
+      if (e.key === 'F5') {
+        e.preventDefault();
+        quicksaveSnapshot();
+        return;
+      }
+      if (e.key === 'F9') {
+        e.preventDefault();
+        quickloadSnapshot();
+        return;
+      }
+      if (e.key.toLowerCase() === 'r') {
         refreshActiveView();
         return;
       }
+      if (e.key === ' ') {
+        e.preventDefault();
+        const activeTab = getActiveTabId();
+        if (activeTab === 'benchmarks') {
+          runAllBenchmarks();
+        } else if (activeTab === 'services') {
+          refreshServices();
+        } else if (activeTab === 'export') {
+          generateReport();
+          showToast('Audit report refreshed.', 'info');
+        } else if (activeTab === 'logs') {
+          renderLogs();
+        } else {
+          inspectHardware();
+          showToast('Hardware telemetry refreshed.', 'info');
+        }
+        return;
+      }
+      if (e.key === 'Enter') {
+        const activeTab = getActiveTabId();
+        if (activeTab === 'benchmarks') {
+          runAllBenchmarks();
+        } else if (activeTab === 'export') {
+          generateReport();
+        }
+        return;
+      }
       if (e.key.toLowerCase() === 'c') {
-        const activeTab = document.querySelector('.tab-content.active');
-        if (activeTab && activeTab.id === 'tab-benchmarks') {
+        const activeTab = getActiveTabId();
+        if (activeTab === 'benchmarks') {
           runCpuBenchmark();
-        } else if (activeTab && activeTab.id === 'tab-logs') {
+        } else if (activeTab === 'logs') {
           clearLogs();
         }
         return;
       }
       if (e.key.toLowerCase() === 'm') {
-        const activeTab = document.querySelector('.tab-content.active');
-        if (activeTab && activeTab.id === 'tab-benchmarks') {
+        const activeTab = getActiveTabId();
+        if (activeTab === 'benchmarks') {
           runRamBenchmark();
         }
         return;
       }
       if (e.key.toLowerCase() === 'd') {
-        const activeTab = document.querySelector('.tab-content.active');
-        if (activeTab && activeTab.id === 'tab-benchmarks') {
+        const activeTab = getActiveTabId();
+        if (activeTab === 'benchmarks') {
           runDiskBenchmark();
         }
         return;
       }
       if (e.key.toLowerCase() === 's') {
-        const activeTab = document.querySelector('.tab-content.active');
-        if (activeTab && activeTab.id === 'tab-services') {
+        const activeTab = getActiveTabId();
+        if (activeTab === 'services') {
           cycleServiceFilter();
         } else {
           switchTab('services');
@@ -1327,12 +1577,16 @@
         return;
       }
       if (e.key.toLowerCase() === 'l') {
-        const activeTab = document.querySelector('.tab-content.active');
-        if (activeTab && activeTab.id === 'tab-logs') {
+        const activeTab = getActiveTabId();
+        if (activeTab === 'logs') {
           clearLogs();
         } else {
           switchTab('logs');
         }
+        return;
+      }
+      if (e.key.toLowerCase() === 'i') {
+        triggerImportJson();
         return;
       }
       if (e.key.toLowerCase() === 'e') {
@@ -1516,8 +1770,12 @@
     }
 
     if (navigator.storage && navigator.storage.persisted) {
-      const isPersisted = await navigator.storage.persisted();
-      document.getElementById('disk-persisted').textContent = isPersisted ? "Yes (Persistent)" : "No (Temporary)";
+      try {
+        const isPersisted = await navigator.storage.persisted();
+        document.getElementById('disk-persisted').textContent = isPersisted ? "Yes (Persistent)" : "No (Temporary)";
+      } catch(e) {
+        document.getElementById('disk-persisted').textContent = "Unknown";
+      }
     } else {
       document.getElementById('disk-persisted').textContent = "Unknown";
     }
@@ -1693,22 +1951,43 @@
     const testData = new Uint8Array(chunkSize);
     for (let i = 0; i < chunkSize; i++) testData[i] = i % 256;
 
-    // Write Test using IndexedDB storage sync
-    progress.style.width = '50%';
-    const startWrite = performance.now();
-    const db = await openTestDb();
-    await writeToDb(db, testData);
-    const writeTimeSec = (performance.now() - startWrite) / 1000;
-    const writeMBs = Math.round((chunkSize / (1024 * 1024)) / writeTimeSec);
+    let writeMBs = 0;
+    let readMBs = 0;
 
-    // Read Test
-    progress.style.width = '80%';
-    const startRead = performance.now();
-    const readData = await readFromDb(db);
-    const readTimeSec = (performance.now() - startRead) / 1000;
-    const readMBs = Math.round((chunkSize / (1024 * 1024)) / readTimeSec);
+    try {
+      progress.style.width = '40%';
+      const startWrite = performance.now();
+      const db = await openTestDb();
+      if (!db) throw new Error('IndexedDB unavailable or blocked');
 
-    await clearTestDb(db);
+      await writeToDb(db, testData);
+      const writeTimeSec = Math.max(0.001, (performance.now() - startWrite) / 1000);
+      writeMBs = Math.round((chunkSize / (1024 * 1024)) / writeTimeSec);
+
+      // Read Test
+      progress.style.width = '80%';
+      const startRead = performance.now();
+      const readData = await readFromDb(db);
+      const readTimeSec = Math.max(0.001, (performance.now() - startRead) / 1000);
+      readMBs = Math.round((chunkSize / (1024 * 1024)) / readTimeSec);
+
+      await clearTestDb(db);
+    } catch(err) {
+      // Fallback: Blob buffer streaming I/O test
+      const startWrite = performance.now();
+      const blob = new Blob([testData], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const writeTimeSec = Math.max(0.001, (performance.now() - startWrite) / 1000);
+      writeMBs = Math.round((chunkSize / (1024 * 1024)) / writeTimeSec);
+
+      progress.style.width = '80%';
+      const startRead = performance.now();
+      const resp = await fetch(url);
+      const buf = await resp.arrayBuffer();
+      URL.revokeObjectURL(url);
+      const readTimeSec = Math.max(0.001, (performance.now() - startRead) / 1000);
+      readMBs = Math.round((chunkSize / (1024 * 1024)) / readTimeSec);
+    }
 
     progress.style.width = '100%';
     const avgScore = Math.round((writeMBs + readMBs) / 2);
@@ -1724,33 +2003,61 @@
 
   function openTestDb() {
     return new Promise(resolve => {
-      const req = indexedDB.open('KSysBenchDb', 1);
-      req.onupgradeneeded = () => req.result.createObjectStore('chunks');
-      req.onsuccess = () => resolve(req.result);
+      try {
+        if (!window.indexedDB) return resolve(null);
+        const req = indexedDB.open('KSysBenchDb', 1);
+        req.onupgradeneeded = () => {
+          try { req.result.createObjectStore('chunks'); } catch(e) {}
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => resolve(null);
+        req.onblocked = () => resolve(null);
+      } catch(e) {
+        resolve(null);
+      }
     });
   }
 
   function writeToDb(db, data) {
     return new Promise(resolve => {
-      const tx = db.transaction('chunks', 'readwrite');
-      tx.objectStore('chunks').put(data, 'bench_chunk');
-      tx.oncomplete = () => resolve();
+      try {
+        if (!db) return resolve();
+        const tx = db.transaction('chunks', 'readwrite');
+        tx.objectStore('chunks').put(data, 'bench_chunk');
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => resolve();
+        tx.onabort = () => resolve();
+      } catch(e) {
+        resolve();
+      }
     });
   }
 
   function readFromDb(db) {
     return new Promise(resolve => {
-      const tx = db.transaction('chunks', 'readonly');
-      const req = tx.objectStore('chunks').get('bench_chunk');
-      req.onsuccess = () => resolve(req.result);
+      try {
+        if (!db) return resolve(null);
+        const tx = db.transaction('chunks', 'readonly');
+        const req = tx.objectStore('chunks').get('bench_chunk');
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => resolve(null);
+      } catch(e) {
+        resolve(null);
+      }
     });
   }
 
   function clearTestDb(db) {
     return new Promise(resolve => {
-      const tx = db.transaction('chunks', 'readwrite');
-      tx.objectStore('chunks').clear();
-      tx.oncomplete = () => resolve();
+      try {
+        if (!db) return resolve();
+        const tx = db.transaction('chunks', 'readwrite');
+        tx.objectStore('chunks').clear();
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => resolve();
+      } catch(e) {
+        resolve();
+      }
     });
   }
 
@@ -1919,6 +2226,7 @@
       const s = systemServices[idx];
       systemServices.splice(idx, 1);
       saveCustomServices();
+      closeServiceModal();
       logEvent('INFO', `Removed custom service daemon: ${s.name}`);
       showToast(`Removed daemon: ${s.name}`, 'info');
       renderServices();
@@ -2126,6 +2434,8 @@
           runningServices: systemServices.filter(s => s.status === 'RUNNING').length
         },
         benchmarks: benchResults,
+        customServices: systemServices.filter(s => s.id.startsWith('custom_')),
+        serviceStates: systemServices.map(s => ({ id: s.id, status: s.status, mem: s.mem })),
         eventLogs: eventLogs
       };
       downloadBlob(JSON.stringify(jsonObj, null, 2), 'ksys_system_report.json', 'application/json');
@@ -2195,9 +2505,17 @@
     setInterval(inspectHardware, 5000);
     setInterval(updateTelemetrySparklines, 1000);
 
-    setTimeout(() => {
-      showToast('Welcome to KSys! Press F1 or "H" for Help guide. Use keys 1-5 to navigate.', 'info', 5000);
-    }, 400);
+    const seenTutorial = safeGetStorage('ksys_tutorialSeen', false);
+    if (!seenTutorial) {
+      setTimeout(() => {
+        showHelp();
+        showToast('Welcome to KSys! Workstation guide opened. Press Esc to dismiss.', 'info', 6000);
+      }, 350);
+    } else {
+      setTimeout(() => {
+        showToast('Welcome to KSys! Press F1 or "H" for Help guide. Use keys 1-5 to navigate.', 'info', 4000);
+      }, 400);
+    }
   });
 </script>
 </body>
