@@ -1,0 +1,2566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KChrono - Core Paradox Engine</title>
+    <style>
+        :root {
+            --bg-void: #060913;
+            --bg-panel: #0c1222;
+            --bg-panel-dark: #080d19;
+            --bg-card: #131c33;
+            --bg-card-hover: #1b2847;
+            --border-dim: #1e2c4f;
+            --border-bright: #38bdf8;
+            --text-bright: #f8fafc;
+            --text-normal: #cbd5e1;
+            --text-dim: #64748b;
+
+            --epoch-alpha: #f59e0b; /* Past 1984: Precursor Amber */
+            --epoch-alpha-dim: #78350f;
+            --epoch-beta: #06b6d4;  /* Present 2042: Prime Cyan */
+            --epoch-beta-dim: #0e7490;
+            --epoch-gamma: #c084fc; /* Future 2188: Entropic Violet */
+            --epoch-gamma-dim: #6b21a8;
+
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-amber: #f59e0b;
+
+            --current-epoch-color: var(--epoch-beta);
+            --font-mono: 'Consolas', 'Courier New', monospace;
+        }
+
+        /* Themes */
+        body[data-theme="amber"] {
+            --current-epoch-color: var(--epoch-alpha);
+            --border-bright: #f59e0b;
+        }
+        body[data-theme="violet"] {
+            --current-epoch-color: var(--epoch-gamma);
+            --border-bright: #c084fc;
+        }
+        body[data-theme="green"] {
+            --current-epoch-color: #10b981;
+            --border-bright: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-void);
+            color: var(--text-normal);
+            font-family: var(--font-mono);
+            font-size: 13px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* CRT Raster Scanlines */
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%),
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            background-size: 100% 3px, 6px 100%;
+            z-index: 998;
+            opacity: 0.65;
+            transition: opacity 0.2s ease;
+        }
+        body.no-crt .scanlines {
+            display: none;
+        }
+
+        /* CRT Vignette */
+        .crt-vignette {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none;
+            background: radial-gradient(circle at center, transparent 60%, rgba(2, 4, 10, 0.5) 90%, rgba(0, 0, 0, 0.85) 100%);
+            box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8);
+            z-index: 997;
+        }
+
+        /* Top Header */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 14px;
+            background: var(--bg-panel-dark);
+            border-bottom: 1px solid var(--border-dim);
+            height: 44px;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+            color: var(--text-bright);
+        }
+
+        .header-logo {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            background: linear-gradient(135deg, var(--epoch-alpha), var(--epoch-beta), var(--epoch-gamma));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+            font-size: 14px;
+            font-weight: 900;
+            color: #000;
+        }
+
+        .header-epoch-badges {
+            display: flex;
+            gap: 6px;
+        }
+
+        .epoch-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            color: var(--text-dim);
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .epoch-btn:hover {
+            border-color: var(--border-bright);
+            color: var(--text-bright);
+        }
+
+        .epoch-btn.active[data-epoch="alpha"] {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: var(--epoch-alpha);
+            color: var(--epoch-alpha);
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+        }
+
+        .epoch-btn.active[data-epoch="beta"] {
+            background: rgba(6, 182, 212, 0.2);
+            border-color: var(--epoch-beta);
+            color: var(--epoch-beta);
+            box-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
+        }
+
+        .epoch-btn.active[data-epoch="gamma"] {
+            background: rgba(192, 132, 252, 0.2);
+            border-color: var(--epoch-gamma);
+            color: var(--epoch-gamma);
+            box-shadow: 0 0 12px rgba(192, 132, 252, 0.4);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-ctrl {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            color: var(--text-normal);
+            padding: 4px 9px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s ease;
+        }
+        .btn-ctrl:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-bright);
+            color: var(--text-bright);
+        }
+        .btn-ctrl:active {
+            transform: translateY(1px);
+        }
+        .btn-ctrl.recording {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: var(--accent-red);
+            color: #fca5a5;
+            animation: pulse-red 1s infinite;
+        }
+        .btn-ctrl.echo-active {
+            background: rgba(6, 182, 212, 0.25);
+            border-color: var(--epoch-beta);
+            color: #a5f3fc;
+            animation: pulse-cyan 1s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 4px rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 12px rgba(239, 68, 68, 0.8); }
+            100% { box-shadow: 0 0 4px rgba(239, 68, 68, 0.4); }
+        }
+        @keyframes pulse-cyan {
+            0% { box-shadow: 0 0 4px rgba(6, 182, 212, 0.4); }
+            50% { box-shadow: 0 0 12px rgba(6, 182, 212, 0.8); }
+            100% { box-shadow: 0 0 4px rgba(6, 182, 212, 0.4); }
+        }
+
+        /* Main Workspace Layout */
+        .workspace {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Left Side: Simulation Viewport */
+        .viewport-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #020409;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .viewport-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 10px;
+            background: rgba(12, 18, 34, 0.85);
+            border-bottom: 1px solid var(--border-dim);
+            font-size: 11px;
+            z-index: 5;
+        }
+
+        .canvas-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #030610;
+        }
+
+        canvas#simCanvas {
+            image-rendering: pixelated;
+            cursor: crosshair;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Right Side: Telemetry, Chronograph & Deck */
+        .sidebar {
+            width: 320px;
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border-dim);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 5;
+        }
+
+        .sidebar-section {
+            padding: 10px;
+            border-bottom: 1px solid var(--border-dim);
+        }
+
+        .sidebar-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Paradox Strain Gauge */
+        .strain-meter {
+            height: 12px;
+            background: #0a0f1d;
+            border: 1px solid var(--border-dim);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 4px;
+        }
+
+        .strain-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #10b981 0%, #f59e0b 60%, #ef4444 90%);
+            transition: width 0.3s ease;
+        }
+
+        .strain-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-dim);
+        }
+
+        /* Chronograph Mini Graph */
+        .chronograph-box {
+            height: 90px;
+            background: #070b16;
+            border: 1px solid var(--border-dim);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        canvas#chronographCanvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Causal Node Inspector */
+        .node-inspector {
+            font-size: 11px;
+            line-height: 1.4;
+            background: #090e1c;
+            border: 1px solid var(--border-dim);
+            border-radius: 4px;
+            padding: 8px;
+            min-height: 64px;
+        }
+
+        /* Inventory / Chrono-Deck */
+        .chrono-deck {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .deck-slot {
+            aspect-ratio: 1;
+            background: #070b16;
+            border: 1px dashed var(--border-dim);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            position: relative;
+        }
+        .deck-slot.filled {
+            border-style: solid;
+            border-color: var(--border-bright);
+            color: var(--text-bright);
+            background: var(--bg-card);
+        }
+        .deck-slot:hover {
+            border-color: var(--text-bright);
+        }
+        .deck-slot-icon {
+            font-size: 16px;
+            margin-bottom: 2px;
+        }
+
+        /* Terminal Event Log */
+        .event-log-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100px;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        .event-log {
+            flex: 1;
+            background: #050811;
+            border: 1px solid var(--border-dim);
+            border-radius: 4px;
+            padding: 8px;
+            font-size: 11px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 4px;
+        }
+
+        .log-entry {
+            line-height: 1.35;
+            word-break: break-word;
+        }
+        .log-entry.ripple {
+            color: #38bdf8;
+            border-left: 2px solid #38bdf8;
+            padding-left: 4px;
+        }
+        .log-entry.warn {
+            color: #f59e0b;
+            border-left: 2px solid #f59e0b;
+            padding-left: 4px;
+        }
+        .log-entry.danger {
+            color: #ef4444;
+            border-left: 2px solid #ef4444;
+            padding-left: 4px;
+            font-weight: bold;
+        }
+        .log-entry.success {
+            color: #10b981;
+            border-left: 2px solid #10b981;
+            padding-left: 4px;
+            font-weight: bold;
+        }
+
+        /* Bottom Status & Scrubber Bar */
+        footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 14px;
+            background: var(--bg-panel-dark);
+            border-top: 1px solid var(--border-dim);
+            height: 32px;
+            font-size: 11px;
+            color: var(--text-dim);
+            z-index: 10;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Overlays: Splash, Tutorial, Scenario Select, Help, Settings */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(3, 6, 15, 0.88);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 990;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            width: 580px;
+            max-width: 92vw;
+            max-height: 88vh;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-bright);
+            border-radius: 6px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.9), 0 0 15px rgba(6, 182, 212, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: modal-enter 0.2s ease-out;
+        }
+
+        @keyframes modal-enter {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-header {
+            padding: 12px 16px;
+            background: var(--bg-panel-dark);
+            border-bottom: 1px solid var(--border-dim);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            color: var(--text-bright);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-body {
+            padding: 16px;
+            overflow-y: auto;
+            line-height: 1.5;
+            color: var(--text-normal);
+        }
+
+        .modal-footer {
+            padding: 10px 16px;
+            background: var(--bg-panel-dark);
+            border-top: 1px solid var(--border-dim);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Splash Screen Special Styling */
+        .splash-card {
+            width: 500px;
+            text-align: center;
+        }
+        .splash-title {
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            background: linear-gradient(90deg, var(--epoch-alpha), var(--epoch-beta), var(--epoch-gamma));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+            text-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+        }
+        .splash-subtitle {
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+        .splash-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .splash-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            color: var(--text-bright);
+            padding: 11px 16px;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .splash-btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-bright);
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+            transform: translateX(3px);
+        }
+        .splash-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+            border-color: var(--border-dim) !important;
+            box-shadow: none !important;
+        }
+
+        /* Scenario Cards */
+        .scenario-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .scenario-item:hover {
+            border-color: var(--border-bright);
+            background: var(--bg-card-hover);
+        }
+        .scenario-item.active {
+            border-color: var(--accent-green);
+            background: rgba(16, 185, 129, 0.1);
+        }
+        .scenario-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: var(--text-bright);
+        }
+        .scenario-desc {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        /* Tutorial steps */
+        .tut-step {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 14px;
+            background: #090e1c;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 3px solid var(--border-bright);
+        }
+        .tut-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            color: var(--border-bright);
+        }
+
+        /* HUD Floating Notification */
+        .toast {
+            position: fixed;
+            bottom: 44px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(12, 18, 34, 0.95);
+            border: 1px solid var(--border-bright);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--text-bright);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            z-index: 1000;
+        }
+        .toast.visible {
+            opacity: 1;
+            transform: translate(-50%, -6px);
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+    <div class="crt-vignette"></div>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="header-title">
+            <div class="header-logo">⏳</div>
+            <span>KCHRONO</span>
+            <span style="font-size: 10px; color: var(--text-dim); font-weight: normal;">v1.0.0</span>
+        </div>
+
+        <!-- Epoch Jump Switcher -->
+        <div class="header-epoch-badges">
+            <button class="epoch-btn" data-epoch="alpha" id="btnEpochAlpha" title="Switch to Epoch Alpha (1984 - Past) [Key 1]">
+                <span>●</span> EPOCH ALPHA (1984)
+            </button>
+            <button class="epoch-btn active" data-epoch="beta" id="btnEpochBeta" title="Switch to Epoch Beta (2042 - Present) [Key 2]">
+                <span>●</span> EPOCH BETA (2042)
+            </button>
+            <button class="epoch-btn" data-epoch="gamma" id="btnEpochGamma" title="Switch to Epoch Gamma (2188 - Future) [Key 3]">
+                <span>●</span> EPOCH GAMMA (2188)
+            </button>
+        </div>
+
+        <!-- Action Controls -->
+        <div class="header-controls">
+            <button class="btn-ctrl" id="btnRecordEcho" title="Record movements for temporal ghost echo [R]">
+                <span>⏺</span> Record Echo
+            </button>
+            <button class="btn-ctrl" id="btnPlayEcho" title="Execute recorded ghost sequence alongside you [P]">
+                <span>▶</span> Execute Echo
+            </button>
+            <button class="btn-ctrl" id="btnRewind" title="Rewind one temporal turn [Z]">
+                <span>↺</span> Rewind Turn
+            </button>
+            <button class="btn-ctrl" id="btnQuicksave" title="Quicksave game state [F5]">
+                <span>💾</span> F5 Save
+            </button>
+            <button class="btn-ctrl" id="btnQuickload" title="Quickload game state [F9]">
+                <span>📂</span> F9 Load
+            </button>
+            <button class="btn-ctrl" id="btnScenarios" title="Select mission scenario">
+                <span>📋</span> Scenarios
+            </button>
+            <button class="btn-ctrl" id="btnHelp" title="Field Manual & Causal Codex [?]">
+                <span>❓</span> Help
+            </button>
+            <button class="btn-ctrl" id="btnSettings" title="Configure audio & CRT settings">
+                <span>⚙</span> Settings
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="workspace">
+        <!-- Center/Left Simulation Canvas Viewport -->
+        <div class="viewport-container">
+            <div class="viewport-bar">
+                <div id="epochDesc">EPOCH BETA (2042) — Chrono-Station Prime Reality</div>
+                <div style="display: flex; gap: 14px;">
+                    <span id="echoStatus">Echo Ghost: Idle</span>
+                    <span id="turnCounter">Turn: 0</span>
+                    <span id="posCoords">Pos: (2, 2)</span>
+                </div>
+            </div>
+            <div class="canvas-wrapper">
+                <canvas id="simCanvas" width="768" height="512"></canvas>
+            </div>
+        </div>
+
+        <!-- Right Side: Paradox Telemetry & Chronograph -->
+        <div class="sidebar">
+            <!-- Paradox Strain Section -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <span>Paradox Strain</span>
+                    <span id="strainPercent" style="color: var(--accent-green);">0%</span>
+                </div>
+                <div class="strain-meter">
+                    <div class="strain-fill" id="strainBar"></div>
+                </div>
+                <div class="strain-labels">
+                    <span>Stable (0%)</span>
+                    <span>Fluctuation (50%)</span>
+                    <span>BREACH (100%)</span>
+                </div>
+            </div>
+
+            <!-- Chronograph Branch Graph -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <span>Chronograph Causality Link</span>
+                    <span style="font-size: 9px; color: var(--epoch-beta);" id="causalLinkStatus">COHERENT</span>
+                </div>
+                <div class="chronograph-box">
+                    <canvas id="chronographCanvas" width="300" height="90"></canvas>
+                </div>
+            </div>
+
+            <!-- Causal Node Inspector -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <span>Causal Node Inspector</span>
+                </div>
+                <div class="node-inspector" id="nodeInspector">
+                    Hover or interact with a tile to inspect its past origins, future echoes, and causal linkages.
+                </div>
+            </div>
+
+            <!-- Chrono-Deck (Inventory) -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <span>Chrono-Deck (Artifacts)</span>
+                    <span id="deckCount" style="font-size: 9px;">0 / 4</span>
+                </div>
+                <div class="chrono-deck" id="chronoDeck">
+                    <div class="deck-slot" data-slot="0"><span class="deck-slot-icon">∅</span><span>Empty</span></div>
+                    <div class="deck-slot" data-slot="1"><span class="deck-slot-icon">∅</span><span>Empty</span></div>
+                    <div class="deck-slot" data-slot="2"><span class="deck-slot-icon">∅</span><span>Empty</span></div>
+                    <div class="deck-slot" data-slot="3"><span class="deck-slot-icon">∅</span><span>Empty</span></div>
+                </div>
+            </div>
+
+            <!-- Real-time Temporal Event Log -->
+            <div class="event-log-container">
+                <div class="sidebar-title">
+                    <span>Temporal Event Log</span>
+                    <span style="cursor: pointer;" id="btnClearLog" title="Clear log">Clear</span>
+                </div>
+                <div class="event-log" id="eventLog">
+                    <div class="log-entry ripple">[00:00:00] Chrono-Array synchronized. Welcome, Architect.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Status Bar -->
+    <footer>
+        <div class="status-left">
+            <span id="scenarioName">Scenario: The Genesis Core</span>
+            <span>|</span>
+            <span id="objectiveText">Objective: Restore power in Alpha to unlock Beta Blast Gate.</span>
+        </div>
+        <div class="status-right">
+            <span>[WASD / Arrows] Move</span>
+            <span>[Space] Interact/Wait</span>
+            <span>[Tab] Cycle Epoch</span>
+            <span>[R] Record Echo</span>
+            <span>[P] Play Echo</span>
+            <span>[Z] Undo</span>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toastNotification">Notification</div>
+
+    <!-- 1. Start Splash Screen Overlay -->
+    <div class="overlay active" id="splashOverlay">
+        <div class="modal-card splash-card">
+            <div class="modal-body">
+                <div class="splash-title">K C H R O N O</div>
+                <div class="splash-subtitle">Chrono-Spatial Paradox Engine & Temporal Array Simulator</div>
+
+                <div class="splash-menu">
+                    <button class="splash-btn" id="btnSplashNew">
+                        <span>▶ NEW TIMELINE</span>
+                        <span style="font-size: 11px; opacity: 0.7;">Initialize Sequence</span>
+                    </button>
+                    <button class="splash-btn" id="btnSplashContinue" disabled>
+                        <span>↻ RESUME TIMELINE</span>
+                        <span style="font-size: 11px; opacity: 0.7;">Load Autosave</span>
+                    </button>
+                    <button class="splash-btn" id="btnSplashScenarios">
+                        <span>📋 SELECT SCENARIO</span>
+                        <span style="font-size: 11px; opacity: 0.7;">5 Operations</span>
+                    </button>
+                    <button class="splash-btn" id="btnSplashHelp">
+                        <span>📖 TEMPORAL MANUAL</span>
+                        <span style="font-size: 11px; opacity: 0.7;">Causal Physics</span>
+                    </button>
+                    <button class="splash-btn" id="btnSplashSettings">
+                        <span>⚙ SYSTEM SETTINGS</span>
+                        <span style="font-size: 11px; opacity: 0.7;">Audio & CRT</span>
+                    </button>
+                </div>
+                <div style="font-size: 10px; color: var(--text-dim); margin-top: 10px;">
+                    Deep emergent temporal mechanics • Quicksave [F5] • Zero External Dependencies • &lt;999 KB
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Onboarding Tutorial Overlay -->
+    <div class="overlay" id="tutorialOverlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title"><span>⏳</span> TEMPORAL ARCHITECT ONBOARDING</div>
+                <button class="btn-ctrl" id="btnTutClose">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="tut-step">
+                    <div class="tut-icon">🌐</div>
+                    <div>
+                        <b style="color: var(--text-bright);">1. Tri-Epoch Synchronized Navigation</b><br>
+                        You operate across 3 parallel timeframes of the same facility:
+                        <b>Alpha (1984 Past)</b>, <b>Beta (2042 Present)</b>, and <b>Gamma (2188 Future)</b>.
+                        Press <b>[Tab]</b> or <b>[1 / 2 / 3]</b> to shift temporal perspective at any moment.
+                    </div>
+                </div>
+                <div class="tut-step">
+                    <div class="tut-icon">⚡</div>
+                    <div>
+                        <b style="color: var(--text-bright);">2. Forward Causal Ripple Engine</b><br>
+                        Actions taken in earlier epochs ripple instantaneously forward to mutate later epochs!
+                        Pushing a heavy crate or repairing a geothermal conduit in Alpha opens blast gates in Beta and dispels entropic vortexes in Gamma.
+                    </div>
+                </div>
+                <div class="tut-step">
+                    <div class="tut-icon">👥</div>
+                    <div>
+                        <b style="color: var(--text-bright);">3. Chrono-Echo Ghost System</b><br>
+                        Dual-switches require two people at once. Press <b>[R]</b> to record your movements, then <b>[P]</b> to execute. A glowing <b>Past-Self Ghost</b> will replay your exact path to hold switches while you walk through!
+                    </div>
+                </div>
+                <div class="tut-step">
+                    <div class="tut-icon">⚠️</div>
+                    <div>
+                        <b style="color: var(--text-bright);">4. Paradox Strain & Chrono-Quakes</b><br>
+                        Aggressive timeline tampering raises Paradox Strain. If strain hits 100%, a <b>Paradox Breach</b> occurs, spawning hostile Tachyon Phantoms. Keep causality stable!
+                    </div>
+                </div>
+                <div class="tut-step">
+                    <div class="tut-icon">💾</div>
+                    <div>
+                        <b style="color: var(--text-bright);">5. State Persistence & Controls</b><br>
+                        Use <b>[F5]</b> to Quicksave, <b>[F9]</b> to Quickload, and <b>[Z]</b> to Undo. You can also export/import your timeline state as JSON anytime in Settings.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-ctrl" id="btnTutDismiss" style="background: var(--epoch-beta); color: #000; font-weight: bold; padding: 6px 16px;">
+                    ACKNOWLEDGE & BEGIN
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Scenario Selection Overlay -->
+    <div class="overlay" id="scenarioOverlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title"><span>📋</span> MISSION SCENARIO ARCHIVES</div>
+                <button class="btn-ctrl" id="btnScenarioClose">✕</button>
+            </div>
+            <div class="modal-body" id="scenarioList">
+                <!-- Injected dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-ctrl" id="btnScenarioLaunch" style="background: var(--epoch-beta); color: #000; font-weight: bold;">
+                    DEPLOY SCENARIO
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Help & Field Manual Overlay -->
+    <div class="overlay" id="helpOverlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title"><span>📖</span> TEMPORAL FIELD MANUAL & CAUSAL CODEX</div>
+                <button class="btn-ctrl" id="btnHelpClose">✕</button>
+            </div>
+            <div class="modal-body" style="font-size: 12px; line-height: 1.6;">
+                <h4 style="color: var(--epoch-alpha); margin-bottom: 6px;">CAUSAL ENTITIES & INTERACTIONS</h4>
+                <p>• <b>Precursor Power Relay [⚡]</b>: Broken in Alpha. Repairing it routes continuous power forward, electrifying circuits in Beta and activating the Singularity Core in Gamma.</p>
+                <p>• <b>Chrono-Locker [📦]</b>: Deposit tools or power cells in Alpha. They will age 58 years and be ready for retrieval with amplified tachyon charges in Beta or 204 years in Gamma!</p>
+                <p>• <b>Cryo-Floodgate [🌊]</b>: Diverting the coolant sluice in Alpha extinguishes the plasma fire in Beta and crystallizes into a safe ice bridge in Gamma.</p>
+                <p>• <b>Temporal Pressure Plates [⯐]</b>: Must remain depressed to keep Blast Gates open. Use Movable Blocks or your recorded Chrono-Echo ghost.</p>
+                <p>• <b>Laser Barriers [═]</b>: Destructive optical fences. Intercept the beam using heavy lead crates or coordinated ghost distraction.</p>
+
+                <h4 style="color: var(--epoch-gamma); margin: 12px 0 6px;">CONTROLS REFERENCE</h4>
+                <p>• <b>WASD / Arrow Keys</b>: Navigate grid</p>
+                <p>• <b>Space</b>: Interact with adjacent terminal / switch / or wait a turn</p>
+                <p>• <b>1 / 2 / 3 or Tab</b>: Switch to Epoch Alpha, Beta, or Gamma</p>
+                <p>• <b>R</b>: Start/Stop Echo Recording</p>
+                <p>• <b>P</b>: Execute recorded Echo ghost</p>
+                <p>• <b>Z / U</b>: Undo turn</p>
+                <p>• <b>F5 / F9</b>: Quicksave / Quickload</p>
+                <p>• <b>Esc</b>: Open Menu / Dismiss Dialog</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-ctrl" id="btnHelpDismiss">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Settings Overlay -->
+    <div class="overlay" id="settingsOverlay">
+        <div class="modal-card" style="width: 480px;">
+            <div class="modal-header">
+                <div class="modal-title"><span>⚙</span> SYSTEM & AUDIO SETTINGS</div>
+                <button class="btn-ctrl" id="btnSettingsClose">✕</button>
+            </div>
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+                <div>
+                    <label style="display: block; font-weight: bold; margin-bottom: 4px;">Master Audio Volume</label>
+                    <input type="range" id="volSlider" min="0" max="100" value="70" style="width: 100%;">
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label style="font-weight: bold;">Procedural Sound Effects (SFX)</label>
+                    <input type="checkbox" id="chkSfx" checked>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label style="font-weight: bold;">Ambient Tachyon Drone</label>
+                    <input type="checkbox" id="chkDrone" checked>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label style="font-weight: bold;">CRT Phosphor Scanlines & Vignette</label>
+                    <input type="checkbox" id="chkCrt" checked>
+                </div>
+                <div>
+                    <label style="display: block; font-weight: bold; margin-bottom: 4px;">Phosphor CRT Palette</label>
+                    <select id="selTheme" style="width: 100%; background: var(--bg-card); color: var(--text-bright); border: 1px solid var(--border-dim); padding: 6px; border-radius: 4px; font-family: inherit;">
+                        <option value="cyan">Quantum Cyan (Prime)</option>
+                        <option value="amber">Precursor Amber (1984 Retro)</option>
+                        <option value="violet">Entropic Violet (Singularity)</option>
+                        <option value="green">Phosphor Terminal Green</option>
+                    </select>
+                </div>
+                <hr style="border: 0; border-top: 1px solid var(--border-dim);">
+                <div>
+                    <label style="display: block; font-weight: bold; margin-bottom: 6px;">Timeline State Export / Import</label>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn-ctrl" id="btnExportJson" style="flex: 1;">Export JSON</button>
+                        <button class="btn-ctrl" id="btnImportJson" style="flex: 1;">Import JSON</button>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn-ctrl" id="btnResetTutorial" style="width: 100%; color: var(--accent-amber);">
+                        ↻ Reset First-Run Onboarding Tutorial
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-ctrl" id="btnSettingsDismiss">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Implementation -->
+    <script>
+        /* --- Audio Synthesizer (Web Audio API) --- */
+        class TachyonAudio {
+            constructor() {
+                this.ctx = null;
+                this.sfxEnabled = true;
+                this.droneEnabled = true;
+                this.masterVol = 0.7;
+                this.droneOsc1 = null;
+                this.droneOsc2 = null;
+                this.droneGain = null;
+            }
+
+            init() {
+                if (this.ctx) return;
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                this.ctx = new AudioCtx();
+                this.startAmbientDrone();
+            }
+
+            setVolume(val) {
+                this.masterVol = Math.max(0, Math.min(1, val));
+                if (this.droneGain && this.ctx) {
+                    this.droneGain.gain.setValueAtTime(this.droneEnabled ? 0.08 * this.masterVol : 0, this.ctx.currentTime);
+                }
+            }
+
+            startAmbientDrone() {
+                if (!this.ctx || this.droneOsc1) return;
+                try {
+                    this.droneGain = this.ctx.createGain();
+                    this.droneGain.gain.setValueAtTime(this.droneEnabled ? 0.08 * this.masterVol : 0, this.ctx.currentTime);
+                    this.droneGain.connect(this.ctx.destination);
+
+                    this.droneOsc1 = this.ctx.createOscillator();
+                    this.droneOsc1.type = 'sine';
+                    this.droneOsc1.frequency.setValueAtTime(55, this.ctx.currentTime); // A1
+
+                    this.droneOsc2 = this.ctx.createOscillator();
+                    this.droneOsc2.type = 'triangle';
+                    this.droneOsc2.frequency.setValueAtTime(110, this.ctx.currentTime); // A2
+
+                    this.droneOsc1.connect(this.droneGain);
+                    this.droneOsc2.connect(this.droneGain);
+                    this.droneOsc1.start();
+                    this.droneOsc2.start();
+                } catch (e) {
+                    console.warn("Drone audio error:", e);
+                }
+            }
+
+            setEpochDrone(epoch) {
+                if (!this.ctx || !this.droneOsc1) return;
+                const now = this.ctx.currentTime;
+                if (epoch === 'alpha') {
+                    this.droneOsc1.frequency.exponentialRampToValueAtTime(45, now + 0.6);
+                    this.droneOsc2.frequency.exponentialRampToValueAtTime(90, now + 0.6);
+                } else if (epoch === 'beta') {
+                    this.droneOsc1.frequency.exponentialRampToValueAtTime(55, now + 0.6);
+                    this.droneOsc2.frequency.exponentialRampToValueAtTime(110, now + 0.6);
+                } else if (epoch === 'gamma') {
+                    this.droneOsc1.frequency.exponentialRampToValueAtTime(68, now + 0.6);
+                    this.droneOsc2.frequency.exponentialRampToValueAtTime(136, now + 0.6);
+                }
+            }
+
+            playTone(freq, duration = 0.1, type = 'sine', gainVal = 0.2) {
+                if (!this.sfxEnabled || !this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(gainVal * this.masterVol, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + duration);
+                } catch(e) {}
+            }
+
+            playEpochWarp(direction = 1) {
+                if (!this.sfxEnabled || !this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    const startFreq = direction > 0 ? 150 : 600;
+                    const endFreq = direction > 0 ? 600 : 150;
+                    osc.frequency.setValueAtTime(startFreq, now);
+                    osc.frequency.exponentialRampToValueAtTime(endFreq, now + 0.3);
+                    gain.gain.setValueAtTime(0.18 * this.masterVol, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.32);
+                } catch(e) {}
+            }
+
+            playCausalRipple() {
+                if (!this.sfxEnabled || !this.ctx) return;
+                // Harmonic arpeggio
+                const notes = [440, 554, 659, 880];
+                notes.forEach((freq, idx) => {
+                    setTimeout(() => {
+                        this.playTone(freq, 0.25, 'sine', 0.15);
+                    }, idx * 60);
+                });
+            }
+
+            playStep() {
+                this.playTone(180, 0.05, 'triangle', 0.08);
+            }
+
+            playSwitch() {
+                this.playTone(850, 0.08, 'square', 0.12);
+                setTimeout(() => this.playTone(600, 0.08, 'square', 0.1), 40);
+            }
+
+            playDoorOpen() {
+                this.playTone(120, 0.35, 'sawtooth', 0.2);
+            }
+
+            playAlarm() {
+                this.playTone(900, 0.15, 'sawtooth', 0.25);
+                setTimeout(() => this.playTone(720, 0.15, 'sawtooth', 0.25), 160);
+            }
+
+            playVictory() {
+                const chord = [523.25, 659.25, 783.99, 1046.50];
+                chord.forEach(f => this.playTone(f, 0.8, 'sine', 0.2));
+            }
+        }
+
+        /* --- Global Game State & Core Paradox Engine --- */
+        const audio = new TachyonAudio();
+
+        const GRID_W = 24;
+        const GRID_H = 16;
+        const TILE_SIZE = 32;
+
+        const TILES = {
+            VOID: 0,
+            WALL: 1,
+            FLOOR: 2,
+            PRECURSOR_RELAY: 3,  // Alpha: Broken or Repaired -> Powers Beta/Gamma
+            POWER_CONDUIT: 4,    // Carries power to gates
+            BLAST_GATE: 5,       // Opens when powered or switched
+            PRESSURE_PLATE: 6,   // Activates when player/block/echo on it
+            CRYO_FLOODGATE: 7,   // Coolant valve in Alpha
+            ICE_BRIDGE: 8,       // Formed in Gamma when floodgate active
+            PLASMA_PIT: 9,       // Blocks passage in Beta until cooled
+            CHRONO_LOCKER: 10,   // Temporal storage locker
+            SAPLING_VAULT: 11,   // Plant in Alpha -> Tree bridge in Beta/Gamma
+            BIO_BRIDGE: 12,      // Climbable bridge
+            QUANTUM_CORE: 13,    // Level Goal / Terminal
+            OPTICAL_EMITTER: 14, // Laser emitter
+            OPTICAL_RECEIVER: 15,// Laser receptor
+            LASER_BEAM: 16,      // Deadly barrier
+            TACHYON_RIFT: 17     // Paradox anomaly
+        };
+
+        const SCENARIOS = [
+            {
+                id: 1,
+                name: "The Genesis Core (Operation Early Spark)",
+                subtitle: "Restore Alpha precursor power conduits to penetrate Beta security grid",
+                objective: "Energize the Precursor Relay in Alpha to open Beta's Quantum Blast Gate.",
+                briefing: "Temporal Architect, Station Prime's main containment gate is locked tight. Travel back to Epoch Alpha (1984), locate the precursor geothermal relay, and restore its circuit. The causal ripple will flow 58 years into the future, activating Beta's gate.",
+                startEpoch: "beta",
+                winCondition: (state) => state.flags.betaCoreAccessed === true
+            },
+            {
+                id: 2,
+                name: "The Echo Protocol (Ghost Shift)",
+                subtitle: "Coordinate with your past self to bypass synchronized biometric pressure plates",
+                objective: "Record a Chrono-Echo to hold down Plate Alpha while your present self crosses Gate Beta.",
+                briefing: "Security Sector 4 requires two simultaneous authorizations across dual pressure plates. Use your Chrono-Deck's Record function [R] to record your footsteps onto Plate 1, then execute the Echo [P] while you stand on Plate 2.",
+                startEpoch: "beta",
+                winCondition: (state) => state.flags.echoVaultUnlocked === true
+            },
+            {
+                id: 3,
+                name: "Singularity Rupture (Triple Epoch Containment)",
+                subtitle: "Seal temporal rifts across all three epochs before Paradox Strain reaches 100%",
+                objective: "Stabilize 3 Tachyon Rifts (one in Alpha, one in Beta, one in Gamma).",
+                briefing: "A multi-dimensional collapse is tearing the station apart. Paradox Strain is rapidly accumulating! Navigate all three epochs, interact with each unstable rift, and restore the timeline anchor.",
+                startEpoch: "alpha",
+                winCondition: (state) => state.flags.riftsClosed >= 3
+            },
+            {
+                id: 4,
+                name: "Grandfather's Cipher (Causal Loop)",
+                subtitle: "Plant a precursor bio-seed in Alpha to grow a biological archway across the chasm in Gamma",
+                objective: "Plant Botanical Specimen in Alpha to reach the Omega Core in Gamma.",
+                briefing: "The path across the radioactive chasm in 2188 (Gamma) collapsed centuries ago. Plant an ancient genetically reinforced seed in 1984 (Alpha). Over 204 years, it will mature into a massive petrified bio-archway in Gamma.",
+                startEpoch: "alpha",
+                winCondition: (state) => state.flags.omegaCoreAccessed === true
+            },
+            {
+                id: 5,
+                name: "Chrono-Architect Sandbox",
+                subtitle: "Unrestricted temporal lab with interactive causality debugger and live ripple generator",
+                objective: "Freely experiment with timeline causal links, echo loops, and paradox cascades.",
+                briefing: "Sandbox mode: Manipulate any epoch, place causal anchors, trigger temporal ruptures, and observe instantaneous timeline propagation in the Chronograph.",
+                startEpoch: "beta",
+                winCondition: () => false
+            }
+        ];
+
+        class GameEngine {
+            constructor() {
+                this.currentEpoch = 'beta'; // 'alpha', 'beta', 'gamma'
+                this.currentScenario = SCENARIOS[0];
+                this.turn = 0;
+                this.paradoxStrain = 0; // 0 to 100
+                this.isRecordingEcho = false;
+                this.isPlayingEcho = false;
+                this.echoBuffer = []; // recorded actions: [{turn, x, y, epoch, action}]
+                this.echoStepIndex = 0;
+                this.echoGhost = null; // {x, y, epoch}
+
+                this.player = { x: 3, y: 3 };
+                this.inventory = []; // Max 4 items
+                this.flags = {};
+
+                // Map Grids for Alpha, Beta, Gamma (24x16 each)
+                this.grids = {
+                    alpha: this.createEmptyGrid(),
+                    beta: this.createEmptyGrid(),
+                    gamma: this.createEmptyGrid()
+                };
+
+                // Dynamic objects per epoch (crates, phantoms, items)
+                this.entities = {
+                    alpha: [],
+                    beta: [],
+                    gamma: []
+                };
+
+                // Undo history buffer (last 20 states)
+                this.history = [];
+
+                // Visual particle systems & ripple waves
+                this.ripples = [];
+                this.particles = [];
+
+                this.lastCausalLog = "";
+            }
+
+            createEmptyGrid() {
+                const g = [];
+                for (let y = 0; y < GRID_H; y++) {
+                    const row = [];
+                    for (let x = 0; x < GRID_W; x++) {
+                        if (x === 0 || y === 0 || x === GRID_W - 1 || y === GRID_H - 1) {
+                            row.push(TILES.WALL);
+                        } else {
+                            row.push(TILES.FLOOR);
+                        }
+                    }
+                    g.push(row);
+                }
+                return g;
+            }
+
+            initScenario(scenario) {
+                this.currentScenario = scenario;
+                this.currentEpoch = scenario.startEpoch || 'beta';
+                this.turn = 0;
+                this.paradoxStrain = 0;
+                this.isRecordingEcho = false;
+                this.isPlayingEcho = false;
+                this.echoBuffer = [];
+                this.echoGhost = null;
+                this.inventory = [];
+                this.flags = {
+                    precursorRepaired: false,
+                    floodgateOpen: false,
+                    seedPlanted: false,
+                    betaCoreAccessed: false,
+                    echoVaultUnlocked: false,
+                    riftsClosed: 0,
+                    omegaCoreAccessed: false
+                };
+                this.history = [];
+                this.ripples = [];
+                this.particles = [];
+
+                this.buildScenarioMaps(scenario.id);
+                this.saveUndoState();
+                this.logEvent(`[TIMELINE INITIALIZED] Scenario: ${scenario.name}`, 'ripple');
+            }
+
+            buildScenarioMaps(id) {
+                // Reset grids
+                this.grids.alpha = this.createEmptyGrid();
+                this.grids.beta = this.createEmptyGrid();
+                this.grids.gamma = this.createEmptyGrid();
+                this.entities.alpha = [];
+                this.entities.beta = [];
+                this.entities.gamma = [];
+
+                // Common architecture across all 3 epochs
+                // Central division wall with blast gates at (12, 7) and (12, 8)
+                for (let e of ['alpha', 'beta', 'gamma']) {
+                    const g = this.grids[e];
+                    for (let y = 1; y < GRID_H - 1; y++) {
+                        if (y !== 7 && y !== 8) {
+                            g[y][12] = TILES.WALL;
+                        }
+                    }
+                    // Vault room interior
+                    for (let x = 17; x < 22; x++) {
+                        g[4][x] = TILES.WALL;
+                        g[11][x] = TILES.WALL;
+                    }
+                    for (let y = 4; y <= 11; y++) {
+                        if (y !== 7) g[y][17] = TILES.WALL;
+                    }
+                }
+
+                // Default Player starting location
+                this.player.x = 4;
+                this.player.y = 7;
+
+                if (id === 1) {
+                    // Scenario 1: Genesis Core
+                    // Precursor Relay in Alpha at (6, 3)
+                    this.grids.alpha[3][6] = TILES.PRECURSOR_RELAY;
+                    // Blast Gate in Beta at (12, 7) and (12, 8)
+                    this.grids.beta[7][12] = TILES.BLAST_GATE;
+                    this.grids.beta[8][12] = TILES.BLAST_GATE;
+                    // Quantum Core in Beta at (19, 7)
+                    this.grids.beta[7][19] = TILES.QUANTUM_CORE;
+
+                    // Crates in Alpha
+                    this.entities.alpha.push({ id: 'crate1', type: 'crate', x: 8, y: 7 });
+                    this.entities.beta.push({ id: 'crate1_beta', type: 'crate', x: 8, y: 7 });
+
+                } else if (id === 2) {
+                    // Scenario 2: Echo Protocol
+                    // Pressure Plate 1 at (5, 4), Pressure Plate 2 at (5, 10)
+                    this.grids.beta[4][5] = TILES.PRESSURE_PLATE;
+                    this.grids.beta[10][5] = TILES.PRESSURE_PLATE;
+                    // Blast Gate at (12, 7)
+                    this.grids.beta[7][12] = TILES.BLAST_GATE;
+                    this.grids.beta[7][19] = TILES.QUANTUM_CORE;
+
+                } else if (id === 3) {
+                    // Scenario 3: Singularity Rupture
+                    // Tachyon Rifts in each epoch
+                    this.grids.alpha[4][8] = TILES.TACHYON_RIFT;
+                    this.grids.beta[11][8] = TILES.TACHYON_RIFT;
+                    this.grids.gamma[7][19] = TILES.TACHYON_RIFT;
+
+                    // Patrolling Tachyon Phantoms
+                    this.entities.gamma.push({ id: 'phantom1', type: 'phantom', x: 14, y: 7, dir: 1 });
+
+                } else if (id === 4) {
+                    // Scenario 4: Grandfather's Cipher
+                    // Chasm / Void pit in Beta & Gamma
+                    for (let y = 3; y <= 11; y++) {
+                        this.grids.beta[y][10] = TILES.PLASMA_PIT;
+                        this.grids.gamma[y][10] = TILES.VOID;
+                    }
+                    // Sapling vault in Alpha at (6, 7)
+                    this.grids.alpha[7][6] = TILES.SAPLING_VAULT;
+                    // Omega Core in Gamma at (19, 7)
+                    this.grids.gamma[7][19] = TILES.QUANTUM_CORE;
+                    // Chrono locker at (4, 11) in all epochs
+                    this.grids.alpha[11][4] = TILES.CHRONO_LOCKER;
+                    this.grids.beta[11][4] = TILES.CHRONO_LOCKER;
+                    this.grids.gamma[11][4] = TILES.CHRONO_LOCKER;
+
+                } else {
+                    // Scenario 5: Sandbox
+                    this.grids.alpha[3][6] = TILES.PRECURSOR_RELAY;
+                    this.grids.alpha[7][6] = TILES.SAPLING_VAULT;
+                    this.grids.beta[7][12] = TILES.BLAST_GATE;
+                    this.grids.beta[4][5] = TILES.PRESSURE_PLATE;
+                    this.grids.gamma[7][19] = TILES.QUANTUM_CORE;
+                    this.entities.alpha.push({ id: 'crate_s', type: 'crate', x: 8, y: 7 });
+                    this.entities.beta.push({ id: 'crate_sb', type: 'crate', x: 8, y: 7 });
+                }
+
+                // Re-evaluate initial causal ripple state
+                this.propagateCausality(false);
+            }
+
+            /* --- Causal Ripple Engine --- */
+            propagateCausality(visualize = true) {
+                let ripplesTriggered = 0;
+
+                // Rule 1: Alpha Precursor Relay -> Beta & Gamma Power Grid
+                if (this.flags.precursorRepaired) {
+                    // Energize blast gates in Beta
+                    if (this.grids.beta[7][12] === TILES.BLAST_GATE) {
+                        this.grids.beta[7][12] = TILES.FLOOR;
+                        this.grids.beta[8][12] = TILES.FLOOR;
+                        ripplesTriggered++;
+                    }
+                    if (this.grids.gamma[7][12] === TILES.BLAST_GATE) {
+                        this.grids.gamma[7][12] = TILES.FLOOR;
+                        this.grids.gamma[8][12] = TILES.FLOOR;
+                        ripplesTriggered++;
+                    }
+                }
+
+                // Rule 2: Alpha Sapling Vault -> Beta Bio-Bridge & Gamma Petrified Arch
+                if (this.flags.seedPlanted) {
+                    if (this.grids.beta[7][10] === TILES.PLASMA_PIT || this.grids.beta[7][10] === TILES.VOID) {
+                        this.grids.beta[7][10] = TILES.BIO_BRIDGE;
+                        ripplesTriggered++;
+                    }
+                    if (this.grids.gamma[7][10] === TILES.VOID) {
+                        this.grids.gamma[7][10] = TILES.BIO_BRIDGE;
+                        ripplesTriggered++;
+                    }
+                }
+
+                // Rule 3: Alpha Cryo-Floodgate -> Extinguishes Beta Plasma -> Creates Gamma Ice Bridge
+                if (this.flags.floodgateOpen) {
+                    for (let y = 3; y <= 11; y++) {
+                        if (this.grids.beta[y][10] === TILES.PLASMA_PIT) {
+                            this.grids.beta[y][10] = TILES.FLOOR;
+                        }
+                        if (this.grids.gamma[y][10] === TILES.VOID) {
+                            this.grids.gamma[y][10] = TILES.ICE_BRIDGE;
+                        }
+                    }
+                    ripplesTriggered++;
+                }
+
+                // Rule 4: Sync Crates from Alpha forward to Beta & Gamma if undisturbed
+                const alphaCrates = this.entities.alpha.filter(e => e.type === 'crate');
+                alphaCrates.forEach(c => {
+                    let betaCrate = this.entities.beta.find(e => e.id === c.id + '_beta' || e.id === c.id);
+                    if (!betaCrate) {
+                        this.entities.beta.push({ id: c.id + '_beta', type: 'crate', x: c.x, y: c.y });
+                    } else if (!betaCrate.anchored) {
+                        betaCrate.x = c.x;
+                        betaCrate.y = c.y;
+                    }
+                });
+
+                // Rule 5: Dual Pressure Plates in Beta
+                if (this.currentScenario.id === 2) {
+                    const plate1Active = this.isPlatePressed(5, 4, 'beta');
+                    const plate2Active = this.isPlatePressed(5, 10, 'beta');
+
+                    if (plate1Active && plate2Active) {
+                        if (this.grids.beta[7][12] === TILES.BLAST_GATE) {
+                            this.grids.beta[7][12] = TILES.FLOOR;
+                            this.logEvent("DUAL BIOMETRIC AUTH DETECTED: Blast Gate Alpha-07 Opened!", "success");
+                            audio.playDoorOpen();
+                            ripplesTriggered++;
+                        }
+                    } else {
+                        if (this.grids.beta[7][12] === TILES.FLOOR) {
+                            this.grids.beta[7][12] = TILES.BLAST_GATE;
+                            audio.playSwitch();
+                        }
+                    }
+                }
+
+                if (visualize && ripplesTriggered > 0) {
+                    audio.playCausalRipple();
+                    this.spawnRippleEffect(this.player.x * TILE_SIZE + 16, this.player.y * TILE_SIZE + 16);
+                }
+            }
+
+            isPlatePressed(px, py, epoch) {
+                // Check player
+                if (this.currentEpoch === epoch && this.player.x === px && this.player.y === py) return true;
+                // Check echo ghost
+                if (this.echoGhost && this.echoGhost.epoch === epoch && this.echoGhost.x === px && this.echoGhost.y === py) return true;
+                // Check crates
+                const crate = this.entities[epoch].find(e => e.type === 'crate' && e.x === px && e.y === py);
+                if (crate) return true;
+                return false;
+            }
+
+            /* --- Player Movement & Action Dispatcher --- */
+            move(dx, dy) {
+                const targetX = this.player.x + dx;
+                const targetY = this.player.y + dy;
+
+                if (targetX < 0 || targetX >= GRID_W || targetY < 0 || targetY >= GRID_H) return false;
+
+                const targetTile = this.grids[this.currentEpoch][targetY][targetX];
+
+                // Collision checks
+                if (targetTile === TILES.WALL || targetTile === TILES.BLAST_GATE || targetTile === TILES.PLASMA_PIT || targetTile === TILES.VOID) {
+                    audio.playTone(100, 0.05, 'sawtooth', 0.1);
+                    return false;
+                }
+
+                // Check for pushable crate
+                const crate = this.entities[this.currentEpoch].find(e => e.type === 'crate' && e.x === targetX && e.y === targetY);
+                if (crate) {
+                    const crateNextX = targetX + dx;
+                    const crateNextY = targetY + dy;
+                    const crateTile = this.grids[this.currentEpoch][crateNextY][crateNextX];
+
+                    if (crateTile === TILES.FLOOR || crateTile === TILES.PRESSURE_PLATE || crateTile === TILES.ICE_BRIDGE || crateTile === TILES.BIO_BRIDGE) {
+                        crate.x = crateNextX;
+                        crate.y = crateNextY;
+                        audio.playTone(220, 0.1, 'square', 0.1);
+                        this.logEvent(`Crate displaced to (${crateNextX}, ${crateNextY})`, 'ripple');
+
+                        // Pushing a crate in Alpha increases Paradox Strain slightly due to mass displacement
+                        if (this.currentEpoch === 'alpha') {
+                            this.addParadoxStrain(4, "Mass trajectory alteration in 1984");
+                        }
+                    } else {
+                        return false;
+                    }
+                }
+
+                this.saveUndoState();
+
+                this.player.x = targetX;
+                this.player.y = targetY;
+                audio.playStep();
+
+                this.advanceTurn({ action: 'move', dx, dy });
+                return true;
+            }
+
+            interact() {
+                const px = this.player.x;
+                const py = this.player.y;
+                const currentGrid = this.grids[this.currentEpoch];
+
+                // Check standing tile or adjacent tiles
+                const coordsToCheck = [
+                    { x: px, y: py },
+                    { x: px + 1, y: py },
+                    { x: px - 1, y: py },
+                    { x: px, y: py + 1 },
+                    { x: px, y: py - 1 }
+                ];
+
+                let interacted = false;
+
+                for (let c of coordsToCheck) {
+                    if (c.x < 0 || c.x >= GRID_W || c.y < 0 || c.y >= GRID_H) continue;
+                    const tile = currentGrid[c.y][c.x];
+
+                    if (tile === TILES.PRECURSOR_RELAY) {
+                        if (!this.flags.precursorRepaired) {
+                            this.saveUndoState();
+                            this.flags.precursorRepaired = true;
+                            audio.playSwitch();
+                            this.logEvent("[CAUSAL MUTATION] Precursor Geothermal Relay repaired in 1984!", "success");
+                            this.addParadoxStrain(10, "Historical power conduit closed");
+                            this.propagateCausality(true);
+                            interacted = true;
+                            break;
+                        }
+                    } else if (tile === TILES.SAPLING_VAULT) {
+                        if (!this.flags.seedPlanted) {
+                            this.saveUndoState();
+                            this.flags.seedPlanted = true;
+                            audio.playTone(400, 0.2, 'sine', 0.2);
+                            this.logEvent("[BOTANICAL SEED] Planted genetic chronoseed in Epoch Alpha Soil.", "success");
+                            this.addParadoxStrain(6, "Organic continuum altered");
+                            this.propagateCausality(true);
+                            interacted = true;
+                            break;
+                        }
+                    } else if (tile === TILES.TACHYON_RIFT) {
+                        this.saveUndoState();
+                        currentGrid[c.y][c.x] = TILES.FLOOR;
+                        this.flags.riftsClosed = (this.flags.riftsClosed || 0) + 1;
+                        audio.playTone(600, 0.3, 'sine', 0.25);
+                        this.logEvent(`[RIFT SEALED] Tachyon Rift collapsed (${this.flags.riftsClosed}/3).`, "success");
+                        this.addParadoxStrain(-15, "Temporal rupture stabilized");
+                        interacted = true;
+                        break;
+                    } else if (tile === TILES.QUANTUM_CORE) {
+                        if (this.currentEpoch === 'beta') {
+                            this.flags.betaCoreAccessed = true;
+                            this.flags.echoVaultUnlocked = true;
+                        }
+                        if (this.currentEpoch === 'gamma') {
+                            this.flags.omegaCoreAccessed = true;
+                        }
+                        audio.playVictory();
+                        this.logEvent("MISSION ACCOMPLISHED: Quantum Chrono-Core Harmonized!", "success");
+                        showToast("✨ TIMELINE STABILIZED — MISSION COMPLETE!");
+                        interacted = true;
+                        break;
+                    }
+                }
+
+                if (interacted) {
+                    this.advanceTurn({ action: 'interact' });
+                } else {
+                    // Wait turn
+                    this.saveUndoState();
+                    this.advanceTurn({ action: 'wait' });
+                    this.logEvent("Waiting 1 temporal cycle...", "normal");
+                }
+            }
+
+            /* --- Epoch Jumping --- */
+            switchEpoch(targetEpoch) {
+                if (this.currentEpoch === targetEpoch) return;
+                const oldEpoch = this.currentEpoch;
+                const dir = targetEpoch === 'gamma' || (targetEpoch === 'beta' && oldEpoch === 'alpha') ? 1 : -1;
+
+                this.saveUndoState();
+                this.currentEpoch = targetEpoch;
+                audio.playEpochWarp(dir);
+                audio.setEpochDrone(targetEpoch);
+
+                // Check if current tile in target epoch is solid wall/void
+                if (this.grids[targetEpoch][this.player.y][this.player.x] === TILES.WALL) {
+                    // Find nearest empty floor
+                    this.teleportToNearestFloor();
+                }
+
+                this.addParadoxStrain(2, "Cross-epoch tachyon phase jump");
+                this.logEvent(`WARP: Displaced to EPOCH ${targetEpoch.toUpperCase()} (Tachyon Phase Shift)`, "ripple");
+                this.spawnWarpEffect(this.player.x * TILE_SIZE + 16, this.player.y * TILE_SIZE + 16);
+            }
+
+            teleportToNearestFloor() {
+                for (let r = 1; r < 5; r++) {
+                    for (let dy = -r; dy <= r; dy++) {
+                        for (let dx = -r; dx <= r; dx++) {
+                            const nx = this.player.x + dx;
+                            const ny = this.player.y + dy;
+                            if (nx >= 0 && nx < GRID_W && ny >= 0 && ny < GRID_H) {
+                                if (this.grids[this.currentEpoch][ny][nx] === TILES.FLOOR) {
+                                    this.player.x = nx;
+                                    this.player.y = ny;
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            /* --- Turn Advancement & Echo Playback --- */
+            advanceTurn(playerAction) {
+                this.turn++;
+
+                // Record Echo step if enabled
+                if (this.isRecordingEcho) {
+                    this.echoBuffer.push({
+                        turn: this.turn,
+                        x: this.player.x,
+                        y: this.player.y,
+                        epoch: this.currentEpoch,
+                        action: playerAction
+                    });
+                    this.logEvent(`[ECHO RECORD] Step #${this.echoBuffer.length} logged`, 'normal');
+                }
+
+                // Playback Echo ghost if executing
+                if (this.isPlayingEcho && this.echoBuffer.length > 0) {
+                    if (this.echoStepIndex < this.echoBuffer.length) {
+                        const step = this.echoBuffer[this.echoStepIndex];
+                        this.echoGhost = { x: step.x, y: step.y, epoch: step.epoch };
+                        this.echoStepIndex++;
+                    } else {
+                        // Loop or finish
+                        this.echoStepIndex = 0;
+                        const step = this.echoBuffer[0];
+                        this.echoGhost = { x: step.x, y: step.y, epoch: step.epoch };
+                    }
+                }
+
+                // Update dynamic phantoms in Gamma
+                this.entities[this.currentEpoch].forEach(e => {
+                    if (e.type === 'phantom') {
+                        e.y += e.dir;
+                        if (e.y <= 4 || e.y >= 11) e.dir *= -1;
+                    }
+                });
+
+                // Check for paradox collapse threshold
+                if (this.paradoxStrain >= 100) {
+                    this.triggerParadoxBreach();
+                }
+
+                // Check scenario victory condition
+                if (this.currentScenario.winCondition(this)) {
+                    audio.playVictory();
+                    this.logEvent("MISSION OBJECTIVE COMPLETE: Temporal Anchor Set.", "success");
+                    showToast("🎉 SCENARIO SUCCESSFUL!");
+                }
+
+                // Re-evaluate causal dependencies
+                this.propagateCausality(false);
+            }
+
+            toggleRecordEcho() {
+                if (this.isRecordingEcho) {
+                    this.isRecordingEcho = false;
+                    audio.playTone(400, 0.1, 'square', 0.15);
+                    this.logEvent(`[ECHO RECORD COMPLETE] Captured ${this.echoBuffer.length} footsteps.`, 'success');
+                    showToast(`Echo Buffer: ${this.echoBuffer.length} steps recorded.`);
+                } else {
+                    this.isRecordingEcho = true;
+                    this.echoBuffer = [];
+                    audio.playTone(800, 0.1, 'square', 0.2);
+                    this.logEvent("[ECHO RECORDING ENGAGED] All movements buffered into Tachyon Array.", 'warn');
+                    showToast("Recording Echo... Move to record footsteps.");
+                }
+            }
+
+            togglePlayEcho() {
+                if (this.isPlayingEcho) {
+                    this.isPlayingEcho = false;
+                    this.echoGhost = null;
+                    audio.playTone(300, 0.1, 'sine', 0.1);
+                    this.logEvent("Chrono-Echo Ghost terminated.", 'normal');
+                    showToast("Echo Ghost deactivated.");
+                } else {
+                    if (this.echoBuffer.length === 0) {
+                        showToast("No Echo recorded yet! Press [R] to record.");
+                        return;
+                    }
+                    this.isPlayingEcho = true;
+                    this.echoStepIndex = 0;
+                    this.echoGhost = {
+                        x: this.echoBuffer[0].x,
+                        y: this.echoBuffer[0].y,
+                        epoch: this.echoBuffer[0].epoch
+                    };
+                    audio.playTone(600, 0.2, 'triangle', 0.2);
+                    this.logEvent("[ECHO GHOST MANIFESTED] Parallel past self active!", 'ripple');
+                    showToast("Executing Echo Ghost alongside you!");
+                }
+            }
+
+            addParadoxStrain(amt, reason) {
+                this.paradoxStrain = Math.max(0, Math.min(100, this.paradoxStrain + amt));
+                if (amt > 0) {
+                    this.logEvent(`[PARADOX STRAIN +${amt}%] ${reason}`, 'warn');
+                    if (this.paradoxStrain > 75) {
+                        audio.playAlarm();
+                    }
+                }
+            }
+
+            triggerParadoxBreach() {
+                audio.playAlarm();
+                this.logEvent("[CRITICAL PARADOX BREACH] Reality collapsing! Chrono-Quake detected!", "danger");
+                showToast("⚠️ PARADOX BREACH! Causality rupture active!");
+                // Spawn a tachyon anomaly
+                this.entities[this.currentEpoch].push({
+                    id: 'breach_' + Date.now(),
+                    type: 'phantom',
+                    x: Math.min(GRID_W - 2, this.player.x + 2),
+                    y: this.player.y,
+                    dir: 1
+                });
+            }
+
+            /* --- Undo & State History --- */
+            saveUndoState() {
+                const snapshot = {
+                    currentEpoch: this.currentEpoch,
+                    turn: this.turn,
+                    paradoxStrain: this.paradoxStrain,
+                    player: { ...this.player },
+                    inventory: [...this.inventory],
+                    flags: { ...this.flags },
+                    grids: {
+                        alpha: this.grids.alpha.map(r => [...r]),
+                        beta: this.grids.beta.map(r => [...r]),
+                        gamma: this.grids.gamma.map(r => [...r])
+                    },
+                    entities: {
+                        alpha: this.entities.alpha.map(e => ({ ...e })),
+                        beta: this.entities.beta.map(e => ({ ...e })),
+                        gamma: this.entities.gamma.map(e => ({ ...e }))
+                    }
+                };
+                this.history.push(snapshot);
+                if (this.history.length > 25) this.history.shift();
+            }
+
+            undo() {
+                if (this.history.length === 0) {
+                    showToast("No earlier timeline state to undo.");
+                    return;
+                }
+                const prev = this.history.pop();
+                this.currentEpoch = prev.currentEpoch;
+                this.turn = prev.turn;
+                this.paradoxStrain = prev.paradoxStrain;
+                this.player = prev.player;
+                this.inventory = prev.inventory;
+                this.flags = prev.flags;
+                this.grids = prev.grids;
+                this.entities = prev.entities;
+
+                audio.playTone(350, 0.15, 'sawtooth', 0.15);
+                this.logEvent(`[TIMELINE REWOUND] Restored state at Turn ${this.turn}`, 'ripple');
+                showToast(`Timeline rewound to turn ${this.turn}`);
+            }
+
+            /* --- Quicksave / Quickload --- */
+            quicksave() {
+                const savePayload = {
+                    version: "1.0.0",
+                    scenarioId: this.currentScenario.id,
+                    currentEpoch: this.currentEpoch,
+                    turn: this.turn,
+                    paradoxStrain: this.paradoxStrain,
+                    player: this.player,
+                    flags: this.flags,
+                    inventory: this.inventory,
+                    echoBuffer: this.echoBuffer,
+                    grids: this.grids,
+                    entities: this.entities
+                };
+                try {
+                    localStorage.setItem('kchrono_quicksave', JSON.stringify(savePayload));
+                    localStorage.setItem('kchrono_hasSave', 'true');
+                    audio.playTone(700, 0.1, 'sine', 0.2);
+                    setTimeout(() => audio.playTone(900, 0.15, 'sine', 0.2), 80);
+                    this.logEvent("[QUICKSAVE] Timeline snapshot locked into storage matrix.", "success");
+                    showToast("💾 Quicksave Complete (F5)");
+                    document.getElementById('btnSplashContinue').disabled = false;
+                } catch(e) {
+                    console.error("Save failed:", e);
+                    showToast("Save failed: LocalStorage quota exceeded.");
+                }
+            }
+
+            quickload() {
+                const raw = localStorage.getItem('kchrono_quicksave');
+                if (!raw) {
+                    showToast("No quicksave file found!");
+                    return false;
+                }
+                try {
+                    const data = JSON.parse(raw);
+                    const sc = SCENARIOS.find(s => s.id === data.scenarioId) || SCENARIOS[0];
+                    this.currentScenario = sc;
+                    this.currentEpoch = data.currentEpoch;
+                    this.turn = data.turn;
+                    this.paradoxStrain = data.paradoxStrain;
+                    this.player = data.player;
+                    this.flags = data.flags;
+                    this.inventory = data.inventory || [];
+                    this.echoBuffer = data.echoBuffer || [];
+                    this.grids = data.grids;
+                    this.entities = data.entities;
+                    this.isRecordingEcho = false;
+                    this.isPlayingEcho = false;
+                    this.echoGhost = null;
+
+                    audio.playTone(900, 0.1, 'sine', 0.2);
+                    setTimeout(() => audio.playTone(700, 0.15, 'sine', 0.2), 80);
+                    this.logEvent("[QUICKLOAD] Timeline restored from persistent sector.", "success");
+                    showToast("📂 Quicksave Loaded (F9)");
+                    return true;
+                } catch(e) {
+                    console.error("Load failed:", e);
+                    showToast("Corrupt save file.");
+                    return false;
+                }
+            }
+
+            logEvent(msg, type = 'normal') {
+                this.lastCausalLog = msg;
+                const logEl = document.getElementById('eventLog');
+                if (!logEl) return;
+                const div = document.createElement('div');
+                div.className = `log-entry ${type}`;
+                const timeStr = new Date().toTimeString().split(' ')[0];
+                div.textContent = `[${timeStr}] ${msg}`;
+                logEl.insertBefore(div, logEl.firstChild);
+                // Trim log elements
+                while (logEl.children.length > 50) {
+                    logEl.removeChild(logEl.lastChild);
+                }
+            }
+
+            spawnRippleEffect(x, y) {
+                this.ripples.push({ x, y, radius: 2, maxRadius: 180, alpha: 1.0 });
+            }
+
+            spawnWarpEffect(x, y) {
+                for (let i = 0; i < 24; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 1 + Math.random() * 4;
+                    this.particles.push({
+                        x, y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: 30 + Math.random() * 20,
+                        maxLife: 40,
+                        color: this.currentEpoch === 'alpha' ? '#f59e0b' : this.currentEpoch === 'beta' ? '#06b6d4' : '#c084fc'
+                    });
+                }
+            }
+        }
+
+        const engine = new GameEngine();
+
+        /* --- Canvas Rendering & Audiovisuals --- */
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const chronoCanvas = document.getElementById('chronographCanvas');
+        const chronoCtx = chronoCanvas.getContext('2d');
+
+        function render() {
+            // Clear background
+            ctx.fillStyle = "#030610";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const grid = engine.grids[engine.currentEpoch];
+
+            // Render Tiles
+            for (let y = 0; y < GRID_H; y++) {
+                for (let x = 0; x < GRID_W; x++) {
+                    const tile = grid[y][x];
+                    const rx = x * TILE_SIZE;
+                    const ry = y * TILE_SIZE;
+
+                    drawTile(ctx, tile, rx, ry, engine.currentEpoch);
+                }
+            }
+
+            // Render Entities (Crates, Phantoms)
+            engine.entities[engine.currentEpoch].forEach(ent => {
+                const rx = ent.x * TILE_SIZE;
+                const ry = ent.y * TILE_SIZE;
+                if (ent.type === 'crate') {
+                    drawCrate(ctx, rx, ry);
+                } else if (ent.type === 'phantom') {
+                    drawPhantom(ctx, rx, ry);
+                }
+            });
+
+            // Render Echo Ghost (if active in this epoch)
+            if (engine.echoGhost && engine.echoGhost.epoch === engine.currentEpoch) {
+                drawGhost(ctx, engine.echoGhost.x * TILE_SIZE, engine.echoGhost.y * TILE_SIZE);
+            }
+
+            // Render Player
+            drawPlayer(ctx, engine.player.x * TILE_SIZE, engine.player.y * TILE_SIZE, engine.currentEpoch);
+
+            // Render Causal Ripples
+            for (let i = engine.ripples.length - 1; i >= 0; i--) {
+                const rip = engine.ripples[i];
+                rip.radius += 5;
+                rip.alpha -= 0.025;
+                if (rip.alpha <= 0) {
+                    engine.ripples.splice(i, 1);
+                    continue;
+                }
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(rip.x, rip.y, rip.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(56, 189, 248, ${rip.alpha})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // Render Particles
+            for (let i = engine.particles.length - 1; i >= 0; i--) {
+                const p = engine.particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life--;
+                if (p.life <= 0) {
+                    engine.particles.splice(i, 1);
+                    continue;
+                }
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, 2, 2);
+            }
+
+            // Render Chronograph Graph
+            renderChronograph();
+
+            // Update DOM UI elements
+            updateUI();
+
+            requestAnimationFrame(render);
+        }
+
+        function drawTile(c, tile, x, y, epoch) {
+            if (tile === TILES.WALL) {
+                c.fillStyle = "#111827";
+                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                c.strokeStyle = "#1f2937";
+                c.lineWidth = 1;
+                c.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+            } else if (tile === TILES.FLOOR) {
+                c.fillStyle = epoch === 'alpha' ? "#17120a" : epoch === 'beta' ? "#0a1120" : "#13091f";
+                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                // Subtle grid dot
+                c.fillStyle = "rgba(255, 255, 255, 0.05)";
+                c.fillRect(x + 15, y + 15, 2, 2);
+            } else if (tile === TILES.PRECURSOR_RELAY) {
+                c.fillStyle = "#261c0c";
+                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                c.fillStyle = engine.flags.precursorRepaired ? "#f59e0b" : "#78350f";
+                c.beginPath();
+                c.arc(x + 16, y + 16, 9, 0, Math.PI * 2);
+                c.fill();
+                c.fillStyle = "#000";
+                c.font = "bold 12px monospace";
+                c.fillText("⚡", x + 11, y + 20);
+            } else if (tile === TILES.BLAST_GATE) {
+                c.fillStyle = "#374151";
+                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                c.strokeStyle = "#ef4444";
+                c.lineWidth = 2;
+                c.beginPath();
+                c.moveTo(x + 2, y + 2); c.lineTo(x + 30, y + 30);
+                c.moveTo(x + 30, y + 2); c.lineTo(x + 2, y + 30);
+                c.stroke();
+            } else if (tile === TILES.PRESSURE_PLATE) {
+                c.fillStyle = "#1e293b";
+                c.fillRect(x + 4, y + 4, 24, 24);
+                c.strokeStyle = "#06b6d4";
+                c.lineWidth = 1.5;
+                c.strokeRect(x + 6, y + 6, 20, 20);
+            } else if (tile === TILES.SAPLING_VAULT) {
+                c.fillStyle = "#1e3a1f";
+                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                c.fillStyle = "#10b981";
+                c.fillText("🌱", x + 8, y + 22);
+            } else if (tile === TILES.BIO_BRIDGE) {
+                c.fillStyle = "#166534";
+                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                c.fillStyle = "#4ade80";
+                c.fillText("🌿", x + 8, y + 22);
+            } else if (tile === TILES.CHRONO_LOCKER) {
+                c.fillStyle = "#1e293b";
+                c.fillRect(x + 2, y + 2, 28, 28);
+                c.fillStyle = "#38bdf8";
+                c.fillText("📦", x + 8, y + 22);
+            } else if (tile === TILES.QUANTUM_CORE) {
+                c.fillStyle = "#0f172a";
+                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                // Glowing core
+                const pulse = Math.sin(Date.now() / 200) * 3;
+                c.fillStyle = "#38bdf8";
+                c.beginPath();
+                c.arc(x + 16, y + 16, 10 + pulse, 0, Math.PI * 2);
+                c.fill();
+                c.fillStyle = "#ffffff";
+                c.fillText("⚛", x + 10, y + 20);
+            } else if (tile === TILES.TACHYON_RIFT) {
+                c.fillStyle = "#2e1065";
+                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                c.fillStyle = "#c084fc";
+                c.fillText("🌀", x + 8, y + 22);
+            } else if (tile === TILES.PLASMA_PIT) {
+                c.fillStyle = "#450a0a";
+                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                c.fillStyle = "#f87171";
+                c.fillText("🔥", x + 8, y + 22);
+            } else if (tile === TILES.ICE_BRIDGE) {
+                c.fillStyle = "#0c4a6e";
+                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                c.fillStyle = "#7dd3fc";
+                c.fillText("❄", x + 10, y + 22);
+            } else if (tile === TILES.VOID) {
+                c.fillStyle = "#000000";
+                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+            }
+        }
+
+        function drawCrate(c, x, y) {
+            c.fillStyle = "#854d0e";
+            c.fillRect(x + 3, y + 3, 26, 26);
+            c.strokeStyle = "#fef08a";
+            c.lineWidth = 1;
+            c.strokeRect(x + 4, y + 4, 24, 24);
+            c.beginPath();
+            c.moveTo(x + 4, y + 4); c.lineTo(x + 28, y + 28);
+            c.moveTo(x + 28, y + 4); c.lineTo(x + 4, y + 28);
+            c.stroke();
+        }
+
+        function drawPhantom(c, x, y) {
+            c.fillStyle = "rgba(192, 132, 252, 0.75)";
+            c.beginPath();
+            c.arc(x + 16, y + 14, 10, Math.PI, 0, false);
+            c.lineTo(x + 26, y + 26);
+            c.lineTo(x + 6, y + 26);
+            c.closePath();
+            c.fill();
+            c.fillStyle = "#ffffff";
+            c.fillRect(x + 10, y + 12, 3, 3);
+            c.fillRect(x + 19, y + 12, 3, 3);
+        }
+
+        function drawGhost(c, x, y) {
+            c.fillStyle = "rgba(6, 182, 212, 0.4)";
+            c.beginPath();
+            c.arc(x + 16, y + 16, 12, 0, Math.PI * 2);
+            c.fill();
+            c.strokeStyle = "#a5f3fc";
+            c.lineWidth = 1.5;
+            c.stroke();
+            c.fillStyle = "#ffffff";
+            c.fillText("👻", x + 9, y + 21);
+        }
+
+        function drawPlayer(c, x, y, epoch) {
+            // Outer chronal ring
+            c.strokeStyle = epoch === 'alpha' ? '#f59e0b' : epoch === 'beta' ? '#06b6d4' : '#c084fc';
+            c.lineWidth = 2;
+            c.beginPath();
+            c.arc(x + 16, y + 16, 13, 0, Math.PI * 2);
+            c.stroke();
+
+            // Player body
+            c.fillStyle = "#f8fafc";
+            c.beginPath();
+            c.arc(x + 16, y + 16, 9, 0, Math.PI * 2);
+            c.fill();
+
+            // Chrononavigator visor
+            c.fillStyle = "#0f172a";
+            c.fillRect(x + 13, y + 13, 6, 4);
+        }
+
+        function renderChronograph() {
+            chronoCtx.clearRect(0, 0, chronoCanvas.width, chronoCanvas.height);
+
+            const nodes = [
+                { id: 'alpha', label: '1984 (α)', x: 45, y: 45, color: '#f59e0b' },
+                { id: 'beta', label: '2042 (β)', x: 150, y: 45, color: '#06b6d4' },
+                { id: 'gamma', label: '2188 (γ)', x: 255, y: 45, color: '#c084fc' }
+            ];
+
+            // Draw Causal Link Arrows
+            chronoCtx.strokeStyle = "#334155";
+            chronoCtx.lineWidth = 2;
+            chronoCtx.beginPath();
+            chronoCtx.moveTo(45, 45); chronoCtx.lineTo(150, 45);
+            chronoCtx.moveTo(150, 45); chronoCtx.lineTo(255, 45);
+            chronoCtx.stroke();
+
+            // Ripple pulse along active causal path
+            const pulseT = (Date.now() / 15) % 210;
+            chronoCtx.fillStyle = "#38bdf8";
+            chronoCtx.fillRect(45 + pulseT, 43, 4, 4);
+
+            nodes.forEach(n => {
+                const isActive = engine.currentEpoch === n.id;
+                chronoCtx.fillStyle = isActive ? n.color : "#1e293b";
+                chronoCtx.beginPath();
+                chronoCtx.arc(n.x, n.y, isActive ? 14 : 10, 0, Math.PI * 2);
+                chronoCtx.fill();
+                chronoCtx.strokeStyle = n.color;
+                chronoCtx.lineWidth = 2;
+                chronoCtx.stroke();
+
+                chronoCtx.fillStyle = isActive ? "#ffffff" : "#94a3b8";
+                chronoCtx.font = "bold 10px monospace";
+                chronoCtx.textAlign = "center";
+                chronoCtx.fillText(n.label, n.x, n.y + 28);
+            });
+        }
+
+        function updateUI() {
+            // Epoch Buttons
+            document.querySelectorAll('.epoch-btn').forEach(btn => {
+                if (btn.dataset.epoch === engine.currentEpoch) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // Epoch banner
+            const descEl = document.getElementById('epochDesc');
+            if (engine.currentEpoch === 'alpha') {
+                descEl.textContent = "EPOCH ALPHA (1984) — Precursor Sub-Basement Facility";
+                descEl.style.color = "var(--epoch-alpha)";
+            } else if (engine.currentEpoch === 'beta') {
+                descEl.textContent = "EPOCH BETA (2042) — Chrono-Station Prime Reality";
+                descEl.style.color = "var(--epoch-beta)";
+            } else {
+                descEl.textContent = "EPOCH GAMMA (2188) — Singularity & Decayed Ruins";
+                descEl.style.color = "var(--epoch-gamma)";
+            }
+
+            // Stats
+            document.getElementById('turnCounter').textContent = `Turn: ${engine.turn}`;
+            document.getElementById('posCoords').textContent = `Pos: (${engine.player.x}, ${engine.player.y})`;
+            document.getElementById('echoStatus').textContent = engine.isRecordingEcho ? "Echo: RECORDING" : engine.isPlayingEcho ? "Echo: PLAYING" : "Echo: Idle";
+
+            // Paradox Bar
+            const bar = document.getElementById('strainBar');
+            bar.style.width = `${engine.paradoxStrain}%`;
+            document.getElementById('strainPercent').textContent = `${engine.paradoxStrain}%`;
+            if (engine.paradoxStrain > 75) {
+                document.getElementById('strainPercent').style.color = "var(--accent-red)";
+            } else if (engine.paradoxStrain > 40) {
+                document.getElementById('strainPercent').style.color = "var(--accent-amber)";
+            } else {
+                document.getElementById('strainPercent').style.color = "var(--accent-green)";
+            }
+
+            // Scenario info
+            document.getElementById('scenarioName').textContent = `Scenario: ${engine.currentScenario.name}`;
+            document.getElementById('objectiveText').textContent = `Objective: ${engine.currentScenario.objective}`;
+
+            // Button states
+            const recBtn = document.getElementById('btnRecordEcho');
+            if (engine.isRecordingEcho) {
+                recBtn.classList.add('recording');
+                recBtn.innerHTML = "<span>⏹</span> Stop Record";
+            } else {
+                recBtn.classList.remove('recording');
+                recBtn.innerHTML = "<span>⏺</span> Record Echo";
+            }
+
+            const playBtn = document.getElementById('btnPlayEcho');
+            if (engine.isPlayingEcho) {
+                playBtn.classList.add('echo-active');
+                playBtn.innerHTML = "<span>⏹</span> Halt Echo";
+            } else {
+                playBtn.classList.remove('echo-active');
+                playBtn.innerHTML = "<span>▶</span> Execute Echo";
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toastNotification');
+            toast.textContent = msg;
+            toast.classList.add('visible');
+            setTimeout(() => {
+                toast.classList.remove('visible');
+            }, 2400);
+        }
+
+        /* --- Event Listeners & Modals --- */
+        window.addEventListener('keydown', (e) => {
+            audio.init();
+
+            // Hotkeys
+            if (e.key === 'F5') {
+                e.preventDefault();
+                engine.quicksave();
+                return;
+            }
+            if (e.key === 'F9') {
+                e.preventDefault();
+                engine.quickload();
+                return;
+            }
+            if (e.key === 'Escape') {
+                closeAllOverlays();
+                return;
+            }
+
+            // If an overlay is open, don't pass keys to game
+            const activeModal = document.querySelector('.overlay.active');
+            if (activeModal && activeModal.id !== 'splashOverlay') return;
+            if (activeModal && activeModal.id === 'splashOverlay') return;
+
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                e.preventDefault(); engine.move(0, -1);
+            } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                e.preventDefault(); engine.move(0, 1);
+            } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                e.preventDefault(); engine.move(-1, 0);
+            } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                e.preventDefault(); engine.move(1, 0);
+            } else if (e.key === ' ') {
+                e.preventDefault(); engine.interact();
+            } else if (e.key === 'Tab') {
+                e.preventDefault();
+                const next = engine.currentEpoch === 'alpha' ? 'beta' : engine.currentEpoch === 'beta' ? 'gamma' : 'alpha';
+                engine.switchEpoch(next);
+            } else if (e.key === '1') {
+                engine.switchEpoch('alpha');
+            } else if (e.key === '2') {
+                engine.switchEpoch('beta');
+            } else if (e.key === '3') {
+                engine.switchEpoch('gamma');
+            } else if (e.key === 'r' || e.key === 'R') {
+                engine.toggleRecordEcho();
+            } else if (e.key === 'p' || e.key === 'P') {
+                engine.togglePlayEcho();
+            } else if (e.key === 'z' || e.key === 'Z' || e.key === 'u' || e.key === 'U') {
+                engine.undo();
+            }
+        });
+
+        // Click-to-move / tile inspection on canvas
+        canvas.addEventListener('click', (e) => {
+            audio.init();
+            const rect = canvas.getBoundingClientRect();
+            const clickX = Math.floor((e.clientX - rect.left) / TILE_SIZE);
+            const clickY = Math.floor((e.clientY - rect.top) / TILE_SIZE);
+
+            if (clickX >= 0 && clickX < GRID_W && clickY >= 0 && clickY < GRID_H) {
+                const dx = clickX - engine.player.x;
+                const dy = clickY - engine.player.y;
+                if (Math.abs(dx) + Math.abs(dy) === 1) {
+                    engine.move(dx, dy);
+                } else if (dx === 0 && dy === 0) {
+                    engine.interact();
+                } else {
+                    inspectTileAt(clickX, clickY);
+                }
+            }
+        });
+
+        function inspectTileAt(x, y) {
+            const tile = engine.grids[engine.currentEpoch][y][x];
+            let name = "Standard Floor";
+            let causality = "Coherent floor plate. No divergent timeline events detected.";
+
+            if (tile === TILES.WALL) {
+                name = "Heavy Alloy Bulkhead";
+                causality = "Impenetrable across all known spacetime dimensions.";
+            } else if (tile === TILES.PRECURSOR_RELAY) {
+                name = "Precursor Geothermal Relay";
+                causality = engine.flags.precursorRepaired ? "ACTIVE: Routing power forward into 2042 and 2188." : "OFFLINE: Severed circuit in 1984 prevents downstream power delivery.";
+            } else if (tile === TILES.BLAST_GATE) {
+                name = "Quantum Blast Gate";
+                causality = "Locked by security circuit. Requires upstream power or active pressure plate.";
+            } else if (tile === TILES.PRESSURE_PLATE) {
+                name = "Temporal Biometric Plate";
+                causality = "Requires persistent physical weight to bridge circuit.";
+            } else if (tile === TILES.SAPLING_VAULT) {
+                name = "Genetic Seed Vault";
+                causality = engine.flags.seedPlanted ? "PLANTED: Chronal bio-matter growing across timelines." : "DORMANT: Contains unplanted chronoseeds.";
+            } else if (tile === TILES.QUANTUM_CORE) {
+                name = "Quantum Station Chrono-Core";
+                causality = "Target terminal of the active mission scenario.";
+            }
+
+            document.getElementById('nodeInspector').innerHTML = `<b>${name}</b> at (${x}, ${y})<br><span style="color: #94a3b8;">${causality}</span>`;
+        }
+
+        // Close overlays helper
+        function closeAllOverlays() {
+            document.querySelectorAll('.overlay').forEach(el => el.classList.remove('active'));
+        }
+
+        // Epoch switch buttons
+        document.getElementById('btnEpochAlpha').addEventListener('click', () => { audio.init(); engine.switchEpoch('alpha'); });
+        document.getElementById('btnEpochBeta').addEventListener('click', () => { audio.init(); engine.switchEpoch('beta'); });
+        document.getElementById('btnEpochGamma').addEventListener('click', () => { audio.init(); engine.switchEpoch('gamma'); });
+
+        // Action controls
+        document.getElementById('btnRecordEcho').addEventListener('click', () => { audio.init(); engine.toggleRecordEcho(); });
+        document.getElementById('btnPlayEcho').addEventListener('click', () => { audio.init(); engine.togglePlayEcho(); });
+        document.getElementById('btnRewind').addEventListener('click', () => { audio.init(); engine.undo(); });
+        document.getElementById('btnQuicksave').addEventListener('click', () => { audio.init(); engine.quicksave(); });
+        document.getElementById('btnQuickload').addEventListener('click', () => { audio.init(); engine.quickload(); });
+        document.getElementById('btnClearLog').addEventListener('click', () => { document.getElementById('eventLog').innerHTML = ''; });
+
+        // Splash Buttons
+        document.getElementById('btnSplashNew').addEventListener('click', () => {
+            audio.init();
+            closeAllOverlays();
+            engine.initScenario(SCENARIOS[0]);
+            // Check first-run tutorial flag
+            if (!localStorage.getItem('kchrono_tutorialSeen')) {
+                document.getElementById('tutorialOverlay').classList.add('active');
+            }
+        });
+
+        document.getElementById('btnSplashContinue').addEventListener('click', () => {
+            audio.init();
+            if (engine.quickload()) {
+                closeAllOverlays();
+            }
+        });
+
+        document.getElementById('btnSplashScenarios').addEventListener('click', () => {
+            audio.init();
+            openScenarioModal();
+        });
+
+        document.getElementById('btnSplashHelp').addEventListener('click', () => {
+            audio.init();
+            document.getElementById('helpOverlay').classList.add('active');
+        });
+
+        document.getElementById('btnSplashSettings').addEventListener('click', () => {
+            audio.init();
+            document.getElementById('settingsOverlay').classList.add('active');
+        });
+
+        // Top bar buttons
+        document.getElementById('btnScenarios').addEventListener('click', () => { audio.init(); openScenarioModal(); });
+        document.getElementById('btnHelp').addEventListener('click', () => { audio.init(); document.getElementById('helpOverlay').classList.add('active'); });
+        document.getElementById('btnSettings').addEventListener('click', () => { audio.init(); document.getElementById('settingsOverlay').classList.add('active'); });
+
+        // Modal Close Buttons
+        document.getElementById('btnHelpClose').addEventListener('click', closeAllOverlays);
+        document.getElementById('btnHelpDismiss').addEventListener('click', closeAllOverlays);
+        document.getElementById('btnSettingsClose').addEventListener('click', closeAllOverlays);
+        document.getElementById('btnSettingsDismiss').addEventListener('click', closeAllOverlays);
+        document.getElementById('btnScenarioClose').addEventListener('click', closeAllOverlays);
+
+        // Tutorial Dismiss
+        document.getElementById('btnTutClose').addEventListener('click', () => {
+            localStorage.setItem('kchrono_tutorialSeen', 'true');
+            closeAllOverlays();
+        });
+        document.getElementById('btnTutDismiss').addEventListener('click', () => {
+            localStorage.setItem('kchrono_tutorialSeen', 'true');
+            closeAllOverlays();
+        });
+
+        // Scenario modal rendering
+        let selectedScenarioIndex = 0;
+        function openScenarioModal() {
+            const listEl = document.getElementById('scenarioList');
+            listEl.innerHTML = '';
+            SCENARIOS.forEach((sc, idx) => {
+                const div = document.createElement('div');
+                div.className = `scenario-item ${idx === selectedScenarioIndex ? 'active' : ''}`;
+                div.innerHTML = `
+                    <div class="scenario-header">
+                        <span>#${sc.id}: ${sc.name}</span>
+                        <span style="font-size: 10px; color: var(--epoch-beta);">${sc.startEpoch.toUpperCase()}</span>
+                    </div>
+                    <div class="scenario-desc">${sc.briefing}</div>
+                `;
+                div.addEventListener('click', () => {
+                    selectedScenarioIndex = idx;
+                    document.querySelectorAll('.scenario-item').forEach(el => el.classList.remove('active'));
+                    div.classList.add('active');
+                });
+                listEl.appendChild(div);
+            });
+            document.getElementById('scenarioOverlay').classList.add('active');
+        }
+
+        document.getElementById('btnScenarioLaunch').addEventListener('click', () => {
+            closeAllOverlays();
+            engine.initScenario(SCENARIOS[selectedScenarioIndex]);
+        });
+
+        // Settings events
+        document.getElementById('volSlider').addEventListener('input', (e) => {
+            audio.setVolume(e.target.value / 100);
+        });
+        document.getElementById('chkSfx').addEventListener('change', (e) => {
+            audio.sfxEnabled = e.target.checked;
+        });
+        document.getElementById('chkDrone').addEventListener('change', (e) => {
+            audio.droneEnabled = e.target.checked;
+            audio.setVolume(document.getElementById('volSlider').value / 100);
+        });
+        document.getElementById('chkCrt').addEventListener('change', (e) => {
+            if (e.target.checked) {
+                document.body.classList.remove('no-crt');
+            } else {
+                document.body.classList.add('no-crt');
+            }
+        });
+        document.getElementById('selTheme').addEventListener('change', (e) => {
+            document.body.dataset.theme = e.target.value;
+        });
+        document.getElementById('btnResetTutorial').addEventListener('click', () => {
+            localStorage.removeItem('kchrono_tutorialSeen');
+            showToast("Tutorial reset! Will display on next New Timeline.");
+        });
+
+        // Export JSON
+        document.getElementById('btnExportJson').addEventListener('click', () => {
+            const saveObj = {
+                scenarioId: engine.currentScenario.id,
+                currentEpoch: engine.currentEpoch,
+                turn: engine.turn,
+                paradoxStrain: engine.paradoxStrain,
+                player: engine.player,
+                flags: engine.flags,
+                grids: engine.grids,
+                entities: engine.entities,
+                echoBuffer: engine.echoBuffer
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(saveObj, null, 2));
+            const a = document.createElement('a');
+            a.setAttribute("href", dataStr);
+            a.setAttribute("download", `kchrono_save_turn_${engine.turn}.json`);
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            showToast("Timeline state exported as JSON!");
+        });
+
+        // Import JSON
+        document.getElementById('btnImportJson').addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        const data = JSON.parse(evt.target.result);
+                        localStorage.setItem('kchrono_quicksave', JSON.stringify(data));
+                        engine.quickload();
+                        closeAllOverlays();
+                        showToast("JSON state loaded successfully!");
+                    } catch(err) {
+                        showToast("Error parsing JSON save file.");
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        });
+
+        // Check if quicksave exists on page load
+        if (localStorage.getItem('kchrono_quicksave')) {
+            document.getElementById('btnSplashContinue').disabled = false;
+        }
+
+        // Initialize engine with Scenario 1
+        engine.initScenario(SCENARIOS[0]);
+
+        // Start render loop
+        requestAnimationFrame(render);
+    </script>
+</body>
+</html>
