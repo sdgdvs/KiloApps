@@ -51,7 +51,7 @@
 
 ---
 
-**Target App:** KSnake
+**Target App:** KSolitaire
 **Status:** Next (Pass 5: Tutorial & Save System Integrity)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -127,3 +127,4 @@ Focus on verifying tutorial and save system infrastructure across all games:
 - **KAudio**: ✅ Done (Pass 5). Full workstation session save/load implemented for web & native; kaudio_tutorialSeen flag wired (fires on new session only); hoisted GDI pen/brushes in FFT spectrum loop; Ctrl/Alt/Meta modifier guards added; sound preset node leaks and URL revocation lifetime fixed. Native (20.9 KB) and web verified.
 - **KBBS**: ✅ Done (Pass 5). Persistent door game save/load (LORD & TradeWars) & quicksave/quickload implemented for web & native; kbbs_tutorialSeen flag wired with 4-tab interactive guide; host/port session persistence added; welcome banner displayed; object URL revocations fixed. Native (101.8 KB) and web verified.
 - **KMaze**: ✅ Done (Pass 5). Full checkpoint save/load hardened (isCrouching, bossHP, timers); kmaze_tutorialSeen wired (fires on new game only); splash screen overlay & New Game/Continue/Help buttons wired; start screen keyboard shortcuts (N, L) restored. Native (64.0 KB) and web verified.
+- **KSnake**: ✅ Done (Pass 5). Full game state quicksave/quickload hardened (boss, rivals, skills, hazards, fruits); ksnake_tutorialSeen flag & native first-run guide wired (fires on new game only); F5/F9 hotkeys & menu indicators added; save file deletion bug fixed. Native (53.5 KB) and web verified.

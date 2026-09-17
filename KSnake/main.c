@@ -238,6 +238,7 @@ void SaveStats(void);
 void LoadStats(void);
 void SaveGameState(void);
 int RestoreGameState(void);
+void CheckFirstRunTutorial(HWND hwnd, int savedGameLoaded);
 void SaveCustomMap(void);
 void LoadCustomMap(void);
 void ClearCustomMap(void);
@@ -567,14 +568,54 @@ void SaveStats() {
     }
 }
 
+void CheckFirstRunTutorial(HWND hwnd, int savedGameLoaded) {
+    HANDLE hFile = CreateFileA("ksnake_tutorial.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFile);
+        return;
+    }
+    hFile = CreateFileA("ksnake_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char val = '1';
+        DWORD written = 0;
+        WriteFile(hFile, &val, 1, &written, NULL);
+        CloseHandle(hFile);
+    }
+    if (!savedGameLoaded) {
+        char helpText[1024];
+        wsprintfA(helpText,
+            "Welcome to KSnake Arcade!\n\n"
+            "Controls:\n"
+            "- Movement: Arrow Keys or WASD\n"
+            "- Pause: P or ESC\n"
+            "- Help & High Scores: F1 or H\n\n"
+            "Active Skills:\n"
+            "- [G] Ghost Mode: Glide through walls & tail\n"
+            "- [F] Freeze: Slow enemy snakes and hazards by 50%%\n"
+            "- [M] Magnet: Pull nearby fruits to your snake\n\n"
+            "Quicksave System:\n"
+            "- [F5] Quicksave at any time during gameplay\n"
+            "- [F9] Quickload instantly at any time\n"
+            "- [S / Q] in Pause menu to Save & Exit to title\n\n"
+            "Game Modes:\n"
+            "- Classic, Maze, Speed Ramp, Wall Wrap, Campaign, VS Mode, Custom Map, Gauntlet\n\n"
+            "Press OK to begin your game!");
+        MessageBoxA(hwnd, helpText, "KSnake Arcade - Quick Tutorial", MB_OK | MB_ICONINFORMATION);
+    }
+}
+
 void SaveGameState() {
     HANDLE hFile = CreateFileA("ksnake_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
-        DWORD bw;
+        DWORD bw = 0;
+        int magic = 0x534E4B31; // 'SNK1'
+        WriteFile(hFile, &magic, sizeof(int), &bw, NULL);
         WriteFile(hFile, &snake_len, sizeof(int), &bw, NULL);
         WriteFile(hFile, snake, sizeof(struct Point) * snake_len, &bw, NULL);
         WriteFile(hFile, &dir_x, sizeof(int), &bw, NULL);
         WriteFile(hFile, &dir_y, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &last_dir_x, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &last_dir_y, sizeof(int), &bw, NULL);
         WriteFile(hFile, &food, sizeof(struct Point), &bw, NULL);
         WriteFile(hFile, &game_mode, sizeof(int), &bw, NULL);
         WriteFile(hFile, &wrap_mode, sizeof(int), &bw, NULL);
@@ -582,11 +623,51 @@ void SaveGameState() {
         WriteFile(hFile, &score, sizeof(int), &bw, NULL);
         WriteFile(hFile, &score_mult, sizeof(int), &bw, NULL);
         WriteFile(hFile, &current_speed, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &base_speed, sizeof(int), &bw, NULL);
         WriteFile(hFile, &num_obstacles, sizeof(int), &bw, NULL);
         WriteFile(hFile, obstacles, sizeof(struct Point) * num_obstacles, &bw, NULL);
         WriteFile(hFile, &campaign_level, sizeof(int), &bw, NULL);
         WriteFile(hFile, &campaign_branch, sizeof(int), &bw, NULL);
         WriteFile(hFile, &gauntlet_stage, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &apples_eaten, sizeof(int), &bw, NULL);
+        // Skills
+        WriteFile(hFile, &ghost_cd, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &ghost_active, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &freeze_cd, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &freeze_active, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &magnet_cd, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &magnet_active, sizeof(int), &bw, NULL);
+        // Fruits
+        WriteFile(hFile, &golden_apple, sizeof(struct Point), &bw, NULL);
+        WriteFile(hFile, &golden_timer, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &poison_berry, sizeof(struct Point), &bw, NULL);
+        WriteFile(hFile, &poison_timer, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &poison_active_timer, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &speed_berry, sizeof(struct Point), &bw, NULL);
+        WriteFile(hFile, &speed_timer, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &speed_active_timer, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &ghost_berry, sizeof(struct Point), &bw, NULL);
+        // Portals
+        WriteFile(hFile, &portal_active, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &portal_a, sizeof(struct Point), &bw, NULL);
+        WriteFile(hFile, &portal_b, sizeof(struct Point), &bw, NULL);
+        WriteFile(hFile, &portal_shift_timer, sizeof(int), &bw, NULL);
+        // Boss
+        WriteFile(hFile, &boss, sizeof(struct Boss), &bw, NULL);
+        // Hazards
+        WriteFile(hFile, &num_oil_slicks, sizeof(int), &bw, NULL);
+        WriteFile(hFile, oil_slicks, sizeof(struct Point) * 50, &bw, NULL);
+        WriteFile(hFile, &num_magma, sizeof(int), &bw, NULL);
+        WriteFile(hFile, magma_hazards, sizeof(struct Point) * 50, &bw, NULL);
+        WriteFile(hFile, magma_timers, sizeof(int) * 50, &bw, NULL);
+        // Rivals
+        WriteFile(hFile, &num_rivals, sizeof(int), &bw, NULL);
+        WriteFile(hFile, rivals, sizeof(struct CPUSnake) * 4, &bw, NULL);
+        // Match metrics
+        WriteFile(hFile, &match_ticks, sizeof(int), &bw, NULL);
+        WriteFile(hFile, &match_apples_gained, sizeof(int), &bw, NULL);
+        WriteFile(hFile, grid_coverage, sizeof(grid_coverage), &bw, NULL);
+        WriteFile(hFile, &grid_coverage_count, sizeof(int), &bw, NULL);
         CloseHandle(hFile);
     }
 }
@@ -594,29 +675,123 @@ void SaveGameState() {
 int RestoreGameState() {
     HANDLE hFile = CreateFileA("ksnake_save.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) return 0;
-    DWORD br;
-    ReadFile(hFile, &snake_len, sizeof(int), &br, NULL);
-    if (snake_len < 1) snake_len = 1;
-    if (snake_len > 400) snake_len = 400;
-    ReadFile(hFile, snake, sizeof(struct Point) * snake_len, &br, NULL);
-    ReadFile(hFile, &dir_x, sizeof(int), &br, NULL);
-    ReadFile(hFile, &dir_y, sizeof(int), &br, NULL);
-    ReadFile(hFile, &food, sizeof(struct Point), &br, NULL);
-    ReadFile(hFile, &game_mode, sizeof(int), &br, NULL);
-    ReadFile(hFile, &wrap_mode, sizeof(int), &br, NULL);
-    ReadFile(hFile, &difficulty, sizeof(int), &br, NULL);
-    ReadFile(hFile, &score, sizeof(int), &br, NULL);
-    ReadFile(hFile, &score_mult, sizeof(int), &br, NULL);
-    ReadFile(hFile, &current_speed, sizeof(int), &br, NULL);
-    ReadFile(hFile, &num_obstacles, sizeof(int), &br, NULL);
-    if (num_obstacles < 0) num_obstacles = 0;
-    if (num_obstacles > 120) num_obstacles = 120;
-    ReadFile(hFile, obstacles, sizeof(struct Point) * num_obstacles, &br, NULL);
-    ReadFile(hFile, &campaign_level, sizeof(int), &br, NULL);
-    ReadFile(hFile, &campaign_branch, sizeof(int), &br, NULL);
-    ReadFile(hFile, &gauntlet_stage, sizeof(int), &br, NULL);
+    DWORD br = 0;
+    int magic = 0;
+    ReadFile(hFile, &magic, sizeof(int), &br, NULL);
+    if (magic == 0x534E4B31) { // New comprehensive format ('SNK1')
+        ReadFile(hFile, &snake_len, sizeof(int), &br, NULL);
+        if (snake_len < 1) snake_len = 1;
+        if (snake_len > 400) snake_len = 400;
+        ReadFile(hFile, snake, sizeof(struct Point) * snake_len, &br, NULL);
+        ReadFile(hFile, &dir_x, sizeof(int), &br, NULL);
+        ReadFile(hFile, &dir_y, sizeof(int), &br, NULL);
+        ReadFile(hFile, &last_dir_x, sizeof(int), &br, NULL);
+        ReadFile(hFile, &last_dir_y, sizeof(int), &br, NULL);
+        ReadFile(hFile, &food, sizeof(struct Point), &br, NULL);
+        ReadFile(hFile, &game_mode, sizeof(int), &br, NULL);
+        if (game_mode < 0 || game_mode >= NUM_MODES) game_mode = 0;
+        ReadFile(hFile, &wrap_mode, sizeof(int), &br, NULL);
+        ReadFile(hFile, &difficulty, sizeof(int), &br, NULL);
+        if (difficulty < 0 || difficulty > 2) difficulty = 1;
+        ReadFile(hFile, &score, sizeof(int), &br, NULL);
+        ReadFile(hFile, &score_mult, sizeof(int), &br, NULL);
+        ReadFile(hFile, &current_speed, sizeof(int), &br, NULL);
+        if (current_speed < 30 || current_speed > 500) current_speed = 150;
+        ReadFile(hFile, &base_speed, sizeof(int), &br, NULL);
+        ReadFile(hFile, &num_obstacles, sizeof(int), &br, NULL);
+        if (num_obstacles < 0) num_obstacles = 0;
+        if (num_obstacles > 120) num_obstacles = 120;
+        ReadFile(hFile, obstacles, sizeof(struct Point) * num_obstacles, &br, NULL);
+        ReadFile(hFile, &campaign_level, sizeof(int), &br, NULL);
+        ReadFile(hFile, &campaign_branch, sizeof(int), &br, NULL);
+        ReadFile(hFile, &gauntlet_stage, sizeof(int), &br, NULL);
+        ReadFile(hFile, &apples_eaten, sizeof(int), &br, NULL);
+        // Skills
+        ReadFile(hFile, &ghost_cd, sizeof(int), &br, NULL);
+        ReadFile(hFile, &ghost_active, sizeof(int), &br, NULL);
+        ReadFile(hFile, &freeze_cd, sizeof(int), &br, NULL);
+        ReadFile(hFile, &freeze_active, sizeof(int), &br, NULL);
+        ReadFile(hFile, &magnet_cd, sizeof(int), &br, NULL);
+        ReadFile(hFile, &magnet_active, sizeof(int), &br, NULL);
+        // Special Fruits
+        ReadFile(hFile, &golden_apple, sizeof(struct Point), &br, NULL);
+        ReadFile(hFile, &golden_timer, sizeof(int), &br, NULL);
+        ReadFile(hFile, &poison_berry, sizeof(struct Point), &br, NULL);
+        ReadFile(hFile, &poison_timer, sizeof(int), &br, NULL);
+        ReadFile(hFile, &poison_active_timer, sizeof(int), &br, NULL);
+        ReadFile(hFile, &speed_berry, sizeof(struct Point), &br, NULL);
+        ReadFile(hFile, &speed_timer, sizeof(int), &br, NULL);
+        ReadFile(hFile, &speed_active_timer, sizeof(int), &br, NULL);
+        ReadFile(hFile, &ghost_berry, sizeof(struct Point), &br, NULL);
+        // Portals
+        ReadFile(hFile, &portal_active, sizeof(int), &br, NULL);
+        ReadFile(hFile, &portal_a, sizeof(struct Point), &br, NULL);
+        ReadFile(hFile, &portal_b, sizeof(struct Point), &br, NULL);
+        ReadFile(hFile, &portal_shift_timer, sizeof(int), &br, NULL);
+        // Boss
+        ReadFile(hFile, &boss, sizeof(struct Boss), &br, NULL);
+        // Hazards
+        ReadFile(hFile, &num_oil_slicks, sizeof(int), &br, NULL);
+        if (num_oil_slicks < 0) num_oil_slicks = 0;
+        if (num_oil_slicks > 50) num_oil_slicks = 50;
+        ReadFile(hFile, oil_slicks, sizeof(struct Point) * 50, &br, NULL);
+        ReadFile(hFile, &num_magma, sizeof(int), &br, NULL);
+        if (num_magma < 0) num_magma = 0;
+        if (num_magma > 50) num_magma = 50;
+        ReadFile(hFile, magma_hazards, sizeof(struct Point) * 50, &br, NULL);
+        ReadFile(hFile, magma_timers, sizeof(int) * 50, &br, NULL);
+        // Rivals
+        ReadFile(hFile, &num_rivals, sizeof(int), &br, NULL);
+        if (num_rivals < 0) num_rivals = 0;
+        if (num_rivals > 4) num_rivals = 4;
+        ReadFile(hFile, rivals, sizeof(struct CPUSnake) * 4, &br, NULL);
+        // Match metrics
+        ReadFile(hFile, &match_ticks, sizeof(int), &br, NULL);
+        ReadFile(hFile, &match_apples_gained, sizeof(int), &br, NULL);
+        ReadFile(hFile, grid_coverage, sizeof(grid_coverage), &br, NULL);
+        ReadFile(hFile, &grid_coverage_count, sizeof(int), &br, NULL);
+    } else { // Legacy format fallback where first int was snake_len
+        snake_len = magic;
+        if (snake_len < 1) snake_len = 1;
+        if (snake_len > 400) snake_len = 400;
+        ReadFile(hFile, snake, sizeof(struct Point) * snake_len, &br, NULL);
+        ReadFile(hFile, &dir_x, sizeof(int), &br, NULL);
+        ReadFile(hFile, &dir_y, sizeof(int), &br, NULL);
+        last_dir_x = dir_x; last_dir_y = dir_y;
+        ReadFile(hFile, &food, sizeof(struct Point), &br, NULL);
+        ReadFile(hFile, &game_mode, sizeof(int), &br, NULL);
+        ReadFile(hFile, &wrap_mode, sizeof(int), &br, NULL);
+        ReadFile(hFile, &difficulty, sizeof(int), &br, NULL);
+        ReadFile(hFile, &score, sizeof(int), &br, NULL);
+        ReadFile(hFile, &score_mult, sizeof(int), &br, NULL);
+        ReadFile(hFile, &current_speed, sizeof(int), &br, NULL);
+        ReadFile(hFile, &num_obstacles, sizeof(int), &br, NULL);
+        if (num_obstacles < 0) num_obstacles = 0;
+        if (num_obstacles > 120) num_obstacles = 120;
+        ReadFile(hFile, obstacles, sizeof(struct Point) * num_obstacles, &br, NULL);
+        ReadFile(hFile, &campaign_level, sizeof(int), &br, NULL);
+        ReadFile(hFile, &campaign_branch, sizeof(int), &br, NULL);
+        ReadFile(hFile, &gauntlet_stage, sizeof(int), &br, NULL);
+        apples_eaten = 0;
+        ghost_cd = ghost_active = 0;
+        freeze_cd = freeze_active = 0;
+        magnet_cd = magnet_active = 0;
+        golden_apple.x = -1; golden_timer = 0;
+        poison_berry.x = -1; poison_timer = poison_active_timer = 0;
+        speed_berry.x = -1; speed_timer = speed_active_timer = 0;
+        ghost_berry.x = -1;
+        portal_active = 0;
+        boss.alive = 0;
+        num_oil_slicks = 0;
+        num_magma = 0;
+        num_rivals = 0;
+    }
     CloseHandle(hFile);
-    DeleteFileA("ksnake_save.dat");
+    particle_count = 0;
+    num_shockwaves = 0;
+    screen_shake_timer = 0;
+    shockwave_timer = 0;
+    is_replay_mode = 0;
     return 1;
 }
 
@@ -1833,7 +2008,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (RestoreGameState()) {
                         game_state = 1;
                         SetTimer(hwnd, TIMER_ID, current_speed, NULL);
-                        ShowToastNative("Game Resumed!");
+                        ShowToastNative("Game Resumed! [F9]");
                     } else {
                         ShowToastNative("No Saved Game Found");
                     }
@@ -1843,6 +2018,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (ly >= 310 && ly < 355) {
                     is_replay_mode = 0;
+                    CheckFirstRunTutorial(hwnd, 0);
                     InitGame();
                     SetTimer(hwnd, TIMER_ID, current_speed, NULL);
                     InvalidateRect(hwnd, NULL, TRUE);
@@ -2411,6 +2587,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_KEYDOWN: {
+            if (wParam == VK_F5) {
+                if (game_state == 1 || game_state == 3) {
+                    SaveGameState();
+                    ShowToastNative("Quicksaved to ksnake_save.dat [F5]");
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else {
+                    ShowToastNative("No active game to save.");
+                }
+                break;
+            }
+            if (wParam == VK_F9) {
+                if (RestoreGameState()) {
+                    game_state = 1;
+                    SetTimer(hwnd, TIMER_ID, current_speed, NULL);
+                    ShowToastNative("Quicksave Loaded! [F9]");
+                } else {
+                    ShowToastNative("No Saved Game Found [F9]");
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
+
             if (game_state == 0) { // Menu
                 if (wParam == 'M') {
                     game_mode = (game_mode + 1) % NUM_MODES;
@@ -2427,7 +2625,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (wParam == 'R') {
                     if (RestoreGameState()) {
                         game_state = 1; SetTimer(hwnd, TIMER_ID, current_speed, NULL);
-                        ShowToastNative("Game Resumed!");
+                        ShowToastNative("Game Resumed! [F9]");
                     } else {
                         ShowToastNative("No Saved Game Found");
                     }
@@ -2440,6 +2638,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (wParam == VK_ESCAPE) { PostMessage(hwnd, WM_CLOSE, 0, 0); }
                 else if (wParam == VK_RETURN) {
                     is_replay_mode = 0;
+                    CheckFirstRunTutorial(hwnd, 0);
                     InitGame(); SetTimer(hwnd, TIMER_ID, current_speed, NULL);
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -2602,7 +2801,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(hdc, 110, 150, "C - Config Keys", 15);
                 TextOutA(hdc, 110, 175, "S - Match Stats (Last)", 22);
                 TextOutA(hdc, 110, 200, "X - Play Replay (.ksr)", 22);
-                TextOutA(hdc, 110, 225, "R - Resume Saved Game", 21);
+                DWORD saveAttr = GetFileAttributesA("ksnake_save.dat");
+                int hasSave = (saveAttr != INVALID_FILE_ATTRIBUTES && !(saveAttr & FILE_ATTRIBUTE_DIRECTORY));
+                if (hasSave) {
+                    SetTextColor(hdc, RGB(76, 209, 55));
+                    TextOutA(hdc, 110, 225, "R / F9 - Resume Saved Game", 26);
+                } else {
+                    SetTextColor(hdc, RGB(130, 140, 150));
+                    TextOutA(hdc, 110, 225, "R / F9 - Resume Saved Game (None)", 33);
+                }
+                SetTextColor(hdc, RGB(255, 255, 255));
                 TextOutA(hdc, 110, 250, "Move: WASD/Arrows | Skills: G,F,M | Pause: P/ESC", 48);
 
                 SetTextColor(hdc, RGB(72, 219, 251));
@@ -2723,9 +2931,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 SelectObject(hdc, hFontSmall);
                 SetTextColor(hdc, RGB(255, 255, 255));
-                TextOutA(hdc, 40, 75, "Controls: WASD/Arrows to Move, P/ESC to Pause", 45);
-                TextOutA(hdc, 40, 100, "Skills: G=Ghost, F=Freeze, M=Magnet", 35);
-                TextOutA(hdc, 40, 125, "Modes: Classic, Maze, Ramp, Campaign, VS, Custom, Gauntlet", 59);
+                TextOutA(hdc, 40, 70, "Controls: WASD/Arrows to Move, P/ESC to Pause", 45);
+                TextOutA(hdc, 40, 92, "Skills: G=Ghost, F=Freeze, M=Magnet", 35);
+                TextOutA(hdc, 40, 114, "Save System: F5 Quicksave, F9 Quickload anytime", 47);
+                TextOutA(hdc, 40, 136, "Modes: Classic, Maze, Ramp, Campaign, VS, Custom, Gauntlet", 58);
 
                 SetTextColor(hdc, RGB(251, 197, 49));
                 for(i=0; i<5; i++) {
@@ -2738,10 +2947,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(hdc, 100, 330, "[ ENTER / ESC / F1 to Return ]", 30);
             } else if (game_state == 3) {
                 SetTextColor(hdc, RGB(251, 197, 49));
-                TextOutA(hdc, 210, 200, "PAUSED", 6);
+                TextOutA(hdc, 210, 190, "PAUSED", 6);
                 SelectObject(hdc, hFontSmall);
                 SetTextColor(hdc, RGB(255, 255, 255));
-                TextOutA(hdc, 110, 250, "[P / ESC] Resume   |   [S / Q] Save & Exit", 42);
+                TextOutA(hdc, 110, 235, "[P / ESC] Resume   |   [S / Q] Save & Exit", 42);
+                SetTextColor(hdc, RGB(76, 209, 55));
+                TextOutA(hdc, 110, 260, "[F5] Quicksave     |   [F9] Quickload", 37);
                 SelectObject(hdc, hFont);
             } else if (game_state == 2) {
                 char sbuf[32];
@@ -2762,7 +2973,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SelectObject(hdc, hFont);
                 } else {
                     SelectObject(hdc, hFontSmall);
-                    TextOutA(hdc, 130, 270, "Press ENTER or ESC to Return", 28);
+                    TextOutA(hdc, 130, 260, "Press ENTER or ESC to Return", 28);
+                    DWORD goSaveAttr = GetFileAttributesA("ksnake_save.dat");
+                    if (goSaveAttr != INVALID_FILE_ATTRIBUTES && !(goSaveAttr & FILE_ATTRIBUTE_DIRECTORY)) {
+                        SetTextColor(hdc, RGB(76, 209, 55));
+                        TextOutA(hdc, 130, 285, "[F9] Reload Quicksave Checkpoint", 32);
+                    }
                     SelectObject(hdc, hFont);
                 }
             } else if (game_state == 4) { // VICTORY!

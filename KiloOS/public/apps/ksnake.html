@@ -129,7 +129,10 @@
                     <button class="btn" onclick="saveScoreEntry()">Save</button>
                 </div>
                 <p style="margin-top: 8px;">Press <b style="color:#00d2d3">ENTER</b> or <b style="color:#00d2d3">ESC</b> to Return</p>
-                <button class="btn" onclick="showMenu()" style="margin-top:4px;">Back to Menu</button>
+                <div style="display:flex; gap:6px; margin-top:4px; flex-wrap:wrap; justify-content:center;">
+                    <button class="btn" onclick="showMenu()">Back to Menu</button>
+                    <button class="btn" id="btnGameOverQuickload" onclick="quickLoad()" style="display:none;">[F9] Reload Quicksave</button>
+                </div>
             </div>
 
             <!-- PAUSE OVERLAY -->
@@ -734,8 +737,8 @@
             const highest = leaderboard.length > 0 ? Math.max(...leaderboard.map(l => l.score)) : 0;
             document.getElementById('highDisplay').innerText = `High: ${highest}`;
             
-            const savedState = safeGetStorage('ksnakeSaveState');
-            resumeBtn.style.display = savedState ? 'inline-block' : 'none';
+            const savedState = safeGetJSON('ksnakeSaveState', null);
+            resumeBtn.style.display = (savedState && savedState.snake && savedState.snake.length > 0) ? 'inline-block' : 'none';
             document.getElementById('btnStatsExport').style.display = lastMatchStats ? 'inline-block' : 'none';
             updateSoundButtonUI();
         }
@@ -787,18 +790,18 @@
         function showTutorial(autoStart = false) {
             hideOverlays();
             const btn = document.getElementById('btnTutorialPrimary');
-            if (btn) btn.innerText = autoStart ? "Start Game [ENTER]" : "Close [ENTER]";
+            if (btn) btn.innerText = "Start Game [ENTER]";
             tutorialAutoStart = autoStart;
             if (tutorialOverlay) tutorialOverlay.style.display = 'flex';
         }
 
-        function closeTutorial(startIfAuto = false) {
+        function closeTutorial(startGame = false) {
             hideOverlays();
-            if (startIfAuto && tutorialAutoStart) {
-                tutorialAutoStart = false;
+            const shouldStart = startGame;
+            tutorialAutoStart = false;
+            if (shouldStart) {
                 startNewGameInternal(false, true);
             } else {
-                tutorialAutoStart = false;
                 showMenu();
             }
         }
@@ -1401,6 +1404,9 @@
             if (isHigh) {
                 setTimeout(() => { const inp = document.getElementById('initialsInput'); if (inp) { inp.focus(); inp.select(); } }, 60);
             }
+            const savedState = safeGetJSON('ksnakeSaveState', null);
+            const qlBtn = document.getElementById('btnGameOverQuickload');
+            if (qlBtn) qlBtn.style.display = (savedState && savedState.snake && savedState.snake.length > 0) ? 'inline-block' : 'none';
             gameOverOverlay.style.display = 'flex';
             lastMatchStats = { ticks: matchTicks, apples: matchApplesEaten, coverage: Math.round((gridCoverage.size / 400) * 100), score: score, mode: gameMode };
             requestAnimationFrame(draw);
@@ -1424,6 +1430,8 @@
             if (isHighVic) {
                 setTimeout(() => { const inp = document.getElementById('initialsInput'); if (inp) { inp.focus(); inp.select(); } }, 60);
             }
+            const qlBtn = document.getElementById('btnGameOverQuickload');
+            if (qlBtn) qlBtn.style.display = 'none';
             gameOverOverlay.style.display = 'flex';
             lastMatchStats = { ticks: matchTicks, apples: matchApplesEaten, coverage: Math.round((gridCoverage.size / 400) * 100), score: score, mode: gameMode };
             requestAnimationFrame(draw);
@@ -2808,6 +2816,10 @@
                 showToast("No active game to save.");
                 return;
             }
+            if (isReplayMode) {
+                showToast("Cannot save during replay.");
+                return;
+            }
             const saveState = getGameStatePayload();
             safeSetStorage('ksnakeSaveState', saveState);
             const rBtn = document.getElementById('resumeBtn');
@@ -2817,16 +2829,19 @@
 
         function quickLoad() {
             const s = safeGetJSON('ksnakeSaveState', null);
-            if (!s) {
+            if (!s || !s.snake || s.snake.length === 0) {
                 showToast("No save file to load. [F9]");
                 return;
             }
             resumeGame();
-            showToast("Quicksave loaded! [F9]");
         }
 
         function saveAndExit() {
             if (gameState !== 3 && gameState !== 1) return;
+            if (isReplayMode) {
+                showToast("Cannot save during replay.");
+                return;
+            }
             const saveState = getGameStatePayload();
             safeSetStorage('ksnakeSaveState', saveState);
             if (gameLoop) clearInterval(gameLoop);
@@ -2843,11 +2858,12 @@
 
         function resumeGame() {
             const s = safeGetJSON('ksnakeSaveState', null);
-            if (!s) {
+            if (!s || !s.snake || s.snake.length === 0) {
                 showToast("No saved game to resume.");
                 return;
             }
             try {
+                isReplayMode = false;
                 snake = s.snake || [{x: 5, y: 5}];
                 dir = s.dir || {x: 1, y: 0};
                 lastDir = s.lastDir || {x: 1, y: 0};
@@ -2908,6 +2924,11 @@
                 matchTicks = s.matchTicks || 0;
                 matchApplesEaten = s.matchApplesEaten || 0;
                 gridCoverage = new Set(s.coverage || []);
+
+                screenShake = 0;
+                particles = [];
+                shockwaves = [];
+                trailMotes = [];
 
                 hideOverlays();
                 gameState = 1;
