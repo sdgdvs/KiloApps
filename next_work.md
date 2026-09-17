@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,13 +15,13 @@ current_targets:
   kilo_creator: "KChrono (Phase 1: Project Scaffolding & Core Paradox Engine)"
   kilo_graphics: KQuest
   kilo_tester: KSys
-  kilo_usability: KChess
+  kilo_usability: KGo
   kilo_qa: KSolitaire
   kilo_expander: KScript
 last_run:
-  agent: kilo-tester
-  app: KSynth
-  timestamp: "2026-09-17T08:44:00Z"
+  agent: kilo-usability
+  app: KChess
+  timestamp: "2026-09-17T09:51:00Z"
 last_planner_run: "2026-09-16T19:00:00Z"
 ---
 
@@ -68,9 +68,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTask`, `KTerm`, `KTetris`, `KTimer`, `KTodo`, `KTowers`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KWords`, `KZip`, `K2048`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalc`, `KCalendar`, `KChart`, `KChess`, `KClock`, `KCode`, `KDiff`, `KDnD`, `KDraw`, `KDrum`, `KEdit`, `KExcel`, `KFiles`, `KFit`, `KFlash`, `KFlight`, `KFont`, `KForm`, `KFormula`, `KForth`, `KFractal`, `KGraph`, `KHex`, `KIcon`, `KImage`, `KInvoice`, `KKanban`, `KLife`, `KLogic`, `KMail`, `KMarkdown`, `KMaze`, `KMidi`, `KMines`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KPong`, `KQuest`, `KRadio`, `KRead`, `KReversi`, `KRogue`, `KScript`, `KSimon`, `KSnake`, `KSolitaire`, `KSpace`, `KStarship`, `KStellar`, `KSudoku`, `KSynth`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KChess`
+- **Current Target**: `KGo`
 - **Upcoming Queue**:
-  `KGo`, `KReversi`, `KConnect4`, `KTerm`, `KPad`, `KCalc`, `KPaint`, `KAudio`, `KEdit`, `KExcel`, `KFiles`, `KFit`, `KFlash`, `KFlight`, `KFont`, `KForm`, `KFormula`, `KForth`, `KFractal`, `KGraph`, `KHex`, `KIcon`, `KImage`, `KInvoice`, `KKanban`, `KLife`, `KLogic`, `KMail`, `KMarkdown`, `KMaze`, `KMidi`, `KMines`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KPong`.
+  `KReversi`, `KConnect4`, `KTerm`, `KPad`, `KCalc`, `KPaint`, `KAudio`, `KEdit`, `KExcel`, `KFiles`, `KFit`, `KFlash`, `KFlight`, `KFont`, `KForm`, `KFormula`, `KForth`, `KFractal`, `KGraph`, `KHex`, `KIcon`, `KImage`, `KInvoice`, `KKanban`, `KLife`, `KLogic`, `KMail`, `KMarkdown`, `KMaze`, `KMidi`, `KMines`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KPong`, `KChess`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KSolitaire`
@@ -85,6 +85,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-09-17T09:51:00Z — kilo-usability: KChess**
+  - Status: PASS ✅ (UI/UX polish, HiDPI scaling, onboarding).
+  - Highlights: Expanded window bounds (800x920) in App.jsx eliminating clipping, removed overlapping top HTML button, integrated centered header Help badge (`[F1 / ?]`), status hint prompt parity, added first-run tutorial onboarding (`kchess_tutorialSeen`), dynamic canvas DPR resize handling, fixed native world-transform font double-scaling, synced mode/status click handlers. Native (53 KB) and Web (116 KB) clean.
 
 - **2026-09-17T08:44:00Z — kilo-tester: KSynth**
   - Status: PASS ✅ (9 issues fixed inline).
@@ -101,7 +105,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-09-17T02:22:42Z — kilo-tester: KSudoku**
   - Status: PASS ✅ (9 issues fixed inline).
   - Highlights: Tutorial onboarding (`ksudoku_tutorialSeen`), F5/F9 quicksave/quickload, JSON save import/export, restored difficulty state persistence, responsive difficulty selector, 16x16 generation safety guard, modal backdrop/Esc dismissal, HUD toasts. Build clean.
-
-- **2026-09-17T01:34:20Z — kilo-tester: KStellar**
-  - Status: PASS ✅ (8 issues fixed inline).
-  - Highlights: Tutorial onboarding (`kstellar_tutorialSeen`), F5/F9 quicksave/quickload, JSON save import/export, emergency rescue beacon, combat hotkeys, action locks, HUD toasts. Build clean.

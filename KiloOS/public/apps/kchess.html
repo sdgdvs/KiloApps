@@ -118,9 +118,6 @@
 </head>
 <body>
 <div id="aria-status" role="status" aria-live="polite" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0);">White's turn</div>
-<div style="position:absolute; top:15px; left:20px; color:#5eead4; font-size:13px; font-weight:600; z-index:100; cursor:pointer; background:rgba(15,23,42,0.85); padding:4px 12px; border-radius:6px; border:1px solid #334155; backdrop-filter:blur(6px); transition:all 0.2s;" onclick="openHelpModal()" onmouseover="this.style.borderColor='#38bdf8'" onmouseout="this.style.borderColor='#334155'">
-  &#128214; Help & Controls [F1 / ?]
-</div>
 
 <div id="toast-container"></div>
 
@@ -205,17 +202,21 @@
   
   const W = 760;
   const H = 860;
-  const dpr = window.devicePixelRatio || 1;
-  cvs.style.width = W + 'px';
-  cvs.style.height = H + 'px';
-  cvs.width = W * dpr;
-  cvs.height = H * dpr;
-  ctx.scale(dpr, dpr);
+  function updateCanvasDPI() {
+    const dpr = window.devicePixelRatio || 1;
+    cvs.style.width = W + 'px';
+    cvs.style.height = H + 'px';
+    cvs.width = Math.round(W * dpr);
+    cvs.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  updateCanvasDPI();
+  window.addEventListener('resize', updateCanvasDPI);
   
   setTimeout(() => {
     try {
-      let dw = W - window.innerWidth;
-      let dh = H - window.innerHeight;
+      let dw = (W + 40) - window.innerWidth;
+      let dh = (H + 50) - window.innerHeight;
       if (Math.abs(dw) > 0 || Math.abs(dh) > 0) window.resizeBy(dw, dh);
     } catch (e) {}
   }, 50);
@@ -1886,12 +1887,18 @@
       const my = (e.clientY - rect.top) * (H / rect.height);
 
       // Top mode title click (switch mode or toggle vs AI)
-      if (my >= 15 && my <= 45 && mx >= 25 && mx <= 340) {
+      if (my >= 15 && my <= 45 && mx >= 25 && mx <= 280) {
           if (gameMode === 1 && mx >= 120 && mx <= 230) {
               handleHotkey('t');
           } else {
               handleHotkey('m');
           }
+          return;
+      }
+
+      // Top Center Help button click
+      if (my >= 15 && my <= 45 && mx >= W / 2 - 90 && mx <= W / 2 + 90) {
+          openHelpModal();
           return;
       }
 
@@ -2626,8 +2633,8 @@
           }
       }
 
-      // UI Top Bar: Mode Title & W/L/D stats
-      ctx.font = "bold 16px 'Inter', sans-serif";
+      // UI Top Bar: Mode Title, Top Help Badge & W/L/D stats
+      ctx.font = "bold 15px 'Inter', sans-serif";
       ctx.fillStyle = "#ffffff";
       ctx.textAlign = "left";
 
@@ -2638,7 +2645,29 @@
       else modeText = `Blitz (W:${Math.ceil(blitzTimeWhite)}s B:${Math.ceil(blitzTimeBlack)}s)`;
 
       ctx.fillText(modeText, 30, 35);
+
+      // Top Center Help Prompt Badge
+      let helpBtnW = 160, helpBtnH = 26;
+      let helpBtnX = W / 2 - helpBtnW / 2, helpBtnY = 22;
+      ctx.save();
+      ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+      ctx.beginPath();
+      ctx.roundRect(helpBtnX, helpBtnY, helpBtnW, helpBtnH, 6);
+      ctx.fill();
+      ctx.strokeStyle = "#334155";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.fillStyle = "#5eead4";
+      ctx.font = "bold 12px 'Inter', sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("Help & Controls [F1 / ?]", W / 2, helpBtnY + helpBtnH / 2);
+      ctx.restore();
+
+      ctx.font = "bold 15px 'Inter', sans-serif";
+      ctx.fillStyle = "#ffffff";
       ctx.textAlign = "right";
+      ctx.textBaseline = "alphabetic";
       ctx.fillText(`W:${statsWins} L:${statsLosses} D:${statsDraws}`, W - 30, 35);
 
       // Captured Pieces & Material Counter Display
@@ -2728,7 +2757,7 @@
           ctx.fillStyle = whiteTurn ? "#f8fafc" : "#94a3b8";
           let turnStr = whiteTurn ? "White's Turn" : "Black's Turn";
           if (blackFrozen) turnStr += " (Black Frozen!)";
-          let lastMoveStr = (historyIndex > 0 && moveHistoryStack[historyIndex].moveSAN) ? ` | Last: ${moveHistoryStack[historyIndex].moveSAN} (Click for Hint)` : " | Click or Press H for AI Hint";
+          let lastMoveStr = (historyIndex > 0 && moveHistoryStack[historyIndex].moveSAN) ? ` | Last: ${moveHistoryStack[historyIndex].moveSAN} (Press H for Hint)` : " | Press F1 for Help, H for AI Hint";
           ctx.fillText(turnStr + lastMoveStr, W / 2, H - 40);
       }
       ctx.restore();
@@ -2756,8 +2785,18 @@
   resetGame();
   requestAnimationFrame(gameLoop);
 
+  const TUTORIAL_KEY = 'kchess_tutorialSeen';
+  let seenTutorial = false;
+  try { seenTutorial = localStorage.getItem(TUTORIAL_KEY) === '1'; } catch(e) {}
+  if (!seenTutorial) {
+      try { localStorage.setItem(TUTORIAL_KEY, '1'); } catch(e) {}
+      setTimeout(() => {
+          openHelpModal();
+      }, 350);
+  }
+
   setTimeout(() => {
-      showToast("Welcome to KChess! Press F1 or ? for Help & Controls", "info", 5000);
+      showToast("Welcome to KChess! Press F1 or ? for Help & Controls | H for AI Hint", "info", 5000);
   }, 400);
 </script>
 </body>

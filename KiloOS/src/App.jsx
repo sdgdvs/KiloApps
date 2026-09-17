@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.3.112';
+const MICROS_VERSION = '0.3.113';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='f1' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2364B5F6'/><stop offset='100%' stop-color='%231E88E5'/></linearGradient><linearGradient id='f2' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2390CAF9'/><stop offset='100%' stop-color='%232196F3'/></linearGradient></defs><path fill='url(%23f1)' d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/><path fill='url(%23f2)' d='M2 8h20v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V8z'/></svg>";
 const HELP_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232196F3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'></circle><path d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'></path><line x1='12' y1='17' x2='12.01' y2='17'></line></svg>";
@@ -44,7 +44,7 @@ const APPS = [
   { id: 'knet', title: 'KNet', url: '/apps/knet.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/knet.ico', w: 960, h: 720, folder: 'Network' },
   { id: 'kdb', title: 'KDB', url: '/apps/kdb.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kdb.ico', w: 900, h: 650, folder: 'Dev' },
   { id: 'kscript', title: 'KScript', url: '/apps/kscript.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kscript.ico', w: 960, h: 600, folder: 'Dev' },
-  { id: 'kchess', title: 'KChess', url: '/apps/kchess.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchess.ico', w: 760, h: 900, folder: 'Games' },
+  { id: 'kchess', title: 'KChess', url: '/apps/kchess.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchess.ico', w: 800, h: 920, folder: 'Games' },
   { id: 'ktype', title: 'KType', url: '/apps/ktype.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktype.ico', w: 600, h: 500, folder: 'Dev' },
   { id: 'kchart', title: 'KChart', url: '/apps/kchart.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchart.ico', w: 1024, h: 768, folder: 'Media' },
   { id: 'kzip', title: 'KZip', url: '/apps/kzip.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kzip.ico', w: 900, h: 650, folder: 'System' },

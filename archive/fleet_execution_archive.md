@@ -28,3 +28,7 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - Status: 🟢 Pass 5 Completed.
   - Highlights: Hardened full state quicksave/load in web and native (boss, rivals, skills, hazards), fixed native quickload file deletion bug, first-run tutorial flag, F5/F9 hotkeys. Native (53.5 KB) and web clean.
 
+- **2026-09-17T01:34:20Z — kilo-tester: KStellar**
+  - Status: PASS ✅ (8 issues fixed inline).
+  - Highlights: Tutorial onboarding (`kstellar_tutorialSeen`), F5/F9 quicksave/quickload, JSON save import/export, emergency rescue beacon, combat hotkeys, action locks, HUD toasts. Build clean.
+

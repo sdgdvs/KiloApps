@@ -1915,6 +1915,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE:
             g_hwndMain = hwnd;
             ResetGame();
+            wsprintfA(hintText, "Welcome! Press F1 for Help, H for AI Hint");
+            hintActive = 1;
             SetTimer(hwnd, 3, 30, NULL); // Blitz timer tick
             break;
         case WM_PAINT: {
@@ -2044,7 +2046,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(glintGold);
             DeleteObject(nullPen);
 
-            int fontHeightLabel = -MulDiv(15, (int)(g_dpiScale * 96), 72);
+            int fontHeightLabel = -MulDiv(15, 96, 72);
             HFONT labelFont = CreateFontA(fontHeightLabel, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             HGDIOBJ oldFont = SelectObject(memDC, labelFont);
             SetBkMode(memDC, TRANSPARENT);
@@ -2349,12 +2351,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
-            int fontHeightStatus = -MulDiv(16, (int)(g_dpiScale * 96), 72);
+            int fontHeightStatus = -MulDiv(16, 96, 72);
             HFONT sFont = CreateFontA(fontHeightStatus, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             oldFont = SelectObject(memDC, sFont);
             SetTextColor(memDC, RGB(255, 255, 255));
 
-            RECT modeRc = { 30, 20, W - 150, 45 };
+            RECT modeRc = { 30, 20, W / 2 - 90, 45 };
             char modeBuf[128];
             if (gameMode == 0) {
                 wsprintfA(modeBuf, "Campaign: Stage %d/20 [%s]", currentStage, diffNames[aiPersonality - 1]);
@@ -2367,6 +2369,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             DrawTextA(memDC, modeBuf, -1, &modeRc, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
+            // Top Center Help Prompt Button
+            RECT helpRc = { W / 2 - 80, 21, W / 2 + 80, 45 };
+            HBRUSH hlpBg = CreateSolidBrush(RGB(15, 23, 42));
+            FillRect(memDC, &helpRc, hlpBg);
+            DeleteObject(hlpBg);
+            HPEN hlpPen = CreatePen(PS_SOLID, 1, RGB(51, 65, 85));
+            HGDIOBJ oP2 = SelectObject(memDC, hlpPen);
+            HGDIOBJ oB2 = SelectObject(memDC, GetStockObject(NULL_BRUSH));
+            RoundRect(memDC, helpRc.left, helpRc.top, helpRc.right, helpRc.bottom, 6, 6);
+            SelectObject(memDC, oB2);
+            SelectObject(memDC, oP2);
+            DeleteObject(hlpPen);
+            SetTextColor(memDC, RGB(94, 234, 212));
+            DrawTextA(memDC, "Help & Controls [F1 / ?]", -1, &helpRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+            SetTextColor(memDC, RGB(255, 255, 255));
             RECT statsRc = { W - 150, 20, W - 30, 45 };
             char statsBuf[64];
             wsprintfA(statsBuf, "W:%d L:%d D:%d", statsWins, statsLosses, statsDraws);
@@ -2476,9 +2494,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 char turnBuf[128];
                 char* lastSAN = (g_historyIndex > 0 && g_historyStack[g_historyIndex].san[0] != '\0') ? g_historyStack[g_historyIndex].san : "";
                 if (lastSAN[0] == '\0') {
-                    wsprintfA(turnBuf, "%s %s | Press F1 for Help, H for Hint", whiteTurn ? "White's Turn" : "Black's Turn", blackFrozen ? "(Black Frozen!)" : "");
+                    wsprintfA(turnBuf, "%s %s | Press F1 for Help, H for AI Hint", whiteTurn ? "White's Turn" : "Black's Turn", blackFrozen ? "(Black Frozen!)" : "");
                 } else {
-                    wsprintfA(turnBuf, "%s %s | Last: %s", whiteTurn ? "White's Turn" : "Black's Turn", blackFrozen ? "(Black Frozen!)" : "", lastSAN);
+                    wsprintfA(turnBuf, "%s %s | Last: %s (Press H for Hint)", whiteTurn ? "White's Turn" : "Black's Turn", blackFrozen ? "(Black Frozen!)" : "", lastSAN);
                 }
                 DrawTextA(memDC, turnBuf, -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             }
@@ -2675,6 +2693,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int mx = (int)(LOWORD(lParam) / g_dpiScale);
             int my = (int)(HIWORD(lParam) / g_dpiScale);
 
+            // Top mode title click (switch mode or toggle vs AI)
+            if (my >= 15 && my <= 45 && mx >= 25 && mx <= 280) {
+                if (gameMode == 1 && mx >= 120 && mx <= 230) {
+                    aiMode = !aiMode;
+                } else {
+                    SendMessage(hwnd, WM_KEYDOWN, 'M', 0);
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+
+            // Top center Help button click
+            if (my >= 15 && my <= 45 && mx >= W / 2 - 90 && mx <= W / 2 + 90) {
+                ShowHelpDialog(hwnd);
+                return 0;
+            }
+
             // Check skill & action buttons (Y: 740..776)
             if (my >= 740 && my <= 776) {
                 if (mx >= 30 && mx <= 115) { ShowHelpDialog(hwnd); return 0; }
@@ -2684,6 +2719,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (mx >= 392 && mx <= 477) { SendMessage(hwnd, WM_KEYDOWN, VK_F9, 0); return 0; }
                 if (mx >= 485 && mx <= 600) { SendMessage(hwnd, WM_KEYDOWN, 'P', 0); return 0; }
                 if (mx >= 608 && mx <= 730) { SendMessage(hwnd, WM_KEYDOWN, 'E', 0); return 0; }
+            }
+
+            // Bottom status bar click (Restart or Hint)
+            if (my >= 800 && my <= 845 && mx >= 50 && mx <= W - 50) {
+                if (gameOver) SendMessage(hwnd, WM_KEYDOWN, 'R', 0);
+                else SendMessage(hwnd, WM_KEYDOWN, 'H', 0);
+                return 0;
             }
 
             int tx = (mx - OX) / TS;
