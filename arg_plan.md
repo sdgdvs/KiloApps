@@ -53,3 +53,54 @@ When autonomous agents (`kilo-creator`, `kilo-graphics`, `kilo-expander`) touch 
 1. **Never Break Utility**: An app must remain a 100% fully functioning, highly usable utility or game. The ARG is an ambient layer, not a blocker.
 2. **Weave Subtle Clues**: Embed comments in Win32 C code, hidden properties in HTML data attributes, or easter-egg hotkeys (e.g. `Ctrl+Alt+E`).
 3. **Respect Size**: ARG artifacts must never push any native executable over the sacred **999KB limit**.
+
+---
+
+## 4. The "Virtual 1999 Web" Puzzle Matrix
+
+The "Virtual 1999 Web" is an interconnected constellation of retro Web 1.0 hypermedia pages browsable natively through `KNet`. It serves as the open-world narrative landscape for the ARG.
+
+### Three Layers of Discovery
+
+```mermaid
+graph TD
+    subgraph Tier1["Tier 1: Surface Web (Bookmarks)"]
+        Portal["kweb://portal (Yahoo! 1999 Directory)"]
+        Contrib["/apps/contribute.html (Contributor Guide)"]
+        Webring["kweb://webring (Central Hub)"]
+    end
+
+    subgraph Tier2["Tier 2: Linked Community (Hyperlinks)"]
+        Geo["kweb://users/~neon_rider (Personal Homepage)"]
+        Shrine["kweb://asm-temple (Win32 Tech Shrine)"]
+        Cafe["kweb://cybercafe (Guestbook & Forum)"]
+    end
+
+    subgraph Tier3["Tier 3: Darknet & Hidden ARG Nodes"]
+        Intranet["kweb://10.19.99.4/classified (Corporate Leak)"]
+        Lab["kweb://echo-subsystem.net (Research Journal)"]
+        Terminal["kweb://deep-core (KMatrix Key Fragment)"]
+    end
+
+    Portal --> Geo & Shrine & Cafe
+    Webring --> Geo & Shrine
+    Geo --> Shrine & Cafe
+
+    KHex["KHex Memory Dump"] -.->|"Reveals IP"| Intranet
+    KSynth["KSynth 1999Hz Morse"] -.->|"Spells Domain"| Lab
+    KTerm["KTerm Glitched Log"] -.->|"Leaked URL"| Terminal
+```
+
+1. **Tier 1: Surface Web (Direct KNet Bookmarks)**:
+   - Visible to all users in `KNet`'s dropdown and bookmark bar.
+   - Includes `/apps/contribute.html` (the bridge to physical world compute donation) and `kweb://portal` (an authentic 1999 directory with simulated search, news headlines, and link categories).
+2. **Tier 2: Linked Community (The Webring Web)**:
+   - Pages not in the main bookmark bar, reachable by following links, banner ads, and "Next Site in Ring" badges.
+   - Built with period-accurate aesthetics: `<marquee>`, blink tags, table-based layouts, 88x31 button badges, visitor counters, and web guestbooks.
+3. **Tier 3: Hidden ARG Nodes (The Ghost Web)**:
+   - Pages with no incoming hyperlinks from the surface web.
+   - Solvers must type their exact URL or IP into `KNet`'s address bar after finding coordinates embedded in other apps:
+     - Finding an internal IP (`10.19.99.4`) in `KHex` or `KDB`.
+     - Translating Morse audio from `KSynth` or `KAudio` into a domain name.
+     - Uncovering sysop server notes in `KBBS` or terminal dumps in `KTerm`.
+   - Accessing Tier 3 nodes uncovers encrypted pieces of the master passkey `ECHO-1999-ARCHITECT` needed to unlock `KDirector`.

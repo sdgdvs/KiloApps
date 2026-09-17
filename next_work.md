@@ -82,6 +82,21 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**:
   `KSys`, `KTask`, `KNet`, `KPing`, `KHex`, `KBase`, `KConverter`, `KCalc`, `KZip`, `KFont`, `KPad`, `KNote`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`.
 
+### 7. Future Strategic Milestone: The "Virtual 1999 Web" Initiative
+- **Objective**: Create a living, interconnected retro Web 1.0 ecosystem accessible directly through `KNet`.
+- **Architectural Tiers**:
+  1. **Tier 1 (Direct KNet Bookmarks)**:
+     - `/apps/contribute.html` (Fleet Contributor Portal).
+     - `kweb://portal` (Yahoo! / Excite style 1999 Web Directory & News Portal).
+     - `kweb://webring` (The Central KiloNet Webring Hub).
+  2. **Tier 2 (Linked Community Webring)**:
+     - Interlinked Geocities/Angelfire-style personal pages, cyber shrines, and retro corporate sites reachable only via hyperlinks and webring navigation.
+  3. **Tier 3 (Hidden ARG Nodes & Darknet)**:
+     - Secret, unlisted web addresses discoverable only by deciphering clues, hex offsets, and frequencies hidden across other apps (e.g. `KHex` memory dumps, `KSynth` Morse code, `KBBS` leaks, `KTerm` glitched logs).
+- **Execution Strategy**:
+  - `kilo-creator` and `kilo-expander` turns can adopt virtual web pages under `/KiloOS/public/web/` as micro-targets.
+  - All virtual web pages remain strictly `< 999 KB` and adhere to vintage HTML 4.01 styling (under-construction GIFs, guestbook counters, table-based layouts, and webring badges).
+
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
