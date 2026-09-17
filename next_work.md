@@ -1,28 +1,28 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
-  - kilo-creator
-  - kilo-graphics
   - kilo-tester
   - kilo-usability
+  - kilo-graphics
   - kilo-qa
   - kilo-expander
+  - kilo-creator
 model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "KStarForge (Deep-space shipyard engineering sim)"
+  kilo_tester: KChrono
+  kilo_usability: KChrono
   kilo_graphics: KStarship
-  kilo_tester: KTask
-  kilo_usability: KReversi
   kilo_qa: KStarship
   kilo_expander: KSys
+  kilo_creator: "KStarForge (Deep-space shipyard engineering sim)"
 last_run:
   agent: kilo-expander
   app: KTerm
   timestamp: "2026-09-17T18:45:00Z"
-last_planner_run: "2026-09-16T19:00:00Z"
+last_planner_run: "2026-09-17T20:40:00Z"
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -66,27 +66,27 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Current Target**: `KStarship`
 - **Upcoming Queue**:
-  `KFortress`, `KAlchemy`, `KColony`, `KSpace`, `KAsteroids`, `KMaze`, `KPac`, `KBreakout`, `KSnake`, `KRogue`, `KQuest`.
+  `KChrono`, `KFortress`, `KAlchemy`, `KColony`, `KSpace`, `KAsteroids`, `KBreakout`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KCyber`, `KFarm`, `KMech`, `KMine`, `KMystery`, `KVoid`, `KWizard`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KTask`
+- **Current Target**: `KChrono`
 - **Upcoming Queue**:
-  `KTerm`, `KTetris`, `KTimer`, `KTodo`, `KTowers`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KWords`, `KZip`, `K2048`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalc`, `KCalendar`, `KChart`, `KChess`, `KClock`, `KCode`, `KDiff`, `KDnD`, `KDraw`, `KDrum`, `KEdit`, `KExcel`, `KFiles`, `KFit`, `KFlash`, `KFlight`, `KFont`, `KForm`, `KFormula`, `KForth`, `KFractal`, `KGraph`, `KHex`, `KIcon`, `KImage`, `KInvoice`, `KKanban`, `KLife`, `KLogic`, `KMail`, `KMarkdown`, `KMaze`, `KMidi`, `KMines`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KPong`, `KQuest`, `KRadio`, `KRead`, `KReversi`, `KRogue`, `KScript`, `KSimon`, `KSnake`, `KSolitaire`, `KSpace`, `KStarship`, `KStellar`, `KSudoku`, `KSynth`, `KSys`.
+  `KTask`, `KTerm`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColony`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFarm`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMine`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KRogue`, `KSanctuary`, `KScript`, `KSpace`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KReversi`
+- **Current Target**: `KChrono`
 - **Upcoming Queue**:
-  `KConnect4`, `KTerm`, `KPad`, `KCalc`, `KPaint`, `KAudio`, `KEdit`, `KExcel`, `KFiles`, `KFit`, `KFlash`, `KFlight`, `KFont`, `KForm`, `KFormula`, `KForth`, `KFractal`, `KGraph`, `KHex`, `KIcon`, `KImage`, `KInvoice`, `KKanban`, `KLife`, `KLogic`, `KMail`, `KMarkdown`, `KMaze`, `KMidi`, `KMines`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KPong`, `KChess`, `KGo`.
+  `KTask`, `KPad`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KStarship`
 - **Upcoming Queue**:
-  `KStellar`, `KSudoku`, `KSynth`, `KSys`, `KTask`, `KTerm`, `KTetris`, `KTimer`, `KTodo`, `KTowers`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KWords`, `KZip`, `K2048`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KMaze`, `KSnake`, `KSolitaire`, `KSpace` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace)*.
+  `KStellar`, `KSynth`, `KSys`, `KTask`, `KTerm`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAlchemy`, `KAsteroids`, `KChrono`, `KColony`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMine`, `KMystery`, `KPac`, `KQuest`, `KRogue`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KVoid`, `KWizard` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KSys`
 - **Upcoming Queue**:
-  `KTask`, `KNet`, `KPing`, `KHex`, `KBase`, `KConverter`, `KCalc`, `KZip`, `KFont`, `KPad`, `KNote`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KTerm`.
+  `KTask`, `KNet`, `KPing`, `KHex`, `KBase`, `KFont`, `KPad`, `KNote`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KTerm`, `KVault`, `KZip`.
 
 ### 7. Future Strategic Milestone: The "Virtual 1999 Web" Initiative
 - **Objective**: Create a living, interconnected retro Web 1.0 ecosystem accessible directly through `KNet`.
@@ -122,6 +122,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-17T20:40:00Z — kilo-planner: Fleet Planning & Queue Compaction**
+  - Status: PASS ✅ (24h velocity evaluated, mature apps pruned, queues sanitized).
+  - Queue Rework: Deprioritized 22 mature apps per registry; prioritized newly created KChrono for UI testing and usability.
+  - Rotation Schedule: Set 24h rotation to tester ➔ usability ➔ graphics ➔ qa ➔ expander ➔ creator.
+  - Compaction: Moved older execution logs (KQuest) to archive/fleet_execution_archive.md; enforced 5-entry cap.
+  - Verification: Clean orchestrator dry-run, security lint verified, targets validated.
+
 - **2026-09-17T18:45:00Z — kilo-expander: KTerm**
   - Status: PASS ✅ (Deep functional feature expansion & ARG integration).
   - Pipelines & Redirection: Added output redirection (> and >>) and command chaining (; and &&) across web and native.
@@ -154,11 +161,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Interactive Fixes: Added User Services category filter to select & quick chips; wired closeServiceModal on daemon deletion; added Space/Enter action triggers.
   - Robustness: Hardened IndexedDB benchmark with Blob memory fallback; wrapped storage.persisted check in safe error handler.
   - Verification: Clean single-file Web build (102.1 KB); zero Vite build breaks; Native MSVC clean build (23 KB); <999 KB ceiling verified.
-
-- **2026-09-17T14:00:00Z — kilo-graphics: KQuest**
-  - Status: PASS ✅ (Graphics, boss rush & runesmithing pass).
-  - Highlights: Crescent blade slash animations (silver-cyan / golden cross-cut crit), 18th Mythic Biome (Astral Nexus) with 5 apex monsters & 3-phase Chronos boss.
-  - Mechanics & Content: Boss Rush expanded to 10 waves, Ancient Runesmithing (Ignis, Glacies, Fulgur, Venenum), Elemental Combos (Thermal Shatter, Toxic Overload, Holy Retribution).
-  - Visual Polish: Status auras (Holy Shield aegis runes, Berserk fire, Mana Surge arcs, Iron Will barrier), animated debuff FX, atmospheric weather motes.
-  - Bug Fixes: Town Inv button wired to backpack; Map & Biomes selector placed on town page 2.
-  - Verification: MSVC Native C (95.5 KB) and Web (281.7 KB) clean builds; <999 KB ceiling verified.
