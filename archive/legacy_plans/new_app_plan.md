@@ -74,8 +74,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KCosmic (Cosmic colony fleet logistics and interstellar planetary terraforming simulation)
-**Phase:** 14 (next to do)
-**Status:** In Progress (Phase 13 completed: Procedural cosmic audio & atmospheric soundscapes [Continuous procedural soundscape synthesizers with Void Drone, Planetary Atmo, Ark Engine, and Precursor Harmonics; atmospheric entry roar with aerodynamic shockwave sweep; crystalline bioscan chimes; engine propulsion hum modulation; real-time CRT audio visualizer telemetry; full parity across web and Win32 C])
+**Phase:** 14 (COMPLETED)
+**Status:** Completed (Phase 14 completed: Comprehensive Help & Fleet Admiral's Codex [Planetary classification index, mathematical terraforming formulas, fleet logistics guide, crisis response manual, v1.14 splash screen, 7-step tutorial, and full F5/F9 state persistence])
 
 - [x] Phase 1: Scaffold KCosmic directory (`KCosmic/`), create web HTML skeleton (`KiloOS/public/apps/kcosmic.html`), register in App.jsx.
 - [x] Phase 2: Core colony fleet simulation engine (orbital map, colony arks, terraforming parameters, life support, resource loops).
@@ -90,7 +90,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 11: Orbital megastructures & planetary defense stations (orbital rings, star elevators, planetary shield grids).
 - [x] Phase 12: Alien xenobiology & ancient precursor relics (excavate xeno-ruins, analyze artifacts, unlock precursor technologies).
 - [x] Phase 13: Procedural cosmic audio & atmospheric soundscapes (interstellar drone synthesizers, engine hums, atmospheric entry roar, bioscan chimes).
-- [ ] Phase 14: Comprehensive Help & Fleet Admiral's Codex (Planetary classification index, terraforming formulas, logistics guide, crisis response manual).
+- [x] Phase 14: Comprehensive Help & Fleet Admiral's Codex (Planetary classification index, terraforming formulas, logistics guide, crisis response manual).
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
@@ -156,6 +156,7 @@ When starting a new app, you MUST write concrete phase descriptions for Phases 5
 Use the game/utility feature priority lists above for inspiration, but write specific descriptions tailored to the app.
 
 ## Completed Apps
+- KCosmic (Phase 14 completed: Added Comprehensive Help & Fleet Admiral's Codex to both versions)
 - KAbyss (Phase 14 completed: Added Comprehensive Help & Delver's Tome & Survival Codex to both versions)
 - KStarDredge (Phase 14 completed: Added Comprehensive Help & Dredger Captain's Manual & Codex to both versions)
 - KSubmarine (Phase 14 completed: Added Comprehensive Help & Captain's Submersible Manual to both versions)

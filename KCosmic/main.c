@@ -597,6 +597,82 @@ static TradeRoute g_tradeRoutes[4];
 
 static void SetLogMsg(const char* txt, int isWarn);
 
+// Phase 14: Comprehensive Help, Fleet Codex, Splash Screen, and Persistence State
+static int g_showSplash = 1;
+static int g_showCodex = 0;
+static int g_codexTab = 0;
+static int g_tutorialActive = 0;
+static int g_tutorialStep = 0;
+static int g_tutorialSeen = 0;
+static void CalculateHabitability(void);
+
+
+// --- Phase 14: Binary Save & Load State Persistence ---
+#define SAVE_FILE "kcosmic_quicksave.dat"
+
+typedef struct {
+    char magic[4]; // "KCOS"
+    int version;   // 14
+    Simulation sim;
+    int currentSystem;
+    int systemCount;
+    StarSystem systems[MAX_STAR_SYSTEMS];
+    Ship fleet[5];
+    TradeRoute tradeRoutes[4];
+    int tutorialSeen;
+} SaveStateHeader;
+
+static int SaveGameState(const char* filename) {
+    FILE* f = fopen(filename, "wb");
+    if (!f) return 0;
+    SaveStateHeader hdr;
+    memset(&hdr, 0, sizeof(hdr));
+    hdr.magic[0] = 'K'; hdr.magic[1] = 'C'; hdr.magic[2] = 'O'; hdr.magic[3] = 'S';
+    hdr.version = 14;
+    hdr.sim = sim;
+    hdr.currentSystem = g_currentSystem;
+    hdr.systemCount = g_systemCount;
+    memcpy(hdr.systems, g_systems, sizeof(g_systems));
+    memcpy(hdr.fleet, fleet, sizeof(fleet));
+    memcpy(hdr.tradeRoutes, g_tradeRoutes, sizeof(g_tradeRoutes));
+    hdr.tutorialSeen = g_tutorialSeen;
+    size_t written = fwrite(&hdr, sizeof(hdr), 1, f);
+    fclose(f);
+    return (written == 1);
+}
+
+static int LoadGameState(const char* filename) {
+    FILE* f = fopen(filename, "rb");
+    if (!f) return 0;
+    SaveStateHeader hdr;
+    size_t read = fread(&hdr, sizeof(hdr), 1, f);
+    fclose(f);
+    if (read != 1) return 0;
+    if (memcmp(hdr.magic, "KCOS", 4) != 0 || hdr.version != 14) return 0;
+    sim = hdr.sim;
+    g_currentSystem = hdr.currentSystem;
+    g_systemCount = hdr.systemCount;
+    memcpy(g_systems, hdr.systems, sizeof(g_systems));
+    memcpy(fleet, hdr.fleet, sizeof(fleet));
+    memcpy(g_tradeRoutes, hdr.tradeRoutes, sizeof(g_tradeRoutes));
+    g_tutorialSeen = hdr.tutorialSeen;
+    CalculateHabitability();
+    return 1;
+}
+
+static int HasSavedGame(const char* filename) {
+    FILE* f = fopen(filename, "rb");
+    if (!f) return 0;
+    char magic[4];
+    if (fread(magic, 1, 4, f) == 4 && memcmp(magic, "KCOS", 4) == 0) {
+        fclose(f);
+        return 1;
+    }
+    fclose(f);
+    return 0;
+}
+
+
 // --- Star System & Planet Management Helpers ---
 static CelestialBody* GetActivePlanet(void) {
     int i;
@@ -3093,6 +3169,26 @@ static void AddButton(int id, int x, int y, int w, int h, const char* txt, const
 #define BID_UPG_FUEL        121
 #define BID_UPG_MASS        122
 
+// Phase 14: Comprehensive Help, Fleet Codex, Splash Screen, and Persistence IDs
+#define BID_OPEN_CODEX          8000
+#define BID_QUICKSAVE           8001
+#define BID_QUICKLOAD           8002
+#define BID_CODEX_TAB_0         8010
+#define BID_CODEX_TAB_1         8011
+#define BID_CODEX_TAB_2         8012
+#define BID_CODEX_TAB_3         8013
+#define BID_CODEX_TAB_4         8014
+#define BID_CODEX_CLOSE         8015
+#define BID_CODEX_TUTORIAL      8016
+#define BID_SPLASH_START        8020
+#define BID_SPLASH_RESUME       8021
+#define BID_SPLASH_CODEX        8022
+#define BID_SPLASH_AUDIO        8023
+#define BID_TUT_NEXT            8030
+#define BID_TUT_BACK            8031
+#define BID_TUT_SKIP            8032
+
+
 // --- Action Handlers ---
 static void HandleIntervention(int bid) {
     char buf[128];
@@ -3946,6 +4042,382 @@ static void DrawTradeRoutesGDI(HDC hdc, int cx, int cy, float z, float simTime) 
 
 
 // --- Render Implementation ---
+
+// --- Phase 14: Modal Renderers (Splash Screen, Fleet Codex, Onboarding Tutorial) ---
+
+static void RenderSplashScreen(HDC hdc, int width, int height) {
+    // Semi-transparent darkened backdrop
+    FillSolidRect(hdc, 0, 0, width, height, RGB(3, 5, 10));
+
+    HFONT hTitleFont = CreateFontA(28, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+    HFONT hSubFont = CreateFontA(13, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+    HFONT hMainFont = CreateFontA(13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+    HFONT hSmallFont = CreateFontA(11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+
+    int cardW = 680;
+    int cardH = 460;
+    int cx = (width - cardW) / 2;
+    int cy = (height - cardH) / 2;
+
+    FillSolidRect(hdc, cx, cy, cardW, cardH, RGB(7, 11, 22));
+    FrameSolidRect(hdc, cx, cy, cardW, cardH, COLOR_CYAN);
+
+    // Header Logo
+    SelectObject(hdc, hTitleFont);
+    SetTextColor(hdc, COLOR_CYAN);
+    SetBkMode(hdc, TRANSPARENT);
+    const char* title = "K C O S M I C";
+    SIZE sz;
+    GetTextExtentPoint32A(hdc, title, (int)strlen(title), &sz);
+    TextOutA(hdc, cx + (cardW - sz.cx) / 2, cy + 24, title, (int)strlen(title));
+
+    // Subtitle
+    SelectObject(hdc, hSubFont);
+    SetTextColor(hdc, COLOR_BLUE);
+    const char* sub = "INTERSTELLAR FLEET LOGISTICS & PLANETARY TERRAFORMING";
+    GetTextExtentPoint32A(hdc, sub, (int)strlen(sub), &sz);
+    TextOutA(hdc, cx + (cardW - sz.cx) / 2, cy + 58, sub, (int)strlen(sub));
+
+    // Version Tag
+    SelectObject(hdc, hSmallFont);
+    SetTextColor(hdc, COLOR_EMERALD);
+    const char* ver = "VERSION 1.14 // FLEET ADMIRAL'S CODEX EDITION";
+    GetTextExtentPoint32A(hdc, ver, (int)strlen(ver), &sz);
+    TextOutA(hdc, cx + (cardW - sz.cx) / 2, cy + 80, ver, (int)strlen(ver));
+
+    // Directive Box
+    FillSolidRect(hdc, cx + 30, cy + 104, cardW - 60, 95, RGB(12, 19, 36));
+    FrameSolidRect(hdc, cx + 30, cy + 104, cardW - 60, 95, COLOR_BORDER);
+
+    SelectObject(hdc, hSmallFont);
+    SetTextColor(hdc, COLOR_TEXT_PRI);
+    TextOutA(hdc, cx + 42, cy + 112, "COMMAND DIRECTIVE:", 18);
+    TextOutA(hdc, cx + 42, cy + 128, "Command humanity's ark flotilla across procedural star systems in the Kepler sector.", 84);
+    TextOutA(hdc, cx + 42, cy + 144, "Deploy orbital solar mirrors, troposphere processors, and magnetic core dynamos.", 80);
+    TextOutA(hdc, cx + 42, cy + 160, "Transform hostile worlds into 75%+ Garden biospheres and shield against cosmic hazards.", 87);
+    TextOutA(hdc, cx + 42, cy + 176, "Quicksave with [F5], Quickload with [F9], and access the Fleet Codex with [H / F1].", 83);
+
+    // Action Buttons
+    int btnW = 380;
+    int btnH = 34;
+    int bx = cx + (cardW - btnW) / 2;
+    int by = cy + 220;
+
+    AddButton(BID_SPLASH_START, bx, by, btnW, btnH, "COMMENCE NEW EXPEDITION", "[SPACE / ENTER]", 1);
+    by += 44;
+
+    int hasSave = HasSavedGame(SAVE_FILE);
+    AddButton(BID_SPLASH_RESUME, bx, by, btnW, btnH, hasSave ? "RESUME EXPEDITION [SAVED]" : "RESUME EXPEDITION [NO SAVE]", "[C]", hasSave);
+    by += 44;
+
+    AddButton(BID_SPLASH_CODEX, bx, by, btnW, btnH, "FLEET ADMIRAL'S CODEX & FIELD MANUAL", "[H / F1]", 1);
+    by += 44;
+
+    AddButton(BID_SPLASH_AUDIO, bx, by, btnW, btnH, "CYCLE CRT PHOSPHOR THEME", g_crtThemes[g_crtTheme].name, 1);
+
+    DeleteObject(hTitleFont);
+    DeleteObject(hSubFont);
+    DeleteObject(hMainFont);
+    DeleteObject(hSmallFont);
+}
+
+static void RenderCodexModal(HDC hdc, int width, int height) {
+    // Backdrop
+    FillSolidRect(hdc, 0, 0, width, height, RGB(4, 7, 14));
+
+    HFONT hTitleFont = CreateFontA(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+    HFONT hBoldFont = CreateFontA(13, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+    HFONT hMainFont = CreateFontA(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+    HFONT hSmallFont = CreateFontA(11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+
+    int modW = 980;
+    int modH = 640;
+    if (modW > width - 40) modW = width - 40;
+    if (modH > height - 40) modH = height - 40;
+    int mx = (width - modW) / 2;
+    int my = (height - modH) / 2;
+
+    FillSolidRect(hdc, mx, my, modW, modH, RGB(8, 12, 22));
+    FrameSolidRect(hdc, mx, my, modW, modH, COLOR_CYAN);
+
+    // Header Top Bar
+    FillSolidRect(hdc, mx, my, modW, 40, RGB(10, 17, 32));
+    FrameSolidRect(hdc, mx, my, modW, 40, COLOR_BORDER);
+
+    SelectObject(hdc, hTitleFont);
+    SetTextColor(hdc, COLOR_CYAN);
+    SetBkMode(hdc, TRANSPARENT);
+    TextOutA(hdc, mx + 16, my + 10, "KCOSMIC FLEET ADMIRAL'S CODEX // FIELD ARCHIVE & MANUAL", 55);
+
+    AddButton(BID_CODEX_CLOSE, mx + modW - 90, my + 8, 80, 24, "CLOSE [X]", NULL, 1);
+
+    // Tab Navigation: 5 Tabs
+    int tabW = (modW - 20) / 5;
+    int tabY = my + 44;
+    AddButton(BID_CODEX_TAB_0, mx + 10, tabY, tabW, 26, "1: COMMANDS", NULL, 1);
+    AddButton(BID_CODEX_TAB_1, mx + 10 + tabW, tabY, tabW, 26, "2: PLANETS", NULL, 1);
+    AddButton(BID_CODEX_TAB_2, mx + 10 + tabW * 2, tabY, tabW, 26, "3: FORMULAS", NULL, 1);
+    AddButton(BID_CODEX_TAB_3, mx + 10 + tabW * 3, tabY, tabW, 26, "4: LOGISTICS", NULL, 1);
+    AddButton(BID_CODEX_TAB_4, mx + 10 + tabW * 4, tabY, modW - 20 - tabW * 4, 26, "5: CRISIS & XENO", NULL, 1);
+
+    int bodyY = my + 80;
+    int bodyH = modH - 90;
+    FillSolidRect(hdc, mx + 10, bodyY, modW - 20, bodyH, RGB(12, 18, 32));
+    FrameSolidRect(hdc, mx + 10, bodyY, modW - 20, bodyH, COLOR_BORDER);
+
+    int px = mx + 25;
+    int py = bodyY + 16;
+
+    if (g_codexTab == 0) {
+        // TAB 0: COMMAND & CONTROLS
+        SelectObject(hdc, hBoldFont);
+        SetTextColor(hdc, COLOR_CYAN);
+        TextOutA(hdc, px, py, "--- FLEET ADMIRAL COMMAND INTERFACE & HOTKEYS ---", 49);
+        py += 24;
+
+        SelectObject(hdc, hMainFont);
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        TextOutA(hdc, px, py, "SPACE / ENTER  : Pause or resume the simulation clock.", 54); py += 20;
+        TextOutA(hdc, px, py, "1, 2, 5        : Set simulation warp speed (1x Standard, 2x High, 5x Maximum).", 70); py += 20;
+        TextOutA(hdc, px, py, "H / F1         : Toggle this Comprehensive Fleet Admiral's Codex & Manual.", 66); py += 20;
+        TextOutA(hdc, px, py, "F5             : Quicksave entire expedition state to local telemetry storage.", 71); py += 20;
+        TextOutA(hdc, px, py, "F9             : Quickload expedition state from local telemetry storage.", 65); py += 20;
+        TextOutA(hdc, px, py, "S              : Warp to next star system in sector catalog.", 52); py += 20;
+        TextOutA(hdc, px, py, "G              : Procedurally survey & scan new uncharted star system.", 62); py += 20;
+        TextOutA(hdc, px, py, "T              : Designate selected celestial body as active terraforming target.", 73); py += 20;
+        TextOutA(hdc, px, py, "P              : Snap & center viewport camera onto active target planet.", 65); py += 20;
+        TextOutA(hdc, px, py, "R              : Reset viewport camera position and zoom factor to 1.0x.", 64); py += 20;
+        TextOutA(hdc, px, py, "C              : Cycle CRT Phosphor theme (P4 Cyan, P3 Amber, P1 Green, P7 White).", 74); py += 20;
+        TextOutA(hdc, px, py, "M              : Toggle master audio engine mute on / off.", 50); py += 20;
+        TextOutA(hdc, px, py, "A              : Shift procedural cosmic soundscape mode (Void, Atmo, Engine, Precursor).", 81); py += 20;
+        TextOutA(hdc, px, py, "ESC            : Dismiss active modal, clear target selection, or exit codex.", 69); py += 26;
+
+        SelectObject(hdc, hBoldFont);
+        SetTextColor(hdc, COLOR_EMERALD);
+        TextOutA(hdc, px, py, "MOUSE CONTROLS:", 15); py += 18;
+        SelectObject(hdc, hMainFont);
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        TextOutA(hdc, px, py, "Click & Drag in Viewport : Pan across stellar cartography coordinates.", 70); py += 18;
+        TextOutA(hdc, px, py, "Mouse Wheel / Buttons   : Zoom viewport between 0.4x macro-view and 2.5x close orbit.", 79); py += 24;
+
+        AddButton(BID_CODEX_TUTORIAL, px, py, 260, 28, "LAUNCH INTERACTIVE TUTORIAL", NULL, 1);
+
+    } else if (g_codexTab == 1) {
+        // TAB 1: PLANETARY CLASSIFICATION INDEX
+        SelectObject(hdc, hBoldFont);
+        SetTextColor(hdc, COLOR_CYAN);
+        TextOutA(hdc, px, py, "--- EXOPLANET CLASSIFICATION INDEX & TERRAFORMING PATHWAYS ---", 62);
+        py += 24;
+
+        SelectObject(hdc, hMainFont);
+        SetTextColor(hdc, COLOR_TEXT_DIM);
+        TextOutA(hdc, px, py, "CLASS-I: BARREN ROCK (BR-I)", 27); py += 16;
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        TextOutA(hdc, px, py, "0.00 atm, -120C to +140C, 0% water. High minerals (x1.4), zero volatiles (x0.2).", 81); py += 16;
+        TextOutA(hdc, px, py, "Strategy: Deploy Core Dynamos first for magnetic shield; import volatiles from Boreas.", 86); py += 22;
+
+        SetTextColor(hdc, COLOR_ROSE);
+        TextOutA(hdc, px, py, "CLASS-II: TOXIC GREENHOUSE (TG-II)", 34); py += 16;
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        TextOutA(hdc, px, py, "3.50 atm, +180C, runaway CO2 & sulfur clouds. Min x1.2, Vol x0.8. Searing heat.", 79); py += 16;
+        TextOutA(hdc, px, py, "Strategy: Solar Mirrors set to COOL, Troposphere Processors set to TOXIC SCRUBBING (-P).", 88); py += 22;
+
+        SetTextColor(hdc, COLOR_BLUE);
+        TextOutA(hdc, px, py, "CLASS-III: FROZEN TUNDRA (FT-III)", 33); py += 16;
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        TextOutA(hdc, px, py, "0.35 atm, -75C, 50% ice coverage. Abundant water ice and cryo-volatiles (x1.5).", 79); py += 16;
+        TextOutA(hdc, px, py, "Strategy: Solar Mirrors set to HEAT, Greenhouse Stations set to PFC WARMING (+GHG).", 83); py += 22;
+
+        SetTextColor(hdc, COLOR_CYAN);
+        TextOutA(hdc, px, py, "CLASS-IV: OCEAN WORLD (OW-IV)", 29); py += 16;
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        TextOutA(hdc, px, py, "1.10 atm, +18C, 95% global ocean. High organic potential, mineral scarcity (x0.5).", 82); py += 16;
+        TextOutA(hdc, px, py, "Strategy: Bioseeding Stations & Algal Vats for O2; Tartarus freight routes for minerals.", 88); py += 22;
+
+        SetTextColor(hdc, COLOR_EMERALD);
+        TextOutA(hdc, px, py, "CLASS-V: PRIMORDIAL GAIA (GW-V) [GARDEN WORLD]", 46); py += 16;
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        TextOutA(hdc, px, py, "1.00 atm, +15C, 65% water, 20.9% O2, 78% N2. Habitability >= 75%. Colony Mastered!", 82); py += 16;
+        TextOutA(hdc, px, py, "Strategy: Construct Orbital Rings and Star Elevators, awaken 75,000 cryo-sleepers.", 82);
+
+    } else if (g_codexTab == 2) {
+        // TAB 2: TERRAFORMING FORMULAS
+        SelectObject(hdc, hBoldFont);
+        SetTextColor(hdc, COLOR_CYAN);
+        TextOutA(hdc, px, py, "--- MATHEMATICAL TERRAFORMING MODELS & FORMULAS ---", 51);
+        py += 24;
+
+        SelectObject(hdc, hBoldFont);
+        SetTextColor(hdc, COLOR_EMERALD);
+        TextOutA(hdc, px, py, "1. ATMOSPHERIC PRESSURE FORMULA:", 32); py += 18;
+        SelectObject(hdc, hMainFont);
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        TextOutA(hdc, px, py, "P_eq = P_curr + (N_inject * 0.05 - N_scrub * 0.08) * dt  [Target: 0.90 to 1.10 atm]", 83); py += 16;
+        TextOutA(hdc, px, py, "Inject adds +0.05 atm buffer. Scrub strips -0.08 atm and yields 25 tons salvaged minerals.", 90); py += 22;
+
+        SelectObject(hdc, hBoldFont);
+        SetTextColor(hdc, COLOR_AMBER);
+        TextOutA(hdc, px, py, "2. SURFACE THERMAL EQUILIBRIUM FORMULA:", 39); py += 18;
+        SelectObject(hdc, hMainFont);
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        TextOutA(hdc, px, py, "T = T_base + (GHG * 0.45) + (N_heat * 4.5 C) - (N_cool * 5.0 C)  [Target: 12 to 20 C]", 86); py += 16;
+        TextOutA(hdc, px, py, "Solar Mirrors heat by +4.5 C or cool by -5.0 C. Greenhouse Stations modify GHG factor.", 87); py += 22;
+
+        SelectObject(hdc, hBoldFont);
+        SetTextColor(hdc, COLOR_BLUE);
+        TextOutA(hdc, px, py, "3. HYDROSPHERE LIQUID ENVELOPE:", 31); py += 18;
+        SelectObject(hdc, hMainFont);
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        TextOutA(hdc, px, py, "Freezing: T < -5 C (Permafrost) | Boiling: T > 75 C (Steam) | Target: 50% to 70% Water.", 88); py += 16;
+        TextOutA(hdc, px, py, "Hydro-Towers condense atmospheric humidity (+2.0% water/cyc). Ice comets add +8.0% water.", 89); py += 22;
+
+        SelectObject(hdc, hBoldFont);
+        SetTextColor(hdc, COLOR_PURPLE);
+        TextOutA(hdc, px, py, "4. COMPOSITE HABITABILITY INDEX (H):", 36); py += 18;
+        SelectObject(hdc, hMainFont);
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        TextOutA(hdc, px, py, "H = 25% f(P) + 25% f(T) + 20% f(W) + 15% f(O2) + 10% f(N2) + 5% f(Magnet)", 74); py += 16;
+        TextOutA(hdc, px, py, "Hostile (<25%) -> Harsh (25-49%) -> Developing (50-74%) -> Garden World (75-100%).", 83);
+
+    } else if (g_codexTab == 3) {
+        // TAB 3: FLEET LOGISTICS & TRADE
+        SelectObject(hdc, hBoldFont);
+        SetTextColor(hdc, COLOR_CYAN);
+        TextOutA(hdc, px, py, "--- INTERSTELLAR FLEET LOGISTICS & TRADE CORRIDORS ---", 54);
+        py += 24;
+
+        SelectObject(hdc, hBoldFont);
+        SetTextColor(hdc, COLOR_TEXT_BRIGHT);
+        TextOutA(hdc, px, py, "FLEET VESSEL REGISTRY:", 22); py += 18;
+        SelectObject(hdc, hMainFont);
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        TextOutA(hdc, px, py, "Ark Sovereign     : Flagship sanctuary housing 75,000 cryo-sleepers and foundry fabricators.", 91); py += 16;
+        TextOutA(hdc, px, py, "Titan Freighters  : Bulk mineral and cryo-volatile haulers connecting orbital waystations.", 88); py += 16;
+        TextOutA(hdc, px, py, "Plasma Skimmers   : Automated magnetic scoop vessels harvesting Helium-3 from stellar corona.", 93); py += 22;
+
+        SelectObject(hdc, hBoldFont);
+        SetTextColor(hdc, COLOR_AMBER);
+        TextOutA(hdc, px, py, "AUTOMATED SUPPLY CORRIDORS:", 27); py += 18;
+        SelectObject(hdc, hMainFont);
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        TextOutA(hdc, px, py, "Tartarus Mineral Route  : Asteroid Belt -> Ground Depots (+28 t minerals/cyc).", 78); py += 16;
+        TextOutA(hdc, px, py, "Boreas Cryo-Volatiles   : Frozen Ice Moons -> Atmospheric Array (+20 t volatiles/cyc).", 86); py += 16;
+        TextOutA(hdc, px, py, "Agro-Dome Sustenance    : Ground Farms -> Ark Flotilla (+22 t fresh food/cyc).", 78); py += 16;
+        TextOutA(hdc, px, py, "Helios Plasma Skimmer   : Stellar Corona -> Fuel Depots (+150 kW clean fusion/cyc).", 83); py += 22;
+
+        SelectObject(hdc, hBoldFont);
+        SetTextColor(hdc, COLOR_EMERALD);
+        TextOutA(hdc, px, py, "DEMOGRAPHICS & RATION POLICIES:", 31); py += 18;
+        SelectObject(hdc, hMainFont);
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        TextOutA(hdc, px, py, "Laborers (40% Mining) | Agronomists (25% Food) | Engineers (20% Tech) | Scientists (15% SP).", 92); py += 16;
+        TextOutA(hdc, px, py, "Rations: Spartan (-15 Morale, -40% Food), Standard, Abundant (+15 Morale, +35% Food).", 85);
+
+    } else if (g_codexTab == 4) {
+        // TAB 4: CRISIS RESPONSE MANUAL & PRECURSOR XENOBIOLOGY
+        SelectObject(hdc, hBoldFont);
+        SetTextColor(hdc, COLOR_CYAN);
+        TextOutA(hdc, px, py, "--- CRISIS RESPONSE MANUAL & PRECURSOR ARCHAEOLOGY ---", 54);
+        py += 24;
+
+        SelectObject(hdc, hBoldFont);
+        SetTextColor(hdc, COLOR_ROSE);
+        TextOutA(hdc, px, py, "COSMIC CRISIS MITIGATION PROTOCOLS:", 35); py += 18;
+        SelectObject(hdc, hMainFont);
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        TextOutA(hdc, px, py, "1. Solar CME Flare   : Invert Core Dynamo polarity; fortify Planetary Shield HP (15s timer).", 92); py += 16;
+        TextOutA(hdc, px, py, "2. Asteroid Impact   : Fire Planetary Defense Citadels or mass driver interceptors (18s timer).", 96); py += 16;
+        TextOutA(hdc, px, py, "3. Mantle Quake      : Vent seismic pressure via deep geothermal relief boreholes (12s timer).", 94); py += 16;
+        TextOutA(hdc, px, py, "4. Ecological Blight : Disperse cryo-containment biophages through Troposphere Processors.", 90); py += 16;
+        TextOutA(hdc, px, py, "5. Magnetic Storm    : Ground fleet capacitors; route energy surge into orbital docks.", 86); py += 22;
+
+        SelectObject(hdc, hBoldFont);
+        SetTextColor(hdc, COLOR_PURPLE);
+        TextOutA(hdc, px, py, "ANCIENT PRECURSOR TACHYON RELICS:", 33); py += 18;
+        SelectObject(hdc, hMainFont);
+        SetTextColor(hdc, COLOR_TEXT_PRI);
+        TextOutA(hdc, px, py, "Tachyon Matrix   : Unlocks Xenobiological Bio-Catalysis (+50% Terraforming, +40% Food).", 87); py += 16;
+        TextOutA(hdc, px, py, "Xenobiotic Genome: Unlocks Crystalline Deflectors (+500 Shield HP, +25% Hazard Deflect).", 88); py += 16;
+        TextOutA(hdc, px, py, "Nanite Core      : Unlocks Molecular Nanite Assemblers (-25% Construction & Upgrade Costs).", 90); py += 16;
+        TextOutA(hdc, px, py, "Zero-Point Flux  : Unlocks Zero-Point Resonant Tap (+450 kW Perpetual Clean Energy Output).", 91);
+    }
+
+    DeleteObject(hTitleFont);
+    DeleteObject(hBoldFont);
+    DeleteObject(hMainFont);
+    DeleteObject(hSmallFont);
+}
+
+static void RenderTutorialOverlay(HDC hdc, int width, int height) {
+    HFONT hBoldFont = CreateFontA(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+    HFONT hMainFont = CreateFontA(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+    HFONT hSmallFont = CreateFontA(11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+
+    int tutW = 620;
+    int tutH = 160;
+    int tx = (width - tutW) / 2;
+    int ty = height - tutH - 45;
+
+    FillSolidRect(hdc, tx, ty, tutW, tutH, RGB(8, 14, 26));
+    FrameSolidRect(hdc, tx, ty, tutW, tutH, COLOR_AMBER);
+
+    SelectObject(hdc, hSmallFont);
+    SetTextColor(hdc, COLOR_AMBER);
+    SetBkMode(hdc, TRANSPARENT);
+    char stepBuf[64];
+    sprintf(stepBuf, "FLEET ONBOARDING BRIEFING • STEP %d OF 6", g_tutorialStep + 1);
+    TextOutA(hdc, tx + 16, ty + 10, stepBuf, (int)strlen(stepBuf));
+
+    SelectObject(hdc, hBoldFont);
+    SetTextColor(hdc, COLOR_TEXT_BRIGHT);
+
+    const char* titles[6] = {
+        "1. Stellar Cartography & Viewport Navigation",
+        "2. Planetary Atmosphere & Geo-Engineering (Terra Tab)",
+        "3. Interstellar Fleet Logistics & Automated Trade (Fleet Tab)",
+        "4. Demographics & Biosphere Expansion (Colony Tab)",
+        "5. Cosmic Crisis Alerts & Defensive Countermeasures (Hazard Tab)",
+        "6. Quicksave, Fleet Codex, and Simulation Warp"
+    };
+
+    TextOutA(hdc, tx + 16, ty + 28, titles[g_tutorialStep], (int)strlen(titles[g_tutorialStep]));
+
+    SelectObject(hdc, hMainFont);
+    SetTextColor(hdc, COLOR_TEXT_PRI);
+
+    if (g_tutorialStep == 0) {
+        TextOutA(hdc, tx + 16, ty + 50, "Drag mouse to pan across space; mouse wheel zooms in/out.", 57);
+        TextOutA(hdc, tx + 16, ty + 68, "Click any celestial body to inspect telemetry. Press [T] to bind active target.", 79);
+    } else if (g_tutorialStep == 1) {
+        TextOutA(hdc, tx + 16, ty + 50, "Inspect the Terra tab on the right sidebar. Build Troposphere Processors &", 74);
+        TextOutA(hdc, tx + 16, ty + 68, "Solar Mirrors to balance pressure, temperature, water, and O2/N2 buffer.", 72);
+    } else if (g_tutorialStep == 2) {
+        TextOutA(hdc, tx + 16, ty + 50, "Freighters transport minerals and volatiles from asteroid belts to ground domes.", 80);
+        TextOutA(hdc, tx + 16, ty + 68, "Helios plasma skimmers tap clean energy from stellar corona. Build docks to expand.", 83);
+    } else if (g_tutorialStep == 3) {
+        TextOutA(hdc, tx + 16, ty + 50, "Awaken colonists from the Ark as housing capacity permits. Construct Domes & Megacities.", 88);
+        TextOutA(hdc, tx + 16, ty + 68, "Feed your population with Aeroponic Farms and adjust labor focus to match demands.", 81);
+    } else if (g_tutorialStep == 4) {
+        TextOutA(hdc, tx + 16, ty + 50, "Incoming Solar Flares and Asteroids trigger countdown alerts. Click MITIGATE or switch", 86);
+        TextOutA(hdc, tx + 16, ty + 68, "to Hazard tab to deploy magnetic dampers and kinetic interceptors before impact!", 80);
+    } else if (g_tutorialStep == 5) {
+        TextOutA(hdc, tx + 16, ty + 50, "Press [F5] anytime to Quicksave, and [F9] to Quickload. Press [H / F1] for the Codex.", 85);
+        TextOutA(hdc, tx + 16, ty + 68, "Press [Space] to pause simulation, and [1/2/5] for warp speeds. Forge humanity's future!", 88);
+    }
+
+    // Buttons
+    int by = ty + tutH - 36;
+    if (g_tutorialStep > 0) {
+        AddButton(BID_TUT_BACK, tx + tutW - 250, by, 70, 24, "BACK", NULL, 1);
+    }
+    AddButton(BID_TUT_NEXT, tx + tutW - 170, by, 80, 24, (g_tutorialStep == 5) ? "FINISH" : "NEXT ->", NULL, 1);
+    AddButton(BID_TUT_SKIP, tx + tutW - 80, by, 65, 24, "SKIP", NULL, 1);
+
+    DeleteObject(hBoldFont);
+    DeleteObject(hMainFont);
+    DeleteObject(hSmallFont);
+}
+
 static void RenderUI(HDC hdc, int width, int height) {
     ClearButtons();
 
@@ -3982,6 +4454,7 @@ static void RenderUI(HDC hdc, int width, int height) {
     SelectObject(hdc, hFontSmall);
     SetTextColor(hdc, theme->textDim);
     TextOutA(hdc, 84, 9, "// Fleet Logistics & Terraforming", 33);
+    AddButton(BID_OPEN_CODEX, 220, 10, 96, 24, "CODEX [H]", NULL, 1);
 
     // Header Badges
     SelectObject(hdc, hFontMain);
@@ -4453,6 +4926,9 @@ static void RenderUI(HDC hdc, int width, int height) {
     AddButton(BID_THEME_TOGGLE, 350, navY, 96, 22, g_crtThemes[g_crtTheme].name, NULL, 1);
     AddButton(BID_GRID_TOGGLE, 450, navY, 68, 22, g_showGrid ? "Grid: ON" : "Grid: OFF", NULL, 1);
     AddButton(BID_GLOW_TOGGLE, 522, navY, 68, 22, g_phosphorGlow ? "Glow: ON" : "Glow: OFF", NULL, 1);
+    AddButton(BID_OPEN_CODEX, 596, navY, 76, 22, "Codex [H]", NULL, 1);
+    AddButton(BID_QUICKSAVE, 676, navY, 70, 22, "Save [F5]", NULL, 1);
+    AddButton(BID_QUICKLOAD, 750, navY, 70, 22, "Load [F9]", NULL, 1);
 
     // K. Viewport Selection Card (if something selected)
     if (sim.selectedType != 0) {
@@ -5660,7 +6136,18 @@ static void RenderUI(HDC hdc, int width, int height) {
 
     // Right-aligned engine tag
     SetTextColor(hdc, COLOR_TEXT_DIM);
-    TextOutA(hdc, width - 150, footY + 9, "KCosmic Native v0.3", 19);
+    TextOutA(hdc, width - 210, footY + 9, "KCosmic Native v1.14 (Admiral)", 30);
+
+    // Overlays: Tutorial, Codex, Splash Screen
+    if (g_tutorialActive) {
+        RenderTutorialOverlay(hdc, width, height);
+    }
+    if (g_showCodex) {
+        RenderCodexModal(hdc, width, height);
+    }
+    if (g_showSplash) {
+        RenderSplashScreen(hdc, width, height);
+    }
 
     // Cleanup GDI objects
     SelectObject(hdc, hOldFont);
@@ -5999,6 +6486,97 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
         }
 
         case WM_KEYDOWN: {
+            // Escape closes open modals first
+            if (wParam == VK_ESCAPE) {
+                if (g_showCodex) { g_showCodex = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (g_tutorialActive) { g_tutorialActive = 0; g_tutorialSeen = 1; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+                if (g_showSplash) { g_showSplash = 0; InvalidateRect(hwnd, NULL, FALSE); return 0; }
+            }
+
+            // If in splash screen
+            if (g_showSplash) {
+                if (wParam == VK_SPACE || wParam == VK_RETURN) {
+                    g_showSplash = 0;
+                    if (!g_tutorialSeen) { g_tutorialActive = 1; g_tutorialStep = 0; }
+                    PlaySoundFx(SFX_DEPLOY);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                if (wParam == 'C' || wParam == 'c') {
+                    if (LoadGameState(SAVE_FILE)) {
+                        g_showSplash = 0;
+                        SetLogMsg("Resumed mission from quicksave.", 0);
+                        PlaySoundFx(SFX_SUCCESS);
+                    }
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
+                    g_showCodex = 1;
+                    g_codexTab = 0;
+                    PlaySoundFx(SFX_CLICK);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+            }
+
+            // If in Codex modal, 1-5 changes tab
+            if (g_showCodex) {
+                if (wParam >= '1' && wParam <= '5') {
+                    g_codexTab = (int)(wParam - '1');
+                    PlaySoundFx(SFX_CLICK);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+            }
+
+            // Quicksave & Quickload
+            if (wParam == VK_F5) {
+                if (SaveGameState(SAVE_FILE)) {
+                    char qb[96];
+                    sprintf(qb, "Expedition quicksaved [F5] (Cycle %.2f).", sim.cycle);
+                    SetLogMsg(qb, 0);
+                    PlaySoundFx(SFX_DEPLOY);
+                } else {
+                    SetLogMsg("Quicksave failed: Could not write file.", 1);
+                    PlaySoundFx(SFX_WARN);
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (wParam == VK_F9) {
+                if (LoadGameState(SAVE_FILE)) {
+                    char qb[96];
+                    sprintf(qb, "Expedition quickloaded [F9] (Cycle %.2f).", sim.cycle);
+                    SetLogMsg(qb, 0);
+                    PlaySoundFx(SFX_SUCCESS);
+                } else {
+                    SetLogMsg("Quickload failed: No save file found.", 1);
+                    PlaySoundFx(SFX_WARN);
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+
+            // Codex hotkey
+            if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
+                g_showCodex = !g_showCodex;
+                PlaySoundFx(SFX_CLICK);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+
+            // Cycle CRT theme
+            if (wParam == 'C' || wParam == 'c') {
+                g_crtTheme = (g_crtTheme + 1) % 4;
+                char buf[128];
+                sprintf(buf, "CRT Phosphor mode changed to %s.", g_crtThemes[g_crtTheme].name);
+                SetLogMsg(buf, 0);
+                PlaySoundFx(SFX_CLICK);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+
             switch (wParam) {
                 case VK_SPACE:
                     sim.paused = !sim.paused;

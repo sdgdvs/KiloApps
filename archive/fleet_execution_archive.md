@@ -16,3 +16,6 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - Status: PASS ✅ (8 issues fixed inline).
   - Highlights: Full state persistence across refresh, F5/F9 quicksave/load, JSON mission export/import, replay recordings, pointerdown touch, clean build.
 
+- **2026-09-16T22:06:04Z — kilo-qa: KMaze (Pass 5)**
+  - Status: 🟢 Pass 5 Completed.
+  - Highlights: Hardened state serialization (timers, powerups, boss HP), interactive splash overlay, auto-save beforeunload, tutorial state isolation. Native (64 KB) and web clean.
