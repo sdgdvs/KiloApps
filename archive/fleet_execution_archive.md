@@ -122,3 +122,8 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - Ergonomics & Overlays: Added Space/Enter action triggers, Esc dismiss for non-combat dialogs, F1 help parity, and arrow key flight in native.
   - Verification: Clean MSVC Native C build (142.5 KB); Vite Single-File Web clean build (132.3 KB); all <999 KB size constraints satisfied.
 
+- **2026-09-18T06:45:00Z — kilo-expander: KSys**
+  - Status: PASS ✅ (Deep functional feature expansion, diagnostics, export & hex telemetry).
+  - Highlights: Web hex inspector with 16-byte view/export; native all-volume drive scanner (C-Z); system health & anomaly heuristics; regex/case filters; CSV/Markdown reports. Native (27.5 KB) and Web (114.5 KB) clean builds.
+
+

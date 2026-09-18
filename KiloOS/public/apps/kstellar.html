@@ -244,22 +244,22 @@
         <div id="manual-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(3,8,16,0.96); z-index:150; flex-direction:column; padding:20px; box-sizing:border-box;" onclick="if (event.target === this) closeManual()">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #00ffcc; padding-bottom:8px; margin-bottom:10px;">
                 <h2 style="margin:0; color:#00ffcc; font-size:18px; letter-spacing:1px; text-shadow:0 0 10px #00ffcc;">★ STAR CAPTAIN'S MANUAL &amp; CODEX</h2>
-                <button class="action-btn" style="margin:0; padding:4px 12px; font-size:12px; border-color:#ffff00; color:#ffff00;" onclick="closeManual()">[X] CLOSE (ESC)</button>
+                <button class="action-btn" style="margin:0; padding:4px 12px; font-size:12px; border-color:#ffff00; color:#ffff00;" onclick="closeManual()">[X] CLOSE (ESC / ENTER / SPACE)</button>
             </div>
             <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
-                <button id="man-tab-0" class="action-btn" style="margin:0; padding:5px 8px; font-size:11px;" onclick="switchManualTab(0)">1. FLIGHT &amp; NAV</button>
-                <button id="man-tab-1" class="action-btn" style="margin:0; padding:5px 8px; font-size:11px;" onclick="switchManualTab(1)">2. COMMODITY TRADING</button>
-                <button id="man-tab-2" class="action-btn" style="margin:0; padding:5px 8px; font-size:11px;" onclick="switchManualTab(2)">3. TACTICAL COMBAT</button>
-                <button id="man-tab-3" class="action-btn" style="margin:0; padding:5px 8px; font-size:11px;" onclick="switchManualTab(3)">4. FACTIONS &amp; DIPLOMACY</button>
-                <button id="man-tab-4" class="action-btn" style="margin:0; padding:5px 8px; font-size:11px;" onclick="switchManualTab(4)">5. ANOMALIES &amp; UPGRADES</button>
+                <button id="man-tab-0" class="action-btn" style="margin:0; padding:5px 8px; font-size:11px;" onclick="switchManualTab(0)">1. FLIGHT &amp; NAV [1]</button>
+                <button id="man-tab-1" class="action-btn" style="margin:0; padding:5px 8px; font-size:11px;" onclick="switchManualTab(1)">2. COMMODITIES [2]</button>
+                <button id="man-tab-2" class="action-btn" style="margin:0; padding:5px 8px; font-size:11px;" onclick="switchManualTab(2)">3. COMBAT [3]</button>
+                <button id="man-tab-3" class="action-btn" style="margin:0; padding:5px 8px; font-size:11px;" onclick="switchManualTab(3)">4. FACTIONS [4]</button>
+                <button id="man-tab-4" class="action-btn" style="margin:0; padding:5px 8px; font-size:11px;" onclick="switchManualTab(4)">5. ANOMALIES [5]</button>
             </div>
             <div id="manual-content" style="flex:1; border:1px solid #00ffcc; padding:15px; overflow-y:auto; background:rgba(0,18,28,0.8); font-size:13px; line-height:1.6; color:#d0ffff; box-shadow:inset 0 0 15px rgba(0,255,204,0.15);"></div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; font-size:12px; color:#66cccc;">
                 <span id="manual-tab-indicator">Section 1 of 5</span>
                 <div style="display:flex; gap:8px;">
-                    <button class="action-btn" style="margin:0; padding:4px 12px; font-size:11px;" onclick="prevManualTab()">← PREV</button>
-                    <button class="action-btn" style="margin:0; padding:4px 12px; font-size:11px;" onclick="nextManualTab()">NEXT →</button>
-                    <button class="action-btn" style="margin:0; padding:4px 12px; font-size:11px; border-color:#ffff00; color:#ffff00;" onclick="closeManual()">RESUME FLIGHT</button>
+                    <button class="action-btn" style="margin:0; padding:4px 12px; font-size:11px;" onclick="prevManualTab()">← PREV [LEFT]</button>
+                    <button class="action-btn" style="margin:0; padding:4px 12px; font-size:11px;" onclick="nextManualTab()">NEXT → [RIGHT]</button>
+                    <button class="action-btn" style="margin:0; padding:4px 12px; font-size:11px; border-color:#ffff00; color:#ffff00;" onclick="closeManual()">RESUME FLIGHT [SPACE]</button>
                 </div>
             </div>
         </div>
@@ -746,6 +746,30 @@
             loadGameState(true);
         };
 
+        function safeGetJSON(key, fallback = null) {
+            try {
+                const val = localStorage.getItem(key);
+                return val !== null ? JSON.parse(val) : fallback;
+            } catch (e) {
+                return fallback;
+            }
+        }
+
+        function safeSetStorage(key, val) {
+            try {
+                localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+                return true;
+            } catch (e) {
+                console.warn("Storage write failed (quota exceeded):", e);
+                return false;
+            }
+        }
+
+        function hasSavedGame() {
+            const d = safeGetJSON('kstellar_quicksave') || safeGetJSON('kstellar_save');
+            return !!(d && typeof d === 'object' && typeof d.hull === 'number' && d.hull > 0);
+        }
+
         function saveGameState(isQuick = false) {
             const saveData = {
                 version: 1,
@@ -772,17 +796,34 @@
                 droneEnabled
             };
             try {
-                const json = JSON.stringify(saveData);
-                localStorage.setItem('kstellar_save', json);
-                if (isQuick) {
-                    localStorage.setItem('kstellar_quicksave', json);
-                    showToast("★ QUICK-SAVE RECORDED (F5)");
-                } else {
-                    showToast("★ GAME SAVED (LOCAL STORAGE)");
+                let ok = safeSetStorage('kstellar_save', saveData);
+                if (!ok) {
+                    const lightData = { ...saveData };
+                    lightData.systems = systems.map(s => ({
+                        id: s.id,
+                        food_price: s.food_price,
+                        minerals_price: s.minerals_price,
+                        tech_price: s.tech_price,
+                        phenomenon: s.phenomenon
+                    }));
+                    ok = safeSetStorage('kstellar_save', lightData);
                 }
-                localStorage.setItem('kstellar_tutorialSeen', 'true');
-                playBlip();
-                return true;
+                if (isQuick) {
+                    safeSetStorage('kstellar_quicksave', saveData);
+                }
+                safeSetStorage('kstellar_tutorialSeen', 'true');
+                if (ok) {
+                    if (isQuick) {
+                        showToast("★ QUICK-SAVE RECORDED (F5)");
+                    } else {
+                        showToast("★ GAME SAVED (LOCAL STORAGE)");
+                    }
+                    playBlip();
+                    return true;
+                } else {
+                    showToast("⚠ SAVE FAILED: Storage quota exceeded");
+                    return false;
+                }
             } catch (e) {
                 showToast("⚠ SAVE FAILED: Storage quota exceeded");
                 return false;
@@ -791,16 +832,15 @@
 
         function loadGameState(isQuick = false) {
             try {
-                const key = isQuick ? 'kstellar_quicksave' : 'kstellar_save';
-                let json = localStorage.getItem(key);
-                if (!json && isQuick) json = localStorage.getItem('kstellar_save');
-                if (!json) {
-                    showToast("⚠ NO SAVE DATA FOUND");
+                let data = isQuick ? safeGetJSON('kstellar_quicksave') : safeGetJSON('kstellar_save');
+                if (!data && isQuick) data = safeGetJSON('kstellar_save');
+                if (!data && !isQuick) data = safeGetJSON('kstellar_quicksave');
+                if (!data) {
+                    showToast("⚠ NO SAVE DATA FOUND (F5 to save)");
                     playBlip();
                     return false;
                 }
-                const data = JSON.parse(json);
-                if (!data || typeof data !== 'object') throw new Error("Invalid save structure");
+                if (typeof data !== 'object') throw new Error("Invalid save structure");
 
                 hull = typeof data.hull === 'number' ? data.hull : 100;
                 maxHull = typeof data.maxHull === 'number' ? data.maxHull : 100;
@@ -824,27 +864,40 @@
                 activeMission = data.activeMission || null;
                 currentStationMissions = Array.isArray(data.currentStationMissions) ? data.currentStationMissions : [];
                 if (Array.isArray(data.systems) && data.systems.length > 0) {
-                    systems = data.systems;
+                    if (data.systems[0].name) {
+                        systems = data.systems;
+                    } else {
+                        data.systems.forEach(ls => {
+                            const sys = systems.find(s => s.id === ls.id);
+                            if (sys) {
+                                if (ls.food_price !== undefined) sys.food_price = ls.food_price;
+                                if (ls.minerals_price !== undefined) sys.minerals_price = ls.minerals_price;
+                                if (ls.tech_price !== undefined) sys.tech_price = ls.tech_price;
+                                if (ls.phenomenon !== undefined) sys.phenomenon = ls.phenomenon;
+                            }
+                        });
+                    }
                 }
                 if (typeof data.soundEnabled === 'boolean') {
                     soundEnabled = data.soundEnabled;
-                    localStorage.setItem('kstellar_soundEnabled', soundEnabled);
+                    safeSetStorage('kstellar_soundEnabled', soundEnabled);
                     const btn = document.getElementById('audio-toggle-btn');
                     if (btn) btn.innerText = soundEnabled ? "🔊 AUDIO: ON" : "🔇 AUDIO: OFF";
                 }
                 if (typeof data.droneEnabled === 'boolean') {
                     droneEnabled = data.droneEnabled;
-                    localStorage.setItem('kstellar_droneEnabled', droneEnabled);
+                    safeSetStorage('kstellar_droneEnabled', droneEnabled);
                     const btn = document.getElementById('drone-toggle-btn');
                     if (btn) btn.innerText = droneEnabled ? "🌌 DRONE: ON" : "🌌 DRONE: OFF";
                 }
 
-                localStorage.setItem('kstellar_tutorialSeen', 'true');
+                safeSetStorage('kstellar_tutorialSeen', 'true');
 
                 if (inCombat) endCombat();
                 updateDashboard();
                 renderMap();
-                showSystemInfo(systems.find(s => s.id === currentSystemId));
+                const curSys = systems.find(s => s.id === currentSystemId) || systems[0];
+                showSystemInfo(curSys);
                 showToast(isQuick ? "★ QUICK-SAVE LOADED (F9)" : "★ GAME LOADED");
                 playUpgrade();
                 return true;
@@ -874,7 +927,7 @@
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
             showToast("★ SAVE EXPORTED TO FILE");
             playBlip();
         };
@@ -1501,7 +1554,7 @@
                             <button class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="sell('tech')">Sell</button>
                         </div>
                     </div>
-                </div>
+                </div>`;
                 let repairCost = Math.max(0, (maxHull - hull) * 4);
                 let refuelCost = Math.max(0, Math.round((100 - fuel) * 1.5));
                 html += `<p style="color:#00ffff; font-weight:bold; margin-bottom:5px; margin-top:14px;">Station Maintenance &amp; Fuel</p>
@@ -2233,6 +2286,7 @@
 
         window.addEventListener('keydown', (e) => {
             const modal = document.getElementById('manual-modal');
+            const isManualOpen = (modal && modal.style.display === 'flex');
 
             // Quicksave F5
             if (e.key === 'F5') {
@@ -2246,6 +2300,30 @@
                 e.preventDefault();
                 quickLoad();
                 return;
+            }
+
+            // Manual & Codex Navigation
+            if (isManualOpen) {
+                if (['1', '2', '3', '4', '5'].includes(e.key)) {
+                    e.preventDefault();
+                    switchManualTab(parseInt(e.key, 10) - 1);
+                    return;
+                }
+                if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    prevManualTab();
+                    return;
+                }
+                if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    nextManualTab();
+                    return;
+                }
+                if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ' || e.key === 'm' || e.key === 'M' || e.key === 'h' || e.key === 'H') {
+                    e.preventDefault();
+                    closeManual();
+                    return;
+                }
             }
 
             // Combat Tactical Hotkeys
@@ -2272,16 +2350,28 @@
                 }
             }
 
-            if (e.key === 'm' || e.key === 'M' || e.key === 'h' || e.key === 'H') {
-                if (modal.style.display === 'flex') {
+            // Open/Toggle Manual with M, H, F1, or ?
+            if (e.key === 'm' || e.key === 'M' || e.key === 'h' || e.key === 'H' || e.key === 'F1' || e.key === '?') {
+                e.preventDefault();
+                if (isManualOpen) {
                     closeManual();
                 } else {
                     openManual();
                 }
-            } else if (e.key === 'Escape') {
-                if (modal.style.display === 'flex') {
+                return;
+            }
+
+            if (e.key === 'Escape') {
+                if (isManualOpen) {
                     closeManual();
                 }
+            }
+        });
+
+        // Auto-save on window exit / tab close
+        window.addEventListener('beforeunload', () => {
+            if (hull > 0 && !inCombat) {
+                saveGameState(false);
             }
         });
 
@@ -2291,17 +2381,24 @@
         const droneBtn = document.getElementById('drone-toggle-btn');
         if (droneBtn) droneBtn.innerText = droneEnabled ? "🌌 DRONE: ON" : "🌌 DRONE: OFF";
 
-        renderMap();
-        updateDashboard();
-        showSystemInfo(systems.find(s => s.id === 1));
+        // Restore saved game if present
+        let restored = false;
+        if (hasSavedGame()) {
+            restored = loadGameState(true);
+        }
+        if (!restored) {
+            renderMap();
+            updateDashboard();
+            showSystemInfo(systems.find(s => s.id === 1));
+        }
         requestAnimationFrame(renderCanvasLoop);
 
-        // Auto-show tutorial manual on first visit
-        const tutorialSeen = localStorage.getItem('kstellar_tutorialSeen');
-        if (!tutorialSeen) {
+        // First-run tutorial integrity: prompt fires only on fresh sessions, never interrupting restored save states
+        const tutorialSeen = safeGetJSON('kstellar_tutorialSeen');
+        if (!tutorialSeen && !restored) {
             setTimeout(() => {
                 openManual();
-                localStorage.setItem('kstellar_tutorialSeen', 'true');
+                safeSetStorage('kstellar_tutorialSeen', 'true');
             }, 300);
         }
     </script>

@@ -122,6 +122,9 @@ void GenerateGalaxy() {
 #define ID_BTN_MAN_BACK 176
 #define ID_BTN_MAN_CODEX 177
 
+#define ID_BTN_SAVE 180
+#define ID_BTN_LOAD 181
+
 #define SFX_BLIP 1
 #define SFX_WARP 2
 #define SFX_LASER 3
@@ -214,6 +217,7 @@ HWND hBtnMissions, hBtnMissionAccept1, hBtnMissionAccept2, hBtnMissionAbandon, h
 HWND hBtnFactions, hBtnFactDonate, hBtnFactDues, hBtnFactBribe, hBtnFactBack;
 HWND hBtnInvestigate;
 HWND hBtnManual, hBtnManTab1, hBtnManTab2, hBtnManTab3, hBtnManTab4, hBtnManTab5, hBtnManBack, hBtnManCodex;
+HWND hBtnSave, hBtnLoad;
 
 int selectedSystem = -1;
 int currentSystemId = 0;
@@ -224,6 +228,13 @@ int manualTab = 0;
 
 void HideManualButtons();
 void ShowManualView(HWND hwnd, int tab);
+void ShowStationView(HWND hwnd);
+void UpdateDashboard();
+int SaveGame();
+int LoadGame();
+int HasSavedGame();
+int HasSeenTutorial();
+void MarkTutorialSeen();
 
 int repFed = 10;
 int repTraders = 15;
@@ -295,6 +306,130 @@ int enemyHull = 0;
 int enemyMaxHull = 0;
 int inCombat = 0;
 char combatLog[1024] = "";
+
+#define SAVE_MAGIC 0x54534C4B // "KLST"
+
+typedef struct {
+    int magic;
+    int version;
+    int hull;
+    int maxHull;
+    int fuel;
+    int credits;
+    int cargoFood;
+    int cargoMinerals;
+    int cargoTech;
+    int cargoMax;
+    int engineLevel;
+    int cargoLevel;
+    int weaponLevel;
+    int shieldLevel;
+    int currentSystemId;
+    int selectedSystem;
+    int repFed;
+    int repTraders;
+    int repPirates;
+    Mission activeMission;
+    Mission stationMissions[2];
+    int soundEnabled;
+    int droneEnabled;
+    System systems[MAX_SYSTEMS];
+} GameSaveData;
+
+int HasSeenTutorial() {
+    DWORD attr = GetFileAttributesA("kstellar_tutorial.dat");
+    return (attr != INVALID_FILE_ATTRIBUTES);
+}
+
+void MarkTutorialSeen() {
+    HANDLE hFile = CreateFileA("kstellar_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) CloseHandle(hFile);
+}
+
+int HasSavedGame() {
+    DWORD attr = GetFileAttributesA("kstellar.dat");
+    if (attr == INVALID_FILE_ATTRIBUTES) return 0;
+    FILE* f = fopen("kstellar.dat", "rb");
+    if (!f) return 0;
+    int magic = 0;
+    size_t rd = fread(&magic, sizeof(int), 1, f);
+    fclose(f);
+    return (rd == 1 && magic == SAVE_MAGIC);
+}
+
+int SaveGame() {
+    FILE* f = fopen("kstellar.dat", "wb");
+    if (!f) return 0;
+    GameSaveData d;
+    memset(&d, 0, sizeof(GameSaveData));
+    d.magic = SAVE_MAGIC;
+    d.version = 1;
+    d.hull = hull;
+    d.maxHull = maxHull;
+    d.fuel = fuel;
+    d.credits = credits;
+    d.cargoFood = cargoFood;
+    d.cargoMinerals = cargoMinerals;
+    d.cargoTech = cargoTech;
+    d.cargoMax = cargoMax;
+    d.engineLevel = engineLevel;
+    d.cargoLevel = cargoLevel;
+    d.weaponLevel = weaponLevel;
+    d.shieldLevel = shieldLevel;
+    d.currentSystemId = currentSystemId;
+    d.selectedSystem = selectedSystem;
+    d.repFed = repFed;
+    d.repTraders = repTraders;
+    d.repPirates = repPirates;
+    d.activeMission = activeMission;
+    d.stationMissions[0] = stationMissions[0];
+    d.stationMissions[1] = stationMissions[1];
+    d.soundEnabled = soundEnabled;
+    d.droneEnabled = droneEnabled;
+    memcpy(d.systems, systems, sizeof(System) * MAX_SYSTEMS);
+
+    size_t written = fwrite(&d, sizeof(GameSaveData), 1, f);
+    fclose(f);
+    MarkTutorialSeen();
+    return (written == 1);
+}
+
+int LoadGame() {
+    FILE* f = fopen("kstellar.dat", "rb");
+    if (!f) return 0;
+    GameSaveData d;
+    size_t rd = fread(&d, sizeof(GameSaveData), 1, f);
+    fclose(f);
+    if (rd != 1 || d.magic != SAVE_MAGIC) return 0;
+
+    hull = (d.hull > 0) ? d.hull : 100;
+    maxHull = (d.maxHull > 0) ? d.maxHull : 100;
+    fuel = d.fuel;
+    credits = d.credits;
+    cargoFood = d.cargoFood;
+    cargoMinerals = d.cargoMinerals;
+    cargoTech = d.cargoTech;
+    cargoMax = (d.cargoMax > 0) ? d.cargoMax : 50;
+    engineLevel = (d.engineLevel > 0) ? d.engineLevel : 1;
+    cargoLevel = (d.cargoLevel > 0) ? d.cargoLevel : 1;
+    weaponLevel = (d.weaponLevel > 0) ? d.weaponLevel : 1;
+    shieldLevel = (d.shieldLevel > 0) ? d.shieldLevel : 1;
+    currentSystemId = (d.currentSystemId >= 0 && d.currentSystemId < MAX_SYSTEMS) ? d.currentSystemId : 0;
+    selectedSystem = (d.selectedSystem >= 0 && d.selectedSystem < MAX_SYSTEMS) ? d.selectedSystem : currentSystemId;
+    repFed = d.repFed;
+    repTraders = d.repTraders;
+    repPirates = d.repPirates;
+    activeMission = d.activeMission;
+    stationMissions[0] = d.stationMissions[0];
+    stationMissions[1] = d.stationMissions[1];
+    soundEnabled = d.soundEnabled;
+    droneEnabled = d.droneEnabled;
+    if (hBtnSoundToggle) SetWindowText(hBtnSoundToggle, soundEnabled ? "SND: ON" : "SND: OFF");
+    if (hBtnDroneToggle) SetWindowText(hBtnDroneToggle, droneEnabled ? "DRN: ON" : "DRN: OFF");
+    memcpy(systems, d.systems, sizeof(System) * MAX_SYSTEMS);
+    MarkTutorialSeen();
+    return 1;
+}
 
 static HFONT hFont = NULL;
 static HBRUSH hBgBrush = NULL;
@@ -857,12 +992,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HWND h4 = CreateWindow("STATIC", "LOCAL SYSTEMS", WS_VISIBLE | WS_CHILD, 440, 60, 150, 20, hwnd, NULL, NULL, NULL);
             SendMessage(h4, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hMissionText = CreateWindow("STATIC", "", WS_VISIBLE | WS_CHILD, 20, 45, 435, 20, hwnd, NULL, NULL, NULL);
+            hMissionText = CreateWindow("STATIC", "", WS_VISIBLE | WS_CHILD, 20, 45, 310, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hMissionText, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hBtnManual = CreateWindow("BUTTON", "MANUAL", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 42, 68, 22, hwnd, (HMENU)ID_BTN_MANUAL, NULL, NULL);
-            hBtnSoundToggle = CreateWindow("BUTTON", "SND: ON", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 513, 42, 76, 22, hwnd, (HMENU)ID_BTN_SOUND_TOGGLE, NULL, NULL);
-            hBtnDroneToggle = CreateWindow("BUTTON", "DRN: ON", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 594, 42, 76, 22, hwnd, (HMENU)ID_BTN_DRONE_TOGGLE, NULL, NULL);
+            hBtnSave = CreateWindow("BUTTON", "SAVE", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 335, 42, 60, 22, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
+            hBtnLoad = CreateWindow("BUTTON", "LOAD", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 400, 42, 60, 22, hwnd, (HMENU)ID_BTN_LOAD, NULL, NULL);
+            hBtnManual = CreateWindow("BUTTON", "MANUAL", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 465, 42, 68, 22, hwnd, (HMENU)ID_BTN_MANUAL, NULL, NULL);
+            hBtnSoundToggle = CreateWindow("BUTTON", "SND: ON", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 538, 42, 68, 22, hwnd, (HMENU)ID_BTN_SOUND_TOGGLE, NULL, NULL);
+            hBtnDroneToggle = CreateWindow("BUTTON", "DRN: ON", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 611, 42, 68, 22, hwnd, (HMENU)ID_BTN_DRONE_TOGGLE, NULL, NULL);
 
             hDroneThread = CreateThread(NULL, 0, AmbientDroneThread, NULL, 0, NULL);
             
@@ -947,6 +1084,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             UpdateDashboard();
             InitBgStars();
             SetTimer(hwnd, 1, 33, NULL);
+
+            if (HasSavedGame()) {
+                if (LoadGame()) {
+                    ShowStationView(hwnd);
+                    UpdateDashboard();
+                    SetWindowText(hMissionText, "★ QUICK-LOAD RESTORED (F9)");
+                }
+            } else if (!HasSeenTutorial()) {
+                MarkTutorialSeen();
+                ShowManualView(hwnd, 0);
+                SetWindowText(hMissionText, "Welcome Commander! Review Manual [1-5 / ESC]");
+            }
             return 0;
         }
         case WM_TIMER: {
@@ -1365,7 +1514,26 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         }
         case WM_COMMAND: {
-            if (LOWORD(wParam) == ID_BTN_SET_COURSE && selectedSystem != -1) {
+            if (LOWORD(wParam) == ID_BTN_SAVE) {
+                if (hull > 0) {
+                    SaveGame();
+                    PlaySfx(SFX_UPGRADE);
+                    SetWindowText(hMissionText, "★ QUICK-SAVE RECORDED (F5)");
+                }
+                return 0;
+            } else if (LOWORD(wParam) == ID_BTN_LOAD) {
+                if (LoadGame()) {
+                    ShowStationView(hwnd);
+                    UpdateDashboard();
+                    SetWindowText(hMissionText, "★ QUICK-LOAD RESTORED (F9)");
+                    PlaySfx(SFX_UPGRADE);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else {
+                    SetWindowText(hMissionText, "⚠ NO SAVE FOUND (kstellar.dat)");
+                    PlaySfx(SFX_BLIP);
+                }
+                return 0;
+            } else if (LOWORD(wParam) == ID_BTN_SET_COURSE && selectedSystem != -1) {
                 int dx = systems[selectedSystem].x - systems[currentSystemId].x;
                 int dy = systems[selectedSystem].y - systems[currentSystemId].y;
                 int dist = (int)sqrt((double)(dx * dx + dy * dy));
@@ -1842,19 +2010,110 @@ encounter_processed:
             return 0;
         }
         case WM_KEYDOWN: {
-            if (wParam == 'M' || wParam == 'm' || wParam == 'H' || wParam == 'h') {
-                PlaySfx(SFX_BLIP);
-                if (inManualView) ShowStationView(hwnd);
-                else ShowManualView(hwnd, 0);
-            } else if (wParam == VK_ESCAPE) {
-                if (inManualView) {
+            if (wParam == VK_F5) {
+                if (hull > 0) {
+                    SaveGame();
+                    PlaySfx(SFX_UPGRADE);
+                    SetWindowText(hMissionText, "★ QUICK-SAVE RECORDED (F5)");
+                }
+                return 0;
+            }
+            if (wParam == VK_F9) {
+                if (LoadGame()) {
+                    ShowStationView(hwnd);
+                    UpdateDashboard();
+                    SetWindowText(hMissionText, "★ QUICK-LOAD RESTORED (F9)");
+                    PlaySfx(SFX_UPGRADE);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else {
+                    SetWindowText(hMissionText, "⚠ NO SAVE FOUND (kstellar.dat)");
+                    PlaySfx(SFX_BLIP);
+                }
+                return 0;
+            }
+            if (inCombat) {
+                if (wParam == '1' || wParam == 'A' || wParam == 'a') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_COMBAT_ATTACK, 0), (LPARAM)hBtnCombatAttack);
+                    return 0;
+                }
+                if (wParam == '2' || wParam == 'E' || wParam == 'e') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_COMBAT_EVADE, 0), (LPARAM)hBtnCombatEvade);
+                    return 0;
+                }
+                if (wParam == '3' || wParam == 'T' || wParam == 't') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_COMBAT_USE_TECH, 0), (LPARAM)hBtnCombatUseTech);
+                    return 0;
+                }
+                if (wParam == '4' || wParam == 'F' || wParam == 'f') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_COMBAT_FLEE, 0), (LPARAM)hBtnCombatFlee);
+                    return 0;
+                }
+            }
+            if (inManualView) {
+                if (wParam >= '1' && wParam <= '5') {
+                    PlaySfx(SFX_BLIP);
+                    ShowManualView(hwnd, (int)(wParam - '1'));
+                    return 0;
+                }
+                if (wParam == VK_ESCAPE || wParam == VK_SPACE || wParam == VK_RETURN || wParam == 'M' || wParam == 'm' || wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
                     PlaySfx(SFX_BLIP);
                     ShowStationView(hwnd);
+                    return 0;
                 }
+            }
+            if (inMissionsView) {
+                if (wParam == '1' && stationMissions[0].type != 0 && activeMission.type == 0) {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_MISSION_ACCEPT_1, 0), (LPARAM)hBtnMissionAccept1);
+                    return 0;
+                }
+                if (wParam == '2' && stationMissions[1].type != 0 && activeMission.type == 0) {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_MISSION_ACCEPT_2, 0), (LPARAM)hBtnMissionAccept2);
+                    return 0;
+                }
+                if ((wParam == 'A' || wParam == 'a' || wParam == 'X' || wParam == 'x') && activeMission.type != 0) {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_MISSION_ABANDON, 0), (LPARAM)hBtnMissionAbandon);
+                    return 0;
+                }
+                if (wParam == VK_ESCAPE || wParam == VK_SPACE || wParam == VK_RETURN || wParam == 'B' || wParam == 'b') {
+                    PlaySfx(SFX_BLIP);
+                    ShowStationView(hwnd);
+                    return 0;
+                }
+            }
+            if (inFactionsView) {
+                if (wParam == '1' || wParam == 'D' || wParam == 'd') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_FACT_DONATE, 0), (LPARAM)hBtnFactDonate);
+                    return 0;
+                }
+                if (wParam == '2' || wParam == 'U' || wParam == 'u') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_FACT_DUES, 0), (LPARAM)hBtnFactDues);
+                    return 0;
+                }
+                if (wParam == '3' || wParam == 'P' || wParam == 'p') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_FACT_BRIBE, 0), (LPARAM)hBtnFactBribe);
+                    return 0;
+                }
+                if (wParam == VK_ESCAPE || wParam == VK_SPACE || wParam == VK_RETURN || wParam == 'B' || wParam == 'b') {
+                    PlaySfx(SFX_BLIP);
+                    ShowStationView(hwnd);
+                    return 0;
+                }
+            }
+            if (wParam == 'M' || wParam == 'm' || wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
+                PlaySfx(SFX_BLIP);
+                ShowManualView(hwnd, 0);
+                return 0;
+            }
+            if (wParam == VK_ESCAPE) {
+                ShowStationView(hwnd);
+                return 0;
             }
             return 0;
         }
         case WM_DESTROY: {
+            if (hull > 0 && !inCombat) {
+                SaveGame();
+            }
             droneRunning = 0;
             if (hDroneThread) {
                 WaitForSingleObject(hDroneThread, 500);

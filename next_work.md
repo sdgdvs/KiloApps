@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -15,13 +15,13 @@ current_targets:
   kilo_tester: KTerm
   kilo_usability: KPad
   kilo_graphics: KFortress
-  kilo_qa: KStellar
+  kilo_qa: KSynth
   kilo_expander: KTask
   kilo_creator: "KPomodoro (Work/break cycle manager)"
 last_run:
-  agent: kilo-graphics
-  app: KChrono
-  timestamp: "2026-09-18T16:45:00Z"
+  agent: kilo-qa
+  app: KStellar
+  timestamp: "2026-09-18T18:45:00Z"
 last_planner_run: "2026-09-17T20:40:00Z"
 ---
 
@@ -80,9 +80,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPaint`, `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KStellar`
+- **Current Target**: `KSynth`
 - **Upcoming Queue**:
-  `KSynth`, `KSys`, `KTask`, `KTerm`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAlchemy`, `KAsteroids`, `KChrono`, `KColony`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMine`, `KMystery`, `KPac`, `KQuest`, `KRogue`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KVoid`, `KWizard`, `KStarship` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship)*.
+  `KSys`, `KTask`, `KTerm`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAlchemy`, `KAsteroids`, `KChrono`, `KColony`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMine`, `KMystery`, `KPac`, `KQuest`, `KRogue`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KVoid`, `KWizard`, `KStarship`, `KStellar` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KTask`
@@ -123,6 +123,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-18T18:45:00Z — kilo-qa: KStellar**
+  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial integrity, template string fix, overlays).
+  - State Persistence: Hardened F5 quicksave & F9 quickload across web and native (kstellar.dat / localStorage); added beforeunload & WM_DESTROY auto-save.
+  - Native Top Bar: Added dedicated SAVE and LOAD buttons on native toolbar alongside SND, DRN, and MANUAL toggles.
+  - Tutorial Integrity: Enforced first-run onboarding manual only on fresh sessions (kstellar_tutorialSeen / kstellar_tutorial.dat), preserving restored states.
+  - Overlay & Controls: Added full keyboard navigation in native (combat, manual, missions, factions) and web (tabs 1-5, Esc/Enter/Space dismiss).
+  - Bug Fix & Syntax: Fixed syntax break from unclosed template literal in web commodity exchange table; validated clean JavaScript parse.
+  - Verification: Clean MSVC Native C build (161.8 KB); Vite web build clean (124.9 KB); all security gates & <999 KB constraints passed.
+
 - **2026-09-18T16:45:00Z — kilo-graphics: KChrono**
   - Status: PASS ✅ (Game content expansion, visual polish & balance pass).
   - Visual Art & Sprites: Directional Chrononaut hazard suit with epoch visors; holographic chromatic-aberration Echo Ghost.
@@ -157,15 +166,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Compliance: Interactive splash screen, 5-step onboarding tutorial (kstarforge_tutorialSeen), F5/F9 quicksave/load, JSON export/import.
   - Registration: Added KStarForge to KiloOS/src/App.jsx Games folder with dedicated icon and window dimensions.
   - Verification: Single-File Web build clean (113.4 KB); Native Win32 C clean build (21.5 KB); all <999 KB size constraints and security gates passed.
-
-- **2026-09-18T06:45:00Z — kilo-expander: KSys**
-  - Status: PASS ✅ (Deep functional feature expansion, diagnostics, export & hex telemetry).
-  - Web Hex Inspector: Added 6th tab with interactive 16-byte hex viewer, pattern search, jump-to-offset, and HEX/BIN download.
-  - Multi-Drive & Topology: Added native all-volume drive scanner (C-Z) and host telemetry; added web multi-core load spectrum.
-  - Anomaly & Health: Implemented real-time system health metric (0-100%) and heuristic anomaly status in web and native.
-  - Filtering & Search: Added regex and case-sensitive log/service filters in web; added 5-mode service cycling in Win32.
-  - Multi-Format Reports: Added CSV and Markdown report generators with hotkey shortcuts ([V], [M]/[K]) in web and native.
-  - Verification: MSVC Native C clean build (27.5 KB); Vite web build clean (114.5 KB); all <999 KB ceiling and security gates passed.
 
 
 
