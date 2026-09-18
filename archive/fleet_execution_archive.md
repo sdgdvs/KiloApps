@@ -106,5 +106,6 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - Status: PASS ✅ (8 issues, 8 fixed).
   - Highlights: Interactive wiring & backdrop dismissals, Chrono-Locker storage cache & aging, Scenario latches, direct epoch switching, persistent localStorage settings. Web (121.5 KB) and Native MSVC (15 KB) clean builds.
 
-
-
+- **2026-09-18T00:41:00Z — kilo-usability: KChrono**
+  - Status: PASS ✅ (UI/UX, responsive layout, HiDPI scaling, and input ergonomics pass).
+  - Highlights: Expanded KiloOS window (1140x740); HiDPI devicePixelRatio scaling; hover tile inspector; footer controls; F1/H help hotkey with Enter/Space dismiss; native Win32 mouse support. Single-File Web (128.7 KB) and Native MSVC (15.5 KB) clean builds.

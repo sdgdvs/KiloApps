@@ -870,6 +870,22 @@
         JSON [J]
       </button>
 
+      <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importJSON(event)">
+      <button class="btn-secondary" onclick="document.getElementById('importFileInput').click()" title="Import Process Snapshot from JSON file">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        Import
+      </button>
+
+      <button class="btn-secondary" onclick="quickSaveState()" title="Quicksave snapshot to local storage (F5)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        Save [F5]
+      </button>
+
+      <button class="btn-secondary" onclick="quickLoadState()" title="Quickload snapshot from local storage (F9)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Load [F9]
+      </button>
+
       <button class="btn-secondary" id="btnHelp" onclick="openHelpModal()" title="Help & Shortcuts (F1 or H)" aria-label="Open Help & Shortcuts Dialog">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
         Help [F1]
@@ -1102,7 +1118,7 @@
 
   <!-- Help & Shortcuts Modal -->
   <div class="modal-overlay" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle" onclick="if(event.target===this)closeHelpModal()">
-    <div class="modal-box" style="max-width: 560px;">
+    <div class="modal-box" style="max-width: 580px;">
       <div class="modal-header" style="color: var(--primary); justify-content: space-between;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
@@ -1120,15 +1136,18 @@
           </thead>
           <tbody>
             <tr><td><span class="help-kbd">F1</span> or <span class="help-kbd">H</span></td><td>Toggle this Help Dialog</td><td>Global</td></tr>
-            <tr><td><span class="help-kbd">F5</span> or <span class="help-kbd">R</span></td><td>Refresh Process List</td><td>Global</td></tr>
+            <tr><td><span class="help-kbd">F5</span></td><td>Quicksave Process Snapshot to Storage</td><td>Global</td></tr>
+            <tr><td><span class="help-kbd">F9</span></td><td>Quickload Process Snapshot from Storage</td><td>Global</td></tr>
+            <tr><td><span class="help-kbd">R</span></td><td>Live Refresh Process List from OS</td><td>Global</td></tr>
             <tr><td><span class="help-kbd">↑</span> / <span class="help-kbd">↓</span></td><td>Navigate & Select Process Card</td><td>Processes Tab</td></tr>
-            <tr><td><span class="help-kbd">Enter</span> / <span class="help-kbd">I</span></td><td>Deep Inspect Selected Process</td><td>Processes Tab</td></tr>
+            <tr><td><span class="help-kbd">Enter</span> / <span class="help-kbd">I</span> / <span class="help-kbd">Space</span></td><td>Deep Inspect Selected Process</td><td>Processes Tab</td></tr>
             <tr><td><span class="help-kbd">Dbl-Click</span></td><td>Deep Inspect Process Card</td><td>Processes Tab</td></tr>
             <tr><td><span class="help-kbd">Delete</span></td><td>Terminate Selected Process</td><td>Processes Tab</td></tr>
             <tr><td><span class="help-kbd">P</span></td><td>Cycle Priority (Normal / High / Low)</td><td>Processes Tab</td></tr>
             <tr><td><span class="help-kbd">E</span> / <span class="help-kbd">Ctrl+E</span></td><td>Export Process List to CSV</td><td>Global</td></tr>
             <tr><td><span class="help-kbd">J</span> / <span class="help-kbd">Ctrl+J</span></td><td>Export Process List to JSON</td><td>Global</td></tr>
             <tr><td><span class="help-kbd">1</span> / <span class="help-kbd">2</span> / <span class="help-kbd">3</span></td><td>Switch Tabs (Processes / Charts / Summary)</td><td>Global</td></tr>
+            <tr><td><span class="help-kbd">1</span> - <span class="help-kbd">4</span> / <span class="help-kbd">←</span> <span class="help-kbd">→</span></td><td>Switch Inspector Tabs (Threads/Modules/Mem/Hex)</td><td>Inspector Dialog</td></tr>
             <tr><td><span class="help-kbd">Esc</span></td><td>Close Active Modal / Clear Filter</td><td>Global</td></tr>
           </tbody>
         </table>
@@ -1136,8 +1155,39 @@
           💡 <strong>Tip:</strong> Click or use Arrow keys to select any process. Double-click or press <strong>I</strong> / <strong>Enter</strong> to inspect threads, DLLs, and memory maps in real time. Use <strong>P</strong> to adjust scheduling priority.
         </div>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer" style="justify-content: space-between;">
+        <button class="btn-secondary" onclick="closeHelpModal(); openTutorialModal();">📖 Replay Onboarding Briefing</button>
         <button class="btn-primary" onclick="closeHelpModal()">Got it (Esc)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Onboarding & Tutorial Modal -->
+  <div class="modal-overlay" id="tutorialModal" role="dialog" aria-modal="true" aria-labelledby="tutorialModalTitle" onclick="if(event.target===this)closeTutorialModal()">
+    <div class="modal-box" style="max-width: 520px;">
+      <div class="modal-header" style="color: var(--primary); justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+          <h3 id="tutorialModalTitle">Welcome to KTask Monitor</h3>
+        </div>
+        <button class="btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="closeTutorialModal()" title="Close (Esc)">✕</button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 10px;">
+        <p style="margin: 0; color: var(--text-main); font-size: 13px; line-height: 1.5;">
+          KTask is the retro-modern process manager and diagnostic suite for KiloOS. Monitor active system processes, inspect loaded modules, and analyze system performance in real time.
+        </p>
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; font-size: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <div>⚡ <strong>Interactive Inspector:</strong> Double-click any task or press <span class="help-kbd">Enter</span> / <span class="help-kbd">I</span> to view active threads, loaded DLLs, memory map segments, and live hex headers.</div>
+          <div>🎮 <strong>Keyboard Navigation:</strong> Use <span class="help-kbd">↑</span> / <span class="help-kbd">↓</span> to select tasks, <span class="help-kbd">P</span> to adjust scheduling priority, and <span class="help-kbd">Del</span> to terminate a process.</div>
+          <div>💾 <strong>Quicksave & Persistence:</strong> Press <span class="help-kbd">F5</span> to capture a local snapshot of all active processes, and <span class="help-kbd">F9</span> to reload it at any time.</div>
+          <div>📊 <strong>Exports & Imports:</strong> Export snapshots to CSV (<span class="help-kbd">E</span>) or JSON (<span class="help-kbd">J</span>), or import saved process lists using the <strong>Import</strong> button.</div>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: space-between;">
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); cursor: pointer;">
+          <input type="checkbox" id="dontShowTutorialAgain" checked> Don't show again on launch
+        </label>
+        <button class="btn-primary" onclick="closeTutorialModal()">Start Monitoring (Enter)</button>
       </div>
     </div>
   </div>
@@ -1147,14 +1197,175 @@
   <script>
     let reqIdCounter = 0;
     let autoRefreshInterval = null;
-    let allTasks = [];
+    let defaultSystemTasks = [
+      { id: '1004', title: 'KiloOS Kernel Services' },
+      { id: '1420', title: 'KExplorer File Manager' },
+      { id: '1842', title: 'KTask Process Monitor' },
+      { id: '2105', title: 'KPad Text Editor' },
+      { id: '3290', title: 'KCalc Calculator' }
+    ];
+    let allTasks = [...defaultSystemTasks];
+    let spawnedTasks = [];
     let taskStats = {};
     let activeTab = 'tasks';
-    let selectedTaskId = null;
+    let selectedTaskId = '1004';
     let pendingKillPid = null;
     let pendingKillTitle = '';
     let peakCpu = 0;
     let startTime = Date.now();
+
+    // Safe LocalStorage helpers
+    function safeGetStorage(key) {
+      try {
+        return localStorage.getItem(key);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function safeSetStorage(key, val) {
+      try {
+        localStorage.setItem(key, val);
+      } catch (e) {}
+    }
+
+    // Persist and restore user preferences
+    function saveUserSettings() {
+      const settings = {
+        autoRefresh: document.getElementById('autoRefreshToggle')?.checked ?? true,
+        sort: document.getElementById('sortSelect')?.value || 'name',
+        filter: document.getElementById('filterSelect')?.value || 'all'
+      };
+      safeSetStorage('ktask_settings', JSON.stringify(settings));
+    }
+
+    function loadUserSettings() {
+      try {
+        const raw = safeGetStorage('ktask_settings');
+        if (!raw) return;
+        const settings = JSON.parse(raw);
+        if (typeof settings.autoRefresh === 'boolean') {
+          const toggle = document.getElementById('autoRefreshToggle');
+          if (toggle) toggle.checked = settings.autoRefresh;
+        }
+        if (settings.sort && document.getElementById('sortSelect')) {
+          document.getElementById('sortSelect').value = settings.sort;
+        }
+        if (settings.filter && document.getElementById('filterSelect')) {
+          document.getElementById('filterSelect').value = settings.filter;
+          syncFilterChips();
+        }
+      } catch (e) {}
+    }
+
+    // Tutorial modal handlers
+    function openTutorialModal() {
+      const modal = document.getElementById('tutorialModal');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeTutorialModal() {
+      const modal = document.getElementById('tutorialModal');
+      if (modal) modal.classList.remove('active');
+      const dontShow = document.getElementById('dontShowTutorialAgain');
+      if (dontShow && dontShow.checked) {
+        safeSetStorage('ktask_tutorialSeen', '1');
+      }
+    }
+
+    // Quicksave and Quickload snapshot handlers
+    function quickSaveState() {
+      try {
+        const payload = {
+          timestamp: Date.now(),
+          tasks: allTasks,
+          stats: taskStats,
+          peakCpu: peakCpu,
+          filter: document.getElementById('filterSelect')?.value || 'all',
+          sort: document.getElementById('sortSelect')?.value || 'name'
+        };
+        safeSetStorage('ktask_quicksave', JSON.stringify(payload));
+        const timeStr = new Date().toLocaleTimeString();
+        showToast(`Quicksave snapshot created at ${timeStr} [F5]`);
+      } catch (err) {
+        showToast('Failed to save quicksave snapshot.');
+      }
+    }
+
+    function quickLoadState() {
+      try {
+        const raw = safeGetStorage('ktask_quicksave');
+        if (!raw) {
+          showToast('No quicksave snapshot found. Press F5 to save one.');
+          return;
+        }
+        const data = JSON.parse(raw);
+        if (!Array.isArray(data.tasks) || data.tasks.length === 0) {
+          showToast('Quicksave snapshot is empty or corrupted.');
+          return;
+        }
+        allTasks = data.tasks;
+        if (data.stats) taskStats = data.stats;
+        if (data.peakCpu) peakCpu = data.peakCpu;
+        if (data.filter && document.getElementById('filterSelect')) {
+          document.getElementById('filterSelect').value = data.filter;
+          syncFilterChips();
+        }
+        if (data.sort && document.getElementById('sortSelect')) {
+          document.getElementById('sortSelect').value = data.sort;
+        }
+        // Pause auto-refresh so user can examine the restored snapshot
+        stopAutoRefresh();
+        const toggle = document.getElementById('autoRefreshToggle');
+        if (toggle) toggle.checked = false;
+        saveUserSettings();
+        selectedTaskId = allTasks[0]?.id || null;
+        renderTasks();
+        const timeStr = new Date(data.timestamp || Date.now()).toLocaleTimeString();
+        showToast(`Loaded quicksave snapshot from ${timeStr} [F9] (Auto-refresh paused)`);
+      } catch (err) {
+        showToast('Failed to load quicksave snapshot.');
+      }
+    }
+
+    // JSON Snapshot file import
+    function importJSON(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (!Array.isArray(data) || data.length === 0) {
+            showToast('Invalid JSON snapshot: expected an array of processes.');
+            return;
+          }
+          allTasks = data.map((item, idx) => ({
+            id: String(item.pid || item.id || (5000 + idx)),
+            title: String(item.name || item.title || 'Imported Task')
+          }));
+          data.forEach(item => {
+            const id = String(item.pid || item.id);
+            taskStats[id] = {
+              mem: item.memoryMB != null ? String(item.memoryMB) : (item.mem != null ? String(item.mem) : '20.0'),
+              cpu: item.cpuPercent != null ? String(item.cpuPercent) : (item.cpu != null ? String(item.cpu) : '1.0'),
+              priority: item.priority || 'Normal'
+            };
+          });
+          stopAutoRefresh();
+          const toggle = document.getElementById('autoRefreshToggle');
+          if (toggle) toggle.checked = false;
+          saveUserSettings();
+          selectedTaskId = allTasks[0]?.id || null;
+          renderTasks();
+          showToast(`Imported ${allTasks.length} processes from JSON (Auto-refresh paused).`);
+        } catch (err) {
+          showToast('Failed to parse JSON file.');
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
 
     // Canvas History Data (50 points)
     const HISTORY_LEN = 50;
@@ -1276,6 +1487,7 @@
 
     function toggleAutoRefresh() {
       const isChecked = document.getElementById('autoRefreshToggle')?.checked;
+      saveUserSettings();
       if (isChecked) {
         startAutoRefresh();
       } else {
@@ -1322,6 +1534,7 @@
         sel.value = cat;
       }
       syncFilterChips();
+      saveUserSettings();
       renderTasks();
       const label = cat === 'all' ? 'All Tasks' : (cat === 'high-cpu' ? 'High CPU' : (cat === 'high-mem' ? 'High Memory' : 'High Priority'));
       showToast(`Filter applied: ${label}`);
@@ -1361,12 +1574,14 @@
       const newPid = String(4000 + (demoTaskCounter * 123) % 4900);
       demoTaskCounter++;
       const newTask = { id: newPid, title: name };
+      spawnedTasks.unshift(newTask);
       allTasks.unshift(newTask);
       taskStats[newPid] = {
         mem: (Math.random() * 60 + 15).toFixed(1),
         cpu: (Math.random() * 6.5 + 0.5).toFixed(1),
         priority: demoTaskCounter % 3 === 0 ? 'High' : 'Normal'
       };
+      selectedTaskId = newPid;
       renderTasks();
       showToast(`Spawned demo process: ${name} (PID: ${newPid})`);
     }
@@ -1411,14 +1626,24 @@
 
     function executePendingKill() {
       if (!pendingKillPid) return;
-      const pid = pendingKillPid;
+      const pid = String(pendingKillPid);
       const title = pendingKillTitle;
       closeKillModal();
 
+      // Immediately remove locally so standalone mode or slow parent reflects termination instantly
+      allTasks = allTasks.filter(t => String(t.id) !== pid);
+      spawnedTasks = spawnedTasks.filter(t => String(t.id) !== pid);
+      delete taskStats[pid];
+      if (String(selectedTaskId) === pid) {
+        selectedTaskId = allTasks.length > 0 ? String(allTasks[0].id) : null;
+      }
+      renderTasks();
+
       const reqId = ++reqIdCounter;
-      window.parent.postMessage({ type: 'OS_KILL_TASK', requestId: reqId, taskId: pid }, '*');
-      showToast(`Terminating process ${title || pid}...`);
-      setTimeout(refresh, 100);
+      try {
+        window.parent.postMessage({ type: 'OS_KILL_TASK', requestId: reqId, taskId: pid }, '*');
+      } catch (e) {}
+      showToast(`Terminated process ${title || pid}`);
     }
 
     function changePriority(taskId, newPriority) {
@@ -1492,7 +1717,10 @@
 
     window.addEventListener('message', (e) => {
       if (e.data && e.data.type === 'OS_LIST_TASKS_DONE') {
-        allTasks = Array.isArray(e.data.tasks) ? e.data.tasks : [];
+        const osTasks = Array.isArray(e.data.tasks) ? e.data.tasks : [];
+        const osIds = new Set(osTasks.map(t => String(t.id || '')));
+        const activeSpawned = spawnedTasks.filter(st => !osIds.has(String(st.id)));
+        allTasks = [...activeSpawned, ...osTasks];
         renderTasks();
       }
     });
@@ -1938,11 +2166,16 @@
     document.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
 
+      const tutorialActive = document.getElementById('tutorialModal')?.classList.contains('active');
       const helpActive = document.getElementById('helpModal')?.classList.contains('active');
       const inspectActive = document.getElementById('inspectModal')?.classList.contains('active');
       const confirmActive = document.getElementById('confirmModal')?.classList.contains('active');
 
       if (e.key === 'Escape') {
+        if (tutorialActive) {
+          closeTutorialModal();
+          return;
+        }
         if (helpActive) {
           closeHelpModal();
           return;
@@ -1963,16 +2196,30 @@
         return;
       }
 
-      if (helpActive || inspectActive || confirmActive) {
+      if (tutorialActive || helpActive || inspectActive || confirmActive) {
         if (e.key === 'Enter') {
-          if (confirmActive) executePendingKill();
+          if (tutorialActive) closeTutorialModal();
+          else if (confirmActive) executePendingKill();
           else if (helpActive) closeHelpModal();
           else if (inspectActive) closeInspectModal();
+        } else if (inspectActive) {
+          if (e.key === '1') { e.preventDefault(); switchInspectTab('threads'); }
+          else if (e.key === '2') { e.preventDefault(); switchInspectTab('modules'); }
+          else if (e.key === '3') { e.preventDefault(); switchInspectTab('memory'); }
+          else if (e.key === '4') { e.preventDefault(); switchInspectTab('hex'); }
+          else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            e.preventDefault();
+            const itabs = ['threads', 'modules', 'memory', 'hex'];
+            let idx = itabs.indexOf(activeInspectTab);
+            if (e.key === 'ArrowLeft') idx = (idx - 1 + itabs.length) % itabs.length;
+            else idx = (idx + 1) % itabs.length;
+            switchInspectTab(itabs[idx]);
+          }
         }
         return;
       }
 
-      // Check for modifier shortcuts (Ctrl+E, Ctrl+J)
+      // Check for modifier shortcuts (Ctrl+E, Ctrl+J, Ctrl+S)
       if (e.ctrlKey || e.metaKey) {
         if (e.key === 'e' || e.key === 'E') {
           e.preventDefault();
@@ -1980,8 +2227,11 @@
         } else if (e.key === 'j' || e.key === 'J') {
           e.preventDefault();
           exportJSON();
+        } else if (e.key === 's' || e.key === 'S') {
+          e.preventDefault();
+          quickSaveState();
         }
-        return; // Don't allow Ctrl+1, Ctrl+2, Ctrl+P, etc. to hijack browser actions
+        return;
       }
 
       if (e.altKey) return; // Don't hijack Alt shortcuts
@@ -1995,7 +2245,13 @@
       } else if (e.key === '3') {
         e.preventDefault();
         switchTab('system');
-      } else if (e.key === 'r' || e.key === 'R' || e.key === 'F5') {
+      } else if (e.key === 'F5') {
+        e.preventDefault();
+        quickSaveState();
+      } else if (e.key === 'F9') {
+        e.preventDefault();
+        quickLoadState();
+      } else if (e.key === 'r' || e.key === 'R') {
         e.preventDefault();
         refresh();
       } else if (e.key === 'ArrowDown') {
@@ -2008,12 +2264,14 @@
           e.preventDefault();
           selectAdjacentTask(-1);
         }
-      } else if (e.key === 'Enter') {
+      } else if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
         if (activeTab === 'tasks') {
           e.preventDefault();
           const target = allTasks.find(t => String(t.id) === String(selectedTaskId)) || allTasks[0];
           if (target) {
             openInspectModal(target.id, target.title);
+          } else {
+            toggleAutoRefresh();
           }
         }
       } else if (e.key === 'p' || e.key === 'P') {
@@ -2021,6 +2279,7 @@
           e.preventDefault();
           const target = allTasks.find(t => String(t.id) === String(selectedTaskId)) || allTasks[0];
           if (target) {
+            selectedTaskId = String(target.id);
             const curPri = taskStats[target.id]?.priority || 'Normal';
             const nextPri = curPri === 'Normal' ? 'High' : (curPri === 'High' ? 'Low' : 'Normal');
             changePriority(target.id, nextPri);
@@ -2086,14 +2345,26 @@
       }
     });
 
-    // Initial load and start auto refresh
+    // Initial load and settings restore
     try {
       window.resizeTo(800, 600);
       window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 800, height: 600 }, '*');
     } catch(e) {}
+
+    loadUserSettings();
+    renderTasks();
     setTimeout(refresh, 100);
-    startAutoRefresh();
-    setTimeout(() => showToast('Ready. Press "H" or F1 for help & shortcuts'), 1200);
+    const autoRefreshActive = document.getElementById('autoRefreshToggle')?.checked ?? true;
+    if (autoRefreshActive) {
+      startAutoRefresh();
+    }
+
+    // First-run tutorial onboarding check
+    if (!safeGetStorage('ktask_tutorialSeen')) {
+      setTimeout(openTutorialModal, 400);
+    } else {
+      setTimeout(() => showToast('Ready. Press "H" or F1 for help & shortcuts'), 1000);
+    }
   </script>
 </body>
 </html>
