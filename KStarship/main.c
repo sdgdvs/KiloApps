@@ -240,9 +240,45 @@ DWORD WINAPI EngineHumThread(LPVOID lpParam) {
     return 0;
 }
 
+void InitStars();
+
+int HasSeenTutorial() {
+    DWORD attr = GetFileAttributesA("kstarship_tutorial.dat");
+    if (attr != INVALID_FILE_ATTRIBUTES) return 1;
+    HKEY hKey;
+    if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\KStarship", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+        DWORD val = 0, size = sizeof(DWORD);
+        if (RegQueryValueExA(hKey, "TutorialSeen", NULL, NULL, (LPBYTE)&val, &size) == ERROR_SUCCESS && val == 1) {
+            RegCloseKey(hKey);
+            return 1;
+        }
+        RegCloseKey(hKey);
+    }
+    return 0;
+}
+
+void MarkTutorialSeen() {
+    HANDLE hFile = CreateFileA("kstarship_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) CloseHandle(hFile);
+    HKEY hKey;
+    if (RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\KStarship", 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS) {
+        DWORD val = 1;
+        RegSetValueExA(hKey, "TutorialSeen", 0, REG_DWORD, (const BYTE*)&val, sizeof(DWORD));
+        RegCloseKey(hKey);
+    }
+}
+
+int HasSavedGame() {
+    DWORD attr = GetFileAttributesA("kstarship.dat");
+    return (attr != INVALID_FILE_ATTRIBUTES);
+}
+
 void SaveGame() {
     FILE* f = fopen("kstarship.dat", "wb");
     if (!f) return;
+    int count = roster_count;
+    if (count < 0) count = 0;
+    if (count > 50) count = 50;
     fwrite(&ship_x, sizeof(int), 1, f);
     fwrite(&ship_y, sizeof(int), 1, f);
     fwrite(&ship_angle, sizeof(float), 1, f);
@@ -262,8 +298,8 @@ void SaveGame() {
     fwrite(&superweapon_type, sizeof(int), 1, f);
     fwrite(&superweapon_charges, sizeof(int), 1, f);
     fwrite(faction_rep, sizeof(int), 4, f);
-    fwrite(&roster_count, sizeof(int), 1, f);
-    fwrite(roster, sizeof(CrewMember), roster_count, f);
+    fwrite(&count, sizeof(int), 1, f);
+    fwrite(roster, sizeof(CrewMember), count, f);
     fwrite(systems, sizeof(StarSystem), NUM_SYSTEMS, f);
     fclose(f);
 }
@@ -291,11 +327,52 @@ int LoadGame() {
     fread(&superweapon_charges, sizeof(int), 1, f);
     fread(faction_rep, sizeof(int), 4, f);
     fread(&roster_count, sizeof(int), 1, f);
+    if (roster_count < 0) roster_count = 0;
+    if (roster_count > 50) roster_count = 50;
     fread(roster, sizeof(CrewMember), roster_count, f);
     fread(systems, sizeof(StarSystem), NUM_SYSTEMS, f);
     fclose(f);
     modal_open = 0;
     return 1;
+}
+
+void RestartGame() {
+    ship_x = 0;
+    ship_y = 0;
+    ship_angle = 0.0f;
+    target_angle = 0.0f;
+    shield_alpha = 0.0f;
+    is_moving = 0;
+    res_fuel = 10000.0f;
+    res_hull = 100;
+    res_credits = 1000;
+    res_morale = 100;
+    cargo_minerals = 0;
+    cargo_tech = 0;
+    upg_weapons = 1;
+    upg_shields = 1;
+    upg_engines = 1;
+    upg_cargo = 1;
+    mod_nanites = 0;
+    mod_ramscoop = 0;
+    mod_scanner = 0;
+    superweapon_type = 1;
+    superweapon_charges = 3;
+    superweapon_max = 5;
+    faction_rep[0] = 50;
+    faction_rep[1] = 50;
+    faction_rep[2] = 30;
+    faction_rep[3] = 10;
+    InitStars();
+    for (int i = 0; i < 10; i++) {
+        lstrcpyA(roster[i].name, first_names[rand() % 16]);
+        roster[i].role = 0;
+        roster[i].level = 1;
+        roster[i].xp = 0;
+    }
+    roster_count = 10;
+    modal_open = 0;
+    lstrcpyA(combat_log, "New mission initiated. Systems online.");
 }
 
 void TriggerEncounter(int type) {
@@ -491,6 +568,12 @@ void Update() {
         }
     }
 
+    if (res_hull <= 0) {
+        modal_open = 1;
+        modal_enc_type = 1;
+        return;
+    }
+
     if (modal_open) return;
 
     is_moving = 0;
@@ -498,10 +581,10 @@ void Update() {
     int p_idx = GetOfficer(1);
     if (p_idx != -1) speed += roster[p_idx].level;
     int dx = 0, dy = 0;
-    if (GetAsyncKeyState('W') & 0x8000) { dy -= speed; }
-    if (GetAsyncKeyState('S') & 0x8000) { dy += speed; }
-    if (GetAsyncKeyState('A') & 0x8000) { dx -= speed; }
-    if (GetAsyncKeyState('D') & 0x8000) { dx += speed; }
+    if ((GetAsyncKeyState('W') & 0x8000) || (GetAsyncKeyState(VK_UP) & 0x8000)) { dy -= speed; }
+    if ((GetAsyncKeyState('S') & 0x8000) || (GetAsyncKeyState(VK_DOWN) & 0x8000)) { dy += speed; }
+    if ((GetAsyncKeyState('A') & 0x8000) || (GetAsyncKeyState(VK_LEFT) & 0x8000)) { dx -= speed; }
+    if ((GetAsyncKeyState('D') & 0x8000) || (GetAsyncKeyState(VK_RIGHT) & 0x8000)) { dx += speed; }
 
     if ((dx != 0 || dy != 0) && res_fuel > 0) {
         ship_x += dx;
@@ -1485,7 +1568,11 @@ void Draw(HDC hdc, RECT* rect) {
             else if (modal_enc_type == 21) title = "PRECURSOR WAR GUARDIAN";
 
             if (res_hull <= 0) {
-                desc = "Your ship has been destroyed!\r\nGame Over.\r\nSPACE: Exit";
+                if (HasSavedGame()) {
+                    desc = "Your ship has been destroyed!\r\nGame Over.\r\n\r\n[F9] Reload Quicksave\r\n[R] Restart Mission\r\n[SPACE / ESC] Exit";
+                } else {
+                    desc = "Your ship has been destroyed!\r\nGame Over.\r\n\r\n[R] Restart Mission\r\n[SPACE / ESC] Exit";
+                }
             } else if (pirate_hp <= 0) {
                 if (modal_enc_type == 1) wsprintfA(desc_buf, "%s\r\nSPACE: Claim Bounty (120C, +5 Fed Rep)", combat_log);
                 else if (modal_enc_type == 13) wsprintfA(desc_buf, "%s\r\nSPACE: Claim Rewards (350C, 2 Tech, +15 Rep)", combat_log);
@@ -1573,13 +1660,14 @@ void Draw(HDC hdc, RECT* rect) {
             }
         }
         else if (modal_enc_type == 12) {
-            title = "CAPTAIN'S MANUAL";
-            desc = "SUPERWEAPONS: Key [3] in combat to fire!\r\n"
-                   "MODULES: Nanite Swarm (repairs), Ramscoop, Scanner.\r\n"
-                   "FACTION WARS: Intervene in war zones for rep & bounties.\r\n"
-                   "CTRLS: W/A/S/D move, C Crew, H Help, L Land.\r\n"
-                   "SAVES: F5 QuickSave, F9 QuickLoad.\r\n"
-                   "STATION: Refuel, upgrade, modules, and Superweapons.\r\n";
+            title = "CAPTAIN'S MANUAL & ONBOARDING";
+            desc = "COMMANDER ONBOARDING BRIEFING:\r\n"
+                   "W/A/S/D or Arrows: Fly starship (consumes fuel)\r\n"
+                   "C: Crew roster | L: Land on planet | E: Dock/Interact\r\n"
+                   "H / F1: Open manual | M: Toggle sound\r\n"
+                   "COMBAT: [1] Lasers, [2] Flee, [3] Superweapon\r\n"
+                   "SAVES: F5 QuickSave | F9 QuickLoad\r\n"
+                   "SPACE / ENTER / ESC: Dismiss";
         }
         else if (modal_enc_type == 6) {
             title = "CREW MANAGEMENT";
@@ -1603,7 +1691,9 @@ void Draw(HDC hdc, RECT* rect) {
         
         SetTextColor(memDC, RGB(0, 255, 255));
         RECT bRect = { modalRect.left + 10, modalRect.bottom - 26, modalRect.right - 10, modalRect.bottom - 6 };
-        if (modal_enc_type == 4) {
+        if (res_hull <= 0) {
+            DrawTextA(memDC, HasSavedGame() ? "[ F9: Reload | R: Restart | SPACE: Exit ]" : "[ R: Restart | SPACE: Exit ]", -1, &bRect, DT_CENTER);
+        } else if (modal_enc_type == 4) {
             DrawTextA(memDC, "[ 1-9 OR SPACE ]", -1, &bRect, DT_CENTER);
         } else if (modal_enc_type == 5) {
             DrawTextA(memDC, "[ 1-7 OR SPACE ]", -1, &bRect, DT_CENTER);
@@ -1616,7 +1706,7 @@ void Draw(HDC hdc, RECT* rect) {
         } else if (modal_enc_type == 7 || modal_enc_type == 8 || modal_enc_type == 9 || modal_enc_type == 14 || modal_enc_type == 2 || modal_enc_type == 15) {
             DrawTextA(memDC, "[ 1-2 OR SPACE ]", -1, &bRect, DT_CENTER);
         } else {
-            DrawTextA(memDC, "[ PRESS SPACE ]", -1, &bRect, DT_CENTER);
+            DrawTextA(memDC, "[ PRESS SPACE OR ENTER ]", -1, &bRect, DT_CENTER);
         }
     }
 
@@ -1699,13 +1789,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
             SetTimer(hwnd, 1, 16, NULL);
+            if (HasSavedGame()) {
+                if (LoadGame()) {
+                    lstrcpyA(combat_log, "Quicksave restored from kstarship.dat [F9].");
+                }
+            } else if (!HasSeenTutorial()) {
+                MarkTutorialSeen();
+                modal_open = 1;
+                modal_enc_type = 12; // Captain's Manual / Onboarding Briefing
+                lstrcpyA(combat_log, "Welcome Commander! Review controls & systems.");
+            }
             return 0;
         case WM_KEYDOWN:
             if (wParam == VK_F5) {
-                SaveGame();
-                lstrcpyA(combat_log, "Game Quick-Saved successfully to kstarship.dat.");
-                modal_enc_type = 11;
-                modal_open = 1;
+                if (res_hull > 0) {
+                    SaveGame();
+                    lstrcpyA(combat_log, "Game Quick-Saved successfully to kstarship.dat.");
+                    modal_enc_type = 11;
+                    modal_open = 1;
+                }
                 return 0;
             }
             if (wParam == VK_F9) {
@@ -1713,9 +1815,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     lstrcpyA(combat_log, "Game Quick-Loaded successfully from kstarship.dat.");
                 } else {
                     lstrcpyA(combat_log, "No save file found (kstarship.dat)!");
+                    modal_enc_type = 11;
+                    modal_open = 1;
                 }
-                modal_enc_type = 11;
-                modal_open = 1;
+                return 0;
+            }
+            if (res_hull <= 0) {
+                if (wParam == VK_F9) {
+                    if (LoadGame()) {
+                        lstrcpyA(combat_log, "Game Quick-Loaded successfully from kstarship.dat.");
+                    }
+                    return 0;
+                }
+                if (wParam == 'R' || wParam == 'r') {
+                    RestartGame();
+                    return 0;
+                }
+                if (wParam == VK_SPACE || wParam == VK_RETURN || wParam == VK_ESCAPE) {
+                    PostQuitMessage(0);
+                    return 0;
+                }
                 return 0;
             }
             if (!modal_open && (wParam == 'C' || wParam == 'c')) {
@@ -1723,7 +1842,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 modal_enc_type = 6;
                 return 0;
             }
-            if (!modal_open && (wParam == 'H' || wParam == 'h')) {
+            if (!modal_open && (wParam == 'H' || wParam == 'h' || wParam == VK_F1)) {
                 modal_open = 1;
                 modal_enc_type = 12;
                 return 0;
@@ -1744,12 +1863,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 return 0;
             }
+            if (modal_open && wParam == VK_ESCAPE) {
+                int in_combat = (modal_enc_type == 1 || modal_enc_type == 13 || modal_enc_type == 19 || modal_enc_type == 20 || modal_enc_type == 21);
+                if (!in_combat || pirate_hp <= 0) {
+                    modal_open = 0;
+                    return 0;
+                }
+            }
             if (modal_open) {
                 if (modal_enc_type == 1 || modal_enc_type == 13 || modal_enc_type == 19 || modal_enc_type == 20 || modal_enc_type == 21) {
                     if (res_hull <= 0) {
-                        if (wParam == VK_SPACE) { PostQuitMessage(0); }
+                        if (wParam == VK_SPACE || wParam == VK_RETURN || wParam == VK_ESCAPE) { PostQuitMessage(0); }
                     } else if (pirate_hp <= 0) {
-                        if (wParam == VK_SPACE) {
+                        if (wParam == VK_SPACE || wParam == VK_RETURN) {
                             if (modal_enc_type == 1) {
                                 res_credits += 120;
                                 faction_rep[1] += 5;
@@ -2151,16 +2277,39 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         lstrcpyA(combat_log, "Long-Range Sub-Scanner installed! Highlights star systems with active contacts.");
                         modal_enc_type = 11;
                     }
-                    if (wParam == VK_SPACE) { modal_enc_type = 4; }
+                    if (wParam == VK_SPACE || wParam == VK_RETURN) { modal_enc_type = 4; }
                 } else if (modal_enc_type == 12) {
-                    if (wParam == VK_SPACE) { modal_open = 0; }
+                    if (wParam == VK_SPACE || wParam == VK_RETURN || wParam == VK_ESCAPE || wParam == 'H' || wParam == 'h' || wParam == VK_F1) { modal_open = 0; }
                 } else {
-                    if (wParam == VK_SPACE) {
+                    if (wParam == VK_SPACE || wParam == VK_RETURN) {
                         modal_open = 0;
                     }
                 }
             }
             return 0;
+        case WM_LBUTTONDOWN: {
+            if (res_hull <= 0) {
+                if (HasSavedGame()) {
+                    if (LoadGame()) {
+                        lstrcpyA(combat_log, "Game Quick-Loaded successfully from kstarship.dat.");
+                        modal_open = 0;
+                        return 0;
+                    }
+                }
+                RestartGame();
+                return 0;
+            }
+            if (modal_open) {
+                int in_combat = (modal_enc_type == 1 || modal_enc_type == 13 || modal_enc_type == 19 || modal_enc_type == 20 || modal_enc_type == 21);
+                if (!in_combat || pirate_hp <= 0) {
+                    if (modal_enc_type == 12 || modal_enc_type == 11 || modal_enc_type == 10 || modal_enc_type == 3 || pirate_hp <= 0) {
+                        modal_open = 0;
+                        return 0;
+                    }
+                }
+            }
+            return 0;
+        }
         case WM_TIMER:
             Update();
             InvalidateRect(hwnd, NULL, FALSE);
@@ -2175,6 +2324,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 0;
         }
         case WM_DESTROY:
+            if (res_hull > 0) {
+                SaveGame();
+            }
             PostQuitMessage(0);
             return 0;
     }

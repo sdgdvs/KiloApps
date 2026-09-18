@@ -91,3 +91,7 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - Status: PASS ✅ (UX, responsive scaling, layout, hotkeys, and onboarding pass).
   - Highlights: Expanded KiloOS window (700x760); dynamic cell-size scaling; onboarding banner; permanent hotkey strip; tooltips; F1/P/N/Ctrl+Z hotkeys. Native (176.6 KB) and Web (82.5 KB) clean builds.
 
+- **2026-09-17T18:45:00Z — kilo-expander: KTerm**
+  - Status: PASS ✅ (Deep functional feature expansion & ARG integration).
+  - Highlights: Redirection (> and >>), command chaining (; and &&), text & math tools (grep, wc, head, tail, calc, touch, del, copy, move), history list with !n/!!, tab completion for 44 commands, ps, uptime, ping, netstat, dmesg, and 6 CRT themes. MSVC Native C (40.5 KB) and Single-File Web (83 KB) clean builds.
+

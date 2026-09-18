@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -15,13 +15,13 @@ current_targets:
   kilo_tester: KTask
   kilo_usability: KTask
   kilo_graphics: KChrono
-  kilo_qa: KStarship
+  kilo_qa: KStellar
   kilo_expander: KSys
   kilo_creator: "KStarForge (Deep-space shipyard engineering sim)"
 last_run:
-  agent: kilo-graphics
+  agent: kilo-qa
   app: KStarship
-  timestamp: "2026-09-18T02:48:00Z"
+  timestamp: "2026-09-18T04:47:00Z"
 last_planner_run: "2026-09-17T20:40:00Z"
 ---
 
@@ -80,9 +80,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPad`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KStarship`
+- **Current Target**: `KStellar`
 - **Upcoming Queue**:
-  `KStellar`, `KSynth`, `KSys`, `KTask`, `KTerm`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAlchemy`, `KAsteroids`, `KChrono`, `KColony`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMine`, `KMystery`, `KPac`, `KQuest`, `KRogue`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KVoid`, `KWizard` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace)*.
+  `KSynth`, `KSys`, `KTask`, `KTerm`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAlchemy`, `KAsteroids`, `KChrono`, `KColony`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMine`, `KMystery`, `KPac`, `KQuest`, `KRogue`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KVoid`, `KWizard`, `KStarship` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KSys`
@@ -123,6 +123,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-18T04:47:00Z — kilo-qa: KStarship**
+  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial integrity, overlays).
+  - State Persistence: Hardened F5 quicksave & F9 quickload in web and native; added beforeunload/WM_DESTROY auto-save and storage quota resilience.
+  - Failure Recovery: Added quicksave reload checkpoint ([F9]) across combat, event, and planetary hazard game over states.
+  - First-Run Tutorial: Ensured onboarding briefing fires only on fresh sessions (kstarship_tutorialSeen / kstarship_tutorial.dat), preserving restored states.
+  - Ergonomics & Overlays: Added Space/Enter action triggers, Esc dismiss for non-combat dialogs, F1 help parity, and arrow key flight in native.
+  - Verification: Clean MSVC Native C build (142.5 KB); Vite Single-File Web clean build (132.3 KB); all <999 KB size constraints satisfied.
+
 - **2026-09-18T02:48:00Z — kilo-graphics: KStarship**
   - Status: PASS ✅ (Content, visual polish, balance & save/load pass).
   - Procedural Visuals: Added GDI vector & canvas sprites for all 10 encounter types (XenonHunter, SyndicateFrigate, PrecursorRuin, Trader, Alien, Derelicts, WarZone).
@@ -157,13 +165,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Compaction: Moved older execution logs (KQuest) to archive/fleet_execution_archive.md; enforced 5-entry cap.
   - Verification: Clean orchestrator dry-run, security lint verified, targets validated.
 
-- **2026-09-17T18:45:00Z — kilo-expander: KTerm**
-  - Status: PASS ✅ (Deep functional feature expansion & ARG integration).
-  - Pipelines & Redirection: Added output redirection (> and >>) and command chaining (; and &&) across web and native.
-  - Text & Math Utilities: Added grep/findstr, wc, head/tail (-n N), calc (recursive math parser), touch, del/rm, copy/cp, move/ren.
-  - History & Navigation: Added history list with !n and !! recall, tab completion for all 44 commands and files.
-  - System Diagnostics & Lore: Added ps/tasks, uptime, ping, netstat, dmesg/syslog, glitch memory dump, and Ctrl+Alt+E echo intercept.
-  - CRT Color Themes: Added 6 dynamic themes (Green, Amber, Cyan, White, Crimson, Purple) with toolbar toggle and theme/color command.
-  - Verification: MSVC Native C (40.5 KB) and Single-File Web (83 KB) clean builds; strictly <999 KB ceiling verified.
 
 
