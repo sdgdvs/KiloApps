@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-tester
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -16,12 +16,12 @@ current_targets:
   kilo_usability: KPad
   kilo_graphics: KFortress
   kilo_qa: KSynth
-  kilo_expander: KTask
+  kilo_expander: KNet
   kilo_creator: "KPomodoro (Work/break cycle manager)"
 last_run:
-  agent: kilo-qa
-  app: KStellar
-  timestamp: "2026-09-18T18:45:00Z"
+  agent: kilo-expander
+  app: KTask
+  timestamp: "2026-09-18T20:45:00Z"
 last_planner_run: "2026-09-17T20:40:00Z"
 ---
 
@@ -85,9 +85,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KSys`, `KTask`, `KTerm`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAlchemy`, `KAsteroids`, `KChrono`, `KColony`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMine`, `KMystery`, `KPac`, `KQuest`, `KRogue`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KVoid`, `KWizard`, `KStarship`, `KStellar` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KTask`
+- **Current Target**: `KNet`
 - **Upcoming Queue**:
-  `KNet`, `KPing`, `KHex`, `KBase`, `KFont`, `KPad`, `KNote`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KTerm`, `KVault`, `KZip`, `KSys`.
+  `KPing`, `KHex`, `KBase`, `KFont`, `KPad`, `KNote`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KTerm`, `KVault`, `KZip`, `KSys`, `KTask`.
 
 ### 7. Future Strategic Milestone: The "Virtual 1999 Web" Initiative
 - **Objective**: Create a living, interconnected retro Web 1.0 ecosystem accessible directly through `KNet`.
@@ -122,6 +122,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-09-18T20:45:00Z — kilo-expander: KTask**
+  - Status: PASS ✅ (Deep functional feature expansion, Process Tree, Affinity & Diagnostics).
+  - Process Tree Hierarchy: Added flat/tree view mode toggle ([T]) with parent-child lineages, PPID tracing, and child count badges.
+  - Query & Regex Engine: Search input parses regex (/.../) and attribute queries (cpu>, cpu<, mem>, mem<, pri:, pid:).
+  - CPU Affinity Management: Added 8-core allocation matrix in Inspector with hex/bin bitmasks, presets, and native Win32 cycling ([A]).
+  - Inspector Expansions: Added Environment & CmdLine tab (Tab 5), Hex Peek memory segment selector & ASCII search, and Affinity tab (Tab 6).
+  - Multi-Format Reports: Added Markdown System Diagnostic Audit report ([M]) and standalone HTML diagnostic report export.
+  - Visual Polish & Verification: Process usage mini-bars; MSVC Native C build clean (27 KB); Single-File Web clean (116.8 KB); all <999 KB passed.
 
 - **2026-09-18T18:45:00Z — kilo-qa: KStellar**
   - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial integrity, template string fix, overlays).
@@ -158,14 +167,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Inspector & Shortcuts: Added 1-4/arrow tab switching in Inspector; wired Space/Enter inspect triggers and F1/H help modal parity.
   - Verification: Clean Vite Single-File Web build (88.1 KB, built in 311ms); MSVC Native C clean build (20.5 KB); <999 KB ceiling verified.
 
-- **2026-09-18T10:45:00Z — kilo-creator: KStarForge**
-  - Status: COMPLETE 🚀 (Deep-space shipyard engineering sim created & registered).
-  - Core Sim: Modular 14x14 blueprint grid, drydock fabrication, reactor power & thermal radiators.
-  - Flight Proving Grounds: Real-time shakedown flight test with inertia, mining lasers, shields, and rogue drones.
-  - Economy & Contracts: Faction commissions (Terran Navy, Solaris Mining, Syndicate) with credit & reputation rewards.
-  - Compliance: Interactive splash screen, 5-step onboarding tutorial (kstarforge_tutorialSeen), F5/F9 quicksave/load, JSON export/import.
-  - Registration: Added KStarForge to KiloOS/src/App.jsx Games folder with dedicated icon and window dimensions.
-  - Verification: Single-File Web build clean (113.4 KB); Native Win32 C clean build (21.5 KB); all <999 KB size constraints and security gates passed.
 
 
 

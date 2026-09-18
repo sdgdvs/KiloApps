@@ -10,11 +10,14 @@ void* __cdecl memset(void* p, int c, size_t sz) {
 HWND hListBox = NULL;
 HWND hSearchBox = NULL;
 HWND hBtnRefresh = NULL;
+HWND hBtnTree = NULL;
 HWND hBtnEndTask = NULL;
 HWND hBtnPriority = NULL;
+HWND hBtnAffinity = NULL;
 HWND hBtnInspect = NULL;
 HWND hBtnExportCSV = NULL;
 HWND hBtnExportJSON = NULL;
+HWND hBtnExportMD = NULL;
 HWND hBtnHelp = NULL;
 HWND hStatusText = NULL;
 HFONT g_hFont = NULL;
@@ -22,7 +25,8 @@ WNDPROC g_OldEditProc = NULL;
 WNDPROC g_OldListProc = NULL;
 static WNDPROC g_OldInspectEditProc = NULL;
 
-static char g_toastText[128] = "Ready. Press [F1] or [H] for Help | [Del] End Task | [I] Inspect | [P] Priority | [R] Refresh";
+static BOOL g_isTreeView = FALSE;
+static char g_toastText[128] = "Ready. Press [F1] for Help | [T] Tree | [A] Affinity | [I] Inspect | [P] Priority";
 static int g_toastTimer = 2; // ~5 seconds (2 x 2.5s timer ticks)
 
 void ShowHelpDialog(HWND hwnd);
@@ -185,46 +189,43 @@ void LayoutControls(HWND hwnd) {
 
     MoveWindow(hSearchBox, 10, 10, width - 20, 25, TRUE);
 
-    if (width >= 620) {
-        // Single row toolbar layout for standard/wide window sizes
-        MoveWindow(hListBox, 10, 42, width - 20, height - 105, TRUE);
-        
-        int btnY = height - 58;
-        int curX = 10;
-        MoveWindow(hBtnRefresh, curX, btnY, 95, 24, TRUE); curX += 100;
-        MoveWindow(hBtnPriority, curX, btnY, 85, 24, TRUE); curX += 90;
-        MoveWindow(hBtnInspect, curX, btnY, 80, 24, TRUE); curX += 85;
-        MoveWindow(hBtnExportCSV, curX, btnY, 55, 24, TRUE); curX += 60;
-        MoveWindow(hBtnExportJSON, curX, btnY, 55, 24, TRUE); curX += 60;
-        MoveWindow(hBtnHelp, curX, btnY, 75, 24, TRUE); curX += 80;
+    int listHeight = height - 126;
+    if (listHeight < 60) listHeight = 60;
+    MoveWindow(hListBox, 10, 42, width - 20, listHeight, TRUE);
 
-        int endTaskX = width - 115;
-        if (endTaskX < curX + 5) endTaskX = curX + 5;
-        MoveWindow(hBtnEndTask, endTaskX, btnY, 105, 24, TRUE);
-    } else {
-        // Two-row responsive layout for compact/narrow window sizes
-        MoveWindow(hListBox, 10, 42, width - 20, height - 132, TRUE);
+    int row1Y = height - 80;
+    int row2Y = height - 52;
+    int curX = 10;
 
-        int row1Y = height - 86;
-        int row2Y = height - 58;
-        int curX = 10;
+    // Row 1: Core Process Navigation & Actions
+    MoveWindow(hBtnRefresh, curX, row1Y, 85, 24, TRUE); curX += 90;
+    MoveWindow(hBtnTree, curX, row1Y, 70, 24, TRUE); curX += 75;
+    MoveWindow(hBtnInspect, curX, row1Y, 75, 24, TRUE); curX += 80;
+    MoveWindow(hBtnPriority, curX, row1Y, 75, 24, TRUE); curX += 80;
+    MoveWindow(hBtnAffinity, curX, row1Y, 75, 24, TRUE); curX += 80;
 
-        MoveWindow(hBtnRefresh, curX, row1Y, 95, 24, TRUE); curX += 100;
-        MoveWindow(hBtnPriority, curX, row1Y, 85, 24, TRUE); curX += 90;
-        MoveWindow(hBtnInspect, curX, row1Y, 80, 24, TRUE); curX += 85;
-        MoveWindow(hBtnHelp, curX, row1Y, 75, 24, TRUE);
+    int endTaskX = width - 115;
+    if (endTaskX < curX + 5) endTaskX = curX + 5;
+    MoveWindow(hBtnEndTask, endTaskX, row1Y, 105, 24, TRUE);
 
-        curX = 10;
-        MoveWindow(hBtnExportCSV, curX, row2Y, 65, 24, TRUE); curX += 70;
-        MoveWindow(hBtnExportJSON, curX, row2Y, 65, 24, TRUE); curX += 70;
+    // Row 2: Diagnostic Exports & Reference
+    curX = 10;
+    MoveWindow(hBtnExportCSV, curX, row2Y, 65, 24, TRUE); curX += 70;
+    MoveWindow(hBtnExportJSON, curX, row2Y, 65, 24, TRUE); curX += 70;
+    MoveWindow(hBtnExportMD, curX, row2Y, 75, 24, TRUE); curX += 80;
+    MoveWindow(hBtnHelp, curX, row2Y, 75, 24, TRUE);
 
-        int endTaskX = width - 115;
-        if (endTaskX < curX + 5) endTaskX = curX + 5;
-        MoveWindow(hBtnEndTask, endTaskX, row2Y, 105, 24, TRUE);
-    }
-
-    MoveWindow(hStatusText, 10, height - 28, width - 20, 20, TRUE);
+    MoveWindow(hStatusText, 10, height - 24, width - 20, 20, TRUE);
 }
+
+typedef struct {
+    DWORD pid;
+    DWORD ppid;
+    DWORD threads;
+    LONG pri;
+    char szExeFile[MAX_PATH];
+    BOOL displayed;
+} PROC_ENTRY;
 
 void RefreshList() {
     DWORD selectedPid = 0;
@@ -254,25 +255,150 @@ void RefreshList() {
     int shownTasks = 0;
     DWORD totalThreads = 0;
 
+    // Buffer for tree/hierarchy layout
+    const int MAX_PROCS = 1024;
+    PROC_ENTRY* procList = (PROC_ENTRY*)VirtualAlloc(NULL, sizeof(PROC_ENTRY) * MAX_PROCS, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+
     if (Process32First(hSnapshot, &pe32)) {
         do {
             totalTasks++;
             totalThreads += pe32.cntThreads;
-            if (filter[0] && !my_stristr(pe32.szExeFile, filter)) continue;
 
+            char pidStr[16] = {0};
+            my_utoa(pe32.th32ProcessID, pidStr);
+
+            // Advanced filter matching: supports pid:, pri:, thr>, or substring
+            BOOL matches = TRUE;
+            if (filter[0]) {
+                if (filter[0] == 'p' && filter[1] == 'i' && filter[2] == 'd' && filter[3] == ':') {
+                    matches = my_stristr(pidStr, filter + 4);
+                } else if (filter[0] == 'p' && filter[1] == 'r' && filter[2] == 'i' && filter[3] == ':') {
+                    char priBuf[16] = {0};
+                    my_itoa(pe32.pcPriClassBase, priBuf);
+                    matches = my_stristr(priBuf, filter + 4);
+                } else {
+                    matches = (my_stristr(pe32.szExeFile, filter) || my_stristr(pidStr, filter));
+                }
+            }
+            if (!matches) continue;
+
+            if (procList && shownTasks < MAX_PROCS) {
+                procList[shownTasks].pid = pe32.th32ProcessID;
+                procList[shownTasks].ppid = pe32.th32ParentProcessID;
+                procList[shownTasks].threads = pe32.cntThreads;
+                procList[shownTasks].pri = pe32.pcPriClassBase;
+                my_strcpy(procList[shownTasks].szExeFile, pe32.szExeFile);
+                procList[shownTasks].displayed = FALSE;
+            }
+            shownTasks++;
+        } while (Process32Next(hSnapshot, &pe32));
+    }
+    CloseHandle(hSnapshot);
+
+    if (g_isTreeView && procList && shownTasks > 0) {
+        // Render Tree hierarchy
+        int count = shownTasks < MAX_PROCS ? shownTasks : MAX_PROCS;
+
+        // Phase 1: Render root nodes (where ppid is 0 or ppid not in current list)
+        for (int i = 0; i < count; i++) {
+            BOOL hasParentInList = FALSE;
+            if (procList[i].ppid != 0) {
+                for (int p = 0; p < count; p++) {
+                    if (procList[p].pid == procList[i].ppid && p != i) {
+                        hasParentInList = TRUE;
+                        break;
+                    }
+                }
+            }
+
+            if (!hasParentInList && !procList[i].displayed) {
+                procList[i].displayed = TRUE;
+
+                char buf[512] = {0};
+                char pidStr[16] = {0};
+                char thrStr[16] = {0};
+                char priStr[16] = {0};
+                my_utoa(procList[i].pid, pidStr);
+                my_utoa(procList[i].threads, thrStr);
+                my_itoa(procList[i].pri, priStr);
+
+                my_strcpy(buf, "[PID: ");
+                my_strcat(buf, pidStr);
+                my_strcat(buf, "] ");
+                my_strcat(buf, procList[i].szExeFile);
+                my_strcat(buf, " (Threads: ");
+                my_strcat(buf, thrStr);
+                my_strcat(buf, ", Pri: ");
+                my_strcat(buf, priStr);
+                my_strcat(buf, ")");
+
+                int index = SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)buf);
+                SendMessageA(hListBox, LB_SETITEMDATA, index, (LPARAM)procList[i].pid);
+
+                // Phase 2: Render direct children of this root
+                for (int c = 0; c < count; c++) {
+                    if (procList[c].ppid == procList[i].pid && !procList[c].displayed) {
+                        procList[c].displayed = TRUE;
+                        char cbuf[512] = {0};
+                        char cpidStr[16] = {0};
+                        char cthrStr[16] = {0};
+                        my_utoa(procList[c].pid, cpidStr);
+                        my_utoa(procList[c].threads, cthrStr);
+
+                        my_strcpy(cbuf, "  |-- [PID: ");
+                        my_strcat(cbuf, cpidStr);
+                        my_strcat(cbuf, "] ");
+                        my_strcat(cbuf, procList[c].szExeFile);
+                        my_strcat(cbuf, " (Thr: ");
+                        my_strcat(cbuf, cthrStr);
+                        my_strcat(cbuf, ")");
+
+                        int cindex = SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)cbuf);
+                        SendMessageA(hListBox, LB_SETITEMDATA, cindex, (LPARAM)procList[c].pid);
+                    }
+                }
+            }
+        }
+
+        // Phase 3: Display any remaining unlinked processes
+        for (int i = 0; i < count; i++) {
+            if (!procList[i].displayed) {
+                procList[i].displayed = TRUE;
+                char buf[512] = {0};
+                char pidStr[16] = {0};
+                char thrStr[16] = {0};
+                my_utoa(procList[i].pid, pidStr);
+                my_utoa(procList[i].threads, thrStr);
+
+                my_strcpy(buf, "[PID: ");
+                my_strcat(buf, pidStr);
+                my_strcat(buf, "] ");
+                my_strcat(buf, procList[i].szExeFile);
+                my_strcat(buf, " (Threads: ");
+                my_strcat(buf, thrStr);
+                my_strcat(buf, ")");
+
+                int index = SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)buf);
+                SendMessageA(hListBox, LB_SETITEMDATA, index, (LPARAM)procList[i].pid);
+            }
+        }
+    } else if (procList && shownTasks > 0) {
+        // Render Flat list
+        int count = shownTasks < MAX_PROCS ? shownTasks : MAX_PROCS;
+        for (int i = 0; i < count; i++) {
             char buf[512] = {0};
             char pidStr[16] = {0};
             char thrStr[16] = {0};
             char priStr[16] = {0};
 
-            my_utoa(pe32.th32ProcessID, pidStr);
-            my_utoa(pe32.cntThreads, thrStr);
-            my_itoa(pe32.pcPriClassBase, priStr);
+            my_utoa(procList[i].pid, pidStr);
+            my_utoa(procList[i].threads, thrStr);
+            my_itoa(procList[i].pri, priStr);
 
             my_strcpy(buf, "[PID: ");
             my_strcat(buf, pidStr);
             my_strcat(buf, "] ");
-            my_strcat(buf, pe32.szExeFile);
+            my_strcat(buf, procList[i].szExeFile);
             my_strcat(buf, " (Threads: ");
             my_strcat(buf, thrStr);
             my_strcat(buf, ", BasePri: ");
@@ -280,11 +406,13 @@ void RefreshList() {
             my_strcat(buf, ")");
 
             int index = SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)buf);
-            SendMessageA(hListBox, LB_SETITEMDATA, index, (LPARAM)pe32.th32ProcessID);
-            shownTasks++;
-        } while (Process32Next(hSnapshot, &pe32));
+            SendMessageA(hListBox, LB_SETITEMDATA, index, (LPARAM)procList[i].pid);
+        }
     }
-    CloseHandle(hSnapshot);
+
+    if (procList) {
+        VirtualFree(procList, 0, MEM_RELEASE);
+    }
 
     if (selectedPid != 0 && shownTasks > 0) {
         int count = SendMessageA(hListBox, LB_GETCOUNT, 0, 0);
@@ -299,6 +427,10 @@ void RefreshList() {
 
     SendMessageA(hListBox, WM_SETREDRAW, TRUE, 0);
     RedrawWindow(hListBox, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+
+    if (hBtnTree) {
+        SetWindowTextA(hBtnTree, g_isTreeView ? "List [T]" : "Tree [T]");
+    }
 
     if (hStatusText) {
         if (g_toastTimer > 0) {
@@ -319,7 +451,7 @@ void RefreshList() {
             my_utoa(totalThreads, threadsStr);
             my_utoa(memStatus.dwMemoryLoad, memLoadStr);
 
-            my_strcpy(statusBuf, "Procs: ");
+            my_strcpy(statusBuf, g_isTreeView ? "Tree | Procs: " : "Flat | Procs: ");
             my_strcat(statusBuf, shownStr);
             my_strcat(statusBuf, "/");
             my_strcat(statusBuf, totalStr);
@@ -516,7 +648,7 @@ void PerformInspectProcess(HWND parentHwnd) {
         unsigned char* pAddr = NULL;
         while (VirtualQueryEx(hProc, pAddr, &mbi, sizeof(mbi)) == sizeof(mbi)) {
             regCount++;
-            if (regCount > 50) {
+            if (regCount > 40) {
                 my_strncat(report, "  ... [Truncated remaining memory regions] ...\r\n", 65535);
                 break;
             }
@@ -557,6 +689,53 @@ void PerformInspectProcess(HWND parentHwnd) {
             if (nextAddr <= pAddr) break;
             pAddr = nextAddr;
         }
+
+        // 4. CPU Affinity & Execution Times
+        my_strncat(report, "\r\n-------------------------------------------------------------------\r\n", 65535);
+        my_strncat(report, " 4. CPU AFFINITY & PROCESS EXECUTION TIMES\r\n", 65535);
+        my_strncat(report, "-------------------------------------------------------------------\r\n", 65535);
+
+        DWORD_PTR procAff = 0, sysAff = 0;
+        if (GetProcessAffinityMask(hProc, &procAff, &sysAff)) {
+            char affBuf[128] = {0};
+            char pAffStr[16] = {0};
+            char sAffStr[16] = {0};
+            my_hex8((DWORD)procAff, pAffStr);
+            my_hex8((DWORD)sysAff, sAffStr);
+
+            my_strcpy(affBuf, "  Process CPU Mask: ");
+            my_strcat(affBuf, pAffStr);
+            my_strcat(affBuf, " | System Mask: ");
+            my_strcat(affBuf, sAffStr);
+            my_strcat(affBuf, "\r\n");
+            my_strncat(report, affBuf, 65535);
+        }
+
+        FILETIME ftCreate, ftExit, ftKernel, ftUser;
+        if (GetProcessTimes(hProc, &ftCreate, &ftExit, &ftKernel, &ftUser)) {
+            ULARGE_INTEGER kTime, uTime;
+            kTime.LowPart = ftKernel.dwLowDateTime;
+            kTime.HighPart = ftKernel.dwHighDateTime;
+            uTime.LowPart = ftUser.dwLowDateTime;
+            uTime.HighPart = ftUser.dwHighDateTime;
+
+            DWORD kSec = (DWORD)(kTime.QuadPart / 10000000);
+            DWORD uSec = (DWORD)(uTime.QuadPart / 10000000);
+
+            char timeBuf[128] = {0};
+            char kStr[16] = {0};
+            char uStr[16] = {0};
+            my_utoa(kSec, kStr);
+            my_utoa(uSec, uStr);
+
+            my_strcpy(timeBuf, "  Kernel Time: ");
+            my_strcat(timeBuf, kStr);
+            my_strcat(timeBuf, "s | User Time: ");
+            my_strcat(timeBuf, uStr);
+            my_strcat(timeBuf, "s\r\n");
+            my_strncat(report, timeBuf, 65535);
+        }
+
         CloseHandle(hProc);
     }
     if (regCount == 0) {
@@ -624,6 +803,7 @@ void PerformEndTask(HWND hwnd) {
         if (TerminateProcess(hProc, 1)) {
             CloseHandle(hProc);
             RefreshList();
+            ShowNativeToast("Process successfully terminated.");
         } else {
             DWORD err = GetLastError();
             CloseHandle(hProc);
@@ -694,6 +874,59 @@ void PerformSetPriority(HWND hwnd) {
     CloseHandle(hProc);
 }
 
+void PerformSetAffinity(HWND hwnd) {
+    int sel = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+    if (sel == LB_ERR) {
+        MessageBoxA(hwnd, "Please select a process from the list first.", "KTask Notice", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+
+    DWORD pid = (DWORD)SendMessageA(hListBox, LB_GETITEMDATA, sel, 0);
+    if (pid == 0 || pid == 4) {
+        MessageBoxA(hwnd, "Cannot modify CPU affinity for System or Idle processes.", "KTask Warning", MB_OK | MB_ICONWARNING);
+        return;
+    }
+
+    HANDLE hProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_SET_INFORMATION, FALSE, pid);
+    if (!hProc) {
+        MessageBoxA(hwnd, "Access Denied: Unable to modify process CPU affinity.", "KTask Error", MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    DWORD_PTR procMask = 0;
+    DWORD_PTR sysMask = 0;
+    if (GetProcessAffinityMask(hProc, &procMask, &sysMask)) {
+        DWORD_PTR nextMask = sysMask;
+        const char* desc = "All Available Cores";
+
+        if (procMask == sysMask) {
+            nextMask = 1; // Core 0 only
+            desc = "Core 0 Only (0x1)";
+        } else if (procMask == 1 && (sysMask >= 3)) {
+            nextMask = 3; // Cores 0 & 1
+            desc = "Cores 0 & 1 (0x3)";
+        } else if (procMask == 3 && (sysMask >= 15)) {
+            nextMask = 15; // Cores 0-3
+            desc = "Cores 0-3 (0xF)";
+        } else {
+            nextMask = sysMask;
+            desc = "All Cores (Reset)";
+        }
+
+        if (SetProcessAffinityMask(hProc, nextMask)) {
+            char msg[128] = {0};
+            my_strcpy(msg, "Affinity for PID updated: ");
+            my_strcat(msg, desc);
+            ShowNativeToast(msg);
+        } else {
+            ShowNativeToast("Failed to set process affinity.");
+        }
+    } else {
+        ShowNativeToast("Failed to query process affinity.");
+    }
+    CloseHandle(hProc);
+}
+
 void PerformExportCSV(HWND hwnd) {
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hSnapshot == INVALID_HANDLE_VALUE) {
@@ -708,7 +941,7 @@ void PerformExportCSV(HWND hwnd) {
         return;
     }
 
-    const char* header = "PID,Process Name,Threads,BasePriority\r\n";
+    const char* header = "PID,PPID,Process Name,Threads,BasePriority\r\n";
     DWORD written = 0;
     WriteFile(hFile, header, my_strlen(header), &written, NULL);
 
@@ -718,16 +951,20 @@ void PerformExportCSV(HWND hwnd) {
         do {
             char lineBuf[512] = {0};
             char pidStr[16] = {0};
+            char ppidStr[16] = {0};
             char thrStr[16] = {0};
             char priStr[16] = {0};
             char escapedExe[256] = {0};
 
             my_utoa(pe32.th32ProcessID, pidStr);
+            my_utoa(pe32.th32ParentProcessID, ppidStr);
             my_utoa(pe32.cntThreads, thrStr);
             my_itoa(pe32.pcPriClassBase, priStr);
             my_escape_csv(pe32.szExeFile, escapedExe, sizeof(escapedExe));
 
             my_strcpy(lineBuf, pidStr);
+            my_strcat(lineBuf, ",");
+            my_strcat(lineBuf, ppidStr);
             my_strcat(lineBuf, ",\"");
             my_strcat(lineBuf, escapedExe);
             my_strcat(lineBuf, "\",");
@@ -778,17 +1015,21 @@ void PerformExportJSON(HWND hwnd) {
 
             char lineBuf[512] = {0};
             char pidStr[16] = {0};
+            char ppidStr[16] = {0};
             char thrStr[16] = {0};
             char priStr[16] = {0};
             char escapedExe[256] = {0};
 
             my_utoa(pe32.th32ProcessID, pidStr);
+            my_utoa(pe32.th32ParentProcessID, ppidStr);
             my_utoa(pe32.cntThreads, thrStr);
             my_itoa(pe32.pcPriClassBase, priStr);
             my_escape_json(pe32.szExeFile, escapedExe, sizeof(escapedExe));
 
             my_strcpy(lineBuf, "  {\"pid\": ");
             my_strcat(lineBuf, pidStr);
+            my_strcat(lineBuf, ", \"ppid\": ");
+            my_strcat(lineBuf, ppidStr);
             my_strcat(lineBuf, ", \"name\": \"");
             my_strcat(lineBuf, escapedExe);
             my_strcat(lineBuf, "\", \"threads\": ");
@@ -810,27 +1051,108 @@ void PerformExportJSON(HWND hwnd) {
     ShowNativeToast("Snapshot exported to 'ktask_export.json' successfully!");
 }
 
+void PerformExportMD(HWND hwnd) {
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnapshot == INVALID_HANDLE_VALUE) {
+        ShowNativeToast("Failed to create process snapshot.");
+        return;
+    }
+
+    HANDLE hFile = CreateFileA("ktask_audit_report.md", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        CloseHandle(hSnapshot);
+        ShowNativeToast("Failed to create ktask_audit_report.md file.");
+        return;
+    }
+
+    DWORD written = 0;
+    const char* title = "# KTask Process & System Diagnostic Audit Report\r\n\r\n";
+    WriteFile(hFile, title, my_strlen(title), &written, NULL);
+
+    MEMORYSTATUSEX memStatus;
+    memStatus.dwLength = sizeof(memStatus);
+    GlobalMemoryStatusEx(&memStatus);
+
+    char sysInfo[512] = {0};
+    char memLoadStr[16] = {0};
+    char totalMemMB[16] = {0};
+    char availMemMB[16] = {0};
+    my_utoa(memStatus.dwMemoryLoad, memLoadStr);
+    my_utoa((DWORD)(memStatus.ullTotalPhys / (1024 * 1024)), totalMemMB);
+    my_utoa((DWORD)(memStatus.ullAvailPhys / (1024 * 1024)), availMemMB);
+
+    my_strcpy(sysInfo, "## System Resource Summary\r\n");
+    my_strcat(sysInfo, "- **Memory Load**: ");
+    my_strcat(sysInfo, memLoadStr);
+    my_strcat(sysInfo, "%\r\n- **Physical RAM**: ");
+    my_strcat(sysInfo, totalMemMB);
+    my_strcat(sysInfo, " MB Total (");
+    my_strcat(sysInfo, availMemMB);
+    my_strcat(sysInfo, " MB Available)\r\n\r\n## Active Process Inventory\r\n\r\n");
+    my_strcat(sysInfo, "| PID | PPID | Process Name | Threads | Base Priority |\r\n");
+    my_strcat(sysInfo, "|---|---|---|---|---|\r\n");
+    WriteFile(hFile, sysInfo, my_strlen(sysInfo), &written, NULL);
+
+    PROCESSENTRY32 pe32;
+    pe32.dwSize = sizeof(PROCESSENTRY32);
+    if (Process32First(hSnapshot, &pe32)) {
+        do {
+            char row[512] = {0};
+            char pidStr[16] = {0};
+            char ppidStr[16] = {0};
+            char thrStr[16] = {0};
+            char priStr[16] = {0};
+
+            my_utoa(pe32.th32ProcessID, pidStr);
+            my_utoa(pe32.th32ParentProcessID, ppidStr);
+            my_utoa(pe32.cntThreads, thrStr);
+            my_itoa(pe32.pcPriClassBase, priStr);
+
+            my_strcpy(row, "| `");
+            my_strcat(row, pidStr);
+            my_strcat(row, "` | `");
+            my_strcat(row, ppidStr);
+            my_strcat(row, "` | **");
+            my_strcat(row, pe32.szExeFile);
+            my_strcat(row, "** | ");
+            my_strcat(row, thrStr);
+            my_strcat(row, " | ");
+            my_strcat(row, priStr);
+            my_strcat(row, " |\r\n");
+
+            WriteFile(hFile, row, my_strlen(row), &written, NULL);
+        } while (Process32Next(hSnapshot, &pe32));
+    }
+
+    const char* footer = "\r\n---\r\n*Generated autonomously by KTask Process Monitor diagnostic engine.*\r\n";
+    WriteFile(hFile, footer, my_strlen(footer), &written, NULL);
+
+    CloseHandle(hFile);
+    CloseHandle(hSnapshot);
+
+    ShowNativeToast("Report saved to 'ktask_audit_report.md' successfully!");
+}
+
 void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd,
-        "KTask Process Monitor\r\n\r\n"
+        "KTask Process Monitor & Diagnostic Suite\r\n\r\n"
         "Keyboard Shortcuts:\r\n"
         "  F1 or H   : View this Help dialog\r\n"
         "  F5 or R   : Refresh active process list\r\n"
+        "  T         : Toggle Process Tree / Flat List view\r\n"
         "  Del       : Terminate selected process\r\n"
         "  Enter / I : Deep Inspect selected process\r\n"
         "  P         : Cycle priority (Normal -> High -> Below Normal)\r\n"
+        "  A         : Cycle CPU Core Affinity mask\r\n"
         "  C         : Export process list to CSV (ktask_export.csv)\r\n"
         "  J         : Export process list to JSON (ktask_export.json)\r\n"
+        "  M         : Export System Diagnostic Audit Report (ktask_audit_report.md)\r\n"
         "  Esc       : Clear search filter / dismiss\r\n\r\n"
-        "Toolbar Buttons:\r\n"
-        "  - Refresh [F5] : Live snapshot of running processes\r\n"
-        "  - Priority [P] : Cycle process priority class\r\n"
-        "  - Inspect [I]  : View Threads, Loaded DLLs, and Memory Map\r\n"
-        "  - CSV [C]      : Export process snapshot to CSV\r\n"
-        "  - JSON [J]     : Export process snapshot to JSON\r\n"
-        "  - Help [F1]    : Show shortcuts & documentation\r\n"
-        "  - End Task [Del]: Safely terminate unresponsive process\r\n\r\n"
-        "Double-click any process or press Enter to open Deep Inspector.",
+        "Advanced Filter Syntax:\r\n"
+        "  Type 'pid:123' to match PID\r\n"
+        "  Type 'pri:8' to match Priority\r\n"
+        "  Type any text to search executable name\r\n\r\n"
+        "Double-click any process to open Deep Inspector.",
         "KTask Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
 }
 
@@ -860,11 +1182,31 @@ LRESULT CALLBACK ListSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         if (wParam == VK_F5 || wParam == 'R' || wParam == 'r') {
             RefreshList();
             return 0;
+        } else if (wParam == 'T' || wParam == 't') {
+            g_isTreeView = !g_isTreeView;
+            RefreshList();
+            ShowNativeToast(g_isTreeView ? "View: Process Tree Hierarchy" : "View: Flat Process List");
+            return 0;
         } else if (wParam == VK_DELETE) {
             PerformEndTask(GetParent(hwnd));
             return 0;
         } else if (wParam == 'I' || wParam == 'i' || wParam == VK_RETURN) {
             PerformInspectProcess(GetParent(hwnd));
+            return 0;
+        } else if (wParam == 'P' || wParam == 'p') {
+            PerformSetPriority(GetParent(hwnd));
+            return 0;
+        } else if (wParam == 'A' || wParam == 'a') {
+            PerformSetAffinity(GetParent(hwnd));
+            return 0;
+        } else if (wParam == 'C' || wParam == 'c') {
+            PerformExportCSV(GetParent(hwnd));
+            return 0;
+        } else if (wParam == 'J' || wParam == 'j') {
+            PerformExportJSON(GetParent(hwnd));
+            return 0;
+        } else if (wParam == 'M' || wParam == 'm') {
+            PerformExportMD(GetParent(hwnd));
             return 0;
         } else if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
             ShowHelpDialog(GetParent(hwnd));
@@ -878,7 +1220,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_GETMINMAXINFO: {
             MINMAXINFO* mmi = (MINMAXINFO*)lParam;
-            mmi->ptMinTrackSize.x = 440;
+            mmi->ptMinTrackSize.x = 480;
             mmi->ptMinTrackSize.y = 300;
             return 0;
         }
@@ -887,7 +1229,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 #ifndef EM_SETCUEBANNER
 #define EM_SETCUEBANNER 0x1501
 #endif
-            SendMessageW(hSearchBox, EM_SETCUEBANNER, 0, (LPARAM)L"Filter by Name or PID... (Enter: focus list | F1: Help)");
+            SendMessageW(hSearchBox, EM_SETCUEBANNER, 0, (LPARAM)L"Filter Name or pid:123, pri:8... (Enter: focus list | F1: Help)");
             hListBox = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL | LBS_NOTIFY | LBS_NOINTEGRALHEIGHT, 10, 45, 360, 165, hwnd, (HMENU)4, NULL, NULL);
             hStatusText = CreateWindowA("STATIC", "Processes: 0", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 215, 360, 20, hwnd, (HMENU)5, NULL, NULL);
 
@@ -904,22 +1246,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SendMessageA(hStatusText, WM_SETFONT, (WPARAM)g_hFont, FALSE);
             }
 
-            hBtnRefresh = CreateWindowA("BUTTON", "Refresh [F5]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 10, 240, 95, 25, hwnd, (HMENU)1, NULL, NULL);
-            hBtnPriority = CreateWindowA("BUTTON", "Priority [P]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 110, 240, 85, 25, hwnd, (HMENU)6, NULL, NULL);
-            hBtnInspect = CreateWindowA("BUTTON", "Inspect [I]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 200, 240, 80, 25, hwnd, (HMENU)9, NULL, NULL);
-            hBtnExportCSV = CreateWindowA("BUTTON", "CSV [C]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 285, 240, 55, 25, hwnd, (HMENU)7, NULL, NULL);
-            hBtnExportJSON = CreateWindowA("BUTTON", "JSON [J]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 345, 240, 55, 25, hwnd, (HMENU)8, NULL, NULL);
-            hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 405, 240, 75, 25, hwnd, (HMENU)10, NULL, NULL);
-            hBtnEndTask = CreateWindowA("BUTTON", "End Task [Del]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 485, 240, 105, 25, hwnd, (HMENU)2, NULL, NULL);
+            hBtnRefresh = CreateWindowA("BUTTON", "Refresh [F5]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 10, 240, 85, 25, hwnd, (HMENU)1, NULL, NULL);
+            hBtnTree = CreateWindowA("BUTTON", "Tree [T]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 100, 240, 70, 25, hwnd, (HMENU)11, NULL, NULL);
+            hBtnInspect = CreateWindowA("BUTTON", "Inspect [I]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 175, 240, 75, 25, hwnd, (HMENU)9, NULL, NULL);
+            hBtnPriority = CreateWindowA("BUTTON", "Priority [P]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 255, 240, 75, 25, hwnd, (HMENU)6, NULL, NULL);
+            hBtnAffinity = CreateWindowA("BUTTON", "Affinity [A]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 335, 240, 75, 25, hwnd, (HMENU)12, NULL, NULL);
+            hBtnEndTask = CreateWindowA("BUTTON", "End Task [Del]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 415, 240, 105, 25, hwnd, (HMENU)2, NULL, NULL);
+
+            hBtnExportCSV = CreateWindowA("BUTTON", "CSV [C]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 10, 270, 65, 25, hwnd, (HMENU)7, NULL, NULL);
+            hBtnExportJSON = CreateWindowA("BUTTON", "JSON [J]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 80, 270, 65, 25, hwnd, (HMENU)8, NULL, NULL);
+            hBtnExportMD = CreateWindowA("BUTTON", "Report [M]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 150, 270, 75, 25, hwnd, (HMENU)13, NULL, NULL);
+            hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 230, 270, 75, 25, hwnd, (HMENU)10, NULL, NULL);
             
             if (g_hFont) {
                 SendMessageA(hBtnRefresh, WM_SETFONT, (WPARAM)g_hFont, FALSE);
-                SendMessageA(hBtnPriority, WM_SETFONT, (WPARAM)g_hFont, FALSE);
+                SendMessageA(hBtnTree, WM_SETFONT, (WPARAM)g_hFont, FALSE);
                 SendMessageA(hBtnInspect, WM_SETFONT, (WPARAM)g_hFont, FALSE);
+                SendMessageA(hBtnPriority, WM_SETFONT, (WPARAM)g_hFont, FALSE);
+                SendMessageA(hBtnAffinity, WM_SETFONT, (WPARAM)g_hFont, FALSE);
+                SendMessageA(hBtnEndTask, WM_SETFONT, (WPARAM)g_hFont, FALSE);
                 SendMessageA(hBtnExportCSV, WM_SETFONT, (WPARAM)g_hFont, FALSE);
                 SendMessageA(hBtnExportJSON, WM_SETFONT, (WPARAM)g_hFont, FALSE);
+                SendMessageA(hBtnExportMD, WM_SETFONT, (WPARAM)g_hFont, FALSE);
                 SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)g_hFont, FALSE);
-                SendMessageA(hBtnEndTask, WM_SETFONT, (WPARAM)g_hFont, FALSE);
             }
 
             g_OldEditProc = (WNDPROC)SetWindowLongPtrA(hSearchBox, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
@@ -981,6 +1330,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 PerformInspectProcess(hwnd);
             } else if (id == 10) {
                 ShowHelpDialog(hwnd);
+            } else if (id == 11) {
+                g_isTreeView = !g_isTreeView;
+                RefreshList();
+                ShowNativeToast(g_isTreeView ? "View: Process Tree Hierarchy" : "View: Flat Process List");
+            } else if (id == 12) {
+                PerformSetAffinity(hwnd);
+            } else if (id == 13) {
+                PerformExportMD(hwnd);
             } else if (id == 4 && code == LBN_DBLCLK) {
                 PerformInspectProcess(hwnd);
             }
@@ -992,6 +1349,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RefreshList();
                 ShowNativeToast("Process list refreshed.");
                 return 0;
+            } else if (wParam == 'T' || wParam == 't') {
+                g_isTreeView = !g_isTreeView;
+                RefreshList();
+                ShowNativeToast(g_isTreeView ? "View: Process Tree Hierarchy" : "View: Flat Process List");
+                return 0;
             } else if (wParam == VK_DELETE) {
                 PerformEndTask(hwnd);
                 return 0;
@@ -1001,11 +1363,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (wParam == 'P' || wParam == 'p') {
                 PerformSetPriority(hwnd);
                 return 0;
+            } else if (wParam == 'A' || wParam == 'a') {
+                PerformSetAffinity(hwnd);
+                return 0;
             } else if (wParam == 'C' || wParam == 'c') {
                 PerformExportCSV(hwnd);
                 return 0;
             } else if (wParam == 'J' || wParam == 'j') {
                 PerformExportJSON(hwnd);
+                return 0;
+            } else if (wParam == 'M' || wParam == 'm') {
+                PerformExportMD(hwnd);
                 return 0;
             } else if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
                 ShowHelpDialog(hwnd);
@@ -1039,7 +1407,7 @@ void __stdcall MainEntry() {
     RECT rc = {0, 0, 800, 600};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
     
-    HWND hwnd = CreateWindowExA(0, "KTaskClass", "KTask Process Monitor (F1: Help | F5: Refresh | Del: End Task | I: Inspect | P: Priority | C: CSV | J: JSON)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KTaskClass", "KTask Process Monitor (F1: Help | T: Tree | I: Inspect | P: Priority | A: Affinity | M: Report)", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
@@ -1056,11 +1424,19 @@ void __stdcall MainEntry() {
             } else {
                 if (msg.wParam == VK_F1 || msg.wParam == 'H' || msg.wParam == 'h') { ShowHelpDialog(hwnd); continue; }
                 if (msg.wParam == VK_F5 || msg.wParam == 'R' || msg.wParam == 'r') { RefreshList(); ShowNativeToast("Process list refreshed."); continue; }
+                if (msg.wParam == 'T' || msg.wParam == 't') {
+                    g_isTreeView = !g_isTreeView;
+                    RefreshList();
+                    ShowNativeToast(g_isTreeView ? "View: Process Tree Hierarchy" : "View: Flat Process List");
+                    continue;
+                }
                 if (msg.wParam == VK_DELETE) { PerformEndTask(hwnd); continue; }
                 if (msg.wParam == 'I' || msg.wParam == 'i') { PerformInspectProcess(hwnd); continue; }
                 if (msg.wParam == 'P' || msg.wParam == 'p') { PerformSetPriority(hwnd); continue; }
+                if (msg.wParam == 'A' || msg.wParam == 'a') { PerformSetAffinity(hwnd); continue; }
                 if (msg.wParam == 'C' || msg.wParam == 'c') { PerformExportCSV(hwnd); continue; }
                 if (msg.wParam == 'J' || msg.wParam == 'j') { PerformExportJSON(hwnd); continue; }
+                if (msg.wParam == 'M' || msg.wParam == 'm') { PerformExportMD(hwnd); continue; }
                 if (msg.wParam == VK_ESCAPE) { SetWindowTextA(hSearchBox, ""); RefreshList(); continue; }
             }
         }

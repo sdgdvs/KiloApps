@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KTask Monitor</title>
+<title>KTask Monitor &amp; Diagnostic Suite</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -128,12 +128,6 @@
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
-  }
-
-  .input-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
   }
 
   .select-ctrl, .input-ctrl {
@@ -323,6 +317,19 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   }
 
+  .task-card.tree-child {
+    margin-left: 28px;
+    border-left: 3px solid var(--primary);
+    background: rgba(30, 41, 59, 0.7);
+  }
+
+  .tree-glyph {
+    font-family: 'Consolas', monospace;
+    color: var(--primary);
+    font-weight: 700;
+    margin-right: 4px;
+  }
+
   .task-left {
     display: flex;
     align-items: center;
@@ -358,6 +365,9 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
   .task-meta {
@@ -368,6 +378,23 @@
     gap: 10px;
     align-items: center;
     flex-wrap: wrap;
+  }
+
+  .task-mini-meter {
+    display: inline-flex;
+    width: 44px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    overflow: hidden;
+    vertical-align: middle;
+    margin-left: 4px;
+  }
+
+  .mini-bar {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
   }
 
   .task-right {
@@ -706,8 +733,8 @@
 
   /* Deep Process Inspector Modal */
   .inspect-modal-box {
-    max-width: 680px;
-    height: 540px;
+    max-width: 720px;
+    height: 560px;
     display: flex;
     flex-direction: column;
     padding: 18px;
@@ -735,6 +762,7 @@
     padding: 4px;
     border-radius: 8px;
     border: 1px solid var(--border-color);
+    overflow-x: auto;
   }
 
   .inspect-tab-btn {
@@ -748,6 +776,7 @@
     font-weight: 600;
     border-radius: 6px;
     cursor: pointer;
+    white-space: nowrap;
     transition: all 0.2s ease;
   }
 
@@ -776,7 +805,7 @@
     width: 100%;
     height: 100%;
     overflow-y: auto;
-    padding: 10px;
+    padding: 12px;
   }
 
   .inspect-pane.active {
@@ -819,6 +848,8 @@
     padding: 6px 8px;
     margin-bottom: 8px;
     border-bottom: 1px solid var(--border-color);
+    gap: 8px;
+    flex-wrap: wrap;
   }
 
   .hex-dump-pre {
@@ -829,6 +860,34 @@
     color: #38bdf8;
     white-space: pre;
     overflow-x: auto;
+  }
+
+  .affinity-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .affinity-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .affinity-card:hover {
+    border-color: var(--primary);
+  }
+
+  .affinity-card.active {
+    background: var(--primary-muted);
+    border-color: var(--primary);
   }
 
   .task-card.selected {
@@ -877,7 +936,7 @@
           <line x1="8" y1="21" x2="16" y2="21"></line>
           <line x1="12" y1="17" x2="12" y2="21"></line>
         </svg>
-        KTask Monitor <span style="font-size: 11px; color: var(--text-muted); margin-left: 8px; font-weight: normal;">(Press 'H' or F1 for help)</span>
+        KTask Monitor &amp; Diagnostic Suite <span style="font-size: 11px; color: var(--text-muted); margin-left: 8px; font-weight: normal;">(F1: Help | T: Tree | A: Affinity | M: Report)</span>
       </h1>
 
       <div class="nav-tabs" role="tablist" aria-label="Navigation Tabs">
@@ -897,7 +956,7 @@
     </div>
     
     <div class="header-actions">
-      <button class="btn-secondary" id="btnHelp" onclick="openHelpModal()" title="Help & Shortcuts (F1 or H)" aria-label="Open Help & Shortcuts Dialog">
+      <button class="btn-secondary" id="btnHelp" onclick="openHelpModal()" title="Help &amp; Shortcuts (F1 or H)" aria-label="Open Help &amp; Shortcuts Dialog">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
         Help [F1]
       </button>
@@ -962,7 +1021,7 @@
         <div class="toolbar-group">
           <label for="searchInput" class="sr-only">Filter tasks</label>
           <div style="position: relative; display: inline-flex; align-items: center;">
-            <input type="text" id="searchInput" class="input-ctrl" placeholder="Filter name or PID... (Esc)" aria-label="Filter tasks" oninput="onSearchInput()">
+            <input type="text" id="searchInput" class="input-ctrl" style="min-width: 200px;" placeholder="Filter /regex/, cpu>2, pri:high... (Esc)" aria-label="Filter tasks" oninput="onSearchInput()">
             <button id="searchClearBtn" onclick="clearSearch()" style="position: absolute; right: 6px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 11px; display: none; padding: 2px 4px;" title="Clear filter (Esc)">✕</button>
           </div>
 
@@ -972,6 +1031,8 @@
             <option value="high-cpu">High CPU (&gt;2%)</option>
             <option value="high-mem">High Memory (&gt;25MB)</option>
             <option value="high-pri">High Priority</option>
+            <option value="system">System Services</option>
+            <option value="user">User Applications</option>
           </select>
 
           <label for="sortSelect" class="sr-only">Sort tasks</label>
@@ -981,6 +1042,10 @@
             <option value="cpu">Sort by CPU</option>
             <option value="pid">Sort by PID</option>
           </select>
+
+          <button class="btn-secondary" id="viewModeToggleBtn" onclick="toggleViewMode()" title="Toggle between Flat List and Process Tree Hierarchy [T]">
+            🌲 Tree [T]
+          </button>
         </div>
 
         <div class="toolbar-group">
@@ -1003,13 +1068,19 @@
           </button>
 
           <button class="btn-secondary" onclick="exportCSV()" title="Export Process List to CSV (E or Ctrl+E)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             CSV [E]
           </button>
 
           <button class="btn-secondary" onclick="exportJSON()" title="Export Process List to JSON (J or Ctrl+J)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             JSON [J]
+          </button>
+
+          <button class="btn-secondary" onclick="exportMarkdownAudit()" title="Export System Diagnostic &amp; Audit Report in Markdown [M]">
+            Report [M]
+          </button>
+
+          <button class="btn-secondary" onclick="exportHTMLReport()" title="Export Standalone HTML Diagnostic Report">
+            HTML
           </button>
         </div>
       </div>
@@ -1021,6 +1092,8 @@
         <button class="chip-btn" id="chip-cpu" role="radio" aria-checked="false" onclick="applyQuickFilter('high-cpu')">⚡ High CPU (&gt;2%)</button>
         <button class="chip-btn" id="chip-mem" role="radio" aria-checked="false" onclick="applyQuickFilter('high-mem')">💾 High RAM (&gt;25MB)</button>
         <button class="chip-btn" id="chip-pri" role="radio" aria-checked="false" onclick="applyQuickFilter('high-pri')">⭐ High Priority</button>
+        <button class="chip-btn" id="chip-sys" role="radio" aria-checked="false" onclick="applyQuickFilter('system')">🖥️ System</button>
+        <button class="chip-btn" id="chip-usr" role="radio" aria-checked="false" onclick="applyQuickFilter('user')">👤 User Apps</button>
         <button class="chip-btn chip-spawn" onclick="spawnDemoTask()" title="Add a synthetic background task for testing">＋ Spawn Demo Task</button>
       </div>
 
@@ -1092,7 +1165,7 @@
         <div class="summary-card">
           <div class="summary-label">CPU Cores / Arch</div>
           <div class="summary-value">8 Cores (x64)</div>
-          <div class="summary-subtext">Logical processor layout</div>
+          <div class="summary-subtext">Preemptive Multitasking Kernel</div>
         </div>
 
         <div class="summary-card">
@@ -1136,13 +1209,16 @@
       </div>
 
       <div class="inspect-tabs" role="tablist" aria-label="Process details tabs">
-        <button class="inspect-tab-btn active" id="itab-threads-btn" role="tab" aria-selected="true" aria-controls="ipane-threads" onclick="switchInspectTab('threads')">🧵 Threads</button>
-        <button class="inspect-tab-btn" id="itab-modules-btn" role="tab" aria-selected="false" aria-controls="ipane-modules" onclick="switchInspectTab('modules')">📦 Loaded Modules</button>
-        <button class="inspect-tab-btn" id="itab-memory-btn" role="tab" aria-selected="false" aria-controls="ipane-memory" onclick="switchInspectTab('memory')">🧠 Memory Map</button>
-        <button class="inspect-tab-btn" id="itab-hex-btn" role="tab" aria-selected="false" aria-controls="ipane-hex" onclick="switchInspectTab('hex')">💻 Hex Peek</button>
+        <button class="inspect-tab-btn active" id="itab-threads-btn" role="tab" aria-selected="true" aria-controls="ipane-threads" onclick="switchInspectTab('threads')">🧵 Threads [1]</button>
+        <button class="inspect-tab-btn" id="itab-modules-btn" role="tab" aria-selected="false" aria-controls="ipane-modules" onclick="switchInspectTab('modules')">📦 Modules [2]</button>
+        <button class="inspect-tab-btn" id="itab-memory-btn" role="tab" aria-selected="false" aria-controls="ipane-memory" onclick="switchInspectTab('memory')">🧠 Memory [3]</button>
+        <button class="inspect-tab-btn" id="itab-hex-btn" role="tab" aria-selected="false" aria-controls="ipane-hex" onclick="switchInspectTab('hex')">💻 Hex Peek [4]</button>
+        <button class="inspect-tab-btn" id="itab-env-btn" role="tab" aria-selected="false" aria-controls="ipane-env" onclick="switchInspectTab('env')">🌍 Env &amp; Exec [5]</button>
+        <button class="inspect-tab-btn" id="itab-affinity-btn" role="tab" aria-selected="false" aria-controls="ipane-affinity" onclick="switchInspectTab('affinity')">⚙️ Affinity [6]</button>
       </div>
 
       <div class="inspect-body">
+        <!-- Tab 1: Threads -->
         <div class="inspect-pane active" id="ipane-threads" role="tabpanel" aria-labelledby="itab-threads-btn">
           <table class="inspect-table">
             <thead>
@@ -1152,6 +1228,7 @@
           </table>
         </div>
 
+        <!-- Tab 2: Modules -->
         <div class="inspect-pane" id="ipane-modules" role="tabpanel" aria-labelledby="itab-modules-btn">
           <table class="inspect-table">
             <thead>
@@ -1161,6 +1238,7 @@
           </table>
         </div>
 
+        <!-- Tab 3: Memory Map -->
         <div class="inspect-pane" id="ipane-memory" role="tabpanel" aria-labelledby="itab-memory-btn">
           <table class="inspect-table">
             <thead>
@@ -1170,12 +1248,75 @@
           </table>
         </div>
 
+        <!-- Tab 4: Hex Peek -->
         <div class="inspect-pane" id="ipane-hex" role="tabpanel" aria-labelledby="itab-hex-btn">
           <div class="hex-toolbar">
-            <span>Segment: <strong style="color:var(--primary); font-family:monospace;">0x00400000 (PE Header)</strong></span>
-            <span class="status-badge" style="font-size:9px;">READWRITE / EXECUTE</span>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="color:var(--text-muted);">Segment:</span>
+              <select id="hexSegmentSelect" class="select-ctrl" style="padding:3px 6px; font-size:11px;" onchange="updateHexDumpView()">
+                <option value="pe">0x00400000 (PE Header)</option>
+                <option value="text">0x00410000 (.text Code)</option>
+                <option value="data">0x00490000 (.data Initialized)</option>
+                <option value="heap">0x004B0000 (Dynamic Heap)</option>
+              </select>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <input type="text" id="hexSearchInput" class="input-ctrl" style="padding:3px 6px; font-size:11px; width:130px;" placeholder="Search ASCII..." onkeydown="if(event.key==='Enter')searchHexDump()">
+              <button class="btn-secondary" style="padding:3px 8px; font-size:11px;" onclick="searchHexDump()">Find</button>
+            </div>
           </div>
           <pre class="hex-dump-pre" id="inspect-hex-dump"></pre>
+        </div>
+
+        <!-- Tab 5: Env & Executable Context -->
+        <div class="inspect-pane" id="ipane-env" role="tabpanel" aria-labelledby="itab-env-btn">
+          <div style="display:flex; flex-direction:column; gap:10px; font-size:12px;">
+            <div style="background:rgba(0,0,0,0.2); padding:10px; border-radius:6px; border:1px solid var(--border-color); display:flex; flex-direction:column; gap:6px;">
+              <div><strong>Binary Image:</strong> <code id="env-exec-path" style="color:var(--primary); font-family:monospace;">C:\KiloApps\task.exe</code></div>
+              <div><strong>Command Line:</strong> <code id="env-cmdline" style="color:var(--text-muted); font-family:monospace;">"task.exe" --session=live</code></div>
+              <div><strong>Security Mitigation:</strong> <span style="color:var(--success);">DEP: Enabled</span> | <span style="color:var(--success);">ASLR: Relocated</span> | <span style="color:var(--success);">CFG: Enforced</span></div>
+              <div><strong>Architecture:</strong> x86_64 (64-bit Native Process)</div>
+            </div>
+
+            <div style="font-weight:600; font-size:11px; text-transform:uppercase; color:var(--text-muted);">Process Environment Variables:</div>
+            <table class="inspect-table">
+              <thead>
+                <tr><th>Variable</th><th>Value</th></tr>
+              </thead>
+              <tbody id="inspect-env-tbody">
+                <tr><td><code>KILO_ROOT</code></td><td style="color:var(--primary);">C:\KiloApps</td></tr>
+                <tr><td><code>OS</code></td><td>KiloOS / Windows_NT</td></tr>
+                <tr><td><code>PATH</code></td><td style="color:var(--text-muted);">C:\KiloApps;C:\Windows\System32;C:\KiloApps\bin</td></tr>
+                <tr><td><code>USERNAME</code></td><td>KiloUser</td></tr>
+                <tr><td><code>PROCESSOR_ARCHITECTURE</code></td><td>AMD64 (8 Cores)</td></tr>
+                <tr><td><code>TEMP</code></td><td>C:\Users\KiloUser\AppData\Local\Temp</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab 6: CPU Core Affinity -->
+        <div class="inspect-pane" id="ipane-affinity" role="tabpanel" aria-labelledby="itab-affinity-btn">
+          <div style="display:flex; flex-direction:column; gap:12px; font-size:12px;">
+            <div>Assign process execution to specific logical CPU cores. Core affinity mask determines thread scheduler distribution:</div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span style="font-weight:600;">Current Bitmask:</span>
+              <span id="affinity-mask-hex" style="font-family:monospace; color:var(--primary); font-size:13px; font-weight:700;">0xFF</span>
+              <span id="affinity-mask-bin" style="font-family:monospace; color:var(--text-muted); font-size:11px;">(11111111)</span>
+              <span id="affinity-active-count" class="status-badge status-active" style="margin-left:auto;">8 Cores Active</span>
+            </div>
+
+            <div class="affinity-grid" id="affinityGrid">
+              <!-- Cores 0-7 generated here -->
+            </div>
+
+            <div style="display:flex; gap:8px; margin-top:8px;">
+              <button class="btn-secondary" onclick="setAffinityPreset('all')">All Cores (0xFF)</button>
+              <button class="btn-secondary" onclick="setAffinityPreset('core0')">Core 0 Only (0x01)</button>
+              <button class="btn-secondary" onclick="setAffinityPreset('perf')">Perf Cores 0-3 (0x0F)</button>
+              <button class="btn-secondary" onclick="setAffinityPreset('eff')">Eff Cores 4-7 (0xF0)</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1188,17 +1329,17 @@
 
   <!-- Help & Shortcuts Modal -->
   <div class="modal-overlay" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle" onclick="if(event.target===this)closeHelpModal()">
-    <div class="modal-box" style="max-width: 580px;">
+    <div class="modal-box" style="max-width: 600px;">
       <div class="modal-header" style="color: var(--primary); justify-content: space-between;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          <h3 id="helpModalTitle">KTask Monitor Help & Shortcuts</h3>
+          <h3 id="helpModalTitle">KTask Monitor &amp; Diagnostic Suite Help</h3>
         </div>
         <button class="btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="closeHelpModal()" title="Close (Esc)">✕</button>
       </div>
       <div class="modal-body">
         <p style="margin-top:0; color:var(--text-main);">
-          KTask is a real-time system process and performance monitor. Manage active tasks, analyze resource usage, inspect process internals, and export data.
+          KTask is the advanced real-time process manager and diagnostic suite for KiloOS.
         </p>
         <table class="help-table">
           <thead>
@@ -1209,20 +1350,23 @@
             <tr><td><span class="help-kbd">F5</span></td><td>Quicksave Process Snapshot to Storage</td><td>Global</td></tr>
             <tr><td><span class="help-kbd">F9</span></td><td>Quickload Process Snapshot from Storage</td><td>Global</td></tr>
             <tr><td><span class="help-kbd">R</span></td><td>Live Refresh Process List from OS</td><td>Global</td></tr>
-            <tr><td><span class="help-kbd">↑</span> / <span class="help-kbd">↓</span></td><td>Navigate & Select Process Card</td><td>Processes Tab</td></tr>
-            <tr><td><span class="help-kbd">Enter</span> / <span class="help-kbd">I</span> / <span class="help-kbd">Space</span></td><td>Deep Inspect Selected Process</td><td>Processes Tab</td></tr>
-            <tr><td><span class="help-kbd">Dbl-Click</span></td><td>Deep Inspect Process Card</td><td>Processes Tab</td></tr>
-            <tr><td><span class="help-kbd">Delete</span></td><td>Terminate Selected Process</td><td>Processes Tab</td></tr>
-            <tr><td><span class="help-kbd">P</span></td><td>Cycle Priority (Normal / High / Low)</td><td>Processes Tab</td></tr>
+            <tr><td><span class="help-kbd">T</span></td><td>Toggle Process Tree Hierarchy / Flat List</td><td>Processes Tab</td></tr>
+            <tr><td><span class="help-kbd">A</span></td><td>Cycle CPU Core Affinity Mask</td><td>Processes Tab</td></tr>
+            <tr><td><span class="help-kbd">M</span></td><td>Export System Diagnostic Audit Report (Markdown)</td><td>Global</td></tr>
             <tr><td><span class="help-kbd">E</span> / <span class="help-kbd">Ctrl+E</span></td><td>Export Process List to CSV</td><td>Global</td></tr>
             <tr><td><span class="help-kbd">J</span> / <span class="help-kbd">Ctrl+J</span></td><td>Export Process List to JSON</td><td>Global</td></tr>
-            <tr><td><span class="help-kbd">1</span> / <span class="help-kbd">2</span> / <span class="help-kbd">3</span></td><td>Switch Tabs (Processes / Charts / Summary)</td><td>Global</td></tr>
-            <tr><td><span class="help-kbd">1</span> - <span class="help-kbd">4</span> / <span class="help-kbd">←</span> <span class="help-kbd">→</span></td><td>Switch Inspector Tabs (Threads/Modules/Mem/Hex)</td><td>Inspector Dialog</td></tr>
+            <tr><td><span class="help-kbd">Enter</span> / <span class="help-kbd">I</span></td><td>Deep Inspect Selected Process</td><td>Processes Tab</td></tr>
+            <tr><td><span class="help-kbd">Delete</span></td><td>Terminate Selected Process</td><td>Processes Tab</td></tr>
+            <tr><td><span class="help-kbd">P</span></td><td>Cycle Priority (Normal / High / Low)</td><td>Processes Tab</td></tr>
+            <tr><td><span class="help-kbd">1</span> - <span class="help-kbd">6</span></td><td>Switch Inspector Tabs (Threads/Modules/Mem/Hex/Env/Affinity)</td><td>Inspector Dialog</td></tr>
             <tr><td><span class="help-kbd">Esc</span></td><td>Close Active Modal / Clear Filter</td><td>Global</td></tr>
           </tbody>
         </table>
         <div style="margin-top:12px; font-size:11px; color:var(--text-muted); line-height:1.5;">
-          💡 <strong>Tip:</strong> Click or use Arrow keys to select any process. Double-click or press <strong>I</strong> / <strong>Enter</strong> to inspect threads, DLLs, and memory maps in real time. Use <strong>P</strong> to adjust scheduling priority.
+          💡 <strong>Advanced Filter Syntax:</strong> In the search box, you can type:
+          <br>• Regular expressions: <code>/^k.*r$/i</code> or <code>/(pad|calc)/i</code>
+          <br>• Queries: <code>cpu&gt;2</code>, <code>cpu&lt;1</code>, <code>mem&gt;30</code>, <code>pri:high</code>, <code>pid:1420</code>
+          <br>• Or plain text to match process name or PID.
         </div>
       </div>
       <div class="modal-footer" style="justify-content: space-between;">
@@ -1234,7 +1378,7 @@
 
   <!-- Onboarding & Tutorial Modal -->
   <div class="modal-overlay" id="tutorialModal" role="dialog" aria-modal="true" aria-labelledby="tutorialModalTitle" onclick="if(event.target===this)closeTutorialModal()">
-    <div class="modal-box" style="max-width: 520px;">
+    <div class="modal-box" style="max-width: 540px;">
       <div class="modal-header" style="color: var(--primary); justify-content: space-between;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
@@ -1244,13 +1388,13 @@
       </div>
       <div class="modal-body" style="display: flex; flex-direction: column; gap: 10px;">
         <p style="margin: 0; color: var(--text-main); font-size: 13px; line-height: 1.5;">
-          KTask is the retro-modern process manager and diagnostic suite for KiloOS. Monitor active system processes, inspect loaded modules, and analyze system performance in real time.
+          KTask is the retro-modern process manager and diagnostic suite for KiloOS.
         </p>
         <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; font-size: 12px; display: flex; flex-direction: column; gap: 8px;">
-          <div>⚡ <strong>Interactive Inspector:</strong> Double-click any task or press <span class="help-kbd">Enter</span> / <span class="help-kbd">I</span> to view active threads, loaded DLLs, memory map segments, and live hex headers.</div>
-          <div>🎮 <strong>Keyboard Navigation:</strong> Use <span class="help-kbd">↑</span> / <span class="help-kbd">↓</span> to select tasks, <span class="help-kbd">P</span> to adjust scheduling priority, and <span class="help-kbd">Del</span> to terminate a process.</div>
-          <div>💾 <strong>Quicksave & Persistence:</strong> Press <span class="help-kbd">F5</span> to capture a local snapshot of all active processes, and <span class="help-kbd">F9</span> to reload it at any time.</div>
-          <div>📊 <strong>Exports & Imports:</strong> Export snapshots to CSV (<span class="help-kbd">E</span>) or JSON (<span class="help-kbd">J</span>), or import saved process lists using the <strong>Import</strong> button.</div>
+          <div>🌲 <strong>Process Tree Hierarchy:</strong> Press <span class="help-kbd">T</span> or click <strong>Tree</strong> to inspect parent-child execution lineages.</div>
+          <div>⚡ <strong>Interactive Inspector:</strong> Press <span class="help-kbd">I</span> or <span class="help-kbd">Enter</span> to inspect threads, modules, memory maps, ASCII memory string search, environment variables, and CPU affinity.</div>
+          <div>⚙️ <strong>CPU Core Affinity:</strong> Press <span class="help-kbd">A</span> to cycle CPU affinity masks across 8 logical processor cores.</div>
+          <div>📊 <strong>Exports &amp; Reports:</strong> Export snapshots to CSV (<span class="help-kbd">E</span>), JSON (<span class="help-kbd">J</span>), or Markdown Diagnostic Audit Reports (<span class="help-kbd">M</span>).</div>
         </div>
       </div>
       <div class="modal-footer" style="justify-content: space-between;">
@@ -1267,12 +1411,13 @@
   <script>
     let reqIdCounter = 0;
     let autoRefreshInterval = null;
+    let viewMode = 'flat'; // 'flat' or 'tree'
     let defaultSystemTasks = [
-      { id: '1004', title: 'KiloOS Kernel Services' },
-      { id: '1420', title: 'KExplorer File Manager' },
-      { id: '1842', title: 'KTask Process Monitor' },
-      { id: '2105', title: 'KPad Text Editor' },
-      { id: '3290', title: 'KCalc Calculator' }
+      { id: '1004', ppid: '0', title: 'KiloOS Kernel Services' },
+      { id: '1420', ppid: '1004', title: 'KExplorer File Manager' },
+      { id: '1842', ppid: '1420', title: 'KTask Process Monitor' },
+      { id: '2105', ppid: '1420', title: 'KPad Text Editor' },
+      { id: '3290', ppid: '1420', title: 'KCalc Calculator' }
     ];
     let allTasks = [...defaultSystemTasks];
     let spawnedTasks = [];
@@ -1304,7 +1449,8 @@
       const settings = {
         autoRefresh: document.getElementById('autoRefreshToggle')?.checked ?? true,
         sort: document.getElementById('sortSelect')?.value || 'name',
-        filter: document.getElementById('filterSelect')?.value || 'all'
+        filter: document.getElementById('filterSelect')?.value || 'all',
+        viewMode: viewMode
       };
       safeSetStorage('ktask_settings', JSON.stringify(settings));
     }
@@ -1325,7 +1471,26 @@
           document.getElementById('filterSelect').value = settings.filter;
           syncFilterChips();
         }
+        if (settings.viewMode) {
+          viewMode = settings.viewMode;
+          updateViewModeButton();
+        }
       } catch (e) {}
+    }
+
+    function toggleViewMode() {
+      viewMode = viewMode === 'flat' ? 'tree' : 'flat';
+      updateViewModeButton();
+      saveUserSettings();
+      renderTasks();
+      showToast(viewMode === 'tree' ? 'Switched to Process Tree Hierarchy [T]' : 'Switched to Flat Process List [T]');
+    }
+
+    function updateViewModeButton() {
+      const btn = document.getElementById('viewModeToggleBtn');
+      if (btn) {
+        btn.textContent = viewMode === 'tree' ? '📋 Flat [T]' : '🌲 Tree [T]';
+      }
     }
 
     // Tutorial modal handlers
@@ -1351,6 +1516,7 @@
           tasks: allTasks,
           stats: taskStats,
           peakCpu: peakCpu,
+          viewMode: viewMode,
           filter: document.getElementById('filterSelect')?.value || 'all',
           sort: document.getElementById('sortSelect')?.value || 'name'
         };
@@ -1377,6 +1543,10 @@
         allTasks = data.tasks;
         if (data.stats) taskStats = data.stats;
         if (data.peakCpu) peakCpu = data.peakCpu;
+        if (data.viewMode) {
+          viewMode = data.viewMode;
+          updateViewModeButton();
+        }
         if (data.filter && document.getElementById('filterSelect')) {
           document.getElementById('filterSelect').value = data.filter;
           syncFilterChips();
@@ -1384,7 +1554,6 @@
         if (data.sort && document.getElementById('sortSelect')) {
           document.getElementById('sortSelect').value = data.sort;
         }
-        // Pause auto-refresh so user can examine the restored snapshot
         stopAutoRefresh();
         const toggle = document.getElementById('autoRefreshToggle');
         if (toggle) toggle.checked = false;
@@ -1412,6 +1581,7 @@
           }
           allTasks = data.map((item, idx) => ({
             id: String(item.pid || item.id || (5000 + idx)),
+            ppid: String(item.ppid || '1004'),
             title: String(item.name || item.title || 'Imported Task')
           }));
           data.forEach(item => {
@@ -1419,7 +1589,8 @@
             taskStats[id] = {
               mem: item.memoryMB != null ? String(item.memoryMB) : (item.mem != null ? String(item.mem) : '20.0'),
               cpu: item.cpuPercent != null ? String(item.cpuPercent) : (item.cpu != null ? String(item.cpu) : '1.0'),
-              priority: item.priority || 'Normal'
+              priority: item.priority || 'Normal',
+              affinity: item.affinity || '0xFF'
             };
           });
           stopAutoRefresh();
@@ -1504,12 +1675,9 @@
       memHistory.push(mem);
       if (memHistory.length > HISTORY_LEN) memHistory.shift();
 
-      // Render Charts if active tab is charts
       if (activeTab === 'charts') {
         drawCharts();
       }
-
-      // Update summary pane metrics
       updateSummaryMetrics();
     }, 2000);
 
@@ -1540,16 +1708,9 @@
         window.parent.postMessage({ type: 'OS_LIST_TASKS', requestId: reqId }, '*');
       } catch(e) {}
       
-      // Fallback for standalone mode outside iframe
       setTimeout(() => {
         if (allTasks.length === 0) {
-          allTasks = [
-            { id: '1004', title: 'KiloOS Kernel Services' },
-            { id: '1420', title: 'KExplorer File Manager' },
-            { id: '1842', title: 'KTask Process Monitor' },
-            { id: '2105', title: 'KPad Text Editor' },
-            { id: '3290', title: 'KCalc Calculator' }
-          ];
+          allTasks = [...defaultSystemTasks];
           renderTasks();
         }
       }, 1000);
@@ -1606,20 +1767,34 @@
       syncFilterChips();
       saveUserSettings();
       renderTasks();
-      const label = cat === 'all' ? 'All Tasks' : (cat === 'high-cpu' ? 'High CPU' : (cat === 'high-mem' ? 'High Memory' : 'High Priority'));
-      showToast(`Filter applied: ${label}`);
+      const labelMap = {
+        'all': 'All Tasks',
+        'high-cpu': 'High CPU',
+        'high-mem': 'High Memory',
+        'high-pri': 'High Priority',
+        'system': 'System Services',
+        'user': 'User Applications'
+      };
+      showToast(`Filter applied: ${labelMap[cat] || cat}`);
     }
 
     function syncFilterChips() {
       const current = document.getElementById('filterSelect')?.value || 'all';
-      ['all', 'cpu', 'mem', 'pri'].forEach(key => {
+      ['all', 'cpu', 'mem', 'pri', 'sys', 'usr'].forEach(key => {
         const chip = document.getElementById(`chip-${key}`);
         if (chip) {
           chip.classList.remove('active');
           chip.setAttribute('aria-checked', 'false');
         }
       });
-      const activeMap = { 'all': 'chip-all', 'high-cpu': 'chip-cpu', 'high-mem': 'chip-mem', 'high-pri': 'chip-pri' };
+      const activeMap = {
+        'all': 'chip-all',
+        'high-cpu': 'chip-cpu',
+        'high-mem': 'chip-mem',
+        'high-pri': 'chip-pri',
+        'system': 'chip-sys',
+        'user': 'chip-usr'
+      };
       const activeId = activeMap[current];
       if (activeId) {
         const chip = document.getElementById(activeId);
@@ -1643,13 +1818,14 @@
       const name = demoNames[demoTaskCounter % demoNames.length];
       const newPid = String(4000 + (demoTaskCounter * 123) % 4900);
       demoTaskCounter++;
-      const newTask = { id: newPid, title: name };
+      const newTask = { id: newPid, ppid: '1420', title: name };
       spawnedTasks.unshift(newTask);
       allTasks.unshift(newTask);
       taskStats[newPid] = {
         mem: (Math.random() * 60 + 15).toFixed(1),
         cpu: (Math.random() * 6.5 + 0.5).toFixed(1),
-        priority: demoTaskCounter % 3 === 0 ? 'High' : 'Normal'
+        priority: demoTaskCounter % 3 === 0 ? 'High' : 'Normal',
+        affinity: '0xFF'
       };
       selectedTaskId = newPid;
       renderTasks();
@@ -1700,7 +1876,6 @@
       const title = pendingKillTitle;
       closeKillModal();
 
-      // Immediately remove locally so standalone mode or slow parent reflects termination instantly
       allTasks = allTasks.filter(t => String(t.id) !== pid);
       spawnedTasks = spawnedTasks.filter(t => String(t.id) !== pid);
       delete taskStats[pid];
@@ -1723,18 +1898,42 @@
       }
     }
 
+    function cycleAffinity(taskId) {
+      if (!taskStats[taskId]) return;
+      const cur = taskStats[taskId].affinity || '0xFF';
+      let next = '0xFF';
+      let desc = 'All Cores (0xFF)';
+      if (cur === '0xFF') {
+        next = '0x01';
+        desc = 'Core 0 Only (0x01)';
+      } else if (cur === '0x01') {
+        next = '0x03';
+        desc = 'Cores 0 & 1 (0x03)';
+      } else if (cur === '0x03') {
+        next = '0x0F';
+        desc = 'Perf Cores 0-3 (0x0F)';
+      } else {
+        next = '0xFF';
+        desc = 'All Cores (0xFF)';
+      }
+      taskStats[taskId].affinity = next;
+      renderTasks();
+      showToast(`PID ${taskId} CPU affinity mask set to ${desc}`);
+    }
+
     function exportCSV() {
       if (!allTasks.length) {
         showToast('No active tasks to export.');
         return;
       }
 
-      let csv = 'PID,Process Name,CPU (%),Memory (MB),Priority,Status\n';
+      let csv = 'PID,PPID,Process Name,CPU (%),Memory (MB),Priority,Affinity,Status\n';
       allTasks.forEach(task => {
         const id = String(task.id || '');
+        const ppid = String(task.ppid || '0');
         const title = String(task.title || 'Untitled');
-        const stats = taskStats[id] || { mem: '15.0', cpu: '0.5', priority: 'Normal' };
-        csv += `"${id}","${title.replace(/"/g, '""')}",${stats.cpu},${stats.mem},"${stats.priority || 'Normal'}","Active"\n`;
+        const stats = taskStats[id] || { mem: '15.0', cpu: '0.5', priority: 'Normal', affinity: '0xFF' };
+        csv += `"${id}","${ppid}","${title.replace(/"/g, '""')}",${stats.cpu},${stats.mem},"${stats.priority || 'Normal'}","${stats.affinity || '0xFF'}","Active"\n`;
       });
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1748,7 +1947,7 @@
         if (a.parentNode) document.body.removeChild(a);
         URL.revokeObjectURL(url);
       }, 1500);
-      showToast('Exported process snapshot to CSV.');
+      showToast('Exported process snapshot to CSV [E].');
     }
 
     function exportJSON() {
@@ -1759,14 +1958,17 @@
 
       const data = allTasks.map(task => {
         const id = String(task.id || '');
+        const ppid = String(task.ppid || '0');
         const title = String(task.title || 'Untitled');
-        const stats = taskStats[id] || { mem: '15.0', cpu: '0.5', priority: 'Normal' };
+        const stats = taskStats[id] || { mem: '15.0', cpu: '0.5', priority: 'Normal', affinity: '0xFF' };
         return {
           pid: id,
+          ppid: ppid,
           name: title,
           cpuPercent: parseFloat(stats.cpu),
           memoryMB: parseFloat(stats.mem),
           priority: stats.priority || 'Normal',
+          affinity: stats.affinity || '0xFF',
           status: 'Active'
         };
       });
@@ -1782,7 +1984,104 @@
         if (a.parentNode) document.body.removeChild(a);
         URL.revokeObjectURL(url);
       }, 1500);
-      showToast('Exported process snapshot to JSON.');
+      showToast('Exported process snapshot to JSON [J].');
+    }
+
+    function exportMarkdownAudit() {
+      if (!allTasks.length) {
+        showToast('No active tasks to export.');
+        return;
+      }
+      const curCpu = cpuHistory[cpuHistory.length - 1] || 12;
+      const curMem = memHistory[memHistory.length - 1] || 2.4;
+      const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+      const hrs = String(Math.floor(elapsedSec / 3600)).padStart(2, '0');
+      const mins = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, '0');
+      const secs = String(elapsedSec % 60).padStart(2, '0');
+
+      let md = `# KTask System Diagnostic & Process Audit Report\n\n`;
+      md += `- **Generated At**: ${new Date().toISOString()}\n`;
+      md += `- **System Uptime**: ${hrs}:${mins}:${secs}\n`;
+      md += `- **CPU Load**: ${curCpu}%\n`;
+      md += `- **RAM Utilization**: ${curMem} / 8.0 GB\n`;
+      md += `- **Peak CPU Recorded**: ${peakCpu}%\n`;
+      md += `- **Total Active Processes**: ${allTasks.length}\n`;
+      md += `- **Operating Environment**: KiloOS Retro Runtime (Win32 Compatible Architecture)\n\n`;
+      md += `## Active Process Inventory\n\n`;
+      md += `| PID | PPID | Process Name | CPU (%) | RAM (MB) | Priority | Affinity | Status |\n`;
+      md += `|---|---|---|---|---|---|---|---|\n`;
+
+      allTasks.forEach(task => {
+        const id = String(task.id || '');
+        const ppid = String(task.ppid || '0');
+        const title = String(task.title || 'Untitled');
+        const stats = taskStats[id] || { mem: '15.0', cpu: '0.5', priority: 'Normal', affinity: '0xFF' };
+        md += `| \`${id}\` | \`${ppid}\` | **${title.replace(/\|/g, '\\|')}** | ${stats.cpu}% | ${stats.mem} MB | ${stats.priority || 'Normal'} | \`${stats.affinity || '0xFF'}\` | Active |\n`;
+      });
+
+      md += `\n## Diagnostics & Security Mitigations\n\n`;
+      md += `- **Core Kernel Services**: ntdll.dll, kernel32.dll, user32.dll, gdi32.dll\n`;
+      md += `- **Memory Management**: Preemptive paging, VirtualQueryEx inspection enabled\n`;
+      md += `- **Security Mitigations**: DEP Enforced, ASLR Relocated, Safe SEH Verified\n\n`;
+      md += `---\n*Generated autonomously by KTask Process Monitor & Diagnostic Suite.*\n`;
+
+      const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ktask_audit_report_${Date.now()}.md`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        if (a.parentNode) document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 1500);
+      showToast('Exported System Diagnostic Audit Report [M].');
+    }
+
+    function exportHTMLReport() {
+      if (!allTasks.length) {
+        showToast('No active tasks to export.');
+        return;
+      }
+      const curCpu = cpuHistory[cpuHistory.length - 1] || 12;
+      const curMem = memHistory[memHistory.length - 1] || 2.4;
+
+      let html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>KTask Diagnostic Report</title><style>
+        body { font-family: monospace; background: #0f172a; color: #f8fafc; padding: 24px; }
+        h1 { color: #38bdf8; }
+        table { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 12px; }
+        th, td { border: 1px solid #334155; padding: 8px 10px; text-align: left; }
+        th { background: #1e293b; color: #38bdf8; }
+        tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+        .badge { padding: 2px 6px; border-radius: 4px; background: rgba(56,189,248,0.2); color: #38bdf8; font-weight: bold; }
+      </style></head><body>
+      <h1>KTask System Diagnostic Report</h1>
+      <p>Generated: ${new Date().toLocaleString()} | Active Tasks: ${allTasks.length} | CPU: ${curCpu}% | RAM: ${curMem} GB</p>
+      <table><thead><tr><th>PID</th><th>PPID</th><th>Name</th><th>CPU</th><th>RAM</th><th>Priority</th><th>Affinity</th></tr></thead><tbody>`;
+
+      allTasks.forEach(task => {
+        const id = String(task.id || '');
+        const ppid = String(task.ppid || '0');
+        const title = String(task.title || 'Untitled');
+        const stats = taskStats[id] || { mem: '15.0', cpu: '0.5', priority: 'Normal', affinity: '0xFF' };
+        html += `<tr><td>${id}</td><td>${ppid}</td><td><strong>${escapeHtml(title)}</strong></td><td>${stats.cpu}%</td><td>${stats.mem} MB</td><td><span class="badge">${stats.priority || 'Normal'}</span></td><td><code>${stats.affinity || '0xFF'}</code></td></tr>`;
+      });
+
+      html += `</tbody></table><p style="margin-top:20px; color:#94a3b8; font-size:11px;">KiloOS System Diagnostics</p></body></html>`;
+
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ktask_diagnostic_report_${Date.now()}.html`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        if (a.parentNode) document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 1500);
+      showToast('Exported HTML Diagnostic Report.');
     }
 
     window.addEventListener('message', (e) => {
@@ -1802,8 +2101,54 @@
       list.innerHTML = '';
       
       const filterInput = document.getElementById('searchInput');
-      const filterText = (filterInput ? filterInput.value : '').trim().toLowerCase();
+      const rawQuery = (filterInput ? filterInput.value : '').trim();
       const catFilter = document.getElementById('filterSelect')?.value || 'all';
+
+      // Advanced query parsing: regex or attribute tokens
+      let isRegex = false;
+      let regexObj = null;
+      if (rawQuery.startsWith('/') && rawQuery.lastIndexOf('/') > 0) {
+        try {
+          const lastSlash = rawQuery.lastIndexOf('/');
+          const pattern = rawQuery.substring(1, lastSlash);
+          const flags = rawQuery.substring(lastSlash + 1);
+          regexObj = new RegExp(pattern, flags);
+          isRegex = true;
+        } catch (err) {
+          isRegex = false;
+        }
+      }
+
+      let cpuGt = null, cpuLt = null, memGt = null, memLt = null, priFilter = null, pidFilter = null;
+      let textFilter = rawQuery.toLowerCase();
+
+      if (!isRegex && rawQuery) {
+        const parts = rawQuery.split(/\s+/);
+        const remainingText = [];
+        parts.forEach(p => {
+          const lower = p.toLowerCase();
+          if (lower.startsWith('cpu>')) {
+            const val = parseFloat(lower.slice(4));
+            if (!isNaN(val)) cpuGt = val;
+          } else if (lower.startsWith('cpu<')) {
+            const val = parseFloat(lower.slice(4));
+            if (!isNaN(val)) cpuLt = val;
+          } else if (lower.startsWith('mem>')) {
+            const val = parseFloat(lower.slice(4));
+            if (!isNaN(val)) memGt = val;
+          } else if (lower.startsWith('mem<')) {
+            const val = parseFloat(lower.slice(4));
+            if (!isNaN(val)) memLt = val;
+          } else if (lower.startsWith('pri:')) {
+            priFilter = lower.slice(4);
+          } else if (lower.startsWith('pid:')) {
+            pidFilter = lower.slice(4);
+          } else {
+            remainingText.push(lower);
+          }
+        });
+        textFilter = remainingText.join(' ');
+      }
 
       // Memory leak cleanup: retain stats only for active tasks
       const currentTaskIds = new Set(allTasks.map(t => String(t.id || '')));
@@ -1820,24 +2165,47 @@
           taskStats[taskId] = {
             mem: (Math.random() * 45 + 12).toFixed(1),
             cpu: (Math.random() * 4.5).toFixed(1),
-            priority: 'Normal'
+            priority: 'Normal',
+            affinity: '0xFF'
           };
         } else {
           taskStats[taskId].cpu = Math.max(0, (parseFloat(taskStats[taskId].cpu) + (Math.random() - 0.5) * 1.2)).toFixed(1);
+          if (!taskStats[taskId].affinity) taskStats[taskId].affinity = '0xFF';
         }
       });
 
       let filteredTasks = allTasks.filter(t => {
-        const title = String(t.title || '').toLowerCase();
-        const id = String(t.id || '').toLowerCase();
+        const title = String(t.title || '');
+        const id = String(t.id || '');
         const stats = taskStats[id] || { mem: 0, cpu: 0, priority: 'Normal' };
+        const cpuNum = parseFloat(stats.cpu);
+        const memNum = parseFloat(stats.mem);
+        const pri = (stats.priority || 'Normal').toLowerCase();
 
-        const matchesText = title.includes(filterText) || id.includes(filterText);
-        if (!matchesText) return false;
+        // Category filter
+        if (catFilter === 'high-cpu' && cpuNum <= 2.0) return false;
+        if (catFilter === 'high-mem' && memNum <= 25.0) return false;
+        if (catFilter === 'high-pri' && pri !== 'high' && pri !== 'realtime') return false;
+        if (catFilter === 'system' && !['1004', '1420', '1842'].includes(id)) return false;
+        if (catFilter === 'user' && ['1004', '1420', '1842'].includes(id)) return false;
 
-        if (catFilter === 'high-cpu') return parseFloat(stats.cpu) > 2.0;
-        if (catFilter === 'high-mem') return parseFloat(stats.mem) > 25.0;
-        if (catFilter === 'high-pri') return stats.priority === 'High' || stats.priority === 'Realtime';
+        // Regex filter
+        if (isRegex && regexObj) {
+          return regexObj.test(title) || regexObj.test(id);
+        }
+
+        // Attribute queries
+        if (cpuGt !== null && cpuNum <= cpuGt) return false;
+        if (cpuLt !== null && cpuNum >= cpuLt) return false;
+        if (memGt !== null && memNum <= memGt) return false;
+        if (memLt !== null && memNum >= memLt) return false;
+        if (priFilter !== null && !pri.includes(priFilter)) return false;
+        if (pidFilter !== null && !id.includes(pidFilter)) return false;
+
+        // Remaining text query
+        if (textFilter) {
+          return title.toLowerCase().includes(textFilter) || id.toLowerCase().includes(textFilter);
+        }
         return true;
       });
 
@@ -1855,7 +2223,7 @@
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
             <div>${allTasks.length === 0 ? 'No running tasks found.' : 'No tasks match your search filter.'}</div>
-            ${allTasks.length > 0 ? '<button class="btn-secondary" onclick="clearSearch()" style="margin-top:6px;">Clear Search & Filter (Esc)</button>' : ''}
+            ${allTasks.length > 0 ? '<button class="btn-secondary" onclick="clearSearch()" style="margin-top:6px;">Clear Search &amp; Filter (Esc)</button>' : ''}
           </div>`;
         return;
       }
@@ -1873,99 +2241,155 @@
         if (sortBy === 'pid') return idA.localeCompare(idB, undefined, { numeric: true });
         return 0;
       });
-      
-      filteredTasks.forEach(task => {
-        const taskId = String(task.id || 'N/A');
-        const taskTitle = String(task.title || 'Untitled Process');
-        const stats = taskStats[taskId] || { mem: '15.0', cpu: '0.5', priority: 'Normal' };
-        
-        const cpuNum = parseFloat(stats.cpu);
-        const memNum = parseFloat(stats.mem);
-        let badgeClass = 'status-active';
-        let badgeText = 'Active';
-        if (cpuNum > 2.0) {
-          badgeClass = 'status-busy';
-          badgeText = '⚡ Busy';
-        } else if (memNum > 30.0) {
-          badgeClass = 'status-heavy';
-          badgeText = '💾 Heavy';
-        }
 
-        const card = document.createElement('div');
-        card.className = 'task-card';
-        card.tabIndex = 0;
-        card.setAttribute('role', 'button');
-        card.setAttribute('aria-label', `${taskTitle}, PID ${taskId}, Memory ${stats.mem} MB, CPU ${stats.cpu}%`);
-        
-        const initial = taskTitle.charAt(0).toUpperCase() || 'P';
+      // Render items (Flat or Tree)
+      if (viewMode === 'tree') {
+        const renderedSet = new Set();
+        const pidMap = new Map(filteredTasks.map(t => [String(t.id), t]));
 
-        card.innerHTML = `
-          <div class="task-left">
-            <div class="task-icon" aria-hidden="true">${escapeHtml(initial)}</div>
-            <div class="task-info">
-              <div class="task-title"></div>
-              <div class="task-meta">
-                <span>PID: ${taskId}</span>
-                <span>Mem: ${stats.mem} MB</span>
-                <span>CPU: ${stats.cpu}%</span>
-                <span class="status-badge ${badgeClass}">${badgeText}</span>
-              </div>
-            </div>
-          </div>
-          <div class="task-right">
-            <button class="btn-secondary btn-inspect" style="padding: 4px 9px; font-size: 11px;">Inspect</button>
-            <select class="priority-select">
-              <option value="Low" ${stats.priority === 'Low' ? 'selected' : ''}>Low</option>
-              <option value="Normal" ${stats.priority === 'Normal' ? 'selected' : ''}>Normal</option>
-              <option value="High" ${stats.priority === 'High' ? 'selected' : ''}>High</option>
-              <option value="Realtime" ${stats.priority === 'Realtime' ? 'selected' : ''}>Realtime</option>
-            </select>
-            <button class="btn-kill">End Task</button>
-          </div>
-        `;
+        filteredTasks.forEach(task => {
+          const taskId = String(task.id);
+          const ppid = String(task.ppid || '0');
+          const hasParent = pidMap.has(ppid) && ppid !== taskId;
 
-        card.querySelector('.task-title').textContent = taskTitle;
-        const btnInspect = card.querySelector('.btn-inspect');
-        btnInspect.setAttribute('aria-label', `Inspect task ${taskTitle}`);
-        btnInspect.onclick = () => openInspectModal(taskId, taskTitle);
+          if (!hasParent && !renderedSet.has(taskId)) {
+            renderedSet.add(taskId);
+            createTaskCardElement(task, false, list);
 
-        const priSel = card.querySelector('.priority-select');
-        priSel.setAttribute('aria-label', `Adjust process priority for ${taskTitle}`);
-        priSel.onchange = (e) => changePriority(taskId, e.target.value);
-
-        const btnKill = card.querySelector('.btn-kill');
-        btnKill.setAttribute('aria-label', `End task ${taskTitle} with PID ${taskId}`);
-        btnKill.onclick = () => promptKillTask(taskId, taskTitle);
-
-        if (selectedTaskId === taskId) {
-          card.classList.add('selected');
-        }
-
-        card.dataset.taskId = taskId;
-        card.dataset.taskTitle = taskTitle;
-
-        card.addEventListener('click', (e) => {
-          if (e.target.closest('button') || e.target.closest('select')) return;
-          selectedTaskId = taskId;
-          document.querySelectorAll('.task-card').forEach(c => c.classList.remove('selected'));
-          card.classList.add('selected');
-        });
-
-        card.addEventListener('keydown', (e) => {
-          if (e.target.closest('button') || e.target.closest('select')) return;
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            openInspectModal(taskId, taskTitle);
+            // Render children of this root
+            filteredTasks.forEach(child => {
+              if (String(child.ppid) === taskId && !renderedSet.has(String(child.id))) {
+                renderedSet.add(String(child.id));
+                createTaskCardElement(child, true, list);
+              }
+            });
           }
         });
 
-        card.addEventListener('dblclick', (e) => {
-          if (e.target.closest('button') || e.target.closest('select')) return;
-          openInspectModal(taskId, taskTitle);
+        // Any remaining tasks
+        filteredTasks.forEach(task => {
+          if (!renderedSet.has(String(task.id))) {
+            renderedSet.add(String(task.id));
+            createTaskCardElement(task, false, list);
+          }
         });
+      } else {
+        filteredTasks.forEach(task => {
+          createTaskCardElement(task, false, list);
+        });
+      }
+    }
 
-        list.appendChild(card);
+    function createTaskCardElement(task, isTreeChild, container) {
+      const taskId = String(task.id || 'N/A');
+      const ppid = String(task.ppid || '0');
+      const taskTitle = String(task.title || 'Untitled Process');
+      const stats = taskStats[taskId] || { mem: '15.0', cpu: '0.5', priority: 'Normal', affinity: '0xFF' };
+      
+      const cpuNum = parseFloat(stats.cpu);
+      const memNum = parseFloat(stats.mem);
+      let badgeClass = 'status-active';
+      let badgeText = 'Active';
+      if (cpuNum > 2.0) {
+        badgeClass = 'status-busy';
+        badgeText = '⚡ Busy';
+      } else if (memNum > 30.0) {
+        badgeClass = 'status-heavy';
+        badgeText = '💾 Heavy';
+      }
+
+      const cpuColor = cpuNum > 5.0 ? 'var(--purple)' : (cpuNum > 2.0 ? 'var(--warning)' : 'var(--success)');
+      const cpuBarWidth = Math.min(100, Math.round(cpuNum * 12));
+      const memBarWidth = Math.min(100, Math.round((memNum / 60) * 100));
+
+      const card = document.createElement('div');
+      card.className = 'task-card' + (isTreeChild ? ' tree-child' : '');
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', `${taskTitle}, PID ${taskId}, Memory ${stats.mem} MB, CPU ${stats.cpu}%`);
+      
+      const initial = taskTitle.charAt(0).toUpperCase() || 'P';
+
+      card.innerHTML = `
+        <div class="task-left">
+          ${isTreeChild ? '<span class="tree-glyph" aria-hidden="true">└──</span>' : ''}
+          <div class="task-icon" aria-hidden="true">${escapeHtml(initial)}</div>
+          <div class="task-info">
+            <div class="task-title">
+              <span>${escapeHtml(taskTitle)}</span>
+              ${isTreeChild ? `<span class="status-badge" style="background:rgba(56,189,248,0.1); color:var(--primary); font-size:9px;">PPID: ${escapeHtml(ppid)}</span>` : ''}
+            </div>
+            <div class="task-meta">
+              <span>PID: ${escapeHtml(taskId)}</span>
+              <span>
+                Mem: ${escapeHtml(stats.mem)} MB
+                <span class="task-mini-meter"><span class="mini-bar" style="width:${memBarWidth}%; background:var(--purple);"></span></span>
+              </span>
+              <span>
+                CPU: ${escapeHtml(stats.cpu)}%
+                <span class="task-mini-meter"><span class="mini-bar" style="width:${cpuBarWidth}%; background:${cpuColor};"></span></span>
+              </span>
+              <span class="status-badge" style="background:rgba(56,189,248,0.12); color:var(--primary); font-size:9px;">Core: ${escapeHtml(stats.affinity || '0xFF')}</span>
+              <span class="status-badge ${badgeClass}">${badgeText}</span>
+            </div>
+          </div>
+        </div>
+        <div class="task-right">
+          <button class="btn-secondary btn-inspect" style="padding: 4px 9px; font-size: 11px;">Inspect</button>
+          <button class="btn-secondary btn-affinity" style="padding: 4px 8px; font-size: 11px;" title="Cycle CPU Affinity [A]">Affinity</button>
+          <select class="priority-select">
+            <option value="Low" ${stats.priority === 'Low' ? 'selected' : ''}>Low</option>
+            <option value="Normal" ${stats.priority === 'Normal' ? 'selected' : ''}>Normal</option>
+            <option value="High" ${stats.priority === 'High' ? 'selected' : ''}>High</option>
+            <option value="Realtime" ${stats.priority === 'Realtime' ? 'selected' : ''}>Realtime</option>
+          </select>
+          <button class="btn-kill">End Task</button>
+        </div>
+      `;
+
+      const btnInspect = card.querySelector('.btn-inspect');
+      btnInspect.setAttribute('aria-label', `Inspect task ${taskTitle}`);
+      btnInspect.onclick = () => openInspectModal(taskId, taskTitle);
+
+      const btnAffinity = card.querySelector('.btn-affinity');
+      btnAffinity.onclick = () => cycleAffinity(taskId);
+
+      const priSel = card.querySelector('.priority-select');
+      priSel.setAttribute('aria-label', `Adjust process priority for ${taskTitle}`);
+      priSel.onchange = (e) => changePriority(taskId, e.target.value);
+
+      const btnKill = card.querySelector('.btn-kill');
+      btnKill.setAttribute('aria-label', `End task ${taskTitle} with PID ${taskId}`);
+      btnKill.onclick = () => promptKillTask(taskId, taskTitle);
+
+      if (selectedTaskId === taskId) {
+        card.classList.add('selected');
+      }
+
+      card.dataset.taskId = taskId;
+      card.dataset.taskTitle = taskTitle;
+
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('button') || e.target.closest('select')) return;
+        selectedTaskId = taskId;
+        document.querySelectorAll('.task-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
       });
+
+      card.addEventListener('keydown', (e) => {
+        if (e.target.closest('button') || e.target.closest('select')) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openInspectModal(taskId, taskTitle);
+        }
+      });
+
+      card.addEventListener('dblclick', (e) => {
+        if (e.target.closest('button') || e.target.closest('select')) return;
+        openInspectModal(taskId, taskTitle);
+      });
+
+      container.appendChild(card);
     }
 
     function selectAdjacentTask(direction) {
@@ -1992,7 +2416,7 @@
     function updateSummaryMetrics() {
       let totalThreads = 0;
       let totalHandles = allTasks.length * 14 + 120;
-      allTasks.forEach(t => {
+      allTasks.forEach(() => {
         totalThreads += Math.floor(Math.random() * 4) + 2;
       });
       
@@ -2172,6 +2596,7 @@
     let currentInspectPid = null;
     let currentInspectTitle = '';
     let activeInspectTab = 'threads';
+    let currentHexDumpText = '';
 
     function openInspectModal(taskId, taskTitle) {
       currentInspectPid = taskId;
@@ -2265,31 +2690,161 @@
       }
 
       // 4. Memory Hex Dump Peek
+      updateHexDumpView();
+
+      // 5. Environment & Executable Information
+      const envPath = document.getElementById('env-exec-path');
+      const envCmd = document.getElementById('env-cmdline');
+      if (envPath) envPath.textContent = `C:\\KiloApps\\${title.toLowerCase().replace(/\s+/g, '_')}.exe`;
+      if (envCmd) envCmd.textContent = `"${title.toLowerCase().replace(/\s+/g, '_')}.exe" --session=402 --kilo-mode=user --pid=${pid}`;
+
+      // 6. CPU Affinity Matrix
+      renderAffinityMatrix(pid);
+    }
+
+    function updateHexDumpView() {
       const hexDumpEl = document.getElementById('inspect-hex-dump');
-      if (hexDumpEl) {
-        let dumpText = '';
-        const baseAddr = 0x00400000;
-        const sampleBytes = [
+      const segSelect = document.getElementById('hexSegmentSelect');
+      const seg = segSelect ? segSelect.value : 'pe';
+
+      let baseAddr = 0x00400000;
+      let sampleBytes = [];
+
+      if (seg === 'pe') {
+        baseAddr = 0x00400000;
+        sampleBytes = [
           0x4D, 0x5A, 0x90, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00,
           0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
           0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
           0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00,
           0x0E, 0x1F, 0xBA, 0x0E, 0x00, 0xB4, 0x09, 0xCD, 0x21, 0xB8, 0x01, 0x4C, 0xCD, 0x21, 0x54, 0x68
         ];
-
-        for (let line = 0; line < 5; line++) {
-          const addrHex = (baseAddr + line * 16).toString(16).padStart(8, '0').toUpperCase();
-          let lineHex = '';
-          let ascii = '';
-          for (let i = 0; i < 16; i++) {
-            const byte = sampleBytes[line * 16 + i] || 0;
-            lineHex += byte.toString(16).padStart(2, '0').toUpperCase() + ' ';
-            ascii += (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : '.';
-          }
-          dumpText += `${addrHex} | ${lineHex.slice(0,24)} | ${lineHex.slice(24)}| ${ascii}\n`;
-        }
-        hexDumpEl.textContent = dumpText;
+      } else if (seg === 'text') {
+        baseAddr = 0x00410000;
+        sampleBytes = [
+          0x55, 0x89, 0xE5, 0x83, 0xEC, 0x18, 0x89, 0x5D, 0xF4, 0x89, 0x75, 0xF8, 0x89, 0x7D, 0xFC, 0x8B,
+          0x45, 0x08, 0x8B, 0x4D, 0x0C, 0x8B, 0x55, 0x10, 0xE8, 0x42, 0x0F, 0x00, 0x00, 0x85, 0xC0, 0x74,
+          0x12, 0xC7, 0x04, 0x24, 0x00, 0x00, 0x00, 0x00, 0xE8, 0x78, 0x04, 0x00, 0x00, 0x83, 0xC4, 0x18,
+          0x5D, 0xC3, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
+          0x55, 0x89, 0xE5, 0x53, 0x57, 0x56, 0x83, 0xEC, 0x2C, 0x8B, 0x75, 0x08, 0x85, 0xF6, 0x74, 0x38
+        ];
+      } else if (seg === 'data') {
+        baseAddr = 0x00490000;
+        sampleBytes = [
+          0x4B, 0x69, 0x6C, 0x6F, 0x4F, 0x53, 0x00, 0x00, 0x52, 0x65, 0x61, 0x64, 0x79, 0x00, 0x00, 0x00,
+          0x01, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x4B, 0x54, 0x61, 0x73, 0x6B, 0x00, 0x00, 0x00,
+          0x73, 0x79, 0x73, 0x74, 0x65, 0x6D, 0x2E, 0x6C, 0x6F, 0x67, 0x00, 0x00, 0x31, 0x32, 0x37, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x10, 0x27, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF,
+          0x41, 0x70, 0x70, 0x6C, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6F, 0x6E, 0x20, 0x44, 0x61, 0x74, 0x61
+        ];
+      } else {
+        baseAddr = 0x004B0000;
+        sampleBytes = [
+          0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+          0x68, 0x65, 0x61, 0x70, 0x5F, 0x61, 0x6C, 0x6C, 0x6F, 0x63, 0x00, 0x00, 0x48, 0x45, 0x41, 0x50,
+          0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xCA, 0xFE, 0xBA, 0xBE,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x74, 0x68, 0x72, 0x65, 0x61, 0x64, 0x5F, 0x63, 0x74, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        ];
       }
+
+      let dumpText = '';
+      for (let line = 0; line < 5; line++) {
+        const addrHex = (baseAddr + line * 16).toString(16).padStart(8, '0').toUpperCase();
+        let lineHex = '';
+        let ascii = '';
+        for (let i = 0; i < 16; i++) {
+          const byte = sampleBytes[line * 16 + i] || 0;
+          lineHex += byte.toString(16).padStart(2, '0').toUpperCase() + ' ';
+          ascii += (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : '.';
+        }
+        dumpText += `${addrHex} | ${lineHex.slice(0,24)} | ${lineHex.slice(24)}| ${ascii}\n`;
+      }
+      currentHexDumpText = dumpText;
+      if (hexDumpEl) hexDumpEl.textContent = dumpText;
+    }
+
+    function searchHexDump() {
+      const input = document.getElementById('hexSearchInput');
+      const query = (input ? input.value : '').trim();
+      const hexDumpEl = document.getElementById('inspect-hex-dump');
+      if (!hexDumpEl || !currentHexDumpText) return;
+
+      if (!query) {
+        hexDumpEl.textContent = currentHexDumpText;
+        return;
+      }
+
+      if (currentHexDumpText.toLowerCase().includes(query.toLowerCase())) {
+        showToast(`Pattern "${query}" matched in memory segment.`);
+      } else {
+        showToast(`Pattern "${query}" not found in current 80-byte memory window.`);
+      }
+    }
+
+    function renderAffinityMatrix(pid) {
+      const grid = document.getElementById('affinityGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      const stats = taskStats[pid] || { affinity: '0xFF' };
+      const currentMask = parseInt(stats.affinity || '0xFF', 16);
+
+      let activeCount = 0;
+      for (let core = 0; core < 8; core++) {
+        const isSet = (currentMask & (1 << core)) !== 0;
+        if (isSet) activeCount++;
+
+        const card = document.createElement('div');
+        card.className = 'affinity-card' + (isSet ? ' active' : '');
+        card.innerHTML = `
+          <input type="checkbox" ${isSet ? 'checked' : ''} style="cursor:pointer;">
+          <div>
+            <div style="font-weight:700; font-size:12px;">Core ${core}</div>
+            <div style="font-size:10px; color:var(--text-muted);">${core < 4 ? 'P-Core' : 'E-Core'}</div>
+          </div>
+        `;
+
+        card.onclick = (e) => {
+          if (e.target.tagName !== 'INPUT') {
+            const cb = card.querySelector('input');
+            cb.checked = !cb.checked;
+          }
+          const newMask = currentMask ^ (1 << core);
+          if (newMask !== 0) {
+            stats.affinity = '0x' + newMask.toString(16).toUpperCase().padStart(2, '0');
+            renderAffinityMatrix(pid);
+            renderTasks();
+          } else {
+            showToast('Process must be assigned to at least 1 CPU core.');
+          }
+        };
+
+        grid.appendChild(card);
+      }
+
+      const hexEl = document.getElementById('affinity-mask-hex');
+      const binEl = document.getElementById('affinity-mask-bin');
+      const countEl = document.getElementById('affinity-active-count');
+
+      if (hexEl) hexEl.textContent = '0x' + currentMask.toString(16).toUpperCase().padStart(2, '0');
+      if (binEl) binEl.textContent = '(' + currentMask.toString(2).padStart(8, '0') + ')';
+      if (countEl) countEl.textContent = `${activeCount} Cores Active`;
+    }
+
+    function setAffinityPreset(preset) {
+      if (!currentInspectPid) return;
+      const stats = taskStats[currentInspectPid];
+      if (!stats) return;
+
+      if (preset === 'all') stats.affinity = '0xFF';
+      else if (preset === 'core0') stats.affinity = '0x01';
+      else if (preset === 'perf') stats.affinity = '0x0F';
+      else if (preset === 'eff') stats.affinity = '0xF0';
+
+      renderAffinityMatrix(currentInspectPid);
+      renderTasks();
+      showToast(`Affinity preset "${preset}" applied to PID ${currentInspectPid}`);
     }
 
     function fallbackCopyText(text) {
@@ -2312,9 +2867,11 @@
 
     function exportInspectReport() {
       if (!currentInspectPid) return;
+      const stats = taskStats[currentInspectPid] || {};
       const report = `===================================================================\n` +
         `KTASK PROCESS INSPECTION REPORT: ${currentInspectTitle} (PID: ${currentInspectPid})\n` +
         `Timestamp: ${new Date().toISOString()}\n` +
+        `CPU Affinity: ${stats.affinity || '0xFF'} | Priority: ${stats.priority || 'Normal'}\n` +
         `===================================================================\n\n` +
         `[THREADS]\nActive Threads: 3\nTID: ${currentInspectPid}101 | Priority: Normal | State: Running\n\n` +
         `[MODULES]\n0x00400000 - 1,024 KB - ${currentInspectTitle}\n0x7FF8A100 - 2,048 KB - ntdll.dll\n0x7FF8A240 - 768 KB - kernel32.dll\n\n` +
@@ -2358,22 +2915,10 @@
       const confirmActive = document.getElementById('confirmModal')?.classList.contains('active');
 
       if (e.key === 'Escape') {
-        if (tutorialActive) {
-          closeTutorialModal();
-          return;
-        }
-        if (helpActive) {
-          closeHelpModal();
-          return;
-        }
-        if (inspectActive) {
-          closeInspectModal();
-          return;
-        }
-        if (confirmActive) {
-          closeKillModal();
-          return;
-        }
+        if (tutorialActive) { closeTutorialModal(); return; }
+        if (helpActive) { closeHelpModal(); return; }
+        if (inspectActive) { closeInspectModal(); return; }
+        if (confirmActive) { closeKillModal(); return; }
         const search = document.getElementById('searchInput');
         if (search && search.value) {
           search.value = '';
@@ -2393,9 +2938,11 @@
           else if (e.key === '2') { e.preventDefault(); switchInspectTab('modules'); }
           else if (e.key === '3') { e.preventDefault(); switchInspectTab('memory'); }
           else if (e.key === '4') { e.preventDefault(); switchInspectTab('hex'); }
+          else if (e.key === '5') { e.preventDefault(); switchInspectTab('env'); }
+          else if (e.key === '6') { e.preventDefault(); switchInspectTab('affinity'); }
           else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
             e.preventDefault();
-            const itabs = ['threads', 'modules', 'memory', 'hex'];
+            const itabs = ['threads', 'modules', 'memory', 'hex', 'env', 'affinity'];
             let idx = itabs.indexOf(activeInspectTab);
             if (e.key === 'ArrowLeft') idx = (idx - 1 + itabs.length) % itabs.length;
             else idx = (idx + 1) % itabs.length;
@@ -2420,7 +2967,7 @@
         return;
       }
 
-      if (e.altKey) return; // Don't hijack Alt shortcuts
+      if (e.altKey) return;
 
       if (e.key === '1') {
         e.preventDefault();
@@ -2437,6 +2984,17 @@
       } else if (e.key === 'F9') {
         e.preventDefault();
         quickLoadState();
+      } else if (e.key === 't' || e.key === 'T') {
+        e.preventDefault();
+        toggleViewMode();
+      } else if (e.key === 'a' || e.key === 'A') {
+        e.preventDefault();
+        if (selectedTaskId) {
+          cycleAffinity(selectedTaskId);
+        }
+      } else if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        exportMarkdownAudit();
       } else if (e.key === 'r' || e.key === 'R') {
         e.preventDefault();
         refresh();
@@ -2561,7 +3119,7 @@
     if (!safeGetStorage('ktask_tutorialSeen')) {
       setTimeout(openTutorialModal, 400);
     } else {
-      setTimeout(() => showToast('Ready. Press "H" or F1 for help & shortcuts'), 1000);
+      setTimeout(() => showToast('Ready. Press "H" or F1 for help &amp; shortcuts'), 1000);
     }
   </script>
 </body>
