@@ -127,7 +127,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMine
 - KMandel
 - KVoid
-- KStarship
 - KConnect4
 - KHangman
 - KMech
@@ -163,6 +162,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KPong
 - KMines
 - KAsteroids
+- KStarship
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
 
@@ -184,6 +184,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KFortress (L7): Procedural tower sprites, animated enemy sprites (9 types), knight/militia.
 - KColony (L7): Xeno-caste sprites (3 types), repair drones, logistics rovers.
 - KColosseum (L2): Balteus belt, Manica/Galerus armor, weapon arcs, lion claws, defeat collapse.
+- KStarship (L2): Procedural tactical sprites for 10 encounter types, Gas Giant rings, sub-scanner indicators, shipyard module synthesis, and 5 planet biomes.
 
 **Loop 1 (initial sprite passes):**
 - KCosmic (L1): Fleet ships, shipyard station, planetary sprites.
@@ -191,7 +192,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KStarDredge (L1): Salvage barge, asteroids, raider warships.
 - KSubmarine (L1): Bathyscaphe, abyssal creatures (4 types).
 - KSanctuary (L1): Cross-section cutaway, dweller portraits, facility icons.
-- KMystery (L1), KWizard (L1), KMech (L1), KStarship (L1), KVoid (L1), KStellar (L1): Initial sprites.
+- KMystery (L1), KWizard (L1), KMech (L1), KVoid (L1), KStellar (L1): Initial sprites.
 
 **Classic games (Loop 8 — all similar: particles, shockwaves, filigree):**
 - K2048, KAsteroids, KMines, KWords, KTowers, KGo, KSudoku, KFreecell, KMatch3, KHangman, KConnect4, KSimon, KDarts, KSolitaire, KReversi: All at Loop 8 with themed particle engines.
