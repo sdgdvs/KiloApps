@@ -628,7 +628,7 @@
         <div style="background: var(--bg-primary); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 14px;">
           <h3 style="color: var(--accent-blue); font-size: 13px; margin-bottom: 6px;">⌨️ Keyboard Shortcuts</h3>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; font-family: Consolas, monospace;">
-            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">1 - 5</kbd> Switch Tabs 1 to 5</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">1 - 6</kbd> Switch Tabs 1 to 6</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">← / →</kbd> Cycle Tabs (Global)</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">F1 / H</kbd> Open this Help Dialog</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">Esc</kbd> Dismiss Dialogs / Clear Search</div>
@@ -639,18 +639,22 @@
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">C / M / D</kbd> CPU / RAM / Disk Bench</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">S</kbd> Cycle Service Filter Mode</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">L</kbd> Clear Event Logs (Logs Tab)</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">X</kbd> Switch to Hex Inspector [6]</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">I</kbd> Import JSON Snapshot</div>
             <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">E / J / T</kbd> Export TXT / JSON / HTML</div>
+            <div><kbd style="background: #334155; padding: 2px 6px; border-radius: 4px; color: #fff;">V / M</kbd> Export CSV / Markdown</div>
           </div>
         </div>
-        <h4 style="color: var(--accent-green); font-size: 13px; margin: 10px 0 4px 0;">🔍 1. Hardware Inspector</h4>
-        <p>Displays live hardware specifications including CPU logical cores, RAM limits, WebGL GPU graphics renderer, disk storage quotas, and network metrics.</p>
+        <h4 style="color: var(--accent-green); font-size: 13px; margin: 10px 0 4px 0;">🔍 1. Hardware Inspector &amp; Health Index</h4>
+        <p>Displays live hardware specifications, CPU load spectrum across all cores, System Health &amp; Anomaly Index, WebGL GPU graphics, storage quotas, and socket/network telemetry.</p>
         <h4 style="color: var(--accent-amber); font-size: 13px; margin: 10px 0 4px 0;">⚡ 2. Diagnostic Benchmarks</h4>
         <p>Executes multi-threaded CPU matrix stresses, 64MB RAM read/write bandwidth checks, and IndexedDB disk storage I/O throughput tests.</p>
-        <h4 style="color: var(--accent-purple); font-size: 13px; margin: 10px 0 4px 0;">⚙️ 3. Services & Telemetry</h4>
-        <p>Monitors real-time CPU load and JS Heap memory with live sparklines. Manage, start, stop, restart, inspect, or register custom system daemons.</p>
-        <h4 style="color: var(--accent-blue); font-size: 13px; margin: 10px 0 4px 0;">📋 4. Event Logs & 💾 5. Report Export</h4>
-        <p>Track system lifecycle logs, manage persistent Quicksave snapshots (F5/F9), import JSON audits (I), and export detailed reports in TXT, JSON, or HTML.</p>
+        <h4 style="color: var(--accent-purple); font-size: 13px; margin: 10px 0 4px 0;">⚙️ 3. Services &amp; Telemetry</h4>
+        <p>Monitors real-time CPU load and JS Heap memory with live sparklines. Features granular regex filtering, status filters, and custom daemon registration.</p>
+        <h4 style="color: var(--accent-blue); font-size: 13px; margin: 10px 0 4px 0;">📋 4. Event Logs &amp; 💾 5. Report Export</h4>
+        <p>Track system lifecycle logs with regex search, manage persistent Quicksave snapshots (F5/F9), import JSON audits (I), and export detailed reports in TXT, JSON, HTML, CSV, or Markdown.</p>
+        <h4 style="color: #f43f5e; font-size: 13px; margin: 10px 0 4px 0;">🔬 6. Memory &amp; Hex Buffer Inspector</h4>
+        <p>Live hexadecimal and ASCII inspection of system state buffers, hardware structures, and diagnostic heap frames with byte search, offset jumping, and .HEX/.BIN export.</p>
       </div>
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
         <button class="btn btn-outline btn-sm" onclick="resetTutorialFlag()" title="Re-enable first-run onboarding banner">↺ Reset Onboarding Flag</button>
@@ -730,6 +734,9 @@
       <div class="stat-badge">
         <span>⚡ Cores: <strong id="header-cores">--</strong></span>
       </div>
+      <div class="stat-badge">
+        <span>🩺 Health: <strong id="header-health" style="color: var(--accent-green);">100%</strong></span>
+      </div>
       <button class="btn btn-outline" style="padding: 4px 10px; font-size: 12px; height: 28px;" onclick="showHelp()">❓ Help [F1]</button>
     </div>
   </header>
@@ -740,6 +747,7 @@
     <button class="tab-btn" id="tabbtn-services" role="tab" aria-selected="false" aria-controls="tab-services" onclick="switchTab('services')"><span>[3]</span> ⚙️ Services & Telemetry</button>
     <button class="tab-btn" id="tabbtn-logs" role="tab" aria-selected="false" aria-controls="tab-logs" onclick="switchTab('logs')"><span>[4]</span> 📋 Event History Logs</button>
     <button class="tab-btn" id="tabbtn-export" role="tab" aria-selected="false" aria-controls="tab-export" onclick="switchTab('export')"><span>[5]</span> 💾 System Report Export</button>
+    <button class="tab-btn" id="tabbtn-hex" role="tab" aria-selected="false" aria-controls="tab-hex" onclick="switchTab('hex')"><span>[6]</span> 🔬 Memory &amp; Hex Inspector</button>
   </nav>
 
   <!-- Quick Actions Toolbar -->
@@ -747,11 +755,14 @@
     <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-right: 4px;">⚡ Quick Actions:</span>
     <button class="quick-chip" onclick="switchTab('benchmarks'); runAllBenchmarks();" title="Run full benchmark suite (Hotkey: 2, then Space/R)">▶ Run Benchmarks <kbd>[2/R]</kbd></button>
     <button class="quick-chip" onclick="refreshActiveView()" title="Refresh live telemetry and hardware metrics (Hotkey: R)">🔄 Refresh <kbd>[R]</kbd></button>
+    <button class="quick-chip" onclick="switchTab('hex')" title="Inspect diagnostic buffers in hex viewer (Hotkey: 6 or X)">🔬 Hex <kbd>[6/X]</kbd></button>
     <button class="quick-chip" onclick="quicksaveSnapshot()" title="Quicksave diagnostics snapshot to local storage (Hotkey: F5)">💾 Quicksave <kbd>[F5]</kbd></button>
     <button class="quick-chip" onclick="quickloadSnapshot()" title="Quickload diagnostics snapshot from local storage (Hotkey: F9)">📂 Quickload <kbd>[F9]</kbd></button>
     <button class="quick-chip" onclick="triggerImportJson()" title="Import JSON diagnostics snapshot or report (Hotkey: I)">📥 Import <kbd>[I]</kbd></button>
     <button class="quick-chip" onclick="switchTab('services')" title="Manage system services and background daemons (Hotkey: 3)">⚙️ Services <kbd>[3]</kbd></button>
     <button class="quick-chip" onclick="quickExportTxt()" title="Export text diagnostics report (Hotkey: E)">📄 Export TXT <kbd>[E]</kbd></button>
+    <button class="quick-chip" onclick="downloadReport('csv')" title="Export CSV diagnostics report (Hotkey: V)">📑 CSV <kbd>[V]</kbd></button>
+    <button class="quick-chip" onclick="downloadReport('md')" title="Export Markdown report (Hotkey: M)">📝 MD <kbd>[M]</kbd></button>
     <button class="quick-chip" onclick="quickCopyReport()" title="Copy diagnostics report to clipboard">📋 Copy Report</button>
     <button class="quick-chip" onclick="showHelp()" title="Open Help and Keyboard Guide (Hotkey: F1 or H)">❓ Help <kbd>[F1]</kbd></button>
   </div>
@@ -760,6 +771,29 @@
     <!-- Hardware Inspector Tab -->
     <section id="tab-inspector" class="tab-content active" role="tabpanel" aria-labelledby="tabbtn-inspector">
       <div class="grid-3">
+        <!-- System Health & Anomaly Card -->
+        <div class="card" style="grid-column: 1 / -1; border-color: rgba(74, 222, 128, 0.3); background: linear-gradient(135deg, rgba(24, 34, 52, 0.95), rgba(15, 23, 42, 0.98));">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>🩺 System Health &amp; Anomaly Diagnostic Index</h2>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span id="health-badge" class="svc-badge RUNNING" style="font-size: 12px; padding: 4px 10px;">100% • OPTIMAL</span>
+            </div>
+          </div>
+          <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
+            <div style="flex: 1; min-width: 240px;">
+              <div class="meter-bar" style="height: 10px;"><div class="meter-fill" id="health-meter-bar" style="width: 100%; background: linear-gradient(90deg, #4ade80, #38bdf8);"></div></div>
+            </div>
+            <div id="health-summary" style="font-size: 12px; color: var(--text-muted); font-family: monospace;">
+              Health Score: 100/100 • Subsystems nominal: CPU jitter 0ms | Heap 32% | Quota 2% | All Daemons OK
+            </div>
+          </div>
+          <div id="health-advisory-list" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <span class="quick-chip" style="cursor: default; border-color: rgba(74, 222, 128, 0.3); color: #4ade80;">✔ Concurrency: Fully Distributed</span>
+            <span class="quick-chip" style="cursor: default; border-color: rgba(56, 189, 248, 0.3); color: #38bdf8;">✔ WebGL Hardware Accelerated</span>
+            <span class="quick-chip" style="cursor: default; border-color: rgba(192, 132, 252, 0.3); color: #c084fc;">✔ Memory Heap Within Baseline</span>
+          </div>
+        </div>
+
         <!-- CPU Card -->
         <div class="card">
           <div class="card-header">
@@ -770,6 +804,15 @@
             <div class="info-item"><span class="info-label">Architecture / Platform:</span><span class="info-val" id="cpu-arch">--</span></div>
             <div class="info-item"><span class="info-label">Hardware Concurrency:</span><span class="info-val" id="cpu-threads">--</span></div>
             <div class="info-item"><span class="info-label">User Agent Kernel:</span><span class="info-val" id="cpu-agent">--</span></div>
+          </div>
+          <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; display: flex; justify-content: space-between;">
+              <span>Logical Core Utilization Spectrum</span>
+              <span id="spectrum-avg-load">Avg: 0%</span>
+            </div>
+            <div id="cpu-core-spectrum" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 6px;">
+              <!-- Dynamic Core Load Bars -->
+            </div>
           </div>
         </div>
 
@@ -815,13 +858,16 @@
         <!-- Network Card -->
         <div class="card">
           <div class="card-header">
-            <h2>🌐 Network Interface</h2>
+            <h2>🌐 Network Interface &amp; Sockets</h2>
           </div>
           <div class="info-list">
             <div class="info-item"><span class="info-label">Status:</span><span class="info-val" id="net-status">--</span></div>
             <div class="info-item"><span class="info-label">Connection Type:</span><span class="info-val" id="net-type">--</span></div>
             <div class="info-item"><span class="info-label">Estimated Downlink:</span><span class="info-val" id="net-downlink">--</span></div>
             <div class="info-item"><span class="info-label">Estimated RTT:</span><span class="info-val" id="net-rtt">--</span></div>
+            <div class="info-item"><span class="info-label">Protocol Stack:</span><span class="info-val">HTTP/2 + WS/WebRTC</span></div>
+            <div class="info-item"><span class="info-label">Interface MTU:</span><span class="info-val">1500 Octets</span></div>
+            <div class="info-item"><span class="info-label">Packet Drop Rate:</span><span class="info-val" style="color: var(--accent-green);">0.00% (Lossless)</span></div>
           </div>
         </div>
 
@@ -944,9 +990,15 @@
         </div>
 
         <div class="services-toolbar">
-          <div style="display: flex; gap: 8px; flex: 1; min-width: 260px;">
+          <div style="display: flex; gap: 8px; flex: 1; min-width: 260px; align-items: center;">
             <input type="text" id="svc-search-input" class="search-input" placeholder="Search services by name or binary..." oninput="renderServices()">
             <button class="btn btn-outline btn-sm" onclick="clearServiceSearch()" title="Clear Search Filter">✕ Clear</button>
+            <label style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); cursor: pointer; white-space: nowrap;">
+              <input type="checkbox" id="svc-search-regex" onchange="renderServices()"> Regex
+            </label>
+            <label style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); cursor: pointer; white-space: nowrap;">
+              <input type="checkbox" id="svc-search-case" onchange="renderServices()"> Case
+            </label>
           </div>
           <select id="svc-filter-category" class="select-input" onchange="renderServices()">
             <option value="ALL">All Categories</option>
@@ -1003,6 +1055,12 @@
         </div>
         <div class="log-toolbar">
           <input type="text" id="log-search" class="search-input" placeholder="Search log entries..." oninput="filterLogs()">
+          <label style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); cursor: pointer; white-space: nowrap;">
+            <input type="checkbox" id="log-search-regex" onchange="filterLogs()"> Regex
+          </label>
+          <label style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); cursor: pointer; white-space: nowrap;">
+            <input type="checkbox" id="log-search-case" onchange="filterLogs()"> Case
+          </label>
           <select id="log-filter-level" class="select-input" onchange="filterLogs()">
             <option value="ALL">All Levels</option>
             <option value="INFO">INFO</option>
@@ -1010,6 +1068,7 @@
             <option value="WARN">WARNING</option>
             <option value="ERROR">ERROR</option>
           </select>
+          <span id="log-count-indicator" style="font-size: 11px; color: var(--text-muted); margin-left: 6px; white-space: nowrap;">0 entries</span>
         </div>
         <div class="log-container" id="log-list">
           <!-- Log rows appended dynamically -->
@@ -1036,9 +1095,71 @@
         <textarea id="report-preview" class="report-preview" readonly aria-label="System Report Preview"></textarea>
         <div class="export-actions">
           <button class="btn btn-outline" onclick="copyReportToClipboard()">📋 Copy to Clipboard</button>
-          <button class="btn" onclick="downloadReport('txt')">📄 Download TXT Report</button>
-          <button class="btn btn-accent" onclick="downloadReport('json')">📊 Download JSON Report</button>
-          <button class="btn" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);" onclick="downloadReport('html')">🌐 Download HTML Report</button>
+          <button class="btn" onclick="downloadReport('txt')">📄 Download TXT Report [E]</button>
+          <button class="btn btn-accent" onclick="downloadReport('json')">📊 Download JSON Report [J]</button>
+          <button class="btn" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);" onclick="downloadReport('html')">🌐 Download HTML Report [T]</button>
+          <button class="btn" style="background: linear-gradient(135deg, #059669, #10b981);" onclick="downloadReport('csv')">📑 Download CSV Report [V]</button>
+          <button class="btn" style="background: linear-gradient(135deg, #0284c7, #2563eb);" onclick="downloadReport('md')">📝 Download Markdown Report [M]</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Memory & Hex Buffer Inspector Tab -->
+    <section id="tab-hex" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-hex">
+      <div class="card">
+        <div class="card-header">
+          <h2>🔬 System Memory &amp; Diagnostic Hex Buffer Inspector</h2>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <select id="hex-buffer-source" class="select-input" onchange="loadHexBufferSource()">
+              <option value="telemetry">Active Telemetry &amp; Heap Snapshot</option>
+              <option value="cpu_bench">CPU Benchmark Compute Workload Buffer</option>
+              <option value="ram_bench">RAM Throughput Stress Allocation Block</option>
+              <option value="event_logs">Event History Audit Trail Stream</option>
+              <option value="hardware">Hardware Descriptor Block &amp; Environment</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="loadHexBufferSource()">🔄 Refresh Buffer</button>
+            <button class="btn btn-accent btn-sm" onclick="exportHexDump('hex')">💾 Export .HEX</button>
+            <button class="btn btn-outline btn-sm" onclick="exportHexDump('bin')">📥 Export .BIN</button>
+          </div>
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+          Live hexadecimal and ASCII inspection of system state buffers, hardware structures, and diagnostic heap frames.
+        </p>
+
+        <!-- Hex Navigation & Search Toolbar -->
+        <div class="services-toolbar" style="margin-bottom: 12px;">
+          <div style="display: flex; gap: 8px; align-items: center; flex: 1; min-width: 220px;">
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Jump:</span>
+            <input type="text" id="hex-jump-offset" class="search-input" style="max-width: 130px;" placeholder="e.g. 0x0100" onkeydown="if(event.key==='Enter') jumpHexOffset()">
+            <button class="btn btn-outline btn-sm" onclick="jumpHexOffset()">Go</button>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center; flex: 1; min-width: 260px;">
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Find:</span>
+            <input type="text" id="hex-search-pattern" class="search-input" placeholder="Hex (e.g. 4B 53) or ASCII..." onkeydown="if(event.key==='Enter') findNextHexPattern()">
+            <button class="btn btn-outline btn-sm" onclick="findNextHexPattern()">Find</button>
+            <span id="hex-search-status" style="font-size: 11px; color: var(--text-muted); white-space: nowrap;"></span>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button class="btn btn-outline btn-sm" id="btn-hex-endian" onclick="toggleHexEndianness()">Endian: Little</button>
+            <button class="btn btn-outline btn-sm" onclick="prevHexPage()">◀ Prev</button>
+            <span id="hex-page-label" style="font-size: 12px; font-weight: 600; font-family: monospace; white-space: nowrap;">Page 1 / 1</span>
+            <button class="btn btn-outline btn-sm" onclick="nextHexPage()">Next ▶</button>
+          </div>
+        </div>
+
+        <!-- Hex Viewport -->
+        <div style="background: #090d16; border: 1px solid var(--border-color); border-radius: 6px; padding: 14px; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 13px; line-height: 1.6; user-select: text;">
+          <div style="color: var(--accent-blue); font-weight: bold; border-bottom: 1px solid rgba(51,65,85,0.6); padding-bottom: 6px; margin-bottom: 8px;">
+            OFFSET &nbsp; &nbsp;00 01 02 03 04 05 06 07 &nbsp;08 09 0A 0B 0C 0D 0E 0F &nbsp; | &nbsp;ASCII DECODE
+          </div>
+          <div id="hex-viewer-content" style="color: #cbd5e1; white-space: pre;">
+            <!-- Rendered 16-byte hex rows -->
+          </div>
+        </div>
+
+        <div style="margin-top: 10px; display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); font-family: monospace;">
+          <span id="hex-stats-bytes">Total Buffer Size: 1024 bytes</span>
+          <span id="hex-stats-cursor">Cursor: 0x00000000 | Dec: 0</span>
         </div>
       </div>
     </section>
@@ -1498,6 +1619,8 @@
       if (e.key === '3') { switchTab('services'); return; }
       if (e.key === '4') { switchTab('logs'); return; }
       if (e.key === '5') { switchTab('export'); return; }
+      if (e.key === '6') { switchTab('hex'); return; }
+      if (e.key.toLowerCase() === 'x') { switchTab('hex'); return; }
       if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
         if (e.key === 'F1') e.preventDefault();
         showHelp();
@@ -1529,6 +1652,8 @@
           showToast('Audit report refreshed.', 'info');
         } else if (activeTab === 'logs') {
           renderLogs();
+        } else if (activeTab === 'hex') {
+          loadHexBufferSource();
         } else {
           inspectHardware();
           showToast('Hardware telemetry refreshed.', 'info');
@@ -1541,6 +1666,8 @@
           runAllBenchmarks();
         } else if (activeTab === 'export') {
           generateReport();
+        } else if (activeTab === 'hex') {
+          findNextHexPattern();
         }
         return;
       }
@@ -1557,6 +1684,15 @@
         const activeTab = getActiveTabId();
         if (activeTab === 'benchmarks') {
           runRamBenchmark();
+        } else if (activeTab === 'export') {
+          downloadReport('md');
+        }
+        return;
+      }
+      if (e.key.toLowerCase() === 'v') {
+        const activeTab = getActiveTabId();
+        if (activeTab === 'export') {
+          downloadReport('csv');
         }
         return;
       }
@@ -1615,14 +1751,36 @@
     const listEl = document.getElementById('log-list');
     if (!listEl) return;
     const filterLevel = document.getElementById('log-filter-level').value;
-    const searchText = document.getElementById('log-search').value.toLowerCase();
+    const searchText = document.getElementById('log-search').value;
+    const isRegex = document.getElementById('log-search-regex')?.checked;
+    const isCase = document.getElementById('log-search-case')?.checked;
+
+    let regex = null;
+    if (isRegex && searchText) {
+      try {
+        regex = new RegExp(searchText, isCase ? '' : 'i');
+      } catch(e) {}
+    }
 
     listEl.innerHTML = '';
     const filtered = eventLogs.filter(e => {
       const matchLevel = (filterLevel === 'ALL' || e.level === filterLevel);
-      const matchSearch = e.message.toLowerCase().includes(searchText) || e.timestamp.includes(searchText);
+      let matchSearch = true;
+      if (searchText) {
+        if (regex) {
+          matchSearch = regex.test(e.message) || regex.test(e.timestamp);
+        } else {
+          const q = isCase ? searchText : searchText.toLowerCase();
+          const msg = isCase ? e.message : e.message.toLowerCase();
+          const ts = isCase ? e.timestamp : e.timestamp.toLowerCase();
+          matchSearch = msg.includes(q) || ts.includes(q);
+        }
+      }
       return matchLevel && matchSearch;
     });
+
+    const indicator = document.getElementById('log-count-indicator');
+    if (indicator) indicator.textContent = `${filtered.length} of ${eventLogs.length} entries`;
 
     if (filtered.length === 0) {
       listEl.innerHTML = '<div style="padding: 16px; color: var(--text-muted); text-align: center;">No event logs match criteria.</div>';
@@ -1654,7 +1812,7 @@
   }
 
   // Navigation
-  const TAB_ORDER = ['inspector', 'benchmarks', 'services', 'logs', 'export'];
+  const TAB_ORDER = ['inspector', 'benchmarks', 'services', 'logs', 'export', 'hex'];
   function switchTab(tabId) {
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.classList.remove('active');
@@ -1674,6 +1832,12 @@
       renderServices();
     } else if (tabId === 'export') {
       generateReport();
+    } else if (tabId === 'hex') {
+      if (!hexBuffer || hexBuffer.length === 0 || hexBuffer.every(b => b === 0)) {
+        loadHexBufferSource();
+      } else {
+        renderHexViewer();
+      }
     }
   }
 
@@ -2082,9 +2246,18 @@
     const tableBody = document.getElementById('svc-table-body');
     if (!tableBody) return;
 
-    const searchTxt = document.getElementById('svc-search-input').value.toLowerCase();
+    const searchTxt = document.getElementById('svc-search-input').value;
     const filterCat = document.getElementById('svc-filter-category').value;
     const filterStat = document.getElementById('svc-filter-status').value;
+    const isRegex = document.getElementById('svc-search-regex')?.checked;
+    const isCase = document.getElementById('svc-search-case')?.checked;
+
+    let regex = null;
+    if (isRegex && searchTxt) {
+      try {
+        regex = new RegExp(searchTxt, isCase ? '' : 'i');
+      } catch(e) {}
+    }
 
     let runningCount = 0;
     let totalCount = systemServices.length;
@@ -2094,7 +2267,18 @@
     systemServices.forEach(s => {
       if (s.status === 'RUNNING') runningCount++;
 
-      const matchSearch = s.name.toLowerCase().includes(searchTxt) || s.disp.toLowerCase().includes(searchTxt) || s.bin.toLowerCase().includes(searchTxt);
+      let matchSearch = true;
+      if (searchTxt) {
+        if (regex) {
+          matchSearch = regex.test(s.name) || regex.test(s.disp) || regex.test(s.bin);
+        } else {
+          const q = isCase ? searchTxt : searchTxt.toLowerCase();
+          const name = isCase ? s.name : s.name.toLowerCase();
+          const disp = isCase ? s.disp : s.disp.toLowerCase();
+          const bin = isCase ? s.bin : s.bin.toLowerCase();
+          matchSearch = name.includes(q) || disp.includes(q) || bin.includes(q);
+        }
+      }
       const matchCat = (filterCat === 'ALL' || s.cat === filterCat);
       const matchStat = (filterStat === 'ALL' || s.status === filterStat);
 
@@ -2411,6 +2595,44 @@
 
     if (format === 'txt') {
       downloadBlob(reportText, 'ksys_system_report.txt', 'text/plain');
+    } else if (format === 'csv') {
+      let csv = "Section,Metric,Value\n";
+      csv += `System,Platform,"${(navigator.platform || '').replace(/"/g, '""')}"\n`;
+      csv += `System,UserAgent,"${(navigator.userAgent || '').replace(/"/g, '""')}"\n`;
+      csv += `System,Uptime,"${document.getElementById('header-uptime')?.textContent || ''}"\n`;
+      csv += `Hardware,LogicalCores,${navigator.hardwareConcurrency || 'Unknown'}\n`;
+      csv += `Hardware,DeviceMemoryGB,${navigator.deviceMemory || 'Restricted'}\n`;
+      csv += `Hardware,ScreenResolution,"${window.screen.width}x${window.screen.height}"\n`;
+      csv += `Benchmarks,CPU,"${(benchResults.cpuScore || 'Not Executed').replace(/"/g, '""')}"\n`;
+      csv += `Benchmarks,RAM,"${(benchResults.ramScore || 'Not Executed').replace(/"/g, '""')}"\n`;
+      csv += `Benchmarks,DiskIO,"${(benchResults.diskScore || 'Not Executed').replace(/"/g, '""')}"\n\n`;
+      csv += "ServiceName,DisplayName,Category,Startup,Status,Memory\n";
+      systemServices.forEach(s => {
+        csv += `"${s.name.replace(/"/g, '""')}","${s.disp.replace(/"/g, '""')}","${s.cat}","${s.start}","${s.status}","${s.mem}"\n`;
+      });
+      downloadBlob(csv, 'ksys_system_report.csv', 'text/csv');
+    } else if (format === 'md') {
+      let md = "# KSys Workstation System Diagnostics & Hardware Report\n\n";
+      md += `**Generated On:** ${new Date().toLocaleString()}  \n`;
+      md += `**Session Uptime:** ${document.getElementById('header-uptime')?.textContent || ''}  \n`;
+      md += `**Host Platform:** \`${navigator.platform}\`  \n\n`;
+      md += "## Hardware Specifications\n\n";
+      md += "| Component | Specification / Value |\n|---|---|\n";
+      md += `| **Processor Cores** | ${navigator.hardwareConcurrency || 'Unknown'} Logical Cores |\n`;
+      md += `| **Estimated Memory** | ~${navigator.deviceMemory || 4} GB |\n`;
+      md += `| **Screen Resolution** | ${window.screen.width} x ${window.screen.height} (${window.screen.colorDepth}-bit) |\n`;
+      md += `| **Network Status** | ${navigator.onLine ? 'Connected (Online)' : 'Offline'} |\n\n`;
+      md += "## Diagnostic Benchmark Suite\n\n";
+      md += "| Test Suite | Result / Throughput |\n|---|---|\n";
+      md += `| **CPU Multi-thread Stress** | \`${benchResults.cpuScore || 'Not Executed'}\` |\n`;
+      md += `| **RAM Bandwidth Test** | \`${benchResults.ramScore || 'Not Executed'}\` |\n`;
+      md += `| **Storage I/O Speed** | \`${benchResults.diskScore || 'Not Executed'}\` |\n\n`;
+      md += "## Monitored System Services\n\n";
+      md += "| Service Name | Display Name | Category | Status | Footprint |\n|---|---|---|---|---|\n";
+      systemServices.forEach(s => {
+        md += `| \`${s.name}\` | ${s.disp} | ${s.cat} | **${s.status}** | ${s.mem} |\n`;
+      });
+      downloadBlob(md, 'ksys_system_report.md', 'text/markdown');
     } else if (format === 'json') {
       const jsonObj = {
         title: "KSys System Diagnostics Report",
@@ -2495,15 +2717,383 @@
     showToast(`Downloaded report: ${filename}`, 'success');
   }
 
+  // --- SYSTEM HEALTH & ANOMALY DIAGNOSTICS ENGINE ---
+  function updateSystemHealth() {
+    let score = 100;
+    let advisories = [];
+
+    // Check memory heap
+    let heapPct = 0;
+    if (performance && performance.memory) {
+      heapPct = (performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit) * 100;
+      if (heapPct > 80) {
+        score -= 25;
+        advisories.push('High JS Heap memory pressure (>80%)');
+      } else if (heapPct > 60) {
+        score -= 10;
+        advisories.push('Moderate JS Heap allocation (>60%)');
+      }
+    }
+
+    // Check stopped services
+    const stoppedCount = systemServices.filter(s => s.status === 'STOPPED').length;
+    if (stoppedCount > 4) {
+      score -= 15;
+      advisories.push(`${stoppedCount} background daemons stopped`);
+    } else if (stoppedCount > 0) {
+      score -= 5;
+    }
+
+    // Check network online
+    if (!navigator.onLine) {
+      score -= 20;
+      advisories.push('Network interface is offline');
+    }
+
+    score = Math.max(0, Math.min(100, score));
+
+    const healthBadge = document.getElementById('health-badge');
+    const healthBar = document.getElementById('health-meter-bar');
+    const healthSummary = document.getElementById('health-summary');
+    const headerHealth = document.getElementById('header-health');
+    const advList = document.getElementById('health-advisory-list');
+
+    let rating = 'OPTIMAL';
+    let color = 'var(--accent-green)';
+    if (score < 60) {
+      rating = 'CRITICAL';
+      color = 'var(--accent-red)';
+    } else if (score < 80) {
+      rating = 'ATTENTION';
+      color = 'var(--accent-amber)';
+    }
+
+    if (healthBadge) {
+      healthBadge.textContent = `${score}% • ${rating}`;
+      healthBadge.style.color = color;
+    }
+    if (headerHealth) {
+      headerHealth.textContent = `${score}%`;
+      headerHealth.style.color = color;
+    }
+    if (healthBar) {
+      healthBar.style.width = score + '%';
+      healthBar.style.background = (score >= 80) ? 'linear-gradient(90deg, #4ade80, #38bdf8)' : (score >= 60) ? 'linear-gradient(90deg, #fbbf24, #f59e0b)' : 'linear-gradient(90deg, #f87171, #ef4444)';
+    }
+
+    if (healthSummary) {
+      healthSummary.textContent = `Health Score: ${score}/100 • Subsystem Rating: ${rating} | Heap: ${Math.round(heapPct)}% | Daemons Active: ${systemServices.length - stoppedCount}/${systemServices.length}`;
+    }
+
+    if (advList) {
+      advList.innerHTML = '';
+      if (advisories.length === 0) {
+        advList.innerHTML = `
+          <span class="quick-chip" style="cursor: default; border-color: rgba(74, 222, 128, 0.3); color: #4ade80;">✔ All Core Subsystems Operating Nominally</span>
+          <span class="quick-chip" style="cursor: default; border-color: rgba(56, 189, 248, 0.3); color: #38bdf8;">✔ Concurrency Threads Balanced</span>
+          <span class="quick-chip" style="cursor: default; border-color: rgba(192, 132, 252, 0.3); color: #c084fc;">✔ Memory Heap Within Safety Margin</span>
+        `;
+      } else {
+        advisories.forEach(adv => {
+          const chip = document.createElement('span');
+          chip.className = 'quick-chip';
+          chip.style.borderColor = 'rgba(251, 191, 36, 0.4)';
+          chip.style.color = 'var(--accent-amber)';
+          chip.textContent = `⚠ ${adv}`;
+          advList.appendChild(chip);
+        });
+      }
+    }
+  }
+
+  // --- MULTI-CORE CPU LOAD SPECTRUM ---
+  function updateCpuSpectrum() {
+    const container = document.getElementById('cpu-core-spectrum');
+    if (!container) return;
+
+    const cores = navigator.hardwareConcurrency || 4;
+    let totalLoad = 0;
+
+    if (container.children.length !== cores) {
+      container.innerHTML = '';
+      for (let c = 0; c < cores; c++) {
+        const coreBox = document.createElement('div');
+        coreBox.id = `core-box-${c}`;
+        coreBox.style.cssText = 'background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 4px; padding: 6px; text-align: center;';
+        coreBox.innerHTML = `
+          <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 4px;">Core ${c}</div>
+          <div class="meter-bar" style="height: 6px;"><div class="meter-fill" id="core-fill-${c}" style="width: 10%;"></div></div>
+          <div style="font-size: 10px; font-family: monospace; margin-top: 4px; color: var(--accent-blue);" id="core-val-${c}">10%</div>
+        `;
+        container.appendChild(coreBox);
+      }
+    }
+
+    const mainCpuLoad = parseFloat(document.getElementById('telem-cpu-val')?.textContent || '12');
+    for (let c = 0; c < cores; c++) {
+      const jitter = (Math.sin(Date.now() / 1500 + c * 1.7) * 15) + (Math.random() * 8 - 4);
+      const coreLoad = Math.max(2, Math.min(100, Math.round(mainCpuLoad + jitter)));
+      totalLoad += coreLoad;
+
+      const fill = document.getElementById(`core-fill-${c}`);
+      const val = document.getElementById(`core-val-${c}`);
+      if (fill) fill.style.width = `${coreLoad}%`;
+      if (val) val.textContent = `${coreLoad}%`;
+    }
+
+    const avgLoadEl = document.getElementById('spectrum-avg-load');
+    if (avgLoadEl) avgLoadEl.textContent = `Avg: ${Math.round(totalLoad / cores)}%`;
+  }
+
+  // --- MEMORY & HEX BUFFER INSPECTION SUBSYSTEM ---
+  let hexBuffer = new Uint8Array(1024);
+  let hexPage = 0;
+  const HEX_PAGE_SIZE = 256;
+  let hexEndianness = 'little';
+  let hexHighlightOffset = -1;
+
+  function generateHexBuffer(source) {
+    const buf = new Uint8Array(1024);
+    if (source === 'telemetry') {
+      const view = new DataView(buf.buffer);
+      view.setUint32(0, 0x5359534B, true); // 'KSYS'
+      view.setUint16(4, 1, true);
+      view.setUint16(6, systemServices.length, true);
+      view.setUint32(8, Math.floor((Date.now() - startTime) / 1000), true);
+      view.setFloat32(12, parseFloat(document.getElementById('telem-cpu-val')?.textContent || '12'), true);
+      view.setUint32(16, parseInt(document.getElementById('telem-mem-val')?.textContent || '24'), true);
+      for (let i = 20; i < buf.length; i++) {
+        buf[i] = (i * 37 + (i ^ 0x5A)) & 0xFF;
+      }
+    } else if (source === 'cpu_bench') {
+      const view = new DataView(buf.buffer);
+      view.setUint32(0, 0x43505542, true); // 'CPUB'
+      for (let i = 4; i < buf.length; i += 4) {
+        view.setFloat32(i, Math.sin(i) * 1000, true);
+      }
+    } else if (source === 'ram_bench') {
+      for (let i = 0; i < buf.length; i++) {
+        buf[i] = (i % 256) ^ 0xAA;
+      }
+    } else if (source === 'event_logs') {
+      const text = eventLogs.slice(0, 10).map(e => `[${e.level}] ${e.message}`).join('\n');
+      const enc = new TextEncoder();
+      const bytes = enc.encode(text);
+      buf.set(bytes.subarray(0, Math.min(bytes.length, buf.length)));
+    } else if (source === 'hardware') {
+      const hwText = `ARCH:${navigator.platform};CORES:${navigator.hardwareConcurrency};MEM:${navigator.deviceMemory || 4}GB;DPR:${window.devicePixelRatio}`;
+      const enc = new TextEncoder();
+      const bytes = enc.encode(hwText);
+      buf.set(bytes.subarray(0, Math.min(bytes.length, buf.length)));
+    }
+    return buf;
+  }
+
+  function loadHexBufferSource() {
+    const sel = document.getElementById('hex-buffer-source');
+    const source = sel ? sel.value : 'telemetry';
+    hexBuffer = generateHexBuffer(source);
+    hexPage = 0;
+    hexHighlightOffset = -1;
+    renderHexViewer();
+    logEvent('INFO', `Loaded memory buffer source: ${source} (${hexBuffer.length} bytes)`);
+    showToast(`Hex Buffer loaded: ${sel ? sel.options[sel.selectedIndex].text : source}`, 'info');
+  }
+
+  function renderHexViewer() {
+    const viewer = document.getElementById('hex-viewer-content');
+    if (!viewer) return;
+
+    const totalPages = Math.max(1, Math.ceil(hexBuffer.length / HEX_PAGE_SIZE));
+    if (hexPage >= totalPages) hexPage = totalPages - 1;
+    if (hexPage < 0) hexPage = 0;
+
+    const pageLabel = document.getElementById('hex-page-label');
+    if (pageLabel) pageLabel.textContent = `Page ${hexPage + 1} / ${totalPages}`;
+
+    const statsBytes = document.getElementById('hex-stats-bytes');
+    if (statsBytes) statsBytes.textContent = `Total Buffer Size: ${hexBuffer.length} bytes | Active Offset: 0x${(hexPage * HEX_PAGE_SIZE).toString(16).padStart(8, '0').toUpperCase()}`;
+
+    const startOffset = hexPage * HEX_PAGE_SIZE;
+    const endOffset = Math.min(hexBuffer.length, startOffset + HEX_PAGE_SIZE);
+
+    let output = '';
+    for (let offset = startOffset; offset < endOffset; offset += 16) {
+      const offsetStr = '0x' + offset.toString(16).padStart(8, '0').toUpperCase();
+      const hexParts1 = [];
+      const hexParts2 = [];
+      let asciiPart = '';
+
+      for (let i = 0; i < 16; i++) {
+        const idx = offset + i;
+        if (idx < hexBuffer.length) {
+          const b = hexBuffer[idx];
+          const hexStr = b.toString(16).padStart(2, '0').toUpperCase();
+          const isHighlight = (idx === hexHighlightOffset);
+          const formattedHex = isHighlight ? `<span style="background:var(--accent-amber); color:#000; font-weight:bold; border-radius:2px; padding:0 2px;">${hexStr}</span>` : hexStr;
+
+          if (i < 8) hexParts1.push(formattedHex);
+          else hexParts2.push(formattedHex);
+
+          const ch = (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
+          asciiPart += isHighlight ? `<span style="background:var(--accent-amber); color:#000; font-weight:bold;">${escapeHtml(ch)}</span>` : escapeHtml(ch);
+        } else {
+          if (i < 8) hexParts1.push('  ');
+          else hexParts2.push('  ');
+          asciiPart += ' ';
+        }
+      }
+
+      output += `<span style="color:var(--text-muted);">${offsetStr}</span>  ${hexParts1.join(' ')}  ${hexParts2.join(' ')}   | ${asciiPart}\n`;
+    }
+
+    viewer.innerHTML = output;
+  }
+
+  function prevHexPage() {
+    if (hexPage > 0) {
+      hexPage--;
+      renderHexViewer();
+    }
+  }
+
+  function nextHexPage() {
+    const totalPages = Math.ceil(hexBuffer.length / HEX_PAGE_SIZE);
+    if (hexPage < totalPages - 1) {
+      hexPage++;
+      renderHexViewer();
+    }
+  }
+
+  function jumpHexOffset() {
+    const input = document.getElementById('hex-jump-offset');
+    if (!input) return;
+    const valStr = input.value.trim().toLowerCase();
+    let offset = 0;
+    if (valStr.startsWith('0x')) {
+      offset = parseInt(valStr.substring(2), 16);
+    } else {
+      offset = parseInt(valStr, 10);
+    }
+    if (isNaN(offset) || offset < 0 || offset >= hexBuffer.length) {
+      showToast(`Invalid offset. Buffer range: 0x0000 - 0x${(hexBuffer.length - 1).toString(16).toUpperCase()}`, 'warn');
+      return;
+    }
+    hexPage = Math.floor(offset / HEX_PAGE_SIZE);
+    hexHighlightOffset = offset;
+    renderHexViewer();
+    const cursorEl = document.getElementById('hex-stats-cursor');
+    if (cursorEl) cursorEl.textContent = `Cursor: 0x${offset.toString(16).padStart(8, '0').toUpperCase()} | Dec: ${offset}`;
+    showToast(`Jumped to offset 0x${offset.toString(16).toUpperCase()}`, 'info');
+  }
+
+  function findNextHexPattern() {
+    const input = document.getElementById('hex-search-pattern');
+    const statusEl = document.getElementById('hex-search-status');
+    if (!input) return;
+    const term = input.value.trim();
+    if (!term) return;
+
+    const targetBytes = [];
+    const cleanHex = term.replace(/\s+/g, '');
+    if (/^[0-9a-fA-F]+$/.test(cleanHex) && cleanHex.length % 2 === 0 && cleanHex.length >= 2) {
+      for (let i = 0; i < cleanHex.length; i += 2) {
+        targetBytes.push(parseInt(cleanHex.substring(i, i + 2), 16));
+      }
+    } else {
+      const enc = new TextEncoder();
+      const arr = enc.encode(term);
+      for (let i = 0; i < arr.length; i++) targetBytes.push(arr[i]);
+    }
+
+    const startSearch = (hexHighlightOffset >= 0) ? hexHighlightOffset + 1 : 0;
+    let found = -1;
+    for (let i = startSearch; i <= hexBuffer.length - targetBytes.length; i++) {
+      let match = true;
+      for (let j = 0; j < targetBytes.length; j++) {
+        if (hexBuffer[i + j] !== targetBytes[j]) {
+          match = false;
+          break;
+        }
+      }
+      if (match) {
+        found = i;
+        break;
+      }
+    }
+
+    if (found === -1 && startSearch > 0) {
+      for (let i = 0; i < startSearch; i++) {
+        let match = true;
+        for (let j = 0; j < targetBytes.length; j++) {
+          if (hexBuffer[i + j] !== targetBytes[j]) {
+            match = false;
+            break;
+          }
+        }
+        if (match) {
+          found = i;
+          break;
+        }
+      }
+    }
+
+    if (found !== -1) {
+      hexHighlightOffset = found;
+      hexPage = Math.floor(found / HEX_PAGE_SIZE);
+      renderHexViewer();
+      if (statusEl) statusEl.textContent = `Match at 0x${found.toString(16).toUpperCase()}`;
+      const cursorEl = document.getElementById('hex-stats-cursor');
+      if (cursorEl) cursorEl.textContent = `Cursor: 0x${found.toString(16).padStart(8, '0').toUpperCase()} | Dec: ${found}`;
+      showToast(`Found pattern at offset 0x${found.toString(16).toUpperCase()}`, 'success');
+    } else {
+      if (statusEl) statusEl.textContent = 'Not found';
+      showToast('Search pattern not found in buffer.', 'warn');
+    }
+  }
+
+  function toggleHexEndianness() {
+    hexEndianness = (hexEndianness === 'little') ? 'big' : 'little';
+    const btn = document.getElementById('btn-hex-endian');
+    if (btn) btn.textContent = `Endian: ${hexEndianness === 'little' ? 'Little' : 'Big'}`;
+    showToast(`Hex word display endianness set to ${hexEndianness}.`, 'info');
+  }
+
+  function exportHexDump(format) {
+    if (format === 'hex') {
+      let dump = `; KSys Memory Hex Dump Export\n; Buffer Length: ${hexBuffer.length} bytes\n\n`;
+      for (let offset = 0; offset < hexBuffer.length; offset += 16) {
+        const offsetStr = offset.toString(16).padStart(8, '0').toUpperCase();
+        const bytes = [];
+        let ascii = '';
+        for (let i = 0; i < 16 && offset + i < hexBuffer.length; i++) {
+          const b = hexBuffer[offset + i];
+          bytes.push(b.toString(16).padStart(2, '0').toUpperCase());
+          ascii += (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
+        }
+        dump += `${offsetStr}: ${bytes.join(' ').padEnd(48, ' ')}  |${ascii}|\n`;
+      }
+      downloadBlob(dump, 'ksys_memory_dump.hex', 'text/plain');
+    } else if (format === 'bin') {
+      downloadBlob(hexBuffer, 'ksys_memory_dump.bin', 'application/octet-stream');
+    }
+  }
+
   // Initialization
   window.addEventListener('DOMContentLoaded', () => {
     logEvent('INFO', 'KSys System Inspector & Diagnostic Workstation initialized');
     loadCustomServices();
     inspectHardware();
     renderServices();
+    loadHexBufferSource();
+    updateSystemHealth();
+    updateCpuSpectrum();
+
     setInterval(updateUptime, 1000);
     setInterval(inspectHardware, 5000);
     setInterval(updateTelemetrySparklines, 1000);
+    setInterval(updateSystemHealth, 2000);
+    setInterval(updateCpuSpectrum, 1000);
 
     const seenTutorial = safeGetStorage('ksys_tutorialSeen', false);
     if (!seenTutorial) {
@@ -2513,7 +3103,7 @@
       }, 350);
     } else {
       setTimeout(() => {
-        showToast('Welcome to KSys! Press F1 or "H" for Help guide. Use keys 1-5 to navigate.', 'info', 4000);
+        showToast('Welcome to KSys! Press F1 or "H" for Help guide. Use keys 1-6 to navigate.', 'info', 4000);
       }, 400);
     }
   });

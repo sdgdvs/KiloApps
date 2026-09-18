@@ -38,6 +38,8 @@ void UpdateView(void);
 #define ID_BTN_LOG_CLEAR    1015
 #define ID_BTN_LOG_EXPORT   1016
 #define ID_STATUS_BAR       1017
+#define ID_BTN_EXP_CSV      1018
+#define ID_BTN_EXP_MD       1019
 
 HWND hTabCtrl = NULL;
 HWND hOutput = NULL;
@@ -48,6 +50,8 @@ HWND hBtnAll = NULL;
 HWND hBtnExpTxt = NULL;
 HWND hBtnExpJson = NULL;
 HWND hBtnExpHtml = NULL;
+HWND hBtnExpCsv = NULL;
+HWND hBtnExpMd = NULL;
 HWND hBtnHelp = NULL;
 HWND hBtnSvcRefresh = NULL;
 HWND hBtnSvcFilter = NULL;
@@ -127,9 +131,6 @@ void GetSystemAuditText(char* buf, int maxLen) {
     mem.dwLength = sizeof(mem);
     GlobalMemoryStatusEx(&mem);
     
-    ULARGE_INTEGER freeBytesCaller, totalBytes, totalFree;
-    BOOL hasDisk = GetDiskFreeSpaceExA("C:\\", &freeBytesCaller, &totalBytes, &totalFree);
-    
     DWORD ticks = GetTickCount();
     DWORD hours = ticks / 3600000;
     DWORD mins = (ticks / 60000) % 60;
@@ -144,7 +145,21 @@ void GetSystemAuditText(char* buf, int maxLen) {
     
     SYSTEM_POWER_STATUS sps;
     BOOL hasPower = GetSystemPowerStatus(&sps);
-    
+
+    char computerName[64] = "Unknown";
+    DWORD cnSize = sizeof(computerName);
+    GetComputerNameA(computerName, &cnSize);
+
+    char userName[64] = "Unknown";
+    DWORD unSize = sizeof(userName);
+    GetUserNameA(userName, &unSize);
+
+    char winDir[MAX_PATH] = "Unknown";
+    GetWindowsDirectoryA(winDir, sizeof(winDir));
+
+    char sysDir[MAX_PATH] = "Unknown";
+    GetSystemDirectoryA(sysDir, sizeof(sysDir));
+
     DWORD totalSvc = 0, runSvc = 0;
     SC_HANDLE hSCM = OpenSCManagerA(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
     if (hSCM) {
@@ -167,53 +182,125 @@ void GetSystemAuditText(char* buf, int maxLen) {
         CloseServiceHandle(hSCM);
     }
 
-    wsprintfA(buf,
-        "=================================================================\r\n"
-        "       KSYS NATIVE SYSTEM DIAGNOSTICS & HARDWARE REPORT          \r\n"
-        "=================================================================\r\n"
-        "-> Press 'H' or F1 for Help/Instructions \r\n\r\n"
-        "System Uptime      : %u h %u m %u s\r\n"
-        "Architecture       : %s\r\n"
-        "Logical Processors : %u Cores\r\n"
-        "Page Size          : %u bytes\r\n\r\n"
-        "--- MEMORY SPECIFICATIONS ---\r\n"
-        "Memory Load        : %u%%\r\n"
-        "Total Physical RAM : %u MB\r\n"
-        "Available Physical : %u MB\r\n"
-        "Total Page File    : %u MB\r\n\r\n"
-        "--- SYSTEM SERVICES SUMMARY ---\r\n"
-        "Total Services     : %u Services & Drivers Monitored\r\n"
-        "Running Services   : %u Active Services\r\n\r\n"
-        "--- DISK STORAGE (C:\\) ---\r\n"
-        "Total Capacity     : %u MB\r\n"
-        "Free Capacity      : %u MB\r\n\r\n"
-        "--- DISPLAY & GRAPHICS ---\r\n"
-        "Resolution         : %dx%d (%d-bit, %d Hz)\r\n\r\n"
-        "--- POWER & BATTERY ---\r\n"
-        "AC Power Line      : %s\r\n"
-        "Battery Level      : %s\r\n\r\n"
-        "--- DIAGNOSTIC BENCHMARK RESULTS ---\r\n"
-        "CPU Multi-thread   : %s\r\n"
-        "RAM Throughput     : %s\r\n"
-        "Disk I/O Throughput: %s\r\n"
-        "=================================================================\r\n",
-        hours, mins, secs,
-        (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) ? "x64 (AMD64)" :
-        (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL) ? "x86 (Intel)" : "ARM/Other",
-        si.dwNumberOfProcessors,
-        si.dwPageSize,
-        mem.dwMemoryLoad,
-        (DWORD)(mem.ullTotalPhys >> 20),
-        (DWORD)(mem.ullAvailPhys >> 20),
-        (DWORD)(mem.ullTotalPageFile >> 20),
-        totalSvc, runSvc,
-        hasDisk ? (DWORD)(totalBytes.QuadPart >> 20) : 0,
-        hasDisk ? (DWORD)(totalFree.QuadPart >> 20) : 0,
-        sw, sh, bpp, hz,
-        hasPower ? ((sps.ACLineStatus == 1) ? "Online (AC)" : "Offline (Battery)") : "Unknown",
-        hasPower ? ((sps.BatteryLifePercent != 255) ? "Charged" : "N/A") : "N/A",
-        g_CpuResult, g_RamResult, g_DiskResult
-    );
+    // Health Index calculation
+    int healthScore = 100;
+    if (mem.dwMemoryLoad > 85) healthScore -= 25;
+    else if (mem.dwMemoryLoad > 70) healthScore -= 10;
+
+    ULARGE_INTEGER cFreeBytesCaller, cTotalBytes, cTotalFree;
+    BOOL hasDiskC = GetDiskFreeSpaceExA("C:\\", &cFreeBytesCaller, &cTotalBytes, &cTotalFree);
+    if (hasDiskC) {
+        DWORD freeMB = (DWORD)(cTotalFree.QuadPart >> 20);
+        if (freeMB < 5120) healthScore -= 20;
+        else if (freeMB < 15360) healthScore -= 10;
+    }
+    if (healthScore < 0) healthScore = 0;
+
+    const char* healthRating = (healthScore >= 90) ? "EXCELLENT - Optimal Operation" :
+                               (healthScore >= 75) ? "GOOD - Standard Workload Parameters" :
+                               (healthScore >= 50) ? "FAIR - High Memory or Storage Load" : "CRITICAL - Resource Exhaustion Risk";
+
+    char chunk[512];
+    buf[0] = '\0';
+    lstrcatA(buf, "=================================================================\r\n"
+                  "       KSYS NATIVE SYSTEM DIAGNOSTICS & HARDWARE REPORT          \r\n"
+                  "=================================================================\r\n"
+                  "-> Press 'H' or F1 for Help/Instructions \r\n\r\n");
+
+    wsprintfA(chunk, "--- SYSTEM HEALTH & HOST IDENTITY ---\r\n"
+                     "Overall Health Index : %u%% [%s]\r\n"
+                     "Host Computer Name   : %s\r\n"
+                     "Active User Profile  : %s\r\n"
+                     "System Uptime        : %u h %u m %u s\r\n\r\n",
+              healthScore, healthRating, computerName, userName, hours, mins, secs);
+    lstrcatA(buf, chunk);
+
+    wsprintfA(chunk, "--- PROCESSOR & TOPOLOGY ---\r\n"
+                     "Architecture         : %s\r\n"
+                     "Logical Processors   : %u Cores\r\n"
+                     "Page Size            : %u bytes\r\n"
+                     "Alloc Granularity    : %u bytes\r\n"
+                     "Min App Address      : 0x%p\r\n"
+                     "Max App Address      : 0x%p\r\n\r\n",
+              (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) ? "x64 (AMD64)" :
+              (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL) ? "x86 (Intel)" : "ARM/Other",
+              si.dwNumberOfProcessors, si.dwPageSize, si.dwAllocationGranularity,
+              si.lpMinimumApplicationAddress, si.lpMaximumApplicationAddress);
+    lstrcatA(buf, chunk);
+
+    wsprintfA(chunk, "--- MEMORY SPECIFICATIONS ---\r\n"
+                     "Memory Load          : %u%%\r\n"
+                     "Total Physical RAM   : %u MB\r\n"
+                     "Available Physical   : %u MB\r\n"
+                     "Total Page File      : %u MB\r\n"
+                     "Available Page File  : %u MB\r\n\r\n",
+              mem.dwMemoryLoad, (DWORD)(mem.ullTotalPhys >> 20), (DWORD)(mem.ullAvailPhys >> 20),
+              (DWORD)(mem.ullTotalPageFile >> 20), (DWORD)(mem.ullAvailPageFile >> 20));
+    lstrcatA(buf, chunk);
+
+    wsprintfA(chunk, "--- SYSTEM SERVICES SUMMARY ---\r\n"
+                     "Total Services       : %u Services & Drivers Monitored\r\n"
+                     "Running Services     : %u Active Services\r\n\r\n",
+              totalSvc, runSvc);
+    lstrcatA(buf, chunk);
+
+    lstrcatA(buf, "--- MOUNTED DRIVES & STORAGE VOLUMES ---\r\n");
+    char driveStrings[512] = {0};
+    DWORD drvLen = GetLogicalDriveStringsA(sizeof(driveStrings) - 1, driveStrings);
+    if (drvLen > 0 && drvLen < sizeof(driveStrings)) {
+        char* pDrive = driveStrings;
+        while (*pDrive && lstrlenA(buf) < maxLen - 1024) {
+            UINT driveType = GetDriveTypeA(pDrive);
+            const char* typeStr = "Unknown";
+            if (driveType == DRIVE_FIXED) typeStr = "Fixed (HDD/SSD)";
+            else if (driveType == DRIVE_REMOVABLE) typeStr = "Removable (USB)";
+            else if (driveType == DRIVE_CDROM) typeStr = "CD-ROM/Optical";
+            else if (driveType == DRIVE_REMOTE) typeStr = "Network Share";
+            else if (driveType == DRIVE_RAMDISK) typeStr = "RAM Disk";
+
+            char volName[64] = {0};
+            char fsName[32] = {0};
+            GetVolumeInformationA(pDrive, volName, sizeof(volName), NULL, NULL, NULL, fsName, sizeof(fsName));
+
+            ULARGE_INTEGER dCaller, dTotal, dFree;
+            if (GetDiskFreeSpaceExA(pDrive, &dCaller, &dTotal, &dFree)) {
+                wsprintfA(chunk, "  %-4s [%-12s] %-16s FS: %-6s Total: %6u MB | Free: %6u MB\r\n",
+                          pDrive, volName[0] ? volName : "Local Disk", typeStr, fsName[0] ? fsName : "NTFS",
+                          (DWORD)(dTotal.QuadPart >> 20), (DWORD)(dFree.QuadPart >> 20));
+            } else {
+                wsprintfA(chunk, "  %-4s %-16s (Media Unmounted/Not Ready)\r\n", pDrive, typeStr);
+            }
+            lstrcatA(buf, chunk);
+            pDrive += lstrlenA(pDrive) + 1;
+        }
+    }
+    lstrcatA(buf, "\r\n");
+
+    wsprintfA(chunk, "--- OS DIRECTORIES ---\r\n"
+                     "Windows Directory    : %s\r\n"
+                     "System Directory     : %s\r\n\r\n",
+              winDir, sysDir);
+    lstrcatA(buf, chunk);
+
+    wsprintfA(chunk, "--- DISPLAY & GRAPHICS ---\r\n"
+                     "Resolution           : %dx%d (%d-bit, %d Hz)\r\n\r\n",
+              sw, sh, bpp, hz);
+    lstrcatA(buf, chunk);
+
+    wsprintfA(chunk, "--- POWER & BATTERY ---\r\n"
+                     "AC Power Line        : %s\r\n"
+                     "Battery Level        : %s\r\n\r\n",
+              hasPower ? ((sps.ACLineStatus == 1) ? "Online (AC)" : "Offline (Battery)") : "Unknown",
+              hasPower ? ((sps.BatteryLifePercent != 255) ? "Charged" : "N/A") : "N/A");
+    lstrcatA(buf, chunk);
+
+    wsprintfA(chunk, "--- DIAGNOSTIC BENCHMARK RESULTS ---\r\n"
+                     "CPU Multi-thread     : %s\r\n"
+                     "RAM Throughput       : %s\r\n"
+                     "Disk I/O Throughput  : %s\r\n"
+                     "=================================================================\r\n",
+              g_CpuResult, g_RamResult, g_DiskResult);
+    lstrcatA(buf, chunk);
 }
 
 void GetServicesAndTelemetryText(char* buf, int maxLen) {
@@ -247,7 +334,10 @@ void GetServicesAndTelemetryText(char* buf, int maxLen) {
         (DWORD)(mem.ullTotalPhys >> 20),
         (DWORD)(mem.ullAvailPageFile >> 20),
         hours, mins, secs,
-        (g_ServiceFilterMode == 1) ? "RUNNING ONLY" : (g_ServiceFilterMode == 2) ? "STOPPED ONLY" : "ALL SERVICES"
+        (g_ServiceFilterMode == 1) ? "RUNNING ONLY" :
+        (g_ServiceFilterMode == 2) ? "STOPPED ONLY" :
+        (g_ServiceFilterMode == 3) ? "WIN32 SERVICES ONLY" :
+        (g_ServiceFilterMode == 4) ? "DRIVERS ONLY" : "ALL SERVICES"
     );
 
     SC_HANDLE hSCM = OpenSCManagerA(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
@@ -293,6 +383,8 @@ void GetServicesAndTelemetryText(char* buf, int maxLen) {
 
                     if (g_ServiceFilterMode == 1 && state != SERVICE_RUNNING) continue;
                     if (g_ServiceFilterMode == 2 && state != SERVICE_STOPPED) continue;
+                    if (g_ServiceFilterMode == 3 && (type & SERVICE_DRIVER)) continue;
+                    if (g_ServiceFilterMode == 4 && !(type & SERVICE_DRIVER)) continue;
 
                     const char* stStr = (state == SERVICE_RUNNING) ? "RUNNING" :
                                         (state == SERVICE_STOPPED) ? "STOPPED" :
@@ -479,8 +571,85 @@ void ExportLogs(HWND hwnd) {
     }
 }
 
+void GenerateCsvReport(char* buf, int maxLen) {
+    buf[0] = '\0';
+    lstrcatA(buf, "Section,Metric,Value\r\n");
+    
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+    MEMORYSTATUSEX mem = {0};
+    mem.dwLength = sizeof(mem);
+    GlobalMemoryStatusEx(&mem);
+
+    char line[256];
+    wsprintfA(line, "System,Architecture,%s\r\n", (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) ? "x64" : "x86");
+    lstrcatA(buf, line);
+    wsprintfA(line, "System,LogicalCores,%u\r\n", si.dwNumberOfProcessors);
+    lstrcatA(buf, line);
+    wsprintfA(line, "Memory,MemoryLoadPercent,%u%%\r\n", mem.dwMemoryLoad);
+    lstrcatA(buf, line);
+    wsprintfA(line, "Memory,TotalPhysicalRAM_MB,%u\r\n", (DWORD)(mem.ullTotalPhys >> 20));
+    lstrcatA(buf, line);
+    wsprintfA(line, "Memory,AvailPhysicalRAM_MB,%u\r\n", (DWORD)(mem.ullAvailPhys >> 20));
+    lstrcatA(buf, line);
+    wsprintfA(line, "Benchmarks,CPUStress,\"%s\"\r\n", g_CpuResult);
+    lstrcatA(buf, line);
+    wsprintfA(line, "Benchmarks,RAMSpeed,\"%s\"\r\n", g_RamResult);
+    lstrcatA(buf, line);
+    wsprintfA(line, "Benchmarks,DiskIO,\"%s\"\r\n", g_DiskResult);
+    lstrcatA(buf, line);
+
+    lstrcatA(buf, "\r\nServiceName,DisplayName,Type,Status\r\n");
+    SC_HANDLE hSCM = OpenSCManagerA(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
+    if (hSCM) {
+        DWORD bytesNeeded = 0, servicesReturned = 0, resumeHandle = 0;
+        EnumServicesStatusA(hSCM, SERVICE_WIN32 | SERVICE_DRIVER, SERVICE_STATE_ALL, NULL, 0, &bytesNeeded, &servicesReturned, &resumeHandle);
+        if (bytesNeeded > 0) {
+            BYTE* pBuf = (BYTE*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, bytesNeeded);
+            if (pBuf) {
+                resumeHandle = 0;
+                if (EnumServicesStatusA(hSCM, SERVICE_WIN32 | SERVICE_DRIVER, SERVICE_STATE_ALL, (LPENUM_SERVICE_STATUSA)pBuf, bytesNeeded, &bytesNeeded, &servicesReturned, &resumeHandle)) {
+                    LPENUM_SERVICE_STATUSA pServices = (LPENUM_SERVICE_STATUSA)pBuf;
+                    for (DWORD i = 0; i < servicesReturned && lstrlenA(buf) < maxLen - 256; i++) {
+                        const char* st = (pServices[i].ServiceStatus.dwCurrentState == SERVICE_RUNNING) ? "RUNNING" : "STOPPED";
+                        const char* tp = (pServices[i].ServiceStatus.dwServiceType & SERVICE_DRIVER) ? "DRIVER" : "WIN32";
+                        wsprintfA(line, "\"%s\",\"%s\",%s,%s\r\n",
+                            pServices[i].lpServiceName ? pServices[i].lpServiceName : "",
+                            pServices[i].lpDisplayName ? pServices[i].lpDisplayName : "",
+                            tp, st);
+                        lstrcatA(buf, line);
+                    }
+                }
+                HeapFree(GetProcessHeap(), 0, pBuf);
+            }
+        }
+        CloseServiceHandle(hSCM);
+    }
+}
+
+void GenerateMarkdownReport(char* buf, int maxLen) {
+    static char auditText[16384];
+    GetSystemAuditText(auditText, sizeof(auditText));
+
+    buf[0] = '\0';
+    lstrcatA(buf, "# KSys Native Workstation Diagnostics Report\r\n\r\n");
+    lstrcatA(buf, "## Benchmark Telemetry\r\n\r\n");
+    lstrcatA(buf, "| Diagnostic Benchmark | Result / Score |\r\n|---|---|\r\n");
+    char line[256];
+    wsprintfA(line, "| **CPU Multi-thread Stress** | `%s` |\r\n", g_CpuResult);
+    lstrcatA(buf, line);
+    wsprintfA(line, "| **RAM Throughput** | `%s` |\r\n", g_RamResult);
+    lstrcatA(buf, line);
+    wsprintfA(line, "| **Disk I/O Throughput** | `%s` |\r\n\r\n", g_DiskResult);
+    lstrcatA(buf, line);
+
+    lstrcatA(buf, "## System Hardware & Diagnostics Audit\r\n\r\n```text\r\n");
+    lstrcatA(buf, auditText);
+    lstrcatA(buf, "```\r\n");
+}
+
 void ExportReport(HWND hwndOwner, int type) {
-    static char reportBuf[8192];
+    static char reportBuf[16384];
     GetSystemAuditText(reportBuf, sizeof(reportBuf));
 
     if (type == 0) { // TXT
@@ -506,7 +675,7 @@ void ExportReport(HWND hwndOwner, int type) {
             ShowNativeToast(hwndOwner, "ERROR: Failed to write ksys_report.json");
         }
     } else if (type == 2) { // HTML
-        char htmlBuf[14336];
+        char htmlBuf[18432];
         wsprintfA(htmlBuf,
             "<!DOCTYPE html><html><head><title>KSys Report</title>"
             "<style>body{background:#0f172a;color:#38bdf8;font-family:monospace;padding:20px;}"
@@ -519,11 +688,27 @@ void ExportReport(HWND hwndOwner, int type) {
         } else {
             ShowNativeToast(hwndOwner, "ERROR: Failed to write ksys_report.html");
         }
+    } else if (type == 3) { // CSV
+        static char csvBuf[32768];
+        GenerateCsvReport(csvBuf, sizeof(csvBuf));
+        if (SaveReportFile("ksys_report.csv", csvBuf)) {
+            ShowNativeToast(hwndOwner, "SUCCESS: Exported report to ksys_report.csv");
+        } else {
+            ShowNativeToast(hwndOwner, "ERROR: Failed to write ksys_report.csv");
+        }
+    } else if (type == 4) { // Markdown
+        static char mdBuf[32768];
+        GenerateMarkdownReport(mdBuf, sizeof(mdBuf));
+        if (SaveReportFile("ksys_report.md", mdBuf)) {
+            ShowNativeToast(hwndOwner, "SUCCESS: Exported report to ksys_report.md");
+        } else {
+            ShowNativeToast(hwndOwner, "ERROR: Failed to write ksys_report.md");
+        }
     }
 }
 
 void UpdateView() {
-    static char contentBuf[16384];
+    static char contentBuf[32768];
 
     // Show/hide buttons based on tab
     BOOL isInspTab  = (g_CurrentTab == 0);
@@ -549,6 +734,8 @@ void UpdateView() {
     ShowWindow(hBtnExpTxt,  isExpTab ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnExpJson, isExpTab ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnExpHtml, isExpTab ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnExpCsv,  isExpTab ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnExpMd,   isExpTab ? SW_SHOW : SW_HIDE);
 
     if (g_CurrentTab == 0) { // Hardware Inspector
         GetSystemAuditText(contentBuf, sizeof(contentBuf));
@@ -599,17 +786,20 @@ void ShowHelpDialog(HWND hwnd) {
         "  [C]           - Run CPU Benchmark (Benchmarks Tab)\n"
         "  [M]           - Run RAM Benchmark (Benchmarks Tab)\n"
         "  [D]           - Run Disk Benchmark (Benchmarks Tab)\n"
-        "  [S]           - Toggle Service Filter (Services Tab)\n"
+        "  [S]           - Cycle Service Filter (All/Running/Stopped/Win32/Drivers)\n"
         "  [L]           - Clear Event History Logs (Logs Tab)\n"
-        "  [E]           - Export Report or Log (Export/Logs Tab)\n"
+        "  [E]           - Export TXT Report or Event Log\n"
         "  [J]           - Export JSON Report (Export Tab)\n"
-        "  [T]           - Export HTML Report (Export Tab)\n\n"
-        "FEATURES:\n"
-        "  - Inspector   : Logical CPU cores, Memory load, Disk space & display.\n"
+        "  [T]           - Export HTML Report (Export Tab)\n"
+        "  [V]           - Export CSV Report (Export Tab)\n"
+        "  [K]           - Export Markdown Report (Export Tab)\n\n"
+        "FEATURES & EXPANSIONS:\n"
+        "  - Multi-Drive : Live volume inspection across all logical disks.\n"
+        "  - Topology    : Physical RAM, pagefiles, CPU cores & app bounds.\n"
+        "  - Diagnostics : Automated System Health Index & heuristic rating.\n"
         "  - Benchmarks  : Multi-threaded CPU matrix, RAM throughput, Disk I/O.\n"
-        "  - Services    : Live CPU usage, Win32 services & drivers filter.\n"
-        "  - Event Logs  : Diagnostic history audit trail with clear & export.\n"
-        "  - Export      : Save TXT, JSON, or HTML diagnostic summaries.",
+        "  - Services    : Live CPU usage, Win32 & Kernel Driver filtering.\n"
+        "  - Export Hub  : Multi-format exports: TXT, JSON, HTML, CSV, and Markdown.",
         "KSys Diagnostics Help",
         MB_OK | MB_ICONINFORMATION);
 }
@@ -661,9 +851,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnLogExport = CreateWindow("BUTTON", "Export Log [E]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 140, H - 75, 120, 25, hwnd, (HMENU)ID_BTN_LOG_EXPORT, NULL, NULL);
 
             // Export Buttons
-            hBtnExpTxt  = CreateWindow("BUTTON", "Export TXT [E]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 10, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_EXP_TXT, NULL, NULL);
-            hBtnExpJson = CreateWindow("BUTTON", "Export JSON [J]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 130, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_EXP_JSON, NULL, NULL);
-            hBtnExpHtml = CreateWindow("BUTTON", "Export HTML [T]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 250, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_EXP_HTML, NULL, NULL);
+            hBtnExpTxt  = CreateWindow("BUTTON", "Export TXT [E]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 10, H - 75, 105, 25, hwnd, (HMENU)ID_BTN_EXP_TXT, NULL, NULL);
+            hBtnExpJson = CreateWindow("BUTTON", "Export JSON [J]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 120, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_EXP_JSON, NULL, NULL);
+            hBtnExpHtml = CreateWindow("BUTTON", "Export HTML [T]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 235, H - 75, 110, 25, hwnd, (HMENU)ID_BTN_EXP_HTML, NULL, NULL);
+            hBtnExpCsv  = CreateWindow("BUTTON", "Export CSV [V]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 350, H - 75, 105, 25, hwnd, (HMENU)ID_BTN_EXP_CSV, NULL, NULL);
+            hBtnExpMd   = CreateWindow("BUTTON", "Export MD [K]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 460, H - 75, 105, 25, hwnd, (HMENU)ID_BTN_EXP_MD, NULL, NULL);
 
             hBtnHelp = CreateWindow("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, W - 115, H - 75, 95, 25, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
@@ -720,7 +912,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowNativeToast(hwnd, "Refreshed Services & Telemetry.");
                 UpdateView();
             } else if (id == ID_BTN_SVC_FILTER) {
-                g_ServiceFilterMode = (g_ServiceFilterMode + 1) % 3;
+                g_ServiceFilterMode = (g_ServiceFilterMode + 1) % 5;
                 if (g_ServiceFilterMode == 0) {
                     SetWindowTextA(hBtnSvcFilter, "Filter: All Services [S]");
                     ShowNativeToast(hwnd, "Filter: Showing All Services");
@@ -730,6 +922,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else if (g_ServiceFilterMode == 2) {
                     SetWindowTextA(hBtnSvcFilter, "Filter: Stopped Only [S]");
                     ShowNativeToast(hwnd, "Filter: Showing Stopped Services Only");
+                } else if (g_ServiceFilterMode == 3) {
+                    SetWindowTextA(hBtnSvcFilter, "Filter: Win32 Only [S]");
+                    ShowNativeToast(hwnd, "Filter: Showing Win32 Services Only");
+                } else if (g_ServiceFilterMode == 4) {
+                    SetWindowTextA(hBtnSvcFilter, "Filter: Drivers Only [S]");
+                    ShowNativeToast(hwnd, "Filter: Showing Kernel Drivers Only");
                 }
                 LogEvent("INFO", "Toggled Service Manager filter mode");
                 UpdateView();
@@ -743,6 +941,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ExportReport(hwnd, 1);
             } else if (id == ID_BTN_EXP_HTML) {
                 ExportReport(hwnd, 2);
+            } else if (id == ID_BTN_EXP_CSV) {
+                ExportReport(hwnd, 3);
+            } else if (id == ID_BTN_EXP_MD) {
+                ExportReport(hwnd, 4);
             } else if (id == ID_BTN_HELP) {
                 ShowHelpDialog(hwnd);
             }
@@ -781,9 +983,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (hBtnLogClear)  MoveWindow(hBtnLogClear, 10, nh - 68, 120, 26, TRUE);
             if (hBtnLogExport) MoveWindow(hBtnLogExport, 140, nh - 68, 120, 26, TRUE);
 
-            if (hBtnExpTxt)  MoveWindow(hBtnExpTxt, 10, nh - 68, 110, 26, TRUE);
-            if (hBtnExpJson) MoveWindow(hBtnExpJson, 130, nh - 68, 110, 26, TRUE);
-            if (hBtnExpHtml) MoveWindow(hBtnExpHtml, 250, nh - 68, 110, 26, TRUE);
+            if (hBtnExpTxt)  MoveWindow(hBtnExpTxt, 10, nh - 68, 105, 26, TRUE);
+            if (hBtnExpJson) MoveWindow(hBtnExpJson, 120, nh - 68, 110, 26, TRUE);
+            if (hBtnExpHtml) MoveWindow(hBtnExpHtml, 235, nh - 68, 110, 26, TRUE);
+            if (hBtnExpCsv)  MoveWindow(hBtnExpCsv, 350, nh - 68, 105, 26, TRUE);
+            if (hBtnExpMd)   MoveWindow(hBtnExpMd, 460, nh - 68, 105, 26, TRUE);
 
             if (hBtnHelp) MoveWindow(hBtnHelp, nw - 115, nh - 68, 95, 26, TRUE);
 
@@ -909,6 +1113,12 @@ void MainEntry() {
                     continue;
                 } else if ((msg.wParam == 'T' || msg.wParam == 't') && g_CurrentTab == 4) {
                     ExportReport(hwnd, 2);
+                    continue;
+                } else if ((msg.wParam == 'V' || msg.wParam == 'v') && g_CurrentTab == 4) {
+                    ExportReport(hwnd, 3);
+                    continue;
+                } else if ((msg.wParam == 'K' || msg.wParam == 'k') && g_CurrentTab == 4) {
+                    ExportReport(hwnd, 4);
                     continue;
                 }
             }
