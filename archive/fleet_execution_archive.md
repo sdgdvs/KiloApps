@@ -86,3 +86,8 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - Interactive Fixes: Added User Services category filter to select & quick chips; wired closeServiceModal on daemon deletion; added Space/Enter action triggers.
   - Robustness: Hardened IndexedDB benchmark with Blob memory fallback; wrapped storage.persisted check in safe error handler.
   - Verification: Clean single-file Web build (102.1 KB); zero Vite build breaks; Native MSVC clean build (23 KB); <999 KB ceiling verified.
+
+- **2026-09-17T15:52:00Z — kilo-usability: KGo**
+  - Status: PASS ✅ (UX, responsive scaling, layout, hotkeys, and onboarding pass).
+  - Highlights: Expanded KiloOS window (700x760); dynamic cell-size scaling; onboarding banner; permanent hotkey strip; tooltips; F1/P/N/Ctrl+Z hotkeys. Native (176.6 KB) and Web (82.5 KB) clean builds.
+

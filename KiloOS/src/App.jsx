@@ -106,7 +106,7 @@ const APPS = [
   { id: 'kstardredge', title: 'KStarDredge', url: '/apps/kstardredge.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kstardredge.ico', w: 900, h: 680, folder: 'Games' },
   { id: 'kabyss', title: 'KAbyss', url: '/apps/kabyss.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kabyss.ico', w: 920, h: 680, folder: 'Games' },
   { id: 'kcosmic', title: 'KCosmic', url: '/apps/kcosmic.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcosmic.ico', w: 940, h: 680, folder: 'Games' },
-  { id: 'kchrono', title: 'KChrono', url: '/apps/kchrono.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchrono.ico', w: 1040, h: 720, folder: 'Games' },
+  { id: 'kchrono', title: 'KChrono', url: '/apps/kchrono.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchrono.ico', w: 1140, h: 740, folder: 'Games' },
   { id: 'kdirector', title: 'Director Console', url: '/apps/kdirector.html', icon: '/assets/icons/kdirector.ico', w: 1080, h: 720, folder: 'System' }
 ];
 

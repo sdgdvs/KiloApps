@@ -502,8 +502,8 @@ static void DrawGame(HDC hdc, RECT* rcClient) {
     FillRect(memDC, rcClient, bgBrush);
     DeleteObject(bgBrush);
 
-    HFONT hFont = CreateFontA(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_MODERN, "Consolas");
-    HFONT hTitleFont = CreateFontA(22, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_MODERN, "Consolas");
+    HFONT hFont = CreateFontA(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_MODERN, "Consolas");
+    HFONT hTitleFont = CreateFontA(22, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_MODERN, "Consolas");
     HFONT oldFont = (HFONT)SelectObject(memDC, hFont);
 
     SetBkMode(memDC, TRANSPARENT);
@@ -706,7 +706,7 @@ static void DrawGame(HDC hdc, RECT* rcClient) {
 
         // Bottom Controls Hint
         SetTextColor(memDC, RGB(148, 163, 184));
-        TextOutA(memDC, 20, h - 30, "[WASD/Arrows] Move  [Space] Wait  [1/2/3/Tab] Epoch  [R] Record  [P] Play  [F5/F9] Save/Load  [Esc] Menu", 99);
+        TextOutA(memDC, 20, h - 30, "[WASD/Arrows] Move  [Space] Wait  [1/2/3/Tab] Epoch  [R] Rec  [P] Echo  [F1/H] Help  [F5/F9] Save/Load  [Esc] Menu", 108);
 
         // Victory Overlay
         if (g_appState == STATE_VICTORY) {
@@ -770,7 +770,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                     PostQuitMessage(0);
                 }
             } else if (g_appState == STATE_TUTORIAL) {
-                if (wParam == VK_SPACE || wParam == VK_RETURN || wParam == VK_ESCAPE) {
+                if (wParam == VK_SPACE || wParam == VK_RETURN || wParam == VK_ESCAPE || wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
                     g_appState = STATE_PLAYING;
                 }
             } else if (g_appState == STATE_PLAYING) {
@@ -787,10 +787,73 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 else if (wParam == 'P') TogglePlayEcho();
                 else if (wParam == VK_F5) Quicksave();
                 else if (wParam == VK_F9) Quickload();
+                else if (wParam == 'H' || wParam == 'h' || wParam == VK_F1 || wParam == 0xBF) g_appState = STATE_TUTORIAL;
                 else if (wParam == VK_ESCAPE) g_appState = STATE_SPLASH;
             } else if (g_appState == STATE_VICTORY) {
                 if (wParam == VK_RETURN || wParam == VK_ESCAPE || wParam == VK_SPACE) {
                     g_appState = STATE_SPLASH;
+                }
+            }
+            InvalidateRect(hwnd, NULL, FALSE);
+            return 0;
+        }
+        case WM_LBUTTONDOWN: {
+            int mx = LOWORD(lParam);
+            int my = HIWORD(lParam);
+            RECT rc;
+            GetClientRect(hwnd, &rc);
+
+            if (g_appState == STATE_SPLASH) {
+                int midX = rc.right / 2;
+                if (mx >= midX - 140 && mx <= midX + 160) {
+                    if (my >= 195 && my <= 220) {
+                        ResetGame(1);
+                        if (!HasSeenTutorial()) {
+                            g_appState = STATE_TUTORIAL;
+                            MarkTutorialSeen();
+                        } else {
+                            g_appState = STATE_PLAYING;
+                        }
+                    } else if (my >= 230 && my <= 255) {
+                        ResetGame(2);
+                        g_appState = STATE_PLAYING;
+                    } else if (my >= 265 && my <= 290) {
+                        ResetGame(3);
+                        g_appState = STATE_PLAYING;
+                    } else if (my >= 300 && my <= 325) {
+                        if (Quickload()) g_appState = STATE_PLAYING;
+                    } else if (my >= 335 && my <= 360) {
+                        g_appState = STATE_TUTORIAL;
+                    } else if (my >= 370 && my <= 395) {
+                        PostQuitMessage(0);
+                    }
+                }
+            } else if (g_appState == STATE_TUTORIAL) {
+                g_appState = STATE_PLAYING;
+            } else if (g_appState == STATE_VICTORY) {
+                g_appState = STATE_SPLASH;
+            } else if (g_appState == STATE_PLAYING) {
+                if (my < 44) {
+                    if (mx >= 110 && mx <= 200) SwitchEpoch(EPOCH_ALPHA);
+                    else if (mx >= 210 && mx <= 310) SwitchEpoch(EPOCH_BETA);
+                    else if (mx >= 320 && mx <= 420) SwitchEpoch(EPOCH_GAMMA);
+                    else if (mx >= 670 && mx <= 780) {
+                        if (g_isRecordingEcho) ToggleRecordEcho();
+                        else if (g_isPlayingEcho) TogglePlayEcho();
+                        else ToggleRecordEcho();
+                    }
+                } else if (my >= 60 && my < 60 + GRID_H * TILE_SZ && mx >= 20 && mx < 20 + GRID_W * TILE_SZ) {
+                    int tx = (mx - 20) / TILE_SZ;
+                    int ty = (my - 60) / TILE_SZ;
+                    int dx = tx - g_game.playerX;
+                    int dy = ty - g_game.playerY;
+                    if ((dx == 1 && dy == 0) || (dx == -1 && dy == 0) || (dx == 0 && dy == 1) || (dx == 0 && dy == -1)) {
+                        MovePlayer(dx, dy);
+                    } else if (dx == 0 && dy == 0) {
+                        MovePlayer(0, 0); // Wait / interact
+                    }
+                } else if (my >= rc.bottom - 40) {
+                    g_appState = STATE_TUTORIAL;
                 }
             }
             InvalidateRect(hwnd, NULL, FALSE);
@@ -828,10 +891,13 @@ void MainEntry() {
 
     RegisterClassA(&wc);
 
+    RECT wr = { 0, 0, 840, 560 };
+    AdjustWindowRect(&wr, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
+
     HWND hwnd = CreateWindowExA(
         0, CLASS_NAME, "KChrono - Core Paradox Engine v1.0.0",
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, 840, 560,
+        CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top,
         NULL, NULL, hInstance, NULL
     );
 

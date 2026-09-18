@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -13,15 +13,15 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KTask
-  kilo_usability: KChrono
+  kilo_usability: KTask
   kilo_graphics: KStarship
   kilo_qa: KStarship
   kilo_expander: KSys
   kilo_creator: "KStarForge (Deep-space shipyard engineering sim)"
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KChrono
-  timestamp: "2026-09-17T22:42:00Z"
+  timestamp: "2026-09-18T00:41:00Z"
 last_planner_run: "2026-09-17T20:40:00Z"
 ---
 
@@ -74,9 +74,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTerm`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColony`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFarm`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMine`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KRogue`, `KSanctuary`, `KScript`, `KSpace`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KChrono`
+- **Current Target**: `KTask`
 - **Upcoming Queue**:
-  `KTask`, `KPad`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`.
+  `KPad`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KStarship`
@@ -122,6 +122,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-18T00:41:00Z — kilo-usability: KChrono**
+  - Status: PASS ✅ (UI/UX, responsive layout, HiDPI scaling, and input ergonomics pass).
+  - Window & Layout: Expanded KiloOS window (1140x740) in App.jsx; eliminated viewport/sidebar crowding.
+  - HiDPI & Crispness: Added devicePixelRatio scaling for simCanvas and chronographCanvas; added ClearType fonts in native C.
+  - Responsive Controls: Normalized canvas click/touch coordinates; added live mousemove hover tile inspector.
+  - Ergonomics & Accessibility: Added interactive footer buttons, header Wait/Act button, and scenario double-click launch.
+  - Onboarding & Parity: Added [F1/H] help hotkey and overlay Enter/Space dismiss; added full native C mouse support and AdjustWindowRect.
+  - Verification: Single-file Web build clean (128.7 KB, Vite built in 285ms); Native MSVC clean build (15.5 KB); <999 KB ceiling verified.
+
 - **2026-09-17T22:42:00Z — kilo-tester: KChrono**
   - Status: PASS ✅ (8 issues, 8 fixed).
   - Interactive Wiring: Added backdrop click dismissal on all overlays; added F1/? Help toggle, Enter action trigger, and Esc menu toggle.
@@ -155,12 +164,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Bug Fixes: Removed save deletion on death; fixed help overlay click-through returning to menu instead of resuming game.
   - Verification: Clean single-file Web build (139 KB, Vite built in 319ms); Native MSVC clean build (72.7 KB); strictly <999 KB ceiling.
 
-- **2026-09-17T15:52:00Z — kilo-usability: KGo**
-  - Status: PASS ✅ (UX, responsive scaling, layout, hotkeys, and onboarding pass).
-  - Window & Layout: Expanded KiloOS window (700x760); eliminated 19x19 board clipping and vertical scrolling.
-  - Responsive Goban: Dynamic CSS custom property `--cell-size` (9x9: 34px, 13x13: 28px, 19x19: 22px); scalable stones, aura, badges, rings.
-  - Onboarding & Ergonomics: First-run onboarding banner (`kgo_onboarded`), permanent hotkey quick-strip, and tooltips on all controls.
-  - Keyboard & Modal: Added F1/? help toggle, N new game confirmation, R resign confirmation, Ctrl+Z/U undo, and reorganized help cards.
-  - Native Parity: Dynamic GetCellSize/GetStoneRadius scaling in MSVC C, F1/P/N/Ctrl+Z hotkeys, and persistent hotkey reference banner.
-  - Verification: Single-file Web build clean (82.5 KB, Vite built in 330ms); Native MSVC clean build (176.6 KB); strictly <999 KB ceiling.
 
