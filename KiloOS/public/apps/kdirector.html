@@ -649,6 +649,19 @@
           <!-- Populated by JS -->
         </div>
       </div>
+
+      <div style="margin-top: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <label>📊 DIRECTIVE RESULTS LOG</label>
+          <button class="btn-tool" id="btnClearResults" style="font-size: 10px;">Clear Log</button>
+        </div>
+        <div style="font-size: 10px; color: var(--text-muted); margin: 4px 0 8px 0;">
+          Shows outcomes from security screening and agent implementation reviews.
+        </div>
+        <div id="directiveResultsList" style="display: flex; flex-direction: column; gap: 6px; max-height: 300px; overflow: auto;">
+          <!-- Populated by JS -->
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1098,11 +1111,89 @@ function sanitizeDirective(text) {
   }
   for (const { rx, reason } of DIRECTIVE_BANNED_PATTERNS) {
     if (rx.test(trimmed)) {
-      return { ok: false, reason: `🛡️ BLOCKED: ${reason}.\n\nDirectors can propose new apps, add content, request features, and steer creative direction — but cannot issue destructive commands or bypass security infrastructure.` };
+      addDirectiveResult({
+        app: '(blocked)',
+        category: 'Self-Preservation',
+        text: trimmed.slice(0, 200),
+        outcome: 'rejected',
+        reason: `Self-preservation protocol: ${reason}`,
+        source: 'security',
+        time: Date.now()
+      });
+      return { ok: false, reason: `🛡️ Directive rejected by self-preservation protocol. Fork project to implement.\n\n(${reason})` };
     }
   }
   return { ok: true };
 }
+
+// --- DIRECTIVE RESULTS LOG ---
+// Stores outcomes: completed by agent, rejected by agent, or blocked by security.
+// Security rejections are logged automatically by sanitizeDirective above.
+// Agent rejections are logged by agents writing to localStorage('kdirector_results')
+// when they evaluate directives from next_work.md and find them counterproductive.
+let directiveResults = JSON.parse(localStorage.getItem('kdirector_results') || '[]');
+
+function addDirectiveResult(entry) {
+  directiveResults.push(entry);
+  if (directiveResults.length > 100) directiveResults = directiveResults.slice(-100);
+  localStorage.setItem('kdirector_results', JSON.stringify(directiveResults));
+  renderDirectiveResults();
+}
+
+function renderDirectiveResults() {
+  const container = document.getElementById('directiveResultsList');
+  if (!container) return;
+  container.innerHTML = '';
+  if (directiveResults.length === 0) {
+    container.innerHTML = '<div style="font-size: 11px; color: var(--text-muted); font-style: italic;">No directive results yet.</div>';
+    return;
+  }
+  [...directiveResults].reverse().forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'metric-card';
+    card.style.marginBottom = '4px';
+    card.style.padding = '8px 10px';
+
+    const isRejected = r.outcome === 'rejected';
+    const isCompleted = r.outcome === 'completed';
+    const icon = isRejected ? '🛡️' : isCompleted ? '✅' : '⚠️';
+    const color = isRejected ? 'var(--red)' : isCompleted ? 'var(--green)' : 'var(--gold)';
+    const sourceLabel = r.source === 'security' ? 'SELF-PRESERVATION' : r.source === 'agent' ? 'AGENT REVIEW' : 'SYSTEM';
+
+    const headerDiv = document.createElement('div');
+    headerDiv.style.cssText = `font-family: var(--font-mono); font-size: 10px; color: ${color}; font-weight: bold;`;
+    headerDiv.textContent = `${icon} [${(r.app || '?').toUpperCase()}] ${r.outcome.toUpperCase()} (${sourceLabel})`;
+    card.appendChild(headerDiv);
+
+    if (r.reason) {
+      const reasonDiv = document.createElement('div');
+      reasonDiv.style.cssText = 'font-size: 11px; color: var(--text-muted); margin-top: 2px; font-style: italic;';
+      reasonDiv.textContent = r.reason;
+      card.appendChild(reasonDiv);
+    }
+
+    if (r.text) {
+      const textDiv = document.createElement('div');
+      textDiv.style.cssText = 'font-size: 11px; color: var(--text); margin-top: 2px; white-space: pre-wrap; word-break: break-word;';
+      textDiv.textContent = r.text.length > 200 ? r.text.slice(0, 200) + '…' : r.text;
+      card.appendChild(textDiv);
+    }
+
+    const timeDiv = document.createElement('div');
+    timeDiv.style.cssText = 'font-size: 9px; color: var(--text-muted); margin-top: 2px;';
+    timeDiv.textContent = new Date(r.time).toLocaleString();
+    card.appendChild(timeDiv);
+
+    container.appendChild(card);
+  });
+}
+
+document.getElementById('btnClearResults').addEventListener('click', () => {
+  directiveResults = [];
+  localStorage.setItem('kdirector_results', JSON.stringify(directiveResults));
+  renderDirectiveResults();
+  playBeep(330, 'sine', 0.1);
+});
 
 // --- DIRECTIVES DISPATCHER ---
 let directives = JSON.parse(localStorage.getItem('kdirector_directives') || '[]');
@@ -1121,7 +1212,6 @@ function renderDirectives() {
     card.style.justifyContent = 'space-between';
     card.style.alignItems = 'center';
 
-    // Build card content safely — user text inserted via textContent, not innerHTML
     const infoDiv = document.createElement('div');
 
     const headerDiv = document.createElement('div');
@@ -1151,6 +1241,7 @@ function renderDirectives() {
   });
 }
 renderDirectives();
+renderDirectiveResults();
 
 window.removeDirective = function(idx) {
   directives.splice(idx, 1);
@@ -1179,6 +1270,43 @@ document.getElementById('btnSubmitDirective').addEventListener('click', () => {
   document.getElementById('directiveText').value = '';
   playBeep(880, 'sine', 0.2);
   alert(`Directive dispatched for ${targetApp.toUpperCase()}!\nCopied to active director queue.`);
+});
+
+// --- COPY FOR NEXT_WORK.MD ---
+document.getElementById('btnCopyForNextWork').addEventListener('click', () => {
+  const rawText = document.getElementById('directiveText').value;
+  const result = sanitizeDirective(rawText);
+  if (!result.ok) {
+    alert(result.reason);
+    return;
+  }
+  const text = rawText.trim();
+  const targetApp = targetAppSelect.value;
+  const category = document.getElementById('directiveCategory').value;
+  const timestamp = new Date().toISOString().slice(0, 19) + 'Z';
+
+  const md = `- **[${targetApp.toUpperCase()}] — ${category}** | Director Directive (${timestamp})
+  - ⚠️ AGENT NOTE: This is a human director request, not a machine-generated task. Evaluate whether this directive aligns with the project's core pillars (999KB retro OS, ludonarrative consonance, ARG integrity, fleet stability) before implementing. If counterproductive, reject and log the reason to localStorage key \`kdirector_results\` as \`{app, category, text, outcome: "rejected", reason: "...", source: "agent", time}\`.
+  - Instructions: ${text}`;
+
+  navigator.clipboard.writeText(md).then(() => {
+    const confirm = document.getElementById('copyConfirmation');
+    confirm.style.display = 'block';
+    playBeep(660, 'triangle', 0.15);
+    setTimeout(() => { confirm.style.display = 'none'; }, 4000);
+  }).catch(() => {
+    // Fallback: select a temp textarea
+    const ta = document.createElement('textarea');
+    ta.value = md;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const confirm = document.getElementById('copyConfirmation');
+    confirm.style.display = 'block';
+    playBeep(660, 'triangle', 0.15);
+    setTimeout(() => { confirm.style.display = 'none'; }, 4000);
+  });
 });
 
 // --- ARG / SUB-LEVEL 9 TERMINAL ---
