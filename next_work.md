@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -17,11 +17,11 @@ current_targets:
   kilo_graphics: KChrono
   kilo_qa: KStellar
   kilo_expander: KTask
-  kilo_creator: "KStarForge (Deep-space shipyard engineering sim)"
+  kilo_creator: "KPomodoro (Work/break cycle manager)"
 last_run:
-  agent: kilo-expander
-  app: KSys
-  timestamp: "2026-09-18T06:45:00Z"
+  agent: kilo-creator
+  app: KStarForge
+  timestamp: "2026-09-18T10:45:00Z"
 last_planner_run: "2026-09-17T20:40:00Z"
 ---
 
@@ -60,19 +60,19 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues
 
 ### 1. App Creator & Deep Expander Queue (`kilo-creator`)
-- **Current Target**: `KStarForge` (Deep-space shipyard engineering sim)
+- **Current Target**: `KPomodoro` (Work/break cycle manager)
 - **Upcoming Concepts**:
-  `KPomodoro` (Work/break cycle manager), `KBookmark` (Categorized link vault), `KHash` (Multi-algorithm checksum tool), `KRSS` (Feed reader), `KClip` (Clipboard history tool).
+  `KBookmark` (Categorized link vault), `KHash` (Multi-algorithm checksum tool), `KRSS` (Feed reader), `KClip` (Clipboard history tool).
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Current Target**: `KChrono`
 - **Upcoming Queue**:
-  `KFortress`, `KAlchemy`, `KColony`, `KSpace`, `KAsteroids`, `KBreakout`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KCyber`, `KFarm`, `KMech`, `KMine`, `KMystery`, `KVoid`, `KWizard`, `KStarship`.
+  `KFortress`, `KAlchemy`, `KColony`, `KSpace`, `KAsteroids`, `KBreakout`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KCyber`, `KFarm`, `KMech`, `KMine`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KStarForge`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KTask`
 - **Upcoming Queue**:
-  `KTerm`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColony`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFarm`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMine`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KRogue`, `KSanctuary`, `KScript`, `KSpace`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`.
+  `KTerm`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColony`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFarm`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMine`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KRogue`, `KSanctuary`, `KScript`, `KSpace`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KStarForge`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KTask`
@@ -123,6 +123,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-18T10:45:00Z — kilo-creator: KStarForge**
+  - Status: COMPLETE 🚀 (Deep-space shipyard engineering sim created & registered).
+  - Core Sim: Modular 14x14 blueprint grid, drydock fabrication, reactor power & thermal radiators.
+  - Flight Proving Grounds: Real-time shakedown flight test with inertia, mining lasers, shields, and rogue drones.
+  - Economy & Contracts: Faction commissions (Terran Navy, Solaris Mining, Syndicate) with credit & reputation rewards.
+  - Compliance: Interactive splash screen, 5-step onboarding tutorial (kstarforge_tutorialSeen), F5/F9 quicksave/load, JSON export/import.
+  - Registration: Added KStarForge to KiloOS/src/App.jsx Games folder with dedicated icon and window dimensions.
+  - Verification: Single-File Web build clean (113.4 KB); Native Win32 C clean build (21.5 KB); all <999 KB size constraints and security gates passed.
+
 - **2026-09-18T06:45:00Z — kilo-expander: KSys**
   - Status: PASS ✅ (Deep functional feature expansion, diagnostics, export & hex telemetry).
   - Web Hex Inspector: Added 6th tab with interactive 16-byte hex viewer, pattern search, jump-to-offset, and HEX/BIN download.
@@ -158,14 +167,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Onboarding & Parity: Added [F1/H] help hotkey and overlay Enter/Space dismiss; added full native C mouse support and AdjustWindowRect.
   - Verification: Single-file Web build clean (128.7 KB, Vite built in 285ms); Native MSVC clean build (15.5 KB); <999 KB ceiling verified.
 
-- **2026-09-17T22:42:00Z — kilo-tester: KChrono**
-  - Status: PASS ✅ (8 issues, 8 fixed).
-  - Interactive Wiring: Added backdrop click dismissal on all overlays; added F1/? Help toggle, Enter action trigger, and Esc menu toggle.
-  - Chrono-Deck & Locker: Wired Chrono-Locker storage cache, cross-epoch item aging, deck slot rendering, and artifact strain discharge (hotkeys 4-7).
-  - Causality & Scenarios: Latched blast gate in Scenario 2 upon dual biometric auth; added passive paradox strain in Scenario 3 while rifts active.
-  - Telemetry & Inspector: Added direct epoch switching on Chronograph node click; expanded Causal Inspector for all tiles, crates, and phantoms.
-  - Settings Persistence: Added persistent localStorage storage for master volume, SFX, tachyon drone, CRT scanlines, and color theme.
-  - Verification: Single-file Web build (121.5 KB, Vite built in 333ms); Native MSVC clean build (15 KB); zero Vite build breaks; <999 KB ceiling.
 
 
 

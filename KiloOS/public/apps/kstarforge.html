@@ -1,0 +1,2792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KStarForge - Deep-Space Shipyard Engineering Sim</title>
+    <style>
+        :root {
+            --bg-void: #060a14;
+            --bg-panel: #0d1527;
+            --bg-panel-dark: #080d19;
+            --bg-card: #141f38;
+            --bg-card-hover: #1c2b4c;
+            --border-dim: #1e3054;
+            --border-bright: #38bdf8;
+            --border-cyan: #06b6d4;
+            --text-bright: #f8fafc;
+            --text-normal: #cbd5e1;
+            --text-dim: #64748b;
+            --accent-cyan: #06b6d4;
+            --accent-amber: #f59e0b;
+            --accent-orange: #f97316;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-purple: #a855f7;
+            --font-mono: 'Consolas', 'Courier New', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-void);
+            color: var(--text-normal);
+            font-family: var(--font-mono);
+            font-size: 13px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* CRT Raster Scanlines */
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%),
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            background-size: 100% 3px, 6px 100%;
+            z-index: 998;
+            opacity: 0.65;
+            transition: opacity 0.2s ease;
+        }
+        body.no-crt .scanlines {
+            display: none;
+        }
+
+        .crt-vignette {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none;
+            background: radial-gradient(circle at center, transparent 60%, rgba(2, 4, 10, 0.5) 90%, rgba(0, 0, 0, 0.85) 100%);
+            box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8);
+            z-index: 997;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 14px;
+            background: var(--bg-panel-dark);
+            border-bottom: 1px solid var(--border-dim);
+            height: 44px;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+            color: var(--text-bright);
+        }
+
+        .header-logo {
+            color: var(--accent-cyan);
+            font-size: 18px;
+        }
+
+        .header-resources {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 12px;
+        }
+
+        .res-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(14, 24, 46, 0.8);
+            padding: 3px 8px;
+            border-radius: 3px;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        .res-val {
+            font-weight: bold;
+            color: var(--text-bright);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button.btn {
+            background: var(--bg-card);
+            color: var(--text-normal);
+            border: 1px solid var(--border-dim);
+            padding: 4px 10px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        button.btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-bright);
+            color: var(--text-bright);
+        }
+
+        button.btn.btn-active {
+            background: #1e3a5f;
+            border-color: var(--accent-cyan);
+            color: #38bdf8;
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+        }
+
+        button.btn.btn-primary {
+            background: #0284c7;
+            border-color: #38bdf8;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        button.btn.btn-primary:hover {
+            background: #0369a1;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+        }
+
+        button.btn.btn-danger {
+            background: #991b1b;
+            border-color: #ef4444;
+            color: #fff;
+        }
+
+        /* Nav Bar */
+        nav.nav-bar {
+            display: flex;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border-dim);
+            padding: 4px 14px;
+            gap: 8px;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-dim);
+            padding: 6px 14px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: bold;
+            letter-spacing: 1px;
+            transition: all 0.15s ease;
+        }
+
+        .nav-btn:hover {
+            color: var(--text-bright);
+        }
+
+        .nav-btn.active {
+            color: var(--accent-cyan);
+            border-bottom: 2px solid var(--accent-cyan);
+            text-shadow: 0 0 8px rgba(6, 182, 212, 0.6);
+        }
+
+        /* Main Workspace Area */
+        main#main-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .view-panel {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0; left: 0;
+            display: none;
+        }
+
+        .view-panel.active {
+            display: flex;
+        }
+
+        /* Blueprint Bay Layout */
+        #blueprint-view {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .blueprint-sidebar-left {
+            width: 280px;
+            background: var(--bg-panel-dark);
+            border-right: 1px solid var(--border-dim);
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            gap: 10px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .blueprint-center {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #0e172e 0%, #060913 85%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .blueprint-sidebar-right {
+            width: 320px;
+            background: var(--bg-panel-dark);
+            border-left: 1px solid var(--border-dim);
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            gap: 12px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .section-header {
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--border-dim);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Palette Categories & Items */
+        .category-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .cat-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            color: var(--text-dim);
+            font-size: 11px;
+            padding: 3px 8px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .cat-btn:hover {
+            color: var(--text-bright);
+            border-color: var(--border-bright);
+        }
+
+        .cat-btn.active {
+            background: #1e3a5f;
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .module-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .module-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 4px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .module-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-bright);
+        }
+
+        .module-card.selected {
+            background: #153052;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+        }
+
+        .module-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 12px;
+            color: var(--text-bright);
+        }
+
+        .module-icon-badge {
+            width: 18px;
+            height: 18px;
+            border-radius: 3px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .module-stats-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .stat-badge {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 1px 5px;
+            border-radius: 2px;
+        }
+
+        /* Blueprint Canvas Area */
+        #blueprint-canvas-container {
+            position: relative;
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.15);
+            border: 1px solid var(--border-dim);
+            background: #080e1e;
+        }
+
+        #blueprint-canvas {
+            display: block;
+            cursor: crosshair;
+        }
+
+        .blueprint-toolbar {
+            position: absolute;
+            bottom: 12px;
+            display: flex;
+            gap: 8px;
+            background: rgba(13, 21, 39, 0.85);
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: 1px solid var(--border-dim);
+            backdrop-filter: blur(4px);
+        }
+
+        /* Telemetry Readouts */
+        .telemetry-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 4px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .metric-label {
+            color: var(--text-dim);
+        }
+
+        .metric-value {
+            font-weight: bold;
+            color: var(--text-bright);
+        }
+
+        .meter-bar-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 3px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .meter-bar-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.2s ease, background-color 0.2s ease;
+        }
+
+        /* Drydock View */
+        #drydock-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #070c18;
+            padding: 20px;
+            position: relative;
+        }
+
+        #drydock-canvas {
+            border: 1px solid var(--border-dim);
+            background: #091020;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            border-radius: 4px;
+        }
+
+        .drydock-controls {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .progress-container {
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .progress-bar-fill {
+            height: 18px;
+            background: linear-gradient(90deg, #0284c7, #06b6d4, #38bdf8);
+            width: 0%;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 11px;
+            color: #000;
+            text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
+            transition: width 0.1s linear;
+        }
+
+        /* Shakedown Flight View */
+        #flight-view {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: #02040a;
+        }
+
+        #flight-canvas {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .flight-hud {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: rgba(8, 14, 28, 0.85);
+            padding: 10px 14px;
+            border-radius: 4px;
+            border: 1px solid var(--border-dim);
+            backdrop-filter: blur(4px);
+            font-size: 12px;
+            pointer-events: none;
+        }
+
+        .flight-instructions {
+            position: absolute;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(8, 14, 28, 0.85);
+            padding: 6px 16px;
+            border-radius: 4px;
+            border: 1px solid var(--border-dim);
+            font-size: 11px;
+            color: var(--text-dim);
+            pointer-events: none;
+            display: flex;
+            gap: 16px;
+        }
+
+        /* Contracts View */
+        #contracts-view {
+            display: flex;
+            flex-direction: column;
+            padding: 20px 40px;
+            overflow-y: auto;
+            gap: 16px;
+            background: #090f1d;
+        }
+
+        .contract-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.2s ease;
+        }
+
+        .contract-card:hover {
+            border-color: var(--border-bright);
+        }
+
+        .contract-card.completed {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+
+        .contract-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-width: 65%;
+        }
+
+        .contract-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: var(--text-bright);
+        }
+
+        .contract-client {
+            font-size: 12px;
+            color: var(--accent-cyan);
+        }
+
+        .contract-desc {
+            font-size: 12px;
+            color: var(--text-normal);
+        }
+
+        .contract-reqs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .req-tag {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid var(--border-dim);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .req-tag.met {
+            color: var(--accent-green);
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+
+        .req-tag.unmet {
+            color: var(--accent-red);
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        .contract-reward-side {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .reward-badge {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--accent-amber);
+        }
+
+        /* Manual View */
+        #manual-view {
+            padding: 30px 60px;
+            overflow-y: auto;
+            background: #080d19;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .manual-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .manual-section h3 {
+            color: var(--accent-cyan);
+            border-bottom: 1px solid var(--border-dim);
+            padding-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .manual-section p, .manual-section li {
+            line-height: 1.6;
+            color: var(--text-normal);
+            font-size: 13px;
+        }
+
+        .manual-section ul {
+            padding-left: 20px;
+        }
+
+        /* Modal Overlays (Splash, Tutorial, Settings) */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(4, 8, 16, 0.88);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-box {
+            background: var(--bg-panel);
+            border: 2px solid var(--border-bright);
+            box-shadow: 0 0 40px rgba(6, 182, 212, 0.4);
+            border-radius: 6px;
+            width: 580px;
+            max-width: 90vw;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 12px 18px;
+            background: var(--bg-panel-dark);
+            border-bottom: 1px solid var(--border-dim);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-bright);
+            letter-spacing: 1.5px;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            line-height: 1.6;
+        }
+
+        .modal-footer {
+            padding: 12px 18px;
+            background: var(--bg-panel-dark);
+            border-top: 1px solid var(--border-dim);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Splash Specific */
+        .splash-hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 12px;
+            padding: 10px 0;
+        }
+
+        .splash-title-large {
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 20px rgba(6, 182, 212, 0.6);
+        }
+
+        .splash-sub {
+            font-size: 13px;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .splash-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .splash-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            color: var(--text-bright);
+            font-family: var(--font-mono);
+            font-size: 14px;
+            padding: 10px 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            text-align: left;
+            transition: all 0.15s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .splash-btn:hover {
+            background: #1e3a5f;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
+            transform: translateX(4px);
+        }
+
+        .splash-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            border-color: var(--border-dim);
+        }
+
+        /* Toast notifications */
+        #toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .toast-msg {
+            background: #0284c7;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            border: 1px solid #38bdf8;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: toastIn 0.25s forwards, toastOut 0.25s forwards 2.5s;
+        }
+
+        @keyframes toastIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes toastOut {
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+    <div class="crt-vignette"></div>
+
+    <!-- Header Bar -->
+    <header>
+        <div class="header-title">
+            <span class="header-logo">⚙</span>
+            <span>STARFORGE IX</span>
+            <span style="color: var(--text-dim); font-size: 11px;">// ORBITAL YARD</span>
+        </div>
+
+        <div class="header-resources">
+            <div class="res-item" title="Yard Operating Funds">
+                <span style="color: var(--accent-amber);">CREDITS:</span>
+                <span class="res-val" id="res-credits">3,500$C</span>
+            </div>
+            <div class="res-item" title="Titanium Alloy Blocks">
+                <span style="color: #93c5fd;">TITANIUM:</span>
+                <span class="res-val" id="res-titanium">240</span>
+            </div>
+            <div class="res-item" title="Hyper-Ferrite Armor Plating">
+                <span style="color: #cbd5e1;">FERRITE:</span>
+                <span class="res-val" id="res-ferrite">120</span>
+            </div>
+            <div class="res-item" title="Deuterium Reactor Propellant">
+                <span style="color: #38bdf8;">DEUTERIUM:</span>
+                <span class="res-val" id="res-deuterium">80</span>
+            </div>
+            <div class="res-item" title="Yard Fleet Reputation">
+                <span style="color: #a855f7;">REP:</span>
+                <span class="res-val" id="res-rep">12</span>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <button class="btn" id="btn-quicksave" title="Quicksave [F5]">💾 F5 Save</button>
+            <button class="btn" id="btn-quickload" title="Quickload [F9]">📂 F9 Load</button>
+            <button class="btn" id="btn-audio-toggle" title="Toggle Sound">🔊 Audio</button>
+            <button class="btn" id="btn-settings-open">⚙ Settings</button>
+            <button class="btn" id="btn-help-open">? Help</button>
+        </div>
+    </header>
+
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+        <button class="nav-btn active" data-target="blueprint-view">[1] BLUEPRINT BAY</button>
+        <button class="nav-btn" data-target="drydock-view">[2] DRYDOCK ASSEMBLY</button>
+        <button class="nav-btn" data-target="flight-view">[3] PROVING GROUNDS</button>
+        <button class="nav-btn" data-target="contracts-view">[4] FACTION CONTRACTS</button>
+        <button class="nav-btn" data-target="manual-view">[5] YARD MANUAL</button>
+    </nav>
+
+    <!-- Main Views Container -->
+    <main id="main-container">
+        <!-- 1. Blueprint View -->
+        <div class="view-panel active" id="blueprint-view">
+            <!-- Left Sidebar: Palette -->
+            <div class="blueprint-sidebar-left">
+                <div class="section-header">
+                    <span>MODULE PALETTE</span>
+                    <span style="font-size: 10px; color: var(--text-dim);" id="palette-count">16 Available</span>
+                </div>
+
+                <div class="category-selector">
+                    <button class="cat-btn active" data-cat="all">ALL</button>
+                    <button class="cat-btn" data-cat="hull">HULL</button>
+                    <button class="cat-btn" data-cat="power">POWER</button>
+                    <button class="cat-btn" data-cat="engine">ENGINE</button>
+                    <button class="cat-btn" data-cat="weapon">WEAPON</button>
+                    <button class="cat-btn" data-cat="tactical">TACTICAL</button>
+                    <button class="cat-btn" data-cat="utility">UTILITY</button>
+                </div>
+
+                <div class="module-list" id="module-list-container">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- Center: Canvas Grid -->
+            <div class="blueprint-center">
+                <div id="blueprint-canvas-container">
+                    <canvas id="blueprint-canvas" width="560" height="560"></canvas>
+                </div>
+
+                <div class="blueprint-toolbar">
+                    <button class="btn" id="btn-symmetry" title="Toggle Bilateral Symmetry Placement [S]">⇋ Symmetry: ON</button>
+                    <button class="btn" id="btn-clear-grid" title="Clear Grid">🗑 Clear</button>
+                    <button class="btn" id="btn-template-select">📋 Templates ▼</button>
+                    <button class="btn btn-primary" id="btn-send-to-drydock">🚀 Transfer to Drydock</button>
+                </div>
+            </div>
+
+            <!-- Right Sidebar: Telemetry & Specs -->
+            <div class="blueprint-sidebar-right">
+                <div class="section-header">
+                    <span>VESSEL TELEMETRY</span>
+                    <span id="ship-class-badge" style="color: var(--accent-cyan);">CORVETTE</span>
+                </div>
+
+                <div class="telemetry-card">
+                    <div class="metric-row">
+                        <span class="metric-label">HULL INTEGRITY</span>
+                        <span class="metric-value" id="spec-hull">450 HP</span>
+                    </div>
+                    <div class="meter-bar-container">
+                        <div class="meter-bar-fill" id="bar-hull" style="background-color: #38bdf8;"></div>
+                    </div>
+
+                    <div class="metric-row">
+                        <span class="metric-label">DEFLECTOR SHIELDS</span>
+                        <span class="metric-value" id="spec-shield">300 SP</span>
+                    </div>
+                    <div class="meter-bar-container">
+                        <div class="meter-bar-fill" id="bar-shield" style="background-color: #818cf8;"></div>
+                    </div>
+
+                    <div class="metric-row">
+                        <span class="metric-label">DRY MASS</span>
+                        <span class="metric-value" id="spec-mass">140 TONS</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">TOTAL THRUST</span>
+                        <span class="metric-value" id="spec-thrust">320 kN</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">THRUST-TO-WEIGHT (TWR)</span>
+                        <span class="metric-value" id="spec-twr">2.28</span>
+                    </div>
+                </div>
+
+                <div class="section-header">
+                    <span>POWER & THERMALS</span>
+                </div>
+
+                <div class="telemetry-card">
+                    <div class="metric-row">
+                        <span class="metric-label">POWER GENERATION</span>
+                        <span class="metric-value" id="spec-power-gen">+140 MW</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">POWER DEMAND</span>
+                        <span class="metric-value" id="spec-power-draw">-95 MW</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">NET POWER GRID</span>
+                        <span class="metric-value" id="spec-power-net" style="color: var(--accent-green);">+45 MW (SURPLUS)</span>
+                    </div>
+                    <div class="meter-bar-container">
+                        <div class="meter-bar-fill" id="bar-power" style="background-color: #10b981;"></div>
+                    </div>
+
+                    <div style="height: 1px; background: var(--border-dim); margin: 4px 0;"></div>
+
+                    <div class="metric-row">
+                        <span class="metric-label">HEAT GENERATION</span>
+                        <span class="metric-value" id="spec-heat-gen">42 MW</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">COOLING DISSIPATION</span>
+                        <span class="metric-value" id="spec-heat-dissip">60 MW</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">THERMAL STABILITY</span>
+                        <span class="metric-value" id="spec-heat-net" style="color: var(--accent-green);">STABLE (-18 MW)</span>
+                    </div>
+                    <div class="meter-bar-container">
+                        <div class="meter-bar-fill" id="bar-heat" style="background-color: #06b6d4;"></div>
+                    </div>
+                </div>
+
+                <div class="section-header">
+                    <span>OPERATIONAL CAPABILITIES</span>
+                </div>
+
+                <div class="telemetry-card">
+                    <div class="metric-row">
+                        <span class="metric-label">TOTAL FIREPOWER</span>
+                        <span class="metric-value" id="spec-dps">85 DPS</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">CARGO CAPACITY</span>
+                        <span class="metric-value" id="spec-cargo">120 TONS</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">WARP JUMP RANGE</span>
+                        <span class="metric-value" id="spec-warp">12.5 LY</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">CREW COMPLEMENT</span>
+                        <span class="metric-value" id="spec-crew">6 VANGUARD</span>
+                    </div>
+                </div>
+
+                <div class="section-header">
+                    <span>ESTIMATED FABRICATION COST</span>
+                </div>
+
+                <div class="telemetry-card" id="cost-card">
+                    <div class="metric-row">
+                        <span class="metric-label">CREDITS REQUIRED:</span>
+                        <span class="metric-value" id="cost-credits">1,850$C</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">TITANIUM BLOCKS:</span>
+                        <span class="metric-value" id="cost-titanium">110</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">FERRITE PLATES:</span>
+                        <span class="metric-value" id="cost-ferrite">45</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Drydock Assembly View -->
+        <div class="view-panel" id="drydock-view">
+            <canvas id="drydock-canvas" width="760" height="420"></canvas>
+
+            <div class="drydock-controls">
+                <div class="progress-container">
+                    <div class="progress-bar-fill" id="drydock-progress-bar">0% READY</div>
+                </div>
+
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-primary" id="btn-start-fab">⚡ Begin Fabrication</button>
+                    <button class="btn" id="btn-rush-fab">⏩ Overclock Fabrication (150$C)</button>
+                    <button class="btn" id="btn-launch-flight">🚀 Launch to Proving Grounds</button>
+                    <button class="btn" id="btn-back-blueprint">⮐ Return to Blueprint</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Shakedown Proving Grounds View -->
+        <div class="view-panel" id="flight-view">
+            <canvas id="flight-canvas"></canvas>
+
+            <div class="flight-hud">
+                <div style="font-weight: bold; color: var(--accent-cyan); letter-spacing: 1px;">SHAKEDOWN FLIGHT TELEMETRY</div>
+                <div>HULL: <span id="flight-hud-hull" style="font-weight: bold; color: #fff;">450 / 450</span></div>
+                <div>SHIELD: <span id="flight-hud-shield" style="font-weight: bold; color: #818cf8;">300 / 300</span></div>
+                <div>REACTOR HEAT: <span id="flight-hud-heat" style="font-weight: bold; color: #38bdf8;">0%</span></div>
+                <div>SPEED: <span id="flight-hud-speed" style="font-weight: bold; color: #fff;">0 m/s</span></div>
+                <div>ORE IN CARGO: <span id="flight-hud-cargo" style="font-weight: bold; color: #f59e0b;">0 TONS</span></div>
+            </div>
+
+            <div class="flight-instructions">
+                <span>[W/S] Thrust / Retro</span>
+                <span>[A/D] Steering Yaw</span>
+                <span>[SPACE] Fire Primaries</span>
+                <span>[E] Mining Beam</span>
+                <span>[SHIFT] Afterburner</span>
+                <span>[C] Coolant Vent</span>
+                <span>[ESC] Dock at Station</span>
+            </div>
+        </div>
+
+        <!-- 4. Contracts View -->
+        <div class="view-panel" id="contracts-view">
+            <div class="section-header" style="font-size: 14px; margin-bottom: 8px;">
+                <span>GALACTIC FACTION FLEET COMMISSION BOARD</span>
+                <span style="color: var(--text-dim); font-size: 12px;">Build compliant hulls to fulfill orders</span>
+            </div>
+
+            <div id="contracts-list-container" style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Populated dynamically via JS -->
+            </div>
+        </div>
+
+        <!-- 5. Operations Manual View -->
+        <div class="view-panel" id="manual-view">
+            <div class="manual-section">
+                <h3>1. SHIP ARCHITECTURE & BLUEPRINT BAY</h3>
+                <p>Welcome, Yardmaster. You oversee the deep-space fabrication facility StarForge IX. Every vessel begins on the 14x14 Blueprint Grid.</p>
+                <ul>
+                    <li><strong>Bilateral Symmetry [S]</strong>: Ensures symmetrical mass and thruster balance. Highly recommended for warships and interceptors.</li>
+                    <li><strong>Command Bridge</strong>: Houses primary computer cores and pilot avionics. Every functioning ship requires at least one cockpit.</li>
+                    <li><strong>Hull Framing & Armor</strong>: Titanium plates absorb kinetic impacts; Reinforced Plating resists heavy railgun fire.</li>
+                </ul>
+            </div>
+
+            <div class="manual-section">
+                <h3>2. POWER GRIDS & THERMAL EQUILIBRIUM</h3>
+                <p>Modern vessels generate and consume immense thermal and electrical loads:</p>
+                <ul>
+                    <li><strong>Net Power (MW)</strong>: Your reactors (Fission, Fusion, Antimatter) must generate more megawatts than your thrusters, shields, and weapons draw. Negative net power results in systems brownout.</li>
+                    <li><strong>Heat Dissipation</strong>: Active firing, maneuvering, and reactor coils create heat. Install sufficient <em>Radiator Fins</em> or <em>Cryo-Coolers</em>. If heat exceeds 100%, the reactor will trigger an emergency scram.</li>
+                </ul>
+            </div>
+
+            <div class="manual-section">
+                <h3>3. DRYDOCK ASSEMBLY & FABRICATION</h3>
+                <p>Once your blueprint is engineered, submit it to the Drydock. Automated gantry cranes and welding laser drones will assemble the ship layer-by-layer using your yard's stockpile of Titanium, Ferrite, and Deuterium.</p>
+            </div>
+
+            <div class="manual-section">
+                <h3>4. SHAKEDOWN PROVING GROUNDS</h3>
+                <p>Take your constructed vessel on a shakedown cruise through the high-orbit asteroid proving grounds:</p>
+                <ul>
+                    <li><strong>Flight Controls</strong>: [W/Up] Main Thruster, [S/Down] Retro-Brakes, [A/D/Left/Right] RCS Yaw, [Space] Fire Weapons, [E] Mining Beam, [Shift] Afterburners.</li>
+                    <li><strong>Asteroid Harvesting</strong>: Target mineral asteroids with your mining beam or cannons to extract raw ore into your cargo hold.</li>
+                    <li><strong>Syndicate Pirates</strong>: Rogue automated pirate drones patrol the outskirts. Neutralize them to earn yard bounties.</li>
+                </ul>
+            </div>
+
+            <div class="manual-section">
+                <h3>5. SHORTCUTS & SYSTEM COMMANDS</h3>
+                <ul>
+                    <li><strong>F5</strong>: Quicksave state to browser storage.</li>
+                    <li><strong>F9</strong>: Quickload last quicksave.</li>
+                    <li><strong>1 - 5</strong>: Rapidly switch between views (Blueprint, Drydock, Proving Grounds, Contracts, Manual).</li>
+                    <li><strong>ESC</strong>: Cancel selection, close modal, or return from flight range.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <!-- Start Splash Screen Modal -->
+    <div class="modal-overlay" id="splash-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span class="modal-title">STARFORGE IX // SYSTEM READY</span>
+                <span style="font-size: 11px; color: var(--accent-cyan);">ORBITAL OS v1.0.0</span>
+            </div>
+            <div class="modal-body">
+                <div class="splash-hero">
+                    <div style="font-size: 36px;">⚙ ✦ 🚀</div>
+                    <div class="splash-title-large">K S T A R F O R G E</div>
+                    <div class="splash-sub">Deep-Space Shipyard Engineering Sim</div>
+                    <p style="font-size: 12px; color: var(--text-normal); max-width: 440px;">
+                        Assume command of Orbital Drydock IX. Engineer modular spacecraft, balance power & thermals, test fly in live orbit, and build the ultimate fleet.
+                    </p>
+                </div>
+
+                <div class="splash-menu">
+                    <button class="splash-btn" id="btn-splash-new">
+                        <span>▶ NEW YARD CAREER</span>
+                        <span style="font-size: 11px; color: var(--accent-cyan);">Start fresh simulation</span>
+                    </button>
+                    <button class="splash-btn" id="btn-splash-continue" disabled>
+                        <span>↻ CONTINUE YARD</span>
+                        <span style="font-size: 11px; color: var(--text-dim);" id="splash-save-info">No save found</span>
+                    </button>
+                    <button class="splash-btn" id="btn-splash-flight">
+                        <span>🚀 SHAKEDOWN CRUISE</span>
+                        <span style="font-size: 11px; color: var(--accent-amber);">Immediate test flight</span>
+                    </button>
+                    <button class="splash-btn" id="btn-splash-manual">
+                        <span>📖 OPERATIONS MANUAL</span>
+                        <span style="font-size: 11px; color: var(--text-dim);">Engineering handbook</span>
+                    </button>
+                    <button class="splash-btn" id="btn-splash-settings">
+                        <span>⚙ SYSTEM CONFIG</span>
+                        <span style="font-size: 11px; color: var(--text-dim);">Audio & visuals</span>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <span style="font-size: 11px; color: var(--text-dim); margin-right: auto;">Press [ESC] to dismiss | [F5/F9] Quicksave</span>
+                <button class="btn btn-primary" id="btn-splash-start">Launch Terminal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- First-Run Tutorial Modal -->
+    <div class="modal-overlay" id="tutorial-modal" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span class="modal-title" id="tut-step-title">ONBOARDING: WELCOME TO STARFORGE IX</span>
+                <span style="font-size: 11px; color: var(--accent-cyan);" id="tut-step-count">Step 1 of 5</span>
+            </div>
+            <div class="modal-body" id="tut-step-body">
+                <!-- Populated dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="btn-tut-skip">Skip Tutorial (ESC)</button>
+                <button class="btn" id="btn-tut-prev">Previous</button>
+                <button class="btn btn-primary" id="btn-tut-next">Next Step ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span class="modal-title">SYSTEM SETTINGS</span>
+                <button class="btn" id="btn-settings-close" style="padding: 2px 6px;">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="telemetry-card">
+                    <div class="metric-row">
+                        <span>MASTER AUDIO SYNTHESIZER</span>
+                        <input type="range" id="setting-vol" min="0" max="100" value="70">
+                    </div>
+                    <div class="metric-row">
+                        <span>CRT SCANLINE EMULATION</span>
+                        <button class="btn" id="setting-crt-toggle">ENABLED</button>
+                    </div>
+                </div>
+
+                <div class="telemetry-card">
+                    <div class="metric-row">
+                        <span>SAVE MANAGEMENT</span>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-top: 4px;">
+                        <button class="btn" id="btn-export-save">📥 Export Save (.json)</button>
+                        <button class="btn" id="btn-import-save">📤 Import Save (.json)</button>
+                        <input type="file" id="file-import-input" accept=".json" style="display: none;">
+                        <button class="btn btn-danger" id="btn-reset-save">🗑 Reset All Progress</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="btn-settings-done">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container"></div>
+
+    <script>
+        /* ==========================================================================
+           1. CORE DATA STRUCTURES & MODULE DEFINITIONS
+           ========================================================================== */
+        const GRID_SIZE = 14;
+
+        const MODULE_DEFS = {
+            1: { id: 1, cat: 'hull', name: 'Titanium Hull', badge: 'H', color: '#475569', hp: 120, mass: 10, pGen: 0, pDraw: 0, hGen: 0, hDiss: 0, thrust: 0, dps: 0, cargo: 0, warp: 0, costCr: 50, costTi: 12, costFe: 0, costDe: 0, desc: 'Lightweight structural hull block.' },
+            2: { id: 2, cat: 'hull', name: 'Reinforced Bulkhead', badge: 'B', color: '#64748b', hp: 320, mass: 28, pGen: 0, pDraw: 0, hGen: 0, hDiss: 0, thrust: 0, dps: 0, cargo: 0, warp: 0, costCr: 120, costTi: 25, costFe: 15, costDe: 0, desc: 'Dense composite armor with high kinetic resistance.' },
+            3: { id: 3, cat: 'hull', name: 'Command Bridge', badge: 'C', color: '#06b6d4', hp: 180, mass: 14, pGen: 10, pDraw: 5, hGen: 2, hDiss: 0, thrust: 0, dps: 0, cargo: 0, warp: 0, costCr: 300, costTi: 20, costFe: 5, costDe: 0, desc: 'Command deck housing pilot avionics and navigational matrix.' },
+            4: { id: 4, cat: 'hull', name: 'Observation Dome', badge: 'O', color: '#38bdf8', hp: 90, mass: 8, pGen: 0, pDraw: 2, hGen: 0, hDiss: 0, thrust: 0, dps: 0, cargo: 0, warp: 0, costCr: 150, costTi: 10, costFe: 0, costDe: 0, desc: 'Reinforced glass canopy for optical targeting.' },
+            
+            5: { id: 5, cat: 'power', name: 'Fission Reactor Core', badge: 'F', color: '#eab308', hp: 110, mass: 35, pGen: 55, pDraw: 0, hGen: 18, hDiss: 0, thrust: 0, dps: 0, cargo: 0, warp: 0, costCr: 350, costTi: 30, costFe: 20, costDe: 15, desc: 'Stable nuclear reactor generating reliable baseline megawatts.' },
+            6: { id: 6, cat: 'power', name: 'Fusion Tokamak', badge: 'K', color: '#f97316', hp: 200, mass: 65, pGen: 160, pDraw: 0, hGen: 45, hDiss: 0, thrust: 0, dps: 0, cargo: 0, warp: 0, costCr: 800, costTi: 60, costFe: 40, costDe: 35, desc: 'High-yield magnetic containment fusion reactor.' },
+            7: { id: 7, cat: 'power', name: 'Antimatter Siphon', badge: 'A', color: '#a855f7', hp: 260, mass: 90, pGen: 420, pDraw: 0, hGen: 95, hDiss: 0, thrust: 0, dps: 0, cargo: 0, warp: 0, costCr: 1800, costTi: 100, costFe: 70, costDe: 60, desc: 'High-energy matter-antimatter annihilation cell.' },
+            8: { id: 8, cat: 'power', name: 'Zero-Point Dynamo', badge: 'Z', color: '#ec4899', hp: 350, mass: 50, pGen: 900, pDraw: 0, hGen: 40, hDiss: 0, thrust: 0, dps: 0, cargo: 0, warp: 0, costCr: 3500, costTi: 150, costFe: 100, costDe: 100, desc: 'Precursor relic extracting infinite vacuum energy.' },
+
+            9: { id: 9, cat: 'engine', name: 'Chemical Thruster', badge: 'T', color: '#0284c7', hp: 90, mass: 16, pGen: 0, pDraw: 12, hGen: 8, hDiss: 0, thrust: 95, dps: 0, cargo: 0, warp: 0, costCr: 160, costTi: 18, costFe: 5, costDe: 10, desc: 'Standard hypergolic rocket nozzle providing agile delta-v.' },
+            10: { id: 10, cat: 'engine', name: 'Ion Vector Engine', badge: 'I', color: '#06b6d4', hp: 120, mass: 24, pGen: 0, pDraw: 35, hGen: 14, hDiss: 0, thrust: 190, dps: 0, cargo: 0, warp: 0, costCr: 340, costTi: 30, costFe: 15, costDe: 20, desc: 'Electrostatic ion propulsion for high sustained cruising speed.' },
+            11: { id: 11, cat: 'engine', name: 'Plasma Torch Drive', badge: 'P', color: '#8b5cf6', hp: 180, mass: 45, pGen: 0, pDraw: 75, hGen: 30, hDiss: 0, thrust: 420, dps: 0, cargo: 0, warp: 0, costCr: 750, costTi: 55, costFe: 30, costDe: 40, desc: 'Heavy magnetoplasmadynamic thruster with massive acceleration.' },
+            12: { id: 12, cat: 'engine', name: 'Hyper-Warp Nacelle', badge: 'W', color: '#d946ef', hp: 140, mass: 35, pGen: 0, pDraw: 45, hGen: 20, hDiss: 0, thrust: 50, dps: 0, cargo: 0, warp: 12, costCr: 900, costTi: 45, costFe: 25, costDe: 30, desc: 'Subspace field coil enabling faster-than-light interstellar jumps.' },
+
+            13: { id: 13, cat: 'tactical', name: 'Radiator Fin', badge: 'R', color: '#10b981', hp: 60, mass: 10, pGen: 0, pDraw: 0, hGen: 0, hDiss: 35, thrust: 0, dps: 0, cargo: 0, warp: 0, costCr: 110, costTi: 15, costFe: 0, costDe: 0, desc: 'Graphene thermal radiator shedding waste heat into space.' },
+            14: { id: 14, cat: 'tactical', name: 'Cryo-Subcooler', badge: 'S', color: '#14b8a6', hp: 110, mass: 30, pGen: 0, pDraw: 25, hGen: 0, hDiss: 95, thrust: 0, dps: 0, cargo: 0, warp: 0, costCr: 380, costTi: 30, costFe: 15, costDe: 10, desc: 'Active refrigeration unit dissipating extreme combat thermal spikes.' },
+            15: { id: 15, cat: 'tactical', name: 'Deflector Projector', badge: 'D', color: '#3b82f6', hp: 120, mass: 22, pGen: 0, pDraw: 40, hGen: 12, hDiss: 0, thrust: 0, dps: 0, cargo: 0, warp: 0, costCr: 450, costTi: 35, costFe: 20, costDe: 25, desc: 'High-frequency deflector emitter granting 250 shield capacity.' },
+
+            16: { id: 16, cat: 'weapon', name: 'Twin Autocannon', badge: 'X', color: '#ef4444', hp: 95, mass: 18, pGen: 0, pDraw: 15, hGen: 8, hDiss: 0, thrust: 0, dps: 35, cargo: 0, warp: 0, costCr: 240, costTi: 25, costFe: 15, costDe: 0, desc: 'Rapid-fire tungsten kinetic cannons for close-in interception.' },
+            17: { id: 17, cat: 'weapon', name: 'Heavy Plasma Lance', badge: 'L', color: '#f97316', hp: 130, mass: 32, pGen: 0, pDraw: 50, hGen: 22, hDiss: 0, thrust: 0, dps: 85, cargo: 0, warp: 0, costCr: 550, costTi: 40, costFe: 25, costDe: 20, desc: 'Focused thermal plasma beam melting heavy warship plating.' },
+            18: { id: 18, cat: 'weapon', name: 'Hypervelocity Railgun', badge: 'G', color: '#eab308', hp: 160, mass: 55, pGen: 0, pDraw: 90, hGen: 35, hDiss: 0, thrust: 0, dps: 165, cargo: 0, warp: 0, costCr: 950, costTi: 70, costFe: 50, costDe: 30, desc: 'Long-range magnetic accelerator firing depleted uranium slugs.' },
+
+            19: { id: 19, cat: 'utility', name: 'Cargo Hold Pod', badge: 'M', color: '#a16207', hp: 100, mass: 14, pGen: 0, pDraw: 4, hGen: 0, hDiss: 0, thrust: 0, dps: 0, cargo: 120, warp: 0, costCr: 120, costTi: 20, costFe: 10, costDe: 0, desc: 'Pressurized freight container expanding mineral cargo volume.' },
+            20: { id: 20, cat: 'utility', name: 'Mining Laser Drill', badge: 'U', color: '#06b6d4', hp: 110, mass: 22, pGen: 0, pDraw: 28, hGen: 14, hDiss: 0, thrust: 0, dps: 20, cargo: 0, warp: 0, costCr: 320, costTi: 25, costFe: 15, costDe: 15, desc: 'Industrial mining beam optimized for rapidly shattering asteroids.' }
+        };
+
+        /* Faction Contracts Database */
+        const CONTRACTS_DATA = [
+            {
+                id: 'c1',
+                title: 'Terran Escort Frigate "Aegis IV"',
+                client: 'United Terran Defense Fleet',
+                desc: 'Construct a durable combat escort capable of patrolling the outer rim. Requires high hull plating, deflector shielding, and twin kinetic autocannons.',
+                reqs: { hp: 500, shield: 200, dps: 60, twr: 1.5, cargo: 0, warp: 0 },
+                reward: { credits: 2400, rep: 30, titanium: 60, ferrite: 40 }
+            },
+            {
+                id: 'c2',
+                title: 'Solaris Mineral Hauler "Deep Prospector"',
+                client: 'Solaris Mining Consortium',
+                desc: 'A heavy ore transport with substantial cargo bays and at least one industrial mining beam. Speed can be modest, but cargo capacity must exceed 200 tons.',
+                reqs: { hp: 300, shield: 0, dps: 15, twr: 1.0, cargo: 200, warp: 0 },
+                reward: { credits: 1950, rep: 25, titanium: 80, ferrite: 50 }
+            },
+            {
+                id: 'c3',
+                title: 'Orion Deep Exploration Scout',
+                client: 'Orion Science Coalition',
+                desc: 'An agile long-range vessel equipped with a Hyper-Warp Nacelle, stable thermal radiators, and high thrust-to-weight ratio.',
+                reqs: { hp: 250, shield: 150, dps: 0, twr: 2.2, cargo: 0, warp: 10 },
+                reward: { credits: 3100, rep: 40, titanium: 40, deuterium: 60 }
+            },
+            {
+                id: 'c4',
+                title: 'Classified Echo Prototype [PROJECT 1999]',
+                client: 'Classified Director Directive',
+                desc: 'An enigmatic request broadcasting on a 1999Hz carrier frequency. Demands zero-point or antimatter power grid, high firepower, and extreme warp capability.',
+                reqs: { hp: 800, shield: 400, dps: 150, twr: 2.5, cargo: 100, warp: 20 },
+                reward: { credits: 6500, rep: 80, titanium: 150, ferrite: 100, deuterium: 100 }
+            }
+        ];
+
+        /* ==========================================================================
+           2. AUDIO SYNTHESIZER ENGINE (Web Audio API)
+           ========================================================================== */
+        class AudioEngine {
+            constructor() {
+                this.ctx = null;
+                this.volume = 0.7;
+                this.muted = false;
+                this.ambientNode = null;
+            }
+
+            init() {
+                if (this.ctx) return;
+                try {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) {
+                        this.ctx = new AudioCtx();
+                    }
+                } catch (e) {
+                    console.warn('Web Audio not supported', e);
+                }
+            }
+
+            playBeep(freq, duration, type = 'sine', gainVal = 0.15) {
+                if (this.muted || !this.ctx) return;
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                
+                gain.gain.setValueAtTime(gainVal * this.volume, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            }
+
+            playClick() {
+                this.playBeep(850, 0.04, 'triangle', 0.1);
+            }
+
+            playPlace() {
+                this.playBeep(1200, 0.06, 'sine', 0.2);
+            }
+
+            playRemove() {
+                this.playBeep(340, 0.08, 'sawtooth', 0.15);
+            }
+
+            playCannon() {
+                if (this.muted || !this.ctx) return;
+                this.playBeep(320, 0.09, 'square', 0.25);
+                this.playBeep(180, 0.12, 'sawtooth', 0.2);
+            }
+
+            playPlasma() {
+                if (this.muted || !this.ctx) return;
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(140, this.ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.25 * this.volume, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.15);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.15);
+            }
+
+            playRailgun() {
+                if (this.muted || !this.ctx) return;
+                this.playBeep(140, 0.35, 'square', 0.4);
+                this.playBeep(1200, 0.1, 'sine', 0.3);
+            }
+
+            playMining() {
+                this.playBeep(520, 0.08, 'triangle', 0.12);
+            }
+
+            playWeld() {
+                if (this.muted || !this.ctx) return;
+                this.playBeep(200 + Math.random() * 600, 0.03, 'sawtooth', 0.08);
+            }
+
+            playSuccess() {
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((n, idx) => {
+                    setTimeout(() => this.playBeep(n, 0.15, 'sine', 0.25), idx * 80);
+                });
+            }
+
+            playAlarm() {
+                this.playBeep(880, 0.1, 'sawtooth', 0.25);
+                setTimeout(() => this.playBeep(660, 0.1, 'sawtooth', 0.25), 100);
+            }
+        }
+
+        const audio = new AudioEngine();
+
+        /* ==========================================================================
+           3. MASTER STATE MANAGEMENT & PERSISTENCE
+           ========================================================================== */
+        class GameState {
+            constructor() {
+                this.grid = Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(0));
+                this.selectedModuleId = 1;
+                this.selectedCategory = 'all';
+                this.symmetryMode = true;
+                this.resources = {
+                    credits: 3500,
+                    titanium: 240,
+                    ferrite: 120,
+                    deuterium: 80,
+                    reputation: 12
+                };
+                this.completedContracts = {};
+                this.drydockProgress = 0;
+                this.isFabricating = false;
+                this.stats = {};
+            }
+
+            loadDefaultVanguard() {
+                this.grid = Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(0));
+                const mid = Math.floor(GRID_SIZE / 2);
+                
+                // Prow & Bridge
+                this.grid[2][mid - 1] = 4; // Observation
+                this.grid[2][mid] = 4;
+                this.grid[3][mid - 1] = 3; // Bridge
+                this.grid[3][mid] = 3;
+                
+                // Armor Core
+                this.grid[4][mid - 1] = 2; // Bulkhead
+                this.grid[4][mid] = 2;
+                this.grid[4][mid - 2] = 16; // Autocannon
+                this.grid[4][mid + 1] = 16;
+                
+                // Weapons & Radiators
+                this.grid[5][mid - 2] = 13; // Radiator
+                this.grid[5][mid - 1] = 1;  // Titanium
+                this.grid[5][mid] = 1;
+                this.grid[5][mid + 1] = 13;
+                
+                // Reactor
+                this.grid[6][mid - 1] = 5; // Fission
+                this.grid[6][mid] = 5;
+                this.grid[6][mid - 2] = 15; // Shield
+                this.grid[6][mid + 1] = 15;
+                
+                // Cargo & Utility
+                this.grid[7][mid - 1] = 19; // Cargo
+                this.grid[7][mid] = 20;     // Mining Drill
+                
+                // Engines
+                this.grid[8][mid - 2] = 9;  // Chem
+                this.grid[8][mid - 1] = 11; // Plasma
+                this.grid[8][mid] = 11;
+                this.grid[8][mid + 1] = 9;
+
+                this.calculateTelemetry();
+            }
+
+            calculateTelemetry() {
+                let hp = 0, mass = 25, pGen = 0, pDraw = 0, hGen = 0, hDiss = 10;
+                let thrust = 0, dps = 0, cargo = 0, warp = 0, shields = 0;
+                let costCr = 0, costTi = 0, costFe = 0, costDe = 0;
+                let moduleCount = 0;
+
+                for (let y = 0; y < GRID_SIZE; y++) {
+                    for (let x = 0; x < GRID_SIZE; x++) {
+                        const mId = this.grid[y][x];
+                        if (mId && MODULE_DEFS[mId]) {
+                            const def = MODULE_DEFS[mId];
+                            moduleCount++;
+                            hp += def.hp;
+                            mass += def.mass;
+                            pGen += def.pGen;
+                            pDraw += def.pDraw;
+                            hGen += def.hGen;
+                            hDiss += def.hDiss;
+                            thrust += def.thrust;
+                            dps += def.dps;
+                            cargo += def.cargo;
+                            warp += def.warp;
+                            if (mId === 15) shields += 250;
+
+                            costCr += def.costCr;
+                            costTi += def.costTi;
+                            costFe += def.costFe;
+                            costDe += def.costDe;
+                        }
+                    }
+                }
+
+                const twr = mass > 0 ? (thrust / mass).toFixed(2) : 0;
+                const netPower = pGen - pDraw;
+                const netHeat = hGen - hDiss;
+
+                this.stats = {
+                    moduleCount,
+                    hp, mass, pGen, pDraw, netPower,
+                    hGen, hDiss, netHeat,
+                    thrust, twr, dps, cargo, warp, shields,
+                    costCr, costTi, costFe, costDe
+                };
+
+                return this.stats;
+            }
+
+            saveToStorage(slot = 'kstarforge_quicksave') {
+                const payload = {
+                    grid: this.grid,
+                    resources: this.resources,
+                    completedContracts: this.completedContracts,
+                    drydockProgress: this.drydockProgress,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem(slot, JSON.stringify(payload));
+                showToast('QUICKSAVE SUCCESSFUL [F5]');
+                audio.playSuccess();
+            }
+
+            loadFromStorage(slot = 'kstarforge_quicksave') {
+                const raw = localStorage.getItem(slot);
+                if (!raw) {
+                    showToast('NO SAVE FILE LOCATED');
+                    return false;
+                }
+                try {
+                    const data = JSON.parse(raw);
+                    if (data.grid) this.grid = data.grid;
+                    if (data.resources) this.resources = data.resources;
+                    if (data.completedContracts) this.completedContracts = data.completedContracts;
+                    if (data.drydockProgress !== undefined) this.drydockProgress = data.drydockProgress;
+                    this.calculateTelemetry();
+                    showToast('QUICKSAVE RESTORED [F9]');
+                    audio.playSuccess();
+                    return true;
+                } catch (e) {
+                    console.error('Failed to load save', e);
+                    showToast('CORRUPT SAVE FILE');
+                    return false;
+                }
+            }
+        }
+
+        const state = new GameState();
+
+        /* ==========================================================================
+           4. TOAST NOTIFICATION SYSTEM
+           ========================================================================== */
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = 'toast-msg';
+            el.textContent = msg;
+            container.appendChild(el);
+            setTimeout(() => {
+                if (el.parentNode) el.parentNode.removeChild(el);
+            }, 3000);
+        }
+
+        /* ==========================================================================
+           5. BLUEPRINT CANVAS RENDERER & INTERACTION
+           ========================================================================== */
+        const bpCanvas = document.getElementById('blueprint-canvas');
+        const bpCtx = bpCanvas.getContext('2d');
+        const CELL_SIZE = bpCanvas.width / GRID_SIZE; // 560 / 14 = 40px
+
+        let isMouseDown = false;
+        let isRightClick = false;
+
+        function renderBlueprintGrid() {
+            bpCtx.clearRect(0, 0, bpCanvas.width, bpCanvas.height);
+
+            // Sub-grid gridlines
+            bpCtx.strokeStyle = 'rgba(30, 48, 84, 0.4)';
+            bpCtx.lineWidth = 1;
+            for (let i = 0; i <= GRID_SIZE; i++) {
+                const pos = i * CELL_SIZE;
+                bpCtx.beginPath();
+                bpCtx.moveTo(pos, 0);
+                bpCtx.lineTo(pos, bpCanvas.height);
+                bpCtx.stroke();
+
+                bpCtx.beginPath();
+                bpCtx.moveTo(0, pos);
+                bpCtx.lineTo(bpCanvas.width, pos);
+                bpCtx.stroke();
+            }
+
+            // Symmetry Axis Line
+            if (state.symmetryMode) {
+                const mid = (GRID_SIZE / 2) * CELL_SIZE;
+                bpCtx.strokeStyle = 'rgba(6, 182, 212, 0.7)';
+                bpCtx.setLineDash([4, 4]);
+                bpCtx.lineWidth = 2;
+                bpCtx.beginPath();
+                bpCtx.moveTo(mid, 0);
+                bpCtx.lineTo(mid, bpCanvas.height);
+                bpCtx.stroke();
+                bpCtx.setLineDash([]);
+            }
+
+            // Render Modules
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    const mId = state.grid[y][x];
+                    if (mId && MODULE_DEFS[mId]) {
+                        const def = MODULE_DEFS[mId];
+                        const px = x * CELL_SIZE + 2;
+                        const py = y * CELL_SIZE + 2;
+                        const sz = CELL_SIZE - 4;
+
+                        // Module block background
+                        bpCtx.fillStyle = def.color;
+                        bpCtx.fillRect(px, py, sz, sz);
+
+                        // Border highlight
+                        bpCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                        bpCtx.lineWidth = 1;
+                        bpCtx.strokeRect(px, py, sz, sz);
+
+                        // Badge Letter
+                        bpCtx.fillStyle = '#ffffff';
+                        bpCtx.font = 'bold 14px Consolas, monospace';
+                        bpCtx.textAlign = 'center';
+                        bpCtx.textBaseline = 'middle';
+                        bpCtx.fillText(def.badge, px + sz / 2, py + sz / 2);
+                    }
+                }
+            }
+        }
+
+        function handleGridClick(e) {
+            const rect = bpCanvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            const gx = Math.floor(mouseX / CELL_SIZE);
+            const gy = Math.floor(mouseY / CELL_SIZE);
+
+            if (gx < 0 || gx >= GRID_SIZE || gy < 0 || gy >= GRID_SIZE) return;
+
+            if (e.button === 2 || isRightClick) {
+                // Erase
+                state.grid[gy][gx] = 0;
+                if (state.symmetryMode) {
+                    const symX = GRID_SIZE - 1 - gx;
+                    state.grid[gy][symX] = 0;
+                }
+                audio.playRemove();
+            } else {
+                // Place
+                state.grid[gy][gx] = state.selectedModuleId;
+                if (state.symmetryMode) {
+                    const symX = GRID_SIZE - 1 - gx;
+                    state.grid[gy][symX] = state.selectedModuleId;
+                }
+                audio.playPlace();
+            }
+
+            state.calculateTelemetry();
+            updateUI();
+            renderBlueprintGrid();
+        }
+
+        bpCanvas.addEventListener('mousedown', (e) => {
+            audio.init();
+            isMouseDown = true;
+            isRightClick = (e.button === 2);
+            handleGridClick(e);
+        });
+
+        bpCanvas.addEventListener('mousemove', (e) => {
+            if (isMouseDown) handleGridClick(e);
+        });
+
+        window.addEventListener('mouseup', () => {
+            isMouseDown = false;
+        });
+
+        bpCanvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        /* ==========================================================================
+           6. UI UPDATES & TELEMETRY BINDINGS
+           ========================================================================== */
+        function updateUI() {
+            const s = state.stats;
+
+            // Resources
+            document.getElementById('res-credits').textContent = `${state.resources.credits.toLocaleString()}$C`;
+            document.getElementById('res-titanium').textContent = state.resources.titanium;
+            document.getElementById('res-ferrite').textContent = state.resources.ferrite;
+            document.getElementById('res-deuterium').textContent = state.resources.deuterium;
+            document.getElementById('res-rep').textContent = state.resources.reputation;
+
+            // Telemetry specs
+            document.getElementById('spec-hull').textContent = `${s.hp} HP`;
+            document.getElementById('spec-shield').textContent = `${s.shields} SP`;
+            document.getElementById('spec-mass').textContent = `${s.mass} TONS`;
+            document.getElementById('spec-thrust').textContent = `${s.thrust} kN`;
+            document.getElementById('spec-twr').textContent = s.twr;
+
+            document.getElementById('bar-hull').style.width = `${Math.min(100, (s.hp / 1200) * 100)}%`;
+            document.getElementById('bar-shield').style.width = `${Math.min(100, (s.shields / 800) * 100)}%`;
+
+            // Power
+            document.getElementById('spec-power-gen').textContent = `+${s.pGen} MW`;
+            document.getElementById('spec-power-draw').textContent = `-${s.pDraw} MW`;
+            const netPEl = document.getElementById('spec-power-net');
+            if (s.netPower >= 0) {
+                netPEl.textContent = `+${s.netPower} MW (SURPLUS)`;
+                netPEl.style.color = 'var(--accent-green)';
+                document.getElementById('bar-power').style.backgroundColor = '#10b981';
+            } else {
+                netPEl.textContent = `${s.netPower} MW (BROWNOUT DEFICIT)`;
+                netPEl.style.color = 'var(--accent-red)';
+                document.getElementById('bar-power').style.backgroundColor = '#ef4444';
+            }
+            document.getElementById('bar-power').style.width = `${Math.min(100, (s.pDraw / Math.max(1, s.pGen)) * 100)}%`;
+
+            // Heat
+            document.getElementById('spec-heat-gen').textContent = `${s.hGen} MW`;
+            document.getElementById('spec-heat-dissip').textContent = `${s.hDiss} MW`;
+            const netHEl = document.getElementById('spec-heat-net');
+            if (s.netHeat <= 0) {
+                netHEl.textContent = `STABLE (${s.netHeat} MW)`;
+                netHEl.style.color = 'var(--accent-green)';
+                document.getElementById('bar-heat').style.backgroundColor = '#06b6d4';
+            } else {
+                netHEl.textContent = `OVERHEATING (+${s.netHeat} MW)`;
+                netHEl.style.color = 'var(--accent-red)';
+                document.getElementById('bar-heat').style.backgroundColor = '#ef4444';
+            }
+            document.getElementById('bar-heat').style.width = `${Math.min(100, (s.hGen / Math.max(1, s.hDiss)) * 100)}%`;
+
+            // Capabilities
+            document.getElementById('spec-dps').textContent = `${s.dps} DPS`;
+            document.getElementById('spec-cargo').textContent = `${s.cargo} TONS`;
+            document.getElementById('spec-warp').textContent = `${s.warp} LY`;
+
+            // Ship class badge
+            let shipClass = 'PROBE';
+            if (s.mass > 300) shipClass = 'DREADNOUGHT';
+            else if (s.mass > 180) shipClass = 'HEAVY CRUISER';
+            else if (s.mass > 100) shipClass = 'FRIGATE';
+            else if (s.mass > 40) shipClass = 'CORVETTE';
+            document.getElementById('ship-class-badge').textContent = shipClass;
+
+            // Costs
+            document.getElementById('cost-credits').textContent = `${s.costCr.toLocaleString()}$C`;
+            document.getElementById('cost-titanium').textContent = s.costTi;
+            document.getElementById('cost-ferrite').textContent = s.costFe;
+
+            // Symmetry button state
+            const symBtn = document.getElementById('btn-symmetry');
+            symBtn.textContent = state.symmetryMode ? '⇋ Symmetry: ON' : '⇋ Symmetry: OFF';
+            if (state.symmetryMode) symBtn.classList.add('btn-active');
+            else symBtn.classList.remove('btn-active');
+
+            // Render contracts checklist
+            renderContracts();
+        }
+
+        /* Module Palette Builder */
+        function populateModulePalette() {
+            const container = document.getElementById('module-list-container');
+            container.innerHTML = '';
+
+            let count = 0;
+            Object.values(MODULE_DEFS).forEach(mod => {
+                if (state.selectedCategory !== 'all' && mod.cat !== state.selectedCategory) return;
+                count++;
+
+                const card = document.createElement('div');
+                card.className = `module-card ${mod.id === state.selectedModuleId ? 'selected' : ''}`;
+                card.innerHTML = `
+                    <div class="module-card-header">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span class="module-icon-badge" style="background-color: ${mod.color};">${mod.badge}</span>
+                            <span>${mod.name}</span>
+                        </div>
+                        <span style="font-size: 11px; color: var(--accent-amber);">${mod.costCr}$C</span>
+                    </div>
+                    <div class="module-stats-row">
+                        ${mod.hp ? `<span class="stat-badge">HP:${mod.hp}</span>` : ''}
+                        ${mod.mass ? `<span class="stat-badge">M:${mod.mass}t</span>` : ''}
+                        ${mod.pGen ? `<span class="stat-badge" style="color:var(--accent-green)">+${mod.pGen}MW</span>` : ''}
+                        ${mod.pDraw ? `<span class="stat-badge" style="color:var(--accent-red)">-${mod.pDraw}MW</span>` : ''}
+                        ${mod.hDiss ? `<span class="stat-badge" style="color:var(--accent-cyan)">Cool:${mod.hDiss}</span>` : ''}
+                        ${mod.thrust ? `<span class="stat-badge" style="color:#38bdf8">Thr:${mod.thrust}</span>` : ''}
+                        ${mod.dps ? `<span class="stat-badge" style="color:var(--accent-orange)">DPS:${mod.dps}</span>` : ''}
+                        ${mod.cargo ? `<span class="stat-badge" style="color:var(--accent-amber)">Car:${mod.cargo}</span>` : ''}
+                    </div>
+                `;
+
+                card.addEventListener('click', () => {
+                    audio.init();
+                    audio.playClick();
+                    state.selectedModuleId = mod.id;
+                    populateModulePalette();
+                });
+
+                container.appendChild(card);
+            });
+
+            document.getElementById('palette-count').textContent = `${count} Available`;
+        }
+
+        /* Category Filter Buttons */
+        document.querySelectorAll('.cat-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                audio.playClick();
+                document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.selectedCategory = btn.getAttribute('data-cat');
+                populateModulePalette();
+            });
+        });
+
+        /* ==========================================================================
+           7. DRYDOCK ASSEMBLY SIMULATION
+           ========================================================================== */
+        const dryCanvas = document.getElementById('drydock-canvas');
+        const dryCtx = dryCanvas.getContext('2d');
+        let fabInterval = null;
+
+        function drawDrydockScene() {
+            dryCtx.clearRect(0, 0, dryCanvas.width, dryCanvas.height);
+
+            // Void Backdrop & Nebula
+            const grad = dryCtx.createRadialGradient(380, 210, 50, 380, 210, 350);
+            grad.addColorStop(0, '#0f172a');
+            grad.addColorStop(1, '#020617');
+            dryCtx.fillStyle = grad;
+            dryCtx.fillRect(0, 0, dryCanvas.width, dryCanvas.height);
+
+            // Starfield
+            dryCtx.fillStyle = '#64748b';
+            for (let i = 0; i < 40; i++) {
+                const sx = (i * 97) % dryCanvas.width;
+                const sy = (i * 53) % dryCanvas.height;
+                dryCtx.fillRect(sx, sy, 1.5, 1.5);
+            }
+
+            // Gantry Scaffolding Frame
+            dryCtx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+            dryCtx.lineWidth = 2;
+            dryCtx.strokeRect(100, 60, 560, 300);
+
+            // Gantry Girder Cross-Bracing
+            dryCtx.strokeStyle = 'rgba(30, 58, 100, 0.4)';
+            for (let x = 140; x < 660; x += 80) {
+                dryCtx.beginPath();
+                dryCtx.moveTo(x, 60);
+                dryCtx.lineTo(x + 40, 360);
+                dryCtx.stroke();
+            }
+
+            // Draw current ship under construction in center
+            const progressRatio = state.drydockProgress / 100;
+            const shipCellSz = 16;
+            const ox = 380 - (GRID_SIZE * shipCellSz) / 2;
+            const oy = 210 - (GRID_SIZE * shipCellSz) / 2;
+
+            for (let y = 0; y < GRID_SIZE; y++) {
+                if (y / GRID_SIZE > progressRatio) continue;
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    const mId = state.grid[y][x];
+                    if (mId && MODULE_DEFS[mId]) {
+                        dryCtx.fillStyle = MODULE_DEFS[mId].color;
+                        dryCtx.fillRect(ox + x * shipCellSz, oy + y * shipCellSz, shipCellSz - 1, shipCellSz - 1);
+                    }
+                }
+            }
+
+            // Animated Laser Welding Arms if Fabricating
+            if (state.isFabricating && state.drydockProgress < 100) {
+                const weldY = oy + progressRatio * (GRID_SIZE * shipCellSz);
+                dryCtx.strokeStyle = '#38bdf8';
+                dryCtx.lineWidth = 3;
+
+                // Left arm
+                dryCtx.beginPath();
+                dryCtx.moveTo(100, weldY);
+                dryCtx.lineTo(320, weldY);
+                dryCtx.stroke();
+
+                // Right arm
+                dryCtx.beginPath();
+                dryCtx.moveTo(660, weldY);
+                dryCtx.lineTo(440, weldY);
+                dryCtx.stroke();
+
+                // Welding Sparks
+                dryCtx.fillStyle = '#ffffff';
+                for (let k = 0; k < 6; k++) {
+                    const spX = 320 + (Math.random() - 0.5) * 30;
+                    const spY = weldY + (Math.random() - 0.5) * 20;
+                    dryCtx.fillRect(spX, spY, 2, 2);
+                }
+            }
+        }
+
+        function startFabrication() {
+            const s = state.stats;
+            if (state.resources.credits < s.costCr || state.resources.titanium < s.costTi || state.resources.ferrite < s.costFe) {
+                showToast('INSUFFICIENT YARD MATERIALS FOR FABRICATION');
+                audio.playAlarm();
+                return;
+            }
+
+            // Deduct resources
+            state.resources.credits -= s.costCr;
+            state.resources.titanium -= s.costTi;
+            state.resources.ferrite -= s.costFe;
+            updateUI();
+
+            state.isFabricating = true;
+            state.drydockProgress = 0;
+            showToast('FABRICATION GANTRY COMMENCED');
+
+            if (fabInterval) clearInterval(fabInterval);
+            fabInterval = setInterval(() => {
+                if (state.drydockProgress < 100) {
+                    state.drydockProgress += 2;
+                    audio.playWeld();
+                    document.getElementById('drydock-progress-bar').style.width = `${state.drydockProgress}%`;
+                    document.getElementById('drydock-progress-bar').textContent = `${state.drydockProgress}% ASSEMBLED`;
+                    drawDrydockScene();
+                } else {
+                    clearInterval(fabInterval);
+                    state.isFabricating = false;
+                    document.getElementById('drydock-progress-bar').textContent = `100% READY FOR FLIGHT`;
+                    showToast('VESSEL FABRICATION COMPLETE');
+                    audio.playSuccess();
+                }
+            }, 60);
+        }
+
+        /* ==========================================================================
+           8. PROVING GROUNDS SHAKEDOWN FLIGHT SIMULATOR
+           ========================================================================== */
+        const flightCanvas = document.getElementById('flight-canvas');
+        const fCtx = flightCanvas.getContext('2d');
+
+        function resizeFlightCanvas() {
+            flightCanvas.width = flightCanvas.parentElement.clientWidth;
+            flightCanvas.height = flightCanvas.parentElement.clientHeight;
+        }
+        window.addEventListener('resize', resizeFlightCanvas);
+
+        const flightSim = {
+            active: false,
+            player: {
+                x: 600, y: 400,
+                vx: 0, vy: 0,
+                angle: -Math.PI / 2,
+                heat: 0,
+                currentHp: 450,
+                currentShield: 300,
+                cargoOre: 0
+            },
+            keys: {},
+            projectiles: [],
+            asteroids: [],
+            enemies: [],
+            particles: [],
+            station: { x: 300, y: 300, radius: 60 }
+        };
+
+        function initFlightSim() {
+            resizeFlightCanvas();
+            flightSim.active = true;
+            const p = flightSim.player;
+            p.x = flightCanvas.width / 2;
+            p.y = flightCanvas.height / 2;
+            p.vx = 0;
+            p.vy = 0;
+            p.angle = -Math.PI / 2;
+            p.heat = 0;
+            p.currentHp = state.stats.hp || 450;
+            p.currentShield = state.stats.shields || 300;
+            p.cargoOre = 0;
+
+            flightSim.projectiles = [];
+            flightSim.particles = [];
+            flightSim.enemies = [];
+            flightSim.asteroids = [];
+
+            // Spawn Asteroids
+            for (let i = 0; i < 16; i++) {
+                flightSim.asteroids.push({
+                    x: Math.random() * flightCanvas.width,
+                    y: Math.random() * flightCanvas.height,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: (Math.random() - 0.5) * 0.4,
+                    radius: 16 + Math.random() * 22,
+                    hp: 80,
+                    type: Math.floor(Math.random() * 3)
+                });
+            }
+
+            // Spawn Rogue Drones
+            for (let k = 0; k < 3; k++) {
+                flightSim.enemies.push({
+                    x: 100 + Math.random() * (flightCanvas.width - 200),
+                    y: 80 + Math.random() * 200,
+                    vx: 0, vy: 0,
+                    hp: 90,
+                    shootTimer: 60 + Math.random() * 60
+                });
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            flightSim.keys[e.key.toLowerCase()] = true;
+            flightSim.keys[e.code] = true;
+
+            if (e.key === 'F5') {
+                e.preventDefault();
+                state.saveToStorage();
+            } else if (e.key === 'F9') {
+                e.preventDefault();
+                if (state.loadFromStorage()) {
+                    updateUI();
+                    renderBlueprintGrid();
+                }
+            } else if (e.key === 's' || e.key === 'S') {
+                if (document.getElementById('blueprint-view').classList.contains('active')) {
+                    state.symmetryMode = !state.symmetryMode;
+                    updateUI();
+                    renderBlueprintGrid();
+                    showToast(state.symmetryMode ? 'SYMMETRY: ON' : 'SYMMETRY: OFF');
+                }
+            } else if (e.key === 'Escape') {
+                // Dismiss modals
+                document.getElementById('splash-modal').style.display = 'none';
+                document.getElementById('tutorial-modal').style.display = 'none';
+                document.getElementById('settings-modal').style.display = 'none';
+            } else if (e.key >= '1' && e.key <= '5') {
+                const navBtns = document.querySelectorAll('.nav-btn');
+                const idx = parseInt(e.key) - 1;
+                if (navBtns[idx]) navBtns[idx].click();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            flightSim.keys[e.key.toLowerCase()] = false;
+            flightSim.keys[e.code] = false;
+        });
+
+        function updateFlightSim() {
+            if (!flightSim.active) return;
+            const p = flightSim.player;
+            const s = state.stats;
+
+            // Turning
+            const turnSpeed = 0.055;
+            if (flightSim.keys['a'] || flightSim.keys['arrowleft']) p.angle -= turnSpeed;
+            if (flightSim.keys['d'] || flightSim.keys['arrowright']) p.angle += turnSpeed;
+
+            // Thrust
+            const thrustPower = (s.twr ? parseFloat(s.twr) : 1.5) * 0.12;
+            if (flightSim.keys['w'] || flightSim.keys['arrowup']) {
+                p.vx += Math.cos(p.angle) * thrustPower;
+                p.vy += Math.sin(p.angle) * thrustPower;
+
+                // Thruster particles
+                flightSim.particles.push({
+                    x: p.x - Math.cos(p.angle) * 16,
+                    y: p.y - Math.sin(p.angle) * 16,
+                    vx: -Math.cos(p.angle) * 2 + (Math.random() - 0.5),
+                    vy: -Math.sin(p.angle) * 2 + (Math.random() - 0.5),
+                    color: '#38bdf8',
+                    life: 20
+                });
+            }
+
+            // Retro Brakes
+            if (flightSim.keys['s'] || flightSim.keys['arrowdown']) {
+                p.vx *= 0.94;
+                p.vy *= 0.94;
+            }
+
+            // Overdrive Boost
+            if (flightSim.keys['shift'] || flightSim.keys['shiftleft']) {
+                if (p.heat < 90) {
+                    p.vx += Math.cos(p.angle) * thrustPower * 1.5;
+                    p.vy += Math.sin(p.angle) * thrustPower * 1.5;
+                    p.heat += 0.8;
+                }
+            }
+
+            // Emergency Coolant
+            if (flightSim.keys['c']) {
+                p.heat = Math.max(0, p.heat - 3.0);
+            }
+
+            // Cooling
+            const coolRate = (s.hDiss || 20) * 0.008;
+            p.heat = Math.max(0, p.heat - coolRate);
+
+            // Shields
+            if (s.netPower >= 0 && p.currentShield < s.shields) {
+                p.currentShield = Math.min(s.shields, p.currentShield + 0.3);
+            }
+
+            // Position & Drag
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vx *= 0.99;
+            p.vy *= 0.99;
+
+            // Screen wrap
+            if (p.x < 0) p.x = flightCanvas.width;
+            if (p.x > flightCanvas.width) p.x = 0;
+            if (p.y < 0) p.y = flightCanvas.height;
+            if (p.y > flightCanvas.height) p.y = 0;
+
+            // Primary Fire [Space]
+            if (flightSim.keys[' '] || flightSim.keys['space']) {
+                if (!flightSim.lastFire || Date.now() - flightSim.lastFire > 160) {
+                    flightSim.lastFire = Date.now();
+                    p.heat += 1.8;
+                    audio.playCannon();
+
+                    flightSim.projectiles.push({
+                        x: p.x + Math.cos(p.angle) * 18,
+                        y: p.y + Math.sin(p.angle) * 18,
+                        vx: Math.cos(p.angle) * 10 + p.vx,
+                        vy: Math.sin(p.angle) * 10 + p.vy,
+                        dmg: Math.max(25, (s.dps || 40) / 2),
+                        isEnemy: false,
+                        life: 65,
+                        color: '#06b6d4'
+                    });
+                }
+            }
+
+            // Mining Drill [E]
+            if (flightSim.keys['e']) {
+                p.heat += 0.5;
+                audio.playMining();
+                // Check closest asteroid
+                flightSim.asteroids.forEach(ast => {
+                    const dx = ast.x - p.x;
+                    const dy = ast.y - p.y;
+                    const dist = Math.hypot(dx, dy);
+                    if (dist < 180) {
+                        ast.hp -= 2;
+                        flightSim.particles.push({
+                            x: ast.x + (Math.random() - 0.5) * ast.radius,
+                            y: ast.y + (Math.random() - 0.5) * ast.radius,
+                            vx: -dx * 0.03,
+                            vy: -dy * 0.03,
+                            color: '#f59e0b',
+                            life: 15
+                        });
+                        if (ast.hp <= 0) {
+                            ast.hp = 99999;
+                            state.resources.titanium += 15;
+                            state.resources.ferrite += 8;
+                            p.cargoOre += 23;
+                            showToast('ORE CRACKED & HARVESTED! +23 ORE');
+                            audio.playSuccess();
+                            updateUI();
+                        }
+                    }
+                });
+            }
+
+            // Update Projectiles
+            for (let i = flightSim.projectiles.length - 1; i >= 0; i--) {
+                const pr = flightSim.projectiles[i];
+                pr.x += pr.vx;
+                pr.y += pr.vy;
+                pr.life--;
+
+                if (pr.life <= 0) {
+                    flightSim.projectiles.splice(i, 1);
+                    continue;
+                }
+
+                // Check hit against Asteroids
+                if (!pr.isEnemy) {
+                    flightSim.asteroids.forEach(ast => {
+                        if (Math.hypot(pr.x - ast.x, pr.y - ast.y) < ast.radius) {
+                            pr.life = 0;
+                            ast.hp -= pr.dmg;
+                            if (ast.hp <= 0) {
+                                state.resources.titanium += 10;
+                                updateUI();
+                            }
+                        }
+                    });
+
+                    // Check hit against Enemies
+                    flightSim.enemies.forEach(en => {
+                        if (Math.hypot(pr.x - en.x, pr.y - en.y) < 22) {
+                            pr.life = 0;
+                            en.hp -= pr.dmg;
+                            if (en.hp <= 0 && !en.dead) {
+                                en.dead = true;
+                                state.resources.credits += 150;
+                                state.resources.reputation += 2;
+                                showToast('SYNDICATE PIRATE RAIDER DESTROYED (+150$C)');
+                                audio.playSuccess();
+                                updateUI();
+                            }
+                        }
+                    });
+                } else {
+                    // Check hit against Player
+                    if (Math.hypot(pr.x - p.x, pr.y - p.y) < 18) {
+                        pr.life = 0;
+                        if (p.currentShield > 0) {
+                            p.currentShield -= pr.dmg;
+                            if (p.currentShield < 0) {
+                                p.currentHp += p.currentShield;
+                                p.currentShield = 0;
+                            }
+                        } else {
+                            p.currentHp -= pr.dmg;
+                        }
+                        audio.playAlarm();
+                        if (p.currentHp <= 0) {
+                            p.currentHp = 0;
+                            showToast('HULL INTEGRITY COMPROMISED! RETURNING TO DRYDOCK');
+                            setTimeout(() => {
+                                document.querySelector('.nav-btn[data-target="drydock-view"]').click();
+                            }, 800);
+                        }
+                    }
+                }
+            }
+
+            // Update Enemies AI
+            flightSim.enemies = flightSim.enemies.filter(en => !en.dead);
+            flightSim.enemies.forEach(en => {
+                const dx = p.x - en.x;
+                const dy = p.y - en.y;
+                const dist = Math.hypot(dx, dy);
+
+                if (dist > 80) {
+                    en.vx += (dx / dist) * 0.08;
+                    en.vy += (dy / dist) * 0.08;
+                }
+                en.x += en.vx;
+                en.y += en.vy;
+                en.vx *= 0.98;
+                en.vy *= 0.98;
+
+                en.shootTimer--;
+                if (en.shootTimer <= 0 && dist < 450) {
+                    en.shootTimer = 70 + Math.random() * 50;
+                    flightSim.projectiles.push({
+                        x: en.x, y: en.y,
+                        vx: (dx / dist) * 5,
+                        vy: (dy / dist) * 5,
+                        dmg: 18,
+                        isEnemy: true,
+                        life: 80,
+                        color: '#ef4444'
+                    });
+                }
+            });
+
+            // Update HUD text
+            document.getElementById('flight-hud-hull').textContent = `${Math.floor(p.currentHp)} / ${s.hp || 450}`;
+            document.getElementById('flight-hud-shield').textContent = `${Math.floor(p.currentShield)} / ${s.shields || 300}`;
+            document.getElementById('flight-hud-heat').textContent = `${Math.floor(p.heat)}%`;
+            document.getElementById('flight-hud-speed').textContent = `${Math.floor(Math.hypot(p.vx, p.vy) * 25)} m/s`;
+            document.getElementById('flight-hud-cargo').textContent = `${p.cargoOre} TONS`;
+        }
+
+        function renderFlightSim() {
+            if (!flightSim.active) return;
+            fCtx.clearRect(0, 0, flightCanvas.width, flightCanvas.height);
+
+            // Starfield
+            fCtx.fillStyle = '#cbd5e1';
+            for (let i = 0; i < 50; i++) {
+                const sx = (i * 137) % flightCanvas.width;
+                const sy = (i * 97) % flightCanvas.height;
+                fCtx.fillRect(sx, sy, 1.2, 1.2);
+            }
+
+            // Space Station Dock
+            const st = flightSim.station;
+            fCtx.strokeStyle = 'rgba(6, 182, 212, 0.4)';
+            fCtx.lineWidth = 3;
+            fCtx.strokeRect(st.x - st.radius, st.y - st.radius, st.radius * 2, st.radius * 2);
+            fCtx.fillStyle = '#06b6d4';
+            fCtx.font = '11px Consolas, monospace';
+            fCtx.fillText('STARFORGE IX DOCK', st.x - 50, st.y);
+
+            // Asteroids
+            flightSim.asteroids.forEach(ast => {
+                fCtx.fillStyle = ast.type === 0 ? '#64748b' : (ast.type === 1 ? '#94a3b8' : '#334155');
+                fCtx.beginPath();
+                fCtx.arc(ast.x, ast.y, ast.radius, 0, Math.PI * 2);
+                fCtx.fill();
+                fCtx.strokeStyle = '#475569';
+                fCtx.stroke();
+            });
+
+            // Particles
+            for (let i = flightSim.particles.length - 1; i >= 0; i--) {
+                const pt = flightSim.particles[i];
+                pt.x += pt.vx;
+                pt.y += pt.vy;
+                pt.life--;
+                if (pt.life <= 0) {
+                    flightSim.particles.splice(i, 1);
+                    continue;
+                }
+                fCtx.fillStyle = pt.color;
+                fCtx.fillRect(pt.x, pt.y, 2, 2);
+            }
+
+            // Projectiles
+            flightSim.projectiles.forEach(pr => {
+                fCtx.strokeStyle = pr.color;
+                fCtx.lineWidth = 3;
+                fCtx.beginPath();
+                fCtx.moveTo(pr.x, pr.y);
+                fCtx.lineTo(pr.x - pr.vx * 1.5, pr.y - pr.vy * 1.5);
+                fCtx.stroke();
+            });
+
+            // Rogue Drones
+            flightSim.enemies.forEach(en => {
+                fCtx.fillStyle = '#ef4444';
+                fCtx.fillRect(en.x - 10, en.y - 10, 20, 20);
+                fCtx.strokeStyle = '#b91c1c';
+                fCtx.strokeRect(en.x - 10, en.y - 10, 20, 20);
+            });
+
+            // Player Ship Vector Representation
+            const p = flightSim.player;
+            fCtx.save();
+            fCtx.translate(p.x, p.y);
+            fCtx.rotate(p.angle);
+
+            // Hull
+            fCtx.fillStyle = '#06b6d4';
+            fCtx.beginPath();
+            fCtx.moveTo(18, 0);
+            fCtx.lineTo(-14, -12);
+            fCtx.lineTo(-8, 0);
+            fCtx.lineTo(-14, 12);
+            fCtx.closePath();
+            fCtx.fill();
+            fCtx.strokeStyle = '#38bdf8';
+            fCtx.lineWidth = 1.5;
+            fCtx.stroke();
+
+            // Shield Bubble
+            if (p.currentShield > 0) {
+                fCtx.strokeStyle = `rgba(129, 140, 248, ${Math.min(0.8, p.currentShield / 300)})`;
+                fCtx.lineWidth = 1.5;
+                fCtx.beginPath();
+                fCtx.arc(0, 0, 22, 0, Math.PI * 2);
+                fCtx.stroke();
+            }
+
+            fCtx.restore();
+        }
+
+        /* Animation Main Loop */
+        function gameLoop() {
+            if (flightSim.active) {
+                updateFlightSim();
+                renderFlightSim();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+        requestAnimationFrame(gameLoop);
+
+        /* ==========================================================================
+           9. CONTRACTS & FACTION PROGRESSION
+           ========================================================================== */
+        function renderContracts() {
+            const container = document.getElementById('contracts-list-container');
+            container.innerHTML = '';
+
+            const s = state.stats;
+
+            CONTRACTS_DATA.forEach(contract => {
+                const isCompleted = !!state.completedContracts[contract.id];
+
+                // Validate requirements
+                const r = contract.reqs;
+                const metHp = s.hp >= r.hp;
+                const metShield = s.shields >= r.shield;
+                const metDps = s.dps >= r.dps;
+                const metTwr = parseFloat(s.twr) >= r.twr;
+                const metCargo = s.cargo >= r.cargo;
+                const metWarp = s.warp >= r.warp;
+
+                const allMet = metHp && metShield && metDps && metTwr && metCargo && metWarp;
+
+                const card = document.createElement('div');
+                card.className = `contract-card ${isCompleted ? 'completed' : ''}`;
+                card.innerHTML = `
+                    <div class="contract-info">
+                        <div class="contract-title">${contract.title}</div>
+                        <div class="contract-client">${contract.client}</div>
+                        <div class="contract-desc">${contract.desc}</div>
+                        <div class="contract-reqs">
+                            ${r.hp ? `<span class="req-tag ${metHp ? 'met' : 'unmet'}">Hull: ${s.hp}/${r.hp}</span>` : ''}
+                            ${r.shield ? `<span class="req-tag ${metShield ? 'met' : 'unmet'}">Shield: ${s.shields}/${r.shield}</span>` : ''}
+                            ${r.dps ? `<span class="req-tag ${metDps ? 'met' : 'unmet'}">DPS: ${s.dps}/${r.dps}</span>` : ''}
+                            ${r.twr ? `<span class="req-tag ${metTwr ? 'met' : 'unmet'}">TWR: ${s.twr}/${r.twr}</span>` : ''}
+                            ${r.cargo ? `<span class="req-tag ${metCargo ? 'met' : 'unmet'}">Cargo: ${s.cargo}/${r.cargo}t</span>` : ''}
+                            ${r.warp ? `<span class="req-tag ${metWarp ? 'met' : 'unmet'}">Warp: ${s.warp}/${r.warp}LY</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="contract-reward-side">
+                        <div class="reward-badge">+${contract.reward.credits.toLocaleString()}$C | +${contract.reward.rep} REP</div>
+                        ${isCompleted ? 
+                            `<span style="color: var(--accent-green); font-weight: bold;">✔ CONTRACT FULFILLED</span>` :
+                            `<button class="btn ${allMet ? 'btn-primary' : ''}" ${allMet ? '' : 'disabled'}>
+                                ${allMet ? '🚀 Deliver Vessel' : 'Specifications Incomplete'}
+                            </button>`
+                        }
+                    </div>
+                `;
+
+                const btn = card.querySelector('button');
+                if (btn && allMet && !isCompleted) {
+                    btn.addEventListener('click', () => {
+                        state.completedContracts[contract.id] = true;
+                        state.resources.credits += contract.reward.credits;
+                        state.resources.reputation += contract.reward.rep;
+                        if (contract.reward.titanium) state.resources.titanium += contract.reward.titanium;
+                        if (contract.reward.ferrite) state.resources.ferrite += contract.reward.ferrite;
+                        if (contract.reward.deuterium) state.resources.deuterium += contract.reward.deuterium;
+
+                        showToast(`CONTRACT FULFILLED: +${contract.reward.credits}$C`);
+                        audio.playSuccess();
+                        updateUI();
+                    });
+                }
+
+                container.appendChild(card);
+            });
+        }
+
+        /* ==========================================================================
+           10. FIRST-RUN TUTORIAL WALKTHROUGH
+           ========================================================================== */
+        const TUTORIAL_STEPS = [
+            {
+                title: "STEP 1: BLUEPRINT GRID & MODULAR HULLS",
+                text: "Welcome to StarForge IX. Every vessel is built from modular components on the 14x14 grid. Select modules from the left palette and place them on the grid. Right-click erases modules. Press [S] to toggle bilateral symmetry."
+            },
+            {
+                title: "STEP 2: POWER CORES & REACTORS",
+                text: "Thrusters, shields, and weapons all consume megawatts. Install Fission, Fusion, or Antimatter cores to ensure your Net Power Grid remains positive. Running at a power deficit causes systems brownouts."
+            },
+            {
+                title: "STEP 3: THERMAL EQUILIBRIUM & RADIATORS",
+                text: "Operating high-power weapons and engines generates intense thermal waste. Attach Radiator Fins or Cryo-Coolers. If your vessel overheats in flight, you will be forced to dump emergency coolant with [C]."
+            },
+            {
+                title: "STEP 4: DRYDOCK FABRICATION",
+                text: "Transfer your blueprint to the Drydock to fabricate it. Construction consumes yard resources (Titanium, Ferrite, Deuterium). Once assembled to 100%, launch into the Shakedown Proving Grounds."
+            },
+            {
+                title: "STEP 5: FACTION COMMISSIONS & REPUTATION",
+                text: "Open the Faction Contracts tab to review orders from the Terran Navy, Solaris Mining, and classified clients. Build compliant ships and deliver them to earn credits and fleet reputation!"
+            }
+        ];
+
+        let tutIndex = 0;
+
+        function showTutorialStep(idx) {
+            tutIndex = idx;
+            const step = TUTORIAL_STEPS[idx];
+            document.getElementById('tut-step-title').textContent = step.title;
+            document.getElementById('tut-step-count').textContent = `Step ${idx + 1} of ${TUTORIAL_STEPS.length}`;
+            document.getElementById('tut-step-body').innerHTML = `<p style="font-size: 13px; line-height: 1.6;">${step.text}</p>`;
+
+            document.getElementById('btn-tut-prev').style.display = idx === 0 ? 'none' : 'inline-block';
+            document.getElementById('btn-tut-next').textContent = idx === TUTORIAL_STEPS.length - 1 ? 'Begin Engineering ▶' : 'Next Step ▶';
+            document.getElementById('tutorial-modal').style.display = 'flex';
+        }
+
+        document.getElementById('btn-tut-next').addEventListener('click', () => {
+            audio.playClick();
+            if (tutIndex < TUTORIAL_STEPS.length - 1) {
+                showTutorialStep(tutIndex + 1);
+            } else {
+                document.getElementById('tutorial-modal').style.display = 'none';
+                localStorage.setItem('kstarforge_tutorialSeen', '1');
+                showToast('TUTORIAL COMPLETE - WELCOME TO STARFORGE IX');
+            }
+        });
+
+        document.getElementById('btn-tut-prev').addEventListener('click', () => {
+            audio.playClick();
+            if (tutIndex > 0) showTutorialStep(tutIndex - 1);
+        });
+
+        document.getElementById('btn-tut-skip').addEventListener('click', () => {
+            audio.playClick();
+            document.getElementById('tutorial-modal').style.display = 'none';
+            localStorage.setItem('kstarforge_tutorialSeen', '1');
+        });
+
+        /* ==========================================================================
+           11. EVENT LISTENERS, NAVIGATION & INITIALIZATION
+           ========================================================================== */
+        // Navigation bar tabs
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                audio.init();
+                audio.playClick();
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const targetId = btn.getAttribute('data-target');
+                document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+                document.getElementById(targetId).classList.add('active');
+
+                flightSim.active = (targetId === 'flight-view');
+                if (flightSim.active) {
+                    initFlightSim();
+                } else if (targetId === 'drydock-view') {
+                    drawDrydockScene();
+                } else if (targetId === 'blueprint-view') {
+                    renderBlueprintGrid();
+                }
+            });
+        });
+
+        // Symmetry button
+        document.getElementById('btn-symmetry').addEventListener('click', () => {
+            audio.playClick();
+            state.symmetryMode = !state.symmetryMode;
+            updateUI();
+            renderBlueprintGrid();
+        });
+
+        // Clear grid
+        document.getElementById('btn-clear-grid').addEventListener('click', () => {
+            audio.playRemove();
+            state.grid = Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(0));
+            state.calculateTelemetry();
+            updateUI();
+            renderBlueprintGrid();
+            showToast('BLUEPRINT GRID CLEARED');
+        });
+
+        // Templates
+        document.getElementById('btn-template-select').addEventListener('click', () => {
+            audio.playClick();
+            state.loadDefaultVanguard();
+            updateUI();
+            renderBlueprintGrid();
+            showToast('LOADED VANGUARD CORVETTE TEMPLATE');
+        });
+
+        // Transfer to Drydock
+        document.getElementById('btn-send-to-drydock').addEventListener('click', () => {
+            audio.playClick();
+            document.querySelector('.nav-btn[data-target="drydock-view"]').click();
+        });
+
+        // Drydock buttons
+        document.getElementById('btn-start-fab').addEventListener('click', () => {
+            audio.playClick();
+            startFabrication();
+        });
+
+        document.getElementById('btn-rush-fab').addEventListener('click', () => {
+            audio.playClick();
+            if (state.resources.credits >= 150) {
+                state.resources.credits -= 150;
+                state.drydockProgress = 100;
+                document.getElementById('drydock-progress-bar').style.width = '100%';
+                document.getElementById('drydock-progress-bar').textContent = '100% READY FOR FLIGHT';
+                showToast('FABRICATION OVERCLOCKED TO 100%');
+                audio.playSuccess();
+                updateUI();
+                drawDrydockScene();
+            } else {
+                showToast('INSUFFICIENT CREDITS');
+            }
+        });
+
+        document.getElementById('btn-launch-flight').addEventListener('click', () => {
+            audio.playClick();
+            document.querySelector('.nav-btn[data-target="flight-view"]').click();
+        });
+
+        document.getElementById('btn-back-blueprint').addEventListener('click', () => {
+            audio.playClick();
+            document.querySelector('.nav-btn[data-target="blueprint-view"]').click();
+        });
+
+        // Header buttons
+        document.getElementById('btn-quicksave').addEventListener('click', () => state.saveToStorage());
+        document.getElementById('btn-quickload').addEventListener('click', () => {
+            if (state.loadFromStorage()) {
+                updateUI();
+                renderBlueprintGrid();
+            }
+        });
+
+        document.getElementById('btn-audio-toggle').addEventListener('click', () => {
+            audio.init();
+            audio.muted = !audio.muted;
+            document.getElementById('btn-audio-toggle').textContent = audio.muted ? '🔇 Muted' : '🔊 Audio';
+            showToast(audio.muted ? 'AUDIO MUTED' : 'AUDIO ENABLED');
+        });
+
+        // Settings modal
+        document.getElementById('btn-settings-open').addEventListener('click', () => {
+            audio.playClick();
+            document.getElementById('settings-modal').style.display = 'flex';
+        });
+
+        document.getElementById('btn-settings-close').addEventListener('click', () => {
+            audio.playClick();
+            document.getElementById('settings-modal').style.display = 'none';
+        });
+
+        document.getElementById('btn-settings-done').addEventListener('click', () => {
+            audio.playClick();
+            document.getElementById('settings-modal').style.display = 'none';
+        });
+
+        document.getElementById('setting-crt-toggle').addEventListener('click', (e) => {
+            audio.playClick();
+            document.body.classList.toggle('no-crt');
+            const on = !document.body.classList.contains('no-crt');
+            e.target.textContent = on ? 'ENABLED' : 'DISABLED';
+        });
+
+        document.getElementById('setting-vol').addEventListener('input', (e) => {
+            audio.volume = e.target.value / 100;
+        });
+
+        document.getElementById('btn-help-open').addEventListener('click', () => {
+            audio.playClick();
+            document.querySelector('.nav-btn[data-target="manual-view"]').click();
+        });
+
+        // Save export/import
+        document.getElementById('btn-export-save').addEventListener('click', () => {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(localStorage.getItem('kstarforge_quicksave') || '{}');
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "kstarforge_save.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast('SAVE FILE EXPORTED');
+        });
+
+        document.getElementById('btn-import-save').addEventListener('click', () => {
+            document.getElementById('file-import-input').click();
+        });
+
+        document.getElementById('file-import-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    localStorage.setItem('kstarforge_quicksave', event.target.result);
+                    state.loadFromStorage();
+                    updateUI();
+                    renderBlueprintGrid();
+                    showToast('IMPORT COMPLETED');
+                } catch (err) {
+                    showToast('IMPORT ERROR');
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        document.getElementById('btn-reset-save').addEventListener('click', () => {
+            if (confirm('Reset all shipyard progress?')) {
+                localStorage.removeItem('kstarforge_quicksave');
+                localStorage.removeItem('kstarforge_tutorialSeen');
+                location.reload();
+            }
+        });
+
+        // Splash screen buttons
+        const hasSave = !!localStorage.getItem('kstarforge_quicksave');
+        if (hasSave) {
+            document.getElementById('btn-splash-continue').removeAttribute('disabled');
+            document.getElementById('splash-save-info').textContent = 'Saved yard ready';
+        }
+
+        document.getElementById('btn-splash-new').addEventListener('click', () => {
+            audio.init();
+            audio.playClick();
+            document.getElementById('splash-modal').style.display = 'none';
+            state.loadDefaultVanguard();
+            updateUI();
+            renderBlueprintGrid();
+            if (!localStorage.getItem('kstarforge_tutorialSeen')) {
+                showTutorialStep(0);
+            }
+        });
+
+        document.getElementById('btn-splash-continue').addEventListener('click', () => {
+            audio.init();
+            audio.playClick();
+            document.getElementById('splash-modal').style.display = 'none';
+            if (state.loadFromStorage()) {
+                updateUI();
+                renderBlueprintGrid();
+            }
+        });
+
+        document.getElementById('btn-splash-flight').addEventListener('click', () => {
+            audio.init();
+            audio.playClick();
+            document.getElementById('splash-modal').style.display = 'none';
+            state.loadDefaultVanguard();
+            updateUI();
+            document.querySelector('.nav-btn[data-target="flight-view"]').click();
+        });
+
+        document.getElementById('btn-splash-manual').addEventListener('click', () => {
+            audio.init();
+            audio.playClick();
+            document.getElementById('splash-modal').style.display = 'none';
+            document.querySelector('.nav-btn[data-target="manual-view"]').click();
+        });
+
+        document.getElementById('btn-splash-settings').addEventListener('click', () => {
+            audio.playClick();
+            document.getElementById('settings-modal').style.display = 'flex';
+        });
+
+        document.getElementById('btn-splash-start').addEventListener('click', () => {
+            audio.init();
+            audio.playClick();
+            document.getElementById('splash-modal').style.display = 'none';
+            state.loadDefaultVanguard();
+            updateUI();
+            renderBlueprintGrid();
+            if (!localStorage.getItem('kstarforge_tutorialSeen')) {
+                showTutorialStep(0);
+            }
+        });
+
+        // Initialize state & components
+        state.loadDefaultVanguard();
+        populateModulePalette();
+        updateUI();
+        renderBlueprintGrid();
+    </script>
+</body>
+</html>
