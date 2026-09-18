@@ -199,6 +199,31 @@
     cursor: pointer;
   }
 
+  /* Process Dedicated Toolbar */
+  .process-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .toolbar-divider {
+    width: 1px;
+    height: 22px;
+    background: var(--border-color);
+    margin: 0 4px;
+  }
+
   /* Dashboard Metrics Bar */
   .dashboard {
     flex-shrink: 0;
@@ -372,6 +397,42 @@
     font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .status-badge.status-active {
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--success);
+  }
+
+  .status-badge.status-busy {
+    background: rgba(251, 191, 36, 0.18);
+    color: var(--warning);
+  }
+
+  .status-badge.status-heavy {
+    background: rgba(168, 85, 247, 0.18);
+    color: var(--purple);
+  }
+
+  .chart-hover-tip {
+    display: none;
+    position: absolute;
+    pointer-events: none;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid var(--primary);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'Consolas', monospace;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+  }
+
+  .task-card:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
   }
 
   .btn-kill {
@@ -836,56 +897,6 @@
     </div>
     
     <div class="header-actions">
-      <div class="input-group">
-        <label for="filterSelect" class="sr-only">Filter by category</label>
-        <select id="filterSelect" class="select-ctrl" aria-label="Filter tasks by state" onchange="syncFilterChips(); renderTasks();">
-          <option value="all">All Categories</option>
-          <option value="high-cpu">High CPU (&gt;2%)</option>
-          <option value="high-mem">High Memory (&gt;25MB)</option>
-          <option value="high-pri">High Priority</option>
-        </select>
-
-        <label for="sortSelect" class="sr-only">Sort tasks</label>
-        <select id="sortSelect" class="select-ctrl" aria-label="Sort tasks by" onchange="renderTasks()">
-          <option value="name">Sort by Name</option>
-          <option value="mem">Sort by Memory</option>
-          <option value="cpu">Sort by CPU</option>
-          <option value="pid">Sort by PID</option>
-        </select>
-        
-        <label for="searchInput" class="sr-only">Filter tasks</label>
-        <div style="position: relative; display: inline-flex; align-items: center;">
-          <input type="text" id="searchInput" class="input-ctrl" placeholder="Filter name or PID... (Esc: clear)" aria-label="Filter tasks" oninput="onSearchInput()">
-          <button id="searchClearBtn" onclick="clearSearch()" style="position: absolute; right: 6px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 11px; display: none; padding: 2px 4px;" title="Clear filter (Esc)">✕</button>
-        </div>
-      </div>
-
-      <button class="btn-secondary" onclick="exportCSV()" title="Export Process List to CSV (E or Ctrl+E)">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        CSV [E]
-      </button>
-
-      <button class="btn-secondary" onclick="exportJSON()" title="Export Process List to JSON (J or Ctrl+J)">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        JSON [J]
-      </button>
-
-      <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importJSON(event)">
-      <button class="btn-secondary" onclick="document.getElementById('importFileInput').click()" title="Import Process Snapshot from JSON file">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-        Import
-      </button>
-
-      <button class="btn-secondary" onclick="quickSaveState()" title="Quicksave snapshot to local storage (F5)">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-        Save [F5]
-      </button>
-
-      <button class="btn-secondary" onclick="quickLoadState()" title="Quickload snapshot from local storage (F9)">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        Load [F9]
-      </button>
-
       <button class="btn-secondary" id="btnHelp" onclick="openHelpModal()" title="Help & Shortcuts (F1 or H)" aria-label="Open Help & Shortcuts Dialog">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
         Help [F1]
@@ -946,8 +957,65 @@
   <div class="tab-content">
     <!-- Tab Pane 1: Process List -->
     <div class="tab-pane active" id="pane-tasks" role="tabpanel" aria-labelledby="tab-tasks-btn">
+      <!-- Dedicated Process Toolbar -->
+      <div class="process-toolbar" role="toolbar" aria-label="Process filters and actions">
+        <div class="toolbar-group">
+          <label for="searchInput" class="sr-only">Filter tasks</label>
+          <div style="position: relative; display: inline-flex; align-items: center;">
+            <input type="text" id="searchInput" class="input-ctrl" placeholder="Filter name or PID... (Esc)" aria-label="Filter tasks" oninput="onSearchInput()">
+            <button id="searchClearBtn" onclick="clearSearch()" style="position: absolute; right: 6px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 11px; display: none; padding: 2px 4px;" title="Clear filter (Esc)">✕</button>
+          </div>
+
+          <label for="filterSelect" class="sr-only">Filter by category</label>
+          <select id="filterSelect" class="select-ctrl" aria-label="Filter tasks by state" onchange="syncFilterChips(); renderTasks();">
+            <option value="all">All Categories</option>
+            <option value="high-cpu">High CPU (&gt;2%)</option>
+            <option value="high-mem">High Memory (&gt;25MB)</option>
+            <option value="high-pri">High Priority</option>
+          </select>
+
+          <label for="sortSelect" class="sr-only">Sort tasks</label>
+          <select id="sortSelect" class="select-ctrl" aria-label="Sort tasks by" onchange="renderTasks()">
+            <option value="name">Sort by Name</option>
+            <option value="mem">Sort by Memory</option>
+            <option value="cpu">Sort by CPU</option>
+            <option value="pid">Sort by PID</option>
+          </select>
+        </div>
+
+        <div class="toolbar-group">
+          <button class="btn-secondary" onclick="quickSaveState()" title="Quicksave snapshot to local storage (F5)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            Save [F5]
+          </button>
+
+          <button class="btn-secondary" onclick="quickLoadState()" title="Quickload snapshot from local storage (F9)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Load [F9]
+          </button>
+
+          <div class="toolbar-divider"></div>
+
+          <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importJSON(event)">
+          <button class="btn-secondary" onclick="document.getElementById('importFileInput').click()" title="Import Process Snapshot from JSON file">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            Import
+          </button>
+
+          <button class="btn-secondary" onclick="exportCSV()" title="Export Process List to CSV (E or Ctrl+E)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            CSV [E]
+          </button>
+
+          <button class="btn-secondary" onclick="exportJSON()" title="Export Process List to JSON (J or Ctrl+J)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            JSON [J]
+          </button>
+        </div>
+      </div>
+
       <!-- Quick Filter Chips -->
-      <div class="filter-chips-bar" role="radiogroup" aria-label="Quick process filters" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 4px;">
+      <div class="filter-chips-bar" role="radiogroup" aria-label="Quick process filters" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 4px; margin-bottom: 4px;">
         <span style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Quick Filter:</span>
         <button class="chip-btn active" id="chip-all" role="radio" aria-checked="true" onclick="applyQuickFilter('all')">All Tasks</button>
         <button class="chip-btn" id="chip-cpu" role="radio" aria-checked="false" onclick="applyQuickFilter('high-cpu')">⚡ High CPU (&gt;2%)</button>
@@ -974,6 +1042,7 @@
           </div>
           <div class="chart-canvas-container">
             <canvas id="cpuCanvas"></canvas>
+            <div id="cpuTooltip" class="chart-hover-tip"></div>
           </div>
         </div>
 
@@ -987,6 +1056,7 @@
           </div>
           <div class="chart-canvas-container">
             <canvas id="memCanvas"></canvas>
+            <div id="memTooltip" class="chart-hover-tip"></div>
           </div>
         </div>
       </div>
@@ -1785,6 +1855,7 @@
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
             <div>${allTasks.length === 0 ? 'No running tasks found.' : 'No tasks match your search filter.'}</div>
+            ${allTasks.length > 0 ? '<button class="btn-secondary" onclick="clearSearch()" style="margin-top:6px;">Clear Search & Filter (Esc)</button>' : ''}
           </div>`;
         return;
       }
@@ -1808,8 +1879,23 @@
         const taskTitle = String(task.title || 'Untitled Process');
         const stats = taskStats[taskId] || { mem: '15.0', cpu: '0.5', priority: 'Normal' };
         
+        const cpuNum = parseFloat(stats.cpu);
+        const memNum = parseFloat(stats.mem);
+        let badgeClass = 'status-active';
+        let badgeText = 'Active';
+        if (cpuNum > 2.0) {
+          badgeClass = 'status-busy';
+          badgeText = '⚡ Busy';
+        } else if (memNum > 30.0) {
+          badgeClass = 'status-heavy';
+          badgeText = '💾 Heavy';
+        }
+
         const card = document.createElement('div');
         card.className = 'task-card';
+        card.tabIndex = 0;
+        card.setAttribute('role', 'button');
+        card.setAttribute('aria-label', `${taskTitle}, PID ${taskId}, Memory ${stats.mem} MB, CPU ${stats.cpu}%`);
         
         const initial = taskTitle.charAt(0).toUpperCase() || 'P';
 
@@ -1822,7 +1908,7 @@
                 <span>PID: ${taskId}</span>
                 <span>Mem: ${stats.mem} MB</span>
                 <span>CPU: ${stats.cpu}%</span>
-                <span class="status-badge">Active</span>
+                <span class="status-badge ${badgeClass}">${badgeText}</span>
               </div>
             </div>
           </div>
@@ -1863,6 +1949,14 @@
           selectedTaskId = taskId;
           document.querySelectorAll('.task-card').forEach(c => c.classList.remove('selected'));
           card.classList.add('selected');
+        });
+
+        card.addEventListener('keydown', (e) => {
+          if (e.target.closest('button') || e.target.closest('select')) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openInspectModal(taskId, taskTitle);
+          }
         });
 
         card.addEventListener('dblclick', (e) => {
@@ -1915,33 +2009,50 @@
       if (elMemUsed) elMemUsed.innerText = `${curMem} / 8.0 GB`;
     }
 
+    let hoverState = {
+      cpu: null,
+      mem: null
+    };
+
     function drawCharts() {
       const cpuCanvas = document.getElementById('cpuCanvas');
       const memCanvas = document.getElementById('memCanvas');
 
       if (cpuCanvas) {
-        renderLineChart(cpuCanvas, cpuHistory, '#38bdf8', 'rgba(56, 189, 248, 0.2)', 100);
-        document.getElementById('chart-cpu-val').innerText = cpuHistory[cpuHistory.length - 1] + '%';
+        renderLineChart(cpuCanvas, cpuHistory, '#38bdf8', 'rgba(56, 189, 248, 0.2)', 100, hoverState.cpu);
+        const curCpu = cpuHistory[cpuHistory.length - 1];
+        document.getElementById('chart-cpu-val').innerText = curCpu + '%';
       }
 
       if (memCanvas) {
-        renderLineChart(memCanvas, memHistory, '#a855f7', 'rgba(168, 85, 247, 0.2)', 8.0);
-        document.getElementById('chart-mem-val').innerText = memHistory[memHistory.length - 1] + ' GB';
+        renderLineChart(memCanvas, memHistory, '#a855f7', 'rgba(168, 85, 247, 0.2)', 8.0, hoverState.mem);
+        const curMem = memHistory[memHistory.length - 1];
+        document.getElementById('chart-mem-val').innerText = (typeof curMem === 'number' ? curMem.toFixed(1) : curMem) + ' GB';
       }
     }
 
-    function renderLineChart(canvas, data, strokeColor, fillColor, maxVal) {
+    function renderLineChart(canvas, data, strokeColor, fillColor, maxVal, hoverIndex) {
       const parent = canvas.parentElement;
       if (!parent) return;
       
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = parent.clientWidth * dpr;
-      canvas.height = parent.clientHeight * dpr;
-      const ctx = canvas.getContext('2d');
-      ctx.scale(dpr, dpr);
-      const w = parent.clientWidth;
-      const h = parent.clientHeight;
+      const rect = parent.getBoundingClientRect();
+      const w = Math.floor(rect.width);
+      const h = Math.floor(rect.height);
+      if (w <= 0 || h <= 0) return;
 
+      const dpr = window.devicePixelRatio || 1;
+      const targetW = Math.floor(w * dpr);
+      const targetH = Math.floor(h * dpr);
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+      }
+
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, w, h);
 
       // Draw Gridlines
@@ -1949,7 +2060,7 @@
       ctx.lineWidth = 1;
       const rows = 4;
       for (let i = 1; i < rows; i++) {
-        const y = (h / rows) * i;
+        const y = Math.round((h / rows) * i);
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(w, y);
@@ -1959,8 +2070,9 @@
       if (data.length < 2) return;
 
       const step = w / (data.length - 1);
-      ctx.beginPath();
       
+      // Area Fill
+      ctx.beginPath();
       data.forEach((val, idx) => {
         const x = idx * step;
         const normalized = Math.min(1, Math.max(0, val / maxVal));
@@ -1968,18 +2080,92 @@
         if (idx === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       });
-
-      // Line style
-      ctx.strokeStyle = strokeColor;
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-
-      // Area Fill
       ctx.lineTo(w, h);
       ctx.lineTo(0, h);
       ctx.closePath();
       ctx.fillStyle = fillColor;
       ctx.fill();
+
+      // Line style
+      ctx.beginPath();
+      data.forEach((val, idx) => {
+        const x = idx * step;
+        const normalized = Math.min(1, Math.max(0, val / maxVal));
+        const y = h - (normalized * (h - 20)) - 10;
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Interactive hover crosshair & point
+      if (hoverIndex != null && hoverIndex >= 0 && hoverIndex < data.length) {
+        const hx = hoverIndex * step;
+        const hval = data[hoverIndex];
+        const normalized = Math.min(1, Math.max(0, hval / maxVal));
+        const hy = h - (normalized * (h - 20)) - 10;
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(hx, 0);
+        ctx.lineTo(hx, h);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.beginPath();
+        ctx.arc(hx, hy, 5, 0, Math.PI * 2);
+        ctx.fillStyle = strokeColor;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(hx, hy, 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+      }
+    }
+
+    function setupChartInteractivity(canvasId, type) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const tooltip = document.getElementById(type === 'cpu' ? 'cpuTooltip' : 'memTooltip');
+
+      canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const w = rect.width;
+        if (w <= 0) return;
+        const data = type === 'cpu' ? cpuHistory : memHistory;
+        const step = w / (data.length - 1);
+        let idx = Math.round(mouseX / step);
+        if (idx < 0) idx = 0;
+        if (idx >= data.length) idx = data.length - 1;
+
+        hoverState[type] = idx;
+        drawCharts();
+
+        if (tooltip) {
+          const val = data[idx];
+          const secondsAgo = (data.length - 1 - idx) * 2;
+          const timeStr = secondsAgo === 0 ? 'Now' : `-${secondsAgo}s`;
+          const valStr = type === 'cpu' ? `${val}%` : `${parseFloat(val).toFixed(1)} GB`;
+          tooltip.textContent = `${timeStr} | ${valStr}`;
+          tooltip.style.display = 'block';
+
+          let tipX = mouseX + 12;
+          if (tipX + 110 > w) tipX = mouseX - 115;
+          tooltip.style.left = Math.max(4, tipX) + 'px';
+          tooltip.style.top = '10px';
+        }
+      });
+
+      canvas.addEventListener('mouseleave', () => {
+        hoverState[type] = null;
+        if (tooltip) tooltip.style.display = 'none';
+        drawCharts();
+      });
     }
 
     // Process Inspector Modal State & Methods
@@ -2347,12 +2533,24 @@
 
     // Initial load and settings restore
     try {
-      window.resizeTo(800, 600);
-      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 800, height: 600 }, '*');
+      window.resizeTo(920, 640);
+      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 920, height: 640 }, '*');
     } catch(e) {}
 
     loadUserSettings();
     renderTasks();
+    setupChartInteractivity('cpuCanvas', 'cpu');
+    setupChartInteractivity('memCanvas', 'mem');
+
+    try {
+      const chartObserver = new ResizeObserver(() => {
+        if (activeTab === 'charts') {
+          drawCharts();
+        }
+      });
+      document.querySelectorAll('.chart-canvas-container').forEach(el => chartObserver.observe(el));
+    } catch (e) {}
+
     setTimeout(refresh, 100);
     const autoRefreshActive = document.getElementById('autoRefreshToggle')?.checked ?? true;
     if (autoRefreshActive) {

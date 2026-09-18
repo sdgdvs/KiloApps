@@ -184,20 +184,44 @@ void LayoutControls(HWND hwnd) {
     if (width < 320 || height < 200) return;
 
     MoveWindow(hSearchBox, 10, 10, width - 20, 25, TRUE);
-    MoveWindow(hListBox, 10, 42, width - 20, height - 105, TRUE);
-    
-    int btnY = height - 58;
-    int curX = 10;
-    MoveWindow(hBtnRefresh, curX, btnY, 95, 24, TRUE); curX += 100;
-    MoveWindow(hBtnPriority, curX, btnY, 85, 24, TRUE); curX += 90;
-    MoveWindow(hBtnInspect, curX, btnY, 80, 24, TRUE); curX += 85;
-    MoveWindow(hBtnExportCSV, curX, btnY, 55, 24, TRUE); curX += 60;
-    MoveWindow(hBtnExportJSON, curX, btnY, 55, 24, TRUE); curX += 60;
-    MoveWindow(hBtnHelp, curX, btnY, 75, 24, TRUE); curX += 80;
 
-    int endTaskX = width - 115;
-    if (endTaskX < curX + 5) endTaskX = curX + 5;
-    MoveWindow(hBtnEndTask, endTaskX, btnY, 105, 24, TRUE);
+    if (width >= 620) {
+        // Single row toolbar layout for standard/wide window sizes
+        MoveWindow(hListBox, 10, 42, width - 20, height - 105, TRUE);
+        
+        int btnY = height - 58;
+        int curX = 10;
+        MoveWindow(hBtnRefresh, curX, btnY, 95, 24, TRUE); curX += 100;
+        MoveWindow(hBtnPriority, curX, btnY, 85, 24, TRUE); curX += 90;
+        MoveWindow(hBtnInspect, curX, btnY, 80, 24, TRUE); curX += 85;
+        MoveWindow(hBtnExportCSV, curX, btnY, 55, 24, TRUE); curX += 60;
+        MoveWindow(hBtnExportJSON, curX, btnY, 55, 24, TRUE); curX += 60;
+        MoveWindow(hBtnHelp, curX, btnY, 75, 24, TRUE); curX += 80;
+
+        int endTaskX = width - 115;
+        if (endTaskX < curX + 5) endTaskX = curX + 5;
+        MoveWindow(hBtnEndTask, endTaskX, btnY, 105, 24, TRUE);
+    } else {
+        // Two-row responsive layout for compact/narrow window sizes
+        MoveWindow(hListBox, 10, 42, width - 20, height - 132, TRUE);
+
+        int row1Y = height - 86;
+        int row2Y = height - 58;
+        int curX = 10;
+
+        MoveWindow(hBtnRefresh, curX, row1Y, 95, 24, TRUE); curX += 100;
+        MoveWindow(hBtnPriority, curX, row1Y, 85, 24, TRUE); curX += 90;
+        MoveWindow(hBtnInspect, curX, row1Y, 80, 24, TRUE); curX += 85;
+        MoveWindow(hBtnHelp, curX, row1Y, 75, 24, TRUE);
+
+        curX = 10;
+        MoveWindow(hBtnExportCSV, curX, row2Y, 65, 24, TRUE); curX += 70;
+        MoveWindow(hBtnExportJSON, curX, row2Y, 65, 24, TRUE); curX += 70;
+
+        int endTaskX = width - 115;
+        if (endTaskX < curX + 5) endTaskX = curX + 5;
+        MoveWindow(hBtnEndTask, endTaskX, row2Y, 105, 24, TRUE);
+    }
 
     MoveWindow(hStatusText, 10, height - 28, width - 20, 20, TRUE);
 }

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -13,15 +13,15 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KTerm
-  kilo_usability: KTask
+  kilo_usability: KPad
   kilo_graphics: KChrono
   kilo_qa: KStellar
   kilo_expander: KTask
   kilo_creator: "KPomodoro (Work/break cycle manager)"
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KTask
-  timestamp: "2026-09-18T12:45:00Z"
+  timestamp: "2026-09-18T14:45:00Z"
 last_planner_run: "2026-09-17T20:40:00Z"
 ---
 
@@ -75,9 +75,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColony`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFarm`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMine`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KRogue`, `KSanctuary`, `KScript`, `KSpace`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KStarForge`, `KTask`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KTask`
+- **Current Target**: `KPad`
 - **Upcoming Queue**:
-  `KPad`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`.
+  `KPaint`, `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KStellar`
@@ -123,6 +123,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-18T14:45:00Z — kilo-usability: KTask**
+  - Status: PASS ✅ (UI/UX layout polish, window sizing, responsive controls & HiDPI charts).
+  - Window & Layout: Expanded KiloOS window to 920x640; separated search/snapshot tools into dedicated process toolbar.
+  - HiDPI Canvas & Hover: Upgraded CPU/RAM canvas scaling to DPR; added interactive hover crosshairs, timestamped tooltips, and ResizeObserver.
+  - Controls & Accessibility: Added tabindex=0 and keyboard activation to process cards; added dynamic status badges and clear-filter button on empty search.
+  - Native Win32 Polish: Implemented adaptive two-row toolbar in main.c for narrow window sizes (<620px) preventing button clipping.
+  - Verification: Clean Vite Single-File Web build (88.1 KB); MSVC Native C clean build (20.9 KB); all <999 KB ceiling and security gates passed.
+
 - **2026-09-18T12:45:00Z — kilo-tester: KTask**
   - Status: PASS ✅ (9 issues, 9 fixed).
   - Snapshot & Persistence: Added F5 quicksave & F9 quickload; wired localStorage backup (ktask_quicksave) and user preference persistence.
@@ -157,15 +165,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - First-Run Tutorial: Ensured onboarding briefing fires only on fresh sessions (kstarship_tutorialSeen / kstarship_tutorial.dat), preserving restored states.
   - Ergonomics & Overlays: Added Space/Enter action triggers, Esc dismiss for non-combat dialogs, F1 help parity, and arrow key flight in native.
   - Verification: Clean MSVC Native C build (142.5 KB); Vite Single-File Web clean build (132.3 KB); all <999 KB size constraints satisfied.
-
-- **2026-09-18T02:48:00Z — kilo-graphics: KStarship**
-  - Status: PASS ✅ (Content, visual polish, balance & save/load pass).
-  - Procedural Visuals: Added GDI vector & canvas sprites for all 10 encounter types (XenonHunter, SyndicateFrigate, PrecursorRuin, Trader, Alien, Derelicts, WarZone).
-  - Starmap Graphics: Added Gas Giant planetary rings and gold sub-space scanner pulse rings for detected contacts.
-  - Shipyard Modules: Implemented Nanite Repair Swarm (auto-hull repair), Quantum Ramscoop (35% fuel discount), Sub-Scanner (encounter radar).
-  - Biome Expedition: Added 5 interactive planetary biomes (Gas Giant, Ice World, Lava, Barren, Terrestrial) with distinct risk/reward.
-  - Combat Balance: Unified combat loop with dynamic ASCII HP bars, Pilot evasion, Gunner crits, Engineer absorption, and F5/F9 quicksave/load.
-  - Verification: Clean MSVC Native C (140 KB) and Vite Single-File Web (129.4 KB) builds; strictly <999 KB ceiling verified.
 
 
 
