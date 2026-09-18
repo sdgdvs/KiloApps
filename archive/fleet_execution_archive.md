@@ -114,3 +114,11 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - Status: PASS ✅ (Content, visual polish, balance & save/load pass).
   - Highlights: GDI vector & canvas sprites for 10 encounters, Gas Giant rings, Nanite Repair Swarm, Quantum Ramscoop, Sub-Scanner, 5 planetary biomes, combat balance & save/load. Native (140 KB) and Web (129.4 KB) clean builds.
 
+- **2026-09-18T04:47:00Z — kilo-qa: KStarship**
+  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial integrity, overlays).
+  - State Persistence: Hardened F5 quicksave & F9 quickload in web and native; added beforeunload/WM_DESTROY auto-save and storage quota resilience.
+  - Failure Recovery: Added quicksave reload checkpoint ([F9]) across combat, event, and planetary hazard game over states.
+  - First-Run Tutorial: Ensured onboarding briefing fires only on fresh sessions (kstarship_tutorialSeen / kstarship_tutorial.dat), preserving restored states.
+  - Ergonomics & Overlays: Added Space/Enter action triggers, Esc dismiss for non-combat dialogs, F1 help parity, and arrow key flight in native.
+  - Verification: Clean MSVC Native C build (142.5 KB); Vite Single-File Web clean build (132.3 KB); all <999 KB size constraints satisfied.
+

@@ -878,7 +878,7 @@
                     </button>
                     <button class="splash-btn" id="btnSplashScenarios">
                         <span>📋 SELECT SCENARIO</span>
-                        <span style="font-size: 11px; opacity: 0.7;">5 Operations</span>
+                        <span style="font-size: 11px; opacity: 0.7;">6 Operations</span>
                     </button>
                     <button class="splash-btn" id="btnSplashHelp">
                         <span>📖 TEMPORAL MANUAL</span>
@@ -1271,6 +1271,15 @@
                 briefing: "Sandbox mode: Manipulate any epoch, place causal anchors, trigger temporal ruptures, and observe instantaneous timeline propagation in the Chronograph.",
                 startEpoch: "beta",
                 winCondition: () => false
+            },
+            {
+                id: 6,
+                name: "Tachyon Cascade (The Grand Paradox)",
+                subtitle: "Synchronize all three epochs to prevent total collapse of the Chrono-Array",
+                objective: "Divert cryogenic sluice in Alpha, hold Beta vault gate with Echo Ghost, and stabilize the Singularity Core in Gamma.",
+                briefing: "An ultimate cascade failure is underway across all 3 epochs! In 1984 (Alpha), trigger the cryogenic floodgate to quench Beta's plasma pit. In 2042 (Beta), record an Echo Ghost to keep the biometric plate depressed while you retrieve the Chronal Resonator. Finally, cross the stabilized ice bridge in 2188 (Gamma) and harmonize the Omega Core!",
+                startEpoch: "alpha",
+                winCondition: (state) => state.flags.cascadeStabilized === true
             }
         ];
 
@@ -1282,11 +1291,11 @@
                 this.paradoxStrain = 0; // 0 to 100
                 this.isRecordingEcho = false;
                 this.isPlayingEcho = false;
-                this.echoBuffer = []; // recorded actions: [{turn, x, y, epoch, action}]
+                this.echoBuffer = []; // recorded actions: [{turn, x, y, epoch, facing, action}]
                 this.echoStepIndex = 0;
-                this.echoGhost = null; // {x, y, epoch}
+                this.echoGhost = null; // {x, y, epoch, facing}
 
-                this.player = { x: 3, y: 3 };
+                this.player = { x: 4, y: 7, facing: 'down' };
                 this.inventory = []; // Max 4 items
                 this.flags = {};
 
@@ -1349,8 +1358,10 @@
                     dualAuthUnlocked: false,
                     riftsClosed: 0,
                     omegaCoreAccessed: false,
+                    cascadeStabilized: false,
                     lockerItem: null
                 };
+                this.player = { x: 4, y: 7, facing: 'down' };
                 this.history = [];
                 this.ripples = [];
                 this.particles = [];
@@ -1391,6 +1402,7 @@
                 // Default Player starting location
                 this.player.x = 4;
                 this.player.y = 7;
+                this.player.facing = 'down';
 
                 if (id === 1) {
                     // Scenario 1: Genesis Core
@@ -1440,6 +1452,28 @@
                     this.grids.alpha[11][4] = TILES.CHRONO_LOCKER;
                     this.grids.beta[11][4] = TILES.CHRONO_LOCKER;
                     this.grids.gamma[11][4] = TILES.CHRONO_LOCKER;
+
+                } else if (id === 6) {
+                    // Scenario 6: Tachyon Cascade (The Grand Paradox)
+                    // Alpha: Precursor Relay at (6, 3), Cryo Floodgate at (4, 11), Crate at (8, 7)
+                    this.grids.alpha[3][6] = TILES.PRECURSOR_RELAY;
+                    this.grids.alpha[11][4] = TILES.CRYO_FLOODGATE;
+                    this.entities.alpha.push({ id: 'cascade_crate_a', type: 'crate', x: 8, y: 7 });
+                    this.entities.beta.push({ id: 'cascade_crate_b', type: 'crate', x: 8, y: 7 });
+
+                    // Beta: Plasma pit along col 10 (cooled by Alpha floodgate), Pressure Plate at (5, 5), Blast Gate at (12, 7)
+                    for (let y = 3; y <= 11; y++) {
+                        this.grids.beta[y][10] = TILES.PLASMA_PIT;
+                        this.grids.gamma[y][10] = TILES.VOID;
+                    }
+                    this.grids.beta[5][5] = TILES.PRESSURE_PLATE;
+                    this.grids.beta[7][12] = TILES.BLAST_GATE;
+                    this.grids.beta[8][12] = TILES.BLAST_GATE;
+
+                    // Gamma: Omega Core at (19, 7), Tachyon Rift at (4, 11), Patrolling phantom
+                    this.grids.gamma[7][19] = TILES.QUANTUM_CORE;
+                    this.grids.gamma[11][4] = TILES.TACHYON_RIFT;
+                    this.entities.gamma.push({ id: 'cascade_phantom', type: 'phantom', x: 14, y: 7, dir: 1 });
 
                 } else {
                     // Scenario 5: Sandbox
@@ -1512,7 +1546,7 @@
                     }
                 });
 
-                // Rule 5: Dual Pressure Plates in Beta
+                // Rule 5: Dual Pressure Plates in Beta (Scenario 2)
                 if (this.currentScenario.id === 2) {
                     const plate1Active = this.isPlatePressed(5, 4, 'beta');
                     const plate2Active = this.isPlatePressed(5, 10, 'beta');
@@ -1537,6 +1571,23 @@
                     }
                 }
 
+                // Rule 6: Scenario 6 Dual Pressure & Coolant Cascade
+                if (this.currentScenario.id === 6) {
+                    const plateActive = this.isPlatePressed(5, 5, 'beta');
+                    if (plateActive || this.flags.precursorRepaired) {
+                        if (this.grids.beta[7][12] === TILES.BLAST_GATE) {
+                            this.grids.beta[7][12] = TILES.FLOOR;
+                            this.grids.beta[8][12] = TILES.FLOOR;
+                            ripplesTriggered++;
+                        }
+                    } else {
+                        if (this.grids.beta[7][12] === TILES.FLOOR) {
+                            this.grids.beta[7][12] = TILES.BLAST_GATE;
+                            this.grids.beta[8][12] = TILES.BLAST_GATE;
+                        }
+                    }
+                }
+
                 if (visualize && ripplesTriggered > 0) {
                     audio.playCausalRipple();
                     this.spawnRippleEffect(this.player.x * TILE_SIZE + 16, this.player.y * TILE_SIZE + 16);
@@ -1556,6 +1607,11 @@
 
             /* --- Player Movement & Action Dispatcher --- */
             move(dx, dy) {
+                if (dx > 0) this.player.facing = 'right';
+                else if (dx < 0) this.player.facing = 'left';
+                else if (dy > 0) this.player.facing = 'down';
+                else if (dy < 0) this.player.facing = 'up';
+
                 const targetX = this.player.x + dx;
                 const targetY = this.player.y + dy;
 
@@ -1597,7 +1653,7 @@
                 this.player.y = targetY;
                 audio.playStep();
 
-                this.advanceTurn({ action: 'move', dx, dy });
+                this.advanceTurn({ action: 'move', dx, dy, facing: this.player.facing });
                 return true;
             }
 
@@ -1632,6 +1688,17 @@
                             interacted = true;
                             break;
                         }
+                    } else if (tile === TILES.CRYO_FLOODGATE) {
+                        if (!this.flags.floodgateOpen) {
+                            this.saveUndoState();
+                            this.flags.floodgateOpen = true;
+                            audio.playSwitch();
+                            this.logEvent("[CRYO SLUICE] Coolant floodgate engaged in Alpha! Sluice rushing forward in time.", "success");
+                            this.addParadoxStrain(8, "Cryogenic thermodynamic redistribution");
+                            this.propagateCausality(true);
+                            interacted = true;
+                            break;
+                        }
                     } else if (tile === TILES.SAPLING_VAULT) {
                         if (!this.flags.seedPlanted) {
                             this.saveUndoState();
@@ -1654,7 +1721,7 @@
                         this.flags.riftsClosed = (this.flags.riftsClosed || 0) + 1;
                         audio.playTone(600, 0.3, 'sine', 0.25);
                         this.logEvent(`[RIFT SEALED] Tachyon Rift collapsed (${this.flags.riftsClosed}/3).`, "success");
-                        this.addParadoxStrain(-15, "Temporal rupture stabilized");
+                        this.addParadoxStrain(-20, "Temporal rupture stabilized");
                         interacted = true;
                         break;
                     } else if (tile === TILES.QUANTUM_CORE) {
@@ -1664,6 +1731,9 @@
                         }
                         if (this.currentEpoch === 'gamma') {
                             this.flags.omegaCoreAccessed = true;
+                            if (this.currentScenario.id === 6) {
+                                this.flags.cascadeStabilized = true;
+                            }
                         }
                         audio.playVictory();
                         this.logEvent("MISSION ACCOMPLISHED: Quantum Chrono-Core Harmonized!", "success");
@@ -1734,6 +1804,7 @@
                         x: this.player.x,
                         y: this.player.y,
                         epoch: this.currentEpoch,
+                        facing: this.player.facing || 'down',
                         action: playerAction
                     });
                     this.logEvent(`[ECHO RECORD] Step #${this.echoBuffer.length} logged`, 'normal');
@@ -1743,13 +1814,13 @@
                 if (this.isPlayingEcho && this.echoBuffer.length > 0) {
                     if (this.echoStepIndex < this.echoBuffer.length) {
                         const step = this.echoBuffer[this.echoStepIndex];
-                        this.echoGhost = { x: step.x, y: step.y, epoch: step.epoch };
+                        this.echoGhost = { x: step.x, y: step.y, epoch: step.epoch, facing: step.facing || 'down' };
                         this.echoStepIndex++;
                     } else {
                         // Loop or finish
                         this.echoStepIndex = 0;
                         const step = this.echoBuffer[0];
-                        this.echoGhost = { x: step.x, y: step.y, epoch: step.epoch };
+                        this.echoGhost = { x: step.x, y: step.y, epoch: step.epoch, facing: step.facing || 'down' };
                     }
                 }
 
@@ -1761,9 +1832,11 @@
                     }
                 });
 
-                // Scenario 3: Passive paradox strain accumulation until rifts are sealed
-                if (this.currentScenario.id === 3 && (this.flags.riftsClosed || 0) < 3) {
-                    this.addParadoxStrain(1, "Uncontained Tachyon Rift singularity flux");
+                // Scenario 3 & 6: Balanced passive paradox strain accumulation (every 3 turns)
+                if ((this.currentScenario.id === 3 || this.currentScenario.id === 6) && (this.flags.riftsClosed || 0) < 3) {
+                    if (this.turn % 3 === 0) {
+                        this.addParadoxStrain(1, "Uncontained Tachyon Rift singularity flux");
+                    }
                 }
 
                 // Check for paradox collapse threshold
@@ -2104,6 +2177,8 @@
             ctx.save();
             ctx.scale(dpr, dpr);
 
+            const now = Date.now();
+
             // Clear background (virtual coordinates 768x512)
             ctx.fillStyle = "#030610";
             ctx.fillRect(0, 0, 768, 512);
@@ -2117,7 +2192,7 @@
                     const rx = x * TILE_SIZE;
                     const ry = y * TILE_SIZE;
 
-                    drawTile(ctx, tile, rx, ry, engine.currentEpoch);
+                    drawTile(ctx, tile, rx, ry, engine.currentEpoch, now);
                 }
             }
 
@@ -2126,19 +2201,19 @@
                 const rx = ent.x * TILE_SIZE;
                 const ry = ent.y * TILE_SIZE;
                 if (ent.type === 'crate') {
-                    drawCrate(ctx, rx, ry);
+                    drawCrate(ctx, rx, ry, engine.currentEpoch);
                 } else if (ent.type === 'phantom') {
-                    drawPhantom(ctx, rx, ry);
+                    drawPhantom(ctx, rx, ry, now);
                 }
             });
 
             // Render Echo Ghost (if active in this epoch)
             if (engine.echoGhost && engine.echoGhost.epoch === engine.currentEpoch) {
-                drawGhost(ctx, engine.echoGhost.x * TILE_SIZE, engine.echoGhost.y * TILE_SIZE);
+                drawGhost(ctx, engine.echoGhost.x * TILE_SIZE, engine.echoGhost.y * TILE_SIZE, engine.echoGhost.facing || 'down', now);
             }
 
             // Render Player
-            drawPlayer(ctx, engine.player.x * TILE_SIZE, engine.player.y * TILE_SIZE, engine.currentEpoch);
+            drawPlayer(ctx, engine.player.x * TILE_SIZE, engine.player.y * TILE_SIZE, engine.currentEpoch, engine.player.facing || 'down', now);
 
             // Render Causal Ripples
             for (let i = engine.ripples.length - 1; i >= 0; i--) {
@@ -2183,145 +2258,527 @@
             requestAnimationFrame(render);
         }
 
-        function drawTile(c, tile, x, y, epoch) {
+        function drawTile(c, tile, x, y, epoch, now) {
             if (tile === TILES.WALL) {
-                c.fillStyle = "#111827";
-                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-                c.strokeStyle = "#1f2937";
-                c.lineWidth = 1;
-                c.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+                if (epoch === 'alpha') {
+                    // Alpha: Heavy industrial concrete block with warm amber accents & brass rivets
+                    c.fillStyle = "#1e1812";
+                    c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                    c.fillStyle = "#3a2e22";
+                    c.fillRect(x, y, TILE_SIZE, 3);
+                    c.fillRect(x, y, 3, TILE_SIZE);
+                    c.fillStyle = "#0e0b08";
+                    c.fillRect(x, y + TILE_SIZE - 3, TILE_SIZE, 3);
+                    c.fillRect(x + TILE_SIZE - 3, y, 3, TILE_SIZE);
+                    c.fillStyle = "#282018";
+                    c.fillRect(x + 4, y + 4, TILE_SIZE - 8, TILE_SIZE - 8);
+                    c.fillStyle = "#45382b";
+                    c.fillRect(x + 5, y + 15, TILE_SIZE - 10, 2);
+                    c.fillStyle = "#d97706";
+                    c.fillRect(x + 5, y + 5, 2, 2);
+                    c.fillRect(x + TILE_SIZE - 7, y + 5, 2, 2);
+                    c.fillRect(x + 5, y + TILE_SIZE - 7, 2, 2);
+                    c.fillRect(x + TILE_SIZE - 7, y + TILE_SIZE - 7, 2, 2);
+                } else if (epoch === 'beta') {
+                    // Beta: Sleek dark alloy bulkhead with recessed cyan circuit line & hex bolts
+                    c.fillStyle = "#0c1322";
+                    c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                    c.fillStyle = "#1e293b";
+                    c.fillRect(x, y, TILE_SIZE, 2);
+                    c.fillRect(x, y, 2, TILE_SIZE);
+                    c.fillStyle = "#050913";
+                    c.fillRect(x, y + TILE_SIZE - 2, TILE_SIZE, 2);
+                    c.fillRect(x + TILE_SIZE - 2, y, 2, TILE_SIZE);
+                    c.fillStyle = "#111c30";
+                    c.fillRect(x + 3, y + 3, TILE_SIZE - 6, TILE_SIZE - 6);
+                    c.fillStyle = "rgba(6, 182, 212, 0.4)";
+                    c.fillRect(x + 7, y + 15, TILE_SIZE - 14, 2);
+                    c.fillRect(x + 15, y + 7, 2, TILE_SIZE - 14);
+                    c.fillStyle = "#38bdf8";
+                    c.fillRect(x + 4, y + 4, 2, 2);
+                    c.fillRect(x + TILE_SIZE - 6, y + 4, 2, 2);
+                    c.fillRect(x + 4, y + TILE_SIZE - 6, 2, 2);
+                    c.fillRect(x + TILE_SIZE - 6, y + TILE_SIZE - 6, 2, 2);
+                } else {
+                    // Gamma: Fractured entropic obsidian stone with glowing violet fissures
+                    c.fillStyle = "#12091d";
+                    c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                    c.fillStyle = "#241238";
+                    c.fillRect(x, y, TILE_SIZE, 2);
+                    c.fillRect(x, y, 2, TILE_SIZE);
+                    c.fillStyle = "#07030c";
+                    c.fillRect(x, y + TILE_SIZE - 2, TILE_SIZE, 2);
+                    c.fillRect(x + TILE_SIZE - 2, y, 2, TILE_SIZE);
+                    c.fillStyle = "#1a0d29";
+                    c.fillRect(x + 3, y + 3, TILE_SIZE - 6, TILE_SIZE - 6);
+                    c.strokeStyle = "rgba(192, 132, 252, 0.6)";
+                    c.lineWidth = 1;
+                    c.beginPath();
+                    c.moveTo(x + 4, y + 8);
+                    c.lineTo(x + 13, y + 14);
+                    c.lineTo(x + 18, y + 11);
+                    c.lineTo(x + 27, y + 23);
+                    c.stroke();
+                    c.fillStyle = "#e9d5ff";
+                    c.fillRect(x + 18, y + 11, 2, 2);
+                }
             } else if (tile === TILES.FLOOR) {
-                c.fillStyle = epoch === 'alpha' ? "#17120a" : epoch === 'beta' ? "#0a1120" : "#13091f";
-                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-                // Subtle grid dot
-                c.fillStyle = "rgba(255, 255, 255, 0.05)";
-                c.fillRect(x + 15, y + 15, 2, 2);
+                if (epoch === 'alpha') {
+                    c.fillStyle = "#161009";
+                    c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                    c.strokeStyle = "rgba(245, 158, 11, 0.05)";
+                    c.lineWidth = 1;
+                    c.strokeRect(x + 0.5, y + 0.5, TILE_SIZE - 1, TILE_SIZE - 1);
+                    c.fillStyle = "rgba(245, 158, 11, 0.08)";
+                    c.fillRect(x + 15, y + 15, 2, 2);
+                } else if (epoch === 'beta') {
+                    c.fillStyle = "#09101d";
+                    c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                    c.strokeStyle = "rgba(6, 182, 212, 0.06)";
+                    c.lineWidth = 1;
+                    c.strokeRect(x + 0.5, y + 0.5, TILE_SIZE - 1, TILE_SIZE - 1);
+                    c.fillStyle = "rgba(6, 182, 212, 0.12)";
+                    c.fillRect(x + 15, y + 15, 2, 2);
+                } else {
+                    c.fillStyle = "#11071c";
+                    c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                    c.strokeStyle = "rgba(192, 132, 252, 0.05)";
+                    c.lineWidth = 1;
+                    c.strokeRect(x + 0.5, y + 0.5, TILE_SIZE - 1, TILE_SIZE - 1);
+                    c.fillStyle = "rgba(233, 213, 255, 0.15)";
+                    c.fillRect(x + 14, y + 14, 2, 2);
+                }
             } else if (tile === TILES.PRECURSOR_RELAY) {
-                c.fillStyle = "#261c0c";
+                c.fillStyle = "#1c140a";
                 c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-                c.fillStyle = engine.flags.precursorRepaired ? "#f59e0b" : "#78350f";
+                c.fillStyle = "#92400e";
+                c.fillRect(x + 3, y + 6, 5, 20);
+                c.fillRect(x + TILE_SIZE - 8, y + 6, 5, 20);
+                c.fillStyle = "#d97706";
+                for (let cy = y + 8; cy < y + 24; cy += 4) {
+                    c.fillRect(x + 3, cy, 5, 2);
+                    c.fillRect(x + TILE_SIZE - 8, cy, 5, 2);
+                }
+                c.fillStyle = "#292015";
                 c.beginPath();
                 c.arc(x + 16, y + 16, 9, 0, Math.PI * 2);
                 c.fill();
-                c.fillStyle = "#000";
-                c.font = "bold 12px monospace";
-                c.fillText("⚡", x + 11, y + 20);
-            } else if (tile === TILES.BLAST_GATE) {
-                c.fillStyle = "#374151";
-                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-                c.strokeStyle = "#ef4444";
+                c.strokeStyle = engine.flags.precursorRepaired ? "#f59e0b" : "#78350f";
                 c.lineWidth = 2;
-                c.beginPath();
-                c.moveTo(x + 2, y + 2); c.lineTo(x + 30, y + 30);
-                c.moveTo(x + 30, y + 2); c.lineTo(x + 2, y + 30);
                 c.stroke();
+
+                const angle = (now / 200) % (Math.PI * 2);
+                c.save();
+                c.translate(x + 16, y + 16);
+                c.rotate(angle);
+                c.fillStyle = engine.flags.precursorRepaired ? "#fef08a" : "#b45309";
+                c.fillRect(-7, -2, 14, 4);
+                c.fillRect(-2, -7, 4, 14);
+                c.restore();
+
+                c.fillStyle = engine.flags.precursorRepaired ? "#fbbf24" : "#78350f";
+                c.beginPath();
+                c.arc(x + 16, y + 16, 4, 0, Math.PI * 2);
+                c.fill();
+
+                if (engine.flags.precursorRepaired && Math.random() < 0.3) {
+                    c.strokeStyle = "#fef08a";
+                    c.lineWidth = 1.5;
+                    c.beginPath();
+                    c.moveTo(x + 16, y + 16);
+                    c.lineTo(x + 6 + Math.random() * 20, y + 6 + Math.random() * 20);
+                    c.stroke();
+                }
+            } else if (tile === TILES.BLAST_GATE) {
+                c.fillStyle = "#1e293b";
+                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                c.save();
+                c.beginPath();
+                c.rect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                c.clip();
+                c.fillStyle = "#0f172a";
+                c.fillRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                c.strokeStyle = "#ef4444";
+                c.lineWidth = 3;
+                for (let offset = -TILE_SIZE; offset < TILE_SIZE * 2; offset += 7) {
+                    c.beginPath();
+                    c.moveTo(x + offset, y + 2);
+                    c.lineTo(x + offset + 7, y + TILE_SIZE - 2);
+                    c.stroke();
+                }
+                c.restore();
+                c.fillStyle = "#64748b";
+                c.fillRect(x + 4, y + 13, TILE_SIZE - 8, 6);
+                c.fillStyle = "#ef4444";
+                c.fillRect(x + 14, y + 14, 4, 4);
             } else if (tile === TILES.PRESSURE_PLATE) {
-                c.fillStyle = "#1e293b";
-                c.fillRect(x + 4, y + 4, 24, 24);
-                c.strokeStyle = "#06b6d4";
-                c.lineWidth = 1.5;
-                c.strokeRect(x + 6, y + 6, 20, 20);
-            } else if (tile === TILES.SAPLING_VAULT) {
-                c.fillStyle = "#1e3a1f";
-                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-                c.fillStyle = "#10b981";
-                c.fillText("🌱", x + 8, y + 22);
-            } else if (tile === TILES.BIO_BRIDGE) {
-                c.fillStyle = "#166534";
-                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-                c.fillStyle = "#4ade80";
-                c.fillText("🌿", x + 8, y + 22);
-            } else if (tile === TILES.CHRONO_LOCKER) {
-                c.fillStyle = "#1e293b";
-                c.fillRect(x + 2, y + 2, 28, 28);
-                c.fillStyle = "#38bdf8";
-                c.fillText("📦", x + 8, y + 22);
-            } else if (tile === TILES.QUANTUM_CORE) {
                 c.fillStyle = "#0f172a";
                 c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-                // Glowing core
-                const pulse = Math.sin(Date.now() / 200) * 3;
-                c.fillStyle = "#38bdf8";
+                const isPressed = engine.isPlatePressed(Math.floor(x / TILE_SIZE), Math.floor(y / TILE_SIZE), epoch);
+                c.fillStyle = isPressed ? "#164e63" : "#1e293b";
                 c.beginPath();
-                c.arc(x + 16, y + 16, 10 + pulse, 0, Math.PI * 2);
+                c.moveTo(x + 8, y + 4); c.lineTo(x + 24, y + 4);
+                c.lineTo(x + 28, y + 8); c.lineTo(x + 28, y + 24);
+                c.lineTo(x + 24, y + 28); c.lineTo(x + 8, y + 28);
+                c.lineTo(x + 4, y + 24); c.lineTo(x + 4, y + 8);
+                c.closePath();
                 c.fill();
-                c.fillStyle = "#ffffff";
-                c.fillText("⚛", x + 10, y + 20);
-            } else if (tile === TILES.TACHYON_RIFT) {
-                c.fillStyle = "#2e1065";
+                c.strokeStyle = isPressed ? "#22d3ee" : "#0e7490";
+                c.lineWidth = 1.5;
+                c.stroke();
+
+                c.beginPath();
+                c.arc(x + 16, y + 16, 7, 0, Math.PI * 2);
+                c.fillStyle = isPressed ? "#06b6d4" : "#0f172a";
+                c.fill();
+                c.strokeStyle = isPressed ? "#a5f3fc" : "#0891b2";
+                c.stroke();
+                if (isPressed) {
+                    c.fillStyle = "#ffffff";
+                    c.beginPath();
+                    c.arc(x + 16, y + 16, 3, 0, Math.PI * 2);
+                    c.fill();
+                }
+            } else if (tile === TILES.QUANTUM_CORE) {
+                c.fillStyle = "#030712";
                 c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-                c.fillStyle = "#c084fc";
-                c.fillText("🌀", x + 8, y + 22);
+                const t = now / 250;
+                c.save();
+                c.translate(x + 16, y + 16);
+                c.rotate(t);
+                c.strokeStyle = "#38bdf8";
+                c.lineWidth = 1.5;
+                c.strokeRect(-11, -11, 22, 22);
+                c.rotate(-t * 2);
+                c.strokeStyle = "#c084fc";
+                c.lineWidth = 1.5;
+                c.beginPath();
+                c.arc(0, 0, 8, 0, Math.PI * 2);
+                c.stroke();
+                c.restore();
+
+                const pulse = Math.sin(t * 2) * 2;
+                const grad = c.createRadialGradient(x + 16, y + 16, 1, x + 16, y + 16, 7 + pulse);
+                grad.addColorStop(0, "#ffffff");
+                grad.addColorStop(0.4, "#38bdf8");
+                grad.addColorStop(1, "rgba(2, 132, 199, 0)");
+                c.fillStyle = grad;
+                c.beginPath();
+                c.arc(x + 16, y + 16, 7 + pulse, 0, Math.PI * 2);
+                c.fill();
+            } else if (tile === TILES.TACHYON_RIFT) {
+                c.fillStyle = "#090214";
+                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                const t = now / 300;
+                c.save();
+                c.translate(x + 16, y + 16);
+                for (let i = 0; i < 3; i++) {
+                    c.rotate(t + (i * Math.PI * 2 / 3));
+                    c.strokeStyle = i === 0 ? "#c084fc" : i === 1 ? "#a855f7" : "#e879f9";
+                    c.lineWidth = 2;
+                    c.beginPath();
+                    c.arc(0, 0, 10 - i * 2, 0, Math.PI * 0.9);
+                    c.stroke();
+                }
+                c.restore();
+                c.fillStyle = "#000000";
+                c.beginPath();
+                c.arc(x + 16, y + 16, 4, 0, Math.PI * 2);
+                c.fill();
+                c.strokeStyle = "#ffffff";
+                c.lineWidth = 1;
+                c.stroke();
+            } else if (tile === TILES.CRYO_FLOODGATE) {
+                c.fillStyle = "#082f49";
+                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                c.strokeStyle = "#0284c7";
+                c.lineWidth = 1;
+                c.strokeRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                c.fillStyle = engine.flags.floodgateOpen ? "#38bdf8" : "#0369a1";
+                c.beginPath();
+                c.arc(x + 16, y + 16, 8, 0, Math.PI * 2);
+                c.fill();
+                c.strokeStyle = "#e0f2fe";
+                c.lineWidth = 2;
+                c.beginPath();
+                c.moveTo(x + 16, y + 8); c.lineTo(x + 16, y + 24);
+                c.moveTo(x + 8, y + 16); c.lineTo(x + 24, y + 16);
+                c.stroke();
+                if (engine.flags.floodgateOpen) {
+                    c.fillStyle = "#bae6fd";
+                    c.fillRect(x + 14, y + 14, 4, 4);
+                }
             } else if (tile === TILES.PLASMA_PIT) {
                 c.fillStyle = "#450a0a";
                 c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-                c.fillStyle = "#f87171";
-                c.fillText("🔥", x + 8, y + 22);
+                const boil = Math.sin((now / 150) + x + y);
+                c.fillStyle = "#dc2626";
+                c.beginPath();
+                c.arc(x + 12 + boil * 2, y + 12, 6, 0, Math.PI * 2);
+                c.arc(x + 20 - boil * 2, y + 18, 5, 0, Math.PI * 2);
+                c.fill();
+                c.fillStyle = "#facc15";
+                c.beginPath();
+                c.arc(x + 16, y + 16, 3 + boil, 0, Math.PI * 2);
+                c.fill();
             } else if (tile === TILES.ICE_BRIDGE) {
-                c.fillStyle = "#0c4a6e";
+                c.fillStyle = "#075985";
                 c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-                c.fillStyle = "#7dd3fc";
-                c.fillText("❄", x + 10, y + 22);
+                c.fillStyle = "#38bdf8";
+                c.beginPath();
+                c.moveTo(x + 2, y + 16); c.lineTo(x + 16, y + 2);
+                c.lineTo(x + 30, y + 16); c.lineTo(x + 16, y + 30);
+                c.closePath();
+                c.fill();
+                c.strokeStyle = "#e0f2fe";
+                c.lineWidth = 1;
+                c.stroke();
+                c.fillStyle = "#ffffff";
+                c.fillRect(x + 15, y + 15, 2, 2);
+            } else if (tile === TILES.SAPLING_VAULT) {
+                c.fillStyle = "#064e3b";
+                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                c.strokeStyle = "#059669";
+                c.lineWidth = 1;
+                c.strokeRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                c.fillStyle = "rgba(16, 185, 129, 0.3)";
+                c.beginPath();
+                c.arc(x + 16, y + 16, 9, 0, Math.PI * 2);
+                c.fill();
+                c.fillStyle = engine.flags.seedPlanted ? "#86efac" : "#22c55e";
+                c.beginPath();
+                c.arc(x + 16, y + 16, 4, 0, Math.PI * 2);
+                c.fill();
+            } else if (tile === TILES.BIO_BRIDGE) {
+                c.fillStyle = "#14532d";
+                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                c.strokeStyle = "#22c55e";
+                c.lineWidth = 2;
+                c.beginPath();
+                c.moveTo(x + 2, y + 8); c.quadraticCurveTo(x + 16, y + 20, x + 30, y + 10);
+                c.moveTo(x + 2, y + 24); c.quadraticCurveTo(x + 16, y + 12, x + 30, y + 22);
+                c.stroke();
+                c.fillStyle = "#86efac";
+                c.fillRect(x + 15, y + 14, 3, 3);
+            } else if (tile === TILES.CHRONO_LOCKER) {
+                c.fillStyle = "#1e293b";
+                c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                c.fillStyle = "#334155";
+                c.fillRect(x + 3, y + 3, TILE_SIZE - 6, TILE_SIZE - 6);
+                c.strokeStyle = "#64748b";
+                c.strokeRect(x + 3, y + 3, TILE_SIZE - 6, TILE_SIZE - 6);
+                c.fillStyle = engine.flags.lockerItem ? "#10b981" : "#0284c7";
+                c.fillRect(x + 12, y + 8, 8, 5);
+                c.fillStyle = "#94a3b8";
+                c.fillRect(x + 11, y + 16, 10, 8);
             } else if (tile === TILES.VOID) {
                 c.fillStyle = "#000000";
                 c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
             }
         }
 
-        function drawCrate(c, x, y) {
-            c.fillStyle = "#854d0e";
+        function drawCrate(c, x, y, epoch) {
+            c.fillStyle = "rgba(0, 0, 0, 0.4)";
+            c.fillRect(x + 4, y + 4, 26, 26);
+
+            if (epoch === 'alpha') {
+                c.fillStyle = "#854d0e";
+            } else if (epoch === 'beta') {
+                c.fillStyle = "#1e3a5f";
+            } else {
+                c.fillStyle = "#4a1d6d";
+            }
             c.fillRect(x + 3, y + 3, 26, 26);
-            c.strokeStyle = "#fef08a";
-            c.lineWidth = 1;
-            c.strokeRect(x + 4, y + 4, 24, 24);
+
+            c.fillStyle = epoch === 'alpha' ? "#ca8a04" : epoch === 'beta' ? "#38bdf8" : "#c084fc";
+            c.fillRect(x + 3, y + 3, 26, 2);
+            c.fillRect(x + 3, y + 3, 2, 26);
+            c.fillStyle = "#0f172a";
+            c.fillRect(x + 3, y + 27, 26, 2);
+            c.fillRect(x + 27, y + 3, 2, 26);
+
+            c.fillStyle = "#f8fafc";
+            c.fillRect(x + 3, y + 3, 4, 4);
+            c.fillRect(x + 25, y + 3, 4, 4);
+            c.fillRect(x + 3, y + 25, 4, 4);
+            c.fillRect(x + 25, y + 25, 4, 4);
+
+            c.strokeStyle = epoch === 'alpha' ? "#eab308" : epoch === 'beta' ? "#06b6d4" : "#a855f7";
+            c.lineWidth = 1.5;
             c.beginPath();
-            c.moveTo(x + 4, y + 4); c.lineTo(x + 28, y + 28);
-            c.moveTo(x + 28, y + 4); c.lineTo(x + 4, y + 28);
+            c.moveTo(x + 6, y + 6); c.lineTo(x + 26, y + 26);
+            c.moveTo(x + 26, y + 6); c.lineTo(x + 6, y + 26);
             c.stroke();
+
+            c.fillStyle = "#ffffff";
+            c.beginPath();
+            c.arc(x + 16, y + 16, 3, 0, Math.PI * 2);
+            c.fill();
         }
 
-        function drawPhantom(c, x, y) {
-            c.fillStyle = "rgba(192, 132, 252, 0.75)";
+        function drawPhantom(c, x, y, now = 0) {
+            c.save();
+            const floatY = Math.sin(now / 150) * 2;
+            const py = y + floatY;
+
+            const grad = c.createRadialGradient(x + 16, py + 14, 2, x + 16, py + 14, 14);
+            grad.addColorStop(0, "rgba(192, 132, 252, 0.9)");
+            grad.addColorStop(0.6, "rgba(126, 34, 206, 0.6)");
+            grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+            c.fillStyle = grad;
             c.beginPath();
-            c.arc(x + 16, y + 14, 10, Math.PI, 0, false);
-            c.lineTo(x + 26, y + 26);
-            c.lineTo(x + 6, y + 26);
+            c.arc(x + 16, py + 14, 14, 0, Math.PI * 2);
+            c.fill();
+
+            c.fillStyle = "rgba(88, 28, 135, 0.85)";
+            c.beginPath();
+            c.moveTo(x + 8, py + 14);
+            c.lineTo(x + 8 + Math.sin(now / 100) * 3, py + 26);
+            c.lineTo(x + 13, py + 22);
+            c.lineTo(x + 16, py + 27);
+            c.lineTo(x + 19, py + 22);
+            c.lineTo(x + 24 + Math.cos(now / 100) * 3, py + 26);
+            c.lineTo(x + 24, py + 14);
             c.closePath();
             c.fill();
+
             c.fillStyle = "#ffffff";
-            c.fillRect(x + 10, y + 12, 3, 3);
-            c.fillRect(x + 19, y + 12, 3, 3);
+            c.fillRect(x + 11, py + 11, 3, 2);
+            c.fillRect(x + 18, py + 11, 3, 2);
+            c.fillStyle = "#c084fc";
+            c.fillRect(x + 12, py + 11, 1, 2);
+            c.fillRect(x + 19, py + 11, 1, 2);
+
+            c.restore();
         }
 
-        function drawGhost(c, x, y) {
-            c.fillStyle = "rgba(6, 182, 212, 0.4)";
+        function drawGhost(c, x, y, facing = 'down', now = 0) {
+            c.save();
+            const flicker = 0.55 + Math.sin(now / 100) * 0.15;
+            c.globalAlpha = flicker;
+
+            // Magenta shift layer
+            c.fillStyle = "rgba(192, 132, 252, 0.4)";
             c.beginPath();
-            c.arc(x + 16, y + 16, 12, 0, Math.PI * 2);
+            c.arc(x + 15, y + 10, 6, 0, Math.PI * 2);
+            c.ellipse(x + 15, y + 18, 7, 8, 0, 0, Math.PI * 2);
             c.fill();
-            c.strokeStyle = "#a5f3fc";
-            c.lineWidth = 1.5;
+
+            // Cyan main layer
+            c.fillStyle = "rgba(6, 182, 212, 0.6)";
+            c.beginPath();
+            c.arc(x + 17, y + 10, 6, 0, Math.PI * 2);
+            c.ellipse(x + 17, y + 18, 7, 8, 0, 0, Math.PI * 2);
+            c.fill();
+
+            // Holographic Horizontal Scanlines
+            c.fillStyle = "rgba(0, 0, 0, 0.3)";
+            for (let ly = y + 4; ly < y + 28; ly += 3) {
+                c.fillRect(x + 6, ly, 20, 1);
+            }
+
+            // Visor
+            c.fillStyle = "#a5f3fc";
+            if (facing === 'down') c.fillRect(x + 14, y + 9, 6, 3);
+            else if (facing === 'left') c.fillRect(x + 12, y + 9, 4, 3);
+            else if (facing === 'right') c.fillRect(x + 18, y + 9, 4, 3);
+
+            // Upward Hologram Emitter Beams
+            c.strokeStyle = "rgba(6, 182, 212, 0.35)";
+            c.lineWidth = 1;
+            c.beginPath();
+            c.moveTo(x + 10, y + 28); c.lineTo(x + 16, y + 12);
+            c.moveTo(x + 22, y + 28); c.lineTo(x + 16, y + 12);
             c.stroke();
-            c.fillStyle = "#ffffff";
-            c.fillText("👻", x + 9, y + 21);
+
+            c.restore();
         }
 
-        function drawPlayer(c, x, y, epoch) {
-            // Outer chronal ring
-            c.strokeStyle = epoch === 'alpha' ? '#f59e0b' : epoch === 'beta' ? '#06b6d4' : '#c084fc';
-            c.lineWidth = 2;
+        function drawPlayer(c, x, y, epoch, facing = 'down', now = 0) {
+            const epochColor = epoch === 'alpha' ? '#f59e0b' : epoch === 'beta' ? '#06b6d4' : '#c084fc';
+
+            // Ground Drop Shadow
+            c.fillStyle = "rgba(0, 0, 0, 0.4)";
             c.beginPath();
-            c.arc(x + 16, y + 16, 13, 0, Math.PI * 2);
+            c.ellipse(x + 16, y + 28, 9, 4, 0, 0, Math.PI * 2);
+            c.fill();
+
+            // Pulsing Chronal Field Orbit Ring
+            const auraPulse = Math.sin(now / 200) * 1.5;
+            c.strokeStyle = epochColor;
+            c.lineWidth = 1;
+            c.beginPath();
+            c.arc(x + 16, y + 16, 13 + auraPulse, 0, Math.PI * 2);
             c.stroke();
 
-            // Player body
+            // Tachyon Field Backpack (Emitter Generator)
+            c.fillStyle = "#334155";
+            if (facing === 'down') {
+                c.fillRect(x + 7, y + 12, 4, 9);
+                c.fillRect(x + 21, y + 12, 4, 9);
+                c.fillStyle = epochColor;
+                c.fillRect(x + 8, y + 14, 2, 5);
+                c.fillRect(x + 22, y + 14, 2, 5);
+            } else if (facing === 'up') {
+                c.fillRect(x + 10, y + 11, 12, 11);
+                c.fillStyle = epochColor;
+                c.beginPath();
+                c.arc(x + 16, y + 16, 4, 0, Math.PI * 2);
+                c.fill();
+            } else if (facing === 'left') {
+                c.fillRect(x + 19, y + 12, 5, 10);
+                c.fillStyle = epochColor;
+                c.fillRect(x + 21, y + 14, 2, 6);
+            } else if (facing === 'right') {
+                c.fillRect(x + 8, y + 12, 5, 10);
+                c.fillStyle = epochColor;
+                c.fillRect(x + 9, y + 14, 2, 6);
+            }
+
+            // Hazard Suit Body
             c.fillStyle = "#f8fafc";
             c.beginPath();
-            c.arc(x + 16, y + 16, 9, 0, Math.PI * 2);
+            c.ellipse(x + 16, y + 18, 7, 8, 0, 0, Math.PI * 2);
             c.fill();
+            c.strokeStyle = "#94a3b8";
+            c.lineWidth = 1;
+            c.stroke();
 
-            // Chrononavigator visor
-            c.fillStyle = "#0f172a";
-            c.fillRect(x + 13, y + 13, 6, 4);
+            // Boots / Legs
+            c.fillStyle = "#475569";
+            if (facing === 'left' || facing === 'right') {
+                c.fillRect(x + 14, y + 24, 5, 4);
+            } else {
+                c.fillRect(x + 11, y + 24, 4, 4);
+                c.fillRect(x + 17, y + 24, 4, 4);
+            }
+
+            // Hazard Helmet
+            c.fillStyle = "#f1f5f9";
+            c.beginPath();
+            c.arc(x + 16, y + 10, 6, 0, Math.PI * 2);
+            c.fill();
+            c.strokeStyle = "#64748b";
+            c.stroke();
+
+            // Dynamic Visor & Specular Glint based on Facing Direction
+            c.fillStyle = epochColor;
+            if (facing === 'down') {
+                c.fillRect(x + 13, y + 9, 6, 3);
+                c.fillStyle = "#ffffff";
+                c.fillRect(x + 14, y + 9, 2, 1);
+            } else if (facing === 'up') {
+                c.fillStyle = "#64748b";
+                c.fillRect(x + 15, y + 7, 2, 3);
+            } else if (facing === 'left') {
+                c.fillRect(x + 11, y + 9, 4, 3);
+                c.fillStyle = "#ffffff";
+                c.fillRect(x + 11, y + 9, 1, 1);
+            } else if (facing === 'right') {
+                c.fillRect(x + 17, y + 9, 4, 3);
+                c.fillStyle = "#ffffff";
+                c.fillRect(x + 19, y + 9, 1, 1);
+            }
         }
 
         function renderChronograph() {
@@ -2658,6 +3115,9 @@
             } else if (tile === TILES.BIO_BRIDGE) {
                 name = "Petrified Bio-Archway";
                 causality = "Ancient reinforced root system grown from 1984 seed planting.";
+            } else if (tile === TILES.CRYO_FLOODGATE) {
+                name = "Cryogenic Coolant Sluice Gate";
+                causality = engine.flags.floodgateOpen ? "OPEN: Rushing liquid nitrogen forward into future strata." : "CLOSED: Manual coolant release valve in 1984.";
             } else if (tile === TILES.PLASMA_PIT) {
                 name = "Superheated Plasma Pit";
                 causality = "Lethal thermal hazard. Extinguishable via upstream cryogenic floodgate diversion.";

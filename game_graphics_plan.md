@@ -163,6 +163,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMines
 - KAsteroids
 - KStarship
+- KChrono
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
 
@@ -193,6 +194,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KSubmarine (L1): Bathyscaphe, abyssal creatures (4 types).
 - KSanctuary (L1): Cross-section cutaway, dweller portraits, facility icons.
 - KMystery (L1), KWizard (L1), KMech (L1), KVoid (L1), KStellar (L1): Initial sprites.
+- KChrono (L1): Directional chrononaut & holographic echo ghost sprites, epoch architecture (Alpha concrete, Beta alloy, Gamma obsidian), dynamo relay, quantum singularity core, swirling tachyon rifts, Op #6, strain balance.
 
 **Classic games (Loop 8 — all similar: particles, shockwaves, filigree):**
 - K2048, KAsteroids, KMines, KWords, KTowers, KGo, KSudoku, KFreecell, KMatch3, KHangman, KConnect4, KSimon, KDarts, KSolitaire, KReversi: All at Loop 8 with themed particle engines.
