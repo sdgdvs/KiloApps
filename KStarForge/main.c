@@ -593,7 +593,7 @@ static void DrawGame(HDC hdc, RECT* rc) {
 
     /* Nav Buttons */
     int btnX = 15;
-    const char* tabs[] = { "[1] TITLE", "[2] BLUEPRINT", "[3] DRYDOCK", "[4] FLIGHT TEST", "[5] CONTRACTS", "[6] MANUAL" };
+    const char* tabs[] = { "[1] TITLE", "[2] BLUEPRINT", "[3] DRYDOCK", "[4] FLIGHT TEST", "[5] CONTRACTS", "[6] MANUAL [F1]" };
     for (int t = 0; t < 6; t++) {
         RECT tabRc = { btnX, 48, btnX + 115, 72 };
         int active = 0;
@@ -882,7 +882,7 @@ static void DrawGame(HDC hdc, RECT* rc) {
             "4. DRYDOCK: Gantry fabricates your design layer by layer.",
             "5. SHAKEDOWN PROVING RANGE: Pilot your ship in live space! Mine ore and fight pirates.",
             "6. CONTRACTS: Fulfill faction commissions to earn credits and fleet reputation.",
-            "7. SHORTCUTS: [F5] Quicksave, [F9] Quickload, [1-6] Navigation Tabs, [ESC] Back."
+            "7. SHORTCUTS: [F1/H] Manual, [F5] Quicksave, [F9] Quickload, [1-6] Tabs, [S] Symmetry, [ESC] Back."
         };
         int my = 135;
         SetTextColor(memDC, RGB(200, 220, 240));
@@ -891,6 +891,14 @@ static void DrawGame(HDC hdc, RECT* rc) {
             my += 28;
         }
     }
+
+    /* Persistent Usability Status Bar */
+    RECT statRc = { 0, rc->bottom - 22, rc->right, rc->bottom };
+    HBRUSH statBrush = CreateSolidBrush(RGB(12, 18, 30));
+    FillRect(memDC, &statRc, statBrush);
+    DeleteObject(statBrush);
+    SetTextColor(memDC, RGB(100, 140, 180));
+    TextOutA(memDC, 12, rc->bottom - 18, "[F1/H] Manual  [1-6] Tabs  [S] Symmetry  [R] Reset  [F5] Save  [F9] Load  [LMB] Place  [RMB] Erase", 94);
 
     /* Onscreen Toast */
     if (g_game.toastTimer > 0) {
@@ -953,7 +961,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             } else if (wParam == '5') {
                 g_game.state = STATE_CONTRACTS;
                 PlaySfx(1);
-            } else if (wParam == '6' || wParam == 'H') {
+            } else if (wParam == '6' || wParam == 'H' || wParam == VK_F1) {
                 g_game.state = STATE_HELP;
                 PlaySfx(1);
             } else if (wParam == VK_ESCAPE) {
@@ -1184,7 +1192,7 @@ void MainEntry() {
 
     RegisterClassA(&wc);
 
-    RECT wr = { 0, 0, 860, 580 };
+    RECT wr = { 0, 0, 920, 620 };
     AdjustWindowRect(&wr, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
 
     HWND hwnd = CreateWindowExA(
