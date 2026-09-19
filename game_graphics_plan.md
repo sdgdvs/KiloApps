@@ -152,7 +152,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KBreakout
 - KMaze
 - KColony
-- KFortress
 - KColosseum
 - KCosmic
 - KFarm
@@ -165,6 +164,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KStarship
 - KChrono
 - KStarForge
+- KFortress
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
 
@@ -183,7 +183,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMaze (L9): Themed Minotaur/Boss sprites and biome walls. Stripped annoying HUD/particles per directive.
 - KBreakout (L9): Boss fortress sprites, themed brick types, orbital drones, tractor beam.
 - KQuest (L8): Particle engine, Medieval RPG filigree HUD, weapon sheen, biome motes.
-- KFortress (L7): Procedural tower sprites, animated enemy sprites (9 types), knight/militia.
+- KFortress (L8): Procedural tower evolutions (L1-L3), Nether Rift gate, Citadel keep, vector traps, Web audio synth, meteor physics, BossBlitz balance.
 - KColony (L7): Xeno-caste sprites (3 types), repair drones, logistics rovers.
 - KColosseum (L2): Balteus belt, Manica/Galerus armor, weapon arcs, lion claws, defeat collapse.
 - KStarship (L2): Procedural tactical sprites for 10 encounter types, Gas Giant rings, sub-scanner indicators, shipyard module synthesis, and 5 planet biomes.

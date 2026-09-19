@@ -1655,6 +1655,310 @@ void DrawRoundedRect(HDC hdc, int left, int top, int right, int bottom, COLORREF
     DeleteObject(pen);
 }
 
+static void DrawTrapSprite(HDC memDC, int tx, int ty, int trr, int type, float hp, int charges) {
+    if (type == TRAP_SPIKE) {
+        // Steel Caltrops: metallic plate with 4 sharp triangular spike heads
+        HBRUSH baseB = CreateSolidBrush(RGB(51, 65, 85));
+        HPEN baseP = CreatePen(PS_SOLID, 1, RGB(100, 116, 139));
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, baseB);
+        HPEN oP = (HPEN)SelectObject(memDC, baseP);
+        Ellipse(memDC, tx - trr + 2, ty - trr + 2, tx + trr - 2, ty + trr - 2);
+
+        HBRUSH spkB = CreateSolidBrush(RGB(226, 232, 240));
+        HPEN spkP = CreatePen(PS_SOLID, 1, RGB(148, 163, 184));
+        SelectObject(memDC, spkB); SelectObject(memDC, spkP);
+        POINT spk1[3] = { {tx - 8, ty + 2}, {tx - 2, ty - 6}, {tx - 5, ty + 5} };
+        POINT spk2[3] = { {tx + 8, ty + 2}, {tx + 2, ty - 6}, {tx + 5, ty + 5} };
+        POINT spk3[3] = { {tx, ty - 9}, {tx - 4, ty}, {tx + 4, ty} };
+        POINT spk4[3] = { {tx, ty + 8}, {tx - 5, ty + 1}, {tx + 5, ty + 1} };
+        Polygon(memDC, spk1, 3);
+        Polygon(memDC, spk2, 3);
+        Polygon(memDC, spk3, 3);
+        Polygon(memDC, spk4, 3);
+        
+        SelectObject(memDC, oB); SelectObject(memDC, oP);
+        DeleteObject(baseB); DeleteObject(baseP); DeleteObject(spkB); DeleteObject(spkP);
+    } else if (type == TRAP_OIL) {
+        // Dark swirling oil puddle with iridescent sheen rings
+        HBRUSH oilB = CreateSolidBrush(RGB(15, 23, 42));
+        HPEN oilP = CreatePen(PS_SOLID, 1, RGB(51, 65, 85));
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, oilB);
+        HPEN oP = (HPEN)SelectObject(memDC, oilP);
+        Ellipse(memDC, tx - trr, ty - trr, tx + trr, ty + trr);
+
+        HPEN iris1 = CreatePen(PS_SOLID, 2, RGB(168, 85, 247));
+        SelectObject(memDC, iris1);
+        Arc(memDC, tx - trr + 4, ty - trr + 4, tx + trr - 4, ty + trr - 4, tx - 5, ty, tx + 5, ty);
+        HPEN iris2 = CreatePen(PS_SOLID, 1, RGB(56, 189, 248));
+        SelectObject(memDC, iris2);
+        Arc(memDC, tx - trr + 7, ty - trr + 7, tx + trr - 7, ty + trr - 7, tx, ty - 5, tx, ty + 5);
+
+        SelectObject(memDC, oB); SelectObject(memDC, oP);
+        DeleteObject(oilB); DeleteObject(oilP); DeleteObject(iris1); DeleteObject(iris2);
+    } else if (type == TRAP_BARRICADE) {
+        // Fortified timber barricade with crossbeams and iron rivets
+        HBRUSH woodB = CreateSolidBrush(RGB(120, 53, 15));
+        HPEN woodP = CreatePen(PS_SOLID, 1, RGB(69, 26, 3));
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, woodB);
+        HPEN oP = (HPEN)SelectObject(memDC, woodP);
+        
+        RoundRect(memDC, tx - 12, ty - 6, tx + 12, ty - 1, 2, 2);
+        RoundRect(memDC, tx - 12, ty + 1, tx + 12, ty + 6, 2, 2);
+        
+        HPEN braceP = CreatePen(PS_SOLID, 2, RGB(180, 83, 9));
+        SelectObject(memDC, braceP);
+        MoveToEx(memDC, tx - 10, ty - 8, NULL); LineTo(memDC, tx + 10, ty + 8);
+        MoveToEx(memDC, tx - 10, ty + 8, NULL); LineTo(memDC, tx + 10, ty - 8);
+
+        HBRUSH rivB = CreateSolidBrush(RGB(203, 213, 225));
+        SelectObject(memDC, rivB);
+        Ellipse(memDC, tx - 11, ty - 7, tx - 7, ty - 3);
+        Ellipse(memDC, tx + 7, ty - 7, tx + 11, ty - 3);
+        Ellipse(memDC, tx - 11, ty + 3, tx - 7, ty + 7);
+        Ellipse(memDC, tx + 7, ty + 3, tx + 11, ty + 7);
+
+        SelectObject(memDC, oB); SelectObject(memDC, oP);
+        DeleteObject(woodB); DeleteObject(woodP); DeleteObject(braceP); DeleteObject(rivB);
+    } else if (type == TRAP_DYNAMITE) {
+        // Red TNT dynamite bundle strapped with brass wire & sparking fuse
+        HBRUSH tntB = CreateSolidBrush(RGB(220, 38, 38));
+        HPEN tntP = CreatePen(PS_SOLID, 1, RGB(153, 27, 27));
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, tntB);
+        HPEN oP = (HPEN)SelectObject(memDC, tntP);
+
+        RoundRect(memDC, tx - 8, ty - 8, tx - 2, ty + 8, 2, 2);
+        RoundRect(memDC, tx - 3, ty - 9, tx + 3, ty + 7, 2, 2);
+        RoundRect(memDC, tx + 2, ty - 8, tx + 8, ty + 8, 2, 2);
+
+        HBRUSH strapB = CreateSolidBrush(RGB(234, 179, 8));
+        SelectObject(memDC, strapB);
+        Rectangle(memDC, tx - 9, ty - 2, tx + 9, ty + 2);
+
+        HPEN fuseP = CreatePen(PS_SOLID, 1, RGB(245, 158, 11));
+        SelectObject(memDC, fuseP);
+        MoveToEx(memDC, tx, ty - 9, NULL);
+        LineTo(memDC, tx + 3, ty - 13);
+        LineTo(memDC, tx + 6, ty - 12);
+
+        HBRUSH sparkB = CreateSolidBrush(RGB(254, 240, 138));
+        SelectObject(memDC, sparkB);
+        Ellipse(memDC, tx + 5, ty - 14, tx + 9, ty - 10);
+
+        SelectObject(memDC, oB); SelectObject(memDC, oP);
+        DeleteObject(tntB); DeleteObject(tntP); DeleteObject(strapB); DeleteObject(fuseP); DeleteObject(sparkB);
+    }
+}
+
+static void DrawEnemySprite(HDC memDC, Enemy* e, int ex, int ey, int r, int walkBob) {
+    int t = e->type;
+    int y = ey + walkBob;
+
+    // Boss aura for Ogre, Wyvern, Golem
+    if (t == ENEMY_OGRE || t == ENEMY_WYVERN || t == ENEMY_GOLEM) {
+        HPEN bossPen = CreatePen(PS_SOLID, 2, RGB(239, 68, 68));
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
+        HPEN oP = (HPEN)SelectObject(memDC, bossPen);
+        int auraPulse = (int)(custom_sinf(g_globalFrame * 0.2f) * 3.0f);
+        Ellipse(memDC, ex - r - 6 - auraPulse, y - r - 6 - auraPulse, ex + r + 6 + auraPulse, y + r + 6 + auraPulse);
+        
+        for (int a = 0; a < 4; a++) {
+            float ang = g_globalFrame * 0.08f + a * 1.57f;
+            int gx = ex + (int)(custom_cosf(ang) * (r + 7 + auraPulse));
+            int gy = y + (int)(custom_sinf(ang) * (r + 7 + auraPulse));
+            MoveToEx(memDC, gx - 2, gy, NULL); LineTo(memDC, gx + 2, gy);
+            MoveToEx(memDC, gx, gy - 2, NULL); LineTo(memDC, gx, gy + 2);
+        }
+        SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(bossPen);
+    }
+
+    if (t == ENEMY_GOBLIN) {
+        HBRUSH eB = CreateSolidBrush(RGB(34, 197, 94));
+        HPEN eP = CreatePen(PS_SOLID, 1, RGB(20, 83, 45));
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, eB); HPEN oP = (HPEN)SelectObject(memDC, eP);
+        Ellipse(memDC, ex - r, y - r, ex + r, y + r);
+        POINT leftEar[3] = { {ex - r + 1, y - 2}, {ex - r - 6, y - 6}, {ex - r + 3, y + 2} };
+        POINT rightEar[3] = { {ex + r - 1, y - 2}, {ex + r + 6, y - 6}, {ex + r - 3, y + 2} };
+        Polygon(memDC, leftEar, 3);
+        Polygon(memDC, rightEar, 3);
+        HBRUSH eyeB = CreateSolidBrush(RGB(254, 240, 138));
+        SelectObject(memDC, eyeB);
+        Ellipse(memDC, ex - 4, y - 3, ex - 1, y);
+        Ellipse(memDC, ex + 1, y - 3, ex + 4, y);
+        HPEN dnP = CreatePen(PS_SOLID, 2, RGB(148, 163, 184));
+        SelectObject(memDC, dnP);
+        MoveToEx(memDC, ex + r - 1, y + 2, NULL); LineTo(memDC, ex + r + 5, y - 4);
+        SelectObject(memDC, oB); SelectObject(memDC, oP);
+        DeleteObject(eB); DeleteObject(eP); DeleteObject(eyeB); DeleteObject(dnP);
+    } else if (t == ENEMY_ORC) {
+        HBRUSH eB = CreateSolidBrush(RGB(21, 128, 61));
+        HPEN eP = CreatePen(PS_SOLID, 1, RGB(5, 46, 22));
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, eB); HPEN oP = (HPEN)SelectObject(memDC, eP);
+        Ellipse(memDC, ex - r, y - r, ex + r, y + r);
+        HBRUSH hB = CreateSolidBrush(RGB(71, 85, 105));
+        HPEN hP = CreatePen(PS_SOLID, 1, RGB(148, 163, 184));
+        SelectObject(memDC, hB); SelectObject(memDC, hP);
+        Rectangle(memDC, ex - r + 1, y - r + 1, ex + r - 1, y - 1);
+        Rectangle(memDC, ex - 2, y - 1, ex + 2, y + 3);
+        HBRUSH tuskB = CreateSolidBrush(RGB(248, 250, 252));
+        SelectObject(memDC, tuskB);
+        MoveToEx(memDC, ex - 4, y + 4, NULL); LineTo(memDC, ex - 5, y + 1); LineTo(memDC, ex - 3, y + 4);
+        MoveToEx(memDC, ex + 4, y + 4, NULL); LineTo(memDC, ex + 5, y + 1); LineTo(memDC, ex + 3, y + 4);
+        SelectObject(memDC, oB); SelectObject(memDC, oP);
+        DeleteObject(eB); DeleteObject(eP); DeleteObject(hB); DeleteObject(hP); DeleteObject(tuskB);
+    } else if (t == ENEMY_HOUND) {
+        HBRUSH eB = CreateSolidBrush(RGB(30, 27, 75));
+        HPEN eP = CreatePen(PS_SOLID, 1, RGB(79, 70, 229));
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, eB); HPEN oP = (HPEN)SelectObject(memDC, eP);
+        Ellipse(memDC, ex - r - 2, y - r + 2, ex + r + 2, y + r - 2);
+        POINT hEar1[3] = { {ex - r + 2, y - r + 2}, {ex - r - 3, y - r - 4}, {ex - r + 6, y - r} };
+        POINT hEar2[3] = { {ex - r + 8, y - r + 2}, {ex - r + 4, y - r - 4}, {ex - r + 12, y - r} };
+        Polygon(memDC, hEar1, 3); Polygon(memDC, hEar2, 3);
+        HBRUSH eyeB = CreateSolidBrush(RGB(239, 68, 68));
+        SelectObject(memDC, eyeB);
+        Ellipse(memDC, ex - r + 4, y - 2, ex - r + 7, y + 1);
+        HPEN colP = CreatePen(PS_SOLID, 2, RGB(203, 213, 225));
+        SelectObject(memDC, colP);
+        MoveToEx(memDC, ex, y - r + 2, NULL); LineTo(memDC, ex, y + r - 2);
+        SelectObject(memDC, oB); SelectObject(memDC, oP);
+        DeleteObject(eB); DeleteObject(eP); DeleteObject(eyeB); DeleteObject(colP);
+    } else if (t == ENEMY_GARGOYLE) {
+        int flap = (int)(custom_sinf(g_globalFrame * 0.28f + (float)ex) * 5.0f);
+        HBRUSH wB = CreateSolidBrush(RGB(71, 85, 105));
+        HPEN wP = CreatePen(PS_SOLID, 1, RGB(30, 41, 59));
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, wB); HPEN oP = (HPEN)SelectObject(memDC, wP);
+        POINT wingL[3] = { {ex - 2, y}, {ex - r - 9, y - 7 + flap}, {ex - r + 1, y + 5} };
+        POINT wingR[3] = { {ex + 2, y}, {ex + r + 9, y - 7 + flap}, {ex + r - 1, y + 5} };
+        Polygon(memDC, wingL, 3); Polygon(memDC, wingR, 3);
+        HBRUSH gB = CreateSolidBrush(RGB(100, 116, 139));
+        SelectObject(memDC, gB);
+        Ellipse(memDC, ex - r, y - r, ex + r, y + r);
+        MoveToEx(memDC, ex - 4, y - r + 2, NULL); LineTo(memDC, ex - 7, y - r - 4);
+        MoveToEx(memDC, ex + 4, y - r + 2, NULL); LineTo(memDC, ex + 7, y - r - 4);
+        HBRUSH eyB = CreateSolidBrush(RGB(251, 191, 36));
+        SelectObject(memDC, eyB);
+        Ellipse(memDC, ex - 4, y - 2, ex - 1, y + 1);
+        Ellipse(memDC, ex + 1, y - 2, ex + 4, y + 1);
+        SelectObject(memDC, oB); SelectObject(memDC, oP);
+        DeleteObject(wB); DeleteObject(wP); DeleteObject(gB); DeleteObject(eyB);
+    } else if (t == ENEMY_OGRE) {
+        HBRUSH eB = CreateSolidBrush(RGB(133, 77, 14));
+        HPEN eP = CreatePen(PS_SOLID, 2, RGB(69, 26, 3));
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, eB); HPEN oP = (HPEN)SelectObject(memDC, eP);
+        Ellipse(memDC, ex - r, y - r, ex + r, y + r);
+        HBRUSH pB = CreateSolidBrush(RGB(71, 85, 105));
+        SelectObject(memDC, pB);
+        Ellipse(memDC, ex - 7, y - 3, ex + 7, y + 9);
+        HBRUSH hrnB = CreateSolidBrush(RGB(254, 240, 138));
+        SelectObject(memDC, hrnB);
+        POINT h1[3] = { {ex - 8, y - r + 6}, {ex - 12, y - r - 4}, {ex - 4, y - r + 4} };
+        POINT h2[3] = { {ex + 8, y - r + 6}, {ex + 12, y - r - 4}, {ex + 4, y - r + 4} };
+        Polygon(memDC, h1, 3); Polygon(memDC, h2, 3);
+        HPEN clP = CreatePen(PS_SOLID, 4, RGB(69, 26, 3));
+        SelectObject(memDC, clP);
+        MoveToEx(memDC, ex + r - 3, y + 8, NULL); LineTo(memDC, ex + r + 10, y - 14);
+        HPEN spkP = CreatePen(PS_SOLID, 2, RGB(226, 232, 240));
+        SelectObject(memDC, spkP);
+        MoveToEx(memDC, ex + r + 8, y - 10, NULL); LineTo(memDC, ex + r + 13, y - 12);
+        MoveToEx(memDC, ex + r + 6, y - 6, NULL); LineTo(memDC, ex + r + 11, y - 8);
+        SelectObject(memDC, oB); SelectObject(memDC, oP);
+        DeleteObject(eB); DeleteObject(eP); DeleteObject(pB); DeleteObject(hrnB); DeleteObject(clP); DeleteObject(spkP);
+    } else if (t == ENEMY_NECROMANCER) {
+        HBRUSH rB = CreateSolidBrush(RGB(88, 28, 135));
+        HPEN rP = CreatePen(PS_SOLID, 1, RGB(147, 51, 234));
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, rB); HPEN oP = (HPEN)SelectObject(memDC, rP);
+        POINT cowl[3] = { {ex, y - r - 3}, {ex + r, y + r}, {ex - r, y + r} };
+        Polygon(memDC, cowl, 3);
+        HBRUSH skB = CreateSolidBrush(RGB(241, 245, 249));
+        SelectObject(memDC, skB);
+        Ellipse(memDC, ex - 4, y - 3, ex + 4, y + 4);
+        HBRUSH eyB = CreateSolidBrush(RGB(34, 197, 94));
+        SelectObject(memDC, eyB);
+        Ellipse(memDC, ex - 3, y - 1, ex - 1, y + 1);
+        Ellipse(memDC, ex + 1, y - 1, ex + 3, y + 1);
+        HPEN stP = CreatePen(PS_SOLID, 2, RGB(226, 232, 240));
+        SelectObject(memDC, stP);
+        MoveToEx(memDC, ex + r + 2, y + 9, NULL); LineTo(memDC, ex + r + 2, y - 13);
+        HBRUSH obB = CreateSolidBrush(RGB(74, 222, 128));
+        HPEN obP = CreatePen(PS_SOLID, 1, RGB(187, 247, 208));
+        SelectObject(memDC, obB); SelectObject(memDC, obP);
+        Ellipse(memDC, ex + r - 1, y - 17, ex + r + 5, y - 11);
+        SelectObject(memDC, oB); SelectObject(memDC, oP);
+        DeleteObject(rB); DeleteObject(rP); DeleteObject(skB); DeleteObject(eyB); DeleteObject(stP); DeleteObject(obB); DeleteObject(obP);
+    } else if (t == ENEMY_SKELETON) {
+        HBRUSH sB = CreateSolidBrush(RGB(248, 250, 252));
+        HPEN sP = CreatePen(PS_SOLID, 1, RGB(148, 163, 184));
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, sB); HPEN oP = (HPEN)SelectObject(memDC, sP);
+        Ellipse(memDC, ex - 5, y - r, ex + 5, y - r + 8);
+        HBRUSH dkB = CreateSolidBrush(RGB(15, 23, 42));
+        SelectObject(memDC, dkB);
+        Ellipse(memDC, ex - 3, y - r + 3, ex - 1, y - r + 5);
+        Ellipse(memDC, ex + 1, y - r + 3, ex + 3, y - r + 5);
+        SelectObject(memDC, sP);
+        MoveToEx(memDC, ex, y - r + 8, NULL); LineTo(memDC, ex, y + r - 2);
+        MoveToEx(memDC, ex - 4, y - 1, NULL); LineTo(memDC, ex + 4, y - 1);
+        MoveToEx(memDC, ex - 3, y + 3, NULL); LineTo(memDC, ex + 3, y + 3);
+        HPEN swP = CreatePen(PS_SOLID, 1, RGB(203, 213, 225));
+        SelectObject(memDC, swP);
+        MoveToEx(memDC, ex + 3, y + 4, NULL); LineTo(memDC, ex + 9, y - 4);
+        SelectObject(memDC, oB); SelectObject(memDC, oP);
+        DeleteObject(sB); DeleteObject(sP); DeleteObject(dkB); DeleteObject(swP);
+    } else if (t == ENEMY_WYVERN) {
+        int flap = (int)(custom_sinf(g_globalFrame * 0.32f + (float)ex) * 7.0f);
+        HBRUSH wB = CreateSolidBrush(RGB(185, 28, 28));
+        HPEN wP = CreatePen(PS_SOLID, 2, RGB(127, 29, 29));
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, wB); HPEN oP = (HPEN)SelectObject(memDC, wP);
+        POINT dWingL[4] = { {ex - 3, y}, {ex - r - 12, y - 10 + flap}, {ex - r - 8, y + 3 + flap/2}, {ex - 2, y + 4} };
+        POINT dWingR[4] = { {ex + 3, y}, {ex + r + 12, y - 10 + flap}, {ex + r + 8, y + 3 + flap/2}, {ex + 2, y + 4} };
+        Polygon(memDC, dWingL, 4); Polygon(memDC, dWingR, 4);
+        Ellipse(memDC, ex - r, y - r + 2, ex + r, y + r - 2);
+        POINT snout[3] = { {ex, y - r + 3}, {ex - 4, y - r - 5}, {ex + 4, y - r - 5} };
+        Polygon(memDC, snout, 3);
+        HBRUSH eyB = CreateSolidBrush(RGB(253, 224, 71));
+        SelectObject(memDC, eyB);
+        Ellipse(memDC, ex - 4, y - 4, ex - 1, y - 1);
+        Ellipse(memDC, ex + 1, y - 4, ex + 4, y - 1);
+        SelectObject(memDC, wP);
+        MoveToEx(memDC, ex, y + r - 2, NULL); LineTo(memDC, ex + 4, y + r + 6); LineTo(memDC, ex, y + r + 10);
+        SelectObject(memDC, oB); SelectObject(memDC, oP);
+        DeleteObject(wB); DeleteObject(wP); DeleteObject(eyB);
+    } else if (t == ENEMY_GOLEM) {
+        HBRUSH gB = CreateSolidBrush(RGB(51, 65, 85));
+        HPEN gP = CreatePen(PS_SOLID, 2, RGB(100, 116, 139));
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, gB); HPEN oP = (HPEN)SelectObject(memDC, gP);
+        RoundRect(memDC, ex - r, y - r, ex + r, y + r, 4, 4);
+        HBRUSH shB = CreateSolidBrush(RGB(30, 41, 59));
+        SelectObject(memDC, shB);
+        RoundRect(memDC, ex - r - 4, y - r + 2, ex - r + 3, y - 2, 2, 2);
+        RoundRect(memDC, ex + r - 3, y - r + 2, ex + r + 4, y - 2, 2, 2);
+        HPEN rnP = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
+        SelectObject(memDC, rnP);
+        MoveToEx(memDC, ex, y - 7, NULL); LineTo(memDC, ex, y + 7);
+        MoveToEx(memDC, ex - 5, y - 2, NULL); LineTo(memDC, ex, y + 3); LineTo(memDC, ex + 5, y - 2);
+        HBRUSH coreB = CreateSolidBrush(RGB(186, 230, 253));
+        SelectObject(memDC, coreB);
+        Ellipse(memDC, ex - 2, y - 2, ex + 2, y + 2);
+        SelectObject(memDC, oB); SelectObject(memDC, oP);
+        DeleteObject(gB); DeleteObject(gP); DeleteObject(shB); DeleteObject(rnP); DeleteObject(coreB);
+    }
+
+    if (e->slowed) {
+        HPEN frP = CreatePen(PS_SOLID, 1, RGB(56, 189, 248));
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
+        HPEN oP = (HPEN)SelectObject(memDC, frP);
+        Ellipse(memDC, ex - r - 2, y - r - 2, ex + r + 2, y + r + 2);
+        SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(frP);
+    }
+    if (e->poisonTicks > 0) {
+        HBRUSH pB = CreateSolidBrush(RGB(34, 197, 94));
+        HPEN pP = CreatePen(PS_NULL, 0, 0);
+        HBRUSH oB = (HBRUSH)SelectObject(memDC, pB); HPEN oP = (HPEN)SelectObject(memDC, pP);
+        Ellipse(memDC, ex - 3, y - r - 5, ex, y - r - 2);
+        Ellipse(memDC, ex + 2, y - r - 6, ex + 5, y - r - 3);
+        SelectObject(memDC, oB); SelectObject(memDC, oP);
+        DeleteObject(pB); DeleteObject(pP);
+    }
+}
+
 void Render(HDC hdc, HWND hwnd) {
     RECT clientRect;
     GetClientRect(hwnd, &clientRect);
@@ -1688,7 +1992,7 @@ void Render(HDC hdc, HWND hwnd) {
 
     SelectObject(memDC, hFontSub);
     SetTextColor(memDC, TEXT_MUTED);
-    TextOutA(memDC, 150, 26, "Loop 6: Citadel Graphics & FX", 29);
+    TextOutA(memDC, 150, 26, "Loop 8: Citadel Visuals & Balance", 33);
 
     SelectObject(memDC, hFontStat);
     char buf[64];
@@ -1854,19 +2158,52 @@ void Render(HDC hdc, HWND hwnd) {
         DeleteObject(glowPen);
     }
 
-    // Portal Spawn Gate
-    DrawRoundedRect(memDC, g_waypoints[0].x - 22, g_waypoints[0].y - 22, g_waypoints[0].x + 22, g_waypoints[0].y + 22, RGB(180, 40, 40), RGB(239, 68, 68), 6);
-    SetTextColor(memDC, TEXT_WHITE);
-    TextOutA(memDC, g_waypoints[0].x - 14, g_waypoints[0].y - 6, "GATE", 4);
+    // Nether Rift Spawn Gate (Obsidian frame, twin runic obelisks, pulsing vortex core)
+    int gateX = g_waypoints[0].x, gateY = g_waypoints[0].y;
+    DrawRoundedRect(memDC, gateX - 24, gateY - 24, gateX + 24, gateY + 24, RGB(15, 23, 42), RGB(88, 28, 135), 8);
+    DrawRoundedRect(memDC, gateX - 22, gateY - 20, gateX - 14, gateY + 20, RGB(30, 41, 59), RGB(239, 68, 68), 2);
+    DrawRoundedRect(memDC, gateX + 14, gateY - 20, gateX + 22, gateY + 20, RGB(30, 41, 59), RGB(239, 68, 68), 2);
+    HBRUSH vorB = CreateSolidBrush(RGB(153, 27, 27));
+    HPEN vorP = CreatePen(PS_SOLID, 2, RGB(239, 68, 68));
+    HBRUSH oVorB = (HBRUSH)SelectObject(memDC, vorB); HPEN oVorP = (HPEN)SelectObject(memDC, vorP);
+    Ellipse(memDC, gateX - 11, gateY - 16, gateX + 11, gateY + 16);
+    int eyePulse = (int)(custom_sinf(g_globalFrame * 0.2f) * 2.0f);
+    HBRUSH eyeB = CreateSolidBrush(RGB(254, 202, 202));
+    SelectObject(memDC, eyeB);
+    Ellipse(memDC, gateX - 4 - eyePulse, gateY - 7 - eyePulse, gateX + 4 + eyePulse, gateY + 7 + eyePulse);
+    SelectObject(memDC, oVorB); SelectObject(memDC, oVorP);
+    DeleteObject(vorB); DeleteObject(vorP); DeleteObject(eyeB);
+    SetTextColor(memDC, RGB(254, 202, 202));
+    TextOutA(memDC, gateX - 14, gateY - 6, "RIFT", 4);
 
-    // Fortress Castle Keep with battlements and banner
-    DrawRoundedRect(memDC, g_waypoints[5].x - 30, g_waypoints[5].y - 30, g_waypoints[5].x + 35, g_waypoints[5].y + 35, CASTLE_COLOR, TEXT_GOLD, 8);
-    // Battlements
-    for (int bx = -28; bx < 30; bx += 14) {
-        DrawRoundedRect(memDC, g_waypoints[5].x + bx, g_waypoints[5].y - 34, g_waypoints[5].x + bx + 8, g_waypoints[5].y - 28, RGB(100, 116, 139), TEXT_GOLD, 1);
+    // Royal Citadel Castle Keep with ashlar masonry, watchtowers, portcullis, and fluttering banner
+    int cx = g_waypoints[5].x, cy = g_waypoints[5].y;
+    DrawRoundedRect(memDC, cx - 32, cy - 30, cx + 36, cy + 34, CASTLE_COLOR, TEXT_GOLD, 8);
+    HPEN masP = CreatePen(PS_SOLID, 1, RGB(51, 65, 85));
+    HPEN oMasP = (HPEN)SelectObject(memDC, masP);
+    MoveToEx(memDC, cx - 28, cy - 10, NULL); LineTo(memDC, cx + 32, cy - 10);
+    MoveToEx(memDC, cx - 28, cy + 8, NULL); LineTo(memDC, cx + 32, cy + 8);
+    SelectObject(memDC, oMasP); DeleteObject(masP);
+    DrawRoundedRect(memDC, cx - 34, cy - 28, cx - 20, cy + 24, RGB(71, 85, 105), TEXT_GOLD, 3);
+    DrawRoundedRect(memDC, cx + 24, cy - 28, cx + 38, cy + 24, RGB(71, 85, 105), TEXT_GOLD, 3);
+    DrawRoundedRect(memDC, cx - 10, cy + 10, cx + 14, cy + 34, RGB(15, 23, 42), RGB(100, 116, 139), 4);
+    for (int bx = -30; bx < 32; bx += 12) {
+        DrawRoundedRect(memDC, cx + bx, cy - 34, cx + bx + 7, cy - 28, RGB(100, 116, 139), TEXT_GOLD, 1);
     }
+    int banWave = (int)(custom_sinf(g_globalFrame * 0.25f) * 3.0f);
+    HPEN poleP = CreatePen(PS_SOLID, 2, RGB(217, 119, 6));
+    HPEN oPolP = (HPEN)SelectObject(memDC, poleP);
+    MoveToEx(memDC, cx + 2, cy - 34, NULL); LineTo(memDC, cx + 2, cy - 48);
+    SelectObject(memDC, oPolP); DeleteObject(poleP);
+    HBRUSH banB = CreateSolidBrush(RGB(59, 130, 246));
+    HPEN banP = CreatePen(PS_SOLID, 1, TEXT_GOLD);
+    HBRUSH oBanB = (HBRUSH)SelectObject(memDC, banB); HPEN oBanP = (HPEN)SelectObject(memDC, banP);
+    POINT banPts[3] = { {cx + 2, cy - 48}, {cx + 18 + banWave, cy - 43}, {cx + 2, cy - 38} };
+    Polygon(memDC, banPts, 3);
+    SelectObject(memDC, oBanB); SelectObject(memDC, oBanP);
+    DeleteObject(banB); DeleteObject(banP);
     SetTextColor(memDC, TEXT_GOLD);
-    TextOutA(memDC, g_waypoints[5].x - 24, g_waypoints[5].y - 8, "CASTLE", 6);
+    TextOutA(memDC, cx - 22, cy - 6, "CITADEL", 7);
 
     for (int i = 0; i < g_slotCount; i++) {
         COLORREF fill = (g_selectedSlot == i) ? TOWER_SLOT_HOVER : TOWER_SLOT_BG;
@@ -1877,113 +2214,220 @@ void Render(HDC hdc, HWND hwnd) {
             int anim = g_slots[i].attackAnim;
             int type = g_slots[i].towerType;
 
+            int lvl = g_slots[i].level;
+
             if (type == TOWER_ARCHER) {
-                // Timber platform with wood palisades
-                HBRUSH bB = CreateSolidBrush(RGB(120, 53, 15)); HPEN bP = CreatePen(PS_SOLID, 1, RGB(69, 26, 3));
+                // Base Timber platform
+                HBRUSH bB = CreateSolidBrush((lvl >= 3) ? RGB(71, 85, 105) : RGB(120, 53, 15));
+                HPEN bP = CreatePen(PS_SOLID, 1, (lvl >= 3) ? TEXT_GOLD : RGB(69, 26, 3));
                 HBRUSH oB = (HBRUSH)SelectObject(memDC, bB); HPEN oP = (HPEN)SelectObject(memDC, bP);
                 Rectangle(memDC, g_slots[i].x - 14, g_slots[i].y - 14, g_slots[i].x + 14, g_slots[i].y + 14);
-                // Corner timber posts
-                HBRUSH pB = CreateSolidBrush(RGB(180, 83, 9));
+
+                // Corner timber / iron posts
+                HBRUSH pB = CreateSolidBrush((lvl >= 2) ? RGB(148, 163, 184) : RGB(180, 83, 9));
                 SelectObject(memDC, pB);
                 Rectangle(memDC, g_slots[i].x - 14, g_slots[i].y - 14, g_slots[i].x - 9, g_slots[i].y - 9);
                 Rectangle(memDC, g_slots[i].x + 9, g_slots[i].y - 14, g_slots[i].x + 14, g_slots[i].y - 9);
                 Rectangle(memDC, g_slots[i].x - 14, g_slots[i].y + 9, g_slots[i].x - 9, g_slots[i].y + 14);
                 Rectangle(memDC, g_slots[i].x + 9, g_slots[i].y + 9, g_slots[i].x + 14, g_slots[i].y + 14);
-                // Golden recurve bow arc
-                HPEN bowP = CreatePen(PS_SOLID, 2, RGB(217, 119, 6));
+
+                // Bows: L1=single recurve bow, L2=dual arbalests, L3=triple gilded arbalests + pennants
+                HPEN bowP = CreatePen(PS_SOLID, (lvl >= 3) ? 2 : 1, (lvl >= 3) ? TEXT_GOLD : RGB(217, 119, 6));
                 SelectObject(memDC, bowP);
-                Arc(memDC, g_slots[i].x - 8, g_slots[i].y - 8, g_slots[i].x + 8, g_slots[i].y + 8, g_slots[i].x, g_slots[i].y - 8, g_slots[i].x, g_slots[i].y + 8);
+                if (lvl == 1) {
+                    Arc(memDC, g_slots[i].x - 8, g_slots[i].y - 8, g_slots[i].x + 8, g_slots[i].y + 8, g_slots[i].x, g_slots[i].y - 8, g_slots[i].x, g_slots[i].y + 8);
+                } else if (lvl == 2) {
+                    Arc(memDC, g_slots[i].x - 9, g_slots[i].y - 9, g_slots[i].x + 5, g_slots[i].y + 5, g_slots[i].x - 2, g_slots[i].y - 9, g_slots[i].x - 2, g_slots[i].y + 5);
+                    Arc(memDC, g_slots[i].x - 5, g_slots[i].y - 5, g_slots[i].x + 9, g_slots[i].y + 9, g_slots[i].x + 2, g_slots[i].y - 5, g_slots[i].x + 2, g_slots[i].y + 9);
+                } else {
+                    Arc(memDC, g_slots[i].x - 9, g_slots[i].y - 9, g_slots[i].x + 3, g_slots[i].y + 3, g_slots[i].x - 3, g_slots[i].y - 9, g_slots[i].x - 3, g_slots[i].y + 3);
+                    Arc(memDC, g_slots[i].x - 6, g_slots[i].y - 6, g_slots[i].x + 6, g_slots[i].y + 6, g_slots[i].x, g_slots[i].y - 6, g_slots[i].x, g_slots[i].y + 6);
+                    Arc(memDC, g_slots[i].x - 3, g_slots[i].y - 3, g_slots[i].x + 9, g_slots[i].y + 9, g_slots[i].x + 3, g_slots[i].y - 3, g_slots[i].x + 3, g_slots[i].y + 9);
+                    // Archer pennant
+                    MoveToEx(memDC, g_slots[i].x - 11, g_slots[i].y - 12, NULL); LineTo(memDC, g_slots[i].x - 11, g_slots[i].y - 17);
+                    LineTo(memDC, g_slots[i].x - 6, g_slots[i].y - 15); LineTo(memDC, g_slots[i].x - 11, g_slots[i].y - 13);
+                }
                 SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(bB); DeleteObject(bP); DeleteObject(pB); DeleteObject(bowP);
             } else if (type == TOWER_MAGE) {
-                // Arcane obsidian hexagonal base & amethyst shard
-                HBRUSH mB = CreateSolidBrush(RGB(59, 7, 100)); HPEN mP = CreatePen(PS_SOLID, 1, RGB(168, 85, 247));
+                // Arcane obsidian base & amethyst crystals: L1=single shard, L2=twin shards + rune ring, L3=tripartite prisms + halo
+                HBRUSH mB = CreateSolidBrush(RGB(59, 7, 100)); HPEN mP = CreatePen(PS_SOLID, (lvl >= 2) ? 2 : 1, (lvl >= 3) ? TEXT_GOLD : RGB(168, 85, 247));
                 HBRUSH oB = (HBRUSH)SelectObject(memDC, mB); HPEN oP = (HPEN)SelectObject(memDC, mP);
                 Ellipse(memDC, g_slots[i].x - 14, g_slots[i].y - 14, g_slots[i].x + 14, g_slots[i].y + 14);
-                // Levitating crystal diamond
-                HBRUSH crB = CreateSolidBrush(RGB(192, 132, 252));
+
+                if (lvl >= 2) {
+                    HPEN rnP = CreatePen(PS_SOLID, 1, RGB(192, 132, 252));
+                    SelectObject(memDC, rnP);
+                    Ellipse(memDC, g_slots[i].x - 10, g_slots[i].y - 10, g_slots[i].x + 10, g_slots[i].y + 10);
+                    DeleteObject(rnP);
+                }
+
+                HBRUSH crB = CreateSolidBrush((lvl >= 3) ? RGB(245, 208, 254) : RGB(192, 132, 252));
                 SelectObject(memDC, crB);
-                POINT pts[4] = { {g_slots[i].x, g_slots[i].y - 9}, {g_slots[i].x + 6, g_slots[i].y}, {g_slots[i].x, g_slots[i].y + 9}, {g_slots[i].x - 6, g_slots[i].y} };
-                Polygon(memDC, pts, 4);
+                if (lvl == 1) {
+                    POINT pts[4] = { {g_slots[i].x, g_slots[i].y - 9}, {g_slots[i].x + 6, g_slots[i].y}, {g_slots[i].x, g_slots[i].y + 9}, {g_slots[i].x - 6, g_slots[i].y} };
+                    Polygon(memDC, pts, 4);
+                } else if (lvl == 2) {
+                    POINT pts1[4] = { {g_slots[i].x - 4, g_slots[i].y - 8}, {g_slots[i].x, g_slots[i].y - 2}, {g_slots[i].x - 4, g_slots[i].y + 4}, {g_slots[i].x - 8, g_slots[i].y - 2} };
+                    POINT pts2[4] = { {g_slots[i].x + 4, g_slots[i].y - 4}, {g_slots[i].x + 8, g_slots[i].y + 2}, {g_slots[i].x + 4, g_slots[i].y + 8}, {g_slots[i].x, g_slots[i].y + 2} };
+                    Polygon(memDC, pts1, 4); Polygon(memDC, pts2, 4);
+                } else {
+                    POINT pts1[4] = { {g_slots[i].x, g_slots[i].y - 10}, {g_slots[i].x + 4, g_slots[i].y - 3}, {g_slots[i].x, g_slots[i].y + 2}, {g_slots[i].x - 4, g_slots[i].y - 3} };
+                    POINT pts2[4] = { {g_slots[i].x - 6, g_slots[i].y + 1}, {g_slots[i].x - 2, g_slots[i].y + 8}, {g_slots[i].x - 6, g_slots[i].y + 11}, {g_slots[i].x - 10, g_slots[i].y + 5} };
+                    POINT pts3[4] = { {g_slots[i].x + 6, g_slots[i].y + 1}, {g_slots[i].x + 10, g_slots[i].y + 5}, {g_slots[i].x + 6, g_slots[i].y + 11}, {g_slots[i].x + 2, g_slots[i].y + 8} };
+                    Polygon(memDC, pts1, 4); Polygon(memDC, pts2, 4); Polygon(memDC, pts3, 4);
+                }
+
                 // Orbiting mana spark
                 HBRUSH spB = CreateSolidBrush(RGB(245, 208, 254));
                 SelectObject(memDC, spB);
                 int sx = g_slots[i].x + (int)(custom_cosf(g_globalFrame * 0.1f) * 11.0f);
                 int sy = g_slots[i].y + (int)(custom_sinf(g_globalFrame * 0.1f) * 11.0f);
                 Ellipse(memDC, sx - 2, sy - 2, sx + 2, sy + 2);
+                if (lvl >= 2) {
+                    int sx2 = g_slots[i].x + (int)(custom_cosf(g_globalFrame * 0.1f + 3.14f) * 11.0f);
+                    int sy2 = g_slots[i].y + (int)(custom_sinf(g_globalFrame * 0.1f + 3.14f) * 11.0f);
+                    Ellipse(memDC, sx2 - 2, sy2 - 2, sx2 + 2, sy2 + 2);
+                }
                 SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(mB); DeleteObject(mP); DeleteObject(crB); DeleteObject(spB);
             } else if (type == TOWER_CANNON) {
-                // Bronze turntable & dark iron cannon barrel
+                // Cannon: L1=single barrel, L2=twin battery barrels, L3=triple siege mortar battery
                 HBRUSH cB = CreateSolidBrush(RGB(71, 85, 105)); HPEN cP = CreatePen(PS_SOLID, 1, RGB(148, 163, 184));
                 HBRUSH oB = (HBRUSH)SelectObject(memDC, cB); HPEN oP = (HPEN)SelectObject(memDC, cP);
                 Ellipse(memDC, g_slots[i].x - 14, g_slots[i].y - 14, g_slots[i].x + 14, g_slots[i].y + 14);
-                // Heavy iron barrel
+
                 HBRUSH brB = CreateSolidBrush(RGB(30, 41, 59));
                 SelectObject(memDC, brB);
-                Rectangle(memDC, g_slots[i].x - 8, g_slots[i].y - 5, g_slots[i].x + 9, g_slots[i].y + 5);
-                // Bronze muzzle ring
-                HBRUSH mzB = CreateSolidBrush(RGB(217, 119, 6));
-                SelectObject(memDC, mzB);
-                Rectangle(memDC, g_slots[i].x + 7, g_slots[i].y - 6, g_slots[i].x + 10, g_slots[i].y + 6);
+                HBRUSH mzB = CreateSolidBrush((lvl >= 3) ? TEXT_GOLD : RGB(217, 119, 6));
+
+                if (lvl == 1) {
+                    Rectangle(memDC, g_slots[i].x - 8, g_slots[i].y - 5, g_slots[i].x + 9, g_slots[i].y + 5);
+                    SelectObject(memDC, mzB);
+                    Rectangle(memDC, g_slots[i].x + 7, g_slots[i].y - 6, g_slots[i].x + 10, g_slots[i].y + 6);
+                } else if (lvl == 2) {
+                    Rectangle(memDC, g_slots[i].x - 8, g_slots[i].y - 7, g_slots[i].x + 9, g_slots[i].y - 2);
+                    Rectangle(memDC, g_slots[i].x - 8, g_slots[i].y + 2, g_slots[i].x + 9, g_slots[i].y + 7);
+                    SelectObject(memDC, mzB);
+                    Rectangle(memDC, g_slots[i].x + 7, g_slots[i].y - 8, g_slots[i].x + 10, g_slots[i].y - 1);
+                    Rectangle(memDC, g_slots[i].x + 7, g_slots[i].y + 1, g_slots[i].x + 10, g_slots[i].y + 8);
+                } else {
+                    Rectangle(memDC, g_slots[i].x - 8, g_slots[i].y - 8, g_slots[i].x + 10, g_slots[i].y - 4);
+                    Rectangle(memDC, g_slots[i].x - 8, g_slots[i].y - 2, g_slots[i].x + 11, g_slots[i].y + 2);
+                    Rectangle(memDC, g_slots[i].x - 8, g_slots[i].y + 4, g_slots[i].x + 10, g_slots[i].y + 8);
+                    SelectObject(memDC, mzB);
+                    Rectangle(memDC, g_slots[i].x + 8, g_slots[i].y - 9, g_slots[i].x + 11, g_slots[i].y - 3);
+                    Rectangle(memDC, g_slots[i].x + 9, g_slots[i].y - 3, g_slots[i].x + 12, g_slots[i].y + 3);
+                    Rectangle(memDC, g_slots[i].x + 8, g_slots[i].y + 3, g_slots[i].x + 11, g_slots[i].y + 9);
+                }
+
                 // Stack of cannonballs
                 HBRUSH blB = CreateSolidBrush(RGB(15, 23, 42));
                 SelectObject(memDC, blB);
                 Ellipse(memDC, g_slots[i].x - 8, g_slots[i].y + 4, g_slots[i].x - 2, g_slots[i].y + 10);
                 Ellipse(memDC, g_slots[i].x - 3, g_slots[i].y + 4, g_slots[i].x + 3, g_slots[i].y + 10);
+                if (lvl >= 2) Ellipse(memDC, g_slots[i].x - 5, g_slots[i].y - 1, g_slots[i].x + 1, g_slots[i].y + 5);
                 SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(cB); DeleteObject(cP); DeleteObject(brB); DeleteObject(mzB); DeleteObject(blB);
             } else if (type == TOWER_FROST) {
-                // Glacial ice pedestal & crystalline obelisk
+                // Frost: L1=pedestal+obelisk, L2=twin stalagmites+frost ring, L3=glacial monolith+4 crystal shards
                 HBRUSH fB = CreateSolidBrush(RGB(3, 105, 161)); HPEN fP = CreatePen(PS_SOLID, 1, RGB(56, 189, 248));
                 HBRUSH oB = (HBRUSH)SelectObject(memDC, fB); HPEN oP = (HPEN)SelectObject(memDC, fP);
                 Ellipse(memDC, g_slots[i].x - 14, g_slots[i].y - 14, g_slots[i].x + 14, g_slots[i].y + 14);
+
                 HBRUSH icB = CreateSolidBrush(RGB(186, 230, 253));
                 SelectObject(memDC, icB);
-                POINT pts[4] = { {g_slots[i].x, g_slots[i].y - 11}, {g_slots[i].x + 6, g_slots[i].y + 2}, {g_slots[i].x, g_slots[i].y + 10}, {g_slots[i].x - 6, g_slots[i].y + 2} };
-                Polygon(memDC, pts, 4);
+                if (lvl == 1) {
+                    POINT pts[4] = { {g_slots[i].x, g_slots[i].y - 11}, {g_slots[i].x + 6, g_slots[i].y + 2}, {g_slots[i].x, g_slots[i].y + 10}, {g_slots[i].x - 6, g_slots[i].y + 2} };
+                    Polygon(memDC, pts, 4);
+                } else if (lvl == 2) {
+                    POINT p1[4] = { {g_slots[i].x - 3, g_slots[i].y - 12}, {g_slots[i].x + 2, g_slots[i].y}, {g_slots[i].x - 3, g_slots[i].y + 8}, {g_slots[i].x - 7, g_slots[i].y} };
+                    POINT p2[4] = { {g_slots[i].x + 4, g_slots[i].y - 8}, {g_slots[i].x + 8, g_slots[i].y + 3}, {g_slots[i].x + 4, g_slots[i].y + 11}, {g_slots[i].x, g_slots[i].y + 3} };
+                    Polygon(memDC, p1, 4); Polygon(memDC, p2, 4);
+                } else {
+                    POINT p1[4] = { {g_slots[i].x, g_slots[i].y - 13}, {g_slots[i].x + 5, g_slots[i].y}, {g_slots[i].x, g_slots[i].y + 10}, {g_slots[i].x - 5, g_slots[i].y} };
+                    Polygon(memDC, p1, 4);
+                    // 4 levitating ice shards
+                    Ellipse(memDC, g_slots[i].x - 10, g_slots[i].y - 10, g_slots[i].x - 6, g_slots[i].y - 6);
+                    Ellipse(memDC, g_slots[i].x + 6, g_slots[i].y - 10, g_slots[i].x + 10, g_slots[i].y - 6);
+                    Ellipse(memDC, g_slots[i].x - 10, g_slots[i].y + 6, g_slots[i].x - 6, g_slots[i].y + 10);
+                    Ellipse(memDC, g_slots[i].x + 6, g_slots[i].y + 6, g_slots[i].x + 10, g_slots[i].y + 10);
+                }
                 SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(fB); DeleteObject(fP); DeleteObject(icB);
             } else if (type == TOWER_TESLA) {
-                // Iron pylon with copper coils & dual electrodes
+                // Tesla: L1=pylon+dual electrodes, L2=quad coil stack+lightning spire, L3=dynamo gyro-ring+4 spark nodes
                 HBRUSH tB = CreateSolidBrush(RGB(51, 65, 85)); HPEN tP = CreatePen(PS_SOLID, 1, RGB(100, 116, 139));
                 HBRUSH oB = (HBRUSH)SelectObject(memDC, tB); HPEN oP = (HPEN)SelectObject(memDC, tP);
                 Rectangle(memDC, g_slots[i].x - 12, g_slots[i].y - 12, g_slots[i].x + 12, g_slots[i].y + 12);
+
                 HBRUSH cpB = CreateSolidBrush(RGB(180, 83, 9));
                 SelectObject(memDC, cpB);
                 Rectangle(memDC, g_slots[i].x - 6, g_slots[i].y - 7, g_slots[i].x + 6, g_slots[i].y - 4);
                 Rectangle(memDC, g_slots[i].x - 6, g_slots[i].y - 2, g_slots[i].x + 6, g_slots[i].y + 1);
                 Rectangle(memDC, g_slots[i].x - 6, g_slots[i].y + 3, g_slots[i].x + 6, g_slots[i].y + 6);
-                HBRUSH elB = CreateSolidBrush(TEXT_GOLD);
+                if (lvl >= 2) Rectangle(memDC, g_slots[i].x - 8, g_slots[i].y - 10, g_slots[i].x + 8, g_slots[i].y - 8);
+
+                HBRUSH elB = CreateSolidBrush((lvl >= 3) ? RGB(254, 240, 138) : TEXT_GOLD);
                 SelectObject(memDC, elB);
                 Ellipse(memDC, g_slots[i].x - 8, g_slots[i].y - 10, g_slots[i].x - 2, g_slots[i].y - 4);
                 Ellipse(memDC, g_slots[i].x + 2, g_slots[i].y - 10, g_slots[i].x + 8, g_slots[i].y - 4);
+                if (lvl >= 3) {
+                    Ellipse(memDC, g_slots[i].x - 11, g_slots[i].y - 1, g_slots[i].x - 6, g_slots[i].y + 4);
+                    Ellipse(memDC, g_slots[i].x + 6, g_slots[i].y - 1, g_slots[i].x + 11, g_slots[i].y + 4);
+                }
                 SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(tB); DeleteObject(tP); DeleteObject(cpB); DeleteObject(elB);
             } else if (type == TOWER_BALLISTA) {
-                // Heavy siege platform with flexed bow limbs & bolt
+                // Ballista: L1=single limb+bolt, L2=compound limbs+dual carriage, L3=heavy scorpion+triple harpoons
                 HBRUSH blB = CreateSolidBrush(RGB(87, 48, 16)); HPEN blP = CreatePen(PS_SOLID, 1, TEXT_GOLD);
                 HBRUSH oB = (HBRUSH)SelectObject(memDC, blB); HPEN oP = (HPEN)SelectObject(memDC, blP);
                 Ellipse(memDC, g_slots[i].x - 14, g_slots[i].y - 14, g_slots[i].x + 14, g_slots[i].y + 14);
-                HPEN limbP = CreatePen(PS_SOLID, 2, RGB(146, 64, 14));
+
+                HPEN limbP = CreatePen(PS_SOLID, (lvl >= 2) ? 3 : 2, RGB(146, 64, 14));
                 SelectObject(memDC, limbP);
                 MoveToEx(memDC, g_slots[i].x - 9, g_slots[i].y - 8, NULL);
                 LineTo(memDC, g_slots[i].x - 2, g_slots[i].y);
                 LineTo(memDC, g_slots[i].x - 9, g_slots[i].y + 8);
-                HPEN boltP = CreatePen(PS_SOLID, 2, RGB(226, 232, 240));
+                if (lvl >= 2) {
+                    MoveToEx(memDC, g_slots[i].x - 12, g_slots[i].y - 10, NULL);
+                    LineTo(memDC, g_slots[i].x - 5, g_slots[i].y);
+                    LineTo(memDC, g_slots[i].x - 12, g_slots[i].y + 10);
+                }
+
+                HPEN boltP = CreatePen(PS_SOLID, 2, (lvl >= 3) ? TEXT_GOLD : RGB(226, 232, 240));
                 SelectObject(memDC, boltP);
-                MoveToEx(memDC, g_slots[i].x - 6, g_slots[i].y, NULL);
-                LineTo(memDC, g_slots[i].x + 11, g_slots[i].y);
+                if (lvl == 1) {
+                    MoveToEx(memDC, g_slots[i].x - 6, g_slots[i].y, NULL); LineTo(memDC, g_slots[i].x + 11, g_slots[i].y);
+                } else if (lvl == 2) {
+                    MoveToEx(memDC, g_slots[i].x - 6, g_slots[i].y - 3, NULL); LineTo(memDC, g_slots[i].x + 11, g_slots[i].y - 3);
+                    MoveToEx(memDC, g_slots[i].x - 6, g_slots[i].y + 3, NULL); LineTo(memDC, g_slots[i].x + 11, g_slots[i].y + 3);
+                } else {
+                    MoveToEx(memDC, g_slots[i].x - 6, g_slots[i].y - 5, NULL); LineTo(memDC, g_slots[i].x + 11, g_slots[i].y - 5);
+                    MoveToEx(memDC, g_slots[i].x - 6, g_slots[i].y, NULL); LineTo(memDC, g_slots[i].x + 12, g_slots[i].y);
+                    MoveToEx(memDC, g_slots[i].x - 6, g_slots[i].y + 5, NULL); LineTo(memDC, g_slots[i].x + 11, g_slots[i].y + 5);
+                }
                 SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(blB); DeleteObject(blP); DeleteObject(limbP); DeleteObject(boltP);
             } else if (type == TOWER_POISON) {
-                // Alchemist stone mortar & emerald elixir flask
+                // Poison: L1=mortar+flask, L2=dual alembics+pipe, L3=triple vats+luminescent conduits
                 HBRUSH pB = CreateSolidBrush(RGB(20, 83, 45)); HPEN pP = CreatePen(PS_SOLID, 1, RGB(34, 197, 94));
                 HBRUSH oB = (HBRUSH)SelectObject(memDC, pB); HPEN oP = (HPEN)SelectObject(memDC, pP);
                 Ellipse(memDC, g_slots[i].x - 14, g_slots[i].y - 14, g_slots[i].x + 14, g_slots[i].y + 14);
+
                 HBRUSH flB = CreateSolidBrush(RGB(22, 163, 74));
                 SelectObject(memDC, flB);
-                Ellipse(memDC, g_slots[i].x - 7, g_slots[i].y - 5, g_slots[i].x + 7, g_slots[i].y + 7);
-                HBRUSH nkB = CreateSolidBrush(RGB(134, 239, 172));
-                SelectObject(memDC, nkB);
-                Rectangle(memDC, g_slots[i].x - 2, g_slots[i].y - 10, g_slots[i].x + 3, g_slots[i].y - 5);
-                SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(pB); DeleteObject(pP); DeleteObject(flB); DeleteObject(nkB);
+                if (lvl == 1) {
+                    Ellipse(memDC, g_slots[i].x - 7, g_slots[i].y - 5, g_slots[i].x + 7, g_slots[i].y + 7);
+                    HBRUSH nkB = CreateSolidBrush(RGB(134, 239, 172));
+                    SelectObject(memDC, nkB);
+                    Rectangle(memDC, g_slots[i].x - 2, g_slots[i].y - 10, g_slots[i].x + 3, g_slots[i].y - 5);
+                    DeleteObject(nkB);
+                } else if (lvl == 2) {
+                    Ellipse(memDC, g_slots[i].x - 9, g_slots[i].y - 4, g_slots[i].x - 1, g_slots[i].y + 6);
+                    Ellipse(memDC, g_slots[i].x + 1, g_slots[i].y - 4, g_slots[i].x + 9, g_slots[i].y + 6);
+                } else {
+                    Ellipse(memDC, g_slots[i].x - 10, g_slots[i].y - 2, g_slots[i].x - 3, g_slots[i].y + 6);
+                    Ellipse(memDC, g_slots[i].x - 3, g_slots[i].y - 8, g_slots[i].x + 4, g_slots[i].y - 1);
+                    Ellipse(memDC, g_slots[i].x + 3, g_slots[i].y - 2, g_slots[i].x + 10, g_slots[i].y + 6);
+                }
+                SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(pB); DeleteObject(pP); DeleteObject(flB);
             } else if (type == TOWER_INFERNO) {
-                // Basalt volcanic fortress with molten core
+                // Basalt volcanic fortress with molten core & fire corona
                 HBRUSH inB = CreateSolidBrush(RGB(69, 10, 10)); HPEN inP = CreatePen(PS_SOLID, 2, RGB(239, 68, 68));
                 HBRUSH oB = (HBRUSH)SelectObject(memDC, inB); HPEN oP = (HPEN)SelectObject(memDC, inP);
                 Ellipse(memDC, g_slots[i].x - 16, g_slots[i].y - 16, g_slots[i].x + 16, g_slots[i].y + 16);
@@ -1995,7 +2439,7 @@ void Render(HDC hdc, HWND hwnd) {
                 Ellipse(memDC, g_slots[i].x - 3, g_slots[i].y - 3, g_slots[i].x + 3, g_slots[i].y + 3);
                 SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(inB); DeleteObject(inP); DeleteObject(crB); DeleteObject(hB);
             } else if (type == TOWER_SUPERCONDUCTOR) {
-                // Arcane superconductor ring
+                // Arcane superconductor ring & hyper-conductive crystal
                 HBRUSH scB = CreateSolidBrush(RGB(12, 74, 110)); HPEN scP = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
                 HBRUSH oB = (HBRUSH)SelectObject(memDC, scB); HPEN oP = (HPEN)SelectObject(memDC, scP);
                 Ellipse(memDC, g_slots[i].x - 16, g_slots[i].y - 16, g_slots[i].x + 16, g_slots[i].y + 16);
@@ -2026,6 +2470,20 @@ void Render(HDC hdc, HWND hwnd) {
                 Ellipse(memDC, g_slots[i].x - 6, g_slots[i].y - 6, g_slots[i].x + 6, g_slots[i].y + 6);
                 SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(sbB); DeleteObject(sbP); DeleteObject(suB);
             }
+
+            // Fusion Rotating Crown Aura
+            if (lvl == 4) {
+                HPEN crownPen = CreatePen(PS_SOLID, 1, RGB(254, 240, 138));
+                HPEN oldCrown = (HPEN)SelectObject(memDC, crownPen);
+                for (int c = 0; c < 4; c++) {
+                    float cAng = g_globalFrame * 0.08f + c * 1.57f;
+                    int cx1 = g_slots[i].x + (int)(custom_cosf(cAng) * 17.0f);
+                    int cy1 = g_slots[i].y + (int)(custom_sinf(cAng) * 17.0f);
+                    MoveToEx(memDC, cx1 - 2, cy1, NULL); LineTo(memDC, cx1 + 2, cy1);
+                    MoveToEx(memDC, cx1, cy1 - 2, NULL); LineTo(memDC, cx1, cy1 + 2);
+                }
+                SelectObject(memDC, oldCrown); DeleteObject(crownPen);
+            }
             
             SetTextColor(memDC, (g_slots[i].level == 4) ? RGB(254, 240, 138) : TEXT_GOLD);
             char lvlBuf[8];
@@ -2041,19 +2499,7 @@ void Render(HDC hdc, HWND hwnd) {
     for (int tr = 0; tr < MAX_TRAPS; tr++) {
         if (!g_traps[tr].active) continue;
         int tx = (int)g_traps[tr].x; int ty = (int)g_traps[tr].y; int trr = g_traps[tr].radius;
-        HBRUSH tB = NULL; HPEN tP = NULL; const char* lbl = "";
-        if (g_traps[tr].type == TRAP_SPIKE) { tB = CreateSolidBrush(RGB(100,100,100)); tP = CreatePen(PS_SOLID, 1, RGB(70,70,70)); lbl = "S"; }
-        else if (g_traps[tr].type == TRAP_OIL) { tB = CreateSolidBrush(RGB(20,20,20)); tP = CreatePen(PS_SOLID, 1, RGB(0,0,0)); lbl = "O"; }
-        else if (g_traps[tr].type == TRAP_BARRICADE) { tB = CreateSolidBrush(RGB(139,69,19)); tP = CreatePen(PS_SOLID, 1, RGB(101,67,33)); lbl = "B"; }
-        else if (g_traps[tr].type == TRAP_DYNAMITE) { tB = CreateSolidBrush(RGB(220,38,38)); tP = CreatePen(PS_SOLID, 1, TEXT_GOLD); lbl = "D"; }
-        
-        HBRUSH oB = (HBRUSH)SelectObject(memDC, tB); HPEN oP = (HPEN)SelectObject(memDC, tP);
-        Ellipse(memDC, tx-trr, ty-trr, tx+trr, ty+trr);
-        SelectObject(memDC, oB); SelectObject(memDC, oP);
-        DeleteObject(tB); DeleteObject(tP);
-        
-        SetTextColor(memDC, TEXT_WHITE);
-        TextOutA(memDC, tx-4, ty-6, lbl, 1);
+        DrawTrapSprite(memDC, tx, ty, trr, g_traps[tr].type, g_traps[tr].hp, g_traps[tr].charges);
     }
 
     for (int m = 0; m < MAX_MILITIA; m++) {
@@ -2092,73 +2538,7 @@ void Render(HDC hdc, HWND hwnd) {
         int t = g_enemies[e].type;
         int walkBob = (int)(custom_sinf(g_globalFrame * 0.25f + e) * 2.0f);
 
-        HBRUSH eB = NULL; HPEN eP = CreatePen(PS_SOLID, 1, RGB(15, 23, 42));
-        if (t == ENEMY_GOBLIN) eB = CreateSolidBrush(RGB(34, 197, 94));
-        else if (t == ENEMY_ORC) eB = CreateSolidBrush(RGB(21, 128, 61));
-        else if (t == ENEMY_HOUND) eB = CreateSolidBrush(RGB(49, 46, 129));
-        else if (t == ENEMY_GARGOYLE) eB = CreateSolidBrush(RGB(100, 116, 139));
-        else if (t == ENEMY_OGRE) eB = CreateSolidBrush(RGB(133, 77, 14));
-        else if (t == ENEMY_NECROMANCER) eB = CreateSolidBrush(RGB(88, 28, 135));
-        else if (t == ENEMY_SKELETON) eB = CreateSolidBrush(RGB(248, 250, 252));
-        else if (t == ENEMY_WYVERN) eB = CreateSolidBrush(RGB(185, 28, 28));
-        else if (t == ENEMY_GOLEM) eB = CreateSolidBrush(RGB(51, 65, 85));
-
-        // Boss aura
-        if (t == ENEMY_OGRE || t == ENEMY_WYVERN || t == ENEMY_GOLEM) {
-            HPEN bossPen = CreatePen(PS_SOLID, 2, RGB(239, 68, 68));
-            HBRUSH oB = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
-            HPEN oP = (HPEN)SelectObject(memDC, bossPen);
-            Ellipse(memDC, ex - r - 5, ey + walkBob - r - 5, ex + r + 5, ey + walkBob + r + 5);
-            SelectObject(memDC, oB); SelectObject(memDC, oP); DeleteObject(bossPen);
-        }
-
-        // Enemy body
-        HBRUSH oldB = (HBRUSH)SelectObject(memDC, eB);
-        HPEN oldP = (HPEN)SelectObject(memDC, eP);
-        Ellipse(memDC, ex - r, ey + walkBob - r, ex + r, ey + walkBob + r);
-
-        // Thematic feature details
-        if (t == ENEMY_GOBLIN) {
-            // Pointy ears
-            MoveToEx(memDC, ex - r, ey + walkBob, NULL); LineTo(memDC, ex - r - 4, ey + walkBob - 3); LineTo(memDC, ex - r + 2, ey + walkBob + 2);
-            MoveToEx(memDC, ex + r, ey + walkBob, NULL); LineTo(memDC, ex + r + 4, ey + walkBob - 3); LineTo(memDC, ex + r - 2, ey + walkBob + 2);
-        } else if (t == ENEMY_ORC) {
-            // Iron helm bar
-            HBRUSH hB = CreateSolidBrush(RGB(71, 85, 105));
-            HBRUSH pOld = (HBRUSH)SelectObject(memDC, hB);
-            Rectangle(memDC, ex - r + 1, ey + walkBob - r, ex + r - 1, ey + walkBob - r/2);
-            SelectObject(memDC, pOld); DeleteObject(hB);
-        } else if (t == ENEMY_GARGOYLE || t == ENEMY_WYVERN) {
-            // Wings
-            int flap = (int)(custom_sinf(g_globalFrame * 0.25f) * 5.0f);
-            MoveToEx(memDC, ex - r, ey + walkBob, NULL); LineTo(memDC, ex - r - 8, ey + walkBob - 6 + flap); LineTo(memDC, ex - r, ey + walkBob + 2);
-            MoveToEx(memDC, ex + r, ey + walkBob, NULL); LineTo(memDC, ex + r + 8, ey + walkBob - 6 + flap); LineTo(memDC, ex + r, ey + walkBob + 2);
-        } else if (t == ENEMY_OGRE) {
-            // Spiked club
-            HPEN clP = CreatePen(PS_SOLID, 4, RGB(69, 26, 3));
-            HPEN clOld = (HPEN)SelectObject(memDC, clP);
-            MoveToEx(memDC, ex + r - 2, ey + walkBob + 6, NULL); LineTo(memDC, ex + r + 8, ey + walkBob - 14);
-            SelectObject(memDC, clOld); DeleteObject(clP);
-        } else if (t == ENEMY_NECROMANCER) {
-            // Staff with glowing orb
-            HPEN stP = CreatePen(PS_SOLID, 2, RGB(212, 212, 216));
-            HPEN stOld = (HPEN)SelectObject(memDC, stP);
-            MoveToEx(memDC, ex + r + 2, ey + walkBob + 8, NULL); LineTo(memDC, ex + r + 2, ey + walkBob - 12);
-            SelectObject(memDC, stOld); DeleteObject(stP);
-            HBRUSH obB = CreateSolidBrush(RGB(74, 222, 128));
-            HBRUSH obOld = (HBRUSH)SelectObject(memDC, obB);
-            Ellipse(memDC, ex + r, ey + walkBob - 15, ex + r + 5, ey + walkBob - 10);
-            SelectObject(memDC, obOld); DeleteObject(obB);
-        } else if (t == ENEMY_GOLEM) {
-            // Cyan elemental rune line
-            HPEN rnP = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
-            HPEN rnOld = (HPEN)SelectObject(memDC, rnP);
-            MoveToEx(memDC, ex - 4, ey + walkBob - 4, NULL); LineTo(memDC, ex, ey + walkBob + 2); LineTo(memDC, ex + 4, ey + walkBob - 4);
-            SelectObject(memDC, rnOld); DeleteObject(rnP);
-        }
-
-        SelectObject(memDC, oldB); SelectObject(memDC, oldP);
-        DeleteObject(eB); DeleteObject(eP);
+        DrawEnemySprite(memDC, &g_enemies[e], ex, ey, r, walkBob);
 
         int barW = (t == ENEMY_OGRE || t == ENEMY_WYVERN || t == ENEMY_GOLEM) ? 36 : 22;
         float hpRatio = (float)g_enemies[e].hp / (float)g_enemies[e].maxHp;
@@ -2828,13 +3208,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     g_spawnQueueCount = g_wave * 2;
                     if (g_spawnQueueCount > MAX_SPAWN_QUEUE) g_spawnQueueCount = MAX_SPAWN_QUEUE;
                     g_spawnQueueHead = 0;
-                    for (int i = 0; i < g_spawnQueueCount; i++) g_spawnQueue[i] = (i % 2 == 0) ? ENEMY_OGRE : ENEMY_WYVERN;
+                    for (int i = 0; i < g_spawnQueueCount; i++) {
+                        g_spawnQueue[i] = (i % 3 == 0) ? ENEMY_OGRE : ((i % 3 == 1) ? ENEMY_WYVERN : ENEMY_GOLEM);
+                    }
                 } else {
                     g_spawnQueueCount = 6 + g_wave * 3;
                     if (g_spawnQueueCount > MAX_SPAWN_QUEUE) g_spawnQueueCount = MAX_SPAWN_QUEUE;
                     g_spawnQueueHead = 0;
                     for (int i = 0; i < g_spawnQueueCount; i++) {
-                        if (g_wave % 5 == 0 && i == 0) g_spawnQueue[i] = ENEMY_OGRE;
+                        if (g_wave % 5 == 0 && i == 0) {
+                            g_spawnQueue[i] = (g_wave % 15 == 5) ? ENEMY_OGRE : ((g_wave % 15 == 10) ? ENEMY_WYVERN : ENEMY_GOLEM);
+                        }
                         else if (g_wave >= 6 && i == 1 && g_wave % 3 == 0) g_spawnQueue[i] = ENEMY_WYVERN;
                         else if (g_wave >= 8 && i == 2 && g_wave % 4 == 0) g_spawnQueue[i] = ENEMY_GOLEM;
                         else {

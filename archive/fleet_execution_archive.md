@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-19T06:45:00Z — kilo-qa: KSynth**
+  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial integrity, overlays).
+  - Persistence: Full workstation quicksave (F5) and quickload (F9) across web and native with checksum validation and quota fallback.
+  - Tutorial Integrity: Fresh-session onboarding (`ksynth_tutorialSeen` / `ksynth_tutorial.dat`) protecting restored saves from interruption.
+  - Interactive Overlays: Modal guide keyboard dismissals (Esc, Enter, Space) and focused action triggers verified.
+  - Cleanliness & Safety: Auto-save on pagehide/unload, audio voice panic cleanup, and zero resource leaks confirmed.
+  - Verification: MSVC Native C build clean (23.5 KB); Vite single-file web build clean (91.7 KB); all <999 KB limits passed.
+
 - **2026-09-19T04:45:00Z — kilo-graphics: KStarForge**
   - Status: PASS ✅ (Visual asset generation, procedural hull rendering, sector encounter art & balance).
   - Blueprint & Drydock Art: Added technical CAD module glyphs (containment coils, thruster bells, radiator slats, muzzles) and gantry fabrication animations.
