@@ -109,6 +109,7 @@ const APPS = [
   { id: 'kchrono', title: 'KChrono', url: '/apps/kchrono.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchrono.ico', w: 1140, h: 740, folder: 'Games' },
   { id: 'kstarforge', title: 'KStarForge', url: '/apps/kstarforge.html', exeUrl: '/exe/KStarForge.exe', icon: '/assets/icons/kstarforge.ico', w: 1200, h: 780, folder: 'Games' },
   { id: 'kpomodoro', title: 'KPomodoro', url: '/apps/kpomodoro.html', exeUrl: '/exe/KPomodoro.exe', icon: '/assets/icons/kpomodoro.ico', w: 960, h: 700, folder: 'Office' },
+  { id: 'kbookmark', title: 'KBookmark', url: '/apps/kbookmark.html', exeUrl: '/exe/KBookmark.exe', icon: '/assets/icons/kbookmark.ico', w: 980, h: 700, folder: 'Office' },
   { id: 'kdirector', title: 'Director Console', url: '/apps/kdirector.html', icon: '/assets/icons/kdirector.ico', w: 1080, h: 720, folder: 'System' }
 ];
 

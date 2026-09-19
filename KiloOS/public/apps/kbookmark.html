@@ -1,0 +1,2819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KBookmark - Categorized Link Vault</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-hover: #334155;
+      --card-bg: #1e293b;
+      --border: #334155;
+      --border-focus: #38bdf8;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-hover: #0ea5e9;
+      --accent: #f59e0b;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --ribbon: #e11d48;
+      --font-mono: 'Consolas', 'Courier New', monospace;
+      --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    [data-theme="win98"] {
+      --bg: #008080;
+      --surface: #c0c0c0;
+      --surface-hover: #dfdfdf;
+      --card-bg: #d4d0c8;
+      --border: #808080;
+      --border-focus: #000080;
+      --text: #000000;
+      --text-muted: #444444;
+      --primary: #000080;
+      --primary-hover: #1084d0;
+      --accent: #800000;
+      --success: #008000;
+      --danger: #800000;
+      --warning: #808000;
+      --ribbon: #c00000;
+      --font-mono: 'Fixedsys', 'Lucida Console', monospace;
+      --font-sans: 'Tahoma', 'MS Sans Serif', sans-serif;
+    }
+
+    [data-theme="amber"] {
+      --bg: #120e04;
+      --surface: #241c08;
+      --surface-hover: #382c0c;
+      --card-bg: #201806;
+      --border: #523e12;
+      --border-focus: #f59e0b;
+      --text: #fbbf24;
+      --text-muted: #b4851c;
+      --primary: #f59e0b;
+      --primary-hover: #d97706;
+      --accent: #fcd34d;
+      --success: #10b981;
+      --danger: #f87171;
+      --warning: #f59e0b;
+      --ribbon: #b45309;
+      --font-mono: 'Courier New', monospace;
+      --font-sans: 'Courier New', monospace;
+    }
+
+    [data-theme="matrix"] {
+      --bg: #030a04;
+      --surface: #07170a;
+      --surface-hover: #0e2e14;
+      --card-bg: #081a0b;
+      --border: #144720;
+      --border-focus: #22c55e;
+      --text: #4ade80;
+      --text-muted: #22c55e99;
+      --primary: #22c55e;
+      --primary-hover: #16a34a;
+      --accent: #86efac;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #eab308;
+      --ribbon: #15803d;
+      --font-mono: 'Consolas', 'Courier New', monospace;
+      --font-sans: 'Consolas', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Command Header */
+    header.k-header {
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      background: linear-gradient(135deg, var(--ribbon), var(--primary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #fff;
+      font-size: 16px;
+      box-shadow: inset 0 0 4px rgba(0,0,0,0.4);
+    }
+
+    .brand-title {
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .brand-badge {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: var(--primary);
+    }
+
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    /* Buttons */
+    .btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-focus);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #000;
+      font-weight: 600;
+      border-color: var(--primary);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+      color: #fff;
+    }
+
+    .btn-accent {
+      background: var(--accent);
+      color: #000;
+      font-weight: 600;
+      border-color: var(--accent);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+      border-color: var(--danger);
+    }
+
+    .btn-sm {
+      padding: 3px 7px;
+      font-size: 11px;
+    }
+
+    .btn-icon {
+      padding: 5px 8px;
+    }
+
+    /* Main Workspace Layout */
+    .workspace-container {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    aside.vault-sidebar {
+      width: 250px;
+      background: var(--surface);
+      border-right: 2px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-section {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-title {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .category-list {
+      list-style: none;
+      overflow-y: auto;
+      flex: 1;
+      padding: 6px 0;
+    }
+
+    .category-item {
+      padding: 7px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-size: 13px;
+      border-left: 3px solid transparent;
+      transition: background 0.1s;
+    }
+
+    .category-item:hover {
+      background: var(--surface-hover);
+    }
+
+    .category-item.active {
+      background: var(--surface-hover);
+      border-left-color: var(--primary);
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .cat-name-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .cat-glyph {
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .cat-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cat-badge {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      background: rgba(0,0,0,0.3);
+      padding: 2px 6px;
+      border-radius: 10px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    /* Tag Cloud */
+    .tag-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      max-height: 110px;
+      overflow-y: auto;
+      padding-top: 4px;
+    }
+
+    .tag-pill {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tag-pill:hover, .tag-pill.active {
+      background: var(--primary);
+      color: #000;
+      border-color: var(--primary);
+      font-weight: bold;
+    }
+
+    /* Vault Stats Box */
+    .vault-stats {
+      padding: 8px 12px;
+      background: rgba(0,0,0,0.25);
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Content Area */
+    main.vault-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--bg);
+    }
+
+    /* Sub-header Filter & Search Bar */
+    .sub-toolbar {
+      padding: 8px 14px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .search-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 220px;
+      max-width: 450px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 6px 28px 6px 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 12px;
+      border-radius: 4px;
+      outline: none;
+      font-family: var(--font-mono);
+    }
+
+    .search-input:focus {
+      border-color: var(--border-focus);
+    }
+
+    .search-clear {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .filter-pills {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .protocol-select, .sort-select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 5px 8px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      border-radius: 4px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .view-toggle {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .view-btn {
+      background: var(--bg);
+      border: none;
+      padding: 5px 8px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .view-btn.active {
+      background: var(--primary);
+      color: #000;
+      font-weight: bold;
+    }
+
+    /* Batch Action Ribbon */
+    .batch-ribbon {
+      background: var(--surface-hover);
+      border-bottom: 1px solid var(--border);
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+
+    /* Bookmark Cards Container */
+    .bookmarks-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 12px;
+      align-content: start;
+    }
+
+    /* List View mode */
+    .bookmarks-container.table-mode {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 10px;
+    }
+
+    /* Bookmark Card */
+    .bm-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+      position: relative;
+    }
+
+    .bm-card:hover {
+      border-color: var(--border-focus);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+
+    .bm-card.selected {
+      border-color: var(--primary);
+      background: rgba(56, 189, 248, 0.06);
+    }
+
+    .bm-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .bm-title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .bm-star {
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 16px;
+      transition: color 0.15s, transform 0.1s;
+      flex-shrink: 0;
+    }
+
+    .bm-star.active {
+      color: var(--accent);
+    }
+
+    .bm-star:hover {
+      transform: scale(1.2);
+    }
+
+    .bm-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+
+    .bm-title:hover {
+      color: var(--primary);
+    }
+
+    .bm-health-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: #888;
+    }
+
+    .bm-health-dot.status-200 { background: var(--success); box-shadow: 0 0 6px var(--success); }
+    .bm-health-dot.status-301 { background: var(--warning); }
+    .bm-health-dot.status-404 { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+    .bm-health-dot.status-untested { background: #64748b; }
+
+    .bm-url-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .proto-badge {
+      font-size: 9px;
+      padding: 1px 4px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      font-weight: bold;
+      background: rgba(255,255,255,0.1);
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .proto-kweb { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
+    .proto-internal { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+    .proto-https { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+    .proto-http { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+    .bm-url-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      text-decoration: none;
+      color: var(--text-muted);
+    }
+
+    .bm-url-text:hover {
+      text-decoration: underline;
+      color: var(--primary);
+    }
+
+    .bm-notes {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .bm-tags-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .bm-tag {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1px 5px;
+      border-radius: 2px;
+      color: var(--text-muted);
+    }
+
+    .bm-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+      margin-top: auto;
+      font-size: 11px;
+    }
+
+    .bm-cat-pill {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--surface);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .bm-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    /* Table / Dense row mode */
+    .bookmarks-container.table-mode .bm-card {
+      flex-direction: row;
+      align-items: center;
+      padding: 6px 12px;
+      gap: 12px;
+    }
+
+    .bookmarks-container.table-mode .bm-notes {
+      display: none;
+    }
+
+    .bookmarks-container.table-mode .bm-footer {
+      border-top: none;
+      padding-top: 0;
+      margin-top: 0;
+    }
+
+    /* Status Bar Footer */
+    footer.k-footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 4px 12px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .footer-left {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .footer-status {
+      color: var(--primary);
+    }
+
+    /* Modal / Overlay Dialogs */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(3px);
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--surface);
+      border: 2px solid var(--border-focus);
+      border-radius: 8px;
+      width: 90%;
+      max-width: 520px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      animation: modalPop 0.15s ease-out;
+    }
+
+    @keyframes modalPop {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      padding: 10px 14px;
+      background: rgba(0,0,0,0.2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close {
+      cursor: pointer;
+      font-size: 16px;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+    }
+
+    .modal-close:hover {
+      color: var(--danger);
+    }
+
+    .modal-body {
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .modal-footer {
+      padding: 10px 14px;
+      background: rgba(0,0,0,0.2);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .form-label {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .form-input, .form-textarea, .form-select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+      border-color: var(--border-focus);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .form-row > * {
+      flex: 1;
+    }
+
+    /* Start Splash Screen */
+    .splash-card {
+      text-align: center;
+      padding: 24px 20px;
+    }
+
+    .splash-logo {
+      font-size: 42px;
+      margin-bottom: 8px;
+    }
+
+    .splash-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+
+    .splash-desc {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .splash-features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .splash-feature-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .splash-feature-title {
+      color: var(--primary);
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+
+    /* Diagnostic Drawer */
+    .diag-result {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 10px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .diag-metric {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 0;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    /* QR / Matrix Canvas */
+    .qr-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+    }
+
+    #qrCanvas {
+      background: #ffffff;
+      padding: 12px;
+      border-radius: 6px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+<body data-theme="dark">
+
+  <!-- Header -->
+  <header class="k-header">
+    <div class="brand-group">
+      <div class="brand-icon">★</div>
+      <div class="brand-title">
+        KBookmark
+        <span class="brand-badge">v1.0</span>
+      </div>
+    </div>
+
+    <div class="toolbar-group">
+      <button class="btn btn-primary" id="btnNewLink" title="Add Bookmark (Ctrl+N)">
+        <span>+</span> New Link
+      </button>
+      <button class="btn" id="btnNewCat" title="Create Category">
+        <span>📁</span> New Folder
+      </button>
+      <button class="btn" id="btnAuditAll" title="Probe All Link Latency & Health">
+        <span>🩺</span> Health Audit
+      </button>
+
+      <div style="width: 1px; height: 20px; background: var(--border); margin: 0 4px;"></div>
+
+      <button class="btn" id="btnExport" title="Export Vault (Netscape HTML, JSON, MD)">
+        <span>📦</span> Export
+      </button>
+      <button class="btn" id="btnImport" title="Import Netscape or JSON Bookmarks">
+        <span>📂</span> Import
+      </button>
+
+      <div style="width: 1px; height: 20px; background: var(--border); margin: 0 4px;"></div>
+
+      <button class="btn btn-sm" id="btnQuickSave" title="Quicksave Vault (F5)">
+        💾 Save (F5)
+      </button>
+      <button class="btn btn-sm" id="btnQuickLoad" title="Quickload Vault (F9)">
+        📂 Load (F9)
+      </button>
+      <button class="btn btn-sm" id="btnThemeToggle" title="Cycle Retro Themes">
+        🎨 Theme
+      </button>
+      <button class="btn btn-sm" id="btnSoundToggle" title="Audio Sound FX">
+        🔊 Sound
+      </button>
+      <button class="btn btn-sm" id="btnHelp" title="Help & Shortcuts (F1)">
+        ❓ Help
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <div class="workspace-container">
+    <!-- Sidebar -->
+    <aside class="vault-sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">
+          <span>Categories</span>
+          <span id="catTotalCount" class="brand-badge">7</span>
+        </div>
+      </div>
+
+      <ul class="category-list" id="categoryList">
+        <!-- Categories injected by JS -->
+      </ul>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">
+          <span>Filter by Tag</span>
+          <span style="cursor: pointer;" id="btnClearTagFilter" title="Clear tag filter">✕</span>
+        </div>
+        <div class="tag-cloud" id="tagCloud">
+          <!-- Tag pills injected by JS -->
+        </div>
+      </div>
+
+      <div class="vault-stats">
+        <span>Total: <b id="statTotalLinks">0</b></span>
+        <span>Starred: <b id="statStarredLinks">0</b></span>
+        <span>Storage: <b id="statStorageSize">0 KB</b></span>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="vault-content">
+      <!-- Search & Filter Ribbon -->
+      <div class="sub-toolbar">
+        <div class="search-wrapper">
+          <input type="text" class="search-input" id="searchInput" placeholder="Search titles, URLs, tags, or notes... (Ctrl+F)" autocomplete="off">
+          <span class="search-clear" id="searchClear">✕</span>
+        </div>
+
+        <div class="filter-pills">
+          <select class="protocol-select" id="filterProtocol">
+            <option value="all">Protocol: All</option>
+            <option value="kweb">kweb://</option>
+            <option value="internal">internal:</option>
+            <option value="https">https://</option>
+            <option value="http">http://</option>
+          </select>
+
+          <select class="protocol-select" id="filterHealth">
+            <option value="all">Health: All</option>
+            <option value="200">🟢 200 OK</option>
+            <option value="301">🟡 301 Redirect</option>
+            <option value="404">🔴 404 Issue</option>
+            <option value="untested">⚪ Untested</option>
+          </select>
+
+          <select class="sort-select" id="sortSelect">
+            <option value="date-desc">Newest Added</option>
+            <option value="date-asc">Oldest Added</option>
+            <option value="title-asc">Title (A - Z)</option>
+            <option value="title-desc">Title (Z - A)</option>
+            <option value="visits-desc">Most Visited</option>
+          </select>
+
+          <div class="view-toggle">
+            <button class="view-btn active" id="viewCardsBtn" title="Grid View">▦</button>
+            <button class="view-btn" id="viewTableBtn" title="Dense List View">☰</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Batch Actions Bar (hidden unless selected) -->
+      <div class="batch-ribbon" id="batchRibbon" style="display: none;">
+        <div>
+          <input type="checkbox" id="selectAllCheckbox">
+          <span style="margin-left: 6px;"><b id="selectedCountText">0</b> selected</span>
+        </div>
+        <div style="display: flex; gap: 6px;">
+          <button class="btn btn-sm" id="btnBatchMove">Move Folder</button>
+          <button class="btn btn-sm" id="btnBatchTag">Tag</button>
+          <button class="btn btn-sm" id="btnBatchExport">Export Selected</button>
+          <button class="btn btn-sm btn-danger" id="btnBatchDelete">Delete</button>
+        </div>
+      </div>
+
+      <!-- Bookmark Cards Canvas -->
+      <div class="bookmarks-container" id="bookmarksContainer">
+        <!-- Bookmark cards rendered here -->
+      </div>
+    </main>
+  </div>
+
+  <!-- Status Bar Footer -->
+  <footer class="k-footer">
+    <div class="footer-left">
+      <span class="footer-status" id="footerStatus">Ready. Select a bookmark to launch.</span>
+    </div>
+    <div>
+      <span>Press <b>F1</b> for Shortcuts | <b>F5</b> Quicksave | <b>F9</b> Quickload</span>
+    </div>
+  </footer>
+
+  <!-- MODAL: Add / Edit Bookmark -->
+  <div class="modal-overlay" id="modalBookmark">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span id="bmModalGlyph">🔖</span>
+          <span id="bmModalTitle">Add New Bookmark</span>
+        </div>
+        <button class="modal-close" id="btnCloseBmModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editBookmarkId">
+        <div class="form-group">
+          <label class="form-label">Title *</label>
+          <input type="text" class="form-input" id="bmInputTitle" placeholder="e.g. Yahoo! Directory (1999)" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">URL / Address * (supports kweb://, https://, internal:, gopher://)</label>
+          <input type="text" class="form-input" id="bmInputUrl" placeholder="kweb://portal or https://..." required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Category / Folder</label>
+            <select class="form-select" id="bmInputCategory">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select class="form-select" id="bmInputStatus">
+              <option value="Active">Active</option>
+              <option value="Review">Review</option>
+              <option value="Archived">Archived</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tags (comma separated)</label>
+          <input type="text" class="form-input" id="bmInputTags" placeholder="retro, directory, 1999, search">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes / Description</label>
+          <textarea class="form-textarea" id="bmInputNotes" rows="3" placeholder="Context, search tips, or secret ARG hints..."></textarea>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="bmInputStarred">
+          <label for="bmInputStarred" style="font-size: 12px; cursor: pointer;">★ Pin to Favorites</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="btnCancelBm">Cancel</button>
+        <button class="btn btn-primary" id="btnSaveBm">Save Bookmark</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Add Category -->
+  <div class="modal-overlay" id="modalCategory">
+    <div class="modal-box" style="max-width: 400px;">
+      <div class="modal-header">
+        <div class="modal-title">📁 New Category Folder</div>
+        <button class="modal-close" id="btnCloseCatModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Folder Name</label>
+          <input type="text" class="form-input" id="catInputName" placeholder="e.g. Cyber Security">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Icon Glyph</label>
+          <select class="form-select" id="catInputGlyph">
+            <option value="📁">📁 Folder</option>
+            <option value="🌐">🌐 Web</option>
+            <option value="💻">💻 Code</option>
+            <option value="🛰">🛰 System</option>
+            <option value="🕹">🕹 Game</option>
+            <option value="🗝">🗝 Secret</option>
+            <option value="⚡">⚡ Signal</option>
+            <option value="📦">📦 Archive</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="btnCancelCat">Cancel</button>
+        <button class="btn btn-primary" id="btnSaveCat">Create Folder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Link Health Diagnostic Drawer -->
+  <div class="modal-overlay" id="modalDiag">
+    <div class="modal-box" style="max-width: 460px;">
+      <div class="modal-header">
+        <div class="modal-title">🩺 Link Health Inspector</div>
+        <button class="modal-close" id="btnCloseDiagModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="diagContent" class="diag-result">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="btnRetestDiag">Re-Test</button>
+        <button class="btn btn-primary" id="btnDoneDiag">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: QR Code & Matrix Visualizer -->
+  <div class="modal-overlay" id="modalQr">
+    <div class="modal-box" style="max-width: 420px;">
+      <div class="modal-header">
+        <div class="modal-title">📱 2D Matrix / QR Visualizer</div>
+        <button class="modal-close" id="btnCloseQrModal">✕</button>
+      </div>
+      <div class="modal-body qr-container">
+        <canvas id="qrCanvas" width="200" height="200"></canvas>
+        <div id="qrUrlLabel" style="font-family: var(--font-mono); font-size: 11px; word-break: break-all; text-align: center; color: var(--primary);"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btnCloseQr">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Universal Export / Import -->
+  <div class="modal-overlay" id="modalExportImport">
+    <div class="modal-box" style="max-width: 500px;">
+      <div class="modal-header">
+        <div class="modal-title" id="exImModalTitle">📦 Export Vault</div>
+        <button class="modal-close" id="btnCloseExImModal">✕</button>
+      </div>
+      <div class="modal-body" id="exImBody">
+        <!-- Content dynamic -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btnExImDone">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Start Splash Screen -->
+  <div class="modal-overlay" id="modalSplash">
+    <div class="modal-box splash-card" style="max-width: 540px;">
+      <div class="splash-logo">★</div>
+      <div class="splash-title">KBookmark v1.0</div>
+      <div class="splash-desc">
+        Curate, classify, and explore the cyber-web and KiloOS local ecosystem. Your sovereign categorized link vault.
+      </div>
+
+      <div class="splash-features">
+        <div class="splash-feature-item">
+          <div class="splash-feature-title">🌐 Virtual 1999 & Surface Web</div>
+          <div>Preloaded with retro webring, portals, and internal tools.</div>
+        </div>
+        <div class="splash-feature-item">
+          <div class="splash-feature-title">🩺 Health & Protocol Audit</div>
+          <div>Probe link latency, HTTP response codes, and security.</div>
+        </div>
+        <div class="splash-feature-item">
+          <div class="splash-feature-title">📦 Netscape HTML Export</div>
+          <div>Export to standard browser bookmark format & JSON backups.</div>
+        </div>
+        <div class="splash-feature-item">
+          <div class="splash-feature-title">💾 Full Persistence</div>
+          <div>F5 Quicksave & F9 Quickload across all sessions.</div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: center; gap: 10px;">
+        <button class="btn btn-primary" id="btnSplashEnter" style="padding: 8px 18px; font-size: 13px;">
+          🚀 Open Link Vault (Enter)
+        </button>
+        <button class="btn" id="btnSplashTour">
+          ⚡ Quick Tour
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Help & Shortcuts Tour -->
+  <div class="modal-overlay" id="modalHelp">
+    <div class="modal-box" style="max-width: 520px;">
+      <div class="modal-header">
+        <div class="modal-title">❓ Help & Quick Reference</div>
+        <button class="modal-close" id="btnCloseHelpModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div class="diag-metric"><span>Ctrl + N</span> <b>Add New Bookmark</b></div>
+          <div class="diag-metric"><span>Ctrl + F or /</span> <b>Focus Omni-Search</b></div>
+          <div class="diag-metric"><span>F5</span> <b>Quicksave Vault State</b></div>
+          <div class="diag-metric"><span>F9</span> <b>Quickload Vault State</b></div>
+          <div class="diag-metric"><span>Esc</span> <b>Dismiss Active Modal / Drawer</b></div>
+          <div class="diag-metric"><span>Enter</span> <b>Open highlighted link or confirm</b></div>
+        </div>
+
+        <div style="margin-top: 12px; font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+          <b style="color: var(--text);">Protocols Supported:</b><br>
+          • <code>kweb://</code> - Retro Virtual 1999 Web links & portals<br>
+          • <code>internal:</code> - KiloOS system applications (e.g. internal:knet, internal:ksys)<br>
+          • <code>https://</code> & <code>http://</code> - Physical internet addresses<br>
+          • <code>gemini://</code> & <code>gopher://</code> - Alternative hypermedia protocols
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 6px; margin-top: 10px;">
+          <input type="checkbox" id="checkTutorialSeen">
+          <label for="checkTutorialSeen" style="font-size: 11px; cursor: pointer;">Don't show first-run tutorial on new session</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btnDoneHelp">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden file input for import -->
+  <input type="file" id="fileImporter" accept=".json,.html,.htm,.txt" style="display: none;">
+
+  <!-- Application Logic -->
+  <script>
+    (function() {
+      // Audio Synthesizer
+      let audioCtx = null;
+      let soundEnabled = true;
+
+      function initAudio() {
+        if (!audioCtx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) audioCtx = new AudioContext();
+        }
+      }
+
+      function playTone(freq, type, duration, gainVal = 0.1) {
+        if (!soundEnabled) return;
+        try {
+          initAudio();
+          if (!audioCtx) return;
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + duration);
+        } catch(e) {}
+      }
+
+      function sfxClick() { playTone(800, 'sine', 0.04, 0.05); }
+      function sfxStar() { playTone(1200, 'triangle', 0.12, 0.08); }
+      function sfxSave() {
+        playTone(523.25, 'sine', 0.08, 0.08);
+        setTimeout(() => playTone(659.25, 'sine', 0.08, 0.08), 70);
+        setTimeout(() => playTone(783.99, 'sine', 0.15, 0.08), 140);
+      }
+      function sfxLoad() {
+        playTone(783.99, 'sine', 0.08, 0.08);
+        setTimeout(() => playTone(659.25, 'sine', 0.08, 0.08), 70);
+        setTimeout(() => playTone(523.25, 'sine', 0.15, 0.08), 140);
+      }
+      function sfxOpen() {
+        playTone(440, 'triangle', 0.06, 0.08);
+        setTimeout(() => playTone(880, 'triangle', 0.1, 0.08), 60);
+      }
+      function sfxPing() { playTone(987.77, 'sine', 0.25, 0.06); }
+      function sfxDelete() { playTone(180, 'sawtooth', 0.15, 0.08); }
+
+      // Initial Vault Data
+      const DEFAULT_CATEGORIES = [
+        { id: 'cat-portals', name: 'Web 1.0 Portals', glyph: '🌐' },
+        { id: 'cat-dev', name: 'Development & Code', glyph: '💻' },
+        { id: 'cat-fleet', name: 'Fleet & System', glyph: '🛰' },
+        { id: 'cat-cyber', name: 'Cyberdeck & Media', glyph: '🕹' },
+        { id: 'cat-arg', name: 'ARG Secrets', glyph: '🗝' }
+      ];
+
+      const DEFAULT_BOOKMARKS = [
+        {
+          id: 'bm-1',
+          title: 'Yahoo! Directory (1999)',
+          url: 'kweb://portal',
+          category: 'Web 1.0 Portals',
+          tags: ['directory', 'search', '1999', 'vintage'],
+          notes: 'The authentic Yahoo!-style curated web directory with classifieds and headlines.',
+          starred: true,
+          visits: 42,
+          dateAdded: Date.now() - 86400000 * 5,
+          status: 'Active',
+          health: 200
+        },
+        {
+          id: 'bm-2',
+          title: 'KiloNet Webring Hub',
+          url: 'kweb://webring',
+          category: 'Web 1.0 Portals',
+          tags: ['webring', 'community', 'hubs', 'homepages'],
+          notes: 'Central ring hub linking user sites, cyber-shrines, and retro guestbooks.',
+          starred: true,
+          visits: 29,
+          dateAdded: Date.now() - 86400000 * 4,
+          status: 'Active',
+          health: 200
+        },
+        {
+          id: 'bm-3',
+          title: 'Geocities Cyber-Shrine',
+          url: 'kweb://users/~neon_rider',
+          category: 'Web 1.0 Portals',
+          tags: ['geocities', 'retro', 'badges'],
+          notes: '88x31 animated buttons, visitor hit counters, and MIDI background music.',
+          starred: false,
+          visits: 14,
+          dateAdded: Date.now() - 86400000 * 3,
+          status: 'Active',
+          health: 200
+        },
+        {
+          id: 'bm-4',
+          title: 'The Wayback Machine',
+          url: 'https://web.archive.org',
+          category: 'Web 1.0 Portals',
+          tags: ['archive', 'history', 'preservation'],
+          notes: 'Digital time capsule of historical internet culture and ancient sites.',
+          starred: false,
+          visits: 18,
+          dateAdded: Date.now() - 86400000 * 2,
+          status: 'Active',
+          health: 200
+        },
+        {
+          id: 'bm-5',
+          title: 'Contributor Compute Portal',
+          url: '/apps/contribute.html',
+          category: 'Web 1.0 Portals',
+          tags: ['compute', 'fleet', 'donation'],
+          notes: 'Donate idle browser compute cycles to power autonomous agent workflows.',
+          starred: false,
+          visits: 8,
+          dateAdded: Date.now() - 86400000 * 1,
+          status: 'Active',
+          health: 200
+        },
+        {
+          id: 'bm-6',
+          title: 'KScript Sandbox IDE',
+          url: 'internal:kscript',
+          category: 'Development & Code',
+          tags: ['dev', 'ide', 'code', 'sandbox'],
+          notes: 'In-OS live script workspace with immediate execution and diagnostics.',
+          starred: true,
+          visits: 33,
+          dateAdded: Date.now() - 86400000 * 6,
+          status: 'Active',
+          health: 200
+        },
+        {
+          id: 'bm-7',
+          title: 'KHex Memory Inspector',
+          url: 'internal:khex',
+          category: 'Development & Code',
+          tags: ['hex', 'memory', 'binary', 'dump'],
+          notes: 'Raw memory buffer analyzer, byte inspector, and XOR cipher decrypter.',
+          starred: false,
+          visits: 19,
+          dateAdded: Date.now() - 86400000 * 5,
+          status: 'Active',
+          health: 200
+        },
+        {
+          id: 'bm-8',
+          title: 'KTerm Command Shell',
+          url: 'internal:kterm',
+          category: 'Development & Code',
+          tags: ['cli', 'shell', 'terminal', 'pipes'],
+          notes: 'Vintage green-screen CLI with Virtual File System, pipes, and macros.',
+          starred: false,
+          visits: 25,
+          dateAdded: Date.now() - 86400000 * 4,
+          status: 'Active',
+          health: 200
+        },
+        {
+          id: 'bm-9',
+          title: 'KiloApps Fleet GitHub',
+          url: 'https://github.com/mrbos/KiloApps',
+          category: 'Development & Code',
+          tags: ['git', 'source', 'autonomous', 'fleet'],
+          notes: 'Master repository for 60+ micro-applications under the strict 999KB limit.',
+          starred: true,
+          visits: 55,
+          dateAdded: Date.now() - 86400000 * 7,
+          status: 'Active',
+          health: 200
+        },
+        {
+          id: 'bm-10',
+          title: 'KSys Telemetry Monitor',
+          url: 'internal:ksys',
+          category: 'Fleet & System',
+          tags: ['system', 'telemetry', 'hardware', 'monitor'],
+          notes: 'Real-time resource usage, CPU benchmarks, and system daemons workstation.',
+          starred: true,
+          visits: 48,
+          dateAdded: Date.now() - 86400000 * 6,
+          status: 'Active',
+          health: 200
+        },
+        {
+          id: 'bm-11',
+          title: 'KPing Subnet Inspector',
+          url: 'internal:kping',
+          category: 'Fleet & System',
+          tags: ['network', 'ping', 'icmp', 'jitter'],
+          notes: 'LAN subnet sweep, VoIP MOS calculation, and RFC SLA grading suite.',
+          starred: false,
+          visits: 21,
+          dateAdded: Date.now() - 86400000 * 3,
+          status: 'Active',
+          health: 200
+        },
+        {
+          id: 'bm-12',
+          title: 'KNet Cyber Browser',
+          url: 'internal:knet',
+          category: 'Fleet & System',
+          tags: ['browser', 'network', 'kweb', 'sniffer'],
+          notes: 'Authentic 1999 hypermedia web browser with hex dump and packet inspector.',
+          starred: true,
+          visits: 64,
+          dateAdded: Date.now() - 86400000 * 8,
+          status: 'Active',
+          health: 200
+        },
+        {
+          id: 'bm-13',
+          title: 'KVault Secure Keybox',
+          url: 'internal:kvault',
+          category: 'Fleet & System',
+          tags: ['vault', 'security', 'keys', 'encryption'],
+          notes: 'Hardware-grade encrypted safe for credentials, seeds, and keypairs.',
+          starred: false,
+          visits: 12,
+          dateAdded: Date.now() - 86400000 * 2,
+          status: 'Active',
+          health: 200
+        },
+        {
+          id: 'bm-14',
+          title: 'KSynth Polyphonic Audio',
+          url: 'internal:ksynth',
+          category: 'Cyberdeck & Media',
+          tags: ['audio', 'synth', 'sound', 'midi'],
+          notes: 'Multi-oscillator retro synthesizer with keyboard piano roll and presets.',
+          starred: false,
+          visits: 17,
+          dateAdded: Date.now() - 86400000 * 4,
+          status: 'Active',
+          health: 200
+        },
+        {
+          id: 'bm-15',
+          title: 'KStarForge Shipyards',
+          url: 'internal:kstarforge',
+          category: 'Cyberdeck & Media',
+          tags: ['game', 'shipyard', 'engineering', 'sim'],
+          notes: 'Deep-space vessel fabrication, modular hull design, and flight proving range.',
+          starred: false,
+          visits: 22,
+          dateAdded: Date.now() - 86400000 * 3,
+          status: 'Active',
+          health: 200
+        },
+        {
+          id: 'bm-16',
+          title: 'KPomodoro Focus Manager',
+          url: 'internal:kpomodoro',
+          category: 'Cyberdeck & Media',
+          tags: ['timer', 'focus', 'productivity', 'pomo'],
+          notes: 'Work/break cycle manager with procedural ambient chimes and analytics.',
+          starred: false,
+          visits: 15,
+          dateAdded: Date.now() - 86400000 * 1,
+          status: 'Active',
+          health: 200
+        },
+        {
+          id: 'bm-17',
+          title: 'Glitched Subnet Node 0x7F',
+          url: 'kweb://echo.kilocore.net/signal_99.wav',
+          category: 'ARG Secrets',
+          tags: ['arg', 'signal', 'carrier', 'audio', 'secret'],
+          notes: 'Ghost transmission detected in carrier background frequency. Clue for KMatrix.',
+          starred: true,
+          visits: 7,
+          dateAdded: Date.now() - 86400000 * 9,
+          status: 'Active',
+          health: 200
+        },
+        {
+          id: 'bm-18',
+          title: 'Architect Memory Segment 0x4A',
+          url: 'kweb://echo.kilocore.net/archive_1999.dat',
+          category: 'ARG Secrets',
+          tags: ['arg', 'memory', 'lore', 'passkey'],
+          notes: 'Contains cryptographic string ECHO-1999-ARCHITECT for the KDirector unlock.',
+          starred: true,
+          visits: 11,
+          dateAdded: Date.now() - 86400000 * 8,
+          status: 'Active',
+          health: 200
+        },
+        {
+          id: 'bm-19',
+          title: 'Darknet AI Gateway',
+          url: 'kweb://darknet.ai',
+          category: 'ARG Secrets',
+          tags: ['arg', 'darknet', 'clandestine', 'gateway'],
+          notes: 'Tier 3 subterranean router cluster connecting rogue agent entities.',
+          starred: false,
+          visits: 5,
+          dateAdded: Date.now() - 86400000 * 10,
+          status: 'Active',
+          health: 301
+        }
+      ];
+
+      // State
+      let categories = [];
+      let bookmarks = [];
+      let activeCategory = 'all'; // 'all', 'starred', 'recent', or category name
+      let activeTagFilter = null;
+      let searchQuery = '';
+      let selectedProtocol = 'all';
+      let selectedHealth = 'all';
+      let currentSort = 'date-desc';
+      let isTableMode = false;
+      let selectedBookmarkIds = new Set();
+      let activeTheme = 'dark';
+      let activeDiagBookmarkId = null;
+
+      // DOM Elements
+      const categoryList = document.getElementById('categoryList');
+      const tagCloud = document.getElementById('tagCloud');
+      const bookmarksContainer = document.getElementById('bookmarksContainer');
+      const searchInput = document.getElementById('searchInput');
+      const searchClear = document.getElementById('searchClear');
+      const filterProtocol = document.getElementById('filterProtocol');
+      const filterHealth = document.getElementById('filterHealth');
+      const sortSelect = document.getElementById('sortSelect');
+      const viewCardsBtn = document.getElementById('viewCardsBtn');
+      const viewTableBtn = document.getElementById('viewTableBtn');
+      const footerStatus = document.getElementById('footerStatus');
+      const statTotalLinks = document.getElementById('statTotalLinks');
+      const statStarredLinks = document.getElementById('statStarredLinks');
+      const statStorageSize = document.getElementById('statStorageSize');
+      const catTotalCount = document.getElementById('catTotalCount');
+      const batchRibbon = document.getElementById('batchRibbon');
+      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+      const selectedCountText = document.getElementById('selectedCountText');
+
+      // Modals
+      const modalBookmark = document.getElementById('modalBookmark');
+      const modalCategory = document.getElementById('modalCategory');
+      const modalDiag = document.getElementById('modalDiag');
+      const modalQr = document.getElementById('modalQr');
+      const modalExportImport = document.getElementById('modalExportImport');
+      const modalSplash = document.getElementById('modalSplash');
+      const modalHelp = document.getElementById('modalHelp');
+      const checkTutorialSeen = document.getElementById('checkTutorialSeen');
+
+      // Persistence Handlers
+      function saveStateToLocal() {
+        try {
+          const payload = {
+            categories,
+            bookmarks,
+            activeTheme,
+            soundEnabled,
+            isTableMode,
+            version: '1.0'
+          };
+          const json = JSON.stringify(payload);
+          localStorage.setItem('kbookmark_vault', json);
+          updateStorageStats(json.length);
+        } catch(e) {
+          console.warn('Storage save error:', e);
+        }
+      }
+
+      function loadStateFromLocal() {
+        try {
+          const saved = localStorage.getItem('kbookmark_vault');
+          if (saved) {
+            const data = JSON.parse(saved);
+            if (data.categories && Array.isArray(data.categories)) categories = data.categories;
+            if (data.bookmarks && Array.isArray(data.bookmarks)) bookmarks = data.bookmarks;
+            if (data.activeTheme) setTheme(data.activeTheme);
+            if (data.soundEnabled !== undefined) soundEnabled = data.soundEnabled;
+            if (data.isTableMode !== undefined) isTableMode = data.isTableMode;
+            updateStorageStats(saved.length);
+            return true;
+          }
+        } catch(e) {
+          console.warn('Storage load error:', e);
+        }
+        return false;
+      }
+
+      function quickSave() {
+        sfxSave();
+        try {
+          const payload = {
+            categories,
+            bookmarks,
+            time: Date.now()
+          };
+          localStorage.setItem('kbookmark_quicksave', JSON.stringify(payload));
+          setStatus('Vault quicksaved successfully to localStorage (F5).');
+        } catch(e) {
+          setStatus('Error performing quicksave.');
+        }
+      }
+
+      function quickLoad() {
+        try {
+          const raw = localStorage.getItem('kbookmark_quicksave');
+          if (!raw) {
+            setStatus('No quicksave snapshot found (F5 to save).');
+            return;
+          }
+          const data = JSON.parse(raw);
+          if (data.categories) categories = data.categories;
+          if (data.bookmarks) bookmarks = data.bookmarks;
+          sfxLoad();
+          renderCategories();
+          renderBookmarks();
+          saveStateToLocal();
+          setStatus('Vault quickloaded from snapshot (F9).');
+        } catch(e) {
+          setStatus('Error loading snapshot.');
+        }
+      }
+
+      function updateStorageStats(byteLen) {
+        if (statStorageSize) {
+          const kb = (byteLen / 1024).toFixed(1);
+          statStorageSize.textContent = kb + ' KB';
+        }
+      }
+
+      function setStatus(msg) {
+        if (footerStatus) {
+          footerStatus.textContent = msg;
+        }
+      }
+
+      // Themes
+      const THEMES = ['dark', 'win98', 'amber', 'matrix'];
+      function setTheme(theme) {
+        activeTheme = theme;
+        document.body.setAttribute('data-theme', theme);
+        saveStateToLocal();
+      }
+
+      function cycleTheme() {
+        sfxClick();
+        const nextIdx = (THEMES.indexOf(activeTheme) + 1) % THEMES.length;
+        setTheme(THEMES[nextIdx]);
+        setStatus(`Switched theme to ${THEMES[nextIdx].toUpperCase()}.`);
+      }
+
+      // Protocol Detection
+      function getProtocol(url) {
+        if (!url) return 'http';
+        const u = url.trim().toLowerCase();
+        if (u.startsWith('kweb://')) return 'kweb';
+        if (u.startsWith('internal:')) return 'internal';
+        if (u.startsWith('https://')) return 'https';
+        if (u.startsWith('http://')) return 'http';
+        if (u.startsWith('gopher://')) return 'gopher';
+        if (u.startsWith('gemini://')) return 'gemini';
+        return 'other';
+      }
+
+      // Launch URL
+      function openLink(url, bmId) {
+        sfxOpen();
+        if (bmId) {
+          const bm = bookmarks.find(b => b.id === bmId);
+          if (bm) {
+            bm.visits = (bm.visits || 0) + 1;
+            saveStateToLocal();
+            renderBookmarks();
+          }
+        }
+        setStatus(`Launching: ${url}`);
+        if (url.startsWith('internal:') || url.startsWith('kweb://')) {
+          // Open in KiloOS parent window or iframe if available
+          try {
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage({ type: 'KILO_OPEN_URL', url }, '*');
+            }
+          } catch(e) {}
+          window.open(url, '_blank');
+        } else {
+          window.open(url, '_blank', 'noopener,noreferrer');
+        }
+      }
+
+      // Rendering: Categories
+      function renderCategories() {
+        categoryList.innerHTML = '';
+
+        // Built-in pseudo-categories
+        const specialCats = [
+          { id: 'all', name: 'All Bookmarks', glyph: '📋', count: bookmarks.length },
+          { id: 'starred', name: 'Starred Vault', glyph: '★', count: bookmarks.filter(b => b.starred).length },
+          { id: 'recent', name: 'Recent History', glyph: '🕒', count: bookmarks.filter(b => (b.visits || 0) > 0).length }
+        ];
+
+        specialCats.forEach(sc => {
+          const li = document.createElement('li');
+          li.className = `category-item ${activeCategory === sc.id ? 'active' : ''}`;
+          li.innerHTML = `
+            <div class="cat-name-wrapper">
+              <span class="cat-glyph">${sc.glyph}</span>
+              <span class="cat-name">${sc.name}</span>
+            </div>
+            <span class="cat-badge">${sc.count}</span>
+          `;
+          li.onclick = () => {
+            sfxClick();
+            activeCategory = sc.id;
+            renderCategories();
+            renderBookmarks();
+          };
+          categoryList.appendChild(li);
+        });
+
+        // Divider
+        const divLi = document.createElement('li');
+        divLi.style.height = '1px';
+        divLi.style.background = 'var(--border)';
+        divLi.style.margin = '4px 10px';
+        categoryList.appendChild(divLi);
+
+        // Custom categories
+        categories.forEach(c => {
+          const count = bookmarks.filter(b => b.category === c.name).length;
+          const li = document.createElement('li');
+          li.className = `category-item ${activeCategory === c.name ? 'active' : ''}`;
+          li.innerHTML = `
+            <div class="cat-name-wrapper">
+              <span class="cat-glyph">${c.glyph || '📁'}</span>
+              <span class="cat-name">${c.name}</span>
+            </div>
+            <span class="cat-badge">${count}</span>
+          `;
+          li.onclick = () => {
+            sfxClick();
+            activeCategory = c.name;
+            renderCategories();
+            renderBookmarks();
+          };
+          categoryList.appendChild(li);
+        });
+
+        if (catTotalCount) catTotalCount.textContent = categories.length;
+        renderTagCloud();
+        updateSummaryCounters();
+      }
+
+      function renderTagCloud() {
+        tagCloud.innerHTML = '';
+        const tagMap = new Map();
+        bookmarks.forEach(b => {
+          if (b.tags && Array.isArray(b.tags)) {
+            b.tags.forEach(t => {
+              const tag = t.trim().toLowerCase();
+              if (tag) tagMap.set(tag, (tagMap.get(tag) || 0) + 1);
+            });
+          }
+        });
+
+        const sortedTags = Array.from(tagMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 24);
+        sortedTags.forEach(([tag, count]) => {
+          const pill = document.createElement('span');
+          pill.className = `tag-pill ${activeTagFilter === tag ? 'active' : ''}`;
+          pill.textContent = `#${tag} (${count})`;
+          pill.onclick = () => {
+            sfxClick();
+            activeTagFilter = (activeTagFilter === tag) ? null : tag;
+            renderTagCloud();
+            renderBookmarks();
+          };
+          tagCloud.appendChild(pill);
+        });
+      }
+
+      function updateSummaryCounters() {
+        if (statTotalLinks) statTotalLinks.textContent = bookmarks.length;
+        if (statStarredLinks) statStarredLinks.textContent = bookmarks.filter(b => b.starred).length;
+      }
+
+      // Filtering & Sorting
+      function getFilteredBookmarks() {
+        return bookmarks.filter(b => {
+          // Category filter
+          if (activeCategory === 'starred') {
+            if (!b.starred) return false;
+          } else if (activeCategory === 'recent') {
+            if (!b.visits || b.visits === 0) return false;
+          } else if (activeCategory !== 'all') {
+            if (b.category !== activeCategory) return false;
+          }
+
+          // Tag filter
+          if (activeTagFilter) {
+            if (!b.tags || !b.tags.some(t => t.toLowerCase() === activeTagFilter.toLowerCase())) {
+              return false;
+            }
+          }
+
+          // Protocol filter
+          if (selectedProtocol !== 'all') {
+            const proto = getProtocol(b.url);
+            if (proto !== selectedProtocol) return false;
+          }
+
+          // Health filter
+          if (selectedHealth !== 'all') {
+            if (selectedHealth === 'untested') {
+              if (b.health) return false;
+            } else {
+              if (String(b.health) !== selectedHealth) return false;
+            }
+          }
+
+          // Search query
+          if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            const inTitle = (b.title || '').toLowerCase().includes(q);
+            const inUrl = (b.url || '').toLowerCase().includes(q);
+            const inNotes = (b.notes || '').toLowerCase().includes(q);
+            const inTags = (b.tags || []).some(t => t.toLowerCase().includes(q));
+            const inCat = (b.category || '').toLowerCase().includes(q);
+            if (!inTitle && !inUrl && !inNotes && !inTags && !inCat) return false;
+          }
+
+          return true;
+        }).sort((a, b) => {
+          if (currentSort === 'date-desc') return (b.dateAdded || 0) - (a.dateAdded || 0);
+          if (currentSort === 'date-asc') return (a.dateAdded || 0) - (b.dateAdded || 0);
+          if (currentSort === 'title-asc') return (a.title || '').localeCompare(b.title || '');
+          if (currentSort === 'title-desc') return (b.title || '').localeCompare(a.title || '');
+          if (currentSort === 'visits-desc') return (b.visits || 0) - (a.visits || 0);
+          return 0;
+        });
+      }
+
+      // Rendering: Bookmarks
+      function renderBookmarks() {
+        bookmarksContainer.innerHTML = '';
+        bookmarksContainer.className = `bookmarks-container ${isTableMode ? 'table-mode' : ''}`;
+
+        const items = getFilteredBookmarks();
+
+        if (items.length === 0) {
+          bookmarksContainer.innerHTML = `
+            <div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text-muted);">
+              <div style="font-size: 36px; margin-bottom: 8px;">🔍</div>
+              <div style="font-size: 15px; font-weight: bold; color: var(--text);">No bookmarks found</div>
+              <div style="font-size: 12px; margin-top: 4px;">Adjust search query, clear filters, or click <b>[+ New Link]</b> to add one.</div>
+            </div>
+          `;
+          updateBatchRibbon();
+          return;
+        }
+
+        items.forEach(b => {
+          const proto = getProtocol(b.url);
+          const isSelected = selectedBookmarkIds.has(b.id);
+          const card = document.createElement('div');
+          card.className = `bm-card ${isSelected ? 'selected' : ''}`;
+
+          let healthClass = 'status-untested';
+          if (b.health === 200) healthClass = 'status-200';
+          else if (b.health === 301) healthClass = 'status-301';
+          else if (b.health === 404) healthClass = 'status-404';
+
+          const tagPillsHtml = (b.tags || []).map(t => `<span class="bm-tag">#${escapeHtml(t)}</span>`).join('');
+
+          card.innerHTML = `
+            <div class="bm-header">
+              <input type="checkbox" class="bm-select-check" ${isSelected ? 'checked' : ''}>
+              <div class="bm-title-group">
+                <span class="bm-star ${b.starred ? 'active' : ''}" title="${b.starred ? 'Starred' : 'Unstarred'}">★</span>
+                <span class="bm-health-dot ${healthClass}" title="Health: ${b.health || 'Untested'}"></span>
+                <span class="bm-title" title="${escapeHtml(b.title)}">${escapeHtml(b.title)}</span>
+              </div>
+              <div class="bm-actions">
+                <button class="btn btn-sm btn-icon btn-open" title="Open Link">🔗</button>
+                <button class="btn btn-sm btn-icon btn-probe" title="Diagnostic Probe">🩺</button>
+                <button class="btn btn-sm btn-icon btn-qr" title="QR & 2D Matrix">📱</button>
+                <button class="btn btn-sm btn-icon btn-edit" title="Edit Bookmark">✎</button>
+                <button class="btn btn-sm btn-icon btn-del" title="Delete Bookmark">🗑</button>
+              </div>
+            </div>
+
+            <div class="bm-url-row">
+              <span class="proto-badge proto-${proto}">${proto}</span>
+              <a class="bm-url-text" href="${escapeHtml(b.url)}" target="_blank" title="${escapeHtml(b.url)}">${escapeHtml(b.url)}</a>
+              <span style="color: var(--text-muted); font-size: 10px;">👁 ${b.visits || 0}</span>
+            </div>
+
+            ${b.notes ? `<div class="bm-notes">${escapeHtml(b.notes)}</div>` : ''}
+
+            ${tagPillsHtml ? `<div class="bm-tags-row">${tagPillsHtml}</div>` : ''}
+
+            <div class="bm-footer">
+              <span class="bm-cat-pill">${escapeHtml(b.category || 'General')}</span>
+              <span style="color: var(--text-muted); font-size: 10px;">${formatDate(b.dateAdded)}</span>
+            </div>
+          `;
+
+          // Event Listeners on Card Elements
+          const checkEl = card.querySelector('.bm-select-check');
+          checkEl.onchange = (e) => {
+            if (e.target.checked) selectedBookmarkIds.add(b.id);
+            else selectedBookmarkIds.delete(b.id);
+            card.classList.toggle('selected', e.target.checked);
+            updateBatchRibbon();
+          };
+
+          const starEl = card.querySelector('.bm-star');
+          starEl.onclick = (e) => {
+            e.stopPropagation();
+            sfxStar();
+            b.starred = !b.starred;
+            saveStateToLocal();
+            renderCategories();
+            renderBookmarks();
+            setStatus(b.starred ? `Starred "${b.title}"` : `Unstarred "${b.title}"`);
+          };
+
+          const titleEl = card.querySelector('.bm-title');
+          titleEl.onclick = () => openLink(b.url, b.id);
+
+          const openBtn = card.querySelector('.btn-open');
+          openBtn.onclick = () => openLink(b.url, b.id);
+
+          const probeBtn = card.querySelector('.btn-probe');
+          probeBtn.onclick = () => openDiagnostic(b.id);
+
+          const qrBtn = card.querySelector('.btn-qr');
+          qrBtn.onclick = () => openQrModal(b);
+
+          const editBtn = card.querySelector('.btn-edit');
+          editBtn.onclick = () => openEditBookmark(b.id);
+
+          const delBtn = card.querySelector('.btn-del');
+          delBtn.onclick = () => deleteBookmark(b.id);
+
+          bookmarksContainer.appendChild(card);
+        });
+
+        updateBatchRibbon();
+      }
+
+      function updateBatchRibbon() {
+        const total = getFilteredBookmarks().length;
+        const count = selectedBookmarkIds.size;
+        if (count > 0) {
+          batchRibbon.style.display = 'flex';
+          selectedCountText.textContent = count;
+          selectAllCheckbox.checked = (count === total && total > 0);
+        } else {
+          batchRibbon.style.display = 'none';
+          selectAllCheckbox.checked = false;
+        }
+      }
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function formatDate(ts) {
+        if (!ts) return '';
+        const d = new Date(ts);
+        return d.toLocaleDateString();
+      }
+
+      // Add / Edit Bookmark
+      function openAddBookmark() {
+        sfxClick();
+        document.getElementById('editBookmarkId').value = '';
+        document.getElementById('bmModalGlyph').textContent = '🔖';
+        document.getElementById('bmModalTitle').textContent = 'Add New Bookmark';
+        document.getElementById('bmInputTitle').value = '';
+        document.getElementById('bmInputUrl').value = '';
+        document.getElementById('bmInputTags').value = '';
+        document.getElementById('bmInputNotes').value = '';
+        document.getElementById('bmInputStarred').checked = false;
+        document.getElementById('bmInputStatus').value = 'Active';
+
+        populateCategoryDropdown(activeCategory !== 'all' && activeCategory !== 'starred' && activeCategory !== 'recent' ? activeCategory : null);
+        modalBookmark.classList.add('active');
+        document.getElementById('bmInputTitle').focus();
+      }
+
+      function openEditBookmark(bmId) {
+        sfxClick();
+        const bm = bookmarks.find(b => b.id === bmId);
+        if (!bm) return;
+
+        document.getElementById('editBookmarkId').value = bm.id;
+        document.getElementById('bmModalGlyph').textContent = '✎';
+        document.getElementById('bmModalTitle').textContent = 'Edit Bookmark';
+        document.getElementById('bmInputTitle').value = bm.title || '';
+        document.getElementById('bmInputUrl').value = bm.url || '';
+        document.getElementById('bmInputTags').value = (bm.tags || []).join(', ');
+        document.getElementById('bmInputNotes').value = bm.notes || '';
+        document.getElementById('bmInputStarred').checked = !!bm.starred;
+        document.getElementById('bmInputStatus').value = bm.status || 'Active';
+
+        populateCategoryDropdown(bm.category);
+        modalBookmark.classList.add('active');
+      }
+
+      function populateCategoryDropdown(selectedCat) {
+        const sel = document.getElementById('bmInputCategory');
+        sel.innerHTML = '';
+        categories.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.name;
+          opt.textContent = `${c.glyph || '📁'} ${c.name}`;
+          if (c.name === selectedCat) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      }
+
+      function saveBookmarkFromModal() {
+        const id = document.getElementById('editBookmarkId').value;
+        const title = document.getElementById('bmInputTitle').value.trim();
+        let url = document.getElementById('bmInputUrl').value.trim();
+        const category = document.getElementById('bmInputCategory').value;
+        const tagsRaw = document.getElementById('bmInputTags').value;
+        const notes = document.getElementById('bmInputNotes').value.trim();
+        const starred = document.getElementById('bmInputStarred').checked;
+        const status = document.getElementById('bmInputStatus').value;
+
+        if (!title || !url) {
+          alert('Title and URL are required.');
+          return;
+        }
+
+        // Format tags
+        const tags = tagsRaw.split(',').map(t => t.trim().toLowerCase()).filter(t => t.length > 0);
+
+        if (id) {
+          const bm = bookmarks.find(b => b.id === id);
+          if (bm) {
+            bm.title = title;
+            bm.url = url;
+            bm.category = category;
+            bm.tags = tags;
+            bm.notes = notes;
+            bm.starred = starred;
+            bm.status = status;
+            setStatus(`Updated bookmark "${title}".`);
+          }
+        } else {
+          const newBm = {
+            id: 'bm-' + Date.now(),
+            title,
+            url,
+            category,
+            tags,
+            notes,
+            starred,
+            status,
+            visits: 0,
+            dateAdded: Date.now(),
+            health: 200
+          };
+          bookmarks.unshift(newBm);
+          setStatus(`Added new bookmark "${title}".`);
+        }
+
+        sfxSave();
+        saveStateToLocal();
+        modalBookmark.classList.remove('active');
+        renderCategories();
+        renderBookmarks();
+      }
+
+      function deleteBookmark(bmId) {
+        sfxDelete();
+        const bm = bookmarks.find(b => b.id === bmId);
+        const name = bm ? bm.title : 'bookmark';
+        if (confirm(`Delete "${name}" from vault?`)) {
+          bookmarks = bookmarks.filter(b => b.id !== bmId);
+          selectedBookmarkIds.delete(bmId);
+          saveStateToLocal();
+          renderCategories();
+          renderBookmarks();
+          setStatus(`Deleted "${name}".`);
+        }
+      }
+
+      // Add Category
+      function openAddCategory() {
+        sfxClick();
+        document.getElementById('catInputName').value = '';
+        modalCategory.classList.add('active');
+        document.getElementById('catInputName').focus();
+      }
+
+      function saveCategoryFromModal() {
+        const name = document.getElementById('catInputName').value.trim();
+        const glyph = document.getElementById('catInputGlyph').value;
+        if (!name) return;
+
+        if (categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+          alert('A folder with this name already exists.');
+          return;
+        }
+
+        categories.push({
+          id: 'cat-' + Date.now(),
+          name,
+          glyph
+        });
+
+        sfxSave();
+        saveStateToLocal();
+        modalCategory.classList.remove('active');
+        renderCategories();
+        setStatus(`Created category folder "${name}".`);
+      }
+
+      // Diagnostic Probe Suite
+      function openDiagnostic(bmId) {
+        sfxPing();
+        activeDiagBookmarkId = bmId;
+        const bm = bookmarks.find(b => b.id === bmId);
+        if (!bm) return;
+
+        runDiagnosticProbe(bm);
+        modalDiag.classList.add('active');
+      }
+
+      function runDiagnosticProbe(bm) {
+        const diagContent = document.getElementById('diagContent');
+        diagContent.innerHTML = `
+          <div style="color: var(--primary); font-weight: bold; margin-bottom: 8px;">
+            Target: ${escapeHtml(bm.title)}
+          </div>
+          <div style="color: var(--text-muted); margin-bottom: 12px;">
+            Probing URL: ${escapeHtml(bm.url)}...
+          </div>
+          <div style="text-align: center; padding: 20px;">
+            <span>[🩺 Sending ICMP & HTTP Header Probe...]</span>
+          </div>
+        `;
+
+        setTimeout(() => {
+          // Realistic network simulation
+          const proto = getProtocol(bm.url);
+          const rtt = Math.floor(Math.random() * 45) + 12; // 12-57ms
+          const jitter = (Math.random() * 3.5).toFixed(1);
+          const statusCode = bm.url.includes('darknet') ? 301 : (bm.url.includes('missing') ? 404 : 200);
+          bm.health = statusCode;
+          saveStateToLocal();
+          renderBookmarks();
+
+          diagContent.innerHTML = `
+            <div style="font-weight: bold; color: var(--primary); margin-bottom: 8px;">
+              Diagnostic Probe Complete: ${statusCode === 200 ? '🟢 200 OK' : (statusCode === 301 ? '🟡 301 Moved' : '🔴 404 Error')}
+            </div>
+            <div class="diag-metric"><span>URL</span> <b>${escapeHtml(bm.url)}</b></div>
+            <div class="diag-metric"><span>Protocol</span> <b>${proto.toUpperCase()}</b></div>
+            <div class="diag-metric"><span>Round-Trip Time (RTT)</span> <b>${rtt} ms</b></div>
+            <div class="diag-metric"><span>Estimated Jitter</span> <b>±${jitter} ms</b></div>
+            <div class="diag-metric"><span>Status Code</span> <b>${statusCode}</b></div>
+            <div class="diag-metric"><span>Server Daemon</span> <b>Apache/1.3.12 (Unix) / KiloNet Gateway</b></div>
+            <div class="diag-metric"><span>Content-Type</span> <b>text/html; charset=iso-8859-1</b></div>
+            <div class="diag-metric"><span>Encryption Grade</span> <b>${proto === 'https' ? 'TLS 1.3 (Sovereign)' : (proto === 'kweb' ? 'Retro Web 1.0 (Direct Pipe)' : 'Cleartext')}</b></div>
+          `;
+          setStatus(`Probe complete for ${bm.title}: ${statusCode} (${rtt}ms).`);
+        }, 350);
+      }
+
+      function auditAllLinks() {
+        sfxPing();
+        setStatus('Running health diagnostic audit across all bookmarks in vault...');
+        let audited = 0;
+        bookmarks.forEach(bm => {
+          const code = bm.url.includes('darknet') ? 301 : (bm.url.includes('missing') ? 404 : 200);
+          bm.health = code;
+          audited++;
+        });
+        saveStateToLocal();
+        renderBookmarks();
+        setStatus(`Health audit complete: verified ${audited} link targets.`);
+      }
+
+      // QR Code / Retro Matrix 2D Generator
+      function openQrModal(bm) {
+        sfxClick();
+        const canvas = document.getElementById('qrCanvas');
+        const urlLabel = document.getElementById('qrUrlLabel');
+        urlLabel.textContent = bm.url;
+
+        generateMatrixQr(canvas, bm.url);
+        modalQr.classList.add('active');
+      }
+
+      function generateMatrixQr(canvas, text) {
+        const ctx = canvas.getContext('2d');
+        const size = 200;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, size, size);
+
+        // Procedural pseudo-QR pattern based on hash of text
+        const gridCount = 25;
+        const cellSize = Math.floor(size / gridCount);
+
+        let hash = 0;
+        for (let i = 0; i < text.length; i++) {
+          hash = ((hash << 5) - hash) + text.charCodeAt(i);
+          hash |= 0;
+        }
+
+        ctx.fillStyle = '#0f172a';
+
+        // Draw standard QR finder patterns in 3 corners
+        function drawFinder(gx, gy) {
+          for (let dy = 0; dy < 7; dy++) {
+            for (let dx = 0; dx < 7; dx++) {
+              const border = (dx === 0 || dx === 6 || dy === 0 || dy === 6);
+              const inner = (dx >= 2 && dx <= 4 && dy >= 2 && dy <= 4);
+              if (border || inner) {
+                ctx.fillRect((gx + dx) * cellSize, (gy + dy) * cellSize, cellSize, cellSize);
+              }
+            }
+          }
+        }
+
+        drawFinder(1, 1);
+        drawFinder(gridCount - 8, 1);
+        drawFinder(1, gridCount - 8);
+
+        // Fill pseudo random data cells using string hash
+        let seed = Math.abs(hash);
+        for (let y = 0; y < gridCount; y++) {
+          for (let x = 0; x < gridCount; x++) {
+            // Avoid finder corners
+            const inTopLeft = (x < 9 && y < 9);
+            const inTopRight = (x >= gridCount - 9 && y < 9);
+            const inBottomLeft = (x < 9 && y >= gridCount - 9);
+            if (inTopLeft || inTopRight || inBottomLeft) continue;
+
+            seed = (seed * 9301 + 49297) % 233280;
+            if ((seed / 233280) > 0.5) {
+              ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+            }
+          }
+        }
+      }
+
+      // Universal Export / Import
+      function openExportModal() {
+        sfxClick();
+        const modalTitle = document.getElementById('exImModalTitle');
+        const body = document.getElementById('exImBody');
+        modalTitle.textContent = '📦 Export Categorized Link Vault';
+
+        body.innerHTML = `
+          <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+            Choose a universal export format. The Netscape Bookmark HTML format is natively importable by all modern web browsers.
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <button class="btn btn-primary" id="btnExportNetscape" style="justify-content: flex-start; padding: 10px;">
+              🌐 <b>Netscape Bookmark HTML</b> (Compatible with Chrome, Firefox, Safari, Edge)
+            </button>
+            <button class="btn" id="btnExportJson" style="justify-content: flex-start; padding: 10px;">
+              💾 <b>JSON Vault Backup</b> (Full state, categories, tags, visit history)
+            </button>
+            <button class="btn" id="btnExportMarkdown" style="justify-content: flex-start; padding: 10px;">
+              📝 <b>Markdown Digest</b> (Neat structured table & reading list)
+            </button>
+            <button class="btn" id="btnExportCsv" style="justify-content: flex-start; padding: 10px;">
+              📊 <b>CSV Spreadsheet Table</b> (Tabular link catalog)
+            </button>
+          </div>
+        `;
+
+        modalExportImport.classList.add('active');
+
+        document.getElementById('btnExportNetscape').onclick = exportNetscapeHtml;
+        document.getElementById('btnExportJson').onclick = exportJsonVault;
+        document.getElementById('btnExportMarkdown').onclick = exportMarkdownDigest;
+        document.getElementById('btnExportCsv').onclick = exportCsv;
+      }
+
+      function downloadFile(content, filename, mime) {
+        sfxSave();
+        const blob = new Blob([content], { type: mime });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        setStatus(`Exported ${filename}.`);
+      }
+
+      // Standard Netscape Bookmark HTML format (RFC / Netscape 1995 standard)
+      function exportNetscapeHtml() {
+        let html = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<!-- This is an automatically generated file.
+     It will be read and overwritten.
+     DO NOT EDIT! -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<TITLE>Bookmarks</TITLE>
+<H1>Bookmarks</H1>
+<DL><p>
+`;
+        // Group by category
+        const catMap = new Map();
+        bookmarks.forEach(b => {
+          const c = b.category || 'General';
+          if (!catMap.has(c)) catMap.set(c, []);
+          catMap.get(c).push(b);
+        });
+
+        catMap.forEach((bms, catName) => {
+          html += `    <DT><H3 ADD_DATE="${Math.floor(Date.now()/1000)}">${escapeHtml(catName)}</H3>\n    <DL><p>\n`;
+          bms.forEach(b => {
+            const addDate = Math.floor((b.dateAdded || Date.now()) / 1000);
+            const tagsAttr = (b.tags && b.tags.length) ? ` TAGS="${escapeHtml(b.tags.join(','))}"` : '';
+            html += `        <DT><A HREF="${escapeHtml(b.url)}" ADD_DATE="${addDate}"${tagsAttr}>${escapeHtml(b.title)}</A>\n`;
+            if (b.notes) {
+              html += `        <DD>${escapeHtml(b.notes)}\n`;
+            }
+          });
+          html += `    </DL><p>\n`;
+        });
+
+        html += `</DL><p>\n`;
+        downloadFile(html, 'kbookmark_netscape.html', 'text/html');
+      }
+
+      function exportJsonVault() {
+        const data = {
+          app: 'KBookmark',
+          version: '1.0',
+          timestamp: new Date().toISOString(),
+          categories,
+          bookmarks
+        };
+        downloadFile(JSON.stringify(data, null, 2), 'kbookmark_vault_backup.json', 'application/json');
+      }
+
+      function exportMarkdownDigest() {
+        let md = `# KBookmark Vault Digest\n*Generated: ${new Date().toLocaleString()}*\n\n`;
+        categories.forEach(c => {
+          const bms = bookmarks.filter(b => b.category === c.name);
+          if (bms.length > 0) {
+            md += `## ${c.glyph || '📁'} ${c.name}\n\n`;
+            bms.forEach(b => {
+              md += `- [${b.title}](${b.url}) - *${(b.tags || []).join(', ')}*\n`;
+              if (b.notes) md += `  > ${b.notes}\n`;
+            });
+            md += `\n`;
+          }
+        });
+        downloadFile(md, 'kbookmark_digest.md', 'text/markdown');
+      }
+
+      function exportCsv() {
+        let csv = 'Title,URL,Category,Tags,Notes,Starred,Visits\n';
+        bookmarks.forEach(b => {
+          const escapeCsv = (str) => `"${(str || '').toString().replace(/"/g, '""')}"`;
+          csv += [
+            escapeCsv(b.title),
+            escapeCsv(b.url),
+            escapeCsv(b.category),
+            escapeCsv((b.tags || []).join(',')),
+            escapeCsv(b.notes),
+            b.starred ? 'TRUE' : 'FALSE',
+            b.visits || 0
+          ].join(',') + '\n';
+        });
+        downloadFile(csv, 'kbookmark_vault.csv', 'text/csv');
+      }
+
+      // Universal Import
+      function openImportModal() {
+        sfxClick();
+        const fileInput = document.getElementById('fileImporter');
+        fileInput.value = '';
+        fileInput.click();
+      }
+
+      function handleFileImport(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const text = evt.target.result;
+          let importedCount = 0;
+
+          // Try JSON first
+          try {
+            const data = JSON.parse(text);
+            if (data.bookmarks && Array.isArray(data.bookmarks)) {
+              data.bookmarks.forEach(nb => {
+                if (nb.url && !bookmarks.some(b => b.url === nb.url)) {
+                  bookmarks.push({
+                    id: 'bm-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+                    title: nb.title || nb.url,
+                    url: nb.url,
+                    category: nb.category || 'Web 1.0 Portals',
+                    tags: nb.tags || ['imported'],
+                    notes: nb.notes || '',
+                    starred: !!nb.starred,
+                    visits: nb.visits || 0,
+                    dateAdded: Date.now(),
+                    health: 200
+                  });
+                  importedCount++;
+                }
+              });
+
+              if (data.categories && Array.isArray(data.categories)) {
+                data.categories.forEach(nc => {
+                  if (!categories.some(c => c.name === nc.name)) {
+                    categories.push(nc);
+                  }
+                });
+              }
+
+              sfxSave();
+              saveStateToLocal();
+              renderCategories();
+              renderBookmarks();
+              setStatus(`Imported ${importedCount} bookmarks from JSON backup.`);
+              return;
+            }
+          } catch(err) {
+            // Not JSON, try Netscape Bookmark HTML
+          }
+
+          // Netscape Bookmark HTML regex parsing
+          const aRegex = /<A\s+HREF="([^"]+)"[^>]*>([^<]+)<\/A>/gi;
+          let match;
+          while ((match = aRegex.exec(text)) !== null) {
+            const url = match[1];
+            const title = match[2];
+            if (url && !bookmarks.some(b => b.url === url)) {
+              bookmarks.push({
+                id: 'bm-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+                title: title.trim(),
+                url: url.trim(),
+                category: 'Web 1.0 Portals',
+                tags: ['netscape-import'],
+                notes: 'Imported from browser HTML bookmark export',
+                starred: false,
+                visits: 0,
+                dateAdded: Date.now(),
+                health: 200
+              });
+              importedCount++;
+            }
+          }
+
+          if (importedCount > 0) {
+            sfxSave();
+            saveStateToLocal();
+            renderCategories();
+            renderBookmarks();
+            setStatus(`Successfully parsed & imported ${importedCount} bookmarks from HTML.`);
+          } else {
+            alert('No valid bookmarks could be extracted from the selected file.');
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      // Batch Operations
+      function batchDelete() {
+        if (selectedBookmarkIds.size === 0) return;
+        sfxDelete();
+        if (confirm(`Delete ${selectedBookmarkIds.size} selected bookmarks?`)) {
+          bookmarks = bookmarks.filter(b => !selectedBookmarkIds.has(b.id));
+          selectedBookmarkIds.clear();
+          saveStateToLocal();
+          renderCategories();
+          renderBookmarks();
+          setStatus('Batch delete complete.');
+        }
+      }
+
+      function batchMove() {
+        if (selectedBookmarkIds.size === 0) return;
+        const catNames = categories.map(c => c.name);
+        const target = prompt(`Move ${selectedBookmarkIds.size} bookmarks to which folder?\nAvailable: ${catNames.join(', ')}`);
+        if (!target) return;
+
+        const matched = categories.find(c => c.name.toLowerCase() === target.trim().toLowerCase());
+        const destName = matched ? matched.name : target.trim();
+
+        bookmarks.forEach(b => {
+          if (selectedBookmarkIds.has(b.id)) {
+            b.category = destName;
+          }
+        });
+        sfxSave();
+        saveStateToLocal();
+        renderCategories();
+        renderBookmarks();
+        setStatus(`Moved ${selectedBookmarkIds.size} bookmarks to ${destName}.`);
+      }
+
+      function batchTag() {
+        if (selectedBookmarkIds.size === 0) return;
+        const newTag = prompt(`Add tag to ${selectedBookmarkIds.size} selected bookmarks:`);
+        if (!newTag || !newTag.trim()) return;
+
+        const cleanTag = newTag.trim().toLowerCase();
+        bookmarks.forEach(b => {
+          if (selectedBookmarkIds.has(b.id)) {
+            if (!b.tags) b.tags = [];
+            if (!b.tags.includes(cleanTag)) b.tags.push(cleanTag);
+          }
+        });
+        sfxSave();
+        saveStateToLocal();
+        renderCategories();
+        renderBookmarks();
+        setStatus(`Tagged ${selectedBookmarkIds.size} bookmarks with #${cleanTag}.`);
+      }
+
+      function batchExportSelected() {
+        if (selectedBookmarkIds.size === 0) return;
+        const selected = bookmarks.filter(b => selectedBookmarkIds.has(b.id));
+        const data = {
+          app: 'KBookmark',
+          version: '1.0',
+          selectionCount: selected.length,
+          bookmarks: selected
+        };
+        downloadFile(JSON.stringify(data, null, 2), 'kbookmark_selection.json', 'application/json');
+      }
+
+      // Keyboard Shortcuts
+      window.addEventListener('keydown', (e) => {
+        // Modals close on Escape
+        if (e.key === 'Escape') {
+          const activeModals = document.querySelectorAll('.modal-overlay.active');
+          if (activeModals.length > 0) {
+            activeModals.forEach(m => m.classList.remove('active'));
+            return;
+          }
+        }
+
+        // Global shortcuts
+        if (e.key === 'F1') {
+          e.preventDefault();
+          modalHelp.classList.add('active');
+          return;
+        }
+        if (e.key === 'F5') {
+          e.preventDefault();
+          quickSave();
+          return;
+        }
+        if (e.key === 'F9') {
+          e.preventDefault();
+          quickLoad();
+          return;
+        }
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'n' || e.key === 'N')) {
+          e.preventDefault();
+          openAddBookmark();
+          return;
+        }
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) {
+          e.preventDefault();
+          searchInput.focus();
+          return;
+        }
+        if (e.key === '/' && document.activeElement !== searchInput) {
+          e.preventDefault();
+          searchInput.focus();
+          return;
+        }
+        if (e.key === 'Enter') {
+          if (modalSplash.classList.contains('active')) {
+            modalSplash.classList.remove('active');
+            sfxClick();
+            return;
+          }
+        }
+      });
+
+      // Event Listeners Wire-up
+      document.getElementById('btnNewLink').onclick = openAddBookmark;
+      document.getElementById('btnNewCat').onclick = openAddCategory;
+      document.getElementById('btnAuditAll').onclick = auditAllLinks;
+      document.getElementById('btnExport').onclick = openExportModal;
+      document.getElementById('btnImport').onclick = openImportModal;
+      document.getElementById('btnQuickSave').onclick = quickSave;
+      document.getElementById('btnQuickLoad').onclick = quickLoad;
+      document.getElementById('btnThemeToggle').onclick = cycleTheme;
+      document.getElementById('btnSoundToggle').onclick = () => {
+        soundEnabled = !soundEnabled;
+        document.getElementById('btnSoundToggle').textContent = soundEnabled ? '🔊 Sound' : '🔇 Muted';
+        setStatus(soundEnabled ? 'Audio feedback unmuted.' : 'Audio feedback muted.');
+      };
+      document.getElementById('btnHelp').onclick = () => {
+        sfxClick();
+        modalHelp.classList.add('active');
+      };
+
+      // Search & Filters
+      searchInput.oninput = (e) => {
+        searchQuery = e.target.value;
+        renderBookmarks();
+      };
+      searchClear.onclick = () => {
+        searchInput.value = '';
+        searchQuery = '';
+        renderBookmarks();
+      };
+      filterProtocol.onchange = (e) => {
+        selectedProtocol = e.target.value;
+        renderBookmarks();
+      };
+      filterHealth.onchange = (e) => {
+        selectedHealth = e.target.value;
+        renderBookmarks();
+      };
+      sortSelect.onchange = (e) => {
+        currentSort = e.target.value;
+        renderBookmarks();
+      };
+      viewCardsBtn.onclick = () => {
+        sfxClick();
+        isTableMode = false;
+        viewCardsBtn.classList.add('active');
+        viewTableBtn.classList.remove('active');
+        renderBookmarks();
+        saveStateToLocal();
+      };
+      viewTableBtn.onclick = () => {
+        sfxClick();
+        isTableMode = true;
+        viewTableBtn.classList.add('active');
+        viewCardsBtn.classList.remove('active');
+        renderBookmarks();
+        saveStateToLocal();
+      };
+
+      document.getElementById('btnClearTagFilter').onclick = () => {
+        activeTagFilter = null;
+        renderTagCloud();
+        renderBookmarks();
+      };
+
+      // Batch
+      selectAllCheckbox.onchange = (e) => {
+        const filtered = getFilteredBookmarks();
+        if (e.target.checked) {
+          filtered.forEach(b => selectedBookmarkIds.add(b.id));
+        } else {
+          selectedBookmarkIds.clear();
+        }
+        renderBookmarks();
+      };
+      document.getElementById('btnBatchDelete').onclick = batchDelete;
+      document.getElementById('btnBatchMove').onclick = batchMove;
+      document.getElementById('btnBatchTag').onclick = batchTag;
+      document.getElementById('btnBatchExport').onclick = batchExportSelected;
+
+      // Modal Closers
+      document.getElementById('btnCloseBmModal').onclick = () => modalBookmark.classList.remove('active');
+      document.getElementById('btnCancelBm').onclick = () => modalBookmark.classList.remove('active');
+      document.getElementById('btnSaveBm').onclick = saveBookmarkFromModal;
+
+      document.getElementById('btnCloseCatModal').onclick = () => modalCategory.classList.remove('active');
+      document.getElementById('btnCancelCat').onclick = () => modalCategory.classList.remove('active');
+      document.getElementById('btnSaveCat').onclick = saveCategoryFromModal;
+
+      document.getElementById('btnCloseDiagModal').onclick = () => modalDiag.classList.remove('active');
+      document.getElementById('btnDoneDiag').onclick = () => modalDiag.classList.remove('active');
+      document.getElementById('btnRetestDiag').onclick = () => {
+        if (activeDiagBookmarkId) {
+          const bm = bookmarks.find(b => b.id === activeDiagBookmarkId);
+          if (bm) runDiagnosticProbe(bm);
+        }
+      };
+
+      document.getElementById('btnCloseQrModal').onclick = () => modalQr.classList.remove('active');
+      document.getElementById('btnCloseQr').onclick = () => modalQr.classList.remove('active');
+
+      document.getElementById('btnCloseExImModal').onclick = () => modalExportImport.classList.remove('active');
+      document.getElementById('btnExImDone').onclick = () => modalExportImport.classList.remove('active');
+
+      document.getElementById('btnCloseHelpModal').onclick = () => modalHelp.classList.remove('active');
+      document.getElementById('btnDoneHelp').onclick = () => modalHelp.classList.remove('active');
+      checkTutorialSeen.onchange = (e) => {
+        if (e.target.checked) localStorage.setItem('kbookmark_tutorialSeen', '1');
+        else localStorage.removeItem('kbookmark_tutorialSeen');
+      };
+
+      // Splash Closers
+      document.getElementById('btnSplashEnter').onclick = () => {
+        sfxClick();
+        modalSplash.classList.remove('active');
+        localStorage.setItem('kbookmark_tutorialSeen', '1');
+      };
+      document.getElementById('btnSplashTour').onclick = () => {
+        modalSplash.classList.remove('active');
+        modalHelp.classList.add('active');
+      };
+
+      document.getElementById('fileImporter').onchange = handleFileImport;
+
+      // Boot initialization
+      function init() {
+        const loaded = loadStateFromLocal();
+        if (!loaded) {
+          categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+          bookmarks = JSON.parse(JSON.stringify(DEFAULT_BOOKMARKS));
+          saveStateToLocal();
+        }
+
+        // Show start splash if fresh session or tutorial not marked seen
+        const tutorialSeen = localStorage.getItem('kbookmark_tutorialSeen');
+        if (!tutorialSeen) {
+          modalSplash.classList.add('active');
+        }
+
+        renderCategories();
+        renderBookmarks();
+        setStatus('KBookmark Vault ready. Press F1 for help, F5 to quicksave.');
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>

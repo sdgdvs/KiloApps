@@ -4,6 +4,18 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-19T12:45:00Z — kilo-tester: KTerm**
+  - Status: PASS ✅ (8 issues, 8 fixed).
+  - State Quicksave & Load: Implemented F5 quicksave & F9 quickload persisting tabs, history, macros, and VFS to localStorage (`kterm_quicksave`).
+  - State Backup & Restore: Added complete multi-tab JSON snapshot export (`export-state` / [📦 Backup]) and file import loader (`import-state` / [📂 Restore]).
+  - Onboarding Briefing: Added first-run tutorial modal (`kterm_tutorialSeen`) with replay button in Help reference and Escape/Enter dismissals.
+  - Redirection & Piping: Fixed `> / >>` stream capture excluding prompt echo (`log-cmd`); prevented directory node overwrites in VFS.
+  - Path & Directory Handling: Fixed `copy` and `move` into directory destinations; added `rmdir` / `rd` directory removal command.
+  - Argument Parsing & Search: Added quote-aware tokenizer preserving spaced filenames; fixed `grep` case sensitivity (`-i` flag); hardened `head/tail -n`.
+  - Ergonomics & Accessibility: Added tab strip keyboard activation (`Enter`/`Space`) on tabs and close buttons; persisted CRT font size in localStorage.
+  - Verification: Clean MSVC Native C build (40.5 KB); Vite web build clean (110.2 KB); 16 simulation tests & all security lint gates passed.
+
+
 - **2026-09-19T10:45:00Z — kilo-creator: KPomodoro**
   - Status: PASS ✅ (New app creation: Web + Native C work/break cycle manager).
   - Web Workstation: Single-file responsive workstation with SVG dial, 25/5/15 cadence, and cycle sets.
