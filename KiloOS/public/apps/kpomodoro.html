@@ -1,0 +1,2363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KPomodoro - Work/Break Cycle Manager</title>
+<style>
+  :root {
+    --bg-dark: #0f1118;
+    --card-bg: #171a24;
+    --card-hover: #1e2230;
+    --border-color: #272d3f;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --pomo-red: #ef4444;
+    --pomo-red-glow: rgba(239, 68, 68, 0.25);
+    --break-green: #10b981;
+    --break-green-glow: rgba(16, 185, 129, 0.25);
+    --break-blue: #0ea5e9;
+    --break-blue-glow: rgba(14, 165, 233, 0.25);
+    --gold: #f59e0b;
+    --purple: #a855f7;
+    --active-color: var(--pomo-red);
+    --active-glow: var(--pomo-red-glow);
+  }
+
+  body.theme-amber {
+    --bg-dark: #120e06;
+    --card-bg: #1c150b;
+    --card-hover: #261d0f;
+    --border-color: #3b2c15;
+    --text-primary: #fef3c7;
+    --text-secondary: #d97706;
+    --text-muted: #92400e;
+    --pomo-red: #f59e0b;
+    --pomo-red-glow: rgba(245, 158, 11, 0.3);
+    --break-green: #eab308;
+    --break-green-glow: rgba(234, 179, 8, 0.3);
+    --break-blue: #d97706;
+    --break-blue-glow: rgba(217, 119, 6, 0.3);
+    --gold: #fbbf24;
+    --active-color: var(--pomo-red);
+    --active-glow: var(--pomo-red-glow);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+  }
+
+  body {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Header Bar */
+  header {
+    height: 52px;
+    background: #131620;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    flex-shrink: 0;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+  }
+
+  .brand-icon {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--pomo-red);
+    font-size: 18px;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn {
+    background: #202534;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+  }
+
+  .btn:hover {
+    background: #2a3144;
+    border-color: #3b4460;
+  }
+
+  .btn:active {
+    transform: scale(0.97);
+  }
+
+  .btn-primary {
+    background: var(--active-color);
+    border-color: transparent;
+    color: #ffffff;
+    box-shadow: 0 0 12px var(--active-glow);
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.1);
+    background: var(--active-color);
+  }
+
+  .btn-icon {
+    padding: 6px 9px;
+    font-size: 14px;
+  }
+
+  /* Main Workspace Layout */
+  .workspace {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* Left Area: Timer Stage */
+  .timer-stage {
+    flex: 1.1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+    border-right: 1px solid var(--border-color);
+    background: radial-gradient(circle at 50% 45%, rgba(23, 27, 38, 0.8) 0%, var(--bg-dark) 70%);
+  }
+
+  /* Mode Switcher Tabs */
+  .mode-pills {
+    display: flex;
+    background: #141722;
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    gap: 4px;
+    margin-bottom: 24px;
+  }
+
+  .mode-pill {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .mode-pill:hover {
+    color: var(--text-primary);
+  }
+
+  .mode-pill.active {
+    background: var(--active-color);
+    color: #ffffff;
+    box-shadow: 0 2px 8px var(--active-glow);
+  }
+
+  /* Big Circular Timer Dial */
+  .dial-container {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dial-svg {
+    transform: rotate(-90deg);
+    width: 100%;
+    height: 100%;
+  }
+
+  .dial-bg {
+    fill: none;
+    stroke: #1a1e2b;
+    stroke-width: 10;
+  }
+
+  .dial-progress {
+    fill: none;
+    stroke: var(--active-color);
+    stroke-width: 10;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.3s linear, stroke 0.4s ease;
+    filter: drop-shadow(0 0 8px var(--active-glow));
+  }
+
+  .dial-center {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .time-readout {
+    font-size: 64px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .mode-label {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  /* Cycle Set Pips */
+  .cycle-pips {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .pip {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #252a3a;
+    border: 2px solid var(--border-color);
+    transition: all 0.2s;
+  }
+
+  .pip.completed {
+    background: var(--pomo-red);
+    border-color: var(--pomo-red);
+    box-shadow: 0 0 6px var(--pomo-red-glow);
+  }
+
+  .pip.current {
+    border-color: var(--active-color);
+    transform: scale(1.15);
+  }
+
+  /* Active Pinned Task Header */
+  .active-task-banner {
+    margin-top: 18px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 360px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .active-task-banner span.tag {
+    background: #252c3f;
+    color: var(--text-secondary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* Main Timer Controls */
+  .timer-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .btn-huge {
+    padding: 12px 32px;
+    font-size: 16px;
+    border-radius: 8px;
+    min-width: 130px;
+    justify-content: center;
+  }
+
+  /* Ambient Sound Generator Strip */
+  .ambient-strip {
+    margin-top: 22px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #141722;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .ambient-select {
+    background: #1c2130;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    padding: 4px 8px;
+    font-size: 12px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .volume-slider {
+    width: 70px;
+    accent-color: var(--active-color);
+    cursor: pointer;
+  }
+
+  /* Right Area: Productivity Desk */
+  .desk {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #131620;
+    overflow: hidden;
+  }
+
+  .desk-nav {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    background: #161a26;
+  }
+
+  .desk-tab {
+    flex: 1;
+    padding: 12px 8px;
+    text-align: center;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .desk-tab:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .desk-tab.active {
+    color: var(--text-primary);
+    border-bottom-color: var(--active-color);
+    background: rgba(23, 27, 38, 0.7);
+  }
+
+  .desk-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Task List View */
+  .task-add-bar {
+    display: flex;
+    gap: 8px;
+  }
+
+  .input-text {
+    flex: 1;
+    background: #1a1e2b;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: var(--text-primary);
+    font-size: 13px;
+    outline: none;
+  }
+
+  .input-text:focus {
+    border-color: var(--active-color);
+  }
+
+  .input-select {
+    background: #1a1e2b;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px;
+    color: var(--text-primary);
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .task-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 14px;
+    transition: all 0.15s;
+  }
+
+  .task-item:hover {
+    background: var(--card-hover);
+    border-color: #3b4460;
+  }
+
+  .task-item.active {
+    border-color: var(--active-color);
+    background: rgba(239, 68, 68, 0.05);
+  }
+
+  .task-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .task-check {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--break-green);
+  }
+
+  .task-title {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .task-title.done {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+
+  .task-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .task-tag {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #252b3d;
+    color: var(--text-secondary);
+  }
+
+  .task-pips {
+    color: var(--pomo-red);
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+
+  .task-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Stats / Matrix View */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .stat-card .val {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .stat-card .lbl {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .chart-box {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 14px;
+  }
+
+  .chart-box h4 {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text-secondary);
+  }
+
+  .heat-canvas {
+    width: 100%;
+    height: 90px;
+    background: #11141d;
+    border-radius: 6px;
+    display: block;
+  }
+
+  /* History Table */
+  .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .history-table th {
+    text-align: left;
+    padding: 8px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+  }
+
+  .history-table td {
+    padding: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+  }
+
+  /* Settings Form */
+  .settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+
+  .setting-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .setting-info .name {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .setting-info .desc {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .setting-input {
+    width: 70px;
+    background: #1b202e;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 6px;
+    color: var(--text-primary);
+    text-align: center;
+    font-weight: 600;
+  }
+
+  /* Bottom Status Bar */
+  footer {
+    height: 32px;
+    background: #0d0f15;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .status-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .status-indicator {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--active-color);
+  }
+
+  .status-indicator.pulse {
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 var(--active-glow); }
+    70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(0,0,0,0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0,0,0,0); }
+  }
+
+  /* Overlays & Modals */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal-box {
+    background: #161924;
+    border: 1px solid #2e354a;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 520px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateY(10px);
+    transition: transform 0.2s ease;
+  }
+
+  .modal-overlay.open .modal-box {
+    transform: translateY(0);
+  }
+
+  .modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+  }
+
+  .modal-close:hover {
+    color: var(--text-primary);
+  }
+
+  .modal-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  .modal-footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    background: #12151e;
+  }
+
+  /* Splash Overlay */
+  .splash-box {
+    text-align: center;
+    padding: 36px 24px;
+    max-width: 480px;
+  }
+
+  .splash-logo {
+    font-size: 52px;
+    margin-bottom: 8px;
+    display: inline-block;
+    filter: drop-shadow(0 0 16px var(--pomo-red-glow));
+  }
+
+  .splash-title {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    color: var(--text-primary);
+  }
+
+  .splash-sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+  }
+
+  .splash-stats {
+    display: flex;
+    justify-content: space-around;
+    background: #11141d;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 24px;
+  }
+
+  .splash-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Tutorial Step Card */
+  .tutorial-card {
+    background: #1b202f;
+    border: 1px solid #2e354a;
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .tutorial-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .tutorial-text h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .tutorial-text p {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  /* Toast notification */
+  .toast {
+    position: fixed;
+    bottom: 44px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1e2434;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s ease;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ARG Relic notification badge */
+  .relic-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: var(--gold);
+    font-size: 11px;
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="brand">
+    <div class="brand-icon">🍅</div>
+    <div>KPomodoro <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">v1.0.0</span></div>
+  </div>
+
+  <div class="header-actions">
+    <button class="btn btn-icon" id="btnAudioToggle" title="Toggle Sound (M)">🔔</button>
+    <button class="btn btn-icon" id="btnQuickSave" title="Quicksave (F5)">💾</button>
+    <button class="btn btn-icon" id="btnQuickLoad" title="Quickload (F9)">📂</button>
+    <button class="btn btn-icon" id="btnExport" title="Export Backup JSON">📤</button>
+    <button class="btn btn-icon" id="btnImport" title="Import Backup JSON">📥</button>
+    <input type="file" id="fileImport" accept=".json" style="display: none;">
+    <button class="btn btn-icon" id="btnSettings" title="Settings">⚙️</button>
+    <button class="btn btn-icon" id="btnHelp" title="Guide / Tutorial (F1)">❓</button>
+  </div>
+</header>
+
+<!-- Main Workspace -->
+<div class="workspace">
+
+  <!-- Left: Timer Arena -->
+  <div class="timer-stage">
+    
+    <!-- Phase selector pills -->
+    <div class="mode-pills">
+      <button class="mode-pill active" id="pillFocus" data-mode="focus">Work (25m)</button>
+      <button class="mode-pill" id="pillShort" data-mode="shortBreak">Short Break (5m)</button>
+      <button class="mode-pill" id="pillLong" data-mode="longBreak">Long Break (15m)</button>
+    </div>
+
+    <!-- Dial SVG Ring -->
+    <div class="dial-container">
+      <svg class="dial-svg" viewBox="0 0 260 260">
+        <circle class="dial-bg" cx="130" cy="130" r="115"></circle>
+        <circle class="dial-progress" id="dialProgress" cx="130" cy="130" r="115" stroke-dasharray="722.56" stroke-dashoffset="0"></circle>
+      </svg>
+      <div class="dial-center">
+        <div class="time-readout" id="timeDisplay">25:00</div>
+        <div class="mode-label" id="modeLabel">FOCUS SESSION</div>
+      </div>
+    </div>
+
+    <!-- Cycle pips -->
+    <div class="cycle-pips" id="cyclePips">
+      <div class="pip current" title="Session 1"></div>
+      <div class="pip" title="Session 2"></div>
+      <div class="pip" title="Session 3"></div>
+      <div class="pip" title="Session 4"></div>
+    </div>
+
+    <!-- Active Task Banner -->
+    <div class="active-task-banner" id="activeTaskBanner">
+      <span>🎯</span>
+      <span style="color: var(--text-muted);">Target:</span>
+      <strong id="activeTaskName">Select or Add a Task</strong>
+      <span class="tag" id="activeTaskTag">General</span>
+    </div>
+
+    <!-- Controls -->
+    <div class="timer-controls">
+      <button class="btn btn-primary btn-huge" id="btnStartPause">Start (Space)</button>
+      <button class="btn" id="btnSkip">Skip Phase (S)</button>
+      <button class="btn" id="btnReset">Reset (R)</button>
+    </div>
+
+    <!-- Ambient audio synthesizer bar -->
+    <div class="ambient-strip">
+      <span>🎧 Focus Ambience:</span>
+      <select class="ambient-select" id="ambientSelect">
+        <option value="none">Mute / None</option>
+        <option value="tick">Analog Clock Tick</option>
+        <option value="binaural">432Hz Alpha Drone</option>
+        <option value="rain">Deep Rainstorm</option>
+      </select>
+      <input type="range" class="volume-slider" id="ambientVol" min="0" max="1" step="0.05" value="0.3" title="Ambience Volume">
+    </div>
+
+  </div>
+
+  <!-- Right: Desk / Task Backlog / Stats / Log -->
+  <div class="desk">
+    
+    <!-- Desk Tabs -->
+    <div class="desk-nav">
+      <button class="desk-tab active" data-desk="tasks">Focus Tasks</button>
+      <button class="desk-tab" data-desk="stats">Analytics</button>
+      <button class="desk-tab" data-desk="history">History Log</button>
+      <button class="desk-tab" data-desk="presets">Cycle Settings</button>
+    </div>
+
+    <!-- Desk Content Area -->
+    <div class="desk-content">
+
+      <!-- View 1: Tasks Backlog -->
+      <div id="viewTasks" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="task-add-bar">
+          <input type="text" class="input-text" id="taskInput" placeholder="What are you working on right now? (Enter to add)">
+          <select class="input-select" id="taskTagSelect">
+            <option value="Dev">Dev</option>
+            <option value="Office">Office</option>
+            <option value="Design">Design</option>
+            <option value="Writing">Writing</option>
+            <option value="Study">Study</option>
+            <option value="Fleet">Fleet</option>
+          </select>
+          <input type="number" class="input-text" id="taskEstPomos" value="2" min="1" max="12" style="width: 54px; text-align: center;" title="Estimated Pomodoros">
+          <button class="btn btn-primary" id="btnAddTask">Add</button>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--text-muted);">
+          <span>Priority Backlog (<span id="taskCount">0</span> tasks)</span>
+          <button class="btn btn-icon" id="btnClearCompleted" style="font-size: 11px; padding: 3px 8px;">Clear Done</button>
+        </div>
+
+        <div class="task-list" id="taskListContainer">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- View 2: Analytics & Stats -->
+      <div id="viewStats" style="display: none; flex-direction: column; gap: 16px;">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="val" id="statTodayPomos">0</div>
+            <div class="lbl">Completed Today (🍅)</div>
+          </div>
+          <div class="stat-card">
+            <div class="val" id="statTodayMinutes">0m</div>
+            <div class="lbl">Focus Time Today</div>
+          </div>
+          <div class="stat-card">
+            <div class="val" id="statLifetimePomos">0</div>
+            <div class="lbl">Lifetime Sessions</div>
+          </div>
+          <div class="stat-card">
+            <div class="val" id="statStreak">1 Day</div>
+            <div class="lbl">Focus Streak</div>
+          </div>
+        </div>
+
+        <div class="chart-box">
+          <h4>Hourly Focus Activity (24h Distribution)</h4>
+          <canvas class="heat-canvas" id="hourlyChart" width="400" height="90"></canvas>
+        </div>
+
+        <div class="chart-box">
+          <h4>Category Focus Breakdown</h4>
+          <div id="categoryBreakdown" style="display: flex; flex-direction: column; gap: 8px; font-size: 12px;">
+            <!-- Category progress bars -->
+          </div>
+        </div>
+      </div>
+
+      <!-- View 3: History Log -->
+      <div id="viewHistory" style="display: none; flex-direction: column; gap: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 12px; color: var(--text-secondary);">Recorded Work & Break Cadences</span>
+          <div style="display: flex; gap: 6px;">
+            <button class="btn" id="btnExportCSV" style="font-size: 11px; padding: 4px 8px;">Export CSV</button>
+            <button class="btn" id="btnClearHistory" style="font-size: 11px; padding: 4px 8px; color: var(--pomo-red);">Clear</button>
+          </div>
+        </div>
+
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Phase</th>
+              <th>Duration</th>
+              <th>Task</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- View 4: Settings & Presets -->
+      <div id="viewPresets" style="display: none; flex-direction: column; gap: 14px;">
+        <div class="settings-group">
+          
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="name">Focus Duration (Minutes)</span>
+              <span class="desc">Length of high-intensity cognitive sprint (default: 25)</span>
+            </div>
+            <input type="number" class="setting-input" id="setFocusMin" min="1" max="90" value="25">
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="name">Short Break Duration (Minutes)</span>
+              <span class="desc">Brief mental recovery window (default: 5)</span>
+            </div>
+            <input type="number" class="setting-input" id="setShortMin" min="1" max="30" value="5">
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="name">Long Break Duration (Minutes)</span>
+              <span class="desc">Extended rest between multi-sprint sets (default: 15)</span>
+            </div>
+            <input type="number" class="setting-input" id="setLongMin" min="1" max="60" value="15">
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="name">Long Break Interval</span>
+              <span class="desc">Completed pomodoros before long break (default: 4)</span>
+            </div>
+            <input type="number" class="setting-input" id="setLongInterval" min="1" max="12" value="4">
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="name">Auto-Start Breaks</span>
+              <span class="desc">Automatically trigger break timer when focus concludes</span>
+            </div>
+            <input type="checkbox" id="setAutoBreaks" style="accent-color: var(--active-color); width: 18px; height: 18px;">
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="name">Auto-Start Pomodoro</span>
+              <span class="desc">Automatically restart next focus session when break concludes</span>
+            </div>
+            <input type="checkbox" id="setAutoPomos" style="accent-color: var(--active-color); width: 18px; height: 18px;">
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="name">Notification Chime</span>
+              <span class="desc">Sound played when cycle completes</span>
+            </div>
+            <select class="input-select" id="setChimeType">
+              <option value="zen">Zen Harmonic Bowl</option>
+              <option value="digital">Digital Watch Beep</option>
+              <option value="bell">Mechanical Bell</option>
+              <option value="arpeggio">8-Bit Arpeggio</option>
+            </select>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="name">Strict Mode</span>
+              <span class="desc">Confirmations required to pause or skip active focus sessions</span>
+            </div>
+            <input type="checkbox" id="setStrictMode" style="accent-color: var(--active-color); width: 18px; height: 18px;">
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="name">KiloOS Phosphor Theme</span>
+              <span class="desc">Toggle retro amber terminal phosphor styling</span>
+            </div>
+            <button class="btn" id="btnToggleTheme" style="font-size: 11px;">Toggle Theme</button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Bottom Status Bar -->
+<footer>
+  <div class="status-left">
+    <div class="status-badge">
+      <div class="status-indicator" id="statusDot"></div>
+      <span id="statusText">Ready</span>
+    </div>
+    <span>|</span>
+    <span>Today: <strong id="footerTodayPomos">0</strong> pomodoros completed</span>
+    <span>|</span>
+    <span id="footerActiveGoal">No active goal</span>
+  </div>
+  <div class="status-right">
+    <span>Hotkeys: Space (Start/Pause) | S (Skip) | R (Reset) | F1 (Help) | F5 (Save) | F9 (Load)</span>
+  </div>
+</footer>
+
+<!-- Toast Element -->
+<div class="toast" id="toastBox">
+  <span id="toastIcon">💾</span>
+  <span id="toastMsg">State saved successfully!</span>
+</div>
+
+<!-- Start Splash Overlay -->
+<div class="modal-overlay open" id="splashModal">
+  <div class="modal-box splash-box">
+    <div class="splash-logo">🍅</div>
+    <div class="splash-title">KPOMODORO</div>
+    <div class="splash-sub">Work/Break Cycle & Cognitive Cadence Manager</div>
+
+    <div class="splash-stats">
+      <div>
+        <div style="font-size: 18px; font-weight: 700;" id="splashTodayCount">0</div>
+        <div style="font-size: 11px; color: var(--text-muted);">Today's Pomodoros</div>
+      </div>
+      <div>
+        <div style="font-size: 18px; font-weight: 700;" id="splashTodayMins">0m</div>
+        <div style="font-size: 11px; color: var(--text-muted);">Focus Minutes</div>
+      </div>
+      <div>
+        <div style="font-size: 18px; font-weight: 700;" id="splashStreak">1 Day</div>
+        <div style="font-size: 11px; color: var(--text-muted);">Current Streak</div>
+      </div>
+    </div>
+
+    <div class="splash-buttons">
+      <button class="btn btn-primary btn-huge" id="btnSplashStart">Start Focus Session (Enter)</button>
+      <button class="btn" id="btnSplashTasks">Open Focus Tasks</button>
+      <button class="btn" id="btnSplashTutorial">How It Works (Tutorial)</button>
+    </div>
+  </div>
+</div>
+
+<!-- Onboarding / Tutorial Modal -->
+<div class="modal-overlay" id="tutorialModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3><span>📖</span> KPomodoro Quick Start Guide</h3>
+      <button class="modal-close" id="btnTutorialClose">&times;</button>
+    </div>
+    <div class="modal-body">
+      
+      <div class="tutorial-card">
+        <div class="tutorial-icon">⏳</div>
+        <div class="tutorial-text">
+          <h4>1. The 25/5 Cadence</h4>
+          <p>Work with undivided focus for 25 minutes, followed by a 5-minute break. After 4 focus sessions, enjoy an extended 15-minute long break to avoid mental fatigue.</p>
+        </div>
+      </div>
+
+      <div class="tutorial-card">
+        <div class="tutorial-icon">🎯</div>
+        <div class="tutorial-text">
+          <h4>2. Single-Task Intentionality</h4>
+          <p>Pin a specific task before you hit Start. Break big goals into estimated pomodoro chunks (🍅) and mark them done as you finish.</p>
+        </div>
+      </div>
+
+      <div class="tutorial-card">
+        <div class="tutorial-icon">🎧</div>
+        <div class="tutorial-text">
+          <h4>3. Procedural Ambience</h4>
+          <p>Activate synthesized focus soundscapes: Analog clock ticking, 432Hz binaural alpha brainwave drones, or calming rainstorm.</p>
+        </div>
+      </div>
+
+      <div class="tutorial-card">
+        <div class="tutorial-icon">⚡</div>
+        <div class="tutorial-text">
+          <h4>4. Workstation Ergonomics</h4>
+          <p>Use hotkeys for speed: <strong>Space</strong> (Start/Pause), <strong>S</strong> (Skip), <strong>R</strong> (Reset), <strong>F5</strong> (Quicksave), <strong>F9</strong> (Quickload), and <strong>Esc</strong> to dismiss dialogs.</p>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; margin-right: auto; cursor: pointer;">
+        <input type="checkbox" id="chkDontShowTutorial"> Don't show on start
+      </label>
+      <button class="btn btn-primary" id="btnTutorialFinish">Start Focusing!</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3><span>⚙️</span> Quick Preferences</h3>
+      <button class="modal-close" id="btnSettingsClose">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size: 12px; color: var(--text-secondary);">Cycle durations and sound alerts can also be configured anytime under the "Cycle Settings" tab on the right desk.</p>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button class="btn" id="btnResetAllData" style="color: var(--pomo-red); border-color: rgba(239,68,68,0.3);">⚠️ Reset All History & Stats</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="btnSettingsDone">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// --- State Management ---
+const STORAGE_KEY = 'kpomodoro_state_v1';
+const TUTORIAL_FLAG = 'kpomodoro_tutorialSeen';
+
+const state = {
+  mode: 'focus', // 'focus', 'shortBreak', 'longBreak'
+  isRunning: false,
+  remainingSeconds: 25 * 60,
+  targetDuration: 25 * 60,
+  currentSet: 1, // 1 to longInterval
+  completedToday: 0,
+  todayMinutes: 0,
+  lifetimePomodoros: 0,
+  streak: 1,
+  lastDateStr: new Date().toDateString(),
+  activeTaskId: null,
+  tasks: [
+    { id: 1, title: 'Draft system specifications', tag: 'Dev', est: 3, done: 1, completed: false },
+    { id: 2, title: 'Review fleet telemetry logs', tag: 'Fleet', est: 2, done: 0, completed: false }
+  ],
+  history: [],
+  hourlyMap: Array(24).fill(0),
+  settings: {
+    focusMin: 25,
+    shortMin: 5,
+    longMin: 15,
+    longInterval: 4,
+    autoBreaks: false,
+    autoPomos: false,
+    chimeType: 'zen',
+    strictMode: false,
+    theme: 'dark'
+  },
+  soundEnabled: true,
+  ambientTrack: 'none',
+  ambientVolume: 0.3
+};
+
+// --- Web Audio Synthesizer ---
+let audioCtx = null;
+let ambientNodes = null;
+
+function initAudio() {
+  if (!audioCtx) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) {
+      audioCtx = new AudioContext();
+    }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+// Chime Synthesis
+function playChime(type) {
+  if (!state.soundEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+
+  const now = audioCtx.currentTime;
+  if (type === 'digital') {
+    // 2-tone digital watch beep
+    const osc1 = audioCtx.createOscillator();
+    const gain1 = audioCtx.createGain();
+    osc1.type = 'square';
+    osc1.frequency.setValueAtTime(1046.5, now); // C6
+    osc1.frequency.setValueAtTime(1318.5, now + 0.1); // E6
+    gain1.gain.setValueAtTime(0.15, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc1.connect(gain1);
+    gain1.connect(audioCtx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.35);
+  } else if (type === 'bell') {
+    // Mechanical bell ring
+    const freqs = [880, 1760, 2640, 3520];
+    freqs.forEach((f, idx) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, now);
+      gain.gain.setValueAtTime(0.2 / (idx + 1), now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 1.8);
+    });
+  } else if (type === 'arpeggio') {
+    // 8-bit joyful arpeggio
+    const notes = [523.25, 659.25, 783.99, 1046.5];
+    notes.forEach((f, idx) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(f, now + idx * 0.1);
+      gain.gain.setValueAtTime(0, now + idx * 0.1);
+      gain.gain.linearRampToValueAtTime(0.2, now + idx * 0.1 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.3);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now + idx * 0.1);
+      osc.stop(now + idx * 0.1 + 0.3);
+    });
+  } else {
+    // Zen Tibetan Bowl (Harmonic overtone cascade)
+    const partials = [432, 864, 1296, 1728];
+    partials.forEach((f, idx) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, now);
+      gain.gain.setValueAtTime(0.25 / (idx + 1), now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.5);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 2.5);
+    });
+  }
+}
+
+// Subtle Tick Sound
+function playTick() {
+  if (!state.soundEnabled || state.ambientTrack !== 'tick') return;
+  initAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(1200, now);
+  osc.frequency.exponentialRampToValueAtTime(200, now + 0.015);
+  gain.gain.setValueAtTime(state.ambientVolume * 0.15, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.015);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.015);
+}
+
+// Continuous Ambience Synthesizer
+function stopAmbience() {
+  if (ambientNodes) {
+    try {
+      ambientNodes.forEach(node => {
+        if (node.stop) node.stop();
+        if (node.disconnect) node.disconnect();
+      });
+    } catch (e) {}
+    ambientNodes = null;
+  }
+}
+
+function updateAmbience() {
+  stopAmbience();
+  if (!state.soundEnabled || !state.isRunning) return;
+  if (state.ambientTrack === 'none' || state.ambientTrack === 'tick') return;
+
+  initAudio();
+  if (!audioCtx) return;
+
+  const now = audioCtx.currentTime;
+
+  if (state.ambientTrack === 'binaural') {
+    // 432Hz Left, 442Hz Right (10Hz Alpha Focus Beat)
+    const merger = audioCtx.createChannelMerger(2);
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(state.ambientVolume * 0.15, now);
+
+    const oscL = audioCtx.createOscillator();
+    oscL.type = 'sine';
+    oscL.frequency.setValueAtTime(216, now);
+    oscL.connect(merger, 0, 0);
+
+    const oscR = audioCtx.createOscillator();
+    oscR.type = 'sine';
+    oscR.frequency.setValueAtTime(226, now); // 10Hz diff
+    oscR.connect(merger, 0, 1);
+
+    merger.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    oscL.start();
+    oscR.start();
+    ambientNodes = [oscL, oscR, merger, gain];
+
+  } else if (state.ambientTrack === 'rain') {
+    // Pink noise buffer with lowpass resonant filter
+    const bufferSize = audioCtx.sampleRate * 2;
+    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    let b0 = 0, b1 = 0, b2 = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      b0 = 0.99886 * b0 + white * 0.0555179;
+      b1 = 0.99332 * b1 + white * 0.0750759;
+      b2 = 0.96900 * b2 + white * 0.1538520;
+      output[i] = (b0 + b1 + b2 + white * 0.05) * 0.1;
+    }
+
+    const whiteNoise = audioCtx.createBufferSource();
+    whiteNoise.buffer = noiseBuffer;
+    whiteNoise.loop = true;
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(750, now);
+
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(state.ambientVolume * 0.25, now);
+
+    whiteNoise.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    whiteNoise.start();
+    ambientNodes = [whiteNoise, filter, gain];
+  }
+}
+
+// --- Persistence Helpers ---
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    console.error('Save failed', e);
+  }
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (data && typeof data === 'object') {
+      Object.assign(state, data);
+      
+      // Date boundary check for daily stats
+      const today = new Date().toDateString();
+      if (state.lastDateStr !== today) {
+        const lastDate = new Date(state.lastDateStr);
+        const currDate = new Date(today);
+        const diffDays = Math.round((currDate - lastDate) / (1000 * 60 * 60 * 24));
+        if (diffDays === 1 && state.completedToday > 0) {
+          state.streak += 1;
+        } else if (diffDays > 1) {
+          state.streak = 1;
+        }
+        state.completedToday = 0;
+        state.todayMinutes = 0;
+        state.hourlyMap = Array(24).fill(0);
+        state.lastDateStr = today;
+      }
+      return true;
+    }
+  } catch (e) {
+    console.error('Load failed', e);
+  }
+  return false;
+}
+
+function showToast(msg, icon = '🍅') {
+  const toastBox = document.getElementById('toastBox');
+  const toastIcon = document.getElementById('toastIcon');
+  const toastMsg = document.getElementById('toastMsg');
+  toastIcon.textContent = icon;
+  toastMsg.textContent = msg;
+  toastBox.classList.add('show');
+  clearTimeout(toastBox._timer);
+  toastBox._timer = setTimeout(() => {
+    toastBox.classList.remove('show');
+  }, 2200);
+}
+
+// --- Timer Cycle Controller ---
+let intervalTimer = null;
+
+function setMode(newMode, resetTimer = true) {
+  state.mode = newMode;
+  document.body.classList.remove('mode-focus', 'mode-short', 'mode-long');
+  
+  const root = document.documentElement;
+  if (newMode === 'focus') {
+    root.style.setProperty('--active-color', 'var(--pomo-red)');
+    root.style.setProperty('--active-glow', 'var(--pomo-red-glow)');
+    state.targetDuration = state.settings.focusMin * 60;
+    document.getElementById('modeLabel').textContent = 'FOCUS SESSION';
+  } else if (newMode === 'shortBreak') {
+    root.style.setProperty('--active-color', 'var(--break-green)');
+    root.style.setProperty('--active-glow', 'var(--break-green-glow)');
+    state.targetDuration = state.settings.shortMin * 60;
+    document.getElementById('modeLabel').textContent = 'SHORT BREAK';
+  } else {
+    root.style.setProperty('--active-color', 'var(--break-blue)');
+    root.style.setProperty('--active-glow', 'var(--break-blue-glow)');
+    state.targetDuration = state.settings.longMin * 60;
+    document.getElementById('modeLabel').textContent = 'LONG REST BREAK';
+  }
+
+  // Update mode pills
+  document.querySelectorAll('.mode-pill').forEach(pill => {
+    pill.classList.toggle('active', pill.dataset.mode === newMode);
+  });
+
+  if (resetTimer) {
+    state.remainingSeconds = state.targetDuration;
+  }
+  updateTimerDisplay();
+  saveState();
+}
+
+function toggleStartPause() {
+  initAudio();
+  if (state.isRunning) {
+    pauseTimer();
+  } else {
+    startTimer();
+  }
+}
+
+function startTimer() {
+  state.isRunning = true;
+  document.getElementById('btnStartPause').textContent = 'Pause (Space)';
+  document.getElementById('statusDot').classList.add('pulse');
+  document.getElementById('statusText').textContent = state.mode === 'focus' ? 'Focusing...' : 'Resting...';
+  
+  updateAmbience();
+
+  clearInterval(intervalTimer);
+  intervalTimer = setInterval(() => {
+    tick();
+  }, 1000);
+
+  saveState();
+}
+
+function pauseTimer() {
+  if (state.settings.strictMode && state.mode === 'focus' && state.remainingSeconds < state.targetDuration - 30) {
+    if (!confirm('Strict Mode Active: Pausing will interrupt your cognitive flow. Proceed?')) {
+      return;
+    }
+  }
+  state.isRunning = false;
+  document.getElementById('btnStartPause').textContent = 'Start (Space)';
+  document.getElementById('statusDot').classList.remove('pulse');
+  document.getElementById('statusText').textContent = 'Paused';
+  clearInterval(intervalTimer);
+  stopAmbience();
+  saveState();
+}
+
+function resetTimer() {
+  pauseTimer();
+  state.remainingSeconds = state.targetDuration;
+  updateTimerDisplay();
+  showToast('Timer reset', '🔄');
+  saveState();
+}
+
+function skipPhase() {
+  if (state.settings.strictMode && state.mode === 'focus') {
+    if (!confirm('Strict Mode Active: Skip this focus session early?')) {
+      return;
+    }
+  }
+  pauseTimer();
+  transitionNextPhase(false);
+}
+
+function tick() {
+  if (state.remainingSeconds > 0) {
+    state.remainingSeconds--;
+    playTick();
+    updateTimerDisplay();
+  } else {
+    cycleComplete();
+  }
+}
+
+function cycleComplete() {
+  pauseTimer();
+  playChime(state.settings.chimeType);
+
+  const durationMin = Math.round(state.targetDuration / 60);
+
+  if (state.mode === 'focus') {
+    // Record Pomodoro Stats
+    state.completedToday += 1;
+    state.todayMinutes += durationMin;
+    state.lifetimePomodoros += 1;
+
+    // Record to 24h map
+    const hour = new Date().getHours();
+    state.hourlyMap[hour] = (state.hourlyMap[hour] || 0) + durationMin;
+
+    // Active Task Progress
+    let activeTaskTitle = 'Unassigned Sprint';
+    let activeTag = 'General';
+    if (state.activeTaskId) {
+      const t = state.tasks.find(x => x.id === state.activeTaskId);
+      if (t) {
+        t.done += 1;
+        activeTaskTitle = t.title;
+        activeTag = t.tag;
+        if (t.done >= t.est) {
+          t.completed = true;
+          showToast(`Task completed: "${t.title}"!`, '🎉');
+        }
+      }
+    }
+
+    // Log Entry
+    state.history.unshift({
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      mode: 'Focus',
+      duration: `${durationMin}m`,
+      task: activeTaskTitle,
+      tag: activeTag
+    });
+
+    // Check Easter Egg / ARG hook
+    if (activeTaskTitle.toUpperCase().includes('ECHO') || state.settings.longInterval === 42) {
+      triggerArgEvent();
+    }
+
+    showToast(`Focus session #${state.completedToday} complete! Great job!`, '🍅');
+    transitionNextPhase(true);
+
+  } else {
+    // Break completed
+    state.history.unshift({
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      mode: state.mode === 'shortBreak' ? 'Short Break' : 'Long Break',
+      duration: `${durationMin}m`,
+      task: 'Rest & Hydration',
+      tag: 'Rest'
+    });
+
+    showToast('Break finished! Ready to focus?', '⚡');
+    setMode('focus');
+    if (state.settings.autoPomos) {
+      startTimer();
+    }
+  }
+
+  renderTasks();
+  renderStats();
+  renderHistory();
+  updateCyclePips();
+  saveState();
+}
+
+function transitionNextPhase(wasFinished = true) {
+  if (state.mode === 'focus') {
+    if (state.currentSet >= state.settings.longInterval) {
+      state.currentSet = 1;
+      setMode('longBreak');
+    } else {
+      if (wasFinished) state.currentSet += 1;
+      setMode('shortBreak');
+    }
+    if (state.settings.autoBreaks) {
+      startTimer();
+    }
+  } else {
+    setMode('focus');
+    if (state.settings.autoPomos) {
+      startTimer();
+    }
+  }
+  updateCyclePips();
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(state.remainingSeconds / 60);
+  const s = state.remainingSeconds % 60;
+  const timeStr = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  document.getElementById('timeDisplay').textContent = timeStr;
+
+  // Window Title for background tracking
+  const icon = state.mode === 'focus' ? '🍅' : '☕';
+  document.title = `${icon} ${timeStr} - ${state.mode === 'focus' ? 'Focus' : 'Break'} | KPomodoro`;
+
+  // SVG Dial progress
+  const total = state.targetDuration;
+  const fraction = total > 0 ? (state.remainingSeconds / total) : 0;
+  const circumference = 2 * Math.PI * 115; // ~722.56
+  const offset = circumference * (1 - fraction);
+  document.getElementById('dialProgress').style.strokeDashoffset = offset;
+}
+
+function updateCyclePips() {
+  const container = document.getElementById('cyclePips');
+  container.innerHTML = '';
+  const max = state.settings.longInterval;
+  for (let i = 1; i <= max; i++) {
+    const pip = document.createElement('div');
+    pip.className = 'pip';
+    pip.title = `Session ${i} of ${max}`;
+    if (i < state.currentSet) {
+      pip.classList.add('completed');
+    } else if (i === state.currentSet) {
+      pip.classList.add('current');
+    }
+    container.appendChild(pip);
+  }
+}
+
+// --- ARG Easter Egg Lore ---
+function triggerArgEvent() {
+  document.body.classList.add('theme-amber');
+  state.settings.theme = 'amber';
+  state.history.unshift({
+    time: '19:99',
+    mode: 'ECHO TELEMETRY',
+    duration: '42m',
+    task: 'SYNCHRONIZED COGNITIVE CORE: Harmonic 432Hz locked. The KMatrix awaits.',
+    tag: 'ARG'
+  });
+  showToast('ARG Relic Unlocked: "Echo Cadence" Phosphor Mode!', '✨');
+}
+
+// --- Task List View Rendering ---
+function renderTasks() {
+  const container = document.getElementById('taskListContainer');
+  container.innerHTML = '';
+  document.getElementById('taskCount').textContent = state.tasks.length;
+
+  // Update active task banner
+  const activeTask = state.tasks.find(x => x.id === state.activeTaskId);
+  const banner = document.getElementById('activeTaskBanner');
+  const bannerName = document.getElementById('activeTaskName');
+  const bannerTag = document.getElementById('activeTaskTag');
+  const footerGoal = document.getElementById('footerActiveGoal');
+
+  if (activeTask) {
+    bannerName.textContent = activeTask.title;
+    bannerTag.textContent = activeTask.tag;
+    footerGoal.textContent = `Goal: ${activeTask.title} (${activeTask.done}/${activeTask.est} 🍅)`;
+  } else {
+    bannerName.textContent = 'None Selected';
+    bannerTag.textContent = 'General';
+    footerGoal.textContent = 'No active goal pinned';
+  }
+
+  state.tasks.forEach(t => {
+    const el = document.createElement('div');
+    el.className = 'task-item';
+    if (t.id === state.activeTaskId) el.classList.add('active');
+
+    const left = document.createElement('div');
+    left.className = 'task-left';
+
+    const chk = document.createElement('input');
+    chk.type = 'checkbox';
+    chk.className = 'task-check';
+    chk.checked = t.completed;
+    chk.addEventListener('change', () => {
+      t.completed = chk.checked;
+      renderTasks();
+      saveState();
+    });
+
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'task-title' + (t.completed ? ' done' : '');
+    titleSpan.textContent = t.title;
+
+    left.appendChild(chk);
+    left.appendChild(titleSpan);
+
+    const meta = document.createElement('div');
+    meta.className = 'task-meta';
+
+    const tagSpan = document.createElement('span');
+    tagSpan.className = 'task-tag';
+    tagSpan.textContent = t.tag;
+
+    const pipsSpan = document.createElement('span');
+    pipsSpan.className = 'task-pips';
+    pipsSpan.textContent = '🍅'.repeat(Math.min(t.done, 8)) + (t.done < t.est ? '○'.repeat(t.est - t.done) : '');
+
+    meta.appendChild(tagSpan);
+    meta.appendChild(pipsSpan);
+
+    const actions = document.createElement('div');
+    actions.className = 'task-actions';
+
+    const pinBtn = document.createElement('button');
+    pinBtn.className = 'btn btn-icon';
+    pinBtn.style.fontSize = '11px';
+    pinBtn.style.padding = '3px 6px';
+    pinBtn.textContent = t.id === state.activeTaskId ? '🎯 Pinned' : 'Pin';
+    pinBtn.addEventListener('click', () => {
+      state.activeTaskId = (state.activeTaskId === t.id) ? null : t.id;
+      renderTasks();
+      saveState();
+    });
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn btn-icon';
+    delBtn.style.fontSize = '11px';
+    delBtn.style.padding = '3px 6px';
+    delBtn.textContent = '🗑️';
+    delBtn.addEventListener('click', () => {
+      state.tasks = state.tasks.filter(x => x.id !== t.id);
+      if (state.activeTaskId === t.id) state.activeTaskId = null;
+      renderTasks();
+      saveState();
+    });
+
+    actions.appendChild(pinBtn);
+    actions.appendChild(delBtn);
+
+    el.appendChild(left);
+    el.appendChild(meta);
+    el.appendChild(actions);
+
+    container.appendChild(el);
+  });
+}
+
+function addTask() {
+  const input = document.getElementById('taskInput');
+  const title = input.value.trim();
+  if (!title) return;
+  const tag = document.getElementById('taskTagSelect').value;
+  const est = parseInt(document.getElementById('taskEstPomos').value, 10) || 1;
+
+  const newTask = {
+    id: Date.now(),
+    title: title,
+    tag: tag,
+    est: Math.max(1, est),
+    done: 0,
+    completed: false
+  };
+
+  state.tasks.push(newTask);
+  if (!state.activeTaskId) state.activeTaskId = newTask.id;
+  input.value = '';
+  renderTasks();
+  saveState();
+  showToast(`Added task: "${title}"`, '🎯');
+}
+
+// --- Analytics View Rendering ---
+function renderStats() {
+  document.getElementById('statTodayPomos').textContent = state.completedToday;
+  document.getElementById('statTodayMinutes').textContent = `${state.todayMinutes}m`;
+  document.getElementById('statLifetimePomos').textContent = state.lifetimePomodoros;
+  document.getElementById('statStreak').textContent = `${state.streak} ${state.streak === 1 ? 'Day' : 'Days'}`;
+
+  document.getElementById('footerTodayPomos').textContent = state.completedToday;
+  document.getElementById('splashTodayCount').textContent = state.completedToday;
+  document.getElementById('splashTodayMins').textContent = `${state.todayMinutes}m`;
+  document.getElementById('splashStreak').textContent = `${state.streak}d`;
+
+  // Draw 24-hour canvas chart
+  const canvas = document.getElementById('hourlyChart');
+  if (canvas && canvas.getContext) {
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const maxVal = Math.max(60, ...state.hourlyMap);
+    const barW = (w - 30) / 24;
+
+    ctx.fillStyle = '#1e2434';
+    ctx.fillRect(0, 0, w, h);
+
+    for (let i = 0; i < 24; i++) {
+      const val = state.hourlyMap[i] || 0;
+      const barH = (val / maxVal) * (h - 24);
+      const x = 15 + i * barW;
+      const y = h - 16 - barH;
+
+      ctx.fillStyle = val > 0 ? '#ef4444' : '#2b3246';
+      ctx.fillRect(x + 1, y, barW - 2, barH);
+
+      if (i % 4 === 0) {
+        ctx.fillStyle = '#64748b';
+        ctx.font = '9px monospace';
+        ctx.fillText(`${i}h`, x, h - 4);
+      }
+    }
+  }
+
+  // Render Category breakdown
+  const catBox = document.getElementById('categoryBreakdown');
+  catBox.innerHTML = '';
+  const tagCounts = {};
+  state.history.forEach(h => {
+    if (h.mode === 'Focus') {
+      tagCounts[h.tag] = (tagCounts[h.tag] || 0) + 1;
+    }
+  });
+
+  const total = Object.values(tagCounts).reduce((a, b) => a + b, 0) || 1;
+  const tags = Object.keys(tagCounts);
+
+  if (tags.length === 0) {
+    catBox.innerHTML = '<div style="color: var(--text-muted);">No sessions logged yet today.</div>';
+  } else {
+    tags.forEach(tag => {
+      const cnt = tagCounts[tag];
+      const pct = Math.round((cnt / total) * 100);
+
+      const row = document.createElement('div');
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.gap = '8px';
+
+      row.innerHTML = `
+        <span style="width: 60px; font-weight: 600;">${tag}</span>
+        <div style="flex: 1; height: 8px; background: #202636; border-radius: 4px; overflow: hidden;">
+          <div style="width: ${pct}%; height: 100%; background: var(--active-color);"></div>
+        </div>
+        <span style="width: 40px; text-align: right; color: var(--text-muted);">${pct}%</span>
+      `;
+      catBox.appendChild(row);
+    });
+  }
+}
+
+// --- History Log View Rendering ---
+function renderHistory() {
+  const tbody = document.getElementById('historyTableBody');
+  tbody.innerHTML = '';
+
+  if (state.history.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 16px;">No recorded cycle history.</td></tr>';
+    return;
+  }
+
+  state.history.slice(0, 30).forEach(h => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${h.time}</td>
+      <td><strong>${h.mode}</strong></td>
+      <td>${h.duration}</td>
+      <td>${h.task} <span style="font-size: 10px; color: var(--text-muted);">[${h.tag}]</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// --- Desk Tabs Switcher ---
+function initDeskNav() {
+  const tabs = document.querySelectorAll('.desk-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      const target = tab.dataset.desk;
+      document.getElementById('viewTasks').style.display = target === 'tasks' ? 'flex' : 'none';
+      document.getElementById('viewStats').style.display = target === 'stats' ? 'flex' : 'none';
+      document.getElementById('viewHistory').style.display = target === 'history' ? 'flex' : 'none';
+      document.getElementById('viewPresets').style.display = target === 'presets' ? 'flex' : 'none';
+
+      if (target === 'stats') renderStats();
+      if (target === 'history') renderHistory();
+    });
+  });
+}
+
+// --- Settings Binding ---
+function bindSettings() {
+  const f = document.getElementById('setFocusMin');
+  const s = document.getElementById('setShortMin');
+  const l = document.getElementById('setLongMin');
+  const i = document.getElementById('setLongInterval');
+  const ab = document.getElementById('setAutoBreaks');
+  const ap = document.getElementById('setAutoPomos');
+  const ch = document.getElementById('setChimeType');
+  const sm = document.getElementById('setStrictMode');
+
+  f.value = state.settings.focusMin;
+  s.value = state.settings.shortMin;
+  l.value = state.settings.longMin;
+  i.value = state.settings.longInterval;
+  ab.checked = state.settings.autoBreaks;
+  ap.checked = state.settings.autoPomos;
+  ch.value = state.settings.chimeType;
+  sm.checked = state.settings.strictMode;
+
+  const saveSettings = () => {
+    state.settings.focusMin = parseInt(f.value, 10) || 25;
+    state.settings.shortMin = parseInt(s.value, 10) || 5;
+    state.settings.longMin = parseInt(l.value, 10) || 15;
+    state.settings.longInterval = parseInt(i.value, 10) || 4;
+    state.settings.autoBreaks = ab.checked;
+    state.settings.autoPomos = ap.checked;
+    state.settings.chimeType = ch.value;
+    state.settings.strictMode = sm.checked;
+
+    if (!state.isRunning) {
+      setMode(state.mode, true);
+    }
+    updateCyclePips();
+    saveState();
+    showToast('Settings saved');
+  };
+
+  [f, s, l, i, ch].forEach(el => el.addEventListener('change', saveSettings));
+  [ab, ap, sm].forEach(el => el.addEventListener('click', saveSettings));
+
+  document.getElementById('btnToggleTheme').addEventListener('click', () => {
+    document.body.classList.toggle('theme-amber');
+    state.settings.theme = document.body.classList.contains('theme-amber') ? 'amber' : 'dark';
+    saveState();
+  });
+}
+
+// --- Quicksave / Quickload & Export/Import ---
+function quickSave() {
+  saveState();
+  showToast('Workstation state quicksaved (F5)', '💾');
+}
+
+function quickLoad() {
+  if (loadState()) {
+    setMode(state.mode, false);
+    renderTasks();
+    renderStats();
+    renderHistory();
+    updateCyclePips();
+    showToast('Workstation state quickloaded (F9)', '📂');
+  } else {
+    showToast('No saved state found', '⚠️');
+  }
+}
+
+function exportJSON() {
+  const jsonStr = JSON.stringify(state, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `kpomodoro_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Exported backup JSON', '📤');
+}
+
+function importJSON(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (parsed && parsed.settings && parsed.tasks) {
+        Object.assign(state, parsed);
+        setMode(state.mode, true);
+        renderTasks();
+        renderStats();
+        renderHistory();
+        updateCyclePips();
+        saveState();
+        showToast('Backup restored successfully!', '📥');
+      } else {
+        alert('Invalid KPomodoro backup format.');
+      }
+    } catch (err) {
+      alert('Error parsing JSON backup file.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function exportCSV() {
+  if (state.history.length === 0) {
+    showToast('No history records to export', '⚠️');
+    return;
+  }
+  let csv = 'Timestamp,Mode,Duration,Task,Tag\n';
+  state.history.forEach(h => {
+    csv += `"${h.time}","${h.mode}","${h.duration}","${h.task.replace(/"/g, '""')}","${h.tag}"\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `kpomodoro_history_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Exported history CSV', '📊');
+}
+
+// --- Wire Event Handlers ---
+function initEvents() {
+  // Timer buttons
+  document.getElementById('btnStartPause').addEventListener('click', toggleStartPause);
+  document.getElementById('btnSkip').addEventListener('click', skipPhase);
+  document.getElementById('btnReset').addEventListener('click', resetTimer);
+
+  // Phase selector pills
+  document.getElementById('pillFocus').addEventListener('click', () => { pauseTimer(); setMode('focus'); });
+  document.getElementById('pillShort').addEventListener('click', () => { pauseTimer(); setMode('shortBreak'); });
+  document.getElementById('pillLong').addEventListener('click', () => { pauseTimer(); setMode('longBreak'); });
+
+  // Ambient sound selector
+  const ambSelect = document.getElementById('ambientSelect');
+  const ambVol = document.getElementById('ambientVol');
+  ambSelect.addEventListener('change', () => {
+    state.ambientTrack = ambSelect.value;
+    updateAmbience();
+    saveState();
+  });
+  ambVol.addEventListener('input', () => {
+    state.ambientVolume = parseFloat(ambVol.value);
+    if (ambientNodes) {
+      updateAmbience();
+    }
+    saveState();
+  });
+
+  // Audio Toggle
+  const btnAudio = document.getElementById('btnAudioToggle');
+  btnAudio.addEventListener('click', () => {
+    state.soundEnabled = !state.soundEnabled;
+    btnAudio.textContent = state.soundEnabled ? '🔔' : '🔕';
+    if (!state.soundEnabled) stopAmbience();
+    else if (state.isRunning) updateAmbience();
+    showToast(state.soundEnabled ? 'Audio alerts active' : 'Audio muted');
+    saveState();
+  });
+
+  // Task events
+  document.getElementById('btnAddTask').addEventListener('click', addTask);
+  document.getElementById('taskInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addTask();
+  });
+  document.getElementById('btnClearCompleted').addEventListener('click', () => {
+    state.tasks = state.tasks.filter(t => !t.completed);
+    renderTasks();
+    saveState();
+  });
+
+  // Header quick buttons
+  document.getElementById('btnQuickSave').addEventListener('click', quickSave);
+  document.getElementById('btnQuickLoad').addEventListener('click', quickLoad);
+  document.getElementById('btnExport').addEventListener('click', exportJSON);
+  
+  const fileImport = document.getElementById('fileImport');
+  document.getElementById('btnImport').addEventListener('click', () => fileImport.click());
+  fileImport.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) importJSON(e.target.files[0]);
+  });
+
+  document.getElementById('btnExportCSV').addEventListener('click', exportCSV);
+  document.getElementById('btnClearHistory').addEventListener('click', () => {
+    if (confirm('Clear all recorded session history?')) {
+      state.history = [];
+      renderHistory();
+      saveState();
+      showToast('History cleared');
+    }
+  });
+
+  // Splash Screen Actions
+  const splashModal = document.getElementById('splashModal');
+  const closeSplash = () => splashModal.classList.remove('open');
+
+  document.getElementById('btnSplashStart').addEventListener('click', () => {
+    closeSplash();
+    startTimer();
+  });
+  document.getElementById('btnSplashTasks').addEventListener('click', () => {
+    closeSplash();
+    document.querySelector('[data-desk="tasks"]').click();
+  });
+  document.getElementById('btnSplashTutorial').addEventListener('click', () => {
+    closeSplash();
+    openTutorial();
+  });
+
+  // Tutorial Actions
+  const tutorialModal = document.getElementById('tutorialModal');
+  const openTutorial = () => tutorialModal.classList.add('open');
+  const closeTutorial = () => {
+    tutorialModal.classList.remove('open');
+    if (document.getElementById('chkDontShowTutorial').checked) {
+      localStorage.setItem(TUTORIAL_FLAG, 'true');
+    }
+  };
+
+  document.getElementById('btnHelp').addEventListener('click', openTutorial);
+  document.getElementById('btnTutorialClose').addEventListener('click', closeTutorial);
+  document.getElementById('btnTutorialFinish').addEventListener('click', () => {
+    localStorage.setItem(TUTORIAL_FLAG, 'true');
+    closeTutorial();
+  });
+
+  // Settings Modal Actions
+  const settingsModal = document.getElementById('settingsModal');
+  document.getElementById('btnSettings').addEventListener('click', () => settingsModal.classList.add('open'));
+  document.getElementById('btnSettingsClose').addEventListener('click', () => settingsModal.classList.remove('open'));
+  document.getElementById('btnSettingsDone').addEventListener('click', () => settingsModal.classList.remove('open'));
+  document.getElementById('btnResetAllData').addEventListener('click', () => {
+    if (confirm('Reset ALL data, history, and tasks to factory default?')) {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(TUTORIAL_FLAG);
+      location.reload();
+    }
+  });
+
+  // Close overlays on backdrop click
+  [splashModal, tutorialModal, settingsModal].forEach(m => {
+    m.addEventListener('click', (e) => {
+      if (e.target === m) m.classList.remove('open');
+    });
+  });
+
+  // Global Keyboard Navigation
+  window.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
+    if (e.code === 'Space') {
+      e.preventDefault();
+      toggleStartPause();
+    } else if (e.key === 's' || e.key === 'S') {
+      e.preventDefault();
+      skipPhase();
+    } else if (e.key === 'r' || e.key === 'R') {
+      e.preventDefault();
+      resetTimer();
+    } else if (e.key === 'F1') {
+      e.preventDefault();
+      openTutorial();
+    } else if (e.key === 'F5') {
+      e.preventDefault();
+      quickSave();
+    } else if (e.key === 'F9') {
+      e.preventDefault();
+      quickLoad();
+    } else if (e.key === 'm' || e.key === 'M') {
+      e.preventDefault();
+      document.getElementById('btnAudioToggle').click();
+    } else if (e.key === 'Escape') {
+      splashModal.classList.remove('open');
+      tutorialModal.classList.remove('open');
+      settingsModal.classList.remove('open');
+    }
+  });
+
+  // Auto-save on page exit
+  window.addEventListener('beforeunload', () => {
+    saveState();
+  });
+}
+
+// --- Initialization ---
+function init() {
+  loadState();
+
+  if (state.settings.theme === 'amber') {
+    document.body.classList.add('theme-amber');
+  }
+
+  setMode(state.mode, true);
+  initDeskNav();
+  bindSettings();
+  initEvents();
+
+  renderTasks();
+  renderStats();
+  renderHistory();
+  updateCyclePips();
+
+  // First-run tutorial check
+  const tutorialSeen = localStorage.getItem(TUTORIAL_FLAG);
+  if (!tutorialSeen) {
+    document.getElementById('splashModal').classList.remove('open');
+    document.getElementById('tutorialModal').classList.add('open');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
