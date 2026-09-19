@@ -1139,8 +1139,15 @@
                     <li><strong>F5</strong>: Quicksave state to browser storage.</li>
                     <li><strong>F9</strong>: Quickload last quicksave.</li>
                     <li><strong>1 - 5</strong>: Rapidly switch between views (Blueprint, Drydock, Proving Grounds, Contracts, Manual).</li>
-                    <li><strong>ESC</strong>: Cancel selection, close modal, or return from flight range.</li>
+                    <li><strong>S</strong>: Toggle bilateral symmetry placement mode.</li>
+                    <li><strong>F1 / H</strong>: Open this Operations Manual.</li>
+                    <li><strong>ESC</strong>: Cancel selection, close modal, or return from flight range to drydock.</li>
                 </ul>
+                <div style="margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" id="btn-manual-tut">🎓 Replay Tutorial Walkthrough</button>
+                    <button class="btn" id="btn-manual-quicksave">💾 Quicksave Now [F5]</button>
+                    <button class="btn" id="btn-manual-quickload">📂 Quickload [F9]</button>
+                </div>
             </div>
         </div>
     </main>
@@ -1150,7 +1157,10 @@
         <div class="modal-box">
             <div class="modal-header">
                 <span class="modal-title">STARFORGE IX // SYSTEM READY</span>
-                <span style="font-size: 11px; color: var(--accent-cyan);">ORBITAL OS v1.0.0</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 11px; color: var(--accent-cyan);">ORBITAL OS v1.0.0</span>
+                    <button class="btn" id="btn-splash-close" style="padding: 2px 6px;">✕</button>
+                </div>
             </div>
             <div class="modal-body">
                 <div class="splash-hero">
@@ -1197,7 +1207,10 @@
         <div class="modal-box">
             <div class="modal-header">
                 <span class="modal-title" id="tut-step-title">ONBOARDING: WELCOME TO STARFORGE IX</span>
-                <span style="font-size: 11px; color: var(--accent-cyan);" id="tut-step-count">Step 1 of 5</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 11px; color: var(--accent-cyan);" id="tut-step-count">Step 1 of 5</span>
+                    <button class="btn" id="btn-tut-close" style="padding: 2px 6px;">✕</button>
+                </div>
             </div>
             <div class="modal-body" id="tut-step-body">
                 <!-- Populated dynamically -->
@@ -1206,6 +1219,52 @@
                 <button class="btn" id="btn-tut-skip">Skip Tutorial (ESC)</button>
                 <button class="btn" id="btn-tut-prev">Previous</button>
                 <button class="btn btn-primary" id="btn-tut-next">Next Step ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Selector Modal -->
+    <div class="modal-overlay" id="template-modal" style="display: none;">
+        <div class="modal-box" style="width: 640px;">
+            <div class="modal-header">
+                <span class="modal-title">SELECT SHIP ARCHETYPE TEMPLATE</span>
+                <button class="btn" id="btn-template-close" style="padding: 2px 6px;">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 12px; color: var(--text-normal);">Select a standard StarForge hull blueprint to populate your fabrication grid:</p>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="splash-btn" data-template="vanguard">
+                        <div>
+                            <div style="font-weight: bold; color: var(--accent-cyan);">1. VANGUARD CORVETTE [BALANCED PATROL]</div>
+                            <div style="font-size: 11px; color: var(--text-dim);">Balanced multi-role interceptor: titanium framing, autocannons, fission power, and dual plasma drives.</div>
+                        </div>
+                        <span class="stat-badge" style="color: var(--accent-green);">LOAD</span>
+                    </button>
+                    <button class="splash-btn" data-template="aegis">
+                        <div>
+                            <div style="font-weight: bold; color: var(--accent-cyan);">2. AEGIS ESCORT FRIGATE [FLEET DEFENSE]</div>
+                            <div style="font-size: 11px; color: var(--text-dim);">Heavy escort frigate: reinforced bulkheads, deflector shields, dual autocannons, and high kinetic survivability. Meets Contract 1.</div>
+                        </div>
+                        <span class="stat-badge" style="color: var(--accent-green);">LOAD</span>
+                    </button>
+                    <button class="splash-btn" data-template="prospector">
+                        <div>
+                            <div style="font-weight: bold; color: var(--accent-cyan);">3. DEEP PROSPECTOR [INDUSTRIAL HAULER]</div>
+                            <div style="font-size: 11px; color: var(--text-dim);">Solaris mineral transport: expanded cargo pods, industrial laser drill, and sustained cruising engines. Meets Contract 2.</div>
+                        </div>
+                        <span class="stat-badge" style="color: var(--accent-green);">LOAD</span>
+                    </button>
+                    <button class="splash-btn" data-template="orion">
+                        <div>
+                            <div style="font-weight: bold; color: var(--accent-cyan);">4. ORION SCOUT [WARP EXPLORATION]</div>
+                            <div style="font-size: 11px; color: var(--text-dim);">Science exploration scout: hyper-warp nacelle, agile ion thrusters, graphene radiators, and high TWR. Meets Contract 3.</div>
+                        </div>
+                        <span class="stat-badge" style="color: var(--accent-green);">LOAD</span>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="btn-template-done">Close</button>
             </div>
         </div>
     </div>
@@ -1231,9 +1290,16 @@
 
                 <div class="telemetry-card">
                     <div class="metric-row">
+                        <span>TUTORIAL & ONBOARDING</span>
+                        <button class="btn" id="btn-settings-replay-tut">🎓 Replay Tutorial</button>
+                    </div>
+                </div>
+
+                <div class="telemetry-card">
+                    <div class="metric-row">
                         <span>SAVE MANAGEMENT</span>
                     </div>
-                    <div style="display: flex; gap: 8px; margin-top: 4px;">
+                    <div style="display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
                         <button class="btn" id="btn-export-save">📥 Export Save (.json)</button>
                         <button class="btn" id="btn-import-save">📤 Import Save (.json)</button>
                         <input type="file" id="file-import-input" accept=".json" style="display: none;">
@@ -1598,6 +1664,8 @@
 
         let isMouseDown = false;
         let isRightClick = false;
+        let hoverX = -1;
+        let hoverY = -1;
 
         function renderBlueprintGrid() {
             bpCtx.clearRect(0, 0, bpCanvas.width, bpCanvas.height);
@@ -1659,15 +1727,41 @@
                     }
                 }
             }
+
+            // Hover Cell Highlight
+            if (hoverX >= 0 && hoverX < GRID_SIZE && hoverY >= 0 && hoverY < GRID_SIZE) {
+                bpCtx.fillStyle = 'rgba(56, 189, 248, 0.25)';
+                bpCtx.fillRect(hoverX * CELL_SIZE + 2, hoverY * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+                bpCtx.strokeStyle = '#38bdf8';
+                bpCtx.lineWidth = 1.5;
+                bpCtx.strokeRect(hoverX * CELL_SIZE + 2, hoverY * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+
+                if (state.symmetryMode) {
+                    const symX = GRID_SIZE - 1 - hoverX;
+                    if (symX !== hoverX) {
+                        bpCtx.fillStyle = 'rgba(6, 182, 212, 0.2)';
+                        bpCtx.fillRect(symX * CELL_SIZE + 2, hoverY * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+                        bpCtx.strokeStyle = '#06b6d4';
+                        bpCtx.lineWidth = 1.5;
+                        bpCtx.strokeRect(symX * CELL_SIZE + 2, hoverY * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+                    }
+                }
+            }
+        }
+
+        function getGridCoordinates(e) {
+            const rect = bpCanvas.getBoundingClientRect();
+            const scaleX = bpCanvas.width / (rect.width || 1);
+            const scaleY = bpCanvas.height / (rect.height || 1);
+            const mouseX = (e.clientX - rect.left) * scaleX;
+            const mouseY = (e.clientY - rect.top) * scaleY;
+            const gx = Math.floor(mouseX / CELL_SIZE);
+            const gy = Math.floor(mouseY / CELL_SIZE);
+            return { gx, gy };
         }
 
         function handleGridClick(e) {
-            const rect = bpCanvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-            const gx = Math.floor(mouseX / CELL_SIZE);
-            const gy = Math.floor(mouseY / CELL_SIZE);
-
+            const { gx, gy } = getGridCoordinates(e);
             if (gx < 0 || gx >= GRID_SIZE || gy < 0 || gy >= GRID_SIZE) return;
 
             if (e.button === 2 || isRightClick) {
@@ -1697,11 +1791,27 @@
             audio.init();
             isMouseDown = true;
             isRightClick = (e.button === 2);
+            const { gx, gy } = getGridCoordinates(e);
+            hoverX = gx;
+            hoverY = gy;
             handleGridClick(e);
         });
 
         bpCanvas.addEventListener('mousemove', (e) => {
-            if (isMouseDown) handleGridClick(e);
+            const { gx, gy } = getGridCoordinates(e);
+            hoverX = gx;
+            hoverY = gy;
+            if (isMouseDown) {
+                handleGridClick(e);
+            } else {
+                renderBlueprintGrid();
+            }
+        });
+
+        bpCanvas.addEventListener('mouseleave', () => {
+            hoverX = -1;
+            hoverY = -1;
+            renderBlueprintGrid();
         });
 
         window.addEventListener('mouseup', () => {
@@ -1932,6 +2042,14 @@
         }
 
         function startFabrication() {
+            if (state.isFabricating) {
+                showToast('FABRICATION ALREADY IN PROGRESS');
+                return;
+            }
+            if (state.drydockProgress >= 100) {
+                showToast('VESSEL ALREADY 100% ASSEMBLED - READY FOR FLIGHT');
+                return;
+            }
             const s = state.stats;
             if (state.resources.credits < s.costCr || state.resources.titanium < s.costTi || state.resources.ferrite < s.costFe) {
                 showToast('INSUFFICIENT YARD MATERIALS FOR FABRICATION');
@@ -2046,6 +2164,12 @@
             flightSim.keys[e.key.toLowerCase()] = true;
             flightSim.keys[e.code] = true;
 
+            if (e.key === ' ' && flightSim.active) {
+                e.preventDefault();
+            } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && flightSim.active) {
+                e.preventDefault();
+            }
+
             if (e.key === 'F5') {
                 e.preventDefault();
                 state.saveToStorage();
@@ -2055,6 +2179,10 @@
                     updateUI();
                     renderBlueprintGrid();
                 }
+            } else if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H') && !flightSim.active && (!document.activeElement || document.activeElement.tagName !== 'INPUT'))) {
+                e.preventDefault();
+                document.querySelector('.nav-btn[data-target="manual-view"]')?.click();
+                showToast('YARD OPERATIONS MANUAL [F1]');
             } else if (e.key === 's' || e.key === 'S') {
                 if (document.getElementById('blueprint-view').classList.contains('active')) {
                     state.symmetryMode = !state.symmetryMode;
@@ -2063,11 +2191,32 @@
                     showToast(state.symmetryMode ? 'SYMMETRY: ON' : 'SYMMETRY: OFF');
                 }
             } else if (e.key === 'Escape') {
-                // Dismiss modals
-                document.getElementById('splash-modal').style.display = 'none';
-                document.getElementById('tutorial-modal').style.display = 'none';
-                document.getElementById('settings-modal').style.display = 'none';
-            } else if (e.key >= '1' && e.key <= '5') {
+                let closedModal = false;
+                ['splash-modal', 'tutorial-modal', 'template-modal', 'settings-modal'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el && el.style.display !== 'none') {
+                        el.style.display = 'none';
+                        closedModal = true;
+                        if (id === 'tutorial-modal') {
+                            localStorage.setItem('kstarforge_tutorialSeen', '1');
+                        }
+                    }
+                });
+                if (!closedModal && flightSim.active) {
+                    document.querySelector('.nav-btn[data-target="drydock-view"]')?.click();
+                    showToast('DOCKED AT STATION // RETURNED TO DRYDOCK');
+                }
+            } else if (e.key === 'Enter') {
+                if (document.getElementById('splash-modal').style.display !== 'none') {
+                    document.getElementById('btn-splash-start')?.click();
+                } else if (document.getElementById('tutorial-modal').style.display !== 'none') {
+                    document.getElementById('btn-tut-next')?.click();
+                } else if (document.getElementById('template-modal').style.display !== 'none') {
+                    document.getElementById('btn-template-done')?.click();
+                } else if (document.getElementById('settings-modal').style.display !== 'none') {
+                    document.getElementById('btn-settings-done')?.click();
+                }
+            } else if (e.key >= '1' && e.key <= '5' && (!document.activeElement || document.activeElement.tagName !== 'INPUT')) {
                 const navBtns = document.querySelectorAll('.nav-btn');
                 const idx = parseInt(e.key) - 1;
                 if (navBtns[idx]) navBtns[idx].click();
@@ -2583,14 +2732,125 @@
             showToast('BLUEPRINT GRID CLEARED');
         });
 
-        // Templates
-        document.getElementById('btn-template-select').addEventListener('click', () => {
-            audio.playClick();
-            state.loadDefaultVanguard();
+        // Templates System
+        function loadTemplate(type) {
+            state.grid = Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(0));
+            const mid = Math.floor(GRID_SIZE / 2);
+
+            if (type === 'vanguard') {
+                state.loadDefaultVanguard();
+                showToast('LOADED: VANGUARD CORVETTE');
+            } else if (type === 'aegis') {
+                // Terran Combat Escort: High HP, Shields, Autocannons (Meets Contract 1)
+                state.grid[2][mid - 1] = 3; // Bridge
+                state.grid[2][mid] = 3;
+                state.grid[3][mid - 1] = 2; // Bulkhead
+                state.grid[3][mid] = 2;
+                state.grid[4][mid - 2] = 16; // Autocannon
+                state.grid[4][mid - 1] = 2;
+                state.grid[4][mid] = 2;
+                state.grid[4][mid + 1] = 16;
+                state.grid[5][mid - 2] = 16; // Autocannon
+                state.grid[5][mid - 1] = 2;
+                state.grid[5][mid] = 2;
+                state.grid[5][mid + 1] = 16;
+                state.grid[6][mid - 2] = 15; // Shield
+                state.grid[6][mid - 1] = 6;  // Fusion
+                state.grid[6][mid] = 6;
+                state.grid[6][mid + 1] = 15;
+                state.grid[7][mid - 2] = 13; // Radiator
+                state.grid[7][mid - 1] = 2;
+                state.grid[7][mid] = 2;
+                state.grid[7][mid + 1] = 13;
+                state.grid[8][mid - 2] = 9;  // Chem
+                state.grid[8][mid - 1] = 11; // Plasma
+                state.grid[8][mid] = 11;
+                state.grid[8][mid + 1] = 9;
+                state.calculateTelemetry();
+                showToast('LOADED: AEGIS ESCORT FRIGATE');
+            } else if (type === 'prospector') {
+                // Solaris Mining Hauler: Cargo pods, mining drill (Meets Contract 2)
+                state.grid[2][mid - 1] = 4; // Observation
+                state.grid[2][mid] = 4;
+                state.grid[3][mid - 1] = 3; // Bridge
+                state.grid[3][mid] = 3;
+                state.grid[4][mid - 2] = 20; // Mining Drill
+                state.grid[4][mid - 1] = 2;
+                state.grid[4][mid] = 2;
+                state.grid[4][mid + 1] = 20;
+                state.grid[5][mid - 2] = 19; // Cargo Pod
+                state.grid[5][mid - 1] = 19;
+                state.grid[5][mid] = 19;
+                state.grid[5][mid + 1] = 19;
+                state.grid[6][mid - 2] = 19; // Cargo Pod
+                state.grid[6][mid - 1] = 5;  // Fission
+                state.grid[6][mid] = 5;
+                state.grid[6][mid + 1] = 19;
+                state.grid[7][mid - 2] = 13; // Radiator
+                state.grid[7][mid - 1] = 1;
+                state.grid[7][mid] = 1;
+                state.grid[7][mid + 1] = 13;
+                state.grid[8][mid - 2] = 9;
+                state.grid[8][mid - 1] = 11;
+                state.grid[8][mid] = 11;
+                state.grid[8][mid + 1] = 9;
+                state.calculateTelemetry();
+                showToast('LOADED: DEEP PROSPECTOR HAULER');
+            } else if (type === 'orion') {
+                // Orion Science Scout: Warp Nacelle, Ion drive, high TWR (Meets Contract 3)
+                state.grid[2][mid - 1] = 4; // Observation
+                state.grid[2][mid] = 4;
+                state.grid[3][mid - 1] = 3; // Bridge
+                state.grid[3][mid] = 3;
+                state.grid[4][mid - 2] = 1; // Titanium
+                state.grid[4][mid - 1] = 1;
+                state.grid[4][mid] = 1;
+                state.grid[4][mid + 1] = 1;
+                state.grid[5][mid - 2] = 13; // Radiator
+                state.grid[5][mid - 1] = 15; // Shield
+                state.grid[5][mid] = 15;
+                state.grid[5][mid + 1] = 13;
+                state.grid[6][mid - 2] = 13;
+                state.grid[6][mid - 1] = 6;  // Fusion
+                state.grid[6][mid] = 6;
+                state.grid[6][mid + 1] = 13;
+                state.grid[7][mid - 2] = 12; // Warp Nacelle
+                state.grid[7][mid - 1] = 1;
+                state.grid[7][mid] = 1;
+                state.grid[7][mid + 1] = 12;
+                state.grid[8][mid - 2] = 10; // Ion Drive
+                state.grid[8][mid - 1] = 10;
+                state.grid[8][mid] = 10;
+                state.grid[8][mid + 1] = 10;
+                state.calculateTelemetry();
+                showToast('LOADED: ORION WARP SCOUT');
+            }
+
             updateUI();
             renderBlueprintGrid();
-            showToast('LOADED VANGUARD CORVETTE TEMPLATE');
+            audio.playSuccess();
+        }
+
+        document.getElementById('btn-template-select').addEventListener('click', () => {
+            audio.playClick();
+            document.getElementById('template-modal').style.display = 'flex';
         });
+
+        document.querySelectorAll('#template-modal [data-template]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                audio.playClick();
+                const type = btn.getAttribute('data-template');
+                loadTemplate(type);
+                document.getElementById('template-modal').style.display = 'none';
+            });
+        });
+
+        const closeTemplateModal = () => {
+            audio.playClick();
+            document.getElementById('template-modal').style.display = 'none';
+        };
+        document.getElementById('btn-template-close')?.addEventListener('click', closeTemplateModal);
+        document.getElementById('btn-template-done')?.addEventListener('click', closeTemplateModal);
 
         // Transfer to Drydock
         document.getElementById('btn-send-to-drydock').addEventListener('click', () => {
@@ -2606,6 +2866,10 @@
 
         document.getElementById('btn-rush-fab').addEventListener('click', () => {
             audio.playClick();
+            if (state.drydockProgress >= 100) {
+                showToast('ALREADY FULLY ASSEMBLED (100%)');
+                return;
+            }
             if (state.resources.credits >= 150) {
                 state.resources.credits -= 150;
                 state.drydockProgress = 100;
@@ -2622,6 +2886,11 @@
 
         document.getElementById('btn-launch-flight').addEventListener('click', () => {
             audio.playClick();
+            if (state.drydockProgress < 100) {
+                showToast('WARNING: PROTOTYPE FIELD TEST // HULL NOT FULLY ASSEMBLED');
+            } else {
+                showToast('LAUNCHING TO PROVING GROUNDS');
+            }
             document.querySelector('.nav-btn[data-target="flight-view"]').click();
         });
 
@@ -2646,7 +2915,18 @@
             showToast(audio.muted ? 'AUDIO MUTED' : 'AUDIO ENABLED');
         });
 
-        // Settings modal
+        // Settings modal & Backdrop dismissals
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.style.display = 'none';
+                    if (overlay.id === 'tutorial-modal') {
+                        localStorage.setItem('kstarforge_tutorialSeen', '1');
+                    }
+                }
+            });
+        });
+
         document.getElementById('btn-settings-open').addEventListener('click', () => {
             audio.playClick();
             document.getElementById('settings-modal').style.display = 'flex';
@@ -2667,10 +2947,13 @@
             document.body.classList.toggle('no-crt');
             const on = !document.body.classList.contains('no-crt');
             e.target.textContent = on ? 'ENABLED' : 'DISABLED';
+            localStorage.setItem('kstarforge_crt', on ? 'enabled' : 'disabled');
+            showToast(on ? 'CRT EMULATION ENABLED' : 'CRT EMULATION DISABLED');
         });
 
         document.getElementById('setting-vol').addEventListener('input', (e) => {
             audio.volume = e.target.value / 100;
+            localStorage.setItem('kstarforge_volume', audio.volume.toString());
         });
 
         document.getElementById('btn-help-open').addEventListener('click', () => {
@@ -2678,9 +2961,35 @@
             document.querySelector('.nav-btn[data-target="manual-view"]').click();
         });
 
+        // Replay Tutorial hooks
+        const replayTutorial = () => {
+            audio.playClick();
+            document.getElementById('settings-modal').style.display = 'none';
+            showTutorialStep(0);
+        };
+        document.getElementById('btn-settings-replay-tut')?.addEventListener('click', replayTutorial);
+        document.getElementById('btn-manual-tut')?.addEventListener('click', replayTutorial);
+
+        // Manual view quick actions
+        document.getElementById('btn-manual-quicksave')?.addEventListener('click', () => state.saveToStorage());
+        document.getElementById('btn-manual-quickload')?.addEventListener('click', () => {
+            if (state.loadFromStorage()) {
+                updateUI();
+                renderBlueprintGrid();
+            }
+        });
+
         // Save export/import
         document.getElementById('btn-export-save').addEventListener('click', () => {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(localStorage.getItem('kstarforge_quicksave') || '{}');
+            const payload = {
+                grid: state.grid,
+                resources: state.resources,
+                completedContracts: state.completedContracts,
+                drydockProgress: state.drydockProgress,
+                timestamp: Date.now()
+            };
+            localStorage.setItem('kstarforge_quicksave', JSON.stringify(payload));
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
             downloadAnchor.setAttribute("download", "kstarforge_save.json");
@@ -2700,13 +3009,20 @@
             const reader = new FileReader();
             reader.onload = (event) => {
                 try {
+                    const data = JSON.parse(event.target.result);
+                    if (!data.grid || !Array.isArray(data.grid)) {
+                        throw new Error('Invalid grid format in save JSON');
+                    }
                     localStorage.setItem('kstarforge_quicksave', event.target.result);
                     state.loadFromStorage();
                     updateUI();
                     renderBlueprintGrid();
-                    showToast('IMPORT COMPLETED');
+                    showToast('SAVE IMPORT COMPLETED');
                 } catch (err) {
-                    showToast('IMPORT ERROR');
+                    console.error(err);
+                    showToast('IMPORT ERROR: INVALID SAVE FORMAT');
+                } finally {
+                    e.target.value = '';
                 }
             };
             reader.readAsText(file);
@@ -2720,12 +3036,39 @@
             }
         });
 
+        // Auto-save on page unload
+        window.addEventListener('beforeunload', () => {
+            try {
+                const payload = {
+                    grid: state.grid,
+                    resources: state.resources,
+                    completedContracts: state.completedContracts,
+                    drydockProgress: state.drydockProgress,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem('kstarforge_quicksave', JSON.stringify(payload));
+            } catch (e) {}
+        });
+
         // Splash screen buttons
         const hasSave = !!localStorage.getItem('kstarforge_quicksave');
         if (hasSave) {
             document.getElementById('btn-splash-continue').removeAttribute('disabled');
             document.getElementById('splash-save-info').textContent = 'Saved yard ready';
         }
+
+        const closeSplash = () => {
+            audio.playClick();
+            document.getElementById('splash-modal').style.display = 'none';
+        };
+        document.getElementById('btn-splash-close')?.addEventListener('click', closeSplash);
+
+        const closeTut = () => {
+            audio.playClick();
+            document.getElementById('tutorial-modal').style.display = 'none';
+            localStorage.setItem('kstarforge_tutorialSeen', '1');
+        };
+        document.getElementById('btn-tut-close')?.addEventListener('click', closeTut);
 
         document.getElementById('btn-splash-new').addEventListener('click', () => {
             audio.init();
@@ -2781,6 +3124,18 @@
                 showTutorialStep(0);
             }
         });
+
+        // Restore settings preferences from storage
+        const savedCrt = localStorage.getItem('kstarforge_crt');
+        if (savedCrt === 'disabled') {
+            document.body.classList.add('no-crt');
+            document.getElementById('setting-crt-toggle').textContent = 'DISABLED';
+        }
+        const savedVol = localStorage.getItem('kstarforge_volume');
+        if (savedVol !== null) {
+            audio.volume = parseFloat(savedVol);
+            document.getElementById('setting-vol').value = Math.round(audio.volume * 100);
+        }
 
         // Initialize state & components
         state.loadDefaultVanguard();

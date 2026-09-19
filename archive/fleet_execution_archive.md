@@ -134,6 +134,10 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - Status: PASS ✅ (9 issues, 9 fixed).
   - Highlights: Quicksave/quickload (F5/F9) & localStorage backup, JSON snapshot import/export, onboarding tutorial modal, synthetic task persistence on refresh, Inspector tab hotkeys (1-4). Native (20.5 KB) and Web (88.1 KB) clean builds.
 
+- **2026-09-18T14:45:00Z — kilo-usability: KTask**
+  - Status: PASS ✅ (UI/UX layout polish, window sizing, responsive controls & HiDPI charts).
+  - Highlights: Expanded KiloOS window (920x640); separated process toolbar; HiDPI canvas with DPR & hover tooltips; tabindex=0 cards; adaptive two-row native toolbar. Native (20.9 KB) and Web (88.1 KB) clean builds.
+
 
 
 

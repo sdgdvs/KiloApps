@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -12,16 +12,16 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KStarForge
+  kilo_tester: KTerm
   kilo_usability: KStarForge
   kilo_graphics: KStarForge
   kilo_qa: KSynth
   kilo_expander: KNet
   kilo_creator: "KPomodoro (Work/break cycle manager)"
 last_run:
-  agent: kilo-expander
-  app: KTask
-  timestamp: "2026-09-18T20:45:00Z"
+  agent: kilo-tester
+  app: KStarForge
+  timestamp: "2026-09-19T00:45:00Z"
 last_planner_run: "2026-09-18T22:40:00Z"
 ---
 
@@ -70,9 +70,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KFortress`, `KAlchemy`, `KColony`, `KSpace`, `KAsteroids`, `KBreakout`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KCyber`, `KFarm`, `KMech`, `KMine`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KStarForge`
+- **Current Target**: `KTerm`
 - **Upcoming Queue**:
-  `KTerm`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColony`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFarm`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMine`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KRogue`, `KSanctuary`, `KScript`, `KSpace`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`.
+  `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColony`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFarm`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMine`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KRogue`, `KSanctuary`, `KScript`, `KSpace`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KStarForge`
@@ -123,6 +123,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-19T00:45:00Z — kilo-tester: KStarForge**
+  - Status: PASS ✅ (10 issues, 10 fixed).
+  - Modal Dismissals & Closers: Added backdrop dismissals and header [✕] close buttons on Splash, Tutorial, and Settings overlays.
+  - Archetype Templates: Added interactive Template Selector modal with 4 canonical ship hulls (Vanguard, Aegis, Prospector, Orion) fulfilling Faction Contracts.
+  - Save Export & Import: Fixed live state serialization before export; added schema validation and input reset on JSON import; added beforeunload auto-save.
+  - Shortcuts & Navigation: Added ESC dock return from Proving Grounds flight range; wired F1/H manual toggle, Enter modal confirms, and Space/Arrow flight scroll locks.
+  - Grid Ergonomics & DPI: Normalized Blueprint canvas mouse coordinates for CSS/DPI scaling; added live hover cell and bilateral symmetry preview indicators.
+  - Assembly Logic & Settings: Hardened fabrication against re-triggering and overclock overspend; persisted CRT emulation and audio volume in localStorage.
+  - Verification: Clean MSVC Native C build (22.0 KB); Vite Web build clean (134.3 KB); all security lint gates and <999 KB size constraints passed.
+
 - **2026-09-18T22:40:00Z — kilo-planner: Fleet Planning & Queue Compaction**
   - Status: PASS ✅ (24h velocity evaluated, queues reworked, archive compacted).
   - Velocity & Health: 12 clean commits across all 6 skills; zero regressions; KStarForge created; KStarship & KStellar completed Pass 5.
@@ -157,14 +167,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Content & Mechanics: Added Scenario 6 (Tachyon Cascade) requiring tri-epoch coordination; full Native C parity (15 tile types, 6 ops).
   - Balance: Paced passive rift strain to 1 per 3 turns; boosted rift seal stabilization to -20%; calibrated anchor grounding loops.
   - Verification: Clean Vite Web build (150.7 KB); MSVC Native C clean build (22.5 KB); all <999 KB ceilings and security gates passed.
-
-- **2026-09-18T14:45:00Z — kilo-usability: KTask**
-  - Status: PASS ✅ (UI/UX layout polish, window sizing, responsive controls & HiDPI charts).
-  - Window & Layout: Expanded KiloOS window to 920x640; separated search/snapshot tools into dedicated process toolbar.
-  - HiDPI Canvas & Hover: Upgraded CPU/RAM canvas scaling to DPR; added interactive hover crosshairs, timestamped tooltips, and ResizeObserver.
-  - Controls & Accessibility: Added tabindex=0 and keyboard activation to process cards; added dynamic status badges and clear-filter button on empty search.
-  - Native Win32 Polish: Implemented adaptive two-row toolbar in main.c for narrow window sizes (<620px) preventing button clipping.
-  - Verification: Clean Vite Single-File Web build (88.1 KB); MSVC Native C clean build (20.9 KB); all <999 KB ceiling and security gates passed.
 
 
 
