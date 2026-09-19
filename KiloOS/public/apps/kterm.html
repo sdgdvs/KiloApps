@@ -571,6 +571,11 @@
   </div>
   <div class="toolbar-actions" role="toolbar" aria-label="Terminal Actions">
     <button class="btn-action" id="btnTheme" title="Cycle CRT Color Themes">🎨 Theme</button>
+    <button class="btn-action" id="btnSaveState" title="Quicksave Session State (F5)">💾 Save (F5)</button>
+    <button class="btn-action" id="btnLoadState" title="Quickload Session State (F9)">⚡ Load (F9)</button>
+    <button class="btn-action" id="btnExportState" title="Export JSON State Backup">📦 Backup</button>
+    <button class="btn-action" id="btnImportState" title="Import JSON State Backup (Ctrl+O)">📂 Restore</button>
+    <input type="file" id="fileImportState" accept=".json" style="display: none;">
     <button class="btn-action" id="btnExportLog" title="Download Session Log (Ctrl+S)">💾 Export Log</button>
     <button class="btn-action" id="btnClear" title="Clear Screen (Ctrl+L)">🧹 Clear</button>
     <button class="btn-action" id="btnZoomOut" title="Decrease Font Size (Ctrl+-)">A−</button>
@@ -589,6 +594,9 @@
   <button class="quick-chip" data-cmd="dmesg" title="Kernel diagnostic boot log">📋 dmesg</button>
   <button class="quick-chip" data-cmd="theme" title="Cycle CRT color themes">🎨 theme</button>
   <button class="quick-chip" data-cmd="sysinfo" title="System and terminal version">ℹ️ sysinfo</button>
+  <button class="quick-chip" data-cmd="save" title="Quicksave terminal state [F5]">💾 save</button>
+  <button class="quick-chip" data-cmd="load" title="Quickload terminal state [F9]">⚡ load</button>
+  <button class="quick-chip" data-cmd="tutorial" title="Replay terminal tutorial briefing">🎓 tutorial</button>
   <button class="quick-chip" data-cmd="export-log" title="Export session log to file">💾 export-log</button>
   <button class="quick-chip" data-cmd="clear" title="Clear terminal screen">🧹 clear</button>
 </div>
@@ -608,13 +616,15 @@
 <div id="statusbar" role="status" aria-label="Terminal Status">
   <div>
     <span><span class="shortcut-tag">F1 / h</span>Help</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">F5</span>Save</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">F9</span>Load</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+T</span>New Tab</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+W</span>Close Tab</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+Tab</span>Next Tab</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+1..8</span>Switch Tab</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+S</span>Export Log</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">Ctrl+O</span>Restore</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+R</span>Search</span> &nbsp;|&nbsp; 
-    <span><span class="shortcut-tag">Ctrl+Alt+E</span>Echo</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Tab</span>Complete</span> &nbsp;|&nbsp; 
     <span><span class="shortcut-tag">Ctrl+L</span>Clear</span>
   </div>
@@ -639,6 +649,9 @@
         <div class="modal-section-title">⌨️ Keyboard Shortcuts</div>
         <table class="cmd-table">
           <tr><td class="code-cell"><code>F1</code> or <code>h</code></td><td class="cmd-desc">Open / toggle this Help Reference guide</td></tr>
+          <tr><td class="code-cell"><code>F5</code> / <code>save</code></td><td class="cmd-desc">Quicksave all tabs and session state to local storage</td></tr>
+          <tr><td class="code-cell"><code>F9</code> / <code>load</code></td><td class="cmd-desc">Quickload all tabs and session state from local storage</td></tr>
+          <tr><td class="code-cell"><code>Ctrl + O</code> / <code>restore</code></td><td class="cmd-desc">Import JSON session backup file</td></tr>
           <tr><td class="code-cell"><code>Ctrl + T</code></td><td class="cmd-desc">Open a new terminal tab session</td></tr>
           <tr><td class="code-cell"><code>Ctrl + W</code></td><td class="cmd-desc">Close the current terminal tab</td></tr>
           <tr><td class="code-cell"><code>Ctrl + Tab</code></td><td class="cmd-desc">Cycle forward to the next tab (Shift for previous)</td></tr>
@@ -703,14 +716,64 @@
           <tr><td class="code-cell"><code>export</code> VAR=val</td><td class="cmd-desc">Set environment variable (view all with <code>env</code>)</td></tr>
           <tr><td class="code-cell"><code>macro</code> record &lt;name&gt;</td><td class="cmd-desc">Record a sequence of terminal commands (stop with <code>macro stop</code>)</td></tr>
           <tr><td class="code-cell"><code>macro</code> play &lt;name&gt;</td><td class="cmd-desc">Replay a saved command macro (view all with <code>macro list</code>)</td></tr>
+          <tr><td class="code-cell"><code>export-state</code> / <code>backup</code></td><td class="cmd-desc">Export full multi-tab JSON state backup snapshot</td></tr>
+          <tr><td class="code-cell"><code>import-state</code> / <code>restore</code></td><td class="cmd-desc">Import previously exported JSON state backup snapshot</td></tr>
+          <tr><td class="code-cell"><code>tutorial</code></td><td class="cmd-desc">Open the quick-start onboarding briefing dialog</td></tr>
+          <tr><td class="code-cell"><code>rmdir</code> / <code>rd</code> &lt;dir&gt;</td><td class="cmd-desc">Remove empty directory from virtual file system</td></tr>
           <tr><td class="code-cell"><code>export-log</code> [file]</td><td class="cmd-desc">Export current session log to downloadable text file</td></tr>
           <tr><td class="code-cell"><code>newtab</code> [name]</td><td class="cmd-desc">Create a new named terminal tab session</td></tr>
           <tr><td class="code-cell"><code>exit</code> / <code>closetab</code></td><td class="cmd-desc">Close current tab session</td></tr>
         </table>
       </div>
     </div>
-    <div class="modal-footer">
+    <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+      <button class="btn-action" id="btnReplayTutorial" title="Replay Onboarding Briefing">🎓 Replay Briefing</button>
       <button class="btn-action" id="btnModalCloseFooter">Got It (Esc)</button>
+    </div>
+  </div>
+</div>
+
+<!-- Terminal Onboarding Briefing Modal Dialog -->
+<div id="tutorialModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title" id="tutorialTitle">
+        <span>🎓</span> KTerm Quick-Start Briefing &amp; Architecture
+      </div>
+      <button class="modal-close-btn" id="btnTutorialClose" title="Close (Escape)">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom: 14px; padding: 10px 14px; background: rgba(0, 255, 102, 0.08); border-left: 3px solid var(--term-fg); border-radius: 4px; font-size: 12px; color: #a7f3d0;">
+        🖥️ <b>Welcome to KTerm:</b> Advanced retro shell emulator for KiloOS featuring multi-tab sessions, pipeline redirection, VFS virtual file manipulation, safe math evaluation, and persistence state management under strict &lt;999 KB constraints.
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">🚀 Core Features &amp; Workflow</div>
+        <table class="cmd-table">
+          <tr><td class="code-cell"><code>Ctrl + T</code> / <code>Ctrl + W</code></td><td class="cmd-desc">Manage up to 8 isolated terminal sessions with independent working directories, histories, aliases, and environment variables.</td></tr>
+          <tr><td class="code-cell"><code>&gt;</code> / <code>&gt;&gt;</code> Piping</td><td class="cmd-desc">Redirect terminal tool output directly to VFS files (e.g. <code>help &gt; manual.txt</code> or <code>ps &gt;&gt; logs.txt</code>).</td></tr>
+          <tr><td class="code-cell"><code>;</code> &amp; <code>&amp;&amp;</code> Chaining</td><td class="cmd-desc">Execute sequential batches of commands in a single line (e.g. <code>uptime ; dir ; ver</code>).</td></tr>
+          <tr><td class="code-cell"><code>F5</code> / <code>F9</code> Hotkeys</td><td class="cmd-desc"><b>F5 Quicksave</b> snapshots all open tabs, histories, and macros to localStorage. <b>F9 Quickload</b> restores session state instantly.</td></tr>
+          <tr><td class="code-cell"><code>Ctrl + R</code> Search</td><td class="cmd-desc">Incremental reverse search through command history buffer with live match completion.</td></tr>
+          <tr><td class="code-cell"><code>calc &lt;expr&gt;</code></td><td class="cmd-desc">Built-in recursive-descent arithmetic calculator with parentheses and operator precedence without eval.</td></tr>
+        </table>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-section-title">⚡ Quick Tips</div>
+        <ul style="margin: 0; padding-left: 18px; color: #94a3b8; font-size: 12px; line-height: 1.6;">
+          <li>Double-click any tab in the header bar to quickly rename it.</li>
+          <li>Click any command row in the <b>Help (F1)</b> reference or any chip in the <b>Quick Bar</b> to execute it immediately.</li>
+          <li>Cycle between 6 CRT phosphors anytime using the <b>🎨 Theme</b> button or <code>theme &lt;name&gt;</code> command.</li>
+          <li>Export full JSON snapshots via <b>📦 Backup</b> and reload them anytime using <b>📂 Restore (Ctrl+O)</b>.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+      <label style="font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+        <input type="checkbox" id="chkDontShowTutorial" style="accent-color: var(--term-fg); cursor: pointer;"> Don't show briefing automatically
+      </label>
+      <button class="btn-action" id="btnTutorialStart" style="background: rgba(0, 255, 102, 0.15); color: var(--term-fg); border-color: var(--term-border); font-weight: bold;">Start Working (Esc / Enter)</button>
     </div>
   </div>
 </div>
@@ -731,6 +794,11 @@
   const btnExportLog = document.getElementById('btnExportLog');
   const btnClear = document.getElementById('btnClear');
   const btnHelp = document.getElementById('btnHelp');
+  const btnSaveState = document.getElementById('btnSaveState');
+  const btnLoadState = document.getElementById('btnLoadState');
+  const btnExportState = document.getElementById('btnExportState');
+  const btnImportState = document.getElementById('btnImportState');
+  const fileImportState = document.getElementById('fileImportState');
   const tabStatusInfo = document.getElementById('tabStatusInfo');
   
   const MAX_LOG_LINES = 1000;
@@ -785,6 +853,165 @@
       return true;
     }
     return false;
+  }
+
+  function parseArgs(str) {
+    const args = [];
+    const regex = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
+    let match;
+    while ((match = regex.exec(str)) !== null) {
+      if (match[1] !== undefined) {
+        args.push(match[1]);
+      } else if (match[2] !== undefined) {
+        args.push(match[2]);
+      } else {
+        args.push(match[0]);
+      }
+    }
+    return args;
+  }
+
+  function serializeState() {
+    const s = getActiveSession();
+    if (s) {
+      s.outputHTML = output.innerHTML;
+      s.currentDraft = input.value;
+    }
+    return {
+      version: 1,
+      appName: 'KTerm',
+      timestamp: Date.now(),
+      activeSessionId,
+      nextSessionNum,
+      activeThemeName,
+      currentFontSize,
+      totalCommandCount,
+      macros,
+      sessions: sessions.map(sess => ({
+        id: sess.id,
+        name: sess.name,
+        currentPath: sess.currentPath,
+        history: sess.history || [],
+        historyPos: sess.historyPos || 0,
+        currentDraft: sess.currentDraft || '',
+        outputHTML: sess.outputHTML || '',
+        aliases: Object.assign({}, sess.aliases),
+        env: Object.assign({}, sess.env)
+      })),
+      vfsFallbackTree: fallbackVFS.tree
+    };
+  }
+
+  function deserializeState(data) {
+    if (!data || !Array.isArray(data.sessions) || data.sessions.length === 0) {
+      throw new Error("Invalid state snapshot format");
+    }
+    sessions = data.sessions.map(d => {
+      const sess = new TerminalSession(d.id || ('sess_' + Math.random().toString(36).substr(2, 4)), d.name || 'Tab');
+      sess.currentPath = d.currentPath || '/';
+      sess.history = Array.isArray(d.history) ? d.history : [];
+      sess.historyPos = typeof d.historyPos === 'number' ? d.historyPos : sess.history.length;
+      sess.currentDraft = d.currentDraft || '';
+      sess.outputHTML = d.outputHTML || '';
+      if (d.aliases && typeof d.aliases === 'object') sess.aliases = Object.assign({}, d.aliases);
+      if (d.env && typeof d.env === 'object') sess.env = Object.assign({}, d.env);
+      return sess;
+    });
+
+    nextSessionNum = data.nextSessionNum || (sessions.length + 1);
+    activeSessionId = data.activeSessionId && sessions.some(s => s.id === data.activeSessionId)
+      ? data.activeSessionId
+      : sessions[0].id;
+
+    if (data.activeThemeName && themes.includes(data.activeThemeName)) {
+      setTheme(data.activeThemeName);
+    }
+    if (data.currentFontSize && typeof data.currentFontSize === 'number') {
+      setFontSize(data.currentFontSize);
+    }
+    if (typeof data.totalCommandCount === 'number') {
+      totalCommandCount = data.totalCommandCount;
+    }
+    if (data.macros && typeof data.macros === 'object') {
+      macros = Object.assign({}, data.macros);
+    }
+    if (data.vfsFallbackTree && typeof data.vfsFallbackTree === 'object') {
+      fallbackVFS.tree = data.vfsFallbackTree;
+    }
+
+    switchTab(activeSessionId);
+    renderTabs();
+  }
+
+  function quickSaveState() {
+    try {
+      const state = serializeState();
+      localStorage.setItem('kterm_quicksave', JSON.stringify(state));
+      print(`[QUICKSAVE] State successfully saved to local storage (${sessions.length} tab(s)).`, "log-system");
+      showToast(`💾 Terminal Quicksaved [F5] (${sessions.length} tabs)`, "sys", 2200);
+      return true;
+    } catch (err) {
+      print(`[QUICKSAVE ERROR] Failed to save state: ${err.message}`, "log-error");
+      showToast("❌ Quicksave failed: " + err.message, "err");
+      return false;
+    }
+  }
+
+  function quickLoadState() {
+    try {
+      const raw = localStorage.getItem('kterm_quicksave');
+      if (!raw) {
+        print("[QUICKLOAD] No saved state found in local storage (Press F5 to save first).", "log-warn");
+        showToast("⚠️ No quicksave data found (Press F5 to save)", "warn");
+        return false;
+      }
+      const data = JSON.parse(raw);
+      deserializeState(data);
+      print(`[QUICKLOAD] State successfully restored from local storage (${sessions.length} tab(s)).`, "log-system");
+      showToast(`⚡ Terminal Quickloaded [F9] (${sessions.length} tabs)`, "sys", 2200);
+      return true;
+    } catch (err) {
+      print(`[QUICKLOAD ERROR] Failed to load state: ${err.message}`, "log-error");
+      showToast("❌ Quickload failed: " + err.message, "err");
+      return false;
+    }
+  }
+
+  function exportStateJSON() {
+    try {
+      const state = serializeState();
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kterm_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      print("[BACKUP] Session state JSON backup exported successfully.", "log-system");
+      showToast("📦 State backup downloaded", "sys");
+    } catch (err) {
+      print(`[BACKUP ERROR] ${err.message}`, "log-error");
+      showToast("❌ Backup export failed", "err");
+    }
+  }
+
+  function importStateJSON(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        deserializeState(data);
+        print(`[RESTORE] Successfully imported session backup "${escapeHtml(file.name)}".`, "log-system");
+        showToast("📂 State restored from backup", "sys");
+      } catch (err) {
+        print(`[RESTORE ERROR] Invalid JSON state file: ${err.message}`, "log-error");
+        showToast("❌ Failed to restore state backup", "err");
+      }
+    };
+    reader.readAsText(file);
   }
 
   // Safe Math Evaluator using recursive descent (NO eval / new Function)
@@ -898,6 +1125,10 @@
   function writeVFSFile(filePath, content, append = false) {
     const vfs = getVFS();
     const target = resolvePath(filePath);
+    const existingNode = vfs.getNode(target);
+    if (existingNode && existingNode.type === 'dir') {
+      return false;
+    }
     const parts = target.split('/').filter(Boolean);
     const fileName = parts.pop();
     if (!fileName) return false;
@@ -1073,10 +1304,23 @@
         closeBtn.setAttribute('aria-label', `Close tab ${s.name}`);
         closeBtn.setAttribute('tabindex', '0');
         closeBtn.onclick = (e) => closeTab(s.id, e);
+        closeBtn.onkeydown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            closeTab(s.id, e);
+          }
+        };
         tab.appendChild(closeBtn);
       }
 
       tab.onclick = () => switchTab(s.id);
+      tab.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          switchTab(s.id);
+        }
+      };
       tab.ondblclick = (e) => {
         e.stopPropagation();
         const newName = window.prompt("Rename terminal session tab:", s.name);
@@ -1243,7 +1487,8 @@
       let trimmed = expanded.trim();
       if (!trimmed) return;
 
-      let args = trimmed.split(/\s+/);
+      let args = parseArgs(trimmed);
+      if (args.length === 0) return;
       let cmd = args[0].toLowerCase();
       let vfs = getVFS();
       let s = getActiveSession();
@@ -1310,6 +1555,43 @@
       } else if (cmd === 'clear' || cmd === 'cls') {
           output.innerHTML = '';
           if (s) s.outputHTML = '';
+      } else if (cmd === 'quicksave' || cmd === 'save') {
+          quickSaveState();
+      } else if (cmd === 'quickload' || cmd === 'load') {
+          quickLoadState();
+      } else if (cmd === 'export-state' || cmd === 'backup') {
+          exportStateJSON();
+      } else if (cmd === 'import-state' || cmd === 'restore') {
+          if (fileImportState) fileImportState.click();
+      } else if (cmd === 'tutorial') {
+          openTutorialModal();
+      } else if (cmd === 'rmdir' || cmd === 'rd') {
+          let dirArg = args.slice(1).find(a => !isOptionFlag(a));
+          if (!dirArg) {
+              print("Usage: rmdir <directory_name>");
+          } else {
+              let target = resolvePath(dirArg);
+              if (target === '/' || target === '') {
+                  print("ERROR: Cannot remove root directory.", "log-error");
+              } else if (s.currentPath.startsWith(target)) {
+                  print("ERROR: Cannot remove active working directory.", "log-error");
+              } else {
+                  let parts = target.split('/').filter(Boolean);
+                  let name = parts.pop();
+                  let parentPath = '/' + parts.join('/');
+                  let parent = vfs.getNode(parentPath);
+                  if (parent && parent.children && parent.children[name]) {
+                      if (parent.children[name].type !== 'dir') {
+                          print("ERROR: Target is a file. Use 'del' to remove files.", "log-error");
+                      } else {
+                          delete parent.children[name];
+                          print(`Directory removed: ${dirArg}`, "log-system");
+                      }
+                  } else {
+                      print("ERROR: Directory not found.", "log-error");
+                  }
+              }
+          }
       } else if (cmd === 'export-log') {
           exportSessionLog(args[1] || 'kterm_log.txt');
       } else if (cmd === 'newtab') {
@@ -1484,8 +1766,7 @@
               }
           }
       } else if (cmd === 'echo') {
-          let textIndex = trimmed.indexOf(' ');
-          print(textIndex !== -1 ? trimmed.substring(textIndex + 1) : '');
+          print(args.slice(1).join(' '));
       } else if (cmd === 'mkdir') {
           let dirArg = args.slice(1).find(a => !isOptionFlag(a));
           if (!dirArg) {
@@ -1543,9 +1824,17 @@
           if (!srcArg || !dstArg) {
               print("Usage: copy <source> <destination>");
           } else {
-              let srcNode = vfs.getNode(resolvePath(srcArg));
+              let srcPath = resolvePath(srcArg);
+              let srcNode = vfs.getNode(srcPath);
               if (srcNode && srcNode.type === 'file') {
-                  writeVFSFile(dstArg, srcNode.content || '', false);
+                  let dstPath = resolvePath(dstArg);
+                  let dstNode = vfs.getNode(dstPath);
+                  let finalDst = dstPath;
+                  if (dstNode && dstNode.type === 'dir') {
+                      let srcFileName = srcPath.split('/').filter(Boolean).pop();
+                      finalDst = (dstPath === '/' ? '' : dstPath) + '/' + srcFileName;
+                  }
+                  writeVFSFile(finalDst, srcNode.content || '', false);
                   print(`Copied ${srcArg} -> ${dstArg}`, "log-system");
               } else {
                   print("ERROR: Source file not found.", "log-error");
@@ -1560,7 +1849,14 @@
               let srcPath = resolvePath(srcArg);
               let srcNode = vfs.getNode(srcPath);
               if (srcNode && srcNode.type === 'file') {
-                  writeVFSFile(dstArg, srcNode.content || '', false);
+                  let dstPath = resolvePath(dstArg);
+                  let dstNode = vfs.getNode(dstPath);
+                  let finalDst = dstPath;
+                  if (dstNode && dstNode.type === 'dir') {
+                      let srcFileName = srcPath.split('/').filter(Boolean).pop();
+                      finalDst = (dstPath === '/' ? '' : dstPath) + '/' + srcFileName;
+                  }
+                  writeVFSFile(finalDst, srcNode.content || '', false);
                   let parts = srcPath.split('/').filter(Boolean);
                   let name = parts.pop();
                   let parent = vfs.getNode('/' + parts.join('/'));
@@ -1571,7 +1867,7 @@
               }
           }
       } else if (cmd === 'grep' || cmd === 'findstr' || cmd === 'find') {
-          let caseInsensitive = true;
+          let caseInsensitive = false;
           let remain = args.slice(1);
           if (remain[0] === '-i') {
               caseInsensitive = true;
@@ -1635,11 +1931,27 @@
           }
       } else if (cmd === 'head' || cmd === 'tail') {
           let num = 10;
-          let nIdx = args.indexOf('-n');
-          if (nIdx !== -1 && args[nIdx + 1]) {
-              num = parseInt(args[nIdx + 1], 10) || 10;
+          let nIdx = -1;
+          for (let i = 1; i < args.length; i++) {
+              if (args[i] === '-n' && args[i + 1]) {
+                  num = parseInt(args[i + 1], 10) || 10;
+                  nIdx = i;
+                  break;
+              } else if (args[i].startsWith('-n') && args[i].length > 2) {
+                  num = parseInt(args[i].substring(2), 10) || 10;
+                  nIdx = i;
+                  break;
+              }
           }
-          let fileArg = args.slice(1).find((a, i) => !isOptionFlag(a) && (nIdx === -1 || i !== nIdx));
+          let fileArg = null;
+          for (let i = 1; i < args.length; i++) {
+              if (i === nIdx) continue;
+              if (nIdx !== -1 && i === nIdx + 1 && args[nIdx] === '-n') continue;
+              if (!isOptionFlag(args[i])) {
+                  fileArg = args[i];
+                  break;
+              }
+          }
           if (!fileArg) {
               print("Usage: head/tail [-n lines] <filename>");
           } else {
@@ -1843,8 +2155,10 @@
         const isAppend = !!appendMatch;
 
         const capturedLogs = [];
-        printLogHook = (txt) => {
-          capturedLogs.push(txt);
+        printLogHook = (txt, forceClass) => {
+          if (forceClass !== 'log-cmd') {
+            capturedLogs.push(txt);
+          }
         };
 
         execute(cmdPart);
@@ -2054,7 +2368,8 @@
         'history', 'calc', 'ps', 'uptime', 'ping', 'netstat', 'theme', 'color', 
         'dmesg', 'glitch', 'run', 'exec', 'date', 'time', 'whoami', 'cls', 'ls', 
         'cat', 'alias', 'unalias', 'env', 'export', 'unset', 'macro', 'export-log', 
-        'newtab'
+        'newtab', 'save', 'quicksave', 'load', 'quickload', 'backup', 'restore', 
+        'export-state', 'import-state', 'tutorial', 'rmdir', 'rd'
       ];
       const aliasKeys = Object.keys(s.aliases || {});
       const allCmds = Array.from(new Set([...builtins, ...aliasKeys]));
@@ -2091,6 +2406,11 @@
   const helpModal = document.getElementById('helpModal');
   const btnModalClose = document.getElementById('btnModalClose');
   const btnModalCloseFooter = document.getElementById('btnModalCloseFooter');
+  const btnReplayTutorial = document.getElementById('btnReplayTutorial');
+  const tutorialModal = document.getElementById('tutorialModal');
+  const btnTutorialClose = document.getElementById('btnTutorialClose');
+  const btnTutorialStart = document.getElementById('btnTutorialStart');
+  const chkDontShowTutorial = document.getElementById('chkDontShowTutorial');
   const toastContainer = document.getElementById('toastContainer');
   const btnZoomIn = document.getElementById('btnZoomIn');
   const btnZoomOut = document.getElementById('btnZoomOut');
@@ -2103,6 +2423,7 @@
     measurer.style.fontSize = currentFontSize + 'px';
     cursor.style.height = (currentFontSize + 2) + 'px';
     updateCursor();
+    try { localStorage.setItem('kterm_fontsize', String(currentFontSize)); } catch(e) {}
     showToast(`Font Size: ${currentFontSize}px`, 'sys', 1500);
   }
   if (btnZoomIn) btnZoomIn.addEventListener('click', () => setFontSize(currentFontSize + 1));
@@ -2202,6 +2523,42 @@
     }
   }
 
+  function openTutorialModal() {
+    if (tutorialModal) {
+      tutorialModal.classList.add('open');
+      if (btnTutorialStart) btnTutorialStart.focus();
+    }
+  }
+
+  function closeTutorialModal() {
+    if (tutorialModal) {
+      tutorialModal.classList.remove('open');
+      if (chkDontShowTutorial && chkDontShowTutorial.checked) {
+        try { localStorage.setItem('kterm_tutorialSeen', 'true'); } catch (e) {}
+      }
+      input.focus();
+    }
+  }
+
+  if (btnTutorialClose) btnTutorialClose.addEventListener('click', closeTutorialModal);
+  if (btnTutorialStart) btnTutorialStart.addEventListener('click', closeTutorialModal);
+  if (btnReplayTutorial) btnReplayTutorial.addEventListener('click', () => {
+    closeHelpModal();
+    openTutorialModal();
+  });
+  if (tutorialModal) {
+    tutorialModal.addEventListener('click', (e) => {
+      if (e.target === tutorialModal) closeTutorialModal();
+    });
+    tutorialModal.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        closeTutorialModal();
+      }
+    });
+  }
+
+
   if (btnModalClose) btnModalClose.addEventListener('click', closeHelpModal);
   if (btnModalCloseFooter) btnModalCloseFooter.addEventListener('click', closeHelpModal);
   if (helpModal) {
@@ -2211,6 +2568,27 @@
   }
 
   btnNewTab.addEventListener('click', () => createNewTab());
+  btnNewTab.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      createNewTab();
+    }
+  });
+  if (btnSaveState) btnSaveState.addEventListener('click', quickSaveState);
+  if (btnLoadState) btnLoadState.addEventListener('click', quickLoadState);
+  if (btnExportState) btnExportState.addEventListener('click', exportStateJSON);
+  if (btnImportState) btnImportState.addEventListener('click', () => {
+    if (fileImportState) fileImportState.click();
+  });
+  if (fileImportState) {
+    fileImportState.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        importStateJSON(file);
+        fileImportState.value = '';
+      }
+    });
+  }
   btnExportLog.addEventListener('click', () => exportSessionLog());
   btnClear.addEventListener('click', () => {
     output.innerHTML = '';
@@ -2227,6 +2605,21 @@
       toggleHelpModal();
       return;
     }
+    if (e.key === 'F5') {
+      e.preventDefault();
+      quickSaveState();
+      return;
+    }
+    if (e.key === 'F9') {
+      e.preventDefault();
+      quickLoadState();
+      return;
+    }
+    if (e.ctrlKey && e.key.toLowerCase() === 'o') {
+      e.preventDefault();
+      if (fileImportState) fileImportState.click();
+      return;
+    }
     if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'e') {
       e.preventDefault();
       print("[ECHO ANOMALY INTERCEPT DETECTED] Resonance: 1999Hz.", "log-system");
@@ -2235,6 +2628,11 @@
       return;
     }
     if (e.key === 'Escape') {
+      if (tutorialModal && tutorialModal.classList.contains('open')) {
+        e.preventDefault();
+        closeTutorialModal();
+        return;
+      }
       if (helpModal && helpModal.classList.contains('open')) {
         e.preventDefault();
         closeHelpModal();
@@ -2329,9 +2727,33 @@
   });
 
   createNewTab("Tab 1");
-  showToast("⚡ Welcome to KTerm! Press F1 or 'h' for Help | Ctrl+T: New Tab | 🎨 Theme", "sys", 5000);
+
+  // Restore font size from localStorage
+  try {
+    const savedSize = localStorage.getItem('kterm_fontsize');
+    if (savedSize) {
+      const parsed = parseInt(savedSize, 10);
+      if (!isNaN(parsed) && parsed >= 10 && parsed <= 24) {
+        setFontSize(parsed);
+      }
+    }
+  } catch (e) {}
+
+  showToast("⚡ Welcome to KTerm! F1: Help | F5: Save | F9: Load | Ctrl+T: New Tab", "sys", 5000);
+
+  // Check first-run tutorial
+  try {
+    const seen = localStorage.getItem('kterm_tutorialSeen');
+    if (!seen) {
+      setTimeout(() => openTutorialModal(), 250);
+    }
+  } catch (e) {}
 
   window.addEventListener('beforeunload', () => {
+    try {
+      const state = serializeState();
+      localStorage.setItem('kterm_autosave', JSON.stringify(state));
+    } catch (e) {}
     if (toastContainer) {
       toastContainer.querySelectorAll('.toast').forEach(t => {
         if (t._timer) clearTimeout(t._timer);

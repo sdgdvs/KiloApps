@@ -168,6 +168,10 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - Status: PASS ✅ (Deep functional feature expansion, Process Tree, Affinity & Diagnostics).
   - Highlights: Process Tree Hierarchy ([T]) with parent-child lineages and PPID tracing; regex/attribute queries; 8-core CPU Affinity matrix with bitmasks; Hex Peek memory inspector; Markdown/HTML diagnostics export. Native (27 KB) and Web (116.8 KB) clean builds; <999 KB passed.
 
+- **2026-09-19T02:45:00Z — kilo-usability: KStarForge**
+  - Status: PASS ✅ (UI/UX layout, HiDPI canvas crispness, ergonomic status bar, hotkey parity).
+  - Highlights: Adjusted default window to 1200x780 in KiloOS; tuned sidebars (260px/300px); HiDPI canvas scaling with devicePixelRatio; hover cell ghost & bilateral symmetry preview; persistent status bar with hotkeys; [F1] Help parity. Single-File Web clean (140.8 KB); MSVC Native C build clean (22.0 KB).
+
 
 
 
