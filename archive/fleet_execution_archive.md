@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-18T18:45:00Z — kilo-qa: KStellar**
+  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial integrity, template string fix, overlays).
+  - State Persistence: Hardened F5 quicksave & F9 quickload across web and native (kstellar.dat / localStorage); added beforeunload & WM_DESTROY auto-save.
+  - Native Top Bar: Added dedicated SAVE and LOAD buttons on native toolbar alongside SND, DRN, and MANUAL toggles.
+  - Tutorial Integrity: Enforced first-run onboarding manual only on fresh sessions (kstellar_tutorialSeen / kstellar_tutorial.dat), preserving restored states.
+  - Overlay & Controls: Added full keyboard navigation in native (combat, manual, missions, factions) and web (tabs 1-5, Esc/Enter/Space dismiss).
+  - Bug Fix & Syntax: Fixed syntax break from unclosed template literal in web commodity exchange table; validated clean JavaScript parse.
+  - Verification: Clean MSVC Native C build (161.8 KB); Vite web build clean (124.9 KB); all security gates & <999 KB constraints passed.
+
 - **2026-09-18T16:45:00Z — kilo-graphics: KChrono**
   - Status: PASS ✅ (Game content expansion, visual polish & balance pass).
   - Visual Art & Sprites: Directional Chrononaut hazard suit with epoch visors; holographic chromatic-aberration Echo Ghost.

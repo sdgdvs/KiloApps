@@ -57,6 +57,12 @@ static DWORD WINAPI SoundThread(LPVOID lpParam) {
         Beep(920, 60);
         Sleep(30);
         Beep(750, 60);
+    } else if (type == 11) { // Explosion / Debris
+        Beep(180, 50);
+        Beep(120, 80);
+    } else if (type == 12) { // Shield Deflection
+        Beep(880, 20);
+        Beep(1200, 30);
     }
     return 0;
 }
@@ -169,6 +175,8 @@ typedef struct {
     float x, y;
     float vx, vy;
     float radius;
+    float rot;
+    float rotSpeed;
     int hp;
     int mineralType;
     int active;
@@ -190,6 +198,8 @@ typedef struct {
     float vx, vy;
     float angle;
     int hp;
+    int maxHp;
+    int droneType; /* 0 = Interceptor, 1 = Gunship, 2 = Sentry */
     int active;
     int shootTimer;
 } EnemyDrone;
@@ -211,7 +221,9 @@ static Contract g_contracts[] = {
     { "Terran System Patrol",    "Terran Star Navy",    400, 180,  60,   0, 1200, 25, 0 },
     { "Asteroid Ore Surveyor",   "Solaris Mining Corp", 200,  90,   0, 100,  850, 15, 0 },
     { "Heavy Strike Corvette",   "Orion Coalition",     650, 350, 140,   0, 2400, 40, 0 },
-    { "Deep-Space Hauler Mk II", "Free Traders Guild",  300, 150,  20, 200, 1600, 30, 0 }
+    { "Deep-Space Hauler Mk II", "Free Traders Guild",  300, 150,  20, 200, 1600, 30, 0 },
+    { "Sol Invictus Dreadnought","Empire of Sol Fleet", 1000, 600, 180, 120, 4800, 60, 0 },
+    { "Void Long-Range Scout",   "Deep-Survey Guild",   350, 300,  40, 100, 3600, 45, 0 }
 };
 
 #define CONTRACT_COUNT (sizeof(g_contracts) / sizeof(g_contracts[0]))
@@ -359,6 +371,8 @@ static void InitFlightSim() {
         a->vx = ((MyRand() % 20) - 10) * 0.05f;
         a->vy = ((MyRand() % 20) - 10) * 0.05f;
         a->radius = (float)(14 + (MyRand() % 16));
+        a->rot = (float)(MyRand() % 360) * 0.0174f;
+        a->rotSpeed = ((MyRand() % 20) - 10) * 0.002f;
         a->hp = (int)a->radius * 3;
         a->mineralType = (MyRand() % 3);
     }
@@ -369,14 +383,17 @@ static void InitFlightSim() {
 
     for (int i = 0; i < MAX_DRONES; i++) {
         EnemyDrone* d = &g_game.drones[i];
-        d->active = (i < 3) ? 1 : 0;
+        d->active = (i < 4) ? 1 : 0;
         d->x = (float)(100 + (MyRand() % 640));
         d->y = (float)(100 + (MyRand() % 200));
         d->vx = 0.0f;
         d->vy = 0.0f;
         d->angle = 0.0f;
-        d->hp = 80;
-        d->shootTimer = 30 + MyRand() % 60;
+        d->droneType = (i % 3); /* 0 = Interceptor, 1 = Gunship, 2 = Sentry */
+        if (d->droneType == 0) { d->hp = 75; d->maxHp = 75; }
+        else if (d->droneType == 1) { d->hp = 160; d->maxHp = 160; }
+        else { d->hp = 110; d->maxHp = 110; }
+        d->shootTimer = 30 + MyRand() % 50;
     }
 }
 
@@ -387,6 +404,15 @@ static void StepFlightSim() {
     p->y += p->vy;
     p->vx *= 0.985f;
     p->vy *= 0.985f;
+
+    /* Station Dock Proximity Envelope at (110, 160) */
+    float ddx = p->x - 110.0f;
+    float ddy = p->y - 160.0f;
+    if (ddx * ddx + ddy * ddy < 6400.0f) {
+        if (p->currentHp < g_game.stats.totalHp) p->currentHp++;
+        if (p->currentShield < g_game.stats.maxShields) p->currentShield += 2;
+        if (p->heat > 0.0f) p->heat -= 0.5f;
+    }
 
     /* Cooling */
     float coolRate = (float)g_game.stats.heatDissip * 0.02f;
@@ -409,6 +435,7 @@ static void StepFlightSim() {
     for (int i = 0; i < MAX_ASTEROIDS; i++) {
         Asteroid* a = &g_game.asteroids[i];
         if (!a->active) continue;
+        a->rot += a->rotSpeed;
         a->x += a->vx;
         a->y += a->vy;
         if (a->x < 20.0f || a->x > 820.0f) a->vx = -a->vx;
@@ -439,10 +466,10 @@ static void StepFlightSim() {
                     a->hp -= pr->damage;
                     if (a->hp <= 0) {
                         a->active = 0;
-                        if (a->mineralType == 0) g_game.economy.titanium += 15;
-                        else if (a->mineralType == 1) g_game.economy.ferrite += 10;
-                        else g_game.economy.deuterium += 8;
-                        SetToast("ASTEROID HARVESTED! +ORE");
+                        if (a->mineralType == 0) g_game.economy.titanium += 18;
+                        else if (a->mineralType == 1) g_game.economy.ferrite += 14;
+                        else g_game.economy.deuterium += 10;
+                        SetToast("ASTEROID ORE VEIN CRACKED! +MINERALS");
                         PlaySfx(6);
                     }
                     break;
@@ -460,10 +487,14 @@ static void StepFlightSim() {
                     d->hp -= pr->damage;
                     if (d->hp <= 0) {
                         d->active = 0;
-                        g_game.economy.credits += 120;
-                        g_game.economy.reputation += 2;
-                        SetToast("SYNDICATE RAIDER NEUTRALIZED! +120$C");
-                        PlaySfx(9);
+                        int bounty = (d->droneType == 1 ? 250 : (d->droneType == 2 ? 150 : 120));
+                        int repGain = (d->droneType == 1 ? 4 : 2);
+                        g_game.economy.credits += bounty;
+                        g_game.economy.reputation += repGain;
+                        if (d->droneType == 1) SetToast("MARAUDER BRUTE DESTROYED! +250$C");
+                        else if (d->droneType == 2) SetToast("ROGUE SENTRY NEUTRALIZED! +150$C");
+                        else SetToast("SYNDICATE VIPER DESTROYED! +120$C");
+                        PlaySfx(11);
                     }
                     break;
                 }
@@ -476,14 +507,15 @@ static void StepFlightSim() {
                 pr->active = 0;
                 if (p->currentShield > 0) {
                     p->currentShield -= pr->damage;
+                    PlaySfx(12);
                     if (p->currentShield < 0) {
                         p->currentHp += p->currentShield;
                         p->currentShield = 0;
                     }
                 } else {
                     p->currentHp -= pr->damage;
+                    PlaySfx(10);
                 }
-                PlaySfx(10);
                 if (p->currentHp <= 0) {
                     p->currentHp = 0;
                     SetToast("HULL BREACH! EMERGENCY ORBITAL EVAC");
@@ -493,7 +525,7 @@ static void StepFlightSim() {
         }
     }
 
-    /* Drones AI */
+    /* Drones Tactical AI */
     for (int k = 0; k < MAX_DRONES; k++) {
         EnemyDrone* d = &g_game.drones[k];
         if (!d->active) continue;
@@ -502,18 +534,35 @@ static void StepFlightSim() {
         float dy = p->y - d->y;
         float distSq = dx * dx + dy * dy;
 
-        if (distSq > 100.0f) {
-            d->vx += (dx > 0 ? 0.08f : -0.08f);
-            d->vy += (dy > 0 ? 0.08f : -0.08f);
+        if (d->droneType == 0) {
+            /* Interceptor: Agile flanker */
+            if (distSq > 15000.0f) {
+                d->vx += (dx > 0 ? 0.12f : -0.12f);
+                d->vy += (dy > 0 ? 0.12f : -0.12f);
+            } else {
+                d->vx += (dy > 0 ? 0.14f : -0.14f);
+                d->vy += (dx > 0 ? -0.14f : 0.14f);
+            }
+        } else if (d->droneType == 1) {
+            /* Gunship: Steady advance */
+            if (distSq > 25000.0f) {
+                d->vx += (dx > 0 ? 0.06f : -0.06f);
+                d->vy += (dy > 0 ? 0.06f : -0.06f);
+            }
+        } else {
+            /* Sentry: Slow defensive drift */
+            d->vx *= 0.92f;
+            d->vy *= 0.92f;
         }
+
         d->x += d->vx;
         d->y += d->vy;
         d->vx *= 0.96f;
         d->vy *= 0.96f;
 
         d->shootTimer--;
-        if (d->shootTimer <= 0 && distSq < 90000.0f) {
-            d->shootTimer = 45 + MyRand() % 40;
+        if (d->shootTimer <= 0 && distSq < 100000.0f) {
+            d->shootTimer = (d->droneType == 0 ? 35 + MyRand() % 30 : (45 + MyRand() % 40));
             for (int i = 0; i < MAX_PROJECTILES; i++) {
                 if (!g_game.projectiles[i].active) {
                     Projectile* pr = &g_game.projectiles[i];
@@ -521,10 +570,10 @@ static void StepFlightSim() {
                     pr->isEnemy = 1;
                     pr->x = d->x;
                     pr->y = d->y;
-                    float mag = 5.0f;
+                    float mag = (d->droneType == 0 ? 6.0f : 4.5f);
                     pr->vx = (dx > 0 ? 1.0f : -1.0f) * mag;
                     pr->vy = (dy > 0 ? 1.0f : -1.0f) * mag;
-                    pr->damage = 15;
+                    pr->damage = (d->droneType == 1 ? 24 : 14);
                     pr->life = 70;
                     break;
                 }
@@ -650,10 +699,41 @@ static void DrawGame(HDC hdc, RECT* rc) {
                     /* Grid lines */
                     SetPixel(memDC, bx, by, RGB(30, 45, 75));
                 } else {
+                    /* Technical CAD Module Glyph & Borders */
+                    HPEN hLite = CreatePen(PS_SOLID, 1, RGB(180, 210, 240));
+                    HPEN hDark = CreatePen(PS_SOLID, 1, RGB(20, 30, 45));
+                    HPEN prevPen = (HPEN)SelectObject(memDC, hLite);
+                    MoveToEx(memDC, bx, by + cSize - 2, NULL);
+                    LineTo(memDC, bx, by);
+                    LineTo(memDC, bx + cSize - 1, by);
+                    SelectObject(memDC, hDark);
+                    MoveToEx(memDC, bx + cSize - 1, by, NULL);
+                    LineTo(memDC, bx + cSize - 1, by + cSize - 1);
+                    LineTo(memDC, bx, by + cSize - 1);
+                    SelectObject(memDC, prevPen);
+                    DeleteObject(hLite);
+                    DeleteObject(hDark);
+
+                    int cx = bx + cSize / 2;
+                    int cy = by + cSize / 2;
+                    if (m == MOD_BRIDGE) {
+                        /* Cockpit crosshair & canopy */
+                        SetPixel(memDC, cx, cy - 4, RGB(255, 255, 255));
+                        SetPixel(memDC, cx - 1, cy - 3, RGB(255, 255, 255));
+                        SetPixel(memDC, cx + 1, cy - 3, RGB(255, 255, 255));
+                    } else if (m == MOD_THRUSTER_CHEM || m == MOD_THRUSTER_PLASMA) {
+                        /* Thruster nozzle indicator */
+                        SetPixel(memDC, cx - 3, cy + 5, RGB(255, 200, 50));
+                        SetPixel(memDC, cx + 3, cy + 5, RGB(255, 200, 50));
+                    } else if (m == MOD_REACTOR_FISSION || m == MOD_REACTOR_FUSION) {
+                        /* Reactor core dot */
+                        SetPixel(memDC, cx, cy, RGB(255, 255, 255));
+                    }
+
                     /* Letter indicator */
                     char ch = g_moduleDefs[m].name[0];
                     SetTextColor(memDC, RGB(255, 255, 255));
-                    TextOutA(memDC, bx + 12, by + 9, &ch, 1);
+                    TextOutA(memDC, bx + cSize - 13, by + cSize - 16, &ch, 1);
                 }
             }
         }
@@ -734,6 +814,49 @@ static void DrawGame(HDC hdc, RECT* rc) {
             MoveToEx(memDC, x, 180, NULL); LineTo(memDC, x, 380);
         }
 
+        /* Draw ship under construction in center */
+        int shipCellSz = 16;
+        int ox = 420 - (GRID_SZ * shipCellSz) / 2;
+        int oy = 280 - (GRID_SZ * shipCellSz) / 2;
+        int progressRow = (g_game.drydockProgress * GRID_SZ) / 100;
+
+        for (int y = 0; y < GRID_SZ; y++) {
+            if (y > progressRow) continue;
+            for (int x = 0; x < GRID_SZ; x++) {
+                int m = g_game.grid[y][x];
+                if (m > 0 && m < (int)MOD_COUNT) {
+                    RECT mRc = { ox + x * shipCellSz, oy + y * shipCellSz, ox + (x + 1) * shipCellSz - 1, oy + (y + 1) * shipCellSz - 1 };
+                    HBRUSH mb = CreateSolidBrush(g_moduleDefs[m].color);
+                    FillRect(memDC, &mRc, mb);
+                    DeleteObject(mb);
+                }
+            }
+        }
+
+        /* Gantry hydraulic clamp arms */
+        RECT clampTop = { ox + (GRID_SZ * shipCellSz) / 2 - 25, oy - 14, ox + (GRID_SZ * shipCellSz) / 2 + 25, oy - 2 };
+        HBRUSH cb = CreateSolidBrush(RGB(40, 60, 90));
+        FillRect(memDC, &clampTop, cb);
+        RECT clampBot = { ox + (GRID_SZ * shipCellSz) / 2 - 25, oy + GRID_SZ * shipCellSz + 2, ox + (GRID_SZ * shipCellSz) / 2 + 25, oy + GRID_SZ * shipCellSz + 14 };
+        FillRect(memDC, &clampBot, cb);
+        DeleteObject(cb);
+
+        /* Welding sparks & laser arms if fabricating */
+        if (g_game.drydockProgress > 0 && g_game.drydockProgress < 100) {
+            int wy = oy + progressRow * shipCellSz;
+            HPEN wPen = CreatePen(PS_SOLID, 2, RGB(0, 220, 255));
+            HPEN oP = (HPEN)SelectObject(memDC, wPen);
+            MoveToEx(memDC, 100, wy, NULL); LineTo(memDC, ox - 6, wy);
+            MoveToEx(memDC, 740, wy, NULL); LineTo(memDC, ox + GRID_SZ * shipCellSz + 6, wy);
+            SelectObject(memDC, oP);
+            DeleteObject(wPen);
+            for (int s = 0; s < 6; s++) {
+                int sx = ox + (MyRand() % (GRID_SZ * shipCellSz));
+                int sy = wy + (MyRand() % 14) - 7;
+                SetPixel(memDC, sx, sy, RGB(255, 255, 255));
+            }
+        }
+
         /* Assembly progress bar */
         RECT pBar = { 150, 420, 690, 450 };
         HBRUSH pbBg = CreateSolidBrush(RGB(20, 30, 50));
@@ -760,19 +883,65 @@ static void DrawGame(HDC hdc, RECT* rc) {
         PlayerFlight* p = &g_game.flight;
 
         /* Starfield background */
-        for (int i = 0; i < 40; i++) {
+        for (int i = 0; i < 45; i++) {
             int sx = (i * 73 + (int)p->x / 4) % (rc->right - 20) + 10;
             int sy = (i * 107 + (int)p->y / 4) % (rc->bottom - 80) + 70;
             SetPixel(memDC, sx, sy, RGB(180, 200, 255));
         }
 
-        /* Asteroids */
+        /* Orbital Station Dock at (110, 160) */
+        HBRUSH stBrush = CreateSolidBrush(RGB(15, 25, 45));
+        HBRUSH oSt = (HBRUSH)SelectObject(memDC, stBrush);
+        Ellipse(memDC, 80, 130, 140, 190);
+        SelectObject(memDC, oSt);
+        DeleteObject(stBrush);
+
+        /* Station Solar Arrays */
+        HBRUSH solBrush = CreateSolidBrush(RGB(20, 50, 120));
+        RECT sol1 = { 55, 152, 76, 168 };
+        RECT sol2 = { 144, 152, 165, 168 };
+        FillRect(memDC, &sol1, solBrush);
+        FillRect(memDC, &sol2, solBrush);
+        DeleteObject(solBrush);
+
+        /* Dock Navigation Beacons */
+        SetPixel(memDC, 52, 160, RGB(50, 255, 100));
+        SetPixel(memDC, 168, 160, RGB(255, 60, 60));
+        SetTextColor(memDC, RGB(0, 200, 255));
+        TextOutA(memDC, 60, 195, "STARFORGE IX DOCK", 17);
+
+        /* Asteroids with Craggy Polygons and Mineral Vein Lines */
         for (int i = 0; i < MAX_ASTEROIDS; i++) {
             Asteroid* a = &g_game.asteroids[i];
             if (!a->active) continue;
-            HBRUSH astBrush = CreateSolidBrush(a->mineralType == 0 ? RGB(100, 110, 130) : (a->mineralType == 1 ? RGB(140, 90, 60) : RGB(60, 120, 160)));
-            Ellipse(memDC, (int)(a->x - a->radius), (int)(a->y - a->radius), (int)(a->x + a->radius), (int)(a->y + a->radius));
-            DeleteObject(astBrush);
+
+            POINT astPts[8];
+            float rBase = a->radius;
+            astPts[0].x = (int)(a->x + rBase * 0.9f);  astPts[0].y = (int)(a->y - rBase * 0.4f);
+            astPts[1].x = (int)(a->x + rBase * 0.5f);  astPts[1].y = (int)(a->y - rBase * 0.95f);
+            astPts[2].x = (int)(a->x - rBase * 0.4f);  astPts[2].y = (int)(a->y - rBase * 0.85f);
+            astPts[3].x = (int)(a->x - rBase * 0.95f); astPts[3].y = (int)(a->y - rBase * 0.2f);
+            astPts[4].x = (int)(a->x - rBase * 0.8f);  astPts[4].y = (int)(a->y + rBase * 0.6f);
+            astPts[5].x = (int)(a->x - rBase * 0.3f);  astPts[5].y = (int)(a->y + rBase * 0.95f);
+            astPts[6].x = (int)(a->x + rBase * 0.6f);  astPts[6].y = (int)(a->y + rBase * 0.85f);
+            astPts[7].x = (int)(a->x + rBase * 0.95f); astPts[7].y = (int)(a->y + rBase * 0.2f);
+
+            COLORREF astCol = (a->mineralType == 0 ? RGB(70, 85, 110) : (a->mineralType == 1 ? RGB(110, 65, 35) : RGB(45, 75, 130)));
+            HBRUSH astB = CreateSolidBrush(astCol);
+            HBRUSH oB = (HBRUSH)SelectObject(memDC, astB);
+            Polygon(memDC, astPts, 8);
+            SelectObject(memDC, oB);
+            DeleteObject(astB);
+
+            /* Embedded crystalline mineral vein */
+            COLORREF veinCol = (a->mineralType == 0 ? RGB(56, 189, 248) : (a->mineralType == 1 ? RGB(251, 146, 60) : RGB(192, 132, 252)));
+            HPEN vPen = CreatePen(PS_SOLID, 1, veinCol);
+            HPEN oP = (HPEN)SelectObject(memDC, vPen);
+            MoveToEx(memDC, (int)a->x - 5, (int)a->y - 3, NULL);
+            LineTo(memDC, (int)a->x + 2, (int)a->y + 1);
+            LineTo(memDC, (int)a->x + 7, (int)a->y - 2);
+            SelectObject(memDC, oP);
+            DeleteObject(vPen);
         }
 
         /* Projectiles */
@@ -787,31 +956,112 @@ static void DrawGame(HDC hdc, RECT* rc) {
             DeleteObject(prPen);
         }
 
-        /* Drones */
+        /* Enemy Drones (Interceptor, Gunship, Sentry) */
         for (int k = 0; k < MAX_DRONES; k++) {
             EnemyDrone* d = &g_game.drones[k];
             if (!d->active) continue;
-            HBRUSH drBrush = CreateSolidBrush(RGB(220, 40, 40));
-            HBRUSH oB = (HBRUSH)SelectObject(memDC, drBrush);
-            Rectangle(memDC, (int)d->x - 8, (int)d->y - 8, (int)d->x + 8, (int)d->y + 8);
-            SelectObject(memDC, oB);
-            DeleteObject(drBrush);
+
+            if (d->droneType == 0) {
+                /* Interceptor: 5-point swept wing dart */
+                POINT dPts[5];
+                dPts[0].x = (int)d->x;      dPts[0].y = (int)d->y - 12;
+                dPts[1].x = (int)d->x + 10; dPts[1].y = (int)d->y + 8;
+                dPts[2].x = (int)d->x + 4;  dPts[2].y = (int)d->y + 4;
+                dPts[3].x = (int)d->x - 4;  dPts[3].y = (int)d->y + 4;
+                dPts[4].x = (int)d->x - 10; dPts[4].y = (int)d->y + 8;
+                HBRUSH drBrush = CreateSolidBrush(RGB(220, 30, 30));
+                HBRUSH oB = (HBRUSH)SelectObject(memDC, drBrush);
+                Polygon(memDC, dPts, 5);
+                SelectObject(memDC, oB);
+                DeleteObject(drBrush);
+            } else if (d->droneType == 1) {
+                /* Gunship: 6-point armored wedge */
+                POINT gPts[6];
+                gPts[0].x = (int)d->x;      gPts[0].y = (int)d->y - 14;
+                gPts[1].x = (int)d->x + 12; gPts[1].y = (int)d->y - 2;
+                gPts[2].x = (int)d->x + 8;  gPts[2].y = (int)d->y + 10;
+                gPts[3].x = (int)d->x - 8;  gPts[3].y = (int)d->y + 10;
+                gPts[4].x = (int)d->x - 12; gPts[4].y = (int)d->y - 2;
+                gPts[5].x = (int)d->x;      gPts[5].y = (int)d->y - 14;
+                HBRUSH gBrush = CreateSolidBrush(RGB(180, 60, 20));
+                HBRUSH oB = (HBRUSH)SelectObject(memDC, gBrush);
+                Polygon(memDC, gPts, 6);
+                SelectObject(memDC, oB);
+                DeleteObject(gBrush);
+            } else {
+                /* Sentry Drone: Octagonal hull */
+                RECT sRc = { (int)d->x - 7, (int)d->y - 7, (int)d->x + 7, (int)d->y + 7 };
+                HBRUSH sBrush = CreateSolidBrush(RGB(60, 65, 80));
+                FillRect(memDC, &sRc, sBrush);
+                DeleteObject(sBrush);
+                SetPixel(memDC, (int)d->x, (int)d->y, RGB(255, 200, 0));
+            }
         }
 
-        /* Player Ship Vector */
-        HBRUSH pBrush = CreateSolidBrush(RGB(0, 200, 255));
-        HBRUSH oB = (HBRUSH)SelectObject(memDC, pBrush);
-        POINT pts[3];
-        float sa = 14.0f;
-        pts[0].x = (int)(p->x + sa * 1.5f * -p->vy * 0.15f); /* Simple direction representation */
-        pts[0].y = (int)(p->y - sa * 1.5f);
-        pts[1].x = (int)(p->x - sa);
-        pts[1].y = (int)(p->y + sa);
-        pts[2].x = (int)(p->x + sa);
-        pts[2].y = (int)(p->y + sa);
-        Polygon(memDC, pts, 3);
-        SelectObject(memDC, oB);
-        DeleteObject(pBrush);
+        /* Player Ship (Procedurally rendered from active blueprint grid) */
+        int minX = GRID_SZ, maxX = -1, minY = GRID_SZ, maxY = -1;
+        for (int y = 0; y < GRID_SZ; y++) {
+            for (int x = 0; x < GRID_SZ; x++) {
+                if (g_game.grid[y][x] != MOD_EMPTY) {
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
+        }
+
+        if (minX <= maxX) {
+            float midX = (minX + maxX) * 0.5f;
+            float midY = (minY + maxY) * 0.5f;
+            int sz = 5;
+
+            /* Thruster exhaust flame */
+            if (p->vy < 0.0f) {
+                HPEN fPen = CreatePen(PS_SOLID, 2, RGB(255, 140, 0));
+                HPEN oP = (HPEN)SelectObject(memDC, fPen);
+                MoveToEx(memDC, (int)p->x - 4, (int)p->y + 12, NULL);
+                LineTo(memDC, (int)p->x, (int)p->y + 18);
+                LineTo(memDC, (int)p->x + 4, (int)p->y + 12);
+                SelectObject(memDC, oP);
+                DeleteObject(fPen);
+            }
+
+            for (int y = 0; y < GRID_SZ; y++) {
+                for (int x = 0; x < GRID_SZ; x++) {
+                    int m = g_game.grid[y][x];
+                    if (m != MOD_EMPTY) {
+                        int mx = (int)(p->x + (x - midX) * sz);
+                        int my = (int)(p->y + (y - midY) * sz);
+                        RECT mRc = { mx, my, mx + sz - 1, my + sz - 1 };
+                        HBRUSH mb = CreateSolidBrush(g_moduleDefs[m].color);
+                        FillRect(memDC, &mRc, mb);
+                        DeleteObject(mb);
+                    }
+                }
+            }
+
+            /* Shield bubble if active */
+            if (p->currentShield > 0) {
+                HPEN sPen = CreatePen(PS_SOLID, 1, RGB(0, 200, 255));
+                HPEN oP = (HPEN)SelectObject(memDC, sPen);
+                int rad = (int)((maxX - minX + 2) * sz * 0.7f + 6);
+                Arc(memDC, (int)p->x - rad, (int)p->y - rad, (int)p->x + rad, (int)p->y + rad, 0, 0, 0, 0);
+                SelectObject(memDC, oP);
+                DeleteObject(sPen);
+            }
+        } else {
+            /* Fallback wedge */
+            HBRUSH pBrush = CreateSolidBrush(RGB(0, 200, 255));
+            HBRUSH oB = (HBRUSH)SelectObject(memDC, pBrush);
+            POINT pts[3];
+            pts[0].x = (int)p->x; pts[0].y = (int)p->y - 14;
+            pts[1].x = (int)p->x - 10; pts[1].y = (int)p->y + 10;
+            pts[2].x = (int)p->x + 10; pts[2].y = (int)p->y + 10;
+            Polygon(memDC, pts, 3);
+            SelectObject(memDC, oB);
+            DeleteObject(pBrush);
+        }
 
         /* HUD Readout */
         char hBuf[128];

@@ -1454,6 +1454,22 @@
                 desc: 'An enigmatic request broadcasting on a 1999Hz carrier frequency. Demands zero-point or antimatter power grid, high firepower, and extreme warp capability.',
                 reqs: { hp: 800, shield: 400, dps: 150, twr: 2.5, cargo: 100, warp: 20 },
                 reward: { credits: 6500, rep: 80, titanium: 150, ferrite: 100, deuterium: 100 }
+            },
+            {
+                id: 'c5',
+                title: 'Sovereignty Heavy Dreadnought "Sol Invictus"',
+                client: 'Empire of Sol Heavy Fleet',
+                desc: 'Commission for a frontline flagship vessel. Demands ultra-heavy composite armor (>1000 HP), impenetrable deflector screens (>400 SP), devastating firepower (>180 DPS), and heavy cargo reserves (>120t).',
+                reqs: { hp: 1000, shield: 400, dps: 180, twr: 1.2, cargo: 120, warp: 0 },
+                reward: { credits: 4800, rep: 60, titanium: 140, ferrite: 90, deuterium: 80 }
+            },
+            {
+                id: 'c6',
+                title: 'Void Explorer Long-Range Scout',
+                client: 'Frontier Deep-Survey Guild',
+                desc: 'Commission for a high-velocity scout vessel designed to breach deep space anomaly corridors. Requires high thrust-to-weight ratio (>2.8), hyper-warp capability (>15 LY), and survey cargo pods (>100t).',
+                reqs: { hp: 350, shield: 200, dps: 40, twr: 2.8, cargo: 100, warp: 15 },
+                reward: { credits: 3600, rep: 45, titanium: 80, ferrite: 60, deuterium: 100 }
             }
         ];
 
@@ -1463,40 +1479,37 @@
         class AudioEngine {
             constructor() {
                 this.ctx = null;
-                this.volume = 0.7;
                 this.muted = false;
-                this.ambientNode = null;
+                this.volume = 0.5;
             }
 
             init() {
-                if (this.ctx) return;
-                try {
+                if (!this.ctx) {
                     const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                    if (AudioCtx) {
-                        this.ctx = new AudioCtx();
-                    }
-                } catch (e) {
-                    console.warn('Web Audio not supported', e);
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
                 }
             }
 
-            playBeep(freq, duration, type = 'sine', gainVal = 0.15) {
+            playBeep(freq, duration, type = 'sine', vol = 0.2) {
                 if (this.muted || !this.ctx) return;
-                if (this.ctx.state === 'suspended') this.ctx.resume();
-                
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                
-                gain.gain.setValueAtTime(gainVal * this.volume, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
-                
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                
-                osc.start();
-                osc.stop(this.ctx.currentTime + duration);
+                try {
+                    if (this.ctx.state === 'suspended') this.ctx.resume();
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(vol * this.volume, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {
+                    // Ignore autoplay restrictions
+                }
             }
 
             playClick() {
@@ -1558,6 +1571,18 @@
             playAlarm() {
                 this.playBeep(880, 0.1, 'sawtooth', 0.25);
                 setTimeout(() => this.playBeep(660, 0.1, 'sawtooth', 0.25), 100);
+            }
+
+            playExplosion() {
+                if (this.muted || !this.ctx) return;
+                this.playBeep(90, 0.25, 'sawtooth', 0.35);
+                this.playBeep(45, 0.4, 'square', 0.4);
+            }
+
+            playShieldHit() {
+                if (this.muted || !this.ctx) return;
+                this.playBeep(680, 0.08, 'sine', 0.2);
+                this.playBeep(920, 0.05, 'triangle', 0.15);
             }
         }
 
@@ -1747,6 +1772,160 @@
             bpCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
 
+        function drawModuleBlueprintGlyph(ctx, def, px, py, sz) {
+            // Module background block with beveled edges
+            ctx.fillStyle = def.color;
+            ctx.fillRect(px, py, sz, sz);
+
+            // Bevel highlights
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(px, py, sz, sz);
+
+            // Inner shadow border
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+            ctx.strokeRect(px + 1, py + 1, sz - 2, sz - 2);
+
+            const cx = px + sz / 2;
+            const cy = py + sz / 2;
+
+            ctx.save();
+            if (def.cat === 'hull') {
+                if (def.id === 3 || def.id === 4) {
+                    // Bridge / Canopy: cockpit canopy arc with crosshairs
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy - 2, sz * 0.25, Math.PI, 0);
+                    ctx.lineTo(cx + sz * 0.25, cy + sz * 0.25);
+                    ctx.lineTo(cx - sz * 0.25, cy + sz * 0.25);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.strokeStyle = '#0284c7';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy - sz * 0.35); ctx.lineTo(cx, cy + sz * 0.35);
+                    ctx.moveTo(cx - sz * 0.35, cy); ctx.lineTo(cx + sz * 0.35, cy);
+                    ctx.stroke();
+                } else {
+                    // Armor / Bulkhead: Corner rivets and diagonal facet
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                    const rOffset = 4;
+                    ctx.fillRect(px + rOffset, py + rOffset, 2, 2);
+                    ctx.fillRect(px + sz - rOffset - 2, py + rOffset, 2, 2);
+                    ctx.fillRect(px + rOffset, py + sz - rOffset - 2, 2, 2);
+                    ctx.fillRect(px + sz - rOffset - 2, py + sz - rOffset - 2, 2, 2);
+
+                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.25)';
+                    ctx.beginPath();
+                    ctx.moveTo(px + 4, py + 4); ctx.lineTo(px + sz - 4, py + sz - 4);
+                    ctx.stroke();
+                }
+            } else if (def.cat === 'power') {
+                // Reactor: Containment ring with core
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.arc(cx, cy, sz * 0.3, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.fillStyle = '#fef08a';
+                ctx.beginPath();
+                ctx.arc(cx, cy, sz * 0.14, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Magnetic coil lines
+                ctx.beginPath();
+                ctx.moveTo(cx - sz * 0.35, cy); ctx.lineTo(cx + sz * 0.35, cy);
+                ctx.moveTo(cx, cy - sz * 0.35); ctx.lineTo(cx, cy + sz * 0.35);
+                ctx.stroke();
+            } else if (def.cat === 'engine') {
+                // Thrusters: dual nozzle bells pointing south
+                ctx.fillStyle = '#0f172a';
+                ctx.beginPath();
+                ctx.moveTo(cx - sz * 0.35, py + 4);
+                ctx.lineTo(cx - sz * 0.1, py + 4);
+                ctx.lineTo(cx - sz * 0.05, py + sz - 3);
+                ctx.lineTo(cx - sz * 0.4, py + sz - 3);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(cx + sz * 0.1, py + 4);
+                ctx.lineTo(cx + sz * 0.35, py + 4);
+                ctx.lineTo(cx + sz * 0.4, py + sz - 3);
+                ctx.lineTo(cx + sz * 0.05, py + sz - 3);
+                ctx.closePath();
+                ctx.fill();
+
+                // Thrust vector chevron
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.moveTo(cx, py + 6); ctx.lineTo(cx, py + sz - 6);
+                ctx.lineTo(cx - 3, py + sz - 10);
+                ctx.moveTo(cx, py + sz - 6); ctx.lineTo(cx + 3, py + sz - 10);
+                ctx.stroke();
+            } else if (def.cat === 'tactical') {
+                if (def.id === 13 || def.id === 14) {
+                    // Radiator: vertical cooling slats
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+                    ctx.lineWidth = 1.5;
+                    for (let s = -2; s <= 2; s++) {
+                        ctx.beginPath();
+                        ctx.moveTo(cx + s * (sz * 0.15), py + 4);
+                        ctx.lineTo(cx + s * (sz * 0.15), py + sz - 4);
+                        ctx.stroke();
+                    }
+                } else {
+                    // Deflector: Concentric shield arcs
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1.2;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, sz * 0.35, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, sz * 0.2, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            } else if (def.cat === 'weapon') {
+                // Dual barrels pointing forward (north)
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(cx - sz * 0.25, py + 2, sz * 0.15, sz * 0.65);
+                ctx.fillRect(cx + sz * 0.1, py + 2, sz * 0.15, sz * 0.65);
+
+                ctx.fillStyle = '#fca5a5';
+                ctx.fillRect(cx - sz * 0.25, py + 2, sz * 0.15, 3);
+                ctx.fillRect(cx + sz * 0.1, py + 2, sz * 0.15, 3);
+            } else if (def.cat === 'utility') {
+                if (def.id === 19) {
+                    // Cargo: Corrugated shipping container ribs
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+                    ctx.lineWidth = 1.2;
+                    for (let r = 0; r < 3; r++) {
+                        ctx.strokeRect(px + 4, py + 4 + r * (sz * 0.26), sz - 8, sz * 0.2);
+                    }
+                } else {
+                    // Mining Drill: Rotary drill head
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.moveTo(cx, py + 3);
+                    ctx.lineTo(cx + sz * 0.3, py + sz - 5);
+                    ctx.lineTo(cx - sz * 0.3, py + sz - 5);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+            ctx.restore();
+
+            // Badge Letter in bottom-right corner
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 11px Consolas, monospace';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(def.badge, px + sz - 2, py + sz - 1);
+        }
+
         function renderBlueprintGrid() {
             bpCtx.save();
             bpCtx.setTransform(1, 0, 0, 1, 0, 0);
@@ -1792,21 +1971,7 @@
                         const py = y * CELL_SIZE + 2;
                         const sz = CELL_SIZE - 4;
 
-                        // Module block background
-                        bpCtx.fillStyle = def.color;
-                        bpCtx.fillRect(px, py, sz, sz);
-
-                        // Border highlight
-                        bpCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-                        bpCtx.lineWidth = 1;
-                        bpCtx.strokeRect(px, py, sz, sz);
-
-                        // Badge Letter
-                        bpCtx.fillStyle = '#ffffff';
-                        bpCtx.font = 'bold 14px Consolas, monospace';
-                        bpCtx.textAlign = 'center';
-                        bpCtx.textBaseline = 'middle';
-                        bpCtx.fillText(def.badge, px + sz / 2, py + sz / 2);
+                        drawModuleBlueprintGlyph(bpCtx, def, px, py, sz);
                     }
                 }
             }
@@ -2130,11 +2295,21 @@
                 for (let x = 0; x < GRID_SIZE; x++) {
                     const mId = state.grid[y][x];
                     if (mId && MODULE_DEFS[mId]) {
-                        dryCtx.fillStyle = MODULE_DEFS[mId].color;
-                        dryCtx.fillRect(ox + x * shipCellSz, oy + y * shipCellSz, shipCellSz - 1, shipCellSz - 1);
+                        drawModuleBlueprintGlyph(dryCtx, MODULE_DEFS[mId], ox + x * shipCellSz, oy + y * shipCellSz, shipCellSz - 1);
                     }
                 }
             }
+
+            // Gantry hydraulic holding clamps (prow & aft)
+            dryCtx.fillStyle = '#334155';
+            dryCtx.strokeStyle = '#38bdf8';
+            dryCtx.lineWidth = 1.2;
+            // Prow clamps
+            dryCtx.fillRect(ox + (GRID_SIZE * shipCellSz) / 2 - 25, oy - 16, 50, 12);
+            dryCtx.strokeRect(ox + (GRID_SIZE * shipCellSz) / 2 - 25, oy - 16, 50, 12);
+            // Aft clamps
+            dryCtx.fillRect(ox + (GRID_SIZE * shipCellSz) / 2 - 25, oy + (GRID_SIZE * shipCellSz) + 4, 50, 12);
+            dryCtx.strokeRect(ox + (GRID_SIZE * shipCellSz) / 2 - 25, oy + (GRID_SIZE * shipCellSz) + 4, 50, 12);
 
             // Animated Laser Welding Arms if Fabricating
             if (state.isFabricating && state.drydockProgress < 100) {
@@ -2145,20 +2320,35 @@
                 // Left arm
                 dryCtx.beginPath();
                 dryCtx.moveTo(100, weldY);
-                dryCtx.lineTo(320, weldY);
+                dryCtx.lineTo(ox - 8, weldY);
                 dryCtx.stroke();
 
                 // Right arm
                 dryCtx.beginPath();
                 dryCtx.moveTo(660, weldY);
-                dryCtx.lineTo(440, weldY);
+                dryCtx.lineTo(ox + GRID_SIZE * shipCellSz + 8, weldY);
                 dryCtx.stroke();
 
-                // Welding Sparks
+                // Laser focused plasma arc
+                dryCtx.strokeStyle = '#ffffff';
+                dryCtx.lineWidth = 1.5;
+                dryCtx.beginPath();
+                dryCtx.moveTo(ox - 8, weldY);
+                dryCtx.lineTo(ox + (GRID_SIZE * shipCellSz) * 0.4, weldY);
+                dryCtx.moveTo(ox + GRID_SIZE * shipCellSz + 8, weldY);
+                dryCtx.lineTo(ox + (GRID_SIZE * shipCellSz) * 0.6, weldY);
+                dryCtx.stroke();
+
+                // Welding Sparks & Plasma Glow
+                dryCtx.fillStyle = 'rgba(56, 189, 248, 0.35)';
+                dryCtx.beginPath();
+                dryCtx.arc(380, weldY, 28, 0, Math.PI * 2);
+                dryCtx.fill();
+
                 dryCtx.fillStyle = '#ffffff';
-                for (let k = 0; k < 6; k++) {
-                    const spX = 320 + (Math.random() - 0.5) * 30;
-                    const spY = weldY + (Math.random() - 0.5) * 20;
+                for (let k = 0; k < 8; k++) {
+                    const spX = 380 + (Math.random() - 0.5) * 60;
+                    const spY = weldY + (Math.random() - 0.5) * 30;
                     dryCtx.fillRect(spX, spY, 2, 2);
                 }
             }
@@ -2260,6 +2450,422 @@
             station: { x: 300, y: 300, radius: 60 }
         };
 
+        /* ==========================================================================
+           8. PROVING GROUNDS SHAKEDOWN FLIGHT SIMULATOR (VISUAL PASS & SYSTEM DEPTH)
+           ========================================================================== */
+        const flightCanvas = document.getElementById('flight-canvas');
+        const fCtx = flightCanvas.getContext('2d');
+
+        function resizeFlightCanvas() {
+            const dpr = Math.max(1, window.devicePixelRatio || 1);
+            const parent = flightCanvas.parentElement;
+            const cssW = parent ? (parent.clientWidth || 800) : 800;
+            const cssH = parent ? (parent.clientHeight || 600) : 600;
+            flightCanvas.width = Math.round(cssW * dpr);
+            flightCanvas.height = Math.round(cssH * dpr);
+            flightCanvas.style.width = `${cssW}px`;
+            flightCanvas.style.height = `${cssH}px`;
+            fCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        function setupCanvases() {
+            setupBpCanvas();
+            setupDrydockCanvas();
+            resizeFlightCanvas();
+        }
+
+        window.addEventListener('resize', () => {
+            setupCanvases();
+            if (document.getElementById('blueprint-view').classList.contains('active')) {
+                renderBlueprintGrid();
+            } else if (document.getElementById('drydock-view').classList.contains('active')) {
+                drawDrydockScene();
+            }
+        });
+
+        const flightSim = {
+            active: false,
+            player: {
+                x: 600, y: 400,
+                vx: 0, vy: 0,
+                angle: -Math.PI / 2,
+                heat: 0,
+                currentHp: 450,
+                currentShield: 300,
+                cargoOre: 0
+            },
+            keys: {},
+            projectiles: [],
+            asteroids: [],
+            enemies: [],
+            particles: [],
+            station: { x: 260, y: 240, radius: 55 }
+        };
+
+        function drawStarforgeStation(ctx, st) {
+            const time = Date.now();
+            ctx.save();
+            ctx.translate(st.x, st.y);
+
+            // Gantry outer docking ring
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 0, st.radius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // 4 Solar panel arrays with girder struts
+            for (let i = 0; i < 4; i++) {
+                ctx.save();
+                ctx.rotate((i * Math.PI) / 2);
+                ctx.strokeStyle = '#475569';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(st.radius * 0.4, 0);
+                ctx.lineTo(st.radius + 18, 0);
+                ctx.stroke();
+
+                // Solar panel cells
+                ctx.fillStyle = '#1e3a8a';
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 0.8;
+                ctx.fillRect(st.radius + 6, -8, 20, 16);
+                ctx.strokeRect(st.radius + 6, -8, 20, 16);
+                ctx.restore();
+            }
+
+            // Central Pressurized Station Hub
+            ctx.fillStyle = '#0f172a';
+            ctx.strokeStyle = '#06b6d4';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 0, st.radius * 0.45, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Airlock / Docking Bay Aperture
+            ctx.fillStyle = '#0284c7';
+            ctx.fillRect(-st.radius * 0.22, -3, st.radius * 0.44, 6);
+
+            // Blinking port/starboard navigation beacons
+            const blink = (time % 1000) < 500;
+            ctx.fillStyle = blink ? '#22c55e' : '#14532d'; // Port green
+            ctx.beginPath();
+            ctx.arc(-st.radius, 0, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = blink ? '#ef4444' : '#7f1d1d'; // Starboard red
+            ctx.beginPath();
+            ctx.arc(st.radius, 0, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Station Nameplate
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = 'bold 10px Consolas, monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('STARFORGE IX // DRY-DOCK 01', 0, st.radius + 18);
+
+            // Proximity Docking Envelope
+            const p = flightSim.player;
+            const distToStation = Math.hypot(p.x - st.x, p.y - st.y);
+            if (distToStation < st.radius + 35) {
+                ctx.fillStyle = 'rgba(6, 182, 212, 0.18)';
+                ctx.beginPath();
+                ctx.arc(0, 0, st.radius + 30, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#fef08a';
+                ctx.font = 'bold 11px Consolas, monospace';
+                ctx.fillText('⚡ DOCK MATRIX ENGAGED [ESC: REFIT & RECHARGE]', 0, -st.radius - 12);
+
+                // Passive repair & shield recharge in dock envelope
+                if (p.currentHp < (state.stats.hp || 450)) p.currentHp += 0.25;
+                if (p.currentShield < (state.stats.shields || 300)) p.currentShield += 0.5;
+                p.heat = Math.max(0, p.heat - 0.5);
+            }
+
+            ctx.restore();
+        }
+
+        function drawAsteroid(ctx, ast) {
+            ctx.save();
+            ctx.translate(ast.x, ast.y);
+            if (ast.rot !== undefined) ctx.rotate(ast.rot);
+
+            // Craggy polygon rock body
+            ctx.beginPath();
+            if (ast.pts && ast.pts.length > 0) {
+                ctx.moveTo(ast.pts[0].x, ast.pts[0].y);
+                for (let i = 1; i < ast.pts.length; i++) {
+                    ctx.lineTo(ast.pts[i].x, ast.pts[i].y);
+                }
+            } else {
+                ctx.arc(0, 0, ast.radius, 0, Math.PI * 2);
+            }
+            ctx.closePath();
+
+            const grad = ctx.createRadialGradient(-ast.radius * 0.3, -ast.radius * 0.3, 2, 0, 0, ast.radius);
+            if (ast.type === 0) {
+                grad.addColorStop(0, '#64748b');
+                grad.addColorStop(1, '#1e293b');
+                ctx.strokeStyle = '#475569';
+            } else if (ast.type === 1) {
+                grad.addColorStop(0, '#78350f');
+                grad.addColorStop(1, '#1c1917');
+                ctx.strokeStyle = '#92400e';
+            } else {
+                grad.addColorStop(0, '#4c1d95');
+                grad.addColorStop(1, '#0f172a');
+                ctx.strokeStyle = '#6d28d9';
+            }
+            ctx.fillStyle = grad;
+            ctx.fill();
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+
+            // Embedded crystalline mineral veins
+            ctx.lineWidth = 1.2;
+            if (ast.type === 0) {
+                ctx.strokeStyle = '#38bdf8'; // Titanium cyan veins
+            } else if (ast.type === 1) {
+                ctx.strokeStyle = '#fb923c'; // Ferrite copper-orange veins
+            } else {
+                ctx.strokeStyle = '#c084fc'; // Deuterium violet ice
+            }
+
+            ctx.beginPath();
+            const r = ast.radius * 0.6;
+            ctx.moveTo(-r * 0.5, -r * 0.2);
+            ctx.lineTo(0, r * 0.3);
+            ctx.lineTo(r * 0.6, 0);
+            ctx.moveTo(-r * 0.2, r * 0.2);
+            ctx.lineTo(r * 0.3, r * 0.5);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function drawEnemyVessel(ctx, en) {
+            ctx.save();
+            ctx.translate(en.x, en.y);
+
+            const angle = Math.atan2(en.vy || 0.01, en.vx || 0.01);
+            ctx.rotate(angle);
+
+            if (en.type === 'interceptor') {
+                // Syndicate Viper Interceptor: sleek swept-wing dart
+                ctx.fillStyle = '#dc2626';
+                ctx.strokeStyle = '#f87171';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.moveTo(14, 0);       // Nose
+                ctx.lineTo(-8, -12);     // Port wingtip
+                ctx.lineTo(-4, -4);      // Port inner notch
+                ctx.lineTo(-10, 0);      // Aft center
+                ctx.lineTo(-4, 4);       // Starboard inner notch
+                ctx.lineTo(-8, 12);      // Starboard wingtip
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Cockpit slit
+                ctx.fillStyle = '#fef08a';
+                ctx.fillRect(2, -1.5, 4, 3);
+
+                // Twin Engine glow
+                ctx.fillStyle = '#f97316';
+                ctx.fillRect(-9, -4, 2, 2);
+                ctx.fillRect(-9, 2, 2, 2);
+            } else if (en.type === 'gunship') {
+                // Marauder Gunship: heavy armored wedge chassis
+                ctx.fillStyle = '#7f1d1d';
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(16, 0);       // Armored prow
+                ctx.lineTo(4, -14);      // Port turret sponson
+                ctx.lineTo(-14, -10);    // Port aft
+                ctx.lineTo(-10, 0);      // Engine block
+                ctx.lineTo(-14, 10);     // Starboard aft
+                ctx.lineTo(4, 14);       // Starboard turret sponson
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Dual heavy gun barrels
+                ctx.fillStyle = '#fca5a5';
+                ctx.fillRect(6, -11, 7, 2);
+                ctx.fillRect(6, 9, 7, 2);
+            } else {
+                // Rogue Mining Sentry Drone: industrial hex chassis with hazard stripes
+                ctx.fillStyle = '#334155';
+                ctx.strokeStyle = '#eab308';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                for (let a = 0; a < 6; a++) {
+                    const rad = (a * Math.PI) / 3;
+                    const hx = Math.cos(rad) * 12;
+                    const hy = Math.sin(rad) * 12;
+                    if (a === 0) ctx.moveTo(hx, hy);
+                    else ctx.lineTo(hx, hy);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Hazard core & sensor eye
+                ctx.fillStyle = '#ca8a04';
+                ctx.beginPath();
+                ctx.arc(0, 0, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#ef4444';
+                ctx.fillRect(1, -1.5, 3, 3);
+            }
+
+            ctx.restore();
+
+            // Health pip bar above enemy (if damaged)
+            if (en.hp < en.maxHp) {
+                const barW = 24;
+                const barH = 3;
+                const bx = en.x - barW / 2;
+                const by = en.y - 18;
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+                ctx.fillRect(bx, by, barW, barH);
+                const hpRatio = Math.max(0, en.hp / en.maxHp);
+                ctx.fillStyle = hpRatio > 0.5 ? '#22c55e' : (hpRatio > 0.25 ? '#f59e0b' : '#ef4444');
+                ctx.fillRect(bx, by, barW * hpRatio, barH);
+            }
+        }
+
+        function drawPlayerShip(ctx, p) {
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            // Rotate so grid row 0 (prow) aligns with heading
+            ctx.rotate(p.angle + Math.PI / 2);
+
+            // Compute bounding box of player's configured modules
+            let minX = GRID_SIZE, maxX = -1, minY = GRID_SIZE, maxY = -1;
+            let moduleCount = 0;
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    if (state.grid[y][x]) {
+                        minX = Math.min(minX, x);
+                        maxX = Math.max(maxX, x);
+                        minY = Math.min(minY, y);
+                        maxY = Math.max(maxY, y);
+                        moduleCount++;
+                    }
+                }
+            }
+
+            if (moduleCount === 0) {
+                // Fallback default hull if empty
+                ctx.fillStyle = '#06b6d4';
+                ctx.beginPath();
+                ctx.moveTo(0, -18);
+                ctx.lineTo(-12, 14);
+                ctx.lineTo(0, 8);
+                ctx.lineTo(12, 14);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.restore();
+                return;
+            }
+
+            const midX = (minX + maxX) / 2;
+            const midY = (minY + maxY) / 2;
+            const sz = 5.2;
+
+            const isThrusting = flightSim.keys['w'] || flightSim.keys['arrowup'];
+
+            // Draw thruster exhaust flames behind nozzles
+            if (isThrusting) {
+                for (let y = 0; y < GRID_SIZE; y++) {
+                    for (let x = 0; x < GRID_SIZE; x++) {
+                        const mId = state.grid[y][x];
+                        if (mId && MODULE_DEFS[mId] && MODULE_DEFS[mId].cat === 'engine') {
+                            const lx = (x - midX) * sz;
+                            const ly = (y - midY) * sz + sz / 2;
+                            const isPlasma = (mId === 11 || mId === 12);
+                            const flameLen = (isPlasma ? 14 : 10) + Math.random() * 6;
+                            const flameW = sz * 0.7;
+
+                            ctx.save();
+                            const grad = ctx.createLinearGradient(lx, ly, lx, ly + flameLen);
+                            if (isPlasma) {
+                                grad.addColorStop(0, '#ffffff');
+                                grad.addColorStop(0.3, '#38bdf8');
+                                grad.addColorStop(0.7, '#8b5cf6');
+                                grad.addColorStop(1, 'rgba(139, 92, 246, 0)');
+                            } else {
+                                grad.addColorStop(0, '#ffffff');
+                                grad.addColorStop(0.3, '#f59e0b');
+                                grad.addColorStop(0.7, '#ef4444');
+                                grad.addColorStop(1, 'rgba(239, 68, 68, 0)');
+                            }
+                            ctx.fillStyle = grad;
+                            ctx.beginPath();
+                            ctx.moveTo(lx - flameW / 2, ly);
+                            ctx.lineTo(lx, ly + flameLen);
+                            ctx.lineTo(lx + flameW / 2, ly);
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.restore();
+                        }
+                    }
+                }
+            }
+
+            // Draw player ship modules
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    const mId = state.grid[y][x];
+                    if (!mId || !MODULE_DEFS[mId]) continue;
+                    const def = MODULE_DEFS[mId];
+                    const lx = (x - midX) * sz - sz / 2;
+                    const ly = (y - midY) * sz - sz / 2;
+
+                    ctx.fillStyle = def.color;
+                    ctx.fillRect(lx, ly, sz, sz);
+
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+                    ctx.lineWidth = 0.6;
+                    ctx.strokeRect(lx, ly, sz, sz);
+
+                    if (def.cat === 'hull' && (mId === 3 || mId === 4)) {
+                        ctx.fillStyle = '#e0f2fe';
+                        ctx.fillRect(lx + 1, ly + 1, sz - 2, sz - 2);
+                    } else if (def.cat === 'power') {
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(lx + sz * 0.3, ly + sz * 0.3, sz * 0.4, sz * 0.4);
+                    } else if (def.cat === 'weapon') {
+                        ctx.fillStyle = '#f87171';
+                        ctx.fillRect(lx + sz * 0.25, ly - 1, sz * 0.5, 1.5);
+                    }
+                }
+            }
+
+            // Shield Bubble
+            if (p.currentShield > 0) {
+                const radius = Math.max((maxX - minX + 1), (maxY - minY + 1)) * sz * 0.75 + 6;
+                const shieldAlpha = Math.min(0.65, 0.2 + (p.currentShield / (state.stats.shields || 300)) * 0.45);
+                ctx.strokeStyle = `rgba(56, 189, 248, ${shieldAlpha})`;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.fillStyle = `rgba(6, 182, 212, ${shieldAlpha * 0.12})`;
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
         function initFlightSim() {
             resizeFlightCanvas();
             flightSim.active = true;
@@ -2279,29 +2885,48 @@
             flightSim.enemies = [];
             flightSim.asteroids = [];
 
-            // Spawn Asteroids
+            // Spawn Asteroids with craggy polygon silhouettes and mineral veins
             for (let i = 0; i < 16; i++) {
+                const rad = 16 + Math.random() * 22;
+                const numPts = 10 + Math.floor(Math.random() * 4);
+                const pts = [];
+                for (let j = 0; j < numPts; j++) {
+                    const ang = (j / numPts) * Math.PI * 2;
+                    const r = rad * (0.8 + Math.random() * 0.4);
+                    pts.push({ x: Math.cos(ang) * r, y: Math.sin(ang) * r });
+                }
                 flightSim.asteroids.push({
                     x: Math.random() * flightCanvas.width,
                     y: Math.random() * flightCanvas.height,
-                    vx: (Math.random() - 0.5) * 0.4,
-                    vy: (Math.random() - 0.5) * 0.4,
-                    radius: 16 + Math.random() * 22,
-                    hp: 80,
+                    vx: (Math.random() - 0.5) * 0.35,
+                    vy: (Math.random() - 0.5) * 0.35,
+                    radius: rad,
+                    pts: pts,
+                    rot: Math.random() * Math.PI * 2,
+                    rotSpeed: (Math.random() - 0.5) * 0.015,
+                    hp: Math.round(rad * 3.5),
+                    maxHp: Math.round(rad * 3.5),
                     type: Math.floor(Math.random() * 3)
                 });
             }
 
-            // Spawn Rogue Drones
-            for (let k = 0; k < 3; k++) {
+            // Spawn Varied Pirate Raider Fleet
+            const enemyTypes = [
+                { type: 'interceptor', name: 'Syndicate Viper', hp: 75, maxHp: 75, speed: 2.2, dmg: 14, color: '#ef4444' },
+                { type: 'gunship', name: 'Marauder Brute', hp: 170, maxHp: 170, speed: 1.2, dmg: 26, color: '#f97316' },
+                { type: 'sentry', name: 'Rogue Sentry Rig', hp: 110, maxHp: 110, speed: 0.6, dmg: 18, color: '#eab308' },
+                { type: 'interceptor', name: 'Syndicate Viper', hp: 75, maxHp: 75, speed: 2.2, dmg: 14, color: '#ef4444' }
+            ];
+            enemyTypes.forEach(archetype => {
                 flightSim.enemies.push({
+                    ...archetype,
                     x: 100 + Math.random() * (flightCanvas.width - 200),
                     y: 80 + Math.random() * 200,
                     vx: 0, vy: 0,
-                    hp: 90,
-                    shootTimer: 60 + Math.random() * 60
+                    angle: 0,
+                    shootTimer: 45 + Math.random() * 60
                 });
-            }
+            });
         }
 
         window.addEventListener('keydown', (e) => {
@@ -2440,6 +3065,17 @@
             if (p.y < 0) p.y = flightCanvas.height;
             if (p.y > flightCanvas.height) p.y = 0;
 
+            // Rotate asteroids
+            flightSim.asteroids.forEach(ast => {
+                if (ast.rotSpeed) ast.rot += ast.rotSpeed;
+                ast.x += ast.vx;
+                ast.y += ast.vy;
+                if (ast.x < 0) ast.x = flightCanvas.width;
+                if (ast.x > flightCanvas.width) ast.x = 0;
+                if (ast.y < 0) ast.y = flightCanvas.height;
+                if (ast.y > flightCanvas.height) ast.y = 0;
+            });
+
             // Primary Fire [Space]
             if (flightSim.keys[' '] || flightSim.keys['space']) {
                 if (!flightSim.lastFire || Date.now() - flightSim.lastFire > 160) {
@@ -2464,7 +3100,6 @@
             if (flightSim.keys['e']) {
                 p.heat += 0.5;
                 audio.playMining();
-                // Check closest asteroid
                 flightSim.asteroids.forEach(ast => {
                     const dx = ast.x - p.x;
                     const dy = ast.y - p.y;
@@ -2476,15 +3111,28 @@
                             y: ast.y + (Math.random() - 0.5) * ast.radius,
                             vx: -dx * 0.03,
                             vy: -dy * 0.03,
-                            color: '#f59e0b',
+                            color: ast.type === 0 ? '#38bdf8' : (ast.type === 1 ? '#fb923c' : '#c084fc'),
                             life: 15
                         });
                         if (ast.hp <= 0) {
                             ast.hp = 99999;
-                            state.resources.titanium += 15;
-                            state.resources.ferrite += 8;
-                            p.cargoOre += 23;
-                            showToast('ORE CRACKED & HARVESTED! +23 ORE');
+                            if (ast.type === 0) state.resources.titanium += 20;
+                            else if (ast.type === 1) state.resources.ferrite += 15;
+                            else state.resources.deuterium += 12;
+                            p.cargoOre += 25;
+                            showToast('ORE VEIN HARVESTED! MINERALS DELIVERED TO YARD');
+                            // Mineral debris particles
+                            for (let b = 0; b < 14; b++) {
+                                const spd = 1.0 + Math.random() * 2.5;
+                                const ang = Math.random() * Math.PI * 2;
+                                flightSim.particles.push({
+                                    x: ast.x, y: ast.y,
+                                    vx: Math.cos(ang) * spd,
+                                    vy: Math.sin(ang) * spd,
+                                    color: ast.type === 0 ? '#38bdf8' : (ast.type === 1 ? '#fb923c' : '#c084fc'),
+                                    life: 20 + Math.random() * 15
+                                });
+                            }
                             audio.playSuccess();
                             updateUI();
                         }
@@ -2504,48 +3152,67 @@
                     continue;
                 }
 
-                // Check hit against Asteroids
+                // Hit Asteroids
                 if (!pr.isEnemy) {
                     flightSim.asteroids.forEach(ast => {
                         if (Math.hypot(pr.x - ast.x, pr.y - ast.y) < ast.radius) {
                             pr.life = 0;
                             ast.hp -= pr.dmg;
-                            if (ast.hp <= 0) {
-                                state.resources.titanium += 10;
+                            if (ast.hp <= 0 && ast.hp > -1000) {
+                                ast.hp = -9999;
+                                if (ast.type === 0) state.resources.titanium += 12;
+                                else if (ast.type === 1) state.resources.ferrite += 10;
+                                else state.resources.deuterium += 8;
                                 updateUI();
                             }
                         }
                     });
 
-                    // Check hit against Enemies
+                    // Hit Enemies
                     flightSim.enemies.forEach(en => {
                         if (Math.hypot(pr.x - en.x, pr.y - en.y) < 22) {
                             pr.life = 0;
                             en.hp -= pr.dmg;
                             if (en.hp <= 0 && !en.dead) {
                                 en.dead = true;
-                                state.resources.credits += 150;
-                                state.resources.reputation += 2;
-                                showToast('SYNDICATE PIRATE RAIDER DESTROYED (+150$C)');
-                                audio.playSuccess();
+                                const bounty = en.type === 'gunship' ? 250 : (en.type === 'sentry' ? 140 : 120);
+                                const repGained = en.type === 'gunship' ? 4 : 2;
+                                state.resources.credits += bounty;
+                                state.resources.reputation += repGained;
+                                showToast(`${en.name.toUpperCase()} NEUTRALIZED (+${bounty}$C)`);
+
+                                // Explosive debris particles
+                                for (let b = 0; b < 18; b++) {
+                                    const spd = 1.5 + Math.random() * 3.5;
+                                    const ang = Math.random() * Math.PI * 2;
+                                    flightSim.particles.push({
+                                        x: en.x, y: en.y,
+                                        vx: Math.cos(ang) * spd,
+                                        vy: Math.sin(ang) * spd,
+                                        color: Math.random() > 0.4 ? '#f97316' : '#facc15',
+                                        life: 25 + Math.random() * 20
+                                    });
+                                }
+                                audio.playExplosion();
                                 updateUI();
                             }
                         }
                     });
                 } else {
-                    // Check hit against Player
-                    if (Math.hypot(pr.x - p.x, pr.y - p.y) < 18) {
+                    // Hit Player
+                    if (Math.hypot(pr.x - p.x, pr.y - p.y) < 20) {
                         pr.life = 0;
                         if (p.currentShield > 0) {
                             p.currentShield -= pr.dmg;
+                            audio.playShieldHit();
                             if (p.currentShield < 0) {
                                 p.currentHp += p.currentShield;
                                 p.currentShield = 0;
                             }
                         } else {
                             p.currentHp -= pr.dmg;
+                            audio.playAlarm();
                         }
-                        audio.playAlarm();
                         if (p.currentHp <= 0) {
                             p.currentHp = 0;
                             showToast('HULL INTEGRITY COMPROMISED! RETURNING TO DRYDOCK');
@@ -2557,33 +3224,52 @@
                 }
             }
 
-            // Update Enemies AI
+            // Update Enemies Tactical AI
             flightSim.enemies = flightSim.enemies.filter(en => !en.dead);
             flightSim.enemies.forEach(en => {
                 const dx = p.x - en.x;
                 const dy = p.y - en.y;
                 const dist = Math.hypot(dx, dy);
 
-                if (dist > 80) {
-                    en.vx += (dx / dist) * 0.08;
-                    en.vy += (dy / dist) * 0.08;
+                if (en.type === 'interceptor') {
+                    // Fast evasive strafing
+                    if (dist > 120) {
+                        en.vx += (dx / dist) * 0.12;
+                        en.vy += (dy / dist) * 0.12;
+                    } else {
+                        // Flank laterally
+                        en.vx += (-dy / dist) * 0.15;
+                        en.vy += (dx / dist) * 0.15;
+                    }
+                } else if (en.type === 'gunship') {
+                    // Heavy siege advance
+                    if (dist > 180) {
+                        en.vx += (dx / dist) * 0.07;
+                        en.vy += (dy / dist) * 0.07;
+                    }
+                } else {
+                    // Sentry slow patrol
+                    en.vx *= 0.95;
+                    en.vy *= 0.95;
                 }
+
                 en.x += en.vx;
                 en.y += en.vy;
                 en.vx *= 0.98;
                 en.vy *= 0.98;
 
                 en.shootTimer--;
-                if (en.shootTimer <= 0 && dist < 450) {
-                    en.shootTimer = 70 + Math.random() * 50;
+                if (en.shootTimer <= 0 && dist < 480) {
+                    en.shootTimer = en.type === 'interceptor' ? (50 + Math.random() * 30) : (75 + Math.random() * 50);
+                    const pSpd = en.type === 'interceptor' ? 6.5 : 5.0;
                     flightSim.projectiles.push({
                         x: en.x, y: en.y,
-                        vx: (dx / dist) * 5,
-                        vy: (dy / dist) * 5,
-                        dmg: 18,
+                        vx: (dx / dist) * pSpd,
+                        vy: (dy / dist) * pSpd,
+                        dmg: en.dmg || 18,
                         isEnemy: true,
                         life: 80,
-                        color: '#ef4444'
+                        color: en.type === 'gunship' ? '#ea580c' : '#ef4444'
                     });
                 }
             });
@@ -2607,7 +3293,7 @@
             const simW = parent ? (parent.clientWidth || 800) : 800;
             const simH = parent ? (parent.clientHeight || 600) : 600;
 
-            // Starfield
+            // Starfield backdrop
             fCtx.fillStyle = '#cbd5e1';
             for (let i = 0; i < 50; i++) {
                 const sx = (i * 137) % simW;
@@ -2615,23 +3301,12 @@
                 fCtx.fillRect(sx, sy, 1.2, 1.2);
             }
 
-            // Space Station Dock
-            const st = flightSim.station;
-            fCtx.strokeStyle = 'rgba(6, 182, 212, 0.4)';
-            fCtx.lineWidth = 3;
-            fCtx.strokeRect(st.x - st.radius, st.y - st.radius, st.radius * 2, st.radius * 2);
-            fCtx.fillStyle = '#06b6d4';
-            fCtx.font = '11px Consolas, monospace';
-            fCtx.fillText('STARFORGE IX DOCK', st.x - 50, st.y);
+            // Orbital Space Station Dock
+            drawStarforgeStation(fCtx, flightSim.station);
 
-            // Asteroids
+            // Asteroids with craggy polygonal silhouettes & mineral veins
             flightSim.asteroids.forEach(ast => {
-                fCtx.fillStyle = ast.type === 0 ? '#64748b' : (ast.type === 1 ? '#94a3b8' : '#334155');
-                fCtx.beginPath();
-                fCtx.arc(ast.x, ast.y, ast.radius, 0, Math.PI * 2);
-                fCtx.fill();
-                fCtx.strokeStyle = '#475569';
-                fCtx.stroke();
+                drawAsteroid(fCtx, ast);
             });
 
             // Particles
@@ -2658,43 +3333,13 @@
                 fCtx.stroke();
             });
 
-            // Rogue Drones
+            // Enemy Vessels (Interceptors, Gunships, Mining Sentries)
             flightSim.enemies.forEach(en => {
-                fCtx.fillStyle = '#ef4444';
-                fCtx.fillRect(en.x - 10, en.y - 10, 20, 20);
-                fCtx.strokeStyle = '#b91c1c';
-                fCtx.strokeRect(en.x - 10, en.y - 10, 20, 20);
+                drawEnemyVessel(fCtx, en);
             });
 
-            // Player Ship Vector Representation
-            const p = flightSim.player;
-            fCtx.save();
-            fCtx.translate(p.x, p.y);
-            fCtx.rotate(p.angle);
-
-            // Hull
-            fCtx.fillStyle = '#06b6d4';
-            fCtx.beginPath();
-            fCtx.moveTo(18, 0);
-            fCtx.lineTo(-14, -12);
-            fCtx.lineTo(-8, 0);
-            fCtx.lineTo(-14, 12);
-            fCtx.closePath();
-            fCtx.fill();
-            fCtx.strokeStyle = '#38bdf8';
-            fCtx.lineWidth = 1.5;
-            fCtx.stroke();
-
-            // Shield Bubble
-            if (p.currentShield > 0) {
-                fCtx.strokeStyle = `rgba(129, 140, 248, ${Math.min(0.8, p.currentShield / 300)})`;
-                fCtx.lineWidth = 1.5;
-                fCtx.beginPath();
-                fCtx.arc(0, 0, 22, 0, Math.PI * 2);
-                fCtx.stroke();
-            }
-
-            fCtx.restore();
+            // Player Starship (Rendered directly from active shipyard blueprint)
+            drawPlayerShip(fCtx, flightSim.player);
         }
 
         /* Animation Main Loop */
