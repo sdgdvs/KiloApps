@@ -19,10 +19,14 @@
     --warning: #f59e0b;
     --purple: #8b5cf6;
     --purple-hover: #a78bfa;
+    --cyan: #06b6d4;
+    --cyan-hover: #22d3ee;
+    --emerald: #059669;
+    --emerald-hover: #10b981;
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0; padding: 16px; font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0; padding: 14px; font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
     background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
     color: var(--text); display: flex; flex-direction: column;
     height: 100vh; overflow: hidden;
@@ -39,18 +43,18 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
   }
   .controls {
-    display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 14px; margin-bottom: 12px; align-items: flex-end;
+    display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 14px; margin-bottom: 10px; align-items: flex-end;
   }
   .input-group {
-    display: flex; flex-direction: column; gap: 4px;
+    display: flex; flex-direction: column; gap: 3px;
   }
   .input-group label {
-    font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+    font-size: 10.5px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
   }
   input[type="text"], input[type="number"], select {
     background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border);
-    color: var(--text); padding: 7px 10px; border-radius: 6px; outline: none;
-    font-family: "Consolas", monospace; font-size: 13px; transition: border-color 0.2s, box-shadow 0.2s;
+    color: var(--text); padding: 6px 9px; border-radius: 6px; outline: none;
+    font-family: "Consolas", monospace; font-size: 12.5px; transition: border-color 0.2s, box-shadow 0.2s;
   }
   input[type="text"]:focus, input[type="number"]:focus, select:focus {
     border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
@@ -60,17 +64,17 @@
     color: #e2e8f0;
   }
   .checkbox-group {
-    display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; padding-bottom: 6px;
+    display: flex; align-items: center; gap: 5px; cursor: pointer; user-select: none; padding-bottom: 5px;
   }
-  input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+  input[type="checkbox"] { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
   .btn {
-    padding: 7px 14px; border: none; border-radius: 6px; font-weight: 600; font-size: 12.5px;
+    padding: 6px 12px; border: none; border-radius: 6px; font-weight: 600; font-size: 12px;
     cursor: pointer; transition: all 0.2s ease;
-    display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 76px;
+    display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 68px;
     font-family: inherit; user-select: none;
   }
   .kbd-badge {
-    display: inline-block; font-size: 10px; font-family: "Consolas", monospace;
+    display: inline-block; font-size: 9.5px; font-family: "Consolas", monospace;
     background: rgba(0, 0, 0, 0.3); padding: 1px 4px; border-radius: 4px;
     border: 1px solid rgba(255, 255, 255, 0.2); opacity: 0.85; font-weight: normal;
   }
@@ -82,52 +86,80 @@
   .btn-secondary:hover { background: #475569; transform: translateY(-1px); }
   .btn-mtu { background: var(--purple); color: white; }
   .btn-mtu:hover { background: var(--purple-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4); }
+  .btn-subnet { background: var(--cyan); color: #0f172a; font-weight: 700; }
+  .btn-subnet:hover { background: var(--cyan-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4); }
+  .btn-dns { background: var(--emerald); color: white; }
+  .btn-dns:hover { background: var(--emerald-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
   
   .terminal-container {
-    flex: 1; display: flex; flex-direction: column; gap: 12px; overflow: hidden;
+    flex: 1; display: flex; flex-direction: column; gap: 10px; overflow: hidden;
   }
   
   .terminal {
-    flex: 1; display: flex; flex-direction: column; padding: 12px 14px; border-radius: 12px;
-    background: rgba(10, 15, 29, 0.85); border: 1px solid var(--border); overflow: hidden;
+    flex: 1; display: flex; flex-direction: column; padding: 10px 12px; border-radius: 12px;
+    background: rgba(10, 15, 29, 0.88); border: 1px solid var(--border); overflow: hidden;
   }
   .terminal-header {
-    display: flex; align-items: center; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 6px; flex-wrap: wrap;
   }
-  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
   .dot-red { background: #ff5f56; } .dot-yellow { background: #ffbd2e; } .dot-green { background: #27c93f; }
   
   .status-badge {
-    display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 600;
     padding: 2px 8px; border-radius: 12px; background: rgba(255, 255, 255, 0.07);
     color: var(--text-muted); font-family: "Consolas", monospace; margin-left: 6px;
   }
   .status-badge.pinging { background: rgba(16, 185, 129, 0.2); color: #34d399; }
   .status-badge.tracing { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
   .status-badge.mtu { background: rgba(139, 92, 246, 0.2); color: #c084fc; }
+  .status-badge.subnet { background: rgba(6, 182, 212, 0.2); color: #22d3ee; }
+  .status-badge.dns { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
   .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .filter-bar {
+    display: flex; align-items: center; gap: 6px; margin-left: auto;
+  }
+  .filter-pill {
+    padding: 2px 7px; border-radius: 4px; font-size: 10.5px; font-weight: 600;
+    cursor: pointer; background: rgba(255, 255, 255, 0.06); color: var(--text-muted);
+    border: 1px solid transparent; transition: all 0.15s ease; user-select: none;
+  }
+  .filter-pill:hover { background: rgba(255, 255, 255, 0.12); color: white; }
+  .filter-pill.active { background: rgba(59, 130, 246, 0.25); color: #93c5fd; border-color: rgba(59, 130, 246, 0.4); }
+
+  #filterInput {
+    padding: 3px 8px; font-size: 11px; width: 140px; border-radius: 4px;
+    background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-subtle);
+  }
 
   #out {
     flex: 1; background: transparent; border: none; color: #a3be8c;
-    font-family: "Consolas", "Courier New", monospace; font-size: 13px;
-    resize: none; outline: none; overflow-y: auto; line-height: 1.5;
+    font-family: "Consolas", "Courier New", monospace; font-size: 12.5px;
+    resize: none; outline: none; overflow-y: auto; line-height: 1.45;
   }
-  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar { width: 7px; }
   ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
   
   .analytics-panel {
-    height: 105px; display: flex; gap: 10px; border-radius: 12px;
-    background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); padding: 8px 12px; box-sizing: border-box;
+    height: 98px; display: flex; gap: 8px; border-radius: 12px;
+    background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); padding: 6px 10px; box-sizing: border-box;
   }
   .stats-box {
-    display: flex; flex-direction: column; justify-content: center; padding: 6px 12px;
-    background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); border-radius: 8px; min-width: 100px;
+    display: flex; flex-direction: column; justify-content: center; padding: 4px 10px;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); border-radius: 8px; min-width: 82px;
   }
-  .stats-box span { font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-  .stats-box strong { font-size: 19px; color: var(--text); margin-top: 2px; font-family: "Consolas", monospace; }
+  .stats-box span { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .stats-box strong { font-size: 16px; color: var(--text); margin-top: 2px; font-family: "Consolas", monospace; }
+  .stats-box .quality-tag { font-size: 10px; font-weight: 700; border-radius: 3px; padding: 1px 4px; display: inline-block; margin-top: 2px; text-align: center; }
+  .tag-crystal { background: rgba(16, 185, 129, 0.25); color: #34d399; }
+  .tag-good { background: rgba(59, 130, 246, 0.25); color: #60a5fa; }
+  .tag-fair { background: rgba(245, 158, 11, 0.25); color: #fbbf24; }
+  .tag-poor { background: rgba(239, 68, 68, 0.25); color: #f87171; }
+
   .graph-box {
     flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column;
   }
@@ -135,11 +167,11 @@
 
   /* Toast Notification System */
   .toast-container {
-    position: fixed; top: 16px; right: 16px; z-index: 1000;
+    position: fixed; top: 14px; right: 14px; z-index: 1000;
     display: flex; flex-direction: column; gap: 8px; pointer-events: none;
   }
   .toast {
-    pointer-events: auto; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 500;
+    pointer-events: auto; padding: 9px 13px; border-radius: 8px; font-size: 12px; font-weight: 500;
     display: flex; align-items: center; gap: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.4);
     animation: toastIn 0.25s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; transition: all 0.2s ease;
     border: 1px solid var(--border); backdrop-filter: blur(8px); max-width: 380px;
@@ -153,41 +185,49 @@
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
-  /* Modal Dialog */
+  /* Modal Dialogs */
   .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(6px);
+    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(6px);
     display: flex; align-items: center; justify-content: center; z-index: 999;
     opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
   }
   .modal-overlay.active { opacity: 1; pointer-events: auto; }
   .modal-dialog {
     background: #1e293b; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px;
-    width: 620px; max-width: 90vw; max-height: 85vh; overflow-y: auto; padding: 20px;
+    width: 640px; max-width: 92vw; max-height: 85vh; overflow-y: auto; padding: 18px;
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5); transform: translateY(10px); transition: transform 0.2s ease;
   }
   .modal-overlay.active .modal-dialog { transform: translateY(0); }
   .modal-header {
     display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border);
-    padding-bottom: 12px; margin-bottom: 14px;
+    padding-bottom: 10px; margin-bottom: 12px;
   }
-  .modal-title { font-size: 16px; font-weight: 700; color: #f8fafc; display: flex; align-items: center; gap: 8px; }
+  .modal-title { font-size: 15px; font-weight: 700; color: #f8fafc; display: flex; align-items: center; gap: 8px; }
   .modal-close {
     background: transparent; border: none; color: var(--text-muted); font-size: 20px;
     cursor: pointer; padding: 2px 6px; border-radius: 4px; line-height: 1;
   }
   .modal-close:hover { color: white; background: rgba(255, 255, 255, 0.1); }
-  .shortcut-table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; }
+  .shortcut-table { width: 100%; border-collapse: collapse; margin: 8px 0 14px; }
   .shortcut-table th, .shortcut-table td {
-    padding: 8px 10px; text-align: left; font-size: 12.5px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 7px 8px; text-align: left; font-size: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
-  .shortcut-table th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px; }
+  .shortcut-table th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 10.5px; }
   .shortcut-key {
     background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 2px 6px; border-radius: 4px; font-family: "Consolas", monospace; font-size: 11.5px; color: #93c5fd;
+    padding: 2px 5px; border-radius: 4px; font-family: "Consolas", monospace; font-size: 11px; color: #93c5fd;
   }
   .info-block {
-    background: rgba(0, 0, 0, 0.3); border-left: 3px solid var(--accent); padding: 10px 12px;
-    border-radius: 4px; margin-bottom: 12px; font-size: 12px; line-height: 1.5; color: #cbd5e1;
+    background: rgba(0, 0, 0, 0.3); border-left: 3px solid var(--accent); padding: 8px 10px;
+    border-radius: 4px; margin-bottom: 10px; font-size: 11.5px; line-height: 1.45; color: #cbd5e1;
+  }
+  .export-option-card {
+    background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border-subtle); border-radius: 8px;
+    padding: 12px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s ease;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .export-option-card:hover {
+    border-color: var(--accent); background: rgba(59, 130, 246, 0.1);
   }
 </style>
 </head>
@@ -197,7 +237,7 @@
       <label for="host">Target Host / IP</label>
       <input type="text" id="host" value="127.0.0.1" placeholder="e.g. 1.1.1.1 or google.com" title="Target IP address or domain name (Press Enter to Ping)">
     </div>
-    <div class="input-group" style="width: 145px;">
+    <div class="input-group" style="width: 140px;">
       <label for="presetSelect">Presets</label>
       <select id="presetSelect" title="Quickly select preset host [1-6]">
         <option value="">Quick Presets...</option>
@@ -209,40 +249,52 @@
         <option value="192.168.1.1">6. 192.168.1.1 (Gateway)</option>
       </select>
     </div>
-    <div class="input-group" style="width: 60px;">
+    <div class="input-group" style="width: 50px;">
       <label for="count">Count</label>
-      <input type="number" id="count" value="4" min="1" max="100" title="Number of echo requests to send">
+      <input type="number" id="count" value="4" min="1" max="1000" title="Number of echo requests to send">
     </div>
-    <div class="input-group" style="width: 70px;">
+    <div class="input-group" style="width: 60px;">
       <label for="size">Size (B)</label>
       <input type="number" id="size" value="32" min="1" max="65500" title="Payload buffer size in bytes (excludes 28B header)">
     </div>
-    <div class="input-group" style="width: 60px;">
+    <div class="input-group" style="width: 52px;">
       <label for="ttl">TTL</label>
       <input type="number" id="ttl" value="115" min="1" max="255" title="Time-To-Live hop limit">
     </div>
+    <div class="input-group" style="width: 68px;">
+      <label for="timeout">Wait(ms)</label>
+      <input type="number" id="timeout" value="1000" min="100" max="10000" step="100" title="Per-packet reply timeout threshold">
+    </div>
     <div class="input-group">
-      <label class="checkbox-group" for="continuous" style="padding: 0; margin-top: auto; margin-bottom: 6px;" title="Continuous ping loop until stopped">
+      <label class="checkbox-group" for="continuous" style="padding: 0; margin-top: auto; margin-bottom: 5px;" title="Continuous ping loop until stopped">
         <input type="checkbox" id="continuous">
         <span style="font-size: 11px; color: var(--text-muted)">-t (Cont)</span>
       </label>
     </div>
     <div class="input-group">
-      <label class="checkbox-group" for="hexdump" style="padding: 0; margin-top: auto; margin-bottom: 6px;" title="Display raw packet payload buffer in hexadecimal">
+      <label class="checkbox-group" for="hexdump" style="padding: 0; margin-top: auto; margin-bottom: 5px;" title="Display raw packet payload buffer in hexadecimal">
         <input type="checkbox" id="hexdump">
         <span style="font-size: 11px; color: var(--text-muted)">Hex Dump</span>
       </label>
     </div>
     <div class="input-group">
-      <label class="checkbox-group" for="dfbit" style="padding: 0; margin-top: auto; margin-bottom: 6px;" title="Set Don't-Fragment bit in IP header">
+      <label class="checkbox-group" for="dfbit" style="padding: 0; margin-top: auto; margin-bottom: 5px;" title="Set Don't-Fragment bit in IP header">
         <input type="checkbox" id="dfbit">
-        <span style="font-size: 11px; color: var(--text-muted)">-f (DF Bit)</span>
+        <span style="font-size: 11px; color: var(--text-muted)">-f (DF)</span>
+      </label>
+    </div>
+    <div class="input-group">
+      <label class="checkbox-group" for="resolveCheck" style="padding: 0; margin-top: auto; margin-bottom: 5px;" title="Resolve IP addresses to hostnames">
+        <input type="checkbox" id="resolveCheck">
+        <span style="font-size: 11px; color: var(--text-muted)">-a (Resolve)</span>
       </label>
     </div>
     <button id="btnAction" class="btn btn-primary" title="Start/Stop Ping [P]">Ping <span class="kbd-badge">P</span></button>
     <button id="btnTrace" class="btn btn-primary" title="Start/Stop Route Trace [T]">Trace <span class="kbd-badge">T</span></button>
     <button id="btnMTU" class="btn btn-mtu" title="Path MTU Discovery [M]">MTU <span class="kbd-badge">M</span></button>
-    <button id="btnExport" class="btn btn-secondary" title="Export Log [E]">Export <span class="kbd-badge">E</span></button>
+    <button id="btnSubnet" class="btn btn-subnet" title="Subnet LAN Discovery Sweep [S]">Subnet <span class="kbd-badge">S</span></button>
+    <button id="btnDNS" class="btn btn-dns" title="DNS & IP Inspector [D]">DNS <span class="kbd-badge">D</span></button>
+    <button id="btnExport" class="btn btn-secondary" title="Export Log / CSV / Markdown [E]">Export <span class="kbd-badge">E</span></button>
     <button id="btnCopy" class="btn btn-secondary" title="Copy Console Log [Ctrl+C]">Copy <span class="kbd-badge">^C</span></button>
     <button id="btnClear" class="btn btn-secondary" title="Clear Console [C]">Clear <span class="kbd-badge">C</span></button>
     <button id="btnSound" class="btn btn-secondary" title="Toggle Sound Feedback [U]">Audio: ON <span class="kbd-badge">U</span></button>
@@ -255,13 +307,22 @@
         <div class="dot dot-red"></div>
         <div class="dot dot-yellow"></div>
         <div class="dot dot-green"></div>
-        <span style="margin-left: 8px; font-size: 12px; color: var(--text-muted); font-family: monospace;">KPing Diagnostics Log</span>
+        <span style="margin-left: 6px; font-size: 11.5px; color: var(--text-muted); font-family: monospace;">KPing Diagnostics Log</span>
         <span id="statusBadge" class="status-badge"><span class="pulse-dot"></span><span id="statusText">IDLE</span></span>
-        <span style="margin-left: auto; font-size: 11.5px; color: var(--text-dim); font-family: monospace;">Press <strong style="color:var(--text-muted)">Enter / [P]</strong> to Ping • <strong style="color:var(--text-muted)">[F1]</strong> Help</span>
+        
+        <div class="filter-bar">
+          <span class="filter-pill active" data-filter="all">All</span>
+          <span class="filter-pill" data-filter="reply">Replies</span>
+          <span class="filter-pill" data-filter="loss">Loss/Errors</span>
+          <span class="filter-pill" data-filter="hops">Hops</span>
+          <span class="filter-pill" data-filter="probes">Probes</span>
+          <input type="text" id="filterInput" placeholder="Filter log..." title="Filter console output lines">
+        </div>
       </div>
-      <textarea id="out" readonly spellcheck="false" role="log" aria-live="polite" aria-atomic="false">Welcome to KPing Network Diagnostics.
-Features: ICMP Ping [P], Path MTU Discovery (PMTU) [M], Route Tracing [T], Hex Dump, DF-Flag Toggle, Log Export [E].
-Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
+      <textarea id="out" readonly spellcheck="false" role="log" aria-live="polite" aria-atomic="false">Welcome to KPing Network Diagnostics Suite.
+Modes: Ping [P], Route Trace [T], Path MTU [M], Subnet LAN Sweep [S], DNS Inspector [D].
+Metrics: Mean Jitter (RFC 3550), Std Dev, VoIP MOS Quality Score, SLA Rating.
+Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' for Help.
 
 </textarea>
     </div>
@@ -276,11 +337,24 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
         <strong id="valLoss">0%</strong>
       </div>
       <div class="stats-box">
+        <span>Std Dev (σ)</span>
+        <strong id="valStdDev">0ms</strong>
+      </div>
+      <div class="stats-box">
+        <span>VoIP MOS</span>
+        <strong id="valMOS">4.4</strong>
+        <span id="tagMOS" class="quality-tag tag-crystal">Crystal</span>
+      </div>
+      <div class="stats-box">
+        <span>SLA Grade</span>
+        <strong id="valSLA">A+</strong>
+      </div>
+      <div class="stats-box">
         <span>Path MTU</span>
         <strong id="valMTU">-</strong>
       </div>
       <div class="graph-box" style="position: relative;">
-        <span style="font-size: 10.5px; color: var(--text-muted); position: absolute; top: 3px; left: 8px; font-family: monospace;">Latency & Jitter (ms)</span>
+        <span style="font-size: 10px; color: var(--text-muted); position: absolute; top: 2px; left: 8px; font-family: monospace;">Latency & Jitter Telemetry (ms)</span>
         <canvas id="graphCanvas" role="img" aria-label="Network latency and jitter telemetry chart"></canvas>
         <div id="graphTooltip" style="display:none; position:absolute; pointer-events:none; background:rgba(15,23,42,0.95); border:1px solid var(--accent); padding:3px 8px; border-radius:4px; font-size:11px; font-family:monospace; color:#93c5fd; z-index:10; box-shadow:0 4px 12px rgba(0,0,0,0.5); white-space:nowrap;"></div>
       </div>
@@ -290,19 +364,65 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
+  <!-- Export Dialog Modal -->
+  <div id="exportModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
+    <div class="modal-dialog glass" style="width: 520px;">
+      <div class="modal-header">
+        <div id="exportModalTitle" class="modal-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Export Diagnostic Telemetry & Reports
+        </div>
+        <button id="exportCloseBtn" class="modal-close" title="Close [Esc]" aria-label="Close export dialog">&times;</button>
+      </div>
+
+      <div class="export-option-card" onclick="triggerExport('json')">
+        <div>
+          <strong style="color:#93c5fd; font-size:13px;">JSON Telemetry Dataset (.json)</strong>
+          <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">Complete structured telemetry array, packet metrics, and session audit.</div>
+        </div>
+        <button class="btn btn-secondary" style="min-width:60px;">Download</button>
+      </div>
+
+      <div class="export-option-card" onclick="triggerExport('csv')">
+        <div>
+          <strong style="color:#6ee7b7; font-size:13px;">CSV Spreadsheet Table (.csv)</strong>
+          <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">RFC-compliant tabular dataset for Excel, Pandas, or Wireshark comparison.</div>
+        </div>
+        <button class="btn btn-secondary" style="min-width:60px;">Download</button>
+      </div>
+
+      <div class="export-option-card" onclick="triggerExport('md')">
+        <div>
+          <strong style="color:#c084fc; font-size:13px;">Markdown Audit Report (.md)</strong>
+          <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">Formatted engineering report with metric tables and console dump.</div>
+        </div>
+        <button class="btn btn-secondary" style="min-width:60px;">Download</button>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
+        <button id="btnExportCancel" class="btn btn-secondary">Close [Esc]</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Help & Shortcuts Modal -->
   <div id="helpModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
     <div class="modal-dialog glass">
       <div class="modal-header">
         <div id="helpModalTitle" class="modal-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          KPing Reference & Keyboard Shortcuts
+          KPing Reference & Diagnostic Shortcuts
         </div>
         <button id="modalCloseBtn" class="modal-close" title="Close [Esc]" aria-label="Close modal dialog">&times;</button>
       </div>
       
       <div class="info-block">
-        <strong>Path MTU Discovery (PMTU):</strong> Probes destination buffer sizes with the Don't-Fragment (DF) bit set to determine maximum transmission unit without IP fragmentation, calculating recommended TCP MSS (<span class="shortcut-key">MTU - 40B</span>).
+        <strong>Diagnostic Suite Modes:</strong>
+        <br>• <strong>Ping [P]:</strong> Precision ICMP echo testing measuring latency, jitter (RFC 3550), std deviation, VoIP MOS, and SLA compliance.
+        <br>• <strong>Trace [T]:</strong> Hop-by-hop route latency and transit mapping.
+        <br>• <strong>PMTU [M]:</strong> Path MTU Discovery sweep probing Don't-Fragment buffer limits to compute recommended TCP MSS.
+        <br>• <strong>Subnet [S]:</strong> Fast CIDR LAN discovery sweep scanning active nodes on the local subnet.
+        <br>• <strong>DNS [D]:</strong> Reverse PTR resolution and RFC IP classification (RFC 1918, RFC 1122, RFC 3927, CGNAT).
       </div>
 
       <table class="shortcut-table">
@@ -330,9 +450,19 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
             <td>Perform Path MTU Discovery with DF bit sweep</td>
           </tr>
           <tr>
+            <td><span class="shortcut-key">S</span></td>
+            <td><strong>Subnet Sweep</strong></td>
+            <td>Scan local subnet for active nodes and devices</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">D</span></td>
+            <td><strong>DNS Inspector</strong></td>
+            <td>Resolve records and analyze RFC IP classification</td>
+          </tr>
+          <tr>
             <td><span class="shortcut-key">E</span> / <span class="shortcut-key">Ctrl+S</span></td>
             <td><strong>Export</strong></td>
-            <td>Save session logs & latency telemetry to JSON file</td>
+            <td>Open export dialog (JSON, CSV, Markdown)</td>
           </tr>
           <tr>
             <td><span class="shortcut-key">Ctrl+C</span></td>
@@ -343,6 +473,16 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
             <td><span class="shortcut-key">C</span></td>
             <td><strong>Clear</strong></td>
             <td>Clear terminal output console & telemetry graph</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">F5</span></td>
+            <td><strong>Quicksave</strong></td>
+            <td>Save current target & config to local storage</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">F9</span></td>
+            <td><strong>Quickload</strong></td>
+            <td>Restore previously quicksaved target & config</td>
           </tr>
           <tr>
             <td><span class="shortcut-key">U</span></td>
@@ -367,7 +507,7 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
         </tbody>
       </table>
 
-      <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
+      <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
         <button id="btnModalGotIt" class="btn btn-primary">Got it [Esc]</button>
       </div>
     </div>
@@ -375,7 +515,7 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
 
 <script>
   if (window.parent && window.parent !== window) {
-      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 870, height: 650 }, '*');
+      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 940, height: 680 }, '*');
   }
 
   function escapeHtml(str) {
@@ -411,17 +551,23 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
   const countInput = document.getElementById('count');
   const sizeInput = document.getElementById('size');
   const ttlInput = document.getElementById('ttl');
+  const timeoutInput = document.getElementById('timeout');
   const continuousCheck = document.getElementById('continuous');
   const hexdumpCheck = document.getElementById('hexdump');
   const dfCheck = document.getElementById('dfbit');
+  const resolveCheck = document.getElementById('resolveCheck');
+
   const btnAction = document.getElementById('btnAction');
   const btnMTU = document.getElementById('btnMTU');
   const btnTrace = document.getElementById('btnTrace');
+  const btnSubnet = document.getElementById('btnSubnet');
+  const btnDNS = document.getElementById('btnDNS');
   const btnExport = document.getElementById('btnExport');
   const btnCopy = document.getElementById('btnCopy');
   const btnClear = document.getElementById('btnClear');
   const btnSound = document.getElementById('btnSound');
   const btnHelp = document.getElementById('btnHelp');
+
   const out = document.getElementById('out');
   const canvas = document.getElementById('graphCanvas');
   const ctx = canvas.getContext('2d');
@@ -429,23 +575,39 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
   
   const valJitter = document.getElementById('valJitter');
   const valLoss = document.getElementById('valLoss');
+  const valStdDev = document.getElementById('valStdDev');
+  const valMOS = document.getElementById('valMOS');
+  const tagMOS = document.getElementById('tagMOS');
+  const valSLA = document.getElementById('valSLA');
   const valMTU = document.getElementById('valMTU');
+
   const statusBadge = document.getElementById('statusBadge');
   const statusText = document.getElementById('statusText');
   const toastContainer = document.getElementById('toastContainer');
   const helpModal = document.getElementById('helpModal');
   const modalCloseBtn = document.getElementById('modalCloseBtn');
   const btnModalGotIt = document.getElementById('btnModalGotIt');
-  
+  const exportModal = document.getElementById('exportModal');
+  const exportCloseBtn = document.getElementById('exportCloseBtn');
+  const btnExportCancel = document.getElementById('btnExportCancel');
+
+  const filterPills = document.querySelectorAll('.filter-pill');
+  const filterInput = document.getElementById('filterInput');
+  let currentFilter = 'all';
+  let filterQuery = '';
+
   let pingInterval = null;
   let isPinging = false;
   let isTracing = false;
   let isMtuSweeping = false;
+  let isSubnetSweeping = false;
+  let isDnsInspecting = false;
   let stats = { sent: 0, recv: 0, lost: 0, min: Infinity, max: -Infinity, sum: 0 };
   let currentHost = '';
   
   let historyData = [];
   let logEntries = [];
+  let allConsoleLines = [];
   let lastFocusedEl = null;
 
   // Audio subsystem
@@ -494,7 +656,6 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
 
   function playPingSound(ms) {
     if (soundMuted) return;
-    // Map latency 1ms - 100ms to frequency 800Hz down to 350Hz
     const clamped = Math.max(1, Math.min(100, ms));
     const freq = 800 - (clamped * 4.5);
     playTone(freq, 'sine', 0.06, 0.15);
@@ -518,6 +679,15 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
   function playTraceSound() {
     if (soundMuted) return;
     playTone(480, 'triangle', 0.05, 0.1);
+  }
+
+  function playSubnetSound(active) {
+    if (soundMuted) return;
+    if (active) {
+      playTone(720, 'sine', 0.05, 0.12);
+    } else {
+      playTone(240, 'sine', 0.03, 0.04);
+    }
   }
 
   function playCompleteSound() {
@@ -545,18 +715,20 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
 
   // Persistent settings
   function loadConfig() {
-    const cfg = safeGetStorage('kping_config_v1', null);
+    const cfg = safeGetStorage('kping_config_v2', null);
     if (cfg && typeof cfg === 'object') {
       if (typeof cfg.host === 'string' && cfg.host.trim()) hostInput.value = cfg.host.trim();
       if (typeof cfg.count === 'number') countInput.value = Math.max(1, Math.min(1000, cfg.count));
       if (typeof cfg.size === 'number') sizeInput.value = Math.max(1, Math.min(65500, cfg.size));
       if (typeof cfg.ttl === 'number') ttlInput.value = Math.max(1, Math.min(255, cfg.ttl));
+      if (typeof cfg.timeout === 'number') timeoutInput.value = Math.max(100, Math.min(10000, cfg.timeout));
       if (typeof cfg.continuous === 'boolean') {
         continuousCheck.checked = cfg.continuous;
         countInput.disabled = cfg.continuous;
       }
       if (typeof cfg.hexdump === 'boolean') hexdumpCheck.checked = cfg.hexdump;
       if (typeof cfg.dfbit === 'boolean') dfCheck.checked = cfg.dfbit;
+      if (typeof cfg.resolve === 'boolean') resolveCheck.checked = cfg.resolve;
     }
     if (presetSelect) {
       presetSelect.value = hostInput.value.trim();
@@ -564,18 +736,20 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
   }
 
   function saveConfig() {
-    safeSetStorage('kping_config_v1', {
+    safeSetStorage('kping_config_v2', {
       host: hostInput.value.trim(),
       count: parseInt(countInput.value) || 4,
       size: parseInt(sizeInput.value) || 32,
       ttl: parseInt(ttlInput.value) || 115,
+      timeout: parseInt(timeoutInput.value) || 1000,
       continuous: continuousCheck.checked,
       hexdump: hexdumpCheck.checked,
-      dfbit: dfCheck.checked
+      dfbit: dfCheck.checked,
+      resolve: resolveCheck.checked
     });
   }
 
-  [hostInput, countInput, sizeInput, ttlInput, continuousCheck, hexdumpCheck, dfCheck].forEach(el => {
+  [hostInput, countInput, sizeInput, ttlInput, timeoutInput, continuousCheck, hexdumpCheck, dfCheck, resolveCheck].forEach(el => {
     el.addEventListener('change', saveConfig);
   });
 
@@ -585,6 +759,45 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
     }
     saveConfig();
   });
+
+  function quicksaveState() {
+    saveConfig();
+    safeSetStorage('kping_quicksave', {
+      host: hostInput.value.trim(),
+      count: parseInt(countInput.value) || 4,
+      size: parseInt(sizeInput.value) || 32,
+      ttl: parseInt(ttlInput.value) || 115,
+      timeout: parseInt(timeoutInput.value) || 1000,
+      continuous: continuousCheck.checked,
+      hexdump: hexdumpCheck.checked,
+      dfbit: dfCheck.checked,
+      resolve: resolveCheck.checked,
+      timestamp: new Date().toISOString()
+    });
+    showToast("💾 <strong>Configuration Quicksaved [F5]</strong>", "success", 2500);
+    append(`[i] Configuration state quicksaved to storage [F5]\n`, 'info');
+  }
+
+  function quickloadState() {
+    const saved = safeGetStorage('kping_quicksave', null);
+    if (!saved) {
+      showToast("No quicksave state found to restore", "warning", 2500);
+      return;
+    }
+    if (saved.host) hostInput.value = saved.host;
+    if (saved.count) countInput.value = saved.count;
+    if (saved.size) sizeInput.value = saved.size;
+    if (saved.ttl) ttlInput.value = saved.ttl;
+    if (saved.timeout) timeoutInput.value = saved.timeout;
+    continuousCheck.checked = !!saved.continuous;
+    hexdumpCheck.checked = !!saved.hexdump;
+    dfCheck.checked = !!saved.dfbit;
+    resolveCheck.checked = !!saved.resolve;
+    countInput.disabled = continuousCheck.checked;
+    saveConfig();
+    showToast("📂 <strong>Configuration Quickloaded [F9]</strong>", "info", 2500);
+    append(`[i] Configuration state quickloaded from storage [F9]\n`, 'info');
+  }
 
   function showToast(messageHtml, type = 'info', duration = 4000) {
     while (toastContainer.children.length >= 3) {
@@ -620,6 +833,12 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
     } else if (mode === 'mtu') {
       statusBadge.classList.add('mtu');
       statusText.textContent = 'PMTU SWEEP';
+    } else if (mode === 'subnet') {
+      statusBadge.classList.add('subnet');
+      statusText.textContent = 'SUBNET SWEEP';
+    } else if (mode === 'dns') {
+      statusBadge.classList.add('dns');
+      statusText.textContent = 'DNS QUERY';
     } else {
       statusText.textContent = 'IDLE';
     }
@@ -644,18 +863,23 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
     if (e.target === helpModal) closeHelpModal();
   };
 
-  helpModal.addEventListener('keydown', (e) => {
-    if (e.key === 'Tab') {
-      const focusables = [modalCloseBtn, btnModalGotIt];
-      if (e.shiftKey && document.activeElement === focusables[0]) {
-        e.preventDefault();
-        focusables[focusables.length - 1].focus();
-      } else if (!e.shiftKey && document.activeElement === focusables[focusables.length - 1]) {
-        e.preventDefault();
-        focusables[0].focus();
-      }
+  function openExportModal() {
+    lastFocusedEl = document.activeElement;
+    exportModal.classList.add('active');
+  }
+
+  function closeExportModal() {
+    exportModal.classList.remove('active');
+    if (lastFocusedEl && typeof lastFocusedEl.focus === 'function') {
+      lastFocusedEl.focus();
     }
-  });
+  }
+
+  exportCloseBtn.onclick = closeExportModal;
+  btnExportCancel.onclick = closeExportModal;
+  exportModal.onclick = (e) => {
+    if (e.target === exportModal) closeExportModal();
+  };
 
   presetSelect.addEventListener('change', () => {
     if (isBusy()) return;
@@ -692,13 +916,61 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
     saveConfig();
   });
 
-  function append(text, type = "info", rawObj = null) {
-      out.value += text;
-      if (out.value.length > 30000) {
-          const cutIdx = out.value.indexOf('\n', out.value.length - 20000);
-          out.value = cutIdx !== -1 ? out.value.substring(cutIdx + 1) : out.value.substring(out.value.length - 20000);
-      }
+  // Console Filter System
+  filterPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      filterPills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      currentFilter = pill.dataset.filter;
+      applyConsoleFilter();
+    });
+  });
+
+  filterInput.addEventListener('input', () => {
+    filterQuery = filterInput.value.trim().toLowerCase();
+    applyConsoleFilter();
+  });
+
+  function applyConsoleFilter() {
+    if (currentFilter === 'all' && !filterQuery) {
+      out.value = allConsoleLines.map(l => l.text).join('');
       out.scrollTop = out.scrollHeight;
+      return;
+    }
+
+    const filtered = allConsoleLines.filter(line => {
+      if (currentFilter === 'reply' && line.type !== 'reply') return false;
+      if (currentFilter === 'loss' && line.type !== 'timeout' && line.type !== 'error' && line.type !== 'mtu_frag') return false;
+      if (currentFilter === 'hops' && line.type !== 'trace_hop') return false;
+      if (currentFilter === 'probes' && line.type !== 'mtu_pass' && line.type !== 'mtu_frag') return false;
+      if (filterQuery && !line.text.toLowerCase().includes(filterQuery)) return false;
+      return true;
+    });
+
+    out.value = filtered.map(l => l.text).join('');
+    out.scrollTop = out.scrollHeight;
+  }
+
+  function append(text, type = "info", rawObj = null) {
+      allConsoleLines.push({ text, type });
+      if (allConsoleLines.length > 1000) allConsoleLines.shift();
+
+      let shouldDisplay = true;
+      if (currentFilter === 'reply' && type !== 'reply') shouldDisplay = false;
+      if (currentFilter === 'loss' && type !== 'timeout' && type !== 'error' && type !== 'mtu_frag') shouldDisplay = false;
+      if (currentFilter === 'hops' && type !== 'trace_hop') shouldDisplay = false;
+      if (currentFilter === 'probes' && type !== 'mtu_pass' && type !== 'mtu_frag') shouldDisplay = false;
+      if (filterQuery && !text.toLowerCase().includes(filterQuery)) shouldDisplay = false;
+
+      if (shouldDisplay) {
+        out.value += text;
+        if (out.value.length > 30000) {
+            const cutIdx = out.value.indexOf('\n', out.value.length - 20000);
+            out.value = cutIdx !== -1 ? out.value.substring(cutIdx + 1) : out.value.substring(out.value.length - 20000);
+        }
+        out.scrollTop = out.scrollHeight;
+      }
+
       if (rawObj) {
           logEntries.push(Object.assign({ timestamp: new Date().toISOString() }, rawObj));
       } else {
@@ -709,11 +981,17 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
 
   function clearOutput() {
       out.value = "";
+      allConsoleLines = [];
       logEntries = [];
       historyData = [];
       stats = { sent: 0, recv: 0, lost: 0, min: Infinity, max: -Infinity, sum: 0 };
       valJitter.textContent = "0ms";
       valLoss.textContent = "0%";
+      valStdDev.textContent = "0ms";
+      valMOS.textContent = "4.4";
+      tagMOS.className = "quality-tag tag-crystal";
+      tagMOS.textContent = "Crystal";
+      valSLA.textContent = "A+";
       valMTU.textContent = "-";
       currentHoverIdx = -1;
       graphTooltip.style.display = 'none';
@@ -755,15 +1033,19 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
   }
 
   function generateHexDump(size) {
-      let hex = "Payload Hex Dump:\n";
+      let hex = "Payload Hex & ASCII Inspection:\n";
+      const sampleText = "KiloApps KPing Diagnostic Payload 1999";
       for (let i = 0; i < size && i < 128; i += 16) {
           let chunk = [];
+          let ascii = "";
           for (let j = 0; j < 16; j++) {
               if (i + j < size) {
-                  chunk.push(Math.floor(Math.random() * 256).toString(16).padStart(2, '0'));
+                  const b = (i + j < sampleText.length) ? sampleText.charCodeAt(i + j) : ((i + j * 7) % 256);
+                  chunk.push(b.toString(16).padStart(2, '0'));
+                  ascii += (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
               }
           }
-          hex += `  0x${i.toString(16).padStart(4, '0')}  ${chunk.join(' ')}\n`;
+          hex += `  0x${i.toString(16).padStart(4, '0')}  ${chunk.join(' ').padEnd(48, ' ')}  |${ascii}|\n`;
       }
       if (size > 128) hex += `  ... (${size - 128} more bytes)\n`;
       return hex;
@@ -774,14 +1056,29 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       presetSelect.disabled = disabled;
       sizeInput.disabled = disabled;
       ttlInput.disabled = disabled;
+      timeoutInput.disabled = disabled;
       continuousCheck.disabled = disabled;
       hexdumpCheck.disabled = disabled;
       dfCheck.disabled = disabled;
+      resolveCheck.disabled = disabled;
       countInput.disabled = disabled || continuousCheck.checked;
   }
 
   function isBusy() {
-      return isPinging || isTracing || isMtuSweeping;
+      return isPinging || isTracing || isMtuSweeping || isSubnetSweeping || isDnsInspecting;
+  }
+
+  function classifyIP(ip) {
+      if (ip === '127.0.0.1' || ip === 'localhost') return "RFC 1122 Loopback (Localhost)";
+      if (ip.startsWith('192.168.')) return "RFC 1918 Private LAN (Class C)";
+      if (ip.startsWith('10.')) return "RFC 1918 Private LAN (Class A)";
+      if (ip.startsWith('172.16.') || ip.startsWith('172.20.') || ip.startsWith('172.31.')) return "RFC 1918 Private LAN (Class B)";
+      if (ip.startsWith('169.254.')) return "RFC 3927 Link-Local / APIPA";
+      if (ip.startsWith('100.64.')) return "RFC 6598 Carrier Grade NAT (CGNAT)";
+      if (ip === '1.1.1.1') return "Cloudflare Anycast DNS (Public Internet)";
+      if (ip === '8.8.8.8' || ip === '8.8.4.4') return "Google Public DNS (Public Internet)";
+      if (ip === '9.9.9.9') return "Quad9 Secure Anycast (Public Internet)";
+      return "Public Global Unicast (WAN)";
   }
 
   function startPing() {
@@ -792,20 +1089,26 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       const size = Math.max(1, Math.min(65500, parseInt(sizeInput.value) || 32));
       const count = Math.max(1, Math.min(1000, parseInt(countInput.value) || 4));
       const ttl = Math.max(1, Math.min(255, parseInt(ttlInput.value) || 115));
+      const timeout = Math.max(100, Math.min(10000, parseInt(timeoutInput.value) || 1000));
       sizeInput.value = size;
       countInput.value = count;
       ttlInput.value = ttl;
+      timeoutInput.value = timeout;
       const continuous = continuousCheck.checked;
       const df = dfCheck.checked;
+      const resolve = resolveCheck.checked;
       
       out.value = "";
+      allConsoleLines = [];
       logEntries = [];
       historyData = [];
       drawGraph();
       valJitter.textContent = "0ms";
       valLoss.textContent = "0%";
+      valStdDev.textContent = "0ms";
       
-      append(`Pinging ${currentHost} with ${size} bytes of data [DF=${df ? 1 : 0}]:\n\n`, 'header');
+      const ipClass = classifyIP(currentHost);
+      append(`Pinging ${currentHost} [${ipClass}] with ${size} bytes of data [DF=${df ? 1 : 0}, Resolve=${resolve ? 1 : 0}, Timeout=${timeout}ms]:\n\n`, 'header');
       if (hexdumpCheck.checked) {
           append(generateHexDump(size) + "\n", 'hexdump');
       }
@@ -816,6 +1119,8 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       btnAction.className = 'btn btn-danger';
       btnTrace.disabled = true;
       btnMTU.disabled = true;
+      btnSubnet.disabled = true;
+      btnDNS.disabled = true;
       setInputsDisabled(true);
       
       stats = { sent: 0, recv: 0, lost: 0, min: Infinity, max: -Infinity, sum: 0 };
@@ -841,7 +1146,9 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
                   stats.sum += time;
                   historyData.push(time);
                   if (historyData.length > 200) historyData.shift();
-                  append(`Reply from ${currentHost}: bytes=${size} time=${time}ms TTL=${ttl}\n`, 'reply', { host: currentHost, bytes: size, time, ttl, df });
+
+                  const resolvedName = resolve ? ` (${currentHost === '1.1.1.1' ? 'one.one.one.one' : currentHost === '8.8.8.8' ? 'dns.google' : 'host.lan'})` : '';
+                  append(`Reply from ${currentHost}${resolvedName}: bytes=${size} time=${time}ms TTL=${ttl}\n`, 'reply', { host: currentHost, bytes: size, time, ttl, df });
                   playPingSound(time);
               } else {
                   stats.lost++;
@@ -867,8 +1174,11 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       let jitterSum = 0;
       let jitterCount = 0;
       let lastTime = null;
+      const validTimes = [];
+
       for (let t of historyData) {
           if (t !== null) {
+              validTimes.push(t);
               if (lastTime !== null) {
                   jitterSum += Math.abs(t - lastTime);
                   jitterCount++;
@@ -878,6 +1188,48 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       }
       const avgJitter = jitterCount > 0 ? Math.round(jitterSum / jitterCount) : 0;
       valJitter.textContent = `${avgJitter}ms`;
+
+      // Standard Deviation calculation
+      if (validTimes.length > 1) {
+          const avg = validTimes.reduce((a, b) => a + b, 0) / validTimes.length;
+          const variance = validTimes.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / validTimes.length;
+          const stdDev = Math.sqrt(variance);
+          valStdDev.textContent = `${stdDev.toFixed(1)}ms`;
+      } else {
+          valStdDev.textContent = `0ms`;
+      }
+
+      // VoIP MOS Quality Score (ITU-T G.107 E-Model simplified)
+      const avgLat = stats.recv > 0 ? Math.round(stats.sum / stats.recv) : 20;
+      const effectiveLatency = avgLat + (2 * avgJitter) + 10;
+      let R = 93.2 - (effectiveLatency / 40) - (2.5 * lossPercent);
+      if (R < 0) R = 0;
+      if (R > 100) R = 100;
+      let mos = 1 + (0.035 * R) + (7e-6 * R * (R - 60) * (100 - R));
+      mos = Math.max(1.0, Math.min(4.41, mos));
+      valMOS.textContent = mos.toFixed(2);
+
+      if (mos >= 4.1) {
+          tagMOS.className = "quality-tag tag-crystal";
+          tagMOS.textContent = "Crystal";
+      } else if (mos >= 3.6) {
+          tagMOS.className = "quality-tag tag-good";
+          tagMOS.textContent = "Good";
+      } else if (mos >= 3.0) {
+          tagMOS.className = "quality-tag tag-fair";
+          tagMOS.textContent = "Fair";
+      } else {
+          tagMOS.className = "quality-tag tag-poor";
+          tagMOS.textContent = "Poor";
+      }
+
+      // SLA Compliance Grade
+      if (lossPercent === 0 && avgLat <= 25 && avgJitter <= 5) valSLA.textContent = "A+";
+      else if (lossPercent === 0 && avgLat <= 60 && avgJitter <= 15) valSLA.textContent = "A";
+      else if (lossPercent <= 2 && avgLat <= 120) valSLA.textContent = "B";
+      else if (lossPercent <= 5 && avgLat <= 200) valSLA.textContent = "C";
+      else if (lossPercent <= 15 || avgLat <= 350) valSLA.textContent = "D";
+      else valSLA.textContent = "F";
   }
 
   let currentHoverIdx = -1;
@@ -901,10 +1253,9 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       const valid = historyData.filter(d => d !== null);
       let maxTime = valid.length > 0 ? Math.max(...valid) : 40;
       if (maxTime < 40) maxTime = 40;
-      // Round maxTime up to nearest 10
       maxTime = Math.ceil(maxTime / 10) * 10;
 
-      // Draw horizontal threshold grid lines
+      // Threshold lines
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
       ctx.lineWidth = 1;
       ctx.font = '9px Consolas, monospace';
@@ -927,7 +1278,7 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       const pts = historyData.length;
       const stepX = plotW / Math.max(10, pts - 1);
       
-      // Fill gradient under curve
+      // Fill gradient
       const gradient = ctx.createLinearGradient(0, paddingTop, 0, paddingTop + plotH);
       gradient.addColorStop(0, 'rgba(59, 130, 246, 0.35)');
       gradient.addColorStop(1, 'rgba(59, 130, 246, 0.02)');
@@ -982,14 +1333,13 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       }
       ctx.stroke();
 
-      // Draw points
+      // Points & hover dots
       for (let i = 0; i < pts; i++) {
           const val = historyData[i];
           const x = paddingLeft + i * stepX;
           const isHovered = (i === hoverIdx);
 
           if (val === null) {
-              // Packet loss indicator
               ctx.fillStyle = '#ef4444';
               ctx.fillRect(x - 3, paddingTop + plotH - 3, 6, 6);
               if (isHovered) {
@@ -1043,9 +1393,9 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
           graphTooltip.style.display = 'block';
           graphTooltip.style.left = `${Math.min(rect.width - 120, Math.max(10, x - 45))}px`;
           graphTooltip.style.top = `${Math.max(5, mouseY - 28)}px`;
-          const prefix = isTracing ? `Hop #${packetNum}` : (isMtuSweeping ? `Probe #${packetNum}` : `#${packetNum}`);
+          const prefix = isTracing ? `Hop #${packetNum}` : (isMtuSweeping ? `Probe #${packetNum}` : (isSubnetSweeping ? `Node #${packetNum}` : `#${packetNum}`));
           if (val === null) {
-              const reason = isMtuSweeping ? 'Exceeds MTU' : 'Lost (Timeout)';
+              const reason = isMtuSweeping ? 'Exceeds MTU' : (isSubnetSweeping ? 'Offline' : 'Timeout');
               graphTooltip.innerHTML = `<span style="color:#f87171;">${prefix}: ${reason}</span>`;
           } else {
               graphTooltip.innerHTML = `<span>${prefix}: <strong>${val}ms</strong></span>`;
@@ -1072,6 +1422,8 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       btnAction.className = 'btn btn-primary';
       btnTrace.disabled = false;
       btnMTU.disabled = false;
+      btnSubnet.disabled = false;
+      btnDNS.disabled = false;
       setInputsDisabled(false);
       
       const lossPercent = stats.sent > 0 ? Math.round((stats.lost / stats.sent) * 100) : 0;
@@ -1083,7 +1435,8 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
           const max = stats.max;
           const avg = Math.round(stats.sum / stats.recv);
           append(`Approximate round trip times in milli-seconds:\n`, 'summary_times_header');
-          append(`    Minimum = ${min}ms, Maximum = ${max}ms, Average = ${avg}ms\n`, 'summary_times', { min, max, avg });
+          append(`    Minimum = ${min}ms, Maximum = ${max}ms, Average = ${avg}ms, Jitter = ${valJitter.textContent}\n`, 'summary_times', { min, max, avg });
+          append(`    VoIP MOS Score = ${valMOS.textContent}/4.5, SLA Compliance = ${valSLA.textContent}\n`, 'summary_sla');
       }
       playCompleteSound();
       showToast(`Ping completed (${lossPercent}% loss)`, lossPercent === 0 ? 'success' : 'warning', 3000);
@@ -1095,6 +1448,7 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       hostInput.value = currentHost;
       saveConfig();
       out.value = "";
+      allConsoleLines = [];
       logEntries = [];
       historyData = [];
       valJitter.textContent = "-";
@@ -1114,6 +1468,8 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       btnMTU.className = 'btn btn-danger';
       btnAction.disabled = true;
       btnTrace.disabled = true;
+      btnSubnet.disabled = true;
+      btnDNS.disabled = true;
       setInputsDisabled(true);
 
       const probeSizes = [548, 1000, 1400, 1452, 1460, 1472, 1492, 1500];
@@ -1157,6 +1513,8 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       btnMTU.className = 'btn btn-mtu';
       btnAction.disabled = false;
       btnTrace.disabled = false;
+      btnSubnet.disabled = false;
+      btnDNS.disabled = false;
       setInputsDisabled(false);
 
       const calculatedMTU = maxPass > 0 ? (maxPass + 28) : 0;
@@ -1190,6 +1548,8 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       btnMTU.className = 'btn btn-mtu';
       btnAction.disabled = false;
       btnTrace.disabled = false;
+      btnSubnet.disabled = false;
+      btnDNS.disabled = false;
       setInputsDisabled(false);
       append(`\n[!] Path MTU Discovery cancelled by user.\n\n`, 'warning');
       showToast("Path MTU Discovery cancelled", "warning", 2500);
@@ -1201,6 +1561,7 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       hostInput.value = currentHost;
       saveConfig();
       out.value = "";
+      allConsoleLines = [];
       logEntries = [];
       historyData = [];
       valJitter.textContent = "-";
@@ -1215,6 +1576,8 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       btnTrace.className = 'btn btn-danger';
       btnAction.disabled = true;
       btnMTU.disabled = true;
+      btnSubnet.disabled = true;
+      btnDNS.disabled = true;
       setInputsDisabled(true);
       showToast(`Tracing route to <strong>${escapeHtml(currentHost)}</strong>...`, 'info', 2500);
       
@@ -1262,11 +1625,184 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       btnTrace.className = 'btn btn-primary';
       btnAction.disabled = false;
       btnMTU.disabled = false;
+      btnSubnet.disabled = false;
+      btnDNS.disabled = false;
       setInputsDisabled(false);
       if (manual) {
           append(`\n[!] Route trace cancelled by user.\n\n`, 'warning');
           showToast("Route trace cancelled", "warning", 2500);
       }
+  }
+
+  // Subnet Sweep Mode
+  function startSubnetSweep() {
+      if (isBusy()) return;
+      currentHost = cleanHost(hostInput.value);
+      hostInput.value = currentHost;
+      saveConfig();
+      out.value = "";
+      allConsoleLines = [];
+      logEntries = [];
+      historyData = [];
+      valJitter.textContent = "-";
+      valLoss.textContent = "-";
+      drawGraph();
+
+      let prefix = "192.168.1.";
+      const parts = currentHost.split('.');
+      if (parts.length === 4 && parts.every(p => !isNaN(parseInt(p)))) {
+          prefix = `${parts[0]}.${parts[1]}.${parts[2]}.`;
+      }
+
+      append(`============================================================\n`, 'subnet_header');
+      append(` KPing Subnet LAN Node Discovery Sweep\n`, 'subnet_header');
+      append(` Subnet Range: ${prefix}1 - ${prefix}20\n`, 'subnet_header');
+      append(` Probing active devices and local network topography...\n`, 'subnet_header');
+      append(`============================================================\n\n`, 'subnet_header');
+
+      isSubnetSweeping = true;
+      setStatus('subnet');
+      btnSubnet.innerHTML = 'Stop <span class="kbd-badge">S</span>';
+      btnSubnet.className = 'btn btn-danger';
+      btnAction.disabled = true;
+      btnTrace.disabled = true;
+      btnMTU.disabled = true;
+      btnDNS.disabled = true;
+      setInputsDisabled(true);
+
+      let nodeIdx = 1;
+      let activeCount = 0;
+      showToast(`Sweeping subnet <strong>${escapeHtml(prefix)}1-20</strong>...`, 'info', 2500);
+
+      if (pingInterval) clearInterval(pingInterval);
+      pingInterval = setInterval(() => {
+          const ip = `${prefix}${nodeIdx}`;
+          // Deterministic simulation based on node index
+          const isOnline = (nodeIdx === 1 || nodeIdx === 3 || nodeIdx === 8 || nodeIdx === 14 || (nodeIdx % 5 === 0));
+          
+          if (isOnline) {
+              activeCount++;
+              const lat = Math.floor(Math.random() * 8) + 1;
+              historyData.push(lat);
+              const role = nodeIdx === 1 ? "Default Gateway / Router" : nodeIdx === 3 ? "DNS Cache / Pi-hole" : nodeIdx === 8 ? "Network Printer / IoT" : "Active Workstation";
+              append(`[ONLINE]  ${ip.padEnd(16, ' ')} -> Reply in ${lat}ms (${role})\n`, 'subnet_node', { ip, online: true, latency: lat, role });
+              playSubnetSound(true);
+          } else {
+              historyData.push(null);
+              append(`[OFFLINE] ${ip.padEnd(16, ' ')} -> Request timed out\n`, 'subnet_node', { ip, online: false });
+              playSubnetSound(false);
+          }
+          drawGraph();
+          nodeIdx++;
+
+          if (nodeIdx > 20) {
+              stopSubnetSweep(false, prefix, activeCount);
+          }
+      }, 350);
+  }
+
+  function stopSubnetSweep(manual = true, prefix = "192.168.1.", activeCount = 0) {
+      if (!isSubnetSweeping) return;
+      clearInterval(pingInterval);
+      pingInterval = null;
+      isSubnetSweeping = false;
+      setStatus('idle');
+      btnSubnet.innerHTML = 'Subnet <span class="kbd-badge">S</span>';
+      btnSubnet.className = 'btn btn-subnet';
+      btnAction.disabled = false;
+      btnTrace.disabled = false;
+      btnMTU.disabled = false;
+      btnDNS.disabled = false;
+      setInputsDisabled(false);
+
+      if (manual) {
+          append(`\n[!] Subnet sweep cancelled by user.\n\n`, 'warning');
+          showToast("Subnet sweep cancelled", "warning", 2000);
+      } else {
+          append(`\n------------------------------------------------------------\n`, 'subnet_summary');
+          append(` Subnet Sweep Summary for ${prefix}0/24:\n`, 'subnet_summary');
+          append(`   - Total Addresses Probed: 20 nodes\n`, 'subnet_summary');
+          append(`   - Active Online Hosts:    ${activeCount} hosts detected\n`, 'subnet_summary');
+          append(`   - Offline / Quiet Nodes:  ${20 - activeCount}\n`, 'subnet_summary');
+          append(`------------------------------------------------------------\n\n`, 'subnet_summary');
+          playCompleteSound();
+          showToast(`Subnet Sweep complete: <strong>${activeCount} online hosts</strong> found`, 'success', 3500);
+      }
+  }
+
+  // DNS Inspector Mode
+  function startDnsInspect() {
+      if (isBusy()) return;
+      currentHost = cleanHost(hostInput.value);
+      hostInput.value = currentHost;
+      saveConfig();
+      out.value = "";
+      allConsoleLines = [];
+      logEntries = [];
+      historyData = [];
+      drawGraph();
+
+      const ipClass = classifyIP(currentHost);
+
+      append(`============================================================\n`, 'dns_header');
+      append(` KPing DNS & RFC Network Inspector\n`, 'dns_header');
+      append(` Target Address:    ${currentHost}\n`, 'dns_header');
+      append(` Address Category:  ${ipClass}\n`, 'dns_header');
+      append(` Querying DNS records and reverse PTR lookup...\n`, 'dns_header');
+      append(`============================================================\n\n`, 'dns_header');
+
+      isDnsInspecting = true;
+      setStatus('dns');
+      btnDNS.innerHTML = 'Stop <span class="kbd-badge">D</span>';
+      btnDNS.className = 'btn btn-danger';
+      btnAction.disabled = true;
+      btnTrace.disabled = true;
+      btnMTU.disabled = true;
+      btnSubnet.disabled = true;
+      setInputsDisabled(true);
+
+      showToast(`Inspecting DNS & address space for <strong>${escapeHtml(currentHost)}</strong>...`, 'info', 2500);
+
+      const records = [
+          { type: 'A', name: currentHost, data: currentHost === '127.0.0.1' ? '127.0.0.1' : (currentHost === '1.1.1.1' ? '1.1.1.1, 1.0.0.1' : '172.217.16.206'), ttl: 300 },
+          { type: 'AAAA', name: currentHost, data: currentHost === '127.0.0.1' ? '::1' : '2606:4700:4700::1111', ttl: 300 },
+          { type: 'PTR', name: currentHost, data: currentHost === '1.1.1.1' ? 'one.one.one.one' : (currentHost === '8.8.8.8' ? 'dns.google' : 'host.kilo.internal'), ttl: 3600 },
+          { type: 'MX', name: currentHost, data: '10 mail.' + currentHost, ttl: 1800 },
+          { type: 'TXT', name: currentHost, data: '"v=spf1 include:_spf.' + currentHost + ' ~all"', ttl: 3600 }
+      ];
+
+      let recIdx = 0;
+      if (pingInterval) clearInterval(pingInterval);
+      pingInterval = setInterval(() => {
+          const rec = records[recIdx];
+          append(`  ${rec.type.padEnd(6, ' ')}  ${rec.name.padEnd(20, ' ')}  ${rec.data.padEnd(32, ' ')}  TTL=${rec.ttl}s\n`, 'dns_record', rec);
+          playTone(500 + recIdx * 60, 'sine', 0.05, 0.1);
+          recIdx++;
+
+          if (recIdx >= records.length) {
+              clearInterval(pingInterval);
+              pingInterval = null;
+              isDnsInspecting = false;
+              setStatus('idle');
+              btnDNS.innerHTML = 'DNS <span class="kbd-badge">D</span>';
+              btnDNS.className = 'btn btn-dns';
+              btnAction.disabled = false;
+              btnTrace.disabled = false;
+              btnMTU.disabled = false;
+              btnSubnet.disabled = false;
+              setInputsDisabled(false);
+
+              append(`\n------------------------------------------------------------\n`, 'dns_summary');
+              append(` Diagnostic Network Profile:\n`, 'dns_summary');
+              append(`   - Classification:   ${ipClass}\n`, 'dns_summary');
+              append(`   - Standard MTU:     1500 bytes (Ethernet Standard)\n`, 'dns_summary');
+              append(`   - Recommended MSS:  1460 bytes\n`, 'dns_summary');
+              append(`   - Reverse Hostname: ${records[2].data}\n`, 'dns_summary');
+              append(`------------------------------------------------------------\n\n`, 'dns_summary');
+              playCompleteSound();
+              showToast("DNS & Address inspection complete", "success", 3000);
+          }
+      }, 400);
   }
 
   btnAction.onclick = () => {
@@ -1284,41 +1820,106 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       else startTrace();
   };
 
-  function exportLog() {
-      const payload = JSON.stringify({
-          app: "KPing Network Diagnostics",
-          version: "1.0",
-          host: currentHost || hostInput.value.trim() || '127.0.0.1',
-          timestamp: new Date().toISOString(),
-          stats,
-          rawConsole: out.value,
-          logs: logEntries
-      }, null, 2);
+  btnSubnet.onclick = () => {
+      if (isSubnetSweeping) stopSubnetSweep(true);
+      else startSubnetSweep();
+  };
 
+  btnDNS.onclick = () => {
+      if (isDnsInspecting) {
+          clearInterval(pingInterval);
+          pingInterval = null;
+          isDnsInspecting = false;
+          setStatus('idle');
+          btnDNS.innerHTML = 'DNS <span class="kbd-badge">D</span>';
+          btnDNS.className = 'btn btn-dns';
+          btnAction.disabled = false;
+          btnTrace.disabled = false;
+          btnMTU.disabled = false;
+          btnSubnet.disabled = false;
+          setInputsDisabled(false);
+          append(`\n[!] DNS inspection cancelled.\n\n`, 'warning');
+      } else {
+          startDnsInspect();
+      }
+  };
+
+  function triggerExport(format) {
+      closeExportModal();
+      const host = currentHost || hostInput.value.trim() || '127.0.0.1';
+      const timestamp = new Date().toISOString();
+
+      if (format === 'json') {
+          const payload = JSON.stringify({
+              app: "KPing Network Diagnostics Suite",
+              version: "2.0",
+              host,
+              timestamp,
+              stats,
+              metrics: {
+                  jitter: valJitter.textContent,
+                  loss: valLoss.textContent,
+                  stdDev: valStdDev.textContent,
+                  voipMOS: valMOS.textContent,
+                  slaGrade: valSLA.textContent,
+                  mtu: valMTU.textContent
+              },
+              rawConsole: out.value,
+              logs: logEntries
+          }, null, 2);
+          downloadBlob(payload, `kping_telemetry_${Date.now()}.json`, 'application/json');
+          showToast("Telemetry exported as <strong>JSON</strong>", "success", 3000);
+      } else if (format === 'csv') {
+          let csv = "Timestamp,Target,Line_Type,Raw_Telemetry\r\n";
+          allConsoleLines.forEach(l => {
+              const cleanText = l.text.replace(/[\r\n]+/g, ' ').replace(/"/g, '""').trim();
+              if (cleanText) {
+                  csv += `"${timestamp}","${host}","${l.type}","${cleanText}"\r\n`;
+              }
+          });
+          downloadBlob(csv, `kping_table_${Date.now()}.csv`, 'text/csv');
+          showToast("Spreadsheet exported as <strong>CSV</strong>", "success", 3000);
+      } else if (format === 'md') {
+          const md = `# KPing Diagnostic Audit Report\n\n` +
+                     `- **Target Host**: \`${host}\`\n` +
+                     `- **Timestamp**: ${timestamp}\n` +
+                     `- **Network SLA Grade**: \`${valSLA.textContent}\`\n` +
+                     `- **VoIP MOS Quality**: \`${valMOS.textContent} / 4.5\` (${tagMOS.textContent})\n` +
+                     `- **Latency Jitter**: \`${valJitter.textContent}\` (Std Dev: \`${valStdDev.textContent}\`)\n` +
+                     `- **Packet Loss**: \`${valLoss.textContent}\` (Sent: ${stats.sent}, Recv: ${stats.recv})\n` +
+                     `- **Path MTU**: \`${valMTU.textContent}\`\n\n` +
+                     `## Diagnostic Console Log\n\n` +
+                     `\`\`\`text\n${out.value.trim()}\n\`\`\`\n\n` +
+                     `*Report generated autonomously by KPing Diagnostics Suite.*\n`;
+          downloadBlob(md, `kping_report_${Date.now()}.md`, 'text/markdown');
+          showToast("Report exported as <strong>Markdown</strong>", "success", 3000);
+      }
+  }
+
+  function downloadBlob(content, filename, mimeType) {
       try {
-          const blob = new Blob([payload], { type: 'application/json' });
+          const blob = new Blob([content], { type: mimeType });
           const url = URL.createObjectURL(blob);
           const anchor = document.createElement('a');
           anchor.setAttribute("href", url);
-          anchor.setAttribute("download", `kping_log_${Date.now()}.json`);
+          anchor.setAttribute("download", filename);
           document.body.appendChild(anchor);
           anchor.click();
           anchor.remove();
           setTimeout(() => URL.revokeObjectURL(url), 2000);
-          showToast("Log exported as <strong>kping_log.json</strong>", "success", 3000);
       } catch (e) {
-          showToast("Export failed: " + e.message, "error", 3000);
+          showToast("Export download failed: " + e.message, "error", 3000);
       }
   }
 
-  btnExport.onclick = exportLog;
+  btnExport.onclick = openExportModal;
   btnCopy.onclick = copyLog;
   btnClear.onclick = clearOutput;
   btnSound.onclick = toggleSound;
   btnHelp.onclick = openHelpModal;
 
   // Enter to ping on input fields
-  [hostInput, countInput, sizeInput, ttlInput].forEach(inp => {
+  [hostInput, countInput, sizeInput, ttlInput, timeoutInput].forEach(inp => {
     inp.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -1337,7 +1938,7 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
       // Save / Export hotkey (Ctrl+S)
       if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
           e.preventDefault();
-          exportLog();
+          openExportModal();
           return;
       }
 
@@ -1353,8 +1954,26 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
           }
       }
 
+      // Quicksave (F5)
+      if (e.key === 'F5') {
+          e.preventDefault();
+          quicksaveState();
+          return;
+      }
+
+      // Quickload (F9)
+      if (e.key === 'F9') {
+          e.preventDefault();
+          quickloadState();
+          return;
+      }
+
       // Escape hotkey
       if (e.key === 'Escape') {
+          if (exportModal.classList.contains('active')) {
+              closeExportModal();
+              return;
+          }
           if (helpModal.classList.contains('active')) {
               closeHelpModal();
               return;
@@ -1362,6 +1981,8 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
           if (isPinging) stopPing();
           if (isTracing) stopTrace(true);
           if (isMtuSweeping) stopMtuSweep();
+          if (isSubnetSweeping) stopSubnetSweep(true);
+          if (isDnsInspecting) btnDNS.click();
           return;
       }
 
@@ -1386,9 +2007,15 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
           } else if (e.key === 'm' || e.key === 'M') {
               e.preventDefault();
               if (isMtuSweeping) stopMtuSweep(); else startMtuSweep();
+          } else if (e.key === 's' || e.key === 'S') {
+              e.preventDefault();
+              if (isSubnetSweeping) stopSubnetSweep(true); else startSubnetSweep();
+          } else if (e.key === 'd' || e.key === 'D') {
+              e.preventDefault();
+              if (isDnsInspecting) btnDNS.click(); else startDnsInspect();
           } else if (e.key === 'e' || e.key === 'E') {
               e.preventDefault();
-              exportLog();
+              openExportModal();
           } else if (e.key === 'c' || e.key === 'C') {
               if (active.id === 'out' && active.selectionStart !== active.selectionEnd) {
                   return;
@@ -1413,7 +2040,7 @@ Press Enter or 'P' to Ping, 'C' to Clear, or 'F1' for Help.
 
   // Startup Welcome Toast
   setTimeout(() => {
-    showToast("⚡ <strong>KPing Network Diagnostics Ready</strong><br>Press <strong>Enter / [P]</strong> to Ping, <strong>[T]</strong> to Trace, <strong>[M]</strong> for PMTU, or <strong>[F1]</strong> for Help.", "info", 5000);
+    showToast("⚡ <strong>KPing Diagnostics Suite Ready</strong><br>Modes: <strong>[P]</strong>ing, <strong>[T]</strong>race, <strong>[M]</strong>TU, <strong>[S]</strong>ubnet, <strong>[D]</strong>NS • <strong>[F1]</strong> Help", "info", 5000);
   }, 400);
 </script>
 </body>
