@@ -658,7 +658,7 @@
       </div>
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
         <button class="btn btn-outline btn-sm" onclick="resetTutorialFlag()" title="Re-enable first-run onboarding banner">↺ Reset Onboarding Flag</button>
-        <button class="btn btn-outline" onclick="closeHelpModal()">Close (Esc)</button>
+        <button id="btnHelpGotIt" class="btn btn-accent" onclick="closeHelpModal()">Got It [Enter / Space / Esc]</button>
       </div>
     </div>
   </div>
@@ -681,7 +681,7 @@
       </div>
       <p id="modal-svc-desc" style="font-size: 12px; color: var(--text-muted); background: var(--bg-primary); padding: 10px; border-radius: 6px; margin-bottom: 20px; border: 1px solid var(--border-color);"></p>
       <div style="display: flex; justify-content: flex-end; gap: 10px;">
-        <button class="btn btn-outline" onclick="closeServiceModal()">Close (Esc)</button>
+        <button id="btnServiceClose" class="btn btn-accent" onclick="closeServiceModal()">Close [Enter / Space / Esc]</button>
       </div>
     </div>
   </div>
@@ -712,8 +712,8 @@
         </div>
       </div>
       <div style="display: flex; justify-content: flex-end; gap: 10px;">
-        <button class="btn btn-outline" onclick="closeAddServiceModal()">Cancel</button>
-        <button class="btn btn-accent" onclick="submitCustomService()">Register Service</button>
+        <button class="btn btn-outline" onclick="closeAddServiceModal()">Cancel [Esc]</button>
+        <button class="btn btn-accent" onclick="submitCustomService()">Register Service [Enter]</button>
       </div>
     </div>
   </div>
@@ -1195,7 +1195,12 @@
   function safeGetStorage(key, fallback) {
     try {
       const val = localStorage.getItem(key);
-      return val ? JSON.parse(val) : fallback;
+      if (val === null || val === undefined) return fallback;
+      try {
+        return JSON.parse(val);
+      } catch (_) {
+        return val;
+      }
     } catch(e) {
       return fallback;
     }
@@ -1203,8 +1208,17 @@
 
   function safeSetStorage(key, val) {
     try {
-      localStorage.setItem(key, JSON.stringify(val));
-    } catch(e) {}
+      if (val === null || val === undefined) {
+        localStorage.removeItem(key);
+      } else {
+        localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+      }
+    } catch(e) {
+      console.warn('Storage quota exceeded or storage unavailable:', e);
+      if (typeof logEvent === 'function') {
+        logEvent('WARN', 'Storage write failed (quota exceeded or storage restricted)');
+      }
+    }
   }
 
   // Synthesized Web Audio Acoustic Feedback
@@ -1368,10 +1382,17 @@
   }
 
   function showHelp() {
-    document.getElementById('help-modal').style.display = 'flex';
+    const hm = document.getElementById('help-modal');
+    if (!hm) return;
+    hm.style.display = 'flex';
+    setTimeout(() => {
+      const btn = document.getElementById('btnHelpGotIt');
+      if (btn) btn.focus();
+    }, 50);
   }
   function closeHelpModal() {
-    document.getElementById('help-modal').style.display = 'none';
+    const hm = document.getElementById('help-modal');
+    if (hm) hm.style.display = 'none';
     safeSetStorage('ksys_tutorialSeen', '1');
   }
   function resetTutorialFlag() {
@@ -1402,6 +1423,9 @@
   function quicksaveSnapshot() {
     try {
       const activeTabId = getActiveTabId();
+      const svcFilter = document.getElementById('svc-filter-status');
+      const logFilter = document.getElementById('log-filter-level');
+      const hexSource = document.getElementById('hex-buffer-source');
       const snapshot = {
         version: 1,
         savedAt: new Date().toISOString(),
@@ -1409,14 +1433,19 @@
         customServices: systemServices.filter(s => s.id.startsWith('custom_')),
         serviceStates: systemServices.map(s => ({ id: s.id, status: s.status, mem: s.mem })),
         eventLogs: eventLogs.slice(0, 50),
-        activeTab: activeTabId
+        activeTab: activeTabId,
+        serviceFilterStatus: svcFilter ? svcFilter.value : 'all',
+        logFilterLevel: logFilter ? logFilter.value : 'ALL',
+        hexSource: hexSource ? hexSource.value : 'telemetry'
       };
       safeSetStorage('ksys_quicksave_v1', snapshot);
+      safeSetStorage('ksys_tutorialSeen', '1');
       logEvent('INFO', `[QUICKSAVE] Diagnostics snapshot saved (Tab: ${activeTabId}, ${snapshot.customServices.length} custom daemons)`);
-      showToast('Diagnostics snapshot quicksaved! [F5]', 'success');
+      showToast('💾 Diagnostics snapshot quicksaved! [F5]', 'success', 2500);
+      playFeedback('click');
     } catch(err) {
       logEvent('ERROR', `Quicksave failed: ${err.message}`);
-      showToast('Failed to quicksave snapshot', 'error');
+      showToast('Storage quota exceeded or save failed.', 'error', 3000);
     }
   }
 
@@ -1424,15 +1453,17 @@
     try {
       const snapshot = safeGetStorage('ksys_quicksave_v1', null);
       if (!snapshot) {
-        showToast('No quicksave snapshot found. Press F5 to save one.', 'warn');
+        showToast('⚠ No quicksave snapshot found. Press F5 to save one.', 'warn', 3000);
         return;
       }
       applySnapshotData(snapshot);
+      safeSetStorage('ksys_tutorialSeen', '1');
       logEvent('INFO', `[QUICKLOAD] Diagnostics snapshot restored from ${new Date(snapshot.savedAt).toLocaleTimeString()}`);
-      showToast('Diagnostics snapshot quickloaded! [F9]', 'success');
+      showToast('📂 Diagnostics snapshot quickloaded! [F9]', 'success', 2500);
+      playFeedback('click');
     } catch(err) {
       logEvent('ERROR', `Quickload failed: ${err.message}`);
-      showToast('Failed to quickload snapshot', 'error');
+      showToast('Failed to quickload snapshot.', 'error', 3000);
     }
   }
 
@@ -1442,8 +1473,8 @@
     if (snapshot.benchResults) {
       benchResults = { ...snapshot.benchResults };
       if (benchResults.cpuScore) document.getElementById('cpu-score').textContent = benchResults.cpuScore;
-      if (benchResults.ramScore) document.getElementById('ram-score').textContent = benchResults.ramScore.split(' ')[0] + ' MB/s';
-      if (benchResults.diskScore) document.getElementById('disk-score').textContent = benchResults.diskScore.split(' ')[0] + ' MB/s';
+      if (benchResults.ramScore) document.getElementById('ram-score').textContent = benchResults.ramScore.includes('MB/s') ? benchResults.ramScore : benchResults.ramScore + ' MB/s';
+      if (benchResults.diskScore) document.getElementById('disk-score').textContent = benchResults.diskScore.includes('MB/s') ? benchResults.diskScore : benchResults.diskScore + ' MB/s';
       const cpuProg = document.getElementById('cpu-bench-progress');
       if (cpuProg && benchResults.cpuScore) cpuProg.style.width = '100%';
       const ramProg = document.getElementById('ram-bench-progress');
@@ -1474,6 +1505,24 @@
     if (Array.isArray(snapshot.eventLogs) && snapshot.eventLogs.length > 0) {
       eventLogs.length = 0;
       snapshot.eventLogs.forEach(l => eventLogs.push(l));
+    }
+
+    if (snapshot.serviceFilterStatus) {
+      const svcFilter = document.getElementById('svc-filter-status');
+      if (svcFilter) svcFilter.value = snapshot.serviceFilterStatus;
+    }
+
+    if (snapshot.logFilterLevel) {
+      const logFilter = document.getElementById('log-filter-level');
+      if (logFilter) logFilter.value = snapshot.logFilterLevel;
+    }
+
+    if (snapshot.hexSource) {
+      const hexSource = document.getElementById('hex-buffer-source');
+      if (hexSource) {
+        hexSource.value = snapshot.hexSource;
+        if (typeof loadHexBufferSource === 'function') loadHexBufferSource();
+      }
     }
 
     renderServices();
@@ -1585,12 +1634,34 @@
 
     // Modal active handling
     if (isAnyModalOpen()) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeAllModals();
+        return;
+      }
       if (e.key === 'Enter') {
         const addModal = document.getElementById('add-service-modal');
         if (addModal && addModal.style.display !== 'none') {
           submitCustomService();
         } else {
           closeAllModals();
+        }
+        return;
+      }
+      if (e.key === ' ' || e.code === 'Space') {
+        const addModal = document.getElementById('add-service-modal');
+        if (!addModal || addModal.style.display === 'none') {
+          e.preventDefault();
+          closeAllModals();
+          return;
+        }
+      }
+      if (e.key === 'F1' || e.key.toLowerCase() === 'h' || e.key === '?') {
+        const helpModal = document.getElementById('help-modal');
+        if (helpModal && helpModal.style.display !== 'none') {
+          e.preventDefault();
+          closeHelpModal();
+          return;
         }
       }
       return;
@@ -2004,29 +2075,32 @@
       const blob = new Blob([workerCode], { type: 'application/javascript' });
       const workerUrl = URL.createObjectURL(blob);
 
-      const promises = [];
-      for (let i = 0; i < workerCount; i++) {
-        promises.push(new Promise((resolve, reject) => {
-          try {
-            const w = new Worker(workerUrl);
-            w.onmessage = (msg) => {
-              w.terminate();
-              resolve(msg.data);
-            };
-            w.onerror = (err) => {
-              w.terminate();
-              reject(err);
-            };
-            w.postMessage({ iterations });
-          } catch(e) {
-            reject(e);
-          }
-        }));
-      }
+      try {
+        const promises = [];
+        for (let i = 0; i < workerCount; i++) {
+          promises.push(new Promise((resolve, reject) => {
+            try {
+              const w = new Worker(workerUrl);
+              w.onmessage = (msg) => {
+                w.terminate();
+                resolve(msg.data);
+              };
+              w.onerror = (err) => {
+                w.terminate();
+                reject(err);
+              };
+              w.postMessage({ iterations });
+            } catch(e) {
+              reject(e);
+            }
+          }));
+        }
 
-      progress.style.width = '60%';
-      await Promise.all(promises);
-      URL.revokeObjectURL(workerUrl);
+        progress.style.width = '60%';
+        await Promise.all(promises);
+      } finally {
+        URL.revokeObjectURL(workerUrl);
+      }
 
       totalTime = performance.now() - startAll;
       const totalOps = workerCount * iterations;
@@ -2141,16 +2215,19 @@
       const startWrite = performance.now();
       const blob = new Blob([testData], { type: 'application/octet-stream' });
       const url = URL.createObjectURL(blob);
-      const writeTimeSec = Math.max(0.001, (performance.now() - startWrite) / 1000);
-      writeMBs = Math.round((chunkSize / (1024 * 1024)) / writeTimeSec);
+      try {
+        const writeTimeSec = Math.max(0.001, (performance.now() - startWrite) / 1000);
+        writeMBs = Math.round((chunkSize / (1024 * 1024)) / writeTimeSec);
 
-      progress.style.width = '80%';
-      const startRead = performance.now();
-      const resp = await fetch(url);
-      const buf = await resp.arrayBuffer();
-      URL.revokeObjectURL(url);
-      const readTimeSec = Math.max(0.001, (performance.now() - startRead) / 1000);
-      readMBs = Math.round((chunkSize / (1024 * 1024)) / readTimeSec);
+        progress.style.width = '80%';
+        const startRead = performance.now();
+        const resp = await fetch(url);
+        const buf = await resp.arrayBuffer();
+        const readTimeSec = Math.max(0.001, (performance.now() - startRead) / 1000);
+        readMBs = Math.round((chunkSize / (1024 * 1024)) / readTimeSec);
+      } finally {
+        URL.revokeObjectURL(url);
+      }
     }
 
     progress.style.width = '100%';
@@ -3079,6 +3156,53 @@
     }
   }
 
+  // Background Timers and Resource Cleanup
+  let timerUptime = null;
+  let timerInspect = null;
+  let timerSparklines = null;
+  let timerHealth = null;
+  let timerSpectrum = null;
+
+  function cleanupTimers() {
+    if (timerUptime) { clearInterval(timerUptime); timerUptime = null; }
+    if (timerInspect) { clearInterval(timerInspect); timerInspect = null; }
+    if (timerSparklines) { clearInterval(timerSparklines); timerSparklines = null; }
+    if (timerHealth) { clearInterval(timerHealth); timerHealth = null; }
+    if (timerSpectrum) { clearInterval(timerSpectrum); timerSpectrum = null; }
+  }
+
+  function autoSaveState() {
+    try {
+      const activeTabId = getActiveTabId();
+      const svcFilter = document.getElementById('svc-filter-status');
+      const logFilter = document.getElementById('log-filter-level');
+      const hexSource = document.getElementById('hex-buffer-source');
+      const state = {
+        version: 1,
+        savedAt: new Date().toISOString(),
+        benchResults: { ...benchResults },
+        customServices: systemServices.filter(s => s.id.startsWith('custom_')),
+        serviceStates: systemServices.map(s => ({ id: s.id, status: s.status, mem: s.mem })),
+        eventLogs: eventLogs.slice(0, 50),
+        activeTab: activeTabId,
+        serviceFilterStatus: svcFilter ? svcFilter.value : 'all',
+        logFilterLevel: logFilter ? logFilter.value : 'ALL',
+        hexSource: hexSource ? hexSource.value : 'telemetry'
+      };
+      safeSetStorage('ksys_state_v1', state);
+    } catch(e) {}
+  }
+
+  window.addEventListener('beforeunload', () => {
+    autoSaveState();
+    cleanupTimers();
+  });
+
+  window.addEventListener('pagehide', () => {
+    autoSaveState();
+    cleanupTimers();
+  });
+
   // Initialization
   window.addEventListener('DOMContentLoaded', () => {
     logEvent('INFO', 'KSys System Inspector & Diagnostic Workstation initialized');
@@ -3089,13 +3213,25 @@
     updateSystemHealth();
     updateCpuSpectrum();
 
-    setInterval(updateUptime, 1000);
-    setInterval(inspectHardware, 5000);
-    setInterval(updateTelemetrySparklines, 1000);
-    setInterval(updateSystemHealth, 2000);
-    setInterval(updateCpuSpectrum, 1000);
+    const savedState = safeGetStorage('ksys_state_v1', null);
+    if (savedState) {
+      try {
+        applySnapshotData(savedState);
+      } catch (e) {
+        console.warn('Could not restore saved state:', e);
+      }
+    }
 
-    const seenTutorial = safeGetStorage('ksys_tutorialSeen', false);
+    timerUptime = setInterval(updateUptime, 1000);
+    timerInspect = setInterval(inspectHardware, 5000);
+    timerSparklines = setInterval(updateTelemetrySparklines, 1000);
+    timerHealth = setInterval(updateSystemHealth, 2000);
+    timerSpectrum = setInterval(updateCpuSpectrum, 1000);
+
+    const seenTutorial = safeGetStorage('ksys_tutorialSeen', false) ||
+                         !!safeGetStorage('ksys_quicksave_v1', null) ||
+                         !!safeGetStorage('ksys_state_v1', null) ||
+                         !!safeGetStorage('ksys_custom_services_v1', null);
     if (!seenTutorial) {
       setTimeout(() => {
         showHelp();
@@ -3103,7 +3239,7 @@
       }, 350);
     } else {
       setTimeout(() => {
-        showToast('Welcome to KSys! Press F1 or "H" for Help guide. Use keys 1-6 to navigate.', 'info', 4000);
+        showToast('Welcome to KSys! Press F1 or "H" for Help guide. [F5] Save, [F9] Load, Keys 1-6 Navigate.', 'info', 4000);
       }, 400);
     }
   });

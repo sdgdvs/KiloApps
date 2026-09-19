@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-19T08:45:00Z — kilo-expander: KNet**
+  - Status: PASS ✅ (Virtual 1999 Web launch, raw hex dump engine, performance waterfall).
+  - Virtual 1999 Web: Launched retro Web 1.0 ecosystem (/web/portal.html, webring.html, geocities.html, darknet.html) mapped to kweb:// schemes.
+  - Hex View Inspector: Added side-by-side hex dump mode with ASCII column in web and native (hex:<url>).
+  - Diagnostic Waterfall: Added real-time HTTP performance metrics (DNS, TCP handshake, TTFB, throughput rate).
+  - Packet Sniffer Depth: Added interactive frame dissection drawer (Ethernet II, IPv4, TCP/UDP headers, raw packet hex payload).
+  - Traffic Log Polish: Added latency threshold filtering (<20ms, 20-100ms, >100ms), case sensitivity toggle, and LOCAL/ARG filters.
+  - Native Parity: Added kweb:* ASCII hypermedia directories, hex:<url> hex inspector, and performance waterfall in MSVC C.
+  - Verification: Clean MSVC Native C build (29.2 KB); Vite web build clean (75.8 KB); all security gates & <999 KB constraints passed.
+
 - **2026-09-19T06:45:00Z — kilo-qa: KSynth**
   - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial integrity, overlays).
   - Persistence: Full workstation quicksave (F5) and quickload (F9) across web and native with checksum validation and quota fallback.

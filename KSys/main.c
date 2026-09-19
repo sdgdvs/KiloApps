@@ -40,6 +40,8 @@ void UpdateView(void);
 #define ID_STATUS_BAR       1017
 #define ID_BTN_EXP_CSV      1018
 #define ID_BTN_EXP_MD       1019
+#define ID_BTN_SAVE         1020
+#define ID_BTN_LOAD         1021
 
 HWND hTabCtrl = NULL;
 HWND hOutput = NULL;
@@ -53,6 +55,8 @@ HWND hBtnExpHtml = NULL;
 HWND hBtnExpCsv = NULL;
 HWND hBtnExpMd = NULL;
 HWND hBtnHelp = NULL;
+HWND hBtnSave = NULL;
+HWND hBtnLoad = NULL;
 HWND hBtnSvcRefresh = NULL;
 HWND hBtnSvcFilter = NULL;
 HWND hBtnInspRefresh = NULL;
@@ -65,7 +69,7 @@ char g_LogBuffer[16384] = {0};
 char g_CpuResult[128] = "Not Executed";
 char g_RamResult[128] = "Not Executed";
 char g_DiskResult[128] = "Not Executed";
-char g_ToastMsg[256] = "Welcome to KSys! Tabs: [1-5] | Run: [R] | Help: [F1] / [H]";
+char g_ToastMsg[256] = "Welcome to KSys! Tabs: [1-5] | [F5] Save | [F9] Load | [F1] Help";
 DWORD g_ToastExpire = 0;
 
 int g_CurrentTab = 0;
@@ -534,6 +538,115 @@ void RunDiskBenchmark() {
     LogEvent("BENCH", g_DiskResult);
 }
 
+#define KSYS_SAVE_MAGIC 0x5359534B // 'KSYS'
+
+#pragma pack(push, 1)
+typedef struct {
+    DWORD magic;
+    DWORD version;
+    int currentTab;
+    int serviceFilterMode;
+    char cpuResult[128];
+    char ramResult[128];
+    char diskResult[128];
+    char logBuffer[16384];
+    DWORD checksum;
+} KSysSaveData;
+#pragma pack(pop)
+
+DWORD CalcSaveChecksum(const KSysSaveData* data) {
+    DWORD sum = 0x5A5A5A5A;
+    const unsigned char* p = (const unsigned char*)data;
+    size_t len = sizeof(KSysSaveData) - sizeof(DWORD);
+    size_t i;
+    for (i = 0; i < len; i++) {
+        sum = ((sum << 5) + sum) + p[i];
+    }
+    return sum;
+}
+
+BOOL SaveStateToFile(const char* filename) {
+    KSysSaveData data;
+    memset(&data, 0, sizeof(data));
+    data.magic = KSYS_SAVE_MAGIC;
+    data.version = 1;
+    data.currentTab = g_CurrentTab;
+    data.serviceFilterMode = g_ServiceFilterMode;
+    lstrcpynA(data.cpuResult, g_CpuResult, sizeof(data.cpuResult));
+    lstrcpynA(data.ramResult, g_RamResult, sizeof(data.ramResult));
+    lstrcpynA(data.diskResult, g_DiskResult, sizeof(data.diskResult));
+    lstrcpynA(data.logBuffer, g_LogBuffer, sizeof(data.logBuffer));
+    data.checksum = CalcSaveChecksum(&data);
+
+    HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return FALSE;
+    DWORD written = 0;
+    BOOL ok = WriteFile(hFile, &data, sizeof(data), &written, NULL);
+    CloseHandle(hFile);
+    if (ok && written == sizeof(data)) {
+        LogEvent("INFO", "[QUICKSAVE] Diagnostics snapshot saved to file");
+        return TRUE;
+    }
+    return FALSE;
+}
+
+BOOL LoadStateFromFile(const char* filename) {
+    HANDLE hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return FALSE;
+    DWORD size = GetFileSize(hFile, NULL);
+    if (size != sizeof(KSysSaveData)) {
+        CloseHandle(hFile);
+        return FALSE;
+    }
+    KSysSaveData data;
+    DWORD read = 0;
+    BOOL ok = ReadFile(hFile, &data, sizeof(data), &read, NULL);
+    CloseHandle(hFile);
+    if (!ok || read != sizeof(data)) return FALSE;
+    if (data.magic != KSYS_SAVE_MAGIC || data.version != 1) return FALSE;
+    if (data.checksum != CalcSaveChecksum(&data)) return FALSE;
+
+    g_CurrentTab = data.currentTab;
+    if (g_CurrentTab < 0 || g_CurrentTab > 4) g_CurrentTab = 0;
+    g_ServiceFilterMode = data.serviceFilterMode;
+    if (g_ServiceFilterMode < 0 || g_ServiceFilterMode > 4) g_ServiceFilterMode = 0;
+
+    lstrcpynA(g_CpuResult, data.cpuResult, sizeof(g_CpuResult));
+    lstrcpynA(g_RamResult, data.ramResult, sizeof(g_RamResult));
+    lstrcpynA(g_DiskResult, data.diskResult, sizeof(data.diskResult));
+    lstrcpynA(g_LogBuffer, data.logBuffer, sizeof(g_LogBuffer));
+
+    LogEvent("INFO", "[QUICKLOAD] Diagnostics snapshot restored from file");
+    return TRUE;
+}
+
+BOOL HasSavedState(const char* filename) {
+    HANDLE hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return FALSE;
+    DWORD size = GetFileSize(hFile, NULL);
+    CloseHandle(hFile);
+    return (size == sizeof(KSysSaveData));
+}
+
+BOOL HasSeenTutorial(void) {
+    HANDLE hFile = CreateFileA("ksys_tutorial.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFile);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+void MarkTutorialSeen(void) {
+    HANDLE hFile = CreateFileA("ksys_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char val = '1';
+        DWORD written = 0;
+        WriteFile(hFile, &val, 1, &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
 BOOL SaveReportFile(const char* filename, const char* content) {
     HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) return FALSE;
@@ -768,6 +881,7 @@ BOOL CALLBACK SetFontProc(HWND child, LPARAM hFont) {
 }
 
 void ShowHelpDialog(HWND hwnd) {
+    MarkTutorialSeen();
     MessageBoxA(hwnd,
         "==========================================================\n"
         "       KSYS WORKSTATION DIAGNOSTICS HELP GUIDE            \n"
@@ -781,8 +895,10 @@ void ShowHelpDialog(HWND hwnd) {
         "  [Left/Right]  - Switch between Navigation Tabs\n"
         "  [Tab]         - Cycle Focus through Controls / Buttons\n"
         "  [F1] or [H]   - Display this Help Guide\n"
+        "  [F5]          - Quicksave Diagnostics Snapshot (ksys.dat)\n"
+        "  [F9]          - Quickload Diagnostics Snapshot\n"
+        "  [R]           - Run All Benchmarks / Refresh Active View\n"
         "  [Esc]         - Return to Hardware Inspector [1]\n"
-        "  [R] or [F5]   - Run All Benchmarks / Refresh Active View\n"
         "  [C]           - Run CPU Benchmark (Benchmarks Tab)\n"
         "  [M]           - Run RAM Benchmark (Benchmarks Tab)\n"
         "  [D]           - Run Disk Benchmark (Benchmarks Tab)\n"
@@ -799,6 +915,7 @@ void ShowHelpDialog(HWND hwnd) {
         "  - Diagnostics : Automated System Health Index & heuristic rating.\n"
         "  - Benchmarks  : Multi-threaded CPU matrix, RAM throughput, Disk I/O.\n"
         "  - Services    : Live CPU usage, Win32 & Kernel Driver filtering.\n"
+        "  - Persistence : Quicksave (F5) and Quickload (F9) to ksys.dat.\n"
         "  - Export Hub  : Multi-format exports: TXT, JSON, HTML, CSV, and Markdown.",
         "KSys Diagnostics Help",
         MB_OK | MB_ICONINFORMATION);
@@ -857,6 +974,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnExpCsv  = CreateWindow("BUTTON", "Export CSV [V]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 350, H - 75, 105, 25, hwnd, (HMENU)ID_BTN_EXP_CSV, NULL, NULL);
             hBtnExpMd   = CreateWindow("BUTTON", "Export MD [K]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 460, H - 75, 105, 25, hwnd, (HMENU)ID_BTN_EXP_MD, NULL, NULL);
 
+            hBtnSave = CreateWindow("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, W - 335, H - 75, 100, 25, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
+            hBtnLoad = CreateWindow("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, W - 225, H - 75, 100, 25, hwnd, (HMENU)ID_BTN_LOAD, NULL, NULL);
             hBtnHelp = CreateWindow("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, W - 115, H - 75, 95, 25, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
             hStatusBar = CreateWindowEx(0, "STATIC", g_ToastMsg, WS_CHILD | WS_VISIBLE | SS_LEFTNOWORDWRAP, 10, H - 45, W - 25, 20, hwnd, (HMENU)ID_STATUS_BAR, NULL, NULL);
@@ -864,7 +983,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
 
             LogEvent("INFO", "KSys Workstation Diagnostics initialized");
-            ShowNativeToast(hwnd, "Welcome to KSys! Tabs: [1-5] | Run: [R] | Help: [F1] / [H]");
+            ShowNativeToast(hwnd, "Welcome to KSys! Tabs: [1-5] | [F5] Save | [F9] Load | [F1] Help");
             UpdateView();
             SetTimer(hwnd, 1, 1000, NULL);
             break;
@@ -945,6 +1064,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ExportReport(hwnd, 3);
             } else if (id == ID_BTN_EXP_MD) {
                 ExportReport(hwnd, 4);
+            } else if (id == ID_BTN_SAVE) {
+                if (SaveStateToFile("ksys.dat")) {
+                    MarkTutorialSeen();
+                    ShowNativeToast(hwnd, "★ Diagnostics snapshot quicksaved to ksys.dat [F5]");
+                } else {
+                    ShowNativeToast(hwnd, "⚠ Failed to quicksave diagnostics snapshot");
+                }
+            } else if (id == ID_BTN_LOAD) {
+                if (LoadStateFromFile("ksys.dat")) {
+                    MarkTutorialSeen();
+                    if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, g_CurrentTab);
+                    UpdateView();
+                    ShowNativeToast(hwnd, "★ Diagnostics snapshot quickloaded from ksys.dat [F9]");
+                } else {
+                    ShowNativeToast(hwnd, "⚠ No quicksave snapshot found (ksys.dat)");
+                }
             } else if (id == ID_BTN_HELP) {
                 ShowHelpDialog(hwnd);
             }
@@ -957,7 +1092,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 if (g_ToastExpire != 0 && GetTickCount() > g_ToastExpire) {
                     g_ToastExpire = 0;
-                    lstrcpynA(g_ToastMsg, "KSys Workstation Ready | Keys: [1-5] Tabs, [R] Run/Refresh, [F1] Help", sizeof(g_ToastMsg));
+                    lstrcpynA(g_ToastMsg, "KSys Workstation Ready | Keys: [1-5] Tabs, [F5] Save, [F9] Load, [R] Refresh, [F1] Help", sizeof(g_ToastMsg));
                     if (hStatusBar) SetWindowTextA(hStatusBar, g_ToastMsg);
                 }
             }
@@ -989,12 +1124,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (hBtnExpCsv)  MoveWindow(hBtnExpCsv, 350, nh - 68, 105, 26, TRUE);
             if (hBtnExpMd)   MoveWindow(hBtnExpMd, 460, nh - 68, 105, 26, TRUE);
 
+            if (hBtnSave) MoveWindow(hBtnSave, nw - 335, nh - 68, 100, 26, TRUE);
+            if (hBtnLoad) MoveWindow(hBtnLoad, nw - 225, nh - 68, 100, 26, TRUE);
             if (hBtnHelp) MoveWindow(hBtnHelp, nw - 115, nh - 68, 95, 26, TRUE);
 
             if (hStatusBar) MoveWindow(hStatusBar, 10, nh - 34, nw - 20, 22, TRUE);
             break;
         }
         case WM_DESTROY:
+            SaveStateToFile("ksys.dat");
             KillTimer(hwnd, 1);
             if (hFont) DeleteObject(hFont);
             PostQuitMessage(0);
@@ -1032,6 +1170,17 @@ void MainEntry() {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
+    if (HasSavedState("ksys.dat")) {
+        if (LoadStateFromFile("ksys.dat")) {
+            if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, g_CurrentTab);
+            UpdateView();
+            ShowNativeToast(hwnd, "★ Restored saved state from ksys.dat [F9]");
+        }
+    } else if (!HasSeenTutorial()) {
+        ShowHelpDialog(hwnd);
+        ShowNativeToast(hwnd, "Welcome to KSys! Workstation diagnostics initialized");
+    }
+
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
         if (msg.message == WM_KEYDOWN) {
@@ -1065,7 +1214,25 @@ void MainEntry() {
                         ShowNativeToast(hwnd, "Switched to Hardware Inspector [1]");
                     }
                     continue;
-                } else if (msg.wParam == VK_F5 || msg.wParam == 'R' || msg.wParam == 'r') {
+                } else if (msg.wParam == VK_F5) {
+                    if (SaveStateToFile("ksys.dat")) {
+                        MarkTutorialSeen();
+                        ShowNativeToast(hwnd, "★ Diagnostics snapshot quicksaved to ksys.dat [F5]");
+                    } else {
+                        ShowNativeToast(hwnd, "⚠ Failed to quicksave diagnostics snapshot");
+                    }
+                    continue;
+                } else if (msg.wParam == VK_F9) {
+                    if (LoadStateFromFile("ksys.dat")) {
+                        MarkTutorialSeen();
+                        if (hTabCtrl) TabCtrl_SetCurSel(hTabCtrl, g_CurrentTab);
+                        UpdateView();
+                        ShowNativeToast(hwnd, "★ Diagnostics snapshot quickloaded from ksys.dat [F9]");
+                    } else {
+                        ShowNativeToast(hwnd, "⚠ No quicksave snapshot found (ksys.dat)");
+                    }
+                    continue;
+                } else if (msg.wParam == 'R' || msg.wParam == 'r') {
                     if (g_CurrentTab == 1) {
                         RunCpuBenchmark();
                         RunRamBenchmark();

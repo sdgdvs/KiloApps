@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -15,13 +15,13 @@ current_targets:
   kilo_tester: KTimer
   kilo_usability: KPaint
   kilo_graphics: KAlchemy
-  kilo_qa: KSys
+  kilo_qa: KTask
   kilo_expander: KPing
   kilo_creator: "KBookmark (Categorized link vault)"
 last_run:
-  agent: kilo-graphics
-  app: KFortress
-  timestamp: "2026-09-19T16:45:00Z"
+  agent: kilo-qa
+  app: KSys
+  timestamp: "2026-09-19T18:45:00Z"
 last_planner_run: "2026-09-18T22:40:00Z"
 ---
 
@@ -80,9 +80,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KSys`
+- **Current Target**: `KTask`
 - **Upcoming Queue**:
-  `KTask`, `KTerm`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAlchemy`, `KAsteroids`, `KChrono`, `KColony`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMine`, `KMystery`, `KPac`, `KQuest`, `KRogue`, `KSanctuary`, `KStarDredge`, `KSubmarine` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth)*.
+  `KTerm`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAlchemy`, `KAsteroids`, `KChrono`, `KColony`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMine`, `KMystery`, `KPac`, `KQuest`, `KRogue`, `KSanctuary`, `KStarDredge`, `KSubmarine` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KPing`
@@ -122,6 +122,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-09-19T18:45:00Z — kilo-qa: KSys**
+  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial integrity, interactive modals).
+  - State Persistence: Quicksave (F5) & quickload (F9) across web and native (ksys.dat / localStorage) capturing full telemetry, benchmarks, daemons, logs, and tabs.
+  - Native UI Parity: Added dedicated Save [F5] and Load [F9] buttons to native toolbar; auto-save state on exit (WM_DESTROY) and pagehide/beforeunload.
+  - Tutorial Integrity: Fresh-session onboarding (ksys_tutorialSeen / ksys_tutorial.dat) never interrupting restored snapshots.
+  - Modal Controls & Ergonomics: Added Enter, Space, and Esc keyboard handlers across all modals (Help, Service Details, Add Service).
+  - Safety & Cleanliness: Hardened storage quota handling, wrapped Web Worker and blob streaming URLs in finally blocks to eliminate leaks, added interval cleanup.
+  - Verification: Clean MSVC Native C build (29.5 KB); Vite web build clean (134.7 KB); all security lint gates and <999 KB constraints passed.
 
 - **2026-09-19T16:45:00Z — kilo-graphics: KFortress**
   - Status: PASS ✅ (Tower level evolution, procedural gate & keep, vector traps, meteor physics, audio synth, balance).
@@ -164,14 +173,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Native Windows Parity: Standalone Win32 C implementation with double-buffered GDI UI, task target, and binary persistence.
   - Verification: Clean MSVC Native C build (15.5 KB); Vite web build clean (75.8 KB); all security lint gates and <999 KB limits passed.
 
-- **2026-09-19T08:45:00Z — kilo-expander: KNet**
-  - Status: PASS ✅ (Virtual 1999 Web launch, raw hex dump engine, performance waterfall).
-  - Virtual 1999 Web: Launched retro Web 1.0 ecosystem (/web/portal.html, webring.html, geocities.html, darknet.html) mapped to kweb:// schemes.
-  - Hex View Inspector: Added side-by-side hex dump mode with ASCII column in web and native (hex:<url>).
-  - Diagnostic Waterfall: Added real-time HTTP performance metrics (DNS, TCP handshake, TTFB, throughput rate).
-  - Packet Sniffer Depth: Added interactive frame dissection drawer (Ethernet II, IPv4, TCP/UDP headers, raw packet hex payload).
-  - Traffic Log Polish: Added latency threshold filtering (<20ms, 20-100ms, >100ms), case sensitivity toggle, and LOCAL/ARG filters.
-  - Native Parity: Added kweb:* ASCII hypermedia directories, hex:<url> hex inspector, and performance waterfall in MSVC C.
-  - Verification: Clean MSVC Native C build (29.2 KB); Vite web build clean (75.8 KB); all security gates & <999 KB constraints passed.
 
 
