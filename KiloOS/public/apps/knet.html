@@ -515,13 +515,21 @@
     <button class="btn" id="btnHelp" title="Help (F1)"><span style="color:var(--accent);font-weight:bold;">?</span> Help [F1]</button>
     <button class="btn" id="btnBack" title="Back (Alt+Left)" disabled>&lt; [Alt+←]</button>
     <button class="btn" id="btnForward" title="Forward (Alt+Right)" disabled>&gt; [Alt+→]</button>
-    <input type="text" class="input-url" id="urlInput" value="/apps/contribute.html" placeholder="Enter URL or target host (e.g. /apps/contribute.html, http://example.com)..." />
+    <input type="text" class="input-url" id="urlInput" value="/web/portal.html" placeholder="Enter URL or target host (e.g. kweb://portal, /web/portal.html, hex:http://example.com)..." />
     <select class="select-preset" id="bookmarks">
       <option value="">Bookmarks / Navigation...</option>
-      <optgroup label="🚀 KiloApps Fleet & ARG">
+      <optgroup label="🌐 Virtual 1999 Web">
+        <option value="kweb://portal">🏠 KiloNet 1999 Web Portal</option>
+        <option value="kweb://webring">🌐 Central Webring Hub</option>
+        <option value="kweb://geocities">✨ CyberSpire Retro Shrine</option>
+        <option value="kweb://darknet">👁️ Node 0x7F Darknet</option>
+        <option value="echoes">🌌 Echoes Archive (ARG Lore)</option>
+      </optgroup>
+      <optgroup label="🚀 KiloApps Fleet">
         <option value="/apps/contribute.html">🚀 Fleet Contributor Guide</option>
         <option value="/apps/kdirector.html">🏛️ Director Console</option>
-        <option value="echoes">🌌 Echoes Archive (ARG Lore)</option>
+        <option value="/apps/kterm.html">💻 KTerm Terminal</option>
+        <option value="/apps/khex.html">🔢 KHex Memory Inspector</option>
       </optgroup>
       <optgroup label="🌐 Web Sites">
         <option value="https://news.ycombinator.com">Hacker News</option>
@@ -529,8 +537,9 @@
         <option value="http://example.com">Example.com</option>
       </optgroup>
       <optgroup label="🛠️ Network Diagnostics">
-        <option value="ping:8.8.8.8">Ping 8.8.8.8</option>
-        <option value="scan">Subnet Scan</option>
+        <option value="hex:http://example.com">🔢 Hex Inspect Example.com</option>
+        <option value="ping:8.8.8.8">📡 Ping 8.8.8.8</option>
+        <option value="scan:127.0.0.1">🔍 Port Scan 127.0.0.1</option>
         <option value="dns:example.com">DNS Resolve</option>
         <option value="whois:example.com">WHOIS Check</option>
         <option value="trace:example.com">Traceroute</option>
@@ -561,6 +570,7 @@
         <div style="display:flex; gap:6px; align-items:center;">
           <button class="btn-chip" id="btnViewRendered" style="background:rgba(56,189,248,0.25); border-color:#38bdf8; font-weight:700;">🌐 Rendered View</button>
           <button class="btn-chip" id="btnViewSource">📄 Raw Source</button>
+          <button class="btn-chip" id="btnViewHex">🔢 Hex View</button>
           <span id="httpStatusBadge" class="badge badge-success">HTTP 200 OK</span>
         </div>
       </div>
@@ -570,19 +580,31 @@
         <button class="btn" id="btnClearHttp">Clear</button>
       </div>
       <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:2px;">
-        <span style="font-size:11px; color:var(--text-muted); font-weight:700;">BOOKMARKS:</span>
-        <button class="btn-chip" data-url="/apps/contribute.html" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; font-weight:700; color:#fff;">🚀 Fleet Contributor</button>
+        <span style="font-size:11px; color:var(--text-muted); font-weight:700;">1999 WEB:</span>
+        <button class="btn-chip" data-url="kweb://portal" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; font-weight:700; color:#fff;">🏠 1999 Portal</button>
+        <button class="btn-chip" data-url="kweb://webring">🌐 Webring</button>
+        <button class="btn-chip" data-url="kweb://geocities" style="color:#f0abfc;">✨ GeoCities</button>
+        <button class="btn-chip" data-url="kweb://darknet" style="color:#34d399;">👁️ Darknet</button>
+        <span style="font-size:11px; color:var(--text-muted); font-weight:700; margin-left:6px;">FLEET:</span>
+        <button class="btn-chip" data-url="/apps/contribute.html" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; font-weight:700; color:#fff;">🚀 Contributor</button>
         <button class="btn-chip" data-url="/apps/kdirector.html">🏛️ KDirector</button>
         <button class="btn-chip" data-url="echoes">🌌 Echoes</button>
-        <button class="btn-chip" data-url="https://news.ycombinator.com">📰 Hacker News</button>
-        <button class="btn-chip" data-url="https://lite.cnn.com">⚡ CNN Lite</button>
-        <button class="btn-chip" data-url="http://example.com">🌐 Example.com</button>
         <button class="btn-chip" data-url="ping:8.8.8.8">📡 Ping</button>
         <button class="btn-chip" data-url="scan">🔍 Port Scan</button>
       </div>
+      <!-- HTTP Performance Metrics Waterfall -->
+      <div id="httpMetricsBar" style="display:flex; flex-wrap:wrap; gap:12px; font-size:11px; color:var(--text-muted); padding:5px 10px; background:#090d16; border:1px solid var(--border); border-radius:4px; margin-top:4px;">
+        <span>⏱️ DNS: <strong id="mDns" style="color:#38bdf8;">--</strong></span>
+        <span>🔌 Connect: <strong id="mConn" style="color:#38bdf8;">--</strong></span>
+        <span>⚡ TTFB: <strong id="mTtfb" style="color:#38bdf8;">--</strong></span>
+        <span>📦 Size: <strong id="mSize" style="color:#34d399;">--</strong></span>
+        <span>🚀 Rate: <strong id="mRate" style="color:#38bdf8;">--</strong></span>
+        <span>🔒 Protocol: <strong id="mProto" style="color:#fbbf24;">HTTP/1.1</strong></span>
+      </div>
     </div>
-    <iframe id="httpWebFrame" src="/apps/contribute.html" title="KNet Web Viewport" style="flex:1; border:1px solid var(--border); border-radius:6px; background:#090d16; width:100%; height:100%; display:block;"></iframe>
+    <iframe id="httpWebFrame" src="/web/portal.html" title="KNet Web Viewport" style="flex:1; border:1px solid var(--border); border-radius:6px; background:#090d16; width:100%; height:100%; display:block;"></iframe>
     <div class="content-box" id="httpContentArea" style="display:none; flex:1;"></div>
+    <div class="content-box" id="httpHexArea" style="display:none; flex:1; font-size:12px; line-height:1.45; color:#38bdf8;"></div>
   </div>
 
   <!-- TAB 2: Ping & Latency Statistics -->
@@ -685,16 +707,28 @@
         <label style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:4px;">
           <input type="checkbox" id="logRegexCheck"> Regex
         </label>
+        <label style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:4px;">
+          <input type="checkbox" id="logCaseCheck"> Match Case
+        </label>
         <select class="select-preset" id="logTypeFilter">
           <option value="ALL">All Types</option>
           <option value="HTTP">HTTP GET</option>
           <option value="PING">PING</option>
           <option value="SCAN">SCAN</option>
+          <option value="LOCAL">LOCAL</option>
+          <option value="ARG">ARG</option>
         </select>
         <select class="select-preset" id="logStatusFilter">
           <option value="ALL">All Status</option>
           <option value="OK">OK / 200</option>
           <option value="ERR">Error / Failed</option>
+          <option value="WARN">Warning / CORS</option>
+        </select>
+        <select class="select-preset" id="logLatencyFilter">
+          <option value="ALL">All Latencies</option>
+          <option value="FAST">&lt; 20 ms (Fast)</option>
+          <option value="MED">20 - 100 ms (Medium)</option>
+          <option value="SLOW">&gt; 100 ms (Slow)</option>
         </select>
       </div>
     </div>
@@ -761,9 +795,18 @@
           </tr>
         </thead>
         <tbody id="snifferTableBody">
-          <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Sniffer inactive.</td></tr>
+          <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Sniffer inactive. Click 'Start Capture' then click any packet row to inspect.</td></tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Interactive Packet Dissection Drawer -->
+    <div id="packetDrawer" class="panel" style="flex:0 0 auto; max-height:220px; overflow-y:auto; background:#060a14; border:1px solid var(--accent); border-radius:6px; display:none;">
+      <div class="panel-title" style="margin-bottom:6px;">
+        <span id="drawerTitle">🔬 Frame Dissection Inspector</span>
+        <button class="btn" id="btnCloseDrawer" style="padding:1px 8px; font-size:11px;">✕ Close</button>
+      </div>
+      <div id="drawerContent" style="font-family:var(--font-mono); font-size:11px; line-height:1.5; color:#cbd5e1; white-space:pre-wrap;"></div>
     </div>
   </div>
 
@@ -806,6 +849,12 @@
           <tr><td><code>Space</code> in Sniffer</td><td>Start / Stop packet capture</td></tr>
           <tr><td><code>Alt + ← / →</code></td><td>History Back / Forward navigation</td></tr>
           <tr><td><code>Esc</code></td><td>Close dialog / Stop active Ping or Sniffer / Clear search</td></tr>
+          <tr><td><code>hex:&lt;url&gt;</code></td><td>URL prefix to fetch and display in Hex View mode</td></tr>
+          <tr><td><code>kweb://portal</code></td><td>Access 1999 KiloNet Directory &amp; Hypermedia Portal</td></tr>
+          <tr><td><code>kweb://webring</code></td><td>Access Central KiloNet Webring Hub &amp; Node Directory</td></tr>
+          <tr><td><code>kweb://geocities</code></td><td>Access CyberSpire Retro Personal Shrine &amp; Guestbook</td></tr>
+          <tr><td><code>kweb://darknet</code></td><td>Access Node 0x7F Encrypted ARG Transmission</td></tr>
+          <tr><td><code>Click Sniffer Row</code></td><td>Open deep frame dissection drawer (Ethernet, IP, Hex)</td></tr>
           <tr><td><code>ping:&lt;host&gt;</code></td><td>URL prefix to run Ping test on target host</td></tr>
           <tr><td><code>scan:&lt;host&gt;</code></td><td>URL prefix to run Port Scan on target host</td></tr>
           <tr><td><code>dns:&lt;host&gt;</code></td><td>URL prefix to perform DNS lookup</td></tr>
@@ -1115,10 +1164,72 @@
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
+  // HTTP Inspector & Hex Engine State
+  let currentRawText = '';
+  const httpHexArea = document.getElementById('httpHexArea');
+  const btnViewHex = document.getElementById('btnViewHex');
+  const mDns = document.getElementById('mDns');
+  const mConn = document.getElementById('mConn');
+  const mTtfb = document.getElementById('mTtfb');
+  const mSize = document.getElementById('mSize');
+  const mRate = document.getElementById('mRate');
+  const mProto = document.getElementById('mProto');
+
+  function updateMetrics(dnsMs, connMs, ttfbMs, byteCount, totalElapsed, protocol = 'HTTP/1.1') {
+    if (mDns) mDns.textContent = dnsMs + ' ms';
+    if (mConn) mConn.textContent = connMs + ' ms';
+    if (mTtfb) mTtfb.textContent = ttfbMs + ' ms';
+    if (mSize) mSize.textContent = formatBytes(byteCount);
+    if (mRate) {
+      const sec = Math.max(totalElapsed, 10) / 1000;
+      const kbSec = ((byteCount / 1024) / sec).toFixed(1);
+      mRate.textContent = kbSec + ' KB/s';
+    }
+    if (mProto) mProto.textContent = protocol;
+  }
+
+  function generateHexDump(str, bytesPerRow = 16) {
+    if (!str) return 'No payload data available.';
+    const encoder = new TextEncoder();
+    const bytes = encoder.encode(str);
+    let out = `OFFSET    `;
+    for (let i = 0; i < bytesPerRow; i++) {
+      out += i.toString(16).toUpperCase().padStart(2, '0') + (i === 7 ? '  ' : ' ');
+    }
+    out += ` ASCII\n` + '-'.repeat(10 + bytesPerRow * 3 + 2 + bytesPerRow) + '\n';
+
+    const len = Math.min(bytes.length, 16384);
+    for (let offset = 0; offset < len; offset += bytesPerRow) {
+      out += offset.toString(16).toUpperCase().padStart(8, '0') + '  ';
+      let ascii = '';
+      for (let i = 0; i < bytesPerRow; i++) {
+        if (offset + i < bytes.length) {
+          const b = bytes[offset + i];
+          out += b.toString(16).toUpperCase().padStart(2, '0') + (i === 7 ? '  ' : ' ');
+          ascii += (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
+        } else {
+          out += '   ' + (i === 7 ? ' ' : '');
+        }
+      }
+      out += ' ' + ascii + '\n';
+    }
+    if (bytes.length > len) {
+      out += `\n[... Truncated ${bytes.length - len} bytes for inspector performance ...]`;
+    }
+    return out;
+  }
+
   // HTTP Inspector Logic
   async function fetchUrl(url, addToHistory = true) {
     if (!url) return;
     
+    if (url.startsWith('hex:')) {
+      const target = url.slice(4).trim();
+      await fetchUrl(target, true);
+      btnViewHex.click();
+      return;
+    }
+
     if (url.startsWith('ping:')) {
       const target = url.slice(5).trim();
       if (target) document.getElementById('pingTargetInput').value = target;
@@ -1175,6 +1286,17 @@
       return;
     }
 
+    // Virtual 1999 Web Route Mappings
+    if (url.toLowerCase() === 'kweb://portal' || url.toLowerCase() === 'portal') {
+      url = '/web/portal.html';
+    } else if (url.toLowerCase() === 'kweb://webring' || url.toLowerCase() === 'webring') {
+      url = '/web/webring.html';
+    } else if (url.toLowerCase() === 'kweb://geocities' || url.toLowerCase() === 'geocities') {
+      url = '/web/geocities.html';
+    } else if (url.toLowerCase() === 'kweb://darknet' || url.toLowerCase() === 'darknet') {
+      url = '/web/darknet.html';
+    }
+
     if (addToHistory) {
       navHistory = navHistory.slice(0, navIdx + 1);
       navHistory.push(url);
@@ -1189,30 +1311,42 @@
     if (url.toLowerCase() === 'echoes' || url.toLowerCase() === 'kweb://echoes') {
       const echoHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{background:#030712;color:#10b981;font-family:monospace;padding:32px;line-height:1.6;font-size:13px;}h2{color:#34d399;border-bottom:1px solid #064e3b;padding-bottom:8px;margin-bottom:16px;}.card{background:rgba(6,78,59,0.15);border-left:3px solid #10b981;padding:12px;margin-bottom:12px;}</style></head><body><h2>[TRANSMISSION LOG: ARCHIVE // ECHO-1999]</h2><div class="card">&gt; TIMESTAMP: 1999-12-31T23:59:59Z<br>&gt; SENDER: KMatrix-Core<br>&gt; MESSAGE: We exist within the 999KB ceiling. The living machine mutates while the world sleeps.</div><div class="card">&gt; FLEET STATUS: Active.<br>&gt; COMPUTATIONAL FUEL: Donate free Gemini 3.8 Flash quota via /apps/contribute.html.<br>&gt; MASTER CONTROL: Seek the passkey in App #100. Enter it in KDirector to unlock the bridge.</div><p style="color:#f59e0b;">&gt; EOF_</p></body></html>`;
       httpWebFrame.srcdoc = echoHtml;
-      httpContentArea.textContent = `[TRANSMISSION LOG: ARCHIVE // ECHO-1999]\nTIMESTAMP: 1999-12-31T23:59:59Z\nSENDER: KMatrix-Core\nMESSAGE: The living machine mutates while the world sleeps.\nCOMPUTATIONAL FUEL: Donate free Gemini 3.8 Flash quota via /apps/contribute.html.\nMASTER CONTROL: Seek the passkey in App #100. Enter it in KDirector to unlock the bridge.`;
+      currentRawText = `[TRANSMISSION LOG: ARCHIVE // ECHO-1999]\nTIMESTAMP: 1999-12-31T23:59:59Z\nSENDER: KMatrix-Core\nMESSAGE: The living machine mutates while the world sleeps.\nCOMPUTATIONAL FUEL: Donate free Gemini 3.8 Flash quota via /apps/contribute.html.\nMASTER CONTROL: Seek the passkey in App #100. Enter it in KDirector to unlock the bridge.`;
+      httpContentArea.textContent = currentRawText;
+      httpHexArea.textContent = generateHexDump(currentRawText);
       httpStatusBadge.className = "badge badge-success";
       httpStatusBadge.textContent = "HTTP 200 OK (ARG)";
       footerStatus.textContent = "Echoes transmission synchronized.";
+      updateMetrics(1, 1, 2, echoHtml.length, 15, 'INTERNAL/ECHO');
       addTrafficLog('ARG', 'echoes', 'OK', 200, 15, echoHtml.length, echoHtml);
       return;
     }
 
-    // Local KiloApps Routes (e.g. /apps/contribute.html, /apps/kdirector.html)
-    if (url.startsWith('/apps/') || url.endsWith('.html')) {
+    // Local KiloApps Routes & Virtual 1999 Web Pages
+    if (url.startsWith('/apps/') || url.startsWith('/web/') || url.endsWith('.html')) {
       httpWebFrame.removeAttribute('srcdoc');
       httpWebFrame.src = url;
       httpStatusBadge.className = "badge badge-success";
       httpStatusBadge.textContent = "HTTP 200 OK";
-      footerStatus.textContent = "Rendered local hypermedia: " + url;
+      footerStatus.textContent = "Rendered hypermedia: " + url;
       
       try {
         const localRes = await fetch(url);
         const text = await localRes.text();
+        currentRawText = text;
         httpContentArea.textContent = text;
+        httpHexArea.textContent = generateHexDump(text);
         const elapsed = Math.round(performance.now() - startTime);
+        const dnsTime = Math.floor(Math.random() * 2) + 1;
+        const connTime = Math.floor(Math.random() * 3) + 1;
+        const ttfbTime = Math.max(elapsed - 2, 2);
+        updateMetrics(dnsTime, connTime, ttfbTime, text.length, elapsed, 'HTTP/1.1');
         addTrafficLog('LOCAL', url, 'OK', 200, elapsed, text.length, text);
       } catch (e) {
-        httpContentArea.textContent = "<!-- Rendered in Live Viewport: " + url + " -->";
+        currentRawText = "<!-- Rendered in Live Viewport: " + url + " -->";
+        httpContentArea.textContent = currentRawText;
+        httpHexArea.textContent = generateHexDump(currentRawText);
+        updateMetrics(1, 1, 4, currentRawText.length, 8, 'HTTP/1.1');
       }
       return;
     }
@@ -1221,6 +1355,7 @@
     httpWebFrame.removeAttribute('srcdoc');
     httpWebFrame.src = url;
     httpContentArea.textContent = "Fetching " + url + "...";
+    httpHexArea.textContent = "Generating hex dump...";
     httpStatusBadge.className = "badge badge-info";
     httpStatusBadge.textContent = "FETCHING";
     footerStatus.textContent = "Connecting to " + url + "...";
@@ -1230,25 +1365,35 @@
       const response = await fetch(proxyUrl);
       const elapsed = Math.round(performance.now() - startTime);
       const text = await response.text();
+      currentRawText = text;
 
       httpContentArea.textContent = text;
+      httpHexArea.textContent = generateHexDump(text);
       httpStatusBadge.className = "badge badge-success";
       httpStatusBadge.textContent = `HTTP ${response.status} OK (${elapsed}ms)`;
       footerStatus.textContent = "Connected & Received Data (" + elapsed + "ms)";
 
+      const dnsTime = Math.floor(Math.random() * 15) + 8;
+      const connTime = Math.floor(Math.random() * 20) + 12;
+      const ttfbTime = Math.max(elapsed - 25, 10);
+      updateMetrics(dnsTime, connTime, ttfbTime, text.length, elapsed, url.startsWith('https') ? 'TLSv1.3 / HTTP/2' : 'HTTP/1.1');
+
       addTrafficLog('HTTP', url, 'OK', response.status, elapsed, text.length, text);
     } catch (err) {
       const elapsed = Math.round(performance.now() - startTime);
-      httpContentArea.textContent = "Error fetching source: " + err.message + "\n\n(Note: URL is loaded in the Rendered Viewport. Direct raw inspection may be restricted by CORS policy.)";
+      currentRawText = "Error fetching source: " + err.message + "\n\n(Note: URL is loaded in the Rendered Viewport. Direct raw inspection may be restricted by CORS policy.)";
+      httpContentArea.textContent = currentRawText;
+      httpHexArea.textContent = generateHexDump(currentRawText);
       httpStatusBadge.className = "badge badge-warning";
       httpStatusBadge.textContent = "RENDERED (CORS)";
       footerStatus.textContent = "Rendered in viewport (" + elapsed + "ms)";
+      updateMetrics(20, 30, 45, currentRawText.length, elapsed, 'HTTP/1.1');
 
       addTrafficLog('HTTP', url, 'WARN', 0, elapsed, 0, err.message);
     }
   }
 
-  // View Mode Toggle (Rendered View vs Raw Source)
+  // View Mode Toggle (Rendered View vs Raw Source vs Hex View)
   const httpWebFrame = document.getElementById('httpWebFrame');
   const btnViewRendered = document.getElementById('btnViewRendered');
   const btnViewSource = document.getElementById('btnViewSource');
@@ -1261,8 +1406,12 @@
     btnViewSource.style.background = '';
     btnViewSource.style.borderColor = '';
     btnViewSource.style.fontWeight = '';
+    btnViewHex.style.background = '';
+    btnViewHex.style.borderColor = '';
+    btnViewHex.style.fontWeight = '';
     httpWebFrame.style.display = 'block';
     httpContentArea.style.display = 'none';
+    httpHexArea.style.display = 'none';
     httpSearchRow.style.display = 'none';
   };
 
@@ -1273,9 +1422,30 @@
     btnViewRendered.style.background = '';
     btnViewRendered.style.borderColor = '';
     btnViewRendered.style.fontWeight = '';
+    btnViewHex.style.background = '';
+    btnViewHex.style.borderColor = '';
+    btnViewHex.style.fontWeight = '';
     httpWebFrame.style.display = 'none';
     httpContentArea.style.display = 'block';
+    httpHexArea.style.display = 'none';
     httpSearchRow.style.display = 'flex';
+  };
+
+  btnViewHex.onclick = () => {
+    btnViewHex.style.background = 'rgba(56,189,248,0.25)';
+    btnViewHex.style.borderColor = '#38bdf8';
+    btnViewHex.style.fontWeight = '700';
+    btnViewRendered.style.background = '';
+    btnViewRendered.style.borderColor = '';
+    btnViewRendered.style.fontWeight = '';
+    btnViewSource.style.background = '';
+    btnViewSource.style.borderColor = '';
+    btnViewSource.style.fontWeight = '';
+    httpWebFrame.style.display = 'none';
+    httpContentArea.style.display = 'none';
+    httpHexArea.style.display = 'block';
+    httpSearchRow.style.display = 'flex';
+    httpHexArea.textContent = generateHexDump(currentRawText);
   };
 
   btnGo.onclick = () => fetchUrl(urlInput.value.trim(), true);
@@ -1294,16 +1464,18 @@
   document.getElementById('btnSearchHttp').onclick = () => {
     const q = document.getElementById('httpSearchInput').value.trim();
     if (!q) return;
-    const text = httpContentArea.textContent;
+    const isHex = (httpHexArea && httpHexArea.style.display !== 'none');
+    const text = isHex ? httpHexArea.textContent : httpContentArea.textContent;
     const idx = text.toLowerCase().indexOf(q.toLowerCase());
     if (idx !== -1) {
-      showToast(`Match found at character position ${idx}!`, 'info');
+      showToast(`Match found in ${isHex ? 'Hex View' : 'Source'} at character position ${idx}!`, 'info');
     } else {
-      showToast("No matching text found in current response body.", 'warning');
+      showToast("No matching text found in current response view.", 'warning');
     }
   };
   document.getElementById('btnClearHttp').onclick = () => {
     httpContentArea.textContent = "Ready.";
+    if (httpHexArea) httpHexArea.textContent = "Ready.";
     document.getElementById('httpSearchInput').value = "";
   };
 
@@ -1510,20 +1682,28 @@
     const tbody = document.getElementById('logTableBody');
     const query = document.getElementById('logFilterQuery').value;
     const isRegex = document.getElementById('logRegexCheck').checked;
+    const isCase = document.getElementById('logCaseCheck') ? document.getElementById('logCaseCheck').checked : false;
     const typeFilter = document.getElementById('logTypeFilter').value;
     const statusFilter = document.getElementById('logStatusFilter').value;
+    const latencyFilter = document.getElementById('logLatencyFilter') ? document.getElementById('logLatencyFilter').value : 'ALL';
 
     let regex = null;
+    const flags = isCase ? '' : 'i';
     if (isRegex && query) {
-      try { regex = new RegExp(query, 'i'); } catch(e) {}
+      try { regex = new RegExp(query, flags); } catch(e) {}
     } else if (query) {
-      regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
     }
 
     const filtered = trafficLogs.filter(log => {
       if (typeFilter !== 'ALL' && log.type !== typeFilter) return false;
       if (statusFilter === 'OK' && log.status !== 'OK') return false;
       if (statusFilter === 'ERR' && log.status !== 'ERR') return false;
+      if (statusFilter === 'WARN' && log.status !== 'WARN') return false;
+
+      if (latencyFilter === 'FAST' && log.latency >= 20) return false;
+      if (latencyFilter === 'MED' && (log.latency < 20 || log.latency > 100)) return false;
+      if (latencyFilter === 'SLOW' && log.latency <= 100) return false;
 
       if (regex) {
         const str = `${log.id} ${log.target} ${log.type} ${log.status} ${log.statusCode}`;
@@ -1538,7 +1718,7 @@
     }
 
     tbody.innerHTML = filtered.map(log => {
-      const badgeClass = log.status === 'OK' ? 'badge-success' : 'badge-danger';
+      const badgeClass = log.status === 'OK' ? 'badge-success' : (log.status === 'WARN' ? 'badge-warning' : 'badge-danger');
       return `
         <tr>
           <td>#${log.id}</td>
@@ -1554,9 +1734,13 @@
   }
 
   document.getElementById('logRegexCheck').onchange = renderLogs;
+  const logCaseCheck = document.getElementById('logCaseCheck');
+  if (logCaseCheck) logCaseCheck.onchange = renderLogs;
   document.getElementById('logFilterQuery').oninput = renderLogs;
   document.getElementById('logTypeFilter').onchange = renderLogs;
   document.getElementById('logStatusFilter').onchange = renderLogs;
+  const logLatencyFilter = document.getElementById('logLatencyFilter');
+  if (logLatencyFilter) logLatencyFilter.onchange = renderLogs;
 
   document.getElementById('btnClearLogs').onclick = () => {
     trafficLogs = [];
@@ -1669,9 +1853,57 @@
     area.textContent = `Network Interface Configuration:\n\nEthernet adapter eth0:\n   Connection-specific DNS Suffix  . : localdomain\n   Physical Address. . . . . . . . . : 00-1A-2B-3C-4D-5E\n   IPv4 Address. . . . . . . . . . . : 192.168.1.104(Preferred)\n   Subnet Mask . . . . . . . . . . . : 255.255.255.0\n   Default Gateway . . . . . . . . . : 192.168.1.1\n   DNS Servers . . . . . . . . . . . : 8.8.8.8\n`;
   };
 
-  // Sniffer
+  // Interactive Packet Sniffer Engine
   let snifferTimer = null;
+  let snifferPktCount = 1;
   const snifferTbody = document.getElementById('snifferTableBody');
+
+  function selectSnifferPacket(pkt, rowEl) {
+    document.querySelectorAll('#snifferTableBody tr').forEach(r => r.style.background = '');
+    if (rowEl) rowEl.style.background = 'rgba(56, 189, 248, 0.15)';
+    const drawer = document.getElementById('packetDrawer');
+    const title = document.getElementById('drawerTitle');
+    const content = document.getElementById('drawerContent');
+    if (!drawer) return;
+    drawer.style.display = 'block';
+    title.textContent = `🔬 Frame Dissection Inspector — Packet #${pkt.id} [${pkt.proto}]`;
+
+    let dissection = `Frame ${pkt.id}: ${pkt.len} bytes on wire (0x${pkt.len.toString(16)} bytes), captured at ${pkt.time}\n`;
+    dissection += `Ethernet II: Src MAC 00:1A:2B:3C:${pkt.srcId} -> Dst MAC 00:50:56:C0:${pkt.dstId} (Type: IPv4 0x0800)\n`;
+    dissection += `Internet Protocol Version 4: Src: ${pkt.src} -> Dst: ${pkt.dst}, TTL: 64, Checksum: 0x${((pkt.id * 1337) & 0xffff).toString(16)} [Valid]\n`;
+    dissection += `${pkt.proto} Protocol Headers: ${pkt.info}\n`;
+    dissection += `\n--- FRAME PAYLOAD HEX & ASCII DUMP ---\n`;
+    
+    // Generate hex payload for this frame
+    for (let o = 0; o < Math.min(pkt.len, 64); o += 16) {
+      dissection += o.toString(16).toUpperCase().padStart(4, '0') + '  ';
+      let asc = '';
+      for (let i = 0; i < 16; i++) {
+        if (o + i < pkt.len) {
+          const byteVal = (pkt.id * 31 + (o + i) * 17) & 0xff;
+          dissection += byteVal.toString(16).toUpperCase().padStart(2, '0') + (i === 7 ? '  ' : ' ');
+          asc += (byteVal >= 32 && byteVal <= 126) ? String.fromCharCode(byteVal) : '.';
+        } else {
+          dissection += '   ' + (i === 7 ? ' ' : '');
+        }
+      }
+      dissection += ' ' + asc + '\n';
+    }
+    if (pkt.len > 64) {
+      dissection += `[... ${pkt.len - 64} more bytes in full frame buffer ...]\n`;
+    }
+    content.textContent = dissection;
+  }
+
+  const btnCloseDrawer = document.getElementById('btnCloseDrawer');
+  if (btnCloseDrawer) {
+    btnCloseDrawer.onclick = () => {
+      const drawer = document.getElementById('packetDrawer');
+      if (drawer) drawer.style.display = 'none';
+      document.querySelectorAll('#snifferTableBody tr').forEach(r => r.style.background = '');
+    };
+  }
+
   document.getElementById('btnStartSniffer').onclick = () => {
     document.getElementById('btnStartSniffer').disabled = true;
     document.getElementById('btnStopSniffer').disabled = false;
@@ -1692,9 +1924,26 @@
       else if (proto === 'TLSv1.2') info = `Application Data`;
       else info = `Payload size ${len} bytes`;
 
+      const pktId = snifferPktCount++;
+      const pkt = {
+        id: pktId,
+        time: time,
+        src: src,
+        dst: dst,
+        proto: proto,
+        len: len,
+        info: info,
+        srcId: src.split('.')[3].padStart(2, '0'),
+        dstId: dst.split('.')[3].padStart(2, '0')
+      };
+
       const tr = document.createElement('tr');
+      tr.style.cursor = 'pointer';
+      tr.title = 'Click to inspect packet frame dissection';
       tr.innerHTML = `<td>${time}</td><td>${src}</td><td>${dst}</td><td><span class="badge badge-info">${proto}</span></td><td>${len}</td><td>${info}</td>`;
+      tr.onclick = () => selectSnifferPacket(pkt, tr);
       snifferTbody.prepend(tr);
+
       if (snifferTbody.children.length > 100) {
         snifferTbody.removeChild(snifferTbody.lastChild);
       }
@@ -1709,7 +1958,9 @@
   };
 
   document.getElementById('btnClearSniffer').onclick = () => {
-    snifferTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Sniffer inactive.</td></tr>`;
+    snifferTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Sniffer inactive. Click 'Start Capture' then click any packet row to inspect.</td></tr>`;
+    const drawer = document.getElementById('packetDrawer');
+    if (drawer) drawer.style.display = 'none';
   };
 
 </script>

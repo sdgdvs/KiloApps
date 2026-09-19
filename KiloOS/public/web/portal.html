@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KiloNet Navigator - 1999 Web Portal</title>
+<style>
+  body {
+    background-color: #000080;
+    color: #000000;
+    font-family: 'Times New Roman', Times, serif;
+    margin: 0;
+    padding: 12px;
+    background-image: radial-gradient(#0000a0 15%, #000060 15%);
+    background-size: 8px 8px;
+  }
+  .page-box {
+    max-width: 920px;
+    margin: 0 auto;
+    background: #ffffff;
+    border: 4px ridge #c0c0c0;
+    padding: 12px;
+    box-shadow: 4px 4px 15px rgba(0,0,0,0.6);
+  }
+  header {
+    border-bottom: 2px solid #000080;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+  }
+  .banner-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .banner-title {
+    font-size: 28px;
+    font-weight: bold;
+    color: #cc0000;
+    font-style: italic;
+    text-shadow: 1px 1px 0 #ffd700;
+    letter-spacing: -1px;
+  }
+  .banner-subtitle {
+    font-size: 13px;
+    font-family: 'Courier New', monospace;
+    color: #000080;
+  }
+  .marquee-box {
+    background: #ffffcc;
+    border: 1px solid #ffcc00;
+    padding: 4px 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    margin: 8px 0;
+    color: #800000;
+    font-weight: bold;
+  }
+  .search-table {
+    width: 100%;
+    background: #e6f2ff;
+    border: 2px groove #000080;
+    padding: 8px;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .search-box {
+    padding: 4px 8px;
+    font-size: 14px;
+    width: 320px;
+    border: 2px inset #999;
+  }
+  .btn-retro {
+    background: #d4d0c8;
+    border: 2px outset #ffffff;
+    font-family: 'MS Sans Serif', Tahoma, sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 3px 12px;
+    cursor: pointer;
+  }
+  .btn-retro:active {
+    border-style: inset;
+  }
+  .columns-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .columns-table td {
+    vertical-align: top;
+    padding: 6px;
+  }
+  .category-box {
+    border: 1px solid #999;
+    background: #fdfdfd;
+    margin-bottom: 10px;
+  }
+  .category-header {
+    background: #000080;
+    color: #ffffff;
+    font-family: 'Arial', sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 4px 8px;
+  }
+  .category-content {
+    padding: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .category-content a {
+    color: #0000cc;
+    text-decoration: underline;
+    font-weight: bold;
+  }
+  .category-content a:visited {
+    color: #800080;
+  }
+  .cool-site-box {
+    background: #ffffdd;
+    border: 2px dashed #ff9900;
+    padding: 8px;
+    margin-bottom: 10px;
+  }
+  .ticker-box {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    background: #000000;
+    color: #00ff00;
+    padding: 6px;
+    margin: 8px 0;
+  }
+  .webring-widget {
+    margin-top: 16px;
+    background: #f0f0f0;
+    border: 2px ridge #808080;
+    padding: 8px;
+    text-align: center;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+  }
+  .webring-links {
+    margin-top: 6px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+  }
+  .web-counter {
+    background: #000;
+    color: #ff3333;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 15px;
+    padding: 2px 6px;
+    border: 2px inset #555;
+    letter-spacing: 2px;
+  }
+  footer {
+    border-top: 2px solid #c0c0c0;
+    margin-top: 12px;
+    padding-top: 8px;
+    text-align: center;
+    font-size: 11px;
+    color: #555;
+    font-family: Arial, sans-serif;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-box">
+  <header>
+    <table class="banner-table">
+      <tr>
+        <td>
+          <span class="banner-title">KiloNet Central!</span><br>
+          <span class="banner-subtitle">★ The Premier Virtual 1999 Directory &amp; Hypermedia Portal ★</span>
+        </td>
+        <td style="text-align:right;">
+          <span style="font-size:11px; font-family:Arial, sans-serif;">Net Visitors:</span>
+          <span class="web-counter" id="visitorCounter">0048291</span><br>
+          <span style="font-size:10px; color:#666;">Optimized for Netscape 4.7 &amp; KNet 2.0</span>
+        </td>
+      </tr>
+    </table>
+
+    <div class="marquee-box">
+      ⚡ FLASH NEWS: KiloApps Fleet reaches 95 retro applications! Contributor portal active at /apps/contribute.html — Fuel the living machine!
+    </div>
+  </header>
+
+  <div class="search-table">
+    <form id="searchForm" onsubmit="handleSearch(event)">
+      <label style="font-family:Arial, sans-serif; font-weight:bold; font-size:13px; color:#000080;">Search KiloNet Web:</label>
+      <input type="text" id="searchInput" class="search-box" placeholder="Find software, lore, webring sites, or guides..." />
+      <input type="submit" class="btn-retro" value="Search Central!" />
+      <button type="button" class="btn-retro" onclick="handleLucky()">I'm Feeling Retro!</button>
+    </form>
+    <div id="searchNotice" style="font-size:12px; font-family:Arial, sans-serif; color:#666; margin-top:4px;"></div>
+  </div>
+
+  <table class="columns-table">
+    <tr>
+      <!-- Column 1 -->
+      <td style="width:50%;">
+        <div class="cool-site-box">
+          <div style="font-weight:bold; color:#cc0000; font-family:Arial, sans-serif; font-size:13px;">🌟 Cool Site of the Day</div>
+          <p style="margin:4px 0 6px 0; font-size:13px;">
+            <a href="/web/geocities.html" style="font-weight:bold;">CyberSpire's Underground Retro Shrine</a><br>
+            A classic personal cyber-temple featuring MIDI tunes, under-construction banners, and an interactive visitor guestbook!
+          </p>
+          <span style="font-size:11px; color:#666;">[Added 1999-10-14] Rating: ★★★★★</span>
+        </div>
+
+        <div class="category-box">
+          <div class="category-header">📂 Fleet Core &amp; Network Infrastructure</div>
+          <div class="category-content">
+            • <a href="/apps/contribute.html">🚀 Fleet Contributor Portal</a> — Donate quota &amp; guide the autonomous fleet<br>
+            • <a href="/apps/kdirector.html">🏛️ KDirector Operator Console</a> — Issue human directives &amp; monitor runs<br>
+            • <a href="/web/webring.html">🌐 Central KiloNet Webring Hub</a> — Explore interconnected member homepages<br>
+            • <a href="/apps/knet.html">📡 KNet Diagnostics Suite</a> — Packet sniffer, ping chart, &amp; port scanner
+          </div>
+        </div>
+
+        <div class="category-box">
+          <div class="category-header">🎮 Gaming &amp; Arcade Vault</div>
+          <div class="category-content">
+            • <a href="/apps/kstarforge.html">🚀 KStarForge</a> — Design starships &amp; fulfill faction contracts<br>
+            • <a href="/apps/krogue.html">🗡️ KRogue</a> — Deep ASCII dungeon crawler (Loop 11+)<br>
+            • <a href="/apps/kchrono.html">⏳ KChrono</a> — Tri-epoch time paradox manipulation puzzle<br>
+            • <a href="/apps/kspace.html">🛸 KSpace</a> — Vector space dogfights with replay recording
+          </div>
+        </div>
+      </td>
+
+      <!-- Column 2 -->
+      <td style="width:50%;">
+        <div class="ticker-box">
+          [NASDAQ-1999] KLNT +4.12 | CYBR +18.50 | GEOC +12.30 | VFS99 +2.80 | CRT +0.45
+        </div>
+
+        <div class="category-box">
+          <div class="category-header">🛠️ System Tools &amp; Dev Utilities</div>
+          <div class="category-content">
+            • <a href="/apps/kterm.html">💻 KTerm</a> — Retro terminal emulator with command piping<br>
+            • <a href="/apps/khex.html">🔢 KHex</a> — Binary memory dump inspector &amp; pattern finder<br>
+            • <a href="/apps/ksys.html">⚙️ KSys</a> — Low-level OS architecture monitor &amp; resource graphs<br>
+            • <a href="/apps/kpad.html">📝 KPad</a> — Ergonomic text editor with multi-format export
+          </div>
+        </div>
+
+        <div class="category-box">
+          <div class="category-header">🌌 ARG Lore &amp; The Darknet</div>
+          <div class="category-content">
+            • <a href="/web/darknet.html">👁️ Transmission Node 0x7F</a> — Decrypted darknet transmissions &amp; lore<br>
+            • <a href="echoes">📜 Echoes Archive (1999-12-31)</a> — Deep memory traces of the living OS<br>
+            • <a href="/apps/kbbs.html">📠 KBBS</a> — ANSI dial-up door games &amp; message boards
+          </div>
+        </div>
+
+        <div class="category-box">
+          <div class="category-header">⛅ KiloNet Weather &amp; Clock</div>
+          <div class="category-content" style="font-family:'Courier New', monospace; font-size:12px;">
+            STATION: K-NET-ORBITAL // ALT: 350 KM<br>
+            TEMPERATURE: 21°C / 70°F | BAROMETER: 1013.2 hPa<br>
+            CONDITIONS: Clear starfield, solar wind calm.
+          </div>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Webring Widget -->
+  <div class="webring-widget">
+    <strong>[ KiloNet 1999 Webring Member #001 ]</strong><br>
+    <span>This site is proud to be part of the Central KiloNet Webring!</span>
+    <div class="webring-links">
+      <a href="/web/darknet.html">[« Previous Site]</a>
+      <a href="/web/webring.html">[Central Hub]</a>
+      <a href="#" onclick="jumpRandom(); return false;">[🎲 Random Jump]</a>
+      <a href="/web/geocities.html">[Next Site »]</a>
+    </div>
+  </div>
+
+  <footer>
+    Copyright © 1999-2026 KiloNet Interactive Consortium. All Rights Reserved.<br>
+    Rendered inside KNet Hypermedia Engine • Built to survive within the 999 KB ceiling.
+  </footer>
+</div>
+
+<script>
+  // Visitor counter animation
+  const counterEl = document.getElementById('visitorCounter');
+  let currentHits = parseInt(localStorage.getItem('knet_portal_hits') || '48291');
+  currentHits += Math.floor(Math.random() * 3) + 1;
+  localStorage.setItem('knet_portal_hits', currentHits.toString());
+  counterEl.textContent = currentHits.toString().padStart(7, '0');
+
+  const sites = [
+    '/web/geocities.html',
+    '/web/webring.html',
+    '/web/darknet.html',
+    '/apps/contribute.html',
+    '/apps/kdirector.html'
+  ];
+
+  function jumpRandom() {
+    const pick = sites[Math.floor(Math.random() * sites.length)];
+    window.location.href = pick;
+  }
+
+  function handleSearch(e) {
+    e.preventDefault();
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    const notice = document.getElementById('searchNotice');
+    if (!q) {
+      notice.textContent = "Please enter a search term.";
+      return;
+    }
+
+    if (q.includes('geo') || q.includes('shrine') || q.includes('midi') || q.includes('guest')) {
+      window.location.href = '/web/geocities.html';
+    } else if (q.includes('dark') || q.includes('arg') || q.includes('secret') || q.includes('echo')) {
+      window.location.href = '/web/darknet.html';
+    } else if (q.includes('ring') || q.includes('webring') || q.includes('hub')) {
+      window.location.href = '/web/webring.html';
+    } else if (q.includes('contrib') || q.includes('fuel') || q.includes('fleet')) {
+      window.location.href = '/apps/contribute.html';
+    } else {
+      notice.textContent = `Search found 3 virtual records for '${q}'. Redirecting to Webring Hub...`;
+      setTimeout(() => { window.location.href = '/web/webring.html'; }, 700);
+    }
+  }
+
+  function handleLucky() {
+    jumpRandom();
+  }
+</script>
+
+</body>
+</html>

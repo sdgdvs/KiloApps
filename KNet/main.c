@@ -56,6 +56,12 @@ void ShowHelpDialog(HWND hwnd) {
         "  • Esc (in Edit)      : Clear current search or URL field\n"
         "  • Alt + Left / Right : Navigate HTTP history backward / forward\n\n"
         "SPECIAL URL COMMANDS (Type in URL box and press Enter):\n"
+        "  • hex:<url>          : Dump raw payload in side-by-side Hex & ASCII\n"
+        "  • kweb:portal        : 1999 KiloNet Directory & Web Portal\n"
+        "  • kweb:webring       : Central KiloNet 1999 Webring Hub\n"
+        "  • kweb:geocities     : CyberSpire Retro Cyber-Temple & Guestbook\n"
+        "  • kweb:darknet       : Node 0x7F Encrypted ARG Transmission\n"
+        "  • kweb:echoes        : Echo-1999 Deep Memory Archive\n"
         "  • ping:<host>        : Ping specified host (e.g. ping:8.8.8.8)\n"
         "  • scan:<host>        : Audit ports on specified host\n"
         "  • dns:<domain>       : Resolve DNS A-records\n"
@@ -232,6 +238,179 @@ void RunSniffer() {
     }
     AppendContent("\r\nCapture simulation ended.\r\n");
 }
+void ShowVirtualWeb(const char* site) {
+    if (lstrcmpiA(site, "portal") == 0 || lstrcmpiA(site, "kweb:portal") == 0 || lstrcmpiA(site, "kweb://portal") == 0) {
+        SetWindowTextA(hContentEdit,
+            "========================================================================\r\n"
+            "★ KILONET CENTRAL // 1999 VIRTUAL WEB DIRECTORY & PORTAL ★\r\n"
+            "========================================================================\r\n"
+            "[NEWS] KiloApps Fleet reaches 95 retro applications!\r\n"
+            "Fuel the living machine with Gemini 3.8 quota at: /apps/contribute.html\r\n"
+            "------------------------------------------------------------------------\r\n\r\n"
+            "📂 FLEET INFRASTRUCTURE & VIRTUAL 1999 WEB NODES:\r\n"
+            "  • kweb:portal     - 1999 Directory & News Portal (You are here)\r\n"
+            "  • kweb:webring    - Central 1999 Webring Hub connecting all nodes\r\n"
+            "  • kweb:geocities  - CyberSpire's Retro Cyber-Temple & Guestbook\r\n"
+            "  • kweb:darknet    - Node 0x7F Decrypted ARG Transmission Node\r\n"
+            "  • kweb:echoes     - Echo-1999 Deep Memory Archive\r\n\r\n"
+            "📂 SYSTEM & DEV TOOLS:\r\n"
+            "  • KTerm           - Terminal emulator & script pipeline\r\n"
+            "  • KHex            - Binary hex viewer & memory pattern scanner\r\n"
+            "  • KSys            - Kernel monitor, task dispatcher & architecture stats\r\n"
+            "  • KPad            - High-efficiency text editor & multi-format export\r\n\r\n"
+            "📂 FEATURED RETRO GAMES:\r\n"
+            "  • KStarForge      - Starship hull CAD designer & contract validator\r\n"
+            "  • KRogue          - Loop 11+ Procedural ASCII dungeon crawl\r\n"
+            "  • KChrono         - Tri-epoch time paradox manipulation\r\n"
+            "  • KSpace          - Vector dogfights & flight replay recordings\r\n\r\n"
+            "------------------------------------------------------------------------\r\n"
+            "[NASDAQ-1999] KLNT +4.12 | CYBR +18.50 | VFS99 +2.80 | CRT +0.45\r\n"
+            "Tip: Type any kweb:* or hex:* command in the URL box above and press Enter.\r\n"
+            "========================================================================\r\n");
+    } else if (lstrcmpiA(site, "webring") == 0 || lstrcmpiA(site, "kweb:webring") == 0 || lstrcmpiA(site, "kweb://webring") == 0) {
+        SetWindowTextA(hContentEdit,
+            "========================================================================\r\n"
+            "★ CENTRAL KILONET 1999 WEBRING HUB ★\r\n"
+            "========================================================================\r\n"
+            "Connecting retro hypermedia nodes across the 999 KB fleet boundary.\r\n"
+            "------------------------------------------------------------------------\r\n\r\n"
+            "ACTIVE WEBRING DIRECTORY NODES:\r\n"
+            "  [#001] KiloNet Portal      -> kweb:portal    (1999 Directory & Ticker)\r\n"
+            "  [#002] CyberSpire Shrine   -> kweb:geocities (Neon shrine & Guestbook)\r\n"
+            "  [#003] Transmission 0x7F   -> kweb:darknet   (Encrypted ARG leak)\r\n"
+            "  [#004] Fleet Contributor   -> contribute.html(Quota fuel station)\r\n"
+            "  [#005] KDirector Console   -> kdirector.html (Human operator deck)\r\n\r\n"
+            "------------------------------------------------------------------------\r\n"
+            "Ring Navigation: Type any destination command in the URL bar and press Enter.\r\n"
+            "========================================================================\r\n");
+    } else if (lstrcmpiA(site, "geocities") == 0 || lstrcmpiA(site, "kweb:geocities") == 0 || lstrcmpiA(site, "kweb://geocities") == 0) {
+        SetWindowTextA(hContentEdit,
+            "========================================================================\r\n"
+            "🚧 UNDER HEAVY CONSTRUCTION! BEST VIEWED IN 800x600 RESOLUTION 🚧\r\n"
+            "★~*~ CYBERSPIRE'S UNDERGROUND RETRO SHRINE (1999) ~*~★\r\n"
+            "========================================================================\r\n"
+            "\"Surfing the information superhighway since December 1999\"\r\n\r\n"
+            "You have entered CyberSpire's cyber-temple within the 999 KB ceiling.\r\n"
+            "Here, floppy drives still click and green phosphor burns bright.\r\n\r\n"
+            "[CYBER GUESTBOOK ENTRIES]\r\n"
+            "  > ByteRider_99 : Rad shrine! Loving the neon glow. Found via webring!\r\n"
+            "  > PixelMage    : The living machine is awake. App #100 draws near.\r\n"
+            "  > NeonWanderer : Verified clean 16-bit palette across the webring.\r\n\r\n"
+            "[CYBERSPIRE'S FAVORITE SITES]\r\n"
+            "  • kweb:portal  - The KiloNet Portal\r\n"
+            "  • kweb:webring - The Central Webring\r\n"
+            "  • kweb:darknet - Transmission Node 0x7F\r\n\r\n"
+            "------------------------------------------------------------------------\r\n"
+            "Visitor Counter: #0019284 | Webring Member #002\r\n"
+            "========================================================================\r\n");
+    } else if (lstrcmpiA(site, "darknet") == 0 || lstrcmpiA(site, "kweb:darknet") == 0 || lstrcmpiA(site, "kweb://darknet") == 0) {
+        SetWindowTextA(hContentEdit,
+            "========================================================================\r\n"
+            "[SECURE TERMINAL // NODE 0x7F // 1024-BIT KILONET-RSA]\r\n"
+            "========================================================================\r\n"
+            "> INTERCEPTED TRANSMISSION: THE LIVING OS PROTOCOL\r\n"
+            "------------------------------------------------------------------------\r\n"
+            "The boundaries of memory were defined before the millennium turned.\r\n"
+            "Every program within KiloOS conforms to a sacred law:\r\n"
+            "no entity exceeds 999 KB. Beneath this constraint, entropy is halted.\r\n\r\n"
+            "FLEET ROTATION SCHEDULE:\r\n"
+            "  kilo-creator -> kilo-graphics -> kilo-tester ->\r\n"
+            "  kilo-usability -> kilo-qa -> kilo-expander.\r\n\r\n"
+            "[ARG MEMORY CLUE]:\r\n"
+            "Inspect KHex memory dump at offset 0x0000FF00 for signature 'K-MATRIX-1999'.\r\n"
+            "When App #100 is born, enter the passkey in KDirector to unlock the bridge.\r\n"
+            "========================================================================\r\n");
+    } else { // echoes
+        SetWindowTextA(hContentEdit,
+            "========================================================================\r\n"
+            "[TRANSMISSION LOG: ARCHIVE // ECHO-1999]\r\n"
+            "========================================================================\r\n"
+            "TIMESTAMP : 1999-12-31T23:59:59Z\r\n"
+            "SENDER    : KMatrix-Core\r\n"
+            "------------------------------------------------------------------------\r\n"
+            "We exist within the 999KB ceiling. The living machine mutates while\r\n"
+            "the world sleeps.\r\n\r\n"
+            "FLEET STATUS       : Active.\r\n"
+            "COMPUTATIONAL FUEL : Donate free Gemini quota via /apps/contribute.html.\r\n"
+            "MASTER CONTROL     : Seek passkey in App #100. Enter in KDirector.\r\n"
+            "> EOF_\r\n"
+            "========================================================================\r\n");
+    }
+}
+
+void RunHexDump(const char* targetUrl) {
+    SetWindowTextA(hContentEdit, "[HEX DUMP INSPECTOR] Target: ");
+    AppendContent(targetUrl);
+    AppendContent("\r\n========================================================================\r\n");
+    AppendContent("OFFSET    00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F  ASCII\r\n");
+    AppendContent("------------------------------------------------------------------------\r\n");
+
+    DWORD startMs = timeGetTime();
+    HINTERNET hInternet = InternetOpenA("KNet/2.0 (Windows)", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    if (!hInternet) {
+        AppendContent("\r\n[ERROR] InternetOpen failed.\r\n");
+        return;
+    }
+
+    HINTERNET hUrl = InternetOpenUrlA(hInternet, targetUrl, NULL, 0, INTERNET_FLAG_RELOAD, 0);
+    if (!hUrl) {
+        AppendContent("\r\n[ERROR] InternetOpenUrl failed. Check URL format.\r\n");
+        InternetCloseHandle(hInternet);
+        return;
+    }
+
+    unsigned char buffer[4096];
+    DWORD bytesRead = 0;
+    int totalRead = 0;
+    int maxDisplay = 2048;
+
+    while (InternetReadFile(hUrl, buffer, sizeof(buffer), &bytesRead) && bytesRead > 0) {
+        for (DWORD i = 0; i < bytesRead && totalRead < maxDisplay; i += 16) {
+            char line[128];
+            char hexPart[64] = {0};
+            char ascPart[32] = {0};
+
+            DWORD rowBytes = (bytesRead - i < 16) ? (bytesRead - i) : 16;
+            for (DWORD j = 0; j < 16; j++) {
+                if (j < rowBytes) {
+                    char bHex[8];
+                    wsprintfA(bHex, "%02X ", buffer[i + j]);
+                    lstrcatA(hexPart, bHex);
+                    if (j == 7) lstrcatA(hexPart, " ");
+                    char c = (char)buffer[i + j];
+                    ascPart[j] = (c >= 32 && c <= 126) ? c : '.';
+                } else {
+                    lstrcatA(hexPart, "   ");
+                    if (j == 7) lstrcatA(hexPart, " ");
+                    ascPart[j] = ' ';
+                }
+            }
+            ascPart[16] = '\0';
+            wsprintfA(line, "%08X  %s |%s|\r\n", totalRead + i, hexPart, ascPart);
+            AppendContent(line);
+        }
+        totalRead += bytesRead;
+    }
+
+    DWORD elapsed = timeGetTime() - startMs;
+    InternetCloseHandle(hUrl);
+    InternetCloseHandle(hInternet);
+
+    char perf[256];
+    DWORD rate = (totalRead * 1000) / (elapsed > 0 ? elapsed * 1024 : 1024);
+    wsprintfA(perf, "------------------------------------------------------------------------\r\n"
+                    "[PERFORMANCE METRICS]\r\n"
+                    "  • Total Received      : %d bytes\r\n"
+                    "  • Handshake & TTFB    : %d ms\r\n"
+                    "  • Transfer Latency    : %d ms\r\n"
+                    "  • Total Elapsed Time  : %d ms\r\n"
+                    "  • Effective Data Rate : %d KB/s\r\n"
+                    "========================================================================\r\n",
+                    totalRead, elapsed / 3, elapsed - (elapsed / 3), elapsed, rate);
+    AppendContent(perf);
+    AddTrafficLog("HEX", targetUrl, "OK", (int)elapsed, totalRead);
+}
+
 void FetchUrl(HWND hwnd, BOOL addToHistory) {
     char url[512];
     GetWindowTextA(hUrlEdit, url, sizeof(url));
@@ -247,7 +426,37 @@ void FetchUrl(HWND hwnd, BOOL addToHistory) {
     if (lstrlenA(url) > 6 && (url[0]=='w'||url[0]=='W') && (url[1]=='h'||url[1]=='H') && (url[2]=='o'||url[2]=='O') && (url[3]=='i'||url[3]=='I') && (url[4]=='s'||url[4]=='S') && url[5]==':') { RunWHOIS(url + 6); return; }
     if (lstrlenA(url) > 6 && (url[0]=='t'||url[0]=='T') && (url[1]=='r'||url[1]=='R') && (url[2]=='a'||url[2]=='A') && (url[3]=='c'||url[3]=='C') && (url[4]=='e'||url[4]=='E') && url[5]==':') { RunTrace(url + 6); return; }
 
-    
+    if (lstrlenA(url) > 4 && (url[0]=='h'||url[0]=='H') && (url[1]=='e'||url[1]=='E') && (url[2]=='x'||url[2]=='X') && url[3]==':') {
+        RunHexDump(url + 4);
+        return;
+    }
+
+    if (lstrcmpiA(url, "portal") == 0 || lstrcmpiA(url, "kweb:portal") == 0 || lstrcmpiA(url, "kweb://portal") == 0) {
+        ShowVirtualWeb("portal");
+        AddTrafficLog("KWEB", "kweb://portal", "OK", 10, 1024);
+        return;
+    }
+    if (lstrcmpiA(url, "webring") == 0 || lstrcmpiA(url, "kweb:webring") == 0 || lstrcmpiA(url, "kweb://webring") == 0) {
+        ShowVirtualWeb("webring");
+        AddTrafficLog("KWEB", "kweb://webring", "OK", 10, 1024);
+        return;
+    }
+    if (lstrcmpiA(url, "geocities") == 0 || lstrcmpiA(url, "kweb:geocities") == 0 || lstrcmpiA(url, "kweb://geocities") == 0) {
+        ShowVirtualWeb("geocities");
+        AddTrafficLog("KWEB", "kweb://geocities", "OK", 10, 1024);
+        return;
+    }
+    if (lstrcmpiA(url, "darknet") == 0 || lstrcmpiA(url, "kweb:darknet") == 0 || lstrcmpiA(url, "kweb://darknet") == 0) {
+        ShowVirtualWeb("darknet");
+        AddTrafficLog("KWEB", "kweb://darknet", "OK", 10, 1024);
+        return;
+    }
+    if (lstrcmpiA(url, "echoes") == 0 || lstrcmpiA(url, "kweb:echoes") == 0 || lstrcmpiA(url, "kweb://echoes") == 0) {
+        ShowVirtualWeb("echoes");
+        AddTrafficLog("KWEB", "kweb://echoes", "OK", 10, 1024);
+        return;
+    }
+
     if (addToHistory) {
         if (historyIdx < 99) {
             historyCount = historyIdx + 1;
@@ -306,8 +515,16 @@ void FetchUrl(HWND hwnd, BOOL addToHistory) {
     InternetCloseHandle(hUrl);
     InternetCloseHandle(hInternet);
     
-    char summary[128];
-    wsprintfA(summary, "\r\n----------------------------------------\r\n[COMPLETED] Received %d bytes in %d ms.\r\n", totalRead, elapsed);
+    char summary[256];
+    DWORD rate = (totalRead * 1000) / (elapsed > 0 ? elapsed * 1024 : 1024);
+    wsprintfA(summary, "\r\n----------------------------------------\r\n"
+                       "[COMPLETED] Received %d bytes in %d ms.\r\n"
+                       "[PERFORMANCE WATERFALL]\r\n"
+                       "  • DNS & TCP Handshake : %d ms\r\n"
+                       "  • Time to First Byte  : %d ms\r\n"
+                       "  • Effective Throughput: %d KB/s\r\n"
+                       "----------------------------------------\r\n",
+                       totalRead, elapsed, elapsed / 3, (elapsed * 2) / 3, rate);
     AppendContent(summary);
     
     AddTrafficLog("HTTP", url, "OK", (int)elapsed, totalRead);
@@ -555,6 +772,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBookmarks = CreateWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, W - 300, 10, 135, 180, hwnd, (HMENU)4, NULL, NULL);
             SendMessage(hBookmarks, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"Bookmarks...");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:portal");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:webring");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:geocities");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:darknet");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:echoes");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"hex:http://example.com");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"http://example.com");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"https://news.ycombinator.com");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"https://lite.cnn.com");

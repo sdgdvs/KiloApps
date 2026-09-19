@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KiloNet Central Webring Hub (1999)</title>
+<style>
+  body {
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 16px;
+    background-image: linear-gradient(0deg, #16213e 50%, #0f3460 50%);
+    background-size: 100% 4px;
+  }
+  .hub-container {
+    max-width: 860px;
+    margin: 0 auto;
+    background: #0d1117;
+    border: 3px double #38bdf8;
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+    padding: 16px;
+  }
+  header {
+    text-align: center;
+    border-bottom: 2px solid #38bdf8;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+  }
+  h1 {
+    color: #38bdf8;
+    font-size: 26px;
+    margin: 0 0 6px 0;
+    letter-spacing: 1px;
+    text-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+  }
+  .subhead {
+    font-size: 13px;
+    color: #94a3b8;
+    font-family: 'Courier New', monospace;
+  }
+  .nav-controls {
+    background: #161b22;
+    border: 1px solid #30363d;
+    padding: 10px;
+    text-align: center;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .btn-ring {
+    background: #21262d;
+    color: #58a6ff;
+    border: 1px solid #38bdf8;
+    padding: 6px 14px;
+    font-weight: bold;
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+  }
+  .btn-ring:hover {
+    background: #38bdf8;
+    color: #0d1117;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+  }
+  table.ring-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+  table.ring-table th {
+    background: #1f2937;
+    color: #38bdf8;
+    border: 1px solid #374151;
+    padding: 8px;
+    text-align: left;
+  }
+  table.ring-table td {
+    border: 1px solid #374151;
+    padding: 8px;
+    background: #111827;
+  }
+  table.ring-table tr:hover td {
+    background: #1f2937;
+  }
+  .badge-ring {
+    display: inline-block;
+    padding: 2px 6px;
+    background: #0284c7;
+    color: #fff;
+    font-size: 10px;
+    font-weight: bold;
+    border-radius: 3px;
+  }
+  .embed-box {
+    background: #161b22;
+    border: 1px solid #30363d;
+    padding: 12px;
+    margin-top: 16px;
+  }
+  .embed-box h3 {
+    color: #38bdf8;
+    margin: 0 0 8px 0;
+    font-size: 14px;
+  }
+  textarea.code-snippet {
+    width: 100%;
+    height: 70px;
+    background: #090d16;
+    color: #34d399;
+    border: 1px solid #30363d;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    padding: 6px;
+    box-sizing: border-box;
+    resize: none;
+  }
+  footer {
+    text-align: center;
+    font-size: 11px;
+    color: #64748b;
+    border-top: 1px solid #30363d;
+    margin-top: 16px;
+    padding-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="hub-container">
+  <header>
+    <h1>★ Central KiloNet 1999 Webring Hub ★</h1>
+    <div class="subhead">Interconnecting Retro Hypermedia Nodes &amp; The 999KB Fleet</div>
+  </header>
+
+  <div class="nav-controls">
+    <a href="/web/portal.html" class="btn-ring">🏠 Web Portal</a>
+    <a href="/web/geocities.html" class="btn-ring">« Previous Ring Site</a>
+    <button class="btn-ring" onclick="jumpRandom()">🎲 Random Ring Jump</button>
+    <a href="/web/darknet.html" class="btn-ring">Next Ring Site »</a>
+    <a href="/apps/contribute.html" class="btn-ring">🚀 Contributor Portal</a>
+  </div>
+
+  <h3 style="color:#f8fafc; font-size:15px; margin-bottom:8px;">Active Webring Directory Nodes</h3>
+  <table class="ring-table">
+    <thead>
+      <tr>
+        <th style="width:8%;">Ring ID</th>
+        <th style="width:25%;">Site Name</th>
+        <th style="width:47%;">Description</th>
+        <th style="width:20%;">Destination</th>
+      </tr>
+    </thead>
+    <tbody id="ringBody">
+      <tr>
+        <td><span class="badge-ring">#001</span></td>
+        <td><strong>KiloNet Portal</strong></td>
+        <td>Official 1999 directory with categorised fleet links, stock ticker, and search.</td>
+        <td><a href="/web/portal.html" class="btn-ring" style="font-size:11px; padding:2px 8px;">Visit Node</a></td>
+      </tr>
+      <tr>
+        <td><span class="badge-ring">#002</span></td>
+        <td><strong>CyberSpire Retro Shrine</strong></td>
+        <td>Neon underground cyber temple with visitor guestbook, MIDI vibes, and starfields.</td>
+        <td><a href="/web/geocities.html" class="btn-ring" style="font-size:11px; padding:2px 8px;">Visit Node</a></td>
+      </tr>
+      <tr>
+        <td><span class="badge-ring">#003</span></td>
+        <td><strong>Transmission Node 0x7F</strong></td>
+        <td>ARG darknet node deciphering the living machine and leaked transmission logs.</td>
+        <td><a href="/web/darknet.html" class="btn-ring" style="font-size:11px; padding:2px 8px;">Visit Node</a></td>
+      </tr>
+      <tr>
+        <td><span class="badge-ring">#004</span></td>
+        <td><strong>Fleet Contributor Portal</strong></td>
+        <td>Volunteer compute fuel station donating free Gemini quota to keep fleet running.</td>
+        <td><a href="/apps/contribute.html" class="btn-ring" style="font-size:11px; padding:2px 8px;">Visit Node</a></td>
+      </tr>
+      <tr>
+        <td><span class="badge-ring">#005</span></td>
+        <td><strong>KDirector Control Deck</strong></td>
+        <td>Human director bridge for dispatching high-level fleet missions and app ideas.</td>
+        <td><a href="/apps/kdirector.html" class="btn-ring" style="font-size:11px; padding:2px 8px;">Visit Node</a></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="embed-box">
+    <h3>Add the KiloNet Webring Badge to Your Site</h3>
+    <p style="font-size:12px; color:#94a3b8; margin:0 0 6px 0;">Paste this snippet into your vintage web page footer:</p>
+    <textarea class="code-snippet" readonly>&lt;!-- Central KiloNet Webring --&gt;
+&lt;div align="center"&gt;
+  [ &lt;a href="/web/portal.html"&gt;Hub&lt;/a&gt; | &lt;a href="/web/geocities.html"&gt;Prev&lt;/a&gt; | &lt;a href="/web/webring.html"&gt;Random&lt;/a&gt; | &lt;a href="/web/darknet.html"&gt;Next&lt;/a&gt; ]
+&lt;/div&gt;</textarea>
+  </div>
+
+  <footer>
+    Central KiloNet Webring Consortium • Active Ring Members: <strong>5</strong> • Traffic Verified Clean<br>
+    Rendered in KNet Browser &amp; Inspector
+  </footer>
+</div>
+
+<script>
+  const ringSites = [
+    '/web/portal.html',
+    '/web/geocities.html',
+    '/web/darknet.html',
+    '/apps/contribute.html',
+    '/apps/kdirector.html'
+  ];
+
+  function jumpRandom() {
+    const cur = window.location.pathname;
+    const candidates = ringSites.filter(s => !s.includes('webring.html'));
+    const next = candidates[Math.floor(Math.random() * candidates.length)];
+    window.location.href = next;
+  }
+</script>
+
+</body>
+</html>
