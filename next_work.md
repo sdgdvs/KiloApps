@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -13,15 +13,15 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KTimer
-  kilo_usability: KPad
+  kilo_usability: KPaint
   kilo_graphics: KFortress
   kilo_qa: KSys
   kilo_expander: KPing
   kilo_creator: "KBookmark (Categorized link vault)"
 last_run:
-  agent: kilo-tester
-  app: KTerm
-  timestamp: "2026-09-19T12:45:00Z"
+  agent: kilo-usability
+  app: KPad
+  timestamp: "2026-09-19T14:45:00Z"
 last_planner_run: "2026-09-18T22:40:00Z"
 ---
 
@@ -75,9 +75,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColony`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFarm`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMine`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KRogue`, `KSanctuary`, `KScript`, `KSpace`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KPad`
+- **Current Target**: `KPaint`
 - **Upcoming Queue**:
-  `KPaint`, `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`.
+  `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KSys`
@@ -123,6 +123,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-19T14:45:00Z — kilo-usability: KPad**
+  - Status: PASS ✅ (UI/UX layout, first-run onboarding, word wrap sync, hotkeys & navigation).
+  - Window & Layout: Tuned default window to 960x640 in KiloOS; added responsive status bar wrapping with clickable Ln/Col, UTF-8, and indent toggle.
+  - First-Run Onboarding: Added interactive welcome guide modal (kpad_tutorialSeen) with startup checkbox and Help menu tour trigger.
+  - Navigation & Jump: Added Go to Line dialog (Ctrl+G) with bounds validation; wired clickable status line/col and gutter line jumper.
+  - Word Wrap & Font Crispness: Fixed CSS word wrap desync between editor and highlight overlay; dynamic gutter width scaling for large line counts.
+  - Code Ergonomics: Added multi-line block indent/outdent (Tab/Shift+Tab), syntax-aware line comment toggle (Ctrl+/), and quick toolbar Help button.
+  - Tab Usability & Hotkeys: Added middle-click tab closure, sequential tab cycling (Ctrl+PgUp/PgDn), Alt+H/F1 help shortcuts, and modal Enter dismiss.
+  - Native Parity: Added Go to Line (Ctrl+G), Ctrl+PgUp/PgDn cycling, 960x640 window defaults, and wider status segments in MSVC C.
+
 - **2026-09-19T12:45:00Z — kilo-tester: KTerm**
   - Status: PASS ✅ (8 issues, 8 fixed).
   - State Quicksave & Load: Implemented F5 quicksave & F9 quickload persisting tabs, history, macros, and VFS to localStorage (`kterm_quicksave`).
@@ -161,14 +171,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Interactive Overlays: Modal guide keyboard dismissals (Esc, Enter, Space) and focused action triggers verified.
   - Cleanliness & Safety: Auto-save on pagehide/unload, audio voice panic cleanup, and zero resource leaks confirmed.
   - Verification: MSVC Native C build clean (23.5 KB); Vite single-file web build clean (91.7 KB); all <999 KB limits passed.
-
-- **2026-09-19T04:45:00Z — kilo-graphics: KStarForge**
-  - Status: PASS ✅ (Visual asset generation, procedural hull rendering, sector encounter art & balance).
-  - Blueprint & Drydock Art: Added technical CAD module glyphs (containment coils, thruster bells, radiator slats, muzzles) and gantry fabrication animations.
-  - Proving Grounds Visuals: Added procedural player starship renderer matching grid modules, animated exhaust plumes, shield deflector bubble, and weapon flash.
-  - Sector Encounters: Added 3 pirate vector hulls (Viper, Brute, Sentry), craggy 8-point asteroid polygons with mineral veins, and orbital station dock landmark.
-  - Audio Synthesizers: Implemented dynamic explosion and shield deflection sound synthesis in web and native audio threads.
-  - Content & Balance: Added 2 high-tier faction contracts (Dreadnought, Void Scout); verified encounter drop rates and repair tether healing.
-  - Verification: Clean MSVC Native C build (25.6 KB); Vite web build clean (169.0 KB); all security lint gates and <999 KB ceilings passed.
 
 

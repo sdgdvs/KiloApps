@@ -469,14 +469,27 @@
     color: var(--text-secondary); 
     z-index: 10;
     user-select: none;
+    flex-wrap: wrap;
+    gap: 6px;
   }
   .status-left, .status-right {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
+    flex-wrap: wrap;
   }
   .status-item {
     display: flex; align-items: center; gap: 6px;
+  }
+  .status-clickable {
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+    border-radius: 3px;
+    padding: 1px 4px;
+  }
+  .status-clickable:hover {
+    color: var(--accent-hover);
+    background: rgba(59, 130, 246, 0.15);
   }
   .lang-select, .theme-select {
     background: rgba(0,0,0,0.3);
@@ -533,7 +546,7 @@
     border-radius: 10px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
     width: 90%;
-    max-width: 480px;
+    max-width: min(92vw, 560px);
     max-height: 85vh;
     display: flex;
     flex-direction: column;
@@ -755,6 +768,8 @@
         <div class="divider"></div>
         <div onclick="openFind(false)"><span>Find...</span><span class="shortcut">Ctrl+F</span></div>
         <div onclick="openFind(true)"><span>Replace...</span><span class="shortcut">Ctrl+H</span></div>
+        <div onclick="promptGoToLine()"><span>Go to Line...</span><span class="shortcut">Ctrl+G</span></div>
+        <div onclick="toggleLineComment()"><span>Toggle Line Comment</span><span class="shortcut">Ctrl+/</span></div>
         <div onclick="insertDateTime()"><span>Insert Time/Date</span><span class="shortcut">F5</span></div>
       </div>
     </div>
@@ -789,6 +804,7 @@
 
     <div class="menu-btn">Help
       <div class="dropdown">
+        <div onclick="showOnboarding(true)"><span>🚀 Welcome & Feature Tour</span></div>
         <div onclick="showHelp()"><span>Keyboard Shortcuts</span><span class="shortcut">F1</span></div>
         <div onclick="showAbout()"><span>About KPad Pro</span></div>
       </div>
@@ -820,8 +836,14 @@
       <button class="quick-btn" onclick="changeFontSize(-1)" title="Decrease font size (Ctrl+-)">A-</button>
       <button class="quick-btn" onclick="resetFontSize()" title="Reset font size (Ctrl+0)" id="zoom-badge">14px</button>
       <button class="quick-btn" onclick="changeFontSize(1)" title="Increase font size (Ctrl+=)">A+</button>
+      <button class="quick-btn" onclick="promptGoToLine()" title="Go to Line (Ctrl+G)">
+        📍 GoTo <span class="kbd-hint">Ctrl+G</span>
+      </button>
       <button class="quick-btn" onclick="clearCurrentDocument()" title="Clear document (Alt+X)">
         ✕ Clear <span class="kbd-hint">Alt+X</span>
+      </button>
+      <button class="quick-btn" onclick="showHelp()" title="Help & Keyboard Shortcuts (F1 / Alt+H)">
+        ❓ Help <span class="kbd-hint">F1</span>
       </button>
     </div>
     <div class="quick-group">
@@ -872,8 +894,8 @@
       <div class="status-item" id="stat-autosave" style="color: #34d399; font-size:10px;">● Auto-Saved</div>
     </div>
     <div class="status-right">
-      <div class="status-item" style="cursor:pointer; font-weight:bold; color:var(--accent-hover);" onclick="showHelp()" title="Help (F1)">
-        [?] Press F1 for Help
+      <div class="status-item status-clickable" style="font-weight:bold; color:var(--accent-hover);" onclick="showHelp()" title="Help & Shortcuts Guide (F1 / Alt+H)">
+        [?] Help [F1]
       </div>
       <div class="status-item">
         <label for="theme-selector" style="display:none;">Theme</label>
@@ -897,7 +919,9 @@
           <option value="sql">SQL</option>
         </select>
       </div>
-      <div class="status-item" id="stat-pos">Ln 1, Col 1</div>
+      <div class="status-item status-clickable" id="stat-indent" onclick="toggleIndentSize()" title="Click to toggle indentation spaces (Spaces: 4 / Spaces: 2)">Spaces: 4</div>
+      <div class="status-item" id="stat-encoding" title="Character encoding">UTF-8</div>
+      <div class="status-item status-clickable" id="stat-pos" onclick="promptGoToLine()" title="Click to Go to Line (Ctrl+G)">Ln 1, Col 1</div>
       <div class="status-item" id="stat-counts">1 Lines, 0 Chars</div>
     </div>
   </div>
@@ -1078,6 +1102,12 @@
         const item = document.createElement('div');
         item.className = `tab-item ${index === activeTabIndex ? 'active' : ''}`;
         item.onclick = () => switchTab(index);
+        item.onauxclick = (e) => {
+          if (e.button === 1) {
+            e.preventDefault();
+            promptCloseTab(index, e);
+          }
+        };
         item.oncontextmenu = (e) => showTabContext(e, index);
         
         if (index < 9) {
@@ -1259,16 +1289,18 @@
       // Update Highlight overlay
       highlightCode.innerHTML = colorize(text, lang) + (text.endsWith('\n') ? ' ' : '');
       
-      // Update Gutter line numbers
+      // Update Gutter line numbers with dynamic width
       const lines = text.split('\n');
       const linesCount = lines.length;
+      const gutterDigits = Math.max(2, String(linesCount).length);
+      gutter.style.width = Math.max(46, (gutterDigits * 9 + 18)) + 'px';
       
       const linesBefore = text.substr(0, editor.selectionStart).split('\n');
       const currentLineIdx = linesBefore.length - 1;
 
       let gutterHtml = '';
       for (let i = 1; i <= linesCount; i++) {
-        gutterHtml += `<div class="gutter-line ${i - 1 === currentLineIdx ? 'active' : ''}">${i}</div>`;
+        gutterHtml += `<div class="gutter-line ${i - 1 === currentLineIdx ? 'active' : ''}" onclick="goToLineDirect(${i})" style="cursor:pointer;" title="Line ${i}">${i}</div>`;
       }
       gutter.innerHTML = gutterHtml;
 
@@ -1276,11 +1308,15 @@
       const colIdx = linesBefore[linesBefore.length - 1].length + 1;
       const selLen = Math.abs(editor.selectionEnd - editor.selectionStart);
       
-      document.getElementById('stat-pos').innerText = selLen > 0 ? 
-        `Ln ${currentLineIdx + 1}, Col ${colIdx} (${selLen} sel)` : 
-        `Ln ${currentLineIdx + 1}, Col ${colIdx}`;
+      const posEl = document.getElementById('stat-pos');
+      if (posEl) {
+        posEl.innerText = selLen > 0 ? 
+          `Ln ${currentLineIdx + 1}, Col ${colIdx} (${selLen} sel)` : 
+          `Ln ${currentLineIdx + 1}, Col ${colIdx}`;
+      }
 
-      document.getElementById('stat-counts').innerText = `${linesCount} Lines, ${text.length} Chars`;
+      const countEl = document.getElementById('stat-counts');
+      if (countEl) countEl.innerText = `${linesCount} Lines, ${text.length} Chars`;
 
       // Mark tab as modified
       if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
@@ -1290,6 +1326,18 @@
           renderTabs();
         }
       }
+    }
+
+    function goToLineDirect(lineNum) {
+      const lines = editor.value.split('\n');
+      if (lineNum < 1 || lineNum > lines.length) return;
+      let charOffset = 0;
+      for (let i = 0; i < lineNum - 1; i++) {
+        charOffset += lines[i].length + 1;
+      }
+      editor.focus();
+      editor.setSelectionRange(charOffset, charOffset);
+      updateEditor();
     }
 
     // Synchronize Scroll
@@ -1302,6 +1350,7 @@
     editor.addEventListener('input', updateEditor);
     editor.addEventListener('keyup', updateEditor);
     editor.addEventListener('click', updateEditor);
+    editor.addEventListener('mouseup', updateEditor);
 
     // --- Find & Replace Engine ---
     function openFind(showReplace = false) {
@@ -1513,12 +1562,25 @@
       wordWrap = !wordWrap;
       const wrapVal = wordWrap ? 'soft' : 'off';
       editor.setAttribute('wrap', wrapVal);
+      editor.style.whiteSpace = wordWrap ? 'pre-wrap' : 'pre';
+      editor.style.wordWrap = wordWrap ? 'break-word' : 'normal';
       highlightPre.style.whiteSpace = wordWrap ? 'pre-wrap' : 'pre';
       highlightPre.style.wordWrap = wordWrap ? 'break-word' : 'normal';
       const btn = document.getElementById('btn-quick-wrap');
       if (btn) btn.classList.toggle('active', wordWrap);
       try { localStorage.setItem('kpad_wordwrap', wordWrap ? '1' : '0'); } catch (e) {}
       showToast(`Word wrap ${wordWrap ? 'enabled' : 'disabled'}`, 'info', 1800);
+      updateEditor();
+    }
+
+    let currentIndentSize = 4;
+    function toggleIndentSize() {
+      currentIndentSize = currentIndentSize === 4 ? 2 : 4;
+      const el = document.getElementById('stat-indent');
+      if (el) el.innerText = `Spaces: ${currentIndentSize}`;
+      editor.style.tabSize = currentIndentSize;
+      highlightPre.style.tabSize = currentIndentSize;
+      showToast(`Indentation set to ${currentIndentSize} spaces`, 'info', 1800);
     }
 
     function toggleGutter() {
@@ -2174,29 +2236,33 @@
 
     function showHelp() {
       const fileShortcuts = [
-        { label: 'New Document / Tab', key: 'Ctrl + N / Ctrl + T' },
-        { label: 'Close Tab', key: 'Ctrl + W' },
+        { label: 'New Tab / Document', key: 'Ctrl + T / Ctrl + N' },
+        { label: 'Close Active Tab', key: 'Ctrl + W' },
         { label: 'Switch Tab (1-9)', key: 'Ctrl + 1..9' },
+        { label: 'Previous / Next Tab', key: 'Ctrl + PgUp / PgDn' },
+        { label: 'Close Tab (Mouse)', key: 'Middle-Click' },
         { label: 'Save (VFS / Local)', key: 'Ctrl + S' },
         { label: 'Open Local File', key: 'Ctrl + O' }
       ];
 
       const editShortcuts = [
-        { label: 'Copy All Document', key: 'Alt + C / Ctrl+Shift+C' },
-        { label: 'Clear Document', key: 'Alt + X' },
+        { label: 'Go to Line Number', key: 'Ctrl + G' },
         { label: 'Find in Document', key: 'Ctrl + F' },
         { label: 'Find & Replace', key: 'Ctrl + H' },
-        { label: 'Select All', key: 'Ctrl + A' },
-        { label: 'Insert Date / Time', key: 'F5' },
+        { label: 'Toggle Line Comment', key: 'Ctrl + /' },
+        { label: 'Indent / Outdent', key: 'Tab / Shift+Tab' },
+        { label: 'Copy All Document', key: 'Alt+C / Ctrl+Shift+C' },
+        { label: 'Clear Document', key: 'Alt + X' },
         { label: 'Toggle Word Wrap', key: 'Alt + Z' },
-        { label: 'Zoom In / Out / Reset', key: 'Ctrl++ / Ctrl+- / Ctrl+0' }
+        { label: 'Zoom In / Out / Reset', key: 'Ctrl++ / Ctrl+- / Ctrl+0' },
+        { label: 'Insert Date & Time', key: 'F5' }
       ];
 
       const securityShortcuts = [
         { label: 'Encrypt Document (AES-256)', key: 'Ctrl + E' },
         { label: 'Decrypt Document (Unlock)', key: 'Ctrl + D' },
-        { label: 'Close Dialog / Cancel', key: 'Escape' },
-        { label: 'Help & Shortcuts Guide', key: 'F1' }
+        { label: 'Help & Shortcuts Guide', key: 'F1 / Alt + H' },
+        { label: 'Close Dialog / Search', key: 'Escape' }
       ];
       
       let html = '<div>';
@@ -2207,13 +2273,13 @@
       });
       html += '</div>';
 
-      html += '<div class="shortcut-category">✏️ Editing & Formatting</div><div class="shortcut-grid">';
+      html += '<div class="shortcut-category">✏️ Editing, Navigation & Formatting</div><div class="shortcut-grid">';
       editShortcuts.forEach(s => {
         html += `<div class="shortcut-row"><span>${s.label}</span><span class="shortcut-key">${s.key}</span></div>`;
       });
       html += '</div>';
 
-      html += '<div class="shortcut-category">🔒 Security & Navigation</div><div class="shortcut-grid">';
+      html += '<div class="shortcut-category">🔒 Security & Shortcuts</div><div class="shortcut-grid">';
       securityShortcuts.forEach(s => {
         html += `<div class="shortcut-row"><span>${s.label}</span><span class="shortcut-key">${s.key}</span></div>`;
       });
@@ -2224,18 +2290,181 @@
       openModal('📖 KPad Pro User Guide & Shortcuts', html, true);
     }
 
+    function promptGoToLine() {
+      const lines = editor.value.split('\n');
+      const totalLines = lines.length;
+      const currentLine = editor.value.substr(0, editor.selectionStart).split('\n').length;
+      const bodyHTML = `
+        <div class="form-group">
+          <label class="form-label" for="goto-line-input">Line Number (1 - ${totalLines}):</label>
+          <input type="number" class="form-input" id="goto-line-input" min="1" max="${totalLines}" value="${currentLine}" onkeydown="if(event.key==='Enter') executeGoToLine()">
+          <div class="form-hint">Enter the line number and press Enter to jump directly</div>
+        </div>
+        <div class="modal-btn-row">
+          <button class="modal-btn-cancel" onclick="closeModal()">Cancel</button>
+          <button class="modal-btn" onclick="executeGoToLine()">Go to Line</button>
+        </div>
+      `;
+      openModal('📍 Go to Line', bodyHTML, false);
+      setTimeout(() => {
+        const inp = document.getElementById('goto-line-input');
+        if (inp) { inp.focus(); inp.select(); }
+      }, 50);
+    }
+
+    function executeGoToLine() {
+      const inp = document.getElementById('goto-line-input');
+      if (!inp) return;
+      const lineNum = parseInt(inp.value, 10);
+      const lines = editor.value.split('\n');
+      if (isNaN(lineNum) || lineNum < 1 || lineNum > lines.length) {
+        showToast(`Please enter a valid line number between 1 and ${lines.length}`, 'error');
+        return;
+      }
+      closeModal();
+      let charOffset = 0;
+      for (let i = 0; i < lineNum - 1; i++) {
+        charOffset += lines[i].length + 1;
+      }
+      editor.focus();
+      editor.setSelectionRange(charOffset, charOffset);
+      const lineHeight = currentFontSize * 1.6;
+      editor.scrollTop = Math.max(0, (lineNum - 3) * lineHeight);
+      highlightPre.scrollTop = editor.scrollTop;
+      gutter.scrollTop = editor.scrollTop;
+      updateEditor();
+      showToast(`Jumped to line ${lineNum}`, 'info', 1500);
+    }
+
+    function escapeRegExp(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function toggleLineComment() {
+      const lang = document.getElementById('lang-selector')?.value || 'plaintext';
+      let commentPrefix = '// ';
+      let commentSuffix = '';
+      if (lang === 'python') {
+        commentPrefix = '# ';
+      } else if (lang === 'sql') {
+        commentPrefix = '-- ';
+      } else if (lang === 'html') {
+        commentPrefix = '<!-- ';
+        commentSuffix = ' -->';
+      }
+
+      const text = editor.value;
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+
+      const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+      let lineEnd = text.indexOf('\n', end);
+      if (lineEnd === -1) lineEnd = text.length;
+
+      const targetBlock = text.substring(lineStart, lineEnd);
+      const lines = targetBlock.split('\n');
+
+      const allCommented = lines.every(l => {
+        const trimmed = l.trim();
+        if (!trimmed) return true;
+        if (commentSuffix) {
+          return trimmed.startsWith(commentPrefix.trim()) && trimmed.endsWith(commentSuffix.trim());
+        }
+        return trimmed.startsWith(commentPrefix.trim());
+      });
+
+      const newLines = lines.map(l => {
+        if (!l.trim()) return l;
+        if (allCommented) {
+          let un = l;
+          if (commentSuffix && un.includes(commentSuffix.trim())) {
+            un = un.replace(new RegExp('\\s*' + escapeRegExp(commentSuffix.trim()) + '\\s*$'), '');
+          }
+          return un.replace(new RegExp('^(\\s*)' + escapeRegExp(commentPrefix.trim()) + '\\s?'), '$1');
+        } else {
+          const matchIndent = l.match(/^(\s*)/);
+          const indent = matchIndent ? matchIndent[1] : '';
+          const rest = l.substring(indent.length);
+          return indent + commentPrefix + rest + commentSuffix;
+        }
+      });
+
+      const replaced = newLines.join('\n');
+      editor.value = text.substring(0, lineStart) + replaced + text.substring(lineEnd);
+      editor.selectionStart = lineStart;
+      editor.selectionEnd = lineStart + replaced.length;
+      updateEditor();
+    }
+
+    function showOnboarding(force = false) {
+      if (!force && localStorage.getItem('kpad_tutorialSeen')) return;
+
+      const html = `
+        <div style="padding: 4px 0;">
+          <div style="display:flex; align-items:center; gap: 12px; margin-bottom: 14px; background: rgba(59, 130, 246, 0.1); border: 1px solid var(--border-active); border-radius: 8px; padding: 12px;">
+            <div style="font-size:28px;">⚡</div>
+            <div>
+              <div style="font-weight:700; color:var(--text-primary); font-size:14px;">Welcome to KPad Pro</div>
+              <div style="font-size:12px; color:var(--text-secondary);">High-Performance Multi-Tab Text & Code Workstation</div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px; font-size: 12px; margin-bottom: 16px;">
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <span style="font-size:16px;">📁</span>
+              <div><strong>Multi-Tab Sessions:</strong> Work across multiple tabs (<code class="shortcut-key">Ctrl+T</code>, <code class="shortcut-key">Ctrl+W</code>, <code class="shortcut-key">Ctrl+1..9</code>, <code class="shortcut-key">Ctrl+PgUp/PgDn</code>, or middle-click tab to close).</div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <span style="font-size:16px;">🔒</span>
+              <div><strong>AES-256 Document Lock:</strong> Military-grade browser encryption (<code class="shortcut-key">Ctrl+E</code> lock, <code class="shortcut-key">Ctrl+D</code> unlock, <code class="shortcut-key">.kpad.enc</code> export/import).</div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <span style="font-size:16px;">🚀</span>
+              <div><strong>Starter Templates:</strong> Quick bootstrap buttons for Markdown Notes, JavaScript, HTML5, C/C++, and JSON.</div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <span style="font-size:16px;">🔍</span>
+              <div><strong>Precision Editing:</strong> Find & Replace (<code class="shortcut-key">Ctrl+F</code>, <code class="shortcut-key">Ctrl+H</code>), Go to Line (<code class="shortcut-key">Ctrl+G</code>), and Comment Toggle (<code class="shortcut-key">Ctrl+/</code>).</div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <span style="font-size:16px;">⌨️</span>
+              <div><strong>Hotkey Reference:</strong> Press <code class="shortcut-key">F1</code> or <code class="shortcut-key">Alt+H</code> anytime to view the complete keyboard shortcuts guide.</div>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top: 1px solid var(--border-glass); padding-top: 12px;">
+            <label style="font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:6px; cursor:pointer;">
+              <input type="checkbox" id="dont-show-tour" checked> Don't show this tour on startup
+            </label>
+            <button class="modal-btn" onclick="finishOnboarding()">Get Started ➔</button>
+          </div>
+        </div>
+      `;
+      openModal('🚀 KPad Pro Onboarding & Quick Guide', html, false);
+    }
+
+    function finishOnboarding() {
+      const cb = document.getElementById('dont-show-tour');
+      if (cb && cb.checked) {
+        try { localStorage.setItem('kpad_tutorialSeen', '1'); } catch (e) {}
+      }
+      closeModal();
+      showToast('Welcome to KPad Pro! Press F1 anytime for help.', 'success', 3000);
+    }
+
     function showAbout() {
       const html = `
         <div style="text-align:center; padding: 10px 0;">
           <div style="font-size:24px; font-weight:800; background: linear-gradient(135deg, var(--accent), var(--accent-hover)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 6px;">KPad Pro</div>
-          <div style="color: var(--text-muted); font-size:12px; margin-bottom: 16px;">Version 1.4 • KiloOS Suite</div>
+          <div style="color: var(--text-muted); font-size:12px; margin-bottom: 16px;">Version 1.5 • KiloOS Suite</div>
           <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px;">
-            A high-performance text and code editor with AES-256 document encryption, multi-tab sessions, non-blocking notifications, quick starter templates, and auto-save recovery.
+            A high-performance text and code editor with AES-256 document encryption, multi-tab sessions, non-blocking notifications, quick starter templates, line-jump navigation, and auto-save recovery.
           </p>
           <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 8px; padding: 12px; text-align: left; font-size: 12px; line-height: 1.6;">
             <div>🔒 <strong>Document Security:</strong> 256-bit AES-GCM encryption with PBKDF2 password protection, encrypted file exports (.kpad.enc), auto-save recovery, and live SHA-256 diagnostics.</div>
             <div style="margin-top:6px;">🚀 <strong>Quick Templates:</strong> Instant starter code for Markdown Notes, JavaScript, HTML5, C/C++, and JSON.</div>
-            <div style="margin-top:6px;">⌨️ <strong>Quick Tab Navigation:</strong> Use <code>Ctrl+1</code> through <code>Ctrl+9</code> or <code>Ctrl+T</code> / <code>Ctrl+W</code> to manage document tabs with zero friction.</div>
+            <div style="margin-top:6px;">⌨️ <strong>Quick Tab Navigation:</strong> Use <code>Ctrl+1</code> through <code>Ctrl+9</code>, <code>Ctrl+PgUp/PgDn</code>, or <code>Ctrl+T</code> / <code>Ctrl+W</code> to manage document tabs with zero friction.</div>
+            <div style="margin-top:6px;">📍 <strong>Precision Tools:</strong> Jump to lines via <code>Ctrl+G</code>, toggle comments with <code>Ctrl+/</code>, and indent blocks with <code>Tab / Shift+Tab</code>.</div>
           </div>
         </div>
       `;
@@ -2245,6 +2474,16 @@
     // Global Key Shortcuts
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') { closeModal(); closeFind(); }
+      if (e.key === 'Enter') {
+        const modal = document.getElementById('app-modal');
+        if (modal && modal.classList.contains('active')) {
+          const footer = document.getElementById('modal-footer');
+          if (footer && footer.style.display !== 'none') {
+            e.preventDefault();
+            closeModal();
+          }
+        }
+      }
       if (e.ctrlKey && e.key >= '1' && e.key <= '9') {
         const tabIdx = parseInt(e.key, 10) - 1;
         if (tabIdx < tabs.length) {
@@ -2252,8 +2491,24 @@
           switchTab(tabIdx);
         }
       }
+      if (e.ctrlKey && e.key === 'PageUp') {
+        e.preventDefault();
+        if (tabs.length > 1) {
+          const prev = (activeTabIndex - 1 + tabs.length) % tabs.length;
+          switchTab(prev);
+        }
+      }
+      if (e.ctrlKey && e.key === 'PageDown') {
+        e.preventDefault();
+        if (tabs.length > 1) {
+          const next = (activeTabIndex + 1) % tabs.length;
+          switchTab(next);
+        }
+      }
       if (e.ctrlKey && (e.key === 'f' || e.key === 'F')) { e.preventDefault(); openFind(false); }
       if (e.ctrlKey && (e.key === 'h' || e.key === 'H')) { e.preventDefault(); openFind(true); }
+      if (e.ctrlKey && (e.key === 'g' || e.key === 'G')) { e.preventDefault(); promptGoToLine(); }
+      if (e.ctrlKey && e.key === '/') { e.preventDefault(); toggleLineComment(); }
       if (e.ctrlKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); saveVFS(); }
       if (e.ctrlKey && (e.key === 't' || e.key === 'T')) { e.preventDefault(); newTab(); }
       if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); newTab(); }
@@ -2269,17 +2524,59 @@
       if (e.ctrlKey && (e.key === '-' || e.key === '_')) { e.preventDefault(); changeFontSize(-1); }
       if (e.ctrlKey && e.key === '0') { e.preventDefault(); resetFontSize(); }
       if (e.key === 'F5') { e.preventDefault(); insertDateTime(); }
-      if (e.key === 'F1') { e.preventDefault(); showHelp(); }
+      if (e.key === 'F1' || (e.altKey && (e.key === 'h' || e.key === 'H'))) { e.preventDefault(); showHelp(); }
+      if ((e.key === '?' || e.key === 'h' || e.key === 'H') && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
+        e.preventDefault();
+        showHelp();
+      }
     });
 
-    // Handle Tab key indenting inside editor
+    // Handle Tab key indenting and outdenting inside editor
     editor.addEventListener('keydown', function(e) {
       if (e.key === 'Tab') {
         e.preventDefault();
         const start = this.selectionStart;
         const end = this.selectionEnd;
-        this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
-        this.selectionStart = this.selectionEnd = start + 4;
+        const value = this.value;
+        const indentStr = " ".repeat(currentIndentSize);
+
+        if (start === end && !e.shiftKey) {
+          this.value = value.substring(0, start) + indentStr + value.substring(end);
+          this.selectionStart = this.selectionEnd = start + currentIndentSize;
+        } else {
+          const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+          let lineEnd = value.indexOf('\n', end);
+          if (lineEnd === -1) lineEnd = value.length;
+
+          const selectedLines = value.substring(lineStart, lineEnd).split('\n');
+          let newLines = [];
+          let startOffsetChange = 0;
+          let totalChange = 0;
+
+          if (e.shiftKey) {
+            selectedLines.forEach((l, idx) => {
+              const spaces = l.match(new RegExp('^ {1,' + currentIndentSize + '}'));
+              if (spaces) {
+                const removed = spaces[0].length;
+                newLines.push(l.substring(removed));
+                totalChange -= removed;
+                if (idx === 0) startOffsetChange -= removed;
+              } else {
+                newLines.push(l);
+              }
+            });
+          } else {
+            selectedLines.forEach((l, idx) => {
+              newLines.push(indentStr + l);
+              totalChange += currentIndentSize;
+              if (idx === 0) startOffsetChange += currentIndentSize;
+            });
+          }
+
+          this.value = value.substring(0, lineStart) + newLines.join('\n') + value.substring(lineEnd);
+          this.selectionStart = Math.max(lineStart, start + startOffsetChange);
+          this.selectionEnd = Math.max(this.selectionStart, end + totalChange);
+        }
         updateEditor();
       }
     });
@@ -2310,7 +2607,11 @@
       if (!loadSession()) {
         createTab("Welcome", "Welcome to KPad Pro!\n\nPress F1 or click Help for shortcuts and guide.\n", null, "plaintext");
       }
-      showToast("💡 Welcome to KPad Pro! Press F1 or click Help for shortcuts & guide.", "info", 4500);
+      if (!localStorage.getItem('kpad_tutorialSeen')) {
+        setTimeout(() => showOnboarding(false), 250);
+      } else {
+        showToast("💡 Welcome to KPad Pro! Press F1 or click Help for shortcuts & guide.", "info", 4000);
+      }
     };
   </script>
 </body>

@@ -6,8 +6,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#define W 800
-#define H 600
+#define W 960
+#define H 640
 #define MAX_TABS 10
 
 typedef struct {
@@ -68,10 +68,12 @@ BOOL g_bWordWrap = FALSE;
 #define ID_TPL_C            9032
 #define ID_TPL_HTML         9033
 #define ID_TPL_JSON         9034
+#define ID_EDIT_GOTOLINE    9035
 void UpdateStatusBar(void);
 void UpdateTabTitle(int index);
 void AddTab(const char* name, const char* path);
 void SwitchTab(int index);
+void DoGoToLineNative(void);
 
 int g_nFontSizePt = 12;
 char g_szCustomStatus[128] = {0};
@@ -695,6 +697,117 @@ BOOL PromptPassword(HWND hWndParent, const char* title, char* outPassword, int m
     return FALSE;
 }
 
+char g_szGoToLineResult[32] = {0};
+BOOL g_bGoToLineOK = FALSE;
+
+LRESULT CALLBACK GoToLineDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) {
+        case WM_CREATE: {
+            CreateWindowExA(0, "STATIC", "Enter Line Number to Jump to:", WS_CHILD | WS_VISIBLE, 15, 12, 260, 18, hwnd, NULL, GetModuleHandle(NULL), NULL);
+            HWND hEditLine = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_NUMBER | ES_AUTOHSCROLL, 15, 34, 250, 24, hwnd, (HMENU)101, GetModuleHandle(NULL), NULL);
+            CreateWindowExA(0, "BUTTON", "Go to Line", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_DEFPUSHBUTTON, 75, 70, 90, 26, hwnd, (HMENU)IDOK, GetModuleHandle(NULL), NULL);
+            CreateWindowExA(0, "BUTTON", "Cancel", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 175, 70, 80, 26, hwnd, (HMENU)IDCANCEL, GetModuleHandle(NULL), NULL);
+            SetFocus(hEditLine);
+            break;
+        }
+        case WM_COMMAND: {
+            if (LOWORD(wParam) == IDOK) {
+                GetDlgItemTextA(hwnd, 101, g_szGoToLineResult, sizeof(g_szGoToLineResult));
+                g_bGoToLineOK = TRUE;
+                DestroyWindow(hwnd);
+            } else if (LOWORD(wParam) == IDCANCEL) {
+                g_bGoToLineOK = FALSE;
+                DestroyWindow(hwnd);
+            }
+            break;
+        }
+        case WM_CLOSE:
+            g_bGoToLineOK = FALSE;
+            DestroyWindow(hwnd);
+            break;
+        default:
+            return DefWindowProcA(hwnd, msg, wParam, lParam);
+    }
+    return 0;
+}
+
+static int SimpleAtoi(const char* s) {
+    int v = 0;
+    if (!s) return 0;
+    while (*s >= '0' && *s <= '9') {
+        v = v * 10 + (*s - '0');
+        s++;
+    }
+    return v;
+}
+
+void DoGoToLineNative() {
+    if (g_NumTabs == 0 || !g_Tabs[g_ActiveTab].hEdit) return;
+    HWND hEdit = g_Tabs[g_ActiveTab].hEdit;
+    int totalLines = (int)SendMessageA(hEdit, EM_GETLINECOUNT, 0, 0);
+
+    static BOOL s_registered = FALSE;
+    if (!s_registered) {
+        WNDCLASSA wc = {0};
+        wc.lpfnWndProc = GoToLineDlgProc;
+        wc.hInstance = GetModuleHandle(NULL);
+        wc.lpszClassName = "KPadGoToLineDlgClass";
+        wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+        RegisterClassA(&wc);
+        s_registered = TRUE;
+    }
+
+    g_bGoToLineOK = FALSE;
+    g_szGoToLineResult[0] = 0;
+
+    RECT rcParent;
+    GetWindowRect(g_hMainWnd, &rcParent);
+    int dlgW = 295, dlgH = 145;
+    int dlgX = rcParent.left + (rcParent.right - rcParent.left - dlgW) / 2;
+    int dlgY = rcParent.top + (rcParent.bottom - rcParent.top - dlgH) / 2;
+
+    HWND hDlg = CreateWindowExA(WS_EX_DLGMODALFRAME | WS_EX_TOPMOST, "KPadGoToLineDlgClass", "Go to Line",
+        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE, dlgX, dlgY, dlgW, dlgH, g_hMainWnd, NULL, GetModuleHandle(NULL), NULL);
+    if (!hDlg) return;
+
+    EnableWindow(g_hMainWnd, FALSE);
+    MSG msg;
+    while (IsWindow(hDlg) && GetMessageA(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN) {
+            if (msg.wParam == VK_RETURN) {
+                SendMessageA(hDlg, WM_COMMAND, IDOK, 0);
+                continue;
+            } else if (msg.wParam == VK_ESCAPE) {
+                SendMessageA(hDlg, WM_COMMAND, IDCANCEL, 0);
+                continue;
+            }
+        }
+        TranslateMessage(&msg);
+        DispatchMessageA(&msg);
+    }
+    EnableWindow(g_hMainWnd, TRUE);
+    SetForegroundWindow(g_hMainWnd);
+    SetFocus(hEdit);
+
+    if (g_bGoToLineOK && g_szGoToLineResult[0]) {
+        int lineNum = SimpleAtoi(g_szGoToLineResult);
+        if (lineNum >= 1 && lineNum <= totalLines) {
+            LRESULT charIdx = SendMessageA(hEdit, EM_LINEINDEX, lineNum - 1, 0);
+            if (charIdx != -1) {
+                SendMessageA(hEdit, EM_SETSEL, charIdx, charIdx);
+                SendMessageA(hEdit, EM_SCROLLCARET, 0, 0);
+                char stat[64];
+                wsprintfA(stat, "Jumped to Line %d", lineNum);
+                ShowNativeStatus(stat);
+            }
+        } else {
+            char warn[128];
+            wsprintfA(warn, "Invalid line number. Document has %d lines.", totalLines);
+            MessageBoxA(g_hMainWnd, warn, "Go to Line", MB_OK | MB_ICONWARNING);
+        }
+    }
+}
+
 void ShowDetailedDiagnostics() {
     if (g_NumTabs == 0) return;
     HWND hEdit = g_Tabs[g_ActiveTab].hEdit;
@@ -1064,6 +1177,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hEditMenu, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_FIND, "Find...\tCtrl+F");
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_REPLACE, "Replace...\tCtrl+H");
+            AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_GOTOLINE, "Go to Line...\tCtrl+G");
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_ENCRYPT, "Encrypt Buffer (Password Lock)...\tCtrl+E");
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_DECRYPT, "Decrypt Buffer (Unlock)...\tCtrl+D");
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_TIME_DATE, "Time/Date\tF5");
@@ -1099,7 +1213,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Create Status Window
             g_hStatus = CreateStatusWindowA(WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP, "", hwnd, 100);
-            int parts[4] = { 250, 410, 580, -1 };
+            int parts[4] = { 320, 520, 750, -1 };
             SendMessage(g_hStatus, SB_SETPARTS, 4, (LPARAM)parts);
 
             // Create Tab Control
@@ -1191,6 +1305,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case ID_EDIT_REPLACE:
                     DoFindReplace(TRUE);
                     break;
+                case ID_EDIT_GOTOLINE:
+                    DoGoToLineNative();
+                    break;
                 case ID_EDIT_ENCRYPT:
                     EncryptBufferAction();
                     break;
@@ -1257,8 +1374,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         "  • Ctrl+S              : Save Document\n"
                         "  • Ctrl+W              : Close Active Tab\n"
                         "  • Ctrl+1 .. 9         : Switch to Tab 1-9\n"
-                        "  • Ctrl+Tab            : Next Tab Cycle\n\n"
+                        "  • Ctrl+Tab / PgUp/PgDn: Next / Previous Tab Cycle\n\n"
                         "EDITING & SEARCH:\n"
+                        "  • Ctrl+G              : Go to Line Number\n"
                         "  • Ctrl+F / Ctrl+H     : Find / Replace\n"
                         "  • Ctrl+A              : Select All\n"
                         "  • Ctrl+Shift+C / Alt+C: Copy All Document\n"
@@ -1449,12 +1567,30 @@ void MainEntry() {
                 SendMessage(hwnd, WM_COMMAND, ID_FILE_SAVE, 0);
                 continue;
             }
-            if (ctrl && msg.wParam == 'F') {
+            if (ctrl && (msg.wParam == 'F' || msg.wParam == 'f')) {
                 SendMessage(hwnd, WM_COMMAND, ID_EDIT_FIND, 0);
                 continue;
             }
-            if (ctrl && msg.wParam == 'H') {
+            if (ctrl && (msg.wParam == 'H' || msg.wParam == 'h')) {
                 SendMessage(hwnd, WM_COMMAND, ID_EDIT_REPLACE, 0);
+                continue;
+            }
+            if (ctrl && (msg.wParam == 'G' || msg.wParam == 'g')) {
+                SendMessage(hwnd, WM_COMMAND, ID_EDIT_GOTOLINE, 0);
+                continue;
+            }
+            if (ctrl && msg.wParam == VK_PRIOR) {
+                if (g_NumTabs > 1) {
+                    int prevTab = (g_ActiveTab - 1 + g_NumTabs) % g_NumTabs;
+                    SwitchTab(prevTab);
+                }
+                continue;
+            }
+            if (ctrl && msg.wParam == VK_NEXT) {
+                if (g_NumTabs > 1) {
+                    int nextTab = (g_ActiveTab + 1) % g_NumTabs;
+                    SwitchTab(nextTab);
+                }
                 continue;
             }
             if (ctrl && msg.wParam == 'E') {
