@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -15,13 +15,13 @@ current_targets:
   kilo_tester: KTerm
   kilo_usability: KPad
   kilo_graphics: KFortress
-  kilo_qa: KSynth
+  kilo_qa: KSys
   kilo_expander: KNet
   kilo_creator: "KPomodoro (Work/break cycle manager)"
 last_run:
-  agent: kilo-graphics
-  app: KStarForge
-  timestamp: "2026-09-19T04:45:00Z"
+  agent: kilo-qa
+  app: KSynth
+  timestamp: "2026-09-19T06:45:00Z"
 last_planner_run: "2026-09-18T22:40:00Z"
 ---
 
@@ -80,9 +80,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPaint`, `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KSynth`
+- **Current Target**: `KSys`
 - **Upcoming Queue**:
-  `KSys`, `KTask`, `KTerm`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAlchemy`, `KAsteroids`, `KChrono`, `KColony`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMine`, `KMystery`, `KPac`, `KQuest`, `KRogue`, `KSanctuary`, `KStarDredge`, `KSubmarine` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar)*.
+  `KTask`, `KTerm`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAlchemy`, `KAsteroids`, `KChrono`, `KColony`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMine`, `KMystery`, `KPac`, `KQuest`, `KRogue`, `KSanctuary`, `KStarDredge`, `KSubmarine` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KNet`
@@ -123,6 +123,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-19T06:45:00Z — kilo-qa: KSynth**
+  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial integrity, overlays).
+  - Persistence: Full workstation quicksave (F5) and quickload (F9) across web and native with checksum validation and quota fallback.
+  - Tutorial Integrity: Fresh-session onboarding (`ksynth_tutorialSeen` / `ksynth_tutorial.dat`) protecting restored saves from interruption.
+  - Interactive Overlays: Modal guide keyboard dismissals (Esc, Enter, Space) and focused action triggers verified.
+  - Cleanliness & Safety: Auto-save on pagehide/unload, audio voice panic cleanup, and zero resource leaks confirmed.
+  - Verification: MSVC Native C build clean (23.5 KB); Vite single-file web build clean (91.7 KB); all <999 KB limits passed.
+
 - **2026-09-19T04:45:00Z — kilo-graphics: KStarForge**
   - Status: PASS ✅ (Visual asset generation, procedural hull rendering, sector encounter art & balance).
   - Blueprint & Drydock Art: Added technical CAD module glyphs (containment coils, thruster bells, radiator slats, muzzles) and gantry fabrication animations.
@@ -158,15 +166,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Rotation Schedule: Configured upcoming 24h rotation to tester ➔ usability ➔ graphics ➔ qa ➔ expander ➔ creator.
   - Log Compaction: Enforced 5-entry limit in next_work.md; archived older entries to archive/fleet_execution_archive.md.
   - Verification: Security lint passed; orchestrator dry-run validated.
-
-- **2026-09-18T20:45:00Z — kilo-expander: KTask**
-  - Status: PASS ✅ (Deep functional feature expansion, Process Tree, Affinity & Diagnostics).
-  - Process Tree Hierarchy: Added flat/tree view mode toggle ([T]) with parent-child lineages, PPID tracing, and child count badges.
-  - Query & Regex Engine: Search input parses regex (/.../) and attribute queries (cpu>, cpu<, mem>, mem<, pri:, pid:).
-  - CPU Affinity Management: Added 8-core allocation matrix in Inspector with hex/bin bitmasks, presets, and native Win32 cycling ([A]).
-  - Inspector Expansions: Added Environment & CmdLine tab (Tab 5), Hex Peek memory segment selector & ASCII search, and Affinity tab (Tab 6).
-  - Multi-Format Reports: Added Markdown System Diagnostic Audit report ([M]) and standalone HTML diagnostic report export.
-  - Visual Polish & Verification: Process usage mini-bars; MSVC Native C build clean (27 KB); Single-File Web clean (116.8 KB); all <999 KB passed.
 
 
 

@@ -4,9 +4,9 @@
 #include <stdlib.h>
 
 #define W 660
-#define H 450
+#define H 460
 
-HWND hComboPreset, hComboWave, hBtnPlay, hBtnSeq, hBtnExportWav, hBtnHelp, hFreq, hAttack, hDecay, hSustain, hRelease;
+HWND hComboPreset, hComboWave, hBtnPlay, hBtnSeq, hBtnExportWav, hBtnHelp, hBtnSave, hBtnLoad, hFreq, hAttack, hDecay, hSustain, hRelease;
 HWND hDelayTime, hDelayFdbk, hDelayMix;
 HWND hComboArp, hArpBpm, hArpOct;
 HWND hScopeWnd, hPianoWnd, hStatusText;
@@ -517,7 +517,7 @@ LRESULT CALLBACK PianoProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
-// Subclass edit controls to handle Enter, Esc, and F1 smoothly
+// Subclass edit controls to handle Enter, Esc, F1, F5, and F9 smoothly
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == WM_KEYDOWN) {
         if (wParam == VK_RETURN) {
@@ -532,6 +532,14 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         }
         if (wParam == VK_F1) {
             PostMessage(GetParent(hwnd), WM_COMMAND, 3, 0);
+            return 0;
+        }
+        if (wParam == VK_F5) {
+            PostMessage(GetParent(hwnd), WM_COMMAND, 5, 0);
+            return 0;
+        }
+        if (wParam == VK_F9) {
+            PostMessage(GetParent(hwnd), WM_COMMAND, 6, 0);
             return 0;
         }
     }
@@ -593,25 +601,180 @@ void ExportWav(HWND hwnd) {
     MessageBoxA(hwnd, msg, "KSynth WAV Export", MB_OK | MB_ICONINFORMATION);
 }
 
+void UpdateWindowTitle(HWND hwnd);
+
+#define KSYNTH_SAVE_MAGIC 0x4B53594E // "KSYN"
+#define KSYNTH_SAVE_VER 1
+
+typedef struct {
+    DWORD magic;
+    DWORD version;
+    int preset;
+    int wave;
+    int freq;
+    char attack[16];
+    char decay[16];
+    char sustain[16];
+    char release[16];
+    char delayTime[16];
+    char delayFdbk[16];
+    char delayMix[16];
+    int arpMode;
+    int octaveShift;
+    DWORD checksum;
+} KSynthSaveData;
+
+static DWORD CalculateSaveChecksum(const KSynthSaveData* data) {
+    DWORD sum = 0x12345678;
+    const unsigned char* p = (const unsigned char*)data;
+    size_t len = (size_t)((const char*)&data->checksum - (const char*)data);
+    for (size_t i = 0; i < len; i++) {
+        sum = (sum * 31) + p[i];
+    }
+    return sum;
+}
+
+BOOL SaveStateToFile(const char* filename) {
+    KSynthSaveData data;
+    memset(&data, 0, sizeof(data));
+    data.magic = KSYNTH_SAVE_MAGIC;
+    data.version = KSYNTH_SAVE_VER;
+
+    data.preset = (int)SendMessage(hComboPreset, CB_GETCURSEL, 0, 0);
+    data.wave = (int)SendMessage(hComboWave, CB_GETCURSEL, 0, 0);
+    if (data.wave == CB_ERR) data.wave = 0;
+
+    char buf[32];
+    GetWindowTextA(hFreq, buf, sizeof(buf));
+    data.freq = parse_int(buf);
+    if (data.freq < 20) data.freq = 440;
+
+    GetWindowTextA(hAttack, data.attack, sizeof(data.attack));
+    GetWindowTextA(hDecay, data.decay, sizeof(data.decay));
+    GetWindowTextA(hSustain, data.sustain, sizeof(data.sustain));
+    GetWindowTextA(hRelease, data.release, sizeof(data.release));
+
+    GetWindowTextA(hDelayTime, data.delayTime, sizeof(data.delayTime));
+    GetWindowTextA(hDelayFdbk, data.delayFdbk, sizeof(data.delayFdbk));
+    GetWindowTextA(hDelayMix, data.delayMix, sizeof(data.delayMix));
+
+    data.arpMode = (int)SendMessage(hComboArp, CB_GETCURSEL, 0, 0);
+    if (data.arpMode == CB_ERR) data.arpMode = 0;
+
+    data.octaveShift = g_octaveShift;
+    data.checksum = CalculateSaveChecksum(&data);
+
+    HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return FALSE;
+
+    DWORD written = 0;
+    BOOL ok = WriteFile(hFile, &data, sizeof(data), &written, NULL);
+    CloseHandle(hFile);
+    return (ok && written == sizeof(data));
+}
+
+BOOL LoadStateFromFile(const char* filename) {
+    HANDLE hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return FALSE;
+
+    KSynthSaveData data;
+    DWORD read = 0;
+    BOOL ok = ReadFile(hFile, &data, sizeof(data), &read, NULL);
+    CloseHandle(hFile);
+
+    if (!ok || read != sizeof(data)) return FALSE;
+    if (data.magic != KSYNTH_SAVE_MAGIC || data.version != KSYNTH_SAVE_VER) return FALSE;
+    if (data.checksum != CalculateSaveChecksum(&data)) return FALSE;
+
+    if (data.preset >= 0 && data.preset < 6) {
+        SendMessage(hComboPreset, CB_SETCURSEL, data.preset, 0);
+    } else {
+        SendMessage(hComboPreset, CB_SETCURSEL, -1, 0);
+    }
+
+    if (data.wave >= 0 && data.wave < 5) {
+        SendMessage(hComboWave, CB_SETCURSEL, data.wave, 0);
+    }
+
+    char buf[32];
+    if (data.freq >= 20 && data.freq <= 20000) {
+        wsprintfA(buf, "%d", data.freq);
+        SetWindowTextA(hFreq, buf);
+    }
+
+    if (data.attack[0]) SetWindowTextA(hAttack, data.attack);
+    if (data.decay[0]) SetWindowTextA(hDecay, data.decay);
+    if (data.sustain[0]) SetWindowTextA(hSustain, data.sustain);
+    if (data.release[0]) SetWindowTextA(hRelease, data.release);
+
+    if (data.delayTime[0]) SetWindowTextA(hDelayTime, data.delayTime);
+    if (data.delayFdbk[0]) SetWindowTextA(hDelayFdbk, data.delayFdbk);
+    if (data.delayMix[0]) SetWindowTextA(hDelayMix, data.delayMix);
+
+    if (data.arpMode >= 0 && data.arpMode < 5) {
+        SendMessage(hComboArp, CB_SETCURSEL, data.arpMode, 0);
+    }
+
+    if (data.octaveShift >= -2 && data.octaveShift <= 2) {
+        g_octaveShift = data.octaveShift;
+    }
+
+    HWND hwndMain = GetParent(hFreq);
+    if (hwndMain) UpdateWindowTitle(hwndMain);
+
+    PlayTone();
+    return TRUE;
+}
+
+BOOL HasSavedState(const char* filename) {
+    HANDLE hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return FALSE;
+    DWORD size = GetFileSize(hFile, NULL);
+    CloseHandle(hFile);
+    return (size == sizeof(KSynthSaveData));
+}
+
+BOOL HasSeenTutorial(void) {
+    HANDLE hFile = CreateFileA("ksynth_tutorial.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFile);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+void MarkTutorialSeen(void) {
+    HANDLE hFile = CreateFileA("ksynth_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char val = '1';
+        DWORD written = 0;
+        WriteFile(hFile, &val, 1, &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
 BOOL CALLBACK SetFontProc(HWND child, LPARAM hFont) {
     SendMessage(child, WM_SETFONT, hFont, TRUE);
     return TRUE;
 }
 
 void ShowHelp(HWND hwnd) {
+    MarkTutorialSeen();
     MessageBoxA(hwnd,
         "KSynth Workstation Pro - Keyboard & Controls Guide\n\n"
         "Interactive Piano Keyboard:\n"
         "  White Keys: [A]=C4  [S]=D4  [D]=E4  [F]=F4  [G]=G4  [H]=A4  [J]=B4  [K]=C5\n"
         "  Black Keys: [W]=C#4 [E]=D#4 [T]=F#4 [Y]=G#4 [U]=A#4\n"
-        "  (You can also click directly on the virtual piano keys!)\n\n"
-        "Keyboard Shortcuts:\n"
-        "  [Space]       : Play active tone\n"
+        "  (Click directly on virtual piano keys with mouse!)\n\n"
+        "Workstation Persistence & Shortcuts:\n"
+        "  [F5]          : Quicksave entire synth workstation state (ksynth.dat)\n"
+        "  [F9]          : Quickload saved workstation state\n"
+        "  [Space]       : Play active synth tone\n"
         "  [P]           : Play arpeggiator pattern\n"
         "  [E] / [Ctrl+S]: Export sound to 16-bit 44.1 kHz WAV file\n"
         "  [1] - [6]     : Direct preset switch (Lead, Bass, Pad, 8-Bit, Bell, Noise)\n"
         "  [Z] / [X]     : Shift keyboard octave down / up (-2 to +2)\n"
-        "  [Esc]         : Panic (stop sound) / Unfocus edit fields\n"
+        "  [Esc]         : Panic (stop sound) / Unfocus edit fields / Dismiss\n"
         "  [Enter]       : Play tone while editing frequency or ADSR fields\n"
         "  [F1] or [?]   : Display this Help guide\n\n"
         "Synthesizer Modules:\n"
@@ -690,10 +853,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hComboArp, CB_SETCURSEL, 0, 0);
 
             // Play, Arp, Export WAV & Help Buttons
-            hBtnPlay      = CreateScaledWindowEx(0, "BUTTON", "▶ Play [Space]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 15, 360, 75, 32, hwnd, (HMENU)1, NULL, NULL);
-            hBtnSeq       = CreateScaledWindowEx(0, "BUTTON", "⚡ Arp [P]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 95, 360, 75, 32, hwnd, (HMENU)2, NULL, NULL);
-            hBtnExportWav = CreateScaledWindowEx(0, "BUTTON", "🔊 WAV [E]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 175, 360, 75, 32, hwnd, (HMENU)4, NULL, NULL);
-            hBtnHelp      = CreateScaledWindowEx(0, "BUTTON", "❓ Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 255, 360, 75, 32, hwnd, (HMENU)3, NULL, NULL);
+            hBtnPlay      = CreateScaledWindowEx(0, "BUTTON", "▶ Play", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 15, 356, 58, 28, hwnd, (HMENU)1, NULL, NULL);
+            hBtnSeq       = CreateScaledWindowEx(0, "BUTTON", "⚡ Arp", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 76, 356, 55, 28, hwnd, (HMENU)2, NULL, NULL);
+            hBtnExportWav = CreateScaledWindowEx(0, "BUTTON", "🔊 WAV", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 134, 356, 58, 28, hwnd, (HMENU)4, NULL, NULL);
+            hBtnHelp      = CreateScaledWindowEx(0, "BUTTON", "❓ Help", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 195, 356, 65, 28, hwnd, (HMENU)3, NULL, NULL);
+
+            // Buttons Row 2: Quicksave [F5], Quickload [F9]
+            hBtnSave      = CreateScaledWindowEx(0, "BUTTON", "💾 Quicksave [F5]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 15, 388, 118, 26, hwnd, (HMENU)5, NULL, NULL);
+            hBtnLoad      = CreateScaledWindowEx(0, "BUTTON", "📂 Quickload [F9]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 137, 388, 123, 26, hwnd, (HMENU)6, NULL, NULL);
 
             // Oscilloscope Box Window
             WNDCLASS sc = {0};
@@ -715,7 +882,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Keyboard navigation hint & Status label
             CreateScaledWindowEx(0, "STATIC", "Keys: [A-K] Oct 4 | [Z/X] Octave Shift | [1-6] Presets", WS_CHILD | WS_VISIBLE, 280, 344, 350, 18, hwnd, NULL, NULL, NULL);
-            hStatusText = CreateScaledWindowEx(0, "STATIC", "Ready | Press [Space] or [A-K] to play sound | [F1] Help", WS_CHILD | WS_VISIBLE, 340, 366, 295, 20, hwnd, NULL, NULL, NULL);
+            hStatusText = CreateScaledWindowEx(0, "STATIC", "Ready | Press [Space] or [A-K] to play sound | [F1] Help", WS_CHILD | WS_VISIBLE, 280, 368, 350, 46, hwnd, NULL, NULL, NULL);
 
             // Subclass edit controls
             HWND editControls[] = { hFreq, hAttack, hDecay, hSustain, hRelease, hDelayTime, hDelayFdbk, hDelayMix };
@@ -751,6 +918,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowHelp(hwnd);
             } else if (LOWORD(wParam) == 4) {
                 ExportWav(hwnd);
+            } else if (LOWORD(wParam) == 5) {
+                SaveStateToFile("ksynth.dat");
+                UpdateStatusText("★ Workstation quicksaved to ksynth.dat [F5]");
+            } else if (LOWORD(wParam) == 6) {
+                if (LoadStateFromFile("ksynth.dat")) {
+                    MarkTutorialSeen();
+                    UpdateStatusText("★ Workstation quickloaded from ksynth.dat [F9]");
+                } else {
+                    UpdateStatusText("⚠ No quicksave file found (ksynth.dat)");
+                }
             } else if (HIWORD(wParam) == CBN_SELCHANGE && (HWND)lParam == hComboPreset) {
                 int sel = SendMessage(hComboPreset, CB_GETCURSEL, 0, 0);
                 ApplyPreset(sel);
@@ -759,6 +936,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            SaveStateToFile("ksynth.dat");
             if (hWaveOut) {
                 waveOutReset(hWaveOut);
                 waveOutUnprepareHeader(hWaveOut, &waveHdr, sizeof(WAVEHDR));
@@ -814,6 +992,15 @@ void MainEntry() {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
+    if (HasSavedState("ksynth.dat")) {
+        if (LoadStateFromFile("ksynth.dat")) {
+            UpdateStatusText("★ Restored saved state from ksynth.dat [F9]");
+        }
+    } else if (!HasSeenTutorial()) {
+        ShowHelp(hwnd);
+        UpdateStatusText("Welcome to KSynth! Press [Space] or [A-K] to play");
+    }
+
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
         if (msg.message == WM_KEYDOWN && !(msg.lParam & 0x40000000)) {
@@ -827,6 +1014,20 @@ void MainEntry() {
                               hFocus == hSustain || hFocus == hRelease || hFocus == hDelayTime ||
                               hFocus == hDelayFdbk || hFocus == hDelayMix);
             if (!isEditing) {
+                if (key == VK_F5) {
+                    SaveStateToFile("ksynth.dat");
+                    UpdateStatusText("★ Workstation quicksaved to ksynth.dat [F5]");
+                    continue;
+                }
+                if (key == VK_F9) {
+                    if (LoadStateFromFile("ksynth.dat")) {
+                        MarkTutorialSeen();
+                        UpdateStatusText("★ Workstation quickloaded from ksynth.dat [F9]");
+                    } else {
+                        UpdateStatusText("⚠ No quicksave file found (ksynth.dat)");
+                    }
+                    continue;
+                }
                 if (key == VK_SPACE) {
                     PlayTone();
                     UpdateStatusText("Playing synthesizer tone [Space]");

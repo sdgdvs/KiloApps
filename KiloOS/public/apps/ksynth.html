@@ -512,7 +512,7 @@
         </div>
       </div>
       <div style="margin-top:14px; display:flex; justify-content:flex-end;">
-        <button class="btn btn-primary" onclick="toggleHelp(false)" style="padding:6px 20px;">Got It</button>
+        <button id="btnHelpGotIt" class="btn btn-primary" onclick="toggleHelp(false)" style="padding:6px 20px;">Got It [Enter / Space / Esc]</button>
       </div>
     </div>
   </div>
@@ -807,15 +807,32 @@
     if (!hm) return;
     try { localStorage.setItem('ksynth_tutorialSeen', '1'); } catch (e) {}
     if (show === undefined) {
-      hm.style.display = (hm.style.display === 'none' || !hm.style.display) ? 'flex' : 'none';
+      const willShow = (hm.style.display === 'none' || !hm.style.display);
+      hm.style.display = willShow ? 'flex' : 'none';
+      if (willShow) {
+        setTimeout(() => {
+          const btn = document.getElementById('btnHelpGotIt');
+          if (btn) btn.focus();
+        }, 50);
+      }
     } else {
       hm.style.display = show ? 'flex' : 'none';
+      if (show) {
+        setTimeout(() => {
+          const btn = document.getElementById('btnHelpGotIt');
+          if (btn) btn.focus();
+        }, 50);
+      }
     }
   }
 
   window.addEventListener('DOMContentLoaded', () => {
     let seen = false;
-    try { seen = localStorage.getItem('ksynth_tutorialSeen') === '1'; } catch (e) {}
+    try {
+      seen = (localStorage.getItem('ksynth_tutorialSeen') === '1') ||
+             !!localStorage.getItem('ksynth_quicksave') ||
+             !!localStorage.getItem('ksynth_state_v1');
+    } catch (e) {}
     if (!seen) {
       setTimeout(() => {
         toggleHelp(true);
@@ -1598,6 +1615,7 @@
   const activeKeySet = new Map();
 
   function panicAllNotesOff() {
+    stopArpeggiator();
     for (const [noteNum] of activeVoices) {
       triggerNoteOff(noteNum);
     }
@@ -1613,13 +1631,25 @@
 
   window.addEventListener('keydown', (e) => {
     if (e.repeat) return;
-    if (e.key === 'Escape') {
-      const hm = document.getElementById('helpModal');
-      if (hm && hm.style.display !== 'none') {
+
+    const hm = document.getElementById('helpModal');
+    const isHelpOpen = hm && (hm.style.display === 'flex' || hm.style.display === 'block');
+    if (isHelpOpen) {
+      if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
         toggleHelp(false);
-      } else {
-        panicAllNotesOff();
+        return;
       }
+      if (e.key === '?' || e.key === 'F1') {
+        e.preventDefault();
+        toggleHelp(false);
+        return;
+      }
+      return;
+    }
+
+    if (e.key === 'Escape') {
+      panicAllNotesOff();
       return;
     }
     if (e.key === '?' || e.key === 'F1') {
@@ -2321,6 +2351,7 @@
       release: parseFloat(document.getElementById('release').value),
       bpm: parseInt(document.getElementById('seqBpm').value),
       seqSteps: seqStepsData.map(s => ({ on: !!s.on, note: s.note })),
+      isSeqPlaying: isSeqPlaying,
       arpEnabled: arpEnabled,
       arpHold: arpHold,
       arpMode: document.getElementById('arpMode').value,
@@ -2383,13 +2414,23 @@
       if (config.visMode === 'spectrum') document.getElementById('visModeSpectrum').click();
       else document.getElementById('visModeScope').click();
     }
+
+    if (config.isSeqPlaying !== undefined) {
+      if (config.isSeqPlaying && !isSeqPlaying) {
+        startSequencer();
+      } else if (!config.isSeqPlaying && isSeqPlaying) {
+        stopSequencer();
+      }
+    }
   }
 
   function saveCurrentPatch() {
     try {
       const config = getCurrentState();
       localStorage.setItem('ksynth_state_v1', JSON.stringify(config));
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Storage quota or error saving patch:', e);
+    }
   }
 
   function loadSavedPatch() {
@@ -2409,7 +2450,7 @@
       showToast('💾 Quicksave complete! [F5]', 'success', 2500);
     } catch (err) {
       console.error(err);
-      showToast('Failed to quicksave state.', 'error');
+      showToast('Storage quota exceeded or save failed.', 'error', 3000);
     }
   }
 
@@ -2422,15 +2463,24 @@
       }
       const state = JSON.parse(raw);
       applyState(state);
+      try { localStorage.setItem('ksynth_tutorialSeen', '1'); } catch (e) {}
       showToast('📂 State quickloaded! [F9]', 'success', 2500);
     } catch (err) {
       console.error(err);
-      showToast('Failed to quickload state.', 'error');
+      showToast('Failed to quickload state.', 'error', 3000);
     }
   }
 
   document.getElementById('btnQuickSave').addEventListener('click', quickSave);
   document.getElementById('btnQuickLoad').addEventListener('click', quickLoad);
+
+  // Auto-save patch on page unload or visibility change
+  window.addEventListener('beforeunload', () => {
+    saveCurrentPatch();
+  });
+  window.addEventListener('pagehide', () => {
+    saveCurrentPatch();
+  });
 
   // Load saved patch on initial start
   loadSavedPatch();

@@ -156,6 +156,10 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - Status: PASS ✅ (UI/UX layout polish, window sizing, responsive controls & HiDPI charts).
   - Highlights: Expanded KiloOS window (920x640); separated process toolbar; HiDPI canvas with DPR & hover tooltips; tabindex=0 cards; adaptive two-row native toolbar. Native (20.9 KB) and Web (88.1 KB) clean builds.
 
+- **2026-09-18T20:45:00Z — kilo-expander: KTask**
+  - Status: PASS ✅ (Deep functional feature expansion, Process Tree, Affinity & Diagnostics).
+  - Highlights: Process Tree Hierarchy ([T]) with parent-child lineages and PPID tracing; regex/attribute queries; 8-core CPU Affinity matrix with bitmasks; Hex Peek memory inspector; Markdown/HTML diagnostics export. Native (27 KB) and Web (116.8 KB) clean builds; <999 KB passed.
+
 
 
 
