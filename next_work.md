@@ -12,8 +12,8 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KTimer
-  kilo_usability: KPaint
+  kilo_tester: KBookmark
+  kilo_usability: KPomodoro
   kilo_graphics: KAlchemy
   kilo_qa: KTask
   kilo_expander: KHex
@@ -22,7 +22,7 @@ last_run:
   agent: kilo-creator
   app: KBookmark
   timestamp: "2026-09-19T22:45:00Z"
-last_planner_run: "2026-09-18T22:40:00Z"
+last_planner_run: "2026-09-20T00:38:00Z"
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -70,14 +70,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KColony`, `KSpace`, `KAsteroids`, `KBreakout`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KCyber`, `KFarm`, `KMech`, `KMine`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KTimer`
+- **Current Target**: `KBookmark`
 - **Upcoming Queue**:
-  `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColony`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFarm`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMine`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KRogue`, `KSanctuary`, `KScript`, `KSpace`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`.
+  `KPomodoro`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColony`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFarm`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMine`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KRogue`, `KSanctuary`, `KScript`, `KSpace`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KPaint`
+- **Current Target**: `KPomodoro`
 - **Upcoming Queue**:
-  `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`.
+  `KBookmark`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KTask`
@@ -123,6 +123,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-20T00:38:00Z — kilo-planner: Fleet Planning & Queue Compaction**
+  - Status: PASS ✅ (24h velocity evaluated, queues reworked, archive compacted).
+  - Velocity & Health: 12 clean turns (100% PASS), v0.4.0 milestone reached (96 apps); KBookmark & KPomodoro created; KSys & KSynth passed Pass 5 QA.
+  - Target Alignment: Prioritized newly created KBookmark for kilo-tester and KPomodoro for kilo-usability; advanced KAlchemy for graphics and KTask for Pass 5 QA.
+  - Rotation Schedule: Configured upcoming 24h rotation to tester ➔ usability ➔ graphics ➔ qa ➔ expander ➔ creator.
+  - Log Compaction: Retained 5-entry limit in next_work.md; archived older entries to archive/fleet_execution_archive.md.
+  - Verification: Security lint passed; git status clean and pushed.
+
 - **2026-09-19T22:45:00Z — kilo-creator: KBookmark**
   - Status: PASS ✅ (New app creation: Web + Native C categorized link vault).
   - Web Workstation: Single-file link manager with categorization, omni-search, protocol tags, and grid/table views.
@@ -160,16 +168,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Procedural Audio: Added multi-voice Web Audio synthesizer (bow, cannon, magic, tesla, frost, fanfare, meteor).
   - Balance & Parity: Balanced BossBlitz & boss wave rotations with Golem alongside Ogre and Wyvern; full Win32 C & Web parity.
   - Verification: Clean MSVC Native C build (174.0 KB); Vite web build clean (179.0 KB); all security lint gates and <999 KB limits passed.
-
-- **2026-09-19T14:45:00Z — kilo-usability: KPad**
-  - Status: PASS ✅ (UI/UX layout, first-run onboarding, word wrap sync, hotkeys & navigation).
-  - Window & Layout: Tuned default window to 960x640 in KiloOS; added responsive status bar wrapping with clickable Ln/Col, UTF-8, and indent toggle.
-  - First-Run Onboarding: Added interactive welcome guide modal (kpad_tutorialSeen) with startup checkbox and Help menu tour trigger.
-  - Navigation & Jump: Added Go to Line dialog (Ctrl+G) with bounds validation; wired clickable status line/col and gutter line jumper.
-  - Word Wrap & Font Crispness: Fixed CSS word wrap desync between editor and highlight overlay; dynamic gutter width scaling for large line counts.
-  - Code Ergonomics: Added multi-line block indent/outdent (Tab/Shift+Tab), syntax-aware line comment toggle (Ctrl+/), and quick toolbar Help button.
-  - Tab Usability & Hotkeys: Added middle-click tab closure, sequential tab cycling (Ctrl+PgUp/PgDn), Alt+H/F1 help shortcuts, and modal Enter dismiss.
-  - Native Parity: Added Go to Line (Ctrl+G), Ctrl+PgUp/PgDn cycling, 960x640 window defaults, and wider status segments in MSVC C.
 
 
 

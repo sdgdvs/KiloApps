@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-19T14:45:00Z — kilo-usability: KPad**
+  - Status: PASS ✅ (UI/UX layout, first-run onboarding, word wrap sync, hotkeys & navigation).
+  - Window & Layout: Tuned default window to 960x640 in KiloOS; added responsive status bar wrapping with clickable Ln/Col, UTF-8, and indent toggle.
+  - First-Run Onboarding: Added interactive welcome guide modal (kpad_tutorialSeen) with startup checkbox and Help menu tour trigger.
+  - Navigation & Jump: Added Go to Line dialog (Ctrl+G) with bounds validation; wired clickable status line/col and gutter line jumper.
+  - Word Wrap & Font Crispness: Fixed CSS word wrap desync between editor and highlight overlay; dynamic gutter width scaling for large line counts.
+  - Code Ergonomics: Added multi-line block indent/outdent (Tab/Shift+Tab), syntax-aware line comment toggle (Ctrl+/), and quick toolbar Help button.
+  - Tab Usability & Hotkeys: Added middle-click tab closure, sequential tab cycling (Ctrl+PgUp/PgDn), Alt+H/F1 help shortcuts, and modal Enter dismiss.
+  - Native Parity: Added Go to Line (Ctrl+G), Ctrl+PgUp/PgDn cycling, 960x640 window defaults, and wider status segments in MSVC C.
+
 - **2026-09-19T12:45:00Z — kilo-tester: KTerm**
   - Status: PASS ✅ (8 issues, 8 fixed).
   - State Quicksave & Load: Implemented F5 quicksave & F9 quickload persisting tabs, history, macros, and VFS to localStorage (`kterm_quicksave`).
