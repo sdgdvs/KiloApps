@@ -18,6 +18,8 @@ HWND hBtnInspect = NULL;
 HWND hBtnExportCSV = NULL;
 HWND hBtnExportJSON = NULL;
 HWND hBtnExportMD = NULL;
+HWND hBtnSave = NULL;
+HWND hBtnLoad = NULL;
 HWND hBtnHelp = NULL;
 HWND hStatusText = NULL;
 HFONT g_hFont = NULL;
@@ -26,6 +28,7 @@ WNDPROC g_OldListProc = NULL;
 static WNDPROC g_OldInspectEditProc = NULL;
 
 static BOOL g_isTreeView = FALSE;
+static BOOL g_isSnapshotMode = FALSE;
 static char g_toastText[128] = "Ready. Press [F1] for Help | [T] Tree | [A] Affinity | [I] Inspect | [P] Priority";
 static int g_toastTimer = 2; // ~5 seconds (2 x 2.5s timer ticks)
 
@@ -208,12 +211,14 @@ void LayoutControls(HWND hwnd) {
     if (endTaskX < curX + 5) endTaskX = curX + 5;
     MoveWindow(hBtnEndTask, endTaskX, row1Y, 105, 24, TRUE);
 
-    // Row 2: Diagnostic Exports & Reference
+    // Row 2: Diagnostic Exports, State Persistence & Reference
     curX = 10;
-    MoveWindow(hBtnExportCSV, curX, row2Y, 65, 24, TRUE); curX += 70;
-    MoveWindow(hBtnExportJSON, curX, row2Y, 65, 24, TRUE); curX += 70;
-    MoveWindow(hBtnExportMD, curX, row2Y, 75, 24, TRUE); curX += 80;
-    MoveWindow(hBtnHelp, curX, row2Y, 75, 24, TRUE);
+    MoveWindow(hBtnExportCSV, curX, row2Y, 60, 24, TRUE); curX += 65;
+    MoveWindow(hBtnExportJSON, curX, row2Y, 60, 24, TRUE); curX += 65;
+    MoveWindow(hBtnExportMD, curX, row2Y, 70, 24, TRUE); curX += 75;
+    MoveWindow(hBtnSave, curX, row2Y, 75, 24, TRUE); curX += 80;
+    MoveWindow(hBtnLoad, curX, row2Y, 75, 24, TRUE); curX += 80;
+    MoveWindow(hBtnHelp, curX, row2Y, 70, 24, TRUE);
 
     MoveWindow(hStatusText, 10, height - 24, width - 20, 20, TRUE);
 }
@@ -226,6 +231,196 @@ typedef struct {
     char szExeFile[MAX_PATH];
     BOOL displayed;
 } PROC_ENTRY;
+
+#define KTASK_SAVE_MAGIC 0x4B54534B  // "KTSK"
+#define KTASK_SAVE_VERSION 1
+#define MAX_SAVED_PROCS 128
+
+typedef struct {
+    DWORD magic;
+    DWORD version;
+    DWORD timestamp;
+    BOOL isTreeView;
+    char searchFilter[128];
+    DWORD selectedPid;
+    DWORD procCount;
+    PROC_ENTRY procs[MAX_SAVED_PROCS];
+    DWORD checksum;
+} KTaskSaveData;
+
+static KTaskSaveData g_saveBuffer;
+
+DWORD CalculateKTaskChecksum(const KTaskSaveData* data) {
+    const unsigned char* p = (const unsigned char*)data;
+    size_t sz = sizeof(KTaskSaveData) - sizeof(DWORD);
+    DWORD sum = 0x5A5AA5A5;
+    for (size_t i = 0; i < sz; i++) {
+        sum = ((sum << 5) + sum) + p[i];
+    }
+    return sum;
+}
+
+BOOL HasSeenTutorial(void) {
+    HANDLE hFile = CreateFileA("ktask_tutorial.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFile);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+void MarkTutorialSeen(void) {
+    HANDLE hFile = CreateFileA("ktask_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        const char* mark = "TUTORIAL_SEEN_V1\r\n";
+        DWORD written = 0;
+        WriteFile(hFile, mark, my_strlen(mark), &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+BOOL HasSavedState(const char* filename) {
+    HANDLE hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return FALSE;
+    DWORD size = GetFileSize(hFile, NULL);
+    CloseHandle(hFile);
+    return (size == sizeof(KTaskSaveData));
+}
+
+BOOL SaveStateToFile(const char* filename) {
+    memset(&g_saveBuffer, 0, sizeof(g_saveBuffer));
+    g_saveBuffer.magic = KTASK_SAVE_MAGIC;
+    g_saveBuffer.version = KTASK_SAVE_VERSION;
+    g_saveBuffer.timestamp = GetTickCount();
+    g_saveBuffer.isTreeView = g_isTreeView;
+    if (hSearchBox) {
+        GetWindowTextA(hSearchBox, g_saveBuffer.searchFilter, sizeof(g_saveBuffer.searchFilter) - 1);
+    }
+    int currentSel = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+    if (currentSel != LB_ERR) {
+        g_saveBuffer.selectedPid = (DWORD)SendMessageA(hListBox, LB_GETITEMDATA, currentSel, 0);
+    }
+
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnapshot != INVALID_HANDLE_VALUE) {
+        PROCESSENTRY32 pe32;
+        pe32.dwSize = sizeof(PROCESSENTRY32);
+        DWORD count = 0;
+        if (Process32First(hSnapshot, &pe32)) {
+            do {
+                if (count < MAX_SAVED_PROCS) {
+                    g_saveBuffer.procs[count].pid = pe32.th32ProcessID;
+                    g_saveBuffer.procs[count].ppid = pe32.th32ParentProcessID;
+                    g_saveBuffer.procs[count].threads = pe32.cntThreads;
+                    g_saveBuffer.procs[count].pri = pe32.pcPriClassBase;
+                    my_strcpy(g_saveBuffer.procs[count].szExeFile, pe32.szExeFile);
+                    count++;
+                }
+            } while (Process32Next(hSnapshot, &pe32));
+        }
+        CloseHandle(hSnapshot);
+        g_saveBuffer.procCount = count;
+    }
+
+    g_saveBuffer.checksum = CalculateKTaskChecksum(&g_saveBuffer);
+
+    HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return FALSE;
+
+    DWORD written = 0;
+    BOOL ok = WriteFile(hFile, &g_saveBuffer, sizeof(g_saveBuffer), &written, NULL);
+    CloseHandle(hFile);
+
+    if (ok && written == sizeof(g_saveBuffer)) {
+        MarkTutorialSeen();
+        return TRUE;
+    }
+    return FALSE;
+}
+
+BOOL LoadStateFromFile(const char* filename) {
+    HANDLE hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return FALSE;
+
+    DWORD size = GetFileSize(hFile, NULL);
+    if (size != sizeof(KTaskSaveData)) {
+        CloseHandle(hFile);
+        return FALSE;
+    }
+
+    DWORD read = 0;
+    BOOL ok = ReadFile(hFile, &g_saveBuffer, sizeof(g_saveBuffer), &read, NULL);
+    CloseHandle(hFile);
+
+    if (!ok || read != sizeof(g_saveBuffer)) return FALSE;
+    if (g_saveBuffer.magic != KTASK_SAVE_MAGIC || g_saveBuffer.version != KTASK_SAVE_VERSION) return FALSE;
+    if (g_saveBuffer.checksum != CalculateKTaskChecksum(&g_saveBuffer)) return FALSE;
+
+    g_isTreeView = g_saveBuffer.isTreeView;
+    if (hSearchBox) {
+        SetWindowTextA(hSearchBox, g_saveBuffer.searchFilter);
+    }
+
+    SendMessageA(hListBox, WM_SETREDRAW, FALSE, 0);
+    SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
+
+    for (DWORD i = 0; i < g_saveBuffer.procCount; i++) {
+        char buf[512] = {0};
+        char pidStr[16] = {0};
+        char thrStr[16] = {0};
+        char priStr[16] = {0};
+
+        my_utoa(g_saveBuffer.procs[i].pid, pidStr);
+        my_utoa(g_saveBuffer.procs[i].threads, thrStr);
+        my_itoa(g_saveBuffer.procs[i].pri, priStr);
+
+        my_strcpy(buf, "[PID: ");
+        my_strcat(buf, pidStr);
+        my_strcat(buf, "] ");
+        my_strcat(buf, g_saveBuffer.procs[i].szExeFile);
+        my_strcat(buf, " (Threads: ");
+        my_strcat(buf, thrStr);
+        my_strcat(buf, ", BasePri: ");
+        my_strcat(buf, priStr);
+        my_strcat(buf, ")");
+
+        int index = SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)buf);
+        SendMessageA(hListBox, LB_SETITEMDATA, index, (LPARAM)g_saveBuffer.procs[i].pid);
+    }
+
+    if (g_saveBuffer.selectedPid != 0 && g_saveBuffer.procCount > 0) {
+        int count = SendMessageA(hListBox, LB_GETCOUNT, 0, 0);
+        for (int i = 0; i < count; i++) {
+            DWORD pid = (DWORD)SendMessageA(hListBox, LB_GETITEMDATA, i, 0);
+            if (pid == g_saveBuffer.selectedPid) {
+                SendMessageA(hListBox, LB_SETCURSEL, i, 0);
+                break;
+            }
+        }
+    } else if (g_saveBuffer.procCount > 0) {
+        SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
+    }
+
+    SendMessageA(hListBox, WM_SETREDRAW, TRUE, 0);
+    RedrawWindow(hListBox, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+
+    if (hBtnTree) {
+        SetWindowTextA(hBtnTree, g_isTreeView ? "List [T]" : "Tree [T]");
+    }
+
+    g_isSnapshotMode = TRUE;
+    MarkTutorialSeen();
+
+    char toast[128] = {0};
+    char numStr[16] = {0};
+    my_utoa(g_saveBuffer.procCount, numStr);
+    my_strcpy(toast, "★ Restored snapshot (");
+    my_strcat(toast, numStr);
+    my_strcat(toast, " tasks) from ktask.dat [F9] (Auto-refresh paused. Press R to resume)");
+    ShowNativeToast(toast);
+
+    return TRUE;
+}
 
 void RefreshList() {
     DWORD selectedPid = 0;
@@ -1138,7 +1333,9 @@ void ShowHelpDialog(HWND hwnd) {
         "KTask Process Monitor & Diagnostic Suite\r\n\r\n"
         "Keyboard Shortcuts:\r\n"
         "  F1 or H   : View this Help dialog\r\n"
-        "  F5 or R   : Refresh active process list\r\n"
+        "  F5        : Quicksave process snapshot to ktask.dat\r\n"
+        "  F9        : Quickload process snapshot from ktask.dat\r\n"
+        "  R         : Refresh active process list (live)\r\n"
         "  T         : Toggle Process Tree / Flat List view\r\n"
         "  Del       : Terminate selected process\r\n"
         "  Enter / I : Deep Inspect selected process\r\n"
@@ -1159,13 +1356,24 @@ void ShowHelpDialog(HWND hwnd) {
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == WM_KEYDOWN) {
         if (wParam == VK_F5) {
-            RefreshList();
+            if (SaveStateToFile("ktask.dat")) {
+                ShowNativeToast("★ Diagnostics snapshot quicksaved to ktask.dat [F5]");
+            } else {
+                ShowNativeToast("⚠ Failed to quicksave snapshot.");
+            }
+            return 0;
+        } else if (wParam == VK_F9) {
+            if (!LoadStateFromFile("ktask.dat")) {
+                ShowNativeToast("⚠ No quicksave snapshot found (ktask.dat).");
+            }
             return 0;
         } else if (wParam == VK_ESCAPE) {
             SetWindowTextA(hwnd, "");
+            g_isSnapshotMode = FALSE;
             RefreshList();
             return 0;
         } else if (wParam == VK_RETURN) {
+            g_isSnapshotMode = FALSE;
             RefreshList();
             if (hListBox) SetFocus(hListBox);
             return 0;
@@ -1179,8 +1387,22 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 
 LRESULT CALLBACK ListSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == WM_KEYDOWN) {
-        if (wParam == VK_F5 || wParam == 'R' || wParam == 'r') {
+        if (wParam == VK_F5) {
+            if (SaveStateToFile("ktask.dat")) {
+                ShowNativeToast("★ Diagnostics snapshot quicksaved to ktask.dat [F5]");
+            } else {
+                ShowNativeToast("⚠ Failed to quicksave snapshot.");
+            }
+            return 0;
+        } else if (wParam == VK_F9) {
+            if (!LoadStateFromFile("ktask.dat")) {
+                ShowNativeToast("⚠ No quicksave snapshot found (ktask.dat).");
+            }
+            return 0;
+        } else if (wParam == 'R' || wParam == 'r') {
+            g_isSnapshotMode = FALSE;
             RefreshList();
+            ShowNativeToast("Live process list refreshed [R].");
             return 0;
         } else if (wParam == 'T' || wParam == 't') {
             g_isTreeView = !g_isTreeView;
@@ -1246,17 +1468,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SendMessageA(hStatusText, WM_SETFONT, (WPARAM)g_hFont, FALSE);
             }
 
-            hBtnRefresh = CreateWindowA("BUTTON", "Refresh [F5]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 10, 240, 85, 25, hwnd, (HMENU)1, NULL, NULL);
+            hBtnRefresh = CreateWindowA("BUTTON", "Refresh [R]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 10, 240, 85, 25, hwnd, (HMENU)1, NULL, NULL);
             hBtnTree = CreateWindowA("BUTTON", "Tree [T]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 100, 240, 70, 25, hwnd, (HMENU)11, NULL, NULL);
             hBtnInspect = CreateWindowA("BUTTON", "Inspect [I]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 175, 240, 75, 25, hwnd, (HMENU)9, NULL, NULL);
             hBtnPriority = CreateWindowA("BUTTON", "Priority [P]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 255, 240, 75, 25, hwnd, (HMENU)6, NULL, NULL);
             hBtnAffinity = CreateWindowA("BUTTON", "Affinity [A]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 335, 240, 75, 25, hwnd, (HMENU)12, NULL, NULL);
             hBtnEndTask = CreateWindowA("BUTTON", "End Task [Del]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 415, 240, 105, 25, hwnd, (HMENU)2, NULL, NULL);
 
-            hBtnExportCSV = CreateWindowA("BUTTON", "CSV [C]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 10, 270, 65, 25, hwnd, (HMENU)7, NULL, NULL);
-            hBtnExportJSON = CreateWindowA("BUTTON", "JSON [J]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 80, 270, 65, 25, hwnd, (HMENU)8, NULL, NULL);
-            hBtnExportMD = CreateWindowA("BUTTON", "Report [M]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 150, 270, 75, 25, hwnd, (HMENU)13, NULL, NULL);
-            hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 230, 270, 75, 25, hwnd, (HMENU)10, NULL, NULL);
+            hBtnExportCSV = CreateWindowA("BUTTON", "CSV [C]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 10, 270, 60, 25, hwnd, (HMENU)7, NULL, NULL);
+            hBtnExportJSON = CreateWindowA("BUTTON", "JSON [J]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 75, 270, 60, 25, hwnd, (HMENU)8, NULL, NULL);
+            hBtnExportMD = CreateWindowA("BUTTON", "Report [M]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 140, 270, 70, 25, hwnd, (HMENU)13, NULL, NULL);
+            hBtnSave = CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 215, 270, 75, 25, hwnd, (HMENU)14, NULL, NULL);
+            hBtnLoad = CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 295, 270, 75, 25, hwnd, (HMENU)15, NULL, NULL);
+            hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 375, 270, 70, 25, hwnd, (HMENU)10, NULL, NULL);
             
             if (g_hFont) {
                 SendMessageA(hBtnRefresh, WM_SETFONT, (WPARAM)g_hFont, FALSE);
@@ -1268,6 +1492,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SendMessageA(hBtnExportCSV, WM_SETFONT, (WPARAM)g_hFont, FALSE);
                 SendMessageA(hBtnExportJSON, WM_SETFONT, (WPARAM)g_hFont, FALSE);
                 SendMessageA(hBtnExportMD, WM_SETFONT, (WPARAM)g_hFont, FALSE);
+                SendMessageA(hBtnSave, WM_SETFONT, (WPARAM)g_hFont, FALSE);
+                SendMessageA(hBtnLoad, WM_SETFONT, (WPARAM)g_hFont, FALSE);
                 SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)g_hFont, FALSE);
             }
 
@@ -1301,10 +1527,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == 1) {
                 if (g_toastTimer > 0) {
                     g_toastTimer--;
-                    if (g_toastTimer == 0) {
+                    if (g_toastTimer == 0 && !g_isSnapshotMode) {
                         RefreshList();
                     }
-                } else if (GetFocus() != hSearchBox) {
+                } else if (GetFocus() != hSearchBox && !g_isSnapshotMode) {
                     RefreshList();
                 }
             }
@@ -1314,8 +1540,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int id = LOWORD(wParam);
             int code = HIWORD(wParam);
             if (id == 3 && code == EN_CHANGE) {
+                g_isSnapshotMode = FALSE;
                 RefreshList();
             } else if (id == 1) {
+                g_isSnapshotMode = FALSE;
                 RefreshList();
                 ShowNativeToast("Process list refreshed.");
             } else if (id == 2) {
@@ -1338,6 +1566,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 PerformSetAffinity(hwnd);
             } else if (id == 13) {
                 PerformExportMD(hwnd);
+            } else if (id == 14) {
+                if (SaveStateToFile("ktask.dat")) {
+                    ShowNativeToast("★ Diagnostics snapshot quicksaved to ktask.dat [F5]");
+                } else {
+                    ShowNativeToast("⚠ Failed to quicksave snapshot.");
+                }
+            } else if (id == 15) {
+                if (!LoadStateFromFile("ktask.dat")) {
+                    ShowNativeToast("⚠ No quicksave snapshot found (ktask.dat).");
+                }
             } else if (id == 4 && code == LBN_DBLCLK) {
                 PerformInspectProcess(hwnd);
             }
@@ -1345,9 +1583,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_KEYDOWN:
-            if (wParam == VK_F5 || wParam == 'R' || wParam == 'r') {
+            if (wParam == VK_F5) {
+                if (SaveStateToFile("ktask.dat")) {
+                    ShowNativeToast("★ Diagnostics snapshot quicksaved to ktask.dat [F5]");
+                } else {
+                    ShowNativeToast("⚠ Failed to quicksave snapshot.");
+                }
+                return 0;
+            } else if (wParam == VK_F9) {
+                if (!LoadStateFromFile("ktask.dat")) {
+                    ShowNativeToast("⚠ No quicksave snapshot found (ktask.dat).");
+                }
+                return 0;
+            } else if (wParam == 'R' || wParam == 'r') {
+                g_isSnapshotMode = FALSE;
                 RefreshList();
-                ShowNativeToast("Process list refreshed.");
+                ShowNativeToast("Live process list refreshed [R].");
                 return 0;
             } else if (wParam == 'T' || wParam == 't') {
                 g_isTreeView = !g_isTreeView;
@@ -1382,6 +1633,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
 
         case WM_DESTROY:
+            SaveStateToFile("ktask.dat");
             KillTimer(hwnd, 1);
             if (g_hFont) {
                 DeleteObject(g_hFont);
@@ -1412,18 +1664,55 @@ void __stdcall MainEntry() {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
+    if (HasSavedState("ktask.dat")) {
+        if (LoadStateFromFile("ktask.dat")) {
+            ShowNativeToast("★ Restored saved state from ktask.dat [F9]");
+        }
+    } else if (!HasSeenTutorial()) {
+        ShowHelpDialog(hwnd);
+        MarkTutorialSeen();
+        ShowNativeToast("Welcome to KTask! Process monitor initialized");
+    }
+
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
             HWND focusWnd = GetFocus();
             if (focusWnd == hSearchBox) {
                 if (msg.wParam == VK_F1) { ShowHelpDialog(hwnd); continue; }
-                if (msg.wParam == VK_F5) { RefreshList(); ShowNativeToast("Process list refreshed."); continue; }
-                if (msg.wParam == VK_ESCAPE) { SetWindowTextA(hSearchBox, ""); RefreshList(); continue; }
-                if (msg.wParam == VK_RETURN) { RefreshList(); if (hListBox) SetFocus(hListBox); continue; }
+                if (msg.wParam == VK_F5) {
+                    if (SaveStateToFile("ktask.dat")) {
+                        ShowNativeToast("★ Diagnostics snapshot quicksaved to ktask.dat [F5]");
+                    } else {
+                        ShowNativeToast("⚠ Failed to quicksave snapshot.");
+                    }
+                    continue;
+                }
+                if (msg.wParam == VK_F9) {
+                    if (!LoadStateFromFile("ktask.dat")) {
+                        ShowNativeToast("⚠ No quicksave snapshot found (ktask.dat).");
+                    }
+                    continue;
+                }
+                if (msg.wParam == VK_ESCAPE) { SetWindowTextA(hSearchBox, ""); g_isSnapshotMode = FALSE; RefreshList(); continue; }
+                if (msg.wParam == VK_RETURN) { g_isSnapshotMode = FALSE; RefreshList(); if (hListBox) SetFocus(hListBox); continue; }
             } else {
                 if (msg.wParam == VK_F1 || msg.wParam == 'H' || msg.wParam == 'h') { ShowHelpDialog(hwnd); continue; }
-                if (msg.wParam == VK_F5 || msg.wParam == 'R' || msg.wParam == 'r') { RefreshList(); ShowNativeToast("Process list refreshed."); continue; }
+                if (msg.wParam == VK_F5) {
+                    if (SaveStateToFile("ktask.dat")) {
+                        ShowNativeToast("★ Diagnostics snapshot quicksaved to ktask.dat [F5]");
+                    } else {
+                        ShowNativeToast("⚠ Failed to quicksave snapshot.");
+                    }
+                    continue;
+                }
+                if (msg.wParam == VK_F9) {
+                    if (!LoadStateFromFile("ktask.dat")) {
+                        ShowNativeToast("⚠ No quicksave snapshot found (ktask.dat).");
+                    }
+                    continue;
+                }
+                if (msg.wParam == 'R' || msg.wParam == 'r') { g_isSnapshotMode = FALSE; RefreshList(); ShowNativeToast("Process list refreshed."); continue; }
                 if (msg.wParam == 'T' || msg.wParam == 't') {
                     g_isTreeView = !g_isTreeView;
                     RefreshList();
@@ -1437,7 +1726,7 @@ void __stdcall MainEntry() {
                 if (msg.wParam == 'C' || msg.wParam == 'c') { PerformExportCSV(hwnd); continue; }
                 if (msg.wParam == 'J' || msg.wParam == 'j') { PerformExportJSON(hwnd); continue; }
                 if (msg.wParam == 'M' || msg.wParam == 'm') { PerformExportMD(hwnd); continue; }
-                if (msg.wParam == VK_ESCAPE) { SetWindowTextA(hSearchBox, ""); RefreshList(); continue; }
+                if (msg.wParam == VK_ESCAPE) { SetWindowTextA(hSearchBox, ""); g_isSnapshotMode = FALSE; RefreshList(); continue; }
             }
         }
         if (!IsDialogMessage(hwnd, &msg)) {

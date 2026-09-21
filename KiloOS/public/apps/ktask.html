@@ -1429,7 +1429,7 @@
     let peakCpu = 0;
     let startTime = Date.now();
 
-    // Safe LocalStorage helpers
+    // Safe LocalStorage helpers with quota error handling
     function safeGetStorage(key) {
       try {
         return localStorage.getItem(key);
@@ -1440,8 +1440,16 @@
 
     function safeSetStorage(key, val) {
       try {
-        localStorage.setItem(key, val);
-      } catch (e) {}
+        if (val === null || val === undefined) {
+          localStorage.removeItem(key);
+        } else {
+          localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+        }
+        return true;
+      } catch (e) {
+        console.warn('Storage quota exceeded or storage unavailable:', e);
+        return false;
+      }
     }
 
     // Persist and restore user preferences
@@ -1502,10 +1510,7 @@
     function closeTutorialModal() {
       const modal = document.getElementById('tutorialModal');
       if (modal) modal.classList.remove('active');
-      const dontShow = document.getElementById('dontShowTutorialAgain');
-      if (dontShow && dontShow.checked) {
-        safeSetStorage('ktask_tutorialSeen', '1');
-      }
+      safeSetStorage('ktask_tutorialSeen', '1');
     }
 
     // Quicksave and Quickload snapshot handlers
@@ -1514,15 +1519,24 @@
         const payload = {
           timestamp: Date.now(),
           tasks: allTasks,
+          spawnedTasks: spawnedTasks,
           stats: taskStats,
           peakCpu: peakCpu,
           viewMode: viewMode,
+          activeTab: activeTab,
           filter: document.getElementById('filterSelect')?.value || 'all',
-          sort: document.getElementById('sortSelect')?.value || 'name'
+          sort: document.getElementById('sortSelect')?.value || 'name',
+          searchQuery: document.getElementById('searchInput')?.value || '',
+          selectedTaskId: selectedTaskId
         };
-        safeSetStorage('ktask_quicksave', JSON.stringify(payload));
+        const ok = safeSetStorage('ktask_quicksave', JSON.stringify(payload));
+        if (!ok) {
+          showToast('Storage quota exceeded or save failed.');
+          return;
+        }
+        safeSetStorage('ktask_tutorialSeen', '1');
         const timeStr = new Date().toLocaleTimeString();
-        showToast(`Quicksave snapshot created at ${timeStr} [F5]`);
+        showToast(`★ Quicksave snapshot created at ${timeStr} [F5]`);
       } catch (err) {
         showToast('Failed to save quicksave snapshot.');
       }
@@ -1541,11 +1555,20 @@
           return;
         }
         allTasks = data.tasks;
+        if (Array.isArray(data.spawnedTasks)) {
+          spawnedTasks = data.spawnedTasks;
+        }
         if (data.stats) taskStats = data.stats;
-        if (data.peakCpu) peakCpu = data.peakCpu;
+        if (data.peakCpu != null) peakCpu = data.peakCpu;
         if (data.viewMode) {
           viewMode = data.viewMode;
           updateViewModeButton();
+        }
+        if (data.activeTab && data.activeTab !== activeTab) {
+          switchTab(data.activeTab);
+        }
+        if (data.searchQuery !== undefined && document.getElementById('searchInput')) {
+          document.getElementById('searchInput').value = data.searchQuery;
         }
         if (data.filter && document.getElementById('filterSelect')) {
           document.getElementById('filterSelect').value = data.filter;
@@ -1558,12 +1581,71 @@
         const toggle = document.getElementById('autoRefreshToggle');
         if (toggle) toggle.checked = false;
         saveUserSettings();
-        selectedTaskId = allTasks[0]?.id || null;
+        selectedTaskId = data.selectedTaskId || allTasks[0]?.id || null;
         renderTasks();
+        safeSetStorage('ktask_tutorialSeen', '1');
         const timeStr = new Date(data.timestamp || Date.now()).toLocaleTimeString();
-        showToast(`Loaded quicksave snapshot from ${timeStr} [F9] (Auto-refresh paused)`);
+        showToast(`📂 Loaded quicksave snapshot from ${timeStr} [F9] (Auto-refresh paused)`);
       } catch (err) {
         showToast('Failed to load quicksave snapshot.');
+      }
+    }
+
+    // Auto-save and restore working session state
+    function autoSaveState() {
+      try {
+        const state = {
+          tasks: allTasks,
+          spawnedTasks: spawnedTasks,
+          stats: taskStats,
+          peakCpu: peakCpu,
+          viewMode: viewMode,
+          activeTab: activeTab,
+          filter: document.getElementById('filterSelect')?.value || 'all',
+          sort: document.getElementById('sortSelect')?.value || 'name',
+          searchQuery: document.getElementById('searchInput')?.value || '',
+          selectedTaskId: selectedTaskId,
+          autoRefresh: document.getElementById('autoRefreshToggle')?.checked ?? true
+        };
+        safeSetStorage('ktask_session_state', JSON.stringify(state));
+      } catch (e) {}
+    }
+
+    function restoreSessionState() {
+      try {
+        const raw = safeGetStorage('ktask_session_state');
+        if (!raw) return false;
+        const data = JSON.parse(raw);
+        if (!Array.isArray(data.tasks) || data.tasks.length === 0) return false;
+        allTasks = data.tasks;
+        if (Array.isArray(data.spawnedTasks)) spawnedTasks = data.spawnedTasks;
+        if (data.stats) taskStats = data.stats;
+        if (data.peakCpu != null) peakCpu = data.peakCpu;
+        if (data.viewMode) {
+          viewMode = data.viewMode;
+          updateViewModeButton();
+        }
+        if (data.activeTab && data.activeTab !== 'tasks') {
+          switchTab(data.activeTab);
+        }
+        if (data.searchQuery && document.getElementById('searchInput')) {
+          document.getElementById('searchInput').value = data.searchQuery;
+        }
+        if (data.filter && document.getElementById('filterSelect')) {
+          document.getElementById('filterSelect').value = data.filter;
+          syncFilterChips();
+        }
+        if (data.sort && document.getElementById('sortSelect')) {
+          document.getElementById('sortSelect').value = data.sort;
+        }
+        if (data.selectedTaskId) selectedTaskId = data.selectedTaskId;
+        if (typeof data.autoRefresh === 'boolean') {
+          const toggle = document.getElementById('autoRefreshToggle');
+          if (toggle) toggle.checked = data.autoRefresh;
+        }
+        return true;
+      } catch (e) {
+        return false;
       }
     }
 
@@ -1623,63 +1705,74 @@
         .replace(/'/g, '&#39;');
     }
 
-    // Dynamic System Stats update
-    setInterval(() => {
-      if (document.hidden) return;
+    // Dynamic System Stats update with lifecycle interval control
+    let sysStatsInterval = null;
+    function startSysStatsInterval() {
+      stopSysStatsInterval();
+      sysStatsInterval = setInterval(() => {
+        if (document.hidden) return;
 
-      const cpu = Math.floor(Math.random() * 25) + 5;
-      if (cpu > peakCpu) peakCpu = cpu;
+        const cpu = Math.floor(Math.random() * 25) + 5;
+        if (cpu > peakCpu) peakCpu = cpu;
 
-      const cpuVal = document.getElementById('cpu-val');
-      const cpuFill = document.getElementById('cpu-fill');
-      if (cpuVal) cpuVal.innerText = cpu + '%';
-      if (cpuFill) {
-        cpuFill.style.width = cpu + '%';
-        cpuFill.style.backgroundColor = cpu > 80 ? 'hsl(0, 85%, 60%)' : (cpu > 50 ? 'hsl(40, 85%, 55%)' : 'hsl(200, 85%, 60%)');
-      }
-
-      const memBase = 2.2;
-      const mem = parseFloat((memBase + Math.random() * 0.5).toFixed(1));
-      const memVal = document.getElementById('mem-val');
-      const memFill = document.getElementById('mem-fill');
-      if (memVal) memVal.innerText = mem + ' GB';
-      if (memFill) memFill.style.width = Math.floor((mem / 8.0) * 100) + '%';
-
-      // Status Badge
-      const sysStatus = document.getElementById('sys-status-badge');
-      if (sysStatus) {
-        if (cpu > 75 || mem > 6.0) {
-          sysStatus.innerText = 'HIGH LOAD';
-          sysStatus.style.color = 'var(--danger)';
-        } else if (cpu > 45 || mem > 4.5) {
-          sysStatus.innerText = 'MODERATE';
-          sysStatus.style.color = 'var(--warning)';
-        } else {
-          sysStatus.innerText = 'OPTIMAL';
-          sysStatus.style.color = 'var(--success)';
+        const cpuVal = document.getElementById('cpu-val');
+        const cpuFill = document.getElementById('cpu-fill');
+        if (cpuVal) cpuVal.innerText = cpu + '%';
+        if (cpuFill) {
+          cpuFill.style.width = cpu + '%';
+          cpuFill.style.backgroundColor = cpu > 80 ? 'hsl(0, 85%, 60%)' : (cpu > 50 ? 'hsl(40, 85%, 55%)' : 'hsl(200, 85%, 60%)');
         }
+
+        const memBase = 2.2;
+        const mem = parseFloat((memBase + Math.random() * 0.5).toFixed(1));
+        const memVal = document.getElementById('mem-val');
+        const memFill = document.getElementById('mem-fill');
+        if (memVal) memVal.innerText = mem + ' GB';
+        if (memFill) memFill.style.width = Math.floor((mem / 8.0) * 100) + '%';
+
+        // Status Badge
+        const sysStatus = document.getElementById('sys-status-badge');
+        if (sysStatus) {
+          if (cpu > 75 || mem > 6.0) {
+            sysStatus.innerText = 'HIGH LOAD';
+            sysStatus.style.color = 'var(--danger)';
+          } else if (cpu > 45 || mem > 4.5) {
+            sysStatus.innerText = 'MODERATE';
+            sysStatus.style.color = 'var(--warning)';
+          } else {
+            sysStatus.innerText = 'OPTIMAL';
+            sysStatus.style.color = 'var(--success)';
+          }
+        }
+
+        // Uptime counter
+        const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+        const hrs = String(Math.floor(elapsedSec / 3600)).padStart(2, '0');
+        const mins = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, '0');
+        const secs = String(elapsedSec % 60).padStart(2, '0');
+        const uptimeVal = document.getElementById('uptime-val');
+        if (uptimeVal) uptimeVal.innerText = `Uptime: ${hrs}:${mins}:${secs}`;
+
+        // Update History Arrays
+        cpuHistory.push(cpu);
+        if (cpuHistory.length > HISTORY_LEN) cpuHistory.shift();
+
+        memHistory.push(mem);
+        if (memHistory.length > HISTORY_LEN) memHistory.shift();
+
+        if (activeTab === 'charts') {
+          drawCharts();
+        }
+        updateSummaryMetrics();
+      }, 2000);
+    }
+
+    function stopSysStatsInterval() {
+      if (sysStatsInterval) {
+        clearInterval(sysStatsInterval);
+        sysStatsInterval = null;
       }
-
-      // Uptime counter
-      const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
-      const hrs = String(Math.floor(elapsedSec / 3600)).padStart(2, '0');
-      const mins = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, '0');
-      const secs = String(elapsedSec % 60).padStart(2, '0');
-      const uptimeVal = document.getElementById('uptime-val');
-      if (uptimeVal) uptimeVal.innerText = `Uptime: ${hrs}:${mins}:${secs}`;
-
-      // Update History Arrays
-      cpuHistory.push(cpu);
-      if (cpuHistory.length > HISTORY_LEN) cpuHistory.shift();
-
-      memHistory.push(mem);
-      if (memHistory.length > HISTORY_LEN) memHistory.shift();
-
-      if (activeTab === 'charts') {
-        drawCharts();
-      }
-      updateSummaryMetrics();
-    }, 2000);
+    }
 
     function switchTab(tabName) {
       activeTab = tabName;
@@ -1921,6 +2014,31 @@
       showToast(`PID ${taskId} CPU affinity mask set to ${desc}`);
     }
 
+    const activeObjectUrls = new Set();
+    function safeDownloadBlob(blob, filename) {
+      let url = null;
+      let a = null;
+      try {
+        url = URL.createObjectURL(blob);
+        activeObjectUrls.add(url);
+        a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+      } catch (err) {
+        console.error('Download failed:', err);
+      } finally {
+        setTimeout(() => {
+          if (a && a.parentNode) document.body.removeChild(a);
+          if (url) {
+            try { URL.revokeObjectURL(url); } catch (e) {}
+            activeObjectUrls.delete(url);
+          }
+        }, 1500);
+      }
+    }
+
     function exportCSV() {
       if (!allTasks.length) {
         showToast('No active tasks to export.');
@@ -1937,16 +2055,7 @@
       });
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `ktask_processes_${Date.now()}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        if (a.parentNode) document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, 1500);
+      safeDownloadBlob(blob, `ktask_processes_${Date.now()}.csv`);
       showToast('Exported process snapshot to CSV [E].');
     }
 
@@ -1974,16 +2083,7 @@
       });
 
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `ktask_processes_${Date.now()}.json`;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        if (a.parentNode) document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, 1500);
+      safeDownloadBlob(blob, `ktask_processes_${Date.now()}.json`);
       showToast('Exported process snapshot to JSON [J].');
     }
 
@@ -2026,16 +2126,7 @@
       md += `---\n*Generated autonomously by KTask Process Monitor & Diagnostic Suite.*\n`;
 
       const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `ktask_audit_report_${Date.now()}.md`;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        if (a.parentNode) document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, 1500);
+      safeDownloadBlob(blob, `ktask_audit_report_${Date.now()}.md`);
       showToast('Exported System Diagnostic Audit Report [M].');
     }
 
@@ -2071,16 +2162,7 @@
       html += `</tbody></table><p style="margin-top:20px; color:#94a3b8; font-size:11px;">KiloOS System Diagnostics</p></body></html>`;
 
       const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `ktask_diagnostic_report_${Date.now()}.html`;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        if (a.parentNode) document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, 1500);
+      safeDownloadBlob(blob, `ktask_diagnostic_report_${Date.now()}.html`);
       showToast('Exported HTML Diagnostic Report.');
     }
 
@@ -2928,11 +3010,15 @@
       }
 
       if (tutorialActive || helpActive || inspectActive || confirmActive) {
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+          e.preventDefault();
           if (tutorialActive) closeTutorialModal();
-          else if (confirmActive) executePendingKill();
+          else if (confirmActive) {
+            if (e.key === 'Enter') executePendingKill();
+            else closeKillModal();
+          }
           else if (helpActive) closeHelpModal();
-          else if (inspectActive) closeInspectModal();
+          else if (inspectActive && e.key === 'Enter') closeInspectModal();
         } else if (inspectActive) {
           if (e.key === '1') { e.preventDefault(); switchInspectTab('threads'); }
           else if (e.key === '2') { e.preventDefault(); switchInspectTab('modules'); }
@@ -3084,9 +3170,37 @@
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         stopAutoRefresh();
-      } else if (document.getElementById('autoRefreshToggle')?.checked) {
-        startAutoRefresh();
+        stopSysStatsInterval();
+      } else {
+        startSysStatsInterval();
+        if (document.getElementById('autoRefreshToggle')?.checked) {
+          startAutoRefresh();
+        }
       }
+    });
+
+    let chartObserver = null;
+    function cleanupResources() {
+      stopAutoRefresh();
+      stopSysStatsInterval();
+      if (chartObserver) {
+        try { chartObserver.disconnect(); } catch (e) {}
+        chartObserver = null;
+      }
+      for (const url of activeObjectUrls) {
+        try { URL.revokeObjectURL(url); } catch (e) {}
+      }
+      activeObjectUrls.clear();
+    }
+
+    window.addEventListener('beforeunload', () => {
+      autoSaveState();
+      cleanupResources();
+    });
+
+    window.addEventListener('pagehide', () => {
+      autoSaveState();
+      cleanupResources();
     });
 
     // Initial load and settings restore
@@ -3096,12 +3210,13 @@
     } catch(e) {}
 
     loadUserSettings();
+    restoreSessionState();
     renderTasks();
     setupChartInteractivity('cpuCanvas', 'cpu');
     setupChartInteractivity('memCanvas', 'mem');
 
     try {
-      const chartObserver = new ResizeObserver(() => {
+      chartObserver = new ResizeObserver(() => {
         if (activeTab === 'charts') {
           drawCharts();
         }
@@ -3110,13 +3225,18 @@
     } catch (e) {}
 
     setTimeout(refresh, 100);
+    startSysStatsInterval();
     const autoRefreshActive = document.getElementById('autoRefreshToggle')?.checked ?? true;
     if (autoRefreshActive) {
       startAutoRefresh();
     }
 
-    // First-run tutorial onboarding check
-    if (!safeGetStorage('ktask_tutorialSeen')) {
+    // First-run tutorial onboarding check: only on fresh sessions, never interrupting restored save states
+    const hasSeenTutorial = safeGetStorage('ktask_tutorialSeen');
+    const hasQuicksave = safeGetStorage('ktask_quicksave');
+    const hasSession = safeGetStorage('ktask_session_state');
+
+    if (!hasSeenTutorial && !hasQuicksave && !hasSession) {
       setTimeout(openTutorialModal, 400);
     } else {
       setTimeout(() => showToast('Ready. Press "H" or F1 for help &amp; shortcuts'), 1000);
