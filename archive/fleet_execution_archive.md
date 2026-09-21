@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-21T09:50:00Z — kilo-usability: KPomodoro**
+  - Status: PASS ✅ (HiDPI canvas scaling, responsive layout breakpoints, Help & hotkey ergonomics, Win32 WM_SIZE parity).
+  - HiDPI Canvas Scaling: Wired window.devicePixelRatio and dynamic container width scaling to hourly focus activity chart.
+  - Responsive Breakpoints: Added 820px and 540px media queries supporting narrow windows, split-screen tiling, and mobile flex layouts.
+  - Help & Controls Ergonomics: Added visible Help (H) button, wired H/? and 1-3 mode keys in web and Win32 keydown handlers.
+  - Native Win32 Parity: Implemented WM_SIZE handler for dynamic control recentering, updated status bar hotkey hints and dialog.
+  - Verification: Clean MSVC Native C build (16.5 KB); Vite web build clean (72.8 KB); security linter and automated tests passed.
+
 - **2026-09-21T07:50:00Z — kilo-tester: KBookmark**
   - Status: PASS ✅ (6 issues, 6 fixed).
   - Modal & Form Ergonomics: Added backdrop click dismissals across all 7 modals; enabled Enter key submission in form inputs.
