@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -17,11 +17,11 @@ current_targets:
   kilo_graphics: KColony
   kilo_qa: KTerm
   kilo_expander: KBase
-  kilo_creator: "KHash (Multi-algorithm checksum tool)"
+  kilo_creator: "KRSS (Feed reader)"
 last_run:
-  agent: kilo-expander
-  app: KHex
-  timestamp: "2026-09-21T15:55:00Z"
+  agent: kilo-creator
+  app: KHash
+  timestamp: "2026-09-21T17:50:00Z"
 last_planner_run: "2026-09-21T05:46:00Z"
 ---
 
@@ -60,9 +60,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ## Active Target Queues
 
 ### 1. App Creator & Deep Expander Queue (`kilo-creator`)
-- **Current Target**: `KHash` (Multi-algorithm checksum tool)
+- **Current Target**: `KRSS` (Feed reader)
 - **Upcoming Concepts**:
-  `KRSS` (Feed reader), `KClip` (Clipboard history tool), `KMatrix` (Master Terminal & ARG Climax).
+  `KClip` (Clipboard history tool), `KMatrix` (Master Terminal & ARG Climax).
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Current Target**: `KColony`
@@ -123,6 +123,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-21T17:50:00Z — kilo-creator: KHash**
+  - Status: PASS ✅ (New application #97 created: Multi-algorithm checksum & cryptographic integrity workstation).
+  - Algorithmic Suite: Real-time calculation for CRC32, Adler-32, FNV-1a (32/64), MD5, SHA-1, SHA-256, SHA-384, SHA-512, and keyed HMAC.
+  - Streaming File Inspector: Chunked non-blocking file hashing with progress reporting and per-file verification badges.
+  - Integrity Verifier & Diff: Automatic algorithm length heuristics with side-by-side mismatch character diffing.
+  - Manifest Generator & Batch Verifier: Export and batch verify standard .sfv, .md5, and .sha256 manifests.
+  - Mandatory Compliance: Start splash overlay, tutorialSeen flag persistence, F5 quicksave, F9 quickload, retro audio synthesizer.
+  - Verification: Clean MSVC Native C build (15.5 KB); Vite web build clean (74.9 KB); 17 automated verification suites and security lint passed.
+
 - **2026-09-21T15:55:00Z — kilo-expander: KHex**
   - Status: PASS ✅ (Deep forensic & algorithmic feature expansion, Win32 C & Web parity).
   - Algorithmic Hashes & Parity: Added Adler-32, FNV-1a 32-bit, and CRC-16 CCITT alongside IEEE CRC32, MD5, and SHA-256.
@@ -156,16 +165,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Help & Controls Ergonomics: Added visible Help (H) button, wired H/? and 1-3 mode keys in web and Win32 keydown handlers.
   - Native Win32 Parity: Implemented WM_SIZE handler for dynamic control recentering, updated status bar hotkey hints and dialog.
   - Verification: Clean MSVC Native C build (16.5 KB); Vite web build clean (72.8 KB); security linter and automated tests passed.
-
-- **2026-09-21T07:50:00Z — kilo-tester: KBookmark**
-  - Status: PASS ✅ (6 issues, 6 fixed).
-  - Modal & Form Ergonomics: Added backdrop click dismissals across all 7 modals; enabled Enter key submission in form inputs.
-  - Full Keyboard Navigation: Wired ArrowUp/Down card focus navigation, Space star toggling, and 1-9 category hotkeys.
-  - State & URL Robustness: Auto-prepended https:// on schemeless URLs; auto-created target categories in batch move.
-  - Netscape Import & Sync: Extracted folder names from Netscape H3 headers; synchronized tutorial checkbox with storage.
-  - Verification: MSVC Native C build clean (22.5 KB); Vite web build clean (101.8 KB); 7 headless CDP suites passed.
-
-
-
-
-

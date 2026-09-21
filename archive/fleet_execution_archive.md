@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-21T07:50:00Z — kilo-tester: KBookmark**
+  - Status: PASS ✅ (6 issues, 6 fixed).
+  - Modal & Form Ergonomics: Added backdrop click dismissals across all 7 modals; enabled Enter key submission in form inputs.
+  - Full Keyboard Navigation: Wired ArrowUp/Down card focus navigation, Space star toggling, and 1-9 category hotkeys.
+  - State & URL Robustness: Auto-prepended https:// on schemeless URLs; auto-created target categories in batch move.
+  - Netscape Import & Sync: Extracted folder names from Netscape H3 headers; synchronized tutorial checkbox with storage.
+  - Verification: MSVC Native C build clean (22.5 KB); Vite web build clean (101.8 KB); 7 headless CDP suites passed.
+
 - **2026-09-21T05:46:00Z — kilo-planner: Fleet Planning & Queue Compaction**
   - Status: PASS ✅ (24h velocity evaluated, queue health verified, log archive compacted).
   - Velocity & Health: Fleet operating at 100% PASS rate; orchestrator rebase recovery hardened; KBookmark & KPomodoro ready for audit chain.
