@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -16,12 +16,12 @@ current_targets:
   kilo_usability: KBookmark
   kilo_graphics: KSpace
   kilo_qa: KTimer
-  kilo_expander: KBase
+  kilo_expander: KFont
   kilo_creator: "KRSS (Feed reader)"
 last_run:
-  agent: kilo-qa
-  app: KTerm
-  timestamp: "2026-09-21T21:55:00Z"
+  agent: kilo-expander
+  app: KBase
+  timestamp: "2026-09-21T23:55:00Z"
 last_planner_run: "2026-09-21T05:46:00Z"
 ---
 
@@ -85,9 +85,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAlchemy`, `KAsteroids`, `KChrono`, `KColony`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMine`, `KMystery`, `KPac`, `KQuest`, `KRogue`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KTerm` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KBase`
+- **Current Target**: `KFont`
 - **Upcoming Queue**:
-  `KFont`, `KPad`, `KNote`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KTerm`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHex`.
+  `KPad`, `KNote`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KTerm`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHex`, `KBase`.
 
 ### 7. Future Strategic Milestone: The "Virtual 1999 Web" Initiative
 - **Objective**: Create a living, interconnected retro Web 1.0 ecosystem accessible directly through `KNet`.
@@ -123,6 +123,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-21T23:55:00Z — kilo-expander: KBase**
+  - Status: PASS ✅ (Deep numerical, float, bitboard, and encoding expansion; Web & Win32 parity).
+  - Multi-Base & Vintage: Packed BCD, reflected Gray code, and Project Echo classified preset (0x10199904).
+  - Extended Bitwise Suite: Nybble swap, LSB isolation/clear, NAND, NOR, XNOR, AND-NOT (ANDN), and CLMUL.
+  - Floating & Fixed-Point: IEEE-754 FP16 half-precision, Bfloat16 neural float, and Q-format DSP inspector (Q8.8, Q16.16, Q0.15).
+  - Encodings & Code Gen: MIDI VLQ big-endian stream, multi-language code export (C/C++, Rust, Python, NASM), Markdown export.
+  - Verification: Clean MSVC Native C build (21.5 KB); Vite web build clean; Edge CDP test suite (0 errors) & security lint passed.
+
 - **2026-09-21T21:55:00Z — kilo-qa: KTerm**
   - Status: PASS ✅ (Pass 5 audit: Quicksave/quickload state persistence, tutorial integrity, modal ergonomics, leak cleanup).
   - State Persistence: Quicksave (F5) and quickload (F9) across web (localStorage) and native (kterm.dat) capturing all tabs, histories, aliases, macros.
@@ -156,12 +164,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Memory Navigation & Heatmap: Added buffer address jumping and +/-16B stepping toolbar, and chunked sliding-window entropy heatmap.
   - Project Echo ARG Integration: Added corporate ROM sector preset (0x10199904 / 10.19.99.4) linking to kweb://10.19.99.4/classified.
   - Verification: Clean MSVC Native C build (29.5 KB); Vite web build clean (127.5 KB); security linter and verification suite passed.
-
-- **2026-09-21T13:55:00Z — kilo-qa: KTask**
-  - Status: PASS ✅ (Pass 5 audit: Quicksave/quickload state persistence, tutorial integrity, modal ergonomics, leak cleanup).
-  - State Persistence: Quicksave (F5) and quickload (F9) across web and native (ktask.dat / localStorage) capturing full task snapshot, hierarchy, and filters.
-  - Native UI Parity: Added dedicated Save [F5] and Load [F9] buttons; auto-save state on exit (WM_DESTROY) and pagehide/beforeunload.
-  - Tutorial Integrity: Fresh-session onboarding (ktask_tutorialSeen / ktask_tutorial.dat) never interrupting restored save states.
-  - Modal Controls & Ergonomics: Added Enter, Space, and Esc keyboard handlers across all modals (Help, Inspector, Terminate, Tutorial).
-  - Safety & Cleanliness: Hardened storage quota handling, wrapped blob URL exports in safe helpers to eliminate leaks, added interval cleanup.
-  - Verification: Clean MSVC Native C build (29.5 KB); Vite web build clean (121.8 KB); all 6 headless CDP test suites and security lint passed.

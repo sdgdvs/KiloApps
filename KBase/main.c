@@ -7,6 +7,8 @@
 #pragma comment (lib, "user32.lib")
 #pragma comment (lib, "gdi32.lib")
 
+int _fltused = 1;
+
 #pragma function(memset)
 void* __cdecl memset(void* dest, int c, size_t count) {
     char* bytes = (char*)dest;
@@ -368,12 +370,12 @@ void DoMultiWidthInspect() {
     SetWindowTextA(hBitDisplay, bin64);
 }
 
-// Variable-Length Integer (LEB128 & Protobuf Varint)
+// Variable-Length Integer (LEB128, Protobuf Varint & MIDI VLQ)
 void DoVarintEncode() {
     char buf[128];
     GetWindowTextA(hInput, buf, 128);
     
-    // Check if input is a hex byte sequence (contains spaces)
+    // Check if input is a hex byte sequence (contains spaces/dashes/commas)
     int hasSpace = 0;
     for (int i = 0; buf[i]; i++) {
         if (buf[i] == ' ' || buf[i] == ',' || buf[i] == '-') { hasSpace = 1; break; }
@@ -412,7 +414,7 @@ void DoVarintEncode() {
         return;
     }
 
-    // Otherwise Encode integer to ULEB128, SLEB128 & ZigZag
+    // Otherwise Encode integer to ULEB128, SLEB128, ZigZag & MIDI VLQ
     UINT64 val = parse_u64(buf, 10);
     if (val == 0 && buf[0] != '0') val = parse_u64(buf, 16);
 
@@ -457,24 +459,44 @@ void DoVarintEncode() {
         zzBytes[zzCount++] = b;
     } while (tempZZ != 0);
 
-    char ulebHex[64] = {0}, slebHex[64] = {0}, zzHex[64] = {0};
+    // MIDI VLQ Encode (Big-endian 7-bit continuation stream)
+    BYTE vlqBytes[16];
+    int vlqCount = 0;
+    UINT64 tempV = val;
+    vlqBytes[vlqCount++] = (BYTE)(tempV & 0x7F);
+    tempV >>= 7;
+    while (tempV > 0 && vlqCount < 16) {
+        vlqBytes[vlqCount++] = (BYTE)((tempV & 0x7F) | 0x80);
+        tempV >>= 7;
+    }
+    // Reverse because MIDI VLQ is big-endian
+    for (int i = 0; i < vlqCount / 2; i++) {
+        BYTE t = vlqBytes[i];
+        vlqBytes[i] = vlqBytes[vlqCount - 1 - i];
+        vlqBytes[vlqCount - 1 - i] = t;
+    }
+
+    char ulebHex[64] = {0}, slebHex[64] = {0}, zzHex[64] = {0}, vlqHex[64] = {0};
     int pos = 0;
     for (int i = 0; i < ulebCount; i++) pos += wsprintfA(&ulebHex[pos], "%02X ", ulebBytes[i]);
     pos = 0;
     for (int i = 0; i < slebCount; i++) pos += wsprintfA(&slebHex[pos], "%02X ", slebBytes[i]);
     pos = 0;
     for (int i = 0; i < zzCount; i++) pos += wsprintfA(&zzHex[pos], "%02X ", zzBytes[i]);
+    pos = 0;
+    for (int i = 0; i < vlqCount; i++) pos += wsprintfA(&vlqHex[pos], "%02X ", vlqBytes[i]);
 
-    char outStr[1024];
+    char outStr[1280];
     wsprintfA(outStr,
-        "=== Variable-Length Integer (LEB128 & Protobuf Varint) ===\r\n"
+        "=== Variable-Length Integer (LEB128, Protobuf & MIDI VLQ) ===\r\n"
         "Input Value: %s\r\n\r\n"
         "ULEB128 (Unsigned) Hex Bytes: %s (%d bytes)\r\n"
         "SLEB128 (Signed) Hex Bytes:   %s (%d bytes)\r\n"
-        "Protobuf ZigZag Encoded Hex:  %s (%d bytes)\r\n\r\n"
-        "[First Byte Breakdown]\r\n"
+        "Protobuf ZigZag Encoded Hex:  %s (%d bytes)\r\n"
+        "MIDI VLQ (Big-Endian) Hex:    %s (%d bytes)\r\n\r\n"
+        "[ULEB128 First Byte Breakdown]\r\n"
         "MSB (Continuation): %d | 7-bit Payload: 0x%02X (%d)",
-        buf, ulebHex, ulebCount, slebHex, slebCount, zzHex, zzCount,
+        buf, ulebHex, ulebCount, slebHex, slebCount, zzHex, zzCount, vlqHex, vlqCount,
         (ulebBytes[0] & 0x80) ? 1 : 0, (int)(ulebBytes[0] & 0x7F), (int)(ulebBytes[0] & 0x7F));
 
     SetWindowTextA(hOutput, outStr);
@@ -566,7 +588,236 @@ void DoBitfieldSlice() {
     SetWindowTextA(hOutput, outStr);
 }
 
-// Bitwise operations (AND, OR, XOR, NOT, SHL, SHR, ROL, ROR)
+// Reflected Gray Code & Packed BCD Conversion
+void DoBCDAndGray() {
+    char buf[128];
+    GetWindowTextA(hInput, buf, 128);
+    UINT64 val = parse_u64(buf, 10);
+    if (val == 0 && buf[0] != '0') val = parse_u64(buf, 16);
+
+    // Binary to Gray
+    UINT64 gray = val ^ (val >> 1);
+    char grayHex[32], grayBin[68];
+    u64_to_hex(gray, grayHex);
+    u64_to_bin(gray, grayBin);
+
+    // Gray to Binary (decoding input assuming input was Gray)
+    UINT64 decodedBin = val;
+    for (UINT64 mask = val >> 1; mask != 0; mask >>= 1) {
+        decodedBin ^= mask;
+    }
+    char decBinHex[32], decBinDec[32];
+    u64_to_hex(decodedBin, decBinHex);
+    u64_to_dec(decodedBin, decBinDec);
+
+    // Packed BCD encode (each decimal digit to 4 bits)
+    UINT64 bcd = 0;
+    UINT64 temp = val;
+    int bcdShift = 0;
+    int bcdOverflow = 0;
+    while (temp > 0) {
+        if (bcdShift >= 64) { bcdOverflow = 1; break; }
+        UINT64 d = temp % 10;
+        bcd |= (d << bcdShift);
+        bcdShift += 4;
+        temp /= 10;
+    }
+    char bcdHex[32];
+    u64_to_hex(bcd, bcdHex);
+
+    // Decode input assuming input was Packed BCD
+    UINT64 bcdDec = 0;
+    UINT64 mult = 1;
+    UINT64 tempBcd = val;
+    int bcdValid = 1;
+    while (tempBcd > 0) {
+        UINT64 d = tempBcd & 0xF;
+        if (d > 9) { bcdValid = 0; break; }
+        bcdDec += d * mult;
+        mult *= 10;
+        tempBcd >>= 4;
+    }
+    char bcdDecStr[32];
+    u64_to_dec(bcdDec, bcdDecStr);
+
+    char outStr[1024];
+    wsprintfA(outStr,
+        "=== Reflected Gray Code & Packed BCD ===\r\n"
+        "Source Value: 0x%08X%08X (%d decimal)\r\n\r\n"
+        "[Reflected Gray Code]\r\n"
+        "Binary -> Gray Code:    0x%s\r\n"
+        "Gray Code Binary:       %s\r\n"
+        "Gray -> Binary Decoded: 0x%s (%s dec)\r\n\r\n"
+        "[Packed Binary-Coded Decimal (BCD)]\r\n"
+        "Packed BCD Encode:      0x%s %s\r\n"
+        "BCD Decode (raw nibbles): %s\r\n\r\n"
+        "[Project Echo Historical Cipher Anchor]\r\n"
+        "Key: 0x10199904 -> Octets: 16.25.153.4 | Date: Oct 19, 1994",
+        (DWORD)(val >> 32), (DWORD)(val & 0xFFFFFFFF), (DWORD)(val & 0xFFFFFFFF),
+        grayHex, grayBin, decBinHex, decBinDec,
+        bcdHex, bcdOverflow ? "(truncated >16 digits)" : "",
+        bcdValid ? bcdDecStr : "Invalid BCD digits (>9 in nibble)");
+
+    SetWindowTextA(hOutput, outStr);
+}
+
+// Floating-Point & Fixed-Point Inspector
+void DoFloatInspect() {
+    char buf[128];
+    GetWindowTextA(hInput, buf, 128);
+    UINT64 val = parse_u64(buf, 10);
+    if (val == 0 && buf[0] != '0') val = parse_u64(buf, 16);
+
+    DWORD u32 = (DWORD)(val & 0xFFFFFFFF);
+    DWORD s32 = (u32 >> 31) & 1;
+    DWORD exp32 = (u32 >> 23) & 0xFF;
+    DWORD mant32 = u32 & 0x7FFFFF;
+    int expUnbiased = (int)exp32 - 127;
+    const char* class32 = "Normalized";
+    if (exp32 == 255) {
+        class32 = (mant32 == 0) ? (s32 ? "-Infinity" : "+Infinity") : "NaN (Not-a-Number)";
+    } else if (exp32 == 0) {
+        class32 = (mant32 == 0) ? (s32 ? "-Zero" : "+Zero") : "Subnormal (Denormalized)";
+    }
+
+    WORD u16 = (WORD)(val & 0xFFFF);
+    WORD s16 = (u16 >> 15) & 1;
+    WORD exp16 = (u16 >> 10) & 0x1F;
+    WORD mant16 = u16 & 0x3FF;
+    int exp16Unbiased = (int)exp16 - 15;
+
+    WORD bf16 = (WORD)(val & 0xFFFF);
+    WORD sBf = (bf16 >> 15) & 1;
+    WORD expBf = (bf16 >> 7) & 0xFF;
+    WORD mantBf = bf16 & 0x7F;
+    int expBfUnbiased = (int)expBf - 127;
+
+    // Fixed-Point Q-formats
+    INT16 q88 = (INT16)(val & 0xFFFF);
+    int q88Int = q88 >> 8;
+    int q88Frac = (int)(((q88 & 0xFF) * 1000) / 256);
+
+    INT32 q1616 = (INT32)(val & 0xFFFFFFFF);
+    int q1616Int = q1616 >> 16;
+    int q1616Frac = (int)(((q1616 & 0xFFFF) * 1000) / 65536);
+
+    INT16 q015 = (INT16)(val & 0xFFFF);
+    int q015Frac = (int)(((INT32)q015 * 10000) / 32768);
+
+    char outStr[1536];
+    wsprintfA(outStr,
+        "=== Floating-Point & Fixed-Point Inspector ===\r\n"
+        "Raw 32-Bit Hex: 0x%08X | Raw 16-Bit Hex: 0x%04X\r\n\r\n"
+        "[IEEE-754 32-Bit Single Precision (Binary32)]\r\n"
+        "Classification: %s\r\n"
+        "Sign:           %d (%s)\r\n"
+        "Biased Exp:     %u (0x%02X) | Unbiased: %d\r\n"
+        "Mantissa:       0x%06X (23-bit fraction)\r\n\r\n"
+        "[IEEE-754 16-Bit Half Precision (Binary16)]\r\n"
+        "Sign: %d | Biased Exp: %u (Unbiased: %d) | Mantissa: 0x%03X (10-bit)\r\n\r\n"
+        "[Brain Floating Point (Bfloat16)]\r\n"
+        "Sign: %d | Biased Exp: %u (Unbiased: %d) | Mantissa: 0x%02X (7-bit)\r\n\r\n"
+        "[Fixed-Point DSP Formats]\r\n"
+        "Q8.8   (Signed 8.8):   ~%d.%03d\r\n"
+        "Q16.16 (Signed 16.16): ~%d.%03d\r\n"
+        "Q0.15  (DSP Audio):    ~%s0.%04d",
+        u32, (DWORD)u16,
+        class32, s32, s32 ? "Negative" : "Positive",
+        exp32, exp32, expUnbiased, mant32,
+        (DWORD)s16, (DWORD)exp16, exp16Unbiased, (DWORD)mant16,
+        (DWORD)sBf, (DWORD)expBf, expBfUnbiased, (DWORD)mantBf,
+        q88Int, q88Frac < 0 ? -q88Frac : q88Frac,
+        q1616Int, q1616Frac < 0 ? -q1616Frac : q1616Frac,
+        q015 < 0 ? "-" : "+", q015Frac < 0 ? -q015Frac : q015Frac);
+
+    SetWindowTextA(hOutput, outStr);
+}
+
+// Endian Byte Swap & 64-bit Nybble Swap
+void DoEndianSwap() {
+    char buf[128];
+    GetWindowTextA(hInput, buf, 128);
+    UINT64 val = parse_u64(buf, 10);
+    if (val == 0 && buf[0] != '0') val = parse_u64(buf, 16);
+
+    UINT16 u16 = (UINT16)(val & 0xFFFF);
+    UINT16 swap16 = ((u16 & 0x00FF) << 8) | ((u16 & 0xFF00) >> 8);
+
+    UINT32 u32 = (UINT32)(val & 0xFFFFFFFF);
+    UINT32 swap32 = ((u32 & 0x000000FF) << 24) |
+                    ((u32 & 0x0000FF00) << 8)  |
+                    ((u32 & 0x00FF0000) >> 8)  |
+                    ((u32 & 0xFF000000) >> 24);
+
+    UINT64 swap64 = ((val & 0x00000000000000FFULL) << 56) |
+                    ((val & 0x000000000000FF00ULL) << 40) |
+                    ((val & 0x0000000000FF0000ULL) << 24) |
+                    ((val & 0x00000000FF000000ULL) << 8)  |
+                    ((val & 0x000000FF00000000ULL) >> 8)  |
+                    ((val & 0x0000FF0000000000ULL) >> 24) |
+                    ((val & 0x00FF000000000000ULL) >> 40) |
+                    ((val & 0xFF00000000000000ULL) >> 56);
+
+    UINT64 nybbleSwap = ((val & 0x0F0F0F0F0F0F0F0FULL) << 4) |
+                        ((val & 0xF0F0F0F0F0F0F0F0ULL) >> 4);
+
+    char valHex[32], swap64Hex[32], nybbleHex[32];
+    u64_to_hex(val, valHex);
+    u64_to_hex(swap64, swap64Hex);
+    u64_to_hex(nybbleSwap, nybbleHex);
+
+    char outStr[1024];
+    wsprintfA(outStr,
+        "=== Endian Byte Swap & Nybble Reversal ===\r\n"
+        "Original 64-Bit Hex: 0x%s\r\n\r\n"
+        "[16-Bit Byte Swap]\r\n"
+        "Original: 0x%04X -> Swapped: 0x%04X (Bytes: %02X %02X -> %02X %02X)\r\n\r\n"
+        "[32-Bit Byte Swap]\r\n"
+        "Original: 0x%08X -> Swapped: 0x%08X\r\n\r\n"
+        "[64-Bit Byte Swap]\r\n"
+        "Little-Endian <-> Big-Endian: 0x%s\r\n\r\n"
+        "[64-Bit Nybble Swap (Adjacent 4-bit nibbles)]\r\n"
+        "Swapped Nybbles: 0x%s",
+        valHex,
+        (DWORD)u16, (DWORD)swap16, (DWORD)(u16 >> 8), (DWORD)(u16 & 0xFF), (DWORD)(swap16 >> 8), (DWORD)(swap16 & 0xFF),
+        u32, swap32,
+        swap64Hex,
+        nybbleHex);
+
+    SetWindowTextA(hOutput, outStr);
+}
+
+// Multi-Language Constant Code Snippet Generator
+void DoGenCode() {
+    char buf[128];
+    GetWindowTextA(hInput, buf, 128);
+    UINT64 val = parse_u64(buf, 10);
+    if (val == 0 && buf[0] != '0') val = parse_u64(buf, 16);
+
+    char hexStr[32], decStr[32];
+    u64_to_hex(val, hexStr);
+    u64_to_dec(val, decStr);
+
+    char outStr[1024];
+    wsprintfA(outStr,
+        "=== Multi-Language Constant Code Snippets ===\r\n\r\n"
+        "// C / C++\r\n"
+        "static const uint64_t VALUE = 0x%sULL; /* %s */\r\n\r\n"
+        "// Rust\r\n"
+        "const VALUE: u64 = 0x%s; // %s\r\n\r\n"
+        "// Python\r\n"
+        "VALUE = 0x%s  # %s\r\n\r\n"
+        "// NASM x86_64 Assembly\r\n"
+        "mov rax, 0x%s ; %s",
+        hexStr, decStr,
+        hexStr, decStr,
+        hexStr, decStr,
+        hexStr, decStr);
+
+    SetWindowTextA(hOutput, outStr);
+}
+
+// Bitwise operations (AND, OR, XOR, NOT, SHL, SHR, ROL, ROR, NAND, NOR, XNOR, ANDN, CLMUL, LSB-Iso)
 void DoBitwiseOp(int op) {
     char bufA[64], bufB[64];
     GetWindowTextA(hEditA, bufA, 64);
@@ -600,6 +851,19 @@ void DoBitwiseOp(int op) {
             opName = "ROR";
             break;
         }
+        case 18: res = ~(valA & valB); opName = "NAND"; break;
+        case 19: res = ~(valA | valB); opName = "NOR"; break;
+        case 30: res = ~(valA ^ valB); opName = "XNOR"; break;
+        case 31: res = valA & (~valB); opName = "AND-NOT (ANDN)"; break;
+        case 32: {
+            res = 0;
+            for (int i = 0; i < 32; i++) {
+                if ((valB >> i) & 1) res ^= (valA << i);
+            }
+            opName = "Carry-less Mul (CLMUL)";
+            break;
+        }
+        case 33: res = valA & (0ULL - valA); opName = "LSB-Isolate (A & -A)"; break;
     }
 
     char hex[32], dec[32], bin[68], outStr[256];
@@ -622,92 +886,115 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HFONT hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
             
             CreateWindowA("STATIC", "Input Buffer / Number:", WS_CHILD | WS_VISIBLE, 10, 8, 200, 18, hwnd, NULL, NULL, NULL);
-            HWND hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 755, 6, 105, 24, hwnd, (HMENU)99, NULL, NULL);
+            HWND hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 780, 6, 105, 24, hwnd, (HMENU)99, NULL, NULL);
             SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hFont, 0);
 
             hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "42", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_WANTRETURN,
-                10, 30, 850, 48, hwnd, NULL, NULL, NULL);
+                10, 30, 875, 44, hwnd, NULL, NULL, NULL);
             SendMessageA(hInput, WM_SETFONT, (WPARAM)hFont, 0);
 
-            // Operands A & B for bitwise calculations, plus 1-click Demo & Copy buttons
-            CreateWindowA("STATIC", "Operand A (Hex/Dec):", WS_CHILD | WS_VISIBLE, 10, 85, 135, 18, hwnd, NULL, NULL, NULL);
-            hEditA = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "0x0F0F0F0F", WS_CHILD | WS_VISIBLE, 145, 82, 110, 22, hwnd, NULL, NULL, NULL);
+            // Operands A & B for bitwise calculations, plus 1-click Demo, Copy, Clear, Code buttons
+            CreateWindowA("STATIC", "Operand A (Hex/Dec):", WS_CHILD | WS_VISIBLE, 10, 80, 135, 18, hwnd, NULL, NULL, NULL);
+            hEditA = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "0x0F0F0F0F", WS_CHILD | WS_VISIBLE, 145, 78, 105, 22, hwnd, NULL, NULL, NULL);
             SendMessageA(hEditA, WM_SETFONT, (WPARAM)hFont, 0);
 
-            CreateWindowA("STATIC", "Operand B / Slice:", WS_CHILD | WS_VISIBLE, 265, 85, 130, 18, hwnd, NULL, NULL, NULL);
-            hEditB = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "15:8", WS_CHILD | WS_VISIBLE, 400, 82, 85, 22, hwnd, NULL, NULL, NULL);
+            CreateWindowA("STATIC", "Operand B / Slice:", WS_CHILD | WS_VISIBLE, 260, 80, 120, 18, hwnd, NULL, NULL, NULL);
+            hEditB = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "15:8", WS_CHILD | WS_VISIBLE, 385, 78, 85, 22, hwnd, NULL, NULL, NULL);
             SendMessageA(hEditB, WM_SETFONT, (WPARAM)hFont, 0);
 
-            HWND hBtnCopyOut = CreateWindowA("BUTTON", "Copy Out [C]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 495, 81, 115, 24, hwnd, (HMENU)201, NULL, NULL);
+            HWND hBtnCopyOut = CreateWindowA("BUTTON", "Copy Out [C]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 480, 77, 95, 24, hwnd, (HMENU)201, NULL, NULL);
             SendMessageA(hBtnCopyOut, WM_SETFONT, (WPARAM)hFont, 0);
 
-            HWND hBtnDemo = CreateWindowA("BUTTON", "✨ Demo [D]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 618, 81, 115, 24, hwnd, (HMENU)202, NULL, NULL);
+            HWND hBtnDemo = CreateWindowA("BUTTON", "✨ Demo [D]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 585, 77, 95, 24, hwnd, (HMENU)202, NULL, NULL);
             SendMessageA(hBtnDemo, WM_SETFONT, (WPARAM)hFont, 0);
 
-            HWND hBtnClear = CreateWindowA("BUTTON", "Clear [X]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 740, 81, 120, 24, hwnd, (HMENU)203, NULL, NULL);
+            HWND hBtnClear = CreateWindowA("BUTTON", "Clear [X]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 690, 77, 85, 24, hwnd, (HMENU)203, NULL, NULL);
             SendMessageA(hBtnClear, WM_SETFONT, (WPARAM)hFont, 0);
 
-            // Action Buttons - Base & Text Encoding
-            HWND hBtnConv = CreateWindowA("BUTTON", "Convert [Enter]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 112, 115, 24, hwnd, (HMENU)100, NULL, NULL);
+            HWND hBtnCode = CreateWindowA("BUTTON", "Code [K]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 785, 77, 100, 24, hwnd, (HMENU)26, NULL, NULL);
+            SendMessageA(hBtnCode, WM_SETFONT, (WPARAM)hFont, 0);
+
+            // Action Buttons - Base, Encodings, Ints, Slicer, BCD, Float
+            HWND hBtnConv = CreateWindowA("BUTTON", "Convert [Enter]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 107, 110, 24, hwnd, (HMENU)100, NULL, NULL);
             SendMessageA(hBtnConv, WM_SETFONT, (WPARAM)hFont, 0);
 
-            hBtnEnc = CreateWindowA("BUTTON", "B64 Enc", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 130, 112, 75, 24, hwnd, (HMENU)1, NULL, NULL);
+            hBtnEnc = CreateWindowA("BUTTON", "B64 Enc", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 125, 107, 65, 24, hwnd, (HMENU)1, NULL, NULL);
             SendMessageA(hBtnEnc, WM_SETFONT, (WPARAM)hFont, 0);
             
-            hBtnDec = CreateWindowA("BUTTON", "B64 Dec", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 210, 112, 75, 24, hwnd, (HMENU)2, NULL, NULL);
+            hBtnDec = CreateWindowA("BUTTON", "B64 Dec", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 195, 107, 65, 24, hwnd, (HMENU)2, NULL, NULL);
             SendMessageA(hBtnDec, WM_SETFONT, (WPARAM)hFont, 0);
             
-            HWND hBtnUrlEnc = CreateWindowA("BUTTON", "URL Enc", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 290, 112, 75, 24, hwnd, (HMENU)4, NULL, NULL);
+            HWND hBtnUrlEnc = CreateWindowA("BUTTON", "URL Enc", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 265, 107, 65, 24, hwnd, (HMENU)4, NULL, NULL);
             SendMessageA(hBtnUrlEnc, WM_SETFONT, (WPARAM)hFont, 0);
 
-            HWND hBtnUrlDec = CreateWindowA("BUTTON", "URL Dec", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 370, 112, 75, 24, hwnd, (HMENU)5, NULL, NULL);
+            HWND hBtnUrlDec = CreateWindowA("BUTTON", "URL Dec", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 335, 107, 65, 24, hwnd, (HMENU)5, NULL, NULL);
             SendMessageA(hBtnUrlDec, WM_SETFONT, (WPARAM)hFont, 0);
 
-            hBtnHash = CreateWindowA("BUTTON", "SHA-256", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 450, 112, 80, 24, hwnd, (HMENU)3, NULL, NULL);
+            hBtnHash = CreateWindowA("BUTTON", "SHA-256", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 405, 107, 75, 24, hwnd, (HMENU)3, NULL, NULL);
             SendMessageA(hBtnHash, WM_SETFONT, (WPARAM)hFont, 0);
 
-            HWND hBtnVarint = CreateWindowA("BUTTON", "Varint [V]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 535, 112, 95, 24, hwnd, (HMENU)20, NULL, NULL);
+            HWND hBtnVarint = CreateWindowA("BUTTON", "Varint [V]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 485, 107, 75, 24, hwnd, (HMENU)20, NULL, NULL);
             SendMessageA(hBtnVarint, WM_SETFONT, (WPARAM)hFont, 0);
 
-            HWND hBtnInts = CreateWindowA("BUTTON", "Int Formats [I]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 635, 112, 110, 24, hwnd, (HMENU)21, NULL, NULL);
+            HWND hBtnInts = CreateWindowA("BUTTON", "Ints [I]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 565, 107, 70, 24, hwnd, (HMENU)21, NULL, NULL);
             SendMessageA(hBtnInts, WM_SETFONT, (WPARAM)hFont, 0);
 
-            HWND hBtnSlice = CreateWindowA("BUTTON", "Bitfield Slice [S]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 750, 112, 110, 24, hwnd, (HMENU)22, NULL, NULL);
+            HWND hBtnSlice = CreateWindowA("BUTTON", "Slice [S]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 640, 107, 75, 24, hwnd, (HMENU)22, NULL, NULL);
             SendMessageA(hBtnSlice, WM_SETFONT, (WPARAM)hFont, 0);
 
-            // Bitwise Operator Buttons
-            HWND hBtnAnd = CreateWindowA("BUTTON", "AND", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 142, 60, 24, hwnd, (HMENU)10, NULL, NULL);
+            HWND hBtnBCD = CreateWindowA("BUTTON", "BCD/Gray [G]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 720, 107, 90, 24, hwnd, (HMENU)23, NULL, NULL);
+            SendMessageA(hBtnBCD, WM_SETFONT, (WPARAM)hFont, 0);
+
+            HWND hBtnFloat = CreateWindowA("BUTTON", "Float [F]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 815, 107, 70, 24, hwnd, (HMENU)24, NULL, NULL);
+            SendMessageA(hBtnFloat, WM_SETFONT, (WPARAM)hFont, 0);
+
+            // Extended Bitwise Operator Buttons
+            HWND hBtnAnd = CreateWindowA("BUTTON", "AND", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 137, 48, 24, hwnd, (HMENU)10, NULL, NULL);
             SendMessageA(hBtnAnd, WM_SETFONT, (WPARAM)hFont, 0);
-            HWND hBtnOr  = CreateWindowA("BUTTON", "OR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 75, 142, 60, 24, hwnd, (HMENU)11, NULL, NULL);
+            HWND hBtnOr  = CreateWindowA("BUTTON", "OR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 62, 137, 44, 24, hwnd, (HMENU)11, NULL, NULL);
             SendMessageA(hBtnOr, WM_SETFONT, (WPARAM)hFont, 0);
-            HWND hBtnXor = CreateWindowA("BUTTON", "XOR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 140, 142, 60, 24, hwnd, (HMENU)12, NULL, NULL);
+            HWND hBtnXor = CreateWindowA("BUTTON", "XOR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 110, 137, 48, 24, hwnd, (HMENU)12, NULL, NULL);
             SendMessageA(hBtnXor, WM_SETFONT, (WPARAM)hFont, 0);
-            HWND hBtnNot = CreateWindowA("BUTTON", "NOT(A)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 205, 142, 65, 24, hwnd, (HMENU)13, NULL, NULL);
+            HWND hBtnNot = CreateWindowA("BUTTON", "NOT(A)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 162, 137, 52, 24, hwnd, (HMENU)13, NULL, NULL);
             SendMessageA(hBtnNot, WM_SETFONT, (WPARAM)hFont, 0);
-            HWND hBtnShl = CreateWindowA("BUTTON", "SHL", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 275, 142, 60, 24, hwnd, (HMENU)14, NULL, NULL);
+            HWND hBtnShl = CreateWindowA("BUTTON", "SHL", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 218, 137, 46, 24, hwnd, (HMENU)14, NULL, NULL);
             SendMessageA(hBtnShl, WM_SETFONT, (WPARAM)hFont, 0);
-            HWND hBtnShr = CreateWindowA("BUTTON", "SHR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 340, 142, 60, 24, hwnd, (HMENU)15, NULL, NULL);
+            HWND hBtnShr = CreateWindowA("BUTTON", "SHR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 268, 137, 46, 24, hwnd, (HMENU)15, NULL, NULL);
             SendMessageA(hBtnShr, WM_SETFONT, (WPARAM)hFont, 0);
-            HWND hBtnRol = CreateWindowA("BUTTON", "ROL", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 405, 142, 60, 24, hwnd, (HMENU)16, NULL, NULL);
+            HWND hBtnRol = CreateWindowA("BUTTON", "ROL", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 318, 137, 46, 24, hwnd, (HMENU)16, NULL, NULL);
             SendMessageA(hBtnRol, WM_SETFONT, (WPARAM)hFont, 0);
-            HWND hBtnRor = CreateWindowA("BUTTON", "ROR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 470, 142, 60, 24, hwnd, (HMENU)17, NULL, NULL);
+            HWND hBtnRor = CreateWindowA("BUTTON", "ROR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 368, 137, 46, 24, hwnd, (HMENU)17, NULL, NULL);
             SendMessageA(hBtnRor, WM_SETFONT, (WPARAM)hFont, 0);
+            HWND hBtnNand = CreateWindowA("BUTTON", "NAND", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 418, 137, 50, 24, hwnd, (HMENU)18, NULL, NULL);
+            SendMessageA(hBtnNand, WM_SETFONT, (WPARAM)hFont, 0);
+            HWND hBtnNor = CreateWindowA("BUTTON", "NOR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 472, 137, 46, 24, hwnd, (HMENU)19, NULL, NULL);
+            SendMessageA(hBtnNor, WM_SETFONT, (WPARAM)hFont, 0);
+            HWND hBtnXnor = CreateWindowA("BUTTON", "XNOR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 522, 137, 52, 24, hwnd, (HMENU)30, NULL, NULL);
+            SendMessageA(hBtnXnor, WM_SETFONT, (WPARAM)hFont, 0);
+            HWND hBtnAndn = CreateWindowA("BUTTON", "ANDN", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 578, 137, 52, 24, hwnd, (HMENU)31, NULL, NULL);
+            SendMessageA(hBtnAndn, WM_SETFONT, (WPARAM)hFont, 0);
+            HWND hBtnClmul = CreateWindowA("BUTTON", "CLMUL", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 634, 137, 58, 24, hwnd, (HMENU)32, NULL, NULL);
+            SendMessageA(hBtnClmul, WM_SETFONT, (WPARAM)hFont, 0);
+            HWND hBtnLsbIso = CreateWindowA("BUTTON", "LSB-Iso", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 696, 137, 66, 24, hwnd, (HMENU)33, NULL, NULL);
+            SendMessageA(hBtnLsbIso, WM_SETFONT, (WPARAM)hFont, 0);
+            HWND hBtnEndian = CreateWindowA("BUTTON", "Endian [E]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 766, 137, 119, 24, hwnd, (HMENU)25, NULL, NULL);
+            SendMessageA(hBtnEndian, WM_SETFONT, (WPARAM)hFont, 0);
 
             // 64-Bit Binary Stream Display
-            CreateWindowA("STATIC", "64-Bit Binary Stream:", WS_CHILD | WS_VISIBLE, 10, 172, 200, 18, hwnd, NULL, NULL, NULL);
+            CreateWindowA("STATIC", "64-Bit Binary Stream:", WS_CHILD | WS_VISIBLE, 10, 167, 200, 18, hwnd, NULL, NULL, NULL);
             hBitDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "0000000000000000000000000000000000000000000000000000000000000000",
-                WS_CHILD | WS_VISIBLE | ES_READONLY, 10, 190, 850, 24, hwnd, NULL, NULL, NULL);
+                WS_CHILD | WS_VISIBLE | ES_READONLY, 10, 185, 875, 24, hwnd, NULL, NULL, NULL);
             SendMessageA(hBitDisplay, WM_SETFONT, (WPARAM)hFont, 0);
 
             // Output Display Area
-            CreateWindowA("STATIC", "Output Result:", WS_CHILD | WS_VISIBLE, 10, 220, 200, 18, hwnd, NULL, NULL, NULL);
+            CreateWindowA("STATIC", "Output Result:", WS_CHILD | WS_VISIBLE, 10, 215, 200, 18, hwnd, NULL, NULL, NULL);
             hOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY,
-                10, 238, 850, 280, hwnd, NULL, NULL, NULL);
+                10, 233, 875, 305, hwnd, NULL, NULL, NULL);
             SendMessageA(hOutput, WM_SETFONT, (WPARAM)hFont, 0);
 
             // Non-blocking Bottom Status Bar
-            hStatus = CreateWindowExA(0, "STATIC", " Ready | F1: Help | C: Copy Output | D: Demo | Enter: Convert | X: Clear",
-                WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 526, 850, 20, hwnd, (HMENU)300, NULL, NULL);
+            hStatus = CreateWindowExA(0, "STATIC", " Ready | F1: Help | C: Copy Output | D: Demo | Enter: Convert | G: Gray/BCD | F: Float | E: Endian",
+                WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 544, 875, 20, hwnd, (HMENU)300, NULL, NULL);
             SendMessageA(hStatus, WM_SETFONT, (WPARAM)hFont, 0);
 
             // Trigger default conversion
@@ -723,9 +1010,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id == 5) { DoUrlDecode(); ShowNativeStatus(hwnd, "URL decoded output"); }
             else if (id == 6) { DoHexEncode(); ShowNativeStatus(hwnd, "Hex encoded output"); }
             else if (id == 7) { DoHexDecode(); ShowNativeStatus(hwnd, "Hex decoded output"); }
-            else if (id == 20) { DoVarintEncode(); ShowNativeStatus(hwnd, "Varint / LEB128 computed [V]"); }
+            else if (id == 20) { DoVarintEncode(); ShowNativeStatus(hwnd, "Varint / LEB128 & MIDI VLQ computed [V]"); }
             else if (id == 21) { DoMultiWidthInspect(); ShowNativeStatus(hwnd, "Multi-width integers inspected [I]"); }
             else if (id == 22) { DoBitfieldSlice(); ShowNativeStatus(hwnd, "Bitfield slice extracted [S]"); }
+            else if (id == 23) { DoBCDAndGray(); ShowNativeStatus(hwnd, "Gray Code & Packed BCD converted [G]"); }
+            else if (id == 24) { DoFloatInspect(); ShowNativeStatus(hwnd, "Floating & Fixed-Point inspected [F]"); }
+            else if (id == 25) { DoEndianSwap(); ShowNativeStatus(hwnd, "Endian & Nybble Swapped [E]"); }
+            else if (id == 26) { DoGenCode(); ShowNativeStatus(hwnd, "Code snippets generated [K]"); }
             else if (id == 100) DoConvertBases();
             else if (id == 201) DoCopyOutput(hwnd);
             else if (id == 202) DoLoadDemo(hwnd);
@@ -735,7 +1026,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetWindowTextA(hBitDisplay, "0000000000000000000000000000000000000000000000000000000000000000");
                 ShowNativeStatus(hwnd, "Cleared buffer and output [X]");
             }
-            else if (id >= 10 && id <= 17) {
+            else if ((id >= 10 && id <= 19) || (id >= 30 && id <= 33)) {
                 DoBitwiseOp(id);
                 ShowNativeStatus(hwnd, "Bitwise operation calculated!");
             }
@@ -748,16 +1039,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "- C: Copy output buffer to Windows clipboard\n"
                     "- D: Load 1-click sample demo presets (0xDEADBEEF)\n"
                     "- X: Clear inputs and output buffer\n"
-                    "- V: Varint / LEB128 & ZigZag encoding\n"
+                    "- V: Varint / LEB128 & MIDI VLQ encoding\n"
                     "- I: Multi-width integer representation inspector\n"
-                    "- S: Bitfield slice extraction\n\n"
+                    "- S: Bitfield slice & bit diagnostics\n"
+                    "- G: Reflected Gray Code & Packed BCD\n"
+                    "- F: IEEE-754 Float32/FP16/Bfloat16 & Q-Formats\n"
+                    "- E: Endian Byte Swap & 64-bit Nybble Swap\n"
+                    "- K: Multi-language constant code snippets\n\n"
                     "FEATURES & OPERATIONS:\n"
-                    "1. Convert Base: 64-bit live conversion across Dec, Hex, and 64-bit Binary stream.\n"
-                    "2. String Suite: Base64 encode/decode, URL encode/decode, Hex encode/decode, and SHA-256 hash.\n"
-                    "3. Varint / LEB128: Encode integers or decode hex bytes to ULEB128, SLEB128 & Protobuf ZigZag.\n"
-                    "4. Int Formats: Multi-width inspector for int8/16/32/64 two's comp, unsigned, 1's comp, and sign-mag.\n"
-                    "5. Bitfield Slice: Extract [High:Low] bit slice and compute Popcount, CLZ, CTZ, Parity, Power of 2.\n"
-                    "6. Bitwise Operations: AND, OR, XOR, NOT(A), SHL, SHR, ROL, and ROR between Operands A and B.",
+                    "1. Convert Base: Live conversion across Dec, Hex, and 64-bit Binary stream.\n"
+                    "2. String Suite: Base64, URL, Hex encode/decode, and SHA-256 hash.\n"
+                    "3. Varint & Streams: ULEB128, SLEB128, ZigZag, and MIDI VLQ.\n"
+                    "4. Int Formats: int8/16/32/64 two's comp, unsigned, 1's comp, sign-mag.\n"
+                    "5. Bitfield Slice: Extract [High:Low] slices; Popcount, CLZ, CTZ, Parity.\n"
+                    "6. Extended Bitwise: AND, OR, XOR, NOT, SHL, SHR, ROL, ROR, NAND, NOR, XNOR, ANDN, CLMUL, LSB-Iso.\n"
+                    "7. Vintage & Specialized: Reflected Gray code, Packed BCD, Project Echo anchor (0x10199904).\n"
+                    "8. Floats & Fixed-Point: Binary32, Binary16, Bfloat16, and DSP Q-formats (Q8.8, Q16.16, Q0.15).",
                     "KBase Studio - User Guide", MB_OK | MB_ICONINFORMATION);
             }
             break;
@@ -797,10 +1094,10 @@ void __stdcall MainEntry() {
     RegisterClassA(&wc);
     
     DWORD style = (WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX) | WS_CLIPCHILDREN;
-    RECT rc = {0, 0, 900, 600};
+    RECT rc = {0, 0, 915, 610};
     AdjustWindowRect(&rc, style, FALSE);
     
-    HWND hwnd = CreateWindowExA(0, "KBaseApp", "KBase - Universal Base & Bitwise Utility [Press F1 for Help]", style,
+    HWND hwnd = CreateWindowExA(0, "KBaseApp", "KBase - Universal Base & Bitwise Studio [Press F1 for Help]", style,
         CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
         
     ShowWindow(hwnd, SW_SHOW);
@@ -851,6 +1148,22 @@ void __stdcall MainEntry() {
                 }
                 if (msg.wParam == 'S' || msg.wParam == 's') {
                     SendMessageA(hwnd, WM_COMMAND, 22, 0);
+                    continue;
+                }
+                if (msg.wParam == 'G' || msg.wParam == 'g') {
+                    SendMessageA(hwnd, WM_COMMAND, 23, 0);
+                    continue;
+                }
+                if (msg.wParam == 'F' || msg.wParam == 'f') {
+                    SendMessageA(hwnd, WM_COMMAND, 24, 0);
+                    continue;
+                }
+                if (msg.wParam == 'E' || msg.wParam == 'e') {
+                    SendMessageA(hwnd, WM_COMMAND, 25, 0);
+                    continue;
+                }
+                if (msg.wParam == 'K' || msg.wParam == 'k') {
+                    SendMessageA(hwnd, WM_COMMAND, 26, 0);
                     continue;
                 }
             }

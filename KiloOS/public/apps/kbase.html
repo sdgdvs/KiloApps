@@ -648,10 +648,10 @@
     <span>KBase Studio <small style="font-weight:normal; color:var(--text-muted); margin-left:10px; font-size:0.8rem;">(Press 'H' or F1 for help)</small></span>
   </div>
   <nav>
-    <button class="tab-btn active" data-tab="tab-converter"><span class="kbd-key" style="font-size:0.7rem; padding:1px 4px; margin-right:4px;">1</span>⚡ Multi-Base</button>
+    <button class="tab-btn active" data-tab="tab-converter"><span class="kbd-key" style="font-size:0.7rem; padding:1px 4px; margin-right:4px;">1</span>⚡ Multi-Base &amp; BCD</button>
     <button class="tab-btn" data-tab="tab-bitboard"><span class="kbd-key" style="font-size:0.7rem; padding:1px 4px; margin-right:4px;">2</span>🔢 64-Bit Grid &amp; Ops</button>
-    <button class="tab-btn" data-tab="tab-ieee"><span class="kbd-key" style="font-size:0.7rem; padding:1px 4px; margin-right:4px;">3</span>🔬 IEEE-754 Float</button>
-    <button class="tab-btn" data-tab="tab-encodings"><span class="kbd-key" style="font-size:0.7rem; padding:1px 4px; margin-right:4px;">4</span>🎛️ Varint &amp; Bitfields</button>
+    <button class="tab-btn" data-tab="tab-ieee"><span class="kbd-key" style="font-size:0.7rem; padding:1px 4px; margin-right:4px;">3</span>🔬 IEEE-754 &amp; Fixed-Pt</button>
+    <button class="tab-btn" data-tab="tab-encodings"><span class="kbd-key" style="font-size:0.7rem; padding:1px 4px; margin-right:4px;">4</span>🎛️ Varint, Bitfields &amp; Code</button>
     <button class="tab-btn" data-tab="tab-history"><span class="kbd-key" style="font-size:0.7rem; padding:1px 4px; margin-right:4px;">5</span>📜 History &amp; Export</button>
     <button class="btn btn-sm btn-accent" id="btn-help-modal" style="margin-left: 6px;">❓ Help [F1]</button>
   </nav>
@@ -677,6 +677,7 @@
         <button class="preset-chip base-preset" data-val="0x7FFFFFFF">0x7FFFFFFF</button>
         <button class="preset-chip base-preset" data-val="0xFFFFFFFFFFFFFFFF">Max 64-bit</button>
         <button class="preset-chip base-preset" data-val="0x4B696C6F4F5321">"KiloOS!"</button>
+        <button class="preset-chip base-preset" data-val="270113028">0x10199904 (Echo)</button>
       </div>
 
       <div class="grid-2">
@@ -752,6 +753,32 @@
             </div>
           </div>
           <input type="text" id="base-ascii" placeholder="Single char / short text..." autocomplete="off">
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top: 10px;">
+        <div class="input-group">
+          <div class="input-header">
+            <label>Packed BCD (Binary Coded Decimal)</label>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="badge">BCD</span>
+              <button class="btn btn-xs btn-copy-field" data-target="base-bcd" data-label="Packed BCD" title="Copy BCD">📋 Copy</button>
+              <button class="btn btn-xs btn-clear-field" data-target="base-bcd" title="Clear BCD">✕</button>
+            </div>
+          </div>
+          <input type="text" id="base-bcd" placeholder="e.g. 0x42 (nybbles 0-9)" autocomplete="off">
+        </div>
+
+        <div class="input-group">
+          <div class="input-header">
+            <label>Reflected Gray Code</label>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="badge">GRAY</span>
+              <button class="btn btn-xs btn-copy-field" data-target="base-gray" data-label="Gray Code" title="Copy Gray">📋 Copy</button>
+              <button class="btn btn-xs btn-clear-field" data-target="base-gray" title="Clear Gray">✕</button>
+            </div>
+          </div>
+          <input type="text" id="base-gray" placeholder="Gray code result..." autocomplete="off">
         </div>
       </div>
     </div>
@@ -842,6 +869,9 @@
         <button class="btn" id="bb-ror">Rotate Right (ROR)</button>
         <button class="btn" id="bb-rev">Reverse Bits</button>
         <button class="btn" id="bb-byteswap">Byte Swap (Endianness)</button>
+        <button class="btn btn-accent" id="bb-swap-nybbles">Swap Nybbles</button>
+        <button class="btn btn-accent" id="bb-isolate-lsb">Isolate LSB (x &amp; -x)</button>
+        <button class="btn btn-accent" id="bb-clear-lsb">Clear LSB (x &amp; (x-1))</button>
       </div>
     </div>
 
@@ -863,11 +893,16 @@
         <button class="btn btn-accent" data-op="OR">A | B (OR)</button>
         <button class="btn btn-accent" data-op="XOR">A ^ B (XOR)</button>
         <button class="btn" data-op="NOT">~A (NOT)</button>
+        <button class="btn" data-op="NAND">NAND (~(A &amp; B))</button>
+        <button class="btn" data-op="NOR">NOR (~(A | B))</button>
+        <button class="btn" data-op="XNOR">XNOR (~(A ^ B))</button>
+        <button class="btn" data-op="ANDN">AND-NOT (A &amp; ~B)</button>
         <button class="btn" data-op="SHL">A &lt;&lt; B (SHL)</button>
         <button class="btn" data-op="SHR">A &gt;&gt;&gt; B (SHR Logical)</button>
         <button class="btn" data-op="SAR">A &gt;&gt; B (SAR Arith)</button>
         <button class="btn" data-op="ROL">A ROL B</button>
         <button class="btn" data-op="ROR">A ROR B</button>
+        <button class="btn" data-op="CLMUL">A CLMUL B</button>
       </div>
 
       <table class="matrix-table">
@@ -995,6 +1030,97 @@
         </div>
       </div>
     </div>
+
+    <!-- Half-Precision 16-Bit (FP16 / binary16) -->
+    <div class="card">
+      <div class="card-title">
+        <span>16-Bit Half Precision (FP16 / binary16)</span>
+        <span class="badge" id="fp16-hex">0x4248</span>
+      </div>
+      <div class="ieee-breakdown">
+        <div class="ieee-strip">
+          <div class="ieee-part part-sign" id="fp16-sign-strip" style="flex: 1;" title="Sign Bit">S</div>
+          <div class="ieee-part part-exp" id="fp16-exp-strip" style="flex: 5;" title="Exponent Bits">EXP (5-bit)</div>
+          <div class="ieee-part part-mantissa" id="fp16-mant-strip" style="flex: 10;" title="Mantissa Bits">MANTISSA (10-bit)</div>
+        </div>
+
+        <div class="grid-2" style="font-family: var(--font-mono); font-size: 0.9rem;">
+          <div>
+            <p><strong>Sign Bit:</strong> <span id="fp16-sign-val" style="color:var(--accent-pink)">0</span></p>
+            <p><strong>Biased Exponent:</strong> <span id="fp16-exp-val" style="color:var(--accent-cyan)">16 (0b10000)</span></p>
+            <p><strong>Unbiased Exponent (E - 15):</strong> <span id="fp16-exp-unbiased">1</span></p>
+          </div>
+          <div>
+            <p><strong>Mantissa (Fraction):</strong> <span id="fp16-mant-val" style="color:var(--accent-amber)">0.5703125 (0x248)</span></p>
+            <p><strong>Exact Reconstructed:</strong> <span id="fp16-reconstructed" style="color:var(--accent-green)">3.140625</span></p>
+            <p><strong>Formula:</strong> <span id="fp16-formula" style="font-size:0.8rem; color:var(--text-muted)">(-1)^0 × 2^1 × 1.5703125</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Brain Floating Point 16-Bit (Bfloat16) -->
+    <div class="card">
+      <div class="card-title">
+        <span>16-Bit Brain Floating Point (Bfloat16 / Neural)</span>
+        <span class="badge" id="bf16-hex">0x4049</span>
+      </div>
+      <div class="ieee-breakdown">
+        <div class="ieee-strip">
+          <div class="ieee-part part-sign" id="bf16-sign-strip" style="flex: 1;" title="Sign Bit">S</div>
+          <div class="ieee-part part-exp" id="bf16-exp-strip" style="flex: 8;" title="Exponent Bits">EXP (8-bit)</div>
+          <div class="ieee-part part-mantissa" id="bf16-mant-strip" style="flex: 7;" title="Mantissa Bits">MANT (7)</div>
+        </div>
+
+        <div class="grid-2" style="font-family: var(--font-mono); font-size: 0.9rem;">
+          <div>
+            <p><strong>Sign Bit:</strong> <span id="bf16-sign-val" style="color:var(--accent-pink)">0</span></p>
+            <p><strong>Biased Exponent:</strong> <span id="bf16-exp-val" style="color:var(--accent-cyan)">128</span></p>
+            <p><strong>Unbiased Exponent (E - 127):</strong> <span id="bf16-exp-unbiased">1</span></p>
+          </div>
+          <div>
+            <p><strong>Mantissa (Fraction):</strong> <span id="bf16-mant-val" style="color:var(--accent-amber)">73 / 128 (0.5703)</span></p>
+            <p><strong>Exact Reconstructed:</strong> <span id="bf16-reconstructed" style="color:var(--accent-green)">3.140625</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fixed-Point Q-Format Inspector -->
+    <div class="card">
+      <div class="card-title">
+        <span>Fixed-Point Representation Suite (Q-Format DSP / Embedded)</span>
+        <span class="badge">Fixed-Point</span>
+      </div>
+      <div class="grid-2" style="margin-bottom: 12px;">
+        <div class="input-group">
+          <label>Target Real Value</label>
+          <input type="text" id="q-real-input" value="3.14159" placeholder="e.g. 3.14159 or -0.75">
+        </div>
+        <div class="input-group">
+          <label>Preset Q-Formats</label>
+          <div class="btn-group">
+            <button class="btn btn-sm q-preset" data-val="1.5">1.5</button>
+            <button class="btn btn-sm q-preset" data-val="-0.75">-0.75</button>
+            <button class="btn btn-sm q-preset" data-val="0.125">0.125</button>
+            <button class="btn btn-sm q-preset" data-val="127.996">127.996</button>
+          </div>
+        </div>
+      </div>
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th>Q-Format</th>
+            <th>Sign / Total</th>
+            <th>Raw Hex</th>
+            <th>Raw Integer</th>
+            <th>Real Decimal Value</th>
+            <th>Resolution (LSB Step)</th>
+          </tr>
+        </thead>
+        <tbody id="q-format-body"></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- TAB: ENCODINGS, VARINT & BITFIELDS -->
@@ -1025,11 +1151,13 @@
         <div style="background:#090c13; padding:12px; border-radius:6px; border:1px solid var(--card-border);">
           <p style="margin-bottom:6px;"><strong>ULEB128 (Unsigned):</strong> <span id="res-uleb-bytes" style="color:var(--accent-cyan); font-weight:bold;">E5 8E 26</span> (<span id="res-uleb-count">3</span> bytes)</p>
           <p style="margin-bottom:6px;"><strong>SLEB128 (Signed):</strong> <span id="res-sleb-bytes" style="color:var(--accent-green); font-weight:bold;">E5 8E 26</span></p>
+          <p style="margin-bottom:6px;"><strong>MIDI VLQ (Big-Endian):</strong> <span id="res-vlq-bytes" style="color:var(--accent-pink); font-weight:bold;">A6 0C 65</span> (<span id="res-vlq-count">3</span> bytes)</p>
           <p><strong>Protobuf ZigZag:</strong> <span id="res-zigzag-val" style="color:var(--accent-amber);">1248970</span> (<span id="res-zigzag-bytes">AA 9D 4C</span>)</p>
         </div>
         <div style="background:#090c13; padding:12px; border-radius:6px; border:1px solid var(--card-border);">
           <p style="margin-bottom:6px;"><strong>Decoded Unsigned:</strong> <span id="res-dec-unsigned" style="color:var(--accent-cyan); font-weight:bold;">624485</span></p>
           <p style="margin-bottom:6px;"><strong>Decoded Signed (SLEB):</strong> <span id="res-dec-signed" style="color:var(--accent-green); font-weight:bold;">624485</span></p>
+          <p style="margin-bottom:6px;"><strong>Decoded MIDI VLQ:</strong> <span id="res-dec-vlq" style="color:var(--accent-pink); font-weight:bold;">624485</span></p>
           <p><strong>Decoded ZigZag:</strong> <span id="res-dec-zigzag" style="color:var(--accent-amber);">312242</span></p>
         </div>
       </div>
@@ -1107,6 +1235,18 @@
         </div>
       </div>
     </div>
+
+    <!-- Multi-Language Code Snippet Generator -->
+    <div class="card">
+      <div class="card-title">
+        <span>Multi-Language Code Snippet Generator</span>
+        <button class="btn btn-sm btn-accent" id="btn-copy-code" title="Copy generated code snippet">📋 Copy Code Snippet</button>
+      </div>
+      <div class="input-group">
+        <label>Generated Definition (C/C++, Rust, Python, NASM x86_64)</label>
+        <textarea id="code-snippet-output" readonly style="font-family:var(--font-mono); font-size:0.85rem; height: 160px;"></textarea>
+      </div>
+    </div>
   </div>
 
   <!-- TAB 5: HISTORY LOG & EXPORT -->
@@ -1118,6 +1258,7 @@
           <button class="btn btn-sm" id="btn-clear-history">Clear History</button>
           <button class="btn btn-sm btn-accent" id="btn-copy-history" title="Copy History as TSV table to clipboard">📋 Copy Table [Alt+C]</button>
           <button class="btn btn-sm btn-accent" id="btn-export-csv">Export CSV</button>
+          <button class="btn btn-sm btn-accent" id="btn-export-md">Export Markdown</button>
           <button class="btn btn-sm btn-primary" id="btn-export-json">Export JSON</button>
         </div>
       </div>
@@ -1172,11 +1313,11 @@
       <div>
         <div class="modal-section-title">💡 Feature Highlights</div>
         <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem; color: var(--text-muted);">
-          <li><strong style="color:var(--accent-cyan);">Multi-Base Live Converter:</strong> Real-time 64-bit synchronization between Binary (0b), Octal (0o), Decimal, Hex (0x), Custom base (2-36), and ASCII/Unicode characters with 1-click [📋 Copy] and [✕ Clear] buttons for every field.</li>
-          <li><strong style="color:var(--accent-green);">64-Bit Toggle Grid &amp; Ops:</strong> Interactive bit manipulation board with instant bit patterns (All 0s, All 1s, Alternating 0xAA/0x55, Sign Bit, Low Bit) and bitwise AND/OR/XOR/NOT/SAR operations.</li>
-          <li><strong style="color:var(--accent-amber);">IEEE-754 Inspector:</strong> Visual single (32-bit float) and double (64-bit double) breakdown with color-coded Sign, Exponent, and Mantissa bits and exact reconstruction formulas.</li>
-          <li><strong style="color:var(--accent-purple);">Varint &amp; Bitfields:</strong> LEB128 / SLEB128 / Protobuf ZigZag encoder/decoder, multi-width (int8..64) two's complement inspector, and bitfield slicer with Popcount/CLZ/CTZ diagnostics.</li>
-          <li><strong style="color:var(--text-main);">Export &amp; History:</strong> Automatic calculation logging with instant TSV clipboard copy, CSV, and JSON export.</li>
+          <li><strong style="color:var(--accent-cyan);">Multi-Base, BCD &amp; Gray:</strong> Real-time 64-bit synchronization between Binary (0b), Octal (0o), Decimal, Hex (0x), Custom base (2-36), Packed BCD (nybbles 0-9), and Reflected Gray Code with 1-click [📋 Copy] and [✕ Clear] buttons.</li>
+          <li><strong style="color:var(--accent-green);">64-Bit Toggle Grid &amp; Ops:</strong> Interactive bit manipulation board with instant patterns, Nybble Swap, LSB isolation/clear, and extended bitwise ops: AND, OR, XOR, NOT, NAND, NOR, XNOR, AND-NOT (`A &amp; ~B`), SHL, SHR, SAR, ROL, ROR, and Carryless CLMUL.</li>
+          <li><strong style="color:var(--accent-amber);">IEEE-754 &amp; Fixed-Point Suite:</strong> Visual single (FP32), double (FP64), half-precision (FP16 / binary16), and neural (Bfloat16) breakdown with exact formulas, plus DSP fixed-point Q-format inspector (Q8.8, Q16.16, Q0.15, Q7.8).</li>
+          <li><strong style="color:var(--accent-purple);">Varint, Bitfields &amp; Code:</strong> LEB128 / SLEB128 / Protobuf ZigZag / MIDI VLQ encoder &amp; decoder, multi-width two's complement inspector, bitfield slicer with Popcount/CLZ/CTZ, and multi-language code generator (C/C++, Rust, Python, NASM).</li>
+          <li><strong style="color:var(--text-main);">Export &amp; History:</strong> Automatic calculation logging with instant TSV clipboard copy, CSV, Markdown table, and JSON export.</li>
         </ul>
       </div>
     </div>
@@ -1313,6 +1454,8 @@
   const elHex = document.getElementById('base-hex');
   const elCustom = document.getElementById('base-custom');
   const elAscii = document.getElementById('base-ascii');
+  const elBcd = document.getElementById('base-bcd');
+  const elGray = document.getElementById('base-gray');
   const customRange = document.getElementById('custom-base-range');
   const customLabel = document.getElementById('custom-base-label');
 
@@ -1354,6 +1497,8 @@
       if (sourceEl !== elHex) elHex.value = '';
       if (sourceEl !== elCustom) elCustom.value = '';
       if (sourceEl !== elAscii) elAscii.value = '';
+      if (sourceEl !== elBcd && elBcd) elBcd.value = '';
+      if (sourceEl !== elGray && elGray) elGray.value = '';
       return;
     }
 
@@ -1373,6 +1518,24 @@
       } catch(e) {
         elAscii.value = '';
       }
+    }
+
+    if (elBcd && sourceEl !== elBcd) {
+      if (bigVal >= 0n) {
+        elBcd.value = '0x' + bigVal.toString(10);
+      } else {
+        elBcd.value = '[Negative: Not BCD]';
+      }
+    }
+
+    if (elGray && sourceEl !== elGray) {
+      const u64 = bigVal & 0xFFFFFFFFFFFFFFFFn;
+      const gray = u64 ^ (u64 >> 1n);
+      elGray.value = '0x' + gray.toString(16).toUpperCase();
+    }
+
+    if (typeof updateCodeSnippet === 'function') {
+      updateCodeSnippet(bigVal);
     }
   }
 
@@ -1396,6 +1559,37 @@
   elDec.addEventListener('input', (e) => handleBaseInput(e, 10));
   elHex.addEventListener('input', (e) => handleBaseInput(e, 16));
   elCustom.addEventListener('input', (e) => handleBaseInput(e, parseInt(customRange.value, 10)));
+
+  if (elBcd) {
+    elBcd.addEventListener('input', (e) => {
+      let val = e.target.value.trim();
+      if (!val) { updateBasesFromValue(null, e.target); return; }
+      if (val.toLowerCase().startsWith('0x')) val = val.substring(2);
+      if (/^[0-9]+$/.test(val)) {
+        let bigVal = BigInt(val);
+        updateBasesFromValue(bigVal, e.target);
+        bitboardVal = bigVal & 0xFFFFFFFFFFFFFFFFn;
+        renderBitboard();
+      }
+    });
+  }
+
+  if (elGray) {
+    elGray.addEventListener('input', (e) => {
+      let val = e.target.value.trim();
+      if (!val) { updateBasesFromValue(null, e.target); return; }
+      let grayVal = parseOpVal(val);
+      let bin = 0n;
+      let temp = grayVal;
+      while (temp > 0n) {
+        bin ^= temp;
+        temp >>= 1n;
+      }
+      updateBasesFromValue(bin, e.target);
+      bitboardVal = bin & 0xFFFFFFFFFFFFFFFFn;
+      renderBitboard();
+    });
+  }
 
   customRange.addEventListener('input', () => {
     const val = parseBigIntFromBase(elDec.value, 10);
@@ -1643,6 +1837,43 @@
     updateBasesFromValue(bitboardVal, null);
   };
 
+  const btnSwapNybbles = document.getElementById('bb-swap-nybbles');
+  if (btnSwapNybbles) {
+    btnSwapNybbles.onclick = () => {
+      let v = bitboardVal;
+      let swapped = 0n;
+      for (let i = 0n; i < 8n; i++) {
+        let byte = (v >> (i * 8n)) & 0xFFn;
+        let swappedByte = ((byte & 0x0Fn) << 4n) | ((byte & 0xF0n) >> 4n);
+        swapped |= (swappedByte << (i * 8n));
+      }
+      bitboardVal = swapped;
+      renderBitboard();
+      updateBasesFromValue(bitboardVal, null);
+      showToast('Swapped nybbles across all bytes');
+    };
+  }
+
+  const btnIsolateLsb = document.getElementById('bb-isolate-lsb');
+  if (btnIsolateLsb) {
+    btnIsolateLsb.onclick = () => {
+      bitboardVal = (bitboardVal & (-bitboardVal)) & 0xFFFFFFFFFFFFFFFFn;
+      renderBitboard();
+      updateBasesFromValue(bitboardVal, null);
+      showToast('Isolated lowest set bit (x & -x)');
+    };
+  }
+
+  const btnClearLsb = document.getElementById('bb-clear-lsb');
+  if (btnClearLsb) {
+    btnClearLsb.onclick = () => {
+      bitboardVal = (bitboardVal & (bitboardVal - 1n)) & 0xFFFFFFFFFFFFFFFFn;
+      renderBitboard();
+      updateBasesFromValue(bitboardVal, null);
+      showToast('Cleared lowest set bit (x & (x - 1))');
+    };
+  }
+
   // Bitboard Presets & Copy Listeners
   document.querySelectorAll('.bb-preset').forEach(btn => {
     btn.onclick = () => {
@@ -1719,6 +1950,10 @@
       case 'OR':  res = valA | valB; break;
       case 'XOR': res = valA ^ valB; break;
       case 'NOT': res = ~valA & 0xFFFFFFFFFFFFFFFFn; break;
+      case 'NAND': res = ~(valA & valB) & 0xFFFFFFFFFFFFFFFFn; break;
+      case 'NOR':  res = ~(valA | valB) & 0xFFFFFFFFFFFFFFFFn; break;
+      case 'XNOR': res = ~(valA ^ valB) & 0xFFFFFFFFFFFFFFFFn; break;
+      case 'ANDN': res = (valA & ~valB) & 0xFFFFFFFFFFFFFFFFn; break;
       case 'SHL': res = (valA << (valB & 63n)) & 0xFFFFFFFFFFFFFFFFn; break;
       case 'SHR': res = (valA >> (valB & 63n)) & 0xFFFFFFFFFFFFFFFFn; break;
       case 'SAR': 
@@ -1734,6 +1969,16 @@
       case 'ROR': {
         const cnt = valB & 63n;
         res = ((valA >> cnt) | (valA << (64n - cnt))) & 0xFFFFFFFFFFFFFFFFn;
+        break;
+      }
+      case 'CLMUL': {
+        let c = 0n;
+        for (let i = 0n; i < 64n; i++) {
+          if ((valB & (1n << i)) !== 0n) {
+            c ^= (valA << i);
+          }
+        }
+        res = c & 0xFFFFFFFFFFFFFFFFn;
         break;
       }
     }
@@ -1832,13 +2077,134 @@
     document.getElementById('fp64-exp-val').textContent = `${exp64} (0b${exp64.toString(2).padStart(11, '0')})`;
     document.getElementById('fp64-exp-unbiased').textContent = unbiased64;
 
-    const mant64 = bigBits64 & 0x000FFFFFFFFFFFFFn;
-    const mantFrac64 = Number(mant64) / Math.pow(2, 52);
-    document.getElementById('fp64-mant-val').textContent = mantFrac64.toFixed(12);
-    document.getElementById('fp64-reconstructed').textContent = view64.getFloat64(0, false);
+    // 16-Bit Half Precision Float (FP16 / binary16) Breakdown
+    let fp16Sign = sign32;
+    let fp16Exp = 0;
+    let fp16Mant = 0;
+    let fp16Reconstructed = 0;
+    let fp16Formula = '';
+
+    if (exp32 === 255) {
+      fp16Exp = 31;
+      fp16Mant = mant32 ? 0x200 : 0;
+      fp16Reconstructed = mant32 ? NaN : (fp16Sign ? -Infinity : Infinity);
+      fp16Formula = isNaN(fp16Reconstructed) ? 'NaN' : (fp16Sign ? '-Infinity' : '+Infinity');
+    } else if (exp32 !== 0) {
+      const unbiased = exp32 - 127;
+      const newExp = unbiased + 15;
+      if (newExp >= 31) {
+        fp16Exp = 31; fp16Mant = 0;
+        fp16Reconstructed = fp16Sign ? -Infinity : Infinity;
+        fp16Formula = 'Overflow -> ' + (fp16Sign ? '-Infinity' : '+Infinity');
+      } else if (newExp <= 0) {
+        if (10 + newExp >= 0) {
+          fp16Exp = 0;
+          fp16Mant = (mant32 | 0x800000) >> (14 - newExp);
+          fp16Reconstructed = (fp16Sign ? -1 : 1) * Math.pow(2, -14) * (fp16Mant / 1024);
+          fp16Formula = `(-1)^${fp16Sign} × 2^(-14) × (${fp16Mant}/1024) [subnormal]`;
+        } else {
+          fp16Exp = 0; fp16Mant = 0;
+          fp16Reconstructed = fp16Sign ? -0 : 0;
+          fp16Formula = 'Underflow -> ' + (fp16Sign ? '-0' : '+0');
+        }
+      } else {
+        fp16Exp = newExp;
+        fp16Mant = mant32 >> 13;
+        fp16Reconstructed = (fp16Sign ? -1 : 1) * Math.pow(2, fp16Exp - 15) * (1 + fp16Mant / 1024);
+        fp16Formula = `(-1)^${fp16Sign} × 2^(${fp16Exp - 15}) × (1 + ${fp16Mant}/1024)`;
+      }
+    } else {
+      fp16Exp = 0; fp16Mant = 0;
+      fp16Reconstructed = fp16Sign ? -0 : 0;
+      fp16Formula = `(-1)^${fp16Sign} × 0 = ${fp16Sign ? '-0' : '+0'}`;
+    }
+
+    const fp16Bits = ((fp16Sign << 15) | (fp16Exp << 10) | (fp16Mant & 0x3FF)) & 0xFFFF;
+    const fp16Bin = fp16Bits.toString(2).padStart(16, '0');
+    const elFp16Hex = document.getElementById('fp16-hex');
+    if (elFp16Hex) {
+      elFp16Hex.textContent = '0x' + fp16Bits.toString(16).padStart(4, '0').toUpperCase();
+      document.getElementById('fp16-sign-strip').textContent = fp16Bin[0];
+      document.getElementById('fp16-exp-strip').textContent = fp16Bin.substring(1, 6);
+      document.getElementById('fp16-mant-strip').textContent = fp16Bin.substring(6);
+      document.getElementById('fp16-sign-val').textContent = `${fp16Sign} (${fp16Sign === 1 ? '- negative' : '+ positive'})`;
+      document.getElementById('fp16-exp-val').textContent = `${fp16Exp} (0b${fp16Exp.toString(2).padStart(5, '0')})`;
+      document.getElementById('fp16-exp-unbiased').textContent = fp16Exp === 0 ? -14 : fp16Exp - 15;
+      document.getElementById('fp16-mant-val').textContent = (fp16Mant / 1024).toFixed(5) + ` (0x${fp16Mant.toString(16).toUpperCase()})`;
+      document.getElementById('fp16-reconstructed').textContent = fp16Reconstructed;
+      document.getElementById('fp16-formula').textContent = fp16Formula;
+    }
+
+    // 16-Bit Brain Floating Point (Bfloat16)
+    const bf16Bits = (bits32 >>> 16) & 0xFFFF;
+    const bf16Bin = bf16Bits.toString(2).padStart(16, '0');
+    const bf16Sign = (bf16Bits >>> 15) & 1;
+    const bf16Exp = (bf16Bits >>> 7) & 0xFF;
+    const bf16Mant = bf16Bits & 0x7F;
+    const bf16Buf = new ArrayBuffer(4);
+    const bf16View = new DataView(bf16Buf);
+    bf16View.setUint32(0, bf16Bits << 16, false);
+    const bf16Reconstructed = bf16View.getFloat32(0, false);
+    const elBf16Hex = document.getElementById('bf16-hex');
+    if (elBf16Hex) {
+      elBf16Hex.textContent = '0x' + bf16Bits.toString(16).padStart(4, '0').toUpperCase();
+      document.getElementById('bf16-sign-strip').textContent = bf16Bin[0];
+      document.getElementById('bf16-exp-strip').textContent = bf16Bin.substring(1, 9);
+      document.getElementById('bf16-mant-strip').textContent = bf16Bin.substring(9);
+      document.getElementById('bf16-sign-val').textContent = `${bf16Sign}`;
+      document.getElementById('bf16-exp-val').textContent = `${bf16Exp}`;
+      document.getElementById('bf16-exp-unbiased').textContent = bf16Exp === 0 ? -126 : bf16Exp - 127;
+      document.getElementById('bf16-mant-val').textContent = `${bf16Mant} / 128 (${(bf16Mant / 128).toFixed(4)})`;
+      document.getElementById('bf16-reconstructed').textContent = bf16Reconstructed;
+    }
+
+    // Fixed-point Q-Format Suite
+    renderFixedPoint(false);
 
     if (recordHistory) {
-      addHistory('IEEE-754 Inspect', rawVal, `Float32: 0x${bits32.toString(16).toUpperCase()}`);
+      addHistory('IEEE-754 Inspect', rawVal, `Float32: 0x${bits32.toString(16).toUpperCase()} | FP16: 0x${fp16Bits.toString(16).toUpperCase()}`);
+    }
+  }
+
+  function renderFixedPoint(recordHistory = false) {
+    const qInput = document.getElementById('q-real-input');
+    const tbody = document.getElementById('q-format-body');
+    if (!tbody || !qInput) return;
+    let num = parseFloat(qInput.value.trim());
+    if (isNaN(num)) num = 0;
+
+    const formats = [
+      { name: 'Q8.8', total: 16, frac: 8, signed: true },
+      { name: 'Q16.16', total: 32, frac: 16, signed: true },
+      { name: 'Q0.15', total: 16, frac: 15, signed: true },
+      { name: 'Q7.8', total: 16, frac: 8, signed: false },
+      { name: 'Q32.32', total: 64, frac: 32, signed: true }
+    ];
+
+    tbody.innerHTML = formats.map(fmt => {
+      const scale = Math.pow(2, fmt.frac);
+      let rawInt = Math.round(num * scale);
+      const maxVal = fmt.signed ? (Math.pow(2, fmt.total - 1) - 1) : (Math.pow(2, fmt.total) - 1);
+      const minVal = fmt.signed ? -Math.pow(2, fmt.total - 1) : 0;
+      const clamped = Math.max(minVal, Math.min(maxVal, rawInt));
+      const realVal = clamped / scale;
+      const hex = '0x' + (BigInt.asUintN(fmt.total, BigInt(clamped))).toString(16).padStart(fmt.total / 4, '0').toUpperCase();
+      const res = Math.pow(2, -fmt.frac);
+
+      return `
+        <tr>
+          <td><strong>${fmt.name}</strong></td>
+          <td><span class="badge">${fmt.signed ? 'Signed' : 'Unsigned'} ${fmt.total}-bit</span></td>
+          <td style="color:var(--accent-cyan); font-family:var(--font-mono);">${hex}</td>
+          <td style="color:var(--accent-green); font-family:var(--font-mono);">${clamped}</td>
+          <td style="color:var(--text-main); font-family:var(--font-mono);">${realVal.toFixed(6)}</td>
+          <td style="color:var(--accent-amber); font-family:var(--font-mono);">&plusmn;${res.toExponential(3)}</td>
+        </tr>
+      `;
+    }).join('');
+
+    if (recordHistory) {
+      addHistory('Fixed-Point Q-Format', num, `Q16.16: ${tbody.children[1]?.children[2]?.textContent || ''}`);
     }
   }
 
@@ -1878,6 +2244,29 @@
       bytes.push(byte);
     }
     return bytes;
+  }
+
+  function encodeMIDI_VLQ(val) {
+    let v = BigInt.asUintN(64, BigInt(val));
+    if (v === 0n) return [0];
+    const bytes = [];
+    bytes.push(Number(v & 0x7Fn));
+    v >>= 7n;
+    while (v > 0n) {
+      bytes.push(Number((v & 0x7Fn) | 0x80n));
+      v >>= 7n;
+    }
+    return bytes.reverse();
+  }
+
+  function decodeMIDI_VLQ(bytes) {
+    let res = 0n;
+    for (let i = 0; i < bytes.length; i++) {
+      const b = BigInt(bytes[i]);
+      res = (res << 7n) | (b & 0x7Fn);
+      if ((b & 0x80n) === 0n) break;
+    }
+    return res;
   }
 
   function encodeZigZag64(n) {
@@ -1951,6 +2340,39 @@
     }).join('');
   }
 
+  function updateCodeSnippet(bigVal) {
+    const el = document.getElementById('code-snippet-output');
+    if (!el) return;
+    const u64 = BigInt.asUintN(64, bigVal);
+    const hex = '0x' + u64.toString(16).padStart(16, '0').toUpperCase();
+    const hexShort = '0x' + u64.toString(16).toUpperCase();
+    const bin = u64.toString(2);
+
+    el.value = `// --- C / C++ 64-Bit Definition ---
+#define KBASE_VALUE ${hex}ULL
+#define KBASE_HAS_FLAG(val, flag) (((val) & (flag)) == (flag))
+
+struct DiagnosticFlags {
+    unsigned int lo_byte  : 8;   // Bits 0..7
+    unsigned int mid_word : 16;  // Bits 8..23
+    unsigned int hi_word  : 16;  // Bits 24..39
+    unsigned int reserved : 24;  // Bits 40..63
+};
+
+// --- Rust Constant & Byte Array ---
+pub const KBASE_VALUE: u64 = ${hexShort};
+pub const KBASE_BITS: u64 = 0b${bin};
+pub const KBASE_LE_BYTES: [u8; 8] = [${Array.from({length: 8}, (_, i) => '0x' + ((u64 >> BigInt(i*8)) & 0xFFn).toString(16).padStart(2, '0').toUpperCase()).join(', ')}];
+
+// --- Python 3.10+ Definition ---
+KBASE_VALUE = ${hexShort}
+IS_ACTIVE = lambda v: bool(v & KBASE_VALUE)
+
+// --- NASM x86_64 Assembly ---
+KBASE_VALUE dq ${hexShort}
+`;
+  }
+
   function runVarintEncode(recordHistory = false) {
     const raw = varintValInput.value.trim();
     let val = parseOpVal(raw);
@@ -1960,16 +2382,22 @@
 
     const uleb = encodeULEB128(val);
     const sleb = encodeSLEB128(val);
+    const vlq = encodeMIDI_VLQ(val);
     const zzVal = encodeZigZag64(val);
     const zzBytes = encodeULEB128(zzVal);
 
     const ulebHex = uleb.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
     const slebHex = sleb.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+    const vlqHex = vlq.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
     const zzHex = zzBytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
 
     document.getElementById('res-uleb-bytes').textContent = ulebHex;
     document.getElementById('res-uleb-count').textContent = uleb.length;
     document.getElementById('res-sleb-bytes').textContent = slebHex;
+    const elVlqBytes = document.getElementById('res-vlq-bytes');
+    if (elVlqBytes) elVlqBytes.textContent = vlqHex;
+    const elVlqCount = document.getElementById('res-vlq-count');
+    if (elVlqCount) elVlqCount.textContent = vlq.length;
     document.getElementById('res-zigzag-val').textContent = zzVal.toString(10);
     document.getElementById('res-zigzag-bytes').textContent = zzHex;
 
@@ -1979,12 +2407,15 @@
     // Update decoded preview
     document.getElementById('res-dec-unsigned').textContent = decodeULEB128Bytes(uleb).toString(10);
     document.getElementById('res-dec-signed').textContent = decodeSLEB128Bytes(sleb).toString(10);
+    const elDecVlq = document.getElementById('res-dec-vlq');
+    if (elDecVlq) elDecVlq.textContent = decodeMIDI_VLQ(vlq).toString(10);
     document.getElementById('res-dec-zigzag').textContent = decodeZigZag64(decodeULEB128Bytes(zzBytes)).toString(10);
 
     updateMultiWidthInspector(val);
     updateBitfieldSlicer(val);
+    updateCodeSnippet(val);
     if (recordHistory) {
-      addHistory('Varint Encode', raw, `ULEB: ${ulebHex} | SLEB: ${slebHex}`);
+      addHistory('Varint Encode', raw, `ULEB: ${ulebHex} | VLQ: ${vlqHex}`);
     }
   }
 
@@ -1995,15 +2426,19 @@
 
     const ulebDec = decodeULEB128Bytes(bytes);
     const slebDec = decodeSLEB128Bytes(bytes);
+    const vlqDec = decodeMIDI_VLQ(bytes);
     const zzDec = decodeZigZag64(ulebDec);
 
     document.getElementById('res-dec-unsigned').textContent = ulebDec.toString(10) + ` (0x${ulebDec.toString(16).toUpperCase()})`;
     document.getElementById('res-dec-signed').textContent = slebDec.toString(10);
+    const elDecVlq = document.getElementById('res-dec-vlq');
+    if (elDecVlq) elDecVlq.textContent = vlqDec.toString(10);
     document.getElementById('res-dec-zigzag').textContent = zzDec.toString(10);
 
     renderVarintBreakdown(bytes);
     updateMultiWidthInspector(ulebDec);
     updateBitfieldSlicer(ulebDec);
+    updateCodeSnippet(ulebDec);
     if (recordHistory) {
       addHistory('Varint Decode', hexStr, `Unsigned: ${ulebDec}, Signed: ${slebDec}`);
     }
@@ -2201,6 +2636,40 @@
         inspectIEEE754(true);
       };
     });
+
+    const qRealInput = document.getElementById('q-real-input');
+    if (qRealInput) {
+      qRealInput.addEventListener('input', () => renderFixedPoint(false));
+    }
+    document.querySelectorAll('.q-preset').forEach(btn => {
+      btn.onclick = () => {
+        if (qRealInput) qRealInput.value = btn.dataset.val;
+        renderFixedPoint(true);
+      };
+    });
+
+    const btnExportMd = document.getElementById('btn-export-md');
+    if (btnExportMd) {
+      btnExportMd.onclick = () => {
+        if (historyLog.length === 0) {
+          showToast('History is empty!');
+          return;
+        }
+        let md = '| Timestamp | Category | Input | Output |\n|---|---|---|---|\n';
+        historyLog.forEach(row => {
+          md += `| ${row.timestamp} | ${row.category} | \`${row.input.replace(/\|/g, '\\|')}\` | \`${row.output.replace(/\|/g, '\\|')}\` |\n`;
+        });
+        downloadFile(md, 'kbase_history.md', 'text/markdown');
+      };
+    }
+
+    const btnCopyCode = document.getElementById('btn-copy-code');
+    if (btnCopyCode) {
+      btnCopyCode.onclick = () => {
+        const snippet = document.getElementById('code-snippet-output')?.value;
+        copyToClipboard(snippet, 'Code Snippet');
+      };
+    }
 
     const toastDismiss = document.getElementById('toast-dismiss');
     if (toastDismiss) {
