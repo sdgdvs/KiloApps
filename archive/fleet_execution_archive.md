@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-21T11:55:00Z — kilo-graphics: KAlchemy**
+  - Status: PASS ✅ (100% recipe reachability graph complete, tier-adaptive chromatic particles, visual polish, balance).
+  - Synthesis Graph Parity: Added missing `cosmos + energy -> time` recipe in HTML, unblocking Time, Eternity, Chrono Crystal, and Astra-Chronos core.
+  - Tier-Adaptive Visual FX: Implemented 5-layer chromatic prismatic shockwaves & stars for Mythic Tier 6 discoveries and solar double rings for Tier 5.
+  - Crucible Resonance & UI: Added dynamic tier-responsive border glow and box-shadow to slots with reactive aura on valid recipe placement.
+  - Audio & Celebratory Feedback: Added distinct Mythic toasts, fanfare audio, and journal logging for Magnum Opus tier transmutations.
+  - Verification: Clean MSVC Native C build (69.0 KB); Vite web build clean (75.89 KB); 12 automated verification suites passed cleanly.
+
 - **2026-09-21T09:50:00Z — kilo-usability: KPomodoro**
   - Status: PASS ✅ (HiDPI canvas scaling, responsive layout breakpoints, Help & hotkey ergonomics, Win32 WM_SIZE parity).
   - HiDPI Canvas Scaling: Wired window.devicePixelRatio and dynamic container width scaling to hourly focus activity chart.

@@ -13,6 +13,8 @@
 #define IDC_BTN_EXPORT   108
 #define IDC_BTN_THEME    109
 #define IDC_BTN_HELP     110
+#define IDC_BTN_SAVE     111
+#define IDC_BTN_LOAD     112
 
 #define MAX_TABS 8
 #define MAX_HISTORY 50
@@ -169,7 +171,7 @@ static TermTheme g_themes[] = {
 static int g_currentTheme = 0;
 
 HWND hTab, hOut, hIn, hPrompt, hStatus;
-HWND hBtnNewTab, hBtnCloseTab, hBtnClear, hBtnExport, hBtnTheme, hBtnHelp;
+HWND hBtnNewTab, hBtnCloseTab, hBtnClear, hBtnExport, hBtnTheme, hBtnHelp, hBtnSave, hBtnLoad;
 HWND g_hMainWnd = NULL;
 WNDPROC oldEditProc;
 WNDPROC oldOutProc;
@@ -192,6 +194,11 @@ void UpdateAppTitle();
 void ApplyTheme(int themeIdx);
 void ProcessCommandLine(const char* fullLine);
 void ProcessSingleCommand(const char* rawCmd);
+BOOL SaveStateToFile(const char* filename);
+BOOL LoadStateFromFile(const char* filename);
+BOOL HasSavedState(const char* filename);
+BOOL HasSeenTutorial(void);
+void MarkTutorialSeen(void);
 
 TabSession g_tabs[MAX_TABS];
 int g_tabCount = 0;
@@ -286,6 +293,8 @@ void ShowHelpDialog(HWND hwnd) {
         "KTerm - Advanced Terminal Quick Reference\r\n\r\n"
         "KEYBOARD SHORTCUTS:\r\n"
         "  F1 / 'h'         - Open this Help Reference guide\r\n"
+        "  F5               - Quicksave terminal state snapshot to kterm.dat\r\n"
+        "  F9               - Quickload terminal state snapshot from kterm.dat\r\n"
         "  Ctrl + T         - Open a new terminal tab\r\n"
         "  Ctrl + W         - Close active terminal tab\r\n"
         "  Ctrl + Tab       - Cycle to next tab (Shift for previous)\r\n"
@@ -300,6 +309,9 @@ void ShowHelpDialog(HWND hwnd) {
         "  Up / Down Arrow  - Navigate command history\r\n\r\n"
         "CORE & NAVIGATION COMMANDS:\r\n"
         "  help             - Show command reference\r\n"
+        "  save / quicksave - Snapshot all tabs and session state to kterm.dat\r\n"
+        "  load / quickload - Restore all tabs and session state from kterm.dat\r\n"
+        "  tutorial         - Replay terminal tutorial briefing\r\n"
         "  ver / sysinfo    - Show OS and terminal version\r\n"
         "  dir / ls [path]  - List directory contents\r\n"
         "  cd [path]        - Change current directory\r\n"
@@ -345,7 +357,7 @@ void SetStatusFeedback(const char* msg) {
     if (hStatus) {
         char statusText[512];
         int cur = (g_activeTab >= 0 && g_activeTab < g_tabCount) ? (g_activeTab + 1) : 1;
-        wsprintfA(statusText, " [F1 / h] Help   [Ctrl+T] Tab   [Ctrl+W] Close   [Ctrl+1..8] Tabs   [Ctrl+S] Export   |   %s   (Tab %d/%d)", g_statusMsg, cur, g_tabCount);
+        wsprintfA(statusText, " [F1/h] Help  [F5] Save  [F9] Load  [Ctrl+T] Tab  [Ctrl+W] Close  [Ctrl+S] Export  |  %s  (Tab %d/%d)", g_statusMsg, cur, g_tabCount);
         SetWindowTextA(hStatus, statusText);
     }
 }
@@ -355,11 +367,11 @@ void UpdateStatusDisplay() {
     char statusText[512];
     int cur = (g_activeTab >= 0 && g_activeTab < g_tabCount) ? (g_activeTab + 1) : 1;
     if (g_statusExpiry != 0 && GetTickCount() < g_statusExpiry && g_statusMsg[0]) {
-        wsprintfA(statusText, " [F1 / h] Help   [Ctrl+T] Tab   [Ctrl+W] Close   [Ctrl+1..8] Tabs   [Ctrl+S] Export   |   %s   (Tab %d/%d)", g_statusMsg, cur, g_tabCount);
+        wsprintfA(statusText, " [F1/h] Help  [F5] Save  [F9] Load  [Ctrl+T] Tab  [Ctrl+W] Close  [Ctrl+S] Export  |  %s  (Tab %d/%d)", g_statusMsg, cur, g_tabCount);
     } else {
         g_statusExpiry = 0;
         g_statusMsg[0] = '\0';
-        wsprintfA(statusText, " [F1 / h] Help   [Ctrl+T] Tab   [Ctrl+W] Close   [Ctrl+1..8] Tabs   [Ctrl+S] Export   [Theme: %s]   [Tab %d of %d]", g_themes[g_currentTheme].name, cur, g_tabCount);
+        wsprintfA(statusText, " [F1/h] Help  [F5] Save  [F9] Load  [Ctrl+T] Tab  [Ctrl+W] Close  [Ctrl+S] Export  [Theme: %s]  [Tab %d of %d]", g_themes[g_currentTheme].name, cur, g_tabCount);
     }
     SetWindowTextA(hStatus, statusText);
 }
@@ -526,6 +538,232 @@ void SwitchTab(int newIdx) {
     wsprintfA(feedback, "Switched to Tab %d (%s)", g_activeTab + 1, g_tabs[g_activeTab].title);
     SetStatusFeedback(feedback);
     SetFocus(hIn);
+}
+
+#define KTERM_SAVE_MAGIC 0x4D524554
+#define KTERM_SAVE_VERSION 1
+
+typedef struct {
+    char title[64];
+    char currentDir[MAX_PATH];
+    char history[MAX_HISTORY][256];
+    int history_count;
+    int history_pos;
+    Alias aliases[MAX_ALIASES];
+    int alias_count;
+    EnvVar envVars[MAX_ENV];
+    int env_count;
+    int outputLen;
+    char outputText[32768];
+} SavedTab;
+
+typedef struct {
+    DWORD magic;
+    DWORD version;
+    DWORD timestamp;
+    int tabCount;
+    int activeTab;
+    int currentTheme;
+    int totalCommands;
+    Macro macros[MAX_MACROS];
+    int macroCount;
+    SavedTab tabs[MAX_TABS];
+    DWORD checksum;
+} KTermSaveState;
+
+static KTermSaveState g_saveBuffer;
+
+static DWORD CalculateChecksum(const void* data, size_t size) {
+    const unsigned char* p = (const unsigned char*)data;
+    DWORD sum1 = 1;
+    DWORD sum2 = 0;
+    for (size_t i = 0; i < size; i++) {
+        sum1 = (sum1 + p[i]) % 65521;
+        sum2 = (sum2 + sum1) % 65521;
+    }
+    return (sum2 << 16) | sum1;
+}
+
+BOOL HasSeenTutorial(void) {
+    HANDLE hFile = CreateFileA("kterm_tutorial.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFile);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+void MarkTutorialSeen(void) {
+    HANDLE hFile = CreateFileA("kterm_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        const char* mark = "TUTORIAL_SEEN_V1\r\n";
+        DWORD written = 0;
+        WriteFile(hFile, mark, lstrlenA(mark), &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+BOOL HasSavedState(const char* filename) {
+    if (!filename) filename = "kterm.dat";
+    HANDLE hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD sz = GetFileSize(hFile, NULL);
+        CloseHandle(hFile);
+        return sz >= sizeof(KTermSaveState);
+    }
+    return FALSE;
+}
+
+BOOL SaveStateToFile(const char* filename) {
+    if (!filename) filename = "kterm.dat";
+    SaveActiveTabOutput();
+
+    memset(&g_saveBuffer, 0, sizeof(g_saveBuffer));
+    g_saveBuffer.magic = KTERM_SAVE_MAGIC;
+    g_saveBuffer.version = KTERM_SAVE_VERSION;
+    g_saveBuffer.timestamp = GetTickCount();
+    g_saveBuffer.tabCount = g_tabCount;
+    g_saveBuffer.activeTab = g_activeTab;
+    g_saveBuffer.currentTheme = g_currentTheme;
+    g_saveBuffer.totalCommands = g_totalCommands;
+    g_saveBuffer.macroCount = g_macroCount;
+
+    for (int m = 0; m < g_macroCount && m < MAX_MACROS; m++) {
+        g_saveBuffer.macros[m] = g_macros[m];
+    }
+
+    for (int i = 0; i < g_tabCount && i < MAX_TABS; i++) {
+        TabSession* tab = &g_tabs[i];
+        lstrcpynA(g_saveBuffer.tabs[i].title, tab->title, sizeof(g_saveBuffer.tabs[i].title));
+        lstrcpynA(g_saveBuffer.tabs[i].currentDir, tab->currentDir, sizeof(g_saveBuffer.tabs[i].currentDir));
+        g_saveBuffer.tabs[i].history_count = tab->history_count;
+        g_saveBuffer.tabs[i].history_pos = tab->history_pos;
+        for (int h = 0; h < tab->history_count && h < MAX_HISTORY; h++) {
+            lstrcpynA(g_saveBuffer.tabs[i].history[h], tab->history[h], 256);
+        }
+        g_saveBuffer.tabs[i].alias_count = tab->alias_count;
+        for (int a = 0; a < tab->alias_count && a < MAX_ALIASES; a++) {
+            g_saveBuffer.tabs[i].aliases[a] = tab->aliases[a];
+        }
+        g_saveBuffer.tabs[i].env_count = tab->env_count;
+        for (int e = 0; e < tab->env_count && e < MAX_ENV; e++) {
+            g_saveBuffer.tabs[i].envVars[e] = tab->envVars[e];
+        }
+        if (tab->outputBuffer) {
+            int len = lstrlenA(tab->outputBuffer);
+            if (len > sizeof(g_saveBuffer.tabs[i].outputText) - 1) {
+                len = sizeof(g_saveBuffer.tabs[i].outputText) - 1;
+            }
+            g_saveBuffer.tabs[i].outputLen = len;
+            memcpy(g_saveBuffer.tabs[i].outputText, tab->outputBuffer, len);
+            g_saveBuffer.tabs[i].outputText[len] = '\0';
+        }
+    }
+
+    g_saveBuffer.checksum = CalculateChecksum(&g_saveBuffer, sizeof(g_saveBuffer) - sizeof(DWORD));
+
+    HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return FALSE;
+
+    DWORD written = 0;
+    BOOL ok = WriteFile(hFile, &g_saveBuffer, sizeof(g_saveBuffer), &written, NULL);
+    CloseHandle(hFile);
+
+    if (ok && written == sizeof(g_saveBuffer)) {
+        MarkTutorialSeen();
+        return TRUE;
+    }
+    return FALSE;
+}
+
+BOOL LoadStateFromFile(const char* filename) {
+    if (!filename) filename = "kterm.dat";
+    HANDLE hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return FALSE;
+
+    DWORD read = 0;
+    BOOL ok = ReadFile(hFile, &g_saveBuffer, sizeof(g_saveBuffer), &read, NULL);
+    CloseHandle(hFile);
+
+    if (!ok || read != sizeof(g_saveBuffer)) return FALSE;
+    if (g_saveBuffer.magic != KTERM_SAVE_MAGIC || g_saveBuffer.version != KTERM_SAVE_VERSION) return FALSE;
+
+    DWORD expectedCrc = CalculateChecksum(&g_saveBuffer, sizeof(g_saveBuffer) - sizeof(DWORD));
+    if (g_saveBuffer.checksum != expectedCrc) return FALSE;
+
+    // Free existing tabs
+    for (int i = 0; i < g_tabCount; i++) {
+        if (g_tabs[i].outputBuffer) {
+            HeapFree(GetProcessHeap(), 0, g_tabs[i].outputBuffer);
+            g_tabs[i].outputBuffer = NULL;
+        }
+    }
+    if (hTab) {
+        TabCtrl_DeleteAllItems(hTab);
+    }
+
+    int count = g_saveBuffer.tabCount;
+    if (count <= 0 || count > MAX_TABS) count = 1;
+
+    g_tabCount = 0;
+    for (int i = 0; i < count; i++) {
+        TabSession* tab = &g_tabs[i];
+        ZeroMemory(tab, sizeof(TabSession));
+        lstrcpynA(tab->title, g_saveBuffer.tabs[i].title, sizeof(tab->title));
+        lstrcpynA(tab->currentDir, g_saveBuffer.tabs[i].currentDir, sizeof(tab->currentDir));
+        tab->history_count = g_saveBuffer.tabs[i].history_count;
+        if (tab->history_count > MAX_HISTORY) tab->history_count = MAX_HISTORY;
+        tab->history_pos = g_saveBuffer.tabs[i].history_pos;
+        for (int h = 0; h < tab->history_count; h++) {
+            lstrcpynA(tab->history[h], g_saveBuffer.tabs[i].history[h], 256);
+        }
+        tab->alias_count = g_saveBuffer.tabs[i].alias_count;
+        if (tab->alias_count > MAX_ALIASES) tab->alias_count = MAX_ALIASES;
+        for (int a = 0; a < tab->alias_count; a++) {
+            tab->aliases[a] = g_saveBuffer.tabs[i].aliases[a];
+        }
+        tab->env_count = g_saveBuffer.tabs[i].env_count;
+        if (tab->env_count > MAX_ENV) tab->env_count = MAX_ENV;
+        for (int e = 0; e < tab->env_count; e++) {
+            tab->envVars[e] = g_saveBuffer.tabs[i].envVars[e];
+        }
+
+        tab->outputBuffer = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, OUT_BUF_SIZE);
+        if (g_saveBuffer.tabs[i].outputLen > 0) {
+            lstrcpynA(tab->outputBuffer, g_saveBuffer.tabs[i].outputText, OUT_BUF_SIZE);
+        }
+
+        if (hTab) {
+            TCITEMA tie;
+            ZeroMemory(&tie, sizeof(tie));
+            tie.mask = TCIF_TEXT;
+            tie.pszText = tab->title;
+            TabCtrl_InsertItem(hTab, i, &tie);
+        }
+        g_tabCount++;
+    }
+
+    g_totalCommands = g_saveBuffer.totalCommands;
+    g_macroCount = g_saveBuffer.macroCount;
+    if (g_macroCount > MAX_MACROS) g_macroCount = MAX_MACROS;
+    for (int m = 0; m < g_macroCount; m++) {
+        g_macros[m] = g_saveBuffer.macros[m];
+    }
+
+    int act = g_saveBuffer.activeTab;
+    if (act < 0 || act >= g_tabCount) act = 0;
+    g_activeTab = act;
+
+    if (g_saveBuffer.currentTheme >= 0 && g_saveBuffer.currentTheme < 6) {
+        ApplyTheme(g_saveBuffer.currentTheme);
+    }
+
+    if (hTab) TabCtrl_SetCurSel(hTab, g_activeTab);
+    LoadTabOutput(g_activeTab);
+    UpdatePromptDisplay();
+
+    MarkTutorialSeen();
+    return TRUE;
 }
 
 // Alias Expansion
@@ -734,10 +972,31 @@ void ProcessSingleCommand(const char* rawCmd) {
         AppendOutput("  env/export - Environment variables (export VAR=val, unset VAR)");
         AppendOutput("  macro      - Macro recording (record, stop, play, list)");
         AppendOutput("  export-log - Export terminal session output to file");
+        AppendOutput("  save/quicksave - Snapshot all tabs and session state to kterm.dat [F5]");
+        AppendOutput("  load/quickload - Restore all tabs and session state from kterm.dat [F9]");
+        AppendOutput("  tutorial   - Replay terminal quickstart tutorial briefing");
         AppendOutput("  newtab     - Open new terminal tab session (newtab [title])");
         AppendOutput("  exit       - Exit application or close active tab");
         AppendOutput("  Piping     - Output redirection (cmd > file, cmd >> file)");
         AppendOutput("  Chaining   - Multi-command execution (cmd1 ; cmd2 or cmd1 && cmd2)");
+    } else if (MatchCommand(cmd, "save") || MatchCommand(cmd, "quicksave")) {
+        if (SaveStateToFile("kterm.dat")) {
+            AppendOutput("[QUICKSAVE] Complete session state snapshot saved to kterm.dat [F5].");
+            SetStatusFeedback("★ Quicksaved state to kterm.dat [F5]");
+        } else {
+            AppendOutput("[ERROR] Failed to save quicksave state to kterm.dat.");
+            SetStatusFeedback("⚠ Quicksave failed");
+        }
+    } else if (MatchCommand(cmd, "load") || MatchCommand(cmd, "quickload")) {
+        if (LoadStateFromFile("kterm.dat")) {
+            AppendOutput("[QUICKLOAD] Complete session state snapshot restored from kterm.dat [F9].");
+            SetStatusFeedback("📂 Quickloaded state from kterm.dat [F9]");
+        } else {
+            AppendOutput("[ERROR] Failed to load quicksave state from kterm.dat (not found or invalid).");
+            SetStatusFeedback("⚠ No quicksave state found");
+        }
+    } else if (MatchCommand(cmd, "tutorial")) {
+        ShowHelpDialog(g_hMainWnd ? g_hMainWnd : hOut);
     } else if (MatchCommand(cmd, "ver") || MatchCommand(cmd, "sysinfo")) {
         AppendOutput("KiloOS Native v1.2 (Deep Utilities & Multi-Tab Terminal Shell)");
         AppendOutput("Kernel Constraints: <999KB Strict Size Policy Active.");
@@ -1907,6 +2166,24 @@ LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 0;
         }
 
+        if (wParam == VK_F5) {
+            if (SaveStateToFile("kterm.dat")) {
+                SetStatusFeedback("★ Quicksaved state to kterm.dat [F5]");
+            } else {
+                SetStatusFeedback("⚠ Quicksave failed");
+            }
+            return 0;
+        }
+
+        if (wParam == VK_F9) {
+            if (LoadStateFromFile("kterm.dat")) {
+                SetStatusFeedback("📂 Quickloaded state from kterm.dat [F9]");
+            } else {
+                SetStatusFeedback("⚠ No quicksave state found (kterm.dat)");
+            }
+            return 0;
+        }
+
         // Easter Egg Echo Telemetry: Ctrl + Alt + E
         if ((GetKeyState(VK_CONTROL) & 0x8000) && (GetKeyState(VK_MENU) & 0x8000) && wParam == 'E') {
             AppendOutput("[ECHO ANOMALY INTERCEPT DETECTED] Resonance: 1999Hz.");
@@ -2065,6 +2342,22 @@ LRESULT CALLBACK OutEditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
             ShowHelpDialog(GetParent(hwnd));
             return 0;
         }
+        if (wParam == VK_F5) {
+            if (SaveStateToFile("kterm.dat")) {
+                SetStatusFeedback("★ Quicksaved state to kterm.dat [F5]");
+            } else {
+                SetStatusFeedback("⚠ Quicksave failed");
+            }
+            return 0;
+        }
+        if (wParam == VK_F9) {
+            if (LoadStateFromFile("kterm.dat")) {
+                SetStatusFeedback("📂 Quickloaded state from kterm.dat [F9]");
+            } else {
+                SetStatusFeedback("⚠ No quicksave state found (kterm.dat)");
+            }
+            return 0;
+        }
         if ((GetKeyState(VK_CONTROL) & 0x8000) && (GetKeyState(VK_MENU) & 0x8000) && wParam == 'E') {
             AppendOutput("[ECHO ANOMALY INTERCEPT DETECTED] Resonance: 1999Hz.");
             AppendOutput(">> Sector 0x1999: kweb://deep-core | Key Fragment: \"1999-ARCH\" <<");
@@ -2137,6 +2430,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                        0, 0, 0, 0, hwnd, (HMENU)IDC_BTN_THEME, GetModuleHandle(NULL), NULL);
             hBtnHelp = CreateWindowExA(0, "BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
                                       0, 0, 0, 0, hwnd, (HMENU)IDC_BTN_HELP, GetModuleHandle(NULL), NULL);
+            hBtnSave = CreateWindowExA(0, "BUTTON", "Save (F5)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
+                                      0, 0, 0, 0, hwnd, (HMENU)IDC_BTN_SAVE, GetModuleHandle(NULL), NULL);
+            hBtnLoad = CreateWindowExA(0, "BUTTON", "Load (F9)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
+                                      0, 0, 0, 0, hwnd, (HMENU)IDC_BTN_LOAD, GetModuleHandle(NULL), NULL);
 
             hOut = CreateWindowExA(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
                                   0, 0, 0, 0, hwnd, (HMENU)IDC_OUT, GetModuleHandle(NULL), NULL);
@@ -2171,6 +2468,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hBtnExport, WM_SETFONT, (WPARAM)g_hTabFont, 0);
             SendMessageA(hBtnTheme, WM_SETFONT, (WPARAM)g_hTabFont, 0);
             SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)g_hTabFont, 0);
+            SendMessageA(hBtnSave, WM_SETFONT, (WPARAM)g_hTabFont, 0);
+            SendMessageA(hBtnLoad, WM_SETFONT, (WPARAM)g_hTabFont, 0);
 
             SendMessageA(hOut, WM_SETFONT, (WPARAM)g_hFont, 0);
             SendMessageA(hPrompt, WM_SETFONT, (WPARAM)g_hFont, 0);
@@ -2212,9 +2511,41 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (id == IDC_BTN_HELP) {
                 ShowHelpDialog(hwnd);
                 SetFocus(hIn);
+            } else if (id == IDC_BTN_SAVE) {
+                if (SaveStateToFile("kterm.dat")) {
+                    SetStatusFeedback("★ Quicksaved state to kterm.dat [F5]");
+                } else {
+                    SetStatusFeedback("⚠ Quicksave failed");
+                }
+                SetFocus(hIn);
+            } else if (id == IDC_BTN_LOAD) {
+                if (LoadStateFromFile("kterm.dat")) {
+                    SetStatusFeedback("📂 Quickloaded state from kterm.dat [F9]");
+                } else {
+                    SetStatusFeedback("⚠ No quicksave state found (kterm.dat)");
+                }
+                SetFocus(hIn);
             }
             break;
         }
+        case WM_KEYDOWN:
+            if (wParam == VK_F5) {
+                if (SaveStateToFile("kterm.dat")) {
+                    SetStatusFeedback("★ Quicksaved state to kterm.dat [F5]");
+                } else {
+                    SetStatusFeedback("⚠ Quicksave failed");
+                }
+                return 0;
+            }
+            if (wParam == VK_F9) {
+                if (LoadStateFromFile("kterm.dat")) {
+                    SetStatusFeedback("📂 Quickloaded state from kterm.dat [F9]");
+                } else {
+                    SetStatusFeedback("⚠ No quicksave state found (kterm.dat)");
+                }
+                return 0;
+            }
+            break;
         case WM_NOTIFY: {
             LPNMHDR pnm = (LPNMHDR)lParam;
             if (pnm->idFrom == IDC_TAB && pnm->code == TCN_SELCHANGE) {
@@ -2232,20 +2563,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int outH = h - tabH - inH - statusH;
             if (outH < 0) outH = 0;
 
-            int btnBarW = 380;
+            int btnBarW = 490;
             int tabW = (w > btnBarW + 60) ? (w - btnBarW) : (w / 2);
             if (tabW < 40) tabW = 40;
             int btnX = tabW + 2;
 
             MoveWindow(hTab, 0, 0, tabW, tabH, TRUE);
 
-            int bw1 = 52, bw2 = 52, bw3 = 48, bw4 = 54, bw5 = 54, bw6 = 70;
-            MoveWindow(hBtnNewTab, btnX, 1, bw1, 26, TRUE);
-            MoveWindow(hBtnCloseTab, btnX + bw1 + 2, 1, bw2, 26, TRUE);
-            MoveWindow(hBtnClear, btnX + bw1 + bw2 + 4, 1, bw3, 26, TRUE);
-            MoveWindow(hBtnExport, btnX + bw1 + bw2 + bw3 + 6, 1, bw4, 26, TRUE);
-            MoveWindow(hBtnTheme, btnX + bw1 + bw2 + bw3 + bw4 + 8, 1, bw5, 26, TRUE);
-            MoveWindow(hBtnHelp, btnX + bw1 + bw2 + bw3 + bw4 + bw5 + 10, 1, bw6, 26, TRUE);
+            int bw1 = 48, bw2 = 48, bw3 = 46, bw4 = 52, bw5 = 64, bw6 = 64, bw7 = 50, bw8 = 64;
+            MoveWindow(hBtnNewTab, btnX, 1, bw1, 26, TRUE); btnX += bw1 + 2;
+            MoveWindow(hBtnCloseTab, btnX, 1, bw2, 26, TRUE); btnX += bw2 + 2;
+            MoveWindow(hBtnClear, btnX, 1, bw3, 26, TRUE); btnX += bw3 + 2;
+            MoveWindow(hBtnExport, btnX, 1, bw4, 26, TRUE); btnX += bw4 + 2;
+            MoveWindow(hBtnSave, btnX, 1, bw5, 26, TRUE); btnX += bw5 + 2;
+            MoveWindow(hBtnLoad, btnX, 1, bw6, 26, TRUE); btnX += bw6 + 2;
+            MoveWindow(hBtnTheme, btnX, 1, bw7, 26, TRUE); btnX += bw7 + 2;
+            MoveWindow(hBtnHelp, btnX, 1, bw8, 26, TRUE);
 
             MoveWindow(hOut, 0, tabH, w, outH, TRUE);
             UpdatePromptDisplay();
@@ -2284,6 +2617,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_ERASEBKGND:
             return 1;
         case WM_DESTROY:
+            SaveActiveTabOutput();
+            SaveStateToFile("kterm.dat");
             KillTimer(hwnd, 1);
             for (int i = 0; i < g_tabCount; i++) {
                 if (g_tabs[i].outputBuffer) {
@@ -2325,8 +2660,36 @@ void MainEntry() {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
+    if (HasSavedState("kterm.dat")) {
+        if (LoadStateFromFile("kterm.dat")) {
+            SetStatusFeedback("★ Restored saved state from kterm.dat [F9]");
+        }
+    } else if (!HasSeenTutorial()) {
+        ShowHelpDialog(hwnd);
+        MarkTutorialSeen();
+        SetStatusFeedback("Welcome to KTerm! Terminal initialized (F1: Help)");
+    }
+
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0) > 0) {
+        if (msg.message == WM_KEYDOWN) {
+            if (msg.wParam == VK_F5) {
+                if (SaveStateToFile("kterm.dat")) {
+                    SetStatusFeedback("★ Quicksaved state to kterm.dat [F5]");
+                } else {
+                    SetStatusFeedback("⚠ Quicksave failed");
+                }
+                continue;
+            }
+            if (msg.wParam == VK_F9) {
+                if (LoadStateFromFile("kterm.dat")) {
+                    SetStatusFeedback("📂 Quickloaded state from kterm.dat [F9]");
+                } else {
+                    SetStatusFeedback("⚠ No quicksave state found (kterm.dat)");
+                }
+                continue;
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }

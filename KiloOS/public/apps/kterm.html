@@ -807,24 +807,43 @@
   let totalCommandCount = 0;
 
   const themes = ['green', 'amber', 'cyan', 'white', 'crimson', 'purple'];
+  function safeSetStorage(key, value) {
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch (e) {
+      try {
+        localStorage.removeItem('kterm_autosave');
+        localStorage.setItem(key, value);
+        return true;
+      } catch (e2) {
+        return false;
+      }
+    }
+  }
+
+  function safeGetStorage(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch (e) {
+      return null;
+    }
+  }
+
   let activeThemeName = 'green';
 
   function setTheme(theme) {
     if (!themes.includes(theme)) return;
     activeThemeName = theme;
     document.body.setAttribute('data-theme', theme);
-    try {
-      localStorage.setItem('kterm_theme', theme);
-    } catch (e) {}
+    safeSetStorage('kterm_theme', theme);
   }
 
   // Restore theme from localStorage
-  try {
-    const savedTheme = localStorage.getItem('kterm_theme');
-    if (savedTheme && themes.includes(savedTheme)) {
-      setTheme(savedTheme);
-    }
-  } catch (e) {}
+  const savedTheme = safeGetStorage('kterm_theme');
+  if (savedTheme && themes.includes(savedTheme)) {
+    setTheme(savedTheme);
+  }
 
   function cycleTheme() {
     const idx = themes.indexOf(activeThemeName);
@@ -919,7 +938,7 @@
     });
 
     nextSessionNum = data.nextSessionNum || (sessions.length + 1);
-    activeSessionId = data.activeSessionId && sessions.some(s => s.id === data.activeSessionId)
+    const targetSessionId = data.activeSessionId && sessions.some(s => s.id === data.activeSessionId)
       ? data.activeSessionId
       : sessions[0].id;
 
@@ -939,14 +958,21 @@
       fallbackVFS.tree = data.vfsFallbackTree;
     }
 
-    switchTab(activeSessionId);
+    activeSessionId = null;
+    switchTab(targetSessionId);
     renderTabs();
   }
 
   function quickSaveState() {
     try {
       const state = serializeState();
-      localStorage.setItem('kterm_quicksave', JSON.stringify(state));
+      const ok = safeSetStorage('kterm_quicksave', JSON.stringify(state));
+      if (!ok) {
+        print(`[QUICKSAVE ERROR] Storage quota exceeded or save failed.`, "log-error");
+        showToast("⚠️ Quicksave failed: Storage quota exceeded", "err");
+        return false;
+      }
+      safeSetStorage('kterm_tutorialSeen', '1');
       print(`[QUICKSAVE] State successfully saved to local storage (${sessions.length} tab(s)).`, "log-system");
       showToast(`💾 Terminal Quicksaved [F5] (${sessions.length} tabs)`, "sys", 2200);
       return true;
@@ -959,14 +985,15 @@
 
   function quickLoadState() {
     try {
-      const raw = localStorage.getItem('kterm_quicksave');
+      const raw = safeGetStorage('kterm_quicksave');
       if (!raw) {
         print("[QUICKLOAD] No saved state found in local storage (Press F5 to save first).", "log-warn");
-        showToast("⚠️ No quicksave data found (Press F5 to save)", "warn");
+        showToast("ℹ️ No quicksave data found (Press F5 to save)", "warn");
         return false;
       }
       const data = JSON.parse(raw);
       deserializeState(data);
+      safeSetStorage('kterm_tutorialSeen', '1');
       print(`[QUICKLOAD] State successfully restored from local storage (${sessions.length} tab(s)).`, "log-system");
       showToast(`⚡ Terminal Quickloaded [F9] (${sessions.length} tabs)`, "sys", 2200);
       return true;
@@ -2423,7 +2450,7 @@
     measurer.style.fontSize = currentFontSize + 'px';
     cursor.style.height = (currentFontSize + 2) + 'px';
     updateCursor();
-    try { localStorage.setItem('kterm_fontsize', String(currentFontSize)); } catch(e) {}
+    safeSetStorage('kterm_fontsize', String(currentFontSize));
     showToast(`Font Size: ${currentFontSize}px`, 'sys', 1500);
   }
   if (btnZoomIn) btnZoomIn.addEventListener('click', () => setFontSize(currentFontSize + 1));
@@ -2533,9 +2560,7 @@
   function closeTutorialModal() {
     if (tutorialModal) {
       tutorialModal.classList.remove('open');
-      if (chkDontShowTutorial && chkDontShowTutorial.checked) {
-        try { localStorage.setItem('kterm_tutorialSeen', 'true'); } catch (e) {}
-      }
+      safeSetStorage('kterm_tutorialSeen', '1');
       input.focus();
     }
   }
@@ -2551,19 +2576,24 @@
       if (e.target === tutorialModal) closeTutorialModal();
     });
     tutorialModal.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
+      if (e.key === 'Enter' || e.key === 'Escape' || e.key === ' ') {
         e.preventDefault();
         closeTutorialModal();
       }
     });
   }
 
-
   if (btnModalClose) btnModalClose.addEventListener('click', closeHelpModal);
   if (btnModalCloseFooter) btnModalCloseFooter.addEventListener('click', closeHelpModal);
   if (helpModal) {
     helpModal.addEventListener('click', (e) => {
       if (e.target === helpModal) closeHelpModal();
+    });
+    helpModal.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === 'Escape' || e.key === ' ') {
+        e.preventDefault();
+        closeHelpModal();
+      }
     });
   }
 
@@ -2729,30 +2759,31 @@
   createNewTab("Tab 1");
 
   // Restore font size from localStorage
-  try {
-    const savedSize = localStorage.getItem('kterm_fontsize');
-    if (savedSize) {
-      const parsed = parseInt(savedSize, 10);
-      if (!isNaN(parsed) && parsed >= 10 && parsed <= 24) {
-        setFontSize(parsed);
-      }
+  const savedSize = safeGetStorage('kterm_fontsize');
+  if (savedSize) {
+    const parsed = parseInt(savedSize, 10);
+    if (!isNaN(parsed) && parsed >= 10 && parsed <= 24) {
+      setFontSize(parsed);
     }
-  } catch (e) {}
+  }
 
-  showToast("⚡ Welcome to KTerm! F1: Help | F5: Save | F9: Load | Ctrl+T: New Tab", "sys", 5000);
+  // First-run tutorial onboarding check: only on fresh sessions, never interrupting restored save states
+  const hasSeenTutorial = safeGetStorage('kterm_tutorialSeen');
+  const hasQuicksave = safeGetStorage('kterm_quicksave');
+  const hasAutosave = safeGetStorage('kterm_autosave');
 
-  // Check first-run tutorial
-  try {
-    const seen = localStorage.getItem('kterm_tutorialSeen');
-    if (!seen) {
-      setTimeout(() => openTutorialModal(), 250);
-    }
-  } catch (e) {}
+  if (!hasSeenTutorial && !hasQuicksave && !hasAutosave) {
+    setTimeout(() => openTutorialModal(), 300);
+  } else {
+    setTimeout(() => showToast("⚡ Welcome to KTerm! F1: Help | F5: Save | F9: Load | Ctrl+T: New Tab", "sys", 4000), 500);
+  }
 
-  window.addEventListener('beforeunload', () => {
+  function autoSaveState() {
     try {
-      const state = serializeState();
-      localStorage.setItem('kterm_autosave', JSON.stringify(state));
+      if (totalCommandCount > 0 || sessions.length > 1 || (sessions[0] && (sessions[0].currentDraft || sessions[0].history.length > 0))) {
+        const state = serializeState();
+        safeSetStorage('kterm_autosave', JSON.stringify(state));
+      }
     } catch (e) {}
     if (toastContainer) {
       toastContainer.querySelectorAll('.toast').forEach(t => {
@@ -2760,7 +2791,10 @@
       });
       toastContainer.innerHTML = '';
     }
-  });
+  }
+
+  window.addEventListener('beforeunload', autoSaveState);
+  window.addEventListener('pagehide', autoSaveState);
 </script>
 </body>
 </html>
