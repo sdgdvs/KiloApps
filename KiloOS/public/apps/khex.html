@@ -750,6 +750,7 @@
               <option value="0xCAFEBABE">Java Class (0xCAFEBABE)</option>
               <option value="0x6D736100">WebAssembly (0x6D736100)</option>
               <option value="0x40490FDB">Float Pi 3.14159 (0x40490FDB)</option>
+              <option value="0x10199904">Project Echo Sector (0x10199904)</option>
               <option value="0xFFFFFFFF">All Bits Set (0xFFFFFFFF)</option>
             </select>
             <button class="btn btn-sm" onclick="resetConverter()">Reset</button>
@@ -823,6 +824,7 @@
           <button class="btn btn-cyan btn-sm" onclick="document.getElementById('fileInput').click()">Open File</button>
           <button class="btn btn-sm" onclick="loadSampleBuffer()">Load Sample Data</button>
           <button class="btn btn-purple btn-sm" onclick="loadHexBuffer()">Load Hex Bytes</button>
+          <button class="btn btn-sm" style="background:rgba(139,92,246,0.25); border:1px solid rgba(139,92,246,0.5); color:#c084fc;" onclick="loadEchoRomBuffer()">Echo ROM Sector</button>
         </div>
       </div>
       <div class="form-group">
@@ -836,6 +838,16 @@
         <div class="title-left">🖥️ Interactive Hex View (16 Bytes / Row)</div>
         <div class="form-row">
           <span style="font-size:0.75rem; color:var(--text-secondary);" id="bufferSizeLabel">Buffer Size: 0 Bytes</span>
+        </div>
+      </div>
+      <!-- Hex Navigation & Goto Address Bar -->
+      <div id="hexNavBar" style="display:flex; align-items:center; gap:8px; background:var(--input-bg); padding:6px 12px; border-radius:8px; border:1px solid var(--border-color); font-size:0.8rem; font-family:monospace; margin-bottom:8px; flex-wrap:wrap;">
+        <span style="color:var(--text-secondary);">📍 Goto Address:</span>
+        <input type="text" id="gotoOffsetInput" placeholder="0x0000 or 0" style="width:110px; padding:4px 8px; font-family:monospace; font-size:0.8rem; background:var(--card-bg); border:1px solid var(--border-color); border-radius:4px; color:var(--accent-cyan);">
+        <button class="btn btn-sm btn-cyan" onclick="gotoOffset()">Jump [Go]</button>
+        <div style="margin-left:auto; display:flex; align-items:center; gap:6px;">
+          <button class="btn btn-sm" onclick="jumpOffsetStep(-16)">▲ -16B</button>
+          <button class="btn btn-sm" onclick="jumpOffsetStep(16)">▼ +16B</button>
         </div>
       </div>
       <!-- Selected Byte Editor Toolbar -->
@@ -910,6 +922,24 @@
         <!-- Dynamic Bars -->
       </div>
     </div>
+
+    <!-- Chunked Sliding-Window Entropy Heatmap Panel -->
+    <div class="panel">
+      <div class="panel-title">
+        <div class="title-left">🗺️ Localized Chunk Entropy Heatmap & Payload Scanner</div>
+        <span style="font-size:0.75rem; color:var(--text-secondary);" id="chunkEntropyLabel">Click chunk to inspect in Hex View</span>
+      </div>
+      <div id="chunkEntropyStrip" style="display:flex; flex-wrap:wrap; gap:3px; max-height:140px; overflow-y:auto; padding:6px; background:var(--input-bg); border-radius:6px; border:1px solid var(--border-color);">
+        <!-- Dynamic colored chunk blocks -->
+      </div>
+      <div style="display:flex; align-items:center; gap:12px; margin-top:8px; font-size:0.75rem; color:var(--text-secondary); flex-wrap:wrap;">
+        <span>Density Legend:</span>
+        <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; border-radius:2px; background:#10b981; display:inline-block;"></span> 0-3 b/B (Sparse/Pad)</span>
+        <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; border-radius:2px; background:#06b6d4; display:inline-block;"></span> 3-6 b/B (Structured/Text)</span>
+        <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; border-radius:2px; background:#f59e0b; display:inline-block;"></span> 6-7.5 b/B (Code/Packed)</span>
+        <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; border-radius:2px; background:#8b5cf6; display:inline-block;"></span> 7.5-8 b/B (Encrypted/Compressed)</span>
+      </div>
+    </div>
   </div>
 
   <!-- TAB 4: Search & Replace -->
@@ -957,7 +987,10 @@
         <div class="inspector-item"><div class="inspector-label">Checksum 16-bit</div><div class="inspector-value" id="hashSum16">0x0000</div></div>
         <div class="inspector-item"><div class="inspector-label">Checksum 32-bit</div><div class="inspector-value" id="hashSum32">0x00000000</div></div>
         <div class="inspector-item"><div class="inspector-label">XOR 8-bit Checksum</div><div class="inspector-value" id="hashXor8">0x00</div></div>
+        <div class="inspector-item"><div class="inspector-label">CRC16 (CCITT 0x1021)</div><div class="inspector-value" id="hashCRC16">0x0000</div></div>
         <div class="inspector-item"><div class="inspector-label">CRC32 (Standard IEEE)</div><div class="inspector-value" id="hashCRC32">0x00000000</div></div>
+        <div class="inspector-item"><div class="inspector-label">Adler-32 Checksum</div><div class="inspector-value" id="hashAdler32">0x00000001</div></div>
+        <div class="inspector-item"><div class="inspector-label">FNV-1a 32-bit Hash</div><div class="inspector-value" id="hashFNV1a">0x811C9DC5</div></div>
         <div class="inspector-item" style="grid-column: span 2;"><div class="inspector-label">MD5 Digest</div><div class="inspector-value" id="hashMD5">d41d8cd98f00b204e9800998ecf8427e</div></div>
         <div class="inspector-item" style="grid-column: span 2;"><div class="inspector-label">SHA-256 Digest</div><div class="inspector-value" id="hashSHA256">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</div></div>
       </div>
@@ -971,9 +1004,19 @@
         <div class="panel-title">🛠️ Byte Manipulation Tool</div>
         <div class="form-group">
           <label>Operation Type</label>
-          <select id="opType">
+          <select id="opType" onchange="updateOpArgVisibility()">
             <option value="invert">Invert / Bitwise NOT (~x)</option>
             <option value="xor">XOR Mask (Key in Hex)</option>
+            <option value="and">Bitwise AND (& Key in Hex)</option>
+            <option value="or">Bitwise OR (| Key in Hex)</option>
+            <option value="shl">Shift Left Bits (&lt;&lt; N bits)</option>
+            <option value="shr">Shift Right Bits (&gt;&gt; N bits)</option>
+            <option value="rol">Rotate Left Bits (&lt;&lt;&lt; N bits)</option>
+            <option value="ror">Rotate Right Bits (&gt;&gt;&gt; N bits)</option>
+            <option value="add">Arithmetic Add (+ N mod 256)</option>
+            <option value="sub">Arithmetic Subtract (- N mod 256)</option>
+            <option value="upper">Convert ASCII to UPPERCASE</option>
+            <option value="lower">Convert ASCII to lowercase</option>
             <option value="fill">Fill Buffer with Byte Value</option>
             <option value="swap16">Endian Swap 16-bit Words</option>
             <option value="swap32">Endian Swap 32-bit Words</option>
@@ -981,8 +1024,8 @@
           </select>
         </div>
         <div class="form-group" id="opArgGroup">
-          <label>Argument (Hex / Byte Value)</label>
-          <input type="text" id="opArg" value="FF" placeholder="Hex value (e.g. AA or 5A)">
+          <label id="opArgLabel">Argument (Hex / Byte Value / Shift Count)</label>
+          <input type="text" id="opArg" value="FF" placeholder="Hex or decimal value (e.g. AA, 1, or 5A)">
         </div>
         <button class="btn btn-purple" style="margin-top:8px;" onclick="applyByteOperation()">Apply Operation to Buffer</button>
       </div>
@@ -1009,6 +1052,11 @@
         <select id="exportPreset" onchange="generateExport()">
           <option value="hexdump">Formatted Hex Dump</option>
           <option value="carray">C / C++ Byte Array (const unsigned char data[])</option>
+          <option value="intelhex">Intel HEX (.hex) Format</option>
+          <option value="asmdb">Assembly DB Directives (db 0x..)</option>
+          <option value="json">JSON Byte Array [0x..]</option>
+          <option value="rust">Rust Byte Slice (&[u8])</option>
+          <option value="csharp">C# Byte Array (new byte[] { ... })</option>
           <option value="pybytes">Python bytes literal (b'\x...')</option>
           <option value="base64">Base64 Encoded Stream</option>
           <option value="hexstr">Continuous Raw Hex String</option>
@@ -1053,13 +1101,13 @@
         <div style="background: var(--input-bg); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color);">
           <div style="font-weight: 700; color: var(--accent-cyan); margin-bottom: 6px;">🛠️ Feature Modules</div>
           <ul style="margin: 0; padding-left: 20px; font-size: 0.8rem; line-height: 1.5;">
-            <li><b>[1] Converter & Inspector:</b> Real-time synchronization across Hex, Dec, Bin, Oct, ASCII, and IEEE 754 float/double. Includes an interactive 32-bit bitfield manipulator.</li>
-            <li><b>[2] Hex Viewer & Buffer:</b> 16 bytes/row hex viewer with offset mapping, ASCII column, custom file import, and sample data generator.</li>
-            <li><b>[3] Entropy & Dissection:</b> Shannon Entropy randomness meter, bit density ratio, byte frequency distribution histogram, and file magic signature detection.</li>
+            <li><b>[1] Converter & Inspector:</b> Real-time synchronization across Hex, Dec, Bin, Oct, ASCII, and IEEE 754 float/double. Includes an interactive 32-bit bitfield manipulator and quick presets (including Project Echo Sector 0x10199904).</li>
+            <li><b>[2] Hex Viewer & Buffer:</b> 16 bytes/row hex viewer with offset navigation, Jump to Offset, +/-16B step controls, Project Echo ROM loader, file import, and sample data.</li>
+            <li><b>[3] Entropy & Dissection:</b> Chunked sliding-window entropy heatmap with click-to-jump, Shannon Entropy meter, bit density ratio, byte frequency distribution, and file magic signature detection.</li>
             <li><b>[4] Search & Replace:</b> Fast ASCII and Hex byte sequence finder with replace-all capability.</li>
-            <li><b>[5] Checksum & Hashes:</b> Instant 8/16/32-bit sums, XOR8, IEEE CRC32, MD5, and SHA-256 digests.</li>
-            <li><b>[6] Byte Operations:</b> Invert, XOR mask, buffer fill, word endian swaps, and reversal.</li>
-            <li><b>[7] Data Export:</b> Formatted HexDump, C/C++ array, Python bytes, Base64, and RAW file download.</li>
+            <li><b>[5] Checksum & Hashes:</b> Instant 8/16/32-bit sums, XOR8, CRC-16 CCITT, IEEE CRC32, Adler-32, FNV-1a, MD5, and SHA-256 digests.</li>
+            <li><b>[6] Byte Operations:</b> Bitwise NOT/XOR/AND/OR, shifts (&lt;&lt;/&gt;&gt;), rotations (ROL/ROR), arithmetic add/sub, ASCII case conversions, word endian swaps, and buffer reversal.</li>
+            <li><b>[7] Data Export:</b> Formatted HexDump, C/C++ array, Intel HEX (.hex), NASM Assembly DB directives, JSON byte array, Rust byte slice, C# byte array, Python bytes, Base64, and RAW file download.</li>
           </ul>
         </div>
       </div>
@@ -1132,6 +1180,7 @@
     renderHexView();
     computeHashes();
     generateExport();
+    updateOpArgVisibility();
     if (activeTab !== 'converter') {
       switchTab(activeTab);
     }
@@ -1145,6 +1194,8 @@
     if (oa) oa.addEventListener('keydown', (e) => { if (e.key === 'Enter') { applyByteOperation(); e.preventDefault(); } });
     const beh = document.getElementById('byteEditHexInput');
     if (beh) beh.addEventListener('keydown', (e) => { if (e.key === 'Enter') { applyByteEdit(); e.preventDefault(); } });
+    const goIn = document.getElementById('gotoOffsetInput');
+    if (goIn) goIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { gotoOffset(); e.preventDefault(); } });
 
     // Click-to-copy for all inspector items
     document.querySelectorAll('.inspector-item').forEach(item => {
@@ -1262,6 +1313,7 @@
     if (tabId === 'editor') renderHexView();
     if (tabId === 'entropy') computeEntropyAndDistribution();
     if (tabId === 'hashes') computeHashes();
+    if (tabId === 'operations') updateOpArgVisibility();
     if (tabId === 'export') generateExport();
   }
 
@@ -1462,6 +1514,18 @@
     if (bytes.length >= 2 && bytes[0] === 0x23 && bytes[1] === 0x21) {
       return { name: 'Unix Script Shebang', ext: '.sh', desc: 'Executable script interpreter directive (#!/...).' };
     }
+    if (ascii.startsWith('ECHO_ROM_1999') || (bytes.length >= 4 && bytes[0] === 0x10 && bytes[1] === 0x19 && bytes[2] === 0x99 && bytes[3] === 0x04)) {
+      return { name: 'Project Echo ROM Sector', ext: '.rom', desc: 'Classified Subsystem Memory Sector [ARG Intranet: kweb://10.19.99.4/classified]' };
+    }
+    if (bytes.length >= 12 && ascii.startsWith('RIFF') && ascii.substring(8, 12) === 'WEBP') {
+      return { name: 'WebP Raster Image', ext: '.webp', desc: 'Google WebP modern compressed image container.' };
+    }
+    if (bytes.length >= 3 && ((bytes[0] === 0x49 && bytes[1] === 0x44 && bytes[2] === 0x33) || (bytes[0] === 0xFF && (bytes[1] & 0xE0) === 0xE0))) {
+      return { name: 'MPEG Audio Layer 3 (MP3)', ext: '.mp3', desc: 'Compressed audio stream with ID3 tag / sync frame.' };
+    }
+    if (bytes.length >= 4 && bytes[0] === 0x66 && bytes[1] === 0x4C && bytes[2] === 0x61 && bytes[3] === 0x43) {
+      return { name: 'Free Lossless Audio Codec (FLAC)', ext: '.flac', desc: 'Lossless audio stream container.' };
+    }
     if (ascii.startsWith('<?xml') || ascii.startsWith('<!DOCTYPE') || ascii.startsWith('<html')) {
       return { name: 'XML / HTML Markup', ext: '.html', desc: 'Structured markup text document.' };
     }
@@ -1486,6 +1550,7 @@
       document.getElementById('entropyHighRatio').innerText = '0 (0.0%)';
       document.getElementById('uniqueBytesCountLabel').innerText = '0 Unique Bytes in 0 Bytes Total';
       document.getElementById('byteFreqHistogram').innerHTML = '<div style="color:var(--text-dim); font-size:0.8rem; padding:8px;">Buffer is empty. Load or type data to view frequency distribution.</div>';
+      computeChunkEntropy();
       dissectHeader();
       return;
     }
@@ -1574,6 +1639,7 @@
       histContainer.appendChild(row);
     });
 
+    computeChunkEntropy();
     dissectHeader();
   }
 
@@ -1595,6 +1661,14 @@
                  'Signature Description: ' + sig.desc + '\n' +
                  'Buffer Total Length:   ' + target.length + ' Bytes\n' +
                  'Endianness Profile:    ' + (isLittleEndian ? 'Little Endian (LE - Standard x86/ARM)' : 'Big Endian (BE - Network Byte Order)');
+
+    if (sig.name.includes('Project Echo')) {
+      report += '\n--------------------------------------------------\n' +
+                '>>> PROJECT ECHO CLASSIFIED ARG INTEL DETECTED <<<\n' +
+                'Target Subsystem Address: 10.19.99.4\n' +
+                'Encrypted Corporate Node: kweb://10.19.99.4/classified\n' +
+                'Authorization Directive:  Access via KNet retro browser';
+    }
 
     document.getElementById('sigDetailsBox').innerText = report;
   }
@@ -1744,6 +1818,98 @@
     renderHexView();
     selectByte(0);
     showToast('Sample Data Loaded', 'Hex viewer buffer loaded with 98 sample bytes.', 'success');
+  }
+
+  function loadEchoRomBuffer() {
+    const rom = new Uint8Array(128);
+    const header = "ECHO_ROM_1999::CLASSIFIED_SECTOR_04";
+    for (let i = 0; i < header.length; i++) rom[i] = header.charCodeAt(i);
+    rom[36] = 0x10; rom[37] = 0x19; rom[38] = 0x99; rom[39] = 0x04; // 10.19.99.4
+    const url = "URI:kweb://10.19.99.4/classified [GATEWAY_ARMED]";
+    for (let i = 0; i < url.length; i++) rom[40 + i] = url.charCodeAt(i);
+    let seed = 0x19991004;
+    for (let i = 40 + url.length; i < 128; i++) {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      rom[i] = (seed >> 16) & 0xFF;
+    }
+    binaryBuffer = rom;
+    textBuf.value = new TextDecoder().decode(rom.subarray(0, 40 + url.length)) + " [Encrypted Payload ...]";
+    try { localStorage.setItem('khex_text_buf', textBuf.value); } catch(e) {}
+    selectedOffset = 0;
+    renderHexView();
+    selectByte(36);
+    showToast('Echo ROM Loaded', 'Project Echo Intranet ROM Sector loaded (128 bytes, Target: 10.19.99.4)', 'success', 5000);
+  }
+
+  function gotoOffset(targetOffset = null) {
+    if (targetOffset === null) {
+      const input = document.getElementById('gotoOffsetInput');
+      if (!input || !input.value.trim()) {
+        showToast('Goto Address', 'Please enter an offset (e.g. 0x0020 or 32).', 'warning');
+        return;
+      }
+      let str = input.value.trim();
+      if (str.startsWith('0x') || str.startsWith('0X')) {
+        targetOffset = parseInt(str, 16);
+      } else {
+        targetOffset = parseInt(str, 10);
+      }
+    }
+    if (isNaN(targetOffset) || targetOffset < 0 || targetOffset >= binaryBuffer.length) {
+      showToast('Offset Out of Bounds', `Target offset 0x${(targetOffset || 0).toString(16).toUpperCase()} is outside buffer range (0 - 0x${binaryBuffer.length.toString(16).toUpperCase()}).`, 'error');
+      return;
+    }
+    selectByte(targetOffset);
+    showToast('Jumped to Address', `Selected offset 0x${targetOffset.toString(16).padStart(8, '0').toUpperCase()} (${targetOffset})`, 'info', 2000);
+  }
+
+  function jumpOffsetStep(step) {
+    if (!binaryBuffer || binaryBuffer.length === 0) return;
+    let target = Math.max(0, Math.min(binaryBuffer.length - 1, selectedOffset + step));
+    gotoOffset(target);
+  }
+
+  function computeChunkEntropy() {
+    const container = document.getElementById('chunkEntropyStrip');
+    if (!container) return;
+    container.innerHTML = '';
+    if (!binaryBuffer || binaryBuffer.length === 0) {
+      container.innerHTML = '<div style="color:var(--text-dim); font-size:0.8rem; padding:8px;">Buffer is empty. Load or type data to view chunk entropy heatmap.</div>';
+      return;
+    }
+    const chunkSize = binaryBuffer.length > 4096 ? 128 : (binaryBuffer.length > 512 ? 32 : 16);
+    const totalChunks = Math.ceil(binaryBuffer.length / chunkSize);
+    const maxChunksToRender = 160;
+    const renderChunks = Math.min(totalChunks, maxChunksToRender);
+
+    const lbl = document.getElementById('chunkEntropyLabel');
+    if (lbl) lbl.innerText = `${renderChunks} Chunks (${chunkSize}B each) | Click chunk to jump in Hex View`;
+
+    for (let c = 0; c < renderChunks; c++) {
+      const start = c * chunkSize;
+      const end = Math.min(binaryBuffer.length, start + chunkSize);
+      const slice = binaryBuffer.subarray(start, end);
+      const ent = calculateShannonEntropy(slice);
+      const cls = getEntropyClassification(ent);
+
+      const cell = document.createElement('div');
+      cell.style.width = '14px';
+      cell.style.height = '20px';
+      cell.style.borderRadius = '3px';
+      cell.style.background = cls.color;
+      cell.style.cursor = 'pointer';
+      cell.style.transition = 'transform 0.15s ease, filter 0.15s ease';
+      cell.title = `Chunk [${c}]: 0x${start.toString(16).toUpperCase()} - 0x${end.toString(16).toUpperCase()} (${end - start}B)\nEntropy: ${ent.toFixed(3)} b/B (${cls.label})`;
+
+      cell.onmouseenter = () => { cell.style.transform = 'scale(1.25)'; cell.style.filter = 'brightness(1.3)'; };
+      cell.onmouseleave = () => { cell.style.transform = 'scale(1)'; cell.style.filter = 'none'; };
+      cell.onclick = () => {
+        switchTab('editor');
+        gotoOffset(start);
+      };
+
+      container.appendChild(cell);
+    }
   }
 
   function handleFileSelect(e) {
@@ -2065,7 +2231,10 @@
       document.getElementById('hashSum16').innerText = '0x0000';
       document.getElementById('hashSum32').innerText = '0x00000000';
       document.getElementById('hashXor8').innerText = '0x00';
+      document.getElementById('hashCRC16').innerText = '0x0000';
       document.getElementById('hashCRC32').innerText = '0x00000000';
+      document.getElementById('hashAdler32').innerText = '0x00000001';
+      document.getElementById('hashFNV1a').innerText = '0x811C9DC5';
       document.getElementById('hashMD5').innerText = 'd41d8cd98f00b204e9800998ecf8427e';
       document.getElementById('hashSHA256').innerText = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
       return;
@@ -2086,6 +2255,14 @@
     document.getElementById('hashSum32').innerText = '0x' + sum32.toString(16).padStart(8, '0').toUpperCase();
     document.getElementById('hashXor8').innerText = '0x' + xor8.toString(16).padStart(2, '0').toUpperCase();
 
+    // CRC16, Adler32, FNV-1a
+    let crc16 = calcCRC16(binaryBuffer);
+    let adler32 = calcAdler32(binaryBuffer);
+    let fnv1a = calcFNV1a(binaryBuffer);
+    document.getElementById('hashCRC16').innerText = '0x' + crc16.toString(16).padStart(4, '0').toUpperCase();
+    document.getElementById('hashAdler32').innerText = '0x' + adler32.toString(16).padStart(8, '0').toUpperCase();
+    document.getElementById('hashFNV1a').innerText = '0x' + fnv1a.toString(16).padStart(8, '0').toUpperCase();
+
     // CRC32
     let crc = 0xFFFFFFFF;
     for (let i = 0; i < binaryBuffer.length; i++) {
@@ -2102,6 +2279,43 @@
     calcSHA256(binaryBuffer).then(res => {
       document.getElementById('hashSHA256').innerText = res;
     });
+  }
+
+  // Pure JS Adler-32 Checksum
+  function calcAdler32(buf) {
+    if (!buf || buf.length === 0) return 1;
+    let a = 1, b = 0;
+    for (let i = 0; i < buf.length; i++) {
+      a = (a + buf[i]) % 65521;
+      b = (b + a) % 65521;
+    }
+    return ((b << 16) | a) >>> 0;
+  }
+
+  // Pure JS FNV-1a 32-bit Hash
+  function calcFNV1a(buf) {
+    if (!buf || buf.length === 0) return 0x811C9DC5;
+    let hash = 2166136261 >>> 0;
+    for (let i = 0; i < buf.length; i++) {
+      hash ^= buf[i];
+      hash = Math.imul(hash, 16777619) >>> 0;
+    }
+    return hash >>> 0;
+  }
+
+  // Pure JS CRC-16 (CCITT 0x1021)
+  function calcCRC16(buf) {
+    if (!buf || buf.length === 0) return 0;
+    let crc = 0xFFFF;
+    for (let i = 0; i < buf.length; i++) {
+      crc ^= (buf[i] << 8);
+      for (let j = 0; j < 8; j++) {
+        if (crc & 0x8000) crc = (crc << 1) ^ 0x1021;
+        else crc <<= 1;
+        crc &= 0xFFFF;
+      }
+    }
+    return crc;
   }
 
   // Pure JS MD5 Implementation
@@ -2215,6 +2429,33 @@
     return pureJsSHA256(buf);
   }
 
+  function updateOpArgVisibility() {
+    let type = document.getElementById('opType').value;
+    let group = document.getElementById('opArgGroup');
+    let label = document.getElementById('opArgLabel');
+    let input = document.getElementById('opArg');
+    if (!group || !label || !input) return;
+
+    if (type === 'invert' || type === 'swap16' || type === 'swap32' || type === 'reverse' || type === 'upper' || type === 'lower') {
+      group.style.display = 'none';
+    } else {
+      group.style.display = 'block';
+      if (type === 'xor' || type === 'and' || type === 'or') {
+        label.innerText = 'Mask Key (Hex, e.g. 5A or FF)';
+        if (!input.value) input.value = '5A';
+      } else if (type === 'shl' || type === 'shr' || type === 'rol' || type === 'ror') {
+        label.innerText = 'Shift / Rotate Amount (1 - 7 bits)';
+        input.value = '1';
+      } else if (type === 'add' || type === 'sub') {
+        label.innerText = 'Step Value (Hex or Dec, e.g. 01 or 10)';
+        if (!input.value) input.value = '01';
+      } else if (type === 'fill') {
+        label.innerText = 'Fill Byte (Hex, e.g. 00 or FF)';
+        if (!input.value) input.value = '00';
+      }
+    }
+  }
+
   // --- TAB 5: BYTE OPERATIONS LOGIC ---
   function applyByteOperation() {
     let previewBox = document.getElementById('opPreviewBox');
@@ -2225,8 +2466,14 @@
     }
 
     let type = document.getElementById('opType').value;
-    let argStr = document.getElementById('opArg').value.replace(/[^0-9a-fA-F]/g, '');
-    let argVal = parseInt(argStr, 16) || 0;
+    let argStr = document.getElementById('opArg').value.trim();
+    let argVal = 0;
+    if (argStr.startsWith('0x') || argStr.startsWith('0X')) {
+      argVal = parseInt(argStr, 16) || 0;
+    } else {
+      let cleanHex = argStr.replace(/[^0-9a-fA-F]/g, '');
+      argVal = parseInt(cleanHex, 16) || parseInt(argStr, 10) || 0;
+    }
 
     let newBuf = new Uint8Array(binaryBuffer.length);
     newBuf.set(binaryBuffer);
@@ -2235,6 +2482,40 @@
       for (let i = 0; i < newBuf.length; i++) newBuf[i] = (~newBuf[i]) & 0xFF;
     } else if (type === 'xor') {
       for (let i = 0; i < newBuf.length; i++) newBuf[i] ^= (argVal & 0xFF);
+    } else if (type === 'and') {
+      for (let i = 0; i < newBuf.length; i++) newBuf[i] &= (argVal & 0xFF);
+    } else if (type === 'or') {
+      for (let i = 0; i < newBuf.length; i++) newBuf[i] |= (argVal & 0xFF);
+    } else if (type === 'shl') {
+      let shift = (argVal > 0 ? argVal : 1) % 8;
+      for (let i = 0; i < newBuf.length; i++) newBuf[i] = (newBuf[i] << shift) & 0xFF;
+    } else if (type === 'shr') {
+      let shift = (argVal > 0 ? argVal : 1) % 8;
+      for (let i = 0; i < newBuf.length; i++) newBuf[i] = (newBuf[i] >>> shift) & 0xFF;
+    } else if (type === 'rol') {
+      let shift = (argVal > 0 ? argVal : 1) % 8;
+      for (let i = 0; i < newBuf.length; i++) {
+        let b = newBuf[i];
+        newBuf[i] = ((b << shift) | (b >>> (8 - shift))) & 0xFF;
+      }
+    } else if (type === 'ror') {
+      let shift = (argVal > 0 ? argVal : 1) % 8;
+      for (let i = 0; i < newBuf.length; i++) {
+        let b = newBuf[i];
+        newBuf[i] = ((b >>> shift) | (b << (8 - shift))) & 0xFF;
+      }
+    } else if (type === 'add') {
+      for (let i = 0; i < newBuf.length; i++) newBuf[i] = (newBuf[i] + argVal) & 0xFF;
+    } else if (type === 'sub') {
+      for (let i = 0; i < newBuf.length; i++) newBuf[i] = (newBuf[i] - argVal) & 0xFF;
+    } else if (type === 'upper') {
+      for (let i = 0; i < newBuf.length; i++) {
+        if (newBuf[i] >= 97 && newBuf[i] <= 122) newBuf[i] -= 32;
+      }
+    } else if (type === 'lower') {
+      for (let i = 0; i < newBuf.length; i++) {
+        if (newBuf[i] >= 65 && newBuf[i] <= 90) newBuf[i] += 32;
+      }
     } else if (type === 'fill') {
       newBuf.fill(argVal & 0xFF);
     } else if (type === 'swap16') {
@@ -2302,7 +2583,73 @@
       for (let i = 0; i < binaryBuffer.length; i++) {
         out += '0x' + binaryBuffer[i].toString(16).padStart(2, '0').toUpperCase();
         if (i < binaryBuffer.length - 1) out += ', ';
-        if ((i + 1) % 12 === 0) out += '\n  ';
+        if ((i + 1) % 12 === 0 && i < binaryBuffer.length - 1) out += '\n  ';
+      }
+      out += '\n};';
+    } else if (preset === 'intelhex') {
+      let offset = 0;
+      while (offset < binaryBuffer.length) {
+        let chunkLen = Math.min(16, binaryBuffer.length - offset);
+        let addr = offset & 0xFFFF;
+        let sum = chunkLen + ((addr >> 8) & 0xFF) + (addr & 0xFF) + 0x00;
+        let dataHex = '';
+        for (let i = 0; i < chunkLen; i++) {
+          let b = binaryBuffer[offset + i];
+          sum += b;
+          dataHex += b.toString(16).padStart(2, '0').toUpperCase();
+        }
+        let chk = ((~sum + 1) & 0xFF).toString(16).padStart(2, '0').toUpperCase();
+        let lenStr = chunkLen.toString(16).padStart(2, '0').toUpperCase();
+        let addrStr = addr.toString(16).padStart(4, '0').toUpperCase();
+        out += ':' + lenStr + addrStr + '00' + dataHex + chk + '\n';
+        offset += chunkLen;
+      }
+      out += ':00000001FF\n';
+      out += '; Intel HEX Format (' + binaryBuffer.length + ' bytes total)';
+    } else if (preset === 'asmdb') {
+      out = '; x86 / NASM Assembly Byte Directives (' + binaryBuffer.length + ' bytes)\n';
+      out += 'data_bytes:\n';
+      let rows = Math.ceil(binaryBuffer.length / 16);
+      for (let r = 0; r < rows; r++) {
+        let chunkLen = Math.min(16, binaryBuffer.length - r * 16);
+        let byteHexes = [];
+        let asciiStr = '';
+        for (let i = 0; i < chunkLen; i++) {
+          let b = binaryBuffer[r * 16 + i];
+          byteHexes.push('0x' + b.toString(16).padStart(2, '0').toUpperCase());
+          asciiStr += (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
+        }
+        out += '  db ' + byteHexes.join(', ').padEnd(80, ' ') + ' ; |' + asciiStr + '|\n';
+      }
+      out += 'data_len equ $ - data_bytes\n';
+    } else if (preset === 'json') {
+      let rows = Math.ceil(binaryBuffer.length / 16);
+      let items = [];
+      for (let i = 0; i < binaryBuffer.length; i++) {
+        items.push('"0x' + binaryBuffer[i].toString(16).padStart(2, '0').toUpperCase() + '"');
+      }
+      out = '[\n';
+      for (let r = 0; r < rows; r++) {
+        let slice = items.slice(r * 16, r * 16 + 16);
+        out += '  ' + slice.join(', ') + (r < rows - 1 ? ',\n' : '\n');
+      }
+      out += ']';
+    } else if (preset === 'rust') {
+      out = '// Rust byte slice (&[u8]) - ' + binaryBuffer.length + ' bytes\n';
+      out += 'pub const DATA: &[u8] = &[\n  ';
+      for (let i = 0; i < binaryBuffer.length; i++) {
+        out += '0x' + binaryBuffer[i].toString(16).padStart(2, '0').toUpperCase();
+        if (i < binaryBuffer.length - 1) out += ', ';
+        if ((i + 1) % 12 === 0 && i < binaryBuffer.length - 1) out += '\n  ';
+      }
+      out += '\n];';
+    } else if (preset === 'csharp') {
+      out = '// C# byte array (byte[]) - ' + binaryBuffer.length + ' bytes\n';
+      out += 'public static readonly byte[] Data = new byte[] {\n  ';
+      for (let i = 0; i < binaryBuffer.length; i++) {
+        out += '0x' + binaryBuffer[i].toString(16).padStart(2, '0').toUpperCase();
+        if (i < binaryBuffer.length - 1) out += ', ';
+        if ((i + 1) % 12 === 0 && i < binaryBuffer.length - 1) out += '\n  ';
       }
       out += '\n};';
     } else if (preset === 'pybytes') {

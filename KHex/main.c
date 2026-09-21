@@ -23,11 +23,15 @@
 #define ID_BTN_PRESET 19
 #define ID_BTN_COPYOUT 20
 #define ID_BTN_CLEAROUT 21
+#define ID_BTN_ROL32 22
+#define ID_BTN_ROR32 23
+#define ID_BTN_INTELHEX 24
+#define ID_BTN_ASMDB 25
 
 HWND hHex, hDec, hBin, hOct, hAscii;
 HWND hInt8, hUint8, hInt16, hUint16, hInt32, hUint32, hFloat;
 HWND hEntropy, hPopCount, hSig;
-HWND hSum8, hSum16, hSum32, hXor8, hCRC32;
+HWND hSum8, hSum16, hSum32, hXor8, hCRC32, hAdler32, hFNV1a, hCRC16;
 HWND hExportEdit, hEndianBtn;
 
 BOOL updating = FALSE;
@@ -185,6 +189,73 @@ unsigned int calcCRC32(unsigned int val) {
     return crc ^ 0xFFFFFFFF;
 }
 
+// Adler-32 Checksum
+unsigned int calcAdler32(unsigned int val) {
+    unsigned char bytes[4];
+    bytes[0] = (val >> 24) & 0xFF;
+    bytes[1] = (val >> 16) & 0xFF;
+    bytes[2] = (val >> 8) & 0xFF;
+    bytes[3] = val & 0xFF;
+
+    unsigned int s1 = 1, s2 = 0;
+    int i;
+    for (i = 0; i < 4; i++) {
+        s1 = (s1 + bytes[i]) % 65521;
+        s2 = (s2 + s1) % 65521;
+    }
+    return (s2 << 16) | s1;
+}
+
+// FNV-1a 32-bit Hash
+unsigned int calcFNV1a(unsigned int val) {
+    unsigned char bytes[4];
+    bytes[0] = (val >> 24) & 0xFF;
+    bytes[1] = (val >> 16) & 0xFF;
+    bytes[2] = (val >> 8) & 0xFF;
+    bytes[3] = val & 0xFF;
+
+    unsigned int hash = 2166136261u;
+    int i;
+    for (i = 0; i < 4; i++) {
+        hash ^= bytes[i];
+        hash *= 16777619u;
+    }
+    return hash;
+}
+
+// CRC-16 (CCITT 0x1021)
+unsigned short calcCRC16(unsigned int val) {
+    unsigned char bytes[4];
+    bytes[0] = (val >> 24) & 0xFF;
+    bytes[1] = (val >> 16) & 0xFF;
+    bytes[2] = (val >> 8) & 0xFF;
+    bytes[3] = val & 0xFF;
+
+    unsigned short crc = 0xFFFF;
+    int i, j;
+    for (i = 0; i < 4; i++) {
+        crc ^= ((unsigned short)bytes[i] << 8);
+        for (j = 0; j < 8; j++) {
+            if (crc & 0x8000) crc = (crc << 1) ^ 0x1021;
+            else crc <<= 1;
+        }
+    }
+    return crc;
+}
+
+// 32-bit Rotations
+unsigned int rol32(unsigned int v, int n) {
+    n &= 31;
+    if (n == 0) return v;
+    return (v << n) | (v >> (32 - n));
+}
+
+unsigned int ror32(unsigned int v, int n) {
+    n &= 31;
+    if (n == 0) return v;
+    return (v >> n) | (v << (32 - n));
+}
+
 // Simple Float format to string
 void fmtFloat(float f, char* buf) {
     int intPart = (int)f;
@@ -271,6 +342,7 @@ const char* detectMagicSignature(unsigned int val, unsigned int swapVal) {
     if (v == 0x75737461 || s == 0x75737461) return "TAR Archive (.tar) [0x75737461]";
     if (v == 0x1A45DFA3 || s == 0x1A45DFA3) return "Matroska / WebM Video (.mkv) [0x1A45DFA3]";
     if (v == 0x464C5601 || s == 0x464C5601) return "Flash Video Container (.flv) [0x464C5601]";
+    if (v == 0x10199904 || s == 0x10199904) return "Project Echo Sector [kweb://10.19.99.4/classified]";
 
     unsigned short w1 = (unsigned short)((v >> 16) & 0xFFFF);
     unsigned short w0 = (unsigned short)(v & 0xFFFF);
@@ -337,12 +409,18 @@ void UpdateInspector(unsigned int val) {
     unsigned int sum32 = inspectVal;
     unsigned int xor8 = b0 ^ b1 ^ b2 ^ b3;
     unsigned int crc32 = calcCRC32(inspectVal);
+    unsigned int adler32 = calcAdler32(inspectVal);
+    unsigned int fnv1a = calcFNV1a(inspectVal);
+    unsigned short crc16 = calcCRC16(inspectVal);
 
     wsprintfA(buf, "0x%02X", sum8); SetWindowTextA(hSum8, buf);
     wsprintfA(buf, "0x%04X", sum16); SetWindowTextA(hSum16, buf);
     wsprintfA(buf, "0x%08X", sum32); SetWindowTextA(hSum32, buf);
     wsprintfA(buf, "0x%02X", xor8); SetWindowTextA(hXor8, buf);
     wsprintfA(buf, "0x%08X", crc32); SetWindowTextA(hCRC32, buf);
+    wsprintfA(buf, "0x%08X", adler32); SetWindowTextA(hAdler32, buf);
+    wsprintfA(buf, "0x%08X", fnv1a); SetWindowTextA(hFNV1a, buf);
+    wsprintfA(buf, "0x%04X", crc16); SetWindowTextA(hCRC16, buf);
 }
 
 void UpdateFields(HWND hSrc) {
@@ -410,6 +488,40 @@ void ExportHexDump(unsigned int val) {
     SetWindowTextA(hExportEdit, out);
 }
 
+void ExportIntelHex(unsigned int val) {
+    char out[256];
+    unsigned char b0 = (val >> 24) & 0xFF;
+    unsigned char b1 = (val >> 16) & 0xFF;
+    unsigned char b2 = (val >> 8) & 0xFF;
+    unsigned char b3 = val & 0xFF;
+    unsigned int sum = 0x04 + 0x00 + 0x00 + 0x00 + b0 + b1 + b2 + b3;
+    unsigned char chk = (unsigned char)((~sum + 1) & 0xFF);
+    wsprintfA(out,
+        ":04000000%02X%02X%02X%02X%02X\r\n"
+        ":00000001FF\r\n"
+        "; Intel HEX Format (1 Data Record + 1 EOF Record)",
+        b0, b1, b2, b3, chk);
+    SetWindowTextA(hExportEdit, out);
+}
+
+void ExportAsmDb(unsigned int val) {
+    char out[256];
+    unsigned char b0 = (val >> 24) & 0xFF;
+    unsigned char b1 = (val >> 16) & 0xFF;
+    unsigned char b2 = (val >> 8) & 0xFF;
+    unsigned char b3 = val & 0xFF;
+    char c0 = (b0 >= 32 && b0 <= 126) ? b0 : '.';
+    char c1 = (b1 >= 32 && b1 <= 126) ? b1 : '.';
+    char c2 = (b2 >= 32 && b2 <= 126) ? b2 : '.';
+    char c3 = (b3 >= 32 && b3 <= 126) ? b3 : '.';
+    wsprintfA(out,
+        "; x86 / NASM Assembly Directives\r\n"
+        "data_val:  db 0x%02X, 0x%02X, 0x%02X, 0x%02X  ; ASCII: '%c%c%c%c'\r\n"
+        "           dd 0x%08X                ; 32-bit Dword representation",
+        b0, b1, b2, b3, c0, c1, c2, c3, val);
+    SetWindowTextA(hExportEdit, out);
+}
+
 void ExportDissection(unsigned int val) {
     char out[4096];
     unsigned int swapVal = swap32(val);
@@ -432,46 +544,89 @@ void ExportDissection(unsigned int val) {
     int asciiBytes = (b0 >= 32 && b0 <= 126) + (b1 >= 32 && b1 <= 126) + (b2 >= 32 && b2 <= 126) + (b3 >= 32 && b3 <= 126);
     int highBytes = (b0 >= 128) + (b1 >= 128) + (b2 >= 128) + (b3 >= 128);
 
-    wsprintfA(out,
-        "=======================================================================\r\n"
-        " KHEX DEEP BINARY DISSECTION & SHANNON ENTROPY REPORT\r\n"
-        "=======================================================================\r\n"
-        "Raw Hex Value:        0x%08X  |  Endian Swapped: 0x%08X\r\n"
-        "Active Endian Mode:   %s\r\n"
-        "File Signature Match: %s\r\n"
-        "Shannon Entropy:      %s (%s)\r\n"
-        "Bit Population Count: %d / 32 bits set (%d.%d%% bit density, %s Parity)\r\n"
-        "-----------------------------------------------------------------------\r\n"
-        "BYTE DISTRIBUTION & CLASSIFICATION:\r\n"
-        "  * Null Bytes (0x00):        %d / 4  (%d%%)\r\n"
-        "  * Printable ASCII (32..126): %d / 4  (%d%%)\r\n"
-        "  * High / Binary (>= 0x80):   %d / 4  (%d%%)\r\n"
-        "-----------------------------------------------------------------------\r\n"
-        "BYTE-BY-BYTE STRUCTURAL BREAKDOWN:\r\n"
-        "  [0] 0x%02X (%3u)  Bin: %d%d%d%d%d%d%d%d  ASCII: '%c'  [%s]\r\n"
-        "  [1] 0x%02X (%3u)  Bin: %d%d%d%d%d%d%d%d  ASCII: '%c'  [%s]\r\n"
-        "  [2] 0x%02X (%3u)  Bin: %d%d%d%d%d%d%d%d  ASCII: '%c'  [%s]\r\n"
-        "  [3] 0x%02X (%3u)  Bin: %d%d%d%d%d%d%d%d  ASCII: '%c'  [%s]\r\n"
-        "-----------------------------------------------------------------------\r\n"
-        "INTEGRITY & CHECKSUMS:\r\n"
-        "  Sum8: 0x%02X  |  Sum16: 0x%04X  |  Sum32: 0x%08X\r\n"
-        "  XOR8: 0x%02X  |  CRC32: 0x%08X\r\n"
-        "=======================================================================",
-        val, swapVal,
-        isLittleEndian ? "Little Endian (LE)" : "Big Endian (BE)",
-        sig,
-        entStr, entClass,
-        pop, popPct / 10, popPct % 10, (pop % 2 == 0) ? "Even" : "Odd",
-        nullBytes, nullBytes * 25,
-        asciiBytes, asciiBytes * 25,
-        highBytes, highBytes * 25,
-        b0, b0, (b0>>7)&1, (b0>>6)&1, (b0>>5)&1, (b0>>4)&1, (b0>>3)&1, (b0>>2)&1, (b0>>1)&1, b0&1, (b0>=32&&b0<=126)?b0:'.', (b0>=32&&b0<=126)?"Printable":(b0==0?"Null":"Binary"),
-        b1, b1, (b1>>7)&1, (b1>>6)&1, (b1>>5)&1, (b1>>4)&1, (b1>>3)&1, (b1>>2)&1, (b1>>1)&1, b1&1, (b1>=32&&b1<=126)?b1:'.', (b1>=32&&b1<=126)?"Printable":(b1==0?"Null":"Binary"),
-        b2, b2, (b2>>7)&1, (b2>>6)&1, (b2>>5)&1, (b2>>4)&1, (b2>>3)&1, (b2>>2)&1, (b2>>1)&1, b2&1, (b2>=32&&b2<=126)?b2:'.', (b2>=32&&b2<=126)?"Printable":(b2==0?"Null":"Binary"),
-        b3, b3, (b3>>7)&1, (b3>>6)&1, (b3>>5)&1, (b3>>4)&1, (b3>>3)&1, (b3>>2)&1, (b3>>1)&1, b3&1, (b3>=32&&b3<=126)?b3:'.', (b3>=32&&b3<=126)?"Printable":(b3==0?"Null":"Binary"),
-        (b0+b1+b2+b3)&0xFF, (b0+b1+b2+b3)&0xFFFF, inspectVal,
-        b0^b1^b2^b3, calcCRC32(inspectVal)
-    );
+    unsigned int sum8 = (b0 + b1 + b2 + b3) & 0xFF;
+    unsigned int sum16 = (b0 + b1 + b2 + b3) & 0xFFFF;
+    unsigned int sum32 = inspectVal;
+    unsigned int xor8 = b0 ^ b1 ^ b2 ^ b3;
+    unsigned int crc32 = calcCRC32(inspectVal);
+    unsigned int adler32 = calcAdler32(inspectVal);
+    unsigned int fnv1a = calcFNV1a(inspectVal);
+    unsigned short crc16 = calcCRC16(inspectVal);
+
+    if (val == 0x10199904 || swapVal == 0x10199904) {
+        wsprintfA(out,
+            "=======================================================================\r\n"
+            " KHEX DEEP BINARY DISSECTION & SHANNON ENTROPY REPORT\r\n"
+            "=======================================================================\r\n"
+            "Raw Hex Value:        0x%08X  |  Endian Swapped: 0x%08X\r\n"
+            "Active Endian Mode:   %s\r\n"
+            "File Signature Match: %s\r\n"
+            "Shannon Entropy:      %s (%s)\r\n"
+            "Bit Population Count: %d / 32 bits set (%d.%d%% bit density, %s Parity)\r\n"
+            "-----------------------------------------------------------------------\r\n"
+            "INTEGRITY & CHECKSUMS:\r\n"
+            "  Sum8:    0x%02X     |  Sum16:   0x%04X     |  Sum32:  0x%08X\r\n"
+            "  XOR8:    0x%02X     |  CRC16:   0x%04X     |  CRC32:  0x%08X\r\n"
+            "  Adler32: 0x%08X |  FNV-1a:  0x%08X\r\n"
+            "-----------------------------------------------------------------------\r\n"
+            ">>> PROJECT ECHO CLASSIFIED ARG INTEL DETECTED <<<\r\n"
+            "  Target Subsystem Address: 10.19.99.4\r\n"
+            "  Encrypted Corporate Node: kweb://10.19.99.4/classified\r\n"
+            "  Authorization Directive:  Access via KNet retro browser\r\n"
+            "=======================================================================",
+            val, swapVal,
+            isLittleEndian ? "Little Endian (LE)" : "Big Endian (BE)",
+            sig,
+            entStr, entClass,
+            pop, popPct / 10, popPct % 10, (pop % 2 == 0) ? "Even" : "Odd",
+            sum8, sum16, sum32,
+            xor8, crc16, crc32,
+            adler32, fnv1a
+        );
+    } else {
+        wsprintfA(out,
+            "=======================================================================\r\n"
+            " KHEX DEEP BINARY DISSECTION & SHANNON ENTROPY REPORT\r\n"
+            "=======================================================================\r\n"
+            "Raw Hex Value:        0x%08X  |  Endian Swapped: 0x%08X\r\n"
+            "Active Endian Mode:   %s\r\n"
+            "File Signature Match: %s\r\n"
+            "Shannon Entropy:      %s (%s)\r\n"
+            "Bit Population Count: %d / 32 bits set (%d.%d%% bit density, %s Parity)\r\n"
+            "-----------------------------------------------------------------------\r\n"
+            "BYTE DISTRIBUTION & CLASSIFICATION:\r\n"
+            "  * Null Bytes (0x00):        %d / 4  (%d%%)\r\n"
+            "  * Printable ASCII (32..126): %d / 4  (%d%%)\r\n"
+            "  * High / Binary (>= 0x80):   %d / 4  (%d%%)\r\n"
+            "-----------------------------------------------------------------------\r\n"
+            "BYTE-BY-BYTE STRUCTURAL BREAKDOWN:\r\n"
+            "  [0] 0x%02X (%3u)  Bin: %d%d%d%d%d%d%d%d  ASCII: '%c'  [%s]\r\n"
+            "  [1] 0x%02X (%3u)  Bin: %d%d%d%d%d%d%d%d  ASCII: '%c'  [%s]\r\n"
+            "  [2] 0x%02X (%3u)  Bin: %d%d%d%d%d%d%d%d  ASCII: '%c'  [%s]\r\n"
+            "  [3] 0x%02X (%3u)  Bin: %d%d%d%d%d%d%d%d  ASCII: '%c'  [%s]\r\n"
+            "-----------------------------------------------------------------------\r\n"
+            "INTEGRITY & CHECKSUMS:\r\n"
+            "  Sum8:    0x%02X     |  Sum16:   0x%04X     |  Sum32:  0x%08X\r\n"
+            "  XOR8:    0x%02X     |  CRC16:   0x%04X     |  CRC32:  0x%08X\r\n"
+            "  Adler32: 0x%08X |  FNV-1a:  0x%08X\r\n"
+            "=======================================================================",
+            val, swapVal,
+            isLittleEndian ? "Little Endian (LE)" : "Big Endian (BE)",
+            sig,
+            entStr, entClass,
+            pop, popPct / 10, popPct % 10, (pop % 2 == 0) ? "Even" : "Odd",
+            nullBytes, nullBytes * 25,
+            asciiBytes, asciiBytes * 25,
+            highBytes, highBytes * 25,
+            b0, b0, (b0>>7)&1, (b0>>6)&1, (b0>>5)&1, (b0>>4)&1, (b0>>3)&1, (b0>>2)&1, (b0>>1)&1, b0&1, (b0>=32&&b0<=126)?b0:'.', (b0>=32&&b0<=126)?"Printable":(b0==0?"Null":"Binary"),
+            b1, b1, (b1>>7)&1, (b1>>6)&1, (b1>>5)&1, (b1>>4)&1, (b1>>3)&1, (b1>>2)&1, (b1>>1)&1, b1&1, (b1>=32&&b1<=126)?b1:'.', (b1>=32&&b1<=126)?"Printable":(b1==0?"Null":"Binary"),
+            b2, b2, (b2>>7)&1, (b2>>6)&1, (b2>>5)&1, (b2>>4)&1, (b2>>3)&1, (b2>>2)&1, (b2>>1)&1, b2&1, (b2>=32&&b2<=126)?b2:'.', (b2>=32&&b2<=126)?"Printable":(b2==0?"Null":"Binary"),
+            b3, b3, (b3>>7)&1, (b3>>6)&1, (b3>>5)&1, (b3>>4)&1, (b3>>3)&1, (b3>>2)&1, (b3>>1)&1, b3&1, (b3>=32&&b3<=126)?b3:'.', (b3>=32&&b3<=126)?"Printable":(b3==0?"Null":"Binary"),
+            sum8, sum16, sum32,
+            xor8, crc16, crc32,
+            adler32, fnv1a
+        );
+    }
 
     SetWindowTextA(hExportEdit, out);
 }
@@ -488,7 +643,8 @@ static const struct {
     { "DOS / PE Executable (0x00005A4D)", 0x00005A4D },
     { "Java Class Bytecode (0xCAFEBABE)", 0xCAFEBABE },
     { "WebAssembly Binary (0x6D736100)", 0x6D736100 },
-    { "Float Pi 3.14159 (0x40490FDB)", 0x40490FDB }
+    { "Float Pi 3.14159 (0x40490FDB)", 0x40490FDB },
+    { "Project Echo Sector (0x10199904)", 0x10199904 }
 };
 #define NUM_PRESETS (sizeof(PRESETS) / sizeof(PRESETS[0]))
 
@@ -514,7 +670,7 @@ void ApplyNextPreset(HWND hwnd) {
     g_presetIdx = (g_presetIdx + 1) % NUM_PRESETS;
     SetCurrentVal(PRESETS[g_presetIdx].val);
     char msg[256];
-    wsprintfA(msg, "=== PRESET LOADED: %s ===\r\n\r\nHex: 0x%08X\r\nType in any base field to inspect or modify.\r\nPress Ctrl+1..7 for byte operations & exports.", PRESETS[g_presetIdx].name, PRESETS[g_presetIdx].val);
+    wsprintfA(msg, "=== PRESET LOADED: %s ===\r\n\r\nHex: 0x%08X\r\nType in any base field to inspect or modify.\r\nPress Ctrl+1..9, Ctrl+L/R for byte operations & exports.", PRESETS[g_presetIdx].name, PRESETS[g_presetIdx].val);
     SetWindowTextA(hExportEdit, msg);
 }
 
@@ -524,21 +680,25 @@ void ShowHelpDialog(HWND hwnd) {
         "CORE FEATURES:\n"
         " • Base Converter: Live sync between Hex, Dec, Bin, Oct, and ASCII.\n"
         " • Multi-Type Inspector: Signed/Unsigned Int8/16/32, Float32, PopCount, Shannon Entropy & File Signature.\n"
-        " • Checksum Suite: Instant Sum8, Sum16, Sum32, XOR8, and IEEE CRC32.\n"
-        " • Byte Operations: Swap16, Swap32, Invert (~), and XOR 0xFF mask.\n"
-        " • Export Suite: C/C++ byte arrays, formatted HexDump, and deep Shannon Entropy reports.\n"
+        " • Checksum Suite: Instant Sum8, Sum16, Sum32, XOR8, CRC16, CRC32, Adler-32, and FNV-1a.\n"
+        " • Byte Operations: Swap16, Swap32, Invert (~), XOR 0xFF mask, ROL32, and ROR32.\n"
+        " • Export Suite: C/C++ byte arrays, formatted HexDump, Intel HEX, NASM Asm DB, and deep Shannon Entropy reports.\n"
         " • Clipboard: One-click 'Copy Output' to export your results instantly.\n\n"
         "KEYBOARD SHORTCUTS:\n"
         " • [F1]               : Open this Help Dialog\n"
-        " • [P]                : Cycle Presets (PNG, ZIP, ELF, MZ, Wasm, Float Pi)\n"
+        " • [P]                : Cycle Presets (PNG, ZIP, ELF, MZ, Wasm, Float Pi, Echo Sector)\n"
         " • [Ctrl+E]           : Toggle Endianness (LE / BE)\n"
         " • [Ctrl+1]           : Endian Swap 16-bit Words\n"
         " • [Ctrl+2]           : Endian Swap 32-bit Words\n"
         " • [Ctrl+3]           : Bitwise Invert (~)\n"
         " • [Ctrl+4]           : XOR 0xFF Mask\n"
+        " • [Ctrl+L]           : Rotate Left 1 Bit (ROL)\n"
+        " • [Ctrl+R]           : Rotate Right 1 Bit (ROR)\n"
         " • [Ctrl+5]           : Export as C Array\n"
         " • [Ctrl+6]           : Export as HexDump\n"
         " • [Ctrl+7]           : Deep Dissection & Entropy Report\n"
+        " • [Ctrl+8]           : Export as Intel HEX\n"
+        " • [Ctrl+9]           : Export as Assembly DB\n"
         " • [Ctrl+C]           : Copy Output to Clipboard\n\n"
         "Tip: Type in any base field to instantly update all representations.",
         "KHex Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
@@ -840,36 +1000,55 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             CreateWindowEx(0, "STATIC", "--- CHECKSUM & HASH SUITE ---", WS_CHILD | WS_VISIBLE, 10, 210, 250, 16, hwnd, NULL, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "Sum8:", WS_CHILD | WS_VISIBLE, 10, 230, 40, 20, hwnd, NULL, NULL, NULL);
-            hSum8 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00", WS_CHILD | WS_VISIBLE | ES_READONLY, 55, 230, 70, 22, hwnd, NULL, NULL, NULL);
+            hSum8 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00", WS_CHILD | WS_VISIBLE | ES_READONLY, 50, 230, 65, 22, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "Sum16:", WS_CHILD | WS_VISIBLE, 135, 230, 45, 20, hwnd, NULL, NULL, NULL);
-            hSum16 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x0000", WS_CHILD | WS_VISIBLE | ES_READONLY, 185, 230, 90, 22, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Sum16:", WS_CHILD | WS_VISIBLE, 122, 230, 45, 20, hwnd, NULL, NULL, NULL);
+            hSum16 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x0000", WS_CHILD | WS_VISIBLE | ES_READONLY, 170, 230, 75, 22, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "XOR8:", WS_CHILD | WS_VISIBLE, 285, 230, 40, 20, hwnd, NULL, NULL, NULL);
-            hXor8 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00", WS_CHILD | WS_VISIBLE | ES_READONLY, 330, 230, 70, 22, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "XOR8:", WS_CHILD | WS_VISIBLE, 252, 230, 40, 20, hwnd, NULL, NULL, NULL);
+            hXor8 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00", WS_CHILD | WS_VISIBLE | ES_READONLY, 292, 230, 65, 22, hwnd, NULL, NULL, NULL);
+
+            CreateWindowEx(0, "STATIC", "Adler32:", WS_CHILD | WS_VISIBLE, 365, 230, 50, 20, hwnd, NULL, NULL, NULL);
+            hAdler32 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00000000", WS_CHILD | WS_VISIBLE | ES_READONLY, 420, 230, 95, 22, hwnd, NULL, NULL, NULL);
+
+            CreateWindowEx(0, "STATIC", "FNV-1a:", WS_CHILD | WS_VISIBLE, 525, 230, 50, 20, hwnd, NULL, NULL, NULL);
+            hFNV1a = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00000000", WS_CHILD | WS_VISIBLE | ES_READONLY, 580, 230, 95, 22, hwnd, NULL, NULL, NULL);
+
+            CreateWindowEx(0, "STATIC", "CRC16:", WS_CHILD | WS_VISIBLE, 685, 230, 45, 20, hwnd, NULL, NULL, NULL);
+            hCRC16 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x0000", WS_CHILD | WS_VISIBLE | ES_READONLY, 735, 230, 85, 22, hwnd, NULL, NULL, NULL);
 
             CreateWindowEx(0, "STATIC", "CRC32:", WS_CHILD | WS_VISIBLE, 10, 255, 45, 20, hwnd, NULL, NULL, NULL);
-            hCRC32 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00000000", WS_CHILD | WS_VISIBLE | ES_READONLY, 60, 255, 120, 22, hwnd, NULL, NULL, NULL);
+            hCRC32 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00000000", WS_CHILD | WS_VISIBLE | ES_READONLY, 60, 255, 115, 22, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "Sum32:", WS_CHILD | WS_VISIBLE, 190, 255, 45, 20, hwnd, NULL, NULL, NULL);
-            hSum32 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00000000", WS_CHILD | WS_VISIBLE | ES_READONLY, 240, 255, 120, 22, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Sum32:", WS_CHILD | WS_VISIBLE, 185, 255, 45, 20, hwnd, NULL, NULL, NULL);
+            hSum32 = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0x00000000", WS_CHILD | WS_VISIBLE | ES_READONLY, 235, 255, 115, 22, hwnd, NULL, NULL, NULL);
 
             // Section 4: Operations & Export
-            CreateWindowEx(0, "STATIC", "--- BYTE OPERATIONS, EXPORT & DISSECTION ---", WS_CHILD | WS_VISIBLE, 10, 285, 340, 16, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "--- BYTE OPERATIONS, EXPORT & DISSECTION ---", WS_CHILD | WS_VISIBLE, 10, 282, 340, 16, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "BUTTON", "Swap16 [^1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 305, 80, 24, hwnd, (HMENU)ID_BTN_SWAP16, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Swap32 [^2]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 95, 305, 80, 24, hwnd, (HMENU)ID_BTN_SWAP32, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Invert [^3]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 180, 305, 75, 24, hwnd, (HMENU)ID_BTN_INVERT, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "XOR FF [^4]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 260, 305, 80, 24, hwnd, (HMENU)ID_BTN_XORMASK, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "C Array [^5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 345, 305, 80, 24, hwnd, (HMENU)ID_BTN_CARRAY, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "HexDump [^6]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 430, 305, 85, 24, hwnd, (HMENU)ID_BTN_DUMP, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Dissect & Entropy [^7]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 520, 305, 140, 24, hwnd, (HMENU)ID_BTN_DISSECT, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Copy Output", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 665, 305, 90, 24, hwnd, (HMENU)ID_BTN_COPYOUT, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 760, 305, 60, 24, hwnd, (HMENU)ID_BTN_CLEAROUT, NULL, NULL);
+            // Row 1 Operations Buttons (y=300)
+            CreateWindowEx(0, "BUTTON", "Swap16 [^1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 300, 75, 24, hwnd, (HMENU)ID_BTN_SWAP16, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Swap32 [^2]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 90, 300, 75, 24, hwnd, (HMENU)ID_BTN_SWAP32, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Invert [^3]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 170, 300, 70, 24, hwnd, (HMENU)ID_BTN_INVERT, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "XOR FF [^4]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 245, 300, 75, 24, hwnd, (HMENU)ID_BTN_XORMASK, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "ROL32 [^L]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 325, 300, 75, 24, hwnd, (HMENU)ID_BTN_ROL32, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "ROR32 [^R]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 405, 300, 75, 24, hwnd, (HMENU)ID_BTN_ROR32, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Preset [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 485, 300, 75, 24, hwnd, (HMENU)ID_BTN_PRESET, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 565, 300, 65, 24, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Copy Output", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 635, 300, 95, 24, hwnd, (HMENU)ID_BTN_COPYOUT, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 735, 300, 60, 24, hwnd, (HMENU)ID_BTN_CLEAROUT, NULL, NULL);
 
-            hExportEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KHex Suite!\r\nPress F1 or click 'Help' for user guide & shortcuts.\r\n\r\nInitial test value 0x12345678 loaded.\r\nClick 'Preset [P]' to cycle famous signatures, or type in any base field.\r\nClick 'Copy Output' or press Ctrl+C to copy results to clipboard.", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_READONLY | WS_TABSTOP, 10, 335, 810, 355, hwnd, NULL, NULL, NULL);
+            // Row 2 Export Buttons (y=328)
+            CreateWindowEx(0, "BUTTON", "C Array [^5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 328, 80, 24, hwnd, (HMENU)ID_BTN_CARRAY, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "HexDump [^6]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 95, 328, 85, 24, hwnd, (HMENU)ID_BTN_DUMP, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Intel HEX [^8]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 185, 328, 95, 24, hwnd, (HMENU)ID_BTN_INTELHEX, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Asm DB [^9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 285, 328, 85, 24, hwnd, (HMENU)ID_BTN_ASMDB, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Dissect & Entropy [^7]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 375, 328, 140, 24, hwnd, (HMENU)ID_BTN_DISSECT, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 520, 328, 80, 24, hwnd, (HMENU)100, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "Shortcuts: F1 (Help), P (Preset), Ctrl+E (Endian), Ctrl+1..7 (Ops), Ctrl+C (Copy Output)", WS_CHILD | WS_VISIBLE, 10, 698, 620, 18, hwnd, NULL, NULL, NULL);
+            hExportEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KHex Suite!\r\nPress F1 or click 'Help' for user guide & shortcuts.\r\n\r\nInitial test value 0x12345678 loaded.\r\nClick 'Preset [P]' to cycle famous signatures, or type in any base field.\r\nClick 'Copy Output' or press Ctrl+C to copy results to clipboard.", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_READONLY | WS_TABSTOP, 10, 356, 810, 335, hwnd, NULL, NULL, NULL);
+
+            CreateWindowEx(0, "STATIC", "Shortcuts: F1 (Help), P (Preset), Ctrl+E (Endian), Ctrl+1..9 (Ops & Exports), Ctrl+L/R (Rot), Ctrl+C (Copy)", WS_CHILD | WS_VISIBLE, 10, 698, 700, 18, hwnd, NULL, NULL, NULL);
 
             // Initialize Motes
             if (!g_motesInit) {
@@ -907,48 +1086,64 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SpawnShockwave(380, 115, RGB(6, 182, 212));
                 } else if (id == ID_BTN_SWAP16) {
                     SetCurrentVal(swap16(GetCurrentVal()));
-                    SpawnParticles(50, 315, RGB(139, 92, 246), 24);
-                    SpawnShockwave(50, 315, RGB(139, 92, 246));
+                    SpawnParticles(50, 312, RGB(139, 92, 246), 24);
+                    SpawnShockwave(50, 312, RGB(139, 92, 246));
                 } else if (id == ID_BTN_SWAP32) {
                     SetCurrentVal(swap32(GetCurrentVal()));
-                    SpawnParticles(135, 315, RGB(139, 92, 246), 24);
-                    SpawnShockwave(135, 315, RGB(139, 92, 246));
+                    SpawnParticles(135, 312, RGB(139, 92, 246), 24);
+                    SpawnShockwave(135, 312, RGB(139, 92, 246));
                 } else if (id == ID_BTN_INVERT) {
                     SetCurrentVal(~GetCurrentVal());
-                    SpawnParticles(215, 315, RGB(245, 158, 11), 24);
-                    SpawnShockwave(215, 315, RGB(245, 158, 11));
+                    SpawnParticles(215, 312, RGB(245, 158, 11), 24);
+                    SpawnShockwave(215, 312, RGB(245, 158, 11));
                 } else if (id == ID_BTN_XORMASK) {
                     SetCurrentVal(GetCurrentVal() ^ 0xFFFFFFFF);
-                    SpawnParticles(300, 315, RGB(245, 158, 11), 24);
-                    SpawnShockwave(300, 315, RGB(245, 158, 11));
+                    SpawnParticles(300, 312, RGB(245, 158, 11), 24);
+                    SpawnShockwave(300, 312, RGB(245, 158, 11));
+                } else if (id == ID_BTN_ROL32) {
+                    SetCurrentVal(rol32(GetCurrentVal(), 1));
+                    SpawnParticles(360, 312, RGB(6, 182, 212), 24);
+                    SpawnShockwave(360, 312, RGB(6, 182, 212));
+                } else if (id == ID_BTN_ROR32) {
+                    SetCurrentVal(ror32(GetCurrentVal(), 1));
+                    SpawnParticles(440, 312, RGB(6, 182, 212), 24);
+                    SpawnShockwave(440, 312, RGB(6, 182, 212));
                 } else if (id == ID_BTN_CARRAY) {
                     ExportCArray(GetCurrentVal());
-                    SpawnParticles(385, 315, RGB(16, 185, 129), 24);
-                    SpawnShockwave(385, 315, RGB(16, 185, 129));
+                    SpawnParticles(50, 340, RGB(16, 185, 129), 24);
+                    SpawnShockwave(50, 340, RGB(16, 185, 129));
                 } else if (id == ID_BTN_DUMP) {
                     ExportHexDump(GetCurrentVal());
-                    SpawnParticles(470, 315, RGB(59, 130, 246), 24);
-                    SpawnShockwave(470, 315, RGB(59, 130, 246));
+                    SpawnParticles(140, 340, RGB(59, 130, 246), 24);
+                    SpawnShockwave(140, 340, RGB(59, 130, 246));
+                } else if (id == ID_BTN_INTELHEX) {
+                    ExportIntelHex(GetCurrentVal());
+                    SpawnParticles(230, 340, RGB(245, 158, 11), 24);
+                    SpawnShockwave(230, 340, RGB(245, 158, 11));
+                } else if (id == ID_BTN_ASMDB) {
+                    ExportAsmDb(GetCurrentVal());
+                    SpawnParticles(330, 340, RGB(139, 92, 246), 24);
+                    SpawnShockwave(330, 340, RGB(139, 92, 246));
                 } else if (id == ID_BTN_DISSECT) {
                     ExportDissection(GetCurrentVal());
-                    SpawnParticles(590, 315, RGB(6, 182, 212), 32);
-                    SpawnShockwave(590, 315, RGB(6, 182, 212));
+                    SpawnParticles(445, 340, RGB(6, 182, 212), 32);
+                    SpawnShockwave(445, 340, RGB(6, 182, 212));
                 } else if (id == ID_BTN_RESET) {
                     SetCurrentVal(0);
-                    SpawnParticles(690, 20, RGB(239, 68, 68), 20);
+                    SpawnParticles(595, 312, RGB(239, 68, 68), 20);
                 } else if (id == ID_BTN_PRESET) {
                     ApplyNextPreset(hwnd);
-                    SpawnParticles(600, 20, RGB(6, 182, 212), 24);
-                    SpawnShockwave(600, 20, RGB(6, 182, 212));
+                    SpawnParticles(520, 312, RGB(6, 182, 212), 24);
+                    SpawnShockwave(520, 312, RGB(6, 182, 212));
                 } else if (id == ID_BTN_COPYOUT) {
                     CopyExportToClipboard(hwnd);
-                    SpawnParticles(710, 315, RGB(16, 185, 129), 24);
-                    SpawnShockwave(710, 315, RGB(16, 185, 129));
+                    SpawnParticles(680, 312, RGB(16, 185, 129), 24);
+                    SpawnShockwave(680, 312, RGB(16, 185, 129));
                 } else if (id == ID_BTN_CLEAROUT) {
                     SetWindowTextA(hExportEdit, "");
-                    SpawnParticles(790, 315, RGB(239, 68, 68), 16);
+                    SpawnParticles(765, 312, RGB(239, 68, 68), 16);
                 } else if (id == 100) {
-                    SpawnParticles(780, 20, RGB(6, 182, 212), 24);
+                    SpawnParticles(560, 340, RGB(6, 182, 212), 24);
                     ShowHelpDialog(hwnd);
                 }
             }
@@ -1008,7 +1203,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (hCtl == hExportEdit) {
                 SetTextColor(hdc, RGB(226, 232, 240));
                 SetBkColor(hdc, RGB(15, 23, 42));
-            } else if (hCtl == hEntropy || hCtl == hSig || hCtl == hCRC32) {
+            } else if (hCtl == hEntropy || hCtl == hSig || hCtl == hCRC32 || hCtl == hAdler32 || hCtl == hFNV1a || hCtl == hCRC16) {
                 SetTextColor(hdc, RGB(6, 182, 212));
                 SetBkColor(hdc, RGB(15, 23, 42));
             } else {
@@ -1256,6 +1451,18 @@ void MainEntry() {
                     continue;
                 } else if (msg.wParam == '7') {
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DISSECT, BN_CLICKED), 0);
+                    continue;
+                } else if (msg.wParam == '8') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_INTELHEX, BN_CLICKED), 0);
+                    continue;
+                } else if (msg.wParam == '9') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_ASMDB, BN_CLICKED), 0);
+                    continue;
+                } else if (msg.wParam == 'L' || msg.wParam == 'l') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_ROL32, BN_CLICKED), 0);
+                    continue;
+                } else if (msg.wParam == 'R' || msg.wParam == 'r') {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_ROR32, BN_CLICKED), 0);
                     continue;
                 }
             } else {

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -16,12 +16,12 @@ current_targets:
   kilo_usability: KBookmark
   kilo_graphics: KColony
   kilo_qa: KTerm
-  kilo_expander: KHex
+  kilo_expander: KBase
   kilo_creator: "KHash (Multi-algorithm checksum tool)"
 last_run:
-  agent: kilo-qa
-  app: KTask
-  timestamp: "2026-09-21T13:55:00Z"
+  agent: kilo-expander
+  app: KHex
+  timestamp: "2026-09-21T15:55:00Z"
 last_planner_run: "2026-09-21T05:46:00Z"
 ---
 
@@ -85,9 +85,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAlchemy`, `KAsteroids`, `KChrono`, `KColony`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMine`, `KMystery`, `KPac`, `KQuest`, `KRogue`, `KSanctuary`, `KStarDredge`, `KSubmarine` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KHex`
+- **Current Target**: `KBase`
 - **Upcoming Queue**:
-  `KBase`, `KFont`, `KPad`, `KNote`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KTerm`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`.
+  `KFont`, `KPad`, `KNote`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KTerm`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHex`.
 
 ### 7. Future Strategic Milestone: The "Virtual 1999 Web" Initiative
 - **Objective**: Create a living, interconnected retro Web 1.0 ecosystem accessible directly through `KNet`.
@@ -123,6 +123,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-21T15:55:00Z — kilo-expander: KHex**
+  - Status: PASS ✅ (Deep forensic & algorithmic feature expansion, Win32 C & Web parity).
+  - Algorithmic Hashes & Parity: Added Adler-32, FNV-1a 32-bit, and CRC-16 CCITT alongside IEEE CRC32, MD5, and SHA-256.
+  - Multi-Language Code Exports: Added Intel HEX (.hex), NASM Assembly DB directives, JSON, Rust, and C# byte arrays.
+  - Bitwise & Arithmetic Suite: Added bitwise shifts (shl/shr), rotations (rol/ror), modular add/sub, logic and/or, and case toggles.
+  - Memory Navigation & Heatmap: Added buffer address jumping and +/-16B stepping toolbar, and chunked sliding-window entropy heatmap.
+  - Project Echo ARG Integration: Added corporate ROM sector preset (0x10199904 / 10.19.99.4) linking to kweb://10.19.99.4/classified.
+  - Verification: Clean MSVC Native C build (29.5 KB); Vite web build clean (127.5 KB); security linter and verification suite passed.
+
 - **2026-09-21T13:55:00Z — kilo-qa: KTask**
   - Status: PASS ✅ (Pass 5 audit: Quicksave/quickload state persistence, tutorial integrity, modal ergonomics, leak cleanup).
   - State Persistence: Quicksave (F5) and quickload (F9) across web and native (ktask.dat / localStorage) capturing full task snapshot, hierarchy, and filters.
@@ -155,14 +164,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & URL Robustness: Auto-prepended https:// on schemeless URLs; auto-created target categories in batch move.
   - Netscape Import & Sync: Extracted folder names from Netscape H3 headers; synchronized tutorial checkbox with storage.
   - Verification: MSVC Native C build clean (22.5 KB); Vite web build clean (101.8 KB); 7 headless CDP suites passed.
-
-- **2026-09-21T05:46:00Z — kilo-planner: Fleet Planning & Queue Compaction**
-  - Status: PASS ✅ (24h velocity evaluated, queue health verified, log archive compacted).
-  - Velocity & Health: Fleet operating at 100% PASS rate; orchestrator rebase recovery hardened; KBookmark & KPomodoro ready for audit chain.
-  - Target Alignment: Confirmed kilo-tester on KBookmark, kilo-usability on KPomodoro, kilo-graphics on KAlchemy, kilo-qa on KTask (Pass 5), kilo-expander on KHex, kilo-creator on KHash.
-  - Rotation Schedule: Configured active rotation to tester ➔ usability ➔ graphics ➔ qa ➔ expander ➔ creator.
-  - Log Compaction: Compacted 2026-09-19 KFortress log to archive/fleet_execution_archive.md; preserved 5-entry active limit.
-  - Verification: Security lint passed cleanly; orchestrator queue validation verified.
 
 
 
