@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-19T20:45:00Z — kilo-expander: KPing**
+  - Status: PASS ✅ (Deep diagnostic expansion, subnet sweep, DNS inspector, performance metrics, multi-format export).
+  - Diagnostic Modes: Added Subnet LAN discovery sweep [S] probing active local nodes and DNS & RFC IP inspector [D] for address classification.
+  - Granular Parameters: Added wait timeout control (-w), reverse DNS resolution (-a), and enhanced Hex & ASCII payload inspection.
+  - Performance Metrics: Added RFC 3550 Mean Jitter, standard deviation (sigma), VoIP MOS Score (1.0-4.5), and Network SLA compliance grade (A+ to F).
+  - Multi-Format Export: Added CSV spreadsheet table and Markdown engineering audit report exports alongside JSON and TXT in web and native C.
+  - Console Usability: Added real-time log filter pills (Replies, Loss/Timeout, Hops, Probes) and search input; added F5 quicksave and F9 quickload.
+  - Verification: Clean MSVC Native C build (28.5 KB); Vite web build clean (84.2 KB); all security lint gates and <999 KB constraints passed.
+
 - **2026-09-19T18:45:00Z — kilo-qa: KSys**
   - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial integrity, interactive modals).
   - State Persistence: Quicksave (F5) & quickload (F9) across web and native (ksys.dat / localStorage) capturing full telemetry, benchmarks, daemons, logs, and tabs.

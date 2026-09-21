@@ -45,7 +45,7 @@ static int g_focusMin = 25;
 static int g_shortMin = 5;
 static int g_longMin = 15;
 
-static char g_statusText[128] = "KPomodoro Ready. Press [Space] to begin focus cycle.";
+static char g_statusText[128] = "KPomodoro Ready. Press [Space] to begin, [H] for Help.";
 static int g_statusTicks = 0;
 
 // Controls
@@ -257,9 +257,10 @@ static void ShowHelp(HWND hwnd) {
         "  * After 4 sessions, take an extended 15-minute Long Break\n\n"
         "Keyboard Shortcuts:\n"
         "  * Space       : Start / Pause Timer\n"
+        "  * 1, 2, 3     : Switch Mode (1: Focus, 2: Short, 3: Long)\n"
         "  * S           : Skip to Next Phase\n"
         "  * R           : Reset Current Phase\n"
-        "  * F1          : This Help Manual\n"
+        "  * H or F1     : This Help Manual\n"
         "  * F5          : Quicksave State to disk (kpomodoro.dat)\n"
         "  * F9          : Quickload State from disk\n\n"
         "Ludonarrative ARG Lore:\n"
@@ -375,11 +376,13 @@ static void PaintUI(HWND hwnd, HDC hdc) {
     SetTextColor(memDC, COLOR_TEXT_PRIMARY);
     TextOutA(memDC, 32, height - 20, g_statusText, lstrlenA(g_statusText));
 
-    const char* hintText = "Space: Play/Pause | S: Skip | R: Reset | F1: Help | F5: Save | F9: Load";
+    const char* hintText = "Space: Play/Pause | 1-3: Phase | S: Skip | R: Reset | H/F1: Help | F5/F9: Save/Load";
     SIZE hintSize;
     GetTextExtentPoint32A(memDC, hintText, lstrlenA(hintText), &hintSize);
     SetTextColor(memDC, COLOR_TEXT_MUTED);
-    TextOutA(memDC, width - hintSize.cx - 16, height - 20, hintText, lstrlenA(hintText));
+    if (width - hintSize.cx - 16 > 280) {
+        TextOutA(memDC, width - hintSize.cx - 16, height - 20, hintText, lstrlenA(hintText));
+    }
 
     // Blit to screen
     BitBlt(hdc, 0, 0, width, height, memDC, 0, 0, SRCCOPY);
@@ -416,7 +419,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         g_hBtnModeFocus = CreateWindowExA(0, "BUTTON", "Focus (25m)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 420, 8, 100, 30, hwnd, (HMENU)ID_BTN_MODE_FOCUS, NULL, NULL);
         g_hBtnModeShort = CreateWindowExA(0, "BUTTON", "Short (5m)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 530, 8, 90, 30, hwnd, (HMENU)ID_BTN_MODE_SHORT, NULL, NULL);
         g_hBtnModeLong = CreateWindowExA(0, "BUTTON", "Long (15m)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 8, 90, 30, hwnd, (HMENU)ID_BTN_MODE_LONG, NULL, NULL);
-        g_hBtnHelp = CreateWindowExA(0, "BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 730, 8, 70, 30, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+        g_hBtnHelp = CreateWindowExA(0, "BUTTON", "Help (H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 730, 8, 70, 30, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
         // Task edit input
         g_hEditTask = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", g_taskTitle, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 160, 485, 420, 26, hwnd, (HMENU)ID_EDIT_TASK, NULL, NULL);
@@ -478,10 +481,33 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             if (g_statusTicks > 0) {
                 g_statusTicks--;
                 if (g_statusTicks == 0) {
-                    ShowStatus("KPomodoro Ready. Press [Space] to begin focus cycle.");
+                    ShowStatus("KPomodoro Ready. Press [Space] to begin, [H] for Help.");
                 }
             }
         }
+        return 0;
+    }
+
+    case WM_SIZE: {
+        int width = LOWORD(lParam);
+        int height = HIWORD(lParam);
+        int cx = width / 2;
+        if (g_hBtnStart && g_hBtnSkip && g_hBtnReset) {
+            SetWindowPos(g_hBtnStart, NULL, cx - 160, 325, 120, 36, SWP_NOZORDER);
+            SetWindowPos(g_hBtnSkip, NULL, cx - 30, 325, 90, 36, SWP_NOZORDER);
+            SetWindowPos(g_hBtnReset, NULL, cx + 70, 325, 90, 36, SWP_NOZORDER);
+        }
+        if (g_hBtnHelp && g_hBtnModeLong && g_hBtnModeShort && g_hBtnModeFocus) {
+            SetWindowPos(g_hBtnHelp, NULL, width - 85, 8, 75, 30, SWP_NOZORDER);
+            SetWindowPos(g_hBtnModeLong, NULL, width - 185, 8, 95, 30, SWP_NOZORDER);
+            SetWindowPos(g_hBtnModeShort, NULL, width - 285, 8, 95, 30, SWP_NOZORDER);
+            SetWindowPos(g_hBtnModeFocus, NULL, width - 395, 8, 105, 30, SWP_NOZORDER);
+        }
+        if (g_hEditTask && g_hBtnSetTask) {
+            SetWindowPos(g_hEditTask, NULL, cx - 250, 485, 370, 26, SWP_NOZORDER);
+            SetWindowPos(g_hBtnSetTask, NULL, cx + 130, 485, 120, 26, SWP_NOZORDER);
+        }
+        InvalidateRect(hwnd, NULL, TRUE);
         return 0;
     }
 
@@ -495,8 +521,17 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         } else if (wParam == 'R' || wParam == 'r') {
             ResetTimer();
             return 0;
-        } else if (wParam == VK_F1) {
+        } else if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
             ShowHelp(hwnd);
+            return 0;
+        } else if (wParam == '1') {
+            SetMode(MODE_FOCUS, TRUE);
+            return 0;
+        } else if (wParam == '2') {
+            SetMode(MODE_SHORT_BREAK, TRUE);
+            return 0;
+        } else if (wParam == '3') {
+            SetMode(MODE_LONG_BREAK, TRUE);
             return 0;
         } else if (wParam == VK_F5) {
             QuickSave();
@@ -594,8 +629,20 @@ void MainEntry(void) {
                     ResetTimer();
                     continue;
                 }
-                if (msg.wParam == VK_F1) {
+                if (msg.wParam == VK_F1 || msg.wParam == 'H' || msg.wParam == 'h') {
                     ShowHelp(hwnd);
+                    continue;
+                }
+                if (msg.wParam == '1') {
+                    SetMode(MODE_FOCUS, TRUE);
+                    continue;
+                }
+                if (msg.wParam == '2') {
+                    SetMode(MODE_SHORT_BREAK, TRUE);
+                    continue;
+                }
+                if (msg.wParam == '3') {
+                    SetMode(MODE_LONG_BREAK, TRUE);
                     continue;
                 }
                 if (msg.wParam == VK_F5) {

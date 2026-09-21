@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -13,15 +13,15 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KPomodoro
-  kilo_usability: KPomodoro
+  kilo_usability: KBookmark
   kilo_graphics: KAlchemy
   kilo_qa: KTask
   kilo_expander: KHex
   kilo_creator: "KHash (Multi-algorithm checksum tool)"
 last_run:
-  agent: kilo-tester
-  app: KBookmark
-  timestamp: "2026-09-21T07:50:00Z"
+  agent: kilo-usability
+  app: KPomodoro
+  timestamp: "2026-09-21T09:50:00Z"
 last_planner_run: "2026-09-21T05:46:00Z"
 ---
 
@@ -75,9 +75,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColony`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFarm`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMine`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KRogue`, `KSanctuary`, `KScript`, `KSpace`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KBookmark`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KPomodoro`
+- **Current Target**: `KBookmark`
 - **Upcoming Queue**:
-  `KBookmark`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`.
+  `KPaint`, `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KPomodoro`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KTask`
@@ -123,6 +123,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-21T09:50:00Z — kilo-usability: KPomodoro**
+  - Status: PASS ✅ (HiDPI canvas scaling, responsive layout breakpoints, Help & hotkey ergonomics, Win32 WM_SIZE parity).
+  - HiDPI Canvas Scaling: Wired window.devicePixelRatio and dynamic container width scaling to hourly focus activity chart.
+  - Responsive Breakpoints: Added 820px and 540px media queries supporting narrow windows, split-screen tiling, and mobile flex layouts.
+  - Help & Controls Ergonomics: Added visible Help (H) button, wired H/? and 1-3 mode keys in web and Win32 keydown handlers.
+  - Native Win32 Parity: Implemented WM_SIZE handler for dynamic control recentering, updated status bar hotkey hints and dialog.
+  - Verification: Clean MSVC Native C build (16.5 KB); Vite web build clean (72.8 KB); security linter and automated tests passed.
+
 - **2026-09-21T07:50:00Z — kilo-tester: KBookmark**
   - Status: PASS ✅ (6 issues, 6 fixed).
   - Modal & Form Ergonomics: Added backdrop click dismissals across all 7 modals; enabled Enter key submission in form inputs.
@@ -156,15 +164,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Mandatory Compliance: Start splash screen, first-run tutorial, F5/F9 quicksave/load, and localStorage persistence.
   - Native Windows Parity: Double-buffered Win32 C implementation with ListView/ListBox, ShellExecute launch, and binary state.
   - Verification: Clean MSVC Native C build (22.0 KB); Vite web build clean (75.8 KB); all security lint gates and <999 KB limits passed.
-
-- **2026-09-19T20:45:00Z — kilo-expander: KPing**
-  - Status: PASS ✅ (Deep diagnostic expansion, subnet sweep, DNS inspector, performance metrics, multi-format export).
-  - Diagnostic Modes: Added Subnet LAN discovery sweep [S] probing active local nodes and DNS & RFC IP inspector [D] for address classification.
-  - Granular Parameters: Added wait timeout control (-w), reverse DNS resolution (-a), and enhanced Hex & ASCII payload inspection.
-  - Performance Metrics: Added RFC 3550 Mean Jitter, standard deviation (sigma), VoIP MOS Score (1.0-4.5), and Network SLA compliance grade (A+ to F).
-  - Multi-Format Export: Added CSV spreadsheet table and Markdown engineering audit report exports alongside JSON and TXT in web and native C.
-  - Console Usability: Added real-time log filter pills (Replies, Loss/Timeout, Hops, Probes) and search input; added F5 quicksave and F9 quickload.
-  - Verification: Clean MSVC Native C build (28.5 KB); Vite web build clean (84.2 KB); all security lint gates and <999 KB constraints passed.
 
 
 
