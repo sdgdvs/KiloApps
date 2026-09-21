@@ -500,6 +500,11 @@
       background: rgba(56, 189, 248, 0.06);
     }
 
+    .bm-card.active-focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 2px var(--border-focus), 0 4px 12px rgba(0,0,0,0.3);
+    }
+
     .bm-header {
       display: flex;
       align-items: flex-start;
@@ -1240,10 +1245,13 @@
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <div class="diag-metric"><span>Ctrl + N</span> <b>Add New Bookmark</b></div>
           <div class="diag-metric"><span>Ctrl + F or /</span> <b>Focus Omni-Search</b></div>
+          <div class="diag-metric"><span>↑ / ↓</span> <b>Navigate Bookmarks</b></div>
+          <div class="diag-metric"><span>Enter</span> <b>Launch highlighted link / Confirm</b></div>
+          <div class="diag-metric"><span>Space</span> <b>Toggle Star on highlighted</b></div>
+          <div class="diag-metric"><span>1 – 9</span> <b>Switch Categories (1: All, 2: Starred...)</b></div>
           <div class="diag-metric"><span>F5</span> <b>Quicksave Vault State</b></div>
           <div class="diag-metric"><span>F9</span> <b>Quickload Vault State</b></div>
-          <div class="diag-metric"><span>Esc</span> <b>Dismiss Active Modal / Drawer</b></div>
-          <div class="diag-metric"><span>Enter</span> <b>Open highlighted link or confirm</b></div>
+          <div class="diag-metric"><span>Esc</span> <b>Dismiss Active Modal / Clear Search</b></div>
         </div>
 
         <div style="margin-top: 12px; font-size: 12px; color: var(--text-muted); line-height: 1.5;">
@@ -1592,6 +1600,7 @@
       let selectedBookmarkIds = new Set();
       let activeTheme = 'dark';
       let activeDiagBookmarkId = null;
+      let highlightedIndex = -1;
 
       // DOM Elements
       const categoryList = document.getElementById('categoryList');
@@ -1921,6 +1930,7 @@
         const items = getFilteredBookmarks();
 
         if (items.length === 0) {
+          highlightedIndex = -1;
           bookmarksContainer.innerHTML = `
             <div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text-muted);">
               <div style="font-size: 36px; margin-bottom: 8px;">🔍</div>
@@ -1932,11 +1942,17 @@
           return;
         }
 
-        items.forEach(b => {
+        if (highlightedIndex >= items.length) {
+          highlightedIndex = items.length - 1;
+        }
+
+        items.forEach((b, idx) => {
           const proto = getProtocol(b.url);
           const isSelected = selectedBookmarkIds.has(b.id);
+          const isFocused = (idx === highlightedIndex);
           const card = document.createElement('div');
-          card.className = `bm-card ${isSelected ? 'selected' : ''}`;
+          card.className = `bm-card ${isSelected ? 'selected' : ''} ${isFocused ? 'active-focus' : ''}`;
+          card.setAttribute('data-index', idx);
 
           let healthClass = 'status-untested';
           if (b.health === 200) healthClass = 'status-200';
@@ -2015,6 +2031,16 @@
 
           const delBtn = card.querySelector('.btn-del');
           delBtn.onclick = () => deleteBookmark(b.id);
+
+          card.onclick = (e) => {
+            if (e.target.closest('button') || e.target.closest('input') || e.target.closest('a')) return;
+            highlightedIndex = idx;
+            const cards = bookmarksContainer.querySelectorAll('.bm-card');
+            cards.forEach((c, i) => {
+              c.classList.toggle('active-focus', i === highlightedIndex);
+            });
+            setStatus(`Selected [${idx + 1}/${items.length}]: ${b.title} (Enter to open, Space to star)`);
+          };
 
           bookmarksContainer.appendChild(card);
         });
@@ -2112,6 +2138,10 @@
         if (!title || !url) {
           alert('Title and URL are required.');
           return;
+        }
+
+        if (!url.includes('://') && !url.startsWith('internal:') && !url.startsWith('mailto:') && !url.startsWith('/') && !url.startsWith('#')) {
+          url = 'https://' + url;
         }
 
         // Format tags
@@ -2516,28 +2546,43 @@
             // Not JSON, try Netscape Bookmark HTML
           }
 
-          // Netscape Bookmark HTML regex parsing
-          const aRegex = /<A\s+HREF="([^"]+)"[^>]*>([^<]+)<\/A>/gi;
-          let match;
-          while ((match = aRegex.exec(text)) !== null) {
-            const url = match[1];
-            const title = match[2];
-            if (url && !bookmarks.some(b => b.url === url)) {
-              bookmarks.push({
-                id: 'bm-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
-                title: title.trim(),
-                url: url.trim(),
-                category: 'Web 1.0 Portals',
-                tags: ['netscape-import'],
-                notes: 'Imported from browser HTML bookmark export',
-                starred: false,
-                visits: 0,
-                dateAdded: Date.now(),
-                health: 200
-              });
-              importedCount++;
+          // Netscape Bookmark HTML parsing: extract categories (<H3>) and links (<A>)
+          const lines = text.split(/\r?\n/);
+          let currentCategory = 'Web 1.0 Portals';
+          lines.forEach(line => {
+            const h3Match = line.match(/<H3[^>]*>([^<]+)<\/H3>/i);
+            if (h3Match && h3Match[1].trim()) {
+              currentCategory = h3Match[1].trim();
+              if (!categories.some(c => c.name.toLowerCase() === currentCategory.toLowerCase())) {
+                categories.push({
+                  id: 'cat-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+                  name: currentCategory,
+                  glyph: '📁'
+                });
+              }
             }
-          }
+            const aRegex = /<A\s+[^>]*HREF=["']([^"'>\s]+)["'][^>]*>([^<]+)<\/A>/gi;
+            let match;
+            while ((match = aRegex.exec(line)) !== null) {
+              const url = match[1];
+              const title = match[2];
+              if (url && !bookmarks.some(b => b.url === url)) {
+                bookmarks.push({
+                  id: 'bm-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+                  title: title.trim(),
+                  url: url.trim(),
+                  category: currentCategory,
+                  tags: ['netscape-import'],
+                  notes: 'Imported from browser HTML bookmark export',
+                  starred: false,
+                  visits: 0,
+                  dateAdded: Date.now(),
+                  health: 200
+                });
+                importedCount++;
+              }
+            }
+          });
 
           if (importedCount > 0) {
             sfxSave();
@@ -2574,6 +2619,14 @@
 
         const matched = categories.find(c => c.name.toLowerCase() === target.trim().toLowerCase());
         const destName = matched ? matched.name : target.trim();
+
+        if (!matched && !categories.some(c => c.name.toLowerCase() === destName.toLowerCase())) {
+          categories.push({
+            id: 'cat-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+            name: destName,
+            glyph: '📁'
+          });
+        }
 
         bookmarks.forEach(b => {
           if (selectedBookmarkIds.has(b.id)) {
@@ -2620,6 +2673,9 @@
 
       // Keyboard Shortcuts
       window.addEventListener('keydown', (e) => {
+        const isInputFocused = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName);
+        const hasActiveModal = document.querySelector('.modal-overlay.active') !== null;
+
         // Modals close on Escape
         if (e.key === 'Escape') {
           const activeModals = document.querySelectorAll('.modal-overlay.active');
@@ -2627,11 +2683,22 @@
             activeModals.forEach(m => m.classList.remove('active'));
             return;
           }
+          if (document.activeElement === searchInput || searchQuery) {
+            searchInput.value = '';
+            searchQuery = '';
+            searchInput.blur();
+            renderBookmarks();
+            setStatus('Search cleared.');
+            return;
+          }
         }
 
         // Global shortcuts
         if (e.key === 'F1') {
           e.preventDefault();
+          if (checkTutorialSeen) {
+            checkTutorialSeen.checked = !!localStorage.getItem('kbookmark_tutorialSeen');
+          }
           modalHelp.classList.add('active');
           return;
         }
@@ -2655,17 +2722,93 @@
           searchInput.focus();
           return;
         }
-        if (e.key === '/' && document.activeElement !== searchInput) {
+        if (e.key === '/' && !isInputFocused && !hasActiveModal) {
           e.preventDefault();
           searchInput.focus();
           return;
         }
+
+        // Enter key handling
         if (e.key === 'Enter') {
           if (modalSplash.classList.contains('active')) {
             modalSplash.classList.remove('active');
+            localStorage.setItem('kbookmark_tutorialSeen', '1');
+            if (checkTutorialSeen) checkTutorialSeen.checked = true;
             sfxClick();
             return;
           }
+          if (!hasActiveModal && !isInputFocused) {
+            const items = getFilteredBookmarks();
+            if (highlightedIndex >= 0 && highlightedIndex < items.length) {
+              e.preventDefault();
+              openLink(items[highlightedIndex].url, items[highlightedIndex].id);
+              return;
+            }
+          }
+        }
+
+        // Space key handling: toggle star on highlighted bookmark
+        if (e.key === ' ' && !hasActiveModal && !isInputFocused) {
+          const items = getFilteredBookmarks();
+          if (highlightedIndex >= 0 && highlightedIndex < items.length) {
+            e.preventDefault();
+            const b = items[highlightedIndex];
+            sfxStar();
+            b.starred = !b.starred;
+            saveStateToLocal();
+            renderCategories();
+            renderBookmarks();
+            setStatus(b.starred ? `Starred "${b.title}"` : `Unstarred "${b.title}"`);
+            return;
+          }
+        }
+
+        // Arrow navigation: ↑ and ↓ to navigate bookmarks
+        if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !hasActiveModal && !isInputFocused) {
+          const items = getFilteredBookmarks();
+          if (items.length > 0) {
+            e.preventDefault();
+            if (e.key === 'ArrowDown') {
+              highlightedIndex = (highlightedIndex + 1) % items.length;
+            } else {
+              highlightedIndex = (highlightedIndex - 1 + items.length) % items.length;
+            }
+            const cards = bookmarksContainer.querySelectorAll('.bm-card');
+            cards.forEach((c, idx) => {
+              c.classList.toggle('active-focus', idx === highlightedIndex);
+            });
+            if (cards[highlightedIndex]) {
+              cards[highlightedIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
+            const activeBm = items[highlightedIndex];
+            setStatus(`Selected [${highlightedIndex + 1}/${items.length}]: ${activeBm.title} (Enter to open, Space to star)`);
+            return;
+          }
+        }
+
+        // 1-9 Hotkeys for Category Switching
+        if (!e.ctrlKey && !e.altKey && !e.metaKey && !hasActiveModal && !isInputFocused && e.key >= '1' && e.key <= '9') {
+          const num = parseInt(e.key, 10);
+          if (num === 1) {
+            activeCategory = 'all';
+          } else if (num === 2) {
+            activeCategory = 'starred';
+          } else if (num === 3) {
+            activeCategory = 'recent';
+          } else {
+            const catIdx = num - 4;
+            if (catIdx >= 0 && catIdx < categories.length) {
+              activeCategory = categories[catIdx].name;
+            } else {
+              return;
+            }
+          }
+          sfxClick();
+          highlightedIndex = -1;
+          renderCategories();
+          renderBookmarks();
+          setStatus(`Category switched to "${activeCategory}" (Hotkey ${num}).`);
+          return;
         }
       });
 
@@ -2685,6 +2828,9 @@
       };
       document.getElementById('btnHelp').onclick = () => {
         sfxClick();
+        if (checkTutorialSeen) {
+          checkTutorialSeen.checked = !!localStorage.getItem('kbookmark_tutorialSeen');
+        }
         modalHelp.classList.add('active');
       };
 
@@ -2784,13 +2930,48 @@
         sfxClick();
         modalSplash.classList.remove('active');
         localStorage.setItem('kbookmark_tutorialSeen', '1');
+        if (checkTutorialSeen) checkTutorialSeen.checked = true;
       };
       document.getElementById('btnSplashTour').onclick = () => {
         modalSplash.classList.remove('active');
+        if (checkTutorialSeen) {
+          checkTutorialSeen.checked = !!localStorage.getItem('kbookmark_tutorialSeen');
+        }
         modalHelp.classList.add('active');
       };
 
       document.getElementById('fileImporter').onchange = handleFileImport;
+
+      // Modal backdrop click dismissal for all overlays
+      document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) {
+            overlay.classList.remove('active');
+          }
+        });
+      });
+
+      // Enter key submission inside modal input fields
+      [document.getElementById('bmInputTitle'), document.getElementById('bmInputUrl'), document.getElementById('bmInputTags')].forEach(inp => {
+        if (inp) {
+          inp.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              saveBookmarkFromModal();
+            }
+          });
+        }
+      });
+
+      const catInp = document.getElementById('catInputName');
+      if (catInp) {
+        catInp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            saveCategoryFromModal();
+          }
+        });
+      }
 
       // Boot initialization
       function init() {
@@ -2803,6 +2984,9 @@
 
         // Show start splash if fresh session or tutorial not marked seen
         const tutorialSeen = localStorage.getItem('kbookmark_tutorialSeen');
+        if (checkTutorialSeen) {
+          checkTutorialSeen.checked = !!tutorialSeen;
+        }
         if (!tutorialSeen) {
           modalSplash.classList.add('active');
         }

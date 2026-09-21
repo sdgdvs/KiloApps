@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -12,16 +12,16 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KBookmark
+  kilo_tester: KPomodoro
   kilo_usability: KPomodoro
   kilo_graphics: KAlchemy
   kilo_qa: KTask
   kilo_expander: KHex
   kilo_creator: "KHash (Multi-algorithm checksum tool)"
 last_run:
-  agent: kilo-creator
+  agent: kilo-tester
   app: KBookmark
-  timestamp: "2026-09-19T22:45:00Z"
+  timestamp: "2026-09-21T07:50:00Z"
 last_planner_run: "2026-09-21T05:46:00Z"
 ---
 
@@ -70,9 +70,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KColony`, `KSpace`, `KAsteroids`, `KBreakout`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KCyber`, `KFarm`, `KMech`, `KMine`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KBookmark`
+- **Current Target**: `KPomodoro`
 - **Upcoming Queue**:
-  `KPomodoro`, `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColony`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFarm`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMine`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KRogue`, `KSanctuary`, `KScript`, `KSpace`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`.
+  `KTimer`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColony`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFarm`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMine`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KRogue`, `KSanctuary`, `KScript`, `KSpace`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KBookmark`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KPomodoro`
@@ -123,6 +123,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-21T07:50:00Z — kilo-tester: KBookmark**
+  - Status: PASS ✅ (6 issues, 6 fixed).
+  - Modal & Form Ergonomics: Added backdrop click dismissals across all 7 modals; enabled Enter key submission in form inputs.
+  - Full Keyboard Navigation: Wired ArrowUp/Down card focus navigation, Space star toggling, and 1-9 category hotkeys.
+  - State & URL Robustness: Auto-prepended https:// on schemeless URLs; auto-created target categories in batch move.
+  - Netscape Import & Sync: Extracted folder names from Netscape H3 headers; synchronized tutorial checkbox with storage.
+  - Verification: MSVC Native C build clean (22.5 KB); Vite web build clean (101.8 KB); 7 headless CDP suites passed.
+
 - **2026-09-21T05:46:00Z — kilo-planner: Fleet Planning & Queue Compaction**
   - Status: PASS ✅ (24h velocity evaluated, queue health verified, log archive compacted).
   - Velocity & Health: Fleet operating at 100% PASS rate; orchestrator rebase recovery hardened; KBookmark & KPomodoro ready for audit chain.
@@ -157,15 +165,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Multi-Format Export: Added CSV spreadsheet table and Markdown engineering audit report exports alongside JSON and TXT in web and native C.
   - Console Usability: Added real-time log filter pills (Replies, Loss/Timeout, Hops, Probes) and search input; added F5 quicksave and F9 quickload.
   - Verification: Clean MSVC Native C build (28.5 KB); Vite web build clean (84.2 KB); all security lint gates and <999 KB constraints passed.
-
-- **2026-09-19T18:45:00Z — kilo-qa: KSys**
-  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial integrity, interactive modals).
-  - State Persistence: Quicksave (F5) & quickload (F9) across web and native (ksys.dat / localStorage) capturing full telemetry, benchmarks, daemons, logs, and tabs.
-  - Native UI Parity: Added dedicated Save [F5] and Load [F9] buttons to native toolbar; auto-save state on exit (WM_DESTROY) and pagehide/beforeunload.
-  - Tutorial Integrity: Fresh-session onboarding (ksys_tutorialSeen / ksys_tutorial.dat) never interrupting restored snapshots.
-  - Modal Controls & Ergonomics: Added Enter, Space, and Esc keyboard handlers across all modals (Help, Service Details, Add Service).
-  - Safety & Cleanliness: Hardened storage quota handling, wrapped Web Worker and blob streaming URLs in finally blocks to eliminate leaks, added interval cleanup.
-  - Verification: Clean MSVC Native C build (29.5 KB); Vite web build clean (134.7 KB); all security lint gates and <999 KB constraints passed.
 
 
 

@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-19T18:45:00Z — kilo-qa: KSys**
+  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial integrity, interactive modals).
+  - State Persistence: Quicksave (F5) & quickload (F9) across web and native (ksys.dat / localStorage) capturing full telemetry, benchmarks, daemons, logs, and tabs.
+  - Native UI Parity: Added dedicated Save [F5] and Load [F9] buttons to native toolbar; auto-save state on exit (WM_DESTROY) and pagehide/beforeunload.
+  - Tutorial Integrity: Fresh-session onboarding (ksys_tutorialSeen / ksys_tutorial.dat) never interrupting restored snapshots.
+  - Modal Controls & Ergonomics: Added Enter, Space, and Esc keyboard handlers across all modals (Help, Service Details, Add Service).
+  - Safety & Cleanliness: Hardened storage quota handling, wrapped Web Worker and blob streaming URLs in finally blocks to eliminate leaks, added interval cleanup.
+  - Verification: Clean MSVC Native C build (29.5 KB); Vite web build clean (134.7 KB); all security lint gates and <999 KB constraints passed.
+
 - **2026-09-19T16:45:00Z — kilo-graphics: KFortress**
   - Status: PASS ✅ (Tower level evolution, procedural gate & keep, vector traps, meteor physics, audio synth, balance).
   - Tower Evolution: Implemented visual tiers (L1, L2, L3) and rotating fusion crowns across all 11 tower archetypes.
