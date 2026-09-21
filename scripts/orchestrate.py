@@ -147,7 +147,84 @@ def find_agy_executable() -> str:
     raise FileNotFoundError("Could not locate agy.exe. Please ensure Antigravity CLI is installed.")
 
 
-def run_git_pull():
+def check_and_recover_git_state() -> bool:
+    """Detects and cleans up incomplete/interrupted Git operations (stuck rebase, merge, locks)."""
+    git_dir = REPO_ROOT / ".git"
+    if not git_dir.exists():
+        return True
+
+    # 1. Clear stale index.lock if present (> 2 minutes old)
+    index_lock = git_dir / "index.lock"
+    if index_lock.exists():
+        try:
+            mtime = index_lock.stat().st_mtime
+            age_sec = datetime.datetime.now().timestamp() - mtime
+            if age_sec > 120:
+                index_lock.unlink()
+                log(f"Removed stale git index.lock (age: {age_sec:.0f}s).")
+        except Exception as e:
+            log(f"Warning: Failed to check/remove index.lock: {e}")
+
+    # 2. Check if a rebase is stuck in progress
+    rebase_merge = git_dir / "rebase-merge"
+    rebase_apply = git_dir / "rebase-apply"
+    if rebase_merge.exists() or rebase_apply.exists():
+        log("Detected stuck Git rebase in progress. Aborting rebase to restore clean tree...")
+        res = subprocess.run(
+            ["git", "rebase", "--abort"],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+        )
+        if res.returncode == 0:
+            log("Stuck rebase aborted successfully.")
+        else:
+            log(f"Warning: git rebase --abort exited with code {res.returncode}: {res.stderr.strip()}")
+
+    # 3. Check if a merge is stuck in progress
+    merge_head = git_dir / "MERGE_HEAD"
+    if merge_head.exists():
+        log("Detected stuck Git merge in progress. Aborting merge...")
+        subprocess.run(
+            ["git", "merge", "--abort"],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+        )
+
+    # 4. Check for unmerged files (conflict status)
+    try:
+        status_res = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+        )
+        if status_res.returncode == 0:
+            lines = status_res.stdout.splitlines()
+            has_unmerged = any(
+                line.startswith(("UU", "AA", "UD", "DU", "DD", "AU", "UA")) or (len(line) >= 2 and line[0] == "U")
+                for line in lines
+            )
+            if has_unmerged:
+                log("Detected unmerged conflict files in working tree! Attempting recovery via git checkout HEAD -- . ...")
+                subprocess.run(
+                    ["git", "checkout", "HEAD", "--", "."],
+                    cwd=str(REPO_ROOT),
+                    capture_output=True,
+                    text=True,
+                )
+    except Exception as e:
+        log(f"Warning: Failed to verify git status during recovery check: {e}")
+
+    return True
+
+
+def run_git_pull() -> bool:
+    """Pulls latest remote changes with automatic rebase and safety rollback on conflict."""
+    # 1. Clean up any stuck rebase, merge, or lockfile before pulling
+    check_and_recover_git_state()
+
     log("Running git pull --rebase in repo root...")
     res = subprocess.run(
         ["git", "pull", "--rebase"],
@@ -155,11 +232,62 @@ def run_git_pull():
         capture_output=True,
         text=True,
     )
-    if res.returncode != 0:
-        log(f"Git pull rebase failed (code {res.returncode}):\n{res.stderr}")
-        return False
-    log(f"Git sync clean: {res.stdout.strip() or 'Already up to date.'}")
-    return True
+    if res.returncode == 0:
+        log(f"Git sync clean: {res.stdout.strip() or 'Already up to date.'}")
+        return True
+
+    err_output = res.stderr.strip() or res.stdout.strip()
+    log(f"Git pull rebase failed (code {res.returncode}):\n{err_output}")
+
+    # CRITICAL: If git pull --rebase stopped mid-rebase with conflicts, immediately abort
+    # so conflict markers are never left in working tree files.
+    git_dir = REPO_ROOT / ".git"
+    if (git_dir / "rebase-merge").exists() or (git_dir / "rebase-apply").exists():
+        log("Pull left rebase in progress with conflicts. Aborting rebase immediately to preserve file integrity...")
+        abort_res = subprocess.run(
+            ["git", "rebase", "--abort"],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+        )
+        if abort_res.returncode == 0:
+            log("Rebase aborted cleanly. Local working files preserved without conflict markers.")
+        else:
+            log(f"Warning: git rebase --abort failed (code {abort_res.returncode}): {abort_res.stderr.strip()}")
+
+    return False
+
+
+def validate_next_work_file(path: Path) -> tuple[bool, str]:
+    """Validates that next_work.md exists and contains no Git conflict markers."""
+    if not path.exists():
+        return False, f"File {path} does not exist."
+    try:
+        content = path.read_text(encoding="utf-8")
+    except Exception as e:
+        return False, f"Failed to read {path}: {e}"
+
+    # Check for git conflict markers
+    conflict_markers = ["<<<<<<<", "=======", ">>>>>>>"]
+    has_conflict = any(marker in content for marker in conflict_markers)
+    if has_conflict:
+        log(f"CRITICAL: Git conflict markers found in {path.name}! Attempting self-healing from HEAD...")
+        restore_res = subprocess.run(
+            ["git", "checkout", "HEAD", "--", path.name],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+        )
+        if restore_res.returncode == 0:
+            log(f"Successfully self-healed {path.name} from HEAD.")
+            try:
+                content = path.read_text(encoding="utf-8")
+            except Exception as e:
+                return False, f"Failed to re-read {path}: {e}"
+        else:
+            return False, f"File {path} contains unresolved git conflict markers and could not be restored."
+
+    return True, content
 
 
 def build_agent_prompt(agent: str, targets: dict) -> str:
@@ -272,13 +400,19 @@ def main():
         if not args.dry_run:
             if not run_git_pull():
                 log("Proceeding with local state despite git sync warning.")
+        else:
+            check_and_recover_git_state()
 
-        if not NEXT_WORK_FILE.exists():
-            log(f"Error: {NEXT_WORK_FILE} does not exist!")
-            sys.exit(1)
+        is_valid, content_or_err = validate_next_work_file(NEXT_WORK_FILE)
+        if not is_valid:
+            log(f"Queue validation error: {content_or_err}. Skipping dispatch.")
+            return
 
-        content = NEXT_WORK_FILE.read_text(encoding="utf-8")
-        frontmatter = parse_frontmatter(content)
+        try:
+            frontmatter = parse_frontmatter(content_or_err)
+        except Exception as e:
+            log(f"Error parsing frontmatter in {NEXT_WORK_FILE.name}: {e}. Skipping dispatch.")
+            return
 
         # Check if 24 hours have elapsed since last planner run
         last_planner_str = frontmatter.get("last_planner_run")
@@ -370,6 +504,36 @@ def main():
         else:
             log("Agent turn completed successfully.")
 
+        # Post-agent Git check: ensure unpushed commits are synchronized to remote
+        if process.returncode == 0 and not args.dry_run:
+            try:
+                rev_res = subprocess.run(
+                    ["git", "rev-list", "@{u}..HEAD", "--count"],
+                    cwd=str(REPO_ROOT),
+                    capture_output=True,
+                    text=True,
+                )
+                if rev_res.returncode == 0 and rev_res.stdout.strip():
+                    unpushed_count = int(rev_res.stdout.strip())
+                    if unpushed_count > 0:
+                        log(f"Detected {unpushed_count} unpushed commit(s). Pushing to origin/main...")
+                        push_res = subprocess.run(
+                            ["git", "push", "origin", "main"],
+                            cwd=str(REPO_ROOT),
+                            capture_output=True,
+                            text=True,
+                        )
+                        if push_res.returncode == 0:
+                            log("Unpushed commit(s) successfully pushed to origin/main.")
+                        else:
+                            log(f"Warning: git push exited with code {push_res.returncode}: {push_res.stderr.strip()}")
+            except Exception as e:
+                log(f"Warning: Post-agent push check encountered error: {e}")
+
+    except Exception as e:
+        import traceback
+        log(f"CRITICAL: Unhandled exception in orchestrator tick: {e}")
+        log(traceback.format_exc())
     finally:
         release_lock()
         log("Orchestrator tick finished. Lock released.")

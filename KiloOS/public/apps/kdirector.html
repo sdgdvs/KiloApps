@@ -644,7 +644,10 @@
       </div>
 
       <div style="margin-top: 20px;">
-        <label>ACTIVE DIRECTIVES QUEUE</label>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <label>ACTIVE DIRECTIVES QUEUE</label>
+          <button class="btn-tool" id="btnExportAllDirectives" style="font-size: 10px; color: var(--cyan);">📋 Copy All for next_work.md</button>
+        </div>
         <div id="activeDirectivesList" style="margin-top: 8px; display: flex; flex-direction: column; gap: 8px;">
           <!-- Populated by JS -->
         </div>
@@ -1229,14 +1232,35 @@ function renderDirectives() {
     timeDiv.textContent = `Created: ${new Date(d.time).toLocaleTimeString()}`;
     infoDiv.appendChild(timeDiv);
 
+    const actionsDiv = document.createElement('div');
+    actionsDiv.style.cssText = 'display: flex; gap: 6px; align-items: center;';
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'btn-tool';
+    copyBtn.style.color = 'var(--cyan)';
+    copyBtn.textContent = '📋 Copy';
+    copyBtn.title = 'Copy formatted for next_work.md';
+    copyBtn.addEventListener('click', () => {
+      const formatted = formatDirectiveForNextWork(d.app, d.category, d.text);
+      copyToClipboard(formatted).then(() => {
+        showCopyConfirmation(`✅ Directive for ${d.app.toUpperCase()} copied to clipboard!`);
+        playBeep(660, 'sine', 0.1);
+      }).catch(() => {
+        prompt('Copy this directive markdown into next_work.md:', formatted);
+      });
+    });
+
     const dismissBtn = document.createElement('button');
     dismissBtn.className = 'btn-tool';
     dismissBtn.style.color = 'var(--red)';
     dismissBtn.textContent = 'Dismiss';
     dismissBtn.addEventListener('click', () => removeDirective(idx));
 
+    actionsDiv.appendChild(copyBtn);
+    actionsDiv.appendChild(dismissBtn);
+
     card.appendChild(infoDiv);
-    card.appendChild(dismissBtn);
+    card.appendChild(actionsDiv);
     directivesList.appendChild(card);
   });
 }
@@ -1249,6 +1273,102 @@ window.removeDirective = function(idx) {
   renderDirectives();
   playBeep(330, 'sine', 0.1);
 };
+
+// --- DIRECTIVE FORMATTING & CLIPBOARD INTEGRATION ---
+function formatDirectiveForNextWork(targetApp, category, text) {
+  return `- **[${targetApp.toUpperCase()}] — ${category}** | Director Directive\n  - ⚠️ AGENT NOTE: This is a human director request, not a machine-generated task. Evaluate whether this directive aligns with the project's core pillars (999KB retro OS, ludonarrative consonance, ARG integrity, fleet stability) before implementing. If counterproductive, skip and log your reasoning.\n  - Instructions: ${text}`;
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.top = '0';
+  ta.style.left = '0';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try {
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    return Promise.resolve();
+  } catch (err) {
+    document.body.removeChild(ta);
+    return Promise.reject(err);
+  }
+}
+
+function copyToClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+  }
+  return fallbackCopy(text);
+}
+
+const copyConfirmation = document.getElementById('copyConfirmation');
+let copyTimeout = null;
+
+function showCopyConfirmation(msg) {
+  if (copyConfirmation) {
+    copyConfirmation.textContent = msg || '✅ Annotated directive copied to clipboard! Paste into the "Director Directives" section of next_work.md.';
+    copyConfirmation.style.display = 'block';
+    if (copyTimeout) clearTimeout(copyTimeout);
+    copyTimeout = setTimeout(() => {
+      copyConfirmation.style.display = 'none';
+    }, 4000);
+  }
+}
+
+// Wire "📋 Copy for next_work.md" button
+const btnCopyForNextWork = document.getElementById('btnCopyForNextWork');
+if (btnCopyForNextWork) {
+  btnCopyForNextWork.addEventListener('click', () => {
+    const rawText = document.getElementById('directiveText').value;
+    const result = sanitizeDirective(rawText);
+    if (!result.ok) {
+      alert(result.reason);
+      return;
+    }
+    const text = rawText.trim();
+    const targetApp = targetAppSelect.value;
+    const category = document.getElementById('directiveCategory').value;
+
+    // Automatically enqueue to local directives if not already present
+    const exists = directives.some(d => d.app === targetApp && d.category === category && d.text === text);
+    if (!exists && directives.length < DIRECTIVE_MAX_QUEUE) {
+      directives.push({ app: targetApp, category, text, time: Date.now() });
+      localStorage.setItem('kdirector_directives', JSON.stringify(directives));
+      renderDirectives();
+    }
+
+    const formatted = formatDirectiveForNextWork(targetApp, category, text);
+    copyToClipboard(formatted).then(() => {
+      showCopyConfirmation('✅ Annotated directive copied to clipboard! Paste into the "Director Directives" section of next_work.md.');
+      playBeep(880, 'triangle', 0.15);
+    }).catch(() => {
+      prompt('Copy this directive markdown into next_work.md:', formatted);
+    });
+  });
+}
+
+// Wire "📋 Copy All for next_work.md" button
+const btnExportAllDirectives = document.getElementById('btnExportAllDirectives');
+if (btnExportAllDirectives) {
+  btnExportAllDirectives.addEventListener('click', () => {
+    if (directives.length === 0) {
+      alert('No active directives in the queue to copy.');
+      return;
+    }
+    const fullText = directives.map(d => formatDirectiveForNextWork(d.app, d.category, d.text)).join('\n\n');
+    copyToClipboard(fullText).then(() => {
+      showCopyConfirmation(`✅ Copied all ${directives.length} directive(s) to clipboard! Paste into next_work.md.`);
+      playBeep(880, 'triangle', 0.15);
+    }).catch(() => {
+      prompt('Copy all directives into next_work.md:', fullText);
+    });
+  });
+}
 
 document.getElementById('btnSubmitDirective').addEventListener('click', () => {
   const rawText = document.getElementById('directiveText').value;
