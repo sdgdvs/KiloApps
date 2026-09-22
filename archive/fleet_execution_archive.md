@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-21T15:55:00Z — kilo-expander: KHex**
+  - Status: PASS ✅ (Deep forensic & algorithmic feature expansion, Win32 C & Web parity).
+  - Algorithmic Hashes & Parity: Added Adler-32, FNV-1a 32-bit, and CRC-16 CCITT alongside IEEE CRC32, MD5, and SHA-256.
+  - Multi-Language Code Exports: Added Intel HEX (.hex), NASM Assembly DB directives, JSON, Rust, and C# byte arrays.
+  - Bitwise & Arithmetic Suite: Added bitwise shifts (shl/shr), rotations (rol/ror), modular add/sub, logic and/or, and case toggles.
+  - Memory Navigation & Heatmap: Added buffer address jumping and +/-16B stepping toolbar, and chunked sliding-window entropy heatmap.
+  - Project Echo ARG Integration: Added corporate ROM sector preset (0x10199904 / 10.19.99.4) linking to kweb://10.19.99.4/classified.
+  - Verification: Clean MSVC Native C build (29.5 KB); Vite web build clean (127.5 KB); security linter and verification suite passed.
+
 - **2026-09-21T11:55:00Z — kilo-graphics: KAlchemy**
   - Status: PASS ✅ (100% recipe reachability graph complete, tier-adaptive chromatic particles, visual polish, balance).
   - Synthesis Graph Parity: Added missing `cosmos + energy -> time` recipe in HTML, unblocking Time, Eternity, Chrono Crystal, and Astra-Chronos core.

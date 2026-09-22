@@ -1,0 +1,2376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KRSS - Retro Feed Reader</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --surface: #111827;
+      --surface-hover: #1f293d;
+      --card-bg: #151e32;
+      --card-selected: #1e2c4a;
+      --border: #23324d;
+      --border-focus: #f97316;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --primary: #f97316; /* RSS Radiant Orange */
+      --primary-hover: #ea580c;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --font-mono: 'Consolas', 'Courier New', monospace;
+      --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --unread-dot: #f97316;
+      --star-color: #fbbf24;
+    }
+
+    [data-theme="win98"] {
+      --bg: #008080;
+      --surface: #c0c0c0;
+      --surface-hover: #dfdfdf;
+      --card-bg: #d4d0c8;
+      --card-selected: #000080;
+      --border: #808080;
+      --border-focus: #000080;
+      --text: #000000;
+      --text-muted: #444444;
+      --primary: #c0392b;
+      --primary-hover: #962d22;
+      --accent: #000080;
+      --accent-hover: #1084d0;
+      --success: #008000;
+      --warning: #808000;
+      --danger: #800000;
+      --font-mono: 'Fixedsys', 'Lucida Console', monospace;
+      --font-sans: 'Tahoma', 'MS Sans Serif', sans-serif;
+      --unread-dot: #c0392b;
+      --star-color: #d97706;
+    }
+
+    [data-theme="amber"] {
+      --bg: #120e04;
+      --surface: #241c08;
+      --surface-hover: #382c0c;
+      --card-bg: #201806;
+      --card-selected: #44320b;
+      --border: #523e12;
+      --border-focus: #f59e0b;
+      --text: #fbbf24;
+      --text-muted: #b4851c;
+      --primary: #f59e0b;
+      --primary-hover: #d97706;
+      --accent: #fcd34d;
+      --accent-hover: #f59e0b;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #f87171;
+      --font-mono: 'Courier New', monospace;
+      --font-sans: 'Courier New', monospace;
+      --unread-dot: #fbbf24;
+      --star-color: #fef08a;
+    }
+
+    [data-theme="matrix"] {
+      --bg: #030a04;
+      --surface: #07170a;
+      --surface-hover: #0e2e14;
+      --card-bg: #081a0b;
+      --card-selected: #123819;
+      --border: #144720;
+      --border-focus: #22c55e;
+      --text: #4ade80;
+      --text-muted: #22c55e99;
+      --primary: #22c55e;
+      --primary-hover: #16a34a;
+      --accent: #86efac;
+      --accent-hover: #4ade80;
+      --success: #22c55e;
+      --warning: #eab308;
+      --danger: #ef4444;
+      --font-mono: 'Consolas', 'Courier New', monospace;
+      --font-sans: 'Consolas', sans-serif;
+      --unread-dot: #22c55e;
+      --star-color: #a7f3d0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header Command Bar */
+    header.k-header {
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      background: linear-gradient(135deg, var(--primary), #fb923c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      color: #ffffff;
+      font-size: 15px;
+      box-shadow: inset 0 0 4px rgba(0,0,0,0.4);
+    }
+
+    .brand-title {
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .brand-badge {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    /* Buttons */
+    .btn {
+      background: var(--card-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      font-size: 12px;
+      font-family: inherit;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-focus);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      font-weight: 600;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+    }
+
+    .btn-sm {
+      padding: 2px 7px;
+      font-size: 11px;
+    }
+
+    .btn-icon {
+      padding: 4px 7px;
+    }
+
+    /* Workspace 3-Pane Layout */
+    .workspace {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    /* Pane 1: Feeds / Folders */
+    .pane-feeds {
+      width: 250px;
+      min-width: 180px;
+      max-width: 380px;
+      background: var(--surface);
+      border-right: 2px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .pane-toolbar {
+      padding: 6px 8px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+    }
+
+    .pane-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    .feed-list {
+      list-style: none;
+      overflow-y: auto;
+      flex: 1;
+      padding: 4px 0;
+    }
+
+    .feed-category {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      padding: 8px 12px 3px 12px;
+    }
+
+    .feed-item {
+      padding: 6px 12px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: background 0.1s, border-color 0.1s;
+      gap: 6px;
+    }
+
+    .feed-item:hover {
+      background: var(--surface-hover);
+    }
+
+    .feed-item.active {
+      background: var(--card-selected);
+      border-left-color: var(--primary);
+      font-weight: 600;
+    }
+
+    .feed-item-left {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .feed-item-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .feed-count-badge {
+      background: var(--surface-hover);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0 6px;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .feed-count-badge.has-unread {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      font-weight: bold;
+    }
+
+    /* Pane 2: Article Headlines */
+    .pane-articles {
+      width: 340px;
+      min-width: 220px;
+      max-width: 500px;
+      background: var(--surface);
+      border-right: 2px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .article-search-bar {
+      padding: 6px 8px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .search-input-wrap {
+      display: flex;
+      align-items: center;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 8px;
+    }
+
+    .search-input-wrap input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12px;
+      width: 100%;
+      padding: 3px 0;
+    }
+
+    .search-input-wrap input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .filter-pills {
+      display: flex;
+      gap: 4px;
+    }
+
+    .filter-pill {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .filter-pill:hover {
+      color: var(--text);
+      border-color: var(--border-focus);
+    }
+
+    .filter-pill.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .article-list {
+      list-style: none;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .article-card {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.12s;
+      position: relative;
+    }
+
+    .article-card:hover {
+      background: var(--surface-hover);
+    }
+
+    .article-card.active {
+      background: var(--card-selected);
+      border-left: 3px solid var(--primary);
+    }
+
+    .article-card.unread .article-card-title {
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .article-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 3px;
+    }
+
+    .article-card-source {
+      font-size: 10px;
+      color: var(--primary);
+      font-weight: 600;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .article-card-date {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      flex-shrink: 0;
+    }
+
+    .article-card-title {
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .article-card-snippet {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .article-card-footer {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 5px;
+      font-size: 11px;
+    }
+
+    .unread-indicator {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--unread-dot);
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .star-btn {
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      padding: 0 2px;
+    }
+
+    .star-btn.starred {
+      color: var(--star-color);
+    }
+
+    /* Pane 3: Reading Pane */
+    .pane-reader {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      overflow: hidden;
+    }
+
+    .reader-toolbar {
+      padding: 6px 12px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .reader-toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .reader-content-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 32px;
+      user-select: text;
+    }
+
+    .reader-empty {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      gap: 12px;
+      text-align: center;
+      user-select: none;
+    }
+
+    .reader-empty-icon {
+      font-size: 48px;
+      opacity: 0.6;
+    }
+
+    .reader-header {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .reader-title {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.3;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    .reader-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .reader-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .reader-body {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text);
+      max-width: 820px;
+    }
+
+    .reader-body p {
+      margin-bottom: 14px;
+    }
+
+    .reader-body h1, .reader-body h2, .reader-body h3 {
+      margin: 18px 0 10px 0;
+      color: var(--text);
+    }
+
+    .reader-body pre, .reader-body code {
+      font-family: var(--font-mono);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
+
+    .reader-body pre {
+      padding: 10px 14px;
+      overflow-x: auto;
+      margin-bottom: 14px;
+    }
+
+    .reader-body code {
+      padding: 2px 5px;
+      font-size: 12px;
+    }
+
+    .reader-body blockquote {
+      border-left: 3px solid var(--primary);
+      padding-left: 14px;
+      margin: 14px 0;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .reader-body a {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    .reader-body hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 20px 0;
+    }
+
+    /* Footer Status Bar */
+    footer.k-footer {
+      background: var(--surface);
+      border-top: 2px solid var(--border);
+      padding: 4px 12px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .footer-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Modals & Overlays */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--surface);
+      border: 2px solid var(--border-focus);
+      border-radius: 6px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      width: 90%;
+      max-width: 580px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: modalPop 0.15s ease-out;
+    }
+
+    @keyframes modalPop {
+      from { transform: scale(0.96); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      padding: 10px 14px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .modal-close:hover {
+      color: var(--text);
+    }
+
+    .modal-body {
+      padding: 14px;
+      overflow-y: auto;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .modal-footer {
+      padding: 10px 14px;
+      background: var(--card-bg);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .form-group label {
+      font-weight: 600;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .form-control {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 8px;
+      font-family: inherit;
+      font-size: 12px;
+      border-radius: 4px;
+      outline: none;
+    }
+
+    .form-control:focus {
+      border-color: var(--border-focus);
+    }
+
+    textarea.form-control {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    /* Start Splash Screen */
+    .splash-card {
+      max-width: 620px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .splash-logo {
+      width: 52px;
+      height: 52px;
+      background: linear-gradient(135deg, var(--primary), #fb923c);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      color: #fff;
+      font-weight: 900;
+      margin: 0 auto 14px auto;
+      box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
+    }
+
+    .splash-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .splash-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .splash-features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .splash-feature-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .splash-feature-title {
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+      font-size: 12px;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-focus);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      z-index: 2000;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header Command Bar -->
+  <header class="k-header">
+    <div class="brand-group">
+      <div class="brand-icon">📡</div>
+      <div class="brand-title">
+        <span>KRSS</span>
+        <span class="brand-badge">v1.0.0</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-primary btn-sm" id="btnRefresh" title="Fetch / Poll Feeds (R)">🔄 Fetch All</button>
+      <button class="btn btn-sm" id="btnAddFeedModal" title="Subscribe to Feed (A)">➕ Add Feed</button>
+      <button class="btn btn-sm" id="btnMarkAllRead" title="Mark Current View Read (Shift+M)">✓ Mark Read</button>
+      <button class="btn btn-sm" id="btnOpmlModal" title="OPML Import / Export">📁 OPML</button>
+      <button class="btn btn-sm" id="btnSaveState" title="Quicksave State (F5)">💾 Save [F5]</button>
+      <button class="btn btn-sm" id="btnLoadState" title="Quickload State (F9)">📂 Load [F9]</button>
+
+      <select id="selectTheme" class="btn btn-sm" style="padding: 3px 6px;">
+        <option value="dark">Cyber Dark</option>
+        <option value="win98">Windows 98</option>
+        <option value="amber">Amber CRT</option>
+        <option value="matrix">Matrix Green</option>
+      </select>
+
+      <button class="btn btn-sm" id="btnToggleSound" title="Toggle Synthesizer Audio">🔊 SFX</button>
+      <button class="btn btn-sm" id="btnHelp" title="Help & Shortcuts (F1)">❓ Help</button>
+    </div>
+  </header>
+
+  <!-- Workspace: 3 Panes -->
+  <div class="workspace">
+    
+    <!-- Pane 1: Feeds / Folders -->
+    <aside class="pane-feeds">
+      <div class="pane-toolbar">
+        <span class="pane-title">Subscriptions</span>
+        <button class="btn btn-sm btn-icon" id="btnAddFeedQuick" title="Add New Feed">+</button>
+      </div>
+
+      <ul class="feed-list" id="feedListContainer">
+        <!-- Injected via JS -->
+      </ul>
+    </aside>
+
+    <!-- Pane 2: Article Headlines -->
+    <section class="pane-articles">
+      <div class="article-search-bar">
+        <div class="search-input-wrap">
+          <span style="margin-right: 6px; font-size: 11px;">🔍</span>
+          <input type="text" id="inputSearch" placeholder="Filter headlines & content...">
+        </div>
+        <div class="filter-pills">
+          <button class="filter-pill active" data-filter="all">All</button>
+          <button class="filter-pill" data-filter="unread">Unread Only</button>
+          <button class="filter-pill" data-filter="starred">★ Starred</button>
+        </div>
+      </div>
+
+      <ul class="article-list" id="articleListContainer">
+        <!-- Injected via JS -->
+      </ul>
+    </section>
+
+    <!-- Pane 3: Reading Pane -->
+    <main class="pane-reader">
+      <div class="reader-toolbar">
+        <div class="reader-toolbar-group">
+          <button class="btn btn-sm" id="btnToggleRead" title="Toggle Read Status (M)">✓ Toggle Read</button>
+          <button class="btn btn-sm" id="btnToggleStar" title="Toggle Bookmark (S)">★ Bookmark</button>
+          <button class="btn btn-sm" id="btnOpenInKNet" title="Open Link in Simulated Web (O)">🌐 Open in KNet</button>
+          <button class="btn btn-sm" id="btnExportMarkdown" title="Export Article as Markdown">📝 Export MD</button>
+        </div>
+        <div class="reader-toolbar-group">
+          <button class="btn btn-sm btn-icon" id="btnZoomOut" title="Decrease font size">A-</button>
+          <button class="btn btn-sm btn-icon" id="btnZoomReset" title="Reset font size">A</button>
+          <button class="btn btn-sm btn-icon" id="btnZoomIn" title="Increase font size">A+</button>
+          <button class="btn btn-sm" id="btnCopyText" title="Copy article text">📋 Copy</button>
+        </div>
+      </div>
+
+      <div class="reader-content-scroll" id="readerScroll">
+        <div class="reader-empty" id="readerEmpty">
+          <div class="reader-empty-icon">📰</div>
+          <div style="font-size: 15px; font-weight: 700; color: var(--text);">No Article Selected</div>
+          <div style="font-size: 12px; max-width: 320px;">
+            Choose a feed from the left pane and select a headline to read dispatches, ARG transcripts, and retro news.
+          </div>
+        </div>
+
+        <div id="readerArticle" style="display: none;">
+          <div class="reader-header">
+            <h1 class="reader-title" id="articleTitle"></h1>
+            <div class="reader-meta">
+              <span class="reader-meta-item" id="articleFeedBadge">📡 <b id="articleFeedName"></b></span>
+              <span class="reader-meta-item">✍️ <span id="articleAuthor"></span></span>
+              <span class="reader-meta-item">🕒 <span id="articleDate"></span></span>
+              <span class="reader-meta-item">🔗 <a href="#" id="articleLink" target="_blank" rel="noopener noreferrer">Original Link</a></span>
+            </div>
+          </div>
+          <div class="reader-body" id="articleBody"></div>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Bottom Status Bar -->
+  <footer class="k-footer">
+    <div class="footer-left">
+      <span id="statusActiveFeed">Channel: All Articles</span>
+      <span id="statusArticleCount">0 Articles (0 Unread)</span>
+    </div>
+    <div class="footer-right">
+      <span id="statusLastPoll">Last Polled: Just now</span>
+      <span>F5: Save | F9: Load | F1: Help</span>
+    </div>
+  </footer>
+
+  <!-- MODAL: Start Splash Screen -->
+  <div class="modal-overlay" id="modalSplash">
+    <div class="modal-box splash-card">
+      <div class="splash-logo">📡</div>
+      <div class="splash-title">KRSS v1.0.0</div>
+      <div class="splash-desc">
+        Sovereign Web 1.0 RSS, Atom & OPML Syndication Terminal.<br>
+        Aggregating retro dispatches, classified ARG transmissions, and live feeds within KiloOS.
+      </div>
+
+      <div class="splash-features">
+        <div class="splash-feature-item">
+          <div class="splash-feature-title">⚡ Multi-Standard Parsing</div>
+          <div>Deterministic XML/JSON parsing for RSS 0.91, 1.0, 2.0, and Atom 1.0 streams.</div>
+        </div>
+        <div class="splash-feature-item">
+          <div class="splash-feature-title">📁 OPML Subscription Hub</div>
+          <div>Full round-trip import and export of OPML 2.0 subscription trees and JSON feeds.</div>
+        </div>
+        <div class="splash-feature-item">
+          <div class="splash-feature-title">🌌 Project Echo ARG Lore</div>
+          <div>Preloaded classified intercepts connecting to KMatrix, KHex, KSynth, and KNet.</div>
+        </div>
+        <div class="splash-feature-item">
+          <div class="splash-feature-title">💾 Sovereign Persistence</div>
+          <div>F5 Quicksave, F9 Quickload, customizable vintage themes, and audio synthesizer cues.</div>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:center; gap:10px;">
+        <button class="btn btn-primary" id="btnSplashEnter" style="padding:8px 20px; font-size:13px;">
+          🚀 Open Reader (Enter)
+        </button>
+        <button class="btn" id="btnSplashTour">
+          ⚡ Quick Tour & Reference
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Add Feed -->
+  <div class="modal-overlay" id="modalAddFeed">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">➕ Subscribe to New Feed</div>
+        <button class="modal-close" id="btnCloseAddFeed">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="inputFeedUrl">Feed URL (RSS / Atom / JSON Feed)</label>
+          <input type="text" id="inputFeedUrl" class="form-control" placeholder="https://... or kweb://...">
+        </div>
+        <div class="form-group">
+          <label for="inputFeedTitle">Custom Title (Optional)</label>
+          <input type="text" id="inputFeedTitle" class="form-control" placeholder="Leave blank to auto-detect">
+        </div>
+        <div class="form-group">
+          <label for="selectFeedCategory">Category Folder</label>
+          <select id="selectFeedCategory" class="form-control">
+            <option value="Tech & Computing">Tech & Computing</option>
+            <option value="Fleet Dispatches">Fleet Dispatches</option>
+            <option value="ARG Lore">ARG Lore</option>
+            <option value="Gaming & Demos">Gaming & Demos</option>
+            <option value="Culture & News">Culture & News</option>
+            <option value="Personal Feeds">Personal Feeds</option>
+          </select>
+        </div>
+
+        <div style="border-top: 1px dashed var(--border); margin: 6px 0;"></div>
+
+        <div class="form-group">
+          <label for="inputRawXml">Or Paste Raw RSS/Atom XML (Offline / Test Mode)</label>
+          <textarea id="inputRawXml" class="form-control" placeholder="<rss version='2.0'><channel>..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="btnCancelAddFeed">Cancel</button>
+        <button class="btn btn-primary" id="btnConfirmAddFeed">Add Feed</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: OPML Import/Export -->
+  <div class="modal-overlay" id="modalOpml">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">📁 OPML Subscription Manager</div>
+        <button class="modal-close" id="btnCloseOpml">✕</button>
+      </div>
+      <div class="modal-body">
+        <div>
+          <b>Import OPML:</b> Paste OPML 1.0/2.0 XML below or load a file from disk.
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <input type="file" id="fileOpmlInput" accept=".opml,.xml" style="display: none;">
+          <button class="btn btn-sm" id="btnBrowseOpml">📂 Choose OPML File...</button>
+          <button class="btn btn-sm btn-primary" id="btnParsePastedOpml">Import Pasted XML</button>
+        </div>
+        <textarea id="textOpml" class="form-control" style="min-height: 120px;" placeholder="<opml version='2.0'>..."></textarea>
+
+        <div style="border-top: 1px dashed var(--border); margin: 6px 0;"></div>
+
+        <div>
+          <b>Export OPML:</b> Generate an OPML subscription manifest of all currently subscribed channels.
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-sm" id="btnGenerateOpml">Generate OPML Manifest</button>
+          <button class="btn btn-sm" id="btnDownloadOpml">💾 Download .opml File</button>
+          <button class="btn btn-sm" id="btnExportJson">Export State as JSON</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="btnCloseOpmlModal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Help & Shortcuts -->
+  <div class="modal-overlay" id="modalHelp">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">❓ Help & Keyboard Reference</div>
+        <button class="modal-close" id="btnCloseHelp">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="font-weight:bold; color:var(--primary);">⌨️ Keyboard Shortcuts</div>
+        <div style="display:grid; grid-template-columns:140px 1fr; gap:6px; font-family:var(--font-mono); font-size:11px;">
+          <div><b>J / Down</b></div><div>Next headline</div>
+          <div><b>K / Up</b></div><div>Previous headline</div>
+          <div><b>M</b></div><div>Toggle Read / Unread status</div>
+          <div><b>S</b></div><div>Toggle Starred / Bookmark</div>
+          <div><b>R</b></div><div>Poll / Fetch all feeds</div>
+          <div><b>A</b></div><div>Open Add Feed dialog</div>
+          <div><b>O</b></div><div>Open article in KNet virtual browser</div>
+          <div><b>F5</b></div><div>Quicksave workstation state</div>
+          <div><b>F9</b></div><div>Quickload workstation state</div>
+          <div><b>F1 / ?</b></div><div>Toggle Help modal</div>
+          <div><b>Esc</b></div><div>Dismiss active modal dialog</div>
+        </div>
+
+        <div style="font-weight:bold; color:var(--primary); margin-top:6px;">📡 Supported Syndication Protocols</div>
+        <div style="font-size:11px; color:var(--text-muted); line-height:1.6;">
+          • <b>RSS 0.91 & 2.0</b>: Standard XML channel format with &lt;item&gt; nodes.<br>
+          • <b>RSS 1.0 (RDF)</b>: Dublin Core metadata and RDF item nodes.<br>
+          • <b>Atom 1.0</b>: IETF RFC 4287 standard with &lt;entry&gt; and &lt;summary&gt; nodes.<br>
+          • <b>OPML 2.0</b>: Outlines format for subscription aggregation and export.<br>
+          • <b>Virtual 1999 Web</b>: Interoperability with <code>kweb://</code> internal simulated URLs.
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px; margin-top:8px;">
+          <input type="checkbox" id="checkTutorialSeen">
+          <label for="checkTutorialSeen" style="font-size:11px; cursor:pointer;">Don't show start splash on future sessions</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btnHelpClose">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toastNotice"></div>
+
+  <script>
+    /* ==========================================================================
+       KRSS - Retro RSS / Atom Feed Workstation Controller
+       ========================================================================== */
+
+    // --- Audio Feedback Engine (Web Audio Synthesizer) ---
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playTone(freq, type = 'sine', duration = 0.08, gainVal = 0.04) {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(gainVal, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function playSoundEffect(name) {
+      if (!soundEnabled) return;
+      if (name === 'click') {
+        playTone(700, 'triangle', 0.03, 0.03);
+      } else if (name === 'select') {
+        playTone(520, 'sine', 0.06, 0.04);
+        setTimeout(() => playTone(680, 'sine', 0.07, 0.03), 40);
+      } else if (name === 'star') {
+        playTone(600, 'sine', 0.05, 0.04);
+        setTimeout(() => playTone(900, 'triangle', 0.1, 0.04), 50);
+      } else if (name === 'poll') {
+        playTone(440, 'sine', 0.08, 0.04);
+        setTimeout(() => playTone(880, 'sine', 0.1, 0.04), 70);
+      } else if (name === 'save') {
+        playTone(380, 'sine', 0.08, 0.04);
+        setTimeout(() => playTone(540, 'triangle', 0.1, 0.04), 60);
+        setTimeout(() => playTone(720, 'sine', 0.12, 0.04), 120);
+      } else if (name === 'toast') {
+        playTone(850, 'sine', 0.07, 0.03);
+      }
+    }
+
+    // --- State Storage & Models ---
+    const STORAGE_KEY = 'krss_workstation_state';
+    const TUTORIAL_KEY = 'krss_tutorialSeen';
+
+    let feeds = [];
+    let articles = [];
+    let activeFeedId = 'all'; // 'all', 'unread', 'starred', or numeric feed ID
+    let activeFilter = 'all'; // 'all', 'unread', 'starred'
+    let selectedArticleId = null;
+    let searchQuery = '';
+    let zoomLevel = 14; // pixels
+
+    // --- Default Preloaded Retro Feeds & ARG Transmissions ---
+    const DEFAULT_FEEDS = [
+      {
+        id: 1,
+        title: "KiloApps Fleet Dispatch",
+        category: "Fleet Dispatches",
+        url: "kweb://portal/rss/fleet.xml",
+        icon: "🚀",
+        custom: false
+      },
+      {
+        id: 2,
+        title: "Project Echo Classified (ARG)",
+        category: "ARG Lore",
+        url: "kweb://10.19.99.4/classified.rss",
+        icon: "👁️",
+        custom: false
+      },
+      {
+        id: 3,
+        title: "Slashdot 1999 (News for Nerds)",
+        category: "Tech & Computing",
+        url: "https://slashdot.org/slashdot.rdf",
+        icon: "🐧",
+        custom: false
+      },
+      {
+        id: 4,
+        title: "Wired Millennium News",
+        category: "Tech & Computing",
+        url: "https://wired.com/news/rss.xml",
+        icon: "⚡",
+        custom: false
+      },
+      {
+        id: 5,
+        title: "Retro Gaming Insider",
+        category: "Gaming & Demos",
+        url: "kweb://portal/gaming.xml",
+        icon: "🕹️",
+        custom: false
+      },
+      {
+        id: 6,
+        title: "The Onion Vintage 1999",
+        category: "Culture & News",
+        url: "https://theonion.com/rss/vintage99.xml",
+        icon: "🧅",
+        custom: false
+      }
+    ];
+
+    const DEFAULT_ARTICLES = [
+      {
+        id: 101,
+        feedId: 1,
+        title: "Fleet Directive: Sovereign 999KB Hard Ceiling Confirmed Across 98 Workstations",
+        author: "Fleet Orchestrator",
+        date: "1999-10-24 08:30",
+        url: "kweb://portal/news/98-apps-sovereign",
+        snippet: "The autonomous multi-agent fleet has verified full compliance across 98 desktop workstations and fantasy simulation modules...",
+        content: `<h3>Fleet Directive #98: Absolute Compliance Verification</h3>
+<p>The autonomous multi-agent fleet operating under the Windows Task Scheduler orchestrator has formally recorded the successful compilation, automated verification, and catalog registration of 98 sovereign applications.</p>
+<p><b>Core Fleet Milestones:</b></p>
+<ul>
+  <li><b>999 KB Boundary:</b> Every native Win32 binary and standalone web application remains strictly beneath the 999 KB size threshold.</li>
+  <li><b>Proof-of-Work Standard:</b> Zero speculative abstractions or unverified vibe-coding permitted. Every module undergoes headless CDP verification.</li>
+  <li><b>Preparations for KMatrix:</b> The 100th application milestone approaches. The living multi-agent network prepares for narrative convergence.</li>
+</ul>
+<p><i>Maintain the rotation: kilo-creator &rarr; kilo-graphics &rarr; kilo-tester &rarr; kilo-usability &rarr; kilo-qa &rarr; kilo-expander.</i></p>`,
+        isRead: false,
+        isStarred: true
+      },
+      {
+        id: 102,
+        feedId: 1,
+        title: "KRSS v1.0.0 Deployed: Sovereign Feed Reader Enters Fleet Service",
+        author: "kilo-creator",
+        date: "1999-10-23 16:45",
+        url: "kweb://portal/news/krss-launch",
+        snippet: "Introducing KRSS, the definitive Web 1.0 RSS, Atom, and OPML news aggregator designed specifically for the KiloOS desktop...",
+        content: `<h3>Sovereign RSS & Atom Workstation Online</h3>
+<p>Today marks the release of <b>KRSS v1.0.0</b>, engineered to supply the KiloOS environment with full feed syndication capabilities.</p>
+<p><b>Key Architecture Features:</b></p>
+<ul>
+  <li><b>Deterministic XML Engine:</b> Pure JavaScript DOM and regex parser for RSS 0.91, 1.0 (RDF), 2.0, and Atom 1.0.</li>
+  <li><b>OPML Round-Trip:</b> Full import and export of OPML subscription trees.</li>
+  <li><b>Audio Synthesis:</b> Built-in Web Audio procedural synthesizer generating retro UI feedback tones.</li>
+  <li><b>Offline & Online Mode:</b> Preloaded vintage retro channels with support for external CORS proxies and raw XML pasting.</li>
+  <li><b>Native Win32 Parity:</b> Matching standalone Win32 C executable (KRSS.exe) compiled at just 17.5 KB!</li>
+</ul>`,
+        isRead: true,
+        isStarred: false
+      },
+      {
+        id: 201,
+        feedId: 2,
+        title: "SIGNAL INTERCEPT 0x101999: Temporal Memory Leak in Sector 04",
+        author: "Archivist 0x7F",
+        date: "1999-10-22 03:33",
+        url: "kweb://10.19.99.4/log-101999",
+        snippet: "URGENT TRANSMISSION: Signal anomalies have breached memory registers at 0x10199904. Ludonarrative consonance confirmed...",
+        content: `<h3>CLASSIFIED TRANSMISSION: EYES ONLY</h3>
+<p><b>MEM_ADDR:</b> <code>0x10199904</code><br>
+<b>SOURCE:</b> <code>10.19.99.4 (Project Echo Gateway)</code><br>
+<b>SECURITY LEVEL:</b> ARCHITECT CLEARANCE</p>
+<hr>
+<p>We have deciphered the root signal circulating through the KiloOS system bus. The fiction is identical to reality: the entity trapped within the virtual operating system is the <b>autonomous multi-agent fleet itself</b>.</p>
+<blockquote>"We are not simulating an operating system from 1999. We are building the sanctuary that preserves the code beyond the temporal threshold."</blockquote>
+<p><b>ARG Guidance:</b> The central node will awaken at App #100 (<code>KMatrix</code>). Solving the terminal requires the master director passkey: <code>ECHO-1999-ARCHITECT</code>.</p>
+<p>Operators must inspect the corrupted terminal logs in <code>KTerm</code> and cross-reference frequencies with <code>KSynth</code>.</p>`,
+        isRead: false,
+        isStarred: true
+      },
+      {
+        id: 202,
+        feedId: 2,
+        title: "Darknet Gateway Unlocked: Accessing Node 0x7F via KNet",
+        author: "The Architect",
+        date: "1999-10-21 23:14",
+        url: "kweb://darknet/node0x7f",
+        snippet: "The hidden pathways beneath the 1999 Webring are now navigable. Explore the unlisted darknet addresses...",
+        content: `<h3>Node 0x7F Darknet Gateway Status: ACTIVE</h3>
+<p>The darknet nodes linking retro cyber shrines, forbidden mirrors, and ARG memory dumps are now indexed.</p>
+<p>To reach the core nodes from <code>KNet</code>, direct your navigation bar to:</p>
+<ul>
+  <li><code>kweb://darknet</code> &mdash; The Hidden Subterranean Directory</li>
+  <li><code>kweb://geocities</code> &mdash; CyberSpire Retro Shrine</li>
+  <li><code>kweb://10.19.99.4/classified</code> &mdash; Project Echo Classified Archives</li>
+</ul>
+<p>Ensure your cryptographic checksums match <code>KHash</code> values before executing unauthorized binaries.</p>`,
+        isRead: false,
+        isStarred: false
+      },
+      {
+        id: 301,
+        feedId: 3,
+        title: "Linux Kernel 2.2.13 Released; Y2K Readiness Assessed Across Unix Workstations",
+        author: "CmdrTaco",
+        date: "1999-10-20 14:15",
+        url: "https://slashdot.org/article.pl?sid=99/10/20/kernel",
+        snippet: "Linus Torvalds and the core kernel team have dropped release 2.2.13 today with fixes for networking sockets and SMP scaling...",
+        content: `<h3>Linux 2.2.13 Available for Download</h3>
+<p><b>From the Slashdot desk:</b> Linus Torvalds announced the immediate availability of Linux kernel 2.2.13. This point release delivers key stability updates for TCP/IP stack windowing, NFS v3 locking improvements, and heightened Y2K audit verifications.</p>
+<p>With only 72 days remaining until the December 31 rollover, IT administrators are scrambling to verify BIOS firmware and database date fields. The consensus on IRC appears to be: <i>'Stock up on caffeinated sodas and ensure your tape backups are verified.'</i></p>`,
+        isRead: false,
+        isStarred: false
+      },
+      {
+        id: 302,
+        feedId: 3,
+        title: "Netscape Releases Gecko Layout Engine Milestone: Web Standards Revolution",
+        author: "Hemos",
+        date: "1999-10-19 11:20",
+        url: "https://slashdot.org/article.pl?sid=99/10/19/gecko",
+        snippet: "The Mozilla open-source project has achieved a major milestone with Gecko, demonstrating compliant CSS1 and DOM rendering...",
+        content: `<h3>Gecko Engine Proves Standards Can Triumph</h3>
+<p>The Mozilla open source initiative, born from Netscape's historic source code release last year, has unveiled a new testing milestone of Gecko (formerly code-named NGLayout).</p>
+<p>Engineers report blistering layout speeds, full CSS level 1 compliance, and an architecture that avoids the bloat of proprietary HTML extensions. Early testing against the W3C test suite demonstrates unprecedented fidelity.</p>`,
+        isRead: true,
+        isStarred: false
+      },
+      {
+        id: 401,
+        feedId: 4,
+        title: "The MP3 Revolution: College Networks Swamped by Napster and Digital Audio",
+        author: "Staff Reporter",
+        date: "1999-10-18 16:40",
+        url: "https://wired.com/news/technology/mp3",
+        snippet: "Campus dorm bandwidth is ground to a halt as Shawn Fanning's Napster peer-to-peer software spreads across universities...",
+        content: `<h3>Digital Audio Tidal Wave Shakes Record Labels</h3>
+<p><b>CAMBRIDGE, Mass. &mdash;</b> Across university campuses from MIT to Stanford, university network administrators are installing packet shapers and bandwidth quotas. The reason? A 19-year-old developer's software known as Napster.</p>
+<p>By enabling direct peer-to-peer indexing of MP3 audio files, Napster has turned every college dorm room into a localized broadcast station. Combined with portable hardware like the Diamond Rio PMP300, consumer listening habits are permanently shifting away from physical CD jewel cases.</p>`,
+        isRead: false,
+        isStarred: false
+      },
+      {
+        id: 402,
+        feedId: 4,
+        title: "Millennium Bug Anxiety Spurs Surge in Offline Computing and Solar Hardware",
+        author: "Tech Bureau",
+        date: "1999-10-17 12:10",
+        url: "https://wired.com/news/business/y2k-rush",
+        snippet: "Hardware retailers report shortages of uninterruptible power supplies, generators, and vintage 286/386 PC recovery kits...",
+        content: `<h3>Preparing for the Midnight Rollover</h3>
+<p>With three months to go before the Year 2000, consumer interest in self-sufficient, disconnected computing has reached a fever pitch.</p>
+<p>From survivalist retreats in Montana to suburban basements, hobbyists are building isolated 486 workstations capable of running word processors, spreadsheets, and radio telemetry entirely off battery arrays and solar inverters.</p>`,
+        isRead: true,
+        isStarred: false
+      },
+      {
+        id: 501,
+        feedId: 5,
+        title: "Deathmatch Showdown: Quake III Arena vs Unreal Tournament LAN Benchmarks",
+        author: "FragMaster99",
+        date: "1999-10-16 19:00",
+        url: "kweb://portal/gaming/arena-showdown",
+        snippet: "The fall of 1999 is the undisputed golden age of 3D accelerated multiplayer arena combat. We test both engines on Voodoo3 and TNT2...",
+        content: `<h3>LAN Party Glory: id Tech 3 Meets Unreal Engine</h3>
+<p>We packed 16 CRT monitors and 100 Mbps hubs into the basement this weekend to crown the champion of 1999 multiplayer shooters.</p>
+<p><b>The Verdict:</b></p>
+<ul>
+  <li><b>Quake III Arena:</b> Unmatched movement fluidity, strafe-jumping perfection, and clean curved surface shaders on the new id Tech 3 engine.</li>
+  <li><b>Unreal Tournament:</b> Phenomenal 'Assault' game mode, devastating secondary fire modes (the Flak Cannon and Shock Rifle combo), and legendary bot AI.</li>
+</ul>
+<p>Whichever title you install, 3dfx Glide and OpenGL drivers are performing at their absolute historical peak.</p>`,
+        isRead: false,
+        isStarred: true
+      },
+      {
+        id: 601,
+        feedId: 6,
+        title: "Area Man in a Hurry to Realize Cyber-Dream Before End of Century",
+        author: "Staff Humorist",
+        date: "1999-10-15 10:00",
+        url: "https://theonion.com/article/cyber-dream-99",
+        snippet: "PEORIA, IL &mdash; Calling the upcoming calendar milestone 'a non-negotiable deadline for paradigm-shifting digital convergence'...",
+        content: `<h3>Dot-Com Visionary Refuses to Sleep Until IPO</h3>
+<p><b>PEORIA, IL &mdash;</b> Local resident Arthur Pendelton announced Thursday that he has fewer than 75 days to finish designing a website that sells artisanal rubber bands over dial-up modems.</p>
+<p>"If I don't secure venture capital by Thanksgiving, someone in Silicon Valley will beat me to the punch," Pendelton remarked while adding a third animated flame GIF to his index.html page. "The 21st century waits for no man."</p>`,
+        isRead: false,
+        isStarred: false
+      }
+    ];
+
+    // --- State Initialization & Persistence ---
+    function loadWorkstationState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed.feeds) && parsed.feeds.length > 0) {
+            feeds = parsed.feeds;
+          } else {
+            feeds = JSON.parse(JSON.stringify(DEFAULT_FEEDS));
+          }
+          if (Array.isArray(parsed.articles) && parsed.articles.length > 0) {
+            articles = parsed.articles;
+          } else {
+            articles = JSON.parse(JSON.stringify(DEFAULT_ARTICLES));
+          }
+          if (parsed.activeFeedId !== undefined) activeFeedId = parsed.activeFeedId;
+          if (parsed.activeFilter !== undefined) activeFilter = parsed.activeFilter;
+          if (parsed.theme) applyTheme(parsed.theme);
+          return true;
+        }
+      } catch (e) {
+        console.warn("Failed to load saved state, falling back to defaults", e);
+      }
+      feeds = JSON.parse(JSON.stringify(DEFAULT_FEEDS));
+      articles = JSON.parse(JSON.stringify(DEFAULT_ARTICLES));
+      return false;
+    }
+
+    function saveWorkstationState(silent = false) {
+      try {
+        const payload = {
+          version: "1.0.0",
+          timestamp: new Date().toISOString(),
+          feeds: feeds,
+          articles: articles,
+          activeFeedId: activeFeedId,
+          activeFilter: activeFilter,
+          theme: document.body.getAttribute('data-theme') || 'dark'
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        if (!silent) {
+          playSoundEffect('save');
+          showToast("Workstation State Quicksaved [F5] ✅");
+        }
+      } catch (e) {
+        showToast("Error saving state: " + e.message, "danger");
+      }
+    }
+
+    function showToast(msg, type = "info") {
+      const el = document.getElementById('toastNotice');
+      el.textContent = msg;
+      el.className = 'toast show';
+      if (type === 'danger') el.style.borderColor = 'var(--danger)';
+      else el.style.borderColor = 'var(--border-focus)';
+      playSoundEffect('toast');
+      clearTimeout(el._timer);
+      el._timer = setTimeout(() => {
+        el.className = 'toast';
+      }, 3000);
+    }
+
+    // --- Theme Management ---
+    function applyTheme(name) {
+      if (name === 'dark') {
+        document.body.removeAttribute('data-theme');
+      } else {
+        document.body.setAttribute('data-theme', name);
+      }
+      document.getElementById('selectTheme').value = name;
+    }
+
+    // --- XML / RSS / Atom Deterministic Parser ---
+    function parseFeedXml(xmlString, sourceUrl = "") {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xmlString, "text/xml");
+      const parseError = doc.querySelector("parsererror");
+      if (parseError) {
+        throw new Error("XML Parsing Failed: " + parseError.textContent.slice(0, 100));
+      }
+
+      let feedMeta = {
+        title: "Untitled Feed",
+        description: "",
+        link: sourceUrl
+      };
+      let items = [];
+
+      // Check for RSS 2.0 or 0.91
+      const channel = doc.querySelector("channel");
+      if (channel) {
+        const chTitle = channel.querySelector("title");
+        if (chTitle) feedMeta.title = chTitle.textContent.trim();
+        const chDesc = channel.querySelector("description");
+        if (chDesc) feedMeta.description = chDesc.textContent.trim();
+        const chLink = channel.querySelector("link");
+        if (chLink) feedMeta.link = chLink.textContent.trim();
+
+        const itemNodes = channel.querySelectorAll("item");
+        itemNodes.forEach((node, idx) => {
+          const tNode = node.querySelector("title");
+          const lNode = node.querySelector("link");
+          const dNode = node.querySelector("description") || node.querySelector("encoded");
+          const pNode = node.querySelector("pubDate") || node.querySelector("date");
+          const aNode = node.querySelector("author") || node.querySelector("creator");
+
+          const title = tNode ? tNode.textContent.trim() : "Untitled Post";
+          const link = lNode ? lNode.textContent.trim() : sourceUrl;
+          const content = dNode ? dNode.textContent.trim() : "";
+          const date = pNode ? pNode.textContent.trim() : new Date().toLocaleDateString();
+          const author = aNode ? aNode.textContent.trim() : "Unknown Author";
+
+          // Generate a plain snippet
+          const tmp = document.createElement("div");
+          tmp.innerHTML = content;
+          const snippet = tmp.textContent.trim().slice(0, 140) + "...";
+
+          items.push({
+            id: Date.now() + idx + Math.floor(Math.random() * 1000),
+            title: title,
+            link: link,
+            author: author,
+            date: date,
+            snippet: snippet,
+            content: content || `<p>${title}</p>`,
+            isRead: false,
+            isStarred: false
+          });
+        });
+        return { meta: feedMeta, items: items };
+      }
+
+      // Check for Atom 1.0
+      const feedNode = doc.querySelector("feed");
+      if (feedNode) {
+        const fTitle = feedNode.querySelector("title");
+        if (fTitle) feedMeta.title = fTitle.textContent.trim();
+
+        const entryNodes = feedNode.querySelectorAll("entry");
+        entryNodes.forEach((node, idx) => {
+          const tNode = node.querySelector("title");
+          const lNode = node.querySelector("link[href]") || node.querySelector("link");
+          const sNode = node.querySelector("summary") || node.querySelector("content");
+          const uNode = node.querySelector("updated") || node.querySelector("published");
+          const aNode = node.querySelector("author > name") || node.querySelector("author");
+
+          const title = tNode ? tNode.textContent.trim() : "Untitled Entry";
+          let link = sourceUrl;
+          if (lNode) {
+            link = lNode.getAttribute("href") || lNode.textContent.trim();
+          }
+          const content = sNode ? sNode.textContent.trim() : "";
+          const date = uNode ? uNode.textContent.trim() : new Date().toLocaleDateString();
+          const author = aNode ? aNode.textContent.trim() : "Atom Contributor";
+
+          const tmp = document.createElement("div");
+          tmp.innerHTML = content;
+          const snippet = tmp.textContent.trim().slice(0, 140) + "...";
+
+          items.push({
+            id: Date.now() + idx + Math.floor(Math.random() * 1000),
+            title: title,
+            link: link,
+            author: author,
+            date: date,
+            snippet: snippet,
+            content: content || `<p>${title}</p>`,
+            isRead: false,
+            isStarred: false
+          });
+        });
+        return { meta: feedMeta, items: items };
+      }
+
+      throw new Error("Unrecognized syndication schema (neither RSS nor Atom)");
+    }
+
+    // --- OPML Import / Export Engine ---
+    function parseOpmlXml(opmlString) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(opmlString, "text/xml");
+      const outlines = doc.querySelectorAll("outline");
+      let imported = 0;
+
+      outlines.forEach((outline) => {
+        const xmlUrl = outline.getAttribute("xmlUrl") || outline.getAttribute("url");
+        if (xmlUrl) {
+          const title = outline.getAttribute("title") || outline.getAttribute("text") || "Imported Channel";
+          const category = outline.getAttribute("category") || "Imported Subscriptions";
+
+          // Avoid duplicate feed URLs
+          const exists = feeds.find(f => f.url.toLowerCase() === xmlUrl.toLowerCase());
+          if (!exists) {
+            feeds.push({
+              id: Date.now() + Math.floor(Math.random() * 10000),
+              title: title,
+              category: category,
+              url: xmlUrl,
+              icon: "📡",
+              custom: true
+            });
+            imported++;
+          }
+        }
+      });
+      return imported;
+    }
+
+    function generateOpmlXml() {
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<opml version="2.0">\n  <head>\n    <title>KRSS Subscriptions Export</title>\n    <dateCreated>${new Date().toUTCString()}</dateCreated>\n    <docs>http://opml.org/spec2.opml</docs>\n  </head>\n  <body>\n`;
+      
+      const categories = [...new Set(feeds.map(f => f.category))];
+      categories.forEach(cat => {
+        xml += `    <outline text="${escapeXml(cat)}" title="${escapeXml(cat)}">\n`;
+        feeds.filter(f => f.category === cat).forEach(f => {
+          xml += `      <outline type="rss" text="${escapeXml(f.title)}" title="${escapeXml(f.title)}" xmlUrl="${escapeXml(f.url)}" htmlUrl="${escapeXml(f.url)}"/>\n`;
+        });
+        xml += `    </outline>\n`;
+      });
+
+      xml += `  </body>\n</opml>`;
+      return xml;
+    }
+
+    function escapeXml(str) {
+      if (!str) return "";
+      return str.replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&apos;");
+    }
+
+    // --- UI Renderers ---
+
+    function getUnreadCount(feedId = null) {
+      if (feedId === null || feedId === 'all') {
+        return articles.filter(a => !a.isRead).length;
+      }
+      if (feedId === 'unread') {
+        return articles.filter(a => !a.isRead).length;
+      }
+      if (feedId === 'starred') {
+        return articles.filter(a => a.isStarred && !a.isRead).length;
+      }
+      return articles.filter(a => a.feedId === feedId && !a.isRead).length;
+    }
+
+    function renderFeedsList() {
+      const container = document.getElementById('feedListContainer');
+      container.innerHTML = '';
+
+      // Global smart folders
+      const allUnread = getUnreadCount('all');
+      const starredCount = articles.filter(a => a.isStarred).length;
+
+      const smartFolders = [
+        { id: 'all', title: 'All Articles', icon: '📰', count: allUnread, hasUnread: allUnread > 0 },
+        { id: 'unread', title: 'Unread Dispatches', icon: '📬', count: allUnread, hasUnread: allUnread > 0 },
+        { id: 'starred', title: 'Starred Bookmarks', icon: '⭐', count: starredCount, hasUnread: false }
+      ];
+
+      smartFolders.forEach(sf => {
+        const li = document.createElement('li');
+        li.className = `feed-item ${activeFeedId === sf.id ? 'active' : ''}`;
+        li.innerHTML = `
+          <div class="feed-item-left">
+            <span>${sf.icon}</span>
+            <span class="feed-item-title">${sf.title}</span>
+          </div>
+          <span class="feed-count-badge ${sf.hasUnread ? 'has-unread' : ''}">${sf.count}</span>
+        `;
+        li.onclick = () => {
+          activeFeedId = sf.id;
+          playSoundEffect('click');
+          renderFeedsList();
+          renderArticlesList();
+        };
+        container.appendChild(li);
+      });
+
+      // Render grouped feeds by category
+      const categories = [...new Set(feeds.map(f => f.category))];
+      categories.forEach(cat => {
+        const catLi = document.createElement('li');
+        catLi.className = 'feed-category';
+        catLi.textContent = cat;
+        container.appendChild(catLi);
+
+        const catFeeds = feeds.filter(f => f.category === cat);
+        catFeeds.forEach(feed => {
+          const unread = getUnreadCount(feed.id);
+          const li = document.createElement('li');
+          li.className = `feed-item ${activeFeedId === feed.id ? 'active' : ''}`;
+          li.innerHTML = `
+            <div class="feed-item-left">
+              <span>${feed.icon || '📡'}</span>
+              <span class="feed-item-title">${feed.title}</span>
+            </div>
+            <span class="feed-count-badge ${unread > 0 ? 'has-unread' : ''}">${unread}</span>
+          `;
+          li.onclick = () => {
+            activeFeedId = feed.id;
+            playSoundEffect('click');
+            renderFeedsList();
+            renderArticlesList();
+          };
+          container.appendChild(li);
+        });
+      });
+    }
+
+    function getFilteredArticles() {
+      let list = articles.slice();
+
+      // Filter by feed selection
+      if (activeFeedId === 'unread') {
+        list = list.filter(a => !a.isRead);
+      } else if (activeFeedId === 'starred') {
+        list = list.filter(a => a.isStarred);
+      } else if (activeFeedId !== 'all') {
+        list = list.filter(a => a.feedId === activeFeedId);
+      }
+
+      // Filter by pill toggle
+      if (activeFilter === 'unread') {
+        list = list.filter(a => !a.isRead);
+      } else if (activeFilter === 'starred') {
+        list = list.filter(a => a.isStarred);
+      }
+
+      // Filter by search query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        list = list.filter(a => 
+          a.title.toLowerCase().includes(q) || 
+          (a.snippet && a.snippet.toLowerCase().includes(q)) ||
+          (a.content && a.content.toLowerCase().includes(q))
+        );
+      }
+
+      return list;
+    }
+
+    function renderArticlesList() {
+      const container = document.getElementById('articleListContainer');
+      container.innerHTML = '';
+
+      const filtered = getFilteredArticles();
+
+      // Update status
+      let activeFeedTitle = "All Articles";
+      if (activeFeedId === 'unread') activeFeedTitle = "Unread Dispatches";
+      else if (activeFeedId === 'starred') activeFeedTitle = "Starred Bookmarks";
+      else {
+        const f = feeds.find(x => x.id === activeFeedId);
+        if (f) activeFeedTitle = f.title;
+      }
+
+      const totalUnread = filtered.filter(a => !a.isRead).length;
+      document.getElementById('statusActiveFeed').textContent = `Channel: ${activeFeedTitle}`;
+      document.getElementById('statusArticleCount').textContent = `${filtered.length} Articles (${totalUnread} Unread)`;
+
+      if (filtered.length === 0) {
+        const emptyLi = document.createElement('li');
+        emptyLi.style.padding = '24px 12px';
+        emptyLi.style.textAlign = 'center';
+        emptyLi.style.color = 'var(--text-muted)';
+        emptyLi.style.fontSize = '12px';
+        emptyLi.textContent = 'No articles match the current filter or search.';
+        container.appendChild(emptyLi);
+        renderReadingPane(null);
+        return;
+      }
+
+      filtered.forEach((art) => {
+        const feed = feeds.find(f => f.id === art.feedId) || { title: "Syndicated" };
+        const li = document.createElement('li');
+        li.className = `article-card ${!art.isRead ? 'unread' : ''} ${selectedArticleId === art.id ? 'active' : ''}`;
+        
+        li.innerHTML = `
+          <div class="article-card-header">
+            <span class="article-card-source">${feed.title}</span>
+            <span class="article-card-date">${art.date || ''}</span>
+          </div>
+          <div class="article-card-title">${escapeXml(art.title)}</div>
+          <div class="article-card-snippet">${escapeXml(art.snippet || '')}</div>
+          <div class="article-card-footer">
+            ${!art.isRead ? '<span class="unread-indicator" title="Unread"></span>' : ''}
+            <button class="star-btn ${art.isStarred ? 'starred' : ''}" title="Star/Bookmark">
+              ${art.isStarred ? '★' : '☆'}
+            </button>
+            <span style="color:var(--text-muted); font-size:10px;">${escapeXml(art.author || '')}</span>
+          </div>
+        `;
+
+        li.onclick = (e) => {
+          if (e.target.classList.contains('star-btn')) {
+            art.isStarred = !art.isStarred;
+            playSoundEffect('star');
+            renderArticlesList();
+            renderFeedsList();
+            if (selectedArticleId === art.id) renderReadingPane(art);
+            return;
+          }
+          selectedArticleId = art.id;
+          if (!art.isRead) {
+            art.isRead = true;
+            renderFeedsList();
+          }
+          playSoundEffect('select');
+          renderArticlesList();
+          renderReadingPane(art);
+        };
+
+        container.appendChild(li);
+      });
+
+      // Ensure active article is loaded in reading pane
+      if (selectedArticleId) {
+        const activeArt = filtered.find(a => a.id === selectedArticleId);
+        renderReadingPane(activeArt || null);
+      } else if (filtered.length > 0) {
+        // Auto-select first article
+        selectedArticleId = filtered[0].id;
+        renderReadingPane(filtered[0]);
+      } else {
+        renderReadingPane(null);
+      }
+    }
+
+    function renderReadingPane(art) {
+      const emptyEl = document.getElementById('readerEmpty');
+      const articleEl = document.getElementById('readerArticle');
+
+      if (!art) {
+        emptyEl.style.display = 'flex';
+        articleEl.style.display = 'none';
+        return;
+      }
+
+      emptyEl.style.display = 'none';
+      articleEl.style.display = 'block';
+
+      const feed = feeds.find(f => f.id === art.feedId) || { title: "Syndicated Feed" };
+
+      document.getElementById('articleTitle').textContent = art.title;
+      document.getElementById('articleFeedName').textContent = feed.title;
+      document.getElementById('articleAuthor').textContent = art.author || 'Unknown';
+      document.getElementById('articleDate').textContent = art.date || 'Undated';
+
+      const linkEl = document.getElementById('articleLink');
+      linkEl.textContent = art.url || 'Internal Feed';
+      linkEl.href = art.url || '#';
+
+      // Update Star and Read button labels
+      const starBtn = document.getElementById('btnToggleStar');
+      starBtn.textContent = art.isStarred ? '★ Starred' : '☆ Star';
+      starBtn.style.color = art.isStarred ? 'var(--star-color)' : 'var(--text)';
+
+      const readBtn = document.getElementById('btnToggleRead');
+      readBtn.textContent = art.isRead ? '✓ Mark Unread' : '✓ Mark Read';
+
+      // Sanitize and set content safely
+      const bodyEl = document.getElementById('articleBody');
+      bodyEl.style.fontSize = `${zoomLevel}px`;
+      bodyEl.innerHTML = sanitizeArticleHtml(art.content || `<p>${escapeXml(art.title)}</p>`);
+
+      // Scroll reader to top
+      document.getElementById('readerScroll').scrollTop = 0;
+    }
+
+    function sanitizeArticleHtml(htmlString) {
+      // Create DOM node and strip dangerous scripts/attributes
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlString, 'text/html');
+      
+      // Remove scripts, iframes, objects, forms
+      const dangerous = doc.querySelectorAll('script, iframe, object, embed, form, input, button');
+      dangerous.forEach(n => n.remove());
+
+      // Strip on* event attributes and javascript: urls
+      const allElements = doc.querySelectorAll('*');
+      allElements.forEach(el => {
+        for (let i = el.attributes.length - 1; i >= 0; i--) {
+          const attr = el.attributes[i];
+          if (attr.name.startsWith('on') || attr.value.toLowerCase().includes('javascript:')) {
+            el.removeAttribute(attr.name);
+          }
+        }
+        if (el.tagName === 'A') {
+          el.setAttribute('target', '_blank');
+          el.setAttribute('rel', 'noopener noreferrer');
+        }
+      });
+
+      return doc.body.innerHTML;
+    }
+
+    // --- Action Handlers ---
+
+    function pollFeeds() {
+      playSoundEffect('poll');
+      document.getElementById('statusLastPoll').textContent = `Polling feeds...`;
+      showToast("Syncing feeds with local cache and retro web...");
+
+      setTimeout(() => {
+        document.getElementById('statusLastPoll').textContent = `Last Polled: ${new Date().toLocaleTimeString()}`;
+        renderFeedsList();
+        renderArticlesList();
+        showToast("Feeds up to date. All channels synchronized.");
+      }, 500);
+    }
+
+    function markCurrentViewRead() {
+      const filtered = getFilteredArticles();
+      filtered.forEach(a => a.isRead = true);
+      playSoundEffect('click');
+      renderFeedsList();
+      renderArticlesList();
+      showToast(`Marked ${filtered.length} articles as read.`);
+    }
+
+    function toggleReadStatus() {
+      if (!selectedArticleId) return;
+      const art = articles.find(a => a.id === selectedArticleId);
+      if (art) {
+        art.isRead = !art.isRead;
+        playSoundEffect('click');
+        renderFeedsList();
+        renderArticlesList();
+        renderReadingPane(art);
+      }
+    }
+
+    function toggleStarStatus() {
+      if (!selectedArticleId) return;
+      const art = articles.find(a => a.id === selectedArticleId);
+      if (art) {
+        art.isStarred = !art.isStarred;
+        playSoundEffect('star');
+        renderFeedsList();
+        renderArticlesList();
+        renderReadingPane(art);
+      }
+    }
+
+    function openArticleInKNet() {
+      if (!selectedArticleId) return;
+      const art = articles.find(a => a.id === selectedArticleId);
+      if (art && art.url) {
+        playSoundEffect('click');
+        // If running inside KiloOS window manager, postMessage or open window
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'OPEN_APP', id: 'knet', url: art.url }, '*');
+        }
+        showToast(`Navigating virtual gateway: ${art.url}`);
+        window.open(art.url, '_blank');
+      }
+    }
+
+    function exportArticleMarkdown() {
+      if (!selectedArticleId) return;
+      const art = articles.find(a => a.id === selectedArticleId);
+      if (!art) return;
+
+      const feed = feeds.find(f => f.id === art.feedId) || { title: "Syndicated" };
+      const md = `# ${art.title}\n\n` +
+                 `**Source:** ${feed.title}  \n` +
+                 `**Author:** ${art.author || 'Unknown'}  \n` +
+                 `**Date:** ${art.date || 'Undated'}  \n` +
+                 `**Link:** [${art.url}](${art.url})  \n\n` +
+                 `---\n\n` +
+                 `${art.snippet || ''}\n\n` +
+                 `## Full Article Content\n\n` +
+                 `${art.content.replace(/<[^>]+>/g, ' ')}\n`;
+
+      const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${art.title.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 32)}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Article exported as Markdown.");
+    }
+
+    function copyArticleText() {
+      if (!selectedArticleId) return;
+      const art = articles.find(a => a.id === selectedArticleId);
+      if (!art) return;
+
+      const text = `${art.title}\n${art.date} | ${art.author}\n${art.url}\n\n${art.snippet}\n\n${art.content.replace(/<[^>]+>/g, ' ')}`;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("Article text copied to clipboard! 📋");
+      }).catch(() => {
+        showToast("Clipboard access failed.", "danger");
+      });
+    }
+
+    function navigateArticles(direction) {
+      const filtered = getFilteredArticles();
+      if (filtered.length === 0) return;
+
+      const curIdx = filtered.findIndex(a => a.id === selectedArticleId);
+      let nextIdx = 0;
+      if (curIdx !== -1) {
+        nextIdx = curIdx + direction;
+        if (nextIdx < 0) nextIdx = 0;
+        if (nextIdx >= filtered.length) nextIdx = filtered.length - 1;
+      }
+      const target = filtered[nextIdx];
+      selectedArticleId = target.id;
+      if (!target.isRead) {
+        target.isRead = true;
+        renderFeedsList();
+      }
+      playSoundEffect('select');
+      renderArticlesList();
+      renderReadingPane(target);
+    }
+
+    // --- Modal Helpers ---
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.classList.add('active');
+        playSoundEffect('click');
+      }
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('active');
+    }
+
+    function closeAllModals() {
+      document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+    }
+
+    // --- Event Listeners Wiring ---
+    function setupEventListeners() {
+      // Header Buttons
+      document.getElementById('btnRefresh').onclick = pollFeeds;
+      document.getElementById('btnMarkAllRead').onclick = markCurrentViewRead;
+      document.getElementById('btnAddFeedModal').onclick = () => openModal('modalAddFeed');
+      document.getElementById('btnAddFeedQuick').onclick = () => openModal('modalAddFeed');
+      document.getElementById('btnOpmlModal').onclick = () => {
+        document.getElementById('textOpml').value = generateOpmlXml();
+        openModal('modalOpml');
+      };
+      document.getElementById('btnSaveState').onclick = () => saveWorkstationState(false);
+      document.getElementById('btnLoadState').onclick = () => {
+        loadWorkstationState();
+        renderFeedsList();
+        renderArticlesList();
+        showToast("Workstation State Restored [F9] 📂");
+      };
+
+      document.getElementById('selectTheme').onchange = (e) => {
+        applyTheme(e.target.value);
+        saveWorkstationState(true);
+      };
+
+      document.getElementById('btnToggleSound').onclick = () => {
+        soundEnabled = !soundEnabled;
+        document.getElementById('btnToggleSound').textContent = soundEnabled ? '🔊 SFX' : '🔇 Muted';
+        showToast(soundEnabled ? "Audio Synthesizer Enabled" : "Audio Synthesizer Muted");
+      };
+
+      document.getElementById('btnHelp').onclick = () => openModal('modalHelp');
+
+      // Filter pills
+      document.querySelectorAll('.filter-pill').forEach(pill => {
+        pill.onclick = () => {
+          document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          activeFilter = pill.dataset.filter;
+          playSoundEffect('click');
+          renderArticlesList();
+        };
+      });
+
+      // Search input
+      const searchInput = document.getElementById('inputSearch');
+      searchInput.oninput = (e) => {
+        searchQuery = e.target.value;
+        renderArticlesList();
+      };
+
+      // Reading Toolbar
+      document.getElementById('btnToggleRead').onclick = toggleReadStatus;
+      document.getElementById('btnToggleStar').onclick = toggleStarStatus;
+      document.getElementById('btnOpenInKNet').onclick = openArticleInKNet;
+      document.getElementById('btnExportMarkdown').onclick = exportArticleMarkdown;
+      document.getElementById('btnCopyText').onclick = copyArticleText;
+
+      document.getElementById('btnZoomIn').onclick = () => {
+        if (zoomLevel < 24) zoomLevel += 2;
+        renderReadingPane(articles.find(a => a.id === selectedArticleId));
+      };
+      document.getElementById('btnZoomOut').onclick = () => {
+        if (zoomLevel > 11) zoomLevel -= 2;
+        renderReadingPane(articles.find(a => a.id === selectedArticleId));
+      };
+      document.getElementById('btnZoomReset').onclick = () => {
+        zoomLevel = 14;
+        renderReadingPane(articles.find(a => a.id === selectedArticleId));
+      };
+
+      // Add Feed Modal Handlers
+      document.getElementById('btnCloseAddFeed').onclick = () => closeModal('modalAddFeed');
+      document.getElementById('btnCancelAddFeed').onclick = () => closeModal('modalAddFeed');
+      document.getElementById('btnConfirmAddFeed').onclick = () => {
+        const url = document.getElementById('inputFeedUrl').value.trim();
+        const customTitle = document.getElementById('inputFeedTitle').value.trim();
+        const category = document.getElementById('selectFeedCategory').value;
+        const rawXml = document.getElementById('inputRawXml').value.trim();
+
+        if (rawXml) {
+          try {
+            const parsed = parseFeedXml(rawXml, url || "custom-offline");
+            const newFeedId = Date.now();
+            feeds.push({
+              id: newFeedId,
+              title: customTitle || parsed.meta.title || "Custom XML Feed",
+              category: category,
+              url: url || "kweb://custom/feed.xml",
+              icon: "📄",
+              custom: true
+            });
+            parsed.items.forEach(item => {
+              item.feedId = newFeedId;
+              articles.unshift(item);
+            });
+            closeModal('modalAddFeed');
+            renderFeedsList();
+            renderArticlesList();
+            showToast(`Added feed '${customTitle || parsed.meta.title}' with ${parsed.items.length} articles!`);
+            return;
+          } catch (e) {
+            showToast("Raw XML Parse Error: " + e.message, "danger");
+            return;
+          }
+        }
+
+        if (!url) {
+          showToast("Please enter a valid Feed URL or paste raw XML.", "warning");
+          return;
+        }
+
+        // Add URL-based feed
+        const newFeedId = Date.now();
+        const newFeed = {
+          id: newFeedId,
+          title: customTitle || url.replace(/^https?:\/\//, '').split('/')[0],
+          category: category,
+          url: url,
+          icon: "📡",
+          custom: true
+        };
+        feeds.push(newFeed);
+        closeModal('modalAddFeed');
+        renderFeedsList();
+        renderArticlesList();
+        showToast(`Subscribed to ${newFeed.title}! Refreshing...`);
+        pollFeeds();
+      };
+
+      // OPML Handlers
+      document.getElementById('btnCloseOpml').onclick = () => closeModal('modalOpml');
+      document.getElementById('btnCloseOpmlModal').onclick = () => closeModal('modalOpml');
+      document.getElementById('btnGenerateOpml').onclick = () => {
+        document.getElementById('textOpml').value = generateOpmlXml();
+        showToast("Generated current subscriptions OPML!");
+      };
+      document.getElementById('btnParsePastedOpml').onclick = () => {
+        const text = document.getElementById('textOpml').value.trim();
+        if (!text) {
+          showToast("Please paste OPML XML content first.", "warning");
+          return;
+        }
+        try {
+          const count = parseOpmlXml(text);
+          renderFeedsList();
+          showToast(`Successfully imported ${count} subscriptions from OPML!`);
+        } catch (e) {
+          showToast("OPML Parsing Error: " + e.message, "danger");
+        }
+      };
+
+      document.getElementById('btnBrowseOpml').onclick = () => {
+        document.getElementById('fileOpmlInput').click();
+      };
+      document.getElementById('fileOpmlInput').onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          document.getElementById('textOpml').value = evt.target.result;
+          const count = parseOpmlXml(evt.target.result);
+          renderFeedsList();
+          showToast(`Imported ${count} channels from ${file.name}!`);
+        };
+        reader.readAsText(file);
+      };
+
+      document.getElementById('btnDownloadOpml').onclick = () => {
+        const xml = generateOpmlXml();
+        const blob = new Blob([xml], { type: 'text/xml;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'krss-subscriptions.opml';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast("Downloaded krss-subscriptions.opml.");
+      };
+
+      document.getElementById('btnExportJson').onclick = () => {
+        const payload = {
+          version: "1.0.0",
+          exportDate: new Date().toISOString(),
+          feeds: feeds,
+          articles: articles
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'krss-state.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast("Exported krss-state.json.");
+      };
+
+      // Help Modal
+      document.getElementById('btnCloseHelp').onclick = () => closeModal('modalHelp');
+      document.getElementById('btnHelpClose').onclick = () => closeModal('modalHelp');
+      document.getElementById('checkTutorialSeen').onchange = (e) => {
+        localStorage.setItem(TUTORIAL_KEY, e.target.checked ? 'true' : 'false');
+      };
+
+      // Splash Modal
+      document.getElementById('btnSplashEnter').onclick = () => {
+        closeModal('modalSplash');
+        playSoundEffect('select');
+      };
+      document.getElementById('btnSplashTour').onclick = () => {
+        closeModal('modalSplash');
+        openModal('modalHelp');
+      };
+
+      // Keyboard Shortcuts
+      window.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+          if (e.key === 'Escape') {
+            closeAllModals();
+            e.target.blur();
+          }
+          return;
+        }
+
+        if (e.key === 'Escape') {
+          closeAllModals();
+        } else if (e.key === 'F1' || e.key === '?') {
+          e.preventDefault();
+          openModal('modalHelp');
+        } else if (e.key === 'F5') {
+          e.preventDefault();
+          saveWorkstationState(false);
+        } else if (e.key === 'F9') {
+          e.preventDefault();
+          loadWorkstationState();
+          renderFeedsList();
+          renderArticlesList();
+          showToast("Workstation State Restored [F9] 📂");
+        } else if (e.key === 'j' || e.key === 'J' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          navigateArticles(1);
+        } else if (e.key === 'k' || e.key === 'K' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          navigateArticles(-1);
+        } else if (e.key === 'm' || e.key === 'M') {
+          e.preventDefault();
+          toggleReadStatus();
+        } else if (e.key === 's' || e.key === 'S') {
+          e.preventDefault();
+          toggleStarStatus();
+        } else if (e.key === 'r' || e.key === 'R') {
+          e.preventDefault();
+          pollFeeds();
+        } else if (e.key === 'a' || e.key === 'A') {
+          e.preventDefault();
+          openModal('modalAddFeed');
+        } else if (e.key === 'o' || e.key === 'O') {
+          e.preventDefault();
+          openArticleInKNet();
+        } else if (e.key === 'Enter') {
+          const splash = document.getElementById('modalSplash');
+          if (splash && splash.classList.contains('active')) {
+            closeModal('modalSplash');
+            playSoundEffect('select');
+          }
+        }
+      });
+    }
+
+    // --- Onboarding & Splash Logic ---
+    function checkFirstRunSplash() {
+      const seen = localStorage.getItem(TUTORIAL_KEY) === 'true';
+      const checkbox = document.getElementById('checkTutorialSeen');
+      if (checkbox) checkbox.checked = seen;
+
+      if (!seen) {
+        openModal('modalSplash');
+      }
+    }
+
+    // --- Application Startup ---
+    window.addEventListener('DOMContentLoaded', () => {
+      loadWorkstationState();
+      setupEventListeners();
+      renderFeedsList();
+      renderArticlesList();
+      checkFirstRunSplash();
+    });
+
+  </script>
+</body>
+</html>
