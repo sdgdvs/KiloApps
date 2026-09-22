@@ -166,6 +166,7 @@ async function runSuite() {
       stutterCount: 0,
       maxFrameDelta: 16.6,
       screenshot: `screenshots/${appBase}.png`,
+      interaction: { totalInteractive: 0, buttonsClicked: 0, buttonsMutated: 0, buttonsErrored: 0, keyErrors: 0 },
       errors: []
     };
 
@@ -243,6 +244,67 @@ async function runSuite() {
         const dest = path.join(SCREENSHOTS_DIR, `${appBase}.png`);
         fs.writeFileSync(dest, Buffer.from(ssRes.data, 'base64'));
       }
+
+      // === Interaction Testing Phase ===
+      const preInteractErrors = currentErrors.length;
+
+      const interactRes = await sendCommand('Runtime.evaluate', {
+        expression: `
+        (async function() {
+          const buttons = document.querySelectorAll('button, [onclick], [role="button"]');
+          let totalClicked = 0, errored = 0, mutated = 0;
+
+          for (const btn of buttons) {
+            if (totalClicked >= 20) break;
+            let didMutate = false;
+            const obs = new MutationObserver(() => { didMutate = true; });
+            obs.observe(document.body, { childList: true, subtree: true, attributes: true });
+            try {
+              btn.click();
+              await new Promise(r => setTimeout(r, 50));
+            } catch(e) { errored++; }
+            obs.disconnect();
+            if (didMutate) mutated++;
+            totalClicked++;
+          }
+
+          let keyErrors = 0;
+          for (const key of ['Escape', 'F1', 'Enter']) {
+            try {
+              document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+              await new Promise(r => setTimeout(r, 30));
+            } catch(e) { keyErrors++; }
+          }
+
+          return {
+            totalInteractive: document.querySelectorAll('button, [onclick], input, select, a[href], [role="button"]').length,
+            buttonsClicked: totalClicked,
+            buttonsMutated: mutated,
+            buttonsErrored: errored,
+            keyErrors
+          };
+        })()
+        `,
+        returnByValue: true,
+        awaitPromise: true
+      });
+
+      if (interactRes && interactRes.result && interactRes.result.value) {
+        report.interaction = interactRes.result.value;
+      }
+
+      // Check for JS errors thrown during interaction
+      const interactErrors = currentErrors.slice(preInteractErrors);
+      if (interactErrors.length > 0) {
+        report.errors.push(`Interaction errors (${interactErrors.length}): ${interactErrors[0].slice(0, 80)}`);
+      }
+
+      // Capture post-interaction screenshot
+      const ssInteract = await sendCommand('Page.captureScreenshot', { format: 'png' });
+      if (ssInteract && ssInteract.data) {
+        const dest = path.join(SCREENSHOTS_DIR, `${appBase}_interact.png`);
+        fs.writeFileSync(dest, Buffer.from(ssInteract.data, 'base64'));
+      }
     } catch (err) {
       report.errors.push(`Runner error: ${err.message}`);
       process.stdout.write('X');
@@ -267,6 +329,12 @@ async function runSuite() {
 
   console.log(`Summary: ${passed} passed, ${failed} failed across ${appReports.length} apps.`);
   console.log(`Performance Warnings: ${stuttering} apps exhibited frame drops or stuttering.`);
+
+  const totalInteractive = appReports.reduce((s, r) => s + r.interaction.totalInteractive, 0);
+  const totalClicked = appReports.reduce((s, r) => s + r.interaction.buttonsClicked, 0);
+  const totalMutated = appReports.reduce((s, r) => s + r.interaction.buttonsMutated, 0);
+  const interactErrors = appReports.filter(r => r.interaction.buttonsErrored > 0 || r.interaction.keyErrors > 0).length;
+  console.log(`Interaction Testing: ${totalInteractive} interactive elements, ${totalClicked} buttons clicked, ${totalMutated} reactive, ${interactErrors} apps with interaction errors.`);
 }
 
 function generateGallery(reports) {
@@ -291,6 +359,11 @@ function generateGallery(reports) {
             <span>FPS: <strong>${r.fps}</strong></span>
             <span>Max Delta: <strong>${r.maxFrameDelta}ms</strong></span>
             <span>Size: <strong>${r.sizeKb} KB</strong></span>
+          </div>
+          <div class="card-metrics">
+            <span>Interactive: <strong>${r.interaction.totalInteractive}</strong></span>
+            <span>Clicked: <strong>${r.interaction.buttonsClicked}</strong></span>
+            <span>Reactive: <strong>${r.interaction.buttonsMutated}/${r.interaction.buttonsClicked || 1}</strong></span>
           </div>
           ${r.errors.length > 0 ? `<div class="card-errors">${r.errors[0].slice(0, 80)}</div>` : ''}
           <div class="card-actions">
