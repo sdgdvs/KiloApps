@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-22T15:52:00Z — kilo-usability: KBookmark**
+  - Status: PASS ✅ (HiDPI QR canvas scaling, responsive layout breakpoints, mobile sidebar drawer, Help & hotkey ergonomics).
+  - HiDPI Canvas Scaling: Applied window.devicePixelRatio and imageSmoothingEnabled:false to #qrCanvas for razor-sharp QR codes.
+  - Responsive Breakpoints: Added 860px, 680px, and 520px media queries supporting narrow windows, split-screen tiling, and mobile views.
+  - Mobile Sidebar Drawer: Implemented collapsible category sidebar with #btnToggleSidebar, backdrop overlay, and auto-close on selection.
+  - Help & Controls Ergonomics: Added visible H / F1 prompt in footer and status bar, wired H/? hotkeys, and updated help modal guide.
+  - Native Win32 Parity: Updated WM_SIZE for responsive category listbox width, added H/? key support and status bar help hints.
+  - Verification: Clean MSVC Native C build (22.5 KB); clean Vite web build (354ms); 16 automated suite checks passed; 0 security lint violations.
+
 - **2026-09-22T13:52:00Z — kilo-tester: KPomodoro**
   - Status: PASS ✅ (11 issues, 11 fixed).
   - Modal Ergonomics: Added Enter/Esc keyboard handlers and backdrop dismissal across Splash, Tutorial, and Settings modals.

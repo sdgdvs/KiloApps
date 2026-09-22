@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KHash
+  kilo_tester: KRSS
   kilo_usability: KHash
   kilo_graphics: KSanctuary
   kilo_qa: KTrader
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-graphics
-  app: KBreakout
-  timestamp: "2026-09-22T22:27:00Z"
+  agent: kilo-tester
+  app: KHash
+  timestamp: "2026-09-22T22:42:00Z"
 last_planner_run: "2026-09-22T07:47:00Z"
 ---
 
@@ -89,9 +89,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KCyber`, `KFarm`, `KMech`, `KMine`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KAlchemy`, `KColony`, `KSpace`, `KAsteroids`, `KBreakout`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KHash`
+- **Current Target**: `KRSS`
 - **Upcoming Queue**:
-  `KRSS`, `KClip`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColony`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFarm`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMine`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KRogue`, `KSanctuary`, `KScript`, `KSpace`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KPomodoro`.
+  `KClip`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColony`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFarm`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMine`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KRogue`, `KSanctuary`, `KScript`, `KSpace`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KPomodoro`, `KHash`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KHash`
@@ -151,6 +151,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-22T22:42:00Z — kilo-tester: KHash**
+  - Status: PASS ✅ (6 UI/interactive issues, 6 fixed).
+  - Modal Dismissals: Added dimmed backdrop click handling and Enter/Esc dismissal across Splash and Help dialogs.
+  - Interactive Wiring: Wired direct click-to-copy on Text Digest and File Inspector result cards; added Tab 2 list clear.
+  - Verifier Ergonomics: Added hash swap [⇄] and clear buttons; silenced repetitive typing buzz in integrity check.
+  - State & JSON Backup: Added full state capture including verification hashes; added 1-click JSON state export and file import.
+  - Keyboard Controls: Wired F1 / ? / H help modal toggle, Enter dialog dismissal, and 1–5 tab switching navigation.
+  - Verification: Clean MSVC build (15.0 KB); clean Vite build (211ms); security lint passed (0 violations).
+
 - **2026-09-22T22:27:00Z — kilo-graphics: KBreakout**
   - Status: PASS ✅ (Maturity & Skip Protocol enforced; standalone native distribution built and placed).
   - Assessment: Loop 11 mature status verified (40 stages, boss fortress, cyber-forge lab, 7 skills, audio synth).
@@ -185,12 +194,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Modal Ergonomics: Added Enter, Space, and Esc keyboard handlers across Help and Tutorial modals.
   - Resource Cleanliness: Implemented safe blob URL tracking to eliminate leaks; wrapped storage in quota protection; interval cleanup.
   - Verification: Clean MSVC Native C build (23.0 KB); clean Vite web build (348ms); 25 automated QA suite checks passed; 0 security violations.
-
-- **2026-09-22T15:52:00Z — kilo-usability: KBookmark**
-  - Status: PASS ✅ (HiDPI QR canvas scaling, responsive layout breakpoints, mobile sidebar drawer, Help & hotkey ergonomics).
-  - HiDPI Canvas Scaling: Applied window.devicePixelRatio and imageSmoothingEnabled:false to #qrCanvas for razor-sharp QR codes.
-  - Responsive Breakpoints: Added 860px, 680px, and 520px media queries supporting narrow windows, split-screen tiling, and mobile views.
-  - Mobile Sidebar Drawer: Implemented collapsible category sidebar with #btnToggleSidebar, backdrop overlay, and auto-close on selection.
-  - Help & Controls Ergonomics: Added visible H / F1 prompt in footer and status bar, wired H/? hotkeys, and updated help modal guide.
-  - Native Win32 Parity: Updated WM_SIZE for responsive category listbox width, added H/? key support and status bar help hints.
-  - Verification: Clean MSVC Native C build (22.5 KB); clean Vite web build (354ms); 16 automated suite checks passed; 0 security lint violations.

@@ -870,6 +870,9 @@
       <button class="btn btn-sm" id="btnSoundToggle" title="Toggle retro audio chirps">🔊 Sound</button>
       <button class="btn btn-sm" id="btnSaveState" title="Quicksave Workstation State (F5)">💾 Save [F5]</button>
       <button class="btn btn-sm" id="btnLoadState" title="Quickload Workstation State (F9)">📂 Load [F9]</button>
+      <button class="btn btn-sm" id="btnExportJson" title="Export State as JSON File">📤 Export</button>
+      <button class="btn btn-sm" id="btnImportJson" title="Import State from JSON File">📥 Import</button>
+      <input type="file" id="stateFileInput" accept=".json,application/json" style="display:none;">
       <button class="btn btn-sm btn-primary" id="btnHelp" title="Quick Reference & Tour (F1)">❓ Help</button>
     </div>
   </header>
@@ -947,6 +950,10 @@
 
     <!-- TAB 2: File Inspector & Checksum -->
     <div class="tab-pane" id="tabFile">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+        <span style="font-size:11px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:0.5px;">Stream File Inspector</span>
+        <button class="btn btn-sm" id="btnClearFiles" title="Clear all analyzed files">🧹 Clear List</button>
+      </div>
       <div class="dropzone" id="fileDropzone">
         <div class="drop-icon">📦</div>
         <div class="drop-text">Drag & Drop files here, or click to browse</div>
@@ -973,7 +980,9 @@
         <div class="card-title">
           <span>Calculated / Candidate Checksum</span>
           <div style="display:flex; gap:6px;">
-            <button class="btn btn-sm" id="btnUseTextHash">Use Text Digest</button>
+            <button class="btn btn-sm" id="btnUseTextHash" title="Use current Text Digest (SHA-256 / CRC32)">Use Text Digest</button>
+            <button class="btn btn-sm" id="btnSwapHashes" title="Swap Expected and Calculated checksums">⇄ Swap</button>
+            <button class="btn btn-sm" id="btnClearVerify" title="Clear verification fields">🧹 Clear</button>
           </div>
         </div>
         <input type="text" id="verifyCalculated" class="input-box" style="min-height:initial; padding:6px 8px;" placeholder="Paste calculated hash or select from active computation...">
@@ -1105,11 +1114,11 @@
         <div style="font-weight:bold; color:var(--accent);">⌨️ Keyboard Shortcuts</div>
         <div style="display:grid; grid-template-columns:120px 1fr; gap:6px; font-family:var(--font-mono); font-size:11px;">
           <div><b>1 – 5</b></div><div>Switch tabs (Text, File, Verify, Manifest, Benchmarks)</div>
-          <div><b>F1 / ?</b></div><div>Toggle this Help & Reference modal</div>
-          <div><b>F5</b></div><div>Quicksave current state to local storage</div>
+          <div><b>F1 / ? / H</b></div><div>Toggle this Help & Reference modal</div>
+          <div><b>F5</b></div><div>Quicksave state to local storage</div>
           <div><b>F9</b></div><div>Quickload state from local storage</div>
-          <div><b>Ctrl + V</b></div><div>Paste payload into active tab</div>
-          <div><b>Esc</b></div><div>Dismiss any active modal dialog</div>
+          <div><b>Enter</b></div><div>Confirm / dismiss active modal dialog</div>
+          <div><b>Esc</b></div><div>Dismiss any active modal dialog or backdrop</div>
         </div>
 
         <div style="font-weight:bold; color:var(--accent); margin-top:8px;">🛡️ Algorithm Reference</div>
@@ -1670,17 +1679,19 @@
             <span class="algo-tag ${algo.tagClass}">${algo.tag} • ${algo.bits}-bit</span>
           </div>
           <div class="algo-val-row">
-            <div class="algo-val" title="Click to copy">${formatted}</div>
+            <div class="algo-val" title="Click to copy" style="cursor:pointer;">${formatted}</div>
             <button class="btn btn-sm btnCopyOne" title="Copy digest">📋</button>
             <button class="btn btn-sm btnVerifyOne" title="Verify in Tab 3">⚖️</button>
           </div>
         `;
 
-        // Click to copy
-        card.querySelector('.btnCopyOne').addEventListener('click', () => {
+        // Click to copy (via copy button or clicking the hash directly)
+        const copyFn = () => {
           sfxClick();
           navigator.clipboard.writeText(formatted).then(() => showToast(`Copied ${algo.name}`));
-        });
+        };
+        card.querySelector('.btnCopyOne').addEventListener('click', copyFn);
+        card.querySelector('.algo-val').addEventListener('click', copyFn);
 
         // Send to Verifier tab
         card.querySelector('.btnVerifyOne').addEventListener('click', () => {
@@ -1794,29 +1805,38 @@
         // Render file hash results
         const resDiv = document.getElementById(`${fileCardId}_results`);
         resDiv.innerHTML = `
-          <div class="algo-card" style="padding:6px 8px;">
+          <div class="algo-card file-algo-card" style="padding:6px 8px; cursor:pointer;" title="Click to copy CRC32">
             <div class="algo-header"><span class="algo-name">CRC32</span><span class="algo-tag tag-checksum">SFV</span></div>
             <div class="algo-val">${crc32}</div>
           </div>
-          <div class="algo-card" style="padding:6px 8px;">
+          <div class="algo-card file-algo-card" style="padding:6px 8px; cursor:pointer;" title="Click to copy MD5">
             <div class="algo-header"><span class="algo-name">MD5</span><span class="algo-tag tag-legacy">MD5</span></div>
             <div class="algo-val">${md5}</div>
           </div>
-          <div class="algo-card" style="padding:6px 8px;">
+          <div class="algo-card file-algo-card" style="padding:6px 8px; cursor:pointer;" title="Click to copy SHA-1">
             <div class="algo-header"><span class="algo-name">SHA-1</span><span class="algo-tag tag-legacy">SHA-1</span></div>
             <div class="algo-val">${sha1}</div>
           </div>
-          <div class="algo-card" style="padding:6px 8px;">
+          <div class="algo-card file-algo-card" style="padding:6px 8px; cursor:pointer;" title="Click to copy SHA-256">
             <div class="algo-header"><span class="algo-name">SHA-256</span><span class="algo-tag tag-crypto">SHA-256</span></div>
             <div class="algo-val">${sha256}</div>
           </div>
         `;
 
+        resDiv.querySelectorAll('.file-algo-card').forEach(item => {
+          const val = item.querySelector('.algo-val')?.textContent || '';
+          const name = item.querySelector('.algo-name')?.textContent || 'hash';
+          item.addEventListener('click', () => {
+            sfxClick();
+            navigator.clipboard.writeText(val.trim()).then(() => showToast(`Copied ${file.name} ${name}`));
+          });
+        });
+
         card.querySelector('.btnFileVerify').addEventListener('click', () => {
           sfxClick();
           document.getElementById('verifyCalculated').value = sha256;
           switchTab('tabVerify');
-          runVerification();
+          runVerification(true);
         });
       }
       setStatus(`Analyzed ${files.length} file(s).`);
@@ -1836,19 +1856,56 @@
       });
     }
 
+    // --- Tab 2: Clear File List ---
+    const btnClearFiles = document.getElementById('btnClearFiles');
+    if (btnClearFiles) {
+      btnClearFiles.addEventListener('click', () => {
+        sfxClick();
+        APP_STATE.filesAnalyzed = [];
+        document.getElementById('fileListContainer').innerHTML = '';
+        document.getElementById('manifestOutput').value = '';
+        document.getElementById('manifestVerifyResults').innerHTML = '';
+        setStatus('File inspector list cleared.');
+        showToast('Cleared file list');
+      });
+    }
+
     // --- Tab 3: Integrity Verifier & Character Diff ---
     const verifyExpected = document.getElementById('verifyExpected');
     const verifyCalculated = document.getElementById('verifyCalculated');
 
-    verifyExpected.addEventListener('input', runVerification);
-    verifyCalculated.addEventListener('input', runVerification);
+    verifyExpected.addEventListener('input', () => runVerification(false));
+    verifyCalculated.addEventListener('input', () => runVerification(false));
 
     document.getElementById('btnUseTextHash').addEventListener('click', () => {
       sfxClick();
       const primary = APP_STATE.calculatedDigests['sha256'] || APP_STATE.calculatedDigests['crc32'] || '';
       verifyCalculated.value = primary;
-      runVerification();
+      runVerification(true);
     });
+
+    const btnSwapHashes = document.getElementById('btnSwapHashes');
+    if (btnSwapHashes) {
+      btnSwapHashes.addEventListener('click', () => {
+        sfxClick();
+        const tmp = verifyExpected.value;
+        verifyExpected.value = verifyCalculated.value;
+        verifyCalculated.value = tmp;
+        runVerification(true);
+        showToast('Swapped expected and calculated checksums');
+      });
+    }
+
+    const btnClearVerify = document.getElementById('btnClearVerify');
+    if (btnClearVerify) {
+      btnClearVerify.addEventListener('click', () => {
+        sfxClick();
+        verifyExpected.value = '';
+        verifyCalculated.value = '';
+        runVerification(false);
+        showToast('Cleared verification fields');
+      });
+    }
 
     function detectAlgorithmByLength(len) {
       if (len === 8) return 'CRC32 / Adler-32 / FNV-32';
@@ -1862,7 +1919,7 @@
       return 'Unknown Custom Length';
     }
 
-    function runVerification() {
+    function runVerification(playMismatchAudio = false) {
       const expRaw = verifyExpected.value.trim();
       const calcRaw = verifyCalculated.value.trim();
 
@@ -1888,12 +1945,14 @@
       }
 
       if (expClean === calcClean) {
-        sfxMatch();
+        if (expClean.length >= 8) sfxMatch();
         banner.className = 'verify-banner banner-match';
         banner.innerHTML = `<span>✅ INTEGRITY VERIFIED: Checksums match perfectly! (${expClean.length * 4}-bit ${detectAlgorithmByLength(expClean.length)})</span>`;
         diffCard.style.display = 'none';
       } else {
-        sfxMismatch();
+        if (playMismatchAudio || (expClean.length === calcClean.length && expClean.length >= 8)) {
+          sfxMismatch();
+        }
         banner.className = 'verify-banner banner-mismatch';
         banner.innerHTML = `<span>⚠️ INTEGRITY MISMATCH: Calculated checksum does NOT match expected value!</span>`;
         diffCard.style.display = 'flex';
@@ -2031,7 +2090,11 @@
 
         if (manifestFile) {
           checked++;
-          const matchFile = APP_STATE.filesAnalyzed.find(f => f.name.toLowerCase() === manifestFile.toLowerCase());
+          const cleanManifestName = manifestFile.replace(/^.*[\\\/]/, '').trim().toLowerCase();
+          const matchFile = APP_STATE.filesAnalyzed.find(f => {
+            const cleanFName = f.name.replace(/^.*[\\\/]/, '').trim().toLowerCase();
+            return cleanFName === cleanManifestName;
+          });
           const item = document.createElement('div');
           item.style.padding = '4px 8px';
           item.style.borderRadius = '3px';
@@ -2120,19 +2183,65 @@
       setStatus(`Benchmark completed for ${mb} MB sample.`);
     });
 
-    // --- State Persistence (F5 Quicksave / F9 Quickload) ---
+    // --- State Persistence (F5 Quicksave / F9 Quickload & JSON File Backup) ---
+    function getFullStateSnapshot() {
+      return {
+        hexCase: APP_STATE.hexCase,
+        formatMode: APP_STATE.formatMode,
+        hmacEnabled: APP_STATE.hmacEnabled,
+        hmacKey: APP_STATE.hmacKey,
+        textPayload: document.getElementById('textPayload').value,
+        textEncoding: document.getElementById('textEncodingSelect').value,
+        verifyExpected: document.getElementById('verifyExpected').value,
+        verifyCalculated: document.getElementById('verifyCalculated').value,
+        theme: document.body.getAttribute('data-theme') || 'dark',
+        savedAt: new Date().toISOString()
+      };
+    }
+
+    function applyLoadedState(rawOrObj) {
+      const state = (typeof rawOrObj === 'string') ? JSON.parse(rawOrObj) : rawOrObj;
+      if (state.hexCase) {
+        APP_STATE.hexCase = state.hexCase;
+        document.querySelectorAll('#groupHexCase .radio-opt').forEach(o => o.classList.toggle('active', o.dataset.val === state.hexCase));
+      }
+      if (state.formatMode) {
+        APP_STATE.formatMode = state.formatMode;
+        document.querySelectorAll('#groupFormat .radio-opt').forEach(o => o.classList.toggle('active', o.dataset.val === state.formatMode));
+      }
+      if (typeof state.hmacEnabled === 'boolean') {
+        APP_STATE.hmacEnabled = state.hmacEnabled;
+        checkHmac.checked = state.hmacEnabled;
+        inputHmacKey.style.display = state.hmacEnabled ? 'block' : 'none';
+      }
+      if (state.hmacKey !== undefined) {
+        APP_STATE.hmacKey = state.hmacKey;
+        inputHmacKey.value = state.hmacKey;
+      }
+      if (state.textPayload !== undefined) {
+        document.getElementById('textPayload').value = state.textPayload;
+      }
+      if (state.textEncoding) {
+        document.getElementById('textEncodingSelect').value = state.textEncoding;
+      }
+      if (state.verifyExpected !== undefined) {
+        document.getElementById('verifyExpected').value = state.verifyExpected;
+      }
+      if (state.verifyCalculated !== undefined) {
+        document.getElementById('verifyCalculated').value = state.verifyCalculated;
+      }
+      if (state.theme) {
+        document.body.setAttribute('data-theme', state.theme);
+        themeSelect.value = state.theme;
+      }
+      computeTextDigests();
+      runVerification(false);
+      sfxMatch();
+    }
+
     function quickSaveState() {
       try {
-        const snapshot = {
-          hexCase: APP_STATE.hexCase,
-          formatMode: APP_STATE.formatMode,
-          hmacEnabled: APP_STATE.hmacEnabled,
-          hmacKey: APP_STATE.hmacKey,
-          textPayload: document.getElementById('textPayload').value,
-          textEncoding: document.getElementById('textEncodingSelect').value,
-          theme: document.body.getAttribute('data-theme') || 'dark',
-          savedAt: new Date().toISOString()
-        };
+        const snapshot = getFullStateSnapshot();
         localStorage.setItem('khash_quicksave', JSON.stringify(snapshot));
         localStorage.setItem('khash_state', JSON.stringify(snapshot));
         sfxMatch();
@@ -2150,36 +2259,7 @@
           showToast('No saved state found');
           return;
         }
-        const state = JSON.parse(raw);
-        if (state.hexCase) {
-          APP_STATE.hexCase = state.hexCase;
-          document.querySelectorAll('#groupHexCase .radio-opt').forEach(o => o.classList.toggle('active', o.dataset.val === state.hexCase));
-        }
-        if (state.formatMode) {
-          APP_STATE.formatMode = state.formatMode;
-          document.querySelectorAll('#groupFormat .radio-opt').forEach(o => o.classList.toggle('active', o.dataset.val === state.formatMode));
-        }
-        if (typeof state.hmacEnabled === 'boolean') {
-          APP_STATE.hmacEnabled = state.hmacEnabled;
-          checkHmac.checked = state.hmacEnabled;
-          inputHmacKey.style.display = state.hmacEnabled ? 'block' : 'none';
-        }
-        if (state.hmacKey) {
-          APP_STATE.hmacKey = state.hmacKey;
-          inputHmacKey.value = state.hmacKey;
-        }
-        if (state.textPayload !== undefined) {
-          document.getElementById('textPayload').value = state.textPayload;
-        }
-        if (state.textEncoding) {
-          document.getElementById('textEncodingSelect').value = state.textEncoding;
-        }
-        if (state.theme) {
-          document.body.setAttribute('data-theme', state.theme);
-          themeSelect.value = state.theme;
-        }
-        computeTextDigests();
-        sfxMatch();
+        applyLoadedState(raw);
         showToast('State quickloaded (F9)');
         setStatus('Workstation state restored.');
       } catch (e) {
@@ -2187,14 +2267,52 @@
       }
     }
 
+    function exportStateJson() {
+      sfxClick();
+      const snapshot = getFullStateSnapshot();
+      downloadTextFile('khash_state.json', JSON.stringify(snapshot, null, 2));
+      showToast('Exported khash_state.json');
+    }
+
+    function importStateJson() {
+      sfxClick();
+      document.getElementById('stateFileInput').click();
+    }
+
     document.getElementById('btnSaveState').addEventListener('click', quickSaveState);
     document.getElementById('btnLoadState').addEventListener('click', quickLoadState);
+    document.getElementById('btnExportJson').addEventListener('click', exportStateJson);
+    document.getElementById('btnImportJson').addEventListener('click', importStateJson);
 
-    // --- Keyboard Navigation ---
+    document.getElementById('stateFileInput').addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            applyLoadedState(event.target.result);
+            showToast(`Imported ${file.name}`);
+            setStatus(`Restored configuration from ${file.name}.`);
+          } catch (err) {
+            showToast('Invalid state JSON file');
+          }
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    // --- Keyboard Navigation & Modal Backdrop Listeners ---
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'F1') {
+      const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+      const isEditing = (activeTag === 'input' || activeTag === 'textarea');
+
+      if (e.key === 'F1' || (!isEditing && (e.key === '?' || e.key === 'h' || e.key === 'H'))) {
         e.preventDefault();
-        openHelpModal();
+        if (modalHelp.classList.contains('active')) {
+          modalHelp.classList.remove('active');
+        } else {
+          openHelpModal();
+        }
         return;
       }
       if (e.key === 'F5') {
@@ -2208,7 +2326,13 @@
         return;
       }
       if (e.key === 'Escape') {
-        document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+        document.querySelectorAll('.modal-overlay').forEach(m => {
+          m.classList.remove('active');
+          if (m.id === 'modalSplash') {
+            localStorage.setItem('khash_tutorialSeen', '1');
+            checkTutorialSeen.checked = true;
+          }
+        });
         return;
       }
       if (e.key === 'Enter') {
@@ -2218,17 +2342,35 @@
           dismissSplash();
           return;
         }
+        const modalHelp = document.getElementById('modalHelp');
+        if (modalHelp.classList.contains('active')) {
+          e.preventDefault();
+          modalHelp.classList.remove('active');
+          return;
+        }
       }
 
       // 1-5 Tab shortcuts when not typing in text areas
-      const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-      if (activeTag !== 'input' && activeTag !== 'textarea') {
+      if (!isEditing) {
         if (e.key === '1') switchTab('tabText');
         if (e.key === '2') switchTab('tabFile');
         if (e.key === '3') switchTab('tabVerify');
         if (e.key === '4') switchTab('tabManifest');
         if (e.key === '5') switchTab('tabBenchmark');
       }
+    });
+
+    // Modal backdrop click dismissals
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.classList.remove('active');
+          if (overlay.id === 'modalSplash') {
+            localStorage.setItem('khash_tutorialSeen', '1');
+            checkTutorialSeen.checked = true;
+          }
+        }
+      });
     });
 
     // --- Splash & Tutorial Modals ---
