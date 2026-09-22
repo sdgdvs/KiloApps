@@ -110,6 +110,30 @@
     color: #0b111e;
   }
 
+  .tab-btn.save-btn, .tab-btn.load-btn {
+    flex: 0 0 auto;
+    padding: 12px 10px;
+    background: rgba(76, 217, 100, 0.12);
+    border-left: 1px solid var(--border-color);
+    border-bottom: 2px solid transparent;
+    color: var(--success-color);
+  }
+
+  .tab-btn.load-btn {
+    background: rgba(255, 149, 0, 0.12);
+    color: var(--warning-color);
+  }
+
+  .tab-btn.save-btn:hover, .tab-btn.save-btn:focus-visible {
+    background: var(--success-color);
+    color: #0b111e;
+  }
+
+  .tab-btn.load-btn:hover, .tab-btn.load-btn:focus-visible {
+    background: var(--warning-color);
+    color: #0b111e;
+  }
+
   /* Toast Notification System */
   #toastContainer {
     position: fixed;
@@ -747,6 +771,12 @@
     <button class="tab-btn" id="tabInterval" role="tab" aria-selected="false" aria-controls="panelInterval" tabindex="-1" title="Interval / HIIT Mode [5]">
       [5] 🏋️ HIIT
     </button>
+    <button class="tab-btn save-btn" id="btnSave" title="Quicksave All Timers & Workspace [F5]">
+      💾 SAVE [F5]
+    </button>
+    <button class="tab-btn load-btn" id="btnLoad" title="Quickload Saved State [F9]">
+      📂 LOAD [F9]
+    </button>
     <button class="tab-btn help-btn" id="btnHelp" title="Help & Shortcuts (F1 / H)">
       ❓ HELP [F1]
     </button>
@@ -1039,6 +1069,8 @@
             <tr><td><kbd>P</kbd></td><td>Pause All (Multi-Timer)</td></tr>
             <tr><td><kbd>R</kbd></td><td>Reset current timer</td></tr>
             <tr><td><kbd>Enter</kbd></td><td>Start timer / Add multi-timer / Save preset</td></tr>
+            <tr><td><kbd>F5</kbd></td><td>Quicksave complete timers & workspace snapshot</td></tr>
+            <tr><td><kbd>F9</kbd></td><td>Quickload saved snapshot from storage</td></tr>
             <tr><td><kbd>F1</kbd> / <kbd>H</kbd></td><td>Open / Close this Help dialog</td></tr>
             <tr><td><kbd>Esc</kbd></td><td>Close Help dialog</td></tr>
           </table>
@@ -1050,6 +1082,49 @@
           <p style="margin:4px 0;"><strong>🎛️ Multi-Timer:</strong> Run multiple labeled timers simultaneously with individual progress bars and batch Start/Pause.</p>
           <p style="margin:4px 0;"><strong>🍅 Pomodoro:</strong> Focus intervals (25m Work, 5m Short Break, 15m Long Break) with automatic session and daily streak tracking.</p>
           <p style="margin:4px 0;"><strong>🏋️ Interval / HIIT:</strong> Circuit timer with customizable Prep, Work, Rest durations, and Tabata/HIIT/Boxing presets.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive First-Run Onboarding Tutorial Modal -->
+  <div class="modal-backdrop" id="tutorialModal" role="dialog" aria-modal="true" aria-labelledby="tutorialModalTitle">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title" id="tutorialModalTitle">⏱️ Welcome to KTimer!</div>
+        <button class="modal-close-btn" id="tutorialModalCloseBtn" aria-label="Close Tutorial">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="help-section">
+          <div class="help-section-title">🚀 Quick Start Guide</div>
+          <p style="margin:4px 0;">KTimer is a high-precision multi-mode timing station engineered for micro-productivity and workouts.</p>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0;">
+            <div style="background:rgba(255,255,255,0.03); padding:8px; border-radius:4px; border:1px solid var(--border-color);">
+              <strong>[1] ⏱️ Stopwatch</strong><br><small style="color:var(--text-muted);">Split laps, badges, CSV/TXT exports.</small>
+            </div>
+            <div style="background:rgba(255,255,255,0.03); padding:8px; border-radius:4px; border:1px solid var(--border-color);">
+              <strong>[2] ⏳ Countdown</strong><br><small style="color:var(--text-muted);">Presets, ±1m adjustments, audio chimes.</small>
+            </div>
+            <div style="background:rgba(255,255,255,0.03); padding:8px; border-radius:4px; border:1px solid var(--border-color);">
+              <strong>[3] 🎛️ Multi-Timer</strong><br><small style="color:var(--text-muted);">Concurrent labeled timers with batch controls.</small>
+            </div>
+            <div style="background:rgba(255,255,255,0.03); padding:8px; border-radius:4px; border:1px solid var(--border-color);">
+              <strong>[4] 🍅 Pomodoro</strong><br><small style="color:var(--text-muted);">25/5 focus intervals & streak tracking.</small>
+            </div>
+          </div>
+          <div style="background:rgba(255,255,255,0.03); padding:8px; border-radius:4px; border:1px solid var(--border-color); margin-bottom:10px;">
+            <strong>[5] 🏋️ Interval / HIIT:</strong> Circuit trainer with Tabata 20/10, HIIT 30/15, and Boxing 3m/1m rounds.
+          </div>
+          <div class="help-section-title">⚡ Essential Hotkeys</div>
+          <table class="shortcuts-table">
+            <tr><td><kbd>Space</kbd></td><td>Start / Pause active timer</td></tr>
+            <tr><td><kbd>1</kbd> - <kbd>5</kbd></td><td>Switch timer mode tabs</td></tr>
+            <tr><td><kbd>F5</kbd> / <kbd>F9</kbd></td><td>Quicksave / Quickload complete workspace snapshot</td></tr>
+            <tr><td><kbd>F1</kbd> / <kbd>H</kbd></td><td>Open full keyboard shortcut guide</td></tr>
+          </table>
+        </div>
+        <div style="display:flex; justify-content:flex-end; margin-top:14px;">
+          <button class="btn primary" id="btnTutorialStart" style="padding:8px 24px;">Start Timing [Enter]</button>
         </div>
       </div>
     </div>
@@ -1088,7 +1163,14 @@
     function safeStorageSet(key, val) {
       try {
         localStorage.setItem(key, JSON.stringify(val));
-      } catch (e) {}
+      } catch (e) {
+        try {
+          localStorage.removeItem('ktimer_active_tab');
+          localStorage.setItem(key, JSON.stringify(val));
+        } catch (e2) {
+          console.warn('LocalStorage quota exceeded:', e2);
+        }
+      }
     }
 
     // --- Toast Notifications ---
@@ -1124,18 +1206,20 @@
 
     // --- Help Modal Controller ---
     const helpModal = document.getElementById('helpModal');
+    let helpActive = false;
     function openHelpModal() {
+      if (!helpModal) return;
       helpModal.classList.add('open');
+      helpActive = true;
     }
     function closeHelpModal() {
+      if (!helpModal) return;
       helpModal.classList.remove('open');
+      helpActive = false;
     }
     function toggleHelpModal() {
-      if (helpModal.classList.contains('open')) {
-        closeHelpModal();
-      } else {
-        openHelpModal();
-      }
+      if (helpActive) closeHelpModal();
+      else openHelpModal();
     }
     document.getElementById('btnHelp').onclick = () => openHelpModal();
     document.getElementById('modalCloseBtn').onclick = () => closeHelpModal();
@@ -1143,6 +1227,56 @@
     helpModal.onclick = (e) => {
       if (e.target === helpModal) closeHelpModal();
     };
+
+    // --- Tutorial Modal Controller ---
+    const tutorialModal = document.getElementById('tutorialModal');
+    let tutorialActive = false;
+    function openTutorialModal() {
+      if (!tutorialModal) return;
+      tutorialModal.classList.add('open');
+      tutorialActive = true;
+    }
+    function closeTutorialModal() {
+      if (!tutorialModal) return;
+      tutorialModal.classList.remove('open');
+      tutorialActive = false;
+      safeStorageSet('ktimer_tutorialSeen', true);
+    }
+    const btnTutClose = document.getElementById('tutorialModalCloseBtn');
+    if (btnTutClose) btnTutClose.onclick = closeTutorialModal;
+    const btnTutStart = document.getElementById('btnTutorialStart');
+    if (btnTutStart) btnTutStart.onclick = closeTutorialModal;
+    if (tutorialModal) {
+      tutorialModal.onclick = (e) => {
+        if (e.target === tutorialModal) closeTutorialModal();
+      };
+    }
+
+    // --- Safe Blob Exporter & Resource Management ---
+    const activeObjectUrls = new Set();
+    function safeDownloadBlob(blob, filename) {
+      let url = null;
+      let a = null;
+      try {
+        url = URL.createObjectURL(blob);
+        activeObjectUrls.add(url);
+        a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+      } catch (err) {
+        console.error('Download failed:', err);
+      } finally {
+        setTimeout(() => {
+          if (a && a.parentNode) a.parentNode.removeChild(a);
+          if (url) {
+            try { URL.revokeObjectURL(url); } catch (e) {}
+            activeObjectUrls.delete(url);
+          }
+        }, 1500);
+      }
+    }
 
     // --- Web Audio Synthesizer ---
     let sharedAudioCtx = null;
@@ -1447,17 +1581,8 @@
       swLaps.forEach(l => {
         csv += `${l.id},${formatMs(l.splitMs, true)},${formatMs(l.totalMs, true)},${(l.splitMs / 1000).toFixed(3)}\n`;
       });
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `ktimer_laps_${Date.now()}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        a.remove();
-        URL.revokeObjectURL(url);
-      }, 1500);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      safeDownloadBlob(blob, `ktimer_laps_${Date.now()}.csv`);
       showToast('Exported laps to CSV file', 'success');
     };
 
@@ -1473,17 +1598,8 @@
       swLaps.forEach(l => {
         txt += `${l.id.toString().padEnd(6)}| ${formatMs(l.splitMs, true)} | ${formatMs(l.totalMs, true)}\n`;
       });
-      const blob = new Blob([txt], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `ktimer_laps_${Date.now()}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        a.remove();
-        URL.revokeObjectURL(url);
-      }, 1500);
+      const blob = new Blob([txt], { type: 'text/plain;charset=utf-8;' });
+      safeDownloadBlob(blob, `ktimer_laps_${Date.now()}.txt`);
       showToast('Exported laps to TXT report', 'success');
     };
 
@@ -2222,17 +2338,295 @@
       }
     });
 
-    // Keyboard Shortcuts
+    // --- Full App State Persistence Architecture (Pass 5) ---
+    function getFullStateSnapshot() {
+      const activeTabObj = tabs.find(t => t.panel.classList.contains('active'));
+      const activeTabName = activeTabObj ? activeTabObj.name : 'stopwatch';
+
+      let currentSwElapsed = swElapsed;
+      if (swInterval) {
+        currentSwElapsed += (performance.now() - swStart);
+      }
+
+      return {
+        version: 1,
+        timestamp: Date.now(),
+        activeTab: activeTabName,
+        stopwatch: {
+          running: !!swInterval,
+          elapsed: currentSwElapsed,
+          laps: swLaps.map(l => ({ ...l }))
+        },
+        timer: {
+          running: !!tmInterval,
+          remaining: tmRemaining,
+          total: tmTotal,
+          inputStr: tmInput ? tmInput.value : '00:05:00',
+          customPresets: Array.isArray(customPresets) ? [...customPresets] : []
+        },
+        multiTimers: multiTimers.map(t => ({
+          name: t.name,
+          totalMs: t.totalMs,
+          remainingMs: t.remainingMs,
+          isRunning: !!t.isRunning,
+          lastTick: Date.now()
+        })),
+        pomodoro: {
+          state: pomoState,
+          cycleCount: pomoCycleCount,
+          total: pomoTotal,
+          remaining: pomoRemaining,
+          running: !!pomoInterval,
+          stats: { ...pomoStats }
+        },
+        interval: {
+          phase: intPhase,
+          currentSet: intCurrentSet,
+          totalSets: intTotalSets,
+          workMs: intWorkMs,
+          restMs: intRestMs,
+          prepMs: intPrepMs,
+          remainingMs: intRemainingMs,
+          totalPhaseMs: intTotalPhaseMs,
+          running: !!intInterval
+        }
+      };
+    }
+
+    function restoreFullStateSnapshot(state) {
+      if (!state || typeof state !== 'object') return false;
+
+      try {
+        // 1. Restore Custom Presets
+        if (Array.isArray(state.timer?.customPresets)) {
+          customPresets = state.timer.customPresets;
+          safeStorageSet('ktimer_custom_presets', customPresets);
+          renderPresets();
+        }
+
+        // 2. Restore Stopwatch
+        if (state.stopwatch) {
+          if (swInterval) {
+            clearInterval(swInterval);
+            swInterval = null;
+          }
+          swElapsed = Number(state.stopwatch.elapsed) || 0;
+          swLaps = Array.isArray(state.stopwatch.laps) ? state.stopwatch.laps : [];
+          if (state.stopwatch.running) {
+            swStart = performance.now();
+            swInterval = setInterval(updateSw, 25);
+            swBtnStart.innerText = "Stop";
+            swBtnStart.classList.remove("primary");
+          } else {
+            swBtnStart.innerText = swElapsed > 0 ? "Resume" : "Start";
+            swBtnStart.classList.add("primary");
+          }
+          updateSw();
+          renderLaps();
+        }
+
+        // 3. Restore Countdown Timer
+        if (state.timer) {
+          if (tmInterval) {
+            clearInterval(tmInterval);
+            tmInterval = null;
+          }
+          tmTotal = Number(state.timer.total) || 300000;
+          tmRemaining = Number(state.timer.remaining) || tmTotal;
+          if (state.timer.inputStr && tmInput) {
+            tmInput.value = state.timer.inputStr;
+          }
+          if (state.timer.running && tmRemaining > 0) {
+            tmTarget = Date.now() + tmRemaining;
+            tmInterval = setInterval(updateTimer, 50);
+            tmBtnStart.innerText = "Pause";
+            tmBtnStart.classList.remove("primary");
+            tmInput.style.display = 'none';
+            tmDisplay.style.display = 'block';
+          } else {
+            tmBtnStart.innerText = (tmRemaining < tmTotal && tmRemaining > 0) ? "Resume" : "Start";
+            tmBtnStart.classList.add("primary");
+            if (tmRemaining < tmTotal && tmRemaining > 0) {
+              tmInput.style.display = 'none';
+              tmDisplay.style.display = 'block';
+            } else {
+              tmInput.style.display = 'block';
+              tmDisplay.style.display = 'none';
+            }
+          }
+          updateTimer();
+        }
+
+        // 4. Restore Multi Timers
+        if (Array.isArray(state.multiTimers)) {
+          const now = Date.now();
+          multiTimers = state.multiTimers.map(t => ({
+            ...t,
+            lastTick: now
+          }));
+          saveMultiTimers();
+          renderMultiTimers();
+          if (multiTimers.some(t => t.isRunning)) {
+            startMultiTick();
+          }
+        }
+
+        // 5. Restore Pomodoro
+        if (state.pomodoro) {
+          if (pomoInterval) {
+            clearInterval(pomoInterval);
+            pomoInterval = null;
+          }
+          pomoState = state.pomodoro.state || POMO_STATE.WORK;
+          pomoCycleCount = Number(state.pomodoro.cycleCount) || 1;
+          pomoTotal = Number(state.pomodoro.total) || getPomoDuration(pomoState);
+          pomoRemaining = Number(state.pomodoro.remaining) || pomoTotal;
+          if (state.pomodoro.stats) {
+            pomoStats = { ...pomoStats, ...state.pomodoro.stats };
+            safeStorageSet('ktimer_pomo_stats', pomoStats);
+          }
+          if (state.pomodoro.running && pomoRemaining > 0) {
+            pomoTargetTime = Date.now() + pomoRemaining;
+            pomoInterval = setInterval(tickPomo, 100);
+            pomoBtnStart.innerText = "Pause";
+            pomoBtnStart.classList.remove("primary");
+          } else {
+            pomoBtnStart.innerText = (pomoRemaining < pomoTotal && pomoRemaining > 0) ? "Resume" : "Start";
+            pomoBtnStart.classList.add("primary");
+          }
+          renderPomoUI();
+        }
+
+        // 6. Restore Interval / HIIT
+        if (state.interval) {
+          if (intInterval) {
+            clearInterval(intInterval);
+            intInterval = null;
+          }
+          intPhase = state.interval.phase || INT_PHASE.PREP;
+          intCurrentSet = Number(state.interval.currentSet) || 1;
+          intTotalSets = Number(state.interval.totalSets) || 8;
+          intWorkMs = Number(state.interval.workMs) || 20000;
+          intRestMs = Number(state.interval.restMs) || 10000;
+          intPrepMs = Number(state.interval.prepMs) || 5000;
+          intRemainingMs = Number(state.interval.remainingMs) || intPrepMs;
+          intTotalPhaseMs = Number(state.interval.totalPhaseMs) || intPrepMs;
+
+          const elW = document.getElementById('intCfgWork');
+          const elR = document.getElementById('intCfgRest');
+          const elS = document.getElementById('intCfgSets');
+          const elP = document.getElementById('intCfgPrep');
+          if (elW) elW.value = Math.round(intWorkMs / 1000);
+          if (elR) elR.value = Math.round(intRestMs / 1000);
+          if (elS) elS.value = intTotalSets;
+          if (elP) elP.value = Math.round(intPrepMs / 1000);
+
+          if (state.interval.running && intRemainingMs > 0 && intPhase !== INT_PHASE.DONE) {
+            intTargetTime = Date.now() + intRemainingMs;
+            intInterval = setInterval(tickInterval, 100);
+            intBtnStart.innerText = "Pause";
+            intBtnStart.classList.remove("primary");
+          } else {
+            intBtnStart.innerText = (intRemainingMs < intTotalPhaseMs && intRemainingMs > 0) ? "Resume" : "Start";
+            intBtnStart.classList.add("primary");
+          }
+          renderIntervalUI();
+        }
+
+        // 7. Restore Active Tab
+        if (state.activeTab) {
+          switchTab(state.activeTab);
+        }
+
+        return true;
+      } catch (err) {
+        console.error('Failed to restore snapshot:', err);
+        return false;
+      }
+    }
+
+    function quicksaveState() {
+      try {
+        const snap = getFullStateSnapshot();
+        safeStorageSet('ktimer_quicksave', snap);
+        showToast('★ Full workspace snapshot quicksaved [F5]', 'success');
+      } catch (err) {
+        showToast('⚠ Quicksave failed: storage quota exceeded', 'danger');
+      }
+    }
+
+    function quickloadState() {
+      const snap = safeStorageGet('ktimer_quicksave', null);
+      if (!snap) {
+        showToast('⚠ No quicksave snapshot found [F5 to save first]', 'warning');
+        return false;
+      }
+      const ok = restoreFullStateSnapshot(snap);
+      if (ok) {
+        showToast('★ Quicksave state restored [F9]', 'success');
+      } else {
+        showToast('⚠ Failed to restore quicksave data', 'danger');
+      }
+      return ok;
+    }
+
+    function autoSaveSession() {
+      try {
+        const snap = getFullStateSnapshot();
+        safeStorageSet('ktimer_session_state', snap);
+      } catch (err) {}
+    }
+
+    // Connect Toolbar Save & Load Buttons
+    const btnSaveEl = document.getElementById('btnSave');
+    if (btnSaveEl) btnSaveEl.onclick = quicksaveState;
+    const btnLoadEl = document.getElementById('btnLoad');
+    if (btnLoadEl) btnLoadEl.onclick = quickloadState;
+
+    // Keyboard Shortcuts & Modal Gating
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        closeHelpModal();
+      // 1. Modal Dialog Navigation & Escape/Enter Handling
+      if (tutorialActive || helpActive) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          if (tutorialActive) closeTutorialModal();
+          if (helpActive) closeHelpModal();
+          return;
+        }
+        if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+          e.preventDefault();
+          if (tutorialActive) closeTutorialModal();
+          else if (helpActive) closeHelpModal();
+          return;
+        }
         return;
       }
+
+      if (e.key === 'Escape') {
+        closeHelpModal();
+        closeTutorialModal();
+        return;
+      }
+
       if (e.key === 'F1' || (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA')) {
         e.preventDefault();
         toggleHelpModal();
         return;
       }
+
+      // Quicksave & Quickload Shortcuts (always active outside inputs)
+      if (e.key === 'F5') {
+        e.preventDefault();
+        quicksaveState();
+        return;
+      }
+
+      if (e.key === 'F9') {
+        e.preventDefault();
+        quickloadState();
+        return;
+      }
+
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
       if (e.ctrlKey || e.altKey || e.metaKey) return;
 
@@ -2322,24 +2716,52 @@
       }
     });
 
-    // Lifecycle Teardown
-    window.addEventListener('beforeunload', () => {
-      if (swInterval) clearInterval(swInterval);
-      if (tmInterval) clearInterval(tmInterval);
-      if (mtTickInterval) clearInterval(mtTickInterval);
-      if (pomoInterval) clearInterval(pomoInterval);
-      if (intInterval) clearInterval(intInterval);
+    // Lifecycle Teardown & Resource Cleanup
+    function cleanupResources() {
+      if (swInterval) { clearInterval(swInterval); swInterval = null; }
+      if (tmInterval) { clearInterval(tmInterval); tmInterval = null; }
+      if (mtTickInterval) { clearInterval(mtTickInterval); mtTickInterval = null; }
+      if (pomoInterval) { clearInterval(pomoInterval); pomoInterval = null; }
+      if (intInterval) { clearInterval(intInterval); intInterval = null; }
+      for (const u of activeObjectUrls) {
+        try { URL.revokeObjectURL(u); } catch (e) {}
+      }
+      activeObjectUrls.clear();
       if (sharedAudioCtx && sharedAudioCtx.close) {
         try { sharedAudioCtx.close(); } catch (e) {}
       }
+    }
+
+    window.addEventListener('beforeunload', () => {
+      autoSaveSession();
+      cleanupResources();
     });
 
-    // Restore Saved Active Tab & Startup Welcome Toast
-    const savedTab = safeStorageGet('ktimer_active_tab', 'stopwatch');
-    switchTab(savedTab);
-    setTimeout(() => {
-      showToast("⏱️ Welcome to KTimer! [Space] Start/Pause, [1-5] Tabs, [H/F1] Help", "info", 4500);
-    }, 400);
+    window.addEventListener('pagehide', () => {
+      autoSaveSession();
+      cleanupResources();
+    });
+
+    // --- Startup Initialization, Session Recovery & Tutorial Onboarding ---
+    const savedSession = safeStorageGet('ktimer_session_state', null);
+    const hasQuicksave = safeStorageGet('ktimer_quicksave', null);
+    const hasSeenTutorial = safeStorageGet('ktimer_tutorialSeen', false);
+
+    if (savedSession) {
+      restoreFullStateSnapshot(savedSession);
+    } else {
+      const savedTab = safeStorageGet('ktimer_active_tab', 'stopwatch');
+      switchTab(savedTab);
+    }
+
+    // First-run tutorial onboarding check: only on fresh sessions, never interrupting restored states
+    if (!hasSeenTutorial && !hasQuicksave && !savedSession) {
+      setTimeout(openTutorialModal, 400);
+    } else {
+      setTimeout(() => {
+        showToast("⏱️ Ready. [Space] Start/Pause, [F5] Save, [F9] Load, [H/F1] Help", "info", 4000);
+      }, 500);
+    }
   </script>
 </body>
 </html>

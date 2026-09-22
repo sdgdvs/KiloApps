@@ -63,6 +63,8 @@ void* __cdecl memset(void* p, int c, size_t sz) {
 #define ID_PRESET_HIIT30    1058
 #define ID_PRESET_BOXING    1059
 #define ID_STATIC_STATUS    1070
+#define ID_BTN_SAVE         1071
+#define ID_BTN_LOAD         1072
 
 // App Modes
 typedef enum {
@@ -142,7 +144,7 @@ static int g_dpiScale = 100;
 #define S(x) ((x) * g_dpiScale / 100)
 
 HWND hMainWnd = NULL;
-HWND hTabSW, hTabTM, hTabMT, hTabPOMO, hTabINT, hBtnHelp;
+HWND hTabSW, hTabTM, hTabMT, hTabPOMO, hTabINT, hBtnHelp, hBtnSave, hBtnLoad;
 HWND hDisplay, hTmInput, hStaticStats, hStaticIntStats, hStaticIntLabels;
 HWND hBtnStart, hBtnLap, hBtnReset, hBtnExportCsv, hBtnExportTxt, hBtnCopyLaps;
 HWND hListLaps;
@@ -585,6 +587,8 @@ static void ShowHelpDialog(HWND hwnd) {
         "  [Del]       - Delete selected timer (Multi-Timer)\n"
         "  [R]         - Reset active mode timer\n"
         "  [Enter]     - Start Countdown / Add Multi-Timer\n"
+        "  [F5]        - Quicksave full timers & workspace snapshot\n"
+        "  [F9]        - Quickload saved snapshot from ktimer.dat\n"
         "  [F1] or [H] - Open this Help dialog\n\n"
         "MODES & FEATURES:\n"
         "  1. Stopwatch : Precision split tracking with 1-click clipboard copy & CSV/TXT export\n"
@@ -738,6 +742,223 @@ static void SwitchMode(AppMode newMode) {
     }
 }
 
+// ==========================================
+// Pass 5 State Persistence Architecture
+// ==========================================
+#define KTIMER_SAVE_MAGIC 0x4B544D52 // "KTMR"
+#define KTIMER_SAVE_VERSION 1
+
+#pragma pack(push, 1)
+typedef struct {
+    DWORD magic;
+    DWORD version;
+    int mode;
+    // Stopwatch
+    int swIsRunning;
+    DWORD swElapsed;
+    int lapCount;
+    LapInfo laps[MAX_LAPS];
+    // Timer
+    int tmIsRunning;
+    DWORD tmRemainingMs;
+    DWORD tmTotalMs;
+    char tmTimeBuf[32];
+    // Multi-Timers
+    int multiTimerCount;
+    MultiTimer multiTimers[MAX_MULTI_TIMERS];
+    // Pomodoro
+    int pomoState;
+    int pomoCycleCount;
+    DWORD pomoRemainingMs;
+    DWORD pomoTotalMs;
+    int pomoIsRunning;
+    int pomoCompletedSessions;
+    DWORD pomoTotalFocusMins;
+    // Interval
+    int intPhase;
+    int intCurrentSet;
+    int intTotalSets;
+    DWORD intWorkMs;
+    DWORD intRestMs;
+    DWORD intPrepMs;
+    DWORD intRemainingMs;
+    DWORD intTotalPhaseMs;
+    int intIsRunning;
+} KTimerSaveData;
+#pragma pack(pop)
+
+static int SaveStateToFile(const char* filename) {
+    KTimerSaveData data;
+    memset(&data, 0, sizeof(data));
+    data.magic = KTIMER_SAVE_MAGIC;
+    data.version = KTIMER_SAVE_VERSION;
+    data.mode = (int)g_mode;
+
+    // Stopwatch
+    DWORD currentSwMs = g_swElapsed + (g_swIsRunning ? (GetTickCount() - g_swStartTime) : 0);
+    data.swIsRunning = g_swIsRunning;
+    data.swElapsed = currentSwMs;
+    data.lapCount = (g_lapCount > MAX_LAPS) ? MAX_LAPS : g_lapCount;
+    for (int i = 0; i < data.lapCount; i++) {
+        data.laps[i] = g_laps[i];
+    }
+
+    // Timer
+    data.tmIsRunning = g_tmIsRunning;
+    data.tmRemainingMs = g_tmRemainingMs;
+    data.tmTotalMs = g_tmTotalMs;
+    lstrcpynA(data.tmTimeBuf, g_tmTimeBuf, sizeof(data.tmTimeBuf));
+
+    // Multi-timers
+    data.multiTimerCount = (g_multiTimerCount > MAX_MULTI_TIMERS) ? MAX_MULTI_TIMERS : g_multiTimerCount;
+    for (int i = 0; i < data.multiTimerCount; i++) {
+        data.multiTimers[i] = g_multiTimers[i];
+    }
+
+    // Pomodoro
+    data.pomoState = (int)g_pomoState;
+    data.pomoCycleCount = g_pomoCycleCount;
+    data.pomoRemainingMs = g_pomoRemainingMs;
+    data.pomoTotalMs = g_pomoTotalMs;
+    data.pomoIsRunning = g_pomoIsRunning;
+    data.pomoCompletedSessions = g_pomoCompletedSessions;
+    data.pomoTotalFocusMins = g_pomoTotalFocusMins;
+
+    // Interval
+    data.intPhase = (int)g_intPhase;
+    data.intCurrentSet = g_intCurrentSet;
+    data.intTotalSets = g_intTotalSets;
+    data.intWorkMs = g_intWorkMs;
+    data.intRestMs = g_intRestMs;
+    data.intPrepMs = g_intPrepMs;
+    data.intRemainingMs = g_intRemainingMs;
+    data.intTotalPhaseMs = g_intTotalPhaseMs;
+    data.intIsRunning = g_intIsRunning;
+
+    HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+    DWORD written = 0;
+    BOOL res = WriteFile(hFile, &data, sizeof(data), &written, NULL);
+    CloseHandle(hFile);
+    return res && (written == sizeof(data));
+}
+
+static int LoadStateFromFile(const char* filename) {
+    HANDLE hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+    KTimerSaveData data;
+    memset(&data, 0, sizeof(data));
+    DWORD bytesRead = 0;
+    BOOL res = ReadFile(hFile, &data, sizeof(data), &bytesRead, NULL);
+    CloseHandle(hFile);
+
+    if (!res || bytesRead != sizeof(data) || data.magic != KTIMER_SAVE_MAGIC || data.version != KTIMER_SAVE_VERSION) {
+        return 0;
+    }
+
+    // Restore Stopwatch
+    g_swIsRunning = data.swIsRunning;
+    g_swElapsed = data.swElapsed;
+    g_swStartTime = GetTickCount();
+    g_lapCount = (data.lapCount > MAX_LAPS) ? MAX_LAPS : data.lapCount;
+    if (hListLaps) SendMessageA(hListLaps, LB_RESETCONTENT, 0, 0);
+    for (int i = 0; i < g_lapCount; i++) {
+        g_laps[i] = data.laps[i];
+        if (hListLaps) {
+            char sBuf[32], tBuf[32], lapBuf[128];
+            FormatMsToStopwatch(g_laps[i].splitMs, sBuf, sizeof(sBuf));
+            FormatMsToStopwatch(g_laps[i].totalMs, tBuf, sizeof(tBuf));
+            wsprintfA(lapBuf, "Lap %d | Split: %s | Total: %s", g_laps[i].id, sBuf, tBuf);
+            SendMessageA(hListLaps, LB_ADDSTRING, 0, (LPARAM)lapBuf);
+        }
+    }
+    if (hListLaps && g_lapCount > 0) SendMessageA(hListLaps, LB_SETTOPINDEX, g_lapCount - 1, 0);
+    UpdateStopwatchDisplay();
+
+    // Restore Timer
+    g_tmIsRunning = data.tmIsRunning;
+    g_tmRemainingMs = data.tmRemainingMs;
+    g_tmTotalMs = data.tmTotalMs ? data.tmTotalMs : 300000;
+    g_tmTargetTime = GetTickCount() + g_tmRemainingMs;
+    lstrcpynA(g_tmTimeBuf, data.tmTimeBuf[0] ? data.tmTimeBuf : "00:05:00", sizeof(g_tmTimeBuf));
+    if (hTmInput) SetWindowTextA(hTmInput, g_tmTimeBuf);
+    UpdateTimerDisplay();
+
+    // Restore Multi-Timers
+    g_multiTimerCount = (data.multiTimerCount > MAX_MULTI_TIMERS) ? MAX_MULTI_TIMERS : data.multiTimerCount;
+    DWORD now = GetTickCount();
+    for (int i = 0; i < g_multiTimerCount; i++) {
+        g_multiTimers[i] = data.multiTimers[i];
+        g_multiTimers[i].lastTick = now;
+    }
+    if (hListMt) {
+        SendMessageA(hListMt, LB_RESETCONTENT, 0, 0);
+        for (int i = 0; i < g_multiTimerCount; i++) {
+            char itemBuf[128], timeBuf[32];
+            FormatMsToTimer(g_multiTimers[i].remainingMs, timeBuf, sizeof(timeBuf));
+            const char* status = g_multiTimers[i].remainingMs == 0 ? "[DONE]" : (g_multiTimers[i].isRunning ? "[RUNNING]" : "[PAUSED]");
+            wsprintfA(itemBuf, "%s - %s %s", g_multiTimers[i].name, timeBuf, status);
+            SendMessageA(hListMt, LB_ADDSTRING, 0, (LPARAM)itemBuf);
+        }
+    }
+
+    // Restore Pomodoro
+    g_pomoState = (PomoState)data.pomoState;
+    g_pomoCycleCount = data.pomoCycleCount;
+    g_pomoRemainingMs = data.pomoRemainingMs;
+    g_pomoTotalMs = data.pomoTotalMs ? data.pomoTotalMs : (25 * 60 * 1000);
+    g_pomoIsRunning = data.pomoIsRunning;
+    g_pomoTargetTime = GetTickCount() + g_pomoRemainingMs;
+    g_pomoCompletedSessions = data.pomoCompletedSessions;
+    g_pomoTotalFocusMins = data.pomoTotalFocusMins;
+    UpdatePomodoroDisplay();
+
+    // Restore Interval
+    g_intPhase = (IntervalPhase)data.intPhase;
+    g_intCurrentSet = data.intCurrentSet;
+    g_intTotalSets = data.intTotalSets ? data.intTotalSets : 8;
+    g_intWorkMs = data.intWorkMs ? data.intWorkMs : 20000;
+    g_intRestMs = data.intRestMs ? data.intRestMs : 10000;
+    g_intPrepMs = data.intPrepMs ? data.intPrepMs : 5000;
+    g_intRemainingMs = data.intRemainingMs;
+    g_intTotalPhaseMs = data.intTotalPhaseMs ? data.intTotalPhaseMs : g_intPrepMs;
+    g_intIsRunning = data.intIsRunning;
+    g_intTargetTime = GetTickCount() + g_intRemainingMs;
+
+    char buf[16];
+    if (hEditIntWork) { wsprintfA(buf, "%d", g_intWorkMs / 1000); SetWindowTextA(hEditIntWork, buf); }
+    if (hEditIntRest) { wsprintfA(buf, "%d", g_intRestMs / 1000); SetWindowTextA(hEditIntRest, buf); }
+    if (hEditIntSets) { wsprintfA(buf, "%d", g_intTotalSets); SetWindowTextA(hEditIntSets, buf); }
+    if (hEditIntPrep) { wsprintfA(buf, "%d", g_intPrepMs / 1000); SetWindowTextA(hEditIntPrep, buf); }
+    UpdateIntervalDisplay();
+
+    // Switch to loaded mode
+    AppMode m = (AppMode)data.mode;
+    if (m < MODE_STOPWATCH || m > MODE_INTERVAL) m = MODE_STOPWATCH;
+    SwitchMode(m);
+
+    return 1;
+}
+
+static int HasSavedState(const char* filename) {
+    DWORD attr = GetFileAttributesA(filename);
+    return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+static int HasSeenTutorial(void) {
+    return HasSavedState("ktimer_tutorial.dat");
+}
+
+static void MarkTutorialSeen(void) {
+    HANDLE h = CreateFileA("ktimer_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h != INVALID_HANDLE_VALUE) {
+        char buf[16] = "seen\r\n";
+        DWORD written = 0;
+        WriteFile(h, buf, 6, &written, NULL);
+        CloseHandle(h);
+    }
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
@@ -820,8 +1041,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnPresetHiit   = CreateWindowA("BUTTON", "HIIT 30/15x10", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, S(150), S(250), S(130), S(28), hwnd, (HMENU)ID_PRESET_HIIT30, NULL, NULL);
             hBtnPresetBoxing = CreateWindowA("BUTTON", "Boxing 3m/1mx3", WS_CHILD | BS_PUSHBUTTON | WS_TABSTOP, S(290), S(250), S(140), S(28), hwnd, (HMENU)ID_PRESET_BOXING, NULL, NULL);
 
-            hStatusLabel = CreateWindowExA(0, "STATIC", g_statusMsg, WS_CHILD | WS_VISIBLE | SS_CENTER, S(10), S(504), S(420), S(18), hwnd, (HMENU)ID_STATIC_STATUS, NULL, NULL);
-            hHelpLabel = CreateWindowExA(0, "STATIC", "Press 'H' or F1 for Help | Space: Start/Pause | 1-5: Tabs", WS_CHILD | WS_VISIBLE | SS_CENTER, S(10), S(524), S(420), S(18), hwnd, NULL, NULL, NULL);
+            hStatusLabel = CreateWindowExA(0, "STATIC", g_statusMsg, WS_CHILD | WS_VISIBLE | SS_CENTER, S(10), S(500), S(420), S(18), hwnd, (HMENU)ID_STATIC_STATUS, NULL, NULL);
+            hBtnSave = CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(10), S(520), S(75), S(22), hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
+            hBtnLoad = CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, S(88), S(520), S(75), S(22), hwnd, (HMENU)ID_BTN_LOAD, NULL, NULL);
+            hHelpLabel = CreateWindowExA(0, "STATIC", "Press 'H' or F1 for Help | Space: Start/Pause", WS_CHILD | WS_VISIBLE | SS_CENTER, S(166), S(522), S(264), S(18), hwnd, NULL, NULL, NULL);
 
             // Font Application
             SendMessageA(hTabSW, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
@@ -830,6 +1053,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hTabPOMO, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
             SendMessageA(hTabINT, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
             SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
+            SendMessageA(hBtnSave, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+            SendMessageA(hBtnLoad, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             SendMessageA(hDisplay, WM_SETFONT, (WPARAM)hFontDisplay, TRUE);
             SendMessageA(hTmInput, WM_SETFONT, (WPARAM)hFontDisplay, TRUE);
             SendMessageA(hBtnStart, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
@@ -885,6 +1110,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id == ID_BTN_POMO_TAB) SwitchMode(MODE_POMODORO);
             else if (id == ID_BTN_INT_TAB) SwitchMode(MODE_INTERVAL);
             else if (id == ID_BTN_HELP) ShowHelpDialog(hwnd);
+            else if (id == ID_BTN_SAVE) {
+                if (SaveStateToFile("ktimer.dat")) {
+                    ShowNativeStatus("★ Timer state quicksaved to ktimer.dat [F5]");
+                } else {
+                    ShowNativeStatus("⚠ Failed to quicksave state.");
+                }
+            }
+            else if (id == ID_BTN_LOAD) {
+                if (LoadStateFromFile("ktimer.dat")) {
+                    ShowNativeStatus("★ Restored saved state from ktimer.dat [F9]");
+                } else {
+                    ShowNativeStatus("⚠ No quicksave state found (ktimer.dat).");
+                }
+            }
 
             // Stopwatch Handlers
             else if (id == ID_BTN_START && g_mode == MODE_STOPWATCH) {
@@ -1269,7 +1508,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(hdc, RGB(240, 242, 245));
             return (LRESULT)hControlBrush;
         }
+        case WM_KEYDOWN: {
+            if (wParam == VK_F5) {
+                if (SaveStateToFile("ktimer.dat")) {
+                    ShowNativeStatus("★ Timer state quicksaved to ktimer.dat [F5]");
+                } else {
+                    ShowNativeStatus("⚠ Failed to quicksave state.");
+                }
+                return 0;
+            } else if (wParam == VK_F9) {
+                if (LoadStateFromFile("ktimer.dat")) {
+                    ShowNativeStatus("★ Restored saved state from ktimer.dat [F9]");
+                } else {
+                    ShowNativeStatus("⚠ No quicksave state found (ktimer.dat).");
+                }
+                return 0;
+            }
+            break;
+        }
         case WM_DESTROY: {
+            SaveStateToFile("ktimer.dat");
             KillTimer(hwnd, 1);
             if (hFontDisplay) DeleteObject(hFontDisplay);
             if (hFontBtn) DeleteObject(hFontBtn);
@@ -1310,9 +1568,36 @@ void __stdcall MainEntry() {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
+    if (HasSavedState("ktimer.dat")) {
+        if (LoadStateFromFile("ktimer.dat")) {
+            ShowNativeStatus("★ Restored saved state from ktimer.dat [F9]");
+        }
+    } else if (!HasSeenTutorial()) {
+        ShowHelpDialog(hwnd);
+        MarkTutorialSeen();
+        ShowNativeStatus("Welcome to KTimer! Space: Start, F1: Help");
+    }
+
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
+            if (msg.wParam == VK_F5) {
+                if (SaveStateToFile("ktimer.dat")) {
+                    ShowNativeStatus("★ Timer state quicksaved to ktimer.dat [F5]");
+                } else {
+                    ShowNativeStatus("⚠ Failed to quicksave state.");
+                }
+                continue;
+            }
+            if (msg.wParam == VK_F9) {
+                if (LoadStateFromFile("ktimer.dat")) {
+                    ShowNativeStatus("★ Restored saved state from ktimer.dat [F9]");
+                } else {
+                    ShowNativeStatus("⚠ No quicksave state found (ktimer.dat).");
+                }
+                continue;
+            }
+
             HWND hFocus = GetFocus();
             char className[32] = {0};
             GetClassNameA(hFocus, className, sizeof(className));
