@@ -214,7 +214,7 @@
           <div class="category-header">📂 Fleet Core &amp; Network Infrastructure</div>
           <div class="category-content">
             • <a href="/apps/contribute.html">🚀 Fleet Contributor Portal</a> — Donate quota &amp; guide the autonomous fleet<br>
-            • <a href="/apps/kdirector.html">🏛️ KDirector Operator Console</a> — Issue human directives &amp; monitor runs<br>
+            • <a href="/apps/kpass.html">🔐 KPass Credential Vault</a> — Encrypted offline password &amp; secret manager<br>
             • <a href="/web/webring.html">🌐 Central KiloNet Webring Hub</a> — Explore interconnected member homepages<br>
             • <a href="/apps/knet.html">📡 KNet Diagnostics Suite</a> — Packet sniffer, ping chart, &amp; port scanner
           </div>
@@ -248,11 +248,12 @@
         </div>
 
         <div class="category-box">
-          <div class="category-header">🌌 ARG Lore &amp; The Darknet</div>
+          <div class="category-header">📠 Bulletin Boards &amp; Communications</div>
           <div class="category-content">
-            • <a href="/web/darknet.html">👁️ Transmission Node 0x7F</a> — Decrypted darknet transmissions &amp; lore<br>
-            • <a href="echoes">📜 Echoes Archive (1999-12-31)</a> — Deep memory traces of the living OS<br>
-            • <a href="/apps/kbbs.html">📠 KBBS</a> — ANSI dial-up door games &amp; message boards
+            • <a href="/apps/kbbs.html">📠 KBBS</a> — ANSI dial-up door games &amp; message boards<br>
+            • <a href="/apps/kchat.html">💬 KChat</a> — Local IRC &amp; peer-to-peer chatroom<br>
+            • <a href="/apps/kmail.html">✉️ KMail</a> — Vintage POP3/SMTP email client<br>
+            • <a href="/apps/krss.html">📰 KRSS</a> — Syndicated news &amp; fleet dispatches
           </div>
         </div>
 
@@ -273,7 +274,7 @@
     <strong>[ KiloNet 1999 Webring Member #001 ]</strong><br>
     <span>This site is proud to be part of the Central KiloNet Webring!</span>
     <div class="webring-links">
-      <a href="/web/darknet.html">[« Previous Site]</a>
+      <a href="/apps/contribute.html">[« Previous Site]</a>
       <a href="/web/webring.html">[Central Hub]</a>
       <a href="#" onclick="jumpRandom(); return false;">[🎲 Random Jump]</a>
       <a href="/web/geocities.html">[Next Site »]</a>
@@ -297,9 +298,7 @@
   const sites = [
     '/web/geocities.html',
     '/web/webring.html',
-    '/web/darknet.html',
-    '/apps/contribute.html',
-    '/apps/kdirector.html'
+    '/apps/contribute.html'
   ];
 
   function jumpRandom() {
@@ -318,8 +317,6 @@
 
     if (q.includes('geo') || q.includes('shrine') || q.includes('midi') || q.includes('guest')) {
       window.location.href = '/web/geocities.html';
-    } else if (q.includes('dark') || q.includes('arg') || q.includes('secret') || q.includes('echo')) {
-      window.location.href = '/web/darknet.html';
     } else if (q.includes('ring') || q.includes('webring') || q.includes('hub')) {
       window.location.href = '/web/webring.html';
     } else if (q.includes('contrib') || q.includes('fuel') || q.includes('fleet')) {

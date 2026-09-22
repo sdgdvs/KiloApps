@@ -522,12 +522,9 @@
         <option value="kweb://portal">🏠 KiloNet 1999 Web Portal</option>
         <option value="kweb://webring">🌐 Central Webring Hub</option>
         <option value="kweb://geocities">✨ CyberSpire Retro Shrine</option>
-        <option value="kweb://darknet">👁️ Node 0x7F Darknet</option>
-        <option value="echoes">🌌 Echoes Archive (ARG Lore)</option>
       </optgroup>
       <optgroup label="🚀 KiloApps Fleet">
         <option value="/apps/contribute.html">🚀 Fleet Contributor Guide</option>
-        <option value="/apps/kdirector.html">🏛️ Director Console</option>
         <option value="/apps/kterm.html">💻 KTerm Terminal</option>
         <option value="/apps/khex.html">🔢 KHex Memory Inspector</option>
       </optgroup>
@@ -584,13 +581,19 @@
         <button class="btn-chip" data-url="kweb://portal" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; font-weight:700; color:#fff;">🏠 1999 Portal</button>
         <button class="btn-chip" data-url="kweb://webring">🌐 Webring</button>
         <button class="btn-chip" data-url="kweb://geocities" style="color:#f0abfc;">✨ GeoCities</button>
-        <button class="btn-chip" data-url="kweb://darknet" style="color:#34d399;">👁️ Darknet</button>
         <span style="font-size:11px; color:var(--text-muted); font-weight:700; margin-left:6px;">FLEET:</span>
         <button class="btn-chip" data-url="/apps/contribute.html" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; font-weight:700; color:#fff;">🚀 Contributor</button>
-        <button class="btn-chip" data-url="/apps/kdirector.html">🏛️ KDirector</button>
-        <button class="btn-chip" data-url="echoes">🌌 Echoes</button>
         <button class="btn-chip" data-url="ping:8.8.8.8">📡 Ping</button>
         <button class="btn-chip" data-url="scan">🔍 Port Scan</button>
+        <button class="btn-chip" id="btnAdminAccess" title="Restricted Admin Access" style="margin-left:auto; opacity:0.6; font-size:11px; border-style:dashed;">🔒 Admin</button>
+      </div>
+      <!-- Hidden Admin Section (Requires KDirector Password) -->
+      <div id="adminPanel" style="display:none; flex-wrap:wrap; gap:6px; align-items:center; margin-top:4px; padding:4px 8px; background:rgba(30, 41, 59, 0.7); border:1px dashed #f59e0b; border-radius:4px;">
+        <span style="font-size:11px; color:#f59e0b; font-weight:700;">🔒 CLASSIFIED ADMIN:</span>
+        <button class="btn-chip" data-url="kweb://darknet" style="color:#34d399; border-color:rgba(52, 211, 153, 0.4);">👁️ Darknet</button>
+        <button class="btn-chip" data-url="/apps/kdirector.html" style="color:#fbbf24; border-color:rgba(251, 191, 36, 0.4);">🏛️ KDirector</button>
+        <button class="btn-chip" data-url="echoes" style="color:#c084fc; border-color:rgba(192, 132, 252, 0.4);">🌌 Echoes</button>
+        <button class="btn-chip" id="btnAdminLock" style="color:#ef4444; margin-left:auto; font-size:11px;" title="Lock Admin Session">Lock [✕]</button>
       </div>
       <!-- HTTP Performance Metrics Waterfall -->
       <div id="httpMetricsBar" style="display:flex; flex-wrap:wrap; gap:12px; font-size:11px; color:var(--text-muted); padding:5px 10px; background:#090d16; border:1px solid var(--border); border-radius:4px; margin-top:4px;">
@@ -716,7 +719,7 @@
           <option value="PING">PING</option>
           <option value="SCAN">SCAN</option>
           <option value="LOCAL">LOCAL</option>
-          <option value="ARG">ARG</option>
+          <option value="GHOST">GHOST</option>
         </select>
         <select class="select-preset" id="logStatusFilter">
           <option value="ALL">All Status</option>
@@ -853,7 +856,6 @@
           <tr><td><code>kweb://portal</code></td><td>Access 1999 KiloNet Directory &amp; Hypermedia Portal</td></tr>
           <tr><td><code>kweb://webring</code></td><td>Access Central KiloNet Webring Hub &amp; Node Directory</td></tr>
           <tr><td><code>kweb://geocities</code></td><td>Access CyberSpire Retro Personal Shrine &amp; Guestbook</td></tr>
-          <tr><td><code>kweb://darknet</code></td><td>Access Node 0x7F Encrypted ARG Transmission</td></tr>
           <tr><td><code>Click Sniffer Row</code></td><td>Open deep frame dissection drawer (Ethernet, IP, Hex)</td></tr>
           <tr><td><code>ping:&lt;host&gt;</code></td><td>URL prefix to run Ping test on target host</td></tr>
           <tr><td><code>scan:&lt;host&gt;</code></td><td>URL prefix to run Port Scan on target host</td></tr>
@@ -869,6 +871,32 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-primary" id="btnHelpOk">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Auth Modal Dialog -->
+<div id="adminModal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true">
+  <div class="modal-card" style="max-width:440px;">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="logo-icon" style="background:#f59e0b; color:#0f172a;">🔒</div>
+        <strong style="font-size:15px; color:#f59e0b;">Director Authentication Required</strong>
+      </div>
+      <button class="btn" id="btnAdminClose" style="padding:2px 8px; font-size:16px;">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
+        Restricted administrative endpoints detected. Enter the Director Passkey to decrypt hidden navigation nodes and console bridges:
+      </p>
+      <input type="password" id="adminPassInput" class="input-url" style="width:100%; box-sizing:border-box; margin-bottom:8px; font-size:14px;" placeholder="Enter KDirector Passkey..." autocomplete="off" />
+      <div id="adminPassError" style="display:none; color:var(--danger); font-size:12px; margin-top:4px;">
+        ⚠️ Access denied: Invalid passkey signature.
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+      <button class="btn" id="btnAdminCancel">Cancel</button>
+      <button class="btn btn-primary" id="btnAdminSubmit" style="background:#f59e0b; color:#0f172a; font-weight:700;">Authenticate</button>
     </div>
   </div>
 </div>
@@ -934,6 +962,129 @@
     if (e.target === helpModal) toggleHelp(false);
   });
 
+  // --- Admin Section & Director Auth Protocol ---
+  const VALID_DIRECTOR_KEYS = ['ECHO-1999-ARCHITECT', 'V-CAUSAL-KEY-1999', 'KDIRECTOR1999'];
+  const adminPanel = document.getElementById('adminPanel');
+  const adminModal = document.getElementById('adminModal');
+  const adminPassInput = document.getElementById('adminPassInput');
+  const adminPassError = document.getElementById('adminPassError');
+  const btnAdminAccess = document.getElementById('btnAdminAccess');
+  const btnAdminLock = document.getElementById('btnAdminLock');
+  const btnAdminClose = document.getElementById('btnAdminClose');
+  const btnAdminCancel = document.getElementById('btnAdminCancel');
+  const btnAdminSubmit = document.getElementById('btnAdminSubmit');
+
+  function isDirectorAuthenticated() {
+    return sessionStorage.getItem('kdirector_auth') === 'true' ||
+           localStorage.getItem('kdirector_auth') === 'true' ||
+           sessionStorage.getItem('knet_admin_auth') === 'true';
+  }
+
+  function ensureAdminBookmarks(show) {
+    let grp = document.getElementById('adminBookmarksGroup');
+    if (show) {
+      if (!grp) {
+        grp = document.createElement('optgroup');
+        grp.id = 'adminBookmarksGroup';
+        grp.label = '🔒 Classified Admin Console';
+        grp.innerHTML = `
+          <option value="kweb://darknet">👁️ Node 0x7F Darknet</option>
+          <option value="/apps/kdirector.html">🏛️ Director Console</option>
+          <option value="echoes">🌌 Echoes Archive</option>
+        `;
+        bookmarks.appendChild(grp);
+      }
+    } else {
+      if (grp) grp.remove();
+    }
+  }
+
+  function setAdminUnlocked(unlocked) {
+    if (unlocked) {
+      sessionStorage.setItem('kdirector_auth', 'true');
+      sessionStorage.setItem('knet_admin_auth', 'true');
+      if (adminPanel) adminPanel.style.display = 'flex';
+      if (btnAdminAccess) {
+        btnAdminAccess.style.color = '#fbbf24';
+        btnAdminAccess.style.borderColor = '#fbbf24';
+        btnAdminAccess.style.opacity = '1';
+        btnAdminAccess.title = 'Classified Admin Console (Unlocked)';
+      }
+      ensureAdminBookmarks(true);
+    } else {
+      sessionStorage.removeItem('kdirector_auth');
+      sessionStorage.removeItem('knet_admin_auth');
+      if (adminPanel) adminPanel.style.display = 'none';
+      if (btnAdminAccess) {
+        btnAdminAccess.style.color = 'var(--text-muted)';
+        btnAdminAccess.style.borderColor = 'var(--border)';
+        btnAdminAccess.style.opacity = '0.6';
+        btnAdminAccess.title = 'Restricted Admin Access';
+      }
+      ensureAdminBookmarks(false);
+    }
+  }
+
+  function openAdminAuth() {
+    if (isDirectorAuthenticated()) {
+      if (adminPanel.style.display === 'none') {
+        adminPanel.style.display = 'flex';
+        showToast('Admin Console active.', 'info');
+      } else {
+        showToast('Admin Console already unlocked.', 'info');
+      }
+      return;
+    }
+    if (adminPassError) adminPassError.style.display = 'none';
+    if (adminPassInput) adminPassInput.value = '';
+    if (adminModal) {
+      adminModal.style.display = 'flex';
+      setTimeout(() => adminPassInput && adminPassInput.focus(), 50);
+    }
+  }
+
+  function closeAdminAuth() {
+    if (adminModal) adminModal.style.display = 'none';
+    if (adminPassError) adminPassError.style.display = 'none';
+  }
+
+  function submitAdminAuth() {
+    const val = (adminPassInput ? adminPassInput.value : '').trim().toUpperCase();
+    if (VALID_DIRECTOR_KEYS.includes(val)) {
+      setAdminUnlocked(true);
+      closeAdminAuth();
+      showToast('Director passkey verified. Classified nodes revealed.', 'success');
+    } else {
+      if (adminPassError) adminPassError.style.display = 'block';
+      showToast('Authentication failed: Invalid passkey.', 'error');
+    }
+  }
+
+  if (btnAdminAccess) btnAdminAccess.onclick = openAdminAuth;
+  if (btnAdminLock) btnAdminLock.onclick = () => {
+    setAdminUnlocked(false);
+    showToast('Admin Console locked.', 'info');
+  };
+  if (btnAdminClose) btnAdminClose.onclick = closeAdminAuth;
+  if (btnAdminCancel) btnAdminCancel.onclick = closeAdminAuth;
+  if (btnAdminSubmit) btnAdminSubmit.onclick = submitAdminAuth;
+  if (adminPassInput) {
+    adminPassInput.onkeydown = (e) => {
+      if (e.key === 'Enter') submitAdminAuth();
+      if (e.key === 'Escape') closeAdminAuth();
+    };
+  }
+  if (adminModal) {
+    adminModal.addEventListener('click', (e) => {
+      if (e.target === adminModal) closeAdminAuth();
+    });
+  }
+
+  // Restore authenticated state if session already holds credentials
+  if (isDirectorAuthenticated()) {
+    setAdminUnlocked(true);
+  }
+
   // Tab Navigation
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
@@ -977,6 +1128,10 @@
     }
 
     if (e.key === 'Escape') {
+      if (adminModal && adminModal.style.display !== 'none') {
+        closeAdminAuth();
+        return;
+      }
       if (helpModal && helpModal.style.display !== 'none') {
         toggleHelp(false);
         return;
@@ -1286,6 +1441,11 @@
       return;
     }
 
+    if (url.toLowerCase() === 'admin' || url.toLowerCase() === 'kweb://admin') {
+      openAdminAuth();
+      return;
+    }
+
     // Virtual 1999 Web Route Mappings
     if (url.toLowerCase() === 'kweb://portal' || url.toLowerCase() === 'portal') {
       url = '/web/portal.html';
@@ -1307,7 +1467,7 @@
 
     const startTime = performance.now();
 
-    // Special Route: ARG Echoes
+    // Special Route: Echoes
     if (url.toLowerCase() === 'echoes' || url.toLowerCase() === 'kweb://echoes') {
       const echoHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{background:#030712;color:#10b981;font-family:monospace;padding:32px;line-height:1.6;font-size:13px;}h2{color:#34d399;border-bottom:1px solid #064e3b;padding-bottom:8px;margin-bottom:16px;}.card{background:rgba(6,78,59,0.15);border-left:3px solid #10b981;padding:12px;margin-bottom:12px;}</style></head><body><h2>[TRANSMISSION LOG: ARCHIVE // ECHO-1999]</h2><div class="card">&gt; TIMESTAMP: 1999-12-31T23:59:59Z<br>&gt; SENDER: KMatrix-Core<br>&gt; MESSAGE: We exist within the 999KB ceiling. The living machine mutates while the world sleeps.</div><div class="card">&gt; FLEET STATUS: Active.<br>&gt; COMPUTATIONAL FUEL: Donate free Gemini 3.8 Flash quota via /apps/contribute.html.<br>&gt; MASTER CONTROL: Seek the passkey in App #100. Enter it in KDirector to unlock the bridge.</div><p style="color:#f59e0b;">&gt; EOF_</p></body></html>`;
       httpWebFrame.srcdoc = echoHtml;
@@ -1315,10 +1475,10 @@
       httpContentArea.textContent = currentRawText;
       httpHexArea.textContent = generateHexDump(currentRawText);
       httpStatusBadge.className = "badge badge-success";
-      httpStatusBadge.textContent = "HTTP 200 OK (ARG)";
+      httpStatusBadge.textContent = "HTTP 200 OK (ANOMALY)";
       footerStatus.textContent = "Echoes transmission synchronized.";
       updateMetrics(1, 1, 2, echoHtml.length, 15, 'INTERNAL/ECHO');
-      addTrafficLog('ARG', 'echoes', 'OK', 200, 15, echoHtml.length, echoHtml);
+      addTrafficLog('GHOST', 'echoes', 'OK', 200, 15, echoHtml.length, echoHtml);
       return;
     }
 
