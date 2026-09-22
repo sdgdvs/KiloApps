@@ -104,6 +104,11 @@ int bombCount = 1;
 int maxBombs = 3;
 int weaponType = 0; // 0: Normal, 1: Spread, 2: Laser, 3: Plasma
 
+// Multi-Chassis Fighter Configurations (0: Alpha Interceptor, 1: Crimson Vanguard, 2: Void Phantom)
+int playerChassis = 0;
+const char* chassisNames[3] = {"ALPHA INTERCEPTOR", "CRIMSON VANGUARD", "VOID PHANTOM"};
+const char* chassisTags[3] = {"ALPHA", "CRIMSON", "VOID"};
+
 // Loop 10: Weapon Overcharge
 int overchargeEnergy = 0; // 0 to 100
 int overchargeTimer = 0;  // Frames remaining for Overcharge
@@ -483,6 +488,12 @@ void LoadLeaderboard() {
         RegQueryValueExA(hKey, "HighScore", NULL, &type, (LPBYTE)&highScore, &size);
         size = sizeof(DWORD);
         RegQueryValueExA(hKey, "TotalKills", NULL, &type, (LPBYTE)&totalKills, &size);
+        DWORD chVal = 0;
+        size = sizeof(DWORD);
+        if (RegQueryValueExA(hKey, "Chassis", NULL, &type, (LPBYTE)&chVal, &size) == ERROR_SUCCESS) {
+            playerChassis = (int)chVal;
+            if (playerChassis < 0 || playerChassis > 2) playerChassis = 0;
+        }
         RegCloseKey(hKey);
     }
 }
@@ -496,8 +507,24 @@ void SaveLeaderboard() {
     if (RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\KSpace", 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS) {
         RegSetValueExA(hKey, "HighScore", 0, REG_DWORD, (const BYTE*)&highScore, sizeof(DWORD));
         RegSetValueExA(hKey, "TotalKills", 0, REG_DWORD, (const BYTE*)&totalKills, sizeof(DWORD));
+        DWORD chVal = (DWORD)playerChassis;
+        RegSetValueExA(hKey, "Chassis", 0, REG_DWORD, (const BYTE*)&chVal, sizeof(DWORD));
         RegCloseKey(hKey);
     }
+}
+
+void CyclePlayerChassis() {
+    playerChassis = (playerChassis + 1) % 3;
+    HKEY hKey;
+    if (RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\KSpace", 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS) {
+        DWORD chVal = (DWORD)playerChassis;
+        RegSetValueExA(hKey, "Chassis", 0, REG_DWORD, (const BYTE*)&chVal, sizeof(DWORD));
+        RegCloseKey(hKey);
+    }
+    char buf[64];
+    wsprintfA(buf, "Fighter: %s", chassisNames[playerChassis]);
+    ShowNativeToast(buf, 0, 100);
+    PlaySnd(2);
 }
 
 void ExportStatsCSV() {
@@ -841,14 +868,19 @@ void DestroyBoss() {
     PlaySnd(3);
 
     // Drop Powerups (including guaranteed Drone Wing or Overcharge Core)
+    int dropped = 0;
     for (int k = 0; k < MAX_POWERUPS; k++) {
         if (!pu[k].active) {
             pu[k].active = 1.0f;
-            pu[k].x = bossX + 20.0f + (k % 3) * 30.0f;
+            pu[k].x = bossX + 20.0f + dropped * 30.0f;
             pu[k].y = bossY + 20.0f;
             pu[k].dy = 1.5f;
-            pu[k].type = (k == 0 ? 10.0f : (float)(rnd() % 11)); // 10 = Drone Wing Pod
-            if (k >= 2) break;
+            if (dropped == 0) pu[k].type = 10.0f; // Drone Wing Pod
+            else if (dropped == 1) pu[k].type = 9.0f; // Overcharge Core
+            else if (modeIndex == MODE_BOSS_RUSH && p.hp < p.maxHp) pu[k].type = 3.0f; // Shield/Repair Pod
+            else pu[k].type = (float)(rnd() % 11);
+            dropped++;
+            if (dropped >= 3) break;
         }
     }
 
@@ -1481,7 +1513,7 @@ void Update() {
                     b[i].x = drones[d].x + 4.0f;
                     b[i].y = drones[d].y - 2.0f;
                     b[i].dx = (d == 0 ? -0.4f : 0.4f);
-                    b[i].dy = -8.5f;
+                    b[i].dy = -9.0f;
                     b[i].type = 0.0f;
                     break;
                 }
@@ -1974,7 +2006,11 @@ void Update() {
     if (frameCount % spawnRate == 0) SpawnEnemy();
 
     // Regular & Elite Enemies Update
-    float baseEnemySpeed = 1.8f + (score / 300.0f) + (modeIndex == MODE_ENDURANCE ? 1.0f : 0.0f);
+    float sBonus1 = (score / 5000.0f) * 1.5f;
+    if (sBonus1 > 2.2f) sBonus1 = 2.2f;
+    float sBonus2 = (wave - 1) * 0.12f;
+    if (sBonus2 > 1.5f) sBonus2 = 1.5f;
+    float baseEnemySpeed = 1.8f + sBonus1 + sBonus2 + (modeIndex == MODE_ENDURANCE ? 0.6f : 0.0f);
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (e[i].active) {
             float ew = (e[i].type == 6.0f || e[i].type == 9.0f || e[i].type == 11.0f || e[i].type == 12.0f) ? 36.0f : 20.0f;
@@ -2229,123 +2265,240 @@ void DrawPlayerShipGDI(HDC hdc, int x, int y, int shield, int frame) {
     HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
     HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
 
-    // Multi-Stage Animated Thruster Flames (Tri-Nozzle Engine Array)
     int flameH = 5 + (frame % 3) * 3;
     if (overchargeTimer > 0) flameH += 4;
 
-    // Outboard secondary nozzle flames
-    HBRUSH sfbr = CreateSolidBrush((frame % 2 == 0) ? RGB(255, 145, 0) : RGB(255, 60, 0));
-    HBRUSH oldBr = (HBRUSH)SelectObject(hdc, sfbr);
-    POINT lSec[3] = { {x + 2, y + 17}, {x + 3, y + 17 + flameH * 2 / 3}, {x + 5, y + 17} };
-    Polygon(hdc, lSec, 3);
-    POINT rSec[3] = { {x + 15, y + 17}, {x + 17, y + 17 + flameH * 2 / 3}, {x + 18, y + 17} };
-    Polygon(hdc, rSec, 3);
-    SelectObject(hdc, oldBr); DeleteObject(sfbr);
+    if (playerChassis == 1) {
+        // === CHASSIS 1: CRIMSON VANGUARD (Heavy Assault Dread Fighter) ===
+        HBRUSH fbr1 = CreateSolidBrush((frame % 2 == 0) ? RGB(255, 145, 0) : RGB(255, 61, 0));
+        HBRUSH oldBr = (HBRUSH)SelectObject(hdc, fbr1);
+        POINT pFl1[3] = { {x + 2, y + 18}, {x + 3, y + 18 + flameH * 4 / 5}, {x + 5, y + 18} };
+        Polygon(hdc, pFl1, 3);
+        POINT pFl4[3] = { {x + 15, y + 18}, {x + 17, y + 18 + flameH * 4 / 5}, {x + 18, y + 18} };
+        Polygon(hdc, pFl4, 3);
+        SelectObject(hdc, oldBr); DeleteObject(fbr1);
 
-    // Outer primary flame plume
-    HBRUSH ofbr = CreateSolidBrush((frame % 2 == 0) ? (overchargeTimer > 0 ? RGB(255, 234, 0) : RGB(255, 60, 0)) : RGB(255, 145, 0));
-    oldBr = (HBRUSH)SelectObject(hdc, ofbr);
-    POINT outerPts[3] = { {x + 4, y + 20}, {x + 10, y + 23 + flameH}, {x + 16, y + 20} };
-    Polygon(hdc, outerPts, 3);
-    SelectObject(hdc, oldBr); DeleteObject(ofbr);
+        HBRUSH fbr2 = CreateSolidBrush(overchargeTimer > 0 ? RGB(255, 234, 0) : RGB(255, 61, 0));
+        oldBr = (HBRUSH)SelectObject(hdc, fbr2);
+        POINT pFl2[3] = { {x + 6, y + 19}, {x + 7, y + 19 + flameH}, {x + 9, y + 19} };
+        Polygon(hdc, pFl2, 3);
+        POINT pFl3[3] = { {x + 11, y + 19}, {x + 12, y + 19 + flameH}, {x + 14, y + 19} };
+        Polygon(hdc, pFl3, 3);
+        SelectObject(hdc, oldBr); DeleteObject(fbr2);
 
-    // Core flame
-    HBRUSH fbr = CreateSolidBrush(overchargeTimer > 0 ? RGB(0, 229, 255) : RGB(255, 234, 0));
-    SelectObject(hdc, fbr);
-    POINT flamePts[3] = { {x + 6, y + 20}, {x + 10, y + 20 + flameH}, {x + 14, y + 20} };
-    Polygon(hdc, flamePts, 3);
-    SelectObject(hdc, oldBr); DeleteObject(fbr);
+        for (int m = 0; m < 4; m++) {
+            int my = y + 20 + ((frame * 2 + m * 5) % 18);
+            int mx = x + 10 + (FastSin(frame * 2 + m * 5) * 4) / 127;
+            HBRUSH mbr = CreateSolidBrush(RGB(255, 145, 0));
+            RECT mr = {mx - 1, my, mx + 1, my + 2};
+            FillRect(hdc, &mr, mbr);
+            DeleteObject(mbr);
+        }
 
-    // White center plasma flame
-    HBRUSH wfbr = CreateSolidBrush(RGB(255, 255, 255));
-    SelectObject(hdc, wfbr);
-    POINT whitePts[3] = { {x + 8, y + 20}, {x + 10, y + 17 + flameH / 2}, {x + 12, y + 20} };
-    Polygon(hdc, whitePts, 3);
-    SelectObject(hdc, oldBr); DeleteObject(wfbr);
+        HBRUSH podBr = CreateSolidBrush(overchargeTimer > 0 ? RGB(255, 215, 0) : RGB(213, 0, 0));
+        RECT lpod = {x - 2, y + 8, x + 1, y + 20}; FillRect(hdc, &lpod, podBr);
+        RECT rpod = {x + 19, y + 8, x + 22, y + 20}; FillRect(hdc, &rpod, podBr);
+        DeleteObject(podBr);
+        HBRUSH goldTip = CreateSolidBrush(RGB(255, 234, 0));
+        RECT lg = {x - 2, y + 7, x + 1, y + 9}; FillRect(hdc, &lg, goldTip);
+        RECT rg = {x + 19, y + 7, x + 22, y + 9}; FillRect(hdc, &rg, goldTip);
+        DeleteObject(goldTip);
 
-    // Wingtip Thruster Emitters & Laser Focus Caps
-    HBRUSH wtfbr = CreateSolidBrush(overchargeTimer > 0 ? RGB(255, 234, 0) : RGB(0, 229, 255));
-    SelectObject(hdc, wtfbr);
-    RECT lwt = {x, y + 14, x + 2, y + 20}; FillRect(hdc, &lwt, wtfbr);
-    RECT rwt = {x + 18, y + 14, x + 20, y + 20}; FillRect(hdc, &rwt, wtfbr);
-    SelectObject(hdc, oldBr); DeleteObject(wtfbr);
+        HBRUSH ub = CreateSolidBrush(overchargeTimer > 0 ? RGB(178, 137, 0) : RGB(95, 9, 20));
+        oldBr = (HBRUSH)SelectObject(hdc, ub);
+        POINT uPts[8] = { {x + 10, y - 3}, {x + 22, y + 12}, {x + 20, y + 21}, {x + 14, y + 17}, {x + 10, y + 21}, {x + 6, y + 17}, {x + 0, y + 21}, {x - 2, y + 12} };
+        Polygon(hdc, uPts, 8);
+        SelectObject(hdc, oldBr); DeleteObject(ub);
 
-    // Ship Base Underplate
-    HBRUSH ub = CreateSolidBrush(overchargeTimer > 0 ? RGB(178, 137, 0) : RGB(1, 87, 155));
-    SelectObject(hdc, ub);
-    POINT uPts[6] = { {x + 10, y - 1}, {x + 21, y + 16}, {x + 16, y + 21}, {x + 10, y + 16}, {x + 4, y + 21}, {x - 1, y + 16} };
-    Polygon(hdc, uPts, 6);
-    SelectObject(hdc, oldBr); DeleteObject(ub);
+        HBRUSH wbr = CreateSolidBrush(overchargeTimer > 0 ? RGB(255, 215, 0) : RGB(213, 0, 0));
+        oldBr = (HBRUSH)SelectObject(hdc, wbr);
+        POINT wPts[8] = { {x + 10, y - 2}, {x + 21, y + 11}, {x + 19, y + 20}, {x + 14, y + 16}, {x + 10, y + 20}, {x + 6, y + 16}, {x + 1, y + 20}, {x - 1, y + 11} };
+        Polygon(hdc, wPts, 8);
+        SelectObject(hdc, oldBr); DeleteObject(wbr);
 
-    // Ship Hull - Titanium Upper Armor
-    HBRUSH wbr = CreateSolidBrush(overchargeTimer > 0 ? RGB(255, 215, 0) : RGB(0, 176, 255));
-    SelectObject(hdc, wbr);
-    POINT wingPts[6] = { {x + 10, y}, {x + 20, y + 16}, {x + 15, y + 20}, {x + 10, y + 15}, {x + 5, y + 20}, {x + 0, y + 16} };
-    Polygon(hdc, wingPts, 6);
-    SelectObject(hdc, oldBr); DeleteObject(wbr);
+        HPEN inPen = CreatePen(PS_SOLID, 1, overchargeTimer > 0 ? RGB(255, 245, 157) : RGB(255, 234, 0));
+        HPEN oldP1 = (HPEN)SelectObject(hdc, inPen);
+        MoveToEx(hdc, x + 10, y - 1, NULL); LineTo(hdc, x + 10, y + 15);
+        MoveToEx(hdc, x + 10, y + 6, NULL); LineTo(hdc, x + 18, y + 14);
+        MoveToEx(hdc, x + 10, y + 6, NULL); LineTo(hdc, x + 2, y + 14);
+        SelectObject(hdc, oldP1); DeleteObject(inPen);
 
-    // Hull Inset Lines
-    HPEN inPen = CreatePen(PS_SOLID, 1, overchargeTimer > 0 ? RGB(255, 245, 157) : RGB(128, 216, 255));
-    HPEN oldP1 = (HPEN)SelectObject(hdc, inPen);
-    MoveToEx(hdc, x + 10, y + 1, NULL); LineTo(hdc, x + 10, y + 14);
-    MoveToEx(hdc, x + 10, y + 8, NULL); LineTo(hdc, x + 16, y + 17);
-    MoveToEx(hdc, x + 10, y + 8, NULL); LineTo(hdc, x + 4, y + 17);
-    SelectObject(hdc, oldP1); DeleteObject(inPen);
+        HBRUSH cbr = CreateSolidBrush(RGB(255, 234, 0));
+        oldBr = (HBRUSH)SelectObject(hdc, cbr);
+        Ellipse(hdc, x + 7, y + 5, x + 13, y + 13);
+        SelectObject(hdc, oldBr); DeleteObject(cbr);
+        HBRUSH glBr = CreateSolidBrush(RGB(255, 255, 255));
+        SelectObject(hdc, glBr);
+        Ellipse(hdc, x + 8, y + 6, x + 10, y + 9);
+        SelectObject(hdc, oldBr); DeleteObject(glBr);
 
-    // Specular sheen sweep highlight across hull
-    int sheenY = ((frame * 2) % 22);
-    HPEN sheenPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
-    HPEN oPen2 = (HPEN)SelectObject(hdc, sheenPen);
-    MoveToEx(hdc, x + 10 - sheenY / 3, y + sheenY, NULL);
-    LineTo(hdc, x + 10 + sheenY / 3, y + sheenY + 1);
-    SelectObject(hdc, oPen2); DeleteObject(sheenPen);
+    } else if (playerChassis == 2) {
+        // === CHASSIS 2: VOID PHANTOM (Phased Stealth Delta Interceptor) ===
+        HBRUSH t1 = CreateSolidBrush((frame % 2 == 0) ? RGB(0, 230, 118) : RGB(179, 136, 255));
+        HBRUSH oldBr = (HBRUSH)SelectObject(hdc, t1);
+        POINT pT1[3] = { {x + 6, y + 19}, {x + 7, y + 19 + flameH * 9 / 10}, {x + 9, y + 19} };
+        Polygon(hdc, pT1, 3);
+        SelectObject(hdc, oldBr); DeleteObject(t1);
 
-    // Trailing engine ion exhaust motes
-    for (int m = 0; m < 4; m++) {
-        int my = y + 21 + ((frame * 2 + m * 5) % 18);
-        int mx = x + 10 + (FastSin(frame * 2 + m * 4) * 3) / 127;
-        HBRUSH mbr = CreateSolidBrush((m % 2 == 0) ? RGB(0, 229, 255) : RGB(255, 234, 0));
-        RECT mr = {mx - 1, my, mx + 1, my + 2};
-        FillRect(hdc, &mr, mbr);
-        DeleteObject(mbr);
+        HBRUSH t2 = CreateSolidBrush((frame % 2 == 0) ? RGB(124, 77, 255) : RGB(0, 229, 255));
+        oldBr = (HBRUSH)SelectObject(hdc, t2);
+        POINT pT2[3] = { {x + 11, y + 19}, {x + 12, y + 19 + flameH * 9 / 10}, {x + 14, y + 19} };
+        Polygon(hdc, pT2, 3);
+        SelectObject(hdc, oldBr); DeleteObject(t2);
+
+        for (int m = 0; m < 4; m++) {
+            int my = y + 20 + ((frame * 2 + m * 5) % 18);
+            int mx = x + 10 + (FastSin(frame * 2 + m * 6) * 3) / 127;
+            HBRUSH mbr = CreateSolidBrush((m % 2 == 0) ? RGB(0, 230, 118) : RGB(179, 136, 255));
+            RECT mr = {mx - 1, my, mx + 1, my + 2};
+            FillRect(hdc, &mr, mbr);
+            DeleteObject(mbr);
+        }
+
+        HBRUSH swbr = CreateSolidBrush(overchargeTimer > 0 ? RGB(255, 234, 0) : RGB(0, 230, 118));
+        RECT lsw = {x - 1, y + 14, x + 1, y + 20}; FillRect(hdc, &lsw, swbr);
+        RECT rsw = {x + 19, y + 14, x + 21, y + 20}; FillRect(hdc, &rsw, swbr);
+        DeleteObject(swbr);
+
+        HBRUSH ub = CreateSolidBrush(overchargeTimer > 0 ? RGB(178, 137, 0) : RGB(42, 8, 69));
+        oldBr = (HBRUSH)SelectObject(hdc, ub);
+        POINT uPts[6] = { {x + 10, y - 3}, {x + 23, y + 17}, {x + 16, y + 20}, {x + 10, y + 15}, {x + 4, y + 20}, {x - 3, y + 17} };
+        Polygon(hdc, uPts, 6);
+        SelectObject(hdc, oldBr); DeleteObject(ub);
+
+        HBRUSH wbr = CreateSolidBrush(overchargeTimer > 0 ? RGB(255, 215, 0) : RGB(106, 27, 154));
+        oldBr = (HBRUSH)SelectObject(hdc, wbr);
+        POINT wPts[6] = { {x + 10, y - 2}, {x + 22, y + 16}, {x + 15, y + 19}, {x + 10, y + 14}, {x + 5, y + 19}, {x - 2, y + 16} };
+        Polygon(hdc, wPts, 6);
+        SelectObject(hdc, oldBr); DeleteObject(wbr);
+
+        HPEN inPen = CreatePen(PS_SOLID, 1, overchargeTimer > 0 ? RGB(255, 245, 157) : RGB(0, 230, 118));
+        HPEN oldP1 = (HPEN)SelectObject(hdc, inPen);
+        MoveToEx(hdc, x + 10, y, NULL); LineTo(hdc, x + 10, y + 13);
+        MoveToEx(hdc, x + 10, y + 7, NULL); LineTo(hdc, x + 19, y + 16);
+        MoveToEx(hdc, x + 10, y + 7, NULL); LineTo(hdc, x + 1, y + 16);
+        SelectObject(hdc, oldP1); DeleteObject(inPen);
+
+        HBRUSH cbr = CreateSolidBrush(RGB(0, 230, 118));
+        oldBr = (HBRUSH)SelectObject(hdc, cbr);
+        Ellipse(hdc, x + 7, y + 4, x + 13, y + 12);
+        SelectObject(hdc, oldBr); DeleteObject(cbr);
+        HBRUSH glBr = CreateSolidBrush(RGB(255, 255, 255));
+        SelectObject(hdc, glBr);
+        Ellipse(hdc, x + 8, y + 5, x + 10, y + 8);
+        SelectObject(hdc, oldBr); DeleteObject(glBr);
+
+    } else {
+        // === CHASSIS 0: ALPHA INTERCEPTOR (Classic Titanium Agile Fighter) ===
+        HBRUSH sfbr = CreateSolidBrush((frame % 2 == 0) ? RGB(255, 145, 0) : RGB(255, 60, 0));
+        HBRUSH oldBr = (HBRUSH)SelectObject(hdc, sfbr);
+        POINT lSec[3] = { {x + 2, y + 17}, {x + 3, y + 17 + flameH * 2 / 3}, {x + 5, y + 17} };
+        Polygon(hdc, lSec, 3);
+        POINT rSec[3] = { {x + 15, y + 17}, {x + 17, y + 17 + flameH * 2 / 3}, {x + 18, y + 17} };
+        Polygon(hdc, rSec, 3);
+        SelectObject(hdc, oldBr); DeleteObject(sfbr);
+
+        HBRUSH ofbr = CreateSolidBrush((frame % 2 == 0) ? (overchargeTimer > 0 ? RGB(255, 234, 0) : RGB(255, 60, 0)) : RGB(255, 145, 0));
+        oldBr = (HBRUSH)SelectObject(hdc, ofbr);
+        POINT outerPts[3] = { {x + 4, y + 20}, {x + 10, y + 23 + flameH}, {x + 16, y + 20} };
+        Polygon(hdc, outerPts, 3);
+        SelectObject(hdc, oldBr); DeleteObject(ofbr);
+
+        HBRUSH fbr = CreateSolidBrush(overchargeTimer > 0 ? RGB(0, 229, 255) : RGB(255, 234, 0));
+        SelectObject(hdc, fbr);
+        POINT flamePts[3] = { {x + 6, y + 20}, {x + 10, y + 20 + flameH}, {x + 14, y + 20} };
+        Polygon(hdc, flamePts, 3);
+        SelectObject(hdc, oldBr); DeleteObject(fbr);
+
+        HBRUSH wfbr = CreateSolidBrush(RGB(255, 255, 255));
+        SelectObject(hdc, wfbr);
+        POINT whitePts[3] = { {x + 8, y + 20}, {x + 10, y + 17 + flameH / 2}, {x + 12, y + 20} };
+        Polygon(hdc, whitePts, 3);
+        SelectObject(hdc, oldBr); DeleteObject(wfbr);
+
+        HBRUSH wtfbr = CreateSolidBrush(overchargeTimer > 0 ? RGB(255, 234, 0) : RGB(0, 229, 255));
+        SelectObject(hdc, wtfbr);
+        RECT lwt = {x, y + 14, x + 2, y + 20}; FillRect(hdc, &lwt, wtfbr);
+        RECT rwt = {x + 18, y + 14, x + 20, y + 20}; FillRect(hdc, &rwt, wtfbr);
+        SelectObject(hdc, oldBr); DeleteObject(wtfbr);
+
+        HBRUSH ub = CreateSolidBrush(overchargeTimer > 0 ? RGB(178, 137, 0) : RGB(1, 87, 155));
+        SelectObject(hdc, ub);
+        POINT uPts[6] = { {x + 10, y - 1}, {x + 21, y + 16}, {x + 16, y + 21}, {x + 10, y + 16}, {x + 4, y + 21}, {x - 1, y + 16} };
+        Polygon(hdc, uPts, 6);
+        SelectObject(hdc, oldBr); DeleteObject(ub);
+
+        HBRUSH wbr = CreateSolidBrush(overchargeTimer > 0 ? RGB(255, 215, 0) : RGB(0, 176, 255));
+        SelectObject(hdc, wbr);
+        POINT wingPts[6] = { {x + 10, y}, {x + 20, y + 16}, {x + 15, y + 20}, {x + 10, y + 15}, {x + 5, y + 20}, {x + 0, y + 16} };
+        Polygon(hdc, wingPts, 6);
+        SelectObject(hdc, oldBr); DeleteObject(wbr);
+
+        HPEN inPen = CreatePen(PS_SOLID, 1, overchargeTimer > 0 ? RGB(255, 245, 157) : RGB(128, 216, 255));
+        HPEN oldP1 = (HPEN)SelectObject(hdc, inPen);
+        MoveToEx(hdc, x + 10, y + 1, NULL); LineTo(hdc, x + 10, y + 14);
+        MoveToEx(hdc, x + 10, y + 8, NULL); LineTo(hdc, x + 16, y + 17);
+        MoveToEx(hdc, x + 10, y + 8, NULL); LineTo(hdc, x + 4, y + 17);
+        SelectObject(hdc, oldP1); DeleteObject(inPen);
+
+        int sheenY = ((frame * 2) % 22);
+        HPEN sheenPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+        HPEN oPen2 = (HPEN)SelectObject(hdc, sheenPen);
+        MoveToEx(hdc, x + 10 - sheenY / 3, y + sheenY, NULL);
+        LineTo(hdc, x + 10 + sheenY / 3, y + sheenY + 1);
+        SelectObject(hdc, oPen2); DeleteObject(sheenPen);
+
+        for (int m = 0; m < 4; m++) {
+            int my = y + 21 + ((frame * 2 + m * 5) % 18);
+            int mx = x + 10 + (FastSin(frame * 2 + m * 4) * 3) / 127;
+            HBRUSH mbr = CreateSolidBrush((m % 2 == 0) ? RGB(0, 229, 255) : RGB(255, 234, 0));
+            RECT mr = {mx - 1, my, mx + 1, my + 2};
+            FillRect(hdc, &mr, mbr);
+            DeleteObject(mbr);
+        }
+
+        HBRUSH cbr = CreateSolidBrush(RGB(0, 229, 255));
+        SelectObject(hdc, cbr);
+        Ellipse(hdc, x + 7, y + 4, x + 13, y + 12);
+        SelectObject(hdc, oldBr); DeleteObject(cbr);
+        HBRUSH glBr = CreateSolidBrush(RGB(255, 255, 255));
+        SelectObject(hdc, glBr);
+        Ellipse(hdc, x + 8, y + 5, x + 10, y + 8);
+        SelectObject(hdc, oldBr); DeleteObject(glBr);
     }
-
-    // Cockpit Glass Canopy
-    HBRUSH cbr = CreateSolidBrush(overchargeTimer > 0 ? RGB(0, 229, 255) : RGB(0, 229, 255));
-    SelectObject(hdc, cbr);
-    Ellipse(hdc, x + 7, y + 4, x + 13, y + 12);
-    SelectObject(hdc, oldBr); DeleteObject(cbr);
-    HBRUSH glBr = CreateSolidBrush(RGB(255, 255, 255));
-    SelectObject(hdc, glBr);
-    Ellipse(hdc, x + 8, y + 5, x + 10, y + 8);
-    SelectObject(hdc, oldBr); DeleteObject(glBr);
 
     // Overcharge Hyper-Corona Field
     if (overchargeTimer > 0) {
         HPEN ocPen = CreatePen(PS_SOLID, 2, (frame % 2 == 0) ? RGB(255, 234, 0) : RGB(0, 229, 255));
         SelectObject(hdc, ocPen);
         HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
-        SelectObject(hdc, nullBr);
+        HBRUSH prevBr = (HBRUSH)SelectObject(hdc, nullBr);
         int r = 16 + (frame % 4) * 2;
         Ellipse(hdc, x + 10 - r, y + 10 - r, x + 10 + r, y + 10 + r);
         // Lightning spark arcs
         MoveToEx(hdc, x + 10, y, NULL);
         LineTo(hdc, x + 10 + (rnd() % 20) - 10, y - 8 - (rnd() % 8));
-        SelectObject(hdc, oldBr); DeleteObject(ocPen);
+        SelectObject(hdc, prevBr);
+        SelectObject(hdc, nullPen);
+        DeleteObject(ocPen);
     } else if (hyperShieldTimer > 0) {
         HPEN hpen = CreatePen(PS_SOLID, 3, RGB(255, 234, 0));
         SelectObject(hdc, hpen);
         HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
-        SelectObject(hdc, nullBr);
+        HBRUSH prevBr = (HBRUSH)SelectObject(hdc, nullBr);
         Ellipse(hdc, x - 6, y - 6, x + 26, y + 26);
-        SelectObject(hdc, oldBr); DeleteObject(hpen);
+        SelectObject(hdc, prevBr);
+        SelectObject(hdc, nullPen);
+        DeleteObject(hpen);
     } else if (shield) {
         HPEN spen = CreatePen(PS_SOLID, 2, RGB(0, 229, 255));
         SelectObject(hdc, spen);
         HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
-        SelectObject(hdc, nullBr);
+        HBRUSH prevBr = (HBRUSH)SelectObject(hdc, nullBr);
         Ellipse(hdc, x - 4, y - 4, x + 24, y + 24);
-        SelectObject(hdc, oldBr); DeleteObject(spen);
+        SelectObject(hdc, prevBr);
+        SelectObject(hdc, nullPen);
+        DeleteObject(spen);
     }
 
     if (laserTimer > 0) {
@@ -2353,17 +2506,17 @@ void DrawPlayerShipGDI(HDC hdc, int x, int y, int shield, int frame) {
         HPEN lpen1 = CreatePen(PS_SOLID, 9, RGB(0, 100, 200));
         SelectObject(hdc, lpen1);
         MoveToEx(hdc, x + 10, y, NULL); LineTo(hdc, x + 10, 0);
-        SelectObject(hdc, oldPen); DeleteObject(lpen1);
+        SelectObject(hdc, nullPen); DeleteObject(lpen1);
 
         HPEN lpen2 = CreatePen(PS_SOLID, 5, RGB(0, 229, 255));
         SelectObject(hdc, lpen2);
         MoveToEx(hdc, x + 10, y, NULL); LineTo(hdc, x + 10, 0);
-        SelectObject(hdc, oldPen); DeleteObject(lpen2);
+        SelectObject(hdc, nullPen); DeleteObject(lpen2);
 
         HPEN lpen3 = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
         SelectObject(hdc, lpen3);
         MoveToEx(hdc, x + 10, y, NULL); LineTo(hdc, x + 10, 0);
-        SelectObject(hdc, oldPen); DeleteObject(lpen3);
+        SelectObject(hdc, nullPen); DeleteObject(lpen3);
     }
 
     SelectObject(hdc, oldPen);
@@ -2980,6 +3133,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowNativeToast(soundMuted ? "Sound: MUTED" : "Sound: ON", 0, 90);
                 break;
             }
+            if (wParam == 'C' || wParam == VK_F4) {
+                CyclePlayerChassis();
+                break;
+            }
             if (gameState == STATE_MENU) {
                 int opts = HasSavedGame() ? 6 : 5;
                 if (wParam == 'H' || wParam == VK_F1) {
@@ -3047,6 +3204,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 break;
             }
             if (gameState == STATE_MENU) {
+                if (my >= 75 && my <= 142) {
+                    CyclePlayerChassis();
+                    break;
+                }
                 if (my >= H - 48 && my <= H - 15) {
                     previousState = STATE_MENU;
                     gameState = STATE_HELP;
@@ -3054,8 +3215,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int saved = HasSavedGame();
                     int count = saved ? 6 : 5;
                     for (int i = 0; i < count; i++) {
-                        int y = 160 + i * 32;
-                        if (my >= y - 12 && my <= y + 18) {
+                        int y = 148 + i * 32;
+                        if (my >= y - 10 && my <= y + 20) {
                             menuIndex = i;
                             if (menuIndex == 0) StartNewGame(MODE_CLASSIC);
                             else if (saved && menuIndex == 1) LoadGameState();
@@ -3095,6 +3256,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     gameState = STATE_PLAYING;
                 }
             } else if (gameState == STATE_PLAYING) {
+                if (mx >= 190 && mx <= 280 && my >= 18 && my <= 40) {
+                    CyclePlayerChassis();
+                    break;
+                }
                 if (mx >= W - 52 && mx <= W - 30 && my >= 4 && my <= 26) {
                     previousState = STATE_PLAYING;
                     gameState = STATE_HELP;
@@ -3354,10 +3519,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (gameState == STATE_MENU) {
                     SelectObject(memDC, hFontTitle);
                     SetTextColor(memDC, RGB(0, 229, 255));
-                    TextOutA(memDC, W/2 - 40, 65, "KSPACE", 6);
+                    TextOutA(memDC, W/2 - 40, 48, "KSPACE", 6);
                     SelectObject(memDC, hFontHUD);
                     SetTextColor(memDC, RGB(128, 216, 255));
-                    TextOutA(memDC, W/2 - 70, 92, "Loop 11 Space Command", 21);
+                    TextOutA(memDC, W/2 - 70, 70, "Loop 11 Space Command", 21);
+
+                    // Animated Active Fighter Chassis Preview
+                    DrawPlayerShipGDI(memDC, W/2 - 10, 84, 0, frameCount);
+                    COLORREF chColor = (playerChassis == 1) ? RGB(255, 82, 82) : ((playerChassis == 2) ? RGB(179, 136, 255) : RGB(0, 229, 255));
+                    SetTextColor(memDC, chColor);
+                    char chBuf[64];
+                    wsprintfA(chBuf, "[C] CHASSIS: %s", chassisNames[playerChassis]);
+                    TextOutA(memDC, W/2 - lstrlenA(chBuf)*3, 126, chBuf, lstrlenA(chBuf));
 
                     int saved = HasSavedGame();
                     char* opts[] = {"START NEW GAME", "RESUME SAVED GAME", "HIGH SCORES", "SELECT GAME MODE", "HOW TO PLAY", "EXPORT SCORES"};
@@ -3367,7 +3540,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     SelectObject(memDC, hFontMenu);
                     for (int i = 0; i < count; i++) {
-                        int y = 160 + i * 32;
+                        int y = 148 + i * 32;
                         if (i == menuIndex) {
                             SetTextColor(memDC, RGB(255, 234, 0));
                             char buf[64]; wsprintfA(buf, "> %s <", opts[optIdxs[i]]);
@@ -3416,12 +3589,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else if (gameState == STATE_HELP) {
                     SelectObject(memDC, hFontTitle);
                     SetTextColor(memDC, RGB(0, 229, 255));
-                    TextOutA(memDC, W/2 - 50, 24, "HOW TO PLAY", 11);
+                    TextOutA(memDC, W/2 - 50, 22, "HOW TO PLAY", 11);
                     SelectObject(memDC, hFontHUD);
                     SetTextColor(memDC, RGB(255, 255, 255));
                     char* lines[] = {
                         "ARROWS / DRAG : Move Ship",
                         "SPACE / CLICK : Fire Weapon",
+                        "C / F4        : Cycle Fighter Chassis",
                         "P / [||]      : Pause Game",
                         "M             : Toggle Sound Mute",
                         "",
@@ -3438,8 +3612,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         "S:Spread L:Laser H:Shield",
                         "B:Bomb R:Rapid T:Time"
                     };
-                    for (int i = 0; i < 17; i++) {
-                        TextOutA(memDC, 20, 50 + i * 16, lines[i], lstrlenA(lines[i]));
+                    for (int i = 0; i < 18; i++) {
+                        TextOutA(memDC, 20, 44 + i * 15, lines[i], lstrlenA(lines[i]));
                     }
                     SetTextColor(memDC, RGB(255, 234, 0));
                     TextOutA(memDC, W/2 - 110, H - 28, "Press [H], [ESC], or Click to return", 36);
@@ -3603,8 +3777,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     wsprintfA(hudStr, "SCORE: %d  HIGH: %d  W:%d/20", score, highScore, wave);
                     TextOutA(memDC, 10, 6, hudStr, lstrlenA(hudStr));
 
-                    char statStr[64];
-                    wsprintfA(statStr, "HP: %d  B:[B]%d  Drones:[W]%d/2", p.hp, bombCount, droneCount);
+                    char statStr[80];
+                    wsprintfA(statStr, "HP: %d  B:[B]%d  Drones:[W]%d/2  [C]%s", p.hp, bombCount, droneCount, chassisTags[playerChassis]);
                     TextOutA(memDC, 10, 22, statStr, lstrlenA(statStr));
 
                     // Overcharge & Hyper-Jump Status

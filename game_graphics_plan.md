@@ -140,7 +140,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KMystery
 - KReversi
 - KQuest
-- KSpace
 - KPac
 - KSanctuary
 - KSubmarine
@@ -165,6 +164,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KStarForge
 - KFortress
 - KColony
+- KSpace
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
 
@@ -177,6 +177,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 
 
 **Recent work (Loop 7+):**
+- KSpace (L10): Multi-chassis fighter (Alpha, Crimson, Void), procedural hulls & plumes, Dreadnought telegraphs, boss rush balance.
 - KTetris (L9): Crystal gem facets, steel bulkhead garbage, demolition bomb, holographic guides, plasma sweep.
 - KSnake (L9): Themed boss sprites (Hydra, Basilisk, Inferno, Void) and CPU rival sprites.
 - KPac (L9): 3D Pac-Man aura, animated ghosts with tracking pupils, cybernetic circuit walls.

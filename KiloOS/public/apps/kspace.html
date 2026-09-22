@@ -428,6 +428,22 @@ window.addEventListener('beforeunload', () => {
     weaponType: 0 // 0: Normal, 1: Spread, 2: Laser, 3: Plasma
   };
 
+  // Multi-Chassis Fighter Configurations (0: Alpha Interceptor, 1: Crimson Vanguard, 2: Void Phantom)
+  let playerChassis = parseInt(safeGetStorage('kspace_chassis') || '0', 10);
+  if (isNaN(playerChassis) || playerChassis < 0 || playerChassis > 2) playerChassis = 0;
+  const CHASSIS_SPECS = [
+    { name: 'ALPHA INTERCEPTOR', desc: 'Agile titanium interceptor with precision twin ion drives' },
+    { name: 'CRIMSON VANGUARD', desc: 'Heavy assault fighter with forward-swept wings and quad combustion jets' },
+    { name: 'VOID PHANTOM', desc: 'Phased stealth delta interceptor with emerald tachyon resonance' }
+  ];
+
+  function cyclePlayerChassis() {
+    playerChassis = (playerChassis + 1) % 3;
+    safeSetStorage('kspace_chassis', String(playerChassis));
+    showToast(`🚀 Fighter Chassis: ${CHASSIS_SPECS[playerChassis].name}`, 'info', 1800);
+    playSound(2);
+  }
+
   // Timers & Active Skills Cooldowns
   let spreadTimer = 0;
   let laserTimer = 0;
@@ -1206,6 +1222,11 @@ window.addEventListener('beforeunload', () => {
       return;
     }
 
+    if (keyLower === 'c' || e.key === 'F4') {
+      cyclePlayerChassis();
+      return;
+    }
+
     if (gameState === STATE_MENU) {
       let optCount = hasSavedGame() ? 7 : 6;
       if (menuIndex >= optCount) menuIndex = 0;
@@ -1312,6 +1333,10 @@ window.addEventListener('beforeunload', () => {
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 
     if (gameState === STATE_MENU) {
+      if (my >= 75 && my <= 138) {
+        cyclePlayerChassis();
+        return;
+      }
       let optCount = hasSavedGame() ? 7 : 6;
       for (let i = 0; i < optCount; i++) {
         let btnY = 150 + i * 34;
@@ -1398,6 +1423,10 @@ window.addEventListener('beforeunload', () => {
       gameState = STATE_MENU;
       return;
     } else if (gameState === STATE_PLAYING) {
+      if (mx >= 190 && mx <= 280 && my >= 20 && my <= 44) {
+        cyclePlayerChassis();
+        return;
+      }
       if (mx >= W - 28 && mx <= W - 8 && my >= 4 && my <= 26) {
         gameState = STATE_PAUSED;
         menuIndex = 0;
@@ -1605,6 +1634,9 @@ window.addEventListener('beforeunload', () => {
     // Guaranteed Drone Wing Pod and Overcharge drop
     powerups.push({ x: boss.x + 25, y: boss.y + 20, dy: 1.5, type: 10 }); // Drone Wing Pod
     powerups.push({ x: boss.x + boss.w - 35, y: boss.y + 20, dy: 1.5, type: 9 }); // Overcharge Core
+    if (modeIndex === 2 && p.hp < p.maxHp) {
+      powerups.push({ x: boss.x + boss.w / 2 - 8, y: boss.y + 20, dy: 1.5, type: 3 }); // Shield / Repair Pod
+    }
 
     if (boss.isMothership || wave >= 20) {
       boss = null;
@@ -1713,7 +1745,7 @@ window.addEventListener('beforeunload', () => {
       // Auto-firing twin support plasma vulcan bolts
       drone.shootTimer++;
       if (drone.shootTimer % 14 === 0) {
-        bullets.push({ x: drone.x + 4, y: drone.y - 2, dx: (d === 0 ? -0.4 : 0.4), dy: -8.5, type: 0 });
+        bullets.push({ x: drone.x + 4, y: drone.y - 2, dx: (d === 0 ? -0.4 : 0.4), dy: -9.0, type: 0 });
         playSound(8);
         addMuzzleFlash(drone.x + 4, drone.y - 2, '#00e5ff', 4);
       }
@@ -2105,7 +2137,8 @@ window.addEventListener('beforeunload', () => {
     if (frameCount % spawnRate === 0) spawnEnemy();
 
     // Regular & Elite Enemies Update
-    let baseEnemySpeed = 1.8 + (score / 300) + (modeIndex === 1 ? 1.0 : 0);
+    let speedBonus = Math.min(2.2, (score / 5000) * 1.5) + Math.min(1.5, (wave - 1) * 0.12);
+    let baseEnemySpeed = 1.8 + speedBonus + (modeIndex === 1 ? 0.6 : 0);
     for (let i = enemies.length - 1; i >= 0; i--) {
       let e = enemies[i];
       let ew = (e.type === 6 || e.type === 9 || e.type === 11 || e.type === 12) ? 36 : 20;
@@ -2438,82 +2471,222 @@ window.addEventListener('beforeunload', () => {
     ctx.save();
     ctx.translate(x, y);
 
-    // Multi-Stage Animated Thruster Flames (Tri-Nozzle Engine Array)
     let flameH = 6 + Math.sin(frame * 0.4) * 3;
     if (overchargeTimer > 0) flameH += 4;
-    
-    // Outboard secondary nozzle flames
-    ctx.fillStyle = (frame % 2 === 0) ? '#ff9100' : '#ff3d00';
-    ctx.beginPath(); ctx.moveTo(2, 17); ctx.lineTo(3, 17 + flameH * 0.7); ctx.lineTo(5, 17); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(15, 17); ctx.lineTo(17, 17 + flameH * 0.7); ctx.lineTo(18, 17); ctx.closePath(); ctx.fill();
 
-    // Central primary heavy nozzle flame
-    ctx.fillStyle = (frame % 2 === 0) ? (overchargeTimer > 0 ? '#ffea00' : '#ff3d00') : '#ff9100';
-    ctx.beginPath(); ctx.moveTo(4, 20); ctx.lineTo(10, 20 + flameH + 3); ctx.lineTo(16, 20); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = overchargeTimer > 0 ? '#00e5ff' : '#ffea00';
-    ctx.beginPath(); ctx.moveTo(6, 20); ctx.lineTo(10, 20 + flameH); ctx.lineTo(14, 20); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath(); ctx.moveTo(8, 20); ctx.lineTo(10, 20 + flameH * 0.6); ctx.lineTo(12, 20); ctx.closePath(); ctx.fill();
+    if (playerChassis === 1) {
+      // === CHASSIS 1: CRIMSON VANGUARD (Heavy Assault Dread Fighter) ===
+      // Quad Heavy Combustion Nozzles
+      ctx.fillStyle = (frame % 2 === 0) ? '#ff9100' : '#ff3d00';
+      ctx.beginPath(); ctx.moveTo(2, 18); ctx.lineTo(3, 18 + flameH * 0.8); ctx.lineTo(5, 18); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(6, 19); ctx.lineTo(7.5, 19 + flameH * 1.1); ctx.lineTo(9, 19); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(11, 19); ctx.lineTo(12.5, 19 + flameH * 1.1); ctx.lineTo(14, 19); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(15, 18); ctx.lineTo(17, 18 + flameH * 0.8); ctx.lineTo(18, 18); ctx.closePath(); ctx.fill();
 
-    // Trailing ion plume motes behind main thrusters
-    for (let m = 0; m < 4; m++) {
-      let my = 21 + ((frame * 2 + m * 5) % 18);
-      let mx = 10 + Math.sin(frame * 0.6 + m * 1.5) * 2.5;
-      let mAlpha = Math.max(0, 1.0 - (my - 21) / 18);
-      ctx.fillStyle = (frame % 2 === 0) ? `rgba(0, 229, 255, ${mAlpha})` : `rgba(255, 234, 0, ${mAlpha})`;
-      ctx.fillRect(mx - 1, my, 2, 2);
+      // Trailing combustion embers
+      for (let m = 0; m < 4; m++) {
+        let my = 20 + ((frame * 2 + m * 5) % 18);
+        let mx = 10 + Math.sin(frame * 0.5 + m * 1.8) * 4;
+        let mAlpha = Math.max(0, 1.0 - (my - 20) / 18);
+        ctx.fillStyle = `rgba(255, 145, 0, ${mAlpha})`;
+        ctx.fillRect(mx - 1, my, 2, 2);
+      }
+
+      // Heavy Outboard Gun-Pods with Gold Muzzle Caps
+      ctx.fillStyle = overchargeTimer > 0 ? '#ffd700' : '#d50000';
+      ctx.fillRect(-2, 8, 3, 12);
+      ctx.fillRect(19, 8, 3, 12);
+      ctx.fillStyle = '#ffea00';
+      ctx.fillRect(-2, 7, 3, 2);
+      ctx.fillRect(19, 7, 3, 2);
+
+      // Base Underplate (Deep Burgundy)
+      ctx.fillStyle = overchargeTimer > 0 ? '#b28900' : '#5f0914';
+      ctx.beginPath();
+      ctx.moveTo(10, -3); ctx.lineTo(22, 12); ctx.lineTo(20, 21); ctx.lineTo(14, 17);
+      ctx.lineTo(10, 21); ctx.lineTo(6, 17); ctx.lineTo(0, 21); ctx.lineTo(-2, 12);
+      ctx.closePath(); ctx.fill();
+
+      // Forward-Swept Assault Armor (Scarlet Plating)
+      ctx.fillStyle = overchargeTimer > 0 ? '#ffd700' : '#d50000';
+      ctx.beginPath();
+      ctx.moveTo(10, -2); ctx.lineTo(21, 11); ctx.lineTo(19, 20); ctx.lineTo(14, 16);
+      ctx.lineTo(10, 20); ctx.lineTo(6, 16); ctx.lineTo(1, 20); ctx.lineTo(-1, 11);
+      ctx.closePath(); ctx.fill();
+
+      // Armor Facet Inset Lines (Radiant Gold)
+      ctx.strokeStyle = overchargeTimer > 0 ? '#fff59d' : '#ffea00';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(10, -1); ctx.lineTo(10, 15);
+      ctx.moveTo(10, 6); ctx.lineTo(18, 14);
+      ctx.moveTo(10, 6); ctx.lineTo(2, 14);
+      ctx.stroke();
+
+      // Specular Sheen Sweep
+      let sheenY = ((frame * 1.6) % 36) - 8;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(10, -2); ctx.lineTo(21, 11); ctx.lineTo(19, 20); ctx.lineTo(14, 16);
+      ctx.lineTo(10, 20); ctx.lineTo(6, 16); ctx.lineTo(1, 20); ctx.lineTo(-1, 11);
+      ctx.closePath(); ctx.clip();
+      let sheenGrad = ctx.createLinearGradient(0, sheenY, 15, sheenY + 10);
+      sheenGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+      sheenGrad.addColorStop(0.5, 'rgba(255, 234, 0, 0.7)');
+      sheenGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.fillStyle = sheenGrad;
+      ctx.fillRect(-2, 0, 24, 24);
+      ctx.restore();
+
+      // Amber-Gold Visor Cockpit
+      ctx.fillStyle = '#ffea00';
+      ctx.beginPath(); ctx.ellipse(10, 8, 3, 5.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.ellipse(9.2, 7, 1.2, 2.5, -0.2, 0, Math.PI * 2); ctx.fill();
+
+    } else if (playerChassis === 2) {
+      // === CHASSIS 2: VOID PHANTOM (Phased Stealth Delta Interceptor) ===
+      // Phased Tachyon Twin Exhaust Nozzles
+      let tachyonCol1 = (frame % 2 === 0) ? '#00e676' : '#b388ff';
+      let tachyonCol2 = (frame % 2 === 0) ? '#7c4dff' : '#00e5ff';
+      ctx.fillStyle = tachyonCol1;
+      ctx.beginPath(); ctx.moveTo(6, 19); ctx.lineTo(7.5, 19 + flameH * 0.9); ctx.lineTo(9, 19); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = tachyonCol2;
+      ctx.beginPath(); ctx.moveTo(11, 19); ctx.lineTo(12.5, 19 + flameH * 0.9); ctx.lineTo(14, 19); ctx.closePath(); ctx.fill();
+
+      // Trailing Tachyon Ion Motes
+      for (let m = 0; m < 4; m++) {
+        let my = 20 + ((frame * 2 + m * 5) % 18);
+        let mx = 10 + Math.sin(frame * 0.7 + m * 2.0) * 3;
+        let mAlpha = Math.max(0, 1.0 - (my - 20) / 18);
+        ctx.fillStyle = (m % 2 === 0) ? `rgba(0, 230, 118, ${mAlpha})` : `rgba(179, 136, 255, ${mAlpha})`;
+        ctx.fillRect(mx - 1, my, 2, 2);
+      }
+
+      // Stealth Stabilizer Wingtips
+      ctx.fillStyle = overchargeTimer > 0 ? '#ffea00' : '#00e676';
+      ctx.fillRect(-1, 14, 2, 5 + (frame % 2) * 2);
+      ctx.fillRect(19, 14, 2, 5 + (frame % 2) * 2);
+
+      // Base Underplate (Obsidian Purple)
+      ctx.fillStyle = overchargeTimer > 0 ? '#b28900' : '#2a0845';
+      ctx.beginPath();
+      ctx.moveTo(10, -3); ctx.lineTo(23, 17); ctx.lineTo(16, 20); ctx.lineTo(10, 15);
+      ctx.lineTo(4, 20); ctx.lineTo(-3, 17);
+      ctx.closePath(); ctx.fill();
+
+      // Main Stealth Delta Armor (Royal Void Purple)
+      ctx.fillStyle = overchargeTimer > 0 ? '#ffd700' : '#6a1b9a';
+      ctx.beginPath();
+      ctx.moveTo(10, -2); ctx.lineTo(22, 16); ctx.lineTo(15, 19); ctx.lineTo(10, 14);
+      ctx.lineTo(5, 19); ctx.lineTo(-2, 16);
+      ctx.closePath(); ctx.fill();
+
+      // Emerald Resonance Conduit Lines
+      ctx.strokeStyle = overchargeTimer > 0 ? '#fff59d' : '#00e676';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(10, 0); ctx.lineTo(10, 13);
+      ctx.moveTo(10, 7); ctx.lineTo(19, 16);
+      ctx.moveTo(10, 7); ctx.lineTo(1, 16);
+      ctx.stroke();
+
+      // Specular Sheen Sweep
+      let sheenY = ((frame * 1.6) % 36) - 8;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(10, -2); ctx.lineTo(22, 16); ctx.lineTo(15, 19); ctx.lineTo(10, 14);
+      ctx.lineTo(5, 19); ctx.lineTo(-2, 16);
+      ctx.closePath(); ctx.clip();
+      let sheenGrad = ctx.createLinearGradient(0, sheenY, 15, sheenY + 10);
+      sheenGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+      sheenGrad.addColorStop(0.5, 'rgba(0, 230, 118, 0.6)');
+      sheenGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.fillStyle = sheenGrad;
+      ctx.fillRect(-2, 0, 24, 24);
+      ctx.restore();
+
+      // Phased Crystalline Emerald Cockpit
+      ctx.fillStyle = '#00e676';
+      ctx.beginPath(); ctx.ellipse(10, 7, 2.8, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.ellipse(9.2, 6, 1.0, 2.2, -0.2, 0, Math.PI * 2); ctx.fill();
+
+    } else {
+      // === CHASSIS 0: ALPHA INTERCEPTOR (Classic Titanium Agile Fighter) ===
+      // Outboard secondary nozzle flames
+      ctx.fillStyle = (frame % 2 === 0) ? '#ff9100' : '#ff3d00';
+      ctx.beginPath(); ctx.moveTo(2, 17); ctx.lineTo(3, 17 + flameH * 0.7); ctx.lineTo(5, 17); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(15, 17); ctx.lineTo(17, 17 + flameH * 0.7); ctx.lineTo(18, 17); ctx.closePath(); ctx.fill();
+
+      // Central primary heavy nozzle flame
+      ctx.fillStyle = (frame % 2 === 0) ? (overchargeTimer > 0 ? '#ffea00' : '#ff3d00') : '#ff9100';
+      ctx.beginPath(); ctx.moveTo(4, 20); ctx.lineTo(10, 20 + flameH + 3); ctx.lineTo(16, 20); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = overchargeTimer > 0 ? '#00e5ff' : '#ffea00';
+      ctx.beginPath(); ctx.moveTo(6, 20); ctx.lineTo(10, 20 + flameH); ctx.lineTo(14, 20); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.moveTo(8, 20); ctx.lineTo(10, 20 + flameH * 0.6); ctx.lineTo(12, 20); ctx.closePath(); ctx.fill();
+
+      // Trailing ion plume motes behind main thrusters
+      for (let m = 0; m < 4; m++) {
+        let my = 21 + ((frame * 2 + m * 5) % 18);
+        let mx = 10 + Math.sin(frame * 0.6 + m * 1.5) * 2.5;
+        let mAlpha = Math.max(0, 1.0 - (my - 21) / 18);
+        ctx.fillStyle = (frame % 2 === 0) ? `rgba(0, 229, 255, ${mAlpha})` : `rgba(255, 234, 0, ${mAlpha})`;
+        ctx.fillRect(mx - 1, my, 2, 2);
+      }
+
+      // Wingtip Thruster Emitters & Laser Focus Caps
+      ctx.fillStyle = overchargeTimer > 0 ? '#ffea00' : '#00e5ff';
+      ctx.fillRect(0, 14, 2, 6 + (frame % 2) * 2);
+      ctx.fillRect(18, 14, 2, 6 + (frame % 2) * 2);
+      // Wingtip capacitor glow dots
+      ctx.fillStyle = (frame % 4 < 2) ? '#ffffff' : '#00e5ff';
+      ctx.fillRect(0, 13, 2, 2);
+      ctx.fillRect(18, 13, 2, 2);
+
+      // Ship Hull - Base Underplate
+      ctx.fillStyle = overchargeTimer > 0 ? '#b28900' : '#01579b';
+      ctx.beginPath();
+      ctx.moveTo(10, -1); ctx.lineTo(21, 16); ctx.lineTo(16, 21); ctx.lineTo(10, 16); ctx.lineTo(4, 21); ctx.lineTo(-1, 16);
+      ctx.closePath(); ctx.fill();
+
+      // Ship Hull - Main Titanium Armor Plate
+      ctx.fillStyle = overchargeTimer > 0 ? '#ffd700' : '#00b0ff';
+      ctx.beginPath();
+      ctx.moveTo(10, 0); ctx.lineTo(20, 16); ctx.lineTo(15, 20); ctx.lineTo(10, 15); ctx.lineTo(5, 20); ctx.lineTo(0, 16);
+      ctx.closePath(); ctx.fill();
+
+      // Armor Facet Inset Lines
+      ctx.strokeStyle = overchargeTimer > 0 ? '#fff59d' : '#80d8ff';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(10, 1); ctx.lineTo(10, 14);
+      ctx.moveTo(10, 8); ctx.lineTo(16, 17);
+      ctx.moveTo(10, 8); ctx.lineTo(4, 17);
+      ctx.stroke();
+
+      // Specular Sheen Sweep Highlight Across Hull Facets
+      let sheenY = ((frame * 1.6) % 36) - 8;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(10, 0); ctx.lineTo(20, 16); ctx.lineTo(15, 20); ctx.lineTo(10, 15); ctx.lineTo(5, 20); ctx.lineTo(0, 16);
+      ctx.closePath();
+      ctx.clip();
+      let sheenGrad = ctx.createLinearGradient(0, sheenY, 15, sheenY + 10);
+      sheenGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+      sheenGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.7)');
+      sheenGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.fillStyle = sheenGrad;
+      ctx.fillRect(-2, 0, 24, 24);
+      ctx.restore();
+
+      // Cockpit Canopy Glass Glow & Reflection
+      ctx.fillStyle = overchargeTimer > 0 ? '#00e5ff' : '#00e5ff';
+      ctx.beginPath(); ctx.ellipse(10, 7, 3, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.ellipse(9.2, 6, 1.2, 2.5, -0.2, 0, Math.PI * 2); ctx.fill();
     }
-
-    // Wingtip Thruster Emitters & Laser Focus Caps
-    ctx.fillStyle = overchargeTimer > 0 ? '#ffea00' : '#00e5ff';
-    ctx.fillRect(0, 14, 2, 6 + (frame % 2) * 2);
-    ctx.fillRect(18, 14, 2, 6 + (frame % 2) * 2);
-    // Wingtip capacitor glow dots
-    ctx.fillStyle = (frame % 4 < 2) ? '#ffffff' : '#00e5ff';
-    ctx.fillRect(0, 13, 2, 2);
-    ctx.fillRect(18, 13, 2, 2);
-
-    // Ship Hull - Base Underplate
-    ctx.fillStyle = overchargeTimer > 0 ? '#b28900' : '#01579b';
-    ctx.beginPath();
-    ctx.moveTo(10, -1); ctx.lineTo(21, 16); ctx.lineTo(16, 21); ctx.lineTo(10, 16); ctx.lineTo(4, 21); ctx.lineTo(-1, 16);
-    ctx.closePath(); ctx.fill();
-
-    // Ship Hull - Main Titanium Armor Plate
-    ctx.fillStyle = overchargeTimer > 0 ? '#ffd700' : '#00b0ff';
-    ctx.beginPath();
-    ctx.moveTo(10, 0); ctx.lineTo(20, 16); ctx.lineTo(15, 20); ctx.lineTo(10, 15); ctx.lineTo(5, 20); ctx.lineTo(0, 16);
-    ctx.closePath(); ctx.fill();
-
-    // Armor Facet Inset Lines
-    ctx.strokeStyle = overchargeTimer > 0 ? '#fff59d' : '#80d8ff';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(10, 1); ctx.lineTo(10, 14);
-    ctx.moveTo(10, 8); ctx.lineTo(16, 17);
-    ctx.moveTo(10, 8); ctx.lineTo(4, 17);
-    ctx.stroke();
-
-    // Specular Sheen Sweep Highlight Across Hull Facets
-    let sheenY = ((frame * 1.6) % 36) - 8;
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(10, 0); ctx.lineTo(20, 16); ctx.lineTo(15, 20); ctx.lineTo(10, 15); ctx.lineTo(5, 20); ctx.lineTo(0, 16);
-    ctx.closePath();
-    ctx.clip();
-    let sheenGrad = ctx.createLinearGradient(0, sheenY, 15, sheenY + 10);
-    sheenGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-    sheenGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.7)');
-    sheenGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    ctx.fillStyle = sheenGrad;
-    ctx.fillRect(-2, 0, 24, 24);
-    ctx.restore();
-
-    // Cockpit Canopy Glass Glow & Reflection
-    ctx.fillStyle = overchargeTimer > 0 ? '#00e5ff' : '#00e5ff';
-    ctx.beginPath(); ctx.ellipse(10, 7, 3, 5, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath(); ctx.ellipse(9.2, 6, 1.2, 2.5, -0.2, 0, Math.PI * 2); ctx.fill();
 
     // Overcharge Field / Hyper Shield Barrier / Shield
     if (overchargeTimer > 0) {
@@ -3211,7 +3384,10 @@ window.addEventListener('beforeunload', () => {
     for (let i = 0; i < p.bombs; i++) ctx.fillRect(60 + i * 12, 26, 8, 8);
 
     ctx.fillStyle = '#00e5ff';
-    ctx.fillText(`Drones:[W]${droneCount}/2`, 110, 34);
+    ctx.fillText(`Drones:[W]${droneCount}/2`, 105, 34);
+    const cTag = playerChassis === 1 ? 'CRIMSON' : (playerChassis === 2 ? 'VOID' : 'ALPHA');
+    ctx.fillStyle = playerChassis === 1 ? '#ff5252' : (playerChassis === 2 ? '#b388ff' : '#00e5ff');
+    ctx.fillText(`[C]${cTag}`, 205, 34);
 
     // Overcharge & Hyper-Jump status
     if (hyperJumpTimer > 0) {
@@ -3247,13 +3423,19 @@ window.addEventListener('beforeunload', () => {
 
   function drawMenuScreen() {
     ctx.fillStyle = '#00e5ff';
-    ctx.font = 'bold 32px monospace';
+    ctx.font = 'bold 30px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('KSPACE', W / 2, 70);
+    ctx.fillText('KSPACE', W / 2, 54);
 
     ctx.fillStyle = '#80d8ff';
-    ctx.font = '12px monospace';
-    ctx.fillText('Loop 11 Space Command', W / 2, 98);
+    ctx.font = '11px monospace';
+    ctx.fillText('Loop 11 Space Command', W / 2, 70);
+
+    // Animated Preview of Active Fighter Chassis
+    drawPlayerShip(W / 2 - 10, 80, false, frameCount);
+    ctx.font = 'bold 10px monospace';
+    ctx.fillStyle = playerChassis === 1 ? '#ff5252' : (playerChassis === 2 ? '#b388ff' : '#00e5ff');
+    ctx.fillText(`[C] CHASSIS: ${CHASSIS_SPECS[playerChassis].name}`, W / 2, 126);
 
     let saved = hasSavedGame();
     let options = ['START NEW GAME'];
@@ -3261,7 +3443,7 @@ window.addEventListener('beforeunload', () => {
     options.push('HIGH SCORES', 'SELECT GAME MODE', 'KEYBINDS', 'LOAD REPLAY', 'HOW TO PLAY');
 
     for (let i = 0; i < options.length; i++) {
-      let y = 150 + i * 34;
+      let y = 148 + i * 34;
       if (i === menuIndex) {
         ctx.fillStyle = '#ffea00';
         ctx.font = 'bold 15px monospace';
@@ -3291,13 +3473,14 @@ window.addEventListener('beforeunload', () => {
     ctx.fillStyle = '#00e5ff';
     ctx.font = 'bold 22px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('MISSION CONTROLS', W / 2, 45);
+    ctx.fillText('MISSION CONTROLS', W / 2, 40);
 
     ctx.fillStyle = '#ffffff';
     ctx.font = '11px monospace';
     let instructions = [
       "ARROWS / DRAG : Move Ship",
       "SPACE / CLICK : Fire Weapon",
+      "[C] / [F4]    : Cycle Fighter Chassis",
       "[P] / [||]    : Pause Game",
       "[F5] / [F9]   : Quicksave / Quickload",
       "[M]           : Toggle Audio Mute",
@@ -3317,7 +3500,7 @@ window.addEventListener('beforeunload', () => {
       "W:Drone Pod O:Overcharge Core"
     ];
     for (let i = 0; i < instructions.length; i++) {
-      ctx.fillText(instructions[i], W / 2, 72 + i * 16);
+      ctx.fillText(instructions[i], W / 2, 65 + i * 15);
     }
 
     ctx.fillStyle = '#ffea00';
