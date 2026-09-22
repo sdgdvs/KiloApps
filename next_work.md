@@ -18,10 +18,19 @@ current_targets:
   kilo_qa: KTimer
   kilo_expander: KFont
   kilo_creator: "KClip (Clipboard history tool)"
+virtual_web_target: "kweb://portal"
+virtual_web_rotation:
+  - "kweb://geocities"
+  - "kweb://portal"
+  - "kweb://webring"
+  - "kweb://users/~neon_rider"
+  - "kweb://asm-temple"
+  - "kweb://cybercafe"
+  - "kweb://darknet"
 last_run:
   agent: director-task
-  app: KNet
-  timestamp: "2026-09-22T02:55:00Z"
+  app: "Virtual Web (geocities.html)"
+  timestamp: "2026-09-22T03:18:00Z"
 last_planner_run: "2026-09-21T05:46:00Z"
 ---
 
@@ -54,6 +63,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
    - **On rejection**: The agent removes the directive from this section and appends a result entry to `localStorage('kdirector_results')` with format: `{app, category, text, outcome: "rejected", reason: "...", source: "agent", time: Date.now()}`. This result appears in KDirector's Directive Results Log so the human director can see why it was rejected.
    - **On completion**: The agent removes the directive from this section, logs success to `kdirector_results` with `outcome: "completed"`, and logs a terse entry in the execution log.
    - Directors can freely propose new apps, request features, add content to existing apps, add websites to the Virtual 1999 Web, and steer creative direction. Agents should implement these in good faith unless they conflict with the project's foundational pillars.
+8. **Virtual 1999 Web Expansion Mandate (Anti-Potemkin Directive)**:
+   - The virtual net sites under `/KiloOS/public/web/` browsable in `KNet` must NEVER remain cosmetic stubs, fake placeholders, or potemkin villages.
+   - Agents (`kilo-expander`, `kilo-creator`, `kilo-graphics`, `kilo-usability`) must continually build out real, functional, interactive Web 1.0 experiences on these sites: working sound engines (Web Audio MIDI/synth), interactive CGI-style forms (guestbooks, search indices, calculators, voting polls), retro browser games, downloadable files, and nested subpages.
+   - The `virtual_web_target` rotates eternally alongside app targets, ensuring the retro web ecosystem grows with genuine depth.
 
 ---
 
@@ -89,20 +102,29 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Upcoming Queue**:
   `KPad`, `KNote`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KTerm`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHex`, `KBase`.
 
-### 7. Future Strategic Milestone: The "Virtual 1999 Web" Initiative
-- **Objective**: Create a living, interconnected retro Web 1.0 ecosystem accessible directly through `KNet`.
-- **Architectural Tiers**:
-  1. **Tier 1 (Direct KNet Bookmarks)**:
-     - `/apps/contribute.html` (Fleet Contributor Portal).
-     - `kweb://portal` (Yahoo! / Excite style 1999 Web Directory & News Portal).
-     - `kweb://webring` (The Central KiloNet Webring Hub).
-  2. **Tier 2 (Linked Community Webring)**:
-     - Interlinked Geocities/Angelfire-style personal pages, cyber shrines, and retro corporate sites reachable only via hyperlinks and webring navigation.
-  3. **Tier 3 (Hidden ARG Nodes & Darknet)**:
-     - Secret, unlisted web addresses discoverable only by deciphering clues, hex offsets, and frequencies hidden across other apps (e.g. `KHex` memory dumps, `KSynth` Morse code, `KBBS` leaks, `KTerm` glitched logs).
-- **Execution Strategy**:
-  - `kilo-creator` and `kilo-expander` turns can adopt virtual web pages under `/KiloOS/public/web/` as micro-targets.
-  - All virtual web pages remain strictly `< 999 KB` and adhere to vintage HTML 4.01 styling (under-construction GIFs, guestbook counters, table-based layouts, and webring badges).
+### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
+- **Current Active Target**: `kweb://portal` (`KiloOS/public/web/portal.html`)
+  - *Next in Rotation*: `kweb://webring` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://darknet` ➔ `kweb://geocities`.
+- **Anti-Potemkin Directive & Content Mandates**:
+  1. `kweb://geocities` (*CyberSpire's Retro Shrine*):
+     - ✅ Web Audio 16-bit tracker MIDI jukebox with 3 synthwave/MOD tracks and dancing LED equalizer.
+     - ✅ Working guestbook with local persistence.
+     - Planned: Pixel art gallery, downloadable tracker module (.mod) files, retro cyber fortune-teller.
+  2. `kweb://portal` (*KiloNet Central 1999 Directory*):
+     - Expand from static link list to a living Yahoo/Excite-style portal with working search engine across all 98 apps, live simulated stock market ticker, daily weather updates, classified ads board, and daily retro trivia.
+  3. `kweb://webring` (*Central KiloNet Webring Hub*):
+     - Interactive member site explorer, working HTML badge generator, random node teleportation, and ring integrity health monitor.
+  4. `kweb://users/~neon_rider` (*Personal Hacker / Demoscene Homepage*):
+     - New Tier 2 site: Win32 ASM devlog, tracker music download vault, retro animated GIF banner exchange, web counter.
+  5. `kweb://asm-temple` (*x86 Assembly Programming Shrine*):
+     - New Tier 2 site: Opcode reference guide, interactive real-time byte-to-hex converter, Win32 API architectural diagrams.
+  6. `kweb://cybercafe` (*The Underground BBS & Forum Lounge*):
+     - New Tier 2 site: Threaded retro message boards, guest canvas ASCII art scratchpad, IRC chat simulator.
+  7. `kweb://darknet` (*Node 0x7F Transmission Subsystem*):
+     - Tier 3 Ghost Node: Cryptic packet decoders, deep core telemetry logs, anomaly frequency analysis terminal.
+- **Execution Protocol**:
+  - `kilo-expander`, `kilo-creator`, and `kilo-graphics` alternate between native app targets and `virtual_web_target` to ensure the web world has genuine functional depth.
+  - All virtual web pages remain strictly `< 999 KB`, self-contained or cleanly linked within `/web/`, and adhere to period-accurate HTML 4.01 aesthetic.
 
 ---
 
@@ -122,6 +144,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-09-22T03:18:00Z — director-task: CyberSpire Retro Shrine & Virtual Web Mandate**
+  - Status: PASS ✅ (Web Audio MIDI jukebox implemented; eternal Anti-Potemkin web task established).
+  - Jukebox Audio: Built 4-voice polyphonic Web Audio tracker engine (lead, arp, bass, noise drums) with 3 tracks (135/126/140 BPM).
+  - Visualizer & Controls: Animated 16-band LED peak meter, green LCD marquee, track select, volume/mute, and user unlock gesture.
+  - Eternal Fleet Track: Added Rule 8, virtual_web_target rotation in next_work.md, SKILL.md updates, and arg_plan.md quality standards.
+  - Verification: geocities.html is 29.3 KB (<999 KB ceiling); clean Vite build; security lint passed.
 
 - **2026-09-22T02:55:00Z — director-task: KNet & Virtual Clearnet**
   - Status: PASS ✅ (Darknet, KDirector, and Echoes isolated behind KDirector passkey; clearnet sanitized).
@@ -155,11 +184,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Modal Controls & Ergonomics: Added Enter, Space, and Esc keyboard handlers across Help and Tutorial modals.
   - Bug Fixes & Cleanliness: Fixed state deserialization DOM clobber bug in switchTab, safe storage quota handling, cleaned corrupted emoji mojibake.
   - Verification: Clean MSVC Native C build (45.0 KB); Vite web build clean (108.8 KB); all 9 headless CDP test suites and security lint passed.
-
-- **2026-09-21T19:50:00Z — kilo-graphics: KColony**
-  - Status: PASS ✅ (Maturity & Skip Protocol enforced; standalone native distribution built and placed).
-  - Assessment: Loop 7 mature status verified (19 structures, 13 techs, animated xeno castes, drones, rovers).
-  - Anti-Vibe-Coding Gate: Zero speculative visual clutter/churn introduced per Director Directive & 4-pillar stress test.
-  - Distribution Parity: Built and placed standalone Win32 binary `KiloOS/public/exe/KColony.exe` (160.2 KB).
-  - Verification: MSVC C clean build (160.2 KB); Vite web build clean (125.7 KB); 100% headless CDP test suite passed (0 errors); security lint passed.
 

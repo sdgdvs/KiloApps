@@ -38,6 +38,11 @@ This skill designs and implements new applications or deep game worlds on exactl
    - Connect it to cross-project ARG clues: corrupted logs in KTerm, ghost audio in KSynth/KAudio, memory hex offsets in KHex, and precursor relics in KAbyss/KCosmic/KChrono.
    - Successfully solving KMatrix must reward the player with the Master Director Passkey (`ECHO-1999-ARCHITECT`) to unlock the in-OS `KDirector` console!
 
+5. **Virtual 1999 Web Node Creation (Anti-Potemkin Standard)**:
+   - When creating new Tier 2 or Tier 3 virtual web destinations (`kweb://...` in `KiloOS/public/web/*.html`), each site must be a fully realized, authentic 1999 hypermedia destination.
+   - **Zero Shallow Stubs**: Every page must have genuine working content—working interactive forms, dynamic generators, retro Web Audio sounds, downloadable mock assets, or functioning client-side databases.
+   - Integrate seamlessly into the KNet web directory, webrings, and link networks without exposing cryptic Tier 3 ARG secrets on clearnet hubs.
+
 ## Queue Handoff & Terse Logging (CRITICAL)
 1. **Edit [next_work.md](../../next_work.md)**:
    - Advance `current_targets.kilo_creator` to the next concept.

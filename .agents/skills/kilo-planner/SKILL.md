@@ -30,6 +30,7 @@ This skill is invoked automatically every 24 hours by the orchestrator (`scripts
      - `kilo-qa` (Pass 5 tutorial & state persistence, build verification)
      - `kilo-expander` (deep features for dev, productivity, media tools)
    - Update `current_targets` for each active queue to align with current priorities.
+   - Evaluate `virtual_web_target`: review progress against `virtual_web_rotation` in `next_work.md`, verify sites meet the Anti-Potemkin Quality Standard (genuine interactive depth, Web Audio, simulated backends), and advance `virtual_web_target` to the next site in rotation.
    - If a new app was recently created, ensure subsequent turns prioritize its usability, testing, and graphical polish.
 
 3. **Log Compaction**:

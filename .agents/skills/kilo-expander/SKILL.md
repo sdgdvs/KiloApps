@@ -26,7 +26,11 @@ This skill deepens functional utility and capabilities on exactly ONE applicatio
 4. **🎮 Games (Meta & Engine Utility Only)**:
    - Focus: Replay viewers, custom key rebinding, save state management, PGN/FEN/board state import/export.
    - **DO NOT** add gameplay content, bosses, or campaigns (reserved for `kilo-graphics`).
-5. **Maturity & Skip Protocol**:
+5. **🌐 Virtual 1999 Web Expansion (`virtual_web_target`)**:
+   - When assigned to advance the virtual web or when native app targets are mature, expand `virtual_web_target` in `KiloOS/public/web/*.html`.
+   - **Anti-Potemkin Quality Standard**: Sites must NEVER be shallow placeholders or fake stubs. Build genuine Web 1.0 depth: working simulated backends (guestbooks, search indices, calculators, voting polls), custom Web Audio synthesizers/MIDI jukeboxes, retro browser mini-games, downloadable text/tracker assets, and interconnected hypermedia links.
+   - Maintain strict adherence to HTML 4.01 retro styling, zero external dependencies, and file size strictly `< 999 KB`.
+6. **Maturity & Skip Protocol**:
    - If an app has undergone 6+ passes and is functionally complete without active requests: log `⏭️ Skip — app is feature-complete and mature.` Rotate to queue bottom and finish cleanly.
 
 ## Verification

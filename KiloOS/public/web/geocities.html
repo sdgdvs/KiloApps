@@ -142,6 +142,100 @@
     padding: 2px 6px;
     letter-spacing: 2px;
   }
+  /* 1999 Vintage MIDI Jukebox */
+  .midi-jukebox {
+    border: 3px outset #00ffcc;
+    background: linear-gradient(180deg, #112233 0%, #05101a 100%);
+    padding: 12px;
+    margin-bottom: 14px;
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.25);
+  }
+  .lcd-display {
+    background: #021a0e;
+    border: 2px inset #00aa44;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: #00ff66;
+    font-family: 'Courier New', monospace;
+  }
+  .lcd-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #34d399;
+    border-bottom: 1px dashed rgba(0, 255, 102, 0.3);
+    padding-bottom: 3px;
+  }
+  .lcd-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: #00ff66;
+    text-shadow: 0 0 6px #00ff66;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .equalizer-canvas {
+    width: 100%;
+    height: 36px;
+    background: #010d07;
+    border: 1px solid #004422;
+    display: block;
+    margin-top: 4px;
+  }
+  .midi-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .btn-midi {
+    background: #003344;
+    color: #00ffff;
+    border: 2px outset #00ffff;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .btn-midi:hover {
+    background: #00ffff;
+    color: #001122;
+  }
+  .btn-midi:active, .btn-midi.active {
+    border-style: inset;
+    background: #ff00aa;
+    color: #ffffff;
+    box-shadow: 0 0 8px #ff00aa;
+  }
+  .track-select {
+    background: #001122;
+    color: #00ffff;
+    border: 1px solid #00ffff;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+    flex: 1;
+    min-width: 200px;
+    cursor: pointer;
+  }
+  .vol-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #00ffcc;
+  }
+  .vol-slider {
+    accent-color: #ff00aa;
+    cursor: pointer;
+    width: 70px;
+  }
 </style>
 </head>
 <body>
@@ -163,8 +257,48 @@
       the floppy drives hum, and the 999 KB ceiling holds back the void.
     </p>
     <p style="font-size:12px; color:#aaffee; margin:0;">
-      Soundtrack recommendation: Synthwave &amp; 90s tracker modules.
+      Soundtrack recommendation: Synthwave &amp; 90s tracker modules. Fire up the Jukebox below!
     </p>
+  </div>
+
+  <!-- 1999 Vintage MIDI Jukebox Widget -->
+  <div class="midi-jukebox">
+    <div class="section-title" style="margin-bottom:6px; display:flex; align-items:center; justify-content:space-between;">
+      <span>📻 CYBERSPIRE RETRO MIDI JUKEBOX</span>
+      <span style="font-size:11px; font-weight:normal; color:#00ffcc; text-shadow:none;">[16-BIT TRACKER SYNTH]</span>
+    </div>
+    
+    <div class="lcd-display">
+      <div class="lcd-top">
+        <span id="lcdTrackNo">TRACK 01/03</span>
+        <span id="lcdBpm">135 BPM</span>
+        <span id="lcdTime">TIME: 00:00</span>
+        <span id="lcdStatus" style="color:#ffff00;">PAUSED</span>
+      </div>
+      <div class="lcd-title" id="lcdTrackTitle">♫ Track 1: CyberSpire Neon Horizon (Synthwave)</div>
+      <canvas id="eqCanvas" class="equalizer-canvas" width="400" height="36"></canvas>
+    </div>
+
+    <div class="midi-controls">
+      <button class="btn-midi" id="btnMidiPlay" onclick="toggleMidiPlay()">▶ Play MIDI</button>
+      <button class="btn-midi" id="btnMidiStop" onclick="stopMidi()">⏹ Stop</button>
+      <button class="btn-midi" id="btnMidiPrev" onclick="prevTrack()">⏮ Prev</button>
+      <button class="btn-midi" id="btnMidiNext" onclick="nextTrack()">⏭ Next</button>
+      
+      <select id="midiTrackSelect" class="track-select" onchange="selectTrack(this.value)">
+        <option value="0">01: CyberSpire Neon Horizon (135 BPM - Synthwave)</option>
+        <option value="1">02: Underground Tracker Dreams (126 BPM - Amiga MOD)</option>
+        <option value="2">03: Phosphor Cyberpunk Pulse (140 BPM - Chiptune)</option>
+      </select>
+
+      <div class="vol-control">
+        <button class="btn-midi" id="btnMidiMute" onclick="toggleMute()" style="padding:4px 8px;">🔊</button>
+        <input type="range" id="midiVolume" class="vol-slider" min="0" max="100" value="70" oninput="setVolume(this.value)" />
+      </div>
+    </div>
+    <div style="font-size:10px; color:#38bdf8; font-family:'Courier New', monospace; margin-top:6px; text-align:center;">
+      ★ Authentic Web Audio synthesized chiptune tracker • Zero external plugins • 100% 1999 Cyber Immersion ★
+    </div>
   </div>
 
   <div class="section-box">
@@ -266,6 +400,525 @@
   document.getElementById('gbHits').textContent = hits.toString().padStart(7, '0');
 
   loadGuestbook();
+
+  // ==========================================
+  // 1999 RETRO MIDI / TRACKER SYNTHESIZER
+  // ==========================================
+  const midiTracks = [
+    {
+      title: "♫ Track 1: CyberSpire Neon Horizon (Synthwave)",
+      bpm: 135,
+      steps: 64,
+      // Scale: A minor (Am -> F -> C -> G)
+      lead: [
+        76,null,null,74, 76,null,79,null, 81,null,null,null, null,null,79,76,
+        77,null,null,76, 77,null,81,null, 84,null,null,null, null,null,83,81,
+        79,null,null,77, 76,null,74,null, 72,null,null,null, null,null,74,76,
+        74,null,null,72, 74,null,76,null, 71,null,null,null, null,null,72,74
+      ],
+      arp: [
+        57,60,64,69, 72,69,64,60, 57,60,64,69, 72,69,64,67,
+        53,57,60,65, 69,65,60,57, 53,57,60,65, 69,65,60,64,
+        48,52,55,60, 64,60,55,52, 48,52,55,60, 64,60,55,59,
+        55,59,62,67, 71,67,62,59, 55,59,62,67, 71,67,62,59
+      ],
+      bass: [
+        33,null,33,null, 45,null,33,null, 45,null,33,null, 45,33,null,null,
+        29,null,29,null, 41,null,29,null, 41,null,29,null, 41,29,null,null,
+        36,null,36,null, 48,null,36,null, 48,null,36,null, 48,36,null,null,
+        31,null,31,null, 43,null,31,null, 43,null,31,null, 43,31,null,null
+      ],
+      kick: [
+        1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0,
+        1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0,
+        1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0,
+        1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,1,0
+      ],
+      snare: [
+        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,
+        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,
+        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,
+        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,1,1
+      ],
+      hihat: [
+        0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0,
+        0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0,
+        0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0,
+        0,0,1,0, 0,0,1,0, 0,0,1,0, 1,1,1,1
+      ]
+    },
+    {
+      title: "♫ Track 2: Underground Tracker Dreams (Amiga MOD)",
+      bpm: 126,
+      steps: 64,
+      // Scale: D minor (Dm -> Bb -> Gm -> A7)
+      lead: [
+        62,null,65,null, 69,null,74,null, 72,null,69,null, 65,null,null,null,
+        70,null,74,null, 77,null,82,null, 81,null,77,null, 74,null,null,null,
+        67,null,70,null, 74,null,79,null, 77,null,74,null, 70,null,null,null,
+        69,null,73,null, 76,null,81,null, 85,null,81,null, 76,null,73,null
+      ],
+      arp: [
+        50,53,57,62, 65,62,57,53, 50,53,57,62, 65,62,57,62,
+        46,50,53,58, 62,58,53,50, 46,50,53,58, 62,58,53,58,
+        43,46,50,55, 58,55,50,46, 43,46,50,55, 58,55,50,55,
+        45,49,52,57, 61,57,52,49, 45,49,52,57, 61,57,52,49
+      ],
+      bass: [
+        38,null,null,38, null,38,null,null, 38,null,null,38, null,null,41,43,
+        34,null,null,34, null,34,null,null, 34,null,null,34, null,null,36,37,
+        31,null,null,31, null,31,null,null, 31,null,null,31, null,null,33,34,
+        33,null,null,33, null,33,null,null, 33,null,33,null, 45,null,null,null
+      ],
+      kick: [
+        1,0,0,0, 0,0,1,0, 0,0,1,0, 0,0,0,0,
+        1,0,0,0, 0,0,1,0, 0,0,1,0, 0,0,0,0,
+        1,0,0,0, 0,0,1,0, 0,0,1,0, 0,0,0,0,
+        1,0,0,0, 0,0,1,0, 1,0,0,0, 0,1,1,0
+      ],
+      snare: [
+        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,
+        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,
+        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,
+        0,0,0,0, 1,0,0,0, 0,0,1,0, 1,0,0,1
+      ],
+      hihat: [
+        1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1,
+        1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1,
+        1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1,
+        1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1
+      ]
+    },
+    {
+      title: "♫ Track 3: Phosphor Cyberpunk Pulse (Chiptune)",
+      bpm: 140,
+      steps: 64,
+      // Scale: E minor (Em -> C -> D -> Bm)
+      lead: [
+        76,null,76,79, 81,null,83,null, 84,83,81,79, 76,null,null,null,
+        72,null,72,76, 79,null,81,null, 83,81,79,76, 72,null,null,null,
+        74,null,74,78, 81,null,83,null, 86,83,81,78, 74,null,null,null,
+        71,null,71,74, 78,null,81,null, 83,81,78,74, 71,null,74,78
+      ],
+      arp: [
+        64,67,71,76, 67,71,76,79, 64,67,71,76, 67,71,76,79,
+        60,64,67,72, 64,67,72,76, 60,64,67,72, 64,67,72,76,
+        62,66,69,74, 66,69,74,78, 62,66,69,74, 66,69,74,78,
+        59,62,66,71, 62,66,71,74, 59,62,66,71, 62,66,71,74
+      ],
+      bass: [
+        28,28,40,28, 28,40,28,28, 28,28,40,28, 28,40,28,40,
+        24,24,36,24, 24,36,24,24, 24,24,36,24, 24,36,24,36,
+        26,26,38,26, 26,38,26,26, 26,26,38,26, 26,38,26,38,
+        23,23,35,23, 23,35,23,23, 23,23,35,23, 23,35,23,35
+      ],
+      kick: [
+        1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0,
+        1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0,
+        1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0,
+        1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,1,0
+      ],
+      snare: [
+        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,
+        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,
+        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,
+        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,1,1,1
+      ],
+      hihat: [
+        0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0,
+        0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0,
+        0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0,
+        0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,1
+      ]
+    }
+  ];
+
+  let audioCtx = null;
+  let masterGain = null;
+  let analyser = null;
+  let noiseBuf = null;
+
+  let currentTrackIdx = 0;
+  let isMidiPlaying = false;
+  let isMuted = (localStorage.getItem('cyberspire_midi_muted') === 'true');
+  let currentVolume = parseFloat(localStorage.getItem('cyberspire_midi_vol') || '0.7');
+
+  let currentStep = 0;
+  let nextNoteTime = 0.0;
+  let schedulerTimer = null;
+  let songSeconds = 0;
+  let timeTickerTimer = null;
+
+  function initAudioCtx() {
+    if (!audioCtx) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContextClass();
+      
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 64;
+      analyser.smoothingTimeConstant = 0.75;
+
+      masterGain = audioCtx.createGain();
+      masterGain.gain.setValueAtTime(isMuted ? 0 : currentVolume, audioCtx.currentTime);
+
+      masterGain.connect(analyser);
+      analyser.connect(audioCtx.destination);
+
+      // Noise buffer for percussion
+      noiseBuf = audioCtx.createBuffer(1, audioCtx.sampleRate * 1, audioCtx.sampleRate);
+      const out = noiseBuf.getChannelData(0);
+      for (let i = 0; i < noiseBuf.length; i++) {
+        out[i] = Math.random() * 2 - 1;
+      }
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
+  function midiNoteToFreq(note) {
+    return 440 * Math.pow(2, (note - 69) / 12);
+  }
+
+  function playLead(note, time, dur) {
+    if (!note) return;
+    const osc1 = audioCtx.createOscillator();
+    const osc2 = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    const f = audioCtx.createBiquadFilter();
+
+    osc1.type = 'square';
+    osc2.type = 'sawtooth';
+    const freq = midiNoteToFreq(note);
+    osc1.frequency.setValueAtTime(freq, time);
+    osc2.frequency.setValueAtTime(freq * 1.004, time); // Subtle detune
+
+    f.type = 'lowpass';
+    f.frequency.setValueAtTime(2400, time);
+    f.Q.setValueAtTime(2, time);
+
+    g.gain.setValueAtTime(0.001, time);
+    g.gain.linearRampToValueAtTime(0.18, time + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.09, time + 0.12);
+    g.gain.linearRampToValueAtTime(0.001, time + dur);
+
+    osc1.connect(f);
+    osc2.connect(f);
+    f.connect(g);
+    g.connect(masterGain);
+
+    osc1.start(time);
+    osc2.start(time);
+    osc1.stop(time + dur);
+    osc2.stop(time + dur);
+  }
+
+  function playArp(note, time, dur) {
+    if (!note) return;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    const f = audioCtx.createBiquadFilter();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(midiNoteToFreq(note), time);
+
+    f.type = 'lowpass';
+    f.frequency.setValueAtTime(1800, time);
+    f.Q.setValueAtTime(3, time);
+
+    g.gain.setValueAtTime(0.10, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + dur * 0.9);
+
+    osc.connect(f);
+    f.connect(g);
+    g.connect(masterGain);
+
+    osc.start(time);
+    osc.stop(time + dur);
+  }
+
+  function playBass(note, time, dur) {
+    if (!note) return;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    const f = audioCtx.createBiquadFilter();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(midiNoteToFreq(note), time);
+
+    f.type = 'lowpass';
+    f.frequency.setValueAtTime(500, time);
+
+    g.gain.setValueAtTime(0.24, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + dur * 0.95);
+
+    osc.connect(f);
+    f.connect(g);
+    g.connect(masterGain);
+
+    osc.start(time);
+    osc.stop(time + dur);
+  }
+
+  function playKick(time) {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(150, time);
+    osc.frequency.exponentialRampToValueAtTime(36, time + 0.08);
+
+    g.gain.setValueAtTime(0.35, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
+
+    osc.connect(g);
+    g.connect(masterGain);
+
+    osc.start(time);
+    osc.stop(time + 0.13);
+  }
+
+  function playSnare(time) {
+    if (!noiseBuf) return;
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = noiseBuf;
+
+    const f = audioCtx.createBiquadFilter();
+    f.type = 'bandpass';
+    f.frequency.setValueAtTime(1200, time);
+    f.Q.setValueAtTime(1.5, time);
+
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.18, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + 0.10);
+
+    noise.connect(f);
+    f.connect(g);
+    g.connect(masterGain);
+
+    noise.start(time);
+    noise.stop(time + 0.11);
+  }
+
+  function playHihat(time) {
+    if (!noiseBuf) return;
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = noiseBuf;
+
+    const f = audioCtx.createBiquadFilter();
+    f.type = 'highpass';
+    f.frequency.setValueAtTime(7000, time);
+
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.07, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + 0.035);
+
+    noise.connect(f);
+    f.connect(g);
+    g.connect(masterGain);
+
+    noise.start(time);
+    noise.stop(time + 0.04);
+  }
+
+  function schedule() {
+    const track = midiTracks[currentTrackIdx];
+    const secondsPerBeat = 60.0 / track.bpm;
+    const sixteenthTime = secondsPerBeat / 4.0;
+
+    while (nextNoteTime < audioCtx.currentTime + 0.12) {
+      const step = currentStep;
+      const t = nextNoteTime;
+      const dur = sixteenthTime * 1.5;
+
+      if (track.lead[step]) playLead(track.lead[step], t, dur);
+      if (track.arp[step]) playArp(track.arp[step], t, sixteenthTime);
+      if (track.bass[step]) playBass(track.bass[step], t, sixteenthTime * 2);
+      if (track.kick[step]) playKick(t);
+      if (track.snare[step]) playSnare(t);
+      if (track.hihat[step]) playHihat(t);
+
+      nextNoteTime += sixteenthTime;
+      currentStep = (currentStep + 1) % track.steps;
+    }
+  }
+
+  function startScheduler() {
+    if (schedulerTimer) clearInterval(schedulerTimer);
+    nextNoteTime = audioCtx.currentTime + 0.05;
+    schedulerTimer = setInterval(schedule, 25);
+
+    if (timeTickerTimer) clearInterval(timeTickerTimer);
+    timeTickerTimer = setInterval(() => {
+      songSeconds++;
+      const m = Math.floor(songSeconds / 60).toString().padStart(2, '0');
+      const s = (songSeconds % 60).toString().padStart(2, '0');
+      document.getElementById('lcdTime').textContent = `TIME: ${m}:${s}`;
+    }, 1000);
+  }
+
+  function stopScheduler() {
+    if (schedulerTimer) clearInterval(schedulerTimer);
+    schedulerTimer = null;
+    if (timeTickerTimer) clearInterval(timeTickerTimer);
+    timeTickerTimer = null;
+  }
+
+  function toggleMidiPlay() {
+    initAudioCtx();
+    if (isMidiPlaying) {
+      pauseMidi();
+    } else {
+      playMidi();
+    }
+  }
+
+  function playMidi() {
+    initAudioCtx();
+    isMidiPlaying = true;
+    startScheduler();
+    document.getElementById('btnMidiPlay').textContent = "⏸ Pause";
+    document.getElementById('btnMidiPlay').classList.add('active');
+    document.getElementById('lcdStatus').textContent = "PLAYING";
+    document.getElementById('lcdStatus').style.color = "#00ff66";
+    updateLcd();
+  }
+
+  function pauseMidi() {
+    isMidiPlaying = false;
+    stopScheduler();
+    document.getElementById('btnMidiPlay').textContent = "▶ Play MIDI";
+    document.getElementById('btnMidiPlay').classList.remove('active');
+    document.getElementById('lcdStatus').textContent = "PAUSED";
+    document.getElementById('lcdStatus').style.color = "#ffff00";
+  }
+
+  function stopMidi() {
+    isMidiPlaying = false;
+    stopScheduler();
+    currentStep = 0;
+    songSeconds = 0;
+    document.getElementById('lcdTime').textContent = "TIME: 00:00";
+    document.getElementById('btnMidiPlay').textContent = "▶ Play MIDI";
+    document.getElementById('btnMidiPlay').classList.remove('active');
+    document.getElementById('lcdStatus').textContent = "STOPPED";
+    document.getElementById('lcdStatus').style.color = "#ff0055";
+  }
+
+  function updateLcd() {
+    const track = midiTracks[currentTrackIdx];
+    document.getElementById('lcdTrackNo').textContent = `TRACK 0${currentTrackIdx + 1}/03`;
+    document.getElementById('lcdBpm').textContent = `${track.bpm} BPM`;
+    document.getElementById('lcdTrackTitle').textContent = track.title;
+    document.getElementById('midiTrackSelect').value = currentTrackIdx.toString();
+  }
+
+  function selectTrack(idx) {
+    const wasPlaying = isMidiPlaying;
+    stopMidi();
+    currentTrackIdx = parseInt(idx, 10);
+    updateLcd();
+    if (wasPlaying) playMidi();
+  }
+
+  function prevTrack() {
+    let nextIdx = (currentTrackIdx - 1 + midiTracks.length) % midiTracks.length;
+    selectTrack(nextIdx);
+  }
+
+  function nextTrack() {
+    let nextIdx = (currentTrackIdx + 1) % midiTracks.length;
+    selectTrack(nextIdx);
+  }
+
+  function setVolume(val) {
+    currentVolume = val / 100.0;
+    localStorage.setItem('cyberspire_midi_vol', currentVolume.toString());
+    if (masterGain && !isMuted) {
+      masterGain.gain.setTargetAtTime(currentVolume, audioCtx.currentTime, 0.05);
+    }
+  }
+
+  function toggleMute() {
+    isMuted = !isMuted;
+    localStorage.setItem('cyberspire_midi_muted', isMuted.toString());
+    document.getElementById('btnMidiMute').textContent = isMuted ? "🔇" : "🔊";
+    if (masterGain && audioCtx) {
+      masterGain.gain.setTargetAtTime(isMuted ? 0 : currentVolume, audioCtx.currentTime, 0.05);
+    }
+  }
+
+  // Equalizer Visualizer Drawing
+  const canvas = document.getElementById('eqCanvas');
+  const canvasCtx = canvas ? canvas.getContext('2d') : null;
+  const numBars = 16;
+  const peakHold = new Array(numBars).fill(0);
+
+  function drawEqualizer() {
+    requestAnimationFrame(drawEqualizer);
+    if (!canvasCtx || !canvas) return;
+
+    canvasCtx.fillStyle = '#010d07';
+    canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+    let freqData = new Uint8Array(numBars);
+    if (analyser && isMidiPlaying) {
+      const fullData = new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(fullData);
+      for (let i = 0; i < numBars; i++) {
+        freqData[i] = fullData[i * 2];
+      }
+    } else {
+      freqData.fill(0);
+    }
+
+    const barWidth = (canvas.width / numBars) - 2;
+    for (let i = 0; i < numBars; i++) {
+      let val = freqData[i] / 255.0;
+      let barHeight = val * (canvas.height - 4);
+
+      if (barHeight > peakHold[i]) {
+        peakHold[i] = barHeight;
+      } else {
+        peakHold[i] = Math.max(0, peakHold[i] - 0.4);
+      }
+
+      const x = i * (barWidth + 2) + 1;
+      const y = canvas.height - barHeight;
+
+      // Draw LED blocks
+      const numBlocks = Math.floor(barHeight / 4);
+      for (let b = 0; b < numBlocks; b++) {
+        const blockY = canvas.height - (b * 4) - 3;
+        if (b > 6) {
+          canvasCtx.fillStyle = '#ff00aa'; // Peak pink/magenta
+        } else if (b > 4) {
+          canvasCtx.fillStyle = '#ffff00'; // Mid yellow
+        } else {
+          canvasCtx.fillStyle = '#00ff66'; // Green
+        }
+        canvasCtx.fillRect(x, blockY, barWidth, 3);
+      }
+
+      // Draw peak hold dot
+      if (peakHold[i] > 2) {
+        canvasCtx.fillStyle = '#ffffff';
+        canvasCtx.fillRect(x, canvas.height - peakHold[i] - 2, barWidth, 2);
+      }
+    }
+  }
+  drawEqualizer();
+
+  // Restore saved volume and mute
+  document.getElementById('midiVolume').value = Math.round(currentVolume * 100);
+  if (isMuted) document.getElementById('btnMidiMute').textContent = "🔇";
+  updateLcd();
+
+  // Auto-unlock audio context on any user interaction
+  document.body.addEventListener('click', () => {
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }, { once: true });
 </script>
 
 </body>

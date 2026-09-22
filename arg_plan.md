@@ -104,3 +104,11 @@ graph TD
      - Translating Morse audio from `KSynth` or `KAudio` into a domain name.
      - Uncovering sysop server notes in `KBBS` or terminal dumps in `KTerm`.
    - Accessing Tier 3 nodes uncovers encrypted pieces of the master passkey `ECHO-1999-ARCHITECT` needed to unlock `KDirector`.
+
+### Anti-Potemkin Quality Standard (Mandatory for All Agents)
+
+The Virtual 1999 Web is not a collection of placeholder "under construction" joke pages or static stubs. To maintain world immersion and ludonarrative depth:
+1. **Genuine Functional Depth**: Every site must offer interactive utility—working retro CGI guestbooks, simulated web search engines, live audio synthesizers/MIDI players, interactive mini-tools, retro games, or genuine downloadable archives.
+2. **Zero External Dependencies**: All audio, graphics, animations, and interactive elements must be implemented using pure standard web technologies (HTML5, Canvas, Web Audio API, localStorage) without CDN calls or external libraries.
+3. **Strict Size Ceiling**: Each web page in `KiloOS/public/web/` must remain self-contained and strictly `< 999 KB`.
+4. **Rotating Fleet Expansion**: The fleet maintains an eternal rotating expansion task (`virtual_web_target`) in `next_work.md` across all worker skills (`kilo-expander`, `kilo-creator`, `kilo-graphics`, `kilo-usability`), systematically transforming every virtual node from simple beginnings into rich, exploratory digital artifacts.
