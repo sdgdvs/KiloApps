@@ -69,11 +69,15 @@ BOOL g_bWordWrap = FALSE;
 #define ID_TPL_HTML         9033
 #define ID_TPL_JSON         9034
 #define ID_EDIT_GOTOLINE    9035
+#define ID_FILE_EXPORT_MD   9036
+#define ID_EDIT_REVERSE     9037
 void UpdateStatusBar(void);
 void UpdateTabTitle(int index);
 void AddTab(const char* name, const char* path);
 void SwitchTab(int index);
 void DoGoToLineNative(void);
+void ExportMarkdownNative(void);
+void ReverseLinesNative(void);
 
 int g_nFontSizePt = 12;
 char g_szCustomStatus[128] = {0};
@@ -513,9 +517,11 @@ void ShowStatsDialog() {
     char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len + 1);
     int words = 0;
     int lines = (int)SendMessageA(hEdit, EM_GETLINECOUNT, 0, 0);
+    BOOL hasCRLF = FALSE;
 
     if (buf) {
         GetWindowTextA(hEdit, buf, len + 1);
+        if (strstr(buf, "\r\n")) hasCRLF = TRUE;
         BOOL inWord = FALSE;
         for (int i = 0; buf[i]; i++) {
             if (buf[i] > 32) {
@@ -527,10 +533,100 @@ void ShowStatsDialog() {
         HeapFree(GetProcessHeap(), 0, buf);
     }
 
-    char msg[256];
-    wsprintfA(msg, "Document Statistics:\n\nLines: %d\nWords: %d\nCharacters: %d\nFile: %s",
-        lines, words, len, g_Tabs[g_ActiveTab].szPath[0] ? g_Tabs[g_ActiveTab].szPath : "Unsaved");
+    int readMin = (words + 199) / 200;
+    if (readMin < 1) readMin = 1;
+
+    char msg[320];
+    wsprintfA(msg, "Document Statistics:\n\nLines: %d\nWords: %d (~%d min read)\nCharacters: %d\nLine Endings: %s\nFile: %s",
+        lines, words, readMin, len, hasCRLF ? "Windows (CRLF)" : "Unix (LF)",
+        g_Tabs[g_ActiveTab].szPath[0] ? g_Tabs[g_ActiveTab].szPath : "Unsaved");
     MessageBoxA(g_hMainWnd, msg, "Document Stats - KPad Pro", MB_OK | MB_ICONINFORMATION);
+}
+
+void ExportMarkdownNative() {
+    if (g_NumTabs == 0) return;
+    char szFile[MAX_PATH] = {0};
+    OPENFILENAMEA ofn;
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = g_hMainWnd;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "Markdown Files (*.md)\0*.md\0All Files (*.*)\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.lpstrDefExt = "md";
+    ofn.Flags = OFN_OVERWRITEPROMPT;
+    if (!GetSaveFileNameA(&ofn)) return;
+
+    HANDLE hFile = CreateFileA(szFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        HWND hEdit = g_Tabs[g_ActiveTab].hEdit;
+        int len = GetWindowTextLengthA(hEdit);
+        char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len + 512);
+        if (buf) {
+            char frontmatter[256];
+            wsprintfA(frontmatter, "---\r\ntitle: \"%s\"\r\ngenerator: \"KPad Pro Native 1.6\"\r\n---\r\n\r\n", g_Tabs[g_ActiveTab].szTitle);
+            lstrcpyA(buf, frontmatter);
+            GetWindowTextA(hEdit, buf + lstrlenA(buf), len + 1);
+            DWORD bytesWritten;
+            WriteFile(hFile, buf, lstrlenA(buf), &bytesWritten, NULL);
+            HeapFree(GetProcessHeap(), 0, buf);
+            ShowNativeStatus("Exported Markdown document successfully!");
+        }
+        CloseHandle(hFile);
+    }
+}
+
+void ReverseLinesNative() {
+    HWND hEdit = g_Tabs[g_ActiveTab].hEdit;
+    int len = GetWindowTextLengthA(hEdit);
+    if (len <= 0) return;
+    char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len + 1);
+    char* out = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len + 1);
+    if (buf && out) {
+        GetWindowTextA(hEdit, buf, len + 1);
+        int lineCount = (int)SendMessageA(hEdit, EM_GETLINECOUNT, 0, 0);
+        if (lineCount > 1) {
+            int* starts = (int*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (lineCount + 2) * sizeof(int));
+            int* lens = (int*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (lineCount + 2) * sizeof(int));
+            if (starts && lens) {
+                int curLine = 0;
+                starts[0] = 0;
+                for (int i = 0; i < len; i++) {
+                    if (buf[i] == '\n') {
+                        lens[curLine] = i - starts[curLine] + 1;
+                        curLine++;
+                        starts[curLine] = i + 1;
+                    }
+                }
+                lens[curLine] = len - starts[curLine];
+                curLine++;
+
+                int outPos = 0;
+                for (int i = curLine - 1; i >= 0; i--) {
+                    int l = lens[i];
+                    if (l > 0) {
+                        memcpy(out + outPos, buf + starts[i], l);
+                        outPos += l;
+                        if (i > 0 && out[outPos - 1] != '\n') {
+                            out[outPos++] = '\r';
+                            out[outPos++] = '\n';
+                        }
+                    }
+                }
+                out[outPos] = 0;
+                SetWindowTextA(hEdit, out);
+                g_Tabs[g_ActiveTab].isModified = TRUE;
+                UpdateTabTitle(g_ActiveTab);
+                UpdateStatusBar();
+                ShowNativeStatus("Reversed line order");
+                HeapFree(GetProcessHeap(), 0, starts);
+                HeapFree(GetProcessHeap(), 0, lens);
+            }
+        }
+        HeapFree(GetProcessHeap(), 0, buf);
+        HeapFree(GetProcessHeap(), 0, out);
+    }
 }
 
 // --- Document Security & Cryptography Suite ---
@@ -1162,6 +1258,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hFileMenu, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hFileMenu, MF_STRING, ID_FILE_EXPORT_ENC, "Export Encrypted (.enc)...");
             AppendMenuA(hFileMenu, MF_STRING, ID_FILE_OPEN_ENC, "Open Encrypted (.enc)...");
+            AppendMenuA(hFileMenu, MF_STRING, ID_FILE_EXPORT_MD, "Export Markdown (.md)...");
             AppendMenuA(hFileMenu, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hFileMenu, MF_STRING, ID_FILE_EXIT, "Exit");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hFileMenu, "File");
@@ -1184,6 +1281,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hEditMenu, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_UPPERCASE, "Convert UPPERCASE");
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_LOWERCASE, "Convert lowercase");
+            AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_REVERSE, "Reverse Line Order");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hEditMenu, "Edit");
 
             HMENU hTabMenu = CreatePopupMenu();
@@ -1275,6 +1373,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case ID_FILE_OPEN_ENC:
                     OpenEncryptedFile();
                     break;
+                case ID_FILE_EXPORT_MD:
+                    ExportMarkdownNative();
+                    break;
                 case ID_FILE_EXIT:
                     PostMessageA(hwnd, WM_CLOSE, 0, 0);
                     break;
@@ -1327,6 +1428,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 case ID_EDIT_LOWERCASE:
                     TransformCase(FALSE);
+                    break;
+                case ID_EDIT_REVERSE:
+                    ReverseLinesNative();
                     break;
                 case ID_VIEW_STATS:
                     ShowStatsDialog();

@@ -231,6 +231,92 @@
   }
   .add-tab-btn:hover { color: var(--accent); }
 
+  .tab-pin-icon {
+    font-size: 10px;
+    color: #f59e0b;
+    margin-right: 2px;
+  }
+  .tab-tag-badge {
+    font-size: 9px;
+    background: rgba(59, 130, 246, 0.2);
+    color: var(--accent-hover);
+    padding: 1px 4px;
+    border-radius: 6px;
+    margin-left: 3px;
+  }
+
+  /* Tag Bar & Filter Strip */
+  .tag-bar {
+    background: rgba(11, 15, 25, 0.9);
+    border-bottom: 1px solid var(--border-glass);
+    padding: 3px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 11px;
+    z-index: 85;
+    user-select: none;
+  }
+  .tag-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+  .tag-label {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .tag-pill {
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+    padding: 1px 7px;
+    border-radius: 10px;
+    font-size: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .tag-pill-remove {
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--text-muted);
+    transition: color 0.15s;
+  }
+  .tag-pill-remove:hover { color: #ef4444; }
+  .tag-preset-chip {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-glass);
+    color: var(--text-secondary);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tag-preset-chip:hover {
+    background: rgba(56, 189, 248, 0.2);
+    color: #38bdf8;
+    border-color: rgba(56, 189, 248, 0.4);
+  }
+  .tag-filter-select {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-glass);
+    border-radius: 4px;
+    color: var(--text-secondary);
+    font-size: 10px;
+    padding: 2px 6px;
+    outline: none;
+    cursor: pointer;
+  }
+
   /* Quick Actions & Templates Toolbar */
   .quick-toolbar {
     background: rgba(15, 23, 42, 0.75);
@@ -455,6 +541,125 @@
   .tok-key { color: var(--tok-key); }
   .tok-tag { color: var(--tok-tag); }
   .tok-bool { color: var(--tok-bool); font-weight: bold; }
+
+  /* Live Markdown & Document Preview Pane */
+  .preview-pane {
+    flex: 1 1 50%;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-surface);
+    border-left: 1px solid var(--border-glass);
+    overflow: hidden;
+    z-index: 5;
+    position: relative;
+  }
+  .preview-pane.full {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 10;
+  }
+  .preview-header {
+    padding: 6px 12px;
+    background: var(--bg-glass);
+    border-bottom: 1px solid var(--border-glass);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent-hover);
+    user-select: none;
+  }
+  .preview-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .preview-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px 40px 20px;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-primary);
+  }
+  .preview-body h1 { font-size: 1.75em; margin: 0 0 12px 0; border-bottom: 1px solid var(--border-glass); padding-bottom: 6px; color: var(--accent-hover); }
+  .preview-body h2 { font-size: 1.35em; margin: 16px 0 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 4px; color: #38bdf8; }
+  .preview-body h3 { font-size: 1.15em; margin: 12px 0 6px 0; color: #a78bfa; }
+  .preview-body h4 { font-size: 1.05em; margin: 10px 0 4px 0; color: #34d399; }
+  .preview-body p { margin-bottom: 12px; }
+  .preview-body code { background: rgba(0,0,0,0.4); border: 1px solid var(--border-glass); padding: 2px 6px; border-radius: 4px; font-family: 'Consolas', monospace; font-size: 12px; color: #34d399; }
+  .preview-body pre { background: rgba(0,0,0,0.5); border: 1px solid var(--border-glass); border-radius: 6px; padding: 10px 14px; overflow-x: auto; margin: 12px 0; font-family: 'Consolas', monospace; font-size: 12px; line-height: 1.5; color: #e2e8f0; }
+  .preview-body pre code { background: none; border: none; padding: 0; color: inherit; }
+  .preview-body table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 12px; }
+  .preview-body th, .preview-body td { border: 1px solid var(--border-glass); padding: 7px 12px; text-align: left; }
+  .preview-body th { background: rgba(59,130,246,0.15); color: var(--accent-hover); font-weight: 600; }
+  .preview-body tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+  .preview-body blockquote { border-left: 3px solid var(--accent); padding-left: 12px; color: var(--text-secondary); margin: 12px 0; font-style: italic; background: rgba(59,130,246,0.05); padding-top: 4px; padding-bottom: 4px; border-radius: 0 4px 4px 0; }
+  .preview-body ul, .preview-body ol { padding-left: 22px; margin-bottom: 12px; }
+  .preview-body li { margin-bottom: 4px; }
+  .preview-body hr { border: none; border-top: 1px solid var(--border-glass); margin: 16px 0; }
+  .preview-task { display: flex; align-items: center; gap: 8px; margin: 4px 0; list-style-type: none; }
+  .preview-task input[type="checkbox"] { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
+  .preview-meta-badge { font-size: 10px; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); color: var(--accent-hover); border-radius: 4px; padding: 2px 6px; margin-left: 6px; }
+
+  /* Multi-Tab Search Modal Styling */
+  .search-tabs-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  .search-tab-group {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-glass);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .search-tab-header {
+    background: rgba(255, 255, 255, 0.04);
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-hover);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-glass);
+  }
+  .search-tab-item {
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    transition: background 0.15s;
+    font-family: 'Consolas', monospace;
+  }
+  .search-tab-item:last-child { border-bottom: none; }
+  .search-tab-item:hover { background: rgba(59, 130, 246, 0.15); }
+  .search-line-num {
+    color: var(--text-muted);
+    min-width: 44px;
+    user-select: none;
+  }
+  .search-line-text {
+    flex: 1;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .search-hl {
+    background: rgba(245, 158, 11, 0.35);
+    color: #fbbf24;
+    font-weight: bold;
+    border-radius: 2px;
+    padding: 0 2px;
+  }
 
   /* Glass Status Bar */
   .status-bar { 
@@ -746,10 +951,15 @@
         <div onclick="loadTemplate('json')"><span>Insert Template: JSON (.json)</span></div>
         <div class="divider"></div>
         <div onclick="exportDocument('txt')"><span>Export Plain Text (.txt)</span></div>
+        <div onclick="exportDocument('md')"><span>Export Markdown Notes (.md)</span></div>
         <div onclick="exportDocument('html')"><span>Export HTML (.html)</span></div>
+        <div onclick="exportDocument('html-styled')"><span>Export Styled Print Sheet (.html)</span></div>
+        <div onclick="exportDocument('csv')"><span>Export CSV Line Rows (.csv)</span></div>
         <div onclick="exportDocument('json')"><span>Export Session (.json)</span></div>
+        <div onclick="exportDocument('workspace')"><span>Export Workspace Snapshot (.json)</span><span class="shortcut">Ctrl+Shift+S</span></div>
         <div onclick="exportEncrypted()"><span>Export Encrypted (.kpad.enc)</span></div>
         <div class="divider"></div>
+        <div onclick="importWorkspaceSnapshot()"><span>Import Workspace Snapshot...</span></div>
         <div onclick="importEncrypted()"><span>Import Encrypted File...</span></div>
       </div>
     </div>
@@ -766,10 +976,14 @@
         <div onclick="selectAll()"><span>Select All</span><span class="shortcut">Ctrl+A</span></div>
         <div onclick="clearCurrentDocument()"><span>Clear Document</span><span class="shortcut">Alt+X</span></div>
         <div class="divider"></div>
-        <div onclick="openFind(false)"><span>Find...</span><span class="shortcut">Ctrl+F</span></div>
-        <div onclick="openFind(true)"><span>Replace...</span><span class="shortcut">Ctrl+H</span></div>
+        <div onclick="openFind(false)"><span>Find in Tab...</span><span class="shortcut">Ctrl+F</span></div>
+        <div onclick="openFind(true)"><span>Replace in Tab...</span><span class="shortcut">Ctrl+H</span></div>
+        <div onclick="openGlobalTabSearch()"><span>Search All Open Tabs...</span><span class="shortcut">Ctrl+Shift+F</span></div>
         <div onclick="promptGoToLine()"><span>Go to Line...</span><span class="shortcut">Ctrl+G</span></div>
         <div onclick="toggleLineComment()"><span>Toggle Line Comment</span><span class="shortcut">Ctrl+/</span></div>
+        <div class="divider"></div>
+        <div onclick="promptCsvToMarkdown()"><span>Convert CSV to Markdown Table...</span></div>
+        <div onclick="convertMarkdownTableToCsv()"><span>Convert Markdown Table to CSV</span></div>
         <div onclick="insertDateTime()"><span>Insert Time/Date</span><span class="shortcut">F5</span></div>
       </div>
     </div>
@@ -783,9 +997,23 @@
         <div onclick="transformText('lower')"><span>lowercase</span></div>
         <div onclick="transformText('title')"><span>Title Case</span></div>
         <div class="divider"></div>
+        <div onclick="sortLines('asc')"><span>Sort Lines (Ascending A-Z)</span></div>
+        <div onclick="sortLines('desc')"><span>Sort Lines (Descending Z-A)</span></div>
+        <div onclick="sortLines('numeric')"><span>Sort Lines (Numeric)</span></div>
+        <div onclick="deduplicateLines()"><span>Deduplicate Lines</span></div>
+        <div onclick="reverseLines()"><span>Reverse Line Order</span></div>
+        <div class="divider"></div>
+        <div onclick="base64Transform(true)"><span>Base64 Encode Selection</span></div>
+        <div onclick="base64Transform(false)"><span>Base64 Decode Selection</span></div>
+        <div onclick="urlTransform(true)"><span>URL Encode Selection</span></div>
+        <div onclick="urlTransform(false)"><span>URL Decode Selection</span></div>
+        <div onclick="htmlEntityTransform(true)"><span>HTML Entities Encode</span></div>
+        <div onclick="htmlEntityTransform(false)"><span>HTML Entities Decode</span></div>
+        <div onclick="stripHtmlTags()"><span>Strip HTML Tags</span></div>
+        <div class="divider"></div>
+        <div onclick="toggleLineEndings()"><span>Toggle Line Endings (CRLF ⇄ LF)</span></div>
         <div onclick="trimWhitespace()"><span>Trim Trailing Spaces</span></div>
         <div onclick="formatJSON()"><span>Format JSON</span></div>
-        <div onclick="sortLines()"><span>Sort Lines</span></div>
         <div class="divider"></div>
         <div onclick="showDiagnostics()"><span>📊 Document Diagnostics & Hash</span></div>
       </div>
@@ -793,6 +1021,9 @@
 
     <div class="menu-btn">View
       <div class="dropdown">
+        <div onclick="togglePreview()"><span>Toggle Live Preview (Markdown / HTML)</span><span class="shortcut">Alt+P</span></div>
+        <div onclick="openGlobalTabSearch()"><span>Search All Open Tabs</span><span class="shortcut">Ctrl+Shift+F</span></div>
+        <div class="divider"></div>
         <div onclick="toggleWordWrap()"><span>Toggle Word Wrap</span><span class="shortcut">Alt+Z</span></div>
         <div onclick="toggleGutter()"><span>Toggle Line Numbers</span></div>
         <div class="divider"></div>
@@ -833,6 +1064,12 @@
       <button class="quick-btn" onclick="openFind(true)" title="Find & Replace (Ctrl+H)">
         🔄 Replace <span class="kbd-hint">Ctrl+H</span>
       </button>
+      <button class="quick-btn" onclick="openGlobalTabSearch()" title="Search Across All Open Tabs (Ctrl+Shift+F)">
+        🌐 Tabs Search <span class="kbd-hint">Ctrl+Shift+F</span>
+      </button>
+      <button class="quick-btn" id="btn-quick-preview" onclick="togglePreview()" title="Toggle Live Markdown / HTML Preview (Alt+P)">
+        👁️ Preview <span class="kbd-hint">Alt+P</span>
+      </button>
       <button class="quick-btn" onclick="changeFontSize(-1)" title="Decrease font size (Ctrl+-)">A-</button>
       <button class="quick-btn" onclick="resetFontSize()" title="Reset font size (Ctrl+0)" id="zoom-badge">14px</button>
       <button class="quick-btn" onclick="changeFontSize(1)" title="Increase font size (Ctrl+=)">A+</button>
@@ -853,6 +1090,28 @@
       <button class="quick-chip" onclick="loadTemplate('html')" title="HTML5 Starter (.html)">🌐 HTML5</button>
       <button class="quick-chip" onclick="loadTemplate('c')" title="C/C++ Skeleton (.c)">⚙️ C/C++</button>
       <button class="quick-chip" onclick="loadTemplate('json')" title="JSON Config (.json)">📦 JSON</button>
+    </div>
+  </div>
+
+  <!-- Active Tab Tags & Filter Strip -->
+  <div class="tag-bar" id="tag-bar">
+    <div class="tag-group">
+      <button class="quick-btn" id="btn-pin-tab" onclick="togglePinActiveTab()" title="Pin/Unpin active tab (pinned tabs stay on the left)">📌 Pin Tab</button>
+      <span class="tag-label">🏷️ Tags:</span>
+      <div id="active-tags-list" style="display:inline-flex; align-items:center; gap:4px;"></div>
+      <button class="tag-preset-chip" onclick="promptAddTag()" title="Add custom tag to active tab">+ Tag</button>
+      <span style="color:var(--border-glass); margin:0 2px;">|</span>
+      <span class="tag-preset-chip" onclick="quickAddTag('Notes')" title="Add #Notes tag">+ Notes</span>
+      <span class="tag-preset-chip" onclick="quickAddTag('Code')" title="Add #Code tag">+ Code</span>
+      <span class="tag-preset-chip" onclick="quickAddTag('Draft')" title="Add #Draft tag">+ Draft</span>
+      <span class="tag-preset-chip" onclick="quickAddTag('Todo')" title="Add #Todo tag">+ Todo</span>
+      <span class="tag-preset-chip" onclick="quickAddTag('Config')" title="Add #Config tag">+ Config</span>
+    </div>
+    <div class="tag-group">
+      <label for="tag-filter-select" style="font-size:10px; color:var(--text-muted);">Tab Filter:</label>
+      <select class="tag-filter-select" id="tag-filter-select" onchange="filterTabsByTag(this.value)">
+        <option value="">All Tabs</option>
+      </select>
     </div>
   </div>
 
@@ -877,12 +1136,22 @@
     </div>
   </div>
 
-  <!-- Editor Container with Line Gutter -->
-  <div class="editor-wrapper">
+  <!-- Editor Container with Line Gutter and Split Preview -->
+  <div class="editor-wrapper" id="editor-wrapper">
     <div class="gutter" id="gutter"></div>
-    <div class="code-container">
+    <div class="code-container" id="code-container">
       <pre id="highlight-pre" aria-hidden="true"><code id="highlight-code"></code></pre>
       <textarea id="editor" spellcheck="false" wrap="off" aria-label="Text Editor" placeholder="Start typing or click a template above (📝 Notes, ⚡ JS, 🌐 HTML5, ⚙️ C, 📦 JSON)..."></textarea>
+    </div>
+    <div class="preview-pane" id="preview-pane" style="display:none;">
+      <div class="preview-header">
+        <span id="preview-title">👁️ Live Preview (Markdown)</span>
+        <div class="preview-controls">
+          <button class="quick-btn" id="btn-preview-max" onclick="togglePreviewMaximize()" title="Maximize / Split Preview">⛶</button>
+          <button class="quick-btn" onclick="togglePreview()" title="Close Preview">✕</button>
+        </div>
+      </div>
+      <div class="preview-body" id="preview-body"></div>
     </div>
   </div>
 
@@ -919,19 +1188,26 @@
           <option value="sql">SQL</option>
         </select>
       </div>
+      <div class="status-item status-clickable" id="stat-crlf" onclick="toggleLineEndings()" title="Click to toggle Line Endings (CRLF / LF)">CRLF</div>
       <div class="status-item status-clickable" id="stat-indent" onclick="toggleIndentSize()" title="Click to toggle indentation spaces (Spaces: 4 / Spaces: 2)">Spaces: 4</div>
       <div class="status-item" id="stat-encoding" title="Character encoding">UTF-8</div>
       <div class="status-item status-clickable" id="stat-pos" onclick="promptGoToLine()" title="Click to Go to Line (Ctrl+G)">Ln 1, Col 1</div>
+      <div class="status-item" id="stat-words" title="Words and estimated reading time">0 Words (~0m read)</div>
       <div class="status-item" id="stat-counts">1 Lines, 0 Chars</div>
     </div>
   </div>
 
   <!-- Context Menu for Tabs -->
   <div class="context-menu" id="tab-context-menu">
+    <div onclick="ctxTogglePinTab()">📌 Pin / Unpin Tab</div>
+    <div onclick="ctxEditTags()">🏷️ Manage Tags...</div>
+    <div class="divider"></div>
     <div onclick="ctxNewTab()">New Tab</div>
     <div onclick="ctxDuplicateTab()">Duplicate Tab</div>
+    <div class="divider"></div>
     <div onclick="ctxCloseTab()">Close Tab</div>
     <div onclick="ctxCloseOthers()">Close Others</div>
+    <div onclick="ctxCloseRight()">Close Tabs to Right</div>
   </div>
 
   <!-- Modal Dialog -->
@@ -1001,19 +1277,42 @@
     }
 
     // --- Tab Session Management ---
-    function createTab(name = "Untitled", content = "", path = null, language = "plaintext") {
+    let activeTagFilter = "";
+
+    // --- Tab Session & Tag Management ---
+    function createTab(name = "Untitled", content = "", path = null, language = "plaintext", tags = [], isPinned = false) {
       const tab = {
         id: Date.now() + Math.random(),
         name,
         content,
         path,
         language: language || detectLanguage(name),
+        tags: Array.isArray(tags) ? [...tags] : [],
+        isPinned: Boolean(isPinned),
         isModified: false,
         cursorPos: 0
       };
-      tabs.push(tab);
+
+      if (tab.isPinned) {
+        // Place after last pinned tab or at beginning
+        let lastPinned = -1;
+        for (let i = 0; i < tabs.length; i++) {
+          if (tabs[i].isPinned) lastPinned = i;
+        }
+        if (lastPinned >= 0) {
+          tabs.splice(lastPinned + 1, 0, tab);
+          activeTabIndex = lastPinned + 1;
+        } else {
+          tabs.unshift(tab);
+          activeTabIndex = 0;
+        }
+      } else {
+        tabs.push(tab);
+        activeTabIndex = tabs.length - 1;
+      }
+
       renderTabs();
-      switchTab(tabs.length - 1);
+      switchTab(activeTabIndex);
       saveSession();
     }
 
@@ -1036,6 +1335,7 @@
       document.getElementById('file-path').innerText = tab.path || tab.name;
       
       renderTabs();
+      renderTagBar();
       updateEditor();
       
       if (tab.cursorPos) {
@@ -1043,10 +1343,160 @@
       }
     }
 
+    function togglePinActiveTab() {
+      if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
+        togglePinTab(activeTabIndex);
+      }
+    }
+
+    function togglePinTab(index) {
+      if (index < 0 || index >= tabs.length) return;
+      const tab = tabs[index];
+      tab.isPinned = !tab.isPinned;
+      
+      // Save current content
+      if (activeTabIndex === index) tab.content = editor.value;
+
+      // Re-order: pinned tabs always come first
+      tabs.sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0));
+      activeTabIndex = tabs.indexOf(tab);
+
+      renderTabs();
+      renderTagBar();
+      saveSession();
+      showToast(tab.isPinned ? `📌 Pinned tab: ${tab.name}` : `Unpinned tab: ${tab.name}`, 'info', 1800);
+    }
+
+    function promptAddTag() {
+      if (activeTabIndex < 0 || activeTabIndex >= tabs.length) return;
+      const tab = tabs[activeTabIndex];
+      const bodyHTML = `
+        <div class="form-group">
+          <label class="form-label" for="new-tag-input">Add Tag to "${escapeHtml(tab.name)}":</label>
+          <input type="text" class="form-input" id="new-tag-input" placeholder="e.g. notes, draft, code, todo, config" onkeydown="if(event.key==='Enter') executeAddTag()">
+          <div class="form-hint">Tags help organize, filter, and search across multi-tab sessions</div>
+        </div>
+        <div style="margin-bottom:12px;">
+          <span class="form-label">Suggested Presets:</span>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+            <button class="tag-preset-chip" onclick="document.getElementById('new-tag-input').value='Notes'; executeAddTag();">+ Notes</button>
+            <button class="tag-preset-chip" onclick="document.getElementById('new-tag-input').value='Code'; executeAddTag();">+ Code</button>
+            <button class="tag-preset-chip" onclick="document.getElementById('new-tag-input').value='Draft'; executeAddTag();">+ Draft</button>
+            <button class="tag-preset-chip" onclick="document.getElementById('new-tag-input').value='Todo'; executeAddTag();">+ Todo</button>
+            <button class="tag-preset-chip" onclick="document.getElementById('new-tag-input').value='Docs'; executeAddTag();">+ Docs</button>
+            <button class="tag-preset-chip" onclick="document.getElementById('new-tag-input').value='Config'; executeAddTag();">+ Config</button>
+            <button class="tag-preset-chip" onclick="document.getElementById('new-tag-input').value='Reference'; executeAddTag();">+ Reference</button>
+          </div>
+        </div>
+        <div class="modal-btn-row">
+          <button class="modal-btn-cancel" onclick="closeModal()">Cancel</button>
+          <button class="modal-btn" onclick="executeAddTag()">Add Tag</button>
+        </div>
+      `;
+      openModal('🏷️ Manage Tab Tags', bodyHTML, false);
+      setTimeout(() => {
+        const inp = document.getElementById('new-tag-input');
+        if (inp) inp.focus();
+      }, 50);
+    }
+
+    function executeAddTag() {
+      const inp = document.getElementById('new-tag-input');
+      if (!inp) return;
+      const val = inp.value.trim().replace(/^#/, '');
+      if (val) {
+        quickAddTag(val);
+      }
+      closeModal();
+    }
+
+    function quickAddTag(tagName) {
+      if (activeTabIndex < 0 || activeTabIndex >= tabs.length) return;
+      const tab = tabs[activeTabIndex];
+      if (!Array.isArray(tab.tags)) tab.tags = [];
+      const clean = tagName.trim().toLowerCase();
+      if (!clean) return;
+      if (!tab.tags.includes(clean)) {
+        tab.tags.push(clean);
+        renderTagBar();
+        renderTabs();
+        saveSession();
+        showToast(`Added tag #${clean} to ${tab.name}`, 'info', 1800);
+      }
+    }
+
+    function removeTagFromActiveTab(tagName) {
+      if (activeTabIndex < 0 || activeTabIndex >= tabs.length) return;
+      const tab = tabs[activeTabIndex];
+      if (Array.isArray(tab.tags)) {
+        tab.tags = tab.tags.filter(t => t !== tagName);
+        renderTagBar();
+        renderTabs();
+        saveSession();
+        showToast(`Removed tag #${tagName}`, 'info', 1500);
+      }
+    }
+
+    function filterTabsByTag(tag) {
+      activeTagFilter = (tag || '').trim().toLowerCase();
+      renderTabs();
+      if (activeTagFilter) {
+        showToast(`Filtering tabs by #${activeTagFilter}`, 'info', 1800);
+      } else {
+        showToast('Showing all tabs', 'info', 1500);
+      }
+    }
+
+    function renderTagBar() {
+      const container = document.getElementById('active-tags-list');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const btnPin = document.getElementById('btn-pin-tab');
+      if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
+        const tab = tabs[activeTabIndex];
+        if (btnPin) {
+          btnPin.innerText = tab.isPinned ? '📌 Pinned' : '📌 Pin Tab';
+          btnPin.classList.toggle('active', Boolean(tab.isPinned));
+        }
+
+        if (Array.isArray(tab.tags)) {
+          tab.tags.forEach(tag => {
+            const pill = document.createElement('span');
+            pill.className = 'tag-pill';
+            pill.innerHTML = `<span>#${escapeHtml(tag)}</span><span class="tag-pill-remove" onclick="removeTagFromActiveTab('${escapeHtml(tag)}')">✕</span>`;
+            container.appendChild(pill);
+          });
+        }
+      }
+
+      // Update Filter Select dropdown with all unique tags across fleet of tabs
+      const filterSelect = document.getElementById('tag-filter-select');
+      if (filterSelect) {
+        const currentVal = activeTagFilter;
+        const allTags = new Set();
+        tabs.forEach(t => {
+          if (Array.isArray(t.tags)) {
+            t.tags.forEach(tag => allTags.add(tag));
+          }
+        });
+
+        let opts = '<option value="">All Tabs</option>';
+        allTags.forEach(t => {
+          opts += `<option value="${escapeHtml(t)}" ${t === currentVal ? 'selected' : ''}>#${escapeHtml(t)}</option>`;
+        });
+        filterSelect.innerHTML = opts;
+      }
+    }
+
     function promptCloseTab(index, e) {
       if (e) e.stopPropagation();
       if (index < 0 || index >= tabs.length) return;
       const tab = tabs[index];
+      if (tab.isPinned) {
+        showToast(`Cannot close pinned tab "${tab.name}". Unpin it first!`, 'warning', 2500);
+        return;
+      }
       if (!tab.isModified) {
         closeTabDirect(index);
         return;
@@ -1090,6 +1540,7 @@
             activeTabIndex--;
           }
           renderTabs();
+          renderTagBar();
         }
       }
       saveSession();
@@ -1099,8 +1550,15 @@
       const container = document.getElementById('tabs-bar');
       container.innerHTML = '';
       tabs.forEach((tab, index) => {
+        // Tag filtering
+        const matchesFilter = !activeTagFilter || (Array.isArray(tab.tags) && tab.tags.includes(activeTagFilter));
+
         const item = document.createElement('div');
         item.className = `tab-item ${index === activeTabIndex ? 'active' : ''}`;
+        if (!matchesFilter) {
+          item.style.opacity = '0.35';
+          item.title = `Filtered out by #${activeTagFilter}`;
+        }
         item.onclick = () => switchTab(index);
         item.onauxclick = (e) => {
           if (e.button === 1) {
@@ -1110,7 +1568,13 @@
         };
         item.oncontextmenu = (e) => showTabContext(e, index);
         
-        if (index < 9) {
+        if (tab.isPinned) {
+          const pinSpan = document.createElement('span');
+          pinSpan.className = 'tab-pin-icon';
+          pinSpan.innerText = '📌';
+          pinSpan.title = 'Pinned tab';
+          item.appendChild(pinSpan);
+        } else if (index < 9) {
           const numSpan = document.createElement('span');
           numSpan.className = 'tab-num';
           numSpan.innerText = `${index + 1}`;
@@ -1122,6 +1586,14 @@
         titleSpan.innerText = tab.name;
         item.appendChild(titleSpan);
 
+        if (Array.isArray(tab.tags) && tab.tags.length > 0) {
+          const tagBadge = document.createElement('span');
+          tagBadge.className = 'tab-tag-badge';
+          tagBadge.innerText = `#${tab.tags[0]}${tab.tags.length > 1 ? ` +${tab.tags.length - 1}` : ''}`;
+          tagBadge.title = tab.tags.map(t => '#' + t).join(' ');
+          item.appendChild(tagBadge);
+        }
+
         if (tab.isModified) {
           const dirty = document.createElement('span');
           dirty.className = 'tab-dirty';
@@ -1129,12 +1601,14 @@
           item.appendChild(dirty);
         }
 
-        const closeBtn = document.createElement('div');
-        closeBtn.className = 'tab-close';
-        closeBtn.innerText = '✕';
-        closeBtn.title = 'Close tab (Ctrl+W)';
-        closeBtn.onclick = (e) => promptCloseTab(index, e);
-        item.appendChild(closeBtn);
+        if (!tab.isPinned) {
+          const closeBtn = document.createElement('div');
+          closeBtn.className = 'tab-close';
+          closeBtn.innerText = '✕';
+          closeBtn.title = 'Close tab (Ctrl+W)';
+          closeBtn.onclick = (e) => promptCloseTab(index, e);
+          item.appendChild(closeBtn);
+        }
 
         container.appendChild(item);
       });
@@ -1161,26 +1635,58 @@
       document.getElementById('tab-context-menu').style.display = 'none';
     });
 
+    function ctxTogglePinTab() {
+      if (ctxTabIndex >= 0 && ctxTabIndex < tabs.length) {
+        togglePinTab(ctxTabIndex);
+      }
+    }
+
+    function ctxEditTags() {
+      if (ctxTabIndex >= 0 && ctxTabIndex < tabs.length) {
+        switchTab(ctxTabIndex);
+        promptAddTag();
+      }
+    }
+
     function ctxDuplicateTab() {
       if (ctxTabIndex >= 0 && ctxTabIndex < tabs.length) {
         const t = tabs[ctxTabIndex];
         const content = (ctxTabIndex === activeTabIndex) ? editor.value : t.content;
-        createTab(`${t.name} (Copy)`, content, null, t.language);
+        createTab(`${t.name} (Copy)`, content, null, t.language, t.tags ? [...t.tags] : [], false);
         showToast(`Duplicated tab: ${t.name}`, 'info', 2000);
       }
     }
+
     function ctxCloseTab() { if (ctxTabIndex >= 0) promptCloseTab(ctxTabIndex); }
+
     function ctxCloseOthers() {
       if (ctxTabIndex >= 0 && ctxTabIndex < tabs.length) {
         const kept = tabs[ctxTabIndex];
         if (ctxTabIndex === activeTabIndex) {
           kept.content = editor.value;
         }
-        tabs = [kept];
-        activeTabIndex = -1;
-        switchTab(0);
+        // Keep all pinned tabs plus the target tab
+        const pinnedTabs = tabs.filter((t, i) => t.isPinned && i !== ctxTabIndex);
+        tabs = [...pinnedTabs, kept];
+        activeTabIndex = tabs.indexOf(kept);
+        switchTab(activeTabIndex);
         saveSession();
-        showToast('Closed other tabs', 'info', 2000);
+        showToast('Closed other tabs (pinned tabs preserved)', 'info', 2000);
+      }
+    }
+
+    function ctxCloseRight() {
+      if (ctxTabIndex >= 0 && ctxTabIndex < tabs.length) {
+        const preserved = tabs.slice(0, ctxTabIndex + 1);
+        const rightTabs = tabs.slice(ctxTabIndex + 1);
+        const keptPinned = rightTabs.filter(t => t.isPinned);
+        tabs = [...preserved, ...keptPinned];
+        if (activeTabIndex >= tabs.length) {
+          activeTabIndex = tabs.length - 1;
+        }
+        switchTab(activeTabIndex);
+        saveSession();
+        showToast('Closed tabs to the right (pinned preserved)', 'info', 2000);
       }
     }
 
@@ -1315,8 +1821,23 @@
           `Ln ${currentLineIdx + 1}, Col ${colIdx}`;
       }
 
+      // Words and estimated reading time (~200 wpm)
+      const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+      const readMin = Math.max(1, Math.ceil(words / 200));
+      const wordEl = document.getElementById('stat-words');
+      if (wordEl) wordEl.innerText = `${words.toLocaleString()} Words (~${readMin}m read)`;
+
+      // Line endings indicator
+      const crlfEl = document.getElementById('stat-crlf');
+      if (crlfEl) crlfEl.innerText = text.includes('\r\n') ? 'CRLF' : 'LF';
+
       const countEl = document.getElementById('stat-counts');
       if (countEl) countEl.innerText = `${linesCount} Lines, ${text.length} Chars`;
+
+      // Synchronize live preview if active
+      if (typeof previewActive !== 'undefined' && previewActive) {
+        updatePreview();
+      }
 
       // Mark tab as modified
       if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
@@ -1519,25 +2040,555 @@
       }
     }
 
-    function sortLines() {
+    function sortLines(mode = 'asc') {
       const start = editor.selectionStart;
       const end = editor.selectionEnd;
       const text = editor.value;
-      if (start !== end) {
-        const sel = text.substring(start, end);
-        const lines = sel.split('\n');
+      const isSelection = start !== end;
+      const targetText = isSelection ? text.substring(start, end) : text;
+      let lines = targetText.split('\n');
+
+      if (mode === 'desc') {
+        lines.sort((a, b) => b.localeCompare(a));
+      } else if (mode === 'numeric') {
+        lines.sort((a, b) => {
+          const numA = parseFloat(a) || 0;
+          const numB = parseFloat(b) || 0;
+          return numA - numB;
+        });
+      } else {
         lines.sort((a, b) => a.localeCompare(b));
-        const sorted = lines.join('\n');
+      }
+
+      const sorted = lines.join('\n');
+      if (isSelection) {
         editor.value = text.substring(0, start) + sorted + text.substring(end);
         editor.setSelectionRange(start, start + sorted.length);
-        updateEditor();
-        showToast(`Sorted ${lines.length} selected lines alphabetically`, 'success', 2000);
       } else {
-        const lines = text.split('\n');
-        lines.sort((a, b) => a.localeCompare(b));
-        editor.value = lines.join('\n');
+        editor.value = sorted;
+      }
+      updateEditor();
+      showToast(`Sorted ${lines.length} lines (${mode.toUpperCase()})`, 'success', 2000);
+    }
+
+    function deduplicateLines() {
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      const text = editor.value;
+      const isSelection = start !== end;
+      const targetText = isSelection ? text.substring(start, end) : text;
+      const lines = targetText.split('\n');
+      const seen = new Set();
+      const uniqueLines = [];
+      lines.forEach(l => {
+        if (!seen.has(l)) {
+          seen.add(l);
+          uniqueLines.push(l);
+        }
+      });
+      const removedCount = lines.length - uniqueLines.length;
+      const result = uniqueLines.join('\n');
+      if (isSelection) {
+        editor.value = text.substring(0, start) + result + text.substring(end);
+        editor.setSelectionRange(start, start + result.length);
+      } else {
+        editor.value = result;
+      }
+      updateEditor();
+      showToast(`Removed ${removedCount} duplicate line(s). ${uniqueLines.length} unique lines remain.`, 'success', 2500);
+    }
+
+    function reverseLines() {
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      const text = editor.value;
+      const isSelection = start !== end;
+      const targetText = isSelection ? text.substring(start, end) : text;
+      const reversed = targetText.split('\n').reverse().join('\n');
+      if (isSelection) {
+        editor.value = text.substring(0, start) + reversed + text.substring(end);
+        editor.setSelectionRange(start, start + reversed.length);
+      } else {
+        editor.value = reversed;
+      }
+      updateEditor();
+      showToast('Reversed line order', 'success', 1800);
+    }
+
+    function base64Transform(encode = true) {
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      const text = editor.value;
+      const isSelection = start !== end;
+      const target = isSelection ? text.substring(start, end) : text;
+      if (!target) return;
+      try {
+        let result;
+        if (encode) {
+          result = btoa(unescape(encodeURIComponent(target)));
+        } else {
+          result = decodeURIComponent(escape(atob(target.trim())));
+        }
+        if (isSelection) {
+          editor.value = text.substring(0, start) + result + text.substring(end);
+          editor.setSelectionRange(start, start + result.length);
+        } else {
+          editor.value = result;
+        }
         updateEditor();
-        showToast(`Sorted ${lines.length} lines alphabetically`, 'success', 2000);
+        showToast(encode ? 'Encoded to Base64' : 'Decoded from Base64', 'success', 1800);
+      } catch (e) {
+        showToast('Base64 error: ' + e.message, 'error', 3000);
+      }
+    }
+
+    function urlTransform(encode = true) {
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      const text = editor.value;
+      const isSelection = start !== end;
+      const target = isSelection ? text.substring(start, end) : text;
+      if (!target) return;
+      try {
+        const result = encode ? encodeURIComponent(target) : decodeURIComponent(target);
+        if (isSelection) {
+          editor.value = text.substring(0, start) + result + text.substring(end);
+          editor.setSelectionRange(start, start + result.length);
+        } else {
+          editor.value = result;
+        }
+        updateEditor();
+        showToast(encode ? 'URL Encoded' : 'URL Decoded', 'success', 1800);
+      } catch (e) {
+        showToast('URL error: ' + e.message, 'error', 3000);
+      }
+    }
+
+    function htmlEntityTransform(encode = true) {
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      const text = editor.value;
+      const isSelection = start !== end;
+      const target = isSelection ? text.substring(start, end) : text;
+      if (!target) return;
+      let result;
+      if (encode) {
+        result = target.replace(/&/g, '&amp;')
+                       .replace(/</g, '&lt;')
+                       .replace(/>/g, '&gt;')
+                       .replace(/"/g, '&quot;')
+                       .replace(/'/g, '&#039;');
+      } else {
+        const doc = new DOMParser().parseFromString(target, 'text/html');
+        result = doc.documentElement.textContent;
+      }
+      if (isSelection) {
+        editor.value = text.substring(0, start) + result + text.substring(end);
+        editor.setSelectionRange(start, start + result.length);
+      } else {
+        editor.value = result;
+      }
+      updateEditor();
+      showToast(encode ? 'Encoded HTML entities' : 'Decoded HTML entities', 'success', 1800);
+    }
+
+    function stripHtmlTags() {
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      const text = editor.value;
+      const isSelection = start !== end;
+      const target = isSelection ? text.substring(start, end) : text;
+      const result = target.replace(/<[^>]*>?/gm, '');
+      if (isSelection) {
+        editor.value = text.substring(0, start) + result + text.substring(end);
+        editor.setSelectionRange(start, start + result.length);
+      } else {
+        editor.value = result;
+      }
+      updateEditor();
+      showToast('Stripped HTML tags', 'success', 1800);
+    }
+
+    function toggleLineEndings() {
+      const text = editor.value;
+      if (text.includes('\r\n')) {
+        editor.value = text.replace(/\r\n/g, '\n');
+        showToast('Converted Line Endings to Unix (LF)', 'info', 2000);
+      } else {
+        editor.value = text.replace(/\n/g, '\r\n');
+        showToast('Converted Line Endings to Windows (CRLF)', 'info', 2000);
+      }
+      updateEditor();
+    }
+
+    // --- CSV / Markdown Table Interoperability ---
+    function promptCsvToMarkdown() {
+      const bodyHTML = `
+        <div class="form-group">
+          <label class="form-label" for="csv-import-text">Paste CSV / TSV Data (Comma or Tab Separated):</label>
+          <textarea class="form-input" id="csv-import-text" rows="8" placeholder="Name, Role, Status&#10;Alice, Lead, Active&#10;Bob, Architect, Online&#10;Charlie, Security, Verifying"></textarea>
+          <div class="form-hint">First row will become the Markdown table header. Automatically calculates column alignments.</div>
+        </div>
+        <div class="modal-btn-row">
+          <button class="modal-btn-cancel" onclick="closeModal()">Cancel</button>
+          <button class="modal-btn" onclick="executeCsvToMarkdown()">Convert to Markdown Table</button>
+        </div>
+      `;
+      openModal('📊 Convert CSV to Markdown Table', bodyHTML, false);
+      setTimeout(() => {
+        const ta = document.getElementById('csv-import-text');
+        if (ta) ta.focus();
+      }, 50);
+    }
+
+    function parseCsvRows(raw) {
+      const lines = raw.trim().split('\n').filter(l => l.trim().length > 0);
+      return lines.map(line => {
+        const delimiter = line.includes('\t') ? '\t' : ',';
+        let row = [];
+        let cur = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const c = line[i];
+          if (c === '"') {
+            inQuotes = !inQuotes;
+          } else if (c === delimiter && !inQuotes) {
+            row.push(cur.trim());
+            cur = '';
+          } else {
+            cur += c;
+          }
+        }
+        row.push(cur.trim());
+        return row;
+      });
+    }
+
+    function executeCsvToMarkdown() {
+      const ta = document.getElementById('csv-import-text');
+      if (!ta || !ta.value.trim()) {
+        showToast('Please provide CSV data', 'warning');
+        return;
+      }
+      const rows = parseCsvRows(ta.value);
+      if (rows.length === 0) return;
+
+      const numCols = Math.max(...rows.map(r => r.length));
+      rows.forEach(r => {
+        while (r.length < numCols) r.push('');
+      });
+
+      const colWidths = Array(numCols).fill(3);
+      rows.forEach(r => {
+        r.forEach((cell, i) => {
+          colWidths[i] = Math.max(colWidths[i], cell.length);
+        });
+      });
+
+      let mdTable = '';
+      const header = rows[0];
+      mdTable += '| ' + header.map((h, i) => h.padEnd(colWidths[i])).join(' | ') + ' |\n';
+      mdTable += '| ' + colWidths.map(w => '-'.repeat(w)).join(' | ') + ' |\n';
+      for (let i = 1; i < rows.length; i++) {
+        mdTable += '| ' + rows[i].map((c, idx) => c.padEnd(colWidths[idx])).join(' | ') + ' |\n';
+      }
+
+      closeModal();
+
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      editor.value = editor.value.substring(0, start) + mdTable + editor.value.substring(end);
+      editor.selectionStart = editor.selectionEnd = start + mdTable.length;
+      updateEditor();
+      showToast(`Generated Markdown table with ${rows.length - 1} rows!`, 'success', 2500);
+    }
+
+    function convertMarkdownTableToCsv() {
+      const text = editor.value;
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      const targetText = (start !== end) ? text.substring(start, end) : text;
+
+      const lines = targetText.split('\n').filter(l => l.trim().startsWith('|') && l.trim().endsWith('|'));
+      if (lines.length < 2) {
+        showToast('No Markdown table detected (lines must start and end with |)', 'warning', 3000);
+        return;
+      }
+
+      const parsedRows = [];
+      lines.forEach(l => {
+        const trimmed = l.trim();
+        if (/^\|(\s*:?-+:?\s*\|)+$/.test(trimmed)) return;
+        const cells = trimmed.slice(1, -1).split('|').map(c => c.trim());
+        parsedRows.push(cells);
+      });
+
+      if (parsedRows.length === 0) {
+        showToast('Could not extract table rows', 'warning');
+        return;
+      }
+
+      const csvLines = parsedRows.map(row => {
+        return row.map(cell => {
+          if (cell.includes(',') || cell.includes('"') || cell.includes('\n')) {
+            return `"${cell.replace(/"/g, '""')}"`;
+          }
+          return cell;
+        }).join(',');
+      });
+
+      const csvContent = csvLines.join('\n');
+      downloadFile(csvContent, (tabs[activeTabIndex]?.name || 'table').replace(/\.[^/.]+$/, '') + '.csv', 'text/csv');
+      showToast(`Exported ${parsedRows.length} rows as CSV!`, 'success', 2500);
+    }
+
+    // --- Global Multi-Tab Search Index ---
+    function openGlobalTabSearch() {
+      const currentQuery = document.getElementById('find-input')?.value || '';
+      const bodyHTML = `
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div class="find-row">
+            <input type="text" class="find-input" id="global-search-input" value="${escapeHtml(currentQuery)}" placeholder="Search across all open tabs..." oninput="executeGlobalTabSearch()" onkeydown="if(event.key==='Enter') executeGlobalTabSearch()">
+            <button class="find-toggle" id="btn-glob-case" onclick="toggleGlobOpt('matchCase')">Aa</button>
+            <button class="find-toggle" id="btn-glob-regex" onclick="toggleGlobOpt('regex')">.*</button>
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+            <span id="global-search-stats">Indexing tabs...</span>
+            <span style="font-size:10px;">Click result card to jump directly to tab & line</span>
+          </div>
+          <div class="search-tabs-container" id="global-search-results"></div>
+        </div>
+      `;
+      openModal('🌐 Search in All Open Tabs', bodyHTML, false);
+      setTimeout(() => {
+        const inp = document.getElementById('global-search-input');
+        if (inp) {
+          inp.focus();
+          inp.select();
+          executeGlobalTabSearch();
+        }
+      }, 50);
+    }
+
+    let globOpts = { matchCase: false, regex: false };
+    function toggleGlobOpt(opt) {
+      globOpts[opt] = !globOpts[opt];
+      document.getElementById(opt === 'matchCase' ? 'btn-glob-case' : 'btn-glob-regex')
+              ?.classList.toggle('active', globOpts[opt]);
+      executeGlobalTabSearch();
+    }
+
+    function executeGlobalTabSearch() {
+      const inp = document.getElementById('global-search-input');
+      const stats = document.getElementById('global-search-stats');
+      const container = document.getElementById('global-search-results');
+      if (!inp || !container) return;
+
+      const query = inp.value;
+      if (!query) {
+        stats.innerText = `Ready. ${tabs.length} tabs open.`;
+        container.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:20px;">Type a keyword above to search through all open tabs.</div>`;
+        return;
+      }
+
+      if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
+        tabs[activeTabIndex].content = editor.value;
+      }
+
+      let regex;
+      try {
+        const flags = globOpts.matchCase ? 'g' : 'gi';
+        regex = globOpts.regex ? new RegExp(query, flags) : new RegExp(escapeRegExp(query), flags);
+      } catch (e) {
+        stats.innerText = "Invalid Regular Expression";
+        container.innerHTML = `<div style="color:#ef4444; padding:12px;">Invalid Regex: ${escapeHtml(e.message)}</div>`;
+        return;
+      }
+
+      let totalMatches = 0;
+      let matchedTabs = 0;
+      let resultsHtml = '';
+
+      tabs.forEach((tab, tabIdx) => {
+        const content = (tabIdx === activeTabIndex) ? editor.value : (tab.content || '');
+        const lines = content.split('\n');
+        const tabMatches = [];
+
+        lines.forEach((line, lineIdx) => {
+          regex.lastIndex = 0;
+          if (regex.test(line)) {
+            regex.lastIndex = 0;
+            const highlighted = escapeHtml(line).replace(new RegExp(globOpts.regex ? query : escapeRegExp(query), globOpts.matchCase ? 'g' : 'gi'), m => `<span class="search-hl">${m}</span>`);
+            tabMatches.push({ lineIdx, text: highlighted });
+            totalMatches++;
+          }
+        });
+
+        if (tabMatches.length > 0) {
+          matchedTabs++;
+          const tagBadges = (tab.tags || []).map(t => `<span class="tab-tag-badge">#${escapeHtml(t)}</span>`).join(' ');
+          resultsHtml += `
+            <div class="search-tab-group">
+              <div class="search-tab-header">
+                <span>${tab.isPinned ? '📌 ' : ''}${escapeHtml(tab.name)} ${tagBadges}</span>
+                <span style="font-size:11px; opacity:0.8;">${tabMatches.length} match${tabMatches.length === 1 ? '' : 'es'}</span>
+              </div>
+              <div class="search-tab-items">
+                ${tabMatches.map(m => `
+                  <div class="search-tab-item" onclick="jumpToTabMatch(${tabIdx}, ${m.lineIdx})">
+                    <span class="search-line-num">Ln ${m.lineIdx + 1}</span>
+                    <span class="search-line-text">${m.text}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+      });
+
+      stats.innerText = `Found ${totalMatches} occurrence(s) across ${matchedTabs} tab(s)`;
+      if (totalMatches === 0) {
+        container.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:20px;">No occurrences of "${escapeHtml(query)}" found in any open tabs.</div>`;
+      } else {
+        container.innerHTML = resultsHtml;
+      }
+    }
+
+    function jumpToTabMatch(tabIdx, lineIdx) {
+      closeModal();
+      switchTab(tabIdx);
+      goToLineDirect(lineIdx + 1);
+      showToast(`Jumped to ${tabs[tabIdx].name} line ${lineIdx + 1}`, 'info', 2000);
+    }
+
+    // --- Live Markdown & HTML Preview Engine ---
+    let previewActive = false;
+    let previewMaximized = false;
+
+    function togglePreview() {
+      previewActive = !previewActive;
+      const pane = document.getElementById('preview-pane');
+      const btn = document.getElementById('btn-quick-preview');
+      if (btn) btn.classList.toggle('active', previewActive);
+
+      if (pane) {
+        pane.style.display = previewActive ? 'flex' : 'none';
+      }
+      if (previewActive) {
+        updatePreview();
+        showToast('Live preview opened (Alt+P to toggle)', 'info', 1800);
+      } else {
+        showToast('Live preview closed', 'info', 1500);
+      }
+    }
+
+    function togglePreviewMaximize() {
+      previewMaximized = !previewMaximized;
+      const pane = document.getElementById('preview-pane');
+      const maxBtn = document.getElementById('btn-preview-max');
+      if (pane) pane.classList.toggle('full', previewMaximized);
+      if (maxBtn) maxBtn.innerText = previewMaximized ? '❐' : '⛶';
+    }
+
+    function parseMarkdown(md) {
+      if (!md) return '<p style="color:var(--text-muted); font-style:italic;">Empty document</p>';
+
+      let text = md;
+      if (text.startsWith('---')) {
+        const end = text.indexOf('---', 3);
+        if (end !== -1) {
+          text = text.substring(end + 3).trim();
+        }
+      }
+
+      const codeBlocks = [];
+      text = text.replace(/```([a-zA-Z0-9]*)\n([\s\S]*?)```/g, (match, lang, code) => {
+        const id = `__CODE_BLOCK_${codeBlocks.length}__`;
+        codeBlocks.push({ lang, code: escapeHtml(code.trimEnd()) });
+        return id;
+      });
+
+      text = text.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
+      text = text.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+      text = text.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+      text = text.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+      text = text.replace(/^(?:---|\*\*\*|___)\s*$/gim, '<hr>');
+      text = text.replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>');
+      text = text.replace(/^- \[ \] (.*$)/gim, '<li class="preview-task"><input type="checkbox" disabled> <span>$1</span></li>');
+      text = text.replace(/^- \[x\] (.*$)/gim, '<li class="preview-task"><input type="checkbox" checked disabled> <span style="text-decoration:line-through; opacity:0.7;">$1</span></li>');
+      text = text.replace(/^\* (.*$)/gim, '<li>$1</li>');
+      text = text.replace(/^- (.*$)/gim, '<li>$1</li>');
+      text = text.replace(/^\d+\. (.*$)/gim, '<li>$1</li>');
+
+      const tableRegex = /((?:\|[^\n]+\|\r?\n)+)/g;
+      text = text.replace(tableRegex, (tbl) => {
+        const lines = tbl.trim().split('\n');
+        if (lines.length < 2) return tbl;
+        let html = '<table>';
+        lines.forEach((l, idx) => {
+          if (/^\|(\s*:?-+:?\s*\|)+$/.test(l.trim())) return;
+          const cells = l.trim().slice(1, -1).split('|').map(c => c.trim());
+          if (idx === 0) {
+            html += '<thead><tr>' + cells.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+          } else {
+            html += '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
+          }
+        });
+        html += '</tbody></table>';
+        return html;
+      });
+
+      text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      text = text.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+      text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      text = text.replace(/_([^_]+)_/g, '<em>$1</em>');
+      text = text.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+      text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+      text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:var(--accent-hover);">$1</a>');
+
+      text = text.split('\n\n').map(p => {
+        const tr = p.trim();
+        if (tr.startsWith('<h') || tr.startsWith('<pre') || tr.startsWith('<table') || tr.startsWith('<blockquote') || tr.startsWith('<hr') || tr.startsWith('<li') || tr.startsWith('__CODE_BLOCK_')) {
+          return tr;
+        }
+        return `<p>${tr.replace(/\n/g, '<br>')}</p>`;
+      }).join('\n');
+
+      codeBlocks.forEach((cb, idx) => {
+        const badge = cb.lang ? `<div style="font-size:10px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">${escapeHtml(cb.lang)}</div>` : '';
+        text = text.replace(`__CODE_BLOCK_${idx}__`, `<pre>${badge}<code>${cb.code}</code></pre>`);
+      });
+
+      return text;
+    }
+
+    function updatePreview() {
+      const container = document.getElementById('preview-body');
+      const title = document.getElementById('preview-title');
+      if (!container || !previewActive) return;
+
+      const lang = document.getElementById('lang-selector')?.value || 'plaintext';
+      const text = editor.value;
+      const tabName = tabs[activeTabIndex]?.name || 'Document';
+
+      if (lang === 'html' || tabName.endsWith('.html') || tabName.endsWith('.htm')) {
+        if (title) title.innerHTML = `🌐 HTML Sandbox: <strong>${escapeHtml(tabName)}</strong>`;
+        container.innerHTML = `<iframe style="width:100%; height:100%; min-height:420px; border:none; background:#ffffff; border-radius:6px;" sandbox="allow-scripts" srcdoc="${escapeHtml(text)}"></iframe>`;
+      } else if (lang === 'markdown' || tabName.endsWith('.md') || tabName.endsWith('.markdown')) {
+        if (title) title.innerHTML = `📝 Markdown Preview: <strong>${escapeHtml(tabName)}</strong>`;
+        container.innerHTML = parseMarkdown(text);
+      } else {
+        if (title) title.innerHTML = `📖 Reading View: <strong>${escapeHtml(tabName)}</strong>`;
+        const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+        const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim()).length;
+        container.innerHTML = `
+          <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-glass); border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:11px; display:flex; gap:16px;">
+            <span><strong>Mode:</strong> ${escapeHtml(lang.toUpperCase())}</span>
+            <span><strong>Words:</strong> ${words.toLocaleString()}</span>
+            <span><strong>Paragraphs:</strong> ${paragraphs}</span>
+          </div>
+          <pre style="white-space:pre-wrap; word-break:break-word; font-family:'Consolas', monospace; font-size:13px; line-height:1.6; background:transparent; border:none; padding:0;">${escapeHtml(text)}</pre>
+        `;
       }
     }
 
@@ -2017,10 +3068,32 @@
 
       if (format === 'txt') {
         filename += '.txt';
+      } else if (format === 'md') {
+        filename += '.md';
+        const words = content.trim() === '' ? 0 : content.trim().split(/\s+/).length;
+        const tagList = (tab.tags || []).join(', ');
+        const frontmatter = `---\ntitle: "${tab.name || 'Document'}"\ntags: [${tagList}]\ncreated: "${new Date().toISOString()}"\nwords: ${words}\ngenerator: "KPad Pro 1.6"\n---\n\n`;
+        content = frontmatter + content;
       } else if (format === 'html') {
         filename += '.html';
         mime = 'text/html';
         content = `<!DOCTYPE html>\n<html>\n<head>\n<meta charset="utf-8">\n<title>${escapeHtml(tab.name || 'Document')}</title>\n</head>\n<body>\n<pre>${escapeHtml(content)}</pre>\n</body>\n</html>`;
+      } else if (format === 'html-styled') {
+        filename += '-styled.html';
+        mime = 'text/html';
+        const lines = content.split('\n');
+        const linesHtml = lines.map((l, i) => `<div class="ln"><span class="num">${i + 1}</span><span class="code">${escapeHtml(l) || ' '}</span></div>`).join('');
+        content = `<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<title>${escapeHtml(tab.name || 'Document')} - KPad Pro</title>\n<style>\nbody { font-family: 'Consolas', monospace; background: #0b0f19; color: #f8fafc; padding: 2rem; margin: 0; line-height: 1.6; }\n.header { border-bottom: 2px solid #3b82f6; padding-bottom: 12px; margin-bottom: 20px; font-family: system-ui, sans-serif; }\nh1 { margin: 0 0 6px 0; font-size: 20px; color: #38bdf8; }\n.meta { font-size: 12px; color: #94a3b8; }\n.content { background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 16px; overflow-x: auto; }\n.ln { display: flex; font-size: 13px; }\n.num { width: 48px; color: #475569; user-select: none; text-align: right; padding-right: 14px; flex-shrink: 0; }\n.code { white-space: pre-wrap; word-break: break-all; color: #e2e8f0; }\n@media print { body { background: #fff; color: #000; padding: 0; } .header { border-bottom-color: #000; } h1 { color: #000; } .content { background: #fff; border: 1px solid #ccc; } .num { color: #888; } .code { color: #000; } }\n</style>\n</head>\n<body>\n<div class="header">\n  <h1>${escapeHtml(tab.name || 'Document')}</h1>\n  <div class="meta">Exported from KPad Pro • ${new Date().toLocaleString()} • ${content.length} chars • ${lines.length} lines</div>\n</div>\n<div class="content">\n${linesHtml}\n</div>\n</body>\n</html>`;
+      } else if (format === 'csv') {
+        filename += '.csv';
+        mime = 'text/csv';
+        const lines = content.split('\n');
+        const csvRows = ['"Line","Length","Content"'];
+        lines.forEach((l, i) => {
+          const escaped = l.replace(/"/g, '""');
+          csvRows.push(`${i + 1},${l.length},"${escaped}"`);
+        });
+        content = csvRows.join('\n');
       } else if (format === 'json') {
         if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
           tabs[activeTabIndex].content = editor.value;
@@ -2028,10 +3101,65 @@
         filename = 'kpad_session_backup.json';
         mime = 'application/json';
         content = JSON.stringify(tabs, null, 2);
+      } else if (format === 'workspace') {
+        if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
+          tabs[activeTabIndex].content = editor.value;
+        }
+        filename = 'kpad-workspace.json';
+        mime = 'application/json';
+        const snapshot = {
+          version: "1.6.0",
+          app: "KPad Pro",
+          timestamp: new Date().toISOString(),
+          activeTabIndex: activeTabIndex,
+          wordWrap: wordWrap,
+          fontSize: currentFontSize,
+          theme: document.documentElement.getAttribute('data-theme') || 'dark',
+          tabs: tabs.map(t => ({
+            name: t.name,
+            content: t.content,
+            path: t.path,
+            language: t.language,
+            tags: t.tags || [],
+            isPinned: Boolean(t.isPinned)
+          }))
+        };
+        content = JSON.stringify(snapshot, null, 2);
       }
 
       downloadFile(content, filename, mime);
       showToast(`Exported document as ${format.toUpperCase()}`, 'success');
+    }
+
+    function importWorkspaceSnapshot() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json,*';
+      input.onchange = async e => {
+        if (e.target.files && e.target.files.length > 0) {
+          try {
+            const file = e.target.files[0];
+            const raw = await file.text();
+            const data = JSON.parse(raw);
+            const importedTabs = Array.isArray(data) ? data : (data.tabs || []);
+            if (importedTabs.length === 0) {
+              showToast('No tabs found in workspace snapshot', 'warning');
+              return;
+            }
+            tabs = [];
+            importedTabs.forEach(t => {
+              createTab(t.name || 'Untitled', t.content || '', t.path || null, t.language || 'plaintext', t.tags || [], Boolean(t.isPinned));
+            });
+            const targetActive = typeof data.activeTabIndex === 'number' && data.activeTabIndex < tabs.length ? data.activeTabIndex : 0;
+            switchTab(targetActive);
+            saveSession();
+            showToast(`Restored workspace with ${tabs.length} tabs!`, 'success', 3000);
+          } catch (err) {
+            showToast('Failed to parse workspace file: ' + err.message, 'error');
+          }
+        }
+      };
+      input.click();
     }
 
     // Drag & Drop File Import
@@ -2198,7 +3326,9 @@
           name: t.name,
           content: t.content,
           path: t.path,
-          language: t.language
+          language: t.language,
+          tags: t.tags || [],
+          isPinned: Boolean(t.isPinned)
         }));
         localStorage.setItem('kpad_session_tabs', JSON.stringify(sessionData));
         localStorage.setItem('kpad_session_active', activeTabIndex);
@@ -2212,7 +3342,7 @@
         if (raw) {
           const savedTabs = JSON.parse(raw);
           if (Array.isArray(savedTabs) && savedTabs.length > 0) {
-            savedTabs.forEach(t => createTab(t.name, t.content, t.path, t.language));
+            savedTabs.forEach(t => createTab(t.name, t.content, t.path, t.language, t.tags || [], Boolean(t.isPinned)));
             switchTab(active < savedTabs.length ? active : 0);
             return true;
           }
@@ -2242,13 +3372,17 @@
         { label: 'Previous / Next Tab', key: 'Ctrl + PgUp / PgDn' },
         { label: 'Close Tab (Mouse)', key: 'Middle-Click' },
         { label: 'Save (VFS / Local)', key: 'Ctrl + S' },
-        { label: 'Open Local File', key: 'Ctrl + O' }
+        { label: 'Open Local File', key: 'Ctrl + O' },
+        { label: 'Export Workspace Snapshot', key: 'Ctrl + Shift + S' }
       ];
 
       const editShortcuts = [
+        { label: 'Search in All Open Tabs', key: 'Ctrl + Shift + F' },
+        { label: 'Toggle Live Preview (MD/HTML)', key: 'Alt + P' },
         { label: 'Go to Line Number', key: 'Ctrl + G' },
-        { label: 'Find in Document', key: 'Ctrl + F' },
-        { label: 'Find & Replace', key: 'Ctrl + H' },
+        { label: 'Find in Active Tab', key: 'Ctrl + F' },
+        { label: 'Find & Replace in Tab', key: 'Ctrl + H' },
+        { label: 'Tag Active Tab', key: 'Alt + T' },
         { label: 'Toggle Line Comment', key: 'Ctrl + /' },
         { label: 'Indent / Outdent', key: 'Tab / Shift+Tab' },
         { label: 'Copy All Document', key: 'Alt+C / Ctrl+Shift+C' },
@@ -2262,7 +3396,7 @@
         { label: 'Encrypt Document (AES-256)', key: 'Ctrl + E' },
         { label: 'Decrypt Document (Unlock)', key: 'Ctrl + D' },
         { label: 'Help & Shortcuts Guide', key: 'F1 / Alt + H' },
-        { label: 'Close Dialog / Search', key: 'Escape' }
+        { label: 'Close Dialog / Search / Preview', key: 'Escape' }
       ];
       
       let html = '<div>';
@@ -2505,6 +3639,10 @@
           switchTab(next);
         }
       }
+      if (e.ctrlKey && e.shiftKey && (e.key === 'f' || e.key === 'F')) { e.preventDefault(); openGlobalTabSearch(); }
+      if (e.ctrlKey && e.shiftKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); exportDocument('workspace'); }
+      if (e.altKey && (e.key === 'p' || e.key === 'P')) { e.preventDefault(); togglePreview(); }
+      if (e.altKey && (e.key === 't' || e.key === 'T')) { e.preventDefault(); promptAddTag(); }
       if (e.ctrlKey && (e.key === 'f' || e.key === 'F')) { e.preventDefault(); openFind(false); }
       if (e.ctrlKey && (e.key === 'h' || e.key === 'H')) { e.preventDefault(); openFind(true); }
       if (e.ctrlKey && (e.key === 'g' || e.key === 'G')) { e.preventDefault(); promptGoToLine(); }
@@ -2605,8 +3743,9 @@
         if (path) { loadVFSFile(path); return; }
       }
       if (!loadSession()) {
-        createTab("Welcome", "Welcome to KPad Pro!\n\nPress F1 or click Help for shortcuts and guide.\n", null, "plaintext");
+        createTab("Welcome.md", "# Welcome to KPad Pro\n\nHigh-performance multi-tab text and code workstation.\n\n## Quick Features\n- 🏷️ **Tab Tags & Pinning:** Organize documents with tags (Alt+T) and pin essential tabs.\n- 🌐 **Global Tab Search:** Search across all open tabs instantly (Ctrl+Shift+F).\n- 👁️ **Live Markdown Preview:** Real-time side-by-side preview (Alt+P).\n- 📊 **Table Interoperability:** Convert CSV to Markdown tables and back.\n- 🔒 **AES-256 Security:** Military-grade document lock and .kpad.enc containers.\n- 📦 **Workspace Snapshots:** Full session export/restore (Ctrl+Shift+S).\n\nPress F1 anytime for the full shortcuts and user guide!\n", null, "markdown", ["welcome", "notes"]);
       }
+      renderTagBar();
       if (!localStorage.getItem('kpad_tutorialSeen')) {
         setTimeout(() => showOnboarding(false), 250);
       } else {
