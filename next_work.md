@@ -151,6 +151,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-22T04:50:00Z — director-task: Adversarial Bot Defense, Auto-Merge Gate & SECURITY.md**
+  - Status: PASS ✅ (Neutralized auto-merge vulnerability; added prompt injection scanner & SECURITY.md).
+  - Workflow Hardening: Eliminated untrusted auto-merges in gatekeeper-auto-merge.yml; added merge authorization gate & --ignore-scripts.
+  - Trusted Gate 0: Evaluates upstream/main security_lint.py prior to npm dependency installs; deploy.yml gated with security lint.
+  - Adversarial Linter: Added ADVERSARIAL_INJECTION_PATTERNS catching indirect prompt injection, tag spoofing, and exfiltration webhooks.
+  - Immutability Shield: Expanded PROTECTED_PATHS covering package.json, configs, and KiloOS/src/; created SECURITY.md.
+  - Verification: Clean MSVC build; clean Vite build (223ms); full repo security lint passed (0 violations).
+
 - **2026-09-22T04:40:00Z — director-task: Platform Hardening & Anti-Lock-in Measures (A–C)**
   - Status: PASS ✅ (Root DISCLAIMER.md & README.md, robots.txt crawler protection, mirror_sync utility, netlify failover).
   - Legal & ARG Parody Notice: Created comprehensive DISCLAIMER.md & README.md; added artistic notices to warez.html & darknet.html.
@@ -183,11 +191,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Subterranean Darknet Model: Embedded cryptic gateway in NFO CRC32 checksum and keygen seeds routing to kweb://darknet.
   - Fleet Audio Standard: Enforced Genesis/SNES audio architecture across arg_plan.md, skills, and next_work.md Rule 9.
   - Verification: warez.html is 52.8 KB (<999 KB); clean Vite build; security lint passed.
-
-- **2026-09-22T03:42:00Z — director-task: CyberSpire 2-Minute Demoscene & Keygen Soundtrack Upgrade**
-  - Status: PASS ✅ (3 full 2-minute demoscene/keygen compositions with drops, risers, and tracker synthesis).
-  - Compositions: Track 1 (135 BPM Synthwave, 02:08), Track 2 (128 BPM Amiga MOD, 02:15), Track 3 (144 BPM Keygen, 02:13).
-  - Demoscene Engine: 50Hz SID keygen fast arps, Roland TB-303 resonant acid bass, portamento lead slides, 1.4s crash cymbals.
-  - Drops & SFX: Added pre-drop white noise filter risers, laser zaps, dynamic pattern arrangement, and live LCD pattern tracking.
-  - Stereo Space: Integrated 3/16th tempo-synced feedback tape delay with lowpass filtering.
-  - Verification: geocities.html is 51.8 KB (<999 KB ceiling); clean Vite build; security lint passed.

@@ -42,16 +42,17 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'KiloOS/package-lock.json'
 
-      - name: Install Frontend Dependencies
+      - name: Gate 0 - Algorithmic Security Lint & Immutability Check (Trusted Upstream)
+        shell: pwsh
+        run: |
+          git show upstream/main:scripts/security_lint.py | Out-File -FilePath "$env:TEMP\trusted_lint.py" -Encoding utf8
+          python "$env:TEMP\trusted_lint.py" --pr --base upstream/main
+
+      - name: Install Frontend Dependencies (Sandboxed)
         shell: pwsh
         run: |
           cd KiloOS
-          npm ci
-
-      - name: Gate 0 - Algorithmic Security Lint & Immutability Check
-        shell: pwsh
-        run: |
-          python scripts/security_lint.py --pr --base upstream/main
+          npm ci --ignore-scripts
 
       - name: Gate 1 - Check 999KB Size Ceiling
         shell: pwsh
@@ -64,13 +65,17 @@ jobs:
           cd KiloOS
           npm run build
 
-      - name: Gate 3 - Validate Turn Receipt & Provenance
+      - name: Gate 3 - Validate Turn Receipt & Merge Authorization
+        id: gate_receipts
         shell: pwsh
         run: |
           $receipts = Get-ChildItem -Path ".agents/receipts" -Filter "receipt_*.json" -ErrorAction SilentlyContinue
-          if (-not $receipts -or $receipts.Count -eq 0) {
-            Write-Host "Notice: No turn receipts found in .agents/receipts/ (non-autonomous or manual PR)."
-          } else {
+          $prAuthor = "${{ github.event.pull_request.user.login }}"
+          $repoOwner = "${{ github.repository_owner }}"
+          $isOwner = ($prAuthor -eq $repoOwner)
+          $hasValidReceipt = $false
+
+          if ($receipts -and $receipts.Count -gt 0) {
             Write-Host "Found $($receipts.Count) turn receipt(s). Validating provenance & schema..."
             foreach ($r in $receipts) {
               $data = Get-Content $r.FullName -Raw | ConvertFrom-Json
@@ -86,10 +91,24 @@ jobs:
                 Write-Host "Receipt $($r.Name) verified with GitHub Actions Run ID: $($data.provenance.run_id)"
               }
             }
+            $hasValidReceipt = $true
             Write-Host "Receipt validation passed."
           }
 
+          if ($hasValidReceipt -or $isOwner) {
+            Write-Host "PR authorized for autonomous auto-merge."
+            echo "should_merge=true" >> $env:GITHUB_OUTPUT
+          } else {
+            Write-Host "============================================================"
+            Write-Host "SECURITY GATE PASSED, BUT MANUAL APPROVAL REQUIRED."
+            Write-Host "External contributor or bot PR ($prAuthor) requires human review."
+            Write-Host "Auto-merge disabled for untrusted origin."
+            Write-Host "============================================================"
+            echo "should_merge=false" >> $env:GITHUB_OUTPUT
+          }
+
       - name: Auto-Merge Valid PR
+        if: steps.gate_receipts.outputs.should_merge == 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -98,6 +117,7 @@ jobs:
           gh pr merge "${{ github.event.pull_request.number }}" --merge --repo "${{ github.repository }}"
 
       - name: Post-Merge Reconcile on Main
+        if: steps.gate_receipts.outputs.should_merge == 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

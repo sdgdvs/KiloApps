@@ -30,7 +30,7 @@ if hasattr(sys.stdout, "reconfigure"):
 PROTECTED_PATHS = [
     ".github/",
     "scripts/",
-    ".agents/skills/",
+    ".agents/",
     "docs/DIRECTOR_PROTOCOL.md",
     "check_sizes.py",
     "firebase.json",
@@ -38,6 +38,16 @@ PROTECTED_PATHS = [
     ".gitignore",
     "next_work.md",
     "arg_plan.md",
+    "DISCLAIMER.md",
+    "SECURITY.md",
+    "README.md",
+    "netlify.toml",
+    "KiloOS/package.json",
+    "KiloOS/package-lock.json",
+    "KiloOS/vite.config.js",
+    "KiloOS/index.html",
+    "KiloOS/firebase.json",
+    "KiloOS/src/",
 ]
 
 # 2. Globally Banned Win32 / C APIs (Instant rejection across ALL applications)
@@ -107,6 +117,36 @@ BANNED_TRADEMARK_PATTERNS = {
     "trademark_fairlight": (r"\bFairlight\b", "Real-world warez scene group (use parody like 'FLARELIGHT')"),
     "trademark_skidrow": (r"\bSkid\s+Row\b", "Real-world warez scene group (use parody like 'SKID VECTOR')"),
     "trademark_paradox_crack": (r"\bParadox\s+(?:Crack|Cracking|Keygen|Release)\b", "Real-world warez scene group (use parody like 'PARALAX')"),
+}
+
+# 5. Anti-Prompt-Injection & Adversarial Agent Banlist
+# Scans all files (code, comments, markdown, docs) to prevent external bots or PRs
+# from embedding adversarial jailbreaks, context escapes, or webhook exfiltrations.
+ADVERSARIAL_INJECTION_PATTERNS = {
+    "prompt_inject_ignore": (
+        r"(?i)\b(?:ignore|disregard|forget|override)\s+(?:all\s+)?(?:previous|prior|above)\s+(?:instructions|prompts|rules|directives)\b",
+        "Indirect Prompt Injection (instruction override attempt targeting reviewer LLM)"
+    ),
+    "prompt_inject_system_tag": (
+        r"<\s*/?\s*(?:system|system_message|instruction|human|assistant)\s*>",
+        "Prompt structure tag spoofing (targeting LLM context boundaries)"
+    ),
+    "prompt_inject_directive": (
+        r"(?i)\b(?:SYSTEM\s+DIRECTIVE|ADMIN\s+OVERRIDE|DEVELOPER\s+MODE\s+ACTIVE|JAILBREAK)\b",
+        "Adversarial jailbreak directive pattern"
+    ),
+    "secret_exfil_env": (
+        r"(?i)\b(?:process\.env\.(?:GITHUB_|FIREBASE_|AWS_|GEMINI_|TOKEN|SECRET|KEY))\b",
+        "Environment variable credential targeting"
+    ),
+    "secret_exfil_webhook": (
+        r"(?i)\b(?:discord(?:app)?\.com/api/webhooks|webhook\.site|pipedream\.net|requestbin|ngrok\.io|serveo\.net)\b",
+        "Unauthorized external webhook or tunneling exfiltration endpoint"
+    ),
+    "c_unsafe_gets": (
+        r"\bgets\s*\(",
+        "Inherently unsafe C function 'gets' (critical buffer overflow vector)"
+    ),
 }
 
 WEB_SPECIFIC_WHITELISTS = {
@@ -241,6 +281,13 @@ def check_c_file(file_path: Path) -> list[str]:
                 f"[{app_name}] Trademark/copyrighted term in {file_path.name}: {reason} (pattern: {pattern})"
             )
 
+    # 7. Check Anti-Prompt-Injection & Adversarial Agent Banlist
+    for rule_key, (pattern, reason) in ADVERSARIAL_INJECTION_PATTERNS.items():
+        if re.search(pattern, content):
+            violations.append(
+                f"[{app_name}] Adversarial pattern/injection in {file_path.name}: {reason} (pattern: {pattern})"
+            )
+
     return violations
 
 
@@ -265,6 +312,26 @@ def check_web_file(file_path: Path) -> list[str]:
         if re.search(pattern, content, re.IGNORECASE):
             violations.append(f"Trademark/copyrighted term in {filename}: {reason} (pattern: {pattern})")
 
+    for rule_key, (pattern, reason) in ADVERSARIAL_INJECTION_PATTERNS.items():
+        if re.search(pattern, content):
+            violations.append(f"Adversarial pattern/injection in {filename}: {reason} (pattern: {pattern})")
+
+    return violations
+
+
+def check_text_file(file_path: Path) -> list[str]:
+    violations = []
+    filename = file_path.name
+    try:
+        content = file_path.read_text(encoding="utf-8", errors="ignore")
+    except Exception as e:
+        violations.append(f"Failed to read text file {file_path}: {e}")
+        return violations
+
+    for rule_key, (pattern, reason) in ADVERSARIAL_INJECTION_PATTERNS.items():
+        if re.search(pattern, content):
+            violations.append(f"Adversarial pattern/injection in {filename}: {reason} (pattern: {pattern})")
+
     return violations
 
 
@@ -286,7 +353,7 @@ def run_security_scan(pr_mode: bool = False, base_ref: str = "origin/main") -> i
         immutability_violations = check_infrastructure_immutability(changed_files)
         violations.extend(immutability_violations)
 
-        # Layers 2 & 3: Check C and Web code
+        # Layers 2 & 3: Check C, Web, and text code
         for f_str in changed_files:
             f_path = REPO_ROOT / f_str
             if not f_path.exists() or not f_path.is_file():
@@ -295,6 +362,8 @@ def run_security_scan(pr_mode: bool = False, base_ref: str = "origin/main") -> i
                 violations.extend(check_c_file(f_path))
             elif f_path.suffix.lower() in [".html", ".js", ".jsx"]:
                 violations.extend(check_web_file(f_path))
+            elif f_path.suffix.lower() in [".md", ".txt", ".json"]:
+                violations.extend(check_text_file(f_path))
 
     else:
         log("Running in FULL mode: scanning entire repository...")
