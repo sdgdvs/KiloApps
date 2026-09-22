@@ -112,6 +112,7 @@ const APPS = [
   { id: 'kbookmark', title: 'KBookmark', url: '/apps/kbookmark.html', exeUrl: '/exe/KBookmark.exe', icon: '/assets/icons/kbookmark.ico', w: 980, h: 700, folder: 'Office' },
   { id: 'khash', title: 'KHash', url: '/apps/khash.html', exeUrl: '/exe/KHash.exe', icon: '/assets/icons/khash.ico', w: 920, h: 680, folder: 'System' },
   { id: 'krss', title: 'KRSS', url: '/apps/krss.html', exeUrl: '/exe/KRSS.exe', icon: '/assets/icons/krss.ico', w: 1040, h: 700, folder: 'Network' },
+  { id: 'kclip', title: 'KClip', url: '/apps/kclip.html', exeUrl: '/exe/KClip.exe', icon: '/assets/icons/kclip.ico', w: 980, h: 700, folder: 'System' },
   { id: 'kdirector', title: 'Director Console', url: '/apps/kdirector.html', icon: '/assets/icons/kdirector.ico', w: 1080, h: 720, folder: 'System' }
 ];
 

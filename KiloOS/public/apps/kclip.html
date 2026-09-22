@@ -1,0 +1,2318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KClip - Retro Clipboard & Snippet Workstation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --surface: #111827;
+      --surface-hover: #1e293b;
+      --card-bg: #151e32;
+      --card-selected: #1e2c4a;
+      --border: #23324d;
+      --border-focus: #06b6d4;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --primary: #06b6d4; /* Cyber Cyan */
+      --primary-hover: #0891b2;
+      --accent: #f59e0b; /* Amber */
+      --accent-hover: #d97706;
+      --gold: #eab308;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --font-mono: 'Consolas', 'Courier New', monospace;
+      --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --pin-color: #eab308;
+    }
+
+    [data-theme="win98"] {
+      --bg: #008080;
+      --surface: #c0c0c0;
+      --surface-hover: #dfdfdf;
+      --card-bg: #d4d0c8;
+      --card-selected: #000080;
+      --border: #808080;
+      --border-focus: #000080;
+      --text: #000000;
+      --text-muted: #444444;
+      --primary: #000080;
+      --primary-hover: #1010a0;
+      --accent: #b45309;
+      --accent-hover: #92400e;
+      --gold: #b45309;
+      --success: #008000;
+      --warning: #808000;
+      --danger: #800000;
+      --font-mono: 'Fixedsys', 'Lucida Console', monospace;
+      --font-sans: 'Tahoma', 'MS Sans Serif', sans-serif;
+      --pin-color: #b45309;
+    }
+
+    [data-theme="amber"] {
+      --bg: #120e04;
+      --surface: #241c08;
+      --surface-hover: #382c0c;
+      --card-bg: #201806;
+      --card-selected: #44320b;
+      --border: #523e12;
+      --border-focus: #f59e0b;
+      --text: #fbbf24;
+      --text-muted: #b4851c;
+      --primary: #f59e0b;
+      --primary-hover: #d97706;
+      --accent: #fcd34d;
+      --accent-hover: #f59e0b;
+      --gold: #fde047;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #f87171;
+      --font-mono: 'Courier New', monospace;
+      --font-sans: 'Courier New', monospace;
+      --pin-color: #fde047;
+    }
+
+    [data-theme="matrix"] {
+      --bg: #030a04;
+      --surface: #07170a;
+      --surface-hover: #0e2e14;
+      --card-bg: #081a0b;
+      --card-selected: #123819;
+      --border: #144720;
+      --border-focus: #22c55e;
+      --text: #4ade80;
+      --text-muted: #22c55e99;
+      --primary: #22c55e;
+      --primary-hover: #16a34a;
+      --accent: #86efac;
+      --accent-hover: #4ade80;
+      --gold: #facc15;
+      --success: #22c55e;
+      --warning: #eab308;
+      --danger: #ef4444;
+      --font-mono: 'Consolas', 'Courier New', monospace;
+      --font-sans: 'Consolas', sans-serif;
+      --pin-color: #facc15;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* CRT Scanline Overlay */
+    .crt-overlay {
+      pointer-events: none;
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 6px 100%;
+      z-index: 9999;
+      display: none;
+    }
+    body.scanlines-enabled .crt-overlay {
+      display: block;
+    }
+
+    /* Top Command Bar */
+    header.k-header {
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      background: linear-gradient(135deg, var(--primary), #0284c7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      color: #ffffff;
+      font-size: 14px;
+      box-shadow: inset 0 0 4px rgba(0,0,0,0.5);
+    }
+
+    .brand-title {
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-tag {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--primary);
+      font-family: var(--font-mono);
+      font-weight: bold;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: inherit;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-focus);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #0b0f19;
+      border-color: var(--primary-hover);
+      font-weight: 700;
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      color: #ffffff;
+    }
+
+    .btn-accent {
+      background: var(--accent);
+      color: #0b0f19;
+      border-color: var(--accent-hover);
+      font-weight: 700;
+    }
+    .btn-accent:hover {
+      background: var(--accent-hover);
+      color: #ffffff;
+    }
+
+    .btn-danger {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+    .btn-danger:hover {
+      background: var(--danger);
+      color: #ffffff;
+    }
+
+    .btn-sm {
+      padding: 3px 7px;
+      font-size: 11px;
+    }
+
+    /* Subheader Quick Capture & Filter Bar */
+    .capture-bar {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .input-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    .text-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      outline: none;
+      user-select: text;
+    }
+
+    .text-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 1px var(--border-focus);
+    }
+
+    /* Filter Pills */
+    .filter-pills {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+    }
+
+    .pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .pill:hover {
+      color: var(--text);
+      border-color: var(--primary);
+    }
+
+    .pill.active {
+      background: var(--primary);
+      color: #0b0f19;
+      font-weight: bold;
+      border-color: var(--primary-hover);
+    }
+
+    /* Main Workspace Layout */
+    .workspace {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+      position: relative;
+    }
+
+    /* Left Sidebar: Clip Stack */
+    .clip-list-pane {
+      width: 380px;
+      border-right: 2px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .clip-list-header {
+      padding: 6px 10px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .clip-list-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .clip-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: all 0.12s ease;
+      position: relative;
+    }
+
+    .clip-card:hover {
+      border-color: var(--primary);
+      background: var(--surface-hover);
+    }
+
+    .clip-card.selected {
+      border-color: var(--primary);
+      background: var(--card-selected);
+      box-shadow: inset 2px 0 0 var(--primary);
+    }
+
+    .clip-card.pinned {
+      border-left: 3px solid var(--pin-color);
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .card-badge-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .cat-badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--primary);
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+    }
+
+    .card-time {
+      color: var(--text-muted);
+      font-size: 10px;
+      font-family: var(--font-mono);
+    }
+
+    .card-pin-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text-muted);
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+
+    .card-pin-btn:hover {
+      color: var(--gold);
+      background: rgba(234, 179, 8, 0.15);
+    }
+
+    .card-pin-btn.is-pinned {
+      color: var(--gold);
+    }
+
+    .card-snippet {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.35;
+      max-height: 42px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      word-break: break-all;
+      user-select: text;
+    }
+
+    .card-stats {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-family: var(--font-mono);
+      margin-top: 2px;
+    }
+
+    /* Right Pane: Inspector & Transformation Toolbox */
+    .inspector-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      min-width: 0;
+    }
+
+    .inspector-toolbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .inspector-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .view-mode-tabs {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .view-tab {
+      padding: 3px 8px;
+      font-size: 11px;
+      background: var(--card-bg);
+      color: var(--text-muted);
+      border: none;
+      cursor: pointer;
+    }
+
+    .view-tab.active {
+      background: var(--primary);
+      color: #0b0f19;
+      font-weight: bold;
+    }
+
+    /* Transformation Drawer / Quick Toolbox */
+    .transform-toolbox {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+
+    .toolbox-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary);
+      font-family: var(--font-mono);
+      white-space: nowrap;
+    }
+
+    /* Editor / Hex View Area */
+    .inspector-content {
+      flex: 1;
+      position: relative;
+      display: flex;
+      min-height: 0;
+    }
+
+    .clip-editor {
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.5;
+      padding: 12px;
+      border: none;
+      outline: none;
+      resize: none;
+      overflow: auto;
+      user-select: text;
+    }
+
+    .hex-viewer {
+      width: 100%;
+      height: 100%;
+      background: #050811;
+      color: #38bdf8;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.4;
+      padding: 12px;
+      overflow: auto;
+      white-space: pre;
+      user-select: text;
+      display: none;
+    }
+
+    /* Inspector Footer / Live Stats */
+    .inspector-footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 5px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      flex-shrink: 0;
+    }
+
+    .stats-group {
+      display: flex;
+      gap: 12px;
+    }
+
+    .stats-item span {
+      color: var(--primary);
+      font-weight: bold;
+    }
+
+    /* Bottom Status Bar */
+    footer.k-status {
+      background: var(--surface);
+      border-top: 2px solid var(--border);
+      padding: 4px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 6px var(--success);
+    }
+
+    /* Modals & Overlays */
+    .modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(2px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-window {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      border-radius: 6px;
+      width: 540px;
+      max-width: 90vw;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .modal-close:hover {
+      color: var(--danger);
+    }
+
+    .modal-body {
+      padding: 16px;
+      overflow-y: auto;
+      font-size: 13px;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .modal-footer {
+      background: var(--card-bg);
+      border-top: 1px solid var(--border);
+      padding: 8px 14px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* Templates / Macro List in Modal */
+    .macro-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .macro-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      color: var(--text);
+      transition: border-color 0.15s;
+    }
+    .macro-btn:hover {
+      border-color: var(--primary);
+      background: var(--surface-hover);
+    }
+    .macro-name {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--primary);
+      font-family: var(--font-mono);
+    }
+    .macro-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Notification Toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 20px;
+      background: var(--surface);
+      border: 1px solid var(--primary);
+      border-left: 4px solid var(--primary);
+      color: var(--text);
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+      z-index: 2000;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.2s ease;
+      pointer-events: none;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Win98 Theme Custom Overrides */
+    [data-theme="win98"] .btn,
+    [data-theme="win98"] .clip-card,
+    [data-theme="win98"] .modal-window,
+    [data-theme="win98"] .text-input {
+      border-radius: 0;
+      border-style: outset;
+      border-width: 2px;
+    }
+    [data-theme="win98"] .btn:active,
+    [data-theme="win98"] .clip-card.selected {
+      border-style: inset;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CRT Scanline Effect Overlay -->
+  <div class="crt-overlay"></div>
+
+  <!-- Command Header -->
+  <header class="k-header">
+    <div class="brand-group">
+      <div class="brand-icon">KC</div>
+      <div class="brand-title">KClip</div>
+      <span class="brand-tag">v1.0.0</span>
+      <span class="brand-tag" id="labelMilestone">Milestone #99</span>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-primary" id="btnCaptureSystem" title="Capture from Windows Clipboard">
+        📋 Capture Clip
+      </button>
+      <button class="btn" id="btnOpenTemplates" title="Snippet & Macro Library">
+        ⚡ Snippets
+      </button>
+      <button class="btn" id="btnExportJson" title="Export Backup JSON">
+        💾 Export
+      </button>
+      <button class="btn" id="btnImportJson" title="Import Backup JSON">
+        📂 Import
+      </button>
+      <input type="file" id="fileImportJson" accept=".json" style="display: none;">
+      <button class="btn" id="btnQuickSave" title="QuickSave State (F5)">
+        F5 Save
+      </button>
+      <button class="btn" id="btnQuickLoad" title="QuickLoad State (F9)">
+        F9 Load
+      </button>
+      <button class="btn" id="btnToggleAudio" title="Mute/Unmute FM Synthesizer">
+        🔊 SFX: ON
+      </button>
+      <button class="btn" id="btnSettings" title="Workstation Settings">
+        ⚙️ Settings
+      </button>
+      <button class="btn" id="btnHelp" title="Quick Guide & Keybindings (F1)">
+        ❓ Help
+      </button>
+    </div>
+  </header>
+
+  <!-- Quick Input & Category Filters -->
+  <section class="capture-bar">
+    <div class="input-wrap">
+      <input type="text" id="inputQuickAdd" class="text-input" placeholder="Type or paste to add new clip immediately... (Press Enter)">
+    </div>
+    <button class="btn btn-accent btn-sm" id="btnAddClip">
+      + Add Clip
+    </button>
+    <div style="width: 1px; height: 20px; background: var(--border); margin: 0 4px;"></div>
+    <div class="input-wrap" style="max-width: 220px;">
+      <input type="text" id="inputSearch" class="text-input" placeholder="🔍 Search clips... (Ctrl+F)">
+    </div>
+    <div class="filter-pills" id="filterPills">
+      <button class="pill active" data-cat="all">All</button>
+      <button class="pill" data-cat="pinned">⭐ Pinned</button>
+      <button class="pill" data-cat="code">Code</button>
+      <button class="pill" data-cat="url">URLs</button>
+      <button class="pill" data-cat="json">JSON</button>
+      <button class="pill" data-cat="text">Text</button>
+      <button class="pill" data-cat="secret">ARG/Lore</button>
+    </div>
+  </section>
+
+  <!-- Main Workstation Layout -->
+  <main class="workspace">
+    <!-- Left Column: Clips List -->
+    <aside class="clip-list-pane">
+      <div class="clip-list-header">
+        <span id="clipCountLabel">CLIPBOARD STACK (5 items)</span>
+        <button class="btn btn-danger btn-sm" id="btnClearUnpinned" title="Clear all unpinned clips">
+          Clear Unpinned
+        </button>
+      </div>
+      <div class="clip-list-scroll" id="clipListContainer">
+        <!-- Rendered clip cards will appear here -->
+      </div>
+    </aside>
+
+    <!-- Right Column: Inspector & Operations -->
+    <section class="inspector-pane">
+      <!-- Inspector Command Bar -->
+      <div class="inspector-toolbar">
+        <div class="inspector-actions">
+          <button class="btn btn-primary" id="btnCopyCurrent" title="Copy active clip to clipboard (Ctrl+Shift+C)">
+            📋 Copy (Ctrl+C)
+          </button>
+          <button class="btn" id="btnTogglePinCurrent" title="Pin or unpin active clip (P)">
+            ⭐ Pin
+          </button>
+          <button class="btn" id="btnDuplicateCurrent" title="Duplicate clip in stack">
+            📄 Duplicate
+          </button>
+          <button class="btn btn-danger" id="btnDeleteCurrent" title="Delete active clip (Del)">
+            🗑️ Delete
+          </button>
+          <button class="btn" id="btnDownloadTxt" title="Save clip to local text file">
+            💾 Save .txt
+          </button>
+        </div>
+
+        <div class="view-mode-tabs">
+          <button class="view-tab active" id="tabViewText">Raw Text</button>
+          <button class="view-tab" id="tabViewHex">Hex Dump</button>
+        </div>
+      </div>
+
+      <!-- Quick Text Transformations Bar -->
+      <div class="transform-toolbox">
+        <span class="toolbox-label">TRANSFORM:</span>
+        <button class="btn btn-sm" data-action="upper" title="Convert to UPPERCASE">UPPER</button>
+        <button class="btn btn-sm" data-action="lower" title="Convert to lowercase">lower</button>
+        <button class="btn btn-sm" data-action="title" title="Convert to Title Case">Title Case</button>
+        <button class="btn btn-sm" data-action="camel" title="Convert to camelCase">camelCase</button>
+        <button class="btn btn-sm" data-action="snake" title="Convert to snake_case">snake_case</button>
+        <button class="btn btn-sm" data-action="trim" title="Trim whitespace & empty edges">Trim</button>
+        <button class="btn btn-sm" data-action="strip_html" title="Strip HTML tags">Strip HTML</button>
+        <button class="btn btn-sm" data-action="base64_encode" title="Encode Base64">B64 Enc</button>
+        <button class="btn btn-sm" data-action="base64_decode" title="Decode Base64">B64 Dec</button>
+        <button class="btn btn-sm" data-action="url_encode" title="URL Percent Encode">URL Enc</button>
+        <button class="btn btn-sm" data-action="url_decode" title="URL Decode">URL Dec</button>
+        <button class="btn btn-sm" data-action="json_format" title="Prettify JSON">JSON Pretty</button>
+        <button class="btn btn-sm" data-action="json_minify" title="Minify JSON">JSON Min</button>
+        <button class="btn btn-sm" data-action="rot13" title="ROT13 Cipher">ROT13</button>
+        <button class="btn btn-sm" data-action="reverse" title="Reverse characters">Reverse</button>
+      </div>
+
+      <!-- Text / Hex Display Area -->
+      <div class="inspector-content">
+        <textarea id="editorClipContent" class="clip-editor" placeholder="Select or enter clip content here..."></textarea>
+        <div id="hexViewerContainer" class="hex-viewer"></div>
+      </div>
+
+      <!-- Live Inspector Readout -->
+      <div class="inspector-footer">
+        <div class="stats-group">
+          <div class="stats-item">Chars: <span id="statChars">0</span></div>
+          <div class="stats-item">Words: <span id="statWords">0</span></div>
+          <div class="stats-item">Lines: <span id="statLines">0</span></div>
+          <div class="stats-item">Bytes: <span id="statBytes">0 B</span></div>
+          <div class="stats-item">Type: <span id="statType">None</span></div>
+        </div>
+        <div>
+          CRC32: <span id="statChecksum" style="color: var(--primary);">00000000</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Bottom Workstation Status Bar -->
+  <footer class="k-status">
+    <div class="status-left">
+      <span><span class="status-indicator"></span> SOVEREIGN WORKSTATION READY</span>
+      <span id="statusBufferInfo">Buffer: 5 clips (0 pinned)</span>
+    </div>
+    <div>
+      <span>KClip v1.0.0 | Project Echo #99 | KiloApps Fleet</span>
+    </div>
+  </footer>
+
+  <!-- Start Splash Screen Modal (Mandatory) -->
+  <div class="modal-backdrop" id="modalSplash">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>📋</span> KClip Sovereign Workstation v1.0.0
+        </div>
+      </div>
+      <div class="modal-body">
+        <div style="text-align: center; padding: 10px 0;">
+          <div style="font-size: 32px; margin-bottom: 8px;">📋⚡💾</div>
+          <h2 style="color: var(--primary); margin-bottom: 4px;">KClip 1999</h2>
+          <p style="color: var(--text-muted); font-size: 13px;">
+            The High-Speed Clipboard History, Transformation & Snippet Engine.
+          </p>
+          <div style="display: inline-block; margin-top: 8px; padding: 4px 10px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-mono); font-size: 11px; color: var(--gold);">
+            Milestone #99: Penultimate App before KMatrix ARG Climax
+          </div>
+        </div>
+        <p>
+          KClip captures, categorizes, and organizes text clips, code blocks, URLs, and secrets.
+          Transform text on the fly, deploy parameterized snippet templates, and persist your
+          entire workspace with sovereign F5 QuickSave and F9 QuickLoad.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="btnSplashHelp">📖 Help & Shortcuts</button>
+        <button class="btn btn-primary" id="btnSplashStart">🚀 Launch Workstation</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- First-Run Onboarding Tutorial Modal (Mandatory) -->
+  <div class="modal-backdrop" id="modalTutorial">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>🎓</span> KClip Quick-Start Tutorial
+        </div>
+        <button class="modal-close" id="btnCloseTutorial">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Welcome to KClip!</strong> Here is how to master your clipboard workflow:</p>
+        <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+          <li><strong>📋 Capture & Paste:</strong> Press <em>Capture Clip</em> or paste directly into KClip with <code>Ctrl+V</code>. You can also type quick clips in the top bar.</li>
+          <li><strong>⭐ Pin Protection:</strong> Click the pin button or press <code>P</code> on any clip. Pinned clips are permanently preserved when clearing unpinned history.</li>
+          <li><strong>⚡ Real-time Transforms:</strong> Use the Transform bar to instantly convert between UPPERCASE, lowercase, JSON formatting, Base64, and URL encoding.</li>
+          <li><strong>⚡ Quick Snippets:</strong> Access pre-made templates (ISO timestamps, GUIDs, C/HTML boilerplate) via the <em>Snippets</em> button.</li>
+          <li><strong>💾 Sovereign Persistence:</strong> Press <code>F5</code> anytime to Quicksave or <code>F9</code> to Quickload. Your state is preserved in local sovereign storage.</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btnFinishTutorial">Got it, Let's Go!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Snippets / Template Library Modal -->
+  <div class="modal-backdrop" id="modalTemplates">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>⚡</span> Reusable Snippets & Macros
+        </div>
+        <button class="modal-close" id="btnCloseTemplates">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-muted); font-size: 12px;">
+          Click any macro below to insert it directly into your clipboard history stack:
+        </p>
+        <div class="macro-grid" id="macroGridContainer">
+          <!-- Dynamically populated macros -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="btnDismissTemplates">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help & Shortcuts Modal -->
+  <div class="modal-backdrop" id="modalHelp">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>❓</span> KClip Help & Reference
+        </div>
+        <button class="modal-close" id="btnCloseHelp">&times;</button>
+      </div>
+      <div class="modal-body">
+        <h4 style="color: var(--primary);">Keyboard Shortcuts</h4>
+        <table style="width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 12px;">
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 4px; color: var(--gold);">F1</td>
+            <td style="padding: 4px;">Open Help / Documentation</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 4px; color: var(--gold);">F5</td>
+            <td style="padding: 4px;">QuickSave Workstation State</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 4px; color: var(--gold);">F9</td>
+            <td style="padding: 4px;">QuickLoad Saved State</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 4px; color: var(--gold);">Up / Down</td>
+            <td style="padding: 4px;">Navigate clip history</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 4px; color: var(--gold);">Enter</td>
+            <td style="padding: 4px;">Copy selected clip</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 4px; color: var(--gold);">P</td>
+            <td style="padding: 4px;">Toggle Pin on selected clip</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 4px; color: var(--gold);">Del</td>
+            <td style="padding: 4px;">Delete selected clip</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 4px; color: var(--gold);">Ctrl+F</td>
+            <td style="padding: 4px;">Focus search input</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 4px; color: var(--gold);">Esc</td>
+            <td style="padding: 4px;">Dismiss any open modal / Clear search</td>
+          </tr>
+        </table>
+
+        <h4 style="color: var(--primary); margin-top: 10px;">Classification Engine</h4>
+        <p style="font-size: 12px; color: var(--text-muted);">
+          KClip automatically detects clip formats including URLs, JSON structures, Hex color codes,
+          C/JS source code snippets, and Project Echo classified transmissions.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btnDismissHelp">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-backdrop" id="modalSettings">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>⚙️</span> Workstation Settings
+        </div>
+        <button class="modal-close" id="btnCloseSettings">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div>
+            <label style="display: block; font-weight: 600; margin-bottom: 4px;">Aesthetic Theme</label>
+            <select id="selectTheme" class="text-input">
+              <option value="cyber">Cyber Dark (Default)</option>
+              <option value="win98">Windows 98 Classic Slate</option>
+              <option value="amber">Amber CRT Terminal</option>
+              <option value="matrix">Matrix Green CRT</option>
+            </select>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" id="checkScanlines">
+            <label for="checkScanlines">Enable Authentic CRT Scanline Simulation</label>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" id="checkAutoSave" checked>
+            <label for="checkAutoSave">Auto-Save State on Workspace Exit</label>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" id="checkAudio" checked>
+            <label for="checkAudio">Enable Sega Genesis / SNES Procedural Audio</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btnSaveSettings">Save Preferences</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div class="toast" id="toastNotice">Notification message</div>
+
+  <!-- Workstation Core Logic -->
+  <script>
+    (function() {
+      'use strict';
+
+      // --- 1. PROCEDURAL SOUND ENGINE (Yamaha YM2612 FM / SNES Warm Standard) ---
+      let audioCtx = null;
+      let soundEnabled = true;
+
+      function initAudio() {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+          }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      }
+
+      function playTone(freq, duration, type = 'sine', gain = 0.15) {
+        if (!soundEnabled) return;
+        try {
+          initAudio();
+          if (!audioCtx) return;
+
+          const osc = audioCtx.createOscillator();
+          const gainNode = audioCtx.createGain();
+
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+          gainNode.gain.setValueAtTime(gain, audioCtx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+          osc.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+
+          osc.start();
+          osc.stop(audioCtx.currentTime + duration);
+        } catch (e) {
+          // Graceful fallback for non-audio environments
+        }
+      }
+
+      function playSoundEffect(name) {
+        if (!soundEnabled) return;
+        switch (name) {
+          case 'click':
+            playTone(800, 0.04, 'square', 0.08);
+            break;
+          case 'copy':
+            // High crisp 2-tone FM chime
+            playTone(1200, 0.08, 'sine', 0.2);
+            setTimeout(function() { playTone(1800, 0.12, 'triangle', 0.22); }, 50);
+            break;
+          case 'capture':
+            playTone(520, 0.06, 'sawtooth', 0.15);
+            setTimeout(function() { playTone(1040, 0.09, 'sine', 0.18); }, 40);
+            break;
+          case 'pin':
+            // Golden shimmer
+            playTone(1500, 0.1, 'sine', 0.2);
+            setTimeout(function() { playTone(2200, 0.15, 'sine', 0.25); }, 60);
+            break;
+          case 'delete':
+            playTone(320, 0.12, 'sawtooth', 0.12);
+            break;
+          case 'transform':
+            // Ascending data sweep
+            playTone(700, 0.05, 'triangle', 0.15);
+            setTimeout(function() { playTone(1050, 0.05, 'triangle', 0.15); }, 35);
+            setTimeout(function() { playTone(1400, 0.08, 'sine', 0.18); }, 70);
+            break;
+          case 'save':
+            playTone(660, 0.08, 'sine', 0.18);
+            setTimeout(function() { playTone(880, 0.08, 'sine', 0.18); }, 60);
+            setTimeout(function() { playTone(1320, 0.16, 'triangle', 0.2); }, 120);
+            break;
+          case 'load':
+            playTone(440, 0.08, 'triangle', 0.18);
+            setTimeout(function() { playTone(660, 0.08, 'triangle', 0.18); }, 60);
+            setTimeout(function() { playTone(990, 0.15, 'sine', 0.2); }, 120);
+            break;
+          case 'error':
+            playTone(200, 0.2, 'sawtooth', 0.2);
+            break;
+        }
+      }
+
+      // --- 2. DATA STORE & MODELS ---
+      const DEFAULT_CLIPS = [
+        {
+          id: 'clip_1',
+          content: '/* KClip Sovereign Clipboard Workstation v1.0 */\n#define KCLIP_MAX_STACK 128\nvoid FlushClipboardHistory(void);',
+          category: 'code',
+          pinned: true,
+          timestamp: '1999-09-22 00:00:00'
+        },
+        {
+          id: 'clip_2',
+          content: 'kweb://portal/search?q=kiloos+hypermedia',
+          category: 'url',
+          pinned: true,
+          timestamp: '1999-09-22 01:15:20'
+        },
+        {
+          id: 'clip_3',
+          content: '{\n  "system": "KiloOS",\n  "app": "KClip",\n  "milestone": 99,\n  "status": "SOVEREIGN_VERIFIED"\n}',
+          category: 'json',
+          pinned: false,
+          timestamp: '1999-09-22 02:30:10'
+        },
+        {
+          id: 'clip_4',
+          content: '#06b6d4',
+          category: 'color',
+          pinned: false,
+          timestamp: '1999-09-22 03:00:00'
+        },
+        {
+          id: 'clip_5',
+          content: '// [PROJECT ECHO TRANSMISSION - NODE 0x99]\n// CLASSIFIED BUFFER OFFSET 0x10199904\n// "The 100th node approaches. KMatrix awakens."\n// Relic Passkey: ECHO-1999-ARCHITECT',
+          category: 'secret',
+          pinned: true,
+          timestamp: '1999-09-22 04:00:00'
+        }
+      ];
+
+      const MACRO_TEMPLATES = [
+        {
+          id: 'macro_now',
+          name: 'ISO Timestamp',
+          desc: 'Current ISO 8601 UTC timestamp',
+          generator: function() { return new Date().toISOString(); }
+        },
+        {
+          id: 'macro_guid',
+          name: 'UUID / GUID',
+          desc: 'Generate unique identifier token',
+          generator: function() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+              const r = Math.random() * 16 | 0;
+              const v = c === 'x' ? r : (r & 0x3 | 0x8);
+              return v.toString(16);
+            });
+          }
+        },
+        {
+          id: 'macro_c',
+          name: 'Win32 C Entrypoint',
+          desc: 'Minimal standalone Win32 C boilerplate',
+          generator: function() {
+            return '#include <windows.h>\n\nvoid MainEntry(void) {\n    ExitProcess(0);\n}\n';
+          }
+        },
+        {
+          id: 'macro_html',
+          name: 'Retro HTML4 Boilerplate',
+          desc: 'Authentic 1999 HTML4 document template',
+          generator: function() {
+            return '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n<html>\n<head>\n  <title>New Page</title>\n</head>\n<body bgcolor="#008080" text="#FFFFFF">\n  <h1>Welcome to CyberSpace</h1>\n</body>\n</html>';
+          }
+        },
+        {
+          id: 'macro_lorem',
+          name: 'Lorem Ipsum',
+          desc: 'Standard mock paragraph',
+          generator: function() {
+            return 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.';
+          }
+        },
+        {
+          id: 'macro_echo',
+          name: 'Echo ARG Relic',
+          desc: 'Project Echo Node 0x99 Transmission',
+          generator: function() {
+            return '// [PROJECT ECHO - RELIC #99]\n// ACCESS-CODE: ECHO-1999-ARCHITECT\n// READY FOR KMATRIX #100\n';
+          }
+        }
+      ];
+
+      let state = {
+        clips: [],
+        selectedClipId: null,
+        activeFilter: 'all',
+        searchQuery: '',
+        viewMode: 'text', // 'text' or 'hex'
+        theme: 'cyber',
+        scanlines: false,
+        autoSave: true,
+        sound: true
+      };
+
+      // --- 3. CRC32 / CHECKSUM HELPER ---
+      function computeCrc32(str) {
+        let crc = 0 ^ (-1);
+        for (let i = 0; i < str.length; i++) {
+          crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF];
+        }
+        return ((crc ^ (-1)) >>> 0).toString(16).toUpperCase().padStart(8, '0');
+      }
+
+      const crcTable = (function() {
+        let c;
+        const table = [];
+        for (let n = 0; n < 256; n++) {
+          c = n;
+          for (let k = 0; k < 8; k++) {
+            c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+          }
+          table[n] = c;
+        }
+        return table;
+      })();
+
+      // --- 4. FORMAT CLASSIFIER ---
+      function classifyContent(text) {
+        if (!text) return 'text';
+        const trimmed = text.trim();
+        if (trimmed.includes('ECHO-1999-ARCHITECT') || trimmed.includes('PROJECT ECHO')) {
+          return 'secret';
+        }
+        if (/^#(?:[0-9a-fA-F]{3}){1,2}$/.test(trimmed)) {
+          return 'color';
+        }
+        if (/^(?:https?:\/\/|kweb:\/\/|ftp:\/\/)/i.test(trimmed)) {
+          return 'url';
+        }
+        if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+          try {
+            JSON.parse(trimmed);
+            return 'json';
+          } catch (e) {}
+        }
+        if (trimmed.includes('function') || trimmed.includes('#include') || trimmed.includes('void ') ||
+            trimmed.includes('class ') || trimmed.includes('import ') || trimmed.includes('<html') ||
+            trimmed.includes('const ') || trimmed.includes('let ') || trimmed.includes('var ')) {
+          return 'code';
+        }
+        return 'text';
+      }
+
+      // --- 5. UI TOAST NOTIFICATION ---
+      function showToast(msg) {
+        const toast = document.getElementById('toastNotice');
+        if (!toast) return;
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(function() {
+          toast.classList.remove('show');
+        }, 2200);
+      }
+
+      // --- 6. CLIP MANAGEMENT ---
+      function addClip(content, pinned = false) {
+        if (!content || !content.trim()) return null;
+        const cat = classifyContent(content);
+        const newClip = {
+          id: 'clip_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+          content: content,
+          category: cat,
+          pinned: pinned,
+          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19)
+        };
+
+        // If exact content already exists, move it to top
+        const existingIdx = state.clips.findIndex(function(c) { return c.content === content; });
+        if (existingIdx !== -1) {
+          const old = state.clips.splice(existingIdx, 1)[0];
+          newClip.pinned = old.pinned || pinned;
+        }
+
+        state.clips.unshift(newClip);
+        state.selectedClipId = newClip.id;
+
+        renderClipList();
+        updateInspector();
+        updateStatus();
+        return newClip;
+      }
+
+      function getSelectedClip() {
+        if (!state.selectedClipId && state.clips.length > 0) {
+          state.selectedClipId = state.clips[0].id;
+        }
+        return state.clips.find(function(c) { return c.id === state.selectedClipId; });
+      }
+
+      function deleteSelectedClip() {
+        const sel = getSelectedClip();
+        if (!sel) return;
+        const idx = state.clips.findIndex(function(c) { return c.id === sel.id; });
+        if (idx !== -1) {
+          state.clips.splice(idx, 1);
+          state.selectedClipId = state.clips.length > 0 ? state.clips[Math.min(idx, state.clips.length - 1)].id : null;
+          playSoundEffect('delete');
+          showToast('Clip deleted');
+          renderClipList();
+          updateInspector();
+          updateStatus();
+        }
+      }
+
+      function clearUnpinnedClips() {
+        const pinnedOnly = state.clips.filter(function(c) { return c.pinned; });
+        const removed = state.clips.length - pinnedOnly.length;
+        state.clips = pinnedOnly;
+        if (!state.clips.some(function(c) { return c.id === state.selectedClipId; })) {
+          state.selectedClipId = state.clips.length > 0 ? state.clips[0].id : null;
+        }
+        playSoundEffect('delete');
+        showToast('Cleared ' + removed + ' unpinned clip(s)');
+        renderClipList();
+        updateInspector();
+        updateStatus();
+      }
+
+      function togglePinSelected() {
+        const sel = getSelectedClip();
+        if (!sel) return;
+        sel.pinned = !sel.pinned;
+        playSoundEffect('pin');
+        showToast(sel.pinned ? 'Clip Pinned ⭐' : 'Clip Unpinned');
+        renderClipList();
+        updateInspector();
+        updateStatus();
+      }
+
+      // --- 7. CLIPBOARD ACCESS ---
+      function copyToClipboard(text) {
+        if (!text) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function() {
+            playSoundEffect('copy');
+            showToast('Copied to system clipboard! 📋');
+          }).catch(function() {
+            fallbackCopy(text);
+          });
+        } else {
+          fallbackCopy(text);
+        }
+      }
+
+      function fallbackCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          playSoundEffect('copy');
+          showToast('Copied to clipboard! 📋');
+        } catch (err) {
+          playSoundEffect('error');
+          showToast('Failed to copy');
+        }
+        document.body.removeChild(ta);
+      }
+
+      function captureFromClipboard() {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          navigator.clipboard.readText().then(function(text) {
+            if (text && text.trim()) {
+              addClip(text, false);
+              playSoundEffect('capture');
+              showToast('Captured new clip from clipboard! 📋');
+            } else {
+              showToast('Clipboard is empty or contains non-text');
+            }
+          }).catch(function(err) {
+            // Permission denied or headless
+            promptManualCapture();
+          });
+        } else {
+          promptManualCapture();
+        }
+      }
+
+      function promptManualCapture() {
+        const sample = prompt('Paste clipboard text to capture:', '');
+        if (sample && sample.trim()) {
+          addClip(sample, false);
+          playSoundEffect('capture');
+          showToast('Clip captured! 📋');
+        }
+      }
+
+      // --- 8. TRANSFORMATION ENGINE ---
+      function applyTransform(action) {
+        const sel = getSelectedClip();
+        if (!sel) return;
+        let content = sel.content;
+        let transformed = content;
+
+        switch (action) {
+          case 'upper':
+            transformed = content.toUpperCase();
+            break;
+          case 'lower':
+            transformed = content.toLowerCase();
+            break;
+          case 'title':
+            transformed = content.replace(/\w\S*/g, function(txt) {
+              return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+            });
+            break;
+          case 'camel':
+            transformed = content.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
+              if (+match === 0) return '';
+              return index === 0 ? match.toLowerCase() : match.toUpperCase();
+            }).replace(/\s+/g, '');
+            break;
+          case 'snake':
+            transformed = content.trim().replace(/\s+/g, '_').toLowerCase();
+            break;
+          case 'trim':
+            transformed = content.split('\n').map(function(l) { return l.trim(); }).filter(Boolean).join('\n');
+            break;
+          case 'strip_html':
+            transformed = content.replace(/<[^>]*>?/gm, '');
+            break;
+          case 'base64_encode':
+            try {
+              transformed = btoa(unescape(encodeURIComponent(content)));
+            } catch (e) {
+              showToast('Base64 encoding error');
+              return;
+            }
+            break;
+          case 'base64_decode':
+            try {
+              transformed = decodeURIComponent(escape(atob(content.trim())));
+            } catch (e) {
+              showToast('Invalid Base64 payload');
+              return;
+            }
+            break;
+          case 'url_encode':
+            transformed = encodeURIComponent(content);
+            break;
+          case 'url_decode':
+            try {
+              transformed = decodeURIComponent(content);
+            } catch (e) {
+              showToast('Invalid URL encoding');
+              return;
+            }
+            break;
+          case 'json_format':
+            try {
+              const obj = JSON.parse(content);
+              transformed = JSON.stringify(obj, null, 2);
+            } catch (e) {
+              showToast('Invalid JSON structure');
+              return;
+            }
+            break;
+          case 'json_minify':
+            try {
+              const obj = JSON.parse(content);
+              transformed = JSON.stringify(obj);
+            } catch (e) {
+              showToast('Invalid JSON structure');
+              return;
+            }
+            break;
+          case 'rot13':
+            transformed = content.replace(/[a-zA-Z]/g, function(c) {
+              const base = c <= 'Z' ? 65 : 97;
+              return String.fromCharCode(base + (c.charCodeAt(0) - base + 13) % 26);
+            });
+            break;
+          case 'reverse':
+            transformed = content.split('').reverse().join('');
+            break;
+        }
+
+        if (transformed !== content) {
+          sel.content = transformed;
+          sel.category = classifyContent(transformed);
+          playSoundEffect('transform');
+          showToast('Applied transformation: ' + action);
+          renderClipList();
+          updateInspector();
+          updateStatus();
+        }
+      }
+
+      // --- 9. HEX DUMP GENERATOR ---
+      function generateHexDump(str) {
+        if (!str) return '(empty buffer)';
+        const bytes = [];
+        for (let i = 0; i < str.length; i++) {
+          const code = str.charCodeAt(i);
+          if (code <= 0x7F) {
+            bytes.push(code);
+          } else {
+            const enc = unescape(encodeURIComponent(str[i]));
+            for (let j = 0; j < enc.length; j++) bytes.push(enc.charCodeAt(j));
+          }
+        }
+
+        let lines = [];
+        for (let i = 0; i < bytes.length; i += 16) {
+          const chunk = bytes.slice(i, i + 16);
+          const addr = i.toString(16).toUpperCase().padStart(8, '0');
+          let hexPart = '';
+          let asciiPart = '';
+
+          for (let j = 0; j < 16; j++) {
+            if (j < chunk.length) {
+              hexPart += chunk[j].toString(16).toUpperCase().padStart(2, '0') + ' ';
+              asciiPart += (chunk[j] >= 32 && chunk[j] <= 126) ? String.fromCharCode(chunk[j]) : '.';
+            } else {
+              hexPart += '   ';
+            }
+            if (j === 7) hexPart += ' ';
+          }
+          lines.push(addr + '  ' + hexPart + ' |' + asciiPart + '|');
+        }
+        return lines.join('\n');
+      }
+
+      // --- 10. RENDERING ---
+      function renderClipList() {
+        const container = document.getElementById('clipListContainer');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        let filtered = state.clips;
+        if (state.activeFilter === 'pinned') {
+          filtered = filtered.filter(function(c) { return c.pinned; });
+        } else if (state.activeFilter !== 'all') {
+          filtered = filtered.filter(function(c) { return c.category === state.activeFilter; });
+        }
+
+        if (state.searchQuery) {
+          const q = state.searchQuery.toLowerCase();
+          filtered = filtered.filter(function(c) {
+            return c.content.toLowerCase().includes(q) || c.category.toLowerCase().includes(q);
+          });
+        }
+
+        const countLabel = document.getElementById('clipCountLabel');
+        if (countLabel) {
+          countLabel.textContent = 'CLIPBOARD STACK (' + filtered.length + ' / ' + state.clips.length + ')';
+        }
+
+        if (filtered.length === 0) {
+          const empty = document.createElement('div');
+          empty.style.padding = '20px';
+          empty.style.textAlign = 'center';
+          empty.style.color = 'var(--text-muted)';
+          empty.style.fontSize = '12px';
+          empty.textContent = 'No matching clips in stack.';
+          container.appendChild(empty);
+          return;
+        }
+
+        filtered.forEach(function(clip) {
+          const card = document.createElement('div');
+          card.className = 'clip-card' + (clip.id === state.selectedClipId ? ' selected' : '') + (clip.pinned ? ' pinned' : '');
+          card.dataset.id = clip.id;
+
+          const meta = document.createElement('div');
+          meta.className = 'card-meta';
+
+          const badgeGroup = document.createElement('div');
+          badgeGroup.className = 'card-badge-group';
+
+          const badge = document.createElement('span');
+          badge.className = 'cat-badge';
+          badge.textContent = clip.category;
+          badgeGroup.appendChild(badge);
+
+          const time = document.createElement('span');
+          time.className = 'card-time';
+          time.textContent = clip.timestamp.substring(11, 19);
+          badgeGroup.appendChild(time);
+
+          meta.appendChild(badgeGroup);
+
+          const pinBtn = document.createElement('button');
+          pinBtn.className = 'card-pin-btn' + (clip.pinned ? ' is-pinned' : '');
+          pinBtn.title = clip.pinned ? 'Unpin' : 'Pin to top';
+          pinBtn.innerHTML = clip.pinned ? '⭐' : '☆';
+          pinBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            clip.pinned = !clip.pinned;
+            playSoundEffect('pin');
+            renderClipList();
+            updateInspector();
+            updateStatus();
+          });
+          meta.appendChild(pinBtn);
+
+          card.appendChild(meta);
+
+          const snippet = document.createElement('div');
+          snippet.className = 'card-snippet';
+          snippet.textContent = clip.content;
+          card.appendChild(snippet);
+
+          const stats = document.createElement('div');
+          stats.className = 'card-stats';
+          stats.innerHTML = '<span>' + clip.content.length + ' chars</span><span>' + clip.content.split('\n').length + ' lines</span>';
+          card.appendChild(stats);
+
+          card.addEventListener('click', function() {
+            state.selectedClipId = clip.id;
+            playSoundEffect('click');
+            renderClipList();
+            updateInspector();
+          });
+
+          container.appendChild(card);
+        });
+      }
+
+      function updateInspector() {
+        const sel = getSelectedClip();
+        const editor = document.getElementById('editorClipContent');
+        const hexViewer = document.getElementById('hexViewerContainer');
+        const statChars = document.getElementById('statChars');
+        const statWords = document.getElementById('statWords');
+        const statLines = document.getElementById('statLines');
+        const statBytes = document.getElementById('statBytes');
+        const statType = document.getElementById('statType');
+        const statChecksum = document.getElementById('statChecksum');
+        const btnPin = document.getElementById('btnTogglePinCurrent');
+
+        if (!sel) {
+          if (editor) editor.value = '';
+          if (hexViewer) hexViewer.textContent = '';
+          if (statChars) statChars.textContent = '0';
+          if (statWords) statWords.textContent = '0';
+          if (statLines) statLines.textContent = '0';
+          if (statBytes) statBytes.textContent = '0 B';
+          if (statType) statType.textContent = 'None';
+          if (statChecksum) statChecksum.textContent = '00000000';
+          if (btnPin) btnPin.innerHTML = '⭐ Pin';
+          return;
+        }
+
+        if (editor) editor.value = sel.content;
+        if (hexViewer) hexViewer.textContent = generateHexDump(sel.content);
+
+        const chars = sel.content.length;
+        const words = sel.content.trim() ? sel.content.trim().split(/\s+/).length : 0;
+        const lines = sel.content.split('\n').length;
+        const bytes = new Blob([sel.content]).size;
+
+        if (statChars) statChars.textContent = chars;
+        if (statWords) statWords.textContent = words;
+        if (statLines) statLines.textContent = lines;
+        if (statBytes) statBytes.textContent = bytes < 1024 ? bytes + ' B' : (bytes / 1024).toFixed(1) + ' KB';
+        if (statType) statType.textContent = sel.category.toUpperCase();
+        if (statChecksum) statChecksum.textContent = computeCrc32(sel.content);
+        if (btnPin) btnPin.innerHTML = sel.pinned ? '⭐ Unpin' : '☆ Pin';
+      }
+
+      function updateStatus() {
+        const bufferInfo = document.getElementById('statusBufferInfo');
+        if (bufferInfo) {
+          const pinnedCount = state.clips.filter(function(c) { return c.pinned; }).length;
+          bufferInfo.textContent = 'Buffer: ' + state.clips.length + ' clips (' + pinnedCount + ' pinned)';
+        }
+      }
+
+      // --- 11. STATE PERSISTENCE (QUICKSAVE F5 & QUICKLOAD F9) ---
+      const STORAGE_KEY = 'kclip_save_v1';
+      const SETTINGS_KEY = 'kclip_settings_v1';
+
+      function saveWorkstationState(isQuick = false) {
+        try {
+          const payload = {
+            version: '1.0.0',
+            timestamp: Date.now(),
+            clips: state.clips,
+            selectedClipId: state.selectedClipId,
+            settings: {
+              theme: state.theme,
+              scanlines: state.scanlines,
+              sound: soundEnabled
+            }
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+          if (isQuick) {
+            playSoundEffect('save');
+            showToast('Workstation QuickSaved! [F5] 💾');
+          }
+        } catch (e) {
+          showToast('Storage quota exceeded');
+        }
+      }
+
+      function loadWorkstationState(isQuick = false) {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) {
+            if (isQuick) showToast('No saved state found to load.');
+            return false;
+          }
+          const data = JSON.parse(raw);
+          if (data && Array.isArray(data.clips)) {
+            state.clips = data.clips;
+            state.selectedClipId = data.selectedClipId;
+            if (data.settings) {
+              applyTheme(data.settings.theme || 'cyber');
+              setScanlines(!!data.settings.scanlines);
+              soundEnabled = data.settings.sound !== undefined ? data.settings.sound : true;
+              updateAudioButton();
+            }
+            renderClipList();
+            updateInspector();
+            updateStatus();
+            if (isQuick) {
+              playSoundEffect('load');
+              showToast('Workstation QuickLoaded! [F9] 🚀');
+            }
+            return true;
+          }
+        } catch (e) {
+          if (isQuick) showToast('Failed to load saved state.');
+        }
+        return false;
+      }
+
+      function exportBackupJson() {
+        const payload = {
+          app: 'KClip',
+          version: '1.0.0',
+          exportedAt: new Date().toISOString(),
+          clips: state.clips
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'kclip_backup_' + Date.now() + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        playSoundEffect('save');
+        showToast('Exported backup JSON! 💾');
+      }
+
+      function importBackupJson(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          try {
+            const data = JSON.parse(e.target.result);
+            if (data && Array.isArray(data.clips)) {
+              let added = 0;
+              data.clips.forEach(function(clip) {
+                if (clip.content && !state.clips.some(function(c) { return c.content === clip.content; })) {
+                  state.clips.unshift({
+                    id: 'clip_' + Date.now() + '_' + Math.random(),
+                    content: clip.content,
+                    category: clip.category || classifyContent(clip.content),
+                    pinned: !!clip.pinned,
+                    timestamp: clip.timestamp || new Date().toISOString().replace('T', ' ').substring(0, 19)
+                  });
+                  added++;
+                }
+              });
+              renderClipList();
+              updateInspector();
+              updateStatus();
+              playSoundEffect('load');
+              showToast('Imported ' + added + ' clip(s) from file! 📂');
+            } else {
+              showToast('Invalid KClip JSON backup');
+            }
+          } catch (err) {
+            showToast('JSON parsing failed');
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      function applyTheme(themeName) {
+        state.theme = themeName;
+        if (themeName === 'cyber') {
+          document.body.removeAttribute('data-theme');
+        } else {
+          document.body.setAttribute('data-theme', themeName);
+        }
+        const sel = document.getElementById('selectTheme');
+        if (sel) sel.value = themeName;
+      }
+
+      function setScanlines(enabled) {
+        state.scanlines = enabled;
+        if (enabled) {
+          document.body.classList.add('scanlines-enabled');
+        } else {
+          document.body.classList.remove('scanlines-enabled');
+        }
+        const chk = document.getElementById('checkScanlines');
+        if (chk) chk.checked = enabled;
+      }
+
+      function updateAudioButton() {
+        const btn = document.getElementById('btnToggleAudio');
+        if (btn) {
+          btn.textContent = soundEnabled ? '🔊 SFX: ON' : '🔈 SFX: OFF';
+        }
+      }
+
+      // --- 12. MODAL CONTROLS ---
+      function openModal(id) {
+        const m = document.getElementById(id);
+        if (m) {
+          m.style.display = 'flex';
+          playSoundEffect('click');
+        }
+      }
+
+      function closeModal(id) {
+        const m = document.getElementById(id);
+        if (m) {
+          m.style.display = 'none';
+          playSoundEffect('click');
+        }
+      }
+
+      function closeAllModals() {
+        document.querySelectorAll('.modal-backdrop').forEach(function(m) {
+          m.style.display = 'none';
+        });
+      }
+
+      // --- 13. ONBOARDING & FIRST-RUN SPLASH ---
+      function checkFirstRun() {
+        const tutorialSeen = localStorage.getItem('kclip_tutorialSeen');
+        if (!tutorialSeen) {
+          openModal('modalTutorial');
+        } else {
+          openModal('modalSplash');
+        }
+      }
+
+      // --- 14. EVENT LISTENERS & WIRING ---
+      function initListeners() {
+        // Quick Add Clip
+        const inputQuick = document.getElementById('inputQuickAdd');
+        const btnAdd = document.getElementById('btnAddClip');
+
+        function submitQuickClip() {
+          const val = inputQuick.value;
+          if (val && val.trim()) {
+            addClip(val.trim(), false);
+            inputQuick.value = '';
+            playSoundEffect('capture');
+            showToast('Added clip to stack!');
+          }
+        }
+
+        if (inputQuick) {
+          inputQuick.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') submitQuickClip();
+          });
+        }
+        if (btnAdd) btnAdd.addEventListener('click', submitQuickClip);
+
+        // Search Box
+        const inputSearch = document.getElementById('inputSearch');
+        if (inputSearch) {
+          inputSearch.addEventListener('input', function(e) {
+            state.searchQuery = e.target.value;
+            renderClipList();
+          });
+        }
+
+        // Filter Pills
+        const filterContainer = document.getElementById('filterPills');
+        if (filterContainer) {
+          filterContainer.addEventListener('click', function(e) {
+            const pill = e.target.closest('.pill');
+            if (!pill) return;
+            filterContainer.querySelectorAll('.pill').forEach(function(p) { p.classList.remove('active'); });
+            pill.classList.add('active');
+            state.activeFilter = pill.dataset.cat;
+            playSoundEffect('click');
+            renderClipList();
+          });
+        }
+
+        // Capture from System
+        const btnCapture = document.getElementById('btnCaptureSystem');
+        if (btnCapture) btnCapture.addEventListener('click', captureFromClipboard);
+
+        // QuickSave & QuickLoad
+        const btnQS = document.getElementById('btnQuickSave');
+        const btnQL = document.getElementById('btnQuickLoad');
+        if (btnQS) btnQS.addEventListener('click', function() { saveWorkstationState(true); });
+        if (btnQL) btnQL.addEventListener('click', function() { loadWorkstationState(true); });
+
+        // Copy Current
+        const btnCopy = document.getElementById('btnCopyCurrent');
+        if (btnCopy) {
+          btnCopy.addEventListener('click', function() {
+            const sel = getSelectedClip();
+            if (sel) copyToClipboard(sel.content);
+          });
+        }
+
+        // Toggle Pin Current
+        const btnPinCurrent = document.getElementById('btnTogglePinCurrent');
+        if (btnPinCurrent) btnPinCurrent.addEventListener('click', togglePinSelected);
+
+        // Duplicate Current
+        const btnDup = document.getElementById('btnDuplicateCurrent');
+        if (btnDup) {
+          btnDup.addEventListener('click', function() {
+            const sel = getSelectedClip();
+            if (sel) {
+              addClip(sel.content, sel.pinned);
+              playSoundEffect('copy');
+              showToast('Duplicated clip!');
+            }
+          });
+        }
+
+        // Delete Current
+        const btnDel = document.getElementById('btnDeleteCurrent');
+        if (btnDel) btnDel.addEventListener('click', deleteSelectedClip);
+
+        // Clear Unpinned
+        const btnClear = document.getElementById('btnClearUnpinned');
+        if (btnClear) btnClear.addEventListener('click', clearUnpinnedClips);
+
+        // Download .txt
+        const btnDl = document.getElementById('btnDownloadTxt');
+        if (btnDl) {
+          btnDl.addEventListener('click', function() {
+            const sel = getSelectedClip();
+            if (!sel) return;
+            const blob = new Blob([sel.content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'clip_' + sel.id + '.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            playSoundEffect('save');
+            showToast('Saved clip to file! 💾');
+          });
+        }
+
+        // Live Editor updates
+        const editor = document.getElementById('editorClipContent');
+        if (editor) {
+          editor.addEventListener('input', function(e) {
+            const sel = getSelectedClip();
+            if (sel) {
+              sel.content = e.target.value;
+              sel.category = classifyContent(sel.content);
+              updateInspector();
+              // Update snippet preview in list without full re-render
+              const activeCard = document.querySelector('.clip-card.selected .card-snippet');
+              if (activeCard) activeCard.textContent = sel.content;
+            }
+          });
+        }
+
+        // View Mode Tabs (Text vs Hex)
+        const tabText = document.getElementById('tabViewText');
+        const tabHex = document.getElementById('tabViewHex');
+        const hexViewer = document.getElementById('hexViewerContainer');
+
+        if (tabText && tabHex && editor && hexViewer) {
+          tabText.addEventListener('click', function() {
+            state.viewMode = 'text';
+            tabText.classList.add('active');
+            tabHex.classList.remove('active');
+            editor.style.display = 'block';
+            hexViewer.style.display = 'none';
+            playSoundEffect('click');
+          });
+          tabHex.addEventListener('click', function() {
+            state.viewMode = 'hex';
+            tabHex.classList.add('active');
+            tabText.classList.remove('active');
+            editor.style.display = 'none';
+            hexViewer.style.display = 'block';
+            hexViewer.textContent = generateHexDump(editor.value);
+            playSoundEffect('click');
+          });
+        }
+
+        // Transformations Bar
+        document.querySelectorAll('.transform-toolbox .btn').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            const action = btn.dataset.action;
+            if (action) applyTransform(action);
+          });
+        });
+
+        // Snippets / Templates
+        const btnTemplates = document.getElementById('btnOpenTemplates');
+        if (btnTemplates) {
+          btnTemplates.addEventListener('click', function() {
+            openModal('modalTemplates');
+          });
+        }
+
+        const macroContainer = document.getElementById('macroGridContainer');
+        if (macroContainer) {
+          macroContainer.innerHTML = '';
+          MACRO_TEMPLATES.forEach(function(m) {
+            const b = document.createElement('button');
+            b.className = 'macro-btn';
+            b.innerHTML = '<span class="macro-name">' + m.name + '</span><span class="macro-desc">' + m.desc + '</span>';
+            b.addEventListener('click', function() {
+              const text = m.generator();
+              addClip(text, false);
+              closeModal('modalTemplates');
+              playSoundEffect('capture');
+              showToast('Inserted ' + m.name + ' into stack! ⚡');
+            });
+            macroContainer.appendChild(b);
+          });
+        }
+
+        // Modal Close Buttons
+        document.getElementById('btnCloseTemplates')?.addEventListener('click', function() { closeModal('modalTemplates'); });
+        document.getElementById('btnDismissTemplates')?.addEventListener('click', function() { closeModal('modalTemplates'); });
+        document.getElementById('btnCloseTutorial')?.addEventListener('click', function() {
+          localStorage.setItem('kclip_tutorialSeen', 'true');
+          closeModal('modalTutorial');
+        });
+        document.getElementById('btnFinishTutorial')?.addEventListener('click', function() {
+          localStorage.setItem('kclip_tutorialSeen', 'true');
+          closeModal('modalTutorial');
+        });
+        document.getElementById('btnSplashStart')?.addEventListener('click', function() { closeModal('modalSplash'); });
+        document.getElementById('btnSplashHelp')?.addEventListener('click', function() {
+          closeModal('modalSplash');
+          openModal('modalHelp');
+        });
+        document.getElementById('btnHelp')?.addEventListener('click', function() { openModal('modalHelp'); });
+        document.getElementById('btnCloseHelp')?.addEventListener('click', function() { closeModal('modalHelp'); });
+        document.getElementById('btnDismissHelp')?.addEventListener('click', function() { closeModal('modalHelp'); });
+        document.getElementById('btnSettings')?.addEventListener('click', function() { openModal('modalSettings'); });
+        document.getElementById('btnCloseSettings')?.addEventListener('click', function() { closeModal('modalSettings'); });
+
+        // Settings Modal Save
+        document.getElementById('btnSaveSettings')?.addEventListener('click', function() {
+          const themeSel = document.getElementById('selectTheme');
+          const scanChk = document.getElementById('checkScanlines');
+          const audioChk = document.getElementById('checkAudio');
+          if (themeSel) applyTheme(themeSel.value);
+          if (scanChk) setScanlines(scanChk.checked);
+          if (audioChk) {
+            soundEnabled = audioChk.checked;
+            updateAudioButton();
+          }
+          closeModal('modalSettings');
+          playSoundEffect('save');
+          showToast('Preferences saved!');
+        });
+
+        // Toggle Audio
+        document.getElementById('btnToggleAudio')?.addEventListener('click', function() {
+          soundEnabled = !soundEnabled;
+          updateAudioButton();
+          if (soundEnabled) playSoundEffect('click');
+        });
+
+        // Backup Export / Import
+        document.getElementById('btnExportJson')?.addEventListener('click', exportBackupJson);
+        const fileImport = document.getElementById('fileImportJson');
+        document.getElementById('btnImportJson')?.addEventListener('click', function() {
+          if (fileImport) fileImport.click();
+        });
+        if (fileImport) {
+          fileImport.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+              importBackupJson(e.target.files[0]);
+              e.target.value = '';
+            }
+          });
+        }
+
+        // Global Paste Capture
+        window.addEventListener('paste', function(e) {
+          // If active element is an input or textarea, let normal paste happen unless Shift is pressed
+          if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+            return;
+          }
+          const text = (e.clipboardData || window.clipboardData).getData('text');
+          if (text && text.trim()) {
+            e.preventDefault();
+            addClip(text.trim(), false);
+            playSoundEffect('capture');
+            showToast('Captured paste from system! 📋');
+          }
+        });
+
+        // Global Keyboard Shortcuts
+        window.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape') {
+            closeAllModals();
+            return;
+          }
+          if (e.key === 'F1') {
+            e.preventDefault();
+            openModal('modalHelp');
+            return;
+          }
+          if (e.key === 'F5') {
+            e.preventDefault();
+            saveWorkstationState(true);
+            return;
+          }
+          if (e.key === 'F9') {
+            e.preventDefault();
+            loadWorkstationState(true);
+            return;
+          }
+
+          // If focused in text input, don't trigger navigation shortcuts
+          if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+            return;
+          }
+
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            navigateClip(-1);
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            navigateClip(1);
+          } else if (e.key === 'p' || e.key === 'P') {
+            e.preventDefault();
+            togglePinSelected();
+          } else if (e.key === 'Delete' || e.key === 'Backspace') {
+            e.preventDefault();
+            deleteSelectedClip();
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            const sel = getSelectedClip();
+            if (sel) copyToClipboard(sel.content);
+          } else if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
+            const sel = getSelectedClip();
+            if (sel) copyToClipboard(sel.content);
+          } else if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) {
+            e.preventDefault();
+            const search = document.getElementById('inputSearch');
+            if (search) search.focus();
+          }
+        });
+
+        // Navigation Helper
+        function navigateClip(dir) {
+          if (state.clips.length === 0) return;
+          let idx = state.clips.findIndex(function(c) { return c.id === state.selectedClipId; });
+          if (idx === -1) idx = 0;
+          idx += dir;
+          if (idx < 0) idx = 0;
+          if (idx >= state.clips.length) idx = state.clips.length - 1;
+          state.selectedClipId = state.clips[idx].id;
+          playSoundEffect('click');
+          renderClipList();
+          updateInspector();
+        }
+
+        // Auto-Save on Unload
+        window.addEventListener('beforeunload', function() {
+          if (state.autoSave) saveWorkstationState(false);
+        });
+      }
+
+      // --- 15. BOOTSTRAP WORKSTATION ---
+      function initWorkstation() {
+        const loaded = loadWorkstationState(false);
+        if (!loaded || state.clips.length === 0) {
+          state.clips = DEFAULT_CLIPS.slice();
+          state.selectedClipId = state.clips[0].id;
+        }
+
+        renderClipList();
+        updateInspector();
+        updateStatus();
+        initListeners();
+        checkFirstRun();
+      }
+
+      // Run on DOM ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initWorkstation);
+      } else {
+        initWorkstation();
+      }
+
+    })();
+  </script>
+</body>
+</html>
