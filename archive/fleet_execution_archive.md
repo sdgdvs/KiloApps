@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-21T21:55:00Z — kilo-qa: KTerm**
+  - Status: PASS ✅ (Pass 5 audit: Quicksave/quickload state persistence, tutorial integrity, modal ergonomics, leak cleanup).
+  - State Persistence: Quicksave (F5) and quickload (F9) across web (localStorage) and native (kterm.dat) capturing all tabs, histories, aliases, macros.
+  - Native UI Parity: Added Save [F5] and Load [F9] toolbar buttons; auto-save state on exit (WM_DESTROY) and pagehide/beforeunload.
+  - Tutorial Integrity: Fresh-session onboarding (kterm_tutorialSeen / kterm_tutorial.dat) never interrupting restored save states.
+  - Modal Controls & Ergonomics: Added Enter, Space, and Esc keyboard handlers across Help and Tutorial modals.
+  - Bug Fixes & Cleanliness: Fixed state deserialization DOM clobber bug in switchTab, safe storage quota handling, cleaned corrupted emoji mojibake.
+  - Verification: Clean MSVC Native C build (45.0 KB); Vite web build clean (108.8 KB); all 9 headless CDP test suites and security lint passed.
+
 - **2026-09-21T19:50:00Z — kilo-graphics: KColony**
   - Status: PASS ✅ (Maturity & Skip Protocol enforced; standalone native distribution built and placed).
   - Assessment: Loop 7 mature status verified (19 structures, 13 techs, animated xeno castes, drones, rovers).

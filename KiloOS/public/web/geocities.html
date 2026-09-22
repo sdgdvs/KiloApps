@@ -272,10 +272,11 @@
       <div class="lcd-top">
         <span id="lcdTrackNo">TRACK 01/03</span>
         <span id="lcdBpm">135 BPM</span>
-        <span id="lcdTime">TIME: 00:00</span>
+        <span id="lcdPattern">PAT: 01/18</span>
+        <span id="lcdTime">00:00 / 02:08</span>
         <span id="lcdStatus" style="color:#ffff00;">PAUSED</span>
       </div>
-      <div class="lcd-title" id="lcdTrackTitle">♫ Track 1: CyberSpire Neon Horizon (Synthwave)</div>
+      <div class="lcd-title" id="lcdTrackTitle">♫ Track 1: CyberSpire Neon Horizon • [Pat 01: Intro Ambient Arp] • 135 BPM Demoscene Synth Anthem</div>
       <canvas id="eqCanvas" class="equalizer-canvas" width="400" height="36"></canvas>
     </div>
 
@@ -286,9 +287,9 @@
       <button class="btn-midi" id="btnMidiNext" onclick="nextTrack()">⏭ Next</button>
       
       <select id="midiTrackSelect" class="track-select" onchange="selectTrack(this.value)">
-        <option value="0">01: CyberSpire Neon Horizon (135 BPM - Synthwave)</option>
-        <option value="1">02: Underground Tracker Dreams (126 BPM - Amiga MOD)</option>
-        <option value="2">03: Phosphor Cyberpunk Pulse (140 BPM - Chiptune)</option>
+        <option value="0">01: CyberSpire Neon Horizon (135 BPM - Demoscene Synth Anthem [02:08])</option>
+        <option value="1">02: Underground Tracker Dreams (128 BPM - Amiga ProTracker MOD [02:15])</option>
+        <option value="2">03: Phosphor Cyberpunk Pulse (144 BPM - Hardcore Keygen Chiptune [02:13])</option>
       </select>
 
       <div class="vol-control">
@@ -297,7 +298,7 @@
       </div>
     </div>
     <div style="font-size:10px; color:#38bdf8; font-family:'Courier New', monospace; margin-top:6px; text-align:center;">
-      ★ Authentic Web Audio synthesized chiptune tracker • Zero external plugins • 100% 1999 Cyber Immersion ★
+      ★ Authentic Web Audio synthesized tracker • 2-Minute Full Demoscene Songs with Drops &amp; Sweeps • 100% 1999 Cyber Immersion ★
     </div>
   </div>
 
@@ -401,141 +402,307 @@
 
   loadGuestbook();
 
+// ==========================================
+  // 1999 DEMOSCENE / KEYGEN RETRO TRACKER SYNTHESIZER
+  // 2+ Minute Genuine Demoscene Music Architecture
   // ==========================================
-  // 1999 RETRO MIDI / TRACKER SYNTHESIZER
-  // ==========================================
-  const midiTracks = [
-    {
-      title: "♫ Track 1: CyberSpire Neon Horizon (Synthwave)",
-      bpm: 135,
-      steps: 64,
-      // Scale: A minor (Am -> F -> C -> G)
-      lead: [
-        76,null,null,74, 76,null,79,null, 81,null,null,null, null,null,79,76,
-        77,null,null,76, 77,null,81,null, 84,null,null,null, null,null,83,81,
-        79,null,null,77, 76,null,74,null, 72,null,null,null, null,null,74,76,
-        74,null,null,72, 74,null,76,null, 71,null,null,null, null,null,72,74
-      ],
-      arp: [
-        57,60,64,69, 72,69,64,60, 57,60,64,69, 72,69,64,67,
-        53,57,60,65, 69,65,60,57, 53,57,60,65, 69,65,60,64,
-        48,52,55,60, 64,60,55,52, 48,52,55,60, 64,60,55,59,
-        55,59,62,67, 71,67,62,59, 55,59,62,67, 71,67,62,59
-      ],
-      bass: [
-        33,null,33,null, 45,null,33,null, 45,null,33,null, 45,33,null,null,
-        29,null,29,null, 41,null,29,null, 41,null,29,null, 41,29,null,null,
-        36,null,36,null, 48,null,36,null, 48,null,36,null, 48,36,null,null,
-        31,null,31,null, 43,null,31,null, 43,null,31,null, 43,31,null,null
-      ],
-      kick: [
-        1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0,
-        1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0,
-        1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0,
-        1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,1,0
-      ],
-      snare: [
-        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,
-        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,
-        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,
-        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,1,1
-      ],
-      hihat: [
-        0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0,
-        0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0,
-        0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0,
-        0,0,1,0, 0,0,1,0, 0,0,1,0, 1,1,1,1
-      ]
-    },
-    {
-      title: "♫ Track 2: Underground Tracker Dreams (Amiga MOD)",
-      bpm: 126,
-      steps: 64,
-      // Scale: D minor (Dm -> Bb -> Gm -> A7)
-      lead: [
-        62,null,65,null, 69,null,74,null, 72,null,69,null, 65,null,null,null,
-        70,null,74,null, 77,null,82,null, 81,null,77,null, 74,null,null,null,
-        67,null,70,null, 74,null,79,null, 77,null,74,null, 70,null,null,null,
-        69,null,73,null, 76,null,81,null, 85,null,81,null, 76,null,73,null
-      ],
-      arp: [
-        50,53,57,62, 65,62,57,53, 50,53,57,62, 65,62,57,62,
-        46,50,53,58, 62,58,53,50, 46,50,53,58, 62,58,53,58,
-        43,46,50,55, 58,55,50,46, 43,46,50,55, 58,55,50,55,
-        45,49,52,57, 61,57,52,49, 45,49,52,57, 61,57,52,49
-      ],
-      bass: [
-        38,null,null,38, null,38,null,null, 38,null,null,38, null,null,41,43,
-        34,null,null,34, null,34,null,null, 34,null,null,34, null,null,36,37,
-        31,null,null,31, null,31,null,null, 31,null,null,31, null,null,33,34,
-        33,null,null,33, null,33,null,null, 33,null,33,null, 45,null,null,null
-      ],
-      kick: [
-        1,0,0,0, 0,0,1,0, 0,0,1,0, 0,0,0,0,
-        1,0,0,0, 0,0,1,0, 0,0,1,0, 0,0,0,0,
-        1,0,0,0, 0,0,1,0, 0,0,1,0, 0,0,0,0,
-        1,0,0,0, 0,0,1,0, 1,0,0,0, 0,1,1,0
-      ],
-      snare: [
-        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,
-        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,
-        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,
-        0,0,0,0, 1,0,0,0, 0,0,1,0, 1,0,0,1
-      ],
-      hihat: [
-        1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1,
-        1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1,
-        1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1,
-        1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1
-      ]
-    },
-    {
-      title: "♫ Track 3: Phosphor Cyberpunk Pulse (Chiptune)",
-      bpm: 140,
-      steps: 64,
-      // Scale: E minor (Em -> C -> D -> Bm)
-      lead: [
-        76,null,76,79, 81,null,83,null, 84,83,81,79, 76,null,null,null,
-        72,null,72,76, 79,null,81,null, 83,81,79,76, 72,null,null,null,
-        74,null,74,78, 81,null,83,null, 86,83,81,78, 74,null,null,null,
-        71,null,71,74, 78,null,81,null, 83,81,78,74, 71,null,74,78
-      ],
-      arp: [
-        64,67,71,76, 67,71,76,79, 64,67,71,76, 67,71,76,79,
-        60,64,67,72, 64,67,72,76, 60,64,67,72, 64,67,72,76,
-        62,66,69,74, 66,69,74,78, 62,66,69,74, 66,69,74,78,
-        59,62,66,71, 62,66,71,74, 59,62,66,71, 62,66,71,74
-      ],
-      bass: [
-        28,28,40,28, 28,40,28,28, 28,28,40,28, 28,40,28,40,
-        24,24,36,24, 24,36,24,24, 24,24,36,24, 24,36,24,36,
-        26,26,38,26, 26,38,26,26, 26,26,38,26, 26,38,26,38,
-        23,23,35,23, 23,35,23,23, 23,23,35,23, 23,35,23,35
-      ],
-      kick: [
-        1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0,
-        1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0,
-        1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0,
-        1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,1,0
-      ],
-      snare: [
-        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,
-        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,
-        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,
-        0,0,0,0, 1,0,0,0, 0,0,0,0, 1,1,1,1
-      ],
-      hihat: [
-        0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0,
-        0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0,
-        0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0,
-        0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,1
-      ]
-    }
-  ];
+// Comprehensive 3-Track Demoscene / Keygen Chiptune Library
+function rep4(arr) { return [...arr, ...arr, ...arr, ...arr]; }
+function rep16(val) { return new Array(16).fill(val); }
+const SILENT_64 = new Array(64).fill(null);
+const KICK_OFF = new Array(64).fill(0);
+const SNARE_OFF = new Array(64).fill(0);
+const HAT_OFF = new Array(64).fill(0);
+
+// Basic Drums
+const KICK_4 = rep4([1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0]);
+const KICK_DRIVE = rep4([1,0,0,0, 1,0,0,0, 1,0,1,0, 1,0,0,0]);
+const KICK_SYNC = rep4([1,0,0,0, 0,0,1,0, 1,0,0,0, 0,0,1,0]);
+
+const SNARE_STD = rep4([0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0]);
+const SNARE_GHOST = rep4([0,0,0,0, 1,0,0,0, 0,0,1,0, 1,0,0,1]);
+const SNARE_BUILD = [
+  ...[0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+  ...[0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,1,0],
+  ...[1,0,1,0, 1,0,1,0, 1,0,1,0, 1,1,1,1],
+  ...[1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1]
+];
+
+const HAT_OFFBEAT = rep4([0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0]);
+const HAT_16TH = rep4([1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1]);
+const HAT_OPEN = rep4([0,0,2,0, 0,0,2,0, 0,0,2,0, 0,0,2,0]);
+
+// ============================================================================
+// TRACK 1: "CyberSpire Neon Horizon" (135 BPM - 18 Patterns = 128s / 02:08)
+// ============================================================================
+const T1_CHORDS_MAIN = [
+  ...rep16([69, 72, 76, 81]), // Am
+  ...rep16([65, 69, 72, 77]), // F
+  ...rep16([60, 64, 67, 72]), // C
+  ...rep16([67, 71, 74, 79])  // G
+];
+const T1_CHORDS_BRIDGE = [
+  ...rep16([62, 65, 69, 74]), // Dm
+  ...rep16([64, 67, 71, 76]), // Em
+  ...rep16([65, 69, 72, 77]), // F
+  ...rep16([67, 71, 74, 79])  // G
+];
+const T1_CHORDS_OUTRO = [
+  ...rep16([69, 72, 76, 81]), // Am
+  ...rep16([65, 69, 72, 77]), // F
+  ...rep16([64, 68, 71, 76]), // E7
+  ...rep16([69, 72, 76, 81])  // Am
+];
+
+const T1_BASS_MAIN = [
+  ...[33,33,45,33, 33,45,33,33, 33,33,45,33, 33,45,33,45], // Am
+  ...[29,29,41,29, 29,41,29,29, 29,29,41,29, 29,41,29,41], // F
+  ...[24,24,36,24, 24,36,24,24, 24,24,36,24, 24,36,24,36], // C
+  ...[31,31,43,31, 31,43,31,31, 31,31,43,31, 31,43,31,43]  // G
+];
+const T1_BASS_BRIDGE = [
+  ...[26,26,38,26, 26,38,26,26, 26,26,38,26, 26,38,26,38], // Dm
+  ...[28,28,40,28, 28,40,28,28, 28,28,40,28, 28,40,28,40], // Em
+  ...[29,29,41,29, 29,41,29,29, 29,29,41,29, 29,41,29,41], // F
+  ...[31,31,43,31, 31,43,31,31, 31,31,43,31, 31,43,31,43]  // G
+];
+
+const T1_LEAD_THEME_A = [
+  69,null,72,76, null,76,74,72, 74,null,72,71, 69,null,null,null,
+  65,null,69,72, null,72,74,76, 77,null,76,74, 72,null,74,76,
+  72,null,76,79, null,79,77,76, 77,null,76,74, 72,null,null,null,
+  71,null,74,77, null,76,74,71, 74,null,76,77, 79,77,76,74
+];
+const T1_LEAD_THEME_A_HIGH = [
+  81,null,84,88, null,88,86,84, 86,null,84,83, 81,null,null,null,
+  77,null,81,84, null,84,86,88, 89,null,88,86, 84,null,86,88,
+  84,null,88,91, null,91,89,88, 89,null,88,86, 84,null,null,null,
+  83,null,86,89, null,88,86,83, 86,null,88,89, 91,89,88,86
+];
+const T1_LEAD_THEME_B = [
+  74,null,77,81, null,81,79,77, 79,null,77,76, 74,null,null,null,
+  76,null,79,83, null,83,81,79, 81,null,79,77, 76,null,79,81,
+  77,null,81,84, null,84,83,81, 83,null,81,79, 77,null,null,null,
+  79,null,83,86, null,84,83,79, 83,null,84,86, 88,86,84,83
+];
+const T1_LEAD_SOLO_1 = [
+  69,71,72,74, 76,74,72,71, 72,74,76,79, 81,79,76,74,
+  77,79,81,83, 84,83,81,79, 81,83,84,86, 88,86,84,81,
+  84,86,88,89, 91,89,88,86, 88,89,91,93, 95,93,91,88,
+  83,86,88,89, 91,89,88,86, 88,86,84,83, 81,79,76,74
+];
+const T1_LEAD_SOLO_2 = [
+  81,null,81,83, 84,null,84,86, 88,null,88,89, 91,89,88,86,
+  89,null,89,88, 86,null,86,84, 86,88,86,84, 81,null,null,null,
+  84,86,88,89, 91,89,88,84, 88,89,91,93, 95,93,91,88,
+  96,95,93,91, 89,88,86,84, 86,88,89,91, 93,91,89,88
+];
+const T1_LEAD_OUTRO = [
+  69,null,null,null, 72,null,null,null, 76,null,null,null, 81,null,76,72,
+  77,null,null,null, 74,null,null,null, 72,null,null,null, 69,null,null,null,
+  68,null,null,null, 71,null,null,null, 74,null,null,null, 76,null,null,null,
+  69,null,null,null, null,null,null,null, null,null,null,null, null,null,null,null
+];
+
+const track1 = {
+  title: "Track 1: CyberSpire Neon Horizon (Demoscene Synthwave)",
+  shortTitle: "CyberSpire Neon Horizon",
+  bpm: 135,
+  genre: "135 BPM - Demoscene Synth Anthem",
+  patterns: [
+    { name: "Intro Ambient Arp", lead: SILENT_64, arp: T1_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false },
+    { name: "Intro Groove Build", lead: SILENT_64, arp: T1_CHORDS_MAIN, bass: T1_BASS_MAIN, kick: KICK_4, snare: SNARE_OFF, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Verse 1 Anthem", lead: T1_LEAD_THEME_A, arp: T1_CHORDS_MAIN, bass: T1_BASS_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Verse 1 Flourish", lead: T1_LEAD_THEME_A, arp: T1_CHORDS_MAIN, bass: T1_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_OPEN, crash: false, riser: false, laser: false },
+    { name: "Verse 2 Bridge", lead: T1_LEAD_THEME_B, arp: T1_CHORDS_BRIDGE, bass: T1_BASS_BRIDGE, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Pre-Drop Tension", lead: T1_LEAD_THEME_A, arp: T1_CHORDS_MAIN, bass: T1_BASS_MAIN, kick: KICK_4, snare: SNARE_BUILD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Riser & Cut", lead: SILENT_64, arp: T1_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_BUILD, hihat: HAT_OFF, crash: false, riser: true, laser: true },
+    { name: "THE DROP", lead: T1_LEAD_THEME_A_HIGH, arp: T1_CHORDS_MAIN, bass: T1_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_16TH, crash: true, riser: false, laser: false },
+    { name: "Drop Peak", lead: T1_LEAD_THEME_A_HIGH, arp: T1_CHORDS_MAIN, bass: T1_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_OPEN, crash: false, riser: false, laser: false },
+    { name: "Breakdown", lead: SILENT_64, arp: T1_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false },
+    { name: "Chip Solo 1", lead: T1_LEAD_SOLO_1, arp: T1_CHORDS_MAIN, bass: T1_BASS_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Chip Solo 2", lead: T1_LEAD_SOLO_2, arp: T1_CHORDS_BRIDGE, bass: T1_BASS_BRIDGE, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Mega Build", lead: SILENT_64, arp: T1_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_BUILD, hihat: HAT_OFF, crash: false, riser: true, laser: true },
+    { name: "MEGA DROP", lead: T1_LEAD_THEME_A_HIGH, arp: T1_CHORDS_MAIN, bass: T1_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_16TH, crash: true, riser: false, laser: false },
+    { name: "Final Climax", lead: T1_LEAD_THEME_A, arp: T1_CHORDS_MAIN, bass: T1_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_OPEN, crash: false, riser: false, laser: false },
+    { name: "Outro Groove", lead: T1_LEAD_OUTRO, arp: T1_CHORDS_OUTRO, bass: T1_BASS_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Outro Echo", lead: T1_LEAD_OUTRO, arp: T1_CHORDS_OUTRO, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false },
+    { name: "Final Cadence", lead: SILENT_64, arp: T1_CHORDS_OUTRO, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFF, crash: false, riser: false, laser: false }
+  ]
+};
+
+// ============================================================================
+// TRACK 2: "Underground Tracker Dreams" (128 BPM - 18 Patterns = 135s / 02:15)
+// ============================================================================
+const T2_CHORDS_MAIN = [
+  ...rep16([62, 65, 69, 74]), // Dm
+  ...rep16([58, 62, 65, 70]), // Bb
+  ...rep16([60, 64, 67, 72]), // C
+  ...rep16([57, 60, 64, 69])  // Am
+];
+const T2_CHORDS_BRIDGE = [
+  ...rep16([55, 58, 62, 67]), // Gm
+  ...rep16([58, 62, 65, 70]), // Bb
+  ...rep16([60, 64, 67, 72]), // C
+  ...rep16([57, 61, 64, 67])  // A7
+];
+const T2_BASS_MAIN = [
+  ...[26,null,38,26, null,26,38,null, 26,26,null,38, null,26,38,41], // Dm
+  ...[22,null,34,22, null,22,34,null, 22,22,null,34, null,22,34,38], // Bb
+  ...[24,null,36,24, null,24,36,null, 24,24,null,36, null,24,36,40], // C
+  ...[21,null,33,21, null,21,33,null, 21,21,null,33, null,21,33,36]  // Am
+];
+const T2_BASS_BRIDGE = [
+  ...[23,null,35,23, null,23,35,null, 23,23,null,35, null,23,35,38], // Gm
+  ...[22,null,34,22, null,22,34,null, 22,22,null,34, null,22,34,38], // Bb
+  ...[24,null,36,24, null,24,36,null, 24,24,null,36, null,24,36,40], // C
+  ...[21,null,33,21, null,21,33,null, 21,21,null,33, null,21,33,37]  // A7
+];
+
+const T2_LEAD_THEME_A = [
+  62,null,65,69, null,72,69,65, 67,null,65,64, 62,null,null,null,
+  58,null,62,65, null,67,65,62, 65,null,64,62, 60,null,62,64,
+  60,null,64,67, null,69,67,64, 65,null,64,62, 60,null,null,null,
+  57,null,60,64, null,65,64,60, 64,null,65,67, 69,67,65,64
+];
+const T2_LEAD_THEME_A_HIGH = [
+  74,null,77,81, null,84,81,77, 79,null,77,76, 74,null,null,null,
+  70,null,74,77, null,79,77,74, 77,null,76,74, 72,null,74,76,
+  72,null,76,79, null,81,79,76, 77,null,76,74, 72,null,null,null,
+  69,null,72,76, null,77,76,72, 76,null,77,79, 81,79,77,76
+];
+const T2_LEAD_THEME_B = [
+  67,null,70,74, null,74,72,70, 72,null,70,69, 67,null,null,null,
+  70,null,74,77, null,77,75,74, 75,null,74,72, 70,null,72,74,
+  72,null,76,79, null,79,77,76, 77,null,76,74, 72,null,null,null,
+  69,null,73,76, null,77,76,73, 76,null,77,79, 81,79,77,76
+];
+const T2_LEAD_SOLO = [
+  74,76,77,79, 81,79,77,76, 77,79,81,84, 86,84,81,79,
+  70,72,74,75, 77,75,74,72, 74,75,77,81, 82,81,77,74,
+  72,74,76,77, 79,77,76,74, 76,77,79,83, 84,83,79,76,
+  69,71,73,74, 76,74,73,71, 73,74,76,79, 81,79,76,73
+];
+
+const track2 = {
+  title: "Track 2: Underground Tracker Dreams (Amiga ProTracker MOD)",
+  shortTitle: "Underground Tracker Dreams",
+  bpm: 128,
+  genre: "128 BPM - Amiga FastTracker II Style",
+  patterns: [
+    { name: "Slap Bass Intro", lead: SILENT_64, arp: T2_CHORDS_MAIN, bass: T2_BASS_MAIN, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false },
+    { name: "Chord Stabs In", lead: SILENT_64, arp: T2_CHORDS_MAIN, bass: T2_BASS_MAIN, kick: KICK_SYNC, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Theme A Groove", lead: T2_LEAD_THEME_A, arp: T2_CHORDS_MAIN, bass: T2_BASS_MAIN, kick: KICK_SYNC, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Theme A Breakbeat", lead: T2_LEAD_THEME_A, arp: T2_CHORDS_MAIN, bass: T2_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_GHOST, hihat: HAT_OPEN, crash: false, riser: false, laser: false },
+    { name: "Funky Bridge", lead: T2_LEAD_THEME_B, arp: T2_CHORDS_BRIDGE, bass: T2_BASS_BRIDGE, kick: KICK_SYNC, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Theme B Dev", lead: T2_LEAD_THEME_B, arp: T2_CHORDS_BRIDGE, bass: T2_BASS_BRIDGE, kick: KICK_DRIVE, snare: SNARE_GHOST, hihat: HAT_OPEN, crash: false, riser: false, laser: false },
+    { name: "Tracker Build", lead: SILENT_64, arp: T2_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_BUILD, hihat: HAT_OFF, crash: false, riser: true, laser: true },
+    { name: "THE DROP", lead: T2_LEAD_THEME_A_HIGH, arp: T2_CHORDS_MAIN, bass: T2_BASS_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_16TH, crash: true, riser: false, laser: false },
+    { name: "Drop Groove", lead: T2_LEAD_THEME_A_HIGH, arp: T2_CHORDS_MAIN, bass: T2_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_GHOST, hihat: HAT_OPEN, crash: false, riser: false, laser: false },
+    { name: "Half-Time Dub", lead: T2_LEAD_THEME_A, arp: T2_CHORDS_MAIN, bass: T2_BASS_MAIN, kick: KICK_SYNC, snare: SNARE_STD, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false },
+    { name: "Amiga Chip Solo", lead: T2_LEAD_SOLO, arp: T2_CHORDS_MAIN, bass: T2_BASS_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Solo Climax Build", lead: T2_LEAD_SOLO, arp: T2_CHORDS_BRIDGE, bass: T2_BASS_BRIDGE, kick: KICK_OFF, snare: SNARE_BUILD, hihat: HAT_OFF, crash: false, riser: true, laser: true },
+    { name: "MEGA DROP 2", lead: T2_LEAD_THEME_A_HIGH, arp: T2_CHORDS_MAIN, bass: T2_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_GHOST, hihat: HAT_OPEN, crash: true, riser: false, laser: false },
+    { name: "Mega Drop Peak", lead: T2_LEAD_THEME_A_HIGH, arp: T2_CHORDS_MAIN, bass: T2_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Bridge Out", lead: T2_LEAD_THEME_B, arp: T2_CHORDS_BRIDGE, bass: T2_BASS_BRIDGE, kick: KICK_SYNC, snare: SNARE_STD, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false },
+    { name: "Outro Funk", lead: T2_LEAD_THEME_A, arp: T2_CHORDS_MAIN, bass: T2_BASS_MAIN, kick: KICK_SYNC, snare: SNARE_STD, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false },
+    { name: "Echo Fade", lead: SILENT_64, arp: T2_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false },
+    { name: "Amiga Cadence", lead: SILENT_64, arp: T2_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFF, crash: false, riser: false, laser: false }
+  ]
+};
+
+// ============================================================================
+// TRACK 3: "Phosphor Cyberpunk Pulse" (144 BPM - 20 Patterns = 133s / 02:13)
+// ============================================================================
+const T3_CHORDS_MAIN = [
+  ...rep16([64, 67, 71, 76]), // Em
+  ...rep16([60, 64, 67, 72]), // C
+  ...rep16([62, 66, 69, 74]), // D
+  ...rep16([59, 62, 66, 71])  // Bm
+];
+const T3_CHORDS_MOD = [
+  ...rep16([67, 71, 74, 79]), // G
+  ...rep16([62, 66, 69, 74]), // D
+  ...rep16([69, 72, 76, 81]), // Am
+  ...rep16([59, 63, 66, 69])  // B7
+];
+
+const T3_BASS_ACID_MAIN = [
+  ...[28,28,40,28, 28,40,28,28, 28,40,28,28, 40,28,40,43], // Em
+  ...[24,24,36,24, 24,36,24,24, 24,36,24,24, 36,24,36,38], // C
+  ...[26,26,38,26, 26,38,26,26, 26,38,26,26, 38,26,38,42], // D
+  ...[23,23,35,23, 23,35,23,23, 23,35,23,23, 35,23,35,38]  // Bm
+];
+const T3_BASS_ACID_MOD = [
+  ...[23,23,35,23, 23,35,23,23, 23,35,23,23, 35,23,35,38], // G
+  ...[26,26,38,26, 26,38,26,26, 26,38,26,26, 38,26,38,42], // D
+  ...[21,21,33,21, 21,33,21,21, 21,33,21,21, 33,21,33,36], // Am
+  ...[23,23,35,23, 23,35,23,23, 23,35,23,23, 35,23,35,39]  // B7
+];
+
+const T3_LEAD_HOOK_A = [
+  64,null,67,71, null,71,69,67, 69,null,67,66, 64,null,null,null,
+  60,null,64,67, null,69,67,64, 67,null,66,64, 62,null,64,66,
+  62,null,66,69, null,71,69,66, 69,null,67,66, 64,null,66,67,
+  59,null,62,66, null,67,66,62, 66,null,67,69, 71,69,67,66
+];
+const T3_LEAD_HOOK_HIGH = [
+  76,null,79,83, null,83,81,79, 81,null,79,78, 76,null,null,null,
+  72,null,76,79, null,81,79,76, 79,null,78,76, 74,null,76,78,
+  74,null,78,81, null,83,81,78, 81,null,79,78, 76,null,78,79,
+  71,null,74,78, null,79,78,74, 78,null,79,81, 83,81,79,78
+];
+const T3_LEAD_MOD = [
+  67,null,71,74, null,74,72,71, 74,null,72,71, 69,null,null,null,
+  62,null,66,69, null,71,69,66, 69,null,67,66, 64,null,null,null,
+  69,null,72,76, null,76,74,72, 74,null,72,71, 69,null,71,72,
+  59,null,63,66, null,67,66,63, 66,null,67,69, 71,69,67,66
+];
+const T3_LEAD_SOLO = [
+  76,78,79,81, 83,81,79,78, 79,81,83,86, 88,86,83,81,
+  72,74,76,78, 79,78,76,74, 76,78,79,83, 84,83,79,76,
+  74,76,78,79, 81,79,78,76, 78,79,81,85, 86,85,81,78,
+  71,73,74,76, 78,76,74,73, 74,76,78,82, 83,82,78,74
+];
+
+const track3 = {
+  title: "Track 3: Phosphor Cyberpunk Pulse (Keygen / SID Chiptune)",
+  shortTitle: "Phosphor Cyberpunk Pulse",
+  bpm: 144,
+  genre: "144 BPM - Hardcore Keygen Chiptune",
+  patterns: [
+    { name: "Keygen SID Arp", lead: SILENT_64, arp: T3_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false },
+    { name: "Acid Bass In", lead: SILENT_64, arp: T3_CHORDS_MAIN, bass: T3_BASS_ACID_MAIN, kick: KICK_4, snare: SNARE_OFF, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Beat Explosion", lead: SILENT_64, arp: T3_CHORDS_MAIN, bass: T3_BASS_ACID_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_OPEN, crash: false, riser: false, laser: false },
+    { name: "Keygen Hook 1", lead: T3_LEAD_HOOK_A, arp: T3_CHORDS_MAIN, bass: T3_BASS_ACID_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Hook Variation", lead: T3_LEAD_HOOK_A, arp: T3_CHORDS_MAIN, bass: T3_BASS_ACID_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_OPEN, crash: false, riser: false, laser: false },
+    { name: "Modulation Run", lead: T3_LEAD_MOD, arp: T3_CHORDS_MOD, bass: T3_BASS_ACID_MOD, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Glitch Break", lead: SILENT_64, arp: T3_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_BUILD, hihat: HAT_OFF, crash: false, riser: true, laser: true },
+    { name: "THE FIRST DROP", lead: T3_LEAD_HOOK_HIGH, arp: T3_CHORDS_MAIN, bass: T3_BASS_ACID_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_16TH, crash: true, riser: false, laser: false },
+    { name: "Drop Rave", lead: T3_LEAD_HOOK_HIGH, arp: T3_CHORDS_MAIN, bass: T3_BASS_ACID_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_OPEN, crash: false, riser: false, laser: false },
+    { name: "8-Bit Space Break", lead: SILENT_64, arp: T3_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false },
+    { name: "Filter Sweep Up", lead: T3_LEAD_HOOK_A, arp: T3_CHORDS_MAIN, bass: T3_BASS_ACID_MAIN, kick: KICK_4, snare: SNARE_OFF, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Heavy Riser Build", lead: SILENT_64, arp: T3_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_BUILD, hihat: HAT_OFF, crash: false, riser: true, laser: true },
+    { name: "THE MEGA DROP", lead: T3_LEAD_HOOK_HIGH, arp: T3_CHORDS_MAIN, bass: T3_BASS_ACID_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_16TH, crash: true, riser: false, laser: false },
+    { name: "Mega Drop Climax", lead: T3_LEAD_HOOK_HIGH, arp: T3_CHORDS_MAIN, bass: T3_BASS_ACID_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_OPEN, crash: false, riser: false, laser: false },
+    { name: "Keygen Chip Solo 1", lead: T3_LEAD_SOLO, arp: T3_CHORDS_MAIN, bass: T3_BASS_ACID_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Keygen Chip Solo 2", lead: T3_LEAD_SOLO, arp: T3_CHORDS_MOD, bass: T3_BASS_ACID_MOD, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_OPEN, crash: false, riser: false, laser: false },
+    { name: "Final Power Peak", lead: T3_LEAD_HOOK_HIGH, arp: T3_CHORDS_MAIN, bass: T3_BASS_ACID_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_16TH, crash: true, riser: false, laser: false },
+    { name: "Cool Down", lead: T3_LEAD_HOOK_A, arp: T3_CHORDS_MAIN, bass: T3_BASS_ACID_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false },
+    { name: "Fadeout Arps", lead: SILENT_64, arp: T3_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false },
+    { name: "Final Laser Zap", lead: SILENT_64, arp: T3_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFF, crash: false, riser: false, laser: true }
+  ]
+};
+
+const allTracks = [track1, track2, track3];
+  const midiTracks = allTracks;
 
   let audioCtx = null;
   let masterGain = null;
   let analyser = null;
+  let delayNode = null;
+  let delayFeedback = null;
+  let delayFilter = null;
   let noiseBuf = null;
 
   let currentTrackIdx = 0;
@@ -546,8 +713,7 @@
   let currentStep = 0;
   let nextNoteTime = 0.0;
   let schedulerTimer = null;
-  let songSeconds = 0;
-  let timeTickerTimer = null;
+  let lastLeadFreq = null;
 
   function initAudioCtx() {
     if (!audioCtx) {
@@ -561,11 +727,27 @@
       masterGain = audioCtx.createGain();
       masterGain.gain.setValueAtTime(isMuted ? 0 : currentVolume, audioCtx.currentTime);
 
+      // Stereo demoscene tape delay line (0.22s, 2600Hz lowpass, 0.28 feedback)
+      delayNode = audioCtx.createDelay(1.0);
+      delayNode.delayTime.setValueAtTime(0.22, audioCtx.currentTime);
+
+      delayFeedback = audioCtx.createGain();
+      delayFeedback.gain.setValueAtTime(0.28, audioCtx.currentTime);
+
+      delayFilter = audioCtx.createBiquadFilter();
+      delayFilter.type = 'lowpass';
+      delayFilter.frequency.setValueAtTime(2600, audioCtx.currentTime);
+
+      delayNode.connect(delayFilter);
+      delayFilter.connect(delayFeedback);
+      delayFeedback.connect(delayNode);
+      delayFilter.connect(masterGain);
+
       masterGain.connect(analyser);
       analyser.connect(audioCtx.destination);
 
-      // Noise buffer for percussion
-      noiseBuf = audioCtx.createBuffer(1, audioCtx.sampleRate * 1, audioCtx.sampleRate);
+      // Noise buffer for authentic tracker percussion
+      noiseBuf = audioCtx.createBuffer(1, audioCtx.sampleRate * 2, audioCtx.sampleRate);
       const out = noiseBuf.getChannelData(0);
       for (let i = 0; i < noiseBuf.length; i++) {
         out[i] = Math.random() * 2 - 1;
@@ -580,6 +762,7 @@
     return 440 * Math.pow(2, (note - 69) / 12);
   }
 
+  // 1. Demoscene Lead Synth (Dual saw+square, resonant lowpass, portamento & vibrato)
   function playLead(note, time, dur) {
     if (!note) return;
     const osc1 = audioCtx.createOscillator();
@@ -589,23 +772,47 @@
 
     osc1.type = 'square';
     osc2.type = 'sawtooth';
-    const freq = midiNoteToFreq(note);
-    osc1.frequency.setValueAtTime(freq, time);
-    osc2.frequency.setValueAtTime(freq * 1.004, time); // Subtle detune
+    const targetFreq = midiNoteToFreq(note);
+
+    if (lastLeadFreq && Math.abs(targetFreq - lastLeadFreq) < 500) {
+      // Smooth demoscene portamento pitch glide
+      osc1.frequency.setValueAtTime(lastLeadFreq, time);
+      osc1.frequency.exponentialRampToValueAtTime(targetFreq, time + 0.04);
+      osc2.frequency.setValueAtTime(lastLeadFreq * 1.006, time);
+      osc2.frequency.exponentialRampToValueAtTime(targetFreq * 1.006, time + 0.04);
+    } else {
+      osc1.frequency.setValueAtTime(targetFreq, time);
+      osc2.frequency.setValueAtTime(targetFreq * 1.006, time); // Detune
+    }
+    lastLeadFreq = targetFreq;
+
+    // Vibrato LFO kicks in after 70ms
+    const vib = audioCtx.createOscillator();
+    const vibGain = audioCtx.createGain();
+    vib.frequency.setValueAtTime(5.5, time);
+    vibGain.gain.setValueAtTime(0, time);
+    vibGain.gain.setValueAtTime(0, time + 0.07);
+    vibGain.gain.linearRampToValueAtTime(targetFreq * 0.015, time + 0.16);
+    vib.connect(vibGain);
+    vibGain.connect(osc1.frequency);
+    vibGain.connect(osc2.frequency);
+    vib.start(time);
+    vib.stop(time + dur);
 
     f.type = 'lowpass';
-    f.frequency.setValueAtTime(2400, time);
-    f.Q.setValueAtTime(2, time);
+    f.frequency.setValueAtTime(2800, time);
+    f.Q.setValueAtTime(2.4, time);
 
     g.gain.setValueAtTime(0.001, time);
-    g.gain.linearRampToValueAtTime(0.18, time + 0.015);
-    g.gain.exponentialRampToValueAtTime(0.09, time + 0.12);
+    g.gain.linearRampToValueAtTime(0.18, time + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.11, time + 0.10);
     g.gain.linearRampToValueAtTime(0.001, time + dur);
 
     osc1.connect(f);
     osc2.connect(f);
     f.connect(g);
     g.connect(masterGain);
+    if (delayNode) g.connect(delayNode);
 
     osc1.start(time);
     osc2.start(time);
@@ -613,7 +820,40 @@
     osc2.stop(time + dur);
   }
 
-  function playArp(note, time, dur) {
+  // 2. Authentic 50Hz/60Hz SID/Keygen Fast Arpeggiator
+  function playFastArp(chordNotes, time, dur) {
+    if (!chordNotes || chordNotes.length === 0) return;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    const f = audioCtx.createBiquadFilter();
+
+    osc.type = 'sawtooth';
+
+    // Rapidly cycle notes at 50Hz (every 0.02s) to produce the classic keygen buzzing chip timbre
+    const numCycles = Math.floor(dur / 0.022);
+    for (let c = 0; c < numCycles; c++) {
+      const note = chordNotes[c % chordNotes.length];
+      osc.frequency.setValueAtTime(midiNoteToFreq(note), time + c * 0.022);
+    }
+
+    f.type = 'lowpass';
+    f.frequency.setValueAtTime(3200, time);
+    f.Q.setValueAtTime(2.0, time);
+
+    g.gain.setValueAtTime(0.11, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + dur * 0.95);
+
+    osc.connect(f);
+    f.connect(g);
+    g.connect(masterGain);
+    if (delayNode) g.connect(delayNode);
+
+    osc.start(time);
+    osc.stop(time + dur);
+  }
+
+  // 3. Squelchy Roland TB-303 / SID Acid Bass
+  function playBass(note, time, dur) {
     if (!note) return;
     const osc = audioCtx.createOscillator();
     const g = audioCtx.createGain();
@@ -622,32 +862,11 @@
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(midiNoteToFreq(note), time);
 
+    // Dynamic resonant filter cutoff sweep
     f.type = 'lowpass';
+    f.Q.setValueAtTime(3.8, time);
     f.frequency.setValueAtTime(1800, time);
-    f.Q.setValueAtTime(3, time);
-
-    g.gain.setValueAtTime(0.10, time);
-    g.gain.exponentialRampToValueAtTime(0.001, time + dur * 0.9);
-
-    osc.connect(f);
-    f.connect(g);
-    g.connect(masterGain);
-
-    osc.start(time);
-    osc.stop(time + dur);
-  }
-
-  function playBass(note, time, dur) {
-    if (!note) return;
-    const osc = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    const f = audioCtx.createBiquadFilter();
-
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(midiNoteToFreq(note), time);
-
-    f.type = 'lowpass';
-    f.frequency.setValueAtTime(500, time);
+    f.frequency.exponentialRampToValueAtTime(240, time + Math.min(dur * 0.8, 0.15));
 
     g.gain.setValueAtTime(0.24, time);
     g.gain.exponentialRampToValueAtTime(0.001, time + dur * 0.95);
@@ -660,107 +879,218 @@
     osc.stop(time + dur);
   }
 
+  // 4. Punchy Demoscene Kick Drum
   function playKick(time) {
     const osc = audioCtx.createOscillator();
     const g = audioCtx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(150, time);
-    osc.frequency.exponentialRampToValueAtTime(36, time + 0.08);
+    osc.frequency.setValueAtTime(160, time);
+    osc.frequency.exponentialRampToValueAtTime(36, time + 0.075);
 
-    g.gain.setValueAtTime(0.35, time);
-    g.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
+    g.gain.setValueAtTime(0.38, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + 0.13);
 
     osc.connect(g);
     g.connect(masterGain);
 
     osc.start(time);
-    osc.stop(time + 0.13);
+    osc.stop(time + 0.14);
   }
 
-  function playSnare(time) {
+  // 5. Dual-Layer Tracker Snare (Noise burst + Body tone)
+  function playSnare(time, isGhost) {
     if (!noiseBuf) return;
     const noise = audioCtx.createBufferSource();
     noise.buffer = noiseBuf;
 
     const f = audioCtx.createBiquadFilter();
     f.type = 'bandpass';
-    f.frequency.setValueAtTime(1200, time);
-    f.Q.setValueAtTime(1.5, time);
+    f.frequency.setValueAtTime(1350, time);
+    f.Q.setValueAtTime(1.6, time);
 
     const g = audioCtx.createGain();
-    g.gain.setValueAtTime(0.18, time);
-    g.gain.exponentialRampToValueAtTime(0.001, time + 0.10);
+    const gainVal = isGhost ? 0.08 : 0.20;
+    g.gain.setValueAtTime(gainVal, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + (isGhost ? 0.06 : 0.11));
 
     noise.connect(f);
     f.connect(g);
     g.connect(masterGain);
 
     noise.start(time);
-    noise.stop(time + 0.11);
+    noise.stop(time + 0.12);
+
+    // Pitched body
+    if (!isGhost) {
+      const osc = audioCtx.createOscillator();
+      const oscG = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(180, time);
+      osc.frequency.exponentialRampToValueAtTime(60, time + 0.04);
+      oscG.gain.setValueAtTime(0.14, time);
+      oscG.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
+      osc.connect(oscG);
+      oscG.connect(masterGain);
+      osc.start(time);
+      osc.stop(time + 0.05);
+    }
   }
 
-  function playHihat(time) {
+  // 6. High-Frequency Metallic Hi-Hats (Closed & Open)
+  function playHihat(time, isOpen) {
     if (!noiseBuf) return;
     const noise = audioCtx.createBufferSource();
     noise.buffer = noiseBuf;
 
     const f = audioCtx.createBiquadFilter();
     f.type = 'highpass';
-    f.frequency.setValueAtTime(7000, time);
+    f.frequency.setValueAtTime(isOpen ? 6800 : 8000, time);
 
     const g = audioCtx.createGain();
-    g.gain.setValueAtTime(0.07, time);
-    g.gain.exponentialRampToValueAtTime(0.001, time + 0.035);
+    const dur = isOpen ? 0.18 : 0.035;
+    g.gain.setValueAtTime(isOpen ? 0.09 : 0.07, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + dur);
 
     noise.connect(f);
     f.connect(g);
     g.connect(masterGain);
 
     noise.start(time);
-    noise.stop(time + 0.04);
+    noise.stop(time + dur + 0.01);
   }
 
+  // 7. Epic Crash Cymbal for Drops & Section Climaxes
+  function playCrash(time) {
+    if (!noiseBuf) return;
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = noiseBuf;
+
+    const f = audioCtx.createBiquadFilter();
+    f.type = 'highpass';
+    f.frequency.setValueAtTime(4500, time);
+
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.24, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + 1.4);
+
+    noise.connect(f);
+    f.connect(g);
+    g.connect(masterGain);
+    if (delayNode) g.connect(delayNode);
+
+    noise.start(time);
+    noise.stop(time + 1.45);
+  }
+
+  // 8. Demoscene Noise Riser (Swells before the Drop)
+  function playRiser(time, dur) {
+    if (!noiseBuf) return;
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = noiseBuf;
+
+    const f = audioCtx.createBiquadFilter();
+    f.type = 'bandpass';
+    f.Q.setValueAtTime(3.0, time);
+    f.frequency.setValueAtTime(250, time);
+    f.frequency.exponentialRampToValueAtTime(6000, time + dur);
+
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.001, time);
+    g.gain.linearRampToValueAtTime(0.20, time + dur);
+    g.gain.linearRampToValueAtTime(0.001, time + dur + 0.02);
+
+    noise.connect(f);
+    f.connect(g);
+    g.connect(masterGain);
+
+    noise.start(time);
+    noise.stop(time + dur + 0.03);
+  }
+
+  // 9. Retro 8-bit Laser Zap SFX
+  function playLaser(time) {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(950, time);
+    osc.frequency.exponentialRampToValueAtTime(60, time + 0.065);
+
+    g.gain.setValueAtTime(0.18, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + 0.07);
+
+    osc.connect(g);
+    g.connect(masterGain);
+    if (delayNode) g.connect(delayNode);
+
+    osc.start(time);
+    osc.stop(time + 0.075);
+  }
+
+  // ==========================================
+  // TRACKER SCHEDULER & PATTERN DISPATCHER
+  // ==========================================
   function schedule() {
     const track = midiTracks[currentTrackIdx];
     const secondsPerBeat = 60.0 / track.bpm;
     const sixteenthTime = secondsPerBeat / 4.0;
+    const totalSteps = track.patterns.length * 64;
 
-    while (nextNoteTime < audioCtx.currentTime + 0.12) {
+    while (nextNoteTime < audioCtx.currentTime + 0.14) {
       const step = currentStep;
       const t = nextNoteTime;
-      const dur = sixteenthTime * 1.5;
+      const pIdx = Math.floor(step / 64);
+      const sIdx = step % 64;
+      const pat = track.patterns[pIdx];
 
-      if (track.lead[step]) playLead(track.lead[step], t, dur);
-      if (track.arp[step]) playArp(track.arp[step], t, sixteenthTime);
-      if (track.bass[step]) playBass(track.bass[step], t, sixteenthTime * 2);
-      if (track.kick[step]) playKick(t);
-      if (track.snare[step]) playSnare(t);
-      if (track.hihat[step]) playHihat(t);
+      // Section SFX triggers
+      if (sIdx === 0 && pat.crash) playCrash(t);
+      if (sIdx === 48 && pat.riser) playRiser(t, sixteenthTime * 16);
+      if (sIdx === 60 && pat.laser) playLaser(t);
 
+      // Instruments
+      if (pat.lead[sIdx]) playLead(pat.lead[sIdx], t, sixteenthTime * 1.5);
+      if (pat.arp[sIdx]) playFastArp(pat.arp[sIdx], t, sixteenthTime);
+      if (pat.bass[sIdx]) playBass(pat.bass[sIdx], t, sixteenthTime * 1.2);
+      if (pat.kick[sIdx]) playKick(t);
+      if (pat.snare[sIdx]) playSnare(t, pat.snare[sIdx] === 2);
+      if (pat.hihat[sIdx]) playHihat(t, pat.hihat[sIdx] === 2);
+
+      // Advance clock
       nextNoteTime += sixteenthTime;
-      currentStep = (currentStep + 1) % track.steps;
+      currentStep = (currentStep + 1) % totalSteps;
+      updatePlaybackHud(track, pIdx, sIdx, currentStep, totalSteps, sixteenthTime);
     }
+  }
+
+  function formatTime(secs) {
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = Math.floor(secs % 60).toString().padStart(2, '0');
+    return m + ":" + s;
+  }
+
+  function updatePlaybackHud(track, pIdx, sIdx, step, totalSteps, stepTime) {
+    const elapsedSecs = Math.floor(step * stepTime);
+    const totalSecs = Math.floor(totalSteps * stepTime);
+    const patNum = (pIdx + 1).toString().padStart(2, '0');
+    const patTotal = track.patterns.length.toString().padStart(2, '0');
+
+    const elPat = document.getElementById('lcdPattern');
+    if (elPat) elPat.textContent = 'PAT: ' + patNum + '/' + patTotal;
+    const elTime = document.getElementById('lcdTime');
+    if (elTime) elTime.textContent = formatTime(elapsedSecs) + ' / ' + formatTime(totalSecs);
+    const elTitle = document.getElementById('lcdTrackTitle');
+    if (elTitle) elTitle.textContent = '♫ ' + track.shortTitle + ' • [Pat ' + patNum + ': ' + track.patterns[pIdx].name + '] • ' + track.genre;
   }
 
   function startScheduler() {
     if (schedulerTimer) clearInterval(schedulerTimer);
     nextNoteTime = audioCtx.currentTime + 0.05;
     schedulerTimer = setInterval(schedule, 25);
-
-    if (timeTickerTimer) clearInterval(timeTickerTimer);
-    timeTickerTimer = setInterval(() => {
-      songSeconds++;
-      const m = Math.floor(songSeconds / 60).toString().padStart(2, '0');
-      const s = (songSeconds % 60).toString().padStart(2, '0');
-      document.getElementById('lcdTime').textContent = `TIME: ${m}:${s}`;
-    }, 1000);
   }
 
   function stopScheduler() {
     if (schedulerTimer) clearInterval(schedulerTimer);
     schedulerTimer = null;
-    if (timeTickerTimer) clearInterval(timeTickerTimer);
-    timeTickerTimer = null;
   }
 
   function toggleMidiPlay() {
@@ -796,8 +1126,15 @@
     isMidiPlaying = false;
     stopScheduler();
     currentStep = 0;
-    songSeconds = 0;
-    document.getElementById('lcdTime').textContent = "TIME: 00:00";
+    lastLeadFreq = null;
+    const track = midiTracks[currentTrackIdx];
+    const totalSteps = track.patterns.length * 64;
+    const stepTime = (60.0 / track.bpm) / 4.0;
+    const totalSecs = Math.floor(totalSteps * stepTime);
+    const elPat = document.getElementById('lcdPattern');
+    if (elPat) elPat.textContent = 'PAT: 01/' + track.patterns.length.toString().padStart(2, '0');
+    const elTime = document.getElementById('lcdTime');
+    if (elTime) elTime.textContent = '00:00 / ' + formatTime(totalSecs);
     document.getElementById('btnMidiPlay').textContent = "▶ Play MIDI";
     document.getElementById('btnMidiPlay').classList.remove('active');
     document.getElementById('lcdStatus').textContent = "STOPPED";
@@ -806,9 +1143,22 @@
 
   function updateLcd() {
     const track = midiTracks[currentTrackIdx];
-    document.getElementById('lcdTrackNo').textContent = `TRACK 0${currentTrackIdx + 1}/03`;
-    document.getElementById('lcdBpm').textContent = `${track.bpm} BPM`;
-    document.getElementById('lcdTrackTitle').textContent = track.title;
+    const totalSteps = track.patterns.length * 64;
+    const stepTime = (60.0 / track.bpm) / 4.0;
+    const totalSecs = Math.floor(totalSteps * stepTime);
+    const elapsedSecs = Math.floor(currentStep * stepTime);
+    const pIdx = Math.floor(currentStep / 64);
+    const patNum = (pIdx + 1).toString().padStart(2, '0');
+    const patTotal = track.patterns.length.toString().padStart(2, '0');
+
+    document.getElementById('lcdTrackNo').textContent = 'TRACK 0' + (currentTrackIdx + 1) + '/03';
+    document.getElementById('lcdBpm').textContent = track.bpm + ' BPM';
+    const elPat = document.getElementById('lcdPattern');
+    if (elPat) elPat.textContent = 'PAT: ' + patNum + '/' + patTotal;
+    const elTime = document.getElementById('lcdTime');
+    if (elTime) elTime.textContent = formatTime(elapsedSecs) + ' / ' + formatTime(totalSecs);
+    const elTitle = document.getElementById('lcdTrackTitle');
+    if (elTitle) elTitle.textContent = '♫ ' + track.shortTitle + ' • [Pat ' + patNum + ': ' + track.patterns[pIdx].name + '] • ' + track.genre;
     document.getElementById('midiTrackSelect').value = currentTrackIdx.toString();
   }
 
@@ -847,7 +1197,7 @@
     }
   }
 
-  // Equalizer Visualizer Drawing
+    // Equalizer Visualizer Drawing
   const canvas = document.getElementById('eqCanvas');
   const canvasCtx = canvas ? canvas.getContext('2d') : null;
   const numBars = 16;
