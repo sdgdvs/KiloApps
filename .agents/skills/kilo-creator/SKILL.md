@@ -27,6 +27,7 @@ This skill designs and implements new applications or deep game worlds on exactl
    - **Self-Contained Web File**: Single HTML5 file located at `KiloOS/public/apps/k<name>.html` with inline CSS/JS.
    - **Native Counterpart (Optional/Recommended)**: When creating native C version, place in `K<Name>/main.c` with `build.bat`.
    - **Hard Size Ceiling**: Web file and native executable must each be strictly `< 999 KB`.
+   - **Universal Audio Standard**: Procedural music and sound effects must follow the Genesis (YM2612 FM synthesis) and SNES (SPC700 stereo delay warmth) standard per `arg_plan.md` with zero external audio assets.
 
 3. **System Registration**:
    - Add new app descriptor to the `APPS` array in `KiloOS/src/App.jsx` with appropriate folder (`Games`, `System`, `Media`, `Office`, `Network`, `Dev`).

@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-21T23:55:00Z — kilo-expander: KBase**
+  - Status: PASS ✅ (Deep numerical, float, bitboard, and encoding expansion; Web & Win32 parity).
+  - Multi-Base & Vintage: Packed BCD, reflected Gray code, and Project Echo classified preset (0x10199904).
+  - Extended Bitwise Suite: Nybble swap, LSB isolation/clear, NAND, NOR, XNOR, AND-NOT (ANDN), and CLMUL.
+  - Floating & Fixed-Point: IEEE-754 FP16 half-precision, Bfloat16 neural float, and Q-format DSP inspector (Q8.8, Q16.16, Q0.15).
+  - Encodings & Code Gen: MIDI VLQ big-endian stream, multi-language code export (C/C++, Rust, Python, NASM), Markdown export.
+  - Verification: Clean MSVC Native C build (21.5 KB); Vite web build clean; Edge CDP test suite (0 errors) & security lint passed.
+
 - **2026-09-21T21:55:00Z — kilo-qa: KTerm**
   - Status: PASS ✅ (Pass 5 audit: Quicksave/quickload state persistence, tutorial integrity, modal ergonomics, leak cleanup).
   - State Persistence: Quicksave (F5) and quickload (F9) across web (localStorage) and native (kterm.dat) capturing all tabs, histories, aliases, macros.

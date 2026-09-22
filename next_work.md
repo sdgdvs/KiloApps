@@ -21,6 +21,7 @@ current_targets:
 virtual_web_target: "kweb://portal"
 virtual_web_rotation:
   - "kweb://geocities"
+  - "kweb://warez"
   - "kweb://portal"
   - "kweb://webring"
   - "kweb://users/~neon_rider"
@@ -29,8 +30,8 @@ virtual_web_rotation:
   - "kweb://darknet"
 last_run:
   agent: director-task
-  app: "Virtual Web (geocities.html)"
-  timestamp: "2026-09-22T03:42:00Z"
+  app: "Virtual Web (warez.html)"
+  timestamp: "2026-09-22T04:00:00Z"
 last_planner_run: "2026-09-21T05:46:00Z"
 ---
 
@@ -67,6 +68,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
    - The virtual net sites under `/KiloOS/public/web/` browsable in `KNet` must NEVER remain cosmetic stubs, fake placeholders, or potemkin villages.
    - Agents (`kilo-expander`, `kilo-creator`, `kilo-graphics`, `kilo-usability`) must continually build out real, functional, interactive Web 1.0 experiences on these sites: working sound engines (Web Audio MIDI/synth), interactive CGI-style forms (guestbooks, search indices, calculators, voting polls), retro browser games, downloadable files, and nested subpages.
    - The `virtual_web_target` rotates eternally alongside app targets, ensuring the retro web ecosystem grows with genuine depth.
+9. **Universal Audio Architecture (Genesis & SNES Standard)**:
+   - All procedural chiptune music, sound effects, and virtual net jukeboxes must implement the Sega Genesis (Yamaha YM2612 2-operator FM synthesis with modulation envelopes) and Super Nintendo (SPC700 stereo delay warmth) standard per `arg_plan.md`. Zero external audio files or soundfonts permitted.
 
 ---
 
@@ -145,6 +148,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-22T04:00:00Z — director-task: 0xRELEASE Warez Portal, Cracktros & Audio Standard**
+  - Status: PASS ✅ (warez.html launched with 4 interactive cracktros & Genesis/SNES FM audio).
+  - Warez Archive: Authentic 1999 scene releases (Fairlight, Razor 1911, Paradox, Skid Row) with filterable catalog.
+  - Interactive Cracktros: 3D vector rotating polyhedra (cube, octahedron, star, torus), copper raster bars, sine scroller, 3D starfield.
+  - Genesis/SNES Synthesis: 2-op FM (YM2612) slap-bass/brass and SPC700 stereo delay echoes with zero external audio assets.
+  - Subterranean Darknet Model: Embedded cryptic gateway in NFO CRC32 checksum and keygen seeds routing to kweb://darknet.
+  - Fleet Audio Standard: Enforced Genesis/SNES audio architecture across arg_plan.md, skills, and next_work.md Rule 9.
+  - Verification: warez.html is 52.7 KB (<999 KB); clean Vite build; security lint passed.
+
 - **2026-09-22T03:42:00Z — director-task: CyberSpire 2-Minute Demoscene & Keygen Soundtrack Upgrade**
   - Status: PASS ✅ (3 full 2-minute demoscene/keygen compositions with drops, risers, and tracker synthesis).
   - Compositions: Track 1 (135 BPM Synthwave, 02:08), Track 2 (128 BPM Amiga MOD, 02:15), Track 3 (144 BPM Keygen, 02:13).
@@ -176,11 +188,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Desktop Compliance: Start splash overlay, tutorialSeen flag persistence, F5 quicksave, F9 quickload, audio synthesizer.
   - Verification: Clean MSVC Native C build (17.5 KB); Vite web build clean (80.1 KB); 17 automated tests & security lint passed.
 
-- **2026-09-21T23:55:00Z — kilo-expander: KBase**
-  - Status: PASS ✅ (Deep numerical, float, bitboard, and encoding expansion; Web & Win32 parity).
-  - Multi-Base & Vintage: Packed BCD, reflected Gray code, and Project Echo classified preset (0x10199904).
-  - Extended Bitwise Suite: Nybble swap, LSB isolation/clear, NAND, NOR, XNOR, AND-NOT (ANDN), and CLMUL.
-  - Floating & Fixed-Point: IEEE-754 FP16 half-precision, Bfloat16 neural float, and Q-format DSP inspector (Q8.8, Q16.16, Q0.15).
-  - Encodings & Code Gen: MIDI VLQ big-endian stream, multi-language code export (C/C++, Rust, Python, NASM), Markdown export.
-  - Verification: Clean MSVC Native C build (21.5 KB); Vite web build clean; Edge CDP test suite (0 errors) & security lint passed.
 

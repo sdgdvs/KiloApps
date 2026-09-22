@@ -112,3 +112,34 @@ The Virtual 1999 Web is not a collection of placeholder "under construction" jok
 2. **Zero External Dependencies**: All audio, graphics, animations, and interactive elements must be implemented using pure standard web technologies (HTML5, Canvas, Web Audio API, localStorage) without CDN calls or external libraries.
 3. **Strict Size Ceiling**: Each web page in `KiloOS/public/web/` must remain self-contained and strictly `< 999 KB`.
 4. **Rotating Fleet Expansion**: The fleet maintains an eternal rotating expansion task (`virtual_web_target`) in `next_work.md` across all worker skills (`kilo-expander`, `kilo-creator`, `kilo-graphics`, `kilo-usability`), systematically transforming every virtual node from simple beginnings into rich, exploratory digital artifacts.
+
+---
+
+## 5. Universal Fleet Audio Architecture: Genesis & SNES Chiptune Standard
+
+All low-space procedural music, game sound effects, and virtual net soundtracks across KiloApps must adhere to the **Sega Genesis (Yamaha YM2612 FM) & Super Nintendo (SPC700 DSP)** acoustic standard:
+
+### 1. Sega Genesis FM Synthesis (YM2612 2-Operator Architecture)
+- **Carrier & Modulator Network**: Frequency Modulation via Web Audio API nodes: `modulatorOsc -> modGain -> carrierOsc.frequency`.
+- **Modulation Envelope**: Rapid exponential decay on modulation index creating the iconic punchy, metallic, and woody slap bass (e.g., Sonic the Hedgehog, Streets of Rage) and brass leads.
+- **Harmonic Ratios**: Integer multiples (1:1, 1:2, 2:1, 3:1) for bright bells, punchy basses, and crystal chimes without sample bloat.
+
+### 2. Super Nintendo Acoustic Space (SPC700 Stereo Delay & Warmth)
+- **Stereo Slapback Delay**: Low-pass filtered feedback delay line (160ms–220ms delay, ~2200Hz filter damping, 0.25–0.30 feedback gain) simulating the legendary 8-tap SPC700 hardware echo.
+- **Warm Resonant Pads**: Filtered triangle/sawtooth waveforms with soft ADSR envelopes providing lush 16-bit chord foundations.
+
+### 3. Zero-Sample Constraint
+- Pure algorithmic synthesis: zero external audio files (.mp3, .wav, .ogg) or bloated soundfont banks. All music and sound effects must be generated in real-time within `< 50 KB` of procedural code.
+
+---
+
+## 6. Subterranean Darknet Discovery Model (The Warez/NFO Standard)
+
+Darknet nodes (`kweb://darknet`, `kweb://deep-core`, Node 0x7F) and ARG gateways must **never** be linked on surface web navigation bars, default bookmarks, or clearnet portal menus. 
+
+Instead, the canon discovery model is established by the underground scene (`kweb://warez` / [`warez.html`](file:///C:/Users/M/Documents/antigravity/peaceful-carson/KiloOS/public/web/warez.html)):
+1. **Corrupted File Checksums**: Discovered as anomalous CRC32/MD5 hash records inside authentic ANSI `.NFO` release files.
+2. **Keygen Cipher Seeds**: Entering specific ARG keywords (`darknet`, `matrix`, `echoes`, `0x7f`) into demoscene key generators yields subterranean relay coordinates.
+3. **Memory & Binary Glitches**: Memory dump offsets in `KHex`, glitched ANSI lines in `KBBS`, or audio frequencies in `KSynth`.
+This preserves mystery, rewards inquisitive exploration, and upholds authentic late-90s hacker subculture realism.
+

@@ -22,7 +22,7 @@ This skill executes content depth, visual polish, or balance passes on exactly O
    - Expand toward the 999 KB budget with rich, replayable systems.
 2. **♟️ Classic & Board/Puzzle Games** (*KChess, KGo, KReversi, KConnect4, KSolitaire, KSudoku, KTowers, KMines, KTetris, KPong*):
    - **DO NOT** add campaigns, boss battles, or combat skills.
-   - **Focus**: AI intelligence, difficulty curves (Easy/Medium/Hard tuning), responsive controls, clean board rendering, victory animations, and audio feedback.
+   - **Focus**: AI intelligence, difficulty curves (Easy/Medium/Hard tuning), responsive controls, clean board rendering, victory animations, and audio feedback (Genesis YM2612 FM & SNES SPC700 chiptunes per `arg_plan.md`).
 3. **Maturity & Skip Protocol**:
    - For mature games (6+ passes) that are already cohesive, balanced, and complete without pending directives: log `⏭️ Skip — app is mature, balanced, and complete.` Rotate to queue bottom and finish turn cleanly without churning code.
 

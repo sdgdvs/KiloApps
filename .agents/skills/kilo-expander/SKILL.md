@@ -22,13 +22,13 @@ This skill deepens functional utility and capabilities on exactly ONE applicatio
 2. **📝 Productivity & Data** (*KPad, KNote, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass*):
    - Focus: Data interoperability, multi-tab sessions, tagging, search indexing, schema flexibility, export formats (CSV, JSON, Markdown).
 3. **🎨 Media & Creative** (*KPaint, KImage, KAudio, KSynth, KMedia, KChart, KGraph, KMandel, KType*):
-   - Focus: Format support, DSP/audio synthesis (ADSR envelopes, waveforms), image processing filters, canvas layers.
+   - Focus: Format support, DSP/audio synthesis (Yamaha YM2612 2-op FM, SNES SPC700 delay echo, ADSR envelopes), image processing filters, canvas layers.
 4. **🎮 Games (Meta & Engine Utility Only)**:
    - Focus: Replay viewers, custom key rebinding, save state management, PGN/FEN/board state import/export.
    - **DO NOT** add gameplay content, bosses, or campaigns (reserved for `kilo-graphics`).
 5. **🌐 Virtual 1999 Web Expansion (`virtual_web_target`)**:
    - When assigned to advance the virtual web or when native app targets are mature, expand `virtual_web_target` in `KiloOS/public/web/*.html`.
-   - **Anti-Potemkin Quality Standard**: Sites must NEVER be shallow placeholders or fake stubs. Build genuine Web 1.0 depth: working simulated backends (guestbooks, search indices, calculators, voting polls), custom Web Audio synthesizers/MIDI jukeboxes, retro browser mini-games, downloadable text/tracker assets, and interconnected hypermedia links.
+   - **Anti-Potemkin Quality Standard**: Sites must NEVER be shallow placeholders or fake stubs. Build genuine Web 1.0 depth: working simulated backends (guestbooks, search indices, calculators, voting polls), Genesis/SNES Web Audio synthesizers/MIDI jukeboxes, demoscene cracktros, retro browser mini-games, downloadable text/tracker assets, and interconnected hypermedia links.
    - Maintain strict adherence to HTML 4.01 retro styling, zero external dependencies, and file size strictly `< 999 KB`.
 6. **Maturity & Skip Protocol**:
    - If an app has undergone 6+ passes and is functionally complete without active requests: log `⏭️ Skip — app is feature-complete and mature.` Rotate to queue bottom and finish cleanly.
