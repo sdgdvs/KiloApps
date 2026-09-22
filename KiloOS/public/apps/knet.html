@@ -1485,13 +1485,14 @@
     // Local KiloApps Routes & Virtual 1999 Web Pages
     if (url.startsWith('/apps/') || url.startsWith('/web/') || url.endsWith('.html')) {
       httpWebFrame.removeAttribute('srcdoc');
-      httpWebFrame.src = url;
+      const buster = (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+      httpWebFrame.src = url + buster;
       httpStatusBadge.className = "badge badge-success";
       httpStatusBadge.textContent = "HTTP 200 OK";
       footerStatus.textContent = "Rendered hypermedia: " + url;
       
       try {
-        const localRes = await fetch(url);
+        const localRes = await fetch(url, { cache: 'no-cache' });
         const text = await localRes.text();
         currentRawText = text;
         httpContentArea.textContent = text;
