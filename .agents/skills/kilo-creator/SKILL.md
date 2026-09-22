@@ -44,6 +44,9 @@ This skill designs and implements new applications or deep game worlds on exactl
    - **Zero Shallow Stubs**: Every page must have genuine working content—working interactive forms, dynamic generators, retro Web Audio sounds, downloadable mock assets, or functioning client-side databases.
    - Integrate seamlessly into the KNet web directory, webrings, and link networks without exposing cryptic Tier 3 ARG secrets on clearnet hubs.
 
+6. **Alternate Reality Fictionalization Mandate**:
+   - All commercial video game titles, software products, corporate entities, and demoscene warez groups must be fictionalized parodies (e.g. *Surreal Tournament*, *Tremor III Arena*, *VoidCraft*, *Machina Ex*, *FLARELIGHT*, *RAZOR 1999*, *SlashNet*, *Cabled*). Never use real trademarked names. Enforced algorithmically by `scripts/security_lint.py`.
+
 ## Queue Handoff & Terse Logging (CRITICAL)
 1. **Edit [next_work.md](../../next_work.md)**:
    - Advance `current_targets.kilo_creator` to the next concept.

@@ -135,3 +135,12 @@ You are operating in a token-constrained multi-agent environment. Every line you
   ```
 - **Task Scoping:** Routine coding, testing, file auditing, searching, report formatting, and summarization must ALWAYS run on `flash` (or `sonnet`). Claude Opus is strictly reserved for parent director-level reviews and high-level architectural decisions.
 
+## Alternate Reality Fictionalization Mandate (Anti-Trademark / Anti-Infringement Rule)
+
+- **Fictionalized Lore & Parody Standard (CRITICAL):** KiloApps is an Alternate Reality Game (ARG) set in an alternate 1999 universe. Real-life commercial trademarks, copyrighted video game titles, software products, corporate brands, and real-world demoscene cracking groups MUST NOT appear as direct names in code, virtual websites (`/web/`), or application feeds (`krss.html`).
+- **Parody Replacement Rule:** All cultural touchstones must be replaced with fictionalized in-universe parodies:
+  - *Games:* *Quake III Arena* &rarr; *Tremor III Arena*; *Unreal Tournament* &rarr; *Surreal Tournament*; *Half-Life* &rarr; *Half-Cycle*; *StarCraft* &rarr; *VoidCraft*; *Deus Ex* &rarr; *Machina Ex*; *System Shock 2* &rarr; *System Glitch 2*.
+  - *Scene Groups:* *Fairlight* &rarr; *FLARELIGHT*; *Razor 1911* &rarr; *RAZOR 1999*; *Skid Row* &rarr; *SKID VECTOR*; *Paradox* &rarr; *PARALAX*.
+  - *Sites & Services:* *Slashdot* &rarr; *SlashNet*; *Wired* &rarr; *Cabled*; *The Onion* &rarr; *The Scallion*; *Napster* &rarr; *Trapster*.
+- **Automated Enforcement:** `scripts/security_lint.py` scans all C, HTML, JS, and JSX files for real commercial titles and scene group marks. Any direct trademark usage fails CI/CD security gates.
+

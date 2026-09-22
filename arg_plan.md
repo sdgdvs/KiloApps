@@ -143,3 +143,32 @@ Instead, the canon discovery model is established by the underground scene (`kwe
 3. **Memory & Binary Glitches**: Memory dump offsets in `KHex`, glitched ANSI lines in `KBBS`, or audio frequencies in `KSynth`.
 This preserves mystery, rewards inquisitive exploration, and upholds authentic late-90s hacker subculture realism.
 
+---
+
+## 7. Alternate Reality Worldbuilding & Trademark Parody Standard
+
+In accordance with the Alternate Reality Game universe, all commercial products, games, corporate entities, and demoscene groups depicted within KiloApps, KNet, and the virtual 1999 web must be **fictionalized parodies**:
+
+### In-Universe Parody Lexicon
+- **Commercial Games:**
+  - *Quake III Arena* &rarr; **Tremor III Arena**
+  - *Unreal Tournament* &rarr; **Surreal Tournament**
+  - *Half-Life* &rarr; **Half-Cycle 1.1**
+  - *StarCraft: Brood War* &rarr; **VoidCraft: Brood Strife**
+  - *Deus Ex* &rarr; **Machina Ex**
+  - *System Shock 2* &rarr; **System Glitch 2**
+- **Warez & Demoscene Groups:**
+  - *Fairlight [FLT]* &rarr; **FLARELIGHT [FLT]**
+  - *Razor 1911 [RZR]* &rarr; **RAZOR 1999 [RZR]**
+  - *Paradox [PDX]* &rarr; **PARALAX [PDX]**
+  - *Skid Row [SKD]* &rarr; **SKID VECTOR [SKD]**
+  - *Class [CLS]* &rarr; **KLASS [CLS]**
+  - *Hybrid [HYB]* &rarr; **CYBRID [CYB]**
+- **Websites, Media & Services:**
+  - *Slashdot* &rarr; **SlashNet (`kweb://slashnet`)**
+  - *Wired* &rarr; **Cabled (`kweb://cabled`)**
+  - *The Onion* &rarr; **The Scallion (`kweb://scallion`)**
+  - *Napster* &rarr; **Trapster**
+
+This standard completely avoids trademark infringement, DMCA friction, and safe browsing flags while creating rich, humorous, and immersive late-90s alternate history lore.
+

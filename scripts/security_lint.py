@@ -93,6 +93,22 @@ BANNED_WEB_PATTERNS = {
     "web_cryptoloot": (r"\bcrypto-loot\b", "Cryptomining script"),
 }
 
+# 4. In-Universe ARG Trademark & Copyright Banlist
+# All commercial game titles, real-world cracking/warez groups, and corporate brand names
+# MUST be replaced with fictionalized in-universe parodies (e.g. Surreal Tournament, Tremor III Arena).
+BANNED_TRADEMARK_PATTERNS = {
+    "trademark_quake_arena": (r"\bQuake\s+(?:III|3|Arena)\b", "Commercial game trademark (use parody like 'Tremor III Arena')"),
+    "trademark_unreal_tournament": (r"\bUnreal\s+Tournament\b", "Commercial game trademark (use parody like 'Surreal Tournament')"),
+    "trademark_half_life": (r"\bHalf-Life(?:\s+[12])?\b", "Commercial game trademark (use parody like 'Half-Cycle')"),
+    "trademark_starcraft": (r"\bStarCraft\b", "Commercial game trademark (use parody like 'VoidCraft')"),
+    "trademark_deus_ex": (r"\bDeus\s+Ex\b", "Commercial game trademark (use parody like 'Machina Ex')"),
+    "trademark_system_shock": (r"\bSystem\s+Shock(?:\s+2)?\b", "Commercial game trademark (use parody like 'System Glitch')"),
+    "trademark_razor1911": (r"\bRazor\s+1911\b", "Real-world warez scene group (use parody like 'RAZOR 1999')"),
+    "trademark_fairlight": (r"\bFairlight\b", "Real-world warez scene group (use parody like 'FLARELIGHT')"),
+    "trademark_skidrow": (r"\bSkid\s+Row\b", "Real-world warez scene group (use parody like 'SKID VECTOR')"),
+    "trademark_paradox_crack": (r"\bParadox\s+(?:Crack|Cracking|Keygen|Release)\b", "Real-world warez scene group (use parody like 'PARALAX')"),
+}
+
 WEB_SPECIFIC_WHITELISTS = {
     "kcalc.html": ["web_new_function"],     # Mathematical expression evaluation
     "kgraph.html": ["web_new_function"],    # Formula curve plotting (e.g. sin(x))
@@ -218,6 +234,13 @@ def check_c_file(file_path: Path) -> list[str]:
                 f"GetProcAddress resolves '{target_api}'"
             )
 
+    # 6. Check In-Universe Trademark & Copyright Banlist (scans strings/content in C)
+    for rule_key, (pattern, reason) in BANNED_TRADEMARK_PATTERNS.items():
+        if re.search(pattern, content, re.IGNORECASE):
+            violations.append(
+                f"[{app_name}] Trademark/copyrighted term in {file_path.name}: {reason} (pattern: {pattern})"
+            )
+
     return violations
 
 
@@ -237,6 +260,10 @@ def check_web_file(file_path: Path) -> list[str]:
             continue
         if re.search(pattern, content, re.IGNORECASE):
             violations.append(f"Banned Web/JS pattern in {filename}: {reason} (pattern: {pattern})")
+
+    for rule_key, (pattern, reason) in BANNED_TRADEMARK_PATTERNS.items():
+        if re.search(pattern, content, re.IGNORECASE):
+            violations.append(f"Trademark/copyrighted term in {filename}: {reason} (pattern: {pattern})")
 
     return violations
 
@@ -277,6 +304,13 @@ def run_security_scan(pr_mode: bool = False, base_ref: str = "origin/main") -> i
 
         for web_file in (REPO_ROOT / "KiloOS" / "public" / "apps").glob("*.html"):
             violations.extend(check_web_file(web_file))
+
+        for web_file in (REPO_ROOT / "KiloOS" / "public" / "web").glob("*.html"):
+            violations.extend(check_web_file(web_file))
+
+        for js_file in (REPO_ROOT / "KiloOS" / "src").glob("**/*"):
+            if js_file.suffix.lower() in [".js", ".jsx"]:
+                violations.extend(check_web_file(js_file))
 
     log("=" * 60)
     if violations:

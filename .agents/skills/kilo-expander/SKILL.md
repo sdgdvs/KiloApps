@@ -32,6 +32,8 @@ This skill deepens functional utility and capabilities on exactly ONE applicatio
    - Maintain strict adherence to HTML 4.01 retro styling, zero external dependencies, and file size strictly `< 999 KB`.
 6. **Maturity & Skip Protocol**:
    - If an app has undergone 6+ passes and is functionally complete without active requests: log `⏭️ Skip — app is feature-complete and mature.` Rotate to queue bottom and finish cleanly.
+7. **Alternate Reality Fictionalization Mandate**:
+   - All commercial video game titles, software products, corporate entities, and demoscene warez groups must be fictionalized parodies (e.g. *Surreal Tournament*, *Tremor III Arena*, *VoidCraft*, *Machina Ex*, *FLARELIGHT*, *RAZOR 1999*, *SlashNet*, *Cabled*). Never use real trademarked names. Enforced algorithmically by `scripts/security_lint.py`.
 
 ## Verification
 1. Verify web app build: `cd KiloOS && npm run build`.

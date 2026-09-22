@@ -130,17 +130,17 @@ static void InitDefaultFeedsAndArticles(void) {
     k_strcpy(g_feeds[1].category, "ARG Lore");
     k_strcpy(g_feeds[1].url, "kweb://10.19.99.4/classified.rss");
 
-    // Feed 2: Slashdot 1999
+    // Feed 2: SlashNet 1999
     g_feeds[2].id = 2;
-    k_strcpy(g_feeds[2].title, "Slashdot (Oct 1999)");
+    k_strcpy(g_feeds[2].title, "SlashNet (Oct 1999)");
     k_strcpy(g_feeds[2].category, "Tech Retro");
-    k_strcpy(g_feeds[2].url, "https://slashdot.org/slashdot.rdf");
+    k_strcpy(g_feeds[2].url, "kweb://slashnet/news.rdf");
 
-    // Feed 3: Wired News Vintage
+    // Feed 3: Cabled News Vintage
     g_feeds[3].id = 3;
-    k_strcpy(g_feeds[3].title, "Wired Millennium News");
+    k_strcpy(g_feeds[3].title, "Cabled Millennium News");
     k_strcpy(g_feeds[3].category, "Tech Retro");
-    k_strcpy(g_feeds[3].url, "https://wired.com/news/rss.xml");
+    k_strcpy(g_feeds[3].url, "kweb://cabled/news.xml");
 
     // Feed 4: Retro Gaming Insider
     g_feeds[4].id = 4;
@@ -189,13 +189,13 @@ static void InitDefaultFeedsAndArticles(void) {
     k_strcpy(a->content, "Those who seek the core source must navigate the cyber shrines of the Webring. Look for the hex frequencies embedded in KSynth audio transmissions and the corrupted memory dumps of KHex.");
     a->isRead = 0; a->isStarred = 0;
 
-    // Feed 2 Articles (Slashdot 1999)
+    // Feed 2 Articles (SlashNet 1999)
     a = &g_articles[g_articleCount++];
     a->id = 4; a->feedId = 2;
     k_strcpy(a->title, "Linux Kernel 2.2.13 Released; Y2K Readiness Assessed");
     k_strcpy(a->date, "1999-10-20 14:15");
     k_strcpy(a->author, "CmdrTaco");
-    k_strcpy(a->url, "https://slashdot.org/article.pl?sid=99/10/20/kernel");
+    k_strcpy(a->url, "kweb://slashnet/article-kernel");
     k_strcpy(a->content, "Linus Torvalds and the core kernel hackers have dropped release 2.2.13 today with fixes for networking sockets and SMP scaling.\r\n\r\nMeanwhile, IT departments worldwide are stocking freeze-dried rations and inspecting COBOL dates ahead of the December 31 midnight rollover.");
     a->isRead = 0; a->isStarred = 0;
 
@@ -204,28 +204,28 @@ static void InitDefaultFeedsAndArticles(void) {
     k_strcpy(a->title, "Netscape Releases Gecko Layout Engine Source");
     k_strcpy(a->date, "1999-10-19 11:20");
     k_strcpy(a->author, "Hemos");
-    k_strcpy(a->url, "https://slashdot.org/article.pl?sid=99/10/19/gecko");
+    k_strcpy(a->url, "kweb://slashnet/article-gecko");
     k_strcpy(a->content, "The Mozilla open source project has achieved a major rendering milestone with Gecko. The next generation browser promises strict standards compliance and fast rendering across Unix and Win32.");
     a->isRead = 0; a->isStarred = 0;
 
-    // Feed 3 Articles (Wired 1999)
+    // Feed 3 Articles (Cabled 1999)
     a = &g_articles[g_articleCount++];
     a->id = 6; a->feedId = 3;
     k_strcpy(a->title, "MP3 Revolution Shakes the Recording Industry");
     k_strcpy(a->date, "1999-10-18 16:40");
     k_strcpy(a->author, "Staff Reporter");
-    k_strcpy(a->url, "https://wired.com/news/technology/mp3");
+    k_strcpy(a->url, "kweb://cabled/article-mp3");
     k_strcpy(a->content, "College dorms are saturated with peer-to-peer traffic as Napster gains tens of thousands of new users daily. Portable players like the Rio PMP300 are selling out faster than manufacturers can ship flash chips.");
     a->isRead = 1; a->isStarred = 0;
 
     // Feed 4 Articles (Gaming 1999)
     a = &g_articles[g_articleCount++];
     a->id = 7; a->feedId = 4;
-    k_strcpy(a->title, "Quake III Arena vs Unreal Tournament: The LAN Deathmatch Showdown");
+    k_strcpy(a->title, "Tremor III Arena vs Surreal Tournament: The LAN Deathmatch Showdown");
     k_strcpy(a->date, "1999-10-17 19:00");
     k_strcpy(a->author, "FragMaster99");
     k_strcpy(a->url, "kweb://portal/gaming/arena-showdown");
-    k_strcpy(a->content, "The fall of 1999 is the golden age of 3D accelerated multiplayer shooters. id Software's id Tech 3 engine delivers curved surfaces and blistering railgun action, while Epic Games' UT offers the shock rifle and legendary Assault maps.");
+    k_strcpy(a->content, "The fall of 1999 is the golden age of 3D accelerated multiplayer shooters. id Software's id Tech 3 engine delivers curved surfaces and blistering railgun action, while Epic Digital's Surreal Tournament offers the flux rifle and legendary Assault maps.");
     a->isRead = 0; a->isStarred = 1;
 }
 

@@ -70,6 +70,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
    - The `virtual_web_target` rotates eternally alongside app targets, ensuring the retro web ecosystem grows with genuine depth.
 9. **Universal Audio Architecture (Genesis & SNES Standard)**:
    - All procedural chiptune music, sound effects, and virtual net jukeboxes must implement the Sega Genesis (Yamaha YM2612 2-operator FM synthesis with modulation envelopes) and Super Nintendo (SPC700 stereo delay warmth) standard per `arg_plan.md`. Zero external audio files or soundfonts permitted.
+10. **Alternate Reality Fictionalization Mandate**:
+   - All commercial game titles, real-world cracking/warez groups, and commercial brand names across apps, C code, and virtual websites must be replaced with fictionalized parodies (e.g., *Surreal Tournament*, *Tremor III Arena*, *VoidCraft*, *Machina Ex*, *FLARELIGHT*, *RAZOR 1999*, *SlashNet*, *Cabled*).
+   - Enforced algorithmically by `scripts/security_lint.py`.
 
 ---
 
@@ -148,6 +151,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-22T04:35:00Z — director-task: Alternate Reality Fictionalization Mandate & Automated Checks**
+  - Status: PASS ✅ (Fictionalized remaining commercial brands; codified parody mandate; automated security lint).
+  - KRSS Fictionalization: Replaced Quake III/Unreal with Tremor III/Surreal Tournament; Slashdot/Wired/Onion with SlashNet/Cabled/The Scallion across C and HTML.
+  - Foundational Docs: Codified parody standards in .agents/AGENTS.md, arg_plan.md Section 7, next_work.md Rule 10, and worker SKILL.md files.
+  - Automated Gatekeeper: Added BANNED_TRADEMARK_PATTERNS to scripts/security_lint.py scanning C, HTML, JS, and JSX.
+  - Verification: Clean Vite build; full repo security lint passed (0 violations); all sizes strictly < 999 KB.
+
 - **2026-09-22T04:05:00Z — kilo-graphics: KSpace**
   - Status: PASS ✅ (Multi-chassis fighter customization, procedural hulls & plumes, runaway speed fix, boss rush balance).
   - Multi-Chassis System: 3 distinct hulls (Alpha Interceptor, Crimson Vanguard, Void Phantom) with unique geometries, colorways, thruster plumes, hotkeys ([C]/[F4]), and persistence.
@@ -180,11 +190,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visualizer & Controls: Animated 16-band LED peak meter, green LCD marquee, track select, volume/mute, and user unlock gesture.
   - Eternal Fleet Track: Added Rule 8, virtual_web_target rotation in next_work.md, SKILL.md updates, and arg_plan.md quality standards.
   - Verification: geocities.html is 29.3 KB (<999 KB ceiling); clean Vite build; security lint passed.
-
-- **2026-09-22T02:55:00Z — director-task: KNet & Virtual Clearnet**
-  - Status: PASS ✅ (Darknet, KDirector, and Echoes isolated behind KDirector passkey; clearnet sanitized).
-  - Navigation: Direct Darknet, KDirector, and Echoes bookmarks and surface chips removed from KNet.
-  - Authentication: Added hidden Admin section with Director passkey gate (`ECHO-1999-ARCHITECT`) and session memory.
-  - Clearnet Audit: Replaced ARG/Darknet category on portal.html with retro BBS communications; updated webring.html and geocities.html.
-  - Cryptic Tone: Stripped overt ARG labels across web pages; retained manual kweb:// address bar resolution for solvers.
-  - Verification: Clean Vite build (213ms); zero build errors; knet.html (82.8 KB) compliant with 999KB ceiling.

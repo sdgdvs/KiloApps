@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-22T02:55:00Z — director-task: KNet & Virtual Clearnet**
+  - Status: PASS ✅ (Darknet, KDirector, and Echoes isolated behind KDirector passkey; clearnet sanitized).
+  - Navigation: Direct Darknet, KDirector, and Echoes bookmarks and surface chips removed from KNet.
+  - Authentication: Added hidden Admin section with Director passkey gate (`ECHO-1999-ARCHITECT`) and session memory.
+  - Clearnet Audit: Replaced ARG/Darknet category on portal.html with retro BBS communications; updated webring.html and geocities.html.
+  - Cryptic Tone: Stripped overt ARG labels across web pages; retained manual kweb:// address bar resolution for solvers.
+  - Verification: Clean Vite build (213ms); zero build errors; knet.html (82.8 KB) compliant with 999KB ceiling.
+
 - **2026-09-22T01:50:00Z — kilo-creator: KRSS**
   - Status: PASS ✅ (New application #98 created: Retro Web 1.0 RSS/Atom reader & syndication workstation).
   - Multi-Standard Parsing: Deterministic XML engine for RSS 0.91, 1.0 (RDF), 2.0, and Atom 1.0 feeds.

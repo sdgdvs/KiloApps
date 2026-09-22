@@ -25,6 +25,8 @@ This skill executes content depth, visual polish, or balance passes on exactly O
    - **Focus**: AI intelligence, difficulty curves (Easy/Medium/Hard tuning), responsive controls, clean board rendering, victory animations, and audio feedback (Genesis YM2612 FM & SNES SPC700 chiptunes per `arg_plan.md`).
 3. **Maturity & Skip Protocol**:
    - For mature games (6+ passes) that are already cohesive, balanced, and complete without pending directives: log `⏭️ Skip — app is mature, balanced, and complete.` Rotate to queue bottom and finish turn cleanly without churning code.
+4. **Alternate Reality Fictionalization Mandate**:
+   - All commercial video game titles, software products, corporate entities, and demoscene warez groups must be fictionalized parodies (e.g. *Surreal Tournament*, *Tremor III Arena*, *VoidCraft*, *Machina Ex*, *FLARELIGHT*, *RAZOR 1999*, *SlashNet*, *Cabled*). Never use real trademarked names. Enforced algorithmically by `scripts/security_lint.py`.
 
 ## Verification
 1. Verify web app build: `cd KiloOS && npm run build`.
