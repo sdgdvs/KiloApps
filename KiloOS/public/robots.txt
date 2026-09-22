@@ -1,0 +1,9 @@
+# KiloApps Robots Policy
+# Restricts automated web scrapers from indexing subterranean ARG and simulated demo nodes.
+
+User-agent: *
+Disallow: /web/warez.html
+Disallow: /web/darknet.html
+Disallow: /apps/kdirector.html
+Disallow: /exe/
+Allow: /

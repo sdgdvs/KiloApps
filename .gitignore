@@ -41,3 +41,4 @@ ui-debug.log*
 # Local orchestrator runtime artifacts
 logs/
 .agents/.orchestrator.lock
+*.bundle
