@@ -20,6 +20,9 @@
   - Completed work: "✅ Done" is sufficient. Move entries older than ~30 to archive/.
   - Surgical edits only. Only read files relevant to current task.
 - **⚠️ UNIQUE VISUAL IDENTITY (CRITICAL):** Do NOT apply the same formulaic template to every game. Each game should have a UNIQUE visual identity that fits its theme. A chess game should look like polished wood, not a sci-fi HUD. A farm game should have warm watercolors, not cybernetic reticles. Think about what makes THIS game visually distinct. Avoid copy-pasting the same "4-layer particle engine, dual-tier shockwaves, filigree brackets, specular glint" to every game.
+- **⚠️ DIRECTOR MANDATE (2026-09-22) — SYSTEMATICALLY REMOVE TRAVELING SPECULAR GLINTS (CRITICAL):**
+  - On EVERY game pass, search for and REMOVE all rotating/traveling specular glint comets, perimeter glint dots, and moving border balls across both web (HTML) and native (C). They are annoying across every app and look like rogue gameplay projectiles/balls.
+  - Keep borders static, clean, and thematic. NEVER add new perimeter traveling glints.
 - **⚠️ DIRECTOR DIRECTIVE (2026-09-13) — STOP EXCESSIVE VISUAL FLOURISH & TURN SKIPPING RULE (CRITICAL):**
   - Stop inventing unneeded visual flourishes (blinking HUD reticles, corner diodes, perimeter traveling glints, screen shake, intrusive first-person weapon/hand overlays, or particle spam). Several apps now have too much flourish because unnecessary things were invented.
   - **Maturity Rule for Mature Games (Loop 6+):** For apps that have already been through 6+ passes, unless you have a good directive from the director to add something, **"turn skipped because this app is complete and we don't have new ideas here"** is completely fine and expected!

@@ -71,8 +71,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 9. **Universal Audio Architecture (Genesis & SNES Standard)**:
    - All procedural chiptune music, sound effects, and virtual net jukeboxes must implement the Sega Genesis (Yamaha YM2612 2-operator FM synthesis with modulation envelopes) and Super Nintendo (SPC700 stereo delay warmth) standard per `arg_plan.md`. Zero external audio files or soundfonts permitted.
 10. **Alternate Reality Fictionalization Mandate**:
-   - All commercial game titles, real-world cracking/warez groups, and commercial brand names across apps, C code, and virtual websites must be replaced with fictionalized parodies (e.g., *Surreal Tournament*, *Tremor III Arena*, *VoidCraft*, *Machina Ex*, *FLARELIGHT*, *RAZOR 1999*, *SlashNet*, *Cabled*).
-   - Enforced algorithmically by `scripts/security_lint.py`.
+    - All commercial game titles, real-world cracking/warez groups, and commercial brand names across apps, C code, and virtual websites must be replaced with fictionalized parodies (e.g., *Surreal Tournament*, *Tremor III Arena*, *VoidCraft*, *Machina Ex*, *FLARELIGHT*, *RAZOR 1999*, *SlashNet*, *Cabled*).
+    - Enforced algorithmically by `scripts/security_lint.py`.
+11. **Perimeter Glint & Traveling Comet Ban (DIRECTOR MANDATE - CRITICAL)**:
+    - All agents (especially `kilo-graphics` and `kilo-usability`) MUST systematically remove rotating/traveling specular glint comets and moving perimeter border dots from both web (HTML) and native (C) on all app passes.
+    - These moving dots are annoying, look like distracting projectiles/balls, and clutter gameplay across apps. Replace with clean, static, or period-accurate borders without traveling dots or orbital glint particles. NEVER add new perimeter traveling glints.
 
 ---
 
@@ -145,7 +148,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Instructions: <directive text here>
 -->
 
-*(No active director directives. Fleet runs default round-robin schedule.)*
+- **[ALL_APPS / FLEET] — Visual Quality & Graphics** | Director Directive
+  - ⚠️ AGENT NOTE: Human director request. Priority fleet-wide directive.
+  - Instructions: Systematically remove rotating/traveling specular glint comets, perimeter glint dots, and moving border balls across both web (HTML) and native (Win32 C) on every app pass. They are annoying across every app and look like distracting projectiles/balls. Replace with clean, static, or period-accurate borders without traveling dots or orbital glint particles. NEVER add new perimeter traveling glints.
 
 ---
 

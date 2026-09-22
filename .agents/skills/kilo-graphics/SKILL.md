@@ -27,6 +27,10 @@ This skill executes content depth, visual polish, or balance passes on exactly O
    - For mature games (6+ passes) that are already cohesive, balanced, and complete without pending directives: log `⏭️ Skip — app is mature, balanced, and complete.` Rotate to queue bottom and finish turn cleanly without churning code.
 4. **Alternate Reality Fictionalization Mandate**:
    - All commercial video game titles, software products, corporate entities, and demoscene warez groups must be fictionalized parodies (e.g. *Surreal Tournament*, *Tremor III Arena*, *VoidCraft*, *Machina Ex*, *FLARELIGHT*, *RAZOR 1999*, *SlashNet*, *Cabled*). Never use real trademarked names. Enforced algorithmically by `scripts/security_lint.py`.
+5. **🚫 Specular Glint & Traveling Comet Ban (DIRECTOR MANDATE - CRITICAL)**:
+   - On every pass, search for and REMOVE any traveling/rotating specular glint comets, perimeter glint dots, or moving border balls across both web (HTML) and native (C).
+   - These traveling dots are distracting, look like rogue projectiles/balls, and annoy players across games.
+   - Replace with clean, static, or period-accurate borders without traveling dots or orbital glint particles. NEVER add new perimeter traveling glints.
 
 ## Verification
 1. Verify web app build: `cd KiloOS && npm run build`.

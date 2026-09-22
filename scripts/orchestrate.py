@@ -317,6 +317,7 @@ def build_agent_prompt(agent: str, targets: dict) -> str:
         return (
             f"Activate skill 'kilo-graphics'. "
             f"Perform game content, visual polish, and balance pass for '{target}' per next_work.md. "
+            f"Search for and remove any rotating specular glints or traveling perimeter border dots. "
             f"Verify builds, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
         )
     elif agent == "kilo-usability":
