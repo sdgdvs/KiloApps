@@ -295,6 +295,13 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .active-task-banner:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: var(--active-color);
   }
 
   .active-task-banner span.tag {
@@ -1335,6 +1342,7 @@
     <div class="modal-body">
       <p style="font-size: 12px; color: var(--text-secondary);">Cycle durations and sound alerts can also be configured anytime under the "Cycle Settings" tab on the right desk.</p>
       <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button class="btn" id="btnOpenDeskSettings">⚙️ Open Full Cycle Settings Tab</button>
         <button class="btn" id="btnResetAllData" style="color: var(--pomo-red); border-color: rgba(239,68,68,0.3);">⚠️ Reset All History & Stats</button>
       </div>
     </div>
@@ -1382,6 +1390,16 @@ const state = {
   ambientTrack: 'none',
   ambientVolume: 0.3
 };
+
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 // --- Web Audio Synthesizer ---
 let audioCtx = null;
@@ -1686,7 +1704,7 @@ function startTimer() {
 function pauseTimer() {
   if (state.settings.strictMode && state.mode === 'focus' && state.remainingSeconds < state.targetDuration - 30) {
     if (!confirm('Strict Mode Active: Pausing will interrupt your cognitive flow. Proceed?')) {
-      return;
+      return false;
     }
   }
   state.isRunning = false;
@@ -1696,10 +1714,13 @@ function pauseTimer() {
   clearInterval(intervalTimer);
   stopAmbience();
   saveState();
+  return true;
 }
 
 function resetTimer() {
-  pauseTimer();
+  if (state.isRunning) {
+    if (!pauseTimer()) return;
+  }
   state.remainingSeconds = state.targetDuration;
   updateTimerDisplay();
   showToast('Timer reset', '🔄');
@@ -1712,7 +1733,7 @@ function skipPhase() {
       return;
     }
   }
-  pauseTimer();
+  if (!pauseTimer()) return;
   transitionNextPhase(false);
 }
 
@@ -1945,6 +1966,21 @@ function renderTasks() {
       saveState();
     });
 
+    const incBtn = document.createElement('button');
+    incBtn.className = 'btn btn-icon';
+    incBtn.style.fontSize = '11px';
+    incBtn.style.padding = '3px 6px';
+    incBtn.title = 'Add Pomodoro (+1 🍅)';
+    incBtn.textContent = '+🍅';
+    incBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      t.done += 1;
+      if (t.done >= t.est) t.completed = true;
+      renderTasks();
+      saveState();
+      showToast(`Added +1 🍅 to "${t.title}"`, '🍅');
+    });
+
     const delBtn = document.createElement('button');
     delBtn.className = 'btn btn-icon';
     delBtn.style.fontSize = '11px';
@@ -1958,6 +1994,7 @@ function renderTasks() {
     });
 
     actions.appendChild(pinBtn);
+    actions.appendChild(incBtn);
     actions.appendChild(delBtn);
 
     el.appendChild(left);
@@ -2090,10 +2127,10 @@ function renderHistory() {
   state.history.slice(0, 30).forEach(h => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${h.time}</td>
-      <td><strong>${h.mode}</strong></td>
-      <td>${h.duration}</td>
-      <td>${h.task} <span style="font-size: 10px; color: var(--text-muted);">[${h.tag}]</span></td>
+      <td>${escapeHtml(h.time)}</td>
+      <td><strong>${escapeHtml(h.mode)}</strong></td>
+      <td>${escapeHtml(h.duration)}</td>
+      <td>${escapeHtml(h.task)} <span style="font-size: 10px; color: var(--text-muted);">[${escapeHtml(h.tag)}]</span></td>
     `;
     tbody.appendChild(tr);
   });
@@ -2119,7 +2156,35 @@ function initDeskNav() {
   });
 }
 
-// --- Settings Binding ---
+// --- Settings Synchronization & Binding ---
+function syncSettingsUI() {
+  const f = document.getElementById('setFocusMin');
+  const s = document.getElementById('setShortMin');
+  const l = document.getElementById('setLongMin');
+  const i = document.getElementById('setLongInterval');
+  const ab = document.getElementById('setAutoBreaks');
+  const ap = document.getElementById('setAutoPomos');
+  const ch = document.getElementById('setChimeType');
+  const sm = document.getElementById('setStrictMode');
+  const ambSelect = document.getElementById('ambientSelect');
+  const ambVol = document.getElementById('ambientVol');
+  const btnAudio = document.getElementById('btnAudioToggle');
+
+  if (f) f.value = state.settings.focusMin;
+  if (s) s.value = state.settings.shortMin;
+  if (l) l.value = state.settings.longMin;
+  if (i) i.value = state.settings.longInterval;
+  if (ab) ab.checked = !!state.settings.autoBreaks;
+  if (ap) ap.checked = !!state.settings.autoPomos;
+  if (ch) ch.value = state.settings.chimeType || 'zen';
+  if (sm) sm.checked = !!state.settings.strictMode;
+  if (ambSelect) ambSelect.value = state.ambientTrack || 'none';
+  if (ambVol) ambVol.value = state.ambientVolume != null ? state.ambientVolume : 0.3;
+  if (btnAudio) btnAudio.textContent = state.soundEnabled ? '🔔' : '🔕';
+
+  document.body.classList.toggle('theme-amber', state.settings.theme === 'amber');
+}
+
 function bindSettings() {
   const f = document.getElementById('setFocusMin');
   const s = document.getElementById('setShortMin');
@@ -2130,20 +2195,13 @@ function bindSettings() {
   const ch = document.getElementById('setChimeType');
   const sm = document.getElementById('setStrictMode');
 
-  f.value = state.settings.focusMin;
-  s.value = state.settings.shortMin;
-  l.value = state.settings.longMin;
-  i.value = state.settings.longInterval;
-  ab.checked = state.settings.autoBreaks;
-  ap.checked = state.settings.autoPomos;
-  ch.value = state.settings.chimeType;
-  sm.checked = state.settings.strictMode;
+  syncSettingsUI();
 
   const saveSettings = () => {
-    state.settings.focusMin = parseInt(f.value, 10) || 25;
-    state.settings.shortMin = parseInt(s.value, 10) || 5;
-    state.settings.longMin = parseInt(l.value, 10) || 15;
-    state.settings.longInterval = parseInt(i.value, 10) || 4;
+    state.settings.focusMin = Math.max(1, parseInt(f.value, 10) || 25);
+    state.settings.shortMin = Math.max(1, parseInt(s.value, 10) || 5);
+    state.settings.longMin = Math.max(1, parseInt(l.value, 10) || 15);
+    state.settings.longInterval = Math.max(1, parseInt(i.value, 10) || 4);
     state.settings.autoBreaks = ab.checked;
     state.settings.autoPomos = ap.checked;
     state.settings.chimeType = ch.value;
@@ -2180,6 +2238,7 @@ function quickLoad() {
     renderStats();
     renderHistory();
     updateCyclePips();
+    syncSettingsUI();
     showToast('Workstation state quickloaded (F9)', '📂');
   } else {
     showToast('No saved state found', '⚠️');
@@ -2210,6 +2269,7 @@ function importJSON(file) {
         renderStats();
         renderHistory();
         updateCyclePips();
+        syncSettingsUI();
         saveState();
         showToast('Backup restored successfully!', '📥');
       } else {
@@ -2227,9 +2287,10 @@ function exportCSV() {
     showToast('No history records to export', '⚠️');
     return;
   }
+  const q = (s) => `"${String(s == null ? '' : s).replace(/"/g, '""')}"`;
   let csv = 'Timestamp,Mode,Duration,Task,Tag\n';
   state.history.forEach(h => {
-    csv += `"${h.time}","${h.mode}","${h.duration}","${h.task.replace(/"/g, '""')}","${h.tag}"\n`;
+    csv += `${q(h.time)},${q(h.mode)},${q(h.duration)},${q(h.task)},${q(h.tag)}\n`;
   });
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
@@ -2299,7 +2360,10 @@ function initEvents() {
   const fileImport = document.getElementById('fileImport');
   document.getElementById('btnImport').addEventListener('click', () => fileImport.click());
   fileImport.addEventListener('change', (e) => {
-    if (e.target.files.length > 0) importJSON(e.target.files[0]);
+    if (e.target.files.length > 0) {
+      importJSON(e.target.files[0]);
+      fileImport.value = '';
+    }
   });
 
   document.getElementById('btnExportCSV').addEventListener('click', exportCSV);
@@ -2311,6 +2375,17 @@ function initEvents() {
       showToast('History cleared');
     }
   });
+
+  // Active Task Banner quick jump to task backlog
+  const banner = document.getElementById('activeTaskBanner');
+  if (banner) {
+    banner.addEventListener('click', () => {
+      const taskTab = document.querySelector('[data-desk="tasks"]');
+      if (taskTab) taskTab.click();
+      const taskInput = document.getElementById('taskInput');
+      if (taskInput) taskInput.focus();
+    });
+  }
 
   // Splash Screen Actions
   const splashModal = document.getElementById('splashModal');
@@ -2348,9 +2423,20 @@ function initEvents() {
 
   // Settings Modal Actions
   const settingsModal = document.getElementById('settingsModal');
+  const closeSettings = () => settingsModal.classList.remove('open');
   document.getElementById('btnSettings').addEventListener('click', () => settingsModal.classList.add('open'));
-  document.getElementById('btnSettingsClose').addEventListener('click', () => settingsModal.classList.remove('open'));
-  document.getElementById('btnSettingsDone').addEventListener('click', () => settingsModal.classList.remove('open'));
+  document.getElementById('btnSettingsClose').addEventListener('click', closeSettings);
+  document.getElementById('btnSettingsDone').addEventListener('click', closeSettings);
+  
+  const btnOpenDesk = document.getElementById('btnOpenDeskSettings');
+  if (btnOpenDesk) {
+    btnOpenDesk.addEventListener('click', () => {
+      closeSettings();
+      const presetTab = document.querySelector('[data-desk="presets"]');
+      if (presetTab) presetTab.click();
+    });
+  }
+
   document.getElementById('btnResetAllData').addEventListener('click', () => {
     if (confirm('Reset ALL data, history, and tasks to factory default?')) {
       localStorage.removeItem(STORAGE_KEY);
@@ -2360,15 +2446,52 @@ function initEvents() {
   });
 
   // Close overlays on backdrop click
-  [splashModal, tutorialModal, settingsModal].forEach(m => {
-    m.addEventListener('click', (e) => {
-      if (e.target === m) m.classList.remove('open');
-    });
+  splashModal.addEventListener('click', (e) => {
+    if (e.target === splashModal) closeSplash();
+  });
+  tutorialModal.addEventListener('click', (e) => {
+    if (e.target === tutorialModal) closeTutorial();
+  });
+  settingsModal.addEventListener('click', (e) => {
+    if (e.target === settingsModal) closeSettings();
   });
 
   // Global Keyboard Navigation
   window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
+    const isSplashOpen = splashModal.classList.contains('open');
+    const isTutorialOpen = tutorialModal.classList.contains('open');
+    const isSettingsOpen = settingsModal.classList.contains('open');
+    const anyModalOpen = isSplashOpen || isTutorialOpen || isSettingsOpen;
+
+    if (e.key === 'Escape') {
+      if (isSplashOpen) closeSplash();
+      if (isTutorialOpen) closeTutorial();
+      if (isSettingsOpen) closeSettings();
+      return;
+    }
+
+    if (e.key === 'Enter') {
+      if (isSplashOpen) {
+        e.preventDefault();
+        document.getElementById('btnSplashStart').click();
+        return;
+      }
+      if (isTutorialOpen) {
+        e.preventDefault();
+        document.getElementById('btnTutorialFinish').click();
+        return;
+      }
+      if (isSettingsOpen) {
+        e.preventDefault();
+        closeSettings();
+        return;
+      }
+    }
+
+    // Modal trap: do not execute background shortcuts while modal is open
+    if (anyModalOpen) return;
 
     if (e.code === 'Space') {
       e.preventDefault();
@@ -2384,13 +2507,13 @@ function initEvents() {
       openTutorial();
     } else if (e.key === '1') {
       e.preventDefault();
-      setMode('focus', true);
+      if (pauseTimer()) setMode('focus', true);
     } else if (e.key === '2') {
       e.preventDefault();
-      setMode('shortBreak', true);
+      if (pauseTimer()) setMode('shortBreak', true);
     } else if (e.key === '3') {
       e.preventDefault();
-      setMode('longBreak', true);
+      if (pauseTimer()) setMode('longBreak', true);
     } else if (e.key === 'F5') {
       e.preventDefault();
       quickSave();
@@ -2400,10 +2523,14 @@ function initEvents() {
     } else if (e.key === 'm' || e.key === 'M') {
       e.preventDefault();
       document.getElementById('btnAudioToggle').click();
-    } else if (e.key === 'Escape') {
-      splashModal.classList.remove('open');
-      tutorialModal.classList.remove('open');
-      settingsModal.classList.remove('open');
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      const deskTabs = Array.from(document.querySelectorAll('.desk-tab'));
+      const activeIdx = deskTabs.findIndex(t => t.classList.contains('active'));
+      const nextIdx = e.key === 'ArrowRight'
+        ? (activeIdx + 1) % deskTabs.length
+        : (activeIdx - 1 + deskTabs.length) % deskTabs.length;
+      deskTabs[nextIdx].click();
     }
   });
 

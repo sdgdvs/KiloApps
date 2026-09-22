@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-22T04:50:00Z — director-task: Adversarial Bot Defense, Auto-Merge Gate & SECURITY.md**
+  - Status: PASS ✅ (Neutralized auto-merge vulnerability; added prompt injection scanner & SECURITY.md).
+  - Workflow Hardening: Eliminated untrusted auto-merges in gatekeeper-auto-merge.yml; added merge authorization gate & --ignore-scripts.
+  - Trusted Gate 0: Evaluates upstream/main security_lint.py prior to npm dependency installs; deploy.yml gated with security lint.
+  - Adversarial Linter: Added ADVERSARIAL_INJECTION_PATTERNS catching indirect prompt injection, tag spoofing, and exfiltration webhooks.
+  - Immutability Shield: Expanded PROTECTED_PATHS covering package.json, configs, and KiloOS/src/; created SECURITY.md.
+  - Verification: Clean MSVC build; clean Vite build (223ms); full repo security lint passed (0 violations).
+
 - **2026-09-22T04:40:00Z — director-task: Platform Hardening & Anti-Lock-in Measures (A–C)**
   - Status: PASS ✅ (Root DISCLAIMER.md & README.md, robots.txt crawler protection, mirror_sync utility, netlify failover).
   - Legal & ARG Parody Notice: Created comprehensive DISCLAIMER.md & README.md; added artistic notices to warez.html & darknet.html.
