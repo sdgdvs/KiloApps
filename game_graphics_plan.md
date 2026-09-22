@@ -158,13 +158,13 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KChess
 - KPong
 - KMines
-- KAsteroids
 - KStarship
 - KChrono
 - KStarForge
 - KFortress
 - KColony
 - KSpace
+- KAsteroids
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
 
