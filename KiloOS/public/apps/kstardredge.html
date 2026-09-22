@@ -190,11 +190,12 @@
         .main-container {
             display: grid;
             grid-template-columns: 240px 1fr 270px;
-            grid-template-rows: 1fr 180px;
+            grid-template-rows: 1fr var(--bottom-deck-h, 210px);
             flex: 1;
             gap: 6px;
             padding: 6px;
             overflow: hidden;
+            position: relative;
         }
 
         .panel {
@@ -416,19 +417,56 @@
             grid-column: 1 / span 2;
             grid-row: 2;
             display: grid;
-            grid-template-columns: 370px 1fr;
-            gap: 6px;
+            grid-template-columns: var(--console-width, 530px) 8px 1fr;
+            gap: 0;
             padding: 0;
             background: transparent;
             border: none;
+            position: relative;
+            min-height: 0;
+            min-width: 0;
+        }
+
+        .console-panel {
+            min-width: 280px;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
         .action-grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-            padding: 6px;
+            grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+            gap: 4px;
+            padding: 5px;
             flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            align-content: start;
+        }
+
+        /* Custom Retro CRT Scrollbars */
+        .action-grid::-webkit-scrollbar,
+        .log-box::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        .action-grid::-webkit-scrollbar-track,
+        .log-box::-webkit-scrollbar-track {
+            background: rgba(2, 6, 23, 0.85);
+            border-radius: 2px;
+        }
+        .action-grid::-webkit-scrollbar-thumb,
+        .log-box::-webkit-scrollbar-thumb {
+            background: var(--border-panel);
+            border-radius: 2px;
+        }
+        .action-grid::-webkit-scrollbar-thumb:hover,
+        .log-box::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-cyan);
+            box-shadow: 0 0 5px var(--accent-cyan);
         }
 
         .btn {
@@ -436,7 +474,7 @@
             color: var(--text-bright);
             border: 1px solid var(--border-panel);
             border-radius: 3px;
-            padding: 6px 4px;
+            padding: 4px 3px;
             font-family: var(--font-mono);
             font-size: 10px;
             font-weight: bold;
@@ -445,8 +483,17 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 3px;
+            gap: 2px;
+            min-height: 42px;
             transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .btn span:first-child {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
         }
 
         .btn:hover {
@@ -484,13 +531,99 @@
             color: #e9d5ff;
         }
 
+        /* Horizontal Splitter (Console Width) */
+        .splitter-col {
+            width: 8px;
+            margin: 0 1px;
+            background: rgba(11, 19, 41, 0.85);
+            border: 1px solid var(--border-panel);
+            border-radius: 2px;
+            cursor: col-resize;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+            z-index: 5;
+        }
+        .splitter-col:hover,
+        .splitter-col.resizing {
+            background: rgba(56, 189, 248, 0.25);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+        }
+        .splitter-thumb-col {
+            width: 2px;
+            height: 32px;
+            background: var(--text-dim);
+            border-radius: 1px;
+            transition: background 0.15s ease;
+        }
+        .splitter-col:hover .splitter-thumb-col,
+        .splitter-col.resizing .splitter-thumb-col {
+            background: var(--accent-cyan);
+        }
+
+        /* Vertical Splitter (Deck Height) */
+        .splitter-row {
+            position: absolute;
+            top: -6px;
+            left: 0;
+            right: 0;
+            height: 8px;
+            cursor: row-resize;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            z-index: 15;
+        }
+        .splitter-thumb-row {
+            width: 56px;
+            height: 3px;
+            background: var(--border-panel);
+            border-radius: 2px;
+            transition: all 0.15s ease;
+        }
+        .splitter-row:hover .splitter-thumb-row,
+        .splitter-row.resizing .splitter-thumb-row {
+            background: var(--accent-cyan);
+            box-shadow: 0 0 8px var(--accent-cyan);
+            width: 80px;
+            height: 4px;
+        }
+
+        /* Console header toggle button */
+        .btn-console-mode {
+            background: rgba(15, 39, 68, 0.85);
+            border: 1px solid var(--border-panel);
+            color: var(--accent-cyan);
+            font-family: var(--font-mono);
+            font-size: 8px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+        .btn-console-mode:hover {
+            background: var(--btn-hover);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 6px rgba(0, 240, 255, 0.4);
+        }
+
         .terminal-panel {
             display: flex;
             flex-direction: column;
+            min-height: 0;
+            min-width: 130px;
+            overflow: hidden;
         }
 
         .log-box {
             flex: 1;
+            min-height: 0;
             background: #02050e;
             padding: 6px 8px;
             font-size: 10px;
@@ -501,6 +634,7 @@
             border: 1px solid var(--border-panel);
             border-radius: 3px;
             color: #94a3b8;
+            word-break: break-word;
         }
 
         .log-entry.system { color: var(--text-primary); }
@@ -514,7 +648,11 @@
         .key-hint {
             font-size: 8px;
             color: #93c5fd;
-            opacity: 0.8;
+            opacity: 0.85;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
         }
 
         /* Sector Star Chart Modal */
@@ -1738,13 +1876,25 @@
         </div>
 
         <!-- Bottom: Cockpit Controls & Flight Terminal -->
-        <div class="controls-panel">
-            <div class="panel">
+        <div class="controls-panel" id="controlsPanel">
+            <!-- Top Horizontal Deck Resizer Handle -->
+            <div class="splitter-row" id="deckSplitter" title="Drag vertically to adjust Cockpit Deck height (Double-click to reset)">
+                <div class="splitter-thumb-row"></div>
+            </div>
+
+            <!-- Left: Cockpit Console -->
+            <div class="panel console-panel" id="cockpitConsolePanel">
                 <div class="panel-header">
-                    <span>COCKPIT CONSOLE</span>
-                    <span style="font-size: 9px; color: var(--text-dim);">CONTROLS: WASD / SPACE / T / Z / P / U / N / D / E / K / R</span>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span>COCKPIT CONSOLE</span>
+                        <button class="btn-console-mode" id="btnConsoleToggle" title="Toggle Wide / Compact Console">⤢ WIDE</button>
+                    </div>
+                    <span style="font-size: 9px; color: var(--text-dim); display: flex; align-items: center; gap: 8px;">
+                        <span class="ctrl-shortcuts">CONTROLS: WASD / SPACE / T / Z / P / U / N / D / E / K / R</span>
+                        <span class="resize-hint" style="color: var(--accent-cyan); font-size: 8px; opacity: 0.85;">[DRAG BORDERS TO RESIZE]</span>
+                    </span>
                 </div>
-                <div class="action-grid">
+                <div class="action-grid" id="actionGrid">
                     <button class="btn" id="btnLaser">
                         <span>⚡ LASER</span>
                         <span class="key-hint">[SPACE] FIRE</span>
@@ -1808,7 +1958,13 @@
                 </div>
             </div>
 
-            <div class="panel terminal-panel">
+            <!-- Draggable Column Splitter Handle between Console and Terminal -->
+            <div class="splitter-col" id="consoleSplitter" title="Drag horizontally to resize Cockpit Console (Double-click to reset)">
+                <div class="splitter-thumb-col"></div>
+            </div>
+
+            <!-- Right: Flight & Dredge Terminal -->
+            <div class="panel terminal-panel" id="terminalPanel">
                 <div class="panel-header">
                     <span>FLIGHT & DREDGE TERMINAL</span>
                     <span style="font-size: 9px; color: var(--text-dim);">BUFFER: REAL-TIME</span>
@@ -8998,8 +9154,185 @@
             requestAnimationFrame(gameLoop);
         }
 
+        // --- Cockpit Console Resizing & Ergonomics ---
+        function initConsoleResizers() {
+            const controlsPanel = document.getElementById('controlsPanel');
+            const cockpitConsolePanel = document.getElementById('cockpitConsolePanel');
+            const consoleSplitter = document.getElementById('consoleSplitter');
+            const deckSplitter = document.getElementById('deckSplitter');
+            const mainContainer = document.querySelector('.main-container');
+            const btnConsoleToggle = document.getElementById('btnConsoleToggle');
+
+            if (!controlsPanel || !consoleSplitter || !cockpitConsolePanel) return;
+
+            // Restore saved preferences
+            try {
+                const savedConsoleWidth = localStorage.getItem('kstar_console_width');
+                if (savedConsoleWidth) {
+                    const w = parseInt(savedConsoleWidth, 10);
+                    if (w >= 280 && w <= 1400) {
+                        controlsPanel.style.setProperty('--console-width', `${w}px`);
+                    }
+                }
+
+                const savedDeckHeight = localStorage.getItem('kstar_deck_height');
+                if (savedDeckHeight && mainContainer) {
+                    const h = parseInt(savedDeckHeight, 10);
+                    if (h >= 150 && h <= 650) {
+                        mainContainer.style.setProperty('--bottom-deck-h', `${h}px`);
+                    }
+                }
+            } catch (err) {
+                // Ignore localStorage errors in sandboxed iframes
+            }
+
+            function updateToggleButton() {
+                if (!btnConsoleToggle) return;
+                const curW = cockpitConsolePanel.getBoundingClientRect().width;
+                if (curW >= 640) {
+                    btnConsoleToggle.textContent = '⤡ COMPACT';
+                    btnConsoleToggle.title = 'Collapse console to standard width';
+                } else {
+                    btnConsoleToggle.textContent = '⤢ WIDE';
+                    btnConsoleToggle.title = 'Expand console to wide view';
+                }
+            }
+            updateToggleButton();
+
+            // 1. Horizontal Splitter (Console Width)
+            let isDraggingCol = false;
+            let startX = 0;
+            let startWidth = 0;
+
+            function onColPointerDown(e) {
+                isDraggingCol = true;
+                startX = e.clientX || (e.touches && e.touches[0].clientX);
+                startWidth = cockpitConsolePanel.getBoundingClientRect().width;
+                consoleSplitter.classList.add('resizing');
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+                if (e.cancelable) e.preventDefault();
+            }
+
+            consoleSplitter.addEventListener('mousedown', onColPointerDown);
+            consoleSplitter.addEventListener('touchstart', onColPointerDown, { passive: false });
+
+            // Double click to toggle default / wide
+            consoleSplitter.addEventListener('dblclick', () => {
+                const curW = cockpitConsolePanel.getBoundingClientRect().width;
+                const targetW = curW > 560 ? 530 : 720;
+                controlsPanel.style.setProperty('--console-width', `${targetW}px`);
+                try { localStorage.setItem('kstar_console_width', targetW); } catch (e) {}
+                updateToggleButton();
+                if (audio && audio.playBeep) audio.playBeep(520, 'sine', 0.04, 0.06);
+            });
+
+            // Toggle button click
+            if (btnConsoleToggle) {
+                btnConsoleToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const curW = cockpitConsolePanel.getBoundingClientRect().width;
+                    const targetW = curW >= 640 ? 530 : Math.min(controlsPanel.clientWidth - 160, 720);
+                    controlsPanel.style.setProperty('--console-width', `${targetW}px`);
+                    try { localStorage.setItem('kstar_console_width', targetW); } catch (e) {}
+                    updateToggleButton();
+                    if (audio && audio.playBeep) audio.playBeep(640, 'triangle', 0.05, 0.1);
+                });
+            }
+
+            // 2. Vertical Splitter (Deck Height)
+            let isDraggingRow = false;
+            let startY = 0;
+            let startHeight = 0;
+
+            if (deckSplitter && mainContainer) {
+                function onRowPointerDown(e) {
+                    isDraggingRow = true;
+                    startY = e.clientY || (e.touches && e.touches[0].clientY);
+                    startHeight = controlsPanel.getBoundingClientRect().height;
+                    deckSplitter.classList.add('resizing');
+                    document.body.style.cursor = 'row-resize';
+                    document.body.style.userSelect = 'none';
+                    if (e.cancelable) e.preventDefault();
+                }
+
+                deckSplitter.addEventListener('mousedown', onRowPointerDown);
+                deckSplitter.addEventListener('touchstart', onRowPointerDown, { passive: false });
+
+                deckSplitter.addEventListener('dblclick', () => {
+                    const defaultH = 210;
+                    mainContainer.style.setProperty('--bottom-deck-h', `${defaultH}px`);
+                    try { localStorage.setItem('kstar_deck_height', defaultH); } catch (e) {}
+                    resizeCanvas();
+                    if (audio && audio.playBeep) audio.playBeep(520, 'sine', 0.04, 0.06);
+                });
+            }
+
+            // Global Pointer Move & Up Listeners
+            window.addEventListener('mousemove', (e) => {
+                if (isDraggingCol) {
+                    const clientX = e.clientX;
+                    const dx = clientX - startX;
+                    const maxW = Math.max(340, controlsPanel.clientWidth - 140);
+                    const newW = Math.min(maxW, Math.max(280, Math.round(startWidth + dx)));
+                    controlsPanel.style.setProperty('--console-width', `${newW}px`);
+                    updateToggleButton();
+                } else if (isDraggingRow && mainContainer) {
+                    const clientY = e.clientY;
+                    const dy = startY - clientY; // Moving upward increases bottom deck height
+                    const maxH = Math.round(window.innerHeight * 0.65);
+                    const newH = Math.min(maxH, Math.max(150, Math.round(startHeight + dy)));
+                    mainContainer.style.setProperty('--bottom-deck-h', `${newH}px`);
+                    resizeCanvas();
+                }
+            });
+
+            window.addEventListener('touchmove', (e) => {
+                if (!e.touches || e.touches.length === 0) return;
+                const touch = e.touches[0];
+                if (isDraggingCol) {
+                    const dx = touch.clientX - startX;
+                    const maxW = Math.max(340, controlsPanel.clientWidth - 140);
+                    const newW = Math.min(maxW, Math.max(280, Math.round(startWidth + dx)));
+                    controlsPanel.style.setProperty('--console-width', `${newW}px`);
+                    updateToggleButton();
+                } else if (isDraggingRow && mainContainer) {
+                    const dy = startY - touch.clientY;
+                    const maxH = Math.round(window.innerHeight * 0.65);
+                    const newH = Math.min(maxH, Math.max(150, Math.round(startHeight + dy)));
+                    mainContainer.style.setProperty('--bottom-deck-h', `${newH}px`);
+                    resizeCanvas();
+                }
+            }, { passive: true });
+
+            function stopDragging() {
+                if (isDraggingCol) {
+                    isDraggingCol = false;
+                    consoleSplitter.classList.remove('resizing');
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                    const finalW = Math.round(cockpitConsolePanel.getBoundingClientRect().width);
+                    try { localStorage.setItem('kstar_console_width', finalW); } catch (e) {}
+                    updateToggleButton();
+                }
+                if (isDraggingRow && mainContainer) {
+                    isDraggingRow = false;
+                    if (deckSplitter) deckSplitter.classList.remove('resizing');
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                    const finalH = Math.round(controlsPanel.getBoundingClientRect().height);
+                    try { localStorage.setItem('kstar_deck_height', finalH); } catch (e) {}
+                    resizeCanvas();
+                }
+            }
+
+            window.addEventListener('mouseup', stopDragging);
+            window.addEventListener('touchend', stopDragging);
+        }
+
         // Initialize and Start
         initField();
+        initConsoleResizers();
         resizeCanvas();
         updateCargoUI();
         requestAnimationFrame(gameLoop);
