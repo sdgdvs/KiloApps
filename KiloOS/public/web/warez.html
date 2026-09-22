@@ -499,7 +499,7 @@
       <button class="btn-filter" onclick="filterReleases('trainer', this)">[ TRAINERS ]</button>
     </div>
     <div>
-      <input type="text" id="searchInput" class="search-input" placeholder="Filter releases (e.g. Quake)..." oninput="searchReleases(this.value)" />
+      <input type="text" id="searchInput" class="search-input" placeholder="Filter releases (e.g. Tremor)..." oninput="searchReleases(this.value)" />
     </div>
   </div>
 
@@ -565,7 +565,7 @@
 <div class="modal-overlay" id="cracktroModal">
   <div class="cracktro-window">
     <div class="modal-header">
-      <span id="modalHeaderTitle">⚡ FAIRLIGHT [FLT] - UNREAL TOURNAMENT '99 CRACKTRO</span>
+      <span id="modalHeaderTitle">⚡ FLARELIGHT [FLT] - SURREAL TOURNAMENT '99 CRACKTRO</span>
       <button class="btn-close" onclick="closeCracktro()">[ X ] CLOSE</button>
     </div>
 
@@ -588,7 +588,7 @@
 
       <!-- Patch Controls -->
       <div id="patchBox" class="keygen-row" style="display:none;">
-        <span style="font-size:11px; color:#4ade80;">TARGET: <code id="patchTargetName" style="color:#fff;">UnrealTournament.exe</code></span>
+        <span style="font-size:11px; color:#4ade80;">TARGET: <code id="patchTargetName" style="color:#fff;">SurrealTournament.exe</code></span>
         <button class="btn-patch" id="btnApplyPatch" onclick="applyPatch()">⚡ APPLY NO-CD PATCH</button>
         <div class="patch-progress-box" id="patchProgressBox" style="flex:1;">
           <div class="patch-progress-fill" id="patchProgressFill"></div>
@@ -618,7 +618,7 @@
 <div class="modal-overlay" id="nfoModal">
   <div class="nfo-window">
     <div class="modal-header" style="background:#064e3b; border-color:var(--accent-green); color:#6ee7b7;">
-      <span id="nfoTitle">📜 FAIRLIGHT.NFO - RELEASE INFORMATION</span>
+      <span id="nfoTitle">📜 FLARELIGHT.NFO - RELEASE INFORMATION</span>
       <button class="btn-close" onclick="closeNfo()">[ X ] CLOSE</button>
     </div>
     <div class="nfo-content" id="nfoBody">
@@ -638,97 +638,97 @@ const RELEASES = [
   {
     id: "flt_ut99",
     date: "1999-11-23",
-    group: "FAIRLIGHT",
+    group: "FLARELIGHT",
     groupClass: "group-flt",
-    title: "Unreal Tournament '99 v436 No-CD Patch",
+    title: "Surreal Tournament '99 v436 No-CD Patch",
     media: "01x1.44MB",
     type: "crack",
     typeName: "No-CD Crack",
-    targetExe: "UnrealTournament.exe",
+    targetExe: "SurrealTournament.exe",
     songName: "Mega Drive FM Rush (140 BPM)",
     songStyle: "genesis_rush",
     shape: "cube",
-    scrollerText: "+++ FAIRLIGHT CRACKING DIVISION PRESENTS: UNREAL TOURNAMENT 99 NO-CD PATCH +++ GREETS FLY OUT TO: RAZOR 1911 * SKID ROW * PARADOX * THE SILENTS * TRSI * FUTURE CREW * REMEMBER: 999 KB IS THE LIMIT! +++",
+    scrollerText: "+++ FLARELIGHT CRACKING DIVISION PRESENTS: SURREAL TOURNAMENT 99 NO-CD PATCH +++ GREETS FLY OUT TO: RAZOR 1999 * SKID VECTOR * PARALAX * THE SILENTS * TRSI * FUTURE CREW * REMEMBER: 999 KB IS THE LIMIT! +++",
     nfoFile: "flt_ut99.nfo"
   },
   {
     id: "rzr_q3a",
     date: "1999-12-02",
-    group: "RAZOR 1911",
+    group: "RAZOR 1999",
     groupClass: "group-rzr",
-    title: "Quake III Arena v1.32 Keymaker & CDKey Gen",
+    title: "Tremor III Arena v1.32 Keymaker & CDKey Gen",
     media: "01x2.88MB",
     type: "keygen",
     typeName: "Keygen",
-    targetExe: "quake3.exe",
+    targetExe: "tremor3.exe",
     songName: "SNES 16-Bit Cyber Dreamscape (132 BPM)",
     songStyle: "snes_dream",
     shape: "octahedron",
-    scrollerText: ">>> RAZOR 1911 CD-KEYMAKER DIVISION <<< QUAKE III ARENA KEYGEN >>> GREETS TO FAIRLIGHT, CLASS, KALISTO, HYBRID >>> PURE SEGA/SNES HARDWARE SOUND ARCHITECTURE <<<",
+    scrollerText: ">>> RAZOR 1999 CD-KEYMAKER DIVISION <<< TREMOR III ARENA KEYGEN >>> GREETS TO FLARELIGHT, KLASS, KALISTO, CYBRID >>> PURE SEGA/SNES HARDWARE SOUND ARCHITECTURE <<<",
     nfoFile: "rzr_q3a.nfo"
   },
   {
     id: "pdx_hl",
     date: "1999-06-19",
-    group: "PARADOX",
+    group: "PARALAX",
     groupClass: "group-pdx",
-    title: "Half-Life 1.1.1.0 WON Bypass & Keymaker",
+    title: "Half-Cycle 1.1.1.0 WON Bypass & Keymaker",
     media: "02x1.44MB",
     type: "keygen",
     typeName: "Keygen + Patch",
-    targetExe: "hl.exe",
+    targetExe: "halfcycle.exe",
     songName: "Keygen FM Euphoria (148 BPM)",
     songStyle: "pdx_euphoria",
     shape: "star",
-    scrollerText: "=== PARADOX 1999 === HALF-LIFE WON AUTH BYPASS & KEY GENERATOR === SHOUTS TO ALL RETRO SCENERS AROUND THE GLOBE! STAY TRUE TO THE LIVING MACHINE! ===",
+    scrollerText: "=== PARALAX 1999 === HALF-CYCLE WON AUTH BYPASS & KEY GENERATOR === SHOUTS TO ALL RETRO SCENERS AROUND THE GLOBE! STAY TRUE TO THE LIVING MACHINE! ===",
     nfoFile: "pdx_hl.nfo"
   },
   {
     id: "skd_deusex",
     date: "2000-06-22",
-    group: "SKID ROW",
+    group: "SKID VECTOR",
     groupClass: "group-skd",
-    title: "Deus Ex v1.112fm +12 Trainer & CD-Fix",
+    title: "Machina Ex v1.112fm +12 Trainer & CD-Fix",
     media: "01x1.44MB",
     type: "trainer",
     typeName: "Trainer",
-    targetExe: "DeusEx.exe",
+    targetExe: "MachinaEx.exe",
     songName: "Streets of 1999 Yuzo Groove (125 BPM)",
     songStyle: "yuzo_groove",
     shape: "torus",
-    scrollerText: "### SKID ROW TRAINER TEAM PRESENTS: DEUS EX +12 TRAINER ### INFINITE BIOCELLS, AMMO, HEALTH & AUGMENTATION BATTERY ### GREETS TO OUR BROTHERS IN CYPHERSPACE! ###",
+    scrollerText: "### SKID VECTOR TRAINER TEAM PRESENTS: MACHINA EX +12 TRAINER ### INFINITE BIOCELLS, AMMO, HEALTH & AUGMENTATION BATTERY ### GREETS TO OUR BROTHERS IN CYPHERSPACE! ###",
     nfoFile: "skd_deus.nfo"
   },
   {
     id: "cls_scbw",
     date: "1998-11-30",
-    group: "CLASS",
+    group: "KLASS",
     groupClass: "group-cls",
-    title: "StarCraft: Brood War v1.08 Battle.net Loader",
+    title: "VoidCraft: Brood Strife v1.08 Net Loader",
     media: "01x1.44MB",
     type: "crack",
     typeName: "No-CD Crack",
-    targetExe: "starcraft.exe",
+    targetExe: "voidcraft.exe",
     songName: "Mega Drive FM Rush (140 BPM)",
     songStyle: "genesis_rush",
     shape: "cube",
-    scrollerText: "CLASS 1998-1999 >> STARCRAFT BROOD WAR LOADER >> GREETS TO DEV, FLT, RZR, TRSI >> CELEBRATING 16-BIT RETRO GLORY >>",
+    scrollerText: "KLASS 1998-1999 >> VOIDCRAFT BROOD STRIFE LOADER >> GREETS TO DEV, FLT, RZR, TRSI >> CELEBRATING 16-BIT RETRO GLORY >>",
     nfoFile: "cls_scbw.nfo"
   },
   {
     id: "hbd_ss2",
     date: "1999-08-11",
-    group: "HYBRID",
+    group: "CYBRID",
     groupClass: "group-hbd",
-    title: "System Shock 2 High-Res Patch & CD-Check Remover",
+    title: "System Glitch 2 High-Res Patch & CD-Check Remover",
     media: "01x1.44MB",
     type: "crack",
     typeName: "CD-Patch",
-    targetExe: "shock2.exe",
+    targetExe: "glitch2.exe",
     songName: "Keygen FM Euphoria (148 BPM)",
     songStyle: "pdx_euphoria",
     shape: "octahedron",
-    scrollerText: "HYBRID PRESENTATION >> SYSTEM SHOCK 2 CD-CHECK REMOVAL >> REMEMBER SHODAN! KEEP THE 999KB CEILING UNBROKEN! >>",
+    scrollerText: "CYBRID PRESENTATION >> SYSTEM GLITCH 2 CD-CHECK REMOVAL >> REMEMBER SHODAN-99! KEEP THE 999KB CEILING UNBROKEN! >>",
     nfoFile: "hbd_ss2.nfo"
   }
 ];
@@ -1242,15 +1242,15 @@ function renderCracktroFrame() {
     const barY = cy + Math.sin(animTime * 1.8 + i * 0.28) * 65 + Math.cos(animTime * 0.9) * 20;
     const grad = ctx.createLinearGradient(0, barY - 4, 0, barY + 4);
     
-    if (activeRelease && activeRelease.group === 'FAIRLIGHT') {
+    if (activeRelease && activeRelease.group === 'FLARELIGHT') {
       grad.addColorStop(0, 'rgba(0, 160, 255, 0)');
       grad.addColorStop(0.5, 'rgba(0, 240, 255, 0.45)');
       grad.addColorStop(1, 'rgba(0, 160, 255, 0)');
-    } else if (activeRelease && activeRelease.group === 'RAZOR 1911') {
+    } else if (activeRelease && activeRelease.group === 'RAZOR 1999') {
       grad.addColorStop(0, 'rgba(0, 180, 50, 0)');
       grad.addColorStop(0.5, 'rgba(0, 255, 100, 0.45)');
       grad.addColorStop(1, 'rgba(0, 180, 50, 0)');
-    } else if (activeRelease && activeRelease.group === 'PARADOX') {
+    } else if (activeRelease && activeRelease.group === 'PARALAX') {
       grad.addColorStop(0, 'rgba(255, 0, 100, 0)');
       grad.addColorStop(0.5, 'rgba(255, 50, 150, 0.45)');
       grad.addColorStop(1, 'rgba(255, 0, 100, 0)');
@@ -1306,9 +1306,9 @@ function renderCracktroFrame() {
 
   // Draw vector edges
   ctx.lineWidth = 2;
-  const edgeColor = (activeRelease && activeRelease.group === 'FAIRLIGHT') ? '#38bdf8' :
-                    (activeRelease && activeRelease.group === 'RAZOR 1911') ? '#4ade80' :
-                    (activeRelease && activeRelease.group === 'PARADOX') ? '#f43f5e' : '#facc15';
+  const edgeColor = (activeRelease && activeRelease.group === 'FLARELIGHT') ? '#38bdf8' :
+                    (activeRelease && activeRelease.group === 'RAZOR 1999') ? '#4ade80' :
+                    (activeRelease && activeRelease.group === 'PARALAX') ? '#f43f5e' : '#facc15';
   ctx.strokeStyle = edgeColor;
   ctx.shadowColor = edgeColor;
   ctx.shadowBlur = 10;
@@ -1545,7 +1545,7 @@ function openNfo(releaseId) {
 ║       Seek the inner circle through cracked checksums and keygen anomalies.  ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
 ║ [ GROUP GREETINGS ]                                                          ║
-║ FAIRLIGHT * RAZOR 1911 * SKID ROW * PARADOX * CLASS * HYBRID * FUTURE CREW   ║
+║ FLARELIGHT * RAZOR 1999 * SKID VECTOR * PARALAX * KLASS * CYBRID * FUTURE CREW ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 `;
 
