@@ -879,6 +879,12 @@
       <h1>KTodo</h1>
     </div>
     <div class="header-actions">
+      <button class="btn" id="btnSave" onclick="quicksaveState()" title="Quicksave Workspace State [F5]">
+        💾 Save [F5]
+      </button>
+      <button class="btn" id="btnLoad" onclick="quickloadState()" title="Restore Quicksaved State [F9]">
+        📂 Load [F9]
+      </button>
       <button class="btn" onclick="openHelpModal()" title="Help [F1 or H]">
         ❓ Help [F1]
       </button>
@@ -886,7 +892,7 @@
         📊 <span id="statsToggleLabel">Stats [S]</span>
       </button>
       <button class="btn btn-purple" onclick="openIOModal()" title="Import or Export Tasks [I]">
-        💾 Import / Export [I]
+        📦 Import / Export [I]
       </button>
       <button class="btn btn-danger" onclick="clearCompleted()" title="Remove all finished tasks [C]">
         🧹 Clear Finished [C]
@@ -1072,6 +1078,8 @@
             <li><strong style="color: var(--accent-blue);">S</strong>: Toggle productivity statistics</li>
             <li><strong style="color: var(--accent-blue);">I</strong>: Open Import / Export dialog</li>
             <li><strong style="color: var(--accent-blue);">C</strong>: Clear completed tasks</li>
+            <li><strong style="color: var(--accent-blue);">F5</strong>: Quicksave workspace snapshot to localStorage</li>
+            <li><strong style="color: var(--accent-blue);">F9</strong>: Quickload restored workspace snapshot</li>
             <li><strong style="color: var(--accent-blue);">F1 or H</strong>: Open / close this Help guide</li>
             <li><strong style="color: var(--accent-blue);">Escape</strong>: Close active modal or clear search</li>
           </ul>
@@ -1090,6 +1098,45 @@
           </ul>
         </div>
         <button class="btn btn-primary" style="justify-content: center; margin-top: 4px;" onclick="closeHelpModal()">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- First-Run Tutorial Modal -->
+  <div class="modal-overlay" id="tutorialModal" onclick="if(event.target===this) closeTutorialModal()">
+    <div class="modal-box" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3>✨ Welcome to KTodo</h3>
+        <button class="action-icon-btn" onclick="closeTutorialModal()">✕</button>
+      </div>
+      <div class="modal-body" style="font-size: 13px; line-height: 1.6; color: var(--text-secondary);">
+        <p style="margin-bottom: 8px; color: var(--text-primary); font-weight: 500;">
+          Your sovereign, zero-bloat productivity workstation. Here is everything you need to know:
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 12px;">
+            <strong style="color: var(--accent-blue);">⚡ 1. Rapid Task Capture [N &amp; Enter]</strong>
+            <p style="margin: 3px 0 0 0; font-size: 12px;">Press <code>N</code> to focus input, enter task details, and hit <code>Enter</code> to capture immediately.</p>
+          </div>
+          <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 12px;">
+            <strong style="color: var(--accent-green);">📋 2. Dual Views: List [1] &amp; Kanban [2]</strong>
+            <p style="margin: 3px 0 0 0; font-size: 12px;">Switch between high-density nested checklists (<code>1</code>) and three-column Kanban boards (<code>2</code>).</p>
+          </div>
+          <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 12px;">
+            <strong style="color: var(--accent-amber);">💾 3. State Persistence [F5 &amp; F9]</strong>
+            <p style="margin: 3px 0 0 0; font-size: 12px;">Press <code>F5</code> to snapshot tasks, categories, filters, and views. Press <code>F9</code> to restore. Auto-session recovery protects data on reloads.</p>
+          </div>
+          <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 12px;">
+            <strong style="color: var(--accent-purple);">📦 4. Markdown &amp; Backups [I]</strong>
+            <p style="margin: 3px 0 0 0; font-size: 12px;">Press <code>I</code> to import/export standard GFM Markdown task lists, JSON snapshots, or CSV sheets.</p>
+          </div>
+        </div>
+        <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; user-select: none;">
+            <input type="checkbox" id="chkTutorialNeverAgain" checked style="cursor: pointer;"> Don't show this again
+          </label>
+          <button class="btn btn-primary" style="padding: 8px 18px;" onclick="closeTutorialModal()">Get Started [Enter]</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1119,49 +1166,85 @@
 
     const CATEGORIES = ['all', 'General', 'Work', 'Personal', 'Project', 'Health', 'Shopping'];
 
+    // Safe Storage Wrappers (Quota & Exception Resilient)
+    function safeStorageGet(key, fallback) {
+      try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : fallback;
+      } catch (e) {
+        console.warn('Storage read error for key:', key, e);
+        return fallback;
+      }
+    }
+
+    function safeStorageSet(key, val) {
+      try {
+        localStorage.setItem(key, JSON.stringify(val));
+        return true;
+      } catch (e) {
+        console.warn('Storage quota error for key:', key, e);
+        showToast('⚠️ Storage quota exceeded! Data might not be saved.');
+        return false;
+      }
+    }
+
+    // Active URL tracking to prevent leaks
+    const activeObjectUrls = new Set();
+    function trackBlobUrl(url) {
+      activeObjectUrls.add(url);
+      setTimeout(() => {
+        try { URL.revokeObjectURL(url); } catch (e) {}
+        activeObjectUrls.delete(url);
+      }, 3000);
+      return url;
+    }
+
+    function cleanupResources() {
+      for (const u of activeObjectUrls) {
+        try { URL.revokeObjectURL(u); } catch (e) {}
+      }
+      activeObjectUrls.clear();
+      if (toastTimer) {
+        clearTimeout(toastTimer);
+        toastTimer = null;
+      }
+    }
+
     // Load initial tasks from LocalStorage
     function loadTasks() {
       try {
-        const saved = localStorage.getItem('ktodo_v2_tasks');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed)) {
-            tasks = parsed.filter(t => t && typeof t === 'object').map(t => ({
-              id: t.id || getUniqueId(),
+        const saved = safeStorageGet('ktodo_v2_tasks', null);
+        if (saved && Array.isArray(saved)) {
+          tasks = saved.filter(t => t && typeof t === 'object').map(t => ({
+            id: t.id || getUniqueId(),
+            text: typeof t.text === 'string' ? t.text : 'Task',
+            category: typeof t.category === 'string' ? t.category : 'General',
+            priority: typeof t.priority === 'string' ? t.priority : 'Medium',
+            dueDate: typeof t.dueDate === 'string' ? t.dueDate : '',
+            completed: !!t.completed,
+            subtasks: Array.isArray(t.subtasks) ? t.subtasks.filter(s => s && typeof s === 'object').map(s => ({
+              id: s.id || getUniqueId(),
+              text: typeof s.text === 'string' ? s.text : '',
+              completed: !!s.completed
+            })) : [],
+            createdAt: t.createdAt || new Date().toISOString()
+          }));
+        } else {
+          // Legacy check
+          const legacy = safeStorageGet('ktodo_tasks', null);
+          if (legacy && Array.isArray(legacy)) {
+            tasks = legacy.filter(t => t && typeof t === 'object').map(t => ({
+              id: getUniqueId(),
               text: typeof t.text === 'string' ? t.text : 'Task',
-              category: typeof t.category === 'string' ? t.category : 'General',
+              category: 'General',
               priority: typeof t.priority === 'string' ? t.priority : 'Medium',
-              dueDate: typeof t.dueDate === 'string' ? t.dueDate : '',
+              dueDate: '',
               completed: !!t.completed,
-              subtasks: Array.isArray(t.subtasks) ? t.subtasks.filter(s => s && typeof s === 'object').map(s => ({
-                id: s.id || getUniqueId(),
-                text: typeof s.text === 'string' ? s.text : '',
-                completed: !!s.completed
-              })) : [],
-              createdAt: t.createdAt || new Date().toISOString()
+              subtasks: [],
+              createdAt: new Date().toISOString()
             }));
           } else {
             tasks = [];
-          }
-        } else {
-          // Legacy check
-          const legacy = localStorage.getItem('ktodo_tasks');
-          if (legacy) {
-            const parsed = JSON.parse(legacy);
-            if (Array.isArray(parsed)) {
-              tasks = parsed.filter(t => t && typeof t === 'object').map(t => ({
-                id: getUniqueId(),
-                text: typeof t.text === 'string' ? t.text : 'Task',
-                category: 'General',
-                priority: typeof t.priority === 'string' ? t.priority : 'Medium',
-                dueDate: '',
-                completed: !!t.completed,
-                subtasks: [],
-                createdAt: new Date().toISOString()
-              }));
-            } else {
-              tasks = [];
-            }
           }
         }
       } catch (e) {
@@ -1170,14 +1253,136 @@
       }
     }
 
-    function saveTasks() {
+    function saveTasks(render = true) {
+      safeStorageSet('ktodo_v2_tasks', tasks);
+      if (render) renderAppView();
+    }
+
+    // Full Workspace Snapshot & Quicksave / Quickload
+    function getFullStateSnapshot() {
+      return {
+        version: 2,
+        timestamp: new Date().toISOString(),
+        tasks: tasks,
+        currentViewMode: currentViewMode,
+        activeCategory: activeCategory,
+        currentFilter: currentFilter,
+        currentSort: currentSort,
+        statsVisible: statsVisible,
+        expandedSubtasks: Array.from(expandedSubtasks),
+        taskCounter: taskCounter,
+        selectedTaskId: selectedTaskId
+      };
+    }
+
+    function restoreFullStateSnapshot(state) {
+      if (!state || typeof state !== 'object') return false;
       try {
-        localStorage.setItem('ktodo_v2_tasks', JSON.stringify(tasks));
-      } catch (e) {
-        console.error('Save error:', e);
-        showToast('⚠️ Storage quota exceeded! Tasks might not be saved.');
+        if (Array.isArray(state.tasks)) {
+          tasks = state.tasks.filter(t => t && typeof t === 'object').map(t => ({
+            id: t.id || getUniqueId(),
+            text: typeof t.text === 'string' ? t.text : 'Task',
+            category: typeof t.category === 'string' ? t.category : 'General',
+            priority: typeof t.priority === 'string' ? t.priority : 'Medium',
+            dueDate: typeof t.dueDate === 'string' ? t.dueDate : '',
+            completed: !!t.completed,
+            subtasks: Array.isArray(t.subtasks) ? t.subtasks.filter(s => s && typeof s === 'object').map(s => ({
+              id: s.id || getUniqueId(),
+              text: typeof s.text === 'string' ? s.text : '',
+              completed: !!s.completed
+            })) : [],
+            createdAt: t.createdAt || new Date().toISOString()
+          }));
+        }
+        if (state.currentViewMode && (state.currentViewMode === 'list' || state.currentViewMode === 'kanban')) {
+          setViewMode(state.currentViewMode);
+        }
+        if (state.activeCategory && CATEGORIES.includes(state.activeCategory)) {
+          activeCategory = state.activeCategory;
+        }
+        if (state.currentFilter) {
+          currentFilter = state.currentFilter;
+          document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.id === `filter-${currentFilter}`);
+          });
+        }
+        if (state.currentSort) {
+          currentSort = state.currentSort;
+          const sortEl = document.getElementById('sortBy');
+          if (sortEl) sortEl.value = currentSort;
+        }
+        if (typeof state.statsVisible === 'boolean') {
+          statsVisible = state.statsVisible;
+          const dash = document.getElementById('statsDashboard');
+          const lbl = document.getElementById('statsToggleLabel');
+          if (dash) dash.style.display = statsVisible ? 'grid' : 'none';
+          if (lbl) lbl.textContent = statsVisible ? 'Hide Stats' : 'Stats';
+        }
+        if (Array.isArray(state.expandedSubtasks)) {
+          expandedSubtasks = new Set(state.expandedSubtasks);
+        }
+        if (state.taskCounter && Number.isInteger(state.taskCounter)) {
+          taskCounter = Math.max(taskCounter, state.taskCounter);
+        }
+        if (state.selectedTaskId) {
+          selectedTaskId = state.selectedTaskId;
+        }
+        saveTasks(false);
+        renderAppView();
+        return true;
+      } catch (err) {
+        console.error('Failed to restore snapshot:', err);
+        return false;
       }
-      renderAppView();
+    }
+
+    function quicksaveState() {
+      const snap = getFullStateSnapshot();
+      if (safeStorageSet('ktodo_quicksave', snap)) {
+        showToast('★ Tasks & workspace snapshot quicksaved [F5]');
+      }
+    }
+
+    function quickloadState() {
+      const snap = safeStorageGet('ktodo_quicksave', null);
+      if (!snap) {
+        showToast('⚠️ No quicksave snapshot found [Press F5 to save first]');
+        return false;
+      }
+      const ok = restoreFullStateSnapshot(snap);
+      if (ok) {
+        showToast('★ Restored quicksaved workspace [F9]');
+      } else {
+        showToast('⚠️ Failed to restore quicksave data');
+      }
+      return ok;
+    }
+
+    function autoSaveSession() {
+      const snap = getFullStateSnapshot();
+      safeStorageSet('ktodo_session_state', snap);
+    }
+
+    // First-run Tutorial Modal Management
+    let tutorialActive = false;
+    function openTutorialModal() {
+      const m = document.getElementById('tutorialModal');
+      if (m) {
+        m.classList.add('active');
+        tutorialActive = true;
+      }
+    }
+
+    function closeTutorialModal() {
+      const m = document.getElementById('tutorialModal');
+      if (m) {
+        m.classList.remove('active');
+        tutorialActive = false;
+      }
+      const chk = document.getElementById('chkTutorialNeverAgain');
+      if (!chk || chk.checked) {
+        safeStorageSet('ktodo_tutorialSeen', true);
+      }
     }
 
     let toastTimer = null;
@@ -1746,14 +1951,13 @@
     function exportMarkdown() {
       const mdContent = generateMarkdownText();
       const blob = new Blob([mdContent], { type: 'text/markdown;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
+      const url = trackBlobUrl(URL.createObjectURL(blob));
       const link = document.createElement('a');
       link.setAttribute('href', url);
       link.setAttribute('download', `ktodo_tasks_${getTodayString()}.md`);
       document.body.appendChild(link);
       link.click();
       link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1500);
       showToast('Exported tasks to Markdown (.md)!');
     }
 
@@ -1768,14 +1972,13 @@
 
     function exportJSON() {
       const blob = new Blob([JSON.stringify(tasks, null, 2)], { type: 'application/json;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
+      const url = trackBlobUrl(URL.createObjectURL(blob));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", url);
       downloadAnchor.setAttribute("download", `ktodo_backup_${getTodayString()}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1500);
       showToast('Exported tasks to JSON!');
     }
 
@@ -1788,14 +1991,13 @@
         csv += `${t.id},${text},${cat},${t.priority},${t.dueDate || ''},${t.completed},${subCount}\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
+      const url = trackBlobUrl(URL.createObjectURL(blob));
       const link = document.createElement('a');
       link.setAttribute('href', url);
       link.setAttribute('download', `ktodo_tasks_${getTodayString()}.csv`);
       document.body.appendChild(link);
       link.click();
       link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1500);
       showToast('Exported tasks to CSV!');
     }
 
@@ -2043,23 +2245,65 @@
       showToast('Loaded sample tasks!');
     }
 
-    // Init
-    loadTasks();
-    renderAppView();
-    
+    // Lifecycle Listeners
+    window.addEventListener('beforeunload', () => {
+      autoSaveSession();
+      cleanupResources();
+    });
+
+    window.addEventListener('pagehide', () => {
+      autoSaveSession();
+      cleanupResources();
+    });
+
+    // Keyboard Shortcuts & Modal Handling
     document.addEventListener('keydown', (e) => {
-      const isInput = ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName);
-      if (e.key === 'Escape') {
-        const io = document.getElementById('ioModal');
-        const help = document.getElementById('helpModal');
-        if (io && io.classList.contains('active')) {
-          closeIOModal();
+      // 1. Modal Dialog Navigation & Escape/Enter Handling
+      if (tutorialActive) {
+        if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+          e.preventDefault();
+          closeTutorialModal();
           return;
         }
-        if (help && help.classList.contains('active')) {
+        return;
+      }
+
+      const helpEl = document.getElementById('helpModal');
+      const isHelpActive = helpEl && helpEl.classList.contains('active');
+      if (isHelpActive) {
+        if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+          e.preventDefault();
           closeHelpModal();
           return;
         }
+        return;
+      }
+
+      const ioEl = document.getElementById('ioModal');
+      const isIOActive = ioEl && ioEl.classList.contains('active');
+      if (isIOActive) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          closeIOModal();
+          return;
+        }
+      }
+
+      // Quicksave & Quickload Shortcuts (always active)
+      const isInput = ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName);
+      if (e.key === 'F5') {
+        e.preventDefault();
+        quicksaveState();
+        return;
+      }
+
+      if (e.key === 'F9') {
+        e.preventDefault();
+        quickloadState();
+        return;
+      }
+
+      if (e.key === 'Escape') {
         if (editingTaskId) {
           cancelEditTask();
           return;
@@ -2069,7 +2313,9 @@
           return;
         }
         hideToast();
+        return;
       }
+
       if (!isInput) {
         if (e.ctrlKey || e.altKey || e.metaKey) return;
         if (e.key === 'F1' || e.key.toLowerCase() === 'h') {
@@ -2134,7 +2380,28 @@
         }
       }
     });
-    setTimeout(() => showToast("✨ Welcome to KTodo! Press [F1] for shortcuts | [N] for new task | [1/2] views"), 400);
+
+    // Startup Initialization, Session Recovery & Tutorial Onboarding
+    const savedSession = safeStorageGet('ktodo_session_state', null);
+    const hasQuicksave = safeStorageGet('ktodo_quicksave', null);
+    const hasSeenTutorial = safeStorageGet('ktodo_tutorialSeen', false);
+
+    if (savedSession) {
+      restoreFullStateSnapshot(savedSession);
+    } else {
+      loadTasks();
+      renderAppView();
+    }
+
+    // First-run tutorial onboarding check: only on fresh sessions, never interrupting restored save states
+    if (!hasSeenTutorial && !hasQuicksave && !savedSession && tasks.length === 0) {
+      loadSampleTasks();
+      setTimeout(openTutorialModal, 400);
+    } else {
+      setTimeout(() => {
+        showToast("✨ Ready. [Space] Done, [F5] Save, [F9] Load, [F1] Help, [N] New task");
+      }, 500);
+    }
   </script>
 </body>
 </html>

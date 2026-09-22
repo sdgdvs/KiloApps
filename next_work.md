@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KHash
   kilo_usability: KHash
   kilo_graphics: KBreakout
-  kilo_qa: KTodo
+  kilo_qa: KTrader
   kilo_expander: KFont
   kilo_creator: "KMatrix (Master Terminal & ARG Climax)"
 virtual_web_target: "kweb://webring"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-usability
-  app: KBookmark
-  timestamp: "2026-09-22T15:52:00Z"
+  agent: kilo-qa
+  app: KTodo
+  timestamp: "2026-09-22T17:52:00Z"
 last_planner_run: "2026-09-22T07:47:00Z"
 ---
 
@@ -99,9 +99,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KRSS`, `KClip`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KTodo`
+- **Current Target**: `KTrader`
 - **Upcoming Queue**:
-  `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAlchemy`, `KAsteroids`, `KChrono`, `KColony`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMine`, `KMystery`, `KPac`, `KQuest`, `KRogue`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer)*.
+  `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAlchemy`, `KAsteroids`, `KChrono`, `KColony`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMine`, `KMystery`, `KPac`, `KQuest`, `KRogue`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KTodo` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KFont`
@@ -151,6 +151,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-22T17:52:00Z — kilo-qa: KTodo**
+  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial onboarding integrity, modal controls, safe blob exports).
+  - State Persistence: Quicksave (F5) & quickload (F9) across web (localStorage) and native (ktodo.dat) capturing tasks, subtasks, filters, and views.
+  - Native UI Parity: Added Save [F5] & Load [F9] buttons; auto-save on shutdown (WM_DESTROY) and web beforeunload/pagehide.
+  - Tutorial Integrity: Fresh-session onboarding modal (ktodo_tutorialSeen / ktodo_tutorial.dat) never interrupting restored save states.
+  - Modal Ergonomics: Added Enter, Space, and Esc keyboard handlers across Help and Tutorial modals.
+  - Resource Cleanliness: Implemented safe blob URL tracking to eliminate leaks; wrapped storage in quota protection; interval cleanup.
+  - Verification: Clean MSVC Native C build (23.0 KB); clean Vite web build (348ms); 25 automated QA suite checks passed; 0 security violations.
+
 - **2026-09-22T15:52:00Z — kilo-usability: KBookmark**
   - Status: PASS ✅ (HiDPI QR canvas scaling, responsive layout breakpoints, mobile sidebar drawer, Help & hotkey ergonomics).
   - HiDPI Canvas Scaling: Applied window.devicePixelRatio and imageSmoothingEnabled:false to #qrCanvas for razor-sharp QR codes.
@@ -183,11 +192,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Architecture & Audio: F5 quicksave / F9 quickload persistence; YM2612 FM chiptune & SNES delay audio standard with zero external assets.
   - Lore & Narrative: Project Echo Node 0x99 memory pointer & relic key fragment embedded bridging to milestone #100 KMatrix.
   - Verification: Clean MSVC build (15.5 KB); clean Vite build (342ms); 18 automated suite checks passed; 0 security lint violations.
-
-- **2026-09-22T07:47:00Z — kilo-planner: Fleet Planning & Queue Compaction**
-  - Status: PASS ✅ (24h velocity evaluated, queues reworked, active targets rebalanced, log archive compacted).
-  - Velocity & Health: Fleet achieved 100% PASS rate across last 24h; 2 new apps added (KHash #97, KRSS #98); platform hardening & bot defense gates live.
-  - Target Alignment: Queued newly created apps KHash and KRSS into tester and usability queues; advanced virtual web target to kweb://webring.
-  - Rotation Schedule: Set rotation order to creator ➔ graphics ➔ tester ➔ usability ➔ qa ➔ expander (kilo-creator active for KClip #99 milestone).
-  - Log Compaction: Compacted 2026-09-22 KSpace log entry to archive/fleet_execution_archive.md; preserved strict 5-entry active limit.
-  - Verification: Security linter passed cleanly; orchestrator queue validation verified.

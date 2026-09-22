@@ -186,6 +186,7 @@ HWND g_hWnd = NULL;
 HWND hInput, hCategory, hPriority, hDueDate, hAddBtn;
 HWND hSearch, hFilterStatus, hFilterCategory;
 HWND hList, hToggleBtn, hSubtaskBtn, hDeleteBtn, hClearBtn, hExportBtn, hImportBtn, hExportMDBtn, hImportMDBtn, hStatsBtn, hStatusText, hHelpBtn;
+HWND hSaveBtn, hLoadBtn;
 HFONT hFont, hFontBold;
 
 WNDPROC g_OldEditProc = NULL;
@@ -211,22 +212,64 @@ WNDPROC g_OldListProc = NULL;
 #define ID_EXPORTMDBTN    1016
 #define ID_IMPORTMDBTN    1017
 #define ID_HELPBTN        1018
+#define ID_SAVEBTN        1019
+#define ID_LOADBTN        1020
+
+void ShowNativeToast(const char* msg);
+int SaveStateToFile(const char* filename);
+int LoadStateFromFile(const char* filename);
 
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == WM_GETDLGCODE) {
         return DLGC_WANTALLKEYS;
     }
-    if (msg == WM_KEYDOWN && wParam == VK_RETURN) {
-        HWND hParent = GetParent(hwnd);
-        if (hParent) {
-            SendMessageA(hParent, WM_COMMAND, MAKEWPARAM(ID_ADDBTN, BN_CLICKED), (LPARAM)hAddBtn);
+    if (msg == WM_KEYDOWN) {
+        if (wParam == VK_RETURN) {
+            HWND hParent = GetParent(hwnd);
+            if (hParent) {
+                SendMessageA(hParent, WM_COMMAND, MAKEWPARAM(ID_ADDBTN, BN_CLICKED), (LPARAM)hAddBtn);
+            }
+            return 0;
         }
-        return 0;
+        if (wParam == VK_F5) {
+            if (SaveStateToFile("ktodo.dat")) {
+                ShowNativeToast("★ Tasks saved to ktodo.dat [F5]");
+            } else {
+                ShowNativeToast("⚠ Failed to save tasks.");
+            }
+            return 0;
+        }
+        if (wParam == VK_F9) {
+            if (LoadStateFromFile("ktodo.dat")) {
+                ShowNativeToast("★ Restored tasks from ktodo.dat [F9]");
+            } else {
+                ShowNativeToast("⚠ No saved tasks found (ktodo.dat).");
+            }
+            return 0;
+        }
     }
     return CallWindowProcA(g_OldEditProc, hwnd, msg, wParam, lParam);
 }
 
 LRESULT CALLBACK SearchSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_KEYDOWN) {
+        if (wParam == VK_F5) {
+            if (SaveStateToFile("ktodo.dat")) {
+                ShowNativeToast("★ Tasks saved to ktodo.dat [F5]");
+            } else {
+                ShowNativeToast("⚠ Failed to save tasks.");
+            }
+            return 0;
+        }
+        if (wParam == VK_F9) {
+            if (LoadStateFromFile("ktodo.dat")) {
+                ShowNativeToast("★ Restored tasks from ktodo.dat [F9]");
+            } else {
+                ShowNativeToast("⚠ No saved tasks found (ktodo.dat).");
+            }
+            return 0;
+        }
+    }
     if (msg == WM_COMMAND || msg == WM_KEYUP) {
         HWND hParent = GetParent(hwnd);
         if (hParent) {
@@ -241,6 +284,22 @@ LRESULT CALLBACK ListSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         return DLGC_WANTALLKEYS;
     }
     if (msg == WM_KEYDOWN) {
+        if (wParam == VK_F5) {
+            if (SaveStateToFile("ktodo.dat")) {
+                ShowNativeToast("★ Tasks saved to ktodo.dat [F5]");
+            } else {
+                ShowNativeToast("⚠ Failed to save tasks.");
+            }
+            return 0;
+        }
+        if (wParam == VK_F9) {
+            if (LoadStateFromFile("ktodo.dat")) {
+                ShowNativeToast("★ Restored tasks from ktodo.dat [F9]");
+            } else {
+                ShowNativeToast("⚠ No saved tasks found (ktodo.dat).");
+            }
+            return 0;
+        }
         if (wParam == VK_DELETE) {
             HWND hParent = GetParent(hwnd);
             if (hParent) {
@@ -285,7 +344,7 @@ void RefreshStatusText() {
     int total = g_taskCount;
     int rate = total > 0 ? (completedCount * 100) / total : 0;
     char statusBuf[160];
-    wsprintfA(statusBuf, "Tasks: %d | Active: %d | Done: %d (%d%%) | [Space: Done | N: New | Del: Remove | F1: Help]",
+    wsprintfA(statusBuf, "Tasks: %d | Active: %d | Done: %d (%d%%) | [Space: Done | N: New | F5: Save | F9: Load | F1: Help]",
         total, activeCount, completedCount, rate);
     SetWindowTextA(hStatusText, statusBuf);
 }
@@ -307,6 +366,8 @@ void ShowHelpDialog(HWND hwnd) {
         "  - Space / Enter (in Task List): Toggle task completed\n"
         "  - Del / D: Delete selected task\n"
         "  - C: Clear all completed tasks\n"
+        "  - F5: Quicksave workspace state to ktodo.dat\n"
+        "  - F9: Quickload saved state from ktodo.dat\n"
         "  - S: Show productivity summary & stats\n"
         "  - E: Export Markdown task list (.md)\n"
         "  - I: Import Markdown task list (.md)\n"
@@ -792,6 +853,99 @@ void DoImportMarkdown() {
     ShowNativeToast(msgBuf);
 }
 
+#define KTODO_SAVE_MAGIC 0x4B544F44 // 'KTOD'
+#define KTODO_SAVE_VERSION 1
+
+#pragma pack(push, 1)
+typedef struct {
+    DWORD magic;
+    DWORD version;
+    int taskCount;
+    Task tasks[MAX_TASKS];
+    int filterStatus;
+    int filterCategory;
+    char search[64];
+} KTodoSaveData;
+#pragma pack(pop)
+
+static KTodoSaveData s_saveData;
+
+int SaveStateToFile(const char* filename) {
+    HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+
+    memset(&s_saveData, 0, sizeof(s_saveData));
+    s_saveData.magic = KTODO_SAVE_MAGIC;
+    s_saveData.version = KTODO_SAVE_VERSION;
+    s_saveData.taskCount = (g_taskCount > MAX_TASKS) ? MAX_TASKS : g_taskCount;
+    for (int i = 0; i < s_saveData.taskCount; i++) {
+        s_saveData.tasks[i] = g_tasks[i];
+    }
+    s_saveData.filterStatus = hFilterStatus ? (int)SendMessageA(hFilterStatus, 0x0147 /*CB_GETCURSEL*/, 0, 0) : 0;
+    s_saveData.filterCategory = hFilterCategory ? (int)SendMessageA(hFilterCategory, 0x0147 /*CB_GETCURSEL*/, 0, 0) : 0;
+    if (hSearch) {
+        GetWindowTextA(hSearch, s_saveData.search, sizeof(s_saveData.search));
+    }
+
+    DWORD written = 0;
+    BOOL res = WriteFile(hFile, &s_saveData, sizeof(s_saveData), &written, NULL);
+    CloseHandle(hFile);
+    return (res && written == sizeof(s_saveData)) ? 1 : 0;
+}
+
+int LoadStateFromFile(const char* filename) {
+    HANDLE hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+
+    DWORD bytesRead = 0;
+    BOOL res = ReadFile(hFile, &s_saveData, sizeof(s_saveData), &bytesRead, NULL);
+    CloseHandle(hFile);
+
+    if (!res || bytesRead < sizeof(DWORD) * 3) return 0;
+    if (s_saveData.magic != KTODO_SAVE_MAGIC) return 0;
+
+    g_taskCount = s_saveData.taskCount;
+    if (g_taskCount < 0) g_taskCount = 0;
+    if (g_taskCount > MAX_TASKS) g_taskCount = MAX_TASKS;
+
+    for (int i = 0; i < g_taskCount; i++) {
+        g_tasks[i] = s_saveData.tasks[i];
+    }
+
+    if (hFilterStatus && s_saveData.filterStatus >= 0) {
+        SendMessageA(hFilterStatus, 0x014E /*CB_SETCURSEL*/, s_saveData.filterStatus, 0);
+    }
+    if (hFilterCategory && s_saveData.filterCategory >= 0) {
+        SendMessageA(hFilterCategory, 0x014E /*CB_SETCURSEL*/, s_saveData.filterCategory, 0);
+    }
+    if (hSearch) {
+        SetWindowTextA(hSearch, s_saveData.search);
+    }
+
+    RefreshTaskList();
+    RefreshStatusText();
+    return 1;
+}
+
+static int HasSavedState(const char* filename) {
+    DWORD attr = GetFileAttributesA(filename);
+    return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+static int HasSeenTutorial(void) {
+    return HasSavedState("ktodo_tutorial.dat");
+}
+
+static void MarkTutorialSeen(void) {
+    HANDLE h = CreateFileA("ktodo_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h != INVALID_HANDLE_VALUE) {
+        char buf[16] = "seen\r\n";
+        DWORD written = 0;
+        WriteFile(h, buf, 6, &written, NULL);
+        CloseHandle(h);
+    }
+}
+
 void LoadSampleData() {
     g_taskCount = 0;
 
@@ -880,18 +1034,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL | LBS_HASSTRINGS | WS_TABSTOP, 10, 70, 445, 190, hwnd, (HMENU)ID_LIST, NULL, NULL);
 
             // Row 4: Action Buttons
-            hToggleBtn = CreateWindowA("BUTTON", "Done [Space]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 265, 90, 26, hwnd, (HMENU)ID_TOGGLEBTN, NULL, NULL);
-            hSubtaskBtn = CreateWindowA("BUTTON", "+ Checklist", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 105, 265, 80, 26, hwnd, (HMENU)ID_SUBTASKBTN, NULL, NULL);
-            hDeleteBtn = CreateWindowA("BUTTON", "Delete [Del]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 190, 265, 85, 26, hwnd, (HMENU)ID_DELETEBTN, NULL, NULL);
-            hClearBtn = CreateWindowA("BUTTON", "Clear [C]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 280, 265, 70, 26, hwnd, (HMENU)ID_CLEARBTN, NULL, NULL);
-            hExportBtn = CreateWindowA("BUTTON", "JSON [J]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 355, 265, 65, 26, hwnd, (HMENU)ID_EXPORTBTN, NULL, NULL);
-            hExportMDBtn = CreateWindowA("BUTTON", "Export MD [E]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 425, 265, 95, 26, hwnd, (HMENU)ID_EXPORTMDBTN, NULL, NULL);
-            hImportMDBtn = CreateWindowA("BUTTON", "Import MD [I]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 525, 265, 95, 26, hwnd, (HMENU)ID_IMPORTMDBTN, NULL, NULL);
-            hImportBtn = CreateWindowA("BUTTON", "Demo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 625, 265, 50, 26, hwnd, (HMENU)ID_IMPORTBTN, NULL, NULL);
-            hHelpBtn = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 680, 265, 75, 26, hwnd, (HMENU)ID_HELPBTN, NULL, NULL);
+            hToggleBtn = CreateWindowA("BUTTON", "Done [Space]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 265, 85, 26, hwnd, (HMENU)ID_TOGGLEBTN, NULL, NULL);
+            hSubtaskBtn = CreateWindowA("BUTTON", "+ Checklist", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 100, 265, 75, 26, hwnd, (HMENU)ID_SUBTASKBTN, NULL, NULL);
+            hDeleteBtn = CreateWindowA("BUTTON", "Delete [Del]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 180, 265, 80, 26, hwnd, (HMENU)ID_DELETEBTN, NULL, NULL);
+            hClearBtn = CreateWindowA("BUTTON", "Clear [C]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 265, 265, 65, 26, hwnd, (HMENU)ID_CLEARBTN, NULL, NULL);
+            hSaveBtn = CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 335, 265, 70, 26, hwnd, (HMENU)ID_SAVEBTN, NULL, NULL);
+            hLoadBtn = CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 410, 265, 70, 26, hwnd, (HMENU)ID_LOADBTN, NULL, NULL);
+            hExportBtn = CreateWindowA("BUTTON", "JSON [J]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 485, 265, 60, 26, hwnd, (HMENU)ID_EXPORTBTN, NULL, NULL);
+            hExportMDBtn = CreateWindowA("BUTTON", "Export MD [E]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 550, 265, 85, 26, hwnd, (HMENU)ID_EXPORTMDBTN, NULL, NULL);
+            hImportMDBtn = CreateWindowA("BUTTON", "Import MD [I]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 640, 265, 85, 26, hwnd, (HMENU)ID_IMPORTMDBTN, NULL, NULL);
+            hImportBtn = CreateWindowA("BUTTON", "Demo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 730, 265, 45, 26, hwnd, (HMENU)ID_IMPORTBTN, NULL, NULL);
+            hHelpBtn = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 780, 265, 65, 26, hwnd, (HMENU)ID_HELPBTN, NULL, NULL);
 
             // Row 5: Status Bar
-            hStatusText = CreateWindowA("STATIC", "Tasks: 0 | [Space: Done | N: New | Del: Remove | F1: Help]", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 298, 445, 20, hwnd, NULL, NULL, NULL);
+            hStatusText = CreateWindowA("STATIC", "Tasks: 0 | [Space: Done | N: New | F5: Save | F9: Load | F1: Help]", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 298, 445, 20, hwnd, NULL, NULL, NULL);
 
             // Setup fonts
             hFont = CreateFontA(-16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, 5 /*CLEARTYPE_QUALITY*/, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
@@ -911,6 +1067,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hSubtaskBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hDeleteBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hClearBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hSaveBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hLoadBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hExportBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hExportMDBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hImportMDBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -922,10 +1080,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_OldEditProc = (WNDPROC)SetWindowLongPtrA(hInput, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
             g_OldSearchProc = (WNDPROC)SetWindowLongPtrA(hSearch, GWLP_WNDPROC, (LONG_PTR)SearchSubclassProc);
             g_OldListProc = (WNDPROC)SetWindowLongPtrA(hList, GWLP_WNDPROC, (LONG_PTR)ListSubclassProc);
-
-            // Load sample tasks on startup
-            LoadSampleData();
-            ShowNativeToast("Welcome to KTodo! [F1: Help | N: New | Space: Done]");
             break;
         }
 
@@ -973,18 +1127,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 MoveWindow(hList, 10, 70, cx - 20, listHeight, TRUE);
 
                 int btnY = cy - 60;
-                int btnW[9] = { 90, 80, 85, 70, 65, 95, 95, 50, 75 };
-                HWND btns[9] = { hToggleBtn, hSubtaskBtn, hDeleteBtn, hClearBtn, hExportBtn, hExportMDBtn, hImportMDBtn, hImportBtn, hHelpBtn };
+                int btnW[11] = { 85, 75, 80, 65, 70, 70, 60, 85, 85, 45, 65 };
+                HWND btns[11] = { hToggleBtn, hSubtaskBtn, hDeleteBtn, hClearBtn, hSaveBtn, hLoadBtn, hExportBtn, hExportMDBtn, hImportMDBtn, hImportBtn, hHelpBtn };
                 int totalBtnW = 0;
-                for (int b = 0; b < 9; b++) totalBtnW += btnW[b];
+                for (int b = 0; b < 11; b++) totalBtnW += btnW[b];
                 int avail = cx - 20 - totalBtnW;
-                int gap = avail / 8;
-                if (gap < 2) gap = 2;
-                if (gap > 10) gap = 10;
+                int gap = (avail > 0) ? (avail / 10) : 1;
+                if (gap > 6) gap = 6;
                 int curX = 10;
-                for (int b = 0; b < 9; b++) {
-                    MoveWindow(btns[b], curX, btnY, btnW[b], 26, TRUE);
-                    curX += btnW[b] + gap;
+                for (int b = 0; b < 11; b++) {
+                    int w = btnW[b];
+                    if (avail < 0 && totalBtnW > 0) {
+                        w = (btnW[b] * (cx - 30)) / totalBtnW;
+                        if (w < 40) w = 40;
+                    }
+                    MoveWindow(btns[b], curX, btnY, w, 26, TRUE);
+                    curX += w + gap;
                 }
 
                 MoveWindow(hStatusText, 10, cy - 25, cx - 20, 20, TRUE);
@@ -1008,6 +1166,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DoAddSubtask();
             } else if (id == ID_STATSBTN) {
                 DoShowStats();
+            } else if (id == ID_SAVEBTN) {
+                if (SaveStateToFile("ktodo.dat")) {
+                    ShowNativeToast("★ Tasks quicksaved to ktodo.dat [F5]");
+                } else {
+                    ShowNativeToast("⚠ Failed to quicksave tasks.");
+                }
+            } else if (id == ID_LOADBTN) {
+                if (LoadStateFromFile("ktodo.dat")) {
+                    ShowNativeToast("★ Restored saved tasks from ktodo.dat [F9]");
+                } else {
+                    ShowNativeToast("⚠ No quicksave state found (ktodo.dat).");
+                }
             } else if (id == ID_EXPORTBTN) {
                 DoExportData();
             } else if (id == ID_EXPORTMDBTN) {
@@ -1028,7 +1198,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
 
+        case WM_KEYDOWN: {
+            if (wParam == VK_F5) {
+                if (SaveStateToFile("ktodo.dat")) {
+                    ShowNativeToast("★ Tasks quicksaved to ktodo.dat [F5]");
+                } else {
+                    ShowNativeToast("⚠ Failed to quicksave tasks.");
+                }
+                return 0;
+            } else if (wParam == VK_F9) {
+                if (LoadStateFromFile("ktodo.dat")) {
+                    ShowNativeToast("★ Restored saved tasks from ktodo.dat [F9]");
+                } else {
+                    ShowNativeToast("⚠ No quicksave state found (ktodo.dat).");
+                }
+                return 0;
+            }
+            break;
+        }
+
         case WM_DESTROY:
+            SaveStateToFile("ktodo.dat");
             if (g_toastTimer) {
                 KillTimer(hwnd, IDT_TOAST);
                 g_toastTimer = 0;
@@ -1067,9 +1257,40 @@ void __stdcall MainEntry() {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
+    if (HasSavedState("ktodo.dat")) {
+        if (LoadStateFromFile("ktodo.dat")) {
+            ShowNativeToast("★ Restored saved tasks from ktodo.dat [F9]");
+        }
+    } else if (!HasSeenTutorial()) {
+        LoadSampleData();
+        ShowHelpDialog(hwnd);
+        MarkTutorialSeen();
+        ShowNativeToast("Welcome to KTodo! Space: Done | F5: Save | F9: Load | F1: Help");
+    } else {
+        LoadSampleData();
+        ShowNativeToast("Welcome to KTodo! [F1: Help | N: New | Space: Done]");
+    }
+
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
+            if (msg.wParam == VK_F5) {
+                if (SaveStateToFile("ktodo.dat")) {
+                    ShowNativeToast("★ Tasks quicksaved to ktodo.dat [F5]");
+                } else {
+                    ShowNativeToast("⚠ Failed to quicksave tasks.");
+                }
+                continue;
+            }
+            if (msg.wParam == VK_F9) {
+                if (LoadStateFromFile("ktodo.dat")) {
+                    ShowNativeToast("★ Restored saved tasks from ktodo.dat [F9]");
+                } else {
+                    ShowNativeToast("⚠ No quicksave state found (ktodo.dat).");
+                }
+                continue;
+            }
+
             HWND hFocus = GetFocus();
             char className[32] = {0};
             if (hFocus) GetClassNameA(hFocus, className, sizeof(className));
