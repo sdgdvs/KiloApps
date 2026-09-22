@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>KBreakout - Loop 11: Satellites, Reflectors & Quantum Resonance</title>
+<title>KBreakout - Satellites, Reflectors & Quantum Resonance</title>
 <style>
 * { box-sizing: border-box; }
 body { background: #0e0e17; color: #fff; margin: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; }
@@ -1218,29 +1218,6 @@ function drawPerimeterInlay(ctx) {
     ctx.strokeStyle = chaos_mode ? `rgba(200, 50, 255, ${pulseAlpha})` : `rgba(0, 220, 255, ${pulseAlpha})`;
     ctx.lineWidth = 1.5;
     ctx.strokeRect(bx, by, bw, bh);
-
-    // Traveling specular glint comet along perimeter
-    let perim = 2 * (bw + bh);
-    let glintDist = (frame * 3.5) % perim;
-    let gx = bx, gy = by;
-    if (glintDist < bw) {
-        gx = bx + glintDist; gy = by;
-    } else if (glintDist < bw + bh) {
-        gx = bx + bw; gy = by + (glintDist - bw);
-    } else if (glintDist < 2 * bw + bh) {
-        gx = bx + bw - (glintDist - (bw + bh)); gy = by + bh;
-    } else {
-        gx = bx; gy = by + bh - (glintDist - (2 * bw + bh));
-    }
-
-    let gGrad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 8);
-    gGrad.addColorStop(0, '#ffffff');
-    gGrad.addColorStop(0.4, chaos_mode ? '#ff88ff' : '#00ffff');
-    gGrad.addColorStop(1, 'rgba(0, 255, 255, 0)');
-    ctx.fillStyle = gGrad;
-    ctx.beginPath();
-    ctx.arc(gx, gy, 8, 0, Math.PI * 2);
-    ctx.fill();
     ctx.restore();
 }
 
@@ -1707,8 +1684,8 @@ function render() {
     drawPerimeterInlay(ctx);
 
     if (state === 0) {
-        ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Segoe UI'; ctx.textAlign = 'center';
-        ctx.fillText("KBREAKOUT - LOOP 11", w/2, h/2 - 60);
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Segoe UI'; ctx.textAlign = 'center';
+        ctx.fillText("KBREAKOUT", w/2, h/2 - 60);
         ctx.fillStyle = '#00ffff'; ctx.font = '12px Segoe UI';
         ctx.fillText("Satellites, Reflectors & Quantum Resonance", w/2, h/2 - 38);
         ctx.fillStyle = '#ddd';

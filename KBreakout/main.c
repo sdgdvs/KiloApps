@@ -1004,32 +1004,6 @@ void DrawPerimeterInlay(HDC hdc) {
     HGDIOBJ oB = SelectObject(hdc, nullBr);
     Rectangle(hdc, bx, by, bx + bw, by + bh);
 
-    // Traveling specular glint comet packet along perimeter
-    int perim = 2 * (bw + bh);
-    if (perim > 0) {
-        int glint_dist = (frame_counter * 4) % perim;
-        int gx = bx, gy = by;
-        if (glint_dist < bw) {
-            gx = bx + glint_dist; gy = by;
-        } else if (glint_dist < bw + bh) {
-            gx = bx + bw; gy = by + (glint_dist - bw);
-        } else if (glint_dist < 2 * bw + bh) {
-            gx = bx + bw - (glint_dist - (bw + bh)); gy = by + bh;
-        } else {
-            gx = bx; gy = by + bh - (glint_dist - (2 * bw + bh));
-        }
-
-        HBRUSH gBr = CreateSolidBrush(RGB(255, 255, 255));
-        HGDIOBJ oG = SelectObject(hdc, gBr);
-        HPEN nonePen = CreatePen(PS_NULL, 0, 0);
-        HGDIOBJ oNP = SelectObject(hdc, nonePen);
-        Ellipse(hdc, gx - 3, gy - 3, gx + 3, gy + 3);
-        SelectObject(hdc, oG);
-        SelectObject(hdc, oNP);
-        DeleteObject(nonePen);
-        DeleteObject(gBr);
-    }
-
     SelectObject(hdc, oP);
     SelectObject(hdc, oB);
     DeleteObject(pPen);
@@ -2066,14 +2040,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkMode(memDC, TRANSPARENT);
             
             if (state == 0) {
-                char* t1 = "KBREAKOUT - LOOP 11";
+                char* t1 = "KBREAKOUT";
                 char* t2 = "Satellites, Reflectors & Quantum Resonance";
                 char* t3 = "Press ENTER for Classic Campaign";
                 char* t4 = "Press SPACE for Hard Campaign";
                 char* t5 = "Press C for MULTI-BALL CHAOS MODE";
                 char* t6 = "Press O/F for CYBER-FORGE LAB";
                 char* t7 = "Press E for Level Editor";
-                TextOutA(memDC, W/2 - 70, H/2 - 60, t1, lstrlenA(t1));
+                TextOutA(memDC, W/2 - 42, H/2 - 60, t1, lstrlenA(t1));
                 TextOutA(memDC, W/2 - 120, H/2 - 38, t2, lstrlenA(t2));
                 TextOutA(memDC, W/2 - 90, H/2 - 5, t3, lstrlenA(t3));
                 TextOutA(memDC, W/2 - 80, H/2 + 15, t4, lstrlenA(t4));
