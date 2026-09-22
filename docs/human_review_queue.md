@@ -14,7 +14,7 @@
 | [KAUDIO](gallery/screenshots/kaudio.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kaudio.html) | 54 FPS | 33ms | 62.3 KB | ⚠️ Lag/Stutter |
 | [KBASE](gallery/screenshots/kbase.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kbase.html) | 60 FPS | 17ms | 85 KB | 🟢 Active |
 | [KBBS](gallery/screenshots/kbbs.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kbbs.html) | 57 FPS | 33ms | 112.2 KB | 🟢 Active |
-| [KBREAKOUT](gallery/screenshots/kbreakout.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kbreakout.html) | 60 FPS | 17ms | 76.8 KB | 🟢 Active |
+| [KBREAKOUT](gallery/screenshots/kbreakout.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kbreakout.html) | 60 FPS | 17ms | 76.8 KB | 🔒 Locked (Mature 5+) |
 | [KBUDGET](gallery/screenshots/kbudget.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kbudget.html) | 54 FPS | 33ms | 34.1 KB | ⚠️ Lag/Stutter |
 | [KCALC](gallery/screenshots/kcalc.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kcalc.html) | 44 FPS | 33ms | 79.6 KB | ⚠️ Lag/Stutter |
 | [KCALENDAR](gallery/screenshots/kcalendar.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kcalendar.html) | 57 FPS | 33ms | 72.6 KB | 🟢 Active |
