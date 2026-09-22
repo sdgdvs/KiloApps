@@ -1,88 +1,121 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>KFont</title>
+<meta charset="utf-8">
+<title>KFont - Typography &amp; Font Engineering Inspector</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f5f5f5; display: flex; flex-direction: column; height: 100vh; overflow: hidden; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-  .header { background: #2b2b2b; color: white; padding: 10px 20px; display: flex; gap: 16px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; flex-wrap: wrap; }
-  .header select, .header input[type="text"] { padding: 6px 10px; font-family: inherit; border-radius: 4px; border: 1px solid #555; background: #444; color: white; outline: none; font-size: 13px; }
-  .header select:focus { border-color: #0078d7; }
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Tahoma, sans-serif; background-color: #f4f5f7; display: flex; flex-direction: column; height: 100vh; overflow: hidden; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; color: #222; }
+  .header { background: #1e2227; color: white; padding: 10px 18px; display: flex; gap: 14px; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.25); z-index: 10; flex-wrap: wrap; }
+  .header-brand { font-weight: 700; font-size: 17px; letter-spacing: 0.5px; color: #4da3ff; display: flex; align-items: center; gap: 8px; }
+  .header-hint { font-size: 11px; color: #8fa0b3; font-weight: normal; }
+  .header select, .header input[type="text"] { padding: 6px 10px; font-family: inherit; border-radius: 4px; border: 1px solid #444c56; background: #2d333b; color: #e6edf3; outline: none; font-size: 13px; transition: border-color 0.15s; }
+  .header select:focus, .header input[type="text"]:focus { border-color: #4da3ff; }
+  
   .main { display: flex; flex: 1; overflow: hidden; }
-  .sidebar { width: 230px; flex-shrink: 0; background: #fff; border-right: 1px solid #ccc; display: flex; flex-direction: column; }
-  .tab-btn { padding: 14px 18px; text-align: left; background: none; border: none; border-bottom: 1px solid #eee; cursor: pointer; font-size: 14px; outline: none; color: #333; transition: all 0.2s; display: flex; align-items: center; justify-content: space-between; }
-  .tab-btn:hover { background: #f0f0f0; }
-  .tab-btn.active { background: #e6f2ff; font-weight: bold; border-left: 4px solid #0078d7; color: #0078d7; }
-  .tab-badge { font-size: 11px; background: rgba(0,0,0,0.06); padding: 1px 6px; border-radius: 3px; font-family: "Consolas", monospace; font-weight: normal; color: #666; }
-  .tab-btn.active .tab-badge { background: #0078d7; color: white; }
-  .content { flex: 1; padding: 25px 30px; overflow-y: auto; background: #fff; }
+  .sidebar { width: 235px; flex-shrink: 0; background: #ffffff; border-right: 1px solid #e1e4e8; display: flex; flex-direction: column; overflow-y: auto; }
+  .tab-btn { padding: 12px 16px; text-align: left; background: none; border: none; border-bottom: 1px solid #f0f2f5; cursor: pointer; font-size: 13px; font-family: inherit; outline: none; color: #333; transition: all 0.15s; display: flex; align-items: center; justify-content: space-between; font-weight: 500; }
+  .tab-btn:hover { background: #f6f8fa; color: #0066cc; }
+  .tab-btn.active { background: #eaf3ff; font-weight: 700; border-left: 4px solid #0066cc; color: #0066cc; }
+  .tab-badge { font-size: 10px; background: rgba(0,0,0,0.06); padding: 1px 6px; border-radius: 3px; font-family: "Consolas", monospace; font-weight: 600; color: #666; }
+  .tab-btn.active .tab-badge { background: #0066cc; color: #fff; }
   
+  .content { flex: 1; padding: 22px 28px; overflow-y: auto; background: #ffffff; }
   .panel { display: none; }
-  .panel.active { display: block; animation: fadeIn 0.3s; }
+  .panel.active { display: block; animation: fadeIn 0.2s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
   
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+  h2 { margin-top: 0; color: #1a1f2c; font-weight: 600; font-size: 20px; border-bottom: 1px solid #eaecef; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  h3 { margin-top: 24px; color: #24292e; font-weight: 600; font-size: 15px; margin-bottom: 10px; }
+  p { color: #586069; font-size: 13px; line-height: 1.5; margin-top: 4px; margin-bottom: 14px; }
   
-  h2 { margin-top: 0; color: #111; font-weight: 400; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-  h3 { margin-top: 25px; color: #333; font-weight: 500; font-size: 16px; }
-  p { color: #666; font-size: 14px; }
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; margin-top: 14px; }
+  .metric-card { background: #f8fafc; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 6px; transition: border-color 0.15s, box-shadow 0.15s; }
+  .metric-card:hover { border-color: #3b82f6; box-shadow: 0 2px 6px rgba(59,130,246,0.1); }
+  .metric-title { font-size: 11px; color: #64748b; margin-bottom: 6px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+  .metric-value { font-size: 18px; color: #0f172a; font-family: "Consolas", monospace; word-break: break-all; }
   
-  .metric-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-top: 20px; }
-  .metric-card { background: #fafafa; padding: 15px; border: 1px solid #eaeaea; border-radius: 6px; transition: 0.2s; }
-  .metric-card:hover { border-color: #0078d7; box-shadow: 0 2px 8px rgba(0,120,215,0.1); }
-  .metric-title { font-size: 11px; color: #888; margin-bottom: 8px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
-  .metric-value { font-size: 20px; color: #222; font-family: "Consolas", monospace; word-break: break-all; }
+  .glyph-controls { margin-bottom: 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .glyph-controls select { padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; outline: none; background: white; }
+  .glyph-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 8px; }
+  .glyph-cell { border: 1px solid #e2e8f0; border-radius: 5px; display: flex; flex-direction: column; align-items: center; padding: 10px 4px; cursor: pointer; transition: transform 0.1s, border-color 0.15s, background-color 0.15s; position: relative; background: #fff; }
+  .glyph-cell:hover { background: #f0f7ff; border-color: #3b82f6; transform: translateY(-2px); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+  .glyph-char { font-size: 26px; margin-bottom: 6px; line-height: 1; color: #1e293b; }
+  .glyph-hex { font-size: 10px; color: #64748b; font-family: "Consolas", monospace; }
   
-  .glyph-controls { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  .glyph-controls select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; outline: none; }
-  .glyph-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; }
-  .glyph-cell { border: 1px solid #eee; border-radius: 4px; display: flex; flex-direction: column; align-items: center; padding: 12px 5px; cursor: pointer; transition: 0.15s; position: relative; }
-  .glyph-cell:hover { background: #f0f8ff; border-color: #0078d7; transform: scale(1.05); }
-  .glyph-char { font-size: 28px; margin-bottom: 8px; line-height: 1; color: #111; }
-  .glyph-hex { font-size: 11px; color: #888; font-family: "Consolas", monospace; }
-  
-  .kerning-pair { display: inline-block; border: 1px solid #ddd; border-radius: 6px; margin: 0 15px 15px 0; padding: 20px; text-align: center; background: #fafafa; }
-  .kerning-text { font-size: 64px; border-bottom: 1px solid #eee; margin-bottom: 12px; padding: 0 10px 10px 10px; color: #222; }
-  .kerning-info { font-size: 12px; color: #666; font-weight: 600; }
+  .kerning-pair { display: inline-block; border: 1px solid #cbd5e1; border-radius: 6px; margin: 0 12px 12px 0; padding: 14px 18px; text-align: center; background: #f8fafc; }
+  .kerning-text { font-size: 54px; border-bottom: 1px solid #e2e8f0; margin-bottom: 8px; padding-bottom: 6px; color: #0f172a; }
+  .kerning-info { font-size: 11px; color: #64748b; font-weight: 600; }
   .no-kern { font-feature-settings: "kern" 0; font-kerning: none; }
   .yes-kern { font-feature-settings: "kern" 1; font-kerning: normal; }
   
-  .sample-box { border: 1px solid #ccc; border-radius: 6px; padding: 25px; min-height: 200px; word-wrap: break-word; outline: none; margin-top: 15px; line-height: 1.5; background: #fafafa; }
-  .sample-box:focus { border-color: #0078d7; box-shadow: 0 0 0 2px rgba(0,120,215,0.2); background: white; }
+  .sample-box { border: 1px solid #cbd5e1; border-radius: 6px; padding: 18px; min-height: 160px; word-wrap: break-word; outline: none; margin-top: 12px; line-height: 1.6; background: #fafafa; }
+  .sample-box:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); background: #ffffff; }
   .sample-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; align-items: center; }
   
   #canvasMetrics { display: none; }
-  .checkbox-label { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 14px; user-select: none; }
-  .kbd-hint { font-size: 10px; background: rgba(255,255,255,0.2); padding: 1px 4px; border-radius: 3px; font-family: "Consolas", monospace; }
+  .checkbox-label { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 13px; user-select: none; }
+  .kbd-hint { font-size: 10px; background: rgba(255,255,255,0.18); padding: 1px 5px; border-radius: 3px; font-family: "Consolas", monospace; }
   
-  .anatomy-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; background: #f9f9f9; padding: 12px 16px; border-radius: 6px; border: 1px solid #eee; }
-  .anatomy-input { width: 80px; padding: 8px; font-size: 18px; text-align: center; font-weight: bold; border: 1px solid #ccc; border-radius: 4px; outline: none; font-family: "Segoe UI", sans-serif; }
-  .anatomy-input:focus { border-color: #0078d7; }
-  .chip-btn { padding: 5px 10px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer; font-size: 14px; font-family: inherit; transition: 0.15s; }
-  .chip-btn:hover { background: #0078d7; color: white; border-color: #0078d7; }
-  .action-btn { padding: 8px 14px; background: #0078d7; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; transition: background 0.15s; }
-  .action-btn:hover { background: #0063b1; }
+  .anatomy-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; background: #f8fafc; padding: 10px 14px; border-radius: 6px; border: 1px solid #e2e8f0; }
+  .anatomy-input { width: 75px; padding: 6px; font-size: 17px; text-align: center; font-weight: 700; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; font-family: inherit; }
+  .anatomy-input:focus { border-color: #3b82f6; }
+  .chip-btn { padding: 4px 10px; border: 1px solid #cbd5e1; background: white; border-radius: 4px; cursor: pointer; font-size: 13px; font-family: inherit; transition: 0.15s; }
+  .chip-btn:hover { background: #3b82f6; color: white; border-color: #3b82f6; }
+  .action-btn { padding: 6px 12px; background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; transition: background 0.15s; display: inline-flex; align-items: center; gap: 5px; }
+  .action-btn:hover { background: #0052a3; }
   
-  .anatomy-canvas-container { position: relative; width: 100%; max-width: 800px; margin-bottom: 25px; }
-  #anatomyCanvas { border: 1px solid #ddd; border-radius: 6px; background: #fafafa; width: 100%; height: 320px; box-shadow: inset 0 0 8px rgba(0,0,0,0.03); }
+  .anatomy-canvas-container { position: relative; width: 100%; max-width: 840px; margin-bottom: 20px; }
+  #anatomyCanvas { border: 1px solid #cbd5e1; border-radius: 6px; background: #fdfdfd; width: 100%; height: 320px; box-shadow: inset 0 0 6px rgba(0,0,0,0.03); }
   
-  .guideline-legend { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; color: #555; }
+  .guideline-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; color: #475569; }
   .legend-item { display: flex; align-items: center; gap: 5px; }
   .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
 
-  #toastNotification { display: none; position: fixed; bottom: 20px; right: 20px; background: #222; color: #fff; padding: 12px 20px; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.35); font-size: 13px; z-index: 2000; cursor: pointer; border-left: 4px solid #0078d7; }
+  /* Contrast Matrix & Palettes */
+  .contrast-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; margin-top: 14px; }
+  .contrast-card { border-radius: 6px; padding: 14px 16px; border: 1px solid #cbd5e1; display: flex; flex-direction: column; justify-content: space-between; min-height: 125px; transition: transform 0.15s; }
+  .contrast-card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+  .contrast-sample-text { font-size: 24px; margin-bottom: 8px; line-height: 1.2; word-break: break-all; }
+  .contrast-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-top: 6px; }
+  .badge-pass { background: #10b981; color: white; padding: 2px 6px; border-radius: 3px; font-weight: 700; font-size: 10px; letter-spacing: 0.5px; }
+  .badge-fail { background: #ef4444; color: white; padding: 2px 6px; border-radius: 3px; font-weight: 700; font-size: 10px; letter-spacing: 0.5px; }
 
-  #helpOverlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
-  #helpOverlay.visible { display: flex; animation: fadeIn 0.2s; }
-  .help-modal { background: white; padding: 25px 30px; border-radius: 8px; box-shadow: 0 4px 25px rgba(0,0,0,0.35); max-width: 520px; font-family: "Segoe UI", sans-serif; position: relative; }
-  .help-modal h2 { margin-top: 0; border-bottom: none; color: #0078d7; display: flex; justify-content: space-between; align-items: center; }
-  .help-modal ul { margin-bottom: 16px; line-height: 1.6; }
-  .help-close-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: #888; padding: 0 5px; line-height: 1; }
-  .help-close-btn:hover { color: #111; }
+  /* Waterfall Table */
+  .waterfall-list { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+  .waterfall-row { display: flex; align-items: baseline; gap: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
+  .waterfall-size { width: 55px; flex-shrink: 0; font-size: 11px; font-family: "Consolas", monospace; color: #64748b; font-weight: 600; text-align: right; }
+  .waterfall-text { flex: 1; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #0f172a; }
+  .waterfall-adv { font-size: 11px; font-family: "Consolas", monospace; color: #94a3b8; width: 85px; flex-shrink: 0; text-align: right; }
+
+  /* Code Spec Blocks */
+  .code-block-container { position: relative; margin-top: 14px; margin-bottom: 24px; }
+  .code-block-header { background: #2d333b; color: #adbac7; padding: 8px 14px; font-size: 12px; font-family: "Consolas", monospace; border-top-left-radius: 6px; border-top-right-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
+  .code-block { margin: 0; padding: 14px; background: #1c2128; color: #adbac7; font-family: "Consolas", "Courier New", monospace; font-size: 12px; line-height: 1.5; border-bottom-left-radius: 6px; border-bottom-right-radius: 6px; overflow-x: auto; white-space: pre; }
+  .code-copy-btn { background: #373e47; color: #adbac7; border: 1px solid #444c56; border-radius: 3px; padding: 3px 8px; font-size: 11px; cursor: pointer; }
+  .code-copy-btn:hover { background: #444c56; color: #ffffff; }
+
+  /* String Run Dissector Table */
+  .dissector-table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 12px; }
+  .dissector-table th { background: #f1f5f9; color: #475569; text-align: left; padding: 8px 10px; font-weight: 600; border-bottom: 2px solid #cbd5e1; }
+  .dissector-table td { padding: 7px 10px; border-bottom: 1px solid #e2e8f0; font-family: "Consolas", monospace; color: #1e293b; }
+  .dissector-table tr:hover td { background: #f8fafc; }
+
+  #toastNotification { display: none; position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: #fff; padding: 10px 18px; border-radius: 6px; box-shadow: 0 4px 14px rgba(0,0,0,0.3); font-size: 12px; z-index: 2000; cursor: pointer; border-left: 4px solid #3b82f6; }
+
+  #helpOverlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+  #helpOverlay.visible { display: flex; animation: fadeIn 0.15s ease-out; }
+  .help-modal { background: white; padding: 22px 28px; border-radius: 8px; box-shadow: 0 6px 30px rgba(0,0,0,0.3); max-width: 560px; font-family: inherit; position: relative; max-height: 90vh; overflow-y: auto; }
+  .help-modal h2 { margin-top: 0; border-bottom: none; color: #0066cc; display: flex; justify-content: space-between; align-items: center; font-size: 18px; }
+  .help-modal ul { margin-bottom: 14px; line-height: 1.6; font-size: 13px; color: #334155; }
+  .help-close-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: #64748b; padding: 0 4px; line-height: 1; }
+  .help-close-btn:hover { color: #0f172a; }
 </style>
 </head>
 <body>
   <div class="header">
-    <div style="font-weight:600;font-size:18px;letter-spacing:1px;color:#4af; display: flex; align-items: center; gap: 8px;">KFont Inspect <span style="font-size:12px;color:#aaa;font-weight:normal;">(Press F1 or H for Help)</span></div>
+    <div class="header-brand">KFont Inspect <span class="header-hint">(Press F1 or H for Help)</span></div>
     <select id="fontList" title="Select Font Family">
       <option value="Arial" selected>Arial</option>
       <option value="Calibri">Calibri</option>
@@ -100,7 +133,9 @@
     </select>
     <select id="sizeList" title="Select Font Size">
       <option value="12px">12px</option>
+      <option value="14px">14px</option>
       <option value="16px">16px</option>
+      <option value="20px">20px</option>
       <option value="24px">24px</option>
       <option value="32px">32px</option>
       <option value="48px" selected>48px</option>
@@ -109,46 +144,58 @@
     </select>
     <label class="checkbox-label"><input type="checkbox" id="boldCheck"> Bold <span class="kbd-hint">B</span></label>
     <label class="checkbox-label"><input type="checkbox" id="italicCheck"> Italic <span class="kbd-hint">I</span></label>
-    <button id="helpBtn" style="margin-left:auto; padding: 6px 14px; border-radius:4px; border:none; background:#0078d7; color:white; cursor:pointer; font-family:inherit; font-size:13px; font-weight:500; outline:none;">Help [F1/H]</button>
+    <button id="helpBtn" class="action-btn" style="margin-left:auto;">Help [F1/H]</button>
   </div>
   
   <div class="main">
     <div class="sidebar" role="tablist" aria-label="Font Inspector Tabs">
-      <button class="tab-btn active" id="tab-metrics" role="tab" aria-selected="true" aria-controls="panel-metrics" data-target="panel-metrics">
+      <button class="tab-btn active" id="tab-metrics" role="tab" aria-selected="true" data-target="panel-metrics">
         <span>Metrics &amp; OS/2</span>
         <span class="tab-badge">1</span>
       </button>
-      <button class="tab-btn" id="tab-glyphs" role="tab" aria-selected="false" aria-controls="panel-glyphs" data-target="panel-glyphs">
+      <button class="tab-btn" id="tab-glyphs" role="tab" aria-selected="false" data-target="panel-glyphs">
         <span>Unicode Ranges</span>
         <span class="tab-badge">2</span>
       </button>
-      <button class="tab-btn" id="tab-diagnostics" role="tab" aria-selected="false" aria-controls="panel-diagnostics" data-target="panel-diagnostics">
+      <button class="tab-btn" id="tab-diagnostics" role="tab" aria-selected="false" data-target="panel-diagnostics">
         <span>Kerning &amp; Hinting</span>
         <span class="tab-badge">3</span>
       </button>
-      <button class="tab-btn" id="tab-anatomy" role="tab" aria-selected="false" aria-controls="panel-anatomy" data-target="panel-anatomy">
+      <button class="tab-btn" id="tab-anatomy" role="tab" aria-selected="false" data-target="panel-anatomy">
         <span>Glyph Anatomy</span>
         <span class="tab-badge">4</span>
       </button>
-      <button class="tab-btn" id="tab-sample" role="tab" aria-selected="false" aria-controls="panel-sample" data-target="panel-sample">
-        <span>Live Sample</span>
+      <button class="tab-btn" id="tab-waterfall" role="tab" aria-selected="false" data-target="panel-waterfall">
+        <span>Type Waterfall</span>
         <span class="tab-badge">5</span>
+      </button>
+      <button class="tab-btn" id="tab-contrast" role="tab" aria-selected="false" data-target="panel-contrast">
+        <span>Contrast &amp; WCAG</span>
+        <span class="tab-badge">6</span>
+      </button>
+      <button class="tab-btn" id="tab-spec" role="tab" aria-selected="false" data-target="panel-spec">
+        <span>Spec &amp; Code Export</span>
+        <span class="tab-badge">7</span>
+      </button>
+      <button class="tab-btn" id="tab-sample" role="tab" aria-selected="false" data-target="panel-sample">
+        <span>Live Sample &amp; Run</span>
+        <span class="tab-badge">8</span>
       </button>
     </div>
     
     <div class="content">
-      <!-- Metrics -->
-      <div id="panel-metrics" class="panel active" role="tabpanel" aria-labelledby="tab-metrics">
-        <h2>Font Metadata &amp; Metrics Inspector</h2>
-        <p>Advanced typographical measurements extracted via Canvas Rendering Context actual bounds and extrapolated OS/2 table metrics.</p>
+      <!-- 1. Metrics & OS/2 -->
+      <div id="panel-metrics" class="panel active" role="tabpanel">
+        <h2>Font Metadata &amp; OS/2 Table Metrics</h2>
+        <p>Comprehensive typographical measurements extracted via Canvas Rendering Context actual bounds and extrapolated OpenType/TrueType OS/2 table metrics.</p>
         <div class="metric-grid" id="metricsGrid"></div>
       </div>
       
-      <!-- Glyphs -->
-      <div id="panel-glyphs" class="panel" role="tabpanel" aria-labelledby="tab-glyphs">
-        <h2>Unicode Range &amp; Glyph Viewer</h2>
+      <!-- 2. Glyphs & Unicode Ranges -->
+      <div id="panel-glyphs" class="panel" role="tabpanel">
+        <h2>Unicode Range &amp; Character Map</h2>
         <div class="glyph-controls">
-          <label for="unicodeRange" style="font-weight:500; font-size:14px; color:#444;">Select Unicode Block:</label>
+          <label for="unicodeRange" style="font-weight:600; font-size:13px; color:#334155;">Select Unicode Block:</label>
           <select id="unicodeRange">
             <option value="32,127">Basic Latin (U+0020 - U+007F)</option>
             <option value="160,255">Latin-1 Supplement (U+00A0 - U+00FF)</option>
@@ -159,55 +206,63 @@
             <option value="8192,8303">General Punctuation (U+2000 - U+206F)</option>
             <option value="8352,8399">Currency Symbols (U+20A0 - U+20CF)</option>
             <option value="8448,8527">Letterlike Symbols (U+2100 - U+214F)</option>
+            <option value="8592,8703">Arrows (U+2190 - U+21FF)</option>
+            <option value="8704,8959">Mathematical Operators (U+2200 - U+22FF)</option>
             <option value="9472,9599">Box Drawing (U+2500 - U+257F)</option>
             <option value="9600,9631">Block Elements (U+2580 - U+259F)</option>
             <option value="9632,9727">Geometric Shapes (U+25A0 - U+25FF)</option>
           </select>
-          <span style="font-size:12px; color:#777; margin-left:auto;">(Click any glyph to inspect in Anatomy tab)</span>
+          <span style="font-size:12px; color:#64748b; margin-left:auto;">(Click any glyph to dissect in Anatomy tab)</span>
         </div>
         <div class="glyph-grid" id="glyphGrid"></div>
       </div>
       
-      <!-- Diagnostics -->
-      <div id="panel-diagnostics" class="panel" role="tabpanel" aria-labelledby="tab-diagnostics">
-        <h2>Glyph Kerning &amp; Hinting Diagnostics</h2>
+      <!-- 3. Diagnostics (Kerning & Hinting) -->
+      <div id="panel-diagnostics" class="panel" role="tabpanel">
+        <h2>Glyph Kerning &amp; Grid-Fitting Diagnostics</h2>
         <h3>Visual Kerning Analysis</h3>
-        <p>Comparison of specific kerning pairs with OpenType kerning features explicitly enabled vs disabled.</p>
+        <p>Comparison of common optical kerning pairs with OpenType kerning features enabled vs disabled.</p>
         <div id="kerningPairs"></div>
+
+        <h3>Interactive Custom Kerning Pair Tester</h3>
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:14px; background:#f8fafc; padding:10px 14px; border-radius:6px; border:1px solid #e2e8f0;">
+          <label for="customKernInput" style="font-size:13px; font-weight:600;">Custom Pair (2 chars):</label>
+          <input type="text" id="customKernInput" value="Ta" maxlength="2" style="width:50px; text-align:center; font-weight:bold; font-size:16px; padding:4px;">
+          <div id="customKernResult" style="font-size:13px; color:#334155; margin-left:10px;"></div>
+        </div>
         
-        <h3>Rasterization &amp; Grid Fitting (Hinting)</h3>
-        <p>Rendering at specific pixel sizes to expose pixel-snapping and hinting instructions across scale.</p>
-        <canvas id="hintingCanvas" width="800" height="200" style="border:1px solid #ddd; border-radius:4px; background:#fafafa; max-width:100%;"></canvas>
+        <h3>Rasterization &amp; Grid Fitting (Hinting Across Sizes)</h3>
+        <p>Subpixel text rasterization across sizes to inspect pixel-snapping and hinting behavior.</p>
+        <canvas id="hintingCanvas" width="840" height="240" style="border:1px solid #cbd5e1; border-radius:6px; background:#fdfdfd; max-width:100%;"></canvas>
       </div>
 
-      <!-- Glyph Anatomy & Vector Metrics -->
-      <div id="panel-anatomy" class="panel" role="tabpanel" aria-labelledby="tab-anatomy">
+      <!-- 4. Glyph Anatomy & Vector Metrics -->
+      <div id="panel-anatomy" class="panel" role="tabpanel">
         <h2>Glyph Anatomy &amp; Vector Metrics Dissector</h2>
-        <p>Interactive character inspection with baseline, cap-height, x-height, ascent/descent guides, side bearings (LSB/RSB), and multi-encoding codec breakdown.</p>
+        <p>Interactive character dissection featuring baseline, cap-height, x-height, ascent/descent guides, side bearings (LSB/RSB), and multi-encoding codec breakdown.</p>
         
         <div class="anatomy-controls">
-          <label for="anatomyInput" style="font-weight:600; font-size:14px;">Character / Hex:</label>
+          <label for="anatomyInput" style="font-weight:600; font-size:13px;">Character / Hex:</label>
           <input type="text" id="anatomyInput" class="anatomy-input" value="A" maxlength="10" title="Type character or hex (e.g. A, U+0041, 0x41)">
-          <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-            <span style="font-size:12px; color:#777;">Quick Presets:</span>
-            <button class="chip-btn" data-char="A" title="Uppercase A">A</button>
-            <button class="chip-btn" data-char="g" title="Lowercase g with descender">g</button>
-            <button class="chip-btn" data-char="Q" title="Uppercase Q with tail">Q</button>
-            <button class="chip-btn" data-char="&amp;" title="Ampersand">&amp;</button>
-            <button class="chip-btn" data-char="f" title="Lowercase f with ascender">f</button>
-            <button class="chip-btn" data-char="W" title="Wide uppercase W">W</button>
-            <button class="chip-btn" data-char="0" title="Digit Zero">0</button>
-            <button class="chip-btn" data-char="€" title="Euro Currency Symbol">€</button>
-            <button class="chip-btn" data-char="Ω" title="Greek Capital Omega">Ω</button>
-            <button class="chip-btn" data-char="Ж" title="Cyrillic Capital Zhe">Ж</button>
-            <button class="chip-btn" data-char="★" title="Black Star Symbol">★</button>
-            <button class="chip-btn" data-char="漢" title="CJK Ideograph">漢</button>
+          <div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
+            <span style="font-size:11px; color:#64748b;">Presets:</span>
+            <button class="chip-btn" data-char="A">A</button>
+            <button class="chip-btn" data-char="g">g</button>
+            <button class="chip-btn" data-char="Q">Q</button>
+            <button class="chip-btn" data-char="&amp;">&amp;</button>
+            <button class="chip-btn" data-char="f">f</button>
+            <button class="chip-btn" data-char="W">W</button>
+            <button class="chip-btn" data-char="0">0</button>
+            <button class="chip-btn" data-char="€">€</button>
+            <button class="chip-btn" data-char="Ω">Ω</button>
+            <button class="chip-btn" data-char="Ж">Ж</button>
+            <button class="chip-btn" data-char="★">★</button>
           </div>
           <button id="copyAnatomyReportBtn" class="action-btn" style="margin-left:auto;">Copy JSON Report [C]</button>
         </div>
 
         <div class="anatomy-canvas-container">
-          <canvas id="anatomyCanvas" width="800" height="320"></canvas>
+          <canvas id="anatomyCanvas" width="840" height="320"></canvas>
           <div class="guideline-legend">
             <div class="legend-item"><div class="legend-dot" style="background:#dc3232;"></div> Baseline (Y:0)</div>
             <div class="legend-item"><div class="legend-dot" style="background:#2878f0;"></div> Cap Height</div>
@@ -224,13 +279,86 @@
         <h3>Multi-Encoding &amp; Codec Dissector</h3>
         <div class="metric-grid" id="anatomyCodecGrid"></div>
       </div>
+
+      <!-- 5. Typographic Waterfall & Optical Scale -->
+      <div id="panel-waterfall" class="panel" role="tabpanel">
+        <h2>Typographic Waterfall &amp; Scale Ladder</h2>
+        <p>Continuous optical scaling ladder exposing glyph proportions, line-height leading, and total advance width across standardized typographic steps.</p>
+        
+        <div style="display:flex; gap:12px; align-items:center; margin-bottom:14px; background:#f8fafc; padding:10px 14px; border-radius:6px; border:1px solid #e2e8f0; flex-wrap:wrap;">
+          <label for="scaleRatio" style="font-size:13px; font-weight:600;">Modular Scale Ratio:</label>
+          <select id="scaleRatio" style="padding:4px 8px; border:1px solid #cbd5e1; border-radius:4px; font-size:13px;">
+            <option value="1.125">Major Second (1.125)</option>
+            <option value="1.200">Minor Third (1.200)</option>
+            <option value="1.250" selected>Major Third (1.250)</option>
+            <option value="1.333">Perfect Fourth (1.333)</option>
+            <option value="1.414">Augmented Fourth (1.414)</option>
+            <option value="1.500">Perfect Fifth (1.500)</option>
+            <option value="1.618">Golden Ratio (1.618)</option>
+          </select>
+          <span style="font-size:12px; color:#64748b;">(Ladder preview automatically calculated)</span>
+        </div>
+
+        <div class="waterfall-list" id="waterfallList"></div>
+      </div>
+
+      <!-- 6. Contrast & WCAG Legibility Matrix -->
+      <div id="panel-contrast" class="panel" role="tabpanel">
+        <h2>WCAG 2.1 Contrast &amp; Legibility Matrix</h2>
+        <p>Real-time relative luminance calculation and contrast ratio assessment across classic retro operating systems and modern dark/light themes.</p>
+        
+        <div class="contrast-grid" id="contrastGrid"></div>
+
+        <h3>Interactive Custom Contrast Calculator</h3>
+        <div style="display:flex; gap:16px; align-items:center; margin-top:10px; background:#f8fafc; padding:14px 18px; border-radius:6px; border:1px solid #e2e8f0; flex-wrap:wrap;">
+          <div>
+            <label for="customFg" style="font-size:12px; font-weight:600; display:block; margin-bottom:4px;">Text Color (FG):</label>
+            <input type="color" id="customFg" value="#111111" style="cursor:pointer; width:45px; height:32px; border:1px solid #cbd5e1; border-radius:4px; padding:2px;">
+          </div>
+          <div>
+            <label for="customBg" style="font-size:12px; font-weight:600; display:block; margin-bottom:4px;">Background (BG):</label>
+            <input type="color" id="customBg" value="#ffffff" style="cursor:pointer; width:45px; height:32px; border:1px solid #cbd5e1; border-radius:4px; padding:2px;">
+          </div>
+          <div id="customContrastFeedback" style="flex:1; min-width:240px; font-size:13px; color:#1e293b;"></div>
+        </div>
+      </div>
+
+      <!-- 7. Spec & Code Export -->
+      <div id="panel-spec" class="panel" role="tabpanel">
+        <h2>Typographic Specification &amp; Code Generator</h2>
+        <p>Instant boilerplate and stylesheet generator ready to paste directly into Win32 C desktop applications, CSS stylesheets, or typography design systems.</p>
+        
+        <div class="code-block-container">
+          <div class="code-block-header">
+            <span>Win32 GDI C Code (CreateFontIndirect)</span>
+            <button class="code-copy-btn" id="copyWin32CodeBtn">Copy Win32 C Code</button>
+          </div>
+          <pre class="code-block" id="win32CodeBlock"></pre>
+        </div>
+
+        <div class="code-block-container">
+          <div class="code-block-header">
+            <span>CSS Modular Typography Stylesheet</span>
+            <button class="code-copy-btn" id="copyCssCodeBtn">Copy CSS Code</button>
+          </div>
+          <pre class="code-block" id="cssCodeBlock"></pre>
+        </div>
+
+        <div class="code-block-container">
+          <div class="code-block-header">
+            <span>Font Manifest JSON Spec</span>
+            <button class="code-copy-btn" id="copyJsonCodeBtn">Copy JSON Spec</button>
+          </div>
+          <pre class="code-block" id="jsonCodeBlock"></pre>
+        </div>
+      </div>
       
-      <!-- Sample -->
-      <div id="panel-sample" class="panel" role="tabpanel" aria-labelledby="tab-sample">
-        <h2>Live Free Sample</h2>
+      <!-- 8. Live Sample & String Run Dissector -->
+      <div id="panel-sample" class="panel" role="tabpanel">
+        <h2>Live Free Sample &amp; String Run Dissector</h2>
         <p>Type in the box below to test the font in real-time, or choose a quick sample preset.</p>
         <div class="sample-presets">
-          <span style="font-size:12px; color:#666; font-weight:600;">Presets:</span>
+          <span style="font-size:12px; color:#64748b; font-weight:600;">Presets:</span>
           <button class="chip-btn" id="samplePangramBtn">Fox Pangram</button>
           <button class="chip-btn" id="sampleAlphaBtn">Alphabet Aa-Zz</button>
           <button class="chip-btn" id="sampleDigitsBtn">Digits &amp; Symbols</button>
@@ -242,6 +370,26 @@
 0123456789
 
 Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</div>
+
+        <h3>String Run &amp; Glyph Advance Dissector</h3>
+        <p>Granular character-by-character analysis of the active text run showing advance widths, running coordinate X offsets, and encoding representations.</p>
+        <div style="overflow-x:auto;">
+          <table class="dissector-table" id="dissectorTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Glyph</th>
+                <th>Unicode</th>
+                <th>Advance (px)</th>
+                <th>Total Run X</th>
+                <th>UTF-8 Hex</th>
+                <th>HTML Entity</th>
+                <th>General Category</th>
+              </tr>
+            </thead>
+            <tbody id="dissectorBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -253,32 +401,33 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
   <div id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
     <div class="help-modal">
       <h2 id="helpTitle">
-        <span>KFont Help &amp; Keyboard Shortcuts</span>
+        <span>KFont Typography Inspector Help</span>
         <button class="help-close-btn" id="helpCloseBtn" title="Close Help">&times;</button>
       </h2>
-      <p>Explore typographical metrics, Unicode tables, rasterization hinting, and vector anatomy.</p>
+      <p>A comprehensive engineering workstation for inspecting font measurements, Unicode blocks, kerning behavior, vector guidelines, optical scaling, WCAG contrast, and code generation.</p>
       <ul>
-        <li><strong>Metrics &amp; OS/2</strong>: Inspect font measurements and actual bounding box limits.</li>
-        <li><strong>Unicode Ranges</strong>: View glyphs organized by Unicode blocks (click any glyph to inspect).</li>
-        <li><strong>Diagnostics</strong>: Check visual kerning pairs and hinting across sizes.</li>
-        <li><strong>Glyph Anatomy</strong>: Vector metrics, ABC spacing, bearings, and multi-encoding dissector.</li>
-        <li><strong>Live Sample</strong>: Test custom editable sample text in real-time.</li>
+        <li><strong>Metrics &amp; OS/2</strong>: Font bounding box, typographic ascender/descender, and Panose classification.</li>
+        <li><strong>Unicode Ranges</strong>: 14 Unicode blocks with glyph cards (click any glyph to dissect in Anatomy).</li>
+        <li><strong>Kerning &amp; Hinting</strong>: Visual kerning analysis with custom pair tester and rasterization ladder.</li>
+        <li><strong>Glyph Anatomy</strong>: Vector guidelines, ABC spacing, bearings, and multi-encoding codec dissector.</li>
+        <li><strong>Type Waterfall</strong>: Modular scale optical ladder from 9px to 72px with advance widths.</li>
+        <li><strong>Contrast &amp; WCAG</strong>: 6 retro and modern palettes with real-time luminance contrast ratios.</li>
+        <li><strong>Spec &amp; Code Export</strong>: Win32 GDI C LOGFONT code and CSS typography variables generator.</li>
+        <li><strong>Live Sample &amp; Run</strong>: Real-time text sandbox with granular character advance dissector table.</li>
       </ul>
       <p><strong>Keyboard Shortcuts:</strong></p>
-      <ul style="font-size:13px; color:#444;">
-        <li><kbd style="background:#eee; padding:2px 6px; border-radius:3px;">1</kbd>–<kbd style="background:#eee; padding:2px 6px; border-radius:3px;">5</kbd> : Switch inspector tabs</li>
-        <li><kbd style="background:#eee; padding:2px 6px; border-radius:3px;">B</kbd> : Toggle Bold</li>
-        <li><kbd style="background:#eee; padding:2px 6px; border-radius:3px;">I</kbd> : Toggle Italic</li>
-        <li><kbd style="background:#eee; padding:2px 6px; border-radius:3px;">C</kbd> : Copy Anatomy JSON report (in Anatomy tab)</li>
-        <li><kbd style="background:#eee; padding:2px 6px; border-radius:3px;">H</kbd> / <kbd style="background:#eee; padding:2px 6px; border-radius:3px;">F1</kbd> : Toggle this Help dialog</li>
-        <li><kbd style="background:#eee; padding:2px 6px; border-radius:3px;">Esc</kbd> : Dismiss Help dialog</li>
+      <ul style="font-size:12px; color:#475569;">
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">1</kbd>–<kbd style="background:#eee; padding:1px 5px; border-radius:3px;">8</kbd> : Switch inspector tabs</li>
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">B</kbd> : Toggle Bold</li>
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">I</kbd> : Toggle Italic</li>
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">C</kbd> : Copy active context report or C LOGFONT snippet</li>
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">H</kbd> / <kbd style="background:#eee; padding:1px 5px; border-radius:3px;">F1</kbd> : Toggle this Help dialog</li>
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">Esc</kbd> : Dismiss Help dialog or Toast</li>
       </ul>
-      <p style="font-size: 12px; color: #777; margin-top:15px;">Press <strong>Esc</strong> or click outside to dismiss.</p>
     </div>
   </div>
   
   <script>
-    // Set appropriate auto-opening size if opened as a standalone window
     if (window.top === window.self) {
         window.resizeTo(950, 700);
     } else {
@@ -294,6 +443,10 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     const sampleOutput = document.getElementById('sampleOutput');
     const helpOverlay = document.getElementById('helpOverlay');
     const toastNotification = document.getElementById('toastNotification');
+    const scaleRatio = document.getElementById('scaleRatio');
+    const customFg = document.getElementById('customFg');
+    const customBg = document.getElementById('customBg');
+    const customKernInput = document.getElementById('customKernInput');
 
     function escapeHtml(str) {
       if (str === null || str === undefined) return '';
@@ -342,12 +495,38 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       return `${style} ${weight} ${size} ${family}, sans-serif`;
     }
     
+    // Relative Luminance & WCAG Contrast Formula
+    function sRGBtoLin(c) {
+      c = c / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    }
+
+    function hexToRgb(hex) {
+      hex = hex.replace('#', '');
+      if (hex.length === 3) hex = hex.split('').map(x => x + x).join('');
+      const num = parseInt(hex, 16);
+      return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+    }
+
+    function getLuminance(rgb) {
+      return 0.2126 * sRGBtoLin(rgb.r) + 0.7152 * sRGBtoLin(rgb.g) + 0.0722 * sRGBtoLin(rgb.b);
+    }
+
+    function getContrastRatio(hex1, hex2) {
+      const l1 = getLuminance(hexToRgb(hex1));
+      const l2 = getLuminance(hexToRgb(hex2));
+      const lighter = Math.max(l1, l2);
+      const darker = Math.min(l1, l2);
+      return (lighter + 0.05) / (darker + 0.05);
+    }
+
     function updateMetrics() {
       const canvas = document.getElementById('canvasMetrics');
       const ctx = canvas.getContext('2d');
       ctx.font = getFontString();
       
       const szPx = parseFloat(sizeList.value) || 48;
+      const metrics = ctx.measureText("Hg");
       const asc = metrics.fontBoundingBoxAscent || metrics.actualBoundingBoxAscent || (szPx * 0.8);
       const desc = metrics.fontBoundingBoxDescent || metrics.actualBoundingBoxDescent || (szPx * 0.2);
       const aAsc = metrics.actualBoundingBoxAscent || (asc * 0.9);
@@ -387,7 +566,7 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       const isB = boldCheck.checked ? 'bold' : 'normal';
       const isI = italicCheck.checked ? 'italic' : 'normal';
 
-      for(let i=start; i<=end; i++) {
+      for (let i = start; i <= end; i++) {
         const hex = i.toString(16).toUpperCase().padStart(4, '0');
         let char = '';
         try {
@@ -397,7 +576,7 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         }
         const safeChar = escapeHtml(char);
         html += `
-          <div class="glyph-cell" data-codepoint="${i}" tabindex="0" role="button" title="Click to inspect ${escapeAttr(char)} (U+${hex})" aria-label="Glyph U+${hex}">
+          <div class="glyph-cell" data-codepoint="${i}" tabindex="0" role="button" title="Click to dissect ${escapeAttr(char)} (U+${hex})" aria-label="Glyph U+${hex}">
             <div class="glyph-char" style="font-family: '${safeFont}'; font-weight: ${isB}; font-style: ${isI};">${safeChar}</div>
             <div class="glyph-hex">U+${hex}</div>
           </div>
@@ -412,11 +591,10 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
           anatomyInput.value = char;
           safeSetStorage('kfont_anatomy_char', anatomyInput.value);
           switchToTab('panel-anatomy');
-          showToast(`Inspecting "${char}" (U+${cp.toString(16).toUpperCase().padStart(4, '0')}) in Anatomy dissector`);
+          showToast(`Dissecting "${char}" (U+${cp.toString(16).toUpperCase().padStart(4, '0')})`);
         }
       }
 
-      // Add click & keyboard listeners to inspect in Anatomy tab
       grid.querySelectorAll('.glyph-cell').forEach(cell => {
         cell.onclick = () => activateCell(cell);
         cell.onkeydown = (e) => {
@@ -447,31 +625,60 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         `;
       });
       document.getElementById('kerningPairs').innerHTML = html;
-      
+
+      // Custom Pair calculation
+      updateCustomPair();
+
+      // Hinting canvas
       const canvas = document.getElementById('hintingCanvas');
       const ctx = canvas.getContext('2d');
       const dpr = window.devicePixelRatio || 1;
       
-      // Crisp text rendering
-      if (canvas.width !== 800 * dpr) {
-        canvas.width = 800 * dpr;
-        canvas.height = 200 * dpr;
-        canvas.style.width = '800px';
-        canvas.style.height = '200px';
+      if (canvas.width !== 840 * dpr) {
+        canvas.width = 840 * dpr;
+        canvas.height = 240 * dpr;
+        canvas.style.width = '840px';
+        canvas.style.height = '240px';
       }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, 840, 240);
       
-      ctx.clearRect(0, 0, 800, 200);
+      ctx.fillStyle = '#1e293b';
+      const text = "Rasterization & Hinting Test: Pack my box with five dozen liquor jugs 12345";
       
-      ctx.fillStyle = '#333';
-      const text = "Rasterization & Grid Fitting Test: The quick brown fox jumps over the lazy dog";
-      
-      let y = 30;
-      [10, 12, 16, 20, 24, 32].forEach(sz => {
+      let y = 26;
+      [10, 12, 14, 16, 20, 24, 32].forEach(sz => {
         ctx.font = getFontString(null, sz + "px");
-        ctx.fillText(`${sz}px: ${text}`, 20, y);
-        y += sz + 15;
+        ctx.fillText(`${sz}px: ${text}`, 16, y);
+        y += sz + 10;
       });
+    }
+
+    function updateCustomPair() {
+      const pair = (customKernInput.value || '').trim();
+      const resEl = document.getElementById('customKernResult');
+      if (pair.length < 2) {
+        resEl.innerHTML = '<span style="color:#64748b;">Type 2 characters above to test optical kerning pair.</span>';
+        return;
+      }
+      const c1 = pair[0], c2 = pair[1];
+      const canvas = document.getElementById('canvasMetrics');
+      const ctx = canvas.getContext('2d');
+      ctx.font = getFontString(null, "48px");
+
+      const w1 = ctx.measureText(c1).width;
+      const w2 = ctx.measureText(c2).width;
+      const wPair = ctx.measureText(c1 + c2).width;
+      const unkerned = w1 + w2;
+      const delta = wPair - unkerned;
+
+      resEl.innerHTML = `
+        <strong>"${escapeHtml(c1 + c2)}"</strong>:
+        Unkerned: <strong>${unkerned.toFixed(1)}px</strong> |
+        Kerning Run: <strong>${wPair.toFixed(1)}px</strong> |
+        Adjustment: <strong style="color:${delta < 0 ? '#10b981' : (delta > 0 ? '#ef4444' : '#64748b')}">${delta > 0 ? '+' : ''}${delta.toFixed(1)}px</strong>
+        (${delta < 0 ? 'Tighter Kerning Pair' : (delta > 0 ? 'Expanded Spacing' : 'Neutral Advance')})
+      `;
     }
 
     function getCharInfo(char) {
@@ -480,7 +687,6 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       if (!char) return null;
       let codePoint = char.codePointAt(0);
 
-      // Check hex notation or entity: U+XXXX, 0xXXXX, &#DDDD;, &#xXXXX;, or pure 2-6 hex digits
       const decMatch = char.match(/^&#([0-9]+);?$/);
       const hexEntMatch = char.match(/^&#x([0-9A-Fa-f]+);?$/i);
       const hexPrefixMatch = char.match(/^(?:U\+|0x)([0-9A-Fa-f]{1,6})$/i);
@@ -508,20 +714,16 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       }
       
       const hex = codePoint.toString(16).toUpperCase().padStart(4, '0');
-      
-      // UTF-8 bytes
       const encoder = new TextEncoder();
       const utf8Arr = Array.from(encoder.encode(char));
       const utf8Hex = utf8Arr.map(b => '0x' + b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
 
-      // UTF-16 code units (safely handling surrogate pairs)
       const utf16Arr = [];
       for (let i = 0; i < char.length; i++) {
         utf16Arr.push('0x' + char.charCodeAt(i).toString(16).toUpperCase().padStart(4, '0'));
       }
       const utf16Hex = utf16Arr.join(' ');
 
-      // HTML Entity
       const entityMap = {
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;',
         '©': '&copy;', '®': '&reg;', '€': '&euro;', '£': '&pound;', '¥': '&yen;',
@@ -531,12 +733,10 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       const decEntity = `&#${codePoint};`;
       const hexEntity = `&#x${hex};`;
 
-      // C & JS Escapes
       const cEscape = codePoint <= 0xFFFF ? `\\u${hex}` : `\\U${codePoint.toString(16).toUpperCase().padStart(8, '0')}`;
       const jsEscape = `\\u{${hex}}`;
       const uriEncoded = encodeURIComponent(char);
 
-      // General Category
       let category = "General Character";
       if (codePoint >= 0x41 && codePoint <= 0x5A) category = "Uppercase Latin Letter";
       else if (codePoint >= 0x61 && codePoint <= 0x7A) category = "Lowercase Latin Letter";
@@ -548,6 +748,8 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       else if (codePoint >= 0x0400 && codePoint <= 0x04FF) category = "Cyrillic Script";
       else if (codePoint >= 0x20A0 && codePoint <= 0x20CF) category = "Currency Symbol";
       else if (codePoint >= 0x4E00 && codePoint <= 0x9FFF) category = "CJK Unified Ideograph";
+      else if (codePoint >= 0x2190 && codePoint <= 0x21FF) category = "Arrows";
+      else if (codePoint >= 0x2200 && codePoint <= 0x22FF) category = "Mathematical Operator";
       else if (codePoint >= 0x2500 && codePoint <= 0x257F) category = "Box Drawing Symbol";
       else if (codePoint >= 0x2580 && codePoint <= 0x259F) category = "Block Elements";
       else if (codePoint >= 0x25A0 && codePoint <= 0x25FF) category = "Geometric Shapes";
@@ -576,7 +778,7 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       const canvas = document.getElementById('anatomyCanvas');
       const ctx = canvas.getContext('2d');
       const dpr = window.devicePixelRatio || 1;
-      const w = canvas.parentElement.clientWidth || 800;
+      const w = canvas.parentElement.clientWidth || 840;
       const h = 320;
 
       canvas.width = w * dpr;
@@ -604,11 +806,9 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       const baselineY = 220;
       const originX = Math.max(80, Math.floor(w / 2 - advWidth / 2));
 
-      // Guidelines
       const capH = fontAsc * 0.72;
       const xH = fontAsc * 0.50;
 
-      // Draw Grid Lines
       function drawLine(y, color, dash, label) {
         ctx.strokeStyle = color;
         ctx.lineWidth = dash ? 1.5 : 2;
@@ -625,18 +825,12 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         ctx.fillText(label, w - 25, y - 4);
       }
 
-      // Ascent line
       drawLine(baselineY - fontAsc, '#28a028', true, `Ascent (-${fontAsc.toFixed(1)}px)`);
-      // Cap Height
       drawLine(baselineY - capH, '#2878f0', true, `Cap Height (-${capH.toFixed(1)}px)`);
-      // X-Height
       drawLine(baselineY - xH, '#00a0a0', true, `x-Height (-${xH.toFixed(1)}px)`);
-      // Baseline
       drawLine(baselineY, '#dc3232', false, `Baseline (Y:0)`);
-      // Descent
       drawLine(baselineY + fontDesc, '#b428b4', true, `Descent (+${fontDesc.toFixed(1)}px)`);
 
-      // Side Bearings & Bounding vertical lines
       const lsbX = originX - actLeft;
       const rsbX = originX + actRight;
       const advX = originX + advWidth;
@@ -662,19 +856,16 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       drawVertLine(rsbX, '#e68c00', 'RSB', 34);
       drawVertLine(advX, '#0078d7', 'Advance', 22);
 
-      // Black box bounding rectangle
       ctx.strokeStyle = 'rgba(0, 120, 215, 0.3)';
       ctx.lineWidth = 1;
       ctx.setLineDash([]);
       ctx.strokeRect(lsbX, baselineY - actAsc, rsbX - lsbX, actAsc + actDesc);
 
-      // Render Glyph
       ctx.font = fontStr;
       ctx.fillStyle = '#1a1a1a';
       ctx.textAlign = 'left';
       ctx.fillText(info.char, originX, baselineY);
 
-      // Update Spacing Diagnostics Cards
       const blackBoxW = (actRight + actLeft);
       const lsbVal = -actLeft;
       const rsbVal = advWidth - actRight;
@@ -695,7 +886,6 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         </div>
       `).join('');
 
-      // Update Multi-Encoding Codec Cards (Properly escaped so entities aren't decoded by innerHTML)
       const entitiesDisplay = `${escapeHtml(info.hexEntity)} | ${escapeHtml(info.decEntity)}` + (info.namedEntity !== '-' ? ` | ${escapeHtml(info.namedEntity)}` : '');
       const codecFields = [
         { name: "Unicode Code Point", val: `${escapeHtml(info.hex)} (Dec: ${info.codePoint})` },
@@ -711,9 +901,220 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       document.getElementById('anatomyCodecGrid').innerHTML = codecFields.map(f => `
         <div class="metric-card">
           <div class="metric-title">${escapeHtml(f.name)}</div>
-          <div class="metric-value" style="font-size:16px;">${f.val}</div>
+          <div class="metric-value" style="font-size:15px;">${f.val}</div>
         </div>
       `).join('');
+    }
+
+    function updateWaterfall() {
+      const container = document.getElementById('waterfallList');
+      const ratio = parseFloat(scaleRatio.value) || 1.25;
+      const base = 16;
+      const safeFont = fontList.value.replace(/["\\]/g, '');
+      const weight = boldCheck.checked ? 'bold' : 'normal';
+      const style = italicCheck.checked ? 'italic' : 'normal';
+
+      // 9 scale steps
+      const sizes = [
+        Math.round(base / Math.pow(ratio, 2)),
+        Math.round(base / ratio),
+        base,
+        Math.round(base * ratio),
+        Math.round(base * Math.pow(ratio, 2)),
+        Math.round(base * Math.pow(ratio, 3)),
+        Math.round(base * Math.pow(ratio, 4)),
+        Math.round(base * Math.pow(ratio, 5)),
+        Math.round(base * Math.pow(ratio, 6))
+      ].map(s => Math.max(9, Math.min(96, s)));
+
+      const uniqueSizes = Array.from(new Set(sizes)).sort((a,b) => a - b);
+      const sampleText = "Sphinx of black quartz, judge my vow 12345";
+
+      const canvas = document.getElementById('canvasMetrics');
+      const ctx = canvas.getContext('2d');
+
+      let html = '';
+      uniqueSizes.forEach(sz => {
+        ctx.font = `${style} ${weight} ${sz}px "${safeFont}", sans-serif`;
+        const adv = ctx.measureText(sampleText).width;
+        html += `
+          <div class="waterfall-row">
+            <div class="waterfall-size">${sz}px</div>
+            <div class="waterfall-text" style="font-family:'${safeFont}', sans-serif; font-size:${sz}px; font-weight:${weight}; font-style:${style};">${escapeHtml(sampleText)}</div>
+            <div class="waterfall-adv">${adv.toFixed(0)}px adv</div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function updateContrast() {
+      const palettes = [
+        { name: "Standard Monochrome", fg: "#111111", bg: "#ffffff" },
+        { name: "Charcoal Dark", fg: "#e8e8e8", bg: "#181818" },
+        { name: "Amber CRT Phosphor", fg: "#ffb000", bg: "#1a1100" },
+        { name: "Matrix Green CRT", fg: "#33ff33", bg: "#0a140a" },
+        { name: "Win95 3D Navy", fg: "#000080", bg: "#c0c0c0" },
+        { name: "Cyan Terminal", fg: "#00ffff", bg: "#1e222a" }
+      ];
+
+      const safeFont = fontList.value.replace(/["\\]/g, '');
+      const weight = boldCheck.checked ? 'bold' : 'normal';
+      const style = italicCheck.checked ? 'italic' : 'normal';
+
+      let html = '';
+      palettes.forEach(p => {
+        const ratio = getContrastRatio(p.fg, p.bg);
+        const passAA = ratio >= 4.5;
+        const passAAA = ratio >= 7.0;
+        html += `
+          <div class="contrast-card" style="background:${p.bg}; color:${p.fg}; border-color:${p.bg === '#ffffff' ? '#cbd5e1' : '#334155'};">
+            <div>
+              <div style="font-size:11px; opacity:0.75; font-weight:600; text-transform:uppercase; margin-bottom:4px;">${escapeHtml(p.name)}</div>
+              <div class="contrast-sample-text" style="font-family:'${safeFont}', sans-serif; font-weight:${weight}; font-style:${style};">KFont Retro 1999</div>
+            </div>
+            <div class="contrast-meta">
+              <span>Ratio: <strong>${ratio.toFixed(2)}:1</strong></span>
+              <div style="display:flex; gap:4px;">
+                <span class="${passAA ? 'badge-pass' : 'badge-fail'}">AA</span>
+                <span class="${passAAA ? 'badge-pass' : 'badge-fail'}">AAA</span>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      document.getElementById('contrastGrid').innerHTML = html;
+
+      // Update custom contrast
+      updateCustomContrast();
+    }
+
+    function updateCustomContrast() {
+      const fg = customFg.value;
+      const bg = customBg.value;
+      const ratio = getContrastRatio(fg, bg);
+      const passAA = ratio >= 4.5;
+      const passAAA = ratio >= 7.0;
+      const safeFont = fontList.value.replace(/["\\]/g, '');
+      const weight = boldCheck.checked ? 'bold' : 'normal';
+      const style = italicCheck.checked ? 'italic' : 'normal';
+
+      const fb = document.getElementById('customContrastFeedback');
+      fb.innerHTML = `
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <div style="background:${bg}; color:${fg}; padding:8px 14px; border-radius:4px; font-family:'${safeFont}', sans-serif; font-size:18px; font-weight:${weight}; font-style:${style}; border:1px solid #cbd5e1;">
+            Live Preview: The quick brown fox
+          </div>
+          <div>
+            Contrast Ratio: <strong>${ratio.toFixed(2)}:1</strong> —
+            <span class="${passAA ? 'badge-pass' : 'badge-fail'}" style="margin-left:4px;">AA ${passAA ? 'PASS' : 'FAIL'}</span>
+            <span class="${passAAA ? 'badge-pass' : 'badge-fail'}" style="margin-left:4px;">AAA ${passAAA ? 'PASS' : 'FAIL'}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateSpecAndCode() {
+      const safeFont = fontList.value;
+      const szPx = parseInt(sizeList.value, 10) || 24;
+      const isB = boldCheck.checked;
+      const isI = italicCheck.checked;
+      const ratio = parseFloat(scaleRatio.value) || 1.25;
+
+      const win32Code = `/* === KFont Win32 GDI Font Boilerplate === */
+LOGFONTA lf = {0};
+lf.lfHeight = -${szPx}; // Logical pixel height (or use MulDiv for DPI scaling)
+lf.lfWeight = ${isB ? 'FW_BOLD' : 'FW_NORMAL'};
+lf.lfItalic = ${isI ? 'TRUE' : 'FALSE'};
+lf.lfCharSet = DEFAULT_CHARSET;
+lf.lfQuality = CLEARTYPE_QUALITY;
+lstrcpyA(lf.lfFaceName, "${safeFont}");
+
+HFONT hFont = CreateFontIndirectA(&lf);
+if (hFont) {
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+    TextOutA(hdc, x, y, "Hello KiloOS", 12);
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hFont);
+}`;
+      document.getElementById('win32CodeBlock').textContent = win32Code;
+
+      const cssCode = `/* === KFont Modular Typography Stylesheet === */
+:root {
+  --font-family-primary: "${safeFont}", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-weight-normal: ${isB ? 700 : 400};
+  --font-style-primary: ${isI ? 'italic' : 'normal'};
+  --font-size-base: ${szPx}px;
+  --scale-ratio: ${ratio};
+
+  --font-size-sm: calc(var(--font-size-base) / var(--scale-ratio));
+  --font-size-h3: calc(var(--font-size-base) * var(--scale-ratio));
+  --font-size-h2: calc(var(--font-size-h3) * var(--scale-ratio));
+  --font-size-h1: calc(var(--font-size-h2) * var(--scale-ratio));
+}
+
+body {
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+  font-style: var(--font-style-primary);
+  line-height: 1.5;
+}`;
+      document.getElementById('cssCodeBlock').textContent = cssCode;
+
+      const jsonManifest = JSON.stringify({
+        generator: "KFont Typography Engine",
+        fontFamily: safeFont,
+        baseSizePx: szPx,
+        isBold: isB,
+        isItalic: isI,
+        scaleRatio: ratio,
+        generatedAt: new Date().toISOString()
+      }, null, 2);
+      document.getElementById('jsonCodeBlock').textContent = jsonManifest;
+    }
+
+    function updateDissectorTable() {
+      const text = sampleOutput.innerText || '';
+      const tbody = document.getElementById('dissectorBody');
+      const safeFont = fontList.value.replace(/["\\]/g, '');
+      const weight = boldCheck.checked ? 'bold' : 'normal';
+      const style = italicCheck.checked ? 'italic' : 'normal';
+
+      const canvas = document.getElementById('canvasMetrics');
+      const ctx = canvas.getContext('2d');
+      ctx.font = getFontString();
+
+      let cumX = 0;
+      let html = '';
+      let count = 0;
+      const chars = Array.from(text);
+
+      for (let i = 0; i < chars.length && count < 25; i++) {
+        const ch = chars[i];
+        if (ch === '\n' || ch === '\r') continue;
+
+        const info = getCharInfo(ch);
+        if (!info) continue;
+
+        const adv = ctx.measureText(ch).width;
+        cumX += adv;
+        count++;
+
+        html += `
+          <tr>
+            <td>#${count}</td>
+            <td style="font-size:16px; font-family:'${safeFont}', sans-serif; font-weight:${weight}; font-style:${style};">${escapeHtml(ch)}</td>
+            <td>${escapeHtml(info.hex)}</td>
+            <td>${adv.toFixed(1)} px</td>
+            <td>${cumX.toFixed(1)} px</td>
+            <td>${escapeHtml(info.utf8Hex)}</td>
+            <td>${escapeHtml(info.decEntity)}</td>
+            <td style="font-family:inherit; font-size:11px; color:#64748b;">${escapeHtml(info.category)}</td>
+          </tr>
+        `;
+      }
+      tbody.innerHTML = html || '<tr><td colspan="8" style="text-align:center; color:#94a3b8; padding:16px;">Type sample text above to dissect run.</td></tr>';
     }
     
     function updateSample() {
@@ -721,6 +1122,7 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       sampleOutput.style.fontSize = sizeList.value;
       sampleOutput.style.fontWeight = boldCheck.checked ? 'bold' : 'normal';
       sampleOutput.style.fontStyle = italicCheck.checked ? 'italic' : 'normal';
+      updateDissectorTable();
     }
     
     function updateAll() {
@@ -728,6 +1130,9 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       updateGlyphs();
       updateDiagnostics();
       updateAnatomy();
+      updateWaterfall();
+      updateContrast();
+      updateSpecAndCode();
       updateSample();
     }
     
@@ -744,6 +1149,10 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       if (targetId === 'panel-anatomy') updateAnatomy();
       else if (targetId === 'panel-diagnostics') updateDiagnostics();
       else if (targetId === 'panel-metrics') updateMetrics();
+      else if (targetId === 'panel-waterfall') updateWaterfall();
+      else if (targetId === 'panel-contrast') updateContrast();
+      else if (targetId === 'panel-spec') updateSpecAndCode();
+      else if (targetId === 'panel-sample') updateSample();
     }
 
     const tabBtns = Array.from(document.querySelectorAll('.tab-btn'));
@@ -784,6 +1193,14 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       safeSetStorage('kfont_range', unicodeRange.value);
       updateGlyphs();
     };
+    scaleRatio.onchange = () => {
+      updateWaterfall();
+      updateSpecAndCode();
+    };
+    customFg.oninput = updateCustomContrast;
+    customBg.oninput = updateCustomContrast;
+    customKernInput.oninput = updateCustomPair;
+
     anatomyInput.oninput = () => {
       safeSetStorage('kfont_anatomy_char', anatomyInput.value);
       updateAnatomy();
@@ -791,14 +1208,15 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     anatomyInput.onkeydown = (e) => {
       if (e.key === 'Enter') {
         anatomyInput.blur();
-        showToast(`Inspecting "${anatomyInput.value}"`);
+        showToast(`Dissecting "${anatomyInput.value}"`);
       }
     };
     sampleOutput.oninput = () => {
       safeSetStorage('kfont_sample', sampleOutput.innerText);
+      updateDissectorTable();
     };
 
-    document.querySelectorAll('.chip-btn').forEach(btn => {
+    document.querySelectorAll('.chip-btn[data-char]').forEach(btn => {
       btn.onclick = () => {
         anatomyInput.value = btn.getAttribute('data-char');
         safeSetStorage('kfont_anatomy_char', anatomyInput.value);
@@ -806,10 +1224,35 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       };
     });
 
+    function copyToClipboard(text, msg) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => showToast(msg)).catch(() => fallbackCopy(text, msg));
+      } else {
+        fallbackCopy(text, msg);
+      }
+    }
+
+    function fallbackCopy(text, msg) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast(msg);
+      } catch (e) {
+        showToast("Copy failed. Please copy manually.");
+      }
+    }
+
     function copyAnatomyReport() {
       const info = getCharInfo(anatomyInput.value.trim() || 'A');
       if (!info) return;
       const report = {
+        app: "KFont",
         fontFamily: fontList.value,
         character: info.char,
         codePoint: info.codePoint,
@@ -822,90 +1265,53 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         category: info.category,
         timestamp: new Date().toISOString()
       };
-      const text = JSON.stringify(report, null, 2);
-
-      function showCopied() {
-        showToast("Copied JSON Report to clipboard!");
-        const btn = document.getElementById('copyAnatomyReportBtn');
-        if (btn) {
-          const orig = btn.innerText;
-          btn.innerText = 'Copied!';
-          setTimeout(() => { btn.innerText = orig; }, 2000);
-        }
-      }
-
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text)
-          .then(showCopied)
-          .catch(() => fallbackCopy(text, showCopied));
-      } else {
-        fallbackCopy(text, showCopied);
-      }
-    }
-
-    function fallbackCopy(text, onSuccess) {
-      try {
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        const success = document.execCommand('copy');
-        document.body.removeChild(ta);
-        if (success && onSuccess) onSuccess();
-        else showToast("Copied JSON Report to clipboard!");
-      } catch (e) {
-        showToast("Clipboard copy failed. Please select text manually.");
-      }
+      copyToClipboard(JSON.stringify(report, null, 2), "Copied JSON Report to clipboard!");
     }
 
     document.getElementById('copyAnatomyReportBtn').onclick = copyAnatomyReport;
+    document.getElementById('copyWin32CodeBtn').onclick = () => {
+      copyToClipboard(document.getElementById('win32CodeBlock').textContent, "Copied Win32 C code to clipboard!");
+    };
+    document.getElementById('copyCssCodeBtn').onclick = () => {
+      copyToClipboard(document.getElementById('cssCodeBlock').textContent, "Copied CSS stylesheet to clipboard!");
+    };
+    document.getElementById('copyJsonCodeBtn').onclick = () => {
+      copyToClipboard(document.getElementById('jsonCodeBlock').textContent, "Copied JSON spec to clipboard!");
+    };
 
     // Sample Presets Handlers
-    const samplePangramBtn = document.getElementById('samplePangramBtn');
-    if (samplePangramBtn) {
-      samplePangramBtn.onclick = () => {
-        sampleOutput.innerText = "The quick brown fox jumps over the lazy dog.\n\nPACK MY BOX WITH FIVE DOZEN LIQUOR JUGS.";
-        safeSetStorage('kfont_sample', sampleOutput.innerText);
-        showToast("Loaded Quick Fox Pangram");
-      };
-    }
-    const sampleAlphaBtn = document.getElementById('sampleAlphaBtn');
-    if (sampleAlphaBtn) {
-      sampleAlphaBtn.onclick = () => {
-        sampleOutput.innerText = "ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz\n0123456789";
-        safeSetStorage('kfont_sample', sampleOutput.innerText);
-        showToast("Loaded Full Alphabet & Digits");
-      };
-    }
-    const sampleDigitsBtn = document.getElementById('sampleDigitsBtn');
-    if (sampleDigitsBtn) {
-      sampleDigitsBtn.onclick = () => {
-        sampleOutput.innerText = "0123456789 + - * / = % < > [ ] { } ( ) @ # $ € £ ¥ ^ & _ ~ ` \" ' : ; , . ?";
-        safeSetStorage('kfont_sample', sampleOutput.innerText);
-        showToast("Loaded Digits & Typographic Symbols");
-      };
-    }
-    const sampleSphinxBtn = document.getElementById('sampleSphinxBtn');
-    if (sampleSphinxBtn) {
-      sampleSphinxBtn.onclick = () => {
-        sampleOutput.innerText = "Sphinx of black quartz, judge my vow.\n\nHow vexingly quick daft zebras jump!\n\nBright vixens jump; dozy fowl quack.";
-        safeSetStorage('kfont_sample', sampleOutput.innerText);
-        showToast("Loaded Sphinx & Zebras Pangrams");
-      };
-    }
-    const sampleClearBtn = document.getElementById('sampleClearBtn');
-    if (sampleClearBtn) {
-      sampleClearBtn.onclick = () => {
-        sampleOutput.innerText = "";
-        safeSetStorage('kfont_sample', "");
-        sampleOutput.focus();
-        showToast("Cleared Sample Text");
-      };
-    }
+    document.getElementById('samplePangramBtn').onclick = () => {
+      sampleOutput.innerText = "The quick brown fox jumps over the lazy dog.\n\nPACK MY BOX WITH FIVE DOZEN LIQUOR JUGS.";
+      safeSetStorage('kfont_sample', sampleOutput.innerText);
+      updateDissectorTable();
+      showToast("Loaded Quick Fox Pangram");
+    };
+    document.getElementById('sampleAlphaBtn').onclick = () => {
+      sampleOutput.innerText = "ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz\n0123456789";
+      safeSetStorage('kfont_sample', sampleOutput.innerText);
+      updateDissectorTable();
+      showToast("Loaded Full Alphabet & Digits");
+    };
+    document.getElementById('sampleDigitsBtn').onclick = () => {
+      sampleOutput.innerText = "0123456789 + - * / = % < > [ ] { } ( ) @ # $ € £ ¥ ^ & _ ~ ` \" ' : ; , . ?";
+      safeSetStorage('kfont_sample', sampleOutput.innerText);
+      updateDissectorTable();
+      showToast("Loaded Digits & Typographic Symbols");
+    };
+    document.getElementById('sampleSphinxBtn').onclick = () => {
+      sampleOutput.innerText = "Sphinx of black quartz, judge my vow.\n\nHow vexingly quick daft zebras jump!\n\nBright vixens jump; dozy fowl quack.";
+      safeSetStorage('kfont_sample', sampleOutput.innerText);
+      updateDissectorTable();
+      showToast("Loaded Sphinx & Zebras Pangrams");
+    };
+    document.getElementById('sampleClearBtn').onclick = () => {
+      sampleOutput.innerText = "";
+      safeSetStorage('kfont_sample', "");
+      sampleOutput.focus();
+      updateDissectorTable();
+      showToast("Cleared Sample Text");
+    };
 
-    // Dismiss toast on click
     if (toastNotification) {
       toastNotification.onclick = () => {
         toastNotification.style.display = 'none';
@@ -942,21 +1348,17 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       switchToTab(savedTab);
     }
     
-    // Initial render
     updateAll();
 
-    // Startup welcome toast
     setTimeout(() => {
       showToast("Welcome to KFont! Press F1 or H for Help & Shortcuts.");
     }, 400);
 
-    // Responsive redraw
     window.addEventListener('resize', () => {
       updateAnatomy();
       updateDiagnostics();
     });
 
-    // Help overlay logic
     document.getElementById('helpBtn').addEventListener('click', () => {
       helpOverlay.classList.add('visible');
     });
@@ -971,7 +1373,6 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     document.addEventListener('keydown', (e) => {
       const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable;
 
-      // Dismiss help on Escape
       if (e.key === 'Escape') {
         if (helpOverlay.classList.contains('visible')) {
           helpOverlay.classList.remove('visible');
@@ -993,7 +1394,6 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         return;
       }
 
-      // Suppress single-key shortcuts when modifier keys are pressed or modal is open
       if (e.ctrlKey || e.altKey || e.metaKey) return;
       if (helpOverlay.classList.contains('visible')) {
         if (e.key.toLowerCase() === 'h') {
@@ -1005,17 +1405,13 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       if (!isInput) {
         if (e.key.toLowerCase() === 'h') {
           helpOverlay.classList.toggle('visible');
-        } else if (e.key === '1') {
-          switchToTab('panel-metrics');
-        } else if (e.key === '2') {
-          switchToTab('panel-glyphs');
-        } else if (e.key === '3') {
-          switchToTab('panel-diagnostics');
-        } else if (e.key === '4') {
-          switchToTab('panel-anatomy');
-        } else if (e.key === '5') {
-          switchToTab('panel-sample');
-          sampleOutput.focus();
+        } else if (e.key >= '1' && e.key <= '8') {
+          const tabMap = [
+            'panel-metrics', 'panel-glyphs', 'panel-diagnostics', 'panel-anatomy',
+            'panel-waterfall', 'panel-contrast', 'panel-spec', 'panel-sample'
+          ];
+          const target = tabMap[parseInt(e.key, 10) - 1];
+          if (target) switchToTab(target);
         } else if (e.key.toLowerCase() === 'b') {
           boldCheck.checked = !boldCheck.checked;
           safeSetStorage('kfont_bold', boldCheck.checked ? '1' : '0');
@@ -1026,8 +1422,12 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
           updateAll();
         } else if (e.key.toLowerCase() === 'c') {
           const activePanel = document.querySelector('.panel.active');
-          if (activePanel && activePanel.id === 'panel-anatomy') {
-            copyAnatomyReport();
+          if (activePanel) {
+            if (activePanel.id === 'panel-spec') {
+              copyToClipboard(document.getElementById('win32CodeBlock').textContent, "Copied Win32 C code to clipboard!");
+            } else {
+              copyAnatomyReport();
+            }
           }
         }
       }
@@ -1039,4 +1439,3 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
   </script>
 </body>
 </html>
-
