@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-22T19:50:00Z — kilo-expander: KFont**
+  - Status: PASS ✅ (Deep feature expansion across Win32 C & HTML5 web with 1:1 functional parity).
+  - Diagnostic Depth: Added 11 Unicode ranges, interactive custom pair optical kerning tester, and subpixel hinting canvas.
+  - Optical Scaling Ladder: Built 9-step typographic waterfall ladder with dynamic modular ratio scaling (1.125–1.618).
+  - Legibility & WCAG: Implemented WCAG 2.1 relative luminance matrix across 6 retro & modern palettes with custom color tester.
+  - Spec & Code Generator: Added 1-click generators for Win32 GDI C `LOGFONT` and CSS modular typography variables stylesheet.
+  - Run Dissector: Added character-by-character String Run Dissector table with advance widths, cumulative offsets, and codecs.
+  - Verification: Clean MSVC Native C build (28.5 KB); clean Vite web build (348ms); smoke test & security lint passed (0 violations).
+
 - **2026-09-22T17:52:00Z — kilo-qa: KTodo**
   - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial onboarding integrity, modal controls, safe blob exports).
   - State Persistence: Quicksave (F5) & quickload (F9) across web (localStorage) and native (ktodo.dat) capturing tasks, subtasks, filters, and views.

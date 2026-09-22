@@ -28,6 +28,9 @@ void* memcpy(void* dest, const void* src, size_t count) {
 #define ID_BTN_BUY_START 200
 #define ID_BTN_SELL_START 210
 #define ID_BTN_HELP 600
+#define ID_BTN_NEW 601
+#define ID_BTN_QUICKSAVE 602
+#define ID_BTN_QUICKLOAD 603
 
 typedef struct {
     int credits;
@@ -373,6 +376,9 @@ HWND hStatActiveMission;
 HWND hBtnAbandonMission;
 HWND hBtnMission[3];
 HWND hBtnHelp;
+HWND hBtnNew;
+HWND hBtnQuickSave;
+HWND hBtnQuickLoad;
 #define ID_BTN_MISSION1 501
 #define ID_BTN_MISSION2 502
 #define ID_BTN_MISSION3 503
@@ -723,11 +729,41 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_CREATE: {
             rngState = GetTickCount();
             if (rngState == 0) rngState = 0x1234;
-            if (!LoadGame()) {
+            int loaded = LoadGame();
+            if (!loaded) {
                 GenerateGalaxy();
                 GeneratePrices();
                 GenerateMissions();
                 SaveGame();
+            }
+
+            DWORD tutAttr = GetFileAttributesA("ktrader_tutorial.dat");
+            int tutorialSeen = (tutAttr != INVALID_FILE_ATTRIBUTES && !(tutAttr & FILE_ATTRIBUTE_DIRECTORY));
+            if (!tutorialSeen) {
+                if (!loaded) {
+                    MessageBoxA(hwnd,
+                        "Welcome aboard, Captain!\n\n"
+                        "Welcome to KTrader Stellar Commerce (1999).\n\n"
+                        "Mission Briefing:\n"
+                        "- Trade commodities across 12 planetary systems (buy low, sell high).\n"
+                        "- Watch your fuel tank and refuel [R] at starports.\n"
+                        "- Upgrade Cargo, Engines, and Weapons in the Shipyard.\n"
+                        "- Repel or bribe space pirates in combat encounters.\n"
+                        "- Save 100,000 credits to commission the Dreadnought flagship!\n\n"
+                        "Flight Controls:\n"
+                        "- [1, 2, 3] Jump to connected planetary destinations\n"
+                        "- [R] Refuel ship at dock\n"
+                        "- [F5] Quicksave | [F9] Quickload voyage state\n"
+                        "- [F1] Captain's Log & Help Guide",
+                        "KTrader - Flight Briefing", MB_OK | MB_ICONINFORMATION);
+                }
+                HANDLE hTut = CreateFileA("ktrader_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (hTut != INVALID_HANDLE_VALUE) {
+                    char seenTag[] = "TUTORIAL_SEEN_V1\n";
+                    DWORD written = 0;
+                    WriteFile(hTut, seenTag, sizeof(seenTag) - 1, &written, NULL);
+                    CloseHandle(hTut);
+                }
             }
 
             for (int i = 0; i < MAX_STARS; i++) {
@@ -744,9 +780,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
             
             CreateWindow("STATIC", "KTrader Space Trading Sim", WS_CHILD | WS_VISIBLE,
-                20, 15, 300, 20, hwnd, NULL, NULL, NULL);
+                20, 15, 230, 20, hwnd, NULL, NULL, NULL);
 
-            hBtnHelp = CreateWindow("BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 530, 12, 80, 25, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            hBtnNew = CreateWindow("BUTTON", "New", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 255, 12, 50, 25, hwnd, (HMENU)ID_BTN_NEW, NULL, NULL);
+            hBtnQuickSave = CreateWindow("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 310, 12, 80, 25, hwnd, (HMENU)ID_BTN_QUICKSAVE, NULL, NULL);
+            hBtnQuickLoad = CreateWindow("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 395, 12, 80, 25, hwnd, (HMENU)ID_BTN_QUICKLOAD, NULL, NULL);
+            hBtnHelp = CreateWindow("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 480, 12, 80, 25, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            SendMessage(hBtnNew, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnQuickSave, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnQuickLoad, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hStatCredits = CreateWindow("STATIC", "", WS_CHILD | WS_VISIBLE, 10, 210, 140, 20, hwnd, NULL, NULL, NULL);
@@ -903,13 +945,52 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     "- Food & Water: Cheap at Agri planets.\n"
                     "- Ore: Cheap at Mining planets.\n"
                     "- Tech & Meds: Produced at Tech planets.\n"
-                    "- Luxury/Contraband/Military: Requires high reputation with Traders/Pirates/Navy. Navy may confiscate contraband.\n\n"
+                    "- Luxury/Contraband/Military: Requires high reputation with Traders/Pirates/Navy.\n\n"
                     "Ship Upgrades:\n"
                     "- Cargo: Increases max cargo and shields.\n"
                     "- Engine: Reduces fuel cost.\n"
                     "- Weapons: Increases combat damage.\n"
-                    "- Dreadnought: Ultimate end-game goal!", 
+                    "- Dreadnought: Ultimate 100,000 cr flagship goal!\n\n"
+                    "Flight Controls & Hotkeys:\n"
+                    "- [1, 2, 3] Jump to connected destinations\n"
+                    "- [R] Refuel ship at dock\n"
+                    "- [F5] Quicksave voyage state\n"
+                    "- [F9] Quickload saved voyage\n"
+                    "- [F1] Help Guide\n"
+                    "- Combat: [F / Space] Fire | [E] Flee | [B] Bribe", 
                     "Help", MB_OK | MB_ICONINFORMATION);
+            } else if (LOWORD(wParam) == ID_BTN_QUICKSAVE) {
+                SaveGame();
+                LogMessage("> Quicksave created! [F5]");
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (LOWORD(wParam) == ID_BTN_QUICKLOAD) {
+                if (LoadGame()) {
+                    UpdateUI(hwnd);
+                    LogMessage("> Quicksave restored! [F9]");
+                    InvalidateRect(hwnd, NULL, FALSE);
+                } else {
+                    LogMessage("> No saved voyage found! [F9]");
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+            } else if (LOWORD(wParam) == ID_BTN_NEW) {
+                if (MessageBoxA(hwnd, "Start a new voyage? Current captain profile and credits will be reset.", "KTrader - New Game", MB_YESNO | MB_ICONQUESTION) == IDYES) {
+                    DeleteFileA("ktrader.dat");
+                    ZeroMemory(&state, sizeof(state));
+                    state.credits = 1000;
+                    state.fuel = 100;
+                    state.maxFuel = 100;
+                    state.maxCargo = 20;
+                    state.playerShields = 50;
+                    state.enemyShields = 30;
+                    state.enemyMaxShields = 30;
+                    GenerateGalaxy();
+                    GeneratePrices();
+                    GenerateMissions();
+                    SaveGame();
+                    UpdateUI(hwnd);
+                    LogMessage("> New voyage begun. Welcome aboard, Captain!");
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
             } else if (LOWORD(wParam) == ID_BTN_REFUEL) {
                 int fuelNeeded = state.maxFuel - state.fuel;
                 if (fuelNeeded > 0 && state.credits >= 2 && !state.inCombat) {
@@ -1020,6 +1101,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     LogMessage("> YOU WIN! You purchased the legendary Dreadnought! The galaxy is yours!");
                     SaveGame();
                     UpdateUI(hwnd);
+                    MessageBoxA(hwnd,
+                        "🏆 VOYAGE COMPLETE - SUPREME FLEET COMMANDER 🏆\n\n"
+                        "Congratulations, Captain!\n"
+                        "You have acquired the legendary Dreadnought!\n"
+                        "The trade lanes are secure and the galaxy bows before your fleet.\n\n"
+                        "You may continue free-roaming the stars or start a new voyage at any time.",
+                        "KTrader - Victory!", MB_OK | MB_ICONINFORMATION);
                 }
             } else if (LOWORD(wParam) >= ID_BTN_MISSION1 && LOWORD(wParam) <= ID_BTN_MISSION3) {
                 int idx = LOWORD(wParam) - ID_BTN_MISSION1;
@@ -1541,7 +1629,13 @@ void __stdcall MainEntry() {
                 int ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
                 int alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
                 if (!ctrl && !alt) {
-                    if (state.inCombat) {
+                    if (msg.wParam == VK_F5) {
+                        SendMessage(hwnd, WM_COMMAND, ID_BTN_QUICKSAVE, 0);
+                    } else if (msg.wParam == VK_F9) {
+                        SendMessage(hwnd, WM_COMMAND, ID_BTN_QUICKLOAD, 0);
+                    } else if (msg.wParam == VK_F1) {
+                        SendMessage(hwnd, WM_COMMAND, ID_BTN_HELP, 0);
+                    } else if (state.inCombat) {
                         if (msg.wParam == 'F' || msg.wParam == VK_SPACE) {
                             SendMessage(hwnd, WM_COMMAND, ID_BTN_FIRE, 0);
                         } else if (msg.wParam == 'E') {

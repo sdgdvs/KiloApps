@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KRSS
   kilo_usability: KRSS
   kilo_graphics: KSanctuary
-  kilo_qa: KTrader
+  kilo_qa: KType
   kilo_expander: KPad
   kilo_creator: "KAnomaly (Subterranean Signal Analyzer)"
 virtual_web_target: "kweb://webring"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-usability
-  app: KHash
-  timestamp: "2026-09-22T23:00:00Z"
+  agent: kilo-qa
+  app: KTrader
+  timestamp: "2026-09-22T23:15:00Z"
 last_planner_run: "2026-09-22T07:47:00Z"
 ---
 
@@ -99,9 +99,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KClip`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KTrader`
+- **Current Target**: `KType`
 - **Upcoming Queue**:
-  `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAlchemy`, `KAsteroids`, `KChrono`, `KColony`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMine`, `KMystery`, `KPac`, `KQuest`, `KRogue`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KTodo` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo)*.
+  `KVault`, `KVoid`, `KWizard`, `KZip`, `KAlchemy`, `KAsteroids`, `KChrono`, `KColony`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMine`, `KMystery`, `KPac`, `KQuest`, `KRogue`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KTodo`, `KTrader` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KPad`
@@ -151,6 +151,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-22T23:15:00Z — kilo-qa: KTrader**
+  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial onboarding integrity, modal controls, size limits).
+  - State Persistence: Quicksave (F5) & quickload (F9) across web (localStorage) and native (ktrader.dat) capturing complete state.
+  - Native UI Parity: Added Save [F5], Load [F9], and New buttons; updated message loop and WM_COMMAND.
+  - Tutorial Integrity: Fresh-session onboarding modal (ktrader_tutorialSeen / ktrader_tutorial.dat) never interrupting restored save states.
+  - Modal Ergonomics: Added backdrop dismissal and Esc/Enter/Space handlers across Help, Tutorial, and Victory modals.
+  - Safety & Distribution: Quota-protected storage wrappers; placed standalone native binary KTrader.exe (26.1 KB).
+  - Verification: Clean MSVC Native C build (26.1 KB); clean Vite web build (218ms); security lint passed (0 violations).
+
 - **2026-09-22T23:00:00Z — kilo-usability: KHash**
   - Status: PASS ✅ (Layout dimensions, responsive breakpoints, clipboard paste/copy, file remove, smart algo match).
   - Window & Layout: Tuned App.jsx window to 960x700; added responsive media queries (840px/580px) and sleek scrollbars.
@@ -185,12 +194,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Usability: Implemented start splash overlay, tutorial guide, quicksave [F5]/quickload [F9], and JSON backup.
   - Deterministic Harness: Exposed window.__solveKMatrix() & __KMATRIX_STATE__ for 100% headless CI testability.
   - Verification: MSVC C clean build (14.0 KB); Vite web build clean (1.13s, 46.2 KB); security lint passed (0 violations).
-
-- **2026-09-22T19:50:00Z — kilo-expander: KFont**
-  - Status: PASS ✅ (Deep feature expansion across Win32 C & HTML5 web with 1:1 functional parity).
-  - Diagnostic Depth: Added 11 Unicode ranges, interactive custom pair optical kerning tester, and subpixel hinting canvas.
-  - Optical Scaling Ladder: Built 9-step typographic waterfall ladder with dynamic modular ratio scaling (1.125–1.618).
-  - Legibility & WCAG: Implemented WCAG 2.1 relative luminance matrix across 6 retro & modern palettes with custom color tester.
-  - Spec & Code Generator: Added 1-click generators for Win32 GDI C `LOGFONT` and CSS modular typography variables stylesheet.
-  - Run Dissector: Added character-by-character String Run Dissector table with advance widths, cumulative offsets, and codecs.
-  - Verification: Clean MSVC Native C build (28.5 KB); clean Vite web build (348ms); smoke test & security lint passed (0 violations).

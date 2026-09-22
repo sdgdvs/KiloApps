@@ -78,29 +78,89 @@
   </style>
 </head>
 <body>
-  <button onclick="resetGame()" style="position: absolute; top: 20px; right: 115px; font-size: 1.2em; z-index: 50;">New Game</button>
-  <button onclick="showHelp()" style="position: absolute; top: 20px; right: 20px; font-size: 1.2em; z-index: 50;">Help</button>
+  <div style="position: absolute; top: 15px; right: 20px; display: flex; gap: 6px; z-index: 50; flex-wrap: wrap; justify-content: flex-end;">
+    <button onclick="resetGame()" title="Start New Voyage" style="font-size: 0.95em; padding: 4px 8px; margin: 2px;">New Game</button>
+    <button onclick="quickSave()" title="Quicksave voyage state [F5]" style="font-size: 0.95em; padding: 4px 8px; margin: 2px;">Save [F5]</button>
+    <button onclick="quickLoad()" title="Quickload voyage state [F9]" style="font-size: 0.95em; padding: 4px 8px; margin: 2px;">Load [F9]</button>
+    <button onclick="showHelp()" title="Captain's Log Help Guide [F1]" style="font-size: 0.95em; padding: 4px 8px; margin: 2px;">Help [F1]</button>
+  </div>
+
+  <div id="hud-toast" style="display:none; position:fixed; top:18px; left:50%; transform:translateX(-50%); background:rgba(0,25,35,0.95); border:1px solid #0ff; color:#0ff; padding:8px 18px; font-weight:bold; font-size:1em; box-shadow:0 0 15px rgba(0,255,255,0.6); z-index:200; pointer-events:none; border-radius:3px; transition:opacity 0.25s; text-align:center;"></div>
+
+  <!-- First-Run Tutorial Commissioning Modal -->
+  <div id="tutorial-modal" onclick="if(event.target===this)dismissTutorial();" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,10,15,0.85); z-index:150; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;">
+    <div style="max-width:560px; width:100%; background:rgba(0,20,30,0.98); border:2px solid #0ff; box-shadow:0 0 25px #0ff; padding:25px; color:#0ff; box-sizing:border-box; position:relative;">
+      <h2 style="margin-top:0; color:#0ff; text-shadow:0 0 8px #0ff; border-bottom:1px solid #0ff; padding-bottom:8px;">🚀 WELCOME ABOARD, CAPTAIN</h2>
+      <p style="color:#ff0; font-size:1.05em; margin-bottom:10px;">KTrader Stellar Commerce & Navigational Console (1999)</p>
+      <p>You have taken command of a light trading sloop in the Outer Quadrant. Your primary objective: buy low, sell high, and accumulate <strong>100,000 credits</strong> to commission the legendary <strong>Dreadnought</strong> flagship!</p>
+      <div style="background:rgba(0,40,55,0.6); border:1px dashed #0ff; padding:12px; margin:15px 0; font-size:0.95em;">
+        <div style="font-weight:bold; color:#ff0; margin-bottom:6px;">FLIGHT CONTROLS & SHORTCUTS:</div>
+        <div>• <strong>[1, 2, 3]</strong> : Hyperspace jump to planetary destinations</div>
+        <div>• <strong>[R]</strong> : Quick refuel ship at starport</div>
+        <div>• <strong>[F5]</strong> : Quicksave complete voyage state</div>
+        <div>• <strong>[F9]</strong> : Quickload latest saved voyage</div>
+        <div>• <strong>[F1 / H]</strong> : Captain's Log & commodity price guide</div>
+        <div>• <strong>Combat</strong> : [Space / F] Fire lasers, [E] Evasive flee, [B] Bribe</div>
+      </div>
+      <p style="font-size:0.9em; color:#8ee;">Watch fuel reserves carefully; install engine and cargo upgrades at planetary shipyards as profits grow.</p>
+      <div style="text-align:right; margin-top:20px;">
+        <button onclick="dismissTutorial()" style="font-size:1.1em; padding:8px 20px; background:#0ff; color:#000; font-weight:bold; border:none; cursor:pointer; box-shadow:0 0 10px #0ff;">Begin Voyage [Enter / Space]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dreadnought Victory Modal -->
+  <div id="victory-modal" onclick="if(event.target===this)hideVictory();" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,10,15,0.9); z-index:160; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;">
+    <div style="max-width:580px; width:100%; background:rgba(15,0,25,0.98); border:2px solid #f0f; box-shadow:0 0 30px #f0f; padding:25px; color:#f0f; box-sizing:border-box; text-align:center;">
+      <h1 style="margin-top:0; color:#ff0; text-shadow:0 0 12px #ff0; font-size:1.8em;">🏆 SUPREME FLEET COMMANDER 🏆</h1>
+      <p style="color:#fff; font-size:1.1em;">You have acquired the legendary <strong>Dreadnought</strong>! The quadrant trade routes and outer sectors are now under your fleet's protection.</p>
+      <div id="victory-stats" style="background:rgba(40,0,50,0.6); border:1px solid #f0f; padding:15px; margin:15px auto; text-align:left; color:#0ff; font-family:'Courier New', monospace; font-size:1em; line-height:1.5;">
+      </div>
+      <div style="display:flex; justify-content:center; gap:15px; margin-top:20px; flex-wrap:wrap;">
+        <button onclick="hideVictory()" style="font-size:1.1em; padding:8px 18px; border-color:#0ff; color:#0ff;">Continue Free Roam [Esc / Enter]</button>
+        <button onclick="resetGame()" style="font-size:1.1em; padding:8px 18px; border-color:#ff0; color:#ff0;">New Voyage</button>
+      </div>
+    </div>
+  </div>
+
   <h1>KTrader Space Trading Sim</h1>
   <canvas id="gfx-canvas" width="600" height="150" style="display:block; margin: 10px auto; background: rgba(0,20,30,0.5); border: 1px solid #0ff; box-shadow: 0 0 10px #0ff;"></canvas>
   
-  <div id="help-modal" style="display:none; position:fixed; top:10%; left:10%; width:80%; height:80%; background:rgba(0,15,20,0.95); border:2px solid #0ff; z-index:100; overflow-y:auto; padding:20px; box-shadow:0 0 20px #0ff; color:#0ff; box-sizing:border-box;">
-    <h2 style="margin-top:0;">Captain's Log - Help Guide</h2>
-    <h3 style="color:#ff0;">How to Play</h3>
-    <p>Travel between planets to buy low and sell high. Watch your fuel and be prepared for random encounters like space pirates, asteroid fields, and Navy patrols. Complete missions from the Mission Board to earn extra credits.</p>
-    <h3 style="color:#ff0;">Trade Goods Reference</h3>
-    <ul>
-      <li><strong>Food & Water:</strong> Cheap at Agri planets, expensive elsewhere.</li>
-      <li><strong>Ore:</strong> Cheap at Mining planets, needed by Industrial/Tech.</li>
-      <li><strong>Tech & Meds:</strong> Produced at Tech planets, needed by others.</li>
-      <li><strong>Luxury/Contraband/Military:</strong> High profit, but requires high reputation with Traders/Pirates/Navy to purchase. Contraband may be confiscated by Navy.</li>
-    </ul>
-    <h3 style="color:#ff0;">Ship Upgrades</h3>
-    <ul>
-      <li><strong>Cargo:</strong> Increases max cargo capacity, also increases your shields (+10 per level).</li>
-      <li><strong>Engine:</strong> Reduces fuel consumption for jumps.</li>
-      <li><strong>Weapons:</strong> Increases damage output against pirates.</li>
-    </ul>
-    <button onclick="hideHelp()" style="margin-top: 20px; font-size: 1.1em;">Close Help</button>
+  <div id="help-modal" onclick="if(event.target===this)hideHelp();" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,10,15,0.85); z-index:100; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;">
+    <div style="max-width:650px; max-height:85vh; width:100%; background:rgba(0,15,20,0.98); border:2px solid #0ff; overflow-y:auto; padding:25px; box-shadow:0 0 20px #0ff; color:#0ff; box-sizing:border-box; position:relative;">
+      <button onclick="hideHelp()" style="position:absolute; top:12px; right:15px; font-size:1.2em; padding:2px 8px; border:1px solid #0ff; background:transparent; color:#0ff; cursor:pointer;" title="Close Help [Esc]">✕</button>
+      <h2 style="margin-top:0; border-bottom:1px solid #0ff; padding-bottom:6px;">Captain's Log - Help Guide</h2>
+      <h3 style="color:#ff0;">How to Play</h3>
+      <p>Travel between planets to buy low and sell high. Watch your fuel and be prepared for random encounters like space pirates, asteroid fields, and Navy patrols. Complete missions from the Mission Board to earn extra credits.</p>
+      <h3 style="color:#ff0;">Trade Goods Reference</h3>
+      <ul>
+        <li><strong>Food & Water:</strong> Cheap at Agri planets, expensive elsewhere.</li>
+        <li><strong>Ore:</strong> Cheap at Mining planets, needed by Industrial/Tech.</li>
+        <li><strong>Tech & Meds:</strong> Produced at Tech planets, needed by others.</li>
+        <li><strong>Luxury / Contraband / Military:</strong> High profit, but requires reputation with Traders (50+), Pirates (50+), or Navy (50+). Contraband may be confiscated by Navy patrols!</li>
+      </ul>
+      <h3 style="color:#ff0;">Ship Upgrades</h3>
+      <ul>
+        <li><strong>Cargo Bay:</strong> Increases max cargo capacity, also bolsters energy shields (+10 per level).</li>
+        <li><strong>Engine Drive:</strong> Reduces hyperspace fuel consumption per jump.</li>
+        <li><strong>Weapons:</strong> Increases laser damage against pirate raiders.</li>
+        <li><strong>Dreadnought:</strong> Ultimate 100,000 credit flagship purchase for total galaxy supremacy.</li>
+      </ul>
+      <h3 style="color:#ff0;">Flight Controls & Hotkeys</h3>
+      <ul>
+        <li><strong>[1, 2, 3]:</strong> Jump to connected planetary destination routes</li>
+        <li><strong>[R]:</strong> Quick refuel ship at starport</li>
+        <li><strong>[F5]:</strong> Quicksave voyage state to browser local storage</li>
+        <li><strong>[F9]:</strong> Quickload saved voyage state</li>
+        <li><strong>[F1] / [H] / [?]:</strong> Open / Close this Captain's Log</li>
+        <li><strong>[Esc]:</strong> Dismiss dialogs & close modals</li>
+        <li><strong>Combat:</strong> [Space / F] Fire lasers | [E] Evasive flee | [B] Bribe pirates</li>
+      </ul>
+      <div style="display:flex; justify-content:space-between; margin-top:20px; flex-wrap:wrap; gap:10px;">
+        <button onclick="showTutorial(); hideHelp();" style="font-size:1em; border-color:#ff0; color:#ff0;">View Mission Briefing</button>
+        <button onclick="hideHelp()" style="font-size:1.1em; padding:5px 15px;">Close Help [Esc / Enter]</button>
+      </div>
+    </div>
   </div>
 
   <div class="panel">
@@ -177,8 +237,79 @@
   </div>
 
   <script>
-    function showHelp() { document.getElementById('help-modal').style.display = 'block'; }
-    function hideHelp() { document.getElementById('help-modal').style.display = 'none'; }
+    function safeGetStorage(key) {
+      try { return localStorage.getItem(key); } catch (e) { return null; }
+    }
+    function safeSetStorage(key, val) {
+      try { localStorage.setItem(key, val); return true; } catch (e) { return false; }
+    }
+    function safeRemoveStorage(key) {
+      try { localStorage.removeItem(key); return true; } catch (e) { return false; }
+    }
+
+    let toastTimer = null;
+    function showToast(msg, type = 'info', duration = 3200) {
+      const el = document.getElementById('hud-toast');
+      if (!el) return;
+      if (toastTimer) clearTimeout(toastTimer);
+      el.textContent = msg;
+      if (type === 'success') {
+        el.style.borderColor = '#00ff66';
+        el.style.color = '#00ff66';
+        el.style.boxShadow = '0 0 15px rgba(0,255,102,0.6)';
+      } else if (type === 'warning') {
+        el.style.borderColor = '#ff3333';
+        el.style.color = '#ff3333';
+        el.style.boxShadow = '0 0 15px rgba(255,50,50,0.6)';
+      } else {
+        el.style.borderColor = '#00ffff';
+        el.style.color = '#00ffff';
+        el.style.boxShadow = '0 0 15px rgba(0,255,255,0.6)';
+      }
+      el.style.display = 'block';
+      el.style.opacity = '1';
+      toastTimer = setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => { el.style.display = 'none'; }, 260);
+      }, duration);
+    }
+
+    function showHelp() {
+      const m = document.getElementById('help-modal');
+      if (m) m.style.display = 'flex';
+    }
+    function hideHelp() {
+      const m = document.getElementById('help-modal');
+      if (m) m.style.display = 'none';
+    }
+    function showTutorial() {
+      const m = document.getElementById('tutorial-modal');
+      if (m) m.style.display = 'flex';
+    }
+    function dismissTutorial() {
+      safeSetStorage('ktrader_tutorialSeen', '1');
+      const m = document.getElementById('tutorial-modal');
+      if (m) m.style.display = 'none';
+      playSound('chime');
+    }
+    function showVictory() {
+      const statBox = document.getElementById('victory-stats');
+      if (statBox) {
+        statBox.innerHTML = `
+          <div>• Final Credits Balance: <strong>${Number(state.credits).toLocaleString()} cr</strong></div>
+          <div>• Cargo Hold Capacity: <strong>${state.maxCargo} units (Lv ${state.cargoLevel})</strong></div>
+          <div>• Hyper-Drive Engine: <strong>Lv ${state.engineLevel} (Max Fuel: ${state.maxFuel})</strong></div>
+          <div>• Laser Weapon Arrays: <strong>Lv ${state.weaponLevel}</strong></div>
+          <div>• Planetary Standing: <strong>Traders: ${state.repTraders} | Pirates: ${state.repPirates} | Navy: ${state.repNavy}</strong></div>
+        `;
+      }
+      const m = document.getElementById('victory-modal');
+      if (m) m.style.display = 'flex';
+    }
+    function hideVictory() {
+      const m = document.getElementById('victory-modal');
+      if (m) m.style.display = 'none';
+    }
 
     let audioCtx = null;
     function getAudioContext() {
@@ -296,18 +427,38 @@
             repNavy: state.repNavy,
             hasDreadnought: state.hasDreadnought,
             activeMission: state.activeMission,
-            availableMissions: state.availableMissions
+            availableMissions: state.availableMissions,
+            inCombat: state.inCombat,
+            playerShields: state.playerShields,
+            enemyShields: state.enemyShields,
+            enemyMaxShields: state.enemyMaxShields,
+            bountyTarget: state.bountyTarget
           },
           planets,
-          currentPrices
+          currentPrices,
+          timestamp: Date.now()
         };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-      } catch (err) {}
+        return safeSetStorage(STORAGE_KEY, JSON.stringify(payload));
+      } catch (err) {
+        return false;
+      }
+    }
+
+    function quickSave() {
+      const ok = saveGame();
+      if (ok) {
+        log('Quicksave created! [F5]');
+        showToast('🚀 Quicksave created! [F5]', 'success');
+        playSound('chime');
+      } else {
+        log('Storage quota error: failed to create quicksave.', true);
+        showToast('Storage write failed!', 'warning');
+      }
     }
 
     function loadGame() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = safeGetStorage(STORAGE_KEY);
         if (!raw) return false;
         const data = JSON.parse(raw);
         if (data && data.state && data.planets && typeof data.state.credits === 'number') {
@@ -316,7 +467,11 @@
           if (data.currentPrices && Object.keys(data.currentPrices).length > 0) {
             currentPrices = data.currentPrices;
           }
-          state.inCombat = false;
+          if (typeof state.playerShields !== 'number') state.playerShields = 50 + (state.cargoLevel || 0) * 10;
+          if (typeof state.enemyShields !== 'number') state.enemyShields = 30;
+          if (typeof state.enemyMaxShields !== 'number') state.enemyMaxShields = 30;
+          if (typeof state.inCombat !== 'boolean') state.inCombat = false;
+          if (typeof state.bountyTarget !== 'boolean') state.bountyTarget = false;
           if (!state.inventory) state.inventory = {};
           for (const g of goods) {
             if (typeof state.inventory[g] !== 'number' || state.inventory[g] < 0) state.inventory[g] = 0;
@@ -328,9 +483,22 @@
       return false;
     }
 
+    function quickLoad() {
+      if (loadGame()) {
+        log('Quicksave restored! [F9]');
+        showToast('🚀 Quicksave restored! [F9]', 'success');
+        playSound('chime');
+        updateUI();
+      } else {
+        log('No saved voyage found to load! [F9]', true);
+        showToast('No saved voyage found! [F9]', 'warning');
+        playSound('fail');
+      }
+    }
+
     function resetGame() {
       if (confirm('Start a new voyage? Current captain profile and credits will be reset.')) {
-        try { localStorage.removeItem(STORAGE_KEY); } catch (err) {}
+        safeRemoveStorage(STORAGE_KEY);
         location.reload();
       }
     }
@@ -1418,6 +1586,7 @@
           triggerScreenShake(12);
           log(`🏆 YOU WIN! You purchased the legendary Dreadnought! The galaxy is yours! 🏆`, true);
           document.getElementById('ui-log').style.borderColor = '#f0f';
+          showVictory();
         }
         playSound('chime');
         saveGame();
@@ -1619,11 +1788,40 @@
       if (e.ctrlKey || e.altKey || e.metaKey) return;
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
       
+      const helpOpen = document.getElementById('help-modal') && document.getElementById('help-modal').style.display === 'flex';
+      const tutOpen = document.getElementById('tutorial-modal') && document.getElementById('tutorial-modal').style.display === 'flex';
+      const vicOpen = document.getElementById('victory-modal') && document.getElementById('victory-modal').style.display === 'flex';
+
       if (e.key === 'Escape') {
-        hideHelp();
+        if (tutOpen) { dismissTutorial(); return; }
+        if (vicOpen) { hideVictory(); return; }
+        if (helpOpen) { hideHelp(); return; }
         return;
       }
-      if (document.getElementById('help-modal').style.display === 'block') return;
+
+      if (e.key === 'Enter' || e.key === ' ') {
+        if (tutOpen) { e.preventDefault(); dismissTutorial(); return; }
+        if (vicOpen) { e.preventDefault(); hideVictory(); return; }
+        if (helpOpen) { e.preventDefault(); hideHelp(); return; }
+      }
+
+      if (helpOpen || tutOpen || vicOpen) return;
+
+      if (e.key === 'F5') {
+        e.preventDefault();
+        quickSave();
+        return;
+      }
+      if (e.key === 'F9') {
+        e.preventDefault();
+        quickLoad();
+        return;
+      }
+      if (e.key === 'F1' || e.key === 'h' || e.key === 'H' || e.key === '?') {
+        e.preventDefault();
+        showHelp();
+        return;
+      }
 
       if (state.inCombat) {
         if (e.key === ' ' || e.key === 'f' || e.key === 'F') {
@@ -1643,6 +1841,11 @@
           if (destButtons[idx] && !destButtons[idx].disabled) {
             destButtons[idx].click();
           }
+        } else if (e.key === 'r' || e.key === 'R') {
+          const btnRefuel = document.querySelector('#ui-shipyard button');
+          if (btnRefuel && !btnRefuel.disabled) {
+            btnRefuel.click();
+          }
         }
       }
     });
@@ -1654,7 +1857,8 @@
       }
     });
 
-    if (!loadGame()) {
+    const hasSaved = loadGame();
+    if (!hasSaved) {
       generateGalaxy();
       generatePrices();
       generateMissions();
@@ -1662,6 +1866,15 @@
     }
     updateUI();
     requestAnimationFrame(renderLoop);
+
+    const tutorialSeen = safeGetStorage('ktrader_tutorialSeen') === '1';
+    if (!hasSaved && !tutorialSeen) {
+      setTimeout(() => {
+        showTutorial();
+      }, 250);
+    } else if (hasSaved) {
+      showToast('🚀 Saved voyage resumed. Press [F1] for Help.', 'info', 3000);
+    }
   </script>
 </body>
 </html>
