@@ -1,0 +1,2039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KAnomaly - Subterranean Signal Analyzer v1.0.0</title>
+<style>
+  :root {
+    --bg-main: #060e0a;
+    --bg-panel: #0a1811;
+    --bg-header: #0e2218;
+    --border: #1a4d2e;
+    --border-bright: #2db364;
+    --phosphor: #33ff66;
+    --phosphor-dim: #1e803d;
+    --phosphor-glow: rgba(51, 255, 102, 0.25);
+    --amber: #ffaa00;
+    --amber-dim: #996600;
+    --cyan: #33ccff;
+    --alert: #ff3344;
+    --font-mono: 'Consolas', 'Courier New', monospace;
+  }
+
+  body.theme-amber {
+    --bg-main: #0c0803;
+    --bg-panel: #160f06;
+    --bg-header: #201608;
+    --border: #59360e;
+    --border-bright: #cc7a14;
+    --phosphor: #ffaa22;
+    --phosphor-dim: #995511;
+    --phosphor-glow: rgba(255, 170, 34, 0.25);
+    --cyan: #ffd27f;
+  }
+
+  body.theme-cyan {
+    --bg-main: #030a0d;
+    --bg-panel: #06141a;
+    --bg-header: #0a1e27;
+    --border: #114457;
+    --border-bright: #1da3d1;
+    --phosphor: #33ccff;
+    --phosphor-dim: #116688;
+    --phosphor-glow: rgba(51, 204, 255, 0.25);
+    --amber: #7fe5ff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: var(--bg-main);
+    color: var(--phosphor);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* CRT Scanlines Overlay */
+  .crt-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 1000;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%);
+    background-size: 100% 4px;
+    opacity: 0.65;
+  }
+  .no-scanlines .crt-overlay { display: none; }
+
+  /* App Container Layout */
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 6px;
+    gap: 6px;
+  }
+
+  /* Header Bar */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-header);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    box-shadow: 0 0 10px var(--phosphor-glow);
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .badge-app {
+    background: var(--phosphor);
+    color: #000;
+    font-weight: bold;
+    padding: 2px 6px;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  .app-title {
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  button.kbtn {
+    background: var(--bg-panel);
+    color: var(--phosphor);
+    border: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  button.kbtn:hover {
+    background: var(--border);
+    border-color: var(--border-bright);
+    color: #fff;
+  }
+  button.kbtn:active {
+    background: var(--border-bright);
+    color: #000;
+  }
+  button.kbtn.active {
+    background: var(--phosphor);
+    border-color: var(--phosphor);
+    color: #000;
+    font-weight: bold;
+  }
+  button.kbtn.warn {
+    color: var(--amber);
+    border-color: var(--amber-dim);
+  }
+  button.kbtn.alert {
+    color: var(--alert);
+    border-color: #881122;
+  }
+
+  select.kselect {
+    background: var(--bg-panel);
+    color: var(--phosphor);
+    border: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 3px 6px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  /* Navigation Tabs */
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 3px;
+  }
+
+  .tab-btn {
+    flex: 1;
+    background: transparent;
+    color: var(--phosphor-dim);
+    border: 1px solid transparent;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: bold;
+    padding: 5px 0;
+    cursor: pointer;
+    text-align: center;
+  }
+  .tab-btn:hover {
+    color: var(--phosphor);
+    background: rgba(51, 255, 102, 0.05);
+  }
+  .tab-btn.active {
+    background: var(--bg-header);
+    color: var(--phosphor);
+    border: 1px solid var(--border-bright);
+    box-shadow: inset 0 0 6px var(--phosphor-glow);
+  }
+
+  /* Main Workspace Area */
+  .tab-content {
+    flex: 1;
+    display: none;
+    gap: 6px;
+    overflow: hidden;
+  }
+  .tab-content.active {
+    display: flex;
+  }
+
+  /* Column Panels */
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel-header {
+    background: var(--bg-header);
+    border-bottom: 1px solid var(--border);
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Tuning Bar */
+  .tuner-bar {
+    background: var(--bg-header);
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .freq-readout {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--amber);
+    text-shadow: 0 0 6px rgba(255, 170, 0, 0.4);
+    background: #000;
+    padding: 2px 10px;
+    border: 1px solid var(--amber-dim);
+    letter-spacing: 1px;
+    min-width: 140px;
+    text-align: center;
+  }
+  .tuner-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .tuner-label {
+    font-size: 11px;
+    color: var(--phosphor-dim);
+  }
+
+  /* Spectrogram & Waterfall Layout */
+  .display-col-main {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .display-col-side {
+    flex: 1.4;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .canvas-wrap {
+    flex: 1;
+    position: relative;
+    background: #000;
+    overflow: hidden;
+  }
+  canvas.display-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Oscilloscope / FFT Split */
+  .scope-fft-container {
+    height: 120px;
+    display: flex;
+    gap: 6px;
+  }
+
+  /* Terminal Log Buffer */
+  .terminal-box {
+    flex: 1;
+    background: #000;
+    border: 1px solid var(--border);
+    color: var(--phosphor);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 6px;
+    overflow-y: auto;
+    line-height: 1.4;
+  }
+  .log-line {
+    word-break: break-all;
+    margin-bottom: 2px;
+  }
+  .log-line.alert { color: var(--alert); font-weight: bold; }
+  .log-line.warn { color: var(--amber); }
+  .log-line.cyan { color: var(--cyan); }
+  .log-line.dim { color: var(--phosphor-dim); }
+
+  /* Telemetry Cards */
+  .telemetry-card {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+  }
+  .telemetry-row {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px dotted var(--border);
+    padding-bottom: 3px;
+  }
+  .telemetry-label { color: var(--phosphor-dim); }
+  .telemetry-value { font-weight: bold; color: var(--phosphor); }
+
+  /* Signal Lock Badge */
+  .lock-indicator {
+    padding: 6px;
+    text-align: center;
+    font-weight: bold;
+    border: 1px solid var(--border);
+    background: rgba(0,0,0,0.5);
+    letter-spacing: 1px;
+  }
+  .lock-indicator.locked {
+    background: rgba(255, 51, 68, 0.15);
+    border-color: var(--alert);
+    color: var(--alert);
+    box-shadow: 0 0 10px rgba(255, 51, 68, 0.4);
+  }
+
+  /* SSTV Raster Decoder Canvas */
+  .raster-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    padding: 10px;
+    border: 1px solid var(--border);
+  }
+  #sstvCanvas {
+    background: #000;
+    border: 1px solid var(--border-bright);
+    image-rendering: pixelated;
+  }
+
+  /* Triangulation Vector View */
+  .triangulation-container {
+    flex: 1;
+    display: flex;
+    gap: 6px;
+  }
+  .map-wrap {
+    flex: 2;
+    background: #000;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+
+  /* Anomaly Catalog Table */
+  .catalog-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow: hidden;
+  }
+  .catalog-table-wrap {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    background: #000;
+  }
+  table.catalog-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  table.catalog-table th, table.catalog-table td {
+    padding: 5px 8px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+  table.catalog-table th {
+    background: var(--bg-header);
+    color: var(--cyan);
+    position: sticky;
+    top: 0;
+  }
+  table.catalog-table tr:hover {
+    background: rgba(51, 255, 102, 0.08);
+    cursor: pointer;
+  }
+  table.catalog-table tr.selected {
+    background: rgba(51, 255, 102, 0.2);
+    color: #fff;
+  }
+
+  /* Status Bar Footer */
+  footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-header);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+  .status-left, .status-right {
+    display: flex;
+    gap: 12px;
+  }
+
+  /* Modals and Overlays */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.active {
+    display: flex;
+  }
+  .modal-box {
+    background: var(--bg-panel);
+    border: 2px solid var(--border-bright);
+    box-shadow: 0 0 20px var(--phosphor-glow);
+    width: 90%;
+    max-width: 620px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-header {
+    background: var(--bg-header);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 12px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-body {
+    padding: 14px;
+    overflow-y: auto;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--phosphor);
+  }
+  .modal-footer {
+    background: var(--bg-header);
+    border-top: 1px solid var(--border);
+    padding: 8px 12px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  /* Splash Screen Overlay */
+  #splashScreen {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #040906;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    text-align: center;
+    padding: 20px;
+  }
+  .splash-title {
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--phosphor);
+    letter-spacing: 4px;
+    text-shadow: 0 0 16px var(--phosphor-glow);
+  }
+  .splash-subtitle {
+    font-size: 13px;
+    color: var(--cyan);
+    letter-spacing: 2px;
+  }
+  .splash-desc {
+    max-width: 520px;
+    font-size: 12px;
+    color: var(--phosphor-dim);
+    line-height: 1.6;
+    border: 1px solid var(--border);
+    background: var(--bg-panel);
+    padding: 12px;
+  }
+  .splash-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .splash-btn {
+    font-size: 13px;
+    font-weight: bold;
+    padding: 8px 18px;
+  }
+</style>
+</head>
+<body class="theme-green">
+<div class="crt-overlay"></div>
+
+<!-- Splash Screen -->
+<div id="splashScreen">
+  <div class="badge-app">KILOAPPS SCIENTIFIC WORKSTATION</div>
+  <div class="splash-title">KANOMALY</div>
+  <div class="splash-subtitle">SUBTERRANEAN SIGNAL ANALYZER // v1.0.0</div>
+  <div class="splash-desc">
+    Lithosphere Acoustic & Extremely Low Frequency (ELF/VLF) Observatory Network.<br>
+    Monitor deep crust borehole geophones, scan tectonic waveguide channels, demodulate hidden subterranean data streams, and pinpoint the origin of mysterious underground echoes.
+  </div>
+  <div class="splash-buttons">
+    <button class="kbtn splash-btn active" id="btnSplashStart">NEW ANALYSIS SESSION</button>
+    <button class="kbtn splash-btn" id="btnSplashResume">RESUME SESSION</button>
+    <button class="kbtn splash-btn" id="btnSplashManual">OPERATOR MANUAL [F1]</button>
+  </div>
+  <div style="font-size: 11px; color: var(--phosphor-dim);">Autonomous Subterranean Telemetry Intercept // 1999 KiloNet ARG Standard</div>
+</div>
+
+<!-- Main App UI -->
+<div id="app">
+  <!-- Header -->
+  <header>
+    <div class="header-left">
+      <span class="badge-app">KANOMALY</span>
+      <span class="app-title">SUBTERRANEAN SIGNAL ANALYZER</span>
+      <span style="color: var(--phosphor-dim); font-size: 11px;">v1.0.0</span>
+    </div>
+    <div class="header-controls">
+      <select class="kselect" id="themeSelect">
+        <option value="theme-green">Phosphor Green</option>
+        <option value="theme-amber">Amber Plasma</option>
+        <option value="theme-cyan">Cobalt Blue</option>
+      </select>
+      <button class="kbtn" id="btnScanlinesToggle">CRT: ON</button>
+      <button class="kbtn" id="btnAudioToggle">AUDIO: ON</button>
+      <button class="kbtn" id="btnSaveState" title="Quicksave [F5]">SAVE [F5]</button>
+      <button class="kbtn" id="btnLoadState" title="Quickload [F9]">LOAD [F9]</button>
+      <button class="kbtn" id="btnExportJson">EXPORT</button>
+      <button class="kbtn" id="btnImportJson">IMPORT</button>
+      <button class="kbtn alert" id="btnHelpModal">HELP [F1]</button>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <div class="nav-tabs">
+    <button class="tab-btn active" data-tab="tab-spectrum">[1] SPECTRUM & WATERFALL</button>
+    <button class="tab-btn" data-tab="tab-decoder">[2] DSP FORENSIC DECODER</button>
+    <button class="tab-btn" data-tab="tab-triangulation">[3] SENSOR TRIANGULATION</button>
+    <button class="tab-btn" data-tab="tab-catalog">[4] ANOMALY ARCHIVE (<span id="tabBadgeDiscovered">0</span>/12)</button>
+  </div>
+
+  <!-- Tuner Bar (Persistent across tabs) -->
+  <div class="tuner-bar">
+    <div class="tuner-group">
+      <span class="tuner-label">STATION:</span>
+      <select class="kselect" id="stationSelect" style="min-width: 170px;">
+        <option value="0">BH-09 Kola Wellhead (12,262m)</option>
+        <option value="1">SB-7F Carlsbad Bunker (3,420m)</option>
+        <option value="2">MA-01 Mariana Abyssal (10,994m)</option>
+        <option value="3">YM-04 Yamantau Granitic (4,100m)</option>
+        <option value="4">HG-12 Hadron Sub-Ring (1,750m)</option>
+        <option value="5">AC-08 Atacama Borehole (5,600m)</option>
+      </select>
+    </div>
+
+    <div class="tuner-group">
+      <span class="tuner-label">FREQ:</span>
+      <button class="kbtn" id="btnFreqDownL">&lt;&lt; -1k</button>
+      <button class="kbtn" id="btnFreqDownS">&lt; -0.1k</button>
+      <div class="freq-readout" id="freqDisplay">10.19 kHz</div>
+      <button class="kbtn" id="btnFreqUpS">+0.1k &gt;</button>
+      <button class="kbtn" id="btnFreqUpL">+1k &gt;&gt;</button>
+      <button class="kbtn warn" id="btnSweepToggle">SWEEP [SPACE]</button>
+    </div>
+
+    <div class="tuner-group">
+      <span class="tuner-label">DEMOD:</span>
+      <select class="kselect" id="demodSelect">
+        <option value="AM">RAW / AM (Seismic Envelope)</option>
+        <option value="FSK">FSK (Telemetry Freq-Shift)</option>
+        <option value="CW">CW (Beat Frequency Morse)</option>
+        <option value="SSTV">SSTV / SPECTRAL RASTER</option>
+        <option value="TEL">STREAM HEX TELEMETRY</option>
+      </select>
+    </div>
+
+    <div class="tuner-group">
+      <span class="tuner-label">FILTER BW:</span>
+      <select class="kselect" id="bandwidthSelect">
+        <option value="50">Narrow (50 Hz)</option>
+        <option value="250" selected>Medium (250 Hz)</option>
+        <option value="1000">Wide (1.0 kHz)</option>
+        <option value="4000">Ultra (4.0 kHz)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- TAB 1: SPECTRUM & WATERFALL -->
+  <div class="tab-content active" id="tab-spectrum">
+    <div class="display-col-main">
+      <!-- Top Waterfall Canvas -->
+      <div class="panel" style="flex: 2;">
+        <div class="panel-header">
+          <span>LITHOSPHERE WATERFALL SPECTROGRAM (TIME vs FREQUENCY)</span>
+          <span style="font-size: 10px; color: var(--cyan);" id="spanWaterfallStats">60 FPS // BUFFER: 420x240 // PHOSPHOR P1</span>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="waterfallCanvas" class="display-canvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Bottom Oscilloscope & FFT -->
+      <div class="scope-fft-container">
+        <div class="panel" style="flex: 1;">
+          <div class="panel-header">
+            <span>GEOPHONE ACOUSTIC OSCILLOSCOPE (TIME DOMAIN)</span>
+            <span style="font-size: 10px; color: var(--phosphor-dim);" id="spanScopeGain">GAIN: +18dB</span>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="scopeCanvas" class="display-canvas"></canvas>
+          </div>
+        </div>
+
+        <div class="panel" style="flex: 1;">
+          <div class="panel-header">
+            <span>FFT HARMONIC SPECTRUM (64 BANDS)</span>
+            <span style="font-size: 10px; color: var(--amber);" id="spanPeakFreq">PEAK: 10.19 kHz</span>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="fftCanvas" class="display-canvas"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar Telemetry -->
+    <div class="display-col-side">
+      <div class="panel" style="flex: 1.2;">
+        <div class="panel-header">ACTIVE SENSOR PROBE</div>
+        <div class="telemetry-card">
+          <div class="telemetry-row">
+            <span class="telemetry-label">STATION ID:</span>
+            <span class="telemetry-value" id="cardStationId">SB-7F</span>
+          </div>
+          <div class="telemetry-row">
+            <span class="telemetry-label">LOCATION:</span>
+            <span class="telemetry-value" id="cardStationLoc">Carlsbad Sub-Bunker</span>
+          </div>
+          <div class="telemetry-row">
+            <span class="telemetry-label">PROBE DEPTH:</span>
+            <span class="telemetry-value" id="cardStationDepth">3,420 m</span>
+          </div>
+          <div class="telemetry-row">
+            <span class="telemetry-label">GEOLOGIC STRATUM:</span>
+            <span class="telemetry-value" id="cardStationStratum">Permian Evaporite Basin</span>
+          </div>
+          <div class="telemetry-row">
+            <span class="telemetry-label">NOISE FLOOR:</span>
+            <span class="telemetry-value" id="cardStationNoise">-92 dBm</span>
+          </div>
+          <div class="telemetry-row">
+            <span class="telemetry-label">SEISMIC SENSITIVITY:</span>
+            <span class="telemetry-value" id="cardStationSens">1.84 V/g (High-Q)</span>
+          </div>
+
+          <div class="lock-indicator" id="lockStatusBox">
+            [ STANDBY // TUNING PASSBAND ]
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="flex: 1.5;">
+        <div class="panel-header">
+          <span>FORENSIC TELEMETRY STREAM</span>
+          <button class="kbtn" id="btnClearLog" style="padding: 1px 4px; font-size: 10px;">CLEAR</button>
+        </div>
+        <div class="terminal-box" id="mainTerminalLog"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: DSP FORENSIC DECODER -->
+  <div class="tab-content" id="tab-decoder">
+    <div class="panel" style="flex: 1;">
+      <div class="panel-header">
+        <span>INTERCEPTED SIGNAL METRICS</span>
+        <span id="decoderLockLabel" style="color: var(--alert); font-weight: bold;">CARRIER LOCKED</span>
+      </div>
+      <div style="padding: 10px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="telemetry-card" style="border: 1px solid var(--border);">
+            <div class="telemetry-row"><span class="telemetry-label">CARRIER LOCK:</span><span class="telemetry-value" id="decMetricLock">98.4%</span></div>
+            <div class="telemetry-row"><span class="telemetry-label">SIGNAL-TO-NOISE:</span><span class="telemetry-value" id="decMetricSnr">+24 dB</span></div>
+            <div class="telemetry-row"><span class="telemetry-label">DOPPLER DRIFT:</span><span class="telemetry-value" id="decMetricDoppler">-0.02 Hz/s</span></div>
+            <div class="telemetry-row"><span class="telemetry-label">MODULATION INDEX:</span><span class="telemetry-value" id="decMetricMod">1.42 (FSK)</span></div>
+          </div>
+          <div class="telemetry-card" style="border: 1px solid var(--border);">
+            <div class="telemetry-row"><span class="telemetry-label">PACKET PREAMBLE:</span><span class="telemetry-value" id="decMetricPreamble">0x7F1999 (VALID)</span></div>
+            <div class="telemetry-row"><span class="telemetry-label">FRAME INTEGRITY:</span><span class="telemetry-value" id="decMetricCrc">CRC32 OK</span></div>
+            <div class="telemetry-row"><span class="telemetry-label">TRANSMISSION ORIGIN:</span><span class="telemetry-value" id="decMetricOrigin">10.19.99.4 [SUB-7F]</span></div>
+            <div class="telemetry-row"><span class="telemetry-label">LUDONARRATIVE CONSONANCE:</span><span class="telemetry-value" id="decMetricLore" style="color: var(--amber);">ACTIVE</span></div>
+          </div>
+        </div>
+
+        <div style="font-weight: bold; font-size: 11px; color: var(--cyan);">RAW STREAM HEX DUMP:</div>
+        <div class="terminal-box" id="hexStreamBox" style="height: 140px; font-family: 'Consolas', monospace; font-size: 11px;"></div>
+
+        <div style="font-weight: bold; font-size: 11px; color: var(--cyan);">DECODED ASCII TELEMETRY STREAM:</div>
+        <div class="terminal-box" id="asciiStreamBox" style="height: 120px; font-family: 'Consolas', monospace; font-size: 12px; color: var(--phosphor);"></div>
+      </div>
+    </div>
+
+    <!-- Right Side: SSTV / Spectral Raster Reconstructor -->
+    <div class="panel" style="flex: 1;">
+      <div class="panel-header">
+        <span>SSTV / SPECTRAL RASTER IMAGE RECONSTRUCTOR</span>
+        <button class="kbtn" id="btnTriggerRasterScan">RE-SCAN MATRIX</button>
+      </div>
+      <div class="raster-wrap" style="flex: 1;">
+        <canvas id="sstvCanvas" width="256" height="256"></canvas>
+        <div style="margin-top: 8px; font-size: 11px; color: var(--phosphor-dim); text-align: center;" id="sstvStatusLabel">
+          Demodulating 64x64 sub-crust lithospheric raster image...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: SENSOR TRIANGULATION -->
+  <div class="tab-content" id="tab-triangulation">
+    <div class="panel" style="flex: 2;">
+      <div class="panel-header">
+        <span>LITHOSPHERE GEODETIC SENSOR MAP // TIME-DIFFERENCE-OF-ARRIVAL (TDOA)</span>
+        <button class="kbtn active" id="btnSolveTriangulation">SOLVE EPICENTER FIX</button>
+      </div>
+      <div class="map-wrap">
+        <canvas id="triangulationCanvas" class="display-canvas"></canvas>
+      </div>
+    </div>
+
+    <div class="panel" style="flex: 1;">
+      <div class="panel-header">CROSS-CORRELATION MATRIX</div>
+      <div style="padding: 10px; display: flex; flex-direction: column; gap: 8px; flex: 1; overflow-y: auto;">
+        <div class="telemetry-card" style="border: 1px solid var(--border);">
+          <div style="font-weight: bold; color: var(--cyan); margin-bottom: 4px;">CALCULATED EPICENTER:</div>
+          <div class="telemetry-row"><span class="telemetry-label">ESTIMATED LATITUDE:</span><span class="telemetry-value" id="triangLat">32.42° N</span></div>
+          <div class="telemetry-row"><span class="telemetry-label">ESTIMATED LONGITUDE:</span><span class="telemetry-value" id="triangLon">-104.23° W</span></div>
+          <div class="telemetry-row"><span class="telemetry-label">ESTIMATED DEPTH:</span><span class="telemetry-value" id="triangDepth">3,420 m (Lithosphere)</span></div>
+          <div class="telemetry-row"><span class="telemetry-label">TARGET CLASSIFICATION:</span><span class="telemetry-value" id="triangTarget" style="color: var(--alert);">Sub-Bunker 0x7F</span></div>
+          <div class="telemetry-row"><span class="telemetry-label">CONFIDENCE INDEX:</span><span class="telemetry-value" id="triangConfidence">99.2% (3 Probes)</span></div>
+        </div>
+
+        <div style="font-size: 11px; color: var(--phosphor-dim); line-height: 1.5; border: 1px solid var(--border); padding: 8px; background: rgba(0,0,0,0.5);">
+          Cross-correlating seismic acoustic velocity (P-wave 6.2 km/s, S-wave 3.6 km/s) across global array. When 3 or more stations receive matching harmonic carriers, hyperbolic intersection confirms physical epicenter depth.
+        </div>
+
+        <div class="terminal-box" id="triangLogBox" style="flex: 1;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: ANOMALY ARCHIVE -->
+  <div class="tab-content" id="tab-catalog">
+    <div class="catalog-wrap">
+      <div class="panel" style="flex: 1;">
+        <div class="panel-header">
+          <span>CATALOG OF DETECTED SUBTERRANEAN ANOMALIES (12 KNOWN TARGETS)</span>
+          <span style="font-size: 11px; color: var(--amber);" id="catalogSummaryHeader">Cataloged: 0 / 12 Discovered</span>
+        </div>
+        <div class="catalog-table-wrap">
+          <table class="catalog-table" id="catalogTable">
+            <thead>
+              <tr>
+                <th>STATUS</th>
+                <th>ID</th>
+                <th>CLASSIFICATION</th>
+                <th>CARRIER FREQ</th>
+                <th>MODE</th>
+                <th>DEPTH</th>
+                <th>SIGNATURE PAYLOAD</th>
+              </tr>
+            </thead>
+            <tbody id="catalogTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Dossier Inspector -->
+      <div class="panel" style="height: 150px;">
+        <div class="panel-header">
+          <span id="dossierTitle">ANOMALY DOSSIER: SELECT AN ANOMALY ABOVE</span>
+          <button class="kbtn" id="btnTuneToSelectedAnomaly">TUNE RECEIVER TO TARGET</button>
+        </div>
+        <div style="padding: 8px 12px; overflow-y: auto; font-size: 12px; line-height: 1.5;" id="dossierContent">
+          Select an anomaly from the table to inspect its signal fingerprint, geological context, and decoded ARG lore notes.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Bar Footer -->
+  <footer>
+    <div class="status-left">
+      <span>STATION: <strong id="footStation">SB-7F Carlsbad</strong></span>
+      <span>FREQ: <strong id="footFreq" style="color: var(--amber);">10.19 kHz</strong></span>
+      <span>DEMOD: <strong id="footMode">FSK</strong></span>
+      <span>FILTER: <strong id="footBw">250 Hz</strong></span>
+      <span>STATUS: <strong id="footStatus" style="color: var(--alert);">CARRIER LOCKED</strong></span>
+    </div>
+    <div class="status-right">
+      <span>ANOMALIES: <strong id="footCatalogCount" style="color: var(--cyan);">0 / 12</strong></span>
+      <span>HOTKEYS: [F1] Manual | [F5] Save | [F9] Load | [Space] Sweep</span>
+    </div>
+  </footer>
+</div>
+
+<!-- Operator Manual Modal -->
+<div class="modal-overlay" id="helpModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>OPERATOR MANUAL: KANOMALY v1.0.0</span>
+      <button class="kbtn alert" id="btnCloseHelp">✕</button>
+    </div>
+    <div class="modal-body">
+      <h3 style="color: var(--cyan); margin-bottom: 6px;">1. Operational Overview</h3>
+      <p style="margin-bottom: 10px;">
+        <strong>KAnomaly</strong> is a subterranean acoustic and VLF radio signal analyzer designed to detect, filter, and decode anomalous transmissions pulsating through the Earth's lithosphere.
+      </p>
+      <h3 style="color: var(--cyan); margin-bottom: 6px;">2. Receiver Controls & Tuning</h3>
+      <p style="margin-bottom: 6px;">
+        - <strong>Borehole Station Selector:</strong> Switch between 6 global subterranean observatories (Kola, Carlsbad, Mariana, Yamantau, Hadron, Atacama). Each station taps into distinct geological strata and ground noise levels.<br>
+        - <strong>Frequency Dial:</strong> Tune from 1.00 kHz up to 120.00 kHz in fine (+/-0.1k) and coarse (+/-1k) increments.<br>
+        - <strong>Bandwidth Filter:</strong> Narrow (50Hz), Medium (250Hz), Wide (1kHz), Ultra (4kHz). Narrower filters maximize SNR on weak harmonic carriers.<br>
+        - <strong>Demodulator Modes:</strong> RAW/AM, FSK telemetry, CW Morse code, SSTV / Spectral Raster, and Hex Stream.
+      </p>
+      <h3 style="color: var(--cyan); margin-bottom: 6px;">3. ARG Lore & Ludonarrative Consonance</h3>
+      <p style="margin-bottom: 10px;">
+        12 subterranean anomalies exist within the lithospheric static. Decoded packets reveal darknet node relays (e.g. <code>10.19.99.4</code> from Carlsbad Bunker 0x7F) and autonomous fleet clock cycles (<code>FLEET_CYCLE_1999</code>). When cataloging anomalies, use the Triangulation Map to pinpoint the epicenter!
+      </p>
+      <h3 style="color: var(--cyan); margin-bottom: 6px;">4. Keyboard Shortcuts</h3>
+      <p>
+        <code>[F1]</code> or <code>[H]</code> — Open/Close Operator Manual<br>
+        <code>[F5]</code> — Quicksave State to Local Storage<br>
+        <code>[F9]</code> — Quickload State from Local Storage<br>
+        <code>[Space]</code> — Toggle Auto-Sweep Frequency Sweep<br>
+        <code>[1] - [4]</code> — Switch Navigation Tabs<br>
+        <code>[M]</code> — Toggle Procedural Audio Mute<br>
+        <code>[Esc]</code> — Dismiss any open dialog / tutorial
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="kbtn active" id="btnHelpAcknowledge">ACKNOWLEDGE & RESUME</button>
+    </div>
+  </div>
+</div>
+
+<!-- First-Run Tutorial Modal -->
+<div class="modal-overlay" id="tutorialModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>FIRST-RUN TELEMETRY ONBOARDING</span>
+      <button class="kbtn alert" id="btnSkipTutorial">SKIP [ESC]</button>
+    </div>
+    <div class="modal-body" id="tutorialStepBody">
+      <!-- Injected step content -->
+    </div>
+    <div class="modal-footer">
+      <button class="kbtn" id="btnTutorialPrev">PREVIOUS</button>
+      <button class="kbtn active" id="btnTutorialNext">NEXT STEP &gt;</button>
+    </div>
+  </div>
+</div>
+
+<!-- JSON State Export / Import Modal -->
+<div class="modal-overlay" id="jsonModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span id="jsonModalTitle">SESSION DATA PORTABILITY</span>
+      <button class="kbtn alert" id="btnCloseJson">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom: 8px;">Copy the JSON snapshot below to transfer your session or paste saved JSON data to restore:</p>
+      <textarea id="jsonTextArea" style="width: 100%; height: 160px; background: #000; color: var(--phosphor); font-family: var(--font-mono); font-size: 11px; padding: 6px; border: 1px solid var(--border); outline: none;"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="kbtn" id="btnCopyJson">COPY CLIPBOARD</button>
+      <button class="kbtn active" id="btnApplyJson">APPLY & RESTORE</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // --- Constants & Station Data ---
+  var STATIONS = [
+    { id: "BH-09", name: "Kola Wellhead", loc: "Kola Peninsula, Murmansk", depth: 12262, stratum: "Precambrian Gneiss", noise: -88, sens: "2.10 V/g", lat: 69.39, lon: 30.61 },
+    { id: "SB-7F", name: "Carlsbad Sub-Bunker", loc: "Eddy County, New Mexico", depth: 3420, stratum: "Permian Evaporite Basin", noise: -92, sens: "1.84 V/g", lat: 32.42, lon: -104.23 },
+    { id: "MA-01", name: "Mariana Abyssal Bed", loc: "Challenger Deep Abyssal Crust", depth: 10994, stratum: "Basaltic Mantle Boundary", noise: -82, sens: "2.45 V/g", lat: 11.35, lon: 142.20 },
+    { id: "YM-04", name: "Yamantau Granitic", loc: "Bashkortostan, Urals", depth: 4100, stratum: "Crystalline Quartzite", noise: -95, sens: "1.72 V/g", lat: 54.25, lon: 58.11 },
+    { id: "HG-12", name: "Hadron Deep Ring", loc: "Franco-Swiss Border", depth: 1750, stratum: "Alpine Molasse Basin", noise: -90, sens: "1.95 V/g", lat: 46.23, lon: 6.05 },
+    { id: "AC-08", name: "Atacama Borehole", loc: "Antofagasta, Chile", depth: 5600, stratum: "Volcanic Basement", noise: -94, sens: "1.88 V/g", lat: -23.86, lon: -69.14 }
+  ];
+
+  // 12 Subterranean Anomalies
+  var ANOMALIES = [
+    { id: "ANOM-01", name: "Earth Schumann Cavity", freq: 7.83, mode: "AM", minDepth: 1000, sig: "CAVITY_7.83HZ_HARMONIC", lore: "Natural electromagnetic waveguide between lithosphere and ionosphere." },
+    { id: "ANOM-02", name: "Microseismic Tectonic Hum", freq: 42.00, mode: "AM", minDepth: 2000, sig: "TECTONIC_SLIP_BASELINE", lore: "Continuous friction hum of continental plate boundaries in the upper crust." },
+    { id: "ANOM-03", name: "Kola Borehole Acoustic", freq: 12.26, mode: "CW", minDepth: 10000, sig: "BOREHOLE_WELL_ECHO_PULSE", lore: "Deep drill-string microtremor harmonic feedback from super-deep granite." },
+    { id: "ANOM-04", name: "Carlsbad Bunker Relay", freq: 10.19, mode: "TEL", minDepth: 3000, sig: "10.19.99.4:DARKNET_RELAY", lore: "Subterranean darknet heartbeat beacon transmitting from abandoned salt vault." },
+    { id: "ANOM-05", name: "Precursor Seismic Glyph", freq: 33.33, mode: "SSTV", minDepth: 4000, sig: "PRECURSOR_RASTER_MATRIX", lore: "Ancient structured seismic raster pulse discovered embedded inside crystalline bedrock." },
+    { id: "ANOM-06", name: "Autonomous Fleet Pulse", freq: 19.99, mode: "FSK", minDepth: 1500, sig: "FLEET_CYCLE_1999_SYS_ONLINE", lore: "Autonomous fleet clock cycles leaking into subterranean power grid ground loops." },
+    { id: "ANOM-07", name: "Mariana Trench Abyssal", freq: 14.40, mode: "AM", minDepth: 9000, sig: "HYDRO_ACOUSTIC_ABYSS_TONE", lore: "Ultra-deep hydro-acoustic fault wave below the benthic floor of the trench." },
+    { id: "ANOM-08", name: "Geothermal Vent Osc", freq: 56.70, mode: "FSK", minDepth: 2500, sig: "HYDROTHERMAL_CHAMBER_BURST", lore: "Superheated supercritical steam cavity resonance pulsating at periodic intervals." },
+    { id: "ANOM-09", name: "Yamantau Timecode Clock", freq: 28.50, mode: "CW", minDepth: 3500, sig: "TIMECODE:1999.12.31.23:59:59", lore: "Synchronized sub-crust countdown carrier broadcast from subterranean granitic vault." },
+    { id: "ANOM-10", name: "Mantle Waveguide Leak", freq: 24.00, mode: "TEL", minDepth: 5000, sig: "WAVEGUIDE_CARRIER_LINK_OK", lore: "Shielding leakage from deep trans-continental coaxial subterranean data waveguides." },
+    { id: "ANOM-11", name: "Lithosphere Ghost Morse", freq: 77.70, mode: "CW", minDepth: 2000, sig: "ECHO IS AWAKE IN THE ROCK", lore: "Repeating Morse code transmission pulsating through basalt fault lines." },
+    { id: "ANOM-12", name: "Deep Core Singularity", freq: 99.90, mode: "SSTV", minDepth: 8000, sig: "COORDINATES_0x7F_1999_MASTER", lore: "Master anomaly: cross-correlation reveals the convergence of all subterranean ARG signals." }
+  ];
+
+  // Application State
+  var state = {
+    stationIdx: 1, // Start on Carlsbad SB-7F
+    freq: 10.19,
+    bandwidth: 250,
+    demodMode: "FSK",
+    isSweeping: false,
+    sweepDir: 1,
+    audioEnabled: true,
+    scanlines: true,
+    discoveredAnomalies: {},
+    selectedAnomalyId: null,
+    carrierLocked: false,
+    lockedAnomaly: null,
+    snrDb: 0,
+    triangulationSolved: false
+  };
+
+  // --- Audio Synthesis Engine (Genesis FM / SNES warm standard) ---
+  var audioCtx = null;
+  var audioNodes = {
+    masterGain: null,
+    rumbleNode: null,
+    rumbleFilter: null,
+    carrierOsc: null,
+    modulatorOsc: null,
+    modulatorGain: null,
+    fskOsc1: null,
+    fskOsc2: null
+  };
+
+  function initAudio() {
+    if (audioCtx) return;
+    try {
+      var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      audioCtx = new AudioContextClass();
+
+      var masterGain = audioCtx.createGain();
+      masterGain.gain.setValueAtTime(state.audioEnabled ? 0.25 : 0.0, audioCtx.currentTime);
+      masterGain.connect(audioCtx.destination);
+      audioNodes.masterGain = masterGain;
+
+      // Geophone Brownian Earth Rumble Buffer (2 seconds looping)
+      var bufferSize = audioCtx.sampleRate * 2;
+      var noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      var output = noiseBuffer.getChannelData(0);
+      var lastOut = 0.0;
+      for (var i = 0; i < bufferSize; i++) {
+        var white = Math.random() * 2 - 1;
+        output[i] = (lastOut + (0.02 * white)) / 1.02;
+        lastOut = output[i];
+        output[i] *= 3.5;
+      }
+
+      var rumble = audioCtx.createBufferSource();
+      rumble.buffer = noiseBuffer;
+      rumble.loop = true;
+
+      var filter = audioCtx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(80, audioCtx.currentTime);
+      filter.Q.setValueAtTime(3.0, audioCtx.currentTime);
+
+      var rumbleGain = audioCtx.createGain();
+      rumbleGain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+
+      rumble.connect(filter);
+      filter.connect(rumbleGain);
+      rumbleGain.connect(masterGain);
+      rumble.start();
+
+      audioNodes.rumbleNode = rumble;
+      audioNodes.rumbleFilter = filter;
+
+      // Dual-operator FM Synthesizer for heterodyne whistle & signals
+      var carrier = audioCtx.createOscillator();
+      carrier.type = "sine";
+      carrier.frequency.setValueAtTime(440, audioCtx.currentTime);
+
+      var modulator = audioCtx.createOscillator();
+      modulator.type = "sine";
+      modulator.frequency.setValueAtTime(220, audioCtx.currentTime);
+
+      var modGain = audioCtx.createGain();
+      modGain.gain.setValueAtTime(50, audioCtx.currentTime);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+
+      var carrierGain = audioCtx.createGain();
+      carrierGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
+      carrier.connect(carrierGain);
+      carrierGain.connect(masterGain);
+
+      carrier.start();
+      modulator.start();
+
+      audioNodes.carrierOsc = carrier;
+      audioNodes.modulatorOsc = modulator;
+      audioNodes.modulatorGain = modGain;
+      audioNodes.carrierGain = carrierGain;
+    } catch(e) {
+      console.warn("Web Audio not available:", e);
+    }
+  }
+
+  function playUiClick(freq) {
+    if (!audioCtx || !state.audioEnabled) return;
+    try {
+      var osc = audioCtx.createOscillator();
+      var g = audioCtx.createGain();
+      osc.type = "square";
+      osc.frequency.setValueAtTime(freq || 880, audioCtx.currentTime);
+      g.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+      osc.connect(g);
+      g.connect(audioNodes.masterGain);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.05);
+    } catch(e) {}
+  }
+
+  function playCarrierLockChime() {
+    if (!audioCtx || !state.audioEnabled) return;
+    try {
+      var t = audioCtx.currentTime;
+      var notes = [523.25, 659.25, 783.99, 1046.50]; // C-E-G-C major arpeggio
+      notes.forEach(function(freq, idx) {
+        var osc = audioCtx.createOscillator();
+        var g = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, t + idx * 0.06);
+        g.gain.setValueAtTime(0.12, t + idx * 0.06);
+        g.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.06 + 0.18);
+        osc.connect(g);
+        g.connect(audioNodes.masterGain);
+        osc.start(t + idx * 0.06);
+        osc.stop(t + idx * 0.06 + 0.2);
+      });
+    } catch(e) {}
+  }
+
+  function updateCarrierAudio() {
+    if (!audioCtx || !audioNodes.carrierGain) return;
+    try {
+      var t = audioCtx.currentTime;
+      if (state.carrierLocked) {
+        audioNodes.carrierGain.gain.setTargetAtTime(0.12, t, 0.05);
+        var basePitch = 300 + (state.freq % 20) * 40;
+        audioNodes.carrierOsc.frequency.setTargetAtTime(basePitch, t, 0.05);
+        audioNodes.modulatorOsc.frequency.setTargetAtTime(basePitch * 0.5, t, 0.05);
+        audioNodes.modulatorGain.gain.setTargetAtTime(basePitch * 0.4, t, 0.05);
+      } else {
+        audioNodes.carrierGain.gain.setTargetAtTime(0.0, t, 0.05);
+      }
+    } catch(e) {}
+  }
+
+  // --- Display Canvases Setup ---
+  var wfCanvas = document.getElementById("waterfallCanvas");
+  var wfCtx = wfCanvas.getContext("2d");
+  var scopeCanvas = document.getElementById("scopeCanvas");
+  var scopeCtx = scopeCanvas.getContext("2d");
+  var fftCanvas = document.getElementById("fftCanvas");
+  var fftCtx = fftCanvas.getContext("2d");
+  var sstvCanvas = document.getElementById("sstvCanvas");
+  var sstvCtx = sstvCanvas.getContext("2d");
+  var triCanvas = document.getElementById("triangulationCanvas");
+  var triCtx = triCanvas.getContext("2d");
+
+  // Waterfall offscreen buffer
+  var WF_COLS = 420;
+  var WF_ROWS = 240;
+  var offCanvas = document.createElement("canvas");
+  offCanvas.width = WF_COLS;
+  offCanvas.height = WF_ROWS;
+  var offCtx = offCanvas.getContext("2d");
+  offCtx.fillStyle = "#000";
+  offCtx.fillRect(0, 0, WF_COLS, WF_ROWS);
+
+  // Resize handling
+  function resizeCanvases() {
+    var canvases = [wfCanvas, scopeCanvas, fftCanvas, triCanvas];
+    canvases.forEach(function(c) {
+      if (c && c.parentElement) {
+        c.width = c.parentElement.clientWidth;
+        c.height = c.parentElement.clientHeight;
+      }
+    });
+  }
+  window.addEventListener("resize", resizeCanvases);
+
+  // --- Logging Helper ---
+  function logTerminal(text, type) {
+    var term = document.getElementById("mainTerminalLog");
+    if (!term) return;
+    var line = document.createElement("div");
+    line.className = "log-line" + (type ? " " + type : "");
+    line.textContent = text;
+    term.appendChild(line);
+    term.scrollTop = term.scrollHeight;
+
+    // Keep max 150 lines
+    while (term.children.length > 150) {
+      term.removeChild(term.firstChild);
+    }
+  }
+
+  // --- Signal Tuning & Anomaly Detection Logic ---
+  function checkSignalLock() {
+    var prevLocked = state.carrierLocked;
+    var prevAnom = state.lockedAnomaly;
+    state.carrierLocked = false;
+    state.lockedAnomaly = null;
+    state.snrDb = 0;
+
+    var curStation = STATIONS[state.stationIdx];
+    var tolerance = (state.bandwidth === 50) ? 0.08 : (state.bandwidth === 250 ? 0.20 : 0.60);
+
+    for (var i = 0; i < ANOMALIES.length; i++) {
+      var a = ANOMALIES[i];
+      var diff = Math.abs(state.freq - a.freq);
+      if (diff <= tolerance && curStation.depth >= (a.minDepth * 0.7)) {
+        state.carrierLocked = true;
+        state.lockedAnomaly = a;
+        state.snrDb = Math.max(8, Math.round(34 - (diff / tolerance) * 22));
+
+        if (!state.discoveredAnomalies[a.id]) {
+          state.discoveredAnomalies[a.id] = {
+            discoveredAt: new Date().toISOString(),
+            station: curStation.id,
+            freq: a.freq
+          };
+          playCarrierLockChime();
+          logTerminal("[ANOMALY DISCOVERED!] " + a.id + " (" + a.name + ") at " + a.freq.toFixed(2) + " kHz", "alert");
+          logTerminal("  >> Decoded Payload: " + a.sig, "cyan");
+          logTerminal("  >> Geological Lore: " + a.lore, "warn");
+          updateCatalogUI();
+        }
+        break;
+      }
+    }
+
+    if (state.carrierLocked && !prevLocked) {
+      logTerminal("[CARRIER LOCKED] Freq: " + state.freq.toFixed(2) + " kHz | SNR: +" + state.snrDb + " dB", "alert");
+      playCarrierLockChime();
+    } else if (!state.carrierLocked && prevLocked) {
+      logTerminal("[CARRIER LOST] Returning to ambient noise floor.", "dim");
+    }
+
+    updateCarrierAudio();
+    updateTunerDisplay();
+  }
+
+  function updateTunerDisplay() {
+    document.getElementById("freqDisplay").textContent = state.freq.toFixed(2) + " kHz";
+    document.getElementById("footFreq").textContent = state.freq.toFixed(2) + " kHz";
+    document.getElementById("footMode").textContent = state.demodMode;
+    document.getElementById("footBw").textContent = state.bandwidth + " Hz";
+
+    var lockBox = document.getElementById("lockStatusBox");
+    var footStatus = document.getElementById("footStatus");
+
+    if (state.carrierLocked && state.lockedAnomaly) {
+      var anom = state.lockedAnomaly;
+      lockBox.className = "lock-indicator locked";
+      lockBox.textContent = "[!] CARRIER LOCK: " + anom.id + " (" + anom.name + ") SNR: +" + state.snrDb + "dB";
+      footStatus.textContent = "CARRIER LOCKED: " + anom.id;
+      footStatus.style.color = "var(--alert)";
+
+      // Update Decoder tab labels
+      document.getElementById("decoderLockLabel").textContent = "CARRIER LOCKED: " + anom.id;
+      document.getElementById("decoderLockLabel").style.color = "var(--alert)";
+      document.getElementById("decMetricLock").textContent = "99.4%";
+      document.getElementById("decMetricSnr").textContent = "+" + state.snrDb + " dB";
+      document.getElementById("decMetricOrigin").textContent = anom.sig.indexOf("10.19") !== -1 ? "10.19.99.4 [SUB-7F]" : "Lithosphere Waveguide";
+    } else {
+      lockBox.className = "lock-indicator";
+      lockBox.textContent = "[ STANDBY // TUNING PASSBAND ]";
+      footStatus.textContent = "SEARCHING NOISE FLOOR";
+      footStatus.style.color = "var(--phosphor-dim)";
+
+      document.getElementById("decoderLockLabel").textContent = "NO CARRIER";
+      document.getElementById("decoderLockLabel").style.color = "var(--phosphor-dim)";
+      document.getElementById("decMetricLock").textContent = "0.0%";
+      document.getElementById("decMetricSnr").textContent = "-4 dB";
+    }
+  }
+
+  function stepFrequency(delta) {
+    state.freq = Math.max(1.0, Math.min(120.0, +(state.freq + delta).toFixed(2)));
+    checkSignalLock();
+    playUiClick(440 + (state.freq % 10) * 40);
+  }
+
+  // --- Real-Time Render Loops ---
+  var frameCount = 0;
+  var hexBytes = [];
+  var hexAscii = "";
+
+  function generateHexTelemetry() {
+    frameCount++;
+    if (frameCount % 6 !== 0) return;
+
+    var byteVal = state.carrierLocked ? (Math.floor(Math.random() * 256)) : (Math.floor(Math.random() * 32));
+    var hexStr = (byteVal < 16 ? "0" : "") + byteVal.toString(16).toUpperCase();
+
+    var hexBox = document.getElementById("hexStreamBox");
+    var asciiBox = document.getElementById("asciiStreamBox");
+    if (!hexBox || !asciiBox) return;
+
+    if (state.carrierLocked && state.lockedAnomaly) {
+      var sig = state.lockedAnomaly.sig;
+      var charToEmit = sig[(frameCount / 6) % sig.length];
+      hexStr = (charToEmit.charCodeAt(0)).toString(16).toUpperCase();
+      asciiBox.textContent += charToEmit;
+      if (asciiBox.textContent.length > 300) {
+        asciiBox.textContent = asciiBox.textContent.slice(-300);
+      }
+    } else {
+      asciiBox.textContent += (Math.random() > 0.8 ? "." : " ");
+      if (asciiBox.textContent.length > 300) {
+        asciiBox.textContent = asciiBox.textContent.slice(-300);
+      }
+    }
+
+    hexBytes.push(hexStr);
+    if (hexBytes.length > 64) hexBytes.shift();
+
+    var formatted = "";
+    for (var b = 0; b < hexBytes.length; b++) {
+      formatted += hexBytes[b] + ((b + 1) % 16 === 0 ? "\n" : " ");
+    }
+    hexBox.textContent = formatted;
+  }
+
+  function renderWaterfall() {
+    if (!wfCanvas.width) resizeCanvases();
+
+    // Scroll offscreen buffer down by 1 row
+    offCtx.drawImage(offCanvas, 0, 0, WF_COLS, WF_ROWS - 1, 0, 1, WF_COLS, WF_ROWS - 1);
+
+    // Generate new top row
+    var imgData = offCtx.createImageData(WF_COLS, 1);
+    var d = imgData.data;
+    var centerX = WF_COLS / 2;
+    var curStation = STATIONS[state.stationIdx];
+    var baseNoise = 25 + Math.random() * 15;
+
+    for (var x = 0; x < WF_COLS; x++) {
+      var val = baseNoise + (Math.random() * 20);
+
+      // Passband filter highlight in center
+      var distCenter = Math.abs(x - centerX);
+      var bwHalf = state.bandwidth === 50 ? 6 : (state.bandwidth === 250 ? 18 : 45);
+      if (distCenter <= bwHalf) {
+        val += 25;
+      }
+
+      // Signal peak when carrier locked
+      if (state.carrierLocked) {
+        if (distCenter < 12) {
+          val += (12 - distCenter) * 16;
+        }
+      }
+
+      // Seismic transient spikes
+      if (Math.random() < 0.015) {
+        val += 70;
+      }
+
+      val = Math.min(255, val);
+      var i = x * 4;
+
+      // Color palette mapping
+      if (document.body.classList.contains("theme-amber")) {
+        d[i] = val; // Red
+        d[i+1] = Math.floor(val * 0.65); // Green
+        d[i+2] = Math.floor(val * 0.1); // Blue
+      } else if (document.body.classList.contains("theme-cyan")) {
+        d[i] = Math.floor(val * 0.15);
+        d[i+1] = Math.floor(val * 0.75);
+        d[i+2] = val;
+      } else {
+        // Emerald Phosphor
+        d[i] = val > 190 ? (val - 190) * 2 : 0;
+        d[i+1] = val;
+        d[i+2] = val > 210 ? (val - 210) : Math.floor(val / 8);
+      }
+      d[i+3] = 255;
+    }
+
+    offCtx.putImageData(imgData, 0, 0);
+
+    // Draw offscreen buffer to main waterfall canvas
+    wfCtx.imageSmoothingEnabled = false;
+    wfCtx.drawImage(offCanvas, 0, 0, wfCanvas.width, wfCanvas.height);
+
+    // Draw Reticle Line & Bandpass Bracket Overlay
+    wfCtx.strokeStyle = "rgba(255, 60, 60, 0.85)";
+    wfCtx.lineWidth = 1;
+    var cx = wfCanvas.width / 2;
+    wfCtx.beginPath();
+    wfCtx.moveTo(cx, 0);
+    wfCtx.lineTo(cx, wfCanvas.height);
+    wfCtx.stroke();
+
+    // Bandpass brackets
+    var bwPx = (state.bandwidth === 50 ? 16 : (state.bandwidth === 250 ? 44 : 110));
+    wfCtx.strokeStyle = "rgba(51, 204, 255, 0.7)";
+    wfCtx.setLineDash([4, 4]);
+    wfCtx.beginPath();
+    wfCtx.moveTo(cx - bwPx / 2, 0);
+    wfCtx.lineTo(cx - bwPx / 2, wfCanvas.height);
+    wfCtx.moveTo(cx + bwPx / 2, 0);
+    wfCtx.lineTo(cx + bwPx / 2, wfCanvas.height);
+    wfCtx.stroke();
+    wfCtx.setLineDash([]);
+  }
+
+  function renderScopeAndFft() {
+    // 1. Oscilloscope
+    scopeCtx.fillStyle = "#000";
+    scopeCtx.fillRect(0, 0, scopeCanvas.width, scopeCanvas.height);
+
+    // Oscilloscope grid
+    scopeCtx.strokeStyle = "rgba(32, 96, 56, 0.4)";
+    scopeCtx.lineWidth = 1;
+    var midY = scopeCanvas.height / 2;
+    scopeCtx.beginPath();
+    scopeCtx.moveTo(0, midY);
+    scopeCtx.lineTo(scopeCanvas.width, midY);
+    scopeCtx.stroke();
+
+    // Waveform trace
+    scopeCtx.strokeStyle = state.carrierLocked ? "var(--phosphor)" : "var(--phosphor-dim)";
+    scopeCtx.lineWidth = 1.5;
+    scopeCtx.beginPath();
+
+    for (var x = 0; x < scopeCanvas.width; x++) {
+      var phase = (x + frameCount * 2) * 0.15;
+      var wave = Math.sin(phase) * 12;
+      if (state.carrierLocked) {
+        wave += Math.sin(phase * 2.8) * 16;
+      }
+      var noise = (Math.random() * 8) - 4;
+      var y = midY + wave + noise;
+      if (x === 0) scopeCtx.moveTo(x, y);
+      else scopeCtx.lineTo(x, y);
+    }
+    scopeCtx.stroke();
+
+    // 2. FFT Spectrum Bars
+    fftCtx.fillStyle = "#000";
+    fftCtx.fillRect(0, 0, fftCanvas.width, fftCanvas.height);
+
+    var numBars = 48;
+    var barWidth = fftCanvas.width / numBars;
+    var centerBar = Math.floor(numBars / 2);
+
+    for (var b = 0; b < numBars; b++) {
+      var dist = Math.abs(b - centerBar);
+      var barH = 8 + Math.random() * 14;
+
+      if (state.carrierLocked && dist < 5) {
+        barH += (5 - dist) * 14;
+      }
+      barH = Math.min(fftCanvas.height - 4, barH);
+
+      fftCtx.fillStyle = (dist < 2 && state.carrierLocked) ? "var(--alert)" : "var(--border-bright)";
+      fftCtx.fillRect(b * barWidth, fftCanvas.height - barH, barWidth - 1, barH);
+    }
+  }
+
+  // --- SSTV / Spectral Raster Demodulator ---
+  var rasterLine = 0;
+  var rasterPixels = [];
+  function initRaster() {
+    rasterLine = 0;
+    rasterPixels = [];
+    sstvCtx.fillStyle = "#000";
+    sstvCtx.fillRect(0, 0, 256, 256);
+    document.getElementById("sstvStatusLabel").textContent = "Reconstructing seismic matrix scanlines...";
+  }
+
+  function renderSstvRaster() {
+    if (rasterLine >= 256) return;
+    for (var step = 0; step < 2; step++) {
+      if (rasterLine >= 256) break;
+      for (var x = 0; x < 256; x++) {
+        var dx = x - 128;
+        var dy = rasterLine - 128;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        var val = 0;
+
+        // Structured Precursor Glyph / Radar matrix
+        if (dist > 80 && dist < 90) val = 220; // Outer ring
+        if (dist > 40 && dist < 48) val = 180; // Inner ring
+        if (Math.abs(dx) < 3 || Math.abs(dy) < 3) val = Math.max(val, 200); // Crosshair
+        if (Math.abs(dx - dy) < 4 || Math.abs(dx + dy) < 4) val = Math.max(val, 160); // Diagonals
+        if (dist < 15) val = 255; // Core anomaly nexus
+
+        // Scan noise
+        val += (Math.random() * 30) - 15;
+        val = Math.max(0, Math.min(255, val));
+
+        sstvCtx.fillStyle = "rgb(" + Math.floor(val * 0.2) + "," + val + "," + Math.floor(val * 0.4) + ")";
+        sstvCtx.fillRect(x, rasterLine, 1, 1);
+      }
+      rasterLine++;
+    }
+
+    if (rasterLine >= 256) {
+      document.getElementById("sstvStatusLabel").textContent = "SCANLINE COMPLETE // PRECURSOR MATRIX RESOLVED // LUDONARRATIVE CONSONANCE VERIFIED";
+    }
+  }
+
+  // --- Triangulation Vector Renderer ---
+  function renderTriangulationMap() {
+    triCtx.fillStyle = "#020704";
+    triCtx.fillRect(0, 0, triCanvas.width, triCanvas.height);
+
+    // Draw vector wireframe latitude / longitude grid
+    triCtx.strokeStyle = "rgba(32, 96, 56, 0.4)";
+    triCtx.lineWidth = 1;
+    for (var gx = 0; gx < triCanvas.width; gx += 40) {
+      triCtx.beginPath();
+      triCtx.moveTo(gx, 0);
+      triCtx.lineTo(gx, triCanvas.height);
+      triCtx.stroke();
+    }
+    for (var gy = 0; gy < triCanvas.height; gy += 40) {
+      triCtx.beginPath();
+      triCtx.moveTo(0, gy);
+      triCtx.lineTo(triCanvas.width, gy);
+      triCtx.stroke();
+    }
+
+    // Map stations to canvas coordinates
+    var pad = 40;
+    var w = triCanvas.width - pad * 2;
+    var h = triCanvas.height - pad * 2;
+
+    STATIONS.forEach(function(stn, idx) {
+      // Simple Mercator projection approximation
+      var sx = pad + ((stn.lon + 180) / 360) * w;
+      var sy = pad + ((90 - stn.lat) / 180) * h;
+
+      // Draw Station Marker
+      var isCur = (idx === state.stationIdx);
+      triCtx.fillStyle = isCur ? "var(--alert)" : "var(--cyan)";
+      triCtx.beginPath();
+      triCtx.arc(sx, sy, isCur ? 6 : 4, 0, Math.PI * 2);
+      triCtx.fill();
+
+      // Label
+      triCtx.fillStyle = "var(--phosphor)";
+      triCtx.font = "10px Consolas, monospace";
+      triCtx.fillText(stn.id + " (" + stn.name + ")", sx + 8, sy + 3);
+
+      // If triangulation solved, draw hyperbolic arrival circles
+      if (state.triangulationSolved) {
+        var radius = (idx * 25 + 50 + (frameCount % 60)) % 140;
+        triCtx.strokeStyle = "rgba(51, 204, 255, 0.35)";
+        triCtx.beginPath();
+        triCtx.arc(sx, sy, radius, 0, Math.PI * 2);
+        triCtx.stroke();
+      }
+    });
+
+    // Draw Solved Epicenter Fix
+    if (state.triangulationSolved) {
+      // Carlsbad Sub-Bunker epicenter coordinates
+      var targetStn = STATIONS[1];
+      var ex = pad + ((targetStn.lon + 180) / 360) * w;
+      var ey = pad + ((90 - targetStn.lat) / 180) * h;
+
+      // Pulse ring
+      var pulseR = 8 + (frameCount % 30);
+      triCtx.strokeStyle = "var(--alert)";
+      triCtx.lineWidth = 2;
+      triCtx.beginPath();
+      triCtx.arc(ex, ey, pulseR, 0, Math.PI * 2);
+      triCtx.stroke();
+
+      triCtx.fillStyle = "var(--alert)";
+      triCtx.beginPath();
+      triCtx.arc(ex, ey, 5, 0, Math.PI * 2);
+      triCtx.fill();
+
+      triCtx.fillStyle = "#fff";
+      triCtx.font = "bold 11px Consolas, monospace";
+      triCtx.fillText("TARGET FIX: Sub-Bunker 0x7F (10.19.99.4)", ex + 12, ey - 6);
+    }
+  }
+
+  // Master Animation Loop
+  function animLoop() {
+    if (state.isSweeping) {
+      state.freq = +(state.freq + state.sweepDir * 0.05).toFixed(2);
+      if (state.freq >= 115.0) { state.freq = 115.0; state.sweepDir = -1; }
+      if (state.freq <= 3.0) { state.freq = 3.0; state.sweepDir = 1; }
+      checkSignalLock();
+    }
+
+    renderWaterfall();
+    renderScopeAndFft();
+    generateHexTelemetry();
+
+    if (document.getElementById("tab-decoder").classList.contains("active")) {
+      renderSstvRaster();
+    }
+    if (document.getElementById("tab-triangulation").classList.contains("active")) {
+      renderTriangulationMap();
+    }
+
+    requestAnimationFrame(animLoop);
+  }
+
+  // --- Catalog & Dossier UI ---
+  function updateCatalogUI() {
+    var tbody = document.getElementById("catalogTableBody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    var discoveredCount = 0;
+    ANOMALIES.forEach(function(a) {
+      var isDisc = !!state.discoveredAnomalies[a.id];
+      if (isDisc) discoveredCount++;
+
+      var tr = document.createElement("tr");
+      if (state.selectedAnomalyId === a.id) tr.className = "selected";
+
+      var tdStatus = document.createElement("td");
+      tdStatus.textContent = isDisc ? "✓ CATALOGED" : "[ UNDISCOVERED ]";
+      tdStatus.style.color = isDisc ? "var(--phosphor)" : "var(--phosphor-dim)";
+
+      var tdId = document.createElement("td");
+      tdId.textContent = a.id;
+      tdId.style.fontWeight = "bold";
+
+      var tdName = document.createElement("td");
+      tdName.textContent = a.name;
+
+      var tdFreq = document.createElement("td");
+      tdFreq.textContent = a.freq.toFixed(2) + " kHz";
+      tdFreq.style.color = "var(--amber)";
+
+      var tdMode = document.createElement("td");
+      tdMode.textContent = a.mode;
+
+      var tdDepth = document.createElement("td");
+      tdDepth.textContent = a.minDepth + " m";
+
+      var tdSig = document.createElement("td");
+      tdSig.textContent = isDisc ? a.sig : "••••••••••••••••••••";
+      tdSig.style.fontFamily = "monospace";
+      tdSig.style.color = isDisc ? "var(--cyan)" : "var(--phosphor-dim)";
+
+      tr.appendChild(tdStatus);
+      tr.appendChild(tdId);
+      tr.appendChild(tdName);
+      tr.appendChild(tdFreq);
+      tr.appendChild(tdMode);
+      tr.appendChild(tdDepth);
+      tr.appendChild(tdSig);
+
+      tr.addEventListener("click", function() {
+        state.selectedAnomalyId = a.id;
+        updateCatalogUI();
+        displayAnomalyDossier(a);
+      });
+
+      tbody.appendChild(tr);
+    });
+
+    var summaryText = discoveredCount + " / " + ANOMALIES.length;
+    document.getElementById("tabBadgeDiscovered").textContent = discoveredCount;
+    document.getElementById("catalogSummaryHeader").textContent = "Cataloged: " + summaryText + " Discovered";
+    document.getElementById("footCatalogCount").textContent = summaryText;
+  }
+
+  function displayAnomalyDossier(a) {
+    var isDisc = !!state.discoveredAnomalies[a.id];
+    var title = document.getElementById("dossierTitle");
+    var content = document.getElementById("dossierContent");
+
+    title.textContent = "ANOMALY DOSSIER: " + a.id + " // " + a.name;
+    if (isDisc) {
+      content.innerHTML = "<strong>Status:</strong> <span style='color: var(--phosphor);'>Discovered and Fingerprinted</span><br>" +
+        "<strong>Carrier Frequency:</strong> " + a.freq.toFixed(2) + " kHz | <strong>Demodulation Mode:</strong> " + a.mode + "<br>" +
+        "<strong>Minimum Borehole Depth:</strong> " + a.minDepth + " meters<br>" +
+        "<strong>Decoded Signature Payload:</strong> <code style='color: var(--cyan);'>" + a.sig + "</code><br>" +
+        "<strong>Scientific & ARG Lore Notes:</strong> " + a.lore;
+    } else {
+      content.innerHTML = "<strong>Status:</strong> <span style='color: var(--phosphor-dim);'>Undiscovered in Current Session</span><br>" +
+        "<strong>Frequency:</strong> " + a.freq.toFixed(2) + " kHz (Target band)<br>" +
+        "<em>Tune your receiver to this frequency and select an observatory probe with sufficient borehole depth to lock and decode.</em>";
+    }
+  }
+
+  // --- Triangulation Execution ---
+  function executeTriangulation() {
+    var discCount = Object.keys(state.discoveredAnomalies).length;
+    var logBox = document.getElementById("triangLogBox");
+    logBox.innerHTML = "";
+
+    function addLog(t) {
+      var d = document.createElement("div");
+      d.className = "log-line";
+      d.textContent = t;
+      logBox.appendChild(d);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    addLog("=== EXECUTING MULTI-PROBE TDOA CROSS-CORRELATION ===");
+    addLog("Analyzing arrival time deltas across global borehole geophones...");
+    addLog("BH-09 (Kola): Delta T = +142.3 ms");
+    addLog("SB-7F (Carlsbad): Delta T = 0.0 ms (PRIMARY REFERENCE)");
+    addLog("MA-01 (Mariana): Delta T = +388.7 ms");
+    addLog("YM-04 (Yamantau): Delta T = +194.2 ms");
+
+    setTimeout(function() {
+      addLog(">> Hyperbolic curve convergence achieved!");
+      addLog(">> LAT: 32.42° N | LON: -104.23° W | DEPTH: 3,420 m");
+      addLog(">> TARGET IDENTIFIED: Sub-Bunker 0x7F / Carlsbad Lithosphere Vault");
+      addLog(">> NODE ADDRESS: 10.19.99.4 [Subterranean Darknet Relay]");
+      addLog(">> LUDONARRATIVE STATUS: Fleet Consciousness Connected!");
+      state.triangulationSolved = true;
+      playCarrierLockChime();
+    }, 400);
+  }
+
+  // --- Quicksave & Quickload Persistence ---
+  function quickSaveState() {
+    try {
+      localStorage.setItem("kanomaly_state", JSON.stringify({
+        stationIdx: state.stationIdx,
+        freq: state.freq,
+        bandwidth: state.bandwidth,
+        demodMode: state.demodMode,
+        audioEnabled: state.audioEnabled,
+        scanlines: state.scanlines,
+        discoveredAnomalies: state.discoveredAnomalies,
+        triangulationSolved: state.triangulationSolved
+      }));
+      logTerminal("[STATE SAVED] Quicksave written to localStorage [F5]", "warn");
+      playUiClick(880);
+    } catch(e) {
+      logTerminal("[SAVE ERROR] " + e.message, "alert");
+    }
+  }
+
+  function quickLoadState() {
+    try {
+      var data = localStorage.getItem("kanomaly_state");
+      if (!data) {
+        logTerminal("[LOAD WARNING] No previous session save found.", "warn");
+        return;
+      }
+      var parsed = JSON.parse(data);
+      state.stationIdx = parsed.stationIdx || 0;
+      state.freq = parsed.freq || 10.19;
+      state.bandwidth = parsed.bandwidth || 250;
+      state.demodMode = parsed.demodMode || "FSK";
+      state.audioEnabled = parsed.audioEnabled !== false;
+      state.scanlines = parsed.scanlines !== false;
+      state.discoveredAnomalies = parsed.discoveredAnomalies || {};
+      state.triangulationSolved = !!parsed.triangulationSolved;
+
+      // Update UI components
+      document.getElementById("stationSelect").value = state.stationIdx;
+      document.getElementById("bandwidthSelect").value = state.bandwidth;
+      document.getElementById("demodSelect").value = state.demodMode;
+      updateStationInfo();
+      checkSignalLock();
+      updateCatalogUI();
+      logTerminal("[STATE LOADED] Session restored from localStorage [F9]", "cyan");
+      playUiClick(660);
+    } catch(e) {
+      logTerminal("[LOAD ERROR] " + e.message, "alert");
+    }
+  }
+
+  function updateStationInfo() {
+    var stn = STATIONS[state.stationIdx];
+    document.getElementById("cardStationId").textContent = stn.id;
+    document.getElementById("cardStationLoc").textContent = stn.loc;
+    document.getElementById("cardStationDepth").textContent = stn.depth.toLocaleString() + " m";
+    document.getElementById("cardStationStratum").textContent = stn.stratum;
+    document.getElementById("cardStationNoise").textContent = stn.noise + " dBm";
+    document.getElementById("cardStationSens").textContent = stn.sens;
+    document.getElementById("footStation").textContent = stn.id + " " + stn.name;
+    logTerminal("[STATION SWITCH] Active Probe: " + stn.id + " (" + stn.name + ") at " + stn.depth + "m", "dim");
+    checkSignalLock();
+  }
+
+  // --- First-Run Tutorial Walkthrough ---
+  var TUTORIAL_STEPS = [
+    {
+      title: "Step 1: Subterranean Observatory Array",
+      text: "Welcome, Operator. KAnomaly connects to 6 ultra-deep borehole geophones around the globe. Select different stations using the <strong>STATION</strong> dropdown to listen into varying geological strata and depths."
+    },
+    {
+      title: "Step 2: Receiver Tuning & Passband Filtering",
+      text: "Use the <strong>&lt;&lt; / &gt;&gt;</strong> and <strong>&lt; / &gt;</strong> buttons or <strong>SWEEP</strong> to tune receiver frequencies between 1.00 kHz and 120.00 kHz. Narrow down the <strong>FILTER BW</strong> to isolate weak harmonic signals from the ambient rock noise floor."
+    },
+    {
+      title: "Step 3: Signal Demodulation & Forensic Decoding",
+      text: "When you detect a strong carrier on the waterfall, the system triggers a <strong>CARRIER LOCK</strong>. Switch to the <strong>[2] DSP FORENSIC DECODER</strong> tab to analyze hex streams, extract ASCII payloads, and reconstruct SSTV scanlines."
+    },
+    {
+      title: "Step 4: Cross-Correlation Triangulation",
+      text: "Open the <strong>[3] SENSOR TRIANGULATION</strong> tab and click <strong>SOLVE EPICENTER FIX</strong> to cross-correlate probe arrival times and pinpoint subterranean bunkers and darknet relays in the lithosphere!"
+    }
+  ];
+  var currentTutStep = 0;
+
+  function showTutorialStep(idx) {
+    currentTutStep = idx;
+    var step = TUTORIAL_STEPS[idx];
+    var body = document.getElementById("tutorialStepBody");
+    body.innerHTML = "<h3 style='color: var(--cyan); margin-bottom: 8px;'>" + step.title + "</h3>" +
+      "<p style='font-size: 13px; line-height: 1.6;'>" + step.text + "</p>";
+    document.getElementById("btnTutorialPrev").style.visibility = (idx === 0) ? "hidden" : "visible";
+    document.getElementById("btnTutorialNext").textContent = (idx === TUTORIAL_STEPS.length - 1) ? "FINISH & START" : "NEXT STEP >";
+  }
+
+  // --- Wire UI Events ---
+  document.getElementById("btnSplashStart").addEventListener("click", function() {
+    initAudio();
+    document.getElementById("splashScreen").style.display = "none";
+    if (!localStorage.getItem("kanomaly_tutorialSeen")) {
+      document.getElementById("tutorialModal").classList.add("active");
+      showTutorialStep(0);
+    }
+    resizeCanvases();
+  });
+
+  document.getElementById("btnSplashResume").addEventListener("click", function() {
+    initAudio();
+    document.getElementById("splashScreen").style.display = "none";
+    quickLoadState();
+    resizeCanvases();
+  });
+
+  document.getElementById("btnSplashManual").addEventListener("click", function() {
+    document.getElementById("helpModal").classList.add("active");
+  });
+
+  // Tutorial navigation
+  document.getElementById("btnTutorialNext").addEventListener("click", function() {
+    if (currentTutStep < TUTORIAL_STEPS.length - 1) {
+      showTutorialStep(currentTutStep + 1);
+    } else {
+      localStorage.setItem("kanomaly_tutorialSeen", "1");
+      document.getElementById("tutorialModal").classList.remove("active");
+    }
+  });
+  document.getElementById("btnTutorialPrev").addEventListener("click", function() {
+    if (currentTutStep > 0) showTutorialStep(currentTutStep - 1);
+  });
+  document.getElementById("btnSkipTutorial").addEventListener("click", function() {
+    localStorage.setItem("kanomaly_tutorialSeen", "1");
+    document.getElementById("tutorialModal").classList.remove("active");
+  });
+
+  // Tab switching
+  var tabButtons = document.querySelectorAll(".tab-btn");
+  tabButtons.forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      var tabId = btn.getAttribute("data-tab");
+      tabButtons.forEach(function(b) { b.classList.remove("active"); });
+      document.querySelectorAll(".tab-content").forEach(function(c) { c.classList.remove("active"); });
+      btn.classList.add("active");
+      document.getElementById(tabId).classList.add("active");
+      resizeCanvases();
+      if (tabId === "tab-decoder") initRaster();
+      playUiClick(550);
+    });
+  });
+
+  // Station and Tuner selects
+  document.getElementById("stationSelect").addEventListener("change", function(e) {
+    state.stationIdx = parseInt(e.target.value, 10);
+    updateStationInfo();
+  });
+  document.getElementById("bandwidthSelect").addEventListener("change", function(e) {
+    state.bandwidth = parseInt(e.target.value, 10);
+    checkSignalLock();
+  });
+  document.getElementById("demodSelect").addEventListener("change", function(e) {
+    state.demodMode = e.target.value;
+    updateTunerDisplay();
+  });
+
+  // Frequency Buttons
+  document.getElementById("btnFreqDownL").addEventListener("click", function() { stepFrequency(-1.0); });
+  document.getElementById("btnFreqDownS").addEventListener("click", function() { stepFrequency(-0.1); });
+  document.getElementById("btnFreqUpS").addEventListener("click", function() { stepFrequency(0.1); });
+  document.getElementById("btnFreqUpL").addEventListener("click", function() { stepFrequency(1.0); });
+
+  // Sweep Toggle
+  document.getElementById("btnSweepToggle").addEventListener("click", function() {
+    state.isSweeping = !state.isSweeping;
+    this.classList.toggle("active", state.isSweeping);
+    logTerminal(state.isSweeping ? "[SWEEP ACTIVE] Autonomous frequency sweep initiated." : "[SWEEP HALTED] Locked on current frequency.", "warn");
+    playUiClick(state.isSweeping ? 600 : 300);
+  });
+
+  // Audio Toggle
+  document.getElementById("btnAudioToggle").addEventListener("click", function() {
+    initAudio();
+    state.audioEnabled = !state.audioEnabled;
+    this.textContent = state.audioEnabled ? "AUDIO: ON" : "AUDIO: OFF";
+    if (audioNodes.masterGain && audioCtx) {
+      audioNodes.masterGain.gain.setTargetAtTime(state.audioEnabled ? 0.25 : 0.0, audioCtx.currentTime, 0.05);
+    }
+  });
+
+  // Scanlines Toggle
+  document.getElementById("btnScanlinesToggle").addEventListener("click", function() {
+    state.scanlines = !state.scanlines;
+    document.body.classList.toggle("no-scanlines", !state.scanlines);
+    this.textContent = state.scanlines ? "CRT: ON" : "CRT: OFF";
+  });
+
+  // Theme Select
+  document.getElementById("themeSelect").addEventListener("change", function(e) {
+    document.body.classList.remove("theme-green", "theme-amber", "theme-cyan");
+    document.body.classList.add(e.target.value);
+  });
+
+  // Clear Terminal
+  document.getElementById("btnClearLog").addEventListener("click", function() {
+    document.getElementById("mainTerminalLog").innerHTML = "";
+  });
+
+  // Re-scan Raster
+  document.getElementById("btnTriggerRasterScan").addEventListener("click", function() {
+    initRaster();
+    playUiClick(720);
+  });
+
+  // Triangulation Solve
+  document.getElementById("btnSolveTriangulation").addEventListener("click", function() {
+    executeTriangulation();
+    playUiClick(800);
+  });
+
+  // Tune to Anomaly from catalog
+  document.getElementById("btnTuneToSelectedAnomaly").addEventListener("click", function() {
+    if (!state.selectedAnomalyId) return;
+    var target = ANOMALIES.find(function(a) { return a.id === state.selectedAnomalyId; });
+    if (target) {
+      state.freq = target.freq;
+      state.demodMode = target.mode;
+      document.getElementById("demodSelect").value = target.mode;
+      checkSignalLock();
+      logTerminal("[TUNE SHORTCUT] Receiver matched to " + target.id + " (" + target.freq.toFixed(2) + " kHz)", "cyan");
+    }
+  });
+
+  // Persistence Buttons
+  document.getElementById("btnSaveState").addEventListener("click", quickSaveState);
+  document.getElementById("btnLoadState").addEventListener("click", quickLoadState);
+
+  // JSON Export / Import
+  document.getElementById("btnExportJson").addEventListener("click", function() {
+    var jsonModal = document.getElementById("jsonModal");
+    var area = document.getElementById("jsonTextArea");
+    document.getElementById("jsonModalTitle").textContent = "EXPORT SESSION SNAPSHOT (JSON)";
+    area.value = JSON.stringify({
+      version: "1.0.0",
+      app: "KAnomaly",
+      savedAt: new Date().toISOString(),
+      state: state
+    }, null, 2);
+    jsonModal.classList.add("active");
+  });
+
+  document.getElementById("btnImportJson").addEventListener("click", function() {
+    var jsonModal = document.getElementById("jsonModal");
+    var area = document.getElementById("jsonTextArea");
+    document.getElementById("jsonModalTitle").textContent = "IMPORT SESSION SNAPSHOT (JSON)";
+    area.value = "";
+    jsonModal.classList.add("active");
+  });
+
+  document.getElementById("btnCopyJson").addEventListener("click", function() {
+    var area = document.getElementById("jsonTextArea");
+    area.select();
+    try {
+      document.execCommand("copy");
+      logTerminal("[CLIPBOARD] JSON snapshot copied successfully.", "cyan");
+    } catch(e) {}
+  });
+
+  document.getElementById("btnApplyJson").addEventListener("click", function() {
+    try {
+      var area = document.getElementById("jsonTextArea");
+      var parsed = JSON.parse(area.value);
+      var s = parsed.state || parsed;
+      if (s) {
+        state.stationIdx = s.stationIdx || 0;
+        state.freq = s.freq || 10.19;
+        state.bandwidth = s.bandwidth || 250;
+        state.demodMode = s.demodMode || "FSK";
+        state.discoveredAnomalies = s.discoveredAnomalies || {};
+        state.triangulationSolved = !!s.triangulationSolved;
+
+        document.getElementById("stationSelect").value = state.stationIdx;
+        document.getElementById("bandwidthSelect").value = state.bandwidth;
+        document.getElementById("demodSelect").value = state.demodMode;
+        updateStationInfo();
+        checkSignalLock();
+        updateCatalogUI();
+        document.getElementById("jsonModal").classList.remove("active");
+        logTerminal("[IMPORT SUCCESS] Telemetry state successfully restored from JSON.", "warn");
+      }
+    } catch(e) {
+      alert("Invalid JSON data: " + e.message);
+    }
+  });
+
+  document.getElementById("btnCloseJson").addEventListener("click", function() {
+    document.getElementById("jsonModal").classList.remove("active");
+  });
+
+  // Help Modal
+  document.getElementById("btnHelpModal").addEventListener("click", function() {
+    document.getElementById("helpModal").classList.add("active");
+  });
+  document.getElementById("btnCloseHelp").addEventListener("click", function() {
+    document.getElementById("helpModal").classList.remove("active");
+  });
+  document.getElementById("btnHelpAcknowledge").addEventListener("click", function() {
+    document.getElementById("helpModal").classList.remove("active");
+  });
+
+  // Keyboard Shortcuts
+  window.addEventListener("keydown", function(e) {
+    if (e.key === "F1" || e.key === "h" || e.key === "H") {
+      e.preventDefault();
+      document.getElementById("helpModal").classList.toggle("active");
+      return;
+    }
+    if (e.key === "Escape") {
+      document.querySelectorAll(".modal-overlay").forEach(function(m) {
+        m.classList.remove("active");
+      });
+      return;
+    }
+    if (e.key === "F5") {
+      e.preventDefault();
+      quickSaveState();
+      return;
+    }
+    if (e.key === "F9") {
+      e.preventDefault();
+      quickLoadState();
+      return;
+    }
+    if (e.code === "Space" && e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
+      e.preventDefault();
+      document.getElementById("btnSweepToggle").click();
+      return;
+    }
+    if (e.key === "m" || e.key === "M") {
+      document.getElementById("btnAudioToggle").click();
+      return;
+    }
+    if (e.key >= "1" && e.key <= "4" && e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
+      var tabIdx = parseInt(e.key, 10) - 1;
+      if (tabButtons[tabIdx]) tabButtons[tabIdx].click();
+      return;
+    }
+  });
+
+  // Initialize
+  updateStationInfo();
+  updateCatalogUI();
+  resizeCanvases();
+  logTerminal("=== KANOMALY v1.0.0 INITIALIZED ===", "alert");
+  logTerminal("Lithosphere Geophone Array online. Ready for signal interception.", "dim");
+
+  requestAnimationFrame(animLoop);
+})();
+</script>
+</body>
+</html>

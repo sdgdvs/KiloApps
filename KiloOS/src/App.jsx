@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.4.2';
+const MICROS_VERSION = '0.4.3';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='f1' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2364B5F6'/><stop offset='100%' stop-color='%231E88E5'/></linearGradient><linearGradient id='f2' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2390CAF9'/><stop offset='100%' stop-color='%232196F3'/></linearGradient></defs><path fill='url(%23f1)' d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/><path fill='url(%23f2)' d='M2 8h20v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V8z'/></svg>";
 const HELP_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232196F3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'></circle><path d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'></path><line x1='12' y1='17' x2='12.01' y2='17'></line></svg>";
@@ -114,7 +114,8 @@ const APPS = [
   { id: 'krss', title: 'KRSS', url: '/apps/krss.html', exeUrl: '/exe/KRSS.exe', icon: '/assets/icons/krss.ico', w: 1040, h: 700, folder: 'Network' },
   { id: 'kclip', title: 'KClip', url: '/apps/kclip.html', exeUrl: '/exe/KClip.exe', icon: '/assets/icons/kclip.ico', w: 980, h: 700, folder: 'System' },
   { id: 'kmatrix', title: 'KMatrix', url: '/apps/kmatrix.html', exeUrl: '/exe/KMatrix.exe', icon: '/assets/icons/kmatrix.ico', w: 1080, h: 720, folder: 'System' },
-  { id: 'kdirector', title: 'Director Console', url: '/apps/kdirector.html', icon: '/assets/icons/kdirector.ico', w: 1080, h: 720, folder: 'System' }
+  { id: 'kdirector', title: 'Director Console', url: '/apps/kdirector.html', icon: '/assets/icons/kdirector.ico', w: 1080, h: 720, folder: 'System' },
+  { id: 'kanomaly', title: 'KAnomaly', url: '/apps/kanomaly.html', exeUrl: '/exe/KAnomaly.exe', icon: '/assets/icons/kanomaly.ico', w: 1040, h: 720, folder: 'System' }
 ];
 
 function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModal, openApps, closeApp }) {
