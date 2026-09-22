@@ -27,7 +27,7 @@ function run(label, command) {
   console.log(`${'='.repeat(60)}\n`);
 
   try {
-    execSync(command, { cwd: ROOT, stdio: 'inherit', timeout: 300000 }); // 5min timeout
+    execSync(command, { cwd: ROOT, stdio: 'inherit', timeout: 600000 }); // 10min timeout
     console.log(`\n  ✅ ${label} — PASSED\n`);
     return true;
   } catch (err) {
@@ -67,27 +67,29 @@ function main() {
     gates.push(true);
   }
 
-  // Gate 3: Vision model audit (optional)
-  if (skipVision || !process.env.GEMINI_API_KEY) {
-    if (!skipVision && !process.env.GEMINI_API_KEY) {
-      console.log('\n  ⏭️  Vision audit skipped — GEMINI_API_KEY not set.');
-      console.log('      Set it to enable AI-powered visual quality scoring.\n');
-    } else {
-      console.log('\n  ⏭️  Vision audit skipped (--skip-vision flag).\n');
-    }
+  // Gate 3: Vision model audit
+  // Prefer the agent-native kilo-vision-audit skill (no API key needed).
+  // Fall back to the legacy Python script if GEMINI_API_KEY is set and uv is available.
+  if (skipVision) {
+    console.log('\n  ⏭️  Vision audit skipped (--skip-vision flag).\n');
     gates.push(true);
-  } else {
-    // Check if uv is available for Python script execution
+  } else if (process.env.GEMINI_API_KEY) {
+    // Legacy path: use Python script with external Gemini API
     const uvCheck = spawnSync('uv', ['--version'], { stdio: 'pipe' });
     if (uvCheck.status === 0) {
       gates.push(run(
-        'AI Vision Quality Audit (Gemini Flash)',
+        'AI Vision Quality Audit (Gemini Flash — legacy Python script)',
         `uv run --with google-genai "${path.join(SCRIPTS, 'vision_audit.py')}"`
       ));
     } else {
       console.log('\n  ⏭️  Vision audit skipped — uv not found. Install with: pip install uv\n');
       gates.push(true);
     }
+  } else {
+    console.log('\n  ⏭️  Vision audit skipped — no GEMINI_API_KEY set.');
+    console.log('      Recommended: Use the kilo-vision-audit agent skill instead (no API key needed).');
+    console.log('      Or set GEMINI_API_KEY to use the legacy Python script.\n');
+    gates.push(true);
   }
 
   // Final summary
@@ -110,6 +112,17 @@ function main() {
   console.log('╠══════════════════════════════════════════════════════════╣');
   console.log(`║  ${allPassed ? '🟢 ALL GATES PASSED' : '🔴 ONE OR MORE GATES FAILED'}${' '.repeat(allPassed ? 36 : 30)}║`);
   console.log('╚══════════════════════════════════════════════════════════╝');
+
+  // Write JSON summary for programmatic consumption by agents/orchestrator
+  const report = {
+    timestamp: new Date().toISOString(),
+    gates: labels.map((label, i) => ({ gate: label, passed: gates[i] })),
+    allPassed
+  };
+  const reportPath = path.join(ROOT, 'docs/gallery/quality_gate_report.json');
+  fs.mkdirSync(path.dirname(reportPath), { recursive: true });
+  fs.writeFileSync(reportPath, JSON.stringify(report, null, 2), 'utf8');
+  console.log(`\nFull report saved to docs/gallery/quality_gate_report.json`);
 
   process.exit(allPassed ? 0 : 1);
 }

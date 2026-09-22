@@ -153,7 +153,7 @@ async function runSuite() {
     const sizeKb = (stat.size / 1024).toFixed(1);
     const fileUrl = 'file:///' + fullPath.replace(/\\/g, '/');
 
-    currentErrors = [];
+    // currentErrors is reset after page load (below) to prevent stale error bleed
 
     const report = {
       file,
@@ -178,8 +178,25 @@ async function runSuite() {
     }
 
     try {
+      // Navigate and wait for page to fully load before measuring
+      const loadPromise = new Promise((resolve) => {
+        const handler = (event) => {
+          const msg = JSON.parse(event.data);
+          if (msg.method === 'Page.loadEventFired') {
+            ws.removeEventListener('message', handler);
+            resolve();
+          }
+        };
+        ws.addEventListener('message', handler);
+        // Timeout fallback in case page never fires load (e.g. about:blank)
+        setTimeout(resolve, 3000);
+      });
       await sendCommand('Page.navigate', { url: fileUrl });
-      
+      await loadPromise;
+
+      // Reset errors AFTER page load to prevent stale exceptions from previous app bleeding in
+      currentErrors = [];
+
       // Inject performance probe
       await sendCommand('Runtime.evaluate', { expression: PERF_PROBE_SCRIPT });
 

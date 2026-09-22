@@ -21,7 +21,7 @@ Multiple agents operate on this codebase on overlapping schedules, potentially f
    - Make surgical, minimal changes — ONLY add entries to the APPS array.
    - Commit and push immediately after editing, before doing other work.
 3. **Unified Work State & Gemini Skills (`next_work.md`).**
-   - All active agent roles are packaged as self-contained Gemini Skills in `.agents/skills/` (`kilo-qa`, `kilo-tester`, `kilo-planner`).
+   - All active agent roles are packaged as self-contained Gemini Skills in `.agents/skills/` (`kilo-qa`, `kilo-tester`, `kilo-planner`, `kilo-vision-audit`).
    - Active queue state, current targets, and handoffs are centralized in `next_work.md`.
    - Each agent updates `next_work.md` (frontmatter handoff + terse log entry ≤8 lines), commits, and pushes upon turn completion.
    - Historical planning files are archived in `archive/legacy_plans/`.

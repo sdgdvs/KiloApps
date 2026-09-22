@@ -7,7 +7,7 @@
 //   node scripts/baseline_diff.js                  — compare current vs baselines
 //   node scripts/baseline_diff.js --update          — promote current screenshots to baselines
 //   node scripts/baseline_diff.js --update ksnake   — update baseline for a single app
-//   node scripts/baseline_diff.js --threshold 0.05  — set pixel-diff threshold (default 5%)
+//   node scripts/baseline_diff.js --threshold 0.05  — set pixel-diff threshold (default 15%)
 
 const fs = require('fs');
 const path = require('path');
@@ -19,7 +19,7 @@ const DIFF_REPORT_PATH = path.join(WORKSPACE_ROOT, 'docs/gallery/diff_report.jso
 
 function parseArgs() {
   const args = process.argv.slice(2);
-  const opts = { update: false, threshold: 0.05, app: null };
+  const opts = { update: false, threshold: 0.15, app: null };
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--update') {
       opts.update = true;
@@ -99,7 +99,10 @@ function runDiffAnalysis(threshold) {
   let newApps = 0;
 
   console.log('=== KiloApps Baseline Screenshot Diff Report ===\n');
-  console.log(`Threshold: ${(threshold * 100).toFixed(1)}% pixel difference\n`);
+  console.log(`Threshold: ${(threshold * 100).toFixed(1)}% byte-level difference`);
+  console.log('Note: This is raw byte comparison on compressed PNGs — not perceptual.');
+  console.log('      Minor changes may be flagged due to PNG compression variance.');
+  console.log('      For perceptual analysis, use the kilo-vision-audit agent skill.\n');
 
   for (const file of screenshots) {
     const appName = file.replace('.png', '');

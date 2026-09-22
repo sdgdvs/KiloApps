@@ -2,7 +2,12 @@
 # dependencies = ["google-genai"]
 # ///
 """
-KiloApps Vision Audit — AI-powered visual quality scoring.
+KiloApps Vision Audit — AI-powered visual quality scoring (HUMAN-ONLY FALLBACK).
+
+NOTE: For autonomous agent usage, prefer the kilo-vision-audit agent skill in
+.agents/skills/kilo-vision-audit/ which requires NO API key or external dependencies.
+This script is preserved for humans who want to run vision audits manually outside
+the agent system.
 
 Sends app screenshots to Gemini Flash vision model for structured
 quality evaluation. Outputs JSON scores and flags apps below threshold.
