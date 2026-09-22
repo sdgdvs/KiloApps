@@ -9,8 +9,8 @@
 | :--- | :---: | :---: | :---: | :---: | :--- |
 | [K2048](gallery/screenshots/k2048.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\k2048.html) | 50 FPS | 67ms | 108.6 KB | 🔒 Locked (Mature 5+) |
 | [KABYSS](gallery/screenshots/kabyss.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kabyss.html) | 39 FPS | 117ms | 390.5 KB | ⚠️ Lag/Stutter |
-| [KALCHEMY](gallery/screenshots/kalchemy.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kalchemy.html) | 56 FPS | 33ms | 229.8 KB | 🟢 Active |
-| [KASTEROIDS](gallery/screenshots/kasteroids.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kasteroids.html) | 60 FPS | 17ms | 140.6 KB | 🟢 Active |
+| [KALCHEMY](gallery/screenshots/kalchemy.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kalchemy.html) | 56 FPS | 33ms | 229.8 KB | 🔒 Locked (Mature 5+) |
+| [KASTEROIDS](gallery/screenshots/kasteroids.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kasteroids.html) | 60 FPS | 17ms | 140.6 KB | 🔒 Locked (Mature 5+) |
 | [KAUDIO](gallery/screenshots/kaudio.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kaudio.html) | 54 FPS | 33ms | 62.3 KB | ⚠️ Lag/Stutter |
 | [KBASE](gallery/screenshots/kbase.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kbase.html) | 60 FPS | 17ms | 85 KB | 🟢 Active |
 | [KBBS](gallery/screenshots/kbbs.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kbbs.html) | 57 FPS | 33ms | 112.2 KB | 🟢 Active |
@@ -21,9 +21,9 @@
 | [KCHART](gallery/screenshots/kchart.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kchart.html) | 51 FPS | 50ms | 73.8 KB | ⚠️ Lag/Stutter |
 | [KCHAT](gallery/screenshots/kchat.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kchat.html) | 60 FPS | 17ms | 83.6 KB | 🟢 Active |
 | [KCHATSERVER](gallery/screenshots/kchatserver.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kchatserver.html) | 60 FPS | 17ms | 3.3 KB | 🟢 Active |
-| [KCHESS](gallery/screenshots/kchess.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kchess.html) | 37 FPS | 33ms | 115.6 KB | ⚠️ Lag/Stutter |
+| [KCHESS](gallery/screenshots/kchess.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kchess.html) | 37 FPS | 33ms | 115.6 KB | 🔒 Locked (Mature 5+) |
 | [KCLOCK](gallery/screenshots/kclock.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kclock.html) | 60 FPS | 17ms | 82.2 KB | 🔒 Locked (Mature 5+) |
-| [KCOLONY](gallery/screenshots/kcolony.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kcolony.html) | 60 FPS | 17ms | 122.8 KB | 🟢 Active |
+| [KCOLONY](gallery/screenshots/kcolony.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kcolony.html) | 60 FPS | 17ms | 122.8 KB | 🔒 Locked (Mature 5+) |
 | [KCOLOR](gallery/screenshots/kcolor.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kcolor.html) | 57 FPS | 33ms | 52.7 KB | 🔒 Locked (Mature 5+) |
 | [KCOLOSSEUM](gallery/screenshots/kcolosseum.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kcolosseum.html) | 60 FPS | 17ms | 74.3 KB | 🟢 Active |
 | [KCONNECT4](gallery/screenshots/kconnect4.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kconnect4.html) | 60 FPS | 17ms | 107.6 KB | 🔒 Locked (Mature 5+) |
@@ -31,11 +31,11 @@
 | [KCONVERTER](gallery/screenshots/kconverter.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kconverter.html) | 60 FPS | 17ms | 85.4 KB | 🔒 Locked (Mature 5+) |
 | [KCOSMIC](gallery/screenshots/kcosmic.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kcosmic.html) | 57 FPS | 33ms | 297.4 KB | 🟢 Active |
 | [KCYBER](gallery/screenshots/kcyber.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kcyber.html) | 60 FPS | 17ms | 56.9 KB | 🟢 Active |
-| [KDARTS](gallery/screenshots/kdarts.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kdarts.html) | 46 FPS | 33ms | 76.3 KB | ⚠️ Lag/Stutter |
+| [KDARTS](gallery/screenshots/kdarts.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kdarts.html) | 46 FPS | 33ms | 76.3 KB | 🔒 Locked (Mature 5+) |
 | [KDB](gallery/screenshots/kdb.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kdb.html) | 54 FPS | 33ms | 55.8 KB | ⚠️ Lag/Stutter |
 | [KDRAGON](gallery/screenshots/kdragon.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kdragon.html) | 60 FPS | 17ms | 98.3 KB | 🟢 Active |
 | [KEXPLORER](gallery/screenshots/kexplorer.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kexplorer.html) | 60 FPS | 17ms | 31.7 KB | 🟢 Active |
-| [KFARM](gallery/screenshots/kfarm.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kfarm.html) | 60 FPS | 17ms | 84.1 KB | 🟢 Active |
+| [KFARM](gallery/screenshots/kfarm.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kfarm.html) | 60 FPS | 17ms | 84.1 KB | 🔒 Locked (Mature 5+) |
 | [KFLASH](gallery/screenshots/kflash.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kflash.html) | 57 FPS | 33ms | 65.8 KB | 🟢 Active |
 | [KFONT](gallery/screenshots/kfont.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kfont.html) | 60 FPS | 17ms | 48.6 KB | 🟢 Active |
 | [KFORTRESS](gallery/screenshots/kfortress.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kfortress.html) | 60 FPS | 17ms | 146 KB | 🟢 Active |
@@ -50,33 +50,33 @@
 | [KMAIL](gallery/screenshots/kmail.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kmail.html) | 60 FPS | 17ms | 59.2 KB | 🟢 Active |
 | [KMANDEL](gallery/screenshots/kmandel.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kmandel.html) | 60 FPS | 17ms | 72.6 KB | 🟢 Active |
 | [KMATCH3](gallery/screenshots/kmatch3.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kmatch3.html) | 60 FPS | 17ms | 81 KB | 🔒 Locked (Mature 5+) |
-| [KMAZE](gallery/screenshots/kmaze.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kmaze.html) | 55 FPS | 33ms | 129 KB | ⚠️ Lag/Stutter |
+| [KMAZE](gallery/screenshots/kmaze.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kmaze.html) | 55 FPS | 33ms | 129 KB | 🔒 Locked (Mature 5+) |
 | [KMECH](gallery/screenshots/kmech.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kmech.html) | 60 FPS | 17ms | 82.8 KB | 🟢 Active |
 | [KMEDIA](gallery/screenshots/kmedia.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kmedia.html) | 60 FPS | 17ms | 44 KB | 🟢 Active |
-| [KMINE](gallery/screenshots/kmine.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kmine.html) | 60 FPS | 17ms | 42.4 KB | 🟢 Active |
+| [KMINE](gallery/screenshots/kmine.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kmine.html) | 60 FPS | 17ms | 42.4 KB | 🔒 Locked (Mature 5+) |
 | [KMINES](gallery/screenshots/kmines.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kmines.html) | 60 FPS | 17ms | 69.6 KB | 🔒 Locked (Mature 5+) |
 | [KMYSTERY](gallery/screenshots/kmystery.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kmystery.html) | 60 FPS | 17ms | 76.4 KB | 🟢 Active |
 | [KNET](gallery/screenshots/knet.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\knet.html) | 60 FPS | 17ms | 55.8 KB | 🟢 Active |
 | [KNOTE](gallery/screenshots/knote.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\knote.html) | 60 FPS | 17ms | 53.2 KB | 🟢 Active |
-| [KPAC](gallery/screenshots/kpac.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kpac.html) | 61 FPS | 17ms | 128.5 KB | 🟢 Active |
+| [KPAC](gallery/screenshots/kpac.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kpac.html) | 61 FPS | 17ms | 128.5 KB | 🔒 Locked (Mature 5+) |
 | [KPAD](gallery/screenshots/kpad.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kpad.html) | 60 FPS | 17ms | 85.4 KB | 🟢 Active |
 | [KPAINT](gallery/screenshots/kpaint.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kpaint.html) | 60 FPS | 17ms | 86.6 KB | 🟢 Active |
 | [KPASS](gallery/screenshots/kpass.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kpass.html) | 60 FPS | 17ms | 60 KB | 🟢 Active |
 | [KPING](gallery/screenshots/kping.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kping.html) | 49 FPS | 33ms | 57.4 KB | ⚠️ Lag/Stutter |
-| [KPONG](gallery/screenshots/kpong.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kpong.html) | 30 FPS | 50ms | 89.4 KB | ⚠️ Lag/Stutter |
+| [KPONG](gallery/screenshots/kpong.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kpong.html) | 30 FPS | 50ms | 89.4 KB | 🔒 Locked (Mature 5+) |
 | [KQUARANTINE](gallery/screenshots/kquarantine.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kquarantine.html) | 60 FPS | 17ms | 27.9 KB | 🟢 Active |
 | [KQUEST](gallery/screenshots/kquest.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kquest.html) | 60 FPS | 17ms | 262 KB | 🟢 Active |
 | [KRADIO](gallery/screenshots/kradio.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kradio.html) | 60 FPS | 17ms | 36.9 KB | 🟢 Active |
 | [KREAD](gallery/screenshots/kread.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kread.html) | 60 FPS | 17ms | 88.5 KB | 🟢 Active |
 | [KREVERSI](gallery/screenshots/kreversi.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kreversi.html) | 60 FPS | 17ms | 95.6 KB | 🔒 Locked (Mature 5+) |
-| [KROGUE](gallery/screenshots/krogue.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\krogue.html) | 60 FPS | 17ms | 140.7 KB | 🟢 Active |
+| [KROGUE](gallery/screenshots/krogue.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\krogue.html) | 60 FPS | 17ms | 140.7 KB | 🔒 Locked (Mature 5+) |
 | [KSANCTUARY](gallery/screenshots/ksanctuary.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\ksanctuary.html) | 57 FPS | 33ms | 376.7 KB | 🟢 Active |
 | [KSCRIPT](gallery/screenshots/kscript.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kscript.html) | 45 FPS | 33ms | 37.5 KB | ⚠️ Lag/Stutter |
 | [KSETTINGS](gallery/screenshots/ksettings.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\ksettings.html) | 60 FPS | 17ms | 3.7 KB | 🟢 Active |
 | [KSIMON](gallery/screenshots/ksimon.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\ksimon.html) | 60 FPS | 17ms | 63.6 KB | 🔒 Locked (Mature 5+) |
-| [KSNAKE](gallery/screenshots/ksnake.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\ksnake.html) | 60 FPS | 17ms | 136.1 KB | 🟢 Active |
-| [KSOLITAIRE](gallery/screenshots/ksolitaire.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\ksolitaire.html) | 30 FPS | 83ms | 103.9 KB | ⚠️ Lag/Stutter |
-| [KSPACE](gallery/screenshots/kspace.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kspace.html) | 60 FPS | 17ms | 123.7 KB | 🟢 Active |
+| [KSNAKE](gallery/screenshots/ksnake.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\ksnake.html) | 60 FPS | 17ms | 136.1 KB | 🔒 Locked (Mature 5+) |
+| [KSOLITAIRE](gallery/screenshots/ksolitaire.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\ksolitaire.html) | 30 FPS | 83ms | 103.9 KB | 🔒 Locked (Mature 5+) |
+| [KSPACE](gallery/screenshots/kspace.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kspace.html) | 60 FPS | 17ms | 123.7 KB | 🔒 Locked (Mature 5+) |
 | [KSTARDREDGE](gallery/screenshots/kstardredge.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kstardredge.html) | 60 FPS | 17ms | 424.8 KB | 🟢 Active |
 | [KSTARSHIP](gallery/screenshots/kstarship.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kstarship.html) | 60 FPS | 17ms | 77.5 KB | 🟢 Active |
 | [KSTELLAR](gallery/screenshots/kstellar.png) | [Launch](file:///D:\KiloApps\KiloOS\public\apps\kstellar.html) | 60 FPS | 17ms | 101 KB | 🟢 Active |

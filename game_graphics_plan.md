@@ -118,61 +118,33 @@ After completing a full loop through all games, do ONE icon audit turn before st
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 **⚠️ PRIORITY: If ANY game in the queue is at Loop 0 (not yet processed), work on it FIRST before continuing higher-loop games.**
 
-
-- K2048
-- KDarts
-- KSimon
-- KTrader
-- KDragon
-- KSolitaire
-- KHex
-- KStellar
-- KMine
-- KMandel
-- KVoid
-- KConnect4
-- KHangman
-- KMech
-- KMatch3
-- KFreecell
-- KSudoku
-- KGo
-- KTowers
-- KWords
-- KWizard
-- KMystery
-- KReversi
-- KQuest
-- KPac
 - KSanctuary
 - KSubmarine
 - KStarDredge
 - KAbyss
-- KSnake
-- KTetris
-- KCyber
-- KMaze
+- KDragon
 - KColosseum
-- KCosmic
-- KFarm
-- KAlchemy
-- KRogue
-- KChess
-- KPong
-- KMines
+- KCyber
+- KMech
+- KMystery
+- KVoid
+- KWizard
 - KStarship
 - KChrono
 - KStarForge
 - KFortress
-- KColony
-- KSpace
-- KAsteroids
+- KCosmic
+- KStellar
+- KMandel
+- KQuest
 
 ## Completed Work Log (trimmed by Director 2026-09-06 — latest loop per game only)
 
 > Archived: Pre-Loop 6 entries moved to archive/. Only latest loop per game shown.
 
-**Skipped (mature — no work needed):**
+**Mature & Locked Games (Director Directive — strictly no more passes):**
+- **Classic & Board Games (Locked):** K2048, KChess, KConnect4, KDarts, KFreecell, KGo, KHangman, KHex, KMatch3, KMine, KMines, KPong, KReversi, KSimon, KSnake, KSolitaire, KSudoku, KTetris, KTowers, KWords.
+- **Mature Arcade & Campaign Games (Locked):** KBreakout, KPac, KMaze, KSpace, KAsteroids, KColony, KFarm, KAlchemy, KRogue.
 - KMines (L8), KPong (L9), KChess (L9), KRogue (L9), KAlchemy (L8), KFarm (L6), KAsteroids (L8), KBreakout (L11) — skip per Director Directive.
 - KAsteroids (Loop 8): ⏭️ Skip — mature app complete with visual assets; skipped per Director Directive.
 - KColony (Loop 7): ⏭️ Skip — mature app complete with visual assets; skipped per Director Directive & Maturity Protocol.
