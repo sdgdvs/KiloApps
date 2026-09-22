@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KHash
-  kilo_usability: KBookmark
+  kilo_usability: KHash
   kilo_graphics: KBreakout
   kilo_qa: KTodo
   kilo_expander: KFont
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-tester
-  app: KPomodoro
-  timestamp: "2026-09-22T13:52:00Z"
+  agent: kilo-usability
+  app: KBookmark
+  timestamp: "2026-09-22T15:52:00Z"
 last_planner_run: "2026-09-22T07:47:00Z"
 ---
 
@@ -94,9 +94,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KRSS`, `KClip`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAlchemy`, `KAsteroids`, `KAudio`, `KBBS`, `KBase`, `KBreakout`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColony`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFarm`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMine`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KRogue`, `KSanctuary`, `KScript`, `KSpace`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KPomodoro`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KBookmark`
+- **Current Target**: `KHash`
 - **Upcoming Queue**:
-  `KHash`, `KRSS`, `KClip`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`.
+  `KRSS`, `KClip`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPac`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KTodo`
@@ -151,6 +151,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-22T15:52:00Z — kilo-usability: KBookmark**
+  - Status: PASS ✅ (HiDPI QR canvas scaling, responsive layout breakpoints, mobile sidebar drawer, Help & hotkey ergonomics).
+  - HiDPI Canvas Scaling: Applied window.devicePixelRatio and imageSmoothingEnabled:false to #qrCanvas for razor-sharp QR codes.
+  - Responsive Breakpoints: Added 860px, 680px, and 520px media queries supporting narrow windows, split-screen tiling, and mobile views.
+  - Mobile Sidebar Drawer: Implemented collapsible category sidebar with #btnToggleSidebar, backdrop overlay, and auto-close on selection.
+  - Help & Controls Ergonomics: Added visible H / F1 prompt in footer and status bar, wired H/? hotkeys, and updated help modal guide.
+  - Native Win32 Parity: Updated WM_SIZE for responsive category listbox width, added H/? key support and status bar help hints.
+  - Verification: Clean MSVC Native C build (22.5 KB); clean Vite web build (354ms); 16 automated suite checks passed; 0 security lint violations.
+
 - **2026-09-22T13:52:00Z — kilo-tester: KPomodoro**
   - Status: PASS ✅ (11 issues, 11 fixed).
   - Modal Ergonomics: Added Enter/Esc keyboard handlers and backdrop dismissal across Splash, Tutorial, and Settings modals.
@@ -182,12 +191,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Rotation Schedule: Set rotation order to creator ➔ graphics ➔ tester ➔ usability ➔ qa ➔ expander (kilo-creator active for KClip #99 milestone).
   - Log Compaction: Compacted 2026-09-22 KSpace log entry to archive/fleet_execution_archive.md; preserved strict 5-entry active limit.
   - Verification: Security linter passed cleanly; orchestrator queue validation verified.
-
-- **2026-09-22T05:55:00Z — kilo-qa: KTimer**
-  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial onboarding integrity, modal controls, safe blob exports).
-  - State Persistence: Quicksave (F5) & quickload (F9) across web (localStorage) and native (ktimer.dat) capturing all 5 modes, running timers, laps, intervals.
-  - Native UI Parity: Added Save [F5] & Load [F9] toolbar controls; auto-save on shutdown (WM_DESTROY) and web beforeunload/pagehide.
-  - Tutorial Integrity: Fresh-session onboarding modal (ktimer_tutorialSeen / ktimer_tutorial.dat) never interrupting restored save sessions.
-  - Modal Ergonomics: Added Enter, Space, and Esc keyboard handlers across Help and Tutorial modals.
-  - Resource Cleanliness: Implemented safe blob download tracking to eliminate URL leaks; wrapped storage in quota protection; interval cleanup.
-  - Verification: Clean MSVC Native C build (31.5 KB); clean Vite web build (100.0 KB); smoke test, syntax verification, and security lint passed (0 violations).

@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-22T05:55:00Z — kilo-qa: KTimer**
+  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial onboarding integrity, modal controls, safe blob exports).
+  - State Persistence: Quicksave (F5) & quickload (F9) across web (localStorage) and native (ktimer.dat) capturing all 5 modes, running timers, laps, intervals.
+  - Native UI Parity: Added Save [F5] & Load [F9] toolbar controls; auto-save on shutdown (WM_DESTROY) and web beforeunload/pagehide.
+  - Tutorial Integrity: Fresh-session onboarding modal (ktimer_tutorialSeen / ktimer_tutorial.dat) never interrupting restored save sessions.
+  - Modal Ergonomics: Added Enter, Space, and Esc keyboard handlers across Help and Tutorial modals.
+  - Resource Cleanliness: Implemented safe blob download tracking to eliminate URL leaks; wrapped storage in quota protection; interval cleanup.
+  - Verification: Clean MSVC Native C build (31.5 KB); clean Vite web build (100.0 KB); smoke test, syntax verification, and security lint passed (0 violations).
+
 - **2026-09-22T04:50:00Z — director-task: Adversarial Bot Defense, Auto-Merge Gate & SECURITY.md**
   - Status: PASS ✅ (Neutralized auto-merge vulnerability; added prompt injection scanner & SECURITY.md).
   - Workflow Hardening: Eliminated untrusted auto-merges in gatekeeper-auto-merge.yml; added merge authorization gate & --ignore-scripts.

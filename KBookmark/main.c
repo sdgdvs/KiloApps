@@ -102,7 +102,7 @@ static const char* g_categories[] = {
 
 static int g_selectedCategory = 0;
 static char g_searchQuery[128] = "";
-static char g_statusMessage[256] = "KBookmark Ready. Select a bookmark and press Enter or [Open URL].";
+static char g_statusMessage[256] = "KBookmark Ready. Press H or F1 for Help, Enter to Open URL.";
 
 // UI Controls
 #define ID_BTN_ADD      201
@@ -386,14 +386,14 @@ static void ShowHelpDialog(HWND parent) {
     const char* helpText =
         "KBookmark - Categorized Link Vault (Win32)\n\n"
         "Keyboard Shortcuts:\n"
+        "  H / F1             : Show this help dialog\n"
         "  Enter / Dbl-Click  : Open highlighted URL in browser\n"
         "  Ctrl+N / [+ New]   : Add new categorized link\n"
         "  Ctrl+E / [Edit]    : Edit selected link properties\n"
         "  Delete / [Delete]  : Remove selected bookmark\n"
         "  S / [★ Star]       : Toggle favorite status\n"
         "  F5                 : Quicksave vault to kbookmark.dat\n"
-        "  F9                 : Quickload vault from kbookmark.dat\n"
-        "  F1                 : Show this help dialog\n\n"
+        "  F9                 : Quickload vault from kbookmark.dat\n\n"
         "URL Protocols Supported:\n"
         "  http://, https://, kweb://, internal:<app>, gopher://, file://\n\n"
         "Categorized Link Vault -- KiloApps Fleet";
@@ -650,9 +650,10 @@ static LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
         if (w < 400 || h < 200) break;
 
         int listH = h - 75;
-        int listW = w - 215;
-        if (g_hListCats) MoveWindow(g_hListCats, 10, 42, 190, listH, TRUE);
-        if (g_hListView) MoveWindow(g_hListView, 205, 42, listW, listH, TRUE);
+        int catW = (w < 640) ? 140 : 190;
+        int listW = w - catW - 25;
+        if (g_hListCats) MoveWindow(g_hListCats, 10, 42, catW, listH, TRUE);
+        if (g_hListView) MoveWindow(g_hListView, catW + 15, 42, listW, listH, TRUE);
         if (g_hStatusBar) MoveWindow(g_hStatusBar, 10, h - 25, w - 20, 20, TRUE);
         return 0;
     }
@@ -762,7 +763,7 @@ void __cdecl MainEntry(void) {
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
-            if (msg.wParam == VK_F1) {
+            if (msg.wParam == VK_F1 || ((msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_OEM_2) && GetFocus() != g_hEditSearch)) {
                 ShowHelpDialog(hwnd);
                 continue;
             }

@@ -895,6 +895,100 @@
       padding: 12px;
       border-radius: 6px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      image-rendering: pixelated;
+    }
+
+    /* Responsive & Mobile Usability Breakpoints */
+    #btnToggleSidebar {
+      display: none;
+    }
+
+    .sidebar-backdrop {
+      display: none;
+    }
+
+    @media (max-width: 860px) {
+      aside.vault-sidebar {
+        width: 210px;
+      }
+      .bookmarks-container {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 8px;
+        padding: 10px;
+      }
+      .search-wrapper {
+        min-width: 160px;
+      }
+    }
+
+    @media (max-width: 680px) {
+      #btnToggleSidebar {
+        display: inline-flex;
+      }
+      .workspace-container {
+        position: relative;
+      }
+      aside.vault-sidebar {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 50;
+        width: 260px;
+        background: var(--surface);
+        box-shadow: 4px 0 16px rgba(0, 0, 0, 0.5);
+        transform: translateX(-105%);
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      aside.vault-sidebar.sidebar-open {
+        transform: translateX(0);
+      }
+      .sidebar-backdrop {
+        display: none;
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 40;
+      }
+      .sidebar-backdrop.active {
+        display: block;
+      }
+      .k-header {
+        padding: 6px 10px;
+        gap: 8px;
+      }
+      .sub-toolbar {
+        padding: 6px 10px;
+        gap: 8px;
+      }
+      .filter-pills {
+        flex-wrap: wrap;
+        width: 100%;
+      }
+      .protocol-select, .sort-select {
+        flex: 1;
+        min-width: 100px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .brand-title span.brand-badge {
+        display: none;
+      }
+      .toolbar-group .btn-responsive-hide {
+        display: none;
+      }
+      .bookmarks-container {
+        grid-template-columns: 1fr;
+        padding: 8px;
+      }
+      .k-footer > div:last-child {
+        display: none;
+      }
+      .modal-box {
+        max-width: 95vw !important;
+        margin: 10px;
+      }
     }
   </style>
 </head>
@@ -911,26 +1005,29 @@
     </div>
 
     <div class="toolbar-group">
+      <button class="btn btn-sm" id="btnToggleSidebar" title="Toggle Categories Sidebar">
+        📁 <span>Folders</span>
+      </button>
       <button class="btn btn-primary" id="btnNewLink" title="Add Bookmark (Ctrl+N)">
         <span>+</span> New Link
       </button>
-      <button class="btn" id="btnNewCat" title="Create Category">
+      <button class="btn btn-responsive-hide" id="btnNewCat" title="Create Category">
         <span>📁</span> New Folder
       </button>
-      <button class="btn" id="btnAuditAll" title="Probe All Link Latency & Health">
+      <button class="btn btn-responsive-hide" id="btnAuditAll" title="Probe All Link Latency & Health">
         <span>🩺</span> Health Audit
       </button>
 
-      <div style="width: 1px; height: 20px; background: var(--border); margin: 0 4px;"></div>
+      <div style="width: 1px; height: 20px; background: var(--border); margin: 0 4px;" class="btn-responsive-hide"></div>
 
-      <button class="btn" id="btnExport" title="Export Vault (Netscape HTML, JSON, MD)">
+      <button class="btn btn-responsive-hide" id="btnExport" title="Export Vault (Netscape HTML, JSON, MD)">
         <span>📦</span> Export
       </button>
-      <button class="btn" id="btnImport" title="Import Netscape or JSON Bookmarks">
+      <button class="btn btn-responsive-hide" id="btnImport" title="Import Netscape or JSON Bookmarks">
         <span>📂</span> Import
       </button>
 
-      <div style="width: 1px; height: 20px; background: var(--border); margin: 0 4px;"></div>
+      <div style="width: 1px; height: 20px; background: var(--border); margin: 0 4px;" class="btn-responsive-hide"></div>
 
       <button class="btn btn-sm" id="btnQuickSave" title="Quicksave Vault (F5)">
         💾 Save (F5)
@@ -941,17 +1038,18 @@
       <button class="btn btn-sm" id="btnThemeToggle" title="Cycle Retro Themes">
         🎨 Theme
       </button>
-      <button class="btn btn-sm" id="btnSoundToggle" title="Audio Sound FX">
+      <button class="btn btn-sm btn-responsive-hide" id="btnSoundToggle" title="Audio Sound FX">
         🔊 Sound
       </button>
-      <button class="btn btn-sm" id="btnHelp" title="Help & Shortcuts (F1)">
-        ❓ Help
+      <button class="btn btn-sm" id="btnHelp" title="Help & Shortcuts (F1 or H)">
+        ❓ Help (H)
       </button>
     </div>
   </header>
 
   <!-- Main Workspace -->
   <div class="workspace-container">
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
     <!-- Sidebar -->
     <aside class="vault-sidebar">
       <div class="sidebar-section">
@@ -1050,7 +1148,7 @@
       <span class="footer-status" id="footerStatus">Ready. Select a bookmark to launch.</span>
     </div>
     <div>
-      <span>Press <b>F1</b> for Shortcuts | <b>F5</b> Quicksave | <b>F9</b> Quickload</span>
+      <span>Press <b>H or F1</b> for Help | <b>F5</b> Quicksave | <b>F9</b> Quickload</span>
     </div>
   </footer>
 
@@ -1243,6 +1341,7 @@
       </div>
       <div class="modal-body">
         <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div class="diag-metric"><span>H or F1</span> <b>Help & Quick Reference</b></div>
           <div class="diag-metric"><span>Ctrl + N</span> <b>Add New Bookmark</b></div>
           <div class="diag-metric"><span>Ctrl + F or /</span> <b>Focus Omni-Search</b></div>
           <div class="diag-metric"><span>↑ / ↓</span> <b>Navigate Bookmarks</b></div>
@@ -1251,7 +1350,7 @@
           <div class="diag-metric"><span>1 – 9</span> <b>Switch Categories (1: All, 2: Starred...)</b></div>
           <div class="diag-metric"><span>F5</span> <b>Quicksave Vault State</b></div>
           <div class="diag-metric"><span>F9</span> <b>Quickload Vault State</b></div>
-          <div class="diag-metric"><span>Esc</span> <b>Dismiss Active Modal / Clear Search</b></div>
+          <div class="diag-metric"><span>Esc</span> <b>Dismiss Active Modal / Close Drawer</b></div>
         </div>
 
         <div style="margin-top: 12px; font-size: 12px; color: var(--text-muted); line-height: 1.5;">
@@ -1771,6 +1870,23 @@
         }
       }
 
+      function closeMobileSidebar() {
+        const sidebar = document.querySelector('aside.vault-sidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        if (sidebar) sidebar.classList.remove('sidebar-open');
+        if (backdrop) backdrop.classList.remove('active');
+      }
+
+      function toggleMobileSidebar() {
+        const sidebar = document.querySelector('aside.vault-sidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        if (sidebar) {
+          const isOpen = sidebar.classList.toggle('sidebar-open');
+          if (backdrop) backdrop.classList.toggle('active', isOpen);
+          sfxClick();
+        }
+      }
+
       // Rendering: Categories
       function renderCategories() {
         categoryList.innerHTML = '';
@@ -1797,6 +1913,7 @@
             activeCategory = sc.id;
             renderCategories();
             renderBookmarks();
+            closeMobileSidebar();
           };
           categoryList.appendChild(li);
         });
@@ -1825,6 +1942,7 @@
             activeCategory = c.name;
             renderCategories();
             renderBookmarks();
+            closeMobileSidebar();
           };
           categoryList.appendChild(li);
         });
@@ -1856,6 +1974,7 @@
             activeTagFilter = (activeTagFilter === tag) ? null : tag;
             renderTagCloud();
             renderBookmarks();
+            closeMobileSidebar();
           };
           tagCloud.appendChild(pill);
         });
@@ -2308,13 +2427,23 @@
 
       function generateMatrixQr(canvas, text) {
         const ctx = canvas.getContext('2d');
-        const size = 200;
+        const dpr = window.devicePixelRatio || 1;
+        const displaySize = 200;
+
+        canvas.width = Math.round(displaySize * dpr);
+        canvas.height = Math.round(displaySize * dpr);
+        canvas.style.width = displaySize + 'px';
+        canvas.style.height = displaySize + 'px';
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(dpr, dpr);
+        ctx.imageSmoothingEnabled = false;
+
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, size, size);
+        ctx.fillRect(0, 0, displaySize, displaySize);
 
         // Procedural pseudo-QR pattern based on hash of text
         const gridCount = 25;
-        const cellSize = Math.floor(size / gridCount);
+        const cellSize = Math.floor(displaySize / gridCount);
 
         let hash = 0;
         for (let i = 0; i < text.length; i++) {
@@ -2676,8 +2805,13 @@
         const isInputFocused = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName);
         const hasActiveModal = document.querySelector('.modal-overlay.active') !== null;
 
-        // Modals close on Escape
+        // Modals / Drawer close on Escape
         if (e.key === 'Escape') {
+          const sidebar = document.querySelector('aside.vault-sidebar');
+          if (sidebar && sidebar.classList.contains('sidebar-open')) {
+            closeMobileSidebar();
+            return;
+          }
           const activeModals = document.querySelectorAll('.modal-overlay.active');
           if (activeModals.length > 0) {
             activeModals.forEach(m => m.classList.remove('active'));
@@ -2693,8 +2827,8 @@
           }
         }
 
-        // Global shortcuts
-        if (e.key === 'F1') {
+        // Global shortcuts: F1 or H/? when not focused in input
+        if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H' || e.key === '?') && !isInputFocused && !hasActiveModal)) {
           e.preventDefault();
           if (checkTutorialSeen) {
             checkTutorialSeen.checked = !!localStorage.getItem('kbookmark_tutorialSeen');
@@ -2973,6 +3107,12 @@
         });
       }
 
+      // Sidebar drawer controls for mobile / narrow windows
+      const btnToggleSidebar = document.getElementById('btnToggleSidebar');
+      if (btnToggleSidebar) btnToggleSidebar.onclick = toggleMobileSidebar;
+      const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+      if (sidebarBackdrop) sidebarBackdrop.onclick = closeMobileSidebar;
+
       // Boot initialization
       function init() {
         const loaded = loadStateFromLocal();
@@ -2993,7 +3133,7 @@
 
         renderCategories();
         renderBookmarks();
-        setStatus('KBookmark Vault ready. Press F1 for help, F5 to quicksave.');
+        setStatus('KBookmark Vault ready. Press H or F1 for help, F5 to quicksave.');
       }
 
       init();
