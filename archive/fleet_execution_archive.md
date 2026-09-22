@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-22T04:05:00Z — kilo-graphics: KSpace**
+  - Status: PASS ✅ (Multi-chassis fighter customization, procedural hulls & plumes, runaway speed fix, boss rush balance).
+  - Multi-Chassis System: 3 distinct hulls (Alpha Interceptor, Crimson Vanguard, Void Phantom) with unique geometries, colorways, thruster plumes, hotkeys ([C]/[F4]), and persistence.
+  - Runaway Speed Fix: Replaced unbounded speed formula with smoothly clamped curve, resolving telefragging at score > 10,000.
+  - Balance & Boss Rush: Guaranteed emergency shield/repair drop on boss defeat in Boss Rush; tuned companion drone vulcan velocity.
+  - Visuals & Ergonomics: Animated live ship preview in menu; clickable chassis HUD and menu badges; updated help screen.
+  - Parity & Sizes: Native Win32 (76.0 KB) and Web (144.2 KB) maintain 1:1 parity and stay strictly < 999 KB ceiling.
+  - Verification: Clean MSVC build; clean Vite build (338ms); security linter and automated native smoke suite passed cleanly.
+
 - **2026-09-22T04:22:00Z — director-task: 0xRELEASE Warez Portal, Cracktros & Audio Standard**
   - Status: PASS ✅ (warez.html launched with 4 interactive cracktros & Genesis/SNES FM audio).
   - Warez Archive: Fictionalized 1999 scene parodies (Flarelight, Razor 1999, Paralax, Skid Vector) with filterable catalog.
