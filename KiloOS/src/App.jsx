@@ -110,7 +110,7 @@ const APPS = [
   { id: 'kstarforge', title: 'KStarForge', url: '/apps/kstarforge.html', exeUrl: '/exe/KStarForge.exe', icon: '/assets/icons/kstarforge.ico', w: 1200, h: 780, folder: 'Games' },
   { id: 'kpomodoro', title: 'KPomodoro', url: '/apps/kpomodoro.html', exeUrl: '/exe/KPomodoro.exe', icon: '/assets/icons/kpomodoro.ico', w: 960, h: 700, folder: 'Office' },
   { id: 'kbookmark', title: 'KBookmark', url: '/apps/kbookmark.html', exeUrl: '/exe/KBookmark.exe', icon: '/assets/icons/kbookmark.ico', w: 980, h: 700, folder: 'Office' },
-  { id: 'khash', title: 'KHash', url: '/apps/khash.html', exeUrl: '/exe/KHash.exe', icon: '/assets/icons/khash.ico', w: 920, h: 680, folder: 'System' },
+  { id: 'khash', title: 'KHash', url: '/apps/khash.html', exeUrl: '/exe/KHash.exe', icon: '/assets/icons/khash.ico', w: 960, h: 700, folder: 'System' },
   { id: 'krss', title: 'KRSS', url: '/apps/krss.html', exeUrl: '/exe/KRSS.exe', icon: '/assets/icons/krss.ico', w: 1040, h: 700, folder: 'Network' },
   { id: 'kclip', title: 'KClip', url: '/apps/kclip.html', exeUrl: '/exe/KClip.exe', icon: '/assets/icons/kclip.ico', w: 980, h: 700, folder: 'System' },
   { id: 'kmatrix', title: 'KMatrix', url: '/apps/kmatrix.html', exeUrl: '/exe/KMatrix.exe', icon: '/assets/icons/kmatrix.ico', w: 1080, h: 720, folder: 'System' },

@@ -100,6 +100,9 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
     }
 
     /* Top Command Header */
@@ -174,6 +177,15 @@
       transition: all 0.15s ease;
     }
 
+    .btn:focus-visible,
+    .tab-btn:focus-visible,
+    .radio-opt:focus-visible,
+    select.k-select:focus-visible,
+    .input-box:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 1px;
+    }
+
     .btn:hover {
       background: var(--surface-hover);
       border-color: var(--border-focus);
@@ -235,9 +247,13 @@
       padding: 0 10px;
       gap: 4px;
       flex-shrink: 0;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: thin;
     }
 
     .tab-btn {
+      flex-shrink: 0;
       background: transparent;
       border: 1px solid transparent;
       border-bottom: none;
@@ -403,7 +419,7 @@
     /* Algorithm Grid */
     .algo-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
       gap: 10px;
     }
 
@@ -478,6 +494,16 @@
       color: var(--text);
       word-break: break-all;
       user-select: text;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .algo-val:hover {
+      border-color: var(--border-focus);
+    }
+
+    .algo-val.copied-flash {
+      background: rgba(16, 185, 129, 0.25) !important;
+      border-color: var(--success) !important;
     }
 
     /* Dropzone */
@@ -847,6 +873,65 @@
       from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* Custom Sleek Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border-focus);
+    }
+
+    /* Responsive Breakpoints & Ergonomics */
+    @media (max-width: 840px) {
+      header.k-header {
+        flex-wrap: wrap;
+        padding: 6px 10px;
+        gap: 8px;
+      }
+      .header-actions {
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+      .format-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .format-group {
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+    }
+
+    @media (max-width: 580px) {
+      .splash-features {
+        grid-template-columns: 1fr;
+      }
+      .stats-strip {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .card-title {
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .bench-row {
+        flex-wrap: wrap;
+      }
+      .bench-label {
+        width: 100%;
+        margin-bottom: 2px;
+      }
+    }
   </style>
 </head>
 <body data-theme="dark">
@@ -971,7 +1056,10 @@
       <div class="card">
         <div class="card-title">
           <span>Target / Expected Checksum</span>
-          <span style="font-size:10px; color:var(--text-muted);" id="verifyAutoDetected">Detected: None</span>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button class="btn btn-sm" id="btnPasteExpected" title="Paste from clipboard">📋 Paste</button>
+            <span style="font-size:10px; color:var(--text-muted);" id="verifyAutoDetected">Detected: None</span>
+          </div>
         </div>
         <input type="text" id="verifyExpected" class="input-box" style="min-height:initial; padding:6px 8px;" placeholder="Paste expected hash (from release page, manifest, or vendor)...">
       </div>
@@ -979,8 +1067,9 @@
       <div class="card">
         <div class="card-title">
           <span>Calculated / Candidate Checksum</span>
-          <div style="display:flex; gap:6px;">
-            <button class="btn btn-sm" id="btnUseTextHash" title="Use current Text Digest (SHA-256 / CRC32)">Use Text Digest</button>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="btn btn-sm" id="btnPasteCalculated" title="Paste from clipboard">📋 Paste</button>
+            <button class="btn btn-sm" id="btnUseTextHash" title="Use current Text Digest (auto-matches expected algorithm)">Use Text Digest</button>
             <button class="btn btn-sm" id="btnSwapHashes" title="Swap Expected and Calculated checksums">⇄ Swap</button>
             <button class="btn btn-sm" id="btnClearVerify" title="Clear verification fields">🧹 Clear</button>
           </div>
@@ -1003,10 +1092,11 @@
       <div class="card">
         <div class="card-title">
           <span>Manifest Generator</span>
-          <div style="display:flex; gap:6px;">
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
             <button class="btn btn-sm btn-primary" id="btnGenSfv">Export .sfv (CRC32)</button>
             <button class="btn btn-sm btn-primary" id="btnGenMd5">Export .md5</button>
             <button class="btn btn-sm btn-primary" id="btnGenSha256">Export .sha256</button>
+            <button class="btn btn-sm" id="btnCopyManifest" title="Copy manifest text to clipboard">📋 Copy Manifest</button>
           </div>
         </div>
         <div style="font-size:12px; color:var(--text-muted);">
@@ -1058,8 +1148,8 @@
       <span id="statusMsg">KHash Workstation Ready.</span>
     </div>
     <div class="status-right">
-      <span id="statusAlgoCount">8 Engines Active</span>
-      <span>F5: Save | F9: Load</span>
+      <span id="statusAlgoCount">9 Engines Active</span>
+      <span>[F1/H] Help | [F5] Save | [F9] Load | [1-5] Tabs</span>
     </div>
   </footer>
 
@@ -1075,7 +1165,7 @@
 
       <div class="splash-features">
         <div class="splash-feature-item">
-          <div class="splash-feature-title">⚡ 8 Algorithmic Engines</div>
+          <div class="splash-feature-title">⚡ 9 Algorithmic Engines</div>
           <div>CRC32, Adler-32, FNV-1a (32/64), MD5, SHA-1, SHA-256, SHA-384, SHA-512 & HMAC.</div>
         </div>
         <div class="splash-feature-item">
@@ -1686,12 +1776,21 @@
         `;
 
         // Click to copy (via copy button or clicking the hash directly)
-        const copyFn = () => {
+        const copyFn = (e) => {
+          if (e && e.target === card.querySelector('.algo-val')) {
+            const sel = window.getSelection ? window.getSelection().toString() : '';
+            if (sel && sel.length > 0) return;
+          }
           sfxClick();
+          const valEl = card.querySelector('.algo-val');
+          if (valEl) {
+            valEl.classList.add('copied-flash');
+            setTimeout(() => valEl.classList.remove('copied-flash'), 400);
+          }
           navigator.clipboard.writeText(formatted).then(() => showToast(`Copied ${algo.name}`));
         };
-        card.querySelector('.btnCopyOne').addEventListener('click', copyFn);
-        card.querySelector('.algo-val').addEventListener('click', copyFn);
+        card.querySelector('.btnCopyOne').addEventListener('click', (e) => copyFn(e));
+        card.querySelector('.algo-val').addEventListener('click', (e) => copyFn(e));
 
         // Send to Verifier tab
         card.querySelector('.btnVerifyOne').addEventListener('click', () => {
@@ -1735,6 +1834,15 @@
       }
     });
 
+    // Window-level drag/drop protection to prevent browser navigating away
+    window.addEventListener('dragover', (e) => e.preventDefault());
+    window.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (APP_STATE.currentTab === 'tabFile' && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        handleIncomingFiles(Array.from(e.dataTransfer.files));
+      }
+    });
+
     fileInput.addEventListener('change', (e) => {
       if (e.target.files && e.target.files.length > 0) {
         handleIncomingFiles(Array.from(e.target.files));
@@ -1766,7 +1874,8 @@
               </div>
             </div>
             <div style="display:flex; gap:6px;">
-              <button class="btn btn-sm btnFileVerify">⚖️ Verify</button>
+              <button class="btn btn-sm btnFileVerify" title="Send SHA-256 to Verifier">⚖️ Verify</button>
+              <button class="btn btn-sm btnFileRemove" title="Remove this file from list">✕</button>
             </div>
           </div>
           <div class="progress-bar-wrap">
@@ -1838,6 +1947,14 @@
           switchTab('tabVerify');
           runVerification(true);
         });
+
+        card.querySelector('.btnFileRemove').addEventListener('click', () => {
+          sfxClick();
+          card.remove();
+          const idx = APP_STATE.filesAnalyzed.findIndex(f => f.name === file.name && f.size === file.size);
+          if (idx !== -1) APP_STATE.filesAnalyzed.splice(idx, 1);
+          showToast(`Removed ${file.name}`);
+        });
       }
       setStatus(`Analyzed ${files.length} file(s).`);
     }
@@ -1877,11 +1994,65 @@
     verifyExpected.addEventListener('input', () => runVerification(false));
     verifyCalculated.addEventListener('input', () => runVerification(false));
 
+    const btnPasteExpected = document.getElementById('btnPasteExpected');
+    if (btnPasteExpected) {
+      btnPasteExpected.addEventListener('click', async () => {
+        try {
+          sfxClick();
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            verifyExpected.value = text.trim();
+            runVerification(false);
+            showToast('Pasted expected hash');
+          }
+        } catch (e) {
+          showToast('Clipboard read unavailable');
+        }
+      });
+    }
+
+    const btnPasteCalculated = document.getElementById('btnPasteCalculated');
+    if (btnPasteCalculated) {
+      btnPasteCalculated.addEventListener('click', async () => {
+        try {
+          sfxClick();
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            verifyCalculated.value = text.trim();
+            runVerification(true);
+            showToast('Pasted calculated hash');
+          }
+        } catch (e) {
+          showToast('Clipboard read unavailable');
+        }
+      });
+    }
+
     document.getElementById('btnUseTextHash').addEventListener('click', () => {
       sfxClick();
-      const primary = APP_STATE.calculatedDigests['sha256'] || APP_STATE.calculatedDigests['crc32'] || '';
-      verifyCalculated.value = primary;
+      const expClean = verifyExpected.value.trim().replace(/[^0-9a-fA-F]/g, '').toLowerCase();
+      let matchedHash = '';
+      if (expClean.length === 8) {
+        matchedHash = APP_STATE.calculatedDigests['crc32'] || APP_STATE.calculatedDigests['adler32'] || '';
+      } else if (expClean.length === 16) {
+        matchedHash = APP_STATE.calculatedDigests['fnv1a64'] || '';
+      } else if (expClean.length === 32) {
+        matchedHash = APP_STATE.calculatedDigests['md5'] || '';
+      } else if (expClean.length === 40) {
+        matchedHash = APP_STATE.calculatedDigests['sha1'] || '';
+      } else if (expClean.length === 64) {
+        matchedHash = APP_STATE.calculatedDigests['sha256'] || '';
+      } else if (expClean.length === 96) {
+        matchedHash = APP_STATE.calculatedDigests['sha384'] || '';
+      } else if (expClean.length === 128) {
+        matchedHash = APP_STATE.calculatedDigests['sha512'] || '';
+      }
+      if (!matchedHash) {
+        matchedHash = APP_STATE.calculatedDigests['sha256'] || APP_STATE.calculatedDigests['crc32'] || '';
+      }
+      verifyCalculated.value = matchedHash;
       runVerification(true);
+      showToast('Populated calculated checksum');
     });
 
     const btnSwapHashes = document.getElementById('btnSwapHashes');
@@ -2032,6 +2203,21 @@
       showToast('Exported checksums.sha256');
     });
 
+    const btnCopyManifest = document.getElementById('btnCopyManifest');
+    if (btnCopyManifest) {
+      btnCopyManifest.addEventListener('click', () => {
+        sfxClick();
+        const text = document.getElementById('manifestOutput').value;
+        if (!text) {
+          showToast('No manifest generated yet');
+          return;
+        }
+        navigator.clipboard.writeText(text).then(() => {
+          showToast('Manifest copied to clipboard');
+        });
+      });
+    }
+
     function downloadTextFile(filename, content) {
       const blob = new Blob([content], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
@@ -2127,60 +2313,71 @@
     }
 
     // --- Tab 5: Benchmarks ---
-    document.getElementById('btnRunBenchmark').addEventListener('click', async () => {
+    const btnRunBench = document.getElementById('btnRunBenchmark');
+    btnRunBench.addEventListener('click', async () => {
+      if (btnRunBench.disabled) return;
       sfxClick();
-      const mb = parseInt(document.getElementById('benchSizeSelect').value, 10);
-      const container = document.getElementById('benchContainer');
-      container.innerHTML = `<div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Generating ${mb} MB pseudo-random memory buffer...</div>`;
+      btnRunBench.disabled = true;
+      btnRunBench.textContent = '⏳ Benchmarking...';
+      try {
+        const mb = parseInt(document.getElementById('benchSizeSelect').value, 10);
+        const container = document.getElementById('benchContainer');
+        container.innerHTML = `<div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Generating ${mb} MB pseudo-random memory buffer...</div>`;
 
-      // Generate buffer in memory
-      const totalBytes = mb * 1024 * 1024;
-      const buffer = new Uint8Array(totalBytes);
-      for (let i = 0; i < totalBytes; i += 4) {
-        buffer[i] = (i & 0xFF);
-        buffer[i+1] = ((i >> 8) & 0xFF);
-        buffer[i+2] = ((i >> 16) & 0xFF);
-        buffer[i+3] = 0xAA;
+        // Generate buffer in memory
+        const totalBytes = mb * 1024 * 1024;
+        const buffer = new Uint8Array(totalBytes);
+        for (let i = 0; i < totalBytes; i += 4) {
+          buffer[i] = (i & 0xFF);
+          buffer[i+1] = ((i >> 8) & 0xFF);
+          buffer[i+2] = ((i >> 16) & 0xFF);
+          buffer[i+3] = 0xAA;
+        }
+
+        container.innerHTML = '';
+        const algorithms = [
+          { name: 'CRC32', fn: () => calcCRC32(buffer) },
+          { name: 'Adler-32', fn: () => calcAdler32(buffer) },
+          { name: 'FNV-1a 32', fn: () => calcFNV1a32(buffer) },
+          { name: 'MD5 (pure JS)', fn: () => calcMD5(buffer) },
+          { name: 'SHA-1', fn: async () => await calcWebCrypto('SHA-1', buffer) },
+          { name: 'SHA-256', fn: async () => await calcWebCrypto('SHA-256', buffer) },
+          { name: 'SHA-512', fn: async () => await calcWebCrypto('SHA-512', buffer) }
+        ];
+
+        const results = [];
+
+        for (const item of algorithms) {
+          const start = performance.now();
+          await item.fn();
+          const elapsed = performance.now() - start;
+          const mbSec = (mb / (elapsed / 1000)).toFixed(1);
+          results.push({ name: item.name, elapsed: elapsed.toFixed(1), mbSec: parseFloat(mbSec) });
+        }
+
+        const maxSpeed = Math.max(...results.map(r => r.mbSec), 1);
+
+        results.forEach(r => {
+          const row = document.createElement('div');
+          row.className = 'bench-row';
+          const pct = Math.min(100, Math.round((r.mbSec / maxSpeed) * 100));
+          row.innerHTML = `
+            <div class="bench-label">${r.name}</div>
+            <div class="bench-bar-track">
+              <div class="bench-bar-fill" style="width:${pct}%;"></div>
+            </div>
+            <div class="bench-stat">${r.mbSec} MB/s (${r.elapsed}ms)</div>
+          `;
+          container.appendChild(row);
+        });
+
+        setStatus(`Benchmark completed for ${mb} MB sample.`);
+      } catch (err) {
+        showToast('Benchmark encountered an error');
+      } finally {
+        btnRunBench.disabled = false;
+        btnRunBench.textContent = '🚀 Run Benchmark';
       }
-
-      container.innerHTML = '';
-      const algorithms = [
-        { name: 'CRC32', fn: () => calcCRC32(buffer) },
-        { name: 'Adler-32', fn: () => calcAdler32(buffer) },
-        { name: 'FNV-1a 32', fn: () => calcFNV1a32(buffer) },
-        { name: 'MD5 (pure JS)', fn: () => calcMD5(buffer) },
-        { name: 'SHA-1', fn: async () => await calcWebCrypto('SHA-1', buffer) },
-        { name: 'SHA-256', fn: async () => await calcWebCrypto('SHA-256', buffer) },
-        { name: 'SHA-512', fn: async () => await calcWebCrypto('SHA-512', buffer) }
-      ];
-
-      const results = [];
-
-      for (const item of algorithms) {
-        const start = performance.now();
-        await item.fn();
-        const elapsed = performance.now() - start;
-        const mbSec = (mb / (elapsed / 1000)).toFixed(1);
-        results.push({ name: item.name, elapsed: elapsed.toFixed(1), mbSec: parseFloat(mbSec) });
-      }
-
-      const maxSpeed = Math.max(...results.map(r => r.mbSec), 1);
-
-      results.forEach(r => {
-        const row = document.createElement('div');
-        row.className = 'bench-row';
-        const pct = Math.min(100, Math.round((r.mbSec / maxSpeed) * 100));
-        row.innerHTML = `
-          <div class="bench-label">${r.name}</div>
-          <div class="bench-bar-track">
-            <div class="bench-bar-fill" style="width:${pct}%;"></div>
-          </div>
-          <div class="bench-stat">${r.mbSec} MB/s (${r.elapsed}ms)</div>
-        `;
-        container.appendChild(row);
-      });
-
-      setStatus(`Benchmark completed for ${mb} MB sample.`);
     });
 
     // --- State Persistence (F5 Quicksave / F9 Quickload & JSON File Backup) ---

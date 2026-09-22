@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-22T17:52:00Z — kilo-qa: KTodo**
+  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial onboarding integrity, modal controls, safe blob exports).
+  - State Persistence: Quicksave (F5) & quickload (F9) across web (localStorage) and native (ktodo.dat) capturing tasks, subtasks, filters, and views.
+  - Native UI Parity: Added Save [F5] & Load [F9] buttons; auto-save on shutdown (WM_DESTROY) and web beforeunload/pagehide.
+  - Tutorial Integrity: Fresh-session onboarding modal (ktodo_tutorialSeen / ktodo_tutorial.dat) never interrupting restored save states.
+  - Modal Ergonomics: Added Enter, Space, and Esc keyboard handlers across Help and Tutorial modals.
+  - Resource Cleanliness: Implemented safe blob URL tracking to eliminate leaks; wrapped storage in quota protection; interval cleanup.
+  - Verification: Clean MSVC Native C build (23.0 KB); clean Vite web build (348ms); 25 automated QA suite checks passed; 0 security violations.
+
 - **2026-09-22T15:52:00Z — kilo-usability: KBookmark**
   - Status: PASS ✅ (HiDPI QR canvas scaling, responsive layout breakpoints, mobile sidebar drawer, Help & hotkey ergonomics).
   - HiDPI Canvas Scaling: Applied window.devicePixelRatio and imageSmoothingEnabled:false to #qrCanvas for razor-sharp QR codes.
