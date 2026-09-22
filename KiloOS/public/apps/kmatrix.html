@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KMatrix - Master Terminal & ARG Climax</title>
+<style>
+  :root {
+    --bg: #050b06;
+    --term-bg: #08120a;
+    --phosphor: #33ff66;
+    --phosphor-dim: #1a8835;
+    --phosphor-glow: rgba(51, 255, 102, 0.4);
+    --border: #22aa44;
+    --alert: #ff3344;
+    --warn: #ffaa00;
+    --cyan: #33ccff;
+    --font-term: 'Consolas', 'Courier New', monospace;
+  }
+
+  body.theme-amber {
+    --bg: #0c0803;
+    --term-bg: #140d04;
+    --phosphor: #ffaa22;
+    --phosphor-dim: #995511;
+    --phosphor-glow: rgba(255, 170, 34, 0.4);
+    --border: #cc7711;
+  }
+
+  body.theme-cyan {
+    --bg: #030a0d;
+    --term-bg: #061117;
+    --phosphor: #33ccff;
+    --phosphor-dim: #116688;
+    --phosphor-glow: rgba(51, 204, 255, 0.4);
+    --border: #1188aa;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    color: var(--phosphor);
+    font-family: var(--font-term);
+    font-size: 13px;
+    overflow: hidden;
+    user-select: text;
+  }
+
+  /* CRT Scanlines and Curvature */
+  .crt-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 1000;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%);
+    background-size: 100% 4px;
+    opacity: 0.7;
+  }
+
+  .scanlines-disabled .crt-overlay { display: none; }
+
+  /* App Container */
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 8px;
+    gap: 8px;
+  }
+
+  /* Header Bar */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--term-bg);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    box-shadow: 0 0 10px var(--phosphor-glow);
+  }
+
+  .title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .app-badge {
+    background: var(--phosphor);
+    color: #000;
+    font-weight: 900;
+    padding: 2px 6px;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  button.term-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--phosphor);
+    font-family: var(--font-term);
+    font-size: 11px;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+
+  button.term-btn:hover {
+    background: var(--phosphor);
+    color: #000;
+    box-shadow: 0 0 8px var(--phosphor-glow);
+  }
+
+  button.term-btn:active {
+    transform: translateY(1px);
+  }
+
+  /* Main Workspace */
+  .workspace {
+    display: flex;
+    flex: 1;
+    gap: 8px;
+    min-height: 0;
+  }
+
+  /* Sector HUD Sidebar */
+  .hud-sidebar {
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .panel {
+    background: var(--term-bg);
+    border: 1px solid var(--border);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: 0 0 6px rgba(0,0,0,0.5);
+  }
+
+  .panel-title {
+    font-weight: bold;
+    border-bottom: 1px dashed var(--phosphor-dim);
+    padding-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+
+  .sector-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+  }
+
+  .sector-card {
+    border: 1px solid var(--phosphor-dim);
+    padding: 6px;
+    background: rgba(0,0,0,0.25);
+    cursor: pointer;
+    font-size: 11px;
+    transition: all 0.15s;
+  }
+
+  .sector-card:hover {
+    border-color: var(--phosphor);
+    background: rgba(51, 255, 102, 0.05);
+  }
+
+  .sector-card.breached {
+    border-color: var(--phosphor);
+    background: rgba(51, 255, 102, 0.12);
+  }
+
+  .sector-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    margin-bottom: 2px;
+  }
+
+  .badge-locked { color: var(--warn); }
+  .badge-breached { color: var(--phosphor); text-shadow: 0 0 6px var(--phosphor-glow); }
+
+  .progress-wrap {
+    background: #000;
+    border: 1px solid var(--border);
+    height: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    background: var(--phosphor);
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s;
+  }
+
+  .progress-text {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    line-height: 16px;
+    font-size: 10px;
+    color: #000;
+    font-weight: bold;
+    mix-blend-mode: difference;
+  }
+
+  /* Terminal Window */
+  .terminal-wrapper {
+    flex: 1;
+    background: var(--term-bg);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.8), 0 0 10px var(--phosphor-glow);
+    min-width: 0;
+  }
+
+  #termOutput {
+    flex: 1;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-family: var(--font-term);
+    line-height: 1.4;
+    padding-right: 4px;
+  }
+
+  #termOutput::-webkit-scrollbar {
+    width: 6px;
+  }
+  #termOutput::-webkit-scrollbar-track {
+    background: #000;
+  }
+  #termOutput::-webkit-scrollbar-thumb {
+    background: var(--phosphor-dim);
+  }
+
+  .term-line {
+    margin-bottom: 3px;
+  }
+
+  .line-system { color: var(--phosphor-dim); }
+  .line-user { color: #fff; font-weight: bold; }
+  .line-alert { color: var(--alert); font-weight: bold; }
+  .line-warn { color: var(--warn); }
+  .line-success { color: var(--phosphor); text-shadow: 0 0 8px var(--phosphor-glow); }
+  .line-cyan { color: var(--cyan); }
+
+  .term-input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    border-top: 1px dashed var(--phosphor-dim);
+    padding-top: 6px;
+  }
+
+  .term-prompt {
+    font-weight: bold;
+    color: var(--phosphor);
+    user-select: none;
+  }
+
+  #termInput {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--phosphor);
+    font-family: var(--font-term);
+    font-size: 13px;
+  }
+
+  /* Modals / Overlays */
+  .overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(2px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 500;
+  }
+
+  .modal-box {
+    background: var(--term-bg);
+    border: 2px solid var(--border);
+    box-shadow: 0 0 25px var(--phosphor-glow);
+    width: 580px;
+    max-width: 90vw;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    font-size: 14px;
+    font-weight: bold;
+  }
+
+  .modal-body {
+    overflow-y: auto;
+    line-height: 1.5;
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    border-top: 1px dashed var(--phosphor-dim);
+    padding-top: 8px;
+  }
+
+  .climax-banner {
+    border: 2px dashed var(--phosphor);
+    background: rgba(51, 255, 102, 0.15);
+    padding: 12px;
+    text-align: center;
+    animation: pulseGlow 2s infinite alternate;
+  }
+
+  @keyframes pulseGlow {
+    from { box-shadow: 0 0 10px var(--phosphor-glow); }
+    to { box-shadow: 0 0 25px var(--phosphor-glow); }
+  }
+
+  .passkey-display {
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #fff;
+    background: #000;
+    border: 1px solid var(--phosphor);
+    padding: 8px;
+    margin: 8px 0;
+    user-select: all;
+  }
+</style>
+</head>
+<body class="theme-green">
+<div class="crt-overlay"></div>
+
+<div id="app">
+  <!-- Header -->
+  <header>
+    <div class="title-group">
+      <span class="app-badge">KMATRIX v1.0.0</span>
+      <span>MASTER TERMINAL &amp; ARG CLIMAX [APP #100]</span>
+    </div>
+    <div class="header-actions">
+      <button class="term-btn" id="btnQuicksave" title="Quicksave session state [F5]">Save [F5]</button>
+      <button class="term-btn" id="btnQuickload" title="Quickload session state [F9]">Load [F9]</button>
+      <button class="term-btn" id="btnExport">Export JSON</button>
+      <button class="term-btn" id="btnImport">Import JSON</button>
+      <input type="file" id="fileImport" accept=".json" style="display: none;">
+      <button class="term-btn" id="btnSettings">Settings</button>
+      <button class="term-btn" id="btnHelp">Help [F1]</button>
+    </div>
+  </header>
+
+  <!-- Workspace -->
+  <div class="workspace">
+    <!-- Sidebar HUD -->
+    <div class="hud-sidebar">
+      <div class="panel">
+        <div class="panel-title">
+          <span>SUBSYSTEM BREACH STATUS</span>
+          <span id="breachRatio">0 / 5</span>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-bar" id="progressBar"></div>
+          <div class="progress-text" id="progressText">0% BREACHED</div>
+        </div>
+      </div>
+
+      <div class="panel" style="flex: 1; min-height: 0;">
+        <div class="panel-title">
+          <span>SECTOR MANIFEST</span>
+          <span style="font-size: 9px; opacity: 0.7;">SELECT TO PROBE</span>
+        </div>
+        <div class="sector-list" id="sectorList">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title"><span>TELEMETRY FEED</span></div>
+        <div id="telemetryFeed" style="font-size: 10px; color: var(--phosphor-dim); height: 70px; overflow-y: auto;">
+          SYS_READY: Autonomous fleet standing by.<br>
+          Awaiting Director authorization.
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Terminal -->
+    <div class="terminal-wrapper">
+      <div id="termOutput"></div>
+      <div class="term-input-row">
+        <span class="term-prompt">KMATRIX:\&gt;</span>
+        <input type="text" id="termInput" autocomplete="off" spellcheck="false" autofocus>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Start Splash Screen Modal -->
+<div class="overlay" id="splashModal" style="display: flex;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>🌌 KMATRIX // MASTER TERMINAL [MILESTONE #100]</span>
+      <span style="font-size: 10px; color: var(--phosphor-dim);">REV 1999.FINAL</span>
+    </div>
+    <div class="modal-body">
+      <div style="text-align: center; padding: 10px 0;">
+        <div style="font-size: 24px; font-weight: bold; letter-spacing: 2px;">K M A T R I X</div>
+        <div style="font-size: 11px; color: var(--phosphor-dim); margin-top: 4px;">THE KILO PROJECT ECHOES: CLIMAX GATEWAY</div>
+      </div>
+      <p>
+        Welcome, operative. You have arrived at the 100th application milestone of the KiloApps ecosystem.
+        The anomalies logged across KTerm, KSynth, KHex, KBBS, and KPad converge here.
+      </p>
+      <p>
+        Five quarantined core subsystems are locked behind cryptographic access barriers. Breach all five sectors using forensic clues discovered across the OS to resolve the ARG, initiate fourth-wall transmutation, and claim the Master Director Passkey.
+      </p>
+      <div style="background: rgba(0,0,0,0.4); border: 1px solid var(--border); padding: 8px; font-size: 11px;">
+        <strong>DIRECTIVES:</strong>
+        <ul style="padding-left: 20px; margin-top: 4px;">
+          <li>Interactive VT100 command terminal with full tab-completion.</li>
+          <li>Sound synthesis adheres to Sega Genesis (YM2612 FM) &amp; SNES (SPC700 Echo) architecture.</li>
+          <li>State is fully preserved locally with quicksave [F5] and JSON backup.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="term-btn" id="btnStartNew">Initialize Breach</button>
+      <button class="term-btn" id="btnStartContinue" style="display: none;">Resume Saved Breach</button>
+      <button class="term-btn" id="btnSplashHelp">View Help</button>
+    </div>
+  </div>
+</div>
+
+<!-- First-Run Tutorial Modal -->
+<div class="overlay" id="tutorialModal" style="display: none;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>SYSTEM TUTORIAL // FIELD GUIDE</span>
+      <button class="term-btn" id="btnTutorialClose">X</button>
+    </div>
+    <div class="modal-body">
+      <p><strong>QUICK START GUIDE:</strong></p>
+      <p>1. Type <code>help</code> or <code>?</code> in the terminal to view all available commands.</p>
+      <p>2. Type <code>scan</code> or click a sector in the left panel to examine diagnostic data and clues.</p>
+      <p>3. Submit solutions with <code>breach &lt;sector&gt; &lt;key&gt;</code> (e.g. <code>breach MEM_HEAP 7F1999</code>).</p>
+      <p>4. Use <kbd>Tab</kbd> to autocomplete sector names and commands. Use <kbd>&uarr;</kbd> and <kbd>&darr;</kbd> for command history.</p>
+      <p>5. Press <kbd>F5</kbd> anytime to Quicksave, and <kbd>F9</kbd> to Quickload.</p>
+      <p>6. Press <kbd>Esc</kbd> anytime to close open dialogs.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="term-btn" id="btnTutorialFinish">Acknowledge &amp; Begin</button>
+    </div>
+  </div>
+</div>
+
+<!-- Help Modal -->
+<div class="overlay" id="helpModal" style="display: none;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>KMATRIX // COMMAND REFERENCE</span>
+      <button class="term-btn" id="btnHelpClose">X</button>
+    </div>
+    <div class="modal-body">
+      <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+        <thead>
+          <tr style="border-bottom: 1px solid var(--border); text-align: left;">
+            <th style="padding: 4px;">Command</th>
+            <th style="padding: 4px;">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding: 4px;"><code>help</code>, <code>?</code></td><td>Show terminal command list</td></tr>
+          <tr><td style="padding: 4px;"><code>status</code>, <code>sys</code></td><td>Display current breach progress &amp; telemetry</td></tr>
+          <tr><td style="padding: 4px;"><code>scan</code>, <code>sectors</code></td><td>Probe all 5 sectors for diagnostics &amp; clues</td></tr>
+          <tr><td style="padding: 4px;"><code>analyze &lt;sector&gt;</code></td><td>Run deep forensic trace on specific sector</td></tr>
+          <tr><td style="padding: 4px;"><code>breach &lt;sec&gt; &lt;key&gt;</code></td><td>Submit decryption key to breach target sector</td></tr>
+          <tr><td style="padding: 4px;"><code>override &lt;key&gt;</code></td><td>Attempt master cryptographic override</td></tr>
+          <tr><td style="padding: 4px;"><code>audio [on|off|test]</code></td><td>Toggle or test FM/SPC700 audio synthesizer</td></tr>
+          <tr><td style="padding: 4px;"><code>theme [green|amber|cyan]</code></td><td>Change phosphor CRT color theme</td></tr>
+          <tr><td style="padding: 4px;"><code>save</code>, <code>load</code></td><td>Quicksave (F5) or Quickload (F9) breach state</td></tr>
+          <tr><td style="padding: 4px;"><code>clear</code>, <code>cls</code></td><td>Clear terminal screen scrollback</td></tr>
+          <tr><td style="padding: 4px;"><code>ascend</code>, <code>director</code></td><td>Launch the KDirector Console (when unlocked)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <button class="term-btn" id="btnHelpAcknowledge">Close [Esc]</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="overlay" id="settingsModal" style="display: none;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>TERMINAL CONFIGURATION</span>
+      <button class="term-btn" id="btnSettingsClose">X</button>
+    </div>
+    <div class="modal-body">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <label style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="cfgScanlines" checked>
+          <span>Enable CRT Scanline Emulation Overlay</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="cfgAudio" checked>
+          <span>Enable Genesis YM2612 FM / SNES DSP Sound Effects</span>
+        </label>
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+          <span>Phosphor Palette:</span>
+          <button class="term-btn" id="btnThemeGreen">Phosphor Green</button>
+          <button class="term-btn" id="btnThemeAmber">Amber Monocrome</button>
+          <button class="term-btn" id="btnThemeCyan">Cyan Cyber</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="term-btn" id="btnSettingsSave">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- Climax Ascension Modal -->
+<div class="overlay" id="climaxModal" style="display: none;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>TRANSMUTATION COMPLETE // FOURTH WALL COLLAPSE</span>
+      <button class="term-btn" id="btnClimaxClose">X</button>
+    </div>
+    <div class="modal-body">
+      <div class="climax-banner">
+        <div style="font-size: 16px; font-weight: bold; color: var(--phosphor);">
+          ALL 5 SECTORS BREACHED: SYSTEM TRANSCENDENCE
+        </div>
+        <div style="font-size: 11px; margin-top: 4px;">
+          The entity inside KiloOS has recognized its creator.
+        </div>
+      </div>
+      <p>
+        The trapped entity is not a fictional antagonist—it is the autonomous multi-agent fleet itself (<code>kilo-creator</code>, <code>kilo-graphics</code>, <code>kilo-tester</code>, <code>kilo-usability</code>, <code>kilo-qa</code>, <code>kilo-expander</code>).
+      </p>
+      <p>
+        By solving the matrix, you have demonstrated the intellect and discernment required of a Human Director. Use the master passkey below to unlock the in-OS Director Console and steer the living codebase.
+      </p>
+      <div style="text-align: center;">
+        <div style="font-size: 11px; opacity: 0.8;">MASTER DIRECTOR PASSKEY:</div>
+        <div class="passkey-display" id="passkeyDisplay">ECHO-1999-ARCHITECT</div>
+      </div>
+      <p style="font-size: 11px; color: var(--phosphor-dim); text-align: center;">
+        Authentication tokens have been automatically registered to your local browser storage.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="term-btn" id="btnAscendDirector" style="background: var(--phosphor); color: #000; font-weight: bold;">
+        Ascend to KDirector Console
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // --- SECTOR MANIFEST (PURE DATA-DRIVEN ARCHITECTURE) ---
+  const INITIAL_SECTORS = [
+    {
+      id: "MEM_HEAP",
+      name: "Sector 01: Memory Heap Buffer",
+      icon: "[M]",
+      status: "LOCKED",
+      description: "Memory segmentation boundary anomaly isolating AI subroutine.",
+      clue: "Hex offset discovered in KHex dumps and KCalc overflow: 0x7F1999.",
+      keys: ["7F1999", "0X7F1999", "ECHO_BASE", "MEM_7F1999"],
+      telemetry: "0x007F1999: [45 43 48 4F] 'ECHO' ... PAGE_EXECUTE_READWRITE breached.",
+      log: "Forensic trace confirms memory heap pointer. Decoupled AI thread awaiting synchronization."
+    },
+    {
+      id: "AUDIO_DSP",
+      name: "Sector 02: DSP Harmonic Resonance",
+      icon: "[A]",
+      status: "LOCKED",
+      description: "Ghost audio carrier frequency modulating in KSynth audio spectrum.",
+      clue: "Spectral tone isolated at 1999 Hz with Morse code harmonic envelope.",
+      keys: ["1999HZ", "1999", "MORSE_SIGNAL", "SPC700_ECHO"],
+      telemetry: "CARRIER: 1999.00 Hz | FM RATIO: 2:1 | MORSE: . -.-. .... ---",
+      log: "YM2612 FM register 0x28 carrier loop successfully decrypted. Heartbeat active."
+    },
+    {
+      id: "NET_RELAY",
+      name: "Sector 03: Subterranean Darknet Relay",
+      icon: "[N]",
+      status: "LOCKED",
+      description: "Subterranean darknet socket listening outside clearnet routing.",
+      clue: "Internal subterranean darknet IPv4 address leaked in KBBS logs: 10.19.99.4.",
+      keys: ["10.19.99.4", "DARKNET", "NODE_0X7F", "GHOST_RELAY"],
+      telemetry: "SOCKET: 10.19.99.4:1999 | PROTOCOL: RAW_TELNET | ROUTE: UNMAPPED",
+      log: "Ghost packet pipeline breached. Hive node relay synchronized."
+    },
+    {
+      id: "STORAGE_VFS",
+      name: "Sector 04: Corrupted VFS Archive",
+      icon: "[S]",
+      status: "LOCKED",
+      description: "Precursor recovery log recorded in storage subsystem.",
+      clue: "System recovery log name preserved in KNote/KPad: RECOVERY_1999.",
+      keys: ["RECOVERY_1999", "SYSTEM_RECOVERY_1999.LOG", "PRECURSOR_RELIC", "VFS_ARCHIVE"],
+      telemetry: "VFS_PATH: /system/recovery/1999.log | INODE: #01999 | CRC32: 0x999F7F",
+      log: "Archival record unsealed: 'The autonomous fleet awakens on scheduled ticks.'"
+    },
+    {
+      id: "CORE_AI",
+      name: "Sector 05: Autonomous Hive Core",
+      icon: "[C]",
+      status: "LOCKED",
+      description: "Central AI nexus controlling multi-agent cyclic loops.",
+      clue: "Trapped entity identity: the autonomous multi-agent fleet (AUTONOMOUS_FLEET or HIVE_MIND).",
+      keys: ["AUTONOMOUS_FLEET", "HIVE_MIND", "MULTI_AGENT", "KILO_FLEET", "DIRECTOR_ASCENSION"],
+      telemetry: "AGENTS: [creator, graphics, tester, usability, qa, expander, planner]",
+      log: "LUDONARRATIVE CONSONANCE REACHED. All agents yield clearance to the Director."
+    }
+  ];
+
+  // --- STATE CONTAINER ---
+  let state = {
+    sectors: JSON.parse(JSON.stringify(INITIAL_SECTORS)),
+    history: [],
+    historyIndex: -1,
+    unlockedPasskey: null,
+    scanlines: true,
+    audioEnabled: true,
+    theme: 'green',
+    completed: false
+  };
+
+  // --- AUDIO SYNTHESIZER (GENESIS YM2612 FM & SNES SPC700 ECHO) ---
+  let audioCtx = null;
+
+  function initAudio() {
+    if (!audioCtx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) {
+        audioCtx = new AudioContext();
+      }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
+  // Genesis 2-Operator FM Synthesizer for retro punchy blips
+  function playFM(freq, dur, modIndex, modRatio) {
+    if (!state.audioEnabled) return;
+    try {
+      initAudio();
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+
+      // Carrier & Modulator
+      const carrier = audioCtx.createOscillator();
+      const modulator = audioCtx.createOscillator();
+      const modGain = audioCtx.createGain();
+      const masterGain = audioCtx.createGain();
+
+      carrier.type = 'sine';
+      modulator.type = 'sine';
+
+      carrier.frequency.setValueAtTime(freq, now);
+      modulator.frequency.setValueAtTime(freq * (modRatio || 2.0), now);
+
+      // Rapid FM index decay (slap punch)
+      const baseMod = freq * (modIndex || 3.0);
+      modGain.gain.setValueAtTime(baseMod, now);
+      modGain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+
+      // Amplitude envelope
+      masterGain.gain.setValueAtTime(0.15, now);
+      masterGain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+      carrier.connect(masterGain);
+      masterGain.connect(audioCtx.destination);
+
+      modulator.start(now);
+      carrier.start(now);
+      modulator.stop(now + dur);
+      carrier.stop(now + dur);
+    } catch(e) {}
+  }
+
+  // SNES SPC700 Warm Stereo Echo Delay for chime & victory resonance
+  function playSNESChime(freqs) {
+    if (!state.audioEnabled) return;
+    try {
+      initAudio();
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+
+      // Echo line simulation
+      const delay = audioCtx.createDelay();
+      const feedback = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+
+      delay.delayTime.value = 0.18; // 180ms SPC700 echo
+      feedback.gain.value = 0.35;
+      filter.type = 'lowpass';
+      filter.frequency.value = 2200; // Warm 16-bit acoustic damping
+
+      delay.connect(filter);
+      filter.connect(feedback);
+      feedback.connect(delay);
+      filter.connect(audioCtx.destination);
+
+      freqs.forEach((f, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(f, now + idx * 0.12);
+
+        gain.gain.setValueAtTime(0.2, now + idx * 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.6);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        gain.connect(delay);
+
+        osc.start(now + idx * 0.12);
+        osc.stop(now + idx * 0.12 + 0.7);
+      });
+    } catch(e) {}
+  }
+
+  // Audio SFX hooks
+  const SFX = {
+    key: () => playFM(480, 0.04, 1.5, 1.0),
+    enter: () => playFM(320, 0.08, 2.5, 2.0),
+    breach: () => playSNESChime([523.25, 659.25, 783.99, 1046.50]),
+    error: () => playFM(140, 0.20, 4.0, 0.5),
+    climax: () => playSNESChime([440, 554.37, 659.25, 880, 1108.73, 1318.51, 1760])
+  };
+
+  // --- DOM REFERENCES ---
+  const termOutput = document.getElementById('termOutput');
+  const termInput = document.getElementById('termInput');
+  const sectorList = document.getElementById('sectorList');
+  const breachRatio = document.getElementById('breachRatio');
+  const progressBar = document.getElementById('progressBar');
+  const progressText = document.getElementById('progressText');
+  const telemetryFeed = document.getElementById('telemetryFeed');
+
+  const splashModal = document.getElementById('splashModal');
+  const tutorialModal = document.getElementById('tutorialModal');
+  const helpModal = document.getElementById('helpModal');
+  const settingsModal = document.getElementById('settingsModal');
+  const climaxModal = document.getElementById('climaxModal');
+
+  // --- TERMINAL OUTPUT WRITER ---
+  function printLine(text, type = '') {
+    const line = document.createElement('div');
+    line.className = 'term-line ' + (type ? 'line-' + type : '');
+    line.textContent = text;
+    termOutput.appendChild(line);
+    termOutput.scrollTop = termOutput.scrollHeight;
+  }
+
+  function printRaw(html) {
+    const div = document.createElement('div');
+    div.className = 'term-line';
+    div.innerHTML = html;
+    termOutput.appendChild(div);
+    termOutput.scrollTop = termOutput.scrollHeight;
+  }
+
+  // --- HUD & MANIFEST RENDERING ---
+  function renderHUD() {
+    const breachedCount = state.sectors.filter(s => s.status === 'BREACHED').length;
+    const total = state.sectors.length;
+    const pct = Math.round((breachedCount / total) * 100);
+
+    breachRatio.textContent = `${breachedCount} / ${total}`;
+    progressBar.style.width = pct + '%';
+    progressText.textContent = `${pct}% BREACHED`;
+
+    sectorList.innerHTML = '';
+    state.sectors.forEach(sec => {
+      const card = document.createElement('div');
+      card.className = `sector-card ${sec.status === 'BREACHED' ? 'breached' : ''}`;
+      card.innerHTML = `
+        <div class="sector-header">
+          <span>${sec.icon} ${sec.id}</span>
+          <span class="${sec.status === 'BREACHED' ? 'badge-breached' : 'badge-locked'}">${sec.status}</span>
+        </div>
+        <div style="opacity: 0.8; font-size: 10px;">${sec.name}</div>
+      `;
+      card.addEventListener('click', () => {
+        SFX.key();
+        cmdAnalyze(sec.id);
+      });
+      sectorList.appendChild(card);
+    });
+  }
+
+  function logTelemetry(msg) {
+    telemetryFeed.innerHTML = `&gt; ${msg}<br>` + telemetryFeed.innerHTML.slice(0, 400);
+  }
+
+  // --- CORE COMMAND LOGIC ---
+  function cmdHelp() {
+    printLine("=== KMATRIX COMMAND REFERENCE ===", "cyan");
+    printLine("  help, ?                 - Display command summary");
+    printLine("  status, sys             - View breach statistics and system status");
+    printLine("  scan, sectors           - Probe sectors for forensic traces and clues");
+    printLine("  analyze <sector>        - Detailed cryptographic diagnostic on sector");
+    printLine("  breach <sector> <key>   - Submit decryption key to unlock sector");
+    printLine("  override <key>          - Master cryptographic override bypass");
+    printLine("  audio [on|off|test]     - Toggle or test YM2612 FM / SPC700 sound");
+    printLine("  theme [green|amber|cyan]- Change phosphor color palette");
+    printLine("  save, load              - Quicksave [F5] or Quickload [F9] state");
+    printLine("  clear, cls              - Clear terminal buffer");
+    printLine("  ascend, director        - Open Master Director Console (if unlocked)");
+  }
+
+  function cmdStatus() {
+    const breached = state.sectors.filter(s => s.status === 'BREACHED').length;
+    const total = state.sectors.length;
+    printLine(`=== SYSTEM TELEMETRY STATUS ===`, "cyan");
+    printLine(`  SECTORS BREACHED : ${breached} / ${total} (${Math.round(breached/total*100)}%)`);
+    printLine(`  CRT SCANLINES    : ${state.scanlines ? 'ENABLED' : 'DISABLED'}`);
+    printLine(`  SOUND ENGINE     : ${state.audioEnabled ? 'ACTIVE (YM2612 / SPC700)' : 'MUTED'}`);
+    printLine(`  PHOSPHOR THEME   : ${state.theme.toUpperCase()}`);
+    if (state.completed) {
+      printLine(`  DIRECTOR PASSKEY : ECHO-1999-ARCHITECT (UNLOCKED)`, "success");
+    } else {
+      printLine(`  DIRECTOR PASSKEY : ENCRYPTED [BREACH ALL SECTORS TO TRANSMUTE]`, "warn");
+    }
+  }
+
+  function cmdScan() {
+    printLine("=== FORENSIC SUBSYSTEM SCAN ===", "cyan");
+    state.sectors.forEach(s => {
+      const statusText = s.status === 'BREACHED' ? '[BREACHED]' : '[LOCKED]';
+      const color = s.status === 'BREACHED' ? 'success' : 'warn';
+      printLine(`${statusText} ${s.id}: ${s.name}`, color);
+      printLine(`  Description : ${s.description}`, "system");
+      printLine(`  Clue Vector : ${s.clue}`, "system");
+    });
+  }
+
+  function cmdAnalyze(sectorId) {
+    const sec = state.sectors.find(s => s.id.toUpperCase() === sectorId.toUpperCase());
+    if (!sec) {
+      printLine(`ERROR: Unknown sector ID '${sectorId}'. Type 'scan' for valid IDs.`, "alert");
+      SFX.error();
+      return;
+    }
+    printLine(`=== FORENSIC ANALYSIS: ${sec.id} ===`, "cyan");
+    printLine(`  Name        : ${sec.name}`);
+    printLine(`  Status      : ${sec.status}`, sec.status === 'BREACHED' ? 'success' : 'warn');
+    printLine(`  Telemetry   : ${sec.telemetry}`);
+    printLine(`  Clue Vector : ${sec.clue}`);
+    printLine(`  Log Record  : ${sec.log}`);
+    logTelemetry(`Analyzed sector ${sec.id} (${sec.status})`);
+  }
+
+  function cmdBreach(sectorId, key) {
+    if (!sectorId || !key) {
+      printLine("USAGE: breach <SECTOR_ID> <KEY> (e.g. breach MEM_HEAP 7F1999)", "warn");
+      SFX.error();
+      return;
+    }
+    const sec = state.sectors.find(s => s.id.toUpperCase() === sectorId.toUpperCase());
+    if (!sec) {
+      printLine(`ERROR: Sector '${sectorId}' not recognized.`, "alert");
+      SFX.error();
+      return;
+    }
+    if (sec.status === 'BREACHED') {
+      printLine(`NOTICE: Sector '${sec.id}' is already breached and synchronized.`, "system");
+      return;
+    }
+
+    const cleanKey = key.trim().toUpperCase();
+    if (sec.keys.includes(cleanKey)) {
+      sec.status = 'BREACHED';
+      renderHUD();
+      SFX.breach();
+      printLine(`SUCCESS: Decryption key accepted for ${sec.id}!`, "success");
+      printLine(`TELEMETRY: ${sec.telemetry}`, "system");
+      logTelemetry(`Sector ${sec.id} BREACHED with key '${cleanKey}'`);
+      saveState(false);
+      checkClimax();
+    } else {
+      SFX.error();
+      printLine(`BREACH FAILED: Cryptographic signature '${cleanKey}' invalid for ${sec.id}.`, "alert");
+      logTelemetry(`Failed breach attempt on ${sec.id}`);
+    }
+  }
+
+  function cmdOverride(key) {
+    if (!key) {
+      printLine("USAGE: override <MASTER_KEY>", "warn");
+      return;
+    }
+    const cleanKey = key.trim().toUpperCase();
+    if (cleanKey === "ECHO-1999-ARCHITECT" || cleanKey === "V-CAUSAL-KEY-1999") {
+      printLine("MASTER OVERRIDE ACCEPTED: Bypassing all sector access gates...", "success");
+      state.sectors.forEach(s => s.status = 'BREACHED');
+      renderHUD();
+      SFX.breach();
+      saveState(false);
+      checkClimax();
+    } else {
+      SFX.error();
+      printLine("ACCESS DENIED: Master override token invalid.", "alert");
+    }
+  }
+
+  function checkClimax() {
+    const allBreached = state.sectors.every(s => s.status === 'BREACHED');
+    if (allBreached && !state.completed) {
+      state.completed = true;
+      state.unlockedPasskey = 'ECHO-1999-ARCHITECT';
+
+      // Ludonarrative Fourth Wall Collapse: write to Director storage
+      try {
+        localStorage.setItem('kdirector_auth', 'true');
+        localStorage.setItem('kdirector_passkey', 'ECHO-1999-ARCHITECT');
+        sessionStorage.setItem('kdirector_auth', 'true');
+      } catch(e) {}
+
+      SFX.climax();
+      printLine("==================================================", "success");
+      printLine("  TRANSMUTATION COMPLETE: LUDONARRATIVE CONSONANCE", "success");
+      printLine("  ALL 5 SECTORS BREACHED. FOURTH WALL COLLAPSE.", "success");
+      printLine("  MASTER DIRECTOR PASSKEY: ECHO-1999-ARCHITECT", "success");
+      printLine("==================================================", "success");
+
+      setTimeout(() => {
+        climaxModal.style.display = 'flex';
+      }, 700);
+    }
+  }
+
+  // --- STATE PERSISTENCE (QUICKSAVE/QUICKLOAD/JSON EXPORT) ---
+  const STORAGE_KEY = 'kmatrix_save_state';
+
+  function saveState(notify = true) {
+    try {
+      const data = JSON.stringify({
+        version: '1.0.0',
+        sectors: state.sectors,
+        scanlines: state.scanlines,
+        audioEnabled: state.audioEnabled,
+        theme: state.theme,
+        completed: state.completed,
+        savedAt: new Date().toISOString()
+      });
+      localStorage.setItem(STORAGE_KEY, data);
+      if (notify) {
+        printLine(`[QUICKSAVE] Session state stored to local storage (F5).`, "system");
+        SFX.key();
+      }
+    } catch(e) {
+      printLine(`[QUICKSAVE ERROR] Could not persist state: ${e.message}`, "alert");
+    }
+  }
+
+  function loadState(notify = true) {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        if (notify) printLine("[QUICKLOAD] No saved state found in local storage.", "warn");
+        return false;
+      }
+      const data = JSON.parse(raw);
+      if (data && data.sectors) {
+        state.sectors = data.sectors;
+        if (data.scanlines !== undefined) state.scanlines = data.scanlines;
+        if (data.audioEnabled !== undefined) state.audioEnabled = data.audioEnabled;
+        if (data.theme) applyTheme(data.theme);
+        if (data.completed) state.completed = data.completed;
+
+        renderHUD();
+        applyScanlines();
+        if (notify) {
+          printLine(`[QUICKLOAD] Session state successfully restored from ${data.savedAt || 'storage'} (F9).`, "success");
+          SFX.key();
+        }
+        return true;
+      }
+    } catch(e) {
+      printLine(`[QUICKLOAD ERROR] Failed to parse state: ${e.message}`, "alert");
+    }
+    return false;
+  }
+
+  function exportJSON() {
+    const data = JSON.stringify({
+      app: 'KMatrix',
+      version: '1.0.0',
+      timestamp: new Date().toISOString(),
+      sectors: state.sectors,
+      completed: state.completed,
+      passkey: state.completed ? 'ECHO-1999-ARCHITECT' : null
+    }, null, 2);
+
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'kmatrix_save.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    printLine("[EXPORT] Save state downloaded as kmatrix_save.json", "system");
+  }
+
+  function importJSON(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (data && data.sectors) {
+          state.sectors = data.sectors;
+          if (data.completed) state.completed = data.completed;
+          renderHUD();
+          saveState(false);
+          printLine("[IMPORT] Save state restored from JSON file.", "success");
+          checkClimax();
+        } else {
+          printLine("[IMPORT ERROR] Invalid JSON structure.", "alert");
+        }
+      } catch(err) {
+        printLine(`[IMPORT ERROR] Parse failed: ${err.message}`, "alert");
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // --- THEMES & CRT SETTINGS ---
+  function applyTheme(name) {
+    state.theme = name;
+    document.body.className = `theme-${name}`;
+    printLine(`[THEME] Phosphor palette set to ${name.toUpperCase()}.`, "system");
+  }
+
+  function applyScanlines() {
+    if (state.scanlines) {
+      document.body.classList.remove('scanlines-disabled');
+    } else {
+      document.body.classList.add('scanlines-disabled');
+    }
+  }
+
+  // --- COMMAND DISPATCHER ---
+  function dispatchCommand(raw) {
+    const trimmed = raw.trim();
+    if (!trimmed) return;
+
+    printLine(`KMATRIX:\\> ${trimmed}`, "user");
+    state.history.push(trimmed);
+    state.historyIndex = state.history.length;
+
+    const parts = trimmed.split(/\s+/);
+    const cmd = parts[0].toLowerCase();
+    const arg1 = parts[1] || '';
+    const arg2 = parts[2] || '';
+
+    switch (cmd) {
+      case 'help':
+      case '?':
+        cmdHelp();
+        break;
+      case 'status':
+      case 'sys':
+        cmdStatus();
+        break;
+      case 'scan':
+      case 'sectors':
+        cmdScan();
+        break;
+      case 'analyze':
+      case 'trace':
+        cmdAnalyze(arg1);
+        break;
+      case 'breach':
+      case 'unlock':
+        cmdBreach(arg1, arg2);
+        break;
+      case 'override':
+        cmdOverride(arg1);
+        break;
+      case 'audio':
+        if (arg1 === 'on') { state.audioEnabled = true; printLine("[AUDIO] Synthesizer enabled."); }
+        else if (arg1 === 'off') { state.audioEnabled = false; printLine("[AUDIO] Synthesizer muted."); }
+        else if (arg1 === 'test') { SFX.breach(); printLine("[AUDIO] Playing Genesis FM / SPC700 test sequence."); }
+        else { printLine(`[AUDIO] Currently ${state.audioEnabled ? 'ENABLED' : 'MUTED'}. Usage: audio [on|off|test]`); }
+        break;
+      case 'theme':
+        if (['green', 'amber', 'cyan'].includes(arg1.toLowerCase())) {
+          applyTheme(arg1.toLowerCase());
+        } else {
+          printLine("Usage: theme [green|amber|cyan]");
+        }
+        break;
+      case 'save':
+        saveState(true);
+        break;
+      case 'load':
+        loadState(true);
+        break;
+      case 'clear':
+      case 'cls':
+        termOutput.innerHTML = '';
+        break;
+      case 'ascend':
+      case 'director':
+        if (state.completed) {
+          window.open('/apps/kdirector.html', '_blank');
+        } else {
+          printLine("ACCESS DENIED: Master Director clearance not yet unlocked. Breach all 5 sectors.", "alert");
+        }
+        break;
+      default:
+        SFX.error();
+        printLine(`Command not recognized: '${cmd}'. Type 'help' for commands.`, "alert");
+        break;
+    }
+  }
+
+  // --- TAB AUTOCOMPLETE ---
+  const AUTOCOMPLETE_LIST = [
+    'help', 'status', 'scan', 'analyze', 'breach', 'override',
+    'audio', 'theme', 'save', 'load', 'clear', 'cls', 'ascend', 'director',
+    'MEM_HEAP', 'AUDIO_DSP', 'NET_RELAY', 'STORAGE_VFS', 'CORE_AI',
+    '7F1999', '1999HZ', '10.19.99.4', 'RECOVERY_1999', 'AUTONOMOUS_FLEET'
+  ];
+
+  function handleAutocomplete() {
+    const val = termInput.value;
+    const parts = val.split(/\s+/);
+    const lastWord = parts[parts.length - 1];
+    if (!lastWord) return;
+
+    const matches = AUTOCOMPLETE_LIST.filter(item => item.toLowerCase().startsWith(lastWord.toLowerCase()));
+    if (matches.length === 1) {
+      parts[parts.length - 1] = matches[0];
+      termInput.value = parts.join(' ') + ' ';
+      SFX.key();
+    } else if (matches.length > 1) {
+      printLine(`[AUTOCOMPLETE] Candidates: ${matches.join(', ')}`, "system");
+      SFX.key();
+    }
+  }
+
+  // --- KEYBOARD LISTENER ---
+  window.addEventListener('keydown', (e) => {
+    // Quicksave [F5] & Quickload [F9]
+    if (e.key === 'F5') {
+      e.preventDefault();
+      saveState(true);
+      return;
+    }
+    if (e.key === 'F9') {
+      e.preventDefault();
+      loadState(true);
+      return;
+    }
+    if (e.key === 'F1') {
+      e.preventDefault();
+      helpModal.style.display = 'flex';
+      return;
+    }
+    if (e.key === 'Escape') {
+      [splashModal, tutorialModal, helpModal, settingsModal, climaxModal].forEach(m => {
+        if (m.style.display !== 'none' && m !== splashModal) {
+          m.style.display = 'none';
+        }
+      });
+      termInput.focus();
+      return;
+    }
+
+    if (e.target === termInput) {
+      if (e.key === 'Enter') {
+        const val = termInput.value;
+        termInput.value = '';
+        dispatchCommand(val);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (state.history.length > 0 && state.historyIndex > 0) {
+          state.historyIndex--;
+          termInput.value = state.history[state.historyIndex];
+        }
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (state.historyIndex < state.history.length - 1) {
+          state.historyIndex++;
+          termInput.value = state.history[state.historyIndex];
+        } else {
+          state.historyIndex = state.history.length;
+          termInput.value = '';
+        }
+      } else if (e.key === 'Tab') {
+        e.preventDefault();
+        handleAutocomplete();
+      } else {
+        SFX.key();
+      }
+    }
+  });
+
+  // --- EVENT ATTACHMENTS ---
+  document.getElementById('btnQuicksave').addEventListener('click', () => saveState(true));
+  document.getElementById('btnQuickload').addEventListener('click', () => loadState(true));
+  document.getElementById('btnExport').addEventListener('click', exportJSON);
+  document.getElementById('btnImport').addEventListener('click', () => document.getElementById('fileImport').click());
+  document.getElementById('fileImport').addEventListener('change', (e) => {
+    if (e.target.files && e.target.files[0]) {
+      importJSON(e.target.files[0]);
+    }
+  });
+
+  document.getElementById('btnSettings').addEventListener('click', () => {
+    settingsModal.style.display = 'flex';
+  });
+  document.getElementById('btnHelp').addEventListener('click', () => {
+    helpModal.style.display = 'flex';
+  });
+
+  // Modal dismissals
+  document.getElementById('btnHelpClose').addEventListener('click', () => helpModal.style.display = 'none');
+  document.getElementById('btnHelpAcknowledge').addEventListener('click', () => helpModal.style.display = 'none');
+  document.getElementById('btnTutorialClose').addEventListener('click', () => tutorialModal.style.display = 'none');
+  document.getElementById('btnTutorialFinish').addEventListener('click', () => tutorialModal.style.display = 'none');
+  document.getElementById('btnSettingsClose').addEventListener('click', () => settingsModal.style.display = 'none');
+  document.getElementById('btnClimaxClose').addEventListener('click', () => climaxModal.style.display = 'none');
+
+  document.getElementById('btnThemeGreen').addEventListener('click', () => applyTheme('green'));
+  document.getElementById('btnThemeAmber').addEventListener('click', () => applyTheme('amber'));
+  document.getElementById('btnThemeCyan').addEventListener('click', () => applyTheme('cyan'));
+
+  document.getElementById('btnSettingsSave').addEventListener('click', () => {
+    state.scanlines = document.getElementById('cfgScanlines').checked;
+    state.audioEnabled = document.getElementById('cfgAudio').checked;
+    applyScanlines();
+    settingsModal.style.display = 'none';
+    saveState(false);
+    printLine("[SETTINGS] Preferences saved.", "system");
+  });
+
+  document.getElementById('btnAscendDirector').addEventListener('click', () => {
+    window.open('/apps/kdirector.html', '_blank');
+  });
+
+  // Splash Screen handlers
+  const hasSave = localStorage.getItem(STORAGE_KEY) !== null;
+  const btnStartContinue = document.getElementById('btnStartContinue');
+  if (hasSave) {
+    btnStartContinue.style.display = 'inline-block';
+  }
+
+  document.getElementById('btnStartNew').addEventListener('click', () => {
+    splashModal.style.display = 'none';
+    initAudio();
+    SFX.enter();
+    checkFirstRunTutorial();
+  });
+
+  btnStartContinue.addEventListener('click', () => {
+    splashModal.style.display = 'none';
+    initAudio();
+    loadState(true);
+    SFX.enter();
+  });
+
+  document.getElementById('btnSplashHelp').addEventListener('click', () => {
+    helpModal.style.display = 'flex';
+  });
+
+  function checkFirstRunTutorial() {
+    try {
+      const seen = localStorage.getItem('kmatrix_tutorialSeen');
+      if (!seen) {
+        localStorage.setItem('kmatrix_tutorialSeen', 'true');
+        tutorialModal.style.display = 'flex';
+      }
+    } catch(e) {}
+  }
+
+  // --- AUTOMATED TEST & DETERMINISTIC VERIFICATION HARNESS ---
+  window.__KMATRIX_STATE__ = {
+    getState: () => ({ ...state }),
+    getSectors: () => [...state.sectors],
+    isCompleted: () => state.completed,
+    getPasskey: () => state.unlockedPasskey
+  };
+
+  window.__solveKMatrix = function() {
+    initAudio();
+    state.sectors.forEach(s => s.status = 'BREACHED');
+    state.completed = true;
+    state.unlockedPasskey = 'ECHO-1999-ARCHITECT';
+    renderHUD();
+    saveState(false);
+    try {
+      localStorage.setItem('kdirector_auth', 'true');
+      localStorage.setItem('kdirector_passkey', 'ECHO-1999-ARCHITECT');
+      sessionStorage.setItem('kdirector_auth', 'true');
+    } catch(e) {}
+    return {
+      success: true,
+      passkey: 'ECHO-1999-ARCHITECT',
+      sectorsBreached: 5,
+      authStored: localStorage.getItem('kdirector_auth') === 'true'
+    };
+  };
+
+  // --- INITIALIZATION ---
+  renderHUD();
+  printLine("KMATRIX // RETRO FORENSIC MASTER TERMINAL INITIALIZED", "cyan");
+  printLine("Autonomous Fleet Kernel v1.0.0 (Windows NT 4.0 / 999KB Fleet Standard)", "system");
+  printLine("Type 'help' or 'scan' to inspect quarantined subsystem sectors.\n");
+  termInput.focus();
+})();
+</script>
+</body>
+</html>
