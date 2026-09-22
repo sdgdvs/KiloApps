@@ -454,6 +454,8 @@ def main():
 
         cmd = [
             agy_bin,
+            "--add-dir",
+            str(REPO_ROOT),
             "-p",
             prompt,
             "--model",
