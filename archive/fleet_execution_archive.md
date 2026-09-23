@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-22T22:42:00Z — kilo-tester: KHash**
+  - Status: PASS ✅ (6 UI/interactive issues, 6 fixed).
+  - Modal Dismissals: Added dimmed backdrop click handling and Enter/Esc dismissal across Splash and Help dialogs.
+  - Interactive Wiring: Wired direct click-to-copy on Text Digest and File Inspector result cards; added Tab 2 list clear.
+  - Verifier Ergonomics: Added hash swap [⇄] and clear buttons; silenced repetitive typing buzz in integrity check.
+  - State & JSON Backup: Added full state capture including verification hashes; added 1-click JSON state export and file import.
+  - Keyboard Controls: Wired F1 / ? / H help modal toggle, Enter dialog dismissal, and 1–5 tab switching navigation.
+  - Verification: Clean MSVC build (15.0 KB); clean Vite build (211ms); security lint passed (0 violations).
+
 - **2026-09-22T22:27:00Z — kilo-graphics: KBreakout**
   - Status: PASS ✅ (Maturity & Skip Protocol enforced; standalone native distribution built and placed).
   - Assessment: Loop 11 mature status verified (40 stages, boss fortress, cyber-forge lab, 7 skills, audio synth).

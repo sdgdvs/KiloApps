@@ -770,8 +770,8 @@ static int CalculateTotalDefense() {
     int baseHull = 10;
     if (g_state.techReinforcedDef) baseHull += 15;
     int maxBar = (g_state.barricadeMaxHp > 0) ? g_state.barricadeMaxHp : 100;
-    int barDef = (g_state.barricadeHp * 20) / maxBar;
-    int turDef = g_state.turretCount * 18 + (g_state.turretOverclock ? 10 : 0);
+    int barDef = (g_state.barricadeHp * 25) / maxBar;
+    int turDef = g_state.turretCount * 18 + (g_state.turretOverclock ? 12 : 0);
     int facDef = 0;
     for (int f = 0; f < g_state.numFacilities; f++) {
         if (strcmp(g_state.facilities[f].id, "security") == 0) {
@@ -854,7 +854,7 @@ static void CalculateTotals(float* foodProd, float* foodNeed, float* waterProd, 
             *powerGen = (*powerGen > 5) ? (*powerGen - 5) : 6;
         }
     } else if (g_state.weatherType == 2) { // Drought
-        *waterProd *= 0.5f;
+        *waterProd *= 0.6f;
     } else if (g_state.weatherType == 4) { // Cold Snap
         *powerGen = (int)(*powerGen * 0.65f);
         if (!g_state.cmThermalOverdrive) {
@@ -873,7 +873,7 @@ static void CalculateTotals(float* foodProd, float* foodNeed, float* waterProd, 
     float foodPer = (g_state.policyFood == 0) ? 1.5f : ((g_state.policyFood == 2) ? 0.5f : ((g_state.policyFood == 3) ? 0.25f : 1.0f));
     float waterPer = (g_state.policyWater == 1) ? 0.5f : ((g_state.policyWater == 2) ? 0.25f : 1.0f);
     if (g_state.weatherType == 2) {
-        waterPer *= 1.5f; // +50% water thirst during drought
+        waterPer *= 1.35f; // Mitigated water thirst during drought
     }
 
     *foodNeed = g_state.population * foodPer;
@@ -2523,15 +2523,212 @@ static void DrawWastelandLocationSprite(HDC hdc, int x, int y, int locIdx) {
         FillSolidRect(hdc, x + 23, y + 4, 3, 7, RGB(65, 55, 50));
         FillSolidRect(hdc, x + 10, y + 21, 4, 4, RGB(80, 240, 90));
         FillSolidRect(hdc, x + 18, y + 19, 5, 5, RGB(80, 240, 90));
-    } else {
+    } else if (locIdx == 3) {
         // Abandoned Military Silo
         FillSolidRect(hdc, x + 6, y + 14, 20, 14, RGB(55, 60, 55));
         FillSolidRect(hdc, x + 11, y + 6, 10, 8, RGB(70, 75, 70));
         FillSolidRect(hdc, x + 8, y + 22, 4, 3, RGB(240, 180, 20));
         FillSolidRect(hdc, x + 14, y + 22, 4, 3, RGB(240, 180, 20));
         FillSolidRect(hdc, x + 20, y + 22, 4, 3, RGB(240, 180, 20));
+    } else {
+        // Vault 811 Tech Archive
+        FillSolidRect(hdc, x + 3, y + 6, 26, 22, RGB(18, 22, 28));
+        DrawBoxBorder(hdc, x + 3, y + 6, 26, 22, RGB(60, 90, 130));
+        // Cog blast hatch
+        FillSolidRect(hdc, x + 6, y + 9, 14, 14, RGB(45, 55, 75));
+        FillSolidRect(hdc, x + 10, y + 13, 6, 6, RGB(245, 180, 20)); // "811" core
+        FillSolidRect(hdc, x + 12, y + 7, 2, 3, RGB(180, 190, 210));
+        FillSolidRect(hdc, x + 12, y + 22, 2, 3, RGB(180, 190, 210));
+        FillSolidRect(hdc, x + 4, y + 15, 3, 2, RGB(180, 190, 210));
+        FillSolidRect(hdc, x + 19, y + 15, 3, 2, RGB(180, 190, 210));
+        // Glowing cyan archive terminal & warning chevrons
+        FillSolidRect(hdc, x + 21, y + 8, 6, 8, RGB(10, 40, 50));
+        FillSolidRect(hdc, x + 22, y + 9, 4, 6, RGB(40, 220, 240));
+        FillSolidRect(hdc, x + 5, y + 4, 22, 3, RGB(220, 170, 20));
+        FillSolidRect(hdc, x + 8, y + 4, 4, 3, RGB(20, 20, 20));
+        FillSolidRect(hdc, x + 16, y + 4, 4, 3, RGB(20, 20, 20));
     }
 }
+
+static void DrawTurretSprite(HDC hdc, int x, int y, int active) {
+    FillSolidRect(hdc, x, y, 32, 32, RGB(12, 16, 14));
+    DrawBoxBorder(hdc, x, y, 32, 32, active ? COL_BORDER_HI : COL_BORDER);
+
+    // Reinforced concrete & steel tripod base
+    FillSolidRect(hdc, x + 6, y + 25, 20, 4, RGB(45, 50, 55));
+    FillSolidRect(hdc, x + 10, y + 21, 12, 4, RGB(70, 75, 85));
+    FillSolidRect(hdc, x + 14, y + 17, 4, 4, RGB(90, 95, 105));
+
+    // Turret armored housing
+    FillSolidRect(hdc, x + 8, y + 8, 16, 10, RGB(60, 70, 80));
+    DrawBoxBorder(hdc, x + 8, y + 8, 16, 10, RGB(100, 115, 130));
+
+    // Twin 50-cal gun barrels
+    FillSolidRect(hdc, x + 2, y + 9, 7, 2, RGB(160, 165, 175));
+    FillSolidRect(hdc, x + 2, y + 14, 7, 2, RGB(160, 165, 175));
+    // Muzzle flash arresters
+    FillSolidRect(hdc, x + 1, y + 8, 2, 4, RGB(110, 115, 125));
+    FillSolidRect(hdc, x + 1, y + 13, 2, 4, RGB(110, 115, 125));
+
+    // Ammo feeder hopper
+    FillSolidRect(hdc, x + 20, y + 7, 6, 7, RGB(80, 70, 50));
+    FillSolidRect(hdc, x + 21, y + 9, 4, 2, RGB(220, 180, 40));
+
+    // Targeting sensor eye
+    COLORREF sensCol = active ? RGB(40, 230, 90) : RGB(140, 40, 40);
+    FillSolidRect(hdc, x + 13, y + 11, 4, 4, sensCol);
+    FillSolidRect(hdc, x + 14, y + 12, 2, 2, RGB(255, 255, 255));
+}
+
+static void DrawBarricadeSprite(HDC hdc, int x, int y, int hpPct) {
+    FillSolidRect(hdc, x, y, 32, 32, RGB(14, 14, 16));
+    COLORREF bdrCol = (hpPct < 40) ? COL_RED : ((hpPct < 75) ? COL_AMBER : COL_BORDER);
+    DrawBoxBorder(hdc, x, y, 32, 32, bdrCol);
+
+    // Armored bulkhead blast door frame
+    FillSolidRect(hdc, x + 4, y + 4, 24, 24, RGB(40, 45, 52));
+    DrawBoxBorder(hdc, x + 4, y + 4, 24, 24, RGB(80, 88, 100));
+
+    // Interlocking steel blast teeth
+    FillSolidRect(hdc, x + 6, y + 7, 9, 8, RGB(65, 72, 85));
+    FillSolidRect(hdc, x + 17, y + 7, 9, 8, RGB(65, 72, 85));
+    FillSolidRect(hdc, x + 10, y + 13, 12, 8, RGB(75, 82, 95));
+    // Center heavy lock latch
+    FillSolidRect(hdc, x + 14, y + 10, 4, 12, RGB(140, 145, 155));
+
+    // Hydraulic reinforcement pistons
+    FillSolidRect(hdc, x + 4, y + 8, 2, 16, RGB(180, 185, 195));
+    FillSolidRect(hdc, x + 26, y + 8, 2, 16, RGB(180, 185, 195));
+
+    // Safety hazard chevron stripes across bottom
+    FillSolidRect(hdc, x + 5, y + 23, 22, 4, RGB(220, 175, 20));
+    FillSolidRect(hdc, x + 8, y + 23, 3, 4, RGB(20, 20, 20));
+    FillSolidRect(hdc, x + 15, y + 23, 3, 4, RGB(20, 20, 20));
+    FillSolidRect(hdc, x + 22, y + 23, 3, 4, RGB(20, 20, 20));
+
+    // Integrity beacon
+    COLORREF ledCol = (hpPct < 40) ? RGB(240, 40, 40) : ((hpPct < 75) ? RGB(245, 180, 20) : RGB(40, 230, 90));
+    FillSolidRect(hdc, x + 14, y + 5, 4, 2, ledCol);
+}
+
+static void DrawRaiderSprite(HDC hdc, int x, int y, int clanIdx) {
+    FillSolidRect(hdc, x, y, 32, 32, RGB(20, 10, 10));
+    DrawBoxBorder(hdc, x, y, 32, 32, COL_RED);
+
+    if (clanIdx == 0) {
+        // Rustfang Marauders: Spiked leather mask, jagged blade, rust goggles
+        FillSolidRect(hdc, x + 8, y + 8, 16, 16, RGB(90, 45, 30));
+        DrawBoxBorder(hdc, x + 8, y + 8, 16, 16, RGB(140, 70, 40));
+        FillSolidRect(hdc, x + 10, y + 4, 2, 4, RGB(170, 150, 140));
+        FillSolidRect(hdc, x + 15, y + 3, 2, 5, RGB(170, 150, 140));
+        FillSolidRect(hdc, x + 20, y + 4, 2, 4, RGB(170, 150, 140));
+        FillSolidRect(hdc, x + 11, y + 12, 4, 3, RGB(240, 160, 30));
+        FillSolidRect(hdc, x + 17, y + 12, 4, 3, RGB(240, 160, 30));
+        FillSolidRect(hdc, x + 4, y + 14, 3, 12, RGB(160, 165, 175));
+        FillSolidRect(hdc, x + 3, y + 13, 2, 5, RGB(200, 60, 40));
+        FillSolidRect(hdc, x + 10, y + 19, 12, 3, RGB(60, 30, 20));
+    } else if (clanIdx == 1) {
+        // Iron Skull Warband: Painted skull faceplate, studded armor
+        FillSolidRect(hdc, x + 9, y + 7, 14, 17, RGB(215, 215, 210));
+        DrawBoxBorder(hdc, x + 9, y + 7, 14, 17, RGB(90, 90, 95));
+        FillSolidRect(hdc, x + 11, y + 11, 3, 4, RGB(20, 20, 25));
+        FillSolidRect(hdc, x + 18, y + 11, 3, 4, RGB(20, 20, 25));
+        FillSolidRect(hdc, x + 15, y + 15, 2, 3, RGB(20, 20, 25));
+        FillSolidRect(hdc, x + 12, y + 19, 8, 2, RGB(40, 40, 45));
+        FillSolidRect(hdc, x + 13, y + 18, 1, 4, RGB(215, 215, 210));
+        FillSolidRect(hdc, x + 15, y + 18, 1, 4, RGB(215, 215, 210));
+        FillSolidRect(hdc, x + 17, y + 18, 1, 4, RGB(215, 215, 210));
+        FillSolidRect(hdc, x + 5, y + 17, 3, 8, RGB(80, 85, 95));
+        FillSolidRect(hdc, x + 24, y + 17, 3, 8, RGB(80, 85, 95));
+    } else if (clanIdx == 2) {
+        // Rad-Scorpion Reavers: Green chitin carapace, multi-lens visor
+        FillSolidRect(hdc, x + 8, y + 8, 16, 16, RGB(35, 75, 45));
+        DrawBoxBorder(hdc, x + 8, y + 8, 16, 16, RGB(60, 160, 80));
+        FillSolidRect(hdc, x + 11, y + 4, 10, 4, RGB(25, 60, 35));
+        FillSolidRect(hdc, x + 11, y + 11, 2, 2, RGB(80, 245, 120));
+        FillSolidRect(hdc, x + 14, y + 10, 2, 2, RGB(80, 245, 120));
+        FillSolidRect(hdc, x + 17, y + 10, 2, 2, RGB(80, 245, 120));
+        FillSolidRect(hdc, x + 20, y + 11, 2, 2, RGB(80, 245, 120));
+        FillSolidRect(hdc, x + 24, y + 4, 4, 10, RGB(40, 100, 55));
+        FillSolidRect(hdc, x + 22, y + 3, 3, 3, RGB(160, 255, 60));
+        FillSolidRect(hdc, x + 10, y + 18, 12, 4, RGB(45, 90, 55));
+    } else if (clanIdx == 3) {
+        // Dune Stalkers: Sand cowl shroud, amber dual goggles, respirator
+        FillSolidRect(hdc, x + 7, y + 6, 18, 20, RGB(130, 105, 70));
+        FillSolidRect(hdc, x + 9, y + 4, 14, 5, RGB(150, 125, 85));
+        FillSolidRect(hdc, x + 10, y + 11, 5, 5, RGB(50, 40, 30));
+        FillSolidRect(hdc, x + 17, y + 11, 5, 5, RGB(50, 40, 30));
+        FillSolidRect(hdc, x + 11, y + 12, 3, 3, RGB(255, 190, 30));
+        FillSolidRect(hdc, x + 18, y + 12, 3, 3, RGB(255, 190, 30));
+        FillSolidRect(hdc, x + 12, y + 17, 8, 6, RGB(45, 45, 50));
+        FillSolidRect(hdc, x + 10, y + 19, 3, 4, RGB(70, 75, 80));
+        FillSolidRect(hdc, x + 19, y + 19, 3, 4, RGB(70, 75, 80));
+    } else {
+        // Super-Mutant Siege: Irradiated brute jaw, metal brow plate, rebar club
+        FillSolidRect(hdc, x + 7, y + 6, 18, 19, RGB(90, 120, 50));
+        DrawBoxBorder(hdc, x + 7, y + 6, 18, 19, RGB(120, 150, 70));
+        FillSolidRect(hdc, x + 8, y + 7, 16, 4, RGB(110, 115, 125));
+        FillSolidRect(hdc, x + 9, y + 8, 2, 2, RGB(40, 40, 45));
+        FillSolidRect(hdc, x + 21, y + 8, 2, 2, RGB(40, 40, 45));
+        FillSolidRect(hdc, x + 10, y + 12, 3, 2, RGB(220, 40, 30));
+        FillSolidRect(hdc, x + 18, y + 12, 3, 2, RGB(220, 40, 30));
+        FillSolidRect(hdc, x + 9, y + 17, 14, 7, RGB(75, 100, 40));
+        FillSolidRect(hdc, x + 11, y + 16, 2, 3, RGB(240, 240, 230));
+        FillSolidRect(hdc, x + 18, y + 16, 2, 3, RGB(240, 240, 230));
+        FillSolidRect(hdc, x + 3, y + 5, 4, 18, RGB(140, 140, 145));
+    }
+}
+
+static void DrawWeatherSprite(HDC hdc, int x, int y, int weatherType) {
+    FillSolidRect(hdc, x, y, 32, 32, RGB(10, 14, 12));
+    COLORREF bCol = (weatherType == 0) ? COL_BORDER : ((weatherType == 1 || weatherType == 3) ? COL_RED : COL_AMBER);
+    DrawBoxBorder(hdc, x, y, 32, 32, bCol);
+
+    if (weatherType == 0) {
+        // Clear Sky / Smog Sun
+        FillSolidRect(hdc, x + 11, y + 7, 10, 10, RGB(245, 180, 30));
+        FillSolidRect(hdc, x + 13, y + 9, 6, 6, RGB(255, 230, 120));
+        FillSolidRect(hdc, x + 4, y + 20, 24, 7, RGB(100, 75, 50));
+        FillSolidRect(hdc, x + 9, y + 18, 12, 3, RGB(130, 95, 60));
+    } else if (weatherType == 1) {
+        // Gamma Radiation Storm: Trefoil nuclear hazard symbol & lightning
+        FillSolidRect(hdc, x + 4, y + 4, 24, 24, RGB(20, 35, 18));
+        FillSolidRect(hdc, x + 14, y + 14, 4, 4, RGB(50, 230, 90));
+        FillSolidRect(hdc, x + 13, y + 8, 6, 4, RGB(50, 230, 90));
+        FillSolidRect(hdc, x + 8, y + 17, 5, 4, RGB(50, 230, 90));
+        FillSolidRect(hdc, x + 19, y + 17, 5, 4, RGB(50, 230, 90));
+        FillSolidRect(hdc, x + 5, y + 7, 2, 4, RGB(160, 255, 100));
+        FillSolidRect(hdc, x + 25, y + 10, 2, 5, RGB(160, 255, 100));
+    } else if (weatherType == 2) {
+        // Severe Drought: Cracked soil & dried droplet
+        FillSolidRect(hdc, x + 4, y + 4, 24, 24, RGB(45, 30, 15));
+        FillSolidRect(hdc, x + 13, y + 7, 6, 8, RGB(40, 120, 180));
+        FillSolidRect(hdc, x + 15, y + 5, 2, 3, RGB(40, 120, 180));
+        FillSolidRect(hdc, x + 6, y + 18, 20, 2, RGB(15, 10, 5));
+        FillSolidRect(hdc, x + 12, y + 16, 2, 7, RGB(15, 10, 5));
+        FillSolidRect(hdc, x + 20, y + 18, 2, 6, RGB(15, 10, 5));
+        FillSolidRect(hdc, x + 5, y + 6, 4, 4, RGB(255, 210, 40));
+    } else if (weatherType == 3) {
+        // Acid Precipitation: Storm cloud & lime green caustic rain
+        FillSolidRect(hdc, x + 6, y + 6, 20, 8, RGB(55, 60, 65));
+        FillSolidRect(hdc, x + 9, y + 4, 12, 4, RGB(70, 75, 80));
+        FillSolidRect(hdc, x + 8, y + 16, 2, 4, RGB(80, 240, 60));
+        FillSolidRect(hdc, x + 15, y + 15, 2, 4, RGB(80, 240, 60));
+        FillSolidRect(hdc, x + 22, y + 17, 2, 4, RGB(80, 240, 60));
+        FillSolidRect(hdc, x + 5, y + 23, 22, 4, RGB(60, 50, 45));
+        FillSolidRect(hdc, x + 14, y + 21, 3, 2, RGB(160, 255, 100));
+    } else {
+        // Cryogenic Cold Snap: Deep navy background & cyan ice snowflake
+        FillSolidRect(hdc, x + 4, y + 4, 24, 24, RGB(10, 25, 45));
+        FillSolidRect(hdc, x + 15, y + 6, 2, 20, RGB(90, 210, 255));
+        FillSolidRect(hdc, x + 6, y + 15, 20, 2, RGB(90, 210, 255));
+        FillSolidRect(hdc, x + 10, y + 10, 3, 3, RGB(140, 235, 255));
+        FillSolidRect(hdc, x + 19, y + 10, 3, 3, RGB(140, 235, 255));
+        FillSolidRect(hdc, x + 10, y + 19, 3, 3, RGB(140, 235, 255));
+        FillSolidRect(hdc, x + 19, y + 19, 3, 3, RGB(140, 235, 255));
+    }
+}
+
 
 // GUI Rendering
 static void DrawHUD(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int startY) {
@@ -3331,12 +3528,16 @@ static void DrawDefenseView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, i
 
     // 1. Radar Alert Banner
     int radY = y + 20;
-    int radH = 46;
+    int radH = 48;
     DrawStyledBox(hdc, x, radY, w, radH, RGB(25, 12, 10), COL_RED);
+
+    int cIdx = g_state.day / 3;
+    if (cIdx > 4) cIdx = 4;
+    DrawRaiderSprite(hdc, x + 8, radY + 8, cIdx);
 
     SelectObject(hdc, hFontSmall);
     SetTextColor(hdc, COL_TEXT_DIM);
-    TextOutA(hdc, x + 8, radY + 4, "SURFACE SEISMIC RADAR // HOSTILE TRACKING", 41);
+    TextOutA(hdc, x + 46, radY + 4, "SURFACE SEISMIC RADAR // HOSTILE TRACKING", 41);
 
     SelectObject(hdc, hFontBold);
     SetTextColor(hdc, COL_RED);
@@ -3346,19 +3547,17 @@ static void DrawDefenseView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, i
     } else {
         sprintf(radarMsg, "HOSTILE SCOUTS ON SENSORS // ETA: %d DAYS", g_state.raidThreatDays);
     }
-    TextOutA(hdc, x + 8, radY + 18, radarMsg, (int)strlen(radarMsg));
+    TextOutA(hdc, x + 46, radY + 18, radarMsg, (int)strlen(radarMsg));
 
     SelectObject(hdc, hFontSmall);
     SetTextColor(hdc, COL_TEXT_MAIN);
     const char* pClans[] = { "Rustfang Marauders (~35)", "Iron Skull Warband (~50)", "Rad-Scorpion Reavers (~70)", "Dune Stalkers (~90)", "Super-Mutant Siege (~110)" };
-    int cIdx = g_state.day / 3;
-    if (cIdx > 4) cIdx = 4;
     char pBuf[64];
     sprintf(pBuf, "Projected Warband: %s", pClans[cIdx]);
-    TextOutA(hdc, x + 8, radY + 31, pBuf, (int)strlen(pBuf));
+    TextOutA(hdc, x + 46, radY + 32, pBuf, (int)strlen(pBuf));
 
     // Scramble / Test Raid Button
-    DrawButtonControl(hdc, hFontBold, x + w - 180, radY + 10, 170, 26, "TEST DEFENSES [RAID]", COL_RED, COL_DARK_CARD, COL_RED, BTN_DEF_TEST_RAID, 0, 0);
+    DrawButtonControl(hdc, hFontBold, x + w - 180, radY + 11, 170, 26, "TEST DEFENSES [RAID]", COL_RED, COL_DARK_CARD, COL_RED, BTN_DEF_TEST_RAID, 0, 0);
 
     // 2. Three Fortification Cards
     int cardY = radY + radH + 8;
@@ -3378,19 +3577,21 @@ static void DrawDefenseView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, i
     TextOutA(hdc, x + cardW - 75, cardY + 7, barBuf, (int)strlen(barBuf));
 
     float barPct = (float)g_state.barricadeHp / (float)(g_state.barricadeMaxHp > 0 ? g_state.barricadeMaxHp : 100);
-    DrawProgressBar(hdc, x + 8, cardY + 22, cardW - 16, 6, barPct, g_state.barricadeHp < 40 ? COL_RED : COL_GREEN);
+    DrawBarricadeSprite(hdc, x + 8, cardY + 24, (int)(barPct * 100));
+
+    DrawProgressBar(hdc, x + 46, cardY + 24, cardW - 54, 6, barPct, g_state.barricadeHp < 40 ? COL_RED : COL_GREEN);
 
     char bDefBuf[32];
-    sprintf(bDefBuf, "Defense: +%d pts (0.2x HP)", (g_state.barricadeHp * 20) / (g_state.barricadeMaxHp > 0 ? g_state.barricadeMaxHp : 100));
+    sprintf(bDefBuf, "Defense: +%d pts (0.25x HP)", (g_state.barricadeHp * 25) / (g_state.barricadeMaxHp > 0 ? g_state.barricadeMaxHp : 100));
     SetTextColor(hdc, COL_TEXT_MAIN);
-    TextOutA(hdc, x + 8, cardY + 34, bDefBuf, (int)strlen(bDefBuf));
+    TextOutA(hdc, x + 46, cardY + 34, bDefBuf, (int)strlen(bDefBuf));
 
     SetTextColor(hdc, COL_TEXT_DIM);
-    TextOutA(hdc, x + 8, cardY + 48, "Steel blast-doors absorb shock", 30);
+    TextOutA(hdc, x + 46, cardY + 48, "Steel blast-doors absorb shock", 30);
 
     COLORREF rBg = (g_state.scrap >= 15 && g_state.barricadeHp < g_state.barricadeMaxHp) ? COL_BTN_BG : COL_DARK_CARD;
     COLORREF rTxt = (g_state.scrap >= 15 && g_state.barricadeHp < g_state.barricadeMaxHp) ? COL_GREEN : COL_TEXT_DIM;
-    DrawButtonControl(hdc, hFontSmall, x + 8, cardY + 68, (cardW - 20) / 2, 22, "REPAIR (15S)", rTxt, rBg, COL_BORDER, BTN_DEF_REPAIR, 0, 0);
+    DrawButtonControl(hdc, hFontSmall, x + 8, cardY + 68, (cardW - 20) / 2, 22, "REPAIR (+35HP)", rTxt, rBg, COL_BORDER, BTN_DEF_REPAIR, 0, 0);
 
     COLORREF rfBg = (g_state.scrap >= 35) ? COL_BTN_BG : COL_DARK_CARD;
     COLORREF rfTxt = (g_state.scrap >= 35) ? COL_AMBER : COL_TEXT_DIM;
@@ -3409,18 +3610,20 @@ static void DrawDefenseView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, i
     SetTextColor(hdc, COL_AMBER);
     TextOutA(hdc, c2X + cardW - 75, cardY + 7, turBuf, (int)strlen(turBuf));
 
+    DrawTurretSprite(hdc, c2X + 8, cardY + 24, g_state.turretCount > 0);
+
     char tPowerBuf[48];
-    sprintf(tPowerBuf, "Output: +%d Def pts", g_state.turretCount * 18 + (g_state.turretOverclock ? 10 : 0));
+    sprintf(tPowerBuf, "Output: +%d Def pts", g_state.turretCount * 18 + (g_state.turretOverclock ? 12 : 0));
     SetTextColor(hdc, COL_TEXT_MAIN);
-    TextOutA(hdc, c2X + 8, cardY + 22, tPowerBuf, (int)strlen(tPowerBuf));
+    TextOutA(hdc, c2X + 46, cardY + 22, tPowerBuf, (int)strlen(tPowerBuf));
 
     char tDrawBuf[48];
-    sprintf(tDrawBuf, "Draw: -%d kW | OC: %s", g_state.turretCount * 3, g_state.turretOverclock ? "ON (+10)" : "OFF");
+    sprintf(tDrawBuf, "Draw: -%d kW | OC: %s", g_state.turretCount * 3, g_state.turretOverclock ? "ON (+12)" : "OFF");
     SetTextColor(hdc, g_state.turretOverclock ? COL_GREEN : COL_TEXT_DIM);
-    TextOutA(hdc, c2X + 8, cardY + 36, tDrawBuf, (int)strlen(tDrawBuf));
+    TextOutA(hdc, c2X + 46, cardY + 36, tDrawBuf, (int)strlen(tDrawBuf));
 
     SetTextColor(hdc, COL_TEXT_DIM);
-    TextOutA(hdc, c2X + 8, cardY + 50, "Twin 50-cal crossfire sentries", 30);
+    TextOutA(hdc, c2X + 46, cardY + 50, "Twin 50-cal crossfire sentries", 30);
 
     COLORREF bTurBg = (g_state.scrap >= 45) ? COL_BTN_BG : COL_DARK_CARD;
     COLORREF bTurTxt = (g_state.scrap >= 45) ? COL_GREEN : COL_TEXT_DIM;
@@ -3455,18 +3658,20 @@ static void DrawDefenseView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, i
         }
     }
 
+    DrawFacilitySprite(hdc, c3X + 8, cardY + 24, "security", activeG > 0);
+
     char gPowBuf[48];
     sprintf(gPowBuf, "Guard Def: +%d pts", guardPower);
     SetTextColor(hdc, COL_TEXT_MAIN);
-    TextOutA(hdc, c3X + 8, cardY + 22, gPowBuf, (int)strlen(gPowBuf));
+    TextOutA(hdc, c3X + 44, cardY + 22, gPowBuf, (int)strlen(gPowBuf));
 
     char gCntBuf[48];
     sprintf(gCntBuf, "Guards: %d | Militia: %d", activeG, g_state.numSurvivors - activeG);
     SetTextColor(hdc, COL_TEXT_DIM);
-    TextOutA(hdc, c3X + 8, cardY + 36, gCntBuf, (int)strlen(gCntBuf));
+    TextOutA(hdc, c3X + 44, cardY + 36, gCntBuf, (int)strlen(gCntBuf));
 
     SetTextColor(hdc, COL_TEXT_DIM);
-    TextOutA(hdc, c3X + 8, cardY + 50, "+3 Def bonus per drill level", 28);
+    TextOutA(hdc, c3X + 44, cardY + 50, "+3 Def bonus per drill level", 28);
 
     COLORREF drBg = (g_state.scrap >= 12) ? COL_BTN_BG : COL_DARK_CARD;
     COLORREF drTxt = (g_state.scrap >= 12) ? COL_CYAN : COL_TEXT_DIM;
@@ -3654,20 +3859,22 @@ static void DrawHazardsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, i
     int boxH = 68;
     DrawStyledBox(hdc, x, y + 20, w, boxH, COL_DARK_CARD, (g_state.weatherType == 0) ? COL_BORDER : ((g_state.weatherType == 1 || g_state.weatherType == 3) ? COL_RED : COL_AMBER));
 
+    DrawWeatherSprite(hdc, x + 8, y + 36, g_state.weatherType);
+
     SelectObject(hdc, hFontSmall);
     SetTextColor(hdc, COL_TEXT_DIM);
-    TextOutA(hdc, x + 8, y + 26, "SURFACE IONIZATION & METEOROLOGY TELEMETRY", 42);
+    TextOutA(hdc, x + 48, y + 26, "SURFACE IONIZATION & METEOROLOGY TELEMETRY", 42);
 
     SelectObject(hdc, hFontBold);
     COLORREF wTitleCol = (g_state.weatherType == 0) ? COL_TEXT_BRIGHT : ((g_state.weatherType == 1 || g_state.weatherType == 3) ? COL_RED : COL_AMBER);
     SetTextColor(hdc, wTitleCol);
     char wTitleBuf[64];
     sprintf(wTitleBuf, "[ %s ]", wNames[g_state.weatherType]);
-    TextOutA(hdc, x + 8, y + 42, wTitleBuf, (int)strlen(wTitleBuf));
+    TextOutA(hdc, x + 48, y + 42, wTitleBuf, (int)strlen(wTitleBuf));
 
     SelectObject(hdc, hFontSmall);
     SetTextColor(hdc, COL_TEXT_MAIN);
-    TextOutA(hdc, x + 8, y + 62, wDescs[g_state.weatherType], (int)strlen(wDescs[g_state.weatherType]));
+    TextOutA(hdc, x + 48, y + 62, wDescs[g_state.weatherType], (int)strlen(wDescs[g_state.weatherType]));
 
     char radBuf[48], durBuf[32];
     sprintf(radBuf, "Rads: %.1f Rads/h", g_state.exteriorRads);
@@ -4539,17 +4746,25 @@ static void DrawRaidModal(HDC hdc, HFONT hFontBold, HFONT hFontSmall) {
     SetTextColor(hdc, borderCol);
     TextOutA(hdc, mx + 16, my + 14, g_state.lastRaidWon ? "★ BATTLE DEBRIEF // PERIMETER HELD" : "⚠ PERIMETER BREACH // CASUALTY REPORT", g_state.lastRaidWon ? 34 : 37);
 
+    int raidClanIdx = 0;
+    if (strstr(g_state.lastRaidClan, "Iron Skull") != NULL) raidClanIdx = 1;
+    else if (strstr(g_state.lastRaidClan, "Rad-Scorpion") != NULL) raidClanIdx = 2;
+    else if (strstr(g_state.lastRaidClan, "Dune Stalker") != NULL) raidClanIdx = 3;
+    else if (strstr(g_state.lastRaidClan, "Super-Mutant") != NULL) raidClanIdx = 4;
+
+    DrawRaiderSprite(hdc, mx + 16, my + 40, raidClanIdx);
+
     SelectObject(hdc, hFontBold);
     SetTextColor(hdc, COL_TEXT_BRIGHT);
     char clanBuf[64];
     sprintf(clanBuf, "Enemy: %s (Assault Power: %d pts)", g_state.lastRaidClan, g_state.lastRaidAtk);
-    TextOutA(hdc, mx + 16, my + 42, clanBuf, (int)strlen(clanBuf));
+    TextOutA(hdc, mx + 56, my + 42, clanBuf, (int)strlen(clanBuf));
 
     SelectObject(hdc, hFontSmall);
     char defBuf[64];
     sprintf(defBuf, "Vault Total Defense Rating: %d pts", g_state.lastRaidDef);
     SetTextColor(hdc, COL_GREEN);
-    TextOutA(hdc, mx + 16, my + 64, defBuf, (int)strlen(defBuf));
+    TextOutA(hdc, mx + 56, my + 58, defBuf, (int)strlen(defBuf));
 
     int curY = my + 92;
     SetTextColor(hdc, COL_TEXT_MAIN);
@@ -5111,7 +5326,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         int cost = GetEffectiveScrapCost(15);
                         if (g_state.scrap >= (float)cost && g_state.barricadeHp < g_state.barricadeMaxHp) {
                             g_state.scrap -= (float)cost;
-                            g_state.barricadeHp += 30;
+                            g_state.barricadeHp += 35;
                             if (g_state.barricadeHp > g_state.barricadeMaxHp) g_state.barricadeHp = g_state.barricadeMaxHp;
                             char buf[128];
                             sprintf(buf, "DEFENSE: Perimeter barricades repaired to %d/%d HP!", g_state.barricadeHp, g_state.barricadeMaxHp);
@@ -5150,7 +5365,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         if (!g_state.turretOverclock && g_state.scrap >= (float)cost) {
                             g_state.scrap -= (float)cost;
                             g_state.turretOverclock = 1;
-                            AddLog("DEFENSE: Sentry targeting overclocked! Auto-aim precision maximized (+10 Def).", 3);
+                            AddLog("DEFENSE: Sentry targeting overclocked! Auto-aim precision maximized (+12 Def).", 3);
                             PlaySfx(SFX_TURRET);
                         } else {
                             PlaySfx(SFX_ALERT);

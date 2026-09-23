@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KRSS
   kilo_usability: KRSS
-  kilo_graphics: KSanctuary
+  kilo_graphics: KDragon
   kilo_qa: KType
   kilo_expander: KNote
   kilo_creator: "KFleet (Fleet Telemetry Console)"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-creator
-  app: KAnomaly
-  timestamp: "2026-09-22T23:45:00Z"
+  agent: kilo-graphics
+  app: KSanctuary
+  timestamp: "2026-09-23T00:05:00Z"
 last_planner_run: "2026-09-22T07:47:00Z"
 ---
 
@@ -87,9 +87,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KCipher` (Cryptographic Cipher Suite), `KNetMap` (Subnet Topology Visualizer), `KSteno` (Stenographic Carrier Suite).
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KSanctuary`
+- **Current Target**: `KDragon`
 - **Upcoming Queue**:
-  `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KCyber`, `KMech`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`.
+  `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KCyber`, `KMech`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KRSS`
@@ -156,6 +156,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T00:05:00Z — kilo-graphics: KSanctuary**
+  - Status: PASS ✅ (Graphics polish, GDI sprite parity, raider emblems, balance pass).
+  - Pixel Art & Sprites: GDI sprites in Win32 C & SVGs in web for 5 raider warbands, defense turrets, barricades, and weather hazards.
+  - Visual Parity: Added Vault 811 tech archive landmark sprite, surface sentry pillbox, and workshop cutaway dweller.
+  - Specular & Glint Audit: Verified zero traveling border comets or orbiting glints in native C and web HTML.
+  - Gameplay Balance: Tuned barricade defense scaling, sentry overclock bonuses, and mitigated drought water penalty.
+  - Verification: MSVC C clean build (237 KB); Vite web build clean (222ms); security lint passed (0 violations).
+
 - **2026-09-22T23:45:00Z — kilo-creator: KAnomaly**
   - Status: PASS ✅ (Created Subterranean Signal Analyzer across Win32 C & HTML5 web with 100% feature parity).
   - Scientific Core: Real-time waterfall spectrogram, 64-band FFT, acoustic oscilloscope, and geophone strata profiling.
@@ -189,12 +197,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Drag & Drop Shield: Added window-level drop protection preventing navigation; added per-file remove button [✕].
   - Visual Feedback & Hotkeys: Added copy flash animation; documented full hotkeys in status bar footer; verified 9 engines.
   - Verification: Clean MSVC Native C build (15.0 KB); clean Vite web build (218ms); security lint passed (0 violations).
-
-- **2026-09-22T22:42:00Z — kilo-tester: KHash**
-  - Status: PASS ✅ (6 UI/interactive issues, 6 fixed).
-  - Modal Dismissals: Added dimmed backdrop click handling and Enter/Esc dismissal across Splash and Help dialogs.
-  - Interactive Wiring: Wired direct click-to-copy on Text Digest and File Inspector result cards; added Tab 2 list clear.
-  - Verifier Ergonomics: Added hash swap [⇄] and clear buttons; silenced repetitive typing buzz in integrity check.
-  - State & JSON Backup: Added full state capture including verification hashes; added 1-click JSON state export and file import.
-  - Keyboard Controls: Wired F1 / ? / H help modal toggle, Enter dialog dismissal, and 1–5 tab switching navigation.
-  - Verification: Clean MSVC build (15.0 KB); clean Vite build (211ms); security lint passed (0 violations).

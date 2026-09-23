@@ -2377,13 +2377,16 @@
 
                 <!-- Threat Radar Banner -->
                 <div class="raid-radar-box">
-                    <div>
-                        <div style="font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px;">Surface Seismic & Motion Radar</div>
-                        <div style="font-size:13px; font-weight:bold; color:var(--danger-red); text-shadow:0 0 8px var(--danger-glow);" id="lbl-raid-radar-text">
-                            HOSTILE SCOUTS DETECTED // ETA: 3 DAYS
-                        </div>
-                        <div style="font-size:10px; color:var(--text-main); margin-top:2px;" id="lbl-raid-threat-desc">
-                            Expected Warband: Rustfang Marauders (Estimated Assault Power: 30-45)
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div id="radar-raider-badge" style="flex-shrink:0;"></div>
+                        <div>
+                            <div style="font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px;">Surface Seismic & Motion Radar</div>
+                            <div style="font-size:13px; font-weight:bold; color:var(--danger-red); text-shadow:0 0 8px var(--danger-glow);" id="lbl-raid-radar-text">
+                                HOSTILE SCOUTS DETECTED // ETA: 3 DAYS
+                            </div>
+                            <div style="font-size:10px; color:var(--text-main); margin-top:2px;" id="lbl-raid-threat-desc">
+                                Expected Warband: Rustfang Marauders (Estimated Assault Power: 30-45)
+                            </div>
                         </div>
                     </div>
                     <div style="display:flex; gap:6px;">
@@ -2408,11 +2411,11 @@
                             <div class="meter-fill" id="barricade-hp-fill" style="width:100%; background:var(--accent-green);"></div>
                         </div>
                         <div style="font-size:10px; color:var(--text-main);">
-                            Defense Contribution: <strong id="lbl-barricade-contrib" style="color:var(--text-bright);">+20 pts</strong> (0.2x HP)
+                            Defense Contribution: <strong id="lbl-barricade-contrib" style="color:var(--text-bright);">+25 pts</strong> (0.25x HP)
                         </div>
                         <div class="def-actions">
                             <button class="btn-upgrade" onclick="repairBarricade()" id="btn-repair-barricade">
-                                REPAIR (+30 HP // 15 SCRAP)
+                                REPAIR (+35 HP // 15 SCRAP)
                             </button>
                             <button class="btn-upgrade" onclick="reinforceBarricade()" id="btn-reinforce-barricade">
                                 REINFORCE (+25 MAX // 35 SCRAP)
@@ -2440,7 +2443,7 @@
                                 FABRICATE TURRET (+18 DEF // 45 SCRAP)
                             </button>
                             <button class="btn-upgrade" onclick="overclockTurrets()" id="btn-oc-turret">
-                                OVERCLOCK SENSORS (+10 DEF // 20 SCRAP)
+                                OVERCLOCK SENSORS (+12 DEF // 20 SCRAP)
                             </button>
                         </div>
                     </div>
@@ -3276,6 +3279,64 @@
             </svg>`;
         }
 
+        function getRaiderClanSvg(clanName, isWon = false) {
+            const stroke = isWon ? 'var(--accent-green)' : 'var(--danger-red)';
+            const fill = isWon ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
+            if (clanName.includes('Iron Skull')) {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="3" width="30" height="30" rx="2" fill="${fill}" stroke="${stroke}" stroke-width="1"/>
+                    <circle cx="18" cy="16" r="8" fill="#e2e8f0" stroke="#64748b" stroke-width="1"/>
+                    <rect x="14" y="22" width="8" height="5" fill="#e2e8f0" stroke="#64748b" stroke-width="1"/>
+                    <circle cx="15" cy="15" r="2" fill="#0f172a"/>
+                    <circle cx="21" cy="15" r="2" fill="#0f172a"/>
+                    <line x1="16" y1="23" x2="16" y2="27" stroke="#0f172a" stroke-width="1"/>
+                    <line x1="18" y1="23" x2="18" y2="27" stroke="#0f172a" stroke-width="1"/>
+                    <line x1="20" y1="23" x2="20" y2="27" stroke="#0f172a" stroke-width="1"/>
+                </svg>`;
+            } else if (clanName.includes('Rad-Scorpion')) {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="3" width="30" height="30" rx="2" fill="${fill}" stroke="${stroke}" stroke-width="1"/>
+                    <ellipse cx="18" cy="20" rx="7" ry="9" fill="#14532d" stroke="#22c55e" stroke-width="1"/>
+                    <path d="M18 11 Q24 6 26 12 Q27 15 25 18" stroke="#4ade80" stroke-width="1.5" fill="none"/>
+                    <polygon points="25,18 28,19 25,21" fill="#bef264"/>
+                    <circle cx="15" cy="18" r="1.5" fill="#4ade80"/>
+                    <circle cx="21" cy="18" r="1.5" fill="#4ade80"/>
+                </svg>`;
+            } else if (clanName.includes('Dune Stalker')) {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="3" width="30" height="30" rx="2" fill="${fill}" stroke="${stroke}" stroke-width="1"/>
+                    <path d="M9 28 C9 16 11 8 18 8 C25 8 27 16 27 28 Z" fill="#78350f" stroke="#d97706" stroke-width="1"/>
+                    <circle cx="14" cy="17" r="3" fill="#1e293b" stroke="#f59e0b" stroke-width="1.2"/>
+                    <circle cx="22" cy="17" r="3" fill="#1e293b" stroke="#f59e0b" stroke-width="1.2"/>
+                    <circle cx="14" cy="17" r="1.5" fill="#fbbf24"/>
+                    <circle cx="22" cy="17" r="1.5" fill="#fbbf24"/>
+                    <rect x="15" y="22" width="6" height="4" rx="1" fill="#334155"/>
+                </svg>`;
+            } else if (clanName.includes('Super-Mutant')) {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="3" width="30" height="30" rx="2" fill="${fill}" stroke="${stroke}" stroke-width="1"/>
+                    <rect x="10" y="8" width="16" height="18" rx="2" fill="#4d7c0f" stroke="#a3e635" stroke-width="1"/>
+                    <rect x="11" y="9" width="14" height="4" fill="#64748b"/>
+                    <circle cx="14" cy="16" r="1.5" fill="#ef4444"/>
+                    <circle cx="22" cy="16" r="1.5" fill="#ef4444"/>
+                    <rect x="12" y="20" width="12" height="6" fill="#365314"/>
+                    <polygon points="13,20 14,18 15,20" fill="#f8fafc"/>
+                    <polygon points="21,20 22,18 23,20" fill="#f8fafc"/>
+                </svg>`;
+            } else {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="3" width="30" height="30" rx="2" fill="${fill}" stroke="${stroke}" stroke-width="1"/>
+                    <path d="M12 11 L18 6 L24 11 V25 H12 Z" fill="#7f1d1d" stroke="${stroke}" stroke-width="1"/>
+                    <line x1="14" y1="4" x2="14" y2="8" stroke="#94a3b8" stroke-width="1.5"/>
+                    <line x1="18" y1="2" x2="18" y2="7" stroke="#94a3b8" stroke-width="1.5"/>
+                    <line x1="22" y1="4" x2="22" y2="8" stroke="#94a3b8" stroke-width="1.5"/>
+                    <line x1="13" y1="15" x2="17" y2="15" stroke="#f59e0b" stroke-width="2"/>
+                    <line x1="19" y1="15" x2="23" y2="15" stroke="#f59e0b" stroke-width="2"/>
+                    <line x1="14" y1="20" x2="22" y2="20" stroke="#1e293b" stroke-width="1.5"/>
+                </svg>`;
+            }
+        }
+
         function getExpeditionLandmarkSvg(expId, riskLevel = 1) {
             const stroke = riskLevel <= 1 ? 'var(--accent-green)' : (riskLevel <= 2 ? 'var(--accent-amber)' : 'var(--danger-red)');
             const fill = riskLevel <= 1 ? 'rgba(16,185,129,0.1)' : (riskLevel <= 2 ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)');
@@ -3303,11 +3364,18 @@
                     <circle cx="12" cy="25" r="2" fill="#22c55e"/>
                     <circle cx="22" cy="24" r="3" fill="#22c55e"/>
                 </svg>`;
-            } else {
+            } else if (expId === 'exp4') {
                 return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="6" y="14" width="24" height="16" rx="2" fill="${fill}" stroke="${stroke}" stroke-width="1.2"/>
                     <path d="M13 14 V7 C13 5 23 5 23 7 V14 Z" fill="#334155" stroke="${stroke}" stroke-width="1"/>
                     <line x1="8" y1="24" x2="28" y2="24" stroke="var(--accent-amber)" stroke-width="2" stroke-dasharray="3 3"/>
+                </svg>`;
+            } else {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="18" cy="18" r="14" fill="${fill}" stroke="${stroke}" stroke-width="1.2"/>
+                    <circle cx="18" cy="18" r="9" fill="#1e293b" stroke="${stroke}" stroke-width="1"/>
+                    <path d="M18 4 V8 M18 28 V32 M4 18 H8 M28 18 H32 M8 8 L11 11 M25 25 L28 28 M8 28 L11 25 M25 11 L28 8" stroke="${stroke}" stroke-width="1.2"/>
+                    <text x="18" y="21" font-size="7" font-weight="bold" fill="var(--accent-amber)" text-anchor="middle" font-family="monospace">811</text>
                 </svg>`;
             }
         }
@@ -3342,9 +3410,11 @@
                 { x: 95, y: 56, vx: 0.35, room: VAULT_ROOM_SPECS[0], frame: 0, animTick: 0, role: 0 },
                 { x: 235, y: 56, vx: -0.3, room: VAULT_ROOM_SPECS[1], frame: 0, animTick: 0, role: 3 },
                 { x: 375, y: 56, vx: 0.25, room: VAULT_ROOM_SPECS[2], frame: 0, animTick: 0, role: 4 },
+                { x: 535, y: 56, vx: 0.28, room: VAULT_ROOM_SPECS[3], frame: 0, animTick: 0, role: 1 },
                 { x: 65, y: 116, vx: 0.4, room: VAULT_ROOM_SPECS[4], frame: 0, animTick: 0, role: 1 },
                 { x: 230, y: 116, vx: -0.35, room: VAULT_ROOM_SPECS[5], frame: 0, animTick: 0, role: 2 },
-                { x: 380, y: 116, vx: 0.3, room: VAULT_ROOM_SPECS[6], frame: 0, animTick: 0, role: 4 }
+                { x: 380, y: 116, vx: 0.3, room: VAULT_ROOM_SPECS[6], frame: 0, animTick: 0, role: 4 },
+                { x: 540, y: 116, vx: -0.32, room: VAULT_ROOM_SPECS[7], frame: 0, animTick: 0, role: 5 }
             ];
 
             // Environmental Ash & Fallout Particles
@@ -3454,6 +3524,35 @@
             ctx.moveTo(70, 12); ctx.lineTo(74, 4); ctx.lineTo(71, 1);
             ctx.moveTo(74, 7); ctx.lineTo(79, 5);
             ctx.stroke();
+
+            // Surface Perimeter Barricades & Sentry Turrets
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(105, 7, 24, 5);
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillRect(107, 9, 3, 2);
+            ctx.fillRect(113, 9, 3, 2);
+            ctx.fillRect(119, 9, 3, 2);
+            ctx.fillRect(125, 9, 3, 2);
+            ctx.strokeStyle = '#64748b';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(105, 7, 24, 5);
+
+            if (state.turretCount && state.turretCount > 0) {
+                const turX = 145;
+                ctx.fillStyle = '#334155';
+                ctx.fillRect(turX, 8, 14, 4);
+                ctx.fillStyle = '#64748b';
+                ctx.fillRect(turX + 3, 5, 8, 4);
+                const aimAng = Math.sin(t * 1.5) * 0.25 - 0.2;
+                ctx.strokeStyle = '#94a3b8';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(turX + 7, 6);
+                ctx.lineTo(turX + 7 + Math.cos(aimAng) * 8, 6 + Math.sin(aimAng) * 8);
+                ctx.stroke();
+                ctx.fillStyle = state.turretOverclock ? '#ef4444' : '#10b981';
+                ctx.fillRect(turX + 5, 5, 2, 2);
+            }
 
             // Vault 704 Cog Door
             ctx.fillStyle = '#1e293b';
@@ -3723,12 +3822,16 @@
                 const dx = Math.floor(d.x);
                 const dy = d.room.y + d.room.h - 13;
 
-                ctx.fillStyle = d.role === 0 ? '#10b981' : (d.role === 1 ? '#f97316' : '#d97706');
+                ctx.fillStyle = d.role === 0 ? '#10b981' : (d.role === 1 ? '#f97316' : (d.role === 5 ? '#3f6212' : '#d97706'));
                 ctx.fillRect(dx + 1, dy, 5, 2);
                 ctx.fillStyle = '#fed7aa';
                 ctx.fillRect(dx + 1, dy + 2, 5, 4);
                 ctx.fillStyle = '#0f172a';
                 ctx.fillRect(d.vx > 0 ? dx + 4 : dx + 2, dy + 3, 1, 1);
+                if (d.role === 5) {
+                    ctx.fillStyle = '#84cc16';
+                    ctx.fillRect(dx + 1, dy + 1, 5, 2);
+                }
 
                 ctx.fillStyle = '#1e3a8a';
                 ctx.fillRect(dx, dy + 6, 7, 4);
@@ -4645,9 +4748,9 @@
                     totalPowerGen = Math.max(6, totalPowerGen - 5);
                 }
             } else if (wType === 2) { // Drought Heatwave
-                // Aquifer water depletion (-50% water yield, +50% water consumption)
-                totalWaterProd = Math.floor(totalWaterProd * 0.5);
-                totalWaterNeed = Math.round(totalWaterNeed * 1.5);
+                // Aquifer water depletion (mitigated with active shelter water-saving)
+                totalWaterProd = Math.floor(totalWaterProd * 0.6);
+                totalWaterNeed = Math.round(totalWaterNeed * 1.35);
             } else if (wType === 4) { // Sub-Zero Cold Snap
                 // Bio-generators lose power efficiency (-35% power gen)
                 totalPowerGen = Math.round(totalPowerGen * 0.65);
@@ -4698,8 +4801,9 @@
             if (state.researched && state.researched.reinforced_def) {
                 baseHull += 15;
             }
-            const barricadeDef = Math.floor((state.barricadeHp || 100) * 0.2);
-            const turretDef = (state.turretCount || 1) * 18 + (state.turretOverclock ? 10 : 0);
+            const maxBar = state.barricadeMaxHp || 100;
+            const barricadeDef = Math.floor(((state.barricadeHp !== undefined ? state.barricadeHp : 100) / maxBar) * 25);
+            const turretDef = (state.turretCount || 1) * 18 + (state.turretOverclock ? 12 : 0);
 
             let facilityDef = 0;
             state.facilities.forEach(f => {
@@ -4753,7 +4857,7 @@
                 return;
             }
             state.scrap -= cost;
-            state.barricadeHp = Math.min(state.barricadeMaxHp || 100, (state.barricadeHp || 100) + 30);
+            state.barricadeHp = Math.min(state.barricadeMaxHp || 100, (state.barricadeHp || 100) + 35);
             logEvent(`DEFENSE: Perimeter barricades repaired to ${state.barricadeHp}/${state.barricadeMaxHp} HP!`, 'cycle');
             playSound('repair');
             updateAll();
@@ -4801,7 +4905,7 @@
             }
             state.scrap -= cost;
             state.turretOverclock = true;
-            logEvent('DEFENSE: Sentry targeting processors overclocked! Auto-aim precision maximized (+10 Defense).', 'cycle');
+            logEvent('DEFENSE: Sentry targeting processors overclocked! Auto-aim precision maximized (+12 Defense).', 'cycle');
             playSound('turret');
             updateAll();
         }
@@ -4948,17 +5052,22 @@
             const body = document.getElementById('raid-modal-body');
             if (body) {
                 body.innerHTML = `
-                    <div style="background:#111612; border:1px solid ${report.won ? 'var(--accent-green)' : 'var(--danger-red)'}; padding:10px; border-radius:2px; margin-bottom:8px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                            <strong style="font-size:13px; color:var(--text-bright);">${report.clan}</strong>
-                            <span style="font-size:10px; font-weight:bold; color:${report.won ? 'var(--accent-green)' : 'var(--danger-red)'}; background:${report.won ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}; padding:2px 6px; border:1px solid ${report.won ? 'var(--accent-green)' : 'var(--danger-red)'}; border-radius:2px;">
-                                ${report.won ? 'WARBAND REPELLED' : 'PERIMETER COMPROMISED'}
-                            </span>
+                    <div style="background:#111612; border:1px solid ${report.won ? 'var(--accent-green)' : 'var(--danger-red)'}; padding:10px; border-radius:2px; margin-bottom:8px; display:flex; gap:10px; align-items:center;">
+                        <div style="flex-shrink:0;">
+                            ${getRaiderClanSvg(report.clan, report.won)}
                         </div>
-                        <div style="font-size:10px; color:var(--text-dim); margin-bottom:8px;">${report.clanDesc}</div>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:11px; margin-bottom:6px;">
-                            <div>Enemy Assault Power: <strong style="color:var(--danger-red);">${report.assaultPower} pts</strong></div>
-                            <div>Vault Defense Rating: <strong style="color:var(--accent-green);">${report.totalDef} pts</strong></div>
+                        <div style="flex:1; min-width:0;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <strong style="font-size:13px; color:var(--text-bright);">${report.clan}</strong>
+                                <span style="font-size:10px; font-weight:bold; color:${report.won ? 'var(--accent-green)' : 'var(--danger-red)'}; background:${report.won ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}; padding:2px 6px; border:1px solid ${report.won ? 'var(--accent-green)' : 'var(--danger-red)'}; border-radius:2px;">
+                                    ${report.won ? 'WARBAND REPELLED' : 'PERIMETER COMPROMISED'}
+                                </span>
+                            </div>
+                            <div style="font-size:10px; color:var(--text-dim); margin-bottom:6px;">${report.clanDesc}</div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:11px;">
+                                <div>Enemy Assault Power: <strong style="color:var(--danger-red);">${report.assaultPower} pts</strong></div>
+                                <div>Vault Defense Rating: <strong style="color:var(--accent-green);">${report.totalDef} pts</strong></div>
+                            </div>
                         </div>
                     </div>
                     <div style="font-size:11px; line-height:1.6;">
@@ -5020,7 +5129,7 @@
             if (lblTStat) lblTStat.textContent = `ONLINE (${tCount * 3} kW Draw)`;
             const lblTOc = document.getElementById('lbl-turret-oc');
             if (lblTOc) {
-                lblTOc.textContent = state.turretOverclock ? 'OVERCLOCKED (+10)' : 'STANDBY';
+                lblTOc.textContent = state.turretOverclock ? 'OVERCLOCKED (+12)' : 'STANDBY';
                 lblTOc.style.color = state.turretOverclock ? 'var(--accent-green)' : 'var(--text-dim)';
             }
 
@@ -5049,9 +5158,12 @@
             }
             const lblRadarDesc = document.getElementById('lbl-raid-threat-desc');
             if (lblRadarDesc) {
-                const clans = ['Rustfang Marauders (~35 Atk)', 'Iron Skull Warband (~50 Atk)', 'Rad-Scorpion Reavers (~70 Atk)', 'Dune Stalkers (~90 Atk)', 'Super-Mutant Siege (~110 Atk)'];
+                const clans = ['Rustfang Marauders', 'Iron Skull Warband', 'Rad-Scorpion Reavers', 'Dune Stalkers', 'Super-Mutant Siege'];
+                const clanLabels = ['Rustfang Marauders (~35 Atk)', 'Iron Skull Warband (~50 Atk)', 'Rad-Scorpion Reavers (~70 Atk)', 'Dune Stalkers (~90 Atk)', 'Super-Mutant Siege (~110 Atk)'];
                 let cIdx = Math.min(4, Math.floor(state.day / 3));
-                lblRadarDesc.textContent = `Projected Incursion: ${clans[cIdx]} &bull; Threat Index: ${threatDays <= 1 ? 'CRITICAL' : 'ELEVATED'}`;
+                lblRadarDesc.textContent = `Projected Incursion: ${clanLabels[cIdx]} &bull; Threat Index: ${threatDays <= 1 ? 'CRITICAL' : 'ELEVATED'}`;
+                const radarBadge = document.getElementById('radar-raider-badge');
+                if (radarBadge) radarBadge.innerHTML = getRaiderClanSvg(clans[cIdx], false);
             }
 
             // Guard Roster
