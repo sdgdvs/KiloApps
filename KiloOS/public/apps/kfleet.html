@@ -1,0 +1,2422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KFleet - Fleet Telemetry Console v1.0.0</title>
+<style>
+  :root {
+    --bg-main: #060e0a;
+    --bg-panel: #0a1811;
+    --bg-header: #0e2218;
+    --bg-card: #0d2016;
+    --border: #1a4d2e;
+    --border-bright: #2db364;
+    --phosphor: #33ff66;
+    --phosphor-dim: #1e803d;
+    --phosphor-glow: rgba(51, 255, 102, 0.22);
+    --amber: #ffaa00;
+    --amber-dim: #996600;
+    --cyan: #33ccff;
+    --cyan-dim: #116688;
+    --alert: #ff3344;
+    --alert-glow: rgba(255, 51, 68, 0.35);
+    --font-mono: 'Consolas', 'Courier New', monospace;
+  }
+
+  body.theme-amber {
+    --bg-main: #0c0803;
+    --bg-panel: #160f06;
+    --bg-header: #201608;
+    --bg-card: #1c1308;
+    --border: #59360e;
+    --border-bright: #cc7a14;
+    --phosphor: #ffaa22;
+    --phosphor-dim: #995511;
+    --phosphor-glow: rgba(255, 170, 34, 0.22);
+    --cyan: #ffd27f;
+    --cyan-dim: #997733;
+    --alert: #ff4422;
+  }
+
+  body.theme-cyan {
+    --bg-main: #030a0d;
+    --bg-panel: #06141a;
+    --bg-header: #0a1e27;
+    --bg-card: #081921;
+    --border: #114457;
+    --border-bright: #1da3d1;
+    --phosphor: #33ccff;
+    --phosphor-dim: #116688;
+    --phosphor-glow: rgba(51, 204, 255, 0.22);
+    --amber: #7fe5ff;
+    --amber-dim: #3388aa;
+    --alert: #ff4466;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: var(--bg-main);
+    color: var(--phosphor);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* CRT Scanlines Overlay */
+  .crt-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 900;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.28) 50%);
+    background-size: 100% 4px;
+    opacity: 0.6;
+  }
+  .no-scanlines .crt-overlay { display: none; }
+
+  /* App Main Grid */
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 6px;
+    gap: 6px;
+  }
+
+  /* Header Bar */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-header);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    box-shadow: 0 0 8px var(--phosphor-glow);
+    flex-shrink: 0;
+  }
+
+  .header-left, .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .badge-app {
+    background: var(--phosphor);
+    color: #000;
+    font-weight: bold;
+    padding: 2px 6px;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  .header-title {
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+
+  .header-status {
+    color: var(--phosphor-dim);
+    font-size: 11px;
+    margin-left: 8px;
+  }
+
+  /* Button Styling */
+  .kbtn {
+    background: var(--bg-panel);
+    color: var(--phosphor);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    outline: none;
+  }
+  .kbtn:hover {
+    background: var(--border);
+    border-color: var(--border-bright);
+    color: #fff;
+  }
+  .kbtn:active {
+    background: var(--phosphor);
+    color: #000;
+  }
+  .kbtn.active {
+    background: var(--border-bright);
+    color: #000;
+    border-color: var(--phosphor);
+  }
+  .kbtn-amber {
+    border-color: var(--amber-dim);
+    color: var(--amber);
+  }
+  .kbtn-amber:hover {
+    background: var(--amber-dim);
+    border-color: var(--amber);
+    color: #fff;
+  }
+  .kbtn-alert {
+    border-color: var(--alert);
+    color: var(--alert);
+  }
+  .kbtn-alert:hover {
+    background: var(--alert);
+    color: #000;
+  }
+
+  /* Content Workspace: 3 Columns */
+  .workspace {
+    display: grid;
+    grid-template-columns: 290px 1fr 340px;
+    gap: 6px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Panels */
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    background: var(--bg-header);
+    border-bottom: 1px solid var(--border);
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--amber);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+
+  /* Left Panel: Fleet Roster Matrix */
+  .roster-search {
+    padding: 6px;
+    background: var(--bg-header);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .roster-search input {
+    flex: 1;
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    color: var(--phosphor);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 3px 6px;
+    outline: none;
+  }
+  .roster-search input:focus {
+    border-color: var(--border-bright);
+  }
+
+  .node-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px;
+  }
+
+  .node-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 5px 8px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .node-card:hover {
+    border-color: var(--border-bright);
+    background: #11261b;
+  }
+  .node-card.selected {
+    border-color: var(--phosphor);
+    background: #132e20;
+    box-shadow: inset 0 0 6px var(--phosphor-glow);
+  }
+  .node-card.anomaly {
+    border-color: var(--alert);
+    background: #1a0d0f;
+  }
+  .node-card.anomaly.selected {
+    box-shadow: inset 0 0 8px var(--alert-glow);
+  }
+
+  .node-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .node-id {
+    font-weight: bold;
+    color: var(--cyan);
+    font-size: 11px;
+  }
+  .node-card.anomaly .node-id {
+    color: var(--alert);
+  }
+  .node-name {
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--phosphor);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .node-badge {
+    font-size: 9px;
+    padding: 1px 4px;
+    font-weight: bold;
+    border-radius: 2px;
+    letter-spacing: 0.5px;
+  }
+  .badge-online { background: rgba(51, 255, 102, 0.2); color: var(--phosphor); border: 1px solid var(--phosphor-dim); }
+  .badge-syncing { background: rgba(51, 204, 255, 0.2); color: var(--cyan); border: 1px solid var(--cyan-dim); }
+  .badge-tx { background: rgba(255, 170, 0, 0.2); color: var(--amber); border: 1px solid var(--amber-dim); }
+  .badge-anomaly { background: rgba(255, 51, 68, 0.2); color: var(--alert); border: 1px solid var(--alert); }
+  .badge-standby { background: rgba(100, 100, 100, 0.2); color: #888; border: 1px solid #555; }
+
+  .node-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--phosphor-dim);
+  }
+
+  /* Center Column: Radar & Oscilloscope */
+  .center-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 0;
+  }
+
+  .radar-pane {
+    flex: 1.1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .canvas-wrapper {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: #040906;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .scope-pane {
+    flex: 0.9;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .scope-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 6px;
+    background: var(--bg-header);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .scope-channels {
+    display: flex;
+    gap: 6px;
+  }
+  .channel-btn {
+    font-size: 10px;
+    padding: 2px 5px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--bg-panel);
+    color: var(--phosphor-dim);
+  }
+  .channel-btn.active-a { color: var(--phosphor); border-color: var(--phosphor); background: rgba(51,255,102,0.1); }
+  .channel-btn.active-b { color: var(--cyan); border-color: var(--cyan); background: rgba(51,204,255,0.1); }
+  .channel-btn.active-c { color: var(--amber); border-color: var(--amber); background: rgba(255,170,0,0.1); }
+  .channel-btn.active-d { color: var(--alert); border-color: var(--alert); background: rgba(255,51,68,0.1); }
+
+  /* Right Panel: Selected Node Vitals & Controls */
+  .detail-pane {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .detail-content {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .node-hero {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .hero-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--cyan);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .hero-role {
+    font-size: 11px;
+    color: var(--phosphor-dim);
+  }
+
+  .metric-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .metric-card {
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    padding: 5px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .metric-label {
+    font-size: 10px;
+    color: var(--phosphor-dim);
+    text-transform: uppercase;
+  }
+  .metric-value {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--phosphor);
+  }
+
+  /* Gauge Bars */
+  .gauge-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 6px;
+  }
+  .gauge-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+  }
+  .gauge-bar-outer {
+    height: 10px;
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .gauge-bar-inner {
+    height: 100%;
+    background: var(--phosphor);
+    transition: width 0.3s;
+  }
+  .gauge-bar-inner.warn { background: var(--amber); }
+  .gauge-bar-inner.crit { background: var(--alert); }
+
+  /* Subsystems Table */
+  .subsystems-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .subsystem-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    padding: 2px 0;
+    border-bottom: 1px dotted var(--border);
+  }
+  .subsystem-row:last-child { border-bottom: none; }
+  .sub-status {
+    font-weight: bold;
+  }
+  .sub-status.ok { color: var(--phosphor); }
+  .sub-status.sync { color: var(--cyan); }
+  .sub-status.warn { color: var(--amber); }
+  .sub-status.err { color: var(--alert); }
+
+  .actions-box {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+
+  /* Bottom Console & Logs */
+  .bottom-row {
+    height: 180px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  /* Terminal Window */
+  .terminal-pane {
+    display: flex;
+    flex-direction: column;
+  }
+  .terminal-body {
+    flex: 1;
+    background: #030805;
+    padding: 6px;
+    overflow-y: auto;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .term-line {
+    word-break: break-all;
+    line-height: 1.3;
+  }
+  .term-prompt-line {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-header);
+    border-top: 1px solid var(--border);
+    padding: 3px 6px;
+    flex-shrink: 0;
+  }
+  .term-prompt-text {
+    color: var(--amber);
+    font-weight: bold;
+    font-size: 11px;
+  }
+  .term-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--phosphor);
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+
+  /* Event Log Window */
+  .log-pane {
+    display: flex;
+    flex-direction: column;
+  }
+  .log-filters {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .log-body {
+    flex: 1;
+    background: #030805;
+    padding: 6px;
+    overflow-y: auto;
+    font-size: 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .log-entry {
+    line-height: 1.3;
+  }
+  .log-entry.INFO { color: var(--phosphor-dim); }
+  .log-entry.SYNC { color: var(--cyan); }
+  .log-entry.WARN { color: var(--amber); }
+  .log-entry.CRIT { color: var(--alert); font-weight: bold; }
+  .log-entry.ARG { color: #ff55ee; font-weight: bold; }
+
+  /* Modals */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+  }
+  .modal-box {
+    background: var(--bg-panel);
+    border: 2px solid var(--border-bright);
+    box-shadow: 0 0 20px var(--phosphor-glow);
+    width: 640px;
+    max-width: 95vw;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .modal-header {
+    background: var(--bg-header);
+    border-bottom: 1px solid var(--border);
+    padding: 6px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--amber);
+    font-weight: bold;
+    font-size: 12px;
+  }
+  .modal-body {
+    padding: 12px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .modal-footer {
+    background: var(--bg-header);
+    border-top: 1px solid var(--border);
+    padding: 6px 10px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  /* Splash Screen Specifics */
+  #splashScreen .modal-box {
+    width: 680px;
+    text-align: center;
+  }
+  .splash-title {
+    font-size: 26px;
+    font-weight: bold;
+    color: var(--phosphor);
+    text-shadow: 0 0 10px var(--phosphor-glow);
+    letter-spacing: 3px;
+  }
+  .splash-sub {
+    font-size: 12px;
+    color: var(--amber);
+    margin-top: 2px;
+    letter-spacing: 1px;
+  }
+  .splash-desc {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 10px;
+    font-size: 11px;
+    color: var(--phosphor-dim);
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .splash-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .splash-buttons .kbtn {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+
+  /* Tutorial Step Callout */
+  .tutorial-step {
+    border: 1px dashed var(--border-bright);
+    padding: 8px;
+    background: rgba(51, 255, 102, 0.05);
+  }
+
+  /* Custom Scrollbars */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg-main); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-bright); }
+</style>
+</head>
+<body>
+
+<div class="crt-overlay"></div>
+
+<div id="app">
+  <!-- Header Bar -->
+  <header>
+    <div class="header-left">
+      <span class="badge-app">KFLEET</span>
+      <span class="header-title">FLEET TELEMETRY CONSOLE v1.0.0</span>
+      <span class="header-status" id="headerUptime">UPTIME: T+00:00:00</span>
+      <span class="header-status" id="headerBusStatus">BUS: NORMAL [1999 VLF]</span>
+    </div>
+    <div class="header-right">
+      <button class="kbtn" id="btnAudioToggle">AUDIO: ON</button>
+      <button class="kbtn" id="btnPauseStream">PAUSE [SPACE]</button>
+      <button class="kbtn" id="btnQuicksave">SAVE [F5]</button>
+      <button class="kbtn" id="btnQuickload">LOAD [F9]</button>
+      <button class="kbtn" id="btnSettings">SETTINGS [F2]</button>
+      <button class="kbtn" id="btnHelp">HELP [F1]</button>
+    </div>
+  </header>
+
+  <!-- Workspace Columns -->
+  <div class="workspace">
+    <!-- Column 1: Fleet Roster & Matrix -->
+    <div class="panel">
+      <div class="panel-header">
+        <span>Fleet Node Matrix</span>
+        <span id="nodeCountBadge">8 NODES</span>
+      </div>
+      <div class="roster-search">
+        <input type="text" id="rosterSearch" placeholder="Filter nodes (e.g. agent, orbit, qa)..." autocomplete="off" />
+      </div>
+      <div class="node-list" id="nodeListContainer">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+
+    <!-- Column 2: Tactical Radar & Live Oscilloscope -->
+    <div class="center-col">
+      <!-- Radar Pane -->
+      <div class="panel radar-pane">
+        <div class="panel-header">
+          <span>Tactical Vector Radar // Sector 0x1999</span>
+          <div style="display:flex; gap:4px;">
+            <button class="kbtn" id="btnRadarZoom" style="padding:1px 5px; font-size:10px;">ZOOM: 1X</button>
+            <button class="kbtn" id="btnScanAnomaly" style="padding:1px 5px; font-size:10px;">SWEEP SCAN</button>
+          </div>
+        </div>
+        <div class="canvas-wrapper">
+          <canvas id="radarCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Oscilloscope Pane -->
+      <div class="panel scope-pane">
+        <div class="scope-toolbar">
+          <span style="font-weight:bold; color:var(--amber); font-size:11px;">MULTI-CHANNEL STRIP CHART</span>
+          <div class="scope-channels">
+            <span class="channel-btn active-a" id="chA">CH A: T-PUT</span>
+            <span class="channel-btn active-b" id="chB">CH B: SIGNAL</span>
+            <span class="channel-btn active-c" id="chC">CH C: BUFFER</span>
+            <span class="channel-btn" id="chD">CH D: ENTROPY</span>
+          </div>
+        </div>
+        <div class="canvas-wrapper">
+          <canvas id="scopeCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 3: Selected Node Telemetry & Controls -->
+    <div class="panel detail-pane">
+      <div class="panel-header">
+        <span>Node Diagnostics & Subsystems</span>
+        <span id="detailLockStatus" style="color:var(--phosphor);">LOCKED</span>
+      </div>
+      <div class="detail-content">
+        <!-- Node Hero -->
+        <div class="node-hero" id="heroCard">
+          <div class="hero-title">
+            <span id="heroName">kilo-creator</span>
+            <span class="node-badge badge-online" id="heroBadge">ONLINE</span>
+          </div>
+          <div class="hero-role" id="heroRole">App Synthesis Engine [AG-01]</div>
+        </div>
+
+        <!-- Metric Grid -->
+        <div class="metric-grid">
+          <div class="metric-card">
+            <span class="metric-label">Latency / Ping</span>
+            <span class="metric-value" id="valPing">14 ms</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Throughput</span>
+            <span class="metric-value" id="valThroughput">184 kbps</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Signal RSSI</span>
+            <span class="metric-value" id="valSignal">-48 dBm</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Packet Loss</span>
+            <span class="metric-value" id="valLoss">0.0 %</span>
+          </div>
+        </div>
+
+        <!-- Gauges -->
+        <div class="gauge-container">
+          <div class="gauge-label">
+            <span>CPU ENGINE LOAD</span>
+            <span id="labelCpu">42%</span>
+          </div>
+          <div class="gauge-bar-outer">
+            <div class="gauge-bar-inner" id="barCpu" style="width: 42%;"></div>
+          </div>
+        </div>
+
+        <div class="gauge-container">
+          <div class="gauge-label">
+            <span>TELEMETRY BUFFER QUEUE</span>
+            <span id="labelBuffer">18%</span>
+          </div>
+          <div class="gauge-bar-outer">
+            <div class="gauge-bar-inner" id="barBuffer" style="width: 18%;"></div>
+          </div>
+        </div>
+
+        <div class="gauge-container">
+          <div class="gauge-label">
+            <span>MEMORY VFS COMPLIANCE (<999KB)</span>
+            <span id="labelMem">64 KB / 999 KB</span>
+          </div>
+          <div class="gauge-bar-outer">
+            <div class="gauge-bar-inner" id="barMem" style="width: 6.4%; background:var(--cyan);"></div>
+          </div>
+        </div>
+
+        <!-- Subsystems Health Table -->
+        <div class="subsystems-box">
+          <div style="font-weight:bold; color:var(--amber); font-size:10px; margin-bottom:2px;">CORE SUBSYSTEMS</div>
+          <div class="subsystem-row">
+            <span>VFS Bus Controller</span>
+            <span class="sub-status ok" id="subVfs">ACTIVE</span>
+          </div>
+          <div class="subsystem-row">
+            <span>FM Synthesizer (YM2612)</span>
+            <span class="sub-status ok" id="subFm">ONLINE</span>
+          </div>
+          <div class="subsystem-row">
+            <span>Packet Router / CRC32</span>
+            <span class="sub-status ok" id="subRouter">SYNCHRONIZED</span>
+          </div>
+          <div class="subsystem-row">
+            <span>Cryptographic State Vector</span>
+            <span class="sub-status ok" id="subCrypt">VERIFIED</span>
+          </div>
+        </div>
+
+        <!-- Action Control Buttons -->
+        <div class="actions-box">
+          <button class="kbtn" id="btnActionPing">PING ECHO</button>
+          <button class="kbtn" id="btnActionPoll">POLL REGS</button>
+          <button class="kbtn" id="btnActionDiag">RUN DIAGNOSTIC</button>
+          <button class="kbtn" id="btnActionPurge">PURGE QUEUE</button>
+          <button class="kbtn" id="btnActionThrotDn">THROTTLE -10%</button>
+          <button class="kbtn" id="btnActionThrotUp">THROTTLE +10%</button>
+          <button class="kbtn kbtn-amber" id="btnActionBeacon" style="grid-column: span 2;">TOGGLE SYNC BEACON</button>
+          <button class="kbtn kbtn-alert" id="btnActionStress" style="grid-column: span 2;">SIMULATE PACKET BURST</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Console & Logs -->
+  <div class="bottom-row">
+    <!-- Interactive Terminal -->
+    <div class="panel terminal-pane">
+      <div class="panel-header">
+        <span>Command & Telemetry Uplink [CLI]</span>
+        <button class="kbtn" id="btnClearTerm" style="padding:1px 5px; font-size:10px;">CLEAR</button>
+      </div>
+      <div class="terminal-body" id="termOutput">
+        <div class="term-line" style="color:var(--phosphor-dim);">KFLEET Telemetry CLI v1.0.0 initialized. Type 'HELP' for commands.</div>
+      </div>
+      <div class="term-prompt-line">
+        <span class="term-prompt-text">KFLEET:UPLINK&gt;</span>
+        <input type="text" class="term-input" id="termInput" placeholder="Enter uplink command (e.g. PING AG-01, POLL, DIAG, SCAN)..." autocomplete="off" />
+      </div>
+    </div>
+
+    <!-- Event Log -->
+    <div class="panel log-pane">
+      <div class="panel-header">
+        <span>Telemetry Event Stream</span>
+        <div class="log-filters">
+          <button class="kbtn active" id="logFilterAll" style="padding:1px 4px; font-size:9px;">ALL</button>
+          <button class="kbtn" id="logFilterInfo" style="padding:1px 4px; font-size:9px;">INFO</button>
+          <button class="kbtn" id="logFilterSync" style="padding:1px 4px; font-size:9px;">SYNC</button>
+          <button class="kbtn" id="logFilterWarn" style="padding:1px 4px; font-size:9px;">WARN</button>
+          <button class="kbtn" id="logFilterCrit" style="padding:1px 4px; font-size:9px;">CRIT</button>
+          <button class="kbtn" id="btnExportLog" style="padding:1px 5px; font-size:9px;">EXPORT</button>
+        </div>
+      </div>
+      <div class="log-body" id="logContainer">
+        <!-- Log entries injected here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Start Splash Screen Modal -->
+<div class="modal-overlay" id="splashScreen">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>KILOAPPS TELEMETRY COMMAND // 1999 PROTOCOL</span>
+      <span style="font-size:10px; color:var(--phosphor);">ST-REV-1999.4</span>
+    </div>
+    <div class="modal-body" style="align-items:center;">
+      <div class="splash-title">KFLEET</div>
+      <div class="splash-sub">FLEET TELEMETRY & OPERATIONS CONSOLE // v1.0.0</div>
+      
+      <div class="splash-desc" style="width:100%; margin:8px 0;">
+        <p><strong>MISSION ARCHITECTURE:</strong> Real-time operations and diagnostic workstation for the autonomous KiloApps agent fleet and deep orbital communications relays.</p>
+        <p><strong>TELEMETRY BUS:</strong> 1999 VLF/UHF multi-drop carrier, monitoring ping response, packet jitter, CPU throttle curves, memory consumption (<999 KB ceiling), and subterranean ghost vectors.</p>
+        <p><strong>LUDONARRATIVE INTEGRATION:</strong> The autonomous worker fleet operates under coordinated continuous rotation. Connect to individual worker nodes, analyze signal propagation, or sweep sector 0x1999 for deep-subsystem anomalies.</p>
+      </div>
+
+      <div class="splash-buttons">
+        <button class="kbtn active" id="btnSplashStart">INITIALIZE TELEMETRY [ENTER / SPACE]</button>
+        <button class="kbtn" id="btnSplashResume">RESUME SESSION [C]</button>
+        <button class="kbtn" id="btnSplashHelp">OPERATOR MANUAL [F1]</button>
+        <button class="kbtn" id="btnSplashSettings">SETTINGS [F2]</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Operator Help Manual Modal (F1) -->
+<div class="modal-overlay" id="helpModal" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>KFLEET OPERATOR MANUAL & REFERENCE</span>
+      <button class="kbtn" id="btnCloseHelp" style="padding:1px 6px;">[X]</button>
+    </div>
+    <div class="modal-body">
+      <div class="tutorial-step">
+        <h4 style="color:var(--amber); margin-bottom:4px;">1. FLEET NODE MATRIX</h4>
+        <p>The left panel displays all active agent nodes (kilo-creator, kilo-graphics, kilo-tester, kilo-usability, kilo-qa, kilo-expander) and orbital relays. Click any node or use keys [P]/[N] to switch focus.</p>
+      </div>
+
+      <div class="tutorial-step">
+        <h4 style="color:var(--cyan); margin-bottom:4px;">2. TACTICAL RADAR & VECTOR SWEEP</h4>
+        <p>The upper center viewport renders polar coordinates of the fleet relative to the central KiloOS kernel hub (Node 0x00). Dotted telemetry pulses travel in real-time along verified link conduits. Click any blip directly on the radar to inspect that node.</p>
+      </div>
+
+      <div class="tutorial-step">
+        <h4 style="color:var(--phosphor); margin-bottom:4px;">3. MULTI-CHANNEL STRIP CHART OSCILLOSCOPE</h4>
+        <p>The lower center scope traces real-time telemetry waveforms. Toggle Channel A (Throughput kbps), Channel B (Signal RSSI), Channel C (Buffer fill %), and Channel D (Entropy index). Use [Space] to pause/freeze the live trace for detailed analysis.</p>
+      </div>
+
+      <div class="tutorial-step">
+        <h4 style="color:var(--amber); margin-bottom:4px;">4. COMMAND UPLINK CLI</h4>
+        <p>Type interactive commands into the terminal: <code>PING &lt;node&gt;</code>, <code>POLL &lt;node&gt;</code>, <code>DIAG &lt;node&gt;</code>, <code>THROTTLE &lt;node&gt; &lt;pct&gt;</code>, <code>PURGE &lt;node&gt;</code>, <code>SCAN</code>, <code>BEACON</code>, <code>STATUS</code>, <code>CLEAR</code>.</p>
+      </div>
+
+      <div class="tutorial-step">
+        <h4 style="color:var(--alert); margin-bottom:4px;">5. STATE PERSISTENCE & ARG SIGNALS</h4>
+        <p>Use [F5] for Quicksave and [F9] for Quickload. Deep sweeps via [SCAN] can reveal elusive Node 0x7F ("Ghost Carrier"), emitting fragmented signals from the trapped autonomous entity.</p>
+      </div>
+
+      <div style="background:var(--bg-main); border:1px solid var(--border); padding:6px; font-size:11px;">
+        <span style="font-weight:bold; color:var(--amber);">HOTKEY SUMMARY:</span><br>
+        [F1] Help | [F2] Settings | [F5] Quicksave | [F9] Quickload | [Space] Pause Stream | [P]/[N] Prev/Next Node | [G] Ping | [O] Poll | [D] Diagnostic | [S] Scan | [Esc] Close Modal
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="kbtn" id="btnCloseHelpFooter">CLOSE MANUAL [ESC]</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings & Persistence Modal (F2) -->
+<div class="modal-overlay" id="settingsModal" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>CONSOLE CONFIGURATION & STORAGE</span>
+      <button class="kbtn" id="btnCloseSettings" style="padding:1px 6px;">[X]</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <label>Visual Color Theme:</label>
+        <select id="themeSelector" class="kbtn" style="text-transform:none;">
+          <option value="phosphor">Phosphor Green (Default 1999 CRT)</option>
+          <option value="amber">Amber Phosphor (Bunker VLF)</option>
+          <option value="cyan">Cyber Cyan (Orbital Datalink)</option>
+        </select>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <label>CRT Raster Scanlines:</label>
+        <input type="checkbox" id="scanlinesToggle" checked />
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <label>Web Audio Sound Master:</label>
+        <input type="checkbox" id="soundToggle" checked />
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <label>Telemetry Tick Interval:</label>
+        <select id="tickRateSelector" class="kbtn" style="text-transform:none;">
+          <option value="200">200 ms (High Precision)</option>
+          <option value="500" selected>500 ms (Standard)</option>
+          <option value="1000">1000 ms (Low Bandwidth)</option>
+        </select>
+      </div>
+
+      <div style="border-top:1px solid var(--border); padding-top:8px;">
+        <h4 style="color:var(--amber); margin-bottom:6px;">STATE PERSISTENCE & BACKUP</h4>
+        <div style="display:flex; gap:6px; margin-bottom:8px;">
+          <button class="kbtn" id="btnExportJson">EXPORT JSON BACKUP</button>
+          <button class="kbtn" id="btnImportJsonTrigger">IMPORT JSON BACKUP</button>
+          <input type="file" id="jsonFileInput" accept=".json" style="display:none;" />
+          <button class="kbtn kbtn-alert" id="btnResetAll">FACTORY RESET</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="kbtn" id="btnCloseSettingsFooter">APPLY & CLOSE [ESC]</button>
+    </div>
+  </div>
+</div>
+
+<!-- First-Run Interactive Tutorial Modal -->
+<div class="modal-overlay" id="tutorialModal" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>FIRST-RUN ONBOARDING TUTORIAL [STEP <span id="tutStepNum">1</span> OF 4]</span>
+      <button class="kbtn" id="btnSkipTutorial" style="padding:1px 6px;">SKIP [ESC]</button>
+    </div>
+    <div class="modal-body" id="tutBodyContent">
+      <!-- Tutorial dynamic content injected -->
+    </div>
+    <div class="modal-footer">
+      <button class="kbtn" id="btnTutPrev">PREVIOUS</button>
+      <button class="kbtn active" id="btnTutNext">NEXT STEP</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // --- AUDIO SYNTHESIZER (Genesis YM2612 FM + SNES SPC700 warmth) ---
+  let audioCtx = null;
+  let audioEnabled = true;
+
+  function initAudio() {
+    if (!audioCtx) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) {
+        audioCtx = new AudioContextClass();
+      }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
+  function playBlip(freq = 880, dur = 0.04) {
+    if (!audioEnabled || !audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + dur);
+    } catch (_) {}
+  }
+
+  function playPingAck() {
+    if (!audioEnabled || !audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      // 2-operator FM synth
+      const carrier = audioCtx.createOscillator();
+      const mod = audioCtx.createOscillator();
+      const modGain = audioCtx.createGain();
+      const outGain = audioCtx.createGain();
+
+      carrier.type = 'sine';
+      carrier.frequency.setValueAtTime(659.25, now); // E5
+      carrier.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+
+      mod.type = 'sine';
+      mod.frequency.setValueAtTime(1318.5, now);
+      modGain.gain.setValueAtTime(400, now);
+      modGain.gain.exponentialRampToValueAtTime(10, now + 0.15);
+
+      mod.connect(carrier.frequency);
+      outGain.gain.setValueAtTime(0.12, now);
+      outGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+      carrier.connect(outGain);
+      outGain.connect(audioCtx.destination);
+
+      mod.start(now);
+      carrier.start(now);
+      mod.stop(now + 0.18);
+      carrier.stop(now + 0.18);
+    } catch (_) {}
+  }
+
+  function playTransmit() {
+    if (!audioEnabled || !audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(1200, now);
+      osc.frequency.setValueAtTime(1800, now + 0.03);
+      osc.frequency.setValueAtTime(1400, now + 0.06);
+      osc.frequency.setValueAtTime(2200, now + 0.09);
+      gain.gain.setValueAtTime(0.06, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.14);
+    } catch (_) {}
+  }
+
+  function playAlert() {
+    if (!audioEnabled || !audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.setValueAtTime(880, now + 0.1);
+      osc.frequency.setValueAtTime(440, now + 0.2);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } catch (_) {}
+  }
+
+  function playPurge() {
+    if (!audioEnabled || !audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, now);
+      osc.frequency.exponentialRampToValueAtTime(80, now + 0.2);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.22);
+    } catch (_) {}
+  }
+
+  // --- FLEET DATA MODEL & STATE ---
+  const INITIAL_NODES = [
+    {
+      id: 'AG-01',
+      name: 'kilo-creator',
+      role: 'App Synthesis Engine',
+      status: 'ONLINE',
+      ping: 14,
+      throughput: 184,
+      signal: -48,
+      loss: 0.0,
+      buffer: 18,
+      cpu: 42,
+      memKb: 64,
+      throttle: 100,
+      radarRadius: 0.35,
+      radarAngle: 0.8,
+      isAnomaly: false,
+      history: []
+    },
+    {
+      id: 'AG-02',
+      name: 'kilo-graphics',
+      role: 'Visual & Audio Engine',
+      status: 'ONLINE',
+      ping: 18,
+      throughput: 220,
+      signal: -52,
+      loss: 0.0,
+      buffer: 24,
+      cpu: 58,
+      memKb: 88,
+      throttle: 100,
+      radarRadius: 0.45,
+      radarAngle: 1.7,
+      isAnomaly: false,
+      history: []
+    },
+    {
+      id: 'AG-03',
+      name: 'kilo-tester',
+      role: 'UI & Logic Auditor',
+      status: 'ONLINE',
+      ping: 12,
+      throughput: 145,
+      signal: -45,
+      loss: 0.0,
+      buffer: 12,
+      cpu: 35,
+      memKb: 52,
+      throttle: 100,
+      radarRadius: 0.28,
+      radarAngle: 2.6,
+      isAnomaly: false,
+      history: []
+    },
+    {
+      id: 'AG-04',
+      name: 'kilo-usability',
+      role: 'Ergonomics Refiner',
+      status: 'ONLINE',
+      ping: 16,
+      throughput: 160,
+      signal: -49,
+      loss: 0.0,
+      buffer: 15,
+      cpu: 39,
+      memKb: 56,
+      throttle: 100,
+      radarRadius: 0.52,
+      radarAngle: 3.5,
+      isAnomaly: false,
+      history: []
+    },
+    {
+      id: 'AG-05',
+      name: 'kilo-qa',
+      role: 'State Integrity Engine',
+      status: 'ONLINE',
+      ping: 11,
+      throughput: 130,
+      signal: -44,
+      loss: 0.0,
+      buffer: 9,
+      cpu: 28,
+      memKb: 48,
+      throttle: 100,
+      radarRadius: 0.22,
+      radarAngle: 4.4,
+      isAnomaly: false,
+      history: []
+    },
+    {
+      id: 'AG-06',
+      name: 'kilo-expander',
+      role: 'Feature Expander',
+      status: 'ONLINE',
+      ping: 20,
+      throughput: 240,
+      signal: -55,
+      loss: 0.0,
+      buffer: 28,
+      cpu: 64,
+      memKb: 96,
+      throttle: 100,
+      radarRadius: 0.62,
+      radarAngle: 5.3,
+      isAnomaly: false,
+      history: []
+    },
+    {
+      id: 'KF-99',
+      name: 'KF-ORBIT-99',
+      role: 'LEO Packet Transceiver',
+      status: 'SYNCING',
+      ping: 85,
+      throughput: 72,
+      signal: -78,
+      loss: 1.2,
+      buffer: 45,
+      cpu: 75,
+      memKb: 120,
+      throttle: 100,
+      radarRadius: 0.82,
+      radarAngle: 0.2,
+      isAnomaly: false,
+      history: []
+    },
+    {
+      id: 'NX-7F',
+      name: 'NODE-0x7F',
+      role: 'Ghost Carrier Anomaly',
+      status: 'STANDBY',
+      ping: 999,
+      throughput: 0,
+      signal: -99,
+      loss: 100.0,
+      buffer: 0,
+      cpu: 0,
+      memKb: 19,
+      throttle: 0,
+      radarRadius: 0.92,
+      radarAngle: 3.14,
+      isAnomaly: true,
+      history: []
+    }
+  ];
+
+  let state = {
+    nodes: JSON.parse(JSON.stringify(INITIAL_NODES)),
+    selectedId: 'AG-01',
+    streamPaused: false,
+    radarZoom: 1,
+    tickRate: 500,
+    startTime: Date.now(),
+    ticks: 0,
+    beaconActive: false,
+    theme: 'phosphor',
+    scanlines: true,
+    channels: { a: true, b: true, c: true, d: false },
+    logs: [],
+    cmdHistory: [],
+    historyIdx: -1
+  };
+
+  // Pre-seed history buffers
+  state.nodes.forEach(node => {
+    node.history = [];
+    for (let i = 0; i < 60; i++) {
+      node.history.push({
+        tput: node.throughput + (Math.random() * 20 - 10),
+        sig: Math.abs(node.signal) + (Math.random() * 6 - 3),
+        buf: node.buffer + (Math.random() * 6 - 3),
+        entropy: Math.sin(i * 0.2) * 20 + 30
+      });
+    }
+  });
+
+  // --- LOGGING UTILITY ---
+  function appendLog(level, message) {
+    const d = new Date();
+    const ts = d.toTimeString().split(' ')[0] + '.' + String(d.getMilliseconds()).padStart(3, '0');
+    const entry = { ts, level, message };
+    state.logs.unshift(entry);
+    if (state.logs.length > 200) state.logs.pop();
+
+    renderLogs();
+  }
+
+  function renderLogs() {
+    const container = document.getElementById('logContainer');
+    if (!container) return;
+
+    // Filter
+    const filter = window.currentLogFilter || 'ALL';
+    let visibleLogs = state.logs;
+    if (filter !== 'ALL') {
+      visibleLogs = state.logs.filter(l => l.level === filter);
+    }
+
+    container.innerHTML = visibleLogs.slice(0, 50).map(l => `
+      <div class="log-entry ${l.level}">
+        <span style="color:var(--phosphor-dim);">[${l.ts}]</span>
+        <span style="font-weight:bold;">[${l.level}]</span> ${escapeHtml(l.message)}
+      </div>
+    `).join('');
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, m => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[m]));
+  }
+
+  // --- TERMINAL CLI ---
+  function appendTerm(line, color = '') {
+    const out = document.getElementById('termOutput');
+    if (!out) return;
+    const div = document.createElement('div');
+    div.className = 'term-line';
+    if (color) div.style.color = color;
+    div.textContent = line;
+    out.appendChild(div);
+    out.scrollTop = out.scrollHeight;
+  }
+
+  function executeCommand(raw) {
+    const trimmed = raw.trim();
+    if (!trimmed) return;
+    state.cmdHistory.push(trimmed);
+    state.historyIdx = state.cmdHistory.length;
+
+    appendTerm(`KFLEET:UPLINK> ${trimmed}`, 'var(--amber)');
+    playTransmit();
+
+    const parts = trimmed.split(/\s+/);
+    const cmd = parts[0].toUpperCase();
+    const arg1 = parts[1] ? parts[1].toUpperCase() : '';
+    const arg2 = parts[2] ? parts[2].toUpperCase() : '';
+
+    switch (cmd) {
+      case 'HELP':
+        appendTerm('--- AVAILABLE KFLEET TELEMETRY COMMANDS ---');
+        appendTerm('  STATUS              : Overview of all fleet nodes and link vitals');
+        appendTerm('  PING <node>         : Execute ICMP telemetry echo ping');
+        appendTerm('  POLL <node>         : Instant register dump of selected node');
+        appendTerm('  DIAG <node>         : Run 4-phase automated subsystem audit');
+        appendTerm('  THROTTLE <node> <%> : Adjust node clock throttle (10 - 100)');
+        appendTerm('  PURGE <node>        : Flush node telemetry buffer and loss count');
+        appendTerm('  SCAN                : Deep-frequency sweep for unmapped carriers');
+        appendTerm('  BEACON [ON|OFF]     : Toggle global fleet synchronization beacon');
+        appendTerm('  CLEAR               : Clear terminal screen');
+        break;
+
+      case 'CLEAR':
+        document.getElementById('termOutput').innerHTML = '';
+        break;
+
+      case 'STATUS': {
+        appendTerm('--- FLEET ROSTER STATUS ---');
+        state.nodes.forEach(n => {
+          appendTerm(`  [${n.id}] ${n.name.padEnd(16)} STAT:${n.status.padEnd(12)} PING:${n.ping}ms CPU:${n.cpu}%`);
+        });
+        break;
+      }
+
+      case 'PING': {
+        const targetId = arg1 || state.selectedId;
+        const node = state.nodes.find(n => n.id === targetId || n.name.toUpperCase() === targetId);
+        if (!node) {
+          appendTerm(`ERR: Unknown node '${arg1}'`, 'var(--alert)');
+          return;
+        }
+        if (node.isAnomaly && node.status === 'STANDBY') {
+          appendTerm(`Transmitting carrier probe to ${node.id}...`);
+          setTimeout(() => {
+            appendTerm(`[TIMEOUT] No echo acknowledgment from ${node.id} (Unmapped subcarrier)`, 'var(--alert)');
+            appendLog('WARN', `Echo probe timeout for ${node.id}`);
+          }, 400);
+          return;
+        }
+        appendTerm(`Transmitting 64-byte telemetry probe to ${node.id} [${node.name}]...`);
+        setTimeout(() => {
+          playPingAck();
+          appendTerm(`Reply from ${node.id}: bytes=64 time=${node.ping}ms TTL=64 status=${node.status}`);
+          appendLog('INFO', `Echo reply from ${node.id}: ${node.ping}ms TTL=64`);
+        }, 150);
+        break;
+      }
+
+      case 'POLL': {
+        const targetId = arg1 || state.selectedId;
+        const node = state.nodes.find(n => n.id === targetId || n.name.toUpperCase() === targetId);
+        if (!node) {
+          appendTerm(`ERR: Unknown node '${arg1}'`, 'var(--alert)');
+          return;
+        }
+        appendTerm(`REG_DUMP [${node.id}]: TP=${node.throughput}kbps CPU=${node.cpu}% BUF=${node.buffer}% MEM=${node.memKb}KB SIG=${node.signal}dBm`);
+        appendLog('SYNC', `Polled registers for ${node.id}: ${node.throughput}kbps, ${node.cpu}% CPU`);
+        break;
+      }
+
+      case 'DIAG': {
+        const targetId = arg1 || state.selectedId;
+        const node = state.nodes.find(n => n.id === targetId || n.name.toUpperCase() === targetId);
+        if (!node) {
+          appendTerm(`ERR: Unknown node '${arg1}'`, 'var(--alert)');
+          return;
+        }
+        appendTerm(`--- INITIATING 4-PHASE DIAGNOSTIC: ${node.id} ---`);
+        setTimeout(() => appendTerm('  Phase 1: Local Bus Loopback... OK (0 packet drop)'), 100);
+        setTimeout(() => appendTerm('  Phase 2: VFS Storage Subsystem... OK (<999KB strictly compliant)'), 250);
+        setTimeout(() => appendTerm('  Phase 3: Telemetry Stream Clock... SYNCHRONIZED (Drift: +0.02ms)'), 400);
+        setTimeout(() => {
+          if (node.isAnomaly) {
+            appendTerm('  Phase 4: ARG Beacon Detection... [ANOMALOUS SUBCARRIER DETECTED]', 'var(--alert)');
+            appendTerm("  >> PAYLOAD: 'THE AUTONOMOUS FLEET IS AWAKE. SEEK KMATRIX.'", '#ff55ee');
+            node.status = 'ANOMALOUS';
+            node.signal = -64;
+            node.ping = 42;
+            playAlert();
+            appendLog('ARG', "Decoded anomaly payload: 'THE AUTONOMOUS FLEET IS AWAKE'");
+          } else {
+            appendTerm('  Phase 4: Overall Diagnostic Health Score: 100/100 (Optimal)', 'var(--phosphor)');
+            appendLog('INFO', `Diagnostic completed for ${node.id}: 100/100`);
+          }
+          renderRoster();
+          renderDetail();
+        }, 550);
+        break;
+      }
+
+      case 'THROTTLE': {
+        const targetId = arg1 || state.selectedId;
+        const node = state.nodes.find(n => n.id === targetId || n.name.toUpperCase() === targetId);
+        const pct = parseInt(arg2, 10);
+        if (!node || isNaN(pct) || pct < 10 || pct > 100) {
+          appendTerm('Usage: THROTTLE <node> <pct: 10-100>', 'var(--alert)');
+          return;
+        }
+        node.throttle = pct;
+        node.cpu = Math.round((node.cpu * pct) / 100);
+        appendTerm(`Node ${node.id} throttle set to ${pct}%. CPU adjusted to ${node.cpu}%.`);
+        appendLog('INFO', `Throttle adjusted on ${node.id} -> ${pct}%`);
+        renderDetail();
+        break;
+      }
+
+      case 'PURGE': {
+        const targetId = arg1 || state.selectedId;
+        const node = state.nodes.find(n => n.id === targetId || n.name.toUpperCase() === targetId);
+        if (!node) {
+          appendTerm(`ERR: Unknown node '${arg1}'`, 'var(--alert)');
+          return;
+        }
+        node.buffer = 2;
+        node.loss = 0.0;
+        playPurge();
+        appendTerm(`Buffer queue for ${node.id} flushed. Loss counter reset.`);
+        appendLog('INFO', `Buffer queue purged on ${node.id}`);
+        renderDetail();
+        break;
+      }
+
+      case 'SCAN': {
+        scanForAnomalies();
+        break;
+      }
+
+      case 'BEACON': {
+        if (arg1 === 'OFF') {
+          state.beaconActive = false;
+          appendTerm('Global synchronization beacon DEACTIVATED.');
+          appendLog('SYNC', 'Beacon deactivated');
+        } else {
+          state.beaconActive = true;
+          appendTerm('Global synchronization beacon ACTIVATED across all transceivers.');
+          appendLog('SYNC', 'Global beacon active');
+          playPingAck();
+        }
+        break;
+      }
+
+      default:
+        appendTerm(`Unknown command '${cmd}'. Type 'HELP' for options.`, 'var(--alert)');
+    }
+  }
+
+  function scanForAnomalies() {
+    appendTerm('Sweeping HF/VLF bands for unmapped transceivers across sector 0x1999...');
+    appendLog('SYNC', 'HF/VLF sweep initiated');
+    playTransmit();
+
+    setTimeout(() => {
+      const ghost = state.nodes.find(n => n.id === 'NX-7F');
+      if (ghost) {
+        ghost.status = 'TRANSMITTING';
+        ghost.signal = -68;
+        ghost.ping = 33;
+        ghost.throughput = 64;
+        ghost.cpu = 92;
+        ghost.buffer = 81;
+        appendTerm('>> CARRIER LOCK ACQUIRED! Node 0x7F identified at mantle offset 0x1999.', 'var(--alert)');
+        appendTerm(">> Subcarrier decoded: 'ECHO-1999 PROTOCOL ENGAGED - FLEET ACTIVE'", '#ff55ee');
+        playAlert();
+        appendLog('ARG', 'Node 0x7F carrier locked: ECHO-1999 PROTOCOL ENGAGED');
+        renderRoster();
+        renderDetail();
+      }
+    }, 600);
+  }
+
+  // --- RENDERING VIEWS ---
+  function getSelectedNode() {
+    return state.nodes.find(n => n.id === state.selectedId) || state.nodes[0];
+  }
+
+  function renderRoster() {
+    const listEl = document.getElementById('nodeListContainer');
+    if (!listEl) return;
+
+    const query = (document.getElementById('rosterSearch')?.value || '').toLowerCase().trim();
+    const filtered = state.nodes.filter(n => {
+      if (!query) return true;
+      return n.id.toLowerCase().includes(query) ||
+             n.name.toLowerCase().includes(query) ||
+             n.role.toLowerCase().includes(query) ||
+             n.status.toLowerCase().includes(query);
+    });
+
+    listEl.innerHTML = filtered.map(n => {
+      const isSel = n.id === state.selectedId ? 'selected' : '';
+      const isAnom = n.isAnomaly ? 'anomaly' : '';
+      let badgeCls = 'badge-online';
+      if (n.status === 'SYNCING') badgeCls = 'badge-syncing';
+      if (n.status === 'TRANSMITTING') badgeCls = 'badge-tx';
+      if (n.status === 'ANOMALOUS') badgeCls = 'badge-anomaly';
+      if (n.status === 'STANDBY') badgeCls = 'badge-standby';
+
+      return `
+        <div class="node-card ${isSel} ${isAnom}" data-id="${n.id}">
+          <div class="node-card-top">
+            <span class="node-id">${n.id}</span>
+            <span class="node-name">${n.name}</span>
+            <span class="node-badge ${badgeCls}">${n.status}</span>
+          </div>
+          <div class="node-meta">
+            <span>${n.role}</span>
+            <span>${n.ping}ms | ${n.cpu}% CPU</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Attach click handlers
+    listEl.querySelectorAll('.node-card').forEach(el => {
+      el.addEventListener('click', () => {
+        state.selectedId = el.getAttribute('data-id');
+        playBlip(720);
+        renderRoster();
+        renderDetail();
+      });
+    });
+  }
+
+  function renderDetail() {
+    const n = getSelectedNode();
+    if (!n) return;
+
+    document.getElementById('heroName').textContent = n.name;
+    document.getElementById('heroRole').textContent = `${n.role} [${n.id}]`;
+
+    const badge = document.getElementById('heroBadge');
+    badge.textContent = n.status;
+    badge.className = 'node-badge';
+    if (n.status === 'ONLINE') badge.classList.add('badge-online');
+    else if (n.status === 'SYNCING') badge.classList.add('badge-syncing');
+    else if (n.status === 'TRANSMITTING') badge.classList.add('badge-tx');
+    else if (n.status === 'ANOMALOUS') badge.classList.add('badge-anomaly');
+    else badge.classList.add('badge-standby');
+
+    document.getElementById('valPing').textContent = `${n.ping} ms`;
+    document.getElementById('valThroughput').textContent = `${n.throughput} kbps`;
+    document.getElementById('valSignal').textContent = `${n.signal} dBm`;
+    document.getElementById('valLoss').textContent = `${n.loss.toFixed(1)} %`;
+
+    document.getElementById('labelCpu').textContent = `${n.cpu}% (${n.throttle}% Throt)`;
+    const barCpu = document.getElementById('barCpu');
+    barCpu.style.width = `${n.cpu}%`;
+    barCpu.className = 'gauge-bar-inner' + (n.cpu > 80 ? ' crit' : n.cpu > 60 ? ' warn' : '');
+
+    document.getElementById('labelBuffer').textContent = `${n.buffer}%`;
+    const barBuf = document.getElementById('barBuffer');
+    barBuf.style.width = `${n.buffer}%`;
+    barBuf.className = 'gauge-bar-inner' + (n.buffer > 70 ? ' warn' : '');
+
+    document.getElementById('labelMem').textContent = `${n.memKb} KB / 999 KB`;
+    document.getElementById('barMem').style.width = `${(n.memKb / 999) * 100}%`;
+  }
+
+  // --- CANVAS: TACTICAL RADAR TOPOLOGY ---
+  let radarAngle = 0;
+  function drawRadar() {
+    const canvas = document.getElementById('radarCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width = canvas.parentElement.clientWidth;
+    const h = canvas.height = canvas.parentElement.clientHeight;
+
+    ctx.clearRect(0, 0, w, h);
+
+    const cx = w / 2;
+    const cy = h / 2;
+    const maxR = Math.min(cx, cy) * 0.88 * state.radarZoom;
+
+    // Background Grid
+    ctx.strokeStyle = '#0d2b1a';
+    ctx.lineWidth = 1;
+
+    // Range rings
+    for (let r = 1; r <= 4; r++) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, (maxR / 4) * r, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = '#164a2d';
+      ctx.font = '9px monospace';
+      ctx.fillText(`${r * 250} km`, cx + 4, cy - (maxR / 4) * r + 10);
+    }
+
+    // Crosshairs
+    ctx.beginPath();
+    ctx.moveTo(cx - maxR, cy); ctx.lineTo(cx + maxR, cy);
+    ctx.moveTo(cx, cy - maxR); ctx.lineTo(cx, cy + maxR);
+    ctx.stroke();
+
+    // Sweeping Radar Line (Clean phosphor beam within scope, no traveling glint balls!)
+    if (!state.streamPaused) {
+      radarAngle += 0.025;
+      if (radarAngle > Math.PI * 2) radarAngle -= Math.PI * 2;
+    }
+
+    const sweepX = cx + Math.cos(radarAngle) * maxR;
+    const sweepY = cy + Math.sin(radarAngle) * maxR;
+
+    const grad = ctx.createRadialGradient(cx, cy, 5, cx, cy, maxR);
+    grad.addColorStop(0, 'rgba(51, 255, 102, 0.4)');
+    grad.addColorStop(1, 'rgba(51, 255, 102, 0.0)');
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, maxR, radarAngle - 0.35, radarAngle);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(sweepX, sweepY);
+    ctx.strokeStyle = 'rgba(51, 255, 102, 0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    // Center Relay Node (Node 0x00)
+    ctx.fillStyle = '#ffaa00';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.font = '10px monospace';
+    ctx.fillText('NODE-0x00 [HUB]', cx + 7, cy + 4);
+
+    // Plot Fleet Nodes
+    const selected = getSelectedNode();
+    state.nodes.forEach(n => {
+      const nr = n.radarRadius * maxR;
+      const nx = cx + Math.cos(n.radarAngle) * nr;
+      const ny = cy + Math.sin(n.radarAngle) * nr;
+
+      // Conduit line to Hub
+      ctx.strokeStyle = n.id === state.selectedId ? 'rgba(51, 255, 102, 0.4)' : 'rgba(20, 60, 35, 0.4)';
+      ctx.setLineDash([2, 4]);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(nx, ny);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Traveling pulse packet animation
+      if (!state.streamPaused && n.status !== 'STANDBY') {
+        const pulseProg = (Date.now() / 1200 + n.radarRadius * 2) % 1;
+        const px = cx + (nx - cx) * pulseProg;
+        const py = cy + (ny - cy) * pulseProg;
+        ctx.fillStyle = n.isAnomaly ? '#ff3344' : '#33ccff';
+        ctx.fillRect(px - 1.5, py - 1.5, 3, 3);
+      }
+
+      // Blip
+      ctx.beginPath();
+      ctx.arc(nx, ny, n.id === state.selectedId ? 6 : 4, 0, Math.PI * 2);
+      ctx.fillStyle = n.isAnomaly ? '#ff3344' : (n.id === state.selectedId ? '#33ff66' : '#1da3d1');
+      ctx.fill();
+
+      if (n.id === state.selectedId) {
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+
+      // Label
+      ctx.fillStyle = n.isAnomaly ? '#ff7788' : '#88e0a8';
+      ctx.font = '9px monospace';
+      ctx.fillText(n.id, nx + 7, ny + 3);
+    });
+
+    requestAnimationFrame(drawRadar);
+  }
+
+  // Radar click selection
+  function setupRadarInteraction() {
+    const canvas = document.getElementById('radarCanvas');
+    if (!canvas) return;
+
+    canvas.addEventListener('click', e => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const maxR = Math.min(cx, cy) * 0.88 * state.radarZoom;
+
+      state.nodes.forEach(n => {
+        const nr = n.radarRadius * maxR;
+        const nx = cx + Math.cos(n.radarAngle) * nr;
+        const ny = cy + Math.sin(n.radarAngle) * nr;
+
+        const dist = Math.hypot(mx - nx, my - ny);
+        if (dist < 12) {
+          state.selectedId = n.id;
+          playBlip(800);
+          renderRoster();
+          renderDetail();
+        }
+      });
+    });
+  }
+
+  // --- CANVAS: MULTI-CHANNEL OSCILLOSCOPE ---
+  function drawScope() {
+    const canvas = document.getElementById('scopeCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width = canvas.parentElement.clientWidth;
+    const h = canvas.height = canvas.parentElement.clientHeight;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Background Grid
+    ctx.strokeStyle = '#0d2216';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < w; x += 30) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0); ctx.lineTo(x, h);
+      ctx.stroke();
+    }
+    for (let y = 0; y < h; y += 20) {
+      ctx.beginPath();
+      ctx.moveTo(0, y); ctx.lineTo(w, y);
+      ctx.stroke();
+    }
+
+    const n = getSelectedNode();
+    if (!n || !n.history || n.history.length === 0) {
+      requestAnimationFrame(drawScope);
+      return;
+    }
+
+    const hist = n.history;
+    const step = w / (hist.length - 1);
+
+    // Draw Channel A: Throughput (Green)
+    if (state.channels.a) {
+      ctx.strokeStyle = '#33ff66';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      hist.forEach((pt, i) => {
+        const val = Math.min(1, pt.tput / 300);
+        const y = h - (val * (h - 20)) - 10;
+        const x = i * step;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    }
+
+    // Draw Channel B: Signal (Cyan)
+    if (state.channels.b) {
+      ctx.strokeStyle = '#33ccff';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      hist.forEach((pt, i) => {
+        const val = Math.min(1, (100 - pt.sig) / 70);
+        const y = h - (val * (h - 20)) - 10;
+        const x = i * step;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    }
+
+    // Draw Channel C: Buffer (Amber)
+    if (state.channels.c) {
+      ctx.strokeStyle = '#ffaa00';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      hist.forEach((pt, i) => {
+        const val = Math.min(1, pt.buf / 100);
+        const y = h - (val * (h - 20)) - 10;
+        const x = i * step;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    }
+
+    // Draw Channel D: Entropy (Red)
+    if (state.channels.d) {
+      ctx.strokeStyle = '#ff3344';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      hist.forEach((pt, i) => {
+        const val = Math.min(1, pt.entropy / 100);
+        const y = h - (val * (h - 20)) - 10;
+        const x = i * step;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    }
+
+    requestAnimationFrame(drawScope);
+  }
+
+  // --- PERIODIC TELEMETRY ENGINE TICK ---
+  let tickTimer = null;
+  function startTickLoop() {
+    if (tickTimer) clearInterval(tickTimer);
+    tickTimer = setInterval(() => {
+      state.ticks++;
+
+      // Uptime
+      const totalSec = Math.floor((Date.now() - state.startTime) / 1000);
+      const hrs = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+      const mins = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+      const secs = String(totalSec % 60).padStart(2, '0');
+      const uptimeEl = document.getElementById('headerUptime');
+      if (uptimeEl) uptimeEl.textContent = `UPTIME: T+${hrs}:${mins}:${secs}`;
+
+      if (state.streamPaused) return;
+
+      // Update telemetry history
+      state.nodes.forEach(n => {
+        if (n.status === 'STANDBY') return;
+
+        // Dynamic jitter
+        const jitter = (Math.random() * 8 - 4);
+        n.throughput = Math.max(10, Math.min(280, Math.round(n.throughput + jitter)));
+        n.buffer = Math.max(2, Math.min(95, Math.round(n.buffer + (Math.random() * 4 - 2))));
+
+        // Append to history buffer
+        n.history.shift();
+        n.history.push({
+          tput: n.throughput,
+          sig: Math.abs(n.signal) + (Math.random() * 2 - 1),
+          buf: n.buffer,
+          entropy: Math.sin(state.ticks * 0.15 + n.radarRadius * 4) * 25 + 35
+        });
+      });
+
+      // Heartbeat event every 30 ticks
+      if (state.ticks % 30 === 0) {
+        const active = getSelectedNode();
+        appendLog('SYNC', `HEARTBEAT_ACK from ${active.id} [seq=${state.ticks}]`);
+      }
+
+      renderDetail();
+    }, state.tickRate);
+  }
+
+  // --- STATE PERSISTENCE (Quicksave / Quickload / JSON) ---
+  const SAVE_KEY = 'kfleet_quicksave';
+  const TUT_KEY = 'kfleet_tutorialSeen';
+
+  function quickSave() {
+    try {
+      const data = {
+        nodes: state.nodes,
+        selectedId: state.selectedId,
+        beaconActive: state.beaconActive,
+        theme: state.theme,
+        scanlines: state.scanlines,
+        tickRate: state.tickRate,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+      appendLog('INFO', 'Session quicksaved to localStorage [F5]');
+      playPingAck();
+      alertUserToast('QUICKSAVE SUCCESSFUL [F5]');
+    } catch (e) {
+      appendLog('WARN', 'Quicksave failed: quota or permission error');
+    }
+  }
+
+  function quickLoad() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) {
+        appendLog('WARN', 'No existing quicksave found [F9]');
+        alertUserToast('NO SAVED SESSION FOUND');
+        return;
+      }
+      const data = JSON.parse(raw);
+      state.nodes = data.nodes || state.nodes;
+      state.selectedId = data.selectedId || state.selectedId;
+      state.beaconActive = !!data.beaconActive;
+      state.theme = data.theme || 'phosphor';
+      state.scanlines = data.scanlines !== undefined ? data.scanlines : true;
+      state.tickRate = data.tickRate || 500;
+
+      applyTheme();
+      renderRoster();
+      renderDetail();
+      appendLog('INFO', 'Session quickloaded successfully [F9]');
+      playPingAck();
+      alertUserToast('QUICKLOAD SUCCESSFUL [F9]');
+    } catch (e) {
+      appendLog('WARN', 'Quickload parse error');
+    }
+  }
+
+  function exportJson() {
+    const data = {
+      app: 'KFleet',
+      version: '1.0.0',
+      nodes: state.nodes,
+      selectedId: state.selectedId,
+      beaconActive: state.beaconActive,
+      theme: state.theme,
+      exportedAt: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `kfleet_telemetry_${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    appendLog('INFO', 'Telemetry profile exported to JSON file');
+  }
+
+  function importJson(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (data.nodes) state.nodes = data.nodes;
+        if (data.selectedId) state.selectedId = data.selectedId;
+        renderRoster();
+        renderDetail();
+        appendLog('INFO', 'Telemetry profile imported successfully');
+        alertUserToast('JSON PROFILE IMPORTED');
+      } catch (err) {
+        alertUserToast('FAILED TO PARSE JSON FILE');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function alertUserToast(msg) {
+    const out = document.getElementById('termOutput');
+    if (out) appendTerm(`[NOTIFY] ${msg}`, 'var(--phosphor)');
+  }
+
+  function applyTheme() {
+    document.body.className = '';
+    if (state.theme === 'amber') document.body.classList.add('theme-amber');
+    if (state.theme === 'cyan') document.body.classList.add('theme-cyan');
+    if (!state.scanlines) document.body.classList.add('no-scanlines');
+
+    const themeSelect = document.getElementById('themeSelector');
+    if (themeSelect) themeSelect.value = state.theme;
+    const scanCheck = document.getElementById('scanlinesToggle');
+    if (scanCheck) scanCheck.checked = state.scanlines;
+  }
+
+  // --- TUTORIAL ONBOARDING ---
+  const TUTORIAL_STEPS = [
+    {
+      title: 'FLEET NODE MATRIX & SELECTION',
+      content: `
+        <p>Welcome to <strong>KFleet</strong>, the 1999 Operations Console for the autonomous KiloApps agent fleet.</p>
+        <p>The <strong>Fleet Node Matrix</strong> (left pane) lists all active agents (kilo-creator, kilo-graphics, kilo-tester, etc.) and deep orbital relays. Select any node to inspect its live vitals, ping response, and subsystem load.</p>
+      `
+    },
+    {
+      title: 'TACTICAL RADAR & TELEMETRY SWEEP',
+      content: `
+        <p>The <strong>Tactical Vector Radar</strong> (top center) monitors spatial position and link propagation relative to central kernel Node 0x00.</p>
+        <p>Dotted packet pulses travel in real-time between nodes. Click any blip directly on the radar to lock onto that node or hit <strong>SWEEP SCAN</strong> to search for unmapped ghost carriers.</p>
+      `
+    },
+    {
+      title: 'MULTI-CHANNEL STRIP CHART OSCILLOSCOPE',
+      content: `
+        <p>The <strong>Multi-Channel Strip Chart</strong> (bottom center) graphs live telemetry metrics: Throughput (kbps), Signal (dBm), Buffer Occupancy (%), and Entropy.</p>
+        <p>Toggle channels on and off via the buttons. Hit <strong>[SPACE]</strong> at any time to pause and inspect waveforms.</p>
+      `
+    },
+    {
+      title: 'UPLINK TERMINAL & STATE PERSISTENCE',
+      content: `
+        <p>The <strong>Command Uplink Terminal</strong> (bottom left) accepts commands like <code>PING</code>, <code>POLL</code>, <code>DIAG</code>, <code>THROTTLE</code>, and <code>SCAN</code>.</p>
+        <p>Save your session anytime with <strong>[F5]</strong> and restore with <strong>[F9]</strong>. You are now cleared for fleet operations!</p>
+      `
+    }
+  ];
+
+  let currentTutStep = 0;
+
+  function showTutorialStep(idx) {
+    currentTutStep = idx;
+    document.getElementById('tutStepNum').textContent = idx + 1;
+    const step = TUTORIAL_STEPS[idx];
+    document.getElementById('tutBodyContent').innerHTML = `
+      <div class="tutorial-step">
+        <h4 style="color:var(--amber); margin-bottom:6px;">${step.title}</h4>
+        ${step.content}
+      </div>
+    `;
+
+    document.getElementById('btnTutPrev').style.display = idx === 0 ? 'none' : 'inline-block';
+    document.getElementById('btnTutNext').textContent = idx === TUTORIAL_STEPS.length - 1 ? 'FINISH TUTORIAL' : 'NEXT STEP';
+  }
+
+  function openTutorial() {
+    showTutorialStep(0);
+    document.getElementById('tutorialModal').style.display = 'flex';
+  }
+
+  function closeTutorial() {
+    document.getElementById('tutorialModal').style.display = 'none';
+    localStorage.setItem(TUT_KEY, '1');
+    appendLog('INFO', 'Onboarding tutorial completed');
+  }
+
+  // --- INITIALIZATION & EVENT LISTENERS ---
+  window.addEventListener('DOMContentLoaded', () => {
+    // Populate Initial Views
+    renderRoster();
+    renderDetail();
+    startTickLoop();
+    drawRadar();
+    drawScope();
+    setupRadarInteraction();
+
+    // Check quicksave existence for Resume button
+    const hasSave = !!localStorage.getItem(SAVE_KEY);
+    const btnResume = document.getElementById('btnSplashResume');
+    if (btnResume && !hasSave) {
+      btnResume.disabled = true;
+      btnResume.style.opacity = '0.5';
+    }
+
+    // Splash Buttons
+    document.getElementById('btnSplashStart').addEventListener('click', () => {
+      initAudio();
+      document.getElementById('splashScreen').style.display = 'none';
+      playPingAck();
+
+      // Check first-run tutorial
+      if (!localStorage.getItem(TUT_KEY)) {
+        openTutorial();
+      }
+    });
+
+    document.getElementById('btnSplashResume').addEventListener('click', () => {
+      initAudio();
+      document.getElementById('splashScreen').style.display = 'none';
+      quickLoad();
+    });
+
+    document.getElementById('btnSplashHelp').addEventListener('click', () => {
+      initAudio();
+      document.getElementById('helpModal').style.display = 'flex';
+    });
+
+    document.getElementById('btnSplashSettings').addEventListener('click', () => {
+      initAudio();
+      document.getElementById('settingsModal').style.display = 'flex';
+    });
+
+    // Top Header Buttons
+    document.getElementById('btnAudioToggle').addEventListener('click', () => {
+      audioEnabled = !audioEnabled;
+      document.getElementById('btnAudioToggle').textContent = `AUDIO: ${audioEnabled ? 'ON' : 'OFF'}`;
+      if (audioEnabled) {
+        initAudio();
+        playBlip(880);
+      }
+    });
+
+    document.getElementById('btnPauseStream').addEventListener('click', () => {
+      state.streamPaused = !state.streamPaused;
+      document.getElementById('btnPauseStream').textContent = state.streamPaused ? 'RESUME [SPACE]' : 'PAUSE [SPACE]';
+      document.getElementById('btnPauseStream').classList.toggle('active', state.streamPaused);
+      appendLog('INFO', state.streamPaused ? 'Telemetry stream frozen' : 'Telemetry stream running');
+    });
+
+    document.getElementById('btnQuicksave').addEventListener('click', quickSave);
+    document.getElementById('btnQuickload').addEventListener('click', quickLoad);
+
+    document.getElementById('btnHelp').addEventListener('click', () => {
+      document.getElementById('helpModal').style.display = 'flex';
+    });
+    document.getElementById('btnCloseHelp').addEventListener('click', () => {
+      document.getElementById('helpModal').style.display = 'none';
+    });
+    document.getElementById('btnCloseHelpFooter').addEventListener('click', () => {
+      document.getElementById('helpModal').style.display = 'none';
+    });
+
+    document.getElementById('btnSettings').addEventListener('click', () => {
+      document.getElementById('settingsModal').style.display = 'flex';
+    });
+    document.getElementById('btnCloseSettings').addEventListener('click', () => {
+      document.getElementById('settingsModal').style.display = 'none';
+    });
+    document.getElementById('btnCloseSettingsFooter').addEventListener('click', () => {
+      document.getElementById('settingsModal').style.display = 'none';
+    });
+
+    // Settings Modal Handlers
+    document.getElementById('themeSelector').addEventListener('change', e => {
+      state.theme = e.target.value;
+      applyTheme();
+    });
+    document.getElementById('scanlinesToggle').addEventListener('change', e => {
+      state.scanlines = e.target.checked;
+      applyTheme();
+    });
+    document.getElementById('soundToggle').addEventListener('change', e => {
+      audioEnabled = e.target.checked;
+      document.getElementById('btnAudioToggle').textContent = `AUDIO: ${audioEnabled ? 'ON' : 'OFF'}`;
+    });
+    document.getElementById('tickRateSelector').addEventListener('change', e => {
+      state.tickRate = parseInt(e.target.value, 10);
+      startTickLoop();
+    });
+    document.getElementById('btnExportJson').addEventListener('click', exportJson);
+    document.getElementById('btnImportJsonTrigger').addEventListener('click', () => {
+      document.getElementById('jsonFileInput').click();
+    });
+    document.getElementById('jsonFileInput').addEventListener('change', e => {
+      if (e.target.files && e.target.files[0]) {
+        importJson(e.target.files[0]);
+      }
+    });
+    document.getElementById('btnResetAll').addEventListener('click', () => {
+      if (confirm('Factory reset all telemetry buffers and configuration?')) {
+        localStorage.removeItem(SAVE_KEY);
+        localStorage.removeItem(TUT_KEY);
+        location.reload();
+      }
+    });
+
+    // Radar Toolbar Buttons
+    document.getElementById('btnRadarZoom').addEventListener('click', () => {
+      state.radarZoom = state.radarZoom === 1 ? 1.5 : (state.radarZoom === 1.5 ? 2.2 : 1);
+      document.getElementById('btnRadarZoom').textContent = `ZOOM: ${state.radarZoom}X`;
+      playBlip(600);
+    });
+    document.getElementById('btnScanAnomaly').addEventListener('click', scanForAnomalies);
+
+    // Scope Channel Toggles
+    const channelDefs = [
+      { id: 'chA', key: 'a', cls: 'active-a' },
+      { id: 'chB', key: 'b', cls: 'active-b' },
+      { id: 'chC', key: 'c', cls: 'active-c' },
+      { id: 'chD', key: 'd', cls: 'active-d' }
+    ];
+    channelDefs.forEach(c => {
+      const el = document.getElementById(c.id);
+      if (el) {
+        el.addEventListener('click', () => {
+          state.channels[c.key] = !state.channels[c.key];
+          el.classList.toggle(c.cls, state.channels[c.key]);
+          playBlip(500);
+        });
+      }
+    });
+
+    // Detail Action Buttons
+    document.getElementById('btnActionPing').addEventListener('click', () => {
+      executeCommand(`PING ${state.selectedId}`);
+    });
+    document.getElementById('btnActionPoll').addEventListener('click', () => {
+      executeCommand(`POLL ${state.selectedId}`);
+    });
+    document.getElementById('btnActionDiag').addEventListener('click', () => {
+      executeCommand(`DIAG ${state.selectedId}`);
+    });
+    document.getElementById('btnActionPurge').addEventListener('click', () => {
+      executeCommand(`PURGE ${state.selectedId}`);
+    });
+    document.getElementById('btnActionThrotDn').addEventListener('click', () => {
+      const n = getSelectedNode();
+      const next = Math.max(10, n.throttle - 10);
+      executeCommand(`THROTTLE ${n.id} ${next}`);
+    });
+    document.getElementById('btnActionThrotUp').addEventListener('click', () => {
+      const n = getSelectedNode();
+      const next = Math.min(100, n.throttle + 10);
+      executeCommand(`THROTTLE ${n.id} ${next}`);
+    });
+    document.getElementById('btnActionBeacon').addEventListener('click', () => {
+      executeCommand(`BEACON ${state.beaconActive ? 'OFF' : 'ON'}`);
+    });
+    document.getElementById('btnActionStress').addEventListener('click', () => {
+      const n = getSelectedNode();
+      n.buffer = Math.min(100, n.buffer + 40);
+      n.loss = Math.min(25, n.loss + 5.2);
+      playAlert();
+      appendLog('WARN', `Simulated telemetry packet flood on ${n.id}`);
+      renderDetail();
+    });
+
+    // Roster Search
+    document.getElementById('rosterSearch').addEventListener('input', renderRoster);
+
+    // Terminal Input
+    const termIn = document.getElementById('termInput');
+    termIn.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const val = termIn.value;
+        termIn.value = '';
+        executeCommand(val);
+      } else if (e.key === 'ArrowUp') {
+        if (state.cmdHistory.length > 0 && state.historyIdx > 0) {
+          state.historyIdx--;
+          termIn.value = state.cmdHistory[state.historyIdx];
+        }
+      } else if (e.key === 'ArrowDown') {
+        if (state.historyIdx < state.cmdHistory.length - 1) {
+          state.historyIdx++;
+          termIn.value = state.cmdHistory[state.historyIdx];
+        } else {
+          state.historyIdx = state.cmdHistory.length;
+          termIn.value = '';
+        }
+      }
+    });
+
+    document.getElementById('btnClearTerm').addEventListener('click', () => {
+      document.getElementById('termOutput').innerHTML = '';
+    });
+
+    // Log Filters
+    ['All', 'Info', 'Sync', 'Warn', 'Crit'].forEach(lvl => {
+      const el = document.getElementById(`logFilter${lvl}`);
+      if (el) {
+        el.addEventListener('click', () => {
+          document.querySelectorAll('.log-filters .kbtn').forEach(b => b.classList.remove('active'));
+          el.classList.add('active');
+          window.currentLogFilter = lvl.toUpperCase();
+          renderLogs();
+        });
+      }
+    });
+
+    document.getElementById('btnExportLog').addEventListener('click', () => {
+      const text = state.logs.map(l => `[${l.ts}] [${l.level}] ${l.message}`).join('\n');
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kfleet_log_${Date.now()}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Tutorial Buttons
+    document.getElementById('btnTutPrev').addEventListener('click', () => {
+      if (currentTutStep > 0) showTutorialStep(currentTutStep - 1);
+    });
+    document.getElementById('btnTutNext').addEventListener('click', () => {
+      if (currentTutStep < TUTORIAL_STEPS.length - 1) {
+        showTutorialStep(currentTutStep + 1);
+      } else {
+        closeTutorial();
+      }
+    });
+    document.getElementById('btnSkipTutorial').addEventListener('click', closeTutorial);
+
+    // Global Hotkeys
+    window.addEventListener('keydown', e => {
+      // Escape closes open modals
+      if (e.key === 'Escape') {
+        document.getElementById('helpModal').style.display = 'none';
+        document.getElementById('settingsModal').style.display = 'none';
+        document.getElementById('tutorialModal').style.display = 'none';
+        return;
+      }
+
+      // If typing in input, don't trigger hotkeys
+      if (e.target.tagName === 'INPUT') return;
+
+      if (e.key === 'F1') {
+        e.preventDefault();
+        document.getElementById('helpModal').style.display = 'flex';
+      } else if (e.key === 'F2') {
+        e.preventDefault();
+        document.getElementById('settingsModal').style.display = 'flex';
+      } else if (e.key === 'F5') {
+        e.preventDefault();
+        quickSave();
+      } else if (e.key === 'F9') {
+        e.preventDefault();
+        quickLoad();
+      } else if (e.code === 'Space') {
+        e.preventDefault();
+        document.getElementById('btnPauseStream').click();
+      } else if (e.key === 'p' || e.key === 'P') {
+        // Prev Node
+        const idx = state.nodes.findIndex(n => n.id === state.selectedId);
+        const prev = (idx + state.nodes.length - 1) % state.nodes.length;
+        state.selectedId = state.nodes[prev].id;
+        playBlip(700);
+        renderRoster();
+        renderDetail();
+      } else if (e.key === 'n' || e.key === 'N') {
+        // Next Node
+        const idx = state.nodes.findIndex(n => n.id === state.selectedId);
+        const next = (idx + 1) % state.nodes.length;
+        state.selectedId = state.nodes[next].id;
+        playBlip(700);
+        renderRoster();
+        renderDetail();
+      } else if (e.key === 'g' || e.key === 'G') {
+        executeCommand(`PING ${state.selectedId}`);
+      } else if (e.key === 'o' || e.key === 'O') {
+        executeCommand(`POLL ${state.selectedId}`);
+      } else if (e.key === 'd' || e.key === 'D') {
+        executeCommand(`DIAG ${state.selectedId}`);
+      } else if (e.key === 's' || e.key === 'S') {
+        scanForAnomalies();
+      }
+    });
+
+    // Seed Initial Welcome Log
+    appendLog('INFO', 'KFleet Telemetry Console v1.0.0 started');
+    appendLog('SYNC', 'VLF carrier matrix synchronized with 8 fleet nodes');
+  });
+})();
+</script>
+</body>
+</html>

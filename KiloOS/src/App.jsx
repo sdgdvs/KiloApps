@@ -115,7 +115,8 @@ const APPS = [
   { id: 'kclip', title: 'KClip', url: '/apps/kclip.html', exeUrl: '/exe/KClip.exe', icon: '/assets/icons/kclip.ico', w: 980, h: 700, folder: 'System' },
   { id: 'kmatrix', title: 'KMatrix', url: '/apps/kmatrix.html', exeUrl: '/exe/KMatrix.exe', icon: '/assets/icons/kmatrix.ico', w: 1080, h: 720, folder: 'System' },
   { id: 'kdirector', title: 'Director Console', url: '/apps/kdirector.html', icon: '/assets/icons/kdirector.ico', w: 1080, h: 720, folder: 'System' },
-  { id: 'kanomaly', title: 'KAnomaly', url: '/apps/kanomaly.html', exeUrl: '/exe/KAnomaly.exe', icon: '/assets/icons/kanomaly.ico', w: 1040, h: 720, folder: 'System' }
+  { id: 'kanomaly', title: 'KAnomaly', url: '/apps/kanomaly.html', exeUrl: '/exe/KAnomaly.exe', icon: '/assets/icons/kanomaly.ico', w: 1040, h: 720, folder: 'System' },
+  { id: 'kfleet', title: 'KFleet', url: '/apps/kfleet.html', exeUrl: '/exe/KFleet.exe', icon: '/assets/icons/kfleet.ico', w: 1060, h: 720, folder: 'System' }
 ];
 
 function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModal, openApps, closeApp }) {
