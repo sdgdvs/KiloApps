@@ -1444,32 +1444,9 @@ void DrawPerimeterInlayGDI(HDC hdc, int width, int height, float t) {
 
     Rectangle(hdc, margin, margin, margin + w, margin + h);
 
-    // Traveling Specular Glint
-    float totalPerim = 2.0f * (float)(w + h);
-    float glintDist = fmodf(t * 180.0f, totalPerim);
-    int gx = margin, gy = margin;
-
-    if (glintDist < (float)w) {
-        gx = margin + (int)glintDist; gy = margin;
-    } else if (glintDist < (float)(w + h)) {
-        gx = margin + w; gy = margin + (int)(glintDist - (float)w);
-    } else if (glintDist < (float)(2 * w + h)) {
-        gx = margin + w - (int)(glintDist - (float)(w + h)); gy = margin + h;
-    } else {
-        gx = margin; gy = margin + h - (int)(glintDist - (float)(2 * w + h));
-    }
-
-    HBRUSH glintBr = CreateSolidBrush(RGB(255, 255, 220));
-    HPEN glintPen = CreatePen(PS_NULL, 0, 0);
-    SelectObject(hdc, glintBr);
-    SelectObject(hdc, glintPen);
-    Ellipse(hdc, gx - 4, gy - 4, gx + 5, gy + 5);
-
     SelectObject(hdc, oldB);
     SelectObject(hdc, oldP);
     DeleteObject(perimPen);
-    DeleteObject(glintBr);
-    DeleteObject(glintPen);
 }
 
 void DrawBoardSpecularSweepGDI(HDC hdc, int cx, int cy, float t) {

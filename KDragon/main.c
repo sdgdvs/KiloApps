@@ -341,32 +341,6 @@ void DrawOrnateFrame(HDC hdc, RECT rect) {
     DrawFiligreeCorner(hdc, rect.left + 6, rect.bottom - 6, bracket_size, 1, -1);
     DrawFiligreeCorner(hdc, rect.right - 6, rect.bottom - 6, bracket_size, -1, -1);
     
-    // Animated traveling specular glint along top/bottom border
-    int perimeter = (rect.right - rect.left) * 2 + (rect.bottom - rect.top) * 2;
-    int glint_pos = (anim_tick * 4) % perimeter;
-    int gx = rect.left, gy = rect.top;
-    int w = rect.right - rect.left;
-    int h = rect.bottom - rect.top;
-    
-    if (glint_pos < w) {
-        gx = rect.left + glint_pos;
-        gy = rect.top + 2;
-    } else if (glint_pos < w + h) {
-        gx = rect.right - 3;
-        gy = rect.top + (glint_pos - w);
-    } else if (glint_pos < w * 2 + h) {
-        gx = rect.right - (glint_pos - (w + h));
-        gy = rect.bottom - 3;
-    } else {
-        gx = rect.left + 2;
-        gy = rect.bottom - (glint_pos - (w * 2 + h));
-    }
-    
-    HBRUSH glintBrush = CreateSolidBrush(RGB(255, 255, 220));
-    RECT gr = {gx - 2, gy - 2, gx + 3, gy + 3};
-    FillRect(hdc, &gr, glintBrush);
-    DeleteObject(glintBrush);
-    
     SelectObject(hdc, oldPen);
     SelectObject(hdc, oldBrush);
     DeleteObject(borderPen);

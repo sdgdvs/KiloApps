@@ -5034,20 +5034,6 @@ void RenderGdiScene(HDC hdc, int w, int h) {
         Ellipse(hdc, w - 12, h - 12, w - 7, h - 7);
         DeleteObject(hRivetB);
 
-        // Traveling golden glint dot along perimeter
-        int perim = (w + h) * 2;
-        int glintD = (g_GfxFrame * 5) % perim;
-        int gx = 4, gy = 4;
-        if (glintD < w) { gx = glintD; gy = 4; }
-        else if (glintD < w + h) { gx = w - 4; gy = glintD - w; }
-        else if (glintD < w * 2 + h) { gx = w - (glintD - (w + h)); gy = h - 4; }
-        else { gx = 4; gy = h - (glintD - (w * 2 + h)); }
-
-        HBRUSH hGlintB = CreateSolidBrush(RGB(255, 255, 255));
-        SelectObject(hdc, hGlintB);
-        Ellipse(hdc, gx - 2, gy - 2, gx + 3, gy + 3);
-        DeleteObject(hGlintB);
-
         SelectObject(hdc, hOldP);
         SelectObject(hdc, hOldB);
         DeleteObject(hGoldPen);

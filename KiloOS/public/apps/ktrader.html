@@ -1288,19 +1288,7 @@
       // Bottom-Right
       ctx.beginPath(); ctx.moveTo(W - 6 - bSize, H - 6); ctx.lineTo(W - 6, H - 6); ctx.lineTo(W - 6, H - 6 - bSize); ctx.stroke();
 
-      // Traveling specular glint traversing the outer frame
-      const glintPos = (animTime * 0.08) % ((W + H) * 2);
-      let gx = 0, gy = 0;
-      if (glintPos < W) { gx = glintPos; gy = 0; }
-      else if (glintPos < W + H) { gx = W; gy = glintPos - W; }
-      else if (glintPos < W * 2 + H) { gx = W - (glintPos - W - H); gy = H; }
-      else { gx = 0; gy = H - (glintPos - W * 2 - H); }
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-      ctx.shadowColor = '#00ffff';
-      ctx.shadowBlur = 8;
-      ctx.fillRect(gx - 2, gy - 2, 4, 4);
-      ctx.shadowBlur = 0;
 
       ctx.restore();
     }

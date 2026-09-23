@@ -111,7 +111,6 @@ static double RandomDouble(double minVal, double maxVal) {
 // Screen Shake
 double shakeMagnitude = 0.0;
 double shakeAngle = 0.0;
-double glintProgress = 0.0;
 
 // Atmospheric Floating Quantum Motes
 #define NUM_MOTES 35
@@ -665,36 +664,6 @@ void DrawCornerFiligreeGDI(HDC hdc, int w, int h) {
     DeleteObject(hBrushGold);
 }
 
-void DrawPerimeterGlintGDI(HDC hdc, int w, int h, double prog) {
-    int pad = 10;
-    int rw = w - pad * 2;
-    int rh = h - pad * 2;
-    int totalP = (rw + rh) * 2;
-    int curDist = (int)(prog * totalP);
-    
-    int gx = pad, gy = pad;
-    if (curDist < rw) {
-        gx = pad + curDist; gy = pad;
-    } else if (curDist < rw + rh) {
-        gx = pad + rw; gy = pad + (curDist - rw);
-    } else if (curDist < rw * 2 + rh) {
-        gx = pad + rw - (curDist - (rw + rh)); gy = pad + rh;
-    } else {
-        gx = pad; gy = pad + rh - (curDist - (rw * 2 + rh));
-    }
-    
-    HBRUSH hGlintBrush = CreateSolidBrush(RGB(255, 255, 255));
-    HPEN hGlintPen = CreatePen(PS_SOLID, 1, RGB(147, 197, 253));
-    HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hGlintBrush);
-    HPEN hOldP = (HPEN)SelectObject(hdc, hGlintPen);
-    
-    Ellipse(hdc, gx - 5, gy - 5, gx + 6, gy + 6);
-    
-    SelectObject(hdc, hOldB);
-    SelectObject(hdc, hOldP);
-    DeleteObject(hGlintBrush);
-    DeleteObject(hGlintPen);
-}
 
 void ShowHelpDialog(HWND hwnd) {
     MessageBox(hwnd, 
@@ -746,10 +715,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else {
                     shakeMagnitude = 0.0;
                 }
-                
-                // Update traveling glint
-                glintProgress += 0.015;
-                if (glintProgress > 1.0) glintProgress -= 1.0;
                 
                 // Update ambient motes
                 for (int i = 0; i < NUM_MOTES; i++) {
@@ -1202,9 +1167,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
                 
-                // 6. Draw Corner Filigree & Perimeter Glint
+                // 6. Draw Corner Filigree
                 DrawCornerFiligreeGDI(hdcMem, bmpW, bmpH);
-                DrawPerimeterGlintGDI(hdcMem, bmpW, bmpH, glintProgress);
                 
                 // 7. Draw HUD Badge
                 RECT textBg = { 12, bmpH - 46, 560, bmpH - 12 };

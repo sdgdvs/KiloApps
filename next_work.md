@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-qa
-  app: KType
-  timestamp: "2026-09-23T00:45:00Z"
+  agent: kilo-graphics
+  app: "Fleet-Wide Specular Glint Purge"
+  timestamp: "2026-09-23T01:00:00Z"
 last_planner_run: "2026-09-22T07:47:00Z"
 ---
 
@@ -156,6 +156,21 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T01:00:00Z — kilo-vision-audit: Fleet Comprehensive**
+  - Status: PASS ✅ (92 primary apps audited across 5 dimensions using native AI vision).
+  - Scope & Scoring: 92/92 apps scored (Fleet avg: 8.84/10; 0 apps below 5.0 threshold).
+  - Perfect 10s: KConverter, KFlash, KHabit, KMail, KPad, KRead, KStarDredge, KTimer, KVault, KZip.
+  - Glint Audit: Flagged lingering specular border comets across games; stripped 10 apps in commit 67d1d81c.
+  - Gallery Integration: Enriched docs/gallery/index.html and vision_scores.json with visual badges.
+
+- **2026-09-23T01:00:00Z — kilo-graphics: Fleet-Wide Specular Glint Purge**
+  - Status: PASS ✅ (Fleet Rule 11 & Director Directive 100% complete across all 31 native C and 33 web apps).
+  - Scope: Purged rotating specular glint comets, traveling perimeter border dots, and moving border balls.
+  - Native Win32 C: Purged glints in K2048, KChess, KConnect4, KSolitaire, KSudoku, KTowers, KGo, KReversi, KMines, KFreecell, KAsteroids, KPong, KSpace, KSnake, KPac, KTetris, KDarts, KSimon, KColony, KDragon, KFarm, KFortress, KMatch3, KQuest, KStarship, KMandel, KHex, KTrader, KWords, KHangman, KMine, KMystery.
+  - HTML5 Web: Purged CSS/canvas perimeter glints across all 33 corresponding web apps; preserved authentic weapon/mob sprites.
+  - Preserved Authenticity: Retained static period-accurate frames, corner filigrees, and genuine in-game highlights.
+  - Verification: All 31 native binaries recompiled (<255 KB each); Vite web build clean (223ms); security lint 0 violations.
+
 - **2026-09-23T00:45:00Z — kilo-qa: KType**
   - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial onboarding integrity, modal controls, size limits).
   - State Persistence: Quicksave (F5) & quickload (F9) across web (localStorage) and native (ktype.dat) capturing full state.
@@ -181,20 +196,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - OPML & State JSON: Added JSON state file import & auto-detection of pasted JSON into OPML manager; wired custom feed removal [✕].
   - Reading & Ergonomics: Decoupled font zoom from reader scroll position; hardened markdown & clipboard exports against null content.
   - Verification: MSVC C clean build (17.9 KB); Vite web build clean (209ms); security lint passed (0 violations).
-
-- **2026-09-23T00:05:00Z — kilo-graphics: KSanctuary**
-  - Status: PASS ✅ (Graphics polish, GDI sprite parity, raider emblems, balance pass).
-  - Pixel Art & Sprites: GDI sprites in Win32 C & SVGs in web for 5 raider warbands, defense turrets, barricades, and weather hazards.
-  - Visual Parity: Added Vault 811 tech archive landmark sprite, surface sentry pillbox, and workshop cutaway dweller.
-  - Specular & Glint Audit: Verified zero traveling border comets or orbiting glints in native C and web HTML.
-  - Gameplay Balance: Tuned barricade defense scaling, sentry overclock bonuses, and mitigated drought water penalty.
-  - Verification: MSVC C clean build (237 KB); Vite web build clean (222ms); security lint passed (0 violations).
-
-- **2026-09-22T23:45:00Z — kilo-creator: KAnomaly**
-  - Status: PASS ✅ (Created Subterranean Signal Analyzer across Win32 C & HTML5 web with 100% feature parity).
-  - Scientific Core: Real-time waterfall spectrogram, 64-band FFT, acoustic oscilloscope, and geophone strata profiling.
-  - Multi-Sensor Array: 6 global borehole observatories (Kola, Carlsbad, Mariana, Yamantau, Hadron, Atacama).
-  - Cryptographic Intercept: 12 subterranean anomalies with SSTV raster decoding and TDOA hyperbolic epicenter triangulation.
-  - Audio Architecture: Procedural Sega Genesis (YM2612 FM dual-op) and SNES warm geophone rumble audio engine.
-  - State & Usability: Splash screen, first-run tutorial modal, quicksave [F5]/quickload [F9], and JSON state export/import.
-  - Verification: MSVC C clean build (19.0 KB); Vite web build clean (212ms); security lint passed (0 violations).

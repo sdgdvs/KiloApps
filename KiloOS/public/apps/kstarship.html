@@ -754,22 +754,6 @@
       c.fillRect(w - 10, h - 10, 4, 4);
       c.fillRect(w - 16, h - 16, 2, 2);
 
-      const peri = (w + h) * 2;
-      const glintPos = (Date.now() * 0.15) % peri;
-      let gx = 0, gy = 0;
-      if (glintPos < w) { gx = glintPos; gy = 0; }
-      else if (glintPos < w + h) { gx = w; gy = glintPos - w; }
-      else if (glintPos < w * 2 + h) { gx = w - (glintPos - (w + h)); gy = h; }
-      else { gx = 0; gy = h - (glintPos - (w * 2 + h)); }
-
-      let gRad = c.createRadialGradient(gx, gy, 0, gx, gy, 20);
-      gRad.addColorStop(0, '#ffffff');
-      gRad.addColorStop(0.3, '#00ffff');
-      gRad.addColorStop(1, 'rgba(0, 255, 255, 0)');
-      c.fillStyle = gRad;
-      c.beginPath();
-      c.arc(gx, gy, 20, 0, Math.PI * 2);
-      c.fill();
 
       c.restore();
     }

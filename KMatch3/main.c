@@ -832,26 +832,6 @@ void DrawBoard(HDC hdc) {
     SelectObject(hdc, oldPen);
     DeleteObject(studB); DeleteObject(framePenHigh); DeleteObject(framePenLow); DeleteObject(framePenMid);
 
-    // Traveling Specular Glint along Perimeter
-    DWORD tickGlint = GetTickCount();
-    int fw = outerFrame.right - outerFrame.left;
-    int fh = outerFrame.bottom - outerFrame.top;
-    int periLen = 2 * (fw + fh);
-    int gPos = (int)(tickGlint / 3) % periLen;
-    int gx, gy;
-    if (gPos < fw) { gx = outerFrame.left + gPos; gy = outerFrame.top; }
-    else if (gPos < fw + fh) { gx = outerFrame.right; gy = outerFrame.top + (gPos - fw); }
-    else if (gPos < 2 * fw + fh) { gx = outerFrame.right - (gPos - (fw + fh)); gy = outerFrame.bottom; }
-    else { gx = outerFrame.left; gy = outerFrame.bottom - (gPos - (2 * fw + fh)); }
-    
-    HBRUSH glintB = CreateSolidBrush(RGB(255, 255, 255));
-    HPEN glintP = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
-    HBRUSH oGb = (HBRUSH)SelectObject(hdc, glintB);
-    HPEN oGp = (HPEN)SelectObject(hdc, glintP);
-    Ellipse(hdc, gx - 3, gy - 3, gx + 4, gy + 4);
-    SelectObject(hdc, oGb); SelectObject(hdc, oGp);
-    DeleteObject(glintB); DeleteObject(glintP);
-
     // Grid Cells
     for (int r = 0; r < rows; r++) {
         for (int c = 0; c < cols; c++) {

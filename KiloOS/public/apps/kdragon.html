@@ -807,38 +807,6 @@
                     ctx.restore();
                 }
 
-                // 5. Specular Glint traversing the outer container
-                if (container) {
-                    const rect = container.getBoundingClientRect();
-                    this.glintProgress = (this.glintProgress + 0.008) % 1.0;
-                    const perimeter = (rect.width + rect.height) * 2;
-                    let dist = this.glintProgress * perimeter;
-                    let gx = rect.left, gy = rect.top;
-
-                    if (dist < rect.width) {
-                        gx = rect.left + dist;
-                        gy = rect.top;
-                    } else if (dist < rect.width + rect.height) {
-                        gx = rect.right;
-                        gy = rect.top + (dist - rect.width);
-                    } else if (dist < rect.width * 2 + rect.height) {
-                        gx = rect.right - (dist - (rect.width + rect.height));
-                        gy = rect.bottom;
-                    } else {
-                        gx = rect.left;
-                        gy = rect.bottom - (dist - (rect.width * 2 + rect.height));
-                    }
-
-                    ctx.save();
-                    ctx.fillStyle = '#ffffff';
-                    ctx.shadowBlur = 12;
-                    ctx.shadowColor = '#ffd700';
-                    ctx.globalAlpha = 0.85;
-                    ctx.beginPath();
-                    ctx.arc(gx, gy, 3, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.restore();
-                }
             }
         };
         VFX.init();

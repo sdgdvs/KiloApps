@@ -1513,25 +1513,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SelectObject(hdc, hOldR);
             DeleteObject(hRivet);
 
-            // Traveling Specular Glint along perimeter
-            int perimeter = (gridW + gridH) * 2;
-            int glintDist = (int)(bTick * 0.22f) % perimeter;
-            int gx = 0, gy = 0;
-            if (glintDist < gridW) {
-                gx = left + glintDist; gy = top - 2;
-            } else if (glintDist < gridW + gridH) {
-                gx = right + 2; gy = top + (glintDist - gridW);
-            } else if (glintDist < gridW * 2 + gridH) {
-                gx = right - (glintDist - (gridW + gridH)); gy = bottom + 2;
-            } else {
-                gx = left - 2; gy = bottom - (glintDist - (gridW * 2 + gridH));
-            }
-            HBRUSH hGlintBrush = CreateSolidBrush(RGB(255, 255, 255));
-            HBRUSH hOldG = (HBRUSH)SelectObject(hdc, hGlintBrush);
-            Ellipse(hdc, gx - 4, gy - 4, gx + 4, gy + 4);
-            SelectObject(hdc, hOldG);
-            DeleteObject(hGlintBrush);
-
             // Stylized day/night cycle color overlay that slowly shifts based on internal time
             DWORD tick = GetTickCount();
             float cycle = (float)(tick % 60000) / 60000.0f;

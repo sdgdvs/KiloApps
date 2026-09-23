@@ -1570,23 +1570,7 @@
       ctx.strokeStyle = `rgba(0, 240, 240, ${periPulse})`;
       ctx.lineWidth = 1.5;
       ctx.strokeRect(offX + 2, offY + 2, BOARD_W - 4, H * CELL - 4);
-
-      // Traveling Specular Glint along perimeter
-      let pW = BOARD_W - 4, pH = H * CELL - 4;
-      let periTotal = (pW + pH) * 2;
-      let gDist = (tick * 0.25) % periTotal;
-      let gx = 2, gy = 2;
-      if (gDist < pW) { gx = 2 + gDist; gy = 2; }
-      else if (gDist < pW + pH) { gx = 2 + pW; gy = 2 + (gDist - pW); }
-      else if (gDist < pW * 2 + pH) { gx = 2 + pW - (gDist - (pW + pH)); gy = 2 + pH; }
-      else { gx = 2; gy = 2 + pH - (gDist - (pW * 2 + pH)); }
-
-      ctx.fillStyle = '#ffffff';
-      ctx.shadowColor = '#00ffff';
-      ctx.shadowBlur = 8;
-      ctx.beginPath();
-      ctx.arc(offX + gx, offY + gy, 2.5, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.restore();
 
       // Ornate Cybernetic Arcade HUD Corner Reticle L-Brackets with Tech Notches
       ctx.strokeStyle = '#00d2d3';

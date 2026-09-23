@@ -1144,10 +1144,6 @@
       ctx.arc(mote.x, mote.y, mote.size, 0, Math.PI * 2);
       ctx.fill();
     }
-
-    const glintProgress = ((animTime * 0.4) % 1.0);
-    const glintDiag = glintProgress * (cols + rows);
-
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {
         const bx = x * CELL;
@@ -1155,12 +1151,10 @@
         const cellState = state[y][x];
 
         if (cellState === 0 || cellState === 2) {
-          const isGlint = Math.abs((x + y) - glintDiag) < 0.6;
-          
-          ctx.fillStyle = isGlint ? "#334155" : "#1e293b";
+          ctx.fillStyle = "#1e293b";
           ctx.fillRect(bx + 1, by + 1, CELL - 2, CELL - 2);
 
-          ctx.fillStyle = isGlint ? "#94a3b8" : "#475569";
+          ctx.fillStyle = "#475569";
           ctx.fillRect(bx, by, CELL, 2);
           ctx.fillRect(bx, by, 2, CELL);
 

@@ -634,12 +634,10 @@
 
     // Continuous 60 FPS Animation & Compositing Loop
     let lastTime = 0;
-    let glintProgress = 0;
 
     function renderLoop(time) {
       const dt = (time - lastTime) / 1000 || 0.016;
       lastTime = time;
-      glintProgress = (glintProgress + dt * 0.4) % 1.0;
 
       const w = canvas.width;
       const h = canvas.height;
@@ -782,8 +780,7 @@
       // 5. Ornate Cybernetic HUD Corner Filigree L-Brackets & Gold Rivets
       drawCornerFiligree(ctx, w, h);
 
-      // 6. Pulsating Energy Perimeter Inlay Border & Traveling Specular Glint
-      drawPerimeterGlint(ctx, w, h, glintProgress);
+
 
       requestAnimationFrame(renderLoop);
     }
@@ -832,38 +829,7 @@
       c.restore();
     }
 
-    function drawPerimeterGlint(c, w, h, progress) {
-      c.save();
-      const pad = 12;
-      const rw = w - pad * 2;
-      const rh = h - pad * 2;
-      const totalPerim = (rw + rh) * 2;
-      const curDist = progress * totalPerim;
 
-      let gx = pad, gy = pad;
-      if (curDist < rw) {
-        gx = pad + curDist; gy = pad;
-      } else if (curDist < rw + rh) {
-        gx = pad + rw; gy = pad + (curDist - rw);
-      } else if (curDist < rw * 2 + rh) {
-        gx = pad + rw - (curDist - (rw + rh)); gy = pad + rh;
-      } else {
-        gx = pad; gy = pad + rh - (curDist - (rw * 2 + rh));
-      }
-
-      // Traveling Specular Glint
-      const glintGrad = c.createRadialGradient(gx, gy, 0, gx, gy, 24);
-      glintGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-      glintGrad.addColorStop(0.3, 'rgba(96, 165, 250, 0.7)');
-      glintGrad.addColorStop(1, 'transparent');
-
-      c.fillStyle = glintGrad;
-      c.beginPath();
-      c.arc(gx, gy, 24, 0, Math.PI * 2);
-      c.fill();
-
-      c.restore();
-    }
 
     requestAnimationFrame(renderLoop);
 

@@ -1418,24 +1418,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 LineTo(memDC, W - 6, H - 6); LineTo(memDC, 6, H - 6); LineTo(memDC, 6, 6);
                 SelectObject(memDC, oldPenInlay); DeleteObject(inlayPen);
 
-                // Traveling Specular Glint along perimeter
-                int perimW = W - 12, perimH = H - 12;
-                int totalPerim = (perimW + perimH) * 2;
-                int glintPos = (int)(GetTickCount() * 0.18f) % totalPerim;
-                int gx = 6, gy = 6;
-                if (glintPos < perimW) { gx = 6 + glintPos; gy = 6; }
-                else if (glintPos < perimW + perimH) { gx = 6 + perimW; gy = 6 + (glintPos - perimW); }
-                else if (glintPos < perimW * 2 + perimH) { gx = 6 + perimW - (glintPos - perimW - perimH); gy = 6 + perimH; }
-                else { gx = 6; gy = 6 + perimH - (glintPos - perimW * 2 - perimH); }
-
-                HBRUSH glintBrush = CreateSolidBrush(RGB(255, 255, 255));
-                HPEN glintPen = CreatePen(PS_SOLID, 1, GetPrimaryColor());
-                HPEN oldGP = (HPEN)SelectObject(memDC, glintPen);
-                HBRUSH oldGB = (HBRUSH)SelectObject(memDC, glintBrush);
-                Ellipse(memDC, gx - 3, gy - 3, gx + 4, gy + 4);
-                SelectObject(memDC, oldGP); SelectObject(memDC, oldGB);
-                DeleteObject(glintPen); DeleteObject(glintBrush);
-
                 // Ornate Cybernetic Arcade HUD Corner Filigree L-Brackets with Rivet Detailing (Loop 8)
                 HPEN cornerPen = CreatePen(PS_SOLID, 2, GetPrimaryColor());
                 HPEN oldCP = (HPEN)SelectObject(memDC, cornerPen);

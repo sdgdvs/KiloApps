@@ -2286,17 +2286,6 @@
             ctx.lineWidth = 1.5;
             ctx.strokeRect(3, 3, 394, 394);
 
-            // Traveling Specular Glint along perimeter (total = 394 * 4 = 1576)
-            let periTotal = 394 * 4;
-            let gDist = (frameCount * 5) % periTotal;
-            let gx = 3, gy = 3;
-            if (gDist < 394) { gx = 3 + gDist; gy = 3; }
-            else if (gDist < 788) { gx = 397; gy = 3 + (gDist - 394); }
-            else if (gDist < 1182) { gx = 397 - (gDist - 788); gy = 397; }
-            else { gx = 3; gy = 397 - (gDist - 1182); }
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath(); ctx.arc(gx, gy, 2.5, 0, Math.PI * 2); ctx.fill();
-
             // Ornate Cybernetic Arcade HUD Corner Reticle L-Brackets with Tech Notches
             ctx.strokeStyle = '#00d2d3';
             ctx.lineWidth = 2;

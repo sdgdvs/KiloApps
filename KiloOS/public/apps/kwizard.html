@@ -1022,24 +1022,6 @@
             ctx.beginPath(); ctx.moveTo(w - 8 - bLen, h - 8); ctx.lineTo(w - 8, h - 8); ctx.lineTo(w - 8, h - 8 - bLen); ctx.stroke();
             ctx.fillRect(w - 10, h - 10, 3, 3);
 
-            // Traveling Specular Glint along Perimeter Frame
-            const glintProg = (time * 0.3) % 1;
-            const perim = (w + h) * 2;
-            const d = glintProg * perim;
-            let gx = 0, gy = 0;
-            if (d < w) { gx = d; gy = 0; }
-            else if (d < w + h) { gx = w; gy = d - w; }
-            else if (d < w * 2 + h) { gx = w - (d - (w + h)); gy = h; }
-            else { gx = 0; gy = h - (d - (w * 2 + h)); }
-
-            ctx.beginPath();
-            ctx.arc(gx, gy, 4, 0, Math.PI * 2);
-            ctx.fillStyle = '#ffffff';
-            ctx.shadowColor = '#ffd700';
-            ctx.shadowBlur = 8;
-            ctx.fill();
-            ctx.shadowBlur = 0;
-
             ctx.restore();
 
             requestAnimationFrame(updateAndDrawArena);

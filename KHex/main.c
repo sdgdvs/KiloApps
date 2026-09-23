@@ -1239,15 +1239,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Cyber HUD Corner Filigree Brackets on banner frame
             DrawCyberHudBracket(memDC, 6, 4, 830, 92, RGB(6, 182, 212));
 
-            // Animated Traveling Specular Glint along top border
             DWORD ticks = GetTickCount();
-            int glintX = (int)((ticks / 10) % (bannerW + 200)) - 100;
-            HPEN hGlintPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
-            HPEN oldGP = (HPEN)SelectObject(memDC, hGlintPen);
-            MoveToEx(memDC, glintX - 30, 4, NULL);
-            LineTo(memDC, glintX + 30, 4);
-            SelectObject(memDC, oldGP);
-            DeleteObject(hGlintPen);
+
 
             // Ambient Floating Cyber Dust / Matrix Motes
             int m;

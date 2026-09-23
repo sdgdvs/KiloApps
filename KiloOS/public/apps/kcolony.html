@@ -1168,24 +1168,10 @@
             ctx.fillRect(5, 393, 2, 2);
             ctx.fillRect(393, 393, 2, 2);
 
-            // 2. Pulsating Energy Perimeter Inlay Border with Traveling Specular Glint
-            const glintPos = ((globalAnimTime * 100) % 1600);
+            // 2. Perimeter Inlay Border
             ctx.strokeStyle = `rgba(0, 255, 255, ${0.25 + 0.15 * Math.sin(globalAnimTime * 3)})`;
             ctx.lineWidth = 1;
             ctx.strokeRect(2, 2, 396, 396);
-
-            // Draw traveling glint along border
-            let gx = 0, gy = 0;
-            if (glintPos < 400) { gx = glintPos; gy = 2; }
-            else if (glintPos < 800) { gx = 398; gy = glintPos - 400; }
-            else if (glintPos < 1200) { gx = 398 - (glintPos - 800); gy = 398; }
-            else { gx = 2; gy = 398 - (glintPos - 1200); }
-            const grad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 18);
-            grad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-            grad.addColorStop(0.5, 'rgba(0, 255, 255, 0.4)');
-            grad.addColorStop(1, 'rgba(0, 255, 255, 0)');
-            ctx.fillStyle = grad;
-            ctx.fillRect(gx - 18, gy - 18, 36, 36);
 
             // 3. Draw Shield field outlines on overlay
             for (let y = 0; y < GRID_H; y++) {

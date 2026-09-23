@@ -863,20 +863,6 @@ void DrawBoard(HDC hdc, int width, int height) {
     SelectObject(hdc, oldBrush);
     DeleteObject(neonBorderPen);
 
-    // Animated Traveling Specular Glint traversing Console Perimeter
-    float glintAngle = tick * 0.0018f;
-    int glintX = cx + (int)(cosf(glintAngle) * (consoleRadius - 6));
-    int glintY = cy + (int)(sinf(glintAngle) * (consoleRadius - 6));
-    HBRUSH glintBrush = CreateSolidBrush(RGB(255, 255, 255));
-    oldBrush = SelectObject(hdc, glintBrush);
-    HPEN nullP = CreatePen(PS_NULL, 0, 0);
-    oldPen = SelectObject(hdc, nullP);
-    Ellipse(hdc, glintX - 5, glintY - 5, glintX + 5, glintY + 5);
-    SelectObject(hdc, oldBrush);
-    SelectObject(hdc, oldPen);
-    DeleteObject(glintBrush);
-    DeleteObject(nullP);
-
     // Metallic Screws
     for (int i = 0; i < 8; i++) {
         float a = i * 0.785398f;

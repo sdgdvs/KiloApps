@@ -812,7 +812,6 @@
     let shakeIntensity = 0;
     let shakeAngle = 0;
     let shakeRot = 0;
-    let borderGlint = 0;
     let globalFrame = 0;
     let blizzTimer = 0;
     let envArt = [];
@@ -2320,7 +2319,6 @@
 
       // Update Ambient Weather
       globalFrame++;
-      borderGlint = (globalFrame * 3.5) % 2720;
       ambientWeather.forEach(w => {
         w.x += w.vx;
         w.y += w.vy;
@@ -4123,28 +4121,6 @@
       drawFiligreeCorner(margin + pW, margin + pH, filSize, Math.PI);
       drawFiligreeCorner(margin, margin + pH, filSize, -Math.PI / 2);
 
-      // Specular Glint along perimeter
-      let glintX = margin, glintY = margin;
-      const perim = 2 * (pW + pH);
-      const curGlint = borderGlint % perim;
-      if (curGlint < pW) {
-        glintX = margin + curGlint; glintY = margin;
-      } else if (curGlint < pW + pH) {
-        glintX = margin + pW; glintY = margin + (curGlint - pW);
-      } else if (curGlint < pW * 2 + pH) {
-        glintX = margin + pW - (curGlint - (pW + pH)); glintY = margin + pH;
-      } else {
-        glintX = margin; glintY = margin + pH - (curGlint - (pW * 2 + pH));
-      }
-
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(glintX, glintY, 3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = 'rgba(251, 191, 36, 0.7)';
-      ctx.beginPath();
-      ctx.arc(glintX, glintY, 7, 0, Math.PI * 2);
-      ctx.fill();
 
       ctx.restore();
 

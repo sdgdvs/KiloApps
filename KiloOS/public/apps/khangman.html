@@ -1474,30 +1474,6 @@
         ctx.lineWidth = 1.5;
         ctx.strokeRect(4, 4, w - 8, h - 8);
 
-        // 8. Traveling Specular Glint traversing perimeter
-        const perim = (w - 8) * 2 + (h - 8) * 2;
-        const glintPos = (now * 0.12) % perim;
-        let gx = 4, gy = 4;
-        if (glintPos < (w - 8)) {
-            gx = 4 + glintPos; gy = 4;
-        } else if (glintPos < (w - 8) + (h - 8)) {
-            gx = w - 4; gy = 4 + (glintPos - (w - 8));
-        } else if (glintPos < (w - 8) * 2 + (h - 8)) {
-            gx = (w - 4) - (glintPos - ((w - 8) + (h - 8))); gy = h - 4;
-        } else {
-            gx = 4; gy = (h - 4) - (glintPos - ((w - 8) * 2 + (h - 8)));
-        }
-        ctx.save();
-        ctx.globalCompositeOperation = 'lighter';
-        const glintGrad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 10);
-        glintGrad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-        glintGrad.addColorStop(0.4, 'rgba(79, 172, 254, 0.5)');
-        glintGrad.addColorStop(1, 'rgba(79, 172, 254, 0)');
-        ctx.fillStyle = glintGrad;
-        ctx.beginPath();
-        ctx.arc(gx, gy, 10, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
 
         // 9. Ornate Western / Spooky Gallows HUD Corner Filigree L-Brackets with Brass Rivet Studs
         const cornerSize = 16;

@@ -502,8 +502,6 @@ void DrawGrid(HDC hdc, HFONT hFont) {
         }
     }
 
-    int glintCell = (animFrame * 2) % (GRID_W + GRID_H);
-
     for (int y = 0; y < GRID_H; y++) {
         for (int x = 0; x < GRID_W; x++) {
             RECT rc = { effOffsetX + x * CELL_SIZE, effOffsetY + y * CELL_SIZE, effOffsetX + (x + 1) * CELL_SIZE, effOffsetY + (y + 1) * CELL_SIZE };
@@ -560,15 +558,6 @@ void DrawGrid(HDC hdc, HFONT hFont) {
                 FillRect(hdc, &rc, brush);
                 DeleteObject(brush);
 
-                // High-Tech Diagonal Specular Sheen Sweep Highlight
-                if ((x + y) == glintCell && (t == 1 || t == 7 || t == 9 || t == 13 || t == 14 || t == 15 || t == 19)) {
-                    HPEN glintPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-                    HPEN oldGp = SelectObject(hdc, glintPen);
-                    MoveToEx(hdc, rc.left + 2, rc.bottom - 2, NULL);
-                    LineTo(hdc, rc.right - 2, rc.top + 2);
-                    SelectObject(hdc, oldGp);
-                    DeleteObject(glintPen);
-                }
             }
             
             HPEN pen = CreatePen(PS_SOLID, 1, t > 0 ? borderCol : RGB(0, 51, 51));
@@ -789,20 +778,6 @@ void DrawGrid(HDC hdc, HFONT hFont) {
     Ellipse(hdc, effOffsetX + gw - 1, effOffsetY + gh - 1, effOffsetX + gw + 3, effOffsetY + gh + 3);
     SelectObject(hdc, oldNp); DeleteObject(nullP);
     SelectObject(hdc, oldDb); DeleteObject(diodeBr);
-
-    // Traveling Specular Glint along Perimeter Frame
-    int borderLen = (gw + gh) * 2;
-    int bGlint = (animFrame * 8) % borderLen;
-    int glintX = effOffsetX, glintY = effOffsetY;
-    if (bGlint < gw) { glintX += bGlint; glintY += 0; }
-    else if (bGlint < gw + gh) { glintX += gw; glintY += (bGlint - gw); }
-    else if (bGlint < gw * 2 + gh) { glintX += gw - (bGlint - (gw + gh)); glintY += gh; }
-    else { glintX += 0; glintY += gh - (bGlint - (gw * 2 + gh)); }
-    
-    HBRUSH glintB = CreateSolidBrush(RGB(255, 255, 255));
-    HBRUSH oldGb = SelectObject(hdc, glintB);
-    Ellipse(hdc, glintX - 3, glintY - 3, glintX + 3, glintY + 3);
-    SelectObject(hdc, oldGb); DeleteObject(glintB);
 
     // 2. Atmospheric Planetary Biome Motes
     if (planetType == 0) { // Mars Prime Red Dust

@@ -1540,19 +1540,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             // Bottom-Right
             MoveToEx(memDC, 582, 144, NULL); LineTo(memDC, 594, 144); LineTo(memDC, 594, 132);
 
-            // Traveling frame glint
-            int glintPos = (animTick * 6) % 1500;
-            int gx = 0, gy = 0;
-            if (glintPos < 600) { gx = glintPos; gy = 0; }
-            else if (glintPos < 750) { gx = 600; gy = glintPos - 600; }
-            else if (glintPos < 1350) { gx = 600 - (glintPos - 750); gy = 150; }
-            else { gx = 0; gy = 150 - (glintPos - 1350); }
-            HBRUSH hGlint = CreateSolidBrush(RGB(255, 255, 255));
-            SelectObject(memDC, hGlint);
-            Rectangle(memDC, gx - 2, gy - 2, gx + 3, gy + 3);
             SelectObject(memDC, origBrush);
             SelectObject(memDC, origPen);
-            DeleteObject(hGlint);
             DeleteObject(hHudPen);
 
             // Blit double-buffered frame to screen with screen shake offset

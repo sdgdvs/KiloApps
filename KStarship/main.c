@@ -672,20 +672,6 @@ void DrawCyberHUD(HDC memDC, int w, int h) {
     MoveToEx(memDC, w - 6 - len, h - 6, NULL); LineTo(memDC, w - 6, h - 6); LineTo(memDC, w - 6, h - 6 - len);
     RECT r4 = {w - 8, h - 8, w - 4, h - 4}; FillRect(memDC, &r4, cyanBrush);
 
-    // Specular Glint traversing Outer Border
-    int peri = (w + h) * 2;
-    int gPos = (GetTickCount() / 6) % peri;
-    int gx = 0, gy = 0;
-    if (gPos < w) { gx = gPos; gy = 0; }
-    else if (gPos < w + h) { gx = w; gy = gPos - w; }
-    else if (gPos < w * 2 + h) { gx = w - (gPos - (w + h)); gy = h; }
-    else { gx = 0; gy = h - (gPos - (w * 2 + h)); }
-
-    HBRUSH glintBrush = CreateSolidBrush(RGB(255, 255, 255));
-    SelectObject(memDC, glintBrush);
-    Ellipse(memDC, gx - 4, gy - 4, gx + 4, gy + 4);
-    DeleteObject(glintBrush);
-
     SelectObject(memDC, oldPen);
     DeleteObject(hudPen);
     DeleteObject(cyanBrush);

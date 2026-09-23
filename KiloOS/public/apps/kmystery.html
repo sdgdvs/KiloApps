@@ -1671,21 +1671,6 @@
             ctx.stroke();
             ctx.fillRect(w - 6, h - 6, 3, 3);
 
-            const glintPerim = (animFrame * 4) % (w * 2 + h * 2);
-            let gx = 0, gy = 0;
-            if (glintPerim < w) { gx = glintPerim; gy = 2; }
-            else if (glintPerim < w + h) { gx = w - 2; gy = glintPerim - w; }
-            else if (glintPerim < w * 2 + h) { gx = w - (glintPerim - (w + h)); gy = h - 2; }
-            else { gx = 2; gy = h - (glintPerim - (w * 2 + h)); }
-
-            const glintGrad = ctx.createRadialGradient(gx, gy, 1, gx, gy, 12);
-            glintGrad.addColorStop(0, '#ffffff');
-            glintGrad.addColorStop(0.5, 'rgba(212, 175, 55, 0.5)');
-            glintGrad.addColorStop(1, 'rgba(212, 175, 55, 0)');
-            ctx.fillStyle = glintGrad;
-            ctx.beginPath();
-            ctx.arc(gx, gy, 12, 0, Math.PI * 2);
-            ctx.fill();
 
             ctx.restore();
         }

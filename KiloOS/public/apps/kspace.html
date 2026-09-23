@@ -3283,31 +3283,6 @@ window.addEventListener('beforeunload', () => {
     ctx.lineWidth = 1;
     ctx.strokeRect(8, 8, W - 16, H - 16);
 
-    // Traveling Specular Glint along Perimeter
-    let perimW = W - 10;
-    let perimH = H - 10;
-    let totalLen = 2 * (perimW + perimH);
-    let glintPos = (frame * 3.5) % totalLen;
-    let gx = 5, gy = 5;
-    if (glintPos < perimW) {
-      gx = 5 + glintPos; gy = 5;
-    } else if (glintPos < perimW + perimH) {
-      gx = 5 + perimW; gy = 5 + (glintPos - perimW);
-    } else if (glintPos < 2 * perimW + perimH) {
-      gx = 5 + perimW - (glintPos - perimW - perimH); gy = 5 + perimH;
-    } else {
-      gx = 5; gy = 5 + perimH - (glintPos - 2 * perimW - perimH);
-    }
-    
-    let glintGrad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 8);
-    glintGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-    glintGrad.addColorStop(0.4, 'rgba(0, 229, 255, 0.7)');
-    glintGrad.addColorStop(1, 'rgba(0, 229, 255, 0)');
-    ctx.fillStyle = glintGrad;
-    ctx.beginPath();
-    ctx.arc(gx, gy, 8, 0, Math.PI * 2);
-    ctx.fill();
-
     // 4 Ornate Cybernetic Corner Reticles (L-Brackets)
     drawCyberReticle(ctx, 5, 5, 0);                 // Top-Left
     drawCyberReticle(ctx, W - 5, 5, Math.PI / 2);     // Top-Right

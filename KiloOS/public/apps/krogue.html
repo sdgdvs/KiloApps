@@ -1412,28 +1412,6 @@
             ctx.strokeStyle = `rgba(214, 158, 46, ${0.25 + pulse * 0.25})`;
             ctx.lineWidth = 1;
             ctx.strokeRect(6, 6, w - 12, h - 12);
-
-            // Traveling Specular Glint
-            let totalPerim = (w - 16) * 2 + (h - 16) * 2;
-            let glintPos = (frameCount * 3.5) % totalPerim;
-            let gx = 8, gy = 8;
-            let topLen = w - 16, rightLen = h - 16, botLen = w - 16;
-            if (glintPos < topLen) {
-                gx = 8 + glintPos; gy = 8;
-            } else if (glintPos < topLen + rightLen) {
-                gx = 8 + topLen; gy = 8 + (glintPos - topLen);
-            } else if (glintPos < topLen + rightLen + botLen) {
-                gx = 8 + topLen - (glintPos - topLen - rightLen); gy = 8 + rightLen;
-            } else {
-                gx = 8; gy = 8 + rightLen - (glintPos - topLen - rightLen - botLen);
-            }
-
-            let grad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 12);
-            grad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-            grad.addColorStop(0.4, 'rgba(236, 201, 75, 0.6)');
-            grad.addColorStop(1, 'rgba(236, 201, 75, 0)');
-            ctx.fillStyle = grad;
-            ctx.beginPath(); ctx.arc(gx, gy, 12, 0, Math.PI * 2); ctx.fill();
             ctx.restore();
         }
 

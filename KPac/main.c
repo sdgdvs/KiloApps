@@ -2136,20 +2136,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             Rectangle(memDC, 3, 3, 297, 297);
             DeleteObject(periPen);
 
-            // Traveling Specular Glint along perimeter (perimeter = 294 * 4 = 1176)
-            int periTotal = 294 * 4;
-            int gDist = (frameCount * 6) % periTotal;
-            int gx = 3, gy = 3;
-            if (gDist < 294) { gx = 3 + gDist; gy = 3; }
-            else if (gDist < 588) { gx = 297; gy = 3 + (gDist - 294); }
-            else if (gDist < 882) { gx = 297 - (gDist - 588); gy = 297; }
-            else { gx = 3; gy = 297 - (gDist - 882); }
-            HBRUSH glintBr = CreateSolidBrush(RGB(255, 255, 255));
-            SelectObject(memDC, glintBr);
-            SelectObject(memDC, GetStockObject(NULL_PEN));
-            Ellipse(memDC, gx - 2, gy - 2, gx + 3, gy + 3);
-            DeleteObject(glintBr);
-
             // Ornate Cybernetic Arcade HUD Corner Reticle L-Brackets with Tech Notches
             HPEN reticlePen = CreatePen(PS_SOLID, 2, RGB(0, 229, 255));
             SelectObject(memDC, reticlePen);

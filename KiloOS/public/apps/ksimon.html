@@ -855,21 +855,6 @@
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // Animated Traveling Specular Glint traversing Console Perimeter
-    const glintAngle = (now * 0.0018) % (Math.PI * 2);
-    const glintX = cx + Math.cos(glintAngle) * (consoleRadius - 6);
-    const glintY = cy + Math.sin(glintAngle) * (consoleRadius - 6);
-
-    const glintGrad = ctx.createRadialGradient(glintX, glintY, 0, glintX, glintY, 24);
-    glintGrad.addColorStop(0, '#ffffff');
-    glintGrad.addColorStop(0.3, 'rgba(0, 255, 204, 0.9)');
-    glintGrad.addColorStop(0.7, 'rgba(0, 255, 204, 0.3)');
-    glintGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = glintGrad;
-    ctx.beginPath();
-    ctx.arc(glintX, glintY, 24, 0, Math.PI * 2);
-    ctx.fill();
-
     // Metallic Screws
     for (let i = 0; i < 8; i++) {
       const a = (i * Math.PI / 4);

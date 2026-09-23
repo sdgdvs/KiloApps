@@ -1764,28 +1764,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveToEx(hdc, boardLeft + 16, boardBottom - 2, NULL); LineTo(hdc, boardRight - 16, boardBottom - 2);
             DeleteObject(shimPen);
 
-            // Traveling specular glint traversing the outer mahogany frame perimeter
-            int perimW = boardRight - boardLeft;
-            int perimH = boardBottom - boardTop;
-            int perimTotal = 2 * (perimW + perimH);
-            if (perimTotal > 0) {
-                int glintPos = (animTick * 5) % perimTotal;
-                int gx = boardLeft, gy = boardTop;
-                if (glintPos < perimW) {
-                    gx = boardLeft + glintPos; gy = boardTop;
-                } else if (glintPos < perimW + perimH) {
-                    gx = boardRight; gy = boardTop + (glintPos - perimW);
-                } else if (glintPos < 2 * perimW + perimH) {
-                    gx = boardRight - (glintPos - (perimW + perimH)); gy = boardBottom;
-                } else {
-                    gx = boardLeft; gy = boardBottom - (glintPos - (2 * perimW + perimH));
-                }
-                HPEN glintPen = CreatePen(PS_SOLID, 3, RGB(255, 255, 255));
-                HGDIOBJ oldGP = SelectObject(hdc, glintPen);
-                Ellipse(hdc, gx - 3, gy - 3, gx + 4, gy + 4);
-                SelectObject(hdc, oldGP);
-                DeleteObject(glintPen);
-            }
+
 
             SelectObject(hdc, oldGB);
             DeleteObject(goldBrush);

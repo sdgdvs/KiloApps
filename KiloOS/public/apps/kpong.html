@@ -1823,24 +1823,6 @@
       ctx.lineWidth = 1;
       ctx.strokeRect(6, 6, W - 12, H - 12);
 
-      // Traveling Specular Glint along perimeter
-      let perimW = W - 12, perimH = H - 12;
-      let totalPerim = (perimW + perimH) * 2;
-      let glintPos = (Date.now() * 0.18) % totalPerim;
-      let gx = 6, gy = 6;
-      if (glintPos < perimW) { gx = 6 + glintPos; gy = 6; }
-      else if (glintPos < perimW + perimH) { gx = 6 + perimW; gy = 6 + (glintPos - perimW); }
-      else if (glintPos < perimW * 2 + perimH) { gx = 6 + perimW - (glintPos - perimW - perimH); gy = 6 + perimH; }
-      else { gx = 6; gy = 6 + perimH - (glintPos - perimW * 2 - perimH); }
-
-      let glintGrad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 12);
-      glintGrad.addColorStop(0, '#ffffff');
-      glintGrad.addColorStop(0.3, borderGlow);
-      glintGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = glintGrad;
-      ctx.beginPath();
-      ctx.arc(gx, gy, 12, 0, Math.PI * 2);
-      ctx.fill();
       ctx.restore();
 
       // Ornate Cybernetic Arcade HUD Corner Filigree L-Brackets with Rivet Detailing (Loop 8)

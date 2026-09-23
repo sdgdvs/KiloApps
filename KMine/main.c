@@ -1047,8 +1047,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HGDIOBJ oldFont = SelectObject(memDC, hFont);
             SetBkMode(memDC, TRANSPARENT);
             
-            int glintDiag = (animFrame % (cols + rows + 10));
-
             for (int y = 0; y < rows; y++) {
                 for (int x = 0; x < cols; x++) {
                     RECT r;
@@ -1059,15 +1057,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     if (state[y][x] == 0 || state[y][x] == 2) {
                         // Unrevealed Raised 3D Cell
-                        int isGlint = ((x + y) == glintDiag);
-                        COLORREF cellColor = isGlint ? RGB(51, 65, 85) : RGB(30, 41, 59);
+                        COLORREF cellColor = RGB(30, 41, 59);
                         HBRUSH cellBrush = CreateSolidBrush(cellColor);
                         RECT innerR = { r.left + 1, r.top + 1, r.right - 1, r.bottom - 1 };
                         FillRect(memDC, &innerR, cellBrush);
                         DeleteObject(cellBrush);
 
                         // 3D Bevel Highlights (Top & Left)
-                        COLORREF hlColor = isGlint ? RGB(148, 163, 184) : RGB(71, 85, 105);
+                        COLORREF hlColor = RGB(71, 85, 105);
                         HBRUSH hlBrush = CreateSolidBrush(hlColor);
                         RECT hlTop = { r.left, r.top, r.right, r.top + 2 };
                         RECT hlLeft = { r.left, r.top, r.left + 2, r.bottom };

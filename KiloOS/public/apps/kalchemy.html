@@ -411,25 +411,6 @@
       box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.8), 0 0 20px var(--glow-purple);
     }
 
-    .crucible-panel .traveling-glint {
-      position: absolute;
-      inset: 0;
-      border-radius: 12px;
-      pointer-events: none;
-      border: 1px solid transparent;
-      background: linear-gradient(120deg, transparent, rgba(243, 156, 18, 0.6), transparent, rgba(155, 89, 182, 0.6), transparent) border-box;
-      -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      animation: borderGlint 5s linear infinite;
-      z-index: 4;
-    }
-
-    @keyframes borderGlint {
-      0% { opacity: 0.3; filter: hue-rotate(0deg); }
-      50% { opacity: 0.8; filter: hue-rotate(90deg); }
-      100% { opacity: 0.3; filter: hue-rotate(0deg); }
-    }
 
     /* Transmutation Circle & Vessel */
     .transmutation-circle {
@@ -2321,7 +2302,6 @@
 
     <!-- Center: Laboratory Panel -->
     <div class="panel crucible-panel">
-      <div class="traveling-glint"></div>
       <!-- Game Mode Selector Bar -->
       <div class="mode-selector-bar">
         <button class="mode-tab active" id="mode-tab-0" onclick="setGameMode(0)">🧪 Classic</button>

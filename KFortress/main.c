@@ -2677,21 +2677,6 @@ void Render(HDC hdc, HWND hwnd) {
     DrawFiligreeLBracket(memDC, bfX + bfW - 4, bfY + bfH - 4, 18, 2);
     DrawFiligreeLBracket(memDC, bfX + 4, bfY + bfH - 4, 18, 3);
 
-    // Traveling Specular Glint along battlefield perimeter
-    int glintPerim = 2 * (bfW + bfH);
-    int glintPos = (g_globalFrame * 4) % glintPerim;
-    int gx = bfX, gy = bfY;
-    if (glintPos < bfW) { gx = bfX + glintPos; gy = bfY; }
-    else if (glintPos < bfW + bfH) { gx = bfX + bfW; gy = bfY + (glintPos - bfW); }
-    else if (glintPos < bfW * 2 + bfH) { gx = bfX + bfW - (glintPos - (bfW + bfH)); gy = bfY + bfH; }
-    else { gx = bfX; gy = bfY + bfH - (glintPos - (bfW * 2 + bfH)); }
-    
-    HBRUSH glintB = CreateSolidBrush(RGB(255, 255, 255));
-    HPEN glintP = CreatePen(PS_SOLID, 1, TEXT_GOLD);
-    HBRUSH ogB = (HBRUSH)SelectObject(memDC, glintB); HPEN ogP = (HPEN)SelectObject(memDC, glintP);
-    Ellipse(memDC, gx - 3, gy - 3, gx + 4, gy + 4);
-    SelectObject(memDC, ogB); SelectObject(memDC, ogP);
-    DeleteObject(glintB); DeleteObject(glintP);
 
     for (int i = 0; i < MAX_FLOATING_TEXTS; i++) {
         if (g_floatingTexts[i].active) {

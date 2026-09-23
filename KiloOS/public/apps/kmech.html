@@ -70,31 +70,6 @@
         .hud-corner-bl::after { bottom: 1px; left: 1px; }
         .hud-corner-br::after { bottom: 1px; right: 1px; }
 
-        .glint-border {
-            position: absolute;
-            inset: 0;
-            border-radius: 6px;
-            pointer-events: none;
-            z-index: 40;
-            overflow: hidden;
-        }
-        .glint-light {
-            position: absolute;
-            width: 80px;
-            height: 80px;
-            background: radial-gradient(circle, rgba(0, 255, 200, 0.8) 0%, rgba(0, 255, 100, 0) 70%);
-            border-radius: 50%;
-            filter: blur(2px);
-            opacity: 0.6;
-            animation: borderGlint 8s linear infinite;
-        }
-        @keyframes borderGlint {
-            0% { top: -40px; left: -40px; }
-            25% { top: -40px; left: calc(100% - 40px); }
-            50% { top: calc(100% - 40px); left: calc(100% - 40px); }
-            75% { top: calc(100% - 40px); left: -40px; }
-            100% { top: -40px; left: -40px; }
-        }
 
         .screen {
             display: none;
@@ -550,7 +525,6 @@
         <div class="hud-corner hud-corner-tr"></div>
         <div class="hud-corner hud-corner-bl"></div>
         <div class="hud-corner hud-corner-br"></div>
-        <div class="glint-border"><div class="glint-light"></div></div>
 
         <!-- Toast Notification Container -->
         <div id="toast-container"></div>

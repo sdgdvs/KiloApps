@@ -1214,28 +1214,6 @@
                 ctx.restore();
             });
 
-            // Traveling Specular Glint along perimeter
-            const perimeter = (w + h) * 2;
-            const glintDist = (time * 0.22) % perimeter;
-            let gx = 0, gy = 0;
-            if (glintDist < w) {
-                gx = glintDist; gy = 3;
-            } else if (glintDist < w + h) {
-                gx = w - 3; gy = glintDist - w;
-            } else if (glintDist < w * 2 + h) {
-                gx = w - (glintDist - (w + h)); gy = h - 3;
-            } else {
-                gx = 3; gy = h - (glintDist - (w * 2 + h));
-            }
-
-            const grad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 14);
-            grad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-            grad.addColorStop(0.4, 'rgba(255, 235, 59, 0.6)');
-            grad.addColorStop(1, 'rgba(255, 215, 0, 0)');
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(gx, gy, 14, 0, Math.PI * 2);
-            ctx.fill();
         }
 
         // Seasonal Ambient Atmospheric Particles

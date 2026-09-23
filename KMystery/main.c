@@ -1129,17 +1129,6 @@ void DrawArtDecoFiligreeGDI(HDC hdc, int w, int h) {
     SelectObject(hdc, oldP);
     DeleteObject(hGoldPen);
 
-    // Traveling specular glint pip
-    int perim = (g_animFrame * 4) % (w * 2 + h * 2);
-    int gx = 0, gy = 0;
-    if (perim < w) { gx = perim; gy = 2; }
-    else if (perim < w + h) { gx = w - 2; gy = perim - w; }
-    else if (perim < w * 2 + h) { gx = w - (perim - (w + h)); gy = h - 2; }
-    else { gx = 2; gy = h - (perim - (w * 2 + h)); }
-
-    SetPixel(hdc, gx, gy, RGB(255, 255, 255));
-    SetPixel(hdc, gx + 1, gy, RGB(212, 175, 55));
-    SetPixel(hdc, gx, gy + 1, RGB(212, 175, 55));
 }
 
 // Scene Viewport Window Procedure

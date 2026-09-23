@@ -50,19 +50,7 @@
   .corner-bracket.bottom-left::after { bottom: 2px; left: 2px; }
   .corner-bracket.bottom-right::after { bottom: 2px; right: 2px; }
 
-  .glint-border {
-    position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
-    border: 2px solid transparent; border-radius: 14px; pointer-events: none; z-index: 105;
-    background: linear-gradient(90deg, rgba(255,215,0,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,215,0,0) 100%) border-box;
-    mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude;
-    animation: glintRotate 4s linear infinite;
-  }
-  @keyframes glintRotate {
-    0% { transform: rotate(0deg); opacity: 0.3; filter: drop-shadow(0 0 4px #ffd700); }
-    50% { opacity: 0.85; filter: drop-shadow(0 0 10px #ffd700); }
-    100% { transform: rotate(360deg); opacity: 0.3; filter: drop-shadow(0 0 4px #ffd700); }
-  }
+
 
   .cell {
     border-radius: 6px; display: flex; justify-content: center; align-items: center;
@@ -246,7 +234,6 @@
     <div class="corner-bracket top-right"></div>
     <div class="corner-bracket bottom-left"></div>
     <div class="corner-bracket bottom-right"></div>
-    <div class="glint-border"></div>
     <div id="board" role="grid" aria-label="KMatch3 Game Board"></div>
   </div>
 

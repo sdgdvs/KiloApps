@@ -1883,29 +1883,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, prevBBrush);
             DeleteObject(bPen);
 
-            // Traveling Specular Glint traversing perimeter
-            int totalPerim = (W - 8 + H - 8) * 2;
-            int glintProgress = (anim_ticks * 5) % totalPerim;
-            int gx = 4, gy = 4;
-            if (glintProgress < W - 8) {
-                gx = 4 + glintProgress; gy = 4;
-            } else if (glintProgress < (W - 8) + (H - 8)) {
-                gx = W - 4; gy = 4 + (glintProgress - (W - 8));
-            } else if (glintProgress < (W - 8) * 2 + (H - 8)) {
-                gx = W - 4 - (glintProgress - ((W - 8) + (H - 8))); gy = H - 4;
-            } else {
-                gx = 4; gy = H - 4 - (glintProgress - ((W - 8) * 2 + (H - 8)));
-            }
-            HBRUSH glintB = CreateSolidBrush(RGB(255, 255, 255));
-            HPEN glintP = CreatePen(PS_SOLID, 1, RGB(255, 235, 59));
-            HBRUSH ogb = (HBRUSH)SelectObject(memDC, glintB);
-            HPEN ogp = (HPEN)SelectObject(memDC, glintP);
-            Ellipse(memDC, gx - 4, gy - 4, gx + 4, gy + 4);
-            Ellipse(memDC, gx - 2, gy - 2, gx + 2, gy + 2);
-            SelectObject(memDC, ogb);
-            SelectObject(memDC, ogp);
-            DeleteObject(glintB);
-            DeleteObject(glintP);
 
             // Western / Gallows Ornate Corner Filigree L-Brackets with Brass Rivets
             HPEN filPen = CreatePen(PS_SOLID, 2, RGB(218, 165, 32)); // Golden brass

@@ -6,6 +6,13 @@ int _fltused = 1;
 long _ftol2_sse(float f) { return (long)f; }
 long _ftol2(float f) { return (long)f; }
 
+#pragma function(memset)
+void* memset(void* dest, int c, size_t count) {
+    char* bytes = (char*)dest;
+    while (count--) *bytes++ = (char)c;
+    return dest;
+}
+
 #define W 320
 #define H 480
 #define MAX_BULLETS 50
@@ -2766,26 +2773,6 @@ void DrawSciFiHUDFrame(HDC hdc, int frame) {
     // Outer & inner perimeter
     Rectangle(hdc, 5, 5, W - 5, H - 5);
     Rectangle(hdc, 8, 8, W - 8, H - 8);
-
-    // Traveling Specular Glint along Perimeter
-    int perimW = W - 10;
-    int perimH = H - 10;
-    int totalLen = 2 * (perimW + perimH);
-    int glintPos = (frame * 4) % totalLen;
-    int gx = 5, gy = 5;
-    if (glintPos < perimW) {
-        gx = 5 + glintPos; gy = 5;
-    } else if (glintPos < perimW + perimH) {
-        gx = 5 + perimW; gy = 5 + (glintPos - perimW);
-    } else if (glintPos < 2 * perimW + perimH) {
-        gx = 5 + perimW - (glintPos - perimW - perimH); gy = 5 + perimH;
-    } else {
-        gx = 5; gy = 5 + perimH - (glintPos - 2 * perimW - perimH);
-    }
-    HBRUSH gbr = CreateSolidBrush(RGB(255, 255, 255));
-    RECT gr = {gx - 2, gy - 2, gx + 3, gy + 3};
-    FillRect(hdc, &gr, gbr);
-    DeleteObject(gbr);
 
     // 4 Corner Cybernetic Reticles
     DrawCyberReticleGDI(hdc, 5, 5, 1, 1);          // Top-Left

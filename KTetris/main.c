@@ -2222,26 +2222,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, oldPen);
             DeleteObject(inlayPen);
 
-            // Traveling Specular Glint along perimeter
-            int pW = W * CELL_SIZE - 4, pH = H * CELL_SIZE - 4;
-            int periTotal = (pW + pH) * 2;
-            int gDist = (int)((currentTick / 4) % periTotal);
-            int gx = 2, gy = 2;
-            if (gDist < pW) { gx = 2 + gDist; gy = 2; }
-            else if (gDist < pW + pH) { gx = 2 + pW; gy = 2 + (gDist - pW); }
-            else if (gDist < pW * 2 + pH) { gx = 2 + pW - (gDist - (pW + pH)); gy = 2 + pH; }
-            else { gx = 2; gy = 2 + pH - (gDist - (pW * 2 + pH)); }
-
-            HBRUSH glintBrush = CreateSolidBrush(RGB(255, 255, 255));
-            HBRUSH oBrushG = (HBRUSH)SelectObject(memDC, glintBrush);
-            HPEN glintPen = CreatePen(PS_SOLID, 1, RGB(0, 240, 255));
-            HPEN oPenG = (HPEN)SelectObject(memDC, glintPen);
-            Ellipse(memDC, offX + gx - 2, offY + gy - 2, offX + gx + 3, offY + gy + 3);
-            SelectObject(memDC, oPenG);
-            SelectObject(memDC, oBrushG);
-            DeleteObject(glintPen);
-            DeleteObject(glintBrush);
-
             // Ornate Cybernetic Arcade HUD Corner Reticle L-Brackets with Tech Notches
             HPEN reticlePen = CreatePen(PS_SOLID, 2, RGB(0, 210, 211));
             oldPen = (HPEN)SelectObject(memDC, reticlePen);
