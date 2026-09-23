@@ -31,10 +31,15 @@ This skill executes content depth, visual polish, or balance passes on exactly O
    - On every pass, search for and REMOVE any traveling/rotating specular glint comets, perimeter glint dots, or moving border balls across both web (HTML) and native (C).
    - These traveling dots are distracting, look like rogue projectiles/balls, and annoy players across games.
    - Replace with clean, static, or period-accurate borders without traveling dots or orbital glint particles. NEVER add new perimeter traveling glints.
+6. **🎨 Distinctive App Icon Uniqueness Audit (DIRECTOR MANDATE - CRITICAL)**:
+   - On every pass, run `python scripts/check_icons.py` to audit icon uniqueness across all applications in `KiloOS/src/App.jsx`.
+   - Ensure every app possesses a unique, distinctive 32x32 `.ico` file in `KiloOS/public/assets/icons/`. Reusing icons or copying existing `.ico` files is strictly prohibited.
+   - If missing or duplicate icon hashes are detected, run `python scripts/check_icons.py --fix` (or generate unique pixel art) to ensure 100% icon uniqueness across the fleet.
 
 ## Verification
 1. Verify web app build: `cd KiloOS && npm run build`.
 2. Verify size constraint: `< 999 KB`.
+3. Verify icon uniqueness: `python scripts/check_icons.py`.
 
 ## Queue Handoff & Terse Logging (CRITICAL)
 1. **Edit [next_work.md](../../next_work.md)**:

@@ -33,11 +33,16 @@ This skill is invoked automatically every 24 hours by the orchestrator (`scripts
    - Evaluate `virtual_web_target`: review progress against `virtual_web_rotation` in `next_work.md`, verify sites meet the Anti-Potemkin Quality Standard (genuine interactive depth, Web Audio, simulated backends), and advance `virtual_web_target` to the next site in rotation.
    - If a new app was recently created, ensure subsequent turns prioritize its usability, testing, and graphical polish.
 
-3. **Log Compaction**:
+3. **Daily Fleet Icon Uniqueness Audit (DIRECTOR MANDATE - CRITICAL)**:
+   - Run `python scripts/check_icons.py`.
+   - Verify that all apps in `KiloOS/src/App.jsx` point to existing `.ico` files and have 0 duplicate SHA256 hashes.
+   - If any duplicate or missing icons are detected, immediately resolve via `python scripts/check_icons.py --fix` or assign `kilo-graphics` to generate unique icons for them.
+
+4. **Log Compaction**:
    - Retain only the 5 most recent agent execution log entries in `next_work.md`.
    - Move older entries into `archive/fleet_execution_archive.md`.
 
-4. **Queue Handoff & Timestamp Update**:
+5. **Queue Handoff & Timestamp Update**:
    - In YAML frontmatter of `next_work.md`:
      - Update `last_planner_run` to the current UTC timestamp (e.g., `2026-09-17T...Z`).
      - Set `current_agent` to the first scheduled worker agent in `agent_rotation`.
