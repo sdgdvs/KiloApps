@@ -721,7 +721,7 @@
     /* Notification Toast */
     .toast {
       position: fixed;
-      bottom: 30px;
+      top: 48px;
       right: 20px;
       background: var(--surface);
       border: 1px solid var(--primary);
@@ -734,9 +734,11 @@
       box-shadow: 0 4px 15px rgba(0,0,0,0.6);
       z-index: 2000;
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(-8px);
       transition: all 0.2s ease;
-      pointer-events: none;
+      cursor: pointer;
+      pointer-events: auto;
+      user-select: none;
     }
     .toast.show {
       opacity: 1;
@@ -1036,7 +1038,7 @@
   </footer>
 
   <!-- Start Splash Screen Modal (Mandatory) -->
-  <div class="modal-backdrop" id="modalSplash">
+  <div class="modal-backdrop modal" id="modalSplash">
     <div class="modal-window">
       <div class="modal-header">
         <div class="modal-title">
@@ -1069,7 +1071,7 @@
   </div>
 
   <!-- First-Run Onboarding Tutorial Modal (Mandatory) -->
-  <div class="modal-backdrop" id="modalTutorial">
+  <div class="modal-backdrop modal" id="modalTutorial">
     <div class="modal-window">
       <div class="modal-header">
         <div class="modal-title">
@@ -1088,13 +1090,14 @@
         </ul>
       </div>
       <div class="modal-footer">
+        <button class="btn" id="btnTutorialSnippets">⚡ Snippets Library</button>
         <button class="btn btn-primary" id="btnFinishTutorial">Got it, Let's Go!</button>
       </div>
     </div>
   </div>
 
   <!-- Snippets / Template Library Modal -->
-  <div class="modal-backdrop" id="modalTemplates">
+  <div class="modal-backdrop modal" id="modalTemplates">
     <div class="modal-window">
       <div class="modal-header">
         <div class="modal-title">
@@ -1117,7 +1120,7 @@
   </div>
 
   <!-- Help & Shortcuts Modal -->
-  <div class="modal-backdrop" id="modalHelp">
+  <div class="modal-backdrop modal" id="modalHelp">
     <div class="modal-window">
       <div class="modal-header">
         <div class="modal-title">
@@ -1195,7 +1198,7 @@
   </div>
 
   <!-- Settings Modal -->
-  <div class="modal-backdrop" id="modalSettings">
+  <div class="modal-backdrop modal" id="modalSettings">
     <div class="modal-window">
       <div class="modal-header">
         <div class="modal-title">
@@ -1483,12 +1486,14 @@
       }
 
       // --- 5. UI TOAST NOTIFICATION ---
+      let toastTimer = null;
       function showToast(msg) {
         const toast = document.getElementById('toastNotice');
         if (!toast) return;
         toast.textContent = msg;
         toast.classList.add('show');
-        setTimeout(function() {
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function() {
           toast.classList.remove('show');
         }, 2200);
       }
@@ -2127,23 +2132,50 @@
       // --- 12. MODAL CONTROLS ---
       function openModal(id) {
         const m = document.getElementById(id);
-        if (m) {
-          m.style.display = 'flex';
-          playSoundEffect('click');
+        if (!m) return;
+
+        // Auto-mark tutorial seen if moving to another modal
+        const modalTutorial = document.getElementById('modalTutorial');
+        if (modalTutorial && (modalTutorial.style.display === 'flex' || modalTutorial.classList.contains('active')) && id !== 'modalTutorial') {
+          localStorage.setItem('kclip_tutorialSeen', 'true');
         }
+
+        // Close/hide ALL other modals first to prevent any double-modal backdrop stacking/collisions
+        document.querySelectorAll('.modal-backdrop').forEach(function(modal) {
+          if (modal !== m) {
+            modal.style.display = 'none';
+            modal.classList.remove('active');
+            modal.removeAttribute('aria-modal');
+          }
+        });
+
+        m.style.display = 'flex';
+        m.classList.add('active');
+        m.setAttribute('aria-modal', 'true');
+        playSoundEffect('click');
       }
 
       function closeModal(id) {
         const m = document.getElementById(id);
         if (m) {
+          if (id === 'modalTutorial') {
+            localStorage.setItem('kclip_tutorialSeen', 'true');
+          }
           m.style.display = 'none';
+          m.classList.remove('active');
+          m.removeAttribute('aria-modal');
           playSoundEffect('click');
         }
       }
 
       function closeAllModals() {
         document.querySelectorAll('.modal-backdrop').forEach(function(m) {
+          if (m.id === 'modalTutorial') {
+            localStorage.setItem('kclip_tutorialSeen', 'true');
+          }
           m.style.display = 'none';
+          m.classList.remove('active');
+          m.removeAttribute('aria-modal');
         });
       }
 
@@ -2394,6 +2426,11 @@
           localStorage.setItem('kclip_tutorialSeen', 'true');
           closeModal('modalTutorial');
         });
+        document.getElementById('btnTutorialSnippets')?.addEventListener('click', function() {
+          localStorage.setItem('kclip_tutorialSeen', 'true');
+          closeModal('modalTutorial');
+          openModal('modalTemplates');
+        });
         document.getElementById('btnCloseSplash')?.addEventListener('click', function() { closeModal('modalSplash'); });
         document.getElementById('btnSplashStart')?.addEventListener('click', function() { closeModal('modalSplash'); });
         document.getElementById('btnSplashHelp')?.addEventListener('click', function() {
@@ -2485,9 +2522,15 @@
           }
         });
 
+        // Toast click-to-dismiss
+        document.getElementById('toastNotice')?.addEventListener('click', function() {
+          if (toastTimer) clearTimeout(toastTimer);
+          this.classList.remove('show');
+        });
+
         function isAnyModalOpen() {
           return Array.from(document.querySelectorAll('.modal-backdrop')).some(function(m) {
-            return m.style.display === 'flex';
+            return m.style.display === 'flex' || m.classList.contains('active');
           });
         }
 
@@ -2495,10 +2538,6 @@
         window.addEventListener('keydown', function(e) {
           // Modal Dismissal with Escape
           if (e.key === 'Escape') {
-            const modalTutorial = document.getElementById('modalTutorial');
-            if (modalTutorial && modalTutorial.style.display === 'flex') {
-              localStorage.setItem('kclip_tutorialSeen', 'true');
-            }
             if (isAnyModalOpen()) {
               closeAllModals();
               return;
@@ -2516,27 +2555,12 @@
             return;
           }
 
-          if (e.key === 'F1') {
-            e.preventDefault();
-            openModal('modalHelp');
-            return;
-          }
-          if (e.key === 'F5') {
-            e.preventDefault();
-            saveWorkstationState(true);
-            return;
-          }
-          if (e.key === 'F9') {
-            e.preventDefault();
-            loadWorkstationState(true);
-            return;
-          }
-
-          // If modal is open, handle Enter / Space to advance / confirm, and block background shortcuts
+          // If modal is open, handle Enter / Space to advance / confirm, and block all background shortcuts
           if (isAnyModalOpen()) {
             if (e.key === 'Enter' || e.key === ' ') {
               const modalSplash = document.getElementById('modalSplash');
               const modalTutorial = document.getElementById('modalTutorial');
+              const modalTemplates = document.getElementById('modalTemplates');
               const modalHelp = document.getElementById('modalHelp');
               const modalSettings = document.getElementById('modalSettings');
 
@@ -2547,8 +2571,12 @@
               }
               if (modalTutorial && modalTutorial.style.display === 'flex') {
                 e.preventDefault();
-                localStorage.setItem('kclip_tutorialSeen', 'true');
                 closeModal('modalTutorial');
+                return;
+              }
+              if (modalTemplates && modalTemplates.style.display === 'flex') {
+                e.preventDefault();
+                closeModal('modalTemplates');
                 return;
               }
               if (modalHelp && modalHelp.style.display === 'flex') {
@@ -2562,6 +2590,22 @@
                 return;
               }
             }
+            return;
+          }
+
+          if (e.key === 'F1') {
+            e.preventDefault();
+            openModal('modalHelp');
+            return;
+          }
+          if (e.key === 'F5') {
+            e.preventDefault();
+            saveWorkstationState(true);
+            return;
+          }
+          if (e.key === 'F9') {
+            e.preventDefault();
+            loadWorkstationState(true);
             return;
           }
 

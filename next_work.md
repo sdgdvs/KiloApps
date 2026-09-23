@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KPomodoro
-  kilo_usability: KClip
+  kilo_usability: KCalc
   kilo_graphics: KSubmarine
   kilo_qa: KVoid
   kilo_expander: "KConnect4 (Firebase RTDB Multiplayer)"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-tester
-  app: KCipher
-  timestamp: "2026-09-23T05:52:00Z"
+  agent: kilo-usability
+  app: KClip
+  timestamp: "2026-09-23T06:50:00Z"
 last_planner_run: "2026-09-23T04:40:00Z"
 ---
 
@@ -102,9 +102,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KCalc` (toast blocking calculation buttons), `KHangman` (keyboard cutoff), `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KClip` (Resolve Quick-Start Tutorial modal backdrop collision with Reusable Snippets modal)
+- **Current Target**: `KCalc` (reposition bottom-center toast blocking buttons)
 - **Upcoming Queue**:
-  `KCalc` (reposition bottom-center toast blocking buttons), `KHex` (Tab 2 label, scrollbar, row cutoff), `KContacts` (reposition bottom-right toast blocking submit button), `KFarm` (reposition bottom toast blocking seed radio buttons), `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`.
+  `KHex` (Tab 2 label, scrollbar, row cutoff), `KContacts` (reposition bottom-right toast blocking submit button), `KFarm` (reposition bottom toast blocking seed radio buttons), `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KVoid`
@@ -170,6 +170,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T06:50:00Z — kilo-usability: KClip (Modal Isolation, Backdrop Collision & Toast Occlusion Remediation)**
+  - Status: PASS ✅ (Eliminated modal collisions and toast occlusion; 0 regressions).
+  - Modal Isolation: Enforced strict mutual exclusivity across all modals; auto-cleared background backdrops and ARIA states.
+  - Tutorial Ergonomics: Added direct Snippets Library navigation button to tutorial footer for seamless onboarding transition.
+  - Toast Positioning: Repositioned toast from bottom-right (blocking F1 status button) to top-right with instant click-to-dismiss.
+  - Shortcut Guard: Blocked background key listeners (F1, F5, F9, B, T, C) during active modal states; enabled Enter/Space for templates.
+  - Verification: Headless CDP test pass (74 interactive elements, 0 errors, 60 FPS frame pacing); Vite clean build; C build clean (15.8 KB).
+
 - **2026-09-23T05:52:00Z — kilo-tester: KCipher (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (6 UI/state issues resolved; 0 regressions).
   - State Sync: Synchronized `state` across QuickLoad, JSON Import/Export, and Lore Transmissions.
@@ -203,11 +211,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Channels & Help: Updated #ai-lounge channel to #lounge; updated Help tutorial, shortcuts, and documentation.
   - Ergonomics: Restored standard Ctrl+A select-all behavior in native edit control.
   - Verification: Native MSVC C clean build (26.5 KB); HTML5 (85.1 KB); Headless CDP 60 FPS pass (0 errors); Lint clean.
-
-- **2026-09-23T03:02:00Z — kilo-usability: KiloOS Window Resizing & Folder Layout**
-  - Status: PASS ✅ (Fixed folder overflow blowout, removed broken vestigial handle, expanded resize hitboxes).
-  - Flexbox Layout Fix: Added `min-height: 0; overflow: hidden;` to `.xp-content` so large folders scroll instead of blowing out to 992px+.
-  - Corner Alignment: Aligned `.folder-content` bounds with `.xp-window` bottom border so resize handles match visual corners.
-  - Vestigial Handle Cleanup: Removed dead 15x15 bottom-right div that lacked `dir` parameter and swallowed `se` resize events.
-  - Hitbox Ergonomics: Expanded corner handles to 14x14px and edges to 8px; added `resizing` overlay guard.
-  - Version Bump: Bumped to 0.4.4 in `KiloOS/package.json` and `App.jsx`. Vite build clean (230ms); lint 0 violations.

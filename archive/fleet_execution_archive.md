@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-23T03:02:00Z — kilo-usability: KiloOS Window Resizing & Folder Layout**
+  - Status: PASS ✅ (Fixed folder overflow blowout, removed broken vestigial handle, expanded resize hitboxes).
+  - Flexbox Layout Fix: Added `min-height: 0; overflow: hidden;` to `.xp-content` so large folders scroll instead of blowing out to 992px+.
+  - Corner Alignment: Aligned `.folder-content` bounds with `.xp-window` bottom border so resize handles match visual corners.
+  - Vestigial Handle Cleanup: Removed dead 15x15 bottom-right div that lacked `dir` parameter and swallowed `se` resize events.
+  - Hitbox Ergonomics: Expanded corner handles to 14x14px and edges to 8px; added `resizing` overlay guard.
+  - Version Bump: Bumped to 0.4.4 in `KiloOS/package.json` and `App.jsx`. Vite build clean (230ms); lint 0 violations.
+
 - **2026-09-23T02:00:00Z — kilo-expander: KNote**
   - Status: PASS ✅ (Multi-tab sessions, tag cloud, in-editor Find/Replace, speed formatting, multi-format export/import, Trash recovery).
   - Multi-Tab Workspace: Added responsive tab strip, tab switching/closing, Ctrl+W, Ctrl+Tab, Ctrl+1..9 shortcuts, session persistence.
