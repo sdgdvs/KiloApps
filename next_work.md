@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KTodo
-  kilo_usability: KClip
+  kilo_usability: KPaint
   kilo_graphics: KSubmarine
   kilo_qa: KVault
   kilo_expander: KNote
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KClip
-  timestamp: "2026-09-23T01:30:00Z"
+  timestamp: "2026-09-23T01:45:00Z"
 last_planner_run: "2026-09-22T07:47:00Z"
 ---
 
@@ -97,9 +97,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KPomodoro`, `KHash`, `KRSS`, `KClip`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KClip`
+- **Current Target**: `KPaint`
 - **Upcoming Queue**:
-  `KPaint`, `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`.
+  `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KVault`
@@ -156,6 +156,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T01:45:00Z — kilo-usability: KClip**
+  - Status: PASS ✅ (Layout dimensions, responsive behavior, help discoverability, scrollbars, shortcuts).
+  - Window & Layout: Adjusted KiloOS default window dimensions to 1040x720 for comfortable dual-pane workflow.
+  - Collapsible Sidebar: Added B hotkey & toggle button to maximize editor pane for wide snippets and hex dumps.
+  - Discoverable Help: Added clickable [F1 / H] status bar prompt and wired H, ?, B, T, C, J, K shortcuts.
+  - Theming & Ergonomics: Added themed retro scrollbars across all 4 palettes; added empty-selection error guards.
+  - Verification: Native MSVC C (15.5 KB); Single-file HTML5 (92.2 KB); Vite build clean (219ms); security lint 0 violations.
+
 - **2026-09-23T01:30:00Z — kilo-tester: KClip**
   - Status: PASS ✅ (6 issues found, 6 fixed).
   - Modal Controls: Added backdrop click dismissals, header close button, and Esc/Enter/Space hotkey handling.
@@ -187,11 +195,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Perfect 10s: KConverter, KFlash, KHabit, KMail, KPad, KRead, KStarDredge, KTimer, KVault, KZip.
   - Glint Audit: Flagged lingering specular border comets across games; stripped 10 apps in commit 67d1d81c.
   - Gallery Integration: Enriched docs/gallery/index.html and vision_scores.json with visual badges.
-
-- **2026-09-23T01:00:00Z — kilo-graphics: Fleet-Wide Specular Glint Purge**
-  - Status: PASS ✅ (Fleet Rule 11 & Director Directive 100% complete across all 31 native C and 33 web apps).
-  - Scope: Purged rotating specular glint comets, traveling perimeter border dots, and moving border balls.
-  - Native Win32 C: Purged glints in K2048, KChess, KConnect4, KSolitaire, KSudoku, KTowers, KGo, KReversi, KMines, KFreecell, KAsteroids, KPong, KSpace, KSnake, KPac, KTetris, KDarts, KSimon, KColony, KDragon, KFarm, KFortress, KMatch3, KQuest, KStarship, KMandel, KHex, KTrader, KWords, KHangman, KMine, KMystery.
-  - HTML5 Web: Purged CSS/canvas perimeter glints across all 33 corresponding web apps; preserved authentic weapon/mob sprites.
-  - Preserved Authenticity: Retained static period-accurate frames, corner filigrees, and genuine in-game highlights.
-  - Verification: All 31 native binaries recompiled (<255 KB each); Vite web build clean (223ms); security lint 0 violations.

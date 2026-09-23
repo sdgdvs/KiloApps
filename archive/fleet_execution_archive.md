@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-23T01:00:00Z — kilo-graphics: Fleet-Wide Specular Glint Purge**
+  - Status: PASS ✅ (Fleet Rule 11 & Director Directive 100% complete across all 31 native C and 33 web apps).
+  - Scope: Purged rotating specular glint comets, traveling perimeter border dots, and moving border balls.
+  - Native Win32 C: Purged glints in K2048, KChess, KConnect4, KSolitaire, KSudoku, KTowers, KGo, KReversi, KMines, KFreecell, KAsteroids, KPong, KSpace, KSnake, KPac, KTetris, KDarts, KSimon, KColony, KDragon, KFarm, KFortress, KMatch3, KQuest, KStarship, KMandel, KHex, KTrader, KWords, KHangman, KMine, KMystery.
+  - HTML5 Web: Purged CSS/canvas perimeter glints across all 33 corresponding web apps; preserved authentic weapon/mob sprites.
+  - Preserved Authenticity: Retained static period-accurate frames, corner filigrees, and genuine in-game highlights.
+  - Verification: All 31 native binaries recompiled (<255 KB each); Vite web build clean (223ms); security lint 0 violations.
+
 - **2026-09-23T00:45:00Z — kilo-qa: KType**
   - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial onboarding integrity, modal controls, size limits).
   - State Persistence: Quicksave (F5) & quickload (F9) across web (localStorage) and native (ktype.dat) capturing full state.
