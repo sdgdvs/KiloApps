@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KHangman
   kilo_usability: "KContacts (reposition bottom-right toast blocking submit button)"
-  kilo_graphics: "KAbyss (Weave Arc 2 Precursor Relic Glyph)"
+  kilo_graphics: KColosseum
   kilo_qa: KZip
   kilo_expander: "KGo (Firebase RTDB Online Multiplayer)"
   kilo_creator: "kweb://users/~neon_rider (Virtual Web 1999 & ASM Devlog)"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-usability
-  app: "KHex (Weave Arc 1 Memory Offset IP Clue)"
-  timestamp: "2026-09-23T18:45:00Z"
+  agent: kilo-graphics
+  app: "KAbyss (Weave Arc 2 Precursor Relic Glyph & Glint Removal)"
+  timestamp: "2026-09-23T19:55:00Z"
 last_planner_run: "2026-09-23T04:40:00Z"
 ---
 
@@ -101,9 +101,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `kweb://warez` (Cracktros, Chiptune Jukebox & Demoscene Vault expansion).
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KAbyss`
+- **Current Target**: `KColosseum`
 - **Upcoming Queue**:
-  `KColosseum`, `KCyber`, `KMech`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`.
+  `KCyber`, `KMech`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KHangman` (keyboard cutoff)
@@ -190,6 +190,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T19:55:00Z — kilo-graphics: KAbyss (Weave Arc 2 Precursor Relic Glyph & Glint Removal)**
+  - Status: PASS ✅ (Weaved Arc 2 Precursor Relic Glyph, purged glints/dots across web & C, balanced loot).
+  - Precursor Relic: Inscribed `REL_PRECURSOR_GLYPH` / `ITEM_REL_PRECURSOR_GLYPH` with 1999 ARG clues (`10.19.99.4`, `kweb://echo-subsystem.net`).
+  - Discovery Mechanics: Unearthed via stonework search [R/X] on Depth 4+ near Shrines/Altars, Void Monarch drops, and crypt chests.
+  - Glint & Dot Purge: Removed chest lock specular glints, merchant coin glint, and rotating void crystal dots around Void Monarch.
+  - Balance Pass: Integrated Precursor Glyph (+11 Light, +25 MP/SAN, +4 Arcana) into gear/merchant pools and attuned ley-line resonance.
+  - Verification: MSVC C clean build (`KAbyss.exe` 218.5 KB); Vite clean build (380ms); icon uniqueness 100%; security lint clean (<999KB).
+
 - **2026-09-23T18:45:00Z — kilo-usability: KHex (Tab 2 Label, Scrollbars, Row Cutoff & Arc 1 Clue)**
   - Status: PASS ✅ (Resolved Tab 2 label, dark themed scrollbars, row cutoff, and weaved Arc 1 memory offset IP clue).
   - Usability & Layout: Renamed Tab 2 to "Hex Editor & Viewer", added custom 6px cyber scrollbars, and expanded window to 920x800.
@@ -223,11 +231,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Social & Controls: Added interactive match HUD bar with quick chat phrases, rematch handshakes, invite link copy, and spectator mode.
   - UI Ergonomics: Added `[O]` hotkey & toolbar button, online turn indicator, and disabled disruptive offline controls during active matches.
   - Verification: Single-file web (`kchess.html` 154.0 KB); Vite build clean (375ms); security lint 100% clean; strict <999 KB ceiling.
-
-- **2026-09-23T14:45:00Z — kilo-qa: KWizard (Pass 5: Tutorial & State Integrity)**
-  - Status: PASS ✅ (Full state persistence & tutorial isolation verified; 0 regressions).
-  - Quicksave & Load: Implemented full state persistence across F5/F9 hotkeys and toolbar buttons in web (`kwizard_save`) and native C (`kwizard.dat`).
-  - First-Run Tutorial: Added session-isolated onboarding (`kwizard_tutorialSeen` / `kwizard_tutorial.dat`) with Esc/Enter/Space dismissal.
-  - UI Ergonomics: Added top-right toast notification system and comprehensive controls guide ([F1] Grimoire, [F5] Save, [F9] Load, [D] Deck, [E] End Turn).
-  - Verification: MSVC C clean build (`KWizard.exe` 31.7 KB); single-file web (`kwizard.html` 82.1 KB); Vite build clean (346ms); security lint 100% clean.
 

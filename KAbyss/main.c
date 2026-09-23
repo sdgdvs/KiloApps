@@ -301,6 +301,7 @@ typedef enum {
     ITEM_WPN_CRYPT_GREATSWORD,
     ITEM_ARM_WYRMSCALE,
     ITEM_REL_MONARCH_CROWN,
+    ITEM_REL_PRECURSOR_GLYPH,
     NUM_ITEM_DEFS
 } ItemId;
 
@@ -361,7 +362,8 @@ static const ItemDef g_itemDefs[NUM_ITEM_DEFS] = {
     { ITEM_KEY_RUNIC, "Ancient Runic Key", ITEM_TYPE_KEY, SLOT_NONE, "k", COLOR_TEXT_GOLD, "Unlocks crypt chests and sealed doors.", 0,0,0,0, 0,0,0 },
     { ITEM_WPN_CRYPT_GREATSWORD, "Keeper's Greatsword", ITEM_TYPE_EQUIPMENT, SLOT_WEAPON, "/", RGB(245,158,11), "+10 Might, +3 Warding, +15 Max HP. Heavy tomb blade.", 10,3,0,0, 15,0,0 },
     { ITEM_ARM_WYRMSCALE, "Wyrmscale Carapace", ITEM_TYPE_EQUIPMENT, SLOT_ARMOR, "[", RGB(16,185,129), "+9 Warding, +40 Max HP, +2 Might. Impervious to acid.", 2,9,0,0, 40,0,0 },
-    { ITEM_REL_MONARCH_CROWN, "Crown of Void Monarch", ITEM_TYPE_EQUIPMENT, SLOT_RELIC, "o", RGB(192,132,252), "+10 Light, +35 Max Aether, +35 Max Sanity, +5 Arcana.", 0,2,5,10, 0,35,35 }
+    { ITEM_REL_MONARCH_CROWN, "Crown of Void Monarch", ITEM_TYPE_EQUIPMENT, SLOT_RELIC, "o", RGB(192,132,252), "+10 Light, +35 Max Aether, +35 Max Sanity, +5 Arcana.", 0,2,5,10, 0,35,35 },
+    { ITEM_REL_PRECURSOR_GLYPH, "Precursor Relic Glyph", ITEM_TYPE_EQUIPMENT, SLOT_RELIC, "X", RGB(56,189,248), "+11 Light, +25 Max Aether, +25 Max Sanity, +4 Arcana. [Arc 2: 10.19.99.4]", 0,1,4,11, 0,25,25 }
 };
 
 #define NUM_RECIPES 6
@@ -640,6 +642,7 @@ static void PlayAudioAsync(int snd) {
 // Camera
 static int g_camX = 0;
 static int g_camY = 0;
+static BOOL g_hasPrecursorGlyph = FALSE;
 
 // Function declarations
 void InitGame(int depth);
@@ -1435,6 +1438,11 @@ void DamageMonster(int idx, int dmg, const char* dmgType, BOOL isCrit) {
         } else if (m->type == MONSTER_VOID_MONARCH) {
             AddPackItem(ITEM_REL_MONARCH_CROWN, 1);
             AddPackItem(ITEM_PANACEA_DEEP, 1);
+            if (!g_hasPrecursorGlyph) {
+                g_hasPrecursorGlyph = TRUE;
+                AddPackItem(ITEM_REL_PRECURSOR_GLYPH, 1);
+                AddLog("✦ PRECURSOR RELIC GLYPH RECOVERED: The Void Monarch yields an ancient ARG tablet [10.19.99.4 | echo-subsystem.net]!", RGB(56, 189, 248));
+            }
             AddLog("Spoils of the Void: Discovered Crown of Void Monarch (+10 Light, +35 MP/SAN)!", COLOR_TEXT_GOLD);
         } else if (m->type == MONSTER_GHOUL) {
             if (RandInt(0, 100) < 55) { AddPackItem(ITEM_ING_AZURE_SPORES, 1); AddLog("Harvested Azure Spores from the mire ghoul.", RGB(52, 211, 153)); }
@@ -2679,7 +2687,7 @@ int GetItemSellValue(ItemId id) {
     if (id <= ITEM_NONE || id >= NUM_ITEM_DEFS) return 5;
     const ItemDef* def = &g_itemDefs[id];
     if (def->category == ITEM_TYPE_EQUIPMENT) {
-        if (id == ITEM_WPN_VOID_DAGGER || id == ITEM_ARM_AEGIS_CUIRASS || id == ITEM_AMU_VOID) return 40;
+        if (id == ITEM_WPN_VOID_DAGGER || id == ITEM_ARM_AEGIS_CUIRASS || id == ITEM_AMU_VOID || id == ITEM_REL_PRECURSOR_GLYPH) return 40;
         if (id == ITEM_REL_CENSER || id == ITEM_AMU_STAR) return 35;
         return 25;
     }
@@ -2847,8 +2855,8 @@ void BuyMerchantItem(int itemNum) {
                 SpawnCombatText((float)g_player.x, (float)g_player.y, "+5 MAX AETHER!", COLOR_TEXT_GOLD);
             }
         } else if (itemNum == 7) {
-            ItemId mysteryPool[] = { ITEM_PANACEA_DEEP, ITEM_ARM_AEGIS_CUIRASS, ITEM_WPN_VOID_DAGGER, ITEM_REL_CENSER, ITEM_AMU_VOID, ITEM_STONESKIN_BREW, ITEM_LIQUID_FIRE, ITEM_ELIXIR_VITALITY };
-            ItemId pick = mysteryPool[RandInt(0, 7)];
+            ItemId mysteryPool[] = { ITEM_PANACEA_DEEP, ITEM_ARM_AEGIS_CUIRASS, ITEM_WPN_VOID_DAGGER, ITEM_REL_CENSER, ITEM_AMU_VOID, ITEM_STONESKIN_BREW, ITEM_LIQUID_FIRE, ITEM_ELIXIR_VITALITY, ITEM_REL_PRECURSOR_GLYPH };
+            ItemId pick = mysteryPool[RandInt(0, 8)];
             if (AddPackItem(pick, 1)) {
                 g_player.essence -= price;
                 snprintf(buf, sizeof(buf), "VOID MYSTERY RELIC! Hermit draws %s from the dark!", g_itemDefs[pick].name);
@@ -3162,8 +3170,8 @@ void MovePlayer(int dx, int dy) {
                     snprintf(lbuf, sizeof(lbuf), "Found %s in chest!", g_itemDefs[pickPot].name);
                     AddLog(lbuf, COLOR_ACCENT_GREEN);
                 } else if (roll < 85) {
-                    ItemId gears[] = { ITEM_WPN_RUNIC_BLADE, ITEM_WPN_VOID_DAGGER, ITEM_ARM_SHADOW_CLOAK, ITEM_ARM_AEGIS_CUIRASS, ITEM_REL_LANTERN, ITEM_REL_CENSER, ITEM_AMU_LIFE, ITEM_AMU_STAR, ITEM_AMU_VOID };
-                    ItemId pickGear = gears[RandInt(0, 8)];
+                    ItemId gears[] = { ITEM_WPN_RUNIC_BLADE, ITEM_WPN_VOID_DAGGER, ITEM_ARM_SHADOW_CLOAK, ITEM_ARM_AEGIS_CUIRASS, ITEM_REL_LANTERN, ITEM_REL_CENSER, ITEM_AMU_LIFE, ITEM_AMU_STAR, ITEM_AMU_VOID, ITEM_REL_PRECURSOR_GLYPH };
+                    ItemId pickGear = gears[RandInt(0, 9)];
                     AddPackItem(pickGear, 1);
                     char lbuf[128];
                     snprintf(lbuf, sizeof(lbuf), "Discovered %s (+Gear) in chest!", g_itemDefs[pickGear].name);
@@ -3560,8 +3568,22 @@ void SearchArea(void) {
                     AddLog(buf, RGB(52, 211, 153));
                     found = TRUE;
                 }
+
+                // Arc 2 Clue: Unearthed Precursor Relic Glyph near ancient monolithic stonework
+                if ((g_dungeon[ny][nx] == TILE_SHRINE || g_dungeon[ny][nx] == TILE_ALTAR || g_dungeon[ny][nx] == TILE_PILLAR) && g_depthLevel >= 4 && !g_hasPrecursorGlyph) {
+                    g_hasPrecursorGlyph = TRUE;
+                    AddPackItem(ITEM_REL_PRECURSOR_GLYPH, 1);
+                    AddLog("✦ PRECURSOR RELIC GLYPH UNEARTHED! Stonework reveals: [10.19.99.4 | kweb://echo-subsystem.net]", RGB(56, 189, 248));
+                    SpawnCombatText((float)g_player.x, (float)g_player.y, "PRECURSOR GLYPH!", RGB(56, 189, 248));
+                    Beep(880, 70); Beep(1320, 90);
+                    found = TRUE;
+                }
             }
         }
+    }
+    if (g_player.equipRelic == ITEM_REL_PRECURSOR_GLYPH) {
+        AddLog("[GLYPH RESONANCE]: Precursor carrier wave active (1999Hz). Intranet node 10.19.99.4/classified decrypted!", RGB(56, 189, 248));
+        found = TRUE;
     }
     if (!found) {
         AddLog("No hidden traps or occult glyphs detected.", COLOR_TEXT_DIM);
@@ -4100,17 +4122,6 @@ static void DrawMonsterSprite(HDC hdc, int x, int y, int type, int frame, int st
         SelectObject(hdc, nullPen);
         DeleteObject(auraPen);
 
-        // Orbiting Void Crystals
-        for (int o = 0; o < 3; o++) {
-            float ang = (float)frame * 0.15f + (float)o * 2.094f;
-            int ox = cx + (int)(cosf(ang) * 12.0f);
-            int oy = my + (int)(sinf(ang) * 6.0f);
-            HBRUSH orbBr = CreateSolidBrush(RGB(192, 132, 252));
-            SelectObject(hdc, orbBr);
-            Ellipse(hdc, ox - 2, oy - 2, ox + 3, oy + 3);
-            DeleteObject(orbBr);
-        }
-
         // Obsidian Astral Mantle
         HBRUSH mantleBr = CreateSolidBrush(RGB(59, 7, 100));
         SelectObject(hdc, mantleBr);
@@ -4489,12 +4500,11 @@ static void DrawTileSprite(HDC hdc, int x, int y, int tile, BOOL isVisible, int 
             DeleteObject(lBr);
             SetPixel(hdc, x + 8, y + 13, RGB(254, 240, 138));
 
-            // 6. Floating Gold Coin / Essence Glint above head
+            // 6. Floating Gold Coin above head
             int coinOff = (int)(sinf((float)frame * 0.25f) * 2.0f);
             SetPixel(hdc, cx, y + 3 + coinOff, RGB(251, 191, 36));
             SetPixel(hdc, cx - 1, y + 3 + coinOff, RGB(254, 240, 138));
             SetPixel(hdc, cx + 1, y + 3 + coinOff, RGB(254, 240, 138));
-            SetPixel(hdc, cx, y + 2 + coinOff, RGB(255, 255, 255));
             SetPixel(hdc, cx, y + 4 + coinOff, RGB(217, 119, 6));
         }
     }
@@ -6346,6 +6356,7 @@ void ResetPlayerRun(void) {
     g_player.level = 1;
     g_player.exp = 0;
     g_player.max_exp = 100;
+    g_hasPrecursorGlyph = FALSE;
     g_player.facing = 2; // Down
     g_player.equippedStaff = 0; // Ashwood Rune Staff
     g_player.staffSockets[0] = 0; // Pyre Rune socketed

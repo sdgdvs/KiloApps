@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-23T14:45:00Z — kilo-qa: KWizard (Pass 5: Tutorial & State Integrity)**
+  - Status: PASS ✅ (Full state persistence & tutorial isolation verified; 0 regressions).
+  - Quicksave & Load: Implemented full state persistence across F5/F9 hotkeys and toolbar buttons in web (`kwizard_save`) and native C (`kwizard.dat`).
+  - First-Run Tutorial: Added session-isolated onboarding (`kwizard_tutorialSeen` / `kwizard_tutorial.dat`) with Esc/Enter/Space dismissal.
+  - UI Ergonomics: Added top-right toast notification system and comprehensive controls guide ([F1] Grimoire, [F5] Save, [F9] Load, [D] Deck, [E] End Turn).
+  - Verification: MSVC C clean build (`KWizard.exe` 31.7 KB); single-file web (`kwizard.html` 82.1 KB); Vite build clean (346ms); security lint 100% clean.
+
 - **2026-09-23T13:50:00Z — kilo-graphics: KStarDredge (Specular Glint Removal, Visual Polish & Raider Balance Pass)**
   - Status: PASS ✅ (Eliminated specular glints across web & C; verified clean HUD and synced raider balance).
   - Glint Purge: Removed pulsing specular glint square on ore chunks, mineral core glint dot, and canopy glint slash in `kstardredge.html` & `main.c`.

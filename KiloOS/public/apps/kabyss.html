@@ -3078,6 +3078,15 @@
                 desc: 'Radiant astral crown dropped by The Void Monarch (+10 Light, +35 Max Aether, +35 Max Sanity, +5 Arcana, +2 Warding).',
                 might: 0, warding: 2, arcana: 5, light: 10, maxHp: 0, maxAether: 35, maxSanity: 35
             },
+            REL_PRECURSOR_GLYPH: {
+                id: 'REL_PRECURSOR_GLYPH',
+                name: 'Precursor Relic Glyph',
+                type: ITEM_TYPES.EQUIPMENT,
+                slot: EQUIP_SLOTS.RELIC,
+                icon: '💠',
+                desc: 'Inscrutable ARG tablet pulsating with 1999 telemetry: kweb://echo-subsystem.net (10.19.99.4). +11 Light, +25 Max Aether, +25 Max Sanity, +4 Arcana, +1 Warding.',
+                might: 0, warding: 1, arcana: 4, light: 11, maxHp: 0, maxAether: 25, maxSanity: 25
+            },
 
             // Amulet
             AMU_LIFE: {
@@ -3242,6 +3251,7 @@
             level: 1,
             exp: 0,
             maxExp: 100,
+            hasPrecursorGlyph: false,
             might: 14,
             warding: 12,
             arcana: 16,
@@ -3643,7 +3653,7 @@
             const it = ITEMS[itemKey];
             if (!it) return 5;
             if (it.type === ITEM_TYPES.EQUIPMENT) {
-                if (it.id === 'WPN_VOID_DAGGER' || it.id === 'ARM_AEGIS_CUIRASS' || it.id === 'AMU_VOID') return 40;
+                if (it.id === 'WPN_VOID_DAGGER' || it.id === 'ARM_AEGIS_CUIRASS' || it.id === 'AMU_VOID' || it.id === 'REL_PRECURSOR_GLYPH') return 40;
                 if (it.id === 'REL_CENSER' || it.id === 'AMU_STAR') return 35;
                 return 25;
             }
@@ -3852,7 +3862,7 @@
                 player.essence -= ware.price;
                 const mysteryPool = [
                     'PANACEA_DEEP', 'ARM_AEGIS_CUIRASS', 'WPN_VOID_DAGGER', 'REL_CENSER',
-                    'AMU_VOID', 'STONESKIN_BREW', 'LIQUID_FIRE', 'ELIXIR_VITALITY'
+                    'AMU_VOID', 'STONESKIN_BREW', 'LIQUID_FIRE', 'ELIXIR_VITALITY', 'REL_PRECURSOR_GLYPH'
                 ];
                 const pickItem = mysteryPool[Math.floor(Math.random() * mysteryPool.length)];
                 addItem(pickItem, 1);
@@ -4894,6 +4904,11 @@
                 } else if (m.type === 'VOID_MONARCH') {
                     droppedItem = 'REL_MONARCH_CROWN';
                     addItem('PANACEA_DEEP', 1);
+                    if (!player.hasPrecursorGlyph) {
+                        player.hasPrecursorGlyph = true;
+                        addItem('REL_PRECURSOR_GLYPH', 1);
+                        logMessage('✦ PRECURSOR RELIC GLYPH RECOVERED: The Void Monarch yields an ancient ARG tablet: [ECHO-1999 // 10.19.99.4 // kweb://echo-subsystem.net]!', 'relic');
+                    }
                 } else if (m.type === 'SKELETON') {
                     if (dropRoll < 0.45) droppedItem = 'ING_BRIMSTONE';
                     else if (dropRoll < 0.70) droppedItem = 'HEAL_SALVE';
@@ -5883,20 +5898,6 @@
                 ctx.arc(cx, my, 16, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Orbiting Void Crystals
-                for (let o = 0; o < 3; o++) {
-                    const orbAngle = animTime * 3 + o * (Math.PI * 2 / 3);
-                    const ox = cx + Math.cos(orbAngle) * 13;
-                    const oy = my + Math.sin(orbAngle) * 7;
-                    ctx.fillStyle = '#c084fc';
-                    ctx.shadowColor = '#a855f7';
-                    ctx.shadowBlur = 6;
-                    ctx.beginPath();
-                    ctx.arc(ox, oy, 2.5, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-                }
-
                 // Royal Obsidian Astral Mantle
                 ctx.fillStyle = '#3b0764';
                 ctx.beginPath();
@@ -5974,15 +5975,6 @@
                 ctx.fillRect(sx + 14, sy + 12, 4, 6);
                 ctx.fillStyle = '#1c1917';
                 ctx.fillRect(sx + 15.5, sy + 13.5, 1, 2.5);
-
-                // Specular glint on gold lock every 2.5s
-                if (isVisible) {
-                    const glint = (animTime * 2) % 4;
-                    if (glint < 0.6) {
-                        ctx.fillStyle = '#fffbeb';
-                        ctx.fillRect(sx + 14 + glint * 5, sy + 12, 1.5, 4);
-                    }
-                }
 
             } else if (tile === TILE.ALTAR) {
                 // Stepped obsidian plinth
@@ -6955,6 +6947,9 @@
                     }
                     if (Math.random() < 0.4) {
                         const gearPool = ['WPN_RUNIC_BLADE', 'ARM_ABYSSAL_MAIL', 'ARM_SHADOW_CLOAK', 'REL_LANTERN', 'AMU_LIFE', 'AMU_STAR'];
+                        if (depthLevel >= 4) {
+                            gearPool.push('REL_CENSER', 'ARM_AEGIS_CUIRASS', 'WPN_VOID_DAGGER', 'AMU_VOID', 'REL_PRECURSOR_GLYPH');
+                        }
                         const gearLoot = gearPool[Math.floor(Math.random() * gearPool.length)];
                         if (addItem(gearLoot, 1)) {
                             chestMsg += ` Found ${ITEMS[gearLoot].icon} ${ITEMS[gearLoot].name}!`;
@@ -7040,8 +7035,22 @@
                             logMessage(`Detected bubbling Alchemy Cauldron at (${nx}, ${ny})!`, 'heal');
                             found = true;
                         }
+
+                        // Arc 2 Clue: Unearthed Precursor Relic Glyph near ancient monolithic stonework
+                        if ((dungeon[ny][nx] === TILE.SHRINE || dungeon[ny][nx] === TILE.ALTAR || dungeon[ny][nx] === TILE.PILLAR) && depthLevel >= 4 && !player.hasPrecursorGlyph) {
+                            player.hasPrecursorGlyph = true;
+                            addItem('REL_PRECURSOR_GLYPH', 1);
+                            logMessage('✦ PRECURSOR RELIC GLYPH UNEARTHED! The stonework vibrates with an ancient 1999 transmission: [ECHO-1999 // 10.19.99.4 // kweb://echo-subsystem.net]!', 'relic');
+                            spawnCombatText(player.x, player.y, 'PRECURSOR GLYPH!', '#38bdf8');
+                            AudioSys.playLevelUp();
+                            found = true;
+                        }
                     }
                 }
+            }
+            if (player.equipment && player.equipment.relic === 'REL_PRECURSOR_GLYPH') {
+                logMessage('💠 [GLYPH RESONANCE]: Precursor carrier wave active (1999Hz). Corporate intranet node 10.19.99.4/classified decoded!', 'magic');
+                found = true;
             }
             if (!found) {
                 logMessage('No hidden traps or occult glyphs detected in immediate vicinity.');
