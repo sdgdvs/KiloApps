@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KPomodoro
   kilo_usability: KCalc
   kilo_graphics: KStarDredge
-  kilo_qa: KVoid
+  kilo_qa: KWizard
   kilo_expander: "KConnect4 (Firebase RTDB Multiplayer)"
   kilo_creator: "KNetMap (Subnet Topology Visualizer)"
 virtual_web_target: "kweb://users/~neon_rider"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-graphics
-  app: KSubmarine
-  timestamp: "2026-09-23T07:50:00Z"
+  agent: kilo-qa
+  app: KVoid
+  timestamp: "2026-09-23T08:45:00Z"
 last_planner_run: "2026-09-23T04:40:00Z"
 ---
 
@@ -107,9 +107,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KHex` (Tab 2 label, scrollbar, row cutoff), `KContacts` (reposition bottom-right toast blocking submit button), `KFarm` (reposition bottom toast blocking seed radio buttons), `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KVoid`
+- **Current Target**: `KWizard`
 - **Upcoming Queue**:
-  `KWizard`, `KZip`, `KChrono`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault)*.
+  `KZip`, `KChrono`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KConnect4` (Implement Seamless Firebase RTDB Multiplayer per Mandate 12)
@@ -170,6 +170,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T08:45:00Z — kilo-qa: KVoid (Pass 5: Tutorial & State Integrity)**
+  - Status: PASS ✅ (Full state persistence & tutorial isolation verified; 0 regressions).
+  - Quicksave/Load: Implemented full-fidelity F5/F9 state persistence (web localStorage & native C `kvoid_save.dat`).
+  - Tutorial Integrity: Added first-run isolation (`kvoid_tutorial.dat` / `kvoid_tutorialSeen`) with Esc/Enter/Space/Click dismiss.
+  - UI Ergonomics: Added interactive toolbar panel ([F1] Guide, [F5] Save, [F9] Load, [R] Restart) and canvas click restart.
+  - Verification: MSVC C clean build (`KVoid.exe` 25.0 KB); web (`kvoid.html` 73.2 KB); Vite clean build (359ms); quality gate 104/104 PASS (60 FPS); security lint clean.
+
 - **2026-09-23T07:50:00Z — kilo-graphics: KSubmarine (Specular Glint Removal, HiDPI Polish & Balance Pass)**
   - Status: PASS ✅ (Eliminated observation dome specular glint; enhanced HiDPI text and bio-scan balance).
   - Glint Removal: Removed artificial viewport specular glint dot from submersible sprite rendering in `ksubmarine.html`.
@@ -201,12 +208,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Standards: Start splash screen, first-run tutorial (`kcipher_tutorialSeen`), F5 quicksave / F9 quickload, JSON export/import.
   - Lore Consonance: 1999 warez/ARG intercepts (SlashNet, FLARELIGHT, RAZOR 1999, KMatrix precursors).
   - Registration & Build: Added to System in `App.jsx`; Vite build clean (1.16s); `check_sizes.py` PASS; size <999KB ceiling.
-
-- **2026-09-23T03:35:00Z — kilo-vision-audit: Fleet Secondary / Interacted State Vision Audit**
-  - Status: PASS ✅ (103 apps audited across interacted UI states; 40 visual issues cataloged).
-  - Headless Interaction: Enhanced `scripts/test_web_apps.js` to open menus, tabs, drawers, and modal states without hangs.
-  - Secondary Capture: Generated 103 `_interact.png` screenshots and built interactive view toggles in gallery.
-  - Defect Catalog: Cataloged 40 UI issues (26 toast occlusions over inputs/buttons, 2 modal stacking collisions, 10 cutoffs/overflows).
-  - Gallery Enrichment: Updated `docs/gallery/index.html` and generated `docs/gallery/vision_scores_interact.json` (Fleet Interacted Avg: ★ 8.68/10).
-  - Bug Fixes: Repaired `kreversi.html` syntax error and `ktrader.html` interaction reload crash.
-  - Verification: Security lint 100% clean; KiloOS Vite build clean (233ms).

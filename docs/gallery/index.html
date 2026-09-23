@@ -114,12 +114,6 @@
       <button style="padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1px solid #30363d; background: #21262d; color: #c9d1d9; cursor: pointer;" onclick="document.querySelectorAll('img[data-initial]').forEach(img => img.src = img.getAttribute('data-initial'))">View All: Initial State</button>
       <button style="padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1px solid #30363d; background: #21262d; color: #58a6ff; cursor: pointer;" onclick="document.querySelectorAll('img[data-interact]').forEach(img => img.src = img.getAttribute('data-interact'))">View All: Interacted / Secondary State</button>
     </div>
-        <div style="margin-top: 14px; display: flex; gap: 12px; flex-wrap: wrap;">
-      <span style="background: #21262d; border: 1px solid #30363d; padding: 6px 12px; border-radius: 6px; font-size: 13px;">Total Apps Audited: <strong style="color: #fff">103</strong></span>
-      <span style="background: #21262d; border: 1px solid #30363d; padding: 6px 12px; border-radius: 6px; font-size: 13px;">Initial Vision Avg: <strong style="color: #3fb950">★ 8.84 / 10</strong></span>
-      <span style="background: #21262d; border: 1px solid #30363d; padding: 6px 12px; border-radius: 6px; font-size: 13px;">Interacted Vision Avg: <strong style="color: #58a6ff">★ 8.68 / 10</strong></span>
-      <span style="background: #21262d; border: 1px solid #30363d; padding: 6px 12px; border-radius: 6px; font-size: 13px;">Interacted UI Issues Flagged: <strong style="color: #e3b341">40</strong></span>
-    </div>
   </header>
   <div class="grid">
     
@@ -147,10 +141,6 @@
             <span>State: <strong style="color: #58a6ff;" title="clicked_btn_1: Copied!">clicked_btn_1: Copie</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.8</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/contribute.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -158,7 +148,7 @@
       </div>
     
 
-      <div class="app-card ">
+      <div class="app-card card-warn">
         <div class="card-img-wrap" id="wrap-k2048_html">
           <img id="img-k2048_html" src="screenshots/k2048_interact.png" alt="K2048" loading="lazy" data-initial="screenshots/k2048.png" data-interact="screenshots/k2048_interact.png">
         </div>
@@ -170,11 +160,11 @@
         <div class="card-body">
           <div class="card-header">
             <h3>K2048</h3>
-            <span class="badge badge-pass">60 FPS PASS</span>
+            <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>60</strong></span>
-            <span>Max Delta: <strong>17ms</strong></span>
+            <span>FPS: <strong>42</strong></span>
+            <span>Max Delta: <strong>50ms</strong></span>
             <span>Size: <strong>115.7 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -182,13 +172,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: Stats">opened_menu: Stats</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 7.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Button labels wrap awkwardly in power-up buttons row (Upgrade, Hammer)
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/k2048.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -196,7 +179,7 @@
       </div>
     
 
-      <div class="app-card ">
+      <div class="app-card card-warn">
         <div class="card-img-wrap" id="wrap-kabyss_html">
           <img id="img-kabyss_html" src="screenshots/kabyss_interact.png" alt="KABYSS" loading="lazy" data-initial="screenshots/kabyss.png" data-interact="screenshots/kabyss_interact.png">
         </div>
@@ -208,11 +191,11 @@
         <div class="card-body">
           <div class="card-header">
             <h3>KABYSS</h3>
-            <span class="badge badge-pass">60 FPS PASS</span>
+            <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>60</strong></span>
-            <span>Max Delta: <strong>17ms</strong></span>
+            <span>FPS: <strong>57</strong></span>
+            <span>Max Delta: <strong>33ms</strong></span>
             <span>Size: <strong>390.5 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -220,10 +203,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: Pack">switched_tab: Pack</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kabyss.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -231,7 +210,7 @@
       </div>
     
 
-      <div class="app-card card-warn">
+      <div class="app-card ">
         <div class="card-img-wrap" id="wrap-kalchemy_html">
           <img id="img-kalchemy_html" src="screenshots/kalchemy_interact.png" alt="KALCHEMY" loading="lazy" data-initial="screenshots/kalchemy.png" data-interact="screenshots/kalchemy_interact.png">
         </div>
@@ -243,11 +222,11 @@
         <div class="card-body">
           <div class="card-header">
             <h3>KALCHEMY</h3>
-            <span class="badge badge-warn">LAG / STUTTER</span>
+            <span class="badge badge-pass">60 FPS PASS</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>55</strong></span>
-            <span>Max Delta: <strong>50ms</strong></span>
+            <span>FPS: <strong>60</strong></span>
+            <span>Max Delta: <strong>17ms</strong></span>
             <span>Size: <strong>233.9 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -255,13 +234,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: 🗖">opened_menu: 🗖</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #f85149;">★ 6.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.2</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Unstyled [x] close button outside modal frame and modal text truncated at bottom
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kalchemy.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -286,17 +258,13 @@
           <div class="card-metrics">
             <span>FPS: <strong>60</strong></span>
             <span>Max Delta: <strong>17ms</strong></span>
-            <span>Size: <strong>74 KB</strong></span>
+            <span>Size: <strong>76 KB</strong></span>
           </div>
           <div class="card-metrics">
             <span>Interactive: <strong>35</strong></span>
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: [2] DSP FORENSIC DECODER">switched_tab: [2] DS</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kanomaly.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -328,13 +296,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Perimeter glint comet present on border
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kasteroids.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -357,8 +318,8 @@
             <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>57</strong></span>
-            <span>Max Delta: <strong>33ms</strong></span>
+            <span>FPS: <strong>49</strong></span>
+            <span>Max Delta: <strong>50ms</strong></span>
             <span>Size: <strong>69 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -366,13 +327,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.8</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Missing glyph square box on Coin [4] preset button; Virtual piano keys partially cut off below fold
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kaudio.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -404,13 +358,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: 2🔢 64-Bit Grid & Ops">switched_tab: 2🔢 64</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.8</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.4</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Bit toggle board ('HIGH 32-BITS' / 'LOW 32-BITS') overflows card horizontally, generating unwanted horizontal scrollbar
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kbase.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -434,7 +381,7 @@
           </div>
           <div class="card-metrics">
             <span>FPS: <strong>51</strong></span>
-            <span>Max Delta: <strong>50ms</strong></span>
+            <span>Max Delta: <strong>33ms</strong></span>
             <span>Size: <strong>126.8 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -442,13 +389,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 7.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Terminal screen is completely empty on launch without prompt or banner; Top toolbar has heavy button clutter with disparate colors
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kbbs.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -471,7 +411,7 @@
             <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>48</strong></span>
+            <span>FPS: <strong>51</strong></span>
             <span>Max Delta: <strong>33ms</strong></span>
             <span>Size: <strong>106.3 KB</strong></span>
           </div>
@@ -480,10 +420,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: ☰">opened_menu: ☰</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kbookmark.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -515,13 +451,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 8.2</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Distracting perimeter glint comet resembles a game ball; Title displays internal development loop LOOP 11
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kbreakout.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -553,10 +482,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: Settings">opened_menu: Setting</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kbudget.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -579,8 +504,8 @@
             <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>31</strong></span>
-            <span>Max Delta: <strong>67ms</strong></span>
+            <span>FPS: <strong>54</strong></span>
+            <span>Max Delta: <strong>33ms</strong></span>
             <span>Size: <strong>83.9 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -589,13 +514,6 @@
         2">switched_tab: Financ</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 7.8</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 7.6</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Toast notification stack in center-bottom overlaps and completely blocks calculation input fields and buttons
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kcalc.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -603,7 +521,7 @@
       </div>
     
 
-      <div class="app-card card-warn">
+      <div class="app-card ">
         <div class="card-img-wrap" id="wrap-kcalendar_html">
           <img id="img-kcalendar_html" src="screenshots/kcalendar_interact.png" alt="KCALENDAR" loading="lazy" data-initial="screenshots/kcalendar.png" data-interact="screenshots/kcalendar_interact.png">
         </div>
@@ -615,11 +533,11 @@
         <div class="card-body">
           <div class="card-header">
             <h3>KCALENDAR</h3>
-            <span class="badge badge-warn">LAG / STUTTER</span>
+            <span class="badge badge-pass">60 FPS PASS</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>54</strong></span>
-            <span>Max Delta: <strong>50ms</strong></span>
+            <span>FPS: <strong>60</strong></span>
+            <span>Max Delta: <strong>17ms</strong></span>
             <span>Size: <strong>80.1 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -627,13 +545,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: 2 Week">switched_tab: 2 Week</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.8</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Startup toast banner slightly obscures lower row event tags
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kcalendar.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -665,13 +576,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: F1 Help">opened_menu: F1 Help</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.8</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Toast notification overlaps the rightmost chart bar
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kchart.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -679,7 +583,7 @@
       </div>
     
 
-      <div class="app-card card-warn">
+      <div class="app-card ">
         <div class="card-img-wrap" id="wrap-kchat_html">
           <img id="img-kchat_html" src="screenshots/kchat_interact.png" alt="KCHAT" loading="lazy" data-initial="screenshots/kchat.png" data-interact="screenshots/kchat_interact.png">
         </div>
@@ -691,11 +595,11 @@
         <div class="card-body">
           <div class="card-header">
             <h3>KCHAT</h3>
-            <span class="badge badge-warn">LAG / STUTTER</span>
+            <span class="badge badge-pass">60 FPS PASS</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>54</strong></span>
-            <span>Max Delta: <strong>33ms</strong></span>
+            <span>FPS: <strong>60</strong></span>
+            <span>Max Delta: <strong>17ms</strong></span>
             <span>Size: <strong>85.1 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -703,13 +607,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: Help F1">opened_menu: Help F1</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.2</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Port input field slightly truncates 4-digit port numbers
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kchat.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -734,20 +631,13 @@
           <div class="card-metrics">
             <span>FPS: <strong>60</strong></span>
             <span>Max Delta: <strong>17ms</strong></span>
-            <span>Size: <strong>3.4 KB</strong></span>
+            <span>Size: <strong>3.3 KB</strong></span>
           </div>
           <div class="card-metrics">
             <span>Interactive: <strong>0</strong></span>
             <span>State: <strong style="color: #58a6ff;" title="Secondary">Secondary</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 7.8</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Web version is an informational stub directing user to download native .exe
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kchatserver.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -771,7 +661,7 @@
           </div>
           <div class="card-metrics">
             <span>FPS: <strong>37</strong></span>
-            <span>Max Delta: <strong>33ms</strong></span>
+            <span>Max Delta: <strong>50ms</strong></span>
             <span>Size: <strong>115.6 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -779,13 +669,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Rotating perimeter glint comet along board border; Cyan cyber-styled buttons clash aesthetically with classic wood board theme
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kchess.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -808,19 +691,15 @@
             <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>25</strong></span>
-            <span>Max Delta: <strong>50ms</strong></span>
-            <span>Size: <strong>150.6 KB</strong></span>
+            <span>FPS: <strong>27</strong></span>
+            <span>Max Delta: <strong>83ms</strong></span>
+            <span>Size: <strong>147.3 KB</strong></span>
           </div>
           <div class="card-metrics">
             <span>Interactive: <strong>39</strong></span>
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kchrono.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -828,7 +707,38 @@
       </div>
     
 
-      <div class="app-card card-warn">
+      <div class="app-card ">
+        <div class="card-img-wrap" id="wrap-kcipher_html">
+          <img id="img-kcipher_html" src="screenshots/kcipher_interact.png" alt="KCIPHER" loading="lazy" data-initial="screenshots/kcipher.png" data-interact="screenshots/kcipher_interact.png">
+        </div>
+        
+        <div class="view-toggle" style="display:flex; justify-content:center; gap:6px; padding:6px; background:#12161f; border-bottom:1px solid var(--border);">
+          <button style="padding:2px 8px; font-size:10px; border-radius:3px; border:1px solid #30363d; background:#21262d; color:#8b949e; cursor:pointer;" onclick="document.getElementById('img-kcipher_html').src='screenshots/kcipher.png'; this.parentElement.querySelectorAll('button').forEach(b=>b.style.color='#8b949e'); this.style.color='#58a6ff';">Initial View</button>
+          <button style="padding:2px 8px; font-size:10px; border-radius:3px; border:1px solid #30363d; background:#21262d; color:#58a6ff; cursor:pointer;" onclick="document.getElementById('img-kcipher_html').src='screenshots/kcipher_interact.png'; this.parentElement.querySelectorAll('button').forEach(b=>b.style.color='#8b949e'); this.style.color='#58a6ff';">Interacted View</button>
+        </div>
+        <div class="card-body">
+          <div class="card-header">
+            <h3>KCIPHER</h3>
+            <span class="badge badge-pass">60 FPS PASS</span>
+          </div>
+          <div class="card-metrics">
+            <span>FPS: <strong>60</strong></span>
+            <span>Max Delta: <strong>17ms</strong></span>
+            <span>Size: <strong>102.3 KB</strong></span>
+          </div>
+          <div class="card-metrics">
+            <span>Interactive: <strong>58</strong></span>
+            <span>State: <strong style="color: #58a6ff;" title="switched_tab: 📊 Frequency Analysis">switched_tab: 📊 Fre</strong></span>
+          </div>
+          
+          <div class="card-actions">
+            <a href="../../KiloOS/public/apps/kcipher.html" target="_blank" class="play-btn">▶ Play App</a>
+          </div>
+        </div>
+      </div>
+    
+
+      <div class="app-card ">
         <div class="card-img-wrap" id="wrap-kclip_html">
           <img id="img-kclip_html" src="screenshots/kclip_interact.png" alt="KCLIP" loading="lazy" data-initial="screenshots/kclip.png" data-interact="screenshots/kclip_interact.png">
         </div>
@@ -840,25 +750,18 @@
         <div class="card-body">
           <div class="card-header">
             <h3>KCLIP</h3>
-            <span class="badge badge-warn">LAG / STUTTER</span>
+            <span class="badge badge-pass">60 FPS PASS</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>57</strong></span>
-            <span>Max Delta: <strong>33ms</strong></span>
-            <span>Size: <strong>92.2 KB</strong></span>
+            <span>FPS: <strong>60</strong></span>
+            <span>Max Delta: <strong>17ms</strong></span>
+            <span>Size: <strong>94.2 KB</strong></span>
           </div>
           <div class="card-metrics">
-            <span>Interactive: <strong>73</strong></span>
+            <span>Interactive: <strong>74</strong></span>
             <span>State: <strong style="color: #58a6ff;" title="clicked_btn_2: ⚡ Snippets">clicked_btn_2: ⚡ Sni</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 7.6</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Quick-Start Tutorial modal renders simultaneously behind Reusable Snippets modal with colliding backdrops
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kclip.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -890,13 +793,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: World 2">switched_tab: World </strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 7.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Horizontal scrollbar rendered beneath top tab bar due to overflowing tabs; Tab labels cut off at Se
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kclock.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -928,13 +824,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 8.2</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.4</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Bottom-right welcome toast occludes button [8] Administrator's Manual & Tech Spec
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kcolony.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -942,7 +831,7 @@
       </div>
     
 
-      <div class="app-card card-warn">
+      <div class="app-card ">
         <div class="card-img-wrap" id="wrap-kcolor_html">
           <img id="img-kcolor_html" src="screenshots/kcolor_interact.png" alt="KCOLOR" loading="lazy" data-initial="screenshots/kcolor.png" data-interact="screenshots/kcolor_interact.png">
         </div>
@@ -954,11 +843,11 @@
         <div class="card-body">
           <div class="card-header">
             <h3>KCOLOR</h3>
-            <span class="badge badge-warn">LAG / STUTTER</span>
+            <span class="badge badge-pass">60 FPS PASS</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>57</strong></span>
-            <span>Max Delta: <strong>33ms</strong></span>
+            <span>FPS: <strong>60</strong></span>
+            <span>Max Delta: <strong>17ms</strong></span>
             <span>Size: <strong>52.7 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -966,10 +855,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: HSL">switched_tab: HSL</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kcolor.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1001,13 +886,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.2</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Top-right button ('LANISTA'S GUIDE [H]') overlaps and covers header text ('LUDUS MANAGEMENT')
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kcolosseum.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1039,13 +917,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 7.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.2</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Toast in bottom-center overlaps and blocks the Undo [U] button
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kconnect4.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1077,13 +948,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: 2 ★ Favs 2">switched_tab: 2 ★ Fa</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.8</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Toast in bottom-right cuts off Add to Favorites checkbox and contact submit button
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kcontacts.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1115,10 +979,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: Batch Mode 2">switched_tab: Batch </strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 10.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kconverter.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1141,8 +1001,8 @@
             <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>33</strong></span>
-            <span>Max Delta: <strong>33ms</strong></span>
+            <span>FPS: <strong>34</strong></span>
+            <span>Max Delta: <strong>50ms</strong></span>
             <span>Size: <strong>512.5 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -1150,13 +1010,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: Fleet">switched_tab: Fleet</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Third exoplanet card in catalog partially clipped by panel boundary
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kcosmic.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1188,13 +1041,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 8.2</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Excessive empty space between boot banner and bottom root prompt
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kcyber.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1217,7 +1063,7 @@
             <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>34</strong></span>
+            <span>FPS: <strong>43</strong></span>
             <span>Max Delta: <strong>33ms</strong></span>
             <span>Size: <strong>75.4 KB</strong></span>
           </div>
@@ -1226,13 +1072,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: Help">opened_menu: Help</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 7.2</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Title displays uncleaned internal dev text '(Loop 7 Expansion)'; top control box pushes dartboard off bottom of viewport
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kdarts.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1256,7 +1095,7 @@
           </div>
           <div class="card-metrics">
             <span>FPS: <strong>51</strong></span>
-            <span>Max Delta: <strong>33ms</strong></span>
+            <span>Max Delta: <strong>50ms</strong></span>
             <span>Size: <strong>55.8 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -1264,13 +1103,6 @@
             <span>State: <strong style="color: #58a6ff;" title="clicked_btn_2: Exp CSV E">clicked_btn_2: Exp C</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 7.8</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Toast stack in top-right overlaps and completely blocks header action buttons
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kdb.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1278,7 +1110,7 @@
       </div>
     
 
-      <div class="app-card ">
+      <div class="app-card card-warn">
         <div class="card-img-wrap" id="wrap-kdirector_html">
           <img id="img-kdirector_html" src="screenshots/kdirector_interact.png" alt="KDIRECTOR" loading="lazy" data-initial="screenshots/kdirector.png" data-interact="screenshots/kdirector_interact.png">
         </div>
@@ -1290,11 +1122,11 @@
         <div class="card-body">
           <div class="card-header">
             <h3>KDIRECTOR</h3>
-            <span class="badge badge-pass">60 FPS PASS</span>
+            <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>60</strong></span>
-            <span>Max Delta: <strong>17ms</strong></span>
+            <span>FPS: <strong>57</strong></span>
+            <span>Max Delta: <strong>33ms</strong></span>
             <span>Size: <strong>60.8 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -1302,10 +1134,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: 🔬 LIVE INSPECTOR & SANDBOX">switched_tab: 🔬 LIV</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kdirector.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1337,13 +1165,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: F1 Help (❓)">opened_menu: F1 Help</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.2</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Toast notification in top-right overlaps and obstructs modal close button
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kdragon.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1368,17 +1189,13 @@
           <div class="card-metrics">
             <span>FPS: <strong>60</strong></span>
             <span>Max Delta: <strong>17ms</strong></span>
-            <span>Size: <strong>32.5 KB</strong></span>
+            <span>Size: <strong>31.7 KB</strong></span>
           </div>
           <div class="card-metrics">
             <span>Interactive: <strong>8</strong></span>
             <span>State: <strong style="color: #58a6ff;" title="clicked_btn_2: Refresh">clicked_btn_2: Refre</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kexplorer.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1410,13 +1227,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 7.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 7.8</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Toast in bottom-center overlaps and completely hides seed selector radio buttons (Corn, Tomato, Pumpkin)
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kfarm.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1448,10 +1258,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: Stats">opened_menu: Stats</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 10.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kflash.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1474,19 +1280,15 @@
             <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>46</strong></span>
+            <span>FPS: <strong>48</strong></span>
             <span>Max Delta: <strong>50ms</strong></span>
-            <span>Size: <strong>76.7 KB</strong></span>
+            <span>Size: <strong>79.1 KB</strong></span>
           </div>
           <div class="card-metrics">
             <span>Interactive: <strong>44</strong></span>
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kfleet.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1519,10 +1321,6 @@
         2">switched_tab: Unicod</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kfont.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1554,13 +1352,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: GUIDE [F1/H]">opened_menu: GUIDE [</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.2</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Toast in top-right overlaps and occludes modal header title and close button
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kfortress.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1592,13 +1383,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: Stats">opened_menu: Stats</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.8</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Title text on top-right toolbar is truncated (KFre)
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kfreecell.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1630,13 +1414,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: Stats">opened_menu: Stats</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.8</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Rotating perimeter glint comet along wooden board edge; Bottom controls panel partially truncated by viewport
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kgo.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1668,13 +1445,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: [2] Calculus">switched_tab: [2] Ca</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.2</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Unintended horizontal scrollbar underneath Quick preset buttons
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kgraph.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1682,7 +1452,7 @@
       </div>
     
 
-      <div class="app-card ">
+      <div class="app-card card-warn">
         <div class="card-img-wrap" id="wrap-khabit_html">
           <img id="img-khabit_html" src="screenshots/khabit_interact.png" alt="KHABIT" loading="lazy" data-initial="screenshots/khabit.png" data-interact="screenshots/khabit_interact.png">
         </div>
@@ -1694,11 +1464,11 @@
         <div class="card-body">
           <div class="card-header">
             <h3>KHABIT</h3>
-            <span class="badge badge-pass">60 FPS PASS</span>
+            <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>60</strong></span>
-            <span>Max Delta: <strong>17ms</strong></span>
+            <span>FPS: <strong>54</strong></span>
+            <span>Max Delta: <strong>33ms</strong></span>
             <span>Size: <strong>48.3 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -1706,10 +1476,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: 📊">opened_menu: 📊</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 10.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/khabit.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1741,13 +1507,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: I">opened_menu: I</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 8.2</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 7.8</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Virtual keyboard is cut off at the bottom of the viewport in active gameplay (rows below N hidden)
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/khangman.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1755,7 +1514,7 @@
       </div>
     
 
-      <div class="app-card ">
+      <div class="app-card card-warn">
         <div class="card-img-wrap" id="wrap-khash_html">
           <img id="img-khash_html" src="screenshots/khash_interact.png" alt="KHASH" loading="lazy" data-initial="screenshots/khash.png" data-interact="screenshots/khash_interact.png">
         </div>
@@ -1767,11 +1526,11 @@
         <div class="card-body">
           <div class="card-header">
             <h3>KHASH</h3>
-            <span class="badge badge-pass">60 FPS PASS</span>
+            <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>60</strong></span>
-            <span>Max Delta: <strong>17ms</strong></span>
+            <span>FPS: <strong>57</strong></span>
+            <span>Max Delta: <strong>33ms</strong></span>
             <span>Size: <strong>90.4 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -1779,10 +1538,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: 📁 [2] File Inspector">switched_tab: 📁 [2]</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/khash.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1805,7 +1560,7 @@
             <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>45</strong></span>
+            <span>FPS: <strong>51</strong></span>
             <span>Max Delta: <strong>33ms</strong></span>
             <span>Size: <strong>127.1 KB</strong></span>
           </div>
@@ -1814,13 +1569,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: 2 🔍 Hex Viewer & Buffer">switched_tab: 2 🔍 H</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 8.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 7.8</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Tab 2 has empty/missing label; unstyled horizontal scrollbar under tab bar; hex rows cut off at bottom
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/khex.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1828,7 +1576,7 @@
       </div>
     
 
-      <div class="app-card card-warn">
+      <div class="app-card ">
         <div class="card-img-wrap" id="wrap-kimage_html">
           <img id="img-kimage_html" src="screenshots/kimage_interact.png" alt="KIMAGE" loading="lazy" data-initial="screenshots/kimage.png" data-interact="screenshots/kimage_interact.png">
         </div>
@@ -1840,11 +1588,11 @@
         <div class="card-body">
           <div class="card-header">
             <h3>KIMAGE</h3>
-            <span class="badge badge-warn">LAG / STUTTER</span>
+            <span class="badge badge-pass">60 FPS PASS</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>57</strong></span>
-            <span>Max Delta: <strong>33ms</strong></span>
+            <span>FPS: <strong>60</strong></span>
+            <span>Max Delta: <strong>17ms</strong></span>
             <span>Size: <strong>90.1 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -1852,13 +1600,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: 2 Kernel FX">switched_tab: 2 Kern</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.2</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.4</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Toast notification overlaps EXIF Camera Inspector and bottom stats in right-side panel
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kimage.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1866,7 +1607,7 @@
       </div>
     
 
-      <div class="app-card card-warn">
+      <div class="app-card ">
         <div class="card-img-wrap" id="wrap-kjournal_html">
           <img id="img-kjournal_html" src="screenshots/kjournal_interact.png" alt="KJOURNAL" loading="lazy" data-initial="screenshots/kjournal.png" data-interact="screenshots/kjournal_interact.png">
         </div>
@@ -1878,11 +1619,11 @@
         <div class="card-body">
           <div class="card-header">
             <h3>KJOURNAL</h3>
-            <span class="badge badge-warn">LAG / STUTTER</span>
+            <span class="badge badge-pass">60 FPS PASS</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>57</strong></span>
-            <span>Max Delta: <strong>33ms</strong></span>
+            <span>FPS: <strong>60</strong></span>
+            <span>Max Delta: <strong>17ms</strong></span>
             <span>Size: <strong>81.2 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -1890,13 +1631,6 @@
             <span>State: <strong style="color: #58a6ff;" title="clicked_btn_2: 📊">clicked_btn_2: 📊</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.4</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Toast notification in bottom-right overlaps bottom-right corner of analytics modal
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kjournal.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1931,10 +1665,6 @@
     2">clicked_btn_2: 📥 In</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 10.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kmail.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1966,13 +1696,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: Help & Controls F1 / H">opened_menu: Help & </strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.4</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.2</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Toast in top-left overlaps and occludes modal title ('KMandel' hidden)
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kmandel.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -1980,7 +1703,7 @@
       </div>
     
 
-      <div class="app-card card-warn">
+      <div class="app-card ">
         <div class="card-img-wrap" id="wrap-kmatch3_html">
           <img id="img-kmatch3_html" src="screenshots/kmatch3_interact.png" alt="KMATCH3" loading="lazy" data-initial="screenshots/kmatch3.png" data-interact="screenshots/kmatch3_interact.png">
         </div>
@@ -1992,11 +1715,11 @@
         <div class="card-body">
           <div class="card-header">
             <h3>KMATCH3</h3>
-            <span class="badge badge-warn">LAG / STUTTER</span>
+            <span class="badge badge-pass">60 FPS PASS</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>51</strong></span>
-            <span>Max Delta: <strong>67ms</strong></span>
+            <span>FPS: <strong>60</strong></span>
+            <span>Max Delta: <strong>17ms</strong></span>
             <span>Size: <strong>80.2 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -2004,13 +1727,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 8.4</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.2</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Double scrollbars (horizontal and vertical) appear around board; frame corners clipped
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kmatch3.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2042,13 +1758,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: Settings">opened_menu: Setting</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Minor typo 'AMBER MONOCROME' instead of 'AMBER MONOCHROME' in settings modal
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kmatrix.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2071,8 +1780,8 @@
             <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>51</strong></span>
-            <span>Max Delta: <strong>34ms</strong></span>
+            <span>FPS: <strong>49</strong></span>
+            <span>Max Delta: <strong>50ms</strong></span>
             <span>Size: <strong>135.5 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -2080,10 +1789,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kmaze.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2115,13 +1820,6 @@
             <span>State: <strong style="color: #58a6ff;" title="clicked_btn_2: Heavy Cannon">clicked_btn_2: Heavy</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Toast notification overlaps the top-right manual button; Rotating perimeter glint comet along green HUD frame
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kmech.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2153,13 +1851,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.4</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Missing keybind character inside 5s skip buttons
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kmedia.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2191,13 +1882,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 7.8</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Toast notification stack in top-right overlaps and occludes header buttons (Help [F1], Imp [I])
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kmine.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2229,13 +1913,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: Help [?]">opened_menu: Help [?</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.8</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Excessive empty horizontal margins flanking the centered 9x9 grid
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kmines.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2267,10 +1944,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: Manual">opened_menu: Manual</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.2</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kmystery.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2302,10 +1975,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: [2] 📡 Ping & Latency">switched_tab: [2] 📡</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/knet.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2330,17 +1999,13 @@
           <div class="card-metrics">
             <span>FPS: <strong>60</strong></span>
             <span>Max Delta: <strong>17ms</strong></span>
-            <span>Size: <strong>96.5 KB</strong></span>
+            <span>Size: <strong>99.3 KB</strong></span>
           </div>
           <div class="card-metrics">
             <span>Interactive: <strong>54</strong></span>
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: 🗑 Trash (0)">switched_tab: 🗑 Tra</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/knote.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2372,13 +2037,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 8.4</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.4</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Stack of 3 toasts in top overlaps and hides top game score and life counter
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kpac.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2410,10 +2068,6 @@
             <span>State: <strong style="color: #58a6ff;" title="clicked_btn_2: 🔤 Wrap Alt+Z">clicked_btn_2: 🔤 Wr</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 10.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kpad.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2445,13 +2099,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.4</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Toast notification in bottom-right overlaps bottom horizontal canvas scrollbar and edge
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kpaint.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2483,10 +2130,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: Vault (0) [2]">switched_tab: Vault </strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.2</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kpass.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2509,22 +2152,15 @@
             <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>41</strong></span>
+            <span>FPS: <strong>48</strong></span>
             <span>Max Delta: <strong>50ms</strong></span>
-            <span>Size: <strong>86.2 KB</strong></span>
+            <span>Size: <strong>84.2 KB</strong></span>
           </div>
           <div class="card-metrics">
             <span>Interactive: <strong>31</strong></span>
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 7.8</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Toast notification stack in top-right overlaps right header buttons (Clear, Audio ON, Help [F1]) with awkward text wrapping
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kping.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2547,7 +2183,7 @@
             <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>27</strong></span>
+            <span>FPS: <strong>37</strong></span>
             <span>Max Delta: <strong>50ms</strong></span>
             <span>Size: <strong>75.8 KB</strong></span>
           </div>
@@ -2556,13 +2192,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: ⚙️">opened_menu: ⚙️</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 7.8</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Quick Preferences modal renders directly on top of Quick-Start Guide modal with colliding headers and scrollbars
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kpomodoro.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2594,13 +2223,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: 🏆 Stats [L]">opened_menu: 🏆 Stat</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ How to Play modal blocks initial gameplay view; Background perimeter glint comet visible
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kpong.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2632,13 +2254,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: [?] Help">opened_menu: [?] Hel</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Terminal input placeholder text has low contrast against black background
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kquarantine.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2670,13 +2285,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.2</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Header displays internal dev phase text 'Phase 14...'; bottom toast overlaps hero class selection cards
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kquest.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2709,13 +2317,6 @@
                     1">clicked_btn_2: Subsp</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.2</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 7.8</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Multiple stacked error toasts in top-right overlap and occlude header container
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kradio.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2747,10 +2348,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: ✕">switched_tab: ✕</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 10.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kread.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2782,13 +2379,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: Stats">opened_menu: Stats</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 8.2</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Game board is cut off at the bottom of the window requiring vertical scroll; Rotating perimeter glint comet along board frame
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kreversi.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2820,13 +2410,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 8.2</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Bottom directional controls are vertically truncated by window edge; Rotating perimeter glint comet along start screen frame
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/krogue.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2849,7 +2432,7 @@
             <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>48</strong></span>
+            <span>FPS: <strong>57</strong></span>
             <span>Max Delta: <strong>33ms</strong></span>
             <span>Size: <strong>93.4 KB</strong></span>
           </div>
@@ -2858,10 +2441,6 @@
             <span>State: <strong style="color: #58a6ff;" title="clicked_btn_2: 🔄 Fetch All">clicked_btn_2: 🔄 Fe</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/krss.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2893,13 +2472,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: [2] SURVIVOR ROSTER">switched_tab: [2] SU</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.8</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.4</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Horizontal scrollbar appears at bottom of survivor citizen roster panel
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/ksanctuary.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2922,8 +2494,8 @@
             <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>37</strong></span>
-            <span>Max Delta: <strong>50ms</strong></span>
+            <span>FPS: <strong>40</strong></span>
+            <span>Max Delta: <strong>34ms</strong></span>
             <span>Size: <strong>88.4 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -2931,13 +2503,6 @@
             <span>State: <strong style="color: #58a6ff;" title="clicked_btn_2: ▶ Play Alt+P">clicked_btn_2: ▶ Pla</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Stack of 3 toasts in bottom-right occludes memory inspector variable table rows and data
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kscript.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -2969,13 +2534,6 @@
             <span>State: <strong style="color: #58a6ff;" title="Secondary">Secondary</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #f85149;">★ 6.8</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Vast empty white space occupies 80% of window; Only two settings options present in entire system settings app
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/ksettings.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3007,13 +2565,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: Help">opened_menu: Help</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 8.2</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Prominent rotating perimeter glint comet along console ring; Bottom game control buttons cut off vertically
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/ksimon.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3045,13 +2596,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.8</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.4</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Toast in top-center overlaps top header buttons (Score, Mode, Pause)
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/ksnake.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3074,8 +2618,8 @@
             <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>22</strong></span>
-            <span>Max Delta: <strong>100ms</strong></span>
+            <span>FPS: <strong>23</strong></span>
+            <span>Max Delta: <strong>83ms</strong></span>
             <span>Size: <strong>116.3 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -3083,13 +2627,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 8.2</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.4</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Toast notification at bottom overlaps 4th, 5th, and 6th tableau card columns
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/ksolitaire.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3121,13 +2658,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.4</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Toast in top-center overlaps and blocks game score HUD and shields display
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kspace.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3135,7 +2665,7 @@
       </div>
     
 
-      <div class="app-card card-warn">
+      <div class="app-card ">
         <div class="card-img-wrap" id="wrap-kstardredge_html">
           <img id="img-kstardredge_html" src="screenshots/kstardredge_interact.png" alt="KSTARDREDGE" loading="lazy" data-initial="screenshots/kstardredge.png" data-interact="screenshots/kstardredge_interact.png">
         </div>
@@ -3147,11 +2677,11 @@
         <div class="card-body">
           <div class="card-header">
             <h3>KSTARDREDGE</h3>
-            <span class="badge badge-warn">LAG / STUTTER</span>
+            <span class="badge badge-pass">60 FPS PASS</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>55</strong></span>
-            <span>Max Delta: <strong>50ms</strong></span>
+            <span>FPS: <strong>60</strong></span>
+            <span>Max Delta: <strong>17ms</strong></span>
             <span>Size: <strong>439.5 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -3159,10 +2689,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 10.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kstardredge.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3170,7 +2696,7 @@
       </div>
     
 
-      <div class="app-card ">
+      <div class="app-card card-warn">
         <div class="card-img-wrap" id="wrap-kstarforge_html">
           <img id="img-kstarforge_html" src="screenshots/kstarforge_interact.png" alt="KSTARFORGE" loading="lazy" data-initial="screenshots/kstarforge.png" data-interact="screenshots/kstarforge_interact.png">
         </div>
@@ -3182,22 +2708,18 @@
         <div class="card-body">
           <div class="card-header">
             <h3>KSTARFORGE</h3>
-            <span class="badge badge-pass">60 FPS PASS</span>
+            <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>60</strong></span>
-            <span>Max Delta: <strong>17ms</strong></span>
-            <span>Size: <strong>169.5 KB</strong></span>
+            <span>FPS: <strong>58</strong></span>
+            <span>Max Delta: <strong>29ms</strong></span>
+            <span>Size: <strong>165.7 KB</strong></span>
           </div>
           <div class="card-metrics">
             <span>Interactive: <strong>55</strong></span>
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: [2] DRYDOCK ASSEMBLY">switched_tab: [2] DR</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kstarforge.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3205,7 +2727,7 @@
       </div>
     
 
-      <div class="app-card card-warn">
+      <div class="app-card ">
         <div class="card-img-wrap" id="wrap-kstarship_html">
           <img id="img-kstarship_html" src="screenshots/kstarship_interact.png" alt="KSTARSHIP" loading="lazy" data-initial="screenshots/kstarship.png" data-interact="screenshots/kstarship_interact.png">
         </div>
@@ -3217,11 +2739,11 @@
         <div class="card-body">
           <div class="card-header">
             <h3>KSTARSHIP</h3>
-            <span class="badge badge-warn">LAG / STUTTER</span>
+            <span class="badge badge-pass">60 FPS PASS</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>54</strong></span>
-            <span>Max Delta: <strong>33ms</strong></span>
+            <span>FPS: <strong>60</strong></span>
+            <span>Max Delta: <strong>17ms</strong></span>
             <span>Size: <strong>131.7 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -3229,13 +2751,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: MANUAL (H)">opened_menu: MANUAL </strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.8</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Rotating perimeter glint comet along viewport border; Bottom action buttons partially clipped by container
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kstarship.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3267,10 +2782,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: MANUAL">opened_menu: MANUAL</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kstellar.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3278,7 +2789,7 @@
       </div>
     
 
-      <div class="app-card card-warn">
+      <div class="app-card ">
         <div class="card-img-wrap" id="wrap-ksubmarine_html">
           <img id="img-ksubmarine_html" src="screenshots/ksubmarine_interact.png" alt="KSUBMARINE" loading="lazy" data-initial="screenshots/ksubmarine.png" data-interact="screenshots/ksubmarine_interact.png">
         </div>
@@ -3290,22 +2801,18 @@
         <div class="card-body">
           <div class="card-header">
             <h3>KSUBMARINE</h3>
-            <span class="badge badge-warn">LAG / STUTTER</span>
+            <span class="badge badge-pass">60 FPS PASS</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>55</strong></span>
-            <span>Max Delta: <strong>50ms</strong></span>
-            <span>Size: <strong>402.6 KB</strong></span>
+            <span>FPS: <strong>60</strong></span>
+            <span>Max Delta: <strong>17ms</strong></span>
+            <span>Size: <strong>402.7 KB</strong></span>
           </div>
           <div class="card-metrics">
             <span>Interactive: <strong>76</strong></span>
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/ksubmarine.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3337,13 +2844,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: Stats">opened_menu: Stats</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Rotating perimeter glint comet along gold board border
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/ksudoku.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3375,10 +2875,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/ksynth.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3386,7 +2882,7 @@
       </div>
     
 
-      <div class="app-card card-warn">
+      <div class="app-card ">
         <div class="card-img-wrap" id="wrap-ksys_html">
           <img id="img-ksys_html" src="screenshots/ksys_interact.png" alt="KSYS" loading="lazy" data-initial="screenshots/ksys.png" data-interact="screenshots/ksys_interact.png">
         </div>
@@ -3398,11 +2894,11 @@
         <div class="card-body">
           <div class="card-header">
             <h3>KSYS</h3>
-            <span class="badge badge-warn">LAG / STUTTER</span>
+            <span class="badge badge-pass">60 FPS PASS</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>57</strong></span>
-            <span>Max Delta: <strong>33ms</strong></span>
+            <span>FPS: <strong>63</strong></span>
+            <span>Max Delta: <strong>17ms</strong></span>
             <span>Size: <strong>134.7 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -3410,13 +2906,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: [2] ⚡ Diagnostic Benchmarks">switched_tab: [2] ⚡ </strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.2</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Stacked toasts in bottom-right occlude primary confirmation button of Workstation Guide modal
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/ksys.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3448,13 +2937,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: [2] Performance">switched_tab: [2] Pe</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 8.2</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Process table is completely blank with no initial processes or empty-state explanation
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/ktask.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3479,17 +2961,13 @@
           <div class="card-metrics">
             <span>FPS: <strong>60</strong></span>
             <span>Max Delta: <strong>17ms</strong></span>
-            <span>Size: <strong>28.7 KB</strong></span>
+            <span>Size: <strong>27.8 KB</strong></span>
           </div>
           <div class="card-metrics">
             <span>Interactive: <strong>17</strong></span>
             <span>State: <strong style="color: #58a6ff;" title="clicked_btn_2: Refresh">clicked_btn_2: Refre</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/ktaskmgr.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3521,13 +2999,6 @@
             <span>State: <strong style="color: #58a6ff;" title="clicked_btn_2: 🎨 Theme">clicked_btn_2: 🎨 Th</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.8</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.2</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Toast in bottom-right overlaps and cuts off 'Start Working' modal action button
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kterm.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3559,13 +3030,6 @@
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.8</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.2</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Bottom toast notification overlaps 'Press [H] or F1 for Help & Controls Guide' text
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/ktetris.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3597,13 +3061,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: [2] ⏳ TIMER">switched_tab: [2] ⏳ </strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 10.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.2</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Welcome modal height exceeds viewport; bottom action button is clipped by viewport edge
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/ktimer.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3626,7 +3083,7 @@
             <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>39</strong></span>
+            <span>FPS: <strong>42</strong></span>
             <span>Max Delta: <strong>33ms</strong></span>
             <span>Size: <strong>81.3 KB</strong></span>
           </div>
@@ -3635,13 +3092,6 @@
             <span>State: <strong style="color: #58a6ff;" title="clicked_btn_2: 📂 Load [F9]">clicked_btn_2: 📂 Lo</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.4</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Bottom-right toast notification overlaps modal primary 'Get Started [Enter]' button
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/ktodo.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3649,7 +3099,7 @@
       </div>
     
 
-      <div class="app-card card-warn">
+      <div class="app-card ">
         <div class="card-img-wrap" id="wrap-ktowers_html">
           <img id="img-ktowers_html" src="screenshots/ktowers_interact.png" alt="KTOWERS" loading="lazy" data-initial="screenshots/ktowers.png" data-interact="screenshots/ktowers_interact.png">
         </div>
@@ -3661,11 +3111,11 @@
         <div class="card-body">
           <div class="card-header">
             <h3>KTOWERS</h3>
-            <span class="badge badge-warn">LAG / STUTTER</span>
+            <span class="badge badge-pass">60 FPS PASS</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>57</strong></span>
-            <span>Max Delta: <strong>33ms</strong></span>
+            <span>FPS: <strong>60</strong></span>
+            <span>Max Delta: <strong>17ms</strong></span>
             <span>Size: <strong>93.9 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -3673,13 +3123,6 @@
             <span>State: <strong style="color: #58a6ff;" title="started_game: Campaign">started_game: Campai</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #e3b341;">★ 8.2</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Rotating perimeter glint comet along canvas frame; Bottom peg labels and controls truncated vertically
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/ktowers.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3707,17 +3150,10 @@
             <span>Size: <strong>73.6 KB</strong></span>
           </div>
           <div class="card-metrics">
-            <span>Interactive: <strong>37</strong></span>
+            <span>Interactive: <strong>40</strong></span>
             <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Bottom navigation options partially cut off by window edge
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/ktrader.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3740,7 +3176,7 @@
             <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>26</strong></span>
+            <span>FPS: <strong>21</strong></span>
             <span>Max Delta: <strong>83ms</strong></span>
             <span>Size: <strong>75.1 KB</strong></span>
           </div>
@@ -3749,13 +3185,6 @@
             <span>State: <strong style="color: #58a6ff;" title="switched_tab: 🎮 Arcade Cascade">switched_tab: 🎮 Arc</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Help & Controls modal opens automatically over typing canvas
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/ktype.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3778,8 +3207,8 @@
             <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>26</strong></span>
-            <span>Max Delta: <strong>100ms</strong></span>
+            <span>FPS: <strong>32</strong></span>
+            <span>Max Delta: <strong>33ms</strong></span>
             <span>Size: <strong>65.9 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -3787,10 +3216,6 @@
             <span>State: <strong style="color: #58a6ff;" title="dismissed_splash">dismissed_splash</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 10.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kvault.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3815,20 +3240,13 @@
           <div class="card-metrics">
             <span>FPS: <strong>60</strong></span>
             <span>Max Delta: <strong>17ms</strong></span>
-            <span>Size: <strong>65.1 KB</strong></span>
+            <span>Size: <strong>71.6 KB</strong></span>
           </div>
           <div class="card-metrics">
-            <span>Interactive: <strong>0</strong></span>
-            <span>State: <strong style="color: #58a6ff;" title="canvas_action: Space/Enter/Click">canvas_action: Space</strong></span>
+            <span>Interactive: <strong>5</strong></span>
+            <span>State: <strong style="color: #58a6ff;" title="opened_menu: [F1/H] Guide">opened_menu: [F1/H] </strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 8.8</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 9.0</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Survival Guide modal obscures the gameplay arena on launch
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kvoid.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3851,7 +3269,7 @@
             <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>42</strong></span>
+            <span>FPS: <strong>48</strong></span>
             <span>Max Delta: <strong>50ms</strong></span>
             <span>Size: <strong>70.3 KB</strong></span>
           </div>
@@ -3860,13 +3278,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: Deck">opened_menu: Deck</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.4</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Spell Index card grid is cut off at bottom of Grimoire modal
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kwizard.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3889,8 +3300,8 @@
             <span class="badge badge-warn">LAG / STUTTER</span>
           </div>
           <div class="card-metrics">
-            <span>FPS: <strong>52</strong></span>
-            <span>Max Delta: <strong>50ms</strong></span>
+            <span>FPS: <strong>57</strong></span>
+            <span>Max Delta: <strong>33ms</strong></span>
             <span>Size: <strong>87.5 KB</strong></span>
           </div>
           <div class="card-metrics">
@@ -3898,13 +3309,6 @@
             <span>State: <strong style="color: #58a6ff;" title="opened_menu: Stats">opened_menu: Stats</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 9.6</strong></span>
-            <span>Vision (Interact): <strong style="color: #3fb950;">★ 8.8</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Modal header contains uncleaned internal dev text: 'Loop 8 Edition'
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kwords.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>
@@ -3936,13 +3340,6 @@
             <span>State: <strong style="color: #58a6ff;" title="clicked_btn_2: 📂 Open [Ctrl+O]">clicked_btn_2: 📂 Op</strong></span>
           </div>
           
-                    <div class="card-metrics" style="background: rgba(88, 166, 255, 0.05); padding: 4px 6px; border-radius: 4px; margin-top: 4px;">
-            <span>Vision (Init): <strong style="color: #3fb950;">★ 10.0</strong></span>
-            <span>Vision (Interact): <strong style="color: #e3b341;">★ 8.4</strong></span>
-          </div>
-          <div class="card-errors" style="background: rgba(210, 153, 34, 0.15); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.3); margin-top: 4px;">
-            ⚠️ Bottom-center toast overlaps and sits directly over bottom status bar text
-          </div>
           <div class="card-actions">
             <a href="../../KiloOS/public/apps/kzip.html" target="_blank" class="play-btn">▶ Play App</a>
           </div>

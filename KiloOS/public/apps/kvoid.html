@@ -93,6 +93,42 @@
             height: 20px;
             text-shadow: 0 0 3px #0f0;
         }
+        .btn-panel {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .retro-btn {
+            background: #0a140a;
+            color: #0f0;
+            border: 1px solid #0f0;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: bold;
+            padding: 4px 10px;
+            cursor: pointer;
+            text-shadow: 0 0 3px #0f0;
+            box-shadow: 0 0 4px rgba(0, 255, 0, 0.2);
+            transition: background 0.15s, color 0.15s;
+        }
+        .retro-btn:hover {
+            background: #0f0;
+            color: #000;
+            text-shadow: none;
+        }
+        .retro-btn:active {
+            transform: scale(0.97);
+        }
+        .close-help-btn {
+            display: block;
+            width: 100%;
+            margin-top: 15px;
+            padding: 8px;
+            font-size: 14px;
+            text-align: center;
+        }
         #help-modal {
             position: absolute;
             top: 50px; left: 20px; right: 20px; bottom: 50px;
@@ -129,15 +165,22 @@
             <div class="scanlines"></div>
             <div class="crt-overlay"></div>
         </div>
-        <div id="message">Use WASD to move. Space to use EMP. Press H for Help.</div>
-        <div id="help-modal" style="display:none;">
-            <h2>Survival Guide (Press H or Esc to close)</h2>
+        <div id="message">Use WASD to move. Space for EMP. [F1] Help &bull; [F5] Save &bull; [F9] Load</div>
+        <div class="btn-panel">
+            <button class="retro-btn" id="btn-help" onclick="toggleHelp()">[F1/H] Guide</button>
+            <button class="retro-btn" id="btn-save" onclick="quickSave()">[F5] Quicksave</button>
+            <button class="retro-btn" id="btn-load" onclick="quickLoad()">[F9] Quickload</button>
+            <button class="retro-btn" id="btn-restart" onclick="resetGame()">[R] Restart</button>
+        </div>
+        <div id="help-modal" style="display:none;" role="dialog" aria-modal="true" aria-label="Survival Guide">
+            <h2>Survival Guide (Press H, Esc, Space, or Enter to close)</h2>
             <div class="help-section">
                 <h3>Controls & How to Play</h3>
                 <p><b>WASD / Arrows:</b> Move<br>
                 <b>Space:</b> Use EMP (Stuns nearby aliens)<br>
-                <b>H / Esc:</b> Toggle / Close Help<br>
-                <b>R:</b> Restart (when game over)<br>
+                <b>F1 / H / Esc:</b> Toggle / Close Survival Guide<br>
+                <b>F5:</b> Quicksave State &bull; <b>F9:</b> Quickload State<br>
+                <b>R / Enter / Space:</b> Restart (when game over)<br>
                 Survive, find the elevator to the next deck. Watch your Oxygen and Battery. If either hits zero, you die.</p>
             </div>
             <div class="help-section">
@@ -149,6 +192,7 @@
                 <p><b>The Entities:</b> Sensitive to noise and movement. If they catch you, it's instant death. They glow magenta. Hide in Lockers to avoid detection.<br>
                 <b>Stunned Entities:</b> Glow blue. Safe to pass temporarily.</p>
             </div>
+            <button class="retro-btn close-help-btn" id="btn-close-modal" onclick="closeHelp()">ENTER THE VOID [CLOSE GUIDE]</button>
         </div>
     </div>
     <script>
@@ -1193,9 +1237,11 @@
                 ctx.fillStyle = '#0f0';
                 ctx.font = '16px Courier New';
                 ctx.textAlign = 'center';
-                ctx.fillText(winEnding, canvas.width/2, canvas.height/2 - 15);
+                ctx.fillText(winEnding, canvas.width/2, canvas.height/2 - 20);
                 ctx.font = '14px Courier New';
-                ctx.fillText("Press 'R' to play again", canvas.width/2, canvas.height/2 + 20);
+                ctx.fillText("Press 'R' / Space / Enter to play again", canvas.width/2, canvas.height/2 + 15);
+                ctx.fillStyle = '#0ff';
+                ctx.fillText("[F9] Reload Quicksave", canvas.width/2, canvas.height/2 + 40);
             }
             if (isDead) {
                 ctx.fillStyle = 'rgba(0,0,0,0.85)';
@@ -1203,10 +1249,12 @@
                 ctx.fillStyle = '#f00';
                 ctx.font = '30px Courier New';
                 ctx.textAlign = 'center';
-                ctx.fillText("SIGNAL LOST", canvas.width/2, canvas.height/2 - 15);
+                ctx.fillText("SIGNAL LOST", canvas.width/2, canvas.height/2 - 25);
                 ctx.fillStyle = '#0f0';
                 ctx.font = '14px Courier New';
-                ctx.fillText("Press 'R' to restart", canvas.width/2, canvas.height/2 + 25);
+                ctx.fillText("Press 'R' / Space / Enter to restart", canvas.width/2, canvas.height/2 + 15);
+                ctx.fillStyle = '#0ff';
+                ctx.fillText("[F9] Reload Quicksave", canvas.width/2, canvas.height/2 + 40);
             }
         }
 
@@ -1400,6 +1448,110 @@
             }
         }
 
+        function toggleHelp() {
+            showHelp = !showHelp;
+            const modal = document.getElementById('help-modal');
+            if (modal) modal.style.display = showHelp ? 'block' : 'none';
+            if (!showHelp) {
+                try { localStorage.setItem('kvoid_tutorialSeen', '1'); } catch (err) {}
+            }
+        }
+
+        function closeHelp() {
+            showHelp = false;
+            const modal = document.getElementById('help-modal');
+            if (modal) modal.style.display = 'none';
+            try { localStorage.setItem('kvoid_tutorialSeen', '1'); } catch (err) {}
+        }
+
+        function quickSave() {
+            try {
+                const saveState = {
+                    player: { x: player.x, y: player.y },
+                    playerDir,
+                    deck,
+                    oxygen,
+                    battery,
+                    keys: { r: keys.r, g: keys.g, b: keys.b },
+                    emps,
+                    totalTime,
+                    selfDestructActive,
+                    selfDestructTimer,
+                    isDead,
+                    wonGame,
+                    winEnding,
+                    rooms: rooms.map(r => ({ x: r.x, y: r.y, w: r.w, h: r.h })),
+                    aliens: aliens.map(a => ({ x: a.x, y: a.y, state: a.state, stunTimer: a.stunTimer })),
+                    map: map.map(row => row.slice())
+                };
+                localStorage.setItem('kvoid_save', JSON.stringify(saveState));
+                showMessage("STATE QUICKSAVED (F5)", "#0f0");
+                playBeep(880, 'sine', 0.15, 0.2);
+            } catch (err) {
+                showMessage("QUICKSAVE FAILED (STORAGE ERROR)", "#f00");
+            }
+        }
+
+        function quickLoad() {
+            try {
+                const raw = localStorage.getItem('kvoid_save');
+                if (!raw) {
+                    showMessage("NO QUICKLOAD SAVE FOUND (Press F5 to Save)", "#ff0");
+                    return false;
+                }
+                const s = JSON.parse(raw);
+                if (!s || !s.map || !s.player) {
+                    showMessage("QUICKLOAD FAILED (CORRUPTED SAVE)", "#f00");
+                    return false;
+                }
+                player.x = s.player.x;
+                player.y = s.player.y;
+                playerDir = s.playerDir || 0;
+                deck = s.deck || 1;
+                oxygen = s.oxygen !== undefined ? s.oxygen : 100;
+                battery = s.battery !== undefined ? s.battery : 100;
+                keys = s.keys || { r: false, g: false, b: false };
+                emps = s.emps || 0;
+                totalTime = s.totalTime || 0;
+                selfDestructActive = !!s.selfDestructActive;
+                selfDestructTimer = s.selfDestructTimer || 0;
+                isDead = !!s.isDead;
+                wonGame = !!s.wonGame;
+                winEnding = s.winEnding || "";
+                rooms = (s.rooms || []).map(r => ({ x: r.x, y: r.y, w: r.w, h: r.h }));
+                aliens = (s.aliens || []).map(a => ({ x: a.x, y: a.y, state: a.state, stunTimer: a.stunTimer || 0 }));
+                map = s.map.map(row => row.slice());
+
+                particles = [];
+                shockwaves = [];
+                screenShake = 0;
+
+                // Close tutorial modal so it never blocks or interrupts restored state
+                closeHelp();
+
+                updateInventoryDisplay();
+                updateStatsDisplay();
+                startAlienInterval();
+                showMessage("STATE QUICKLOADED (F9)", "#0f0");
+                playBeep(523, 'sine', 0.15, 0.2);
+                draw();
+                return true;
+            } catch (err) {
+                showMessage("QUICKLOAD FAILED (STORAGE READ ERROR)", "#f00");
+                return false;
+            }
+        }
+
+        canvas.addEventListener('click', () => {
+            if (showHelp) {
+                closeHelp();
+                return;
+            }
+            if (isDead || wonGame) {
+                resetGame();
+            }
+        });
+
         function resetGame() {
             deck = 1;
             player = { x: 2, y: 2 };
@@ -1421,35 +1573,51 @@
             updateInventoryDisplay();
             updateStatsDisplay();
             startAlienInterval();
-            showMessage("Use WASD to move. Space to use EMP. Press H for Help.");
+            showMessage("Use WASD to move. Space for EMP. [F1] Help • [F5] Save • [F9] Load");
             draw();
         }
 
         window.addEventListener('keydown', (e) => {
             if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+            if (e.key === 'F1') {
+                e.preventDefault();
+                toggleHelp();
+                return;
+            }
+            if (e.key === 'F5') {
+                e.preventDefault();
+                quickSave();
+                return;
+            }
+            if (e.key === 'F9') {
+                e.preventDefault();
+                quickLoad();
+                return;
+            }
             if (e.key === 'Escape') {
                 if (showHelp) {
-                    showHelp = false;
-                    document.getElementById('help-modal').style.display = 'none';
-                    try { localStorage.setItem('kvoid_tutorialSeen', '1'); } catch (err) {}
+                    closeHelp();
                     return;
                 }
             }
             if (e.key === 'h' || e.key === 'H') {
-                showHelp = !showHelp;
-                document.getElementById('help-modal').style.display = showHelp ? 'block' : 'none';
-                if (!showHelp) {
-                    try { localStorage.setItem('kvoid_tutorialSeen', '1'); } catch (err) {}
+                toggleHelp();
+                return;
+            }
+            if (showHelp) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    closeHelp();
                 }
                 return;
             }
             if (isDead || wonGame) {
-                if (e.key === 'r' || e.key === 'R') {
+                if (e.key === 'r' || e.key === 'R' || e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
                     resetGame();
                 }
                 return;
             }
-            if (showHelp) return;
             switch(e.key) {
                 case 'ArrowUp':
                 case 'w':

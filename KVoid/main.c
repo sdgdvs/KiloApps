@@ -438,10 +438,152 @@ void ResetGame() {
     GenerateMap();
 }
 
+typedef struct {
+    DWORD magic; // 0x4B564F44 ('KVOD')
+    DWORD version; // 1
+    int playerX, playerY, playerDir;
+    int deck;
+    float oxygen, battery;
+    int hasRedKey, hasGreenKey, hasBlueKey;
+    int emps;
+    int totalTime;
+    int selfDestructActive, selfDestructTimer;
+    int isDead, wonGame;
+    char winEnding[128];
+    int roomCount;
+    Room rooms[30];
+    int alienCount;
+    Alien aliens[MAX_ALIENS];
+    int map[ROWS][COLS];
+} KVoidSaveState;
+
+int IsTutorialSeen(void) {
+    DWORD attr = GetFileAttributesA("kvoid_tutorial.dat");
+    if (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY)) return 1;
+    return 0;
+}
+
+void MarkTutorialSeen(void) {
+    HANDLE hFile = CreateFileA("kvoid_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char val = '1';
+        DWORD written = 0;
+        WriteFile(hFile, &val, 1, &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+void SaveGameState(void) {
+    KVoidSaveState s;
+    BYTE* pByte = (BYTE*)&s;
+    for (int i = 0; i < (int)sizeof(KVoidSaveState); i++) pByte[i] = 0;
+
+    s.magic = 0x4B564F44; // 'KVOD'
+    s.version = 1;
+    s.playerX = playerX;
+    s.playerY = playerY;
+    s.playerDir = playerDir;
+    s.deck = deck;
+    s.oxygen = oxygen;
+    s.battery = battery;
+    s.hasRedKey = hasRedKey;
+    s.hasGreenKey = hasGreenKey;
+    s.hasBlueKey = hasBlueKey;
+    s.emps = emps;
+    s.totalTime = totalTime;
+    s.selfDestructActive = selfDestructActive;
+    s.selfDestructTimer = selfDestructTimer;
+    s.isDead = isDead;
+    s.wonGame = wonGame;
+    lstrcpynA(s.winEnding, winEnding, sizeof(s.winEnding));
+    s.roomCount = roomCount;
+    for (int i = 0; i < 30; i++) s.rooms[i] = rooms[i];
+    s.alienCount = alienCount;
+    for (int i = 0; i < MAX_ALIENS; i++) s.aliens[i] = aliens[i];
+    for (int y = 0; y < ROWS; y++) {
+        for (int x = 0; x < COLS; x++) {
+            s.map[y][x] = map[y][x];
+        }
+    }
+
+    HANDLE hFile = CreateFileA("kvoid_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, &s, sizeof(KVoidSaveState), &written, NULL);
+        CloseHandle(hFile);
+        lstrcpy(sysMsg, "STATE QUICKSAVED (F5)");
+    } else {
+        lstrcpy(sysMsg, "SAVE FAILED (FILE ERROR)");
+    }
+    msgTimer = 60;
+}
+
+int LoadGameState(void) {
+    KVoidSaveState s;
+    int success = 0;
+
+    HANDLE hFile = CreateFileA("kvoid_save.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD readBytes = 0;
+        if (ReadFile(hFile, &s, sizeof(KVoidSaveState), &readBytes, NULL) && readBytes == sizeof(KVoidSaveState)) {
+            if (s.magic == 0x4B564F44) {
+                success = 1;
+            }
+        }
+        CloseHandle(hFile);
+    }
+
+    if (!success) {
+        lstrcpy(sysMsg, "NO QUICKLOAD SAVE FOUND");
+        msgTimer = 60;
+        return 0;
+    }
+
+    playerX = s.playerX;
+    playerY = s.playerY;
+    playerDir = s.playerDir;
+    deck = s.deck;
+    oxygen = s.oxygen;
+    battery = s.battery;
+    hasRedKey = s.hasRedKey;
+    hasGreenKey = s.hasGreenKey;
+    hasBlueKey = s.hasBlueKey;
+    emps = s.emps;
+    totalTime = s.totalTime;
+    selfDestructActive = s.selfDestructActive;
+    selfDestructTimer = s.selfDestructTimer;
+    isDead = s.isDead;
+    wonGame = s.wonGame;
+    lstrcpy(winEnding, s.winEnding);
+    roomCount = s.roomCount;
+    for (int i = 0; i < 30; i++) rooms[i] = s.rooms[i];
+    alienCount = s.alienCount;
+    for (int i = 0; i < MAX_ALIENS; i++) aliens[i] = s.aliens[i];
+    for (int y = 0; y < ROWS; y++) {
+        for (int x = 0; x < COLS; x++) {
+            map[y][x] = s.map[y][x];
+        }
+    }
+
+    for (int i = 0; i < MAX_PARTICLES; i++) particles[i].life = 0;
+    for (int i = 0; i < MAX_SHOCKWAVES; i++) shockwaves[i].life = 0;
+    screenShake = 0;
+
+    showHelp = 0;
+    MarkTutorialSeen();
+
+    lstrcpy(sysMsg, "STATE QUICKLOADED (F9)");
+    msgTimer = 60;
+    return 1;
+}
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE:
             SetTimer(hwnd, 1, 50, NULL);
+            if (!IsTutorialSeen()) {
+                showHelp = 1;
+            }
             return 0;
         case WM_TIMER:
             for (int i = 0; i < MAX_PARTICLES; i++) {
@@ -1104,24 +1246,35 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (sysMsg[0] != '\0') {
                 SetTextColor(hdcMem, RGB(0, 255, 0));
                 TextOut(hdcMem, 10, 25, sysMsg, lstrlen(sysMsg));
+            } else {
+                SetTextColor(hdcMem, RGB(0, 150, 0));
+                char* hint = "[F1] Guide   [F5] Save   [F9] Load";
+                TextOut(hdcMem, 10, 25, hint, lstrlen(hint));
             }
 
             if (wonGame) {
                 SetTextColor(hdcMem, RGB(0, 255, 0));
-                TextOut(hdcMem, WINDOW_WIDTH / 2 - lstrlen(winEnding) * 4, WINDOW_HEIGHT / 2 - 10, winEnding, lstrlen(winEnding));
-                char* restartMsg = "PRESS 'R' TO PLAY AGAIN";
-                TextOut(hdcMem, WINDOW_WIDTH / 2 - lstrlen(restartMsg) * 4, WINDOW_HEIGHT / 2 + 15, restartMsg, lstrlen(restartMsg));
+                TextOut(hdcMem, WINDOW_WIDTH / 2 - lstrlen(winEnding) * 4, WINDOW_HEIGHT / 2 - 20, winEnding, lstrlen(winEnding));
+                char* restartMsg = "PRESS 'R' / SPACE / ENTER TO PLAY AGAIN";
+                TextOut(hdcMem, WINDOW_WIDTH / 2 - lstrlen(restartMsg) * 4, WINDOW_HEIGHT / 2 + 10, restartMsg, lstrlen(restartMsg));
+                SetTextColor(hdcMem, RGB(0, 255, 255));
+                char* loadMsg = "[F9] RELOAD QUICKSAVE";
+                TextOut(hdcMem, WINDOW_WIDTH / 2 - lstrlen(loadMsg) * 4, WINDOW_HEIGHT / 2 + 35, loadMsg, lstrlen(loadMsg));
             } else if (isDead) {
                 SetTextColor(hdcMem, RGB(255, 0, 0));
                 char* deadMsg = "SIGNAL LOST";
-                TextOut(hdcMem, WINDOW_WIDTH / 2 - 40, WINDOW_HEIGHT / 2 - 10, deadMsg, lstrlen(deadMsg));
-                char* restartMsg = "PRESS 'R' TO RESTART";
-                TextOut(hdcMem, WINDOW_WIDTH / 2 - lstrlen(restartMsg) * 4, WINDOW_HEIGHT / 2 + 15, restartMsg, lstrlen(restartMsg));
+                TextOut(hdcMem, WINDOW_WIDTH / 2 - 40, WINDOW_HEIGHT / 2 - 25, deadMsg, lstrlen(deadMsg));
+                SetTextColor(hdcMem, RGB(0, 255, 0));
+                char* restartMsg = "PRESS 'R' / SPACE / ENTER TO RESTART";
+                TextOut(hdcMem, WINDOW_WIDTH / 2 - lstrlen(restartMsg) * 4, WINDOW_HEIGHT / 2 + 10, restartMsg, lstrlen(restartMsg));
+                SetTextColor(hdcMem, RGB(0, 255, 255));
+                char* loadMsg = "[F9] RELOAD QUICKSAVE";
+                TextOut(hdcMem, WINDOW_WIDTH / 2 - lstrlen(loadMsg) * 4, WINDOW_HEIGHT / 2 + 35, loadMsg, lstrlen(loadMsg));
             }
 
             if (showHelp) {
                 HBRUSH hHelpBrush = CreateSolidBrush(RGB(10, 10, 10));
-                RECT helpRect = {40, 40, WINDOW_WIDTH - 40, WINDOW_HEIGHT - 40};
+                RECT helpRect = {40, 30, WINDOW_WIDTH - 40, WINDOW_HEIGHT - 30};
                 FillRect(hdcMem, &helpRect, hHelpBrush);
                 
                 HPEN hHelpPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 0));
@@ -1135,24 +1288,39 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                 SetTextColor(hdcMem, RGB(0, 255, 0));
                 SetBkMode(hdcMem, TRANSPARENT);
-                int y = 50;
-                TextOut(hdcMem, WINDOW_WIDTH / 2 - 110, y, "SURVIVAL GUIDE (Press H or Esc to close)", 40);
-                y += 35;
-                TextOut(hdcMem, 60, y, "Controls & How to Play:", 23); y += 20;
-                TextOut(hdcMem, 70, y, "WASD / Arrows: Move", 19); y += 20;
-                TextOut(hdcMem, 70, y, "Space: Use EMP (Stuns nearby aliens)", 36); y += 20;
-                TextOut(hdcMem, 70, y, "H / Esc: Toggle / Close Help", 28); y += 20;
-                TextOut(hdcMem, 70, y, "R: Restart (when game over)", 27); y += 25;
-                TextOut(hdcMem, 70, y, "Survive, find elevator. Watch Oxygen & Battery.", 47); y += 35;
+                int y = 42;
+                TextOut(hdcMem, WINDOW_WIDTH / 2 - 130, y, "SURVIVAL GUIDE (Press Esc / Space / Enter)", 42);
+                y += 30;
+                TextOut(hdcMem, 60, y, "Controls & How to Play:", 23); y += 18;
+                TextOut(hdcMem, 70, y, "WASD / Arrows: Move", 19); y += 18;
+                TextOut(hdcMem, 70, y, "Space: Use EMP (Stuns nearby aliens)", 36); y += 18;
+                TextOut(hdcMem, 70, y, "F1 / H / Esc: Toggle / Close Guide", 34); y += 18;
+                TextOut(hdcMem, 70, y, "F5: Quicksave State   F9: Quickload State", 41); y += 18;
+                TextOut(hdcMem, 70, y, "R / Space / Enter: Restart (when game over)", 43); y += 22;
+                TextOut(hdcMem, 70, y, "Survive, find elevator. Watch Oxygen & Battery.", 47); y += 28;
                 
-                TextOut(hdcMem, 60, y, "Lore Index:", 11); y += 20;
-                TextOut(hdcMem, 70, y, "Trapped on a derelict station. The crew was", 43); y += 20;
-                TextOut(hdcMem, 70, y, "experimenting on aliens... it didn't go well.", 45); y += 35;
+                TextOut(hdcMem, 60, y, "Lore Index:", 11); y += 18;
+                TextOut(hdcMem, 70, y, "Trapped on a derelict station. The crew was", 43); y += 18;
+                TextOut(hdcMem, 70, y, "experimenting on aliens... it didn't go well.", 45); y += 28;
                 
-                TextOut(hdcMem, 60, y, "Enemy Bestiary:", 15); y += 20;
-                TextOut(hdcMem, 70, y, "Entities: Sensitive to noise & movement.", 40); y += 20;
-                TextOut(hdcMem, 70, y, "They glow magenta. Hide in Lockers to avoid.", 44); y += 20;
+                TextOut(hdcMem, 60, y, "Enemy Bestiary:", 15); y += 18;
+                TextOut(hdcMem, 70, y, "Entities: Sensitive to noise & movement.", 40); y += 18;
+                TextOut(hdcMem, 70, y, "They glow magenta. Hide in Lockers to avoid.", 44); y += 18;
                 TextOut(hdcMem, 70, y, "Stunned Entities: Glow blue. Safe temporarily.", 46);
+
+                RECT btnRect = {WINDOW_WIDTH / 2 - 140, helpRect.bottom - 36, WINDOW_WIDTH / 2 + 140, helpRect.bottom - 12};
+                HBRUSH hBtnBrush = CreateSolidBrush(RGB(15, 30, 15));
+                FillRect(hdcMem, &btnRect, hBtnBrush);
+                DeleteObject(hBtnBrush);
+                HPEN hBtnPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 0));
+                HPEN hOldPenBtn = (HPEN)SelectObject(hdcMem, hBtnPen);
+                HBRUSH hOldBrushBtn = (HBRUSH)SelectObject(hdcMem, GetStockObject(NULL_BRUSH));
+                Rectangle(hdcMem, btnRect.left, btnRect.top, btnRect.right, btnRect.bottom);
+                SelectObject(hdcMem, hOldBrushBtn);
+                SelectObject(hdcMem, hOldPenBtn);
+                DeleteObject(hBtnPen);
+                char* enterMsg = "[ ENTER THE VOID (CLICK / ENTER) ]";
+                TextOut(hdcMem, WINDOW_WIDTH / 2 - lstrlen(enterMsg) * 4, helpRect.bottom - 29, enterMsg, lstrlen(enterMsg));
             }
 
             // Draw scanlines
@@ -1187,25 +1355,51 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             EndPaint(hwnd, &ps);
             return 0;
         }
-        case WM_KEYDOWN: {
-            if (wParam == 'H') {
-                showHelp = !showHelp;
-                InvalidateRect(hwnd, NULL, FALSE);
-                return 0;
-            }
-            if (wParam == VK_ESCAPE && showHelp) {
+        case WM_LBUTTONDOWN:
+            if (showHelp) {
                 showHelp = 0;
+                MarkTutorialSeen();
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
             if (isDead || wonGame) {
-                if (wParam == 'R') {
+                ResetGame();
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            return 0;
+        case WM_KEYDOWN: {
+            if (wParam == VK_F1 || wParam == 'H') {
+                showHelp = !showHelp;
+                if (!showHelp) MarkTutorialSeen();
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (wParam == VK_F5) {
+                SaveGameState();
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (wParam == VK_F9) {
+                LoadGameState();
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (showHelp) {
+                if (wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE) {
+                    showHelp = 0;
+                    MarkTutorialSeen();
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+                return 0;
+            }
+            if (isDead || wonGame) {
+                if (wParam == 'R' || wParam == VK_RETURN || wParam == VK_SPACE) {
                     ResetGame();
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
                 return 0;
             }
-            if (showHelp) return 0;
             int newX = playerX;
             int newY = playerY;
             
