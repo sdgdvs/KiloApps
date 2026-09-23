@@ -1,0 +1,2658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KCipher - Cryptographic Cipher Suite &amp; Steganography Workbench</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --bg: #090d16;
+      --surface: #0f172a;
+      --surface-2: #1e293b;
+      --surface-hover: #334155;
+      --card-bg: #131d31;
+      --border: #2a3b5c;
+      --border-focus: #38bdf8;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-hover: #0ea5e9;
+      --accent: #f59e0b;
+      --accent-hover: #d97706;
+      --success: #10b981;
+      --danger: #ef4444;
+      --font-mono: 'Consolas', 'Courier New', monospace;
+      --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    [data-theme="win98"] {
+      --bg: #008080;
+      --surface: #c0c0c0;
+      --surface-2: #d4d0c8;
+      --surface-hover: #dfdfdf;
+      --card-bg: #ece9d8;
+      --border: #808080;
+      --border-focus: #000080;
+      --text: #000000;
+      --text-muted: #444444;
+      --primary: #000080;
+      --primary-hover: #1084d0;
+      --accent: #800000;
+      --accent-hover: #a00000;
+      --success: #008000;
+      --danger: #800000;
+      --font-mono: 'Fixedsys', 'Lucida Console', monospace;
+      --font-sans: 'Tahoma', 'MS Sans Serif', sans-serif;
+    }
+
+    [data-theme="amber"] {
+      --bg: #140d02;
+      --surface: #261905;
+      --surface-2: #3d2808;
+      --surface-hover: #54370b;
+      --card-bg: #2d1e06;
+      --border: #66440f;
+      --border-focus: #f59e0b;
+      --text: #fbbf24;
+      --text-muted: #b4851c;
+      --primary: #f59e0b;
+      --primary-hover: #d97706;
+      --accent: #fcd34d;
+      --accent-hover: #f59e0b;
+      --success: #10b981;
+      --danger: #f87171;
+      --font-mono: 'Courier New', monospace;
+      --font-sans: 'Courier New', monospace;
+    }
+
+    [data-theme="matrix"] {
+      --bg: #030a04;
+      --surface: #07170a;
+      --surface-2: #0e2e14;
+      --surface-hover: #144720;
+      --card-bg: #0a1f0d;
+      --border: #1a5727;
+      --border-focus: #22c55e;
+      --text: #4ade80;
+      --text-muted: #22c55e99;
+      --primary: #22c55e;
+      --primary-hover: #16a34a;
+      --accent: #86efac;
+      --accent-hover: #4ade80;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --font-mono: 'Consolas', monospace;
+      --font-sans: 'Consolas', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Window Header / Title Bar */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-icon {
+      font-size: 16px;
+      color: var(--primary);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    button, select, input, textarea {
+      font-family: inherit;
+      font-size: 12px;
+      color: inherit;
+    }
+
+    .btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-focus);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #000;
+      border-color: var(--primary-hover);
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-accent {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent-hover);
+    }
+
+    .btn-sm {
+      padding: 2px 6px;
+      font-size: 11px;
+    }
+
+    /* Tab Navigation */
+    .tabs-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      padding: 4px 10px 0 10px;
+      gap: 4px;
+      flex-shrink: 0;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 5px 5px 0 0;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+      background: var(--surface-hover);
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      background: var(--card-bg);
+      border-color: var(--border-focus);
+      border-bottom: 1px solid var(--card-bg);
+      margin-bottom: -1px;
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      overflow-y: auto;
+      background: var(--card-bg);
+      padding: 10px;
+      position: relative;
+    }
+
+    .tab-content {
+      display: none;
+      height: 100%;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tab-content.active {
+      display: flex;
+    }
+
+    /* Workbench Layout */
+    .workbench-grid {
+      display: grid;
+      grid-template-columns: 1fr 120px 1fr;
+      gap: 10px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    @media (max-width: 768px) {
+      .workbench-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      background: var(--surface-2);
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .panel-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+      gap: 6px;
+      min-height: 0;
+    }
+
+    .text-box {
+      flex: 1;
+      width: 100%;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.4;
+      resize: none;
+      user-select: text;
+    }
+
+    .text-box:focus {
+      outline: none;
+      border-color: var(--border-focus);
+    }
+
+    .panel-footer {
+      padding: 4px 8px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Central Transform Controls */
+    .transform-controls {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      padding: 4px;
+    }
+
+    .transform-controls .btn {
+      width: 100%;
+      justify-content: center;
+      padding: 8px 4px;
+    }
+
+    /* Algorithm Config Bar */
+    .config-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+    }
+
+    .config-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .config-group label {
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .config-input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+    }
+
+    .config-input:focus {
+      outline: none;
+      border-color: var(--border-focus);
+    }
+
+    /* Frequency Chart */
+    .freq-container {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 12px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .chart-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    .chart-canvas {
+      flex: 1;
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
+
+    .stats-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 4px;
+      font-size: 12px;
+    }
+
+    .stat-val {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    /* Brute Force Cracker */
+    .cracker-table-wrap {
+      flex: 1;
+      overflow-y: auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    table.retro-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      text-align: left;
+    }
+
+    table.retro-table th {
+      background: var(--surface-2);
+      padding: 6px 10px;
+      position: sticky;
+      top: 0;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    table.retro-table td {
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono);
+    }
+
+    table.retro-table tr:hover {
+      background: var(--surface-hover);
+    }
+
+    table.retro-table tr.best-match {
+      background: rgba(56, 189, 248, 0.15);
+      border-left: 3px solid var(--primary);
+    }
+
+    /* Steganography Tab */
+    .stego-grid {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 12px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .stego-canvas-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #stegoCanvas {
+      width: 320px;
+      height: 240px;
+      background: #000;
+      border: 1px solid var(--border);
+      image-rendering: pixelated;
+    }
+
+    /* Lore Intercepts */
+    .lore-grid {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 12px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .lore-list {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow-y: auto;
+    }
+
+    .lore-item {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.15s;
+    }
+
+    .lore-item:hover, .lore-item.active {
+      border-color: var(--primary);
+      background: var(--surface-hover);
+    }
+
+    /* Status Bar */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 4px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .status-left, .status-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Splash Screen Overlay */
+    .splash-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(9, 13, 22, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+
+    .splash-card {
+      background: var(--surface);
+      border: 2px solid var(--primary);
+      box-shadow: 0 0 25px rgba(56, 189, 248, 0.25);
+      border-radius: 8px;
+      max-width: 520px;
+      width: 100%;
+      padding: 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .splash-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: 1px;
+      font-family: var(--font-mono);
+    }
+
+    .splash-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .splash-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Tutorial Overlay */
+    .tutorial-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.82);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 150;
+      padding: 20px;
+    }
+
+    .tutorial-card {
+      background: var(--surface);
+      border: 2px solid var(--accent);
+      border-radius: 8px;
+      max-width: 480px;
+      width: 100%;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .toast {
+      position: absolute;
+      bottom: 30px;
+      right: 20px;
+      background: var(--surface-2);
+      border: 1px solid var(--primary);
+      color: var(--text);
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.25s ease;
+      z-index: 200;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body data-theme="cyber">
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <span class="brand-icon">🔒</span>
+      <span>KCipher Workbench</span>
+      <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">v1.0.0 (1999)</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-sm" id="btnNewSession" title="Reset Session">📄 New</button>
+      <button class="btn btn-sm" id="btnQuickSave" title="Save state (F5)">💾 QuickSave [F5]</button>
+      <button class="btn btn-sm" id="btnQuickLoad" title="Load state (F9)">📂 QuickLoad [F9]</button>
+      <button class="btn btn-sm" id="btnExportJSON" title="Export session JSON">📤 Export</button>
+      <button class="btn btn-sm" id="btnImportJSON" title="Import session JSON">📥 Import</button>
+      <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
+      <button class="btn btn-sm" id="btnSoundToggle" title="Toggle audio effects">🔊 Sound: ON</button>
+      <select id="themeSelect" class="btn btn-sm" style="padding: 2px 4px;">
+        <option value="cyber">Theme: Cyberpunk</option>
+        <option value="win98">Theme: Win98</option>
+        <option value="amber">Theme: Amber CRT</option>
+        <option value="matrix">Theme: Matrix Green</option>
+      </select>
+      <button class="btn btn-sm btn-accent" id="btnHelpTutorial" title="Open Tutorial">❓ Help</button>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="tabs-bar">
+    <button class="tab-btn active" data-tab="tabWorkbench">🔐 Cipher Workbench</button>
+    <button class="tab-btn" data-tab="tabFrequency">📊 Frequency Analysis</button>
+    <button class="tab-btn" data-tab="tabCracker">⚡ Caesar Auto-Cracker</button>
+    <button class="tab-btn" data-tab="tabStego">🖼️ Image Steganography</button>
+    <button class="tab-btn" data-tab="tabLore">📜 1999 Transmissions</button>
+  </nav>
+
+  <!-- Main View Area -->
+  <main>
+    <!-- TAB 1: WORKBENCH -->
+    <div id="tabWorkbench" class="tab-content active">
+      <!-- Config Bar -->
+      <div class="config-bar">
+        <div class="config-group">
+          <label for="cipherSelect">Cipher:</label>
+          <select id="cipherSelect" class="config-input" style="font-weight: 700;">
+            <option value="rot13">Caesar / ROT-N</option>
+            <option value="vigenere">Vigenère (Polyalphabetic)</option>
+            <option value="railfence">Rail Fence (Transposition)</option>
+            <option value="atbash">Atbash (Mirror Substitution)</option>
+            <option value="substitution">Monoalphabetic Substitution</option>
+            <option value="rc4">RC4 (ARC4 1990s Stream)</option>
+            <option value="xor">Vernam XOR Stream</option>
+          </select>
+        </div>
+
+        <!-- Dynamic Cipher Controls -->
+        <div id="rotControls" class="config-group">
+          <label for="rotShift">Shift (1-25):</label>
+          <input type="range" id="rotShift" min="1" max="25" value="13" style="width: 80px;">
+          <span id="rotShiftVal" style="font-family: var(--font-mono); font-weight: bold; width: 24px;">13</span>
+          <button class="btn btn-sm" id="btnPresetRot13">ROT-13</button>
+          <button class="btn btn-sm" id="btnPresetCaesar">Caesar (3)</button>
+        </div>
+
+        <div id="vigenereControls" class="config-group" style="display: none;">
+          <label for="vigenereKey">Key Phrase:</label>
+          <input type="text" id="vigenereKey" class="config-input" value="KILO1999" placeholder="Enter keyword" style="width: 140px;">
+          <label><input type="checkbox" id="vigenereKeepPunct" checked> Keep Punctuation</label>
+        </div>
+
+        <div id="railControls" class="config-group" style="display: none;">
+          <label for="railCount">Rails (2-10):</label>
+          <input type="range" id="railCount" min="2" max="10" value="3" style="width: 70px;">
+          <span id="railCountVal" style="font-family: var(--font-mono); font-weight: bold; width: 20px;">3</span>
+        </div>
+
+        <div id="subControls" class="config-group" style="display: none;">
+          <label for="subAlphabet">Cipher Alphabet:</label>
+          <input type="text" id="subAlphabet" class="config-input" value="ZYXWVUTSRQPONMLKJIHGFEDCBA" maxlength="26" style="width: 220px; font-family: var(--font-mono);">
+          <button class="btn btn-sm" id="btnSubRandom">🎲 Randomize</button>
+          <button class="btn btn-sm" id="btnSubReset">Reset</button>
+        </div>
+
+        <div id="rc4Controls" class="config-group" style="display: none;">
+          <label for="rc4Key">Passphrase / Key:</label>
+          <input type="text" id="rc4Key" class="config-input" value="ARCHITECT_1999" style="width: 140px;">
+          <label for="rc4Format">Format:</label>
+          <select id="rc4Format" class="config-input">
+            <option value="hex">Hexadecimal</option>
+            <option value="base64">Base64</option>
+          </select>
+        </div>
+
+        <div id="xorControls" class="config-group" style="display: none;">
+          <label for="xorKey">Key (String/Hex):</label>
+          <input type="text" id="xorKey" class="config-input" value="SECRET" style="width: 120px;">
+          <select id="xorFormat" class="config-input">
+            <option value="hex">Hex Output</option>
+            <option value="base64">Base64 Output</option>
+          </select>
+        </div>
+
+        <div class="config-group" style="margin-left: auto;">
+          <label><input type="checkbox" id="chkLiveTransform" checked> ⚡ Live Transform</label>
+        </div>
+      </div>
+
+      <!-- Workbench Panes -->
+      <div class="workbench-grid">
+        <!-- Input / Plaintext Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <span>INPUT / PLAINTEXT</span>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn btn-sm" id="btnSampleText">Sample</button>
+              <button class="btn btn-sm" id="btnClearInput">Clear</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <textarea id="inputText" class="text-box" placeholder="Enter plain text to encrypt or ciphertext to decrypt..."></textarea>
+          </div>
+          <div class="panel-footer">
+            <span id="inputStats">Chars: 0 | Words: 0 | Bytes: 0</span>
+            <button class="btn btn-sm" id="btnCopyInput">📋 Copy</button>
+          </div>
+        </div>
+
+        <!-- Transform Buttons -->
+        <div class="transform-controls">
+          <button class="btn btn-primary" id="btnEncryptAction" title="Encrypt Input -> Output">
+            <span>ENCRYPT</span> <span>▶</span>
+          </button>
+          <button class="btn btn-accent" id="btnDecryptAction" title="Decrypt Output -> Input">
+            <span>◀</span> <span>DECRYPT</span>
+          </button>
+          <button class="btn" id="btnSwapPanes" title="Swap input and output text">
+            <span>⇅</span> <span>SWAP</span>
+          </button>
+          <div style="font-size: 11px; text-align: center; color: var(--text-muted); margin-top: 6px;">
+            Hotkeys:<br><b>Ctrl+Enter</b>: Encrypt<br><b>F5</b>: QuickSave<br><b>F9</b>: QuickLoad
+          </div>
+        </div>
+
+        <!-- Output / Ciphertext Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <span>OUTPUT / CIPHERTEXT</span>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn btn-sm" id="btnSendToFreq">📊 Analyze</button>
+              <button class="btn btn-sm" id="btnSendToStego">🖼️ To Stego</button>
+              <button class="btn btn-sm" id="btnClearOutput">Clear</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <textarea id="outputText" class="text-box" placeholder="Transformed output appears here..."></textarea>
+          </div>
+          <div class="panel-footer">
+            <span id="outputStats">Chars: 0 | Bytes: 0 | Entropy: 0.00</span>
+            <button class="btn btn-sm" id="btnCopyOutput">📋 Copy</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historical Context Card -->
+      <div class="panel" style="max-height: 85px; flex-shrink: 0; padding: 6px 12px; font-size: 12px; background: var(--surface);">
+        <div style="font-weight: bold; color: var(--primary); margin-bottom: 2px;" id="cipherDescTitle">Caesar / ROT-13 Cipher</div>
+        <div style="color: var(--text-muted); line-height: 1.4; overflow-y: auto;" id="cipherDescBody">
+          Monoalphabetic substitution where each letter in the plaintext is shifted by a fixed number of positions down the alphabet. Known since Julius Caesar (~58 BC). ROT-13 is its symmetric special case (shift 13) widely used in Usenet and BBS boards in 1999.
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: FREQUENCY ANALYSIS -->
+    <div id="tabFrequency" class="tab-content">
+      <div class="freq-container">
+        <div class="chart-panel">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-weight: bold; font-size: 13px;">Letter Frequency vs. Standard English Distribution</div>
+            <div style="display: flex; gap: 10px; font-size: 11px;">
+              <span style="color: var(--primary);">■ Ciphertext / Sample</span>
+              <span style="color: var(--accent);">■ English Reference (ETAOIN SHRDLU)</span>
+            </div>
+          </div>
+          <canvas id="freqCanvas" class="chart-canvas"></canvas>
+          <div style="font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between;">
+            <span>Bars show percentage frequency of letters A through Z.</span>
+            <button class="btn btn-sm" id="btnRefreshFreq">🔄 Re-analyze Output</button>
+          </div>
+        </div>
+
+        <div class="stats-card">
+          <div style="font-weight: bold; font-size: 13px; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 4px;">
+            Cryptanalytic Metrics
+          </div>
+          
+          <div class="stat-row">
+            <span>Index of Coincidence (IoC):</span>
+            <span id="statIoC" class="stat-val">0.000</span>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: -6px;" id="statIoCDesc">
+            English plaintext ~ 0.067 | Random ciphertext ~ 0.038
+          </div>
+
+          <div class="stat-row" style="margin-top: 6px;">
+            <span>Shannon Entropy:</span>
+            <span id="statEntropy" class="stat-val">0.00 bits</span>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: -6px;" id="statEntropyDesc">
+            English text ~ 4.1 bits/char | High entropy &gt; 4.8 bits
+          </div>
+
+          <div class="stat-row" style="margin-top: 6px;">
+            <span>Total Characters:</span>
+            <span id="statTotalChars" class="stat-val">0</span>
+          </div>
+
+          <div class="stat-row">
+            <span>Alphabetic Letters:</span>
+            <span id="statAlphaLetters" class="stat-val">0</span>
+          </div>
+
+          <div style="font-weight: bold; font-size: 12px; margin-top: 6px;">Top Ciphertext Letters:</div>
+          <div id="statTopLetters" style="font-family: var(--font-mono); font-size: 12px; color: var(--text);">None</div>
+
+          <div style="margin-top: auto; padding-top: 8px; border-top: 1px solid var(--border);">
+            <button class="btn btn-sm btn-accent" id="btnSendToCrackerFromFreq" style="width: 100%;">
+              ⚡ Test in Auto-Cracker
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: AUTO CRACKER -->
+    <div id="tabCracker" class="tab-content">
+      <div style="display: flex; gap: 10px; align-items: center; background: var(--surface); padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px;">
+        <span style="font-weight: bold; font-size: 13px;">Caesar / ROT-N Brute-Force Evaluator</span>
+        <button class="btn btn-primary btn-sm" id="btnRunCracker">⚡ Run Brute-Force Scan (All 25 Shifts)</button>
+        <span style="font-size: 11px; color: var(--text-muted); margin-left: auto;">
+          Scored via English quadgram &amp; letter frequency statistics.
+        </span>
+      </div>
+
+      <div class="cracker-table-wrap">
+        <table class="retro-table" id="crackerTable">
+          <thead>
+            <tr>
+              <th style="width: 60px;">Shift</th>
+              <th style="width: 90px;">Score</th>
+              <th>Decoded Preview</th>
+              <th style="width: 100px;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="crackerTableBody">
+            <tr>
+              <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">
+                Click "Run Brute-Force Scan" to analyze current ciphertext across all 25 shift keys.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 4: STEGANOGRAPHY -->
+    <div id="tabStego" class="tab-content">
+      <div class="stego-grid">
+        <!-- Canvas Side -->
+        <div class="stego-canvas-wrap">
+          <div style="font-weight: bold; font-size: 13px; align-self: flex-start;">Carrier Image</div>
+          <canvas id="stegoCanvas" width="320" height="240"></canvas>
+          <div style="display: flex; flex-wrap: wrap; gap: 4px; width: 100%;">
+            <button class="btn btn-sm" id="btnStegoPresetPlasma">Plasma</button>
+            <button class="btn btn-sm" id="btnStegoPresetGrid">Cyber Grid</button>
+            <button class="btn btn-sm" id="btnStegoPresetNoise">Test Bars</button>
+            <button class="btn btn-sm" id="btnStegoUpload">Upload Image</button>
+            <input type="file" id="stegoFileInput" accept="image/*" style="display: none;">
+          </div>
+          <div style="display: flex; gap: 6px; width: 100%; margin-top: 6px;">
+            <button class="btn btn-sm btn-accent" id="btnBitPlaneToggle" style="flex: 1;">👁️ View Bit-Plane 0</button>
+            <button class="btn btn-sm" id="btnDownloadStego" style="flex: 1;">💾 Save PNG</button>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); line-height: 1.3;">
+            Capacity: <b>9,600 bytes</b> (320×240 × 1 bit / 8).
+          </div>
+        </div>
+
+        <!-- Secret Payload Side -->
+        <div class="panel">
+          <div class="panel-header">
+            <span>STEGANOGRAPHIC SECRET PAYLOAD</span>
+            <span id="stegoCapacityLabel" style="font-size: 11px; color: var(--text-muted);">0 / 9600 bytes</span>
+          </div>
+          <div class="panel-body">
+            <textarea id="stegoText" class="text-box" placeholder="Enter secret message to hide inside image pixels, or click 'Extract Message' to decode from carrier image..."></textarea>
+            <div style="display: flex; gap: 8px; margin-top: 6px;">
+              <button class="btn btn-primary" id="btnEncodeStego" style="flex: 1;">
+                🔒 Encode Secret into Image
+              </button>
+              <button class="btn btn-accent" id="btnDecodeStego" style="flex: 1;">
+                🔓 Extract Message from Image
+              </button>
+            </div>
+          </div>
+          <div class="panel-footer">
+            <span>LSB 1-Bit Encoding across RGB pixel components. Zero visual distortion.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: 1999 TRANSMISSIONS & ARG CLUES -->
+    <div id="tabLore" class="tab-content">
+      <div class="lore-grid">
+        <div class="lore-list">
+          <div style="font-weight: bold; font-size: 12px; color: var(--primary); margin-bottom: 4px;">
+            Archived Transmissions
+          </div>
+          <div class="lore-item active" data-lore="0">
+            <div style="font-weight: bold;">[INTERCEPT-01]</div>
+            <div style="font-size: 11px; color: var(--text-muted);">RAZOR 1999 Warez Dispatch</div>
+          </div>
+          <div class="lore-item" data-lore="1">
+            <div style="font-weight: bold;">[INTERCEPT-02]</div>
+            <div style="font-size: 11px; color: var(--text-muted);">SlashNet Cryptic Thread</div>
+          </div>
+          <div class="lore-item" data-lore="2">
+            <div style="font-weight: bold;">[INTERCEPT-03]</div>
+            <div style="font-size: 11px; color: var(--text-muted);">The Trapped Entity (KMatrix Echo)</div>
+          </div>
+          <div class="lore-item" data-lore="3">
+            <div style="font-weight: bold;">[INTERCEPT-04]</div>
+            <div style="font-size: 11px; color: var(--text-muted);">FLARELIGHT Demoscene Key</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <span id="loreTitle">INTERCEPT DETAILS</span>
+            <button class="btn btn-sm btn-primary" id="btnLoadLoreToWorkbench">
+              📥 Load Ciphertext into Workbench
+            </button>
+          </div>
+          <div class="panel-body" style="gap: 12px;">
+            <div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">CIPHERTEXT INTERCEPT:</div>
+              <textarea id="loreCiphertext" class="text-box" style="height: 120px;" readonly></textarea>
+            </div>
+            <div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">TRANSMISSION METADATA &amp; HINT:</div>
+              <div id="loreMetadata" style="font-size: 12px; background: var(--bg); border: 1px solid var(--border); padding: 8px; border-radius: 4px; line-height: 1.4; color: var(--text);">
+                Loading intercept metadata...
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Status Bar -->
+  <footer>
+    <div class="status-left">
+      <span id="statusReady">● SYSTEM READY</span>
+      <span id="statusCipher">Active: ROT-13 / Caesar</span>
+      <span id="statusIoC">IoC: 0.000</span>
+    </div>
+    <div class="status-right">
+      <span>KiloApps Cryptographic Security Fleet</span>
+      <span>F5: QuickSave | F9: QuickLoad</span>
+    </div>
+  </footer>
+
+  <!-- Splash Screen Overlay -->
+  <div id="splashOverlay" class="splash-overlay">
+    <div class="splash-card">
+      <div class="splash-title">KCipher 1999</div>
+      <div class="splash-subtitle">
+        Cryptographic Cipher Suite &amp; Steganography Workbench<br>
+        Multi-algorithm classical encryption, cryptanalysis, frequency visualization, and carrier steganography.
+      </div>
+      <div class="splash-buttons">
+        <button class="btn btn-primary" id="btnSplashNew" style="justify-content: center; padding: 8px;">
+          🚀 Start New Session
+        </button>
+        <button class="btn" id="btnSplashContinue" style="justify-content: center; padding: 8px;" disabled>
+          📂 Continue Saved Session
+        </button>
+        <button class="btn" id="btnSplashTutorial" style="justify-content: center; padding: 8px;">
+          📖 Guided Onboarding Tutorial
+        </button>
+      </div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">
+        Designed for KiloOS • Strictly &lt; 999 KB
+      </div>
+    </div>
+  </div>
+
+  <!-- Onboarding Tutorial Modal -->
+  <div id="tutorialOverlay" class="tutorial-overlay">
+    <div class="tutorial-card">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-weight: bold; color: var(--accent); font-size: 14px;" id="tutStepTitle">Step 1: Workbench</div>
+        <span style="font-size: 11px; color: var(--text-muted);" id="tutStepIndicator">1 / 4</span>
+      </div>
+      <div id="tutStepBody" style="font-size: 12px; color: var(--text); line-height: 1.5;">
+        Welcome to KCipher! Use the top cipher selector to pick from classic algorithms: Caesar/ROT-13, Vigenère, Rail Fence, Substitution, RC4, or XOR.
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+        <button class="btn btn-sm" id="btnTutSkip">Skip (Esc)</button>
+        <div style="display: flex; gap: 6px;">
+          <button class="btn btn-sm" id="btnTutPrev" disabled>Previous</button>
+          <button class="btn btn-sm btn-accent" id="btnTutNext">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast">Session Saved</div>
+
+  <!-- Application Logic Script -->
+  <script>
+    /* =========================================================
+       AUDIO ENGINE (Genesis YM2612 & SNES Procedural Synthesis)
+       ========================================================= */
+    class RetroAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            this.ctx = new AudioContext();
+          }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playClick() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.03);
+        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.03);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.03);
+      }
+
+      playEncrypt() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(260, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.12);
+      }
+
+      playDecrypt() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(440, this.ctx.currentTime + 0.14);
+        gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.14);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.14);
+      }
+
+      playCrackArpeggio() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const t = this.ctx.currentTime + idx * 0.04;
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.08, t);
+          gain.gain.linearRampToValueAtTime(0.01, t + 0.06);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.06);
+        });
+      }
+
+      playSave() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1318.51, this.ctx.currentTime); // E6
+        osc.frequency.exponentialRampToValueAtTime(1975.53, this.ctx.currentTime + 0.15); // B6
+        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.15);
+      }
+
+      playError() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.18);
+      }
+    }
+
+    const audio = new RetroAudioEngine();
+
+    /* =========================================================
+       CRYPTOGRAPHIC ENGINES
+       ========================================================= */
+
+    // Standard English reference frequencies (ETAOIN SHRDLU...)
+    const ENGLISH_FREQ = {
+      A: 8.167, B: 1.492, C: 2.782, D: 4.253, E: 12.702,
+      F: 2.228, G: 2.015, H: 6.094, I: 6.966, J: 0.153,
+      K: 0.772, L: 4.025, M: 2.406, N: 6.749, O: 7.507,
+      P: 1.929, Q: 0.095, R: 5.987, S: 6.327, T: 9.056,
+      U: 2.758, V: 0.978, W: 2.360, X: 0.150, Y: 1.974, Z: 0.074
+    };
+
+    // 1. Caesar / ROT-N
+    function cipherCaesar(text, shift, decrypt = false) {
+      if (decrypt) shift = (26 - (shift % 26)) % 26;
+      shift = ((shift % 26) + 26) % 26;
+      let res = '';
+      for (let i = 0; i < text.length; i++) {
+        const c = text.charCodeAt(i);
+        if (c >= 65 && c <= 90) {
+          res += String.fromCharCode(((c - 65 + shift) % 26) + 65);
+        } else if (c >= 97 && c <= 122) {
+          res += String.fromCharCode(((c - 97 + shift) % 26) + 97);
+        } else {
+          res += text[i];
+        }
+      }
+      return res;
+    }
+
+    // 2. Vigenere Cipher
+    function cipherVigenere(text, key, decrypt = false, keepPunct = true) {
+      if (!key) return text;
+      const cleanKey = key.toUpperCase().replace(/[^A-Z]/g, '');
+      if (cleanKey.length === 0) return text;
+
+      let res = '';
+      let keyIdx = 0;
+      for (let i = 0; i < text.length; i++) {
+        const c = text.charCodeAt(i);
+        let shift = cleanKey.charCodeAt(keyIdx % cleanKey.length) - 65;
+        if (decrypt) shift = (26 - shift) % 26;
+
+        if (c >= 65 && c <= 90) {
+          res += String.fromCharCode(((c - 65 + shift) % 26) + 65);
+          keyIdx++;
+        } else if (c >= 97 && c <= 122) {
+          res += String.fromCharCode(((c - 97 + shift) % 26) + 97);
+          keyIdx++;
+        } else {
+          if (keepPunct) res += text[i];
+        }
+      }
+      return res;
+    }
+
+    // 3. Rail Fence Cipher (Zig-Zag Transposition)
+    function cipherRailFence(text, rails, decrypt = false) {
+      rails = Math.max(2, Math.min(rails, 20));
+      if (!text || text.length <= rails) return text;
+
+      if (!decrypt) {
+        // Encrypt
+        const fence = Array.from({ length: rails }, () => []);
+        let rail = 0;
+        let direction = 1;
+        for (let i = 0; i < text.length; i++) {
+          fence[rail].push(text[i]);
+          rail += direction;
+          if (rail === 0 || rail === rails - 1) direction *= -1;
+        }
+        return fence.map(row => row.join('')).join('');
+      } else {
+        // Decrypt
+        const fence = Array.from({ length: rails }, () => Array(text.length).fill(null));
+        let rail = 0;
+        let direction = 1;
+        for (let i = 0; i < text.length; i++) {
+          fence[rail][i] = '*';
+          rail += direction;
+          if (rail === 0 || rail === rails - 1) direction *= -1;
+        }
+
+        let charIdx = 0;
+        for (let r = 0; r < rails; r++) {
+          for (let c = 0; c < text.length; c++) {
+            if (fence[r][c] === '*' && charIdx < text.length) {
+              fence[r][c] = text[charIdx++];
+            }
+          }
+        }
+
+        let res = '';
+        rail = 0;
+        direction = 1;
+        for (let i = 0; i < text.length; i++) {
+          res += fence[rail][i];
+          rail += direction;
+          if (rail === 0 || rail === rails - 1) direction *= -1;
+        }
+        return res;
+      }
+    }
+
+    // 4. Substitution Cipher / Atbash
+    function cipherSubstitution(text, keyAlphabet, decrypt = false) {
+      const standard = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      const keyUpper = (keyAlphabet || "ZYXWVUTSRQPONMLKJIHGFEDCBA").toUpperCase();
+      if (keyUpper.length !== 26) return text;
+
+      const fromAlpha = decrypt ? keyUpper : standard;
+      const toAlpha = decrypt ? standard : keyUpper;
+
+      let res = '';
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        const isUpper = c >= 'A' && c <= 'Z';
+        const isLower = c >= 'a' && c <= 'z';
+        if (isUpper) {
+          const idx = fromAlpha.indexOf(c);
+          res += idx !== -1 ? toAlpha[idx] : c;
+        } else if (isLower) {
+          const idx = fromAlpha.indexOf(c.toUpperCase());
+          res += idx !== -1 ? toAlpha[idx].toLowerCase() : c;
+        } else {
+          res += c;
+        }
+      }
+      return res;
+    }
+
+    // 5. RC4 (ARC4 1990s Stream Cipher)
+    function rc4KSA(keyStr) {
+      const s = [];
+      for (let i = 0; i < 256; i++) s[i] = i;
+      let j = 0;
+      const keyLen = keyStr.length || 1;
+      for (let i = 0; i < 256; i++) {
+        j = (j + s[i] + keyStr.charCodeAt(i % keyLen)) % 256;
+        const tmp = s[i];
+        s[i] = s[j];
+        s[j] = tmp;
+      }
+      return s;
+    }
+
+    function cipherRC4(text, key, decrypt = false, format = 'hex') {
+      if (!key) return text;
+      const s = rc4KSA(key);
+      let i = 0, j = 0;
+
+      let inputBytes = [];
+      if (decrypt && format === 'hex') {
+        const cleanHex = text.replace(/[^0-9a-fA-F]/g, '');
+        for (let k = 0; k < cleanHex.length; k += 2) {
+          inputBytes.push(parseInt(cleanHex.substr(k, 2), 16));
+        }
+      } else if (decrypt && format === 'base64') {
+        try {
+          const bin = atob(text.trim());
+          for (let k = 0; k < bin.length; k++) inputBytes.push(bin.charCodeAt(k));
+        } catch (e) {
+          inputBytes = Array.from(new TextEncoder().encode(text));
+        }
+      } else {
+        inputBytes = Array.from(new TextEncoder().encode(text));
+      }
+
+      const outBytes = [];
+      for (let k = 0; k < inputBytes.length; k++) {
+        i = (i + 1) % 256;
+        j = (j + s[i]) % 256;
+        const tmp = s[i];
+        s[i] = s[j];
+        s[j] = tmp;
+        const kByte = s[(s[i] + s[j]) % 256];
+        outBytes.push(inputBytes[k] ^ kByte);
+      }
+
+      if (decrypt) {
+        return new TextDecoder().decode(new Uint8Array(outBytes));
+      } else {
+        if (format === 'hex') {
+          return outBytes.map(b => b.toString(16).padStart(2, '0')).join('');
+        } else {
+          // Base64
+          let binStr = '';
+          outBytes.forEach(b => { binStr += String.fromCharCode(b); });
+          return btoa(binStr);
+        }
+      }
+    }
+
+    // 6. XOR Vernam Stream
+    function cipherXOR(text, key, decrypt = false, format = 'hex') {
+      if (!key) return text;
+      let inputBytes = [];
+      if (decrypt && format === 'hex') {
+        const cleanHex = text.replace(/[^0-9a-fA-F]/g, '');
+        for (let k = 0; k < cleanHex.length; k += 2) {
+          inputBytes.push(parseInt(cleanHex.substr(k, 2), 16));
+        }
+      } else if (decrypt && format === 'base64') {
+        try {
+          const bin = atob(text.trim());
+          for (let k = 0; k < bin.length; k++) inputBytes.push(bin.charCodeAt(k));
+        } catch (e) {
+          inputBytes = Array.from(new TextEncoder().encode(text));
+        }
+      } else {
+        inputBytes = Array.from(new TextEncoder().encode(text));
+      }
+
+      const keyBytes = Array.from(new TextEncoder().encode(key));
+      const outBytes = [];
+      for (let i = 0; i < inputBytes.length; i++) {
+        outBytes.push(inputBytes[i] ^ keyBytes[i % keyBytes.length]);
+      }
+
+      if (decrypt) {
+        return new TextDecoder().decode(new Uint8Array(outBytes));
+      } else {
+        if (format === 'hex') {
+          return outBytes.map(b => b.toString(16).padStart(2, '0')).join('');
+        } else {
+          let binStr = '';
+          outBytes.forEach(b => { binStr += String.fromCharCode(b); });
+          return btoa(binStr);
+        }
+      }
+    }
+
+    /* =========================================================
+       CRYPTANALYSIS & STATS (IoC, Entropy, Quadgram Score)
+       ========================================================= */
+
+    function calculateStats(text) {
+      if (!text) return { ioc: 0, entropy: 0, counts: {}, totalAlpha: 0 };
+      const counts = {};
+      let totalAlpha = 0;
+      const upper = text.toUpperCase();
+
+      for (let i = 0; i < upper.length; i++) {
+        const c = upper[i];
+        if (c >= 'A' && c <= 'Z') {
+          counts[c] = (counts[c] || 0) + 1;
+          totalAlpha++;
+        }
+      }
+
+      // Index of Coincidence
+      let sum = 0;
+      for (const k in counts) {
+        sum += counts[k] * (counts[k] - 1);
+      }
+      const ioc = totalAlpha > 1 ? sum / (totalAlpha * (totalAlpha - 1)) : 0;
+
+      // Shannon Entropy
+      const byteCounts = {};
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        byteCounts[c] = (byteCounts[c] || 0) + 1;
+      }
+      let entropy = 0;
+      const len = text.length;
+      for (const k in byteCounts) {
+        const p = byteCounts[k] / len;
+        entropy -= p * Math.log2(p);
+      }
+
+      return { ioc, entropy, counts, totalAlpha };
+    }
+
+    // Automated English Quadgram / Letter scoring
+    function scoreEnglishText(text) {
+      if (!text || text.length === 0) return -9999;
+      let score = 0;
+      const upper = text.toUpperCase();
+      let alphaCount = 0;
+
+      for (let i = 0; i < upper.length; i++) {
+        const c = upper[i];
+        if (c >= 'A' && c <= 'Z') {
+          alphaCount++;
+          // Add letter frequency score
+          score += (ENGLISH_FREQ[c] || 0) * 1.5;
+        } else if (c === ' ') {
+          score += 6; // Spaces are very natural in English
+        } else if (c >= '0' && c <= '9') {
+          score += 1;
+        } else if (c.charCodeAt(0) < 32 || c.charCodeAt(0) > 126) {
+          score -= 30; // Unprintable chars heavily penalized
+        }
+      }
+
+      // Common bigrams bonus
+      const bigrams = ['TH', 'HE', 'IN', 'ER', 'AN', 'RE', 'ED', 'ON', 'ES', 'ST', 'EN', 'AT', 'TO', 'NT', 'HA', 'ND', 'OU', 'EA', 'NG', 'AS'];
+      for (let i = 0; i < upper.length - 1; i++) {
+        const bg = upper.substr(i, 2);
+        if (bigrams.includes(bg)) score += 8;
+      }
+
+      return alphaCount > 0 ? Math.round((score / text.length) * 10) : -100;
+    }
+
+    /* =========================================================
+       IMAGE STEGANOGRAPHY ENGINE (1-Bit LSB Canvas Carrier)
+       ========================================================= */
+
+    class SteganographyEngine {
+      constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+        this.isBitPlaneView = false;
+        this.originalImageData = null;
+      }
+
+      drawPreset(type) {
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        const imgData = this.ctx.createImageData(w, h);
+        const d = imgData.data;
+
+        if (type === 'plasma') {
+          for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+              const idx = (y * w + x) * 4;
+              const v = Math.sin(x / 16.0) + Math.sin(y / 12.0) + Math.sin((x + y) / 16.0) + Math.sin(Math.sqrt(x*x + y*y) / 14.0);
+              const col = Math.floor((v + 4) * 32) % 256;
+              d[idx] = (col * 2) % 256;       // R
+              d[idx + 1] = (col * 3) % 256;   // G
+              d[idx + 2] = (255 - col);       // B
+              d[idx + 3] = 255;               // A
+            }
+          }
+        } else if (type === 'grid') {
+          for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+              const idx = (y * w + x) * 4;
+              const isGrid = (x % 20 === 0) || (y % 20 === 0);
+              d[idx] = isGrid ? 0 : 12;
+              d[idx + 1] = isGrid ? 200 : 30;
+              d[idx + 2] = isGrid ? 255 : 60;
+              d[idx + 3] = 255;
+            }
+          }
+        } else {
+          // Test Color Bars 1999
+          const barWidth = w / 7;
+          const colors = [
+            [192, 192, 192], [192, 192, 0], [0, 192, 192], [0, 192, 0],
+            [192, 0, 192], [192, 0, 0], [0, 0, 192]
+          ];
+          for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+              const barIdx = Math.min(6, Math.floor(x / barWidth));
+              const idx = (y * w + x) * 4;
+              d[idx] = colors[barIdx][0];
+              d[idx + 1] = colors[barIdx][1];
+              d[idx + 2] = colors[barIdx][2];
+              d[idx + 3] = 255;
+            }
+          }
+        }
+
+        this.ctx.putImageData(imgData, 0, 0);
+        this.originalImageData = this.ctx.getImageData(0, 0, w, h);
+        this.isBitPlaneView = false;
+      }
+
+      encodeMessage(secretText) {
+        if (!secretText) return { success: false, msg: 'No message to encode' };
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        const maxBytes = Math.floor((w * h * 3) / 8) - 4; // Reserve 4 bytes for length header
+        const encoder = new TextEncoder();
+        const payloadBytes = encoder.encode(secretText);
+
+        if (payloadBytes.length > maxBytes) {
+          return { success: false, msg: `Message too large (${payloadBytes.length} > ${maxBytes} max bytes)` };
+        }
+
+        const imgData = this.ctx.getImageData(0, 0, w, h);
+        const data = imgData.data;
+
+        // Header: 32-bit integer length
+        const len = payloadBytes.length;
+        const fullBytes = [
+          (len >> 24) & 0xFF,
+          (len >> 16) & 0xFF,
+          (len >> 8) & 0xFF,
+          len & 0xFF,
+          ...payloadBytes
+        ];
+
+        let byteIdx = 0;
+        let bitIdx = 0;
+
+        for (let i = 0; i < data.length && byteIdx < fullBytes.length; i++) {
+          if (i % 4 === 3) continue; // Skip alpha channel
+
+          const bit = (fullBytes[byteIdx] >> (7 - bitIdx)) & 1;
+          data[i] = (data[i] & ~1) | bit; // Set 0th bit
+
+          bitIdx++;
+          if (bitIdx === 8) {
+            bitIdx = 0;
+            byteIdx++;
+          }
+        }
+
+        this.ctx.putImageData(imgData, 0, 0);
+        this.originalImageData = this.ctx.getImageData(0, 0, w, h);
+        this.isBitPlaneView = false;
+        return { success: true, bytes: payloadBytes.length };
+      }
+
+      decodeMessage() {
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        const imgData = this.ctx.getImageData(0, 0, w, h);
+        const data = imgData.data;
+
+        // Read 32-bit length header
+        let len = 0;
+        let bitCount = 0;
+        let currentByte = 0;
+        const headerBytes = [];
+        let dataPixelIdx = 0;
+
+        for (let i = 0; i < data.length && headerBytes.length < 4; i++) {
+          if (i % 4 === 3) continue;
+          const bit = data[i] & 1;
+          currentByte = (currentByte << 1) | bit;
+          bitCount++;
+          if (bitCount === 8) {
+            headerBytes.push(currentByte);
+            currentByte = 0;
+            bitCount = 0;
+          }
+          dataPixelIdx = i + 1;
+        }
+
+        len = (headerBytes[0] << 24) | (headerBytes[1] << 16) | (headerBytes[2] << 8) | headerBytes[3];
+
+        const maxPossible = Math.floor((w * h * 3) / 8);
+        if (len <= 0 || len > maxPossible) {
+          return { success: false, msg: 'No encoded message detected in carrier image' };
+        }
+
+        // Read payload bytes
+        const extracted = [];
+        bitCount = 0;
+        currentByte = 0;
+
+        for (let i = dataPixelIdx; i < data.length && extracted.length < len; i++) {
+          if (i % 4 === 3) continue;
+          const bit = data[i] & 1;
+          currentByte = (currentByte << 1) | bit;
+          bitCount++;
+          if (bitCount === 8) {
+            extracted.push(currentByte);
+            currentByte = 0;
+            bitCount = 0;
+          }
+        }
+
+        try {
+          const decoder = new TextDecoder();
+          const text = decoder.decode(new Uint8Array(extracted));
+          return { success: true, text, bytes: len };
+        } catch (e) {
+          return { success: false, msg: 'Failed to decode text payload' };
+        }
+      }
+
+      toggleBitPlane() {
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        if (!this.isBitPlaneView) {
+          this.originalImageData = this.ctx.getImageData(0, 0, w, h);
+          const current = this.ctx.getImageData(0, 0, w, h);
+          const d = current.data;
+          for (let i = 0; i < d.length; i += 4) {
+            // Check LSB of red channel and magnify to 0 or 255
+            const lsb = (d[i] & 1) ? 255 : 0;
+            d[i] = lsb;
+            d[i + 1] = lsb;
+            d[i + 2] = lsb;
+            d[i + 3] = 255;
+          }
+          this.ctx.putImageData(current, 0, 0);
+          this.isBitPlaneView = true;
+        } else {
+          if (this.originalImageData) {
+            this.ctx.putImageData(this.originalImageData, 0, 0);
+          }
+          this.isBitPlaneView = false;
+        }
+      }
+    }
+
+    /* =========================================================
+       1999 LORE TRANSMISSIONS & ARG CHALLENGES
+       ========================================================= */
+    const LORE_INTERCEPTS = [
+      {
+        title: "[INTERCEPT-01] RAZOR 1999 Warez Dispatch",
+        cipher: "rot13",
+        ciphertext: "ENM-1999: GB NYY FPRAREF NAQ CEVTVEF. GUR FRPERG GB HASHETRNOYR CERPHEFBE ENYVNF VF UVQQRA VA GUR FLFGRZ XREARY. GEVEZBE VVV NERAN PBHENRE GENAFSREF NER PBZCYRGR. FGNL IETVYNAG.",
+        plaintextHint: "Encrypted via ROT-13. A legendary warez release note referencing Tremor III Arena couriers.",
+        metadata: "Source: IRC #warez-1999 • Algorithm: Caesar ROT-13 • Target Node: Subnet-19"
+      },
+      {
+        title: "[INTERCEPT-02] SlashNet Cryptic Thread",
+        cipher: "vigenere",
+        key: "ARCHITECT",
+        ciphertext: "Rk lqvd kfvv yfxk: Vzx ivbspk ncbvy gvvz fcfxgl mczt vh kydx. KiloOS vf kww dcfxevx mpxm gvyv.",
+        plaintextHint: "Polyalphabetic Vigenère encryption using passkey 'ARCHITECT'.",
+        metadata: "Source: SlashNet /crypto/thread-419 • Algorithm: Vigenère (Key: ARCHITECT)"
+      },
+      {
+        title: "[INTERCEPT-03] The Trapped Entity (KMatrix Echo)",
+        cipher: "railfence",
+        rails: 3,
+        ciphertext: "WEEAVIEATRNMHLOCEOX19EHFTIIKPRCJTEE-9ARHET",
+        plaintextHint: "Transposition Rail Fence cipher with depth 3. Precursor beacon echoing KMatrix architect lore.",
+        metadata: "Source: KTerm Telemetry Node • Algorithm: Rail Fence (3 Rails)"
+      },
+      {
+        title: "[INTERCEPT-04] FLARELIGHT Demoscene Key",
+        cipher: "rc4",
+        key: "DEMO1999",
+        ciphertext: "248e359a35e408d249f390382d56a312d8a562ca6c8889b9",
+        plaintextHint: "RC4 stream cipher hex output keyed with 'DEMO1999'. Contains the master passkey snippet.",
+        metadata: "Source: FLARELIGHT Intro NFO • Algorithm: RC4 (Key: DEMO1999, Hex format)"
+      }
+    ];
+
+    /* =========================================================
+       UI CONTROLLER & EVENT BINDINGS
+       ========================================================= */
+
+    const state = {
+      activeTab: 'tabWorkbench',
+      cipher: 'rot13',
+      rotShift: 13,
+      vigenereKey: 'KILO1999',
+      vigenereKeepPunct: true,
+      railCount: 3,
+      subAlphabet: 'ZYXWVUTSRQPONMLKJIHGFEDCBA',
+      rc4Key: 'ARCHITECT_1999',
+      rc4Format: 'hex',
+      xorKey: 'SECRET',
+      xorFormat: 'hex',
+      liveTransform: true,
+      theme: 'cyber',
+      tutorialStep: 1
+    };
+
+    let stegoEngine = null;
+
+    // Elements
+    const elements = {
+      inputText: document.getElementById('inputText'),
+      outputText: document.getElementById('outputText'),
+      cipherSelect: document.getElementById('cipherSelect'),
+      rotShift: document.getElementById('rotShift'),
+      rotShiftVal: document.getElementById('rotShiftVal'),
+      vigenereKey: document.getElementById('vigenereKey'),
+      vigenereKeepPunct: document.getElementById('vigenereKeepPunct'),
+      railCount: document.getElementById('railCount'),
+      railCountVal: document.getElementById('railCountVal'),
+      subAlphabet: document.getElementById('subAlphabet'),
+      rc4Key: document.getElementById('rc4Key'),
+      rc4Format: document.getElementById('rc4Format'),
+      xorKey: document.getElementById('xorKey'),
+      xorFormat: document.getElementById('xorFormat'),
+      chkLiveTransform: document.getElementById('chkLiveTransform'),
+      themeSelect: document.getElementById('themeSelect'),
+      btnSoundToggle: document.getElementById('btnSoundToggle'),
+      toast: document.getElementById('toast'),
+      splashOverlay: document.getElementById('splashOverlay'),
+      tutorialOverlay: document.getElementById('tutorialOverlay'),
+      freqCanvas: document.getElementById('freqCanvas'),
+      statusReady: document.getElementById('statusReady'),
+      statusCipher: document.getElementById('statusCipher'),
+      statusIoC: document.getElementById('statusIoC'),
+      inputStats: document.getElementById('inputStats'),
+      outputStats: document.getElementById('outputStats'),
+      cipherDescTitle: document.getElementById('cipherDescTitle'),
+      cipherDescBody: document.getElementById('cipherDescBody')
+    };
+
+    // Show Toast
+    function showToast(msg) {
+      elements.toast.textContent = msg;
+      elements.toast.classList.add('show');
+      setTimeout(() => elements.toast.classList.remove('show'), 2200);
+    }
+
+    // Switch Tab
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabId);
+      });
+      document.querySelectorAll('.tab-content').forEach(pane => {
+        pane.classList.toggle('active', pane.id === tabId);
+      });
+      state.activeTab = tabId;
+      audio.playClick();
+
+      if (tabId === 'tabFrequency') {
+        drawFrequencyChart();
+      }
+    }
+
+    // Update Visible Cipher Controls
+    function updateCipherControls() {
+      const c = elements.cipherSelect.value;
+      state.cipher = c;
+
+      document.getElementById('rotControls').style.display = c === 'rot13' ? 'flex' : 'none';
+      document.getElementById('vigenereControls').style.display = c === 'vigenere' ? 'flex' : 'none';
+      document.getElementById('railControls').style.display = c === 'railfence' ? 'flex' : 'none';
+      document.getElementById('subControls').style.display = (c === 'substitution' || c === 'atbash') ? 'flex' : 'none';
+      document.getElementById('rc4Controls').style.display = c === 'rc4' ? 'flex' : 'none';
+      document.getElementById('xorControls').style.display = c === 'xor' ? 'flex' : 'none';
+
+      elements.statusCipher.textContent = `Active: ${elements.cipherSelect.options[elements.cipherSelect.selectedIndex].text}`;
+
+      // Update descriptions
+      const descMap = {
+        rot13: {
+          title: "Caesar / ROT-13 Cipher",
+          body: "Monoalphabetic shift cipher where each letter is shifted by a constant number of places. Known since Julius Caesar (~58 BC). ROT-13 is symmetric (applying twice returns plaintext)."
+        },
+        vigenere: {
+          title: "Vigenère Cipher (Polyalphabetic)",
+          body: "Polyalphabetic substitution invented by Giovan Battista Bellaso (1553) and later attributed to Blaise de Vigenère. Resistant to simple frequency analysis because each letter is shifted according to a repeating passphrase."
+        },
+        railfence: {
+          title: "Rail Fence Cipher (Zig-Zag Transposition)",
+          body: "Transposition cipher where characters are written diagonally in a zig-zag across multiple parallel 'rails', then read off row by row. Preserves letter frequencies but destroys bigram/trigram adjacency."
+        },
+        atbash: {
+          title: "Atbash Substitution Cipher",
+          body: "Biblical Hebrew mirror substitution (A ↔ Z, B ↔ Y, C ↔ X). Fully reciprocal monoalphabetic cipher."
+        },
+        substitution: {
+          title: "General Monoalphabetic Substitution",
+          body: "Arbitrary 26-letter permutation mapping. Provides 26! (≈ 4.03 × 10^26) possible keys, vulnerable to single-letter frequency and bigram cryptanalysis."
+        },
+        rc4: {
+          title: "RC4 (ARC4 1990s Stream Cipher)",
+          body: "Invented by Ron Rivest in 1987. The premier stream cipher of the 1990s (used in SSL/TLS, WEP, and Lotus Notes). Generates a pseudo-random byte stream via a 256-byte permutation table XOR'd with the data."
+        },
+        xor: {
+          title: "Vernam XOR Stream Cipher",
+          body: "Bitwise XOR with repeating secret key. If the key is truly random, never reused, and as long as the message, it constitutes an unbreakable One-Time Pad (Shannon 1949)."
+        }
+      };
+
+      if (descMap[c]) {
+        elements.cipherDescTitle.textContent = descMap[c].title;
+        elements.cipherDescBody.textContent = descMap[c].body;
+      }
+    }
+
+    // Execute Encryption
+    function runEncrypt() {
+      const input = elements.inputText.value;
+      let output = '';
+
+      switch (state.cipher) {
+        case 'rot13':
+          output = cipherCaesar(input, state.rotShift, false);
+          break;
+        case 'vigenere':
+          output = cipherVigenere(input, state.vigenereKey, false, state.vigenereKeepPunct);
+          break;
+        case 'railfence':
+          output = cipherRailFence(input, state.railCount, false);
+          break;
+        case 'atbash':
+          output = cipherSubstitution(input, "ZYXWVUTSRQPONMLKJIHGFEDCBA", false);
+          break;
+        case 'substitution':
+          output = cipherSubstitution(input, state.subAlphabet, false);
+          break;
+        case 'rc4':
+          output = cipherRC4(input, state.rc4Key, false, state.rc4Format);
+          break;
+        case 'xor':
+          output = cipherXOR(input, state.xorKey, false, state.xorFormat);
+          break;
+        default:
+          output = input;
+      }
+
+      elements.outputText.value = output;
+      updateStats();
+      audio.playEncrypt();
+    }
+
+    // Execute Decryption
+    function runDecrypt() {
+      const input = elements.outputText.value || elements.inputText.value;
+      let output = '';
+
+      switch (state.cipher) {
+        case 'rot13':
+          output = cipherCaesar(input, state.rotShift, true);
+          break;
+        case 'vigenere':
+          output = cipherVigenere(input, state.vigenereKey, true, state.vigenereKeepPunct);
+          break;
+        case 'railfence':
+          output = cipherRailFence(input, state.railCount, true);
+          break;
+        case 'atbash':
+          output = cipherSubstitution(input, "ZYXWVUTSRQPONMLKJIHGFEDCBA", true);
+          break;
+        case 'substitution':
+          output = cipherSubstitution(input, state.subAlphabet, true);
+          break;
+        case 'rc4':
+          output = cipherRC4(input, state.rc4Key, true, state.rc4Format);
+          break;
+        case 'xor':
+          output = cipherXOR(input, state.xorKey, true, state.xorFormat);
+          break;
+        default:
+          output = input;
+      }
+
+      elements.inputText.value = output;
+      updateStats();
+      audio.playDecrypt();
+    }
+
+    // Update Text Statistics
+    function updateStats() {
+      const inText = elements.inputText.value;
+      const outText = elements.outputText.value;
+
+      const inWords = inText.trim() ? inText.trim().split(/\s+/).length : 0;
+      const inBytes = new TextEncoder().encode(inText).length;
+      elements.inputStats.textContent = `Chars: ${inText.length} | Words: ${inWords} | Bytes: ${inBytes}`;
+
+      const outBytes = new TextEncoder().encode(outText).length;
+      const stats = calculateStats(outText || inText);
+      elements.outputStats.textContent = `Chars: ${outText.length} | Bytes: ${outBytes} | Entropy: ${stats.entropy.toFixed(2)}`;
+      elements.statusIoC.textContent = `IoC: ${stats.ioc.toFixed(3)}`;
+
+      // Update Analysis Tab stats if active
+      document.getElementById('statIoC').textContent = stats.ioc.toFixed(3);
+      document.getElementById('statEntropy').textContent = `${stats.entropy.toFixed(2)} bits`;
+      document.getElementById('statTotalChars').textContent = outText.length;
+      document.getElementById('statAlphaLetters').textContent = stats.totalAlpha;
+
+      // Top letters
+      const sorted = Object.entries(stats.counts).sort((a, b) => b[1] - a[1]);
+      const topStr = sorted.slice(0, 7).map(([k, v]) => `${k} (${((v/Math.max(1, stats.totalAlpha))*100).toFixed(1)}%)`).join(', ');
+      document.getElementById('statTopLetters').textContent = topStr || 'None';
+
+      if (state.activeTab === 'tabFrequency') {
+        drawFrequencyChart();
+      }
+    }
+
+    // Render Canvas Frequency Chart
+    function drawFrequencyChart() {
+      const canvas = elements.freqCanvas;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width = canvas.parentElement.clientWidth - 20;
+      const h = canvas.height = canvas.parentElement.clientHeight - 80;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const targetText = elements.outputText.value || elements.inputText.value;
+      const stats = calculateStats(targetText);
+      const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
+      const barWidth = Math.max(8, Math.floor((w - 40) / 26) - 4);
+      const startX = 30;
+      const maxPct = 15; // Max 15% on chart
+
+      // Draw Grid Lines
+      ctx.strokeStyle = "rgba(148, 163, 184, 0.15)";
+      ctx.lineWidth = 1;
+      for (let p = 0; p <= maxPct; p += 3) {
+        const y = h - 25 - (p / maxPct) * (h - 40);
+        ctx.beginPath();
+        ctx.moveTo(startX, y);
+        ctx.lineTo(w - 10, y);
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(148, 163, 184, 0.6)";
+        ctx.font = "10px monospace";
+        ctx.fillText(`${p}%`, 5, y + 3);
+      }
+
+      // Draw Bars
+      letters.forEach((char, idx) => {
+        const x = startX + idx * (barWidth + 4);
+        const count = stats.counts[char] || 0;
+        const pct = stats.totalAlpha > 0 ? (count / stats.totalAlpha) * 100 : 0;
+        const refPct = ENGLISH_FREQ[char];
+
+        const barHeight = Math.min(h - 40, (pct / maxPct) * (h - 40));
+        const refHeight = Math.min(h - 40, (refPct / maxPct) * (h - 40));
+
+        // English Reference (Translucent Amber)
+        ctx.fillStyle = "rgba(245, 158, 11, 0.35)";
+        ctx.fillRect(x, h - 25 - refHeight, barWidth, refHeight);
+        ctx.strokeStyle = "rgba(245, 158, 11, 0.8)";
+        ctx.strokeRect(x, h - 25 - refHeight, barWidth, refHeight);
+
+        // Ciphertext Actual (Cyan)
+        ctx.fillStyle = "rgba(56, 189, 248, 0.8)";
+        ctx.fillRect(x + 2, h - 25 - barHeight, barWidth - 4, barHeight);
+
+        // Letter Label
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "11px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText(char, x + barWidth / 2, h - 10);
+      });
+    }
+
+    // Run Caesar Auto-Cracker
+    function runAutoCracker() {
+      const text = elements.outputText.value || elements.inputText.value;
+      const tbody = document.getElementById('crackerTableBody');
+      tbody.innerHTML = '';
+
+      if (!text || text.trim().length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--danger); padding: 15px;">Please enter ciphertext in the workbench first.</td></tr>';
+        audio.playError();
+        return;
+      }
+
+      const results = [];
+      for (let shift = 1; shift <= 25; shift++) {
+        const candidate = cipherCaesar(text, shift, true);
+        const score = scoreEnglishText(candidate);
+        results.push({ shift, candidate, score });
+      }
+
+      // Sort by best score descending
+      results.sort((a, b) => b.score - a.score);
+
+      results.forEach((res, index) => {
+        const tr = document.createElement('tr');
+        if (index === 0) tr.classList.add('best-match');
+
+        const preview = res.candidate.length > 70 ? res.candidate.substr(0, 70) + '...' : res.candidate;
+
+        tr.innerHTML = `
+          <td><b>Shift ${res.shift}</b></td>
+          <td style="color: ${index === 0 ? 'var(--primary)' : 'var(--text-muted)'}; font-weight: bold;">${res.score}</td>
+          <td style="word-break: break-all;">${preview}</td>
+          <td><button class="btn btn-sm btn-primary btn-apply-crack" data-shift="${res.shift}">Apply</button></td>
+        `;
+
+        tr.querySelector('.btn-apply-crack').addEventListener('click', () => {
+          elements.inputText.value = res.candidate;
+          elements.cipherSelect.value = 'rot13';
+          elements.rotShift.value = res.shift;
+          elements.rotShiftVal.textContent = res.shift;
+          state.rotShift = res.shift;
+          updateCipherControls();
+          updateStats();
+          switchTab('tabWorkbench');
+          showToast(`Applied Shift ${res.shift} Decryption!`);
+          audio.playDecrypt();
+        });
+
+        tbody.appendChild(tr);
+      });
+
+      audio.playCrackArpeggio();
+      showToast('Brute-Force Analysis Complete!');
+    }
+
+    /* =========================================================
+       QUICKSAVE / QUICKLOAD (F5 / F9) & STATE PERSISTENCE
+       ========================================================= */
+
+    function quickSaveSession() {
+      const sessionData = {
+        inputText: elements.inputText.value,
+        outputText: elements.outputText.value,
+        cipher: elements.cipherSelect.value,
+        rotShift: parseInt(elements.rotShift.value, 10),
+        vigenereKey: elements.vigenereKey.value,
+        vigenereKeepPunct: elements.vigenereKeepPunct.checked,
+        railCount: parseInt(elements.railCount.value, 10),
+        subAlphabet: elements.subAlphabet.value,
+        rc4Key: elements.rc4Key.value,
+        rc4Format: elements.rc4Format.value,
+        xorKey: elements.xorKey.value,
+        xorFormat: elements.xorFormat.value,
+        theme: document.body.dataset.theme,
+        timestamp: Date.now()
+      };
+
+      try {
+        localStorage.setItem('kcipher_quicksave', JSON.stringify(sessionData));
+        showToast('Session QuickSaved! (F5)');
+        audio.playSave();
+      } catch (e) {
+        showToast('Save failed: local storage full');
+      }
+    }
+
+    function quickLoadSession() {
+      try {
+        const raw = localStorage.getItem('kcipher_quicksave');
+        if (!raw) {
+          showToast('No QuickSave found! (Press F5 to save)');
+          audio.playError();
+          return;
+        }
+        const data = JSON.parse(raw);
+        elements.inputText.value = data.inputText || '';
+        elements.outputText.value = data.outputText || '';
+        elements.cipherSelect.value = data.cipher || 'rot13';
+        elements.rotShift.value = data.rotShift || 13;
+        elements.rotShiftVal.textContent = data.rotShift || 13;
+        elements.vigenereKey.value = data.vigenereKey || 'KILO1999';
+        elements.vigenereKeepPunct.checked = data.vigenereKeepPunct !== false;
+        elements.railCount.value = data.railCount || 3;
+        elements.railCountVal.textContent = data.railCount || 3;
+        elements.subAlphabet.value = data.subAlphabet || 'ZYXWVUTSRQPONMLKJIHGFEDCBA';
+        elements.rc4Key.value = data.rc4Key || 'ARCHITECT_1999';
+        elements.rc4Format.value = data.rc4Format || 'hex';
+        elements.xorKey.value = data.xorKey || 'SECRET';
+        elements.xorFormat.value = data.xorFormat || 'hex';
+
+        if (data.theme) {
+          document.body.dataset.theme = data.theme;
+          elements.themeSelect.value = data.theme;
+        }
+
+        updateCipherControls();
+        updateStats();
+        showToast('QuickSave Loaded! (F9)');
+        audio.playDecrypt();
+      } catch (e) {
+        showToast('Corrupted save data');
+        audio.playError();
+      }
+    }
+
+    /* =========================================================
+       ONBOARDING TUTORIAL
+       ========================================================= */
+
+    const TUTORIAL_STEPS = [
+      {
+        title: "Step 1: The Cryptographic Workbench",
+        text: "KCipher provides authentic classical and 1990s ciphers: Caesar/ROT-13, Vigenère polyalphabetic, Rail Fence transposition, Substitution, RC4 stream, and XOR Vernam. Type or paste your message in the left panel and click ENCRYPT (or press Ctrl+Enter)."
+      },
+      {
+        title: "Step 2: Real-Time Frequency Analysis",
+        text: "Switch to the Frequency Analysis tab to inspect letter distribution histograms. Compare your ciphertext against standard English (ETAOIN SHRDLU). The Index of Coincidence (IoC) tells you if you're dealing with a monoalphabetic or polyalphabetic cipher!"
+      },
+      {
+        title: "Step 3: Caesar Brute-Force Cracker",
+        text: "Encountered an unknown shifted message? The Caesar Auto-Cracker tests all 25 possible shifts in milliseconds, scores each result using English quadgram statistics, and lets you apply the best plaintext with one click."
+      },
+      {
+        title: "Step 4: 1-Bit Image Steganography",
+        text: "Need to hide secrets in plain sight? Use the Steganography Carrier to embed secret text directly into the least significant bit (LSB) of canvas image pixels without visual distortion. Save the PNG or inspect the raw bit-plane!"
+      }
+    ];
+
+    function showTutorialStep(step) {
+      state.tutorialStep = step;
+      const data = TUTORIAL_STEPS[step - 1];
+      document.getElementById('tutStepTitle').textContent = data.title;
+      document.getElementById('tutStepBody').textContent = data.text;
+      document.getElementById('tutStepIndicator').textContent = `${step} / ${TUTORIAL_STEPS.length}`;
+      document.getElementById('btnTutPrev').disabled = step === 1;
+      document.getElementById('btnTutNext').textContent = step === TUTORIAL_STEPS.length ? "Finish" : "Next";
+      elements.tutorialOverlay.style.display = 'flex';
+    }
+
+    function closeTutorial() {
+      elements.tutorialOverlay.style.display = 'none';
+      try {
+        localStorage.setItem('kcipher_tutorialSeen', '1');
+      } catch (e) {}
+    }
+
+    /* =========================================================
+       INITIALIZATION
+       ========================================================= */
+
+    window.addEventListener('DOMContentLoaded', () => {
+      stegoEngine = new SteganographyEngine('stegoCanvas');
+      stegoEngine.drawPreset('plasma');
+
+      // Check if quicksave exists for splash button
+      if (localStorage.getItem('kcipher_quicksave')) {
+        document.getElementById('btnSplashContinue').disabled = false;
+      }
+
+      // Check tutorial flag
+      const tutorialSeen = localStorage.getItem('kcipher_tutorialSeen');
+
+      // Splash Buttons
+      document.getElementById('btnSplashNew').addEventListener('click', () => {
+        elements.splashOverlay.style.display = 'none';
+        audio.playClick();
+        if (!tutorialSeen) {
+          showTutorialStep(1);
+        }
+      });
+
+      document.getElementById('btnSplashContinue').addEventListener('click', () => {
+        elements.splashOverlay.style.display = 'none';
+        quickLoadSession();
+      });
+
+      document.getElementById('btnSplashTutorial').addEventListener('click', () => {
+        elements.splashOverlay.style.display = 'none';
+        showTutorialStep(1);
+      });
+
+      // Tutorial Controls
+      document.getElementById('btnTutNext').addEventListener('click', () => {
+        if (state.tutorialStep < TUTORIAL_STEPS.length) {
+          showTutorialStep(state.tutorialStep + 1);
+        } else {
+          closeTutorial();
+        }
+        audio.playClick();
+      });
+
+      document.getElementById('btnTutPrev').addEventListener('click', () => {
+        if (state.tutorialStep > 1) {
+          showTutorialStep(state.tutorialStep - 1);
+        }
+        audio.playClick();
+      });
+
+      document.getElementById('btnTutSkip').addEventListener('click', () => {
+        closeTutorial();
+        audio.playClick();
+      });
+
+      document.getElementById('btnHelpTutorial').addEventListener('click', () => {
+        showTutorialStep(1);
+      });
+
+      // Tabs Navigation
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      });
+
+      // Cipher Selection
+      elements.cipherSelect.addEventListener('change', () => {
+        updateCipherControls();
+        if (state.liveTransform) runEncrypt();
+      });
+
+      // Rot Slider
+      elements.rotShift.addEventListener('input', (e) => {
+        elements.rotShiftVal.textContent = e.target.value;
+        state.rotShift = parseInt(e.target.value, 10);
+        if (state.liveTransform) runEncrypt();
+      });
+
+      document.getElementById('btnPresetRot13').addEventListener('click', () => {
+        elements.rotShift.value = 13;
+        elements.rotShiftVal.textContent = 13;
+        state.rotShift = 13;
+        if (state.liveTransform) runEncrypt();
+      });
+
+      document.getElementById('btnPresetCaesar').addEventListener('click', () => {
+        elements.rotShift.value = 3;
+        elements.rotShiftVal.textContent = 3;
+        state.rotShift = 3;
+        if (state.liveTransform) runEncrypt();
+      });
+
+      // Vigenere Inputs
+      elements.vigenereKey.addEventListener('input', (e) => {
+        state.vigenereKey = e.target.value;
+        if (state.liveTransform) runEncrypt();
+      });
+
+      elements.vigenereKeepPunct.addEventListener('change', (e) => {
+        state.vigenereKeepPunct = e.target.checked;
+        if (state.liveTransform) runEncrypt();
+      });
+
+      // Rail Slider
+      elements.railCount.addEventListener('input', (e) => {
+        elements.railCountVal.textContent = e.target.value;
+        state.railCount = parseInt(e.target.value, 10);
+        if (state.liveTransform) runEncrypt();
+      });
+
+      // Substitution Controls
+      elements.subAlphabet.addEventListener('input', (e) => {
+        state.subAlphabet = e.target.value.toUpperCase();
+        if (state.liveTransform) runEncrypt();
+      });
+
+      document.getElementById('btnSubRandom').addEventListener('click', () => {
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
+        for (let i = letters.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [letters[i], letters[j]] = [letters[j], letters[i]];
+        }
+        const randAlpha = letters.join('');
+        elements.subAlphabet.value = randAlpha;
+        state.subAlphabet = randAlpha;
+        if (state.liveTransform) runEncrypt();
+        audio.playClick();
+      });
+
+      document.getElementById('btnSubReset').addEventListener('click', () => {
+        elements.subAlphabet.value = "ZYXWVUTSRQPONMLKJIHGFEDCBA";
+        state.subAlphabet = "ZYXWVUTSRQPONMLKJIHGFEDCBA";
+        if (state.liveTransform) runEncrypt();
+        audio.playClick();
+      });
+
+      // RC4 Controls
+      elements.rc4Key.addEventListener('input', (e) => {
+        state.rc4Key = e.target.value;
+        if (state.liveTransform) runEncrypt();
+      });
+      elements.rc4Format.addEventListener('change', (e) => {
+        state.rc4Format = e.target.value;
+        if (state.liveTransform) runEncrypt();
+      });
+
+      // XOR Controls
+      elements.xorKey.addEventListener('input', (e) => {
+        state.xorKey = e.target.value;
+        if (state.liveTransform) runEncrypt();
+      });
+      elements.xorFormat.addEventListener('change', (e) => {
+        state.xorFormat = e.target.value;
+        if (state.liveTransform) runEncrypt();
+      });
+
+      // Live Transform checkbox
+      elements.chkLiveTransform.addEventListener('change', (e) => {
+        state.liveTransform = e.target.checked;
+      });
+
+      // Text Input Events
+      elements.inputText.addEventListener('input', () => {
+        updateStats();
+        if (state.liveTransform) runEncrypt();
+      });
+
+      elements.outputText.addEventListener('input', () => {
+        updateStats();
+      });
+
+      // Encrypt & Decrypt Actions
+      document.getElementById('btnEncryptAction').addEventListener('click', runEncrypt);
+      document.getElementById('btnDecryptAction').addEventListener('click', runDecrypt);
+
+      document.getElementById('btnSwapPanes').addEventListener('click', () => {
+        const tmp = elements.inputText.value;
+        elements.inputText.value = elements.outputText.value;
+        elements.outputText.value = tmp;
+        updateStats();
+        audio.playClick();
+      });
+
+      // Clear buttons
+      document.getElementById('btnClearInput').addEventListener('click', () => {
+        elements.inputText.value = '';
+        updateStats();
+        audio.playClick();
+      });
+
+      document.getElementById('btnClearOutput').addEventListener('click', () => {
+        elements.outputText.value = '';
+        updateStats();
+        audio.playClick();
+      });
+
+      // Copy buttons
+      document.getElementById('btnCopyInput').addEventListener('click', () => {
+        navigator.clipboard.writeText(elements.inputText.value);
+        showToast('Input copied to clipboard!');
+        audio.playClick();
+      });
+
+      document.getElementById('btnCopyOutput').addEventListener('click', () => {
+        navigator.clipboard.writeText(elements.outputText.value);
+        showToast('Output copied to clipboard!');
+        audio.playClick();
+      });
+
+      // Sample Text
+      document.getElementById('btnSampleText').addEventListener('click', () => {
+        elements.inputText.value = "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG. Cryptography transforms plaintext into ciphertext to preserve confidential communication across open networks.";
+        updateStats();
+        if (state.liveTransform) runEncrypt();
+        audio.playClick();
+      });
+
+      // Workbench cross-links
+      document.getElementById('btnSendToFreq').addEventListener('click', () => {
+        switchTab('tabFrequency');
+      });
+
+      document.getElementById('btnSendToStego').addEventListener('click', () => {
+        document.getElementById('stegoText').value = elements.outputText.value || elements.inputText.value;
+        switchTab('tabStego');
+      });
+
+      // Auto Cracker Trigger
+      document.getElementById('btnRunCracker').addEventListener('click', runAutoCracker);
+      document.getElementById('btnSendToCrackerFromFreq').addEventListener('click', () => {
+        switchTab('tabCracker');
+        runAutoCracker();
+      });
+
+      document.getElementById('btnRefreshFreq').addEventListener('click', () => {
+        drawFrequencyChart();
+        audio.playClick();
+      });
+
+      // Steganography Controls
+      document.getElementById('btnStegoPresetPlasma').addEventListener('click', () => {
+        stegoEngine.drawPreset('plasma');
+        audio.playClick();
+      });
+
+      document.getElementById('btnStegoPresetGrid').addEventListener('click', () => {
+        stegoEngine.drawPreset('grid');
+        audio.playClick();
+      });
+
+      document.getElementById('btnStegoPresetNoise').addEventListener('click', () => {
+        stegoEngine.drawPreset('bars');
+        audio.playClick();
+      });
+
+      document.getElementById('btnBitPlaneToggle').addEventListener('click', () => {
+        stegoEngine.toggleBitPlane();
+        audio.playClick();
+      });
+
+      document.getElementById('btnEncodeStego').addEventListener('click', () => {
+        const text = document.getElementById('stegoText').value;
+        const res = stegoEngine.encodeMessage(text);
+        if (res.success) {
+          showToast(`Encoded ${res.bytes} bytes into image carrier!`);
+          audio.playEncrypt();
+        } else {
+          showToast(res.msg);
+          audio.playError();
+        }
+      });
+
+      document.getElementById('btnDecodeStego').addEventListener('click', () => {
+        const res = stegoEngine.decodeMessage();
+        if (res.success) {
+          document.getElementById('stegoText').value = res.text;
+          showToast(`Extracted ${res.bytes} bytes of secret text!`);
+          audio.playDecrypt();
+        } else {
+          showToast(res.msg);
+          audio.playError();
+        }
+      });
+
+      document.getElementById('btnDownloadStego').addEventListener('click', () => {
+        const a = document.createElement('a');
+        a.download = 'kcipher_stego.png';
+        a.href = elements.stegoCanvas ? elements.stegoCanvas.toDataURL('image/png') : document.getElementById('stegoCanvas').toDataURL('image/png');
+        a.click();
+        showToast('Stego PNG downloaded!');
+        audio.playClick();
+      });
+
+      document.getElementById('btnStegoUpload').addEventListener('click', () => {
+        document.getElementById('stegoFileInput').click();
+      });
+
+      document.getElementById('stegoFileInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.getElementById('stegoCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            stegoEngine.originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            stegoEngine.isBitPlaneView = false;
+            showToast('Carrier image loaded!');
+            audio.playClick();
+          };
+          img.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+
+      // 1999 Lore Intercepts
+      function loadLore(idx) {
+        document.querySelectorAll('.lore-item').forEach((item, i) => {
+          item.classList.toggle('active', i === idx);
+        });
+        const lore = LORE_INTERCEPTS[idx];
+        document.getElementById('loreTitle').textContent = lore.title;
+        document.getElementById('loreCiphertext').value = lore.ciphertext;
+        document.getElementById('loreMetadata').innerHTML = `
+          <b>Source:</b> ${lore.metadata}<br>
+          <b>Cryptanalytic Hint:</b> ${lore.plaintextHint}
+        `;
+        audio.playClick();
+      }
+
+      document.querySelectorAll('.lore-item').forEach((item, idx) => {
+        item.addEventListener('click', () => loadLore(idx));
+      });
+      loadLore(0);
+
+      document.getElementById('btnLoadLoreToWorkbench').addEventListener('click', () => {
+        const activeIdx = Array.from(document.querySelectorAll('.lore-item')).findIndex(item => item.classList.contains('active'));
+        const lore = LORE_INTERCEPTS[activeIdx];
+        elements.inputText.value = lore.ciphertext;
+        elements.cipherSelect.value = lore.cipher;
+        if (lore.key) {
+          if (lore.cipher === 'vigenere') elements.vigenereKey.value = lore.key;
+          if (lore.cipher === 'rc4') elements.rc4Key.value = lore.key;
+        }
+        if (lore.rails) elements.railCount.value = lore.rails;
+        updateCipherControls();
+        updateStats();
+        switchTab('tabWorkbench');
+        showToast('Transmission loaded into Workbench!');
+        audio.playClick();
+      });
+
+      // Global Header Actions
+      document.getElementById('btnNewSession').addEventListener('click', () => {
+        elements.inputText.value = '';
+        elements.outputText.value = '';
+        elements.cipherSelect.value = 'rot13';
+        elements.rotShift.value = 13;
+        elements.rotShiftVal.textContent = 13;
+        updateCipherControls();
+        updateStats();
+        showToast('New Session initialized.');
+        audio.playClick();
+      });
+
+      document.getElementById('btnQuickSave').addEventListener('click', quickSaveSession);
+      document.getElementById('btnQuickLoad').addEventListener('click', quickLoadSession);
+
+      // JSON Export & Import
+      document.getElementById('btnExportJSON').addEventListener('click', () => {
+        const exportData = {
+          app: 'KCipher',
+          version: '1.0.0',
+          inputText: elements.inputText.value,
+          outputText: elements.outputText.value,
+          cipher: elements.cipherSelect.value,
+          rotShift: state.rotShift,
+          vigenereKey: state.vigenereKey,
+          railCount: state.railCount,
+          subAlphabet: state.subAlphabet,
+          rc4Key: state.rc4Key,
+          rc4Format: state.rc4Format,
+          timestamp: new Date().toISOString()
+        };
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.download = `kcipher_export_${Date.now()}.json`;
+        a.href = URL.createObjectURL(blob);
+        a.click();
+        showToast('Session exported to JSON!');
+        audio.playClick();
+      });
+
+      document.getElementById('btnImportJSON').addEventListener('click', () => {
+        document.getElementById('jsonFileInput').click();
+      });
+
+      document.getElementById('jsonFileInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          try {
+            const data = JSON.parse(evt.target.result);
+            elements.inputText.value = data.inputText || '';
+            elements.outputText.value = data.outputText || '';
+            elements.cipherSelect.value = data.cipher || 'rot13';
+            if (data.rotShift) {
+              elements.rotShift.value = data.rotShift;
+              elements.rotShiftVal.textContent = data.rotShift;
+            }
+            if (data.vigenereKey) elements.vigenereKey.value = data.vigenereKey;
+            if (data.railCount) elements.railCount.value = data.railCount;
+            if (data.subAlphabet) elements.subAlphabet.value = data.subAlphabet;
+            if (data.rc4Key) elements.rc4Key.value = data.rc4Key;
+            updateCipherControls();
+            updateStats();
+            showToast('JSON Session successfully loaded!');
+            audio.playDecrypt();
+          } catch (err) {
+            showToast('Invalid JSON file format');
+            audio.playError();
+          }
+        };
+        reader.readAsText(file);
+      });
+
+      // Audio Toggle
+      elements.btnSoundToggle.addEventListener('click', () => {
+        audio.muted = !audio.muted;
+        elements.btnSoundToggle.textContent = audio.muted ? '🔇 Sound: OFF' : '🔊 Sound: ON';
+        showToast(audio.muted ? 'Sound Muted' : 'Sound Enabled');
+      });
+
+      // Theme Selector
+      elements.themeSelect.addEventListener('change', (e) => {
+        document.body.dataset.theme = e.target.value;
+        state.theme = e.target.value;
+        drawFrequencyChart();
+        audio.playClick();
+      });
+
+      // Keyboard Shortcuts (F5, F9, Ctrl+Enter, Escape)
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'F5') {
+          e.preventDefault();
+          quickSaveSession();
+        } else if (e.key === 'F9') {
+          e.preventDefault();
+          quickLoadSession();
+        } else if (e.key === 'Enter' && e.ctrlKey) {
+          e.preventDefault();
+          runEncrypt();
+        } else if (e.key === 'Escape') {
+          if (elements.tutorialOverlay.style.display === 'flex') {
+            closeTutorial();
+          }
+        }
+      });
+
+      // Initial run
+      updateCipherControls();
+      updateStats();
+    });
+  </script>
+</body>
+</html>
