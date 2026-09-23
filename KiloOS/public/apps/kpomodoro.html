@@ -847,9 +847,9 @@
   /* Toast notification */
   .toast {
     position: fixed;
-    bottom: 44px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
+    top: 58px;
+    right: 20px;
+    transform: translateY(-8px);
     background: #1e2434;
     color: var(--text-primary);
     border: 1px solid var(--border-color);
@@ -865,11 +865,14 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    cursor: pointer;
+    user-select: none;
   }
 
   .toast.show {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+    transform: translateY(0);
   }
 
   /* ARG Relic notification badge */
@@ -1246,16 +1249,16 @@
 </footer>
 
 <!-- Toast Element -->
-<div class="toast" id="toastBox">
+<div class="toast" id="toastBox" role="status" aria-live="polite" title="Click to dismiss">
   <span id="toastIcon">💾</span>
   <span id="toastMsg">State saved successfully!</span>
 </div>
 
 <!-- Start Splash Overlay -->
-<div class="modal-overlay open" id="splashModal">
+<div class="modal-overlay" id="splashModal" role="dialog" aria-modal="true" aria-labelledby="splashTitle">
   <div class="modal-box splash-box">
     <div class="splash-logo">🍅</div>
-    <div class="splash-title">KPOMODORO</div>
+    <div class="splash-title" id="splashTitle">KPOMODORO</div>
     <div class="splash-sub">Work/Break Cycle & Cognitive Cadence Manager</div>
 
     <div class="splash-stats">
@@ -1282,11 +1285,11 @@
 </div>
 
 <!-- Onboarding / Tutorial Modal -->
-<div class="modal-overlay" id="tutorialModal">
+<div class="modal-overlay" id="tutorialModal" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle">
   <div class="modal-box">
     <div class="modal-header">
-      <h3><span>📖</span> KPomodoro Quick Start Guide</h3>
-      <button class="modal-close" id="btnTutorialClose">&times;</button>
+      <h3 id="tutorialTitle"><span>📖</span> KPomodoro Quick Start Guide</h3>
+      <button class="modal-close" id="btnTutorialClose" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
       
@@ -1333,11 +1336,11 @@
 </div>
 
 <!-- Settings Modal -->
-<div class="modal-overlay" id="settingsModal">
+<div class="modal-overlay" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
   <div class="modal-box">
     <div class="modal-header">
-      <h3><span>⚙️</span> Quick Preferences</h3>
-      <button class="modal-close" id="btnSettingsClose">&times;</button>
+      <h3 id="settingsTitle"><span>⚙️</span> Quick Preferences</h3>
+      <button class="modal-close" id="btnSettingsClose" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
       <p style="font-size: 12px; color: var(--text-secondary);">Cycle durations and sound alerts can also be configured anytime under the "Cycle Settings" tab on the right desk.</p>
@@ -1415,6 +1418,26 @@ function initAudio() {
   if (audioCtx && audioCtx.state === 'suspended') {
     audioCtx.resume();
   }
+}
+
+// UI Tone Synthesis
+function playTone(freq, type = 'sine', dur = 0.04) {
+  if (!state.soundEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + dur);
+  } catch (e) {}
 }
 
 // Chime Synthesis
@@ -2387,51 +2410,92 @@ function initEvents() {
     });
   }
 
-  // Splash Screen Actions
+  // --- Unified Modal Management (Strict Mutual Exclusivity) ---
   const splashModal = document.getElementById('splashModal');
-  const closeSplash = () => splashModal.classList.remove('open');
+  const tutorialModal = document.getElementById('tutorialModal');
+  const settingsModal = document.getElementById('settingsModal');
 
+  function openModal(id) {
+    const target = document.getElementById(id);
+    if (!target) return;
+
+    // Auto-mark tutorial seen if moving to another modal from tutorial
+    if (tutorialModal.classList.contains('open') && id !== 'tutorialModal') {
+      const chk = document.getElementById('chkDontShowTutorial');
+      if (chk && chk.checked) localStorage.setItem(TUTORIAL_FLAG, 'true');
+    }
+
+    // Close all other modals first to prevent any double-modal backdrop stacking/collisions
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+      if (modal !== target) {
+        modal.classList.remove('open');
+        modal.removeAttribute('aria-modal');
+      }
+    });
+
+    target.classList.add('open');
+    target.setAttribute('aria-modal', 'true');
+    playTone(540, 'sine', 0.04);
+  }
+
+  function closeModal(id) {
+    const m = document.getElementById(id);
+    if (m) {
+      if (id === 'tutorialModal') {
+        const chk = document.getElementById('chkDontShowTutorial');
+        if (chk && chk.checked) localStorage.setItem(TUTORIAL_FLAG, 'true');
+      }
+      m.classList.remove('open');
+      m.removeAttribute('aria-modal');
+      playTone(440, 'sine', 0.03);
+    }
+  }
+
+  function closeAllModals() {
+    document.querySelectorAll('.modal-overlay').forEach(m => {
+      if (m.id === 'tutorialModal') {
+        const chk = document.getElementById('chkDontShowTutorial');
+        if (chk && chk.checked) localStorage.setItem(TUTORIAL_FLAG, 'true');
+      }
+      m.classList.remove('open');
+      m.removeAttribute('aria-modal');
+    });
+  }
+
+  function getActiveModal() {
+    return document.querySelector('.modal-overlay.open');
+  }
+
+  // Splash Screen Actions
   document.getElementById('btnSplashStart').addEventListener('click', () => {
-    closeSplash();
+    closeModal('splashModal');
     startTimer();
   });
   document.getElementById('btnSplashTasks').addEventListener('click', () => {
-    closeSplash();
-    document.querySelector('[data-desk="tasks"]').click();
+    closeModal('splashModal');
+    document.querySelector('[data-desk="tasks"]')?.click();
   });
   document.getElementById('btnSplashTutorial').addEventListener('click', () => {
-    closeSplash();
-    openTutorial();
+    openModal('tutorialModal');
   });
 
   // Tutorial Actions
-  const tutorialModal = document.getElementById('tutorialModal');
-  const openTutorial = () => tutorialModal.classList.add('open');
-  const closeTutorial = () => {
-    tutorialModal.classList.remove('open');
-    if (document.getElementById('chkDontShowTutorial').checked) {
-      localStorage.setItem(TUTORIAL_FLAG, 'true');
-    }
-  };
-
-  document.getElementById('btnHelp').addEventListener('click', openTutorial);
-  document.getElementById('btnTutorialClose').addEventListener('click', closeTutorial);
+  document.getElementById('btnHelp').addEventListener('click', () => openModal('tutorialModal'));
+  document.getElementById('btnTutorialClose').addEventListener('click', () => closeModal('tutorialModal'));
   document.getElementById('btnTutorialFinish').addEventListener('click', () => {
     localStorage.setItem(TUTORIAL_FLAG, 'true');
-    closeTutorial();
+    closeModal('tutorialModal');
   });
 
   // Settings Modal Actions
-  const settingsModal = document.getElementById('settingsModal');
-  const closeSettings = () => settingsModal.classList.remove('open');
-  document.getElementById('btnSettings').addEventListener('click', () => settingsModal.classList.add('open'));
-  document.getElementById('btnSettingsClose').addEventListener('click', closeSettings);
-  document.getElementById('btnSettingsDone').addEventListener('click', closeSettings);
+  document.getElementById('btnSettings').addEventListener('click', () => openModal('settingsModal'));
+  document.getElementById('btnSettingsClose').addEventListener('click', () => closeModal('settingsModal'));
+  document.getElementById('btnSettingsDone').addEventListener('click', () => closeModal('settingsModal'));
   
   const btnOpenDesk = document.getElementById('btnOpenDeskSettings');
   if (btnOpenDesk) {
     btnOpenDesk.addEventListener('click', () => {
-      closeSettings();
+      closeModal('settingsModal');
       const presetTab = document.querySelector('[data-desk="presets"]');
       if (presetTab) presetTab.click();
     });
@@ -2446,52 +2510,55 @@ function initEvents() {
   });
 
   // Close overlays on backdrop click
-  splashModal.addEventListener('click', (e) => {
-    if (e.target === splashModal) closeSplash();
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        closeModal(overlay.id);
+      }
+    });
   });
-  tutorialModal.addEventListener('click', (e) => {
-    if (e.target === tutorialModal) closeTutorial();
-  });
-  settingsModal.addEventListener('click', (e) => {
-    if (e.target === settingsModal) closeSettings();
+
+  // Toast click-to-dismiss
+  document.getElementById('toastBox')?.addEventListener('click', () => {
+    const toastBox = document.getElementById('toastBox');
+    if (toastBox) {
+      clearTimeout(toastBox._timer);
+      toastBox.classList.remove('show');
+    }
   });
 
   // Global Keyboard Navigation
   window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
 
-    const isSplashOpen = splashModal.classList.contains('open');
-    const isTutorialOpen = tutorialModal.classList.contains('open');
-    const isSettingsOpen = settingsModal.classList.contains('open');
-    const anyModalOpen = isSplashOpen || isTutorialOpen || isSettingsOpen;
+    const activeModal = getActiveModal();
 
-    if (e.key === 'Escape') {
-      if (isSplashOpen) closeSplash();
-      if (isTutorialOpen) closeTutorial();
-      if (isSettingsOpen) closeSettings();
+    if (activeModal) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeModal(activeModal.id);
+        return;
+      }
+
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (activeModal.id === 'splashModal') {
+          document.getElementById('btnSplashStart')?.click();
+        } else if (activeModal.id === 'tutorialModal') {
+          document.getElementById('btnTutorialFinish')?.click();
+        } else if (activeModal.id === 'settingsModal') {
+          document.getElementById('btnSettingsDone')?.click();
+        }
+        return;
+      }
+
+      // Modal trap: do not execute background shortcuts while modal is open
       return;
     }
 
-    if (e.key === 'Enter') {
-      if (isSplashOpen) {
-        e.preventDefault();
-        document.getElementById('btnSplashStart').click();
-        return;
-      }
-      if (isTutorialOpen) {
-        e.preventDefault();
-        document.getElementById('btnTutorialFinish').click();
-        return;
-      }
-      if (isSettingsOpen) {
-        e.preventDefault();
-        closeSettings();
-        return;
-      }
+    if (e.key === 'Escape') {
+      return;
     }
-
-    // Modal trap: do not execute background shortcuts while modal is open
-    if (anyModalOpen) return;
 
     if (e.code === 'Space') {
       e.preventDefault();
@@ -2504,7 +2571,7 @@ function initEvents() {
       resetTimer();
     } else if (e.key === 'F1' || e.key === 'h' || e.key === 'H' || e.key === '?') {
       e.preventDefault();
-      openTutorial();
+      openModal('tutorialModal');
     } else if (e.key === '1') {
       e.preventDefault();
       if (pauseTimer()) setMode('focus', true);
@@ -2522,7 +2589,7 @@ function initEvents() {
       quickLoad();
     } else if (e.key === 'm' || e.key === 'M') {
       e.preventDefault();
-      document.getElementById('btnAudioToggle').click();
+      document.getElementById('btnAudioToggle')?.click();
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       e.preventDefault();
       const deskTabs = Array.from(document.querySelectorAll('.desk-tab'));
@@ -2530,7 +2597,7 @@ function initEvents() {
       const nextIdx = e.key === 'ArrowRight'
         ? (activeIdx + 1) % deskTabs.length
         : (activeIdx - 1 + deskTabs.length) % deskTabs.length;
-      deskTabs[nextIdx].click();
+      deskTabs[nextIdx]?.click();
     }
   });
 
@@ -2565,11 +2632,12 @@ function init() {
   renderHistory();
   updateCyclePips();
 
-  // First-run tutorial check
+  // First-run tutorial vs start splash screen presentation
   const tutorialSeen = localStorage.getItem(TUTORIAL_FLAG);
   if (!tutorialSeen) {
-    document.getElementById('splashModal').classList.remove('open');
-    document.getElementById('tutorialModal').classList.add('open');
+    openModal('tutorialModal');
+  } else {
+    openModal('splashModal');
   }
 }
 

@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-23T06:50:00Z — kilo-usability: KClip (Modal Isolation, Backdrop Collision & Toast Occlusion Remediation)**
+  - Status: PASS ✅ (Eliminated modal collisions and toast occlusion; 0 regressions).
+  - Modal Isolation: Enforced strict mutual exclusivity across all modals; auto-cleared background backdrops and ARIA states.
+  - Tutorial Ergonomics: Added direct Snippets Library navigation button to tutorial footer for seamless onboarding transition.
+  - Toast Positioning: Repositioned toast from bottom-right (blocking F1 status button) to top-right with instant click-to-dismiss.
+  - Shortcut Guard: Blocked background key listeners (F1, F5, F9, B, T, C) during active modal states; enabled Enter/Space for templates.
+  - Verification: Headless CDP test pass (74 interactive elements, 0 errors, 60 FPS frame pacing); Vite clean build; C build clean (15.8 KB).
+
 - **2026-09-23T05:52:00Z — kilo-tester: KCipher (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (6 UI/state issues resolved; 0 regressions).
   - State Sync: Synchronized `state` across QuickLoad, JSON Import/Export, and Lore Transmissions.
