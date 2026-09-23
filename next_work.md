@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-usability
-  app: KiloOS
-  timestamp: "2026-09-23T03:02:00Z"
+  agent: kilo-qa
+  app: KChat
+  timestamp: "2026-09-23T03:10:00Z"
 last_planner_run: "2026-09-22T07:47:00Z"
 ---
 
@@ -166,6 +166,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T03:10:00Z — kilo-qa: KChat AI Persona Removal**
+  - Status: PASS ✅ (Completely removed AI persona section and feature from web and native KChat).
+  - Web (kchat.html): Removed top AI persona selector, Ask AI button, /ai slash command, and activePersona state.
+  - Native (main.c): Removed hPersonaCombo, hAskAI button, /ai command, GenerateAIResponse, and activePersona stats.
+  - Channels & Help: Updated #ai-lounge channel to #lounge; updated Help tutorial, shortcuts, and documentation.
+  - Ergonomics: Restored standard Ctrl+A select-all behavior in native edit control.
+  - Verification: Native MSVC C clean build (26.5 KB); HTML5 (85.1 KB); Headless CDP 60 FPS pass (0 errors); Lint clean.
+
 - **2026-09-23T03:02:00Z — kilo-usability: KiloOS Window Resizing & Folder Layout**
   - Status: PASS ✅ (Fixed folder overflow blowout, removed broken vestigial handle, expanded resize hitboxes).
   - Flexbox Layout Fix: Added `min-height: 0; overflow: hidden;` to `.xp-content` so large folders scroll instead of blowing out to 992px+.
@@ -200,12 +208,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Discoverable Help: Added clickable [F1 / H] status bar prompt and wired H, ?, B, T, C, J, K shortcuts.
   - Theming & Ergonomics: Added themed retro scrollbars across all 4 palettes; added empty-selection error guards.
   - Verification: Native MSVC C (15.5 KB); Single-file HTML5 (92.2 KB); Vite build clean (219ms); security lint 0 violations.
-
-- **2026-09-23T01:30:00Z — kilo-tester: KClip**
-  - Status: PASS ✅ (6 issues found, 6 fixed).
-  - Modal Controls: Added backdrop click dismissals, header close button, and Esc/Enter/Space hotkey handling.
-  - Keyboard Shortcuts: Added 1-9 direct clip jump hotkeys and Space view mode toggle; guarded background hotkeys.
-  - Navigation & Filtering: Filtered stack navigation for ArrowUp/Down with auto-scroll; added Colors category pill.
-  - Editor Ergonomics: Preserved cursor position during live typing; added real-time card snippet/stats sync.
-  - Settings & State: Synchronized form inputs on open, fixed autoSave toggle saving, and delayed URL revocation.
-  - Verification: Native MSVC C (15.5 KB); Single-file HTML5 (86.6 KB); Vite build clean (241ms); security lint 0 violations.

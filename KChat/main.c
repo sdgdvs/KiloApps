@@ -38,13 +38,12 @@ static int g_dpi = 96;
 
 SOCKET s = INVALID_SOCKET;
 HWND hLog, hIp, hPort, hBtn, hInput, hSend, hClear, hSave, hCopyBtn;
-HWND hRoomCombo, hPersonaCombo, hAskAI, hSearchInput, hPinBtn, hReactBtn, hExportJson, hImportBtn;
+HWND hRoomCombo, hSearchInput, hPinBtn, hReactBtn, hExportJson, hImportBtn;
 HWND hTopicLabel, hPollBtn, hVoteBtn, hStatsBtn, hHelpBtn;
 
 char logBuf[65536] = "";
 char currentRoom[32] = "#general";
 char currentUsername[32] = "User";
-char activePersona[32] = "Assistant";
 char searchKeyword[64] = "";
 int filterPinnedOnly = 0;
 
@@ -55,7 +54,7 @@ RoomTopic g_roomTopics[MAX_ROOMS] = {
     {"#general", "General discussions & community hub"},
     {"#dev", "KiloApps architecture, C/ASM & Web dev"},
     {"#random", "Off-topic banters and fun"},
-    {"#ai-lounge", "Prompt crafting & neural explorations"},
+    {"#lounge", "Casual lounge & community discussion"},
     {"", ""}
 };
 int g_topicCount = 4;
@@ -319,40 +318,9 @@ void ShowRoomStats() {
     }
 
     char statsReport[384];
-    wsprintfA(statsReport, "[STATS for %s]: User: %s | Messages: %d (Total: %d) | Pinned: %d | Active Polls: %d (Votes: %d) | Persona: %s",
-        currentRoom, currentUsername, roomMsgs, g_msgCount, roomPinned, roomPolls, totalVotes, activePersona);
+    wsprintfA(statsReport, "[STATS for %s]: User: %s | Messages: %d (Total: %d) | Pinned: %d | Active Polls: %d (Votes: %d)",
+        currentRoom, currentUsername, roomMsgs, g_msgCount, roomPinned, roomPolls, totalVotes);
     AddMessage("System", statsReport, currentRoom, 0);
-}
-
-void GenerateAIResponse(const char* prompt) {
-    char reply[384];
-    char userPersonaTag[64];
-    my_strcpy(userPersonaTag, activePersona);
-    my_strcat(userPersonaTag, " AI");
-
-    if (my_strcmp(activePersona, "Cyberpunk") == 0) {
-        my_strcpy(reply, "Data node ping received on grid. Packet decrypted: ");
-        my_strcat(reply, prompt);
-        my_strcat(reply, ". Cyber signal status: 100Gbps active.");
-    } else if (my_strcmp(activePersona, "CodeBot") == 0) {
-        my_strcpy(reply, "[CODEBOT]: // Processed query: ");
-        my_strcat(reply, prompt);
-        my_strcat(reply, " -> Status: 200 OK. Compiled with 0 errors.");
-    } else if (my_strcmp(activePersona, "Sarcastic") == 0) {
-        my_strcpy(reply, "Really? \"");
-        my_strcat(reply, prompt);
-        my_strcat(reply, "\"? Groundbreaking input. Pausing quantum computing to appreciate that.");
-    } else if (my_strcmp(activePersona, "Cerberus") == 0) {
-        my_strcpy(reply, "[CERBERUS]: Security Protocol 9 active. Query audited and cleared.");
-    } else {
-        my_strcpy(reply, "I am happy to assist you with \"");
-        my_strcat(reply, prompt);
-        my_strcat(reply, "\". Everything in ");
-        my_strcat(reply, currentRoom);
-        my_strcat(reply, " is operating smoothly!");
-    }
-
-    AddMessage(userPersonaTag, reply, currentRoom, 0);
 }
 
 void EscapeJsonString(const char* src, char* dst, int maxDst) {
@@ -397,17 +365,16 @@ void ShowHelpDialog(HWND hwnd) {
         "=== KChat Native Pro User Guide & Reference ===\r\n\r\n"
         "[QUICK-START TUTORIAL]\r\n"
         "  1. Switch Channels : Use [Ctrl+1]..[Ctrl+4] or the Room dropdown to toggle\r\n"
-        "                       between #general, #dev, #random, and #ai-lounge.\r\n"
-        "  2. Chat & AI       : Type your message in the bottom box and hit [Enter].\r\n"
-        "                       Click [Ask AI] or press [Ctrl+A] to prompt the active AI Persona.\r\n"
+        "                       between #general, #dev, #random, and #lounge.\r\n"
+        "  2. Chat & Messaging: Type your message in the bottom box and hit [Enter].\r\n"
+        "                       Use slash commands like /me, /shrug, or /roll for actions.\r\n"
         "  3. Interactive Poll: Click [+ Poll] or type /poll to launch a vote; click [Vote] to vote.\r\n"
         "  4. Search & Filter : Type in the Search box to filter messages; press [Esc] to reset.\r\n"
         "  5. Export & Copy   : Click [Copy] or press [Ctrl+C] to copy log to clipboard;\r\n"
         "                       click [Save TXT] or [JSON] to archive conversation history.\r\n\r\n"
         "[KEYBOARD SHORTCUTS]\r\n"
         "  F1, H            : Open this comprehensive Help & Tutorial guide\r\n"
-        "  Ctrl+1 .. Ctrl+4 : Quick switch channel (#general, #dev, #random, #ai-lounge)\r\n"
-        "  Ctrl+A           : Query active AI Persona with current input\r\n"
+        "  Ctrl+1 .. Ctrl+4 : Quick switch channel (#general, #dev, #random, #lounge)\r\n"
         "  Ctrl+C           : Copy channel chat log to clipboard\r\n"
         "  Ctrl+F           : Focus and select Search filter box\r\n"
         "  Ctrl+P           : Pin / Unpin latest message in channel\r\n"
@@ -424,13 +391,10 @@ void ShowHelpDialog(HWND hwnd) {
         "  /join <#room>                       : Switch or join a custom channel\r\n"
         "  /roll [d6|d20|d100]                 : Roll dice with custom sides\r\n"
         "  /stats                              : Display channel analytics\r\n"
-        "  /ai <prompt>                        : Direct query to active AI Persona\r\n"
         "  /me <action>                        : Send 3rd-person action notice\r\n"
         "  /shrug, /table                      : Quick fun ASCII emotes\r\n"
         "  /clear                              : Clear message view\r\n"
         "  /unpin                              : Unpin banner message\r\n\r\n"
-        "[AI PERSONAS]\r\n"
-        "  Assistant, Cyberpunk AI, CodeBot, Sarcastic Hacker, Cerberus Security\r\n\r\n"
         "[SERVER CONNECTIVITY]\r\n"
         "  Connect to TCP chat server at specified IP:Port.";
     MessageBoxA(hwnd, helpText, "KChat Pro - Help & Tutorial", MB_OK | MB_ICONINFORMATION);
@@ -485,8 +449,7 @@ LRESULT CALLBACK InputSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
     }
     if (msg == WM_KEYDOWN && (GetKeyState(VK_CONTROL) & 0x8000)) {
         if (wParam == 'A' || wParam == 'a') {
-            HWND hParent = GetParent(hwnd);
-            SendMessageA(hParent, WM_COMMAND, 106, 0);
+            SendMessageA(hwnd, EM_SETSEL, 0, -1);
             return 0;
         }
     }
@@ -499,7 +462,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             WSADATA wsa;
             WSAStartup(MAKEWORD(2,2), &wsa);
 
-            // Row 1: Network & Room & Persona controls
+            // Row 1: Network & Room controls
             CreateWindowA("STATIC", "IP:", WS_CHILD|WS_VISIBLE, SCALE(10), SCALE(10), SCALE(22), SCALE(20), hwnd, 0, 0, 0);
             hIp = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "127.0.0.1", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, SCALE(34), SCALE(8), SCALE(72), SCALE(24), hwnd, 0, 0, 0);
             
@@ -513,17 +476,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hRoomCombo, CB_ADDSTRING, 0, (LPARAM)"#general");
             SendMessageA(hRoomCombo, CB_ADDSTRING, 0, (LPARAM)"#dev");
             SendMessageA(hRoomCombo, CB_ADDSTRING, 0, (LPARAM)"#random");
-            SendMessageA(hRoomCombo, CB_ADDSTRING, 0, (LPARAM)"#ai-lounge");
+            SendMessageA(hRoomCombo, CB_ADDSTRING, 0, (LPARAM)"#lounge");
             SendMessageA(hRoomCombo, CB_SETCURSEL, 0, 0);
-
-            CreateWindowA("STATIC", "AI:", WS_CHILD|WS_VISIBLE, SCALE(412), SCALE(10), SCALE(22), SCALE(20), hwnd, 0, 0, 0);
-            hPersonaCombo = CreateWindowA("COMBOBOX", "", WS_CHILD|WS_VISIBLE|CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP, SCALE(436), SCALE(8), SCALE(105), SCALE(150), hwnd, (HMENU)105, 0, 0);
-            SendMessageA(hPersonaCombo, CB_ADDSTRING, 0, (LPARAM)"Assistant");
-            SendMessageA(hPersonaCombo, CB_ADDSTRING, 0, (LPARAM)"Cyberpunk");
-            SendMessageA(hPersonaCombo, CB_ADDSTRING, 0, (LPARAM)"CodeBot");
-            SendMessageA(hPersonaCombo, CB_ADDSTRING, 0, (LPARAM)"Sarcastic");
-            SendMessageA(hPersonaCombo, CB_ADDSTRING, 0, (LPARAM)"Cerberus");
-            SendMessageA(hPersonaCombo, CB_SETCURSEL, 0, 0);
 
             hPollBtn = CreateWindowA("BUTTON", "+ Poll [P]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(547), SCALE(8), SCALE(65), SCALE(24), hwnd, (HMENU)113, 0, 0);
             hVoteBtn = CreateWindowA("BUTTON", "Vote [V]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(616), SCALE(8), SCALE(58), SCALE(24), hwnd, (HMENU)114, 0, 0);
@@ -546,11 +500,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hLog = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_MULTILINE|ES_AUTOVSCROLL|ES_READONLY|WS_TABSTOP, SCALE(10), SCALE(66), SCALE(810), SCALE(508), hwnd, 0, 0, 0);
             
             // Row 4: Send & Input area
-            hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, SCALE(10), SCALE(584), SCALE(430), SCALE(26), hwnd, 0, 0, 0);
-            hSend = CreateWindowA("BUTTON", "Send [Enter]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(446), SCALE(584), SCALE(84), SCALE(26), hwnd, (HMENU)101, 0, 0);
-            hCopyBtn = CreateWindowA("BUTTON", "Copy [Ctrl+C]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(534), SCALE(584), SCALE(88), SCALE(26), hwnd, (HMENU)116, 0, 0);
-            hAskAI = CreateWindowA("BUTTON", "Ask AI [Ctrl+A]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(626), SCALE(584), SCALE(98), SCALE(26), hwnd, (HMENU)106, 0, 0);
-            hSave = CreateWindowA("BUTTON", "Save TXT", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(728), SCALE(584), SCALE(92), SCALE(26), hwnd, (HMENU)103, 0, 0);
+            hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL|WS_TABSTOP, SCALE(10), SCALE(584), SCALE(512), SCALE(26), hwnd, 0, 0, 0);
+            hSend = CreateWindowA("BUTTON", "Send [Enter]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(528), SCALE(584), SCALE(90), SCALE(26), hwnd, (HMENU)101, 0, 0);
+            hCopyBtn = CreateWindowA("BUTTON", "Copy [Ctrl+C]", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(624), SCALE(584), SCALE(96), SCALE(26), hwnd, (HMENU)116, 0, 0);
+            hSave = CreateWindowA("BUTTON", "Save TXT", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_TABSTOP, SCALE(726), SCALE(584), SCALE(94), SCALE(26), hwnd, (HMENU)103, 0, 0);
             
             oldInputProc = (WNDPROC)SetWindowLongPtrA(hInput, GWLP_WNDPROC, (LONG_PTR)InputSubclassProc);
             oldSearchProc = (WNDPROC)SetWindowLongPtrA(hSearchInput, GWLP_WNDPROC, (LONG_PTR)SearchSubclassProc);
@@ -562,7 +515,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hPort, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hRoomCombo, WM_SETFONT, (WPARAM)hUIFont, TRUE);
-            SendMessageA(hPersonaCombo, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hPollBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hVoteBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hStatsBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
@@ -577,11 +529,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hInput, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hSend, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hCopyBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
-            SendMessageA(hAskAI, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hClear, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hSave, WM_SETFONT, (WPARAM)hUIFont, TRUE);
 
-            AddMessage("System", "Welcome to KChat Native Pro Suite! Interactive Polls, Topics, AI Personas, and Slash Commands active.", "#general", 1);
+            AddMessage("System", "Welcome to KChat Native Pro Suite! Interactive Polls, Topics, and Slash Commands active.", "#general", 1);
             
             const char* sampleOpts[] = { "C/Win32 Native App", "HTML5/JS Web App", "Both with Full Parity" };
             AddPollMessage("KChatBot", "What is your favorite KiloApp architecture style?", sampleOpts, 3, "#general");
@@ -611,11 +562,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SendMessageA(hRoomCombo, CB_GETLBTEXT, idx, (LPARAM)currentRoom);
                     UpdateTopicDisplay();
                     RebuildLogView();
-                }
-            } else if (wmId == 105 && wmEvent == CBN_SELCHANGE) { // Persona Combobox selection
-                int idx = (int)SendMessageA(hPersonaCombo, CB_GETCURSEL, 0, 0);
-                if (idx != CB_ERR) {
-                    SendMessageA(hPersonaCombo, CB_GETLBTEXT, idx, (LPARAM)activePersona);
                 }
             } else if (wmId == 111 && wmEvent == EN_CHANGE) { // Search Edit Box
                 GetWindowTextA(hSearchInput, searchKeyword, sizeof(searchKeyword));
@@ -686,7 +632,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (buf[0]) {
                     // Slash command handling
                     if (my_strcmp(buf, "/help") == 0) {
-                        AddMessage("System", "Help: /poll <q>? <o1>|<o2>, /vote <num>, /topic <text>, /nick <name>, /roll [d20], /stats, /me <act>, /shrug, /ai <prompt>, /clear, /unpin", currentRoom, 0);
+                        AddMessage("System", "Help: /poll <q>? <o1>|<o2>, /vote <num>, /topic <text>, /nick <name>, /roll [d20], /stats, /me <act>, /shrug, /clear, /unpin", currentRoom, 0);
                         SetWindowTextA(hInput, "");
                         break;
                     }
@@ -853,13 +799,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         break;
                     }
 
-                    if (buf[0] == '/' && buf[1] == 'a' && buf[2] == 'i' && buf[3] == ' ') {
-                        AddMessage(currentUsername, buf, currentRoom, 0);
-                        GenerateAIResponse(buf + 4);
-                        SetWindowTextA(hInput, "");
-                        break;
-                    }
-
                     AddMessage(currentUsername, buf, currentRoom, 0);
                     if (s != INVALID_SOCKET) {
                         send(s, buf, my_strlen(buf), 0);
@@ -867,13 +806,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     SetWindowTextA(hInput, "");
                 }
-            } else if (wmId == 106) { // Ask AI
-                char buf[384];
-                GetWindowTextA(hInput, buf, sizeof(buf));
-                if (!buf[0]) my_strcpy(buf, "What is your system status?");
-                AddMessage(currentUsername, buf, currentRoom, 0);
-                GenerateAIResponse(buf);
-                SetWindowTextA(hInput, "");
             } else if (wmId == 107) { // Pin Last
                 if (g_msgCount > 0) {
                     g_messages[g_msgCount - 1].pinned = !g_messages[g_msgCount - 1].pinned;
@@ -1070,10 +1002,7 @@ void __stdcall MainEntry() {
                     SwitchToRoom(hwnd, "#random");
                     continue;
                 } else if (msg.wParam == '4') {
-                    SwitchToRoom(hwnd, "#ai-lounge");
-                    continue;
-                } else if (msg.wParam == 'A' || msg.wParam == 'a') {
-                    SendMessageA(hwnd, WM_COMMAND, 106, 0);
+                    SwitchToRoom(hwnd, "#lounge");
                     continue;
                 } else if (msg.wParam == 'C' || msg.wParam == 'c') {
                     if (focus != hInput && focus != hSearchInput) {
@@ -1123,7 +1052,7 @@ void __stdcall MainEntry() {
                     SwitchToRoom(hwnd, "#random");
                     continue;
                 } else if (msg.wParam == '4') {
-                    SwitchToRoom(hwnd, "#ai-lounge");
+                    SwitchToRoom(hwnd, "#lounge");
                     continue;
                 }
             }

@@ -624,19 +624,6 @@
                 <input type="text" id="port" value="6667" style="width: 50px;" aria-label="Custom server port">
                 <button id="btnConnect" onclick="window.connect()" aria-label="Connect or disconnect from custom server">Connect</button>
             </div>
-
-            <!-- AI Persona & Persona Selector -->
-            <div class="row">
-                <label for="aiPersona">🤖 AI Persona:</label>
-                <select id="aiPersona" onchange="window.changePersona()" aria-label="Select AI Persona">
-                    <option value="Assistant">Assistant (Helpful)</option>
-                    <option value="Cyberpunk">Cyberpunk AI</option>
-                    <option value="CodeBot">CodeBot</option>
-                    <option value="Sarcastic">Sarcastic Hacker</option>
-                    <option value="Cerberus">Cerberus Security</option>
-                </select>
-                <button id="btnAskAI" class="btn-purple" onclick="window.askAI()" aria-label="Ask AI Persona">✨ Ask AI</button>
-            </div>
         </div>
 
         <!-- Channel Pills Row & Search / Export Bar -->
@@ -645,7 +632,7 @@
                 <div class="channel-pill active" onclick="window.switchRoom('#general')"><span class="key-badge">1</span> #general</div>
                 <div class="channel-pill" onclick="window.switchRoom('#dev')"><span class="key-badge">2</span> #dev</div>
                 <div class="channel-pill" onclick="window.switchRoom('#random')"><span class="key-badge">3</span> #random</div>
-                <div class="channel-pill" onclick="window.switchRoom('#ai-lounge')"><span class="key-badge">4</span> #ai-lounge</div>
+                <div class="channel-pill" onclick="window.switchRoom('#lounge')"><span class="key-badge">4</span> #lounge</div>
                 <button class="btn-secondary" style="padding: 2px 8px; font-size: 11px;" onclick="window.openRoomModal()" title="Create/Join a channel">+ Room</button>
                 <span class="help-tip-badge" onclick="window.showHelp()" title="Click for Quick-Start Tutorial & Shortcuts" style="cursor: pointer; font-size: 11px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 2px 8px; color: #93c5fd; margin-left: 4px;">💡 Press [F1] for Tutorial</span>
             </div>
@@ -706,8 +693,8 @@
                 <div class="help-section">
                     <div class="help-section-title">🚀 Quick-Start Tutorial</div>
                     <div style="font-size: 12px; color: var(--text-muted); line-height: 1.6; display: flex; flex-direction: column; gap: 6px;">
-                        <div><strong>1. Switch Channels:</strong> Click channel tabs (<code style="color:#60a5fa">#general</code>, <code style="color:#60a5fa">#dev</code>, <code style="color:#60a5fa">#random</code>, <code style="color:#60a5fa">#ai-lounge</code>) or press keys <span class="key-badge">1</span>–<span class="key-badge">4</span>. Click <code style="color:#60a5fa">+ Room</code> or type <code>/join #room</code> to jump into any custom channel.</div>
-                        <div><strong>2. Chat & AI Personas:</strong> Type a message and hit <span class="key-badge">Enter</span>. Click <strong>✨ Ask AI</strong> or type <code>/ai prompt</code> to query your chosen AI persona (Assistant, Cyberpunk, CodeBot, Sarcastic, Cerberus).</div>
+                        <div><strong>1. Switch Channels:</strong> Click channel tabs (<code style="color:#60a5fa">#general</code>, <code style="color:#60a5fa">#dev</code>, <code style="color:#60a5fa">#random</code>, <code style="color:#60a5fa">#lounge</code>) or press keys <span class="key-badge">1</span>–<span class="key-badge">4</span>. Click <code style="color:#60a5fa">+ Room</code> or type <code>/join #room</code> to jump into any custom channel.</div>
+                        <div><strong>2. Chat & Messaging:</strong> Type a message and hit <span class="key-badge">Enter</span>. Use rich formatting, slash commands like <code>/me &lt;action&gt;</code>, or quick emotes like <code>/shrug</code>.</div>
                         <div><strong>3. Interactive Polls:</strong> Click <strong>📊 Poll</strong> (or press <span class="key-badge">P</span>) to launch an instant room vote. Click any option bar or use <code>/vote 1</code> to cast a vote.</div>
                         <div><strong>4. Copy & Pin Messages:</strong> Click <strong>📋 Copy</strong> on any message to copy its text to the clipboard with instant confirmation, or <strong>📌 Pin</strong> to pin important notes to the room banner.</div>
                         <div><strong>5. Search & Export:</strong> Press <span class="key-badge">Ctrl+F</span> to filter messages with instant clear button. Click <strong>📋 Copy</strong>, <strong>📥 JSON</strong>, or <strong>📄 TXT</strong> to archive or export your conversations.</div>
@@ -718,7 +705,7 @@
                     <div class="help-section-title">⌨️ Keyboard Shortcuts</div>
                     <table class="help-table">
                         <tr><td>[F1] or [H]</td><td>Open / Close this comprehensive Help Guide & Tutorial</td></tr>
-                        <tr><td>[1] - [4]</td><td>Quick switch channel (#general, #dev, #random, #ai-lounge)</td></tr>
+                        <tr><td>[1] - [4]</td><td>Quick switch channel (#general, #dev, #random, #lounge)</td></tr>
                         <tr><td>[P]</td><td>Open Create Interactive Poll modal</td></tr>
                         <tr><td>[S]</td><td>Open Chat Room Analytics & Insights modal</td></tr>
                         <tr><td>[Ctrl + C]</td><td>Copy channel chat transcript to clipboard</td></tr>
@@ -738,7 +725,6 @@
                         <tr><td>/join &lt;#room&gt;</td><td>Switch to or create a custom chat room</td></tr>
                         <tr><td>/roll [d20]</td><td>Roll a dice (e.g., /roll d6, /roll d100)</td></tr>
                         <tr><td>/stats</td><td>Display channel & message analytics</td></tr>
-                        <tr><td>/ai &lt;prompt&gt;</td><td>Direct query to the active AI Persona</td></tr>
                         <tr><td>/me &lt;action&gt;</td><td>Send a 3rd-person action notice</td></tr>
                         <tr><td>/shrug</td><td>Post ASCII shrug ¯\_(ツ)_/¯</td></tr>
                         <tr><td>/tableflip</td><td>Post ASCII tableflip (╯°□°)╯︵ ┻━┻</td></tr>
@@ -748,9 +734,9 @@
                 </div>
 
                 <div class="help-section">
-                    <div class="help-section-title">🤖 AI Personas & Global Network</div>
+                    <div class="help-section-title">🌐 Global Network & IRC Connectivity</div>
                     <div style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">
-                        Choose between <strong>Assistant</strong>, <strong>Cyberpunk AI</strong>, <strong>CodeBot</strong>, <strong>Sarcastic Hacker</strong>, or <strong>Cerberus Security</strong> using the top AI selector. Join the <strong>Firebase Global Room</strong> for cross-browser realtime multi-user chat, or connect to custom TCP/WS chat nodes.
+                        Join the <strong>Firebase Global Room</strong> for cross-browser realtime multi-user chat, or connect to custom TCP/WS chat nodes using the IP and Port network toolbar.
                     </div>
                 </div>
             </div>
@@ -867,7 +853,6 @@
             </div>
             <div style="font-size: 12px; color: var(--text-muted); background: rgba(0,0,0,0.3); padding: 10px; border-radius: var(--radius-sm); line-height: 1.6;">
                 <div><strong>Current Channel:</strong> <span id="statCurrentRoom" style="color: #60a5fa;">#general</span></div>
-                <div><strong>Active AI Persona:</strong> <span id="statActiveAI" style="color: #c084fc;">Assistant</span></div>
                 <div><strong>Active Server:</strong> <span id="statServerStatus" style="color: #34d399;">Local / Offline</span></div>
             </div>
             <div style="text-align: right;">
@@ -905,21 +890,20 @@
         let currentUsername = "Guest" + Math.floor(Math.random() * 10000);
         let currentRoom = "#general";
         let showOnlyPinned = false;
-        let activePersona = "Assistant";
 
-        let rooms = ["#general", "#dev", "#random", "#ai-lounge"];
+        let rooms = ["#general", "#dev", "#random", "#lounge"];
         let roomTopics = {
             "#general": "General discussions & community hub",
             "#dev": "KiloApps architecture, C/ASM & Web dev",
             "#random": "Off-topic banters and fun",
-            "#ai-lounge": "Prompt crafting & neural explorations"
+            "#lounge": "Casual lounge & community discussion"
         };
 
         let messages = [
             {
                 id: 'sys_1',
                 user: 'System',
-                text: 'Welcome to KChat Pro Suite! Multi-Room, Interactive Polls, Topics, AI Personas, and Slash Commands active.\n💡 Tip: Press [F1] or [H] for the Quick-Start Tutorial, Slash Commands, and Shortcuts.',
+                text: 'Welcome to KChat Pro Suite! Multi-Room, Interactive Polls, Topics, and Slash Commands active.\n💡 Tip: Press [F1] or [H] for the Quick-Start Tutorial, Slash Commands, and Shortcuts.',
                 timestamp: Date.now() - 3000,
                 room: '#general',
                 pinned: true,
@@ -936,7 +920,7 @@
                 pinned: false,
                 reactions: { '💡': 3 },
                 userReacted: {},
-                isAI: true,
+                isAI: false,
                 isPoll: true,
                 pollQuestion: 'What is your favorite KiloApp architecture style?',
                 pollOptions: [
@@ -959,7 +943,6 @@
                     if (parsed.roomTopics && typeof parsed.roomTopics === 'object') roomTopics = parsed.roomTopics;
                     if (parsed.currentUsername) currentUsername = parsed.currentUsername;
                     if (parsed.currentRoom) currentRoom = parsed.currentRoom;
-                    if (parsed.activePersona) activePersona = parsed.activePersona;
                 }
             } catch(e) {
                 console.warn("Could not load KChat state from localStorage:", e);
@@ -973,8 +956,7 @@
                     rooms: rooms,
                     roomTopics: roomTopics,
                     currentUsername: currentUsername,
-                    currentRoom: currentRoom,
-                    activePersona: activePersona
+                    currentRoom: currentRoom
                 };
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
             } catch(e) {
@@ -1173,23 +1155,6 @@
         window.promptNewRoom = function() {
             window.openRoomModal();
         };
-
-        // Persona Responses Generator
-        function generateAIResponse(userPrompt) {
-            switch(activePersona) {
-                case 'Cyberpunk':
-                    return `⚡ [CYBERPUNK AI]: Data stream captured from room ${currentRoom}. Processing "${userPrompt}". Signal output: Matrix node updated at 100Gbps. Neon protocols engaged.`;
-                case 'CodeBot':
-                    return `💻 [CODEBOT]: \`// Received query: "${userPrompt}"\`\nfunction executeResponse() {\n  return { status: 200, output: "Code analyzed cleanly. No syntax errors detected." };\n}`;
-                case 'Sarcastic':
-                    return `😈 [SARCASTIC HACKER]: Oh wow, "${userPrompt}"? Truly groundbreaking stuff. Let me pause downloading the internet to process that deeply. 10/10 input!`;
-                case 'Cerberus':
-                    return `🛡️ [CERBERUS SECURITY]: Security Protocol 9 active on "${userPrompt}". Firewall verified. Access Level 5 clear in ${currentRoom}. Audited.`;
-                case 'Assistant':
-                default:
-                    return `🤖 [ASSISTANT]: I'm happy to help you with "${userPrompt}"! In channel ${currentRoom}, everything is functioning smoothly. Let me know if you need anything else.`;
-            }
-        }
 
         // Render Functions
         window.renderMessages = function() {
@@ -1459,22 +1424,6 @@
             window.renderMessages();
         };
 
-        window.changePersona = function() {
-            activePersona = document.getElementById('aiPersona').value;
-            safeSaveState();
-            showToast(`Switched AI Persona to ${activePersona}`);
-        };
-
-        window.askAI = function() {
-            const queryText = inputEl.value.trim() || "What can you do?";
-            addMessage(currentUsername, queryText, currentRoom, false);
-            inputEl.value = '';
-            setTimeout(() => {
-                const aiReply = generateAIResponse(queryText);
-                addMessage(activePersona + " AI", aiReply, currentRoom, true);
-            }, 600);
-        };
-
         // Pinning & Reaction Controls
         window.togglePin = function(msgId) {
             const m = messages.find(item => item.id === msgId);
@@ -1536,7 +1485,6 @@
             document.getElementById('statTotalPolls').textContent = pollMsgs.length;
             document.getElementById('statTotalVotes').textContent = totalVotes;
             document.getElementById('statCurrentRoom').textContent = currentRoom;
-            document.getElementById('statActiveAI').textContent = activePersona;
             document.getElementById('statServerStatus').textContent = isFirebase ? 'Firebase Global RTDB' : (ws ? 'Connected TCP/WS' : 'Local / Offline');
 
             statsModalEl.classList.add('active');
@@ -1853,7 +1801,7 @@
             if (!msg) return;
 
             if (msg === '/help' || msg.startsWith('/help ')) {
-                addMessage("System", "KChat Commands: /poll <q>? <opt1>|<opt2>, /vote <num>, /topic <text>, /roll [d20], /stats, /me <action>, /shrug, /tableflip, /nick <name>, /join <#room>, /ai <prompt>, /clear, /unpin", currentRoom, false);
+                addMessage("System", "KChat Commands: /poll <q>? <opt1>|<opt2>, /vote <num>, /topic <text>, /roll [d20], /stats, /me <action>, /shrug, /tableflip, /nick <name>, /join <#room>, /clear, /unpin", currentRoom, false);
                 inputEl.value = '';
                 return;
             }
@@ -2003,22 +1951,6 @@
                 }
             }
 
-            if (msg === '/ai') {
-                window.askAI();
-                return;
-            }
-
-            if (msg.startsWith('/ai ')) {
-                const aiPrompt = msg.substring(4).trim();
-                addMessage(currentUsername, msg, currentRoom);
-                inputEl.value = '';
-                setTimeout(() => {
-                    const aiReply = generateAIResponse(aiPrompt);
-                    addMessage(activePersona + " AI", aiReply, currentRoom, true);
-                }, 500);
-                return;
-            }
-
             addMessage(currentUsername, msg, currentRoom);
 
             if (isFirebase) {
@@ -2041,10 +1973,6 @@
         };
 
         // Initial setup
-        const aiSelect = document.getElementById('aiPersona');
-        if (aiSelect && activePersona) {
-            aiSelect.value = activePersona;
-        }
         window.renderChannelBar();
         window.renderMessages();
         setTimeout(() => {
