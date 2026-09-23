@@ -43,36 +43,36 @@ typedef struct {
 } CampaignStage;
 
 CampaignStage campaign[20] = {
-    {9, 5, 0.5f, 0, "Stage 1: Novice Field", 0, 0, {}, ""},
-    {9, 3, 0.5f, 1, "Stage 2: Corner Skirmish", 0, 0, {}, ""},
+    {9, 5, 0.5f, 0, "Stage 1: Novice Field", 0, 0, {0}, ""},
+    {9, 3, 0.5f, 1, "Stage 2: Corner Skirmish", 0, 0, {0}, ""},
     {9, 0, 0.5f, 0, "Stage 3: Tsumego - Corner Capture", 1, 7, 
      {{1,0,2}, {1,1,2}, {0,1,2}, {2,0,1}, {2,1,1}, {1,2,1}, {0,2,1}}, 
      "Capture White's corner group at (0,0)!"},
-    {9, 2, 0.5f, 2, "Stage 4: Tactical Border", 0, 0, {}, ""},
-    {9, 0, 6.5f, 3, "Stage 5: 9x9 Master Duel", 0, 0, {}, ""},
-    {13, 7, 0.5f, 0, "Stage 6: Medium Horizon", 0, 0, {}, ""},
+    {9, 2, 0.5f, 2, "Stage 4: Tactical Border", 0, 0, {0}, ""},
+    {9, 0, 6.5f, 3, "Stage 5: 9x9 Master Duel", 0, 0, {0}, ""},
+    {13, 7, 0.5f, 0, "Stage 6: Medium Horizon", 0, 0, {0}, ""},
     {13, 0, 0.5f, 1, "Stage 7: Tsumego - Side Crane's Nest", 1, 8,
      {{3,2,2}, {4,2,2}, {5,2,2}, {3,3,1}, {6,2,1}, {4,1,1}, {5,1,1}, {4,3,2}},
      "Expose White's weakness on the side!"},
-    {13, 4, 0.5f, 2, "Stage 8: Pincer Conflict", 0, 0, {}, ""},
-    {13, 2, 6.5f, 1, "Stage 9: Influence Battle", 0, 0, {}, ""},
-    {13, 0, 6.5f, 3, "Stage 10: 13x13 Grandmaster", 0, 0, {}, ""},
+    {13, 4, 0.5f, 2, "Stage 8: Pincer Conflict", 0, 0, {0}, ""},
+    {13, 2, 6.5f, 1, "Stage 9: Influence Battle", 0, 0, {0}, ""},
+    {13, 0, 6.5f, 3, "Stage 10: 13x13 Grandmaster", 0, 0, {0}, ""},
     {19, 0, 0.5f, 0, "Stage 11: Tsumego - Making Two Eyes", 1, 11,
      {{0,1,1}, {1,1,1}, {2,1,1}, {3,1,1}, {3,0,1}, {0,2,2}, {1,2,2}, {2,2,2}, {3,2,2}, {4,1,2}, {4,0,2}},
      "Play the vital point to secure two eyes for Black!"},
-    {19, 8, 0.5f, 1, "Stage 12: Great Wall Siege", 0, 0, {}, ""},
-    {19, 5, 0.5f, 2, "Stage 13: Dragon Slayer", 0, 0, {}, ""},
+    {19, 8, 0.5f, 1, "Stage 12: Great Wall Siege", 0, 0, {0}, ""},
+    {19, 5, 0.5f, 2, "Stage 13: Dragon Slayer", 0, 0, {0}, ""},
     {19, 0, 0.5f, 3, "Stage 14: Tsumego - Surround the Center", 1, 9,
      {{9,9,2}, {10,9,2}, {9,10,2}, {10,10,2}, {8,9,1}, {11,9,1}, {8,10,1}, {11,10,1}, {9,11,1}},
      "Surround and capture White's central shape!"},
-    {19, 3, 0.5f, 3, "Stage 15: Dragon Slayer Elite", 0, 0, {}, ""},
+    {19, 3, 0.5f, 3, "Stage 15: Dragon Slayer Elite", 0, 0, {0}, ""},
     {19, 0, 0.5f, 2, "Stage 16: Tsumego - Belly Attachment", 1, 10,
      {{5,5,2}, {5,6,2}, {6,5,2}, {4,5,1}, {4,6,1}, {5,4,1}, {6,4,1}, {7,5,1}, {6,7,1}, {5,7,1}},
      "Play the belly attachment tesuji at (6,6) to capture White!"},
-    {19, 2, 6.5f, 1, "Stage 17: Center Star Invasion", 0, 0, {}, ""},
-    {19, 1, 6.5f, 2, "Stage 18: Even Corner Clash", 0, 0, {}, ""},
-    {19, 0, 7.5f, 3, "Stage 19: KGo Championship Final", 0, 0, {}, ""},
-    {19, 0, 7.5f, 3, "Stage 20: Grandmaster Go Legend Challenge", 0, 0, {}, ""}
+    {19, 2, 6.5f, 1, "Stage 17: Center Star Invasion", 0, 0, {0}, ""},
+    {19, 1, 6.5f, 2, "Stage 18: Even Corner Clash", 0, 0, {0}, ""},
+    {19, 0, 7.5f, 3, "Stage 19: KGo Championship Final", 0, 0, {0}, ""},
+    {19, 0, 7.5f, 3, "Stage 20: Grandmaster Go Legend Challenge", 0, 0, {0}, ""}
 };
 
 int currentCampaignStage = -1;
@@ -1570,36 +1570,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SelectObject(memDC, oldPenInlay);
             SelectObject(memDC, oldBInlay);
             DeleteObject(inlayPen);
-
-            // Traveling specular glint traversing the outer playfield Kaya board frame
-            float periT = fmodf(animTime * 0.6f, 1.0f);
-            float totalPeri = (float)((boardW + 30) * 4);
-            float curDist = periT * totalPeri;
-            int glintX = padding - 15;
-            int glintY = padding - 15;
-            int sideLen = boardW + 30;
-            if (curDist < sideLen) {
-                glintX = (padding - 15) + (int)curDist;
-                glintY = padding - 15;
-            } else if (curDist < sideLen * 2) {
-                glintX = padding + boardW + 15;
-                glintY = (padding - 15) + (int)(curDist - sideLen);
-            } else if (curDist < sideLen * 3) {
-                glintX = (padding + boardW + 15) - (int)(curDist - sideLen * 2);
-                glintY = padding + boardW + 15;
-            } else {
-                glintX = padding - 15;
-                glintY = (padding + boardW + 15) - (int)(curDist - sideLen * 3);
-            }
-            HBRUSH glintBrush1 = CreateSolidBrush(RGB(255, 255, 255));
-            HBRUSH glintBrush2 = CreateSolidBrush(RGB(255, 225, 120));
-            SelectObject(memDC, nullPen);
-            SelectObject(memDC, glintBrush2);
-            Ellipse(memDC, glintX - 7, glintY - 7, glintX + 7, glintY + 7);
-            SelectObject(memDC, glintBrush1);
-            Ellipse(memDC, glintX - 3, glintY - 3, glintX + 3, glintY + 3);
-            DeleteObject(glintBrush1);
-            DeleteObject(glintBrush2);
 
             // Grid lines
             HPEN hPen = CreatePen(PS_SOLID, 1, RGB(30, 22, 14));

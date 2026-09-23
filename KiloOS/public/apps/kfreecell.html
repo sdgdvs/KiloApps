@@ -1534,34 +1534,7 @@
       const pulse = Math.sin(time * 3.0) * 0.25 + 0.75;
       ctx.save();
       ctx.strokeStyle = `rgba(255, 215, 0, ${(0.4 * pulse).toFixed(3)})`;
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([8, 8]);
-      ctx.lineDashOffset = -time * 26;
       ctx.strokeRect(x, y, bw, bh);
-      ctx.setLineDash([]);
-
-      // Traveling Specular Glint traversing the perimeter
-      const totalPerim = (bw + bh) * 2;
-      const glintDist = ((time * 200) % totalPerim);
-      let gx = x, gy = y;
-      if (glintDist < bw) {
-        gx = x + glintDist; gy = y;
-      } else if (glintDist < bw + bh) {
-        gx = x + bw; gy = y + (glintDist - bw);
-      } else if (glintDist < bw * 2 + bh) {
-        gx = x + bw - (glintDist - (bw + bh)); gy = y + bh;
-      } else {
-        gx = x; gy = y + bh - (glintDist - (bw * 2 + bh));
-      }
-
-      let glintGrad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 20);
-      glintGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-      glintGrad.addColorStop(0.35, 'rgba(255, 215, 0, 0.85)');
-      glintGrad.addColorStop(1, 'rgba(255, 215, 0, 0)');
-      ctx.fillStyle = glintGrad;
-      ctx.beginPath();
-      ctx.arc(gx, gy, 20, 0, Math.PI * 2);
-      ctx.fill();
       ctx.restore();
     }
 

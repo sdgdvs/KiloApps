@@ -185,26 +185,26 @@ typedef struct {
 } CampaignStageData;
 
 static const CampaignStageData g_campaignStages[20] = {
-    { 1, "Initiation", 6, 6, AI_ROOKIE, 1, 1, "Small 6x6 board. Master the basics.", 0, {}, 0, {}, 0, {} },
-    { 2, "Outpost Duel", 6, 6, AI_GREEDY, 1, 1, "6x6 board against an aggressive Greedy AI.", 0, {}, 0, {}, 0, {} },
-    { 3, "The Vault", 6, 6, AI_ROOKIE, 1, 1, "6x6 board with 4 obstacle holes blocking corners.", 4, {{1,1},{1,4},{4,1},{4,4}}, 0, {}, 0, {} },
-    { 4, "Classic Arena", 8, 8, AI_GREEDY, 1, 1, "Standard 8x8 battle vs Greedy AI.", 0, {}, 0, {}, 0, {} },
-    { 5, "Fortress Gates", 8, 8, AI_POSITIONAL, 1, 1, "8x8 board with blocked corners and 2x bonus tiles!", 4, {{0,0},{0,7},{7,0},{7,7}}, 2, {{2,2},{5,5}}, 0, {} },
-    { 6, "Crossfire Zone", 8, 8, AI_POSITIONAL, 1, 1, "4 inner obstacle holes split the center.", 4, {{2,2},{2,5},{5,2},{5,5}}, 2, {{1,3},{6,4}}, 0, {} },
-    { 7, "Vanguard Siege", 8, 8, AI_GRANDMASTER, 2, 1, "Face Grandmaster AI! You start with 2 extra discs.", 0, {}, 0, {}, 2, {{2,3,BLACK},{5,4,BLACK}} },
-    { 8, "Great Colosseum", 10, 10, AI_ROOKIE, 2, 2, "Massive 10x10 arena! Control the expansive board.", 0, {}, 4, {{3,3},{3,6},{6,3},{6,6}}, 0, {} },
-    { 9, "Greedy Leviathan", 10, 10, AI_GREEDY, 2, 2, "10x10 board vs high-disc Greedy AI.", 0, {}, 4, {{2,4},{4,7},{7,5},{5,2}}, 0, {} },
-    { 10, "Citadel Runes", 10, 10, AI_POSITIONAL, 2, 2, "10x10 board with 8 corner & subcorner holes.", 8, {{0,0},{0,9},{9,0},{9,9},{1,1},{1,8},{8,1},{8,8}}, 4, {{3,4},{4,5},{5,4},{6,5}}, 0, {} },
-    { 11, "Diamond Ring", 8, 8, AI_POSITIONAL, 2, 2, "8x8 board with an outer ring of obstacles.", 8, {{1,3},{1,4},{3,1},{4,1},{3,6},{4,6},{6,3},{6,4}}, 4, {{2,2},{2,5},{5,2},{5,5}}, 0, {} },
-    { 12, "Labyrinth Grid", 10, 10, AI_GRANDMASTER, 2, 2, "10x10 maze layout with 8 obstacle blocks vs Grandmaster.", 8, {{2,2},{2,7},{7,2},{7,7},{4,2},{4,7},{2,4},{7,4}}, 4, {{3,3},{3,6},{6,3},{6,6}}, 0, {} },
-    { 13, "Blitz Trench", 6, 6, AI_GRANDMASTER, 2, 2, "Fast 6x6 board with 5s Blitz timer vs Grandmaster!", 0, {}, 2, {{1,2},{4,3}}, 0, {} },
-    { 14, "Dragon's Den", 8, 8, AI_GRANDMASTER, 2, 2, "8x8 board with 4 dragon holes on edge centers.", 4, {{0,3},{3,0},{4,7},{7,4}}, 4, {{2,3},{3,5},{5,2},{4,4}}, 0, {} },
-    { 15, "Eclipse Chamber", 10, 10, AI_POSITIONAL, 2, 2, "10x10 board with 12 obstacles surrounding center.", 12, {{1,1},{1,8},{8,1},{8,8},{3,1},{6,1},{3,8},{6,8},{1,3},{1,6},{8,3},{8,6}}, 4, {{4,2},{5,7},{2,5},{7,4}}, 0, {} },
-    { 16, "Phantom Matrix", 8, 8, AI_GRANDMASTER, 2, 2, "8x8 board with 6 staggered holes and 4 bonus tiles.", 6, {{0,2},{2,7},{5,0},{7,5},{3,3},{4,4}}, 4, {{1,1},{1,6},{6,1},{6,6}}, 0, {} },
-    { 17, "Warlord's Gambit", 10, 10, AI_POSITIONAL, 3, 2, "10x10 battlefield with 8 holes and 6 bonus tiles.", 8, {{0,4},{4,0},{5,9},{9,5},{2,2},{2,7},{7,2},{7,7}}, 6, {{3,2},{2,3},{6,7},{7,6},{3,7},{7,3}}, 0, {} },
-    { 18, "Titan Crucible", 10, 10, AI_GRANDMASTER, 3, 2, "10x10 arena with 10 holes vs Grandmaster Minimax.", 10, {{1,4},{1,5},{8,4},{8,5},{4,1},{5,1},{4,8},{5,8},{0,0},{9,9}}, 6, {{2,4},{7,5},{4,2},{5,7},{3,3},{6,6}}, 0, {} },
-    { 19, "Iron Apex", 8, 8, AI_GRANDMASTER, 3, 2, "Tight 8x8 board with 4 holes vs ruthless Grandmaster AI.", 4, {{1,2},{2,5},{5,2},{6,5}}, 4, {{0,1},{1,6},{6,1},{7,6}}, 0, {} },
-    { 20, "Reversi Grandmaster Challenge", 10, 10, AI_GRANDMASTER, 3, 3, "The ultimate 10x10 stage against the Supreme Reversi Grandmaster!", 12, {{0,0},{0,9},{9,0},{9,9},{2,2},{2,7},{7,2},{7,7},{4,1},{5,8},{1,5},{8,4}}, 6, {{3,4},{4,3},{5,6},{6,5},{1,1},{8,8}}, 0, {} }
+    { 1, "Initiation", 6, 6, AI_ROOKIE, 1, 1, "Small 6x6 board. Master the basics.", 0, {0}, 0, {0}, 0, {0} },
+    { 2, "Outpost Duel", 6, 6, AI_GREEDY, 1, 1, "6x6 board against an aggressive Greedy AI.", 0, {0}, 0, {0}, 0, {0} },
+    { 3, "The Vault", 6, 6, AI_ROOKIE, 1, 1, "6x6 board with 4 obstacle holes blocking corners.", 4, {{1,1},{1,4},{4,1},{4,4}}, 0, {0}, 0, {0} },
+    { 4, "Classic Arena", 8, 8, AI_GREEDY, 1, 1, "Standard 8x8 battle vs Greedy AI.", 0, {0}, 0, {0}, 0, {0} },
+    { 5, "Fortress Gates", 8, 8, AI_POSITIONAL, 1, 1, "8x8 board with blocked corners and 2x bonus tiles!", 4, {{0,0},{0,7},{7,0},{7,7}}, 2, {{2,2},{5,5}}, 0, {0} },
+    { 6, "Crossfire Zone", 8, 8, AI_POSITIONAL, 1, 1, "4 inner obstacle holes split the center.", 4, {{2,2},{2,5},{5,2},{5,5}}, 2, {{1,3},{6,4}}, 0, {0} },
+    { 7, "Vanguard Siege", 8, 8, AI_GRANDMASTER, 2, 1, "Face Grandmaster AI! You start with 2 extra discs.", 0, {0}, 0, {0}, 2, {{2,3,BLACK},{5,4,BLACK}} },
+    { 8, "Great Colosseum", 10, 10, AI_ROOKIE, 2, 2, "Massive 10x10 arena! Control the expansive board.", 0, {0}, 4, {{3,3},{3,6},{6,3},{6,6}}, 0, {0} },
+    { 9, "Greedy Leviathan", 10, 10, AI_GREEDY, 2, 2, "10x10 board vs high-disc Greedy AI.", 0, {0}, 4, {{2,4},{4,7},{7,5},{5,2}}, 0, {0} },
+    { 10, "Citadel Runes", 10, 10, AI_POSITIONAL, 2, 2, "10x10 board with 8 corner & subcorner holes.", 8, {{0,0},{0,9},{9,0},{9,9},{1,1},{1,8},{8,1},{8,8}}, 4, {{3,4},{4,5},{5,4},{6,5}}, 0, {0} },
+    { 11, "Diamond Ring", 8, 8, AI_POSITIONAL, 2, 2, "8x8 board with an outer ring of obstacles.", 8, {{1,3},{1,4},{3,1},{4,1},{3,6},{4,6},{6,3},{6,4}}, 4, {{2,2},{2,5},{5,2},{5,5}}, 0, {0} },
+    { 12, "Labyrinth Grid", 10, 10, AI_GRANDMASTER, 2, 2, "10x10 maze layout with 8 obstacle blocks vs Grandmaster.", 8, {{2,2},{2,7},{7,2},{7,7},{4,2},{4,7},{2,4},{7,4}}, 4, {{3,3},{3,6},{6,3},{6,6}}, 0, {0} },
+    { 13, "Blitz Trench", 6, 6, AI_GRANDMASTER, 2, 2, "Fast 6x6 board with 5s Blitz timer vs Grandmaster!", 0, {0}, 2, {{1,2},{4,3}}, 0, {0} },
+    { 14, "Dragon's Den", 8, 8, AI_GRANDMASTER, 2, 2, "8x8 board with 4 dragon holes on edge centers.", 4, {{0,3},{3,0},{4,7},{7,4}}, 4, {{2,3},{3,5},{5,2},{4,4}}, 0, {0} },
+    { 15, "Eclipse Chamber", 10, 10, AI_POSITIONAL, 2, 2, "10x10 board with 12 obstacles surrounding center.", 12, {{1,1},{1,8},{8,1},{8,8},{3,1},{6,1},{3,8},{6,8},{1,3},{1,6},{8,3},{8,6}}, 4, {{4,2},{5,7},{2,5},{7,4}}, 0, {0} },
+    { 16, "Phantom Matrix", 8, 8, AI_GRANDMASTER, 2, 2, "8x8 board with 6 staggered holes and 4 bonus tiles.", 6, {{0,2},{2,7},{5,0},{7,5},{3,3},{4,4}}, 4, {{1,1},{1,6},{6,1},{6,6}}, 0, {0} },
+    { 17, "Warlord's Gambit", 10, 10, AI_POSITIONAL, 3, 2, "10x10 battlefield with 8 holes and 6 bonus tiles.", 8, {{0,4},{4,0},{5,9},{9,5},{2,2},{2,7},{7,2},{7,7}}, 6, {{3,2},{2,3},{6,7},{7,6},{3,7},{7,3}}, 0, {0} },
+    { 18, "Titan Crucible", 10, 10, AI_GRANDMASTER, 3, 2, "10x10 arena with 10 holes vs Grandmaster Minimax.", 10, {{1,4},{1,5},{8,4},{8,5},{4,1},{5,1},{4,8},{5,8},{0,0},{9,9}}, 6, {{2,4},{7,5},{4,2},{5,7},{3,3},{6,6}}, 0, {0} },
+    { 19, "Iron Apex", 8, 8, AI_GRANDMASTER, 3, 2, "Tight 8x8 board with 4 holes vs ruthless Grandmaster AI.", 4, {{1,2},{2,5},{5,2},{6,5}}, 4, {{0,1},{1,6},{6,1},{7,6}}, 0, {0} },
+    { 20, "Reversi Grandmaster Challenge", 10, 10, AI_GRANDMASTER, 3, 3, "The ultimate 10x10 stage against the Supreme Reversi Grandmaster!", 12, {{0,0},{0,9},{9,0},{9,9},{2,2},{2,7},{7,2},{7,7},{4,1},{5,8},{1,5},{8,4}}, 6, {{3,4},{4,3},{5,6},{6,5},{1,1},{8,8}}, 0, {0} }
 };
 
 typedef struct {
@@ -942,43 +942,9 @@ void DrawMahoganyFrame(HDC hdc, int boardX, int boardY, int boardW, int boardH) 
         DeleteObject(hlBrush);
     }
 
-    // Animated traveling specular glint along Mahogany frame perimeter
+    // Sculpted diagonal specular sheen sweep across the board
     int pW = (frameRect.right - 5) - (frameRect.left + 5);
     int pH = (frameRect.bottom - 5) - (frameRect.top + 5);
-    if (pW > 0 && pH > 0) {
-        int perimeter = 2 * (pW + pH);
-        int glintDist = (globalFrameCounter * 3) % perimeter;
-        
-        for (int t = 0; t < 5; t++) {
-            int trailDist = (glintDist - t * 8 + perimeter) % perimeter;
-            int gx, gy;
-            if (trailDist < pW) {
-                gx = frameRect.left + 5 + trailDist;
-                gy = frameRect.top + 5;
-            } else if (trailDist < pW + pH) {
-                gx = frameRect.right - 5;
-                gy = frameRect.top + 5 + (trailDist - pW);
-            } else if (trailDist < 2 * pW + pH) {
-                gx = frameRect.right - 5 - (trailDist - (pW + pH));
-                gy = frameRect.bottom - 5;
-            } else {
-                gx = frameRect.left + 5;
-                gy = frameRect.bottom - 5 - (trailDist - (2 * pW + pH));
-            }
-
-            int gRad = (t == 0) ? 3 : (t < 3 ? 2 : 1);
-            COLORREF gCol = (t == 0) ? RGB(255, 255, 255) : (t == 1 ? RGB(255, 240, 180) : RGB(218, 165, 32));
-            HBRUSH gBrush = CreateSolidBrush(gCol);
-            HPEN gPen = CreatePen(PS_SOLID, 1, gCol);
-            SelectObject(hdc, gBrush);
-            SelectObject(hdc, gPen);
-            Ellipse(hdc, gx - gRad, gy - gRad, gx + gRad, gy + gRad);
-            DeleteObject(gBrush);
-            DeleteObject(gPen);
-        }
-    }
-
-    // Sculpted diagonal specular sheen sweep across the board
     int sheenPos = (globalFrameCounter * 3) % (pW + pH + 200) - 100;
     for (int y = frameRect.top + 6; y < frameRect.bottom - 6; y += 4) {
         int sx = frameRect.left + 6 + (sheenPos - (y - frameRect.top));

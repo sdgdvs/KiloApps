@@ -1600,42 +1600,6 @@ void DrawCornerFiligree(HDC hdc, RECT boardBg) {
     DeleteObject(rB);
 }
 
-void DrawPerimeterGlint(HDC hdc, RECT boardBg) {
-    int w = boardBg.right - boardBg.left;
-    int h = boardBg.bottom - boardBg.top;
-    int perimeter = (w * 2) + (h * 2);
-    if (perimeter <= 0) return;
-
-    int pos = (frameAnimCount * 4) % perimeter;
-    int gx = boardBg.left, gy = boardBg.top;
-
-    if (pos < w) {
-        gx = boardBg.left + pos;
-        gy = boardBg.top;
-    } else if (pos < w + h) {
-        gx = boardBg.right;
-        gy = boardBg.top + (pos - w);
-    } else if (pos < w * 2 + h) {
-        gx = boardBg.right - (pos - w - h);
-        gy = boardBg.bottom;
-    } else {
-        gx = boardBg.left;
-        gy = boardBg.bottom - (pos - w * 2 - h);
-    }
-
-    // Glowing traveling glint
-    for (int r = 6; r >= 1; r--) {
-        int alpha = (7 - r) * 35;
-        COLORREF glintColor = RGB(min(255, 200 + alpha), min(255, 180 + alpha), min(255, 100 + alpha));
-        HPEN gPen = CreatePen(PS_SOLID, 1, glintColor);
-        HPEN oldP = (HPEN)SelectObject(hdc, gPen);
-        SelectObject(hdc, GetStockObject(NULL_BRUSH));
-        Ellipse(hdc, gx - r, gy - r, gx + r, gy + r);
-        SelectObject(hdc, oldP);
-        DeleteObject(gPen);
-    }
-}
-
 void DrawBoard(HDC hdc) {
     RECT bgRect = {0, 0, 800, 600};
 
@@ -1798,9 +1762,8 @@ void DrawBoard(HDC hdc) {
     DeleteObject(fLight);
     DeleteObject(fDark);
 
-    // Ornate Cybernetic Corner Filigree and Pulsating Perimeter Glint
+    // Ornate Cybernetic Corner Filigree
     DrawCornerFiligree(hdc, boardBg);
-    DrawPerimeterGlint(hdc, boardBg);
 
     // Draw Cells
     for (int i = 0; i < grid_size; i++) {

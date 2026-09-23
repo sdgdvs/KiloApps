@@ -1733,40 +1733,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, oldInPen);
             DeleteObject(inPen);
 
-            // Animated Traveling Specular Glint along Perimeter
-            int perimLen = 2 * (bW + bH);
-            if (perimLen > 0) {
-                int gDist = (animTick * 5) % perimLen;
-                int gx = pad, gy = pad;
-                if (gDist < bW) {
-                    gx = pad + gDist;
-                    gy = pad;
-                } else if (gDist < bW + bH) {
-                    gx = pad + bW;
-                    gy = pad + (gDist - bW);
-                } else if (gDist < 2 * bW + bH) {
-                    gx = pad + bW - (gDist - (bW + bH));
-                    gy = pad + bH;
-                } else {
-                    gx = pad;
-                    gy = pad + bH - (gDist - (2 * bW + bH));
-                }
-
-                HBRUSH gBrush = CreateSolidBrush(RGB(255, 255, 255));
-                HGDIOBJ oldGB = SelectObject(memDC, gBrush);
-                HPEN nullP = CreatePen(PS_NULL, 0, 0);
-                HGDIOBJ oldGP = SelectObject(memDC, nullP);
-                Ellipse(memDC, gx - 4, gy - 4, gx + 5, gy + 5);
-                HBRUSH gHalo = CreateSolidBrush(RGB(56, 189, 248));
-                SelectObject(memDC, gHalo);
-                Ellipse(memDC, gx - 8, gy - 8, gx + 9, gy + 9);
-                SelectObject(memDC, oldGP);
-                SelectObject(memDC, oldGB);
-                DeleteObject(nullP);
-                DeleteObject(gHalo);
-                DeleteObject(gBrush);
-            }
-
             // Ornate HUD Corner Filigree L-Brackets with Brass Rivet Studs
             int armLen = 28;
             HPEN goldFiltPen = CreatePen(PS_SOLID, 2, RGB(245, 158, 11)); // Art Deco Gold

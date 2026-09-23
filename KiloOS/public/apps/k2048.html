@@ -1210,7 +1210,6 @@
         let fxAnimId = null;
         let screenShakeIntensityWeb = 0;
         let screenShakeRotWeb = 0;
-        let perimeterGlintPos = 0;
 
         function initAmbientDust() {
             ambientDust = [];
@@ -1485,36 +1484,11 @@
             ctx.restore();
         }
 
-        function drawPerimeterGlint(ctx, w, h) {
-            perimeterGlintPos += 2.5;
-            const perimeter = (w - 8) * 2 + (h - 8) * 2;
-            let d = perimeterGlintPos % perimeter;
-            let gx = 4, gy = 4;
-
-            if (d < (w - 8)) {
-                gx = 4 + d; gy = 4;
-            } else if (d < (w - 8) + (h - 8)) {
-                gx = w - 4; gy = 4 + (d - (w - 8));
-            } else if (d < (w - 8) * 2 + (h - 8)) {
-                gx = w - 4 - (d - (w - 8) - (h - 8)); gy = h - 4;
-            } else {
-                gx = 4; gy = h - 4 - (d - (w - 8) * 2 - (h - 8));
-            }
-
+        function drawPerimeterBorder(ctx, w, h) {
             ctx.save();
             ctx.strokeStyle = 'rgba(255, 215, 0, 0.2)';
             ctx.lineWidth = 1.5;
             ctx.strokeRect(4, 4, w - 8, h - 8);
-
-            // Specular Glint Glow
-            let radGlow = ctx.createRadialGradient(gx, gy, 0, gx, gy, 18);
-            radGlow.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-            radGlow.addColorStop(0.3, 'rgba(255, 215, 0, 0.6)');
-            radGlow.addColorStop(1, 'rgba(255, 215, 0, 0)');
-            ctx.fillStyle = radGlow;
-            ctx.beginPath();
-            ctx.arc(gx, gy, 18, 0, Math.PI * 2);
-            ctx.fill();
             ctx.restore();
         }
 
@@ -1662,9 +1636,9 @@
                     fxCtx.restore();
                 }
 
-                // Corner Filigree L-Brackets and Perimeter Traveling Glint
+                // Corner Filigree L-Brackets and Clean Perimeter Border
                 drawCornerFiligree(fxCtx, w, h);
-                drawPerimeterGlint(fxCtx, w, h);
+                drawPerimeterBorder(fxCtx, w, h);
             }
 
             // Continuous Procedural Screen-Shake with Quadratic Physics Decay & Rotational Damping

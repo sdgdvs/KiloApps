@@ -2101,29 +2101,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             Rectangle(hdcMem, boardLeft - 4, boardTop - 4, boardLeft + boardW + 4, boardTop + boardH + 4);
             DeleteObject(inlayPen);
 
-            // --- Traveling Specular Glint traversing frame perimeter ---
-            int perim = (boardW + 12) * 2 + (boardH + 12) * 2;
-            int gPos = (int)(nowTicks / 8) % perim;
-            int gx = boardLeft - 6, gy = boardTop - 6;
-            if (gPos < (boardW + 12)) {
-                gx = boardLeft - 6 + gPos; gy = boardTop - 6;
-            } else if (gPos < (boardW + 12) + (boardH + 12)) {
-                gx = boardLeft + boardW + 6; gy = boardTop - 6 + (gPos - (boardW + 12));
-            } else if (gPos < (boardW + 12) * 2 + (boardH + 12)) {
-                gx = (boardLeft + boardW + 6) - (gPos - ((boardW + 12) + (boardH + 12))); gy = boardTop + boardH + 6;
-            } else {
-                gx = boardLeft - 6; gy = (boardTop + boardH + 6) - (gPos - ((boardW + 12) * 2 + (boardH + 12)));
-            }
-            HBRUSH glintBrush = CreateSolidBrush(RGB(255, 255, 255));
-            HBRUSH flareBrush = CreateSolidBrush(RGB(0, 229, 255));
-            SelectObject(hdcMem, nullPen);
-            SelectObject(hdcMem, flareBrush);
-            Ellipse(hdcMem, gx - 5, gy - 5, gx + 5, gy + 5);
-            SelectObject(hdcMem, glintBrush);
-            Ellipse(hdcMem, gx - 2, gy - 2, gx + 2, gy + 2);
-            DeleteObject(glintBrush);
-            DeleteObject(flareBrush);
-
             // --- Ornate Cybernetic / Arcade HUD Corner Filigree L-Brackets with Brass Rivets ---
             int cSz = 16;
             HPEN goldPen = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));

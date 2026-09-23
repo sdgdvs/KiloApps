@@ -105,26 +105,6 @@
     box-shadow: inset 0 0 12px rgba(255, 215, 0, 0.15);
     animation: goldBorderShimmer 4s ease-in-out infinite alternate;
   }
-  .frame-glint {
-    position: absolute;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(255, 220, 100, 0.5) 35%, rgba(255, 215, 0, 0) 70%);
-    pointer-events: none;
-    z-index: 15;
-    animation: frameGlintTravel 7s linear infinite;
-    mix-blend-mode: screen;
-  }
-  @keyframes frameGlintTravel {
-    0% { top: -15px; left: -15px; opacity: 0; }
-    5% { opacity: 0.9; }
-    25% { top: -15px; left: calc(100% - 45px); }
-    50% { top: calc(100% - 45px); left: calc(100% - 45px); }
-    75% { top: calc(100% - 45px); left: -15px; }
-    95% { opacity: 0.9; }
-    100% { top: -15px; left: -15px; opacity: 0; }
-  }
   .zen-mote {
     position: absolute;
     background: radial-gradient(circle, #fff 0%, #ffd700 50%, rgba(255, 215, 0, 0) 100%);
@@ -735,7 +715,6 @@
     <div class="analyzer-banner" id="analyzer-banner"></div>
   </div>
   <div class="board-container" id="board-container">
-    <div class="frame-glint"></div>
     <div class="goban-filigree goban-filigree-tl"></div>
     <div class="goban-filigree goban-filigree-tr"></div>
     <div class="goban-filigree goban-filigree-bl"></div>

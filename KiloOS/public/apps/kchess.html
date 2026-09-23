@@ -2256,30 +2256,6 @@
       // Board Frame Ornate Filigree Corner Brackets
       drawOrnateCornerFiligree(ctx, OX - 6, OY - 6, TS * 8 + 12, TS * 8 + 12, 16, '#d4af37', '#fef08a');
 
-      // Traveling Specular Glint traversing the chessboard border frame
-      let boardW = TS * 8 + 12;
-      let boardH = TS * 8 + 12;
-      let totalPerim = (boardW + boardH) * 2;
-      let glintPos = (performance.now() * 0.12) % totalPerim;
-      let glintX = OX - 6, glintY = OY - 6;
-      if (glintPos < boardW) {
-          glintX += glintPos;
-      } else if (glintPos < boardW + boardH) {
-          glintX += boardW; glintY += (glintPos - boardW);
-      } else if (glintPos < boardW * 2 + boardH) {
-          glintX += boardW - (glintPos - boardW - boardH); glintY += boardH;
-      } else {
-          glintY += boardH - (glintPos - boardW * 2 - boardH);
-      }
-      let glintGrad = ctx.createRadialGradient(glintX, glintY, 0, glintX, glintY, 18);
-      glintGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-      glintGrad.addColorStop(0.4, 'rgba(253, 230, 138, 0.7)');
-      glintGrad.addColorStop(1, 'rgba(212, 175, 55, 0)');
-      ctx.fillStyle = glintGrad;
-      ctx.beginPath();
-      ctx.arc(glintX, glintY, 18, 0, Math.PI * 2);
-      ctx.fill();
-
       ctx.font = "bold 15px 'Inter', sans-serif";
       ctx.fillStyle = "#d4af37";
       ctx.textAlign = "center";

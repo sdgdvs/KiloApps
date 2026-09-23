@@ -1384,22 +1384,6 @@ void DrawBoardToDC(HWND hwnd, HDC hdc) {
     DrawCornerBracket(hdc, 2, rows * CELL_SIZE + HEADER_HEIGHT - 2, 0, 1);
     DrawCornerBracket(hdc, cols * CELL_SIZE - 2, rows * CELL_SIZE + HEADER_HEIGHT - 2, 1, 1);
 
-    // Pulsating Perimeter Inlay Border with Traveling Specular Glint
-    int glintPerim = 2 * (cols * CELL_SIZE + rows * CELL_SIZE);
-    int glintPos = (int)((tick / 15) % glintPerim);
-    int gx = 0, gy = HEADER_HEIGHT;
-    if (glintPos < cols * CELL_SIZE) { gx = glintPos; gy = HEADER_HEIGHT; }
-    else if (glintPos < cols * CELL_SIZE + rows * CELL_SIZE) { gx = cols * CELL_SIZE - 1; gy = HEADER_HEIGHT + glintPos - cols * CELL_SIZE; }
-    else if (glintPos < 2 * cols * CELL_SIZE + rows * CELL_SIZE) { gx = cols * CELL_SIZE - (glintPos - (cols * CELL_SIZE + rows * CELL_SIZE)); gy = rows * CELL_SIZE + HEADER_HEIGHT - 1; }
-    else { gx = 0; gy = rows * CELL_SIZE + HEADER_HEIGHT - (glintPos - (2 * cols * CELL_SIZE + rows * CELL_SIZE)); }
-    
-    // Draw glint node
-    SetPixel(hdc, gx, gy, RGB(255, 255, 255));
-    SetPixel(hdc, gx + 1, gy, RGB(122, 162, 247));
-    SetPixel(hdc, gx - 1, gy, RGB(122, 162, 247));
-    SetPixel(hdc, gx, gy + 1, RGB(122, 162, 247));
-    SetPixel(hdc, gx, gy - 1, RGB(122, 162, 247));
-
     DrawParticles(hdc);
 
     if (shields > 0) {

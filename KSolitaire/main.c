@@ -930,28 +930,6 @@ void DrawPerimeterInlay(HDC hdc, int winW, int winH, DWORD tick) {
 
     Rectangle(hdc, left + 3, top + 3, right - 3, bottom - 3);
 
-    // Traveling Specular Glint
-    int totalPerim = (w + h) * 2;
-    if (totalPerim > 0) {
-        int glintDist = (int)((tick / 8) % totalPerim);
-        int gx = left, gy = top;
-        if (glintDist < w) {
-            gx = left + glintDist; gy = top;
-        } else if (glintDist < w + h) {
-            gx = right; gy = top + (glintDist - w);
-        } else if (glintDist < w * 2 + h) {
-            gx = right - (glintDist - (w + h)); gy = bottom;
-        } else {
-            gx = left; gy = bottom - (glintDist - (w * 2 + h));
-        }
-
-        HBRUSH glintBrush = CreateSolidBrush(RGB(255, 255, 255));
-        HBRUSH prevGB = (HBRUSH)SelectObject(hdc, glintBrush);
-        Ellipse(hdc, gx - 4, gy - 4, gx + 4, gy + 4);
-        SelectObject(hdc, prevGB);
-        DeleteObject(glintBrush);
-    }
-
     SelectObject(hdc, oldPen);
     SelectObject(hdc, oldBrush);
     DeleteObject(inlayPen);

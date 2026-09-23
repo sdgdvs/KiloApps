@@ -2200,28 +2200,6 @@ void DrawCyberHUD(HDC hdc) {
     Rectangle(hdc, 11, 11, WIDTH - 11, HEIGHT - 11);
     DeleteObject(bPen);
 
-    // Traveling specular glint traversing outer playfield perimeter
-    int periW = (WIDTH - 16);
-    int periH = (HEIGHT - 16);
-    int periLen = 2 * periW + 2 * periH;
-    int glintDist = (int)(timeSec * 220.0f) % periLen;
-    int gx = 8, gy = 8;
-    if (glintDist < periW) {
-        gx = 8 + glintDist; gy = 8;
-    } else if (glintDist < periW + periH) {
-        gx = WIDTH - 8; gy = 8 + (glintDist - periW);
-    } else if (glintDist < 2 * periW + periH) {
-        gx = (WIDTH - 8) - (glintDist - (periW + periH)); gy = HEIGHT - 8;
-    } else {
-        gx = 8; gy = (HEIGHT - 8) - (glintDist - (2 * periW + periH));
-    }
-
-    HBRUSH gBrush = CreateSolidBrush(RGB(255, 255, 255));
-    HPEN gPen = CreatePen(PS_SOLID, 1, RGB(56, 189, 248));
-    SelectObject(hdc, gBrush); SelectObject(hdc, gPen);
-    Ellipse(hdc, gx - 4, gy - 4, gx + 4, gy + 4);
-    DeleteObject(gBrush); DeleteObject(gPen);
-
     // 2. Ornate Cybernetic Arcade HUD Corner Filigree L-Brackets with tech notches & rivet accents
     HPEN cPen = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
     HPEN iPen = CreatePen(PS_SOLID, 1, RGB(250, 204, 21));

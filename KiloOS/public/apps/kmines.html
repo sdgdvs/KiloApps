@@ -393,7 +393,6 @@
     let particles = [];
     let shockwaves = [];
     let fxAnimFrame = null;
-    let borderGlintAngle = 0;
 
     // Background Dust FX
     const bgCanvas = document.getElementById('bg-canvas');
@@ -660,29 +659,7 @@
       lastAnimTime = now;
 
       fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
-      
-      // Draw border glint traveling around board frame
-      borderGlintAngle += 0.03;
-      const bw = fxCanvas.width;
-      const bh = fxCanvas.height;
-      if (bw > 10 && bh > 10) {
-        const perim = 2 * (bw + bh);
-        const glintPos = ((borderGlintAngle * 60) % perim + perim) % perim;
-        let gx = 0, gy = 0;
-        if (glintPos < bw) { gx = glintPos; gy = 0; }
-        else if (glintPos < bw + bh) { gx = bw; gy = glintPos - bw; }
-        else if (glintPos < 2 * bw + bh) { gx = bw - (glintPos - (bw + bh)); gy = bh; }
-        else { gx = 0; gy = bh - (glintPos - (2 * bw + bh)); }
 
-        const radGrad = fxCtx.createRadialGradient(gx, gy, 0, gx, gy, 20);
-        radGrad.addColorStop(0, 'rgba(122, 162, 247, 0.9)');
-        radGrad.addColorStop(0.5, 'rgba(122, 162, 247, 0.4)');
-        radGrad.addColorStop(1, 'rgba(122, 162, 247, 0)');
-        fxCtx.fillStyle = radGrad;
-        fxCtx.beginPath();
-        fxCtx.arc(gx, gy, 20, 0, Math.PI * 2);
-        fxCtx.fill();
-      }
 
       // 1. Dual-tier Concentric Shockwaves
       for (let i = shockwaves.length - 1; i >= 0; i--) {

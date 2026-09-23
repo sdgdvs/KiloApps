@@ -1772,37 +1772,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(hLightPen);
             DeleteObject(hDarkPen);
 
-            // Traveling Specular Glint along outer perimeter
-            DWORD tcGlint = GetTickCount() % 3200;
-            float glintPos = (float)tcGlint / 3200.0f; // 0.0 to 1.0 around the 4 sides
-            int perimW = outerFrame.right - outerFrame.left;
-            int perimH = outerFrame.bottom - outerFrame.top;
-            int totalPerim = 2 * (perimW + perimH);
-            int currentDist = (int)(glintPos * totalPerim);
-            int gx = 0, gy = 0;
-            if (currentDist < perimW) { // Top edge
-                gx = outerFrame.left + currentDist;
-                gy = outerFrame.top;
-            } else if (currentDist < perimW + perimH) { // Right edge
-                gx = outerFrame.right;
-                gy = outerFrame.top + (currentDist - perimW);
-            } else if (currentDist < 2 * perimW + perimH) { // Bottom edge
-                gx = outerFrame.right - (currentDist - (perimW + perimH));
-                gy = outerFrame.bottom;
-            } else { // Left edge
-                gx = outerFrame.left;
-                gy = outerFrame.bottom - (currentDist - (2 * perimW + perimH));
-            }
-            HBRUSH hGlintBrush = CreateSolidBrush(RGB(255, 255, 255));
-            HPEN hGlintPen = CreatePen(PS_SOLID, 1, RGB(250, 204, 21));
-            HPEN oldGP = (HPEN)SelectObject(hdcMem, hGlintPen);
-            HBRUSH oldGB = (HBRUSH)SelectObject(hdcMem, hGlintBrush);
-            Ellipse(hdcMem, gx - 3, gy - 3, gx + 4, gy + 4);
-            SelectObject(hdcMem, oldGB);
-            SelectObject(hdcMem, oldGP);
-            DeleteObject(hGlintPen);
-            DeleteObject(hGlintBrush);
-
             // Outer Frame Corner Filigree L-Brackets with Brass Rivet Studs
             HPEN hFilGold = CreatePen(PS_SOLID, 3, RGB(250, 204, 21));
             HPEN oPG = (HPEN)SelectObject(hdcMem, hFilGold);

@@ -833,7 +833,6 @@
         let ambientMotes = [];
         let animFrameId = null;
         let screenShake = 0;
-        let glintProgress = 0;
         let sheenProgress = 0;
 
         function initAmbientMotes() {
@@ -1030,20 +1029,6 @@
             ctx.fill();
         }
 
-        function getPerimeterPoint(progress, left, top, width, height) {
-            const perimeter = 2 * (width + height);
-            const dist = (progress % 1.0) * perimeter;
-            if (dist < width) {
-                return { x: left + dist, y: top };
-            } else if (dist < width + height) {
-                return { x: left + width, y: top + (dist - width) };
-            } else if (dist < 2 * width + height) {
-                return { x: left + width - (dist - (width + height)), y: top + height };
-            } else {
-                return { x: left, y: top + height - (dist - (2 * width + height)) };
-            }
-        }
-
         function updateParticles() {
             const canvas = document.getElementById('fx-canvas');
             if (canvas) {
@@ -1070,29 +1055,6 @@
                     ctx.fill();
                     ctx.restore();
                 }
-
-                // 2. Animated Traveling Specular Glint along Mahogany Perimeter
-                const wrapper = document.getElementById('board-wrapper');
-                if (wrapper) {
-                    const pad = 10;
-                    const bW = wrapper.clientWidth - pad * 2;
-                    const bH = wrapper.clientHeight - pad * 2;
-                    glintProgress = (glintProgress + 0.0035) % 1.0;
-
-                    // Draw comet tail for traveling glint
-                    for (let t = 0; t < 6; t++) {
-                        const trailProg = (glintProgress - t * 0.008 + 1.0) % 1.0;
-                        const pt = getPerimeterPoint(trailProg, pad, pad, bW, bH);
-                        ctx.save();
-                        ctx.globalAlpha = (1.0 - t / 6) * 0.8;
-                        ctx.fillStyle = t === 0 ? '#ffffff' : '#ffd700';
-                        ctx.shadowColor = '#ffd700';
-                        ctx.shadowBlur = t === 0 ? 8 : 4;
-                        ctx.beginPath();
-                        ctx.arc(pt.x, pt.y, Math.max(1, 3.5 - t * 0.5), 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.restore();
-                    }
 
                     // 3. Sculpted Specular Sheen Sweep traversing the board
                     sheenProgress = (sheenProgress + 0.003) % 1.0;

@@ -2017,35 +2017,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Board Frame Ornate Filigree Corner Brackets
             DrawFiligreeLBracket(memDC, OX - 6, OY - 6, TS * 8 + 12, TS * 8 + 12, 16, RGB(212, 175, 55), RGB(254, 240, 138));
 
-            // Traveling Specular Glint traversing the chessboard border frame
-            int boardW = TS * 8 + 12;
-            int boardH = TS * 8 + 12;
-            int totalPerim = (boardW + boardH) * 2;
-            int glintPos = (int)(now / 8) % totalPerim;
-            int glintX = OX - 6, glintY = OY - 6;
-            if (glintPos < boardW) {
-                glintX += glintPos;
-            } else if (glintPos < boardW + boardH) {
-                glintX += boardW; glintY += (glintPos - boardW);
-            } else if (glintPos < boardW * 2 + boardH) {
-                glintX += boardW - (glintPos - boardW - boardH); glintY += boardH;
-            } else {
-                glintY += boardH - (glintPos - boardW * 2 - boardH);
-            }
-            HBRUSH glintBrush = CreateSolidBrush(RGB(255, 255, 255));
-            HBRUSH glintGold = CreateSolidBrush(RGB(254, 240, 138));
-            HPEN nullPen = CreatePen(PS_NULL, 0, 0);
-            HGDIOBJ oB = SelectObject(memDC, glintGold);
-            HGDIOBJ oP = SelectObject(memDC, nullPen);
-            Ellipse(memDC, glintX - 6, glintY - 6, glintX + 6, glintY + 6);
-            SelectObject(memDC, glintBrush);
-            Ellipse(memDC, glintX - 3, glintY - 3, glintX + 3, glintY + 3);
-            SelectObject(memDC, oB);
-            SelectObject(memDC, oP);
-            DeleteObject(glintBrush);
-            DeleteObject(glintGold);
-            DeleteObject(nullPen);
-
             int fontHeightLabel = -MulDiv(15, 96, 72);
             HFONT labelFont = CreateFontA(fontHeightLabel, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             HGDIOBJ oldFont = SelectObject(memDC, labelFont);

@@ -2054,34 +2054,6 @@
             ctx.lineWidth = 1;
             ctx.strokeRect(pad + 3, pad + 3, bW - 6, bH - 6);
 
-            // Traveling Specular Glint along Perimeter
-            const perimeterLen = 2 * (bW + bH);
-            const glintDist = (globalAnimTime * 4.5) % perimeterLen;
-            let gx = pad, gy = pad;
-            if (glintDist < bW) {
-                gx = pad + glintDist;
-                gy = pad;
-            } else if (glintDist < bW + bH) {
-                gx = pad + bW;
-                gy = pad + (glintDist - bW);
-            } else if (glintDist < 2 * bW + bH) {
-                gx = pad + bW - (glintDist - (bW + bH));
-                gy = pad + bH;
-            } else {
-                gx = pad;
-                gy = pad + bH - (glintDist - (2 * bW + bH));
-            }
-
-            const glintGrad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 28);
-            glintGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-            glintGrad.addColorStop(0.3, 'rgba(56, 189, 248, 0.8)');
-            glintGrad.addColorStop(0.7, 'rgba(245, 158, 11, 0.4)');
-            glintGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
-            ctx.fillStyle = glintGrad;
-            ctx.beginPath();
-            ctx.arc(gx, gy, 28, 0, Math.PI * 2);
-            ctx.fill();
-
             // Corner Filigree L-Brackets with Brass Rivet Studs
             const armLen = 28;
             const fPad = 8;

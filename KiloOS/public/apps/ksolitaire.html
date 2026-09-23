@@ -2887,34 +2887,7 @@ function drawPerimeterInlay(ctx, rect, time) {
   const pulse = Math.sin(time * 3.0) * 0.25 + 0.75;
   ctx.save();
   ctx.strokeStyle = `rgba(255, 215, 0, ${(0.35 * pulse).toFixed(3)})`;
-  ctx.lineWidth = 1.5;
-  ctx.setLineDash([8, 8]);
-  ctx.lineDashOffset = -time * 24;
   ctx.strokeRect(x, y, w, h);
-  ctx.setLineDash([]);
-
-  // Traveling Specular Glint traversing the perimeter
-  const totalPerim = (w + h) * 2;
-  const glintDist = ((time * 180) % totalPerim);
-  let gx = x, gy = y;
-  if (glintDist < w) {
-    gx = x + glintDist; gy = y;
-  } else if (glintDist < w + h) {
-    gx = x + w; gy = y + (glintDist - w);
-  } else if (glintDist < w * 2 + h) {
-    gx = x + w - (glintDist - (w + h)); gy = y + h;
-  } else {
-    gx = x; gy = y + h - (glintDist - (w * 2 + h));
-  }
-
-  let glintGrad = ctx.createRadialGradient(gx, gy, 0, gx, gy, 18);
-  glintGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-  glintGrad.addColorStop(0.3, 'rgba(255, 215, 0, 0.8)');
-  glintGrad.addColorStop(1, 'rgba(255, 215, 0, 0)');
-  ctx.fillStyle = glintGrad;
-  ctx.beginPath();
-  ctx.arc(gx, gy, 18, 0, Math.PI * 2);
-  ctx.fill();
   ctx.restore();
 }
 
