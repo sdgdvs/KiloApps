@@ -11,7 +11,7 @@
 #define W 800
 #define H 600
 
-HWND hEdit, hList, hBtnNew, hBtnDel, hStatus, hSearch, hBtnPin, hBtnExportMd, hBtnExportJson, hBtnImport, hBtnLock, hTab, hBtnHelp;
+HWND hEdit, hList, hBtnNew, hBtnDel, hStatus, hSearch, hBtnPin, hBtnExportMd, hBtnExportCsv, hBtnExportJson, hBtnImport, hBtnLock, hTab, hBtnHelp;
 HBRUSH bgBrush, sidebarBrush, g_hbrClass;
 HFONT hFont;
 
@@ -28,6 +28,7 @@ HFONT hFont;
 #define ID_TAB 9015
 #define ID_TIMER_SAVE 9016
 #define ID_BTN_HELP 9017
+#define ID_BTN_EXPORT_CSV 9018
 
 char notes[100][8192] = {0};
 int pinned[100] = {0};
@@ -255,6 +256,48 @@ void ExportNoteMD() {
     }
 }
 
+void ExportCSV() {
+    SaveToMemory();
+    OPENFILENAMEA ofn; char szFile[260] = "knote_export.csv";
+    ZeroMemory(&ofn, sizeof(ofn)); ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hEdit; ofn.lpstrFile = szFile; ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "CSV (*.csv)\0*.csv\0All Files (*.*)\0*.*\0"; ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+    ofn.lpstrDefExt = "csv";
+    if (GetSaveFileNameA(&ofn)) {
+        HANDLE hFile = CreateFileA(ofn.lpstrFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD bw;
+            const char* header = "\"ID\",\"Title\",\"Pinned\",\"Encrypted\",\"Content\"\r\n";
+            WriteFile(hFile, header, lstrlenA(header), &bw, NULL);
+            for(int i=0; i<numNotes; i++) {
+                char* txt = encrypted[i] ? unlockedNotes[i] : notes[i];
+                char title[64] = {0};
+                int j = 0;
+                while(txt[j] && txt[j] != '\r' && txt[j] != '\n' && j < 32) {
+                    if (txt[j] == '"') title[j] = '\'';
+                    else title[j] = txt[j];
+                    j++;
+                }
+                title[j] = 0; if (j == 0) lstrcpyA(title, "Empty Note");
+
+                char row[160];
+                wsprintfA(row, "\"n_%d\",\"%s\",\"%s\",\"%s\",\"", i, title, pinned[i]?"true":"false", encrypted[i]?"true":"false");
+                WriteFile(hFile, row, lstrlenA(row), &bw, NULL);
+                for(int k=0; txt[k]; k++) {
+                    if(txt[k] == '"') {
+                        WriteFile(hFile, "\"\"", 2, &bw, NULL);
+                    } else {
+                        WriteFile(hFile, &txt[k], 1, &bw, NULL);
+                    }
+                }
+                WriteFile(hFile, "\"\r\n", 3, &bw, NULL);
+            }
+            CloseHandle(hFile);
+        }
+    }
+}
+
 void ExportJSON() {
     SaveToMemory();
     OPENFILENAMEA ofn; char szFile[260] = "knote_export.json";
@@ -462,7 +505,7 @@ void ShowHelpDialog(HWND hwnd) {
         "FEATURES:\r\n"
         "  - Tags: Type #tag anywhere in notes to categorize\r\n"
         "  - AES-256: Lock notes with secure password encryption\r\n"
-        "  - Backups: Export Markdown or standard JSON\r\n"
+        "  - Backups: Export CSV, Markdown, or standard JSON\r\n"
         "  - Multi-tab: Open and edit multiple notes seamlessly",
         "KNote Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
 }
@@ -506,12 +549,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hSearch, EM_SETCUEBANNER, FALSE, (LPARAM)L"Search tags... (Ctrl+F, Esc clear)");
             hList = CreateWindowEx(0, "LISTBOX", NULL, WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_VSCROLL|LBS_NOTIFY, 0, 48, 200, H-48, hwnd, (HMENU)ID_LIST, NULL, NULL);
             
-            hBtnPin = CreateWindow("BUTTON", "Pin [^P]", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 200, 0, 70, 26, hwnd, (HMENU)ID_BTN_PIN, NULL, NULL);
-            hBtnLock = CreateWindow("BUTTON", "Lock", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 270, 0, 65, 26, hwnd, (HMENU)ID_BTN_LOCK, NULL, NULL);
-            hBtnExportMd = CreateWindow("BUTTON", "Exp MD", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 335, 0, 75, 26, hwnd, (HMENU)ID_BTN_EXPORT_MD, NULL, NULL);
-            hBtnExportJson = CreateWindow("BUTTON", "Exp JSON", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 410, 0, 80, 26, hwnd, (HMENU)ID_BTN_EXPORT_JSON, NULL, NULL);
-            hBtnImport = CreateWindow("BUTTON", "Imp JSON", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 490, 0, 80, 26, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
-            hBtnHelp = CreateWindow("BUTTON", "Help [F1]", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 570, 0, 80, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            hBtnPin = CreateWindow("BUTTON", "Pin [^P]", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 200, 0, 55, 26, hwnd, (HMENU)ID_BTN_PIN, NULL, NULL);
+            hBtnLock = CreateWindow("BUTTON", "Lock", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 255, 0, 55, 26, hwnd, (HMENU)ID_BTN_LOCK, NULL, NULL);
+            hBtnExportMd = CreateWindow("BUTTON", "Exp MD", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 310, 0, 65, 26, hwnd, (HMENU)ID_BTN_EXPORT_MD, NULL, NULL);
+            hBtnExportCsv = CreateWindow("BUTTON", "Exp CSV", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 375, 0, 65, 26, hwnd, (HMENU)ID_BTN_EXPORT_CSV, NULL, NULL);
+            hBtnExportJson = CreateWindow("BUTTON", "Exp JSON", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 440, 0, 70, 26, hwnd, (HMENU)ID_BTN_EXPORT_JSON, NULL, NULL);
+            hBtnImport = CreateWindow("BUTTON", "Imp JSON", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 510, 0, 70, 26, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
+            hBtnHelp = CreateWindow("BUTTON", "Help [F1]", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 580, 0, 60, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
             g_oldSearchEditProc = (WNDPROC)SetWindowLongPtrA(hSearch, GWLP_WNDPROC, (LONG_PTR)SearchEditProc);
 
@@ -527,7 +571,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hSearch, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnNew, WM_SETFONT, (WPARAM)hFont, TRUE); SendMessage(hBtnDel, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnPin, WM_SETFONT, (WPARAM)hFont, TRUE); SendMessage(hBtnLock, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessage(hBtnExportMd, WM_SETFONT, (WPARAM)hFont, TRUE); SendMessage(hBtnExportJson, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnExportMd, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnExportCsv, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnExportJson, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnImport, WM_SETFONT, (WPARAM)hFont, TRUE); SendMessage(hStatus, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hTab, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -555,6 +601,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowHelpDialog(hwnd);
             }
             else if (LOWORD(wParam) == ID_BTN_EXPORT_MD) { ExportNoteMD(); }
+            else if (LOWORD(wParam) == ID_BTN_EXPORT_CSV) { ExportCSV(); }
             else if (LOWORD(wParam) == ID_BTN_EXPORT_JSON) { ExportJSON(); RefreshList(); RenderTabs(); }
             else if (LOWORD(wParam) == ID_BTN_IMPORT) { ImportJSON(); RefreshList(); RenderTabs(); }
             else if (LOWORD(wParam) == ID_BTN_NEW) {
@@ -630,12 +677,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hBtnNew, 0, 0, 100, topH, TRUE); MoveWindow(hBtnDel, 100, 0, 100, topH, TRUE);
             MoveWindow(hSearch, 0, topH, sideW, 22, TRUE); MoveWindow(hList, 0, topH + 22, sideW, nh - (topH + 22), TRUE);
             int bx = sideW;
-            MoveWindow(hBtnPin, bx, 0, 70, topH, TRUE); bx += 70;
-            MoveWindow(hBtnLock, bx, 0, 65, topH, TRUE); bx += 65;
-            MoveWindow(hBtnExportMd, bx, 0, 75, topH, TRUE); bx += 75;
-            MoveWindow(hBtnExportJson, bx, 0, 80, topH, TRUE); bx += 80;
-            MoveWindow(hBtnImport, bx, 0, 80, topH, TRUE); bx += 80;
-            MoveWindow(hBtnHelp, bx, 0, 80, topH, TRUE);
+            MoveWindow(hBtnPin, bx, 0, 55, topH, TRUE); bx += 55;
+            MoveWindow(hBtnLock, bx, 0, 55, topH, TRUE); bx += 55;
+            MoveWindow(hBtnExportMd, bx, 0, 65, topH, TRUE); bx += 65;
+            MoveWindow(hBtnExportCsv, bx, 0, 65, topH, TRUE); bx += 65;
+            MoveWindow(hBtnExportJson, bx, 0, 70, topH, TRUE); bx += 70;
+            MoveWindow(hBtnImport, bx, 0, 70, topH, TRUE); bx += 70;
+            MoveWindow(hBtnHelp, bx, 0, 60, topH, TRUE);
             MoveWindow(hTab, sideW, topH, nw - sideW, 24, TRUE);
             MoveWindow(hEdit, sideW, topH + 24, nw - sideW, nh - topH - 44, TRUE);
             MoveWindow(hStatus, sideW, nh - 20, nw - sideW, 20, TRUE);
