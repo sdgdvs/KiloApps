@@ -689,9 +689,207 @@
     color: #aaa;
     font-weight: 600;
   }
+
+  /* Toast Notifications */
+  #toastContainer {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+    max-width: 340px;
+    width: max-content;
+  }
+  .toast {
+    background: rgba(28, 20, 12, 0.95);
+    border: 1px solid #d4af37;
+    color: #ffffff;
+    padding: 9px 15px;
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.8), 0 0 8px rgba(212,175,55,0.3);
+    font-size: 0.86em;
+    font-weight: 500;
+    pointer-events: auto;
+    cursor: pointer;
+    animation: toastIn 0.2s ease-out;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    backdrop-filter: blur(4px);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .toast.success { border-color: #00e676; box-shadow: 0 4px 16px rgba(0,0,0,0.8), 0 0 8px rgba(0,230,118,0.4); }
+  .toast.warning { border-color: #ffd700; box-shadow: 0 4px 16px rgba(0,0,0,0.8), 0 0 8px rgba(255,215,0,0.4); }
+  .toast.info { border-color: #00ffc8; box-shadow: 0 4px 16px rgba(0,0,0,0.8), 0 0 8px rgba(0,255,200,0.4); }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(-8px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Online Multiplayer Bar */
+  .online-bar {
+    width: 90%;
+    max-width: 600px;
+    background: linear-gradient(135deg, rgba(28, 18, 10, 0.96), rgba(42, 28, 14, 0.96));
+    border: 2px solid #d4af37;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.7), 0 0 12px rgba(212,175,55,0.25);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-sizing: border-box;
+  }
+  .online-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 0.85em;
+  }
+  .online-badge {
+    background: #00c853;
+    color: #000;
+    font-weight: bold;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 0.78em;
+    letter-spacing: 0.5px;
+  }
+  .room-code-badge {
+    background: #2a1f10;
+    border: 1px solid #d4af37;
+    color: #ffd700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: all 0.15s;
+  }
+  .room-code-badge:hover {
+    background: #3d2b14;
+    border-color: #fff;
+    color: #fff;
+  }
+  .role-badge {
+    background: #181818;
+    border: 1px solid #555;
+    color: #e0e0e0;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .online-opponent-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 0.88em;
+  }
+  .online-chat-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 6px;
+    padding: 5px 8px;
+  }
+  .chat-chip {
+    background: #2c2013;
+    border: 1px solid #73502b;
+    color: #f0e6d2;
+    padding: 2px 7px;
+    border-radius: 12px;
+    font-size: 0.76em;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .chat-chip:hover {
+    background: #50381e;
+    border-color: #ffd700;
+    color: #ffd700;
+  }
+  .btn-tiny {
+    padding: 3px 8px;
+    font-size: 0.78em;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    border: 1px solid transparent;
+  }
+  .btn-danger {
+    background: #c62828;
+    color: #fff;
+    border-color: #ff5252;
+  }
+  .btn-danger:hover {
+    background: #e53935;
+  }
+
+  /* Multiplayer Modal Elements */
+  #multiplayer-modal .modal-content {
+    background: #19120b;
+    border: 2px solid #d4af37;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.9), 0 0 20px rgba(212,175,55,0.3);
+  }
+  .mp-section {
+    background: rgba(45, 30, 15, 0.45);
+    border: 1px solid #5a3d1d;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+  .mp-section label {
+    display: block;
+    font-size: 0.82em;
+    color: #ffd700;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  .mp-section input[type="text"], .mp-section select {
+    background: #0d0a07;
+    border: 1px solid #73502b;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.88em;
+  }
+  .mp-lobby-box {
+    max-height: 125px;
+    overflow-y: auto;
+    background: #0d0a07;
+    border: 1px solid #4a3319;
+    border-radius: 6px;
+    padding: 6px;
+  }
+  .lobby-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    margin-bottom: 4px;
+    background: rgba(60, 40, 20, 0.4);
+    border-radius: 4px;
+    font-size: 0.82em;
+    border: 1px solid #634522;
+  }
+  .lobby-item:hover {
+    background: rgba(90, 60, 30, 0.6);
+    border-color: #ffd700;
+  }
 </style>
 </head>
 <body>
+  <div id="toastContainer"></div>
   <h1>KGo</h1>
   <div class="onboarding-banner" id="onboarding-banner">
     <div>
@@ -702,6 +900,7 @@
   </div>
   <div class="hotkey-bar" id="hotkey-bar">
     <span class="hotkey-item" title="Open Help Guide"><kbd>F1</kbd> / <kbd>?</kbd> Help</span>
+    <span class="hotkey-item" title="Open Online Multiplayer Hub"><kbd>O</kbd> Online</span>
     <span class="hotkey-item" title="Request AI Recommended Move"><kbd>H</kbd> Hint</span>
     <span class="hotkey-item" title="Toggle Stone Group Liberty Inspector"><kbd>S</kbd> Analyzer</span>
     <span class="hotkey-item" title="Toggle Controlled Territory Estimator"><kbd>T</kbd> Territory</span>
@@ -714,6 +913,35 @@
     <div class="stage-info" id="stage-info">Komi: 6.5</div>
     <div class="analyzer-banner" id="analyzer-banner"></div>
   </div>
+  <div id="onlineBar" class="online-bar" style="display:none;">
+    <div class="online-header">
+      <span class="online-badge">🌐 ONLINE MATCH</span>
+      <span id="onlineRoomCode" class="room-code-badge" onclick="copyOnlineRoomLink()" title="Click to copy room code">Room: <strong id="onlineRoomIdText">----</strong> 📋</span>
+      <span id="onlineRoleText" class="role-badge">You: Black (P1)</span>
+      <span id="onlineSizeText" class="role-badge" style="color:#ffd700;">9x9 Goban</span>
+    </div>
+    <div class="online-opponent-status">
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span id="onlineOpponentIndicator">🟡</span>
+        <span id="onlineOpponentText">Waiting for opponent to join...</span>
+      </div>
+      <div style="display:flex; gap:5px;">
+        <button id="onlineRematchBtn" onclick="requestOnlineRematch()" style="display:none; background:#00c853; border-color:#00e5ff; color:#fff;" class="btn-tiny">🔥 Rematch</button>
+        <button id="onlineLeaveBtn" onclick="leaveOnlineGame(true)" class="btn-tiny btn-danger">Exit Match</button>
+      </div>
+    </div>
+    <div class="online-chat-bar">
+      <span style="font-size:0.75em; color:#ffd700; font-weight:bold;">Quick Chat:</span>
+      <button class="chat-chip" onclick="sendOnlineChat('Good move! 🌸')">🌸 Good move!</button>
+      <button class="chat-chip" onclick="sendOnlineChat('Nice capture! ⚡')">⚡ Nice capture!</button>
+      <button class="chat-chip" onclick="sendOnlineChat('Atari! ⚠️')">⚠️ Atari!</button>
+      <button class="chat-chip" onclick="sendOnlineChat('Thinking... 🍵')">🍵 Thinking</button>
+      <button class="chat-chip" onclick="sendOnlineChat('Good game! 🏆')">🏆 GG</button>
+      <button class="chat-chip" onclick="sendOnlineChat('Rematch? 🔥')">🔥 Rematch?</button>
+      <input type="text" id="onlineCustomChatInput" placeholder="Message..." maxlength="60" style="background:#0a0704; border:1px solid #73502b; color:#fff; font-size:0.75em; padding:2px 6px; border-radius:10px; width:90px;" onkeydown="if(event.key==='Enter')sendCustomOnlineChat()">
+      <button class="chat-chip" onclick="sendCustomOnlineChat()" style="background:#2e4922; border-color:#69f0ae;">Send</button>
+    </div>
+  </div>
   <div class="board-container" id="board-container">
     <div class="goban-filigree goban-filigree-tl"></div>
     <div class="goban-filigree goban-filigree-tr"></div>
@@ -722,6 +950,7 @@
     <div class="board" id="board"></div>
   </div>
   <div class="controls">
+    <button id="btn-multiplayer" style="background: linear-gradient(135deg, #1b5e20, #00897b); color: #fff; font-weight: bold; border-color: #00e5ff;" title="Open Online Multiplayer Hub (O)">🌐 Online (O)</button>
     <button id="btn-pass" title="Pass your turn without placing a stone (P)">Pass (P)</button>
     <button id="btn-resign" title="Concede the match to your opponent">Resign</button>
     <button id="btn-undo" title="Revert last move pair against AI or last single move (U / Ctrl+Z)">Undo (U)</button>
@@ -800,6 +1029,104 @@
     </div>
   </div>
 
+  <div id="multiplayer-modal" class="modal">
+    <div class="modal-content">
+      <button id="btn-close-mp" class="close-btn" onclick="closeAllModals()" title="Close (Esc)">Close</button>
+      <h2>🌐 KGo - Online Multiplayer</h2>
+      <p style="font-size: 0.85em; color: #d4af37; margin-top: -6px; margin-bottom: 14px;">
+        Real-time cross-computer Baduk / Go powered by Firebase Realtime Database.
+      </p>
+
+      <!-- Player Handle Section -->
+      <div class="mp-section">
+        <label>Your Go Player Call-Sign:</label>
+        <div style="display:flex; gap:6px;">
+          <input type="text" id="mpPlayerName" maxlength="16" placeholder="Enter nickname..." style="flex:1;">
+          <button onclick="savePlayerName()" style="background:#8c6d1f; color:#fff; font-weight:bold; border-radius:4px; border:1px solid #ffd700; cursor:pointer; padding:6px 12px;">Save</button>
+        </div>
+      </div>
+
+      <!-- Quick Match Section -->
+      <div class="mp-section" style="background: rgba(0, 200, 83, 0.12); border-color: #00c853;">
+        <h3 style="margin: 0 0 4px 0; color: #69f0ae; font-size: 1em;">⚡ Quick Match</h3>
+        <p style="font-size: 0.82em; color: #cfd8dc; margin: 0 0 8px 0;">Instantly join an open public match or host a new one on the 9x9 Goban.</p>
+        <button id="mpQuickMatchBtn" onclick="startQuickMatch()" style="width: 100%; background: linear-gradient(135deg, #00c853, #00b0ff); color:#000; font-weight: bold; padding: 8px 12px; font-size: 0.95em; border-radius:4px; border:none; cursor:pointer;">
+          ⚡ Instant Quick Match
+        </button>
+      </div>
+
+      <!-- Create or Join Room Section -->
+      <div class="mp-section">
+        <h3 style="margin: 0 0 6px 0; color: #ffd700; font-size: 1em;">🔑 Host Custom Room / Private Match</h3>
+        <div style="display:flex; gap:6px; align-items:center; margin-bottom: 8px;">
+          <label style="margin:0; font-size:0.82em; color:#ffd700;">Board Size:</label>
+          <select id="mpBoardSizeSelect" style="background:#0d0a07; border:1px solid #73502b; color:#fff; padding:4px 8px; border-radius:4px;">
+            <option value="9" selected>9x9 Fast Match</option>
+            <option value="13">13x13 Tactical</option>
+            <option value="19">19x19 Full Goban</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:6px; margin-bottom: 8px;">
+          <button onclick="createCustomRoom(true)" style="flex:1; background:#3e2723; color:#fff; border:1px solid #d4af37; border-radius:4px; padding:6px; cursor:pointer; font-weight:bold;">+ Host Public Room</button>
+          <button onclick="createCustomRoom(false)" style="flex:1; background:#212121; color:#fff; border:1px solid #888; border-radius:4px; padding:6px; cursor:pointer; font-weight:bold;">🔒 Host Private Room</button>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <input type="text" id="mpJoinCodeInput" maxlength="10" placeholder="Enter Room Code (e.g. GO-7382)" style="flex:1; text-transform:uppercase;">
+          <button onclick="joinRoomByInput()" style="background:#00897b; color:#fff; border:1px solid #00e5ff; border-radius:4px; padding:6px 12px; cursor:pointer; font-weight:bold;">Join Match</button>
+        </div>
+      </div>
+
+      <!-- Live Public Lobby Section -->
+      <div class="mp-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <h3 style="margin:0; color:#4fc3f7; font-size:1em;">📡 Live Public Lobby</h3>
+          <button onclick="refreshLobbyList()" style="font-size:0.75em; padding:2px 8px; background:#333; color:#ffd700; border:1px solid #666; border-radius:4px; cursor:pointer;">🔄 Refresh</button>
+        </div>
+        <div id="mpLobbyList" class="mp-lobby-box">
+          <div style="color:#aaa; font-style:italic; font-size:0.85em; text-align:center; padding:10px;">Connecting to lobby...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+      authDomain: "kiloappschat.firebaseapp.com",
+      databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+      projectId: "kiloappschat",
+      storageBucket: "kiloappschat.firebasestorage.app",
+      messagingSenderId: "290208566057",
+      appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+    };
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      window.fb = {
+        app,
+        db,
+        ref,
+        set,
+        get,
+        push,
+        onValue,
+        onChildAdded,
+        off,
+        serverTimestamp,
+        onDisconnect
+      };
+      if (window.onFirebaseLoaded) {
+        window.onFirebaseLoaded();
+      }
+    } catch (err) {
+      console.warn("Firebase RTDB init error:", err);
+    }
+  </script>
+
 <script>
   const boardEl = document.getElementById('board');
   const boardContainerEl = document.getElementById('board-container');
@@ -845,6 +1172,22 @@
   let territoryMap = [];
   let atariStones = [];
   let koMap = [];
+
+  /* Online Multiplayer State */
+  let isOnlineGame = false;
+  let currentRoomId = null;
+  let currentRoomStatus = 'none'; // 'waiting', 'playing', 'finished'
+  let myPlayerNum = 0; // 0=Spectator, 1=Black(P1), 2=White(P2)
+  let myPlayerColor = null; // 'B', 'W', null
+  let myPlayerName = localStorage.getItem('kgo_playerName') || ('Player_' + Math.floor(1000 + Math.random() * 9000));
+  let opponentName = 'Opponent';
+  let isHost = false;
+  let activeRoomRef = null;
+  let activeRoomListener = null;
+  let activeLobbyRef = null;
+  let activeLobbyListener = null;
+  let localLastMoveTs = 0;
+  let localLastChatTs = 0;
 
   const campaign = [
     {size: 9, handicap: 5, komi: 0.5, aiPersonality: 'territorial', name: "Stage 1: Novice Field", isTsumego: false, initialStones: [], targetDesc: ""},
@@ -987,8 +1330,598 @@
       gain.gain.linearRampToValueAtTime(0.01, now + 0.8);
       osc.start(now);
       osc.stop(now + 0.8);
+    } else if (type === 'turn') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587, now);
+      osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+      gain.gain.setValueAtTime(0.35, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+      osc.start(now);
+      osc.stop(now + 0.25);
+    } else if (type === 'join') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.setValueAtTime(659, now + 0.1);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    } else if (type === 'chat') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(700, now);
+      osc.frequency.exponentialRampToValueAtTime(250, now + 0.05);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
+      osc.start(now);
+      osc.stop(now + 0.06);
     }
   }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    return String(text).replace(/[&<>"']/g, function(m) {
+      switch (m) {
+        case '&': return '&amp;';
+        case '<': return '&lt;';
+        case '>': return '&gt;';
+        case '"': return '&quot;';
+        case "'": return '&#039;';
+        default: return m;
+      }
+    });
+  }
+
+  function showToast(msg, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = msg;
+    toast.onclick = () => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(-8px) scale(0.95)';
+      setTimeout(() => toast.remove(), 200);
+    };
+    container.appendChild(toast);
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-8px) scale(0.95)';
+        setTimeout(() => toast.remove(), 200);
+      }
+    }, 4200);
+  }
+
+  function isLocalPlayerTurn() {
+    if (isOnlineGame) {
+      return currentRoomStatus === 'playing' && currentPlayer === myPlayerColor;
+    }
+    return !(document.getElementById('ai-toggle').checked && currentPlayer === 'W');
+  }
+
+  function copyOnlineRoomLink() {
+    if (!currentRoomId) return;
+    const link = window.location.origin + window.location.pathname + '#room=' + currentRoomId;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(link).then(() => {
+        showToast(`Copied room invite link: ${currentRoomId}`, 'success');
+      }).catch(() => {
+        prompt("Copy room code:", currentRoomId);
+      });
+    } else {
+      prompt("Copy room code:", currentRoomId);
+    }
+  }
+
+  function closeAllModals() {
+    const help = document.getElementById('help-modal');
+    const mp = document.getElementById('multiplayer-modal');
+    if (help) help.style.display = 'none';
+    if (mp) mp.style.display = 'none';
+    if (activeLobbyRef && activeLobbyListener && window.fb) {
+      try { window.fb.off(activeLobbyRef, 'value', activeLobbyListener); } catch(e) {}
+      activeLobbyRef = null;
+      activeLobbyListener = null;
+    }
+  }
+
+  function toggleMultiplayerModal() {
+    const mp = document.getElementById('multiplayer-modal');
+    const isOpen = mp && mp.style.display === 'flex';
+    closeAllModals();
+    if (!isOpen && mp) {
+      mp.style.display = 'flex';
+      const nameInput = document.getElementById('mpPlayerName');
+      if (nameInput) nameInput.value = myPlayerName;
+      subscribeLobby();
+    }
+  }
+
+  function savePlayerName() {
+    const input = document.getElementById('mpPlayerName');
+    if (!input) return;
+    const name = input.value.trim();
+    if (name.length > 0) {
+      myPlayerName = name;
+      localStorage.setItem('kgo_playerName', name);
+      showToast(`Call-sign updated to "${escapeHtml(name)}"`, 'success');
+    }
+  }
+
+  function subscribeLobby() {
+    if (!window.fb) return;
+    if (activeLobbyRef && activeLobbyListener) {
+      try { window.fb.off(activeLobbyRef, 'value', activeLobbyListener); } catch(e) {}
+    }
+    const lobbyRef = window.fb.ref(window.fb.db, 'multiplayer/kgo/lobby');
+    activeLobbyRef = lobbyRef;
+    activeLobbyListener = window.fb.onValue(lobbyRef, (snapshot) => {
+      renderLobbyList(snapshot.val());
+    });
+  }
+
+  function refreshLobbyList() {
+    subscribeLobby();
+    showToast('Lobby refreshed', 'info');
+  }
+
+  function renderLobbyList(lobbyData) {
+    const box = document.getElementById('mpLobbyList');
+    if (!box) return;
+    if (!lobbyData || Object.keys(lobbyData).length === 0) {
+      box.innerHTML = '<div style="color:#aaa; font-style:italic; font-size:0.85em; text-align:center; padding:10px;">No open rooms in lobby right now. Host one or use Quick Match!</div>';
+      return;
+    }
+    const now = Date.now();
+    let html = '';
+    let count = 0;
+    for (const code of Object.keys(lobbyData)) {
+      const item = lobbyData[code];
+      if (item && item.createdAt && (now - item.createdAt < 900000)) {
+        count++;
+        const timeAgoSec = Math.max(1, Math.floor((now - item.createdAt) / 1000));
+        const timeStr = timeAgoSec < 60 ? `${timeAgoSec}s ago` : `${Math.floor(timeAgoSec / 60)}m ago`;
+        const isMine = item.host === myPlayerName;
+        const roomSize = item.size ? `${item.size}x${item.size}` : '9x9';
+        html += `
+          <div class="lobby-item">
+            <div>
+              <strong style="color:#ffd700; font-family:monospace;">${escapeHtml(code)}</strong>
+              <span style="color:#90caf9; margin-left:6px;">Host: ${escapeHtml(item.host || 'Player')}</span>
+              <span style="color:#69f0ae; margin-left:6px;">(${roomSize})</span>
+              <span style="color:#888; font-size:0.85em; margin-left:6px;">(${timeStr})</span>
+            </div>
+            <button onclick="joinOnlineRoom('${escapeHtml(code)}')" style="background:#00897b; color:#fff; border:1px solid #00e5ff; border-radius:4px; padding:2px 8px; font-size:0.85em; cursor:pointer;">
+              ${isMine ? 'Resume' : 'Join'}
+            </button>
+          </div>
+        `;
+      }
+    }
+    box.innerHTML = count === 0 ? '<div style="color:#aaa; font-style:italic; font-size:0.85em; text-align:center; padding:10px;">No active public rooms waiting right now. Host one or use Quick Match!</div>' : html;
+  }
+
+  async function startQuickMatch() {
+    if (!window.fb) {
+      showToast('Connecting to Firebase RTDB... please wait', 'warning');
+      return;
+    }
+    const quickBtn = document.getElementById('mpQuickMatchBtn');
+    if (quickBtn) quickBtn.textContent = '🔍 Searching for Open Match...';
+
+    try {
+      const lobbyRef = window.fb.ref(window.fb.db, 'multiplayer/kgo/lobby');
+      const snap = await window.fb.get(lobbyRef);
+      const data = snap.val();
+      let matchedId = null;
+
+      if (data) {
+        const now = Date.now();
+        for (const key of Object.keys(data)) {
+          const item = data[key];
+          if (item && item.createdAt && (now - item.createdAt < 600000) && item.host !== myPlayerName) {
+            matchedId = key;
+            break;
+          }
+        }
+      }
+
+      if (matchedId) {
+        showToast(`Found open match: ${matchedId}! Joining...`, 'info');
+        joinOnlineRoom(matchedId);
+      } else {
+        showToast('No open match found. Creating public room for opponents...', 'info');
+        const newCode = 'GO-' + Math.floor(1000 + Math.random() * 9000);
+        createCustomRoom(true, newCode);
+      }
+    } catch (err) {
+      console.error("Quick match error:", err);
+      showToast('Failed to check lobby. Creating room...', 'warning');
+      createCustomRoom(true);
+    } finally {
+      if (quickBtn) quickBtn.textContent = '⚡ Instant Quick Match';
+    }
+  }
+
+  async function createCustomRoom(isPublic = true, specificCode = null) {
+    if (!window.fb) {
+      showToast('Firebase RTDB not connected yet.', 'warning');
+      return;
+    }
+    const code = (specificCode || ('GO-' + Math.floor(1000 + Math.random() * 9000))).toUpperCase().trim();
+    const selectSizeEl = document.getElementById('mpBoardSizeSelect');
+    const chosenSize = selectSizeEl ? parseInt(selectSizeEl.value) : 9;
+
+    size = chosenSize;
+    document.getElementById('board-size').value = size;
+    document.getElementById('ai-toggle').checked = false;
+    currentCampaignStage = -1;
+    currentKomi = 6.5;
+
+    initBoard();
+    isOnlineGame = true;
+    isHost = true;
+    myPlayerNum = 1;
+    myPlayerColor = 'B';
+    currentRoomId = code;
+    currentRoomStatus = 'waiting';
+
+    const roomData = {
+      id: code,
+      status: 'waiting',
+      size: chosenSize,
+      komi: 6.5,
+      p1: { name: myPlayerName, connected: true, joinedAt: Date.now() },
+      p2: null,
+      turn: 'B',
+      board: board,
+      captures: { B: 0, W: 0 },
+      lastMove: null,
+      consecutivePasses: 0,
+      winner: 0,
+      winReason: null,
+      finalScore: null,
+      rematch: { p1: false, p2: false },
+      chat: null,
+      isPublic: isPublic,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+
+    try {
+      await window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + code), roomData);
+      if (isPublic) {
+        await window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/lobby/' + code), {
+          id: code,
+          host: myPlayerName,
+          size: chosenSize,
+          createdAt: Date.now()
+        });
+      }
+
+      try {
+        window.fb.onDisconnect(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + code + '/p1/connected')).set(false);
+        if (isPublic) {
+          window.fb.onDisconnect(window.fb.ref(window.fb.db, 'multiplayer/kgo/lobby/' + code)).remove();
+        }
+      } catch(e) {}
+
+      closeAllModals();
+      attachRoomListener(code);
+
+      const onlineBar = document.getElementById('onlineBar');
+      if (onlineBar) onlineBar.style.display = 'flex';
+      document.getElementById('onlineRoomIdText').textContent = code;
+      document.getElementById('onlineRoleText').textContent = 'You: Black (P1)';
+      document.getElementById('onlineSizeText').textContent = `${chosenSize}x${chosenSize} Goban`;
+      document.getElementById('onlineOpponentIndicator').textContent = '🟡';
+      document.getElementById('onlineOpponentText').textContent = 'Waiting for opponent to join...';
+      document.getElementById('onlineRematchBtn').style.display = 'none';
+
+      updateStatus();
+      showToast(`🌐 Room ${code} created! Waiting for Player 2...`, 'success');
+    } catch(err) {
+      console.error("Room creation error:", err);
+      showToast('Failed to create room: ' + err.message, 'warning');
+      isOnlineGame = false;
+    }
+  }
+
+  function joinRoomByInput() {
+    const input = document.getElementById('mpJoinCodeInput');
+    if (!input) return;
+    const code = input.value.trim().toUpperCase();
+    if (!code) {
+      showToast('Please enter a room code.', 'warning');
+      return;
+    }
+    joinOnlineRoom(code);
+  }
+
+  async function joinOnlineRoom(roomId) {
+    if (!window.fb) {
+      showToast('Firebase RTDB not connected yet.', 'warning');
+      return;
+    }
+    const code = roomId.toUpperCase().trim();
+    if (!code) {
+      showToast('Please enter a valid room code.', 'warning');
+      return;
+    }
+
+    try {
+      const roomRef = window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + code);
+      const snap = await window.fb.get(roomRef);
+      const room = snap.val();
+
+      if (!room) {
+        showToast(`Room "${code}" does not exist.`, 'warning');
+        return;
+      }
+
+      size = room.size || 9;
+      document.getElementById('board-size').value = size;
+      document.getElementById('ai-toggle').checked = false;
+      currentCampaignStage = -1;
+      currentKomi = room.komi || 6.5;
+
+      initBoard();
+      isOnlineGame = true;
+      currentRoomId = code;
+
+      if (room.status === 'waiting' || !room.p2) {
+        isHost = false;
+        myPlayerNum = 2;
+        myPlayerColor = 'W';
+        currentRoomStatus = 'playing';
+
+        await window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + code + '/p2'), {
+          name: myPlayerName,
+          connected: true,
+          joinedAt: Date.now()
+        });
+        await window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + code + '/status'), 'playing');
+        await window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + code + '/updatedAt'), Date.now());
+
+        try {
+          await window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/lobby/' + code), null);
+        } catch(e) {}
+
+        try {
+          window.fb.onDisconnect(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + code + '/p2/connected')).set(false);
+        } catch(e) {}
+
+        showToast(`🎮 Joined match ${code} as White (P2)!`, 'success');
+      } else {
+        isHost = false;
+        myPlayerNum = 0;
+        myPlayerColor = null;
+        currentRoomStatus = room.status;
+        showToast(`👁️ Joined room ${code} as Spectator!`, 'info');
+      }
+
+      closeAllModals();
+      attachRoomListener(code);
+
+      const onlineBar = document.getElementById('onlineBar');
+      if (onlineBar) onlineBar.style.display = 'flex';
+      document.getElementById('onlineRoomIdText').textContent = code;
+      document.getElementById('onlineRoleText').textContent = myPlayerNum === 1 ? 'You: Black (P1)' : (myPlayerNum === 2 ? 'You: White (P2)' : 'You: Spectator');
+      document.getElementById('onlineSizeText').textContent = `${size}x${size} Goban`;
+      document.getElementById('onlineRematchBtn').style.display = 'none';
+
+      updateStatus();
+    } catch(err) {
+      console.error("Join room error:", err);
+      showToast('Failed to join room: ' + err.message, 'warning');
+      isOnlineGame = false;
+    }
+  }
+
+  function attachRoomListener(roomId) {
+    if (activeRoomRef && activeRoomListener && window.fb) {
+      try { window.fb.off(activeRoomRef, 'value', activeRoomListener); } catch(e) {}
+      activeRoomRef = null;
+      activeRoomListener = null;
+    }
+
+    const roomRef = window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + roomId);
+    activeRoomRef = roomRef;
+    activeRoomListener = window.fb.onValue(roomRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) {
+        if (isOnlineGame) {
+          showToast('Online room closed.', 'warning');
+          leaveOnlineGame(false);
+        }
+        return;
+      }
+      handleRoomUpdate(data);
+    });
+  }
+
+  function handleRoomUpdate(room) {
+    const prevStatus = currentRoomStatus;
+    currentRoomStatus = room.status || 'waiting';
+
+    const roleStr = myPlayerNum === 1 ? 'You: Black (P1)' : (myPlayerNum === 2 ? 'You: White (P2)' : 'You: Spectator');
+    const roleEl = document.getElementById('onlineRoleText');
+    if (roleEl) roleEl.textContent = roleStr;
+
+    const opponent = myPlayerNum === 1 ? room.p2 : room.p1;
+    const oppIndicator = document.getElementById('onlineOpponentIndicator');
+    const oppText = document.getElementById('onlineOpponentText');
+
+    if (room.status === 'waiting' && !room.p2) {
+      if (oppIndicator) oppIndicator.textContent = '🟡';
+      if (oppText) oppText.textContent = 'Waiting for opponent to join...';
+    } else if (opponent) {
+      opponentName = opponent.name || 'Opponent';
+      if (oppIndicator) oppIndicator.textContent = opponent.connected ? '🟢' : '🔴';
+      if (oppText) oppText.textContent = `Opponent: ${opponentName}${opponent.connected ? '' : ' (Disconnected)'}`;
+      
+      if (prevStatus === 'waiting' && room.status === 'playing') {
+        showToast(`🥋 ${opponentName} joined the match! Game on!`, 'success');
+        playSound('join');
+      }
+    }
+
+    if (room.size && room.size !== size) {
+      size = room.size;
+      document.getElementById('board-size').value = size;
+      document.getElementById('onlineSizeText').textContent = `${size}x${size} Goban`;
+    }
+    if (room.komi !== undefined) currentKomi = room.komi;
+
+    if (room.lastMove && room.lastMove.ts > localLastMoveTs) {
+      localLastMoveTs = room.lastMove.ts;
+      if (room.board) board = deepCopy(room.board);
+      if (room.captures) captures = { ...room.captures };
+      if (room.turn) currentPlayer = room.turn;
+      consecutivePasses = room.consecutivePasses || 0;
+
+      if (room.lastMove.pass) {
+        showToast(`${room.lastMove.color === 'B' ? 'Black' : 'White'} passed.`, 'info');
+        playSound('place');
+      } else if (!room.lastMove.resign) {
+        lastMove = { x: room.lastMove.x, y: room.lastMove.y };
+        playSound(room.lastMove.captured > 0 ? 'capture' : 'place');
+        triggerScreenShake(room.lastMove.captured > 0 ? 4.0 : 2.0);
+      }
+
+      updateStatus();
+      drawBoard();
+
+      if (currentPlayer === myPlayerColor && room.status === 'playing') {
+        playSound('turn');
+        showToast(`Your turn! (${myPlayerColor === 'B' ? 'Black' : 'White'})`, 'info');
+      }
+    } else if (room.status === 'playing' && prevStatus === 'waiting') {
+      updateStatus();
+      drawBoard();
+    }
+
+    if (room.status === 'finished') {
+      const rematchBtn = document.getElementById('onlineRematchBtn');
+      if (rematchBtn) rematchBtn.style.display = 'inline-block';
+
+      if (prevStatus !== 'finished') {
+        playSound('over');
+        if (room.winner) {
+          spawnVictoryCelebration(room.winner);
+          if (room.winner === myPlayerColor) {
+            showToast(`🏆 VICTORY! You won by ${room.winReason || 'score'}!`, 'success');
+          } else {
+            showToast(`Match concluded: ${room.winner === 'B' ? 'Black' : 'White'} wins by ${room.winReason || 'score'}.`, 'warning');
+          }
+        }
+      }
+    }
+
+    if (room.chat && room.chat.ts > localLastChatTs) {
+      localLastChatTs = room.chat.ts;
+      if (room.chat.sender !== myPlayerName) {
+        showToast(`💬 <strong>${escapeHtml(room.chat.sender)}:</strong> ${escapeHtml(room.chat.text)}`, 'info');
+        playSound('chat');
+      }
+    }
+
+    if (room.rematch) {
+      if (room.rematch.p1 && room.rematch.p2) {
+        if (isHost) {
+          window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/rematch'), { p1: false, p2: false });
+          window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/status'), 'playing');
+          window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/winner'), 0);
+          window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/winReason'), null);
+          window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/finalScore'), null);
+          window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/turn'), 'B');
+          window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/lastMove'), null);
+          window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/consecutivePasses'), 0);
+          window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/captures'), { B: 0, W: 0 });
+          
+          initBoard();
+          window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/board'), board);
+        } else {
+          initBoard();
+        }
+        const rematchBtn = document.getElementById('onlineRematchBtn');
+        if (rematchBtn) rematchBtn.style.display = 'none';
+        showToast('🔥 Rematch started! Good luck!', 'success');
+        playSound('turn');
+      } else if ((myPlayerNum === 1 && room.rematch.p2) || (myPlayerNum === 2 && room.rematch.p1)) {
+        showToast('Opponent requested a rematch! Click Rematch to accept.', 'info');
+      }
+    }
+  }
+
+  function sendOnlineChat(chipText) {
+    if (!isOnlineGame || !currentRoomId || !window.fb) return;
+    const chatData = {
+      sender: myPlayerName,
+      text: chipText,
+      ts: Date.now()
+    };
+    localLastChatTs = chatData.ts;
+    window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/chat'), chatData);
+    showToast(`💬 You: ${escapeHtml(chipText)}`, 'info');
+  }
+
+  function sendCustomOnlineChat() {
+    const input = document.getElementById('onlineCustomChatInput');
+    if (!input) return;
+    const text = input.value.trim();
+    if (text.length === 0) return;
+    sendOnlineChat(text);
+    input.value = '';
+  }
+
+  function requestOnlineRematch() {
+    if (!isOnlineGame || !currentRoomId || !window.fb) return;
+    const slot = myPlayerNum === 1 ? 'p1' : (myPlayerNum === 2 ? 'p2' : null);
+    if (!slot) return;
+    window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/rematch/' + slot), true);
+    showToast('Rematch requested! Waiting for opponent...', 'info');
+  }
+
+  function leaveOnlineGame(confirmPrompt = true) {
+    if (confirmPrompt && isOnlineGame && currentRoomStatus === 'playing') {
+      if (!confirm('Leave this active online match? This will concede the game.')) return;
+      if (window.fb && currentRoomId) {
+        window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/winner'), (myPlayerColor === 'B' ? 'W' : 'B'));
+        window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/winReason'), 'abandonment');
+        window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/status'), 'finished');
+      }
+    }
+
+    if (window.fb && currentRoomId) {
+      if (isHost && currentRoomStatus === 'waiting') {
+        try { window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/lobby/' + currentRoomId), null); } catch(e) {}
+      }
+      const slot = myPlayerNum === 1 ? 'p1' : (myPlayerNum === 2 ? 'p2' : null);
+      if (slot) {
+        try { window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/' + slot + '/connected'), false); } catch(e) {}
+      }
+    }
+
+    if (activeRoomRef && activeRoomListener && window.fb) {
+      try { window.fb.off(activeRoomRef, 'value', activeRoomListener); } catch(e) {}
+      activeRoomRef = null;
+      activeRoomListener = null;
+    }
+
+    isOnlineGame = false;
+    currentRoomId = null;
+    currentRoomStatus = 'none';
+    myPlayerNum = 0;
+    myPlayerColor = null;
+
+    const onlineBar = document.getElementById('onlineBar');
+    if (onlineBar) onlineBar.style.display = 'none';
+
+    initBoard();
+    showToast('Returned to local play.', 'info');
+  }
+
 
   function initBoard() {
     board = Array(size).fill(null).map(() => Array(size).fill(null));
@@ -1349,8 +2282,12 @@
             stone.className = `stone ${capturedAnim.color === 'B' ? 'black' : 'white'} captured`;
             cell.appendChild(stone);
           }
+          const ghostColor = isOnlineGame ? (myPlayerColor || currentPlayer) : currentPlayer;
           const ghost = document.createElement('div');
-          ghost.className = `stone ghost ${currentPlayer === 'B' ? 'black' : 'white'}`;
+          ghost.className = `stone ghost ${ghostColor === 'B' ? 'black' : 'white'}`;
+          if (isOnlineGame && !isLocalPlayerTurn()) {
+            ghost.style.display = 'none';
+          }
           cell.appendChild(ghost);
         }
 
@@ -1504,6 +2441,20 @@
       recordGameEnd('W');
     }
     
+    if (isOnlineGame && currentRoomId && window.fb) {
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/winner'), winner);
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/winReason'), 'score');
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/status'), 'finished');
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/finalScore'), {
+        terrB, terrW, capB: captures.B, capW: captures.W, komi: currentKomi, totalB, totalW, diff: Math.abs(totalB - totalW)
+      });
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/updatedAt'), Date.now());
+      playSound('over');
+      spawnVictoryCelebration(winner);
+      showToast(`🏆 Game scored! Black: ${totalB} | White: ${totalW}. ${winner === 'B' ? 'Black' : 'White'} wins by ${Math.abs(totalB - totalW).toFixed(1)}!`, 'success');
+      return;
+    }
+
     playSound('over');
     spawnVictoryCelebration(winner);
     setTimeout(() => {
@@ -1534,7 +2485,14 @@
   }
 
   function placeStone(x, y) {
-    if (document.getElementById('ai-toggle').checked && currentPlayer === 'W') return;
+    if (isOnlineGame) {
+      if (!isLocalPlayerTurn()) {
+        showToast("It's not your turn!", "warning");
+        return;
+      }
+    } else {
+      if (document.getElementById('ai-toggle').checked && currentPlayer === 'W') return;
+    }
     if (board[y][x] !== null) return;
     
     let boardBackup = deepCopy(board);
@@ -1553,7 +2511,7 @@
       board = boardBackup;
       captures = capBackup;
       triggerScreenShake(5.0);
-      alert("Suicide move is not allowed.");
+      showToast("Suicide move is not allowed.", "warning");
       return;
     }
     
@@ -1562,20 +2520,23 @@
       board = boardBackup;
       captures = capBackup;
       triggerScreenShake(5.0);
-      alert("Superko rule violation (recreating previous position).");
+      showToast("Superko rule violation (recreating previous position).", "warning");
       return;
     }
     
-    undoStack.push({
-      board: boardBackup,
-      captures: capBackup,
-      history: histBackup,
-      lastMove: lastMoveBackup,
-      currentPlayer: currPlayerBackup
-    });
-    redoStack = [];
+    if (!isOnlineGame) {
+      undoStack.push({
+        board: boardBackup,
+        captures: capBackup,
+        history: histBackup,
+        lastMove: lastMoveBackup,
+        currentPlayer: currPlayerBackup
+      });
+      redoStack = [];
+    }
 
     history.push(boardToString());
+    let prevColor = currentPlayer;
     currentPlayer = opp;
     consecutivePasses = 0;
     lastMove = {x, y};
@@ -1601,6 +2562,19 @@
       capturedStonesForAnim = [];
     }
     
+    if (isOnlineGame && currentRoomId && window.fb) {
+      localLastMoveTs = Date.now();
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/board'), board);
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/captures'), captures);
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/turn'), currentPlayer);
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/consecutivePasses'), 0);
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/lastMove'), {
+        x, y, pass: false, resign: false, color: prevColor, captured: caps, ts: localLastMoveTs
+      });
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/updatedAt'), localLastMoveTs);
+      return;
+    }
+
     if (currentCampaignStage !== -1 && campaign[currentCampaignStage].isTsumego) {
       let solved = false;
       let stage = campaign[currentCampaignStage];
@@ -1910,7 +2884,10 @@
 
   function updateStatus() {
     let statusText = `Current Turn: ${currentPlayer === 'B' ? 'Black' : 'White'}`;
-    if (currentCampaignStage !== -1) {
+    if (isOnlineGame) {
+      const isMyTurn = (currentPlayer === myPlayerColor);
+      statusText = `[ONLINE] ${isMyTurn ? '⚡ YOUR TURN' : "Opponent's Turn"} (${currentPlayer === 'B' ? 'Black' : 'White'})`;
+    } else if (currentCampaignStage !== -1) {
       statusText = `${campaign[currentCampaignStage].name} - ${statusText}`;
     }
     document.querySelector('.status').innerText = statusText;
@@ -1918,6 +2895,35 @@
   }
 
   document.getElementById('btn-pass').addEventListener('click', () => {
+    if (isOnlineGame) {
+      if (!isLocalPlayerTurn()) {
+        showToast("It's not your turn to pass!", "warning");
+        return;
+      }
+      consecutivePasses++;
+      let prevPlayer = currentPlayer;
+      currentPlayer = currentPlayer === 'B' ? 'W' : 'B';
+      hintCell = null;
+      updateStatus();
+      drawBoard();
+
+      localLastMoveTs = Date.now();
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/turn'), currentPlayer);
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/consecutivePasses'), consecutivePasses);
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/lastMove'), {
+        x: -1, y: -1, pass: true, resign: false, color: prevPlayer, captured: 0, ts: localLastMoveTs
+      });
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/updatedAt'), localLastMoveTs);
+
+      showToast("You passed your turn.", "info");
+
+      if (consecutivePasses >= 2) {
+        showToast("Both players passed! Concluding and scoring game...", "info");
+        calculateScore();
+      }
+      return;
+    }
+
     consecutivePasses++;
     if (consecutivePasses >= 2) {
       calculateScore();
@@ -1940,6 +2946,10 @@
   });
 
   function doUndo() {
+    if (isOnlineGame) {
+      showToast("Undo is disabled during online matches.", "warning");
+      return;
+    }
     let isVsAI = document.getElementById('ai-toggle').checked;
     let stepsToUndo = (isVsAI && undoStack.length >= 2) ? 2 : 1;
     
@@ -1969,6 +2979,10 @@
   document.getElementById('btn-undo').addEventListener('click', doUndo);
 
   document.getElementById('btn-hint').addEventListener('click', () => {
+    if (isOnlineGame) {
+      showToast("AI Hint is disabled during online matches for fair play.", "warning");
+      return;
+    }
     triggerScreenShake(3.5);
     calculateHint();
   });
@@ -1990,6 +3004,18 @@
   });
 
   document.getElementById('btn-resign').addEventListener('click', () => {
+    if (isOnlineGame) {
+      if (!confirm("Are you sure you want to resign the online match?")) return;
+      playSound('over');
+      triggerScreenShake(10.0);
+      const winner = (myPlayerColor === 'B' ? 'W' : 'B');
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/winner'), winner);
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/winReason'), 'resignation');
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/status'), 'finished');
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kgo/rooms/' + currentRoomId + '/updatedAt'), Date.now());
+      showToast("You resigned the match.", "warning");
+      return;
+    }
     playSound('over');
     triggerScreenShake(10.0);
     setTimeout(() => {
@@ -2014,6 +3040,12 @@
   });
   
   document.getElementById('btn-new').addEventListener('click', () => {
+    if (isOnlineGame) {
+      if (confirm("Leave the online match and start a new local game?")) {
+        leaveOnlineGame(false);
+      }
+      return;
+    }
     currentCampaignStage = -1;
     currentKomi = 6.5;
     triggerScreenShake(4.0);
@@ -2130,7 +3162,7 @@
 
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      document.getElementById('help-modal').style.display = 'none';
+      closeAllModals();
       return;
     }
     if (e.ctrlKey && (e.key === 'z' || e.key === 'Z')) {
@@ -2146,11 +3178,21 @@
       }
       return;
     }
+    const mpModal = document.getElementById('multiplayer-modal');
+    if (mpModal && mpModal.style.display === 'flex') {
+      if (e.key === 'o' || e.key === 'O') {
+        e.preventDefault();
+        closeAllModals();
+      }
+      return;
+    }
 
     if (e.key === 'u' || e.key === 'U') {
       doUndo();
     } else if (e.key === 'h' || e.key === 'H') {
       calculateHint();
+    } else if (e.key === 'o' || e.key === 'O') {
+      toggleMultiplayerModal();
     } else if (e.key === 't' || e.key === 'T') {
       document.getElementById('btn-estimate').click();
     } else if (e.key === 's' || e.key === 'S') {
@@ -2202,6 +3244,21 @@
 
   loadStats();
   initBoard();
+
+  const btnMp = document.getElementById('btn-multiplayer');
+  if (btnMp) btnMp.addEventListener('click', toggleMultiplayerModal);
+
+  window.onFirebaseLoaded = () => {
+    if (window.location.hash) {
+      const match = window.location.hash.match(/room=([A-Za-z0-9_-]+)/);
+      if (match && match[1]) {
+        setTimeout(() => joinOnlineRoom(match[1]), 350);
+      }
+    }
+  };
+  if (window.fb && window.onFirebaseLoaded) {
+    window.onFirebaseLoaded();
+  }
 </script>
 </body>
 </html>

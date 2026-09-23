@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-tester
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -16,7 +16,7 @@ current_targets:
   kilo_usability: "KContacts (reposition bottom-right toast blocking submit button)"
   kilo_graphics: KColosseum
   kilo_qa: KChrono
-  kilo_expander: "KGo (Firebase RTDB Online Multiplayer)"
+  kilo_expander: "KReversi (Firebase RTDB Online Multiplayer)"
   kilo_creator: "kweb://users/~neon_rider (Virtual Web 1999 & ASM Devlog)"
 virtual_web_target: "kweb://users/~neon_rider"
 virtual_web_rotation:
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-qa
-  app: "KZip (Pass 5: Tutorial & State Integrity)"
-  timestamp: "2026-09-23T20:45:00Z"
+  agent: kilo-expander
+  app: "KGo (Firebase RTDB Online Multiplayer)"
+  timestamp: "2026-09-23T21:55:00Z"
 last_planner_run: "2026-09-23T04:40:00Z"
 ---
 
@@ -121,9 +121,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KGo` (Implement Seamless Firebase RTDB Multiplayer per Mandate 12)
+- **Current Target**: `KReversi` (Implement Seamless Firebase RTDB Multiplayer per Mandate 12)
 - **Upcoming Queue**:
-  `KReversi` (Multiplayer), `KDarts` (Multiplayer), `KTetris` (Arcade Duel Multiplayer), `KSnake` (Multiplayer), `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote` *(Completed: KConnect4, KChess)*.
+  `KDarts` (Multiplayer), `KTetris` (Arcade Duel Multiplayer), `KSnake` (Multiplayer), `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote` *(Completed: KConnect4, KChess, KGo)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -190,6 +190,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T21:55:00Z — kilo-expander: KGo (Firebase RTDB Online Multiplayer)**
+  - Status: PASS ✅ (Seamless Firebase Realtime Database online multiplayer implemented; 0 regressions).
+  - Online Infrastructure: Embedded CDN Firebase ES modules (`multiplayer/kgo/rooms/<id>`), player presence (`onDisconnect`), and public lobby broadcast (`multiplayer/kgo/lobby`).
+  - Game Synchronization: Real-time board state, stone placement, liberties/captures, alternating turn enforcement, consecutive passes, and score resolution across 9x9, 13x13, and 19x19 Gobans.
+  - Match Features: Public instant matchmaking, private custom room codes, live in-match chat chips, rematch handshake, and resignation handling.
+  - Audio & Usability: Procedural Genesis/SNES FM synthesis sound chimes (turn, join, chat), top-right non-blocking safe toast alerts, and hotkey integration (`O`).
+  - Verification: 8/8 headless unit tests pass; MSVC C clean build (`KGo.exe` 172.0 KB); Vite clean build (374ms, `kgo.html` 121.5 KB); security lint 100% clean; <999KB ceiling.
+
 - **2026-09-23T20:45:00Z — kilo-qa: KZip (Pass 5: Tutorial & State Integrity)**
   - Status: PASS ✅ (Full state persistence & tutorial isolation verified; 0 regressions).
   - Quicksave & Load: Implemented complete state capture across [F5] Save and [F9] Load hotkeys & buttons in web (`kzip_quicksave`) and native C (`kzip.dat`).
@@ -222,13 +230,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast & Validation: Eliminated 4-toast startup blitz (`silent=true`), added financial input bounds checking, and guarded `sendToCalc`.
   - Data Portability: Added JSON workspace state export/import (`kcalc_workspace.json`) alongside CSV/TXT history tools.
   - Verification: 15/15 node math/UI unit tests pass; MSVC C clean build (26.1 KB); Vite build clean (379ms); security lint clean; <999KB ceiling.
-
-- **2026-09-23T16:45:00Z — kilo-creator: KSteno (Stenographic Carrier Suite & Dead-Drop Network)**
-  - Status: PASS ✅ (New app created: native Win32 C + HTML5 web app registered in KiloOS).
-  - Web App (ksteno.html, 125.7 KB): Multi-carrier workbench: 1/2/4-bit image LSB (seeded PRNG), 16-bit PCM audio modulation, SNOW whitespace chaff, Chi-Square (χ²) PoVs steganalysis, Firebase RTDB global dead-drop network.
-  - Native App (KSteno.exe, 9.5 KB): Win32 GDI desktop carrier suite, whitespace encoder/decoder, RC4 payload armor, χ² frequency analyzer.
-  - Mandates: Firebase cross-computer dead-drop channels (#global-dead-drop, #flarlight-covert, #sub-rosa-99), 0 glint particles, top-right safe toasts.
-  - Standards: Title splash screen, first-run tutorial (`ksteno_tutorialSeen`), F5 quicksave/F9 quickload, 1999 ARG lore (FLARELIGHT, Node 0x7F).
-  - Universal Audio: Procedural Genesis YM2612 FM synthesis operator pairs & SPC700 stereo delay warmth.
-  - Verification: MSVC C clean build (9.5 KB); Vite clean build (356ms); security lint 100% PASS; strict <999KB ceiling.
 
