@@ -118,7 +118,8 @@ const APPS = [
   { id: 'kdirector', title: 'Director Console', url: '/apps/kdirector.html', icon: '/assets/icons/kdirector.ico', w: 1080, h: 720, folder: 'System' },
   { id: 'kanomaly', title: 'KAnomaly', url: '/apps/kanomaly.html', exeUrl: '/exe/KAnomaly.exe', icon: '/assets/icons/kanomaly.ico', w: 1040, h: 720, folder: 'System' },
   { id: 'kfleet', title: 'KFleet', url: '/apps/kfleet.html', exeUrl: '/exe/KFleet.exe', icon: '/assets/icons/kfleet.ico', w: 1060, h: 720, folder: 'System' },
-  { id: 'knetmap', title: 'KNetMap', url: '/apps/knetmap.html', exeUrl: '/exe/KNetMap.exe', icon: '/assets/icons/knet.ico', w: 1080, h: 720, folder: 'Network' }
+  { id: 'knetmap', title: 'KNetMap', url: '/apps/knetmap.html', exeUrl: '/exe/KNetMap.exe', icon: '/assets/icons/knet.ico', w: 1080, h: 720, folder: 'Network' },
+  { id: 'ksteno', title: 'KSteno', url: '/apps/ksteno.html', exeUrl: '/exe/KSteno.exe', icon: '/assets/icons/ksteno.ico', w: 1040, h: 720, folder: 'System' }
 ];
 
 function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModal, openApps, closeApp }) {

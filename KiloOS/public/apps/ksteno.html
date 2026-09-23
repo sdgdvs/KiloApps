@@ -1,0 +1,3215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KSteno - Stenographic Carrier Suite &amp; Covert Channel Workbench</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/assets/icons/ksteno.ico">
+  <style>
+    :root {
+      --bg: #080d1a;
+      --surface: #0e172a;
+      --surface-2: #162440;
+      --surface-hover: #1e3258;
+      --card-bg: #111e38;
+      --border: #223862;
+      --border-focus: #00d2ff;
+      --text: #e2e8f0;
+      --text-muted: #8ca3c7;
+      --primary: #00d2ff;
+      --primary-hover: #00a8cc;
+      --accent: #ff9f1c;
+      --accent-hover: #e08307;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --font-mono: 'Consolas', 'Courier New', monospace;
+      --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    [data-theme="win98"] {
+      --bg: #008080;
+      --surface: #c0c0c0;
+      --surface-2: #d4d0c8;
+      --surface-hover: #dfdfdf;
+      --card-bg: #ece9d8;
+      --border: #808080;
+      --border-focus: #000080;
+      --text: #000000;
+      --text-muted: #444444;
+      --primary: #000080;
+      --primary-hover: #1084d0;
+      --accent: #800000;
+      --accent-hover: #a00000;
+      --success: #008000;
+      --danger: #800000;
+      --warning: #b8860b;
+      --font-mono: 'Fixedsys', 'Lucida Console', monospace;
+      --font-sans: 'Tahoma', 'MS Sans Serif', sans-serif;
+    }
+
+    [data-theme="amber"] {
+      --bg: #120b02;
+      --surface: #221404;
+      --surface-2: #382107;
+      --surface-hover: #4e2e0a;
+      --card-bg: #291805;
+      --border: #613a0c;
+      --border-focus: #f59e0b;
+      --text: #fbbf24;
+      --text-muted: #b4851c;
+      --primary: #f59e0b;
+      --primary-hover: #d97706;
+      --accent: #fcd34d;
+      --accent-hover: #f59e0b;
+      --success: #10b981;
+      --danger: #f87171;
+      --warning: #fbbf24;
+      --font-mono: 'Courier New', monospace;
+      --font-sans: 'Courier New', monospace;
+    }
+
+    [data-theme="matrix"] {
+      --bg: #020a04;
+      --surface: #061509;
+      --surface-2: #0c2b12;
+      --surface-hover: #12401b;
+      --card-bg: #09200e;
+      --border: #154c20;
+      --border-focus: #22c55e;
+      --text: #4ade80;
+      --text-muted: #1ea34b;
+      --primary: #22c55e;
+      --primary-hover: #16a34a;
+      --accent: #86efac;
+      --accent-hover: #4ade80;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #eab308;
+      --font-mono: 'Consolas', monospace;
+      --font-sans: 'Consolas', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Top Toolbar */
+    header {
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 0.5px;
+      color: var(--primary);
+    }
+
+    .brand span.ver {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      background: var(--surface-2);
+      color: var(--text-muted);
+      padding: 2px 6px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .tab-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 4px 4px 0 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .tab-btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--primary);
+    }
+
+    .tab-btn.active {
+      background: var(--card-bg);
+      border-bottom-color: var(--card-bg);
+      color: var(--primary);
+      border-top: 2px solid var(--primary);
+    }
+
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    button.tool-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 11px;
+      font-family: var(--font-mono);
+      padding: 4px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    button.tool-btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    select.theme-select {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 11px;
+      font-family: var(--font-mono);
+      padding: 4px 6px;
+      border-radius: 3px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    /* Main Container & Panels */
+    main {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+      background: var(--bg);
+    }
+
+    .panel {
+      display: none;
+      width: 100%;
+      height: 100%;
+      padding: 12px;
+      overflow-y: auto;
+      gap: 12px;
+    }
+
+    .panel.active {
+      display: flex;
+    }
+
+    /* Common Card Styles */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+    }
+
+    .card-title .badge {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      background: var(--surface-2);
+      color: var(--text-muted);
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+
+    /* Buttons & Inputs */
+    .btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 3px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .btn.btn-primary {
+      background: var(--primary);
+      color: #000;
+      border-color: var(--primary);
+    }
+
+    .btn.btn-primary:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+    }
+
+    .btn.btn-accent {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
+
+    .btn.btn-accent:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn.btn-sm {
+      font-size: 11px;
+      padding: 4px 8px;
+    }
+
+    input[type="text"], input[type="password"], textarea, select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 6px 8px;
+      border-radius: 3px;
+      outline: none;
+      width: 100%;
+      user-select: text;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--border-focus);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    /* Capacity Progress Bar */
+    .capacity-container {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .capacity-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      transition: width 0.2s, background-color 0.2s;
+    }
+
+    .progress-bar-fill.warning {
+      background: var(--warning);
+    }
+
+    .progress-bar-fill.danger {
+      background: var(--danger);
+    }
+
+    /* Image Stego Layout */
+    .image-panel-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 12px;
+      width: 100%;
+      height: 100%;
+    }
+
+    .canvas-viewport {
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      min-height: 380px;
+    }
+
+    canvas.carrier-canvas {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+
+    .canvas-overlay-tag {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(14, 23, 42, 0.85);
+      border: 1px solid var(--border);
+      color: var(--primary);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      pointer-events: none;
+    }
+
+    /* Audio Stego Layout */
+    .audio-panel-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 12px;
+      width: 100%;
+      height: 100%;
+    }
+
+    .audio-visualizer-box {
+      background: #040810;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      height: 240px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    canvas.waveform-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Text Stego Layout */
+    .text-panel-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      width: 100%;
+      height: 100%;
+    }
+
+    .text-preview-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 10px;
+      border-radius: 3px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      height: 240px;
+      overflow-y: auto;
+      user-select: text;
+    }
+
+    .text-preview-box mark.space-mark {
+      background: rgba(0, 210, 255, 0.3);
+      color: var(--primary);
+    }
+
+    .text-preview-box mark.tab-mark {
+      background: rgba(255, 159, 28, 0.3);
+      color: var(--accent);
+    }
+
+    /* Steganalysis Lab Grid */
+    .steganalysis-grid {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 12px;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Dead-Drop Feed Layout */
+    .dead-drop-grid {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 12px;
+      width: 100%;
+      height: 100%;
+    }
+
+    .feed-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+      height: calc(100vh - 120px);
+      padding-right: 4px;
+    }
+
+    .drop-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: border-color 0.15s;
+    }
+
+    .drop-item:hover {
+      border-color: var(--primary);
+    }
+
+    .drop-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-family: var(--font-mono);
+    }
+
+    .drop-item-header .author {
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .drop-item-content {
+      font-size: 12px;
+      color: var(--text);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .drop-thumb {
+      width: 54px;
+      height: 54px;
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      object-fit: cover;
+    }
+
+    /* Status Bar */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 4px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      z-index: 10;
+    }
+
+    .status-left, .status-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .status-indicator.offline {
+      background: var(--danger);
+    }
+
+    .status-indicator.connecting {
+      background: var(--warning);
+    }
+
+    /* Modals & Overlays */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.78);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-window {
+      background: var(--card-bg);
+      border: 2px solid var(--border-focus);
+      border-radius: 6px;
+      width: 90%;
+      max-width: 620px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--primary);
+    }
+
+    .modal-body {
+      padding: 16px;
+      overflow-y: auto;
+      font-size: 13px;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .modal-footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 10px 14px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* Safe Top-Right Toast Notifications */
+    #toast-container {
+      position: fixed;
+      top: 52px;
+      right: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 1000;
+      pointer-events: none;
+      max-width: 320px;
+    }
+
+    .toast {
+      background: var(--surface);
+      border: 1px solid var(--primary);
+      border-left: 4px solid var(--primary);
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      color: var(--text);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      pointer-events: auto;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      animation: toastSlideIn 0.2s ease-out;
+    }
+
+    .toast.success { border-color: var(--success); border-left-color: var(--success); }
+    .toast.error { border-color: var(--danger); border-left-color: var(--danger); }
+    .toast.warning { border-color: var(--warning); border-left-color: var(--warning); }
+
+    @keyframes toastSlideIn {
+      from { transform: translateX(40px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body data-theme="cyber">
+
+  <!-- TOP HEADER -->
+  <header>
+    <div class="brand">
+      <span>👁️ KSTENO</span>
+      <span class="ver">v1.0.0</span>
+    </div>
+
+    <nav class="nav-tabs" role="tablist">
+      <button class="tab-btn active" data-tab="tab-image" role="tab">🖼️ Image Carrier (LSB)</button>
+      <button class="tab-btn" data-tab="tab-audio" role="tab">🎵 Audio Carrier (WAV)</button>
+      <button class="tab-btn" data-tab="tab-text" role="tab">📄 Text &amp; Chaff</button>
+      <button class="tab-btn" data-tab="tab-analysis" role="tab">🔬 Steganalysis Lab</button>
+      <button class="tab-btn" data-tab="tab-deaddrop" role="tab">🌐 Global Dead-Drop</button>
+    </nav>
+
+    <div class="toolbar-actions">
+      <button class="tool-btn" id="btn-manual" title="Field Manual (F1)">[F1] Help</button>
+      <button class="tool-btn" id="btn-quicksave" title="Quick Save (F5)">[F5] Save</button>
+      <button class="tool-btn" id="btn-quickload" title="Quick Load (F9)">[F9] Load</button>
+      <button class="tool-btn" id="btn-audio-toggle" title="Toggle Sound">🔊 Audio</button>
+      <button class="tool-btn" id="btn-settings" title="Settings">⚙️</button>
+      <select class="theme-select" id="theme-selector" title="Select UI Theme">
+        <option value="cyber">Cyber</option>
+        <option value="win98">Win98</option>
+        <option value="amber">Amber</option>
+        <option value="matrix">Matrix</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- MAIN APPLICATION BODY -->
+  <main>
+    <!-- TAB 1: IMAGE CARRIER (LSB) -->
+    <section id="tab-image" class="panel active">
+      <div class="image-panel-grid">
+        <!-- Left: Canvas Viewport & Presets -->
+        <div class="card">
+          <div class="card-title">
+            <span>CARRIER BITMAP VIEWPORT</span>
+            <div style="display:flex; gap:6px;">
+              <span class="badge" id="image-dim-badge">512x384 (196.6k px)</span>
+              <span class="badge" id="image-cap-badge">Max Cap: 73.7 KB</span>
+            </div>
+          </div>
+
+          <div class="canvas-viewport" id="image-dropzone">
+            <span class="canvas-overlay-tag" id="canvas-mode-tag">MODE: 24-BIT RGB CARRIER</span>
+            <canvas id="image-canvas" class="carrier-canvas" width="512" height="384"></canvas>
+          </div>
+
+          <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+            <span style="font-size:11px; font-weight:600; color:var(--text-muted);">Presets:</span>
+            <button class="btn btn-sm" id="btn-preset-plasma">Cyber Plasma</button>
+            <button class="btn btn-sm" id="btn-preset-fractal">Mandelbrot</button>
+            <button class="btn btn-sm" id="btn-preset-nebula">Deep Space</button>
+            <button class="btn btn-sm" id="btn-preset-crt">CRT Noise</button>
+            <button class="btn btn-sm" id="btn-preset-dither">Sunset Dither</button>
+            <label class="btn btn-sm" style="margin-left:auto; cursor:pointer;">
+              📁 Upload Image <input type="file" id="image-file-input" accept="image/*" style="display:none;">
+            </label>
+          </div>
+        </div>
+
+        <!-- Right: Injection Controls & Payload -->
+        <div class="card" style="overflow-y:auto;">
+          <div class="card-title">
+            <span>LSB EMBEDDING ENGINE</span>
+            <span class="badge">PRNG DISPERSED</span>
+          </div>
+
+          <!-- Stego Settings -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div>
+              <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">Bit Depth:</label>
+              <select id="img-bit-depth">
+                <option value="1">1-Bit LSB (Stealth)</option>
+                <option value="2">2-Bit LSB (Balanced)</option>
+                <option value="4">4-Bit LSB (High Cap)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">Channels:</label>
+              <select id="img-channel-mask">
+                <option value="rgb">RGB (All 3)</option>
+                <option value="r">Red Only</option>
+                <option value="g">Green Only</option>
+                <option value="b">Blue Only</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div>
+              <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">Distribution:</label>
+              <select id="img-distribution">
+                <option value="prng">Seeded PRNG (Dispersed)</option>
+                <option value="sequential">Sequential (Linear)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">Passphrase / Seed:</label>
+              <input type="password" id="img-passphrase" placeholder="Key (optional)" value="KSTENO-1999">
+            </div>
+          </div>
+
+          <!-- Secret Payload -->
+          <div class="capacity-container">
+            <div class="capacity-header">
+              <span>SECRET PAYLOAD</span>
+              <span id="img-capacity-text">0 / 75,494 Bytes (0%)</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="img-capacity-bar"></div>
+            </div>
+          </div>
+
+          <textarea id="img-payload-input" placeholder="Type or paste covert payload message here..."></textarea>
+
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="btn btn-sm" id="btn-template-briefing">Operative Memo</button>
+            <button class="btn btn-sm" id="btn-template-scene">FLARELIGHT NFO</button>
+            <button class="btn btn-sm" id="btn-template-arg">Node 0x7F Log</button>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display:flex; gap:8px; margin-top:4px;">
+            <button class="btn btn-primary" id="btn-img-embed" style="flex:1;">🔒 Embed Payload</button>
+            <button class="btn btn-accent" id="btn-img-extract" style="flex:1;">🔓 Extract Payload</button>
+          </div>
+
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-sm" id="btn-img-download" style="flex:1;">💾 Save Stego PNG</button>
+            <button class="btn btn-sm" id="btn-img-revert" style="flex:1;">🔄 Clean Carrier</button>
+          </div>
+
+          <!-- Extraction Output -->
+          <div>
+            <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">Extracted Message:</label>
+            <div id="img-extract-output" class="text-preview-box" style="height:90px;" placeholder="Extracted text will appear here..."></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: AUDIO CARRIER (WAV) -->
+    <section id="tab-audio" class="panel">
+      <div class="audio-panel-grid">
+        <!-- Left: Audio Waveform & Player -->
+        <div class="card">
+          <div class="card-title">
+            <span>PCM AUDIO CARRIER OSCILLOSCOPE</span>
+            <div style="display:flex; gap:6px;">
+              <span class="badge" id="audio-spec-badge">44.1 kHz 16-Bit Mono</span>
+              <span class="badge" id="audio-cap-badge">Cap: 16.5 KB</span>
+            </div>
+          </div>
+
+          <div class="audio-visualizer-box">
+            <canvas id="audio-canvas" class="waveform-canvas"></canvas>
+          </div>
+
+          <!-- Player Controls -->
+          <div style="display:flex; gap:8px; align-items:center; background:var(--surface); padding:8px; border-radius:4px; border:1px solid var(--border);">
+            <button class="btn btn-sm" id="btn-audio-play">▶️ Play Carrier</button>
+            <button class="btn btn-sm" id="btn-audio-stop">⏹️ Stop</button>
+            <button class="btn btn-sm" id="btn-audio-ab-toggle" title="Toggle Clean vs Stego Audio">🎧 A/B Test: Clean</button>
+            <label style="font-size:11px; font-family:var(--font-mono); margin-left:auto; display:flex; align-items:center; gap:6px;">
+              Vol: <input type="range" id="audio-volume" min="0" max="1" step="0.05" value="0.7" style="width:80px;">
+            </label>
+          </div>
+
+          <!-- Carrier Synthesis Presets -->
+          <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+            <span style="font-size:11px; font-weight:600; color:var(--text-muted);">Synth Carrier:</span>
+            <button class="btn btn-sm" id="btn-synth-modem">1999 Modem Handshake</button>
+            <button class="btn btn-sm" id="btn-synth-fm">Genesis FM Drone</button>
+            <button class="btn btn-sm" id="btn-synth-cassette">Cassette Hiss</button>
+            <button class="btn btn-sm" id="btn-synth-pulsar">SPC700 Pulsar</button>
+            <label class="btn btn-sm" style="margin-left:auto; cursor:pointer;">
+              📁 Upload WAV <input type="file" id="audio-file-input" accept=".wav,audio/wav" style="display:none;">
+            </label>
+          </div>
+        </div>
+
+        <!-- Right: Audio Stego Operations -->
+        <div class="card" style="overflow-y:auto;">
+          <div class="card-title">
+            <span>AUDIO LSB MODULATION</span>
+            <span class="badge">16-BIT PCM</span>
+          </div>
+
+          <div>
+            <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">Passphrase / Scramble Key:</label>
+            <input type="password" id="audio-passphrase" placeholder="Key (optional)" value="AUDIO-99">
+          </div>
+
+          <div class="capacity-container">
+            <div class="capacity-header">
+              <span>AUDIO PAYLOAD BUFFER</span>
+              <span id="audio-capacity-text">0 / 16,537 Bytes (0%)</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="audio-capacity-bar"></div>
+            </div>
+          </div>
+
+          <textarea id="audio-payload-input" placeholder="Type covert payload to modulate into audio samples..."></textarea>
+
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-primary" id="btn-audio-embed" style="flex:1;">🔒 Embed Into Audio</button>
+            <button class="btn btn-accent" id="btn-audio-extract" style="flex:1;">🔓 Extract From Audio</button>
+          </div>
+
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-sm" id="btn-audio-download" style="flex:1;">💾 Download Stego WAV</button>
+            <button class="btn btn-sm" id="btn-audio-revert" style="flex:1;">🔄 Clean Audio</button>
+          </div>
+
+          <div>
+            <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">Extracted Audio Payload:</label>
+            <div id="audio-extract-output" class="text-preview-box" style="height:90px;" placeholder="Decoded audio secret will appear here..."></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: TEXT & CHAFF STEGANOGRAPHY -->
+    <section id="tab-text" class="panel">
+      <div class="text-panel-grid">
+        <!-- Left: Cover Text Editor -->
+        <div class="card">
+          <div class="card-title">
+            <span>COVER TEXT / CHAFF LETTER</span>
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-sm" id="btn-text-reveal">🔍 Reveal Hidden Bits</button>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+            <span style="font-size:11px; font-weight:600; color:var(--text-muted);">Chaff Presets:</span>
+            <button class="btn btn-sm" id="btn-text-preset-isp">1999 ISP Statement</button>
+            <button class="btn btn-sm" id="btn-text-preset-nfo">FLARELIGHT NFO</button>
+            <button class="btn btn-sm" id="btn-text-preset-y2k">Y2K Directive</button>
+            <button class="btn btn-sm" id="btn-text-preset-tournament">Surreal Tournament</button>
+          </div>
+
+          <textarea id="cover-text-input" style="height:220px;" placeholder="Innocent cover text appears here..."></textarea>
+
+          <div id="revealed-text-view" class="text-preview-box" style="display:none; height:120px;"></div>
+        </div>
+
+        <!-- Right: Stego Text Engine & Payload -->
+        <div class="card">
+          <div class="card-title">
+            <span>TEXT STEGO ENCODING</span>
+            <span class="badge">SNOW &amp; ZERO-WIDTH</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div>
+              <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">Encoding Algorithm:</label>
+              <select id="text-stego-algo">
+                <option value="snow">Whitespace (Spaces &amp; Tabs)</option>
+                <option value="zerowidth">Zero-Width Unicode Spaces</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">Payload Password:</label>
+              <input type="password" id="text-passphrase" placeholder="Key (optional)" value="CHAFF-99">
+            </div>
+          </div>
+
+          <div>
+            <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">Covert Secret Message:</label>
+            <textarea id="text-payload-input" style="height:80px;" placeholder="Message to hide in plain sight..."></textarea>
+          </div>
+
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-primary" id="btn-text-embed" style="flex:1;">🔒 Inject Secret into Text</button>
+            <button class="btn btn-accent" id="btn-text-extract" style="flex:1;">🔓 Extract Hidden Text</button>
+          </div>
+
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-sm" id="btn-text-copy" style="flex:1;">📋 Copy Stego Text</button>
+            <button class="btn btn-sm" id="btn-text-download" style="flex:1;">💾 Save Stego Text</button>
+          </div>
+
+          <div>
+            <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">Extracted Secret Message:</label>
+            <div id="text-extract-output" class="text-preview-box" style="height:90px;" placeholder="Decoded message will appear here..."></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: STEGANALYSIS & BITPLANE LAB -->
+    <section id="tab-analysis" class="panel">
+      <div class="steganalysis-grid">
+        <!-- Left: Bitplane Slicer Viewport -->
+        <div class="card">
+          <div class="card-title">
+            <span>BITPLANE SLICER &amp; SPECTRAL VISUALIZER</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <span class="badge" id="bitplane-badge">Bitplane 0 (LSB)</span>
+            </div>
+          </div>
+
+          <div class="canvas-viewport" style="min-height:360px;">
+            <canvas id="analysis-canvas" class="carrier-canvas" width="512" height="384"></canvas>
+          </div>
+
+          <div style="display:flex; gap:12px; align-items:center; background:var(--surface); padding:8px; border-radius:4px; border:1px solid var(--border);">
+            <label style="font-size:11px; font-weight:600; color:var(--text-muted);">Bitplane Slice (0-7):</label>
+            <input type="range" id="bitplane-slider" min="0" max="7" step="1" value="0" style="flex:1;">
+            <span id="bitplane-val-text" style="font-size:12px; font-family:var(--font-mono); font-weight:700; width:60px;">Bit 0 (LSB)</span>
+            <select id="bitplane-channel" style="width:110px;">
+              <option value="rgb">All Channels</option>
+              <option value="r">Red</option>
+              <option value="g">Green</option>
+              <option value="b">Blue</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Right: Chi-Square Steganalysis & Metrics -->
+        <div class="card" style="overflow-y:auto;">
+          <div class="card-title">
+            <span>CHI-SQUARE (χ²) STEGANALYSIS</span>
+            <button class="btn btn-sm btn-primary" id="btn-run-steganalysis">🔬 Scan Carrier</button>
+          </div>
+
+          <!-- Chi-Square Curve Canvas -->
+          <div style="background:#000; border:1px solid var(--border); border-radius:4px; height:160px; position:relative;">
+            <canvas id="chisq-canvas" width="370" height="160" style="width:100%; height:100%;"></canvas>
+          </div>
+
+          <!-- Verdict Badge -->
+          <div id="stego-verdict-box" style="padding:10px; border-radius:4px; border:1px solid var(--border); background:var(--surface); text-align:center;">
+            <div style="font-size:11px; color:var(--text-muted);">STEGANALYSIS VERDICT</div>
+            <div id="stego-verdict-text" style="font-size:13px; font-weight:700; color:var(--success); margin-top:2px;">CLEAN CARRIER (P &lt; 5%)</div>
+          </div>
+
+          <!-- Metrics Table -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:11px; font-family:var(--font-mono);">
+            <div style="background:var(--surface); padding:6px; border-radius:3px; border:1px solid var(--border);">
+              <span style="color:var(--text-muted); display:block;">Shannon Entropy:</span>
+              <span id="stat-entropy" style="font-weight:700; color:var(--primary);">7.42 bits/byte</span>
+            </div>
+            <div style="background:var(--surface); padding:6px; border-radius:3px; border:1px solid var(--border);">
+              <span style="color:var(--text-muted); display:block;">χ² Statistic:</span>
+              <span id="stat-chisq" style="font-weight:700; color:var(--primary);">12.44</span>
+            </div>
+            <div style="background:var(--surface); padding:6px; border-radius:3px; border:1px solid var(--border);">
+              <span style="color:var(--text-muted); display:block;">Stego Probability (P):</span>
+              <span id="stat-prob" style="font-weight:700; color:var(--success);">0.02%</span>
+            </div>
+            <div style="background:var(--surface); padding:6px; border-radius:3px; border:1px solid var(--border);">
+              <span style="color:var(--text-muted); display:block;">Estimated Injected:</span>
+              <span id="stat-est-cap" style="font-weight:700; color:var(--text);">0.0 KB (0%)</span>
+            </div>
+          </div>
+
+          <div style="font-size:11px; color:var(--text-muted); line-height:1.4; border-top:1px solid var(--border); padding-top:6px;">
+            <strong>Theory:</strong> Westfeld-Pfitzmann Pairs of Values (PoVs) test evaluates equalization between 2k and 2k+1 pixel values. Natural images show asymmetry; LSB injection forces asymptotic symmetry.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: GLOBAL DEAD-DROP NETWORK (FIREBASE RTDB) -->
+    <section id="tab-deaddrop" class="panel">
+      <div class="dead-drop-grid">
+        <!-- Left: Live Dead-Drop Feed -->
+        <div class="card" style="padding-bottom:6px;">
+          <div class="card-title">
+            <span>COVERT DEAD-DROP RELAY</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <select id="drop-channel-select" style="width:160px; font-size:11px;">
+                <option value="global">#global-dead-drop</option>
+                <option value="flarlight">#flarlight-covert</option>
+                <option value="subrosa">#sub-rosa-99</option>
+                <option value="cypher">#cypher-cadre</option>
+              </select>
+              <button class="btn btn-sm" id="btn-refresh-feed">🔄 Refresh</button>
+            </div>
+          </div>
+
+          <div class="feed-container" id="dead-drop-feed">
+            <!-- Intercepted drops will populate here -->
+          </div>
+        </div>
+
+        <!-- Right: Transmitter & Interceptor -->
+        <div class="card" style="overflow-y:auto;">
+          <div class="card-title">
+            <span>COVERT TRANSMITTER</span>
+            <span class="badge" id="presence-badge">1 Operative Online</span>
+          </div>
+
+          <div>
+            <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">Operative Codename:</label>
+            <input type="text" id="operative-handle" placeholder="Agent-Codename" value="Agent-99">
+          </div>
+
+          <div>
+            <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">Transmission Subject / Codename:</label>
+            <input type="text" id="drop-subject" placeholder="e.g. Operation Nightfall" value="FLARELIGHT Telemetry Release #42">
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <div>
+              <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">Carrier Source:</label>
+              <select id="drop-source-select">
+                <option value="image">Active Image Carrier</option>
+                <option value="audio">Active Audio Carrier</option>
+                <option value="text">Active Text Carrier</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">Lock Passphrase:</label>
+              <input type="password" id="drop-passphrase" placeholder="Key (optional)">
+            </div>
+          </div>
+
+          <div>
+            <label style="font-size:11px; font-weight:600; color:var(--text-muted); display:block; margin-bottom:2px;">Cryptanalysis Clue / Hint:</label>
+            <input type="text" id="drop-hint" placeholder="Public hint for receiving agents..." value="Inspect LSB 1-bit or consult 1999 archive">
+          </div>
+
+          <button class="btn btn-primary" id="btn-broadcast-drop" style="width:100%; padding:8px;">
+            📡 Broadcast Carrier to Dead-Drop
+          </button>
+
+          <!-- Selected Intercept Inspector -->
+          <div style="border-top:1px solid var(--border); padding-top:8px; display:flex; flex-direction:column; gap:6px;">
+            <div style="font-size:11px; font-weight:700; color:var(--accent);">INTERCEPTED DROP INSPECTOR</div>
+            <div id="intercept-status" style="font-size:11px; color:var(--text-muted);">Select a drop from the feed to inspect or decode.</div>
+            <input type="password" id="intercept-key-input" placeholder="Enter drop decryption passphrase..." style="display:none;">
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-sm btn-accent" id="btn-import-intercept" style="flex:1; display:none;">📥 Load into Workbench</button>
+              <button class="btn btn-sm btn-primary" id="btn-crack-intercept" style="flex:1; display:none;">🔓 Crack Payload</button>
+            </div>
+            <div id="intercept-decoded-box" class="text-preview-box" style="height:80px; display:none;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- BOTTOM STATUS BAR -->
+  <footer>
+    <div class="status-left">
+      <span style="display:flex; align-items:center; gap:6px;">
+        <span class="status-indicator" id="net-indicator"></span>
+        <span id="net-status-text">Network: Connecting to RTDB...</span>
+      </span>
+      <span>|</span>
+      <span id="status-carrier-info">Carrier: 512x384 PNG (Clean)</span>
+    </div>
+
+    <div class="status-right">
+      <span id="status-op-name">Operative: Agent-99</span>
+      <span>|</span>
+      <span>F1: Manual | F5: Save | F9: Load</span>
+    </div>
+  </footer>
+
+  <!-- START SPLASH SCREEN MODAL -->
+  <div class="modal-overlay" id="modal-splash">
+    <div class="modal-window">
+      <div class="modal-header">
+        <span>👁️ KSTENO — COVERT CARRIER SUITE v1.0.0</span>
+      </div>
+      <div class="modal-body">
+        <div style="text-align:center; padding:10px 0;">
+          <h2 style="color:var(--primary); font-size:20px; letter-spacing:1px; margin-bottom:6px;">STENOGRAPHIC CARRIER WORKBENCH</h2>
+          <p style="color:var(--text-muted); font-size:12px; max-width:480px; margin:0 auto;">
+            Professional 1999-era multi-carrier steganography suite. Hide secret communiques in lossless images, 16-bit PCM audio waveforms, and trailing text whitespace. Intercept global dead-drops via Firebase Realtime Relay.
+          </p>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;">
+          <div style="background:var(--surface); padding:10px; border-radius:4px; border:1px solid var(--border);">
+            <div style="font-weight:700; color:var(--primary); margin-bottom:4px;">🖼️ 3 Carrier Paradigms</div>
+            <div style="font-size:11px; color:var(--text-muted);">Image LSB (1/2/4-bit), 16-bit Audio PCM modulation, and SNOW whitespace chaff.</div>
+          </div>
+          <div style="background:var(--surface); padding:10px; border-radius:4px; border:1px solid var(--border);">
+            <div style="font-weight:700; color:var(--accent); margin-bottom:4px;">🔬 Chi-Square Analysis</div>
+            <div style="font-size:11px; color:var(--text-muted);">Pairs of Values (PoV) mathematical testing and spectral bitplane slicing.</div>
+          </div>
+          <div style="background:var(--surface); padding:10px; border-radius:4px; border:1px solid var(--border);">
+            <div style="font-weight:700; color:var(--success); margin-bottom:4px;">🌐 Global Dead-Drop</div>
+            <div style="font-size:11px; color:var(--text-muted);">Cross-computer clandestine drops on kiloapps.web.app via Firebase RTDB.</div>
+          </div>
+          <div style="background:var(--surface); padding:10px; border-radius:4px; border:1px solid var(--border);">
+            <div style="font-weight:700; color:var(--warning); margin-bottom:4px;">🔊 Genesis &amp; SNES Audio</div>
+            <div style="font-size:11px; color:var(--text-muted);">Procedural YM2612 FM synthesis feedback tones and SPC700 stereo warmth.</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-sm" id="btn-splash-manual">📖 Field Manual</button>
+        <button class="btn btn-sm" id="btn-splash-load">📂 Resume Session</button>
+        <button class="btn btn-primary" id="btn-splash-start">⚡ Begin Operative Session</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FIRST-RUN TUTORIAL MODAL -->
+  <div class="modal-overlay" id="modal-tutorial" style="display:none;">
+    <div class="modal-window">
+      <div class="modal-header">
+        <span id="tut-title">OPERATIVE ONBOARDING (STEP 1 OF 4)</span>
+        <button class="tool-btn" id="btn-tut-close">✕ Esc</button>
+      </div>
+      <div class="modal-body" id="tut-body">
+        <!-- Injected via script -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-sm" id="btn-tut-skip">Skip Briefing</button>
+        <button class="btn btn-sm" id="btn-tut-prev" style="display:none;">Previous</button>
+        <button class="btn btn-primary" id="btn-tut-next">Next Step →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FIELD MANUAL MODAL -->
+  <div class="modal-overlay" id="modal-manual" style="display:none;">
+    <div class="modal-window" style="max-width:700px;">
+      <div class="modal-header">
+        <span>📖 KSTENO OPERATIVE FIELD MANUAL (F1)</span>
+        <button class="tool-btn" id="btn-manual-close">✕ Esc</button>
+      </div>
+      <div class="modal-body" style="font-size:12px; gap:10px;">
+        <h3 style="color:var(--primary);">1. LSB Steganography Principles</h3>
+        <p>In 24-bit RGB images, each pixel consists of 8 bits per channel (Red, Green, Blue). Modifying the least significant bit (LSB) changes pixel luminosity by at most 1/256th (0.39%), remaining completely imperceptible to the human eye while yielding up to 73.7 KB of secret storage on a 512x384 canvas.</p>
+        
+        <h3 style="color:var(--accent);">2. Seeded PRNG Pixel Dispersion</h3>
+        <p>Naive steganography writes bits sequentially from (0,0), creating obvious rectangular bitplane artifacts detectable in an image editor. KSteno uses a password-seeded Linear Congruential Generator (LCG) to disperse bits pseudo-randomly across the entire coordinate space, defeating sequential visual inspection.</p>
+
+        <h3 style="color:var(--success);">3. Chi-Square (χ²) Steganalysis</h3>
+        <p>The Westfeld-Pfitzmann detector tests theoretical equilibrium between Pairs of Values (2k and 2k+1). Natural photographic gradients have unequal frequencies. Random bit injection equalizes these pairs. When χ² probability approaches 100%, payload presence is statistically proven.</p>
+
+        <h3 style="color:var(--warning);">4. Keyboard Shortcuts</h3>
+        <ul style="padding-left:18px; line-height:1.6;">
+          <li><strong>F1:</strong> Toggle Field Manual</li>
+          <li><strong>F5:</strong> Quick Save session state to localStorage</li>
+          <li><strong>F9:</strong> Quick Load saved session</li>
+          <li><strong>Esc:</strong> Close active dialog or modal</li>
+          <li><strong>1 - 5:</strong> Fast switch between Carrier Modes</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btn-manual-ok">Understood</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div class="modal-overlay" id="modal-settings" style="display:none;">
+    <div class="modal-window" style="max-width:450px;">
+      <div class="modal-header">
+        <span>⚙️ KSTENO SETTINGS</span>
+        <button class="tool-btn" id="btn-settings-close">✕ Esc</button>
+      </div>
+      <div class="modal-body">
+        <div>
+          <label style="font-weight:600; font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">Master Audio Effects:</label>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="setting-sound-enabled" checked style="width:auto;">
+            <span style="font-size:12px;">Enable Genesis YM2612 Procedural Tones</span>
+          </div>
+        </div>
+
+        <div style="margin-top:8px;">
+          <label style="font-weight:600; font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">Operative Handle:</label>
+          <input type="text" id="setting-handle-input" value="Agent-99">
+        </div>
+
+        <div style="margin-top:8px;">
+          <label style="font-weight:600; font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">Profile Backup &amp; Reset:</label>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-sm" id="btn-export-profile" style="flex:1;">Export JSON</button>
+            <label class="btn btn-sm" style="flex:1; cursor:pointer; text-align:center;">
+              Import JSON <input type="file" id="import-profile-file" accept=".json" style="display:none;">
+            </label>
+            <button class="btn btn-sm btn-accent" id="btn-clear-data">Reset All</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btn-settings-save">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAFE NON-OCCLUDING TOAST CONTAINER -->
+  <div id="toast-container" role="status" aria-live="polite"></div>
+
+  <!-- FIREBASE RTDB MODULE INITIALIZATION -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+      authDomain: "kiloappschat.firebaseapp.com",
+      databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+      projectId: "kiloappschat",
+      storageBucket: "kiloappschat.firebasestorage.app",
+      messagingSenderId: "290208566057",
+      appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+    };
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      window.fb = {
+        app,
+        db,
+        ref,
+        set,
+        get,
+        push,
+        onValue,
+        onChildAdded,
+        off,
+        serverTimestamp,
+        onDisconnect
+      };
+      if (window.onFirebaseLoaded) {
+        window.onFirebaseLoaded();
+      }
+    } catch (err) {
+      console.warn("Firebase RTDB init error:", err);
+      if (window.onFirebaseError) {
+        window.onFirebaseError(err);
+      }
+    }
+  </script>
+
+  <!-- MAIN KSTENO APPLICATION LOGIC -->
+  <script>
+    /* ==========================================================================
+       1. GLOBAL AUDIO & SOUND ENGINE (Genesis YM2612 FM Synthesis Standard)
+       ========================================================================== */
+    class AudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            this.ctx = new AudioContextClass();
+          }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playClick() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(1400, now);
+        osc.frequency.exponentialRampToValueAtTime(300, now + 0.03);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.03);
+      }
+
+      playEmbedChirp() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const mod = this.ctx.createOscillator();
+        const modGain = this.ctx.createGain();
+        const masterGain = this.ctx.createGain();
+
+        // 2-Operator FM synthesis sweep
+        osc.type = 'sine';
+        mod.type = 'sawtooth';
+        mod.frequency.setValueAtTime(240, now);
+        mod.frequency.linearRampToValueAtTime(720, now + 0.16);
+        modGain.gain.setValueAtTime(300, now);
+
+        osc.frequency.setValueAtTime(880, now);
+        osc.frequency.exponentialRampToValueAtTime(440, now + 0.16);
+
+        mod.connect(modGain);
+        modGain.connect(osc.frequency);
+
+        masterGain.gain.setValueAtTime(0.25, now);
+        masterGain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+
+        osc.connect(masterGain);
+        masterGain.connect(this.ctx.destination);
+
+        osc.start(now);
+        mod.start(now);
+        osc.stop(now + 0.16);
+        mod.stop(now + 0.16);
+      }
+
+      playExtractChime() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.04);
+          gain.gain.setValueAtTime(0.18, now + idx * 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.18);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + idx * 0.04);
+          osc.stop(now + idx * 0.04 + 0.18);
+        });
+      }
+
+      playAlert() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(180, now);
+        osc.frequency.setValueAtTime(140, now + 0.08);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.2);
+      }
+
+      playTransmitBurst() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        // Modem carrier chirp
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(1200, now);
+        osc.frequency.setValueAtTime(2400, now + 0.05);
+        osc.frequency.setValueAtTime(1800, now + 0.1);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.2);
+      }
+    }
+
+    const sound = new AudioEngine();
+
+    /* ==========================================================================
+       2. SAFE TOAST NOTIFICATION SYSTEM
+       ========================================================================== */
+    function showToast(message, type = 'info', duration = 3000) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      toast.title = "Click to dismiss";
+      toast.addEventListener('click', () => {
+        toast.remove();
+      });
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        if (toast.parentElement) {
+          toast.style.transition = 'opacity 0.2s';
+          toast.style.opacity = '0';
+          setTimeout(() => toast.remove(), 200);
+        }
+      }, duration);
+    }
+
+    /* ==========================================================================
+       3. CRYPTOGRAPHIC & PSEUDO-RANDOM HELPERS (CRC32, LCG, RC4)
+       ========================================================================== */
+    // Standard CRC32 table
+    const CRC32_TABLE = new Uint32Array(256);
+    for (let i = 0; i < 256; i++) {
+      let c = i;
+      for (let k = 0; k < 8; k++) {
+        c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+      }
+      CRC32_TABLE[i] = c >>> 0;
+    }
+
+    function calculateCRC32(bytes) {
+      let crc = 0xFFFFFFFF;
+      for (let i = 0; i < bytes.length; i++) {
+        crc = (crc >>> 8) ^ CRC32_TABLE[(crc ^ bytes[i]) & 0xFF];
+      }
+      return ((crc ^ 0xFFFFFFFF) >>> 0);
+    }
+
+    // RC4 Stream Cipher for payload armor
+    function rc4Crypt(keyStr, dataBytes) {
+      if (!keyStr) return dataBytes;
+      const keyBytes = new TextEncoder().encode(keyStr);
+      const s = new Uint8Array(256);
+      for (let i = 0; i < 256; i++) s[i] = i;
+      let j = 0;
+      for (let i = 0; i < 256; i++) {
+        j = (j + s[i] + keyBytes[i % keyBytes.length]) & 0xFF;
+        const tmp = s[i]; s[i] = s[j]; s[j] = tmp;
+      }
+      let i = 0; j = 0;
+      const result = new Uint8Array(dataBytes.length);
+      for (let k = 0; k < dataBytes.length; k++) {
+        i = (i + 1) & 0xFF;
+        j = (j + s[i]) & 0xFF;
+        const tmp = s[i]; s[i] = s[j]; s[j] = tmp;
+        const keystream = s[(s[i] + s[j]) & 0xFF];
+        result[k] = dataBytes[k] ^ keystream;
+      }
+      return result;
+    }
+
+    // Seeded PRNG for pixel coordinate dispersal (Linear Congruential Generator)
+    function createPRNG(seedStr) {
+      let seed = 0x1999ABCD;
+      for (let i = 0; i < seedStr.length; i++) {
+        seed = ((seed << 5) - seed + seedStr.charCodeAt(i)) >>> 0;
+      }
+      return function next() {
+        seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+        return seed / 4294967296;
+      };
+    }
+
+    // Shuffled array of unique indices from seed
+    function getShuffledIndices(count, seedStr) {
+      const arr = new Uint32Array(count);
+      for (let i = 0; i < count; i++) arr[i] = i;
+      const rand = createPRNG(seedStr);
+      for (let i = count - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+      }
+      return arr;
+    }
+
+    /* ==========================================================================
+       4. IMAGE CARRIER ENGINE & PRESETS (Mode 1)
+       ========================================================================== */
+    const imgCanvas = document.getElementById('image-canvas');
+    const imgCtx = imgCanvas.getContext('2d');
+    let cleanImageBackup = null; // Uint8ClampedArray backup of clean carrier
+
+    function setCanvasDimensions(w, h) {
+      imgCanvas.width = w;
+      imgCanvas.height = h;
+      document.getElementById('image-dim-badge').textContent = `${w}x${h} (${(w*h/1000).toFixed(1)}k px)`;
+      updateCapacityUI();
+    }
+
+    function backupCleanCanvas() {
+      const imgData = imgCtx.getImageData(0, 0, imgCanvas.width, imgCanvas.height);
+      cleanImageBackup = new Uint8ClampedArray(imgData.data);
+    }
+
+    // Preset 1: 1999 Cyber Plasma
+    function drawPresetPlasma() {
+      const w = 512, h = 384;
+      setCanvasDimensions(w, h);
+      const imgData = imgCtx.createImageData(w, h);
+      const d = imgData.data;
+      let ptr = 0;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const v1 = Math.sin(x / 16.0);
+          const v2 = Math.sin(y / 12.0);
+          const v3 = Math.sin((x + y) / 24.0);
+          const v4 = Math.sin(Math.sqrt(x * x + y * y) / 18.0);
+          const val = (v1 + v2 + v3 + v4 + 4) / 8.0;
+
+          d[ptr]     = Math.floor(Math.sin(val * Math.PI) * 127 + 128); // R
+          d[ptr + 1] = Math.floor(Math.sin(val * Math.PI + 2) * 127 + 128); // G
+          d[ptr + 2] = Math.floor(Math.sin(val * Math.PI + 4) * 127 + 128); // B
+          d[ptr + 3] = 255;
+          ptr += 4;
+        }
+      }
+      imgCtx.putImageData(imgData, 0, 0);
+      backupCleanCanvas();
+      showToast("Generated Cyber Plasma Carrier", "info");
+    }
+
+    // Preset 2: Mandelbrot Fractal
+    function drawPresetFractal() {
+      const w = 512, h = 384;
+      setCanvasDimensions(w, h);
+      const imgData = imgCtx.createImageData(w, h);
+      const d = imgData.data;
+      const maxIter = 50;
+      let ptr = 0;
+      for (let y = 0; y < h; y++) {
+        const c_im = (y - h / 2) * 3.0 / h;
+        for (let x = 0; x < w; x++) {
+          const c_re = (x - w / 1.4) * 3.0 / w;
+          let z_re = c_re, z_im = c_im;
+          let iter = 0;
+          while (z_re * z_re + z_im * z_im <= 4 && iter < maxIter) {
+            const new_re = z_re * z_re - z_im * z_im + c_re;
+            z_im = 2 * z_re * z_im + c_im;
+            z_re = new_re;
+            iter++;
+          }
+          if (iter === maxIter) {
+            d[ptr] = 12; d[ptr + 1] = 18; d[ptr + 2] = 32; d[ptr + 3] = 255;
+          } else {
+            const hue = iter / maxIter;
+            d[ptr]     = Math.floor(Math.sin(hue * 6.28) * 120 + 130);
+            d[ptr + 1] = Math.floor(Math.sin(hue * 6.28 + 1.5) * 120 + 130);
+            d[ptr + 2] = Math.floor(Math.sin(hue * 6.28 + 3.0) * 120 + 130);
+            d[ptr + 3] = 255;
+          }
+          ptr += 4;
+        }
+      }
+      imgCtx.putImageData(imgData, 0, 0);
+      backupCleanCanvas();
+      showToast("Generated Mandelbrot Carrier", "info");
+    }
+
+    // Preset 3: Deep Space Nebula
+    function drawPresetNebula() {
+      const w = 512, h = 384;
+      setCanvasDimensions(w, h);
+      const imgData = imgCtx.createImageData(w, h);
+      const d = imgData.data;
+      let ptr = 0;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const dist = Math.hypot(x - w / 2, y - h / 2) / (w / 2);
+          const noise = (Math.sin(x * 0.05) + Math.cos(y * 0.05) + Math.sin((x + y) * 0.03) + 3) / 6;
+          const star = Math.random() > 0.992 ? 220 : 0;
+          d[ptr]     = Math.min(255, Math.floor(noise * 90 * (1 - dist * 0.5)) + star);
+          d[ptr + 1] = Math.min(255, Math.floor(noise * 40 * (1 - dist * 0.5)) + star);
+          d[ptr + 2] = Math.min(255, Math.floor(noise * 140 * (1 - dist * 0.5)) + star);
+          d[ptr + 3] = 255;
+          ptr += 4;
+        }
+      }
+      imgCtx.putImageData(imgData, 0, 0);
+      backupCleanCanvas();
+      showToast("Generated Deep Space Carrier", "info");
+    }
+
+    // Preset 4: CRT Noise
+    function drawPresetCRT() {
+      const w = 512, h = 384;
+      setCanvasDimensions(w, h);
+      const imgData = imgCtx.createImageData(w, h);
+      const d = imgData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const val = Math.floor(Math.random() * 180 + 40);
+        d[i] = val;
+        d[i + 1] = Math.floor(val * 0.85);
+        d[i + 2] = Math.floor(val * 0.95);
+        d[i + 3] = 255;
+      }
+      imgCtx.putImageData(imgData, 0, 0);
+      backupCleanCanvas();
+      showToast("Generated CRT Noise Carrier", "info");
+    }
+
+    // Preset 5: Sunset Dither
+    function drawPresetDither() {
+      const w = 512, h = 384;
+      setCanvasDimensions(w, h);
+      const imgData = imgCtx.createImageData(w, h);
+      const d = imgData.data;
+      let ptr = 0;
+      for (let y = 0; y < h; y++) {
+        const yNorm = y / h;
+        for (let x = 0; x < w; x++) {
+          const dither = ((x % 2 === y % 2) ? 12 : -12);
+          d[ptr]     = Math.min(255, Math.max(0, Math.floor((1 - yNorm * 0.8) * 230 + dither)));
+          d[ptr + 1] = Math.min(255, Math.max(0, Math.floor(Math.sin(yNorm * Math.PI) * 140 + dither)));
+          d[ptr + 2] = Math.min(255, Math.max(0, Math.floor(yNorm * 220 + dither)));
+          d[ptr + 3] = 255;
+          ptr += 4;
+        }
+      }
+      imgCtx.putImageData(imgData, 0, 0);
+      backupCleanCanvas();
+      showToast("Generated Sunset Dither Carrier", "info");
+    }
+
+    // Calculate maximum available payload capacity in bytes
+    function getImageMaxCapacityBytes() {
+      const w = imgCanvas.width;
+      const h = imgCanvas.height;
+      const totalPixels = w * h;
+      const bitDepth = parseInt(document.getElementById('img-bit-depth').value, 10);
+      const channelMode = document.getElementById('img-channel-mask').value;
+      const channelsPerPixel = (channelMode === 'rgb') ? 3 : 1;
+      const totalAvailableBits = totalPixels * channelsPerPixel * bitDepth;
+      // Subtract 16 bytes for KSteno magic header (KS01 + flags + length + CRC32)
+      return Math.max(0, Math.floor(totalAvailableBits / 8) - 16);
+    }
+
+    function updateCapacityUI() {
+      const maxCap = getImageMaxCapacityBytes();
+      document.getElementById('image-cap-badge').textContent = `Max Cap: ${(maxCap / 1024).toFixed(1)} KB`;
+      const text = document.getElementById('img-payload-input').value;
+      const currentBytes = new TextEncoder().encode(text).length;
+      const pct = maxCap > 0 ? Math.min(100, (currentBytes / maxCap) * 100) : 0;
+
+      const bar = document.getElementById('img-capacity-bar');
+      bar.style.width = `${pct}%`;
+      bar.className = 'progress-bar-fill' + (pct > 95 ? ' danger' : (pct > 75 ? ' warning' : ''));
+      document.getElementById('img-capacity-text').textContent = `${currentBytes} / ${maxCap} Bytes (${pct.toFixed(1)}%)`;
+    }
+
+    /* --------------------------------------------------------------------------
+       Image LSB Embedder (Encodes into Canvas)
+       Header structure:
+       [0..3]: ASCII "KS01" (4 bytes)
+       [4]: Flags byte (Bit 0..1: bitDepth-1, Bit 2..3: channelMode, Bit 4: encrypted)
+       [5..8]: uint32 Little-Endian payload length
+       [9..12]: uint32 Little-Endian CRC32 of payload
+       [13..15]: Reserved (0x00, 0x00, 0x00)
+       [16..]: Encrypted / Encoded Payload Bytes
+       -------------------------------------------------------------------------- */
+    function embedImagePayload() {
+      const text = document.getElementById('img-payload-input').value;
+      if (!text) {
+        showToast("Enter a secret payload to embed!", "warning");
+        return;
+      }
+      const rawBytes = new TextEncoder().encode(text);
+      const maxCap = getImageMaxCapacityBytes();
+      if (rawBytes.length > maxCap) {
+        showToast(`Payload exceeds carrier capacity (${rawBytes.length} > ${maxCap} Bytes)!`, "error");
+        return;
+      }
+
+      const bitDepth = parseInt(document.getElementById('img-bit-depth').value, 10);
+      const channelMode = document.getElementById('img-channel-mask').value;
+      const distribution = document.getElementById('img-distribution').value;
+      const passphrase = document.getElementById('img-passphrase').value;
+
+      // Calculate CRC32 of original plaintext
+      const crc = calculateCRC32(rawBytes);
+
+      // Encrypt with RC4 if passphrase provided
+      const finalPayloadBytes = passphrase ? rc4Crypt(passphrase, rawBytes) : rawBytes;
+
+      // Build header packet
+      const packet = new Uint8Array(16 + finalPayloadBytes.length);
+      packet[0] = 0x4B; // 'K'
+      packet[1] = 0x53; // 'S'
+      packet[2] = 0x30; // '0'
+      packet[3] = 0x31; // '1'
+
+      let flags = (bitDepth - 1) & 0x03;
+      const chCode = (channelMode === 'rgb' ? 0 : (channelMode === 'r' ? 1 : (channelMode === 'g' ? 2 : 3)));
+      flags |= (chCode << 2);
+      if (passphrase) flags |= 0x10;
+      packet[4] = flags;
+
+      // Length (4 bytes LE)
+      const len = finalPayloadBytes.length;
+      packet[5] = len & 0xFF;
+      packet[6] = (len >> 8) & 0xFF;
+      packet[7] = (len >> 16) & 0xFF;
+      packet[8] = (len >> 24) & 0xFF;
+
+      // CRC32 (4 bytes LE)
+      packet[9] = crc & 0xFF;
+      packet[10] = (crc >> 8) & 0xFF;
+      packet[11] = (crc >> 16) & 0xFF;
+      packet[12] = (crc >> 24) & 0xFF;
+
+      packet[13] = 0; packet[14] = 0; packet[15] = 0;
+
+      // Copy payload
+      packet.set(finalPayloadBytes, 16);
+
+      // Flatten packet into bits
+      const totalBits = packet.length * 8;
+      const bitArray = new Uint8Array(totalBits);
+      for (let i = 0; i < packet.length; i++) {
+        const b = packet[i];
+        for (let bit = 7; bit >= 0; bit--) {
+          bitArray[i * 8 + (7 - bit)] = (b >> bit) & 1;
+        }
+      }
+
+      // Read image canvas
+      const w = imgCanvas.width;
+      const h = imgCanvas.height;
+      const imgData = imgCtx.getImageData(0, 0, w, h);
+      const d = imgData.data;
+
+      // Determine channel indices to modify per pixel
+      const chIndices = (channelMode === 'rgb') ? [0, 1, 2] :
+                        (channelMode === 'r' ? [0] :
+                        (channelMode === 'g' ? [1] : [2]));
+
+      // Total bit slots available
+      const slotsCount = w * h * chIndices.length;
+      let slotOrder;
+      if (distribution === 'prng' && passphrase) {
+        slotOrder = getShuffledIndices(slotsCount, passphrase + "_img");
+      } else {
+        slotOrder = new Uint32Array(slotsCount);
+        for (let i = 0; i < slotsCount; i++) slotOrder[i] = i;
+      }
+
+      // Embed bitArray into slots using chosen bitDepth
+      let bitPtr = 0;
+      const bitMask = (1 << bitDepth) - 1;
+      const clearMask = ~bitMask & 0xFF;
+
+      for (let s = 0; s < slotsCount && bitPtr < totalBits; s++) {
+        const slotIdx = slotOrder[s];
+        const pixelIdx = Math.floor(slotIdx / chIndices.length);
+        const ch = chIndices[slotIdx % chIndices.length];
+        const bytePos = pixelIdx * 4 + ch;
+
+        let valChunk = 0;
+        for (let b = 0; b < bitDepth && bitPtr < totalBits; b++) {
+          valChunk = (valChunk << 1) | bitArray[bitPtr++];
+        }
+
+        d[bytePos] = (d[bytePos] & clearMask) | valChunk;
+      }
+
+      imgCtx.putImageData(imgData, 0, 0);
+      sound.playEmbedChirp();
+      showToast(`Successfully embedded ${rawBytes.length} Bytes into image carrier!`, "success");
+      document.getElementById('canvas-mode-tag').textContent = "MODE: STEGO IMAGE CARRIER (PAYLOAD INJECTED)";
+    }
+
+    /* --------------------------------------------------------------------------
+       Image LSB Extractor
+       -------------------------------------------------------------------------- */
+    function extractImagePayload() {
+      const bitDepth = parseInt(document.getElementById('img-bit-depth').value, 10);
+      const channelMode = document.getElementById('img-channel-mask').value;
+      const distribution = document.getElementById('img-distribution').value;
+      const passphrase = document.getElementById('img-passphrase').value;
+
+      const w = imgCanvas.width;
+      const h = imgCanvas.height;
+      const imgData = imgCtx.getImageData(0, 0, w, h);
+      const d = imgData.data;
+
+      const chIndices = (channelMode === 'rgb') ? [0, 1, 2] :
+                        (channelMode === 'r' ? [0] :
+                        (channelMode === 'g' ? [1] : [2]));
+
+      const slotsCount = w * h * chIndices.length;
+      let slotOrder;
+      if (distribution === 'prng' && passphrase) {
+        slotOrder = getShuffledIndices(slotsCount, passphrase + "_img");
+      } else {
+        slotOrder = new Uint32Array(slotsCount);
+        for (let i = 0; i < slotsCount; i++) slotOrder[i] = i;
+      }
+
+      // Read initial 16 bytes (128 bits) to inspect header
+      const headerBits = new Uint8Array(128);
+      let bitPtr = 0;
+      for (let s = 0; s < slotsCount && bitPtr < 128; s++) {
+        const slotIdx = slotOrder[s];
+        const pixelIdx = Math.floor(slotIdx / chIndices.length);
+        const ch = chIndices[slotIdx % chIndices.length];
+        const bytePos = pixelIdx * 4 + ch;
+        const val = d[bytePos];
+
+        for (let b = bitDepth - 1; b >= 0 && bitPtr < 128; b--) {
+          headerBits[bitPtr++] = (val >> b) & 1;
+        }
+      }
+
+      // Assemble 16 header bytes
+      const header = new Uint8Array(16);
+      for (let i = 0; i < 16; i++) {
+        let b = 0;
+        for (let k = 0; k < 8; k++) {
+          b = (b << 1) | headerBits[i * 8 + k];
+        }
+        header[i] = b;
+      }
+
+      // Verify Magic Signature "KS01"
+      if (header[0] !== 0x4B || header[1] !== 0x53 || header[2] !== 0x30 || header[3] !== 0x31) {
+        sound.playAlert();
+        showToast("No valid KSteno header found! (Check bit-depth, channel, or key)", "error");
+        document.getElementById('img-extract-output').textContent = "[ERROR: No KSteno payload header detected in this carrier image]";
+        return;
+      }
+
+      const payloadLen = header[5] | (header[6] << 8) | (header[7] << 16) | (header[8] << 24);
+      const expectedCRC = (header[9] | (header[10] << 8) | (header[11] << 16) | (header[12] << 24)) >>> 0;
+
+      if (payloadLen <= 0 || payloadLen > slotsCount) {
+        showToast(`Corrupt payload header (invalid length: ${payloadLen})!`, "error");
+        return;
+      }
+
+      // Read totalBits = (16 + payloadLen) * 8
+      const totalBitsNeeded = (16 + payloadLen) * 8;
+      const allBits = new Uint8Array(totalBitsNeeded);
+      bitPtr = 0;
+
+      for (let s = 0; s < slotsCount && bitPtr < totalBitsNeeded; s++) {
+        const slotIdx = slotOrder[s];
+        const pixelIdx = Math.floor(slotIdx / chIndices.length);
+        const ch = chIndices[slotIdx % chIndices.length];
+        const bytePos = pixelIdx * 4 + ch;
+        const val = d[bytePos];
+
+        for (let b = bitDepth - 1; b >= 0 && bitPtr < totalBitsNeeded; b--) {
+          allBits[bitPtr++] = (val >> b) & 1;
+        }
+      }
+
+      // Extract raw payload bytes
+      const rawPayload = new Uint8Array(payloadLen);
+      for (let i = 0; i < payloadLen; i++) {
+        let b = 0;
+        for (let k = 0; k < 8; k++) {
+          b = (b << 1) | allBits[(16 + i) * 8 + k];
+        }
+        rawPayload[i] = b;
+      }
+
+      // Decrypt if encrypted
+      const decrypted = passphrase ? rc4Crypt(passphrase, rawPayload) : rawPayload;
+      const computedCRC = calculateCRC32(decrypted);
+
+      const isCRCValid = (computedCRC === expectedCRC);
+      const decodedText = new TextDecoder('utf-8', { fatal: false }).decode(decrypted);
+
+      document.getElementById('img-extract-output').textContent = decodedText;
+      sound.playExtractChime();
+
+      if (isCRCValid) {
+        showToast(`Successfully extracted ${payloadLen} Bytes (CRC32: 0x${expectedCRC.toString(16).toUpperCase()} MATCH)!`, "success");
+      } else {
+        showToast(`Extracted ${payloadLen} Bytes with CRC mismatch (Wrong key or corrupted image)!`, "warning");
+      }
+    }
+
+    /* ==========================================================================
+       5. AUDIO CARRIER ENGINE (Mode 2)
+       ========================================================================== */
+    const audioCanvas = document.getElementById('audio-canvas');
+    const audioCtxCvs = audioCanvas.getContext('2d');
+    let audioSampleRate = 44100;
+    let audioSamples = new Int16Array(44100 * 3); // 3 seconds clean mono
+    let stegoAudioSamples = null;
+    let currentPlayingBuffer = null;
+    let isPlayingAudio = false;
+    let activeAudioSourceNode = null;
+    let abListeningMode = 'clean'; // 'clean' or 'stego'
+
+    function renderAudioWaveform() {
+      const w = audioCanvas.width = audioCanvas.offsetWidth || 500;
+      const h = audioCanvas.height = audioCanvas.offsetHeight || 220;
+      audioCtxCvs.fillStyle = '#040810';
+      audioCtxCvs.fillRect(0, 0, w, h);
+
+      // Grid lines
+      audioCtxCvs.strokeStyle = '#162440';
+      audioCtxCvs.lineWidth = 1;
+      audioCtxCvs.beginPath();
+      audioCtxCvs.moveTo(0, h / 2);
+      audioCtxCvs.lineTo(w, h / 2);
+      audioCtxCvs.stroke();
+
+      const samples = (abListeningMode === 'stego' && stegoAudioSamples) ? stegoAudioSamples : audioSamples;
+      if (!samples || samples.length === 0) return;
+
+      audioCtxCvs.strokeStyle = (abListeningMode === 'stego' ? '#ff9f1c' : '#00d2ff');
+      audioCtxCvs.lineWidth = 1.5;
+      audioCtxCvs.beginPath();
+
+      const step = Math.ceil(samples.length / w);
+      const amp = h / 2 * 0.85;
+
+      for (let i = 0; i < w; i++) {
+        let min = 1.0;
+        let max = -1.0;
+        for (let j = 0; j < step; j++) {
+          const s = samples[i * step + j] / 32768.0;
+          if (s < min) min = s;
+          if (s > max) max = s;
+        }
+        audioCtxCvs.lineTo(i, (1 + min) * amp);
+        audioCtxCvs.lineTo(i, (1 + max) * amp);
+      }
+      audioCtxCvs.stroke();
+    }
+
+    // Generate Procedural WAVs
+    function generateSynthModem() {
+      const dur = 3;
+      const total = audioSampleRate * dur;
+      audioSamples = new Int16Array(total);
+      for (let i = 0; i < total; i++) {
+        const t = i / audioSampleRate;
+        const v = Math.sin(2 * Math.PI * 1200 * t) * 0.4 +
+                  Math.sin(2 * Math.PI * 2400 * t) * 0.3 +
+                  (Math.random() - 0.5) * 0.15;
+        audioSamples[i] = Math.floor(v * 30000);
+      }
+      stegoAudioSamples = null;
+      renderAudioWaveform();
+      updateAudioCapacityUI();
+      showToast("Generated 1999 Modem Carrier (3s)", "info");
+    }
+
+    function generateSynthFM() {
+      const dur = 3;
+      const total = audioSampleRate * dur;
+      audioSamples = new Int16Array(total);
+      for (let i = 0; i < total; i++) {
+        const t = i / audioSampleRate;
+        const mod = Math.sin(2 * Math.PI * 220 * t) * 2.0;
+        const v = Math.sin(2 * Math.PI * 110 * t + mod) * 0.7;
+        audioSamples[i] = Math.floor(v * 28000);
+      }
+      stegoAudioSamples = null;
+      renderAudioWaveform();
+      updateAudioCapacityUI();
+      showToast("Generated Genesis FM Synth Drone (3s)", "info");
+    }
+
+    function generateSynthCassette() {
+      const dur = 3;
+      const total = audioSampleRate * dur;
+      audioSamples = new Int16Array(total);
+      let last = 0;
+      for (let i = 0; i < total; i++) {
+        const white = (Math.random() - 0.5) * 0.3;
+        last = last * 0.92 + white * 0.08; // Brown noise filter
+        audioSamples[i] = Math.floor(last * 32000);
+      }
+      stegoAudioSamples = null;
+      renderAudioWaveform();
+      updateAudioCapacityUI();
+      showToast("Generated Cassette Static Carrier", "info");
+    }
+
+    function generateSynthPulsar() {
+      const dur = 3;
+      const total = audioSampleRate * dur;
+      audioSamples = new Int16Array(total);
+      for (let i = 0; i < total; i++) {
+        const t = i / audioSampleRate;
+        const pulse = Math.pow(Math.sin(2 * Math.PI * 2 * t), 16);
+        const v = Math.sin(2 * Math.PI * 440 * t) * pulse * 0.7;
+        audioSamples[i] = Math.floor(v * 28000);
+      }
+      stegoAudioSamples = null;
+      renderAudioWaveform();
+      updateAudioCapacityUI();
+      showToast("Generated SPC700 Pulsar Carrier", "info");
+    }
+
+    function getAudioMaxCapacityBytes() {
+      return Math.max(0, Math.floor(audioSamples.length / 8) - 16);
+    }
+
+    function updateAudioCapacityUI() {
+      const maxCap = getAudioMaxCapacityBytes();
+      document.getElementById('audio-cap-badge').textContent = `Cap: ${(maxCap / 1024).toFixed(1)} KB`;
+      const text = document.getElementById('audio-payload-input').value;
+      const currentBytes = new TextEncoder().encode(text).length;
+      const pct = maxCap > 0 ? Math.min(100, (currentBytes / maxCap) * 100) : 0;
+      const bar = document.getElementById('audio-capacity-bar');
+      bar.style.width = `${pct}%`;
+      bar.className = 'progress-bar-fill' + (pct > 90 ? ' danger' : '');
+      document.getElementById('audio-capacity-text').textContent = `${currentBytes} / ${maxCap} Bytes (${pct.toFixed(1)}%)`;
+    }
+
+    function embedAudioPayload() {
+      const text = document.getElementById('audio-payload-input').value;
+      if (!text) {
+        showToast("Enter covert payload for audio carrier!", "warning");
+        return;
+      }
+      const rawBytes = new TextEncoder().encode(text);
+      const maxCap = getAudioMaxCapacityBytes();
+      if (rawBytes.length > maxCap) {
+        showToast(`Audio payload too large (${rawBytes.length} > ${maxCap} Bytes)!`, "error");
+        return;
+      }
+
+      const passphrase = document.getElementById('audio-passphrase').value;
+      const crc = calculateCRC32(rawBytes);
+      const finalBytes = passphrase ? rc4Crypt(passphrase, rawBytes) : rawBytes;
+
+      // Header: 16 bytes
+      const packet = new Uint8Array(16 + finalBytes.length);
+      packet[0] = 0x4B; packet[1] = 0x53; packet[2] = 0x41; packet[3] = 0x31; // "KSA1"
+      packet[4] = passphrase ? 0x01 : 0x00;
+      const len = finalBytes.length;
+      packet[5] = len & 0xFF; packet[6] = (len >> 8) & 0xFF;
+      packet[7] = (len >> 16) & 0xFF; packet[8] = (len >> 24) & 0xFF;
+      packet[9] = crc & 0xFF; packet[10] = (crc >> 8) & 0xFF;
+      packet[11] = (crc >> 16) & 0xFF; packet[12] = (crc >> 24) & 0xFF;
+      packet.set(finalBytes, 16);
+
+      const totalBits = packet.length * 8;
+      stegoAudioSamples = new Int16Array(audioSamples);
+
+      let bitPtr = 0;
+      for (let i = 0; i < packet.length; i++) {
+        const b = packet[i];
+        for (let k = 7; k >= 0; k--) {
+          const bit = (b >> k) & 1;
+          stegoAudioSamples[bitPtr] = (stegoAudioSamples[bitPtr] & ~1) | bit;
+          bitPtr++;
+        }
+      }
+
+      abListeningMode = 'stego';
+      document.getElementById('btn-audio-ab-toggle').textContent = "🎧 A/B Test: Stego";
+      renderAudioWaveform();
+      sound.playEmbedChirp();
+      showToast(`Embedded ${rawBytes.length} Bytes into 16-bit audio carrier!`, "success");
+    }
+
+    function extractAudioPayload() {
+      const samples = stegoAudioSamples || audioSamples;
+      if (samples.length < 128) {
+        showToast("Audio carrier too short to contain header!", "error");
+        return;
+      }
+      const passphrase = document.getElementById('audio-passphrase').value;
+
+      // Extract 16 header bytes (128 bits)
+      const header = new Uint8Array(16);
+      for (let i = 0; i < 16; i++) {
+        let b = 0;
+        for (let k = 0; k < 8; k++) {
+          b = (b << 1) | (samples[i * 8 + k] & 1);
+        }
+        header[i] = b;
+      }
+
+      if (header[0] !== 0x4B || header[1] !== 0x53 || header[2] !== 0x41 || header[3] !== 0x31) {
+        sound.playAlert();
+        showToast("No KSteno audio header ('KSA1') found!", "error");
+        document.getElementById('audio-extract-output').textContent = "[ERROR: No valid audio carrier payload detected]";
+        return;
+      }
+
+      const payloadLen = header[5] | (header[6] << 8) | (header[7] << 16) | (header[8] << 24);
+      const expectedCRC = (header[9] | (header[10] << 8) | (header[11] << 16) | (header[12] << 24)) >>> 0;
+
+      if (payloadLen <= 0 || (16 + payloadLen) * 8 > samples.length) {
+        showToast("Corrupted audio stego header length!", "error");
+        return;
+      }
+
+      const rawPayload = new Uint8Array(payloadLen);
+      for (let i = 0; i < payloadLen; i++) {
+        let b = 0;
+        for (let k = 0; k < 8; k++) {
+          b = (b << 1) | (samples[(16 + i) * 8 + k] & 1);
+        }
+        rawPayload[i] = b;
+      }
+
+      const decrypted = passphrase ? rc4Crypt(passphrase, rawPayload) : rawPayload;
+      const computedCRC = calculateCRC32(decrypted);
+      const text = new TextDecoder().decode(decrypted);
+
+      document.getElementById('audio-extract-output').textContent = text;
+      sound.playExtractChime();
+
+      if (computedCRC === expectedCRC) {
+        showToast(`Audio payload verified clean! (${payloadLen} Bytes)`, "success");
+      } else {
+        showToast("CRC mismatch! Ensure encryption passphrase matches.", "warning");
+      }
+    }
+
+    // Playback of PCM Samples
+    function playAudioCarrier() {
+      sound.init();
+      if (!sound.ctx) return;
+      stopAudioCarrier();
+
+      const samples = (abListeningMode === 'stego' && stegoAudioSamples) ? stegoAudioSamples : audioSamples;
+      const buffer = sound.ctx.createBuffer(1, samples.length, audioSampleRate);
+      const f32 = buffer.getChannelData(0);
+      for (let i = 0; i < samples.length; i++) {
+        f32[i] = samples[i] / 32768.0;
+      }
+
+      activeAudioSourceNode = sound.ctx.createBufferSource();
+      activeAudioSourceNode.buffer = buffer;
+      const gainNode = sound.ctx.createGain();
+      gainNode.gain.value = parseFloat(document.getElementById('audio-volume').value);
+      activeAudioSourceNode.connect(gainNode);
+      gainNode.connect(sound.ctx.destination);
+      activeAudioSourceNode.start();
+      isPlayingAudio = true;
+      document.getElementById('btn-audio-play').textContent = "⏸️ Playing...";
+      activeAudioSourceNode.onended = () => {
+        isPlayingAudio = false;
+        document.getElementById('btn-audio-play').textContent = "▶️ Play Carrier";
+      };
+    }
+
+    function stopAudioCarrier() {
+      if (activeAudioSourceNode) {
+        try { activeAudioSourceNode.stop(); } catch (e) {}
+        activeAudioSourceNode = null;
+      }
+      isPlayingAudio = false;
+      document.getElementById('btn-audio-play').textContent = "▶️ Play Carrier";
+    }
+
+    // Build standard RIFF / WAVE file Blob
+    function createWavBlob(samples, sampleRate = 44100) {
+      const buffer = new ArrayBuffer(44 + samples.length * 2);
+      const view = new DataView(buffer);
+
+      function writeString(offset, str) {
+        for (let i = 0; i < str.length; i++) {
+          view.setUint8(offset + i, str.charCodeAt(i));
+        }
+      }
+
+      writeString(0, 'RIFF');
+      view.setUint32(4, 36 + samples.length * 2, true);
+      writeString(8, 'WAVE');
+      writeString(12, 'fmt ');
+      view.setUint32(16, 16, true); // PCM format chunk length
+      view.setUint16(20, 1, true);  // PCM format
+      view.setUint16(22, 1, true);  // Mono
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true); // byte rate
+      view.setUint16(32, 2, true);  // block align
+      view.setUint16(34, 16, true); // bits per sample
+      writeString(36, 'data');
+      view.setUint32(40, samples.length * 2, true);
+
+      let offset = 44;
+      for (let i = 0; i < samples.length; i++, offset += 2) {
+        view.setInt16(offset, samples[i], true);
+      }
+      return new Blob([view], { type: 'audio/wav' });
+    }
+
+    /* ==========================================================================
+       6. TEXT & CHAFF STEGANOGRAPHY (Mode 3)
+       ========================================================================== */
+    const TEXT_PRESETS = {
+      isp: `KILO-NET INTERNET SERVICES - ACCOUNT STATEMENT\nDate: September 23, 1999\nConnection Type: 56K V.90 Dial-up\nUsername: operative_99\nStatus: Active Dial-up Carrier Node\nMonthly Usage: 142.4 Hours\nThank you for choosing Kilo-Net Online Systems.\nPlease ensure all modem scripts are kept current for Y2K readiness.`,
+      nfo: `┌────────────────────────────────────────────────────────┐\n│ FLARELIGHT 1999 - COVERT COURIER TRANSMISSION NODE #42 │\n└────────────────────────────────────────────────────────┘\nSupplier: The Ghost        Release Date: 1999-09-23\nPackager: Sub-Rosa 99      OS Target: KiloOS 0.4.4\nProtection: KSteno Armor   Rating: 10/10 Pure Scene\nNews: Watch the skies as Y2K approaches. Node 0x7F awakens.\nSurreal Tournament clan matches held every Friday midnight.`,
+      y2k: `DIRECTIVE 99-Y2K: FLEET TELEMETRY PREPARATION\nAll terminals operating KiloOS must execute diagnostic audits.\nClock rollovers across RTC registers must be monitored.\nReport any anomalous frequency spikes or autonomous behaviors.\nEnsure all cryptographic keyrings are backed up offline.`,
+      tournament: `SURREAL TOURNAMENT 1999 CLAN MATCH REPORT\nTeam Alpha vs Clan CyberShade\nMap: Facing Worlds (DM-CTF)\nFinal Score: Alpha 5 - 3 CyberShade\nMVP: RazorSniper with 42 frags.\nNext match scheduled on Tremor III Arena server 1999.`
+    };
+
+    function embedTextPayload() {
+      const cover = document.getElementById('cover-text-input').value;
+      const secret = document.getElementById('text-payload-input').value;
+      if (!secret) {
+        showToast("Enter secret text to conceal!", "warning");
+        return;
+      }
+      const algo = document.getElementById('text-stego-algo').value;
+      const passphrase = document.getElementById('text-passphrase').value;
+
+      const rawBytes = new TextEncoder().encode(secret);
+      const crc = calculateCRC32(rawBytes);
+      const finalBytes = passphrase ? rc4Crypt(passphrase, rawBytes) : rawBytes;
+
+      // Packet: 4-byte len + 4-byte CRC + payload
+      const packet = new Uint8Array(8 + finalBytes.length);
+      const len = finalBytes.length;
+      packet[0] = len & 0xFF; packet[1] = (len >> 8) & 0xFF;
+      packet[2] = (len >> 16) & 0xFF; packet[3] = (len >> 24) & 0xFF;
+      packet[4] = crc & 0xFF; packet[5] = (crc >> 8) & 0xFF;
+      packet[6] = (crc >> 16) & 0xFF; packet[7] = (crc >> 24) & 0xFF;
+      packet.set(finalBytes, 8);
+
+      // Bits array
+      let bits = "";
+      for (let i = 0; i < packet.length; i++) {
+        const b = packet[i];
+        for (let k = 7; k >= 0; k--) {
+          bits += ((b >> k) & 1);
+        }
+      }
+
+      if (algo === 'snow') {
+        // Trailing whitespace: Space = 0, Tab = 1
+        const lines = cover.split('\n');
+        if (lines.length === 0) {
+          showToast("Cover text needs at least one line!", "error");
+          return;
+        }
+        // Clean existing trailing whitespace
+        const cleanLines = lines.map(l => l.replace(/[\t ]+$/, ''));
+        const bitsPerLine = Math.ceil(bits.length / cleanLines.length);
+        let bitOffset = 0;
+        const newLines = cleanLines.map(line => {
+          if (bitOffset >= bits.length) return line;
+          const chunk = bits.substr(bitOffset, bitsPerLine);
+          bitOffset += bitsPerLine;
+          let ws = "";
+          for (let ch of chunk) {
+            ws += (ch === '0' ? ' ' : '\t');
+          }
+          return line + ws;
+        });
+        document.getElementById('cover-text-input').value = newLines.join('\n');
+      } else {
+        // Zero-width Unicode insertion
+        // \u200B = 0, \u200C = 1, \u200D = separator
+        let zw = "\u200D";
+        for (let ch of bits) {
+          zw += (ch === '0' ? '\u200B' : '\u200C');
+        }
+        zw += "\u200D";
+        // Inject between first and second character or at start
+        const text = cover.length > 2 ? cover.slice(0, 2) + zw + cover.slice(2) : cover + zw;
+        document.getElementById('cover-text-input').value = text;
+      }
+
+      sound.playEmbedChirp();
+      showToast(`Concealed ${rawBytes.length} Bytes in text carrier!`, "success");
+    }
+
+    function extractTextPayload() {
+      const text = document.getElementById('cover-text-input').value;
+      const algo = document.getElementById('text-stego-algo').value;
+      const passphrase = document.getElementById('text-passphrase').value;
+
+      let bits = "";
+      if (algo === 'snow') {
+        const lines = text.split('\n');
+        for (let line of lines) {
+          const match = line.match(/[\t ]+$/);
+          if (match) {
+            for (let ch of match[0]) {
+              bits += (ch === ' ' ? '0' : '1');
+            }
+          }
+        }
+      } else {
+        const match = text.match(/\u200D([\u200B\u200C]+)\u200D/);
+        if (match) {
+          for (let ch of match[1]) {
+            bits += (ch === '\u200B' ? '0' : '1');
+          }
+        }
+      }
+
+      if (bits.length < 64) {
+        sound.playAlert();
+        showToast("No concealed text payload found!", "error");
+        document.getElementById('text-extract-output').textContent = "[ERROR: No stego bits detected in cover text]";
+        return;
+      }
+
+      // Read 8-byte header
+      const packetBytes = new Uint8Array(Math.floor(bits.length / 8));
+      for (let i = 0; i < packetBytes.length; i++) {
+        let b = 0;
+        for (let k = 0; k < 8; k++) {
+          b = (b << 1) | (bits[i * 8 + k] === '1' ? 1 : 0);
+        }
+        packetBytes[i] = b;
+      }
+
+      const payloadLen = packetBytes[0] | (packetBytes[1] << 8) | (packetBytes[2] << 16) | (packetBytes[3] << 24);
+      const expectedCRC = (packetBytes[4] | (packetBytes[5] << 8) | (packetBytes[6] << 16) | (packetBytes[7] << 24)) >>> 0;
+
+      if (payloadLen <= 0 || payloadLen > packetBytes.length - 8) {
+        showToast("Invalid extracted text length!", "error");
+        return;
+      }
+
+      const rawPayload = packetBytes.subarray(8, 8 + payloadLen);
+      const decrypted = passphrase ? rc4Crypt(passphrase, rawPayload) : rawPayload;
+      const computedCRC = calculateCRC32(decrypted);
+      const decoded = new TextDecoder().decode(decrypted);
+
+      document.getElementById('text-extract-output').textContent = decoded;
+      sound.playExtractChime();
+
+      if (computedCRC === expectedCRC) {
+        showToast(`Text secret recovered clean! (${payloadLen} Bytes)`, "success");
+      } else {
+        showToast("CRC mismatch! Check passphrase.", "warning");
+      }
+    }
+
+    function toggleRevealWhitespace() {
+      const view = document.getElementById('revealed-text-view');
+      if (view.style.display === 'none') {
+        const text = document.getElementById('cover-text-input').value;
+        let html = "";
+        for (let ch of text) {
+          if (ch === ' ') html += '<mark class="space-mark">·</mark>';
+          else if (ch === '\t') html += '<mark class="tab-mark">→\t</mark>';
+          else if (ch === '\n') html += '\n';
+          else if (ch === '\u200B') html += '<mark style="background:#ef4444; color:#fff;">[ZW-0]</mark>';
+          else if (ch === '\u200C') html += '<mark style="background:#22c55e; color:#000;">[ZW-1]</mark>';
+          else if (ch === '\u200D') html += '<mark style="background:#f59e0b; color:#000;">[ZW-SEP]</mark>';
+          else html += ch.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+        view.innerHTML = html;
+        view.style.display = 'block';
+        document.getElementById('btn-text-reveal').textContent = "🙈 Hide Bits View";
+      } else {
+        view.style.display = 'none';
+        document.getElementById('btn-text-reveal').textContent = "🔍 Reveal Hidden Bits";
+      }
+    }
+
+    /* ==========================================================================
+       7. STEGANALYSIS & BITPLANE SLICER (Mode 4)
+       ========================================================================== */
+    const analysisCanvas = document.getElementById('analysis-canvas');
+    const analysisCtx = analysisCanvas.getContext('2d');
+    const chisqCanvas = document.getElementById('chisq-canvas');
+    const chisqCtx = chisqCanvas.getContext('2d');
+
+    function renderBitplaneSlice() {
+      const bit = parseInt(document.getElementById('bitplane-slider').value, 10);
+      const channel = document.getElementById('bitplane-channel').value;
+      document.getElementById('bitplane-badge').textContent = `Bitplane ${bit} (${bit === 0 ? 'LSB' : (bit === 7 ? 'MSB' : 'Mid')})`;
+      document.getElementById('bitplane-val-text').textContent = `Bit ${bit}`;
+
+      const w = imgCanvas.width;
+      const h = imgCanvas.height;
+      analysisCanvas.width = w;
+      analysisCanvas.height = h;
+
+      const srcData = imgCtx.getImageData(0, 0, w, h);
+      const src = srcData.data;
+      const outData = analysisCtx.createImageData(w, h);
+      const out = outData.data;
+
+      for (let i = 0; i < src.length; i += 4) {
+        let bitVal = 0;
+        if (channel === 'r') {
+          bitVal = (src[i] >> bit) & 1;
+        } else if (channel === 'g') {
+          bitVal = (src[i + 1] >> bit) & 1;
+        } else if (channel === 'b') {
+          bitVal = (src[i + 2] >> bit) & 1;
+        } else {
+          // Average bits
+          bitVal = (((src[i] >> bit) & 1) + ((src[i + 1] >> bit) & 1) + ((src[i + 2] >> bit) & 1)) >= 2 ? 1 : 0;
+        }
+
+        const lum = bitVal ? 255 : 0;
+        out[i] = lum;
+        out[i + 1] = lum;
+        out[i + 2] = lum;
+        out[i + 3] = 255;
+      }
+      analysisCtx.putImageData(outData, 0, 0);
+    }
+
+    // Westfeld & Pfitzmann Chi-Square Steganalysis Algorithm
+    function runChiSquareSteganalysis() {
+      const w = imgCanvas.width;
+      const h = imgCanvas.height;
+      const imgData = imgCtx.getImageData(0, 0, w, h);
+      const d = imgData.data;
+
+      // Histogram of pixel frequencies (0..255)
+      const hist = new Int32Array(256);
+      for (let i = 0; i < d.length; i += 4) {
+        hist[d[i]]++;     // R
+        hist[d[i + 1]]++; // G
+        hist[d[i + 2]]++; // B
+      }
+
+      // Shannon Entropy calculation
+      const totalSamples = (d.length / 4) * 3;
+      let entropy = 0;
+      for (let i = 0; i < 256; i++) {
+        if (hist[i] > 0) {
+          const p = hist[i] / totalSamples;
+          entropy -= p * Math.log2(p);
+        }
+      }
+      document.getElementById('stat-entropy').textContent = `${entropy.toFixed(2)} bits/byte`;
+
+      // Chi-Square statistic across Pairs of Values (2k and 2k+1)
+      let chiSquare = 0;
+      let kDegrees = 0;
+
+      for (let k = 0; k < 128; k++) {
+        const o1 = hist[2 * k];
+        const o2 = hist[2 * k + 1];
+        const expected = (o1 + o2) / 2.0;
+        if (expected > 5) { // Minimum threshold for chi-square validity
+          chiSquare += ((o1 - expected) * (o1 - expected)) / expected;
+          chiSquare += ((o2 - expected) * (o2 - expected)) / expected;
+          kDegrees++;
+        }
+      }
+
+      document.getElementById('stat-chisq').textContent = chiSquare.toFixed(2);
+
+      // Estimate Steganography Probability
+      // In LSB stego, chiSquare drops dramatically toward 0 because frequencies equalize!
+      // In clean images, pairs of values are naturally asymmetrical.
+      const normalizedVariance = kDegrees > 0 ? (chiSquare / kDegrees) : 1.0;
+      let stegoProb = 0;
+      if (normalizedVariance < 0.2) {
+        stegoProb = 99.5; // Almost perfectly equalized: definitive LSB injection!
+      } else if (normalizedVariance < 0.6) {
+        stegoProb = Math.max(10, (1.0 - normalizedVariance) * 100);
+      } else {
+        stegoProb = Math.max(0.01, (1.0 / (normalizedVariance + 0.1)) * 3);
+      }
+
+      document.getElementById('stat-prob').textContent = `${stegoProb.toFixed(2)}%`;
+      document.getElementById('stat-est-cap').textContent = (stegoProb > 50) ? 
+        `${((totalSamples * (stegoProb / 100)) / (8 * 1024)).toFixed(1)} KB` : "0.0 KB (0%)";
+
+      // Verdict box styling
+      const verdictText = document.getElementById('stego-verdict-text');
+      if (stegoProb > 70) {
+        verdictText.textContent = "🔴 HIGH PROBABILITY OF LSB INJECTION (P > 70%)";
+        verdictText.style.color = "var(--danger)";
+        sound.playAlert();
+      } else if (stegoProb > 25) {
+        verdictText.textContent = "🟡 SUSPICIOUS CARRIER / HIGH SYMMETRY (P > 25%)";
+        verdictText.style.color = "var(--warning)";
+      } else {
+        verdictText.textContent = "🟢 NATURAL ENTROPY / CLEAN CARRIER (P < 5%)";
+        verdictText.style.color = "var(--success)";
+      }
+
+      // Draw Chi-Square Probability Curve
+      drawChiSquareCurve(stegoProb);
+      showToast("Steganalysis scan completed", "info");
+    }
+
+    function drawChiSquareCurve(prob) {
+      const w = chisqCanvas.width = chisqCanvas.offsetWidth || 370;
+      const h = chisqCanvas.height = chisqCanvas.offsetHeight || 160;
+      chisqCtx.fillStyle = '#000';
+      chisqCtx.fillRect(0, 0, w, h);
+
+      // Grid
+      chisqCtx.strokeStyle = '#1e3258';
+      chisqCtx.lineWidth = 1;
+      for (let y = 20; y < h; y += 30) {
+        chisqCtx.beginPath(); chisqCtx.moveTo(0, y); chisqCtx.lineTo(w, y); chisqCtx.stroke();
+      }
+
+      // Curve
+      chisqCtx.strokeStyle = prob > 70 ? '#ef4444' : '#00d2ff';
+      chisqCtx.lineWidth = 2;
+      chisqCtx.beginPath();
+      chisqCtx.moveTo(20, h - 20);
+
+      const targetH = (h - 40) * (prob / 100);
+      for (let x = 20; x < w - 20; x += 5) {
+        const prog = (x - 20) / (w - 40);
+        const y = h - 20 - (targetH * Math.pow(prog, 0.5));
+        chisqCtx.lineTo(x, y);
+      }
+      chisqCtx.stroke();
+
+      // Label
+      chisqCtx.fillStyle = '#8ca3c7';
+      chisqCtx.font = '10px Consolas';
+      chisqCtx.fillText("χ² Probability Curve (PoVs)", 24, 18);
+      chisqCtx.fillText(`P = ${prob.toFixed(1)}%`, w - 75, 18);
+    }
+
+    /* ==========================================================================
+       8. GLOBAL DEAD-DROP NETWORK & FIREBASE RTDB RELAY (Mode 5)
+       ========================================================================== */
+    let currentDeadDropChannel = 'global';
+    let isFirebaseOnline = false;
+    let selectedInterceptDrop = null;
+
+    // Simulated 1999 ARG Lore Drops (Offline fallback & rich narrative)
+    const SIMULATED_DROPS = [
+      {
+        id: "drop_flarlight_01",
+        sender: "FLARELIGHT_Ghost",
+        title: "FLARELIGHT Scene Courier Telemetry #42",
+        type: "image",
+        timestamp: Date.now() - 120000,
+        hint: "Key: FLARE1999 - Inspect LSB 1-bit",
+        encrypted: true,
+        secretPayload: "FLARELIGHT UNDERGROUND COURIER BBS: Dial 555-0199 (14.4k). Precursor relic located at memory offset 0x7F in KMatrix. The fleet awakes!",
+        carrierType: "plasma"
+      },
+      {
+        id: "drop_subrosa_02",
+        sender: "SubRosa_Operative",
+        title: "Y2K System Anomaly Directive",
+        type: "text",
+        timestamp: Date.now() - 360000,
+        hint: "SNOW trailing spaces / Tabs",
+        encrypted: false,
+        secretPayload: "CONFIDENTIAL: Autonomous fleet rotation detected across 6 worker skills. Echoes of 1999 are real.",
+        carrierType: "snow"
+      },
+      {
+        id: "drop_node0x7f_03",
+        sender: "Node_0x7F",
+        title: "Darknet Transmission Echo",
+        type: "audio",
+        timestamp: Date.now() - 720000,
+        hint: "PCM audio LSB - Key: AUDIO-99",
+        encrypted: true,
+        secretPayload: "CORRUPTED TELEMETRY: Master Director Passkey is ECHO-1999-ARCHITECT. Unlock the KDirector terminal!",
+        carrierType: "modem"
+      }
+    ];
+
+    function initFirebaseIntegration() {
+      if (window.fb && window.fb.db) {
+        isFirebaseOnline = true;
+        document.getElementById('net-indicator').className = 'status-indicator';
+        document.getElementById('net-status-text').textContent = "Network: Firebase RTDB Online";
+        subscribeToDeadDropChannel(currentDeadDropChannel);
+        updatePresence();
+      } else {
+        document.getElementById('net-indicator').className = 'status-indicator connecting';
+        document.getElementById('net-status-text').textContent = "Network: Operating in Offline Simulation Mode";
+        renderDeadDropFeed(SIMULATED_DROPS);
+      }
+    }
+
+    window.onFirebaseLoaded = () => {
+      initFirebaseIntegration();
+    };
+
+    window.onFirebaseError = () => {
+      document.getElementById('net-indicator').className = 'status-indicator offline';
+      document.getElementById('net-status-text').textContent = "Network: Offline (Simulated Drops Active)";
+      renderDeadDropFeed(SIMULATED_DROPS);
+    };
+
+    function updatePresence() {
+      if (!isFirebaseOnline || !window.fb) return;
+      const handle = document.getElementById('operative-handle').value || "Agent-99";
+      const userRef = window.fb.ref(window.fb.db, `multiplayer/ksteno/presence/${handle}`);
+      window.fb.set(userRef, {
+        name: handle,
+        channel: currentDeadDropChannel,
+        lastSeen: window.fb.serverTimestamp()
+      });
+      window.fb.onDisconnect(userRef).remove();
+    }
+
+    function subscribeToDeadDropChannel(channelName) {
+      if (!isFirebaseOnline || !window.fb) {
+        renderDeadDropFeed(SIMULATED_DROPS);
+        return;
+      }
+      const channelRef = window.fb.ref(window.fb.db, `multiplayer/ksteno/drops/${channelName}`);
+      window.fb.onValue(channelRef, (snapshot) => {
+        const val = snapshot.val();
+        if (val) {
+          const drops = Object.keys(val).map(k => ({ id: k, ...val[k] })).reverse();
+          renderDeadDropFeed(drops);
+        } else {
+          renderDeadDropFeed(SIMULATED_DROPS);
+        }
+      });
+    }
+
+    function renderDeadDropFeed(drops) {
+      const container = document.getElementById('dead-drop-feed');
+      container.innerHTML = "";
+
+      if (!drops || drops.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:12px;">No active dead-drops in this channel. Broadcast one using the transmitter!</div>`;
+        return;
+      }
+
+      drops.forEach(drop => {
+        const item = document.createElement('div');
+        item.className = 'drop-item';
+        const dateStr = new Date(drop.timestamp || Date.now()).toLocaleTimeString();
+        const typeIcon = drop.type === 'image' ? '🖼️' : (drop.type === 'audio' ? '🎵' : '📄');
+
+        item.innerHTML = `
+          <div class="drop-item-header">
+            <span class="author">${typeIcon} ${escapeHtml(drop.sender || 'Unknown')}</span>
+            <span style="color:var(--text-muted);">${dateStr}</span>
+          </div>
+          <div class="drop-item-content">
+            <div style="flex:1;">
+              <div style="font-weight:700; color:var(--text);">${escapeHtml(drop.title || 'Untitled Drop')}</div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
+                ${drop.hint ? `💡 Hint: ${escapeHtml(drop.hint)}` : 'No hint provided'} | ${drop.encrypted ? '🔒 Key Locked' : '🔓 Public'}
+              </div>
+            </div>
+            <button class="btn btn-sm btn-primary btn-inspect-drop" data-id="${drop.id}">Inspect</button>
+          </div>
+        `;
+
+        item.querySelector('.btn-inspect-drop').addEventListener('click', () => {
+          selectInterceptDrop(drop);
+        });
+
+        container.appendChild(item);
+      });
+    }
+
+    function selectInterceptDrop(drop) {
+      selectedInterceptDrop = drop;
+      document.getElementById('intercept-status').innerHTML = `
+        <strong>${escapeHtml(drop.title)}</strong><br>
+        Source: ${escapeHtml(drop.sender)} | Type: ${drop.type.toUpperCase()}<br>
+        ${drop.hint ? `Hint: ${escapeHtml(drop.hint)}` : ''}
+      `;
+      document.getElementById('intercept-key-input').style.display = drop.encrypted ? 'block' : 'none';
+      document.getElementById('btn-import-intercept').style.display = 'inline-flex';
+      document.getElementById('btn-crack-intercept').style.display = 'inline-flex';
+      document.getElementById('intercept-decoded-box').style.display = 'none';
+      sound.playClick();
+      showToast(`Selected drop: ${drop.title}`, "info");
+    }
+
+    function crackInterceptDrop() {
+      if (!selectedInterceptDrop) return;
+      const key = document.getElementById('intercept-key-input').value;
+      const box = document.getElementById('intercept-decoded-box');
+      box.style.display = 'block';
+
+      if (selectedInterceptDrop.secretPayload) {
+        if (selectedInterceptDrop.encrypted && key !== 'FLARE1999' && key !== 'AUDIO-99' && key !== 'KSTENO-1999') {
+          sound.playAlert();
+          box.textContent = "[CRC / PASS MISMATCH]: Incorrect decryption passphrase for this covert drop.";
+          showToast("Decryption failed: Incorrect key", "error");
+        } else {
+          sound.playExtractChime();
+          box.textContent = `[DECRYPTED SECRET]:\n${selectedInterceptDrop.secretPayload}`;
+          showToast("Covert payload cracked successfully!", "success");
+        }
+      } else {
+        box.textContent = `[EXTRACTED DATA]: Carrier imported directly into active workbench. Check ${selectedInterceptDrop.type.toUpperCase()} tab.`;
+        showToast("Carrier ready for extraction in workbench", "info");
+      }
+    }
+
+    function broadcastCurrentCarrier() {
+      const handle = document.getElementById('operative-handle').value || "Agent-99";
+      const subject = document.getElementById('drop-subject').value || "Covert Communique";
+      const sourceType = document.getElementById('drop-source-select').value;
+      const passphrase = document.getElementById('drop-passphrase').value;
+      const hint = document.getElementById('drop-hint').value;
+
+      const newDrop = {
+        sender: handle,
+        title: subject,
+        type: sourceType,
+        timestamp: Date.now(),
+        hint: hint,
+        encrypted: !!passphrase
+      };
+
+      if (isFirebaseOnline && window.fb) {
+        const channelRef = window.fb.ref(window.fb.db, `multiplayer/ksteno/drops/${currentDeadDropChannel}`);
+        window.fb.push(channelRef, newDrop).then(() => {
+          sound.playTransmitBurst();
+          showToast("Broadcast posted to live Firebase dead-drop!", "success");
+        }).catch(err => {
+          showToast("Firebase broadcast failed: " + err.message, "error");
+        });
+      } else {
+        // Local simulation push
+        newDrop.id = "sim_" + Date.now();
+        newDrop.secretPayload = (sourceType === 'image' ? document.getElementById('img-payload-input').value :
+                                (sourceType === 'audio' ? document.getElementById('audio-payload-input').value :
+                                document.getElementById('text-payload-input').value)) || "Simulated covert data";
+        SIMULATED_DROPS.unshift(newDrop);
+        renderDeadDropFeed(SIMULATED_DROPS);
+        sound.playTransmitBurst();
+        showToast("Broadcast posted to simulated dead-drop relay!", "success");
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    /* ==========================================================================
+       9. TUTORIAL & ONBOARDING SYSTEM
+       ========================================================================== */
+    const TUTORIAL_STEPS = [
+      {
+        title: "STEP 1: CARRIER SELECTION & PRESETS",
+        html: `<p>Welcome to <strong>KSteno</strong>. Steganography is the art of concealing communications inside innocent host carriers.</p>
+               <p>Use the top toolbar to switch between <strong>Image (LSB)</strong>, <strong>Audio (16-bit PCM)</strong>, and <strong>Text (Whitespace Chaff)</strong> carriers. Try the built-in 1999 demoscene presets or upload your own files!</p>`
+      },
+      {
+        title: "STEP 2: LSB EMBEDDING & SEEDED PRNG",
+        html: `<p>In the Image workbench, type your secret communique into the payload buffer. Choose between <strong>1-bit LSB (stealthiest)</strong>, <strong>2-bit</strong>, or <strong>4-bit</strong>.</p>
+               <p>Select <strong>Seeded PRNG</strong> to disperse bits pseudo-randomly across pixels using your password seed, preventing sequential analysis!</p>`
+      },
+      {
+        title: "STEP 3: CHI-SQUARE STEGANALYSIS",
+        html: `<p>Switch to the <strong>Steganalysis Lab</strong>. Scrub the <strong>Bitplane Slicer</strong> to inspect bitplane 0 (LSB) up to 7 (MSB).</p>
+               <p>Run the <strong>Chi-Square (χ²) Scan</strong> to measure pairs-of-values equilibrium and mathematically prove or disprove payload injection!</p>`
+      },
+      {
+        title: "STEP 4: GLOBAL FIREBASE DEAD-DROP RELAY",
+        html: `<p>In the <strong>Global Dead-Drop</strong> tab, operatives worldwide on <em>kiloapps.web.app</em> drop and intercept covert carriers in real-time through Firebase RTDB.</p>
+               <p>Broadcast your own steganographic drops or intercept and crack drops from other agents. Good luck, Operative!</p>`
+      }
+    ];
+
+    let currentTutStep = 0;
+
+    function showTutorialStep(idx) {
+      currentTutStep = idx;
+      const step = TUTORIAL_STEPS[idx];
+      document.getElementById('tut-title').textContent = step.title;
+      document.getElementById('tut-body').innerHTML = step.html;
+      document.getElementById('btn-tut-prev').style.display = (idx > 0) ? 'inline-flex' : 'none';
+      document.getElementById('btn-tut-next').textContent = (idx === TUTORIAL_STEPS.length - 1) ? 'Finish Briefing ✓' : 'Next Step →';
+    }
+
+    function checkFirstRunTutorial() {
+      try {
+        const seen = localStorage.getItem('ksteno_tutorialSeen');
+        if (!seen) {
+          document.getElementById('modal-tutorial').style.display = 'flex';
+          showTutorialStep(0);
+        }
+      } catch (e) {}
+    }
+
+    function closeTutorial() {
+      document.getElementById('modal-tutorial').style.display = 'none';
+      try {
+        localStorage.setItem('ksteno_tutorialSeen', 'true');
+      } catch (e) {}
+      showToast("Operative briefing completed", "info");
+    }
+
+    /* ==========================================================================
+       10. STATE PERSISTENCE (Quicksave F5 & Quickload F9)
+       ========================================================================== */
+    function quickSaveSession() {
+      try {
+        const state = {
+          theme: document.body.getAttribute('data-theme'),
+          handle: document.getElementById('operative-handle').value,
+          imgPayload: document.getElementById('img-payload-input').value,
+          imgPassphrase: document.getElementById('img-passphrase').value,
+          imgBitDepth: document.getElementById('img-bit-depth').value,
+          audioPayload: document.getElementById('audio-payload-input').value,
+          textCover: document.getElementById('cover-text-input').value,
+          textPayload: document.getElementById('text-payload-input').value,
+          soundEnabled: sound.enabled,
+          timestamp: Date.now()
+        };
+        localStorage.setItem('ksteno_save', JSON.stringify(state));
+        sound.playExtractChime();
+        showToast("Quick Save successful [F5]", "success");
+      } catch (err) {
+        showToast("Quick Save failed: " + err.message, "error");
+      }
+    }
+
+    function quickLoadSession() {
+      try {
+        const raw = localStorage.getItem('ksteno_save');
+        if (!raw) {
+          showToast("No saved session found [F9]", "warning");
+          return;
+        }
+        const state = JSON.parse(raw);
+        if (state.theme) {
+          document.body.setAttribute('data-theme', state.theme);
+          document.getElementById('theme-selector').value = state.theme;
+        }
+        if (state.handle) {
+          document.getElementById('operative-handle').value = state.handle;
+          document.getElementById('status-op-name').textContent = `Operative: ${state.handle}`;
+        }
+        if (state.imgPayload !== undefined) document.getElementById('img-payload-input').value = state.imgPayload;
+        if (state.imgPassphrase !== undefined) document.getElementById('img-passphrase').value = state.imgPassphrase;
+        if (state.imgBitDepth !== undefined) document.getElementById('img-bit-depth').value = state.imgBitDepth;
+        if (state.audioPayload !== undefined) document.getElementById('audio-payload-input').value = state.audioPayload;
+        if (state.textCover !== undefined) document.getElementById('cover-text-input').value = state.textCover;
+        if (state.textPayload !== undefined) document.getElementById('text-payload-input').value = state.textPayload;
+
+        updateCapacityUI();
+        updateAudioCapacityUI();
+        sound.playExtractChime();
+        showToast("Quick Load successful [F9]", "success");
+      } catch (err) {
+        showToast("Quick Load failed: " + err.message, "error");
+      }
+    }
+
+    /* ==========================================================================
+       11. EVENT LISTENERS & DOM HOOKUPS
+       ========================================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      // 1. Navigation Tabs
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          sound.playClick();
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          const targetId = btn.getAttribute('data-tab');
+          document.getElementById(targetId).classList.add('active');
+
+          if (targetId === 'tab-audio') renderAudioWaveform();
+          if (targetId === 'tab-analysis') {
+            renderBitplaneSlice();
+            runChiSquareSteganalysis();
+          }
+        });
+      });
+
+      // 2. Theme Selector
+      document.getElementById('theme-selector').addEventListener('change', (e) => {
+        document.body.setAttribute('data-theme', e.target.value);
+        sound.playClick();
+      });
+
+      // 3. Audio Toggle
+      document.getElementById('btn-audio-toggle').addEventListener('click', () => {
+        sound.enabled = !sound.enabled;
+        document.getElementById('btn-audio-toggle').textContent = sound.enabled ? "🔊 Audio" : "🔇 Muted";
+        showToast(sound.enabled ? "Audio Enabled" : "Audio Muted", "info");
+      });
+
+      // 4. Keyboard Shortcuts
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'F1') {
+          e.preventDefault();
+          document.getElementById('modal-manual').style.display = 'flex';
+        } else if (e.key === 'F5') {
+          e.preventDefault();
+          quickSaveSession();
+        } else if (e.key === 'F9') {
+          e.preventDefault();
+          quickLoadSession();
+        } else if (e.key === 'Escape') {
+          document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+        } else if (e.altKey && e.key >= '1' && e.key <= '5') {
+          const tabs = document.querySelectorAll('.tab-btn');
+          const idx = parseInt(e.key, 10) - 1;
+          if (tabs[idx]) tabs[idx].click();
+        }
+      });
+
+      // 5. Image Preset Handlers
+      document.getElementById('btn-preset-plasma').addEventListener('click', drawPresetPlasma);
+      document.getElementById('btn-preset-fractal').addEventListener('click', drawPresetFractal);
+      document.getElementById('btn-preset-nebula').addEventListener('click', drawPresetNebula);
+      document.getElementById('btn-preset-crt').addEventListener('click', drawPresetCRT);
+      document.getElementById('btn-preset-dither').addEventListener('click', drawPresetDither);
+
+      document.getElementById('btn-template-briefing').addEventListener('click', () => {
+        document.getElementById('img-payload-input').value = "TOP SECRET: Operative briefing confirmed. Meet courier at Node 0x7F.";
+        updateCapacityUI();
+      });
+      document.getElementById('btn-template-scene').addEventListener('click', () => {
+        document.getElementById('img-payload-input').value = "FLARELIGHT 1999 RELEASE #42: Surreal Tournament Trainer +5. Key: FLARE1999";
+        updateCapacityUI();
+      });
+      document.getElementById('btn-template-arg').addEventListener('click', () => {
+        document.getElementById('img-payload-input').value = "NODE 0x7F TELEMETRY: The autonomous fleet rotates eternally across 6 worker skills.";
+        updateCapacityUI();
+      });
+
+      document.getElementById('img-payload-input').addEventListener('input', updateCapacityUI);
+      document.getElementById('img-bit-depth').addEventListener('change', updateCapacityUI);
+      document.getElementById('img-channel-mask').addEventListener('change', updateCapacityUI);
+
+      document.getElementById('btn-img-embed').addEventListener('click', embedImagePayload);
+      document.getElementById('btn-img-extract').addEventListener('click', extractImagePayload);
+      document.getElementById('btn-img-revert').addEventListener('click', () => {
+        if (cleanImageBackup) {
+          const imgData = imgCtx.createImageData(imgCanvas.width, imgCanvas.height);
+          imgData.data.set(cleanImageBackup);
+          imgCtx.putImageData(imgData, 0, 0);
+          document.getElementById('canvas-mode-tag').textContent = "MODE: CLEAN CARRIER (RESTORED)";
+          showToast("Restored clean carrier backup", "info");
+        } else {
+          drawPresetPlasma();
+        }
+      });
+
+      document.getElementById('btn-img-download').addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.download = 'ksteno_carrier.png';
+        link.href = imgCanvas.toDataURL('image/png');
+        link.click();
+        showToast("Downloaded stego image (PNG)", "success");
+      });
+
+      // 6. Image File Drag-Drop & Upload
+      const dropzone = document.getElementById('image-dropzone');
+      dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = 'var(--primary)'; });
+      dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = 'var(--border)'; });
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = 'var(--border)';
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          loadImageFile(e.dataTransfer.files[0]);
+        }
+      });
+      document.getElementById('image-file-input').addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) loadImageFile(e.target.files[0]);
+      });
+
+      function loadImageFile(file) {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const img = new Image();
+          img.onload = () => {
+            setCanvasDimensions(img.width, img.height);
+            imgCtx.drawImage(img, 0, 0);
+            backupCleanCanvas();
+            showToast(`Loaded ${file.name} (${img.width}x${img.height})`, "success");
+          };
+          img.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // 7. Audio Presets & Controls
+      document.getElementById('btn-synth-modem').addEventListener('click', generateSynthModem);
+      document.getElementById('btn-synth-fm').addEventListener('click', generateSynthFM);
+      document.getElementById('btn-synth-cassette').addEventListener('click', generateSynthCassette);
+      document.getElementById('btn-synth-pulsar').addEventListener('click', generateSynthPulsar);
+
+      document.getElementById('btn-audio-play').addEventListener('click', () => {
+        if (isPlayingAudio) stopAudioCarrier(); else playAudioCarrier();
+      });
+      document.getElementById('btn-audio-stop').addEventListener('click', stopAudioCarrier);
+      document.getElementById('btn-audio-ab-toggle').addEventListener('click', () => {
+        if (!stegoAudioSamples) {
+          showToast("No stego audio generated yet! Embed payload first.", "warning");
+          return;
+        }
+        abListeningMode = (abListeningMode === 'clean' ? 'stego' : 'clean');
+        document.getElementById('btn-audio-ab-toggle').textContent = `🎧 A/B Test: ${abListeningMode === 'clean' ? 'Clean' : 'Stego'}`;
+        renderAudioWaveform();
+        if (isPlayingAudio) playAudioCarrier();
+        showToast(`Listening to ${abListeningMode.toUpperCase()} audio`, "info");
+      });
+
+      document.getElementById('audio-payload-input').addEventListener('input', updateAudioCapacityUI);
+      document.getElementById('btn-audio-embed').addEventListener('click', embedAudioPayload);
+      document.getElementById('btn-audio-extract').addEventListener('click', extractAudioPayload);
+      document.getElementById('btn-audio-revert').addEventListener('click', () => {
+        stegoAudioSamples = null;
+        abListeningMode = 'clean';
+        document.getElementById('btn-audio-ab-toggle').textContent = "🎧 A/B Test: Clean";
+        renderAudioWaveform();
+        showToast("Audio reverted to clean carrier", "info");
+      });
+
+      document.getElementById('btn-audio-download').addEventListener('click', () => {
+        const samples = stegoAudioSamples || audioSamples;
+        const blob = createWavBlob(samples, audioSampleRate);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ksteno_audio.wav';
+        a.click();
+        showToast("Downloaded Stego WAV", "success");
+      });
+
+      // 8. Text Stego Handlers
+      document.getElementById('btn-text-preset-isp').addEventListener('click', () => {
+        document.getElementById('cover-text-input').value = TEXT_PRESETS.isp;
+      });
+      document.getElementById('btn-text-preset-nfo').addEventListener('click', () => {
+        document.getElementById('cover-text-input').value = TEXT_PRESETS.nfo;
+      });
+      document.getElementById('btn-text-preset-y2k').addEventListener('click', () => {
+        document.getElementById('cover-text-input').value = TEXT_PRESETS.y2k;
+      });
+      document.getElementById('btn-text-preset-tournament').addEventListener('click', () => {
+        document.getElementById('cover-text-input').value = TEXT_PRESETS.tournament;
+      });
+
+      document.getElementById('btn-text-embed').addEventListener('click', embedTextPayload);
+      document.getElementById('btn-text-extract').addEventListener('click', extractTextPayload);
+      document.getElementById('btn-text-reveal').addEventListener('click', toggleRevealWhitespace);
+      document.getElementById('btn-text-copy').addEventListener('click', () => {
+        const text = document.getElementById('cover-text-input').value;
+        navigator.clipboard.writeText(text);
+        showToast("Copied text with covert bits to clipboard", "success");
+      });
+      document.getElementById('btn-text-download').addEventListener('click', () => {
+        const text = document.getElementById('cover-text-input').value;
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ksteno_text.txt';
+        a.click();
+        showToast("Downloaded Stego text file", "success");
+      });
+
+      // 9. Steganalysis Controls
+      document.getElementById('bitplane-slider').addEventListener('input', renderBitplaneSlice);
+      document.getElementById('bitplane-channel').addEventListener('change', renderBitplaneSlice);
+      document.getElementById('btn-run-steganalysis').addEventListener('click', runChiSquareSteganalysis);
+
+      // 10. Dead-Drop Actions
+      document.getElementById('btn-broadcast-drop').addEventListener('click', broadcastCurrentCarrier);
+      document.getElementById('btn-crack-intercept').addEventListener('click', crackInterceptDrop);
+      document.getElementById('btn-refresh-feed').addEventListener('click', () => {
+        subscribeToDeadDropChannel(currentDeadDropChannel);
+        showToast("Dead-drop feed refreshed", "info");
+      });
+      document.getElementById('drop-channel-select').addEventListener('change', (e) => {
+        currentDeadDropChannel = e.target.value;
+        subscribeToDeadDropChannel(currentDeadDropChannel);
+        showToast(`Switched channel to #${currentDeadDropChannel}`, "info");
+      });
+
+      // 11. Modal Controls
+      document.getElementById('btn-splash-start').addEventListener('click', () => {
+        document.getElementById('modal-splash').style.display = 'none';
+        sound.playClick();
+        checkFirstRunTutorial();
+      });
+      document.getElementById('btn-splash-load').addEventListener('click', () => {
+        document.getElementById('modal-splash').style.display = 'none';
+        quickLoadSession();
+      });
+      document.getElementById('btn-splash-manual').addEventListener('click', () => {
+        document.getElementById('modal-manual').style.display = 'flex';
+      });
+
+      document.getElementById('btn-manual').addEventListener('click', () => {
+        document.getElementById('modal-manual').style.display = 'flex';
+      });
+      document.getElementById('btn-manual-close').addEventListener('click', () => {
+        document.getElementById('modal-manual').style.display = 'none';
+      });
+      document.getElementById('btn-manual-ok').addEventListener('click', () => {
+        document.getElementById('modal-manual').style.display = 'none';
+      });
+
+      document.getElementById('btn-quicksave').addEventListener('click', quickSaveSession);
+      document.getElementById('btn-quickload').addEventListener('click', quickLoadSession);
+
+      document.getElementById('btn-settings').addEventListener('click', () => {
+        document.getElementById('modal-settings').style.display = 'flex';
+      });
+      document.getElementById('btn-settings-close').addEventListener('click', () => {
+        document.getElementById('modal-settings').style.display = 'none';
+      });
+      document.getElementById('btn-settings-save').addEventListener('click', () => {
+        const handle = document.getElementById('setting-handle-input').value;
+        document.getElementById('operative-handle').value = handle;
+        document.getElementById('status-op-name').textContent = `Operative: ${handle}`;
+        sound.enabled = document.getElementById('setting-sound-enabled').checked;
+        document.getElementById('modal-settings').style.display = 'none';
+        showToast("Settings updated", "success");
+      });
+
+      // Tutorial Next / Prev
+      document.getElementById('btn-tut-close').addEventListener('click', closeTutorial);
+      document.getElementById('btn-tut-skip').addEventListener('click', closeTutorial);
+      document.getElementById('btn-tut-next').addEventListener('click', () => {
+        if (currentTutStep < TUTORIAL_STEPS.length - 1) {
+          showTutorialStep(currentTutStep + 1);
+        } else {
+          closeTutorial();
+        }
+      });
+      document.getElementById('btn-tut-prev').addEventListener('click', () => {
+        if (currentTutStep > 0) showTutorialStep(currentTutStep - 1);
+      });
+
+      // Initial Setup
+      drawPresetPlasma();
+      generateSynthModem();
+      document.getElementById('cover-text-input').value = TEXT_PRESETS.isp;
+      document.getElementById('img-payload-input').value = "TOP SECRET: Agent rendezvous confirmed at coordinates 0x7F. Guard this carrier.";
+      updateCapacityUI();
+      updateAudioCapacityUI();
+      initFirebaseIntegration();
+    });
+  </script>
+</body>
+</html>
