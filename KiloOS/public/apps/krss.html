@@ -859,6 +859,68 @@
       opacity: 1;
       transform: translateY(0);
     }
+
+    /* Clean Themed Scrollbars */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--surface);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border-focus);
+    }
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) var(--surface);
+    }
+
+    .btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 1px;
+    }
+
+    .pane-feeds.collapsed {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .pane-feeds {
+        width: 200px;
+        min-width: 160px;
+      }
+      .pane-articles {
+        width: 280px;
+        min-width: 200px;
+      }
+      .reader-content-scroll {
+        padding: 16px 20px;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .workspace {
+        position: relative;
+      }
+      .pane-feeds {
+        width: 180px;
+      }
+      .pane-articles {
+        width: 240px;
+      }
+      .header-actions {
+        gap: 4px;
+      }
+      .btn {
+        padding: 3px 6px;
+        font-size: 11px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -874,6 +936,7 @@
     </div>
 
     <div class="header-actions">
+      <button class="btn btn-sm" id="btnToggleSidebar" title="Toggle Feeds Sidebar (B)">📂 Feeds</button>
       <button class="btn btn-primary btn-sm" id="btnRefresh" title="Fetch / Poll Feeds (R)">🔄 Fetch All</button>
       <button class="btn btn-sm" id="btnAddFeedModal" title="Subscribe to Feed (A)">➕ Add Feed</button>
       <button class="btn btn-sm" id="btnMarkAllRead" title="Mark Current View Read (Shift+M)">✓ Mark Read</button>
@@ -889,7 +952,7 @@
       </select>
 
       <button class="btn btn-sm" id="btnToggleSound" title="Toggle Synthesizer Audio">🔊 SFX</button>
-      <button class="btn btn-sm" id="btnHelp" title="Help & Shortcuts (F1)">❓ Help</button>
+      <button class="btn btn-sm" id="btnHelp" title="Help & Shortcuts (F1/H)">❓ Help (F1/H)</button>
     </div>
   </header>
 
@@ -931,16 +994,19 @@
     <main class="pane-reader">
       <div class="reader-toolbar">
         <div class="reader-toolbar-group">
+          <button class="btn btn-sm" id="btnPrevArticle" title="Previous Article (K / Up)">◀ Prev</button>
+          <button class="btn btn-sm" id="btnNextArticle" title="Next Article (J / Down)">Next ▶</button>
           <button class="btn btn-sm" id="btnToggleRead" title="Toggle Read Status (M)">✓ Toggle Read</button>
           <button class="btn btn-sm" id="btnToggleStar" title="Toggle Bookmark (S)">★ Bookmark</button>
           <button class="btn btn-sm" id="btnOpenInKNet" title="Open Link in Simulated Web (O)">🌐 Open in KNet</button>
           <button class="btn btn-sm" id="btnExportMarkdown" title="Export Article as Markdown">📝 Export MD</button>
         </div>
         <div class="reader-toolbar-group">
-          <button class="btn btn-sm btn-icon" id="btnZoomOut" title="Decrease font size">A-</button>
-          <button class="btn btn-sm btn-icon" id="btnZoomReset" title="Reset font size">A</button>
-          <button class="btn btn-sm btn-icon" id="btnZoomIn" title="Increase font size">A+</button>
-          <button class="btn btn-sm" id="btnCopyText" title="Copy article text">📋 Copy</button>
+          <button class="btn btn-sm btn-icon" id="btnZoomOut" title="Decrease font size (-)">A-</button>
+          <span id="zoomDisplay" style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); min-width: 28px; text-align: center;">14px</span>
+          <button class="btn btn-sm btn-icon" id="btnZoomReset" title="Reset font size (0)">A</button>
+          <button class="btn btn-sm btn-icon" id="btnZoomIn" title="Increase font size (+)">A+</button>
+          <button class="btn btn-sm btn-icon" id="btnCopyText" title="Copy article text">📋 Copy</button>
         </div>
       </div>
 
@@ -978,7 +1044,7 @@
     </div>
     <div class="footer-right">
       <span id="statusLastPoll">Last Polled: Just now</span>
-      <span>F5: Save | F9: Load | F1: Help</span>
+      <span>F1/H: Help | B: Feeds | J/K: Nav | F5: Save | F9: Load</span>
     </div>
   </footer>
 
@@ -1114,15 +1180,17 @@
           <div><b>1 - 9</b></div><div>Select headline 1 through 9</div>
           <div><b>J / Down</b></div><div>Next headline</div>
           <div><b>K / Up</b></div><div>Previous headline</div>
+          <div><b>B</b></div><div>Toggle Subscriptions sidebar</div>
           <div><b>M</b></div><div>Toggle Read / Unread status</div>
           <div><b>Shift + M</b></div><div>Mark current view read</div>
           <div><b>S</b></div><div>Toggle Starred / Bookmark</div>
           <div><b>R</b></div><div>Poll / Fetch all feeds</div>
           <div><b>A</b></div><div>Open Add Feed dialog</div>
           <div><b>O</b></div><div>Open article in KNet virtual browser</div>
+          <div><b>+ / -</b></div><div>Zoom font size in / out (0 to reset)</div>
           <div><b>F5</b></div><div>Quicksave workstation state</div>
           <div><b>F9</b></div><div>Quickload workstation state</div>
-          <div><b>F1 / ?</b></div><div>Toggle Help modal</div>
+          <div><b>F1 / H / ?</b></div><div>Toggle Help modal</div>
           <div><b>Esc</b></div><div>Dismiss active modal dialog / clear search</div>
         </div>
 
@@ -1465,6 +1533,19 @@
           if (parsed.activeFeedId !== undefined) activeFeedId = parsed.activeFeedId;
           if (parsed.activeFilter !== undefined) activeFilter = parsed.activeFilter;
           if (parsed.theme) applyTheme(parsed.theme);
+          if (parsed.zoomLevel) {
+            zoomLevel = Math.max(10, Math.min(26, parsed.zoomLevel));
+            const bodyEl = document.getElementById('articleBody');
+            if (bodyEl) bodyEl.style.fontSize = `${zoomLevel}px`;
+            const zoomDisp = document.getElementById('zoomDisplay');
+            if (zoomDisp) zoomDisp.textContent = `${zoomLevel}px`;
+          }
+          if (parsed.sidebarCollapsed !== undefined) {
+            const pane = document.querySelector('.pane-feeds');
+            if (pane) pane.classList.toggle('collapsed', !!parsed.sidebarCollapsed);
+            const btn = document.getElementById('btnToggleSidebar');
+            if (btn) btn.classList.toggle('active', !parsed.sidebarCollapsed);
+          }
           syncFilterPills();
           return true;
         }
@@ -1483,8 +1564,22 @@
       });
     }
 
+    function toggleSidebar() {
+      const pane = document.querySelector('.pane-feeds');
+      if (!pane) return;
+      const isCollapsed = pane.classList.toggle('collapsed');
+      const btn = document.getElementById('btnToggleSidebar');
+      if (btn) {
+        btn.classList.toggle('active', !isCollapsed);
+        btn.title = isCollapsed ? "Show Feeds Sidebar (B)" : "Hide Feeds Sidebar (B)";
+      }
+      playSoundEffect('click');
+      saveWorkstationState(true);
+    }
+
     function saveWorkstationState(silent = false) {
       try {
+        const pane = document.querySelector('.pane-feeds');
         const payload = {
           version: "1.0.0",
           timestamp: new Date().toISOString(),
@@ -1492,7 +1587,9 @@
           articles: articles,
           activeFeedId: activeFeedId,
           activeFilter: activeFilter,
-          theme: document.body.getAttribute('data-theme') || 'dark'
+          theme: document.body.getAttribute('data-theme') || 'dark',
+          zoomLevel: zoomLevel,
+          sidebarCollapsed: pane ? pane.classList.contains('collapsed') : false
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
         if (!silent) {
@@ -1853,7 +1950,7 @@
         
         li.innerHTML = `
           <div class="article-card-header">
-            <span class="article-card-source">${feed.title}</span>
+            <span class="article-card-source">${escapeXml(feed.title)}</span>
             <span class="article-card-date">${art.date || ''}</span>
           </div>
           <div class="article-card-title">${escapeXml(art.title)}</div>
@@ -1893,6 +1990,10 @@
       if (selectedArticleId) {
         const activeArt = filtered.find(a => a.id === selectedArticleId);
         renderReadingPane(activeArt || null);
+        const activeCard = container.querySelector('.article-card.active');
+        if (activeCard) {
+          activeCard.scrollIntoView({ block: 'nearest' });
+        }
       } else if (filtered.length > 0) {
         // Auto-select first article
         selectedArticleId = filtered[0].id;
@@ -2150,6 +2251,7 @@
         showToast(soundEnabled ? "Audio Synthesizer Enabled" : "Audio Synthesizer Muted");
       };
 
+      document.getElementById('btnToggleSidebar').onclick = toggleSidebar;
       document.getElementById('btnHelp').onclick = () => openModal('modalHelp');
 
       // Filter pills
@@ -2171,6 +2273,8 @@
       };
 
       // Reading Toolbar
+      document.getElementById('btnPrevArticle').onclick = () => navigateArticles(-1);
+      document.getElementById('btnNextArticle').onclick = () => navigateArticles(1);
       document.getElementById('btnToggleRead').onclick = toggleReadStatus;
       document.getElementById('btnToggleStar').onclick = toggleStarStatus;
       document.getElementById('btnOpenInKNet').onclick = openArticleInKNet;
@@ -2181,6 +2285,9 @@
         zoomLevel = Math.max(10, Math.min(26, newZoom));
         const bodyEl = document.getElementById('articleBody');
         if (bodyEl) bodyEl.style.fontSize = `${zoomLevel}px`;
+        const zoomDisp = document.getElementById('zoomDisplay');
+        if (zoomDisp) zoomDisp.textContent = `${zoomLevel}px`;
+        saveWorkstationState(true);
       }
 
       document.getElementById('btnZoomIn').onclick = () => setZoom(zoomLevel + 2);
@@ -2435,7 +2542,7 @@
 
         if (e.key === 'Escape') {
           closeAllModals();
-        } else if (e.key === 'F1' || e.key === '?') {
+        } else if (e.key === 'F1' || e.key === '?' || e.key === 'h' || e.key === 'H') {
           e.preventDefault();
           const helpEl = document.getElementById('modalHelp');
           if (helpEl && helpEl.classList.contains('active')) {
@@ -2443,6 +2550,18 @@
           } else {
             openModal('modalHelp');
           }
+        } else if (e.key === 'b' || e.key === 'B') {
+          e.preventDefault();
+          toggleSidebar();
+        } else if (e.key === '+' || e.key === '=') {
+          e.preventDefault();
+          setZoom(zoomLevel + 2);
+        } else if (e.key === '-' || e.key === '_') {
+          e.preventDefault();
+          setZoom(zoomLevel - 2);
+        } else if (e.key === '0') {
+          e.preventDefault();
+          setZoom(14);
         } else if (e.key === 'F5') {
           e.preventDefault();
           saveWorkstationState(false);

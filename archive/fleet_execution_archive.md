@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-22T23:15:00Z — kilo-qa: KTrader**
+  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial onboarding integrity, modal controls, size limits).
+  - State Persistence: Quicksave (F5) & quickload (F9) across web (localStorage) and native (ktrader.dat) capturing complete state.
+  - Native UI Parity: Added Save [F5], Load [F9], and New buttons; updated message loop and WM_COMMAND.
+  - Tutorial Integrity: Fresh-session onboarding modal (ktrader_tutorialSeen / ktrader_tutorial.dat) never interrupting restored save states.
+  - Modal Ergonomics: Added backdrop dismissal and Esc/Enter/Space handlers across Help, Tutorial, and Victory modals.
+  - Safety & Distribution: Quota-protected storage wrappers; placed standalone native binary KTrader.exe (26.1 KB).
+  - Verification: Clean MSVC Native C build (26.1 KB); clean Vite web build (218ms); security lint passed (0 violations).
+
 - **2026-09-22T23:00:00Z — kilo-usability: KHash**
   - Status: PASS ✅ (Layout dimensions, responsive breakpoints, clipboard paste/copy, file remove, smart algo match).
   - Window & Layout: Tuned App.jsx window to 960x700; added responsive media queries (840px/580px) and sleek scrollbars.

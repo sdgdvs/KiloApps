@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KClip
-  kilo_usability: KRSS
+  kilo_usability: KClip
   kilo_graphics: KDragon
   kilo_qa: KType
   kilo_expander: KNote
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-tester
+  agent: kilo-usability
   app: KRSS
-  timestamp: "2026-09-23T00:15:00Z"
+  timestamp: "2026-09-23T00:30:00Z"
 last_planner_run: "2026-09-22T07:47:00Z"
 ---
 
@@ -97,9 +97,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KPomodoro`, `KHash`, `KRSS`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KRSS`
+- **Current Target**: `KClip`
 - **Upcoming Queue**:
-  `KClip`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`.
+  `KPaint`, `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KType`
@@ -156,6 +156,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T00:30:00Z — kilo-usability: KRSS**
+  - Status: PASS ✅ (Layout dimensions, responsive breakpoints, collapsible sidebar, navigation ergonomics).
+  - Window & Layout: Tuned App.jsx window to 1080x720; added responsive media queries (900px/720px) and retro scrollbars.
+  - Collapsible Sidebar: Added 1-click & hotkey [B] sidebar collapse to maximize reader pane width across small displays.
+  - Navigation & Reader: Added Prev/Next article buttons [◀]/[▶]; wired J/K/1-9 active card auto-scroll-into-view.
+  - Font Zoom & State: Persisted zoomLevel and sidebar state in localStorage; added live zoom px display and +/-/0 keys.
+  - Discoverability & Native: Added visible F1/H prompts and H/M/S/R key accelerators across web and native Win32 C.
+  - Verification: MSVC C clean build (17.5 KB); Vite web build clean (224ms); security lint passed (0 violations).
+
 - **2026-09-23T00:15:00Z — kilo-tester: KRSS**
   - Status: PASS ✅ (5 UI/interactive issues, 5 fixed).
   - Modal Dismissals: Added dimmed backdrop click handling and Space/Esc dismissal across Splash, Add Feed, OPML, and Help.
@@ -187,12 +196,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Formats & Previews: Live Markdown/HTML split preview, 2-way CSV ⇄ MD table converter, workspace JSON snapshot export/import.
   - Native Parity: Markdown export (.md) with frontmatter header, reverse line order tool, line endings and reading time stats.
   - Verification: MSVC C clean build (29.0 KB); Vite web build clean (213ms); security lint passed (0 violations).
-
-- **2026-09-22T23:15:00Z — kilo-qa: KTrader**
-  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial onboarding integrity, modal controls, size limits).
-  - State Persistence: Quicksave (F5) & quickload (F9) across web (localStorage) and native (ktrader.dat) capturing complete state.
-  - Native UI Parity: Added Save [F5], Load [F9], and New buttons; updated message loop and WM_COMMAND.
-  - Tutorial Integrity: Fresh-session onboarding modal (ktrader_tutorialSeen / ktrader_tutorial.dat) never interrupting restored save states.
-  - Modal Ergonomics: Added backdrop dismissal and Esc/Enter/Space handlers across Help, Tutorial, and Victory modals.
-  - Safety & Distribution: Quota-protected storage wrappers; placed standalone native binary KTrader.exe (26.1 KB).
-  - Verification: Clean MSVC Native C build (26.1 KB); clean Vite web build (218ms); security lint passed (0 violations).

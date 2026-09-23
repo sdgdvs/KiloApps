@@ -384,10 +384,13 @@ static void ShowHelpDialog(void) {
         "• Top Right: Article Headlines (Click to read)\n"
         "• Lower Right: Full Article Viewing Pane\n\n"
         "Keyboard Shortcuts:\n"
-        "• F1: Show this Help dialog\n"
+        "• F1 or H: Show this Help dialog\n"
         "• F5: Quicksave state (krss.dat)\n"
         "• F9: Quickload state (krss.dat)\n"
-        "• Esc: Close active modal or exit\n\n"
+        "• M: Mark active article as read\n"
+        "• S: Toggle Star / Bookmark\n"
+        "• R: Refresh / Fetch feeds\n"
+        "• Esc: Close active dialog or exit\n\n"
         "Includes Project Echo classified leaks and vintage 1999 feeds.",
         "KRSS Help & Documentation",
         MB_OK | MB_ICONINFORMATION);
@@ -419,8 +422,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 424, 10, 80, 26, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
             g_hBtnLoad = CreateWindowA("BUTTON", "Load (F9)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 510, 10, 80, 26, hwnd, (HMENU)ID_BTN_LOAD, NULL, NULL);
-            g_hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                596, 10, 80, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            g_hBtnHelp = CreateWindowA("BUTTON", "Help (F1/H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                596, 10, 90, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
             // Left Pane: Feeds Listbox
             g_hListFeeds = CreateWindowA("LISTBOX", NULL,
@@ -438,7 +441,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 270, 292, 640, 272, hwnd, (HMENU)ID_EDIT_VIEWER, NULL, NULL);
 
             // Status Bar
-            g_hStatusBar = CreateWindowA("STATIC", "KRSS Initialized. Select channel or press [F1] for Help.",
+            g_hStatusBar = CreateWindowA("STATIC", "KRSS Initialized. Press [F1] or [H] for Help.",
                 WS_CHILD | WS_VISIBLE | SS_LEFT,
                 10, 572, 900, 20, hwnd, (HMENU)ID_STATUS_BAR, NULL, NULL);
 
@@ -504,7 +507,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
         }
 
         case WM_KEYDOWN: {
-            if (wParam == VK_F1) {
+            if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
                 ShowHelpDialog();
                 return 0;
             } else if (wParam == VK_F5) {
@@ -512,6 +515,15 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 return 0;
             } else if (wParam == VK_F9) {
                 LoadState();
+                return 0;
+            } else if (wParam == 'M' || wParam == 'm') {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_MARKREAD, 0), 0);
+                return 0;
+            } else if (wParam == 'S' || wParam == 's') {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_STAR, 0), 0);
+                return 0;
+            } else if (wParam == 'R' || wParam == 'r') {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_REFRESH, 0), 0);
                 return 0;
             }
             break;
