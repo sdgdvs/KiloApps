@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-22T23:00:00Z — kilo-usability: KHash**
+  - Status: PASS ✅ (Layout dimensions, responsive breakpoints, clipboard paste/copy, file remove, smart algo match).
+  - Window & Layout: Tuned App.jsx window to 960x700; added responsive media queries (840px/580px) and sleek scrollbars.
+  - Interactive Ergonomics: Added 1-click clipboard paste buttons for Verifier; added 1-click Copy Manifest button.
+  - Smart Algorithm Match: "Use Text Digest" auto-matches algorithm of expected hash (CRC32/MD5/SHA-1/256/384/512).
+  - Drag & Drop Shield: Added window-level drop protection preventing navigation; added per-file remove button [✕].
+  - Visual Feedback & Hotkeys: Added copy flash animation; documented full hotkeys in status bar footer; verified 9 engines.
+  - Verification: Clean MSVC Native C build (15.0 KB); clean Vite web build (218ms); security lint passed (0 violations).
+
 - **2026-09-22T22:42:00Z — kilo-tester: KHash**
   - Status: PASS ✅ (6 UI/interactive issues, 6 fixed).
   - Modal Dismissals: Added dimmed backdrop click handling and Enter/Esc dismissal across Splash and Help dialogs.

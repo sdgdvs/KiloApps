@@ -1073,24 +1073,26 @@
       </div>
       <div class="modal-body">
         <div>
-          <b>Import OPML:</b> Paste OPML 1.0/2.0 XML below or load a file from disk.
+          <b>Import Subscriptions or State:</b> Paste OPML XML or JSON below, or load a file from disk.
         </div>
-        <div style="display: flex; gap: 8px;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           <input type="file" id="fileOpmlInput" accept=".opml,.xml" style="display: none;">
           <button class="btn btn-sm" id="btnBrowseOpml">📂 Choose OPML File...</button>
-          <button class="btn btn-sm btn-primary" id="btnParsePastedOpml">Import Pasted XML</button>
+          <input type="file" id="fileJsonInput" accept=".json" style="display: none;">
+          <button class="btn btn-sm" id="btnBrowseJson">📂 Import JSON State...</button>
+          <button class="btn btn-sm btn-primary" id="btnParsePastedOpml">Import Pasted Content</button>
         </div>
-        <textarea id="textOpml" class="form-control" style="min-height: 120px;" placeholder="<opml version='2.0'>..."></textarea>
+        <textarea id="textOpml" class="form-control" style="min-height: 120px;" placeholder="<opml version='2.0'>... or paste exported state JSON"></textarea>
 
         <div style="border-top: 1px dashed var(--border); margin: 6px 0;"></div>
 
         <div>
-          <b>Export OPML:</b> Generate an OPML subscription manifest of all currently subscribed channels.
+          <b>Export Subscriptions & State:</b> Generate OPML manifest or download full state snapshot.
         </div>
-        <div style="display: flex; gap: 8px;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           <button class="btn btn-sm" id="btnGenerateOpml">Generate OPML Manifest</button>
           <button class="btn btn-sm" id="btnDownloadOpml">💾 Download .opml File</button>
-          <button class="btn btn-sm" id="btnExportJson">Export State as JSON</button>
+          <button class="btn btn-sm" id="btnExportJson">💾 Export State JSON</button>
         </div>
       </div>
       <div class="modal-footer">
@@ -1109,9 +1111,11 @@
       <div class="modal-body">
         <div style="font-weight:bold; color:var(--primary);">⌨️ Keyboard Shortcuts</div>
         <div style="display:grid; grid-template-columns:140px 1fr; gap:6px; font-family:var(--font-mono); font-size:11px;">
+          <div><b>1 - 9</b></div><div>Select headline 1 through 9</div>
           <div><b>J / Down</b></div><div>Next headline</div>
           <div><b>K / Up</b></div><div>Previous headline</div>
           <div><b>M</b></div><div>Toggle Read / Unread status</div>
+          <div><b>Shift + M</b></div><div>Mark current view read</div>
           <div><b>S</b></div><div>Toggle Starred / Bookmark</div>
           <div><b>R</b></div><div>Poll / Fetch all feeds</div>
           <div><b>A</b></div><div>Open Add Feed dialog</div>
@@ -1119,7 +1123,7 @@
           <div><b>F5</b></div><div>Quicksave workstation state</div>
           <div><b>F9</b></div><div>Quickload workstation state</div>
           <div><b>F1 / ?</b></div><div>Toggle Help modal</div>
-          <div><b>Esc</b></div><div>Dismiss active modal dialog</div>
+          <div><b>Esc</b></div><div>Dismiss active modal dialog / clear search</div>
         </div>
 
         <div style="font-weight:bold; color:var(--primary); margin-top:6px;">📡 Supported Syndication Protocols</div>
@@ -1461,6 +1465,7 @@
           if (parsed.activeFeedId !== undefined) activeFeedId = parsed.activeFeedId;
           if (parsed.activeFilter !== undefined) activeFilter = parsed.activeFilter;
           if (parsed.theme) applyTheme(parsed.theme);
+          syncFilterPills();
           return true;
         }
       } catch (e) {
@@ -1468,7 +1473,14 @@
       }
       feeds = JSON.parse(JSON.stringify(DEFAULT_FEEDS));
       articles = JSON.parse(JSON.stringify(DEFAULT_ARTICLES));
+      syncFilterPills();
       return false;
+    }
+
+    function syncFilterPills() {
+      document.querySelectorAll('.filter-pill').forEach(pill => {
+        pill.classList.toggle('active', pill.dataset.filter === activeFilter);
+      });
     }
 
     function saveWorkstationState(silent = false) {
@@ -1740,11 +1752,27 @@
           li.innerHTML = `
             <div class="feed-item-left">
               <span>${feed.icon || '📡'}</span>
-              <span class="feed-item-title">${feed.title}</span>
+              <span class="feed-item-title">${escapeXml(feed.title)}</span>
             </div>
-            <span class="feed-count-badge ${unread > 0 ? 'has-unread' : ''}">${unread}</span>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <span class="feed-count-badge ${unread > 0 ? 'has-unread' : ''}">${unread}</span>
+              ${feed.custom ? `<button class="btn-del-feed" title="Remove Feed" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:10px; padding:0 2px;">✕</button>` : ''}
+            </div>
           `;
-          li.onclick = () => {
+          li.onclick = (e) => {
+            if (e.target.classList.contains('btn-del-feed')) {
+              e.stopPropagation();
+              if (confirm(`Remove custom feed '${feed.title}'?`)) {
+                feeds = feeds.filter(f => f.id !== feed.id);
+                articles = articles.filter(a => a.feedId !== feed.id);
+                if (activeFeedId === feed.id) activeFeedId = 'all';
+                saveWorkstationState(true);
+                renderFeedsList();
+                renderArticlesList();
+                showToast(`Removed feed '${feed.title}'`);
+              }
+              return;
+            }
             activeFeedId = feed.id;
             playSoundEffect('click');
             renderFeedsList();
@@ -1960,6 +1988,7 @@
     function markCurrentViewRead() {
       const filtered = getFilteredArticles();
       filtered.forEach(a => a.isRead = true);
+      saveWorkstationState(true);
       playSoundEffect('click');
       renderFeedsList();
       renderArticlesList();
@@ -1971,6 +2000,7 @@
       const art = articles.find(a => a.id === selectedArticleId);
       if (art) {
         art.isRead = !art.isRead;
+        saveWorkstationState(true);
         playSoundEffect('click');
         renderFeedsList();
         renderArticlesList();
@@ -1983,6 +2013,7 @@
       const art = articles.find(a => a.id === selectedArticleId);
       if (art) {
         art.isStarred = !art.isStarred;
+        saveWorkstationState(true);
         playSoundEffect('star');
         renderFeedsList();
         renderArticlesList();
@@ -1997,7 +2028,10 @@
         playSoundEffect('click');
         // If running inside KiloOS window manager, postMessage or open window
         if (window.parent && window.parent !== window) {
-          window.parent.postMessage({ type: 'OPEN_APP', id: 'knet', url: art.url }, '*');
+          try {
+            window.parent.postMessage({ type: 'OPEN_APP', id: 'knet', url: art.url }, '*');
+            window.parent.postMessage({ type: 'KILO_OPEN_URL', url: art.url }, '*');
+          } catch(e) {}
         }
         showToast(`Navigating virtual gateway: ${art.url}`);
         window.open(art.url, '_blank');
@@ -2010,6 +2044,7 @@
       if (!art) return;
 
       const feed = feeds.find(f => f.id === art.feedId) || { title: "Syndicated" };
+      const rawContent = (art.content || art.snippet || '').replace(/<[^>]+>/g, ' ');
       const md = `# ${art.title}\n\n` +
                  `**Source:** ${feed.title}  \n` +
                  `**Author:** ${art.author || 'Unknown'}  \n` +
@@ -2018,7 +2053,7 @@
                  `---\n\n` +
                  `${art.snippet || ''}\n\n` +
                  `## Full Article Content\n\n` +
-                 `${art.content.replace(/<[^>]+>/g, ' ')}\n`;
+                 `${rawContent}\n`;
 
       const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -2035,7 +2070,8 @@
       const art = articles.find(a => a.id === selectedArticleId);
       if (!art) return;
 
-      const text = `${art.title}\n${art.date} | ${art.author}\n${art.url}\n\n${art.snippet}\n\n${art.content.replace(/<[^>]+>/g, ' ')}`;
+      const rawContent = (art.content || art.snippet || '').replace(/<[^>]+>/g, ' ');
+      const text = `${art.title}\n${art.date || ''} | ${art.author || 'Unknown'}\n${art.url || ''}\n\n${art.snippet || ''}\n\n${rawContent}`;
       navigator.clipboard.writeText(text).then(() => {
         showToast("Article text copied to clipboard! 📋");
       }).catch(() => {
@@ -2058,6 +2094,7 @@
       selectedArticleId = target.id;
       if (!target.isRead) {
         target.isRead = true;
+        saveWorkstationState(true);
         renderFeedsList();
       }
       playSoundEffect('select');
@@ -2140,20 +2177,40 @@
       document.getElementById('btnExportMarkdown').onclick = exportArticleMarkdown;
       document.getElementById('btnCopyText').onclick = copyArticleText;
 
-      document.getElementById('btnZoomIn').onclick = () => {
-        if (zoomLevel < 24) zoomLevel += 2;
-        renderReadingPane(articles.find(a => a.id === selectedArticleId));
-      };
-      document.getElementById('btnZoomOut').onclick = () => {
-        if (zoomLevel > 11) zoomLevel -= 2;
-        renderReadingPane(articles.find(a => a.id === selectedArticleId));
-      };
-      document.getElementById('btnZoomReset').onclick = () => {
-        zoomLevel = 14;
-        renderReadingPane(articles.find(a => a.id === selectedArticleId));
-      };
+      function setZoom(newZoom) {
+        zoomLevel = Math.max(10, Math.min(26, newZoom));
+        const bodyEl = document.getElementById('articleBody');
+        if (bodyEl) bodyEl.style.fontSize = `${zoomLevel}px`;
+      }
+
+      document.getElementById('btnZoomIn').onclick = () => setZoom(zoomLevel + 2);
+      document.getElementById('btnZoomOut').onclick = () => setZoom(zoomLevel - 2);
+      document.getElementById('btnZoomReset').onclick = () => setZoom(14);
 
       // Add Feed Modal Handlers
+      const openAddFeed = () => {
+        document.getElementById('inputFeedUrl').value = '';
+        document.getElementById('inputFeedTitle').value = '';
+        document.getElementById('inputRawXml').value = '';
+        openModal('modalAddFeed');
+        setTimeout(() => document.getElementById('inputFeedUrl').focus(), 50);
+      };
+      document.getElementById('btnAddFeedModal').onclick = openAddFeed;
+      document.getElementById('btnAddFeedQuick').onclick = openAddFeed;
+
+      document.getElementById('inputFeedUrl').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          document.getElementById('btnConfirmAddFeed').click();
+        }
+      });
+      document.getElementById('inputFeedTitle').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          document.getElementById('btnConfirmAddFeed').click();
+        }
+      });
+
       document.getElementById('btnCloseAddFeed').onclick = () => closeModal('modalAddFeed');
       document.getElementById('btnCancelAddFeed').onclick = () => closeModal('modalAddFeed');
       document.getElementById('btnConfirmAddFeed').onclick = () => {
@@ -2178,10 +2235,14 @@
               item.feedId = newFeedId;
               articles.unshift(item);
             });
+            saveWorkstationState(true);
             closeModal('modalAddFeed');
             renderFeedsList();
             renderArticlesList();
             showToast(`Added feed '${customTitle || parsed.meta.title}' with ${parsed.items.length} articles!`);
+            document.getElementById('inputFeedUrl').value = '';
+            document.getElementById('inputFeedTitle').value = '';
+            document.getElementById('inputRawXml').value = '';
             return;
           } catch (e) {
             showToast("Raw XML Parse Error: " + e.message, "danger");
@@ -2205,14 +2266,18 @@
           custom: true
         };
         feeds.push(newFeed);
+        saveWorkstationState(true);
         closeModal('modalAddFeed');
         renderFeedsList();
         renderArticlesList();
         showToast(`Subscribed to ${newFeed.title}! Refreshing...`);
+        document.getElementById('inputFeedUrl').value = '';
+        document.getElementById('inputFeedTitle').value = '';
+        document.getElementById('inputRawXml').value = '';
         pollFeeds();
       };
 
-      // OPML Handlers
+      // OPML & JSON State Handlers
       document.getElementById('btnCloseOpml').onclick = () => closeModal('modalOpml');
       document.getElementById('btnCloseOpmlModal').onclick = () => closeModal('modalOpml');
       document.getElementById('btnGenerateOpml').onclick = () => {
@@ -2222,11 +2287,30 @@
       document.getElementById('btnParsePastedOpml').onclick = () => {
         const text = document.getElementById('textOpml').value.trim();
         if (!text) {
-          showToast("Please paste OPML XML content first.", "warning");
+          showToast("Please paste OPML XML or JSON content first.", "warning");
           return;
+        }
+        if (text.startsWith('{')) {
+          try {
+            const data = JSON.parse(text);
+            if (Array.isArray(data.feeds)) {
+              feeds = data.feeds;
+              if (Array.isArray(data.articles)) articles = data.articles;
+              saveWorkstationState(true);
+              renderFeedsList();
+              renderArticlesList();
+              showToast(`Imported state JSON (${feeds.length} feeds, ${articles.length} articles)!`);
+              closeModal('modalOpml');
+              return;
+            }
+          } catch (e) {
+            showToast("JSON Import Error: " + e.message, "danger");
+            return;
+          }
         }
         try {
           const count = parseOpmlXml(text);
+          saveWorkstationState(true);
           renderFeedsList();
           showToast(`Successfully imported ${count} subscriptions from OPML!`);
         } catch (e) {
@@ -2244,8 +2328,37 @@
         reader.onload = (evt) => {
           document.getElementById('textOpml').value = evt.target.result;
           const count = parseOpmlXml(evt.target.result);
+          saveWorkstationState(true);
           renderFeedsList();
           showToast(`Imported ${count} channels from ${file.name}!`);
+        };
+        reader.readAsText(file);
+      };
+
+      document.getElementById('btnBrowseJson').onclick = () => {
+        document.getElementById('fileJsonInput').click();
+      };
+      document.getElementById('fileJsonInput').onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          try {
+            const data = JSON.parse(evt.target.result);
+            if (Array.isArray(data.feeds)) {
+              feeds = data.feeds;
+              if (Array.isArray(data.articles)) articles = data.articles;
+              saveWorkstationState(true);
+              renderFeedsList();
+              renderArticlesList();
+              showToast(`Restored state from ${file.name} (${feeds.length} feeds, ${articles.length} articles)!`);
+              closeModal('modalOpml');
+            } else {
+              showToast("Invalid state JSON structure.", "danger");
+            }
+          } catch (err) {
+            showToast("JSON Parse Error: " + err.message, "danger");
+          }
         };
         reader.readAsText(file);
       };
@@ -2296,10 +2409,24 @@
         openModal('modalHelp');
       };
 
+      // Backdrop dismissal on all modals
+      document.querySelectorAll('.modal-overlay').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            closeModal(modal.id);
+          }
+        });
+      });
+
       // Keyboard Shortcuts
       window.addEventListener('keydown', (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
           if (e.key === 'Escape') {
+            if (e.target.id === 'inputSearch') {
+              e.target.value = '';
+              searchQuery = '';
+              renderArticlesList();
+            }
             closeAllModals();
             e.target.blur();
           }
@@ -2310,7 +2437,12 @@
           closeAllModals();
         } else if (e.key === 'F1' || e.key === '?') {
           e.preventDefault();
-          openModal('modalHelp');
+          const helpEl = document.getElementById('modalHelp');
+          if (helpEl && helpEl.classList.contains('active')) {
+            closeModal('modalHelp');
+          } else {
+            openModal('modalHelp');
+          }
         } else if (e.key === 'F5') {
           e.preventDefault();
           saveWorkstationState(false);
@@ -2320,12 +2452,31 @@
           renderFeedsList();
           renderArticlesList();
           showToast("Workstation State Restored [F9] 📂");
+        } else if (e.key >= '1' && e.key <= '9') {
+          const idx = parseInt(e.key, 10) - 1;
+          const filtered = getFilteredArticles();
+          if (idx < filtered.length) {
+            e.preventDefault();
+            const target = filtered[idx];
+            selectedArticleId = target.id;
+            if (!target.isRead) {
+              target.isRead = true;
+              saveWorkstationState(true);
+              renderFeedsList();
+            }
+            playSoundEffect('select');
+            renderArticlesList();
+            renderReadingPane(target);
+          }
         } else if (e.key === 'j' || e.key === 'J' || e.key === 'ArrowDown') {
           e.preventDefault();
           navigateArticles(1);
         } else if (e.key === 'k' || e.key === 'K' || e.key === 'ArrowUp') {
           e.preventDefault();
           navigateArticles(-1);
+        } else if (e.shiftKey && (e.key === 'M' || e.key === 'm')) {
+          e.preventDefault();
+          markCurrentViewRead();
         } else if (e.key === 'm' || e.key === 'M') {
           e.preventDefault();
           toggleReadStatus();
@@ -2337,13 +2488,14 @@
           pollFeeds();
         } else if (e.key === 'a' || e.key === 'A') {
           e.preventDefault();
-          openModal('modalAddFeed');
+          openAddFeed();
         } else if (e.key === 'o' || e.key === 'O') {
           e.preventDefault();
           openArticleInKNet();
-        } else if (e.key === 'Enter') {
+        } else if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
           const splash = document.getElementById('modalSplash');
           if (splash && splash.classList.contains('active')) {
+            e.preventDefault();
             closeModal('modalSplash');
             playSoundEffect('select');
           }

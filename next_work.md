@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KRSS
+  kilo_tester: KClip
   kilo_usability: KRSS
   kilo_graphics: KDragon
   kilo_qa: KType
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-graphics
-  app: KSanctuary
-  timestamp: "2026-09-23T00:05:00Z"
+  agent: kilo-tester
+  app: KRSS
+  timestamp: "2026-09-23T00:15:00Z"
 last_planner_run: "2026-09-22T07:47:00Z"
 ---
 
@@ -92,9 +92,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KCyber`, `KMech`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KRSS`
+- **Current Target**: `KClip`
 - **Upcoming Queue**:
-  `KClip`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KPomodoro`, `KHash`.
+  `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KPomodoro`, `KHash`, `KRSS`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KRSS`
@@ -156,6 +156,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T00:15:00Z — kilo-tester: KRSS**
+  - Status: PASS ✅ (5 UI/interactive issues, 5 fixed).
+  - Modal Dismissals: Added dimmed backdrop click handling and Space/Esc dismissal across Splash, Add Feed, OPML, and Help.
+  - Keyboard Controls: Fixed Shift+M view-read action; wired 1-9 direct headline jumps, Enter/Space splash exit, and F1 help toggle.
+  - OPML & State JSON: Added JSON state file import & auto-detection of pasted JSON into OPML manager; wired custom feed removal [✕].
+  - Reading & Ergonomics: Decoupled font zoom from reader scroll position; hardened markdown & clipboard exports against null content.
+  - Verification: MSVC C clean build (17.9 KB); Vite web build clean (209ms); security lint passed (0 violations).
+
 - **2026-09-23T00:05:00Z — kilo-graphics: KSanctuary**
   - Status: PASS ✅ (Graphics polish, GDI sprite parity, raider emblems, balance pass).
   - Pixel Art & Sprites: GDI sprites in Win32 C & SVGs in web for 5 raider warbands, defense turrets, barricades, and weather hazards.
@@ -188,12 +196,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Modal Ergonomics: Added backdrop dismissal and Esc/Enter/Space handlers across Help, Tutorial, and Victory modals.
   - Safety & Distribution: Quota-protected storage wrappers; placed standalone native binary KTrader.exe (26.1 KB).
   - Verification: Clean MSVC Native C build (26.1 KB); clean Vite web build (218ms); security lint passed (0 violations).
-
-- **2026-09-22T23:00:00Z — kilo-usability: KHash**
-  - Status: PASS ✅ (Layout dimensions, responsive breakpoints, clipboard paste/copy, file remove, smart algo match).
-  - Window & Layout: Tuned App.jsx window to 960x700; added responsive media queries (840px/580px) and sleek scrollbars.
-  - Interactive Ergonomics: Added 1-click clipboard paste buttons for Verifier; added 1-click Copy Manifest button.
-  - Smart Algorithm Match: "Use Text Digest" auto-matches algorithm of expected hash (CRC32/MD5/SHA-1/256/384/512).
-  - Drag & Drop Shield: Added window-level drop protection preventing navigation; added per-file remove button [✕].
-  - Visual Feedback & Hotkeys: Added copy flash animation; documented full hotkeys in status bar footer; verified 9 engines.
-  - Verification: Clean MSVC Native C build (15.0 KB); clean Vite web build (218ms); security lint passed (0 violations).
