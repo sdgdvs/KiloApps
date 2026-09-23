@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-23T09:55:00Z — kilo-expander: KConnect4 (Seamless Firebase RTDB Multiplayer Expansion)**
+  - Status: PASS ✅ (Implemented real-time cross-computer multiplayer via Firebase RTDB per Mandate 12).
+  - Online Multiplayer: Quick Match public matchmaking, host/join custom rooms, public lobby browser, spectator mode.
+  - Game State Sync: Real-time turn alternation, move synchronization, powerups (Bomb/Drill/Magnet/Freeze), quick chat emotes.
+  - UI Ergonomics: Added Online HUD banner, [O] shortcut, room invite URL auto-join (`?room=XYZ`), clean `onDisconnect()` presence.
+  - Offline Fallback: 100% offline preservation for vs AI (4 personalities), Campaign (20 stages), 2P local, and Speed modes.
+  - Verification: Headless CDP test pass (0 errors, 60 FPS pacing); single-file web 146.6 KB (<999KB); Vite build clean (367ms); security lint clean.
+
 - **2026-09-23T08:45:00Z — kilo-qa: KVoid (Pass 5: Tutorial & State Integrity)**
   - Status: PASS ✅ (Full state persistence & tutorial isolation verified; 0 regressions).
   - Quicksave/Load: Implemented full-fidelity F5/F9 state persistence (web localStorage & native C `kvoid_save.dat`).

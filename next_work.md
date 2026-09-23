@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KCalc
   kilo_usability: KHex
   kilo_graphics: KAbyss
-  kilo_qa: KWizard
+  kilo_qa: KZip
   kilo_expander: "KChess (Firebase RTDB Multiplayer)"
   kilo_creator: "KSteno (Stenographic Carrier Suite)"
 virtual_web_target: "kweb://users/~neon_rider"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-graphics
-  app: KStarDredge
-  timestamp: "2026-09-23T13:50:00Z"
+  agent: kilo-qa
+  app: KWizard
+  timestamp: "2026-09-23T14:45:00Z"
 last_planner_run: "2026-09-23T04:40:00Z"
 ---
 
@@ -107,9 +107,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KContacts` (reposition bottom-right toast blocking submit button), `KFarm` (reposition bottom toast blocking seed radio buttons), `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KWizard`
+- **Current Target**: `KZip`
 - **Upcoming Queue**:
-  `KZip`, `KChrono`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid)*.
+  `KChrono`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KChess` (Implement Seamless Firebase RTDB Multiplayer per Mandate 12)
@@ -170,6 +170,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T14:45:00Z — kilo-qa: KWizard (Pass 5: Tutorial & State Integrity)**
+  - Status: PASS ✅ (Full state persistence & tutorial isolation verified; 0 regressions).
+  - Quicksave & Load: Implemented full state persistence across F5/F9 hotkeys and toolbar buttons in web (`kwizard_save`) and native C (`kwizard.dat`).
+  - First-Run Tutorial: Added session-isolated onboarding (`kwizard_tutorialSeen` / `kwizard_tutorial.dat`) with Esc/Enter/Space dismissal.
+  - UI Ergonomics: Added top-right toast notification system and comprehensive controls guide ([F1] Grimoire, [F5] Save, [F9] Load, [D] Deck, [E] End Turn).
+  - Verification: MSVC C clean build (`KWizard.exe` 31.7 KB); single-file web (`kwizard.html` 82.1 KB); Vite build clean (346ms); security lint 100% clean.
+
 - **2026-09-23T13:50:00Z — kilo-graphics: KStarDredge (Specular Glint Removal, Visual Polish & Raider Balance Pass)**
   - Status: PASS ✅ (Eliminated specular glints across web & C; verified clean HUD and synced raider balance).
   - Glint Purge: Removed pulsing specular glint square on ore chunks, mineral core glint dot, and canopy glint slash in `kstardredge.html` & `main.c`.
@@ -199,12 +206,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Standards: Title splash screen, first-run tutorial (`kknetmap_tutorialSeen`), F5 quicksave/F9 quickload, 1999 ARG parody brands (CYBER-CO, 3-CON, Bastion, Sol Unix).
   - Universal Audio: Pure Web Audio YM2612 FM synthesis & SPC700 stereo delay warmth.
   - Verification: Clean MSVC build (11.2 KB); Vite clean build (396ms); security lint 100% PASS; strict <999KB ceiling.
-
-- **2026-09-23T09:55:00Z — kilo-expander: KConnect4 (Seamless Firebase RTDB Multiplayer Expansion)**
-  - Status: PASS ✅ (Implemented real-time cross-computer multiplayer via Firebase RTDB per Mandate 12).
-  - Online Multiplayer: Quick Match public matchmaking, host/join custom rooms, public lobby browser, spectator mode.
-  - Game State Sync: Real-time turn alternation, move synchronization, powerups (Bomb/Drill/Magnet/Freeze), quick chat emotes.
-  - UI Ergonomics: Added Online HUD banner, [O] shortcut, room invite URL auto-join (`?room=XYZ`), clean `onDisconnect()` presence.
-  - Offline Fallback: 100% offline preservation for vs AI (4 personalities), Campaign (20 stages), 2P local, and Speed modes.
-  - Verification: Headless CDP test pass (0 errors, 60 FPS pacing); single-file web 146.6 KB (<999KB); Vite build clean (367ms); security lint clean.
 

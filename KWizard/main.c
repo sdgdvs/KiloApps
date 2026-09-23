@@ -65,6 +65,8 @@ static const char* my_strstr(const char* haystack, const char* needle) {
 #define BTN_HELP 110
 #define LST_HELP 111
 #define BTN_HELP_CLOSE 112
+#define BTN_SAVE 113
+#define BTN_LOAD 114
 #define IDT_CAMPAIGN_NEXT 1001
 #define IDT_ANIM 1002
 
@@ -215,7 +217,7 @@ Projectile projectiles[MAX_PROJECTILES];
 float screenShake = 0.0f;
 float runicAngle = 0.0f;
 
-HWND hwndDraw, hwndReset, hwndCombo, hwndDeckBtn, hwndHelpBtn, hwndAvail, hwndDeck, hwndDeckClose, hwndHelp, hwndHelpClose;
+HWND hwndDraw, hwndReset, hwndCombo, hwndDeckBtn, hwndHelpBtn, hwndSaveBtn, hwndLoadBtn, hwndAvail, hwndDeck, hwndDeckClose, hwndHelp, hwndHelpClose;
 
 unsigned int seed = 0;
 int my_rand() {
@@ -480,6 +482,168 @@ void InitGame(int oppHp) {
     }
 }
 
+#define KWIZARD_SAVE_MAGIC 0x4D47414D
+#define KWIZARD_SAVE_VERSION 1
+
+typedef struct {
+    DWORD magic;
+    DWORD version;
+    int playerHp;
+    int opponentHp;
+    int opponentMaxHp;
+    int gameState;
+    int campaignLevel;
+    int playerMana;
+    int playerMaxMana;
+    int opponentMana;
+    int opponentMaxMana;
+    int playerBurn;
+    int playerFreeze;
+    int playerShield;
+    int playerRegen;
+    int playerPoison;
+    int opponentBurn;
+    int opponentFreeze;
+    int opponentShield;
+    int opponentRegen;
+    int opponentPoison;
+    int playerCount;
+    int playerHand[7];
+    int opponentCount;
+    int opponentHand[7];
+    int playerDeckCount;
+    int playerDeck[20];
+    char arenaMsg[128];
+} KWizardSave;
+
+static int IsTutorialSeen(void) {
+    HANDLE hFile = CreateFileA("kwizard_tutorial.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFile);
+        return 1;
+    }
+    return 0;
+}
+
+static void MarkTutorialSeen(void) {
+    HANDLE hFile = CreateFileA("kwizard_tutorial.dat", GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) CloseHandle(hFile);
+}
+
+static int SaveGameState(HWND hwnd) {
+    KWizardSave save;
+    memset(&save, 0, sizeof(save));
+    save.magic = KWIZARD_SAVE_MAGIC;
+    save.version = KWIZARD_SAVE_VERSION;
+    save.playerHp = playerHp;
+    save.opponentHp = opponentHp;
+    save.opponentMaxHp = opponentMaxHp;
+    save.gameState = gameState;
+    save.campaignLevel = campaignLevel;
+    save.playerMana = playerMana;
+    save.playerMaxMana = playerMaxMana;
+    save.opponentMana = opponentMana;
+    save.opponentMaxMana = opponentMaxMana;
+    save.playerBurn = playerBurn;
+    save.playerFreeze = playerFreeze;
+    save.playerShield = playerShield;
+    save.playerRegen = playerRegen;
+    save.playerPoison = playerPoison;
+    save.opponentBurn = opponentBurn;
+    save.opponentFreeze = opponentFreeze;
+    save.opponentShield = opponentShield;
+    save.opponentRegen = opponentRegen;
+    save.opponentPoison = opponentPoison;
+    save.playerCount = playerCount;
+    for (int i = 0; i < 7; i++) save.playerHand[i] = playerHand[i];
+    save.opponentCount = opponentCount;
+    for (int i = 0; i < 7; i++) save.opponentHand[i] = opponentHand[i];
+    save.playerDeckCount = playerDeckCount;
+    for (int i = 0; i < 20; i++) save.playerDeck[i] = playerDeck[i];
+    lstrcpynA(save.arenaMsg, arenaMsg, 128);
+
+    HANDLE hFile = CreateFileA("kwizard.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        lstrcpyA(arenaMsg, "Quicksave failed (file write error)!");
+        if (hwnd) InvalidateRect(hwnd, NULL, FALSE);
+        return 0;
+    }
+    DWORD bytesWritten = 0;
+    WriteFile(hFile, &save, sizeof(save), &bytesWritten, NULL);
+    CloseHandle(hFile);
+
+    MarkTutorialSeen();
+
+    lstrcpyA(arenaMsg, "Game Quicksaved to kwizard.dat [F5]");
+    if (hwnd) InvalidateRect(hwnd, NULL, FALSE);
+    return 1;
+}
+
+static int LoadGameState(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kwizard.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        lstrcpyA(arenaMsg, "No save found! Press [F5] to Quicksave.");
+        if (hwnd) InvalidateRect(hwnd, NULL, FALSE);
+        return 0;
+    }
+    KWizardSave save;
+    memset(&save, 0, sizeof(save));
+    DWORD bytesRead = 0;
+    BOOL ok = ReadFile(hFile, &save, sizeof(save), &bytesRead, NULL);
+    CloseHandle(hFile);
+
+    if (!ok || bytesRead != sizeof(save) || save.magic != KWIZARD_SAVE_MAGIC) {
+        lstrcpyA(arenaMsg, "Corrupted save file in kwizard.dat!");
+        if (hwnd) InvalidateRect(hwnd, NULL, FALSE);
+        return 0;
+    }
+
+    if (hwnd) KillTimer(hwnd, IDT_CAMPAIGN_NEXT);
+
+    playerHp = save.playerHp;
+    opponentHp = save.opponentHp;
+    opponentMaxHp = save.opponentMaxHp;
+    gameState = save.gameState;
+    campaignLevel = save.campaignLevel;
+    playerMana = save.playerMana;
+    playerMaxMana = save.playerMaxMana;
+    opponentMana = save.opponentMana;
+    opponentMaxMana = save.opponentMaxMana;
+    playerBurn = save.playerBurn;
+    playerFreeze = save.playerFreeze;
+    playerShield = save.playerShield;
+    playerRegen = save.playerRegen;
+    playerPoison = save.playerPoison;
+    opponentBurn = save.opponentBurn;
+    opponentFreeze = save.opponentFreeze;
+    opponentShield = save.opponentShield;
+    opponentRegen = save.opponentRegen;
+    opponentPoison = save.opponentPoison;
+    playerCount = save.playerCount;
+    for (int i = 0; i < 7; i++) playerHand[i] = save.playerHand[i];
+    opponentCount = save.opponentCount;
+    for (int i = 0; i < 7; i++) opponentHand[i] = save.opponentHand[i];
+    playerDeckCount = save.playerDeckCount;
+    for (int i = 0; i < 20; i++) playerDeck[i] = save.playerDeck[i];
+
+    if (hwnd) {
+        ShowWindow(hwndAvail, SW_HIDE);
+        ShowWindow(hwndDeck, SW_HIDE);
+        ShowWindow(hwndDeckClose, SW_HIDE);
+        ShowWindow(hwndHelp, SW_HIDE);
+        ShowWindow(hwndHelpClose, SW_HIDE);
+    }
+
+    particleCount = 0;
+    shockwaveCount = 0;
+    floaterCount = 0;
+    for (int i = 0; i < MAX_PROJECTILES; i++) projectiles[i].active = 0;
+
+    lstrcpyA(arenaMsg, "Game Quickloaded from kwizard.dat [F9]");
+    if (hwnd) InvalidateRect(hwnd, NULL, FALSE);
+    return 1;
+}
+
 void ResetGame() {
     campaignLevel = 0;
     InitGame(30);
@@ -731,43 +895,51 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_CREATE:
             hwndCombo = CreateWindow("COMBOBOX", "", 
                                      CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_VISIBLE,
-                                     130, 10, 100, 100,
+                                     10, 10, 80, 100,
                                      hwnd, (HMENU)CMB_DIFFICULTY, NULL, NULL);
             SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)"Easy");
             SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)"Medium");
             SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)"Hard");
             SendMessage(hwndCombo, CB_SETCURSEL, 1, 0); // Default to Medium
-            hwndDraw = CreateWindow("BUTTON", "Draw Card",
+            hwndDraw = CreateWindow("BUTTON", "Draw",
                                     WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                                    240, 10, 95, 30,
+                                    95, 10, 65, 30,
                                     hwnd, (HMENU)BTN_DRAW, NULL, NULL);
             CreateWindow("BUTTON", "End Turn",
                          WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                         345, 10, 95, 30,
+                         165, 10, 75, 30,
                          hwnd, (HMENU)BTN_END_TURN, NULL, NULL);
-            hwndReset = CreateWindow("BUTTON", "Reset Game",
+            hwndReset = CreateWindow("BUTTON", "Reset",
                                      WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                                     450, 10, 95, 30,
+                                     245, 10, 65, 30,
                                      hwnd, (HMENU)BTN_RESET, NULL, NULL);
             CreateWindow("BUTTON", "Campaign",
                          WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                         555, 10, 95, 30,
+                         315, 10, 80, 30,
                          hwnd, (HMENU)BTN_CAMPAIGN, NULL, NULL);
             hwndDeckBtn = CreateWindow("BUTTON", "Deck",
                                        WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                                       660, 10, 50, 30,
+                                       400, 10, 50, 30,
                                        hwnd, (HMENU)BTN_DECK, NULL, NULL);
             hwndHelpBtn = CreateWindow("BUTTON", "Help",
                                        WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                                       720, 10, 50, 30,
+                                       455, 10, 50, 30,
                                        hwnd, (HMENU)BTN_HELP, NULL, NULL);
+            hwndSaveBtn = CreateWindow("BUTTON", "Save [F5]",
+                                       WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                                       510, 10, 75, 30,
+                                       hwnd, (HMENU)BTN_SAVE, NULL, NULL);
+            hwndLoadBtn = CreateWindow("BUTTON", "Load [F9]",
+                                       WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                                       590, 10, 75, 30,
+                                       hwnd, (HMENU)BTN_LOAD, NULL, NULL);
 
             hwndAvail = CreateWindow("LISTBOX", "",
                                      WS_CHILD | WS_BORDER | WS_VSCROLL | LBS_NOTIFY,
                                      50, 50, 300, 400,
                                      hwnd, (HMENU)LST_AVAIL, NULL, NULL);
             hwndDeck = CreateWindow("LISTBOX", "",
-                                    WS_CHILD | WS_BORDER | WS_VSCROLL | LBS_NOTIFY,
+                                     WS_CHILD | WS_BORDER | WS_VSCROLL | LBS_NOTIFY,
                                      450, 50, 300, 400,
                                      hwnd, (HMENU)LST_DECK, NULL, NULL);
             hwndDeckClose = CreateWindow("BUTTON", "Save & Close",
@@ -792,6 +964,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             seed = GetTickCount();
             SetTimer(hwnd, IDT_ANIM, 33, NULL);
             ResetGame();
+            if (!IsTutorialSeen()) {
+                SendMessage(hwnd, WM_COMMAND, BTN_HELP, 0);
+            }
             return 0;
 
         case WM_TIMER:
@@ -959,6 +1134,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"You start with 1 Max Mana, gaining 1 per turn (up to 10).");
                 SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"Defeat the opponent by reducing their HP to 0.");
                 SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"");
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"=== CONTROLS & SHORTCUTS ===");
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"[F1] / [H]: Grimoire Help");
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"[F5]: Quicksave State to kwizard.dat");
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"[F9]: Quickload State from kwizard.dat");
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"[D]: Open Deck Builder (20 cards required)");
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"[E] / [Space]: End Turn");
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"[R]: Reset Skirmish");
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"[Esc]: Close Grimoire / Deck Builder");
+                SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"");
                 SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"=== STATUS EFFECTS ===");
                 SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"Shield: Absorbs incoming damage.");
                 SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"Burn/Poison: Take damage at the start of your turn.");
@@ -975,10 +1159,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 ShowWindow(hwndHelpClose, SW_SHOW);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (LOWORD(wParam) == BTN_HELP_CLOSE) {
+                MarkTutorialSeen();
                 gameState = 0;
                 ShowWindow(hwndHelp, SW_HIDE);
                 ShowWindow(hwndHelpClose, SW_HIDE);
                 InvalidateRect(hwnd, NULL, FALSE);
+            } else if (LOWORD(wParam) == BTN_SAVE) {
+                SaveGameState(hwnd);
+            } else if (LOWORD(wParam) == BTN_LOAD) {
+                LoadGameState(hwnd);
             } else if (LOWORD(wParam) == LST_AVAIL && HIWORD(wParam) == LBN_DBLCLK) {
                 if (gameState == 3 && playerDeckCount < 20) {
                     int sel = (int)SendMessage(hwndAvail, LB_GETCURSEL, 0, 0);
@@ -1427,8 +1616,22 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         }
 
         case WM_KEYDOWN:
-            if (wParam == VK_ESCAPE) {
+            if (wParam == VK_F5) {
+                SaveGameState(hwnd);
+                return 0;
+            } else if (wParam == VK_F9) {
+                LoadGameState(hwnd);
+                return 0;
+            } else if (wParam == VK_F1) {
+                if (gameState == 4) {
+                    SendMessage(hwnd, WM_COMMAND, BTN_HELP_CLOSE, 0);
+                } else {
+                    SendMessage(hwnd, WM_COMMAND, BTN_HELP, 0);
+                }
+                return 0;
+            } else if (wParam == VK_ESCAPE) {
                 if (gameState == 3 || gameState == 4) {
+                    if (gameState == 4) MarkTutorialSeen();
                     gameState = 0;
                     ShowWindow(hwndAvail, SW_HIDE);
                     ShowWindow(hwndDeck, SW_HIDE);
@@ -1436,6 +1639,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     ShowWindow(hwndHelp, SW_HIDE);
                     ShowWindow(hwndHelpClose, SW_HIDE);
                     InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+            } else if (gameState == 4) {
+                if (wParam == VK_RETURN || wParam == VK_SPACE) {
+                    SendMessage(hwnd, WM_COMMAND, BTN_HELP_CLOSE, 0);
                     return 0;
                 }
             } else if (wParam == 'H') {

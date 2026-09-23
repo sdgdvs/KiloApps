@@ -297,9 +297,40 @@
         }
         .help-content h2, .help-content h3 { color: #ffd700; margin-top: 10px; margin-bottom: 5px; }
         .help-content p, .help-content ul { margin-top: 5px; margin-bottom: 10px; font-size: 13px; color: #e8d8b7; }
+        #toast-container {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            z-index: 250;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .toast {
+            pointer-events: auto;
+            background: rgba(20, 8, 38, 0.95);
+            border: 1.5px solid #b89947;
+            border-radius: 6px;
+            padding: 8px 14px;
+            color: #f5ecd5;
+            font-size: 12px;
+            font-family: 'Georgia', serif;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.8), 0 0 10px rgba(184, 153, 71, 0.25);
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toast.toast-info { border-color: #3b82f6; color: #bfdbfe; }
+        .toast.toast-success { border-color: #22c55e; color: #bbf7d0; }
+        .toast.toast-warn { border-color: #eab308; color: #fef08a; }
+        .toast.toast-error { border-color: #ef4444; color: #fecaca; }
     </style>
 </head>
 <body>
+    <div id="toast-container" role="status" aria-live="polite"></div>
     <div id="game-board">
         <div id="controls">
             <select id="difficulty-select">
@@ -313,6 +344,8 @@
             <button id="campaign-btn" style="background: linear-gradient(180deg, #6d3a1f 0%, #3d1c0b 100%); border-color: #e69138;">Campaign</button>
             <button id="deck-btn" style="background: linear-gradient(180deg, #1e3a8a 0%, #0f172a 100%); border-color: #60a5fa;">Deck</button>
             <button id="help-btn" style="background: linear-gradient(180deg, #6b21a8 0%, #3b0764 100%); border-color: #c084fc;">Grimoire</button>
+            <button id="save-btn" title="Quicksave Game (F5)" style="background: linear-gradient(180deg, #1e3a8a 0%, #0f172a 100%); border-color: #3b82f6;">Save [F5]</button>
+            <button id="load-btn" title="Quickload Game (F9)" style="background: linear-gradient(180deg, #065f46 0%, #064e3b 100%); border-color: #10b981;">Load [F9]</button>
         </div>
         
         <div>
@@ -356,6 +389,17 @@
             <h3>How to Play</h3>
             <p>You and your opponent take turns casting spells. You start with 1 Max Mana, gaining 1 per turn (up to 10). Your mana refreshes at the start of your turn. Draw a card each turn.</p>
             <p>Defeat the opponent by reducing their HP to 0. Build your deck to create powerful synergies!</p>
+
+            <h3>Controls & Shortcuts</h3>
+            <ul>
+                <li><b>[F1] / [H]:</b> Open / Close Grimoire</li>
+                <li><b>[F5]:</b> Quicksave State (persists HP, Mana, hands, deck, status effects, campaign)</li>
+                <li><b>[F9]:</b> Quickload State</li>
+                <li><b>[D]:</b> Open Deck Builder (20 cards required)</li>
+                <li><b>[E] / [Space]:</b> End Turn</li>
+                <li><b>[R]:</b> Reset Skirmish</li>
+                <li><b>[Esc]:</b> Close Active Dialog / Grimoire / Deck Builder</li>
+            </ul>
             
             <h3>Status Effects</h3>
             <ul>
@@ -1044,6 +1088,29 @@
         const helpModal = document.getElementById('help-modal');
         const closeHelpBtn = document.getElementById('close-help-btn');
         const spellIndexList = document.getElementById('spell-index-list');
+        const saveBtn = document.getElementById('save-btn');
+        const loadBtn = document.getElementById('load-btn');
+
+        function showToast(msg, type = 'info', duration = 3000) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerText = msg;
+            toast.onclick = () => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-6px)';
+                setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 200);
+            };
+            container.appendChild(toast);
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(-6px)';
+                    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 200);
+                }
+            }, duration);
+        }
 
         function renderDeckBuilder() {
             availCardsDiv.innerHTML = '';
@@ -1237,6 +1304,7 @@
 
         function createCardElement(cardData, isOpponent) {
             const card = document.createElement('div');
+            card.cardData = cardData;
             card.className = 'card ' + (cardData.type || 'arcane') + (isOpponent ? ' opponent' : '');
             
             if (isOpponent) {
@@ -1335,6 +1403,7 @@
                 randomCard = sampleCards[playerDeck[Math.floor(Math.random() * playerDeck.length)]];
             }
             const cardElement = createCardElement(randomCard, isOpponent);
+            cardElement.cardData = randomCard;
             hand.appendChild(cardElement);
             if (isOpponent) opponentCards.push(randomCard);
         }
@@ -1356,7 +1425,9 @@
 
             opponentHand.innerHTML = '';
             opponentCards.forEach(c => {
-                opponentHand.appendChild(createCardElement(c, true));
+                const el = createCardElement(c, true);
+                el.cardData = c;
+                opponentHand.appendChild(el);
             });
 
             let playedCards = [];
@@ -1517,12 +1588,165 @@
             startCampaignBattle();
         };
 
+        function quickSave() {
+            try {
+                const pCards = [];
+                for (let i = 0; i < playerHand.children.length; i++) {
+                    const el = playerHand.children[i];
+                    if (el && el.cardData) {
+                        const idx = sampleCards.indexOf(el.cardData);
+                        if (idx >= 0) pCards.push(idx);
+                    }
+                }
+                const oCards = opponentCards.map(c => sampleCards.indexOf(c)).filter(idx => idx >= 0);
+
+                const saveState = {
+                    version: 1,
+                    timestamp: Date.now(),
+                    playerHp,
+                    playerMana,
+                    playerMaxMana,
+                    opponentHp,
+                    opponentMaxHp,
+                    opponentMana,
+                    opponentMaxMana,
+                    playerBurn, playerFreeze, playerShield, playerRegen, playerPoison,
+                    opponentBurn, opponentFreeze, opponentShield, opponentRegen, opponentPoison,
+                    gameState,
+                    campaignLevel,
+                    difficulty: document.getElementById('difficulty-select') ? document.getElementById('difficulty-select').value : 'medium',
+                    arenaBannerMsg,
+                    arenaBannerColor,
+                    playerCards: pCards,
+                    opponentCards: oCards,
+                    playerDeck: [...playerDeck]
+                };
+                localStorage.setItem('kwizard_save', JSON.stringify(saveState));
+                showToast("State Quicksaved [F5]", "info");
+                playSound('arcane');
+            } catch (err) {
+                showToast("Quicksave Failed (Storage Error)", "error");
+            }
+        }
+
+        function quickLoad() {
+            try {
+                const raw = localStorage.getItem('kwizard_save');
+                if (!raw) {
+                    showToast("No Save Found! Press [F5] to Save", "warn");
+                    return false;
+                }
+                const s = JSON.parse(raw);
+                if (!s || typeof s.playerHp !== 'number') {
+                    showToast("Quickload Failed (Corrupt Save)", "error");
+                    return false;
+                }
+                if (campaignTimer) { clearTimeout(campaignTimer); campaignTimer = null; }
+
+                playerHp = s.playerHp;
+                playerMana = s.playerMana;
+                playerMaxMana = s.playerMaxMana;
+                opponentHp = s.opponentHp;
+                opponentMaxHp = s.opponentMaxHp;
+                opponentMana = s.opponentMana;
+                opponentMaxMana = s.opponentMaxMana;
+
+                playerBurn = s.playerBurn || 0;
+                playerFreeze = s.playerFreeze || 0;
+                playerShield = s.playerShield || 0;
+                playerRegen = s.playerRegen || 0;
+                playerPoison = s.playerPoison || 0;
+
+                opponentBurn = s.opponentBurn || 0;
+                opponentFreeze = s.opponentFreeze || 0;
+                opponentShield = s.opponentShield || 0;
+                opponentRegen = s.opponentRegen || 0;
+                opponentPoison = s.opponentPoison || 0;
+
+                gameState = s.gameState;
+                campaignLevel = s.campaignLevel || 0;
+                if (s.difficulty && document.getElementById('difficulty-select')) {
+                    document.getElementById('difficulty-select').value = s.difficulty;
+                }
+                arenaBannerMsg = s.arenaBannerMsg || "Arcane State Restored!";
+                arenaBannerColor = s.arenaBannerColor || "#ffd700";
+
+                if (Array.isArray(s.playerDeck) && s.playerDeck.length === 20) {
+                    playerDeck = s.playerDeck;
+                    try { localStorage.setItem('kwizard_playerDeck', JSON.stringify(playerDeck)); } catch (e) {}
+                }
+
+                // Close open modals
+                if (deckModal) deckModal.style.display = 'none';
+                if (helpModal) helpModal.style.display = 'none';
+
+                // Clear and rebuild hands
+                playerHand.innerHTML = '';
+                opponentHand.innerHTML = '';
+                opponentCards = [];
+
+                if (Array.isArray(s.playerCards)) {
+                    s.playerCards.forEach(idx => {
+                        if (idx >= 0 && idx < sampleCards.length) {
+                            const cData = sampleCards[idx];
+                            const el = createCardElement(cData, false);
+                            el.cardData = cData;
+                            playerHand.appendChild(el);
+                        }
+                    });
+                }
+                if (Array.isArray(s.opponentCards)) {
+                    s.opponentCards.forEach(idx => {
+                        if (idx >= 0 && idx < sampleCards.length) {
+                            const cData = sampleCards[idx];
+                            const el = createCardElement(cData, true);
+                            el.cardData = cData;
+                            opponentHand.appendChild(el);
+                            opponentCards.push(cData);
+                        }
+                    });
+                }
+
+                updateManaDisplay();
+                showToast("State Quickloaded [F9]", "success");
+                playSound('arcane');
+                return true;
+            } catch (err) {
+                showToast("Quickload Failed (Load Error)", "error");
+                return false;
+            }
+        }
+
+        if (saveBtn) saveBtn.onclick = quickSave;
+        if (loadBtn) loadBtn.onclick = quickLoad;
+
         window.addEventListener('keydown', (e) => {
+            if (e.key === 'F5') {
+                e.preventDefault();
+                quickSave();
+                return;
+            }
+            if (e.key === 'F9') {
+                e.preventDefault();
+                quickLoad();
+                return;
+            }
+            if (e.key === 'F1') {
+                e.preventDefault();
+                if (helpModal && helpModal.style.display === 'flex') {
+                    closeHelp();
+                } else {
+                    openHelp();
+                }
+                return;
+            }
             if (e.key === 'Escape') {
                 if (deckModal && deckModal.style.display === 'flex') {
                     if (playerDeck.length === 20) {
                         try { localStorage.setItem('kwizard_playerDeck', JSON.stringify(playerDeck)); } catch (err) {}
                         deckModal.style.display = 'none';
+                    } else {
+                        showToast("Deck must have exactly 20 cards!", "warn");
                     }
                     return;
                 }
@@ -1532,7 +1756,13 @@
                 }
             }
             if (deckModal && deckModal.style.display === 'flex') return;
-            if (helpModal && helpModal.style.display === 'flex') return;
+            if (helpModal && helpModal.style.display === 'flex') {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    closeHelp();
+                    return;
+                }
+                return;
+            }
 
             if (e.key === 'h' || e.key === 'H') {
                 openHelp();
