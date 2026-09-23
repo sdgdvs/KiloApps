@@ -47,6 +47,31 @@ This skill designs and implements new applications or deep game worlds on exactl
 6. **Alternate Reality Fictionalization Mandate**:
    - All commercial video game titles, software products, corporate entities, and demoscene warez groups must be fictionalized parodies (e.g. *Surreal Tournament*, *Tremor III Arena*, *VoidCraft*, *Machina Ex*, *FLARELIGHT*, *RAZOR 1999*, *SlashNet*, *Cabled*). Never use real trademarked names. Enforced algorithmically by `scripts/security_lint.py`.
 
+7. **Seamless Online Multiplayer via Firebase (DIRECTOR MANDATE - CRITICAL)**:
+   - **Core Focus**: When creating new games and interactive applications, concentrate on adding seamless online multiplayer features that run through Firebase Realtime Database.
+   - **Cross-Computer Play**: Enable different people playing on `kiloapps.web.app` from different computers anywhere on the internet—who are not otherwise communicating and share no local network—to discover each other, match up, and play together in real-time, identical to how KChat connects global users in its `#general` chat room.
+   - **Architecture & Setup**:
+     - Load Firebase via ES modules directly from Google CDN (adds 0 bytes to git build, preserving the strict `< 999 KB` size ceiling):
+       ```javascript
+       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+       import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+       const firebaseConfig = {
+           apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+           authDomain: "kiloappschat.firebaseapp.com",
+           databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+           projectId: "kiloappschat",
+           storageBucket: "kiloappschat.firebasestorage.app",
+           messagingSenderId: "290208566057",
+           appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+       };
+       const app = initializeApp(firebaseConfig);
+       const db = getDatabase(app);
+       ```
+     - Organize state under structured RTDB paths: `multiplayer/<appName>/rooms/<roomId>` and `multiplayer/<appName>/lobby`.
+     - Support both "Quick Match / Global Room" (instant match with any online player) and "Private Room" (e.g. code `KILO-1999`).
+     - Sync game state in real-time: active player turns, player presence with `onDisconnect()`, game board arrays, and live move feeds.
+     - Always provide graceful offline fallback: if Firebase is unreachable or the user chooses offline play, provide local 2-player or single-player vs AI mode.
+
 ## Queue Handoff & Terse Logging (CRITICAL)
 1. **Edit [next_work.md](../../next_work.md)**:
    - Advance `current_targets.kilo_creator` to the next concept.

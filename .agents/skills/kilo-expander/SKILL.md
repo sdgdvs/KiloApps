@@ -23,9 +23,9 @@ This skill deepens functional utility and capabilities on exactly ONE applicatio
    - Focus: Data interoperability, multi-tab sessions, tagging, search indexing, schema flexibility, export formats (CSV, JSON, Markdown).
 3. **🎨 Media & Creative** (*KPaint, KImage, KAudio, KSynth, KMedia, KChart, KGraph, KMandel, KType*):
    - Focus: Format support, DSP/audio synthesis (Yamaha YM2612 2-op FM, SNES SPC700 delay echo, ADSR envelopes), image processing filters, canvas layers.
-4. **🎮 Games (Meta & Engine Utility Only)**:
-   - Focus: Replay viewers, custom key rebinding, save state management, PGN/FEN/board state import/export.
-   - **DO NOT** add gameplay content, bosses, or campaigns (reserved for `kilo-graphics`).
+4. **🎮 Games (Engine Utility & Multiplayer Expansion)**:
+   - Focus: Replay viewers, custom key rebinding, save state management, PGN/FEN/board state import/export, and online multiplayer integration.
+   - **DO NOT** add solo campaign levels, bosses, or cosmetic sprite sheets (reserved for `kilo-graphics`).
 5. **🌐 Virtual 1999 Web Expansion (`virtual_web_target`)**:
    - When assigned to advance the virtual web or when native app targets are mature, expand `virtual_web_target` in `KiloOS/public/web/*.html`.
    - **Anti-Potemkin Quality Standard**: Sites must NEVER be shallow placeholders or fake stubs. Build genuine Web 1.0 depth: working simulated backends (guestbooks, search indices, calculators, voting polls), Genesis/SNES Web Audio synthesizers/MIDI jukeboxes, demoscene cracktros, retro browser mini-games, downloadable text/tracker assets, and interconnected hypermedia links.
@@ -34,6 +34,31 @@ This skill deepens functional utility and capabilities on exactly ONE applicatio
    - If an app has undergone 6+ passes and is functionally complete without active requests: log `⏭️ Skip — app is feature-complete and mature.` Rotate to queue bottom and finish cleanly.
 7. **Alternate Reality Fictionalization Mandate**:
    - All commercial video game titles, software products, corporate entities, and demoscene warez groups must be fictionalized parodies (e.g. *Surreal Tournament*, *Tremor III Arena*, *VoidCraft*, *Machina Ex*, *FLARELIGHT*, *RAZOR 1999*, *SlashNet*, *Cabled*). Never use real trademarked names. Enforced algorithmically by `scripts/security_lint.py`.
+8. **🌐 Seamless Online Multiplayer Expansion via Firebase (DIRECTOR MANDATE - CRITICAL)**:
+   - **Core Purpose**: Concentrate on retrofitting and expanding existing games and collaborative applications with seamless online multiplayer powered by Firebase Realtime Database.
+   - **Cross-Computer Play**: Enable players visiting `kiloapps.web.app` from different computers anywhere in the world—who are not otherwise communicating and share no local network—to connect, challenge each other, and play in real-time, identical to how KChat connects global users in its `#general` room.
+   - **Priority Expansion Targets**:
+     - *Turn-Based Board & Strategy Games*: *KChess, KConnect4, KGo, KReversi, KDarts, KCheckers, KBattleship, KCards*. Implement shared room state (`multiplayer/<app>/rooms/<roomId>`), real-time move synchronization via RTDB `push`/`onValue`, turn alternation, spectator view, and global public matchmaking (`multiplayer/<app>/lobby`).
+     - *Collaborative Tools*: *KDraw, KPaint, KSynth (collaborative jam), KPad (shared live text)*. Sync canvas draw strokes or text buffers in real-time between connected peers.
+     - *Competitive Arcade Duels*: Real-time high-score races, side-by-side split screens, attack line sending (e.g. *KTetris*, *K2048*, *KSnake* dual arenas).
+   - **Technical Standard**:
+     - Load Firebase via ES modules directly from Google CDN (adds 0 bytes to git build, strictly preserving <999 KB):
+       ```javascript
+       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+       import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+       const firebaseConfig = {
+           apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+           authDomain: "kiloappschat.firebaseapp.com",
+           databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+           projectId: "kiloappschat",
+           storageBucket: "kiloappschat.firebasestorage.app",
+           messagingSenderId: "290208566057",
+           appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+       };
+       const app = initializeApp(firebaseConfig);
+       const db = getDatabase(app);
+       ```
+     - Handle room joining, player presence (`onDisconnect()`), clean unmounting (`off()`), and always preserve local / solo / AI play as a default fallback.
 
 ## Verification
 1. Verify web app build: `cd KiloOS && npm run build`.
