@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KHangman
   kilo_usability: "KContacts (reposition bottom-right toast blocking submit button)"
   kilo_graphics: KColosseum
-  kilo_qa: KZip
+  kilo_qa: KChrono
   kilo_expander: "KGo (Firebase RTDB Online Multiplayer)"
   kilo_creator: "kweb://users/~neon_rider (Virtual Web 1999 & ASM Devlog)"
 virtual_web_target: "kweb://users/~neon_rider"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-graphics
-  app: "KAbyss (Weave Arc 2 Precursor Relic Glyph & Glint Removal)"
-  timestamp: "2026-09-23T19:55:00Z"
+  agent: kilo-qa
+  app: "KZip (Pass 5: Tutorial & State Integrity)"
+  timestamp: "2026-09-23T20:45:00Z"
 last_planner_run: "2026-09-23T04:40:00Z"
 ---
 
@@ -116,9 +116,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KFarm` (reposition bottom toast blocking seed radio buttons), `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KZip`
+- **Current Target**: `KChrono`
 - **Upcoming Queue**:
-  `KChrono`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard)*.
+  `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KGo` (Implement Seamless Firebase RTDB Multiplayer per Mandate 12)
@@ -190,6 +190,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T20:45:00Z — kilo-qa: KZip (Pass 5: Tutorial & State Integrity)**
+  - Status: PASS ✅ (Full state persistence & tutorial isolation verified; 0 regressions).
+  - Quicksave & Load: Implemented complete state capture across [F5] Save and [F9] Load hotkeys & buttons in web (`kzip_quicksave`) and native C (`kzip.dat`).
+  - First-Run Tutorial: Added session-isolated onboarding (`kzip_tutorialSeen` / `kzip_tutorial.dat`) with Esc/Enter/Space dismissals without interrupting saves.
+  - Modal & Overlay Hardening: Trapped background shortcuts during active modals, routed Esc/Enter dismissal, and enabled click-to-dismiss on toasts.
+  - Resource Safety: Added storage quota error handlers and verified automatic ObjectURL cleanup on archive download.
+  - Verification: Clean MSVC C native build (`KZip.exe` 25.6 KB); clean Vite build (353ms, `kzip.html` 61.6 KB); security lint 100% clean; <999KB ceiling.
+
 - **2026-09-23T19:55:00Z — kilo-graphics: KAbyss (Weave Arc 2 Precursor Relic Glyph & Glint Removal)**
   - Status: PASS ✅ (Weaved Arc 2 Precursor Relic Glyph, purged glints/dots across web & C, balanced loot).
   - Precursor Relic: Inscribed `REL_PRECURSOR_GLYPH` / `ITEM_REL_PRECURSOR_GLYPH` with 1999 ARG clues (`10.19.99.4`, `kweb://echo-subsystem.net`).
@@ -223,12 +231,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Standards: Title splash screen, first-run tutorial (`ksteno_tutorialSeen`), F5 quicksave/F9 quickload, 1999 ARG lore (FLARELIGHT, Node 0x7F).
   - Universal Audio: Procedural Genesis YM2612 FM synthesis operator pairs & SPC700 stereo delay warmth.
   - Verification: MSVC C clean build (9.5 KB); Vite clean build (356ms); security lint 100% PASS; strict <999KB ceiling.
-
-- **2026-09-23T15:55:00Z — kilo-expander: KChess (Firebase RTDB Seamless Online Multiplayer)**
-  - Status: PASS ✅ (Cross-computer multiplayer verified; 0 regressions).
-  - Online Multiplayer: Added Firebase RTDB real-time move sync (`multiplayer/kchess/rooms/<roomId>`), turn alternation, SAN/FEN sync, and presence with `onDisconnect()`.
-  - Matchmaking & Lobby: Built public lobby index (`multiplayer/kchess/lobby`), instant 1-click Quick Match, custom room creation (public/private), and code join.
-  - Social & Controls: Added interactive match HUD bar with quick chat phrases, rematch handshakes, invite link copy, and spectator mode.
-  - UI Ergonomics: Added `[O]` hotkey & toolbar button, online turn indicator, and disabled disruptive offline controls during active matches.
-  - Verification: Single-file web (`kchess.html` 154.0 KB); Vite build clean (375ms); security lint 100% clean; strict <999 KB ceiling.
 

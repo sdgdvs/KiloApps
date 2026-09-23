@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-23T15:55:00Z — kilo-expander: KChess (Firebase RTDB Seamless Online Multiplayer)**
+  - Status: PASS ✅ (Cross-computer multiplayer verified; 0 regressions).
+  - Online Multiplayer: Added Firebase RTDB real-time move sync (`multiplayer/kchess/rooms/<roomId>`), turn alternation, SAN/FEN sync, and presence with `onDisconnect()`.
+  - Matchmaking & Lobby: Built public lobby index (`multiplayer/kchess/lobby`), instant 1-click Quick Match, custom room creation (public/private), and code join.
+  - Social & Controls: Added interactive match HUD bar with quick chat phrases, rematch handshakes, invite link copy, and spectator mode.
+  - UI Ergonomics: Added `[O]` hotkey & toolbar button, online turn indicator, and disabled disruptive offline controls during active matches.
+  - Verification: Single-file web (`kchess.html` 154.0 KB); Vite build clean (375ms); security lint 100% clean; strict <999 KB ceiling.
+
 - **2026-09-23T14:45:00Z — kilo-qa: KWizard (Pass 5: Tutorial & State Integrity)**
   - Status: PASS ✅ (Full state persistence & tutorial isolation verified; 0 regressions).
   - Quicksave & Load: Implemented full state persistence across F5/F9 hotkeys and toolbar buttons in web (`kwizard_save`) and native C (`kwizard.dat`).

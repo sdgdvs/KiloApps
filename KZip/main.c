@@ -12,8 +12,11 @@
 #define MAX_FILES 100
 #define MAX_FILE_SIZE (100 * 1024 * 1024) // 100MB limit per file
 
+#define QUICKSAVE_FILE "kzip.dat"
+#define TUTORIAL_FLAG_FILE "kzip_tutorial.dat"
+
 HWND hListBox, hEditSearch, hChkRegex, hEditPassword, hComboCompress;
-HWND hBtnOpen, hBtnAdd, hBtnRemove, hBtnPack, hBtnExtractSel, hBtnExtractAll, hBtnBatchExtract, hBtnVerify, hBtnPreview, hBtnDemo, hBtnHelp;
+HWND hBtnOpen, hBtnAdd, hBtnRemove, hBtnPack, hBtnExtractSel, hBtnExtractAll, hBtnBatchExtract, hBtnVerify, hBtnPreview, hBtnSave, hBtnLoad, hBtnDemo, hBtnHelp;
 HWND hStatus, hHeader, hMainWnd;
 HFONT hFont, hMonoFont;
 WNDPROC g_pfnOrigSearchProc = NULL;
@@ -217,6 +220,8 @@ void ShowHelp(HWND hwnd) {
         "  * Batch Ext [B]: Unpack multiple .kza archives in batch\n"
         "  * Verify [V]: Check CRC32 checksums against file corruption\n"
         "  * Preview [P]: Inspect file header, compression stats & hex dump\n"
+        "  * Save [F5]: Quicksave full archive state to kzip.dat\n"
+        "  * Load [F9]: Quickload archive state from kzip.dat\n"
         "  * Demo [D]: Load sample bundle (3 files) for instant testing\n\n"
         "SEARCH & COMPRESSION:\n"
         "  * Filter: Instant live search (wildcard * and . supported with Regex)\n"
@@ -224,6 +229,8 @@ void ShowHelp(HWND hwnd) {
         "  * Password: Enter password before packing to apply XOR cipher\n\n"
         "GLOBAL KEYBOARD ACCELERATORS:\n"
         "  * F1 or 'H': Show this Help & Shortcuts guide\n"
+        "  * F5: Quicksave archive state to kzip.dat\n"
+        "  * F9: Quickload archive state from kzip.dat\n"
         "  * Ctrl+O: Open archive\n"
         "  * Ctrl+S: Pack archive\n"
         "  * Ctrl+E: Extract all files\n"
@@ -554,6 +561,167 @@ BOOL OpenArchive(const char* filepath) {
     return TRUE;
 }
 
+BOOL QuickSaveState(HWND hwnd) {
+    HANDLE hFile = CreateFileA(QUICKSAVE_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        MessageBoxA(hwnd, "Failed to create quicksave file (kzip.dat).", "KZip Error", MB_OK | MB_ICONERROR);
+        return FALSE;
+    }
+
+    DWORD magic = 0x53515A4B; // 'KZQS'
+    DWORD written = 0;
+    WriteFile(hFile, &magic, sizeof(DWORD), &written, NULL);
+
+    DWORD compSel = (DWORD)SendMessage(hComboCompress, CB_GETCURSEL, 0, 0);
+    DWORD regexVal = (DWORD)SendMessage(hChkRegex, BM_GETCHECK, 0, 0);
+    WriteFile(hFile, &compSel, sizeof(DWORD), &written, NULL);
+    WriteFile(hFile, &regexVal, sizeof(DWORD), &written, NULL);
+
+    char searchBuf[128] = {0};
+    GetWindowTextA(hEditSearch, searchBuf, sizeof(searchBuf));
+    DWORD searchLen = (DWORD)lstrlenA(searchBuf) + 1;
+    WriteFile(hFile, &searchLen, sizeof(DWORD), &written, NULL);
+    WriteFile(hFile, searchBuf, searchLen, &written, NULL);
+
+    char passBuf[128] = {0};
+    GetWindowTextA(hEditPassword, passBuf, sizeof(passBuf));
+    DWORD passLen = (DWORD)lstrlenA(passBuf) + 1;
+    WriteFile(hFile, &passLen, sizeof(DWORD), &written, NULL);
+    WriteFile(hFile, passBuf, passLen, &written, NULL);
+
+    WriteFile(hFile, &numFiles, sizeof(int), &written, NULL);
+    for (int i = 0; i < numFiles; i++) {
+        DWORD nameLen = (DWORD)lstrlenA(archive[i].name) + 1;
+        WriteFile(hFile, &nameLen, sizeof(DWORD), &written, NULL);
+        WriteFile(hFile, archive[i].name, nameLen, &written, NULL);
+        WriteFile(hFile, &archive[i].uncompSize, sizeof(DWORD), &written, NULL);
+        WriteFile(hFile, &archive[i].compSize, sizeof(DWORD), &written, NULL);
+        WriteFile(hFile, &archive[i].crc32, sizeof(DWORD), &written, NULL);
+        WriteFile(hFile, &archive[i].method, sizeof(DWORD), &written, NULL);
+        if (archive[i].uncompSize > 0 && archive[i].data) {
+            WriteFile(hFile, archive[i].data, archive[i].uncompSize, &written, NULL);
+        }
+    }
+
+    CloseHandle(hFile);
+    char msg[128];
+    wsprintfA(msg, "Archive state quicksaved (%d files) to kzip.dat [F5]", numFiles);
+    SetWindowTextA(hStatus, msg);
+    return TRUE;
+}
+
+BOOL QuickLoadState(HWND hwnd) {
+    HANDLE hFile = CreateFileA(QUICKSAVE_FILE, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        MessageBoxA(hwnd, "No quicksave snapshot found (kzip.dat).\nPress F5 to save snapshot.", "KZip", MB_OK | MB_ICONINFORMATION);
+        return FALSE;
+    }
+
+    DWORD magic = 0;
+    DWORD read = 0;
+    ReadFile(hFile, &magic, sizeof(DWORD), &read, NULL);
+    if (magic != 0x53515A4B || read != sizeof(DWORD)) {
+        CloseHandle(hFile);
+        MessageBoxA(hwnd, "Invalid or corrupted quicksave file (kzip.dat).", "KZip Error", MB_OK | MB_ICONERROR);
+        return FALSE;
+    }
+
+    DWORD compSel = 0, regexVal = 0;
+    ReadFile(hFile, &compSel, sizeof(DWORD), &read, NULL);
+    ReadFile(hFile, &regexVal, sizeof(DWORD), &read, NULL);
+    SendMessage(hComboCompress, CB_SETCURSEL, (WPARAM)compSel, 0);
+    SendMessage(hChkRegex, BM_SETCHECK, (WPARAM)regexVal, 0);
+
+    char searchBuf[128] = {0};
+    DWORD searchLen = 0;
+    ReadFile(hFile, &searchLen, sizeof(DWORD), &read, NULL);
+    if (searchLen > 0 && searchLen <= sizeof(searchBuf)) {
+        ReadFile(hFile, searchBuf, searchLen, &read, NULL);
+        SetWindowTextA(hEditSearch, searchBuf);
+    } else {
+        SetWindowTextA(hEditSearch, "");
+    }
+
+    char passBuf[128] = {0};
+    DWORD passLen = 0;
+    ReadFile(hFile, &passLen, sizeof(DWORD), &read, NULL);
+    if (passLen > 0 && passLen <= sizeof(passBuf)) {
+        ReadFile(hFile, passBuf, passLen, &read, NULL);
+        SetWindowTextA(hEditPassword, passBuf);
+    } else {
+        SetWindowTextA(hEditPassword, "");
+    }
+
+    ClearArchive();
+
+    int loadedFiles = 0;
+    ReadFile(hFile, &loadedFiles, sizeof(int), &read, NULL);
+    if (loadedFiles > MAX_FILES) loadedFiles = MAX_FILES;
+
+    for (int i = 0; i < loadedFiles; i++) {
+        DWORD nameLen = 0;
+        ReadFile(hFile, &nameLen, sizeof(DWORD), &read, NULL);
+        if (nameLen == 0 || nameLen > sizeof(archive[i].name)) break;
+        ReadFile(hFile, archive[i].name, nameLen, &read, NULL);
+        archive[i].name[sizeof(archive[i].name) - 1] = '\0';
+
+        ReadFile(hFile, &archive[i].uncompSize, sizeof(DWORD), &read, NULL);
+        ReadFile(hFile, &archive[i].compSize, sizeof(DWORD), &read, NULL);
+        ReadFile(hFile, &archive[i].crc32, sizeof(DWORD), &read, NULL);
+        ReadFile(hFile, &archive[i].method, sizeof(DWORD), &read, NULL);
+
+        if (archive[i].uncompSize > MAX_FILE_SIZE) break;
+
+        if (archive[i].uncompSize > 0) {
+            archive[i].data = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, archive[i].uncompSize);
+            if (!archive[i].data) break;
+            ReadFile(hFile, archive[i].data, archive[i].uncompSize, &read, NULL);
+        } else {
+            archive[i].data = NULL;
+        }
+
+        numFiles++;
+    }
+
+    CloseHandle(hFile);
+    RefreshList();
+    char msg[128];
+    wsprintfA(msg, "Quicksave restored (%d files) from kzip.dat [F9]", numFiles);
+    SetWindowTextA(hStatus, msg);
+    return TRUE;
+}
+
+void CheckFirstRunTutorial(HWND hwnd) {
+    HANDLE hFlag = CreateFileA(TUTORIAL_FLAG_FILE, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (hFlag != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFlag);
+        return;
+    }
+
+    HANDLE hSave = CreateFileA(QUICKSAVE_FILE, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (hSave != INVALID_HANDLE_VALUE) {
+        CloseHandle(hSave);
+        HANDLE hNewFlag = CreateFileA(TUTORIAL_FLAG_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hNewFlag != INVALID_HANDLE_VALUE) {
+            BYTE b = 1;
+            DWORD w = 0;
+            WriteFile(hNewFlag, &b, 1, &w, NULL);
+            CloseHandle(hNewFlag);
+        }
+        return;
+    }
+
+    HANDLE hNewFlag = CreateFileA(TUTORIAL_FLAG_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hNewFlag != INVALID_HANDLE_VALUE) {
+        BYTE b = 1;
+        DWORD w = 0;
+        WriteFile(hNewFlag, &b, 1, &w, NULL);
+        CloseHandle(hNewFlag);
+    }
+
+    ShowHelp(hwnd);
+}
+
 void ExtractSingleFile(int realIndex) {
     if (realIndex < 0 || realIndex >= numFiles) return;
 
@@ -865,6 +1033,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnBatchExtract = CreateWindowEx(0, "BUTTON", "Batch [B]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 530, H - 72, 66, 26, hwnd, (HMENU)8, NULL, NULL);
             hBtnVerify = CreateWindowEx(0, "BUTTON", "Verify [V]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 601, H - 72, 64, 26, hwnd, (HMENU)7, NULL, NULL);
             hBtnPreview = CreateWindowEx(0, "BUTTON", "Preview [P]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 670, H - 72, 68, 26, hwnd, (HMENU)9, NULL, NULL);
+            hBtnSave = CreateWindowEx(0, "BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0, 0, 0, hwnd, (HMENU)12, NULL, NULL);
+            hBtnLoad = CreateWindowEx(0, "BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0, 0, 0, hwnd, (HMENU)13, NULL, NULL);
             hBtnDemo = CreateWindowEx(0, "BUTTON", "Demo [D]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 743, H - 72, 64, 26, hwnd, (HMENU)11, NULL, NULL);
             hBtnHelp = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 812, H - 72, 66, 26, hwnd, (HMENU)10, NULL, NULL);
 
@@ -1016,6 +1186,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else {
                     MessageBoxA(NULL, "Please select a file to preview.", "KZip", MB_OK | MB_ICONWARNING);
                 }
+            } else if (id == 12) { // Save [F5]
+                QuickSaveState(hwnd);
+            } else if (id == 13) { // Load [F9]
+                QuickLoadState(hwnd);
             } else if (id == 10) { // Help
                 ShowHelp(hwnd);
             } else if (id == 11) { // Demo
@@ -1032,7 +1206,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_GETMINMAXINFO: {
             LPMINMAXINFO mmi = (LPMINMAXINFO)lParam;
-            mmi->ptMinTrackSize.x = 840;
+            mmi->ptMinTrackSize.x = 880;
             mmi->ptMinTrackSize.y = 420;
             break;
         }
@@ -1045,18 +1219,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int btnY = nh - 72;
             int x = 10;
             int btnH = 26;
-            int gap = 5;
-            MoveWindow(hBtnOpen, x, btnY, 80, btnH, TRUE); x += 80 + gap;
-            MoveWindow(hBtnAdd, x, btnY, 78, btnH, TRUE); x += 78 + gap;
-            MoveWindow(hBtnRemove, x, btnY, 80, btnH, TRUE); x += 80 + gap;
-            MoveWindow(hBtnPack, x, btnY, 80, btnH, TRUE); x += 80 + gap;
-            MoveWindow(hBtnExtractSel, x, btnY, 86, btnH, TRUE); x += 86 + gap;
-            MoveWindow(hBtnExtractAll, x, btnY, 86, btnH, TRUE); x += 86 + gap;
-            MoveWindow(hBtnBatchExtract, x, btnY, 66, btnH, TRUE); x += 66 + gap;
-            MoveWindow(hBtnVerify, x, btnY, 64, btnH, TRUE); x += 64 + gap;
-            MoveWindow(hBtnPreview, x, btnY, 68, btnH, TRUE); x += 68 + gap;
-            MoveWindow(hBtnDemo, x, btnY, 64, btnH, TRUE); x += 64 + gap;
-            MoveWindow(hBtnHelp, x, btnY, 66, btnH, TRUE);
+            int gap = 4;
+            MoveWindow(hBtnOpen, x, btnY, 74, btnH, TRUE); x += 74 + gap;
+            MoveWindow(hBtnAdd, x, btnY, 72, btnH, TRUE); x += 72 + gap;
+            MoveWindow(hBtnRemove, x, btnY, 74, btnH, TRUE); x += 74 + gap;
+            MoveWindow(hBtnPack, x, btnY, 74, btnH, TRUE); x += 74 + gap;
+            MoveWindow(hBtnExtractSel, x, btnY, 78, btnH, TRUE); x += 78 + gap;
+            MoveWindow(hBtnExtractAll, x, btnY, 78, btnH, TRUE); x += 78 + gap;
+            MoveWindow(hBtnBatchExtract, x, btnY, 60, btnH, TRUE); x += 60 + gap;
+            MoveWindow(hBtnVerify, x, btnY, 58, btnH, TRUE); x += 58 + gap;
+            MoveWindow(hBtnPreview, x, btnY, 62, btnH, TRUE); x += 62 + gap;
+            MoveWindow(hBtnSave, x, btnY, 58, btnH, TRUE); x += 58 + gap;
+            MoveWindow(hBtnLoad, x, btnY, 58, btnH, TRUE); x += 58 + gap;
+            MoveWindow(hBtnDemo, x, btnY, 56, btnH, TRUE); x += 56 + gap;
+            MoveWindow(hBtnHelp, x, btnY, 56, btnH, TRUE);
 
             MoveWindow(hStatus, 10, nh - 38, nw - 20, 24, TRUE);
             break;
@@ -1098,12 +1274,23 @@ void MainEntry() {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
+    CheckFirstRunTutorial(hwnd);
+
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
         if (msg.message == WM_KEYDOWN) {
             BOOL isCtrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
             HWND hFocus = GetFocus();
             BOOL inEdit = (hFocus == hEditSearch || hFocus == hEditPassword);
+
+            if (msg.wParam == VK_F5) {
+                QuickSaveState(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F9) {
+                QuickLoadState(hwnd);
+                continue;
+            }
 
             if (isCtrl) {
                 if (msg.wParam == 'O' || msg.wParam == 'o') {

@@ -312,6 +312,7 @@
     }
     .toast.visible {
       opacity: 1;
+      pointer-events: auto;
       transform: translateX(-50%) translateY(0);
     }
     .shortcut-tag {
@@ -403,6 +404,8 @@
   <button id="btnBatchExtract" aria-label="Batch Extract" title="Batch extract (B)">📑 Batch <span class="shortcut-tag">[B]</span></button>
   <button id="btnVerify" aria-label="Verify CRC32 integrity" title="Verify CRC32 (V)">🛡️ Verify <span class="shortcut-tag">[V]</span></button>
   <button id="btnPreview" aria-label="Deep Preview" title="Preview selected (P)">🔍 Preview <span class="shortcut-tag">[P]</span></button>
+  <button id="btnQuickSave" aria-label="Quicksave snapshot" title="Quicksave state (F5)">💾 Save <span class="shortcut-tag">[F5]</span></button>
+  <button id="btnQuickLoad" aria-label="Quickload snapshot" title="Quickload state (F9)">⚡ Load <span class="shortcut-tag">[F9]</span></button>
   <button id="btnHelpApp" aria-label="Help (F1)" title="Help (F1 or H)">❓ Help <span class="shortcut-tag">[F1]</span></button>
 </div>
 <input type="file" id="batchInput" multiple accept=".kza" style="display:none">
@@ -484,11 +487,15 @@
         <li><strong>Batch Extract [B]:</strong> Unpack multiple .kza archives in batch.</li>
         <li><strong>Verify CRC32 [V]:</strong> Test data checksums against corruption.</li>
         <li><strong>Preview [P]:</strong> Inspect file header, RLE savings & hex dump.</li>
+        <li><strong>Save State [F5]:</strong> Quicksave full archive snapshot to storage.</li>
+        <li><strong>Load State [F9]:</strong> Restore quicksaved archive workspace snapshot.</li>
         <li><strong>Demo [D]:</strong> Load 3 sample files for instant testing.</li>
       </ul>
       <p style="margin-bottom: 8px;"><strong>Keyboard Shortcuts:</strong></p>
       <ul style="margin-left: 20px;">
         <li><strong>F1</strong> or <strong>H</strong>: Toggle this Help dialog</li>
+        <li><strong>F5</strong>: Quicksave archive state to storage</li>
+        <li><strong>F9</strong>: Quickload archive state from storage</li>
         <li><strong>Ctrl+O</strong>: Open archive</li>
         <li><strong>Ctrl+S</strong>: Pack archive to .kza</li>
         <li><strong>Ctrl+E</strong>: Extract all files</li>
@@ -554,6 +561,8 @@
   const batchInput = document.getElementById('batchInput');
   const btnVerify = document.getElementById('btnVerify');
   const btnPreview = document.getElementById('btnPreview');
+  const btnQuickSave = document.getElementById('btnQuickSave');
+  const btnQuickLoad = document.getElementById('btnQuickLoad');
   const btnClearSearch = document.getElementById('btnClearSearch');
   const btnDemoFiles = document.getElementById('btnDemoFiles');
 
@@ -1473,6 +1482,83 @@
   btnOkHelp.onclick = () => helpModal.classList.remove('active');
   if (btnHelpApp) btnHelpApp.onclick = toggleHelp;
 
+  // Full State Persistence: Quicksave & Quickload
+  function quickSaveState() {
+    try {
+      const payload = {
+        timestamp: Date.now(),
+        method: compMethod ? compMethod.value : '1',
+        regex: regexCheck ? regexCheck.checked : false,
+        search: searchInput ? searchInput.value : '',
+        password: passwordInput ? passwordInput.value : '',
+        files: files.map(f => ({
+          name: f.name,
+          uncompSize: f.uncompSize,
+          compSize: f.compSize,
+          crc32: f.crc32,
+          method: f.method,
+          rawBytesB64: uint8ToBase64(f.rawBytes),
+          packedBytesB64: uint8ToBase64(f.packedBytes)
+        }))
+      };
+      const jsonStr = JSON.stringify(payload);
+      safeSetStorage('kzip_quicksave', jsonStr);
+      showToast(`Quicksave saved (${files.length} file(s)) [F5]`);
+    } catch (err) {
+      console.error("Quicksave failed:", err);
+      showToast("Quicksave failed: storage quota exceeded or unavailable.", true);
+    }
+  }
+
+  function quickLoadState() {
+    try {
+      const raw = safeGetStorage('kzip_quicksave');
+      if (!raw) {
+        return showToast("No quicksave found. Press F5 to save snapshot.", true);
+      }
+      const state = JSON.parse(raw);
+      if (!state || !Array.isArray(state.files)) {
+        return showToast("Corrupted quicksave data.", true);
+      }
+      if (compMethod && state.method !== undefined) {
+        compMethod.value = state.method;
+        safeSetStorage('kzip_method', compMethod.value);
+      }
+      if (regexCheck && state.regex !== undefined) {
+        regexCheck.checked = !!state.regex;
+        safeSetStorage('kzip_regex', regexCheck.checked ? '1' : '0');
+      }
+      if (passwordInput && state.password !== undefined) {
+        passwordInput.value = state.password;
+      }
+      if (searchInput && state.search !== undefined) {
+        searchInput.value = state.search;
+      }
+      files = state.files.map(f => {
+        const raw = base64ToUint8(f.rawBytesB64);
+        const packed = f.packedBytesB64 ? base64ToUint8(f.packedBytesB64) : raw;
+        return {
+          name: sanitizeFilename(f.name),
+          uncompSize: f.uncompSize !== undefined ? f.uncompSize : raw.length,
+          compSize: f.compSize !== undefined ? f.compSize : packed.length,
+          crc32: f.crc32 || calculateCRC32(raw),
+          method: f.method !== undefined ? f.method : 0,
+          rawBytes: raw,
+          packedBytes: packed
+        };
+      });
+      selectedFiles.clear();
+      renderTable();
+      showToast(`Quicksave loaded (${files.length} file(s)) [F9]`);
+    } catch (err) {
+      console.error("Quickload failed:", err);
+      showToast("Failed to load quicksave: " + err.message, true);
+    }
+  }
+
+  if (btnQuickSave) btnQuickSave.onclick = quickSaveState;
+  if (btnQuickLoad) btnQuickLoad.onclick = quickLoadState;
+
   // Modal Backdrop Click Dismissals
   [verifyModal, document.getElementById('previewModal'), helpModal].forEach(m => {
     if (m) {
@@ -1486,6 +1572,27 @@
   window.addEventListener('keydown', (e) => {
     const inInput = (document.activeElement === searchInput || document.activeElement === passwordInput);
     const isCtrl = e.ctrlKey || e.metaKey;
+
+    // Check active modal first to prevent background hotkey triggering
+    const activeModal = [verifyModal, document.getElementById('previewModal'), helpModal].find(m => m && m.classList.contains('active'));
+    if (activeModal) {
+      if (e.key === 'Escape' || e.key === 'Enter') {
+        e.preventDefault();
+        activeModal.classList.remove('active');
+      }
+      return;
+    }
+
+    if (e.key === 'F5') {
+      e.preventDefault();
+      quickSaveState();
+      return;
+    }
+    if (e.key === 'F9') {
+      e.preventDefault();
+      quickLoadState();
+      return;
+    }
 
     if (isCtrl) {
       if (e.key === 'o' || e.key === 'O') {
@@ -1511,10 +1618,7 @@
     }
 
     if (e.key === 'Escape') {
-      if (verifyModal.classList.contains('active')) closeModal();
-      else if (helpModal.classList.contains('active')) helpModal.classList.remove('active');
-      else if (document.getElementById('previewModal').classList.contains('active')) document.getElementById('previewModal').classList.remove('active');
-      else if (searchInput.value) {
+      if (searchInput.value) {
         searchInput.value = '';
         renderTable();
       }
@@ -1614,7 +1718,17 @@
   window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 900, height: 650 }, '*');
 
   renderTable();
-  showToast("Welcome to KZip Archiver Studio! Press 'H' or F1 for Help.");
+
+  // First-run tutorial onboarding check
+  const tutorialSeen = safeGetStorage('kzip_tutorialSeen');
+  const hasQuicksave = safeGetStorage('kzip_quicksave');
+  if (!tutorialSeen && !hasQuicksave) {
+    setTimeout(() => {
+      toggleHelp();
+    }, 150);
+  } else {
+    showToast("Welcome to KZip Archiver Studio! Press 'H' or F1 for Help.");
+  }
 </script>
 </body>
 </html>
