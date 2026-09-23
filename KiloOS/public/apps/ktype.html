@@ -360,6 +360,57 @@
   .btn-secondary:hover { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.3); box-shadow: none; }
   .btn-danger { background: var(--accent-red); color: #fff; }
   .btn-danger:hover { opacity: 0.9; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
+  .btn-sm {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 8px;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #111420;
+    color: #f8fafc;
+    border: 1px solid var(--accent-cyan);
+    box-shadow: 0 4px 20px rgba(0, 242, 254, 0.3);
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 9999;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .toast.warning {
+    border-color: var(--accent-amber);
+    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+  }
+  .toast.error {
+    border-color: var(--accent-red);
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+  }
 
   /* Arcade Canvas Container */
   .arcade-container {
@@ -547,8 +598,9 @@
   </nav>
 
   <div class="header-actions">
-    <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Press H for Help</span>
-    <button class="icon-btn" id="help-btn" title="Help (Press H)" aria-label="Help" onclick="toggleHelp()">❔</button>
+    <button class="btn btn-sm" id="btn-quicksave" title="Quicksave Workspace Snapshot [F5]" onclick="quicksaveState()">💾 Save [F5]</button>
+    <button class="btn btn-sm btn-secondary" id="btn-quickload" title="Restore Quicksaved Workspace [F9]" onclick="quickloadState()">📂 Load [F9]</button>
+    <button class="icon-btn" id="help-btn" title="Help &amp; Hotkeys [F1 / H]" aria-label="Help" onclick="toggleHelp()">❔</button>
     <button class="icon-btn" id="sound-btn" title="Toggle Sound" aria-label="Toggle Sound Effects" onclick="toggleSound()">🔊</button>
   </div>
 </header>
@@ -736,18 +788,65 @@
   </div>
 </main>
 
+<!-- Tutorial / Welcome Modal -->
+<div id="tutorial-modal" class="modal-backdrop" style="display: none;" onclick="handleModalBackdropClick(event, 'tutorial-modal')">
+  <div class="card" style="max-width: 560px; width: 92%;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="brand-logo" style="width: 32px; height: 32px; font-size: 16px;">K</div>
+        <h2 style="font-size: 19px; font-weight: 700; margin: 0;">Welcome to KType Studio</h2>
+      </div>
+      <span class="badge">Pass 5 Validated</span>
+    </div>
+    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.5;">
+      Precision typing tutor &amp; arcade speed challenge engineered for peak keystroke ergonomics and keyboard mastery.
+    </p>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px;">
+        <div style="font-weight: 700; color: var(--accent-cyan); margin-bottom: 4px; font-size: 13px;">⚡ Speed Drills</div>
+        <div style="font-size: 12px; color: var(--text-muted);">Timed tests &amp; word drills across English, Code snippets, and symbols.</div>
+      </div>
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px;">
+        <div style="font-weight: 700; color: var(--accent-purple); margin-bottom: 4px; font-size: 13px;">🎮 Arcade Cascade</div>
+        <div style="font-size: 12px; color: var(--text-muted);">Classic falling words arcade mode. Defend your lives with speed &amp; combos.</div>
+      </div>
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px;">
+        <div style="font-weight: 700; color: var(--accent-green); margin-bottom: 4px; font-size: 13px;">📊 Heatmap &amp; Finger Sync</div>
+        <div style="font-size: 12px; color: var(--text-muted);">Live biomechanical finger zones, per-key error rates, and leaderboards.</div>
+      </div>
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px;">
+        <div style="font-weight: 700; color: var(--accent-amber); margin-bottom: 4px; font-size: 13px;">💾 State Persistence</div>
+        <div style="font-size: 12px; color: var(--text-muted);">Press <strong>F5</strong> to quicksave and <strong>F9</strong> to restore full workspace.</div>
+      </div>
+    </div>
+    <div style="background: rgba(0, 242, 254, 0.06); border: 1px solid rgba(0, 242, 254, 0.2); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 12px; line-height: 1.6; color: var(--text-secondary);">
+      <strong>Hotkeys:</strong> [F1/H] Help &middot; [F5] Quicksave &middot; [F9] Quickload &middot; [Esc] Restart Test/Game &middot; [Space] Submit Word
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <button class="btn btn-secondary" onclick="dismissTutorial()" aria-label="Skip tutorial">Skip Tutorial (Esc)</button>
+      <button class="btn" onclick="dismissTutorial()" aria-label="Start typing">🚀 Start Typing (Enter)</button>
+    </div>
+  </div>
+</div>
+
 <!-- Help Modal -->
-<div id="help-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
-  <div class="card" style="max-width: 500px; width: 90%;">
-    <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 16px;">Help & Controls</h2>
-    <ul style="margin-left: 20px; margin-bottom: 20px; line-height: 1.8; color: var(--text-secondary);">
-      <li><strong>Esc</strong>: Restart current test or game</li>
+<div id="help-modal" class="modal-backdrop" style="display: none;" onclick="handleModalBackdropClick(event, 'help-modal')">
+  <div class="card" style="max-width: 520px; width: 90%;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h2 style="font-size: 20px; font-weight: 700; margin: 0;">Help &amp; Controls</h2>
+      <span class="badge">Hotkeys</span>
+    </div>
+    <ul style="margin-left: 20px; margin-bottom: 20px; line-height: 1.9; color: var(--text-secondary);">
+      <li><strong>F1 or H</strong>: Toggle this help guide</li>
+      <li><strong>F5</strong>: Quicksave workspace snapshot to localStorage</li>
+      <li><strong>F9</strong>: Quickload restored workspace snapshot</li>
+      <li><strong>Esc</strong>: Restart current test or arcade game / dismiss modals</li>
       <li><strong>Backspace</strong>: Delete previous character</li>
-      <li><strong>Space</strong>: Submit current word</li>
-      <li><strong>H</strong>: Toggle this help screen</li>
+      <li><strong>Space</strong>: Submit current word (or restart when Game Over)</li>
+      <li><strong>Enter</strong>: Confirm actions or restart game</li>
     </ul>
     <div style="text-align: right;">
-      <button class="btn" onclick="toggleHelp()">Close</button>
+      <button class="btn" onclick="toggleHelp()">Close (Esc / Enter)</button>
     </div>
   </div>
 </div>
@@ -879,31 +978,70 @@ let keyHeatmapData = {};
 let testHistory = [];
 let arcadeHighScore = 0;
 
-try {
-  keyHeatmapData = JSON.parse(localStorage.getItem('ktype_heatmap') || '{}');
-} catch (e) {
-  keyHeatmapData = {};
+// --- Safe Storage Helpers ---
+function safeStorageGet(key, fallback = null) {
+  try {
+    const val = localStorage.getItem(key);
+    return val !== null ? val : fallback;
+  } catch (e) {
+    return fallback;
+  }
 }
 
-try {
-  testHistory = JSON.parse(localStorage.getItem('ktype_history') || '[]');
-} catch (e) {
-  testHistory = [];
+function safeStorageGetJSON(key, fallback = null) {
+  try {
+    const val = localStorage.getItem(key);
+    return val ? JSON.parse(val) : fallback;
+  } catch (e) {
+    return fallback;
+  }
 }
 
-try {
-  arcadeHighScore = Number(localStorage.getItem('ktype_arcade_high')) || 0;
-} catch (e) {
-  arcadeHighScore = 0;
+function safeStorageSet(key, val) {
+  try {
+    const serialized = typeof val === 'string' ? val : JSON.stringify(val);
+    localStorage.setItem(key, serialized);
+    return true;
+  } catch (e) {
+    showToast('⚠️ Storage quota exceeded or disabled', 'warning');
+    return false;
+  }
 }
 
+function safeStorageRemove(key) {
+  try {
+    localStorage.removeItem(key);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+let toastTimeout = null;
+function showToast(msg, type = 'info') {
+  let toastEl = document.getElementById('ktype-toast');
+  if (!toastEl) {
+    toastEl = document.createElement('div');
+    toastEl.id = 'ktype-toast';
+    toastEl.className = 'toast';
+    document.body.appendChild(toastEl);
+  }
+  toastEl.textContent = msg;
+  toastEl.className = `toast show ${type}`;
+  if (toastTimeout) clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => {
+    toastEl.classList.remove('show');
+  }, 2600);
+}
+
+keyHeatmapData = safeStorageGetJSON('ktype_heatmap', {});
+testHistory = safeStorageGetJSON('ktype_history', []);
+arcadeHighScore = Number(safeStorageGet('ktype_arcade_high', 0)) || 0;
+
 try {
-  const savedLesson = localStorage.getItem('ktype_custom_lesson');
-  if (savedLesson) {
-    const parsed = JSON.parse(savedLesson);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      PRESETS.custom = parsed;
-    }
+  const savedLesson = safeStorageGetJSON('ktype_custom_lesson', null);
+  if (savedLesson && Array.isArray(savedLesson) && savedLesson.length > 0) {
+    PRESETS.custom = savedLesson;
   }
 } catch (e) {}
 
@@ -952,14 +1090,166 @@ function switchTab(tabId) {
   }
 }
 
+// --- Modal Handlers ---
+function dismissTutorial() {
+  const modal = document.getElementById('tutorial-modal');
+  if (modal) modal.style.display = 'none';
+  safeStorageSet('ktype_tutorialSeen', '1');
+  if (currentTab === 'test') focusInput();
+}
+
+function handleModalBackdropClick(e, modalId) {
+  if (e.target && e.target.id === modalId) {
+    if (modalId === 'tutorial-modal') dismissTutorial();
+    else if (modalId === 'help-modal') toggleHelp();
+  }
+}
+
 function toggleHelp() {
   const modal = document.getElementById('help-modal');
+  if (!modal) return;
   if (modal.style.display === 'none' || modal.style.display === '') {
     modal.style.display = 'flex';
   } else {
     modal.style.display = 'none';
-    try { localStorage.setItem('ktype_tutorialSeen', '1'); } catch (e) {}
+    safeStorageSet('ktype_tutorialSeen', '1');
     if (currentTab === 'test') focusInput();
+  }
+}
+
+// --- Quicksave & Quickload ---
+function quicksaveState() {
+  const snapshot = {
+    version: 1,
+    timestamp: Date.now(),
+    currentTab,
+    testModeType,
+    testModeVal,
+    currentPreset,
+    soundEnabled,
+    customLesson: PRESETS.custom,
+    customInputText: document.getElementById('custom-text-input') ? document.getElementById('custom-text-input').value : '',
+    keyHeatmapData,
+    testHistory,
+    arcadeHighScore,
+    arcadeState: {
+      running: arcadeRunning,
+      score: arcadeScore,
+      lives: arcadeLives,
+      combo: arcadeCombo,
+      target: arcadeTarget,
+      words: arcadeWords.map(w => ({
+        word: w.word,
+        x: w.x,
+        y: w.y,
+        speed: w.speed,
+        matchLen: w.matchLen
+      }))
+    },
+    testState: {
+      active: isTestActive,
+      completed: testCompleted,
+      wordIndex,
+      charIndex,
+      correctKeystrokes,
+      errorCount,
+      totalKeystrokes,
+      testWords: testWords.slice(0, 100),
+      timeRemaining
+    }
+  };
+
+  if (safeStorageSet('ktype_quicksave', snapshot)) {
+    showToast('💾 Workspace & state quicksaved [F5]');
+    playSound('complete');
+  }
+}
+
+function quickloadState() {
+  const snapshot = safeStorageGetJSON('ktype_quicksave', null);
+  if (!snapshot) {
+    showToast('⚠️ No quicksave snapshot found [Press F5 to save]', 'warning');
+    playSound('error');
+    return;
+  }
+
+  try {
+    if (snapshot.soundEnabled !== undefined) {
+      soundEnabled = !!snapshot.soundEnabled;
+      const soundBtn = document.getElementById('sound-btn');
+      if (soundBtn) {
+        soundBtn.textContent = soundEnabled ? '🔊' : '🔇';
+        soundBtn.classList.toggle('active', soundEnabled);
+      }
+    }
+
+    if (snapshot.keyHeatmapData) {
+      keyHeatmapData = snapshot.keyHeatmapData;
+      renderHeatmap();
+    }
+
+    if (Array.isArray(snapshot.testHistory)) {
+      testHistory = snapshot.testHistory;
+      renderHistoryTable();
+    }
+
+    if (snapshot.arcadeHighScore !== undefined) {
+      arcadeHighScore = Number(snapshot.arcadeHighScore) || 0;
+      safeStorageSet('ktype_arcade_high', arcadeHighScore);
+    }
+
+    if (snapshot.customLesson && Array.isArray(snapshot.customLesson)) {
+      PRESETS.custom = snapshot.customLesson;
+      safeStorageSet('ktype_custom_lesson', PRESETS.custom);
+    }
+    if (snapshot.customInputText !== undefined) {
+      const el = document.getElementById('custom-text-input');
+      if (el) el.value = snapshot.customInputText;
+    }
+
+    if (snapshot.testModeType && snapshot.testModeVal) {
+      testModeType = snapshot.testModeType;
+      testModeVal = snapshot.testModeVal;
+      document.querySelectorAll('#mode-chips .chip').forEach(c => {
+        const text = c.textContent.trim().toLowerCase();
+        if ((testModeType === 'time' && text === `${testModeVal}s`) ||
+            (testModeType === 'words' && text.startsWith(`${testModeVal}`))) {
+          c.classList.add('active');
+        } else {
+          c.classList.remove('active');
+        }
+      });
+    }
+
+    if (snapshot.currentPreset) {
+      currentPreset = snapshot.currentPreset;
+      document.querySelectorAll('#preset-chips .chip').forEach(c => {
+        const onclickAttr = c.getAttribute('onclick') || '';
+        c.classList.toggle('active', onclickAttr.includes(`'${currentPreset}'`));
+      });
+    }
+
+    const targetTab = snapshot.currentTab || 'test';
+    switchTab(targetTab);
+
+    if (targetTab === 'arcade' && snapshot.arcadeState && snapshot.arcadeState.running) {
+      if (arcadeAnimationFrame) cancelAnimationFrame(arcadeAnimationFrame);
+      arcadeRunning = true;
+      arcadeScore = snapshot.arcadeState.score || 0;
+      arcadeLives = snapshot.arcadeState.lives || 3;
+      arcadeCombo = snapshot.arcadeState.combo || 0;
+      arcadeTarget = snapshot.arcadeState.target !== undefined ? snapshot.arcadeState.target : -1;
+      arcadeWords = Array.isArray(snapshot.arcadeState.words) ? snapshot.arcadeState.words : [];
+      arcadeLastSpawn = Date.now();
+      arcadeAnimationFrame = requestAnimationFrame(arcadeLoop);
+    } else if (targetTab === 'test') {
+      resetTest();
+    }
+
+    showToast('📂 Restored quicksaved workspace [F9]');
+    playSound('key');
+  } catch (err) {
+    showToast('⚠️ Failed to restore quicksave data', 'error');
   }
 }
 
@@ -1169,10 +1459,8 @@ function finishTest() {
 
   testHistory.unshift(session);
   if (testHistory.length > 50) testHistory.pop();
-  try {
-    localStorage.setItem('ktype_history', JSON.stringify(testHistory));
-    localStorage.setItem('ktype_heatmap', JSON.stringify(keyHeatmapData));
-  } catch(e) {}
+  safeStorageSet('ktype_history', testHistory);
+  safeStorageSet('ktype_heatmap', keyHeatmapData);
 }
 
 // Input Listener
@@ -1269,8 +1557,47 @@ document.getElementById('hidden-input').addEventListener('input', (e) => {
 });
 
 document.addEventListener('keydown', (e) => {
-  if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+  // Modal keyboard accessibility
+  const tutModal = document.getElementById('tutorial-modal');
+  const isTutOpen = tutModal && tutModal.style.display !== 'none';
+  const helpModal = document.getElementById('help-modal');
+  const isHelpOpen = helpModal && helpModal.style.display !== 'none';
+
+  if (isTutOpen) {
+    if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      dismissTutorial();
+      return;
+    }
+  }
+
+  if (isHelpOpen) {
+    if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ' || e.key === 'F1' || e.key.toLowerCase() === 'h') {
+      e.preventDefault();
+      toggleHelp();
+      return;
+    }
+  }
+
+  // F1 or H for Help
+  if (e.key === 'F1' || (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA')) {
+    e.preventDefault();
     toggleHelp();
+    return;
+  }
+
+  // F5 for Quicksave
+  if (e.key === 'F5') {
+    e.preventDefault();
+    quicksaveState();
+    return;
+  }
+
+  // F9 for Quickload
+  if (e.key === 'F9') {
+    e.preventDefault();
+    quickloadState();
+    return;
   }
 
   if (currentTab === 'test') {
@@ -1288,6 +1615,13 @@ document.addEventListener('keydown', (e) => {
       updateCaretPosition();
     }
   } else if (currentTab === 'arcade') {
+    if (!arcadeRunning) {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+        e.preventDefault();
+        startArcadeGame();
+        return;
+      }
+    }
     if (e.key === 'Escape') {
       startArcadeGame();
       return;
@@ -1308,7 +1642,7 @@ document.addEventListener('keydown', (e) => {
             arcadeScore += 10 + arcadeCombo;
             if (arcadeScore > arcadeHighScore) {
               arcadeHighScore = arcadeScore;
-              try { localStorage.setItem('ktype_arcade_high', arcadeHighScore); } catch(e) {}
+              safeStorageSet('ktype_arcade_high', arcadeHighScore);
             }
             arcadeWords.splice(arcadeTarget, 1);
             arcadeTarget = -1;
@@ -1339,7 +1673,7 @@ document.addEventListener('keydown', (e) => {
             arcadeScore += 10 + arcadeCombo;
             if (arcadeScore > arcadeHighScore) {
               arcadeHighScore = arcadeScore;
-              try { localStorage.setItem('ktype_arcade_high', arcadeHighScore); } catch(e) {}
+              safeStorageSet('ktype_arcade_high', arcadeHighScore);
             }
             arcadeWords.splice(arcadeTarget, 1);
             arcadeTarget = -1;
@@ -1487,8 +1821,9 @@ function renderHeatmap() {
 
 function resetHeatmap() {
   keyHeatmapData = {};
-  try { localStorage.removeItem('ktype_heatmap'); } catch(e) {}
+  safeStorageRemove('ktype_heatmap');
   renderHeatmap();
+  showToast('Heatmap statistics cleared');
 }
 
 function exportHeatmap() {
@@ -1553,18 +1888,22 @@ function exportHeatmap() {
 // --- Custom Lessons & Import/Export ---
 function saveCustomLesson() {
   const text = document.getElementById('custom-text-input').value.trim();
-  if (!text) return alert('Please enter some lesson text first.');
+  if (!text) {
+    showToast('Please enter some lesson text first.', 'warning');
+    return;
+  }
 
   PRESETS.custom = text.split(/\s+/).filter(w => w.length > 0);
-  try {
-    localStorage.setItem('ktype_custom_lesson', JSON.stringify(PRESETS.custom));
-  } catch(e) {}
-  alert('Custom lesson loaded! Select "Custom Import" preset in Speed Test to practice.');
+  safeStorageSet('ktype_custom_lesson', PRESETS.custom);
+  showToast('Custom lesson loaded! Select "Custom Import" preset to practice.');
 }
 
 function exportCustomLesson() {
   const text = document.getElementById('custom-text-input').value.trim();
-  if (!text) return alert('No text to export.');
+  if (!text) {
+    showToast('No text to export.', 'warning');
+    return;
+  }
 
   const blob = new Blob([JSON.stringify({ title: "KType Custom Lesson", words: text.split(/\s+/) }, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -1591,17 +1930,18 @@ function handleFileImport(e) {
         if (parsed.words && Array.isArray(parsed.words)) {
           PRESETS.custom = parsed.words;
           document.getElementById('custom-text-input').value = parsed.words.join(' ');
-          try { localStorage.setItem('ktype_custom_lesson', JSON.stringify(PRESETS.custom)); } catch(e) {}
+          safeStorageSet('ktype_custom_lesson', PRESETS.custom);
         }
       } catch (err) {
-        alert('Invalid JSON file format.');
+        showToast('Invalid JSON file format.', 'error');
+        return;
       }
     } else {
       document.getElementById('custom-text-input').value = content;
       PRESETS.custom = content.split(/\s+/).filter(w => w.length > 0);
-      try { localStorage.setItem('ktype_custom_lesson', JSON.stringify(PRESETS.custom)); } catch(e) {}
+      safeStorageSet('ktype_custom_lesson', PRESETS.custom);
     }
-    alert('File imported successfully!');
+    showToast('File imported successfully!');
   };
   reader.readAsText(file);
   if (e.target && e.target.value !== undefined) e.target.value = '';
@@ -1691,8 +2031,9 @@ function exportHistoryCSV() {
 function clearHistory() {
   if (confirm('Clear all performance history logs?')) {
     testHistory = [];
-    try { localStorage.removeItem('ktype_history'); } catch(e) {}
+    safeStorageRemove('ktype_history');
     renderHistoryTable();
+    showToast('Performance history cleared');
   }
 }
 
@@ -1894,16 +2235,16 @@ window.addEventListener('load', () => {
   renderHeatmap();
   renderHistoryTable();
   try {
-    const savedLesson = localStorage.getItem('ktype_custom_lesson');
-    if (savedLesson) {
-      const parsed = JSON.parse(savedLesson);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        const el = document.getElementById('custom-text-input');
-        if (el) el.value = parsed.join(' ');
-      }
+    const savedLesson = safeStorageGetJSON('ktype_custom_lesson', null);
+    if (savedLesson && Array.isArray(savedLesson) && savedLesson.length > 0) {
+      const el = document.getElementById('custom-text-input');
+      if (el) el.value = savedLesson.join(' ');
     }
-    if (!localStorage.getItem('ktype_tutorialSeen')) {
-      toggleHelp();
+    const tutorialSeen = safeStorageGet('ktype_tutorialSeen');
+    const hasQuicksave = safeStorageGet('ktype_quicksave');
+    if (!tutorialSeen && !hasQuicksave) {
+      const tut = document.getElementById('tutorial-modal');
+      if (tut) tut.style.display = 'flex';
     }
   } catch (e) {}
 });

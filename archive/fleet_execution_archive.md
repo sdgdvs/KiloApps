@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-22T23:35:00Z — kilo-expander: KPad**
+  - Status: PASS ✅ (Deep feature expansion across Win32 C & HTML5 web with 1:1 functional parity).
+  - Productivity & Session: Multi-tab tagging, tag filtering, pinned tabs, and global search index modal across all open tabs.
+  - Formats & Previews: Live Markdown/HTML split preview, 2-way CSV ⇄ MD table converter, workspace JSON snapshot export/import.
+  - Native Parity: Markdown export (.md) with frontmatter header, reverse line order tool, line endings and reading time stats.
+  - Verification: MSVC C clean build (29.0 KB); Vite web build clean (213ms); security lint passed (0 violations).
+
 - **2026-09-22T23:15:00Z — kilo-qa: KTrader**
   - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial onboarding integrity, modal controls, size limits).
   - State Persistence: Quicksave (F5) & quickload (F9) across web (localStorage) and native (ktrader.dat) capturing complete state.

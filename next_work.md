@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KClip
   kilo_usability: KClip
   kilo_graphics: KDragon
-  kilo_qa: KType
+  kilo_qa: KVault
   kilo_expander: KNote
   kilo_creator: "KFleet (Fleet Telemetry Console)"
 virtual_web_target: "kweb://webring"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-usability
-  app: KRSS
-  timestamp: "2026-09-23T00:30:00Z"
+  agent: kilo-qa
+  app: KType
+  timestamp: "2026-09-23T00:45:00Z"
 last_planner_run: "2026-09-22T07:47:00Z"
 ---
 
@@ -102,9 +102,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPaint`, `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KType`
+- **Current Target**: `KVault`
 - **Upcoming Queue**:
-  `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KTodo`, `KTrader` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader)*.
+  `KVoid`, `KWizard`, `KZip`, `KChrono`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KTodo`, `KTrader`, `KType` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KNote`
@@ -156,6 +156,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T00:45:00Z — kilo-qa: KType**
+  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial onboarding integrity, modal controls, size limits).
+  - State Persistence: Quicksave (F5) & quickload (F9) across web (localStorage) and native (ktype.dat) capturing full state.
+  - Native UI Parity: Added Save [F5], Load [F9] headers, auto-recovery on launch, status toast banner, and C state file IO.
+  - Tutorial Integrity: Fresh-session onboarding modal (ktype_tutorialSeen / ktype_tutorial.dat) never interrupting restored save states.
+  - Modal Ergonomics: Added backdrop dismissal and Esc/Enter/Space handlers across Help and Tutorial modals.
+  - Safety & Storage: Wrapped all storage access with quota-safe helpers; cleaned up object URLs and timer leaks.
+  - Verification: MSVC C clean build (22.0 KB); Vite web build clean (221ms); security lint passed (0 violations).
+
 - **2026-09-23T00:30:00Z — kilo-usability: KRSS**
   - Status: PASS ✅ (Layout dimensions, responsive breakpoints, collapsible sidebar, navigation ergonomics).
   - Window & Layout: Tuned App.jsx window to 1080x720; added responsive media queries (900px/720px) and retro scrollbars.
@@ -189,10 +198,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Audio Architecture: Procedural Sega Genesis (YM2612 FM dual-op) and SNES warm geophone rumble audio engine.
   - State & Usability: Splash screen, first-run tutorial modal, quicksave [F5]/quickload [F9], and JSON state export/import.
   - Verification: MSVC C clean build (19.0 KB); Vite web build clean (212ms); security lint passed (0 violations).
-
-- **2026-09-22T23:35:00Z — kilo-expander: KPad**
-  - Status: PASS ✅ (Deep feature expansion across Win32 C & HTML5 web with 1:1 functional parity).
-  - Productivity & Session: Multi-tab tagging, tag filtering, pinned tabs, and global search index modal across all open tabs.
-  - Formats & Previews: Live Markdown/HTML split preview, 2-way CSV ⇄ MD table converter, workspace JSON snapshot export/import.
-  - Native Parity: Markdown export (.md) with frontmatter header, reverse line order tool, line endings and reading time stats.
-  - Verification: MSVC C clean build (29.0 KB); Vite web build clean (213ms); security lint passed (0 violations).

@@ -26,7 +26,7 @@ int numCodeWords = 20;
 
 // --- Modes ---
 // 0: Arcade Cascade, 1: Timed Speed Test (30s), 2: Code Snippets, 3: Error Heatmap, 4: Help Screen
-int currentMode = 4;
+int currentMode = 0;
 int prevMode = 0;
 
 // --- Arcade State ---
@@ -134,6 +134,142 @@ void LoadRegistryData() {
         RegQueryValueExA(hKey, "BestWPM", NULL, NULL, (BYTE*)&bestWPM, &sz);
         RegCloseKey(hKey);
     }
+}
+
+char g_statusMsg[128] = {0};
+DWORD g_statusExpiry = 0;
+
+void ShowNativeStatus(const char* msg) {
+    int i = 0;
+    while (msg && msg[i] && i < 127) {
+        g_statusMsg[i] = msg[i];
+        i++;
+    }
+    g_statusMsg[i] = '\0';
+    g_statusExpiry = GetTickCount() + 3000;
+}
+
+static void my_memcpy(void* dest, const void* src, size_t count) {
+    char* d = (char*)dest;
+    const char* s = (const char*)src;
+    while (count--) *d++ = *s++;
+}
+
+typedef struct {
+    DWORD magic; // 0x45505954 "TYPE"
+    DWORD version; // 1
+    DWORD highArcadeScore;
+    DWORD bestWPM;
+    int currentMode;
+    int prevMode;
+    int arcadeScore;
+    int arcadeLives;
+    int arcadeCombo;
+    int targetWord;
+    FallingWord fWords[MAX_FALLING];
+    int testActive;
+    int testCompleted;
+    int testDuration;
+    int testWordIndex;
+    int testCharIndex;
+    int totalTyped;
+    int correctTyped;
+    int testErrors;
+    DWORD finalWPM;
+    DWORD finalAcc;
+    int testWordPool[40];
+    int keyHits[26];
+    int keyErrors[26];
+} KTypeSaveState;
+
+int SaveStateToFile(const char* filename) {
+    HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+
+    KTypeSaveState state;
+    memset(&state, 0, sizeof(state));
+    state.magic = 0x45505954;
+    state.version = 1;
+    state.highArcadeScore = highArcadeScore;
+    state.bestWPM = bestWPM;
+    state.currentMode = currentMode;
+    state.prevMode = prevMode;
+    state.arcadeScore = arcadeScore;
+    state.arcadeLives = arcadeLives;
+    state.arcadeCombo = arcadeCombo;
+    state.targetWord = targetWord;
+    my_memcpy(state.fWords, fWords, sizeof(fWords));
+    state.testActive = testActive;
+    state.testCompleted = testCompleted;
+    state.testDuration = testDuration;
+    state.testWordIndex = testWordIndex;
+    state.testCharIndex = testCharIndex;
+    state.totalTyped = totalTyped;
+    state.correctTyped = correctTyped;
+    state.testErrors = testErrors;
+    state.finalWPM = finalWPM;
+    state.finalAcc = finalAcc;
+    my_memcpy(state.testWordPool, testWordPool, sizeof(testWordPool));
+    my_memcpy(state.keyHits, keyHits, sizeof(keyHits));
+    my_memcpy(state.keyErrors, keyErrors, sizeof(keyErrors));
+
+    DWORD written = 0;
+    BOOL res = WriteFile(hFile, &state, sizeof(state), &written, NULL);
+    CloseHandle(hFile);
+    return res && (written == sizeof(state));
+}
+
+int LoadStateFromFile(const char* filename) {
+    HANDLE hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+
+    KTypeSaveState state;
+    DWORD readBytes = 0;
+    BOOL res = ReadFile(hFile, &state, sizeof(state), &readBytes, NULL);
+    CloseHandle(hFile);
+
+    if (!res || readBytes != sizeof(state)) return 0;
+    if (state.magic != 0x45505954) return 0;
+
+    highArcadeScore = state.highArcadeScore;
+    bestWPM = state.bestWPM;
+    currentMode = state.currentMode;
+    prevMode = state.prevMode;
+    arcadeScore = state.arcadeScore;
+    arcadeLives = state.arcadeLives;
+    arcadeCombo = state.arcadeCombo;
+    targetWord = state.targetWord;
+    my_memcpy(fWords, state.fWords, sizeof(fWords));
+    testActive = state.testActive;
+    testCompleted = state.testCompleted;
+    testDuration = state.testDuration;
+    testWordIndex = state.testWordIndex;
+    testCharIndex = state.testCharIndex;
+    totalTyped = state.totalTyped;
+    correctTyped = state.correctTyped;
+    testErrors = state.testErrors;
+    finalWPM = state.finalWPM;
+    finalAcc = state.finalAcc;
+    my_memcpy(testWordPool, state.testWordPool, sizeof(testWordPool));
+    my_memcpy(keyHits, state.keyHits, sizeof(keyHits));
+    my_memcpy(keyErrors, state.keyErrors, sizeof(keyErrors));
+
+    return 1;
+}
+
+int HasSavedState(const char* filename) {
+    DWORD attr = GetFileAttributesA(filename);
+    return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+int HasSeenTutorial(void) {
+    DWORD attr = GetFileAttributesA("ktype_tutorial.dat");
+    return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+void MarkTutorialSeen(void) {
+    HANDLE h = CreateFileA("ktype_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h != INVALID_HANDLE_VALUE) CloseHandle(h);
 }
 
 void SpawnArcadeWord() {
@@ -405,9 +541,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             ResetSpeedTest();
             SetTimer(hwnd, 1, 30, NULL);
             DragAcceptFiles(hwnd, TRUE);
+
+            if (HasSavedState("ktype.dat")) {
+                if (LoadStateFromFile("ktype.dat")) {
+                    ShowNativeStatus("★ Restored saved state from ktype.dat [F9]");
+                }
+            } else if (!HasSeenTutorial()) {
+                currentMode = 4;
+                prevMode = 0;
+                MarkTutorialSeen();
+                ShowNativeStatus("Welcome to KType! Space: Start, H: Help");
+            } else {
+                currentMode = 0;
+            }
             break;
 
         case WM_TIMER: {
+            if (g_statusExpiry > 0 && GetTickCount() >= g_statusExpiry) {
+                g_statusExpiry = 0;
+                g_statusMsg[0] = '\0';
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
             if (currentMode == 0) { // Arcade Mode
                 if (arcadeLives > 0) {
                     int i;
@@ -451,19 +605,45 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_KEYDOWN: {
-            // Mode switching via F1 - F5
-            if (wParam == VK_F1) { currentMode = 0; InvalidateRect(hwnd, NULL, TRUE); break; }
+            if (currentMode == 4) {
+                if (wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE || wParam == 'H') {
+                    MarkTutorialSeen();
+                    currentMode = prevMode;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    break;
+                }
+            }
+            // Mode switching via F1 - F4
+            if (wParam == VK_F1) {
+                if (currentMode == 4) { currentMode = 0; }
+                else if (currentMode == 0) { prevMode = 0; currentMode = 4; }
+                else { currentMode = 0; }
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
             if (wParam == VK_F2) { currentMode = 1; ResetSpeedTest(); InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_F3) { currentMode = 2; ResetSpeedTest(); InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_F4) { currentMode = 3; InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_F5) {
-                if (currentMode == 4) currentMode = prevMode;
-                else { prevMode = currentMode; currentMode = 4; }
+                if (SaveStateToFile("ktype.dat")) {
+                    ShowNativeStatus("★ Saved to ktype.dat [F5]");
+                } else {
+                    ShowNativeStatus("⚠ Failed to quicksave");
+                }
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
             }
             if (wParam == VK_F6 && currentMode == 3) { ExportHeatmapBMP(hwnd); break; }
             if (wParam == VK_F7) { ExportCertificateBMP(hwnd); break; }
+            if (wParam == VK_F9) {
+                if (LoadStateFromFile("ktype.dat")) {
+                    ShowNativeStatus("★ Loaded from ktype.dat [F9]");
+                } else {
+                    ShowNativeStatus("⚠ No quicksave (ktype.dat)");
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
             if (wParam == 'H') {
                 if (currentMode == 4) {
                     currentMode = prevMode;
@@ -630,16 +810,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOutA(memDC, 15, 10, "F1: Arcade", 10);
 
             SetTextColor(memDC, (currentMode == 1) ? RGB(0, 242, 254) : RGB(148, 163, 184));
-            TextOutA(memDC, 130, 10, "F2: Speed Test", 14);
+            TextOutA(memDC, 115, 10, "F2: Speed", 9);
 
             SetTextColor(memDC, (currentMode == 2) ? RGB(0, 242, 254) : RGB(148, 163, 184));
-            TextOutA(memDC, 270, 10, "F3: Code Snippets", 17);
+            TextOutA(memDC, 210, 10, "F3: Code", 8);
 
             SetTextColor(memDC, (currentMode == 3) ? RGB(0, 242, 254) : RGB(148, 163, 184));
-            TextOutA(memDC, 440, 10, "F4: Heatmap", 11);
+            TextOutA(memDC, 295, 10, "F4: Heatmap", 11);
 
             SetTextColor(memDC, (currentMode == 4) ? RGB(0, 242, 254) : RGB(148, 163, 184));
-            TextOutA(memDC, 560, 10, "Press H for Help", 16);
+            TextOutA(memDC, 410, 10, "H: Help", 7);
+
+            SetTextColor(memDC, RGB(16, 185, 129));
+            TextOutA(memDC, 490, 10, "F5: Save", 8);
+
+            SetTextColor(memDC, RGB(147, 197, 253));
+            TextOutA(memDC, 575, 10, "F9: Load", 8);
+
+            if (g_statusExpiry > GetTickCount() && g_statusMsg[0]) {
+                SelectObject(memDC, g_fontNav ? g_fontNav : GetStockObject(DEFAULT_GUI_FONT));
+                SetTextColor(memDC, RGB(245, 158, 11));
+                TextOutA(memDC, 665, 10, g_statusMsg, StrLen(g_statusMsg));
+            }
 
             if (g_fontMain) SelectObject(memDC, g_fontMain);
 
@@ -851,16 +1043,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, 40, H - 60, "Legend: Dark = Perfect | Amber = 1-3 Mistypes | Red = >3 Mistypes", 64);
             } else if (currentMode == 4) { // Help Screen
                 SetTextColor(memDC, RGB(0, 242, 254));
-                TextOutA(memDC, 30, 50, "Help & Controls", 15);
+                TextOutA(memDC, 30, 50, "KType Studio - Help & Controls", 30);
                 SetTextColor(memDC, RGB(248, 250, 252));
                 TextOutA(memDC, 30, 90, "F1: Arcade Cascade Mode", 23);
                 TextOutA(memDC, 30, 120, "F2: 30s Timed Speed Test", 24);
                 TextOutA(memDC, 30, 150, "F3: Code Snippets Speed Test", 28);
                 TextOutA(memDC, 30, 180, "F4: Finger Weakness Heatmap", 27);
-                TextOutA(memDC, 30, 210, "F6: Export Heatmap to BMP", 25);
-                TextOutA(memDC, 30, 240, "F7: Export Certificate to BMP", 29);
-                TextOutA(memDC, 30, 270, "F5 or H: Toggle Help", 20);
-                TextOutA(memDC, 30, 300, "ESC: Restart current mode", 25);
+                TextOutA(memDC, 30, 210, "F5: Quicksave Snapshot to ktype.dat", 35);
+                TextOutA(memDC, 30, 240, "F9: Quickload Snapshot from ktype.dat", 37);
+                TextOutA(memDC, 30, 270, "F6: Export Heatmap to BMP", 25);
+                TextOutA(memDC, 30, 300, "F7: Export Certificate to BMP", 29);
+                TextOutA(memDC, 30, 330, "H: Toggle Help | ESC: Restart Mode / Back", 41);
+                SetTextColor(memDC, RGB(16, 185, 129));
+                TextOutA(memDC, 30, 370, "ENTER or SPACE: Exit Help & Start Typing", 40);
             }
 
             SelectObject(memDC, oldFont);
