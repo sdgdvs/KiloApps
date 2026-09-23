@@ -13,11 +13,11 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KCalc
-  kilo_usability: KHex
-  kilo_graphics: KAbyss
+  kilo_usability: "KHex (Weave Arc 1 Memory Offset IP Clue)"
+  kilo_graphics: "KAbyss (Weave Arc 2 Precursor Relic Glyph)"
   kilo_qa: KZip
-  kilo_expander: "KGo (Multiplayer)"
-  kilo_creator: "KPacket (Packet Inspector)"
+  kilo_expander: "KGo (Firebase RTDB Online Multiplayer)"
+  kilo_creator: "kweb://users/~neon_rider (Virtual Web 1999 & ASM Devlog)"
 virtual_web_target: "kweb://users/~neon_rider"
 virtual_web_rotation:
   - "kweb://geocities"
@@ -85,11 +85,17 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Active Target Queues
 
-### 1. App Creator & Deep Expander Queue (`kilo-creator`)
-- **Current Target**: `KPacket` (Packet Inspector)
-- **Upcoming Concepts**:
-  `KAudioTrack` (Multitrack Tracker Studio), `KVox` (Speech Synthesis Workstation).
-- **Multiplayer Focus (CRITICAL)**: Prioritize concepts and games featuring seamless cross-computer Firebase Realtime Database multiplayer (`https://kiloappschat-default-rtdb.firebaseio.com`), allowing players on `kiloapps.web.app` from different computers to play together seamlessly without custom servers.
+### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
+- **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
+- **Current Target**: `kweb://users/~neon_rider` (Personal Hacker / Demoscene & Win32 ASM Homepage)
+- **Upcoming Queue**:
+  `kweb://asm-temple` (x86 Assembly Programming Shrine & Opcode Converter),
+  `kweb://cybercafe` (Underground BBS, Threaded Forums & ASCII Art Canvas),
+  `kweb://10.19.99.4/classified` (Tier 3 Corporate Intranet Leak & Memory Dumps),
+  `kweb://echo-subsystem.net` (Tier 3 Research Journal & Harmonic Decoders),
+  `kweb://deep-core` (Tier 3 Ghost Node Terminal & KMatrix Passkey Fragment),
+  `kweb://portal` (Yahoo/Excite 1999 Directory Upgrade: simulated search, live stocks, classifieds),
+  `kweb://warez` (Cracktros, Chiptune Jukebox & Demoscene Vault expansion).
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Current Target**: `KAbyss`
@@ -153,6 +159,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - ⚠️ AGENT NOTE: This is a human director request, not a machine-generated task. Evaluate whether this directive aligns with the project's core pillars (999KB retro OS, ludonarrative consonance, ARG integrity, fleet stability) before implementing. If counterproductive, skip and log your reasoning.
   - Instructions: <directive text here>
 -->
+
+- **[FLEET-WIDE] — Pivot to ARG, Multiplayer & Virtual Net Expansion (Freeze Standalone App Creation)** | Director Directive
+  - ⚠️ AGENT NOTE: Human director priority directive.
+  - Instructions: Halt creation of new standalone OS apps (frozen at 92 native / 99 web).
+    1. **Virtual Net**: Pivot `kilo-creator` 100% to building real, rich Web 1.0 destinations in `KiloOS/public/web/` (`users/~neon_rider`, `asm-temple`, `cybercafe`, Tier 3 hidden nodes) and linking them to `KNet`.
+    2. **Multiplayer**: Keep `kilo-expander` dedicated to seamless Firebase RTDB multiplayer retrofits (`KGo`, `KReversi`, `KDarts`, `KTetris`, etc.) so users across different computers can play together without servers.
+    3. **ARG Clue-Weaving**: Weave subtle ARG clues (Arc 1 & 2 per `arg_plan.md`) into existing apps: `KHex` (internal IP `10.19.99.4/classified` offset), `KSynth` (1999Hz morse spelling `echo-subsystem.net`), `KTerm` (glitched sysadmin log pointing to `kweb://deep-core`), `KBBS` (sysop server notes), and `KNote` (`system_recovery_1999.log`).
 
 - **[FLEET: kilo-creator & kilo-expander] — Seamless Online Multiplayer via Firebase** | Director Directive
   - ⚠️ AGENT NOTE: Human director request. Priority architectural directive for creator and expander agents.

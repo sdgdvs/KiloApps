@@ -306,7 +306,13 @@ def build_agent_prompt(agent: str, targets: dict) -> str:
             f"Verify builds, advance queue, update next_work.md, and git commit/push. Process 1 app only then STOP."
         )
     elif agent == "kilo-creator":
-        target = targets.get("kilo_creator", "the next app concept per next_work.md")
+        target = targets.get("kilo_creator", "the next virtual web / ARG concept per next_work.md")
+        if "kweb://" in target or "Virtual Web" in target or "public/web" in target:
+            return (
+                f"Activate skill 'kilo-creator'. "
+                f"Design and implement Virtual 1999 Web destination or deep expansion for '{target}' in KiloOS/public/web/ per next_work.md and arg_plan.md (Anti-Potemkin standard: fully functioning interactive Web 1.0 experience, <999KB). "
+                f"Link in KNet/portal/webring, verify builds, advance queue, update next_work.md, and git commit/push. Process 1 target only then STOP."
+            )
         return (
             f"Activate skill 'kilo-creator'. "
             f"Design and implement new application or deep expansion for '{target}' per next_work.md. "
