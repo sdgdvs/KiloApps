@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-qa
-  app: KChat
-  timestamp: "2026-09-23T03:10:00Z"
+  agent: kilo-vision-audit
+  app: ALL_APPS
+  timestamp: "2026-09-23T03:35:00Z"
 last_planner_run: "2026-09-22T07:47:00Z"
 ---
 
@@ -162,9 +162,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - ⚠️ AGENT NOTE: Human director request. Priority fleet-wide directive.
   - Instructions: Systematically remove rotating/traveling specular glint comets, perimeter glint dots, and moving border balls across both web (HTML) and native (Win32 C) on every app pass. They are annoying across every app and look like distracting projectiles/balls. Replace with clean, static, or period-accurate borders without traveling dots or orbital glint particles. NEVER add new perimeter traveling glints.
 
+- **[FLEET: kilo-qa, kilo-usability, kilo-tester] — Toast Occlusion & Modal Clipping Remediation** | Vision Audit Directive
+  - ⚠️ AGENT NOTE: Secondary state vision audit revealed 26 apps where persistent or timed toasts (`z-index: 150-200`) overlap interactive controls (buttons, inputs, close icons) and 10 apps with clipped dialogs/virtual keyboards.
+  - Instructions: During app passes, ensure toasts do not occlude interactive inputs or primary buttons (position toasts safely, dismiss on click/interaction, or use unobtrusive non-overlapping toast bars). Fix double-modal stacking (`kclip`, `kpomodoro`) and remove internal loop labels (`kdarts`, `kwords`).
+
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+
+- **2026-09-23T03:35:00Z — kilo-vision-audit: Fleet Secondary / Interacted State Vision Audit**
+  - Status: PASS ✅ (103 apps audited across interacted UI states; 40 visual issues cataloged).
+  - Headless Interaction: Enhanced `scripts/test_web_apps.js` to open menus, tabs, drawers, and modal states without hangs.
+  - Secondary Capture: Generated 103 `_interact.png` screenshots and built interactive view toggles in gallery.
+  - Defect Catalog: Cataloged 40 UI issues (26 toast occlusions over inputs/buttons, 2 modal stacking collisions, 10 cutoffs/overflows).
+  - Gallery Enrichment: Updated `docs/gallery/index.html` and generated `docs/gallery/vision_scores_interact.json` (Fleet Interacted Avg: ★ 8.68/10).
+  - Bug Fixes: Repaired `kreversi.html` syntax error and `ktrader.html` interaction reload crash.
+  - Verification: Security lint 100% clean; KiloOS Vite build clean (233ms).
 
 - **2026-09-23T03:10:00Z — kilo-qa: KChat AI Persona Removal**
   - Status: PASS ✅ (Completely removed AI persona section and feature from web and native KChat).
@@ -200,11 +213,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Modal Ergonomics: Added backdrop dismissal and Esc/Enter/Space handlers for Help and Tutorial modals.
   - Safety & Storage: Wrapped storage access in quota-safe helpers; ensured zero memory leaks and safe clipboard handling.
   - Verification: Native MSVC C clean build (17.5 KB); Single-file HTML5 (67.5 KB); Vite clean build (410ms); security lint 0 violations.
-
-- **2026-09-23T01:45:00Z — kilo-usability: KClip**
-  - Status: PASS ✅ (Layout dimensions, responsive behavior, help discoverability, scrollbars, shortcuts).
-  - Window & Layout: Adjusted KiloOS default window dimensions to 1040x720 for comfortable dual-pane workflow.
-  - Collapsible Sidebar: Added B hotkey & toggle button to maximize editor pane for wide snippets and hex dumps.
-  - Discoverable Help: Added clickable [F1 / H] status bar prompt and wired H, ?, B, T, C, J, K shortcuts.
-  - Theming & Ergonomics: Added themed retro scrollbars across all 4 palettes; added empty-selection error guards.
-  - Verification: Native MSVC C (15.5 KB); Single-file HTML5 (92.2 KB); Vite build clean (219ms); security lint 0 violations.

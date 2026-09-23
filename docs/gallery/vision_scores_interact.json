@@ -1,0 +1,1122 @@
+{
+  "timestamp": "2026-09-23T03:30:44Z",
+  "model": "agent-native-vision-interacted",
+  "threshold": 5.0,
+  "summary": {
+    "total": 103,
+    "flagged": 40,
+    "average_overall": 8.68
+  },
+  "results": [
+    {
+      "app": "contribute",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "k2048",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kabyss",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kalchemy",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 8,
+      "overall": 8.2,
+      "issues": [
+        "Unstyled [x] close button outside modal frame and modal text truncated at bottom"
+      ]
+    },
+    {
+      "app": "kanomaly",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kasteroids",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kaudio",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kbase",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.4,
+      "issues": [
+        "Bit toggle board ('HIGH 32-BITS' / 'LOW 32-BITS') overflows card horizontally, generating unwanted horizontal scrollbar"
+      ]
+    },
+    {
+      "app": "kbbs",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kbookmark",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kbreakout",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kbudget",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kcalc",
+      "layout": 6,
+      "contrast": 8,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 7,
+      "overall": 7.6,
+      "issues": [
+        "Toast notification stack in center-bottom overlaps and completely blocks calculation input fields and buttons"
+      ]
+    },
+    {
+      "app": "kcalendar",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kchart",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kchat",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kchatserver",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kchess",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kchrono",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kclip",
+      "layout": 6,
+      "contrast": 8,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 7,
+      "overall": 7.6,
+      "issues": [
+        "Quick-Start Tutorial modal renders simultaneously behind Reusable Snippets modal with colliding backdrops"
+      ]
+    },
+    {
+      "app": "kclock",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kcolony",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.4,
+      "issues": [
+        "Bottom-right welcome toast occludes button [8] Administrator's Manual & Tech Spec"
+      ]
+    },
+    {
+      "app": "kcolor",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kcolosseum",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 8,
+      "overall": 8.2,
+      "issues": [
+        "Top-right button ('LANISTA'S GUIDE [H]') overlaps and covers header text ('LUDUS MANAGEMENT')"
+      ]
+    },
+    {
+      "app": "kconnect4",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 8,
+      "overall": 8.2,
+      "issues": [
+        "Toast in bottom-center overlaps and blocks the Undo [U] button"
+      ]
+    },
+    {
+      "app": "kcontacts",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 7,
+      "overall": 8.0,
+      "issues": [
+        "Toast in bottom-right cuts off Add to Favorites checkbox and contact submit button"
+      ]
+    },
+    {
+      "app": "kconverter",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kcosmic",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kcyber",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kdarts",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 7,
+      "overall": 8.0,
+      "issues": [
+        "Title displays uncleaned internal dev text '(Loop 7 Expansion)'; top control box pushes dartboard off bottom of viewport"
+      ]
+    },
+    {
+      "app": "kdb",
+      "layout": 6,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 7,
+      "overall": 7.8,
+      "issues": [
+        "Toast stack in top-right overlaps and completely blocks header action buttons"
+      ]
+    },
+    {
+      "app": "kdirector",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kdragon",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 8,
+      "overall": 8.2,
+      "issues": [
+        "Toast notification in top-right overlaps and obstructs modal close button"
+      ]
+    },
+    {
+      "app": "kexplorer",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kfarm",
+      "layout": 6,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 7,
+      "overall": 7.8,
+      "issues": [
+        "Toast in bottom-center overlaps and completely hides seed selector radio buttons (Corn, Tomato, Pumpkin)"
+      ]
+    },
+    {
+      "app": "kflash",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kfleet",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kfont",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kfortress",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 8,
+      "overall": 8.2,
+      "issues": [
+        "Toast in top-right overlaps and occludes modal header title and close button"
+      ]
+    },
+    {
+      "app": "kfreecell",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kgo",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kgraph",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "khabit",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "khangman",
+      "layout": 6,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 7,
+      "overall": 7.8,
+      "issues": [
+        "Virtual keyboard is cut off at the bottom of the viewport in active gameplay (rows below N hidden)"
+      ]
+    },
+    {
+      "app": "khash",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "khex",
+      "layout": 6,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 7,
+      "overall": 7.8,
+      "issues": [
+        "Tab 2 has empty/missing label; unstyled horizontal scrollbar under tab bar; hex rows cut off at bottom"
+      ]
+    },
+    {
+      "app": "kimage",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.4,
+      "issues": [
+        "Toast notification overlaps EXIF Camera Inspector and bottom stats in right-side panel"
+      ]
+    },
+    {
+      "app": "kjournal",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.4,
+      "issues": [
+        "Toast notification in bottom-right overlaps bottom-right corner of analytics modal"
+      ]
+    },
+    {
+      "app": "kmail",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kmandel",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 8,
+      "overall": 8.2,
+      "issues": [
+        "Toast in top-left overlaps and occludes modal title ('KMandel' hidden)"
+      ]
+    },
+    {
+      "app": "kmatch3",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 8,
+      "overall": 8.2,
+      "issues": [
+        "Double scrollbars (horizontal and vertical) appear around board; frame corners clipped"
+      ]
+    },
+    {
+      "app": "kmatrix",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": [
+        "Minor typo 'AMBER MONOCROME' instead of 'AMBER MONOCHROME' in settings modal"
+      ]
+    },
+    {
+      "app": "kmaze",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kmech",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kmedia",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kmine",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 7,
+      "overall": 8.0,
+      "issues": [
+        "Toast notification stack in top-right overlaps and occludes header buttons (Help [F1], Imp [I])"
+      ]
+    },
+    {
+      "app": "kmines",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kmystery",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "knet",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "knote",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kpac",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.4,
+      "issues": [
+        "Stack of 3 toasts in top overlaps and hides top game score and life counter"
+      ]
+    },
+    {
+      "app": "kpad",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kpaint",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.4,
+      "issues": [
+        "Toast notification in bottom-right overlaps bottom horizontal canvas scrollbar and edge"
+      ]
+    },
+    {
+      "app": "kpass",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kping",
+      "layout": 6,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 7,
+      "overall": 7.8,
+      "issues": [
+        "Toast notification stack in top-right overlaps right header buttons (Clear, Audio ON, Help [F1]) with awkward text wrapping"
+      ]
+    },
+    {
+      "app": "kpomodoro",
+      "layout": 6,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 7,
+      "overall": 7.8,
+      "issues": [
+        "Quick Preferences modal renders directly on top of Quick-Start Guide modal with colliding headers and scrollbars"
+      ]
+    },
+    {
+      "app": "kpong",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kquarantine",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kquest",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 8,
+      "overall": 8.2,
+      "issues": [
+        "Header displays internal dev phase text 'Phase 14...'; bottom toast overlaps hero class selection cards"
+      ]
+    },
+    {
+      "app": "kradio",
+      "layout": 6,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 7,
+      "overall": 7.8,
+      "issues": [
+        "Multiple stacked error toasts in top-right overlap and occlude header container"
+      ]
+    },
+    {
+      "app": "kread",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kreversi",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "krogue",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "krss",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "ksanctuary",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.4,
+      "issues": [
+        "Horizontal scrollbar appears at bottom of survivor citizen roster panel"
+      ]
+    },
+    {
+      "app": "kscript",
+      "layout": 6,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 7,
+      "overall": 8.0,
+      "issues": [
+        "Stack of 3 toasts in bottom-right occludes memory inspector variable table rows and data"
+      ]
+    },
+    {
+      "app": "ksettings",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "ksimon",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "ksnake",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.4,
+      "issues": [
+        "Toast in top-center overlaps top header buttons (Score, Mode, Pause)"
+      ]
+    },
+    {
+      "app": "ksolitaire",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.4,
+      "issues": [
+        "Toast notification at bottom overlaps 4th, 5th, and 6th tableau card columns"
+      ]
+    },
+    {
+      "app": "kspace",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.4,
+      "issues": [
+        "Toast in top-center overlaps and blocks game score HUD and shields display"
+      ]
+    },
+    {
+      "app": "kstardredge",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kstarforge",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kstarship",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kstellar",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "ksubmarine",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "ksudoku",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "ksynth",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "ksys",
+      "layout": 6,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 7,
+      "overall": 8.0,
+      "issues": [
+        "Stacked toasts in bottom-right occlude primary confirmation button of Workstation Guide modal"
+      ]
+    },
+    {
+      "app": "ktask",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "ktaskmgr",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kterm",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 7,
+      "overall": 8.2,
+      "issues": [
+        "Toast in bottom-right overlaps and cuts off 'Start Working' modal action button"
+      ]
+    },
+    {
+      "app": "ktetris",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 8,
+      "overall": 8.2,
+      "issues": [
+        "Bottom toast notification overlaps 'Press [H] or F1 for Help & Controls Guide' text"
+      ]
+    },
+    {
+      "app": "ktimer",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 7,
+      "overall": 8.2,
+      "issues": [
+        "Welcome modal height exceeds viewport; bottom action button is clipped by viewport edge"
+      ]
+    },
+    {
+      "app": "ktodo",
+      "layout": 6,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 7,
+      "overall": 8.0,
+      "issues": [
+        "Bottom-right toast notification overlaps modal primary 'Get Started [Enter]' button"
+      ]
+    },
+    {
+      "app": "ktowers",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "ktrader",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "ktype",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kvault",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kvoid",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kwizard",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.4,
+      "issues": [
+        "Spell Index card grid is cut off at bottom of Grimoire modal"
+      ]
+    },
+    {
+      "app": "kwords",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 8.8,
+      "issues": [
+        "Modal header contains uncleaned internal dev text: 'Loop 8 Edition'"
+      ]
+    },
+    {
+      "app": "kzip",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.4,
+      "issues": [
+        "Bottom-center toast overlaps and sits directly over bottom status bar text"
+      ]
+    }
+  ]
+}

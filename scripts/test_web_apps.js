@@ -272,6 +272,7 @@ async function runSuite() {
       report.hasUi = Boolean(domCheck && domCheck.result && domCheck.result.value);
 
       if (currentErrors.length > 0) {
+        console.log('RUNTIME ERRORS:', currentErrors);
         report.syntaxValid = false;
         report.errors.push(...currentErrors);
         process.stdout.write('E');
@@ -389,6 +390,8 @@ async function runSuite() {
             const startRegex = /^(start|play|new game|deal|roll|launch|begin|campaign|arcade|easy|normal|hard|generate|run|fight|battle|start game)$/i;
             const startBtn = allButtons.find(b => {
               const txt = (b.textContent || '').trim();
+              const oc = (b.getAttribute('onclick') || '').toLowerCase();
+              if (oc.includes('reload') || oc.includes('reset') || oc.includes('restart')) return false;
               return startRegex.test(txt);
             });
 

@@ -1056,22 +1056,6 @@
                     ctx.restore();
                 }
 
-                    // 3. Sculpted Specular Sheen Sweep traversing the board
-                    sheenProgress = (sheenProgress + 0.003) % 1.0;
-                    const sheenX = -100 + sheenProgress * (canvas.width + 250);
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.rect(pad, pad, bW, bH);
-                    ctx.clip();
-                    const grad = ctx.createLinearGradient(sheenX - 40, 0, sheenX + 40, canvas.height);
-                    grad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-                    grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.12)');
-                    grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                    ctx.fillStyle = grad;
-                    ctx.fillRect(pad, pad, bW, bH);
-                    ctx.restore();
-                }
-
                 // Procedural screen-shake decay & rotational damping
                 if (screenShake > 0.05) {
                     screenShake *= 0.86;
