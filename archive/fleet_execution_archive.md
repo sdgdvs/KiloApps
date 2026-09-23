@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-23T13:50:00Z — kilo-graphics: KStarDredge (Specular Glint Removal, Visual Polish & Raider Balance Pass)**
+  - Status: PASS ✅ (Eliminated specular glints across web & C; verified clean HUD and synced raider balance).
+  - Glint Purge: Removed pulsing specular glint square on ore chunks, mineral core glint dot, and canopy glint slash in `kstardredge.html` & `main.c`.
+  - Balance Pass: Synchronized raider combat stats and bounty payouts in native C with web design specs (Skiff 90HP/450CR, Gunship 220HP/1100CR, Dread 450HP/2800CR).
+  - Visual Polish: Cleaned asteroid ore crystal and ship cockpit glass geometry without rogue projectile-like artifacts.
+  - Verification: MSVC C clean build (`KStarDredge.exe` 260.6 KB); single-file web (`kstardredge.html` 449.3 KB); Vite build clean (375ms); security lint 100% clean.
+
 - **2026-09-23T12:45:00Z — kilo-usability: KCalc (Toast Occlusion & Keypad Ergonomics Remediation)**
   - Status: PASS ✅ (Eliminated keypad occlusion; verified non-overlapping layout and crisp interaction).
   - Toast Repositioning: Moved toast container from bottom-center to top-right (`top: 58px; right: 18px`), preventing occlusion of Row 7 calculation buttons (`0`, `.`, `+`, `=`).

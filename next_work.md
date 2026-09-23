@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KHangman
-  kilo_usability: "KHex (Weave Arc 1 Memory Offset IP Clue)"
+  kilo_usability: "KContacts (reposition bottom-right toast blocking submit button)"
   kilo_graphics: "KAbyss (Weave Arc 2 Precursor Relic Glyph)"
   kilo_qa: KZip
   kilo_expander: "KGo (Firebase RTDB Online Multiplayer)"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-tester
-  app: KCalc
-  timestamp: "2026-09-23T17:50:00Z"
+  agent: kilo-usability
+  app: "KHex (Weave Arc 1 Memory Offset IP Clue)"
+  timestamp: "2026-09-23T18:45:00Z"
 last_planner_run: "2026-09-23T04:40:00Z"
 ---
 
@@ -111,9 +111,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KHex` (Tab 2 label, scrollbar, row cutoff)
+- **Current Target**: `KContacts` (reposition bottom-right toast blocking submit button)
 - **Upcoming Queue**:
-  `KContacts` (reposition bottom-right toast blocking submit button), `KFarm` (reposition bottom toast blocking seed radio buttons), `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`.
+  `KFarm` (reposition bottom toast blocking seed radio buttons), `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KZip`
@@ -190,6 +190,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T18:45:00Z — kilo-usability: KHex (Tab 2 Label, Scrollbars, Row Cutoff & Arc 1 Clue)**
+  - Status: PASS ✅ (Resolved Tab 2 label, dark themed scrollbars, row cutoff, and weaved Arc 1 memory offset IP clue).
+  - Usability & Layout: Renamed Tab 2 to "Hex Editor & Viewer", added custom 6px cyber scrollbars, and expanded window to 920x800.
+  - Row Cutoff: Fixed flex shrinking on `.hex-bytes` & `.hex-row` with `min-width: max-content;` preventing byte crushing and ASCII clipping.
+  - Arc 1 Intel: Embedded memory offset `0x0024` indicator pointing to `10.19.99.4` (`kweb://10.19.99.4/classified`) in web & native C.
+  - Toast & Onboarding: Repositioned toasts to top-right with click-to-dismiss; added first-run tutorial modal and F5/F9 quicksave/load.
+  - Verification: Clean MSVC C native build (30.2 KB); clean Vite build (499ms); security lint 100% clean; <999KB ceiling.
+
 - **2026-09-23T17:50:00Z — kilo-tester: KCalc (Interactive UI Audit & Inline Fixes)**
   - Status: PASS ✅ (6 UI/functional issues audited and fixed; 0 regressions).
   - Quicksave & Load: Implemented full workspace snapshots across [F5] Save, [F9] Load, and header buttons (`kcalc_quicksave`).
@@ -222,11 +230,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - First-Run Tutorial: Added session-isolated onboarding (`kwizard_tutorialSeen` / `kwizard_tutorial.dat`) with Esc/Enter/Space dismissal.
   - UI Ergonomics: Added top-right toast notification system and comprehensive controls guide ([F1] Grimoire, [F5] Save, [F9] Load, [D] Deck, [E] End Turn).
   - Verification: MSVC C clean build (`KWizard.exe` 31.7 KB); single-file web (`kwizard.html` 82.1 KB); Vite build clean (346ms); security lint 100% clean.
-
-- **2026-09-23T13:50:00Z — kilo-graphics: KStarDredge (Specular Glint Removal, Visual Polish & Raider Balance Pass)**
-  - Status: PASS ✅ (Eliminated specular glints across web & C; verified clean HUD and synced raider balance).
-  - Glint Purge: Removed pulsing specular glint square on ore chunks, mineral core glint dot, and canopy glint slash in `kstardredge.html` & `main.c`.
-  - Balance Pass: Synchronized raider combat stats and bounty payouts in native C with web design specs (Skiff 90HP/450CR, Gunship 220HP/1100CR, Dread 450HP/2800CR).
-  - Visual Polish: Cleaned asteroid ore crystal and ship cockpit glass geometry without rogue projectile-like artifacts.
-  - Verification: MSVC C clean build (`KStarDredge.exe` 260.6 KB); single-file web (`kstardredge.html` 449.3 KB); Vite build clean (375ms); security lint 100% clean.
 

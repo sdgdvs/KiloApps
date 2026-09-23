@@ -112,20 +112,22 @@
   /* Navigation Tabs */
   .tab-nav {
     display: flex;
-    gap: 6px;
+    gap: 5px;
     background: var(--panel-bg);
     padding: 6px;
     border-radius: 10px;
     border: 1px solid var(--border-color);
     overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(59, 130, 246, 0.25) transparent;
   }
 
   .tab-btn {
-    padding: 8px 16px;
+    padding: 7px 12px;
     border: none;
     background: transparent;
     color: var(--text-secondary);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
     border-radius: 7px;
     cursor: pointer;
@@ -134,6 +136,7 @@
     align-items: center;
     gap: 6px;
     white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .tab-btn:hover {
@@ -427,49 +430,62 @@
     font-family: 'JetBrains Mono', 'Consolas', monospace;
     font-size: 0.85rem;
     overflow-x: auto;
-    max-height: 400px;
+    max-height: min(360px, 45vh);
     overflow-y: auto;
   }
 
   .hex-row {
     display: flex;
+    align-items: center;
     line-height: 1.5;
-    padding: 2px 4px;
+    padding: 3px 6px;
     border-radius: 4px;
+    min-width: max-content;
+    white-space: nowrap;
+    transition: background 0.15s ease;
   }
 
   .hex-row:hover {
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(59, 130, 246, 0.12);
   }
 
   .hex-offset {
     color: var(--accent-purple);
-    width: 90px;
+    width: 96px;
     flex-shrink: 0;
     user-select: none;
+    font-weight: 600;
   }
 
   .hex-bytes {
     display: flex;
-    gap: 8px;
-    flex-grow: 1;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
   }
 
   .hex-byte-group {
     display: flex;
     gap: 4px;
+    flex-shrink: 0;
   }
 
   .hex-byte {
     color: var(--text-primary);
-    width: 22px;
+    width: 24px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     cursor: pointer;
     border-radius: 3px;
+    flex-shrink: 0;
+    transition: background 0.15s ease, color 0.15s ease;
   }
 
   .hex-byte:hover {
-    background: rgba(59, 130, 246, 0.3);
+    background: rgba(59, 130, 246, 0.35);
     color: #fff;
   }
 
@@ -477,23 +493,55 @@
     background: var(--accent-cyan);
     color: #000;
     font-weight: bold;
+    box-shadow: 0 0 6px rgba(6, 182, 212, 0.5);
   }
 
   .hex-byte.highlight {
     background: var(--accent-amber);
     color: #000;
     font-weight: bold;
+    box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
   }
 
   .hex-ascii {
     color: var(--accent-emerald);
-    width: 160px;
+    width: 175px;
     flex-shrink: 0;
-    letter-spacing: 1px;
+    letter-spacing: 1.2px;
     user-select: none;
-    margin-left: 15px;
+    margin-left: 14px;
     border-left: 1px solid var(--border-color);
-    padding-left: 10px;
+    padding-left: 12px;
+    font-family: inherit;
+  }
+
+  /* Usability & Ergonomics: Custom Dark Cyber Scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(9, 13, 22, 0.7);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.4);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(6, 182, 212, 0.7);
+    box-shadow: 0 0 8px rgba(6, 182, 212, 0.4);
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(59, 130, 246, 0.4) rgba(9, 13, 22, 0.7);
+  }
+  .tab-nav::-webkit-scrollbar {
+    height: 3px;
+  }
+  .tab-nav::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.25);
   }
 
   /* Status Bar */
@@ -550,34 +598,36 @@
     animation: particleBurst 0.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
   }
 
-  /* Toast Notification Container */
+  /* Toast Notification Container (Positioned Safely at Top-Right to prevent occluding Status Bar & controls) */
   #toastContainer {
     position: fixed;
-    bottom: 20px;
+    top: 20px;
     right: 20px;
     z-index: 10000;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     pointer-events: none;
+    max-width: 380px;
   }
 
   .khex-toast {
     pointer-events: auto;
+    cursor: pointer;
     background: rgba(15, 23, 42, 0.95);
     border: 1px solid var(--border-color);
     border-left: 4px solid var(--accent-cyan);
     border-radius: 8px;
-    padding: 12px 16px;
+    padding: 10px 14px;
     color: var(--text-primary);
     font-size: 0.85rem;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(12px);
     display: flex;
     align-items: flex-start;
+    justify-content: space-between;
     gap: 10px;
     min-width: 260px;
-    max-width: 380px;
     animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     transition: opacity 0.3s ease, transform 0.3s ease;
   }
@@ -599,14 +649,28 @@
     line-height: 1.35;
   }
 
+  .toast-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+    transition: color 0.15s ease;
+  }
+  .toast-close-btn:hover {
+    color: var(--text-primary);
+  }
+
   @keyframes toastSlideIn {
-    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    from { opacity: 0; transform: translateY(-15px) scale(0.95); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
   @keyframes toastFadeOut {
     from { opacity: 1; transform: translateY(0) scale(1); }
-    to { opacity: 0; transform: translateY(10px) scale(0.95); }
+    to { opacity: 0; transform: translateY(-10px) scale(0.95); }
   }
 
   /* Cybernetic HUD Corner Filigree L-Brackets & Tech Borders */
@@ -714,7 +778,7 @@
   <!-- Navigation Tabs -->
   <div class="tab-nav" role="tablist" aria-label="KHex Suite Tabs">
     <button class="tab-btn active" id="tabbtn-converter" role="tab" aria-selected="true" aria-controls="tab-converter" onclick="switchTab('converter')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">1</span> ⚡ Converter & Inspector</button>
-    <button class="tab-btn" id="tabbtn-editor" role="tab" aria-selected="false" aria-controls="tab-editor" onclick="switchTab('editor')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">2</span> 🔍 Hex Viewer & Buffer</button>
+    <button class="tab-btn" id="tabbtn-editor" role="tab" aria-selected="false" aria-controls="tab-editor" onclick="switchTab('editor')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">2</span> 🔍 Hex Editor & Viewer</button>
     <button class="tab-btn" id="tabbtn-entropy" role="tab" aria-selected="false" aria-controls="tab-entropy" onclick="switchTab('entropy')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">3</span> 📊 Entropy & Dissection</button>
     <button class="tab-btn" id="tabbtn-search" role="tab" aria-selected="false" aria-controls="tab-search" onclick="switchTab('search')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">4</span> 🔎 Search & Replace</button>
     <button class="tab-btn" id="tabbtn-hashes" role="tab" aria-selected="false" aria-controls="tab-hashes" onclick="switchTab('hashes')"><span class="badge" style="padding:2px 6px; font-size:0.7rem;">5</span> 🔐 Checksum & Hashes</button>
@@ -804,7 +868,7 @@
     </div>
   </div>
 
-  <!-- TAB 2: Hex Viewer & Buffer -->
+  <!-- TAB 2: Hex Editor & Viewer -->
   <div id="tab-editor" class="tab-content">
     <div class="panel">
       <div class="panel-title">
@@ -814,7 +878,9 @@
           <button class="btn btn-cyan btn-sm" onclick="document.getElementById('fileInput').click()">Open File</button>
           <button class="btn btn-sm" onclick="loadSampleBuffer()">Load Sample Data</button>
           <button class="btn btn-purple btn-sm" onclick="loadHexBuffer()">Load Hex Bytes</button>
-          <button class="btn btn-sm" style="background:rgba(139,92,246,0.25); border:1px solid rgba(139,92,246,0.5); color:#c084fc;" onclick="loadEchoRomBuffer()">Echo ROM Sector</button>
+          <button class="btn btn-sm" id="btnEchoRom" style="background:rgba(139,92,246,0.25); border:1px solid rgba(139,92,246,0.5); color:#c084fc;" onclick="loadEchoRomBuffer()" title="Load Project Echo ROM Sector (Arc 1 Intel Offset 0x0024)">Echo ROM [0x0024]</button>
+          <button class="btn btn-sm" onclick="quicksaveState()" title="Quicksave Workspace [F5]">Save [F5]</button>
+          <button class="btn btn-sm" onclick="quickloadState()" title="Quickload Workspace [F9]">Load [F9]</button>
         </div>
       </div>
       <div class="form-group">
@@ -825,7 +891,7 @@
 
     <div class="panel">
       <div class="panel-title">
-        <div class="title-left">🖥️ Interactive Hex View (16 Bytes / Row)</div>
+        <div class="title-left">🖥️ Hex View & Byte Editor (16 Bytes / Row)</div>
         <div class="form-row">
           <span style="font-size:0.75rem; color:var(--text-secondary);" id="bufferSizeLabel">Buffer Size: 0 Bytes</span>
         </div>
@@ -833,17 +899,18 @@
       <!-- Hex Navigation & Goto Address Bar -->
       <div id="hexNavBar" style="display:flex; align-items:center; gap:8px; background:var(--input-bg); padding:6px 12px; border-radius:8px; border:1px solid var(--border-color); font-size:0.8rem; font-family:monospace; margin-bottom:8px; flex-wrap:wrap;">
         <span style="color:var(--text-secondary);">📍 Goto Address:</span>
-        <input type="text" id="gotoOffsetInput" placeholder="0x0000 or 0" style="width:110px; padding:4px 8px; font-family:monospace; font-size:0.8rem; background:var(--card-bg); border:1px solid var(--border-color); border-radius:4px; color:var(--accent-cyan);">
+        <input type="text" id="gotoOffsetInput" placeholder="0x0024, 0x0000 or 0" style="width:130px; padding:4px 8px; font-family:monospace; font-size:0.8rem; background:var(--card-bg); border:1px solid var(--border-color); border-radius:4px; color:var(--accent-cyan);">
         <button class="btn btn-sm btn-cyan" onclick="gotoOffset()">Jump [Go]</button>
         <div style="margin-left:auto; display:flex; align-items:center; gap:6px;">
           <button class="btn btn-sm" onclick="jumpOffsetStep(-16)">▲ -16B</button>
           <button class="btn btn-sm" onclick="jumpOffsetStep(16)">▼ +16B</button>
         </div>
       </div>
-      <!-- Selected Byte Editor Toolbar -->
+      <!-- Selected Byte Editor Toolbar with Arc 1 Intel Indicator -->
       <div id="byteEditBar" style="display:flex; align-items:center; gap:10px; background:var(--input-bg); padding:8px 12px; border-radius:8px; border:1px solid var(--border-color); font-size:0.8rem; font-family:monospace; flex-wrap:wrap;">
         <span id="byteEditOffset" style="color:var(--accent-cyan); font-weight:bold;">Offset: 0x00000000 (0)</span>
         <span id="byteEditCurrent" style="color:var(--text-secondary);">Current: 0x48 ('H', 72)</span>
+        <span id="byteEditClue" style="display:none; padding:2px 8px; border-radius:4px; background:rgba(139,92,246,0.25); border:1px solid #a855f7; color:#d8b4fe; font-size:0.75rem; font-weight:600; cursor:pointer;" onclick="showToast('ARG Intel Discovered', 'Corporate Leak IP: 10.19.99.4 -> Open KNet and visit kweb://10.19.99.4/classified', 'success', 7000)" title="Click to view Intel details">🛰️ ARC 1 INTEL: Offset 0x0024 reveals IP 10.19.99.4 (kweb://10.19.99.4/classified)</span>
         <div style="display:flex; align-items:center; gap:6px; margin-left:auto;">
           <label style="font-size:0.75rem; color:var(--text-secondary); text-transform:none;">Edit Byte (Hex):</label>
           <input type="text" id="byteEditHexInput" value="48" maxlength="2" style="width:50px; text-align:center; padding:4px 6px; font-weight:bold; color:var(--accent-cyan);">
@@ -965,7 +1032,7 @@
     </div>
   </div>
 
-  <!-- TAB 4: Checksum & Cryptographic Hash Suite -->
+  <!-- TAB 5: Checksum & Cryptographic Hash Suite -->
   <div id="tab-hashes" class="tab-content">
     <div class="panel">
       <div class="panel-title">
@@ -987,7 +1054,7 @@
     </div>
   </div>
 
-  <!-- TAB 5: Byte Operations -->
+  <!-- TAB 6: Byte Operations -->
   <div id="tab-operations" class="tab-content">
     <div class="grid-2">
       <div class="panel">
@@ -1027,7 +1094,7 @@
     </div>
   </div>
 
-  <!-- TAB 6: Data Export -->
+  <!-- TAB 7: Data Export -->
   <div id="tab-export" class="tab-content">
     <div class="panel">
       <div class="panel-title">
@@ -1082,8 +1149,10 @@
           <div style="font-weight: 700; color: var(--accent-cyan); margin-bottom: 6px;">⌨️ Keyboard Shortcuts</div>
           <table style="width: 100%; font-size: 0.8rem; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[F1]</b> or <b>[H]</b></td><td>Open / Close this Help Guide</td></tr>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[Esc]</b></td><td>Dismiss Help Modal / Active Overlays</td></tr>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[Esc]</b></td><td>Dismiss Active Modals / Overlays</td></tr>
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[E]</b></td><td>Toggle Endianness (Little Endian ⇄ Big Endian)</td></tr>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[P]</b></td><td>Cycle Presets (including Project Echo Sector)</td></tr>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[F5] / [F9]</b></td><td>Quicksave / Quickload Workspace State</td></tr>
             <tr><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[1] - [7]</b></td><td>Quickly switch between Suite Tabs</td></tr>
           </table>
         </div>
@@ -1092,7 +1161,7 @@
           <div style="font-weight: 700; color: var(--accent-cyan); margin-bottom: 6px;">🛠️ Feature Modules</div>
           <ul style="margin: 0; padding-left: 20px; font-size: 0.8rem; line-height: 1.5;">
             <li><b>[1] Converter & Inspector:</b> Real-time synchronization across Hex, Dec, Bin, Oct, ASCII, and IEEE 754 float/double. Includes an interactive 32-bit bitfield manipulator and quick presets (including Project Echo Sector 0x10199904).</li>
-            <li><b>[2] Hex Viewer & Buffer:</b> 16 bytes/row hex viewer with offset navigation, Jump to Offset, +/-16B step controls, Project Echo ROM loader, file import, and sample data.</li>
+            <li><b>[2] Hex Editor & Viewer:</b> 16 bytes/row hex viewer and inline byte editor with offset navigation, Jump to Offset, +/-16B step controls, Project Echo ROM memory dump loader (Arc 1 Intel Offset 0x0024), file import, and quicksave/quickload.</li>
             <li><b>[3] Entropy & Dissection:</b> Chunked sliding-window entropy heatmap with click-to-jump, Shannon Entropy meter, bit density ratio, byte frequency distribution, and file magic signature detection.</li>
             <li><b>[4] Search & Replace:</b> Fast ASCII and Hex byte sequence finder with replace-all capability.</li>
             <li><b>[5] Checksum & Hashes:</b> Instant 8/16/32-bit sums, XOR8, CRC-16 CCITT, IEEE CRC32, Adler-32, FNV-1a, MD5, and SHA-256 digests.</li>
@@ -1108,6 +1177,37 @@
     </div>
   </div>
 
+  <!-- First-Run Onboarding Tutorial Modal -->
+  <div id="tutorialModal" role="dialog" aria-modal="true" aria-labelledby="tutTitle" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9998; justify-content:center; align-items:center; backdrop-filter:blur(6px);" onclick="if(event.target===this) dismissTutorial()">
+    <div class="panel" style="max-width: 600px; width: 92%; max-height: 85vh; overflow-y: auto; border: 1px solid var(--accent-cyan); box-shadow: 0 0 35px rgba(6, 182, 212, 0.4);">
+      <div class="panel-title" style="margin-bottom: 12px;">
+        <div class="title-left" id="tutTitle" style="font-size: 1.15rem; color: var(--accent-cyan);">
+          <span>⚡ Welcome to KHex Suite</span>
+        </div>
+        <button class="btn btn-sm" onclick="dismissTutorial()" style="padding: 2px 8px;">✕</button>
+      </div>
+      <div style="font-size: 0.85rem; line-height: 1.6; color: var(--text-primary); display:flex; flex-direction:column; gap:12px;">
+        <p style="margin:0;">KHex is an advanced 1999-era binary data inspector, hex editor, Shannon entropy analyzer, and byte manipulation workbench.</p>
+        <div style="background:var(--input-bg); padding:10px 14px; border-radius:8px; border:1px solid var(--border-color);">
+          <div style="font-weight:700; color:var(--accent-cyan); margin-bottom:6px;">🚀 Quick Start Guide</div>
+          <ul style="margin:0; padding-left:18px; font-size:0.8rem; line-height:1.5;">
+            <li><b>Tab 1 (Converter & Inspector):</b> Instant sync across Hex, Dec, Bin, IEEE 754 Float, and 32-bit bitfield manipulator.</li>
+            <li><b>Tab 2 (Hex Editor & Viewer):</b> 16 bytes/row hex view with inline byte editing, jump-to-offset, and ROM dump inspector.</li>
+            <li><b>Tab 3 (Entropy & Dissection):</b> Shannon entropy meter, byte distribution histogram, and file magic signature detection.</li>
+            <li><b>Tabs 4-7:</b> Pattern Search/Replace, Checksums (CRC32/MD5/SHA256), Bitwise Ops, and multi-format Export.</li>
+            <li><b>🛰️ Arc 1 Memory Offset:</b> Load the Echo ROM sector to inspect classified offset <code>0x0024</code>!</li>
+          </ul>
+        </div>
+        <div style="font-size:0.8rem; color:var(--text-secondary);">
+          Hotkeys: <b>[F1] / [H]</b> Help &bull; <b>[1-7]</b> Switch Tabs &bull; <b>[E]</b> Swap Endian &bull; <b>[F5] / [F9]</b> Quicksave/Load &bull; <b>[P]</b> Cycle Presets
+        </div>
+      </div>
+      <div style="margin-top:16px; display:flex; justify-content:flex-end; gap:8px;">
+        <button class="btn btn-cyan" onclick="dismissTutorial()">Start Exploring [Enter / Esc]</button>
+      </div>
+    </div>
+  </div>
+
 <script>
   // Global State Buffer
   let initialText = "Hello KHex World! Press 'h' for Help.";
@@ -1117,7 +1217,7 @@
   let activeTab = 'converter';
   let isUpdating = false;
 
-  // Toast Notification Function
+  // Toast Notification Function (Ergonomic Click-to-Dismiss & Cap at 3)
   function showToast(title, message, type = 'info', duration = 4000) {
     let container = document.getElementById('toastContainer');
     if (!container) {
@@ -1125,25 +1225,97 @@
       container.id = 'toastContainer';
       document.body.appendChild(container);
     }
+    while (container.children.length >= 3) {
+      container.removeChild(container.firstChild);
+    }
     const toast = document.createElement('div');
     toast.className = `khex-toast ${type}`;
+    toast.onclick = () => {
+      toast.style.animation = 'toastFadeOut 0.2s forwards';
+      setTimeout(() => toast.remove(), 200);
+    };
     toast.innerHTML = `
-      <div>
+      <div style="flex:1">
         <div class="toast-title">${title}</div>
         <div class="toast-msg">${message}</div>
       </div>
+      <button class="toast-close-btn" title="Dismiss" onclick="event.stopPropagation(); this.closest('.khex-toast').remove();">✕</button>
     `;
     container.appendChild(toast);
     setTimeout(() => {
-      toast.style.animation = 'toastFadeOut 0.3s forwards';
-      setTimeout(() => toast.remove(), 300);
+      if (toast.parentNode) {
+        toast.style.animation = 'toastFadeOut 0.3s forwards';
+        setTimeout(() => toast.remove(), 300);
+      }
     }, duration);
+  }
+
+  function dismissTutorial() {
+    const m = document.getElementById('tutorialModal');
+    if (m) m.style.display = 'none';
+    try { localStorage.setItem('khex_tutorialSeen', '1'); } catch (e) {}
+  }
+
+  // Quicksave & Quickload Workspace State [F5 / F9]
+  function quicksaveState() {
+    if (!binaryBuffer || binaryBuffer.length === 0) {
+      showToast('Quicksave Failed', 'Buffer is empty, nothing to save.', 'warning');
+      return;
+    }
+    const hexStr = Array.from(binaryBuffer).map(b => b.toString(16).padStart(2, '0')).join('');
+    const tb = document.getElementById('rawTextBuffer');
+    const state = {
+      hex: hexStr,
+      text: tb ? tb.value : '',
+      activeTab: activeTab,
+      isLittleEndian: isLittleEndian,
+      selectedOffset: selectedOffset,
+      timestamp: Date.now()
+    };
+    try {
+      localStorage.setItem('khex_quicksave', JSON.stringify(state));
+      showToast('⚡ Quicksave Saved [F5]', `Saved buffer (${binaryBuffer.length} B) to workspace memory.`, 'success', 3000);
+    } catch (e) {
+      showToast('Quicksave Error', 'Could not save state to localStorage.', 'error');
+    }
+  }
+
+  function quickloadState() {
+    try {
+      const saved = localStorage.getItem('khex_quicksave');
+      if (!saved) {
+        showToast('Quickload Notice', 'No saved workspace found in memory. Press F5 to save.', 'info');
+        return;
+      }
+      const state = JSON.parse(saved);
+      if (state.hex) {
+        const bytes = new Uint8Array(state.hex.length / 2);
+        for (let i = 0; i < bytes.length; i++) {
+          bytes[i] = parseInt(state.hex.substr(i * 2, 2), 16);
+        }
+        binaryBuffer = bytes;
+      }
+      const tb = document.getElementById('rawTextBuffer');
+      if (state.text !== undefined && tb) tb.value = state.text;
+      if (state.isLittleEndian !== undefined) {
+        isLittleEndian = state.isLittleEndian;
+        document.getElementById('endianBadge').innerText = isLittleEndian ? 'LE (Little Endian)' : 'BE (Big Endian)';
+      }
+      if (state.activeTab) switchTab(state.activeTab);
+      renderHexView();
+      if (state.selectedOffset !== undefined && state.selectedOffset < binaryBuffer.length) {
+        selectByte(state.selectedOffset);
+      }
+      showToast('⚡ Quickload Restored [F9]', `Restored buffer (${binaryBuffer.length} B) successfully.`, 'success', 3000);
+    } catch (e) {
+      showToast('Quickload Error', 'Failed to parse saved state.', 'error');
+    }
   }
 
   // Initialize UI
   document.addEventListener('DOMContentLoaded', () => {
     if (window.parent && window.parent !== window) {
-      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 860, height: 780 }, '*');
+      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 920, height: 800 }, '*');
     }
     try {
       const savedEndian = localStorage.getItem('khex_endian');
@@ -1174,6 +1346,14 @@
     if (activeTab !== 'converter') {
       switchTab(activeTab);
     }
+
+    // First-Run Tutorial Check
+    try {
+      if (!localStorage.getItem('khex_tutorialSeen')) {
+        const tut = document.getElementById('tutorialModal');
+        if (tut) tut.style.display = 'flex';
+      }
+    } catch (e) {}
 
     // Input Enter key listeners
     const sp = document.getElementById('searchPattern');
@@ -1220,13 +1400,13 @@
         }
       });
     });
-
-    showToast('⚡ KHex Suite Ready', 'Press [F1] or click Help for full shortcuts & documentation.', 'info', 5000);
   });
 
   document.addEventListener('keydown', (e) => {
     let m = document.getElementById('helpModal');
     let isHelpOpen = (m && m.style.display !== 'none');
+    let tut = document.getElementById('tutorialModal');
+    let isTutOpen = (tut && tut.style.display !== 'none');
 
     if (e.key === 'F1' || (!e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 'h' || e.key === 'H') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA')) {
       toggleHelp();
@@ -1234,13 +1414,34 @@
       return;
     }
     if (e.key === 'Escape') {
+      if (isTutOpen) {
+        dismissTutorial();
+        e.preventDefault();
+        return;
+      }
       if (isHelpOpen) {
         m.style.display = 'none';
         e.preventDefault();
+        return;
       }
       return;
     }
-    if (!isHelpOpen && !e.ctrlKey && !e.altKey && !e.metaKey && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+    if (isTutOpen && (e.key === 'Enter' || e.key === ' ')) {
+      dismissTutorial();
+      e.preventDefault();
+      return;
+    }
+    if (e.key === 'F5') {
+      e.preventDefault();
+      quicksaveState();
+      return;
+    }
+    if (e.key === 'F9') {
+      e.preventDefault();
+      quickloadState();
+      return;
+    }
+    if (!isHelpOpen && !isTutOpen && !e.ctrlKey && !e.altKey && !e.metaKey && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
       if (e.key === '1') { switchTab('converter'); e.preventDefault(); }
       else if (e.key === '2') { switchTab('editor'); e.preventDefault(); }
       else if (e.key === '3') { switchTab('entropy'); e.preventDefault(); }
@@ -1257,7 +1458,7 @@
         e.preventDefault();
       }
       else if (e.key === 'p' || e.key === 'P') {
-        const presets = ['0x12345678', '0x89504E47', '0x504B0304', '0x7F454C46', '0x00005A4D', '0xCAFEBABE', '0x6D736100', '0x40490FDB'];
+        const presets = ['0x12345678', '0x89504E47', '0x504B0304', '0x7F454C46', '0x00005A4D', '0xCAFEBABE', '0x6D736100', '0x40490FDB', '0x10199904'];
         let cur = hexInput.value.replace(/[^0-9a-fA-F]/g, '');
         let curVal = '0x' + parseInt(cur, 16).toString(16).toUpperCase();
         let idx = presets.findIndex(p => p.toUpperCase() === curVal);
@@ -1504,7 +1705,7 @@
     if (bytes.length >= 2 && bytes[0] === 0x23 && bytes[1] === 0x21) {
       return { name: 'Unix Script Shebang', ext: '.sh', desc: 'Executable script interpreter directive (#!/...).' };
     }
-    if (ascii.startsWith('ECHO_ROM_1999') || (bytes.length >= 4 && bytes[0] === 0x10 && bytes[1] === 0x19 && bytes[2] === 0x99 && bytes[3] === 0x04)) {
+    if (ascii.startsWith('ECHO_ROM_1999') || (bytes.length >= 4 && ((bytes[0] === 0x10 && bytes[1] === 0x19 && bytes[2] === 0x99 && bytes[3] === 0x04) || (bytes[0] === 0x04 && bytes[1] === 0x99 && bytes[2] === 0x19 && bytes[3] === 0x10)))) {
       return { name: 'Project Echo ROM Sector', ext: '.rom', desc: 'Classified Subsystem Memory Sector [ARG Intranet: kweb://10.19.99.4/classified]' };
     }
     if (bytes.length >= 12 && ascii.startsWith('RIFF') && ascii.substring(8, 12) === 'WEBP') {
@@ -1968,7 +2169,9 @@
         let idx = offset + i;
         if (i === 8) {
           let gap = document.createElement('span');
-          gap.style.width = '8px';
+          gap.style.display = 'inline-block';
+          gap.style.width = '10px';
+          gap.style.flexShrink = '0';
           bytesGroup.appendChild(gap);
         }
 
@@ -2028,6 +2231,22 @@
     if (bcEl) bcEl.innerText = 'Current: 0x' + bHex + ' (' + bAsc + ', ' + b + ')';
     const bhIn = document.getElementById('byteEditHexInput');
     if (bhIn) bhIn.value = bHex;
+
+    // Check Arc 1 Intel Memory Offset IP clue (10.19.99.4)
+    const clueEl = document.getElementById('byteEditClue');
+    if (clueEl) {
+      let isIpClue = false;
+      for (let delta = -3; delta <= 0; delta++) {
+        let start = idx + delta;
+        if (start >= 0 && start + 3 < binaryBuffer.length) {
+          if (binaryBuffer[start] === 0x10 && binaryBuffer[start + 1] === 0x19 && binaryBuffer[start + 2] === 0x99 && binaryBuffer[start + 3] === 0x04) {
+            isIpClue = true;
+            break;
+          }
+        }
+      }
+      clueEl.style.display = isIpClue ? 'inline-flex' : 'none';
+    }
     
     // Read 4 bytes from selected byte for Data Inspector
     let val = 0;
@@ -2721,8 +2940,13 @@
   const appWrapper = document.getElementById('appWrapper');
 
   function resizeFxCanvas() {
-    fxCanvas.width = window.innerWidth;
-    fxCanvas.height = window.innerHeight;
+    const dpr = window.devicePixelRatio || 1;
+    fxCanvas.width = window.innerWidth * dpr;
+    fxCanvas.height = window.innerHeight * dpr;
+    fxCanvas.style.width = window.innerWidth + 'px';
+    fxCanvas.style.height = window.innerHeight + 'px';
+    fxCtx.setTransform(1, 0, 0, 1, 0, 0);
+    fxCtx.scale(dpr, dpr);
   }
   window.addEventListener('resize', resizeFxCanvas);
   resizeFxCanvas();

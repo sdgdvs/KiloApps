@@ -571,6 +571,7 @@ void ExportDissection(unsigned int val) {
             "-----------------------------------------------------------------------\r\n"
             ">>> PROJECT ECHO CLASSIFIED ARG INTEL DETECTED <<<\r\n"
             "  Target Subsystem Address: 10.19.99.4\r\n"
+            "  Memory Dump Offset:       0x0024 (Byte Offset 36)\r\n"
             "  Encrypted Corporate Node: kweb://10.19.99.4/classified\r\n"
             "  Authorization Directive:  Access via KNet retro browser\r\n"
             "=======================================================================",
