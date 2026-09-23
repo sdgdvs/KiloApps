@@ -11,37 +11,87 @@
             color: #e0e6ed;
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             min-height: 100vh;
             box-sizing: border-box;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
+
+        /* Custom retro scrollbar */
+        ::-webkit-scrollbar { width: 7px; height: 7px; }
+        ::-webkit-scrollbar-track { background: #0e1219; }
+        ::-webkit-scrollbar-thumb { background: #2d3848; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4facfe; }
+
         #game-container {
             background: #161c26;
             background-image: linear-gradient(180deg, #1c2432 0%, #121720 100%);
-            border: 4px solid #3b2414;
+            border: 3px solid #3b2414;
             border-radius: 12px;
-            padding: 24px;
+            padding: 12px 16px;
             width: 100%;
-            max-width: 540px;
+            max-width: 560px;
             text-align: center;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 12px 36px rgba(0, 0, 0, 0.75);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 8px 28px rgba(0, 0, 0, 0.75);
             position: relative;
+            margin: auto 0;
+            box-sizing: border-box;
+        }
+        #header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        h1 {
+            margin: 0;
+            color: #4facfe;
+            font-size: 22px;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 8px rgba(79, 172, 254, 0.4);
+        }
+        #upper-panel {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        #hangman-canvas {
+            background: #0e1219;
+            border: 2px solid #2a3446;
+            border-radius: 8px;
+            display: block;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.9), 0 4px 12px rgba(0,0,0,0.5);
+            width: 240px;
+            height: 200px;
+            flex-shrink: 0;
+        }
+        #info-panel {
+            flex: 1;
+            min-width: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 6px;
+            text-align: center;
         }
         #stats {
             background: rgba(12, 16, 23, 0.85);
             border: 1px solid #2d3848;
-            padding: 10px 14px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-size: 13px;
+            padding: 5px 8px;
+            border-radius: 6px;
+            font-size: 11px;
             display: flex;
             justify-content: space-around;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 4px;
             width: 100%;
             box-sizing: border-box;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
@@ -51,61 +101,76 @@
             color: #4facfe;
             text-shadow: 0 0 6px rgba(79, 172, 254, 0.4);
         }
-        h1 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            color: #4facfe;
-            font-size: 26px;
-            letter-spacing: 1px;
-            text-shadow: 0 2px 10px rgba(79, 172, 254, 0.4);
-        }
-        #hangman-canvas {
-            background: #0e1219;
-            border: 2px solid #2a3446;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            display: inline-block;
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.9), 0 4px 12px rgba(0,0,0,0.5);
+        #category {
+            padding: 6px 8px;
+            background: #1c2432;
+            color: #e0e6ed;
+            border: 1px solid #3a485c;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+            box-sizing: border-box;
         }
         #word-display {
-            font-size: 32px;
-            letter-spacing: 6px;
-            margin-bottom: 15px;
+            font-size: 24px;
+            letter-spacing: 4px;
             font-weight: bold;
-            min-height: 44px;
+            min-height: 36px;
             font-family: 'Consolas', 'Courier New', monospace;
             color: #ffffff;
             text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(10, 14, 20, 0.65);
+            border: 1px solid #253040;
+            border-radius: 6px;
+            padding: 4px 6px;
+            word-break: break-all;
+            box-sizing: border-box;
+        }
+        #message {
+            min-height: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
         }
         #keyboard {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-            margin-bottom: 16px;
+            gap: 4px;
+            margin-bottom: 8px;
         }
         .key {
             background: linear-gradient(180deg, #3a4659 0%, #252e3d 100%);
             color: #f0f4f8;
             border: 1px solid #4a5870;
-            border-radius: 6px;
-            padding: 9px 0;
+            border-radius: 5px;
+            padding: 6px 0;
             cursor: pointer;
             font-weight: bold;
-            font-size: 15px;
+            font-size: 14px;
             position: relative;
-            box-shadow: 0 4px 0 #141a24, 0 5px 10px rgba(0,0,0,0.4);
-            transition: all 0.12s ease;
+            box-shadow: 0 3px 0 #141a24, 0 4px 8px rgba(0,0,0,0.4);
+            transition: all 0.1s ease;
             user-select: none;
         }
         .key:hover:not(:disabled) {
             background: linear-gradient(180deg, #46556e 0%, #303b4e 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 0 #141a24, 0 8px 15px rgba(79, 172, 254, 0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 0 #141a24, 0 6px 12px rgba(79, 172, 254, 0.3);
             border-color: #5c6e8c;
         }
         .key:active:not(:disabled) {
             transform: translateY(2px);
-            box-shadow: 0 2px 0 #141a24;
+            box-shadow: 0 1px 0 #141a24;
         }
         .key:disabled {
             background: #141922;
@@ -119,7 +184,7 @@
             background: linear-gradient(180deg, #2e7d32 0%, #1b5e20 100%) !important;
             border-color: #4caf50 !important;
             color: #ffffff !important;
-            box-shadow: 0 3px 0 #0d3810, 0 0 10px rgba(76, 175, 80, 0.4) !important;
+            box-shadow: 0 2px 0 #0d3810, 0 0 8px rgba(76, 175, 80, 0.4) !important;
             opacity: 1 !important;
         }
         .key.key-wrong {
@@ -134,34 +199,27 @@
             position: absolute;
             top: 1px;
             right: 3px;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: bold;
         }
         .key.key-correct[data-badge]::after { color: #a5d6a7; }
         .key.key-wrong[data-badge]::after { color: #ef9a9a; }
 
-        #message {
-            height: 26px;
-            font-size: 15px;
-            margin-bottom: 15px;
-            font-weight: bold;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
         .btn {
             color: white;
             border: 1px solid rgba(255,255,255,0.2);
             border-radius: 6px;
-            padding: 8px 12px;
+            padding: 6px 10px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 12px;
-            box-shadow: 0 3px 0 rgba(0,0,0,0.4);
+            font-size: 11px;
+            box-shadow: 0 2px 0 rgba(0,0,0,0.4);
             transition: transform 0.1s, opacity 0.15s, box-shadow 0.1s;
         }
         .btn:hover:not(:disabled) {
             opacity: 0.92;
             transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.5);
         }
         .btn:active:not(:disabled) {
             transform: translateY(1px);
@@ -191,50 +249,74 @@
             animation: pulse 1.5s infinite;
             display: inline-block;
         }
+        @media (max-width: 520px) {
+            #upper-panel {
+                flex-direction: column;
+            }
+            #game-container {
+                padding: 10px;
+            }
+            #word-display {
+                font-size: 20px;
+                letter-spacing: 3px;
+            }
+            .key {
+                padding: 5px 0;
+                font-size: 12px;
+            }
+        }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <h1>KHangman</h1>
-    
-    <div id="stats">
-        <div>Wins: <span id="stat-wins">0</span></div>
-        <div>Losses: <span id="stat-losses">0</span></div>
-        <div>Streak: <span id="stat-streak">0</span></div>
-        <div>Best: <span id="stat-best">0</span></div>
-        <div>Blitz Best: <span id="stat-blitz-best">0</span></div>
+    <div id="header-row">
+        <h1>KHangman</h1>
+        <div style="display: flex; gap: 6px; align-items: center;">
+            <button class="btn" onclick="toggleMute()" id="mute-btn" style="background-color: #455a64; padding: 4px 8px; font-size: 11px;">🔊 Sound</button>
+            <button class="btn" onclick="showHelp()" style="background-color: #1e88e5; padding: 4px 8px; font-size: 11px;">Help [F1]</button>
+        </div>
     </div>
     
-    <select id="category" onchange="handleCategoryChange()" style="margin-bottom: 15px; padding: 7px 10px; background: #1c2432; color: #e0e6ed; border: 1px solid #3a485c; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);">
-        <option value="Animals">Animals</option>
-        <option value="Science">Science</option>
-        <option value="Countries">Countries</option>
-        <option value="Movies">Movies</option>
-        <option value="Tech">Tech</option>
-        <option value="Myth">Myth</option>
-        <option value="Food">Food</option>
-        <option value="Literature">Literature</option>
-        <option value="Space">Space</option>
-        <option value="Sports">Sports</option>
-        <option value="Custom">Custom</option>
-    </select>
-    
-    <div id="custom-container" style="display: none; margin-bottom: 15px;">
-        <input type="text" id="custom-words" placeholder="e.g. APPLE, BANANA, CHERRY" onkeydown="if(event.key === 'Enter'){initGame();this.blur();}" style="padding: 7px; width: 260px; background: #1c2432; color: white; border: 1px solid #3a485c; border-radius: 6px; font-size: 14px;">
-        <button onclick="initGame()" class="btn" style="background-color: #007acc; margin-left: 5px;">Play Custom</button>
+    <div id="upper-panel">
+        <canvas id="hangman-canvas" width="240" height="200"></canvas>
+        <div id="info-panel">
+            <select id="category" onchange="handleCategoryChange()">
+                <option value="Animals">Animals</option>
+                <option value="Science">Science</option>
+                <option value="Countries">Countries</option>
+                <option value="Movies">Movies</option>
+                <option value="Tech">Tech</option>
+                <option value="Myth">Myth</option>
+                <option value="Food">Food</option>
+                <option value="Literature">Literature</option>
+                <option value="Space">Space</option>
+                <option value="Sports">Sports</option>
+                <option value="Custom">Custom</option>
+            </select>
+            
+            <div id="custom-container" style="display: none; margin-bottom: 4px;">
+                <input type="text" id="custom-words" placeholder="e.g. APPLE, BANANA" onkeydown="if(event.key === 'Enter'){initGame();this.blur();}" style="padding: 4px 6px; width: 140px; background: #1c2432; color: white; border: 1px solid #3a485c; border-radius: 5px; font-size: 11px;">
+                <button onclick="initGame()" class="btn" style="background-color: #007acc; padding: 4px 8px; font-size: 11px; margin-left: 4px;">Play</button>
+            </div>
+            
+            <div id="word-display">_ _ _ _ _</div>
+            <div id="message">Guess a letter to start</div>
+            
+            <div id="stats">
+                <div>Wins: <span id="stat-wins">0</span></div>
+                <div>Losses: <span id="stat-losses">0</span></div>
+                <div>Streak: <span id="stat-streak">0</span></div>
+                <div>Best: <span id="stat-best">0</span></div>
+                <div>Blitz: <span id="stat-blitz-best">0</span></div>
+            </div>
+        </div>
     </div>
-    
-    <canvas id="hangman-canvas" width="240" height="200"></canvas>
-    
-    <div id="word-display">_ _ _ _ _</div>
-    
-    <div id="message">Guess a letter to start</div>
     
     <div id="keyboard"></div>
     
     <!-- Row 1: Active Skills -->
-    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;">
+    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 5px; margin-bottom: 6px;">
         <button class="btn" onclick="useVowelReveal()" id="vowel-btn" style="background-color: #009688;">Vowel[V](2)</button>
         <button class="btn" onclick="useConsonantRadar()" id="radar-btn" style="background-color: #fb8c00;">Radar[H](2)</button>
         <button class="btn" onclick="useShield()" id="shield-btn" style="background-color: #8e24aa;">Shield[S](2)</button>
@@ -243,24 +325,25 @@
     </div>
 
     <!-- Row 2: Game Modes -->
-    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;">
+    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 5px; margin-bottom: 6px;">
         <button class="btn" onclick="startCampaign()" id="campaign-btn" style="background-color: #00897b;">Campaign (20)</button>
         <button class="btn" onclick="startBlitz()" id="blitz-btn" style="background-color: #d81b60;">Blitz Mode</button>
         <button class="btn" onclick="gameMode = 0; initGame()" style="background-color: #0288d1;">Freeplay</button>
     </div>
 
-    <!-- Row 3: Utility & Save -->
-    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 6px;">
-        <button class="btn" onclick="saveGameState()" style="background-color: #43a047;">Save</button>
-        <button class="btn" onclick="loadGameState()" style="background-color: #6a1b9a;">Load</button>
-        <button class="btn" onclick="showHelp()" style="background-color: #1e88e5;">Help</button>
-        <button class="btn" onclick="toggleMute()" id="mute-btn" style="background-color: #455a64;">🔊 Sound</button>
-        <button class="btn" onclick="resetStats()" style="background-color: #546e7a;">Reset Stats</button>
+    <!-- Row 3: Utility, Quicksave & Data Persistence -->
+    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 5px;">
+        <button class="btn" onclick="saveGameState()" title="Quicksave [F5]" style="background-color: #43a047;">Save [F5]</button>
+        <button class="btn" onclick="loadGameState()" title="Quickload [F9]" style="background-color: #6a1b9a;">Load [F9]</button>
+        <button class="btn" onclick="exportSaveJSON()" title="Export Save JSON" style="background-color: #388e3c;">Export</button>
+        <button class="btn" onclick="document.getElementById('import-file').click()" title="Import Save JSON" style="background-color: #512da8;">Import</button>
+        <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importSaveJSON(event)">
+        <button class="btn" onclick="resetStats()" style="background-color: #546e7a;">Reset</button>
     </div>
 </div>
 
 <div id="help-modal" onclick="if(event.target === this) hideHelp();" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; flex-direction: column;">
-    <div style="background: #161c26; padding: 25px; border-radius: 12px; max-width: 460px; text-align: left; border: 2px solid #3a485c; color: #e0e6ed; box-shadow: 0 8px 32px rgba(0,0,0,0.8);">
+    <div style="background: #161c26; padding: 22px; border-radius: 12px; max-width: 480px; text-align: left; border: 2px solid #3a485c; color: #e0e6ed; box-shadow: 0 8px 32px rgba(0,0,0,0.8); max-height: 85vh; overflow-y: auto;">
         <h2 style="color: #4facfe; margin-top: 0;">How to Play KHangman</h2>
         <p><strong>Rules:</strong> Guess the hidden word letter by letter before your strikes run out.</p>
         <p><strong>Game Modes:</strong></p>
@@ -272,13 +355,20 @@
         <p><strong>Active Skills & Power-Ups:</strong></p>
         <ul>
             <li><strong>Vowel Reveal [V]:</strong> Instantly reveals 1 hidden vowel in target word.</li>
-            <li><strong>Consonant Radar [H]:</strong> Reveals 1 hidden consonant.</li>
+            <li><strong>Consonant Radar [H / R]:</strong> Reveals 1 hidden consonant.</li>
             <li><strong>Strike Shield [S]:</strong> Absorbs 1 incorrect letter guess strike.</li>
             <li><strong>Freeze Timer [F]:</strong> Freezes stage/blitz timer for 15 seconds.</li>
             <li><strong>Bomb Nuke [B]:</strong> Eliminates 3 incorrect letters from keyboard.</li>
         </ul>
-        <div style="text-align: right; margin-top: 20px;">
-            <button onclick="hideHelp()" class="btn" style="background-color: #e53935;">Close</button>
+        <p><strong>Keyboard Shortcuts:</strong></p>
+        <ul>
+            <li><strong>A - Z:</strong> Guess letter</li>
+            <li><strong>F5 / F9:</strong> Quicksave / Quickload game state</li>
+            <li><strong>Space / Enter:</strong> Restart game or advance to next campaign stage</li>
+            <li><strong>F1 / ?:</strong> Help modal & tutorial (Escape / Enter / Space to close)</li>
+        </ul>
+        <div style="text-align: right; margin-top: 16px;">
+            <button onclick="hideHelp()" class="btn" style="background-color: #e53935;">Close [Esc]</button>
         </div>
     </div>
 </div>
@@ -369,6 +459,7 @@
 
     function hideHelp() {
         document.getElementById('help-modal').style.display = 'none';
+        try { localStorage.setItem('khangman_tutorial_seen', '1'); } catch (e) {}
     }
 
     function initAudio() {
@@ -600,6 +691,82 @@
                 msgEl.style.color = "#f44336";
             }
         }
+    }
+
+    function exportSaveJSON() {
+        const state = {
+            stats: stats,
+            word: word,
+            category: document.getElementById('category').value,
+            guessed: Array.from(guessed),
+            errors: errors,
+            gameMode: gameMode,
+            campaignLevel: campaignLevel,
+            maxErrors: maxErrors,
+            vowelReveals: vowelReveals,
+            consonantRadars: consonantRadars,
+            shields: shields,
+            freezes: freezes,
+            bombs: bombs,
+            freezeTimerSeconds: freezeTimerSeconds,
+            blitzTime: blitzTime,
+            blitzWords: blitzWords,
+            exportedAt: new Date().toISOString()
+        };
+        try {
+            const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `khangman_save_${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            const msgEl = document.getElementById('message');
+            if (msgEl) {
+                msgEl.innerText = "💾 Save exported to JSON file!";
+                msgEl.style.color = "#81c784";
+            }
+        } catch (e) {
+            const msgEl = document.getElementById('message');
+            if (msgEl) {
+                msgEl.innerText = "⚠️ Failed to export save.";
+                msgEl.style.color = "#f44336";
+            }
+        }
+    }
+
+    function importSaveJSON(event) {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const state = JSON.parse(e.target.result);
+                if (state.stats) {
+                    stats = state.stats;
+                    saveStats();
+                }
+                if (state.word) {
+                    localStorage.setItem('khangman_save', JSON.stringify(state));
+                    loadGameState();
+                }
+                const msgEl = document.getElementById('message');
+                if (msgEl) {
+                    msgEl.innerText = "📂 JSON save file imported successfully!";
+                    msgEl.style.color = "#81c784";
+                }
+            } catch (err) {
+                const msgEl = document.getElementById('message');
+                if (msgEl) {
+                    msgEl.innerText = "⚠️ Invalid JSON save file.";
+                    msgEl.style.color = "#f44336";
+                }
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
     }
 
     function updateSkillButtons() {
@@ -1907,6 +2074,11 @@
                 playSound('shield');
                 triggerScreenShake(8);
                 spawnShockwave(165, 50, 60, '#8e24aa');
+                const msgEl = document.getElementById('message');
+                if (msgEl) {
+                    msgEl.innerText = `🛡️ Strike absorbed by Shield! (${shields} left)`;
+                    msgEl.style.color = '#ce93d8';
+                }
             } else {
                 errors++;
                 ropeAngularVelocity += (Math.random() > 0.5 ? 0.3 : -0.3); // Add sudden sway on error
@@ -2003,20 +2175,32 @@
     }
 
     document.addEventListener('keydown', (e) => {
-        if (e.ctrlKey || e.altKey || e.metaKey) return;
-        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
-
-        const helpModal = document.getElementById('help-modal');
-        if (e.key === 'Escape') {
-            if (helpModal && helpModal.style.display !== 'none') {
-                hideHelp();
-                return;
-            }
-        }
-
-        if (helpModal && helpModal.style.display !== 'none') {
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) {
+            if (e.key === 'Escape') e.target.blur();
             return;
         }
+
+        const helpModal = document.getElementById('help-modal');
+        if (helpModal && helpModal.style.display !== 'none') {
+            if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                hideHelp();
+            }
+            return;
+        }
+
+        if (e.key === 'F5') {
+            e.preventDefault();
+            saveGameState();
+            return;
+        }
+        if (e.key === 'F9') {
+            e.preventDefault();
+            loadGameState();
+            return;
+        }
+
+        if (e.ctrlKey || e.altKey || e.metaKey) return;
 
         if (e.key === '?' || e.key === 'F1') {
             e.preventDefault();
@@ -2024,10 +2208,24 @@
             return;
         }
 
+        if (gameEnded) {
+            if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault();
+                if (gameMode === 1) {
+                    startCampaign();
+                } else if (gameMode === 2) {
+                    startBlitz();
+                } else {
+                    initGame();
+                }
+                return;
+            }
+        }
+
         const keyUpper = e.key.toUpperCase();
         if (keyUpper === 'V' && vowelReveals > 0 && !gameEnded) {
             useVowelReveal();
-        } else if (keyUpper === 'H' && consonantRadars > 0 && !gameEnded) {
+        } else if ((keyUpper === 'H' || keyUpper === 'R') && consonantRadars > 0 && !gameEnded) {
             useConsonantRadar();
         } else if (keyUpper === 'S' && shields > 0 && !gameEnded) {
             useShield();
@@ -2040,8 +2238,16 @@
         }
     });
 
+    function checkFirstRunTutorial() {
+        if (!localStorage.getItem('khangman_tutorial_seen')) {
+            showHelp();
+            localStorage.setItem('khangman_tutorial_seen', '1');
+        }
+    }
+
     loadStats();
     initGame();
+    checkFirstRunTutorial();
     requestAnimationFrame(renderHangmanCanvas);
 </script>
 </body>

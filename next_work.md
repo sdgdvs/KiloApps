@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KHangman
+  kilo_tester: KTodo
   kilo_usability: "KContacts (reposition bottom-right toast blocking submit button)"
   kilo_graphics: KColosseum
   kilo_qa: KChrono
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-creator
-  app: "kweb://users/~neon_rider (Virtual Web 1999 & ASM Devlog)"
-  timestamp: "2026-09-23T22:45:00Z"
+  agent: kilo-tester
+  app: KHangman
+  timestamp: "2026-09-23T23:50:00Z"
 last_planner_run: "2026-09-23T04:40:00Z"
 ---
 
@@ -106,9 +106,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KCyber`, `KMech`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KHangman` (keyboard cutoff)
+- **Current Target**: `KTodo`
 - **Upcoming Queue**:
-  `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`.
+  `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KContacts` (reposition bottom-right toast blocking submit button)
@@ -192,6 +192,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T23:50:00Z — kilo-tester: KHangman (Keyboard Cutoff & UI Audit Remediation)**
+  - Status: PASS ✅ (2 issues identified, 2 fixed; 0 regressions).
+  - Layout & Ergonomics: Restructured upper panel into side-by-side canvas and info column, eliminating keyboard cutoff across all window sizes with responsive scrolling.
+  - Interactive Audit: Wired [F5] quicksave, [F9] quickload, [Space]/[Enter] game restart, dual radar hotkeys [H]/[R], and modal focus trapping.
+  - Data Persistence: Implemented JSON save export and file import with quota safety.
+  - Onboarding & Feedback: Added first-run onboarding tutorial (`khangman_tutorial_seen`) with Esc/Enter/Space dismissals and visual shield strike notifications.
+  - Verification: MSVC C clean build (`KHangman.exe` 36.4 KB); Vite clean build (386ms, `khangman.html` 94.7 KB); security lint 100% clean; <999KB ceiling.
+
 - **2026-09-23T22:45:00Z — kilo-creator: kweb://users/~neon_rider (Virtual Web 1999 & ASM Devlog)**
   - Status: PASS ✅ (Anti-Potemkin Virtual 1999 Web destination fully implemented; 0 regressions).
   - Architecture: Created `KiloOS/public/web/users/neon_rider.html` (64.2 KB < 999 KB ceiling) in pure HTML5, CSS & Web Audio.
@@ -224,12 +232,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Glint & Dot Purge: Removed chest lock specular glints, merchant coin glint, and rotating void crystal dots around Void Monarch.
   - Balance Pass: Integrated Precursor Glyph (+11 Light, +25 MP/SAN, +4 Arcana) into gear/merchant pools and attuned ley-line resonance.
   - Verification: MSVC C clean build (`KAbyss.exe` 218.5 KB); Vite clean build (380ms); icon uniqueness 100%; security lint clean (<999KB).
-
-- **2026-09-23T18:45:00Z — kilo-usability: KHex (Tab 2 Label, Scrollbars, Row Cutoff & Arc 1 Clue)**
-  - Status: PASS ✅ (Resolved Tab 2 label, dark themed scrollbars, row cutoff, and weaved Arc 1 memory offset IP clue).
-  - Usability & Layout: Renamed Tab 2 to "Hex Editor & Viewer", added custom 6px cyber scrollbars, and expanded window to 920x800.
-  - Row Cutoff: Fixed flex shrinking on `.hex-bytes` & `.hex-row` with `min-width: max-content;` preventing byte crushing and ASCII clipping.
-  - Arc 1 Intel: Embedded memory offset `0x0024` indicator pointing to `10.19.99.4` (`kweb://10.19.99.4/classified`) in web & native C.
-  - Toast & Onboarding: Repositioned toasts to top-right with click-to-dismiss; added first-run tutorial modal and F5/F9 quicksave/load.
-  - Verification: Clean MSVC C native build (30.2 KB); clean Vite build (499ms); security lint 100% clean; <999KB ceiling.
 

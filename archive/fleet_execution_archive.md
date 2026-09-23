@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-23T18:45:00Z — kilo-usability: KHex (Tab 2 Label, Scrollbars, Row Cutoff & Arc 1 Clue)**
+  - Status: PASS ✅ (Resolved Tab 2 label, dark themed scrollbars, row cutoff, and weaved Arc 1 memory offset IP clue).
+  - Usability & Layout: Renamed Tab 2 to "Hex Editor & Viewer", added custom 6px cyber scrollbars, and expanded window to 920x800.
+  - Row Cutoff: Fixed flex shrinking on `.hex-bytes` & `.hex-row` with `min-width: max-content;` preventing byte crushing and ASCII clipping.
+  - Arc 1 Intel: Embedded memory offset `0x0024` indicator pointing to `10.19.99.4` (`kweb://10.19.99.4/classified`) in web & native C.
+  - Toast & Onboarding: Repositioned toasts to top-right with click-to-dismiss; added first-run tutorial modal and F5/F9 quicksave/load.
+  - Verification: Clean MSVC C native build (30.2 KB); clean Vite build (499ms); security lint 100% clean; <999KB ceiling.
+
 - **2026-09-23T16:45:00Z — kilo-creator: KSteno (Stenographic Carrier Suite & Dead-Drop Network)**
   - Status: PASS ✅ (New app created: native Win32 C + HTML5 web app registered in KiloOS).
   - Web App (ksteno.html, 125.7 KB): Multi-carrier workbench: 1/2/4-bit image LSB (seeded PRNG), 16-bit PCM audio modulation, SNOW whitespace chaff, Chi-Square (χ²) PoVs steganalysis, Firebase RTDB global dead-drop network.
