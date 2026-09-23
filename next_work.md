@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-tester
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -16,7 +16,7 @@ current_targets:
   kilo_usability: KHex
   kilo_graphics: KAbyss
   kilo_qa: KZip
-  kilo_expander: "KChess (Firebase RTDB Multiplayer)"
+  kilo_expander: "KGo (Multiplayer)"
   kilo_creator: "KSteno (Stenographic Carrier Suite)"
 virtual_web_target: "kweb://users/~neon_rider"
 virtual_web_rotation:
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-qa
-  app: KWizard
-  timestamp: "2026-09-23T14:45:00Z"
+  agent: kilo-expander
+  app: "KChess (Firebase RTDB Multiplayer)"
+  timestamp: "2026-09-23T15:55:00Z"
 last_planner_run: "2026-09-23T04:40:00Z"
 ---
 
@@ -112,9 +112,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KChrono`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KChess` (Implement Seamless Firebase RTDB Multiplayer per Mandate 12)
+- **Current Target**: `KGo` (Implement Seamless Firebase RTDB Multiplayer per Mandate 12)
 - **Upcoming Queue**:
-  `KGo` (Multiplayer), `KReversi` (Multiplayer), `KDarts` (Multiplayer), `KTetris` (Arcade Duel Multiplayer), `KSnake` (Multiplayer), `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote` *(Completed: KConnect4)*.
+  `KReversi` (Multiplayer), `KDarts` (Multiplayer), `KTetris` (Arcade Duel Multiplayer), `KSnake` (Multiplayer), `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote` *(Completed: KConnect4, KChess)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -170,6 +170,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T15:55:00Z — kilo-expander: KChess (Firebase RTDB Seamless Online Multiplayer)**
+  - Status: PASS ✅ (Cross-computer multiplayer verified; 0 regressions).
+  - Online Multiplayer: Added Firebase RTDB real-time move sync (`multiplayer/kchess/rooms/<roomId>`), turn alternation, SAN/FEN sync, and presence with `onDisconnect()`.
+  - Matchmaking & Lobby: Built public lobby index (`multiplayer/kchess/lobby`), instant 1-click Quick Match, custom room creation (public/private), and code join.
+  - Social & Controls: Added interactive match HUD bar with quick chat phrases, rematch handshakes, invite link copy, and spectator mode.
+  - UI Ergonomics: Added `[O]` hotkey & toolbar button, online turn indicator, and disabled disruptive offline controls during active matches.
+  - Verification: Single-file web (`kchess.html` 154.0 KB); Vite build clean (375ms); security lint 100% clean; strict <999 KB ceiling.
+
 - **2026-09-23T14:45:00Z — kilo-qa: KWizard (Pass 5: Tutorial & State Integrity)**
   - Status: PASS ✅ (Full state persistence & tutorial isolation verified; 0 regressions).
   - Quicksave & Load: Implemented full state persistence across F5/F9 hotkeys and toolbar buttons in web (`kwizard_save`) and native C (`kwizard.dat`).
@@ -198,12 +206,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast Ergonomics: Repositioned toast from bottom-center to top-right with instant click-to-dismiss and ARIA polite announcements.
   - Audio & UI Feedback: Added procedural Web Audio UI tones for dialog transitions and confirmed all 54 interactive elements reactive.
   - Verification: Headless CDP test pass (54 elements, 0 warnings, 0 errors, 60 FPS pacing); Vite build clean (452ms); Win32 C build clean (13.5 KB); security lint clean.
-
-- **2026-09-23T10:45:00Z — kilo-creator: KNetMap (Subnet Topology Visualizer & Network Simulator)**
-  - Status: PASS ✅ (New app created: native Win32 C + HTML5 web app registered in KiloOS).
-  - Web App (knetmap.html, 105.9 KB): Interactive topology editor, Dijkstra routing, animated packet pulses (ICMP/TCP/UDP/ARP), VLSM/CIDR partition bar, chaos link cut test, sniffer table, Firebase RTDB online co-op room.
-  - Native App (KNetMap.exe, 11.2 KB): Win32 GDI topology visualizer, double-buffered packet simulation, subnet calculator, Corp/ISP presets.
-  - Standards: Title splash screen, first-run tutorial (`kknetmap_tutorialSeen`), F5 quicksave/F9 quickload, 1999 ARG parody brands (CYBER-CO, 3-CON, Bastion, Sol Unix).
-  - Universal Audio: Pure Web Audio YM2612 FM synthesis & SPC700 stereo delay warmth.
-  - Verification: Clean MSVC build (11.2 KB); Vite clean build (396ms); security lint 100% PASS; strict <999KB ceiling.
 

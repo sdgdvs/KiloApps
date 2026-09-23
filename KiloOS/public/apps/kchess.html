@@ -122,6 +122,20 @@
 <div id="toast-container"></div>
 
 <div id="app-container">
+  <!-- Online Multiplayer Active HUD Bar -->
+  <div id="online-hud-bar" style="display:none; width:760px; max-width:100vw; background:rgba(15,23,42,0.92); border:1px solid #38bdf8; border-radius:10px; margin-bottom:8px; padding:6px 14px; box-sizing:border-box; align-items:center; justify-content:space-between; font-size:12px; backdrop-filter:blur(8px); box-shadow:0 4px 16px rgba(0,0,0,0.4); z-index:50;">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span id="onlineRoomBadge" style="font-weight:bold; color:#5eead4;">Room: KC-....</span>
+      <span id="onlineRoleBadge" style="color:#fde68a;">You: White (P1)</span>
+      <span id="onlineOpponentBadge" style="color:#94a3b8;">Opponent: Waiting... 🟡</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <button onclick="openMultiplayerModal()" style="background:#1e293b; color:#38bdf8; border:1px solid #334155; padding:4px 8px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:600;">💬 Match & Chat</button>
+      <button id="onlineRematchBtn" onclick="requestOnlineRematch()" style="display:none; background:#059669; color:#fff; border:1px solid #10b981; padding:4px 8px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:600;">🔥 Rematch</button>
+      <button onclick="leaveOnlineGame(true)" style="background:#dc2626; color:#fff; border:1px solid #ef4444; padding:4px 8px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:600;">Leave</button>
+    </div>
+  </div>
+
   <canvas id="cvs" width="760" height="860" tabindex="0" role="application" aria-label="Chess game"></canvas>
 
   <!-- Help & User Guide Modal -->
@@ -130,18 +144,20 @@
       <h3>KChess Guide & Controls <span class="close-btn" onclick="closeModals()">&times;</span></h3>
       
       <div style="margin-bottom: 12px;">
-        <div style="font-size:13px; font-weight:bold; color:#38bdf8; margin-bottom:4px;">Game Modes (Click or Press [M] to Switch):</div>
+        <div style="font-size:13px; font-weight:bold; color:#38bdf8; margin-bottom:4px;">Game Modes (Click or Press [M] / [O] to Switch):</div>
         <div style="font-size:12px; color:#cbd5e1; line-height:1.5;">
           <div><span class="mode-badge" style="cursor:pointer;" onclick="setMode(0)" title="Switch to Campaign Mode">Campaign</span> 20 progressive historical & tactical endgame scenarios against advancing AI.</div>
           <div><span class="mode-badge" style="cursor:pointer;" onclick="setMode(1)" title="Switch to Free Play">Free Play</span> Full standard chess board vs AI or 2-player pass-and-play.</div>
           <div><span class="mode-badge" style="cursor:pointer;" onclick="setMode(2)" title="Switch to Puzzle Mode">Puzzles</span> Tactical checkmate and endgame challenge scenarios.</div>
           <div><span class="mode-badge" style="cursor:pointer;" onclick="setMode(3)" title="Switch to Blitz Clock">Blitz</span> Fast-paced 3-minute blitz clock speed chess.</div>
+          <div><span class="mode-badge" style="cursor:pointer; background:#064e3b; border-color:#10b981; color:#6ee7b7;" onclick="openMultiplayerModal()" title="Online Multiplayer">🌐 Online</span> Real-time cross-computer multiplayer via Firebase RTDB lobby.</div>
         </div>
       </div>
 
       <div style="font-size:13px; font-weight:bold; color:#5eead4; margin-bottom:4px;">Keyboard Shortcuts & Controls:</div>
       <table class="help-table">
         <tr><td><kbd>F1</kbd> / <kbd>?</kbd></td><td>Open this Help & Controls guide</td></tr>
+        <tr><td><kbd>O</kbd></td><td>Open Online Multiplayer Matchmaking & Lobby (Firebase RTDB)</td></tr>
         <tr><td><kbd>H</kbd></td><td>Calculate & Display Best AI Move Hint</td></tr>
         <tr><td><kbd>F</kbd></td><td>Activate Time Freeze Skill (Skip AI turn / +15s Blitz)</td></tr>
         <tr><td><kbd>U</kbd> / <kbd>Y</kbd></td><td>Undo / Redo Move (interactive stack)</td></tr>
@@ -152,13 +168,13 @@
         <tr><td><kbd>P</kbd></td><td>Cycle AI Difficulty (Easy, Medium, Hard, Master)</td></tr>
         <tr><td><kbd>E</kbd></td><td>FEN Position Manager (Export / Load FEN string)</td></tr>
         <tr><td><kbd>G</kbd></td><td>PGN Move History (Export / Import PGN notation)</td></tr>
-        <tr><td><kbd>R</kbd></td><td>New Game / Restart / Next Campaign Stage / Next Puzzle</td></tr>
+        <tr><td><kbd>R</kbd></td><td>New Game / Restart / Next Campaign Stage / Rematch</td></tr>
         <tr><td><kbd>&uarr;&darr;&larr;&rarr;</kbd> + <kbd>Enter</kbd></td><td>Keyboard Board Navigation & Move Execution</td></tr>
         <tr><td><kbd>Esc</kbd></td><td>Deselect current piece / Close Modals</td></tr>
       </table>
 
       <div style="font-size:11px; color:#94a3b8; margin-top:8px; line-height:1.4;">
-        Features: Real-time ECO Opening Book detector, Material Score advantage calculator, 3D Ornate Board lighting, Kinematic shockwave & particle physics.
+        Features: Cross-computer Firebase RTDB multiplayer, Real-time ECO Opening Book detector, Material Score advantage calculator, 3D Ornate Board lighting.
       </div>
 
       <div class="btn-group" style="margin-top:16px;">
@@ -194,7 +210,117 @@
       </div>
     </div>
   </div>
+
+  <!-- Online Multiplayer Modal -->
+  <div id="multiplayer-modal" class="modal-overlay" onclick="handleBackdropClick(event, 'multiplayer-modal')">
+    <div class="modal-card" style="width: 520px; max-height: 88vh; overflow-y: auto;">
+      <h3>🌐 KChess Online Multiplayer <span class="close-btn" onclick="closeModals()">&times;</span></h3>
+      <p style="font-size: 12px; color: #94a3b8; margin-top: -6px; margin-bottom: 12px;">
+        Cross-computer real-time chess powered by Firebase Realtime Database.
+      </p>
+
+      <!-- Player Handle Section -->
+      <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid #334155; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px;">
+        <label style="font-size: 12px; font-weight: bold; color: #cbd5e1; display: block; margin-bottom: 6px;">Your Grandmaster Call-Sign:</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="mp-player-name" maxlength="16" placeholder="Grandmaster_..." style="margin-bottom: 0; flex: 1;">
+          <button onclick="savePlayerName()" style="background: #0284c7; border-color: #38bdf8;">Save</button>
+        </div>
+      </div>
+
+      <!-- Quick Match Section -->
+      <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid #10b981; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+        <h4 style="margin: 0 0 6px 0; color: #6ee7b7; font-size: 13px;">⚡ Instant Matchmaking</h4>
+        <p style="font-size: 11px; color: #cbd5e1; margin: 0 0 8px 0;">Find an open challenger in the public lobby or host a new room for incoming players.</p>
+        <button id="mp-quick-match-btn" onclick="startQuickMatch()" class="primary" style="width: 100%; background: linear-gradient(135deg, #059669, #0284c7); padding: 9px; font-size: 13px;">
+          ⚡ Instant Quick Match
+        </button>
+      </div>
+
+      <!-- Create / Join Room Section -->
+      <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid #334155; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px;">
+        <h4 style="margin: 0 0 6px 0; color: #fde68a; font-size: 13px;">🔑 Custom Room / Code</h4>
+        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+          <button onclick="createCustomRoom(true)" style="flex: 1; background: #1e3a8a; border-color: #3b82f6;">+ Host Public Room</button>
+          <button onclick="createCustomRoom(false)" style="flex: 1; background: #312e81; border-color: #6366f1;">🔒 Host Private Room</button>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="mp-join-code-input" maxlength="10" placeholder="Enter Room Code (e.g. KC-4892)" style="margin-bottom: 0; flex: 1; text-transform: uppercase;">
+          <button onclick="joinRoomByInput()" style="background: #0d9488; border-color: #14b8a6;">Join Match</button>
+        </div>
+      </div>
+
+      <!-- Live Public Lobby -->
+      <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid #334155; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <h4 style="margin: 0; color: #38bdf8; font-size: 13px;">📡 Live Public Lobby</h4>
+          <button onclick="refreshLobbyList()" style="font-size: 11px; padding: 3px 8px;">🔄 Refresh</button>
+        </div>
+        <div id="mp-lobby-list" style="max-height: 140px; overflow-y: auto; background: #0b1120; border: 1px solid #1e293b; border-radius: 6px; padding: 6px;">
+          <div style="color: #64748b; font-style: italic; font-size: 11px; text-align: center; padding: 8px;">Connecting to lobby...</div>
+        </div>
+      </div>
+
+      <!-- Quick Chat Previews (when in online match) -->
+      <div id="mp-active-controls" style="display: none; background: rgba(30, 41, 59, 0.85); border: 1px solid #38bdf8; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px;">
+        <h4 style="margin: 0 0 6px 0; color: #5eead4; font-size: 13px;">Active Match Controls</h4>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
+          <button onclick="sendQuickChat('Good luck!')" style="font-size: 11px; padding: 4px 8px;">"Good luck!"</button>
+          <button onclick="sendQuickChat('Nice move!')" style="font-size: 11px; padding: 4px 8px;">"Nice move!"</button>
+          <button onclick="sendQuickChat('Checkmate incoming!')" style="font-size: 11px; padding: 4px 8px;">"Checkmate!"</button>
+          <button onclick="sendQuickChat('Well played!')" style="font-size: 11px; padding: 4px 8px;">"Well played!"</button>
+          <button onclick="sendQuickChat('Rematch?')" style="font-size: 11px; padding: 4px 8px;">"Rematch?"</button>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button onclick="copyRoomLink()" style="flex: 1; background: #0284c7;">📋 Copy Invite Link</button>
+          <button onclick="leaveOnlineGame(true)" style="background: #dc2626; border-color: #ef4444;">Leave Match</button>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button onclick="closeModals()">Close [Esc]</button>
+      </div>
+    </div>
+  </div>
 </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+    authDomain: "kiloappschat.firebaseapp.com",
+    databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+    projectId: "kiloappschat",
+    storageBucket: "kiloappschat.firebasestorage.app",
+    messagingSenderId: "290208566057",
+    appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+  };
+
+  try {
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    window.fb = {
+      app,
+      db,
+      ref,
+      set,
+      get,
+      push,
+      onValue,
+      onChildAdded,
+      off,
+      serverTimestamp,
+      onDisconnect
+    };
+    if (window.onFirebaseLoaded) {
+      window.onFirebaseLoaded();
+    }
+  } catch (err) {
+    console.warn("Firebase RTDB init error:", err);
+  }
+</script>
 
 <script>
   const cvs = document.getElementById('cvs');
@@ -261,6 +387,22 @@
   let statsWins = parseInt(localStorage.getItem('kchess_wins') || '0') || 0;
   let statsLosses = parseInt(localStorage.getItem('kchess_losses') || '0') || 0;
   let statsDraws = parseInt(localStorage.getItem('kchess_draws') || '0') || 0;
+
+  // Online Multiplayer State (Firebase RTDB)
+  let isOnlineGame = false;
+  let currentRoomId = null;
+  let currentRoomStatus = 'none'; // 'none', 'waiting', 'playing', 'finished'
+  let myPlayerNum = 0; // 0 = Spectator, 1 = White (P1), 2 = Black (P2)
+  let myPlayerName = localStorage.getItem('kchess_playerName') || ('Grandmaster_' + Math.floor(1000 + Math.random() * 9000));
+  let opponentName = 'Opponent';
+  let isHost = false;
+  let activeRoomRef = null;
+  let activeRoomListener = null;
+  let activeLobbyRef = null;
+  let activeLobbyListener = null;
+  let localLastMoveTs = 0;
+  let localLastChatTs = 0;
+  let isApplyingRemoteMove = false;
 
   let freezePowerups = 3;
   let blackFrozen = false;
@@ -919,6 +1061,10 @@
   }
 
   function undoMove() {
+      if (isOnlineGame) {
+          showToast("Undo disabled in Online Multiplayer match", "warn");
+          return;
+      }
       if (historyIndex <= 0) return;
       let targetIndex = historyIndex - 1;
       if (aiMode && targetIndex > 0 && moveHistoryStack[targetIndex].whiteTurn !== true) {
@@ -929,6 +1075,10 @@
   }
 
   function redoMove() {
+      if (isOnlineGame) {
+          showToast("Redo disabled in Online Multiplayer match", "warn");
+          return;
+      }
       if (historyIndex >= moveHistoryStack.length - 1) return;
       let targetIndex = historyIndex + 1;
       if (aiMode && targetIndex < moveHistoryStack.length - 1 && moveHistoryStack[targetIndex].whiteTurn !== true) {
@@ -942,6 +1092,10 @@
   // Quick Save & Quick Load State Engine (F5 / F9)
   // --------------------------------------------------------------------------
   function saveGameState() {
+      if (isOnlineGame) {
+          showToast("Game save disabled in Online Multiplayer match", "warn");
+          return;
+      }
       try {
           const state = {
               board: board.map(row => [...row]),
@@ -977,6 +1131,10 @@
   }
 
   function loadGameState() {
+      if (isOnlineGame) {
+          showToast("Game load disabled in Online Multiplayer match", "warn");
+          return false;
+      }
       try {
           const data = localStorage.getItem('kchess_save_state');
           if (!data) {
@@ -1210,6 +1368,9 @@
   }
 
   function setMode(m) {
+      if (isOnlineGame) {
+          leaveOnlineGame(true);
+      }
       gameMode = m;
       if (gameMode === 0) aiMode = true;
       resetGame();
@@ -1221,6 +1382,10 @@
   function handleHotkey(key) {
       const k = key.toLowerCase();
       if (k === 'r') {
+          if (isOnlineGame) {
+              requestOnlineRematch();
+              return;
+          }
           if (gameOver && winner === 1) {
               if (gameMode === 0) {
                   if (currentStage < 20) currentStage++;
@@ -1231,15 +1396,21 @@
           }
           resetGame();
           showToast(gameMode === 0 ? `Stage ${currentStage} Started!` : (gameMode === 2 ? `Puzzle #${(puzzleIndex % 6) + 1} Started!` : "Game Reset!"), "info");
+      } else if (k === 'o') {
+          openMultiplayerModal();
       } else if (k === 'm') {
+          if (isOnlineGame) leaveOnlineGame(true);
           setMode((gameMode + 1) % 4);
       } else if (k === 't') {
+          if (isOnlineGame) { showToast("AI toggle disabled in Online match", "warn"); return; }
           aiMode = !aiMode;
           showToast(aiMode ? "AI Opponent Enabled" : "2-Player Pass & Play Enabled", "info");
       } else if (k === 'p') {
+          if (isOnlineGame) { showToast("AI difficulty disabled in Online match", "warn"); return; }
           aiPersonality = (aiPersonality % 4) + 1;
           showToast(`AI Difficulty: ${difficultyNames[aiPersonality - 1]}`, "info");
       } else if (k === 'h') {
+          if (isOnlineGame) { showToast("AI Hint is disabled in Online Multiplayer matches", "warn"); return; }
           if (!gameOver) {
               let res = getOptimalHintMove();
               if (res.sx !== -1) {
@@ -1254,6 +1425,7 @@
       } else if (k === 'f1' || k === '?') {
           openHelpModal();
       } else if (k === 'f') {
+          if (isOnlineGame) { showToast("Time Freeze is disabled in Online Multiplayer matches", "warn"); return; }
           if (!gameOver && whiteTurn && freezePowerups > 0) {
               freezePowerups--;
               blackFrozen = true;
@@ -1265,10 +1437,10 @@
           }
       } else if (k === 'u') {
           undoMove();
-          showToast("Move Undone (U)", "info");
+          if (!isOnlineGame) showToast("Move Undone (U)", "info");
       } else if (k === 'y') {
           redoMove();
-          showToast("Move Redone (Y)", "info");
+          if (!isOnlineGame) showToast("Move Redone (Y)", "info");
       } else if (k === 's' || k === 'f5') {
           saveGameState();
       } else if (k === 'l' || k === 'f9') {
@@ -1302,6 +1474,33 @@
           handleHotkey(k);
       }
   });
+
+  function syncOnlineMove(moveSAN, sx, sy, tx, ty) {
+      if (isOnlineGame && !isApplyingRemoteMove && currentRoomId && window.fb) {
+          const movePayload = {
+              sx: sx,
+              sy: sy,
+              tx: tx,
+              ty: ty,
+              san: moveSAN || "",
+              player: myPlayerNum,
+              timestamp: Date.now()
+          };
+          localLastMoveTs = movePayload.timestamp;
+          try {
+              window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + currentRoomId + '/lastMove'), movePayload);
+              window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + currentRoomId + '/fen'), getFEN());
+              window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + currentRoomId + '/turn'), whiteTurn ? 1 : 2);
+              window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + currentRoomId + '/updatedAt'), Date.now());
+              if (gameOver) {
+                  window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + currentRoomId + '/winner'), winner);
+                  window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + currentRoomId + '/status'), 'finished');
+              }
+          } catch(e) {
+              console.error("Firebase sync error:", e);
+          }
+      }
+  }
 
   function performMove(sx, sy, tx, ty) {
       let isCaptured = board[ty][tx] !== 0;
@@ -1414,7 +1613,8 @@
           winner = 3;
           updateAriaStatus("Draw by Insufficient Material (K vs K)");
           showToast("Draw by Insufficient Material!", "info", 4000);
-          if (aiMode) { statsDraws++; saveStats(); }
+          if (aiMode || isOnlineGame) { statsDraws++; saveStats(); }
+          syncOnlineMove(moveSAN, sx, sy, tx, ty);
           return;
       } else if (pieces.length === 3) {
           let hasMinor = pieces.some(p => p === 2 || p === 3 || p === 8 || p === 9);
@@ -1423,7 +1623,8 @@
               winner = 3;
               updateAriaStatus("Draw by Insufficient Material (Minor Piece)");
               showToast("Draw by Insufficient Material!", "info", 4000);
-              if (aiMode) { statsDraws++; saveStats(); }
+              if (aiMode || isOnlineGame) { statsDraws++; saveStats(); }
+              syncOnlineMove(moveSAN, sx, sy, tx, ty);
               return;
           }
       }
@@ -1446,16 +1647,23 @@
               updateAriaStatus(msg);
               showToast(msg, "success", 6000);
               if (aiMode) { if (winner === 1) statsWins++; else statsLosses++; saveStats(); }
+              if (isOnlineGame) {
+                  if (winner === myPlayerNum) statsWins++;
+                  else if (winner > 0) statsLosses++;
+                  saveStats();
+              }
           } else {
               winner = 3;
               triggerScreenShake(12, 400, 0.01);
               updateAriaStatus("Stalemate!");
               showToast("Stalemate! Game is a Draw.", "info", 5000);
-              if (aiMode) { statsDraws++; saveStats(); }
+              if (aiMode || isOnlineGame) { statsDraws++; saveStats(); }
           }
       } else {
           updateAriaStatus(whiteTurn ? "White's Turn" : "Black's Turn");
       }
+
+      syncOnlineMove(moveSAN, sx, sy, tx, ty);
   }
 
   function doBlackAIMove() {
@@ -1527,6 +1735,10 @@
 
   function handleSquareClick(tx, ty) {
       if (gameOver) {
+          if (isOnlineGame) {
+              requestOnlineRematch();
+              return;
+          }
           if (winner === 1) {
               if (gameMode === 0) {
                   if (currentStage < 20) currentStage++;
@@ -1538,7 +1750,23 @@
           resetGame();
           return;
       }
-      if (aiMode && !whiteTurn) return;
+
+      if (isOnlineGame) {
+          if (currentRoomStatus !== 'playing') {
+              showToast("Waiting for opponent to join room...", "info");
+              return;
+          }
+          if (myPlayerNum === 0) {
+              showToast("Spectator mode: moves disabled", "info");
+              return;
+          }
+          if ((myPlayerNum === 1 && !whiteTurn) || (myPlayerNum === 2 && whiteTurn)) {
+              showToast("Waiting for opponent's turn...", "info");
+              return;
+          }
+      } else {
+          if (aiMode && !whiteTurn) return;
+      }
       
       if (tx >= 0 && tx < 8 && ty >= 0 && ty < 8) {
           hintActive = false;
@@ -1825,6 +2053,13 @@
       document.getElementById('pgn-modal').style.display = 'none';
       const help = document.getElementById('help-modal');
       if (help) help.style.display = 'none';
+      const mp = document.getElementById('multiplayer-modal');
+      if (mp) mp.style.display = 'none';
+      if (activeLobbyRef && activeLobbyListener && window.fb) {
+          try { window.fb.off(activeLobbyRef, 'value', activeLobbyListener); } catch(e) {}
+          activeLobbyRef = null;
+          activeLobbyListener = null;
+      }
   }
 
   function copyFEN() {
@@ -1843,6 +2078,10 @@
   }
 
   function applyFEN() {
+      if (isOnlineGame) {
+          showToast("Loading FEN disabled during active Online match", "warn");
+          return;
+      }
       const val = document.getElementById('fen-input').value;
       if (loadFEN(val)) {
           closeModals();
@@ -1868,6 +2107,10 @@
   }
 
   function applyPGN() {
+      if (isOnlineGame) {
+          showToast("Importing PGN disabled during active Online match", "warn");
+          return;
+      }
       const pgnText = document.getElementById('pgn-input').value;
       if (!pgnText || !pgnText.trim()) {
           closeModals();
@@ -1881,6 +2124,501 @@
       }
   }
 
+  // --------------------------------------------------------------------------
+  // Firebase RTDB Online Multiplayer Subsystem
+  // --------------------------------------------------------------------------
+  function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, function(m) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+      });
+  }
+
+  function openMultiplayerModal() {
+      closeModals();
+      const modal = document.getElementById('multiplayer-modal');
+      if (modal) {
+          modal.style.display = 'flex';
+          const nameInput = document.getElementById('mp-player-name');
+          if (nameInput) nameInput.value = myPlayerName;
+          const activeCtrls = document.getElementById('mp-active-controls');
+          if (activeCtrls) activeCtrls.style.display = isOnlineGame ? 'block' : 'none';
+          subscribeLobby();
+      }
+  }
+
+  function savePlayerName() {
+      const input = document.getElementById('mp-player-name');
+      if (!input) return;
+      const name = input.value.trim();
+      if (name.length > 0) {
+          myPlayerName = name;
+          localStorage.setItem('kchess_playerName', name);
+          showToast(`Call-sign updated to "${name}"`, 'success');
+      }
+  }
+
+  function subscribeLobby() {
+      if (!window.fb) return;
+      if (activeLobbyRef && activeLobbyListener) {
+          try { window.fb.off(activeLobbyRef, 'value', activeLobbyListener); } catch(e) {}
+      }
+      try {
+          const lobbyRef = window.fb.ref(window.fb.db, 'multiplayer/kchess/lobby');
+          activeLobbyRef = lobbyRef;
+          activeLobbyListener = window.fb.onValue(lobbyRef, (snapshot) => {
+              renderLobbyList(snapshot.val());
+          });
+      } catch(e) {
+          console.warn("Lobby subscription error:", e);
+      }
+  }
+
+  function refreshLobbyList() {
+      if (!window.fb) {
+          showToast("Firebase RTDB not connected yet", "warn");
+          return;
+      }
+      try {
+          window.fb.get(window.fb.ref(window.fb.db, 'multiplayer/kchess/lobby')).then((snap) => {
+              renderLobbyList(snap.val());
+              showToast("Lobby refreshed", "info");
+          });
+      } catch(e) {
+          console.warn(e);
+      }
+  }
+
+  function renderLobbyList(data) {
+      const listEl = document.getElementById('mp-lobby-list');
+      if (!listEl) return;
+      if (!data || Object.keys(data).length === 0) {
+          listEl.innerHTML = '<div style="color:#64748b; font-style:italic; font-size:11px; text-align:center; padding:8px;">No public matches waiting. Click "Instant Quick Match" or "Host Public Room" to start one!</div>';
+          return;
+      }
+      const now = Date.now();
+      let html = '';
+      let count = 0;
+      for (const code of Object.keys(data)) {
+          const item = data[code];
+          if (!item || (now - (item.createdAt || 0) > 600000)) continue;
+          count++;
+          const isMyRoom = isOnlineGame && currentRoomId === code;
+          const hostName = escapeHtml(item.host || 'Player');
+          html += `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#1e293b; padding:6px 10px; border-radius:4px; margin-bottom:4px; font-size:12px;">
+              <div>
+                <span style="font-weight:bold; color:#5eead4;">${code}</span>
+                <span style="color:#94a3b8; margin-left:6px;">Host: <strong style="color:#f8fafc;">${hostName}</strong></span>
+              </div>
+              <div>
+                ${isMyRoom ? '<span style="color:#38bdf8; font-size:11px;">(Your Room)</span>' : `<button onclick="joinOnlineRoom('${code}')" style="background:#059669; border-color:#10b981; font-size:11px; padding:3px 8px; border-radius:4px; cursor:pointer; color:#fff; font-weight:600;">Join</button>`}
+              </div>
+            </div>
+          `;
+      }
+      if (count === 0) {
+          listEl.innerHTML = '<div style="color:#64748b; font-style:italic; font-size:11px; text-align:center; padding:8px;">No active public matches found. Host one!</div>';
+      } else {
+          listEl.innerHTML = html;
+      }
+  }
+
+  async function startQuickMatch() {
+      if (!window.fb) {
+          showToast('Firebase RTDB not connected yet.', 'warn');
+          return;
+      }
+      const quickBtn = document.getElementById('mp-quick-match-btn');
+      if (quickBtn) quickBtn.textContent = '🔍 Searching for challenger...';
+
+      try {
+          const lobbyRef = window.fb.ref(window.fb.db, 'multiplayer/kchess/lobby');
+          const snap = await window.fb.get(lobbyRef);
+          const data = snap.val();
+          let matchedId = null;
+
+          if (data) {
+              const now = Date.now();
+              for (const key of Object.keys(data)) {
+                  const item = data[key];
+                  if (item && item.createdAt && (now - item.createdAt < 600000)) {
+                      matchedId = key;
+                      break;
+                  }
+              }
+          }
+
+          if (matchedId) {
+              showToast(`Found open match: ${matchedId}! Joining...`, 'info');
+              joinOnlineRoom(matchedId);
+          } else {
+              showToast('No open match found. Hosting public room for challengers...', 'info');
+              const newCode = 'KC-' + Math.floor(1000 + Math.random() * 9000);
+              createCustomRoom(true, newCode);
+          }
+      } catch (err) {
+          console.error("Quick match error:", err);
+          showToast('Failed to query lobby. Hosting room...', 'warn');
+          createCustomRoom(true);
+      } finally {
+          if (quickBtn) quickBtn.textContent = '⚡ Instant Quick Match';
+      }
+  }
+
+  async function createCustomRoom(isPublic = true, specificCode = null) {
+      if (!window.fb) {
+          showToast('Firebase RTDB not connected yet.', 'warn');
+          return;
+      }
+      const code = (specificCode || ('KC-' + Math.floor(1000 + Math.random() * 9000))).toUpperCase().trim();
+
+      resetGame();
+      aiMode = false;
+      gameMode = 1;
+      isOnlineGame = true;
+      isHost = true;
+      myPlayerNum = 1; // P1 = White
+      currentRoomId = code;
+      currentRoomStatus = 'waiting';
+
+      const roomData = {
+          id: code,
+          status: 'waiting',
+          p1: { name: myPlayerName, connected: true, joinedAt: Date.now() },
+          p2: null,
+          turn: 1,
+          fen: getFEN(),
+          lastMove: null,
+          winner: 0,
+          rematch: { p1: false, p2: false },
+          chat: null,
+          isPublic: isPublic,
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+      };
+
+      try {
+          await window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + code), roomData);
+          if (isPublic) {
+              await window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/lobby/' + code), {
+                  id: code,
+                  host: myPlayerName,
+                  createdAt: Date.now()
+              });
+          }
+
+          try {
+              window.fb.onDisconnect(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + code + '/p1/connected')).set(false);
+              if (isPublic) {
+                  window.fb.onDisconnect(window.fb.ref(window.fb.db, 'multiplayer/kchess/lobby/' + code)).remove();
+              }
+          } catch(e) {}
+
+          closeModals();
+          attachRoomListener(code);
+          updateOnlineHudBar();
+          showToast(`🌐 Room ${code} created! Waiting for Black to join...`, 'success');
+      } catch(err) {
+          console.error("Room creation error:", err);
+          showToast('Failed to create room: ' + err.message, 'warn');
+          isOnlineGame = false;
+      }
+  }
+
+  function joinRoomByInput() {
+      const input = document.getElementById('mp-join-code-input');
+      if (!input) return;
+      const code = input.value.trim().toUpperCase();
+      if (!code) {
+          showToast('Please enter a room code.', 'warn');
+          return;
+      }
+      joinOnlineRoom(code);
+  }
+
+  async function joinOnlineRoom(roomId) {
+      if (!window.fb) {
+          showToast('Firebase RTDB not connected yet.', 'warn');
+          return;
+      }
+      const code = roomId.toUpperCase().trim();
+      if (!code) {
+          showToast('Please enter a valid room code.', 'warn');
+          return;
+      }
+
+      try {
+          const roomRef = window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + code);
+          const snap = await window.fb.get(roomRef);
+          const room = snap.val();
+
+          if (!room) {
+              showToast(`Room "${code}" does not exist.`, 'warn');
+              return;
+          }
+
+          resetGame();
+          aiMode = false;
+          gameMode = 1;
+          isOnlineGame = true;
+          currentRoomId = code;
+
+          if (room.status === 'waiting' || !room.p2) {
+              isHost = false;
+              myPlayerNum = 2; // P2 = Black
+              currentRoomStatus = 'playing';
+
+              await window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + code + '/p2'), {
+                  name: myPlayerName,
+                  connected: true,
+                  joinedAt: Date.now()
+              });
+              await window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + code + '/status'), 'playing');
+              await window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + code + '/updatedAt'), Date.now());
+
+              try {
+                  await window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/lobby/' + code), null);
+              } catch(e) {}
+
+              try {
+                  window.fb.onDisconnect(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + code + '/p2/connected')).set(false);
+              } catch(e) {}
+
+              showToast(`🎮 Joined match ${code} as Black (P2)!`, 'success');
+          } else {
+              isHost = false;
+              myPlayerNum = 0; // Spectator
+              currentRoomStatus = room.status;
+              showToast(`👁️ Joined room ${code} as Spectator!`, 'info');
+          }
+
+          if (room.fen) {
+              loadFEN(room.fen);
+          }
+
+          closeModals();
+          attachRoomListener(code);
+          updateOnlineHudBar();
+      } catch(err) {
+          console.error("Join room error:", err);
+          showToast('Failed to join room: ' + err.message, 'warn');
+          isOnlineGame = false;
+      }
+  }
+
+  function attachRoomListener(roomId) {
+      if (activeRoomRef && activeRoomListener && window.fb) {
+          try { window.fb.off(activeRoomRef, 'value', activeRoomListener); } catch(e) {}
+          activeRoomRef = null;
+          activeRoomListener = null;
+      }
+
+      const roomRef = window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + roomId);
+      activeRoomRef = roomRef;
+      activeRoomListener = window.fb.onValue(roomRef, (snapshot) => {
+          const data = snapshot.val();
+          if (!data) {
+              if (isOnlineGame) {
+                  showToast('Online room closed.', 'warn');
+                  leaveOnlineGame(false);
+              }
+              return;
+          }
+          handleRoomUpdate(data);
+      });
+  }
+
+  function handleRoomUpdate(room) {
+      currentRoomStatus = room.status || 'waiting';
+
+      const opponent = myPlayerNum === 1 ? room.p2 : room.p1;
+      if (room.status === 'waiting' && !room.p2) {
+          opponentName = 'Waiting...';
+      } else if (opponent) {
+          opponentName = opponent.name || 'Opponent';
+      }
+
+      updateOnlineHudBar();
+
+      // Handle remote moves
+      if (room.lastMove && room.lastMove.timestamp && room.lastMove.timestamp !== localLastMoveTs) {
+          if (room.lastMove.player !== myPlayerNum) {
+              localLastMoveTs = room.lastMove.timestamp;
+              applyRemoteMove(room.lastMove.sx, room.lastMove.sy, room.lastMove.tx, room.lastMove.ty, room.fen);
+          }
+      }
+
+      // Handle in-game chat
+      if (room.chat && room.chat.ts && room.chat.ts !== localLastChatTs) {
+          localLastChatTs = room.chat.ts;
+          if (room.chat.sender !== myPlayerName) {
+              showToast(`💬 ${room.chat.sender}: "${room.chat.text}"`, 'info');
+              playSound('move');
+          }
+      }
+
+      // Handle rematch
+      if (room.rematch) {
+          if (room.rematch.p1 && room.rematch.p2) {
+              resetGame();
+              aiMode = false;
+              gameMode = 1;
+              isOnlineGame = true;
+              currentRoomStatus = 'playing';
+              const rematchBtn = document.getElementById('onlineRematchBtn');
+              if (rematchBtn) { rematchBtn.style.display = 'none'; rematchBtn.textContent = '🔥 Rematch'; }
+              showToast('Round 2 Started! Good luck!', 'success');
+              if (isHost) {
+                  window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + currentRoomId + '/rematch'), { p1: false, p2: false });
+                  window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + currentRoomId + '/status'), 'playing');
+                  window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + currentRoomId + '/winner'), 0);
+                  window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + currentRoomId + '/turn'), 1);
+                  window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + currentRoomId + '/lastMove'), null);
+                  window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + currentRoomId + '/fen'), getFEN());
+              }
+          } else if ((myPlayerNum === 1 && room.rematch.p2) || (myPlayerNum === 2 && room.rematch.p1)) {
+              const opp = myPlayerNum === 1 ? (room.p2 ? room.p2.name : 'Opponent') : (room.p1 ? room.p1.name : 'Opponent');
+              showToast(`🔥 ${opp} requested a Rematch! Click Rematch to accept!`, 'warn');
+              const rematchBtn = document.getElementById('onlineRematchBtn');
+              if (rematchBtn) rematchBtn.style.display = 'inline-block';
+          }
+      }
+  }
+
+  function applyRemoteMove(sx, sy, tx, ty, fenFallback) {
+      if (sx < 0 || sx >= 8 || sy < 0 || sy >= 8 || tx < 0 || tx >= 8 || ty < 0 || ty >= 8) {
+          if (fenFallback) loadFEN(fenFallback);
+          return;
+      }
+      isApplyingRemoteMove = true;
+      try {
+          performMove(sx, sy, tx, ty);
+      } catch(err) {
+          console.error("Error performing remote move:", err);
+          if (fenFallback) loadFEN(fenFallback);
+      } finally {
+          isApplyingRemoteMove = false;
+      }
+  }
+
+  function sendQuickChat(text) {
+      if (!isOnlineGame || !currentRoomId || !window.fb) return;
+      const chatData = {
+          sender: myPlayerName,
+          text: text,
+          ts: Date.now()
+      };
+      localLastChatTs = chatData.ts;
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + currentRoomId + '/chat'), chatData);
+      showToast(`💬 You: "${text}"`, 'info');
+  }
+
+  function sendQuickChatPrompt() {
+      if (!isOnlineGame) return;
+      openMultiplayerModal();
+  }
+
+  function copyRoomLink() {
+      if (!currentRoomId) return;
+      const url = window.location.origin + window.location.pathname + '?room=' + currentRoomId;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(() => {
+              showToast("Room invite link copied to clipboard!", "success");
+          }).catch(() => {
+              showToast("Room Code: " + currentRoomId, "info");
+          });
+      } else {
+          showToast("Room Code: " + currentRoomId, "info");
+      }
+  }
+
+  function requestOnlineRematch() {
+      if (!isOnlineGame || !currentRoomId || !window.fb) return;
+      const slot = myPlayerNum === 1 ? 'p1' : 'p2';
+      window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + currentRoomId + '/rematch/' + slot), true);
+      showToast('Rematch requested! Waiting for opponent...', 'info');
+      const rematchBtn = document.getElementById('onlineRematchBtn');
+      if (rematchBtn) rematchBtn.textContent = '⏳ Rematch Sent';
+  }
+
+  function updateOnlineHudBar() {
+      const bar = document.getElementById('online-hud-bar');
+      if (!bar) return;
+      if (!isOnlineGame) {
+          bar.style.display = 'none';
+          return;
+      }
+      bar.style.display = 'flex';
+      const roomEl = document.getElementById('onlineRoomBadge');
+      if (roomEl) roomEl.textContent = `Room: ${currentRoomId || '...'}`;
+      const roleEl = document.getElementById('onlineRoleBadge');
+      if (roleEl) {
+          roleEl.textContent = myPlayerNum === 1 ? 'You: White (P1)' : (myPlayerNum === 2 ? 'You: Black (P2)' : 'You: Spectator');
+      }
+      const oppEl = document.getElementById('onlineOpponentBadge');
+      if (oppEl) {
+          if (currentRoomStatus === 'waiting') {
+              oppEl.textContent = 'Opponent: Waiting for Black to join... 🟡';
+              oppEl.style.color = '#fde68a';
+          } else {
+              oppEl.textContent = `Opponent: ${opponentName} 🟢`;
+              oppEl.style.color = '#4ade80';
+          }
+      }
+      const rematchBtn = document.getElementById('onlineRematchBtn');
+      if (rematchBtn) {
+          rematchBtn.style.display = gameOver ? 'inline-block' : 'none';
+      }
+  }
+
+  function leaveOnlineGame(notifyServer = true) {
+      if (activeRoomRef && activeRoomListener && window.fb) {
+          try { window.fb.off(activeRoomRef, 'value', activeRoomListener); } catch(e) {}
+          activeRoomRef = null;
+          activeRoomListener = null;
+      }
+      if (notifyServer && currentRoomId && window.fb) {
+          try {
+              if (isHost && currentRoomStatus === 'waiting') {
+                  window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/lobby/' + currentRoomId), null);
+              }
+              if (myPlayerNum === 1) {
+                  window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + currentRoomId + '/p1/connected'), false);
+              } else if (myPlayerNum === 2) {
+                  window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + currentRoomId + '/p2/connected'), false);
+              }
+              if (currentRoomStatus === 'playing' && !gameOver) {
+                  window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + currentRoomId + '/winner'), (myPlayerNum === 1 ? 2 : 1));
+                  window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kchess/rooms/' + currentRoomId + '/status'), 'finished');
+              }
+          } catch(e) {}
+      }
+
+      isOnlineGame = false;
+      currentRoomId = null;
+      currentRoomStatus = 'none';
+      myPlayerNum = 0;
+      isHost = false;
+
+      updateOnlineHudBar();
+      closeModals();
+      setMode(1);
+      showToast('Returned to offline Free Play mode.', 'info');
+  }
+
+  function checkUrlAutoJoin() {
+      try {
+          const params = new URLSearchParams(window.location.search);
+          const room = params.get('room') || params.get('join') || (window.location.hash ? window.location.hash.replace('#', '') : null);
+          if (room && window.fb) {
+              setTimeout(() => {
+                  joinOnlineRoom(room);
+              }, 400);
+          }
+      } catch(e) {}
+  }
+
   cvs.onmousedown = (e) => {
       const rect = cvs.getBoundingClientRect();
       const mx = (e.clientX - rect.left) * (W / rect.width);
@@ -1888,7 +2626,9 @@
 
       // Top mode title click (switch mode or toggle vs AI)
       if (my >= 15 && my <= 45 && mx >= 25 && mx <= 280) {
-          if (gameMode === 1 && mx >= 120 && mx <= 230) {
+          if (isOnlineGame) {
+              openMultiplayerModal();
+          } else if (gameMode === 1 && mx >= 120 && mx <= 230) {
               handleHotkey('t');
           } else {
               handleHotkey('m');
@@ -1904,19 +2644,24 @@
 
       // Bottom skill & action buttons (Y: 740..776)
       if (my >= 740 && my <= 776) {
-          if (mx >= 30 && mx <= 115) { openHelpModal(); return; }
-          if (mx >= 123 && mx <= 203) { undoMove(); return; }
-          if (mx >= 211 && mx <= 291) { redoMove(); return; }
-          if (mx >= 299 && mx <= 384) { saveGameState(); return; }
-          if (mx >= 392 && mx <= 477) { loadGameState(); return; }
-          if (mx >= 485 && mx <= 600) { handleHotkey('p'); return; }
-          if (mx >= 608 && mx <= 730) { openFENModal(); return; }
+          if (mx >= 30 && mx <= 110) { openHelpModal(); return; }
+          if (mx >= 118 && mx <= 198) { undoMove(); return; }
+          if (mx >= 206 && mx <= 286) { redoMove(); return; }
+          if (mx >= 294 && mx <= 384) { openMultiplayerModal(); return; }
+          if (mx >= 392 && mx <= 470) { saveGameState(); return; }
+          if (mx >= 478 && mx <= 556) { loadGameState(); return; }
+          if (mx >= 564 && mx <= 652) { handleHotkey('p'); return; }
+          if (mx >= 660 && mx <= 730) { openFENModal(); return; }
       }
 
-      // Bottom status bar click (Restart or Hint)
+      // Bottom status bar click (Restart or Hint or Rematch)
       if (my >= 800 && my <= 845 && mx >= 50 && mx <= W - 50) {
-          if (gameOver) handleHotkey('r');
-          else handleHotkey('h');
+          if (gameOver) {
+              if (isOnlineGame) requestOnlineRematch();
+              else handleHotkey('r');
+          } else {
+              handleHotkey('h');
+          }
           return;
       }
 
@@ -2615,7 +3360,10 @@
       ctx.textAlign = "left";
 
       let modeText = "";
-      if (gameMode === 0) modeText = `Campaign: Stage ${currentStage}/20 [${difficultyNames[aiPersonality - 1]}]`;
+      if (isOnlineGame) {
+          let roleStr = myPlayerNum === 1 ? "White (P1)" : (myPlayerNum === 2 ? "Black (P2)" : "Spectator");
+          modeText = `🌐 Online [${currentRoomId || '...'}] (${roleStr})`;
+      } else if (gameMode === 0) modeText = `Campaign: Stage ${currentStage}/20 [${difficultyNames[aiPersonality - 1]}]`;
       else if (gameMode === 1) modeText = `${aiMode ? 'vs AI' : 'vs Player'} [${difficultyNames[aiPersonality - 1]}]`;
       else if (gameMode === 2) modeText = `Puzzle #${(puzzleIndex % 6) + 1} [${difficultyNames[aiPersonality - 1]}]`;
       else modeText = `Blitz (W:${Math.ceil(blitzTimeWhite)}s B:${Math.ceil(blitzTimeBlack)}s)`;
@@ -2692,28 +3440,29 @@
 
       // Bottom Skill & Action Buttons Row
       let buttons = [
-          { x: 30, y: 740, w: 85, h: 36, text: `Help [F1]` },
-          { x: 123, y: 740, w: 80, h: 36, text: `Undo [U]` },
-          { x: 211, y: 740, w: 80, h: 36, text: `Redo [Y]` },
-          { x: 299, y: 740, w: 85, h: 36, text: `Save [F5]` },
-          { x: 392, y: 740, w: 85, h: 36, text: `Load [F9]` },
-          { x: 485, y: 740, w: 115, h: 36, text: `AI: ${difficultyNames[aiPersonality - 1]} [P]` },
-          { x: 608, y: 740, w: 122, h: 36, text: `FEN/PGN [E]` }
+          { x: 30, y: 740, w: 80, h: 36, text: `Help [F1]`, color: '#1e293b', border: '#5eead4' },
+          { x: 118, y: 740, w: 80, h: 36, text: `Undo [U]`, color: '#1e293b', border: '#5eead4' },
+          { x: 206, y: 740, w: 80, h: 36, text: `Redo [Y]`, color: '#1e293b', border: '#5eead4' },
+          { x: 294, y: 740, w: 90, h: 36, text: isOnlineGame ? `Room [O]` : `Online [O]`, color: isOnlineGame ? '#064e3b' : '#0c4a6e', border: isOnlineGame ? '#10b981' : '#38bdf8' },
+          { x: 392, y: 740, w: 78, h: 36, text: `Save [F5]`, color: '#1e293b', border: '#5eead4' },
+          { x: 478, y: 740, w: 78, h: 36, text: `Load [F9]`, color: '#1e293b', border: '#5eead4' },
+          { x: 564, y: 740, w: 88, h: 36, text: `AI: ${difficultyNames[aiPersonality - 1]} [P]`, color: '#1e293b', border: '#5eead4' },
+          { x: 660, y: 740, w: 70, h: 36, text: `FEN [E]`, color: '#1e293b', border: '#5eead4' }
       ];
 
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.font = "bold 14px 'Inter', sans-serif";
+      ctx.font = "bold 13px 'Inter', sans-serif";
 
       for (let btn of buttons) {
-          ctx.fillStyle = '#1e293b';
+          ctx.fillStyle = btn.color;
           ctx.beginPath();
           ctx.roundRect(btn.x, btn.y, btn.w, btn.h, 6);
           ctx.fill();
-          ctx.strokeStyle = '#5eead4';
+          ctx.strokeStyle = btn.border;
           ctx.lineWidth = 1;
           ctx.stroke();
-          drawOrnateCornerFiligree(ctx, btn.x, btn.y, btn.w, btn.h, 6, 'rgba(94, 234, 212, 0.7)', '#ffffff');
+          drawOrnateCornerFiligree(ctx, btn.x, btn.y, btn.w, btn.h, 6, btn.border, '#ffffff');
 
           ctx.fillStyle = '#ffffff';
           ctx.fillText(btn.text, btn.x + btn.w / 2, btn.y + btn.h / 2);
@@ -2723,12 +3472,24 @@
       ctx.font = "bold 16px 'Inter', sans-serif";
       if (gameOver) {
           ctx.fillStyle = "#f59e0b";
-          if (winner === 1) ctx.fillText((gameMode === 0 && currentStage < 20) ? "White Wins! Press 'R' / Click for Next Stage" : (gameMode === 2 ? "Puzzle Solved! Press 'R' / Click for Next Puzzle" : "Checkmate! White Wins! Press 'R'"), W / 2, H - 40);
-          else if (winner === 2) ctx.fillText("Checkmate! Black Wins! Press 'R' / Click to Restart", W / 2, H - 40);
-          else ctx.fillText("Stalemate / Draw! Press 'R' / Click to Restart", W / 2, H - 40);
+          if (isOnlineGame) {
+              if (winner === myPlayerNum) ctx.fillText("Checkmate! You Win! Click status to Rematch [R]", W / 2, H - 40);
+              else if (winner === 3) ctx.fillText("Draw / Stalemate! Click status to Rematch [R]", W / 2, H - 40);
+              else ctx.fillText("Checkmate! Opponent Wins! Click status to Rematch [R]", W / 2, H - 40);
+          } else {
+              if (winner === 1) ctx.fillText((gameMode === 0 && currentStage < 20) ? "White Wins! Press 'R' / Click for Next Stage" : (gameMode === 2 ? "Puzzle Solved! Press 'R' / Click for Next Puzzle" : "Checkmate! White Wins! Press 'R'"), W / 2, H - 40);
+              else if (winner === 2) ctx.fillText("Checkmate! Black Wins! Press 'R' / Click to Restart", W / 2, H - 40);
+              else ctx.fillText("Stalemate / Draw! Press 'R' / Click to Restart", W / 2, H - 40);
+          }
       } else if (hintActive && hintText !== "") {
           ctx.fillStyle = "#38bdf8";
           ctx.fillText(hintText, W / 2, H - 40);
+      } else if (isOnlineGame) {
+          let isMyTurn = (myPlayerNum === 1 && whiteTurn) || (myPlayerNum === 2 && !whiteTurn);
+          ctx.fillStyle = isMyTurn ? "#5eead4" : "#94a3b8";
+          let turnStr = currentRoomStatus === 'waiting' ? "Waiting for Challenger in Lobby..." : (isMyTurn ? "Your Turn!" : `${opponentName}'s Turn (${whiteTurn ? "White" : "Black"})...`);
+          let lastMoveStr = (historyIndex > 0 && moveHistoryStack[historyIndex] && moveHistoryStack[historyIndex].moveSAN) ? ` | Last: ${moveHistoryStack[historyIndex].moveSAN}` : "";
+          ctx.fillText(turnStr + lastMoveStr, W / 2, H - 40);
       } else {
           ctx.fillStyle = whiteTurn ? "#f8fafc" : "#94a3b8";
           let turnStr = whiteTurn ? "White's Turn" : "Black's Turn";
@@ -2761,6 +3522,17 @@
   resetGame();
   requestAnimationFrame(gameLoop);
 
+  window.onFirebaseLoaded = function() {
+      checkUrlAutoJoin();
+      const modal = document.getElementById('multiplayer-modal');
+      if (modal && modal.style.display === 'flex') {
+          subscribeLobby();
+      }
+  };
+  if (window.fb) {
+      window.onFirebaseLoaded();
+  }
+
   const TUTORIAL_KEY = 'kchess_tutorialSeen';
   let seenTutorial = false;
   try { seenTutorial = localStorage.getItem(TUTORIAL_KEY) === '1'; } catch(e) {}
@@ -2772,7 +3544,7 @@
   }
 
   setTimeout(() => {
-      showToast("Welcome to KChess! Press F1 or ? for Help & Controls | H for AI Hint", "info", 5000);
+      showToast("Welcome to KChess! Press F1 or ? for Help & Controls | O for Online Multiplayer", "info", 5000);
   }, 400);
 </script>
 </body>
