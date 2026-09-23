@@ -522,6 +522,7 @@
         <option value="kweb://portal">🏠 KiloNet 1999 Web Portal</option>
         <option value="kweb://webring">🌐 Central Webring Hub</option>
         <option value="kweb://geocities">✨ CyberSpire Retro Shrine</option>
+        <option value="kweb://users/~neon_rider">⚡ ~neon_rider (ASM &amp; Demoscene)</option>
       </optgroup>
       <optgroup label="🚀 KiloApps Fleet">
         <option value="/apps/contribute.html">🚀 Fleet Contributor Guide</option>
@@ -581,6 +582,7 @@
         <button class="btn-chip" data-url="kweb://portal" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; font-weight:700; color:#fff;">🏠 1999 Portal</button>
         <button class="btn-chip" data-url="kweb://webring">🌐 Webring</button>
         <button class="btn-chip" data-url="kweb://geocities" style="color:#f0abfc;">✨ GeoCities</button>
+        <button class="btn-chip" data-url="kweb://users/~neon_rider" style="color:#00ffcc; border-color:rgba(0, 255, 204, 0.4);">⚡ ~neon_rider</button>
         <span style="font-size:11px; color:var(--text-muted); font-weight:700; margin-left:6px;">FLEET:</span>
         <button class="btn-chip" data-url="/apps/contribute.html" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; font-weight:700; color:#fff;">🚀 Contributor</button>
         <button class="btn-chip" data-url="ping:8.8.8.8">📡 Ping</button>
@@ -856,6 +858,7 @@
           <tr><td><code>kweb://portal</code></td><td>Access 1999 KiloNet Directory &amp; Hypermedia Portal</td></tr>
           <tr><td><code>kweb://webring</code></td><td>Access Central KiloNet Webring Hub &amp; Node Directory</td></tr>
           <tr><td><code>kweb://geocities</code></td><td>Access CyberSpire Retro Personal Shrine &amp; Guestbook</td></tr>
+          <tr><td><code>kweb://users/~neon_rider</code></td><td>Access ~neon_rider's Win32 ASM &amp; Demoscene Devlog</td></tr>
           <tr><td><code>Click Sniffer Row</code></td><td>Open deep frame dissection drawer (Ethernet, IP, Hex)</td></tr>
           <tr><td><code>ping:&lt;host&gt;</code></td><td>URL prefix to run Ping test on target host</td></tr>
           <tr><td><code>scan:&lt;host&gt;</code></td><td>URL prefix to run Port Scan on target host</td></tr>
@@ -1453,10 +1456,15 @@
       url = '/web/webring.html';
     } else if (url.toLowerCase() === 'kweb://geocities' || url.toLowerCase() === 'geocities') {
       url = '/web/geocities.html';
+    } else if (url.toLowerCase() === 'kweb://users/~neon_rider' || url.toLowerCase() === 'users/~neon_rider' || url.toLowerCase() === 'kweb://neon_rider' || url.toLowerCase() === 'neon_rider' || url.toLowerCase() === '~neon_rider' || url.toLowerCase() === 'kweb://users/neon_rider') {
+      url = '/web/users/neon_rider.html';
     } else if (url.toLowerCase() === 'kweb://warez' || url.toLowerCase() === 'warez' || url.toLowerCase() === 'kweb://cracktro' || url.toLowerCase() === 'cracktro' || url.toLowerCase() === 'kweb://scene') {
       url = '/web/warez.html';
     } else if (url.toLowerCase() === 'kweb://darknet' || url.toLowerCase() === 'darknet') {
       url = '/web/darknet.html';
+    } else if (url.toLowerCase().startsWith('kweb://users/')) {
+      const uClean = url.slice(13).replace('~', '');
+      url = '/web/users/' + uClean + (uClean.endsWith('.html') ? '' : '.html');
     }
 
     if (addToHistory) {

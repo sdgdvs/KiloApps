@@ -240,6 +240,7 @@
         <div class="category-box">
           <div class="category-header">🛠️ System Tools &amp; Dev Utilities</div>
           <div class="category-content">
+            • <a href="/web/users/neon_rider.html">⚡ ~neon_rider's Shrine</a> — Win32 ASM devlog, x86 sandbox &amp; tracker tunes<br>
             • <a href="/apps/kterm.html">💻 KTerm</a> — Retro terminal emulator with command piping<br>
             • <a href="/apps/khex.html">🔢 KHex</a> — Binary memory dump inspector &amp; pattern finder<br>
             • <a href="/apps/ksys.html">⚙️ KSys</a> — Low-level OS architecture monitor &amp; resource graphs<br>
@@ -298,6 +299,7 @@
   const sites = [
     '/web/geocities.html',
     '/web/webring.html',
+    '/web/users/neon_rider.html',
     '/apps/contribute.html'
   ];
 
@@ -315,7 +317,9 @@
       return;
     }
 
-    if (q.includes('geo') || q.includes('shrine') || q.includes('midi') || q.includes('guest')) {
+    if (q.includes('neon') || q.includes('rider') || q.includes('asm') || q.includes('opcode')) {
+      window.location.href = '/web/users/neon_rider.html';
+    } else if (q.includes('geo') || q.includes('shrine') || q.includes('midi') || q.includes('guest')) {
       window.location.href = '/web/geocities.html';
     } else if (q.includes('ring') || q.includes('webring') || q.includes('hub')) {
       window.location.href = '/web/webring.html';

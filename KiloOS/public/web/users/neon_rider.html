@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>~*~ [NEON_RIDER] // Win32 ASM Shrine &amp; Demoscene Devlog (1999) ~*~</title>
+<style>
+  :root {
+    --bg-base: #04070d;
+    --bg-card: #0a101b;
+    --bg-panel: #0f1827;
+    --border-color: #00ffcc;
+    --border-dim: #1e3a4a;
+    --accent-cyan: #00ffcc;
+    --accent-magenta: #ff00aa;
+    --accent-green: #00ff66;
+    --accent-amber: #ffcc00;
+    --accent-blue: #38bdf8;
+    --text-primary: #e0f2fe;
+    --text-dim: #7dd3fc;
+    --text-muted: #64748b;
+    --font-mono: 'Consolas', 'Courier New', 'Lucida Console', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    line-height: 1.5;
+    padding: 16px;
+    background-image: 
+      radial-gradient(circle at 50% 0%, #0c2033 0%, #04070d 80%),
+      linear-gradient(rgba(0, 255, 204, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 255, 204, 0.03) 1px, transparent 1px);
+    background-size: 100% 100%, 20px 20px, 20px 20px;
+    min-height: 100vh;
+  }
+
+  /* CRT Scanline Overlay */
+  body::after {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+    background-size: 100% 4px;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+  .site-wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    border: 3px double var(--accent-cyan);
+    background: var(--bg-card);
+    box-shadow: 0 0 25px rgba(0, 255, 204, 0.25), inset 0 0 15px rgba(0, 255, 204, 0.05);
+    padding: 16px;
+  }
+
+  /* Top Marquee */
+  .retro-marquee {
+    background: #001f29;
+    color: var(--accent-cyan);
+    border: 1px solid var(--accent-cyan);
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-shadow: 0 0 5px rgba(0, 255, 204, 0.7);
+  }
+
+  /* Header & ASCII Banner */
+  header {
+    text-align: center;
+    border-bottom: 2px solid var(--accent-magenta);
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+  }
+
+  .ascii-logo {
+    color: var(--accent-cyan);
+    font-size: 11px;
+    line-height: 1.15;
+    text-shadow: 0 0 8px rgba(0, 255, 204, 0.8);
+    display: inline-block;
+    text-align: left;
+    margin: 6px 0;
+  }
+
+  .tagline {
+    font-size: 13px;
+    color: var(--accent-amber);
+    margin-top: 4px;
+    letter-spacing: 1px;
+    text-shadow: 0 0 6px rgba(255, 204, 0, 0.5);
+  }
+
+  /* System Meta Bar */
+  .meta-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-dim);
+    padding: 10px;
+    margin-bottom: 16px;
+    font-size: 11px;
+  }
+
+  .meta-item strong {
+    color: var(--accent-cyan);
+  }
+
+  /* Visitor Counter Box */
+  .counter-box {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .odometer {
+    background: #000;
+    color: #ff3366;
+    border: 2px inset #444;
+    padding: 2px 6px;
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 2px;
+  }
+
+  /* Navigation Bar */
+  .nav-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    background: #09121f;
+    border: 1px solid var(--border-dim);
+    padding: 8px;
+    margin-bottom: 16px;
+  }
+
+  .nav-btn {
+    background: #0f1d30;
+    color: var(--accent-cyan);
+    border: 1px solid var(--border-dim);
+    padding: 6px 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .nav-btn:hover {
+    background: var(--accent-cyan);
+    color: #000;
+    box-shadow: 0 0 8px rgba(0, 255, 204, 0.6);
+  }
+
+  .nav-btn.active {
+    background: var(--accent-magenta);
+    color: #fff;
+    border-color: #fff;
+    box-shadow: 0 0 10px rgba(255, 0, 170, 0.6);
+  }
+
+  /* Content Sections */
+  .content-section {
+    display: none;
+    animation: fadeIn 0.2s ease-in;
+  }
+
+  .content-section.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Panel Cards */
+  .panel-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-dim);
+    padding: 14px;
+    margin-bottom: 16px;
+  }
+
+  .panel-card.cyan-edge { border-left: 4px solid var(--accent-cyan); }
+  .panel-card.magenta-edge { border-left: 4px solid var(--accent-magenta); }
+  .panel-card.amber-edge { border-left: 4px solid var(--accent-amber); }
+  .panel-card.green-edge { border-left: 4px solid var(--accent-green); }
+
+  .panel-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--accent-cyan);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed var(--border-dim);
+    padding-bottom: 4px;
+  }
+
+  /* Buttons & Controls */
+  .btn-retro {
+    background: #112233;
+    color: var(--accent-cyan);
+    border: 1px solid var(--accent-cyan);
+    padding: 4px 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-retro:hover {
+    background: var(--accent-cyan);
+    color: #000;
+  }
+
+  .btn-retro-pink {
+    background: #2a0b1d;
+    color: #ff33aa;
+    border: 1px solid #ff33aa;
+  }
+
+  .btn-retro-pink:hover {
+    background: #ff33aa;
+    color: #000;
+  }
+
+  /* ASM Playground & Opcode Stepper */
+  .asm-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 12px;
+  }
+
+  @media (max-width: 768px) {
+    .asm-grid { grid-template-columns: 1fr; }
+  }
+
+  .code-input-area {
+    width: 100%;
+    height: 180px;
+    background: #050a12;
+    color: #00ff66;
+    border: 1px solid var(--border-dim);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 8px;
+    box-sizing: border-box;
+    resize: vertical;
+    white-space: pre;
+  }
+
+  .reg-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .reg-table td {
+    padding: 4px 6px;
+    border: 1px solid var(--border-dim);
+    background: #080f1a;
+  }
+
+  .reg-table td.reg-name {
+    color: var(--accent-amber);
+    font-weight: bold;
+    width: 30%;
+  }
+
+  .reg-table td.reg-val {
+    color: #00ffcc;
+    font-family: var(--font-mono);
+  }
+
+  .reg-table td.reg-changed {
+    color: #ff00aa !important;
+    font-weight: bold;
+    background: #220818;
+  }
+
+  .flags-bar {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 11px;
+  }
+
+  .flag-badge {
+    padding: 2px 6px;
+    background: #111a24;
+    border: 1px solid #334155;
+    color: #64748b;
+  }
+
+  .flag-badge.active {
+    background: #064e3b;
+    border-color: #10b981;
+    color: #34d399;
+    font-weight: bold;
+  }
+
+  /* Disassembly Viewport */
+  .disasm-viewport {
+    background: #03060a;
+    border: 1px solid var(--border-dim);
+    padding: 8px;
+    max-height: 140px;
+    overflow-y: auto;
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 10px;
+  }
+
+  .disasm-line {
+    padding: 2px 4px;
+    display: flex;
+    gap: 12px;
+  }
+
+  .disasm-line.current {
+    background: rgba(0, 255, 204, 0.18);
+    color: #00ffcc;
+    font-weight: bold;
+    border-left: 3px solid var(--accent-cyan);
+  }
+
+  /* Audio Tracker Jukebox */
+  .audio-console {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 12px;
+  }
+
+  @media (max-width: 768px) {
+    .audio-console { grid-template-columns: 1fr; }
+  }
+
+  .tracker-canvas {
+    width: 100%;
+    height: 100px;
+    background: #020408;
+    border: 1px solid var(--border-dim);
+    display: block;
+  }
+
+  .channel-meters {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 10px;
+    text-align: center;
+  }
+
+  .meter-bar {
+    height: 60px;
+    background: #0a111a;
+    border: 1px solid #1e293b;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .meter-fill {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 0%;
+    background: linear-gradient(to top, #00ff66, #ffcc00, #ff0055);
+    transition: height 0.08s ease;
+  }
+
+  /* Devlog Articles */
+  .article-item {
+    border: 1px solid var(--border-dim);
+    background: #09121e;
+    padding: 12px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+
+  .article-item:hover {
+    border-color: var(--accent-cyan);
+  }
+
+  .article-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--accent-cyan);
+    margin-bottom: 4px;
+  }
+
+  .article-body {
+    font-size: 12px;
+    color: #cbd5e1;
+    display: none;
+    margin-top: 8px;
+    border-top: 1px dashed var(--border-dim);
+    padding-top: 8px;
+    line-height: 1.6;
+  }
+
+  .article-body.open {
+    display: block;
+  }
+
+  .article-body pre {
+    background: #03060a;
+    border: 1px solid #1e293b;
+    color: #38bdf8;
+    padding: 8px;
+    margin: 8px 0;
+    overflow-x: auto;
+    font-size: 11px;
+  }
+
+  /* Code & Vault Viewer */
+  .file-list {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+
+  .code-viewer-box {
+    background: #020408;
+    border: 1px solid var(--border-dim);
+    color: #7dd3fc;
+    font-size: 11px;
+    padding: 10px;
+    max-height: 260px;
+    overflow: auto;
+    white-space: pre;
+  }
+
+  /* Guestbook */
+  .gb-entry {
+    background: #070d17;
+    border: 1px solid var(--border-dim);
+    padding: 10px;
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+
+  .gb-author {
+    color: var(--accent-amber);
+    font-weight: bold;
+  }
+
+  .gb-date {
+    color: var(--text-muted);
+    font-size: 10px;
+    margin-left: 8px;
+  }
+
+  .gb-form input, .gb-form textarea {
+    width: 100%;
+    background: #060b14;
+    border: 1px solid var(--border-dim);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 6px;
+    box-sizing: border-box;
+    margin-bottom: 8px;
+  }
+
+  /* 88x31 Badges Grid */
+  .badges-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin: 12px 0;
+  }
+
+  .micro-badge {
+    width: 88px;
+    height: 31px;
+    border: 1px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1.1;
+    cursor: pointer;
+    box-shadow: 1px 1px 0 #000;
+    user-select: none;
+    text-decoration: none;
+  }
+
+  .badge-notepad { background: #000080; color: #fff; }
+  .badge-masm { background: #800000; color: #ffd700; border-color: #ffd700; }
+  .badge-netscape { background: #004d40; color: #a7ffeb; }
+  .badge-genesis { background: #1a0033; color: #ff00aa; border-color: #ff00aa; }
+  .badge-knet { background: #0c4a6e; color: #38bdf8; border-color: #38bdf8; }
+  .badge-fl { background: #450a0a; color: #f87171; border-color: #f87171; }
+  .badge-ceiling { background: #064e3b; color: #34d399; }
+  .badge-parody { background: #701a75; color: #f0abfc; border-color: #f0abfc; }
+
+  /* Webring Box */
+  .webring-widget {
+    background: #050a12;
+    border: 2px groove var(--accent-cyan);
+    padding: 12px;
+    text-align: center;
+    margin-top: 16px;
+    font-size: 12px;
+  }
+
+  .webring-nav-links {
+    margin-top: 8px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  footer {
+    text-align: center;
+    border-top: 1px solid var(--border-dim);
+    margin-top: 16px;
+    padding-top: 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+
+<div class="site-wrap">
+
+  <!-- Marquee Ticker -->
+  <div class="retro-marquee">
+    ⚡ [NEON_RIDER] v2.4b ⚡ LIVE FROM THE UNDERGROUND // ASM 6.14 RULEZ // TARGET: 386/486/PENTIUM // NO BLOAT // 999KB FOREVER // PARODY SCENE ALIVE // ⚡
+  </div>
+
+  <!-- Header -->
+  <header>
+    <pre class="ascii-logo">
+ ███▄    █ ▓█████  ▒█████   ███▄    █     ██▀███   ██▓▓█████▄ ▓█████  ██▀███  
+ ██ ▀█   █ ▓█   ▀ ▒██▒  ██▒ ██ ▀█   █    ▓██ ▒ ██▒▓██▒▒██▀ ██▌▓█   ▀ ▓██ ▒ ██▒
+▓██  ▀█ ██▒▒███   ▒██░  ██▒▓██  ▀█ ██▒   ▓██ ░▄█ ▒▒██▒░██   █▌▒███   ▓██ ░▄█ ▒
+▓██▒  ▐▌██▒▒▓█  ▄ ▒██   ██░▓██▒  ▐▌██▒   ▒██▀▀█▄  ░██░░▓█▄   ▌▒▓█  ▄ ▒██▀▀█▄  
+▒██░   ▓██░░▒████▒░ ████▓▒░▒██░   ▓██░   ░██▓ ▒██▒░██░░▓████▓ ░▒████▒░██▓ ▒██▒
+░ ▒░   ▒ ▒ ░░ ▒░ ░░ ▒░▒░▒░ ░ ▒░   ▒ ▒    ░ ▒▓ ░▒▓░░▓   ▒▒▓  ▒ ░░ ▒░ ░░ ▒▓ ░▒▓░
+    </pre>
+    <div class="tagline">★ x86 ASSEMBLY SHRINE • DEMOSCENE CODE VAULT • YM2612 SYNTH LAB (1999) ★</div>
+  </header>
+
+  <!-- System Meta Info -->
+  <div class="meta-bar">
+    <div class="meta-item"><strong>CODER:</strong> neon_rider [0xNEON]</div>
+    <div class="meta-item"><strong>CREW:</strong> FLARELIGHT &amp; VOID_PULSE</div>
+    <div class="meta-item"><strong>STATION:</strong> P-II 450MHz / 64MB / SB-Live!</div>
+    <div class="counter-box">
+      <span style="color:var(--text-muted); font-size:10px;">HITS:</span>
+      <span class="odometer" id="hitOdometer">0042189</span>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <nav class="nav-tabs" id="mainNav">
+    <button class="nav-btn active" data-target="tab-about">[1] 🏠 About &amp; Rig</button>
+    <button class="nav-btn" data-target="tab-devlog">[2] 📜 ASM Devlog</button>
+    <button class="nav-btn" data-target="tab-sandbox">[3] ⚙️ x86 Sandbox &amp; Stepper</button>
+    <button class="nav-btn" data-target="tab-audio">[4] 🎵 YM2612 / SPC700 Tracker</button>
+    <button class="nav-btn" data-target="tab-vault">[5] 💾 Source &amp; NFO Vault</button>
+    <button class="nav-btn" data-target="tab-guestbook">[6] ✍️ Guestbook</button>
+    <button class="nav-btn" data-target="tab-webring">[7] 🌐 Badges &amp; Ring</button>
+  </nav>
+
+  <!-- TAB 1: About & Rig -->
+  <section class="content-section active" id="tab-about">
+    <div class="panel-card cyan-edge">
+      <div class="panel-title">
+        <span>[0x01] MANIFESTO: THE PURE CODE IMPERATIVE</span>
+        <span style="font-size:10px; color:var(--accent-amber);">MASM 6.14 / TASM 5.0</span>
+      </div>
+      <p style="margin-bottom:8px; font-size:12px;">
+        Welcome to the personal coordinates of <strong>neon_rider</strong>. In an era where commercial games like <em>Surreal Tournament</em> and <em>Tremor III Arena</em> demand 600 Megabytes of CD-ROM storage and bloated visual comets, this shrine is dedicated to the ancient craft of handcrafted Intel x86 machine instructions.
+      </p>
+      <p style="margin-bottom:8px; font-size:12px;">
+        The true master does not need gigabytes of dynamic link libraries. Within <strong>512 bytes</strong>, we draw procedural fire. Within <strong>4 kilobytes</strong>, we synthesize polyphonic FM music and render raymarched copper tunnels. Within the sacred <strong>999 kilobyte</strong> ceiling of the KiloApps Fleet, we can build entire operating realities.
+      </p>
+      <div style="background:#081320; border:1px solid #1e3a4a; padding:8px; margin-top:10px; font-size:11px;">
+        <span style="color:var(--accent-cyan); font-weight:bold;">⚡ HARDWARE BENCHMARK:</span><br>
+        • CPU: Intel Pentium II Deschutes @ 450 MHz (512KB L2 Cache)<br>
+        • Motherboard: ASUS P2B Intel 440BX Chipset (100 MHz FSB)<br>
+        • RAM: 64 MB PC-100 SDRAM CAS-2<br>
+        • Video: 3dfx Voodoo2 12MB + Matrox Millennium G200 8MB AGP<br>
+        • Audio: Creative Labs Sound Blaster Live! Value (EMU10K1) + Yamaha OPL3 FM Daughterboard
+      </div>
+    </div>
+
+    <div class="panel-card magenta-edge">
+      <div class="panel-title">
+        <span>[0x02] KERNEL TELEMETRY &amp; MEMORY ANOMALIES (ARG LOG)</span>
+        <span style="font-size:10px; color:#ff00aa;">PRIORITY: ALPHA</span>
+      </div>
+      <p style="font-size:12px; margin-bottom:8px;">
+        While profiling low-level Win32 socket hooks and mapping kernel paging offsets inside <code>KHex</code>, I intercepted repeating raw TCP packets originating from internal address <strong>10.19.99.4</strong>.
+      </p>
+      <div style="background:#16091b; border:1px dashed #ff00aa; padding:8px; font-size:11px; color:#f0abfc;">
+        <code>&gt;&gt; RAW DUMP @ 0x0024: [IP 10.19.99.4:79] "CLASSIFIED INTRANET LEAK // ECHO-1999 SUBSYSTEM"<br>
+        &gt;&gt; TELEMETRY FREQ: 1999 Hz continuous carrier wave.<br>
+        &gt;&gt; NOTE: Do NOT publish this link on the clearnet portal. Direct query in KNet only.</code>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 2: ASM Devlog -->
+  <section class="content-section" id="tab-devlog">
+    <div class="panel-card amber-edge">
+      <div class="panel-title">
+        <span>WIN32 ASSEMBLY &amp; DEMOSCENE RESEARCH PAPERS</span>
+        <span style="font-size:10px; color:var(--text-muted);">CLICK TO EXPAND ARTICLES</span>
+      </div>
+
+      <!-- Article 1 -->
+      <div class="article-item" onclick="toggleArticle(1)">
+        <div class="article-header">
+          <span>01. Crushing PE Headers: The 512-Byte Win32 Executable</span>
+          <span style="color:var(--accent-amber);">[1999-08-14]</span>
+        </div>
+        <div style="font-size:11px; color:var(--text-muted);">How to overlay MS-DOS stub and PE headers in MASM to fit below standard disk sector alignment.</div>
+        <div class="article-body" id="art-1">
+          <p>Standard Microsoft linkers produce binaries of at least 4,096 bytes due to section alignment padding. However, the Windows NT / 98 PE loader only inspects a handful of mandatory fields in the <code>IMAGE_NT_HEADERS</code> struct.</p>
+          <p>By collapsing the DOS MZ header directly into the PE signature offset and overlapping <code>IMAGE_FILE_HEADER</code> with the section header table, we can generate a fully functional Win32 executable that summons a native message box in exactly 512 bytes:</p>
+          <pre>; Minimalist Win32 PE Stub (NASM / MASM compatible)
+BITS 32
+org 0x00400000
+
+mz_hdr:
+    inc eax              ; 'MZ' signature spoofed as valid opcodes
+    dec ebp
+    pop edx
+    nop
+pe_offset equ 0x00000004
+pe_hdr:
+    db 'PE',0,0          ; PE Signature
+    dw 0x014C            ; Machine: i386
+    dw 1                 ; NumberOfSections: 1
+    dd 0                 ; TimeDateStamp
+entry_point:
+    xor eax, eax
+    push eax             ; MB_OK
+    push 0x00400080      ; Title
+    push 0x00400080      ; Text
+    push eax             ; hWnd
+    call [0x00400090]    ; MessageBoxA direct import vector
+    ret</pre>
+        </div>
+      </div>
+
+      <!-- Article 2 -->
+      <div class="article-item" onclick="toggleArticle(2)">
+        <div class="article-header">
+          <span>02. The Mathematics of 2-Operator FM Synthesis (YM2612)</span>
+          <span style="color:var(--accent-amber);">[1999-09-02]</span>
+        </div>
+        <div style="font-size:11px; color:var(--text-muted);">Implementing Sega Genesis punchy slap bass and metallic bells on standard Sound Blaster hardware.</div>
+        <div class="article-body" id="art-2">
+          <p>The Sega Genesis Yamaha YM2612 chip relies on frequency modulation rather than memory-heavy PCM sample banks. The fundamental mathematical equation for a 2-operator algorithm is:</p>
+          <pre>s(t) = A_c(t) * sin( 2π * f_c * t + I_m(t) * sin( 2π * f_m * t ) )</pre>
+          <p>Where <code>f_c</code> is the carrier frequency, <code>f_m</code> is the modulator frequency, and <code>I_m(t)</code> is the time-varying modulation index. When <code>I_m</code> experiences an exponential decay from a high initial value, the harmonic spectrum collapses rapidly into a warm sine tone, producing the iconic slap bass of 16-bit retro arcade games!</p>
+        </div>
+      </div>
+
+      <!-- Article 3 -->
+      <div class="article-item" onclick="toggleArticle(3)">
+        <div class="article-header">
+          <span>03. The 999 Kilobyte Ceiling as Architectural Virtue</span>
+          <span style="color:var(--accent-amber);">[1999-10-18]</span>
+        </div>
+        <div style="font-size:11px; color:var(--text-muted);">Why constraints fuel creativity and why bloated frameworks are a temporary madness.</div>
+        <div class="article-body" id="art-3">
+          <p>Modern commercial studios are shipping games that require 128MB of RAM and hundreds of megabytes of disk space. Yet, demoscene groups like FLARELIGHT, RAZOR 1999, and SKID VECTOR can fit complete 3D procedural universes with audio synthesis into a 64KB executable.</p>
+          <p>The KiloApps Fleet standard of <strong>&lt; 999 KB</strong> per complete executable proves that when bloat is purged, software runs instantaneously, cache hits approach 100%, and applications endure across decades without fragile external dependencies.</p>
+        </div>
+      </div>
+
+      <!-- Article 4 -->
+      <div class="article-item" onclick="toggleArticle(4)">
+        <div class="article-header">
+          <span>04. Anomaly Log: Packet Intercept at 10.19.99.4</span>
+          <span style="color:var(--accent-amber);">[1999-11-20]</span>
+        </div>
+        <div style="font-size:11px; color:var(--text-muted);">Raw protocol traces, port 79 finger anomalies, and the rogue autonomous fleet.</div>
+        <div class="article-body" id="art-4">
+          <p>During a packet-sniffing session on our university lab gateway, I detected recurring broadcast frames destined for internal host <code>10.19.99.4</code>. The payload contained structured telemetry from an entity identifying as "KMatrix Autonomous Cluster".</p>
+          <pre>&gt; ETH_FRAME_TYPE: 0x0800 [IPv4]
+&gt; SRC: 10.19.99.4:79   DST: 255.255.255.255:1999
+&gt; DATA: "ECHO PROTOCOL SYNCHRONIZED. SEEK THE ARCHITECT PASSKEY IN KMATRIX."</pre>
+          <p>This is not a standard corporate service. It appears someone inside the network is running an autonomous hypermedia node hidden beneath the intranet gateway.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 3: x86 Sandbox & Stepper -->
+  <section class="content-section" id="tab-sandbox">
+    <div class="panel-card green-edge">
+      <div class="panel-title">
+        <span>INTERACTIVE x86 INSTRUCTION SANDBOX &amp; REGISTER STEPPER</span>
+        <span style="font-size:10px; color:var(--accent-green);">32-BIT PROTECTED MODE SIMULATOR</span>
+      </div>
+
+      <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px; flex-wrap:wrap;">
+        <label style="font-size:11px; color:var(--accent-cyan); font-weight:bold;">Load Preset Routine:</label>
+        <select id="presetSelect" style="background:#09121f; color:#00ffcc; border:1px solid var(--border-dim); padding:4px 8px; font-family:var(--font-mono); font-size:11px;">
+          <option value="preset-clear">1. Zero Registers &amp; NOP Sled</option>
+          <option value="preset-math">2. Fast Math Loop (EAX * 10 via LEA &amp; SHL)</option>
+          <option value="preset-xor">3. XOR 0x7F Decryption Loop</option>
+          <option value="preset-count">4. Down-Counter with Branching (DEC &amp; JNZ)</option>
+          <option value="preset-palette">5. Procedural VGA Palette Generator</option>
+        </select>
+        <button class="btn-retro" id="btnAssemble">Assemble [F5]</button>
+        <button class="btn-retro" id="btnStep" style="background:#133324; border-color:#00ff66; color:#00ff66;">Step [F7]</button>
+        <button class="btn-retro" id="btnRun">Run All</button>
+        <button class="btn-retro" id="btnResetCpu">Reset CPU</button>
+      </div>
+
+      <div class="asm-grid">
+        <!-- Editor Column -->
+        <div>
+          <span style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px;">Assembly Source (MASM/NASM syntax):</span>
+          <textarea class="code-input-area" id="asmInput" spellcheck="false">; --- ROUTINE: Fast Zeroing & Register Mutation ---
+XOR EAX, EAX
+MOV EBX, 0x00000042
+ADD EAX, EBX
+SHL EAX, 2
+MOV ECX, 0x00000005
+SUB EAX, ECX
+INC EDX
+NOP</textarea>
+
+          <span style="font-size:11px; color:var(--text-muted); display:block; margin:8px 0 4px 0;">Disassembly &amp; Opcode Stream:</span>
+          <div class="disasm-viewport" id="disasmList">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- Registers Column -->
+        <div>
+          <span style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px;">General Purpose Registers (32-Bit):</span>
+          <table class="reg-table" id="regTable">
+            <tr><td class="reg-name">EAX</td><td class="reg-val" id="r_eax">0x00000000</td></tr>
+            <tr><td class="reg-name">EBX</td><td class="reg-val" id="r_ebx">0x00000000</td></tr>
+            <tr><td class="reg-name">ECX</td><td class="reg-val" id="r_ecx">0x00000000</td></tr>
+            <tr><td class="reg-name">EDX</td><td class="reg-val" id="r_edx">0x00000000</td></tr>
+            <tr><td class="reg-name">ESI</td><td class="reg-val" id="r_esi">0x00402000</td></tr>
+            <tr><td class="reg-name">EDI</td><td class="reg-val" id="r_edi">0x00403000</td></tr>
+            <tr><td class="reg-name">EIP</td><td class="reg-val" id="r_eip">0x00401000</td></tr>
+          </table>
+
+          <span style="font-size:11px; color:var(--text-muted); display:block; margin:10px 0 4px 0;">EFLAGS Condition Codes:</span>
+          <div class="flags-bar">
+            <span class="flag-badge active" id="f_zf">ZF (Zero)</span>
+            <span class="flag-badge" id="f_cf">CF (Carry)</span>
+            <span class="flag-badge" id="f_sf">SF (Sign)</span>
+          </div>
+
+          <div style="margin-top:12px; font-size:11px; background:#060b13; border:1px solid #1e293b; padding:8px;">
+            <span style="color:var(--accent-amber); font-weight:bold;">Execution Status:</span>
+            <div id="simStatus" style="color:#00ffcc; margin-top:2px;">CPU Ready. Press [Step] or [Run].</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 4: Audio Tracker Jukebox -->
+  <section class="content-section" id="tab-audio">
+    <div class="panel-card magenta-edge">
+      <div class="panel-title">
+        <span>GENESIS YM2612 2-OP FM SYNTHESIS &amp; SPC700 TRACKER JUKEBOX</span>
+        <span style="font-size:10px; color:#ff00aa;">WEB AUDIO FM ENGINE • NO EXTERNAL SAMPLES</span>
+      </div>
+
+      <div class="audio-console">
+        <!-- Visualizer & Controls -->
+        <div>
+          <canvas class="tracker-canvas" id="audioScope" width="600" height="120"></canvas>
+          
+          <div style="display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap;">
+            <button class="btn-retro btn-retro-pink" id="btnPlayAudio">▶ Play Chiptune</button>
+            <button class="btn-retro" id="btnStopAudio">⏹ Stop</button>
+            <button class="btn-retro" id="btnNextTrack">⏭ Next Song</button>
+            
+            <div style="margin-left:auto; display:flex; align-items:center; gap:6px;">
+              <span style="font-size:11px; color:var(--text-muted);">VOL:</span>
+              <input type="range" id="volSlider" min="0" max="100" value="70" style="width:80px; accent-color:var(--accent-magenta);">
+            </div>
+          </div>
+
+          <div style="margin-top:8px; font-size:11px; color:var(--accent-cyan);">
+            NOW PLAYING: <strong id="currentTrackTitle" style="color:#fff;">[01] Neon Overdrive 1999 (FM Slap Bass)</strong>
+          </div>
+        </div>
+
+        <!-- 4-Channel LED Meters -->
+        <div style="background:#060b13; border:1px solid var(--border-dim); padding:10px;">
+          <span style="font-size:11px; color:var(--accent-amber); font-weight:bold; display:block; margin-bottom:6px;">YM2612 4-CH ACTIVITY:</span>
+          
+          <div class="channel-meters">
+            <div>
+              <div class="meter-bar"><div class="meter-fill" id="meter1"></div></div>
+              <span style="color:#64748b;">CH1:FM</span>
+            </div>
+            <div>
+              <div class="meter-bar"><div class="meter-fill" id="meter2"></div></div>
+              <span style="color:#64748b;">CH2:BASS</span>
+            </div>
+            <div>
+              <div class="meter-bar"><div class="meter-fill" id="meter3"></div></div>
+              <span style="color:#64748b;">CH3:ARP</span>
+            </div>
+            <div>
+              <div class="meter-bar"><div class="meter-fill" id="meter4"></div></div>
+              <span style="color:#64748b;">CH4:NOISE</span>
+            </div>
+          </div>
+
+          <div style="margin-top:10px; font-size:10px; color:#94a3b8; line-height:1.4;">
+            • FM Carrier / Modulator: 1:2 Harmonic<br>
+            • SPC700 Stereo Slapback Delay: 190ms<br>
+            • Damping Filter: 2200Hz Low-Pass
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 5: Source & NFO Vault -->
+  <section class="content-section" id="tab-vault">
+    <div class="panel-card cyan-edge">
+      <div class="panel-title">
+        <span>DEMOSCENE CODE VAULT &amp; NFO ARCHIVE</span>
+        <span style="font-size:10px; color:var(--accent-cyan);">INSTANT BROWSER PREVIEW &amp; DOWNLOAD</span>
+      </div>
+
+      <div class="file-list">
+        <button class="btn-retro active-file" onclick="selectVaultFile('tinytunnel.asm')">tinytunnel.asm (128b)</button>
+        <button class="btn-retro" onclick="selectVaultFile('plasma99.asm')">plasma99.asm (256b)</button>
+        <button class="btn-retro" onclick="selectVaultFile('neon_synth.asm')">neon_synth.asm (512b)</button>
+        <button class="btn-retro" onclick="selectVaultFile('fl_neon.nfo')">fl_neon.nfo (Release Info)</button>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <span id="activeVaultFilename" style="font-size:12px; color:var(--accent-amber); font-weight:bold;">tinytunnel.asm</span>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-retro" onclick="copyActiveCode()">📋 Copy Code</button>
+          <button class="btn-retro btn-retro-pink" onclick="downloadActiveCode()">💾 Download File</button>
+        </div>
+      </div>
+
+      <div class="code-viewer-box" id="vaultContentArea">
+; Loading file...
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 6: Guestbook -->
+  <section class="content-section" id="tab-guestbook">
+    <div class="panel-card amber-edge">
+      <div class="panel-title">
+        <span>UNDERGROUND DEMOSCENE GUESTBOOK (CGI-BIN / PERSISTENT)</span>
+        <span style="font-size:10px; color:var(--accent-amber);">LOCALSTORAGE PERSISTENCE</span>
+      </div>
+
+      <!-- Add Entry Form -->
+      <form class="gb-form" id="guestbookForm" onsubmit="handleGbSubmit(event)" style="background:#09121d; border:1px solid var(--border-dim); padding:10px; margin-bottom:14px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+          <input type="text" id="gbNick" placeholder="Your Handle / Nickname (e.g. 0xViper)..." required maxlength="30">
+          <input type="text" id="gbCrew" placeholder="Demoscene Group / Location (e.g. FLARELIGHT)..." maxlength="30">
+        </div>
+        <textarea id="gbMsg" rows="3" placeholder="Leave your message, greetings, or assembly tricks..." required maxlength="240"></textarea>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:11px; color:var(--text-muted);">Strictly text only • No HTML injection</span>
+          <button type="submit" class="btn-retro" style="background:#221504; border-color:#ffcc00; color:#ffcc00;">✍️ Sign Guestbook</button>
+        </div>
+        <div id="gbStatusNotice" style="font-size:11px; color:var(--accent-green); margin-top:4px;"></div>
+      </form>
+
+      <!-- Entries List -->
+      <div id="gbEntriesContainer">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 7: Badges & Webring -->
+  <section class="content-section" id="tab-webring">
+    <div class="panel-card cyan-edge">
+      <div class="panel-title">
+        <span>RETRO 88x31 BUTTON EXCHANGE &amp; AFFILIATES</span>
+        <span style="font-size:10px; color:var(--accent-cyan);">CLICK ANY BADGE TO COPY EMBED CODE</span>
+      </div>
+
+      <div class="badges-grid">
+        <div class="micro-badge badge-notepad" onclick="copyBadgeCode('Notepad')">MADE WITH<br>NOTEPAD</div>
+        <div class="micro-badge badge-masm" onclick="copyBadgeCode('MASM')">MASM 6.14<br>ONLY</div>
+        <div class="micro-badge badge-netscape" onclick="copyBadgeCode('Netscape')">NETSCAPE<br>4.7 READY</div>
+        <div class="micro-badge badge-genesis" onclick="copyBadgeCode('YM2612')">YM2612<br>FM AUDIO</div>
+        <div class="micro-badge badge-knet" onclick="copyBadgeCode('KNet')">KILONET<br>BROWSER</div>
+        <div class="micro-badge badge-fl" onclick="copyBadgeCode('FLARELIGHT')">FLARELIGHT<br>MEMBER</div>
+        <div class="micro-badge badge-ceiling" onclick="copyBadgeCode('999KB')">&lt; 999 KB<br>STANDARD</div>
+        <div class="micro-badge badge-parody" onclick="copyBadgeCode('Surreal')">SURREAL<br>TOURNAMENT</div>
+      </div>
+
+      <div style="background:#070e18; border:1px solid #1e3a4a; padding:8px; margin-top:10px;">
+        <span style="font-size:11px; color:var(--accent-amber); font-weight:bold;">Embed Neon Rider's Badge on your site:</span>
+        <textarea id="badgeSnippet" readonly style="width:100%; height:45px; background:#020509; border:1px solid #334155; color:#00ffcc; font-family:var(--font-mono); font-size:10px; padding:4px; margin-top:4px; resize:none;">&lt;!-- Neon Rider ASM Shrine --&gt;
+&lt;a href="/web/users/neon_rider.html"&gt;&lt;img src="/assets/badges/neon_rider.gif" alt="Neon Rider Win32 ASM" width="88" height="31" border="0"&gt;&lt;/a&gt;</textarea>
+      </div>
+    </div>
+
+    <!-- Webring Box -->
+    <div class="webring-widget">
+      <div style="font-weight:bold; color:var(--accent-cyan);">★ CENTRAL KILONET 1999 WEBRING ★</div>
+      <div style="font-size:11px; color:var(--text-muted); margin:4px 0;">Node Member #006: ~neon_rider (Win32 Assembly &amp; Demoscene Vault)</div>
+      
+      <div class="webring-nav-links">
+        <a href="/web/geocities.html" class="btn-retro">« [Prev] CyberSpire's Shrine</a>
+        <a href="/web/webring.html" class="btn-retro">🌐 [Hub] Webring Center</a>
+        <a href="/web/portal.html" class="btn-retro">🏠 [Portal] KiloNet 1999</a>
+        <a href="/web/warez.html" class="btn-retro">💾 [Scene] 0xRELEASE Vault</a>
+        <a href="/apps/contribute.html" class="btn-retro">[Next] Contributor Hub »</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    [NEON_RIDER] // Engineered with 100% pure handcrafted HTML, CSS &amp; Web Audio API.<br>
+    Zero external CDNs • Compliant with KiloApps &lt; 999 KB Architecture Ceiling • 1999-2026<br>
+    Navigate via KNet Browser at <code>kweb://users/~neon_rider</code>
+  </footer>
+
+</div>
+
+<script>
+  /* =========================================================================
+     1. NAVIGATION & TAB SWITCHING
+     ========================================================================= */
+  const navButtons = document.querySelectorAll('.nav-btn');
+  const sections = document.querySelectorAll('.content-section');
+
+  navButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      navButtons.forEach(b => b.classList.remove('active'));
+      sections.forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      const targetId = btn.getAttribute('data-target');
+      const targetSec = document.getElementById(targetId);
+      if (targetSec) targetSec.classList.add('active');
+    });
+  });
+
+  /* =========================================================================
+     2. HIT COUNTER (PERSISTENT WITH VINTAGE FLIP ODOMETER)
+     ========================================================================= */
+  const hitEl = document.getElementById('hitOdometer');
+  let hits = parseInt(localStorage.getItem('neon_rider_hits') || '42189', 10);
+  hits += Math.floor(Math.random() * 3) + 1;
+  localStorage.setItem('neon_rider_hits', hits.toString());
+  hitEl.textContent = hits.toString().padStart(7, '0');
+
+  /* =========================================================================
+     3. DEVLOG ARTICLES TOGGLE
+     ========================================================================= */
+  function toggleArticle(id) {
+    const art = document.getElementById('art-' + id);
+    if (!art) return;
+    art.classList.toggle('open');
+  }
+
+  /* =========================================================================
+     4. INTERACTIVE x86 MINI-ASSEMBLER & CPU STEPPER (NO EVAL, PURE EMULATION)
+     ========================================================================= */
+  let cpu = {
+    eax: 0, ebx: 0x42, ecx: 0x05, edx: 0,
+    esi: 0x00402000, edi: 0x00403000, eip: 0x00401000,
+    zf: 1, cf: 0, sf: 0
+  };
+  let prevCpu = { ...cpu };
+
+  let parsedProgram = [];
+  let currentStepIdx = 0;
+
+  const presets = {
+    'preset-clear': [
+      "XOR EAX, EAX",
+      "MOV EBX, 0x00000042",
+      "ADD EAX, EBX",
+      "SHL EAX, 2",
+      "MOV ECX, 0x00000005",
+      "SUB EAX, ECX",
+      "INC EDX",
+      "NOP"
+    ],
+    'preset-math': [
+      "; Multiply EAX by 10 using shift-and-add (LEA emulation)",
+      "MOV EAX, 0x00000007",
+      "MOV EBX, EAX",
+      "SHL EAX, 3        ; EAX = EAX * 8",
+      "SHL EBX, 1        ; EBX = original * 2",
+      "ADD EAX, EBX      ; EAX = 8x + 2x = 10x (70)",
+      "NOP"
+    ],
+    'preset-xor': [
+      "; XOR Encryption Cycle",
+      "MOV EAX, 0x000000AA",
+      "XOR EAX, 0x0000007F",
+      "MOV EBX, EAX",
+      "XOR EBX, 0x0000007F ; Decrypt back to 0xAA",
+      "CMP EAX, EBX",
+      "NOP"
+    ],
+    'preset-count': [
+      "; Down-Counter to Zero",
+      "MOV ECX, 0x00000004",
+      "DEC ECX",
+      "DEC ECX",
+      "DEC ECX",
+      "DEC ECX            ; Zero flag should trigger!",
+      "NOP"
+    ],
+    'preset-palette': [
+      "; VGA 256-Color Palette Generation",
+      "XOR EAX, EAX",
+      "INC EAX",
+      "SHL EAX, 1",
+      "ADD EAX, 0x00000010",
+      "MOV EDX, EAX",
+      "NOP"
+    ]
+  };
+
+  const asmInput = document.getElementById('asmInput');
+  const disasmList = document.getElementById('disasmList');
+  const simStatus = document.getElementById('simStatus');
+  const presetSelect = document.getElementById('presetSelect');
+
+  presetSelect.addEventListener('change', (e) => {
+    const lines = presets[e.target.value];
+    if (lines) {
+      asmInput.value = lines.join('\n');
+      assembleCode();
+    }
+  });
+
+  function parseOpcode(line) {
+    const clean = line.split(';')[0].trim().toUpperCase();
+    if (!clean) return null;
+    const parts = clean.split(/[\s,]+/);
+    const op = parts[0];
+    const a1 = parts[1] || '';
+    const a2 = parts[2] || '';
+
+    let hex = "90";
+    if (op === "NOP") hex = "90";
+    else if (op === "XOR" && a1 === "EAX" && a2 === "EAX") hex = "31 C0";
+    else if (op === "XOR" && a1 === "EBX" && a2 === "EBX") hex = "31 DB";
+    else if (op === "XOR") hex = "83 F0 7F";
+    else if (op === "MOV" && a1 === "EAX") hex = "B8 " + toImmHex(a2);
+    else if (op === "MOV" && a1 === "EBX") hex = "BB " + toImmHex(a2);
+    else if (op === "MOV" && a1 === "ECX") hex = "B9 " + toImmHex(a2);
+    else if (op === "ADD" && a1 === "EAX") hex = "03 C3";
+    else if (op === "SUB" && a1 === "EAX") hex = "2B C1";
+    else if (op === "INC" && a1 === "EAX") hex = "40";
+    else if (op === "INC" && a1 === "EDX") hex = "42";
+    else if (op === "DEC" && a1 === "ECX") hex = "49";
+    else if (op === "SHL" && a1 === "EAX") hex = "C1 E0 02";
+    else if (op === "SHL" && a1 === "EBX") hex = "D1 E3";
+    else if (op === "CMP") hex = "3B C3";
+    else hex = "89 C0";
+
+    return { raw: clean, op, a1, a2, hex };
+  }
+
+  function toImmHex(valStr) {
+    let num = 0;
+    if (valStr.startsWith('0X')) num = parseInt(valStr.slice(2), 16);
+    else num = parseInt(valStr, 10) || 0;
+    const hex = (num & 0xFF).toString(16).padStart(2, '0').toUpperCase();
+    return hex + " 00 00 00";
+  }
+
+  function assembleCode() {
+    parsedProgram = [];
+    currentStepIdx = 0;
+    const lines = asmInput.value.split('\n');
+    let addr = 0x00401000;
+
+    lines.forEach(l => {
+      const p = parseOpcode(l);
+      if (p) {
+        p.addr = addr;
+        addr += 2 + Math.floor(p.hex.length / 3);
+        parsedProgram.push(p);
+      }
+    });
+
+    renderDisassembly();
+    simStatus.textContent = `Assembled ${parsedProgram.length} instructions. EIP = 0x00401000`;
+  }
+
+  function renderDisassembly() {
+    disasmList.innerHTML = '';
+    parsedProgram.forEach((p, idx) => {
+      const div = document.createElement('div');
+      div.className = 'disasm-line' + (idx === currentStepIdx ? ' current' : '');
+      const addrHex = '0x' + p.addr.toString(16).toUpperCase();
+      const bytesHex = p.hex.padEnd(12, ' ');
+      div.textContent = `${addrHex}  ${bytesHex}  ${p.raw}`;
+      disasmList.appendChild(div);
+    });
+  }
+
+  function parseVal(arg) {
+    if (!arg) return 0;
+    if (arg === 'EAX') return cpu.eax;
+    if (arg === 'EBX') return cpu.ebx;
+    if (arg === 'ECX') return cpu.ecx;
+    if (arg === 'EDX') return cpu.edx;
+    if (arg.startsWith('0X')) return parseInt(arg.slice(2), 16) || 0;
+    return parseInt(arg, 10) || 0;
+  }
+
+  function stepCpu() {
+    if (parsedProgram.length === 0) assembleCode();
+    if (currentStepIdx >= parsedProgram.length) {
+      simStatus.textContent = "Program completed. Press [Reset CPU] to restart.";
+      return;
+    }
+
+    prevCpu = { ...cpu };
+    const inst = parsedProgram[currentStepIdx];
+    const op = inst.op;
+    const a1 = inst.a1;
+    const a2 = inst.a2;
+
+    if (op === "XOR") {
+      const v = parseVal(a2);
+      if (a1 === "EAX") cpu.eax ^= v;
+      else if (a1 === "EBX") cpu.ebx ^= v;
+      else if (a1 === "ECX") cpu.ecx ^= v;
+    } else if (op === "MOV") {
+      const v = parseVal(a2);
+      if (a1 === "EAX") cpu.eax = v;
+      else if (a1 === "EBX") cpu.ebx = v;
+      else if (a1 === "ECX") cpu.ecx = v;
+      else if (a1 === "EDX") cpu.edx = v;
+    } else if (op === "ADD") {
+      const v = parseVal(a2);
+      if (a1 === "EAX") cpu.eax = (cpu.eax + v) >>> 0;
+    } else if (op === "SUB") {
+      const v = parseVal(a2);
+      if (a1 === "EAX") cpu.eax = Math.max(0, cpu.eax - v);
+    } else if (op === "INC") {
+      if (a1 === "EAX") cpu.eax = (cpu.eax + 1) >>> 0;
+      else if (a1 === "EDX") cpu.edx = (cpu.edx + 1) >>> 0;
+    } else if (op === "DEC") {
+      if (a1 === "ECX") cpu.ecx = Math.max(0, cpu.ecx - 1);
+    } else if (op === "SHL") {
+      const amt = parseVal(a2) || 1;
+      if (a1 === "EAX") cpu.eax = (cpu.eax << amt) >>> 0;
+      else if (a1 === "EBX") cpu.ebx = (cpu.ebx << amt) >>> 0;
+    } else if (op === "CMP") {
+      const diff = parseVal(a1) - parseVal(a2);
+      cpu.zf = diff === 0 ? 1 : 0;
+      cpu.cf = diff < 0 ? 1 : 0;
+    }
+
+    // Update flags
+    const primary = cpu.eax;
+    if (op !== "CMP") {
+      cpu.zf = (primary === 0) ? 1 : 0;
+      cpu.sf = (primary & 0x80000000) ? 1 : 0;
+    }
+
+    cpu.eip = inst.addr;
+    currentStepIdx++;
+    updateRegistersUi();
+    renderDisassembly();
+
+    simStatus.textContent = `Executed [${inst.raw}]. EIP = 0x${cpu.eip.toString(16).toUpperCase()}`;
+    playClickSound();
+  }
+
+  function runAll() {
+    if (parsedProgram.length === 0) assembleCode();
+    while (currentStepIdx < parsedProgram.length) {
+      stepCpu();
+    }
+  }
+
+  function resetCpu() {
+    cpu = {
+      eax: 0, ebx: 0x42, ecx: 0x05, edx: 0,
+      esi: 0x00402000, edi: 0x00403000, eip: 0x00401000,
+      zf: 1, cf: 0, sf: 0
+    };
+    prevCpu = { ...cpu };
+    currentStepIdx = 0;
+    updateRegistersUi();
+    renderDisassembly();
+    simStatus.textContent = "CPU Registers reset to defaults.";
+  }
+
+  function updateRegistersUi() {
+    ['eax', 'ebx', 'ecx', 'edx', 'esi', 'edi', 'eip'].forEach(reg => {
+      const el = document.getElementById('r_' + reg);
+      const val = cpu[reg];
+      el.textContent = '0x' + val.toString(16).padStart(8, '0').toUpperCase();
+      if (val !== prevCpu[reg]) {
+        el.classList.add('reg-changed');
+      } else {
+        el.classList.remove('reg-changed');
+      }
+    });
+
+    document.getElementById('f_zf').className = 'flag-badge' + (cpu.zf ? ' active' : '');
+    document.getElementById('f_cf').className = 'flag-badge' + (cpu.cf ? ' active' : '');
+    document.getElementById('f_sf').className = 'flag-badge' + (cpu.sf ? ' active' : '');
+  }
+
+  document.getElementById('btnAssemble').addEventListener('click', assembleCode);
+  document.getElementById('btnStep').addEventListener('click', stepCpu);
+  document.getElementById('btnRun').addEventListener('click', runAll);
+  document.getElementById('btnResetCpu').addEventListener('click', resetCpu);
+
+  // Initialize sandbox
+  assembleCode();
+
+  /* =========================================================================
+     5. YM2612 2-OP FM SYNTHESIS & SPC700 TRACKER ENGINE
+     ========================================================================= */
+  let audioCtx = null;
+  let isPlayingAudio = false;
+  let audioTimer = null;
+  let trackIdx = 0;
+  let tick = 0;
+
+  const tracks = [
+    {
+      title: "[01] Neon Overdrive 1999 (FM Slap Bass & Lead)",
+      tempo: 130,
+      bassNotes: [110, 110, 130.8, 146.8, 110, 110, 164.8, 146.8],
+      leadNotes: [440, 523.2, 659.2, 587.3, 523.2, 440, 392, 440]
+    },
+    {
+      title: "[02] Subterranean Copper (SPC700 Warm Echo)",
+      tempo: 85,
+      bassNotes: [98, 98, 123.5, 130.8, 98, 98, 146.8, 130.8],
+      leadNotes: [392, 493.8, 523.2, 587.3, 493.8, 392, 329.6, 392]
+    },
+    {
+      title: "[03] Demoscene Rush 64k (Fast Pulse Arps)",
+      tempo: 145,
+      bassNotes: [130.8, 146.8, 164.8, 174.6, 196, 174.6, 164.8, 146.8],
+      leadNotes: [523.2, 587.3, 659.2, 698.4, 783.9, 698.4, 659.2, 587.3]
+    },
+    {
+      title: "[04] Echoes of 10.19.99.4 (1999Hz Harmonic Lore)",
+      tempo: 110,
+      bassNotes: [82.4, 82.4, 110, 82.4, 98, 82.4, 123.4, 82.4],
+      leadNotes: [659.2, 880, 987.7, 880, 1999, 880, 659.2, 440]
+    }
+  ];
+
+  const btnPlayAudio = document.getElementById('btnPlayAudio');
+  const btnStopAudio = document.getElementById('btnStopAudio');
+  const btnNextTrack = document.getElementById('btnNextTrack');
+  const currentTrackTitle = document.getElementById('currentTrackTitle');
+  const volSlider = document.getElementById('volSlider');
+  const canvas = document.getElementById('audioScope');
+  const ctx2d = canvas.getContext('2d');
+
+  let masterGain = null;
+  let analyser = null;
+  let delayNode = null;
+  let feedbackGain = null;
+
+  function initAudio() {
+    if (audioCtx) return;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioContext();
+
+    masterGain = audioCtx.createGain();
+    masterGain.gain.setValueAtTime(0.7, audioCtx.currentTime);
+
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+
+    // SNES SPC700 Stereo Slapback Delay Simulation
+    delayNode = audioCtx.createDelay();
+    delayNode.delayTime.setValueAtTime(0.19, audioCtx.currentTime);
+    feedbackGain = audioCtx.createGain();
+    feedbackGain.gain.setValueAtTime(0.28, audioCtx.currentTime);
+    const delayFilter = audioCtx.createBiquadFilter();
+    delayFilter.type = 'lowpass';
+    delayFilter.frequency.setValueAtTime(2200, audioCtx.currentTime);
+
+    delayNode.connect(delayFilter);
+    delayFilter.connect(feedbackGain);
+    feedbackGain.connect(delayNode);
+    delayFilter.connect(masterGain);
+
+    masterGain.connect(analyser);
+    analyser.connect(audioCtx.destination);
+
+    requestAnimationFrame(renderScope);
+  }
+
+  // YM2612 2-Operator FM Synthesizer Voice
+  function triggerFmVoice(freq, duration, isBass) {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+
+    // Carrier
+    const carrier = audioCtx.createOscillator();
+    carrier.type = isBass ? 'sawtooth' : 'sine';
+    carrier.frequency.setValueAtTime(freq, now);
+
+    // Modulator (FM Operator 2)
+    const modulator = audioCtx.createOscillator();
+    modulator.type = 'sine';
+    const modRatio = isBass ? 2 : 1;
+    modulator.frequency.setValueAtTime(freq * modRatio, now);
+
+    // Modulation Gain Envelope
+    const modGain = audioCtx.createGain();
+    const modDepth = isBass ? 500 : 250;
+    modGain.gain.setValueAtTime(modDepth, now);
+    modGain.gain.exponentialRampToValueAtTime(1, now + duration);
+
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    // Voice Output Gain
+    const voiceGain = audioCtx.createGain();
+    voiceGain.gain.setValueAtTime(isBass ? 0.35 : 0.2, now);
+    voiceGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+    carrier.connect(voiceGain);
+    voiceGain.connect(masterGain);
+    voiceGain.connect(delayNode);
+
+    modulator.start(now);
+    carrier.start(now);
+
+    modulator.stop(now + duration);
+    carrier.stop(now + duration);
+  }
+
+  function triggerNoiseSnare(duration) {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    const bufferSize = audioCtx.sampleRate * duration;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const output = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
+    }
+    const whiteNoise = audioCtx.createBufferSource();
+    whiteNoise.buffer = buffer;
+
+    const noiseFilter = audioCtx.createBiquadFilter();
+    noiseFilter.type = 'highpass';
+    noiseFilter.frequency.setValueAtTime(1000, now);
+
+    const noiseGain = audioCtx.createGain();
+    noiseGain.gain.setValueAtTime(0.2, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+    whiteNoise.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+    noiseGain.connect(masterGain);
+
+    whiteNoise.start(now);
+    whiteNoise.stop(now + duration);
+  }
+
+  function playClickSound() {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(200, now + 0.04);
+    g.gain.setValueAtTime(0.15, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+    osc.connect(g);
+    g.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.04);
+  }
+
+  function stepTracker() {
+    const track = tracks[trackIdx];
+    const bNote = track.bassNotes[tick % track.bassNotes.length];
+    const lNote = track.leadNotes[tick % track.leadNotes.length];
+
+    // Trigger instruments
+    triggerFmVoice(bNote, 0.22, true);
+    if (tick % 2 === 0) {
+      triggerFmVoice(lNote, 0.18, false);
+    }
+    if (tick % 4 === 2) {
+      triggerNoiseSnare(0.12);
+    }
+
+    // Flash activity meters
+    document.getElementById('meter1').style.height = (Math.random() * 60 + 40) + '%';
+    document.getElementById('meter2').style.height = (Math.random() * 70 + 30) + '%';
+    document.getElementById('meter3').style.height = (Math.random() * 50 + 20) + '%';
+    document.getElementById('meter4').style.height = (tick % 4 === 2 ? '90%' : '10%');
+
+    setTimeout(() => {
+      document.getElementById('meter1').style.height = '10%';
+      document.getElementById('meter2').style.height = '10%';
+      document.getElementById('meter3').style.height = '10%';
+      document.getElementById('meter4').style.height = '5%';
+    }, 120);
+
+    tick++;
+  }
+
+  btnPlayAudio.addEventListener('click', () => {
+    initAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (isPlayingAudio) return;
+
+    isPlayingAudio = true;
+    btnPlayAudio.textContent = "⏸ Playing...";
+    const intervalMs = Math.round(60000 / (tracks[trackIdx].tempo * 2));
+    audioTimer = setInterval(stepTracker, intervalMs);
+  });
+
+  btnStopAudio.addEventListener('click', () => {
+    isPlayingAudio = false;
+    btnPlayAudio.textContent = "▶ Play Chiptune";
+    if (audioTimer) clearInterval(audioTimer);
+  });
+
+  btnNextTrack.addEventListener('click', () => {
+    trackIdx = (trackIdx + 1) % tracks.length;
+    currentTrackTitle.textContent = tracks[trackIdx].title;
+    if (isPlayingAudio) {
+      clearInterval(audioTimer);
+      const intervalMs = Math.round(60000 / (tracks[trackIdx].tempo * 2));
+      audioTimer = setInterval(stepTracker, intervalMs);
+    }
+  });
+
+  volSlider.addEventListener('input', (e) => {
+    if (masterGain) {
+      masterGain.gain.setValueAtTime(e.target.value / 100, audioCtx.currentTime);
+    }
+  });
+
+  function renderScope() {
+    requestAnimationFrame(renderScope);
+    if (!analyser) return;
+
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteTimeDomainData(dataArray);
+
+    ctx2d.fillStyle = '#020408';
+    ctx2d.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx2d.lineWidth = 2;
+    ctx2d.strokeStyle = '#00ffcc';
+    ctx2d.shadowBlur = 6;
+    ctx2d.shadowColor = '#00ffcc';
+    ctx2d.beginPath();
+
+    const sliceWidth = canvas.width / dataArray.length;
+    let x = 0;
+
+    for (let i = 0; i < dataArray.length; i++) {
+      const v = dataArray[i] / 128.0;
+      const y = v * (canvas.height / 2);
+
+      if (i === 0) ctx2d.moveTo(x, y);
+      else ctx2d.lineTo(x, y);
+
+      x += sliceWidth;
+    }
+
+    ctx2d.lineTo(canvas.width, canvas.height / 2);
+    ctx2d.stroke();
+  }
+
+  /* =========================================================================
+     6. SOURCE & NFO VAULT (PREVIEW & REAL DATA DOWNLOAD)
+     ========================================================================= */
+  const vaultFiles = {
+    'tinytunnel.asm': `; tinytunnel.asm — 128-byte 3D Tunnel in 16-bit / 32-bit Real-Mode
+; Target: DOS COM or Win32 PE Console
+; Author: neon_rider [FLARELIGHT / 1999]
+
+BITS 16
+ORG 100h
+
+start:
+    mov ax, 13h          ; VGA 320x200x256 mode
+    int 10h
+    push 0A000h
+    pop es
+
+render_loop:
+    mov di, 320*200
+pixel_loop:
+    mov ax, di
+    xor dx, dx
+    mov bx, 320
+    div bx               ; AX = Y, DX = X
+    sub ax, 100          ; Center Y
+    sub dx, 160          ; Center X
+    
+    ; Radius approximation: R = X^2 + Y^2
+    mov bp, dx
+    imul bp, bp
+    mov bx, ax
+    imul bx, bx
+    add bp, bx           ; BP = R^2
+    
+    in al, 40h           ; Query 8253 timer for animation frame
+    add ax, bp
+    stosb                ; Write color to ES:DI
+    dec di
+    jnz pixel_loop
+
+    in al, 60h           ; Check Escape key
+    dec al
+    jnz render_loop
+    mov ax, 03h          ; Restore text mode
+    int 10h
+    ret`,
+
+    'plasma99.asm': `; plasma99.asm — 256-byte Double Sine Plasma Effect
+; Author: neon_rider [0xNEON / 1999]
+
+BITS 16
+ORG 100h
+
+main:
+    mov al, 13h
+    int 10h
+    les bp, [bx]         ; Point ES:BP to video memory 0xA000
+    
+frame:
+    inc word [bx]        ; Increment global timer
+    xor di, di           ; Reset screen index
+draw:
+    mov ax, di
+    cwd
+    mov cx, 320
+    div cx               ; AX = Y, DX = X
+    
+    add ax, [bx]         ; Add motion
+    add dx, [bx]
+    
+    ; Fast table-less sine approximation: sin(x) ~ ((x & 63) - 32)^2
+    and al, 63
+    sub al, 32
+    imul al
+    mov cl, ah
+    
+    and dl, 63
+    sub dl, 32
+    mov al, dl
+    imul al
+    add al, cl           ; Combined plasma interference
+    
+    stosb
+    cmp di, 64000
+    jne draw
+    
+    in al, 60h           ; Check keyboard
+    cmp al, 1
+    jne frame
+    
+    mov al, 03h
+    int 10h
+    ret`,
+
+    'neon_synth.asm': `; neon_synth.asm — 512-byte WinMM Direct Sound Streamer
+; Resolves waveOutOpen & waveOutWrite dynamically
+; Target: Win32 PE Executable
+
+BITS 32
+%include "win32.inc"
+
+section .text
+global _start
+
+_start:
+    ; Allocate 4KB buffer for audio PCM stream
+    push 0x04            ; PAGE_READWRITE
+    push 0x1000          ; MEM_COMMIT
+    push 4096            ; Size
+    push 0
+    call [ebp + VirtualAlloc]
+    mov esi, eax
+
+    ; Fill buffer with procedural 8-bit square wave arp
+    mov ecx, 4096
+.fill_loop:
+    mov eax, ecx
+    and eax, 0x10
+    mov [esi + ecx - 1], al
+    loop .fill_loop
+
+    ; Open default waveform audio output
+    push 0
+    push 0
+    push 0
+    push wave_format
+    push wave_handle
+    call [ebp + waveOutOpen]
+    ret
+
+wave_format:
+    dw 1                 ; WAVE_FORMAT_PCM
+    dw 1                 ; 1 Channel (Mono)
+    dd 22050             ; 22.05 kHz sample rate
+    dd 22050             ; nAvgBytesPerSec
+    dw 1                 ; nBlockAlign
+    dw 8                 ; 8-bit depth
+wave_handle: dd 0`,
+
+    'fl_neon.nfo': `
+ ═══════════════════════════════════════════════════════════════════════
+       FLARELIGHT DEMOSCENE PRODUCTION // RELEASE INFO // 1999
+ ═══════════════════════════════════════════════════════════════════════
+
+   [ RELEASE ]: NEON HIGHWAY 64K
+   [ TYPE    ]: 64 Kilobyte Procedural Demoscene Intro
+   [ CODER   ]: neon_rider [0xNEON]
+   [ MUSIC   ]: YM2612 & SPC700 Synthesizer Engine
+   [ PARTY   ]: Assembly '99 / The Gathering '99
+
+ ───────────────────────────────────────────────────────────────────────
+   [ SYSTEM REQUIREMENTS ]:
+   • Pentium 200 MMX or AMD K6-2 300+
+   • 32 MB System RAM
+   • DirectDraw 6.0 compatible 2D accelerator
+   • Sound Blaster 16 or Sound Blaster Live!
+   • Microsoft Windows 95, 98, or NT 4.0 Workstation
+
+ ───────────────────────────────────────────────────────────────────────
+   [ GREETINGS & RESPECTS ]:
+   • FLARELIGHT • RAZOR 1999 • SKID VECTOR • PARALAX • VOID_PULSE
+   • All assembly wizards squeezing magic from the silicon!
+
+ ───────────────────────────────────────────────────────────────────────
+   [ SECRET COORDINATES ]:
+   Internal subnet listeners note: 10.19.99.4/classified holds answers.
+ ═══════════════════════════════════════════════════════════════════════
+`
+  };
+
+  let currentVaultKey = 'tinytunnel.asm';
+
+  function selectVaultFile(filename) {
+    currentVaultKey = filename;
+    document.getElementById('activeVaultFilename').textContent = filename;
+    document.getElementById('vaultContentArea').textContent = vaultFiles[filename] || '';
+  }
+
+  function copyActiveCode() {
+    const text = vaultFiles[currentVaultKey];
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      alert(`Copied ${currentVaultKey} to clipboard!`);
+    }
+  }
+
+  function downloadActiveCode() {
+    const text = vaultFiles[currentVaultKey];
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = currentVaultKey;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // Initial vault load
+  selectVaultFile('tinytunnel.asm');
+
+  /* =========================================================================
+     7. GUESTBOOK (PERSISTENT WITH LOCALSTORAGE)
+     ========================================================================= */
+  const defaultGuestbook = [
+    {
+      nick: "x86_phantom",
+      crew: "FLARELIGHT // Helsinki",
+      date: "1999-11-28",
+      msg: "Insane 128-byte tunnel routine! The XOR register optimization cut 14 cycles on my Pentium II. Respect."
+    },
+    {
+      nick: "synth_queen",
+      crew: "Independent Tracker",
+      date: "1999-10-14",
+      msg: "Your YM2612 FM bass algorithm sounds godly on my AWE64. Keep pushing the 999KB envelope!"
+    },
+    {
+      nick: "sysop_vector",
+      crew: "The UnderNet BBS",
+      date: "1999-09-03",
+      msg: "Added your site to our node webring! Also, what's that weird broadcast packet at 10.19.99.4?"
+    }
+  ];
+
+  function getGuestbook() {
+    const raw = localStorage.getItem('neon_rider_guestbook');
+    if (!raw) return defaultGuestbook;
+    try {
+      return JSON.parse(raw);
+    } catch (e) {
+      return defaultGuestbook;
+    }
+  }
+
+  function renderGuestbook() {
+    const container = document.getElementById('gbEntriesContainer');
+    const entries = getGuestbook();
+    container.innerHTML = '';
+
+    entries.forEach(entry => {
+      const card = document.createElement('div');
+      card.className = 'gb-entry';
+
+      const header = document.createElement('div');
+      header.style.marginBottom = '4px';
+
+      const author = document.createElement('span');
+      author.className = 'gb-author';
+      author.textContent = entry.nick + (entry.crew ? ` [${entry.crew}]` : '');
+
+      const date = document.createElement('span');
+      date.className = 'gb-date';
+      date.textContent = entry.date;
+
+      header.appendChild(author);
+      header.appendChild(date);
+
+      const msg = document.createElement('div');
+      msg.style.color = '#cbd5e1';
+      msg.textContent = entry.msg;
+
+      card.appendChild(header);
+      card.appendChild(msg);
+      container.appendChild(card);
+    });
+  }
+
+  function handleGbSubmit(e) {
+    e.preventDefault();
+    const nick = document.getElementById('gbNick').value.trim();
+    const crew = document.getElementById('gbCrew').value.trim();
+    const msg = document.getElementById('gbMsg').value.trim();
+    const status = document.getElementById('gbStatusNotice');
+
+    if (!nick || !msg) return;
+
+    const newEntry = {
+      nick,
+      crew,
+      date: "1999-" + new Date().toISOString().slice(5, 10),
+      msg
+    };
+
+    const entries = getGuestbook();
+    entries.unshift(newEntry);
+    localStorage.setItem('neon_rider_guestbook', JSON.stringify(entries));
+
+    document.getElementById('gbNick').value = '';
+    document.getElementById('gbCrew').value = '';
+    document.getElementById('gbMsg').value = '';
+
+    renderGuestbook();
+    status.textContent = "✔ Entry #0" + entries.length + " written to guestbook.dat. Thanks for signing!";
+    setTimeout(() => { status.textContent = ''; }, 4000);
+    playClickSound();
+  }
+
+  renderGuestbook();
+
+  /* =========================================================================
+     8. 88x31 BADGE SNIPPET COPIER
+     ========================================================================= */
+  function copyBadgeCode(badgeName) {
+    const snippet = `<!-- ${badgeName} 88x31 Button -->\n<a href="/web/users/neon_rider.html"><img src="/assets/badges/${badgeName.toLowerCase()}.gif" alt="${badgeName}" width="88" height="31" border="0"></a>`;
+    document.getElementById('badgeSnippet').value = snippet;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(snippet);
+      alert(`Copied ${badgeName} badge code to clipboard!`);
+    }
+  }
+</script>
+
+</body>
+</html>
