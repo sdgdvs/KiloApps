@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-23T07:50:00Z — kilo-graphics: KSubmarine (Specular Glint Removal, HiDPI Polish & Balance Pass)**
+  - Status: PASS ✅ (Eliminated observation dome specular glint; enhanced HiDPI text and bio-scan balance).
+  - Glint Removal: Removed artificial viewport specular glint dot from submersible sprite rendering in `ksubmarine.html`.
+  - HiDPI Polish: Scaled sonar range text vertical offset by DPR (`cy - 4 * dpr`) for crisp high-DPI rendering.
+  - Balance Pass: Added telemetry verification research credit reward (+15 PTS) and acoustic chirp on re-scanning discovered fauna (web & native C).
+  - Verification: Native MSVC C clean build (`KSubmarine.exe` 235 KB); single-file web (`ksubmarine.html` 402 KB); Vite clean build (381ms); security lint 100% clean.
+
 - **2026-09-23T06:50:00Z — kilo-usability: KClip (Modal Isolation, Backdrop Collision & Toast Occlusion Remediation)**
   - Status: PASS ✅ (Eliminated modal collisions and toast occlusion; 0 regressions).
   - Modal Isolation: Enforced strict mutual exclusivity across all modals; auto-cleared background backdrops and ARIA states.

@@ -781,22 +781,23 @@
   /* Toast Notification */
   .toast-container {
     position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 58px;
+    right: 18px;
     display: flex;
     flex-direction: column;
+    align-items: flex-end;
     gap: 8px;
     z-index: 3000;
     pointer-events: none;
+    max-width: min(380px, calc(100vw - 36px));
   }
 
   .toast {
-    background: rgba(18, 22, 34, 0.95);
-    border: 1px solid rgba(99, 102, 241, 0.4);
+    background: rgba(18, 22, 34, 0.96);
+    border: 1px solid rgba(99, 102, 241, 0.45);
     color: #f8fafc;
-    padding: 10px 20px;
-    border-radius: 24px;
+    padding: 9px 16px;
+    border-radius: 10px;
     font-size: 12px;
     font-weight: 500;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 15px rgba(99, 102, 241, 0.2);
@@ -805,14 +806,17 @@
     align-items: center;
     gap: 8px;
     opacity: 0;
-    transform: translateY(10px) scale(0.95);
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateY(-8px) scale(0.96);
+    transition: opacity 0.2s ease, transform 0.2s ease;
     pointer-events: auto;
+    cursor: pointer;
+    user-select: none;
   }
   .toast.show { opacity: 1; transform: translateY(0) scale(1); }
-  .toast.success { border-color: rgba(16, 185, 129, 0.5); }
-  .toast.warning { border-color: rgba(245, 158, 11, 0.5); }
-  .toast.error { border-color: rgba(239, 68, 68, 0.5); }
+  .toast.success { border-color: rgba(16, 185, 129, 0.6); }
+  .toast.warning { border-color: rgba(245, 158, 11, 0.6); }
+  .toast.error { border-color: rgba(239, 68, 68, 0.6); }
+  .toast:hover { filter: brightness(1.15); border-color: rgba(129, 140, 248, 0.8); }
 
   /* Scrollbars */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -824,6 +828,7 @@
     .header { flex-direction: column; align-items: stretch; }
     .mode-tabs { overflow-x: auto; }
     .mem-reg-grid { grid-template-columns: 1fr; }
+    .toast-container { top: 12px; right: 12px; max-width: calc(100vw - 24px); }
   }
 </style>
 </head>
@@ -1354,7 +1359,7 @@
 </div>
 
 <!-- Toast Container -->
-<div id="toastContainer" class="toast-container"></div>
+<div id="toastContainer" class="toast-container" role="region" aria-label="Notifications"></div>
 
 <script>
   // State variables
@@ -1425,16 +1430,41 @@
     calcFV();
     calcMargin();
     calcCAGR();
-    showToast("Welcome to KCalc Pro • Press 'H' or F1 for Help", 'info', 4500);
+    showToast("Welcome to KCalc Pro • Press 'H' or F1 for Help", 'info', 3000);
   });
 
   // Toast Notification System
-  function showToast(msg, type = 'info', duration = 3000) {
+  function dismissToast(toast) {
+    if (!toast || toast._dismissed) return;
+    toast._dismissed = true;
+    if (toast._timer) clearTimeout(toast._timer);
+    toast.classList.remove('show');
+    setTimeout(() => {
+      if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 200);
+  }
+
+  function dismissActiveToasts() {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const toasts = container.querySelectorAll('.toast');
+    toasts.forEach(t => dismissToast(t));
+  }
+
+  function showToast(msg, type = 'info', duration = 2800) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
 
+    // Prune existing toasts to prevent vertical stacking (keep max 2 active)
+    while (container.children.length >= 2) {
+      dismissToast(container.firstElementChild);
+    }
+
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    toast.setAttribute('title', 'Click to dismiss');
     
     let icon = 'ℹ️';
     if (type === 'success') icon = '✓';
@@ -1442,17 +1472,16 @@
     else if (type === 'error') icon = '✕';
 
     toast.innerHTML = `<span style="font-weight:700;">${icon}</span><span>${escapeHtml(msg)}</span>`;
+    toast.onclick = () => dismissToast(toast);
+
     container.appendChild(toast);
 
     requestAnimationFrame(() => {
       toast.classList.add('show');
     });
 
-    setTimeout(() => {
-      toast.classList.remove('show');
-      setTimeout(() => {
-        if (toast.parentNode) toast.parentNode.removeChild(toast);
-      }, 300);
+    toast._timer = setTimeout(() => {
+      dismissToast(toast);
     }, duration);
   }
 
@@ -1554,6 +1583,7 @@
   }
 
   function append(val) {
+    dismissActiveToasts();
     if (expr === 'Error' || expr.startsWith('ERR')) expr = '';
     if (justCalculated) {
       justCalculated = false;
@@ -1567,6 +1597,7 @@
   }
 
   function clearAll() {
+    dismissActiveToasts();
     expr = '';
     justCalculated = false;
     document.getElementById('subDisp').textContent = '';
@@ -1574,6 +1605,7 @@
   }
 
   function backspace() {
+    dismissActiveToasts();
     justCalculated = false;
     if (expr === 'Error' || expr.startsWith('ERR')) { expr = ''; render(); return; }
     

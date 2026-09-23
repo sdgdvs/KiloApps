@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KCalc
-  kilo_usability: KCalc
+  kilo_usability: KHex
   kilo_graphics: KStarDredge
   kilo_qa: KWizard
   kilo_expander: "KChess (Firebase RTDB Multiplayer)"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-tester
-  app: KPomodoro
-  timestamp: "2026-09-23T11:50:00Z"
+  agent: kilo-usability
+  app: KCalc
+  timestamp: "2026-09-23T12:45:00Z"
 last_planner_run: "2026-09-23T04:40:00Z"
 ---
 
@@ -102,9 +102,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KHangman` (keyboard cutoff), `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KCalc` (reposition bottom-center toast blocking buttons)
+- **Current Target**: `KHex` (Tab 2 label, scrollbar, row cutoff)
 - **Upcoming Queue**:
-  `KHex` (Tab 2 label, scrollbar, row cutoff), `KContacts` (reposition bottom-right toast blocking submit button), `KFarm` (reposition bottom toast blocking seed radio buttons), `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`.
+  `KContacts` (reposition bottom-right toast blocking submit button), `KFarm` (reposition bottom toast blocking seed radio buttons), `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KWizard`
@@ -170,6 +170,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T12:45:00Z — kilo-usability: KCalc (Toast Occlusion & Keypad Ergonomics Remediation)**
+  - Status: PASS ✅ (Eliminated keypad occlusion; verified non-overlapping layout and crisp interaction).
+  - Toast Repositioning: Moved toast container from bottom-center to top-right (`top: 58px; right: 18px`), preventing occlusion of Row 7 calculation buttons (`0`, `.`, `+`, `=`).
+  - Interaction Ergonomics: Added instant click-to-dismiss (`cursor: pointer`), auto-dismiss on keypad input (`append`, `clearAll`, `backspace`), and pruned max concurrent toasts.
+  - Accessibility & Polish: Added `role="status"` and `aria-live="polite"` attributes; tuned welcome toast duration to 3000ms.
+  - Verification: Vite build clean (374ms); native MSVC C build clean (26.1 KB); security lint clean; strictly within 999 KB ceiling.
+
 - **2026-09-23T11:50:00Z — kilo-tester: KPomodoro (Modal Stacking Collision & Toast Occlusion Remediation)**
   - Status: PASS ✅ (3 issues identified and resolved; 0 regressions).
   - Modal Isolation: Unified modal management with strict mutual exclusivity across Splash, Tutorial, and Settings overlays.
@@ -200,11 +207,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Tutorial Integrity: Added first-run isolation (`kvoid_tutorial.dat` / `kvoid_tutorialSeen`) with Esc/Enter/Space/Click dismiss.
   - UI Ergonomics: Added interactive toolbar panel ([F1] Guide, [F5] Save, [F9] Load, [R] Restart) and canvas click restart.
   - Verification: MSVC C clean build (`KVoid.exe` 25.0 KB); web (`kvoid.html` 73.2 KB); Vite clean build (359ms); quality gate 104/104 PASS (60 FPS); security lint clean.
-
-- **2026-09-23T07:50:00Z — kilo-graphics: KSubmarine (Specular Glint Removal, HiDPI Polish & Balance Pass)**
-  - Status: PASS ✅ (Eliminated observation dome specular glint; enhanced HiDPI text and bio-scan balance).
-  - Glint Removal: Removed artificial viewport specular glint dot from submersible sprite rendering in `ksubmarine.html`.
-  - HiDPI Polish: Scaled sonar range text vertical offset by DPR (`cy - 4 * dpr`) for crisp high-DPI rendering.
-  - Balance Pass: Added telemetry verification research credit reward (+15 PTS) and acoustic chirp on re-scanning discovered fauna (web & native C).
-  - Verification: Native MSVC C clean build (`KSubmarine.exe` 235 KB); single-file web (`ksubmarine.html` 402 KB); Vite clean build (381ms); security lint 100% clean.
 
