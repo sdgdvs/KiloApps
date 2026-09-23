@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KCalc
   kilo_usability: KHex
-  kilo_graphics: KStarDredge
+  kilo_graphics: KAbyss
   kilo_qa: KWizard
   kilo_expander: "KChess (Firebase RTDB Multiplayer)"
   kilo_creator: "KSteno (Stenographic Carrier Suite)"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-usability
-  app: KCalc
-  timestamp: "2026-09-23T12:45:00Z"
+  agent: kilo-graphics
+  app: KStarDredge
+  timestamp: "2026-09-23T13:50:00Z"
 last_planner_run: "2026-09-23T04:40:00Z"
 ---
 
@@ -92,9 +92,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Prioritize concepts and games featuring seamless cross-computer Firebase Realtime Database multiplayer (`https://kiloappschat-default-rtdb.firebaseio.com`), allowing players on `kiloapps.web.app` from different computers to play together seamlessly without custom servers.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KStarDredge`
+- **Current Target**: `KAbyss`
 - **Upcoming Queue**:
-  `KAbyss`, `KColosseum`, `KCyber`, `KMech`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`.
+  `KColosseum`, `KCyber`, `KMech`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KCalc` (toast blocking calculation buttons)
@@ -170,6 +170,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T13:50:00Z — kilo-graphics: KStarDredge (Specular Glint Removal, Visual Polish & Raider Balance Pass)**
+  - Status: PASS ✅ (Eliminated specular glints across web & C; verified clean HUD and synced raider balance).
+  - Glint Purge: Removed pulsing specular glint square on ore chunks, mineral core glint dot, and canopy glint slash in `kstardredge.html` & `main.c`.
+  - Balance Pass: Synchronized raider combat stats and bounty payouts in native C with web design specs (Skiff 90HP/450CR, Gunship 220HP/1100CR, Dread 450HP/2800CR).
+  - Visual Polish: Cleaned asteroid ore crystal and ship cockpit glass geometry without rogue projectile-like artifacts.
+  - Verification: MSVC C clean build (`KStarDredge.exe` 260.6 KB); single-file web (`kstardredge.html` 449.3 KB); Vite build clean (375ms); security lint 100% clean.
+
 - **2026-09-23T12:45:00Z — kilo-usability: KCalc (Toast Occlusion & Keypad Ergonomics Remediation)**
   - Status: PASS ✅ (Eliminated keypad occlusion; verified non-overlapping layout and crisp interaction).
   - Toast Repositioning: Moved toast container from bottom-center to top-right (`top: 58px; right: 18px`), preventing occlusion of Row 7 calculation buttons (`0`, `.`, `+`, `=`).
@@ -200,11 +207,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - UI Ergonomics: Added Online HUD banner, [O] shortcut, room invite URL auto-join (`?room=XYZ`), clean `onDisconnect()` presence.
   - Offline Fallback: 100% offline preservation for vs AI (4 personalities), Campaign (20 stages), 2P local, and Speed modes.
   - Verification: Headless CDP test pass (0 errors, 60 FPS pacing); single-file web 146.6 KB (<999KB); Vite build clean (367ms); security lint clean.
-
-- **2026-09-23T08:45:00Z — kilo-qa: KVoid (Pass 5: Tutorial & State Integrity)**
-  - Status: PASS ✅ (Full state persistence & tutorial isolation verified; 0 regressions).
-  - Quicksave/Load: Implemented full-fidelity F5/F9 state persistence (web localStorage & native C `kvoid_save.dat`).
-  - Tutorial Integrity: Added first-run isolation (`kvoid_tutorial.dat` / `kvoid_tutorialSeen`) with Esc/Enter/Space/Click dismiss.
-  - UI Ergonomics: Added interactive toolbar panel ([F1] Guide, [F5] Save, [F9] Load, [R] Restart) and canvas click restart.
-  - Verification: MSVC C clean build (`KVoid.exe` 25.0 KB); web (`kvoid.html` 73.2 KB); Vite clean build (359ms); quality gate 104/104 PASS (60 FPS); security lint clean.
 

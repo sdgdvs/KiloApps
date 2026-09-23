@@ -1264,34 +1264,34 @@ void SpawnRaider(int index, int type) {
     if (type == 0) { // Corsair Skiff
         sprintf(r->id, "RAID-%03d", 100 + index * 13 + (rand() % 50));
         strncpy(r->name, "Corsair Skiff", 31);
-        r->maxHp = 60.0f;
-        r->hp = 60.0f;
-        r->maxShield = 40.0f;
-        r->shield = 40.0f;
+        r->maxHp = 90.0f;
+        r->hp = 90.0f;
+        r->maxShield = 50.0f;
+        r->shield = 50.0f;
         r->speed = 6.2f;
-        r->bounty = 250;
+        r->bounty = 450;
         r->radius = 16.0f;
         r->color = RGB(239, 68, 68);
     } else if (type == 1) { // Marauder Gunship
         sprintf(r->id, "GUN-%03d", 200 + index * 17 + (rand() % 50));
         strncpy(r->name, "Marauder Gunship", 31);
-        r->maxHp = 140.0f;
-        r->hp = 140.0f;
-        r->maxShield = 90.0f;
-        r->shield = 90.0f;
+        r->maxHp = 220.0f;
+        r->hp = 220.0f;
+        r->maxShield = 120.0f;
+        r->shield = 120.0f;
         r->speed = 4.2f;
-        r->bounty = 600;
+        r->bounty = 1100;
         r->radius = 22.0f;
         r->color = RGB(245, 158, 11);
     } else { // Void Dread Raider
         sprintf(r->id, "DREAD-%03d", 300 + index * 19 + (rand() % 50));
         strncpy(r->name, "Void Dread Raider", 31);
-        r->maxHp = 320.0f;
-        r->hp = 320.0f;
-        r->maxShield = 220.0f;
-        r->shield = 220.0f;
+        r->maxHp = 450.0f;
+        r->hp = 450.0f;
+        r->maxShield = 240.0f;
+        r->shield = 240.0f;
         r->speed = 2.8f;
-        r->bounty = 1500;
+        r->bounty = 2800;
         r->radius = 32.0f;
         r->color = RGB(244, 63, 94);
     }
@@ -3818,8 +3818,6 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         RECT rcNode = { ax - 4, ay - 4, ax + 5, ay + 5 };
         FillRect(hdc, &rcNode, hBrOreNode);
         DeleteObject(hBrOreNode);
-        SetPixel(hdc, ax - 1, ay - 1, RGB(255, 255, 255));
-        SetPixel(hdc, ax, ay - 1, RGB(255, 255, 255));
         
         SelectObject(hdc, oldAstPen);
         SelectObject(hdc, oldAstBr);
@@ -3985,7 +3983,6 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         // Inner facet ridge
         MoveToEx(hdc, ox - 5, oy, NULL); LineTo(hdc, ox + 5, oy);
         MoveToEx(hdc, ox, oy - 5, NULL); LineTo(hdc, ox, oy + 5);
-        SetPixel(hdc, ox - 1, oy - 2, RGB(255, 255, 255));
         
         SelectObject(hdc, oldChPen);
         SelectObject(hdc, oldChBr);
@@ -4325,14 +4322,13 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     FillRect(hdc, &rcFn, hBrFunnel);
     DeleteObject(hBrFunnel);
 
-    // 6. Armored Cockpit Bridge Glass & Specular Glint
+    // 6. Armored Cockpit Bridge Glass
     HBRUSH hBrGlass = CreateSolidBrush(RGB(56, 189, 248));
     int gx = cx + (int)(5.0f * cosA);
     int gy = cyCenter + (int)(5.0f * sinA);
     RECT rcGlass = { gx - 3, gy - 3, gx + 4, gy + 4 };
     FillRect(hdc, &rcGlass, hBrGlass);
     DeleteObject(hBrGlass);
-    SetPixel(hdc, gx, gy - 1, RGB(255, 255, 255));
     
     // 7. Transponder Beacon (Flashing Green)
     int bx = cx + (int)(2.0f * cosA - (-6.0f) * sinA);

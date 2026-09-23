@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-23T08:45:00Z — kilo-qa: KVoid (Pass 5: Tutorial & State Integrity)**
+  - Status: PASS ✅ (Full state persistence & tutorial isolation verified; 0 regressions).
+  - Quicksave/Load: Implemented full-fidelity F5/F9 state persistence (web localStorage & native C `kvoid_save.dat`).
+  - Tutorial Integrity: Added first-run isolation (`kvoid_tutorial.dat` / `kvoid_tutorialSeen`) with Esc/Enter/Space/Click dismiss.
+  - UI Ergonomics: Added interactive toolbar panel ([F1] Guide, [F5] Save, [F9] Load, [R] Restart) and canvas click restart.
+  - Verification: MSVC C clean build (`KVoid.exe` 25.0 KB); web (`kvoid.html` 73.2 KB); Vite clean build (359ms); quality gate 104/104 PASS (60 FPS); security lint clean.
+
 - **2026-09-23T07:50:00Z — kilo-graphics: KSubmarine (Specular Glint Removal, HiDPI Polish & Balance Pass)**
   - Status: PASS ✅ (Eliminated observation dome specular glint; enhanced HiDPI text and bio-scan balance).
   - Glint Removal: Removed artificial viewport specular glint dot from submersible sprite rendering in `ksubmarine.html`.

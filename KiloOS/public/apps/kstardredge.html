@@ -8260,12 +8260,6 @@
                 ctx.fill();
                 ctx.shadowBlur = 0;
 
-                // Mineral Core Specular Glint
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath();
-                ctx.arc(-1, -1, 1.5, 0, Math.PI * 2);
-                ctx.fill();
-
                 // Geode Anomaly Halo & Internal Resonator
                 if (ast.scanned && ast.geodeType !== 'None') {
                     const isDark = ast.geodeType.includes('Dark');
@@ -8733,13 +8727,6 @@
                 ctx.moveTo(0, -6); ctx.lineTo(0, 6);
                 ctx.moveTo(-6, 0); ctx.lineTo(6, 0);
                 ctx.stroke();
-
-                // Specular Glint
-                const glintPulse = (Date.now() + (chunk.x % 1000)) % 1200 < 200;
-                if (glintPulse) {
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(-1.5, -3, 3, 3);
-                }
                 ctx.shadowBlur = 0;
                 ctx.restore();
             }
@@ -8957,13 +8944,6 @@
             ctx.lineTo(5, 4);
             ctx.closePath();
             ctx.fill();
-            ctx.stroke();
-
-            // Canopy Specular Glint Slash
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(8, -2); ctx.lineTo(2, 2);
             ctx.stroke();
 
             // 8. Communications Mast & Flashing Transponder Strobe
