@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KPomodoro
   kilo_usability: KCalc
-  kilo_graphics: KSubmarine
+  kilo_graphics: KStarDredge
   kilo_qa: KVoid
   kilo_expander: "KConnect4 (Firebase RTDB Multiplayer)"
   kilo_creator: "KNetMap (Subnet Topology Visualizer)"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-usability
-  app: KClip
-  timestamp: "2026-09-23T06:50:00Z"
+  agent: kilo-graphics
+  app: KSubmarine
+  timestamp: "2026-09-23T07:50:00Z"
 last_planner_run: "2026-09-23T04:40:00Z"
 ---
 
@@ -92,9 +92,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Prioritize concepts and games featuring seamless cross-computer Firebase Realtime Database multiplayer (`https://kiloappschat-default-rtdb.firebaseio.com`), allowing players on `kiloapps.web.app` from different computers to play together seamlessly without custom servers.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KSubmarine`
+- **Current Target**: `KStarDredge`
 - **Upcoming Queue**:
-  `KStarDredge`, `KAbyss`, `KColosseum`, `KCyber`, `KMech`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`.
+  `KAbyss`, `KColosseum`, `KCyber`, `KMech`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KPomodoro` (double-modal collision fix)
@@ -170,6 +170,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T07:50:00Z — kilo-graphics: KSubmarine (Specular Glint Removal, HiDPI Polish & Balance Pass)**
+  - Status: PASS ✅ (Eliminated observation dome specular glint; enhanced HiDPI text and bio-scan balance).
+  - Glint Removal: Removed artificial viewport specular glint dot from submersible sprite rendering in `ksubmarine.html`.
+  - HiDPI Polish: Scaled sonar range text vertical offset by DPR (`cy - 4 * dpr`) for crisp high-DPI rendering.
+  - Balance Pass: Added telemetry verification research credit reward (+15 PTS) and acoustic chirp on re-scanning discovered fauna (web & native C).
+  - Verification: Native MSVC C clean build (`KSubmarine.exe` 235 KB); single-file web (`ksubmarine.html` 402 KB); Vite clean build (381ms); security lint 100% clean.
+
 - **2026-09-23T06:50:00Z — kilo-usability: KClip (Modal Isolation, Backdrop Collision & Toast Occlusion Remediation)**
   - Status: PASS ✅ (Eliminated modal collisions and toast occlusion; 0 regressions).
   - Modal Isolation: Enforced strict mutual exclusivity across all modals; auto-cleared background backdrops and ARIA states.
@@ -203,11 +210,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Gallery Enrichment: Updated `docs/gallery/index.html` and generated `docs/gallery/vision_scores_interact.json` (Fleet Interacted Avg: ★ 8.68/10).
   - Bug Fixes: Repaired `kreversi.html` syntax error and `ktrader.html` interaction reload crash.
   - Verification: Security lint 100% clean; KiloOS Vite build clean (233ms).
-
-- **2026-09-23T03:10:00Z — kilo-qa: KChat AI Persona Removal**
-  - Status: PASS ✅ (Completely removed AI persona section and feature from web and native KChat).
-  - Web (kchat.html): Removed top AI persona selector, Ask AI button, /ai slash command, and activePersona state.
-  - Native (main.c): Removed hPersonaCombo, hAskAI button, /ai command, GenerateAIResponse, and activePersona stats.
-  - Channels & Help: Updated #ai-lounge channel to #lounge; updated Help tutorial, shortcuts, and documentation.
-  - Ergonomics: Restored standard Ctrl+A select-all behavior in native edit control.
-  - Verification: Native MSVC C clean build (26.5 KB); HTML5 (85.1 KB); Headless CDP 60 FPS pass (0 errors); Lint clean.

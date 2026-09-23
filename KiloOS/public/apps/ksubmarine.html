@@ -5340,7 +5340,11 @@
                                 logMessage(`🧬 BIO-ACOUSTIC SCAN COMPLETE: [${target.name}]! ${target.desc} (+${ptsAwarded} Research Credits & ${sampleName})`, 'discovery');
                             }
                         } else {
-                            logMessage(`Bio-acoustic telemetry updated: [${target.name}] health & frequency signature verified.`, 'info');
+                            const telemetryPts = 15;
+                            state.surveyPoints += telemetryPts;
+                            renderEngineeringUI();
+                            playBeep(880, 'sine', 0.15, 0.1);
+                            logMessage(`Bio-acoustic telemetry updated: [${target.name}] health & acoustic tracking verified (+${telemetryPts} Research Credits).`, 'info');
                         }
 
                         updateTargetHUD();
@@ -6800,13 +6804,6 @@
                 ctx.arc(8.5 * dpr, 0, 2.2 * dpr, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.shadowBlur = 0;
-
-                // Viewport Specular Glint
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath();
-                ctx.arc(9 * dpr, -0.6 * dpr, 0.7 * dpr, 0, Math.PI * 2);
-                ctx.fill();
-
                 // High-Lux Forward Searchlight Illuminator Cones
                 if (state.searchlights) {
                     const beamGrad = ctx.createRadialGradient(10 * dpr, 0, 2 * dpr, 36 * dpr, 0, 32 * dpr);
@@ -7262,7 +7259,7 @@
                     // Range text
                     ctx.fillStyle = palette.ringText;
                     ctx.font = `${8 * dpr}px monospace`;
-                    ctx.fillText(`${r * 500}m`, cx + (maxR / 4) * r - (18 * dpr), cy - 4);
+                    ctx.fillText(`${r * 500}m`, cx + (maxR / 4) * r - (18 * dpr), cy - 4 * dpr);
                 }
 
                 // Crosshairs & Bearings

@@ -1553,6 +1553,12 @@ void UpdateSimulation(float dt) {
                             snprintf(msg, sizeof(msg), "BIO-SCAN COMPLETE: [%s]! %s (+%d PTS & %s)", target->name, target->desc, ptsAwarded, sName);
                             AddLog(msg, th->accentEmerald);
                         }
+                    } else {
+                        g_sub.surveyPoints += 15;
+                        PlaySoundAsync(880, 80);
+                        char msg[128];
+                        snprintf(msg, sizeof(msg), "Bio-acoustic telemetry verified: [%s] tracking updated (+15 PTS).", target->name);
+                        AddLog(msg, th->accentSonar);
                     }
                 }
             }

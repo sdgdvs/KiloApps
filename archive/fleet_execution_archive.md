@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-23T03:10:00Z — kilo-qa: KChat AI Persona Removal**
+  - Status: PASS ✅ (Completely removed AI persona section and feature from web and native KChat).
+  - Web (kchat.html): Removed top AI persona selector, Ask AI button, /ai slash command, and activePersona state.
+  - Native (main.c): Removed hPersonaCombo, hAskAI button, /ai command, GenerateAIResponse, and activePersona stats.
+  - Channels & Help: Updated #ai-lounge channel to #lounge; updated Help tutorial, shortcuts, and documentation.
+  - Ergonomics: Restored standard Ctrl+A select-all behavior in native edit control.
+  - Verification: Native MSVC C clean build (26.5 KB); HTML5 (85.1 KB); Headless CDP 60 FPS pass (0 errors); Lint clean.
+
 - **2026-09-23T03:02:00Z — kilo-usability: KiloOS Window Resizing & Folder Layout**
   - Status: PASS ✅ (Fixed folder overflow blowout, removed broken vestigial handle, expanded resize hitboxes).
   - Flexbox Layout Fix: Added `min-height: 0; overflow: hidden;` to `.xp-content` so large folders scroll instead of blowing out to 992px+.
