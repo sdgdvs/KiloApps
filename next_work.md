@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KClip
   kilo_usability: KClip
-  kilo_graphics: KDragon
+  kilo_graphics: KSubmarine
   kilo_qa: KVault
   kilo_expander: KNote
   kilo_creator: "KCipher (Cryptographic Cipher Suite)"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-creator
-  app: "KFleet (Fleet Telemetry Console)"
-  timestamp: "2026-09-23T01:15:00Z"
+  agent: kilo-graphics
+  app: KDragon
+  timestamp: "2026-09-23T01:17:00Z"
 last_planner_run: "2026-09-22T07:47:00Z"
 ---
 
@@ -87,9 +87,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KNetMap` (Subnet Topology Visualizer), `KSteno` (Stenographic Carrier Suite).
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KDragon`
+- **Current Target**: `KSubmarine`
 - **Upcoming Queue**:
-  `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KCyber`, `KMech`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`.
+  `KStarDredge`, `KAbyss`, `KColosseum`, `KCyber`, `KMech`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KClip`
@@ -156,6 +156,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T01:17:00Z — kilo-graphics: KDragon**
+  - Status: PASS ✅ (Graphics, enemy archetypes, Astral evolution, balance pass, glint audit).
+  - Web & Native: Purged lingering glint properties; verified zero traveling comets or perimeter dots.
+  - Game Content: Added 6 enemy archetypes, elemental counters, 4th evolution (Astral Dragon), and Hoard Relics tray.
+  - Audio & VFX: Added Genesis YM2612 FM / SPC700 delay audio engine, floating damage numbers, and colored shockwaves.
+  - Balance: Re-tuned arena progression, special ability cooldowns, and minigame rewards across web and native.
+  - Verification: Native MSVC C (137.5 KB); Single-file HTML5 (120.9 KB); Vite build clean; security lint 0 violations.
+
 - **2026-09-23T01:15:00Z — kilo-creator: KFleet**
   - Status: PASS ✅ (Created new app KFleet: Fleet Telemetry Console).
   - Scope: Distributed fleet monitor with 8 nodes, tactical vector radar, multi-channel oscilloscope, CLI uplink.
@@ -187,12 +195,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Modal Ergonomics: Added backdrop dismissal and Esc/Enter/Space handlers across Help and Tutorial modals.
   - Safety & Storage: Wrapped all storage access with quota-safe helpers; cleaned up object URLs and timer leaks.
   - Verification: MSVC C clean build (22.0 KB); Vite web build clean (221ms); security lint passed (0 violations).
-
-- **2026-09-23T00:30:00Z — kilo-usability: KRSS**
-  - Status: PASS ✅ (Layout dimensions, responsive breakpoints, collapsible sidebar, navigation ergonomics).
-  - Window & Layout: Tuned App.jsx window to 1080x720; added responsive media queries (900px/720px) and retro scrollbars.
-  - Collapsible Sidebar: Added 1-click & hotkey [B] sidebar collapse to maximize reader pane width across small displays.
-  - Navigation & Reader: Added Prev/Next article buttons [◀]/[▶]; wired J/K/1-9 active card auto-scroll-into-view.
-  - Font Zoom & State: Persisted zoomLevel and sidebar state in localStorage; added live zoom px display and +/-/0 keys.
-  - Discoverability & Native: Added visible F1/H prompts and H/M/S/R key accelerators across web and native Win32 C.
-  - Verification: MSVC C clean build (17.5 KB); Vite web build clean (224ms); security lint passed (0 violations).

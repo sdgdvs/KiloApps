@@ -339,6 +339,10 @@
                 <div class="stat">Loy: <span id="stat-loyalty">0</span></div>
                 <div class="stat">Gold: <span id="stat-gold">0</span></div>
             </div>
+            <div id="relics-tray" style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; padding: 5px 10px; background: rgba(42, 23, 4, 0.4); border: 1px solid rgba(212, 175, 55, 0.45); border-radius: 4px; font-size: 12px; color: #ffd700;">
+                <span style="font-weight: bold; font-family: 'Cinzel', serif;">👑 Hoard Relics:</span>
+                <span id="relics-list" style="color: #f7e0b5; font-size: 11px; font-family: monospace;">(None discovered yet)</span>
+            </div>
             <div class="entity-display" id="entity-art"><svg id="player-svg" class="bobbing" width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
   <rect x="6" y="3" width="4" height="1" fill="rgb(180,150,100)" />
   <rect x="5" y="4" width="1" height="1" fill="rgb(180,150,100)" />
@@ -548,8 +552,18 @@
                             <li>Mostly Fed &rarr; <b>Earth Dragon</b> (Earthquake slow)</li>
                             <li>Mostly Played &rarr; <b>Fire Dragon</b> (Devastating Fireball)</li>
                             <li>Mostly Slept &rarr; <b>Water Dragon</b> (Healing Stream)</li>
+                            <li>Trained Rigorously (Str &amp; Spd &ge; 10 or Loy &ge; 12) &rarr; <b>Astral Dragon</b> (Starfall cosmic strike)</li>
                         </ul>
                     </li>
+                    <li><b>Elemental Affinities:</b>
+                        <ul>
+                            <li><b>Fire</b> deals +40% vs Frost/Ice beasts.</li>
+                            <li><b>Water</b> deals +40% vs Fire/Magma drakes.</li>
+                            <li><b>Earth</b> deals +30% vs Physical/Ground foes.</li>
+                            <li><b>Astral</b> deals +50% vs Shadow creatures.</li>
+                        </ul>
+                    </li>
+                    <li><b>Sacred Hoard Relics:</b> Collect all 6 rare artifacts on expeditions to achieve Treasure Sovereign status!</li>
                 </ul>
             </div>
         </div>
@@ -607,9 +621,18 @@
             particles: [],
             shockwaves: [],
             motes: [],
+            floatingTexts: [],
             shakeIntensity: 0,
             shakeAngle: 0,
-            glintProgress: 0,
+
+            addFloatingText(x, y, text, color = '#ffd700', size = 16) {
+                this.floatingTexts.push({
+                    x, y, text, color, size,
+                    vy: -1.6,
+                    life: 1.0,
+                    decay: 0.022
+                });
+            },
 
             init() {
                 // Initialize drifting atmospheric magic motes
@@ -807,9 +830,265 @@
                     ctx.restore();
                 }
 
+                // 5. Render Floating Combat Text
+                for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+                    const ft = this.floatingTexts[i];
+                    ft.y += ft.vy;
+                    ft.vy *= 0.96;
+                    ft.life -= ft.decay;
+                    if (ft.life <= 0) {
+                        this.floatingTexts.splice(i, 1);
+                        continue;
+                    }
+                    ctx.save();
+                    ctx.font = `900 ${ft.size}px 'Cinzel', serif`;
+                    ctx.fillStyle = ft.color;
+                    ctx.globalAlpha = Math.max(0, ft.life);
+                    ctx.shadowBlur = 6;
+                    ctx.shadowColor = '#000000';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(ft.text, ft.x, ft.y);
+                    ctx.restore();
+                }
+
             }
         };
         VFX.init();
+
+        // === GENESIS YM2612 2-OPERATOR FM SYNTHESIZER & SNES SPC700 DELAY WARMTH ===
+        const AudioEngine = {
+            ctx: null,
+            delayNode: null,
+            feedbackGain: null,
+            filterNode: null,
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (!AudioCtx) return;
+                    this.ctx = new AudioCtx();
+                    // SPC700 Warmth DSP (Stereo Delay line + Low-pass feedback filter)
+                    this.delayNode = this.ctx.createDelay();
+                    this.delayNode.delayTime.value = 0.16;
+                    this.feedbackGain = this.ctx.createGain();
+                    this.feedbackGain.gain.value = 0.28;
+                    this.filterNode = this.ctx.createBiquadFilter();
+                    this.filterNode.type = 'lowpass';
+                    this.filterNode.frequency.value = 2200;
+
+                    this.delayNode.connect(this.filterNode);
+                    this.filterNode.connect(this.feedbackGain);
+                    this.feedbackGain.connect(this.delayNode);
+                    this.filterNode.connect(this.ctx.destination);
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            },
+
+            playFM(carrierFreq, modRatio, modIndex, duration, type = 'sine', enableEcho = false, masterVol = 0.18) {
+                this.init();
+                if (!this.ctx) return;
+                const t = this.ctx.currentTime;
+                const carrier = this.ctx.createOscillator();
+                const modulator = this.ctx.createOscillator();
+                const modGain = this.ctx.createGain();
+                const carrierGain = this.ctx.createGain();
+
+                carrier.type = type;
+                modulator.type = 'sine';
+
+                carrier.frequency.setValueAtTime(carrierFreq, t);
+                modulator.frequency.setValueAtTime(carrierFreq * modRatio, t);
+
+                const modDev = carrierFreq * modIndex;
+                modGain.gain.setValueAtTime(modDev, t);
+                modGain.gain.exponentialRampToValueAtTime(Math.max(1, modDev * 0.05), t + duration);
+
+                modulator.connect(modGain);
+                modGain.connect(carrier.frequency);
+
+                carrierGain.gain.setValueAtTime(masterVol, t);
+                carrierGain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+
+                carrier.connect(carrierGain);
+                carrierGain.connect(this.ctx.destination);
+                if (enableEcho && this.delayNode) {
+                    carrierGain.connect(this.delayNode);
+                }
+
+                modulator.start(t);
+                carrier.start(t);
+                modulator.stop(t + duration);
+                carrier.stop(t + duration);
+            },
+
+            playPreset(name) {
+                this.init();
+                if (!this.ctx) return;
+                const t = this.ctx.currentTime;
+                if (name === 'click') {
+                    this.playFM(700, 2.0, 0.6, 0.04, 'triangle', false, 0.08);
+                } else if (name === 'munch') {
+                    this.playFM(280, 1.5, 2.0, 0.09, 'square', false, 0.12);
+                    setTimeout(() => this.playFM(460, 1.5, 1.5, 0.12, 'square', false, 0.12), 80);
+                } else if (name === 'roar') {
+                    const c = this.ctx.createOscillator();
+                    const m = this.ctx.createOscillator();
+                    const mg = this.ctx.createGain();
+                    const cg = this.ctx.createGain();
+                    c.type = 'sawtooth'; m.type = 'sine';
+                    c.frequency.setValueAtTime(160, t);
+                    c.frequency.exponentialRampToValueAtTime(45, t + 0.7);
+                    m.frequency.setValueAtTime(80, t);
+                    m.frequency.exponentialRampToValueAtTime(25, t + 0.7);
+                    mg.gain.setValueAtTime(240, t);
+                    mg.gain.exponentialRampToValueAtTime(10, t + 0.7);
+                    m.connect(mg); mg.connect(c.frequency);
+                    cg.gain.setValueAtTime(0.28, t);
+                    cg.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
+                    c.connect(cg); cg.connect(this.ctx.destination);
+                    if (this.delayNode) cg.connect(this.delayNode);
+                    m.start(t); c.start(t); m.stop(t + 0.75); c.stop(t + 0.75);
+                } else if (name === 'clash') {
+                    this.playFM(420, 3.41, 4.0, 0.18, 'sawtooth', false, 0.22);
+                } else if (name === 'fireball') {
+                    this.playFM(220, 2.76, 5.0, 0.35, 'sawtooth', true, 0.26);
+                    setTimeout(() => this.playFM(110, 1.8, 3.5, 0.4, 'sine', true, 0.24), 60);
+                } else if (name === 'heal') {
+                    [523.25, 659.25, 783.99, 1046.5].forEach((f, idx) => {
+                        setTimeout(() => this.playFM(f, 3.5, 1.2, 0.35, 'sine', true, 0.14), idx * 75);
+                    });
+                } else if (name === 'earthquake') {
+                    this.playFM(85, 0.75, 4.5, 0.6, 'triangle', true, 0.3);
+                    setTimeout(() => this.playFM(55, 0.5, 5.0, 0.5, 'sine', true, 0.28), 100);
+                } else if (name === 'starfall') {
+                    [880, 1174.66, 1396.91, 1760].forEach((f, idx) => {
+                        setTimeout(() => this.playFM(f, 2.01, 2.5, 0.3, 'sawtooth', true, 0.16), idx * 60);
+                    });
+                } else if (name === 'gold') {
+                    this.playFM(987.77, 3.5, 1.2, 0.12, 'sine', true, 0.15);
+                    setTimeout(() => this.playFM(1318.51, 3.5, 1.2, 0.25, 'sine', true, 0.18), 70);
+                } else if (name === 'hatch') {
+                    [392.0, 523.25, 659.25, 783.99].forEach((f, idx) => {
+                        setTimeout(() => this.playFM(f, 2.0, 1.5, 0.4, 'sine', true, 0.16), idx * 110);
+                    });
+                } else if (name === 'evolution') {
+                    const notes = [329.63, 440.0, 554.37, 659.25, 880.0, 1108.73];
+                    notes.forEach((f, idx) => {
+                        setTimeout(() => this.playFM(f, 2.5, 2.0, 0.5, 'triangle', true, 0.18), idx * 120);
+                    });
+                } else if (name === 'victory') {
+                    const seq = [
+                        { f: 261.63, d: 100, t: 0 },
+                        { f: 329.63, d: 100, t: 120 },
+                        { f: 392.00, d: 100, t: 240 },
+                        { f: 523.25, d: 250, t: 360 },
+                        { f: 659.25, d: 450, t: 620 }
+                    ];
+                    seq.forEach(s => {
+                        setTimeout(() => this.playFM(s.f, 2.0, 1.8, s.d / 1000, 'sawtooth', true, 0.2), s.t);
+                    });
+                } else if (name === 'defeat') {
+                    [440, 392, 349.23, 311.13, 261.63].forEach((f, idx) => {
+                        setTimeout(() => this.playFM(f, 1.5, 1.0, 0.35, 'triangle', false, 0.16), idx * 130);
+                    });
+                }
+            }
+        };
+
+        const ENEMY_ARCHETYPES = [
+            {
+                id: 'goblin',
+                name: 'Cave Goblin Raider',
+                title: 'Sneak Thief',
+                element: 'Earth',
+                color: '#51cf66',
+                palette1: 'rgb(40,120,40)',
+                palette2: 'rgb(80,180,80)',
+                minAge: 1,
+                bonusGold: 15,
+                strMod: -1,
+                spdMod: 3,
+                hpMod: -15,
+                specialName: 'Poison Dagger'
+            },
+            {
+                id: 'frost',
+                name: 'Frost Wyrm',
+                title: 'Glacial Beast',
+                element: 'Water',
+                color: '#339af0',
+                palette1: 'rgb(30,100,200)',
+                palette2: 'rgb(100,180,255)',
+                minAge: 3,
+                bonusGold: 20,
+                strMod: 0,
+                spdMod: -1,
+                hpMod: 20,
+                specialName: 'Blizzard Breath'
+            },
+            {
+                id: 'magma',
+                name: 'Magma Drake',
+                title: 'Cinder Fiend',
+                element: 'Fire',
+                color: '#ff6b6b',
+                palette1: 'rgb(180,30,30)',
+                palette2: 'rgb(240,100,40)',
+                minAge: 5,
+                bonusGold: 25,
+                strMod: 3,
+                spdMod: 1,
+                hpMod: 10,
+                specialName: 'Lava Torrent'
+            },
+            {
+                id: 'golem',
+                name: 'Ironclad Stone Golem',
+                title: 'Ancient Sentinel',
+                element: 'Earth',
+                color: '#adb5bd',
+                palette1: 'rgb(60,65,70)',
+                palette2: 'rgb(140,145,150)',
+                minAge: 7,
+                bonusGold: 30,
+                strMod: 4,
+                spdMod: -4,
+                hpMod: 40,
+                specialName: 'Seismic Slam'
+            },
+            {
+                id: 'shadow',
+                name: 'Shadow Stalker Wyrm',
+                title: 'Night Horror',
+                element: 'Shadow',
+                color: '#cc5de8',
+                palette1: 'rgb(90,20,130)',
+                palette2: 'rgb(160,60,200)',
+                minAge: 9,
+                bonusGold: 35,
+                strMod: 2,
+                spdMod: 5,
+                hpMod: 10,
+                specialName: 'Shadow Claw'
+            },
+            {
+                id: 'titan',
+                name: 'Ancient Titan Drake',
+                title: 'Apex Sovereign',
+                element: 'Astral',
+                color: '#fcc419',
+                palette1: 'rgb(180,130,20)',
+                palette2: 'rgb(255,220,60)',
+                minAge: 12,
+                bonusGold: 60,
+                strMod: 6,
+                spdMod: 4,
+                hpMod: 60,
+                specialName: 'Celestial Cataclysm'
+            }
+        ];
 
         const Game = {
             state: 'egg',
@@ -818,7 +1097,7 @@
             playCount: 0,
             sleepCount: 0,
             isBusy: false,
-            stats: { hunger: 50, happiness: 50, energy: 100, age: 0, strength: 0, speed: 0, loyalty: 0, gold: 0 },
+            stats: { hunger: 50, happiness: 50, energy: 100, age: 0, strength: 0, speed: 0, loyalty: 0, gold: 0, relics: [] },
             tickInterval: null,
             minigameState: null,
             minigameInterval: null,
@@ -871,36 +1150,7 @@
             },
             
             playSound(type) {
-                if (!window.audioCtx) window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (window.audioCtx.state === 'suspended') window.audioCtx.resume();
-                const osc = window.audioCtx.createOscillator();
-                const gain = window.audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(window.audioCtx.destination);
-                const t = window.audioCtx.currentTime;
-                
-                if (type === 'munch') {
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(300, t);
-                    osc.frequency.exponentialRampToValueAtTime(600, t + 0.1);
-                    gain.gain.setValueAtTime(0.1, t);
-                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
-                    osc.start(t); osc.stop(t + 0.1);
-                } else if (type === 'roar') {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(150, t);
-                    osc.frequency.exponentialRampToValueAtTime(50, t + 0.8);
-                    gain.gain.setValueAtTime(0.3, t);
-                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.8);
-                    osc.start(t); osc.stop(t + 0.8);
-                } else if (type === 'clash') {
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(800, t);
-                    osc.frequency.exponentialRampToValueAtTime(100, t + 0.2);
-                    gain.gain.setValueAtTime(0.3, t);
-                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
-                    osc.start(t); osc.stop(t + 0.2);
-                }
+                AudioEngine.playPreset(type);
             },
             
             init() {
@@ -1083,6 +1333,15 @@
                 document.getElementById('stat-speed').innerText = this.stats.speed;
                 document.getElementById('stat-loyalty').innerText = this.stats.loyalty;
                 document.getElementById('stat-gold').innerText = this.stats.gold;
+
+                const relicsEl = document.getElementById('relics-list');
+                if (relicsEl) {
+                    if (this.stats.relics && this.stats.relics.length > 0) {
+                        relicsEl.innerHTML = this.stats.relics.map(r => `<span style="background:rgba(212,175,55,0.25); border:1px solid #d4af37; padding:1px 6px; border-radius:3px; color:#fff8db; margin-right:4px;">✨ ${r}</span>`).join('');
+                    } else {
+                        relicsEl.innerText = '(None discovered yet — Send expeditions!)';
+                    }
+                }
                 
                 let playerSvg = '';
                 if (this.state === 'egg') {
@@ -1216,6 +1475,8 @@
                         playerSvg = playerSvg.replace(/rgb\(180,30,30\)/g, "rgb(30,60,180)").replace(/rgb\(220,60,60\)/g, "rgb(60,120,220)");
                     } else if (this.element === 'Earth') {
                         playerSvg = playerSvg.replace(/rgb\(180,30,30\)/g, "rgb(100,60,30)").replace(/rgb\(220,60,60\)/g, "rgb(150,100,60)");
+                    } else if (this.element === 'Astral') {
+                        playerSvg = playerSvg.replace(/rgb\(180,30,30\)/g, "rgb(180,130,20)").replace(/rgb\(220,60,60\)/g, "rgb(255,215,60)");
                     }
                 }
                 
@@ -1266,8 +1527,47 @@
   <rect x="3" y="13" width="4" height="1" fill="rgb(180,30,30)" />
   <rect x="9" y="13" width="4" height="1" fill="rgb(180,30,30)" />
 </svg>`;
-                    let enemySvg = adultBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(128,0,128)").replace(/rgb\(220,60,60\)/g, "rgb(180,50,180)").replace('id="player-svg"', 'id="enemy-svg"');
-                    document.getElementById('entity-art').innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; gap:8px;"><div style="display:flex; justify-content:space-between; width:350px; align-items:center;">${playerSvg}<div style="font-weight:bold; color:red; font-size:24px;">VS</div><div style="transform: scaleX(-1);">${enemySvg}</div></div><div style="font-size:13px; font-weight:bold; display:flex; justify-content:space-between; width:330px; background:rgba(0,0,0,0.3); padding:4px 10px; border-radius:4px; border:1px solid rgba(90,56,20,0.35); color:#f7e0b5;"><span>Player HP: <b style="color:#69db7c;">${Math.max(0, this.battleState.playerHp)}</b>/${this.battleState.playerMaxHp}</span><span>Enemy HP: <b style="color:#ff6b6b;">${Math.max(0, this.battleState.enemyHp)}</b>/${this.battleState.enemyMaxHp}</span></div></div>`;
+                    const p1 = this.battleState.enemy?.palette1 || "rgb(128,0,128)";
+                    const p2 = this.battleState.enemy?.palette2 || "rgb(180,50,180)";
+                    const enemySvg = adultBaseSvg.replace(/rgb\(180,30,30\)/g, p1).replace(/rgb\(220,60,60\)/g, p2).replace('id="player-svg"', 'id="enemy-svg"');
+
+                    if (this.element === 'Water') {
+                        playerSvg = adultBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(30,60,180)").replace(/rgb\(220,60,60\)/g, "rgb(60,120,220)");
+                    } else if (this.element === 'Earth') {
+                        playerSvg = adultBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(100,60,30)").replace(/rgb\(220,60,60\)/g, "rgb(150,100,60)");
+                    } else if (this.element === 'Astral') {
+                        playerSvg = adultBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(180,130,20)").replace(/rgb\(220,60,60\)/g, "rgb(255,215,60)");
+                    } else {
+                        playerSvg = adultBaseSvg;
+                    }
+
+                    const playerPct = Math.max(0, Math.min(100, Math.round((this.battleState.playerHp / this.battleState.playerMaxHp) * 100)));
+                    const enemyPct = Math.max(0, Math.min(100, Math.round((this.battleState.enemyHp / this.battleState.enemyMaxHp) * 100)));
+
+                    document.getElementById('entity-art').innerHTML = `
+                        <div style="display:flex; flex-direction:column; align-items:center; gap:8px; width:100%;">
+                            <div style="display:flex; justify-content:space-between; width:380px; align-items:flex-end;">
+                                <div style="display:flex; flex-direction:column; align-items:center;">
+                                    <span style="font-size:12px; font-weight:bold; color:#f7e0b5; margin-bottom:2px;">Your Dragon (${this.element})</span>
+                                    ${playerSvg}
+                                </div>
+                                <div style="font-weight:900; color:#ff4444; font-size:26px; font-family:'Cinzel',serif; text-shadow:0 0 8px rgba(255,0,0,0.6); margin-bottom:40px;">VS</div>
+                                <div style="display:flex; flex-direction:column; align-items:center;">
+                                    <span style="font-size:12px; font-weight:bold; color:#f7e0b5; margin-bottom:2px;">${this.battleState.enemy.name} <span style="background:${this.battleState.enemy.color}; color:#fff; font-size:10px; padding:1px 5px; border-radius:3px;">${this.battleState.enemy.element}</span></span>
+                                    <div style="transform: scaleX(-1);">${enemySvg}</div>
+                                </div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; width:380px; gap:12px;">
+                                <div style="flex:1; background:rgba(0,0,0,0.5); border:1px solid #5a3814; border-radius:4px; padding:2px; height:20px; position:relative; overflow:hidden;">
+                                    <div style="height:100%; width:${playerPct}%; background:linear-gradient(90deg, #40c057, #69db7c); border-radius:2px; transition:width 0.25s ease;"></div>
+                                    <span style="position:absolute; top:2px; left:0; width:100%; text-align:center; font-size:11px; font-weight:bold; color:#fff; text-shadow:1px 1px 2px #000;">HP: ${Math.max(0, this.battleState.playerHp)}/${this.battleState.playerMaxHp}</span>
+                                </div>
+                                <div style="flex:1; background:rgba(0,0,0,0.5); border:1px solid #5a3814; border-radius:4px; padding:2px; height:20px; position:relative; overflow:hidden;">
+                                    <div style="height:100%; width:${enemyPct}%; background:linear-gradient(90deg, #fa5252, #ff8787); border-radius:2px; transition:width 0.25s ease;"></div>
+                                    <span style="position:absolute; top:2px; left:0; width:100%; text-align:center; font-size:11px; font-weight:bold; color:#fff; text-shadow:1px 1px 2px #000;">HP: ${Math.max(0, this.battleState.enemyHp)}/${this.battleState.enemyMaxHp}</span>
+                                </div>
+                            </div>
+                        </div>`;
                 } else {
                     document.getElementById('entity-art').innerHTML = playerSvg;
                     if (!this.isBusy) document.getElementById('controls').style.display = 'flex';
@@ -1281,7 +1581,8 @@
                 this.log("The egg hatched! A baby dragon emerged.");
                 this.showToast("🥚 <b>Egg Hatched!</b> A baby dragon emerged.", "gold");
                 this.updateUI();
-                this.playSound('roar');
+                AudioEngine.playPreset('hatch');
+                setTimeout(() => AudioEngine.playPreset('roar'), 450);
                 this.spawnParticles('#ffffff', 30);
                 
                 this.tickInterval = setInterval(() => this.tick(), 3000);
@@ -1299,7 +1600,8 @@
                     this.stats.energy = Math.max(0, this.stats.energy - 5);
                     this.log("You fed the dragon. It looks satisfied.");
                     this.showToast("🍎 Fed dragon! (+20 Hunger, -5 Energy)", "success");
-                    this.playSound('munch');
+                    AudioEngine.playPreset('munch');
+                    VFX.addFloatingText(width / 2, height / 2 - 50, "+20 Hunger", "#ff6b6b", 16);
                     this.spawnParticles('#ff4444', 15);
                 } else if (type === 'play') {
                     if (this.stats.energy < 20) {
@@ -1313,6 +1615,8 @@
                     this.stats.hunger = Math.max(0, this.stats.hunger - 10);
                     this.log("You played with the dragon! It's happy.");
                     this.showToast("🎾 Played with dragon! (+20 Happiness, -20 Energy)", "success");
+                    AudioEngine.playPreset('gold');
+                    VFX.addFloatingText(width / 2, height / 2 - 50, "+20 Happiness", "#ffd43b", 16);
                     this.spawnParticles('#ffff44', 15);
                 } else if (type === 'sleep') {
                     this.sleepCount++;
@@ -1320,6 +1624,8 @@
                     this.stats.hunger = Math.max(0, this.stats.hunger - 10);
                     this.log("Dragon took a nap and regained energy.");
                     this.showToast("💤 Dragon took a nap! (+40 Energy, -10 Hunger)", "info");
+                    AudioEngine.playPreset('heal');
+                    VFX.addFloatingText(width / 2, height / 2 - 50, "+40 Energy", "#74c0fc", 16);
                     this.spawnParticles('#8888ff', 10);
                 } else if (type === 'hoard') {
                     if (this.stats.energy < 30) {
@@ -1341,12 +1647,28 @@
                         this.stats.happiness = Math.min(100, this.stats.happiness + 5);
                         this.log(`Dragon returned with ${foundGold} gold!`);
                         this.showToast(`🗺️ Expedition success! Found +${foundGold} gold.`, "gold");
+                        AudioEngine.playPreset('gold');
+                        VFX.addFloatingText(width / 2, height / 2 - 50, `+${foundGold} Gold`, "#ffd700", 18);
                         
-                        if (Math.random() < 0.3) {
-                            const items = ["Shiny Scale", "Gemstone", "Old Bone", "Mystery Eggshell"];
+                        if (Math.random() < 0.45) {
+                            const items = ["Shiny Scale", "Gemstone", "Old Bone", "Mystery Eggshell", "Dragon Fang", "Star Fragment"];
                             const item = items[Math.floor(Math.random() * items.length)];
-                            this.log(`Dragon also found a rare item: ${item}!`);
-                            this.showToast(`💎 Rare artifact discovered: ${item}!`, "gold");
+                            if (!this.stats.relics) this.stats.relics = [];
+                            const isNew = !this.stats.relics.includes(item);
+                            if (isNew) {
+                                this.stats.relics.push(item);
+                                this.log(`Dragon discovered a NEW sacred Relic: ${item}! (${this.stats.relics.length}/6)`);
+                                this.showToast(`💎 <b>NEW RELIC DISCOVERED:</b> ${item}! (${this.stats.relics.length}/6)`, "gold", 5000);
+                                AudioEngine.playPreset('gold');
+                                if (this.stats.relics.length === 6) {
+                                    this.log("👑 HOARD COMPLETE! You have assembled all 6 sacred dragon relics!");
+                                    this.showToast("👑 <b>TREASURE SOVEREIGN!</b> All 6 sacred relics assembled!", "gold", 8000);
+                                    AudioEngine.playPreset('victory');
+                                }
+                            } else {
+                                this.log(`Dragon brought back another ${item}!`);
+                                this.showToast(`💎 Found artifact: ${item}`, "info");
+                            }
                         }
                         
                         this.isBusy = false;
@@ -1387,6 +1709,8 @@
                         this.stats.strength += gain;
                         this.log(`You hit with power ${this.minigameValue}! Strength +${gain}`);
                         this.showToast(`⚔️ Power Strike: ${this.minigameValue}! Strength +${gain}`, "gold");
+                        AudioEngine.playPreset('clash');
+                        VFX.addFloatingText(width / 2, height / 2 - 40, `+${gain} Strength`, "#ffd700", 20);
                         this.endMinigame('str');
                     };
                 } else if (type === 'spd') {
@@ -1408,6 +1732,7 @@
                             document.getElementById('btn-spd-react').onclick = null;
                             this.log("Too early! You missed.");
                             this.showToast("Too early! You missed.", "warn");
+                            AudioEngine.playPreset('click');
                             this.endMinigame('spd');
                         } else if (this.minigameState === 'ready') {
                             this.minigameState = null;
@@ -1417,6 +1742,8 @@
                             this.stats.speed += gain;
                             this.log(`Reaction time: ${time}ms! Speed +${gain}`);
                             this.showToast(`⚡ Reaction: ${time}ms! Speed +${gain}`, "gold");
+                            AudioEngine.playPreset('starfall');
+                            VFX.addFloatingText(width / 2, height / 2 - 40, `+${gain} Speed`, "#74c0fc", 20);
                             this.endMinigame('spd');
                         }
                     };
@@ -1434,10 +1761,14 @@
                                 this.stats.loyalty += 5;
                                 this.log("You found the treat! Loyalty +5");
                                 this.showToast("🎉 You found the treat! Loyalty +5", "gold");
+                                AudioEngine.playPreset('gold');
+                                VFX.addFloatingText(width / 2, height / 2 - 40, "+5 Loyalty", "#69db7c", 20);
                             } else {
                                 this.stats.loyalty += 1;
                                 this.log("Empty box. Loyalty +1");
                                 this.showToast("Empty box. Loyalty +1", "info");
+                                AudioEngine.playPreset('click');
+                                VFX.addFloatingText(width / 2, height / 2 - 40, "+1 Loyalty", "#8ce99a", 16);
                             }
                             this.endMinigame('loy');
                         };
@@ -1453,10 +1784,12 @@
                         this.stats.energy = Math.min(100, this.stats.energy + 20);
                         this.log("Bought Premium Meat! Hunger +50, Energy +20.");
                         this.showToast("🍖 Bought Premium Meat! (+50 Hunger, +20 Energy)", "success");
-                        this.playSound('munch');
+                        AudioEngine.playPreset('munch');
+                        VFX.addFloatingText(width / 2, height / 2 - 50, "+50 Hunger", "#ff6b6b", 16);
                     } else { 
                         this.log("Not enough gold."); 
                         this.showToast("Not enough gold!", "warn");
+                        AudioEngine.playPreset('click');
                     }
                 } else if (type === 'toy') {
                     if (this.stats.gold >= 30) {
@@ -1465,9 +1798,12 @@
                         this.stats.energy = Math.min(100, this.stats.energy + 10);
                         this.log("Bought Mystery Toy! Happiness +50, Energy +10.");
                         this.showToast("🔮 Bought Mystery Toy! (+50 Happiness, +10 Energy)", "success");
+                        AudioEngine.playPreset('gold');
+                        VFX.addFloatingText(width / 2, height / 2 - 50, "+50 Happiness", "#ffd43b", 16);
                     } else { 
                         this.log("Not enough gold."); 
                         this.showToast("Not enough gold!", "warn");
+                        AudioEngine.playPreset('click');
                     }
                 } else if (type === 'str') {
                     if (this.stats.gold >= 50) {
@@ -1475,9 +1811,12 @@
                         this.stats.strength += 5;
                         this.log("Bought Power Bracer! Strength +5.");
                         this.showToast("🛡️ Bought Power Bracer! (+5 Strength)", "gold");
+                        AudioEngine.playPreset('clash');
+                        VFX.addFloatingText(width / 2, height / 2 - 50, "+5 Strength", "#ffd700", 18);
                     } else { 
                         this.log("Not enough gold."); 
                         this.showToast("Not enough gold!", "warn");
+                        AudioEngine.playPreset('click');
                     }
                 } else if (type === 'spd') {
                     if (this.stats.gold >= 50) {
@@ -1485,9 +1824,12 @@
                         this.stats.speed += 5;
                         this.log("Bought Swift Boots! Speed +5.");
                         this.showToast("🥾 Bought Swift Boots! (+5 Speed)", "gold");
+                        AudioEngine.playPreset('starfall');
+                        VFX.addFloatingText(width / 2, height / 2 - 50, "+5 Speed", "#74c0fc", 18);
                     } else { 
                         this.log("Not enough gold."); 
                         this.showToast("Not enough gold!", "warn");
+                        AudioEngine.playPreset('click');
                     }
                 }
                 this.updateUI();
@@ -1503,17 +1845,25 @@
                 this.stats.energy -= 20;
                 this.stats.hunger = Math.max(0, this.stats.hunger - 10);
                 
+                const available = ENEMY_ARCHETYPES.filter(a => this.stats.age >= a.minAge);
+                const enemy = available[Math.floor(Math.random() * available.length)] || ENEMY_ARCHETYPES[0];
+                const enemyStr = Math.max(5, this.stats.strength + enemy.strMod + Math.floor(Math.random() * 4));
+                const enemySpd = Math.max(4, this.stats.speed + enemy.spdMod + Math.floor(Math.random() * 4));
+                const enemyMaxHp = Math.max(50, 100 + enemyStr * 5 + enemy.hpMod);
+
                 this.battleState = {
                     playerMaxHp: 100 + this.stats.strength * 5,
-                    enemyStr: Math.max(5, this.stats.strength - 2 + Math.floor(Math.random() * 5)),
-                    enemySpd: Math.max(5, this.stats.speed - 2 + Math.floor(Math.random() * 5))
+                    enemyStr,
+                    enemySpd,
+                    enemyMaxHp,
+                    enemyHp: enemyMaxHp,
+                    enemy
                 };
                 this.battleState.playerHp = this.battleState.playerMaxHp;
-                this.battleState.enemyMaxHp = 100 + this.battleState.enemyStr * 5;
-                this.battleState.enemyHp = this.battleState.enemyMaxHp;
                 
-                this.log(`A wild enemy dragon appears! (HP: ${this.battleState.enemyHp})`);
-                this.playSound('roar');
+                this.log(`⚔️ Confronting ${enemy.name} (${enemy.title})! (HP: ${enemyMaxHp}, Element: ${enemy.element})`);
+                this.showToast(`⚔️ <b>Battle!</b> Confronting <b>${enemy.name}</b> (${enemy.element})`, "warn");
+                AudioEngine.playPreset('roar');
                 
                 this.isBusy = true;
                 document.getElementById('controls').style.display = 'none';
@@ -1536,9 +1886,19 @@
                     this.showToast("No elemental power yet!", "warn");
                     return;
                 }
+
+                const enemy = this.battleState.enemy;
+                const pEl = document.getElementById('player-svg');
+                const eEl = document.getElementById('enemy-svg');
+                const pRect = pEl ? pEl.getBoundingClientRect() : { left: width / 2 - 100, top: height / 2, width: 64, height: 64 };
+                const eRect = eEl ? eEl.getBoundingClientRect() : { left: width / 2 + 100, top: height / 2, width: 64, height: 64 };
+                const pX = pRect.left + pRect.width / 2;
+                const pY = pRect.top + pRect.height / 2;
+                const eX = eRect.left + eRect.width / 2;
+                const eY = eRect.top + eRect.height / 2;
                 
-                let playerDefending = (action === 'defend');
-                let enemyDefending = (Math.random() < 0.3);
+                const playerDefending = (action === 'defend');
+                const enemyDefending = (Math.random() < 0.3);
                 
                 if (action === 'attack') {
                     let hitChance = 0.8 + (this.stats.speed - this.battleState.enemySpd) * 0.05;
@@ -1546,52 +1906,98 @@
                         let dmg = Math.max(1, this.stats.strength * 2 + Math.floor(Math.random() * 5));
                         if (enemyDefending) dmg = Math.floor(dmg / 2);
                         this.battleState.enemyHp -= dmg;
-                        this.log(`You hit the enemy for ${dmg} damage! (Enemy HP: ${Math.max(0, this.battleState.enemyHp)}/${this.battleState.enemyMaxHp})`);
-                        this.playSound('clash');
+                        this.log(`You hit ${enemy.name} for ${dmg} damage! (Enemy HP: ${Math.max(0, this.battleState.enemyHp)}/${this.battleState.enemyMaxHp})`);
+                        AudioEngine.playPreset('clash');
                         this.triggerAnim('player', 'attacking');
+                        VFX.addFloatingText(eX, eY - 20, `-${dmg}`, '#ff4444', 18);
                         setTimeout(() => {
                             this.triggerAnim('enemy', 'shaking');
                             this.spawnParticles('#ff0000', 10, 'enemy');
                         }, 150);
                     } else {
                         this.log("You missed!");
+                        VFX.addFloatingText(eX, eY - 20, "MISS", "#adb5bd", 14);
                     }
                 } else if (action === 'special') {
                     if (this.element === 'Fire') {
                         let dmg = Math.max(1, this.stats.strength * 3 + 10);
+                        if (enemy.element === 'Water') {
+                            dmg = Math.floor(dmg * 1.4);
+                            this.log(`🔥 ELEMENTAL ADVANTAGE! Fire scorched ${enemy.name}!`);
+                            VFX.addFloatingText(eX, eY - 45, "SUPER EFFECTIVE!", "#ffa94d", 14);
+                        } else if (enemy.element === 'Fire') {
+                            dmg = Math.floor(dmg * 0.7);
+                            this.log(`Fire is resisted by ${enemy.name}...`);
+                        }
                         if (enemyDefending) dmg = Math.floor(dmg / 2);
                         this.battleState.enemyHp -= dmg;
-                        this.log(`You used Fireball! Dealt ${dmg} damage. (Enemy HP: ${Math.max(0, this.battleState.enemyHp)}/${this.battleState.enemyMaxHp})`);
+                        this.log(`You unleashed Fireball! Dealt ${dmg} damage. (Enemy HP: ${Math.max(0, this.battleState.enemyHp)}/${this.battleState.enemyMaxHp})`);
+                        AudioEngine.playPreset('fireball');
                         this.triggerAnim('player', 'attacking');
+                        VFX.addShake(6);
+                        VFX.addFloatingText(eX, eY - 20, `-${dmg}`, '#ff922b', 22);
                         setTimeout(() => {
                             this.triggerAnim('enemy', 'shaking');
-                            this.spawnParticles('#ffaa00', 20, 'enemy');
+                            this.spawnParticles('#ffaa00', 25, 'enemy');
                         }, 150);
                     } else if (this.element === 'Water') {
                         let heal = 30 + this.stats.loyalty;
                         this.battleState.playerHp = Math.min(this.battleState.playerMaxHp, this.battleState.playerHp + heal);
+                        if (enemy.element === 'Fire') {
+                            let splashDmg = Math.floor(this.stats.strength * 1.5 + 8);
+                            this.battleState.enemyHp -= splashDmg;
+                            this.log(`🌊 ELEMENTAL ADVANTAGE! Torrent quenched ${enemy.name} for ${splashDmg} damage!`);
+                            VFX.addFloatingText(eX, eY - 20, `-${splashDmg}`, '#74c0fc', 18);
+                        }
                         this.log(`You used Healing Stream! Restored ${heal} HP.`);
+                        AudioEngine.playPreset('heal');
+                        VFX.addFloatingText(pX, pY - 20, `+${heal} HP`, '#38d9a9', 18);
                         this.spawnParticles('#00ffff', 20, 'player');
                     } else if (this.element === 'Earth') {
-                        let dmg = Math.max(1, this.stats.strength * 2);
+                        let dmg = Math.max(1, this.stats.strength * 2 + 6);
                         if (enemyDefending) dmg = Math.floor(dmg / 2);
                         this.battleState.enemyHp -= dmg;
                         this.battleState.enemySpd = Math.max(1, this.battleState.enemySpd - 5);
                         this.log(`You used Earthquake! Dealt ${dmg} damage and slowed enemy. (Enemy HP: ${Math.max(0, this.battleState.enemyHp)}/${this.battleState.enemyMaxHp})`);
+                        AudioEngine.playPreset('earthquake');
                         this.triggerAnim('player', 'attacking');
+                        VFX.addShake(8);
+                        VFX.addFloatingText(eX, eY - 20, `-${dmg}`, '#a9e34b', 20);
                         setTimeout(() => {
                             this.triggerAnim('enemy', 'shaking');
-                            this.spawnParticles('#8b4513', 20, 'enemy');
+                            this.spawnParticles('#8b4513', 25, 'enemy');
+                        }, 150);
+                    } else if (this.element === 'Astral') {
+                        let dmg = Math.max(1, this.stats.strength * 3 + this.stats.speed * 2 + 12);
+                        if (enemy.element === 'Shadow') {
+                            dmg = Math.floor(dmg * 1.5);
+                            this.log(`⭐ COSMIC DISRUPTION! Starfall banished ${enemy.name}'s shadows!`);
+                            VFX.addFloatingText(eX, eY - 45, "SUPER EFFECTIVE!", "#ffd43b", 14);
+                        }
+                        if (enemyDefending) dmg = Math.floor(dmg / 2);
+                        this.battleState.enemyHp -= dmg;
+                        this.battleState.enemySpd = Math.max(1, this.battleState.enemySpd - 3);
+                        this.log(`You invoked STARFALL! Dealt ${dmg} cosmic damage and suppressed enemy speed.`);
+                        AudioEngine.playPreset('starfall');
+                        this.triggerAnim('player', 'attacking');
+                        VFX.addShake(10);
+                        VFX.addShockwave(eX, eY, '#ffd700', 100);
+                        VFX.addFloatingText(eX, eY - 20, `-${dmg}`, '#ffd700', 24);
+                        setTimeout(() => {
+                            this.triggerAnim('enemy', 'shaking');
+                            this.spawnParticles('#ffd700', 30, 'enemy', true);
                         }, 150);
                     }
                 } else if (action === 'defend') {
-                    this.log("You are defending.");
+                    this.log("You entered a defensive stance.");
+                    AudioEngine.playPreset('click');
+                    VFX.addFloatingText(pX, pY - 20, "DEFENSE UP", "#74c0fc", 14);
                 }
                 
                 this.updateUI();
                 
                 if (this.battleState.enemyHp <= 0) {
-                    this.log("Enemy dragon defeated!");
+                    this.log(`🏆 ${enemy.name} defeated!`);
                     this.endBattle(true);
                     return;
                 }
@@ -1599,41 +2005,55 @@
                 if (!enemyDefending) {
                     let hitChance = 0.8 + (this.battleState.enemySpd - this.stats.speed) * 0.05;
                     if (Math.random() < hitChance) {
-                        let dmg = Math.max(1, this.battleState.enemyStr * 2 + Math.floor(Math.random() * 5));
+                        let isSpecial = Math.random() < 0.28;
+                        let dmg = Math.max(1, this.battleState.enemyStr * 2 + Math.floor(Math.random() * 5) + (isSpecial ? 6 : 0));
                         if (playerDefending) dmg = Math.floor(dmg / 2);
                         this.battleState.playerHp -= dmg;
-                        this.log(`Enemy hit you for ${dmg} damage! (HP: ${Math.max(0, this.battleState.playerHp)}/${this.battleState.playerMaxHp})`);
-                        this.playSound('clash');
+                        if (isSpecial) {
+                            this.log(`⚠️ ${enemy.name} used ${enemy.specialName}! Dealt ${dmg} damage! (HP: ${Math.max(0, this.battleState.playerHp)}/${this.battleState.playerMaxHp})`);
+                            AudioEngine.playPreset('roar');
+                            VFX.addShake(8);
+                        } else {
+                            this.log(`${enemy.name} attacked for ${dmg} damage! (HP: ${Math.max(0, this.battleState.playerHp)}/${this.battleState.playerMaxHp})`);
+                            AudioEngine.playPreset('clash');
+                        }
                         this.triggerAnim('enemy', 'attacking-enemy');
+                        VFX.addFloatingText(pX, pY - 20, `-${dmg}`, '#ff6b6b', 18);
                         setTimeout(() => {
                             this.triggerAnim('player', 'shaking');
-                            this.spawnParticles('#ff0000', 10, 'player');
+                            this.spawnParticles(enemy.color || '#ff0000', 12, 'player');
                         }, 150);
                     } else {
-                        this.log("Enemy missed!");
+                        this.log(`${enemy.name} missed!`);
+                        VFX.addFloatingText(pX, pY - 20, "DODGED!", "#69db7c", 14);
                     }
                 } else {
-                    this.log("Enemy is defending.");
+                    this.log(`${enemy.name} is guarding.`);
+                    VFX.addFloatingText(eX, eY - 20, "GUARD", "#adb5bd", 14);
                 }
                 
                 this.updateUI();
                 
                 if (this.battleState.playerHp <= 0) {
-                    this.log("Your dragon was defeated and fled!");
+                    this.log("Your dragon was defeated and retreated!");
                     this.endBattle(false);
                 }
             },
             
             endBattle(won) {
                 if (won) {
-                    let goldGain = 20 + Math.floor(Math.random() * 20);
+                    const bonus = this.battleState?.enemy?.bonusGold || 0;
+                    let goldGain = 20 + Math.floor(Math.random() * 20) + bonus;
                     this.stats.gold += goldGain;
                     this.stats.happiness = Math.min(100, this.stats.happiness + 10);
-                    this.log(`You won the battle and earned ${goldGain} gold!`);
-                    this.showToast(`⚔️ <b>Victory!</b> Won battle and gained +${goldGain} gold!`, "gold");
+                    this.log(`🏆 Victory over ${this.battleState.enemy.name}! Earned +${goldGain} gold.`);
+                    this.showToast(`⚔️ <b>Victory!</b> Defeated <b>${this.battleState.enemy.name}</b> (+${goldGain} Gold)`, "gold", 5000);
+                    AudioEngine.playPreset('victory');
                 } else {
                     this.stats.happiness = Math.max(0, this.stats.happiness - 15);
-                    this.showToast("💔 <b>Defeated!</b> Dragon fled to recover.", "warn");
+                    this.log("Your dragon was defeated and retreated to recover.");
+                    this.showToast("💔 <b>Defeated!</b> Dragon retreated to recover.", "warn");
+                    AudioEngine.playPreset('defeat');
                 }
                 this.battleState = null;
                 this.isBusy = false;
@@ -1759,12 +2179,18 @@
                 
                 if (this.state === 'dragon' && this.stats.age >= 10) {
                     this.state = 'adult';
-                    let max = Math.max(this.feedCount, this.playCount, this.sleepCount);
-                    if (max === this.feedCount) this.element = 'Earth';
-                    else if (max === this.playCount) this.element = 'Fire';
-                    else this.element = 'Water';
-                    this.log(`Your baby dragon evolved into an ADULT ${this.element.toUpperCase()} DRAGON!`);
+                    if ((this.stats.strength >= 10 && this.stats.speed >= 10) || this.stats.loyalty >= 12) {
+                        this.element = 'Astral';
+                    } else {
+                        let max = Math.max(this.feedCount, this.playCount, this.sleepCount);
+                        if (max === this.feedCount) this.element = 'Earth';
+                        else if (max === this.playCount) this.element = 'Fire';
+                        else this.element = 'Water';
+                    }
+                    this.log(`✨ Your baby dragon evolved into an ADULT ${this.element.toUpperCase()} DRAGON!`);
                     this.showToast(`✨ <b>EVOLUTION!</b> Baby dragon evolved into an <b>ADULT ${this.element.toUpperCase()} DRAGON</b>!`, "gold", 7000);
+                    AudioEngine.playPreset('evolution');
+                    this.spawnParticles('#ffd700', 40, 'player', true);
                 }
                 this.updateUI();
             }

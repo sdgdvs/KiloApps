@@ -31,6 +31,8 @@ int bat_enemy_hp = 100;
 int bat_enemy_max = 100;
 int bat_enemy_str = 10;
 int bat_enemy_spd = 10;
+int bat_enemy_type = 0;
+char bat_enemy_name[64] = "Shadow Stalker";
 int minigame_val = 0;
 int minigame_dir = 1;
 int minigame_state = 0;
@@ -273,9 +275,26 @@ void DrawPixelArt(HDC hdc, int x, int y, int scale, COLORREF pixels[16][16], int
                     } else if (element_type == 3) { // Earth
                         if (c == RGB(180,30,30)) c = RGB(100,60,30);
                         else if (c == RGB(220,60,60)) c = RGB(150,100,60);
+                    } else if (element_type == 6) { // Astral
+                        if (c == RGB(180,30,30)) c = RGB(180,130,20);
+                        else if (c == RGB(220,60,60)) c = RGB(255,215,60);
                     } else if (element_type == 5) { // Enemy
-                        if (c == RGB(180,30,30)) c = RGB(128,0,128);
-                        else if (c == RGB(220,60,60)) c = RGB(180,50,180);
+                        if (bat_enemy_type == 0) { // Cave Goblin (Green)
+                            if (c == RGB(180,30,30)) c = RGB(40,110,40);
+                            else if (c == RGB(220,60,60)) c = RGB(80,180,80);
+                        } else if (bat_enemy_type == 1) { // Frost Wyrm (Ice Cyan)
+                            if (c == RGB(180,30,30)) c = RGB(30,100,200);
+                            else if (c == RGB(220,60,60)) c = RGB(100,180,255);
+                        } else if (bat_enemy_type == 2) { // Magma Drake (Orange/Red)
+                            if (c == RGB(180,30,30)) c = RGB(190,40,20);
+                            else if (c == RGB(220,60,60)) c = RGB(245,110,30);
+                        } else if (bat_enemy_type == 3) { // Stone Golem (Grey/Slate)
+                            if (c == RGB(180,30,30)) c = RGB(65,70,75);
+                            else if (c == RGB(220,60,60)) c = RGB(135,140,145);
+                        } else { // Shadow Drake (Purple)
+                            if (c == RGB(180,30,30)) c = RGB(128,0,128);
+                            else if (c == RGB(220,60,60)) c = RGB(180,50,180);
+                        }
                     }
                 }
                 HBRUSH b = CreateSolidBrush(c);
@@ -734,17 +753,43 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     hunger -= 10; if (hunger < 0) hunger = 0;
                     bat_player_max = 100 + strength * 5;
                     bat_player_hp = bat_player_max;
-                    bat_enemy_str = strength - 2 + (rand() % 5); if (bat_enemy_str < 5) bat_enemy_str = 5;
-                    bat_enemy_spd = speed - 2 + (rand() % 5); if (bat_enemy_spd < 5) bat_enemy_spd = 5;
+                    bat_enemy_type = rand() % 5;
+                    COLORREF shockColor = RGB(220, 50, 220);
+                    if (bat_enemy_type == 0) {
+                        strcpy(bat_enemy_name, "Cave Goblin");
+                        bat_enemy_str = strength - 1 + (rand() % 3); if (bat_enemy_str < 5) bat_enemy_str = 5;
+                        bat_enemy_spd = speed + 1 + (rand() % 4); if (bat_enemy_spd < 6) bat_enemy_spd = 6;
+                        shockColor = RGB(80, 200, 80);
+                    } else if (bat_enemy_type == 1) {
+                        strcpy(bat_enemy_name, "Frost Wyrm");
+                        bat_enemy_str = strength + (rand() % 3); if (bat_enemy_str < 6) bat_enemy_str = 6;
+                        bat_enemy_spd = speed - 2 + (rand() % 3); if (bat_enemy_spd < 4) bat_enemy_spd = 4;
+                        shockColor = RGB(50, 150, 255);
+                    } else if (bat_enemy_type == 2) {
+                        strcpy(bat_enemy_name, "Magma Drake");
+                        bat_enemy_str = strength + 2 + (rand() % 4); if (bat_enemy_str < 8) bat_enemy_str = 8;
+                        bat_enemy_spd = speed + (rand() % 3); if (bat_enemy_spd < 5) bat_enemy_spd = 5;
+                        shockColor = RGB(255, 100, 30);
+                    } else if (bat_enemy_type == 3) {
+                        strcpy(bat_enemy_name, "Stone Golem");
+                        bat_enemy_str = strength + 1 + (rand() % 3); if (bat_enemy_str < 7) bat_enemy_str = 7;
+                        bat_enemy_spd = speed - 3 + (rand() % 2); if (bat_enemy_spd < 3) bat_enemy_spd = 3;
+                        shockColor = RGB(160, 160, 160);
+                    } else {
+                        strcpy(bat_enemy_name, "Shadow Stalker");
+                        bat_enemy_str = strength + (rand() % 4); if (bat_enemy_str < 6) bat_enemy_str = 6;
+                        bat_enemy_spd = speed + 2 + (rand() % 4); if (bat_enemy_spd < 7) bat_enemy_spd = 7;
+                        shockColor = RGB(180, 50, 220);
+                    }
                     bat_enemy_max = 100 + bat_enemy_str * 5;
                     bat_enemy_hp = bat_enemy_max;
                     
                     char msg[128];
-                    sprintf(msg, "A wild enemy dragon appears! (HP: %d)", bat_enemy_hp);
+                    sprintf(msg, "Confronting %s! (HP: %d)", bat_enemy_name, bat_enemy_hp);
                     add_log(msg);
                     Beep(150, 100); Beep(100, 200); Beep(80, 200);
                     trigger_screen_shake(5.0f);
-                    add_shockwave(410, 150, 80.0f, RGB(220, 50, 220));
+                    add_shockwave(410, 150, 80.0f, shockColor);
                     
                     ShowWindow(btn_feed, SW_HIDE); ShowWindow(btn_play, SW_HIDE);
                     ShowWindow(btn_sleep, SW_HIDE); ShowWindow(btn_train, SW_HIDE);
@@ -782,7 +827,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (dmg < 1) dmg = 1;
                             if (e_def) dmg /= 2;
                             bat_enemy_hp -= dmg;
-                            char m[128]; sprintf(m, "You hit the enemy for %d damage!", dmg); add_log(m);
+                            char m[128]; sprintf(m, "You hit %s for %d damage!", bat_enemy_name, dmg); add_log(m);
                             Beep(800, 50); Beep(100, 50);
                             player_attack_offset = 24;
                             enemy_damage_flash = 6;
@@ -796,6 +841,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     } else if (action == 2) {
                         if (element == 2) { // Fire
                             int dmg = strength * 3 + 10;
+                            if (bat_enemy_type == 1) { // Frost Wyrm weakness
+                                dmg = (int)(dmg * 1.4f);
+                                add_log("CRITICAL WEAKNESS! Fire scorched Frost Wyrm!");
+                            }
                             if (e_def) dmg /= 2;
                             bat_enemy_hp -= dmg;
                             char m[128]; sprintf(m, "You used Fireball! Dealt %d damage.", dmg); add_log(m);
@@ -809,12 +858,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             int heal = 30 + loyalty;
                             bat_player_hp += heal;
                             if (bat_player_hp > bat_player_max) bat_player_hp = bat_player_max;
+                            if (bat_enemy_type == 2) { // Magma Drake weakness
+                                int splash = strength + 8;
+                                bat_enemy_hp -= splash;
+                                char sm[128]; sprintf(sm, "Torrent quenched Magma Drake for %d damage!", splash); add_log(sm);
+                            }
                             char m[128]; sprintf(m, "You used Healing Stream! Restored %d HP.", heal); add_log(m);
                             add_shockwave(180, 150, 60.0f, RGB(0, 220, 255));
                             spawn_particles_ext(180, 150, RGB(0,255,255), 20, 0);
                             spawn_particles_ext(180, 150, RGB(150,220,255), 10, 1);
                         } else if (element == 3) { // Earth
-                            int dmg = strength * 2;
+                            int dmg = strength * 2 + 6;
                             if (dmg < 1) dmg = 1;
                             if (e_def) dmg /= 2;
                             bat_enemy_hp -= dmg;
@@ -826,6 +880,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             trigger_screen_shake(9.0f);
                             add_shockwave(410, 150, 80.0f, RGB(140, 90, 40));
                             spawn_particles_ext(410, 150, RGB(140,90,40), 20, 2);
+                        } else if (element == 6) { // Astral
+                            int dmg = strength * 3 + speed * 2 + 12;
+                            if (bat_enemy_type == 4) { // Shadow Stalker weakness
+                                dmg = (int)(dmg * 1.5f);
+                                add_log("CRITICAL DISRUPTION! Starfall banished the shadow beast!");
+                            }
+                            if (e_def) dmg /= 2;
+                            bat_enemy_hp -= dmg;
+                            bat_enemy_spd -= 4;
+                            if (bat_enemy_spd < 1) bat_enemy_spd = 1;
+                            char m[128]; sprintf(m, "You used Starfall! Dealt %d cosmic damage.", dmg); add_log(m);
+                            Beep(900, 60); Beep(1200, 80); Beep(1500, 100);
+                            player_attack_offset = 24;
+                            enemy_damage_flash = 8;
+                            trigger_screen_shake(10.0f);
+                            add_shockwave(410, 150, 90.0f, RGB(255, 215, 60));
+                            spawn_particles_ext(410, 150, RGB(255,215,60), 25, 3);
                         }
                     } else if (action == 1) {
                         add_log("You are defending.");
@@ -833,7 +904,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     
                     if (bat_enemy_hp <= 0) {
-                        add_log("Enemy dragon defeated!");
+                        char m[128]; sprintf(m, "%s defeated!", bat_enemy_name); add_log(m);
                         battle_ended = 1;
                         won = 1;
                         trigger_screen_shake(10.0f);
@@ -848,7 +919,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 if (dmg < 1) dmg = 1;
                                 if (p_def) dmg /= 2;
                                 bat_player_hp -= dmg;
-                                char m[128]; sprintf(m, "Enemy hit you for %d damage! (HP: %d/%d)", dmg, bat_player_hp, bat_player_max); add_log(m);
+                                char m[128]; sprintf(m, "%s hit you for %d damage! (HP: %d/%d)", bat_enemy_name, dmg, bat_player_hp, bat_player_max); add_log(m);
                                 Beep(800, 50); Beep(100, 50);
                                 enemy_attack_offset = 24;
                                 player_damage_flash = 6;
@@ -1051,9 +1122,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "- Speed (Spd): Hit chance & dodge rate\n"
                     "- Loyalty (Loy): Potency of special abilities & treats\n"
                     "- Age: Baby dragon evolves at Age 10 based on care:\n"
-                    "   * Mostly Fed  -> Earth Dragon (Earthquake)\n"
-                    "   * Mostly Played-> Fire Dragon (Fireball)\n"
-                    "   * Mostly Slept -> Water Dragon (Healing Stream)", 
+                    "   * High Str/Spd/Loy -> Astral Dragon (Starfall)\n"
+                    "   * Mostly Fed       -> Earth Dragon (Earthquake)\n"
+                    "   * Mostly Played    -> Fire Dragon (Fireball)\n"
+                    "   * Mostly Slept     -> Water Dragon (Healing Stream)", 
                     "Dragon Master's Guide", MB_OK | MB_ICONINFORMATION);
             }
             break;
@@ -1105,24 +1177,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 if (state == 1 && age >= 10) {
                     state = 2;
-                    int max_c = feed_count;
-                    if (play_count > max_c) max_c = play_count;
-                    if (sleep_count > max_c) max_c = sleep_count;
-                    
                     char msg[128];
                     COLORREF evoColor = RGB(255, 215, 0);
-                    if (max_c == feed_count) {
-                        element = 3;
-                        strcpy(msg, "Your baby dragon evolved into an ADULT EARTH DRAGON!");
-                        evoColor = RGB(150, 100, 60);
-                    } else if (max_c == play_count) {
-                        element = 2;
-                        strcpy(msg, "Your baby dragon evolved into an ADULT FIRE DRAGON!");
-                        evoColor = RGB(255, 100, 30);
+                    if ((strength >= 10 && speed >= 10) || loyalty >= 12) {
+                        element = 6;
+                        strcpy(msg, "Your baby dragon evolved into a celestial ASTRAL DRAGON!");
+                        evoColor = RGB(255, 230, 90);
                     } else {
-                        element = 4;
-                        strcpy(msg, "Your baby dragon evolved into an ADULT WATER DRAGON!");
-                        evoColor = RGB(50, 150, 255);
+                        int max_c = feed_count;
+                        if (play_count > max_c) max_c = play_count;
+                        if (sleep_count > max_c) max_c = sleep_count;
+                        
+                        if (max_c == feed_count) {
+                            element = 3;
+                            strcpy(msg, "Your baby dragon evolved into an ADULT EARTH DRAGON!");
+                            evoColor = RGB(150, 100, 60);
+                        } else if (max_c == play_count) {
+                            element = 2;
+                            strcpy(msg, "Your baby dragon evolved into an ADULT FIRE DRAGON!");
+                            evoColor = RGB(255, 100, 30);
+                        } else {
+                            element = 4;
+                            strcpy(msg, "Your baby dragon evolved into an ADULT WATER DRAGON!");
+                            evoColor = RGB(50, 150, 255);
+                        }
                     }
                     add_log(msg);
                     trigger_screen_shake(8.0f);
@@ -1266,6 +1344,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (element == 2) mc = RGB(255, 140, 50); // Fire ember
                 else if (element == 4) mc = RGB(100, 200, 255); // Water bubble
                 else if (element == 3) mc = RGB(160, 220, 100); // Earth spore
+                else if (element == 6) mc = RGB(255, 230, 90); // Astral starlight
                 
                 HBRUSH mb = CreateSolidBrush(mc);
                 int mx = (int)ambient_motes[i].x;
@@ -1315,6 +1394,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (element == 2) type_str = "Fire";
                 else if (element == 3) type_str = "Earth";
                 else if (element == 4) type_str = "Water";
+                else if (element == 6) type_str = "Astral";
                 
                 sprintf(buf1, "Hunger: %d/100  |  Happiness: %d/100  |  Energy: %d/100  |  Age: %d", 
                         hunger, happiness, energy, age);
@@ -1376,6 +1456,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     RECT vsR = {200 + shake_dx, 130 + shake_dy, 400 + shake_dx, 160 + shake_dy};
                     DrawText(hdc, text, strlen(text), &vsR, DT_CENTER | DT_TOP);
                     SetTextColor(hdc, RGB(42, 23, 4));
+                    SelectObject(hdc, hFontNormal);
+                    
+                    // HP bar labels
+                    SelectObject(hdc, hFontSmall);
+                    const char* pLbl = "Your Dragon";
+                    TextOut(hdc, 100 + shake_dx, 204 + shake_dy, pLbl, strlen(pLbl));
+                    TextOut(hdc, 370 + shake_dx, 204 + shake_dy, bat_enemy_name, strlen(bat_enemy_name));
                     SelectObject(hdc, hFontNormal);
                     
                     // HP bars
