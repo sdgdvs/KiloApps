@@ -614,7 +614,7 @@
 
     .toast {
       position: absolute;
-      bottom: 30px;
+      top: 48px;
       right: 20px;
       background: var(--surface-2);
       border: 1px solid var(--primary);
@@ -624,11 +624,12 @@
       font-size: 12px;
       font-weight: 600;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-      transform: translateY(100px);
+      transform: translateY(-20px);
       opacity: 0;
-      transition: all 0.25s ease;
+      transition: all 0.2s ease;
       z-index: 200;
-      pointer-events: none;
+      cursor: pointer;
+      pointer-events: auto;
     }
 
     .toast.show {
@@ -920,7 +921,7 @@
             <button class="btn btn-sm" id="btnDownloadStego" style="flex: 1;">💾 Save PNG</button>
           </div>
           <div style="font-size: 11px; color: var(--text-muted); line-height: 1.3;">
-            Capacity: <b>9,600 bytes</b> (320×240 × 1 bit / 8).
+            Capacity: <b>28,796 bytes</b> (320×240 × 3 bits / 8).
           </div>
         </div>
 
@@ -928,7 +929,7 @@
         <div class="panel">
           <div class="panel-header">
             <span>STEGANOGRAPHIC SECRET PAYLOAD</span>
-            <span id="stegoCapacityLabel" style="font-size: 11px; color: var(--text-muted);">0 / 9600 bytes</span>
+            <span id="stegoCapacityLabel" style="font-size: 11px; color: var(--text-muted);">0 / 28,796 bytes</span>
           </div>
           <div class="panel-body">
             <textarea id="stegoText" class="text-box" placeholder="Enter secret message to hide inside image pixels, or click 'Extract Message' to decode from carrier image..."></textarea>
@@ -1557,9 +1558,18 @@
         this.ctx.putImageData(imgData, 0, 0);
         this.originalImageData = this.ctx.getImageData(0, 0, w, h);
         this.isBitPlaneView = false;
+        const btn = document.getElementById('btnBitPlaneToggle');
+        if (btn) btn.textContent = '👁️ View Bit-Plane 0';
+      }
+
+      revertBitPlaneIfActive() {
+        if (this.isBitPlaneView) {
+          this.toggleBitPlane();
+        }
       }
 
       encodeMessage(secretText) {
+        this.revertBitPlaneIfActive();
         if (!secretText) return { success: false, msg: 'No message to encode' };
         const w = this.canvas.width;
         const h = this.canvas.height;
@@ -1603,10 +1613,13 @@
         this.ctx.putImageData(imgData, 0, 0);
         this.originalImageData = this.ctx.getImageData(0, 0, w, h);
         this.isBitPlaneView = false;
+        const btn = document.getElementById('btnBitPlaneToggle');
+        if (btn) btn.textContent = '👁️ View Bit-Plane 0';
         return { success: true, bytes: payloadBytes.length };
       }
 
       decodeMessage() {
+        this.revertBitPlaneIfActive();
         const w = this.canvas.width;
         const h = this.canvas.height;
         const imgData = this.ctx.getImageData(0, 0, w, h);
@@ -1668,6 +1681,7 @@
       toggleBitPlane() {
         const w = this.canvas.width;
         const h = this.canvas.height;
+        const btn = document.getElementById('btnBitPlaneToggle');
         if (!this.isBitPlaneView) {
           this.originalImageData = this.ctx.getImageData(0, 0, w, h);
           const current = this.ctx.getImageData(0, 0, w, h);
@@ -1682,11 +1696,13 @@
           }
           this.ctx.putImageData(current, 0, 0);
           this.isBitPlaneView = true;
+          if (btn) btn.textContent = '🖼️ View Carrier Image';
         } else {
           if (this.originalImageData) {
             this.ctx.putImageData(this.originalImageData, 0, 0);
           }
           this.isBitPlaneView = false;
+          if (btn) btn.textContent = '👁️ View Bit-Plane 0';
         }
       }
     }
@@ -1783,11 +1799,29 @@
       cipherDescBody: document.getElementById('cipherDescBody')
     };
 
-    // Show Toast
+    // Steganography Capacity Tracker
+    function updateStegoCapacity() {
+      const stegoText = document.getElementById('stegoText');
+      const canvas = document.getElementById('stegoCanvas');
+      const label = document.getElementById('stegoCapacityLabel');
+      if (!stegoText || !canvas || !label) return;
+      const bytes = new TextEncoder().encode(stegoText.value).length;
+      const maxBytes = Math.max(0, Math.floor((canvas.width * canvas.height * 3) / 8) - 4);
+      label.textContent = `${bytes.toLocaleString()} / ${maxBytes.toLocaleString()} bytes`;
+      label.style.color = bytes > maxBytes ? 'var(--danger)' : 'var(--text-muted)';
+    }
+
+    // Show Toast (Dismissible)
+    let toastTimeout = null;
     function showToast(msg) {
-      elements.toast.textContent = msg;
-      elements.toast.classList.add('show');
-      setTimeout(() => elements.toast.classList.remove('show'), 2200);
+      if (elements.toast) {
+        elements.toast.textContent = msg;
+        elements.toast.classList.add('show');
+        if (toastTimeout) clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+          if (elements.toast) elements.toast.classList.remove('show');
+        }, 2200);
+      }
     }
 
     // Switch Tab
@@ -1814,7 +1848,7 @@
       document.getElementById('rotControls').style.display = c === 'rot13' ? 'flex' : 'none';
       document.getElementById('vigenereControls').style.display = c === 'vigenere' ? 'flex' : 'none';
       document.getElementById('railControls').style.display = c === 'railfence' ? 'flex' : 'none';
-      document.getElementById('subControls').style.display = (c === 'substitution' || c === 'atbash') ? 'flex' : 'none';
+      document.getElementById('subControls').style.display = c === 'substitution' ? 'flex' : 'none';
       document.getElementById('rc4Controls').style.display = c === 'rc4' ? 'flex' : 'none';
       document.getElementById('xorControls').style.display = c === 'xor' ? 'flex' : 'none';
 
@@ -1896,7 +1930,8 @@
 
     // Execute Decryption
     function runDecrypt() {
-      const input = elements.outputText.value || elements.inputText.value;
+      const hasOutput = elements.outputText.value.trim().length > 0;
+      const input = hasOutput ? elements.outputText.value : elements.inputText.value;
       let output = '';
 
       switch (state.cipher) {
@@ -1925,7 +1960,11 @@
           output = input;
       }
 
-      elements.inputText.value = output;
+      if (hasOutput) {
+        elements.inputText.value = output;
+      } else {
+        elements.outputText.value = output;
+      }
       updateStats();
       audio.playDecrypt();
     }
@@ -1963,10 +2002,10 @@
     // Render Canvas Frequency Chart
     function drawFrequencyChart() {
       const canvas = elements.freqCanvas;
-      if (!canvas) return;
+      if (!canvas || !canvas.parentElement) return;
       const ctx = canvas.getContext('2d');
-      const w = canvas.width = canvas.parentElement.clientWidth - 20;
-      const h = canvas.height = canvas.parentElement.clientHeight - 80;
+      const w = canvas.width = Math.max(200, canvas.parentElement.clientWidth - 20);
+      const h = canvas.height = Math.max(100, canvas.parentElement.clientHeight - 80);
 
       ctx.clearRect(0, 0, w, h);
 
@@ -2056,11 +2095,14 @@
         `;
 
         tr.querySelector('.btn-apply-crack').addEventListener('click', () => {
+          const originalCiphertext = elements.outputText.value || elements.inputText.value;
           elements.inputText.value = res.candidate;
+          elements.outputText.value = originalCiphertext;
           elements.cipherSelect.value = 'rot13';
           elements.rotShift.value = res.shift;
           elements.rotShiftVal.textContent = res.shift;
           state.rotShift = res.shift;
+          state.cipher = 'rot13';
           updateCipherControls();
           updateStats();
           switchTab('tabWorkbench');
@@ -2118,17 +2160,27 @@
         elements.inputText.value = data.inputText || '';
         elements.outputText.value = data.outputText || '';
         elements.cipherSelect.value = data.cipher || 'rot13';
+        state.cipher = data.cipher || 'rot13';
         elements.rotShift.value = data.rotShift || 13;
         elements.rotShiftVal.textContent = data.rotShift || 13;
+        state.rotShift = data.rotShift || 13;
         elements.vigenereKey.value = data.vigenereKey || 'KILO1999';
+        state.vigenereKey = data.vigenereKey || 'KILO1999';
         elements.vigenereKeepPunct.checked = data.vigenereKeepPunct !== false;
+        state.vigenereKeepPunct = data.vigenereKeepPunct !== false;
         elements.railCount.value = data.railCount || 3;
         elements.railCountVal.textContent = data.railCount || 3;
+        state.railCount = data.railCount || 3;
         elements.subAlphabet.value = data.subAlphabet || 'ZYXWVUTSRQPONMLKJIHGFEDCBA';
+        state.subAlphabet = data.subAlphabet || 'ZYXWVUTSRQPONMLKJIHGFEDCBA';
         elements.rc4Key.value = data.rc4Key || 'ARCHITECT_1999';
+        state.rc4Key = data.rc4Key || 'ARCHITECT_1999';
         elements.rc4Format.value = data.rc4Format || 'hex';
+        state.rc4Format = data.rc4Format || 'hex';
         elements.xorKey.value = data.xorKey || 'SECRET';
+        state.xorKey = data.xorKey || 'SECRET';
         elements.xorFormat.value = data.xorFormat || 'hex';
+        state.xorFormat = data.xorFormat || 'hex';
 
         if (data.theme) {
           document.body.dataset.theme = data.theme;
@@ -2411,6 +2463,7 @@
 
       document.getElementById('btnSendToStego').addEventListener('click', () => {
         document.getElementById('stegoText').value = elements.outputText.value || elements.inputText.value;
+        updateStegoCapacity();
         switchTab('tabStego');
       });
 
@@ -2429,16 +2482,19 @@
       // Steganography Controls
       document.getElementById('btnStegoPresetPlasma').addEventListener('click', () => {
         stegoEngine.drawPreset('plasma');
+        updateStegoCapacity();
         audio.playClick();
       });
 
       document.getElementById('btnStegoPresetGrid').addEventListener('click', () => {
         stegoEngine.drawPreset('grid');
+        updateStegoCapacity();
         audio.playClick();
       });
 
       document.getElementById('btnStegoPresetNoise').addEventListener('click', () => {
         stegoEngine.drawPreset('bars');
+        updateStegoCapacity();
         audio.playClick();
       });
 
@@ -2451,6 +2507,7 @@
         const text = document.getElementById('stegoText').value;
         const res = stegoEngine.encodeMessage(text);
         if (res.success) {
+          updateStegoCapacity();
           showToast(`Encoded ${res.bytes} bytes into image carrier!`);
           audio.playEncrypt();
         } else {
@@ -2463,6 +2520,7 @@
         const res = stegoEngine.decodeMessage();
         if (res.success) {
           document.getElementById('stegoText').value = res.text;
+          updateStegoCapacity();
           showToast(`Extracted ${res.bytes} bytes of secret text!`);
           audio.playDecrypt();
         } else {
@@ -2472,9 +2530,11 @@
       });
 
       document.getElementById('btnDownloadStego').addEventListener('click', () => {
+        stegoEngine.revertBitPlaneIfActive();
+        const canvas = document.getElementById('stegoCanvas');
         const a = document.createElement('a');
         a.download = 'kcipher_stego.png';
-        a.href = elements.stegoCanvas ? elements.stegoCanvas.toDataURL('image/png') : document.getElementById('stegoCanvas').toDataURL('image/png');
+        a.href = canvas.toDataURL('image/png');
         a.click();
         showToast('Stego PNG downloaded!');
         audio.playClick();
@@ -2496,6 +2556,9 @@
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             stegoEngine.originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             stegoEngine.isBitPlaneView = false;
+            const btn = document.getElementById('btnBitPlaneToggle');
+            if (btn) btn.textContent = '👁️ View Bit-Plane 0';
+            updateStegoCapacity();
             showToast('Carrier image loaded!');
             audio.playClick();
           };
@@ -2528,12 +2591,29 @@
         const activeIdx = Array.from(document.querySelectorAll('.lore-item')).findIndex(item => item.classList.contains('active'));
         const lore = LORE_INTERCEPTS[activeIdx];
         elements.inputText.value = lore.ciphertext;
+        elements.outputText.value = '';
         elements.cipherSelect.value = lore.cipher;
-        if (lore.key) {
-          if (lore.cipher === 'vigenere') elements.vigenereKey.value = lore.key;
-          if (lore.cipher === 'rc4') elements.rc4Key.value = lore.key;
+        state.cipher = lore.cipher;
+        if (lore.cipher === 'rot13') {
+          elements.rotShift.value = 13;
+          elements.rotShiftVal.textContent = '13';
+          state.rotShift = 13;
         }
-        if (lore.rails) elements.railCount.value = lore.rails;
+        if (lore.key) {
+          if (lore.cipher === 'vigenere') {
+            elements.vigenereKey.value = lore.key;
+            state.vigenereKey = lore.key;
+          }
+          if (lore.cipher === 'rc4') {
+            elements.rc4Key.value = lore.key;
+            state.rc4Key = lore.key;
+          }
+        }
+        if (lore.rails) {
+          elements.railCount.value = lore.rails;
+          elements.railCountVal.textContent = lore.rails;
+          state.railCount = lore.rails;
+        }
         updateCipherControls();
         updateStats();
         switchTab('tabWorkbench');
@@ -2546,10 +2626,36 @@
         elements.inputText.value = '';
         elements.outputText.value = '';
         elements.cipherSelect.value = 'rot13';
+        state.cipher = 'rot13';
         elements.rotShift.value = 13;
-        elements.rotShiftVal.textContent = 13;
+        elements.rotShiftVal.textContent = '13';
+        state.rotShift = 13;
+        elements.vigenereKey.value = 'KILO1999';
+        state.vigenereKey = 'KILO1999';
+        elements.vigenereKeepPunct.checked = true;
+        state.vigenereKeepPunct = true;
+        elements.railCount.value = 3;
+        elements.railCountVal.textContent = '3';
+        state.railCount = 3;
+        elements.subAlphabet.value = 'ZYXWVUTSRQPONMLKJIHGFEDCBA';
+        state.subAlphabet = 'ZYXWVUTSRQPONMLKJIHGFEDCBA';
+        elements.rc4Key.value = 'ARCHITECT_1999';
+        state.rc4Key = 'ARCHITECT_1999';
+        elements.rc4Format.value = 'hex';
+        state.rc4Format = 'hex';
+        elements.xorKey.value = 'SECRET';
+        state.xorKey = 'SECRET';
+        elements.xorFormat.value = 'hex';
+        state.xorFormat = 'hex';
+        const stegoText = document.getElementById('stegoText');
+        if (stegoText) stegoText.value = '';
+        const tbody = document.getElementById('crackerTableBody');
+        if (tbody) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">Click "Run Brute-Force Scan" to analyze current ciphertext across all 25 shift keys.</td></tr>';
+        }
         updateCipherControls();
         updateStats();
+        updateStegoCapacity();
         showToast('New Session initialized.');
         audio.playClick();
       });
@@ -2567,10 +2673,13 @@
           cipher: elements.cipherSelect.value,
           rotShift: state.rotShift,
           vigenereKey: state.vigenereKey,
+          vigenereKeepPunct: state.vigenereKeepPunct,
           railCount: state.railCount,
           subAlphabet: state.subAlphabet,
           rc4Key: state.rc4Key,
           rc4Format: state.rc4Format,
+          xorKey: state.xorKey,
+          xorFormat: state.xorFormat,
           timestamp: new Date().toISOString()
         };
         const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
@@ -2596,14 +2705,45 @@
             elements.inputText.value = data.inputText || '';
             elements.outputText.value = data.outputText || '';
             elements.cipherSelect.value = data.cipher || 'rot13';
+            state.cipher = data.cipher || 'rot13';
             if (data.rotShift) {
               elements.rotShift.value = data.rotShift;
               elements.rotShiftVal.textContent = data.rotShift;
+              state.rotShift = parseInt(data.rotShift, 10);
             }
-            if (data.vigenereKey) elements.vigenereKey.value = data.vigenereKey;
-            if (data.railCount) elements.railCount.value = data.railCount;
-            if (data.subAlphabet) elements.subAlphabet.value = data.subAlphabet;
-            if (data.rc4Key) elements.rc4Key.value = data.rc4Key;
+            if (data.vigenereKey) {
+              elements.vigenereKey.value = data.vigenereKey;
+              state.vigenereKey = data.vigenereKey;
+            }
+            if (typeof data.vigenereKeepPunct === 'boolean') {
+              elements.vigenereKeepPunct.checked = data.vigenereKeepPunct;
+              state.vigenereKeepPunct = data.vigenereKeepPunct;
+            }
+            if (data.railCount) {
+              elements.railCount.value = data.railCount;
+              elements.railCountVal.textContent = data.railCount;
+              state.railCount = parseInt(data.railCount, 10);
+            }
+            if (data.subAlphabet) {
+              elements.subAlphabet.value = data.subAlphabet;
+              state.subAlphabet = data.subAlphabet;
+            }
+            if (data.rc4Key) {
+              elements.rc4Key.value = data.rc4Key;
+              state.rc4Key = data.rc4Key;
+            }
+            if (data.rc4Format) {
+              elements.rc4Format.value = data.rc4Format;
+              state.rc4Format = data.rc4Format;
+            }
+            if (data.xorKey) {
+              elements.xorKey.value = data.xorKey;
+              state.xorKey = data.xorKey;
+            }
+            if (data.xorFormat) {
+              elements.xorFormat.value = data.xorFormat;
+              state.xorFormat = data.xorFormat;
+            }
             updateCipherControls();
             updateStats();
             showToast('JSON Session successfully loaded!');
@@ -2631,7 +2771,35 @@
         audio.playClick();
       });
 
-      // Keyboard Shortcuts (F5, F9, Ctrl+Enter, Escape)
+      // Toast Click-to-Dismiss
+      elements.toast.addEventListener('click', () => {
+        elements.toast.classList.remove('show');
+        if (toastTimeout) clearTimeout(toastTimeout);
+      });
+
+      // Modal Backdrop Click Dismissals
+      elements.tutorialOverlay.addEventListener('click', (e) => {
+        if (e.target === elements.tutorialOverlay) {
+          closeTutorial();
+          audio.playClick();
+        }
+      });
+
+      elements.splashOverlay.addEventListener('click', (e) => {
+        if (e.target === elements.splashOverlay) {
+          elements.splashOverlay.style.display = 'none';
+          audio.playClick();
+        }
+      });
+
+      // Window Resize Listener for Frequency Chart
+      window.addEventListener('resize', () => {
+        if (state.activeTab === 'tabFrequency') {
+          drawFrequencyChart();
+        }
+      });
+
+      // Keyboard Shortcuts (F5, F9, Ctrl+Enter, Ctrl+Shift+Enter, Escape, Ctrl+1..5)
       window.addEventListener('keydown', (e) => {
         if (e.key === 'F5') {
           e.preventDefault();
@@ -2639,19 +2807,37 @@
         } else if (e.key === 'F9') {
           e.preventDefault();
           quickLoadSession();
+        } else if (e.key === 'Enter' && e.ctrlKey && e.shiftKey) {
+          e.preventDefault();
+          runDecrypt();
         } else if (e.key === 'Enter' && e.ctrlKey) {
           e.preventDefault();
           runEncrypt();
         } else if (e.key === 'Escape') {
           if (elements.tutorialOverlay.style.display === 'flex') {
             closeTutorial();
+          } else if (elements.splashOverlay.style.display !== 'none') {
+            elements.splashOverlay.style.display = 'none';
+          }
+        } else if (e.ctrlKey && e.key >= '1' && e.key <= '5') {
+          const tabMap = {
+            '1': 'tabWorkbench',
+            '2': 'tabFrequency',
+            '3': 'tabCracker',
+            '4': 'tabStego',
+            '5': 'tabLore'
+          };
+          if (tabMap[e.key]) {
+            e.preventDefault();
+            switchTab(tabMap[e.key]);
           }
         }
       });
 
-      // Initial run
+      // Initial run & stego capacity
       updateCipherControls();
       updateStats();
+      updateStegoCapacity();
     });
   </script>
 </body>

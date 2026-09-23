@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KCipher
+  kilo_tester: KPomodoro
   kilo_usability: KClip
   kilo_graphics: KSubmarine
   kilo_qa: KVoid
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-creator
+  agent: kilo-tester
   app: KCipher
-  timestamp: "2026-09-23T03:55:00Z"
+  timestamp: "2026-09-23T05:52:00Z"
 last_planner_run: "2026-09-23T04:40:00Z"
 ---
 
@@ -97,9 +97,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KStarDredge`, `KAbyss`, `KColosseum`, `KCyber`, `KMech`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KCipher`
+- **Current Target**: `KPomodoro` (double-modal collision fix)
 - **Upcoming Queue**:
-  `KPomodoro` (double-modal collision fix), `KCalc` (toast blocking calculation buttons), `KHangman` (keyboard cutoff), `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`.
+  `KCalc` (toast blocking calculation buttons), `KHangman` (keyboard cutoff), `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KClip` (Resolve Quick-Start Tutorial modal backdrop collision with Reusable Snippets modal)
@@ -170,6 +170,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T05:52:00Z — kilo-tester: KCipher (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (6 UI/state issues resolved; 0 regressions).
+  - State Sync: Synchronized `state` across QuickLoad, JSON Import/Export, and Lore Transmissions.
+  - Modal & Backdrop: Added backdrop click dismissal to Tutorial and Splash overlays; wired Escape key across all modals.
+  - Toast Ergonomics: Repositioned toast from bottom-right (occluding buttons) to top-right with click-to-dismiss.
+  - Steganography & Bitplane: Added live capacity tracker, corrected RGB LSB capacity display, fixed bitplane view state leak.
+  - Controls & Shortcuts: Added `Ctrl+Shift+Enter` decrypt hotkey, `Ctrl+1..5` tab shortcuts, and bidirectional decrypt logic.
+  - Verification: Headless CDP test pass (58 elements, 0 errors, 60 FPS); Vite build clean; MSVC C build clean (9.2 KB).
+
 - **2026-09-23T03:55:00Z — kilo-creator: KCipher (Cryptographic Cipher Suite & Steganography Workbench)**
   - Status: PASS ✅ (New application created; native Win32 C + HTML5 web app registered in KiloOS).
   - Web App (kcipher.html, 94.5 KB): 6 ciphers (Caesar/ROT13, Vigenère, Rail Fence, Substitution, RC4, XOR), live frequency analyzer, IoC/Entropy meters, Caesar brute-force cracker, 1-bit LSB steganography engine, procedural Web Audio.
@@ -202,13 +211,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Vestigial Handle Cleanup: Removed dead 15x15 bottom-right div that lacked `dir` parameter and swallowed `se` resize events.
   - Hitbox Ergonomics: Expanded corner handles to 14x14px and edges to 8px; added `resizing` overlay guard.
   - Version Bump: Bumped to 0.4.4 in `KiloOS/package.json` and `App.jsx`. Vite build clean (230ms); lint 0 violations.
-
-- **2026-09-23T02:00:00Z — kilo-expander: KNote**
-  - Status: PASS ✅ (Multi-tab sessions, tag cloud, in-editor Find/Replace, speed formatting, multi-format export/import, Trash recovery).
-  - Multi-Tab Workspace: Added responsive tab strip, tab switching/closing, Ctrl+W, Ctrl+Tab, Ctrl+1..9 shortcuts, session persistence.
-  - Tag Indexing: Real-time #tag aggregator with clickable filter chips and counts; active filter badge with clear button.
-  - Find & Replace: In-editor search toolbar with live match counts, match case toggle, next/prev navigation, replace, replace all.
-  - Speed Formatting: Quick toolbar for Bold [Ctrl+B], Italic [Ctrl+I], code, tasks, timestamp [Alt+D], and markdown tables.
-  - Data Interoperability: Added RFC 4180 CSV spreadsheet export/import, vintage HTML dossier, Master Markdown Digest notebook.
-  - Trash & Recovery: Safe deletion holding notes in Trash with instant Undo toast and dedicated recovery manager.
-  - Verification: Native MSVC C (21.5 KB, added CSV export); Single-file HTML5 (98.8 KB); Vite clean build (229ms); security lint 0 violations.

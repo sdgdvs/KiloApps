@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-23T02:00:00Z — kilo-expander: KNote**
+  - Status: PASS ✅ (Multi-tab sessions, tag cloud, in-editor Find/Replace, speed formatting, multi-format export/import, Trash recovery).
+  - Multi-Tab Workspace: Added responsive tab strip, tab switching/closing, Ctrl+W, Ctrl+Tab, Ctrl+1..9 shortcuts, session persistence.
+  - Tag Indexing: Real-time #tag aggregator with clickable filter chips and counts; active filter badge with clear button.
+  - Find & Replace: In-editor search toolbar with live match counts, match case toggle, next/prev navigation, replace, replace all.
+  - Speed Formatting: Quick toolbar for Bold [Ctrl+B], Italic [Ctrl+I], code, tasks, timestamp [Alt+D], and markdown tables.
+  - Data Interoperability: Added RFC 4180 CSV spreadsheet export/import, vintage HTML dossier, Master Markdown Digest notebook.
+  - Trash & Recovery: Safe deletion holding notes in Trash with instant Undo toast and dedicated recovery manager.
+  - Verification: Native MSVC C (21.5 KB, added CSV export); Single-file HTML5 (98.8 KB); Vite clean build (229ms); security lint 0 violations.
+
 - **2026-09-23T01:15:00Z — kilo-creator: KFleet**
   - Status: PASS ✅ (Created new app KFleet: Fleet Telemetry Console).
   - Scope: Distributed fleet monitor with 8 nodes, tactical vector radar, multi-channel oscilloscope, CLI uplink.
