@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KCalc
+  kilo_tester: KHangman
   kilo_usability: "KHex (Weave Arc 1 Memory Offset IP Clue)"
   kilo_graphics: "KAbyss (Weave Arc 2 Precursor Relic Glyph)"
   kilo_qa: KZip
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-creator
-  app: "KSteno (Stenographic Carrier Suite & Dead-Drop Network)"
-  timestamp: "2026-09-23T16:45:00Z"
+  agent: kilo-tester
+  app: KCalc
+  timestamp: "2026-09-23T17:50:00Z"
 last_planner_run: "2026-09-23T04:40:00Z"
 ---
 
@@ -106,9 +106,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KColosseum`, `KCyber`, `KMech`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KCalc` (toast blocking calculation buttons)
+- **Current Target**: `KHangman` (keyboard cutoff)
 - **Upcoming Queue**:
-  `KHangman` (keyboard cutoff), `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`.
+  `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KHex` (Tab 2 label, scrollbar, row cutoff)
@@ -190,6 +190,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T17:50:00Z — kilo-tester: KCalc (Interactive UI Audit & Inline Fixes)**
+  - Status: PASS ✅ (6 UI/functional issues audited and fixed; 0 regressions).
+  - Quicksave & Load: Implemented full workspace snapshots across [F5] Save, [F9] Load, and header buttons (`kcalc_quicksave`).
+  - First-Run Tutorial: Added onboarding tutorial modal (`kcalc_tutorialSeen`) with Esc/Enter/Space/backdrop dismissal and Help access.
+  - Math & Keypad Fixes: Resolved modulo/percentage regex collision (`10 mod 3`), wired reciprocal `1/x` handler, and fixed multi-memory indicators.
+  - Toast & Validation: Eliminated 4-toast startup blitz (`silent=true`), added financial input bounds checking, and guarded `sendToCalc`.
+  - Data Portability: Added JSON workspace state export/import (`kcalc_workspace.json`) alongside CSV/TXT history tools.
+  - Verification: 15/15 node math/UI unit tests pass; MSVC C clean build (26.1 KB); Vite build clean (379ms); security lint clean; <999KB ceiling.
+
 - **2026-09-23T16:45:00Z — kilo-creator: KSteno (Stenographic Carrier Suite & Dead-Drop Network)**
   - Status: PASS ✅ (New app created: native Win32 C + HTML5 web app registered in KiloOS).
   - Web App (ksteno.html, 125.7 KB): Multi-carrier workbench: 1/2/4-bit image LSB (seeded PRNG), 16-bit PCM audio modulation, SNOW whitespace chaff, Chi-Square (χ²) PoVs steganalysis, Firebase RTDB global dead-drop network.
@@ -220,11 +229,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Balance Pass: Synchronized raider combat stats and bounty payouts in native C with web design specs (Skiff 90HP/450CR, Gunship 220HP/1100CR, Dread 450HP/2800CR).
   - Visual Polish: Cleaned asteroid ore crystal and ship cockpit glass geometry without rogue projectile-like artifacts.
   - Verification: MSVC C clean build (`KStarDredge.exe` 260.6 KB); single-file web (`kstardredge.html` 449.3 KB); Vite build clean (375ms); security lint 100% clean.
-
-- **2026-09-23T12:45:00Z — kilo-usability: KCalc (Toast Occlusion & Keypad Ergonomics Remediation)**
-  - Status: PASS ✅ (Eliminated keypad occlusion; verified non-overlapping layout and crisp interaction).
-  - Toast Repositioning: Moved toast container from bottom-center to top-right (`top: 58px; right: 18px`), preventing occlusion of Row 7 calculation buttons (`0`, `.`, `+`, `=`).
-  - Interaction Ergonomics: Added instant click-to-dismiss (`cursor: pointer`), auto-dismiss on keypad input (`append`, `clearAll`, `backspace`), and pruned max concurrent toasts.
-  - Accessibility & Polish: Added `role="status"` and `aria-live="polite"` attributes; tuned welcome toast duration to 3000ms.
-  - Verification: Vite build clean (374ms); native MSVC C build clean (26.1 KB); security lint clean; strictly within 999 KB ceiling.
 

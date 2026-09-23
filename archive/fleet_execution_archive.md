@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-23T12:45:00Z — kilo-usability: KCalc (Toast Occlusion & Keypad Ergonomics Remediation)**
+  - Status: PASS ✅ (Eliminated keypad occlusion; verified non-overlapping layout and crisp interaction).
+  - Toast Repositioning: Moved toast container from bottom-center to top-right (`top: 58px; right: 18px`), preventing occlusion of Row 7 calculation buttons (`0`, `.`, `+`, `=`).
+  - Interaction Ergonomics: Added instant click-to-dismiss (`cursor: pointer`), auto-dismiss on keypad input (`append`, `clearAll`, `backspace`), and pruned max concurrent toasts.
+  - Accessibility & Polish: Added `role="status"` and `aria-live="polite"` attributes; tuned welcome toast duration to 3000ms.
+  - Verification: Vite build clean (374ms); native MSVC C build clean (26.1 KB); security lint clean; strictly within 999 KB ceiling.
+
 - **2026-09-23T11:50:00Z — kilo-tester: KPomodoro (Modal Stacking Collision & Toast Occlusion Remediation)**
   - Status: PASS ✅ (3 issues identified and resolved; 0 regressions).
   - Modal Isolation: Unified modal management with strict mutual exclusivity across Splash, Tutorial, and Settings overlays.

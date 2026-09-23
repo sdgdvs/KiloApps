@@ -866,6 +866,8 @@
     </nav>
 
     <div class="header-controls">
+      <button class="badge-btn" onclick="quicksaveState()" title="Quicksave Workspace State (F5)">💾 Save [F5]</button>
+      <button class="badge-btn" onclick="quickloadState()" title="Restore Quicksaved State (F9)">📂 Load [F9]</button>
       <button class="badge-btn" onclick="openHelpModal()" title="Help & Keyboard Shortcuts (H / F1)">Help [F1]</button>
       <button id="degRadBtn" class="badge-btn active" onclick="toggleDegRad()" title="Toggle Degrees / Radians (D)">DEG</button>
       <button id="memBadge" class="badge-btn" onclick="openMemoryModal()" title="Memory Registers (M)">M: 0</button>
@@ -928,9 +930,9 @@
           <button class="calc-btn func" onclick="append('cbrt(')">∛</button>
           <button class="calc-btn func" onclick="append('^2')">x²</button>
           <button class="calc-btn func" onclick="append('^3')">x³</button>
-          <button class="calc-btn func" onclick="append('1/')">1/x</button>
+          <button class="calc-btn func" onclick="reciprocal()" title="Reciprocal (1/x)">1/x</button>
           <button class="calc-btn func" onclick="append('fact(')">n!</button>
-          <button class="calc-btn op" onclick="append('%')">mod</button>
+          <button class="calc-btn op" onclick="append(' mod ')" title="Modulo / Remainder">mod</button>
 
           <!-- Row 4: Keypad 7-9 -->
           <button class="calc-btn func" onclick="append('pi')">π</button>
@@ -1244,6 +1246,9 @@
             <input type="text" id="histSearch" class="search-input" placeholder="Search calculation history..." oninput="renderHistory()">
             <button class="action-btn" onclick="exportHistoryCSV()">Export CSV</button>
             <button class="action-btn" onclick="exportHistoryTXT()">Export TXT</button>
+            <button class="action-btn" onclick="exportStateJSON()" title="Export complete workspace snapshot JSON">Export JSON</button>
+            <button class="action-btn" onclick="importStateJSON()" title="Import workspace snapshot JSON">Import JSON</button>
+            <input type="file" id="stateFileInput" accept=".json" style="display:none;" onchange="handleStateFileImport(event)">
             <button class="action-btn danger" onclick="clearHistory()">Clear</button>
           </div>
 
@@ -1289,9 +1294,11 @@
           <tr><td><span class="kbd-key">Enter</span> or <span class="kbd-key">=</span></td><td>Evaluate formula, calculate expression, or submit form</td></tr>
           <tr><td><span class="kbd-key">Backspace</span></td><td>Delete previous character / function token</td></tr>
           <tr><td><span class="kbd-key">Esc</span></td><td>Clear display or close active modal</td></tr>
+          <tr><td><span class="kbd-key">F5</span></td><td>Quicksave full calculator workspace state snapshot</td></tr>
+          <tr><td><span class="kbd-key">F9</span></td><td>Quickload saved calculator workspace snapshot</td></tr>
           <tr><td><span class="kbd-key">Ctrl</span>+<span class="kbd-key">C</span></td><td>Copy current result / display to clipboard</td></tr>
           <tr><td><span class="kbd-key">Ctrl</span>+<span class="kbd-key">V</span></td><td>Paste numbers / expression from clipboard</td></tr>
-          <tr><td><span class="kbd-key">F9</span> or <span class="kbd-key">±</span></td><td>Toggle positive / negative sign (±)</td></tr>
+          <tr><td><span class="kbd-key">±</span></td><td>Toggle positive / negative sign (±)</td></tr>
           <tr><td><span class="kbd-key">D</span></td><td>Toggle Trigonometric Degrees / Radians mode</td></tr>
           <tr><td><span class="kbd-key">M</span></td><td>Open Memory Registers Management Dialog</td></tr>
           <tr><td><span class="kbd-key">H</span> or <span class="kbd-key">F1</span></td><td>Open this Help & Shortcuts Dialog</td></tr>
@@ -1299,7 +1306,10 @@
       </table>
     </div>
 
-    <button class="action-btn" style="background:var(--primary); color:#fff; align-self:flex-end;" onclick="closeModals()">Close Guide</button>
+    <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+      <button class="mini-btn" onclick="openTutorialModal()">✨ Show Tutorial</button>
+      <button class="action-btn" style="background:var(--primary); color:#fff;" onclick="closeModals()">Close Guide</button>
+    </div>
   </div>
 
   <!-- Memory Registers Modal -->
@@ -1354,6 +1364,36 @@
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
       <button class="mini-btn" onclick="clearAllMemRegisters()">Clear All Registers</button>
       <button class="action-btn" style="background:var(--primary); color:#fff;" onclick="closeModals()">Done</button>
+    </div>
+  </div>
+
+  <!-- First-Run Tutorial Onboarding Modal -->
+  <div id="tutorialModal" class="modal-content" style="display:none; max-width: 540px;">
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="logo-icon" style="width:20px; height:20px; font-size:11px;">✨</div>
+        <span>Welcome to KCalc Pro</span>
+      </div>
+      <button class="close-btn" onclick="closeTutorialModal()">✕</button>
+    </div>
+    
+    <div style="display: flex; flex-direction: column; gap: 12px; font-size: 12px; line-height: 1.5; color: var(--text-muted);">
+      <p style="margin:0; color:#fff; font-weight:600; font-size:13px;">
+        High-precision scientific, financial, and statistical calculation suite.
+      </p>
+      <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;">
+        <div><strong style="color:#818cf8;">1. Mode Navigation:</strong> Switch between <strong>Scientific</strong>, <strong>Financial</strong> (PMT/FV/Margin/CAGR), <strong>Statistics</strong> (1-Var & LinReg), <strong>Constants</strong>, and <strong>History Tape</strong> via tabs or <span class="kbd-key">1</span>–<span class="kbd-key">5</span>.</div>
+        <div><strong style="color:#818cf8;">2. Natural Formula Input:</strong> Type expressions directly in the <em>fx</em> bar (e.g. <code>sin(45) + sqrt(144)</code> or <code>10 mod 3</code>) or click the keypad.</div>
+        <div><strong style="color:#818cf8;">3. Workspace Quicksave:</strong> Press <span class="kbd-key">F5</span> anytime to quicksave your workspace, registers, and tape. Press <span class="kbd-key">F9</span> to instantly restore.</div>
+        <div><strong style="color:#818cf8;">4. Clipboard & Export:</strong> Click the main display or press <span class="kbd-key">Ctrl</span>+<span class="kbd-key">C</span> to copy results. Export tape logs to CSV, TXT, or JSON.</div>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px; flex-wrap: wrap; gap: 8px;">
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; cursor: pointer; user-select: none;">
+          <input type="checkbox" id="chkTutorialNeverAgain" checked style="accent-color: #6366f1;">
+          <span>Do not show again on startup</span>
+        </label>
+        <button class="action-btn" style="background:var(--primary); color:#fff;" onclick="closeTutorialModal()">Get Started [Enter / Esc]</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1422,15 +1462,24 @@
   ];
 
   // Initialize
+  let tutorialActive = false;
+
   document.addEventListener('DOMContentLoaded', () => {
     populateConstants();
-    render();
     loadHistoryFromStorage();
-    calcPMT();
-    calcFV();
-    calcMargin();
-    calcCAGR();
-    showToast("Welcome to KCalc Pro • Press 'H' or F1 for Help", 'info', 3000);
+    loadSessionState();
+    render();
+    calcPMT(true);
+    calcFV(true);
+    calcMargin(true);
+    calcCAGR(true);
+
+    const hasSeenTutorial = localStorage.getItem('kcalc_tutorialSeen') === 'true';
+    if (!hasSeenTutorial) {
+      setTimeout(openTutorialModal, 400);
+    } else {
+      showToast("Welcome to KCalc Pro • Press 'H' or F1 for Help", 'info', 2800);
+    }
   });
 
   // Toast Notification System
@@ -1485,11 +1534,13 @@
     }, duration);
   }
 
-  // Modals
+  // Modals Management
   function openHelpModal() {
     document.getElementById('modalOverlay').classList.add('active');
     document.getElementById('helpModal').style.display = 'flex';
     document.getElementById('memModal').style.display = 'none';
+    document.getElementById('tutorialModal').style.display = 'none';
+    tutorialActive = false;
   }
 
   function openMemoryModal() {
@@ -1497,12 +1548,40 @@
     document.getElementById('modalOverlay').classList.add('active');
     document.getElementById('memModal').style.display = 'flex';
     document.getElementById('helpModal').style.display = 'none';
+    document.getElementById('tutorialModal').style.display = 'none';
+    tutorialActive = false;
+  }
+
+  function openTutorialModal() {
+    tutorialActive = true;
+    document.getElementById('modalOverlay').classList.add('active');
+    document.getElementById('tutorialModal').style.display = 'flex';
+    document.getElementById('helpModal').style.display = 'none';
+    document.getElementById('memModal').style.display = 'none';
+  }
+
+  function closeTutorialModal() {
+    tutorialActive = false;
+    document.getElementById('tutorialModal').style.display = 'none';
+    if (document.getElementById('helpModal').style.display !== 'flex' &&
+        document.getElementById('memModal').style.display !== 'flex') {
+      document.getElementById('modalOverlay').classList.remove('active');
+    }
+    const chk = document.getElementById('chkTutorialNeverAgain');
+    if (!chk || chk.checked) {
+      try { localStorage.setItem('kcalc_tutorialSeen', 'true'); } catch {}
+    }
   }
 
   function closeModals() {
+    if (tutorialActive) {
+      closeTutorialModal();
+    }
     document.getElementById('modalOverlay').classList.remove('active');
     document.getElementById('helpModal').style.display = 'none';
     document.getElementById('memModal').style.display = 'none';
+    document.getElementById('tutorialModal').style.display = 'none';
+    tutorialActive = false;
   }
 
   function handleBackdropClick(e) {
@@ -1609,7 +1688,7 @@
     justCalculated = false;
     if (expr === 'Error' || expr.startsWith('ERR')) { expr = ''; render(); return; }
     
-    const keywords = ['sin(', 'cos(', 'tan(', 'asin(', 'acos(', 'atan(', 'ln(', 'log(', 'log2(', 'sqrt(', 'cbrt(', 'fact(', 'abs(', 'floor(', 'ceil(', '10^(', 'e^(', '^2', '^3', 'rnd', 'Ans'];
+    const keywords = ['sin(', 'cos(', 'tan(', 'asin(', 'acos(', 'atan(', 'ln(', 'log(', 'log2(', 'sqrt(', 'cbrt(', 'fact(', 'abs(', 'floor(', 'ceil(', '10^(', 'e^(', '^2', '^3', 'rnd', 'Ans', ' mod '];
     let removed = false;
     for (let k of keywords) {
       if (expr.endsWith(k)) {
@@ -1624,7 +1703,21 @@
     render();
   }
 
+  function reciprocal() {
+    dismissActiveToasts();
+    if (!expr || expr === '0') {
+      expr = '1/';
+    } else if (expr === 'Error' || expr.startsWith('ERR')) {
+      expr = '1/';
+    } else {
+      expr = `1/(${expr})`;
+    }
+    justCalculated = false;
+    render();
+  }
+
   function toggleSign() {
+    dismissActiveToasts();
     justCalculated = false;
     if (!expr) { expr = '-'; }
     else if (expr.startsWith('-')) { expr = expr.substring(1); }
@@ -1651,13 +1744,176 @@
     const memChip = document.getElementById('memChip');
     const memBadge = document.getElementById('memBadge');
     memBadge.textContent = 'M: ' + (Number.isInteger(memoryStore) ? memoryStore : Number(memoryStore.toFixed(2)));
-    if (memoryStore !== 0) {
+    const hasAnyMem = (memoryStore !== 0 || multiMemory.M1 !== 0 || multiMemory.M2 !== 0 || multiMemory.M3 !== 0);
+    if (hasAnyMem) {
       memChip.style.display = 'inline-block';
       memBadge.classList.add('active');
     } else {
       memChip.style.display = 'none';
       memBadge.classList.remove('active');
     }
+
+    autoSaveSession();
+  }
+
+  // Session & Workspace Persistence
+  function autoSaveSession() {
+    try {
+      const state = {
+        expr,
+        lastAns,
+        memoryStore,
+        multiMemory: { ...multiMemory },
+        isDeg,
+        activeViewName
+      };
+      localStorage.setItem('kcalc_session', JSON.stringify(state));
+    } catch {}
+  }
+
+  function loadSessionState() {
+    try {
+      const raw = localStorage.getItem('kcalc_session');
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (s.expr !== undefined) expr = String(s.expr);
+        if (s.lastAns !== undefined) lastAns = Number(s.lastAns);
+        if (s.memoryStore !== undefined) memoryStore = Number(s.memoryStore);
+        if (s.multiMemory && typeof s.multiMemory === 'object') {
+          multiMemory = {
+            M1: Number(s.multiMemory.M1) || 0,
+            M2: Number(s.multiMemory.M2) || 0,
+            M3: Number(s.multiMemory.M3) || 0
+          };
+        }
+        if (s.isDeg !== undefined) {
+          isDeg = Boolean(s.isDeg);
+          const btn = document.getElementById('degRadBtn');
+          const chip = document.getElementById('angleChip');
+          if (btn) { btn.textContent = isDeg ? 'DEG' : 'RAD'; btn.classList.toggle('active', isDeg); }
+          if (chip) { chip.textContent = isDeg ? 'DEG' : 'RAD'; chip.classList.toggle('highlight', isDeg); }
+        }
+        if (s.activeViewName && s.activeViewName !== 'scientific') {
+          switchView(s.activeViewName);
+        }
+      }
+    } catch {}
+  }
+
+  function getFullStateSnapshot() {
+    return {
+      version: 1,
+      timestamp: Date.now(),
+      expr: expr,
+      lastAns: lastAns,
+      memoryStore: memoryStore,
+      multiMemory: { ...multiMemory },
+      isDeg: isDeg,
+      activeViewName: activeViewName,
+      historyTape: [...historyTape],
+      subDisp: document.getElementById('subDisp')?.textContent || ''
+    };
+  }
+
+  function restoreFullStateSnapshot(snap) {
+    if (!snap || typeof snap !== 'object') return false;
+    if (snap.expr !== undefined) expr = String(snap.expr);
+    if (snap.lastAns !== undefined) lastAns = Number(snap.lastAns);
+    if (snap.memoryStore !== undefined) memoryStore = Number(snap.memoryStore);
+    if (snap.multiMemory && typeof snap.multiMemory === 'object') {
+      multiMemory = {
+        M1: Number(snap.multiMemory.M1) || 0,
+        M2: Number(snap.multiMemory.M2) || 0,
+        M3: Number(snap.multiMemory.M3) || 0
+      };
+    }
+    if (snap.isDeg !== undefined) {
+      isDeg = Boolean(snap.isDeg);
+      const btn = document.getElementById('degRadBtn');
+      const chip = document.getElementById('angleChip');
+      if (btn) { btn.textContent = isDeg ? 'DEG' : 'RAD'; btn.classList.toggle('active', isDeg); }
+      if (chip) { chip.textContent = isDeg ? 'DEG' : 'RAD'; chip.classList.toggle('highlight', isDeg); }
+    }
+    if (Array.isArray(snap.historyTape)) {
+      historyTape = snap.historyTape;
+      saveHistoryToStorage();
+      renderHistory();
+    }
+    if (snap.subDisp && document.getElementById('subDisp')) {
+      document.getElementById('subDisp').textContent = snap.subDisp;
+    }
+    if (snap.activeViewName) {
+      switchView(snap.activeViewName);
+    } else {
+      render();
+    }
+    updateModalMemVals();
+    return true;
+  }
+
+  function quicksaveState() {
+    try {
+      const snap = getFullStateSnapshot();
+      localStorage.setItem('kcalc_quicksave', JSON.stringify(snap));
+      showToast('★ Calculator workspace snapshot saved [F5]', 'success', 2500);
+      return true;
+    } catch {
+      showToast('⚠️ Failed to save quicksave data', 'warning');
+      return false;
+    }
+  }
+
+  function quickloadState() {
+    try {
+      const raw = localStorage.getItem('kcalc_quicksave');
+      if (!raw) {
+        showToast('⚠️ No quicksave snapshot found [Press F5 to save first]', 'warning', 2500);
+        return false;
+      }
+      const snap = JSON.parse(raw);
+      if (restoreFullStateSnapshot(snap)) {
+        showToast('★ Restored quicksaved workspace [F9]', 'success', 2500);
+        return true;
+      }
+      showToast('⚠️ Quicksave data format was invalid', 'warning');
+      return false;
+    } catch {
+      showToast('⚠️ Failed to restore quicksave data', 'warning');
+      return false;
+    }
+  }
+
+  function exportStateJSON() {
+    const snap = getFullStateSnapshot();
+    downloadFile('kcalc_workspace.json', JSON.stringify(snap, null, 2), 'application/json');
+    showToast('Exported workspace to kcalc_workspace.json', 'success');
+  }
+
+  function importStateJSON() {
+    const fi = document.getElementById('stateFileInput');
+    if (fi) {
+      fi.value = '';
+      fi.click();
+    }
+  }
+
+  function handleStateFileImport(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const snap = JSON.parse(evt.target.result);
+        if (restoreFullStateSnapshot(snap)) {
+          showToast('Successfully imported calculator workspace', 'success');
+        } else {
+          showToast('Invalid workspace file format', 'error');
+        }
+      } catch {
+        showToast('Could not parse workspace JSON', 'error');
+      }
+    };
+    reader.readAsText(file);
   }
 
   // Memory functions
@@ -1741,7 +1997,7 @@
     sanitized = sanitized.replace(/\bmod\b/gi, '%');
 
     // Support percentage e.g. 50% -> (50/100) only when not used as binary modulo operator
-    sanitized = sanitized.replace(/(\d+(?:\.\d+)?|\([^\)]+\))%(?=[^0-9a-zA-Z(]|$)/g, '($1/100)');
+    sanitized = sanitized.replace(/(\d+(?:\.\d+)?|\([^\)]+\))%(?=\s*(?:[\+\-\*\/\^\),]|}|$))/g, '($1/100)');
 
     // Support standalone rnd token e.g. rnd -> rnd() or 5*rnd -> 5*rnd()
     sanitized = sanitized.replace(/\brnd\b(?!\()/g, 'rnd()');
@@ -1866,77 +2122,85 @@
     });
   }
 
-  function calcPMT() {
+  function calcPMT(silent = false) {
     const P = parseFloat(document.getElementById('pmt-principal').value);
     const rPct = parseFloat(document.getElementById('pmt-rate').value);
     const years = parseFloat(document.getElementById('pmt-years').value);
     const r = (rPct / 100) / 12;
     const n = years * 12;
 
-    if (P > 0 && n > 0 && rPct >= 0) {
-      let pmt = 0;
-      if (r === 0) {
-        pmt = P / n;
-      } else {
-        pmt = (P * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-      }
-      const totalPaid = pmt * n;
-      const totalInterest = totalPaid - P;
-
-      const pmtElem = document.getElementById('pmt-res');
-      pmtElem.textContent = '$' + pmt.toFixed(2);
-      pmtElem.dataset.rawVal = pmt.toFixed(4);
-      document.getElementById('pmt-total-interest').textContent = `Total Interest: $${Math.max(0, totalInterest).toFixed(2)}`;
-      showToast(`PMT Calculated: $${pmt.toFixed(2)}/mo`, 'success');
+    if (isNaN(P) || P <= 0 || isNaN(rPct) || rPct < 0 || isNaN(years) || years <= 0) {
+      if (!silent) showToast('Please enter valid positive numbers for Principal, Rate, and Years', 'warning');
+      return;
     }
+    let pmt = 0;
+    if (r === 0) {
+      pmt = P / n;
+    } else {
+      pmt = (P * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+    }
+    const totalPaid = pmt * n;
+    const totalInterest = totalPaid - P;
+
+    const pmtElem = document.getElementById('pmt-res');
+    pmtElem.textContent = '$' + pmt.toFixed(2);
+    pmtElem.dataset.rawVal = pmt.toFixed(4);
+    document.getElementById('pmt-total-interest').textContent = `Total Interest: $${Math.max(0, totalInterest).toFixed(2)}`;
+    if (!silent) showToast(`PMT Calculated: $${pmt.toFixed(2)}/mo`, 'success');
   }
 
-  function calcFV() {
+  function calcFV(silent = false) {
     const P = parseFloat(document.getElementById('fv-principal').value);
     const r = parseFloat(document.getElementById('fv-rate').value) / 100;
     const t = parseFloat(document.getElementById('fv-years').value);
     const n = parseFloat(document.getElementById('fv-freq').value);
 
-    if (P >= 0 && r >= 0 && t > 0 && n > 0) {
-      const fv = P * Math.pow(1 + (r / n), n * t);
-      const fvElem = document.getElementById('fv-res');
-      fvElem.textContent = '$' + fv.toFixed(2);
-      fvElem.dataset.rawVal = fv.toFixed(4);
-      document.getElementById('fv-growth').textContent = `Total Growth: $${(fv - P).toFixed(2)}`;
-      showToast(`Future Value: $${fv.toFixed(2)}`, 'success');
+    if (isNaN(P) || P < 0 || isNaN(r) || r < 0 || isNaN(t) || t <= 0 || isNaN(n) || n <= 0) {
+      if (!silent) showToast('Please enter valid positive numbers for Principal, Rate, and Period', 'warning');
+      return;
     }
+    const fv = P * Math.pow(1 + (r / n), n * t);
+    const fvElem = document.getElementById('fv-res');
+    fvElem.textContent = '$' + fv.toFixed(2);
+    fvElem.dataset.rawVal = fv.toFixed(4);
+    document.getElementById('fv-growth').textContent = `Total Growth: $${(fv - P).toFixed(2)}`;
+    if (!silent) showToast(`Future Value: $${fv.toFixed(2)}`, 'success');
   }
 
-  function calcMargin() {
+  function calcMargin(silent = false) {
     const cost = parseFloat(document.getElementById('margin-cost').value);
     const sell = parseFloat(document.getElementById('margin-sell').value);
 
-    if (cost >= 0 && sell > 0) {
-      const profit = sell - cost;
-      const marginPct = (profit / sell) * 100;
-      const markupPct = cost > 0 ? (profit / cost) * 100 : 0;
-
-      const profitElem = document.getElementById('margin-profit');
-      profitElem.textContent = '$' + profit.toFixed(2);
-      profitElem.dataset.rawVal = profit.toFixed(2);
-      document.getElementById('margin-pct').textContent = `Margin: ${marginPct.toFixed(2)}%`;
-      document.getElementById('markup-pct').textContent = `Markup: ${markupPct.toFixed(2)}%`;
-      showToast(`Gross Profit: $${profit.toFixed(2)} (${marginPct.toFixed(1)}% margin)`, 'success');
+    if (isNaN(cost) || cost < 0 || isNaN(sell) || sell <= 0) {
+      if (!silent) showToast('Please enter valid positive numbers for Cost and Selling Price', 'warning');
+      return;
     }
+    const profit = sell - cost;
+    const marginPct = (profit / sell) * 100;
+    const markupPct = cost > 0 ? (profit / cost) * 100 : 0;
+
+    const profitElem = document.getElementById('margin-profit');
+    profitElem.textContent = '$' + profit.toFixed(2);
+    profitElem.dataset.rawVal = profit.toFixed(2);
+    document.getElementById('margin-pct').textContent = `Margin: ${marginPct.toFixed(2)}%`;
+    document.getElementById('markup-pct').textContent = `Markup: ${markupPct.toFixed(2)}%`;
+    if (!silent) showToast(`Gross Profit: $${profit.toFixed(2)} (${marginPct.toFixed(1)}% margin)`, 'success');
   }
 
-  function calcCAGR() {
+  function calcCAGR(silent = false) {
     const startVal = parseFloat(document.getElementById('cagr-start').value);
     const endVal = parseFloat(document.getElementById('cagr-end').value);
     const years = parseFloat(document.getElementById('cagr-years').value);
 
-    if (startVal > 0 && endVal > 0 && years > 0) {
-      const cagr = (Math.pow(endVal / startVal, 1 / years) - 1) * 100;
-      const cagrElem = document.getElementById('cagr-res');
-      cagrElem.textContent = cagr.toFixed(2) + '%';
-      cagrElem.dataset.rawVal = cagr.toFixed(4);
-      showToast(`CAGR Rate: ${cagr.toFixed(2)}%`, 'success');
+    if (isNaN(startVal) || startVal <= 0 || isNaN(endVal) || endVal <= 0 || isNaN(years) || years <= 0) {
+      if (!silent) showToast('Please enter valid positive numbers for Initial, Final, and Period', 'warning');
+      return;
     }
+    const cagr = (Math.pow(endVal / startVal, 1 / years) - 1) * 100;
+    const cagrElem = document.getElementById('cagr-res');
+    cagrElem.textContent = cagr.toFixed(2) + '%';
+    cagrElem.dataset.rawVal = cagr.toFixed(4);
+    if (!silent) showToast(`CAGR Rate: ${cagr.toFixed(2)}%`, 'success');
   }
 
   // Statistics & Regression Suite Logic
@@ -2131,19 +2395,28 @@
 
   function predictRegressionY() {
     const xInput = parseFloat(document.getElementById('reg-pred-x').value);
-    if (!isNaN(xInput)) {
+    const predYElem = document.getElementById('reg-pred-y');
+    if (!isNaN(xInput) && currentRegModel && !isNaN(currentRegModel.m)) {
       const yPred = currentRegModel.m * xInput + currentRegModel.b;
-      document.getElementById('reg-pred-y').textContent = yPred.toFixed(4);
+      predYElem.textContent = yPred.toFixed(4);
+    } else {
+      predYElem.textContent = '-';
     }
   }
 
   function sendToCalc(val) {
-    if (val !== undefined && val !== null && val !== '') {
-      switchView('scientific');
-      expr = String(val).trim();
-      render();
-      showToast(`Loaded ${val} into Calculator`, 'info');
+    if (val !== undefined && val !== null && val !== '' && val !== '-') {
+      const cleanVal = String(val).replace(/[$,%]/g, '').trim();
+      if (!isNaN(parseFloat(cleanVal))) {
+        switchView('scientific');
+        expr = cleanVal;
+        justCalculated = false;
+        render();
+        showToast(`Loaded ${cleanVal} into Calculator`, 'info');
+        return;
+      }
     }
+    showToast('No valid numeric value to load', 'warning');
   }
 
   // Constants Library Populate
@@ -2299,6 +2572,15 @@
 
   // Global Keyboard Shortcuts
   document.addEventListener('keydown', (e) => {
+    // Tutorial modal dismissal shortcuts
+    if (tutorialActive) {
+      if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        closeTutorialModal();
+        return;
+      }
+    }
+
     // If modal is open and Esc pressed, close modal
     if (document.getElementById('modalOverlay').classList.contains('active')) {
       if (e.key === 'Escape') {
@@ -2308,7 +2590,21 @@
       return;
     }
 
-    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'TEXTAREA') return;
+    const isInput = ['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName);
+
+    if (e.key === 'F5') {
+      e.preventDefault();
+      quicksaveState();
+      return;
+    }
+
+    if (e.key === 'F9') {
+      e.preventDefault();
+      quickloadState();
+      return;
+    }
+
+    if (isInput) return;
 
     if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
       e.preventDefault();
@@ -2325,12 +2621,6 @@
     if (e.key === 'm' || e.key === 'M') {
       e.preventDefault();
       openMemoryModal();
-      return;
-    }
-
-    if (e.key === 'F9') {
-      e.preventDefault();
-      toggleSign();
       return;
     }
 
