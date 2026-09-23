@@ -35,6 +35,20 @@ This skill executes content depth, visual polish, or balance passes on exactly O
    - On every pass, run `python scripts/check_icons.py` to audit icon uniqueness across all applications in `KiloOS/src/App.jsx`.
    - Ensure every app possesses a unique, distinctive 32x32 `.ico` file in `KiloOS/public/assets/icons/`. Reusing icons or copying existing `.ico` files is strictly prohibited.
    - If missing or duplicate icon hashes are detected, run `python scripts/check_icons.py --fix` (or generate unique pixel art) to ensure 100% icon uniqueness across the fleet.
+7. **🖼️ 2D Sprite Sheet & Seamless Texture Pipeline (Technical Game Asset Pipeline)**:
+   - When generating or expanding sprite animations and environment terrain textures for 2D games, execute the standardized 2-stage asset pipeline:
+   - **Stage 1 (Asset Generation via `generate_image`)**:
+     - *Character Sprites / Run Cycles*: Orthographic 2D view, flat diffuse lighting, zero directional/floor shadows, solid magenta (`#FF00FF`) background, 1:1 aspect ratio, 1024x1024. Keep character visual tokens consistent across all prompts.
+     - *Terrain / Ground Textures*: "Seamless tileable texture, top-down albedo map, orthographic projection, no vignette, uniform diffuse lighting, 1024x1024".
+   - **Stage 2 (Automated Post-Processing via `scripts/asset_pipeline.py`)**:
+     - *Sprites*: `uv run scripts/asset_pipeline.py process-sprites --frames <f1> <f2> ... --out-strip <strip.png> --out-atlas <atlas.json> --box-size 128`
+       - Keys out `#FF00FF` to `alpha = 0` (32-bit RGBA) with despill and dark fringe cleanup.
+       - Auto-crops and centers each sprite into a uniform 128x128 bounding box.
+       - Packs frames into a horizontal sprite sheet (e.g. 512x128 `run_strip4.png`).
+       - Generates accompanying Phaser/Unity-compatible JSON coordinate atlas.
+     - *Textures*: `uv run scripts/asset_pipeline.py process-texture --input <raw.jpg> --out-seamless <path.png> [--quantize 256]`
+       - Applies `ImageChops.offset(512, 512)` seam test and blends quadrant seams to guarantee mathematical tileability.
+       - Use `--quantize 256` if needed to guarantee the texture remains strictly below the `< 999 KB` size ceiling.
 
 ## Verification
 1. Verify web app build: `cd KiloOS && npm run build`.
