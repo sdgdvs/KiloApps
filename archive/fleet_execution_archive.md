@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-23T05:52:00Z — kilo-tester: KCipher (Interactive UI Audit & Inline Repairs)**
+  - Status: PASS ✅ (6 UI/state issues resolved; 0 regressions).
+  - State Sync: Synchronized `state` across QuickLoad, JSON Import/Export, and Lore Transmissions.
+  - Modal & Backdrop: Added backdrop click dismissal to Tutorial and Splash overlays; wired Escape key across all modals.
+  - Toast Ergonomics: Repositioned toast from bottom-right (occluding buttons) to top-right with click-to-dismiss.
+  - Steganography & Bitplane: Added live capacity tracker, corrected RGB LSB capacity display, fixed bitplane view state leak.
+  - Controls & Shortcuts: Added `Ctrl+Shift+Enter` decrypt hotkey, `Ctrl+1..5` tab shortcuts, and bidirectional decrypt logic.
+  - Verification: Headless CDP test pass (58 elements, 0 errors, 60 FPS); Vite build clean; MSVC C build clean (9.2 KB).
+
 - **2026-09-23T03:55:00Z — kilo-creator: KCipher (Cryptographic Cipher Suite & Steganography Workbench)**
   - Status: PASS ✅ (New application created; native Win32 C + HTML5 web app registered in KiloOS).
   - Web App (kcipher.html, 94.5 KB): 6 ciphers (Caesar/ROT13, Vigenère, Rail Fence, Substitution, RC4, XOR), live frequency analyzer, IoC/Entropy meters, Caesar brute-force cracker, 1-bit LSB steganography engine, procedural Web Audio.

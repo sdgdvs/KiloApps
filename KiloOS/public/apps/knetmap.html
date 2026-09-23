@@ -1,0 +1,2713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KNetMap - Subnet Topology Visualizer &amp; Network Simulator</title>
+<style>
+  :root {
+    --bg: #080d19;
+    --panel-bg: rgba(14, 23, 42, 0.92);
+    --panel-border: rgba(56, 189, 248, 0.25);
+    --panel-border-subtle: rgba(255, 255, 255, 0.08);
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+    --cyan: #00f0ff;
+    --cyan-hover: #38bdf8;
+    --emerald: #10b981;
+    --amber: #f59e0b;
+    --rose: #f43f5e;
+    --purple: #a855f7;
+    --blue: #3b82f6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* TOP APP BAR */
+  .app-header {
+    height: 44px;
+    background: #0b1120;
+    border-bottom: 1px solid var(--panel-border);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 10px;
+    z-index: 20;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  }
+  .app-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--cyan);
+    letter-spacing: 0.5px;
+    font-family: "Consolas", monospace;
+  }
+  .app-title svg { width: 20px; height: 20px; fill: var(--cyan); }
+  .badge-ver {
+    background: rgba(0, 240, 255, 0.15);
+    color: var(--cyan);
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 240, 255, 0.3);
+  }
+  .header-divider { width: 1px; height: 22px; background: var(--panel-border-subtle); }
+  
+  .status-cluster {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 11px;
+    font-family: "Consolas", monospace;
+    color: var(--text-muted);
+  }
+  .status-item { display: flex; align-items: center; gap: 5px; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--emerald); }
+  .status-dot.pulse { animation: statusPulse 1.6s infinite ease-in-out; }
+  @keyframes statusPulse {
+    0%, 100% { opacity: 0.4; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.15); }
+  }
+
+  .header-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text);
+    padding: 4px 9px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+    font-family: inherit;
+  }
+  .btn:hover { background: rgba(51, 65, 85, 0.95); border-color: var(--cyan); color: #fff; }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary { background: #0369a1; border-color: #38bdf8; color: #fff; }
+  .btn-primary:hover { background: #0284c7; box-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
+  .btn-success { background: #065f46; border-color: #34d399; color: #fff; }
+  .btn-success:hover { background: #047857; }
+  .btn-danger { background: #9f1239; border-color: #fb7185; color: #fff; }
+  .btn-danger:hover { background: #be123c; }
+  .btn-purple { background: #581c87; border-color: #c084fc; color: #fff; }
+  .btn-purple:hover { background: #6b21a8; }
+  .btn-active { background: #0e7490 !important; border-color: var(--cyan) !important; color: #fff !important; }
+  .btn-icon { padding: 4px 6px; }
+
+  /* SUB-TOOLBAR / CIDR STRIP */
+  .cidr-strip {
+    background: #0d1527;
+    border-bottom: 1px solid var(--panel-border-subtle);
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 11px;
+    font-family: "Consolas", monospace;
+    z-index: 10;
+  }
+  .cidr-label { color: var(--text-dim); text-transform: uppercase; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; }
+  .cidr-bar-container {
+    flex: 1;
+    height: 18px;
+    background: #1e293b;
+    border-radius: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    overflow: hidden;
+    position: relative;
+  }
+  .cidr-slice {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9.5px;
+    color: #fff;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+    border-right: 1px solid rgba(0,0,0,0.3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 4px;
+  }
+  .cidr-slice:hover { filter: brightness(1.25); }
+
+  /* MAIN LAYOUT (PALETTE + CANVAS + TERMINAL) */
+  .workspace {
+    flex: 1;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* LEFT TOOL PALETTE */
+  .palette {
+    width: 175px;
+    background: #090e1a;
+    border-right: 1px solid var(--panel-border-subtle);
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    gap: 12px;
+    z-index: 15;
+    overflow-y: auto;
+  }
+  .palette-section-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .tool-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .tool-btn {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: all 0.15s ease;
+    text-align: left;
+    font-family: inherit;
+  }
+  .tool-btn:hover { background: rgba(30, 41, 59, 0.8); border-color: rgba(56, 189, 248, 0.4); color: #fff; }
+  .tool-btn.active {
+    background: rgba(6, 182, 212, 0.18);
+    border-color: var(--cyan);
+    color: var(--cyan);
+    font-weight: 600;
+  }
+  .tool-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+  
+  .cable-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .cable-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10.5px;
+    padding: 4px 6px;
+    border-radius: 3px;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid transparent;
+    cursor: pointer;
+  }
+  .cable-option:hover { background: rgba(30, 41, 59, 0.7); }
+  .cable-option.active { border-color: var(--cyan); background: rgba(0, 240, 255, 0.1); }
+  .cable-color-chip { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* CANVAS CONTAINER */
+  .canvas-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: #060a14;
+  }
+  canvas#netCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: default;
+  }
+  
+  /* FLOATING CANVAS OVERLAYS */
+  .canvas-hud {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border-subtle);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-family: "Consolas", monospace;
+    font-size: 10.5px;
+    color: var(--text-muted);
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    backdrop-filter: blur(8px);
+    z-index: 5;
+  }
+  .hud-row { display: flex; justify-content: space-between; gap: 12px; }
+  .hud-val { color: var(--cyan); font-weight: 600; }
+
+  .canvas-controls {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 5;
+  }
+  .canvas-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border-subtle);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    backdrop-filter: blur(8px);
+    transition: all 0.15s;
+  }
+  .canvas-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  /* BOTTOM DRAWER / CONSOLE & SNIFFER */
+  .bottom-drawer {
+    height: 180px;
+    background: #080d19;
+    border-top: 1px solid var(--panel-border-subtle);
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+    transition: height 0.2s ease;
+  }
+  .bottom-drawer.collapsed { height: 26px; }
+  .drawer-tabs {
+    height: 26px;
+    background: #0b1120;
+    border-bottom: 1px solid var(--panel-border-subtle);
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    gap: 4px;
+  }
+  .drawer-tab {
+    padding: 3px 10px;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 3px 3px 0 0;
+    border-bottom: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: inherit;
+  }
+  .drawer-tab:hover { color: #fff; }
+  .drawer-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); background: rgba(0, 240, 255, 0.06); }
+  .drawer-tab-badge { background: rgba(255,255,255,0.1); padding: 1px 4px; border-radius: 3px; font-size: 9px; }
+  
+  .drawer-actions { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+  .drawer-action-btn { background: none; border: none; color: var(--text-dim); cursor: pointer; padding: 2px; }
+  .drawer-action-btn:hover { color: #fff; }
+
+  .drawer-content { flex: 1; overflow: hidden; display: flex; }
+  .drawer-pane { flex: 1; display: none; overflow: auto; padding: 6px; font-family: "Consolas", monospace; font-size: 11px; }
+  .drawer-pane.active { display: flex; flex-direction: column; }
+
+  /* PACKET SNIFFER TABLE */
+  .sniffer-table { width: 100%; border-collapse: collapse; text-align: left; }
+  .sniffer-table th {
+    position: sticky; top: 0; background: #0e172a; padding: 4px 6px; font-size: 10px;
+    color: var(--text-dim); border-bottom: 1px solid var(--panel-border-subtle); font-weight: 700;
+  }
+  .sniffer-table td { padding: 3px 6px; border-bottom: 1px solid rgba(255,255,255,0.03); white-space: nowrap; }
+  .sniffer-table tr:hover td { background: rgba(255,255,255,0.04); }
+  .proto-badge {
+    display: inline-block; padding: 1px 4px; border-radius: 3px; font-size: 9.5px; font-weight: 700;
+  }
+  .proto-icmp { background: rgba(0, 240, 255, 0.2); color: #22d3ee; }
+  .proto-tcp { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+  .proto-udp { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+  .proto-arp { background: rgba(168, 85, 247, 0.2); color: #c084fc; }
+
+  /* TERMINAL LOG */
+  .terminal-log {
+    flex: 1;
+    overflow-y: auto;
+    color: #34d399;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    padding: 4px;
+  }
+  .term-info { color: #38bdf8; }
+  .term-warn { color: #f59e0b; }
+  .term-err { color: #f43f5e; }
+  .term-sys { color: #94a3b8; }
+
+  /* NODE INSPECTOR DRAWER */
+  .node-inspector {
+    display: flex;
+    gap: 12px;
+    height: 100%;
+    width: 100%;
+  }
+  .inspector-card {
+    flex: 1;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--panel-border-subtle);
+    border-radius: 4px;
+    padding: 8px;
+    overflow-y: auto;
+  }
+  .inspector-title { font-size: 11px; font-weight: 700; color: var(--cyan); margin-bottom: 6px; }
+  .kv-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 11px; }
+  .kv-key { color: var(--text-dim); }
+  .kv-val { color: var(--text); font-weight: 500; }
+
+  /* MODALS & OVERLAYS */
+  .modal-backdrop {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(6px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal-backdrop.active { display: flex; }
+  .modal-box {
+    background: #0f172a;
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+    width: 90%;
+    max-width: 580px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-header {
+    background: #0b1120;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--panel-border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-title { font-size: 13px; font-weight: 700; color: var(--cyan); font-family: "Consolas", monospace; }
+  .modal-close-btn { background: none; border: none; color: var(--text-dim); font-size: 16px; cursor: pointer; }
+  .modal-close-btn:hover { color: #fff; }
+  .modal-body { padding: 14px; overflow-y: auto; font-size: 12px; line-height: 1.5; color: var(--text-muted); }
+  .modal-footer {
+    background: #0b1120;
+    padding: 10px 14px;
+    border-top: 1px solid var(--panel-border-subtle);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  /* SPLASH OVERLAY */
+  #splashModal .modal-box { max-width: 520px; text-align: center; }
+  .splash-logo {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--cyan);
+    font-family: "Consolas", monospace;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .splash-sub { color: var(--text-dim); font-size: 12px; margin-bottom: 18px; }
+  .splash-buttons { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; }
+  .splash-btn {
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: #1e293b;
+    color: #fff;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .splash-btn:hover { background: #334155; border-color: var(--cyan); transform: translateY(-1px); }
+  .splash-btn-primary { background: #0284c7; border-color: var(--cyan); }
+  .splash-btn-primary:hover { background: #0369a1; }
+
+  /* TUTORIAL STEP CARD */
+  .tut-step-badge {
+    display: inline-block;
+    background: rgba(0, 240, 255, 0.15);
+    color: var(--cyan);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    font-family: "Consolas", monospace;
+  }
+  .tut-img {
+    width: 100%;
+    height: 140px;
+    background: #090e1a;
+    border: 1px dashed var(--panel-border-subtle);
+    border-radius: 6px;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cyan);
+    font-family: "Consolas", monospace;
+    font-size: 12px;
+  }
+
+  /* TOAST NOTIFICATION (TOP-RIGHT NON-OCCLUDING) */
+  #toastContainer {
+    position: fixed;
+    top: 50px;
+    right: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 200;
+    pointer-events: none;
+  }
+  .toast {
+    background: #0f172a;
+    border: 1px solid var(--cyan);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-family: "Consolas", monospace;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    pointer-events: auto;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: toastIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes toastIn { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+</style>
+</head>
+<body>
+
+  <!-- TOP APP BAR -->
+  <header class="app-header">
+    <div class="app-title">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+      <span>KNetMap</span>
+      <span class="badge-ver">v1.0.0</span>
+    </div>
+
+    <div class="header-divider"></div>
+
+    <div class="status-cluster">
+      <div class="status-item">
+        <div class="status-dot pulse" id="engineDot"></div>
+        <span id="engineStatusText">SIM RUNNING</span>
+      </div>
+      <div class="status-item">
+        <span>NODES:</span> <span class="hud-val" id="topNodeCount">0</span>
+      </div>
+      <div class="status-item">
+        <span>LINKS:</span> <span class="hud-val" id="topLinkCount">0</span>
+      </div>
+      <div class="status-item">
+        <span>PACKETS:</span> <span class="hud-val" id="topPktCount">0</span>
+      </div>
+      <div class="status-item" id="topOnlineBadge" style="display:none;">
+        <span style="color:var(--emerald);">● ONLINE</span>
+        <span id="topRoomCode" style="color:var(--cyan); font-size:10px;"></span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Preset Dropdown -->
+      <select id="presetSelect" onchange="loadPresetTopology(this.value)" style="background:#1e293b; color:#e2e8f0; border:1px solid rgba(255,255,255,0.2); font-size:11px; padding:3px 6px; border-radius:4px; outline:none;">
+        <option value="" disabled selected>Presets...</option>
+        <option value="corp">1999 Corporate LAN &amp; DMZ</option>
+        <option value="isp">Multi-Homed ISP Backbone</option>
+        <option value="karpanet">KARPANET Node (1983-1999)</option>
+        <option value="ras">Dial-up RAS &amp; Telco Cloud</option>
+        <option value="blank">Blank Workspace</option>
+      </select>
+
+      <button class="btn" onclick="toggleSimPause()" id="pauseBtn" title="Space: Pause / Run">⏸ Pause</button>
+      <button class="btn" onclick="saveTopologyQuicksave()" title="F5: Quicksave">💾 Save [F5]</button>
+      <button class="btn" onclick="loadTopologyQuicksave()" title="F9: Quickload">📂 Load [F9]</button>
+      <button class="btn btn-purple" onclick="openOnlineModal()" id="onlineBtn" title="O: Real-time Online Co-op">🌐 Online Co-op</button>
+      <button class="btn" onclick="openSubnetModal()" title="Subnet / CIDR Planner">🔢 Subnet Calc</button>
+      <button class="btn" onclick="toggleMute()" id="muteBtn" title="M: Toggle Mute">🔊 Audio</button>
+      <button class="btn btn-primary" onclick="openHelpModal()" title="F1: Documentation">❓ Help [F1]</button>
+    </div>
+  </header>
+
+  <!-- SUB-TOOLBAR / CIDR PARTITION BAR -->
+  <div class="cidr-strip">
+    <span class="cidr-label">CIDR Allocation Bar:</span>
+    <span id="cidrParentLabel" style="color:var(--cyan); font-weight:bold;">192.168.0.0/22 (1024 IPs)</span>
+    <div class="cidr-bar-container" id="cidrBar">
+      <!-- Populated dynamically with color-coded slices -->
+    </div>
+    <span id="cidrStatsLabel" style="color:var(--text-muted); font-size:10px;">Subnets: 4 | Usable Hosts: 1008</span>
+  </div>
+
+  <!-- WORKSPACE -->
+  <div class="workspace">
+    <!-- LEFT TOOL PALETTE -->
+    <aside class="palette">
+      <div class="palette-section-title">Pointer Tools</div>
+      <div class="tool-grid">
+        <button class="tool-btn active" id="tool-select" onclick="setTool('select')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 2l12 11.2-5.8.5 3.3 7.3-2.2 1-3.2-7.4L7 18.5V2z"/></svg>
+          <span>Select / Move</span>
+        </button>
+        <button class="tool-btn" id="tool-connect" onclick="setTool('connect')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 15v4H5v-4h14m1-2H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zM7 18.5c-.82 0-1.5-.67-1.5-1.5s.68-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM16 11V7H8v4H6V5c0-.55.45-1 1-1h10c.55 0 1 .45 1 1v6h-2z"/></svg>
+          <span>Link Cable [C]</span>
+        </button>
+      </div>
+
+      <div class="palette-section-title" style="margin-top:6px;">Add Hardware</div>
+      <div class="tool-grid">
+        <button class="tool-btn" id="tool-add-router" onclick="setTool('add-router')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 13H5c-1.1 0-2 .9-2 2v4c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-4c0-1.1-.9-2-2-2zM7 19c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm4 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm4 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zM12 3L2 12h3v2h14v-2h3L12 3z"/></svg>
+          <span>Router (CYBER-CO)</span>
+        </button>
+        <button class="tool-btn" id="tool-add-switch" onclick="setTool('add-switch')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 7H4c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm-9 7l-3-3 3-3v2h6v2h-6v2zm7 0h-2v-2h2v2zm-12 0H4v-2h2v2z"/></svg>
+          <span>Switch (3-CON)</span>
+        </button>
+        <button class="tool-btn" id="tool-add-firewall" onclick="setTool('add-firewall')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+          <span>Firewall (Bastion)</span>
+        </button>
+        <button class="tool-btn" id="tool-add-server" onclick="setTool('add-server')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 3h16c1.1 0 2 .9 2 2v3c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2zm0 8h16c1.1 0 2 .9 2 2v3c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-3c0-1.1.9-2 2-2zm0 8h16c1.1 0 2 .9 2 2v1c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-1c0-1.1.9-2 2-2zm2-14c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1zm0 8c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
+          <span>Server (Sol Unix)</span>
+        </button>
+        <button class="tool-btn" id="tool-add-workstation" onclick="setTool('add-workstation')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 12H3V4h18v10z"/></svg>
+          <span>Workstation (Win99)</span>
+        </button>
+      </div>
+
+      <div class="palette-section-title" style="margin-top:6px;">Diagnostics</div>
+      <div class="tool-grid">
+        <button class="tool-btn" id="tool-ping" onclick="setTool('ping')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+          <span>Ping Path [P]</span>
+        </button>
+        <button class="tool-btn" id="tool-trace" onclick="setTool('trace')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7"/></svg>
+          <span>Traceroute [T]</span>
+        </button>
+        <button class="tool-btn" id="tool-cut" onclick="setTool('cut')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.64 7.64c.23-.5.36-1.05.36-1.64 0-2.21-1.79-4-4-4S2 3.79 2 6s1.79 4 4 4c.59 0 1.14-.13 1.64-.36L10 12l-2.36 2.36C7.14 14.13 6.59 14 6 14c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4c0-.59-.13-1.14-.36-1.64L12 14l7 7h3v-1L9.64 7.64zM6 8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0 12c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6-7.5c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5zM19 3l-6 6 2 2 7-7V3h-3z"/></svg>
+          <span>Sever Link (Chaos)</span>
+        </button>
+        <button class="tool-btn" id="tool-flood" onclick="triggerTrafficBurst()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l-5.5 9h11z M12 22l5.5-9h-11z"/></svg>
+          <span>Traffic Burst</span>
+        </button>
+      </div>
+
+      <div class="palette-section-title" style="margin-top:6px;">Media Standard</div>
+      <div class="cable-selector">
+        <div class="cable-option active" onclick="selectCableType('100base_tx')" id="cable-100base_tx">
+          <div class="cable-color-chip" style="background:#00f0ff;"></div>
+          <span>100Base-TX (100M)</span>
+        </div>
+        <div class="cable-option" onclick="selectCableType('10base_t')" id="cable-10base_t">
+          <div class="cable-color-chip" style="background:#f59e0b;"></div>
+          <span>10Base-T (10M)</span>
+        </div>
+        <div class="cable-option" onclick="selectCableType('fiber')" id="cable-fiber">
+          <div class="cable-color-chip" style="background:#ec4899;"></div>
+          <span>Fiber FDDI (155M)</span>
+        </div>
+        <div class="cable-option" onclick="selectCableType('serial_t1')" id="cable-serial_t1">
+          <div class="cable-color-chip" style="background:#10b981;"></div>
+          <span>Serial T1 (1.5M)</span>
+        </div>
+      </div>
+
+      <div class="palette-section-title" style="margin-top:6px;">Overlays</div>
+      <label style="display:flex; align-items:center; gap:6px; font-size:10.5px; color:var(--text-muted); cursor:pointer;">
+        <input type="checkbox" id="chkBroadcastDomains" checked onchange="requestRender()"> Subnet Domains
+      </label>
+      <label style="display:flex; align-items:center; gap:6px; font-size:10.5px; color:var(--text-muted); cursor:pointer;">
+        <input type="checkbox" id="chkCollisionDomains" onchange="requestRender()"> Collision Domains
+      </label>
+      <label style="display:flex; align-items:center; gap:6px; font-size:10.5px; color:var(--text-muted); cursor:pointer;">
+        <input type="checkbox" id="chkIpLabels" checked onchange="requestRender()"> IP / Host Labels
+      </label>
+
+      <button class="btn btn-danger" onclick="confirmClearGrid()" style="margin-top:auto; width:100%; justify-content:center;">Clear Grid</button>
+    </aside>
+
+    <!-- CANVAS VIEWPORT -->
+    <main class="canvas-container" id="canvasContainer">
+      <canvas id="netCanvas"></canvas>
+
+      <!-- FLOATING HUD -->
+      <div class="canvas-hud">
+        <div class="hud-row"><span>VIEWPORT:</span> <span class="hud-val" id="hudZoom">100%</span></div>
+        <div class="hud-row"><span>CURSOR:</span> <span class="hud-val" id="hudCoords">0, 0</span></div>
+        <div class="hud-row"><span>ACTIVE TOOL:</span> <span class="hud-val" id="hudTool">SELECT</span></div>
+      </div>
+
+      <!-- ZOOM & RESET CONTROLS -->
+      <div class="canvas-controls">
+        <button class="canvas-btn" onclick="zoomIn()" title="Zoom In">+</button>
+        <button class="canvas-btn" onclick="zoomOut()" title="Zoom Out">-</button>
+        <button class="canvas-btn" onclick="resetView()" title="Fit / Reset View" style="font-size:11px;">1:1</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- BOTTOM DRAWER (PACKET SNIFFER, TERMINAL, ROUTING TABLE) -->
+  <footer class="bottom-drawer" id="bottomDrawer">
+    <div class="drawer-tabs">
+      <div class="drawer-tab active" onclick="switchDrawerTab('sniffer')" id="tab-sniffer">
+        <span>Packet Sniffer</span>
+        <span class="drawer-tab-badge" id="snifferCountBadge">0</span>
+      </div>
+      <div class="drawer-tab" onclick="switchDrawerTab('terminal')" id="tab-terminal">
+        <span>Terminal Diagnostic</span>
+      </div>
+      <div class="drawer-tab" onclick="switchDrawerTab('nodeInspector')" id="tab-nodeInspector">
+        <span>Node Routing Table</span>
+      </div>
+
+      <div class="drawer-actions">
+        <button class="btn" style="padding:2px 6px; font-size:10px;" onclick="clearSnifferLog()">Clear Log</button>
+        <button class="drawer-action-btn" onclick="toggleDrawerCollapse()" id="drawerCollapseBtn" title="Collapse/Expand Drawer">▼</button>
+      </div>
+    </div>
+
+    <div class="drawer-content">
+      <!-- PANE 1: SNIFFER TABLE -->
+      <div class="drawer-pane active" id="pane-sniffer">
+        <table class="sniffer-table">
+          <thead>
+            <tr>
+              <th style="width:70px;">TIME</th>
+              <th style="width:60px;">PROTO</th>
+              <th style="width:130px;">SOURCE</th>
+              <th style="width:130px;">DESTINATION</th>
+              <th style="width:70px;">FLAGS/TTL</th>
+              <th>SUMMARY / PAYLOAD</th>
+            </tr>
+          </thead>
+          <tbody id="snifferTableBody">
+            <!-- Dynamically populated packet logs -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PANE 2: TERMINAL DIAGNOSTIC -->
+      <div class="drawer-pane" id="pane-terminal">
+        <div class="terminal-log" id="terminalLog">
+[KNetMap Kernel v1.0.0 (i386-retro-net)] Ready.
+Subnet routing topology loaded: 192.168.0.0/22.
+Type 'P' to test ping, 'T' for traceroute, or select links to inject faults.
+        </div>
+      </div>
+
+      <!-- PANE 3: NODE INSPECTOR & ROUTING TABLE -->
+      <div class="drawer-pane" id="pane-nodeInspector">
+        <div class="node-inspector" id="nodeInspectorBody">
+          <div style="color:var(--text-dim); padding:10px;">Select a router or host on the canvas to inspect its interfaces, ARP cache, and routing table.</div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- START SPLASH SCREEN MODAL -->
+  <div class="modal-backdrop active" id="splashModal">
+    <div class="modal-box">
+      <div class="modal-body" style="padding:24px 20px;">
+        <div class="splash-logo">KNetMap</div>
+        <div class="splash-sub">Subnet Topology Visualizer &amp; Network Routing Simulator (1999 Edition)</div>
+        <p style="margin-bottom:14px; color:var(--text);">
+          Design enterprise network architectures, calculate Variable Length Subnet Masks (VLSM), trace real-time packet hops, and stress-test failover convergence across CYBER-CO routers, 3-CON switches, and Bastion firewalls.
+        </p>
+
+        <div class="splash-buttons">
+          <button class="splash-btn splash-btn-primary" onclick="startNewSession()">
+            <span>⚡ Start New Network Architecture</span>
+          </button>
+          <button class="splash-btn" onclick="loadPresetFromSplash('corp')">
+            <span>🏢 Load 1999 Corporate DMZ Preset</span>
+          </button>
+          <button class="splash-btn" onclick="loadPresetFromSplash('isp')">
+            <span>🌐 Load Multi-Homed ISP Backbone Preset</span>
+          </button>
+          <button class="splash-btn" onclick="loadTopologyQuicksave(); closeSplash();" id="splashLoadBtn">
+            <span>💾 Resume Saved Session [F9]</span>
+          </button>
+          <button class="splash-btn" onclick="openOnlineModal(); closeSplash();">
+            <span>🤝 Connect Online Co-op Room</span>
+          </button>
+          <button class="splash-btn" onclick="openHelpModal(); closeSplash();">
+            <span>📖 Documentation &amp; User Manual [F1]</span>
+          </button>
+        </div>
+
+        <div style="font-size:10.5px; color:var(--text-dim); margin-top:8px;">
+          KiloApps Fleet ARG 1999 Universe • Single-File Micro-Application &lt;999 KB
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ONBOARDING FIRST-RUN TUTORIAL MODAL -->
+  <div class="modal-backdrop" id="tutorialModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">KNetMap Interactive Guided Tour</span>
+        <button class="modal-close-btn" onclick="dismissTutorial()">✕</button>
+      </div>
+      <div class="modal-body" id="tutorialBody">
+        <!-- Injected dynamically by tutorial engine -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="prevTutorialStep()" id="tutPrevBtn">Previous</button>
+        <button class="btn btn-primary" onclick="nextTutorialStep()" id="tutNextBtn">Next Step</button>
+        <button class="btn btn-danger" onclick="dismissTutorial()">Skip Tour [Esc]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBNET / CIDR CALCULATOR MODAL -->
+  <div class="modal-backdrop" id="subnetModal">
+    <div class="modal-box" style="max-width:620px;">
+      <div class="modal-header">
+        <span class="modal-title">Subnet &amp; VLSM Partition Calculator</span>
+        <button class="modal-close-btn" onclick="closeSubnetModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex; gap:10px; margin-bottom:12px; align-items:flex-end;">
+          <div style="flex:1;">
+            <label style="display:block; font-size:10px; color:var(--text-dim); text-transform:uppercase;">Base IP Address</label>
+            <input type="text" id="calcIpInput" value="192.168.1.0" style="width:100%; background:#1e293b; border:1px solid rgba(255,255,255,0.15); color:#fff; padding:6px; font-family:'Consolas', monospace; font-size:12px; border-radius:4px;">
+          </div>
+          <div style="width:120px;">
+            <label style="display:block; font-size:10px; color:var(--text-dim); text-transform:uppercase;">Subnet Mask</label>
+            <select id="calcCidrSelect" onchange="recalcSubnetTool()" style="width:100%; background:#1e293b; border:1px solid rgba(255,255,255,0.15); color:#fff; padding:6px; font-family:'Consolas', monospace; font-size:12px; border-radius:4px;">
+              <option value="24">/24 (255.255.255.0)</option>
+              <option value="25">/25 (255.255.255.128)</option>
+              <option value="26">/26 (255.255.255.192)</option>
+              <option value="27">/27 (255.255.255.224)</option>
+              <option value="28">/28 (255.255.255.240)</option>
+              <option value="29">/29 (255.255.255.248)</option>
+              <option value="30">/30 (255.255.255.252)</option>
+              <option value="23">/23 (255.255.254.0)</option>
+              <option value="22">/22 (255.255.252.0)</option>
+              <option value="16">/16 (255.255.0.0)</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="recalcSubnetTool()">Calculate</button>
+        </div>
+
+        <div id="calcResultsBox" style="background:#090e1a; border:1px solid var(--panel-border-subtle); border-radius:6px; padding:10px; font-family:'Consolas', monospace; font-size:11px;">
+          <!-- Dynamically populated -->
+        </div>
+
+        <div style="margin-top:14px;">
+          <div style="font-weight:700; color:var(--cyan); margin-bottom:6px; font-size:11px;">VLSM Subnet Slicing Assistant</div>
+          <p style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">
+            Divide this address block into smaller broadcast domains to optimize host assignment across engineering, DMZ, and management VLANs.
+          </p>
+          <div style="display:flex; gap:8px;">
+            <button class="btn" onclick="splitCurrentSubnet()">Split into Two /25 Subnets</button>
+            <button class="btn btn-success" onclick="applySubnetToCurrentMap()">Apply as Zone to Topology</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeSubnetModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ONLINE MULTIPLAYER CO-OP MODAL -->
+  <div class="modal-backdrop" id="onlineModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">🌐 Firebase Collaborative Network Room</span>
+        <button class="modal-close-btn" onclick="closeOnlineModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom:12px; color:var(--text);">
+          Collaborate in real-time with remote network engineers across different computers. Place routers, wire links, sever cables, and watch synchronized packet streams live.
+        </p>
+
+        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;">
+          <div>
+            <label style="display:block; font-size:10px; color:var(--text-dim); text-transform:uppercase;">Your Engineer Callsign</label>
+            <input type="text" id="onlineCallsignInput" value="Admin-1999" style="width:100%; background:#1e293b; border:1px solid rgba(255,255,255,0.15); color:#fff; padding:6px; font-family:'Consolas', monospace; font-size:12px; border-radius:4px;">
+          </div>
+          <div>
+            <label style="display:block; font-size:10px; color:var(--text-dim); text-transform:uppercase;">Room Code / Channel</label>
+            <input type="text" id="onlineRoomCodeInput" value="cyber-backbone" style="width:100%; background:#1e293b; border:1px solid rgba(255,255,255,0.15); color:#fff; padding:6px; font-family:'Consolas', monospace; font-size:12px; border-radius:4px;">
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-bottom:14px;">
+          <button class="btn btn-primary" style="flex:1; justify-content:center;" onclick="joinOnlineRoom()" id="joinRoomBtn">Connect to Room</button>
+          <button class="btn btn-danger" style="flex:1; justify-content:center;" onclick="leaveOnlineRoom()" id="leaveRoomBtn" disabled>Disconnect</button>
+        </div>
+
+        <div style="background:#090e1a; border:1px solid var(--panel-border-subtle); border-radius:6px; padding:8px; font-family:'Consolas', monospace; font-size:11px;">
+          <div style="color:var(--text-dim); margin-bottom:4px;">CONNECTED PEERS IN ROOM:</div>
+          <div id="onlinePeersList" style="color:var(--emerald);">● Local Engineer (You)</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeOnlineModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HELP / DOCUMENTATION MODAL [F1] -->
+  <div class="modal-backdrop" id="helpModal">
+    <div class="modal-box" style="max-width:640px;">
+      <div class="modal-header">
+        <span class="modal-title">KNetMap Documentation &amp; Reference Guide [F1]</span>
+        <button class="modal-close-btn" onclick="closeHelpModal()">✕</button>
+      </div>
+      <div class="modal-body" style="max-height:65vh;">
+        <h4 style="color:var(--cyan); margin-bottom:4px;">Keyboard Shortcuts</h4>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-family:'Consolas', monospace; font-size:11px; margin-bottom:14px;">
+          <div><span style="color:var(--cyan);">[F1]</span> Help &amp; Reference</div>
+          <div><span style="color:var(--cyan);">[F5]</span> Quicksave Topology</div>
+          <div><span style="color:var(--cyan);">[F9]</span> Quickload Quicksave</div>
+          <div><span style="color:var(--cyan);">[Esc]</span> Deselect / Close Modals</div>
+          <div><span style="color:var(--cyan);">[Delete]</span> Delete Selected Item</div>
+          <div><span style="color:var(--cyan);">[Space]</span> Pause / Resume Simulator</div>
+          <div><span style="color:var(--cyan);">[C]</span> Cable Link Mode</div>
+          <div><span style="color:var(--cyan);">[P]</span> Ping Diagnostics Mode</div>
+          <div><span style="color:var(--cyan);">[T]</span> Traceroute Path Mode</div>
+          <div><span style="color:var(--cyan);">[M]</span> Toggle Audio Synthesizer</div>
+          <div><span style="color:var(--cyan);">[O]</span> Online Co-op Drawer</div>
+          <div><span style="color:var(--cyan);">[1 - 5]</span> Fast Hardware Placement</div>
+        </div>
+
+        <h4 style="color:var(--cyan); margin-bottom:4px;">Hardware Types</h4>
+        <ul style="margin-left:18px; margin-bottom:14px; font-size:11.5px;">
+          <li><strong>CYBER-CO 7200 Router:</strong> Layer 3 IP forwarding gateway with automated routing table lookups, TTL decrements, and ICMP routing.</li>
+          <li><strong>3-CON FastSwitch:</strong> Layer 2 high-speed frame switch with port MAC learning tables. Breaks collision domains.</li>
+          <li><strong>Bastion Firewall:</strong> Stateful packet inspection host that monitors SYN/ACK handshakes and blocks unauthorized ports.</li>
+          <li><strong>Sol Unix Enterprise Server:</strong> Reliable multi-user server hosting Web (port 80), Mail (port 25), and DNS (port 53).</li>
+          <li><strong>Win99 Workstation:</strong> End-user terminal capable of dispatching ICMP pings, ARP broadcasts, and TCP handshakes.</li>
+        </ul>
+
+        <h4 style="color:var(--cyan); margin-bottom:4px;">Subnetting &amp; CIDR Rules</h4>
+        <p style="font-size:11.5px; margin-bottom:10px;">
+          Subnetting allows isolating departments into separate broadcast domains. In a <code>/24</code> subnet (mask 255.255.255.0), 8 bits remain for host IDs, yielding 256 addresses (254 usable, reserving .0 for Network ID and .255 for Broadcast).
+        </p>
+
+        <h4 style="color:var(--cyan); margin-bottom:4px;">Universal Audio Engine</h4>
+        <p style="font-size:11.5px;">
+          Procedural sound effects are synthesized in real-time via Web Audio using Sega Genesis (YM2612 2-operator FM) algorithms and SNES SPC700 stereo delay warmth without external sound assets.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeHelpModal()">Got It</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toastContainer"></div>
+
+  <!-- FIREBASE RTDB MODULE INITIALIZATION -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+      authDomain: "kiloappschat.firebaseapp.com",
+      databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+      projectId: "kiloappschat",
+      storageBucket: "kiloappschat.firebasestorage.app",
+      messagingSenderId: "290208566057",
+      appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+    };
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      window.fb = {
+        app, db, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect
+      };
+      if (window.onFirebaseReady) {
+        window.onFirebaseReady();
+      }
+    } catch (err) {
+      console.warn("Firebase RTDB init skipped / offline mode active:", err);
+    }
+  </script>
+
+  <!-- MAIN ENGINE SCRIPT -->
+  <script>
+    /* =========================================================================
+       AUDIO SYNTHESIZER (GENESIS YM2612 FM + SNES SPC700 STEREO DELAY)
+       ========================================================================= */
+    let audioCtx = null;
+    let isMuted = false;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          audioCtx = new AudioContext();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function toggleMute() {
+      isMuted = !isMuted;
+      const btn = document.getElementById('muteBtn');
+      if (btn) {
+        btn.textContent = isMuted ? '🔇 Muted' : '🔊 Audio';
+        btn.classList.toggle('btn-danger', isMuted);
+      }
+      showToast(isMuted ? 'Audio Synthesizer Muted' : 'Audio Synthesizer Active');
+    }
+
+    // Genesis 2-Operator FM sound generator
+    function playFmTone(baseFreq, modMultiplier, modDepth, duration, type = 'sine') {
+      if (isMuted) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      const now = audioCtx.currentTime;
+      const carrier = audioCtx.createOscillator();
+      const carrierGain = audioCtx.createGain();
+      const modulator = audioCtx.createOscillator();
+      const modGain = audioCtx.createGain();
+
+      carrier.type = type;
+      carrier.frequency.setValueAtTime(baseFreq, now);
+
+      modulator.type = 'sine';
+      modulator.frequency.setValueAtTime(baseFreq * modMultiplier, now);
+
+      modGain.gain.setValueAtTime(modDepth, now);
+      modGain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+      modulator.connect(carrier.frequency);
+
+      carrierGain.gain.setValueAtTime(0.08, now);
+      carrierGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      carrier.connect(carrierGain);
+      carrierGain.connect(audioCtx.destination);
+
+      modulator.start(now);
+      carrier.start(now);
+      modulator.stop(now + duration);
+      carrier.stop(now + duration);
+    }
+
+    function soundPacketPulse() {
+      playFmTone(640, 1.5, 200, 0.08, 'sine');
+    }
+    function soundLinkConnect() {
+      playFmTone(520, 2.0, 150, 0.14, 'triangle');
+      setTimeout(() => playFmTone(780, 2.0, 150, 0.16, 'triangle'), 60);
+    }
+    function soundLinkCut() {
+      playFmTone(140, 4.2, 400, 0.22, 'sawtooth');
+    }
+    function soundPingSuccess() {
+      playFmTone(880, 1.0, 50, 0.12, 'sine');
+      setTimeout(() => playFmTone(1320, 1.0, 50, 0.18, 'sine'), 80);
+    }
+    function soundAlert() {
+      playFmTone(300, 3.5, 300, 0.25, 'sawtooth');
+    }
+
+    /* =========================================================================
+       GLOBAL DATA STRUCTURES & TOPOLOGY STATE
+       ========================================================================= */
+    const TOPOLOGY = {
+      nodes: [],
+      links: [],
+      subnets: [
+        { id: 'sub-dmz', name: 'DMZ Public Zone', cidr: '198.51.100.0/24', color: '#ec4899', vlan: 10 },
+        { id: 'sub-mgmt', name: 'Backbone Management', cidr: '10.0.0.0/24', color: '#00f0ff', vlan: 20 },
+        { id: 'sub-eng', name: 'Engineering LAN', cidr: '192.168.10.0/24', color: '#10b981', vlan: 30 },
+        { id: 'sub-ops', name: 'Operations LAN', cidr: '192.168.20.0/24', color: '#f59e0b', vlan: 40 }
+      ],
+      packets: [],
+      packetSnifferLog: []
+    };
+
+    let activeTool = 'select'; // select, connect, add-*, ping, trace, cut
+    let activeCableType = '100base_tx'; // 100base_tx, 10base_t, fiber, serial_t1
+    let isSimPaused = false;
+    let selectedNodeId = null;
+    let selectedLinkId = null;
+    let hoveredNodeId = null;
+    let hoveredLinkId = null;
+    let connectStartNodeId = null;
+    let pingSourceNodeId = null;
+
+    // Viewport pan & zoom
+    let viewZoom = 1.0;
+    let viewPanX = 60;
+    let viewPanY = 40;
+    let isPanning = false;
+    let panStartX = 0;
+    let panStartY = 0;
+    let isDraggingNode = false;
+    let dragNodeId = null;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+
+    let canvas = null;
+    let ctx = null;
+    let animFrameId = null;
+    let lastTimestamp = performance.now();
+
+    /* =========================================================================
+       SUBNET & IP MATHEMATICS UTILITIES
+       ========================================================================= */
+    function ipToInt(ipStr) {
+      const parts = ipStr.trim().split('.').map(Number);
+      if (parts.length !== 4 || parts.some(p => isNaN(p) || p < 0 || p > 255)) return 0;
+      return ((parts[0] << 24) >>> 0) + (parts[1] << 16) + (parts[2] << 8) + parts[3];
+    }
+
+    function intToIp(intVal) {
+      return [
+        (intVal >>> 24) & 255,
+        (intVal >>> 16) & 255,
+        (intVal >>> 8) & 255,
+        intVal & 255
+      ].join('.');
+    }
+
+    function cidrToMask(cidr) {
+      if (cidr === 0) return 0;
+      return ((0xFFFFFFFF << (32 - cidr)) >>> 0);
+    }
+
+    function getSubnetDetails(cidrStr) {
+      const [ip, bitsStr] = cidrStr.split('/');
+      const bits = parseInt(bitsStr, 10) || 24;
+      const ipVal = ipToInt(ip);
+      const maskVal = cidrToMask(bits);
+      const netVal = (ipVal & maskVal) >>> 0;
+      const bcastVal = (netVal | (~maskVal >>> 0)) >>> 0;
+      const firstHostVal = bits <= 30 ? netVal + 1 : netVal;
+      const lastHostVal = bits <= 30 ? bcastVal - 1 : bcastVal;
+      const totalHosts = Math.pow(2, 32 - bits);
+      const usableHosts = bits <= 30 ? Math.max(0, totalHosts - 2) : 1;
+
+      return {
+        ip,
+        bits,
+        mask: intToIp(maskVal),
+        net: intToIp(netVal),
+        bcast: intToIp(bcastVal),
+        firstHost: intToIp(firstHostVal),
+        lastHost: intToIp(lastHostVal),
+        totalHosts,
+        usableHosts
+      };
+    }
+
+    function isIpInSubnet(ipStr, cidrStr) {
+      const details = getSubnetDetails(cidrStr);
+      const targetVal = ipToInt(ipStr);
+      const netVal = ipToInt(details.net);
+      const maskVal = ipToInt(details.mask);
+      return ((targetVal & maskVal) >>> 0) === netVal;
+    }
+
+    function generateMac(seed) {
+      const hex = (seed * 9301 + 49297).toString(16).padStart(6, '0').slice(-6);
+      return `00:50:56:${hex.slice(0,2)}:${hex.slice(2,4)}:${hex.slice(4,6)}`.toUpperCase();
+    }
+
+    /* =========================================================================
+       NODE & LINK FACTORIES
+       ========================================================================= */
+    let nodeCounter = 1;
+    function createNode(type, x, y, customName = null, customIp = null) {
+      const id = 'node-' + (nodeCounter++);
+      let name = customName;
+      let defaultIp = customIp;
+      let subnetId = 'sub-eng';
+
+      if (!name) {
+        if (type === 'router') name = 'GW-CYBER-' + (nodeCounter - 1);
+        else if (type === 'switch') name = 'SW-3CON-' + (nodeCounter - 1);
+        else if (type === 'firewall') name = 'FW-BASTION-' + (nodeCounter - 1);
+        else if (type === 'server') name = 'SOL-SRV-' + (nodeCounter - 1);
+        else name = 'WS-WIN99-' + (nodeCounter - 1);
+      }
+
+      if (!defaultIp) {
+        defaultIp = '192.168.10.' + (10 + nodeCounter);
+      }
+
+      const node = {
+        id,
+        type, // router, switch, firewall, server, workstation
+        name,
+        ip: defaultIp,
+        mask: '255.255.255.0',
+        mac: generateMac(nodeCounter),
+        x: Math.round(x),
+        y: Math.round(y),
+        status: 'up',
+        subnetId,
+        routes: [
+          { dest: '192.168.10.0', mask: '255.255.255.0', gateway: '0.0.0.0', iface: 'eth0', metric: 1 }
+        ],
+        arp: {}
+      };
+
+      if (type === 'router') {
+        node.routes.push({ dest: '0.0.0.0', mask: '0.0.0.0', gateway: '10.0.0.1', iface: 'wan0', metric: 10 });
+      }
+
+      return node;
+    }
+
+    let linkCounter = 1;
+    function createLink(fromId, toId, type = '100base_tx') {
+      let speed = 100;
+      let latency = 2;
+      if (type === '10base_t') { speed = 10; latency = 8; }
+      else if (type === 'fiber') { speed = 155; latency = 1; }
+      else if (type === 'serial_t1') { speed = 1.54; latency = 24; }
+
+      return {
+        id: 'link-' + (linkCounter++),
+        fromId,
+        toId,
+        type,
+        status: 'up',
+        speed,
+        latency,
+        trafficPct: 0
+      };
+    }
+
+    /* =========================================================================
+       ROUTING & GRAPH ALGORITHMS (DIJKSTRA / SHORTEST PATH)
+       ========================================================================= */
+    function findShortestRoute(sourceNodeId, targetNodeId) {
+      if (sourceNodeId === targetNodeId) return [sourceNodeId];
+
+      const distances = {};
+      const previous = {};
+      const unvisited = new Set();
+
+      TOPOLOGY.nodes.forEach(n => {
+        distances[n.id] = Infinity;
+        previous[n.id] = null;
+        unvisited.add(n.id);
+      });
+
+      distances[sourceNodeId] = 0;
+
+      while (unvisited.size > 0) {
+        let currentId = null;
+        let smallestDist = Infinity;
+        unvisited.forEach(id => {
+          if (distances[id] < smallestDist) {
+            smallestDist = distances[id];
+            currentId = id;
+          }
+        });
+
+        if (currentId === null || currentId === targetNodeId || smallestDist === Infinity) {
+          break;
+        }
+
+        unvisited.delete(currentId);
+
+        // Find active links connected to current node
+        const activeLinks = TOPOLOGY.links.filter(l => 
+          l.status === 'up' && (l.fromId === currentId || l.toId === currentId)
+        );
+
+        for (const link of activeLinks) {
+          const neighborId = link.fromId === currentId ? link.toId : link.fromId;
+          if (!unvisited.has(neighborId)) continue;
+
+          const neighborNode = TOPOLOGY.nodes.find(n => n.id === neighborId);
+          if (!neighborNode || neighborNode.status !== 'up') continue;
+
+          // Weight is determined by link latency + metric
+          const weight = link.latency || 2;
+          const alt = distances[currentId] + weight;
+          if (alt < distances[neighborId]) {
+            distances[neighborId] = alt;
+            previous[neighborId] = currentId;
+          }
+        }
+      }
+
+      if (distances[targetNodeId] === Infinity) {
+        return null; // Destination unreachable
+      }
+
+      const path = [];
+      let step = targetNodeId;
+      while (step) {
+        path.unshift(step);
+        step = previous[step];
+      }
+      return path;
+    }
+
+    /* =========================================================================
+       PACKET DISPATCH & ANIMATION ENGINE
+       ========================================================================= */
+    let packetCounter = 1;
+    function dispatchPacket(fromNodeId, toNodeId, protocol = 'ICMP', summary = 'Echo Request') {
+      const path = findShortestRoute(fromNodeId, toNodeId);
+      if (!path || path.length < 2) {
+        logTerminal(`[ROUTING ERROR] Cannot route packet from ${getNodeName(fromNodeId)} to ${getNodeName(toNodeId)}: No active route (Network Unreachable)`, 'term-err');
+        soundAlert();
+        return false;
+      }
+
+      const fromNode = TOPOLOGY.nodes.find(n => n.id === fromNodeId);
+      const toNode = TOPOLOGY.nodes.find(n => n.id === toNodeId);
+      const nextHopId = path[1];
+      const link = TOPOLOGY.links.find(l => 
+        (l.fromId === fromNodeId && l.toId === nextHopId) ||
+        (l.fromId === nextHopId && l.toId === fromNodeId)
+      );
+
+      if (!link || link.status !== 'up') {
+        logTerminal(`[LINK DROP] Direct link to next hop is down!`, 'term-warn');
+        return false;
+      }
+
+      const pkt = {
+        id: 'pkt-' + (packetCounter++),
+        fromId: fromNodeId,
+        toId: nextHopId,
+        finalTargetId: toNodeId,
+        fullPath: path,
+        pathIndex: 0,
+        progress: 0,
+        protocol,
+        srcIp: fromNode ? fromNode.ip : '0.0.0.0',
+        dstIp: toNode ? toNode.ip : '0.0.0.0',
+        summary,
+        ttl: 64,
+        speed: 0.025 / (link.latency ? Math.max(1, link.latency / 4) : 1)
+      };
+
+      TOPOLOGY.packets.push(pkt);
+      logSniffer(protocol, pkt.srcIp, pkt.dstIp, 'TTL=64', summary);
+      soundPacketPulse();
+      return true;
+    }
+
+    function updatePackets(delta) {
+      if (isSimPaused) return;
+
+      for (let i = TOPOLOGY.packets.length - 1; i >= 0; i--) {
+        const pkt = TOPOLOGY.packets[i];
+        pkt.progress += pkt.speed * (delta / 16.6);
+
+        if (pkt.progress >= 1.0) {
+          pkt.pathIndex++;
+          // Check if packet reached final destination
+          if (pkt.pathIndex >= pkt.fullPath.length - 1) {
+            TOPOLOGY.packets.splice(i, 1);
+            onPacketDelivered(pkt);
+          } else {
+            // Forward along next link in path
+            const prevHop = pkt.fullPath[pkt.pathIndex];
+            const nextHop = pkt.fullPath[pkt.pathIndex + 1];
+            const nextLink = TOPOLOGY.links.find(l => 
+              (l.fromId === prevHop && l.toId === nextHop) ||
+              (l.fromId === nextHop && l.toId === prevHop)
+            );
+
+            if (!nextLink || nextLink.status !== 'up') {
+              TOPOLOGY.packets.splice(i, 1);
+              logTerminal(`[DROP] Packet dropped mid-transit between ${getNodeName(prevHop)} and ${getNodeName(nextHop)} (Link Severed)`, 'term-err');
+              soundAlert();
+            } else {
+              pkt.fromId = prevHop;
+              pkt.toId = nextHop;
+              pkt.progress = 0;
+              pkt.ttl--;
+              pkt.speed = 0.025 / (nextLink.latency ? Math.max(1, nextLink.latency / 4) : 1);
+              soundPacketPulse();
+            }
+          }
+        }
+      }
+
+      document.getElementById('topPktCount').textContent = TOPOLOGY.packets.length;
+    }
+
+    function onPacketDelivered(pkt) {
+      const dstNode = TOPOLOGY.nodes.find(n => n.id === pkt.finalTargetId);
+      const srcNode = TOPOLOGY.nodes.find(n => n.id === pkt.fullPath[0]);
+
+      if (pkt.protocol === 'ICMP' && pkt.summary.includes('Echo Request')) {
+        soundPingSuccess();
+        const rtt = Math.round((pkt.fullPath.length - 1) * 4.2 + Math.random() * 2.5);
+        logTerminal(`[PING REPLY] 64 bytes from ${pkt.dstIp} (${dstNode ? dstNode.name : 'host'}): icmp_seq=1 ttl=${pkt.ttl} time=${rtt} ms`, 'term-info');
+        
+        // Dispatch reply back
+        if (srcNode) {
+          setTimeout(() => {
+            dispatchPacket(dstNode.id, srcNode.id, 'ICMP', 'Echo Reply (RTT=' + rtt + 'ms)');
+          }, 80);
+        }
+      } else {
+        logTerminal(`[DELIVERED] ${pkt.protocol} packet reached ${dstNode ? dstNode.name : 'destination'}.`, 'term-info');
+      }
+    }
+
+    function getNodeName(id) {
+      const n = TOPOLOGY.nodes.find(x => x.id === id);
+      return n ? n.name : id;
+    }
+
+    /* =========================================================================
+       CANVAS RENDERING ENGINE
+       ========================================================================= */
+    function initCanvas() {
+      canvas = document.getElementById('netCanvas');
+      ctx = canvas.getContext('2d');
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+      setupCanvasInput();
+      requestAnimationFrame(renderLoop);
+    }
+
+    function resizeCanvas() {
+      const container = document.getElementById('canvasContainer');
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = container.clientWidth * dpr;
+      canvas.height = container.clientHeight * dpr;
+      ctx.scale(dpr, dpr);
+      requestRender();
+    }
+
+    function requestRender() {
+      // Handled in renderLoop
+    }
+
+    function renderLoop(now) {
+      const delta = now - lastTimestamp;
+      lastTimestamp = now;
+
+      updatePackets(delta);
+      drawScene();
+
+      animFrameId = requestAnimationFrame(renderLoop);
+    }
+
+    function drawScene() {
+      const container = document.getElementById('canvasContainer');
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+
+      ctx.save();
+      ctx.clearRect(0, 0, width, height);
+
+      // Background grid
+      ctx.fillStyle = '#060a14';
+      ctx.fillRect(0, 0, width, height);
+
+      // Apply Pan & Zoom
+      ctx.translate(viewPanX, viewPanY);
+      ctx.scale(viewZoom, viewZoom);
+
+      drawGrid(width, height);
+
+      // Draw Broadcast Domains (Translucent Subnet Hulls)
+      if (document.getElementById('chkBroadcastDomains').checked) {
+        drawSubnetDomains();
+      }
+
+      // Draw Cable Links
+      drawLinks();
+
+      // Draw Active Traveling Packets
+      drawPackets();
+
+      // Draw Network Nodes
+      drawNodes();
+
+      // Draw Linking Rubber-Band Line
+      if (activeTool === 'connect' && connectStartNodeId) {
+        const startNode = TOPOLOGY.nodes.find(n => n.id === connectStartNodeId);
+        if (startNode) {
+          ctx.beginPath();
+          ctx.strokeStyle = '#00f0ff';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([6, 4]);
+          ctx.moveTo(startNode.x, startNode.y);
+          ctx.lineTo(mouseWorldX, mouseWorldY);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      }
+
+      ctx.restore();
+    }
+
+    function drawGrid(w, h) {
+      const gridSize = 40;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+      ctx.lineWidth = 1;
+
+      const startX = Math.floor(-viewPanX / viewZoom / gridSize) * gridSize - gridSize;
+      const endX = startX + (w / viewZoom) + gridSize * 2;
+      const startY = Math.floor(-viewPanY / viewZoom / gridSize) * gridSize - gridSize;
+      const endY = startY + (h / viewZoom) + gridSize * 2;
+
+      ctx.beginPath();
+      for (let x = startX; x <= endX; x += gridSize) {
+        ctx.moveTo(x, startY);
+        ctx.lineTo(x, endY);
+      }
+      for (let y = startY; y <= endY; y += gridSize) {
+        ctx.moveTo(startX, y);
+        ctx.lineTo(endX, y);
+      }
+      ctx.stroke();
+    }
+
+    function drawSubnetDomains() {
+      // Group nodes by subnet
+      const groups = {};
+      TOPOLOGY.nodes.forEach(node => {
+        if (!groups[node.subnetId]) groups[node.subnetId] = [];
+        groups[node.subnetId].push(node);
+      });
+
+      for (const [subId, nodes] of Object.entries(groups)) {
+        if (nodes.length === 0) continue;
+        const subDef = TOPOLOGY.subnets.find(s => s.id === subId) || { color: '#38bdf8', name: subId };
+
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        nodes.forEach(n => {
+          if (n.x < minX) minX = n.x;
+          if (n.y < minY) minY = n.y;
+          if (n.x > maxX) maxX = n.x;
+          if (n.y > maxY) maxY = n.y;
+        });
+
+        const pad = 44;
+        minX -= pad; minY -= pad; maxX += pad; maxY += pad;
+
+        ctx.fillStyle = subDef.color + '15';
+        ctx.strokeStyle = subDef.color + '55';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+
+        ctx.beginPath();
+        ctx.roundRect(minX, minY, maxX - minX, maxY - minY, 12);
+        ctx.fill();
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Label
+        ctx.fillStyle = subDef.color;
+        ctx.font = '10px Consolas, monospace';
+        ctx.fillText(`${subDef.name} (${subDef.cidr})`, minX + 8, minY + 14);
+      }
+    }
+
+    function drawLinks() {
+      TOPOLOGY.links.forEach(link => {
+        const n1 = TOPOLOGY.nodes.find(n => n.id === link.fromId);
+        const n2 = TOPOLOGY.nodes.find(n => n.id === link.toId);
+        if (!n1 || !n2) return;
+
+        ctx.beginPath();
+        ctx.moveTo(n1.x, n1.y);
+        ctx.lineTo(n2.x, n2.y);
+
+        let strokeColor = '#00f0ff';
+        let lineW = 2.5;
+
+        if (link.type === '10base_t') strokeColor = '#f59e0b';
+        else if (link.type === 'fiber') { strokeColor = '#ec4899'; lineW = 3.5; }
+        else if (link.type === 'serial_t1') { strokeColor = '#10b981'; lineW = 2.0; }
+
+        if (link.status === 'severed') {
+          ctx.strokeStyle = '#f43f5e';
+          ctx.setLineDash([6, 6]);
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Draw severed red X
+          const midX = (n1.x + n2.x) / 2;
+          const midY = (n1.y + n2.y) / 2;
+          ctx.strokeStyle = '#f43f5e';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(midX - 7, midY - 7); ctx.lineTo(midX + 7, midY + 7);
+          ctx.moveTo(midX + 7, midY - 7); ctx.lineTo(midX - 7, midY + 7);
+          ctx.stroke();
+          return;
+        }
+
+        if (selectedLinkId === link.id || hoveredLinkId === link.id) {
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = lineW + 2;
+          ctx.stroke();
+        }
+
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = lineW;
+        ctx.stroke();
+
+        // Speed/Latency Badge at midpoint
+        const midX = (n1.x + n2.x) / 2;
+        const midY = (n1.y + n2.y) / 2;
+        ctx.fillStyle = 'rgba(11, 17, 32, 0.85)';
+        ctx.fillRect(midX - 22, midY - 7, 44, 14);
+        ctx.strokeStyle = strokeColor + '88';
+        ctx.strokeRect(midX - 22, midY - 7, 44, 14);
+
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = '9px Consolas, monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${link.speed}M`, midX, midY);
+        ctx.textAlign = 'start';
+        ctx.textBaseline = 'alphabetic';
+      });
+    }
+
+    function drawPackets() {
+      TOPOLOGY.packets.forEach(pkt => {
+        const n1 = TOPOLOGY.nodes.find(n => n.id === pkt.fromId);
+        const n2 = TOPOLOGY.nodes.find(n => n.id === pkt.toId);
+        if (!n1 || !n2) return;
+
+        const curX = n1.x + (n2.x - n1.x) * pkt.progress;
+        const curY = n1.y + (n2.y - n1.y) * pkt.progress;
+
+        let col = '#00f0ff';
+        if (pkt.protocol === 'TCP') col = '#10b981';
+        else if (pkt.protocol === 'UDP') col = '#f59e0b';
+        else if (pkt.protocol === 'ARP') col = '#a855f7';
+
+        // Outer glow
+        ctx.fillStyle = col + '44';
+        ctx.beginPath();
+        ctx.arc(curX, curY, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Inner solid core
+        ctx.fillStyle = col;
+        ctx.beginPath();
+        ctx.arc(curX, curY, 4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    function drawNodes() {
+      const showLabels = document.getElementById('chkIpLabels').checked;
+
+      TOPOLOGY.nodes.forEach(node => {
+        const isSelected = selectedNodeId === node.id;
+        const isHovered = hoveredNodeId === node.id;
+        const isPingSrc = pingSourceNodeId === node.id;
+
+        // Selection ring
+        if (isSelected || isPingSrc) {
+          ctx.strokeStyle = isPingSrc ? '#f59e0b' : '#00f0ff';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, 24, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (isHovered) {
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, 22, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // Node Body Circle
+        let fillColor = '#1e293b';
+        let strokeColor = '#38bdf8';
+
+        if (node.type === 'router') { fillColor = '#0c4a6e'; strokeColor = '#00f0ff'; }
+        else if (node.type === 'switch') { fillColor = '#14532d'; strokeColor = '#10b981'; }
+        else if (node.type === 'firewall') { fillColor = '#881337'; strokeColor = '#fb7185'; }
+        else if (node.type === 'server') { fillColor = '#581c87'; strokeColor = '#c084fc'; }
+        else { fillColor = '#1e293b'; strokeColor = '#94a3b8'; }
+
+        ctx.fillStyle = fillColor;
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, 18, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Node Glyph / Vector Icon
+        drawNodeGlyph(node.type, node.x, node.y, strokeColor);
+
+        // Status LED
+        ctx.fillStyle = node.status === 'up' ? '#10b981' : '#f43f5e';
+        ctx.beginPath();
+        ctx.arc(node.x + 12, node.y - 12, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Text Labels
+        if (showLabels) {
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 10.5px Consolas, monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(node.name, node.x, node.y + 30);
+
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = '9.5px Consolas, monospace';
+          ctx.fillText(node.ip, node.x, node.y + 42);
+          ctx.textAlign = 'start';
+        }
+      });
+    }
+
+    function drawNodeGlyph(type, x, y, col) {
+      ctx.strokeStyle = col;
+      ctx.fillStyle = col;
+      ctx.lineWidth = 1.5;
+
+      if (type === 'router') {
+        // Router cross arrows
+        ctx.beginPath();
+        ctx.moveTo(x - 8, y); ctx.lineTo(x + 8, y);
+        ctx.moveTo(x, y - 8); ctx.lineTo(x, y + 8);
+        ctx.stroke();
+      } else if (type === 'switch') {
+        // Switch parallel bidirectional arrows
+        ctx.beginPath();
+        ctx.moveTo(x - 7, y - 3); ctx.lineTo(x + 7, y - 3);
+        ctx.moveTo(x + 7, y + 3); ctx.lineTo(x - 7, y + 3);
+        ctx.stroke();
+      } else if (type === 'firewall') {
+        // Brick wall lines
+        ctx.strokeRect(x - 7, y - 7, 14, 14);
+        ctx.beginPath();
+        ctx.moveTo(x - 7, y); ctx.lineTo(x + 7, y);
+        ctx.moveTo(x, y - 7); ctx.lineTo(x, y);
+        ctx.stroke();
+      } else if (type === 'server') {
+        // Rack server slots
+        ctx.strokeRect(x - 7, y - 8, 14, 16);
+        ctx.beginPath();
+        ctx.moveTo(x - 5, y - 3); ctx.lineTo(x + 5, y - 3);
+        ctx.moveTo(x - 5, y + 3); ctx.lineTo(x + 5, y + 3);
+        ctx.stroke();
+      } else {
+        // Workstation monitor
+        ctx.strokeRect(x - 7, y - 6, 14, 10);
+        ctx.beginPath();
+        ctx.moveTo(x - 3, y + 6); ctx.lineTo(x + 3, y + 6);
+        ctx.moveTo(x, y + 4); ctx.lineTo(x, y + 6);
+        ctx.stroke();
+      }
+    }
+
+    /* =========================================================================
+       INPUT & CANVAS INTERACTION
+       ========================================================================= */
+    let mouseWorldX = 0;
+    let mouseWorldY = 0;
+
+    function setupCanvasInput() {
+      canvas.addEventListener('mousedown', onMouseDown);
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+      canvas.addEventListener('wheel', onWheel, { passive: false });
+
+      // Keyboard Shortcuts
+      window.addEventListener('keydown', onKeyDown);
+    }
+
+    function screenToWorld(sx, sy) {
+      return {
+        x: (sx - viewPanX) / viewZoom,
+        y: (sy - viewPanY) / viewZoom
+      };
+    }
+
+    function onMouseDown(e) {
+      const rect = canvas.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+      const world = screenToWorld(sx, sy);
+
+      // Middle click or space+click = pan
+      if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
+        isPanning = true;
+        panStartX = e.clientX - viewPanX;
+        panStartY = e.clientY - viewPanY;
+        return;
+      }
+
+      if (e.button === 0) {
+        const clickedNode = findNodeAt(world.x, world.y);
+        const clickedLink = findLinkAt(world.x, world.y);
+
+        if (activeTool === 'select') {
+          if (clickedNode) {
+            selectedNodeId = clickedNode.id;
+            selectedLinkId = null;
+            isDraggingNode = true;
+            dragNodeId = clickedNode.id;
+            dragOffsetX = world.x - clickedNode.x;
+            dragOffsetY = world.y - clickedNode.y;
+            updateInspectorPane(clickedNode);
+          } else if (clickedLink) {
+            selectedLinkId = clickedLink.id;
+            selectedNodeId = null;
+          } else {
+            selectedNodeId = null;
+            selectedLinkId = null;
+            // Start panning on empty background
+            isPanning = true;
+            panStartX = e.clientX - viewPanX;
+            panStartY = e.clientY - viewPanY;
+          }
+        } else if (activeTool === 'connect') {
+          if (clickedNode) {
+            if (!connectStartNodeId) {
+              connectStartNodeId = clickedNode.id;
+              soundPacketPulse();
+              showToast(`Linking from ${clickedNode.name}. Click target node.`);
+            } else if (connectStartNodeId !== clickedNode.id) {
+              // Create link
+              const existing = TOPOLOGY.links.find(l => 
+                (l.fromId === connectStartNodeId && l.toId === clickedNode.id) ||
+                (l.fromId === clickedNode.id && l.toId === connectStartNodeId)
+              );
+              if (!existing) {
+                const newLink = createLink(connectStartNodeId, clickedNode.id, activeCableType);
+                TOPOLOGY.links.push(newLink);
+                soundLinkConnect();
+                showToast(`Connected ${getNodeName(connectStartNodeId)} <-> ${clickedNode.name}`);
+                logTerminal(`[LINK CREATED] ${newLink.type} wired between ${getNodeName(connectStartNodeId)} and ${clickedNode.name}.`, 'term-info');
+                syncOnlineTopology();
+              }
+              connectStartNodeId = null;
+            }
+          }
+        } else if (activeTool === 'ping') {
+          if (clickedNode) {
+            if (!pingSourceNodeId) {
+              pingSourceNodeId = clickedNode.id;
+              soundPacketPulse();
+              showToast(`Ping Source: ${clickedNode.name}. Select destination node.`);
+            } else {
+              showToast(`Pinging ${clickedNode.name}...`);
+              dispatchPacket(pingSourceNodeId, clickedNode.id, 'ICMP', 'Echo Request');
+              pingSourceNodeId = null;
+            }
+          }
+        } else if (activeTool === 'trace') {
+          if (clickedNode) {
+            if (!pingSourceNodeId) {
+              pingSourceNodeId = clickedNode.id;
+              showToast(`Trace Source: ${clickedNode.name}. Select destination.`);
+            } else {
+              showToast(`Tracing path to ${clickedNode.name}...`);
+              runTraceroute(pingSourceNodeId, clickedNode.id);
+              pingSourceNodeId = null;
+            }
+          }
+        } else if (activeTool === 'cut') {
+          if (clickedLink) {
+            clickedLink.status = clickedLink.status === 'severed' ? 'up' : 'severed';
+            soundLinkCut();
+            showToast(`Link ${clickedLink.status === 'severed' ? 'Severed!' : 'Repaired'}`);
+            logTerminal(`[FAULT INJECTION] Link ${clickedLink.id} between ${getNodeName(clickedLink.fromId)} and ${getNodeName(clickedLink.toId)} is now ${clickedLink.status.toUpperCase()}.`, 'term-warn');
+            syncOnlineTopology();
+          }
+        } else if (activeTool.startsWith('add-')) {
+          const type = activeTool.replace('add-', '');
+          const newNode = createNode(type, world.x, world.y);
+          TOPOLOGY.nodes.push(newNode);
+          soundLinkConnect();
+          showToast(`Added ${newNode.name}`);
+          logTerminal(`[DEVICE INSTANTIATED] ${newNode.name} (${newNode.type}) placed at (${newNode.x}, ${newNode.y}).`, 'term-info');
+          setTool('select');
+          selectedNodeId = newNode.id;
+          updateInspectorPane(newNode);
+          syncOnlineTopology();
+        }
+      }
+      updateCounts();
+    }
+
+    function onMouseMove(e) {
+      const rect = canvas.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+      const world = screenToWorld(sx, sy);
+      mouseWorldX = world.x;
+      mouseWorldY = world.y;
+
+      document.getElementById('hudCoords').textContent = `${Math.round(world.x)}, ${Math.round(world.y)}`;
+
+      if (isPanning) {
+        viewPanX = e.clientX - panStartX;
+        viewPanY = e.clientY - panStartY;
+      } else if (isDraggingNode && dragNodeId) {
+        const node = TOPOLOGY.nodes.find(n => n.id === dragNodeId);
+        if (node) {
+          node.x = Math.round(world.x - dragOffsetX);
+          node.y = Math.round(world.y - dragOffsetY);
+        }
+      } else {
+        const hovered = findNodeAt(world.x, world.y);
+        hoveredNodeId = hovered ? hovered.id : null;
+        canvas.style.cursor = hovered ? 'pointer' : (activeTool === 'select' ? 'default' : 'crosshair');
+
+        if (!hovered) {
+          const hoveredL = findLinkAt(world.x, world.y);
+          hoveredLinkId = hoveredL ? hoveredL.id : null;
+        } else {
+          hoveredLinkId = null;
+        }
+      }
+    }
+
+    function onMouseUp() {
+      if (isDraggingNode) {
+        syncOnlineTopology();
+      }
+      isPanning = false;
+      isDraggingNode = false;
+      dragNodeId = null;
+    }
+
+    function onWheel(e) {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.12 : 0.89;
+      applyZoom(zoomFactor, e.clientX, e.clientY);
+    }
+
+    function applyZoom(factor, clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      const cx = (clientX || (rect.left + rect.width / 2)) - rect.left;
+      const cy = (clientY || (rect.top + rect.height / 2)) - rect.top;
+
+      const wx = (cx - viewPanX) / viewZoom;
+      const wy = (cy - viewPanY) / viewZoom;
+
+      const newZoom = Math.min(2.5, Math.max(0.4, viewZoom * factor));
+      viewPanX = cx - wx * newZoom;
+      viewPanY = cy - wy * newZoom;
+      viewZoom = newZoom;
+
+      document.getElementById('hudZoom').textContent = Math.round(viewZoom * 100) + '%';
+    }
+
+    function zoomIn() { applyZoom(1.15); }
+    function zoomOut() { applyZoom(0.85); }
+    function resetView() {
+      viewZoom = 1.0;
+      viewPanX = 60;
+      viewPanY = 40;
+      document.getElementById('hudZoom').textContent = '100%';
+    }
+
+    function findNodeAt(x, y) {
+      for (let i = TOPOLOGY.nodes.length - 1; i >= 0; i--) {
+        const n = TOPOLOGY.nodes[i];
+        const dx = n.x - x;
+        const dy = n.y - y;
+        if (dx * dx + dy * dy <= 24 * 24) {
+          return n;
+        }
+      }
+      return null;
+    }
+
+    function findLinkAt(x, y) {
+      for (const link of TOPOLOGY.links) {
+        const n1 = TOPOLOGY.nodes.find(n => n.id === link.fromId);
+        const n2 = TOPOLOGY.nodes.find(n => n.id === link.toId);
+        if (!n1 || !n2) continue;
+
+        const dist = distToSegment({ x, y }, n1, n2);
+        if (dist <= 6) return link;
+      }
+      return null;
+    }
+
+    function distToSegment(p, v, w) {
+      const l2 = (v.x - w.x) * (v.x - w.x) + (v.y - w.y) * (v.y - w.y);
+      if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
+      let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+      t = Math.max(0, Math.min(1, t));
+      return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
+    }
+
+    /* =========================================================================
+       TOOL SELECTION & HOTKEYS
+       ========================================================================= */
+    function setTool(toolName) {
+      activeTool = toolName;
+      connectStartNodeId = null;
+      pingSourceNodeId = null;
+
+      document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById('tool-' + toolName);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      document.getElementById('hudTool').textContent = toolName.toUpperCase();
+      canvas.style.cursor = toolName === 'select' ? 'default' : 'crosshair';
+    }
+
+    function selectCableType(cableType) {
+      activeCableType = cableType;
+      document.querySelectorAll('.cable-option').forEach(o => o.classList.remove('active'));
+      const opt = document.getElementById('cable-' + cableType);
+      if (opt) opt.classList.add('active');
+    }
+
+    function onKeyDown(e) {
+      // Ignore if typing in text input
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
+
+      if (e.key === 'F1') { e.preventDefault(); openHelpModal(); }
+      else if (e.key === 'F5') { e.preventDefault(); saveTopologyQuicksave(); }
+      else if (e.key === 'F9') { e.preventDefault(); loadTopologyQuicksave(); }
+      else if (e.key === 'Escape') {
+        e.preventDefault();
+        closeAllModals();
+        setTool('select');
+      }
+      else if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selectedNodeId) {
+          deleteNode(selectedNodeId);
+          selectedNodeId = null;
+        } else if (selectedLinkId) {
+          deleteLink(selectedLinkId);
+          selectedLinkId = null;
+        }
+      }
+      else if (e.key === ' ') { e.preventDefault(); toggleSimPause(); }
+      else if (e.key === 'p' || e.key === 'P') { setTool('ping'); }
+      else if (e.key === 't' || e.key === 'T') { setTool('trace'); }
+      else if (e.key === 'c' || e.key === 'C') { setTool('connect'); }
+      else if (e.key === 'm' || e.key === 'M') { toggleMute(); }
+      else if (e.key === 'o' || e.key === 'O') { openOnlineModal(); }
+      else if (e.key === '1') { setTool('add-router'); }
+      else if (e.key === '2') { setTool('add-switch'); }
+      else if (e.key === '3') { setTool('add-firewall'); }
+      else if (e.key === '4') { setTool('add-server'); }
+      else if (e.key === '5') { setTool('add-workstation'); }
+    }
+
+    function deleteNode(nodeId) {
+      TOPOLOGY.nodes = TOPOLOGY.nodes.filter(n => n.id !== nodeId);
+      TOPOLOGY.links = TOPOLOGY.links.filter(l => l.fromId !== nodeId && l.toId !== nodeId);
+      soundLinkCut();
+      showToast('Node deleted');
+      updateCounts();
+      syncOnlineTopology();
+    }
+
+    function deleteLink(linkId) {
+      TOPOLOGY.links = TOPOLOGY.links.filter(l => l.id !== linkId);
+      soundLinkCut();
+      showToast('Link removed');
+      updateCounts();
+      syncOnlineTopology();
+    }
+
+    function toggleSimPause() {
+      isSimPaused = !isSimPaused;
+      const btn = document.getElementById('pauseBtn');
+      const dot = document.getElementById('engineDot');
+      const txt = document.getElementById('engineStatusText');
+
+      if (btn) btn.textContent = isSimPaused ? '▶ Resume' : '⏸ Pause';
+      if (dot) dot.style.background = isSimPaused ? '#f59e0b' : '#10b981';
+      if (txt) txt.textContent = isSimPaused ? 'SIM PAUSED' : 'SIM RUNNING';
+    }
+
+    /* =========================================================================
+       DIAGNOSTIC TOOLS: TRACEROUTE & BURSTS
+       ========================================================================= */
+    function runTraceroute(fromId, toId) {
+      const path = findShortestRoute(fromId, toId);
+      if (!path) {
+        logTerminal(`[TRACEROUTE] Destination unreachable from ${getNodeName(fromId)}.`, 'term-err');
+        soundAlert();
+        return;
+      }
+
+      const dstNode = TOPOLOGY.nodes.find(n => n.id === toId);
+      logTerminal(`traceroute to ${dstNode ? dstNode.ip : 'target'} (${dstNode ? dstNode.name : 'host'}), 30 hops max, 40 byte packets`, 'term-info');
+
+      path.forEach((hopId, idx) => {
+        if (idx === 0) return;
+        setTimeout(() => {
+          const hopNode = TOPOLOGY.nodes.find(n => n.id === hopId);
+          const rtt = (idx * 3.8 + Math.random() * 1.5).toFixed(2);
+          logTerminal(` ${idx}  ${hopNode ? hopNode.ip : '0.0.0.0'} (${hopNode ? hopNode.name : 'gw'})  ${rtt} ms`, 'term-info');
+          soundPacketPulse();
+        }, idx * 250);
+      });
+    }
+
+    function triggerTrafficBurst() {
+      if (TOPOLOGY.nodes.length < 2) return;
+      showToast('Triggering Traffic Burst...');
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+          const n1 = TOPOLOGY.nodes[Math.floor(Math.random() * TOPOLOGY.nodes.length)];
+          const n2 = TOPOLOGY.nodes[Math.floor(Math.random() * TOPOLOGY.nodes.length)];
+          if (n1 && n2 && n1.id !== n2.id) {
+            const protos = ['TCP', 'UDP', 'ICMP'];
+            dispatchPacket(n1.id, n2.id, protos[Math.floor(Math.random() * protos.length)], 'Traffic Burst Packet');
+          }
+        }, i * 120);
+      }
+    }
+
+    /* =========================================================================
+       LOGGING (TERMINAL & SNIFFER)
+       ========================================================================= */
+    function logTerminal(msg, className = '') {
+      const log = document.getElementById('terminalLog');
+      if (!log) return;
+      const line = document.createElement('div');
+      if (className) line.className = className;
+      line.textContent = msg;
+      log.appendChild(line);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function logSniffer(proto, src, dst, flags, summary) {
+      const table = document.getElementById('snifferTableBody');
+      if (!table) return;
+
+      const now = new Date();
+      const timeStr = `${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}.${Math.floor(now.getMilliseconds()/100)}`;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="color:var(--text-dim);">${timeStr}</td>
+        <td><span class="proto-badge proto-${proto.toLowerCase()}">${proto}</span></td>
+        <td>${src}</td>
+        <td>${dst}</td>
+        <td style="color:var(--text-dim);">${flags}</td>
+        <td style="color:var(--text);">${summary}</td>
+      `;
+
+      table.insertBefore(tr, table.firstChild);
+      if (table.children.length > 50) {
+        table.removeChild(table.lastChild);
+      }
+
+      TOPOLOGY.packetSnifferLog.push({ time: timeStr, proto, src, dst, flags, summary });
+      document.getElementById('snifferCountBadge').textContent = TOPOLOGY.packetSnifferLog.length;
+    }
+
+    function clearSnifferLog() {
+      document.getElementById('snifferTableBody').innerHTML = '';
+      document.getElementById('terminalLog').innerHTML = '';
+      TOPOLOGY.packetSnifferLog = [];
+      document.getElementById('snifferCountBadge').textContent = '0';
+    }
+
+    function switchDrawerTab(tabName) {
+      document.querySelectorAll('.drawer-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.drawer-pane').forEach(p => p.classList.remove('active'));
+
+      const activeTab = document.getElementById('tab-' + tabName);
+      const activePane = document.getElementById('pane-' + tabName);
+      if (activeTab) activeTab.classList.add('active');
+      if (activePane) activePane.classList.add('active');
+
+      const drawer = document.getElementById('bottomDrawer');
+      if (drawer) drawer.classList.remove('collapsed');
+    }
+
+    function toggleDrawerCollapse() {
+      const drawer = document.getElementById('bottomDrawer');
+      const btn = document.getElementById('drawerCollapseBtn');
+      drawer.classList.toggle('collapsed');
+      btn.textContent = drawer.classList.contains('collapsed') ? '▲' : '▼';
+    }
+
+    function updateInspectorPane(node) {
+      const container = document.getElementById('nodeInspectorBody');
+      if (!container || !node) return;
+
+      switchDrawerTab('nodeInspector');
+
+      container.innerHTML = `
+        <div class="inspector-card">
+          <div class="inspector-title">${node.name} (${node.type.toUpperCase()})</div>
+          <div class="kv-row"><span class="kv-key">Primary IP:</span><span class="kv-val">${node.ip}</span></div>
+          <div class="kv-row"><span class="kv-key">Netmask:</span><span class="kv-val">${node.mask}</span></div>
+          <div class="kv-row"><span class="kv-key">Hardware MAC:</span><span class="kv-val">${node.mac}</span></div>
+          <div class="kv-row"><span class="kv-key">Status:</span><span class="kv-val" style="color:${node.status==='up'?'#34d399':'#fb7185'}">${node.status.toUpperCase()}</span></div>
+          <button class="btn" style="margin-top:6px; font-size:10px;" onclick="toggleNodePower('${node.id}')">Toggle Power State</button>
+        </div>
+
+        <div class="inspector-card" style="flex:1.5;">
+          <div class="inspector-title">Active Routing Table (Kernel FIB)</div>
+          <table style="width:100%; border-collapse:collapse; font-size:10px;">
+            <tr style="color:var(--text-dim); text-align:left;">
+              <th>Destination</th><th>Netmask</th><th>Gateway</th><th>Iface</th><th>Metric</th>
+            </tr>
+            ${node.routes.map(r => `
+              <tr>
+                <td>${r.dest}</td><td>${r.mask}</td><td>${r.gateway}</td><td>${r.iface}</td><td>${r.metric}</td>
+              </tr>
+            `).join('')}
+          </table>
+        </div>
+      `;
+    }
+
+    function toggleNodePower(nodeId) {
+      const node = TOPOLOGY.nodes.find(n => n.id === nodeId);
+      if (node) {
+        node.status = node.status === 'up' ? 'down' : 'up';
+        soundAlert();
+        showToast(`${node.name} is now ${node.status.toUpperCase()}`);
+        logTerminal(`[NODE EVENT] ${node.name} power state toggled to ${node.status.toUpperCase()}.`, 'term-warn');
+        updateInspectorPane(node);
+        syncOnlineTopology();
+      }
+    }
+
+    function updateCounts() {
+      document.getElementById('topNodeCount').textContent = TOPOLOGY.nodes.length;
+      document.getElementById('topLinkCount').textContent = TOPOLOGY.links.length;
+      updateCidrBar();
+    }
+
+    function updateCidrBar() {
+      const bar = document.getElementById('cidrBar');
+      if (!bar) return;
+      bar.innerHTML = '';
+
+      TOPOLOGY.subnets.forEach(sub => {
+        const slice = document.createElement('div');
+        slice.className = 'cidr-slice';
+        slice.style.flex = '1';
+        slice.style.background = sub.color;
+        slice.textContent = `${sub.name} (${sub.cidr})`;
+        slice.title = `${sub.name}\nCIDR: ${sub.cidr}\nVLAN: ${sub.vlan}`;
+        slice.onclick = () => {
+          showToast(`Subnet: ${sub.name} [${sub.cidr}]`);
+        };
+        bar.appendChild(slice);
+      });
+    }
+
+    /* =========================================================================
+       PRESET TOPOLOGIES
+       ========================================================================= */
+    function loadPresetTopology(presetKey) {
+      TOPOLOGY.nodes = [];
+      TOPOLOGY.links = [];
+      TOPOLOGY.packets = [];
+      clearSnifferLog();
+
+      if (presetKey === 'corp') {
+        // 1999 Corporate DMZ & Multi-Subnet LAN
+        const r1 = createNode('router', 320, 140, 'GW-BORDER-7200', '198.51.100.1');
+        const fw = createNode('firewall', 320, 240, 'FW-BASTION', '198.51.100.2');
+        const sw1 = createNode('switch', 180, 360, 'SW-DMZ-3CON', '198.51.100.10');
+        const sw2 = createNode('switch', 460, 360, 'SW-ENG-3CON', '192.168.10.1');
+
+        const srvWeb = createNode('server', 80, 480, 'SOL-WEB-APACHE', '198.51.100.20');
+        srvWeb.subnetId = 'sub-dmz';
+        const srvMail = createNode('server', 220, 480, 'SOL-SENDMAIL', '198.51.100.21');
+        srvMail.subnetId = 'sub-dmz';
+
+        const ws1 = createNode('workstation', 380, 480, 'WS-DEV-01', '192.168.10.101');
+        ws1.subnetId = 'sub-eng';
+        const ws2 = createNode('workstation', 520, 480, 'WS-DEV-02', '192.168.10.102');
+        ws2.subnetId = 'sub-eng';
+
+        TOPOLOGY.nodes.push(r1, fw, sw1, sw2, srvWeb, srvMail, ws1, ws2);
+        TOPOLOGY.links.push(
+          createLink(r1.id, fw.id, 'fiber'),
+          createLink(fw.id, sw1.id, '100base_tx'),
+          createLink(fw.id, sw2.id, '100base_tx'),
+          createLink(sw1.id, srvWeb.id, '100base_tx'),
+          createLink(sw1.id, srvMail.id, '100base_tx'),
+          createLink(sw2.id, ws1.id, '100base_tx'),
+          createLink(sw2.id, ws2.id, '100base_tx')
+        );
+
+        logTerminal('Loaded Preset: 1999 Corporate DMZ & Multi-Subnet Architecture', 'term-info');
+      } else if (presetKey === 'isp') {
+        // Multi-Homed ISP Backbone
+        const r1 = createNode('router', 160, 160, 'CORE-NYC-01', '10.0.1.1');
+        const r2 = createNode('router', 480, 160, 'CORE-CHI-02', '10.0.2.1');
+        const r3 = createNode('router', 480, 420, 'CORE-SFO-03', '10.0.3.1');
+        const r4 = createNode('router', 160, 420, 'CORE-ATL-04', '10.0.4.1');
+
+        TOPOLOGY.nodes.push(r1, r2, r3, r4);
+        TOPOLOGY.links.push(
+          createLink(r1.id, r2.id, 'fiber'),
+          createLink(r2.id, r3.id, 'fiber'),
+          createLink(r3.id, r4.id, 'fiber'),
+          createLink(r4.id, r1.id, 'fiber'),
+          createLink(r1.id, r3.id, 'serial_t1') // Diagonal backup link
+        );
+
+        logTerminal('Loaded Preset: Multi-Homed ISP Autonomous System Mesh', 'term-info');
+      } else if (presetKey === 'karpanet') {
+        // KARPANET Node (1983-1999)
+        const imp1 = createNode('router', 180, 200, 'IMP-MIT-01', '10.1.0.1');
+        const imp2 = createNode('router', 440, 200, 'IMP-STANFORD-02', '10.2.0.1');
+        const imp3 = createNode('router', 310, 380, 'IMP-UTAH-03', '10.3.0.1');
+        const pdp = createNode('server', 80, 340, 'PDP-11-HOST', '10.1.0.50');
+        const vax = createNode('server', 540, 340, 'VAX-780-UNIX', '10.2.0.50');
+
+        TOPOLOGY.nodes.push(imp1, imp2, imp3, pdp, vax);
+        TOPOLOGY.links.push(
+          createLink(imp1.id, imp2.id, 'serial_t1'),
+          createLink(imp2.id, imp3.id, 'serial_t1'),
+          createLink(imp3.id, imp1.id, 'serial_t1'),
+          createLink(imp1.id, pdp.id, '10base_t'),
+          createLink(imp2.id, vax.id, '10base_t')
+        );
+
+        logTerminal('Loaded Preset: KARPANET Historical Packet-Switching Ring', 'term-info');
+      } else if (presetKey === 'ras') {
+        // Dial-up RAS
+        const telco = createNode('router', 300, 160, 'PSTN-TELCO-CLOUD', '204.152.184.1');
+        const ras = createNode('server', 300, 280, 'CYBER-RAS-ACCESS', '204.152.184.2');
+        const radius = createNode('server', 460, 280, 'RADIUS-AUTH-SRV', '204.152.184.10');
+        const c1 = createNode('workstation', 140, 420, 'DIALUP-MODEM-01', '204.152.184.101');
+        const c2 = createNode('workstation', 250, 420, 'DIALUP-MODEM-02', '204.152.184.102');
+        const c3 = createNode('workstation', 360, 420, 'DIALUP-MODEM-03', '204.152.184.103');
+
+        TOPOLOGY.nodes.push(telco, ras, radius, c1, c2, c3);
+        TOPOLOGY.links.push(
+          createLink(telco.id, ras.id, 'serial_t1'),
+          createLink(ras.id, radius.id, '100base_tx'),
+          createLink(ras.id, c1.id, '10base_t'),
+          createLink(ras.id, c2.id, '10base_t'),
+          createLink(ras.id, c3.id, '10base_t')
+        );
+
+        logTerminal('Loaded Preset: Dial-up RAS Access Server & Terminal Pool', 'term-info');
+      }
+
+      resetView();
+      updateCounts();
+      soundLinkConnect();
+      syncOnlineTopology();
+    }
+
+    function loadPresetFromSplash(presetKey) {
+      loadPresetTopology(presetKey);
+      closeSplash();
+    }
+
+    function startNewSession() {
+      loadPresetTopology('corp');
+      closeSplash();
+      checkFirstRunTutorial();
+    }
+
+    function confirmClearGrid() {
+      if (confirm('Clear all nodes and links from workspace?')) {
+        TOPOLOGY.nodes = [];
+        TOPOLOGY.links = [];
+        TOPOLOGY.packets = [];
+        clearSnifferLog();
+        updateCounts();
+        showToast('Workspace Cleared');
+        syncOnlineTopology();
+      }
+    }
+
+    /* =========================================================================
+       STATE PERSISTENCE (QUICKSAVE F5, QUICKLOAD F9, JSON EXPORT/IMPORT)
+       ========================================================================= */
+    function saveTopologyQuicksave() {
+      const data = {
+        nodes: TOPOLOGY.nodes,
+        links: TOPOLOGY.links,
+        subnets: TOPOLOGY.subnets,
+        version: '1.0.0',
+        timestamp: Date.now()
+      };
+      localStorage.setItem('knetmap_quicksave', JSON.stringify(data));
+      soundLinkConnect();
+      showToast('Topology Quicksaved [F5]');
+      logTerminal('[STATE SAVED] Topology configuration written to local persistent storage.', 'term-info');
+    }
+
+    function loadTopologyQuicksave() {
+      const raw = localStorage.getItem('knetmap_quicksave');
+      if (!raw) {
+        showToast('No Quicksave Found');
+        return;
+      }
+      try {
+        const data = JSON.parse(raw);
+        TOPOLOGY.nodes = data.nodes || [];
+        TOPOLOGY.links = data.links || [];
+        if (data.subnets) TOPOLOGY.subnets = data.subnets;
+        TOPOLOGY.packets = [];
+        updateCounts();
+        soundLinkConnect();
+        showToast('Topology Restored [F9]');
+        logTerminal('[STATE RESTORED] Loaded topology quicksave from local storage.', 'term-info');
+        syncOnlineTopology();
+      } catch (err) {
+        showToast('Save file corrupted');
+      }
+    }
+
+    /* =========================================================================
+       FIRST-RUN TUTORIAL ENGINE
+       ========================================================================= */
+    const TUTORIAL_STEPS = [
+      {
+        title: 'Step 1: Welcome to KNetMap',
+        content: 'KNetMap is your alternate-1999 network operations console. You can design corporate subnets, trace routing paths, calculate VLSM addresses, and test network fault tolerance.'
+      },
+      {
+        title: 'Step 2: Placing Hardware & Wiring Links',
+        content: 'Use the left tool palette (or hotkeys 1-5) to place Routers, Switches, and Bastion Firewalls. Press [C] to wire them together with 10Base-T, 100Base-TX, or Fiber FDDI.'
+      },
+      {
+        title: 'Step 3: Real-Time Ping & Traceroute',
+        content: 'Press [P] and click two nodes to dispatch live ICMP Echo packets. Intermediate routers decrement TTL and forward packets across optimal paths!'
+      },
+      {
+        title: 'Step 4: Chaos & Fault Testing',
+        content: 'Use the Sever Link tool to cut active cables. Watch packets dynamically re-route over redundant fallback paths or failover mesh loops.'
+      },
+      {
+        title: 'Step 5: Collaborative Multi-User Co-op',
+        content: 'Press [O] to connect to a shared Firebase RTDB room. You and engineers from other computers can design networks together with live cursor presence.'
+      }
+    ];
+    let currentTutStep = 0;
+
+    function checkFirstRunTutorial() {
+      if (!localStorage.getItem('kknetmap_tutorialSeen')) {
+        setTimeout(openTutorial, 500);
+      }
+    }
+
+    function openTutorial() {
+      currentTutStep = 0;
+      renderTutorialStep();
+      document.getElementById('tutorialModal').classList.add('active');
+    }
+
+    function renderTutorialStep() {
+      const step = TUTORIAL_STEPS[currentTutStep];
+      const body = document.getElementById('tutorialBody');
+      body.innerHTML = `
+        <div class="tut-step-badge">STEP ${currentTutStep + 1} OF ${TUTORIAL_STEPS.length}</div>
+        <h3 style="color:var(--cyan); margin-bottom:8px;">${step.title}</h3>
+        <p style="margin-bottom:12px; color:var(--text);">${step.content}</p>
+        <div class="tut-img">NETMAP INTERACTIVE MATRIX</div>
+      `;
+
+      document.getElementById('tutPrevBtn').style.display = currentTutStep === 0 ? 'none' : 'inline-flex';
+      document.getElementById('tutNextBtn').textContent = currentTutStep === TUTORIAL_STEPS.length - 1 ? 'Finish Tour' : 'Next Step';
+    }
+
+    function nextTutorialStep() {
+      if (currentTutStep < TUTORIAL_STEPS.length - 1) {
+        currentTutStep++;
+        renderTutorialStep();
+      } else {
+        dismissTutorial();
+      }
+    }
+
+    function prevTutorialStep() {
+      if (currentTutStep > 0) {
+        currentTutStep--;
+        renderTutorialStep();
+      }
+    }
+
+    function dismissTutorial() {
+      localStorage.setItem('kknetmap_tutorialSeen', '1');
+      document.getElementById('tutorialModal').classList.remove('active');
+      showToast('Tutorial Completed');
+    }
+
+    /* =========================================================================
+       SUBNET CALCULATOR MODAL LOGIC
+       ========================================================================= */
+    function openSubnetModal() {
+      document.getElementById('subnetModal').classList.add('active');
+      recalcSubnetTool();
+    }
+    function closeSubnetModal() {
+      document.getElementById('subnetModal').classList.remove('active');
+    }
+
+    function recalcSubnetTool() {
+      const ip = document.getElementById('calcIpInput').value.trim();
+      const bits = parseInt(document.getElementById('calcCidrSelect').value, 10);
+      const details = getSubnetDetails(`${ip}/${bits}`);
+
+      const box = document.getElementById('calcResultsBox');
+      box.innerHTML = `
+        <div class="kv-row"><span class="kv-key">Network Address:</span><span class="kv-val" style="color:var(--cyan);">${details.net}</span></div>
+        <div class="kv-row"><span class="kv-key">Broadcast Address:</span><span class="kv-val" style="color:var(--rose);">${details.bcast}</span></div>
+        <div class="kv-row"><span class="kv-key">Subnet Mask:</span><span class="kv-val">${details.mask}</span></div>
+        <div class="kv-row"><span class="kv-key">Usable Host Range:</span><span class="kv-val" style="color:var(--emerald);">${details.firstHost} - ${details.lastHost}</span></div>
+        <div class="kv-row"><span class="kv-key">Total Host Capacity:</span><span class="kv-val">${details.usableHosts} usable hosts (${details.totalHosts} total IPs)</span></div>
+      `;
+    }
+
+    function splitCurrentSubnet() {
+      const currentBits = parseInt(document.getElementById('calcCidrSelect').value, 10);
+      if (currentBits >= 30) {
+        alert('Cannot split a /30 subnet further.');
+        return;
+      }
+      document.getElementById('calcCidrSelect').value = (currentBits + 1).toString();
+      recalcSubnetTool();
+      showToast(`Split into /${currentBits + 1} subnets!`);
+    }
+
+    function applySubnetToCurrentMap() {
+      const ip = document.getElementById('calcIpInput').value.trim();
+      const bits = document.getElementById('calcCidrSelect').value;
+      const cidr = `${ip}/${bits}`;
+
+      const newSub = {
+        id: 'sub-' + Date.now().toString(36),
+        name: `Zone-${cidr}`,
+        cidr,
+        color: ['#00f0ff', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'][TOPOLOGY.subnets.length % 5],
+        vlan: (TOPOLOGY.subnets.length + 1) * 10
+      };
+
+      TOPOLOGY.subnets.push(newSub);
+      updateCidrBar();
+      showToast(`Applied ${cidr} as new topology zone!`);
+      closeSubnetModal();
+    }
+
+    /* =========================================================================
+       ONLINE MULTIPLAYER CO-OP (FIREBASE RTDB DIRECTIVE MANDATE 12)
+       ========================================================================= */
+    let currentRoomId = null;
+    let roomRef = null;
+    let peersRef = null;
+    let myPeerKey = null;
+
+    function openOnlineModal() {
+      document.getElementById('onlineModal').classList.add('active');
+    }
+    function closeOnlineModal() {
+      document.getElementById('onlineModal').classList.remove('active');
+    }
+
+    function joinOnlineRoom() {
+      if (!window.fb || !window.fb.db) {
+        showToast('Online Co-op Unavailable (Offline Mode)');
+        return;
+      }
+
+      const roomCode = document.getElementById('onlineRoomCodeInput').value.trim() || 'cyber-backbone';
+      const callsign = document.getElementById('onlineCallsignInput').value.trim() || 'Admin-1999';
+
+      currentRoomId = roomCode;
+      const db = window.fb.db;
+      const ref = window.fb.ref;
+      const set = window.fb.set;
+      const onValue = window.fb.onValue;
+      const onDisconnect = window.fb.onDisconnect;
+      const push = window.fb.push;
+
+      roomRef = ref(db, `multiplayer/knetmap/rooms/${currentRoomId}`);
+      peersRef = ref(db, `multiplayer/knetmap/rooms/${currentRoomId}/peers`);
+
+      // Register presence
+      const newPeerRef = push(peersRef);
+      myPeerKey = newPeerRef.key;
+
+      set(newPeerRef, {
+        callsign,
+        joinedAt: Date.now()
+      });
+
+      onDisconnect(newPeerRef).remove();
+
+      // Listen for remote topology updates
+      onValue(ref(db, `multiplayer/knetmap/rooms/${currentRoomId}/topology`), snapshot => {
+        const val = snapshot.val();
+        if (val && val.updatedBy !== myPeerKey) {
+          if (val.nodes) TOPOLOGY.nodes = val.nodes;
+          if (val.links) TOPOLOGY.links = val.links;
+          updateCounts();
+        }
+      });
+
+      // Listen for peers
+      onValue(peersRef, snapshot => {
+        const peers = snapshot.val() || {};
+        const peerNames = Object.values(peers).map(p => p.callsign);
+        document.getElementById('onlinePeersList').innerHTML = peerNames.map(name => `<div>● ${name}</div>`).join('');
+      });
+
+      document.getElementById('joinRoomBtn').disabled = true;
+      document.getElementById('leaveRoomBtn').disabled = false;
+      document.getElementById('topOnlineBadge').style.display = 'flex';
+      document.getElementById('topRoomCode').textContent = `[${currentRoomId}]`;
+
+      soundLinkConnect();
+      showToast(`Connected to Room: ${currentRoomId}`);
+      logTerminal(`[ONLINE CONNECTED] Joined collaborative room '${currentRoomId}' as ${callsign}.`, 'term-info');
+      closeOnlineModal();
+    }
+
+    function leaveOnlineRoom() {
+      if (myPeerKey && peersRef && window.fb) {
+        const peerRef = window.fb.ref(window.fb.db, `multiplayer/knetmap/rooms/${currentRoomId}/peers/${myPeerKey}`);
+        window.fb.set(peerRef, null);
+      }
+      currentRoomId = null;
+      document.getElementById('joinRoomBtn').disabled = false;
+      document.getElementById('leaveRoomBtn').disabled = true;
+      document.getElementById('topOnlineBadge').style.display = 'none';
+      showToast('Disconnected from Room');
+    }
+
+    let syncDebounceTimer = null;
+    function syncOnlineTopology() {
+      if (!currentRoomId || !window.fb || !window.fb.db || !myPeerKey) return;
+      clearTimeout(syncDebounceTimer);
+      syncDebounceTimer = setTimeout(() => {
+        const ref = window.fb.ref(window.fb.db, `multiplayer/knetmap/rooms/${currentRoomId}/topology`);
+        window.fb.set(ref, {
+          nodes: TOPOLOGY.nodes,
+          links: TOPOLOGY.links,
+          updatedBy: myPeerKey,
+          timestamp: Date.now()
+        });
+      }, 300);
+    }
+
+    /* =========================================================================
+       MODALS & TOASTS
+       ========================================================================= */
+    function closeSplash() {
+      document.getElementById('splashModal').classList.remove('active');
+    }
+    function openHelpModal() {
+      document.getElementById('helpModal').classList.add('active');
+    }
+    function closeHelpModal() {
+      document.getElementById('helpModal').classList.remove('active');
+    }
+    function closeAllModals() {
+      document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('active'));
+    }
+
+    function showToast(msg) {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `<span>●</span> <span>${msg}</span>`;
+      toast.onclick = () => toast.remove();
+
+      container.appendChild(toast);
+      setTimeout(() => {
+        if (toast.parentNode) toast.remove();
+      }, 3200);
+    }
+
+    /* =========================================================================
+       INITIALIZATION
+       ========================================================================= */
+    window.addEventListener('DOMContentLoaded', () => {
+      initCanvas();
+      loadPresetTopology('corp');
+      updateCounts();
+
+      // Check for quicksave availability for splash screen
+      if (!localStorage.getItem('knetmap_quicksave')) {
+        const btn = document.getElementById('splashLoadBtn');
+        if (btn) btn.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
