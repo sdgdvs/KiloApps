@@ -99,6 +99,8 @@ def main():
                         help="Audit a single app by name (e.g. ksnake)")
     parser.add_argument("--baseline-compare", action="store_true",
                         help="Show score deltas vs previous run")
+    parser.add_argument("--interact", action="store_true",
+                        help="Audit post-interaction screenshots (*_interact.png) instead of initial")
     args = parser.parse_args()
 
     # Check API key
@@ -122,10 +124,15 @@ def main():
         print("Run the headless test suite first: node scripts/test_web_apps.js")
         sys.exit(1)
 
-    screenshots = sorted(
-        p for p in SCREENSHOTS_DIR.glob("*.png")
-        if "_interact" not in p.name  # Skip post-interaction screenshots
-    )
+    if args.interact:
+        screenshots = sorted(SCREENSHOTS_DIR.glob("*_interact.png"))
+        scores_dest = WORKSPACE_ROOT / "docs" / "gallery" / "vision_scores_interact.json"
+    else:
+        screenshots = sorted(
+            p for p in SCREENSHOTS_DIR.glob("*.png")
+            if "_interact" not in p.name  # Skip post-interaction screenshots
+        )
+        scores_dest = SCORES_PATH
 
     if args.app:
         screenshots = [p for p in screenshots if p.stem == args.app]
@@ -210,9 +217,9 @@ def main():
         },
         "results": results,
     }
-    SCORES_PATH.parent.mkdir(parents=True, exist_ok=True)
-    SCORES_PATH.write_text(json.dumps(report, indent=2))
-    print(f"\n  Full report saved to {SCORES_PATH.relative_to(WORKSPACE_ROOT)}")
+    scores_dest.parent.mkdir(parents=True, exist_ok=True)
+    scores_dest.write_text(json.dumps(report, indent=2))
+    print(f"\n  Full report saved to {scores_dest.relative_to(WORKSPACE_ROOT)}")
 
     if flagged > 0:
         print(f"\n  ⚠️  {flagged} app(s) scored below {args.threshold} — review recommended.")

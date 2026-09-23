@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-expander
-  app: KNote
-  timestamp: "2026-09-23T02:00:00Z"
+  agent: kilo-usability
+  app: KiloOS
+  timestamp: "2026-09-23T03:02:00Z"
 last_planner_run: "2026-09-22T07:47:00Z"
 ---
 
@@ -156,6 +156,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T03:02:00Z — kilo-usability: KiloOS Window Resizing & Folder Layout**
+  - Status: PASS ✅ (Fixed folder overflow blowout, removed broken vestigial handle, expanded resize hitboxes).
+  - Flexbox Layout Fix: Added `min-height: 0; overflow: hidden;` to `.xp-content` so large folders scroll instead of blowing out to 992px+.
+  - Corner Alignment: Aligned `.folder-content` bounds with `.xp-window` bottom border so resize handles match visual corners.
+  - Vestigial Handle Cleanup: Removed dead 15x15 bottom-right div that lacked `dir` parameter and swallowed `se` resize events.
+  - Hitbox Ergonomics: Expanded corner handles to 14x14px and edges to 8px; added `resizing` overlay guard.
+  - Version Bump: Bumped to 0.4.4 in `KiloOS/package.json` and `App.jsx`. Vite build clean (230ms); lint 0 violations.
+
 - **2026-09-23T02:00:00Z — kilo-expander: KNote**
   - Status: PASS ✅ (Multi-tab sessions, tag cloud, in-editor Find/Replace, speed formatting, multi-format export/import, Trash recovery).
   - Multi-Tab Workspace: Added responsive tab strip, tab switching/closing, Ctrl+W, Ctrl+Tab, Ctrl+1..9 shortcuts, session persistence.
@@ -191,11 +199,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Editor Ergonomics: Preserved cursor position during live typing; added real-time card snippet/stats sync.
   - Settings & State: Synchronized form inputs on open, fixed autoSave toggle saving, and delayed URL revocation.
   - Verification: Native MSVC C (15.5 KB); Single-file HTML5 (86.6 KB); Vite build clean (241ms); security lint 0 violations.
-
-- **2026-09-23T01:17:00Z — kilo-graphics: KDragon**
-  - Status: PASS ✅ (Graphics, enemy archetypes, Astral evolution, balance pass, glint audit).
-  - Web & Native: Purged lingering glint properties; verified zero traveling comets or perimeter dots.
-  - Game Content: Added 6 enemy archetypes, elemental counters, 4th evolution (Astral Dragon), and Hoard Relics tray.
-  - Audio & VFX: Added Genesis YM2612 FM / SPC700 delay audio engine, floating damage numbers, and colored shockwaves.
-  - Balance: Re-tuned arena progression, special ability cooldowns, and minigame rewards across web and native.
-  - Verification: Native MSVC C (137.5 KB); Single-file HTML5 (120.9 KB); Vite build clean; security lint 0 violations.
