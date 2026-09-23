@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-23T00:45:00Z — kilo-qa: KType**
+  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial onboarding integrity, modal controls, size limits).
+  - State Persistence: Quicksave (F5) & quickload (F9) across web (localStorage) and native (ktype.dat) capturing full state.
+  - Native UI Parity: Added Save [F5], Load [F9] headers, auto-recovery on launch, status toast banner, and C state file IO.
+  - Tutorial Integrity: Fresh-session onboarding modal (ktype_tutorialSeen / ktype_tutorial.dat) never interrupting restored save states.
+  - Modal Ergonomics: Added backdrop dismissal and Esc/Enter/Space handlers across Help and Tutorial modals.
+  - Safety & Storage: Wrapped all storage access with quota-safe helpers; cleaned up object URLs and timer leaks.
+  - Verification: MSVC C clean build (22.0 KB); Vite web build clean (221ms); security lint passed (0 violations).
+
 - **2026-09-22T23:45:00Z — kilo-creator: KAnomaly**
   - Status: PASS ✅ (Created Subterranean Signal Analyzer across Win32 C & HTML5 web with 100% feature parity).
   - Scientific Core: Real-time waterfall spectrogram, 64-band FFT, acoustic oscilloscope, and geophone strata profiling.

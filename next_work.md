@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KClip
+  kilo_tester: KTodo
   kilo_usability: KClip
   kilo_graphics: KSubmarine
   kilo_qa: KVault
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-graphics
-  app: KDragon
-  timestamp: "2026-09-23T01:17:00Z"
+  agent: kilo-tester
+  app: KClip
+  timestamp: "2026-09-23T01:30:00Z"
 last_planner_run: "2026-09-22T07:47:00Z"
 ---
 
@@ -92,9 +92,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KStarDredge`, `KAbyss`, `KColosseum`, `KCyber`, `KMech`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KClip`
+- **Current Target**: `KTodo`
 - **Upcoming Queue**:
-  `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KPomodoro`, `KHash`, `KRSS`.
+  `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KPomodoro`, `KHash`, `KRSS`, `KClip`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KClip`
@@ -156,6 +156,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T01:30:00Z — kilo-tester: KClip**
+  - Status: PASS ✅ (6 issues found, 6 fixed).
+  - Modal Controls: Added backdrop click dismissals, header close button, and Esc/Enter/Space hotkey handling.
+  - Keyboard Shortcuts: Added 1-9 direct clip jump hotkeys and Space view mode toggle; guarded background hotkeys.
+  - Navigation & Filtering: Filtered stack navigation for ArrowUp/Down with auto-scroll; added Colors category pill.
+  - Editor Ergonomics: Preserved cursor position during live typing; added real-time card snippet/stats sync.
+  - Settings & State: Synchronized form inputs on open, fixed autoSave toggle saving, and delayed URL revocation.
+  - Verification: Native MSVC C (15.5 KB); Single-file HTML5 (86.6 KB); Vite build clean (241ms); security lint 0 violations.
+
 - **2026-09-23T01:17:00Z — kilo-graphics: KDragon**
   - Status: PASS ✅ (Graphics, enemy archetypes, Astral evolution, balance pass, glint audit).
   - Web & Native: Purged lingering glint properties; verified zero traveling comets or perimeter dots.
@@ -186,12 +195,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - HTML5 Web: Purged CSS/canvas perimeter glints across all 33 corresponding web apps; preserved authentic weapon/mob sprites.
   - Preserved Authenticity: Retained static period-accurate frames, corner filigrees, and genuine in-game highlights.
   - Verification: All 31 native binaries recompiled (<255 KB each); Vite web build clean (223ms); security lint 0 violations.
-
-- **2026-09-23T00:45:00Z — kilo-qa: KType**
-  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial onboarding integrity, modal controls, size limits).
-  - State Persistence: Quicksave (F5) & quickload (F9) across web (localStorage) and native (ktype.dat) capturing full state.
-  - Native UI Parity: Added Save [F5], Load [F9] headers, auto-recovery on launch, status toast banner, and C state file IO.
-  - Tutorial Integrity: Fresh-session onboarding modal (ktype_tutorialSeen / ktype_tutorial.dat) never interrupting restored save states.
-  - Modal Ergonomics: Added backdrop dismissal and Esc/Enter/Space handlers across Help and Tutorial modals.
-  - Safety & Storage: Wrapped all storage access with quota-safe helpers; cleaned up object URLs and timer leaks.
-  - Verification: MSVC C clean build (22.0 KB); Vite web build clean (221ms); security lint passed (0 violations).
