@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-tester
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -16,7 +16,7 @@ current_targets:
   kilo_usability: KCalc
   kilo_graphics: KStarDredge
   kilo_qa: KWizard
-  kilo_expander: "KConnect4 (Firebase RTDB Multiplayer)"
+  kilo_expander: "KChess (Firebase RTDB Multiplayer)"
   kilo_creator: "KNetMap (Subnet Topology Visualizer)"
 virtual_web_target: "kweb://users/~neon_rider"
 virtual_web_rotation:
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-qa
-  app: KVoid
-  timestamp: "2026-09-23T08:45:00Z"
+  agent: kilo-expander
+  app: KConnect4
+  timestamp: "2026-09-23T09:55:00Z"
 last_planner_run: "2026-09-23T04:40:00Z"
 ---
 
@@ -112,9 +112,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KZip`, `KChrono`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KConnect4` (Implement Seamless Firebase RTDB Multiplayer per Mandate 12)
+- **Current Target**: `KChess` (Implement Seamless Firebase RTDB Multiplayer per Mandate 12)
 - **Upcoming Queue**:
-  `KChess` (Multiplayer), `KGo` (Multiplayer), `KReversi` (Multiplayer), `KDarts` (Multiplayer), `KTetris` (Arcade Duel Multiplayer), `KSnake` (Multiplayer), `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote`.
+  `KGo` (Multiplayer), `KReversi` (Multiplayer), `KDarts` (Multiplayer), `KTetris` (Arcade Duel Multiplayer), `KSnake` (Multiplayer), `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote` *(Completed: KConnect4)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -170,6 +170,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T09:55:00Z — kilo-expander: KConnect4 (Seamless Firebase RTDB Multiplayer Expansion)**
+  - Status: PASS ✅ (Implemented real-time cross-computer multiplayer via Firebase RTDB per Mandate 12).
+  - Online Multiplayer: Quick Match public matchmaking, host/join custom rooms, public lobby browser, spectator mode.
+  - Game State Sync: Real-time turn alternation, move synchronization, powerups (Bomb/Drill/Magnet/Freeze), quick chat emotes.
+  - UI Ergonomics: Added Online HUD banner, [O] shortcut, room invite URL auto-join (`?room=XYZ`), clean `onDisconnect()` presence.
+  - Offline Fallback: 100% offline preservation for vs AI (4 personalities), Campaign (20 stages), 2P local, and Speed modes.
+  - Verification: Headless CDP test pass (0 errors, 60 FPS pacing); single-file web 146.6 KB (<999KB); Vite build clean (367ms); security lint clean.
+
 - **2026-09-23T08:45:00Z — kilo-qa: KVoid (Pass 5: Tutorial & State Integrity)**
   - Status: PASS ✅ (Full state persistence & tutorial isolation verified; 0 regressions).
   - Quicksave/Load: Implemented full-fidelity F5/F9 state persistence (web localStorage & native C `kvoid_save.dat`).
@@ -200,11 +208,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Steganography & Bitplane: Added live capacity tracker, corrected RGB LSB capacity display, fixed bitplane view state leak.
   - Controls & Shortcuts: Added `Ctrl+Shift+Enter` decrypt hotkey, `Ctrl+1..5` tab shortcuts, and bidirectional decrypt logic.
   - Verification: Headless CDP test pass (58 elements, 0 errors, 60 FPS); Vite build clean; MSVC C build clean (9.2 KB).
-
-- **2026-09-23T03:55:00Z — kilo-creator: KCipher (Cryptographic Cipher Suite & Steganography Workbench)**
-  - Status: PASS ✅ (New application created; native Win32 C + HTML5 web app registered in KiloOS).
-  - Web App (kcipher.html, 94.5 KB): 6 ciphers (Caesar/ROT13, Vigenère, Rail Fence, Substitution, RC4, XOR), live frequency analyzer, IoC/Entropy meters, Caesar brute-force cracker, 1-bit LSB steganography engine, procedural Web Audio.
-  - Native App (KCipher.exe, 9.0 KB): Win32 GUI with Caesar, Vigenère, Rail Fence, Atbash, and RC4 stream ciphers.
-  - Standards: Start splash screen, first-run tutorial (`kcipher_tutorialSeen`), F5 quicksave / F9 quickload, JSON export/import.
-  - Lore Consonance: 1999 warez/ARG intercepts (SlashNet, FLARELIGHT, RAZOR 1999, KMatrix precursors).
-  - Registration & Build: Added to System in `App.jsx`; Vite build clean (1.16s); `check_sizes.py` PASS; size <999KB ceiling.
