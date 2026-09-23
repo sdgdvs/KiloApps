@@ -1,0 +1,1090 @@
+{
+  "timestamp": "2026-09-23T00:41:56.049178+00:00",
+  "model": "agent-native-vision",
+  "threshold": 5.0,
+  "summary": {
+    "total": 92,
+    "flagged": 0,
+    "average_overall": 8.84
+  },
+  "results": [
+    {
+      "app": "contribute",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 9,
+      "overall": 8.8,
+      "issues": []
+    },
+    {
+      "app": "k2048",
+      "layout": 7,
+      "contrast": 8,
+      "completeness": 8,
+      "consistency": 7,
+      "functionality": 8,
+      "overall": 7.6,
+      "issues": [
+        "Button labels wrap awkwardly in power-up buttons row (Upgrade, Hammer)"
+      ]
+    },
+    {
+      "app": "kabyss",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kalchemy",
+      "layout": 5,
+      "contrast": 7,
+      "completeness": 6,
+      "consistency": 6,
+      "functionality": 6,
+      "overall": 6.0,
+      "issues": [
+        "Help modal obscures main workspace on startup",
+        "Missing glyph fallback box next to Crucible",
+        "Modal text cut off at bottom of window"
+      ]
+    },
+    {
+      "app": "kasteroids",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": [
+        "Perimeter glint comet present on border"
+      ]
+    },
+    {
+      "app": "kaudio",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 8.8,
+      "issues": [
+        "Missing glyph square box on Coin [4] preset button",
+        "Virtual piano keys partially cut off below fold"
+      ]
+    },
+    {
+      "app": "kbase",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 8.8,
+      "issues": [
+        "Toast notification overlaps action buttons in the bottom section"
+      ]
+    },
+    {
+      "app": "kbbs",
+      "layout": 7,
+      "contrast": 8,
+      "completeness": 6,
+      "consistency": 7,
+      "functionality": 7,
+      "overall": 7.0,
+      "issues": [
+        "Terminal screen is completely empty on launch without prompt or banner",
+        "Top toolbar has heavy button clutter with disparate colors"
+      ]
+    },
+    {
+      "app": "kbreakout",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 8,
+      "consistency": 8,
+      "functionality": 8,
+      "overall": 8.2,
+      "issues": [
+        "Distracting perimeter glint comet resembles a game ball",
+        "Title displays internal development loop LOOP 11"
+      ]
+    },
+    {
+      "app": "kbudget",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kcalc",
+      "layout": 6,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 6,
+      "overall": 7.8,
+      "issues": [
+        "Stacked toast notifications heavily obstruct the center numeric keypad"
+      ]
+    },
+    {
+      "app": "kcalendar",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 8.8,
+      "issues": [
+        "Startup toast banner slightly obscures lower row event tags"
+      ]
+    },
+    {
+      "app": "kchart",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 8.8,
+      "issues": [
+        "Toast notification overlaps the rightmost chart bar"
+      ]
+    },
+    {
+      "app": "kchat",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 10,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.2,
+      "issues": [
+        "Port input field slightly truncates 4-digit port numbers"
+      ]
+    },
+    {
+      "app": "kchatserver",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 7,
+      "consistency": 9,
+      "functionality": 6,
+      "overall": 7.8,
+      "issues": [
+        "Web version is an informational stub directing user to download native .exe"
+      ]
+    },
+    {
+      "app": "kchess",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 9,
+      "overall": 8.6,
+      "issues": [
+        "Rotating perimeter glint comet along board border",
+        "Cyan cyber-styled buttons clash aesthetically with classic wood board theme"
+      ]
+    },
+    {
+      "app": "kclock",
+      "layout": 6,
+      "contrast": 9,
+      "completeness": 8,
+      "consistency": 7,
+      "functionality": 8,
+      "overall": 7.6,
+      "issues": [
+        "Horizontal scrollbar rendered beneath top tab bar due to overflowing tabs",
+        "Tab labels cut off at Se"
+      ]
+    },
+    {
+      "app": "kcolony",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 8,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.2,
+      "issues": [
+        "Toast notification overlaps bottom biome selection button [8]",
+        "Button [8] label text is truncated on right edge",
+        "Perimeter glint comet in background"
+      ]
+    },
+    {
+      "app": "kcolor",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 9.6,
+      "issues": []
+    },
+    {
+      "app": "kcolosseum",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 8.6,
+      "issues": [
+        "Top right Lanistas Guide button overlaps main title heading text"
+      ]
+    },
+    {
+      "app": "kconnect4",
+      "layout": 6,
+      "contrast": 9,
+      "completeness": 8,
+      "consistency": 8,
+      "functionality": 7,
+      "overall": 7.6,
+      "issues": [
+        "Board base stand graphic completely obscures action buttons beneath it",
+        "Perimeter glint comet on board edge"
+      ]
+    },
+    {
+      "app": "kcontacts",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 8.8,
+      "issues": [
+        "Templates bar horizontally truncated on the left panel",
+        "Toast banner overlaps Add to Favorites checkbox and primary action button"
+      ]
+    },
+    {
+      "app": "kconverter",
+      "layout": 10,
+      "contrast": 10,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 10.0,
+      "issues": []
+    },
+    {
+      "app": "kcosmic",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 9.6,
+      "issues": [
+        "Third exoplanet card in catalog partially clipped by panel boundary"
+      ]
+    },
+    {
+      "app": "kcyber",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 7,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.2,
+      "issues": [
+        "Excessive empty space between boot banner and bottom root prompt"
+      ]
+    },
+    {
+      "app": "kdarts",
+      "layout": 6,
+      "contrast": 9,
+      "completeness": 7,
+      "consistency": 8,
+      "functionality": 6,
+      "overall": 7.2,
+      "issues": [
+        "Dartboard is pushed below the fold requiring vertical scroll",
+        "Glowing perimeter glint comet on board frame"
+      ]
+    },
+    {
+      "app": "kdb",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.6,
+      "issues": [
+        "Toast notification positioned over top-right data management buttons"
+      ]
+    },
+    {
+      "app": "kdragon",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 8,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 8.6,
+      "issues": [
+        "Rotating perimeter glint comet along parchment border",
+        "Toast notification overlaps top right card corner"
+      ]
+    },
+    {
+      "app": "kexplorer",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kfarm",
+      "layout": 6,
+      "contrast": 7,
+      "completeness": 8,
+      "consistency": 8,
+      "functionality": 6,
+      "overall": 7.0,
+      "issues": [
+        "Toast notification obscures seed selection radio buttons",
+        "Rotating perimeter glint comet along farm grid frame"
+      ]
+    },
+    {
+      "app": "kflash",
+      "layout": 10,
+      "contrast": 10,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 10.0,
+      "issues": []
+    },
+    {
+      "app": "kfont",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 10,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kfortress",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": [
+        "Rotating perimeter glint comet along game canvas border",
+        "Title displays internal development loop name"
+      ]
+    },
+    {
+      "app": "kfreecell",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 8.8,
+      "issues": [
+        "Title text on top-right toolbar is truncated (KFre)"
+      ]
+    },
+    {
+      "app": "kgo",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 8.8,
+      "issues": [
+        "Rotating perimeter glint comet along wooden board edge",
+        "Bottom controls panel partially truncated by viewport"
+      ]
+    },
+    {
+      "app": "kgraph",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 10,
+      "consistency": 9,
+      "functionality": 10,
+      "overall": 9.2,
+      "issues": [
+        "Unintended horizontal scrollbar underneath Quick preset buttons"
+      ]
+    },
+    {
+      "app": "khabit",
+      "layout": 10,
+      "contrast": 10,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 10.0,
+      "issues": []
+    },
+    {
+      "app": "khangman",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 8,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.2,
+      "issues": [
+        "Virtual keyboard rows truncated at the bottom of the window",
+        "Perimeter glint comet on gallows illustration frame"
+      ]
+    },
+    {
+      "app": "khex",
+      "layout": 6,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 8,
+      "overall": 8.0,
+      "issues": [
+        "Horizontal scrollbar beneath tab bar due to overflow",
+        "Tab 1 icon missing label text",
+        "Toast notification overlaps bottom-right data inspector card"
+      ]
+    },
+    {
+      "app": "kimage",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 9,
+      "overall": 9.2,
+      "issues": [
+        "Toast notification overlaps EXIF Camera Inspector label in right sidebar"
+      ]
+    },
+    {
+      "app": "kjournal",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 9.6,
+      "issues": []
+    },
+    {
+      "app": "kmail",
+      "layout": 10,
+      "contrast": 10,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 10.0,
+      "issues": []
+    },
+    {
+      "app": "kmandel",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 10,
+      "consistency": 9,
+      "functionality": 10,
+      "overall": 9.4,
+      "issues": [
+        "Rotating perimeter glint comet along top frame border"
+      ]
+    },
+    {
+      "app": "kmatch3",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 9,
+      "overall": 8.4,
+      "issues": [
+        "Unintended horizontal and vertical scrollbars around game window",
+        "Rotating perimeter glint comet along gold board border"
+      ]
+    },
+    {
+      "app": "kmaze",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kmech",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.6,
+      "issues": [
+        "Toast notification overlaps the top-right manual button",
+        "Rotating perimeter glint comet along green HUD frame"
+      ]
+    },
+    {
+      "app": "kmedia",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 10,
+      "consistency": 9,
+      "functionality": 10,
+      "overall": 9.4,
+      "issues": [
+        "Missing keybind character inside 5s skip buttons"
+      ]
+    },
+    {
+      "app": "kmine",
+      "layout": 6,
+      "contrast": 9,
+      "completeness": 8,
+      "consistency": 9,
+      "functionality": 7,
+      "overall": 7.8,
+      "issues": [
+        "Minefield grid cut off vertically requiring scroll",
+        "Toast notification overlaps top toolbar mine counter and import button"
+      ]
+    },
+    {
+      "app": "kmines",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 8.8,
+      "issues": [
+        "Excessive empty horizontal margins flanking the centered 9x9 grid"
+      ]
+    },
+    {
+      "app": "kmystery",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 10,
+      "functionality": 9,
+      "overall": 9.2,
+      "issues": []
+    },
+    {
+      "app": "knet",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "knote",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 9.6,
+      "issues": []
+    },
+    {
+      "app": "kpac",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.4,
+      "issues": [
+        "Top banner directly obscures application title and save/load buttons"
+      ]
+    },
+    {
+      "app": "kpad",
+      "layout": 10,
+      "contrast": 10,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 10.0,
+      "issues": []
+    },
+    {
+      "app": "kpaint",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 8.6,
+      "issues": [
+        "Toast notification overlaps the canvas horizontal scrollbar",
+        "Canvas viewport displays both horizontal and vertical scrollbars"
+      ]
+    },
+    {
+      "app": "kpass",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 10,
+      "functionality": 9,
+      "overall": 9.2,
+      "issues": []
+    },
+    {
+      "app": "kping",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 9.6,
+      "issues": []
+    },
+    {
+      "app": "kpong",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.6,
+      "issues": [
+        "How to Play modal blocks initial gameplay view",
+        "Background perimeter glint comet visible"
+      ]
+    },
+    {
+      "app": "kquarantine",
+      "layout": 9,
+      "contrast": 8,
+      "completeness": 9,
+      "consistency": 10,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": [
+        "Terminal input placeholder text has low contrast against black background"
+      ]
+    },
+    {
+      "app": "kquest",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 9,
+      "overall": 8.6,
+      "issues": [
+        "Multiple glowing perimeter glint comets on HUD and viewport frames",
+        "Internal development phase tag Phase 14 displayed in titlebar",
+        "Missing currency glyph square box next to Gold: 50"
+      ]
+    },
+    {
+      "app": "kradio",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 10,
+      "functionality": 9,
+      "overall": 9.2,
+      "issues": []
+    },
+    {
+      "app": "kread",
+      "layout": 10,
+      "contrast": 10,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 10.0,
+      "issues": []
+    },
+    {
+      "app": "kreversi",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 8,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.2,
+      "issues": [
+        "Game board is cut off at the bottom of the window requiring vertical scroll",
+        "Rotating perimeter glint comet along board frame"
+      ]
+    },
+    {
+      "app": "krogue",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 8,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.2,
+      "issues": [
+        "Bottom directional controls are vertically truncated by window edge",
+        "Rotating perimeter glint comet along start screen frame"
+      ]
+    },
+    {
+      "app": "ksanctuary",
+      "layout": 9,
+      "contrast": 10,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 9.8,
+      "issues": [
+        "Minor horizontal scrollbar inside the facility cutaway pane"
+      ]
+    },
+    {
+      "app": "kscript",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 9.6,
+      "issues": [
+        "Lower-right toast notification is slightly clipped by the window boundary"
+      ]
+    },
+    {
+      "app": "ksettings",
+      "layout": 6,
+      "contrast": 9,
+      "completeness": 6,
+      "consistency": 7,
+      "functionality": 6,
+      "overall": 6.8,
+      "issues": [
+        "Vast empty white space occupies 80% of window",
+        "Only two settings options present in entire system settings app"
+      ]
+    },
+    {
+      "app": "ksimon",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 8,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.2,
+      "issues": [
+        "Prominent rotating perimeter glint comet along console ring",
+        "Bottom game control buttons cut off vertically"
+      ]
+    },
+    {
+      "app": "ksnake",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 8.8,
+      "issues": [
+        "Top toast notification overlaps top HUD bar"
+      ]
+    },
+    {
+      "app": "ksolitaire",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 8,
+      "functionality": 8,
+      "overall": 8.2,
+      "issues": [
+        "Rotating perimeter glint comet along green felt border",
+        "Missing icon fallback glyph box on Wand [W] button",
+        "Bottom toast notification obscures lower tableau card ranks"
+      ]
+    },
+    {
+      "app": "kspace",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": [
+        "Title subtitle displays internal development loop name (Loop 11 Space Command)"
+      ]
+    },
+    {
+      "app": "kstardredge",
+      "layout": 10,
+      "contrast": 10,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 10.0,
+      "issues": []
+    },
+    {
+      "app": "kstarship",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 8.8,
+      "issues": [
+        "Rotating perimeter glint comet along viewport border",
+        "Bottom action buttons partially clipped by container"
+      ]
+    },
+    {
+      "app": "kstellar",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 9.6,
+      "issues": []
+    },
+    {
+      "app": "ksubmarine",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 9.6,
+      "issues": []
+    },
+    {
+      "app": "ksudoku",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": [
+        "Rotating perimeter glint comet along gold board border"
+      ]
+    },
+    {
+      "app": "ksynth",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 9.6,
+      "issues": []
+    },
+    {
+      "app": "ksys",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 10,
+      "consistency": 9,
+      "functionality": 10,
+      "overall": 9.2,
+      "issues": [
+        "Horizontal scrollbar beneath top tab bar due to overflowing tabs"
+      ]
+    },
+    {
+      "app": "ktask",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 7,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.2,
+      "issues": [
+        "Process table is completely blank with no initial processes or empty-state explanation"
+      ]
+    },
+    {
+      "app": "ktaskmgr",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": []
+    },
+    {
+      "app": "kterm",
+      "layout": 9,
+      "contrast": 10,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 9.8,
+      "issues": []
+    },
+    {
+      "app": "ktetris",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 8.8,
+      "issues": [
+        "Startup toast notification is partially cut off and obscured at bottom left"
+      ]
+    },
+    {
+      "app": "ktimer",
+      "layout": 10,
+      "contrast": 10,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 10.0,
+      "issues": []
+    },
+    {
+      "app": "ktodo",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 9.4,
+      "issues": [
+        "Bottom empty state illustration partially cut off at window edge"
+      ]
+    },
+    {
+      "app": "ktowers",
+      "layout": 7,
+      "contrast": 9,
+      "completeness": 8,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.2,
+      "issues": [
+        "Rotating perimeter glint comet along canvas frame",
+        "Bottom peg labels and controls truncated vertically"
+      ]
+    },
+    {
+      "app": "ktrader",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 10,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": [
+        "Bottom navigation options partially cut off by window edge"
+      ]
+    },
+    {
+      "app": "ktype",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 8,
+      "overall": 8.6,
+      "issues": [
+        "Help & Controls modal opens automatically over typing canvas"
+      ]
+    },
+    {
+      "app": "kvault",
+      "layout": 10,
+      "contrast": 10,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 10.0,
+      "issues": []
+    },
+    {
+      "app": "kvoid",
+      "layout": 8,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 10,
+      "functionality": 8,
+      "overall": 8.8,
+      "issues": [
+        "Survival Guide modal obscures the gameplay arena on launch"
+      ]
+    },
+    {
+      "app": "kwizard",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 9,
+      "consistency": 9,
+      "functionality": 9,
+      "overall": 9.0,
+      "issues": [
+        "Rotating perimeter glint comet along center arena frame"
+      ]
+    },
+    {
+      "app": "kwords",
+      "layout": 9,
+      "contrast": 9,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 9.6,
+      "issues": []
+    },
+    {
+      "app": "kzip",
+      "layout": 10,
+      "contrast": 10,
+      "completeness": 10,
+      "consistency": 10,
+      "functionality": 10,
+      "overall": 10.0,
+      "issues": []
+    }
+  ]
+}
