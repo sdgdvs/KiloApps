@@ -21,6 +21,8 @@
 #define ID_BTN_CLEAR_CLIP 116
 #define ID_COMBO_THEME 117
 #define ID_BTN_HELP 118
+#define ID_BTN_QUICKSAVE 119
+#define ID_BTN_QUICKLOAD 120
 
 #ifndef EM_SETCUEBANNER
 #define EM_SETCUEBANNER 0x1501
@@ -378,6 +380,161 @@ void ClearVault(HWND hwnd) {
     }
 }
 
+int HasSavedState(const char* filename) {
+    DWORD attr = GetFileAttributesA(filename);
+    return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+int HasSeenTutorial(void) {
+    DWORD attr = GetFileAttributesA("kvault_tutorial.dat");
+    return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+void MarkTutorialSeen(void) {
+    HANDLE h = CreateFileA("kvault_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h != INVALID_HANDLE_VALUE) {
+        char tag[] = "TUTORIAL_SEEN_V1\r\n";
+        DWORD written = 0;
+        WriteFile(h, tag, sizeof(tag) - 1, &written, NULL);
+        CloseHandle(h);
+    }
+}
+
+int SaveSnapshot(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kvault.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+
+    char magic[4] = {'K', 'V', 'L', 'T'};
+    DWORD version = 1;
+    DWORD timeout = (DWORD)g_timeoutMs;
+    DWORD theme = (DWORD)g_theme;
+    DWORD passLen = (DWORD)GetWindowTextLengthA(hPass);
+    DWORD dataLen = (DWORD)GetWindowTextLengthA(hData);
+    DWORD written = 0;
+
+    WriteFile(hFile, magic, 4, &written, NULL);
+    WriteFile(hFile, &version, sizeof(DWORD), &written, NULL);
+    WriteFile(hFile, &timeout, sizeof(DWORD), &written, NULL);
+    WriteFile(hFile, &theme, sizeof(DWORD), &written, NULL);
+    WriteFile(hFile, &passLen, sizeof(DWORD), &written, NULL);
+
+    if (passLen > 0) {
+        char* passBuf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, passLen + 1);
+        if (passBuf) {
+            GetWindowTextA(hPass, passBuf, passLen + 1);
+            WriteFile(hFile, passBuf, passLen, &written, NULL);
+            secure_zero(passBuf, passLen + 1);
+            HeapFree(GetProcessHeap(), 0, passBuf);
+        }
+    }
+
+    WriteFile(hFile, &dataLen, sizeof(DWORD), &written, NULL);
+    if (dataLen > 0) {
+        char* dataBuf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dataLen + 1);
+        if (dataBuf) {
+            GetWindowTextA(hData, dataBuf, dataLen + 1);
+            WriteFile(hFile, dataBuf, dataLen, &written, NULL);
+            secure_zero(dataBuf, dataLen + 1);
+            HeapFree(GetProcessHeap(), 0, dataBuf);
+        }
+    }
+
+    CloseHandle(hFile);
+    return 1;
+}
+
+int LoadSnapshot(HWND hwnd, int showFeedback) {
+    HANDLE hFile = CreateFileA("kvault.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        if (showFeedback) {
+            MessageBoxA(hwnd, "No quicksave snapshot found (kvault.dat).\nPress F5 to create a snapshot.", "KVault", MB_OK | MB_ICONWARNING);
+        }
+        return 0;
+    }
+
+    char magic[4] = {0};
+    DWORD version = 0, timeout = 0, theme = 0, passLen = 0, dataLen = 0;
+    DWORD readBytes = 0;
+
+    if (!ReadFile(hFile, magic, 4, &readBytes, NULL) || readBytes != 4 ||
+        magic[0] != 'K' || magic[1] != 'V' || magic[2] != 'L' || magic[3] != 'T') {
+        CloseHandle(hFile);
+        if (showFeedback) MessageBoxA(hwnd, "Corrupted quicksave data.", "KVault", MB_OK | MB_ICONERROR);
+        return 0;
+    }
+
+    ReadFile(hFile, &version, sizeof(DWORD), &readBytes, NULL);
+    ReadFile(hFile, &timeout, sizeof(DWORD), &readBytes, NULL);
+    ReadFile(hFile, &theme, sizeof(DWORD), &readBytes, NULL);
+    ReadFile(hFile, &passLen, sizeof(DWORD), &readBytes, NULL);
+
+    g_timeoutMs = (int)timeout;
+    HWND hComboTimeout = GetDlgItem(hwnd, ID_COMBO_TIMEOUT);
+    if (hComboTimeout) {
+        if (g_timeoutMs == 60000) SendMessage(hComboTimeout, CB_SETCURSEL, 0, 0);
+        else if (g_timeoutMs == 300000) SendMessage(hComboTimeout, CB_SETCURSEL, 1, 0);
+        else if (g_timeoutMs == 900000) SendMessage(hComboTimeout, CB_SETCURSEL, 2, 0);
+        else if (g_timeoutMs == 0) SendMessage(hComboTimeout, CB_SETCURSEL, 3, 0);
+    }
+
+    g_theme = (int)theme;
+    HWND hComboTheme = GetDlgItem(hwnd, ID_COMBO_THEME);
+    if (hComboTheme) {
+        SendMessage(hComboTheme, CB_SETCURSEL, g_theme, 0);
+    }
+    if (hbgBrush) DeleteObject(hbgBrush);
+    if (hDarkBrush) DeleteObject(hDarkBrush);
+    if (g_theme == 0) {
+        hbgBrush = CreateSolidBrush(RGB(15, 15, 19));
+        hDarkBrush = CreateSolidBrush(RGB(25, 25, 30));
+    } else if (g_theme == 1) {
+        hbgBrush = CreateSolidBrush(RGB(240, 240, 245));
+        hDarkBrush = CreateSolidBrush(RGB(255, 255, 255));
+    } else if (g_theme == 2) {
+        hbgBrush = CreateSolidBrush(RGB(5, 5, 5));
+        hDarkBrush = CreateSolidBrush(RGB(10, 15, 10));
+    }
+    SetClassLongPtrA(hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)hbgBrush);
+
+    if (passLen > 0 && passLen < 1024) {
+        char* passBuf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, passLen + 1);
+        if (passBuf) {
+            ReadFile(hFile, passBuf, passLen, &readBytes, NULL);
+            passBuf[readBytes] = '\0';
+            SetWindowTextA(hPass, passBuf);
+            SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_EDIT_PASS, EN_CHANGE), (LPARAM)hPass);
+            secure_zero(passBuf, passLen + 1);
+            HeapFree(GetProcessHeap(), 0, passBuf);
+        }
+    } else {
+        SetWindowTextA(hPass, "");
+        SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_EDIT_PASS, EN_CHANGE), (LPARAM)hPass);
+    }
+
+    ReadFile(hFile, &dataLen, sizeof(DWORD), &readBytes, NULL);
+    if (dataLen > 0 && dataLen < 10485760) {
+        char* dataBuf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dataLen + 1);
+        if (dataBuf) {
+            ReadFile(hFile, dataBuf, dataLen, &readBytes, NULL);
+            dataBuf[readBytes] = '\0';
+            SetWindowTextA(hData, dataBuf);
+            secure_zero(dataBuf, dataLen + 1);
+            HeapFree(GetProcessHeap(), 0, dataBuf);
+        }
+    } else {
+        SetWindowTextA(hData, "");
+    }
+
+    CloseHandle(hFile);
+    InvalidateRect(hwnd, NULL, TRUE);
+    RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
+
+    if (showFeedback) {
+        MessageBoxA(hwnd, "Workspace state restored from kvault.dat [F9]", "KVault", MB_OK | MB_ICONINFORMATION);
+    }
+    return 1;
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE: {
@@ -446,24 +603,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HWND hBtnGen = CreateWindowA("BUTTON", "Gen Pass", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 490, 320, 90, 25, hwnd, (HMENU)ID_BTN_GENERATE, NULL, NULL);
             SendMessage(hBtnGen, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            HWND hComboTpl = CreateWindowA("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 15, 355, 100, 100, hwnd, (HMENU)ID_COMBO_TEMPLATE, NULL, NULL);
+            HWND hComboTpl = CreateWindowA("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 15, 355, 90, 100, hwnd, (HMENU)ID_COMBO_TEMPLATE, NULL, NULL);
             SendMessage(hComboTpl, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Login");
             SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Finance");
             SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Note");
             SendMessage(hComboTpl, CB_SETCURSEL, 0, 0);
             
-            HWND hBtnTpl = CreateWindowA("BUTTON", "Insert", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 125, 355, 60, 25, hwnd, (HMENU)ID_BTN_INSERT_TEMPLATE, NULL, NULL);
+            HWND hBtnTpl = CreateWindowA("BUTTON", "Insert", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 110, 355, 55, 25, hwnd, (HMENU)ID_BTN_INSERT_TEMPLATE, NULL, NULL);
             SendMessage(hBtnTpl, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            HWND hBtnCopyData = CreateWindowA("BUTTON", "Copy Data", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 195, 355, 85, 25, hwnd, (HMENU)ID_BTN_COPY_DATA, NULL, NULL);
+            HWND hBtnCopyData = CreateWindowA("BUTTON", "Copy", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 170, 355, 50, 25, hwnd, (HMENU)ID_BTN_COPY_DATA, NULL, NULL);
             SendMessage(hBtnCopyData, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            HWND hBtnClearClip = CreateWindowA("BUTTON", "Clear Clip", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 290, 355, 85, 25, hwnd, (HMENU)ID_BTN_CLEAR_CLIP, NULL, NULL);
+            HWND hBtnClearClip = CreateWindowA("BUTTON", "Clr Clip", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 225, 355, 65, 25, hwnd, (HMENU)ID_BTN_CLEAR_CLIP, NULL, NULL);
             SendMessage(hBtnClearClip, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            HWND hBtnHelp = CreateWindowA("BUTTON", "Help", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 385, 355, 85, 25, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            HWND hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 295, 355, 80, 25, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
             SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            HWND hBtnQuickSave = CreateWindowA("BUTTON", "Save [F5]", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 380, 355, 95, 25, hwnd, (HMENU)ID_BTN_QUICKSAVE, NULL, NULL);
+            SendMessage(hBtnQuickSave, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            HWND hBtnQuickLoad = CreateWindowA("BUTTON", "Load [F9]", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 480, 355, 95, 25, hwnd, (HMENU)ID_BTN_QUICKLOAD, NULL, NULL);
+            SendMessage(hBtnQuickLoad, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             LARGE_INTEGER pc;
             QueryPerformanceCounter(&pc);
@@ -471,6 +634,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             SetClassLongPtrA(hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)hbgBrush);
             DragAcceptFiles(hwnd, TRUE);
+
+            if (HasSavedState("kvault.dat")) {
+                LoadSnapshot(hwnd, 0);
+            } else if (!HasSeenTutorial()) {
+                MessageBoxA(hwnd,
+                    "Welcome to KVault (Pass 5 Verified)\n\n"
+                    "Your client-side encrypted password & secret manager.\n\n"
+                    "- Enter a Master Key to encrypt/decrypt sensitive text.\n"
+                    "- Press F5 at any time to quicksave snapshot to kvault.dat.\n"
+                    "- Press F9 to restore your quicksaved workspace snapshot.\n"
+                    "- Press Ctrl+L to lock and wipe clipboard immediately.\n"
+                    "- Press F1 for complete hotkey list & security guide.",
+                    "KVault - Quickstart Guide", MB_OK | MB_ICONINFORMATION);
+                MarkTutorialSeen();
+            }
             break;
         }
         case WM_DROPFILES: {
@@ -635,22 +813,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     CloseClipboard();
                     MessageBoxA(hwnd, "Clipboard cleared.", "KVault", MB_OK | MB_ICONINFORMATION);
                 }
+            } else if (LOWORD(wParam) == ID_BTN_QUICKSAVE) {
+                if (SaveSnapshot(hwnd)) {
+                    MessageBoxA(hwnd, "Workspace state quicksaved to kvault.dat [F5].", "KVault", MB_OK | MB_ICONINFORMATION);
+                } else {
+                    MessageBoxA(hwnd, "Failed to write quicksave snapshot.", "KVault", MB_OK | MB_ICONERROR);
+                }
+            } else if (LOWORD(wParam) == ID_BTN_QUICKLOAD) {
+                LoadSnapshot(hwnd, 1);
             } else if (LOWORD(wParam) == ID_BTN_HELP) {
                 MessageBoxA(hwnd, 
                     "KVault Help & Security Guide\n\n"
                     "1. Master Key: Encrypts/decrypts data with stream cipher.\n"
-                    "2. Auto-Lock: Wipes displayed text and clipboard on inactivity.\n"
-                    "3. Shortcuts:\n"
-                    "   Ctrl+S: Save file\n"
-                    "   Ctrl+O: Open file\n"
-                    "   Ctrl+L: Lock vault\n"
-                    "   Ctrl+E: Encrypt data\n"
-                    "   Ctrl+D: Decrypt data\n"
-                    "   Ctrl+G: Gen password\n"
-                    "   Ctrl+F: Focus Find\n"
-                    "   F1: Help\n"
-                    "4. Drag & Drop: Drop file to load contents.\n"
-                    "5. Clipboard: Clear Clip wipes clipboard after use.",
+                    "2. Quicksave & Restore:\n"
+                    "   F5: Quicksave workspace snapshot to kvault.dat\n"
+                    "   F9: Quickload restored snapshot from kvault.dat\n"
+                    "3. Auto-Lock: Wipes displayed text and clipboard on inactivity.\n"
+                    "4. Shortcuts:\n"
+                    "   F5: Quicksave snapshot\n"
+                    "   F9: Quickload snapshot\n"
+                    "   Ctrl+S: Save file | Ctrl+O: Open file\n"
+                    "   Ctrl+L: Lock vault | Ctrl+E: Encrypt data\n"
+                    "   Ctrl+D: Decrypt data | Ctrl+G: Gen password\n"
+                    "   Ctrl+F: Focus Find | F1: Help\n"
+                    "5. Drag & Drop: Drop file to load contents into editor.\n"
+                    "6. Clipboard: Clear Clip wipes clipboard after use.",
                     "KVault Help", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == ID_BTN_FIND) {
                 char findText[256];
@@ -790,6 +977,12 @@ void __stdcall MainEntry() {
                 } else if (!bCtrl && !bShift && !bAlt) {
                     if (msg.wParam == VK_F1) {
                         SendMessage(hwnd, WM_COMMAND, ID_BTN_HELP, 0);
+                        continue;
+                    } else if (msg.wParam == VK_F5) {
+                        SendMessage(hwnd, WM_COMMAND, ID_BTN_QUICKSAVE, 0);
+                        continue;
+                    } else if (msg.wParam == VK_F9) {
+                        SendMessage(hwnd, WM_COMMAND, ID_BTN_QUICKLOAD, 0);
                         continue;
                     } else if (msg.wParam == VK_RETURN) {
                         if (msg.hwnd == GetDlgItem(hwnd, ID_EDIT_FIND)) {

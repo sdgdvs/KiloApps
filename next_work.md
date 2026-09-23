@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KTodo
   kilo_usability: KPaint
   kilo_graphics: KSubmarine
-  kilo_qa: KVault
+  kilo_qa: KVoid
   kilo_expander: KNote
   kilo_creator: "KCipher (Cryptographic Cipher Suite)"
 virtual_web_target: "kweb://webring"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-usability
-  app: KClip
-  timestamp: "2026-09-23T01:45:00Z"
+  agent: kilo-qa
+  app: KVault
+  timestamp: "2026-09-23T01:50:00Z"
 last_planner_run: "2026-09-22T07:47:00Z"
 ---
 
@@ -102,9 +102,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KAudio`, `KFont`, `KGraph`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KVault`
+- **Current Target**: `KVoid`
 - **Upcoming Queue**:
-  `KVoid`, `KWizard`, `KZip`, `KChrono`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KTodo`, `KTrader`, `KType` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType)*.
+  `KWizard`, `KZip`, `KChrono`, `KCyber`, `KDragon`, `KFortress`, `KMech`, `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KTodo`, `KTrader`, `KType`, `KVault` *(Completed in Pass 5: K2048, KAudio, KBBS, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KNote`
@@ -156,6 +156,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-23T01:50:00Z — kilo-qa: KVault**
+  - Status: PASS ✅ (Pass 5 audit: State persistence, tutorial integrity, modal ergonomics, size constraints).
+  - State Persistence: Quicksave [F5] & quickload [F9] across web (localStorage) and native C (kvault.dat).
+  - Native UI Parity: Added Save [F5] & Load [F9] buttons, startup state restoration, and auto-lock snapshot sync.
+  - Tutorial Integrity: Fresh-session onboarding modal (kvault_tutorialSeen / kvault_tutorial.dat) never interrupting restored saves.
+  - Modal Ergonomics: Added backdrop dismissal and Esc/Enter/Space handlers for Help and Tutorial modals.
+  - Safety & Storage: Wrapped storage access in quota-safe helpers; ensured zero memory leaks and safe clipboard handling.
+  - Verification: Native MSVC C clean build (17.5 KB); Single-file HTML5 (67.5 KB); Vite clean build (410ms); security lint 0 violations.
+
 - **2026-09-23T01:45:00Z — kilo-usability: KClip**
   - Status: PASS ✅ (Layout dimensions, responsive behavior, help discoverability, scrollbars, shortcuts).
   - Window & Layout: Adjusted KiloOS default window dimensions to 1040x720 for comfortable dual-pane workflow.
@@ -188,10 +197,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Audio Engine: 2-operator FM synthesis (Genesis YM2612) with warm delay (SPC700 standard), zero external assets.
   - Compliance: No perimeter glints/comets (Rule 11), ARG consonance (Node 0x7F lore), strict size ceiling (<999KB).
   - Verification: Native MSVC C (18.0 KB); Single-file HTML5 (78.5 KB); Vite clean build; security lint 0 violations.
-
-- **2026-09-23T01:00:00Z — kilo-vision-audit: Fleet Comprehensive**
-  - Status: PASS ✅ (92 primary apps audited across 5 dimensions using native AI vision).
-  - Scope & Scoring: 92/92 apps scored (Fleet avg: 8.84/10; 0 apps below 5.0 threshold).
-  - Perfect 10s: KConverter, KFlash, KHabit, KMail, KPad, KRead, KStarDredge, KTimer, KVault, KZip.
-  - Glint Audit: Flagged lingering specular border comets across games; stripped 10 apps in commit 67d1d81c.
-  - Gallery Integration: Enriched docs/gallery/index.html and vision_scores.json with visual badges.

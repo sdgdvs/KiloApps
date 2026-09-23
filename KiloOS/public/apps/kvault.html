@@ -356,9 +356,11 @@
     <div class="container" id="app-container">
         <div class="header">
             <h1><span aria-hidden="true">🔒</span> KVault</h1>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <button class="btn secondary" style="padding: 8px 12px; font-size: 13px;" onclick="showHelp()" aria-label="Open Help Dialog">Help</button>
-                <div id="auth-controls" style="display:none; align-items:center; gap:10px;">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <button class="btn secondary" style="padding: 8px 12px; font-size: 13px;" onclick="quicksaveState()" title="Quicksave Snapshot [F5]" aria-label="Quicksave Snapshot">💾 Save [F5]</button>
+                <button class="btn secondary" style="padding: 8px 12px; font-size: 13px;" onclick="quickloadState()" title="Restore Quicksaved Snapshot [F9]" aria-label="Quickload Snapshot">📂 Load [F9]</button>
+                <button class="btn secondary" style="padding: 8px 12px; font-size: 13px;" onclick="showHelp()" aria-label="Open Help Dialog">Help [F1]</button>
+                <div id="auth-controls" style="display:none; align-items:center; gap:10px; flex-wrap:wrap;">
                     <select id="theme-select" onchange="updateTheme()" aria-label="Select Color Theme" style="background:var(--input-bg); border:1px solid var(--glass-border); color:var(--text-color); padding:10px 14px; border-radius:10px; font-family:inherit; font-size:14px; outline:none;">
                         <option value="dark">Dark Theme</option>
                         <option value="light">Light Theme</option>
@@ -469,12 +471,31 @@
             <p>Welcome to KVault! Your secure, client-side encrypted password manager and secure note storage.</p>
             <ul>
                 <li><strong>Encryption:</strong> Uses AES-GCM 256-bit encryption. Data is encrypted locally with your Master Password which is NEVER stored.</li>
-                <li><strong>Auto-Lock:</strong> Automatically locks your vault after inactivity.</li>
-                <li><strong>Shortcuts:</strong> <code>Ctrl+S</code> saves vault/secret, <code>Ctrl+L</code> locks instantly.</li>
-                <li><strong>Import/Export:</strong> Backup or restore using encrypted JSON files.</li>
+                <li><strong>Quicksave & Quickload:</strong> Press <strong>F5</strong> to save an instant snapshot of your vault state to localStorage, and <strong>F9</strong> to restore it.</li>
+                <li><strong>Auto-Lock:</strong> Automatically locks your vault and clears clipboard after inactivity.</li>
+                <li><strong>Shortcuts:</strong> <code>[F5]</code> Quicksave, <code>[F9]</code> Quickload, <code>[F1 / H]</code> Help, <code>[Ctrl+S]</code> Save/Export, <code>[Ctrl+L]</code> Lock instantly, <code>[Ctrl+F]</code> Find, <code>[Esc]</code> Close modals / Return.</li>
+                <li><strong>Import/Export:</strong> Backup or restore using encrypted JSON files or drag & drop.</li>
                 <li><strong>Clipboard Security:</strong> Click "Clear Clipboard" after copying passwords to protect sensitive credentials.</li>
             </ul>
-            <button class="btn close-modal" onclick="closeHelp()">Got it</button>
+            <button class="btn close-modal" onclick="closeHelp()">Got it (Esc / Enter)</button>
+        </div>
+    </div>
+
+    <!-- First-run Tutorial / Welcome Modal -->
+    <div class="modal-overlay" id="tutorial-modal" role="dialog" aria-modal="true" aria-labelledby="tutorial-title" style="display:none;">
+        <div class="modal-content" style="max-width: 520px;">
+            <h3 id="tutorial-title">🔐 Welcome to KVault</h3>
+            <p>KVault provides client-side encrypted password management and confidential notes.</p>
+            <div style="background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 8px; padding: 12px; margin: 12px 0; font-size: 13px; line-height: 1.6;">
+                <div>🔒 <strong>AES-GCM 256-bit:</strong> Secrets are encrypted locally with your Master Password.</div>
+                <div style="margin-top: 6px;">💾 <strong>State & Quicksave:</strong> Press <strong>F5</strong> anytime to snapshot vault state, and <strong>F9</strong> to restore.</div>
+                <div style="margin-top: 6px;">⏱️ <strong>Auto-Lock:</strong> Inactivity wipes displayed credentials and clears clipboard.</div>
+                <div style="margin-top: 6px;">⌨️ <strong>Hotkeys:</strong> [F1/H] Help &middot; [F5] Quicksave &middot; [F9] Quickload &middot; [Ctrl+L] Lock Vault &middot; [Esc] Close modals.</div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="btn secondary close-modal" style="flex:1; margin-top:0;" onclick="dismissTutorial()">Skip (Esc)</button>
+                <button class="btn close-modal" style="flex:1; margin-top:0;" onclick="dismissTutorial()">Get Started (Enter)</button>
+            </div>
         </div>
     </div>
 
@@ -498,13 +519,129 @@
 
         function showHelp() {
             const modal = document.getElementById('help-modal');
+            if (!modal) return;
             modal.style.display = 'flex';
             setTimeout(() => modal.classList.add('active'), 10);
         }
         function closeHelp() {
             const modal = document.getElementById('help-modal');
+            if (!modal) return;
             modal.classList.remove('active');
             setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        function showTutorial() {
+            const modal = document.getElementById('tutorial-modal');
+            if (!modal) return;
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+        }
+        function dismissTutorial() {
+            const modal = document.getElementById('tutorial-modal');
+            if (modal) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.style.display = 'none', 300);
+            }
+            safeStorageSet('kvault_tutorialSeen', '1');
+            const passInput = document.getElementById('master-password');
+            if (passInput) passInput.focus();
+        }
+
+        // Safe Storage Helpers
+        function safeStorageGet(key, fallback = null) {
+            try {
+                const val = localStorage.getItem(key);
+                return val !== null ? val : fallback;
+            } catch(e) {
+                return fallback;
+            }
+        }
+
+        function safeStorageSet(key, value) {
+            try {
+                const str = typeof value === 'string' ? value : JSON.stringify(value);
+                localStorage.setItem(key, str);
+                return true;
+            } catch(e) {
+                showNotification("Storage quota exceeded or storage unavailable", "error");
+                return false;
+            }
+        }
+
+        function safeStorageGetJSON(key, fallback = null) {
+            try {
+                const item = localStorage.getItem(key);
+                return item ? JSON.parse(item) : fallback;
+            } catch(e) {
+                return fallback;
+            }
+        }
+
+        // Quicksave & Quickload (F5 / F9)
+        async function quicksaveState() {
+            if (masterKey) {
+                await saveVaultToStorage();
+            }
+            const themeName = document.getElementById('theme-select') ? document.getElementById('theme-select').value : 'dark';
+            const snapshot = {
+                version: 1,
+                timestamp: Date.now(),
+                vaultData: safeStorageGet(STORAGE_KEY, null),
+                theme: themeName,
+                autolock: autoLockTimeout
+            };
+            if (safeStorageSet('kvault_quicksave', snapshot)) {
+                showNotification("💾 Vault snapshot quicksaved [F5]");
+            }
+        }
+
+        async function quickloadState() {
+            const snapshot = safeStorageGetJSON('kvault_quicksave', null);
+            if (!snapshot) {
+                showNotification("⚠️ No quicksave snapshot found [Press F5 to save]", "error");
+                return;
+            }
+            try {
+                if (snapshot.vaultData) {
+                    safeStorageSet(STORAGE_KEY, snapshot.vaultData);
+                }
+                if (snapshot.theme) {
+                    safeStorageSet('kvault_theme', snapshot.theme);
+                    const themeSel = document.getElementById('theme-select');
+                    if (themeSel) {
+                        themeSel.value = snapshot.theme;
+                        updateTheme();
+                    }
+                }
+                if (typeof snapshot.autolock !== 'undefined') {
+                    autoLockTimeout = parseInt(snapshot.autolock) || 60000;
+                    safeStorageSet('kvault_autolock', autoLockTimeout);
+                    const sel = document.getElementById('auto-lock-select');
+                    if (sel) sel.value = autoLockTimeout;
+                    resetIdleTimer();
+                }
+                safeStorageSet('kvault_tutorialSeen', '1');
+
+                if (masterKey && snapshot.vaultData) {
+                    try {
+                        const parsed = JSON.parse(snapshot.vaultData);
+                        if (parsed && parsed.vault) {
+                            const decrypted = await decryptData(parsed.vault, masterKey);
+                            if (decrypted !== null) {
+                                vaultData = JSON.parse(decrypted);
+                                renderSecrets();
+                                showNotification("📂 Vault snapshot restored [F9]");
+                                return;
+                            }
+                        }
+                    } catch(e) {}
+                }
+
+                lockVault();
+                showNotification("📂 Vault snapshot restored [F9]. Please unlock.");
+            } catch(err) {
+                showNotification("⚠️ Failed to restore quicksave data", "error");
+            }
         }
 
         // Theme Support
@@ -670,6 +807,12 @@
                 const passInput = document.getElementById('master-password');
                 if (passInput) passInput.focus();
             }, 100);
+
+            const tutorialSeen = safeStorageGet('kvault_tutorialSeen');
+            const hasQuicksave = safeStorageGet('kvault_quicksave');
+            if (!tutorialSeen && !hasQuicksave && !stored) {
+                showTutorial();
+            }
         }
         
         async function handleAuth() {
@@ -1183,8 +1326,30 @@
             input.click();
         }
         
-        // Keyboard Shortcuts
+        // Keyboard Shortcuts & Modal Accessibility
         document.addEventListener('keydown', (e) => {
+            // Check active modals first
+            const tutModal = document.getElementById('tutorial-modal');
+            const isTutOpen = tutModal && tutModal.classList.contains('active');
+            const helpModal = document.getElementById('help-modal');
+            const isHelpOpen = helpModal && helpModal.classList.contains('active');
+
+            if (isTutOpen) {
+                if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    dismissTutorial();
+                    return;
+                }
+            }
+
+            if (isHelpOpen) {
+                if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    closeHelp();
+                    return;
+                }
+            }
+
             const hasModifier = e.ctrlKey || e.metaKey;
             if (hasModifier && !e.altKey && !e.shiftKey) {
                 if (e.key === 's' || e.key === 'S') {
@@ -1217,25 +1382,30 @@
                     }
                 }
             } else if (!hasModifier && !e.altKey && !e.shiftKey) {
-                if (e.key === 'Escape') {
-                    const modal = document.getElementById('help-modal');
-                    if (modal && modal.classList.contains('active')) {
-                        closeHelp();
-                    } else {
-                        const activeView = document.querySelector('.view-section.active');
-                        if (activeView && activeView.id === 'view-add' && masterKey) {
-                            showVault();
-                        } else if (activeView && activeView.id === 'view-vault') {
-                            const searchInput = document.getElementById('search-input');
-                            if (searchInput && searchInput.value) {
-                                searchInput.value = '';
-                                filterSecrets();
-                            }
-                        }
-                    }
-                } else if (e.key === 'F1') {
+                if (e.key === 'F1') {
                     e.preventDefault();
                     showHelp();
+                } else if (e.key === 'F5') {
+                    e.preventDefault();
+                    quicksaveState();
+                } else if (e.key === 'F9') {
+                    e.preventDefault();
+                    quickloadState();
+                } else if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    if (isHelpOpen) closeHelp();
+                    else showHelp();
+                } else if (e.key === 'Escape') {
+                    const activeView = document.querySelector('.view-section.active');
+                    if (activeView && activeView.id === 'view-add' && masterKey) {
+                        showVault();
+                    } else if (activeView && activeView.id === 'view-vault') {
+                        const searchInput = document.getElementById('search-input');
+                        if (searchInput && searchInput.value) {
+                            searchInput.value = '';
+                            filterSecrets();
+                        }
+                    }
                 }
             }
         });
@@ -1299,6 +1469,15 @@
             helpModal.addEventListener('click', (e) => {
                 if (e.target === e.currentTarget) {
                     closeHelp();
+                }
+            });
+        }
+
+        const tutModal = document.getElementById('tutorial-modal');
+        if (tutModal) {
+            tutModal.addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) {
+                    dismissTutorial();
                 }
             });
         }
