@@ -44,11 +44,11 @@
             transform-origin: center center;
         }
 
-        /* Cybernetic corner filigree & traveling glint */
+        /* Clean static industrial corner brackets (zero traveling glints/perimeter dots) */
         .hud-corner {
             position: absolute;
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             pointer-events: none;
             z-index: 50;
         }
@@ -56,19 +56,6 @@
         .hud-corner-tr { top: 3px; right: 3px; border-top: 2px solid #00ffaa; border-right: 2px solid #00ffaa; }
         .hud-corner-bl { bottom: 3px; left: 3px; border-bottom: 2px solid #00ffaa; border-left: 2px solid #00ffaa; }
         .hud-corner-br { bottom: 3px; right: 3px; border-bottom: 2px solid #00ffaa; border-right: 2px solid #00ffaa; }
-        .hud-corner::after {
-            content: '';
-            position: absolute;
-            width: 3px;
-            height: 3px;
-            background: #00ffea;
-            border-radius: 50%;
-            box-shadow: 0 0 4px #00ffea;
-        }
-        .hud-corner-tl::after { top: 1px; left: 1px; }
-        .hud-corner-tr::after { top: 1px; right: 1px; }
-        .hud-corner-bl::after { bottom: 1px; left: 1px; }
-        .hud-corner-br::after { bottom: 1px; right: 1px; }
 
 
         .screen {
@@ -456,14 +443,14 @@
         /* Toast Notifications */
         #toast-container {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 38px;
+            right: 12px;
             z-index: 1000;
             display: flex;
             flex-direction: column;
             gap: 6px;
             pointer-events: none;
-            max-width: 300px;
+            max-width: 320px;
         }
         .toast {
             background: rgba(0, 20, 10, 0.95);
@@ -476,6 +463,7 @@
             box-shadow: 0 0 10px rgba(0, 255, 100, 0.5);
             animation: toastIn 0.25s ease-out, toastOut 0.25s ease-in 2.75s forwards;
             pointer-events: auto;
+            cursor: pointer;
         }
         .toast.warning {
             border-color: #f90;
@@ -533,16 +521,20 @@
         <div id="screen-garage" class="screen active">
             <div class="header-bar">
                 <h1>⚡ KMech Garage</h1>
-                <button class="btn-help-top" onclick="showScreen('help')">[F1] Manual</button>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn-help-top" onclick="quickSave()">[F5] Save</button>
+                    <button class="btn-help-top" onclick="quickLoad()">[F9] Load</button>
+                    <button class="btn-help-top" onclick="showScreen('help')">[F1] Manual</button>
+                </div>
             </div>
             
             <div class="quick-hint">
-                [D/Enter] Deploy | [R] Repair | [U] Salvage | [S] Sell | [1-4] Gear | [F1] Manual
+                [D/Enter] Deploy | [R] Repair | [U] Salvage | [S] Sell | [1-4] Gear | [F5] Save | [F9] Load | [F1] Manual
             </div>
 
             <div style="text-align: center; margin-bottom: 6px; font-weight: bold; font-size: 12px;">
                 BATTLE: <span id="garage-battle-count" style="color:#ffff44;">1</span> | CREDITS: <span id="garage-credits" style="color:#00ffff;">100</span> CR | SALVAGE: <span id="garage-salvage" style="color:#aaffaa;">0</span><br>
-                PILOT LVL: <span id="garage-level" style="color:#ffff44;">1</span> | XP: <span id="garage-xp">0</span>/<span id="garage-next-xp">100</span>
+                PILOT LVL: <span id="garage-level" style="color:#ffff44;">1</span> (<span id="garage-rank" style="color:#77ffaa;">Cadet</span>) | XP: <span id="garage-xp">0</span>/<span id="garage-next-xp">100</span>
             </div>
 
             <!-- Hangar Bay Diagnostics -->
@@ -622,7 +614,10 @@
         <div id="screen-battle" class="screen">
             <div class="header-bar">
                 <h2>⚔️ Combat Zone</h2>
-                <button class="btn-help-top" onclick="showScreen('help')">[F1] Manual</button>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn-help-top" onclick="quickSave()">[F5] Save</button>
+                    <button class="btn-help-top" onclick="showScreen('help')">[F1] Manual</button>
+                </div>
             </div>
 
             <div class="battle-arena" id="battle-arena">
@@ -683,6 +678,8 @@
                     <tr><td>Repair Mech</td><td><span class="shortcut-key">R</span></td><td>Garage</td></tr>
                     <tr><td>Use / Sell Salvage</td><td><span class="shortcut-key">U / S</span></td><td>Garage</td></tr>
                     <tr><td>Cycle Weapon / Armor / Sink / Special</td><td><span class="shortcut-key">1 / 2 / 3 / 4</span></td><td>Garage</td></tr>
+                    <tr><td>Quicksave Mission State</td><td><span class="shortcut-key">F5</span></td><td>Anywhere</td></tr>
+                    <tr><td>Quickload Mission State</td><td><span class="shortcut-key">F9</span></td><td>Anywhere</td></tr>
                     <tr><td>Attack</td><td><span class="shortcut-key">A / Space / 1</span></td><td>Combat</td></tr>
                     <tr><td>Defend & Vent Heat</td><td><span class="shortcut-key">D / 2</span></td><td>Combat</td></tr>
                     <tr><td>Cycle Target Limb</td><td><span class="shortcut-key">T</span></td><td>Combat</td></tr>
@@ -690,15 +687,28 @@
                     <tr><td>Open / Close Pilot's Manual</td><td><span class="shortcut-key">F1 / H / Esc</span></td><td>Anywhere</td></tr>
                 </table>
 
-                <p><strong>TACTICAL COMBAT & HEAT:</strong><br>
-                - <em>Attack:</em> Deals weapon damage and raises your mech's heat. Exceeding Max Heat causes severe 15 HP core burnout damage!<br>
-                - <em>Defend:</em> Doubles DEF plating and cools your reactors without generating heat.<br>
-                - <em>Targeting:</em> Head deals 3.0x lethal damage with lower accuracy. Torso offers safe, reliable 1.0x hits. Limbs offer 1.5x damage.</p>
+                <p><strong>TACTICAL COMBAT & SUBSYSTEM TARGETING:</strong><br>
+                - <em>Attack:</em> Deals weapon damage and builds up core heat. Exceeding Max Heat causes 15 HP catastrophic burnout!<br>
+                - <em>Defend:</em> Doubles DEF armor, vents reactor heat, and activates Repair Nanodrones if equipped.<br>
+                - <em>Head/Cockpit:</em> Precision strike (20% hit chance, 3.0x lethal damage, stuns enemy systems).<br>
+                - <em>Torso:</em> Center mass (80% hit chance, 1.0x damage, highest reliability).<br>
+                - <em>L.Arm:</em> Shield/Subsystem disarm (60% hit chance, 1.4x damage, strips 2 enemy DEF).<br>
+                - <em>R.Arm:</em> Weapon disarm (60% hit chance, 1.4x damage, reduces enemy ATK by 3).<br>
+                - <em>Legs:</em> Mobility strike (55% hit chance, 1.2x damage, grants +15% evasion next turn).</p>
 
-                <p><strong>PARTS & PILOT UPGRADES:</strong><br>
-                - <em>XP & Leveling:</em> Each pilot level gives +5% accuracy and evasion boost.<br>
+                <p><strong>HOSTILE MECH TIERS:</strong><br>
+                - <em>Battles 1-2:</em> Scout Raider (Agile raptor chassis, rapid pulse laser).<br>
+                - <em>Battles 3-4:</em> Assault Goliath (Heavy armor, shoulder quad-missile pod).<br>
+                - <em>Battles 5-6:</em> Stealth Interceptor (Swept delta chassis, optical active-camo).<br>
+                - <em>Battles 7-8:</em> Siege Titan (Quad-leg walking fortress, heavy siege mortars).<br>
+                - <em>Battles 9+:</em> Apex Overlord (Command dreadnought with void cyclops eye and forcefield).</p>
+
+                <p><strong>PILOT RANKS & SUBSYSTEMS:</strong><br>
+                - <em>XP & Pilot Ranks:</em> Cadet &rarr; Scout &rarr; Veteran &rarr; Ace &rarr; Commander (+5% accuracy & evasion per level).<br>
                 - <em>Jump Jets:</em> +20% evasion bonus.<br>
-                - <em>Energy Shield:</em> Absorbs up to 5 damage per incoming hit.</p>
+                - <em>Energy Shield:</em> Absorbs 6 damage per incoming hit.<br>
+                - <em>Overdrive Core:</em> +25% attack damage boost (adds +12 heat).<br>
+                - <em>Repair Nanodrones:</em> Restores +10 HP whenever defending / venting heat.</p>
             </div>
             
             <div class="actions">
@@ -785,6 +795,46 @@
                     gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.0);
                     osc.start();
                     osc.stop(audioCtx.currentTime + 1.0);
+                } else if (type === 'plasma') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(340, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(35, audioCtx.currentTime + 0.4);
+                    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.4);
+                } else if (type === 'emp') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(1400, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(180, audioCtx.currentTime + 0.25);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                } else if (type === 'shield') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(620, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.25);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                } else if (type === 'repair') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(520, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(680, audioCtx.currentTime + 0.1);
+                    osc.frequency.setValueAtTime(920, audioCtx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.35);
+                } else if (type === 'click') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(1100, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.04);
                 }
             } catch(e) {}
         }
@@ -795,6 +845,8 @@
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
             toast.innerText = msg;
+            toast.title = "Click to dismiss";
+            toast.onclick = () => { toast.remove(); };
             container.appendChild(toast);
             setTimeout(() => {
                 if (toast.parentNode) {
@@ -804,26 +856,93 @@
         }
 
         const weapons = [
-            { name: "Basic Laser", atk: 15, heatGen: 30 },
-            { name: "Heavy Cannon", atk: 25, heatGen: 50 },
-            { name: "Twin Blasters", atk: 20, heatGen: 40 }
+            { name: "Pulse Laser", atk: 16, heatGen: 22, type: 0 },
+            { name: "Heavy Gauss Cannon", atk: 28, heatGen: 46, type: 1 },
+            { name: "Twin Autocannons", atk: 22, heatGen: 34, type: 2 },
+            { name: "Plasma Mortar", atk: 36, heatGen: 58, type: 3 },
+            { name: "EMP Arc Disruptor", atk: 20, heatGen: 26, type: 4 }
         ];
         const armors = [
-            { name: "Standard", def: 5, maxHp: 100 },
-            { name: "Heavy", def: 10, maxHp: 120 },
-            { name: "Light Scout", def: 2, maxHp: 80 }
+            { name: "Standard Composite", def: 5, maxHp: 100, evadeMod: 0.0 },
+            { name: "Heavy Ferro-Fibrous", def: 10, maxHp: 130, evadeMod: -0.05 },
+            { name: "Light Scout Frame", def: 2, maxHp: 80, evadeMod: 0.15 },
+            { name: "Reactive Nanoweave", def: 8, maxHp: 115, evadeMod: 0.05 }
         ];
         const heatSinks = [
-            { name: "Basic", cooling: 20, maxHeat: 100 },
-            { name: "Advanced", cooling: 30, maxHeat: 150 },
-            { name: "Burst", cooling: 40, maxHeat: 80 }
+            { name: "Basic Convection", cooling: 20, maxHeat: 100 },
+            { name: "Advanced Double Sink", cooling: 32, maxHeat: 140 },
+            { name: "Burst Cryo Vent", cooling: 48, maxHeat: 80 },
+            { name: "Vortex Array", cooling: 26, maxHeat: 165 }
         ];
 
         const specials = [
             { name: "None", evadeBonus: 0, shieldDmgReduction: 0 },
-            { name: "Jump Jets", evadeBonus: 0.2, shieldDmgReduction: 0 },
-            { name: "Energy Shield", evadeBonus: 0, shieldDmgReduction: 5 }
+            { name: "Jump Jets", evadeBonus: 0.20, shieldDmgReduction: 0 },
+            { name: "Energy Shield", evadeBonus: 0, shieldDmgReduction: 6 },
+            { name: "Overdrive Core", evadeBonus: 0, shieldDmgReduction: 0 },
+            { name: "Repair Nanodrones", evadeBonus: 0, shieldDmgReduction: 0 }
         ];
+
+        function getPilotRank(lvl) {
+            if (lvl >= 6) return "Mech Commander";
+            if (lvl === 5) return "Strike Commander";
+            if (lvl === 4) return "Ace Vanguard";
+            if (lvl === 3) return "Veteran Lancer";
+            if (lvl === 2) return "Scout Pilot";
+            return "Cadet";
+        }
+
+        function quickSave(silent = false) {
+            try {
+                const savePayload = {
+                    credits, salvage, battleCount, playerLevel, playerXp,
+                    equipWpn, equipArm, equipSink, equipSpec,
+                    playerHp: playerStats.hp
+                };
+                localStorage.setItem('kmech_save', JSON.stringify(savePayload));
+                if (!silent) {
+                    showToast("💾 Mission telemetry saved [F5]", 2500, 'info');
+                    playSound('click');
+                }
+            } catch(e) {
+                if (!silent) showToast("Save failed", 2500, 'danger');
+            }
+        }
+
+        function quickLoad() {
+            try {
+                const raw = localStorage.getItem('kmech_save');
+                if (!raw) {
+                    showToast("⚠️ No telemetry file found. Press [F5] to save.", 3000, 'warning');
+                    return;
+                }
+                const d = JSON.parse(raw);
+                credits = d.credits ?? 100;
+                salvage = d.salvage ?? 0;
+                battleCount = d.battleCount ?? 1;
+                playerLevel = d.playerLevel ?? 1;
+                playerXp = d.playerXp ?? 0;
+                equipWpn = (d.equipWpn ?? 0) % weapons.length;
+                equipArm = (d.equipArm ?? 0) % armors.length;
+                equipSink = (d.equipSink ?? 0) % heatSinks.length;
+                equipSpec = (d.equipSpec ?? 0) % specials.length;
+                
+                playerStats.atk = weapons[equipWpn].atk;
+                playerHeatGen = weapons[equipWpn].heatGen;
+                playerStats.def = armors[equipArm].def;
+                playerStats.maxHp = armors[equipArm].maxHp;
+                playerStats.maxHeat = heatSinks[equipSink].maxHeat;
+                playerCooling = heatSinks[equipSink].cooling;
+                playerStats.hp = (d.playerHp !== undefined && d.playerHp > 0) ? Math.min(d.playerHp, playerStats.maxHp) : playerStats.maxHp;
+                playerStats.heat = 0;
+
+                updateGarage();
+                showToast(`📂 Telemetry restored: ${getPilotRank(playerLevel)} (Battle #${battleCount}) [F9]`, 3500, 'info');
+                playSound('victory');
+            } catch(e) {
+                showToast("Failed to load telemetry", 3000, 'danger');
+            }
+        }
 
         let equipWpn = 0, equipArm = 0, equipSink = 0, equipSpec = 0;
         let playerHeatGen = 30;
@@ -855,44 +974,64 @@
         function getPlayerMechSVG(size = 90) {
             const isHeavy = equipArm === 1;
             const isLight = equipArm === 2;
+            const isNano = equipArm === 3;
             const hasShield = equipSpec === 2;
             const hasJets = equipSpec === 1;
+            const hasOverdrive = equipSpec === 3;
+            const hasNanodrones = equipSpec === 4;
             const heatRatio = playerStats.heat / playerStats.maxHeat;
 
-            const primaryColor = isHeavy ? "#00ff88" : (isLight ? "#33ffaa" : "#00ff66");
-            const armorFill = isHeavy ? "#0d3318" : (isLight ? "#0a2614" : "#114020");
-            const visorColor = heatRatio > 0.8 ? "#ff3300" : (heatRatio > 0.5 ? "#ffaa00" : "#00ffff");
+            const primaryColor = isHeavy ? "#00ff88" : (isLight ? "#33ffaa" : (isNano ? "#00e5ff" : "#00ff66"));
+            const armorFill = isHeavy ? "#0d3318" : (isLight ? "#0a2614" : (isNano ? "#082828" : "#114020"));
+            const visorColor = heatRatio > 0.8 ? "#ff3300" : (heatRatio > 0.5 ? "#ffaa00" : (isNano ? "#00ffff" : "#00ffea"));
 
             let wpnSvg = '';
-            if (equipWpn === 0) { // Basic Laser
+            if (equipWpn === 0) { // Pulse Laser
                 wpnSvg = `
                     <g transform="translate(76, 46)">
                         <rect x="0" y="0" width="12" height="5" fill="#1b4d2b" stroke="${primaryColor}" stroke-width="1"/>
                         <rect x="12" y="1" width="8" height="3" fill="#00ffff" stroke="#00e5ff" stroke-width="0.8"/>
-                        <line x1="20" y1="2.5" x2="24" y2="2.5" stroke="#00ffff" stroke-width="1.5"/>
+                        <line x1="20" y1="2.5" x2="25" y2="2.5" stroke="#00ffff" stroke-width="1.8"/>
                         <circle cx="8" cy="2.5" r="1.5" fill="#00ffff"/>
                     </g>`;
-            } else if (equipWpn === 1) { // Heavy Cannon
+            } else if (equipWpn === 1) { // Heavy Gauss Cannon
                 wpnSvg = `
                     <g transform="translate(74, 43)">
                         <rect x="0" y="0" width="14" height="8" fill="#14331c" stroke="${primaryColor}" stroke-width="1.2"/>
-                        <rect x="14" y="2" width="14" height="4" fill="#33553a" stroke="${primaryColor}" stroke-width="1"/>
-                        <rect x="25" y="0.5" width="4" height="7" fill="#00ff66"/>
+                        <rect x="14" y="2" width="16" height="4" fill="#33553a" stroke="${primaryColor}" stroke-width="1"/>
+                        <rect x="27" y="0.5" width="5" height="7" fill="#ffaa00"/>
                         <circle cx="6" cy="4" r="2.5" fill="#ffaa00"/>
                     </g>`;
-            } else { // Twin Blasters
+            } else if (equipWpn === 2) { // Twin Autocannons
                 wpnSvg = `
                     <g transform="translate(75, 43)">
                         <rect x="0" y="0" width="10" height="9" fill="#1b4d2b" stroke="${primaryColor}" stroke-width="1"/>
-                        <rect x="10" y="0.5" width="11" height="2.5" fill="#ff9900" stroke="#ffaa00" stroke-width="0.8"/>
-                        <rect x="10" y="6" width="11" height="2.5" fill="#ff9900" stroke="#ffaa00" stroke-width="0.8"/>
+                        <rect x="10" y="0.5" width="13" height="2.5" fill="#ff9900" stroke="#ffaa00" stroke-width="0.8"/>
+                        <rect x="10" y="6" width="13" height="2.5" fill="#ff9900" stroke="#ffaa00" stroke-width="0.8"/>
                         <circle cx="5" cy="4.5" r="1.5" fill="#ffaa00"/>
+                    </g>`;
+            } else if (equipWpn === 3) { // Plasma Mortar
+                wpnSvg = `
+                    <g transform="translate(73, 42)">
+                        <rect x="0" y="0" width="12" height="10" fill="#201133" stroke="#cc44ff" stroke-width="1.2"/>
+                        <circle cx="16" cy="5" r="5" fill="#8800cc" stroke="#e066ff" stroke-width="1"/>
+                        <circle cx="16" cy="5" r="2.5" fill="#ffffff"/>
+                        <rect x="21" y="3" width="7" height="4" fill="#550088" stroke="#e066ff" stroke-width="0.8"/>
+                    </g>`;
+            } else { // EMP Arc Disruptor
+                wpnSvg = `
+                    <g transform="translate(74, 42)">
+                        <rect x="0" y="0" width="12" height="9" fill="#0d2833" stroke="#00e5ff" stroke-width="1.2"/>
+                        <rect x="12" y="1" width="6" height="7" fill="#005577" stroke="#00ffff" stroke-width="0.8"/>
+                        <line x1="18" y1="2" x2="26" y2="1" stroke="#00ffff" stroke-width="1.5"/>
+                        <line x1="18" y1="7" x2="26" y2="8" stroke="#00ffff" stroke-width="1.5"/>
+                        <circle cx="6" cy="4.5" r="2" fill="#00ffff"/>
                     </g>`;
             }
 
-            let jetSvg = '';
+            let specialSvg = '';
             if (hasJets) {
-                jetSvg = `
+                specialSvg = `
                     <g>
                         <!-- Jump Jet Thrusters -->
                         <path d="M24,25 L18,18 L24,14 Z" fill="#008855" stroke="#00ffaa" stroke-width="1"/>
@@ -900,15 +1039,28 @@
                         <polygon points="17,17 12,14 16,19" fill="#00ffff" opacity="0.85"/>
                         <polygon points="83,17 88,14 84,19" fill="#00ffff" opacity="0.85"/>
                     </g>`;
-            }
-
-            let shieldSvg = '';
-            if (hasShield) {
-                shieldSvg = `
+            } else if (hasShield) {
+                specialSvg = `
                     <polygon points="50,4 88,22 88,72 50,96 12,72 12,22" 
                              fill="rgba(0, 255, 255, 0.08)" stroke="#00ffff" stroke-width="1.2" stroke-dasharray="4,2" opacity="0.85">
                         <animate attributeName="opacity" values="0.6;0.95;0.6" dur="2s" repeatCount="indefinite"/>
                     </polygon>`;
+            } else if (hasOverdrive) {
+                specialSvg = `
+                    <g>
+                        <rect x="20" y="18" width="6" height="12" fill="#ff2200" stroke="#ffaa00" stroke-width="0.8"/>
+                        <rect x="74" y="18" width="6" height="12" fill="#ff2200" stroke="#ffaa00" stroke-width="0.8"/>
+                        <line x1="23" y1="18" x2="23" y2="12" stroke="#ff5500" stroke-width="1.5"/>
+                        <line x1="77" y1="18" x2="77" y2="12" stroke="#ff5500" stroke-width="1.5"/>
+                    </g>`;
+            } else if (hasNanodrones) {
+                specialSvg = `
+                    <g>
+                        <circle cx="22" cy="20" r="4" fill="#003318" stroke="#00ff88" stroke-width="1"/>
+                        <circle cx="78" cy="20" r="4" fill="#003318" stroke="#00ff88" stroke-width="1"/>
+                        <circle cx="16" cy="18" r="1.5" fill="#77ffaa"/>
+                        <circle cx="84" cy="18" r="1.5" fill="#77ffaa"/>
+                    </g>`;
             }
 
             let headWidth = isHeavy ? 24 : (isLight ? 16 : 20);
@@ -922,8 +1074,7 @@
                         <stop offset="100%" stop-color="#0a2612"/>
                     </linearGradient>
                 </defs>
-                ${shieldSvg}
-                ${jetSvg}
+                ${specialSvg}
                 <g stroke="${primaryColor}" stroke-width="1.5" fill="${armorFill}">
                     <!-- Legs & Greaves -->
                     <path d="M38,64 L30,84 L18,88 L26,94 L42,94 L42,86 L40,64" fill="${armorFill}" stroke-width="1.5"/>
@@ -960,8 +1111,10 @@
         }
 
         function getEnemyMechSVG(size = 90) {
-            let enemyType = 0; // 0=Scout, 1=Brawler, 2=Siege Titan
-            if (battleCount >= 5) enemyType = 2;
+            let enemyType = 0; // 0=Scout, 1=Goliath, 2=Interceptor, 3=Titan, 4=Overlord
+            if (battleCount >= 9) enemyType = 4;
+            else if (battleCount >= 7) enemyType = 3;
+            else if (battleCount >= 5) enemyType = 2;
             else if (battleCount >= 3) enemyType = 1;
 
             const primaryRed = "#ff3333";
@@ -972,23 +1125,17 @@
                 return `
                 <svg class="mech-svg-elem" width="${size}" height="${size * 0.95}" viewBox="0 0 100 100">
                     <g stroke="${primaryRed}" stroke-width="1.5" fill="${darkRed}">
-                        <!-- Digitigrade Raptor Legs -->
                         <path d="M38,62 L22,76 L34,92 L20,94" stroke-width="1.5" fill="none"/>
                         <path d="M62,62 L78,76 L66,92 L80,94" stroke-width="1.5" fill="none"/>
-                        <!-- Torso -->
                         <polygon points="30,28 70,28 60,62 40,62" stroke-width="1.8"/>
-                        <!-- Aerodynamic Fin Ears -->
                         <polygon points="34,14 22,6 32,20" fill="#aa1111"/>
                         <polygon points="66,14 78,6 68,20" fill="#aa1111"/>
-                        <!-- Head -->
                         <circle cx="50" cy="20" r="10" stroke-width="1.5"/>
                         <path d="M43,20 L57,20" stroke="${enemyEye}" stroke-width="2.5"/>
-                        <!-- Needle Cannons -->
                         <line x1="24" y1="36" x2="8" y2="56" stroke-width="2"/>
                         <line x1="8" y1="56" x2="4" y2="70" stroke="${primaryRed}" stroke-width="2.5"/>
                         <line x1="76" y1="36" x2="92" y2="56" stroke-width="2"/>
                         <line x1="92" y1="56" x2="96" y2="70" stroke="${primaryRed}" stroke-width="2.5"/>
-                        <!-- Core -->
                         <circle cx="50" cy="44" r="3.5" fill="${enemyEye}"/>
                     </g>
                 </svg>`;
@@ -996,29 +1143,45 @@
                 return `
                 <svg class="mech-svg-elem" width="${size}" height="${size * 0.95}" viewBox="0 0 100 100">
                     <g stroke="${primaryRed}" stroke-width="1.6" fill="${darkRed}">
-                        <!-- Heavy Legs -->
                         <path d="M36,64 L26,84 L14,94 L38,94 L40,64" stroke-width="1.5"/>
                         <path d="M64,64 L74,84 L86,94 L62,94 L60,64" stroke-width="1.5"/>
-                        <!-- Torso Plating -->
                         <polygon points="22,26 78,26 68,66 32,66" stroke-width="2"/>
-                        <!-- Shoulder Missile Pod -->
                         <rect x="14" y="16" width="16" height="12" fill="#220000" stroke="${primaryRed}" stroke-width="1.2"/>
                         <circle cx="18" cy="20" r="1.5" fill="#ffaa00"/>
                         <circle cx="26" cy="20" r="1.5" fill="#ffaa00"/>
                         <circle cx="18" cy="25" r="1.5" fill="#ffaa00"/>
                         <circle cx="26" cy="25" r="1.5" fill="#ffaa00"/>
-                        <!-- Head -->
                         <rect x="40" y="12" width="20" height="14" stroke-width="1.5" rx="2"/>
                         <polygon points="43,17 57,17 55,22 45,22" fill="${enemyEye}"/>
-                        <!-- Heavy Cannon Arm -->
                         <rect x="76" y="32" width="10" height="26" fill="#330000"/>
                         <rect x="78" y="58" width="6" height="16" fill="#ff2222"/>
-                        <!-- Spiked Fist Left Arm -->
                         <rect x="14" y="34" width="8" height="24"/>
                         <circle cx="18" cy="62" r="5" fill="#ff2222"/>
                     </g>
                 </svg>`;
-            } else { // Siege Titan Dreadnought (Battle 5+)
+            } else if (enemyType === 2) { // Stealth Interceptor (Battle 5-6)
+                return `
+                <svg class="mech-svg-elem" width="${size}" height="${size * 0.95}" viewBox="0 0 100 100">
+                    <g stroke="#ff00aa" stroke-width="1.6" fill="#300520">
+                        <!-- Swept Aerodynamic Delta Wings -->
+                        <polygon points="28,32 4,14 16,50 26,42" fill="#500835" stroke="#ff00aa" stroke-width="1.4"/>
+                        <polygon points="72,32 96,14 84,50 74,42" fill="#500835" stroke="#ff00aa" stroke-width="1.4"/>
+                        <!-- Agile Greaves -->
+                        <path d="M38,64 L28,84 L22,94 L36,94 L42,66"/>
+                        <path d="M62,64 L72,84 L78,94 L64,94 L58,66"/>
+                        <!-- Sleek Torso Plating -->
+                        <polygon points="28,26 72,26 62,64 38,64" stroke-width="1.8"/>
+                        <!-- Cockpit Visor -->
+                        <polygon points="42,14 58,14 54,24 46,24" fill="#00ffff" stroke="#ffffff" stroke-width="0.8"/>
+                        <!-- Dual Arc Disruptors -->
+                        <rect x="10" y="48" width="6" height="20" fill="#200020" stroke="#00ffff" stroke-width="1"/>
+                        <rect x="84" y="48" width="6" height="20" fill="#200020" stroke="#00ffff" stroke-width="1"/>
+                        <!-- Stealth Shimmer Core -->
+                        <circle cx="50" cy="44" r="4" fill="#ff00aa"/>
+                        <circle cx="50" cy="44" r="2" fill="#ffffff"/>
+                    </g>
+                </svg>`;
+            } else if (enemyType === 3) { // Siege Titan (Battle 7-8)
                 return `
                 <svg class="mech-svg-elem" width="${size}" height="${size * 0.95}" viewBox="0 0 100 100">
                     <g stroke="${primaryRed}" stroke-width="1.8" fill="${darkRed}">
@@ -1033,11 +1196,9 @@
                         <!-- Horned Armor Crest -->
                         <polygon points="34,22 28,6 40,16" fill="#ff2222"/>
                         <polygon points="66,22 72,6 60,16" fill="#ff2222"/>
-                        <!-- Ocular Core Cyclops Eye -->
+                        <!-- Central Cyclops Eye -->
                         <circle cx="50" cy="18" r="8" fill="#110000" stroke="${primaryRed}" stroke-width="1.5"/>
-                        <circle cx="50" cy="18" r="3.5" fill="#ffff00">
-                            <animate attributeName="r" values="3;4.5;3" dur="1.2s" repeatCount="indefinite"/>
-                        </circle>
+                        <circle cx="50" cy="18" r="3.5" fill="#ffff00"/>
                         <!-- Quad Cannons -->
                         <rect x="8" y="32" width="10" height="30" fill="#220000"/>
                         <rect x="6" y="62" width="6" height="14" fill="#ff3333"/>
@@ -1046,6 +1207,34 @@
                         <!-- Central Shield Matrix -->
                         <rect x="42" y="36" width="16" height="20" fill="#220000" stroke="#ff8800" stroke-width="1.2"/>
                         <line x1="45" y1="46" x2="55" y2="46" stroke="#ff3333" stroke-width="2"/>
+                    </g>
+                </svg>`;
+            } else { // Apex Overlord (Battle 9+)
+                return `
+                <svg class="mech-svg-elem" width="${size}" height="${size * 0.95}" viewBox="0 0 100 100">
+                    <polygon points="50,2 94,22 94,76 50,98 6,76 6,22" 
+                             fill="rgba(255, 0, 80, 0.08)" stroke="#ff0055" stroke-width="1.2" stroke-dasharray="4,2" opacity="0.85">
+                        <animate attributeName="opacity" values="0.6;0.95;0.6" dur="1.5s" repeatCount="indefinite"/>
+                    </polygon>
+                    <g stroke="#ff0033" stroke-width="2" fill="#260404">
+                        <!-- Fortress Greaves -->
+                        <path d="M26,62 L10,84 L6,96 L30,96 L38,66" fill="#180202"/>
+                        <path d="M74,62 L90,84 L94,96 L70,96 L62,66" fill="#180202"/>
+                        <!-- Apex Torso Plating -->
+                        <polygon points="14,22 86,22 76,68 24,68" fill="#300505" stroke="#ff2200" stroke-width="2.2"/>
+                        <!-- Void Core Cyclops Eye -->
+                        <circle cx="50" cy="38" r="9" fill="#0d0000" stroke="#ff0044" stroke-width="1.8"/>
+                        <circle cx="50" cy="38" r="4.5" fill="#ff00ff">
+                            <animate attributeName="r" values="3.5;5.5;3.5" dur="1s" repeatCount="indefinite"/>
+                        </circle>
+                        <!-- Command Horn Spikes -->
+                        <polygon points="26,20 18,4 34,14" fill="#ff0044"/>
+                        <polygon points="74,20 82,4 66,14" fill="#ff0044"/>
+                        <!-- Heavy Dual Batteries -->
+                        <rect x="6" y="28" width="12" height="36" fill="#110000" stroke="#ff0033"/>
+                        <rect x="82" y="28" width="12" height="36" fill="#110000" stroke="#ff0033"/>
+                        <rect x="8" y="64" width="8" height="12" fill="#ff4400"/>
+                        <rect x="84" y="64" width="8" height="12" fill="#ff4400"/>
                     </g>
                 </svg>`;
             }
@@ -1074,13 +1263,17 @@
             const jetStatus = document.getElementById('hangar-jet-status');
             if (jetStatus) {
                 if (equipSpec === 1) jetStatus.innerText = "+20% EVASION";
-                else if (equipSpec === 2) jetStatus.innerText = "SHIELD 5 DMG";
+                else if (equipSpec === 2) jetStatus.innerText = "SHIELD 6 DMG";
+                else if (equipSpec === 3) jetStatus.innerText = "+25% ATK DMG";
+                else if (equipSpec === 4) jetStatus.innerText = "+10 HP DEFEND";
                 else jetStatus.innerText = "STANDBY";
             }
 
             const enemyTitle = document.getElementById('enemy-title-name');
             if (enemyTitle) {
-                if (battleCount >= 5) enemyTitle.innerText = "Siege Dreadnought";
+                if (battleCount >= 9) enemyTitle.innerText = "Apex Overlord";
+                else if (battleCount >= 7) enemyTitle.innerText = "Siege Titan";
+                else if (battleCount >= 5) enemyTitle.innerText = "Stealth Interceptor";
                 else if (battleCount >= 3) enemyTitle.innerText = "Assault Goliath";
                 else enemyTitle.innerText = "Scout Raider";
             }
@@ -1216,7 +1409,7 @@
 
                 fxCtx.save();
                 if (p.fromPlayer) {
-                    if (p.weaponType === 0) { // Basic Laser: Cyan focus beam
+                    if (p.weaponType === 0) { // Pulse Laser: Cyan coherent focus beam
                         fxCtx.strokeStyle = '#00ffff';
                         fxCtx.lineWidth = 3.5;
                         fxCtx.shadowColor = '#00ffff';
@@ -1225,29 +1418,78 @@
                         fxCtx.moveTo(p.startX + (p.targetX - p.startX) * Math.max(0, p.progress - 0.25), p.y);
                         fxCtx.lineTo(p.x, p.y);
                         fxCtx.stroke();
-                    } else if (p.weaponType === 1) { // Heavy Cannon: Kinetic explosive slug
+                    } else if (p.weaponType === 1) { // Heavy Gauss Cannon: Kinetic explosive slug
                         fxCtx.fillStyle = '#ffaa00';
                         fxCtx.shadowColor = '#ff6600';
-                        fxCtx.shadowBlur = 12;
+                        fxCtx.shadowBlur = 14;
                         fxCtx.beginPath();
-                        fxCtx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+                        fxCtx.arc(p.x, p.y, 5.5, 0, Math.PI * 2);
                         fxCtx.fill();
-                    } else { // Twin Blasters: Dual energy bolts
+                        fxCtx.fillStyle = '#ffffff';
+                        fxCtx.beginPath();
+                        fxCtx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                        fxCtx.fill();
+                    } else if (p.weaponType === 2) { // Twin Autocannons: Dual explosive tracer bolts
                         fxCtx.fillStyle = '#ff9900';
                         fxCtx.shadowColor = '#ffaa00';
                         fxCtx.shadowBlur = 8;
                         fxCtx.fillRect(p.x - 8, p.y - 4, 12, 3);
                         fxCtx.fillRect(p.x - 8, p.y + 2, 12, 3);
+                    } else if (p.weaponType === 3) { // Plasma Mortar: Superheated purple orb
+                        fxCtx.fillStyle = '#cc22ff';
+                        fxCtx.shadowColor = '#ff00ff';
+                        fxCtx.shadowBlur = 16;
+                        fxCtx.beginPath();
+                        fxCtx.arc(p.x, p.y, 7.5, 0, Math.PI * 2);
+                        fxCtx.fill();
+                        fxCtx.fillStyle = '#ffffff';
+                        fxCtx.beginPath();
+                        fxCtx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                        fxCtx.fill();
+                    } else { // EMP Arc Disruptor: Electric lightning bolt
+                        fxCtx.strokeStyle = '#00ffff';
+                        fxCtx.lineWidth = 2.5;
+                        fxCtx.shadowColor = '#00ffff';
+                        fxCtx.shadowBlur = 12;
+                        fxCtx.beginPath();
+                        fxCtx.moveTo(p.x - 16, p.y + (Math.random() - 0.5) * 6);
+                        fxCtx.lineTo(p.x - 8, p.y + (Math.random() - 0.5) * 8);
+                        fxCtx.lineTo(p.x, p.y);
+                        fxCtx.stroke();
                     }
-                } else { // Enemy Disruptor: Red laser
-                    fxCtx.strokeStyle = '#ff3333';
-                    fxCtx.lineWidth = 3.5;
-                    fxCtx.shadowColor = '#ff0000';
-                    fxCtx.shadowBlur = 10;
-                    fxCtx.beginPath();
-                    fxCtx.moveTo(p.startX + (p.targetX - p.startX) * Math.max(0, p.progress - 0.25), p.y);
-                    fxCtx.lineTo(p.x, p.y);
-                    fxCtx.stroke();
+                } else { // Enemy projectile based on tier
+                    if (battleCount >= 9) { // Void Beam
+                        fxCtx.strokeStyle = '#ff00ff';
+                        fxCtx.lineWidth = 4.5;
+                        fxCtx.shadowColor = '#ff0055';
+                        fxCtx.shadowBlur = 14;
+                        fxCtx.beginPath();
+                        fxCtx.moveTo(p.startX + (p.targetX - p.startX) * Math.max(0, p.progress - 0.3), p.y);
+                        fxCtx.lineTo(p.x, p.y);
+                        fxCtx.stroke();
+                    } else if (battleCount >= 7) { // Heavy Siege Mortar
+                        fxCtx.fillStyle = '#ff4400';
+                        fxCtx.shadowColor = '#ff2200';
+                        fxCtx.shadowBlur = 12;
+                        fxCtx.beginPath();
+                        fxCtx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+                        fxCtx.fill();
+                    } else if (battleCount >= 5) { // Interceptor Dual Disruptor
+                        fxCtx.fillStyle = '#ff00aa';
+                        fxCtx.shadowColor = '#00ffff';
+                        fxCtx.shadowBlur = 8;
+                        fxCtx.fillRect(p.x - 6, p.y - 3, 10, 2.5);
+                        fxCtx.fillRect(p.x - 6, p.y + 2, 10, 2.5);
+                    } else { // Red laser
+                        fxCtx.strokeStyle = '#ff3333';
+                        fxCtx.lineWidth = 3.5;
+                        fxCtx.shadowColor = '#ff0000';
+                        fxCtx.shadowBlur = 10;
+                        fxCtx.beginPath();
+                        fxCtx.moveTo(p.startX + (p.targetX - p.startX) * Math.max(0, p.progress - 0.25), p.y);
+                        fxCtx.lineTo(p.x, p.y);
+                        fxCtx.stroke();
+                    }
                 }
                 fxCtx.restore();
 
@@ -1396,34 +1638,44 @@
             updateMechVisuals();
         }
 
+        let playerLegEvadeBoost = 0;
+
         function cycleWpn() {
             equipWpn = (equipWpn + 1) % weapons.length;
             playerStats.atk = weapons[equipWpn].atk;
             playerHeatGen = weapons[equipWpn].heatGen;
+            playSound('click');
             showToast(`Weapon: ${weapons[equipWpn].name} (ATK ${playerStats.atk}, Heat ${playerHeatGen})`, 2000);
             updateGarage();
+            quickSave(true);
         }
         function cycleArm() {
             equipArm = (equipArm + 1) % armors.length;
             playerStats.def = armors[equipArm].def;
             playerStats.maxHp = armors[equipArm].maxHp;
             playerStats.hp = Math.min(playerStats.hp, playerStats.maxHp);
+            playSound('click');
             showToast(`Armor: ${armors[equipArm].name} (DEF ${playerStats.def}, HP ${playerStats.maxHp})`, 2000);
             updateGarage();
+            quickSave(true);
         }
         function cycleSink() {
             equipSink = (equipSink + 1) % heatSinks.length;
             playerStats.maxHeat = heatSinks[equipSink].maxHeat;
             playerCooling = heatSinks[equipSink].cooling;
             if (playerStats.heat > playerStats.maxHeat) playerStats.heat = playerStats.maxHeat;
+            playSound('click');
             showToast(`Heat Sink: ${heatSinks[equipSink].name} (Cooling ${playerCooling}/turn, Max ${playerStats.maxHeat})`, 2000);
             updateGarage();
+            quickSave(true);
         }
 
         function cycleSpec() {
             equipSpec = (equipSpec + 1) % specials.length;
+            playSound('click');
             showToast(`Special: ${specials[equipSpec].name}`, 2000);
             updateGarage();
+            quickSave(true);
         }
 
         function repairMech() {
@@ -1443,10 +1695,12 @@
             let cost = Math.min(missingHp, credits);
             playerStats.hp += cost;
             credits -= cost;
+            playSound('repair');
             const msg = `Repaired ${cost} HP for ${cost} Credits.`;
             document.getElementById('garage-info').innerText = msg;
             showToast(`🔧 ${msg}`, 2500);
             updateGarage();
+            quickSave(true);
         }
 
         function useSalvage() {
@@ -1461,10 +1715,12 @@
                 let heal = Math.min(missingHp, 50);
                 playerStats.hp += heal;
                 salvage--;
+                playSound('repair');
                 const msg = `Used 1 Salvage Part to repair ${heal} HP.`;
                 document.getElementById('garage-info').innerText = msg;
                 showToast(`⚙️ ${msg}`, 2500);
                 updateGarage();
+                quickSave(true);
             } else {
                 const msg = "No salvage parts available.";
                 document.getElementById('garage-info').innerText = msg;
@@ -1476,10 +1732,12 @@
             if (salvage > 0) {
                 salvage--;
                 credits += 50;
+                playSound('click');
                 const msg = "Sold 1 Salvage Part for 50 Credits.";
                 document.getElementById('garage-info').innerText = msg;
                 showToast(`💰 ${msg}`, 2500);
                 updateGarage();
+                quickSave(true);
             } else {
                 const msg = "No salvage parts available.";
                 document.getElementById('garage-info').innerText = msg;
@@ -1506,18 +1764,46 @@
         }
 
         function startBattle() {
+            let eHp = 80, eAtk = 12, eDef = 3, eHeat = 100;
+            if (battleCount >= 9) {
+                eHp = 210 + (battleCount - 9) * 20;
+                eAtk = 30 + (battleCount - 9) * 2;
+                eDef = 12;
+                eHeat = 170;
+            } else if (battleCount >= 7) {
+                eHp = 170;
+                eAtk = 26;
+                eDef = 10;
+                eHeat = 150;
+            } else if (battleCount >= 5) {
+                eHp = 135;
+                eAtk = 21;
+                eDef = 7;
+                eHeat = 135;
+            } else if (battleCount >= 3) {
+                eHp = 110;
+                eAtk = 16;
+                eDef = 5;
+                eHeat = 120;
+            } else {
+                eHp = 75 + battleCount * 5;
+                eAtk = 12 + battleCount * 2;
+                eDef = 3 + battleCount;
+                eHeat = 100;
+            }
             enemyStats = { 
-                maxHp: 80 + (battleCount * 10), 
-                hp: 80 + (battleCount * 10), 
-                atk: 12 + (battleCount * 2), 
-                def: 3 + battleCount, 
-                maxHeat: 100 + (battleCount * 5), 
+                maxHp: eHp, 
+                hp: eHp, 
+                atk: eAtk, 
+                def: eDef, 
+                maxHeat: eHeat, 
                 heat: 0 
             };
             playerStats.heat = 0;
             isDefending = false;
             enemyIsDefending = false;
             isProcessingTurn = false;
+            playerLegEvadeBoost = 0;
             playerLimbDamage = [0, 0, 0, 0, 0];
             document.getElementById('log').innerHTML = '';
             document.getElementById('battle-actions').style.display = 'flex';
@@ -1533,6 +1819,7 @@
             playerStats.heat = 0;
             isProcessingTurn = false;
             isDefending = false;
+            playerLegEvadeBoost = 0;
             if (playerStats.hp <= 0) {
                 playerStats.hp = playerStats.maxHp;
                 document.getElementById('garage-info').innerText = "Mech reconstructed. New campaign initiated.";
@@ -1540,34 +1827,37 @@
                 document.getElementById('garage-info').innerText = "Mission accomplished. Returned to garage.";
             }
             updateGarage();
+            quickSave(true);
             showScreen('garage');
         }
 
         function endBattle(victory) {
             isProcessingTurn = false;
             isDefending = false;
+            playerLegEvadeBoost = 0;
             document.getElementById('battle-actions').style.display = 'none';
             document.getElementById('post-battle-actions').style.display = 'flex';
             if (victory) {
                 playSound('victory');
                 spawnVictoryStars(478, 70);
-                let reward = 50 + (battleCount * 10);
+                let reward = 50 + (battleCount * 12);
                 let parts = Math.floor(Math.random() * 3) + 1;
                 credits += reward;
                 salvage += parts;
                 logMsg(`VICTORY! Earned ${reward} CR and ${parts} Salvage Parts.`);
                 showToast(`🏆 VICTORY! +${reward} CR, +${parts} Salvage Parts!`, 3500);
-                let xpGain = 40 + (battleCount * 20);
+                let xpGain = 45 + (battleCount * 20);
                 playerXp += xpGain;
                 logMsg(`Gained ${xpGain} XP.`);
                 if (playerXp >= playerLevel * 100) {
                     playerXp -= playerLevel * 100;
                     playerLevel++;
                     playSound('victory');
-                    logMsg(`LEVEL UP! Pilot promoted to Level ${playerLevel}. Accuracy/Evasion boosted!`);
-                    showToast(`⭐ LEVEL UP! Pilot is now Level ${playerLevel}!`, 4000);
+                    logMsg(`LEVEL UP! Pilot promoted to Level ${playerLevel} (${getPilotRank(playerLevel)}).`);
+                    showToast(`⭐ LEVEL UP! Pilot is now Level ${playerLevel} (${getPilotRank(playerLevel)})!`, 4000);
                 }
                 battleCount++;
+                quickSave(true);
             } else {
                 playSound('defeat');
                 spawnExplosion(140, 70, 35, false);
@@ -1578,6 +1868,7 @@
                 salvage = 0;
                 playerLevel = 1;
                 playerXp = 0;
+                quickSave(true);
             }
         }
 
@@ -1590,6 +1881,10 @@
             if (isProcessingTurn || document.getElementById('battle-actions').style.display === 'none') return;
             isProcessingTurn = true;
             playerStats.heat += playerHeatGen;
+            if (equipSpec === 3) {
+                playerStats.heat += 12; // Overdrive Core extra heat
+            }
+
             if (playerStats.heat > playerStats.maxHeat) {
                 playerStats.hp -= 15;
                 playSound('alarm');
@@ -1610,6 +1905,8 @@
             if (hitChance > 1.0) hitChance = 1.0;
 
             if (equipWpn === 1) playSound('cannon');
+            else if (equipWpn === 3) playSound('plasma');
+            else if (equipWpn === 4) playSound('emp');
             else playSound('laser');
 
             fireProjectile(true, equipWpn);
@@ -1633,8 +1930,31 @@
                 setTimeout(() => {
                     triggerAnim('enemy-mech-container', 'damaged', 450);
                     playSound('impact');
-                    let dmg = Math.max(1, playerStats.atk - (enemyIsDefending ? enemyStats.def * 2 : enemyStats.def) + Math.floor(Math.random() * 5));
-                    dmg = Math.floor(dmg * targetLimb.mult);
+                    let baseDmg = Math.max(1, playerStats.atk - (enemyIsDefending ? enemyStats.def * 2 : enemyStats.def) + Math.floor(Math.random() * 5));
+                    if (equipSpec === 3) {
+                        baseDmg = Math.floor(baseDmg * 1.25); // Overdrive Core +25%
+                    }
+                    let dmg = Math.floor(baseDmg * targetLimb.mult);
+
+                    // Subsystem tactical effects
+                    if (currentTargetLimb === 0) {
+                        logMsg("CRITICAL COCKPIT STRIKE! Enemy systems rattled!");
+                    } else if (currentTargetLimb === 2) {
+                        enemyStats.def = Math.max(0, enemyStats.def - 2);
+                        logMsg("Enemy defensive armor sheared (-2 DEF)!");
+                    } else if (currentTargetLimb === 3) {
+                        enemyStats.atk = Math.max(5, enemyStats.atk - 3);
+                        logMsg("Enemy weapon hardpoint damaged (-3 ATK)!");
+                    } else if (currentTargetLimb === 4) {
+                        playerLegEvadeBoost = 0.15;
+                        logMsg("Enemy locomotion crippled! +15% Evade against next strike.");
+                    }
+
+                    if (equipWpn === 4) {
+                        enemyStats.heat = Math.min(enemyStats.maxHeat, enemyStats.heat + 16);
+                        logMsg("EMP wave destabilized enemy reactor (+16 heat)!");
+                    }
+
                     enemyStats.hp -= dmg;
                     logMsg(`Direct hit on ${targetLimb.name}! Dealt ${dmg} damage.`);
                     updateBattle();
@@ -1659,8 +1979,16 @@
             if (isProcessingTurn || document.getElementById('battle-actions').style.display === 'none') return;
             isProcessingTurn = true;
             isDefending = true;
-            logMsg("Bracing for impact (Shields raised, Heat venting).");
+            logMsg("Bracing for impact (Armor doubled, Heat venting).");
             addShockwave(140, 70, 50, '#00ffff', 4);
+
+            if (equipSpec === 4 && playerStats.hp < playerStats.maxHp) {
+                let heal = Math.min(10, playerStats.maxHp - playerStats.hp);
+                playerStats.hp += heal;
+                logMsg(`Repair Nanodrones deploy: restored +${heal} HP.`);
+                playSound('repair');
+            }
+
             setTimeout(() => {
                 enemyTurn();
             }, 200);
@@ -1699,7 +2027,12 @@
             }
             let targetLimb = limbs[targetIdx];
             
-            let effectiveChance = targetLimb.chance - specials[equipSpec].evadeBonus - ((playerLevel - 1) * 0.05);
+            let totalEvade = (specials[equipSpec].evadeBonus || 0) + (armors[equipArm].evadeMod || 0) + ((playerLevel - 1) * 0.05);
+            if (playerLegEvadeBoost > 0) {
+                totalEvade += playerLegEvadeBoost;
+                playerLegEvadeBoost = 0;
+            }
+            let effectiveChance = targetLimb.chance - totalEvade;
             playSound('enemyLaser');
             fireProjectile(false, 0);
 
@@ -1707,7 +2040,7 @@
                 triggerAnim('enemy-mech-container', 'enemy-attacking', 200);
                 setTimeout(() => {
                     playSound('miss');
-                    if (specials[equipSpec].evadeBonus > 0 || playerLevel > 1) {
+                    if (totalEvade > 0) {
                         logMsg(`Enemy targeted ${targetLimb.name}... Evaded cleanly!`);
                     } else {
                         logMsg(`Enemy targeted ${targetLimb.name}... Enemy missed!`);
@@ -1729,6 +2062,7 @@
                         let absorbed = Math.min(dmg, specials[equipSpec].shieldDmgReduction);
                         dmg -= absorbed;
                         if (absorbed > 0) {
+                            playSound('shield');
                             logMsg(`Energy Shield absorbed ${absorbed} damage!`);
                             addShockwave(140, 70, 45, '#00ffff', 4);
                         }
@@ -1758,7 +2092,7 @@
 
         // Welcome prompt on startup
         setTimeout(() => {
-            showToast("🤖 PILOT ONLINE: Systems nominal. Press [F1] for Pilot's Manual, [D] to deploy.", 4500);
+            showToast("🤖 PILOT ONLINE: Systems nominal. Press [F1] for Pilot's Manual, [F5] Save, [D] to deploy.", 4500);
         }, 300);
 
         // Comprehensive keyboard navigation
@@ -1774,6 +2108,18 @@
                 } else {
                     showScreen('help');
                 }
+                return;
+            }
+
+            if (e.key === 'F5') {
+                e.preventDefault();
+                quickSave();
+                return;
+            }
+
+            if (e.key === 'F9') {
+                e.preventDefault();
+                quickLoad();
                 return;
             }
 

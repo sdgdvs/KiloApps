@@ -32,59 +32,95 @@ typedef struct {
     int heat;
 } MechStats;
 
+#define NUM_WEAPONS 5
+#define NUM_ARMORS 4
+#define NUM_SINKS 4
+#define NUM_SPECIALS 5
+
 typedef struct {
     const char* name;
     int atk;
     int heatGen;
+    int price;
 } Weapon;
 
 typedef struct {
     const char* name;
     int def;
     int maxHp;
+    float evadeBonus;
+    int price;
 } Armor;
 
 typedef struct {
     const char* name;
     int cooling;
     int maxHeat;
+    int price;
 } HeatSink;
-
-Weapon weapons[3] = {
-    {"Basic Laser", 15, 30},
-    {"Heavy Cannon", 25, 50},
-    {"Twin Blasters", 20, 40}
-};
-
-Armor armors[3] = {
-    {"Standard", 5, 100},
-    {"Heavy", 10, 120},
-    {"Light Scout", 2, 80}
-};
-
-HeatSink sinks[3] = {
-    {"Basic", 20, 100},
-    {"Advanced", 30, 150},
-    {"Burst", 40, 80}
-};
 
 typedef struct {
     const char* name;
     float evadeBonus;
     int shieldDmgReduction;
+    float overdriveMult;
+    int nanodroneHeal;
+    int price;
 } Special;
 
-Special specials[3] = {
-    {"None", 0.0f, 0},
-    {"Jump Jets", 0.2f, 0},
-    {"Energy Shield", 0.0f, 5}
+Weapon weapons[NUM_WEAPONS] = {
+    {"Pulse Laser", 16, 25, 0},
+    {"Heavy Gauss Cannon", 28, 45, 150},
+    {"Twin Autocannons", 22, 35, 220},
+    {"Plasma Mortar", 35, 55, 340},
+    {"EMP Arc Disruptor", 18, 30, 420}
+};
+
+Armor armors[NUM_ARMORS] = {
+    {"Standard Composite", 5, 100, 0.0f, 0},
+    {"Heavy Ferro-Fibrous", 10, 130, -0.05f, 160},
+    {"Light Scout Frame", 3, 85, 0.15f, 190},
+    {"Reactive Nanoweave", 12, 150, 0.05f, 380}
+};
+
+HeatSink sinks[NUM_SINKS] = {
+    {"Basic Convection", 20, 100, 0},
+    {"Adv Double Sink", 30, 140, 140},
+    {"Burst Cryo Vent", 45, 90, 230},
+    {"Vortex Array", 38, 160, 390}
+};
+
+Special specials[NUM_SPECIALS] = {
+    {"None", 0.0f, 0, 0.0f, 0, 0},
+    {"Jump Jets", 0.20f, 0, 0.0f, 0, 180},
+    {"Energy Shield", 0.0f, 6, 0.0f, 0, 240},
+    {"Overdrive Core", 0.0f, 0, 0.25f, 0, 320},
+    {"Repair Nanodrones", 0.0f, 0, 0.0f, 10, 400}
+};
+
+typedef struct {
+    const char* name;
+    int hp;
+    int atk;
+    int def;
+    int maxHeat;
+    const char* mechClass;
+} EnemyTier;
+
+#define NUM_ENEMY_TIERS 5
+EnemyTier enemyTiers[NUM_ENEMY_TIERS] = {
+    {"Scout Raider", 70, 11, 2, 80, "Light Biped"},
+    {"Assault Goliath", 100, 15, 5, 100, "Medium Quad"},
+    {"Stealth Interceptor", 85, 18, 4, 90, "Light Striker"},
+    {"Siege Titan", 135, 22, 8, 120, "Heavy Bastion"},
+    {"Apex Overlord", 175, 26, 11, 150, "Prototype Dreadnought"}
 };
 
 int equipWpn = 0;
 int equipArm = 0;
 int equipSink = 0;
 int equipSpec = 0;
-int playerHeatGen = 30;
+int playerHeatGen = 25;
 int playerCooling = 20;
 
 int credits = 100;
@@ -281,7 +317,100 @@ void clearLogs() {
     logCount = 0;
 }
 
+bool enemyStunned = false;
+float evadeTacticalBonus = 0.0f;
+
+#pragma pack(push, 1)
+typedef struct {
+    DWORD magic;
+    DWORD version;
+    int credits;
+    int salvage;
+    int battleCount;
+    int playerLevel;
+    int playerXp;
+    int equipWpn;
+    int equipArm;
+    int equipSink;
+    int equipSpec;
+    int playerHp;
+    int playerHeat;
+} KMechSaveData;
+#pragma pack(pop)
+
+void QuickSaveNative() {
+    KMechSaveData data;
+    data.magic = 0x48434D4B; // 'KMCH'
+    data.version = 2;
+    data.credits = credits;
+    data.salvage = salvage;
+    data.battleCount = battleCount;
+    data.playerLevel = playerLevel;
+    data.playerXp = playerXp;
+    data.equipWpn = equipWpn;
+    data.equipArm = equipArm;
+    data.equipSink = equipSink;
+    data.equipSpec = equipSpec;
+    data.playerHp = playerStats.hp;
+    data.playerHeat = playerStats.heat;
+
+    HANDLE hFile = CreateFileA("kmech_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, &data, sizeof(data), &written, NULL);
+        CloseHandle(hFile);
+        lstrcpyA(garageInfo, "Pilot telemetry state saved (F5).");
+        addLog("Pilot telemetry state saved (F5).");
+    } else {
+        lstrcpyA(garageInfo, "Failed to write save file.");
+    }
+}
+
+void QuickLoadNative() {
+    HANDLE hFile = CreateFileA("kmech_save.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        KMechSaveData data;
+        DWORD readBytes = 0;
+        if (ReadFile(hFile, &data, sizeof(data), &readBytes, NULL) && readBytes == sizeof(data)) {
+            if (data.magic == 0x48434D4B && data.version == 2) {
+                credits = data.credits;
+                salvage = data.salvage;
+                battleCount = data.battleCount;
+                playerLevel = data.playerLevel;
+                playerXp = data.playerXp;
+                equipWpn = data.equipWpn % NUM_WEAPONS;
+                equipArm = data.equipArm % NUM_ARMORS;
+                equipSink = data.equipSink % NUM_SINKS;
+                equipSpec = data.equipSpec % NUM_SPECIALS;
+
+                playerStats.def = armors[equipArm].def;
+                playerStats.maxHp = armors[equipArm].maxHp;
+                playerStats.hp = data.playerHp > playerStats.maxHp ? playerStats.maxHp : data.playerHp;
+                if (playerStats.hp < 1) playerStats.hp = 1;
+                playerStats.maxHeat = sinks[equipSink].maxHeat;
+                playerCooling = sinks[equipSink].cooling;
+                playerHeatGen = weapons[equipWpn].heatGen;
+                playerStats.atk = weapons[equipWpn].atk;
+                playerStats.heat = data.playerHeat;
+
+                lstrcpyA(garageInfo, "Pilot telemetry state restored (F9).");
+                addLog("Pilot telemetry state restored (F9).");
+            }
+        }
+        CloseHandle(hFile);
+    } else {
+        lstrcpyA(garageInfo, "No save file found.");
+        addLog("No save file found.");
+    }
+}
+
 void EnemyTurn() {
+    if (enemyStunned) {
+        enemyStunned = false;
+        addLog("Enemy systems rebooting... Attack disrupted!");
+        return;
+    }
+
     if (enemyStats.heat + 30 > enemyStats.maxHeat) {
         enemyIsDefending = true;
         addLog("Enemy vents heat! (Defending)");
@@ -304,13 +433,17 @@ void EnemyTurn() {
         }
     }
 
+    int tierIdx = (battleCount - 1) / 2;
+    if (tierIdx >= NUM_ENEMY_TIERS) tierIdx = NUM_ENEMY_TIERS - 1;
+    int enemyWpnType = (tierIdx == 1 || tierIdx == 3) ? 1 : ((tierIdx == 4) ? 3 : 0);
+    FireProjectile(false, enemyWpnType);
+
     int hitRoll = my_rand() % 100;
-    FireProjectile(false, 0);
-    
-    float effectiveChance = limbHitChance[target] - specials[equipSpec].evadeBonus - ((playerLevel - 1) * 0.05f);
+    float totalEvade = specials[equipSpec].evadeBonus + armors[equipArm].evadeBonus + evadeTacticalBonus + ((playerLevel - 1) * 0.05f);
+    float effectiveChance = limbHitChance[target] - totalEvade;
     if (hitRoll > (int)(effectiveChance * 100.0f)) {
         char buf[128];
-        if (specials[equipSpec].evadeBonus > 0 || playerLevel > 1) {
+        if (totalEvade > 0.0f) {
             wsprintfA(buf, "Enemy targets %s... Evaded!", limbNames[target]);
         } else {
             wsprintfA(buf, "Enemy targets %s... Missed!", limbNames[target]);
@@ -369,10 +502,14 @@ void ApplyCooling() {
 }
 
 void ActionAttack() {
-    playerStats.heat += playerHeatGen;
+    int heatProduced = playerHeatGen;
+    if (specials[equipSpec].overdriveMult > 0.0f) {
+        heatProduced += 12;
+    }
+    playerStats.heat += heatProduced;
     if (playerStats.heat > playerStats.maxHeat) {
         playerStats.hp -= 15;
-        addLog("WARNING: OVERHEAT! Took 15 system dmg.");
+        addLog("WARNING: OVERHEAT! Reactor blowout caused 15 dmg.");
         SpawnExplosion(150.0f, 145.0f, 16, false);
         Beep(2000, 100); Beep(2000, 100); Beep(2000, 300);
         if (playerStats.hp <= 0) {
@@ -405,9 +542,12 @@ void ActionAttack() {
         Beep(300, 100);
     } else {
         int effectiveDef = enemyIsDefending ? (enemyStats.def * 2) : enemyStats.def;
-        int dmg = (playerStats.atk - effectiveDef) + (my_rand() % 5);
-        if (dmg < 1) dmg = 1;
-        dmg = (int)(dmg * limbDmgMult[target]);
+        int baseDmg = (playerStats.atk - effectiveDef) + (my_rand() % 5);
+        if (baseDmg < 1) baseDmg = 1;
+        if (specials[equipSpec].overdriveMult > 0.0f) {
+            baseDmg = (int)(baseDmg * (1.0f + specials[equipSpec].overdriveMult));
+        }
+        int dmg = (int)(baseDmg * limbDmgMult[target]);
         enemyStats.hp -= dmg;
         animEnemyDmg = 10;
         SpawnExplosion(440.0f, 145.0f, 20, true);
@@ -415,6 +555,35 @@ void ActionAttack() {
         char buf[128];
         wsprintfA(buf, "You hit %s! Dealt %d dmg.", limbNames[target], dmg);
         addLog(buf);
+        
+        // EMP Arc Disruptor extra enemy heat
+        if (equipWpn == 4) {
+            enemyStats.heat += 20;
+            if (enemyStats.heat > enemyStats.maxHeat) enemyStats.heat = enemyStats.maxHeat;
+            addLog("EMP arc overloaded enemy capacitors (+20 heat)!");
+        }
+
+        // Subsystem critical effects
+        if (target == 0) { // Head
+            enemyStunned = true;
+            addLog("CRITICAL HEADSHOT! Enemy sensors disrupted (Stunned)!");
+        } else if (target == 2) { // L.Arm
+            if (enemyStats.def > 0) {
+                enemyStats.def -= 2;
+                if (enemyStats.def < 0) enemyStats.def = 0;
+                addLog("Enemy shield arm shattered! -2 enemy DEF.");
+            }
+        } else if (target == 3) { // R.Arm
+            if (enemyStats.atk > 4) {
+                enemyStats.atk -= 3;
+                if (enemyStats.atk < 4) enemyStats.atk = 4;
+                addLog("Enemy weapon servo sheared! -3 enemy ATK.");
+            }
+        } else if (target == 4) { // Legs
+            evadeTacticalBonus += 0.15f;
+            addLog("Enemy actuators crushed! Evasion increased.");
+        }
+
         Beep(1000, 50); Beep(800, 50); Beep(600, 100);
         Beep(150, 100); Beep(100, 150);
     }
@@ -422,7 +591,7 @@ void ActionAttack() {
     if (enemyStats.hp <= 0) {
         enemyStats.hp = 0;
         SpawnVictoryStars(440.0f, 145.0f);
-        int reward = 50 + (battleCount * 10);
+        int reward = 50 + (battleCount * 12);
         int parts = (my_rand() % 3) + 1;
         credits += reward;
         salvage += parts;
@@ -458,7 +627,17 @@ void ActionAttack() {
 
 void ActionDefend() {
     isDefending = true;
-    addLog("You brace for impact (Defending).");
+    if (specials[equipSpec].nanodroneHeal > 0) {
+        int heal = specials[equipSpec].nanodroneHeal;
+        if (playerStats.hp + heal > playerStats.maxHp) heal = playerStats.maxHp - playerStats.hp;
+        if (heal > 0) {
+            playerStats.hp += heal;
+            char nbuf[64];
+            wsprintfA(nbuf, "Nanodrones repaired +%d HP!", heal);
+            addLog(nbuf);
+        }
+    }
+    addLog("You brace behind reinforced bulwark (Defending).");
     AddShockwave(150.0f, 145.0f, 40.0f, RGB(0, 255, 255), 3.0f);
     EnemyTurn();
     isDefending = false;
@@ -468,18 +647,26 @@ void ActionDefend() {
 }
 
 void StartBattle() {
-    enemyStats.maxHp = 80 + (battleCount * 10);
+    int tierIdx = (battleCount - 1) / 2;
+    if (tierIdx >= NUM_ENEMY_TIERS) tierIdx = NUM_ENEMY_TIERS - 1;
+    
+    int tierScale = (battleCount - 1);
+    enemyStats.maxHp = enemyTiers[tierIdx].hp + (tierScale * 6);
     enemyStats.hp = enemyStats.maxHp;
-    enemyStats.atk = 12 + (battleCount * 2);
-    enemyStats.def = 3 + battleCount;
-    enemyStats.maxHeat = 100 + (battleCount * 5);
+    enemyStats.atk = enemyTiers[tierIdx].atk + (tierScale * 1);
+    enemyStats.def = enemyTiers[tierIdx].def + (tierScale / 2);
+    enemyStats.maxHeat = enemyTiers[tierIdx].maxHeat + (tierScale * 4);
     enemyStats.heat = 0;
     playerStats.heat = 0;
     isDefending = false;
     enemyIsDefending = false;
+    enemyStunned = false;
+    evadeTacticalBonus = 0.0f;
     for (int i=0; i<5; i++) playerLimbDamage[i] = 0;
     clearLogs();
-    addLog("Enemy mech detected! Engaging...");
+    char buf[128];
+    wsprintfA(buf, "Hostile %s detected! Class: %s. Engaging...", enemyTiers[tierIdx].name, enemyTiers[tierIdx].mechClass);
+    addLog(buf);
     Beep(400, 100); Beep(600, 100); Beep(800, 200);
     gameState = STATE_BATTLE;
 }
@@ -489,23 +676,27 @@ void ReturnToGarage() {
         playerStats.hp = playerStats.maxHp;
         lstrcpyA(garageInfo, "Mech rebuilt. Campaign restarted.");
     } else {
-        lstrcpyA(garageInfo, "Returned to garage. Repairs needed.");
+        lstrcpyA(garageInfo, "Returned to garage. Ready for loadout.");
     }
+    QuickSaveNative();
     gameState = STATE_GARAGE;
 }
 
 // Button areas
-RECT rectRepair  = {  40, 290, 260, 325 };
-RECT rectDeploy  = { 300, 290, 520, 325 };
-RECT rectUseSal  = {  40, 335, 260, 370 };
-RECT rectSellSal = { 300, 335, 520, 370 };
+RECT rectRepair  = {  40, 280, 260, 315 };
+RECT rectDeploy  = { 300, 280, 520, 315 };
+RECT rectUseSal  = {  40, 325, 260, 360 };
+RECT rectSellSal = { 300, 325, 520, 360 };
+
+RECT rectSave    = {  40, 370, 180, 405 };
+RECT rectLoad    = { 200, 370, 340, 405 };
+RECT rectHelp    = { 360, 370, 520, 405 };
 
 RECT rectTarget = { 40, 410, 180, 445 };
 RECT rectAttack = { 200, 410, 340, 445 };
 RECT rectDefend = { 360, 410, 500, 445 };
 RECT rectReturn = { 180, 410, 400, 445 };
 
-RECT rectHelp = { 180, 380, 380, 415 };
 RECT rectReturnHelp = { 180, 430, 400, 465 };
 
 RECT rectWpn = { 20, 230, 140, 265 };
@@ -691,7 +882,7 @@ void DrawPlayerMechGDI(HDC hdc, int cx, int cy, float scale, bool isDead) {
     Polygon(hdc, armR, 4);
 
     // Weapon Hardpoint Model
-    if (equipWpn == 0) { // Basic Laser: Cyan Emitter
+    if (equipWpn == 0) { // Pulse Laser: Cyan Emitter
         HPEN wpnPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
         HGDIOBJ oWP = SelectObject(hdc, wpnPen);
         MoveToEx(hdc, cx + (int)(26 * scale), cy + (int)(10 * scale), NULL);
@@ -699,14 +890,14 @@ void DrawPlayerMechGDI(HDC hdc, int cx, int cy, float scale, bool isDead) {
         Ellipse(hdc, cx + (int)(40 * scale), cy + (int)(8 * scale), cx + (int)(44 * scale), cy + (int)(12 * scale));
         SelectObject(hdc, oWP);
         DeleteObject(wpnPen);
-    } else if (equipWpn == 1) { // Heavy Cannon: Large dark barrel
+    } else if (equipWpn == 1) { // Heavy Gauss Cannon: Large dark barrel
         HBRUSH cBrush = CreateSolidBrush(RGB(70, 90, 70));
         HGDIOBJ oB = SelectObject(hdc, cBrush);
         Rectangle(hdc, cx + (int)(26 * scale), cy + (int)(6 * scale), cx + (int)(46 * scale), cy + (int)(14 * scale));
         Rectangle(hdc, cx + (int)(42 * scale), cy + (int)(4 * scale), cx + (int)(47 * scale), cy + (int)(16 * scale));
         SelectObject(hdc, oB);
         DeleteObject(cBrush);
-    } else { // Twin Blasters: Dual Orange Barrels
+    } else if (equipWpn == 2) { // Twin Autocannons: Dual Orange Barrels
         HPEN wpnPen = CreatePen(PS_SOLID, 2, RGB(255, 160, 0));
         HGDIOBJ oWP = SelectObject(hdc, wpnPen);
         MoveToEx(hdc, cx + (int)(26 * scale), cy + (int)(6 * scale), NULL);
@@ -715,6 +906,27 @@ void DrawPlayerMechGDI(HDC hdc, int cx, int cy, float scale, bool isDead) {
         LineTo(hdc, cx + (int)(40 * scale), cy + (int)(14 * scale));
         SelectObject(hdc, oWP);
         DeleteObject(wpnPen);
+    } else if (equipWpn == 3) { // Plasma Mortar: Flared bell emitter
+        HBRUSH pMorBrush = CreateSolidBrush(RGB(20, 80, 40));
+        HPEN pMorPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 120));
+        HGDIOBJ oB = SelectObject(hdc, pMorBrush);
+        HGDIOBJ oP = SelectObject(hdc, pMorPen);
+        Rectangle(hdc, cx + (int)(26 * scale), cy + (int)(5 * scale), cx + (int)(40 * scale), cy + (int)(15 * scale));
+        Ellipse(hdc, cx + (int)(38 * scale), cy + (int)(3 * scale), cx + (int)(46 * scale), cy + (int)(17 * scale));
+        SelectObject(hdc, oB);
+        SelectObject(hdc, oP);
+        DeleteObject(pMorBrush);
+        DeleteObject(pMorPen);
+    } else { // EMP Arc Disruptor: Twin prong cathode
+        HPEN arcPen = CreatePen(PS_SOLID, 2, RGB(180, 80, 255));
+        HGDIOBJ oWP = SelectObject(hdc, arcPen);
+        MoveToEx(hdc, cx + (int)(26 * scale), cy + (int)(7 * scale), NULL);
+        LineTo(hdc, cx + (int)(44 * scale), cy + (int)(4 * scale));
+        MoveToEx(hdc, cx + (int)(26 * scale), cy + (int)(13 * scale), NULL);
+        LineTo(hdc, cx + (int)(44 * scale), cy + (int)(16 * scale));
+        Ellipse(hdc, cx + (int)(36 * scale), cy + (int)(8 * scale), cx + (int)(40 * scale), cy + (int)(12 * scale));
+        SelectObject(hdc, oWP);
+        DeleteObject(arcPen);
     }
 
     SelectObject(hdc, oldPen);
@@ -738,7 +950,9 @@ void DrawEnemyMechGDI(HDC hdc, int cx, int cy, float scale, int battleNum, bool 
         return;
     }
 
-    int enemyType = (battleNum >= 5) ? 2 : ((battleNum >= 3) ? 1 : 0);
+    int enemyType = (battleNum - 1) / 2;
+    if (enemyType >= NUM_ENEMY_TIERS) enemyType = NUM_ENEMY_TIERS - 1;
+
     COLORREF enemyRed = RGB(255, 50, 50);
     COLORREF enemyDark = RGB(55, 10, 10);
     COLORREF enemyEye = RGB(255, 255, 0);
@@ -813,7 +1027,39 @@ void DrawEnemyMechGDI(HDC hdc, int cx, int cy, float scale, int battleNum, bool 
         // Heavy Cannon Left Arm
         Rectangle(hdc, cx - (int)(38 * scale), cy - (int)(4 * scale), cx - (int)(26 * scale), cy + (int)(26 * scale));
 
-    } else { // Siege Titan Dreadnought (Battle 5+)
+    } else if (enemyType == 2) { // Stealth Interceptor (Battle 5-6)
+        // Sleek Diamond Torso
+        POINT torsoE[4] = {
+            {cx, cy - (int)(26 * scale)},
+            {cx + (int)(24 * scale), cy - (int)(6 * scale)},
+            {cx, cy + (int)(20 * scale)},
+            {cx - (int)(24 * scale), cy - (int)(6 * scale)}
+        };
+        Polygon(hdc, torsoE, 4);
+
+        // Swept Wing Fins
+        POINT finL[3] = { {cx - (int)(20 * scale), cy - (int)(14 * scale)}, {cx - (int)(38 * scale), cy - (int)(24 * scale)}, {cx - (int)(26 * scale), cy} };
+        Polygon(hdc, finL, 3);
+        POINT finR[3] = { {cx + (int)(20 * scale), cy - (int)(14 * scale)}, {cx + (int)(38 * scale), cy - (int)(24 * scale)}, {cx + (int)(26 * scale), cy} };
+        Polygon(hdc, finR, 3);
+
+        // Lightweight Stalker Legs
+        MoveToEx(hdc, cx - (int)(10 * scale), cy + (int)(16 * scale), NULL);
+        LineTo(hdc, cx - (int)(18 * scale), cy + (int)(32 * scale));
+        LineTo(hdc, cx - (int)(12 * scale), cy + (int)(46 * scale));
+
+        MoveToEx(hdc, cx + (int)(10 * scale), cy + (int)(16 * scale), NULL);
+        LineTo(hdc, cx + (int)(18 * scale), cy + (int)(32 * scale));
+        LineTo(hdc, cx + (int)(12 * scale), cy + (int)(46 * scale));
+
+        // Cyan Stealth Eye
+        HPEN eyePen = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
+        HGDIOBJ oE = SelectObject(hdc, eyePen);
+        Ellipse(hdc, cx - (int)(5 * scale), cy - (int)(12 * scale), cx + (int)(5 * scale), cy - (int)(2 * scale));
+        SelectObject(hdc, oE);
+        DeleteObject(eyePen);
+
+    } else if (enemyType == 3) { // Siege Titan (Battle 7-8)
         // Fortress Torso
         POINT torsoE[4] = {
             {cx - (int)(32 * scale), cy - (int)(22 * scale)},
@@ -841,6 +1087,41 @@ void DrawEnemyMechGDI(HDC hdc, int cx, int cy, float scale, int battleNum, bool 
         // Quad Turrets
         Rectangle(hdc, cx - (int)(42 * scale), cy - (int)(6 * scale), cx - (int)(30 * scale), cy + (int)(26 * scale));
         Rectangle(hdc, cx + (int)(30 * scale), cy - (int)(6 * scale), cx + (int)(42 * scale), cy + (int)(26 * scale));
+
+    } else { // Apex Overlord (Battle 9+)
+        // Massive Dreadnought Torso
+        POINT torsoE[6] = {
+            {cx - (int)(34 * scale), cy - (int)(24 * scale)},
+            {cx + (int)(34 * scale), cy - (int)(24 * scale)},
+            {cx + (int)(26 * scale), cy + (int)(12 * scale)},
+            {cx + (int)(16 * scale), cy + (int)(26 * scale)},
+            {cx - (int)(16 * scale), cy + (int)(26 * scale)},
+            {cx - (int)(26 * scale), cy + (int)(12 * scale)}
+        };
+        Polygon(hdc, torsoE, 6);
+
+        // Spiked Pauldrons
+        POINT pL[3] = { {cx - (int)(34 * scale), cy - (int)(24 * scale)}, {cx - (int)(46 * scale), cy - (int)(36 * scale)}, {cx - (int)(36 * scale), cy - (int)(6 * scale)} };
+        Polygon(hdc, pL, 3);
+        POINT pR[3] = { {cx + (int)(34 * scale), cy - (int)(24 * scale)}, {cx + (int)(46 * scale), cy - (int)(36 * scale)}, {cx + (int)(36 * scale), cy - (int)(6 * scale)} };
+        Polygon(hdc, pR, 3);
+
+        // Heavy Reinforced Pillars / Legs
+        Rectangle(hdc, cx - (int)(28 * scale), cy + (int)(20 * scale), cx - (int)(14 * scale), cy + (int)(48 * scale));
+        Rectangle(hdc, cx + (int)(14 * scale), cy + (int)(20 * scale), cx + (int)(28 * scale), cy + (int)(48 * scale));
+
+        // Triple Crimson Eye Cluster
+        HBRUSH redEye = CreateSolidBrush(RGB(255, 0, 80));
+        HGDIOBJ oRE = SelectObject(hdc, redEye);
+        Ellipse(hdc, cx - (int)(10 * scale), cy - (int)(12 * scale), cx - (int)(4 * scale), cy - (int)(6 * scale));
+        Ellipse(hdc, cx - (int)(3 * scale), cy - (int)(15 * scale), cx + (int)(3 * scale), cy - (int)(9 * scale));
+        Ellipse(hdc, cx + (int)(4 * scale), cy - (int)(12 * scale), cx + (int)(10 * scale), cy - (int)(6 * scale));
+        SelectObject(hdc, oRE);
+        DeleteObject(redEye);
+
+        // Twin Lance Barrels
+        Rectangle(hdc, cx - (int)(46 * scale), cy - (int)(2 * scale), cx - (int)(36 * scale), cy + (int)(30 * scale));
+        Rectangle(hdc, cx + (int)(36 * scale), cy - (int)(2 * scale), cx + (int)(46 * scale), cy + (int)(30 * scale));
     }
 
     SelectObject(hdc, oldPen);
@@ -855,16 +1136,12 @@ void DrawSciFiHUDCornerFiligree(HDC hdc, int x, int y, int size, int cornerType)
     
     if (cornerType == 0) { // Top-Left
         MoveToEx(hdc, x, y + size, NULL); LineTo(hdc, x, y); LineTo(hdc, x + size, y);
-        SetPixel(hdc, x + 2, y + 2, RGB(0, 255, 255));
     } else if (cornerType == 1) { // Top-Right
         MoveToEx(hdc, x, y + size, NULL); LineTo(hdc, x, y); LineTo(hdc, x - size, y);
-        SetPixel(hdc, x - 2, y + 2, RGB(0, 255, 255));
     } else if (cornerType == 2) { // Bottom-Left
         MoveToEx(hdc, x, y - size, NULL); LineTo(hdc, x, y); LineTo(hdc, x + size, y);
-        SetPixel(hdc, x + 2, y - 2, RGB(0, 255, 255));
     } else { // Bottom-Right
         MoveToEx(hdc, x, y - size, NULL); LineTo(hdc, x, y); LineTo(hdc, x - size, y);
-        SetPixel(hdc, x - 2, y - 2, RGB(0, 255, 255));
     }
 
     SelectObject(hdc, oldP);
@@ -983,24 +1260,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (PtInRectLocal(&rectWpn, x, y)) {
-                    equipWpn = (equipWpn + 1) % 3;
+                    equipWpn = (equipWpn + 1) % NUM_WEAPONS;
                     playerStats.atk = weapons[equipWpn].atk;
                     playerHeatGen = weapons[equipWpn].heatGen;
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (PtInRectLocal(&rectArm, x, y)) {
-                    equipArm = (equipArm + 1) % 3;
+                    equipArm = (equipArm + 1) % NUM_ARMORS;
                     playerStats.def = armors[equipArm].def;
                     playerStats.maxHp = armors[equipArm].maxHp;
                     playerStats.hp = playerStats.maxHp;
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (PtInRectLocal(&rectSink, x, y)) {
-                    equipSink = (equipSink + 1) % 3;
+                    equipSink = (equipSink + 1) % NUM_SINKS;
                     playerStats.maxHeat = sinks[equipSink].maxHeat;
                     playerCooling = sinks[equipSink].cooling;
                     if (playerStats.heat > playerStats.maxHeat) playerStats.heat = playerStats.maxHeat;
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (PtInRectLocal(&rectSpec, x, y)) {
-                    equipSpec = (equipSpec + 1) % 3;
+                    equipSpec = (equipSpec + 1) % NUM_SPECIALS;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (PtInRectLocal(&rectSave, x, y)) {
+                    QuickSaveNative();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (PtInRectLocal(&rectLoad, x, y)) {
+                    QuickLoadNative();
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (PtInRectLocal(&rectHelp, x, y)) {
                     gameState = STATE_HELP;
@@ -1142,7 +1425,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawButton(memDC, &rectDeploy, "Deploy to Battle [D]");
                 DrawButton(memDC, &rectUseSal, "Use Salvage [U] (+50 HP)");
                 DrawButton(memDC, &rectSellSal, "Sell Salvage [S] (+50 CR)");
-                DrawButton(memDC, &rectHelp, "Pilot's Manual [F1]");
+                DrawButton(memDC, &rectSave, "Save [F5]");
+                DrawButton(memDC, &rectLoad, "Load [F9]");
+                DrawButton(memDC, &rectHelp, "Pilot Manual [F1]");
             } else if (gameState == STATE_BATTLE || gameState == STATE_POST_BATTLE) {
                 // Apply Screen Shake offset
                 int shakeX = 0, shakeY = 0;
@@ -1237,10 +1522,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         HPEN projPen;
                         if (g_projectiles[i].fromPlayer) {
                             if (g_projectiles[i].weaponType == 0) projPen = CreatePen(PS_SOLID, 3, RGB(0, 255, 255));
-                            else if (g_projectiles[i].weaponType == 1) projPen = CreatePen(PS_SOLID, 4, RGB(255, 180, 0));
-                            else projPen = CreatePen(PS_SOLID, 2, RGB(255, 140, 0));
+                            else if (g_projectiles[i].weaponType == 1) projPen = CreatePen(PS_SOLID, 5, RGB(255, 200, 50));
+                            else if (g_projectiles[i].weaponType == 2) projPen = CreatePen(PS_SOLID, 2, RGB(255, 140, 0));
+                            else if (g_projectiles[i].weaponType == 3) projPen = CreatePen(PS_SOLID, 6, RGB(0, 255, 100));
+                            else projPen = CreatePen(PS_SOLID, 3, RGB(180, 50, 255));
                         } else {
-                            projPen = CreatePen(PS_SOLID, 3, RGB(255, 50, 50));
+                            if (g_projectiles[i].weaponType == 1) projPen = CreatePen(PS_SOLID, 5, RGB(255, 120, 50));
+                            else if (g_projectiles[i].weaponType == 3) projPen = CreatePen(PS_SOLID, 6, RGB(255, 60, 180));
+                            else projPen = CreatePen(PS_SOLID, 3, RGB(255, 50, 50));
                         }
                         HGDIOBJ oldProjP = SelectObject(memDC, projPen);
                         MoveToEx(memDC, (int)g_projectiles[i].x - 12, (int)g_projectiles[i].y, NULL);
@@ -1313,18 +1602,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 const char* helpText = 
                     "CONTROLS & SHORTCUTS:\n"
-                    "- Garage: [D/Enter] Deploy | [R] Repair | [U] Use Salvage | [S] Sell Salvage\n"
+                    "- Garage: [D/Enter] Deploy | [R] Repair | [U/S] Salvage | [F5] Save | [F9] Load\n"
                     "- Equipment: [1] Weapon | [2] Armor | [3] Heat Sink | [4] Special\n"
                     "- Combat: [A/Space/1] Attack | [D/2] Defend | [T] Cycle Target Limb\n"
-                    "- Post-Battle: [R/Space/Enter/Esc] Return to Garage\n"
+                    "- Post-Battle: [R/Space/Enter/Esc] Return to Garage (Autosaves)\n"
                     "- Anywhere: [F1/H/Esc] Open / Close Pilot's Manual\n\n"
-                    "TACTICAL COMBAT & HEAT:\n"
-                    "- Attack: Deals weapon damage and builds heat. Exceeding Max Heat causes -15 HP core burnout!\n"
-                    "- Defend: Doubles DEF plating, 0 heat gen, cools reactors.\n"
-                    "- Targeting: Head (3.0x dmg, low hit%), Torso (1.0x, high hit%), Limbs (1.5x).\n\n"
-                    "PARTS & UPGRADES:\n"
-                    "- Pilot Leveling: Adds +5% base accuracy & evasion per level.\n"
-                    "- Jump Jets: +20% Evasion bonus | Energy Shield: Absorbs 5 dmg/hit.";
+                    "TACTICAL SUBSYSTEM TARGETING:\n"
+                    "- Head: High risk / 3.0x damage, disruption causes enemy to lose a turn!\n"
+                    "- Torso: Standard 80% hit chance / reliable core damage.\n"
+                    "- L.Arm: 1.4x damage, strips 2 enemy DEF.\n"
+                    "- R.Arm: 1.4x damage, shears weapon servo for -3 enemy ATK.\n"
+                    "- Legs: 1.2x damage, damages enemy actuators to boost pilot evasion.\n\n"
+                    "ADVANCED GEAR & SPECIALS:\n"
+                    "- Jump Jets: +20% Evasion | Energy Shield: Absorbs 6 incoming damage\n"
+                    "- Overdrive Core: +25% ATK damage (+12 heat) | Nanodrones: Heals 10 HP on Defend\n"
+                    "- EMP Arc Disruptor: Hits capacitors to pump +20 heat directly into enemy!";
                 
                 RECT textRect = {35, 55, 565, 415};
                 DrawTextA(memDC, helpText, -1, &textRect, DT_LEFT | DT_WORDBREAK);
@@ -1342,6 +1634,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_KEYDOWN: {
+            if (wParam == VK_F5) {
+                QuickSaveNative();
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
+            if (wParam == VK_F9) {
+                QuickLoadNative();
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
             if (wParam == VK_F1 || wParam == 'H') {
                 if (gameState != STATE_HELP) {
                     gameState = STATE_HELP;
@@ -1398,24 +1700,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (wParam == '1') {
-                    equipWpn = (equipWpn + 1) % 3;
+                    equipWpn = (equipWpn + 1) % NUM_WEAPONS;
                     playerStats.atk = weapons[equipWpn].atk;
                     playerHeatGen = weapons[equipWpn].heatGen;
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (wParam == '2') {
-                    equipArm = (equipArm + 1) % 3;
+                    equipArm = (equipArm + 1) % NUM_ARMORS;
                     playerStats.def = armors[equipArm].def;
                     playerStats.maxHp = armors[equipArm].maxHp;
                     playerStats.hp = playerStats.maxHp;
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (wParam == '3') {
-                    equipSink = (equipSink + 1) % 3;
+                    equipSink = (equipSink + 1) % NUM_SINKS;
                     playerStats.maxHeat = sinks[equipSink].maxHeat;
                     playerCooling = sinks[equipSink].cooling;
                     if (playerStats.heat > playerStats.maxHeat) playerStats.heat = playerStats.maxHeat;
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else if (wParam == '4') {
-                    equipSpec = (equipSpec + 1) % 3;
+                    equipSpec = (equipSpec + 1) % NUM_SPECIALS;
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
             } else if (gameState == STATE_BATTLE) {

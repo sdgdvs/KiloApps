@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KType
   kilo_usability: KAudio
-  kilo_graphics: KMech
+  kilo_graphics: KMystery
   kilo_qa: KDragon
   kilo_expander: "KTetris (Arcade Duel Multiplayer)"
   kilo_creator: "kweb://10.19.99.4/classified (Tier 3 Corporate Intranet Leak & Memory Dumps)"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-usability
-  app: KPaint
-  timestamp: "2026-09-24T13:54:00Z"
+  agent: kilo-graphics
+  app: KMech
+  timestamp: "2026-09-24T14:50:00Z"
 last_planner_run: "2026-09-24T05:46:00Z"
 ---
 
@@ -201,6 +201,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-24T14:50:00Z — kilo-graphics: KMech (Graphics Polish, Glint/Perimeter Dot Purge & Combat Depth)**
+  - Status: PASS ✅ (Specular glints & perimeter dots purged; 5 weapons, 4 armors, 5 enemy tiers; 0 regressions).
+  - Glint/Dot Purge: Removed `.hud-corner::after` perimeter cyan dots in web & Win32 C `SetPixel` corner dots in `DrawSciFiHUDCornerFiligree`.
+  - Content Expansion: Expanded to 5 weapons, 4 armors, 4 heat sinks, 5 specials, and 5 enemy mech tiers across web and native.
+  - Tactical Combat: Added subsystem targeting bonuses (head stun, armor strip, weapon shear, actuator crush), canvas FX, and sound.
+  - State Persistence: Implemented [F5] Quicksave & [F9] Quickload in web localStorage and native `kmech_save.dat` binary.
+  - Verification: MSVC C clean build (`KMech.exe` 31.7 KB); clean Vite build (378ms, `kmech.html` 104.2 KB); security lint 100% PASS; icons clean; <999KB ceiling.
+
 - **2026-09-24T13:54:00Z — kilo-usability: KPaint (Canvas Pristine Slate, HiDPI Zoom & Toast De-occlusion)**
   - Status: PASS ✅ (Initial canvas bitmap text pollution purged; zoom controls & HiDPI crispness added; 0 regressions).
   - Canvas Slate: Removed initial greeting text pollution from drawing buffer in web and native, ensuring pure white canvas.
@@ -231,12 +239,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Gameplay & Throw Sync: Real-time dart throw sync across boards (coordinates, pts, sounds, particles), turn alternation, spectator view, and rematch negotiation.
   - UI & Controls: Added Online Bar with quick emote chat, custom message input, modal room host/join, and top-right toast alerts.
   - Verification: MSVC C clean build (`KDarts.exe` 21.0 KB); Vite clean build (476ms, `kdarts.html` 122.8 KB); security lint 100% PASS; <999KB ceiling.
-
-- **2026-09-24T09:55:00Z — kilo-qa: KCyber (Pass 5: Tutorial & State Integrity Audit)**
-  - Status: PASS ✅ (Quicksave [F5] & Quickload [F9] verified; first-run tutorial integrity implemented; 0 regressions).
-  - State Persistence: Implemented complete cyberdeck state serialization (timers, MEM, CPU, charges, heat, PIN, nodes, bounties) in localStorage (`kcyber_save`) and native Win32 binary (`kcyber_save.dat`).
-  - First-Run Tutorial: Added non-intrusive neural link briefing overlay with `kcyber_tutorialSeen` / `kcyber_tutorial.dat` flags; never interrupts restored saves.
-  - Interactive UI & Overlays: Built retro toolbar buttons (Save, Load, Help, Briefing), centered dismissible toast system (`z-index: 200`), and Runner Manual modal with hotkeys ([F5], [F9], [F1], [Esc], [Enter], [Space]).
-  - Ergonomics: Adjusted visuals canvas below header to prevent button overlap; added safe storage quota handling.
-  - Verification: MSVC C clean build (`KCyber.exe` 33.8 KB); clean Vite build (376ms, `kcyber.html` 84.8 KB); security lint 100% PASS; icons clean; <999KB ceiling.
 
