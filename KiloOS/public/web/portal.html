@@ -252,6 +252,7 @@
         <div class="category-box">
           <div class="category-header">📠 Bulletin Boards &amp; Communications</div>
           <div class="category-content">
+            • <a href="/web/cybercafe.html">☕ CyberCafe '99</a> — Underground BBS, threaded forums &amp; ASCII art studio<br>
             • <a href="/apps/kbbs.html">📠 KBBS</a> — ANSI dial-up door games &amp; message boards<br>
             • <a href="/apps/kchat.html">💬 KChat</a> — Local IRC &amp; peer-to-peer chatroom<br>
             • <a href="/apps/kmail.html">✉️ KMail</a> — Vintage POP3/SMTP email client<br>
@@ -300,6 +301,7 @@
   const sites = [
     '/web/geocities.html',
     '/web/webring.html',
+    '/web/cybercafe.html',
     '/web/users/neon_rider.html',
     '/web/asm_temple.html',
     '/apps/contribute.html'
@@ -321,6 +323,8 @@
 
     if (q.includes('temple') || q.includes('opcode') || q.includes('converter') || q.includes('x86')) {
       window.location.href = '/web/asm_temple.html';
+    } else if (q.includes('cafe') || q.includes('cybercafe') || q.includes('bbs') || q.includes('ascii')) {
+      window.location.href = '/web/cybercafe.html';
     } else if (q.includes('neon') || q.includes('rider') || q.includes('asm')) {
       window.location.href = '/web/users/neon_rider.html';
     } else if (q.includes('geo') || q.includes('shrine') || q.includes('midi') || q.includes('guest')) {

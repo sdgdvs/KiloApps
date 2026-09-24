@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="CyberCafe '99 // The Underground BBS, Threaded Discussion Forums, ASCII Art Studio & Terminal Lounge.">
+<title>CYBERCAFE '99 // Underground BBS &amp; ASCII Lounge</title>
+<style>
+  :root {
+    --bg-black: #05070a;
+    --bg-dark: #0a0e17;
+    --bg-panel: #111726;
+    --bg-card: #161f33;
+    --border: #22314d;
+    --border-bright: #38bdf8;
+    --amber: #f59e0b;
+    --amber-bright: #fbbf24;
+    --cyan: #06b6d4;
+    --cyan-bright: #22d3ee;
+    --green: #10b981;
+    --green-bright: #34d399;
+    --pink: #ec4899;
+    --text: #e2e8f0;
+    --text-muted: #8492a6;
+    --font-mono: 'Consolas', 'Courier New', monospace;
+    --font-sans: 'Tahoma', 'Arial', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--bg-black);
+    color: var(--text);
+    font-family: var(--font-mono);
+    line-height: 1.45;
+    padding: 12px;
+    min-height: 100vh;
+    background-image: radial-gradient(circle at 50% 0%, #111d33 0%, #05070a 80%);
+  }
+
+  /* Retro CRT Scanlines Effect */
+  body::before {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.28) 50%),
+                linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+    z-index: 999;
+    background-size: 100% 3px, 6px 100%;
+    pointer-events: none;
+    opacity: 0.65;
+  }
+
+  .site-wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 10;
+  }
+
+  /* Header Section */
+  header {
+    background: var(--bg-dark);
+    border: 2px solid var(--border);
+    border-top: 3px solid var(--amber);
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  }
+
+  .header-ascii {
+    color: var(--amber-bright);
+    font-size: 10px;
+    line-height: 1.1;
+    white-space: pre;
+    text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+    overflow-x: auto;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+
+  .header-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid var(--green);
+    color: var(--green-bright);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+  }
+
+  .status-pill::before {
+    content: "●";
+    color: var(--green-bright);
+    animation: pulse 1.8s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-audio {
+    background: #1e293b;
+    border: 1px solid var(--amber);
+    color: var(--amber-bright);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: bold;
+    padding: 4px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s;
+  }
+
+  .btn-audio:hover {
+    background: var(--amber);
+    color: #000;
+  }
+
+  /* Navigation Bar */
+  nav.cyber-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+    background: var(--bg-dark);
+    padding: 4px;
+    border: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .tab-btn {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: bold;
+    padding: 8px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    border-radius: 3px;
+    transition: all 0.15s ease;
+  }
+
+  .tab-btn:hover {
+    background: #1a253c;
+    color: var(--text);
+    border-color: var(--border-bright);
+  }
+
+  .tab-btn.active {
+    background: var(--amber);
+    color: #05070a;
+    border-color: var(--amber-bright);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+  }
+
+  /* Main Container & Panes */
+  .pane-content {
+    display: none;
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-bottom: 16px;
+    min-height: 480px;
+  }
+
+  .pane-content.active {
+    display: block;
+    animation: fadeIn 0.15s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(2px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Utility Components */
+  .section-title {
+    color: var(--cyan-bright);
+    font-size: 15px;
+    font-weight: bold;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .btn-retro {
+    background: #1e293b;
+    border: 1px solid var(--border-bright);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: bold;
+    padding: 5px 12px;
+    cursor: pointer;
+    border-radius: 3px;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.15s;
+  }
+
+  .btn-retro:hover {
+    background: var(--border-bright);
+    color: #000;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+  }
+
+  .btn-retro.amber {
+    border-color: var(--amber);
+    color: var(--amber-bright);
+  }
+
+  .btn-retro.amber:hover {
+    background: var(--amber);
+    color: #000;
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+  }
+
+  /* ------------------- LOUNGE TAB ------------------- */
+  .lounge-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 768px) {
+    .lounge-grid { grid-template-columns: 1fr; }
+  }
+
+  .booth-map {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .booth-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .booth-card:hover {
+    border-color: var(--cyan);
+    transform: translateY(-2px);
+  }
+
+  .booth-card.occupied {
+    border-left: 3px solid var(--pink);
+  }
+
+  .booth-card.available {
+    border-left: 3px solid var(--green);
+  }
+
+  .booth-num {
+    font-weight: bold;
+    color: var(--cyan-bright);
+    margin-bottom: 4px;
+  }
+
+  .booth-user {
+    color: #fff;
+    font-weight: bold;
+    font-size: 12px;
+  }
+
+  .booth-task {
+    color: var(--text-muted);
+    font-size: 10px;
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cafe-counter-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 4px;
+  }
+
+  .menu-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dashed #1e293b;
+    font-size: 12px;
+  }
+
+  .menu-item:last-child {
+    border-bottom: none;
+  }
+
+  .menu-name {
+    font-weight: bold;
+    color: var(--text);
+  }
+
+  .menu-desc {
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  .receipt-box {
+    background: #000;
+    border: 1px dashed var(--amber);
+    color: var(--amber-bright);
+    padding: 10px;
+    font-size: 11px;
+    margin-top: 12px;
+    min-height: 90px;
+    white-space: pre-wrap;
+    font-family: var(--font-mono);
+  }
+
+  .speed-tester {
+    margin-top: 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 12px;
+  }
+
+  .speed-bar-container {
+    background: #000;
+    height: 16px;
+    border: 1px solid var(--border);
+    margin: 8px 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .speed-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--green), var(--cyan));
+    transition: width 0.1s linear;
+  }
+
+  /* ------------------- FORUM TAB ------------------- */
+  .forum-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .forum-search {
+    background: #000;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    width: 240px;
+    border-radius: 3px;
+  }
+
+  .category-filter {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .cat-pill {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+
+  .cat-pill:hover, .cat-pill.active {
+    background: #1e293b;
+    color: var(--cyan-bright);
+    border-color: var(--cyan);
+  }
+
+  .threads-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .thread-item {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cyan);
+    padding: 10px 14px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .thread-item:hover {
+    background: #141d30;
+    border-color: var(--cyan-bright);
+  }
+
+  .thread-item.active {
+    background: #18233c;
+    border-left-color: var(--amber);
+  }
+
+  .thread-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .thread-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .thread-snippet {
+    font-size: 12px;
+    color: #cbd5e1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .thread-tag {
+    display: inline-block;
+    padding: 1px 6px;
+    background: #1e293b;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--amber-bright);
+    font-size: 10px;
+    font-weight: bold;
+    margin-right: 6px;
+  }
+
+  /* Thread View Modal / Detail */
+  .thread-detail-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 14px;
+    margin-top: 14px;
+  }
+
+  .post-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+
+  .post-meta {
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-muted);
+    font-size: 11px;
+    border-bottom: 1px dashed #243048;
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+  }
+
+  .post-author {
+    color: var(--green-bright);
+    font-weight: bold;
+  }
+
+  .post-body {
+    white-space: pre-wrap;
+    line-height: 1.5;
+    color: #e2e8f0;
+  }
+
+  /* Form for New Thread / Reply */
+  .form-row {
+    margin-bottom: 10px;
+  }
+
+  .form-row label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 3px;
+  }
+
+  .form-input, .form-textarea, .form-select {
+    width: 100%;
+    background: #000;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    border-radius: 3px;
+  }
+
+  .form-textarea {
+    resize: vertical;
+    min-height: 70px;
+  }
+
+  /* ------------------- ASCII STUDIO TAB ------------------- */
+  .ascii-studio-grid {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 860px) {
+    .ascii-studio-grid { grid-template-columns: 1fr; }
+  }
+
+  .ascii-palette {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .palette-label {
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--cyan-bright);
+    text-transform: uppercase;
+  }
+
+  .char-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+  }
+
+  .char-btn {
+    background: #000;
+    border: 1px solid var(--border);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+
+  .char-btn:hover, .char-btn.active {
+    background: var(--amber);
+    color: #000;
+    border-color: var(--amber-bright);
+  }
+
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+  }
+
+  .color-swatch {
+    height: 22px;
+    border: 1px solid #000;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+
+  .color-swatch.active {
+    outline: 2px solid #fff;
+    box-shadow: 0 0 6px #fff;
+  }
+
+  .ascii-canvas-container {
+    background: #000;
+    border: 1px solid var(--border);
+    padding: 10px;
+    overflow: auto;
+  }
+
+  #asciiCanvas {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 13px;
+    letter-spacing: 0px;
+    user-select: none;
+    white-space: pre;
+    cursor: crosshair;
+    display: inline-block;
+  }
+
+  .canvas-tools {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  /* ------------------- ARCHIVE TAB ------------------- */
+  .vault-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-top: 10px;
+  }
+
+  .vault-table th, .vault-table td {
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: left;
+  }
+
+  .vault-table th {
+    background: var(--bg-panel);
+    color: var(--amber-bright);
+  }
+
+  .vault-table tr:hover td {
+    background: #141e30;
+  }
+
+  /* Webring & Footer */
+  .webring-box {
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--cyan);
+    padding: 12px;
+    text-align: center;
+    margin-top: 16px;
+    font-size: 12px;
+  }
+
+  .webring-links {
+    margin-top: 8px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 16px 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="site-wrap">
+
+  <!-- Header -->
+  <header>
+    <div class="header-ascii">
+   _____  __     __  ____   ______  _____     _____             ______  ______ 
+  / ____| \ \   / / |  _ \ |  ____||  __ \   / ____|   /\      |  ____||  ____|
+ | |       \ \_/ /  | |_) || |__   | |__) | | |       /  \     | |__   | |__   
+ | |        \   /   |  _ < |  __|  |  _  /  | |      / /\ \    |  __|  |  __|  
+ | |____     | |    | |_) || |____ | | \ \  | |____ / ____ \   | |     | |____ 
+  \_____|    |_|    |____/ |______||_|  \_\  \_____//_/    \_\  |_|     |______| '99
+    </div>
+    <div class="header-meta">
+      <div>
+        <span class="status-pill">SYSOP NODE 0x7F: ONLINE</span>
+        <span style="margin-left: 10px;">DIAL-UP: 56,600 bps V.90</span>
+        <span style="margin-left: 10px;">CARRIER: 10.19.99.12:1999</span>
+      </div>
+      <div class="header-controls">
+        <span id="clockDisplay">1999-11-23 23:42:00 EST</span>
+        <button id="audioToggleBtn" class="btn-audio" onclick="toggleAudioEngine()">🔊 AUDIO: ON</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="cyber-tabs">
+    <button class="tab-btn active" onclick="switchTab('tab-lounge')">☕ TERMINAL LOUNGE</button>
+    <button class="tab-btn" onclick="switchTab('tab-forum')">💬 THREADED BBS FORUM</button>
+    <button class="tab-btn" onclick="switchTab('tab-ascii')">🎨 ASCII ART STUDIO</button>
+    <button class="tab-btn" onclick="switchTab('tab-vault')">💾 FLOPPY ARCHIVES</button>
+  </nav>
+
+  <!-- PANE 1: TERMINAL LOUNGE -->
+  <section id="tab-lounge" class="pane-content active">
+    <div class="section-title">
+      <span>★ CAFE TERMINAL BOOTHS &amp; REFRESHMENT BAR ★</span>
+      <span style="font-size: 11px; color: var(--text-muted);">ACTIVE PATRONS: 7 / 8</span>
+    </div>
+
+    <div class="lounge-grid">
+      <!-- Left: Booth Map -->
+      <div>
+        <h4 style="font-size: 13px; color: var(--amber-bright); margin-bottom: 8px;">TERMINAL STATIONS (LAN HUB 10.19.99.x)</h4>
+        <div class="booth-map" id="boothMap">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Connection Speedtest Simulator -->
+        <div class="speed-tester">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:12px; font-weight:bold; color:var(--cyan-bright);">📡 MODEM LINE THROUGHPUT BENCHMARK</span>
+            <button class="btn-retro" onclick="runSpeedTest()">TEST 56K LINE</button>
+          </div>
+          <div class="speed-bar-container">
+            <div id="speedFill" class="speed-bar-fill"></div>
+          </div>
+          <div id="speedStatus" style="font-size:11px; color:var(--text-muted); display:flex; justify-content:space-between;">
+            <span>STATUS: IDLE</span>
+            <span>0.0 KB/s</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Cafe Counter & Thermal Receipt -->
+      <div>
+        <div class="cafe-counter-panel">
+          <h4 style="font-size: 13px; color: var(--amber-bright); margin-bottom: 8px;">☕ CAFE DISPENSER KIOSK</h4>
+          <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Order fuel for your late-night coding or deathmatch session.</p>
+
+          <div class="menu-item">
+            <div>
+              <div class="menu-name">Jolt Cola (16oz)</div>
+              <div class="menu-desc">All the sugar, twice the caffeine</div>
+            </div>
+            <button class="btn-retro amber" onclick="orderItem('Jolt Cola', '$2.25', '+65% Brain Bandwidth')">$2.25</button>
+          </div>
+
+          <div class="menu-item">
+            <div>
+              <div class="menu-name">Baud Roast Coffee</div>
+              <div class="menu-desc">Extra dark, brewed on x86 heatsinks</div>
+            </div>
+            <button class="btn-retro amber" onclick="orderItem('Baud Roast Coffee', '$1.75', '+40% Typing Rate')">$1.75</button>
+          </div>
+
+          <div class="menu-item">
+            <div>
+              <div class="menu-name">Surge Citrus Soda</div>
+              <div class="menu-desc">Radioactive green carbonation</div>
+            </div>
+            <button class="btn-retro amber" onclick="orderItem('Surge Citrus Soda', '$1.50', '+50% Twitch Reflexes')">$1.50</button>
+          </div>
+
+          <div class="menu-item">
+            <div>
+              <div class="menu-name">Biscotti Byte (Twin Pack)</div>
+              <div class="menu-desc">Hard as a floppy disk casing</div>
+            </div>
+            <button class="btn-retro amber" onclick="orderItem('Biscotti Byte', '$1.00', '+10% Morale')">$1.00</button>
+          </div>
+
+          <div class="receipt-box" id="receiptOutput">
+[THERMAL RECEIPT PRINTER]
+READY FOR ORDERS...
+Select an item above to vend.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANE 2: THREADED FORUM -->
+  <section id="tab-forum" class="pane-content">
+    <div class="section-title">
+      <span>💬 UNDERGROUND BBS DISCUSSION FORUM</span>
+      <button class="btn-retro amber" onclick="openNewThreadModal()">+ START NEW THREAD</button>
+    </div>
+
+    <div class="forum-toolbar">
+      <div class="category-filter">
+        <span class="cat-pill active" onclick="filterForum('ALL')">ALL CHANNELS</span>
+        <span class="cat-pill" onclick="filterForum('Lounge')">1. Lounge</span>
+        <span class="cat-pill" onclick="filterForum('Hardware')">2. Hardware &amp; Silicon</span>
+        <span class="cat-pill" onclick="filterForum('ASCII')">3. ASCII / ANSI Scene</span>
+        <span class="cat-pill" onclick="filterForum('Echoes')">4. Echoes &amp; Subnets</span>
+      </div>
+      <input type="text" id="forumSearchInput" class="forum-search" placeholder="Search threads or author..." oninput="handleForumSearch()">
+    </div>
+
+    <div class="threads-list" id="threadsContainer">
+      <!-- Injected by JS -->
+    </div>
+
+    <!-- Active Thread Detail Area -->
+    <div id="threadDetailArea" style="display:none;" class="thread-detail-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 id="activeThreadTitle" style="color:var(--cyan-bright); font-size:16px;">Thread Title</h3>
+        <button class="btn-retro" onclick="closeThreadDetail()">« BACK TO FORUM</button>
+      </div>
+      <div id="threadPostsList"></div>
+
+      <!-- Quick Reply Box -->
+      <div style="margin-top:14px; background:var(--bg-panel); border:1px solid var(--border); padding:10px;">
+        <div style="font-size:11px; font-weight:bold; color:var(--amber-bright); margin-bottom:6px;">POST REPLY:</div>
+        <div class="form-row">
+          <input type="text" id="replyAuthor" class="form-input" style="width:200px;" placeholder="Your Handle (e.g. HexRider)">
+        </div>
+        <div class="form-row">
+          <textarea id="replyBody" class="form-textarea" placeholder="Type your response... Be constructive. Respect the SysOp."></textarea>
+        </div>
+        <button class="btn-retro amber" onclick="submitReply()">SUBMIT REPLY</button>
+      </div>
+    </div>
+
+    <!-- New Thread Form (Collapsible) -->
+    <div id="newThreadModal" style="display:none; background:var(--bg-card); border:1px solid var(--amber); padding:14px; margin-top:14px;">
+      <h3 style="color:var(--amber-bright); font-size:14px; margin-bottom:10px;">★ POST NEW FORUM THREAD</h3>
+      <div class="form-row">
+        <label>CATEGORY:</label>
+        <select id="newThreadCat" class="form-select" style="width:220px;">
+          <option value="Lounge">1. Lounge General</option>
+          <option value="Hardware">2. Hardware &amp; Silicon</option>
+          <option value="ASCII">3. ASCII / ANSI Scene</option>
+          <option value="Echoes">4. Echoes &amp; Subnets</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>YOUR HANDLE:</label>
+        <input type="text" id="newThreadAuthor" class="form-input" style="width:240px;" placeholder="Handle / Alias">
+      </div>
+      <div class="form-row">
+        <label>THREAD TITLE:</label>
+        <input type="text" id="newThreadTitle" class="form-input" placeholder="Enter thread topic...">
+      </div>
+      <div class="form-row">
+        <label>FIRST POST CONTENT:</label>
+        <textarea id="newThreadBody" class="form-textarea" placeholder="Write your post..."></textarea>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn-retro amber" onclick="submitNewThread()">PUBLISH THREAD</button>
+        <button class="btn-retro" onclick="closeNewThreadModal()">CANCEL</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANE 3: ASCII ART STUDIO -->
+  <section id="tab-ascii" class="pane-content">
+    <div class="section-title">
+      <span>🎨 INTERACTIVE ASCII &amp; ANSI ART CANVAS</span>
+      <span style="font-size:11px; color:var(--text-muted);">GRID: 60 x 20 CELLS</span>
+    </div>
+
+    <div class="ascii-studio-grid">
+      <!-- Toolbar & Palette -->
+      <div class="ascii-palette">
+        <div>
+          <div class="palette-label">Tool Mode</div>
+          <div class="canvas-tools" style="margin-top:4px;">
+            <button class="btn-retro active" id="toolPencil" onclick="setTool('pencil')">✏️ PENCIL</button>
+            <button class="btn-retro" id="toolEraser" onclick="setTool('eraser')">🧹 ERASER</button>
+            <button class="btn-retro" id="toolFill" onclick="setTool('fill')">🪣 FILL</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="palette-label">Character Glyph</div>
+          <div class="char-grid" id="charGrid">
+            <!-- Injected by JS -->
+          </div>
+          <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
+            <span style="font-size:10px; color:var(--text-muted);">Custom:</span>
+            <input type="text" id="customCharInput" maxlength="1" class="form-input" style="width:36px; text-align:center; padding:2px;" value="@" oninput="setCustomChar(this.value)">
+          </div>
+        </div>
+
+        <div>
+          <div class="palette-label">ANSI 16 Foreground</div>
+          <div class="color-grid" id="fgColorGrid">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+        <div>
+          <div class="palette-label">Preset Gallery</div>
+          <select id="asciiPresetSelect" class="form-select" onchange="loadAsciiPreset(this.value)">
+            <option value="">-- Load Classic Art --</option>
+            <option value="mug">Steaming Coffee Mug</option>
+            <option value="crt">Retro CRT Terminal</option>
+            <option value="skull">Demoscene Skull</option>
+            <option value="cyberdeck">Cyberdeck 1999</option>
+          </select>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
+          <button class="btn-retro" onclick="copyCanvasText()">📋 COPY AS TEXT</button>
+          <button class="btn-retro amber" onclick="saveDrawingLocal()">💾 SAVE TO BROWSER</button>
+          <button class="btn-retro" onclick="clearCanvasPrompt()">🗑️ CLEAR CANVAS</button>
+        </div>
+      </div>
+
+      <!-- Canvas Area -->
+      <div class="ascii-canvas-container">
+        <div id="asciiCanvas"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANE 4: FLOPPY ARCHIVES -->
+  <section id="tab-vault" class="pane-content">
+    <div class="section-title">
+      <span>💾 CYBERCAFE PUBLIC ARCHIVES &amp; TEXT VAULT</span>
+      <span style="font-size:11px; color:var(--text-muted);">VERIFIED MD5 CHECKSUMS</span>
+    </div>
+
+    <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+      Patron-uploaded text files, demoscene NFO archives, cafe logs, and phreaking notes. Click "READ" to inspect in-browser.
+    </p>
+
+    <table class="vault-table">
+      <thead>
+        <tr>
+          <th>FILE NAME</th>
+          <th>SIZE</th>
+          <th>DATE</th>
+          <th>CATEGORY</th>
+          <th>ACTION</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>CAFE_WELCOME.TXT</strong></td>
+          <td>1.4 KB</td>
+          <td>1999-10-01</td>
+          <td>SysOp Info</td>
+          <td><button class="btn-retro" onclick="viewVaultFile('CAFE_WELCOME')">VIEW</button></td>
+        </tr>
+        <tr>
+          <td><strong>VOODOO3_OPTIMIZATION.NFO</strong></td>
+          <td>3.2 KB</td>
+          <td>1999-10-18</td>
+          <td>Hardware</td>
+          <td><button class="btn-retro" onclick="viewVaultFile('VOODOO3')">VIEW</button></td>
+        </tr>
+        <tr>
+          <td><strong>ASCII_ART_PRIMER.TXT</strong></td>
+          <td>2.8 KB</td>
+          <td>1999-11-04</td>
+          <td>Art Scene</td>
+          <td><button class="btn-retro" onclick="viewVaultFile('ASCII_PRIMER')">VIEW</button></td>
+        </tr>
+        <tr>
+          <td><strong>SUBNET_ANOMALY_101999.LOG</strong></td>
+          <td>2.1 KB</td>
+          <td>1999-11-15</td>
+          <td>Telemetrics</td>
+          <td><button class="btn-retro" onclick="viewVaultFile('SUBNET_LOG')">VIEW</button></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div id="vaultViewerBox" style="display:none; background:#000; border:1px solid var(--border-bright); padding:12px; margin-top:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span id="vaultFileTitle" style="color:var(--cyan-bright); font-weight:bold; font-size:12px;">FILE PREVIEW</span>
+        <button class="btn-retro" onclick="document.getElementById('vaultViewerBox').style.display='none'">CLOSE</button>
+      </div>
+      <pre id="vaultFileContent" style="color:var(--green-bright); font-size:11px; line-height:1.4; white-space:pre-wrap; max-height:260px; overflow-y:auto;"></pre>
+    </div>
+  </section>
+
+  <!-- Webring / Link Hub -->
+  <div class="webring-box">
+    <strong>[ KiloNet 1999 Webring Member #008 — CyberCafe '99 ]</strong><br>
+    <span style="color:var(--text-muted);">Navigate the interconnected virtual 1999 web nodes:</span>
+    <div class="webring-links">
+      <a href="/web/portal.html" class="btn-retro">🏠 KiloNet Portal</a>
+      <a href="/web/asm_temple.html" class="btn-retro">« Prev: x86 Temple</a>
+      <a href="/web/webring.html" class="btn-retro">🌐 Webring Hub</a>
+      <a href="/web/warez.html" class="btn-retro">Next: Scene Vault »</a>
+      <a href="/web/darknet.html" class="btn-retro">👁️ Node 0x7F Darknet</a>
+    </div>
+  </div>
+
+  <footer>
+    CyberCafe '99 • Underground BBS &amp; ASCII Lounge • Running on KNet Hypermedia 2.0<br>
+    Strictly &lt; 999 KB • Zero External Dependencies • Genesis FM Synthesis Audio Engine
+  </footer>
+
+</div>
+
+<script>
+/* =========================================================================
+   1. PROCEDURAL SOUND ENGINE (Genesis YM2612 & SNES Delay Inspired)
+   ========================================================================= */
+let audioCtx = null;
+let audioEnabled = true;
+
+function initAudio() {
+  if (!audioCtx) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) {
+      audioCtx = new AudioContext();
+    }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function toggleAudioEngine() {
+  audioEnabled = !audioEnabled;
+  const btn = document.getElementById('audioToggleBtn');
+  if (audioEnabled) {
+    initAudio();
+    btn.textContent = '🔊 AUDIO: ON';
+    btn.style.borderColor = 'var(--amber)';
+    btn.style.color = 'var(--amber-bright)';
+    playChime(660, 0.08);
+  } else {
+    btn.textContent = '🔇 AUDIO: MUTED';
+    btn.style.borderColor = 'var(--text-muted)';
+    btn.style.color = 'var(--text-muted)';
+  }
+}
+
+// 2-Operator FM synth sound generator
+function playFmTone(carrierFreq, modRatio, modIndex, duration) {
+  if (!audioEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const modulator = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const masterGain = audioCtx.createGain();
+
+  carrier.type = 'sine';
+  carrier.frequency.setValueAtTime(carrierFreq, now);
+
+  modulator.type = 'sawtooth';
+  modulator.frequency.setValueAtTime(carrierFreq * modRatio, now);
+
+  modGain.gain.setValueAtTime(carrierFreq * modIndex, now);
+  modGain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+
+  masterGain.gain.setValueAtTime(0.12, now);
+  masterGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  carrier.connect(masterGain);
+  masterGain.connect(audioCtx.destination);
+
+  modulator.start(now);
+  carrier.start(now);
+  modulator.stop(now + duration);
+  carrier.stop(now + duration);
+}
+
+function playKeyClick() {
+  playFmTone(800 + Math.random() * 200, 1.5, 0.5, 0.03);
+}
+
+function playChime(freq, dur) {
+  playFmTone(freq || 520, 2.0, 1.2, dur || 0.15);
+}
+
+function playModemChirp() {
+  if (!audioEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(1200, now);
+  osc.frequency.linearRampToValueAtTime(2400, now + 0.12);
+  osc.frequency.linearRampToValueAtTime(960, now + 0.25);
+  gain.gain.setValueAtTime(0.08, now);
+  gain.gain.linearRampToValueAtTime(0.001, now + 0.25);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.25);
+}
+
+/* =========================================================================
+   2. TABS & RETRO CLOCK
+   ========================================================================= */
+function switchTab(tabId) {
+  playChime(440, 0.06);
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.pane-content').forEach(pane => pane.classList.remove('active'));
+
+  const activePane = document.getElementById(tabId);
+  if (activePane) activePane.classList.add('active');
+
+  const btnMap = {
+    'tab-lounge': 0,
+    'tab-forum': 1,
+    'tab-ascii': 2,
+    'tab-vault': 3
+  };
+  const buttons = document.querySelectorAll('.tab-btn');
+  if (buttons[btnMap[tabId]]) {
+    buttons[btnMap[tabId]].classList.add('active');
+  }
+}
+
+function updateClock() {
+  const now = new Date();
+  const clockEl = document.getElementById('clockDisplay');
+  if (clockEl) {
+    const pad = (n) => String(n).padStart(2, '0');
+    clockEl.textContent = `1999-11-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())} EST`;
+  }
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* =========================================================================
+   3. CAFE TERMINAL BOOTHS & REFRESHMENT KIOSK
+   ========================================================================= */
+const BOOTHS_DATA = [
+  { id: 1, user: '~neon_rider', task: 'Compiling Win32 ASM Demotape', status: 'occupied' },
+  { id: 2, user: 'BitCrusher_99', task: 'Deathmatch in Tremor III', status: 'occupied' },
+  { id: 3, user: 'PixelGoddess', task: 'Drawing 16-color ANSI skull', status: 'occupied' },
+  { id: 4, user: 'OPEN STATION', task: 'Terminal waiting for patron...', status: 'available' },
+  { id: 5, user: 'DarkFiber', task: 'BBS SysOp Administration', status: 'occupied' },
+  { id: 6, user: 'RetroEcho', task: 'Analyzing packet noise on 10.19.99.4', status: 'occupied' },
+  { id: 7, user: 'VoodooMaster', task: 'Glide API driver benchmarking', status: 'occupied' },
+  { id: 8, user: 'VoidWalker', task: 'VoidCraft LAN tournament', status: 'occupied' }
+];
+
+function renderBooths() {
+  const container = document.getElementById('boothMap');
+  if (!container) return;
+  container.innerHTML = BOOTHS_DATA.map(b => `
+    <div class="booth-card ${b.status}" onclick="interactBooth(${b.id})">
+      <div class="booth-num">BOOTH #${b.id} [${b.status.toUpperCase()}]</div>
+      <div class="booth-user">${escapeHtml(b.user)}</div>
+      <div class="booth-task">${escapeHtml(b.task)}</div>
+    </div>
+  `).join('');
+}
+
+function interactBooth(id) {
+  playChime(580, 0.08);
+  const booth = BOOTHS_DATA.find(b => b.id === id);
+  if (!booth) return;
+  const receipt = document.getElementById('receiptOutput');
+  receipt.textContent = `[TERMINAL LINK // BOOTH #${id}]\nPATRON: ${booth.user}\nCURRENT PROCESS: ${booth.task}\nSTATUS: IP 10.19.99.${10 + id} [PORT 1999 VERIFIED]`;
+}
+
+function orderItem(name, price, perk) {
+  playModemChirp();
+  const receipt = document.getElementById('receiptOutput');
+  const orderId = Math.floor(1000 + Math.random() * 9000);
+  const time = new Date().toLocaleTimeString();
+  receipt.textContent = 
+`==================================
+CYBERCAFE '99 - REFRESHMENT VOUCHER
+ORDER #${orderId} // TIME: ${time}
+----------------------------------
+ITEM: ${name}
+PRICE: ${price} [CASH ACCEPTED]
+BUFF: ${perk}
+----------------------------------
+THANK YOU FOR VISITING THE UNDERGROUND!
+STAY HYDRATED. HACK RESPONSIBLY.
+==================================`;
+}
+
+let speedTesting = false;
+function runSpeedTest() {
+  if (speedTesting) return;
+  speedTesting = true;
+  playModemChirp();
+
+  const fill = document.getElementById('speedFill');
+  const status = document.getElementById('speedStatus');
+  fill.style.width = '0%';
+  status.innerHTML = '<span>HANDSHAKE: V.90 56K DIAL-UP NEGOTIATION...</span><span>CONNECT...</span>';
+
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += 8;
+    fill.style.width = progress + '%';
+    const bps = (28.8 + (progress / 100) * 27.8).toFixed(1);
+    status.innerHTML = `<span>RECEIVING PACKETS... ${progress}%</span><span>${bps} Kbps</span>`;
+    playKeyClick();
+
+    if (progress >= 100) {
+      clearInterval(interval);
+      speedTesting = false;
+      fill.style.width = '100%';
+      playChime(880, 0.2);
+      status.innerHTML = '<span style="color:var(--green-bright); font-weight:bold;">CONNECTED: 56,600 BPS V.90 OK</span><span style="color:var(--amber-bright);">LATENCY: 124ms</span>';
+    }
+  }, 120);
+}
+
+/* =========================================================================
+   4. THREADED FORUM / BBS MESSAGE BOARD (Interactive & Persistent)
+   ========================================================================= */
+const DEFAULT_THREADS = [
+  {
+    id: 1,
+    category: 'Lounge',
+    title: 'Tremor III Arena vs Surreal Tournament 1999 — The Final Verdict',
+    author: 'FragKing_99',
+    date: '1999-11-20 18:24',
+    posts: [
+      {
+        author: 'FragKing_99',
+        date: '1999-11-20 18:24',
+        body: 'Running both on a 3dfx Voodoo3 3000 AGP. Tremor III has cleaner rocket physics and lighting, but Surreal Tournament bots feel like real LAN opponents with that dynamic sniper rifle. Who is hosting the Friday night cafe server?'
+      },
+      {
+        author: 'PixelGoddess',
+        date: '1999-11-20 19:02',
+        body: 'Surreal Tournament has Facing Worlds (CTF-Face) with that ethereal chiptune soundtrack. Can never be beaten. Meet me in Booth #3 if you want a match.'
+      },
+      {
+        author: 'BitCrusher_99',
+        date: '1999-11-20 20:15',
+        body: 'Tremor III rocket jumps require true dexterity. Let us spin up a server on 10.19.99.20:27960 right after cafe closing.'
+      }
+    ]
+  },
+  {
+    id: 2,
+    category: 'Hardware',
+    title: 'Celeron 300A overclocked to 450MHz using pencil trick & dual heatsinks',
+    author: 'ClockJockey',
+    date: '1999-11-21 14:10',
+    posts: [
+      {
+        author: 'ClockJockey',
+        date: '1999-11-21 14:10',
+        body: 'Slot 1 Abit BH6 motherboard with 100MHz FSB jumper set. The 300A is running rock solid at 450MHz without a single kernel panic. 50% free performance boost! Just make sure your thermal paste is Arctic Silver.'
+      },
+      {
+        author: '~neon_rider',
+        date: '1999-11-21 15:45',
+        body: 'Can confirm. Compiled a 4000-line Win32 assembly rasterizer in 1.4 seconds flat on this chip. The golden era of PC tweaking.'
+      }
+    ]
+  },
+  {
+    id: 3,
+    category: 'ASCII',
+    title: 'Block characters (0xDB) vs wireframe line-art — What is peak aesthetic?',
+    author: 'PixelGoddess',
+    date: '1999-11-22 09:30',
+    posts: [
+      {
+        author: 'PixelGoddess',
+        date: '1999-11-22 09:30',
+        body: 'Full block art with shading characters (░ ▒ ▓ █) creates depth that rivaled early 8-bit graphics. But old-school 7-bit ASCII line art has that minimalist purity that looks glorious in monospace terminals. Try out the canvas studio tab here and post your creations!'
+      },
+      {
+        author: 'DarkFiber',
+        date: '1999-11-22 11:12',
+        body: 'ANSI 16-color files (.ANS) loaded over a 14.4k modem line character by character gave me chills back in 94. Never lose the block art craft.'
+      }
+    ]
+  },
+  {
+    id: 4,
+    category: 'Echoes',
+    title: 'Residual packet echoes observed on 10.19.99.4:1999 [Packet Log Attached]',
+    author: 'DarkFiber',
+    date: '1999-11-23 02:15',
+    posts: [
+      {
+        author: 'DarkFiber',
+        date: '1999-11-23 02:15',
+        body: 'While running packet captures on the cafe gateway router, I noticed recurring SYN frames aimed at non-routable host 10.19.99.4 on port 1999. Faint harmonic tones modulated inside the payload headers resembling 432Hz and 1999Hz audio carriers. SysOp says the intranet is completely airgapped, so where are these packets propagating from?'
+      },
+      {
+        author: 'RetroEcho',
+        date: '1999-11-23 03:40',
+        body: 'I inspected offset 0x0024 in the memory dump from KHex. It maps to the same subnet. Almost as if a subsystem inside the OS itself is trying to communicate across the KNet browser sockets. If anyone has the directory keys, check kweb://10.19.99.4/classified.'
+      }
+    ]
+  }
+];
+
+let forumThreads = [];
+let currentCategory = 'ALL';
+let activeThreadId = null;
+
+function loadForumData() {
+  const saved = localStorage.getItem('kweb_cybercafe_threads');
+  if (saved) {
+    try {
+      forumThreads = JSON.parse(saved);
+    } catch (e) {
+      forumThreads = DEFAULT_THREADS;
+    }
+  } else {
+    forumThreads = DEFAULT_THREADS;
+  }
+  renderThreadsList();
+}
+
+function saveForumData() {
+  localStorage.setItem('kweb_cybercafe_threads', JSON.stringify(forumThreads));
+}
+
+function renderThreadsList() {
+  const container = document.getElementById('threadsContainer');
+  if (!container) return;
+
+  const search = (document.getElementById('forumSearchInput')?.value || '').toLowerCase();
+
+  const filtered = forumThreads.filter(t => {
+    const matchCat = (currentCategory === 'ALL' || t.category === currentCategory);
+    const matchSearch = !search || t.title.toLowerCase().includes(search) || t.author.toLowerCase().includes(search);
+    return matchCat && matchSearch;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="padding:16px; text-align:center; color:var(--text-muted); font-size:12px;">No discussion threads found in this channel.</div>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(t => {
+    const replyCount = t.posts.length - 1;
+    const lastPost = t.posts[t.posts.length - 1];
+    return `
+      <div class="thread-item ${activeThreadId === t.id ? 'active' : ''}" onclick="viewThread(${t.id})">
+        <div class="thread-header">
+          <span><span class="thread-tag">[#${t.category.toUpperCase()}]</span> BY <strong style="color:var(--green-bright);">${escapeHtml(t.author)}</strong></span>
+          <span>${t.date} • ${replyCount} ${replyCount === 1 ? 'REPLY' : 'REPLIES'}</span>
+        </div>
+        <div class="thread-title">${escapeHtml(t.title)}</div>
+        <div class="thread-snippet">${escapeHtml(lastPost ? lastPost.body : '')}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function filterForum(cat) {
+  playKeyClick();
+  currentCategory = cat;
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  const target = Array.from(document.querySelectorAll('.cat-pill')).find(p => p.textContent.includes(cat) || (cat === 'ALL' && p.textContent.includes('ALL')));
+  if (target) target.classList.add('active');
+  renderThreadsList();
+}
+
+function handleForumSearch() {
+  renderThreadsList();
+}
+
+function viewThread(id) {
+  playChime(500, 0.08);
+  activeThreadId = id;
+  const thread = forumThreads.find(t => t.id === id);
+  if (!thread) return;
+
+  renderThreadsList();
+  document.getElementById('threadsContainer').style.display = 'none';
+  const detail = document.getElementById('threadDetailArea');
+  detail.style.display = 'block';
+
+  document.getElementById('activeThreadTitle').textContent = `[#${thread.category}] ${thread.title}`;
+  const listEl = document.getElementById('threadPostsList');
+  listEl.innerHTML = thread.posts.map((p, idx) => `
+    <div class="post-card">
+      <div class="post-meta">
+        <span>#${idx + 1} POSTED BY <span class="post-author">${escapeHtml(p.author)}</span></span>
+        <span>${p.date}</span>
+      </div>
+      <div class="post-body">${escapeHtml(p.body)}</div>
+    </div>
+  `).join('');
+}
+
+function closeThreadDetail() {
+  playKeyClick();
+  activeThreadId = null;
+  document.getElementById('threadDetailArea').style.display = 'none';
+  document.getElementById('threadsContainer').style.display = 'flex';
+  renderThreadsList();
+}
+
+function submitReply() {
+  const author = (document.getElementById('replyAuthor').value || '').trim() || 'AnonymousPatron';
+  const body = (document.getElementById('replyBody').value || '').trim();
+
+  if (!body) {
+    alert('Please enter a response body.');
+    return;
+  }
+
+  const thread = forumThreads.find(t => t.id === activeThreadId);
+  if (!thread) return;
+
+  playChime(620, 0.12);
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const dateStr = `1999-11-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+  thread.posts.push({
+    author,
+    date: dateStr,
+    body
+  });
+
+  saveForumData();
+  document.getElementById('replyBody').value = '';
+  viewThread(activeThreadId);
+}
+
+function openNewThreadModal() {
+  playKeyClick();
+  document.getElementById('newThreadModal').style.display = 'block';
+}
+
+function closeNewThreadModal() {
+  playKeyClick();
+  document.getElementById('newThreadModal').style.display = 'none';
+}
+
+function submitNewThread() {
+  const category = document.getElementById('newThreadCat').value;
+  const author = (document.getElementById('newThreadAuthor').value || '').trim() || 'AnonymousCafeUser';
+  const title = (document.getElementById('newThreadTitle').value || '').trim();
+  const body = (document.getElementById('newThreadBody').value || '').trim();
+
+  if (!title || !body) {
+    alert('Please specify both a thread topic and initial post content.');
+    return;
+  }
+
+  playChime(740, 0.15);
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const dateStr = `1999-11-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+  const newThread = {
+    id: Date.now(),
+    category,
+    title,
+    author,
+    date: dateStr,
+    posts: [
+      {
+        author,
+        date: dateStr,
+        body
+      }
+    ]
+  };
+
+  forumThreads.unshift(newThread);
+  saveForumData();
+
+  document.getElementById('newThreadTitle').value = '';
+  document.getElementById('newThreadBody').value = '';
+  closeNewThreadModal();
+  renderThreadsList();
+  viewThread(newThread.id);
+}
+
+/* =========================================================================
+   5. INTERACTIVE ASCII & ANSI ART STUDIO
+   ========================================================================= */
+const CANVAS_COLS = 60;
+const CANVAS_ROWS = 20;
+let canvasGrid = []; // 2D array of { char: ' ', fg: '#ffffff' }
+let currentTool = 'pencil';
+let currentChar = '█';
+let currentFg = '#38bdf8';
+let isMouseDown = false;
+
+const PALETTE_CHARS = [
+  '█', '▀', '▄', '▌', '▐', '░',
+  '▒', '▓', '■', '▪', '#', '@',
+  '*', '+', '=', '-', ':', '.',
+  '/', '\\', '|', '~', '^', ' '
+];
+
+const ANSI_16_COLORS = [
+  '#000000', '#0000aa', '#00aa00', '#00aaaa',
+  '#aa0000', '#aa00aa', '#aa5500', '#aaaaaa',
+  '#555555', '#5555ff', '#55ff55', '#55ffff',
+  '#ff5555', '#ff55ff', '#ffff55', '#ffffff'
+];
+
+function initAsciiStudio() {
+  // Initialize canvas grid
+  canvasGrid = [];
+  for (let r = 0; r < CANVAS_ROWS; r++) {
+    const row = [];
+    for (let c = 0; c < CANVAS_COLS; c++) {
+      row.push({ char: ' ', fg: '#aaaaaa' });
+    }
+    canvasGrid.push(row);
+  }
+
+  // Render character buttons
+  const charGridEl = document.getElementById('charGrid');
+  charGridEl.innerHTML = PALETTE_CHARS.map(ch => `
+    <button class="char-btn ${ch === currentChar ? 'active' : ''}" onclick="selectChar('${ch === '\\' ? '\\\\' : (ch === '\'' ? '\\\'' : ch)}')">${ch === ' ' ? 'SPC' : ch}</button>
+  `).join('');
+
+  // Render ANSI color swatches
+  const colorGridEl = document.getElementById('fgColorGrid');
+  colorGridEl.innerHTML = ANSI_16_COLORS.map(col => `
+    <div class="color-swatch ${col === currentFg ? 'active' : ''}" style="background:${col};" onclick="selectColor('${col}')" title="${col}"></div>
+  `).join('');
+
+  // Build DOM Canvas
+  renderCanvasDom();
+  loadSavedDrawing();
+}
+
+function renderCanvasDom() {
+  const container = document.getElementById('asciiCanvas');
+  container.innerHTML = '';
+
+  for (let r = 0; r < CANVAS_ROWS; r++) {
+    const rowDiv = document.createElement('div');
+    rowDiv.style.display = 'flex';
+
+    for (let c = 0; c < CANVAS_COLS; c++) {
+      const span = document.createElement('span');
+      span.id = `cell_${r}_${c}`;
+      span.style.width = '9px';
+      span.style.height = '14px';
+      span.style.display = 'inline-block';
+      span.style.textAlign = 'center';
+      span.style.cursor = 'crosshair';
+      span.style.color = canvasGrid[r][c].fg;
+      span.textContent = canvasGrid[r][c].char;
+
+      span.onmousedown = (e) => {
+        e.preventDefault();
+        isMouseDown = true;
+        applyTool(r, c);
+      };
+
+      span.onmouseenter = () => {
+        if (isMouseDown) applyTool(r, c);
+      };
+
+      rowDiv.appendChild(span);
+    }
+    container.appendChild(rowDiv);
+  }
+}
+
+window.addEventListener('mouseup', () => { isMouseDown = false; });
+
+function applyTool(r, c) {
+  if (r < 0 || r >= CANVAS_ROWS || c < 0 || c >= CANVAS_COLS) return;
+
+  if (currentTool === 'pencil') {
+    canvasGrid[r][c].char = currentChar;
+    canvasGrid[r][c].fg = currentFg;
+    updateCellDom(r, c);
+    playKeyClick();
+  } else if (currentTool === 'eraser') {
+    canvasGrid[r][c].char = ' ';
+    canvasGrid[r][c].fg = '#aaaaaa';
+    updateCellDom(r, c);
+  } else if (currentTool === 'fill') {
+    floodFill(r, c, canvasGrid[r][c].char, currentChar, currentFg);
+    playChime(600, 0.1);
+  }
+}
+
+function updateCellDom(r, c) {
+  const cell = document.getElementById(`cell_${r}_${c}`);
+  if (cell) {
+    cell.textContent = canvasGrid[r][c].char;
+    cell.style.color = canvasGrid[r][c].fg;
+  }
+}
+
+function floodFill(startR, startC, targetChar, fillChar, fillFg) {
+  if (targetChar === fillChar) return;
+  const queue = [[startR, startC]];
+  const visited = new Set();
+
+  while (queue.length > 0) {
+    const [r, c] = queue.pop();
+    const key = `${r},${c}`;
+    if (visited.has(key)) continue;
+    visited.add(key);
+
+    if (r >= 0 && r < CANVAS_ROWS && c >= 0 && c < CANVAS_COLS) {
+      if (canvasGrid[r][c].char === targetChar) {
+        canvasGrid[r][c].char = fillChar;
+        canvasGrid[r][c].fg = fillFg;
+        updateCellDom(r, c);
+
+        queue.push([r + 1, c]);
+        queue.push([r - 1, c]);
+        queue.push([r, c + 1]);
+        queue.push([r, c - 1]);
+      }
+    }
+  }
+}
+
+function setTool(tool) {
+  playKeyClick();
+  currentTool = tool;
+  document.getElementById('toolPencil').classList.toggle('active', tool === 'pencil');
+  document.getElementById('toolEraser').classList.toggle('active', tool === 'eraser');
+  document.getElementById('toolFill').classList.toggle('active', tool === 'fill');
+}
+
+function selectChar(ch) {
+  playKeyClick();
+  currentChar = ch;
+  document.querySelectorAll('.char-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent === (ch === ' ' ? 'SPC' : ch));
+  });
+}
+
+function setCustomChar(val) {
+  if (val && val.length > 0) {
+    currentChar = val[0];
+  }
+}
+
+function selectColor(col) {
+  playKeyClick();
+  currentFg = col;
+  document.querySelectorAll('.color-swatch').forEach(s => {
+    s.classList.toggle('active', s.style.backgroundColor === col || s.getAttribute('title') === col);
+  });
+}
+
+function clearCanvasPrompt() {
+  if (confirm('Clear the entire ASCII canvas?')) {
+    playChime(300, 0.1);
+    for (let r = 0; r < CANVAS_ROWS; r++) {
+      for (let c = 0; c < CANVAS_COLS; c++) {
+        canvasGrid[r][c].char = ' ';
+        canvasGrid[r][c].fg = '#aaaaaa';
+        updateCellDom(r, c);
+      }
+    }
+    localStorage.removeItem('kweb_cybercafe_saved_ascii');
+  }
+}
+
+function copyCanvasText() {
+  playChime(700, 0.1);
+  let text = '';
+  for (let r = 0; r < CANVAS_ROWS; r++) {
+    let rowText = '';
+    for (let c = 0; c < CANVAS_COLS; c++) {
+      rowText += canvasGrid[r][c].char;
+    }
+    text += rowText.trimEnd() + '\n';
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert('ASCII Art copied to clipboard!');
+    }).catch(() => {
+      prompt('Copy ASCII text below:', text);
+    });
+  } else {
+    prompt('Copy ASCII text below:', text);
+  }
+}
+
+function saveDrawingLocal() {
+  playChime(800, 0.15);
+  localStorage.setItem('kweb_cybercafe_saved_ascii', JSON.stringify(canvasGrid));
+  alert('Artwork saved to browser storage!');
+}
+
+function loadSavedDrawing() {
+  const saved = localStorage.getItem('kweb_cybercafe_saved_ascii');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length === CANVAS_ROWS) {
+        canvasGrid = parsed;
+        for (let r = 0; r < CANVAS_ROWS; r++) {
+          for (let c = 0; c < CANVAS_COLS; c++) {
+            updateCellDom(r, c);
+          }
+        }
+      }
+    } catch (e) {}
+  }
+}
+
+/* ASCII PRESET LIBRARY */
+const PRESETS = {
+  mug: [
+    "                (  (              ",
+    "                 )  )             ",
+    "               .-------.          ",
+    "             .-'       '-.        ",
+    "            /  CYBERCAFE  \\       ",
+    "           |   [1999]     |---.   ",
+    "           |   BAUD ROAST |   |   ",
+    "            \\            /---'   ",
+    "             '----------'         "
+  ],
+  crt: [
+    "   .----------------------------.  ",
+    "   | .------------------------. |  ",
+    "   | | SYSOP NODE: 0x7F       | |  ",
+    "   | | CONNECTED: 56,600 BPS  | |  ",
+    "   | | KNET://CYBERCAFE       | |  ",
+    "   | | READY._                | |  ",
+    "   | '------------------------' |  ",
+    "   '---------.--------.---------'  ",
+    "            /          \\           ",
+    "        .--'------------'--.       "
+  ],
+  skull: [
+    "               .---.              ",
+    "              /     \\             ",
+    "             | () () |            ",
+    "              \\  ^  /             ",
+    "               |||||              ",
+    "           [FLARELIGHT-99]        "
+  ],
+  cyberdeck: [
+    "     ____________________________  ",
+    "    /   CYBERDECK MATRIX-01     /| ",
+    "   +---------------------------+ | ",
+    "   | [X] x86 500MHz [56K V.90] | | ",
+    "   | CARRIER DETECTED: SUBNET  | | ",
+    "   | IP: 10.19.99.4 [STANDBY]  | | ",
+    "   +---------------------------+/  ",
+    "     \\__\\__\\__\\__\\__\\__\\__\\__/     "
+  ]
+};
+
+function loadAsciiPreset(key) {
+  if (!key || !PRESETS[key]) return;
+  playChime(650, 0.15);
+
+  const lines = PRESETS[key];
+  const startRow = Math.max(0, Math.floor((CANVAS_ROWS - lines.length) / 2));
+
+  for (let r = 0; r < CANVAS_ROWS; r++) {
+    for (let c = 0; c < CANVAS_COLS; c++) {
+      canvasGrid[r][c].char = ' ';
+      canvasGrid[r][c].fg = '#aaaaaa';
+    }
+  }
+
+  lines.forEach((line, rIdx) => {
+    const row = startRow + rIdx;
+    const startCol = Math.max(0, Math.floor((CANVAS_COLS - line.length) / 2));
+    for (let cIdx = 0; cIdx < line.length; cIdx++) {
+      const col = startCol + cIdx;
+      if (row < CANVAS_ROWS && col < CANVAS_COLS) {
+        canvasGrid[row][col].char = line[cIdx];
+        canvasGrid[row][col].fg = currentFg;
+      }
+    }
+  });
+
+  for (let r = 0; r < CANVAS_ROWS; r++) {
+    for (let c = 0; c < CANVAS_COLS; c++) {
+      updateCellDom(r, c);
+    }
+  }
+}
+
+/* =========================================================================
+   6. VAULT FILE VIEWER
+   ========================================================================= */
+const VAULT_FILES = {
+  CAFE_WELCOME: `[FILE: CAFE_WELCOME.TXT // 1999-10-01]
+Welcome to CyberCafe '99!
+Located at the intersection of Silicon Way and 56K Blvd.
+
+RULES OF THE TERMINAL:
+1. Maximum 2 hours per patron during peak deathmatch hours.
+2. No spilling Jolt Cola or Mountain Dew into mechanical keyboards.
+3. Respect SysOp notices on the bulletin boards.
+4. Floppy disks must be scanned for boot sector viruses at the front counter.
+5. All 8 stations are interconnected via 10Base-T Ethernet running KNet.`,
+
+  VOODOO3: `[NFO: VOODOO3_OPTIMIZATION.NFO // 1999-10-18]
+3DFX VOODOO3 3000 / 3500 AGP OPTIMIZATION DISPATCH:
+- Driver: Glide 3.x Reference Package
+- Resolution: 1024x768 16-bit color (22-bit post-filter enabled)
+- Overclock: 166MHz core -> 183MHz with ball-bearing fan addition
+- Recommended Games: Tremor III Arena, Surreal Tournament, Machina Ex.
+Glide minidrivers provide superior framerate pacing over D3D.`,
+
+  ASCII_PRIMER: `[GUIDE: ASCII_ART_PRIMER.TXT // 1999-11-04]
+BASIC ASCII & ANSI ART TECHNIQUES:
+1. The 7-bit standard uses pure ASCII characters (!@#$%^&*()_+).
+2. The IBM Code Page 437 extension adds box-drawing lines and shades:
+   - 0xDB (219): Full Block █
+   - 0xB0 (176): Light Shade ░
+   - 0xB1 (177): Medium Shade ▒
+   - 0xB2 (178): Dark Shade ▓
+   - 0xDF (223): Upper Half ▀
+   - 0xDC (220): Lower Half ▄
+Combine shading blocks with ANSI 16 escape sequences for demoscene magic!`,
+
+  SUBNET_LOG: `[TELEMETRY: SUBNET_ANOMALY_101999.LOG // 1999-11-15]
+GATEWAY ROUTER: K-ROUTER-99 [FIRMWARE 1.99.4]
+WARNING: UNROUTABLE PACKETS ENCOUNTERED
+
+TIMESTAMP           SRC              DST              FLAGS    PAYLOAD
+----------------------------------------------------------------------
+1999-11-15 03:14:02 10.19.99.12:1999 10.19.99.4:1999  [SYN]    [ECHO_SUB]
+1999-11-15 03:14:05 10.19.99.12:1999 10.19.99.4:1999  [ACK]    [HARMONIC_1999HZ]
+1999-11-15 03:14:08 10.19.99.4:1999  10.19.99.12:1999 [ECHO]   [MEM_SECTOR_0x1999]
+
+NOTE: IP 10.19.99.4 responds with valid handshake despite having no physical NIC.
+Packets appear to loop back from the system memory controller.
+Investigate further using KHex or access kweb://10.19.99.4/classified.`
+};
+
+function viewVaultFile(key) {
+  playChime(550, 0.08);
+  const viewer = document.getElementById('vaultViewerBox');
+  const title = document.getElementById('vaultFileTitle');
+  const content = document.getElementById('vaultFileContent');
+
+  if (VAULT_FILES[key]) {
+    title.textContent = `FILE INSPECTION: ${key}.TXT`;
+    content.textContent = VAULT_FILES[key];
+    viewer.style.display = 'block';
+  }
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/* =========================================================================
+   7. INITIALIZATION
+   ========================================================================= */
+window.addEventListener('DOMContentLoaded', () => {
+  renderBooths();
+  loadForumData();
+  initAsciiStudio();
+});
+</script>
+
+</body>
+</html>

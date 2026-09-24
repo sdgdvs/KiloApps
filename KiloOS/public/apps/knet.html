@@ -522,6 +522,7 @@
         <option value="kweb://portal">🏠 KiloNet 1999 Web Portal</option>
         <option value="kweb://webring">🌐 Central Webring Hub</option>
         <option value="kweb://geocities">✨ CyberSpire Retro Shrine</option>
+        <option value="kweb://cybercafe">☕ CyberCafe '99 (BBS &amp; ASCII Lounge)</option>
         <option value="kweb://users/~neon_rider">⚡ ~neon_rider (ASM &amp; Demoscene)</option>
         <option value="kweb://asm-temple">⚡ x86 ASM Temple &amp; Opcode Shrine</option>
       </optgroup>
@@ -583,6 +584,7 @@
         <button class="btn-chip" data-url="kweb://portal" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; font-weight:700; color:#fff;">🏠 1999 Portal</button>
         <button class="btn-chip" data-url="kweb://webring">🌐 Webring</button>
         <button class="btn-chip" data-url="kweb://geocities" style="color:#f0abfc;">✨ GeoCities</button>
+        <button class="btn-chip" data-url="kweb://cybercafe" style="color:#fbbf24; border-color:rgba(251, 191, 36, 0.4);">☕ CyberCafe</button>
         <button class="btn-chip" data-url="kweb://users/~neon_rider" style="color:#00ffcc; border-color:rgba(0, 255, 204, 0.4);">⚡ ~neon_rider</button>
         <button class="btn-chip" data-url="kweb://asm-temple" style="color:#fbbf24; border-color:rgba(245, 158, 11, 0.4);">⚡ ASM Temple</button>
         <span style="font-size:11px; color:var(--text-muted); font-weight:700; margin-left:6px;">FLEET:</span>
@@ -860,6 +862,7 @@
           <tr><td><code>kweb://portal</code></td><td>Access 1999 KiloNet Directory &amp; Hypermedia Portal</td></tr>
           <tr><td><code>kweb://webring</code></td><td>Access Central KiloNet Webring Hub &amp; Node Directory</td></tr>
           <tr><td><code>kweb://geocities</code></td><td>Access CyberSpire Retro Personal Shrine &amp; Guestbook</td></tr>
+          <tr><td><code>kweb://cybercafe</code></td><td>Access Underground BBS, Threaded Forums &amp; ASCII Art Canvas</td></tr>
           <tr><td><code>kweb://users/~neon_rider</code></td><td>Access ~neon_rider's Win32 ASM &amp; Demoscene Devlog</td></tr>
           <tr><td><code>kweb://asm-temple</code></td><td>Access x86 Assembly Programming Shrine &amp; Opcode Converter</td></tr>
           <tr><td><code>Click Sniffer Row</code></td><td>Open deep frame dissection drawer (Ethernet, IP, Hex)</td></tr>
@@ -1459,6 +1462,8 @@
       url = '/web/webring.html';
     } else if (url.toLowerCase() === 'kweb://geocities' || url.toLowerCase() === 'geocities') {
       url = '/web/geocities.html';
+    } else if (url.toLowerCase() === 'kweb://cybercafe' || url.toLowerCase() === 'cybercafe' || url.toLowerCase() === 'kweb://cafe' || url.toLowerCase() === 'cafe' || url.toLowerCase() === 'kweb://bbs') {
+      url = '/web/cybercafe.html';
     } else if (url.toLowerCase() === 'kweb://users/~neon_rider' || url.toLowerCase() === 'users/~neon_rider' || url.toLowerCase() === 'kweb://neon_rider' || url.toLowerCase() === 'neon_rider' || url.toLowerCase() === '~neon_rider' || url.toLowerCase() === 'kweb://users/neon_rider') {
       url = '/web/users/neon_rider.html';
     } else if (url.toLowerCase() === 'kweb://asm-temple' || url.toLowerCase() === 'asm-temple' || url.toLowerCase() === 'kweb://asm_temple' || url.toLowerCase() === 'asm_temple' || url.toLowerCase() === 'kweb://shrine' || url.toLowerCase() === 'shrine') {
