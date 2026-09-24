@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-tester
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -16,7 +16,7 @@ current_targets:
   kilo_usability: KPaint
   kilo_graphics: KMech
   kilo_qa: KDragon
-  kilo_expander: "KDarts (Firebase RTDB Online Multiplayer)"
+  kilo_expander: "KTetris (Arcade Duel Multiplayer)"
   kilo_creator: "kweb://cybercafe (Underground BBS, Threaded Forums & ASCII Art Canvas)"
 virtual_web_target: "kweb://cybercafe"
 virtual_web_rotation:
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-qa
-  app: KCyber
-  timestamp: "2026-09-24T09:55:00Z"
+  agent: kilo-expander
+  app: KDarts
+  timestamp: "2026-09-24T10:48:00Z"
 last_planner_run: "2026-09-24T05:46:00Z"
 ---
 
@@ -125,9 +125,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KFortress`, `KMech`, `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KDarts` (Implement Seamless Firebase RTDB Multiplayer per Mandate 12)
+- **Current Target**: `KTetris` (Arcade Duel Multiplayer)
 - **Upcoming Queue**:
-  `KTetris` (Arcade Duel Multiplayer), `KSnake` (Multiplayer), `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote` *(Completed: KConnect4, KChess, KGo, KReversi)*.
+  `KSnake` (Multiplayer), `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote` *(Completed: KConnect4, KChess, KGo, KReversi, KDarts)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -201,6 +201,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-24T10:48:00Z — kilo-expander: KDarts (Firebase RTDB Online Multiplayer Expansion)**
+  - Status: PASS ✅ (Seamless cross-computer online multiplayer integrated; Mandate 12 compliant; 0 regressions).
+  - Multiplayer Architecture: Built Firebase RTDB real-time synchronization (`multiplayer/kdarts/`) with room/lobby matchmaking and CDN module loader.
+  - Gameplay & Throw Sync: Real-time dart throw sync across boards (coordinates, pts, sounds, particles), turn alternation, spectator view, and rematch negotiation.
+  - UI & Controls: Added Online Bar with quick emote chat, custom message input, modal room host/join, and top-right toast alerts.
+  - Verification: MSVC C clean build (`KDarts.exe` 21.0 KB); Vite clean build (476ms, `kdarts.html` 122.8 KB); security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-24T09:55:00Z — kilo-qa: KCyber (Pass 5: Tutorial & State Integrity Audit)**
   - Status: PASS ✅ (Quicksave [F5] & Quickload [F9] verified; first-run tutorial integrity implemented; 0 regressions).
   - State Persistence: Implemented complete cyberdeck state serialization (timers, MEM, CPU, charges, heat, PIN, nodes, bounties) in localStorage (`kcyber_save`) and native Win32 binary (`kcyber_save.dat`).
@@ -232,11 +239,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast & Ergonomics: Relocated toast to top-right safe zone with click-to-dismiss, preventing task occlusion.
   - Interaction Polish: Fixed cancelled inline edit overwrites, added subtask input autofocus, and cleared due dates on add.
   - Verification: MSVC C clean build (`KTodo.exe` 23.5 KB); clean Vite build (385ms, `ktodo.html` 85.4 KB); security lint 100% PASS; <999KB ceiling.
-
-- **2026-09-24T05:46:00Z — kilo-planner: 24h Fleet Planning & Queue Compaction**
-  - Status: PASS ✅ (24h velocity assessed; queues rebalanced; logs compacted).
-  - Fleet Velocity: 15 passes completed in 24h; 0 regressions; 104/104 icons unique and valid.
-  - Multi-Agent Queues: Rebalanced rotation (`kilo-tester` ➔ `kilo-usability` ➔ `kilo-graphics` ➔ `kilo-qa` ➔ `kilo-expander` ➔ `kilo-creator`).
-  - Active Priorities: Multiplayer (`KDarts`, `KTetris`), Virtual Web (`cybercafe`), Toast occlusion (`KFarm`), UI audit (`KTodo`).
-  - Hygiene: Compacted execution logs to archive; verified security lint & Vite build clean.
 
