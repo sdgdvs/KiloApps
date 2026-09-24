@@ -24,13 +24,14 @@ typedef struct {
     int value;
 } NodeFile;
 
-NodeFile node_files[6] = {
+NodeFile node_files[7] = {
     {"", 0, 0},
     {"", 0, 0},
     {"sys_logs.dat", 12, 100},
     {"customer_db.sql", 45, 250},
     {"r_and_d_schematics.zip", 105, 600},
-    {"zero_day_exploit.exe", 15, 1500}
+    {"zero_day_exploit.exe", 15, 1500},
+    {"ai_core_firmware.bin", 180, 2800}
 };
 
 int player_max_mem = 100;
@@ -38,8 +39,12 @@ int player_mem = 100;
 int player_max_cpu = 5;
 int player_max_cloak = 3;
 int player_max_slow = 3;
+int player_max_patch = 2;
+int player_max_probe = 2;
 int tool_cloak = 3;
 int tool_slow = 3;
+int tool_patch = 2;
+int tool_probe = 2;
 int in_shop = 0;
 int ice_damage = 0;
 char ice_name[32] = "";
@@ -125,16 +130,17 @@ void SpawnParticles(int x, int y, int count, COLORREF color, int type) {
 }
 
 void GenerateMissions() {
-    const char* fileNames[] = {"paydata.zip", "prototype.exe", "blackmail.txt", "employee_db.sql", "admin_creds.dat", "source_code.c", "financials.xls", "auth_keys.rsa"};
+    const char* fileNames[] = {"paydata.zip", "prototype.exe", "blackmail.txt", "employee_db.sql", "admin_creds.dat", "source_code.c", "financials.xls", "auth_keys.rsa", "ai_core_firmware.bin", "shadow_telemetry.log", "anomalous_manifest.dat"};
     for (int i = 0; i < 3; i++) {
         missions[i].id = i + 1;
-        missions[i].node = (my_rand() % 4) + 2;
-        int fidx = my_rand() % 8;
+        missions[i].node = (my_rand() % 5) + 2; // 2 to 6
+        int fidx = my_rand() % 11;
         lstrcpyA(missions[i].file, fileNames[fidx]);
         if (missions[i].node == 2) { missions[i].reward = 150 + (my_rand()%100); lstrcpyA(missions[i].diff, "Easy"); }
         else if (missions[i].node == 3) { missions[i].reward = 300 + (my_rand()%200); lstrcpyA(missions[i].diff, "Medium"); }
         else if (missions[i].node == 4) { missions[i].reward = 600 + (my_rand()%300); lstrcpyA(missions[i].diff, "Hard"); }
         else if (missions[i].node == 5) { missions[i].reward = 1200 + (my_rand()%800); lstrcpyA(missions[i].diff, "Extreme"); }
+        else if (missions[i].node == 6) { missions[i].reward = 2500 + (my_rand()%1000); lstrcpyA(missions[i].diff, "Nightmare"); }
     }
 }
 
@@ -154,6 +160,8 @@ void PlayDialup() {
     }
 }
 void PlayFailTone() { Beep(300, 100); }
+void PlayPatchSound() { Beep(520, 100); Beep(780, 150); }
+void PlayProbeSound() { Beep(900, 80); Beep(1200, 120); }
 
 
 void PrintLine(HWND hwnd, const char* text) {
@@ -214,11 +222,13 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
             wsprintfA(buffer, "Credits: %d cr", player_credits);
             PrintLine(hwnd, buffer);
             PrintLine(hwnd, "Available upgrades:");
-            PrintLine(hwnd, "  buy mem   - +50 Max Memory (Cost: 500 cr)");
-            PrintLine(hwnd, "  buy cpu   - +1 Hacking Attempt (Cost: 1000 cr)");
-            PrintLine(hwnd, "  buy cloak - +1 Cloak Charge (Cost: 200 cr)");
-            PrintLine(hwnd, "  buy slow  - +1 Slow Charge (Cost: 300 cr)");
-            PrintLine(hwnd, "  buy proxy - -20% Heat (Cost: 150 cr)");
+            PrintLine(hwnd, "  buy mem   - +50 Max Memory (Cost: 350 cr)");
+            PrintLine(hwnd, "  buy cpu   - +1 Hacking Attempt (Cost: 600 cr)");
+            PrintLine(hwnd, "  buy cloak - +1 Cloak Charge (Cost: 150 cr)");
+            PrintLine(hwnd, "  buy slow  - +1 Slow Charge (Cost: 200 cr)");
+            PrintLine(hwnd, "  buy patch - +1 Nanite MEM Patch (Cost: 100 cr)");
+            PrintLine(hwnd, "  buy probe - +1 Heuristic Code Probe (Cost: 250 cr)");
+            PrintLine(hwnd, "  buy proxy - -25% Heat (Cost: 120 cr)");
             return;
         }
 
@@ -227,8 +237,8 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                 PrintLine(hwnd, "Usage: buy <item>");
             } else {
                 if (lstrcmpiA(args, "mem") == 0) {
-                    if (player_credits >= 500) {
-                        player_credits -= 500;
+                    if (player_credits >= 350) {
+                        player_credits -= 350;
                         player_max_mem += 50;
                         player_mem += 50;
                         wsprintfA(buffer, "Purchase successful. Max memory increased to %d.", player_max_mem);
@@ -237,8 +247,8 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                         PrintLine(hwnd, "Insufficient credits.");
                     }
                 } else if (lstrcmpiA(args, "cpu") == 0) {
-                    if (player_credits >= 1000) {
-                        player_credits -= 1000;
+                    if (player_credits >= 600) {
+                        player_credits -= 600;
                         player_max_cpu += 1;
                         wsprintfA(buffer, "Purchase successful. Hacking attempts increased to %d.", player_max_cpu);
                         PrintLine(hwnd, buffer);
@@ -246,8 +256,8 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                         PrintLine(hwnd, "Insufficient credits.");
                     }
                 } else if (lstrcmpiA(args, "cloak") == 0) {
-                    if (player_credits >= 200) {
-                        player_credits -= 200;
+                    if (player_credits >= 150) {
+                        player_credits -= 150;
                         player_max_cloak += 1;
                         tool_cloak += 1;
                         wsprintfA(buffer, "Purchase successful. Max Cloak charges: %d.", player_max_cloak);
@@ -256,8 +266,8 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                         PrintLine(hwnd, "Insufficient credits.");
                     }
                 } else if (lstrcmpiA(args, "slow") == 0) {
-                    if (player_credits >= 300) {
-                        player_credits -= 300;
+                    if (player_credits >= 200) {
+                        player_credits -= 200;
                         player_max_slow += 1;
                         tool_slow += 1;
                         wsprintfA(buffer, "Purchase successful. Max Slow charges: %d.", player_max_slow);
@@ -265,10 +275,30 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                     } else {
                         PrintLine(hwnd, "Insufficient credits.");
                     }
+                } else if (lstrcmpiA(args, "patch") == 0) {
+                    if (player_credits >= 100) {
+                        player_credits -= 100;
+                        player_max_patch += 1;
+                        tool_patch += 1;
+                        wsprintfA(buffer, "Purchase successful. Max Patch charges: %d.", player_max_patch);
+                        PrintLine(hwnd, buffer);
+                    } else {
+                        PrintLine(hwnd, "Insufficient credits.");
+                    }
+                } else if (lstrcmpiA(args, "probe") == 0) {
+                    if (player_credits >= 250) {
+                        player_credits -= 250;
+                        player_max_probe += 1;
+                        tool_probe += 1;
+                        wsprintfA(buffer, "Purchase successful. Max Probe charges: %d.", player_max_probe);
+                        PrintLine(hwnd, buffer);
+                    } else {
+                        PrintLine(hwnd, "Insufficient credits.");
+                    }
                 } else if (lstrcmpiA(args, "proxy") == 0) {
-                    if (player_credits >= 150) {
-                        player_credits -= 150;
-                        player_heat -= 20;
+                    if (player_credits >= 120) {
+                        player_credits -= 120;
+                        player_heat -= 25;
                         if (player_heat < 0) player_heat = 0;
                         wsprintfA(buffer, "Purchase successful. Heat reduced to %d%%.", player_heat);
                         PrintLine(hwnd, buffer);
@@ -301,6 +331,17 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
             PrintLine(hwnd, buffer);
             return;
         }
+        if (lstrcmpiA(guess, "help") == 0 || lstrcmpiA(guess, "?") == 0) {
+            PrintLine(hwnd, "Hacking commands: <4-digit PIN>, cloak, slow, patch, probe, status, abort");
+            return;
+        }
+        if (lstrcmpiA(guess, "status") == 0) {
+            wsprintfA(buffer, "HACK STATUS: MEM: %d/%d | Cloak: %d/%d | Slow: %d/%d | Patch: %d/%d | Probe: %d/%d | Heat: %d%%",
+                      player_mem, player_max_mem, tool_cloak, player_max_cloak, tool_slow, player_max_slow,
+                      tool_patch, player_max_patch, tool_probe, player_max_probe, player_heat);
+            PrintLine(hwnd, buffer);
+            return;
+        }
         if (lstrcmpiA(guess, "cloak") == 0) {
             if (tool_cloak > 0) {
                 tool_cloak--;
@@ -327,6 +368,42 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                 SpawnParticles(cr.right - 90, 85, 15, RGB(255, 255, 0), 0);
             } else {
                 PrintLine(hwnd, "[SLOW] Out of charges.");
+            }
+            return;
+        }
+        if (lstrcmpiA(guess, "patch") == 0) {
+            if (tool_patch > 0) {
+                if (player_mem >= player_max_mem) {
+                    PrintLine(hwnd, "[PATCH] Memory integrity already at 100%.");
+                } else {
+                    tool_patch--;
+                    player_mem += 35;
+                    if (player_mem > player_max_mem) player_mem = player_max_mem;
+                    PlayPatchSound();
+                    wsprintfA(buffer, "[PATCH] Nanite patch applied. Restored +35 MEM (%d/%d). Charges left: %d", player_mem, player_max_mem, tool_patch);
+                    PrintLine(hwnd, buffer);
+                    RECT cr; GetClientRect(hwnd, &cr);
+                    g_shockwaveR = 5; g_shockwaveColor = RGB(0, 255, 120);
+                    SpawnParticles(cr.right - 90, 85, 20, RGB(0, 255, 120), 3);
+                }
+            } else {
+                PrintLine(hwnd, "[PATCH] Out of charges.");
+            }
+            return;
+        }
+        if (lstrcmpiA(guess, "probe") == 0) {
+            if (tool_probe > 0) {
+                tool_probe--;
+                PlayProbeSound();
+                int pIdx = my_rand() % 4;
+                char rev = hacking_target[pIdx];
+                wsprintfA(buffer, "[PROBE] Heuristic signal analysis revealed: Digit #%d is '%c'. Charges left: %d", pIdx + 1, rev, tool_probe);
+                PrintLine(hwnd, buffer);
+                RECT cr; GetClientRect(hwnd, &cr);
+                g_shockwaveR = 5; g_shockwaveColor = RGB(255, 230, 0);
+                SpawnParticles(cr.right - 90, 85, 20, RGB(255, 230, 0), 0);
+            } else {
+                PrintLine(hwnd, "[PROBE] Out of charges.");
             }
             return;
         }
@@ -521,16 +598,19 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         PrintLine(hwnd, "  connect   - Attempt connection to network node");
         PrintLine(hwnd, "  contracts - View available hacking contracts");
         PrintLine(hwnd, "  accept    - Accept a contract (e.g. 'accept 1')");
+        PrintLine(hwnd, "  patch     - Apply nanite memory repair patch (+35 MEM)");
         PrintLine(hwnd, "  guide     - Open Runner's Guide (e.g. 'guide ice')");
         PrintLine(hwnd, "During hack:");
         PrintLine(hwnd, "  abort     - Disconnect immediately");
         PrintLine(hwnd, "  cloak     - Blind ICE for 2 cycles");
         PrintLine(hwnd, "  slow      - Halve ICE attack speed");
+        PrintLine(hwnd, "  patch     - Restore +35 MEM integrity");
+        PrintLine(hwnd, "  probe     - Reveal 1 correct digit and position");
     } else if (lstrcmpiA(command, "guide") == 0) {
         if (args[0] == '\0') {
             PrintLine(hwnd, "--- RUNNER'S GUIDE ---");
             PrintLine(hwnd, "Usage: guide <topic>");
-            PrintLine(hwnd, "Topics: commands, ice, upgrade, hacking");
+            PrintLine(hwnd, "Topics: commands, ice, upgrade, hacking, tools");
         } else {
             if (lstrcmpiA(args, "commands") == 0) {
                 PrintLine(hwnd, "--- GUIDE: COMMANDS ---");
@@ -538,21 +618,25 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                 PrintLine(hwnd, "shop: Access the black market to upgrade your cyberdeck.");
                 PrintLine(hwnd, "contracts: List available data theft jobs.");
                 PrintLine(hwnd, "accept <id>: Take a contract, then connect to the node to download.");
+                PrintLine(hwnd, "patch: Repair cyberdeck MEM on the fly using nanite charges.");
             } else if (lstrcmpiA(args, "ice") == 0) {
                 PrintLine(hwnd, "--- GUIDE: ICE (Intrusion Countermeasures Electronics) ---");
                 PrintLine(hwnd, "ICE defends network nodes by attacking your deck's Memory (MEM).");
-                PrintLine(hwnd, "Basic ICE: Weak damage. Found on low-sec nodes.");
-                PrintLine(hwnd, "Tracer ICE: Moderate damage.");
-                PrintLine(hwnd, "Hunter ICE: High damage. Will rapidly deplete your MEM.");
-                PrintLine(hwnd, "Black ICE: Lethal damage. Reserved for extreme-sec nodes.");
+                PrintLine(hwnd, "Basic ICE: Weak damage (5). Found on low-sec public routers.");
+                PrintLine(hwnd, "Tracer ICE: Moderate damage (10). Standard corporate security.");
+                PrintLine(hwnd, "Hunter ICE: High damage (15). Rapidly depletes deck memory.");
+                PrintLine(hwnd, "Black ICE: Lethal damage (25). Military grade countermeasure.");
+                PrintLine(hwnd, "Phantom ICE: Extreme damage (35). Top-tier classified shadow mainframe ICE.");
                 PrintLine(hwnd, "If MEM reaches 0, you are forcibly disconnected.");
-            } else if (lstrcmpiA(args, "upgrade") == 0) {
-                PrintLine(hwnd, "--- GUIDE: DECK UPGRADING ---");
+            } else if (lstrcmpiA(args, "upgrade") == 0 || lstrcmpiA(args, "tools") == 0) {
+                PrintLine(hwnd, "--- GUIDE: DECK UPGRADING & TOOLS ---");
                 PrintLine(hwnd, "Spend credits earned from data theft in the 'shop'.");
                 PrintLine(hwnd, "MEM: Increases maximum memory, letting you survive more ICE attacks.");
                 PrintLine(hwnd, "CPU: Gives you more attempts to crack node passwords.");
                 PrintLine(hwnd, "CLOAK: Buy charges to temporarily blind ICE during a hack.");
                 PrintLine(hwnd, "SLOW: Buy charges to permanently slow down ICE attack speed for one hack.");
+                PrintLine(hwnd, "PATCH: Buy nanite charges to restore +35 MEM during or outside of hacks.");
+                PrintLine(hwnd, "PROBE: Buy heuristic analyzer charges to reveal a PIN digit during a hack.");
                 PrintLine(hwnd, "PROXY: Reduces your global HEAT, which makes ICE attack slower.");
             } else if (lstrcmpiA(args, "hacking") == 0) {
                 PrintLine(hwnd, "--- GUIDE: HACKING ---");
@@ -560,10 +644,11 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                 PrintLine(hwnd, "2. Enter 4 digits. The system returns EXACT (right number, right place)");
                 PrintLine(hwnd, "   and PARTIAL (right number, wrong place).");
                 PrintLine(hwnd, "3. Use this feedback to deduce the PIN before you run out of attempts.");
-                PrintLine(hwnd, "4. Once in, use 'ls' to find files and 'download <file>' to steal them.");
-                PrintLine(hwnd, "5. Higher HEAT speeds up ICE. Aborting or failing hacks increases HEAT.");
+                PrintLine(hwnd, "4. Use 'patch' if MEM runs low, or 'probe' to reveal an unknown digit.");
+                PrintLine(hwnd, "5. Once in, use 'ls' to find files and 'download <file>' to steal them.");
+                PrintLine(hwnd, "6. Higher HEAT speeds up ICE. Aborting or failing hacks increases HEAT.");
             } else {
-                PrintLine(hwnd, "Unknown topic. Topics: commands, ice, upgrade, hacking");
+                PrintLine(hwnd, "Unknown topic. Topics: commands, ice, upgrade, hacking, tools");
             }
         }
     } else if (lstrcmpiA(command, "clear") == 0) {
@@ -575,7 +660,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         InvalidateRect(hwnd, NULL, TRUE);
     } else if (lstrcmpiA(command, "status") == 0) {
         char memBuf[64];
-        wsprintfA(memBuf, "  MEM: %d%%", player_mem);
+        wsprintfA(memBuf, "  MEM: %d/%d", player_mem, player_max_mem);
         PrintLine(hwnd, "DECK STATUS:");
         PrintLine(hwnd, "  CPU: 100%");
         PrintLine(hwnd, memBuf);
@@ -583,17 +668,41 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         PrintLine(hwnd, memBuf);
         wsprintfA(memBuf, "  SLOW: %d charges", tool_slow);
         PrintLine(hwnd, memBuf);
+        wsprintfA(memBuf, "  PATCH: %d charges", tool_patch);
+        PrintLine(hwnd, memBuf);
+        wsprintfA(memBuf, "  PROBE: %d charges", tool_probe);
+        PrintLine(hwnd, memBuf);
         wsprintfA(memBuf, "  CREDITS: %d cr", player_credits);
         PrintLine(hwnd, memBuf);
         wsprintfA(memBuf, "  HEAT: %d%%", player_heat);
         PrintLine(hwnd, memBuf);
         PrintLine(hwnd, "  NET: DISCONNECTED");
+    } else if (lstrcmpiA(command, "patch") == 0) {
+        if (tool_patch > 0) {
+            if (player_mem >= player_max_mem) {
+                PrintLine(hwnd, "[PATCH] System memory already at 100%.");
+            } else {
+                tool_patch--;
+                player_mem += 35;
+                if (player_mem > player_max_mem) player_mem = player_max_mem;
+                PlayPatchSound();
+                wsprintfA(buffer, "[PATCH] Nanite patch applied. Restored +35 MEM (%d/%d). Charges left: %d", player_mem, player_max_mem, tool_patch);
+                PrintLine(hwnd, buffer);
+                RECT cr; GetClientRect(hwnd, &cr);
+                g_shockwaveR = 5; g_shockwaveColor = RGB(0, 255, 120);
+                SpawnParticles(cr.right - 90, 85, 20, RGB(0, 255, 120), 3);
+            }
+        } else {
+            PrintLine(hwnd, "[PATCH] Out of charges. Purchase more in the shop.");
+        }
     } else if (lstrcmpiA(command, "reboot") == 0) {
         player_mem = player_max_mem;
         tool_cloak = player_max_cloak;
         tool_slow = player_max_slow;
+        tool_patch = player_max_patch;
+        tool_probe = player_max_probe;
         if (player_heat > 0) {
-            player_heat -= 10;
+            player_heat -= 15;
             if (player_heat < 0) player_heat = 0;
         }
         active_mission_node = 0;
@@ -603,6 +712,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         lstrcpyA(node_files[3].name, "customer_db.sql"); node_files[3].size = 45; node_files[3].value = 250;
         lstrcpyA(node_files[4].name, "r_and_d_schematics.zip"); node_files[4].size = 105; node_files[4].value = 600;
         lstrcpyA(node_files[5].name, "zero_day_exploit.exe"); node_files[5].size = 15; node_files[5].value = 1500;
+        lstrcpyA(node_files[6].name, "ai_core_firmware.bin"); node_files[6].size = 180; node_files[6].value = 2800;
         PrintLine(hwnd, "System rebooting...");
         PrintLine(hwnd, "Memory and software restored to 100%. Nodes and contracts reset.");
         char buf[64];
@@ -663,8 +773,10 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         PrintLine(hwnd, "   |     +-- [03] DATA_VAULT");
         PrintLine(hwnd, "   |");
         PrintLine(hwnd, "   +-- [04] SEC_SERVER");
-        PrintLine(hwnd, "   |");
-        PrintLine(hwnd, "   +-- [05] BLACK_ICE_NODE");
+        PrintLine(hwnd, "   |     |");
+        PrintLine(hwnd, "   |     +-- [05] BLACK_ICE_NODE");
+        PrintLine(hwnd, "   |     |");
+        PrintLine(hwnd, "   |     +-- [06] SHADOW_MAINFRAME");
         PrintLine(hwnd, "");
         PrintLine(hwnd, "Use 'connect <node_id>' to access a node.");
     } else if (lstrcmpiA(command, "connect") == 0) {
@@ -676,6 +788,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
             else if (lstrcmpiA(args, "03") == 0) node = 3;
             else if (lstrcmpiA(args, "04") == 0) node = 4;
             else if (lstrcmpiA(args, "05") == 0) node = 5;
+            else if (lstrcmpiA(args, "06") == 0) node = 6;
             
             if (node > 0) {
                 hacking_node = node;
@@ -693,6 +806,7 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
                 else if (node == 3) { lstrcpyA(ice_name, "Tracer ICE"); ice_damage = 10; }
                 else if (node == 4) { lstrcpyA(ice_name, "Hunter ICE"); ice_damage = 15; }
                 else if (node == 5) { lstrcpyA(ice_name, "Black ICE"); ice_damage = 25; }
+                else if (node == 6) { lstrcpyA(ice_name, "Phantom ICE"); ice_damage = 35; }
                 
                 ice_damage += player_heat / 5;
 
@@ -934,6 +1048,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         gridColor = RGB(0, 65, 90);
                         skylineColor = RGB(0, 45, 65);
                         hudTitle = "[ICE://BLINDED]";
+                    } else if (hacking_node == 6) {
+                        hudColor = RGB(220, 30, 255);
+                        bgFillColor = RGB(22, 0, 28);
+                        gridColor = RGB(120, 20, 150);
+                        skylineColor = RGB(80, 12, 100);
+                        hudTitle = "[ICE://PHANTOM]";
                     } else {
                         hudColor = RGB(255, 50, 50);
                         bgFillColor = RGB(24, 4, 4);
@@ -1018,19 +1138,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SetPixel(memDC, mx, my - 1, gridColor);
                 }
 
-                // Lateral Motherboard Circuit Bus Conduits & Flowing Data Packets
+                // Lateral Motherboard Circuit Bus Conduits (Static PCB Vias)
                 HPEN busPen = CreatePen(PS_SOLID, 1, gridColor);
                 SelectObject(memDC, busPen);
                 MoveToEx(memDC, vx + 6, vy + 16, NULL); LineTo(memDC, vx + 6, vy + vh - 8);
                 MoveToEx(memDC, vx + vw - 6, vy + 16, NULL); LineTo(memDC, vx + vw - 6, vy + vh - 8);
                 DeleteObject(busPen);
 
-                int bPkt1 = vy + 16 + ((g_animTick * 3) % (vh - 24));
-                int bPkt2 = vy + vh - 8 - ((g_animTick * 2) % (vh - 24));
-                SetPixel(memDC, vx + 6, bPkt1, hudColor);
-                SetPixel(memDC, vx + 6, bPkt1 + 1, hudColor);
-                SetPixel(memDC, vx + vw - 6, bPkt2, hudColor);
-                SetPixel(memDC, vx + vw - 6, bPkt2 + 1, hudColor);
+                // Static PCB via solder pads along bus conduits
+                int viaY[3] = { vy + 36, vy + 72, vy + 108 };
+                for (int v = 0; v < 3; v++) {
+                    SetPixel(memDC, vx + 6, viaY[v], hudColor);
+                    SetPixel(memDC, vx + 6, viaY[v] + 1, hudColor);
+                    SetPixel(memDC, vx + vw - 6, viaY[v], hudColor);
+                    SetPixel(memDC, vx + vw - 6, viaY[v] + 1, hudColor);
+                }
 
                 // Corner L-Brackets
                 HPEN hudPen = CreatePen(PS_SOLID, 2, hudColor);
@@ -1095,6 +1217,67 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                         SetTextColor(memDC, RGB(0, 220, 255));
                         TextOutA(memDC, cx - 24, cy + 40, "BLINDED", 7);
+
+                    } else if (hacking_node == 6) {
+                        // PHANTOM ICE: 4 Rotating Stealth Shroud Diamond Plates & Polyhedral Phase Core
+                        HPEN shardPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+                        HBRUSH shardBrush = CreateSolidBrush(RGB(170, 0, 255));
+                        HPEN linkPen = CreatePen(PS_SOLID, 1, RGB(160, 20, 200));
+
+                        for (int s = 0; s < 4; s++) {
+                            int sAngle = (g_animTick) + (s * 8);
+                            int sDist = 42 + pulse;
+                            int sx = cx + glitch + (FastCos(sAngle) * sDist) / 128;
+                            int sy = cy + (FastSin(sAngle) * sDist) / 128;
+
+                            // Violet Phase Link
+                            SelectObject(memDC, linkPen);
+                            MoveToEx(memDC, cx + glitch, cy, NULL);
+                            LineTo(memDC, sx, sy);
+
+                            // Diamond Stealth Shard
+                            SelectObject(memDC, shardPen);
+                            SelectObject(memDC, shardBrush);
+                            int perpA = sAngle + 8;
+                            POINT dPts[4] = {
+                                { sx + (FastCos(sAngle) * 8) / 128, sy + (FastSin(sAngle) * 8) / 128 },
+                                { sx + (FastCos(perpA) * 5) / 128, sy + (FastSin(perpA) * 5) / 128 },
+                                { sx - (FastCos(sAngle) * 8) / 128, sy - (FastSin(sAngle) * 8) / 128 },
+                                { sx - (FastCos(perpA) * 5) / 128, sy - (FastSin(perpA) * 5) / 128 }
+                            };
+                            Polygon(memDC, dPts, 4);
+                        }
+                        DeleteObject(shardPen);
+                        DeleteObject(shardBrush);
+                        DeleteObject(linkPen);
+
+                        // Polyhedral Hex Core
+                        HPEN corePen = CreatePen(PS_SOLID, 2, RGB(208, 0, 255));
+                        HBRUSH coreBrush = CreateSolidBrush(RGB(40, 0, 55));
+                        SelectObject(memDC, corePen);
+                        SelectObject(memDC, coreBrush);
+                        POINT hexPts[6];
+                        for (int i = 0; i < 6; i++) {
+                            int ang = i * 5;
+                            int r = 24 + pulse;
+                            hexPts[i].x = cx + glitch + (FastCos(ang) * r) / 128;
+                            hexPts[i].y = cy + (FastSin(ang) * r) / 128;
+                        }
+                        Polygon(memDC, hexPts, 6);
+                        DeleteObject(corePen);
+                        DeleteObject(coreBrush);
+
+                        // Visor Slit & Purple Eye
+                        HBRUSH eyeBg = CreateSolidBrush(RGB(10, 0, 16));
+                        RECT visor = { cx + glitch - 16, cy - 3, cx + glitch + 16, cy + 3 };
+                        FillRect(memDC, &visor, eyeBg);
+                        DeleteObject(eyeBg);
+
+                        int eyeX = cx + glitch + (FastSin(g_animTick * 3) * 11) / 128;
+                        HBRUSH eyeBrush = CreateSolidBrush(RGB(255, 0, 220));
+                        SelectObject(memDC, eyeBrush);
+                        Ellipse(memDC, eyeX - 2, cy - 3, eyeX + 3, cy + 3);
+                        DeleteObject(eyeBrush);
 
                     } else {
                         // ACTIVE ICE DAEMON: Orbiting Razor Shards & Demonic Core
@@ -1210,15 +1393,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     DeleteObject(chipPen);
                     DeleteObject(chipBrush);
 
-                    // Traveling Specular Sheen Stripe
-                    int sheenOff = (g_animTick * 2) % (cartH + 15);
-                    if (sheenOff < cartH) {
-                        HPEN sheenPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
-                        SelectObject(memDC, sheenPen);
-                        MoveToEx(memDC, cartX + 2, cartY + sheenOff, NULL);
-                        LineTo(memDC, cartX + cartW - 2, cartY + sheenOff);
-                        DeleteObject(sheenPen);
-                    }
+                    // Static Beveled Top-Edge Circuit Highlight
+                    HPEN edgePen = CreatePen(PS_SOLID, 1, RGB(0, 200, 220));
+                    SelectObject(memDC, edgePen);
+                    MoveToEx(memDC, cartX + 2, cartY + 2, NULL);
+                    LineTo(memDC, cartX + cartW - 2, cartY + 2);
+                    DeleteObject(edgePen);
 
                     SetTextColor(memDC, RGB(0, 255, 255));
                     TextOutA(memDC, cx - 18, cartY + cartH - 16, "SEC-DAT", 7);
@@ -1233,11 +1413,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     Arc(memDC, cx - 42, cy + 34 + bobY / 2, cx + 42, cy + 46 + bobY / 2, 0, 0, 0, 0);
                     DeleteObject(pedPen);
 
-                    // 3 Orbiting Golden Crypto-Credits
+                    // Static Showcase Gold Crypto-Credits on Pedestal Base
+                    int tokenOffsets[3] = { -22, 0, 22 };
                     for (int c = 0; c < 3; c++) {
-                        int cAngle = (g_animTick * 2) + c * 10;
-                        int ox = cx + (FastCos(cAngle) * 46) / 128;
-                        int oy = cy + bobY + (FastSin(cAngle) * 14) / 128;
+                        int ox = cx + tokenOffsets[c];
+                        int oy = cy + bobY + 28;
                         HBRUSH goldB = CreateSolidBrush(RGB(255, 215, 0));
                         SelectObject(memDC, goldB);
                         Ellipse(memDC, ox - 3, oy - 3, ox + 4, oy + 4);
@@ -1301,15 +1481,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     HPEN pedPen = CreatePen(PS_SOLID, 1, RGB(0, 100, 40));
                     SelectObject(memDC, pedPen);
                     Arc(memDC, cx - 44, cy + 34 + bobY / 2, cx + 44, cy + 48 + bobY / 2, 0, 0, 0, 0);
-
-                    // Rotating Radar Beacon Blip
-                    int pedAng = g_animTick;
-                    int bx = cx + (FastCos(pedAng) * 44) / 128;
-                    int by = cy + 41 + (FastSin(pedAng) * 7) / 128;
-                    HBRUSH blipBrush = CreateSolidBrush(RGB(0, 255, 170));
-                    SelectObject(memDC, blipBrush);
-                    Ellipse(memDC, bx - 2, by - 2, bx + 3, by + 3);
-                    DeleteObject(blipBrush);
                     DeleteObject(pedPen);
 
                     // Cyberdeck Base (Trapezoid keyboard chassis)
@@ -1360,12 +1531,25 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     DeleteObject(scrPen);
                     DeleteObject(scrBrush);
 
+                    // Mini Spectrum Analyzer Bars on Screen
+                    for (int b = 0; b < 5; b++) {
+                        int sVal = FastSin(g_animTick * 2 + b * 25);
+                        if (sVal < 0) sVal = -sVal;
+                        int barH = 2 + (sVal * 8) / 128;
+                        COLORREF bClr = (b < 3) ? RGB(0, 200, 100) : RGB(200, 180, 0);
+                        HBRUSH barB = CreateSolidBrush(bClr);
+                        int bx = scrX + 6 + b * 10;
+                        RECT bRect = { bx, scrY + scrH - 3 - barH, bx + 6, scrY + scrH - 3 };
+                        FillRect(memDC, &bRect, barB);
+                        DeleteObject(barB);
+                    }
+
                     // Oscilloscope Waveform on Screen
                     HPEN wavePen = CreatePen(PS_SOLID, 1, RGB(0, 255, 140));
                     SelectObject(memDC, wavePen);
                     for (int sx = 2; sx < scrW - 4; sx += 4) {
-                        int wy1 = (scrY + scrH / 2) + (FastSin((sx + g_animTick * 3)) * 6) / 128;
-                        int wy2 = (scrY + scrH / 2) + (FastSin((sx + 4 + g_animTick * 3)) * 6) / 128;
+                        int wy1 = (scrY + scrH / 2 - 3) + (FastSin((sx + g_animTick * 3)) * 5) / 128;
+                        int wy2 = (scrY + scrH / 2 - 3) + (FastSin((sx + 4 + g_animTick * 3)) * 5) / 128;
                         MoveToEx(memDC, scrX + sx, wy1, NULL);
                         LineTo(memDC, scrX + sx + 4, wy2);
                     }

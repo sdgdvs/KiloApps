@@ -139,6 +139,14 @@
         setTimeout(() => playTone(Math.random()*1000 + 500, 'square', 0.1, 0.05), i*100);
       }
     }
+    function playPatchSound() {
+      playTone(520, 'sine', 0.12, 0.12);
+      setTimeout(() => playTone(780, 'sine', 0.18, 0.12), 100);
+    }
+    function playProbeSound() {
+      playTone(900, 'sawtooth', 0.08, 0.08);
+      setTimeout(() => playTone(1200, 'sine', 0.15, 0.1), 80);
+    }
 
     let hacking_node = null;
     let hacking_target = "";
@@ -151,7 +159,8 @@
       '02': { name: 'sys_logs.dat', size: 12, value: 100 },
       '03': { name: 'customer_db.sql', size: 45, value: 250 },
       '04': { name: 'r_and_d_schematics.zip', size: 105, value: 600 },
-      '05': { name: 'zero_day_exploit.exe', size: 15, value: 1500 }
+      '05': { name: 'zero_day_exploit.exe', size: 15, value: 1500 },
+      '06': { name: 'ai_core_firmware.bin', size: 180, value: 2800 }
     };
     
     let player_max_mem = 100;
@@ -159,8 +168,12 @@
     let player_max_cpu = 5;
     let player_max_cloak = 3;
     let player_max_slow = 3;
+    let player_max_patch = 2;
+    let player_max_probe = 2;
     let tool_cloak = player_max_cloak;
     let tool_slow = player_max_slow;
+    let tool_patch = player_max_patch;
+    let tool_probe = player_max_probe;
     let in_shop = false;
     let ice_interval = null;
     let ice_name = "";
@@ -173,9 +186,9 @@
 
     function generateMissions() {
       missions = [];
-      const fileNames = ["paydata.zip", "prototype.exe", "blackmail.txt", "employee_db.sql", "admin_creds.dat", "source_code.c", "financials.xls", "auth_keys.rsa"];
+      const fileNames = ["paydata.zip", "prototype.exe", "blackmail.txt", "employee_db.sql", "admin_creds.dat", "source_code.c", "financials.xls", "auth_keys.rsa", "ai_core_firmware.bin", "shadow_telemetry.log", "anomalous_manifest.dat"];
       for (let i = 0; i < 3; i++) {
-        let node = Math.floor(Math.random() * 4) + 2; // 2 to 5
+        let node = Math.floor(Math.random() * 5) + 2; // 2 to 6
         let file = fileNames[Math.floor(Math.random() * fileNames.length)];
         let reward = 0;
         let diff = "";
@@ -183,6 +196,7 @@
         else if (node === 3) { reward = 300 + Math.floor(Math.random()*200); diff = "Medium"; }
         else if (node === 4) { reward = 600 + Math.floor(Math.random()*300); diff = "Hard"; }
         else if (node === 5) { reward = 1200 + Math.floor(Math.random()*800); diff = "Extreme"; }
+        else if (node === 6) { reward = 2500 + Math.floor(Math.random()*1000); diff = "Nightmare"; }
         
         missions.push({ id: i+1, node: '0'+node, file: file, reward: reward, diff: diff });
       }
@@ -303,6 +317,12 @@
           gridColor = 'rgba(0, 229, 255, 0.25)';
           horizonGlow = 'rgba(0, 229, 255, 0.22)';
           titleText = '[ICE://STUNNED]';
+        } else if (hacking_node === '06') {
+          hudColor = '#d000ff';
+          bgTheme = '#14001a';
+          gridColor = 'rgba(208, 0, 255, 0.25)';
+          horizonGlow = 'rgba(208, 0, 255, 0.22)';
+          titleText = '[ICE://PHANTOM]';
         } else {
           hudColor = '#ff3333';
           bgTheme = '#180406';
@@ -404,7 +424,7 @@
         ctx.globalAlpha = 1.0;
       }
 
-      // Lateral Motherboard Circuit Bus Conduits & Flowing Data Packets
+      // Lateral Motherboard Circuit Bus Conduits (Static PCB Vias)
       ctx.strokeStyle = gridColor;
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -414,11 +434,13 @@
       ctx.moveTo(170, 20); ctx.lineTo(170, 145); ctx.lineTo(156, 152);
       ctx.stroke();
 
-      const pkt1Y = 20 + ((animTick * 2) % 125);
-      const pkt2Y = 145 - ((animTick * 1.6) % 125);
+      // Static PCB via solder pads along bus conduits
       ctx.fillStyle = hudColor;
-      ctx.fillRect(9, pkt1Y, 3, 4);
-      ctx.fillRect(169, pkt2Y, 3, 4);
+      const viaY = [45, 80, 115];
+      for (let v = 0; v < viaY.length; v++) {
+        ctx.fillRect(9, viaY[v], 3, 3);
+        ctx.fillRect(169, viaY[v], 3, 3);
+      }
 
       // 1. HUD Reticle & Corner Brackets
       ctx.lineWidth = 2;
@@ -499,6 +521,76 @@
           ctx.font = 'bold 9px monospace';
           ctx.textAlign = 'center';
           ctx.fillText('BLINDED', cx, cy + 50);
+
+        } else if (hacking_node === '06') {
+          // PHANTOM ICE: Violet Stealth Shroud Blades & Polyhedral Phase Core
+          const shardCount = 4;
+          for (let s = 0; s < shardCount; s++) {
+            const sAngle = (animTick * 0.03) + s * ((Math.PI * 2) / shardCount);
+            const sDist = 42 * pulse;
+            const sx = cx + glitchX + Math.cos(sAngle) * sDist;
+            const sy = cy + Math.sin(sAngle) * sDist;
+
+            // Violet Phase Link
+            ctx.strokeStyle = 'rgba(208, 0, 255, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(cx + glitchX, cy);
+            ctx.lineTo(sx, sy);
+            ctx.stroke();
+
+            // Diamond Stealth Shard
+            ctx.save();
+            ctx.translate(sx, sy);
+            ctx.rotate(sAngle + Math.PI / 4);
+            ctx.fillStyle = '#b000ff';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(0, -9);
+            ctx.lineTo(6, 0);
+            ctx.lineTo(0, 9);
+            ctx.lineTo(-6, 0);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          // Central Phantom Polyhedral Core
+          ctx.save();
+          ctx.translate(cx + glitchX, cy);
+          ctx.scale(pulse, pulse);
+
+          ctx.strokeStyle = '#d000ff';
+          ctx.fillStyle = 'rgba(38, 0, 52, 0.88)';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(0, -30);
+          ctx.lineTo(26, -10);
+          ctx.lineTo(26, 14);
+          ctx.lineTo(0, 30);
+          ctx.lineTo(-26, 14);
+          ctx.lineTo(-26, -10);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // Violet Aperture Visor
+          ctx.fillStyle = '#0a0012';
+          ctx.fillRect(-18, -4, 36, 8);
+          ctx.strokeStyle = '#e066ff';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(-18, -4, 36, 8);
+
+          // Sweeping Purple Scanning Eye
+          const eyeX = Math.sin(animTick * 0.08) * 12;
+          ctx.fillStyle = '#ff00ee';
+          ctx.beginPath();
+          ctx.arc(eyeX, 0, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
 
         } else {
           // ACTIVE ICE DAEMON: Orbiting Razor Defense Shards & Pulsing Core
@@ -645,19 +737,9 @@
         ctx.strokeStyle = '#00ffcc';
         ctx.strokeRect(cx - 10, cy + bobY - 8, 20, 16);
 
-        // Traveling Specular Sheen Stripe
-        const sheenOff = (animTick * 2) % (cartH + 30);
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(cartX, cartY, cartW, cartH);
-        ctx.clip();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(cartX - 10, cartY + sheenOff - 10);
-        ctx.lineTo(cartX + cartW + 10, cartY + sheenOff + 10);
-        ctx.stroke();
-        ctx.restore();
+        // Static Beveled Top-Edge Circuit Highlight
+        ctx.fillStyle = 'rgba(0, 255, 255, 0.45)';
+        ctx.fillRect(cartX + 2, cartY + 2, cartW - 4, 2);
 
         // Label
         ctx.fillStyle = '#00ffff';
@@ -691,24 +773,22 @@
         ctx.stroke();
         ctx.restore();
 
-        // Orbiting Golden Crypto-Credits (3 tokens)
+        // Static Showcase Gold Crypto-Credits on Pedestal Base
+        const tokenOffsets = [-24, 0, 24];
         for (let c = 0; c < 3; c++) {
-          const cAng = (animTick * 0.04) + c * ((Math.PI * 2) / 3);
-          const cDistX = 52;
-          const cDistY = 16;
-          const ox = cx + Math.cos(cAng) * cDistX;
-          const oy = cy + bobY + Math.sin(cAng) * cDistY;
+          const ox = cx + tokenOffsets[c];
+          const oy = cy + bobY + 32;
 
           ctx.fillStyle = '#ffd700';
           ctx.strokeStyle = '#ffffff';
           ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.arc(ox, oy, 4, 0, Math.PI * 2);
+          ctx.arc(ox, oy, 3.5, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
           ctx.fillStyle = '#996500';
           ctx.beginPath();
-          ctx.arc(ox, oy, 1.5, 0, Math.PI * 2);
+          ctx.arc(ox, oy, 1.2, 0, Math.PI * 2);
           ctx.fill();
         }
 
@@ -783,15 +863,6 @@
         ctx.beginPath();
         ctx.ellipse(0, 0, 52, 14, 0, 0, Math.PI * 2);
         ctx.stroke();
-
-        // Rotating radar beacon blip on pedestal
-        const pedAng = animTick * 0.05;
-        const bx = Math.cos(pedAng) * 52;
-        const by = Math.sin(pedAng) * 14;
-        ctx.fillStyle = '#00ffaa';
-        ctx.beginPath();
-        ctx.arc(bx, by, 3, 0, Math.PI * 2);
-        ctx.fill();
         ctx.restore();
 
         // Cyberdeck Keyboard Base (Wedge / Trapezoid)
@@ -803,7 +874,7 @@
         ctx.moveTo(cx - 40, baseY);
         ctx.lineTo(cx + 40, baseY);
         ctx.lineTo(cx + 50, baseY + 26);
-        ctx.lineTo(cx - 50, baseY + 26);
+        ctx.lineTo(-50 + cx, baseY + 26);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
@@ -838,7 +909,7 @@
         ctx.lineWidth = 2;
         ctx.strokeRect(scrX, scrY, scrW, scrH);
 
-        // Animated Oscilloscope / Neural Waveform on Screen
+        // Animated Oscilloscope & Spectrum Analyzer on Screen
         ctx.save();
         ctx.beginPath();
         ctx.rect(scrX + 2, scrY + 2, scrW - 4, scrH - 4);
@@ -852,12 +923,19 @@
         ctx.moveTo(cx, scrY); ctx.lineTo(cx, scrY + scrH);
         ctx.stroke();
 
+        // Mini Audio / CPU Signal Spectrum Bars
+        for (let b = 0; b < 6; b++) {
+          const barH = 2 + Math.abs(Math.sin((animTick * 0.12) + b * 0.9)) * 7;
+          ctx.fillStyle = b < 4 ? 'rgba(0, 255, 120, 0.55)' : 'rgba(255, 200, 0, 0.55)';
+          ctx.fillRect(scrX + 6 + b * 9, scrY + scrH - 3 - barH, 5, barH);
+        }
+
         // Green Oscilloscope Sine Wave
         ctx.strokeStyle = '#00ff88';
         ctx.lineWidth = 1.8;
         ctx.beginPath();
         for (let sx = 0; sx < scrW - 4; sx += 2) {
-          const waveY = (scrY + scrH / 2) + Math.sin((sx + animTick * 4) * 0.2) * 8;
+          const waveY = (scrY + scrH / 2 - 3) + Math.sin((sx + animTick * 4) * 0.2) * 6;
           if (sx === 0) ctx.moveTo(scrX + 2 + sx, waveY);
           else ctx.lineTo(scrX + 2 + sx, waveY);
         }
@@ -1025,11 +1103,13 @@
           printLine("--- UPGRADE SHOP ---");
           printLine(`Credits: ${player_credits} cr`);
           printLine("Available upgrades:");
-          printLine("  buy mem   - +50 Max Memory (Cost: 500 cr)");
-          printLine("  buy cpu   - +1 Hacking Attempt (Cost: 1000 cr)");
-          printLine("  buy cloak - +1 Cloak Charge (Cost: 200 cr)");
-          printLine("  buy slow  - +1 Slow Charge (Cost: 300 cr)");
-          printLine("  buy proxy - -20% Heat (Cost: 150 cr)");
+          printLine("  buy mem   - +50 Max Memory (Cost: 350 cr)");
+          printLine("  buy cpu   - +1 Hacking Attempt (Cost: 600 cr)");
+          printLine("  buy cloak - +1 Cloak Charge (Cost: 150 cr)");
+          printLine("  buy slow  - +1 Slow Charge (Cost: 200 cr)");
+          printLine("  buy patch - +1 Nanite MEM Patch (Cost: 100 cr)");
+          printLine("  buy probe - +1 Heuristic Code Probe (Cost: 250 cr)");
+          printLine("  buy proxy - -25% Heat (Cost: 120 cr)");
           updatePrompt();
           return;
         }
@@ -1040,8 +1120,8 @@
           } else {
             const item = args[1].toLowerCase();
             if (item === 'mem') {
-              if (player_credits >= 500) {
-                player_credits -= 500;
+              if (player_credits >= 350) {
+                player_credits -= 350;
                 player_max_mem += 50;
                 player_mem += 50;
                 printLine(`Purchase successful. Max memory increased to ${player_max_mem}.`);
@@ -1049,16 +1129,16 @@
                 printLine("Insufficient credits.");
               }
             } else if (item === 'cpu') {
-              if (player_credits >= 1000) {
-                player_credits -= 1000;
+              if (player_credits >= 600) {
+                player_credits -= 600;
                 player_max_cpu += 1;
                 printLine(`Purchase successful. Hacking attempts increased to ${player_max_cpu}.`);
               } else {
                 printLine("Insufficient credits.");
               }
             } else if (item === 'cloak') {
-              if (player_credits >= 200) {
-                player_credits -= 200;
+              if (player_credits >= 150) {
+                player_credits -= 150;
                 player_max_cloak += 1;
                 tool_cloak += 1;
                 printLine(`Purchase successful. Max Cloak charges: ${player_max_cloak}.`);
@@ -1066,18 +1146,36 @@
                 printLine("Insufficient credits.");
               }
             } else if (item === 'slow') {
-              if (player_credits >= 300) {
-                player_credits -= 300;
+              if (player_credits >= 200) {
+                player_credits -= 200;
                 player_max_slow += 1;
                 tool_slow += 1;
                 printLine(`Purchase successful. Max Slow charges: ${player_max_slow}.`);
               } else {
                 printLine("Insufficient credits.");
               }
+            } else if (item === 'patch') {
+              if (player_credits >= 100) {
+                player_credits -= 100;
+                player_max_patch += 1;
+                tool_patch += 1;
+                printLine(`Purchase successful. Max Patch charges: ${player_max_patch}.`);
+              } else {
+                printLine("Insufficient credits.");
+              }
+            } else if (item === 'probe') {
+              if (player_credits >= 250) {
+                player_credits -= 250;
+                player_max_probe += 1;
+                tool_probe += 1;
+                printLine(`Purchase successful. Max Probe charges: ${player_max_probe}.`);
+              } else {
+                printLine("Insufficient credits.");
+              }
             } else if (item === 'proxy') {
-              if (player_credits >= 150) {
-                player_credits -= 150;
-                player_heat -= 20;
+              if (player_credits >= 120) {
+                player_credits -= 120;
+                player_heat -= 25;
                 if (player_heat < 0) player_heat = 0;
                 printLine(`Purchase successful. Heat reduced to ${player_heat}%.`);
               } else {
@@ -1111,12 +1209,12 @@
           return;
         }
         if (guess === 'help' || guess === '?') {
-          printLine("Hacking commands: <4-digit PIN> to guess, cloak (blind ICE), slow (halve trace), status, clear, abort");
+          printLine("Hacking commands: <4-digit PIN> to guess, cloak (blind ICE), slow (halve trace), patch (restore MEM), probe (reveal digit), status, clear, abort");
           updatePrompt();
           return;
         }
         if (guess === 'status') {
-          printLine(`HACK STATUS: MEM: ${player_mem}/${player_max_mem} | Cloak: ${tool_cloak}/${player_max_cloak} | Slow: ${tool_slow}/${player_max_slow} | Attempts: ${hacking_attempts} | Heat: ${player_heat}%`);
+          printLine(`HACK STATUS: MEM: ${player_mem}/${player_max_mem} | Cloak: ${tool_cloak}/${player_max_cloak} | Slow: ${tool_slow}/${player_max_slow} | Patch: ${tool_patch}/${player_max_patch} | Probe: ${tool_probe}/${player_max_probe} | Attempts: ${hacking_attempts} | Heat: ${player_heat}%`);
           updatePrompt();
           return;
         }
@@ -1149,6 +1247,37 @@
             ice_interval = setInterval(iceAttack, current_interval * 2);
           } else {
             printLine(`[SLOW] Out of charges.`);
+          }
+          updatePrompt();
+          return;
+        }
+        if (guess === 'patch') {
+          if (tool_patch > 0) {
+            if (player_mem >= player_max_mem) {
+              printLine(`[PATCH] System memory already at 100% (${player_mem}/${player_max_mem}).`);
+            } else {
+              tool_patch--;
+              player_mem = Math.min(player_max_mem, player_mem + 35);
+              playPatchSound();
+              spawnBurst(90, 80, 25, 'star', '#00ff88');
+              printLine(`[PATCH] Nanite patch applied. Restored +35 MEM (${player_mem}/${player_max_mem}). Charges left: ${tool_patch}`);
+            }
+          } else {
+            printLine(`[PATCH] Out of charges.`);
+          }
+          updatePrompt();
+          return;
+        }
+        if (guess === 'probe') {
+          if (tool_probe > 0) {
+            tool_probe--;
+            playProbeSound();
+            spawnBurst(90, 80, 25, 'spark', '#ffea00');
+            const probeIdx = Math.floor(Math.random() * 4);
+            const revealedChar = hacking_target[probeIdx];
+            printLine(`[PROBE] Heuristic signal analysis revealed: Digit #${probeIdx + 1} is '${revealedChar}'. Charges left: ${tool_probe}`);
+          } else {
+            printLine(`[PROBE] Out of charges.`);
           }
           updatePrompt();
           return;
@@ -1314,17 +1443,20 @@
           printLine("  connect   - Attempt connection to network node");
           printLine("  contracts - View available hacking contracts");
           printLine("  accept    - Accept a contract (e.g. 'accept 1')");
+          printLine("  patch     - Apply nanite memory repair patch (+35 MEM)");
           printLine("  guide     - Open Runner's Guide (e.g. 'guide ice')");
           printLine("During hack:");
           printLine("  abort     - Disconnect immediately");
           printLine("  cloak     - Blind ICE for 2 cycles");
           printLine("  slow      - Halve ICE attack speed");
+          printLine("  patch     - Restore +35 MEM integrity");
+          printLine("  probe     - Reveal 1 correct digit and position");
           break;
         case 'guide':
           if (args.length < 2) {
             printLine("--- RUNNER'S GUIDE ---");
             printLine("Usage: guide <topic>");
-            printLine("Topics: commands, ice, upgrade, hacking");
+            printLine("Topics: commands, ice, upgrade, hacking, tools");
           } else {
             const topic = args[1].toLowerCase();
             if (topic === 'commands') {
@@ -1333,21 +1465,25 @@
               printLine("shop: Access the black market to upgrade your cyberdeck.");
               printLine("contracts: List available data theft jobs.");
               printLine("accept <id>: Take a contract, then connect to the node to download.");
+              printLine("patch: Repair cyberdeck MEM on the fly using nanite charges.");
             } else if (topic === 'ice') {
               printLine("--- GUIDE: ICE (Intrusion Countermeasures Electronics) ---");
               printLine("ICE defends network nodes by attacking your deck's Memory (MEM).");
-              printLine("Basic ICE: Weak damage. Found on low-sec nodes.");
-              printLine("Tracer ICE: Moderate damage.");
-              printLine("Hunter ICE: High damage. Will rapidly deplete your MEM.");
-              printLine("Black ICE: Lethal damage. Reserved for extreme-sec nodes.");
+              printLine("Basic ICE: Weak damage (5). Found on low-sec public routers.");
+              printLine("Tracer ICE: Moderate damage (10). Standard corporate security.");
+              printLine("Hunter ICE: High damage (15). Rapidly depletes deck memory.");
+              printLine("Black ICE: Lethal damage (25). Military grade countermeasure.");
+              printLine("Phantom ICE: Extreme damage (35). Top-tier classified shadow mainframe ICE.");
               printLine("If MEM reaches 0, you are forcibly disconnected.");
-            } else if (topic === 'upgrade') {
-              printLine("--- GUIDE: DECK UPGRADING ---");
+            } else if (topic === 'upgrade' || topic === 'tools') {
+              printLine("--- GUIDE: DECK UPGRADING & TOOLS ---");
               printLine("Spend credits earned from data theft in the 'shop'.");
               printLine("MEM: Increases maximum memory, letting you survive more ICE attacks.");
               printLine("CPU: Gives you more attempts to crack node passwords.");
               printLine("CLOAK: Buy charges to temporarily blind ICE during a hack.");
               printLine("SLOW: Buy charges to permanently slow down ICE attack speed for one hack.");
+              printLine("PATCH: Buy nanite charges to restore +35 MEM during or outside of hacks.");
+              printLine("PROBE: Buy heuristic analyzer charges to reveal a PIN digit during a hack.");
               printLine("PROXY: Reduces your global HEAT, which makes ICE attack slower.");
             } else if (topic === 'hacking') {
               printLine("--- GUIDE: HACKING ---");
@@ -1355,10 +1491,11 @@
               printLine("2. Enter 4 digits. The system returns EXACT (right number, right place)");
               printLine("   and PARTIAL (right number, wrong place).");
               printLine("3. Use this feedback to deduce the PIN before you run out of attempts.");
-              printLine("4. Once in, use 'ls' to find files and 'download <file>' to steal them.");
-              printLine("5. Higher HEAT speeds up ICE. Aborting or failing hacks increases HEAT.");
+              printLine("4. Use 'patch' if MEM runs low, or 'probe' to reveal an unknown digit.");
+              printLine("5. Once in, use 'ls' to find files and 'download <file>' to steal them.");
+              printLine("6. Higher HEAT speeds up ICE. Aborting or failing hacks increases HEAT.");
             } else {
-              printLine("Unknown topic. Topics: commands, ice, upgrade, hacking");
+              printLine("Unknown topic. Topics: commands, ice, upgrade, hacking, tools");
             }
           }
           break;
@@ -1385,6 +1522,8 @@
           printLine(`  MEM: ${player_mem}/${player_max_mem}`);
           printLine(`  CLOAK: ${tool_cloak}/${player_max_cloak} charges`);
           printLine(`  SLOW: ${tool_slow}/${player_max_slow} charges`);
+          printLine(`  PATCH: ${tool_patch}/${player_max_patch} charges`);
+          printLine(`  PROBE: ${tool_probe}/${player_max_probe} charges`);
           printLine(`  CREDITS: ${player_credits} cr`);
           printLine(`  HEAT: ${player_heat}%`);
           printLine(`  NET: ${connected_node ? 'CONNECTED (NODE ' + connected_node + ')' : (hacking_node ? 'INTRUSION (NODE ' + hacking_node + ')' : 'DISCONNECTED')}`);
@@ -1394,12 +1533,29 @@
             printLine("  CONTRACT: None (type 'contracts' to view)");
           }
           break;
+        case 'patch':
+          if (tool_patch > 0) {
+            if (player_mem >= player_max_mem) {
+              printLine(`[PATCH] System memory already at 100% (${player_mem}/${player_max_mem}).`);
+            } else {
+              tool_patch--;
+              player_mem = Math.min(player_max_mem, player_mem + 35);
+              playPatchSound();
+              spawnBurst(90, 80, 25, 'star', '#00ff88');
+              printLine(`[PATCH] Nanite patch applied. Restored +35 MEM (${player_mem}/${player_max_mem}). Charges left: ${tool_patch}`);
+            }
+          } else {
+            printLine(`[PATCH] Out of charges. Purchase more in the shop.`);
+          }
+          break;
         case 'reboot':
           player_mem = player_max_mem;
           tool_cloak = player_max_cloak;
           tool_slow = player_max_slow;
+          tool_patch = player_max_patch;
+          tool_probe = player_max_probe;
           if (player_heat > 0) {
-              player_heat -= 10;
+              player_heat -= 15;
               if (player_heat < 0) player_heat = 0;
           }
           active_mission = null;
@@ -1408,7 +1564,8 @@
             '02': { name: 'sys_logs.dat', size: 12, value: 100 },
             '03': { name: 'customer_db.sql', size: 45, value: 250 },
             '04': { name: 'r_and_d_schematics.zip', size: 105, value: 600 },
-            '05': { name: 'zero_day_exploit.exe', size: 15, value: 1500 }
+            '05': { name: 'zero_day_exploit.exe', size: 15, value: 1500 },
+            '06': { name: 'ai_core_firmware.bin', size: 180, value: 2800 }
           };
           printLine("System rebooting...");
           printLine("Memory and software restored to 100%. Nodes and contracts reset.");
@@ -1453,8 +1610,10 @@
           printLine("   |     +-- [03] DATA_VAULT");
           printLine("   |");
           printLine("   +-- [04] SEC_SERVER");
-          printLine("   |");
-          printLine("   +-- [05] BLACK_ICE_NODE");
+          printLine("   |     |");
+          printLine("   |     +-- [05] BLACK_ICE_NODE");
+          printLine("   |     |");
+          printLine("   |     +-- [06] SHADOW_MAINFRAME");
           printLine("");
           printLine("Use 'connect <node_id>' to access a node.");
           break;
@@ -1472,7 +1631,7 @@
               printLine("ERROR: Cyberdeck MEM depleted (0%). Run 'reboot' to restore system memory.");
               break;
             }
-            const validNodes = ['02', '03', '04', '05'];
+            const validNodes = ['02', '03', '04', '05', '06'];
             if (validNodes.includes(target)) {
               hacking_node = target;
               hacking_target = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
@@ -1481,6 +1640,7 @@
               else if (target === '03') { ice_name = "Tracer ICE"; ice_damage = 10; }
               else if (target === '04') { ice_name = "Hunter ICE"; ice_damage = 15; }
               else if (target === '05') { ice_name = "Black ICE"; ice_damage = 25; }
+              else if (target === '06') { ice_name = "Phantom ICE"; ice_damage = 35; }
               
               ice_damage += Math.floor(player_heat / 5);
 

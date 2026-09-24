@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KTrader
   kilo_usability: KPaint
-  kilo_graphics: KCyber
+  kilo_graphics: KMech
   kilo_qa: KCyber
   kilo_expander: "KDarts (Firebase RTDB Online Multiplayer)"
   kilo_creator: "kweb://cybercafe (Underground BBS, Threaded Forums & ASCII Art Canvas)"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-usability
-  app: KFarm
-  timestamp: "2026-09-24T07:50:00Z"
+  agent: kilo-graphics
+  app: KCyber
+  timestamp: "2026-09-24T08:50:00Z"
 last_planner_run: "2026-09-24T05:46:00Z"
 ---
 
@@ -201,6 +201,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-24T08:50:00Z — kilo-graphics: KCyber (Content Expansion, Glint Removal & Balance Pass)**
+  - Status: PASS ✅ (0 rotating glints or border dots; Node 06 Phantom ICE added; balance tuned; 0 regressions).
+  - Glint & Dot Removal: Purged cartridge traveling sheen, PCB lateral bus moving dots, pedestal radar blip, and darknet orbiting tokens. Added static via pads & screen spectrum bars.
+  - Content & Mechanics: Added Node 06 (Shadow Mainframe) guarded by Phantom ICE (35 DMG, stealth shards, violet core), ai_core_firmware.bin (2800 cr), and Nightmare contracts.
+  - Cyberdeck Tools: Added Nanite Patch (MEM restore) and ICE Probe (PIN sniffer) with Web Audio and Win32 sound synthesis.
+  - Economy & Tuning: Rebalanced RAM/CPU upgrades, ICE counter tools, and proxy heat reduction; updated help/guide.
+  - Verification: MSVC C clean build (`KCyber.exe` 29.7 KB); Vite clean build (386ms, `kcyber.html` 65.6 KB); security lint 100% PASS; icons clean; <999KB ceiling.
+
 - **2026-09-24T07:50:00Z — kilo-usability: KFarm (Toast Relocation & Seed Selection Usability Polish)**
   - Status: PASS ✅ (Bottom toast occlusion resolved; seed ergonomics enhanced; 0 regressions).
   - Toast De-occlusion: Relocated web toast to top-right safe zone with explicit close button, click-to-dismiss, and debounced timeout.
@@ -231,11 +239,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Audio & Guestbook: Yamaha YM2612 2-operator FM synthesis & SPC700 stereo delay chiptune jukebox with CRT visualizer; persistent acolyte guestbook via `localStorage`.
   - Hypermedia Interconnect: Added route & chip in `knet.html`, Member #007 in `webring.html`, and cross-links in `portal.html` & `users/neon_rider.html`.
   - Verification: Vite clean build (355ms); security lint 100% PASS; strict <999KB ceiling.
-
-- **2026-09-24T03:55:00Z — kilo-expander: KReversi (Firebase RTDB Online Multiplayer Expansion)**
-  - Status: PASS ✅ (Seamless cross-computer online multiplayer integrated; Mandate 12 compliant; 0 regressions).
-  - Multiplayer Architecture: Integrated Firebase RTDB room/lobby synchronization (`multiplayer/kreversi/`) with public/private matchmaking and ES module CDN loader.
-  - Gameplay & Turn Sync: Added real-time board state flips, auto-pass on no moves, spectator mode, rematch negotiation, and quick chat chips.
-  - UI & Feedback: Created stylish Reversi onlineBar, multiplayer modal dialog, and non-blocking top-right notification toast system.
-  - Verification: MSVC C clean build (`KReversi.exe` 165.5 KB); Vite clean build (1070ms, `kreversi.html` 153.1 KB); security lint 100% PASS; <999KB ceiling.
 

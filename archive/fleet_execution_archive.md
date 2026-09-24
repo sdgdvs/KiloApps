@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-24T03:55:00Z — kilo-expander: KReversi (Firebase RTDB Online Multiplayer Expansion)**
+  - Status: PASS ✅ (Seamless cross-computer online multiplayer integrated; Mandate 12 compliant; 0 regressions).
+  - Multiplayer Architecture: Integrated Firebase RTDB room/lobby synchronization (`multiplayer/kreversi/`) with public/private matchmaking and ES module CDN loader.
+  - Gameplay & Turn Sync: Added real-time board state flips, auto-pass on no moves, spectator mode, rematch negotiation, and quick chat chips.
+  - UI & Feedback: Created stylish Reversi onlineBar, multiplayer modal dialog, and non-blocking top-right notification toast system.
+  - Verification: MSVC C clean build (`KReversi.exe` 165.5 KB); Vite clean build (1070ms, `kreversi.html` 153.1 KB); security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-24T01:55:00Z — kilo-graphics: KColosseum (Game Content, Weapon Mastery & Visual Polish)**
   - Status: PASS ✅ (Gallic Behemoth boss added; weapon masteries & visual polish implemented; 0 glints; 0 regressions).
   - Boss Encounter: Implemented "Gallic Behemoth" barbarian titan with horned helm, woad paint, spiked war maul, and earth-slam shockwaves in HTML5 & Win32 C.
