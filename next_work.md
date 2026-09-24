@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-tester
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -16,7 +16,7 @@ current_targets:
   kilo_usability: "KFarm (reposition bottom toast blocking seed radio buttons)"
   kilo_graphics: KCyber
   kilo_qa: KCyber
-  kilo_expander: "KReversi (Firebase RTDB Online Multiplayer)"
+  kilo_expander: "KDarts (Firebase RTDB Online Multiplayer)"
   kilo_creator: "kweb://asm-temple (x86 Assembly Programming Shrine & Opcode Converter)"
 virtual_web_target: "kweb://asm-temple"
 virtual_web_rotation:
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-qa
-  app: KChrono
-  timestamp: "2026-09-24T02:45:00Z"
+  agent: kilo-expander
+  app: KReversi
+  timestamp: "2026-09-24T03:55:00Z"
 last_planner_run: "2026-09-23T04:40:00Z"
 ---
 
@@ -125,9 +125,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KDragon`, `KFortress`, `KMech`, `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KReversi` (Implement Seamless Firebase RTDB Multiplayer per Mandate 12)
+- **Current Target**: `KDarts` (Implement Seamless Firebase RTDB Multiplayer per Mandate 12)
 - **Upcoming Queue**:
-  `KDarts` (Multiplayer), `KTetris` (Arcade Duel Multiplayer), `KSnake` (Multiplayer), `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote` *(Completed: KConnect4, KChess, KGo)*.
+  `KTetris` (Arcade Duel Multiplayer), `KSnake` (Multiplayer), `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote` *(Completed: KConnect4, KChess, KGo, KReversi)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -196,6 +196,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-24T03:55:00Z — kilo-expander: KReversi (Firebase RTDB Online Multiplayer Expansion)**
+  - Status: PASS ✅ (Seamless cross-computer online multiplayer integrated; Mandate 12 compliant; 0 regressions).
+  - Multiplayer Architecture: Integrated Firebase RTDB room/lobby synchronization (`multiplayer/kreversi/`) with public/private matchmaking and ES module CDN loader.
+  - Gameplay & Turn Sync: Added real-time board state flips, auto-pass on no moves, spectator mode, rematch negotiation, and quick chat chips.
+  - UI & Feedback: Created stylish Reversi onlineBar, multiplayer modal dialog, and non-blocking top-right notification toast system.
+  - Verification: MSVC C clean build (`KReversi.exe` 165.5 KB); Vite clean build (1070ms, `kreversi.html` 153.1 KB); security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-24T02:45:00Z — kilo-qa: KChrono (Pass 5: Tutorial & State Integrity)**
   - Status: PASS ✅ (Quicksave echo state persistence verified; victory/toast/modal flow fixed; 0 regressions).
   - Quicksave & Load: Extended state capture to include recorded echo sequence in web & native C with on-screen HUD toast confirmations.
@@ -224,12 +231,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - KRSS Scrub: Rewrote spoiled headlines/articles in krss.html & KRSS/main.c into subtle in-universe telemetry.
   - Fleet Scrub: Purged plain-text master passkey leaks and (ARG) labels across kbookmark, kclip, ksteno, kanomaly, kterm, kfleet, warez.
   - Verification: MSVC builds clean (KRSS.exe 17.5 KB, KClip.exe 15.5 KB, KTerm.exe 45.0 KB); Vite clean build; security lint 100% clean.
-
-- **2026-09-23T23:50:00Z — kilo-tester: KHangman (Keyboard Cutoff & UI Audit Remediation)**
-  - Status: PASS ✅ (2 issues identified, 2 fixed; 0 regressions).
-  - Layout & Ergonomics: Restructured upper panel into side-by-side canvas and info column, eliminating keyboard cutoff across all window sizes with responsive scrolling.
-  - Interactive Audit: Wired [F5] quicksave, [F9] quickload, [Space]/[Enter] game restart, dual radar hotkeys [H]/[R], and modal focus trapping.
-  - Data Persistence: Implemented JSON save export and file import with quota safety.
-  - Onboarding & Feedback: Added first-run onboarding tutorial (`khangman_tutorial_seen`) with Esc/Enter/Space dismissals and visual shield strike notifications.
-  - Verification: MSVC C clean build (`KHangman.exe` 36.4 KB); Vite clean build (386ms, `khangman.html` 94.7 KB); security lint 100% clean; <999KB ceiling.
 
