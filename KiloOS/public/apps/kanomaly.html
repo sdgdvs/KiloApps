@@ -540,7 +540,7 @@
     <button class="kbtn splash-btn" id="btnSplashResume">RESUME SESSION</button>
     <button class="kbtn splash-btn" id="btnSplashManual">OPERATOR MANUAL [F1]</button>
   </div>
-  <div style="font-size: 11px; color: var(--phosphor-dim);">Autonomous Subterranean Telemetry Intercept // 1999 KiloNet ARG Standard</div>
+  <div style="font-size: 11px; color: var(--phosphor-dim);">Autonomous Subterranean Telemetry Intercept // KiloNet Telemetry Standard 1.99</div>
 </div>
 
 <!-- Main App UI -->
@@ -818,7 +818,7 @@
           <button class="kbtn" id="btnTuneToSelectedAnomaly">TUNE RECEIVER TO TARGET</button>
         </div>
         <div style="padding: 8px 12px; overflow-y: auto; font-size: 12px; line-height: 1.5;" id="dossierContent">
-          Select an anomaly from the table to inspect its signal fingerprint, geological context, and decoded ARG lore notes.
+          Select an anomaly from the table to inspect its signal fingerprint, geological context, and decoded telemetry notes.
         </div>
       </div>
     </div>
@@ -859,9 +859,9 @@
         - <strong>Bandwidth Filter:</strong> Narrow (50Hz), Medium (250Hz), Wide (1kHz), Ultra (4kHz). Narrower filters maximize SNR on weak harmonic carriers.<br>
         - <strong>Demodulator Modes:</strong> RAW/AM, FSK telemetry, CW Morse code, SSTV / Spectral Raster, and Hex Stream.
       </p>
-      <h3 style="color: var(--cyan); margin-bottom: 6px;">3. ARG Lore & Ludonarrative Consonance</h3>
+      <h3 style="color: var(--cyan); margin-bottom: 6px;">3. Subterranean Telemetry & Classified Signals</h3>
       <p style="margin-bottom: 10px;">
-        12 subterranean anomalies exist within the lithospheric static. Decoded packets reveal darknet node relays (e.g. <code>10.19.99.4</code> from Carlsbad Bunker 0x7F) and autonomous fleet clock cycles (<code>FLEET_CYCLE_1999</code>). When cataloging anomalies, use the Triangulation Map to pinpoint the epicenter!
+        12 subterranean anomalies exist within the lithospheric static. Decoded packets reveal darknet node relays (e.g. <code>10.19.99.4</code> from Carlsbad Bunker 0x7F) and anomalous clock cycles (<code>FLEET_CYCLE_1999</code>). When cataloging anomalies, use the Triangulation Map to pinpoint the epicenter!
       </p>
       <h3 style="color: var(--cyan); margin-bottom: 6px;">4. Keyboard Shortcuts</h3>
       <p>
@@ -942,7 +942,7 @@
     { id: "ANOM-09", name: "Yamantau Timecode Clock", freq: 28.50, mode: "CW", minDepth: 3500, sig: "TIMECODE:1999.12.31.23:59:59", lore: "Synchronized sub-crust countdown carrier broadcast from subterranean granitic vault." },
     { id: "ANOM-10", name: "Mantle Waveguide Leak", freq: 24.00, mode: "TEL", minDepth: 5000, sig: "WAVEGUIDE_CARRIER_LINK_OK", lore: "Shielding leakage from deep trans-continental coaxial subterranean data waveguides." },
     { id: "ANOM-11", name: "Lithosphere Ghost Morse", freq: 77.70, mode: "CW", minDepth: 2000, sig: "ECHO IS AWAKE IN THE ROCK", lore: "Repeating Morse code transmission pulsating through basalt fault lines." },
-    { id: "ANOM-12", name: "Deep Core Singularity", freq: 99.90, mode: "SSTV", minDepth: 8000, sig: "COORDINATES_0x7F_1999_MASTER", lore: "Master anomaly: cross-correlation reveals the convergence of all subterranean ARG signals." }
+    { id: "ANOM-12", name: "Deep Core Singularity", freq: 99.90, mode: "SSTV", minDepth: 8000, sig: "COORDINATES_0x7F_1999_MASTER", lore: "Master anomaly: cross-correlation reveals the convergence of all subterranean telemetry signals." }
   ];
 
   // Application State
@@ -1639,7 +1639,7 @@
         "<strong>Carrier Frequency:</strong> " + a.freq.toFixed(2) + " kHz | <strong>Demodulation Mode:</strong> " + a.mode + "<br>" +
         "<strong>Minimum Borehole Depth:</strong> " + a.minDepth + " meters<br>" +
         "<strong>Decoded Signature Payload:</strong> <code style='color: var(--cyan);'>" + a.sig + "</code><br>" +
-        "<strong>Scientific & ARG Lore Notes:</strong> " + a.lore;
+        "<strong>Scientific & Telemetry Notes:</strong> " + a.lore;
     } else {
       content.innerHTML = "<strong>Status:</strong> <span style='color: var(--phosphor-dim);'>Undiscovered in Current Session</span><br>" +
         "<strong>Frequency:</strong> " + a.freq.toFixed(2) + " kHz (Target band)<br>" +

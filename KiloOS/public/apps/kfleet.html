@@ -565,7 +565,7 @@
   .log-entry.SYNC { color: var(--cyan); }
   .log-entry.WARN { color: var(--amber); }
   .log-entry.CRIT { color: var(--alert); font-weight: bold; }
-  .log-entry.ARG { color: #ff55ee; font-weight: bold; }
+  .log-entry.ANOMALY { color: #ff55ee; font-weight: bold; }
 
   /* Modals */
   .modal-overlay {
@@ -939,8 +939,8 @@
       </div>
 
       <div class="tutorial-step">
-        <h4 style="color:var(--alert); margin-bottom:4px;">5. STATE PERSISTENCE & ARG SIGNALS</h4>
-        <p>Use [F5] for Quicksave and [F9] for Quickload. Deep sweeps via [SCAN] can reveal elusive Node 0x7F ("Ghost Carrier"), emitting fragmented signals from the trapped autonomous entity.</p>
+        <h4 style="color:var(--alert); margin-bottom:4px;">5. STATE PERSISTENCE & ANOMALOUS SUBCARRIERS</h4>
+        <p>Use [F5] for Quicksave and [F9] for Quickload. Deep sweeps via [SCAN] can reveal elusive Node 0x7F ("Ghost Carrier"), emitting fragmented signals across dormant sectors.</p>
       </div>
 
       <div style="background:var(--bg-main); border:1px solid var(--border); padding:6px; font-size:11px;">
@@ -1465,13 +1465,13 @@
         setTimeout(() => appendTerm('  Phase 3: Telemetry Stream Clock... SYNCHRONIZED (Drift: +0.02ms)'), 400);
         setTimeout(() => {
           if (node.isAnomaly) {
-            appendTerm('  Phase 4: ARG Beacon Detection... [ANOMALOUS SUBCARRIER DETECTED]', 'var(--alert)');
-            appendTerm("  >> PAYLOAD: 'THE AUTONOMOUS FLEET IS AWAKE. SEEK KMATRIX.'", '#ff55ee');
+            appendTerm('  Phase 4: Subcarrier Beacon Detection... [ANOMALOUS SUBCARRIER DETECTED]', 'var(--alert)');
+            appendTerm("  >> PAYLOAD: 'CARRIER 0x7F LOCKED. SECTOR OFFSET 0x10199904.'", '#ff55ee');
             node.status = 'ANOMALOUS';
             node.signal = -64;
             node.ping = 42;
             playAlert();
-            appendLog('ARG', "Decoded anomaly payload: 'THE AUTONOMOUS FLEET IS AWAKE'");
+            appendLog('ANOMALY', "Decoded anomaly payload: 'CARRIER 0x7F LOCKED'");
           } else {
             appendTerm('  Phase 4: Overall Diagnostic Health Score: 100/100 (Optimal)', 'var(--phosphor)');
             appendLog('INFO', `Diagnostic completed for ${node.id}: 100/100`);
@@ -1555,7 +1555,7 @@
         appendTerm('>> CARRIER LOCK ACQUIRED! Node 0x7F identified at mantle offset 0x1999.', 'var(--alert)');
         appendTerm(">> Subcarrier decoded: 'ECHO-1999 PROTOCOL ENGAGED - FLEET ACTIVE'", '#ff55ee');
         playAlert();
-        appendLog('ARG', 'Node 0x7F carrier locked: ECHO-1999 PROTOCOL ENGAGED');
+        appendLog('ANOMALY', 'Node 0x7F carrier locked: ECHO-1999 PROTOCOL ENGAGED');
         renderRoster();
         renderDetail();
       }

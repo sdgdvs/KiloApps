@@ -933,7 +933,7 @@
       <button class="pill" data-cat="json">JSON</button>
       <button class="pill" data-cat="color">Colors</button>
       <button class="pill" data-cat="text">Text</button>
-      <button class="pill" data-cat="secret">ARG/Lore</button>
+      <button class="pill" data-cat="secret">Encrypted</button>
     </div>
   </section>
 
@@ -1054,7 +1054,7 @@
             The High-Speed Clipboard History, Transformation & Snippet Engine.
           </p>
           <div style="display: inline-block; margin-top: 8px; padding: 4px 10px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-mono); font-size: 11px; color: var(--gold);">
-            Milestone #99: Penultimate App before KMatrix ARG Climax
+            KiloOS Systems Utility Suite: Node #99
           </div>
         </div>
         <p>
@@ -1364,7 +1364,7 @@
         },
         {
           id: 'clip_5',
-          content: '// [PROJECT ECHO TRANSMISSION - NODE 0x99]\n// CLASSIFIED BUFFER OFFSET 0x10199904\n// "The 100th node approaches. KMatrix awakens."\n// Relic Passkey: ECHO-1999-ARCHITECT',
+          content: '// [PROJECT ECHO TRANSMISSION - NODE 0x99]\n// CLASSIFIED BUFFER OFFSET 0x10199904\n// "Carrier locked at 432 Hz. Node synchronization pending."\n// Residue: 0x101999',
           category: 'secret',
           pinned: true,
           timestamp: '1999-09-22 04:00:00'
@@ -1416,10 +1416,10 @@
         },
         {
           id: 'macro_echo',
-          name: 'Echo ARG Relic',
+          name: 'Subcarrier Telemetry',
           desc: 'Project Echo Node 0x99 Transmission',
           generator: function() {
-            return '// [PROJECT ECHO - RELIC #99]\n// ACCESS-CODE: ECHO-1999-ARCHITECT\n// READY FOR KMATRIX #100\n';
+            return '// [PROJECT ECHO - RELIC #99]\n// OFFSET: 0x10199904 // CARRIER: 432Hz\n// PENDING SYSTEM REBOOT\n';
           }
         }
       ];
@@ -1462,7 +1462,7 @@
       function classifyContent(text) {
         if (!text) return 'text';
         const trimmed = text.trim();
-        if (trimmed.includes('ECHO-1999-ARCHITECT') || trimmed.includes('PROJECT ECHO')) {
+        if (trimmed.includes('PROJECT ECHO') || trimmed.includes('0x10199904')) {
           return 'secret';
         }
         if (/^#(?:[0-9a-fA-F]{3}){1,2}$/.test(trimmed)) {

@@ -144,3 +144,18 @@ You are operating in a token-constrained multi-agent environment. Every line you
   - *Sites & Services:* *Slashdot* &rarr; *SlashNet*; *Wired* &rarr; *Cabled*; *The Onion* &rarr; *The Scallion*; *Napster* &rarr; *Trapster*.
 - **Automated Enforcement:** `scripts/security_lint.py` scans all C, HTML, JS, and JSX files for real commercial titles and scene group marks. Any direct trademark usage fails CI/CD security gates.
 
+## ARG Guidelines & Mystery Preservation Protocol (CRITICAL - TINAG Standard)
+
+- **Subtlety & In-Universe Atmosphere over Heavy-Handed Exposition (MANDATORY):** Clues to the ARG must be subtle, atmospheric, and diegetic (in-universe). Never treat the ARG as a puzzle to be explained with a cudgel, meta-dispatches, or developer walkthroughs.
+- **The "This Is Not A Game" (TINAG) Principle:** Within the OS, applications, help files, news feeds, bookmarks, and virtual web pages, NEVER label content with `(ARG)`, `ARG Secrets`, `ARG Lore`, `ARG Guidance`, or `ARG Clue`. The fiction must never acknowledge itself as an ARG. To the user in 1999, anomalous signals, mysterious memory corruptions, and cryptic transmissions are real system phenomena, darknet rumors, or classified intranet leaks.
+- **Strict Prohibition on Pre-Climax Meta-Spoilers:**
+  - Worker agents must NEVER explain the meta-narrative (e.g. stating that "the trapped entity is the autonomous multi-agent fleet itself", referencing the "Windows Task Scheduler", or listing worker agent names like `kilo-creator`, `kilo-qa`, etc.) inside pre-climax apps, articles, or logs.
+  - The revelation of ludonarrative consonance (that the machine is run by an autonomous multi-agent fleet) is the ultimate climax of the mystery, unlocked ONLY by beating the entire ARG at App #100 (`KMatrix`) and accessing `KDirector`.
+- **Master Passkey Secrecy:**
+  - The master director passkey (`ECHO-1999-ARCHITECT`) must NEVER appear in clear text in news feeds, bookmarks, clipboard history, steganography samples, or help dialogs.
+  - Pre-climax breadcrumbs should only be enigmatic fragments, cryptographic hashes, corrupted memory offsets, or subtle frequencies. The master passkey must be earned by solving the climax in `KMatrix`.
+- **In-Universe Tone Guide:**
+  - **Do:** Create eerie USENET threads from late 1999, corrupted memory dumps at hex offsets, faint audio subcarriers, mysterious packet logs from non-routable subnets (10.19.99.x), or cryptic hacker manifestos.
+  - **Don't:** Post news headlines that read like developer walkthroughs, e.g. *"ARG Guidance: The central node will awaken at App #100... Solving the terminal requires the master director passkey..."*
+
+

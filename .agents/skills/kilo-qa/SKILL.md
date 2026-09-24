@@ -24,6 +24,7 @@ This skill executes a self-contained Pass 5 QA and build audit on exactly ONE ap
    - **Full Game/App State Persistence**: Quicksave (F5) and quickload (F9) capturing complete state (timers, hazards, boss/rival states, upgrades, scores) in local storage and native files without data loss or corruption.
    - **First-run Tutorial Integrity**: Ensure tutorial prompts fire only on fresh sessions using `k<name>_tutorialSeen` / `.dat` flags, never interrupting restored save states.
    - **Interactive Splash & Overlays**: Verify all modal dialogs, victory/game over screens, and help guides have working buttons and keyboard shortcuts (Esc, Enter, Space).
+   - **ARG Mystery & TINAG Standard Verification**: Ensure no un-diegetic `(ARG)` tags, explicit walkthroughs ("ARG Guidance"), premature fleet meta-spoilers, or leaked master passkeys exist in user-facing UI or copy.
    - **Safety & Resource Cleanliness**: Catch storage quota errors gracefully and ensure URL object/interval leaks are cleaned up.
 
 3. **Build & Size Verification**:

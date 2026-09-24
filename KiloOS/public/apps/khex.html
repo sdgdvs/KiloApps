@@ -910,7 +910,7 @@
       <div id="byteEditBar" style="display:flex; align-items:center; gap:10px; background:var(--input-bg); padding:8px 12px; border-radius:8px; border:1px solid var(--border-color); font-size:0.8rem; font-family:monospace; flex-wrap:wrap;">
         <span id="byteEditOffset" style="color:var(--accent-cyan); font-weight:bold;">Offset: 0x00000000 (0)</span>
         <span id="byteEditCurrent" style="color:var(--text-secondary);">Current: 0x48 ('H', 72)</span>
-        <span id="byteEditClue" style="display:none; padding:2px 8px; border-radius:4px; background:rgba(139,92,246,0.25); border:1px solid #a855f7; color:#d8b4fe; font-size:0.75rem; font-weight:600; cursor:pointer;" onclick="showToast('ARG Intel Discovered', 'Corporate Leak IP: 10.19.99.4 -> Open KNet and visit kweb://10.19.99.4/classified', 'success', 7000)" title="Click to view Intel details">🛰️ ARC 1 INTEL: Offset 0x0024 reveals IP 10.19.99.4 (kweb://10.19.99.4/classified)</span>
+        <span id="byteEditClue" style="display:none; padding:2px 8px; border-radius:4px; background:rgba(139,92,246,0.25); border:1px solid #a855f7; color:#d8b4fe; font-size:0.75rem; font-weight:600; cursor:pointer;" onclick="showToast('Subnet Reference', 'Corporate Leak IP: 10.19.99.4 -> Open KNet and visit kweb://10.19.99.4/classified', 'info', 7000)" title="Click to view Intel details">🛰️ SUBNET DETECTED: Offset 0x0024 reveals IP 10.19.99.4 (kweb://10.19.99.4/classified)</span>
         <div style="display:flex; align-items:center; gap:6px; margin-left:auto;">
           <label style="font-size:0.75rem; color:var(--text-secondary); text-transform:none;">Edit Byte (Hex):</label>
           <input type="text" id="byteEditHexInput" value="48" maxlength="2" style="width:50px; text-align:center; padding:4px 6px; font-weight:bold; color:var(--accent-cyan);">
@@ -1706,7 +1706,7 @@
       return { name: 'Unix Script Shebang', ext: '.sh', desc: 'Executable script interpreter directive (#!/...).' };
     }
     if (ascii.startsWith('ECHO_ROM_1999') || (bytes.length >= 4 && ((bytes[0] === 0x10 && bytes[1] === 0x19 && bytes[2] === 0x99 && bytes[3] === 0x04) || (bytes[0] === 0x04 && bytes[1] === 0x99 && bytes[2] === 0x19 && bytes[3] === 0x10)))) {
-      return { name: 'Project Echo ROM Sector', ext: '.rom', desc: 'Classified Subsystem Memory Sector [ARG Intranet: kweb://10.19.99.4/classified]' };
+      return { name: 'Project Echo ROM Sector', ext: '.rom', desc: 'Classified Subsystem Memory Sector [Subcarrier Intranet: kweb://10.19.99.4/classified]' };
     }
     if (bytes.length >= 12 && ascii.startsWith('RIFF') && ascii.substring(8, 12) === 'WEBP') {
       return { name: 'WebP Raster Image', ext: '.webp', desc: 'Google WebP modern compressed image container.' };
@@ -1855,7 +1855,7 @@
 
     if (sig.name.includes('Project Echo')) {
       report += '\n--------------------------------------------------\n' +
-                '>>> PROJECT ECHO CLASSIFIED ARG INTEL DETECTED <<<\n' +
+                '>>> PROJECT ECHO CLASSIFIED TRANSMISSION DETECTED <<<\n' +
                 'Target Subsystem Address: 10.19.99.4\n' +
                 'Encrypted Corporate Node: kweb://10.19.99.4/classified\n' +
                 'Authorization Directive:  Access via KNet retro browser';

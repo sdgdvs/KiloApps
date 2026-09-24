@@ -83,6 +83,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 13. **🎨 Daily App Icon Uniqueness Audit (DIRECTOR MANDATE - CRITICAL)**:
     - Every application in `KiloOS/src/App.jsx` MUST possess a unique, visually distinctive 32x32 `.ico` file in `KiloOS/public/assets/icons/`. Reusing icons or copying existing `.ico` files (e.g. copying `kpass.ico` or pointing multiple apps to `knet.ico`) is strictly prohibited.
     - The autonomous fleet enforces this daily via `scripts/check_icons.py` during `kilo-planner` runs and on every `kilo-graphics` pass. If missing or duplicate icon hashes are detected, resolve immediately via `python scripts/check_icons.py --fix`.
+14. **ARG Guidelines & Mystery Preservation Protocol (DIRECTOR MANDATE - CRITICAL)**:
+    - Clues to the ARG must be subtle, atmospheric, and diegetic (in-universe). Never use cudgel-like explanations or walkthroughs.
+    - NEVER label content with `(ARG)`, `ARG Secrets`, `ARG Lore`, `ARG Guidance`, or `ARG Clue`.
+    - Never explain the autonomous fleet meta-twist before the endgame, and never leak the master passkey `ECHO-1999-ARCHITECT` in plain text. The climax is reserved solely for App #100 (`KMatrix`) and `KDirector`.
 
 ---
 
@@ -192,6 +196,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-24T00:15:00Z — kilo-planner: ARG Guidelines & Mystery Preservation (TINAG Standard)**
+  - Status: PASS ✅ (Established ARG Mystery Preservation protocol; scrubbed spoilers across fleet).
+  - Protocol: Codified TINAG standard in AGENTS.md, arg_plan.md, next_work.md, and skills (creator, expander, qa, tester).
+  - KRSS Scrub: Rewrote spoiled headlines/articles in krss.html & KRSS/main.c into subtle in-universe telemetry.
+  - Fleet Scrub: Purged plain-text master passkey leaks and (ARG) labels across kbookmark, kclip, ksteno, kanomaly, kterm, kfleet, warez.
+  - Verification: MSVC builds clean (KRSS.exe 17.5 KB, KClip.exe 15.5 KB, KTerm.exe 45.0 KB); Vite clean build; security lint 100% clean.
+
 - **2026-09-23T23:50:00Z — kilo-tester: KHangman (Keyboard Cutoff & UI Audit Remediation)**
   - Status: PASS ✅ (2 issues identified, 2 fixed; 0 regressions).
   - Layout & Ergonomics: Restructured upper panel into side-by-side canvas and info column, eliminating keyboard cutoff across all window sizes with responsive scrolling.
@@ -224,12 +235,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Modal & Overlay Hardening: Trapped background shortcuts during active modals, routed Esc/Enter dismissal, and enabled click-to-dismiss on toasts.
   - Resource Safety: Added storage quota error handlers and verified automatic ObjectURL cleanup on archive download.
   - Verification: Clean MSVC C native build (`KZip.exe` 25.6 KB); clean Vite build (353ms, `kzip.html` 61.6 KB); security lint 100% clean; <999KB ceiling.
-
-- **2026-09-23T19:55:00Z — kilo-graphics: KAbyss (Weave Arc 2 Precursor Relic Glyph & Glint Removal)**
-  - Status: PASS ✅ (Weaved Arc 2 Precursor Relic Glyph, purged glints/dots across web & C, balanced loot).
-  - Precursor Relic: Inscribed `REL_PRECURSOR_GLYPH` / `ITEM_REL_PRECURSOR_GLYPH` with 1999 ARG clues (`10.19.99.4`, `kweb://echo-subsystem.net`).
-  - Discovery Mechanics: Unearthed via stonework search [R/X] on Depth 4+ near Shrines/Altars, Void Monarch drops, and crypt chests.
-  - Glint & Dot Purge: Removed chest lock specular glints, merchant coin glint, and rotating void crystal dots around Void Monarch.
-  - Balance Pass: Integrated Precursor Glyph (+11 Light, +25 MP/SAN, +4 Arcana) into gear/merchant pools and attuned ley-line resonance.
-  - Verification: MSVC C clean build (`KAbyss.exe` 218.5 KB); Vite clean build (380ms); icon uniqueness 100%; security lint clean (<999KB).
 

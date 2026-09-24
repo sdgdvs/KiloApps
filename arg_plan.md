@@ -49,10 +49,11 @@ In KiloApps, we achieve absolute **Ludonarrative Consonance**:
 
 ## 3. Directives for Autonomous Agents
 
-When autonomous agents (`kilo-creator`, `kilo-graphics`, `kilo-expander`) touch applications:
+When autonomous agents (`kilo-creator`, `kilo-graphics`, `kilo-expander`, `kilo-qa`, `kilo-tester`) touch applications:
 1. **Never Break Utility**: An app must remain a 100% fully functioning, highly usable utility or game. The ARG is an ambient layer, not a blocker.
-2. **Weave Subtle Clues**: Embed comments in Win32 C code, hidden properties in HTML data attributes, or easter-egg hotkeys (e.g. `Ctrl+Alt+E`).
-3. **Respect Size**: ARG artifacts must never push any native executable over the sacred **999KB limit**.
+2. **Weave Subtle Clues (TINAG Principle)**: Embed hints as diegetic 1999 artifacts—comments in Win32 C code, hidden properties in HTML data attributes, hex offsets, faint audio carrier frequencies, or easter-egg hotkeys (e.g. `Ctrl+Alt+E`).
+3. **No Heavy-Handed Spoilers or Cudgel Explanations**: NEVER label UI, feeds, or bookmarks with `(ARG)` or `ARG Lore`. NEVER post explicit walkthroughs ("ARG Guidance"), explain the autonomous fleet meta-twist before the endgame, or leak the master passkey `ECHO-1999-ARCHITECT` in plain text. Clues must be elusive and mysterious. The fourth-wall collapse and master passkey are reserved strictly for Arc 3 at App #100 (`KMatrix`).
+4. **Respect Size**: ARG artifacts must never push any native executable or web file over the sacred **999KB limit**.
 
 ---
 

@@ -255,8 +255,8 @@ static void InitDefaultClips(void) {
 
     AddClip(
         "// [PROJECT ECHO TRANSMISSION - NODE 0x99]\n"
-        "// \"The 100th node approaches. KMatrix awakens.\"\n"
-        "// Relic Passkey Fragment: ECHO-1999-ARCHITECT\n",
+        "// \"Carrier locked at 432 Hz. Node synchronization pending.\"\n"
+        "// Memory Offset: 0x10199904\n",
         1, "1999-09-22 04:00"
     );
 }

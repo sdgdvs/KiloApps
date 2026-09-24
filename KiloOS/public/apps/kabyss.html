@@ -3084,7 +3084,7 @@
                 type: ITEM_TYPES.EQUIPMENT,
                 slot: EQUIP_SLOTS.RELIC,
                 icon: '💠',
-                desc: 'Inscrutable ARG tablet pulsating with 1999 telemetry: kweb://echo-subsystem.net (10.19.99.4). +11 Light, +25 Max Aether, +25 Max Sanity, +4 Arcana, +1 Warding.',
+                desc: 'Inscrutable ancient glyph tablet pulsating with 1999 telemetry: kweb://echo-subsystem.net (10.19.99.4). +11 Light, +25 Max Aether, +25 Max Sanity, +4 Arcana, +1 Warding.',
                 might: 0, warding: 1, arcana: 4, light: 11, maxHp: 0, maxAether: 25, maxSanity: 25
             },
 
@@ -4907,7 +4907,7 @@
                     if (!player.hasPrecursorGlyph) {
                         player.hasPrecursorGlyph = true;
                         addItem('REL_PRECURSOR_GLYPH', 1);
-                        logMessage('✦ PRECURSOR RELIC GLYPH RECOVERED: The Void Monarch yields an ancient ARG tablet: [ECHO-1999 // 10.19.99.4 // kweb://echo-subsystem.net]!', 'relic');
+                        logMessage('✦ PRECURSOR RELIC GLYPH RECOVERED: The Void Monarch yields an ancient precursor tablet: [ECHO-1999 // 10.19.99.4 // kweb://echo-subsystem.net]!', 'relic');
                     }
                 } else if (m.type === 'SKELETON') {
                     if (dropRoll < 0.45) droppedItem = 'ING_BRIMSTONE';

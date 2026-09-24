@@ -303,7 +303,7 @@ void ShowHelpDialog(HWND hwnd) {
         "  Ctrl + R         - Incremental reverse search (Ctrl+R cycles)\r\n"
         "  Ctrl + L / 'cls' - Clear terminal screen output\r\n"
         "  Ctrl + C         - Cancel current input command line\r\n"
-        "  Ctrl + Alt + E   - Echo Anomaly Intercept (ARG)\r\n"
+        "  Ctrl + Alt + E   - Echo Anomaly Intercept\r\n"
         "  Tab              - Autocomplete commands and file paths\r\n"
         "  Escape           - Clear input command line / cancel search\r\n"
         "  Up / Down Arrow  - Navigate command history\r\n\r\n"

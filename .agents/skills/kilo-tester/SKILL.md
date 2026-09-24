@@ -25,6 +25,7 @@ This skill executes a self-contained interactive UI audit and repair on exactly 
      - Modal dialogs (open, dismiss via backdrop click, Escape key, close buttons).
      - Keyboard shortcuts (F5 quicksave, F9 quickload, Space, Enter, Arrow keys, 1-9 hotkeys).
      - Storage persistence (JSON import/export, local storage state saving, tutorial flags).
+     - **ARG Mystery & TINAG Standard**: Audit copy and labels for ARG mystery violations; remove un-diegetic `(ARG)` tags, explicit walkthroughs ("ARG Guidance"), premature fleet meta-spoilers, or leaked master passkeys.
    - Trace each JavaScript handler: ensure referenced functions exist, IDs are valid, and edge inputs do not crash.
 
 3. **In-Line Repairs**:

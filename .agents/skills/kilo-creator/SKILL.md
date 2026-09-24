@@ -36,7 +36,8 @@ This skill designs and implements new applications or deep game worlds on exactl
 4. **KMatrix & Project-Wide ARG Mandate (App #100 Milestone - Ludonarrative Consonance)**:
    - For the 100th milestone app (`KMatrix`), build it as the central narrative meta-terminal and ARG climax resolving "The Kilo Project Echoes" and "Rogue AI" lore per `arg_plan.md`.
    - **Ludonarrative Consonance**: The fiction matches reality—the trapped entity in KiloOS *is* the autonomous multi-agent fleet. Solving the ARG grants the player the actual keys to command the living codebase.
-   - Connect it to cross-project ARG clues: corrupted logs in KTerm, ghost audio in KSynth/KAudio, memory hex offsets in KHex, and precursor relics in KAbyss/KCosmic/KChrono.
+   - **Mystery Preservation & TINAG Standard (CRITICAL)**: In all pre-climax apps, feeds, and sites, clues MUST be subtle, atmospheric, and diegetic. NEVER label UI elements with `(ARG)` or `ARG Lore`. NEVER explain the autonomous fleet meta-twist before the endgame, and NEVER expose the master passkey `ECHO-1999-ARCHITECT` in plain text.
+   - Connect KMatrix to subtle cross-project ARG clues: corrupted logs in KTerm, ghost audio in KSynth/KAudio, memory hex offsets in KHex, and precursor relics in KAbyss/KCosmic/KChrono.
    - Successfully solving KMatrix must reward the player with the Master Director Passkey (`ECHO-1999-ARCHITECT`) to unlock the in-OS `KDirector` console!
 
 5. **Virtual 1999 Web Node Creation (Anti-Potemkin Standard)**:

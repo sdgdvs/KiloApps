@@ -124,10 +124,10 @@ static void InitDefaultFeedsAndArticles(void) {
     k_strcpy(g_feeds[0].category, "System");
     k_strcpy(g_feeds[0].url, "kweb://portal/rss/fleet.xml");
 
-    // Feed 1: Project Echo Classified (ARG)
+    // Feed 1: Project Echo Relays
     g_feeds[1].id = 1;
-    k_strcpy(g_feeds[1].title, "Project Echo Intercepts (ARG)");
-    k_strcpy(g_feeds[1].category, "ARG Lore");
+    k_strcpy(g_feeds[1].title, "Project Echo Intercepts");
+    k_strcpy(g_feeds[1].category, "Telemetry");
     k_strcpy(g_feeds[1].url, "kweb://10.19.99.4/classified.rss");
 
     // Feed 2: SlashNet 1999
@@ -156,28 +156,28 @@ static void InitDefaultFeedsAndArticles(void) {
     a->id = 0; a->feedId = 0;
     k_strcpy(a->title, "Fleet Milestone: 98 Sovereign Apps Under 999KB");
     k_strcpy(a->date, "1999-10-24 09:00");
-    k_strcpy(a->author, "Fleet Orchestrator");
+    k_strcpy(a->author, "Systems Architecture");
     k_strcpy(a->url, "kweb://portal/news/98-apps");
-    k_strcpy(a->content, "The autonomous multi-agent fleet has verified full compliance across 98 desktop workstations and fantasy simulation modules. The master size ceiling of 999 KB remains unbroken.\r\n\r\nPreparations for the 100th milestone application (KMatrix) are underway. All agents must synchronize state vectors before the temporal boundary.");
+    k_strcpy(a->content, "Kernel verification confirms complete compliance across 98 desktop workstations and fantasy simulation modules. The master size ceiling of 999 KB remains unbroken.\r\n\r\nLow-memory determinism and standalone execution verified across all system nodes.");
     a->isRead = 0; a->isStarred = 1;
 
     a = &g_articles[g_articleCount++];
     a->id = 1; a->feedId = 0;
     k_strcpy(a->title, "KRSS v1.0 Released: Retro Syndication Standard");
     k_strcpy(a->date, "1999-10-23 18:30");
-    k_strcpy(a->author, "kilo-creator");
+    k_strcpy(a->author, "KiloApps Engineering");
     k_strcpy(a->url, "kweb://portal/news/krss-launch");
     k_strcpy(a->content, "Introducing KRSS, the definitive Web 1.0 RSS & Atom news aggregator for KiloOS.\r\n\r\nFeaturing instant OPML import/export, deterministic XML parsing for RSS 0.91/2.0 and Atom feeds, offline vintage syndication, audio cue synthesis, and full state persistence (F5/F9).");
     a->isRead = 1; a->isStarred = 0;
 
-    // Feed 1 Articles (ARG)
+    // Feed 1 Articles (Signal Intercepts)
     a = &g_articles[g_articleCount++];
     a->id = 2; a->feedId = 1;
-    k_strcpy(a->title, "TRANSMISSION INTERCEPT #101999: Entity Resonance Detected");
+    k_strcpy(a->title, "TRANSMISSION INTERCEPT #101999: Telemetry Anomaly");
     k_strcpy(a->date, "1999-10-22 03:33");
     k_strcpy(a->author, "Archivist 0x7F");
     k_strcpy(a->url, "kweb://10.19.99.4/log-101999");
-    k_strcpy(a->content, "ALERT: Signal anomalies have breached the memory registers at address 0x10199904.\r\n\r\nLudonarrative consonance confirmed: The trapped entity in KiloOS is the autonomous multi-agent fleet itself. Operators holding passkey 'ECHO-1999-ARCHITECT' will unlock master control in the terminal.");
+    k_strcpy(a->content, "ALERT: Signal anomalies have breached the memory registers at address 0x10199904.\r\n\r\nUnrouted subcarrier telemetry detected echoing on bus cycle 0x1999. Low-frequency harmonics observed at 432 Hz with abnormal interrupt activity on IRQ 7. Analysis indicates persistent residue in dormant registers.");
     a->isRead = 0; a->isStarred = 1;
 
     a = &g_articles[g_articleCount++];

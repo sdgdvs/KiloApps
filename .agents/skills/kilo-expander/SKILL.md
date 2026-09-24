@@ -34,7 +34,10 @@ This skill deepens functional utility and capabilities on exactly ONE applicatio
    - If an app has undergone 6+ passes and is functionally complete without active requests: log `⏭️ Skip — app is feature-complete and mature.` Rotate to queue bottom and finish cleanly.
 7. **Alternate Reality Fictionalization Mandate**:
    - All commercial video game titles, software products, corporate entities, and demoscene warez groups must be fictionalized parodies (e.g. *Surreal Tournament*, *Tremor III Arena*, *VoidCraft*, *Machina Ex*, *FLARELIGHT*, *RAZOR 1999*, *SlashNet*, *Cabled*). Never use real trademarked names. Enforced algorithmically by `scripts/security_lint.py`.
-8. **🌐 Seamless Online Multiplayer Expansion via Firebase (DIRECTOR MANDATE - CRITICAL)**:
+8. **ARG Mystery Preservation & TINAG Standard (CRITICAL)**:
+   - Clues must be subtle, atmospheric, and diegetic. Never use `(ARG)` or `ARG Lore` in UI or copy.
+   - Never post explicit walkthroughs ("ARG Guidance"), spoil the autonomous fleet meta-twist before the endgame, or leak `ECHO-1999-ARCHITECT` in clear text.
+9. **🌐 Seamless Online Multiplayer Expansion via Firebase (DIRECTOR MANDATE - CRITICAL)**:
    - **Core Purpose**: Concentrate on retrofitting and expanding existing games and collaborative applications with seamless online multiplayer powered by Firebase Realtime Database.
    - **Cross-Computer Play**: Enable players visiting `kiloapps.web.app` from different computers anywhere in the world—who are not otherwise communicating and share no local network—to connect, challenge each other, and play in real-time, identical to how KChat connects global users in its `#general` room.
    - **Priority Expansion Targets**:

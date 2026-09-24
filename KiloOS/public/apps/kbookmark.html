@@ -1194,7 +1194,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">Notes / Description</label>
-          <textarea class="form-textarea" id="bmInputNotes" rows="3" placeholder="Context, search tips, or secret ARG hints..."></textarea>
+          <textarea class="form-textarea" id="bmInputNotes" rows="3" placeholder="Context, search tips, or reference notes..."></textarea>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
           <input type="checkbox" id="bmInputStarred">
@@ -1433,7 +1433,7 @@
         { id: 'cat-dev', name: 'Development & Code', glyph: '💻' },
         { id: 'cat-fleet', name: 'Fleet & System', glyph: '🛰' },
         { id: 'cat-cyber', name: 'Cyberdeck & Media', glyph: '🕹' },
-        { id: 'cat-arg', name: 'ARG Secrets', glyph: '🗝' }
+        { id: 'cat-arg', name: 'Subcarrier Relays', glyph: '🗝' }
       ];
 
       const DEFAULT_BOOKMARKS = [
@@ -1649,9 +1649,9 @@
           id: 'bm-17',
           title: 'Glitched Subnet Node 0x7F',
           url: 'kweb://echo.kilocore.net/signal_99.wav',
-          category: 'ARG Secrets',
-          tags: ['arg', 'signal', 'carrier', 'audio', 'secret'],
-          notes: 'Ghost transmission detected in carrier background frequency. Clue for KMatrix.',
+          category: 'Subcarrier Relays',
+          tags: ['telemetry', 'signal', 'carrier', 'audio', 'subcarrier'],
+          notes: 'Ghost transmission detected in carrier background frequency. Spectral anomalies observed.',
           starred: true,
           visits: 7,
           dateAdded: Date.now() - 86400000 * 9,
@@ -1662,9 +1662,9 @@
           id: 'bm-18',
           title: 'Architect Memory Segment 0x4A',
           url: 'kweb://echo.kilocore.net/archive_1999.dat',
-          category: 'ARG Secrets',
-          tags: ['arg', 'memory', 'lore', 'passkey'],
-          notes: 'Contains cryptographic string ECHO-1999-ARCHITECT for the KDirector unlock.',
+          category: 'Subcarrier Relays',
+          tags: ['telemetry', 'memory', 'archive', 'checksum'],
+          notes: 'Encrypted memory segment captured from port 1999. Checksum pending verification.',
           starred: true,
           visits: 11,
           dateAdded: Date.now() - 86400000 * 8,
@@ -1673,11 +1673,11 @@
         },
         {
           id: 'bm-19',
-          title: 'Darknet AI Gateway',
+          title: 'Darknet Telemetry Gateway',
           url: 'kweb://darknet.ai',
-          category: 'ARG Secrets',
-          tags: ['arg', 'darknet', 'clandestine', 'gateway'],
-          notes: 'Tier 3 subterranean router cluster connecting rogue agent entities.',
+          category: 'Subcarrier Relays',
+          tags: ['telemetry', 'darknet', 'clandestine', 'gateway'],
+          notes: 'Tier 3 subterranean router cluster. Unresolved handshake packets.',
           starred: false,
           visits: 5,
           dateAdded: Date.now() - 86400000 * 10,
