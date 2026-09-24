@@ -177,6 +177,192 @@ void PrintLine(HWND hwnd, const char* text) {
     InvalidateRect(hwnd, NULL, TRUE);
 }
 
+#define KCYBER_SAVE_MAGIC 0x43594252
+#define KCYBER_SAVE_VERSION 1
+
+typedef struct {
+    DWORD magic;
+    DWORD version;
+    int player_credits;
+    int player_mem;
+    int player_max_mem;
+    int player_max_cpu;
+    int player_max_cloak;
+    int player_max_slow;
+    int player_max_patch;
+    int player_max_probe;
+    int tool_cloak;
+    int tool_slow;
+    int tool_patch;
+    int tool_probe;
+    int player_heat;
+    int connected_node;
+    int hacking_node;
+    char hacking_target[5];
+    int hacking_attempts;
+    char ice_name[32];
+    int ice_damage;
+    int ice_frozen_ticks;
+    int in_shop;
+    NodeFile node_files[7];
+    Mission missions[3];
+    int active_mission_node;
+    char active_mission_file[32];
+} KCyberSaveData;
+
+int SaveGameState(HWND hwnd) {
+    KCyberSaveData save;
+    save.magic = KCYBER_SAVE_MAGIC;
+    save.version = KCYBER_SAVE_VERSION;
+    save.player_credits = player_credits;
+    save.player_mem = player_mem;
+    save.player_max_mem = player_max_mem;
+    save.player_max_cpu = player_max_cpu;
+    save.player_max_cloak = player_max_cloak;
+    save.player_max_slow = player_max_slow;
+    save.player_max_patch = player_max_patch;
+    save.player_max_probe = player_max_probe;
+    save.tool_cloak = tool_cloak;
+    save.tool_slow = tool_slow;
+    save.tool_patch = tool_patch;
+    save.tool_probe = tool_probe;
+    save.player_heat = player_heat;
+    save.connected_node = connected_node;
+    save.hacking_node = hacking_node;
+    lstrcpyA(save.hacking_target, hacking_target);
+    save.hacking_attempts = hacking_attempts;
+    lstrcpyA(save.ice_name, ice_name);
+    save.ice_damage = ice_damage;
+    save.ice_frozen_ticks = ice_frozen_ticks;
+    save.in_shop = in_shop;
+    for (int i = 0; i < 7; i++) {
+        save.node_files[i] = node_files[i];
+    }
+    for (int i = 0; i < 3; i++) {
+        save.missions[i] = missions[i];
+    }
+    save.active_mission_node = active_mission_node;
+    lstrcpyA(save.active_mission_file, active_mission_file);
+
+    HANDLE hFile = CreateFileA("kcyber_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        PrintLine(hwnd, "[SYSTEM] Failed to write kcyber_save.dat");
+        PlayFailTone();
+        return 0;
+    }
+    DWORD written = 0;
+    BOOL res = WriteFile(hFile, &save, sizeof(save), &written, NULL);
+    CloseHandle(hFile);
+
+    if (res && written == sizeof(save)) {
+        PrintLine(hwnd, "[SYSTEM] Quicksave created (kcyber_save.dat) [F5]");
+        PlayAccessGranted();
+        return 1;
+    } else {
+        PrintLine(hwnd, "[SYSTEM] Error: Incomplete write to kcyber_save.dat");
+        PlayFailTone();
+        return 0;
+    }
+}
+
+int LoadGameState(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kcyber_save.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        PrintLine(hwnd, "[SYSTEM] No quicksave found (kcyber_save.dat). Press F5 to save.");
+        PlayFailTone();
+        return 0;
+    }
+    KCyberSaveData save;
+    DWORD bytesRead = 0;
+    BOOL res = ReadFile(hFile, &save, sizeof(save), &bytesRead, NULL);
+    CloseHandle(hFile);
+
+    if (!res || bytesRead != sizeof(save) || save.magic != KCYBER_SAVE_MAGIC || save.version != KCYBER_SAVE_VERSION) {
+        PrintLine(hwnd, "[SYSTEM] Corrupt or incompatible quicksave file.");
+        PlayFailTone();
+        return 0;
+    }
+
+    player_credits = save.player_credits;
+    player_mem = save.player_mem;
+    player_max_mem = save.player_max_mem;
+    player_max_cpu = save.player_max_cpu;
+    player_max_cloak = save.player_max_cloak;
+    player_max_slow = save.player_max_slow;
+    player_max_patch = save.player_max_patch;
+    player_max_probe = save.player_max_probe;
+    tool_cloak = save.tool_cloak;
+    tool_slow = save.tool_slow;
+    tool_patch = save.tool_patch;
+    tool_probe = save.tool_probe;
+    player_heat = save.player_heat;
+    connected_node = save.connected_node;
+    hacking_node = save.hacking_node;
+    lstrcpyA(hacking_target, save.hacking_target);
+    hacking_attempts = save.hacking_attempts;
+    lstrcpyA(ice_name, save.ice_name);
+    ice_damage = save.ice_damage;
+    ice_frozen_ticks = save.ice_frozen_ticks;
+    in_shop = save.in_shop;
+    for (int i = 0; i < 7; i++) {
+        node_files[i] = save.node_files[i];
+    }
+    for (int i = 0; i < 3; i++) {
+        missions[i] = save.missions[i];
+    }
+    active_mission_node = save.active_mission_node;
+    lstrcpyA(active_mission_file, save.active_mission_file);
+
+    KillTimer(hwnd, 2);
+    if (hacking_node) {
+        int current_interval = 3000 - (player_heat * 15);
+        if (current_interval < 500) current_interval = 500;
+        SetTimer(hwnd, 2, current_interval, NULL);
+    }
+
+    char buf[128];
+    wsprintfA(buf, "[SYSTEM] Restored state from kcyber_save.dat [F9]. MEM: %d/%d, Cr: %d", player_mem, player_max_mem, player_credits);
+    PrintLine(hwnd, buf);
+    PlayAccessGranted();
+    InvalidateRect(hwnd, NULL, TRUE);
+    return 1;
+}
+
+void PrintRunnerBriefing(HWND hwnd) {
+    PrintLine(hwnd, "=================================================");
+    PrintLine(hwnd, "NEURAL LINK ESTABLISHED // RUNNER ORIENTATION");
+    PrintLine(hwnd, "=================================================");
+    PrintLine(hwnd, "Welcome to KCyberdeck OS v1.0. Quick Briefing:");
+    PrintLine(hwnd, "* Type 'map' to scan grid nodes [02] through [06].");
+    PrintLine(hwnd, "* 'connect <node>' cracks 4-digit PINs against ICE.");
+    PrintLine(hwnd, "* Deduce PIN: EXACT=right spot, PARTIAL=wrong spot.");
+    PrintLine(hwnd, "* Tools during hack: cloak, slow, patch, probe.");
+    PrintLine(hwnd, "* Quicksave [F5] / Quickload [F9] / Runner Guide [F1].");
+    PrintLine(hwnd, "* 'contracts' for paid bounties, 'shop' for upgrades.");
+    PrintLine(hwnd, "=================================================");
+}
+
+void CheckFirstRunTutorial(HWND hwnd) {
+    DWORD saveAttr = GetFileAttributesA("kcyber_save.dat");
+    if (saveAttr != INVALID_FILE_ATTRIBUTES) {
+        PrintLine(hwnd, "[SYSTEM] Quicksave available. Press F9 to restore saved deck session.");
+        return;
+    }
+    DWORD tutAttr = GetFileAttributesA("kcyber_tutorial.dat");
+    if (tutAttr != INVALID_FILE_ATTRIBUTES) {
+        return;
+    }
+
+    PrintRunnerBriefing(hwnd);
+
+    HANDLE hFile = CreateFileA("kcyber_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, "SEEN", 4, &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
 void ProcessCommand(HWND hwnd, const char* cmd) {
     char buffer[MAX_LINE_LENGTH + 32];
     
@@ -214,6 +400,16 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         if (lstrcmpiA(command, "exit") == 0 || lstrcmpiA(command, "abort") == 0) {
             in_shop = 0;
             PrintLine(hwnd, "Exiting shop.");
+            return;
+        }
+
+        if (lstrcmpiA(command, "save") == 0 || lstrcmpiA(command, "quicksave") == 0) {
+            SaveGameState(hwnd);
+            return;
+        }
+
+        if (lstrcmpiA(command, "load") == 0 || lstrcmpiA(command, "quickload") == 0) {
+            LoadGameState(hwnd);
             return;
         }
 
@@ -329,6 +525,14 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
             if (player_heat > 100) player_heat = 100;
             wsprintfA(buffer, "[WARNING] Heat increased to %d%%", player_heat);
             PrintLine(hwnd, buffer);
+            return;
+        }
+        if (lstrcmpiA(guess, "save") == 0 || lstrcmpiA(guess, "quicksave") == 0) {
+            SaveGameState(hwnd);
+            return;
+        }
+        if (lstrcmpiA(guess, "load") == 0 || lstrcmpiA(guess, "quickload") == 0) {
+            LoadGameState(hwnd);
             return;
         }
         if (lstrcmpiA(guess, "help") == 0 || lstrcmpiA(guess, "?") == 0) {
@@ -514,6 +718,16 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
             KillTimer(hwnd, 2);
             return;
         }
+
+        if (lstrcmpiA(command, "save") == 0 || lstrcmpiA(command, "quicksave") == 0) {
+            SaveGameState(hwnd);
+            return;
+        }
+
+        if (lstrcmpiA(command, "load") == 0 || lstrcmpiA(command, "quickload") == 0) {
+            LoadGameState(hwnd);
+            return;
+        }
         
         if (lstrcmpiA(command, "ls") == 0) {
             if (lstrcmpiA(node_files[connected_node].name, "empty") == 0) {
@@ -600,6 +814,9 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
         PrintLine(hwnd, "  accept    - Accept a contract (e.g. 'accept 1')");
         PrintLine(hwnd, "  patch     - Apply nanite memory repair patch (+35 MEM)");
         PrintLine(hwnd, "  guide     - Open Runner's Guide (e.g. 'guide ice')");
+        PrintLine(hwnd, "  save      - Quicksave cyberdeck state to kcyber_save.dat [F5]");
+        PrintLine(hwnd, "  load      - Quickload state from kcyber_save.dat [F9]");
+        PrintLine(hwnd, "  tutorial  - Display runner orientation briefing");
         PrintLine(hwnd, "During hack:");
         PrintLine(hwnd, "  abort     - Disconnect immediately");
         PrintLine(hwnd, "  cloak     - Blind ICE for 2 cycles");
@@ -654,6 +871,15 @@ void ProcessCommand(HWND hwnd, const char* cmd) {
     } else if (lstrcmpiA(command, "clear") == 0) {
         history_count = 0;
         InvalidateRect(hwnd, NULL, TRUE);
+    } else if (lstrcmpiA(command, "save") == 0 || lstrcmpiA(command, "quicksave") == 0) {
+        SaveGameState(hwnd);
+        return;
+    } else if (lstrcmpiA(command, "load") == 0 || lstrcmpiA(command, "quickload") == 0) {
+        LoadGameState(hwnd);
+        return;
+    } else if (lstrcmpiA(command, "tutorial") == 0 || lstrcmpiA(command, "briefing") == 0) {
+        PrintRunnerBriefing(hwnd);
+        return;
     } else if (lstrcmpiA(command, "shop") == 0) {
         in_shop = 1;
         PrintLine(hwnd, "Entering upgrade shop... Type 'ls' to view items, 'exit' to leave.");
@@ -853,6 +1079,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             PrintLine(hwnd, "Loading modules... OK");
             PrintLine(hwnd, "Initializing memory... OK");
             PrintLine(hwnd, "Type 'help' for a list of commands.");
+            CheckFirstRunTutorial(hwnd);
             SetTimer(hwnd, 1, 530, NULL);
             SetTimer(hwnd, 2, 3000, NULL);
             SetTimer(hwnd, 3, 33, NULL);
@@ -1613,6 +1840,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                 SelectObject(memDC, oldPen);
                 DeleteObject(hudPen);
+
+                SetTextColor(memDC, RGB(0, 190, 80));
+                TextOutA(memDC, vx + 2, vy + vh + 6, "[F5:Save F9:Load F1:Help]", 25);
+                SetTextColor(memDC, RGB(0, 255, 0));
             }
 
             // Draw Scanlines across the viewport
@@ -1640,6 +1871,32 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             EndPaint(hwnd, &ps);
             return 0;
         }
+
+        case WM_KEYDOWN:
+            if (wParam == VK_F5) {
+                SaveGameState(hwnd);
+                return 0;
+            } else if (wParam == VK_F9) {
+                LoadGameState(hwnd);
+                return 0;
+            } else if (wParam == VK_F1) {
+                ProcessCommand(hwnd, "guide");
+                return 0;
+            } else if (wParam == VK_ESCAPE) {
+                if (in_shop) {
+                    ProcessCommand(hwnd, "exit");
+                } else if (hacking_node) {
+                    ProcessCommand(hwnd, "abort");
+                } else if (connected_node) {
+                    ProcessCommand(hwnd, "disconnect");
+                } else {
+                    current_input[0] = '\0';
+                    current_input_len = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+                return 0;
+            }
+            break;
 
         case WM_CHAR:
             if (wParam >= 32 && wParam <= 126) {

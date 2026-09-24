@@ -36,9 +36,146 @@
       z-index: 100;
     }
     #header {
-      padding: 10px;
-      border-bottom: 1px solid #0f0;
+      padding: 8px 12px;
+      border-bottom: 1px solid #00ff66;
       background-color: #001100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .deck-toolbar {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .deck-btn {
+      background: #001a08;
+      color: #00ff66;
+      border: 1px solid #00ff66;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 3px 8px;
+      cursor: pointer;
+      text-shadow: 0 0 4px rgba(0,255,100,0.6);
+      box-shadow: 0 0 4px rgba(0,255,100,0.2);
+      border-radius: 2px;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    }
+    .deck-btn:hover {
+      background: #003812;
+      border-color: #33ff88;
+      box-shadow: 0 0 8px rgba(0,255,100,0.5);
+    }
+    .primary-btn {
+      background: #003314;
+      border-color: #00ffaa;
+      font-size: 13px;
+      padding: 6px 16px;
+    }
+    .primary-btn:hover {
+      background: #005522;
+      border-color: #66ffbb;
+    }
+    #hud-toast {
+      display: none;
+      position: fixed;
+      top: 52px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 18, 6, 0.95);
+      border: 1px solid #00ff66;
+      color: #00ff66;
+      padding: 8px 18px;
+      font-weight: bold;
+      font-size: 13px;
+      border-radius: 3px;
+      z-index: 200;
+      cursor: pointer;
+      box-shadow: 0 0 16px rgba(0, 255, 100, 0.4);
+      text-shadow: 0 0 5px rgba(0, 255, 100, 0.7);
+      text-align: center;
+      user-select: none;
+    }
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 10, 3, 0.85);
+      z-index: 150;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-box {
+      border: 2px solid #00ff66;
+      background: #011206;
+      color: #00ff66;
+      max-width: 580px;
+      width: 90%;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 18px 24px;
+      box-shadow: 0 0 25px rgba(0, 255, 100, 0.35);
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #00ff6644;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+    .modal-title {
+      font-weight: bold;
+      font-size: 15px;
+      color: #00ffaa;
+      text-shadow: 0 0 6px rgba(0,255,150,0.6);
+    }
+    .close-btn {
+      background: transparent;
+      border: 1px solid #00ff66;
+      color: #00ff66;
+      font-family: inherit;
+      font-size: 12px;
+      padding: 2px 6px;
+      cursor: pointer;
+    }
+    .close-btn:hover {
+      background: #ff3344;
+      border-color: #ff3344;
+      color: #fff;
+    }
+    .modal-body {
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .tip-box {
+      background: rgba(0, 30, 12, 0.5);
+      border: 1px dashed #00ff6688;
+      padding: 10px 14px;
+      margin: 10px 0;
+      font-size: 12px;
+    }
+    .hotkey-box {
+      background: rgba(40, 35, 0, 0.4);
+      border: 1px dashed #ffcc0088;
+      color: #ffea88;
+      padding: 8px 12px;
+      margin: 10px 0;
+      font-size: 12px;
+    }
+    code {
+      background: rgba(0, 255, 100, 0.15);
+      padding: 1px 4px;
+      border-radius: 2px;
+      color: #aaffcc;
     }
     #terminal {
       flex: 1;
@@ -85,7 +222,16 @@
   </style>
 </head>
 <body>
-  <div id="header">KCyber v1.0 - Cyberdeck Interface</div>
+  <div id="header">
+    <span style="font-weight:bold; letter-spacing:1px;">KCyber v1.0 - Cyberdeck Interface</span>
+    <div class="deck-toolbar">
+      <button class="deck-btn" onclick="quickSave()" title="Quicksave deck state [F5]">Save [F5]</button>
+      <button class="deck-btn" onclick="quickLoad()" title="Quickload saved state [F9]">Load [F9]</button>
+      <button class="deck-btn" onclick="toggleHelp()" title="Runner's Reference Manual [F1]">Help [F1]</button>
+      <button class="deck-btn" onclick="showTutorial()" title="Deck Orientation Briefing">Briefing</button>
+      <button class="deck-btn" onclick="processCommand('reboot')" title="Reboot Deck">Reboot</button>
+    </div>
+  </div>
   <div id="terminal" onclick="document.getElementById('cmd-input').focus()">
     <div id="output"></div>
     <div id="input-container">
@@ -93,8 +239,77 @@
       <input type="text" id="cmd-input" autocomplete="off" spellcheck="false" autofocus />
     </div>
   </div>
-  <div id="visuals" style="position: absolute; right: 25px; top: 25px; width: 180px; height: 160px; pointer-events: none; z-index: 50; background: rgba(0, 15, 5, 0.85); border: 1px solid #00ff6644; border-radius: 4px; box-shadow: 0 0 15px rgba(0, 255, 100, 0.15);">
+  <div id="visuals" style="position: absolute; right: 20px; top: 55px; width: 180px; height: 160px; pointer-events: none; z-index: 50; background: rgba(0, 15, 5, 0.85); border: 1px solid #00ff6644; border-radius: 4px; box-shadow: 0 0 15px rgba(0, 255, 100, 0.15);">
     <canvas id="gfxCanvas" width="180" height="160"></canvas>
+  </div>
+  <div id="hud-toast" onclick="hideToast()" title="Click to dismiss"></div>
+
+  <!-- Tutorial / Orientation Modal -->
+  <div id="tutorial-modal" class="modal-backdrop" style="display:none;" onclick="if(event.target===this)dismissTutorial()">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">⚡ NEURAL LINK ESTABLISHED // RUNNER BRIEFING</span>
+        <button class="close-btn" onclick="dismissTutorial()">[X]</button>
+      </div>
+      <div class="modal-body">
+        <p>Welcome to <strong>KCyberdeck OS</strong>, runner. You are plugged directly into the corporate subnet grid. Your target is data extraction and credit accumulation.</p>
+        <div class="tip-box">
+          <div style="color:#00ffcc; font-weight:bold; margin-bottom:6px;">GRID OPERATIONS & MECHANICS:</div>
+          <div>• <strong>Topology</strong>: Type <code>map</code> to view nodes [02] through [06].</div>
+          <div>• <strong>Intrusion</strong>: Type <code>connect &lt;id&gt;</code> (e.g. <code>connect 02</code>) to breach a node's ICE firewall.</div>
+          <div>• <strong>PIN Cracker</strong>: Deduce the 4-digit code. System gives <strong>EXACT</strong> (correct digit & position) and <strong>PARTIAL</strong> (correct digit, wrong spot) telemetry.</div>
+          <div>• <strong>ICE Defense</strong>: Active ICE drains your MEM on a timer! Use <code>cloak</code> to blind, <code>slow</code> to damp, <code>patch</code> to repair MEM, or <code>probe</code> to sniff a digit.</div>
+          <div>• <strong>Data Theft & Economy</strong>: Run <code>ls</code> and <code>download &lt;file&gt;</code> to extract paydata. Accept jobs via <code>contracts</code> and <code>accept &lt;id&gt;</code>. Spend credits in the <code>shop</code>.</div>
+        </div>
+        <div class="hotkey-box">
+          <div style="color:#ffcc00; font-weight:bold; margin-bottom:4px;">KEYBOARD SHORTCUTS:</div>
+          <div>• <strong>[F5]</strong> : Quicksave complete deck state to storage</div>
+          <div>• <strong>[F9]</strong> : Quickload saved deck state</div>
+          <div>• <strong>[F1]</strong> : Toggle Runner's Reference Manual</div>
+          <div>• <strong>[Esc]</strong> : Close overlays or abort active intrusion</div>
+        </div>
+      </div>
+      <div style="text-align:right; margin-top:16px;">
+        <button class="deck-btn primary-btn" onclick="dismissTutorial()">JACK IN [ENTER / SPACE]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Guide Modal -->
+  <div id="help-modal" class="modal-backdrop" style="display:none;" onclick="if(event.target===this)toggleHelp(false)">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">📖 CYBERDECK RUNNER'S MANUAL [F1]</span>
+        <button class="close-btn" onclick="toggleHelp(false)">[X]</button>
+      </div>
+      <div class="modal-body">
+        <div class="tip-box">
+          <div style="color:#00ffcc; font-weight:bold; margin-bottom:6px;">SYSTEM COMMANDS:</div>
+          <div>• <code>map</code> - Display grid node topology</div>
+          <div>• <code>connect &lt;02-06&gt;</code> - Initiate intrusion against target node</div>
+          <div>• <code>contracts</code> / <code>accept &lt;id&gt;</code> - View and take high-paying data bounties</div>
+          <div>• <code>shop</code> - Enter black market deck upgrade station</div>
+          <div>• <code>patch</code> - Use nanite charges to restore +35 MEM</div>
+          <div>• <code>status</code> - Inspect deck memory, heat level, and tool charges</div>
+          <div>• <code>save</code> [F5] / <code>load</code> [F9] - Quicksave and restore state</div>
+          <div>• <code>reboot</code> - Soft restart deck to restore basic memory</div>
+        </div>
+        <div class="tip-box" style="margin-top:10px;">
+          <div style="color:#ff3344; font-weight:bold; margin-bottom:6px;">ICE COUNTERMEASURES:</div>
+          <div>• <strong>Basic ICE</strong> (Node 02, 5 DMG) | <strong>Tracer ICE</strong> (Node 03, 10 DMG)</div>
+          <div>• <strong>Hunter ICE</strong> (Node 04, 15 DMG) | <strong>Black ICE</strong> (Node 05, 25 DMG)</div>
+          <div>• <strong>Phantom ICE</strong> (Node 06, 35 DMG - Top secret AI core)</div>
+          <div>Higher HEAT accelerates ICE attack cycles. Buy proxies in shop to dissipate HEAT.</div>
+        </div>
+        <div class="hotkey-box" style="margin-top:10px;">
+          <div style="color:#ffcc00; font-weight:bold; margin-bottom:4px;">SHORTCUTS:</div>
+          <div>• <strong>[F5]</strong> Quicksave | <strong>[F9]</strong> Quickload | <strong>[F1]</strong> Toggle Help | <strong>[Esc]</strong> Close</div>
+        </div>
+      </div>
+      <div style="text-align:right; margin-top:16px;">
+        <button class="deck-btn primary-btn" onclick="toggleHelp(false)">CLOSE [ESC]</button>
+      </div>
+    </div>
   </div>
   <script>
     const outputDiv = document.getElementById('output');
@@ -183,6 +398,204 @@
     
     let missions = [];
     let active_mission = null;
+
+    // --- SAFE STORAGE & TOAST HELPERS ---
+    function safeGetStorage(key) {
+      try {
+        return localStorage.getItem(key);
+      } catch (e) {
+        console.warn('Storage read blocked:', e);
+        return null;
+      }
+    }
+
+    function safeSetStorage(key, val) {
+      try {
+        localStorage.setItem(key, val);
+        return true;
+      } catch (e) {
+        console.warn('Storage write blocked/quota exceeded:', e);
+        return false;
+      }
+    }
+
+    let toastTimeout = null;
+    function showToast(msg, isWarn = false) {
+      const toast = document.getElementById('hud-toast');
+      if (!toast) return;
+      toast.textContent = msg;
+      toast.style.borderColor = isWarn ? '#ff3344' : '#00ff66';
+      toast.style.color = isWarn ? '#ff5566' : '#00ff66';
+      toast.style.boxShadow = isWarn ? '0 0 15px rgba(255,50,50,0.6)' : '0 0 15px rgba(0,255,100,0.6)';
+      toast.style.display = 'block';
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.style.display = 'none';
+      }, 2500);
+    }
+    function hideToast() {
+      const toast = document.getElementById('hud-toast');
+      if (toast) toast.style.display = 'none';
+      if (toastTimeout) clearTimeout(toastTimeout);
+    }
+
+    function showTutorial() {
+      const m = document.getElementById('tutorial-modal');
+      if (m) {
+        m.style.display = 'flex';
+        playKeyClack();
+      }
+    }
+    function dismissTutorial() {
+      safeSetStorage('kcyber_tutorialSeen', '1');
+      const m = document.getElementById('tutorial-modal');
+      if (m) m.style.display = 'none';
+      playAccessGranted();
+      cmdInput.focus();
+    }
+    function toggleHelp(force) {
+      const m = document.getElementById('help-modal');
+      if (!m) return;
+      const willShow = (typeof force === 'boolean') ? force : (m.style.display === 'none' || !m.style.display);
+      m.style.display = willShow ? 'flex' : 'none';
+      if (willShow) {
+        playKeyClack();
+      } else {
+        cmdInput.focus();
+      }
+    }
+    function hideModals() {
+      const tm = document.getElementById('tutorial-modal');
+      if (tm && tm.style.display !== 'none' && tm.style.display !== '') {
+        dismissTutorial();
+        return true;
+      }
+      const hm = document.getElementById('help-modal');
+      if (hm && hm.style.display !== 'none' && hm.style.display !== '') {
+        toggleHelp(false);
+        return true;
+      }
+      return false;
+    }
+
+    // --- FULL STATE PERSISTENCE (F5 QUICKSAVE / F9 QUICKLOAD) ---
+    function getGameState() {
+      return {
+        v: 1,
+        time: Date.now(),
+        player_credits,
+        player_mem,
+        player_max_mem,
+        player_max_cpu,
+        player_max_cloak,
+        player_max_slow,
+        player_max_patch,
+        player_max_probe,
+        tool_cloak,
+        tool_slow,
+        tool_patch,
+        tool_probe,
+        player_heat,
+        connected_node,
+        hacking_node,
+        hacking_target,
+        hacking_attempts,
+        ice_name,
+        ice_damage,
+        ice_frozen_ticks,
+        in_shop,
+        node_files: JSON.parse(JSON.stringify(node_files)),
+        missions: JSON.parse(JSON.stringify(missions)),
+        active_mission: active_mission ? JSON.parse(JSON.stringify(active_mission)) : null
+      };
+    }
+
+    function applyGameState(data) {
+      if (!data || data.v !== 1) return false;
+      player_credits = data.player_credits ?? 0;
+      player_mem = data.player_mem ?? 100;
+      player_max_mem = data.player_max_mem ?? 100;
+      player_max_cpu = data.player_max_cpu ?? 5;
+      player_max_cloak = data.player_max_cloak ?? 3;
+      player_max_slow = data.player_max_slow ?? 3;
+      player_max_patch = data.player_max_patch ?? 2;
+      player_max_probe = data.player_max_probe ?? 2;
+      tool_cloak = data.tool_cloak ?? player_max_cloak;
+      tool_slow = data.tool_slow ?? player_max_slow;
+      tool_patch = data.tool_patch ?? player_max_patch;
+      tool_probe = data.tool_probe ?? player_max_probe;
+      player_heat = data.player_heat ?? 0;
+      connected_node = data.connected_node ?? null;
+      hacking_node = data.hacking_node ?? null;
+      hacking_target = data.hacking_target ?? "";
+      hacking_attempts = data.hacking_attempts ?? player_max_cpu;
+      ice_name = data.ice_name ?? "";
+      ice_damage = data.ice_damage ?? 0;
+      ice_frozen_ticks = data.ice_frozen_ticks ?? 0;
+      in_shop = !!data.in_shop;
+      if (data.node_files) node_files = data.node_files;
+      if (data.missions) missions = data.missions;
+      active_mission = data.active_mission ?? null;
+
+      if (ice_interval) {
+        clearInterval(ice_interval);
+        ice_interval = null;
+      }
+      if (hacking_node) {
+        let current_interval = 3000 - (player_heat * 15);
+        if (current_interval < 500) current_interval = 500;
+        ice_interval = setInterval(iceAttack, current_interval);
+      }
+      updatePrompt();
+      return true;
+    }
+
+    function quickSave() {
+      const state = getGameState();
+      const ok = safeSetStorage('kcyber_save', JSON.stringify(state));
+      if (ok) {
+        printLine(`[SAVE] Cyberdeck state cached to storage [F5].`);
+        showToast('💾 Quicksave created! [F5]');
+        playAccessGranted();
+      } else {
+        printLine(`[SAVE ERROR] Failed to save state (storage quota exceeded).`);
+        showToast('⚠ Quicksave failed (Storage quota)!', true);
+        playAccessDenied();
+      }
+    }
+
+    function quickLoad(silent = false) {
+      const raw = safeGetStorage('kcyber_save');
+      if (!raw) {
+        if (!silent) {
+          printLine(`[LOAD] No quicksave state found [F5 to save].`);
+          showToast('⚠ No saved state found! [F5 to save]', true);
+          playAccessDenied();
+        }
+        return false;
+      }
+      try {
+        const data = JSON.parse(raw);
+        if (applyGameState(data)) {
+          if (!silent) {
+            printLine(`[LOAD] Quicksave restored successfully [F9].`);
+            printLine(`       MEM: ${player_mem}/${player_max_mem} | Credits: ${player_credits} cr | Heat: ${player_heat}%`);
+            showToast('💾 Quicksave restored! [F9]');
+            playAccessGranted();
+          }
+          return true;
+        } else {
+          throw new Error('Invalid version');
+        }
+      } catch (e) {
+        if (!silent) {
+          printLine(`[LOAD ERROR] Corrupt save data in storage.`);
+          showToast('⚠ Failed to restore quicksave!', true);
+          playAccessDenied();
+        }
+        return false;
+      }
+    }
 
     function generateMissions() {
       missions = [];
@@ -1081,8 +1494,20 @@
           return;
         }
 
+        if (cmdName === 'save' || cmdName === 'quicksave') {
+          quickSave();
+          updatePrompt();
+          return;
+        }
+
+        if (cmdName === 'load' || cmdName === 'quickload') {
+          quickLoad();
+          updatePrompt();
+          return;
+        }
+
         if (cmdName === 'help') {
-          printLine("Shop commands: ls (list upgrades), buy <item>, status, clear, exit");
+          printLine("Shop commands: ls (list upgrades), buy <item>, status, save, load, clear, exit");
           updatePrompt();
           return;
         }
@@ -1208,8 +1633,18 @@
           updatePrompt();
           return;
         }
+        if (guess === 'save' || guess === 'quicksave') {
+          quickSave();
+          updatePrompt();
+          return;
+        }
+        if (guess === 'load' || guess === 'quickload') {
+          quickLoad();
+          updatePrompt();
+          return;
+        }
         if (guess === 'help' || guess === '?') {
-          printLine("Hacking commands: <4-digit PIN> to guess, cloak (blind ICE), slow (halve trace), patch (restore MEM), probe (reveal digit), status, clear, abort");
+          printLine("Hacking commands: <4-digit PIN> to guess, cloak (blind ICE), slow (halve trace), patch (restore MEM), probe (reveal digit), status, save, load, clear, abort");
           updatePrompt();
           return;
         }
@@ -1362,8 +1797,20 @@
            return;
         }
 
+        if (cmd === 'save' || cmd === 'quicksave') {
+           quickSave();
+           updatePrompt();
+           return;
+        }
+
+        if (cmd === 'load' || cmd === 'quickload') {
+           quickLoad();
+           updatePrompt();
+           return;
+        }
+
         if (cmd === 'help') {
-           printLine("Connected commands: ls (list files), download <file>, status, clear, disconnect / exit");
+           printLine("Connected commands: ls (list files), download <file>, status, save, load, clear, disconnect / exit");
            updatePrompt();
            return;
         }
@@ -1445,6 +1892,9 @@
           printLine("  accept    - Accept a contract (e.g. 'accept 1')");
           printLine("  patch     - Apply nanite memory repair patch (+35 MEM)");
           printLine("  guide     - Open Runner's Guide (e.g. 'guide ice')");
+          printLine("  save      - Quicksave cyberdeck state [F5]");
+          printLine("  load      - Quickload state from storage [F9]");
+          printLine("  tutorial  - Show runner orientation briefing");
           printLine("During hack:");
           printLine("  abort     - Disconnect immediately");
           printLine("  cloak     - Blind ICE for 2 cycles");
@@ -1501,6 +1951,18 @@
           break;
         case 'clear':
           outputDiv.innerHTML = '';
+          break;
+        case 'save':
+        case 'quicksave':
+          quickSave();
+          break;
+        case 'load':
+        case 'quickload':
+          quickLoad();
+          break;
+        case 'tutorial':
+        case 'briefing':
+          showTutorial();
           break;
         case 'shop':
           in_shop = true;
@@ -1707,6 +2169,65 @@
       }
     });
 
+    window.addEventListener('keydown', (e) => {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (e.key === 'F5') {
+        e.preventDefault();
+        quickSave();
+        return;
+      }
+      if (e.key === 'F9') {
+        e.preventDefault();
+        quickLoad();
+        return;
+      }
+      if (e.key === 'F1') {
+        e.preventDefault();
+        toggleHelp();
+        return;
+      }
+      if (e.key === 'Escape') {
+        if (hideModals()) {
+          e.preventDefault();
+          return;
+        }
+        if (in_shop) {
+          processCommand('exit');
+          e.preventDefault();
+          return;
+        }
+        if (hacking_node) {
+          processCommand('abort');
+          e.preventDefault();
+          return;
+        }
+        if (connected_node) {
+          processCommand('disconnect');
+          e.preventDefault();
+          return;
+        }
+        cmdInput.value = '';
+        cmdInput.focus();
+        return;
+      }
+      const tm = document.getElementById('tutorial-modal');
+      if (tm && tm.style.display === 'flex') {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          dismissTutorial();
+          return;
+        }
+      }
+      const hm = document.getElementById('help-modal');
+      if (hm && hm.style.display === 'flex') {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggleHelp(false);
+          return;
+        }
+      }
+    });
+
     // Boot sequence
     generateMissions();
     printLine("KCyber OS booting...");
@@ -1714,6 +2235,17 @@
     printLine("Initializing memory... OK");
     printLine("Type 'help' for a list of commands.");
     requestAnimationFrame(renderLoop);
+
+    const hasSave = !!safeGetStorage('kcyber_save');
+    const tutorialSeen = safeGetStorage('kcyber_tutorialSeen') === '1';
+    if (!hasSave && !tutorialSeen) {
+      setTimeout(() => {
+        showTutorial();
+      }, 350);
+    } else if (hasSave) {
+      printLine("[SYSTEM] Cached deck session found in storage. Press [F9] to restore.");
+      showToast("💾 Saved deck available [F9 to load]");
+    }
   </script>
 </body>
 </html>
