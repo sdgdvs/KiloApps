@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-24T01:55:00Z — kilo-graphics: KColosseum (Game Content, Weapon Mastery & Visual Polish)**
+  - Status: PASS ✅ (Gallic Behemoth boss added; weapon masteries & visual polish implemented; 0 glints; 0 regressions).
+  - Boss Encounter: Implemented "Gallic Behemoth" barbarian titan with horned helm, woad paint, spiked war maul, and earth-slam shockwaves in HTML5 & Win32 C.
+  - Weapon Mastery: Added Gladius Rend (+4 bleed dmg), Trident Entangle (foe staggered), Bare Fists double Favor, and Shield Bash counter on defend miss.
+  - Visual Polish: Added Imperial Aquila eagle standard, dynamic cheering crowd (favor ≥30%), sunbeams, and fighter sand scuffs in HTML5 & GDI.
+  - Verification: MSVC C clean build (`KColosseum.exe` 27.5 KB); Vite clean build (383ms, `kcolosseum.html` 86.7 KB); icons 100% unique; <999KB ceiling.
+
 - **2026-09-24T00:41:00Z — kilo-usability: KContacts (Toast Occlusion & Window Ergonomics)**
   - Status: PASS ✅ (Eliminated toast occlusion blocking Save button; enhanced layout ergonomics; 0 regressions).
   - Toast Positioning: Relocated `.toast-container` from bottom-right (`bottom: 20px; right: 20px`) to top-right (`top: 16px; right: 18px`).
