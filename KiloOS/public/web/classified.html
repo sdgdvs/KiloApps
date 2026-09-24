@@ -1571,7 +1571,7 @@ function execTermCommand(rawCmd) {
            `0x1999:0030  43 41 52 4C 53 42 41 44  5F 30 78 37 46 00 00 00  CARLSBAD_0x7F...\n` +
            `0x1999:0040  31 39 39 39 48 5A 5F 53  55 42 5F 4C 4F 43 4B 00  1999HZ_SUB_LOCK.`;
   } else if (cmd === 'scan') {
-    res += `Scanning subnet 10.19.99.0/24...\n[+] 10.19.99.1   [Gateway Router - Port 80, 23 OPEN]\n[+] 10.19.99.4   [Project Echo Node - Port 1999, 80 OPEN]\n[+] 10.19.99.12  [Subcarrier RF Beacon - Port 1999 OPEN]\n[+] 10.19.99.127 [Carlsbad Salt Vault Core - AIRGAP ARMED]\nScan complete. 4 active hosts discovered.`;
+    res += `Scanning subnet 10.19.99.0/24...\n[+] 10.19.99.1   [Gateway Router - Port 80, 23 OPEN]\n[+] 10.19.99.4   [Project Echo Node - Port 1999, 80 OPEN]\n[+] 10.19.99.12  [Subcarrier RF Beacon - Port 1999 OPEN]\n[+] 10.19.99.19  [Echo Subsystem Acoustic Lab (echo-subsystem.net) - Port 1999, 432 OPEN]\n[+] 10.19.99.127 [Carlsbad Salt Vault Core - AIRGAP ARMED]\nScan complete. 5 active hosts discovered.`;
   } else if (cmd === 'matrix') {
     res += `[RESIDUAL SOCKET TRACE DETECTED]\n>> Sector 0x1999: Destination resolves to App #100 ('KMatrix').\n>> Passkey fragment verified: Passkey format requires 3 hyphenated sections.\n>> Seek KMatrix terminal to conclude the convergence.`;
   } else if (cmd === 'audio') {
