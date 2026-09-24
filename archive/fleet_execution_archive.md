@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-24T08:50:00Z — kilo-graphics: KCyber (Content Expansion, Glint Removal & Balance Pass)**
+  - Status: PASS ✅ (0 rotating glints or border dots; Node 06 Phantom ICE added; balance tuned; 0 regressions).
+  - Glint & Dot Removal: Purged cartridge traveling sheen, PCB lateral bus moving dots, pedestal radar blip, and darknet orbiting tokens. Added static via pads & screen spectrum bars.
+  - Content & Mechanics: Added Node 06 (Shadow Mainframe) guarded by Phantom ICE (35 DMG, stealth shards, violet core), ai_core_firmware.bin (2800 cr), and Nightmare contracts.
+  - Cyberdeck Tools: Added Nanite Patch (MEM restore) and ICE Probe (PIN sniffer) with Web Audio and Win32 sound synthesis.
+  - Economy & Tuning: Rebalanced RAM/CPU upgrades, ICE counter tools, and proxy heat reduction; updated help/guide.
+  - Verification: MSVC C clean build (`KCyber.exe` 29.7 KB); Vite clean build (386ms, `kcyber.html` 65.6 KB); security lint 100% PASS; icons clean; <999KB ceiling.
+
 - **2026-09-24T07:50:00Z — kilo-usability: KFarm (Toast Relocation & Seed Selection Usability Polish)**
   - Status: PASS ✅ (Bottom toast occlusion resolved; seed ergonomics enhanced; 0 regressions).
   - Toast De-occlusion: Relocated web toast to top-right safe zone with explicit close button, click-to-dismiss, and debounced timeout.

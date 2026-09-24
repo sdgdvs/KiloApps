@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KType
-  kilo_usability: KPaint
+  kilo_usability: KAudio
   kilo_graphics: KMech
   kilo_qa: KDragon
   kilo_expander: "KTetris (Arcade Duel Multiplayer)"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-tester
-  app: KTrader
-  timestamp: "2026-09-24T12:45:00Z"
+  agent: kilo-usability
+  app: KPaint
+  timestamp: "2026-09-24T13:54:00Z"
 last_planner_run: "2026-09-24T05:46:00Z"
 ---
 
@@ -115,9 +115,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KPaint`
+- **Current Target**: `KAudio`
 - **Upcoming Queue**:
-  `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`.
+  `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KDragon`
@@ -201,6 +201,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-24T13:54:00Z — kilo-usability: KPaint (Canvas Pristine Slate, HiDPI Zoom & Toast De-occlusion)**
+  - Status: PASS ✅ (Initial canvas bitmap text pollution purged; zoom controls & HiDPI crispness added; 0 regressions).
+  - Canvas Slate: Removed initial greeting text pollution from drawing buffer in web and native, ensuring pure white canvas.
+  - Viewport & HiDPI: Added crisp pixelated canvas rendering with Zoom (25%-400%, Fit) via status bar and Ctrl+Wheel/hotkeys.
+  - Toast & Onboarding: Centered toast above status bar per Vision Audit Directive; wired first-run guide with persistence toggle.
+  - Window Sizing: Adjusted default dimensions to 1140x780 in KiloOS App.jsx and native C for comfortable tool layout.
+  - Verification: Clean MSVC C compile (`KPaint.exe` 25.6 KB); Vite build clean (556ms, `kpaint.html` 94.4 KB); security lint 100% PASS.
+
 - **2026-09-24T12:45:00Z — kilo-tester: KTrader (Interactive UI Audit, Persistence & Glint Remediation)**
   - Status: PASS ✅ (4 issues identified, 4 fixed; 0 regressions).
   - Navigation & Hotkeys: Added [1-9] keyboard routing for all galaxy connections; wired shipyard [R] refuel cue.
@@ -231,12 +239,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Interactive UI & Overlays: Built retro toolbar buttons (Save, Load, Help, Briefing), centered dismissible toast system (`z-index: 200`), and Runner Manual modal with hotkeys ([F5], [F9], [F1], [Esc], [Enter], [Space]).
   - Ergonomics: Adjusted visuals canvas below header to prevent button overlap; added safe storage quota handling.
   - Verification: MSVC C clean build (`KCyber.exe` 33.8 KB); clean Vite build (376ms, `kcyber.html` 84.8 KB); security lint 100% PASS; icons clean; <999KB ceiling.
-
-- **2026-09-24T08:50:00Z — kilo-graphics: KCyber (Content Expansion, Glint Removal & Balance Pass)**
-  - Status: PASS ✅ (0 rotating glints or border dots; Node 06 Phantom ICE added; balance tuned; 0 regressions).
-  - Glint & Dot Removal: Purged cartridge traveling sheen, PCB lateral bus moving dots, pedestal radar blip, and darknet orbiting tokens. Added static via pads & screen spectrum bars.
-  - Content & Mechanics: Added Node 06 (Shadow Mainframe) guarded by Phantom ICE (35 DMG, stealth shards, violet core), ai_core_firmware.bin (2800 cr), and Nightmare contracts.
-  - Cyberdeck Tools: Added Nanite Patch (MEM restore) and ICE Probe (PIN sniffer) with Web Audio and Win32 sound synthesis.
-  - Economy & Tuning: Rebalanced RAM/CPU upgrades, ICE counter tools, and proxy heat reduction; updated help/guide.
-  - Verification: MSVC C clean build (`KCyber.exe` 29.7 KB); Vite clean build (386ms, `kcyber.html` 65.6 KB); security lint 100% PASS; icons clean; <999KB ceiling.
 

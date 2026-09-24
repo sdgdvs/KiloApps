@@ -575,15 +575,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             RECT r = {0, 0, 2000, 2000};
             FillRect(hdcMem, &r, (HBRUSH)GetStockObject(WHITE_BRUSH));
-            
-            HFONT hWelcomeFont = CreateFontA(-24, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5, DEFAULT_PITCH, "Segoe UI");
-            SetTextColor(hdcMem, RGB(150, 150, 150));
-            SetBkMode(hdcMem, TRANSPARENT);
-            HFONT hOldF = (HFONT)SelectObject(hdcMem, hWelcomeFont);
-            TextOutA(hdcMem, 20, 20, "Welcome to KPaint Pro! Press F1 for Help | D for Demo Art", 58);
-            SelectObject(hdcMem, hOldF);
-            DeleteObject(hWelcomeFont);
-            
             ReleaseDC(hwnd, hdc);
             
             UpdatePen();
@@ -792,7 +783,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_KEYDOWN: {
             if (GetKeyState(VK_CONTROL) & 0x8000) {
                 if (wParam == 'Z' || wParam == 'z') {
-                    PerformUndo();
+                    if (GetKeyState(VK_SHIFT) & 0x8000) {
+                        PerformRedo();
+                    } else {
+                        PerformUndo();
+                    }
                     InvalidateRect(hwnd, NULL, FALSE);
                 } else if (wParam == 'Y' || wParam == 'y') {
                     PerformRedo();
@@ -1040,7 +1035,7 @@ void __stdcall MainEntry() {
     wc.hbrBackground = NULL;
 
     RegisterClassA(&wc);
-    RECT wr = {0, 0, 1100, 750};
+    RECT wr = {0, 0, 1140, 780};
     AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_HSCROLL | WS_CLIPCHILDREN, FALSE);
     HWND hwnd = CreateWindowExA(0, "KPaintClass", "KPaint Pro - Press F1 or H for Help", WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_HSCROLL | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top, NULL, NULL, wc.hInstance, NULL);
     
@@ -1054,7 +1049,11 @@ void __stdcall MainEntry() {
             BOOL bCtrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
             if (bCtrl) {
                 if (wParam == 'Z' || wParam == 'z') {
-                    PerformUndo();
+                    if (GetKeyState(VK_SHIFT) & 0x8000) {
+                        PerformRedo();
+                    } else {
+                        PerformUndo();
+                    }
                     InvalidateRect(hwnd, NULL, FALSE);
                     continue;
                 } else if (wParam == 'Y' || wParam == 'y') {

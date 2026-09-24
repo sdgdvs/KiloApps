@@ -259,7 +259,7 @@
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255,255,255,0.05);
     border-radius: 4px;
     background: #ffffff;
-    transition: transform 0.1s ease;
+    transform-origin: top left;
   }
 
   canvas {
@@ -267,6 +267,9 @@
     top: 0;
     left: 0;
     border-radius: 4px;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
   }
   #canvas { z-index: 1; background: #ffffff; cursor: crosshair; }
   #preview { z-index: 2; pointer-events: none; }
@@ -284,6 +287,35 @@
     color: var(--text-muted);
   }
   .status-info { display: flex; gap: 16px; }
+  .zoom-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--panel-border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 11px;
+  }
+  .zoom-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 0 4px;
+    line-height: 1;
+    border-radius: 2px;
+    transition: background 0.15s;
+  }
+  .zoom-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--primary-hover);
+  }
+  @media (max-width: 900px) {
+    .status-hints { display: none; }
+  }
 
   /* Brush Preview Pill */
   .brush-preview-box {
@@ -504,26 +536,29 @@
   /* Toast Notification */
   .toast-notification {
     position: fixed;
-    bottom: 40px;
-    right: 20px;
-    background: rgba(24, 27, 40, 0.95);
+    bottom: 38px;
+    left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    background: rgba(24, 27, 40, 0.96);
     border: 1px solid var(--primary);
     color: var(--text-main);
-    padding: 10px 16px;
+    padding: 8px 18px;
     border-radius: 8px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     box-shadow: 0 8px 24px rgba(0,0,0,0.6);
     z-index: 1000;
     pointer-events: auto;
     cursor: pointer;
     opacity: 0;
-    transform: translateY(10px);
     transition: opacity 0.2s ease, transform 0.2s ease;
+    white-space: nowrap;
+    max-width: 90%;
+    text-align: center;
   }
   .toast-notification.show {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
   }
 </style>
 </head>
@@ -609,6 +644,10 @@
           <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>O</kbd><span>Open Image</span></div>
           <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>Z</kbd><span>Undo</span></div>
           <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>Y</kbd><span>Redo</span></div>
+          <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>+</kbd><span>Zoom In</span></div>
+          <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>-</kbd><span>Zoom Out</span></div>
+          <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>0</kbd><span>Reset Zoom (100%)</span></div>
+          <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>Wheel</kbd><span>Zoom Canvas</span></div>
           <div class="shortcut-item"><kbd>Esc</kbd><span>Deselect / Close Modal</span></div>
           <div class="shortcut-item"><kbd>Del</kbd>/<kbd>Bksp</kbd><span>Clear Selection</span></div>
         </div>
@@ -621,10 +660,14 @@
           <li><strong>Layers:</strong> Add transparent layers, re-order, toggle visibility, and merge layers down. All drawing tools and filters target the active layer.</li>
           <li><strong>Selection:</strong> Use Magic Wand to auto-select contiguous color regions, or Lasso for freeform selection. Press <strong>Esc</strong> to clear selection.</li>
           <li><strong>Filters &amp; Transforms:</strong> Invert colors, grayscale, brightness, contrast, edge detect, sharpen, and rotate/flip.</li>
+          <li><strong>Zoom &amp; Canvas:</strong> Use Zoom In/Out/Fit controls in the status bar or Ctrl+Wheel to zoom into pixels with razor crispness.</li>
           <li><strong>Export:</strong> Export your art directly to PNG, WEBP, or standard 24-bit BMP, or save to the KiloOS filesystem. Drag-and-drop any image onto canvas to load.</li>
         </ul>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer" style="justify-content: space-between; align-items: center;">
+        <label style="font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none;">
+          <input type="checkbox" id="chk-tutorial" checked onchange="toggleTutorialSeen(this.checked)"> Don't show on launch
+        </label>
         <button class="btn btn-accent" style="padding: 8px 24px; font-weight: 600;" onclick="closeHelp()">Got it!</button>
       </div>
     </div>
@@ -790,7 +833,15 @@
       <span>Pos: <strong id="lbl-pos">0, 0</strong></span>
       <span>Tool: <strong id="lbl-tool">Brush</strong></span>
     </div>
-    <div>Press <strong>Ctrl+Z</strong> Undo | <strong>B</strong> Brush | <strong>E</strong> Eraser | <strong>G</strong> Fill | <strong>I</strong> Pick | <strong>F1 / H</strong> Help</div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span class="status-hints"><strong>Ctrl+Z</strong> Undo | <strong>B</strong> Brush | <strong>E</strong> Eraser | <strong>G</strong> Fill | <strong>I</strong> Pick | <strong>F1/H</strong> Help</span>
+      <div class="zoom-controls" role="group" aria-label="Zoom Controls">
+        <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out (Ctrl -)" aria-label="Zoom Out">−</button>
+        <span id="lbl-zoom" onclick="resetZoom()" title="Click to Reset Zoom (Ctrl 0)" style="cursor:pointer; min-width:34px; text-align:center; font-weight:600;">100%</span>
+        <button class="zoom-btn" onclick="zoomIn()" title="Zoom In (Ctrl +)" aria-label="Zoom In">+</button>
+        <button class="zoom-btn" onclick="zoomFit()" title="Fit to Window" aria-label="Fit to Window">Fit</button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -816,6 +867,68 @@
     let activeLayerIndex = 0;
     let layerCounter = 1;
     let lassoPoints = [];
+
+    // Zoom & Canvas Viewport
+    let currentZoom = 1.0;
+    const ZOOM_LEVELS = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0];
+
+    function setZoom(z) {
+      currentZoom = Math.min(4.0, Math.max(0.25, Math.round(z * 100) / 100));
+      applyZoom();
+    }
+
+    function zoomIn() {
+      const next = ZOOM_LEVELS.find(lvl => lvl > currentZoom + 0.01);
+      setZoom(next || 4.0);
+      showToast(`Zoom: ${Math.round(currentZoom * 100)}%`);
+    }
+
+    function zoomOut() {
+      const prev = [...ZOOM_LEVELS].reverse().find(lvl => lvl < currentZoom - 0.01);
+      setZoom(prev || 0.25);
+      showToast(`Zoom: ${Math.round(currentZoom * 100)}%`);
+    }
+
+    function resetZoom() {
+      setZoom(1.0);
+      showToast('Zoom reset: 100%');
+    }
+
+    function zoomFit() {
+      const c = document.getElementById('container');
+      if (!c || !layers[0]) return;
+      const cRect = c.getBoundingClientRect();
+      const availW = Math.max(100, cRect.width - 40);
+      const availH = Math.max(100, cRect.height - 40);
+      const w = layers[0].canvas.width;
+      const h = layers[0].canvas.height;
+      const scale = Math.min(availW / w, availH / h, 1.0);
+      setZoom(Math.max(0.25, Math.floor(scale * 100) / 100));
+      showToast(`Fit to view: ${Math.round(currentZoom * 100)}%`);
+    }
+
+    function applyZoom() {
+      if (!layers[0]) return;
+      const w = layers[0].canvas.width;
+      const h = layers[0].canvas.height;
+      const dispW = Math.round(w * currentZoom) + 'px';
+      const dispH = Math.round(h * currentZoom) + 'px';
+
+      wrapper.style.width = dispW;
+      wrapper.style.height = dispH;
+
+      layers.forEach(l => {
+        l.canvas.style.width = dispW;
+        l.canvas.style.height = dispH;
+      });
+      previewCanvas.style.width = dispW;
+      previewCanvas.style.height = dispH;
+      selCanvas.style.width = dispW;
+      selCanvas.style.height = dispH;
+
+      const lbl = document.getElementById('lbl-zoom');
+      if (lbl) lbl.innerText = Math.round(currentZoom * 100) + '%';
+    }
 
     // History Stack
     const undoStack = [];
@@ -886,6 +999,7 @@
       activeLayerIndex = layers.length - 1;
       canvas = layers[activeLayerIndex].canvas;
       ctx = layers[activeLayerIndex].ctx;
+      applyZoom();
       updateLayersUI();
       updateBrushSettings();
       saveState();
@@ -1173,16 +1287,12 @@
     function initCanvas() {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Add opening instruction
-      ctx.fillStyle = '#9ca3af';
-      ctx.font = '24px Inter, sans-serif';
-      ctx.fillText('Welcome to KPaint Pro! Press H for Help', 20, 40);
 
       loadPreferences();
       loadPalettePreset();
       updateBrushSettings();
       updateLayersUI();
+      applyZoom();
       saveState();
     }
 
@@ -1257,6 +1367,7 @@
       ctx = layers[activeLayerIndex].ctx;
       updateLayersUI();
       updateBrushSettings();
+      applyZoom();
     }
 
     function updateHistoryButtons() {
@@ -1830,8 +1941,7 @@
       previewCanvas.height = newH;
       selCanvas.width = newW;
       selCanvas.height = newH;
-      wrapper.style.width = newW + 'px';
-      wrapper.style.height = newH + 'px';
+      applyZoom();
       document.getElementById('lbl-dim').innerText = `${newW} x ${newH}`;
       updateBrushSettings();
       clearSelection();
@@ -1850,8 +1960,7 @@
       previewCanvas.height = h;
       selCanvas.width = w;
       selCanvas.height = h;
-      wrapper.style.width = w + 'px';
-      wrapper.style.height = h + 'px';
+      applyZoom();
       document.getElementById('lbl-dim').innerText = `${w} x ${h}`;
       updateBrushSettings();
     }
@@ -1973,6 +2082,17 @@
         }
       }
     });
+
+    container.addEventListener('wheel', (e) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        if (e.deltaY < 0) {
+          zoomIn();
+        } else {
+          zoomOut();
+        }
+      }
+    }, { passive: false });
 
     // Toast Notification Manager
     let toastTimer = null;
@@ -2293,14 +2413,32 @@
       }
     }
 
+    function toggleTutorialSeen(dontShow) {
+      try {
+        if (dontShow) {
+          localStorage.setItem('kpaint_tutorial_seen', '1');
+        } else {
+          localStorage.removeItem('kpaint_tutorial_seen');
+        }
+      } catch (_) {}
+    }
+
     function showHelp() {
       const m = document.getElementById('help-modal');
       if (m) m.classList.add('show');
+      const chk = document.getElementById('chk-tutorial');
+      if (chk) {
+        chk.checked = localStorage.getItem('kpaint_tutorial_seen') === '1';
+      }
     }
 
     function closeHelp() {
       const m = document.getElementById('help-modal');
       if (m) m.classList.remove('show');
+      const chk = document.getElementById('chk-tutorial');
+      if (chk && chk.checked) {
+        try { localStorage.setItem('kpaint_tutorial_seen', '1'); } catch (_) {}
+      }
     }
 
     function handleBackdropClick(e) {
@@ -2337,6 +2475,15 @@
         } else if (e.key === 'y' || e.key === 'Y') {
           e.preventDefault();
           redo();
+        } else if (e.key === '=' || e.key === '+') {
+          e.preventDefault();
+          zoomIn();
+        } else if (e.key === '-' || e.key === '_') {
+          e.preventDefault();
+          zoomOut();
+        } else if (e.key === '0') {
+          e.preventDefault();
+          resetZoom();
         } else if (e.key === 's' || e.key === 'S') {
           e.preventDefault();
           saveVFS();
@@ -2387,15 +2534,23 @@
 
     // Hash VFS Load support
     window.onload = () => {
-      if (window.resizeTo) window.resizeTo(1100, 750);
+      if (window.resizeTo) window.resizeTo(1140, 780);
       initCanvas();
       if (window.location.hash) {
         const path = window.location.hash.substring(1);
         if (path) loadVFSFile(path);
       }
-      setTimeout(() => {
-        showToast("Welcome to KPaint Pro! Press F1 for Help | Try Quick Starters below", 4000);
-      }, 300);
+      const tutorialSeen = localStorage.getItem('kpaint_tutorial_seen');
+      if (!tutorialSeen && !window.location.hash) {
+        setTimeout(() => {
+          showHelp();
+          try { localStorage.setItem('kpaint_tutorial_seen', '1'); } catch (_) {}
+        }, 350);
+      } else {
+        setTimeout(() => {
+          showToast("Welcome to KPaint Pro! Press F1 for Help | Try Quick Starters below", 3500);
+        }, 300);
+      }
     };
 
     async function loadVFSFile(path) {
