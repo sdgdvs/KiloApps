@@ -262,12 +262,60 @@
             border-radius: 2px;
             text-shadow: 0 0 6px #00ff00;
         }
+        #toast-bar {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(18, 16, 12, 0.96);
+            border: 1px solid #d4af37;
+            color: #ffe899;
+            padding: 9px 20px;
+            border-radius: 4px;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 22px rgba(0,0,0,0.9), 0 0 10px rgba(212,175,55,0.35);
+            z-index: 9999;
+            pointer-events: none;
+            cursor: pointer;
+            transition: opacity 0.22s ease, transform 0.22s ease;
+            opacity: 0;
+            white-space: pre-line;
+            text-align: center;
+        }
+        #toast-bar.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .clue-item-clickable {
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease, padding-left 0.15s ease;
+        }
+        .clue-item-clickable:hover {
+            color: #ffe899 !important;
+            background: rgba(212,175,55,0.12);
+            padding-left: 4px;
+        }
+        .header-btn-group {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .header-btn-group button {
+            margin: 0;
+        }
     </style>
 </head>
 <body>
     <div id="header">
         <h1>KMystery</h1>
-        <button onclick="showHelp()" class="btn-gold">Manual</button>
+        <div class="header-btn-group">
+            <button id="music-toggle-btn" onclick="toggleMusic()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Toggle procedural 16-bit noir jazz audio">♫ Music: ON</button>
+            <button onclick="quickSave()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Quicksave game state [F5]">Save [F5]</button>
+            <button onclick="quickLoad()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Quickload game state [F9]">Load [F9]</button>
+            <button onclick="toggleHelp()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Toggle detective manual [F1]">Manual [F1]</button>
+        </div>
     </div>
     
     <div id="help-modal" class="hidden">
@@ -286,10 +334,37 @@
             <p>- In the lab, calibrate the scanner waveform to match the target frequency.</p>
             <p>- Use the +11, +7, and -3 frequency shifts strategically.</p>
             <div style="text-align:center; margin-top:20px;">
-                <button onclick="hideHelp()" class="btn-gold">Close Manual</button>
+                <button onclick="hideHelp()" class="btn-gold">Close Manual [Esc]</button>
             </div>
         </div>
     </div>
+
+    <div id="dossier-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.86); z-index:1200; display:flex; justify-content:center; align-items:center;">
+        <div style="background:#111114; border:2px solid #d4af37; padding:22px; max-width:540px; width:90%; max-height:85vh; overflow-y:auto; box-shadow:0 0 35px #000; border-radius:4px; position:relative;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #4a3e26; padding-bottom:8px;">
+                <h2 id="dossier-title" style="margin:0; font-size:16px; color:#d4af37; letter-spacing:1.5px;">EVIDENCE FORENSIC DOSSIER</h2>
+                <button onclick="closeDossier()" class="btn-gold" style="font-size:11px; padding:4px 10px;">Close [Esc]</button>
+            </div>
+            <div style="display:flex; gap:16px; margin-top:14px; flex-wrap:wrap; align-items:center;">
+                <canvas id="dossier-canvas" width="160" height="160" style="background:#07070a; border:1px solid #5a4828; border-radius:3px; flex-shrink:0;"></canvas>
+                <div style="flex:1; min-width:200px; font-size:13px; color:#c0bab0; line-height:1.45;">
+                    <div style="color:#d4af37; font-weight:bold; font-size:14px; margin-bottom:4px;" id="dossier-clue-name">Spent Shell Casing</div>
+                    <div style="margin-bottom:8px; font-style:italic; color:#9c9586;" id="dossier-clue-location">Recovered from: The Manor</div>
+                    <div style="background:rgba(0,0,0,0.55); padding:8px 10px; border-left:3px solid #d4af37; margin-bottom:8px; font-size:12px; color:#dfd8c8;" id="dossier-analysis">
+                        Ballistics analysis in progress...
+                    </div>
+                    <div style="font-size:12px; color:#a09886;" id="dossier-deduction">
+                        Present this item to suspects during interrogation to observe physiological responses.
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top:16px; text-align:right;">
+                <button onclick="closeDossier()" class="btn-gold" style="font-size:12px; padding:6px 18px;">Return to Case File</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="toast-bar" onclick="dismissToast()"></div>
     
     <div id="start-screen">
         <div class="container">
@@ -399,8 +474,297 @@
     </div>
 
     <script>
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        let rainPlaying = false;
+        // =========================================================================
+        // PROCEDURAL AUDIO: GENESIS YM2612 2-OP FM SYNTHESIS & SPC700 STEREO DELAY
+        // =========================================================================
+        class NoirAudioEngine {
+            constructor() {
+                this.ctx = null;
+                this.masterGain = null;
+                this.musicGain = null;
+                this.sfxGain = null;
+                this.delayL = null;
+                this.delayR = null;
+                this.delayFilter = null;
+                this.musicEnabled = true;
+                this.rainSource = null;
+                this.rainGain = null;
+                this.step = 0;
+                this.timer = null;
+                this.bpm = 74;
+            }
+
+            init() {
+                if (this.ctx) return;
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContextClass();
+
+                this.masterGain = this.ctx.createGain();
+                this.masterGain.gain.value = 0.85;
+                this.masterGain.connect(this.ctx.destination);
+
+                // SPC700 Stereo Delay Warmth Network (190ms / 260ms with 2.2kHz tape filter)
+                this.delayL = this.ctx.createDelay();
+                this.delayL.delayTime.value = 0.19;
+                this.delayR = this.ctx.createDelay();
+                this.delayR.delayTime.value = 0.26;
+
+                this.delayFilter = this.ctx.createBiquadFilter();
+                this.delayFilter.type = 'lowpass';
+                this.delayFilter.frequency.value = 2200;
+                this.delayFilter.Q.value = 0.7;
+
+                const delayFeedback = this.ctx.createGain();
+                delayFeedback.gain.value = 0.25;
+
+                const panL = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
+                const panR = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
+                if (panL && panR) {
+                    panL.pan.value = -0.45;
+                    panR.pan.value = 0.45;
+                    this.delayL.connect(panL);
+                    panL.connect(this.delayFilter);
+                    this.delayR.connect(panR);
+                    panR.connect(this.delayFilter);
+                } else {
+                    this.delayL.connect(this.delayFilter);
+                    this.delayR.connect(this.delayFilter);
+                }
+
+                this.delayFilter.connect(delayFeedback);
+                delayFeedback.connect(this.delayL);
+                delayFeedback.connect(this.delayR);
+                this.delayFilter.connect(this.masterGain);
+
+                this.musicGain = this.ctx.createGain();
+                this.musicGain.gain.value = 0.35;
+                this.musicGain.connect(this.masterGain);
+                this.musicGain.connect(this.delayL);
+                this.musicGain.connect(this.delayR);
+
+                this.sfxGain = this.ctx.createGain();
+                this.sfxGain.gain.value = 0.6;
+                this.sfxGain.connect(this.masterGain);
+
+                this.initRain();
+                this.startSequencer();
+            }
+
+            resume() {
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playFMNote(freq, dur, type = 'rhodes', velocity = 0.7) {
+                if (!this.ctx || !this.musicEnabled) return;
+                this.resume();
+
+                const t = this.ctx.currentTime;
+                const mod = this.ctx.createOscillator();
+                const modGain = this.ctx.createGain();
+                const car = this.ctx.createOscillator();
+                const carGain = this.ctx.createGain();
+
+                let modRatio = 2.0;
+                let modDepth = freq * 1.5;
+                let attack = 0.01;
+                let decay = dur * 0.9;
+
+                if (type === 'bass') {
+                    modRatio = 0.5;
+                    modDepth = freq * 2.2;
+                    attack = 0.015;
+                    decay = dur * 0.8;
+                    velocity *= 1.1;
+                } else if (type === 'lead') {
+                    modRatio = 1.5;
+                    modDepth = freq * 1.8;
+                    attack = 0.04;
+                    decay = dur * 0.95;
+                }
+
+                mod.type = 'sine';
+                mod.frequency.value = freq * modRatio;
+                modGain.gain.setValueAtTime(modDepth * velocity, t);
+                modGain.gain.exponentialRampToValueAtTime(1.0, t + decay);
+
+                mod.connect(modGain);
+                modGain.connect(car.frequency);
+
+                car.type = 'sine';
+                car.frequency.setValueAtTime(freq, t);
+
+                carGain.gain.setValueAtTime(0.0001, t);
+                carGain.gain.linearRampToValueAtTime(velocity * 0.25, t + attack);
+                carGain.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+
+                car.connect(carGain);
+                carGain.connect(this.musicGain);
+
+                mod.start(t);
+                car.start(t);
+                mod.stop(t + decay);
+                car.stop(t + decay);
+            }
+
+            initRain() {
+                if (this.rainSource) return;
+                const bufferSize = this.ctx.sampleRate * 2;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                this.rainSource = this.ctx.createBufferSource();
+                this.rainSource.buffer = buffer;
+                this.rainSource.loop = true;
+
+                const rainFilter = this.ctx.createBiquadFilter();
+                rainFilter.type = 'lowpass';
+                rainFilter.frequency.value = 420;
+
+                this.rainGain = this.ctx.createGain();
+                this.rainGain.gain.value = 0.035;
+
+                this.rainSource.connect(rainFilter);
+                rainFilter.connect(this.rainGain);
+                this.rainGain.connect(this.masterGain);
+                this.rainSource.start();
+            }
+
+            startSequencer() {
+                if (this.timer) clearInterval(this.timer);
+                const stepInterval = (60 / this.bpm / 2) * 1000;
+
+                const m = {
+                    bass: [
+                        73.42, 0, 73.42, 82.41, 87.31, 0, 98.00, 110.00,
+                        98.00, 0, 98.00, 110.00, 116.54, 0, 130.81, 123.47,
+                        110.00, 0, 110.00, 123.47, 130.81, 0, 116.54, 98.00,
+                        73.42, 0, 87.31, 98.00, 110.00, 0, 65.41, 0
+                    ],
+                    chords: [
+                        [349.23, 440.00, 523.25, 659.25],
+                        [],
+                        [349.23, 440.00, 523.25, 659.25],
+                        [],
+                        [392.00, 466.16, 587.33, 698.46],
+                        [],
+                        [392.00, 466.16, 587.33, 698.46],
+                        [],
+                        [370.00, 440.00, 466.16, 554.37],
+                        [],
+                        [370.00, 440.00, 466.16, 554.37],
+                        [],
+                        [349.23, 493.88, 659.25, 880.00],
+                        [],
+                        [349.23, 440.00, 523.25, 659.25],
+                        []
+                    ],
+                    lead: [
+                        587.33, 0, 659.25, 698.46, 0, 659.25, 587.33, 0,
+                        0, 523.25, 587.33, 0, 466.16, 0, 440.00, 0,
+                        0, 440.00, 466.16, 554.37, 0, 587.33, 659.25, 0,
+                        587.33, 0, 0, 523.25, 440.00, 392.00, 369.99, 0
+                    ]
+                };
+
+                this.timer = setInterval(() => {
+                    if (!this.musicEnabled) return;
+                    const bFreq = m.bass[this.step % m.bass.length];
+                    if (bFreq > 0) {
+                        this.playFMNote(bFreq, 0.55, 'bass', 0.85);
+                    }
+
+                    const cStep = Math.floor(this.step / 2) % m.chords.length;
+                    if (this.step % 2 === 0) {
+                        const chordNotes = m.chords[cStep];
+                        if (chordNotes && chordNotes.length) {
+                            chordNotes.forEach((f, i) => {
+                                setTimeout(() => {
+                                    this.playFMNote(f, 0.85, 'rhodes', 0.42);
+                                }, i * 18);
+                            });
+                        }
+                    }
+
+                    const lFreq = m.lead[this.step % m.lead.length];
+                    if (lFreq > 0) {
+                        this.playFMNote(lFreq, 0.48, 'lead', 0.48);
+                    }
+
+                    this.step++;
+                }, stepInterval);
+            }
+
+            toggleMusic() {
+                this.musicEnabled = !this.musicEnabled;
+                if (!this.musicEnabled && this.musicGain) {
+                    this.musicGain.gain.setValueAtTime(0, this.ctx.currentTime);
+                } else if (this.musicEnabled && this.musicGain) {
+                    this.musicGain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+                }
+                return this.musicEnabled;
+            }
+
+            playTypewriter() {
+                if (!this.ctx) this.init();
+                this.resume();
+                const t = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(220 + Math.random() * 80, t);
+                osc.frequency.exponentialRampToValueAtTime(30, t + 0.04);
+                gain.gain.setValueAtTime(0.18, t);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+                osc.connect(gain);
+                gain.connect(this.sfxGain);
+                osc.start(t);
+                osc.stop(t + 0.04);
+            }
+
+            playClueReveal() {
+                if (!this.ctx) this.init();
+                this.resume();
+                const notes = [440, 554.37, 659.25, 880];
+                notes.forEach((freq, idx) => {
+                    setTimeout(() => {
+                        this.playFMNote(freq, 1.1, 'rhodes', 0.65);
+                    }, idx * 70);
+                });
+            }
+
+            playDramaticChord() {
+                if (!this.ctx) this.init();
+                this.resume();
+                const freqs = [146.83, 220.00, 261.63, 349.23, 440.00];
+                freqs.forEach(f => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.value = f;
+                    gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.005, this.ctx.currentTime + 2.2);
+                    osc.connect(gain);
+                    gain.connect(this.sfxGain);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 2.2);
+                });
+            }
+        }
+
+        const noirAudio = new NoirAudioEngine();
+
+        // UI & Modal helpers
+        function toggleMusic() {
+            noirAudio.init();
+            const on = noirAudio.toggleMusic();
+            const btn = document.getElementById('music-toggle-btn');
+            if (btn) btn.textContent = on ? '♫ Music: ON' : '♫ Music: OFF';
+            showToast(on ? "♫ Noir Jazz: Playing" : "♫ Noir Jazz: Muted");
+        }
 
         function showHelp() {
             document.getElementById('help-modal').classList.remove('hidden');
@@ -408,68 +772,99 @@
         function hideHelp() {
             document.getElementById('help-modal').classList.add('hidden');
         }
-
-        function playTypewriter() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(150 + Math.random() * 100, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.05);
-            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.05);
+        function toggleHelp() {
+            const m = document.getElementById('help-modal');
+            if (m.classList.contains('hidden')) showHelp();
+            else hideHelp();
         }
 
-        function playDramaticChord() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const freqs = [220, 261.63, 329.63, 440];
-            freqs.forEach(f => {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.value = f;
-                gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.005, audioCtx.currentTime + 2.0);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 2.0);
-            });
-            triggerScreenShake(12);
-            spawnShockwave(canvas.width / 2, canvas.height / 2, '#d4af37');
+        let toastTimer = null;
+        function showToast(msg) {
+            const toast = document.getElementById('toast-bar');
+            if (!toast) return;
+            toast.innerHTML = msg;
+            toast.classList.add('visible');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('visible');
+            }, 2600);
         }
 
-        function startRain() {
-            if (rainPlaying) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const bufferSize = audioCtx.sampleRate * 2;
-            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = Math.random() * 2 - 1;
+        function dismissToast() {
+            const toast = document.getElementById('toast-bar');
+            if (toast) toast.classList.remove('visible');
+        }
+
+        function isInputFocused() {
+            const tag = document.activeElement ? document.activeElement.tagName : '';
+            return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+        }
+
+        function closeAllModals() {
+            hideHelp();
+            closeDossier();
+            const labArea = document.getElementById('lab-area');
+            if (labArea && !labArea.classList.contains('hidden')) closeLab();
+            const accArea = document.getElementById('accusation-area');
+            if (accArea && !accArea.classList.contains('hidden')) cancelAccusation();
+            const intArea = document.getElementById('interrogation-area');
+            if (intArea && !intArea.classList.contains('hidden')) endInterrogation();
+        }
+
+        // Quicksave / Quickload
+        function quickSave() {
+            try {
+                if (document.getElementById('game-screen').classList.contains('hidden')) {
+                    showToast("ℹ️ Start a case investigation first before saving.");
+                    return;
+                }
+                const saveData = {
+                    version: 1,
+                    timestamp: Date.now(),
+                    state: state,
+                    difficulty: document.getElementById('difficulty').value
+                };
+                localStorage.setItem('kmystery_quicksave', JSON.stringify(saveData));
+                showToast("💾 Case File Quicksaved! [F5]");
+                noirAudio.playTypewriter();
+            } catch (err) {
+                showToast("⚠️ Quicksave failed: " + err.message);
             }
-            const noise = audioCtx.createBufferSource();
-            noise.buffer = buffer;
-            noise.loop = true;
-            const filter = audioCtx.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.value = 400;
-            const gain = audioCtx.createGain();
-            gain.gain.value = 0.04;
-            noise.connect(filter);
-            filter.connect(gain);
-            gain.connect(audioCtx.destination);
-            noise.start();
-            rainPlaying = true;
+        }
+
+        function quickLoad() {
+            try {
+                const raw = localStorage.getItem('kmystery_quicksave');
+                if (!raw) {
+                    showToast("ℹ️ No quicksave file found. Press [F5] to save first.");
+                    return;
+                }
+                const data = JSON.parse(raw);
+                if (!data || !data.state) {
+                    showToast("⚠️ Corrupt quicksave data.");
+                    return;
+                }
+                noirAudio.init();
+                noirAudio.resume();
+                Object.assign(state, data.state);
+                document.getElementById('start-screen').classList.add('hidden');
+                document.getElementById('game-screen').classList.remove('hidden');
+                document.getElementById('game-over-area').classList.add('hidden');
+                document.getElementById('time-left').textContent = state.timeLeft;
+                updateLocation();
+                updateNotebook();
+                if (state.inLab) openLab();
+                else closeLab();
+                showToast("📂 Case File Restored! [F9]");
+                noirAudio.playTypewriter();
+            } catch (err) {
+                showToast("⚠️ Quickload failed: " + err.message);
+            }
         }
 
         document.addEventListener('click', (e) => {
             if (e.target.tagName === 'BUTTON') {
-                playTypewriter();
+                noirAudio.playTypewriter();
             }
         });
 
@@ -661,11 +1056,12 @@
                 if (loc.clue) {
                     loc.clueFound = true;
                     state.unanalyzedClues.push({ locName: state.currentLocation, realClue: loc.clue });
-                    playDramaticChord();
+                    noirAudio.playDramaticChord();
+                    triggerLightning();
                     spawnParticleBurst(canvas.width/2, canvas.height/2, 35, '#d4af37');
-                    alert("You found a mysterious object! Take it to the Evidence Lab to analyze.");
+                    showToast("🔎 You recovered physical evidence!\nTake it to the Evidence Lab to analyze.");
                 } else {
-                    alert("You didn't find anything useful here.");
+                    showToast("You searched thoroughly, but found nothing useful here.");
                 }
                 updateLocation();
                 updateNotebook();
@@ -781,7 +1177,8 @@
             let intimidated = false;
             
             if (actualClue === killerClueMap[suspect]) {
-                playDramaticChord();
+                noirAudio.playDramaticChord();
+                triggerLightning();
                 state.interrogationMood = 'caught';
                 triggerScreenShake(16);
                 spawnParticleBurst(canvas.width / 2, canvas.height / 2, 40, '#ff4444');
@@ -822,6 +1219,7 @@
             }
             
             renderInterrogationUI(suspect, response);
+            updateNotebook();
         }
         
         function endInterrogation() {
@@ -898,14 +1296,15 @@
                 }
                 state.unanalyzedClues.splice(analysisState.idx, 1);
                 state.foundClues.push(`[${item.locName}] ${item.realClue}`);
-                playDramaticChord();
+                noirAudio.playDramaticChord();
+                triggerLightning();
                 spawnParticleBurst(canvas.width / 2, canvas.height / 2, 45, '#44ff44');
-                alert(`Spectral Analysis complete! Revealed:\n${item.realClue}`);
+                showToast(`🔬 Spectral Analysis Complete!\nRevealed: ${item.realClue}`);
                 updateNotebook();
                 renderLabList();
             } else if (analysisState.moves <= 0) {
                 triggerScreenShake(8);
-                alert("Calibration failed: Sensor overloaded. Try again.");
+                showToast("⚠️ Calibration failed: Sensor overloaded. Try again.");
                 state.failedCalibrations++;
                 renderLabList();
             } else {
@@ -923,10 +1322,281 @@
             updateLocation();
         }
 
+        const clueForensicData = {
+            'A cufflink with an onyx stone.': {
+                name: 'Onyx Stone Cufflink',
+                analysis: 'Hallmark stamped "925 Sterling". Fine hairline scratches on the reverse suggest frequent wear with a bespoke tailored evening tuxedo.',
+                deduction: 'Points toward a suspect with high-society affiliations and meticulous formal attire (e.g. Mr. Black).'
+            },
+            'A faint scent of expensive rose perfume.': {
+                name: 'Rose Perfume Residue',
+                analysis: 'Gas chromatography identifies Bulgarian Damask rose absolute, bergamot, and ambergris base. Extremely rare and imported from Paris.',
+                deduction: 'Matches the signature fragrance worn by Miss Scarlet. Present during interrogation to provoke an alibi slip.'
+            },
+            'A polished brass military button.': {
+                name: 'Brass Military Button',
+                analysis: 'Stamped with regimental crossed sabers and imperial crown. Thread fibers match heavy khaki wool military dress fabric.',
+                deduction: 'Directly linked to Colonel Mustard\'s military uniform. Check if a button is missing from his jacket.'
+            },
+            'A pristine white glove.': {
+                name: 'Lace Evening Glove',
+                analysis: 'Hand-stitched Belgian lace with small mother-of-pearl button closure. Smudges on finger tips match archival document dust.',
+                deduction: 'Belongs to Mrs. White. Suggests delicate handling or recent tampering with private household estate documents.'
+            },
+            'A broken pair of spectacles.': {
+                name: 'Tortoiseshell Spectacles',
+                analysis: 'High diopter concavo-convex prescription glass. Right hinge shattered by sudden blunt compression force.',
+                deduction: 'Belongs to Professor Plum. The broken lens suggests a violent struggle took place at the crime scene.'
+            },
+            'A spent .38 caliber shell casing.': {
+                name: 'Spent .38 Shell Casing',
+                analysis: 'Rimmed brass casing marked "W.R.A. Co. .38 S&W Spl". Deep hemispherical firing pin indentation with fresh nitrocellulose sulfur residue.',
+                deduction: 'Confirms the murder weapon was a revolver fired within the past 24 hours.'
+            },
+            'A discarded vial smelling of bitter almonds.': {
+                name: 'Cyanide Apothecary Vial',
+                analysis: 'Dark cobalt blue glass bottle with ground glass stopper. Trace aqueous residue tests positive for potassium cyanide salts.',
+                deduction: 'Confirms poison was deployed. Rapidly lethal; victim showed no physical trauma prior to collapse.'
+            },
+            'A heavy, blood-stained lead pipe hidden in the corner.': {
+                name: 'Bloodstained Lead Pipe',
+                analysis: 'Standard 1.25" plumbing pipe elbow. Blunt trauma ridge matches the cranial fractures documented in the coroner\'s post-mortem.',
+                deduction: 'Confirms the murder weapon was a blunt instrument swung with forceful malice.'
+            },
+            'A crumpled letter swearing vengeance.': {
+                name: 'Threatening Letter',
+                analysis: 'Written with iron gall ink on linen ledger paper. Aggressive forward slant with heavy downstrokes indicating profound fury.',
+                deduction: 'Establishes Revenge as the primary motive for the homicide.'
+            },
+            'An altered will leaving everything to the killer.': {
+                name: 'Falsified Last Will & Testament',
+                analysis: 'Codicil page typed on an Underwood typewriter with mismatched ribbon density. Signature forged with tracing guide lines.',
+                deduction: 'Establishes Greed as the primary motive for the homicide.'
+            },
+            'A torn photograph of a happy couple, with one face scratched out.': {
+                name: 'Defaced Portrait Photograph',
+                analysis: 'Silver gelatin cabinet card print. Aggressive razor scratching completely obliterates the victim\'s likeness beside an estranged partner.',
+                deduction: 'Establishes Jealousy as the primary motive for the homicide.'
+            }
+        };
+
+        function inspectClue(idx) {
+            const rawClue = state.foundClues[idx];
+            if (!rawClue) return;
+            const parts = rawClue.split('] ');
+            const locName = parts.length > 1 ? parts[0].replace('[', '') : 'Crime Scene';
+            const actualClue = parts.length > 1 ? parts[1] : rawClue;
+
+            const info = clueForensicData[actualClue] || {
+                name: 'Physical Evidence Sample',
+                analysis: 'Recovered during forensic search of ' + locName + '.',
+                deduction: 'Cross-reference with suspect interrogations.'
+            };
+
+            document.getElementById('dossier-clue-name').textContent = info.name;
+            document.getElementById('dossier-clue-location').textContent = 'Recovered from: ' + locName;
+            document.getElementById('dossier-analysis').textContent = info.analysis;
+            document.getElementById('dossier-deduction').textContent = info.deduction;
+
+            drawDossierSketch(actualClue);
+            document.getElementById('dossier-modal').classList.remove('hidden');
+            noirAudio.playClueReveal();
+        }
+
+        function closeDossier() {
+            document.getElementById('dossier-modal').classList.add('hidden');
+        }
+
+        function drawDossierSketch(clue) {
+            const dCanvas = document.getElementById('dossier-canvas');
+            if (!dCanvas) return;
+            const dCtx = dCanvas.getContext('2d');
+            const dw = dCanvas.width;
+            const dh = dCanvas.height;
+
+            dCtx.clearRect(0, 0, dw, dh);
+            dCtx.fillStyle = '#08080c';
+            dCtx.fillRect(0, 0, dw, dh);
+
+            // Forensic coordinate grid
+            dCtx.strokeStyle = 'rgba(212, 175, 55, 0.12)';
+            dCtx.lineWidth = 1;
+            for (let x = 16; x < dw; x += 16) {
+                dCtx.beginPath(); dCtx.moveTo(x, 0); dCtx.lineTo(x, dh); dCtx.stroke();
+            }
+            for (let y = 16; y < dh; y += 16) {
+                dCtx.beginPath(); dCtx.moveTo(0, y); dCtx.lineTo(dw, y); dCtx.stroke();
+            }
+
+            dCtx.save();
+            dCtx.translate(dw / 2, dh / 2);
+            dCtx.strokeStyle = '#d4af37';
+            dCtx.fillStyle = '#dfd8c8';
+            dCtx.lineWidth = 2;
+
+            if (clue.includes('cufflink')) {
+                // Onyx Cufflink
+                dCtx.fillStyle = '#1c1c20';
+                dCtx.beginPath();
+                dCtx.ellipse(0, 0, 36, 36, 0, 0, Math.PI * 2);
+                dCtx.fill();
+                dCtx.stroke();
+
+                dCtx.fillStyle = '#050505';
+                dCtx.beginPath();
+                dCtx.moveTo(-20, -10); dCtx.lineTo(-10, -20); dCtx.lineTo(10, -20); dCtx.lineTo(20, -10);
+                dCtx.lineTo(20, 10); dCtx.lineTo(10, 20); dCtx.lineTo(-10, 20); dCtx.lineTo(-20, 10);
+                dCtx.closePath();
+                dCtx.fill();
+                dCtx.strokeStyle = '#ffd700';
+                dCtx.stroke();
+
+                dCtx.strokeStyle = 'rgba(255,255,255,0.4)';
+                dCtx.beginPath(); dCtx.moveTo(-10, -15); dCtx.lineTo(5, -15); dCtx.stroke();
+            } else if (clue.includes('rose perfume')) {
+                // Perfume Flacon
+                dCtx.fillStyle = 'rgba(200, 30, 60, 0.35)';
+                dCtx.strokeStyle = '#d4af37';
+                dCtx.beginPath();
+                dCtx.moveTo(-25, 20); dCtx.lineTo(-20, -15); dCtx.lineTo(-10, -25);
+                dCtx.lineTo(10, -25); dCtx.lineTo(20, -15); dCtx.lineTo(25, 20);
+                dCtx.closePath();
+                dCtx.fill(); dCtx.stroke();
+
+                dCtx.fillStyle = '#d4af37';
+                dCtx.fillRect(-6, -34, 12, 9);
+                dCtx.beginPath();
+                dCtx.arc(22, -32, 10, 0, Math.PI * 2);
+                dCtx.fillStyle = '#801322';
+                dCtx.fill(); dCtx.stroke();
+            } else if (clue.includes('military button')) {
+                // Polished Military Button
+                dCtx.fillStyle = '#5a4828';
+                dCtx.beginPath(); dCtx.arc(0, 0, 34, 0, Math.PI * 2); dCtx.fill(); dCtx.stroke();
+                dCtx.strokeStyle = '#ffd700';
+                dCtx.beginPath(); dCtx.arc(0, 0, 26, 0, Math.PI * 2); dCtx.stroke();
+                dCtx.lineWidth = 2.5;
+                dCtx.beginPath(); dCtx.moveTo(-16, -16); dCtx.lineTo(16, 16); dCtx.stroke();
+                dCtx.beginPath(); dCtx.moveTo(16, -16); dCtx.lineTo(-16, 16); dCtx.stroke();
+            } else if (clue.includes('white glove')) {
+                // Lace Glove
+                dCtx.fillStyle = 'rgba(240, 240, 245, 0.85)';
+                dCtx.beginPath();
+                dCtx.moveTo(-15, 30); dCtx.lineTo(-15, 0); dCtx.lineTo(-22, -10); dCtx.lineTo(-18, -18);
+                dCtx.lineTo(-12, -8); dCtx.lineTo(-10, -28); dCtx.lineTo(-4, -28); dCtx.lineTo(-2, -8);
+                dCtx.lineTo(0, -32); dCtx.lineTo(6, -32); dCtx.lineTo(8, -8);
+                dCtx.lineTo(12, -26); dCtx.lineTo(18, -24); dCtx.lineTo(16, 0);
+                dCtx.lineTo(15, 30);
+                dCtx.closePath();
+                dCtx.fill(); dCtx.stroke();
+            } else if (clue.includes('spectacles')) {
+                // Broken Spectacles
+                dCtx.strokeStyle = '#d4af37';
+                dCtx.fillStyle = 'rgba(200, 230, 255, 0.25)';
+                dCtx.beginPath(); dCtx.arc(-22, 0, 18, 0, Math.PI * 2); dCtx.fill(); dCtx.stroke();
+                dCtx.beginPath(); dCtx.arc(22, 0, 18, 0, Math.PI * 2); dCtx.fill(); dCtx.stroke();
+                dCtx.beginPath(); dCtx.moveTo(-4, 0); dCtx.lineTo(4, 0); dCtx.stroke();
+                dCtx.strokeStyle = '#ffddaa';
+                dCtx.lineWidth = 1.5;
+                dCtx.beginPath();
+                dCtx.moveTo(-22, -10); dCtx.lineTo(-18, 0); dCtx.lineTo(-25, 4); dCtx.lineTo(-14, 10);
+                dCtx.stroke();
+            } else if (clue.includes('shell casing') || clue.includes('Revolver')) {
+                // Spent .38 Casing
+                dCtx.fillStyle = '#b89430';
+                dCtx.fillRect(-14, -32, 28, 54);
+                dCtx.strokeRect(-14, -32, 28, 54);
+                dCtx.fillRect(-18, 22, 36, 8);
+                dCtx.strokeRect(-18, 22, 36, 8);
+                dCtx.fillStyle = '#111';
+                dCtx.beginPath(); dCtx.arc(0, 26, 4, 0, Math.PI * 2); dCtx.fill();
+                dCtx.fillStyle = '#d4af37';
+                dCtx.font = 'bold 9px Courier New';
+                dCtx.textAlign = 'center';
+                dCtx.fillText('.38 SPL', 0, -6);
+            } else if (clue.includes('Poison') || clue.includes('vial')) {
+                // Chemical Vial
+                dCtx.fillStyle = 'rgba(60, 220, 100, 0.25)';
+                dCtx.fillRect(-16, -15, 32, 45);
+                dCtx.strokeRect(-16, -15, 32, 45);
+                dCtx.fillStyle = '#4a2c14';
+                dCtx.fillRect(-8, -28, 16, 13);
+                dCtx.strokeRect(-8, -28, 16, 13);
+                dCtx.fillStyle = '#ff4444';
+                dCtx.font = 'bold 12px Courier New';
+                dCtx.textAlign = 'center';
+                dCtx.fillText('☠', 0, 14);
+            } else if (clue.includes('Lead Pipe')) {
+                // Lead Pipe
+                dCtx.fillStyle = '#3a3a42';
+                dCtx.fillRect(-35, -10, 70, 20);
+                dCtx.strokeRect(-35, -10, 70, 20);
+                dCtx.fillStyle = '#551515';
+                dCtx.fillRect(15, -10, 20, 20);
+                dCtx.strokeStyle = '#881111';
+                dCtx.strokeRect(15, -10, 20, 20);
+            } else if (clue.includes('letter') || clue.includes('Revenge')) {
+                // Crumpled letter
+                dCtx.fillStyle = '#d8d0b8';
+                dCtx.beginPath();
+                dCtx.moveTo(-28, -24); dCtx.lineTo(24, -28); dCtx.lineTo(30, 26); dCtx.lineTo(-24, 28);
+                dCtx.closePath();
+                dCtx.fill(); dCtx.stroke();
+                dCtx.strokeStyle = '#222';
+                dCtx.lineWidth = 1;
+                for (let ly = -14; ly < 20; ly += 6) {
+                    dCtx.beginPath(); dCtx.moveTo(-18, ly); dCtx.lineTo(18, ly - 2); dCtx.stroke();
+                }
+            } else if (clue.includes('will') || clue.includes('Greed')) {
+                // Will document
+                dCtx.fillStyle = '#f0ebd8';
+                dCtx.fillRect(-24, -30, 48, 60);
+                dCtx.strokeRect(-24, -30, 48, 60);
+                dCtx.fillStyle = '#8b1e1e';
+                dCtx.beginPath(); dCtx.arc(10, 18, 7, 0, Math.PI * 2); dCtx.fill();
+                dCtx.fillStyle = '#111';
+                dCtx.font = 'bold 8px Courier New';
+                dCtx.textAlign = 'center';
+                dCtx.fillText('LAST WILL', 0, -18);
+            } else if (clue.includes('photograph') || clue.includes('Jealousy')) {
+                // Torn Photograph
+                dCtx.fillStyle = '#c8bba8';
+                dCtx.fillRect(-28, -28, 56, 56);
+                dCtx.strokeRect(-28, -28, 56, 56);
+                dCtx.strokeStyle = '#441111';
+                dCtx.lineWidth = 2;
+                dCtx.beginPath();
+                dCtx.moveTo(-5, -28); dCtx.lineTo(3, -10); dCtx.lineTo(-4, 8); dCtx.lineTo(6, 28);
+                dCtx.stroke();
+                dCtx.fillStyle = '#ff2222';
+                dCtx.font = 'bold 16px Courier New';
+                dCtx.textAlign = 'center';
+                dCtx.fillText('✕', 14, 2);
+            } else {
+                dCtx.fillStyle = '#222';
+                dCtx.beginPath(); dCtx.arc(0, 0, 28, 0, Math.PI * 2); dCtx.fill(); dCtx.stroke();
+                dCtx.fillStyle = '#d4af37';
+                dCtx.font = 'bold 18px Courier New';
+                dCtx.textAlign = 'center';
+                dCtx.fillText('?', 0, 6);
+            }
+
+            dCtx.restore();
+
+            dCtx.fillStyle = 'rgba(212, 175, 55, 0.85)';
+            dCtx.font = '9px Courier New';
+            dCtx.textAlign = 'right';
+            dCtx.fillText('CASE #1999-EVID', dw - 8, dh - 8);
+        }
+
         function updateNotebook() {
             const suspectList = document.getElementById('suspect-list');
             if (state.knownSuspects.length > 0) {
-                suspectList.innerHTML = state.knownSuspects.map(s => `<li><b>${s}</b></li>`).join('');
+                suspectList.innerHTML = state.knownSuspects.map(s => {
+                    const pat = state.patience[s] !== undefined ? state.patience[s] : 3;
+                    const patienceDots = '●'.repeat(Math.max(0, pat)) + '○'.repeat(Math.max(0, 3 - pat));
+                    return `<li><b>${s}</b> <span style="font-size:11px; color:#d4af37; float:right;">[${patienceDots}]</span></li>`;
+                }).join('');
             } else {
                 suspectList.innerHTML = '<li>No suspects yet.</li>';
             }
@@ -940,7 +1610,7 @@
 
             const clueList = document.getElementById('clue-list');
             if (state.foundClues.length > 0) {
-                clueList.innerHTML = state.foundClues.map(c => `<li>${c}</li>`).join('');
+                clueList.innerHTML = state.foundClues.map((c, idx) => `<li class="clue-item-clickable" onclick="inspectClue(${idx})" title="Click to inspect evidence dossier">🔍 <b>${c}</b></li>`).join('');
             } else {
                 clueList.innerHTML = '<li>No usable clues.</li>';
             }
@@ -991,7 +1661,8 @@
                 localStorage.setItem('perfectSolves', perfectSolves);
                 
                 updateStatsUI();
-                playDramaticChord();
+                noirAudio.playDramaticChord();
+                triggerLightning();
                 spawnParticleBurst(canvas.width / 2, canvas.height / 2, 100, '#d4af37');
                 
                 let msg = `Case Closed, Detective! ${suspect} broke down and signed a full confession.\n\nMotive: ${motive}\nWeapon: ${weapon}\nTime Taken: ${hoursTaken}h\n`;
@@ -999,7 +1670,7 @@
                 msg += "\nCongratulations - You cracked the case!";
                 showGameOver("Case Solved! ★", msg);
             } else {
-                playDramaticChord();
+                noirAudio.playDramaticChord();
                 triggerScreenShake(25);
                 showGameOver("Catastrophic Failure", `You indicted ${suspect}, but the real culprit was ${state.solution.killer} (Motive: ${state.solution.motive}, Weapon: ${state.solution.weapon}).\nThe Commissioner has revoked your badge.`);
             }
@@ -1028,26 +1699,44 @@
         }
 
         window.addEventListener('keydown', (e) => {
+            if (e.key === 'F5') {
+                e.preventDefault();
+                quickSave();
+                return;
+            }
+            if (e.key === 'F9') {
+                e.preventDefault();
+                quickLoad();
+                return;
+            }
+            if (e.key === 'F1' || (e.key.toLowerCase() === 'm' && !isInputFocused())) {
+                e.preventDefault();
+                toggleHelp();
+                return;
+            }
             if (e.key === 'Escape') {
-                const helpModal = document.getElementById('help-modal');
-                if (!helpModal.classList.contains('hidden')) {
-                    hideHelp();
-                    return;
-                }
-                const labArea = document.getElementById('lab-area');
-                if (!labArea.classList.contains('hidden')) {
-                    closeLab();
-                    return;
-                }
-                const accArea = document.getElementById('accusation-area');
-                if (!accArea.classList.contains('hidden')) {
-                    cancelAccusation();
-                    return;
-                }
-                const intArea = document.getElementById('interrogation-area');
-                if (!intArea.classList.contains('hidden')) {
-                    endInterrogation();
-                    return;
+                closeAllModals();
+                return;
+            }
+            if (!document.getElementById('game-screen').classList.contains('hidden') && !isInputFocused()) {
+                const k = e.key.toLowerCase();
+                if (k === 's') {
+                    const searchBtn = document.getElementById('search-btn');
+                    if (searchBtn && !searchBtn.disabled) searchLocation();
+                } else if (k === 'l') {
+                    if (state.inLab) closeLab();
+                    else openLab();
+                } else if (k === 'i') {
+                    const loc = state.locations[state.currentLocation];
+                    if (loc && loc.suspect && !state.inLab) startInterrogation();
+                } else if (k === 'a') {
+                    startAccusation();
+                } else if (['1', '2', '3', '4', '5'].includes(e.key)) {
+                    const locNames = Object.keys(state.locations);
+                    const idx = parseInt(e.key) - 1;
+                    if (idx >= 0 && idx < locNames.length) {
+                        travel(locNames[idx]);
+                    }
                 }
             }
         });
@@ -1061,14 +1750,20 @@
         let animFrame = 0;
         let shakeTime = 0;
         let shakeIntensity = 0;
+        let lightningTime = 0;
+
+        function triggerLightning() {
+            lightningTime = 1.0;
+        }
 
         // Particle system
         const particles = [];
         const shockwaves = [];
         const rainDrops = [];
         const fogMotes = [];
+        const officeSmoke = [];
 
-        // Initialize rain & fog
+        // Initialize rain, fog, and smoke
         for (let i = 0; i < 45; i++) {
             rainDrops.push({
                 x: Math.random() * 640,
@@ -1084,6 +1779,16 @@
                 r: 15 + Math.random() * 25,
                 speed: 0.2 + Math.random() * 0.4,
                 alpha: 0.05 + Math.random() * 0.1
+            });
+        }
+        for (let i = 0; i < 18; i++) {
+            officeSmoke.push({
+                x: 640 * 0.83,
+                y: 240 * 0.68 - Math.random() * 35,
+                r: 1.5 + Math.random() * 3,
+                vx: -0.15 + Math.random() * 0.3,
+                vy: -0.35 - Math.random() * 0.35,
+                alpha: Math.random() * 0.45
             });
         }
 
@@ -1131,13 +1836,15 @@
                 ctx.fillStyle = '#090a10';
                 ctx.fillRect(w * 0.17, 25, w * 0.66, h * 0.62);
 
-                ctx.fillStyle = 'rgba(212, 175, 55, 0.08)';
-                for (let y = 30; y < h * 0.8; y += 12) {
+                // Venetian blinds dynamic shadow bars
+                ctx.fillStyle = 'rgba(212, 175, 55, 0.085)';
+                const shiftY = Math.sin(animFrame * 0.02) * 4;
+                for (let y = 28; y < h * 0.8; y += 13) {
                     ctx.beginPath();
-                    ctx.moveTo(w * 0.1, y + 20);
-                    ctx.lineTo(w * 0.9, y - 10);
-                    ctx.lineTo(w * 0.9, y - 4);
-                    ctx.lineTo(w * 0.1, y + 26);
+                    ctx.moveTo(w * 0.1, y + 20 + shiftY);
+                    ctx.lineTo(w * 0.9, y - 10 + shiftY);
+                    ctx.lineTo(w * 0.9, y - 4 + shiftY);
+                    ctx.lineTo(w * 0.1, y + 26 + shiftY);
                     ctx.closePath();
                     ctx.fill();
                 }
@@ -1158,9 +1865,9 @@
                 ctx.strokeStyle = '#2e8b40';
                 ctx.stroke();
 
-                const lampGlow = ctx.createRadialGradient(lampX, lampY - 28, 5, lampX, lampY, 70);
-                lampGlow.addColorStop(0, 'rgba(100, 255, 140, 0.25)');
-                lampGlow.addColorStop(0.5, 'rgba(212, 175, 55, 0.12)');
+                const lampGlow = ctx.createRadialGradient(lampX, lampY - 28, 5, lampX, lampY, 75);
+                lampGlow.addColorStop(0, 'rgba(100, 255, 140, 0.26)');
+                lampGlow.addColorStop(0.5, 'rgba(212, 175, 55, 0.13)');
                 lampGlow.addColorStop(1, 'rgba(0,0,0,0)');
                 ctx.fillStyle = lampGlow;
                 ctx.beginPath();
@@ -1171,12 +1878,33 @@
                 ctx.closePath();
                 ctx.fill();
 
+                // Desk details: Telephone & Ashtray with curling smoke
                 ctx.fillStyle = '#1e1c18';
                 ctx.fillRect(w * 0.65, h * 0.66, 45, 18);
                 ctx.fillStyle = '#0a0a0a';
                 ctx.fillRect(w * 0.68, h * 0.62, 35, 6);
                 ctx.fillStyle = '#222';
-                ctx.fillRect(w * 0.82, h * 0.68, 12, 14);
+                ctx.fillRect(w * 0.82, h * 0.68, 14, 6);
+                ctx.fillStyle = '#ff4400';
+                ctx.fillRect(w * 0.83, h * 0.67, 3, 2);
+
+                for (let i = 0; i < officeSmoke.length; i++) {
+                    const sm = officeSmoke[i];
+                    sm.y += sm.vy;
+                    sm.x += sm.vx;
+                    sm.r += 0.05;
+                    sm.alpha -= 0.006;
+                    if (sm.y < 30 || sm.alpha <= 0) {
+                        sm.x = w * 0.835;
+                        sm.y = h * 0.67;
+                        sm.r = 1.5;
+                        sm.alpha = 0.45;
+                    }
+                    ctx.fillStyle = `rgba(180, 180, 190, ${sm.alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(sm.x, sm.y, sm.r, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             } else if (locName === 'The Manor') {
                 const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
                 skyGrad.addColorStop(0, '#090a12');
@@ -1205,7 +1933,9 @@
                 ctx.closePath();
                 ctx.fill();
 
-                ctx.fillStyle = '#f3cf58';
+                // Candlelit Victorian leaded windows with soft flicker
+                const winFlicker = Math.sin(animFrame * 0.12) * 0.14 + 0.86;
+                ctx.fillStyle = `rgba(243, 207, 88, ${winFlicker})`;
                 ctx.fillRect(w * 0.48, h * 0.4, 14, 20);
                 ctx.fillRect(w * 0.25, h * 0.55, 12, 16);
                 ctx.fillRect(w * 0.72, h * 0.55, 12, 16);
@@ -1224,6 +1954,13 @@
                     ctx.fillText('POLICE LINE DO NOT CROSS', tx, 8);
                 }
                 ctx.restore();
+
+                // Lightning flash overlay
+                if (lightningTime > 0) {
+                    lightningTime -= 0.035;
+                    ctx.fillStyle = `rgba(220, 235, 255, ${Math.min(0.65, lightningTime)})`;
+                    ctx.fillRect(0, 0, w, h);
+                }
             } else if (locName === 'The Docks') {
                 const seaGrad = ctx.createLinearGradient(0, 0, 0, h);
                 seaGrad.addColorStop(0, '#060a10');
@@ -1231,6 +1968,22 @@
                 seaGrad.addColorStop(1, '#020508');
                 ctx.fillStyle = seaGrad;
                 ctx.fillRect(0, 0, w, h);
+
+                // Sweeping lighthouse beam across foggy bay
+                const lhX = w * 0.88;
+                const lhY = h * 0.26;
+                const lhAngle = (animFrame * 0.015) % (Math.PI * 2);
+                const lhGrad = ctx.createRadialGradient(lhX, lhY, 4, lhX, lhY, 260);
+                lhGrad.addColorStop(0, 'rgba(255, 240, 180, 0.42)');
+                lhGrad.addColorStop(1, 'rgba(255, 240, 180, 0)');
+                ctx.save();
+                ctx.fillStyle = lhGrad;
+                ctx.beginPath();
+                ctx.moveTo(lhX, lhY);
+                ctx.arc(lhX, lhY, 260, lhAngle - 0.22, lhAngle + 0.22);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
 
                 ctx.fillStyle = '#05090f';
                 ctx.fillRect(w * 0.45, h * 0.38, 120, 25);
@@ -1242,6 +1995,17 @@
                 ctx.fillStyle = '#1a1814';
                 for (let px = 10; px < w * 0.45; px += 25) {
                     ctx.fillRect(px, h * 0.65, 2, h * 0.35);
+                }
+
+                // Ocean water swell reflections
+                ctx.strokeStyle = 'rgba(100, 180, 255, 0.18)';
+                ctx.lineWidth = 1.5;
+                for (let r = 0; r < 4; r++) {
+                    const wy = h * 0.72 + r * 14 + Math.sin(animFrame * 0.05 + r) * 2;
+                    ctx.beginPath();
+                    ctx.moveTo(w * 0.45, wy);
+                    ctx.quadraticCurveTo(w * 0.7, wy + 4, w, wy);
+                    ctx.stroke();
                 }
 
                 const lampX = w * 0.32;
@@ -1289,29 +2053,53 @@
                 ctx.strokeStyle = '#d4af37';
                 ctx.lineWidth = 3;
                 ctx.strokeRect(w * 0.25, 15, w * 0.5, 45);
-                ctx.fillStyle = '#ff3366';
+
+                // Neon gas tube flicker effect
+                const neonFlicker = Math.random() < 0.03 ? 0.45 : 1.0;
+                ctx.fillStyle = `rgba(255, 51, 102, ${neonFlicker})`;
                 ctx.font = 'bold 16px Courier New';
                 ctx.textAlign = 'center';
                 ctx.shadowColor = '#ff0055';
-                ctx.shadowBlur = 10;
+                ctx.shadowBlur = 10 * neonFlicker;
                 ctx.fillText('★ GOLDEN PALACE ★', w / 2, 44);
                 ctx.shadowBlur = 0;
 
+                // Foreground Roulette Wheel with rotating wedges & rolling ivory ball
+                const wheelX = w / 2;
+                const wheelY = h * 0.85;
                 ctx.fillStyle = '#0f381e';
                 ctx.beginPath();
-                ctx.ellipse(w / 2, h * 0.85, w * 0.45, 45, 0, 0, Math.PI * 2);
+                ctx.ellipse(wheelX, wheelY, w * 0.45, 45, 0, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.strokeStyle = '#d4af37';
                 ctx.lineWidth = 3;
                 ctx.stroke();
 
+                const rSpin = animFrame * 0.025;
+                for (let a = 0; a < Math.PI * 2; a += Math.PI / 8) {
+                    ctx.strokeStyle = '#3d3018';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(wheelX, wheelY);
+                    ctx.lineTo(wheelX + Math.cos(a + rSpin) * (w * 0.4), wheelY + Math.sin(a + rSpin) * 38);
+                    ctx.stroke();
+                }
+
                 ctx.fillStyle = '#4a2505';
                 ctx.beginPath();
-                ctx.ellipse(w / 2, h * 0.85, 35, 15, 0, 0, Math.PI * 2);
+                ctx.ellipse(wheelX, wheelY, 35, 15, 0, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.fillStyle = '#d4af37';
                 ctx.beginPath();
-                ctx.arc(w / 2, h * 0.85, 5, 0, Math.PI * 2);
+                ctx.arc(wheelX, wheelY, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                const ballAngle = animFrame * 0.045;
+                const ballX = wheelX + Math.cos(ballAngle) * (w * 0.38);
+                const ballY = wheelY + Math.sin(ballAngle) * 34;
+                ctx.fillStyle = '#f5f0e6';
+                ctx.beginPath();
+                ctx.arc(ballX, ballY, 3, 0, Math.PI * 2);
                 ctx.fill();
             } else if (locName === 'Train Station') {
                 const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
@@ -1326,6 +2114,7 @@
                 ctx.arc(w / 2, h * 0.7, w * 0.42, Math.PI, Math.PI * 2);
                 ctx.stroke();
 
+                // Station Clock with ticking second hand
                 const clockX = w / 2;
                 const clockY = 50;
                 ctx.fillStyle = '#f0ebd8';
@@ -1335,6 +2124,7 @@
                 ctx.strokeStyle = '#3d3525';
                 ctx.lineWidth = 3;
                 ctx.stroke();
+
                 ctx.strokeStyle = '#111';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
@@ -1344,17 +2134,28 @@
                 ctx.lineTo(clockX + 9, clockY + 4);
                 ctx.stroke();
 
+                const secAngle = ((Date.now() / 1000) % 60) * (Math.PI * 2 / 60) - Math.PI / 2;
+                ctx.strokeStyle = '#b03030';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(clockX, clockY);
+                ctx.lineTo(clockX + Math.cos(secAngle) * 16, clockY + Math.sin(secAngle) * 16);
+                ctx.stroke();
+
                 ctx.fillStyle = '#08080a';
                 ctx.fillRect(w * 0.15, h * 0.48, 140, 50);
                 ctx.fillRect(w * 0.28, h * 0.35, 35, 20);
                 ctx.fillRect(w * 0.15, h * 0.38, 40, 30);
 
-                ctx.fillStyle = 'rgba(200, 200, 210, 0.12)';
-                const steamOffset = (animFrame * 0.5) % 80;
-                ctx.beginPath();
-                ctx.arc(w * 0.3 + steamOffset * 0.5, h * 0.3 - steamOffset * 0.4, 20 + steamOffset * 0.3, 0, Math.PI * 2);
-                ctx.arc(w * 0.34 + steamOffset * 0.8, h * 0.22 - steamOffset * 0.5, 25 + steamOffset * 0.4, 0, Math.PI * 2);
-                ctx.fill();
+                // Billowing steam locomotive puffs
+                for (let s = 0; s < 4; s++) {
+                    const sOffset = ((animFrame * 0.6) + s * 22) % 85;
+                    const sAlpha = Math.max(0, 0.16 * (1 - sOffset / 85));
+                    ctx.fillStyle = `rgba(210, 215, 230, ${sAlpha})`;
+                    ctx.beginPath();
+                    ctx.arc(w * 0.3 + sOffset * 0.55, h * 0.35 - sOffset * 0.4, 16 + sOffset * 0.35, 0, Math.PI * 2);
+                    ctx.fill();
+                }
 
                 ctx.strokeStyle = '#444';
                 ctx.lineWidth = 2;
@@ -1643,34 +2444,32 @@
         function drawArtDecoFiligree(w, h) {
             ctx.save();
             ctx.strokeStyle = '#d4af37';
-            ctx.fillStyle = '#d4af37';
             ctx.lineWidth = 1.5;
 
             const bSize = 14;
+            // Top-Left corner filigree lines
             ctx.beginPath();
             ctx.moveTo(4, 4 + bSize); ctx.lineTo(4, 4); ctx.lineTo(4 + bSize, 4);
             ctx.moveTo(8, 8 + bSize * 0.6); ctx.lineTo(8, 8); ctx.lineTo(8 + bSize * 0.6, 8);
             ctx.stroke();
-            ctx.fillRect(3, 3, 3, 3);
 
+            // Top-Right corner filigree lines
             ctx.beginPath();
             ctx.moveTo(w - 4, 4 + bSize); ctx.lineTo(w - 4, 4); ctx.lineTo(w - 4 - bSize, 4);
             ctx.moveTo(w - 8, 8 + bSize * 0.6); ctx.lineTo(w - 8, 8); ctx.lineTo(w - 8 - bSize * 0.6, 8);
             ctx.stroke();
-            ctx.fillRect(w - 6, 3, 3, 3);
 
+            // Bottom-Left corner filigree lines
             ctx.beginPath();
             ctx.moveTo(4, h - 4 - bSize); ctx.lineTo(4, h - 4); ctx.lineTo(4 + bSize, h - 4);
             ctx.moveTo(8, h - 8 - bSize * 0.6); ctx.lineTo(8, h - 8); ctx.lineTo(8 + bSize * 0.6, h - 8);
             ctx.stroke();
-            ctx.fillRect(3, h - 6, 3, 3);
 
+            // Bottom-Right corner filigree lines
             ctx.beginPath();
             ctx.moveTo(w - 4, h - 4 - bSize); ctx.lineTo(w - 4, h - 4); ctx.lineTo(w - 4 - bSize, h - 4);
             ctx.moveTo(w - 8, h - 8 - bSize * 0.6); ctx.lineTo(w - 8, h - 8); ctx.lineTo(w - 8 - bSize * 0.6, h - 8);
             ctx.stroke();
-            ctx.fillRect(w - 6, h - 6, 3, 3);
-
 
             ctx.restore();
         }

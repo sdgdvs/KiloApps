@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-24T16:00:00Z — kilo-qa: KDragon (Pass 5: Tutorial & State Integrity)**
+  - Status: PASS ✅ (Quicksave/Load, first-run tutorial isolation & glint dot purge verified; 0 regressions).
+  - Glint/Dot Purge: Removed `.corner-filigree::after` dots in web and corner rivet dots in native `DrawFiligreeCorner`.
+  - State Persistence: Implemented [F5] Quicksave and [F9] Quickload across web localStorage and native `kdragon_save.dat`.
+  - Tutorial Isolation: Session-isolated onboarding with Enter/Space/F1 dismissals; click-to-dismiss safe toasts.
+  - Controls & Submenus: Standardized main control visibility transitions across minigames, battle, shop, and expeditions.
+  - Verification: MSVC C clean compile (`KDragon.exe` 147.9 KB); clean Vite build (382ms, `kdragon.html` 133.3 KB); security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-24T14:50:00Z — kilo-graphics: KMech (Graphics Polish, Glint/Perimeter Dot Purge & Combat Depth)**
   - Status: PASS ✅ (Specular glints & perimeter dots purged; 5 weapons, 4 armors, 5 enemy tiers; 0 regressions).
   - Glint/Dot Purge: Removed `.hud-corner::after` perimeter cyan dots in web & Win32 C `SetPixel` corner dots in `DrawSciFiHUDCornerFiligree`.

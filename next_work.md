@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KVault
   kilo_usability: KFont
-  kilo_graphics: KMystery
+  kilo_graphics: KVoid
   kilo_qa: KFortress
   kilo_expander: "KSnake (Multiplayer)"
   kilo_creator: "kweb://echo-subsystem.net (Tier 3 Research Journal & Harmonic Decoders)"
@@ -30,9 +30,9 @@ virtual_web_rotation:
   - "kweb://darknet"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-usability
-  app: KAudio
-  timestamp: "2026-09-24T19:51:00Z"
+  agent: kilo-graphics
+  app: KMystery
+  timestamp: "2026-09-24T20:47:00Z"
 last_planner_run: "2026-09-24T05:46:00Z"
 ---
 
@@ -106,9 +106,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `kweb://10.19.99.4/classified` (Corporate Intranet Leak & Memory Dumps - Completed).
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KCyber`
+- **Current Target**: `KVoid`
 - **Upcoming Queue**:
-  `KMech`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`.
+  `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KVault`
@@ -202,6 +202,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-24T20:47:00Z — kilo-graphics: KMystery (Graphics Polish, Glint/Dot Purge & Dossier Expansion)**
+  - Status: PASS ✅ (Corner filigree dots purged; FM synth audio, Quicksave/Load, forensic dossier added; 0 regressions).
+  - Glint/Dot Purge: Removed 4 corner filigree dots in web `drawArtDecoFiligree`; native C verified clean.
+  - Audio & Synthesis: Yamaha YM2612 2-Op FM jazz noir chiptune engine & SPC700 stereo delay line with rain noise.
+  - Evidence Dossier: Added modal forensic sketches for all 11 clues; suspect patience dots indicator.
+  - State Persistence: Implemented [F5] Quicksave and [F9] Quickload in web localStorage and native `kmystery_save.dat`.
+  - UX & Accessibility: Replaced alerts with click-to-dismiss gold toasts; added F1 manual modal and shortcuts.
+  - Verification: MSVC C clean compile (`KMystery.exe` 32.5 KB); clean Vite build (385ms, `kmystery.html` 113.6 KB); security lint 100% PASS; icons clean; <999KB ceiling.
+
 - **2026-09-24T19:51:00Z — kilo-usability: KAudio (UI/UX, Layout & Responsive Controls Polish)**
   - Status: PASS ✅ (Layout clipping resolved, idle visualizer baseline added, piano key ergonomics refined; 0 regressions).
   - Window & Layout: Adjusted window height to 860px in App.jsx and metadata; replaced center flex cutoff with auto margin scrolling.
@@ -235,13 +244,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Multiplayer Architecture: Firebase RTDB synchronization (`multiplayer/ktetris/`) with lobby table, room codes, and CDN loader.
   - Cyber-AI Bot: 4 bot heuristics (Rookie to Grandmaster) for offline duel practice; live chat/emotes.
   - Verification: MSVC C clean compile (`KTetris.exe` 56.3 KB); Vite build clean (536ms, `ktetris.html` 172.5 KB); security lint 100% PASS; <999KB ceiling.
-
-- **2026-09-24T16:00:00Z — kilo-qa: KDragon (Pass 5: Tutorial & State Integrity)**
-  - Status: PASS ✅ (Quicksave/Load, first-run tutorial isolation & glint dot purge verified; 0 regressions).
-  - Glint/Dot Purge: Removed `.corner-filigree::after` dots in web and corner rivet dots in native `DrawFiligreeCorner`.
-  - State Persistence: Implemented [F5] Quicksave and [F9] Quickload across web localStorage and native `kdragon_save.dat`.
-  - Tutorial Isolation: Session-isolated onboarding with Enter/Space/F1 dismissals; click-to-dismiss safe toasts.
-  - Controls & Submenus: Standardized main control visibility transitions across minigames, battle, shop, and expeditions.
-  - Verification: MSVC C clean compile (`KDragon.exe` 147.9 KB); clean Vite build (382ms, `kdragon.html` 133.3 KB); security lint 100% PASS; <999KB ceiling.
 
 

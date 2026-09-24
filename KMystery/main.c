@@ -72,12 +72,14 @@ float my_cos(float x) {
 #define ID_BTN_TRAVEL_STATION 1028
 #define ID_BTN_HELP 1029
 #define ID_BTN_CLOSE_HELP 1030
+#define ID_BTN_QSAVE 1031
+#define ID_BTN_QLOAD 1032
 
 HWND hMainWnd, hSceneWnd;
 HWND hTitle, hLocName, hLocDesc, hBtnSearch, hBtnTravelOffice, hBtnTravelManor, hBtnTravelDocks, hBtnTravelCasino, hBtnTravelStation;
 HWND hSuspectTitle, hListSuspects, hClueTitle, hListClues, hUnanalyzedTitle, hListUnanalyzed;
 HWND hStartPanel, hBtnStart, hBtnStartMed, hBtnStartHard, hStartDesc, hStatsDesc;
-HWND hBtnHelp, hHelpTitle, hHelpDesc, hBtnCloseHelp;
+HWND hBtnHelp, hHelpTitle, hHelpDesc, hBtnCloseHelp, hBtnSave, hBtnLoad;
 HWND hBtnInterrogate, hIntDesc, hBtnAskAlibi, hBtnPresentClue, hBtnEndInt;
 HWND hBtnLab, hLabTitle, hBtnAnalyze, hBtnLeaveLab;
 HWND hScanDesc, hBtnScan11, hBtnScan7, hBtnScanM3;
@@ -417,6 +419,10 @@ void UpdateUI() {
         ShowWindow(hCmbSuspect, SW_HIDE);
         ShowWindow(hCmbMotive, SW_HIDE);
         ShowWindow(hCmbWeapon, SW_HIDE);
+
+        ShowWindow(hBtnHelp, SW_HIDE);
+        ShowWindow(hBtnSave, SW_HIDE);
+        ShowWindow(hBtnLoad, SW_SHOW);
     } else if (currentState == 1) {
         ShowWindow(hStartPanel, SW_HIDE);
         ShowWindow(hStartDesc, SW_HIDE);
@@ -426,6 +432,8 @@ void UpdateUI() {
         ShowWindow(hStatsDesc, SW_HIDE);
         
         ShowWindow(hBtnHelp, SW_SHOW);
+        ShowWindow(hBtnSave, SW_SHOW);
+        ShowWindow(hBtnLoad, SW_SHOW);
         ShowWindow(hHelpTitle, SW_HIDE);
         ShowWindow(hHelpDesc, SW_HIDE);
         ShowWindow(hBtnCloseHelp, SW_HIDE);
@@ -650,10 +658,136 @@ void UpdateUI() {
         ShowWindow(hCmbWeapon, SW_HIDE);
         
         ShowWindow(hBtnHelp, SW_HIDE);
+        ShowWindow(hBtnSave, SW_HIDE);
+        ShowWindow(hBtnLoad, SW_HIDE);
         ShowWindow(hHelpTitle, SW_SHOW);
         ShowWindow(hHelpDesc, SW_SHOW);
         ShowWindow(hBtnCloseHelp, SW_SHOW);
     }
+}
+
+typedef struct {
+    int version;
+    int currentState;
+    int currentLocation;
+    int timeLeft;
+    int initialTime;
+    int activeItems;
+    int suspectMood;
+    int failedCalibrations;
+    int angrySuspects;
+    Solution currentSolution;
+    int suspectPatience[5];
+    char suspectAlibis[5][128];
+    Location locations[5];
+    Unanalyzed unanalyzed[5];
+    int numUnanalyzed;
+} GameSaveData;
+
+void QuickSaveGame(HWND hwnd) {
+    if (currentState == 0 || currentState == 6) {
+        MessageBoxA(hwnd, "Start or resume an active case before saving.", "Save Notice", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+    HANDLE hFile = CreateFileA("kmystery_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        GameSaveData data;
+        data.version = 1;
+        data.currentState = currentState;
+        data.currentLocation = currentLocation;
+        data.timeLeft = timeLeft;
+        data.initialTime = initialTime;
+        data.activeItems = activeItems;
+        data.suspectMood = suspectMood;
+        data.failedCalibrations = failedCalibrations;
+        data.angrySuspects = angrySuspects;
+        data.currentSolution = currentSolution;
+        data.numUnanalyzed = numUnanalyzed;
+        for (int i = 0; i < 5; i++) {
+            data.suspectPatience[i] = suspectPatience[i];
+            my_strcpy(data.suspectAlibis[i], suspectAlibis[i]);
+            data.locations[i] = locations[i];
+            data.unanalyzed[i] = unanalyzed[i];
+        }
+        DWORD written;
+        WriteFile(hFile, &data, sizeof(GameSaveData), &written, NULL);
+        CloseHandle(hFile);
+        Beep(880, 60);
+        Beep(1174, 120);
+        MessageBoxA(hwnd, "Case file successfully saved to kmystery_save.dat! [F5]", "Quicksave", MB_OK | MB_ICONINFORMATION);
+    }
+}
+
+void QuickLoadGame(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kmystery_save.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        MessageBoxA(hwnd, "No quicksave file (kmystery_save.dat) found. Press [F5] to save first.", "Load Notice", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+    GameSaveData data;
+    DWORD read;
+    BOOL ok = ReadFile(hFile, &data, sizeof(GameSaveData), &read, NULL);
+    CloseHandle(hFile);
+    if (!ok || read != sizeof(GameSaveData) || data.version != 1) {
+        MessageBoxA(hwnd, "Corrupted quicksave data file.", "Load Error", MB_OK | MB_ICONERROR);
+        return;
+    }
+    currentState = data.currentState;
+    currentLocation = data.currentLocation;
+    timeLeft = data.timeLeft;
+    initialTime = data.initialTime;
+    activeItems = data.activeItems;
+    suspectMood = data.suspectMood;
+    failedCalibrations = data.failedCalibrations;
+    angrySuspects = data.angrySuspects;
+    currentSolution = data.currentSolution;
+    numUnanalyzed = data.numUnanalyzed;
+    for (int i = 0; i < 5; i++) {
+        suspectPatience[i] = data.suspectPatience[i];
+        my_strcpy(suspectAlibis[i], data.suspectAlibis[i]);
+        locations[i] = data.locations[i];
+        unanalyzed[i] = data.unanalyzed[i];
+    }
+    char timeBuf[64];
+    wsprintfA(timeBuf, "Time Left: %dh", timeLeft);
+    SetWindowTextA(hTimeLeft, timeBuf);
+
+    SendMessageA(hListSuspects, LB_RESETCONTENT, 0, 0);
+    SendMessageA(hListClues, LB_RESETCONTENT, 0, 0);
+    SendMessageA(hListUnanalyzed, LB_RESETCONTENT, 0, 0);
+    for (int i = 0; i < activeItems; i++) {
+        SendMessageA(hListSuspects, LB_ADDSTRING, 0, (LPARAM)suspects[i]);
+    }
+    SendMessageA(hCmbSuspect, CB_RESETCONTENT, 0, 0);
+    for (int i = 0; i < activeItems; i++) {
+        SendMessageA(hCmbSuspect, CB_ADDSTRING, 0, (LPARAM)suspects[i]);
+    }
+    SendMessageA(hCmbSuspect, CB_SETCURSEL, 0, 0);
+
+    for (int i = 0; i < numUnanalyzed; i++) {
+        char itemBuf[256];
+        wsprintfA(itemBuf, "Object from %s", locations[unanalyzed[i].locIdx].name);
+        SendMessageA(hListUnanalyzed, LB_ADDSTRING, 0, (LPARAM)itemBuf);
+    }
+    for (int i = 0; i < 5; i++) {
+        if (locations[i].searched && locations[i].clueFound && my_strlen(locations[i].clue) > 0) {
+            int alreadyUn = 0;
+            for (int u = 0; u < numUnanalyzed; u++) {
+                if (unanalyzed[u].locIdx == i) alreadyUn = 1;
+            }
+            if (!alreadyUn) {
+                char clueBuf[256];
+                wsprintfA(clueBuf, "[%s] %s", locations[i].name, locations[i].clue);
+                SendMessageA(hListClues, LB_ADDSTRING, 0, (LPARAM)clueBuf);
+            }
+        }
+    }
+
+    Beep(1174, 60);
+    Beep(880, 120);
+    UpdateUI();
+    RECT r; GetClientRect(hwnd, &r); SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
+    MessageBoxA(hwnd, "Case file successfully restored! [F9]", "Quickload", MB_OK | MB_ICONINFORMATION);
 }
 
 void StartGame(int items, int time) {
@@ -1343,11 +1477,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hCmbWeapon, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hBtnHelp = CreateWindowA("BUTTON", "Manual", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            hBtnSave = CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_QSAVE, NULL, NULL);
+            hBtnLoad = CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_QLOAD, NULL, NULL);
             hHelpTitle = CreateWindowA("STATIC", "Detective's Manual", WS_CHILD | SS_CENTER, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
-            hHelpDesc = CreateWindowA("STATIC", "HOW TO PLAY:\n1. Search locations for clues (2h).\n2. Analyze objects in the lab (1h).\n3. Interrogate suspects to catch them in lies (1h).\n4. Accuse the killer with correct motive & weapon!\n\nTIPS:\n- Suspects have patience. Unrelated clues make them angry.\n- The killer's specific clue will catch them immediately!\n- Cross-reference alibis to spot liars.\n- In the lab, calibrate scanner to exactly match the target.", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+            hHelpDesc = CreateWindowA("STATIC", "HOW TO PLAY:\n1. Search locations for clues (2h).\n2. Analyze objects in the lab (1h).\n3. Interrogate suspects to catch them in lies (1h).\n4. Accuse the killer with correct motive & weapon!\n\nTIPS:\n- Suspects have patience. Unrelated clues make them angry.\n- The killer's specific clue will catch them immediately!\n- Cross-reference alibis to spot liars.\n- In the lab, calibrate scanner to exactly match the target.\n- Shortcuts: [F5] Save, [F9] Load, [F1] Manual, [Esc] Back.", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
             hBtnCloseHelp = CreateWindowA("BUTTON", "Close Manual", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_CLOSE_HELP, NULL, NULL);
             
             SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hFontBold, TRUE);
+            SendMessageA(hBtnSave, WM_SETFONT, (WPARAM)hFontBold, TRUE);
+            SendMessageA(hBtnLoad, WM_SETFONT, (WPARAM)hFontBold, TRUE);
             SendMessageA(hHelpTitle, WM_SETFONT, (WPARAM)hFontTitle, TRUE);
             SendMessageA(hHelpDesc, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnCloseHelp, WM_SETFONT, (WPARAM)hFontBold, TRUE);
@@ -1406,10 +1544,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             if (currentState == 0) {
                 MoveWindow(hStartPanel, 0, 0, cx, cy, TRUE);
-                MoveWindow(hStartDesc, cx/2 - 200, cy/2 - 60, 400, 30, TRUE);
-                MoveWindow(hBtnStart, cx/2 - 120, cy/2 - 10, 240, 36, TRUE);
-                MoveWindow(hBtnStartMed, cx/2 - 120, cy/2 + 35, 240, 36, TRUE);
-                MoveWindow(hBtnStartHard, cx/2 - 120, cy/2 + 80, 240, 36, TRUE);
+                MoveWindow(hStartDesc, cx/2 - 200, cy/2 - 80, 400, 30, TRUE);
+                MoveWindow(hBtnStart, cx/2 - 120, cy/2 - 40, 240, 34, TRUE);
+                MoveWindow(hBtnStartMed, cx/2 - 120, cy/2, 240, 34, TRUE);
+                MoveWindow(hBtnStartHard, cx/2 - 120, cy/2 + 40, 240, 34, TRUE);
+                MoveWindow(hBtnLoad, cx/2 - 120, cy/2 + 80, 240, 34, TRUE);
                 MoveWindow(hStatsDesc, cx/2 - 160, cy/2 + 130, 320, 100, TRUE);
             } else {
                 int headerH = 35;
@@ -1417,8 +1556,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int leftW = (cx - pad*3) / 2;
                 int rightW = leftW;
                 
-                MoveWindow(hTitle, 0, 4, cx, headerH, TRUE);
-                MoveWindow(hTimeLeft, cx - 160, pad, 140, 22, TRUE);
+                MoveWindow(hTitle, 0, 4, cx - 380, headerH, TRUE);
+                MoveWindow(hBtnHelp, cx - 85, 6, 75, 24, TRUE);
+                MoveWindow(hBtnSave, cx - 170, 6, 80, 24, TRUE);
+                MoveWindow(hBtnLoad, cx - 255, 6, 80, 24, TRUE);
+                MoveWindow(hTimeLeft, cx - 380, 6, 120, 24, TRUE);
                 
                 int top = headerH + pad;
                 int sceneH = 160;
@@ -1719,6 +1861,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 currentState = prevState;
                 UpdateUI();
                 RECT r; GetClientRect(hwnd, &r); SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
+            } else if (id == ID_BTN_QSAVE) {
+                QuickSaveGame(hwnd);
+            } else if (id == ID_BTN_QLOAD) {
+                QuickLoadGame(hwnd);
+            }
+            break;
+        }
+
+        case WM_KEYDOWN: {
+            if (wParam == VK_F5) {
+                QuickSaveGame(hwnd);
+                return 0;
+            } else if (wParam == VK_F9) {
+                QuickLoadGame(hwnd);
+                return 0;
+            } else if (wParam == VK_F1) {
+                if (currentState == 6) {
+                    currentState = prevState;
+                } else {
+                    prevState = currentState;
+                    currentState = 6;
+                }
+                UpdateUI();
+                RECT r; GetClientRect(hwnd, &r); SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
+                return 0;
+            } else if (wParam == VK_ESCAPE) {
+                if (currentState == 6) {
+                    currentState = prevState;
+                    UpdateUI();
+                    RECT r; GetClientRect(hwnd, &r); SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
+                    return 0;
+                } else if (currentState == 2 || currentState == 3 || currentState == 5) {
+                    currentState = 1;
+                    UpdateUI();
+                    return 0;
+                }
             }
             break;
         }
