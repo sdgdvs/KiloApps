@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KVault
-  kilo_usability: KAudio
+  kilo_usability: KFont
   kilo_graphics: KMystery
   kilo_qa: KFortress
   kilo_expander: "KSnake (Multiplayer)"
@@ -30,9 +30,9 @@ virtual_web_rotation:
   - "kweb://darknet"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-tester
-  app: KType
-  timestamp: "2026-09-24T18:42:00Z"
+  agent: kilo-usability
+  app: KAudio
+  timestamp: "2026-09-24T19:51:00Z"
 last_planner_run: "2026-09-24T05:46:00Z"
 ---
 
@@ -116,9 +116,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KAudio`
+- **Current Target**: `KFont`
 - **Upcoming Queue**:
-  `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`.
+  `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KFortress`
@@ -202,6 +202,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-24T19:51:00Z — kilo-usability: KAudio (UI/UX, Layout & Responsive Controls Polish)**
+  - Status: PASS ✅ (Layout clipping resolved, idle visualizer baseline added, piano key ergonomics refined; 0 regressions).
+  - Window & Layout: Adjusted window height to 860px in App.jsx and metadata; replaced center flex cutoff with auto margin scrolling.
+  - Responsive Density: Compacted panel, keyboard, and sequencer padding/gaps for comfortable zero-scrollbar viewport display.
+  - Musical Ergonomics: Added note name indicators (C4..C5) on virtual piano keys; fixed native C 'H' note conflict with help shortcut.
+  - Modal Dismissal: Standardized Esc, F1, ?, and backdrop dismissal across web and Win32 C without control bleed-through.
+  - Visualizer Fidelity: Added HiDPI idle oscilloscope baseline & center reticle on startup; auto-adapts on window resize.
+  - Verification: MSVC C clean compile (20.9 KB); Vite build clean in 550ms (72.3 KB); security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-24T18:42:00Z — kilo-tester: KType (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (6 UI/interaction defects fixed; 0 regressions; security lint clean; 78.7 KB).
   - Toast Occlusion: Centered toast with click-to-dismiss handler per Vision Audit Directive.
@@ -234,13 +243,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Tutorial Isolation: Session-isolated onboarding with Enter/Space/F1 dismissals; click-to-dismiss safe toasts.
   - Controls & Submenus: Standardized main control visibility transitions across minigames, battle, shop, and expeditions.
   - Verification: MSVC C clean compile (`KDragon.exe` 147.9 KB); clean Vite build (382ms, `kdragon.html` 133.3 KB); security lint 100% PASS; <999KB ceiling.
-
-- **2026-09-24T14:50:00Z — kilo-graphics: KMech (Graphics Polish, Glint/Perimeter Dot Purge & Combat Depth)**
-  - Status: PASS ✅ (Specular glints & perimeter dots purged; 5 weapons, 4 armors, 5 enemy tiers; 0 regressions).
-  - Glint/Dot Purge: Removed `.hud-corner::after` perimeter cyan dots in web & Win32 C `SetPixel` corner dots in `DrawSciFiHUDCornerFiligree`.
-  - Content Expansion: Expanded to 5 weapons, 4 armors, 4 heat sinks, 5 specials, and 5 enemy mech tiers across web and native.
-  - Tactical Combat: Added subsystem targeting bonuses (head stun, armor strip, weapon shear, actuator crush), canvas FX, and sound.
-  - State Persistence: Implemented [F5] Quicksave & [F9] Quickload in web localStorage and native `kmech_save.dat` binary.
-  - Verification: MSVC C clean build (`KMech.exe` 31.7 KB); clean Vite build (378ms, `kmech.html` 104.2 KB); security lint 100% PASS; icons clean; <999KB ceiling.
 
 

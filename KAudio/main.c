@@ -460,14 +460,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int x = (short)LOWORD(lParam);
             int y = (short)HIWORD(lParam);
 
-            // Check Help Dismiss Click
+            // Check Help Dismiss Click (dismiss on click without control bleed-through)
             if (showHelp) {
-                RECT helpRc = {W/2 - 200, H/2 - 150, W/2 + 200, H/2 + 160};
-                if (x >= helpRc.left && x <= helpRc.right && y >= helpRc.top && y <= helpRc.bottom) {
-                    showHelp = 0;
-                    InvalidateRect(hwnd, NULL, FALSE);
-                    break;
-                }
+                showHelp = 0;
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
             }
             // Top Help Button [F1] (x: W-130 to W-10, y: 4 to 28)
             if (x >= W - 130 && x <= W - 10 && y >= 4 && y <= 28) {
@@ -648,7 +645,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
-            if ((wParam == 'H' || wParam == VK_F1 || wParam == VK_OEM_2) && !isRepeat) {
+            if ((wParam == VK_F1 || wParam == VK_OEM_2 || (showHelp && (wParam == 'H' || wParam == 'h'))) && !isRepeat) {
                 showHelp = !showHelp;
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
@@ -985,7 +982,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, helpRc.left + 20, helpRc.top + 206, "V: Toggle Oscilloscope / FFT Spectrum Analyzer", 46);
                 TextOutA(memDC, helpRc.left + 20, helpRc.top + 229, "E: Export DSP-Mastered WAV Audio File", 37);
                 SetTextColor(memDC, RGB(244, 63, 94));
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 265, "Press F1, 'H', [Esc], or Click to close guide", 45);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 265, "Press [F1], [?], [Esc], or Click to close guide", 47);
             }
 
             SelectObject(memDC, oldFont);

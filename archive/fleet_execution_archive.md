@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-24T14:50:00Z — kilo-graphics: KMech (Graphics Polish, Glint/Perimeter Dot Purge & Combat Depth)**
+  - Status: PASS ✅ (Specular glints & perimeter dots purged; 5 weapons, 4 armors, 5 enemy tiers; 0 regressions).
+  - Glint/Dot Purge: Removed `.hud-corner::after` perimeter cyan dots in web & Win32 C `SetPixel` corner dots in `DrawSciFiHUDCornerFiligree`.
+  - Content Expansion: Expanded to 5 weapons, 4 armors, 4 heat sinks, 5 specials, and 5 enemy mech tiers across web and native.
+  - Tactical Combat: Added subsystem targeting bonuses (head stun, armor strip, weapon shear, actuator crush), canvas FX, and sound.
+  - State Persistence: Implemented [F5] Quicksave & [F9] Quickload in web localStorage and native `kmech_save.dat` binary.
+  - Verification: MSVC C clean build (`KMech.exe` 31.7 KB); clean Vite build (378ms, `kmech.html` 104.2 KB); security lint 100% PASS; icons clean; <999KB ceiling.
+
 - **2026-09-24T11:52:00Z — kilo-creator: kweb://cybercafe (Underground BBS & ASCII Studio)**
   - Status: PASS ✅ (Created `cybercafe.html` [58.1 KB]; fully interactive Web 1.0 destination; 0 regressions).
   - Terminal Lounge & Dispenser: Interactive 8-booth LAN status, refreshment kiosk with procedural receipt printing & audio, 56k V.90 throughput test.

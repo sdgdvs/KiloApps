@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KAudio Pro Synthesizer & Sound FX Workstation</title>
-<meta name="window-size" content="width=1000,height=800">
-<meta name="window-width" content="1000">
-<meta name="window-height" content="800">
+<meta name="window-size" content="width=1040,height=860">
+<meta name="window-width" content="1040">
+<meta name="window-height" content="860">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -20,24 +20,25 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 16px;
+    justify-content: flex-start;
+    padding: 12px 16px;
     user-select: none;
     overflow-x: hidden;
   }
   .app-container {
     width: 100%;
     max-width: 980px;
+    margin: auto 0;
     background: rgba(15, 23, 42, 0.75);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    padding: 20px 24px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 14px 18px;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 12px;
   }
   
   /* Header & Top Bar */
@@ -153,7 +154,7 @@
   .panels-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    gap: 12px;
   }
   @media (max-width: 768px) {
     .panels-grid { grid-template-columns: 1fr; }
@@ -163,10 +164,10 @@
     background: rgba(0, 0, 0, 0.35);
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 12px;
-    padding: 14px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
   }
   .panel-header {
     display: flex;
@@ -256,11 +257,11 @@
   .keyboard-panel {
     background: rgba(0, 0, 0, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
-    padding: 16px;
+    border-radius: 12px;
+    padding: 12px 14px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     align-items: center;
   }
   .keyboard-status {
@@ -288,16 +289,17 @@
   }
   .key {
     width: 44px;
-    height: 140px;
+    height: 125px;
     background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 100%);
     border-radius: 0 0 6px 6px;
     display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    padding-bottom: 10px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 8px;
     font-weight: 700;
-    color: #475569;
-    font-size: 12px;
+    color: #334155;
+    font-size: 13px;
     cursor: pointer;
     transition: transform 0.08s, box-shadow 0.08s, background 0.08s;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), inset 0 -4px 0 rgba(0,0,0,0.15);
@@ -305,19 +307,30 @@
     z-index: 1;
     outline: none;
     touch-action: none;
+    gap: 2px;
+  }
+  .key .key-note {
+    font-size: 9px;
+    font-weight: 600;
+    color: #64748b;
   }
   .key.black {
     position: absolute;
     top: 4px;
     width: 28px;
-    height: 84px;
+    height: 75px;
     background: linear-gradient(180deg, #334155 0%, #0f172a 100%);
     border-radius: 0 0 4px 4px;
-    color: #94a3b8;
-    font-size: 10px;
+    color: #cbd5e1;
+    font-size: 11px;
     z-index: 2;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), inset 0 -3px 0 rgba(0,0,0,0.6);
     padding-bottom: 6px;
+  }
+  .key.black .key-note {
+    font-size: 8px;
+    font-weight: 600;
+    color: #94a3b8;
   }
   /* Black Key Positions */
   .key.black[data-note="1"] { margin-left: 32px; }
@@ -332,22 +345,28 @@
     transform: translateY(3px);
     box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1), inset 0 -2px 0 rgba(0,0,0,0.2), 0 0 15px rgba(14, 165, 233, 0.6);
   }
+  .key.active .key-note {
+    color: #e0f2fe;
+  }
   .key.black.active {
     background: #38bdf8;
     color: #fff;
     transform: translateY(3px);
     box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.4), inset 0 -1px 0 rgba(0,0,0,0.5), 0 0 12px rgba(56, 189, 248, 0.6);
   }
+  .key.black.active .key-note {
+    color: #0f172a;
+  }
 
   /* Multi-Track Sequencer Section */
   .sequencer-panel {
     background: rgba(0, 0, 0, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
-    padding: 16px;
+    border-radius: 12px;
+    padding: 12px 14px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
   }
   .seq-controls {
     display: flex;
@@ -658,7 +677,7 @@
       <strong style="text-align: right; color: #fbbf24;">F1 / ? / Esc</strong> <span>Toggle Help Manual / Close Dialog</span>
     </div>
     <div style="text-align: center; color: #94a3b8; font-size: 12px; font-weight: 500; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 8px; cursor: pointer;" onclick="toggleHelp()">
-      Click outside this dialog or press <span style="color: #f43f5e; font-weight: 700;">[Esc]</span> to return to your audio session
+      Click outside this dialog or press <span style="color: #f43f5e; font-weight: 700;">[Esc]</span> or <span style="color: #fbbf24; font-weight: 700;">[F1]</span> to return to your audio session
     </div>
   </div>
 </div>
@@ -976,11 +995,11 @@
   for (let i = 0; i < binds.length; i++) {
     let el = document.createElement('div');
     el.className = 'key' + (isBlack[i] ? ' black' : '');
-    el.dataset.note = i;
-    el.textContent = binds[i];
+    el.innerHTML = `<span>${binds[i]}</span><span class="key-note">${noteNames[i]}</span>`;
     el.tabIndex = 0;
     el.setAttribute('role', 'button');
-    el.setAttribute('aria-label', `Play note ${noteNames[i]}`);
+    el.setAttribute('aria-label', `Play note ${noteNames[i]} (Key ${binds[i]})`);
+    el.title = `Note ${noteNames[i]} [Key ${binds[i]}]`;
 
     const startTrigger = (e) => {
       if (e.type === 'touchstart') e.preventDefault();
@@ -1198,13 +1217,15 @@
   }
 
   // Real-Time Canvas Visualizer (Dual-Mode: Oscilloscope & 32-Band FFT Spectrum)
+  let visualizerStarted = false;
   function startVisualizer() {
+    if (visualizerStarted) return;
+    visualizerStarted = true;
     const canvas = document.getElementById('visCanvas');
     const canvasCtx = canvas.getContext('2d');
 
     function draw() {
       requestAnimationFrame(draw);
-      if (!analyserNode) return;
 
       const dpr = window.devicePixelRatio || 1;
       const displayW = canvas.clientWidth || 300;
@@ -1222,6 +1243,27 @@
 
       canvasCtx.fillStyle = 'rgba(11, 15, 25, 0.4)';
       canvasCtx.fillRect(0, 0, displayW, displayH);
+
+      if (!analyserNode) {
+        // Crisp oscilloscope idle baseline & reticle
+        canvasCtx.lineWidth = 1.5;
+        canvasCtx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+        canvasCtx.shadowColor = '#0ea5e9';
+        canvasCtx.shadowBlur = 4;
+        canvasCtx.beginPath();
+        canvasCtx.moveTo(0, displayH / 2);
+        canvasCtx.lineTo(displayW, displayH / 2);
+        canvasCtx.stroke();
+
+        canvasCtx.strokeStyle = 'rgba(14, 165, 233, 0.35)';
+        canvasCtx.beginPath();
+        canvasCtx.moveTo(displayW / 2, displayH / 2 - 8);
+        canvasCtx.lineTo(displayW / 2, displayH / 2 + 8);
+        canvasCtx.stroke();
+
+        canvasCtx.restore();
+        return;
+      }
 
       if (visMode === 'scope') {
         const bufferLength = analyserNode.frequencyBinCount;
@@ -1325,16 +1367,18 @@
     }
 
     // Function keys and Modal Controls
+    const helpModalEl = document.getElementById('helpModal');
+    const isHelpOpen = helpModalEl && helpModalEl.style.display === 'flex';
+
     if (e.key === 'F1' || e.key === '?' || (e.key === '/' && e.shiftKey)) {
       e.preventDefault();
       toggleHelp();
       return;
     }
 
-    if (e.key === 'Escape') {
-      const m = document.getElementById('helpModal');
-      if (m && m.style.display === 'flex') {
-        m.style.display = 'none';
+    if (e.key === 'Escape' || (isHelpOpen && (e.key === 'h' || e.key === 'H'))) {
+      if (isHelpOpen) {
+        helpModalEl.style.display = 'none';
         safeSetStorage('kaudio_tutorialSeen', '1');
         return;
       }
@@ -1922,6 +1966,12 @@
     }
     return new Blob([buffer], {type: "audio/wav"});
   }
+
+  // Initialize visualizer idle baseline on load
+  startVisualizer();
+  window.addEventListener('resize', () => {
+    // Canvas auto-adapts on next animation frame
+  });
 </script>
 </body>
 </html>
