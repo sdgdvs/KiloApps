@@ -37,13 +37,128 @@
         .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
         .branch-card { background: #1f1f33; border: 2px solid #48dbfb; border-radius: 8px; padding: 10px; margin: 6px 0; width: 90%; cursor: pointer; transition: all 0.2s; text-align: left; }
         .branch-card:hover { transform: scale(1.02); border-color: #fbc531; background: #292942; }
+        #gameContainer.duel-mode { width: 820px; max-width: 98vw; }
+        .mp-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 94%; max-width: 620px; max-height: 90vh; overflow-y: auto; background: #10131d; border: 2px solid #00d2d3; box-shadow: 0 0 35px rgba(0,210,211,0.35); border-radius: 8px; z-index: 850; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #fff; padding: 18px; }
+        .mp-box { background: #161a29; border: 1px solid #2a3350; border-radius: 6px; padding: 12px; }
+        .mp-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .mp-table th { padding: 4px 8px; border-bottom: 1px solid #1f2538; color: #64748b; font-size: 10px; }
+        .mp-table td { padding: 5px 8px; border-bottom: 1px solid #161b2b; color: #cbd5e1; font-size: 11px; }
         .toast-container { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
         .toast { background: #22223b; color: #48dbfb; border: 1px solid #48dbfb; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.6); opacity: 0; transform: translateY(-10px); transition: all 0.25s ease-out; pointer-events: auto; text-align: center; cursor: pointer; }
         .toast.show { opacity: 1; transform: translateY(0); }
     </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+            authDomain: "kiloappschat.firebaseapp.com",
+            databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+            projectId: "kiloappschat",
+            storageBucket: "kiloappschat.firebasestorage.app",
+            messagingSenderId: "290208566057",
+            appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+        };
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            const db = getDatabase(app);
+            window.fb = {
+                app, db, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect
+            };
+            if (window.onFirebaseLoaded) window.onFirebaseLoaded();
+        } catch (err) {
+            console.warn("Firebase RTDB init error:", err);
+        }
+    </script>
 </head>
 <body>
     <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Modal Backdrop -->
+    <div id="modalBackdrop" onclick="closeAllModals()" style="display:none; position:fixed; inset:0; background:rgba(6,8,14,0.78); backdrop-filter:blur(3px); z-index:800;"></div>
+
+    <!-- Multiplayer Modal -->
+    <div id="multiplayerModal" class="mp-modal" style="display:none;" role="dialog" aria-modal="true" aria-label="KSnake Arcade Duel Online Multiplayer">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #252b40; padding-bottom:10px; margin-bottom:14px;">
+            <div style="font-size:16px; font-weight:bold; color:#00d2d3; display:flex; align-items:center; gap:8px;">
+                <span>🌐</span> KSnake Arcade Duel — Online Multiplayer
+            </div>
+            <button onclick="closeAllModals()" style="background:#ff4444; border:none; color:#fff; border-radius:4px; padding:3px 10px; font-weight:bold; cursor:pointer;">✕ [Esc]</button>
+        </div>
+
+        <!-- Player Profile Section -->
+        <div class="mp-box" style="margin-bottom:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                <label style="font-size:12px; font-weight:600; color:#88a0cc;">YOUR VIPER CALLSIGN / NICKNAME:</label>
+                <input type="text" id="mpPlayerName" maxlength="16" style="background:#0c0e18; border:1px solid #00d2d3; color:#00ffff; border-radius:4px; padding:6px 12px; font-size:13px; font-weight:bold; flex:1; max-width:220px;" onchange="updatePlayerName(this.value)">
+            </div>
+        </div>
+
+        <!-- Matchmaking & Custom Rooms (Grid) -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+            <!-- Quick Match Box -->
+            <div class="mp-box" style="border-color:#00ffc8; display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                    <div style="font-weight:bold; font-size:13px; color:#00ffc8; margin-bottom:4px;">⚡ QUICK MATCH</div>
+                    <div style="font-size:11px; color:#94a3b8; margin-bottom:10px;">Instant public auto-matchmaking across all connected players.</div>
+                </div>
+                <button id="btnQuickMatch" onclick="startQuickMatch()" style="background:#00d2aa; border:none; color:#061018; font-weight:bold; font-size:12px; padding:8px 12px; border-radius:4px; cursor:pointer; width:100%;">⚡ Find / Host Match</button>
+            </div>
+
+            <!-- Create Custom Room Box -->
+            <div class="mp-box" style="border-color:#f59e0b;">
+                <div style="font-weight:bold; font-size:13px; color:#f59e0b; margin-bottom:4px;">⚔️ CREATE ROOM</div>
+                <div style="display:flex; gap:6px; margin-bottom:6px;">
+                    <input type="text" id="mpCustomCode" placeholder="CODE (e.g. VIP99)" maxlength="8" style="background:#0c0e18; border:1px solid #556; color:#fff; border-radius:4px; padding:4px 8px; font-size:11px; width:50%; text-transform:uppercase;">
+                    <select id="mpTargetKOs" style="background:#0c0e18; border:1px solid #556; color:#fff; border-radius:4px; padding:4px; font-size:11px; width:50%;">
+                        <option value="1">First to 1 KO</option>
+                        <option value="2">Best of 3 (2 KOs)</option>
+                        <option value="3" selected>Best of 5 (3 KOs)</option>
+                    </select>
+                </div>
+                <button onclick="createCustomRoom()" style="background:#f59e0b; border:none; color:#0b0f19; font-weight:bold; font-size:12px; padding:8px 12px; border-radius:4px; cursor:pointer; width:100%;">Create Custom Room</button>
+            </div>
+        </div>
+
+        <!-- Direct Join by Code -->
+        <div class="mp-box" style="margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+            <span style="font-size:12px; color:#94a3b8; white-space:nowrap;">JOIN CODE:</span>
+            <input type="text" id="mpDirectJoinCode" placeholder="ROOM CODE" maxlength="8" style="background:#0c0e18; border:1px solid #38bdf8; color:#38bdf8; border-radius:4px; padding:5px 8px; font-size:12px; font-weight:bold; width:130px; text-transform:uppercase;" onkeydown="if(event.key==='Enter') joinRoomByCode()">
+            <button onclick="joinRoomByCode()" style="background:#38bdf8; border:none; color:#0b1120; font-weight:bold; font-size:11px; padding:6px 14px; border-radius:4px; cursor:pointer;">Join Room</button>
+            <div id="mpStatusMsg" style="font-size:11px; color:#ffd700; margin-left:auto;"></div>
+        </div>
+
+        <!-- Live Public Lobby Table -->
+        <div class="mp-box" style="margin-bottom:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <div style="font-size:12px; font-weight:bold; color:#38bdf8;">📡 ACTIVE PUBLIC DUEL ROOMS</div>
+                <button onclick="refreshLobbyList()" style="background:#252b40; border:1px solid #475569; color:#94a3b8; font-size:10px; padding:2px 8px; border-radius:3px; cursor:pointer;">↻ Refresh</button>
+            </div>
+            <div id="mpLobbyContainer" style="max-height:140px; overflow-y:auto; border:1px solid #1f2538; border-radius:4px; background:#0c0e18; font-size:11px;">
+                <div style="padding:14px; text-align:center; color:#64748b;">Loading active rooms...</div>
+            </div>
+        </div>
+
+        <!-- Offline / Practice AI Section -->
+        <div class="mp-box" style="border-color:#ffd700; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+            <div>
+                <div style="font-size:12px; font-weight:bold; color:#ffd700;">🤖 OFFLINE SPLIT-SCREEN DUEL VS AI</div>
+                <div style="font-size:10px; color:#94a3b8;">No internet needed. Play 1v1 split screen with real attack hazards & speed surges.</div>
+            </div>
+            <div style="display:flex; gap:6px;">
+                <select id="mpBotDiff" style="background:#0c0e18; border:1px solid #ffd700; color:#ffd700; border-radius:4px; padding:4px 6px; font-size:11px;">
+                    <option value="0">Rookie Bot</option>
+                    <option value="1" selected>Hunter Bot</option>
+                    <option value="2">Glitch Viper</option>
+                    <option value="3">Cyber-AI Grandmaster</option>
+                </select>
+                <button onclick="launchAIDuelFromModal()" style="background:#ffd700; border:none; color:#181200; font-weight:bold; font-size:11px; padding:6px 12px; border-radius:4px; cursor:pointer;">Play Bot</button>
+            </div>
+        </div>
+    </div>
+
     <div id="gameContainer">
         <div id="header">
             <span id="scoreDisplay">Score: 0</span>
@@ -58,7 +173,7 @@
             <div id="bossBarText">HYDRA VIPER BOSS: 15 / 15 HP</div>
         </div>
 
-        <div style="position: relative; width: 400px; height: 400px; max-width: 100%; aspect-ratio: 1 / 1;">
+        <div id="canvasWrapper" style="position: relative; width: 400px; height: 400px; max-width: 100%; aspect-ratio: 1 / 1;">
             <canvas id="gameCanvas" width="400" height="400" aria-label="KSnake Game" role="application" tabindex="0"></canvas>
 
             <!-- MENU OVERLAY -->
@@ -71,6 +186,8 @@
                 </div>
                 <div style="margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;">
                     <button class="btn" onclick="startNewGame()">[ENTER] Play</button>
+                    <button class="btn" onclick="openMultiplayerModal()" style="border-color:#00ffff; color:#00ffff; font-weight:bold;">[N] 🌐 Online Duel</button>
+                    <button class="btn" onclick="startAIDuel()" style="border-color:#ffd700; color:#ffd700; font-weight:bold;">[X] ⚔️ Duel vs AI</button>
                     <button class="btn" onclick="openMapEditor()">[E] Map Editor</button>
                     <button class="btn" id="resumeBtn" onclick="resumeGame()" style="display:none;">[R] Resume</button>
                     <button class="btn" id="btnSoundToggle" onclick="toggleSound()">[U] Sound: ON</button>
@@ -573,8 +690,1368 @@
                     gain.gain.setValueAtTime(0.15, ctxAudio.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.01, ctxAudio.currentTime + 0.5);
                     osc.start(); osc.stop(ctxAudio.currentTime + 0.5);
+                } else if (type === 'attack') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(800, ctxAudio.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(150, ctxAudio.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.12, ctxAudio.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctxAudio.currentTime + 0.15);
+                    osc.start(); osc.stop(ctxAudio.currentTime + 0.15);
+                } else if (type === 'powerup') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, ctxAudio.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(880, ctxAudio.currentTime + 0.12);
+                    gain.gain.setValueAtTime(0.12, ctxAudio.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctxAudio.currentTime + 0.12);
+                    osc.start(); osc.stop(ctxAudio.currentTime + 0.12);
                 }
             } catch(e){}
+        }
+
+        // =========================================================================
+        // ARCADE DUEL & FIREBASE ONLINE MULTIPLAYER SUBSYSTEM
+        // =========================================================================
+        const FIREBASE_PATH_ROOMS = 'multiplayer/ksnake/rooms';
+        const FIREBASE_PATH_LOBBY = 'multiplayer/ksnake/lobby';
+
+        let isDuelMode = false;
+        let isOnlineDuel = false;
+        let isAIDuel = false;
+        let currentRoomId = null;
+        let activeRoomRef = null;
+        let activeRoomListener = null;
+        let activeLobbyRef = null;
+        let activeLobbyListener = null;
+
+        let myPlayerSlot = 1; // 1 = P1 (Left Arena), 2 = P2 (Right Arena)
+        let myPlayerName = safeGetStorage('ksnake_player_name') || ('Viper_' + Math.floor(1000 + Math.random() * 9000));
+        let oppPlayerName = 'Opponent';
+        let isHost = false;
+        let targetKOs = 3;
+        let p1KOs = 0, p2KOs = 0;
+        let roundNumber = 1;
+        let roundCountdown = 0;
+        let roundCountdownTimer = null;
+        let roundBanner = '';
+        let duelMatchOver = false;
+        let duelWinner = null;
+        let rematchP1 = false, rematchP2 = false;
+
+        // Arena constants (780 x 440)
+        const D_CELL = 17;
+        const D_W = 20, D_H = 20;
+        const A1_X = 20, A1_Y = 55;
+        const A2_X = 420, A2_Y = 55;
+        const COND_X = 360, COND_W = 60;
+
+        // Arena 1 State (P1 - Left)
+        let p1Snake = [{x: 5, y: 10}, {x: 4, y: 10}, {x: 3, y: 10}];
+        let p1Dir = {x: 1, y: 0}, p1LastDir = {x: 1, y: 0};
+        let p1Score = 0, p1Apples = 0, p1Streak = 0;
+        let p1Alive = true;
+        let p1Obstacles = [];
+        let p1Food = {x: 12, y: 10};
+        let p1Special = null;
+        let p1SpeedCurse = 0;
+        let p1GhostActive = 0, p1FreezeActive = 0, p1MagnetActive = 0;
+
+        // Arena 2 State (P2 - Right)
+        let p2Snake = [{x: 14, y: 10}, {x: 15, y: 10}, {x: 16, y: 10}];
+        let p2Dir = {x: -1, y: 0}, p2LastDir = {x: -1, y: 0};
+        let p2Score = 0, p2Apples = 0, p2Streak = 0;
+        let p2Alive = true;
+        let p2Obstacles = [];
+        let p2Food = {x: 7, y: 10};
+        let p2Special = null;
+        let p2SpeedCurse = 0;
+        let p2GhostActive = 0, p2FreezeActive = 0, p2MagnetActive = 0;
+
+        // AI Bot parameters
+        let duelBotDiff = 1; // 0=Rookie, 1=Hunter, 2=Glitch Viper, 3=Cyber-AI Grandmaster
+        const botNames = ["ROOKIE BOT", "HUNTER BOT", "GLITCH VIPER", "CYBER-AI GRANDMASTER"];
+
+        // Visual FX & State Arrays
+        let attackBeams = [];
+        let speechBubbles = [];
+        let combatAlerts = [];
+        let duelStepInterval = 130;
+        let duelLoop = null;
+        let lastNetSyncTime = 0;
+
+        function updatePlayerName(val) {
+            if (!val) return;
+            myPlayerName = val.trim().substring(0, 16);
+            safeSetStorage('ksnake_player_name', myPlayerName);
+        }
+
+        function openMultiplayerModal() {
+            const modal = document.getElementById('multiplayerModal');
+            const backdrop = document.getElementById('modalBackdrop');
+            if (modal) modal.style.display = 'block';
+            if (backdrop) backdrop.style.display = 'block';
+            const nameInput = document.getElementById('mpPlayerName');
+            if (nameInput) nameInput.value = myPlayerName;
+            refreshLobbyList();
+        }
+
+        function closeAllModals() {
+            const modal = document.getElementById('multiplayerModal');
+            const backdrop = document.getElementById('modalBackdrop');
+            if (modal) modal.style.display = 'none';
+            if (backdrop) backdrop.style.display = 'none';
+            if (activeLobbyRef && activeLobbyListener && window.fb) {
+                try { window.fb.off(activeLobbyRef, 'value', activeLobbyListener); } catch(e) {}
+                activeLobbyRef = null;
+                activeLobbyListener = null;
+            }
+        }
+
+        function refreshLobbyList() {
+            if (!window.fb) return;
+            const container = document.getElementById('mpLobbyContainer');
+            if (!container) return;
+            container.innerHTML = '<div style="padding:14px; text-align:center; color:#64748b;">Scanning active public rooms...</div>';
+
+            window.fb.get(window.fb.ref(window.fb.db, FIREBASE_PATH_LOBBY)).then(snap => {
+                if (!snap.exists()) {
+                    container.innerHTML = '<div style="padding:14px; text-align:center; color:#64748b;">No public rooms waiting right now. Click Quick Match or Create Room to host!</div>';
+                    return;
+                }
+                const rooms = snap.val();
+                let html = '<table class="mp-table">';
+                html += '<tr><th>ROOM</th><th>HOST</th><th>TARGET</th><th style="text-align:right;">ACTION</th></tr>';
+                let count = 0;
+                for (let code in rooms) {
+                    let r = rooms[code];
+                    if (!r || r.status !== 'waiting') continue;
+                    count++;
+                    html += `<tr>
+                        <td style="font-weight:bold; color:#00d2d3;">${escapeHTML(code)}</td>
+                        <td>${escapeHTML(r.host || 'Viper')}</td>
+                        <td style="color:#ffd700;">${r.targetKOs || 3} KOs</td>
+                        <td style="text-align:right;">
+                            <button onclick="joinRoom('${escapeHTML(code)}')" style="background:#00d2aa; border:none; color:#041416; font-size:10px; font-weight:bold; padding:3px 10px; border-radius:3px; cursor:pointer;">⚔️ Join</button>
+                        </td>
+                    </tr>`;
+                }
+                html += '</table>';
+                container.innerHTML = (count > 0) ? html : '<div style="padding:14px; text-align:center; color:#64748b;">No public rooms waiting right now.</div>';
+            }).catch(err => {
+                container.innerHTML = `<div style="padding:14px; text-align:center; color:#ff6666;">Error: ${escapeHTML(err.message)}</div>`;
+            });
+        }
+
+        async function startQuickMatch() {
+            if (!window.fb) {
+                showToast("Firebase RTDB initializing... Launching offline AI duel!");
+                launchAIDuelFromModal();
+                return;
+            }
+            const btn = document.getElementById('btnQuickMatch');
+            if (btn) btn.innerText = "⏳ Searching for Match...";
+
+            try {
+                const lobbyRef = window.fb.ref(window.fb.db, FIREBASE_PATH_LOBBY);
+                const snapshot = await window.fb.get(lobbyRef);
+                let openRoom = null;
+
+                if (snapshot.exists()) {
+                    const rooms = snapshot.val();
+                    for (let code in rooms) {
+                        if (rooms[code] && rooms[code].status === 'waiting') {
+                            openRoom = code;
+                            break;
+                        }
+                    }
+                }
+
+                if (openRoom) {
+                    await joinRoom(openRoom);
+                } else {
+                    const newCode = 'VIP-' + Math.floor(1000 + Math.random() * 9000);
+                    await createRoomWithCode(newCode, 3, true);
+                }
+            } catch(err) {
+                showToast("Matchmaking error: " + err.message);
+                if (btn) btn.innerText = "⚡ Find / Host Match";
+            }
+        }
+
+        async function createCustomRoom() {
+            let codeInput = document.getElementById('mpCustomCode');
+            let code = codeInput ? codeInput.value.trim().toUpperCase() : '';
+            if (!code) code = 'VIP-' + Math.floor(1000 + Math.random() * 9000);
+            let targetKOsVal = parseInt(document.getElementById('mpTargetKOs')?.value || '3', 10);
+            await createRoomWithCode(code, targetKOsVal, true);
+        }
+
+        async function createRoomWithCode(code, kos, isPublic) {
+            if (!window.fb) {
+                showToast("Firebase offline. Starting AI Duel.");
+                launchAIDuelFromModal();
+                return;
+            }
+            try {
+                currentRoomId = code;
+                isHost = true;
+                myPlayerSlot = 1;
+                targetKOs = kos;
+
+                const roomData = {
+                    status: 'waiting',
+                    createdAt: Date.now(),
+                    targetKOs: kos,
+                    p1: {
+                        name: myPlayerName,
+                        connected: true,
+                        score: 0,
+                        apples: 0,
+                        kos: 0
+                    },
+                    p2: null,
+                    attacks: null,
+                    taunts: null,
+                    rematch: { p1: false, p2: false },
+                    winner: null
+                };
+
+                await window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}`), roomData);
+
+                if (isPublic) {
+                    await window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_LOBBY}/${code}`), {
+                        code,
+                        host: myPlayerName,
+                        createdAt: Date.now(),
+                        targetKOs: kos,
+                        status: 'waiting'
+                    });
+                    window.fb.onDisconnect(window.fb.ref(window.fb.db, `${FIREBASE_PATH_LOBBY}/${code}`)).remove();
+                }
+
+                window.fb.onDisconnect(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}/p1/connected`)).set(false);
+
+                const statusEl = document.getElementById('mpStatusMsg');
+                if (statusEl) statusEl.innerHTML = `<span style="color:#00ffc8;">Room <strong>${code}</strong> created! Waiting for challenger...</span>`;
+                showToast(`Room ${code} created! Waiting for challenger...`, 5000);
+
+                listenToRoom(code);
+            } catch(err) {
+                showToast("Failed to create room: " + err.message);
+            }
+        }
+
+        async function joinRoomByCode() {
+            let codeInput = document.getElementById('mpDirectJoinCode');
+            let code = codeInput ? codeInput.value.trim().toUpperCase() : '';
+            if (!code) { showToast("Please enter a room code!"); return; }
+            await joinRoom(code);
+        }
+
+        async function joinRoom(code) {
+            if (!window.fb) return;
+            try {
+                const roomRef = window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}`);
+                const snap = await window.fb.get(roomRef);
+                if (!snap.exists()) {
+                    showToast(`Room "${code}" not found!`);
+                    return;
+                }
+                const data = snap.val();
+                if (data.status !== 'waiting' && data.p2 && data.p2.connected) {
+                    showToast(`Room "${code}" is already full!`);
+                    return;
+                }
+
+                myPlayerSlot = 2;
+                currentRoomId = code;
+                isHost = false;
+                targetKOs = data.targetKOs || 3;
+                oppPlayerName = data.p1?.name || 'Player 1';
+
+                await window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}/p2`), {
+                    name: myPlayerName,
+                    connected: true,
+                    score: 0,
+                    apples: 0,
+                    kos: 0
+                });
+
+                await window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}/status`), 'playing');
+                window.fb.onDisconnect(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}/p2/connected`)).set(false);
+                await window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_LOBBY}/${code}`), null);
+
+                closeAllModals();
+                listenToRoom(code);
+                startDuelOnline(code, 2, data);
+            } catch(err) {
+                showToast("Failed to join room: " + err.message);
+            }
+        }
+
+        function listenToRoom(code) {
+            if (!window.fb) return;
+            activeRoomRef = window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}`);
+            activeRoomListener = (snapshot) => {
+                const val = snapshot.val();
+                if (!val) return;
+
+                targetKOs = val.targetKOs || 3;
+
+                // Host detects challenger join
+                if (isHost && myPlayerSlot === 1 && val.p2 && val.status === 'playing' && !isDuelMode) {
+                    oppPlayerName = val.p2.name || 'Challenger';
+                    closeAllModals();
+                    startDuelOnline(code, 1, val);
+                    showToast(`Challenger ${oppPlayerName} connected! DUEL START!`, 3000);
+                }
+
+                // Opponent disconnect check
+                const oppSlot = (myPlayerSlot === 1) ? 'p2' : 'p1';
+                if (isDuelMode && isOnlineDuel && val[oppSlot] && val[oppSlot].connected === false) {
+                    showToast(`${oppPlayerName} disconnected! You win!`, 5000);
+                    duelMatchOver = true;
+                    duelWinner = myPlayerSlot;
+                }
+
+                // Opponent state sync
+                const oppData = (myPlayerSlot === 1) ? val.p2 : val.p1;
+                if (oppData && isDuelMode) {
+                    if (myPlayerSlot === 1) {
+                        if (oppData.snake) p2Snake = oppData.snake;
+                        if (oppData.dir) p2Dir = oppData.dir;
+                        if (oppData.score !== undefined) p2Score = oppData.score;
+                        if (oppData.apples !== undefined) p2Apples = oppData.apples;
+                        if (oppData.alive !== undefined) p2Alive = oppData.alive;
+                        if (oppData.food) p2Food = oppData.food;
+                        if (oppData.special !== undefined) p2Special = oppData.special;
+                        if (oppData.ghostActive !== undefined) p2GhostActive = oppData.ghostActive;
+                        if (oppData.freezeActive !== undefined) p2FreezeActive = oppData.freezeActive;
+                        if (oppData.magnetActive !== undefined) p2MagnetActive = oppData.magnetActive;
+                    } else {
+                        if (oppData.snake) p1Snake = oppData.snake;
+                        if (oppData.dir) p1Dir = oppData.dir;
+                        if (oppData.score !== undefined) p1Score = oppData.score;
+                        if (oppData.apples !== undefined) p1Apples = oppData.apples;
+                        if (oppData.alive !== undefined) p1Alive = oppData.alive;
+                        if (oppData.food) p1Food = oppData.food;
+                        if (oppData.special !== undefined) p1Special = oppData.special;
+                        if (oppData.ghostActive !== undefined) p1GhostActive = oppData.ghostActive;
+                        if (oppData.freezeActive !== undefined) p1FreezeActive = oppData.freezeActive;
+                        if (oppData.magnetActive !== undefined) p1MagnetActive = oppData.magnetActive;
+                    }
+                }
+
+                // Rematch check
+                if (val.rematch) {
+                    rematchP1 = !!val.rematch.p1;
+                    rematchP2 = !!val.rematch.p2;
+                    if (rematchP1 && rematchP2 && duelMatchOver) {
+                        resetDuelMatch();
+                    }
+                }
+            };
+            window.fb.onValue(activeRoomRef, activeRoomListener);
+
+            // Attacks listener
+            const attacksRef = window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}/attacks`);
+            window.fb.onChildAdded(attacksRef, snap => {
+                const atk = snap.val();
+                if (!atk || atk.from === myPlayerSlot) return;
+                applyIncomingAttack(atk.type);
+            });
+
+            // Taunts listener
+            const tauntsRef = window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}/taunts`);
+            window.fb.onChildAdded(tauntsRef, snap => {
+                const t = snap.val();
+                if (!t || t.player === myPlayerSlot) return;
+                speechBubbles.push({ player: t.player, text: t.text, life: 120 });
+                playSound('skill');
+            });
+        }
+
+        function startDuelOnline(code, slot, roomData) {
+            hideOverlays();
+            isDuelMode = true;
+            isOnlineDuel = true;
+            isAIDuel = false;
+            currentRoomId = code;
+            myPlayerSlot = slot;
+            targetKOs = roomData.targetKOs || 3;
+            p1KOs = 0; p2KOs = 0;
+            roundNumber = 1;
+            duelMatchOver = false;
+            duelWinner = null;
+            rematchP1 = false; rematchP2 = false;
+
+            setupDuelCanvas();
+            startDuelRound();
+        }
+
+        function launchAIDuelFromModal() {
+            closeAllModals();
+            let sel = document.getElementById('mpBotDiff');
+            let diff = sel ? parseInt(sel.value, 10) : 1;
+            startAIDuel(diff);
+        }
+
+        function startAIDuel(diff = 1) {
+            hideOverlays();
+            isDuelMode = true;
+            isOnlineDuel = false;
+            isAIDuel = true;
+            duelBotDiff = diff;
+            myPlayerSlot = 1;
+            oppPlayerName = botNames[diff] || 'CYBER BOT';
+            targetKOs = 3;
+            p1KOs = 0; p2KOs = 0;
+            roundNumber = 1;
+            duelMatchOver = false;
+            duelWinner = null;
+
+            setupDuelCanvas();
+            startDuelRound();
+            showToast(`Arcade Duel vs ${oppPlayerName} Started! [BO5]`);
+        }
+
+        function setupDuelCanvas() {
+            const container = document.getElementById('gameContainer');
+            if (container) container.classList.add('duel-mode');
+            const wrapper = document.getElementById('canvasWrapper');
+            if (wrapper) {
+                wrapper.style.width = '780px';
+                wrapper.style.height = '440px';
+                wrapper.style.aspectRatio = '780 / 440';
+            }
+            canvas.width = 780 * dpr;
+            canvas.height = 440 * dpr;
+            canvas.style.width = '780px';
+            canvas.style.height = '440px';
+            ctx.scale(dpr, dpr);
+
+            document.getElementById('modeDisplay').innerText = 'Mode: Arcade Duel';
+            if (bossBarContainer) bossBarContainer.style.display = 'none';
+        }
+
+        function restoreSinglePlayerCanvas() {
+            const container = document.getElementById('gameContainer');
+            if (container) container.classList.remove('duel-mode');
+            const wrapper = document.getElementById('canvasWrapper');
+            if (wrapper) {
+                wrapper.style.width = '400px';
+                wrapper.style.height = '400px';
+                wrapper.style.aspectRatio = '1 / 1';
+            }
+            canvas.width = 400 * dpr;
+            canvas.height = 400 * dpr;
+            canvas.style.width = '400px';
+            canvas.style.height = '400px';
+            ctx.scale(dpr, dpr);
+        }
+
+        function leaveDuel() {
+            if (isOnlineDuel && activeRoomRef && activeRoomListener && window.fb) {
+                try {
+                    window.fb.off(activeRoomRef, 'value', activeRoomListener);
+                    window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${currentRoomId}/${myPlayerSlot === 1 ? 'p1' : 'p2'}/connected`), false);
+                } catch(e){}
+                activeRoomRef = null;
+                activeRoomListener = null;
+            }
+            if (duelLoop) clearInterval(duelLoop);
+            isDuelMode = false;
+            isOnlineDuel = false;
+            isAIDuel = false;
+            restoreSinglePlayerCanvas();
+            showMenu();
+            showToast("Returned to Menu.");
+        }
+
+        function startDuelRound() {
+            p1Snake = [{x: 5, y: 10}, {x: 4, y: 10}, {x: 3, y: 10}];
+            p1Dir = {x: 1, y: 0}; p1LastDir = {x: 1, y: 0};
+            p1Alive = true; p1Obstacles = []; p1Streak = 0;
+            p1SpeedCurse = 0; p1GhostActive = 0; p1FreezeActive = 0; p1MagnetActive = 0;
+            p1Food = {x: 12, y: 10}; p1Special = null;
+
+            p2Snake = [{x: 14, y: 10}, {x: 15, y: 10}, {x: 16, y: 10}];
+            p2Dir = {x: -1, y: 0}; p2LastDir = {x: -1, y: 0};
+            p2Alive = true; p2Obstacles = []; p2Streak = 0;
+            p2SpeedCurse = 0; p2GhostActive = 0; p2FreezeActive = 0; p2MagnetActive = 0;
+            p2Food = {x: 7, y: 10}; p2Special = null;
+
+            attackBeams = [];
+            speechBubbles = [];
+            combatAlerts = [];
+            roundBanner = `ROUND ${roundNumber} — READY!`;
+
+            roundCountdown = 3;
+            playSound('skill');
+            if (roundCountdownTimer) clearInterval(roundCountdownTimer);
+            roundCountdownTimer = setInterval(() => {
+                roundCountdown--;
+                if (roundCountdown > 0) {
+                    playSound('eat');
+                } else {
+                    clearInterval(roundCountdownTimer);
+                    roundCountdownTimer = null;
+                    roundBanner = 'DUEL START!';
+                    playSound('victory');
+                    setTimeout(() => { if (roundBanner === 'DUEL START!') roundBanner = ''; }, 1200);
+                }
+            }, 800);
+
+            if (duelLoop) clearInterval(duelLoop);
+            duelLoop = setInterval(duelStep, duelStepInterval);
+            requestAnimationFrame(draw);
+        }
+
+        function duelStep() {
+            if (!isDuelMode) return;
+            if (roundCountdown > 0 || duelMatchOver) {
+                updateDuelVisuals();
+                return;
+            }
+
+            // Move Player 1
+            if (p1Alive) {
+                if (p1SpeedCurse > 0) p1SpeedCurse--;
+                if (p1GhostActive > 0) p1GhostActive--;
+                if (p1FreezeActive > 0) p1FreezeActive--;
+                if (p1MagnetActive > 0) {
+                    p1MagnetActive--;
+                    let h = p1Snake[0];
+                    if (p1Food.x < h.x) p1Food.x++; else if (p1Food.x > h.x) p1Food.x--;
+                    if (p1Food.y < h.y) p1Food.y++; else if (p1Food.y > h.y) p1Food.y--;
+                }
+
+                let nx = p1Snake[0].x + p1Dir.x;
+                let ny = p1Snake[0].y + p1Dir.y;
+
+                let hitWall = (nx < 0 || nx >= D_W || ny < 0 || ny >= D_H);
+                let hitSelf = p1Snake.slice(1).some(s => s.x === nx && s.y === ny);
+                let hitObs = p1Obstacles.some(o => o.x === nx && o.y === ny);
+
+                if ((hitWall || hitSelf || hitObs) && p1GhostActive <= 0) {
+                    p1Alive = false;
+                    addExplosion(A1_X + p1Snake[0].x * D_CELL + 8, A1_Y + p1Snake[0].y * D_CELL + 8, '#00d2d3', true);
+                    playSound('die');
+                    handlePlayerKO(1);
+                } else {
+                    if (p1GhostActive > 0) {
+                        nx = (nx + D_W) % D_W;
+                        ny = (ny + D_H) % D_H;
+                    }
+                    p1Snake.unshift({x: nx, y: ny});
+                    p1LastDir = {...p1Dir};
+
+                    if (nx === p1Food.x && ny === p1Food.y) {
+                        p1Score += 100;
+                        p1Apples++;
+                        p1Streak++;
+                        playSound('eat');
+                        combatAlerts.push({ text: '+100', color: '#4cd137', x: A1_X + nx * D_CELL, y: A1_Y + ny * D_CELL, life: 30 });
+                        if (p1Streak % 3 === 0) {
+                            launchDuelAttack(1, 'junk');
+                        }
+                        if (Math.random() < 0.25 && !p1Special) {
+                            let types = ['gold', 'speed', 'poison'];
+                            p1Special = { type: types[Math.floor(Math.random() * types.length)], x: Math.floor(Math.random() * D_W), y: Math.floor(Math.random() * D_H) };
+                        }
+                        placeDuelFood(1);
+                    } else if (p1Special && nx === p1Special.x && ny === p1Special.y) {
+                        if (p1Special.type === 'gold') {
+                            p1Score += 300;
+                            combatAlerts.push({ text: '⚡ SPEED CURSE!', color: '#ffd700', x: A1_X + nx * D_CELL, y: A1_Y + ny * D_CELL, life: 40 });
+                            launchDuelAttack(1, 'speed');
+                        } else if (p1Special.type === 'speed') {
+                            p1Score += 200;
+                            combatAlerts.push({ text: '🔥 MAGMA BLAST!', color: '#ff4757', x: A1_X + nx * D_CELL, y: A1_Y + ny * D_CELL, life: 40 });
+                            launchDuelAttack(1, 'magma');
+                        } else if (p1Special.type === 'poison') {
+                            p1Score = Math.max(0, p1Score - 50);
+                            if (p1Obstacles.length > 0) p1Obstacles.pop();
+                            combatAlerts.push({ text: 'CLEARED HAZARD', color: '#9b59b6', x: A1_X + nx * D_CELL, y: A1_Y + ny * D_CELL, life: 30 });
+                        }
+                        p1Special = null;
+                        playSound('powerup');
+                    } else {
+                        p1Snake.pop();
+                    }
+                }
+            }
+
+            // Move Player 2 (AI or Network)
+            if (isAIDuel && p2Alive) {
+                computeAIBotMove();
+            }
+
+            if (p2Alive && (isAIDuel || (isOnlineDuel && myPlayerSlot === 2))) {
+                if (p2SpeedCurse > 0) p2SpeedCurse--;
+                if (p2GhostActive > 0) p2GhostActive--;
+                if (p2FreezeActive > 0) p2FreezeActive--;
+                if (p2MagnetActive > 0) {
+                    p2MagnetActive--;
+                    let h = p2Snake[0];
+                    if (p2Food.x < h.x) p2Food.x++; else if (p2Food.x > h.x) p2Food.x--;
+                    if (p2Food.y < h.y) p2Food.y++; else if (p2Food.y > h.y) p2Food.y--;
+                }
+
+                let nx = p2Snake[0].x + p2Dir.x;
+                let ny = p2Snake[0].y + p2Dir.y;
+
+                let hitWall = (nx < 0 || nx >= D_W || ny < 0 || ny >= D_H);
+                let hitSelf = p2Snake.slice(1).some(s => s.x === nx && s.y === ny);
+                let hitObs = p2Obstacles.some(o => o.x === nx && o.y === ny);
+
+                if ((hitWall || hitSelf || hitObs) && p2GhostActive <= 0) {
+                    p2Alive = false;
+                    addExplosion(A2_X + p2Snake[0].x * D_CELL + 8, A2_Y + p2Snake[0].y * D_CELL + 8, '#e056fd', true);
+                    playSound('die');
+                    handlePlayerKO(2);
+                } else {
+                    if (p2GhostActive > 0) {
+                        nx = (nx + D_W) % D_W;
+                        ny = (ny + D_H) % D_H;
+                    }
+                    p2Snake.unshift({x: nx, y: ny});
+                    p2LastDir = {...p2Dir};
+
+                    if (nx === p2Food.x && ny === p2Food.y) {
+                        p2Score += 100;
+                        p2Apples++;
+                        p2Streak++;
+                        combatAlerts.push({ text: '+100', color: '#ffd700', x: A2_X + nx * D_CELL, y: A2_Y + ny * D_CELL, life: 30 });
+                        if (p2Streak % 3 === 0) {
+                            launchDuelAttack(2, 'junk');
+                        }
+                        if (Math.random() < 0.25 && !p2Special) {
+                            let types = ['gold', 'speed', 'poison'];
+                            p2Special = { type: types[Math.floor(Math.random() * types.length)], x: Math.floor(Math.random() * D_W), y: Math.floor(Math.random() * D_H) };
+                        }
+                        placeDuelFood(2);
+                    } else if (p2Special && nx === p2Special.x && ny === p2Special.y) {
+                        if (p2Special.type === 'gold') {
+                            p2Score += 300;
+                            combatAlerts.push({ text: '⚡ SPEED CURSE!', color: '#ffd700', x: A2_X + nx * D_CELL, y: A2_Y + ny * D_CELL, life: 40 });
+                            launchDuelAttack(2, 'speed');
+                        } else if (p2Special.type === 'speed') {
+                            p2Score += 200;
+                            combatAlerts.push({ text: '🔥 MAGMA BLAST!', color: '#ff4757', x: A2_X + nx * D_CELL, y: A2_Y + ny * D_CELL, life: 40 });
+                            launchDuelAttack(2, 'magma');
+                        } else if (p2Special.type === 'poison') {
+                            p2Score = Math.max(0, p2Score - 50);
+                            if (p2Obstacles.length > 0) p2Obstacles.pop();
+                            combatAlerts.push({ text: 'CLEARED HAZARD', color: '#9b59b6', x: A2_X + nx * D_CELL, y: A2_Y + ny * D_CELL, life: 30 });
+                        }
+                        p2Special = null;
+                        playSound('powerup');
+                    } else {
+                        p2Snake.pop();
+                    }
+                }
+            }
+
+            // Network Sync
+            if (isOnlineDuel && window.fb && Date.now() - lastNetSyncTime > 60) {
+                lastNetSyncTime = Date.now();
+                const mySlotStr = (myPlayerSlot === 1) ? 'p1' : 'p2';
+                const myData = (myPlayerSlot === 1) ? {
+                    snake: p1Snake, dir: p1Dir, score: p1Score, apples: p1Apples, alive: p1Alive,
+                    food: p1Food, special: p1Special, ghostActive: p1GhostActive, freezeActive: p1FreezeActive,
+                    magnetActive: p1MagnetActive, connected: true
+                } : {
+                    snake: p2Snake, dir: p2Dir, score: p2Score, apples: p2Apples, alive: p2Alive,
+                    food: p2Food, special: p2Special, ghostActive: p2GhostActive, freezeActive: p2FreezeActive,
+                    magnetActive: p2MagnetActive, connected: true
+                };
+                try {
+                    window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${currentRoomId}/${mySlotStr}`), myData);
+                } catch(e){}
+            }
+
+            updateDuelVisuals();
+        }
+
+        function updateDuelVisuals() {
+            if (screenShake > 0.05) screenShake *= 0.88; else screenShake = 0;
+
+            for (let i = attackBeams.length - 1; i >= 0; i--) {
+                attackBeams[i].life--;
+                if (attackBeams[i].life <= 0) attackBeams.splice(i, 1);
+            }
+
+            for (let i = speechBubbles.length - 1; i >= 0; i--) {
+                speechBubbles[i].life--;
+                if (speechBubbles[i].life <= 0) speechBubbles.splice(i, 1);
+            }
+
+            for (let i = combatAlerts.length - 1; i >= 0; i--) {
+                combatAlerts[i].life--;
+                combatAlerts[i].y -= 0.6;
+                if (combatAlerts[i].life <= 0) combatAlerts.splice(i, 1);
+            }
+        }
+
+        function placeDuelFood(arenaSlot) {
+            let ok = false;
+            let targetSnake = (arenaSlot === 1) ? p1Snake : p2Snake;
+            let targetObs = (arenaSlot === 1) ? p1Obstacles : p2Obstacles;
+            let fx = 10, fy = 10;
+            let attempts = 0;
+            while (!ok && attempts < 100) {
+                attempts++;
+                fx = Math.floor(Math.random() * D_W);
+                fy = Math.floor(Math.random() * D_H);
+                if (targetSnake.some(s => s.x === fx && s.y === fy)) continue;
+                if (targetObs.some(o => o.x === fx && o.y === fy)) continue;
+                ok = true;
+            }
+            if (arenaSlot === 1) p1Food = {x: fx, y: fy};
+            else p2Food = {x: fx, y: fy};
+        }
+
+        function launchDuelAttack(fromSlot, type) {
+            playSound('skill');
+            let toSlot = (fromSlot === 1) ? 2 : 1;
+            let sx = (fromSlot === 1) ? (A1_X + (p1Snake[0]?.x || 5) * D_CELL) : (A2_X + (p2Snake[0]?.x || 14) * D_CELL);
+            let sy = (fromSlot === 1) ? (A1_Y + (p1Snake[0]?.y || 10) * D_CELL) : (A2_Y + (p2Snake[0]?.y || 10) * D_CELL);
+            let tx = (toSlot === 1) ? (A1_X + 170) : (A2_X + 170);
+            let ty = (toSlot === 1) ? (A1_Y + 170) : (A2_Y + 170);
+            let color = (type === 'junk') ? '#00d2d3' : (type === 'speed' ? '#ffd700' : '#ff4757');
+            let label = (type === 'junk') ? '+1 GLITCH WALL!' : (type === 'speed' ? '⚡ SPEED CURSE!' : '🔥 MAGMA TRAP!');
+
+            attackBeams.push({
+                from: fromSlot,
+                sx, sy, tx, ty,
+                color, text: label,
+                life: 30, maxLife: 30
+            });
+
+            if (toSlot === 1) {
+                applyIncomingAttack(type, 1);
+            } else {
+                applyIncomingAttack(type, 2);
+            }
+
+            if (isOnlineDuel && myPlayerSlot === fromSlot && window.fb) {
+                try {
+                    window.fb.push(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${currentRoomId}/attacks`), {
+                        from: fromSlot,
+                        type: type,
+                        ts: Date.now()
+                    });
+                } catch(e){}
+            }
+        }
+
+        function applyIncomingAttack(type, targetSlot) {
+            if (!targetSlot) targetSlot = myPlayerSlot;
+            let obs = (targetSlot === 1) ? p1Obstacles : p2Obstacles;
+            let snk = (targetSlot === 1) ? p1Snake : p2Snake;
+
+            if (type === 'junk' || type === 'magma') {
+                let count = (type === 'magma') ? 2 : 1;
+                for (let k = 0; k < count; k++) {
+                    let rx = Math.floor(Math.random() * D_W);
+                    let ry = Math.floor(Math.random() * D_H);
+                    let head = snk[0] || {x: 10, y: 10};
+                    if (Math.abs(rx - head.x) < 2 && Math.abs(ry - head.y) < 2) rx = (rx + 4) % D_W;
+                    obs.push({x: rx, y: ry});
+                }
+                screenShake = Math.max(screenShake, 8);
+                playSound('die');
+            } else if (type === 'speed') {
+                if (targetSlot === 1) p1SpeedCurse = 35;
+                else p2SpeedCurse = 35;
+                screenShake = Math.max(screenShake, 6);
+                playSound('skill');
+            }
+        }
+
+        function handlePlayerKO(koSlot) {
+            if (duelMatchOver) return;
+
+            if (koSlot === 1) {
+                p2KOs++;
+                roundBanner = `${oppPlayerName} SCORES A KO!`;
+            } else {
+                p1KOs++;
+                roundBanner = `${myPlayerName} SCORES A KO!`;
+            }
+
+            if (p1KOs >= targetKOs) {
+                duelMatchOver = true;
+                duelWinner = 1;
+                roundBanner = `🏆 ${myPlayerName} WINS THE DUEL! 🏆`;
+                playSound('victory');
+            } else if (p2KOs >= targetKOs) {
+                duelMatchOver = true;
+                duelWinner = 2;
+                roundBanner = `🏆 ${oppPlayerName} WINS THE DUEL! 🏆`;
+                playSound('victory');
+            } else {
+                roundNumber++;
+                setTimeout(() => {
+                    if (isDuelMode && !duelMatchOver) startDuelRound();
+                }, 2200);
+            }
+        }
+
+        function requestRematch() {
+            if (isAIDuel) {
+                resetDuelMatch();
+            } else if (isOnlineDuel && window.fb) {
+                try {
+                    const slotStr = (myPlayerSlot === 1) ? 'p1' : 'p2';
+                    window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${currentRoomId}/rematch/${slotStr}`), true);
+                    showToast("Rematch requested! Waiting for opponent...");
+                } catch(e){}
+            }
+        }
+
+        function resetDuelMatch() {
+            p1KOs = 0;
+            p2KOs = 0;
+            roundNumber = 1;
+            duelMatchOver = false;
+            duelWinner = null;
+            rematchP1 = false;
+            rematchP2 = false;
+            if (isOnlineDuel && window.fb) {
+                try {
+                    window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${currentRoomId}/rematch`), { p1: false, p2: false });
+                } catch(e){}
+            }
+            startDuelRound();
+        }
+
+        function sendDuelTaunt(slot, text) {
+            speechBubbles.push({ player: slot, text, life: 120 });
+            playSound('skill');
+            if (isOnlineDuel && window.fb) {
+                try {
+                    window.fb.push(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${currentRoomId}/taunts`), {
+                        player: slot,
+                        text,
+                        ts: Date.now()
+                    });
+                } catch(e){}
+            }
+        }
+
+        function activateDuelSkill(s) {
+            if (!isDuelMode || roundCountdown > 0 || duelMatchOver) return;
+            if (s === 'G' && p1GhostActive <= 0) {
+                p1GhostActive = 40;
+                playSound('skill');
+                combatAlerts.push({ text: '👻 GHOST VIPER ACTIVE!', color: '#00d2d3', x: A1_X + 170, y: A1_Y + 170, life: 35 });
+            } else if (s === 'F' && p1FreezeActive <= 0) {
+                p1FreezeActive = 60;
+                playSound('skill');
+                combatAlerts.push({ text: '❄️ ICE FREEZE SHIELD!', color: '#48dbfb', x: A1_X + 170, y: A1_Y + 170, life: 35 });
+            } else if (s === 'M' && p1MagnetActive <= 0) {
+                p1MagnetActive = 60;
+                playSound('skill');
+                combatAlerts.push({ text: '🧲 APPLE MAGNET CHARGE!', color: '#fbc531', x: A1_X + 170, y: A1_Y + 170, life: 35 });
+            }
+        }
+
+        function computeAIBotMove() {
+            if (!p2Alive || p2Snake.length === 0) return;
+            const head = p2Snake[0];
+            const candidateDirs = [
+                {x: 0, y: -1},
+                {x: 0, y: 1},
+                {x: -1, y: 0},
+                {x: 1, y: 0}
+            ];
+
+            const validMoves = candidateDirs.filter(d => {
+                if (p2LastDir.x === -d.x && p2LastDir.y === -d.y) return false;
+                const nx = head.x + d.x;
+                const ny = head.y + d.y;
+                if (nx < 0 || nx >= D_W || ny < 0 || ny >= D_H) return false;
+                if (p2Snake.slice(0, -1).some(s => s.x === nx && s.y === ny)) return false;
+                if (p2Obstacles.some(o => o.x === nx && o.y === ny)) return false;
+                return true;
+            });
+
+            if (validMoves.length === 0) {
+                const fallback = candidateDirs.filter(d => !(p2LastDir.x === -d.x && p2LastDir.y === -d.y));
+                if (fallback.length > 0) p2Dir = fallback[0];
+                return;
+            }
+
+            if (duelBotDiff === 0 && Math.random() < 0.25) {
+                p2Dir = validMoves[Math.floor(Math.random() * validMoves.length)];
+                return;
+            }
+
+            let target = p2Food;
+            if (p2Special) {
+                let distSpec = Math.abs(head.x - p2Special.x) + Math.abs(head.y - p2Special.y);
+                let distFood = Math.abs(head.x - p2Food.x) + Math.abs(head.y - p2Food.y);
+                if (distSpec < distFood) target = p2Special;
+            }
+
+            let bestMove = validMoves[0];
+            let bestScore = -999999;
+
+            for (let mv of validMoves) {
+                const nx = head.x + mv.x;
+                const ny = head.y + mv.y;
+                let dist = Math.abs(nx - target.x) + Math.abs(ny - target.y);
+                let moveScore = 1000 - dist * 10;
+
+                if (duelBotDiff >= 2) {
+                    let freeCells = countReachableCells(nx, ny, p2Snake, p2Obstacles, 25);
+                    if (freeCells < Math.min(p2Snake.length, 12)) {
+                        moveScore -= 500;
+                    } else {
+                        moveScore += freeCells * 5;
+                    }
+                }
+
+                if (moveScore > bestScore) {
+                    bestScore = moveScore;
+                    bestMove = mv;
+                }
+            }
+            p2Dir = bestMove;
+        }
+
+        function countReachableCells(startX, startY, snakeBody, obstaclesList, maxCount) {
+            let visited = new Set();
+            visited.add(`${startX},${startY}`);
+            let queue = [{x: startX, y: startY}];
+            let count = 0;
+
+            while (queue.length > 0 && count < maxCount) {
+                let curr = queue.shift();
+                count++;
+                const neighbors = [
+                    {x: curr.x, y: curr.y - 1},
+                    {x: curr.x, y: curr.y + 1},
+                    {x: curr.x - 1, y: curr.y},
+                    {x: curr.x + 1, y: curr.y}
+                ];
+                for (let n of neighbors) {
+                    if (n.x < 0 || n.x >= D_W || n.y < 0 || n.y >= D_H) continue;
+                    let key = `${n.x},${n.y}`;
+                    if (visited.has(key)) continue;
+                    if (snakeBody.some(s => s.x === n.x && s.y === n.y)) continue;
+                    if (obstaclesList.some(o => o.x === n.x && o.y === n.y)) continue;
+                    visited.add(key);
+                    queue.push(n);
+                }
+            }
+            return count;
+        }
+
+        function drawDuel() {
+            frameCount++;
+            ctx.clearRect(0, 0, 780, 440);
+
+            let offX = 0, offY = 0;
+            if (screenShake > 0.05) {
+                offX = Math.sin(frameCount * 2.1) * screenShake * 0.7;
+                offY = Math.cos(frameCount * 2.7) * screenShake * 0.7;
+            }
+
+            ctx.fillStyle = '#0a0a14';
+            ctx.fillRect(0, 0, 780, 440);
+
+            ctx.strokeStyle = 'rgba(0, 210, 211, 0.06)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < 780; x += 30) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 440); ctx.stroke();
+            }
+            for (let y = 0; y < 440; y += 30) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(780, y); ctx.stroke();
+            }
+
+            // Top Header Bar
+            ctx.save();
+            ctx.fillStyle = '#00d2d3';
+            ctx.font = 'bold 12px system-ui, sans-serif';
+            ctx.textAlign = 'left';
+            let p1NameStr = `P1: ${myPlayerSlot === 1 ? myPlayerName + ' (YOU)' : oppPlayerName}`;
+            ctx.fillText(p1NameStr, 25, 20);
+            ctx.fillStyle = '#8395a7';
+            ctx.font = '10px monospace';
+            ctx.fillText(`SCORE: ${p1Score}   APPLES: ${p1Apples}   LEN: ${p1Snake.length}`, 25, 36);
+
+            ctx.fillStyle = '#ffd700';
+            ctx.font = '14px sans-serif';
+            let p1Stars = '★'.repeat(p1KOs) + '☆'.repeat(Math.max(0, targetKOs - p1KOs));
+            ctx.fillText(p1Stars, 195, 20);
+
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#00ffff';
+            ctx.font = 'bold 14px system-ui, sans-serif';
+            ctx.fillText('⚔️ VIPER ARCADE DUEL ⚔️', 390, 18);
+            ctx.fillStyle = '#ffd700';
+            ctx.font = 'bold 11px monospace';
+            ctx.fillText(`ROUND ${roundNumber}  [${p1KOs} - ${p2KOs}]  BEST OF ${targetKOs * 2 - 1}`, 390, 36);
+
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#e056fd';
+            ctx.font = 'bold 12px system-ui, sans-serif';
+            let p2NameStr = `${oppPlayerName} ${myPlayerSlot === 2 ? '(YOU)' : ''}`;
+            ctx.fillText(p2NameStr, 755, 20);
+            ctx.fillStyle = '#8395a7';
+            ctx.font = '10px monospace';
+            ctx.fillText(`SCORE: ${p2Score}   APPLES: ${p2Apples}   LEN: ${p2Snake.length}`, 755, 36);
+
+            ctx.fillStyle = '#ffd700';
+            ctx.font = '14px sans-serif';
+            ctx.textAlign = 'left';
+            let p2Stars = '★'.repeat(p2KOs) + '☆'.repeat(Math.max(0, targetKOs - p2KOs));
+            ctx.fillText(p2Stars, 530, 20);
+            ctx.restore();
+
+            // Render Arena 1
+            renderDuelArena(ctx, A1_X + offX, A1_Y + offY, p1Snake, p1Dir, p1Obstacles, p1Food, p1Special, p1Alive, p1GhostActive, p1SpeedCurse, 1);
+
+            // Render Center Conduit
+            renderCenterConduit(ctx, COND_X, A1_Y, COND_W, 340);
+
+            // Render Arena 2
+            renderDuelArena(ctx, A2_X + offX, A2_Y + offY, p2Snake, p2Dir, p2Obstacles, p2Food, p2Special, p2Alive, p2GhostActive, p2SpeedCurse, 2);
+
+            // Attack Beams & Overlays
+            renderAttackBeams(ctx);
+            renderSpeechBubbles(ctx);
+            renderCombatAlerts(ctx);
+            renderDuelBottomBar(ctx);
+
+            if (roundCountdown > 0) {
+                ctx.save();
+                ctx.fillStyle = 'rgba(10, 10, 20, 0.7)';
+                ctx.fillRect(0, 0, 780, 440);
+                ctx.fillStyle = '#00ffff';
+                ctx.font = 'bold 52px system-ui, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(roundCountdown.toString(), 390, 220);
+                ctx.font = 'bold 16px system-ui, sans-serif';
+                ctx.fillStyle = '#ffd700';
+                ctx.fillText(`ROUND ${roundNumber} GET READY!`, 390, 260);
+                ctx.restore();
+            } else if (roundBanner && !duelMatchOver) {
+                ctx.save();
+                ctx.fillStyle = '#ffd700';
+                ctx.font = 'bold 20px system-ui, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(roundBanner, 390, 225);
+                ctx.restore();
+            }
+
+            if (duelMatchOver) {
+                ctx.save();
+                ctx.fillStyle = 'rgba(6, 8, 14, 0.88)';
+                ctx.fillRect(0, 0, 780, 440);
+                ctx.textAlign = 'center';
+                ctx.fillStyle = (duelWinner === 1) ? '#00d2d3' : '#e056fd';
+                ctx.font = 'bold 28px system-ui, sans-serif';
+                let winTitle = (duelWinner === 1) ? `🏆 ${myPlayerName} WINS! 🏆` : `🏆 ${oppPlayerName} WINS! 🏆`;
+                ctx.fillText(winTitle, 390, 180);
+
+                ctx.fillStyle = '#ffd700';
+                ctx.font = 'bold 16px monospace';
+                ctx.fillText(`FINAL SCORE: ${p1KOs} - ${p2KOs}`, 390, 215);
+
+                ctx.fillStyle = '#00d2aa';
+                ctx.fillRect(250, 245, 130, 36);
+                ctx.fillStyle = '#041416';
+                ctx.font = 'bold 12px system-ui, sans-serif';
+                ctx.fillText('⚡ REMATCH [R]', 315, 268);
+
+                ctx.fillStyle = '#ff4757';
+                ctx.fillRect(400, 245, 130, 36);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText('✕ MENU [ESC]', 465, 268);
+                ctx.restore();
+            }
+
+            requestAnimationFrame(draw);
+        }
+
+        function renderDuelArena(ctx, ax, ay, snakeArr, sDir, obstaclesArr, foodObj, specialObj, isAlive, ghostTimer, speedCurse, slot) {
+            ctx.save();
+            let borderColor = (slot === 1) ? 'rgba(0, 210, 211, 0.6)' : 'rgba(224, 86, 253, 0.6)';
+            if (speedCurse > 0) borderColor = 'rgba(255, 71, 87, 0.8)';
+            ctx.strokeStyle = borderColor;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(ax, ay, D_W * D_CELL, D_H * D_CELL);
+
+            for (let x = 0; x < D_W; x++) {
+                for (let y = 0; y < D_H; y++) {
+                    ctx.fillStyle = (x + y) % 2 === 0 ? '#0d111d' : '#121626';
+                    ctx.fillRect(ax + x * D_CELL, ay + y * D_CELL, D_CELL, D_CELL);
+                }
+            }
+
+            obstaclesArr.forEach(o => {
+                let ox = ax + o.x * D_CELL, oy = ay + o.y * D_CELL;
+                ctx.fillStyle = '#2d3436';
+                ctx.fillRect(ox + 1, oy + 1, D_CELL - 2, D_CELL - 2);
+                ctx.strokeStyle = (slot === 1) ? '#00d2d3' : '#e056fd';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(ox + 1, oy + 1, D_CELL - 2, D_CELL - 2);
+            });
+
+            if (foodObj) {
+                let fx = ax + foodObj.x * D_CELL + D_CELL / 2;
+                let fy = ay + foodObj.y * D_CELL + D_CELL / 2;
+                drawAppleSprite(ctx, fx, fy, frameCount);
+            }
+
+            if (specialObj) {
+                let sx = ax + specialObj.x * D_CELL + D_CELL / 2;
+                let sy = ay + specialObj.y * D_CELL + D_CELL / 2;
+                if (specialObj.type === 'gold') drawGoldenAppleSprite(ctx, sx, sy, frameCount);
+                else drawSpecialFruitSprite(ctx, sx, sy, specialObj.type, frameCount);
+            }
+
+            if (snakeArr && snakeArr.length > 0) {
+                for (let i = snakeArr.length - 1; i >= 0; i--) {
+                    let s = snakeArr[i];
+                    let sx = ax + s.x * D_CELL + D_CELL / 2;
+                    let sy = ay + s.y * D_CELL + D_CELL / 2;
+                    if (i === 0) {
+                        if (slot === 1) {
+                            drawViperHead(ctx, sx, sy, sDir.x, sDir.y, ghostTimer > 0, speedCurse > 0, frameCount);
+                        } else {
+                            drawRivalHead(ctx, sx, sy, sDir, 1, frameCount);
+                        }
+                    } else {
+                        if (slot === 1) {
+                            drawSnakeSegment(ctx, sx, sy, i, snakeArr.length, ghostTimer > 0, speedCurse > 0, frameCount);
+                        } else {
+                            drawRivalSegment(ctx, sx, sy, i, snakeArr.length, 1, frameCount);
+                        }
+                    }
+                }
+            }
+
+            if (!isAlive) {
+                ctx.fillStyle = 'rgba(255, 71, 87, 0.4)';
+                ctx.fillRect(ax, ay, D_W * D_CELL, D_H * D_CELL);
+                ctx.fillStyle = '#ff4757';
+                ctx.font = 'bold 22px system-ui, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('💀 K.O.!', ax + 170, ay + 175);
+            }
+            ctx.restore();
+        }
+
+        function renderCenterConduit(ctx, cx, cy, cw, ch) {
+            ctx.save();
+            ctx.fillStyle = '#101322';
+            ctx.fillRect(cx, cy, cw, ch);
+            ctx.strokeStyle = '#252b40';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(cx, cy, cw, ch);
+
+            let flowOffset = (frameCount * 2) % 20;
+            ctx.strokeStyle = 'rgba(0, 210, 211, 0.25)';
+            ctx.setLineDash([6, 6]);
+            ctx.lineDashOffset = -flowOffset;
+            ctx.beginPath();
+            ctx.moveTo(cx + cw / 2, cy);
+            ctx.lineTo(cx + cw / 2, cy + ch);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.fillStyle = '#161a29';
+            ctx.beginPath();
+            ctx.arc(cx + cw / 2, cy + ch / 2, 18, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            ctx.fillStyle = '#ffd700';
+            ctx.font = 'bold 11px system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('VS', cx + cw / 2, cy + ch / 2 + 4);
+            ctx.restore();
+        }
+
+        function renderAttackBeams(ctx) {
+            attackBeams.forEach(b => {
+                let progress = 1 - (b.life / b.maxLife);
+                let curX = b.sx + (b.tx - b.sx) * progress;
+                let curY = b.sy + (b.ty - b.sy) * progress;
+
+                ctx.save();
+                ctx.strokeStyle = b.color;
+                ctx.lineWidth = 3;
+                ctx.shadowColor = b.color;
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.moveTo(b.sx, b.sy);
+                ctx.lineTo(curX, curY);
+                ctx.stroke();
+
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(curX, curY, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.font = 'bold 11px monospace';
+                ctx.fillStyle = b.color;
+                ctx.fillText(b.text, curX + 6, curY - 6);
+                ctx.restore();
+            });
+        }
+
+        function renderSpeechBubbles(ctx) {
+            speechBubbles.forEach(sb => {
+                let bx = (sb.player === 1) ? (A1_X + (p1Snake[0]?.x || 5) * D_CELL) : (A2_X + (p2Snake[0]?.x || 14) * D_CELL);
+                let by = (sb.player === 1) ? (A1_Y + (p1Snake[0]?.y || 10) * D_CELL - 18) : (A2_Y + (p2Snake[0]?.y || 10) * D_CELL - 18);
+
+                ctx.save();
+                ctx.fillStyle = 'rgba(22, 26, 41, 0.92)';
+                ctx.strokeStyle = (sb.player === 1) ? '#00d2d3' : '#e056fd';
+                ctx.lineWidth = 1;
+                ctx.font = 'bold 11px system-ui, sans-serif';
+                let textW = ctx.measureText(sb.text).width;
+                ctx.fillRect(bx - textW / 2 - 6, by - 14, textW + 12, 18);
+                ctx.strokeRect(bx - textW / 2 - 6, by - 14, textW + 12, 18);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'center';
+                ctx.fillText(sb.text, bx, by - 1);
+                ctx.restore();
+            });
+        }
+
+        function renderCombatAlerts(ctx) {
+            combatAlerts.forEach(ca => {
+                ctx.save();
+                ctx.font = 'bold 12px monospace';
+                ctx.fillStyle = ca.color;
+                ctx.textAlign = 'center';
+                ctx.fillText(ca.text, ca.x, ca.y);
+                ctx.restore();
+            });
+        }
+
+        function renderDuelBottomBar(ctx) {
+            ctx.save();
+            ctx.fillStyle = '#121422';
+            ctx.fillRect(0, 404, 780, 36);
+            ctx.strokeStyle = '#252b40';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(0, 404, 780, 36);
+
+            ctx.font = '10px monospace';
+            ctx.fillStyle = '#8395a7';
+            ctx.textAlign = 'left';
+            ctx.fillText('TAUNTS: [1] Ssss!  [2] Venom!  [3] Nice!  [4] Gg!', 20, 424);
+
+            ctx.fillStyle = '#ff4444';
+            ctx.fillRect(340, 410, 100, 22);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 10px system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('✕ LEAVE [ESC]', 390, 425);
+
+            ctx.font = '10px monospace';
+            ctx.fillStyle = '#8395a7';
+            ctx.textAlign = 'right';
+            ctx.fillText('STEER: WASD/Arrows • SKILLS: G/F/M', 760, 424);
+            ctx.restore();
+        }
+
+        function handleDuelClick(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = 780 / rect.width;
+            const scaleY = 440 / rect.height;
+            const mx = (e.clientX - rect.left) * scaleX;
+            const my = (e.clientY - rect.top) * scaleY;
+
+            if (duelMatchOver) {
+                if (mx >= 250 && mx <= 380 && my >= 245 && my <= 281) {
+                    requestRematch();
+                    return;
+                }
+                if (mx >= 400 && mx <= 530 && my >= 245 && my <= 281) {
+                    leaveDuel();
+                    return;
+                }
+            }
+
+            if (mx >= 340 && mx <= 440 && my >= 410 && my <= 432) {
+                leaveDuel();
+                return;
+            }
+
+            if (my >= 410 && my <= 432 && mx < 320) {
+                const taunts = ["🐍 Sssss!", "⚡ Feel my venom!", "🔥 Nice try!", "💀 Game over!"];
+                let idx = Math.floor(mx / 75) % 4;
+                sendDuelTaunt(myPlayerSlot, taunts[idx]);
+                return;
+            }
+
+            if (mx >= A1_X && mx <= A1_X + 340 && my >= A1_Y && my <= A1_Y + 340) {
+                let gx = Math.floor((mx - A1_X) / D_CELL);
+                let gy = Math.floor((my - A1_Y) / D_CELL);
+                let head = p1Snake[0];
+                if (!head) return;
+                let dx = gx - head.x;
+                let dy = gy - head.y;
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    if (dx > 0 && p1LastDir.x !== -1) p1Dir = {x: 1, y: 0};
+                    else if (dx < 0 && p1LastDir.x !== 1) p1Dir = {x: -1, y: 0};
+                } else {
+                    if (dy > 0 && p1LastDir.y !== -1) p1Dir = {x: 0, y: 1};
+                    else if (dy < 0 && p1LastDir.y !== 1) p1Dir = {x: 0, y: -1};
+                }
+            }
+        }
+
+        function handleDuelKeyDown(e) {
+            const k = e.key.toLowerCase();
+            if (e.key === 'Escape') {
+                leaveDuel();
+                return;
+            }
+            if (duelMatchOver) {
+                if (k === 'r') {
+                    requestRematch();
+                    return;
+                }
+                if (e.key === 'Enter') {
+                    leaveDuel();
+                    return;
+                }
+                return;
+            }
+
+            if (myPlayerSlot === 1) {
+                if ((k === keyBinds.up || e.key === 'ArrowUp') && p1LastDir.y !== 1) p1Dir = {x: 0, y: -1};
+                else if ((k === keyBinds.down || e.key === 'ArrowDown') && p1LastDir.y !== -1) p1Dir = {x: 0, y: 1};
+                else if ((k === keyBinds.left || e.key === 'ArrowLeft') && p1LastDir.x !== 1) p1Dir = {x: -1, y: 0};
+                else if ((k === keyBinds.right || e.key === 'ArrowRight') && p1LastDir.x !== -1) p1Dir = {x: 1, y: 0};
+            } else {
+                if ((k === keyBinds.up || e.key === 'ArrowUp') && p2LastDir.y !== 1) p2Dir = {x: 0, y: -1};
+                else if ((k === keyBinds.down || e.key === 'ArrowDown') && p2LastDir.y !== -1) p2Dir = {x: 0, y: 1};
+                else if ((k === keyBinds.left || e.key === 'ArrowLeft') && p2LastDir.x !== 1) p2Dir = {x: -1, y: 0};
+                else if ((k === keyBinds.right || e.key === 'ArrowRight') && p2LastDir.x !== -1) p2Dir = {x: 1, y: 0};
+            }
+
+            if (k === keyBinds.ghost) activateDuelSkill('G');
+            else if (k === keyBinds.freeze) activateDuelSkill('F');
+            else if (k === keyBinds.magnet) activateDuelSkill('M');
+
+            const taunts = ["🐍 Sssss!", "⚡ Feel my venom!", "🔥 Nice try!", "💀 Game over!"];
+            if (k === '1') sendDuelTaunt(myPlayerSlot, taunts[0]);
+            else if (k === '2') sendDuelTaunt(myPlayerSlot, taunts[1]);
+            else if (k === '3') sendDuelTaunt(myPlayerSlot, taunts[2]);
+            else if (k === '4') sendDuelTaunt(myPlayerSlot, taunts[3]);
         }
 
         // Map Editor Functions
@@ -672,6 +2149,10 @@
 
         // Canvas Click for Map Editor and Gameplay Steering
         canvas.addEventListener('click', e => {
+            if (isDuelMode) {
+                handleDuelClick(e);
+                return;
+            }
             if (gameState === 8) {
                 const rect = canvas.getBoundingClientRect();
                 const gx = Math.floor((e.clientX - rect.left) / (rect.width / WIDTH));
@@ -807,6 +2288,10 @@
         }
 
         function showMenu() {
+            if (isDuelMode) {
+                leaveDuel();
+                return;
+            }
             hideOverlays();
             gameState = 0;
             const goTitle = document.getElementById('gameOverTitle');
@@ -1140,7 +2625,7 @@
         }
 
         function update() {
-            if (gameState !== 1) return;
+            if (isDuelMode || gameState !== 1) return;
             matchTicks++;
             gridCoverage.add(`${snake[0].x},${snake[0].y}`);
 
@@ -2252,6 +3737,10 @@
         }
 
         function draw() {
+            if (isDuelMode) {
+                drawDuel();
+                return;
+            }
             frameCount++;
             ctx.clearRect(0, 0, 400, 400);
 
@@ -2971,6 +4460,11 @@
         window.addEventListener('keydown', e => {
             const k = e.key.toLowerCase();
 
+            if (isDuelMode) {
+                handleDuelKeyDown(e);
+                return;
+            }
+
             // Rebinding in config overlay
             if (activeRebindKey && configOverlay.style.display === 'flex') {
                 e.preventDefault();
@@ -3040,7 +4534,9 @@
             }
 
             if (gameState === 0) {
-                if (k === 'm') cycleMode();
+                if (k === 'n') openMultiplayerModal();
+                else if (k === 'x') startAIDuel();
+                else if (k === 'm') cycleMode();
                 else if (k === '1') { difficulty = 0; updateMenuUI(); }
                 else if (k === '2') { difficulty = 1; updateMenuUI(); }
                 else if (k === '3') { difficulty = 2; updateMenuUI(); }
