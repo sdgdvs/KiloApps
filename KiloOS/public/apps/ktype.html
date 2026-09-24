@@ -384,24 +384,27 @@
   .toast {
     position: fixed;
     bottom: 24px;
-    right: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
     background: #111420;
     color: #f8fafc;
     border: 1px solid var(--accent-cyan);
     box-shadow: 0 4px 20px rgba(0, 242, 254, 0.3);
-    padding: 10px 18px;
+    padding: 10px 20px;
     border-radius: 8px;
     font-size: 13px;
     font-weight: 600;
     z-index: 9999;
     opacity: 0;
-    transform: translateY(10px);
     transition: opacity 0.25s ease, transform 0.25s ease;
-    pointer-events: none;
+    cursor: pointer;
+    pointer-events: auto;
+    max-width: 90vw;
+    text-align: center;
   }
   .toast.show {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
   }
   .toast.warning {
     border-color: var(--accent-amber);
@@ -655,7 +658,7 @@
       </div>
     </div>
     
-    <div class="card" style="padding: 12px; text-align: center; border: 1px dashed var(--border-color); cursor: pointer;" onclick="document.getElementById('font-file-input').click()" id="font-drop-zone">
+    <div class="card" style="padding: 12px; text-align: center; border: 1px dashed var(--border-color); cursor: pointer;" onclick="document.getElementById('font-file-input').click()" onkeydown="if(event.key==='Enter'||event.key===' ') document.getElementById('font-file-input').click()" role="button" tabindex="0" id="font-drop-zone" aria-label="Load Custom Font">
       <input type="file" id="font-file-input" accept=".ttf,.otf" style="display: none;" aria-label="Font file picker">
       <span style="font-size: 13px; color: var(--text-secondary);">Drop .TTF / .OTF here or click to load Custom Font</span>
     </div>
@@ -687,7 +690,7 @@
         <h2 style="font-size: 18px; font-weight: 700;">Arcade Speed Typing Cascade</h2>
         <span class="badge">Classic Win32 Mode</span>
       </div>
-      <canvas id="arcade-canvas" width="600" height="450" role="img" aria-label="Arcade falling words game canvas"></canvas>
+      <canvas id="arcade-canvas" width="600" height="450" role="img" aria-label="Arcade falling words game canvas" style="cursor: pointer;" onclick="if(!arcadeRunning) startArcadeGame()"></canvas>
       <div style="display: flex; gap: 12px;">
         <button class="btn" onclick="startArcadeGame()" aria-label="Start new arcade game">🎮 New Arcade Game</button>
       </div>
@@ -796,7 +799,10 @@
         <div class="brand-logo" style="width: 32px; height: 32px; font-size: 16px;">K</div>
         <h2 style="font-size: 19px; font-weight: 700; margin: 0;">Welcome to KType Studio</h2>
       </div>
-      <span class="badge">Pass 5 Validated</span>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="badge">Typing Suite</span>
+        <button class="icon-btn" onclick="dismissTutorial()" aria-label="Close tutorial" title="Close [Esc]" style="border:none;background:transparent;font-size:20px;line-height:1;cursor:pointer;color:var(--text-secondary);">&times;</button>
+      </div>
     </div>
     <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.5;">
       Precision typing tutor &amp; arcade speed challenge engineered for peak keystroke ergonomics and keyboard mastery.
@@ -834,7 +840,10 @@
   <div class="card" style="max-width: 520px; width: 90%;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
       <h2 style="font-size: 20px; font-weight: 700; margin: 0;">Help &amp; Controls</h2>
-      <span class="badge">Hotkeys</span>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="badge">Hotkeys</span>
+        <button class="icon-btn" onclick="toggleHelp()" aria-label="Close help" title="Close [Esc]" style="border:none;background:transparent;font-size:20px;line-height:1;cursor:pointer;color:var(--text-secondary);">&times;</button>
+      </div>
     </div>
     <ul style="margin-left: 20px; margin-bottom: 20px; line-height: 1.9; color: var(--text-secondary);">
       <li><strong>F1 or H</strong>: Toggle this help guide</li>
@@ -868,6 +877,7 @@ const PRESETS = {
 
 // --- Keyboard Layout & Finger Mapping ---
 const KEYBOARD_LAYOUT = [
+  ["1","2","3","4","5","6","7","8","9","0"],
   ["q","w","e","r","t","y","u","i","o","p"],
   ["a","s","d","f","g","h","j","k","l"],
   ["z","x","c","v","b","n","m"]
@@ -1024,6 +1034,8 @@ function showToast(msg, type = 'info') {
     toastEl = document.createElement('div');
     toastEl.id = 'ktype-toast';
     toastEl.className = 'toast';
+    toastEl.title = 'Click to dismiss';
+    toastEl.onclick = () => toastEl.classList.remove('show');
     document.body.appendChild(toastEl);
   }
   toastEl.textContent = msg;
@@ -1243,7 +1255,38 @@ function quickloadState() {
       arcadeLastSpawn = Date.now();
       arcadeAnimationFrame = requestAnimationFrame(arcadeLoop);
     } else if (targetTab === 'test') {
-      resetTest();
+      if (snapshot.testState && Array.isArray(snapshot.testState.testWords) && snapshot.testState.testWords.length > 0) {
+        clearInterval(testTimer);
+        testWords = snapshot.testState.testWords;
+        wordIndex = snapshot.testState.wordIndex || 0;
+        charIndex = snapshot.testState.charIndex || 0;
+        totalKeystrokes = snapshot.testState.totalKeystrokes || 0;
+        correctKeystrokes = snapshot.testState.correctKeystrokes || 0;
+        errorCount = snapshot.testState.errorCount || 0;
+        timeRemaining = snapshot.testState.timeRemaining !== undefined ? snapshot.testState.timeRemaining : testModeVal;
+        isTestActive = false;
+        testCompleted = !!snapshot.testState.completed;
+        renderWords();
+        for (let w = 0; w < wordIndex; w++) {
+          const wEl = document.getElementById(`w-${w}`);
+          if (wEl) {
+            Array.from(wEl.children).forEach(ch => {
+              if (ch.classList.contains('char')) ch.className = 'char correct';
+            });
+          }
+        }
+        document.getElementById('live-timer').textContent = (testModeType === 'time') ? `${timeRemaining}s` : '0s';
+        const minutes = Math.max(0.1, (testModeVal - timeRemaining)) / 60;
+        const netWpm = totalKeystrokes > 0 ? Math.max(0, Math.round((correctKeystrokes / 5) / minutes)) : 0;
+        const acc = totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 100) : 100;
+        document.getElementById('live-wpm').textContent = netWpm;
+        document.getElementById('live-acc').textContent = `${acc}%`;
+        document.getElementById('live-raw').textContent = totalKeystrokes;
+        document.getElementById('live-errors').textContent = errorCount;
+        updateCaretPosition();
+      } else {
+        resetTest();
+      }
     }
 
     showToast('📂 Restored quicksaved workspace [F9]');
@@ -1828,7 +1871,7 @@ function resetHeatmap() {
 
 function exportHeatmap() {
   const canvas = document.createElement('canvas');
-  canvas.width = 800; canvas.height = 360;
+  canvas.width = 800; canvas.height = 380;
   const ctx = canvas.getContext('2d');
   
   ctx.fillStyle = '#05070c';
@@ -1895,7 +1938,14 @@ function saveCustomLesson() {
 
   PRESETS.custom = text.split(/\s+/).filter(w => w.length > 0);
   safeStorageSet('ktype_custom_lesson', PRESETS.custom);
-  showToast('Custom lesson loaded! Select "Custom Import" preset to practice.');
+  currentPreset = 'custom';
+  document.querySelectorAll('#preset-chips .chip').forEach(c => {
+    const onclickAttr = c.getAttribute('onclick') || '';
+    c.classList.toggle('active', onclickAttr.includes("'custom'"));
+  });
+  switchTab('test');
+  resetTest();
+  showToast('Custom lesson saved & loaded! Ready to practice.');
 }
 
 function exportCustomLesson() {
@@ -1957,9 +2007,9 @@ function handleFontImport(e) {
       await font.load();
       document.fonts.add(font);
       document.documentElement.style.setProperty('--font-mono', '"CustomUserFont", monospace');
-      alert('Custom font loaded successfully!');
+      showToast('Custom font loaded successfully!');
     } catch (err) {
-      alert('Failed to load custom font.');
+      showToast('Failed to load custom font.', 'error');
     }
   };
   reader.readAsArrayBuffer(file);
@@ -2009,7 +2059,10 @@ function renderHistoryTable() {
 }
 
 function exportHistoryCSV() {
-  if (testHistory.length === 0) return alert('No history data to export.');
+  if (testHistory.length === 0) {
+    showToast('⚠️ No history data to export.', 'warning');
+    return;
+  }
   let csv = 'Date,Mode,Preset,WPM,Accuracy,CPM,Errors,Duration\r\n';
   testHistory.forEach(h => {
     const cleanDate = String(h.date || '').replace(/"/g, '""');
@@ -2038,7 +2091,10 @@ function clearHistory() {
 }
 
 function exportCertificate() {
-  if (testHistory.length === 0) return alert('No test history available. Complete a test first!');
+  if (testHistory.length === 0) {
+    showToast('⚠️ No test history available. Complete a test first!', 'warning');
+    return;
+  }
   
   const bestTest = testHistory.reduce((best, current) => {
     return (current.wpm > best.wpm) ? current : best;
@@ -2123,7 +2179,10 @@ function initArcadeCanvas() {
   ctx.fillStyle = '#00f2fe';
   ctx.font = 'bold 20px Consolas';
   ctx.textAlign = 'center';
-  ctx.fillText('Press "New Arcade Game" to play Arcade Cascade!', logicalW / 2, logicalH / 2);
+  ctx.fillText('Click canvas or press "New Arcade Game" to start!', logicalW / 2, logicalH / 2 - 12);
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '13px sans-serif';
+  ctx.fillText('Type falling words before they hit the ground', logicalW / 2, logicalH / 2 + 18);
   ctx.restore();
 }
 
@@ -2219,9 +2278,12 @@ function arcadeLoop() {
 
   if (arcadeLives <= 0) {
     ctx.fillStyle = '#ef4444';
-    ctx.font = 'bold 30px sans-serif';
+    ctx.font = 'bold 32px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('GAME OVER', logicalW / 2, logicalH / 2);
+    ctx.fillText('GAME OVER', logicalW / 2, logicalH / 2 - 12);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '14px sans-serif';
+    ctx.fillText('Click canvas or press Space / Enter to restart', logicalW / 2, logicalH / 2 + 20);
   } else {
     arcadeAnimationFrame = requestAnimationFrame(arcadeLoop);
   }
