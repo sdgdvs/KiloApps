@@ -10,7 +10,119 @@
 </head>
 <body>
 <div id="toast" onclick="this.style.opacity='0'" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(18, 22, 34, 0.96); border: 1px solid #00f0f0; color: #00f0f0; padding: 9px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 18px rgba(0,240,240,0.4); opacity: 0; pointer-events: auto; cursor: pointer; transition: opacity 0.25s ease; z-index: 1000; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; align-items: center; gap: 8px;" role="status" aria-live="polite"></div>
+
+<!-- Modal Backdrop -->
+<div id="modalBackdrop" onclick="closeAllModals()" style="display:none; position:fixed; inset:0; background:rgba(6,8,14,0.78); backdrop-filter:blur(3px); z-index:800;"></div>
+
+<!-- Multiplayer Modal -->
+<div id="multiplayerModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:94%; max-width:620px; max-height:90vh; overflow-y:auto; background:#10131d; border:2px solid #00f0f0; box-shadow:0 0 35px rgba(0,240,240,0.35); border-radius:8px; z-index:850; font-family:'Segoe UI',system-ui,sans-serif; color:#ffffff; padding:18px;">
+  <!-- Title bar -->
+  <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #252b40; padding-bottom:10px; margin-bottom:14px;">
+    <div style="font-size:16px; font-weight:bold; color:#00f0f0; display:flex; align-items:center; gap:8px;">
+      <span>🌐</span> KTetris Arcade Duel — Online Multiplayer
+    </div>
+    <button onclick="closeAllModals()" style="background:#ff4444; border:none; color:#fff; border-radius:4px; padding:3px 10px; font-weight:bold; cursor:pointer;">✕ [Esc]</button>
+  </div>
+
+  <!-- Player Profile Section -->
+  <div style="background:#161a29; border:1px solid #2a3350; border-radius:6px; padding:12px; margin-bottom:14px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+      <label style="font-size:12px; font-weight:600; color:#88a0cc;">YOUR CALLSIGN / NICKNAME:</label>
+      <input type="text" id="mpPlayerName" maxlength="16" style="background:#0c0e18; border:1px solid #00f0f0; color:#00ffff; border-radius:4px; padding:6px 12px; font-size:13px; font-weight:bold; flex:1; max-width:220px;" onchange="updatePlayerName(this.value)">
+    </div>
+  </div>
+
+  <!-- Matchmaking & Custom Rooms (Grid) -->
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+    <!-- Quick Match Box -->
+    <div style="background:#161a29; border:1px solid #00ffc8; border-radius:6px; padding:12px; display:flex; flex-direction:column; justify-content:space-between;">
+      <div>
+        <div style="font-weight:bold; font-size:13px; color:#00ffc8; margin-bottom:4px;">⚡ QUICK MATCH</div>
+        <div style="font-size:11px; color:#94a3b8; margin-bottom:10px;">Instant public auto-matchmaking across all connected players.</div>
+      </div>
+      <button id="btnQuickMatch" onclick="startQuickMatch()" style="background:#00d2aa; border:none; color:#061018; font-weight:bold; font-size:12px; padding:8px 12px; border-radius:4px; cursor:pointer; width:100%;">⚡ Find / Host Match</button>
+    </div>
+
+    <!-- Create Custom Room Box -->
+    <div style="background:#161a29; border:1px solid #f59e0b; border-radius:6px; padding:12px;">
+      <div style="font-weight:bold; font-size:13px; color:#f59e0b; margin-bottom:4px;">⚔️ CREATE ROOM</div>
+      <div style="display:flex; gap:6px; margin-bottom:6px;">
+        <input type="text" id="mpCustomCode" placeholder="CODE (e.g. KV99)" maxlength="8" style="background:#0c0e18; border:1px solid #556; color:#fff; border-radius:4px; padding:4px 8px; font-size:11px; width:50%; text-transform:uppercase;">
+        <select id="mpTargetKOs" style="background:#0c0e18; border:1px solid #556; color:#fff; border-radius:4px; padding:4px; font-size:11px; width:50%;">
+          <option value="1">First to 1 KO</option>
+          <option value="3" selected>Best of 5 (3 KOs)</option>
+          <option value="5">First to 5 KOs</option>
+        </select>
+      </div>
+      <button onclick="createCustomRoom()" style="background:#f59e0b; border:none; color:#0b0f19; font-weight:bold; font-size:12px; padding:8px 12px; border-radius:4px; cursor:pointer; width:100%;">Create Custom Room</button>
+    </div>
+  </div>
+
+  <!-- Direct Join by Code -->
+  <div style="background:#161a29; border:1px solid #2a3350; border-radius:6px; padding:10px 12px; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+    <span style="font-size:12px; color:#94a3b8; white-space:nowrap;">JOIN CODE:</span>
+    <input type="text" id="mpDirectJoinCode" placeholder="ROOM CODE" maxlength="8" style="background:#0c0e18; border:1px solid #38bdf8; color:#38bdf8; border-radius:4px; padding:5px 8px; font-size:12px; font-weight:bold; width:130px; text-transform:uppercase;" onkeydown="if(event.key==='Enter') joinRoomByCode()">
+    <button onclick="joinRoomByCode()" style="background:#38bdf8; border:none; color:#0b1120; font-weight:bold; font-size:11px; padding:6px 14px; border-radius:4px; cursor:pointer;">Join Room</button>
+    <div id="mpStatusMsg" style="font-size:11px; color:#ffd700; margin-left:auto;"></div>
+  </div>
+
+  <!-- Live Public Lobby Table -->
+  <div style="background:#161a29; border:1px solid #2a3350; border-radius:6px; padding:12px; margin-bottom:14px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <div style="font-size:12px; font-weight:bold; color:#38bdf8;">📡 ACTIVE PUBLIC DUEL ROOMS</div>
+      <button onclick="refreshLobbyList()" style="background:#252b40; border:1px solid #475569; color:#94a3b8; font-size:10px; padding:2px 8px; border-radius:3px; cursor:pointer;">↻ Refresh</button>
+    </div>
+    <div id="mpLobbyContainer" style="max-height:140px; overflow-y:auto; border:1px solid #1f2538; border-radius:4px; background:#0c0e18; font-size:11px;">
+      <div style="padding:14px; text-align:center; color:#64748b;">Loading active rooms...</div>
+    </div>
+  </div>
+
+  <!-- Offline / Practice AI Section -->
+  <div style="background:#161a29; border:1px solid #475569; border-radius:6px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+    <div>
+      <div style="font-size:12px; font-weight:bold; color:#ffd700;">🤖 OFFLINE SPLIT-SCREEN DUEL VS AI</div>
+      <div style="font-size:10px; color:#94a3b8;">No internet needed. Play 1v1 split screen with real attack lines & garbage.</div>
+    </div>
+    <div style="display:flex; gap:6px;">
+      <select id="mpBotDiff" style="background:#0c0e18; border:1px solid #ffd700; color:#ffd700; border-radius:4px; padding:4px 6px; font-size:11px;">
+        <option value="0">Rookie Bot</option>
+        <option value="1" selected>Aggro Bot</option>
+        <option value="2">Tactical Bot</option>
+        <option value="3">Cyber-AI Grandmaster</option>
+      </select>
+      <button onclick="launchAIDuelFromModal()" style="background:#ffd700; border:none; color:#181200; font-weight:bold; font-size:11px; padding:6px 12px; border-radius:4px; cursor:pointer;">Play Bot</button>
+    </div>
+  </div>
+</div>
+
 <canvas id="gameCanvas" tabindex="0" role="application" aria-label="KTetris Arcade Game"></canvas>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+    authDomain: "kiloappschat.firebaseapp.com",
+    databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+    projectId: "kiloappschat",
+    storageBucket: "kiloappschat.firebasestorage.app",
+    messagingSenderId: "290208566057",
+    appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+  };
+
+  try {
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    window.fb = {
+      app, db, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect
+    };
+    if (window.onFirebaseLoaded) window.onFirebaseLoaded();
+  } catch (err) {
+    console.warn("Firebase RTDB init error:", err);
+  }
+</script>
+
 <script>
   function showToast(msg, dur = 3500) {
       const t = document.getElementById('toast');
@@ -90,15 +202,18 @@
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
   
+  let isDuelMode = false;
   function handleResize() {
       const winW = window.innerWidth;
       const winH = window.innerHeight;
-      const scale = Math.min(winW / 370, winH / 510) * 0.98;
+      const targetW = isDuelMode ? 760 : 370;
+      const targetH = 510;
+      const scale = Math.min(winW / targetW, winH / targetH) * 0.98;
       const dpr = window.devicePixelRatio || 1;
-      canvas.width = 370 * scale * dpr;
-      canvas.height = 510 * scale * dpr;
-      canvas.style.width = (370 * scale) + 'px';
-      canvas.style.height = (510 * scale) + 'px';
+      canvas.width = targetW * scale * dpr;
+      canvas.height = targetH * scale * dpr;
+      canvas.style.width = (targetW * scale) + 'px';
+      canvas.style.height = (targetH * scale) + 'px';
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(scale * dpr, scale * dpr);
       ctx.imageSmoothingEnabled = false;
@@ -141,11 +256,13 @@
       [0xc21800, 0x272000, 0xc21800, 0x272000]  // 12: Z5
   ];
 
-  const MODE_MARATHON = 0;
-  const MODE_SPRINT   = 1;
-  const MODE_ULTRA    = 2;
-  const MODE_CAMPAIGN = 3;
-  const modeNames = ["MARATHON", "SPRINT 40L", "ULTRA 2-MIN", "CAMPAIGN"];
+  const MODE_MARATHON    = 0;
+  const MODE_SPRINT      = 1;
+  const MODE_ULTRA       = 2;
+  const MODE_CAMPAIGN    = 3;
+  const MODE_DUEL_AI     = 4;
+  const MODE_DUEL_ONLINE = 5;
+  const modeNames = ["MARATHON", "SPRINT 40L", "ULTRA 2-MIN", "CAMPAIGN", "DUEL VS AI", "ONLINE DUEL"];
 
   
   let rngState = 12345;
@@ -269,6 +386,852 @@
   let shockwaves = [];
   let speedMotes = [];
 
+  /* Arcade Duel & Multiplayer State */
+  const FIREBASE_PATH_ROOMS = 'multiplayer/ktetris/rooms';
+  const FIREBASE_PATH_LOBBY = 'multiplayer/ktetris/lobby';
+
+  let myPlayerSlot = 1; // 1 = P1, 2 = P2, 0 = Spectator
+  let myPlayerName = safeGetJSON('ktetris_player_name', 'Tetron_' + Math.floor(1000 + Math.random() * 9000));
+  let oppPlayerName = 'Opponent';
+  let isHost = false;
+  let currentRoomId = null;
+  let currentRoomStatus = 'none'; // 'none', 'waiting', 'playing', 'finished'
+  let activeRoomRef = null;
+  let activeRoomListener = null;
+  let activeLobbyRef = null;
+  let activeLobbyListener = null;
+  let lastPieceSyncTs = 0;
+  let lastProcessedOppAttacks = 0;
+  let lastChatTs = 0;
+  let oppDisconnected = false;
+
+  // Round & Match scoring
+  let p1KOs = 0;
+  let p2KOs = 0;
+  let targetKOs = 3; // First to 3 KOs (Best of 5)
+  let roundNumber = 1;
+  let roundCountdown = 0; // ms countdown before next round
+  let roundWinnerName = '';
+  let duelMatchOver = false;
+  let duelWinner = null;
+  let rematchP1 = false, rematchP2 = false;
+
+  // P1 Duel stats
+  let p1GarbagePending = 0;
+  let p1AttacksSent = 0;
+  let p1HoleCol = -1;
+
+  // Opponent (P2 / Bot) state
+  let oppGrid = Array(H).fill().map(() => Array(W).fill(0));
+  let oppPc = 0, oppRot = 0, oppCx = 3, oppCy = -2, oppIsBomb = false;
+  let oppScore = 0, oppLines = 0, oppCombo = 0, oppPiecesPlaced = 0;
+  let oppNextQueue = [];
+  let oppHoldPc = -1, oppHoldIsBomb = false;
+  let oppGarbagePending = 0;
+  let oppAttacksSent = 0;
+  let oppBag = [];
+
+  // AI Bot specific
+  let botLevel = 1; // 0=Rookie, 1=Aggro, 2=Tactical, 3=Grandmaster
+  let botNames = ["ROOKIE BOT", "AGGRO BOT", "TACTICAL BOT", "CYBER-AI GRANDMASTER"];
+  let botTimer = 0;
+  let botTargetRot = 0;
+  let botTargetCol = 3;
+
+  // Visual attack beams & speech bubbles
+  let attackBeams = []; // { sx, sy, tx, ty, x, y, count, color, life, maxLife }
+  let speechBubbles = []; // { player: 1|2, text: string, life: 120 }
+
+  function updatePlayerName(val) {
+      if (!val) return;
+      myPlayerName = val.trim().substring(0, 16);
+      safeSetStorage('ktetris_player_name', myPlayerName);
+  }
+
+  function openMultiplayerModal() {
+      const modal = document.getElementById('multiplayerModal');
+      const backdrop = document.getElementById('modalBackdrop');
+      if (modal) modal.style.display = 'block';
+      if (backdrop) backdrop.style.display = 'block';
+      const nameInput = document.getElementById('mpPlayerName');
+      if (nameInput) nameInput.value = myPlayerName;
+      refreshLobbyList();
+  }
+
+  function closeAllModals() {
+      const modal = document.getElementById('multiplayerModal');
+      const backdrop = document.getElementById('modalBackdrop');
+      if (modal) modal.style.display = 'none';
+      if (backdrop) backdrop.style.display = 'none';
+      if (activeLobbyRef && activeLobbyListener && window.fb) {
+          try { window.fb.off(activeLobbyRef, 'value', activeLobbyListener); } catch(e) {}
+          activeLobbyRef = null;
+          activeLobbyListener = null;
+      }
+  }
+
+  function refreshLobbyList() {
+      if (!window.fb) return;
+      const container = document.getElementById('mpLobbyContainer');
+      if (!container) return;
+      container.innerHTML = '<div style="padding:14px; text-align:center; color:#64748b;">Scanning active public rooms...</div>';
+
+      window.fb.get(window.fb.ref(window.fb.db, FIREBASE_PATH_LOBBY)).then(snap => {
+          if (!snap.exists()) {
+              container.innerHTML = '<div style="padding:14px; text-align:center; color:#64748b;">No public rooms waiting right now. Click Quick Match or Create Room to host!</div>';
+              return;
+          }
+          const rooms = snap.val();
+          let html = '<table style="width:100%; border-collapse:collapse; text-align:left;">';
+          html += '<tr style="border-bottom:1px solid #1f2538; color:#64748b; font-size:10px;"><th style="padding:4px 8px;">ROOM</th><th style="padding:4px 8px;">HOST</th><th style="padding:4px 8px;">TARGET</th><th style="padding:4px 8px; text-align:right;">ACTION</th></tr>';
+          let count = 0;
+          for (let code in rooms) {
+              let r = rooms[code];
+              if (!r) continue;
+              count++;
+              html += `<tr style="border-bottom:1px solid #161b2b; color:#cbd5e1;">
+                  <td style="padding:5px 8px; font-weight:bold; color:#00f0f0;">${code}</td>
+                  <td style="padding:5px 8px;">${r.host || 'Player'}</td>
+                  <td style="padding:5px 8px; color:#ffd700;">${r.targetKOs || 3} KOs</td>
+                  <td style="padding:5px 8px; text-align:right;">
+                      <button onclick="joinRoom('${code}')" style="background:#00d2aa; border:none; color:#041416; font-size:10px; font-weight:bold; padding:3px 10px; border-radius:3px; cursor:pointer;">⚔️ Join</button>
+                  </td>
+              </tr>`;
+          }
+          html += '</table>';
+          container.innerHTML = (count > 0) ? html : '<div style="padding:14px; text-align:center; color:#64748b;">No public rooms waiting right now.</div>';
+      }).catch(err => {
+          container.innerHTML = `<div style="padding:14px; text-align:center; color:#ff6666;">Error: ${err.message}</div>`;
+      });
+  }
+
+  async function startQuickMatch() {
+      if (!window.fb) {
+          showToast("Firebase RTDB initializing... Please try again in a moment.");
+          return;
+      }
+      const btn = document.getElementById('btnQuickMatch');
+      if (btn) btn.innerText = "⏳ Searching for Match...";
+
+      try {
+          const lobbyRef = window.fb.ref(window.fb.db, FIREBASE_PATH_LOBBY);
+          const snapshot = await window.fb.get(lobbyRef);
+          let openRoom = null;
+
+          if (snapshot.exists()) {
+              const rooms = snapshot.val();
+              for (let code in rooms) {
+                  if (rooms[code] && rooms[code].status === 'waiting') {
+                      openRoom = code;
+                      break;
+                  }
+              }
+          }
+
+          if (openRoom) {
+              await joinRoom(openRoom);
+          } else {
+              const newCode = 'DUEL-' + Math.floor(1000 + Math.random() * 9000);
+              await createRoomWithCode(newCode, 3, true);
+          }
+      } catch(err) {
+          console.error("Quick match error:", err);
+          showToast("Matchmaking error: " + err.message);
+          if (btn) btn.innerText = "⚡ Find / Host Match";
+      }
+  }
+
+  async function createCustomRoom() {
+      let codeInput = document.getElementById('mpCustomCode');
+      let code = codeInput ? codeInput.value.trim().toUpperCase() : '';
+      if (!code) code = 'DUEL-' + Math.floor(1000 + Math.random() * 9000);
+      let targetKOsVal = parseInt(document.getElementById('mpTargetKOs')?.value || '3', 10);
+      await createRoomWithCode(code, targetKOsVal, true);
+  }
+
+  async function createRoomWithCode(code, kos, isPublic) {
+      if (!window.fb) return;
+      try {
+          currentRoomId = code;
+          isHost = true;
+          myPlayerSlot = 1;
+          targetKOs = kos;
+
+          const roomData = {
+              status: 'waiting',
+              createdAt: Date.now(),
+              targetKOs: kos,
+              p1: {
+                  name: myPlayerName,
+                  connected: true,
+                  score: 0,
+                  lines: 0,
+                  kos: 0,
+                  attacksSent: 0,
+                  gridStr: serializeGrid(Array(H).fill().map(() => Array(W).fill(0))),
+                  pc: 0, rot: 0, cx: 3, cy: -2
+              },
+              p2: null,
+              chat: null,
+              rematch: { p1: false, p2: false },
+              winner: null
+          };
+
+          await window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}`), roomData);
+
+          if (isPublic) {
+              await window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_LOBBY}/${code}`), {
+                  code,
+                  host: myPlayerName,
+                  createdAt: Date.now(),
+                  targetKOs: kos,
+                  status: 'waiting'
+              });
+              window.fb.onDisconnect(window.fb.ref(window.fb.db, `${FIREBASE_PATH_LOBBY}/${code}`)).remove();
+          }
+
+          window.fb.onDisconnect(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}/p1/connected`)).set(false);
+
+          const statusEl = document.getElementById('mpStatusMsg');
+          if (statusEl) statusEl.innerHTML = `<span style="color:#00ffc8;">Room <strong>${code}</strong> created! Waiting for challenger...</span>`;
+          showToast(`Room ${code} created! Waiting for challenger...`, 5000);
+
+          listenToRoom(code);
+      } catch(err) {
+          showToast("Failed to create room: " + err.message);
+      }
+  }
+
+  async function joinRoomByCode() {
+      let codeInput = document.getElementById('mpDirectJoinCode');
+      let code = codeInput ? codeInput.value.trim().toUpperCase() : '';
+      if (!code) { showToast("Please enter a room code!"); return; }
+      await joinRoom(code);
+  }
+
+  async function joinRoom(code) {
+      if (!window.fb) return;
+      try {
+          const roomRef = window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}`);
+          const snap = await window.fb.get(roomRef);
+          if (!snap.exists()) {
+              showToast(`Room "${code}" not found!`);
+              return;
+          }
+          const data = snap.val();
+          if (data.status !== 'waiting' && data.p2 && data.p2.connected) {
+              myPlayerSlot = 0;
+              currentRoomId = code;
+              isHost = false;
+              targetKOs = data.targetKOs || 3;
+              closeAllModals();
+              startDuelSpectator(code, data);
+              showToast(`Spectating Room ${code}...`, 3000);
+              return;
+          }
+
+          myPlayerSlot = 2;
+          currentRoomId = code;
+          isHost = false;
+          targetKOs = data.targetKOs || 3;
+          oppPlayerName = data.p1?.name || 'Player 1';
+
+          await window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}/p2`), {
+              name: myPlayerName,
+              connected: true,
+              score: 0,
+              lines: 0,
+              kos: 0,
+              attacksSent: 0,
+              gridStr: serializeGrid(Array(H).fill().map(() => Array(W).fill(0))),
+              pc: 0, rot: 0, cx: 3, cy: -2
+          });
+
+          await window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}/status`), 'playing');
+          window.fb.onDisconnect(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}/p2/connected`)).set(false);
+          await window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_LOBBY}/${code}`), null);
+
+          closeAllModals();
+          listenToRoom(code);
+          startDuelOnline(code, 2, data);
+      } catch(err) {
+          showToast("Failed to join room: " + err.message);
+      }
+  }
+
+  function listenToRoom(code) {
+      if (!window.fb) return;
+      activeRoomRef = window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}`);
+      activeRoomListener = (snapshot) => {
+          const val = snapshot.val();
+          if (!val) return;
+
+          currentRoomStatus = val.status;
+          targetKOs = val.targetKOs || 3;
+
+          if (isHost && myPlayerSlot === 1 && val.p2 && val.status === 'playing' && !isDuelMode) {
+              oppPlayerName = val.p2.name || 'Challenger';
+              closeAllModals();
+              startDuelOnline(code, 1, val);
+              showToast(`Challenger ${oppPlayerName} connected! DUEL START!`, 3000);
+          }
+
+          const oppData = (myPlayerSlot === 1) ? val.p2 : val.p1;
+          if (oppData) {
+              if (oppData.name) oppPlayerName = oppData.name;
+              if (oppData.gridStr) oppGrid = deserializeGrid(oppData.gridStr);
+              if (oppData.pc !== undefined) oppPc = oppData.pc;
+              if (oppData.rot !== undefined) oppRot = oppData.rot;
+              if (oppData.cx !== undefined) oppCx = oppData.cx;
+              if (oppData.cy !== undefined) oppCy = oppData.cy;
+              if (oppData.score !== undefined) oppScore = oppData.score;
+              if (oppData.lines !== undefined) oppLines = oppData.lines;
+
+              if (oppData.attacksSent !== undefined && oppData.attacksSent > lastProcessedOppAttacks) {
+                  let diff = oppData.attacksSent - lastProcessedOppAttacks;
+                  lastProcessedOppAttacks = oppData.attacksSent;
+                  spawnAttackBeam(575, 200, 185, 200, diff, '#ff3366');
+                  p1GarbagePending += diff;
+                  playSound(300, 'sawtooth', 0.1);
+              }
+
+              if (oppData.connected === false && !oppDisconnected) {
+                  oppDisconnected = true;
+                  showToast(`⚠️ ${oppPlayerName} disconnected!`, 4000);
+              } else if (oppData.connected === true) {
+                  oppDisconnected = false;
+              }
+          }
+
+          if (val.chat && val.chat.ts > lastChatTs) {
+              lastChatTs = val.chat.ts;
+              if (val.chat.sender !== `p${myPlayerSlot}`) {
+                  speechBubbles.push({ player: 2, text: val.chat.text, life: 120 });
+                  playSound(850, 'sine', 0.1);
+                  showToast(`${oppPlayerName}: ${val.chat.text}`, 2000);
+              }
+          }
+
+          if (val.rematch) {
+              rematchP1 = !!val.rematch.p1;
+              rematchP2 = !!val.rematch.p2;
+              if (rematchP1 && rematchP2 && duelMatchOver) {
+                  duelMatchOver = false;
+                  p1KOs = 0;
+                  p2KOs = 0;
+                  roundNumber = 1;
+                  resetBoardsForNextRound();
+                  if (isHost) {
+                      window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}/rematch`), { p1: false, p2: false });
+                      window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}/status`), 'playing');
+                      window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}/winner`), null);
+                  }
+                  showToast("REMATCH ACCEPTED! New match started!", 3000);
+              }
+          }
+      };
+      window.fb.onValue(activeRoomRef, activeRoomListener);
+  }
+
+  function syncOnlineBoardState(forceLock = false) {
+      if (!window.fb || !currentRoomId || gameMode !== MODE_DUEL_ONLINE) return;
+      const now = performance.now();
+      if (!forceLock && now - lastPieceSyncTs < 75) return;
+      lastPieceSyncTs = now;
+
+      const path = `${FIREBASE_PATH_ROOMS}/${currentRoomId}/p${myPlayerSlot}`;
+      const payload = {
+          name: myPlayerName,
+          connected: true,
+          score,
+          lines,
+          kos: p1KOs,
+          attacksSent: p1AttacksSent,
+          gridStr: serializeGrid(grid),
+          pc, rot, cx, cy
+      };
+      window.fb.set(window.fb.ref(window.fb.db, path), payload);
+  }
+
+  function launchAIDuelFromModal() {
+      const diff = parseInt(document.getElementById('mpBotDiff')?.value || '1', 10);
+      closeAllModals();
+      startDuelAI(diff);
+  }
+
+  function startDuelAI(diff) {
+      if (diff !== undefined) botLevel = diff;
+      gameMode = MODE_DUEL_AI;
+      oppPlayerName = botNames[botLevel] || "CYBER-AI BOT";
+      startScreen = false;
+      isDuelMode = true;
+      handleResize();
+      p1KOs = 0;
+      p2KOs = 0;
+      targetKOs = 3;
+      roundNumber = 1;
+      duelMatchOver = false;
+      duelWinner = null;
+      initDuel(false);
+      showToast(`⚔️ Arcade Duel vs ${oppPlayerName} Started! [BO5]`, 3500);
+  }
+
+  function startDuelOnline(code, slot, data) {
+      gameMode = MODE_DUEL_ONLINE;
+      myPlayerSlot = slot;
+      currentRoomId = code;
+      startScreen = false;
+      isDuelMode = true;
+      handleResize();
+      p1KOs = 0;
+      p2KOs = 0;
+      targetKOs = (data && data.targetKOs) || 3;
+      roundNumber = 1;
+      duelMatchOver = false;
+      duelWinner = null;
+      oppDisconnected = false;
+      initDuel(true);
+      showToast(`🌐 Connected to Duel Room ${code}! First to ${targetKOs} KOs!`, 4000);
+  }
+
+  function startDuelSpectator(code, data) {
+      gameMode = MODE_DUEL_ONLINE;
+      myPlayerSlot = 0;
+      currentRoomId = code;
+      startScreen = false;
+      isDuelMode = true;
+      handleResize();
+      targetKOs = (data && data.targetKOs) || 3;
+      duelMatchOver = false;
+      initDuel(true);
+      listenToRoom(code);
+      showToast(`👁️ Spectating Room ${code}`, 3000);
+  }
+
+  function initDuel(isOnline) {
+      piecesPlaced = 0;
+      grid = Array(H).fill().map(() => Array(W).fill(0));
+      lines = 0;
+      score = 0;
+      combo = 0;
+      bag = [];
+      nextQueue = [];
+      holdPc = -1;
+      holdUsed = false;
+      holdIsBomb = false;
+      p1GarbagePending = 0;
+      p1AttacksSent = 0;
+      p1HoleCol = -1;
+
+      oppGrid = Array(H).fill().map(() => Array(W).fill(0));
+      oppLines = 0;
+      oppScore = 0;
+      oppCombo = 0;
+      oppBag = [];
+      oppNextQueue = [];
+      oppHoldPc = -1;
+      oppGarbagePending = 0;
+      oppAttacksSent = 0;
+      lastProcessedOppAttacks = 0;
+
+      attackBeams = [];
+      speechBubbles = [];
+      particles = [];
+      popups = [];
+      lineFlashes = [];
+      shockwaves = [];
+
+      fillNextQueue();
+      spawn();
+
+      if (!isOnline) {
+          fillOppNextQueue();
+          spawnOpp();
+      }
+  }
+
+  function leaveDuel() {
+      if (activeRoomRef && activeRoomListener && window.fb) {
+          try { window.fb.off(activeRoomRef, 'value', activeRoomListener); } catch(e) {}
+          activeRoomRef = null;
+          activeRoomListener = null;
+      }
+      if (isHost && currentRoomId && window.fb) {
+          try { window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_LOBBY}/${currentRoomId}`), null); } catch(e) {}
+      }
+      isDuelMode = false;
+      startScreen = true;
+      gameOver = false;
+      winScreen = false;
+      duelMatchOver = false;
+      currentRoomId = null;
+      handleResize();
+      showToast("Returned to Main Menu", 2000);
+  }
+
+  function requestRematch() {
+      if (gameMode === MODE_DUEL_AI) {
+          duelMatchOver = false;
+          p1KOs = 0;
+          p2KOs = 0;
+          roundNumber = 1;
+          resetBoardsForNextRound();
+          showToast("Rematch started vs AI!", 2000);
+      } else if (gameMode === MODE_DUEL_ONLINE && window.fb && currentRoomId) {
+          window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${currentRoomId}/rematch/p${myPlayerSlot}`), true);
+          showToast("Rematch requested! Waiting for opponent...", 3000);
+      }
+  }
+
+  function sendChatPing(msg) {
+      if (!msg) return;
+      speechBubbles.push({ player: 1, text: msg, life: 120 });
+      playSound(700, 'sine', 0.08);
+      if (gameMode === MODE_DUEL_ONLINE && window.fb && currentRoomId) {
+          window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${currentRoomId}/chat`), {
+              sender: `p${myPlayerSlot}`,
+              text: msg,
+              ts: Date.now()
+          });
+      }
+      showToast(`You: ${msg}`, 1500);
+  }
+
+  function serializeGrid(g) {
+      let s = '';
+      for (let y = 0; y < H; y++) {
+          for (let x = 0; x < W; x++) {
+              s += (g[y][x] || 0).toString(16);
+          }
+      }
+      return s;
+  }
+
+  function deserializeGrid(s) {
+      if (!s || s.length < H * W) return Array(H).fill().map(() => Array(W).fill(0));
+      let g = [];
+      for (let y = 0; y < H; y++) {
+          let row = [];
+          for (let x = 0; x < W; x++) {
+              row.push(parseInt(s[y * W + x], 16) || 0);
+          }
+          g.push(row);
+      }
+      return g;
+  }
+
+  function checkColBoard(g, p, r, x, y) {
+      let shape = tetrominos[p][r];
+      for (let i = 0; i < 5; i++) {
+          for (let j = 0; j < 5; j++) {
+              if (shape & (1 << (24 - (i * 5 + j)))) {
+                  let nx = x + j, ny = y + i;
+                  if (nx < 0 || nx >= W || ny >= H || (ny >= 0 && g[ny] && g[ny][nx])) return true;
+              }
+          }
+      }
+      return false;
+  }
+
+  function spawnAttackBeam(sx, sy, tx, ty, count, color = '#00f0f0') {
+      attackBeams.push({
+          sx, sy, tx, ty,
+          x: sx, y: sy,
+          count, color,
+          life: 25, maxLife: 25
+      });
+  }
+
+  function updateAttackBeams() {
+      for (let i = attackBeams.length - 1; i >= 0; i--) {
+          let b = attackBeams[i];
+          b.life--;
+          let prog = 1 - (b.life / b.maxLife);
+          b.x = b.sx + (b.tx - b.sx) * prog;
+          b.y = b.sy + (b.ty - b.sy) * prog + Math.sin(prog * Math.PI) * -30;
+
+          for (let k = 0; k < 2; k++) {
+              addParticle(b.x + (Math.random() - 0.5) * 6, b.y + (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 3, (Math.random() - 0.5) * 3, b.color, 2.5, 12, 0);
+          }
+
+          if (b.life <= 0) {
+              addShockwave(b.tx, b.ty, b.color, 60, false);
+              attackBeams.splice(i, 1);
+          }
+      }
+  }
+
+  function handleDuelKO(winnerSlot) {
+      playSound(150, 'sawtooth', 0.4);
+      triggerScreenShake(20, 0.04);
+      if (winnerSlot === 1) {
+          p1KOs++;
+          roundWinnerName = (myPlayerSlot === 1 ? myPlayerName : oppPlayerName);
+          addLayeredExplosion(575, 200, '#00ffff', true);
+          showToast(`${roundWinnerName} scored a KO!`, 3000);
+      } else {
+          p2KOs++;
+          roundWinnerName = (myPlayerSlot === 2 ? myPlayerName : oppPlayerName);
+          addLayeredExplosion(185, 200, '#ff3366', true);
+          showToast(`${roundWinnerName} scored a KO!`, 3000);
+      }
+
+      if (p1KOs >= targetKOs || p2KOs >= targetKOs) {
+          duelMatchOver = true;
+          duelWinner = (p1KOs >= targetKOs ? 1 : 2);
+          if ((duelWinner === 1 && myPlayerSlot === 1) || (duelWinner === 2 && myPlayerSlot === 2)) {
+              playSound(1000, 'square', 0.3);
+              showToast("🏆 VICTORY! You won the Arcade Duel!", 5000);
+          } else {
+              playSound(220, 'sawtooth', 0.4);
+              showToast("💀 DEFEAT! Opponent won the Arcade Duel!", 5000);
+          }
+          if (gameMode === MODE_DUEL_ONLINE && isHost && window.fb && currentRoomId) {
+              window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${currentRoomId}/winner`), duelWinner);
+              window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${currentRoomId}/status`), 'finished');
+          }
+      } else {
+          roundCountdown = 2000;
+          roundNumber++;
+          setTimeout(() => {
+              resetBoardsForNextRound();
+          }, 2000);
+      }
+  }
+
+  function resetBoardsForNextRound() {
+      grid = Array(H).fill().map(() => Array(W).fill(0));
+      oppGrid = Array(H).fill().map(() => Array(W).fill(0));
+      p1GarbagePending = 0;
+      oppGarbagePending = 0;
+      p1HoleCol = -1;
+      fillNextQueue();
+      spawn();
+      if (gameMode === MODE_DUEL_AI) {
+          fillOppNextQueue();
+          spawnOpp();
+      }
+      roundCountdown = 0;
+      showToast(`ROUND ${roundNumber} — FIGHT!`, 2000);
+      playSound(880, 'sine', 0.15);
+  }
+
+  function fillOppNextQueue() {
+      while (oppNextQueue.length < 3) {
+          if (oppBag.length === 0) {
+              for (let i = 0; i < 7; i++) oppBag.push(i);
+              for (let i = oppBag.length - 1; i > 0; i--) {
+                  let j = Math.floor(Math.random() * (i + 1));
+                  [oppBag[i], oppBag[j]] = [oppBag[j], oppBag[i]];
+              }
+          }
+          oppNextQueue.push({ pc: oppBag.pop(), isBomb: false });
+      }
+  }
+
+  function spawnOpp() {
+      fillOppNextQueue();
+      let nextObj = oppNextQueue.shift();
+      oppPc = nextObj.pc;
+      oppRot = 0; oppCx = 3; oppCy = -2;
+      fillOppNextQueue();
+
+      if (checkColBoard(oppGrid, oppPc, oppRot, oppCx, oppCy + 1)) {
+          handleDuelKO(1);
+          return;
+      }
+      let move = findBestAIMove(oppGrid, oppPc, botLevel);
+      botTargetRot = move.rot;
+      botTargetCol = move.col;
+  }
+
+  function updateBot(deltaTime) {
+      if (duelMatchOver || roundCountdown > 0 || isPaused) return;
+      botTimer += deltaTime;
+      let botInterval = [420, 250, 160, 90][botLevel] || 250;
+
+      if (botTimer >= botInterval) {
+          botTimer = 0;
+          if (oppRot !== botTargetRot) {
+              let nr = (oppRot + 1) % 4;
+              if (!checkColBoard(oppGrid, oppPc, nr, oppCx, oppCy)) {
+                  oppRot = nr;
+              } else {
+                  botTargetRot = oppRot;
+              }
+              return;
+          }
+          if (oppCx < botTargetCol) {
+              if (!checkColBoard(oppGrid, oppPc, oppRot, oppCx + 1, oppCy)) oppCx++;
+              return;
+          } else if (oppCx > botTargetCol) {
+              if (!checkColBoard(oppGrid, oppPc, oppRot, oppCx - 1, oppCy)) oppCx--;
+              return;
+          }
+          while (!checkColBoard(oppGrid, oppPc, oppRot, oppCx, oppCy + 1)) {
+              oppCy++;
+          }
+          lockOppPiece();
+      }
+  }
+
+  function lockOppPiece() {
+      let shape = tetrominos[oppPc][oppRot];
+      let val = oppPc + 1;
+      for (let i = 0; i < 5; i++) {
+          for (let j = 0; j < 5; j++) {
+              if (shape & (1 << (24 - (i * 5 + j)))) {
+                  if (oppCy + i >= 0 && oppCy + i < H && oppCx + j >= 0 && oppCx + j < W) {
+                      oppGrid[oppCy + i][oppCx + j] = val;
+                  }
+              }
+          }
+      }
+
+      let cleared = 0;
+      for (let y = H - 1; y >= 0; y--) {
+          if (oppGrid[y].every(c => c > 0)) {
+              oppGrid.splice(y, 1);
+              oppGrid.unshift(Array(W).fill(0));
+              cleared++;
+              y++;
+          }
+      }
+
+      if (cleared > 0) {
+          oppLines += cleared;
+          oppCombo++;
+          let botAtk = 0;
+          if (cleared === 2) botAtk = 1;
+          else if (cleared === 3) botAtk = 2;
+          else if (cleared === 4) botAtk = 4;
+          else if (cleared >= 5) botAtk = 6;
+          if (oppCombo > 1) botAtk += (oppCombo - 1);
+
+          if (oppGarbagePending > 0) {
+              let countered = Math.min(oppGarbagePending, botAtk);
+              oppGarbagePending -= countered;
+              botAtk -= countered;
+          }
+          if (botAtk > 0) {
+              oppAttacksSent += botAtk;
+              spawnAttackBeam(575, 200, 185, 200, botAtk, '#ff3366');
+              p1GarbagePending += botAtk;
+              playSound(300, 'sawtooth', 0.1);
+          }
+      } else {
+          oppCombo = 0;
+          if (oppGarbagePending > 0) {
+              let rise = Math.min(oppGarbagePending, 4);
+              oppGarbagePending -= rise;
+              let hole = Math.floor(Math.random() * W);
+              for (let r = 0; r < rise; r++) {
+                  oppGrid.shift();
+                  let newRow = Array(W).fill(14);
+                  newRow[hole] = 0;
+                  oppGrid.push(newRow);
+              }
+          }
+      }
+
+      spawnOpp();
+  }
+
+  function findBestAIMove(g, piece, diff) {
+      let bestScore = -999999;
+      let bestRot = 0;
+      let bestCol = 3;
+
+      let cfg = [
+          { lines: 15, holes: -15, bump: -2, height: -3, tetris: 0 },
+          { lines: 40, holes: -30, bump: -4, height: -5, tetris: 30 },
+          { lines: 30, holes: -50, bump: -6, height: -6, tetris: 80 },
+          { lines: 35, holes: -90, bump: -10, height: -8, tetris: 140 }
+      ][diff] || { lines: 30, holes: -40, bump: -5, height: -5, tetris: 50 };
+
+      for (let r = 0; r < 4; r++) {
+          for (let c = -2; c < W; c++) {
+              if (checkColBoard(g, piece, r, c, 0)) continue;
+              let dropY = 0;
+              while (!checkColBoard(g, piece, r, c, dropY + 1)) {
+                  dropY++;
+              }
+              let scoreVal = evaluatePlacement(g, piece, r, c, dropY, cfg, diff);
+              if (diff === 0) scoreVal += (Math.random() - 0.5) * 50;
+              if (scoreVal > bestScore) {
+                  bestScore = scoreVal;
+                  bestRot = r;
+                  bestCol = c;
+              }
+          }
+      }
+      return { rot: bestRot, col: bestCol };
+  }
+
+  function evaluatePlacement(origG, piece, rotVal, col, row, cfg, diff) {
+      let sim = [];
+      for (let y = 0; y < H; y++) sim.push(origG[y].slice());
+
+      let shape = tetrominos[piece][rotVal];
+      for (let i = 0; i < 5; i++) {
+          for (let j = 0; j < 5; j++) {
+              if (shape & (1 << (24 - (i * 5 + j)))) {
+                  let ny = row + i, nx = col + j;
+                  if (ny >= 0 && ny < H && nx >= 0 && nx < W) {
+                      sim[ny][nx] = piece + 1;
+                  }
+              }
+          }
+      }
+
+      let cleared = 0;
+      for (let y = H - 1; y >= 0; y--) {
+          if (sim[y].every(v => v > 0)) {
+              sim.splice(y, 1);
+              sim.unshift(Array(W).fill(0));
+              cleared++;
+              y++;
+          }
+      }
+
+      let heights = Array(W).fill(0);
+      let holes = 0;
+      for (let x = 0; x < W; x++) {
+          let blockFound = false;
+          for (let y = 0; y < H; y++) {
+              if (sim[y][x] > 0) {
+                  if (!blockFound) {
+                      heights[x] = H - y;
+                      blockFound = true;
+                  }
+              } else if (blockFound) {
+                  holes++;
+              }
+          }
+      }
+
+      let maxHeight = Math.max(...heights);
+      let bumpiness = 0;
+      for (let x = 0; x < W - 1; x++) {
+          bumpiness += Math.abs(heights[x] - heights[x + 1]);
+      }
+
+      let totalScore = 
+          cleared * cfg.lines +
+          holes * cfg.holes +
+          bumpiness * cfg.bump +
+          maxHeight * cfg.height;
+
+      if (cleared === 4) totalScore += cfg.tetris;
+
+      if (diff >= 2 && maxHeight < 14) {
+          if (heights[W - 1] === 0) totalScore += 35;
+          else if (heights[W - 1] > 2) totalScore -= 40;
+      }
+
+      return totalScore;
+  }
+
   function saveLeaderboard(newScore, modeIdx, linesCleared, timeMs) {
       let modeLabel = modeNames[modeIdx];
       let entry = {
@@ -289,7 +1252,7 @@
   }
 
   function saveGameState() {
-      if (startScreen || gameOver || winScreen) return;
+      if (startScreen || gameOver || winScreen || isDuelMode) return;
       let state = {
           grid, pc, rot, cx, cy, isBomb,
           score, lines, level, combo, piecesPlaced,
@@ -320,6 +1283,8 @@
           freezeCharges = state.freezeCharges ?? 2;
           freezeTimerMs = state.freezeTimerMs ?? 0;
           
+          isDuelMode = false;
+          handleResize();
           startScreen = false; gameOver = false;
       if (!isReplaying) { currentReplay = { seed: Date.now(), inputs: [] }; randomSeed(currentReplay.seed); } else { randomSeed(currentReplay.seed); replayTick = 0; replayIndex = 0; } winScreen = false; isPaused = false; showLeaderboard = false;
           dropInterval = Math.max(40, 500 - (level - 1) * 20);
@@ -484,16 +1449,7 @@
   }
 
   function checkCol(p, r, x, y) {
-      let shape = tetrominos[p][r];
-      for (let i = 0; i < 5; i++) {
-          for (let j = 0; j < 5; j++) {
-              if (shape & (1 << (24 - (i * 5 + j)))) {
-                  let nx = x + j, ny = y + i;
-                  if (nx < 0 || nx >= W || ny >= H || (ny >= 0 && grid[ny][nx])) return true;
-              }
-          }
-      }
-      return false;
+      return checkColBoard(grid, p, r, x, y);
   }
 
   // Active Skills
@@ -508,7 +1464,7 @@
           for (let x = 0; x < W; x++) {
               if (grid[rY][x] > 0) {
                   let pCol = colors[grid[rY][x]];
-                  addLayeredExplosion((x + 0.5) * CELL, (rY + 0.5) * CELL, pCol, false);
+                  addLayeredExplosion((nx + 0.5) * CELL, (rY + 0.5) * CELL, pCol, false);
               }
           }
       }
@@ -574,6 +1530,10 @@
       holdUsed = false;
 
       if (checkCol(pc, rot, cx, cy + 1)) {
+          if (isDuelMode) {
+              handleDuelKO(2);
+              return;
+          }
           gameOver = true;
           playSound(200, 'square', 0.5);
           saveLeaderboard(score, gameMode, lines, modeTimerMs);
@@ -665,6 +1625,60 @@
       
       lines += linesCleared;
       piecesPlaced++;
+
+      if (isDuelMode) {
+          // Process Duel Attack Lines
+          let attackLines = 0;
+          if (linesCleared === 2) attackLines = 1;
+          else if (linesCleared === 3) attackLines = 2;
+          else if (linesCleared === 4) attackLines = 4;
+          else if (linesCleared >= 5) attackLines = 6;
+          if (combo > 1) attackLines += (combo - 1);
+          if (hasBombs) attackLines += 1;
+
+          if (attackLines > 0) {
+              if (p1GarbagePending > 0) {
+                  let countered = Math.min(p1GarbagePending, attackLines);
+                  p1GarbagePending -= countered;
+                  attackLines -= countered;
+                  addPopup(BOARD_W / 2 - 30, (cy + 2) * CELL, `COUNTERED -${countered}!`, "#00ffc8");
+                  playSound(900, 'sine', 0.1);
+              }
+              if (attackLines > 0) {
+                  p1AttacksSent += attackLines;
+                  if (gameMode === MODE_DUEL_AI) {
+                      spawnAttackBeam(185, 200, 575, 200, attackLines, '#00f0f0');
+                      oppGarbagePending += attackLines;
+                      playSound(1200, 'sawtooth', 0.12);
+                  } else if (gameMode === MODE_DUEL_ONLINE) {
+                      spawnAttackBeam(185, 200, 575, 200, attackLines, '#00f0f0');
+                      syncOnlineBoardState(true);
+                      playSound(1200, 'sawtooth', 0.12);
+                  }
+              }
+          }
+
+          if (p1GarbagePending > 0 && linesCleared === 0) {
+              let rise = Math.min(p1GarbagePending, 4);
+              p1GarbagePending -= rise;
+              if (p1HoleCol === -1 || Math.random() < 0.25) {
+                  p1HoleCol = Math.floor(Math.random() * W);
+              }
+              for (let r = 0; r < rise; r++) {
+                  grid.shift();
+                  let newRow = Array(W).fill(14);
+                  newRow[p1HoleCol] = 0;
+                  grid.push(newRow);
+              }
+              triggerScreenShake(7 + rise * 2, 0.025);
+              playSound(180, 'sawtooth', 0.12);
+              addPopup(BOARD_W / 2 - 25, H * CELL - 30, `+${rise} GARBAGE!`, "#ff4444");
+          }
+
+          if (gameMode === MODE_DUEL_ONLINE) {
+              syncOnlineBoardState(true);
+          }
+      }
 
       // Mode-specific logic
       if (gameMode === MODE_CAMPAIGN) {
@@ -803,11 +1817,13 @@
   let hoverMenuIdx = -1;
   function getStartMenuItems() {
       let items = [
-          { id: 'marathon', label: '1. Marathon (Endless)', key: '1', color: '#00ffff', act: () => { gameMode = MODE_MARATHON; startScreen = false; score = 0; isReplaying = false; init(); showToast("Marathon Mode Started!"); } },
-          { id: 'sprint',   label: '2. Sprint (40-Lines Race)', key: '2', color: '#00ffc8', act: () => { gameMode = MODE_SPRINT; startScreen = false; score = 0; isReplaying = false; init(); showToast("Sprint Mode Started (40 Lines)!"); } },
-          { id: 'ultra',    label: '3. Ultra (2-Minute Timed)', key: '3', color: '#ffaa00', act: () => { gameMode = MODE_ULTRA; startScreen = false; score = 0; isReplaying = false; init(); showToast("Ultra Mode Started (2 Minutes)!"); } },
-          { id: 'campaign', label: '4. Campaign (20 Stages)', key: '4', color: '#ff66aa', act: () => { gameMode = MODE_CAMPAIGN; startScreen = false; campaignLevel = 1; score = 0; isReplaying = false; init(); showToast("Campaign Stage 1 Started!"); } },
-          { id: 'scores',   label: '5 / [L]. High Scores & Leaderboard', key: '5', color: '#00ff66', act: () => { showLeaderboard = true; startScreen = false; } },
+          { id: 'marathon', label: '1. Marathon (Endless)', key: '1', color: '#00ffff', act: () => { gameMode = MODE_MARATHON; startScreen = false; isDuelMode = false; handleResize(); score = 0; isReplaying = false; init(); showToast("Marathon Mode Started!"); } },
+          { id: 'sprint',   label: '2. Sprint (40-Lines Race)', key: '2', color: '#00ffc8', act: () => { gameMode = MODE_SPRINT; startScreen = false; isDuelMode = false; handleResize(); score = 0; isReplaying = false; init(); showToast("Sprint Mode Started (40 Lines)!"); } },
+          { id: 'ultra',    label: '3. Ultra (2-Minute Timed)', key: '3', color: '#ffaa00', act: () => { gameMode = MODE_ULTRA; startScreen = false; isDuelMode = false; handleResize(); score = 0; isReplaying = false; init(); showToast("Ultra Mode Started (2 Minutes)!"); } },
+          { id: 'campaign', label: '4. Campaign (20 Stages)', key: '4', color: '#ff66aa', act: () => { gameMode = MODE_CAMPAIGN; startScreen = false; isDuelMode = false; handleResize(); campaignLevel = 1; score = 0; isReplaying = false; init(); showToast("Campaign Stage 1 Started!"); } },
+          { id: 'duel_ai',  label: '5 / [D]. ⚔️ Arcade Duel vs AI (1v1)', key: '5', color: '#f59e0b', act: () => { startDuelAI(); } },
+          { id: 'duel_net', label: '6 / [M]. 🌐 Online Multiplayer Duel', key: '6', color: '#38bdf8', act: () => { openMultiplayerModal(); } },
+          { id: 'scores',   label: '7 / [L]. High Scores & Leaderboard', key: '7', color: '#00ff66', act: () => { showLeaderboard = true; startScreen = false; } },
           { id: 'help',     label: '[H / F1]. Help & Controls Guide', key: 'H', color: '#ffd700', act: () => { showHelp = true; } },
           { id: 'keys',     label: '[K]. Configure Keybinds', key: 'K', color: '#38bdf8', act: () => { showKeybinds = true; bindIndex = 0; startScreen = false; } }
       ];
@@ -815,7 +1831,7 @@
           items.push({ id: 'resume', label: '[V]. Resume Saved Game', key: 'V', color: '#e879f9', act: () => { isReplaying = false; loadGameState(); } });
       }
       if (savedReplay) {
-          items.push({ id: 'replay', label: '[W]. Watch Last Replay', key: 'W', color: '#f43f5e', act: () => { isReplaying = true; currentReplay = savedReplay; startScreen = false; init(); showToast("Playing saved replay..."); } });
+          items.push({ id: 'replay', label: '[W]. Watch Last Replay', key: 'W', color: '#f43f5e', act: () => { isReplaying = true; currentReplay = savedReplay; startScreen = false; isDuelMode = false; handleResize(); init(); showToast("Playing saved replay..."); } });
       }
       return items;
   }
@@ -825,7 +1841,9 @@
       const rect = canvas.getBoundingClientRect();
       const winW = window.innerWidth;
       const winH = window.innerHeight;
-      const scale = Math.min(winW / 370, winH / 510) * 0.98;
+      const targetW = isDuelMode ? 760 : 370;
+      const targetH = 510;
+      const scale = Math.min(winW / targetW, winH / targetH) * 0.98;
       const mx = (e.clientX - rect.left) / scale;
       const my = (e.clientY - rect.top) / scale;
 
@@ -848,6 +1866,12 @@
           isHover = true;
       } else if (winScreen || gameOver) {
           isHover = (my >= 180 && my <= 270);
+      } else if (isDuelMode) {
+          if (duelMatchOver) {
+              if ((mx >= 200 && mx <= 360 && my >= 255 && my <= 291) || (mx >= 400 && mx <= 560 && my >= 255 && my <= 291)) isHover = true;
+          }
+          if (mx >= 352 && mx <= 408 && my >= 265 && my <= 360) isHover = true;
+          if (mx >= 630 && mx <= 740 && my >= 462 && my <= 492) isHover = true;
       } else {
           // In-game: sidebar buttons or game board steering
           if (mx >= SIDEBAR_X - 5 && mx <= SIDEBAR_X + 140) {
@@ -864,7 +1888,9 @@
       const rect = canvas.getBoundingClientRect();
       const winW = window.innerWidth;
       const winH = window.innerHeight;
-      const scale = Math.min(winW / 370, winH / 510) * 0.98;
+      const targetW = isDuelMode ? 760 : 370;
+      const targetH = 510;
+      const scale = Math.min(winW / targetW, winH / targetH) * 0.98;
       const mx = (e.clientX - rect.left) / scale;
       const my = (e.clientY - rect.top) / scale;
 
@@ -902,6 +1928,58 @@
           return;
       }
 
+      if (isDuelMode) {
+          if (duelMatchOver) {
+              if (mx >= 200 && mx <= 360 && my >= 255 && my <= 291) {
+                  requestRematch();
+                  return;
+              }
+              if (mx >= 400 && mx <= 560 && my >= 255 && my <= 291) {
+                  leaveDuel();
+                  return;
+              }
+          }
+          if (mx >= 352 && mx <= 408) {
+              if (my >= 265 && my <= 285) { sendChatPing("GG!"); return; }
+              if (my >= 290 && my <= 310) { sendChatPing("Nice!"); return; }
+              if (my >= 315 && my <= 335) { sendChatPing("Oops!"); return; }
+              if (my >= 340 && my <= 360) { sendChatPing("Duel!"); return; }
+          }
+          if (mx >= 630 && mx <= 740 && my >= 462 && my <= 492) {
+              leaveDuel();
+              return;
+          }
+          if (mx >= 85 && mx < 85 + BOARD_W && my >= 45 && my < 45 + H * CELL && !duelMatchOver && roundCountdown <= 0) {
+              let localX = mx - 85;
+              let localY = my - 45;
+              if (localY >= (H - 4) * CELL) {
+                  let dropDist = 0;
+                  while (!checkCol(pc, rot, cx, cy + 1)) { cy++; dropDist++; }
+                  score += dropDist * 2;
+                  lock();
+                  if (!duelMatchOver && roundCountdown <= 0) spawn();
+                  return;
+              }
+              if (localX < BOARD_W * 0.35) {
+                  if (!checkCol(pc, rot, cx - 1, cy)) cx--;
+                  if (gameMode === MODE_DUEL_ONLINE) syncOnlineBoardState(false);
+                  return;
+              }
+              if (localX > BOARD_W * 0.65) {
+                  if (!checkCol(pc, rot, cx + 1, cy)) cx++;
+                  if (gameMode === MODE_DUEL_ONLINE) syncOnlineBoardState(false);
+                  return;
+              }
+              let nr = (rot + 1) % 4;
+              if (!checkCol(pc, nr, cx, cy)) rot = nr;
+              else if (!checkCol(pc, nr, cx - 1, cy)) { cx--; rot = nr; }
+              else if (!checkCol(pc, nr, cx + 1, cy)) { cx++; rot = nr; }
+              if (gameMode === MODE_DUEL_ONLINE) syncOnlineBoardState(false);
+              return;
+          }
+          return;
+      }
+
       if (winScreen || gameOver) {
           if (mx >= 20 && mx <= 180) {
               if (my >= 180 && my <= 210) { startScreen = true; winScreen = false; gameOver = false; return; }
@@ -929,7 +2007,7 @@
           return;
       }
 
-      // During active gameplay
+      // During active single-player gameplay
       if (!gameOver && !isPaused && !startScreen && !winScreen && !showLeaderboard && !showHelp && !showKeybinds) {
           // Sidebar interactive buttons
           if (mx >= SIDEBAR_X - 5 && mx <= SIDEBAR_X + 140) {
@@ -1006,16 +2084,87 @@
           return;
       }
 
+      if (isDuelMode) {
+          if (e.key === 'Escape') {
+              leaveDuel();
+              return;
+          }
+          if (duelMatchOver) {
+              if (e.key.toLowerCase() === 'r') { requestRematch(); return; }
+              if (e.key === 'Enter') { leaveDuel(); return; }
+          }
+          if (e.key === '1') { sendChatPing("GG!"); return; }
+          if (e.key === '2') { sendChatPing("Nice drop!"); return; }
+          if (e.key === '3') { sendChatPing("Oops!"); return; }
+          if (e.key === '4') { sendChatPing("Duel on!"); return; }
+
+          if (duelMatchOver || roundCountdown > 0) return;
+
+          if (key === keybinds.left) {
+              e.preventDefault();
+              if (!checkCol(pc, rot, cx - 1, cy)) {
+                  cx--;
+                  if (gameMode === MODE_DUEL_ONLINE) syncOnlineBoardState(false);
+              }
+              return;
+          }
+          if (key === keybinds.right) {
+              e.preventDefault();
+              if (!checkCol(pc, rot, cx + 1, cy)) {
+                  cx++;
+                  if (gameMode === MODE_DUEL_ONLINE) syncOnlineBoardState(false);
+              }
+              return;
+          }
+          if (key === keybinds.down) {
+              e.preventDefault();
+              if (!checkCol(pc, rot, cx, cy + 1)) {
+                  cy++;
+                  if (gameMode === MODE_DUEL_ONLINE) syncOnlineBoardState(false);
+              }
+              return;
+          }
+          if (key === keybinds.up || key === 'x' || key === 'z') {
+              e.preventDefault();
+              let nr = (rot + 1) % 4;
+              if (!checkCol(pc, nr, cx, cy)) rot = nr;
+              else if (!checkCol(pc, nr, cx - 1, cy)) { cx--; rot = nr; }
+              else if (!checkCol(pc, nr, cx + 1, cy)) { cx++; rot = nr; }
+              else if (!checkCol(pc, nr, cx - 2, cy)) { cx -= 2; rot = nr; }
+              else if (!checkCol(pc, nr, cx + 2, cy)) { cx += 2; rot = nr; }
+              if (gameMode === MODE_DUEL_ONLINE) syncOnlineBoardState(false);
+              return;
+          }
+          if (key === keybinds.hold || e.key === 'Shift') {
+              e.preventDefault();
+              useHold();
+              if (gameMode === MODE_DUEL_ONLINE) syncOnlineBoardState(false);
+              return;
+          }
+          if (key === keybinds.drop) {
+              e.preventDefault();
+              let dropDist = 0;
+              while (!checkCol(pc, rot, cx, cy + 1)) { cy++; dropDist++; }
+              score += dropDist * 2;
+              lock();
+              if (!duelMatchOver && roundCountdown <= 0) spawn();
+              return;
+          }
+          return;
+      }
+
       if (startScreen) {
-          if (e.key === '1') { gameMode = MODE_MARATHON; startScreen = false; score = 0; isReplaying = false; init(); showToast("Marathon Mode Started!"); return; }
-          if (e.key === '2') { gameMode = MODE_SPRINT;   startScreen = false; score = 0; isReplaying = false; init(); showToast("Sprint Mode Started (40 Lines)!"); return; }
-          if (e.key === '3') { gameMode = MODE_ULTRA;    startScreen = false; score = 0; isReplaying = false; init(); showToast("Ultra Mode Started (2 Minutes)!"); return; }
-          if (e.key === '4') { gameMode = MODE_CAMPAIGN; startScreen = false; campaignLevel = 1; score = 0; isReplaying = false; init(); showToast("Campaign Stage 1 Started!"); return; }
-          if (e.key === '5' || e.key.toLowerCase() === 'l') { showLeaderboard = true; startScreen = false; return; }
+          if (e.key === '1') { gameMode = MODE_MARATHON; startScreen = false; isDuelMode = false; handleResize(); score = 0; isReplaying = false; init(); showToast("Marathon Mode Started!"); return; }
+          if (e.key === '2') { gameMode = MODE_SPRINT;   startScreen = false; isDuelMode = false; handleResize(); score = 0; isReplaying = false; init(); showToast("Sprint Mode Started (40 Lines)!"); return; }
+          if (e.key === '3') { gameMode = MODE_ULTRA;    startScreen = false; isDuelMode = false; handleResize(); score = 0; isReplaying = false; init(); showToast("Ultra Mode Started (2 Minutes)!"); return; }
+          if (e.key === '4') { gameMode = MODE_CAMPAIGN; startScreen = false; isDuelMode = false; handleResize(); campaignLevel = 1; score = 0; isReplaying = false; init(); showToast("Campaign Stage 1 Started!"); return; }
+          if (e.key === '5' || e.key.toLowerCase() === 'd') { startDuelAI(); return; }
+          if (e.key === '6' || e.key.toLowerCase() === 'm') { openMultiplayerModal(); return; }
+          if (e.key === '7' || e.key.toLowerCase() === 'l') { showLeaderboard = true; startScreen = false; return; }
           if (e.key.toLowerCase() === 'v' || e.key.toLowerCase() === 'r') { isReplaying = false; loadGameState(); return; }
           if (e.key === 'F1' || e.key.toLowerCase() === 'h') { e.preventDefault(); showHelp = true; return; }
           if (e.key.toLowerCase() === 'k') { showKeybinds = true; bindIndex = 0; startScreen = false; return; }
-          if (e.key.toLowerCase() === 'w' && savedReplay) { isReplaying = true; currentReplay = savedReplay; startScreen = false; init(); showToast("Playing saved replay..."); return; }
+          if (e.key.toLowerCase() === 'w' && savedReplay) { isReplaying = true; currentReplay = savedReplay; startScreen = false; isDuelMode = false; handleResize(); init(); showToast("Playing saved replay..."); return; }
           return;
       }
       if (showLeaderboard) {
@@ -1460,7 +2609,529 @@
       c.restore();
   }
 
+  function updateDuelMode(deltaTime) {
+      if (isPaused) return;
+
+      if (roundCountdown > 0) {
+          roundCountdown -= deltaTime;
+          if (roundCountdown <= 0) {
+              roundCountdown = 0;
+          }
+      }
+
+      updateAttackBeams();
+
+      for (let i = speechBubbles.length - 1; i >= 0; i--) {
+          speechBubbles[i].life--;
+          if (speechBubbles[i].life <= 0) speechBubbles.splice(i, 1);
+      }
+
+      screenShakeIntensity *= 0.90;
+      if (screenShakeIntensity < 0.05) screenShakeIntensity = 0;
+
+      if (gameMode === MODE_DUEL_AI) {
+          updateBot(deltaTime);
+      }
+
+      if (!duelMatchOver && roundCountdown <= 0) {
+          dropCounter += deltaTime;
+          let currentDropInterval = 500;
+          if (dropCounter > currentDropInterval) {
+              if (!checkCol(pc, rot, cx, cy + 1)) {
+                  cy++;
+                  if (gameMode === MODE_DUEL_ONLINE) syncOnlineBoardState(false);
+              } else {
+                  lock();
+                  if (!duelMatchOver && roundCountdown <= 0) spawn();
+              }
+              dropCounter = 0;
+          }
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+          let p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life--;
+          if (p.life <= 0) particles.splice(i, 1);
+      }
+      for (let i = popups.length - 1; i >= 0; i--) {
+          popups[i].y -= 0.6;
+          popups[i].life--;
+          if (popups[i].life <= 0) popups.splice(i, 1);
+      }
+  }
+
+  function drawDuelMode() {
+      const tick = Date.now();
+      ctx.fillStyle = '#0a0a14';
+      ctx.fillRect(0, 0, 760, 510);
+
+      const gridScroll = (tick * 0.05) % 40;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(0, 255, 200, 0.08)';
+      ctx.lineWidth = 1;
+      for (let i = -10; i < 760 / 40 + 10; i++) {
+          const xPos = i * 40;
+          ctx.beginPath(); ctx.moveTo(xPos, 0); ctx.lineTo(xPos, 510); ctx.stroke();
+      }
+      for (let j = -10; j < 510 / 40 + 10; j++) {
+          const yPos = j * 40 + gridScroll;
+          ctx.beginPath(); ctx.moveTo(0, yPos); ctx.lineTo(760, yPos); ctx.stroke();
+      }
+      ctx.restore();
+
+      ctx.save();
+      ctx.fillStyle = 'rgba(0, 255, 200, 0.35)';
+      for (let i = 0; i < 40; i++) {
+          const starY = (i * 27 + tick * 0.02) % 510;
+          const starX = (Math.sin(i * 1.5) * 370) + 380;
+          ctx.beginPath();
+          ctx.arc(starX, starY, (i % 3 == 0) ? 1.5 : 0.8, 0, Math.PI * 2);
+          ctx.fill();
+      }
+      ctx.restore();
+
+      let offX = 0, offY = 0;
+      if (screenShakeIntensity > 0.05) {
+          let shakeMag = screenShakeIntensity * screenShakeIntensity * 0.04;
+          offX = Math.sin(tick * 0.065) * shakeMag;
+          offY = Math.cos(tick * 0.075) * shakeMag;
+      }
+
+      // TOP HEADER BAR (y: 8..38)
+      ctx.fillStyle = '#00f0f0';
+      ctx.font = 'bold 13px system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`P1: ${myPlayerName} ${myPlayerSlot === 1 ? '(YOU)' : ''}`, 85, 24);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '10px monospace';
+      ctx.fillText(`SCORE: ${score}  LINES: ${lines}`, 85, 37);
+
+      ctx.fillStyle = '#ffd700';
+      ctx.font = '13px sans-serif';
+      let p1Stars = '★'.repeat(p1KOs) + '☆'.repeat(Math.max(0, targetKOs - p1KOs));
+      ctx.fillText(p1Stars, 240, 24);
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#00ffff';
+      ctx.font = 'bold 15px system-ui, sans-serif';
+      ctx.fillText('⚔️ ARCADE DUEL ⚔️', 380, 20);
+      ctx.fillStyle = '#ffd700';
+      ctx.font = 'bold 12px monospace';
+      ctx.fillText(`ROUND ${roundNumber}  [${p1KOs} - ${p2KOs}]  BO${targetKOs * 2 - 1}`, 380, 36);
+
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#ff66aa';
+      ctx.font = 'bold 13px system-ui, sans-serif';
+      ctx.fillText(`${oppPlayerName} ${myPlayerSlot === 2 ? '(YOU)' : ''}`, 675, 24);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '10px monospace';
+      ctx.fillText(`SCORE: ${oppScore}  LINES: ${oppLines}`, 675, 37);
+
+      ctx.fillStyle = '#ffd700';
+      ctx.font = '13px sans-serif';
+      ctx.textAlign = 'left';
+      let p2Stars = '★'.repeat(p2KOs) + '☆'.repeat(Math.max(0, targetKOs - p2KOs));
+      ctx.fillText(p2Stars, 475, 24);
+
+      // ===== BOARD 1 (P1 - Left: x: 85, y: 45, w: 200, h: 400) =====
+      const B1_X = 85 + offX;
+      const B1_Y = 45 + offY;
+
+      ctx.fillStyle = 'rgba(18, 18, 24, 0.9)';
+      ctx.fillRect(B1_X, B1_Y, BOARD_W, H * CELL);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= W; x++) {
+          ctx.beginPath(); ctx.moveTo(B1_X + x * CELL, B1_Y); ctx.lineTo(B1_X + x * CELL, B1_Y + H * CELL); ctx.stroke();
+      }
+      for (let y = 0; y <= H; y++) {
+          ctx.beginPath(); ctx.moveTo(B1_X, B1_Y + y * CELL); ctx.lineTo(B1_X + BOARD_W, B1_Y + y * CELL); ctx.stroke();
+      }
+
+      ctx.save();
+      ctx.strokeStyle = '#00f0f0';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#00f0f0';
+      ctx.shadowBlur = 8;
+      ctx.strokeRect(B1_X, B1_Y, BOARD_W, H * CELL);
+      ctx.restore();
+
+      for (let y = 0; y < H; y++) {
+          for (let x = 0; x < W; x++) {
+              if (grid[y][x]) {
+                  drawBlock(ctx, B1_X + x * CELL, B1_Y + y * CELL, grid[y][x], CELL, 0);
+              }
+          }
+      }
+
+      if (!gameOver && !isPaused && !startScreen && !duelMatchOver && roundCountdown <= 0) {
+          let ghost_y = cy;
+          while (!checkCol(pc, rot, cx, ghost_y + 1)) ghost_y++;
+          let shape = tetrominos[pc][rot];
+          let drawVal = isBomb ? 15 : (pc + 1);
+
+          if (ghost_y > cy) {
+              ctx.save();
+              ctx.strokeStyle = 'rgba(0, 240, 255, 0.25)';
+              ctx.lineWidth = 1;
+              ctx.setLineDash([2, 4]);
+              for (let j = 0; j < 5; j++) {
+                  for (let i = 0; i < 5; i++) {
+                      if (shape & (1 << (24 - (i * 5 + j)))) {
+                          if (cx + j >= 0 && cx + j < W) {
+                              let bx = B1_X + (cx + j) * CELL;
+                              ctx.beginPath();
+                              ctx.moveTo(bx + 2, B1_Y + (cy + i + 1) * CELL);
+                              ctx.lineTo(bx + 2, B1_Y + (ghost_y + i) * CELL);
+                              ctx.stroke();
+                          }
+                          break;
+                      }
+                  }
+              }
+              ctx.restore();
+          }
+
+          for (let i = 0; i < 5; i++) {
+              for (let j = 0; j < 5; j++) {
+                  if (shape & (1 << (24 - (i * 5 + j)))) {
+                      if (ghost_y + i >= 0 && cx + j >= 0 && cx + j < W) {
+                          drawBlock(ctx, B1_X + (cx + j) * CELL, B1_Y + (ghost_y + i) * CELL, drawVal, CELL, 1);
+                      }
+                  }
+              }
+          }
+          for (let i = 0; i < 5; i++) {
+              for (let j = 0; j < 5; j++) {
+                  if (shape & (1 << (24 - (i * 5 + j)))) {
+                      if (cy + i >= 0 && cx + j >= 0 && cx + j < W) {
+                          drawBlock(ctx, B1_X + (cx + j) * CELL, B1_Y + (cy + i) * CELL, drawVal, CELL, 2);
+                      }
+                  }
+              }
+          }
+      }
+
+      ctx.fillStyle = '#1c0c14';
+      ctx.fillRect(75, 45, 7, 400);
+      ctx.strokeStyle = '#33101c';
+      ctx.strokeRect(75, 45, 7, 400);
+      if (p1GarbagePending > 0) {
+          let gH = Math.min(p1GarbagePending * CELL, 400);
+          ctx.fillStyle = (tick % 200 < 100) ? '#ff3344' : '#ff7700';
+          ctx.fillRect(75, 45 + 400 - gH, 7, gH);
+          ctx.fillStyle = '#ff4444';
+          ctx.font = 'bold 9px monospace';
+          ctx.textAlign = 'right';
+          ctx.fillText(`! ${p1GarbagePending}`, 72, 45 + 400 - gH + 10);
+      }
+
+      ctx.fillStyle = 'rgba(20, 24, 38, 0.9)';
+      ctx.fillRect(12, 45, 58, 58);
+      ctx.strokeStyle = '#2a3550';
+      ctx.strokeRect(12, 45, 58, 58);
+      ctx.fillStyle = '#88a0cc';
+      ctx.font = 'bold 9px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText('HOLD [C]', 41, 57);
+      if (holdPc !== -1) {
+          let hShape = tetrominos[holdPc][0];
+          let hVal = holdIsBomb ? 15 : (holdPc + 1);
+          for (let i = 0; i < 5; i++) {
+              for (let j = 0; j < 5; j++) {
+                  if (hShape & (1 << (24 - (i * 5 + j)))) {
+                      drawBlock(ctx, 16 + j * 10, 60 + i * 10, hVal, 10, holdUsed ? 1 : 0);
+                  }
+              }
+          }
+      }
+
+      ctx.fillStyle = 'rgba(20, 24, 38, 0.9)';
+      ctx.fillRect(290, 45, 50, 100);
+      ctx.strokeStyle = '#2a3550';
+      ctx.strokeRect(290, 45, 50, 100);
+      ctx.fillStyle = '#88a0cc';
+      ctx.font = 'bold 9px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText('NEXT', 315, 57);
+      for (let n = 0; n < Math.min(2, nextQueue.length); n++) {
+          let nPc = nextQueue[n].pc;
+          let nVal = nextQueue[n].isBomb ? 15 : (nPc + 1);
+          let nShape = tetrominos[nPc][0];
+          for (let i = 0; i < 5; i++) {
+              for (let j = 0; j < 5; j++) {
+                  if (nShape & (1 << (24 - (i * 5 + j)))) {
+                      drawBlock(ctx, 294 + j * 8, 62 + n * 40 + i * 8, nVal, 8, 0);
+                  }
+              }
+          }
+      }
+
+      // ===== BOARD 2 (Opponent / Bot - Right: x: 475, y: 45, w: 200, h: 400) =====
+      const B2_X = 475;
+      const B2_Y = 45;
+
+      ctx.fillStyle = 'rgba(18, 18, 24, 0.9)';
+      ctx.fillRect(B2_X, B2_Y, BOARD_W, H * CELL);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= W; x++) {
+          ctx.beginPath(); ctx.moveTo(B2_X + x * CELL, B2_Y); ctx.lineTo(B2_X + x * CELL, B2_Y + H * CELL); ctx.stroke();
+      }
+      for (let y = 0; y <= H; y++) {
+          ctx.beginPath(); ctx.moveTo(B2_X, B2_Y + y * CELL); ctx.lineTo(B2_X + BOARD_W, B2_Y + y * CELL); ctx.stroke();
+      }
+
+      ctx.save();
+      ctx.strokeStyle = '#ff3366';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#ff3366';
+      ctx.shadowBlur = 8;
+      ctx.strokeRect(B2_X, B2_Y, BOARD_W, H * CELL);
+      ctx.restore();
+
+      for (let y = 0; y < H; y++) {
+          for (let x = 0; x < W; x++) {
+              if (oppGrid[y][x]) {
+                  drawBlock(ctx, B2_X + x * CELL, B2_Y + y * CELL, oppGrid[y][x], CELL, 0);
+              }
+          }
+      }
+
+      if (!duelMatchOver && roundCountdown <= 0) {
+          let oppGhostY = oppCy;
+          while (!checkColBoard(oppGrid, oppPc, oppRot, oppCx, oppGhostY + 1)) oppGhostY++;
+          let oShape = tetrominos[oppPc][oppRot];
+          let oVal = oppIsBomb ? 15 : (oppPc + 1);
+
+          for (let i = 0; i < 5; i++) {
+              for (let j = 0; j < 5; j++) {
+                  if (oShape & (1 << (24 - (i * 5 + j)))) {
+                      if (oppGhostY + i >= 0 && oppCx + j >= 0 && oppCx + j < W) {
+                          drawBlock(ctx, B2_X + (oppCx + j) * CELL, B2_Y + (oppGhostY + i) * CELL, oVal, CELL, 1);
+                      }
+                  }
+              }
+          }
+          for (let i = 0; i < 5; i++) {
+              for (let j = 0; j < 5; j++) {
+                  if (oShape & (1 << (24 - (i * 5 + j)))) {
+                      if (oppCy + i >= 0 && oppCx + j >= 0 && oppCx + j < W) {
+                          drawBlock(ctx, B2_X + (oppCx + j) * CELL, B2_Y + (oppCy + i) * CELL, oVal, CELL, 2);
+                      }
+                  }
+              }
+          }
+      }
+
+      ctx.fillStyle = '#1c0c14';
+      ctx.fillRect(678, 45, 7, 400);
+      ctx.strokeStyle = '#33101c';
+      ctx.strokeRect(678, 45, 7, 400);
+      if (oppGarbagePending > 0) {
+          let gH = Math.min(oppGarbagePending * CELL, 400);
+          ctx.fillStyle = (tick % 200 < 100) ? '#ff3344' : '#ff7700';
+          ctx.fillRect(678, 45 + 400 - gH, 7, gH);
+          ctx.fillStyle = '#ff4444';
+          ctx.font = 'bold 9px monospace';
+          ctx.textAlign = 'left';
+          ctx.fillText(`! ${oppGarbagePending}`, 688, 45 + 400 - gH + 10);
+      }
+
+      ctx.fillStyle = 'rgba(20, 24, 38, 0.9)';
+      ctx.fillRect(420, 45, 50, 100);
+      ctx.strokeStyle = '#2a3550';
+      ctx.strokeRect(420, 45, 50, 100);
+      ctx.fillStyle = '#88a0cc';
+      ctx.font = 'bold 9px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText('NEXT', 445, 57);
+      for (let n = 0; n < Math.min(2, oppNextQueue.length); n++) {
+          let nPc = oppNextQueue[n].pc;
+          let nVal = oppNextQueue[n].isBomb ? 15 : (nPc + 1);
+          let nShape = tetrominos[nPc][0];
+          for (let i = 0; i < 5; i++) {
+              for (let j = 0; j < 5; j++) {
+                  if (nShape & (1 << (24 - (i * 5 + j)))) {
+                      drawBlock(ctx, 424 + j * 8, 62 + n * 40 + i * 8, nVal, 8, 0);
+                  }
+              }
+          }
+      }
+
+      ctx.fillStyle = 'rgba(20, 24, 38, 0.9)';
+      ctx.fillRect(690, 45, 58, 58);
+      ctx.strokeStyle = '#2a3550';
+      ctx.strokeRect(690, 45, 58, 58);
+      ctx.fillStyle = '#88a0cc';
+      ctx.font = 'bold 9px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText('HOLD', 719, 57);
+      if (oppHoldPc !== -1) {
+          let hShape = tetrominos[oppHoldPc][0];
+          let hVal = oppHoldIsBomb ? 15 : (oppHoldPc + 1);
+          for (let i = 0; i < 5; i++) {
+              for (let j = 0; j < 5; j++) {
+                  if (hShape & (1 << (24 - (i * 5 + j)))) {
+                      drawBlock(ctx, 694 + j * 10, 60 + i * 10, hVal, 10, 0);
+                  }
+              }
+          }
+      }
+
+      // ===== CENTER HUD (x: 348..412, y: 155..440) =====
+      ctx.save();
+      let vsPulse = 0.8 + 0.2 * Math.sin(tick * 0.008);
+      ctx.font = `bold ${Math.floor(26 * vsPulse)}px system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#00ffff';
+      ctx.shadowColor = '#00ffff';
+      ctx.shadowBlur = 12;
+      ctx.fillText('VS', 380, 190);
+      ctx.restore();
+
+      ctx.font = '10px monospace';
+      ctx.fillStyle = '#00f0f0';
+      ctx.textAlign = 'center';
+      ctx.fillText(`ATK: ${p1AttacksSent}`, 380, 215);
+      ctx.fillStyle = '#ff66aa';
+      ctx.fillText(`ATK: ${oppAttacksSent}`, 380, 230);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold 9px system-ui';
+      ctx.fillText('EMOTES:', 380, 255);
+
+      const emotes = [
+          { key: '1', text: 'GG!', y: 265 },
+          { key: '2', text: 'Nice!', y: 290 },
+          { key: '3', text: 'Oops!', y: 315 },
+          { key: '4', text: 'Duel!', y: 340 }
+      ];
+      emotes.forEach(em => {
+          ctx.fillStyle = 'rgba(25, 30, 48, 0.85)';
+          ctx.fillRect(352, em.y, 56, 20);
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(352, em.y, 56, 20);
+          ctx.fillStyle = '#38bdf8';
+          ctx.font = 'bold 10px monospace';
+          ctx.fillText(`[${em.key}] ${em.text}`, 380, em.y + 14);
+      });
+
+      for (let b of attackBeams) {
+          ctx.save();
+          ctx.strokeStyle = b.color;
+          ctx.lineWidth = 3;
+          ctx.shadowColor = b.color;
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.moveTo(b.x - 12, b.y);
+          ctx.lineTo(b.x + 12, b.y);
+          ctx.stroke();
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+      }
+
+      for (let sb of speechBubbles) {
+          ctx.save();
+          let bx = (sb.player === 1) ? 185 : 575;
+          let by = 120;
+          ctx.fillStyle = 'rgba(12, 14, 24, 0.95)';
+          ctx.fillRect(bx - 45, by - 22, 90, 24);
+          ctx.strokeStyle = (sb.player === 1) ? '#00f0f0' : '#ff3366';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(bx - 45, by - 22, 90, 24);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 11px system-ui';
+          ctx.textAlign = 'center';
+          ctx.fillText(sb.text, bx, by - 6);
+          ctx.restore();
+      }
+
+      ctx.fillStyle = 'rgba(14, 18, 28, 0.95)';
+      ctx.fillRect(10, 455, 740, 45);
+      ctx.strokeStyle = '#222c44';
+      ctx.strokeRect(10, 455, 740, 45);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('CONTROLS: [←/→/↓] Move & Soft Drop  [↑] Rotate  [Space] Hard Drop  [C] Hold', 25, 482);
+
+      ctx.fillStyle = 'rgba(255, 68, 68, 0.2)';
+      ctx.fillRect(630, 462, 110, 30);
+      ctx.strokeStyle = '#ff4444';
+      ctx.strokeRect(630, 462, 110, 30);
+      ctx.fillStyle = '#ff6666';
+      ctx.font = 'bold 11px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText('✕ Exit Duel [Esc]', 685, 481);
+
+      if (roundCountdown > 0) {
+          ctx.fillStyle = 'rgba(8, 10, 18, 0.88)';
+          ctx.fillRect(180, 160, 400, 120);
+          ctx.strokeStyle = '#ffd700';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(180, 160, 400, 120);
+          ctx.fillStyle = '#ffd700';
+          ctx.font = 'bold 22px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(`ROUND ${roundNumber - 1} KO!`, 380, 198);
+          ctx.fillStyle = '#00ffc8';
+          ctx.font = 'bold 14px system-ui';
+          ctx.fillText(`${roundWinnerName} SCORES A KO!`, 380, 224);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '12px monospace';
+          ctx.fillText(`Next Round starting in ${(roundCountdown / 1000).toFixed(1)}s...`, 380, 252);
+      }
+
+      if (duelMatchOver) {
+          ctx.fillStyle = 'rgba(8, 10, 18, 0.94)';
+          ctx.fillRect(160, 140, 440, 175);
+          let isWin = (duelWinner === myPlayerSlot);
+          ctx.strokeStyle = isWin ? '#00ff66' : '#ff4444';
+          ctx.lineWidth = 2.5;
+          ctx.strokeRect(160, 140, 440, 175);
+
+          ctx.fillStyle = isWin ? '#00ff66' : '#ff4444';
+          ctx.font = 'bold 24px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(isWin ? '🏆 VICTORY! 🏆' : '💀 DEFEAT! 💀', 380, 178);
+
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 14px system-ui';
+          ctx.fillText(`${duelWinner === 1 ? myPlayerName : oppPlayerName} WINS THE DUEL!`, 380, 206);
+          ctx.fillStyle = '#ffd700';
+          ctx.font = 'bold 15px monospace';
+          ctx.fillText(`FINAL SCORE: ${p1KOs} - ${p2KOs}`, 380, 230);
+
+          ctx.fillStyle = 'rgba(0, 255, 100, 0.2)';
+          ctx.fillRect(200, 255, 160, 36);
+          ctx.strokeStyle = '#00ff66';
+          ctx.strokeRect(200, 255, 160, 36);
+          ctx.fillStyle = '#00ff66';
+          ctx.font = 'bold 12px system-ui';
+          ctx.fillText('🔄 REMATCH [R]', 280, 277);
+
+          ctx.fillStyle = 'rgba(255, 68, 68, 0.2)';
+          ctx.fillRect(400, 255, 160, 36);
+          ctx.strokeStyle = '#ff4444';
+          ctx.strokeRect(400, 255, 160, 36);
+          ctx.fillStyle = '#ff6666';
+          ctx.fillText('✕ MAIN MENU [Esc]', 480, 277);
+      }
+  }
+
   function draw() {
+      if (isDuelMode) {
+          drawDuelMode();
+          return;
+      }
       // Background base
       ctx.fillStyle = '#0a0a14'; // Dark space background
       ctx.fillRect(0, 0, 370, 510);
@@ -2267,6 +3938,13 @@
   function update(time = performance.now()) {
       const deltaTime = Math.min(Math.max(0, time - lastTime), 250);
       lastTime = time;
+
+      if (isDuelMode) {
+          updateDuelMode(deltaTime);
+          draw();
+          requestAnimationFrame(update);
+          return;
+      }
 
       if (!isPaused && !gameOver && !startScreen && !winScreen && !showLeaderboard && !showHelp && !showKeybinds) {
           if (level > lastLevel) {
