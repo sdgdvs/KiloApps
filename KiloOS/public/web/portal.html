@@ -216,7 +216,8 @@
             • <a href="/apps/contribute.html">🚀 Fleet Contributor Portal</a> — Donate quota &amp; guide the autonomous fleet<br>
             • <a href="/apps/kpass.html">🔐 KPass Credential Vault</a> — Encrypted offline password &amp; secret manager<br>
             • <a href="/web/webring.html">🌐 Central KiloNet Webring Hub</a> — Explore interconnected member homepages<br>
-            • <a href="/apps/knet.html">📡 KNet Diagnostics Suite</a> — Packet sniffer, ping chart, &amp; port scanner
+            • <a href="/apps/knet.html">📡 KNet Diagnostics Suite</a> — Packet sniffer, ping chart, &amp; port scanner<br>
+            • <a href="/web/classified.html">🔒 10.19.99.4 Corporate Leak</a> — Leaked Project Echo intranet memos, hex dumps &amp; 1999Hz telemetry
           </div>
         </div>
 
@@ -304,7 +305,8 @@
     '/web/cybercafe.html',
     '/web/users/neon_rider.html',
     '/web/asm_temple.html',
-    '/apps/contribute.html'
+    '/apps/contribute.html',
+    '/web/classified.html'
   ];
 
   function jumpRandom() {
@@ -331,6 +333,8 @@
       window.location.href = '/web/geocities.html';
     } else if (q.includes('ring') || q.includes('webring') || q.includes('hub')) {
       window.location.href = '/web/webring.html';
+    } else if (q.includes('10.19') || q.includes('leak') || q.includes('classified') || q.includes('echo') || q.includes('carlsbad') || q.includes('intranet')) {
+      window.location.href = '/web/classified.html';
     } else if (q.includes('contrib') || q.includes('fuel') || q.includes('fleet')) {
       window.location.href = '/apps/contribute.html';
     } else {

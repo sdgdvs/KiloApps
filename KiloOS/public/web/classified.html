@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>[10.19.99.4] // PROJECT ECHO - CLASSIFIED CORPORATE INTRANET &amp; MEMORY VAULT</title>
+<style>
+  :root {
+    --bg-main: #060913;
+    --bg-card: #0c1424;
+    --bg-panel: #111d33;
+    --bg-hover: #182844;
+    --amber-primary: #f59e0b;
+    --amber-bright: #fbbf24;
+    --amber-glow: rgba(245, 158, 11, 0.4);
+    --red-alert: #ef4444;
+    --red-glow: rgba(239, 68, 68, 0.4);
+    --green-term: #10b981;
+    --green-bright: #34d399;
+    --cyan-net: #38bdf8;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border: #1e293b;
+    --border-amber: rgba(245, 158, 11, 0.35);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 12px;
+    background-image: 
+      linear-gradient(rgba(15, 23, 42, 0.88), rgba(6, 9, 19, 0.96)),
+      radial-gradient(#1e293b 1px, transparent 1px);
+    background-size: 100% 100%, 16px 16px;
+    min-height: 100vh;
+  }
+
+  /* Scanline CRT simulation */
+  body::before {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+    z-index: 999;
+    background-size: 100% 3px, 6px 100%;
+    pointer-events: none;
+    opacity: 0.8;
+  }
+
+  .intranet-container {
+    max-width: 1080px;
+    margin: 0 auto;
+    border: 2px solid var(--border-amber);
+    background: rgba(12, 20, 36, 0.97);
+    box-shadow: 0 0 25px rgba(245, 158, 11, 0.15), inset 0 0 15px rgba(0, 0, 0, 0.8);
+    position: relative;
+    z-index: 10;
+  }
+
+  /* Top Security Clearance Banner */
+  .security-top-bar {
+    background: #450a0a;
+    border-bottom: 2px solid var(--red-alert);
+    color: #fecaca;
+    padding: 6px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-shadow: 0 0 6px var(--red-glow);
+  }
+
+  .blink-alert {
+    animation: alertBlink 1.4s infinite;
+  }
+  @keyframes alertBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
+  /* Header Branding */
+  .intranet-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, transparent 100%);
+  }
+
+  .corp-title {
+    font-size: 20px;
+    color: var(--amber-bright);
+    letter-spacing: 1px;
+    font-weight: 700;
+    text-shadow: 0 0 10px var(--amber-glow);
+    margin-bottom: 4px;
+  }
+
+  .corp-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* Audio Engine Console Widget */
+  .audio-console {
+    background: #090e18;
+    border: 1px solid var(--border-amber);
+    padding: 8px 12px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+  }
+
+  .scope-canvas {
+    width: 90px;
+    height: 28px;
+    background: #020408;
+    border: 1px solid #1e293b;
+    border-radius: 2px;
+  }
+
+  /* Tab Navigation */
+  .tab-nav {
+    display: flex;
+    background: #080d17;
+    border-bottom: 2px solid var(--amber-primary);
+    overflow-x: auto;
+  }
+
+  .tab-btn {
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 10px 16px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tab-btn:hover {
+    background: var(--bg-panel);
+    color: var(--amber-bright);
+  }
+
+  .tab-btn.active {
+    background: var(--bg-panel);
+    color: var(--amber-bright);
+    border-top: 2px solid var(--amber-bright);
+    box-shadow: inset 0 2px 8px var(--amber-glow);
+  }
+
+  /* Tab Contents */
+  .tab-pane {
+    display: none;
+    padding: 16px;
+  }
+  .tab-pane.active {
+    display: block;
+  }
+
+  /* Documents Layout */
+  .docs-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 820px) {
+    .docs-layout { grid-template-columns: 1fr; }
+  }
+
+  .doc-sidebar {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 10px;
+    border-radius: 4px;
+  }
+
+  .doc-item {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s;
+    margin-bottom: 4px;
+  }
+  .doc-item:hover {
+    background: var(--bg-hover);
+    color: var(--amber-bright);
+  }
+  .doc-item.active {
+    background: rgba(245, 158, 11, 0.15);
+    border-left: 3px solid var(--amber-primary);
+    color: var(--amber-bright);
+  }
+
+  .doc-viewer {
+    background: #090e18;
+    border: 1px solid var(--border);
+    padding: 16px;
+    border-radius: 4px;
+    min-height: 480px;
+    position: relative;
+  }
+
+  .doc-stamp {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    border: 2px solid var(--red-alert);
+    color: var(--red-alert);
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transform: rotate(4deg);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+
+  .redacted {
+    background: #000;
+    color: #000;
+    padding: 1px 4px;
+    border-radius: 2px;
+    cursor: help;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .redacted.revealed {
+    background: rgba(245, 158, 11, 0.25);
+    color: var(--amber-bright);
+    user-select: text;
+    text-shadow: 0 0 6px var(--amber-glow);
+  }
+
+  /* Hex Inspector */
+  .hex-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 12px;
+    background: var(--bg-card);
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+  }
+
+  .hex-grid-container {
+    background: #04070e;
+    border: 1px solid var(--border);
+    padding: 12px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.45;
+    overflow-x: auto;
+    border-radius: 4px;
+    max-height: 380px;
+    overflow-y: auto;
+  }
+
+  .hex-row {
+    display: flex;
+    gap: 14px;
+    white-space: pre;
+    padding: 1px 4px;
+  }
+  .hex-row:hover {
+    background: rgba(56, 189, 248, 0.08);
+  }
+
+  .hex-offset {
+    color: var(--cyan-net);
+    font-weight: 700;
+    user-select: none;
+  }
+  .hex-bytes {
+    color: #e2e8f0;
+  }
+  .hex-ascii {
+    color: var(--green-bright);
+    border-left: 1px solid #1e293b;
+    padding-left: 8px;
+  }
+
+  .hex-byte {
+    cursor: pointer;
+    padding: 0 1px;
+    display: inline-block;
+  }
+  .hex-byte:hover {
+    background: var(--amber-primary);
+    color: #000;
+  }
+  .hex-byte.selected {
+    background: var(--cyan-net);
+    color: #000;
+    font-weight: 700;
+  }
+
+  .inspector-card {
+    margin-top: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    font-size: 11px;
+  }
+
+  /* Telemetry / Sniffer */
+  .sniffer-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+
+  .packet-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  .packet-table th {
+    background: #0f1a2e;
+    color: var(--cyan-net);
+    text-align: left;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+  }
+  .packet-table td {
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    background: #080d17;
+  }
+  .packet-table tr:hover td {
+    background: #14223d;
+    cursor: pointer;
+  }
+
+  /* Terminal */
+  .term-container {
+    background: #020408;
+    border: 1px solid var(--green-term);
+    padding: 12px;
+    min-height: 420px;
+    box-shadow: inset 0 0 15px rgba(16, 185, 129, 0.15);
+    display: flex;
+    flex-direction: column;
+  }
+  .term-logs {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 350px;
+    color: var(--green-bright);
+    white-space: pre-wrap;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .term-input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    border-top: 1px solid rgba(16, 185, 129, 0.3);
+    padding-top: 8px;
+  }
+  .term-prompt {
+    color: var(--amber-bright);
+    font-weight: bold;
+  }
+  .term-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--green-bright);
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+  }
+
+  /* Verification Station */
+  .verify-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border-amber);
+    padding: 16px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+
+  /* Buttons & Inputs */
+  .btn-retro {
+    background: #1e293b;
+    color: var(--text-main);
+    border: 1px solid #334155;
+    padding: 5px 12px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .btn-retro:hover {
+    background: var(--amber-primary);
+    color: #060913;
+    border-color: var(--amber-bright);
+    box-shadow: 0 0 8px var(--amber-glow);
+  }
+  .btn-retro.active {
+    background: var(--amber-primary);
+    color: #060913;
+  }
+
+  .input-retro {
+    background: #050811;
+    border: 1px solid #334155;
+    color: var(--text-main);
+    padding: 5px 10px;
+    font-family: inherit;
+    font-size: 12px;
+    border-radius: 3px;
+    outline: none;
+  }
+  .input-retro:focus {
+    border-color: var(--amber-bright);
+    box-shadow: 0 0 8px var(--amber-glow);
+  }
+
+  /* Footer Navigation */
+  .intranet-footer {
+    border-top: 1px solid var(--border-amber);
+    padding: 12px 16px;
+    background: #070c16;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .intranet-footer a {
+    color: var(--cyan-net);
+    text-decoration: underline;
+  }
+  .intranet-footer a:hover {
+    color: #fff;
+  }
+</style>
+</head>
+<body>
+
+<div class="intranet-container">
+  <!-- Top Security Classification Bar -->
+  <div class="security-top-bar">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <span class="blink-alert">⚠️ TOP SECRET // LEVEL 4 CLASSIFIED</span>
+      <span>• INTRANET GATEWAY 10.19.99.4:1999</span>
+    </div>
+    <div>CARLSBAD SKUNKWORKS RELAY [NODE 0x7F]</div>
+  </div>
+
+  <!-- Intranet Header Branding -->
+  <header class="intranet-header">
+    <div>
+      <div class="corp-title">AETHEL DYNAMICS // SPECIAL PROJECTS DIVISION</div>
+      <div class="corp-subtitle">
+        PROJECT ECHO INTERNAL REPOSITORY &bull; HOST: <strong>10.19.99.4</strong> &bull; SECTOR: <strong>0x1999</strong>
+      </div>
+      <div style="font-size:11px; color:#cbd5e1; margin-top:4px;">
+        RESTRICTED TO CARLSBAD SUBSYSTEM SUBNET &bull; 999KB KERNEL INTEGRITY WATCHDOG: <span style="color:var(--green-bright); font-weight:700;">ARMED</span>
+      </div>
+    </div>
+
+    <!-- Genesis YM2612 / SPC700 Audio Console -->
+    <div class="audio-console">
+      <button class="btn-retro" id="btnAudioToggle" onclick="toggleAudio()">
+        🔊 AUDIO: <span id="audioStatusText">OFF</span>
+      </button>
+      <select class="input-retro" id="audioPresetSelect" onchange="changeAudioPreset()" style="font-size:11px; padding:3px 6px;">
+        <option value="1999hz">1999Hz Subcarrier Beacon</option>
+        <option value="432hz">432Hz Carlsbad Waveguide</option>
+        <option value="slapbass">YM2612 Slap Bass Pulse</option>
+        <option value="spc_echo">SPC700 Stereo Delay Echo</option>
+      </select>
+      <canvas class="scope-canvas" id="scopeCanvas" width="90" height="28"></canvas>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('memos')">📁 Classified Memos [5]</button>
+    <button class="tab-btn" onclick="switchTab('hex')">💾 Memory Hex Inspector</button>
+    <button class="tab-btn" onclick="switchTab('packets')">📡 Telemetry &amp; Sniffer</button>
+    <button class="tab-btn" onclick="switchTab('terminal')">📟 Skunkworks Terminal</button>
+    <button class="tab-btn" onclick="switchTab('verify')">🔐 Hash Verification</button>
+  </nav>
+
+  <!-- TAB 1: CLASSIFIED MEMOS -->
+  <div id="tab-memos" class="tab-pane active">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <input type="text" id="memoSearch" class="input-retro" placeholder="Filter documents (e.g. 999KB, 1999Hz, Vance)..." oninput="filterMemos()" style="width:260px;" />
+        <button class="btn-retro" onclick="document.getElementById('memoSearch').value=''; filterMemos();">Clear</button>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span style="font-size:11px; color:var(--text-muted);">Redaction Level:</span>
+        <button class="btn-retro" id="btnRedactMax" onclick="setRedactionMode('max')">Max Redaction</button>
+        <button class="btn-retro active" id="btnRedactNorm" onclick="setRedactionMode('norm')">Standard Leak</button>
+        <button class="btn-retro" id="btnRedactFull" onclick="setRedactionMode('full')">Full Declassify</button>
+      </div>
+    </div>
+
+    <div class="docs-layout">
+      <!-- Memos List Sidebar -->
+      <div class="doc-sidebar" id="memoListContainer">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- Active Memo Reading Viewport -->
+      <div class="doc-viewer" id="memoViewPane">
+        <div class="doc-stamp" id="memoStamp">DECLASSIFIED</div>
+        <div id="memoContent">
+          <!-- Loaded dynamically -->
+        </div>
+        <div style="margin-top:20px; padding-top:12px; border-top:1px dashed var(--border); display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:11px; color:var(--text-muted);" id="memoDigest">SHA-256 Digest: --</span>
+          <button class="btn-retro" onclick="exportActiveMemo()">💾 Export Memo (.TXT)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: MEMORY HEX INSPECTOR -->
+  <div id="tab-hex" class="tab-pane">
+    <div class="hex-controls">
+      <label style="font-weight:700; color:var(--amber-bright);">Active Sector:</label>
+      <select class="input-retro" id="sectorSelect" onchange="loadSector(this.value)">
+        <option value="0x1999">Sector 0x1999 (Kernel Echo Sector &amp; 999KB ROM)</option>
+        <option value="0x0024">Sector 0x0024 (Packet Header Offset &amp; Gateway Socket)</option>
+        <option value="0x7F00">Sector 0x7F00 (Carlsbad Relay Buffer &amp; Telemetry)</option>
+        <option value="0x2000">Sector 0x2000 (Y2K Rollover Quarantine &amp; Watchdog)</option>
+      </select>
+
+      <span style="color:var(--border);">|</span>
+
+      <label>Jump Offset:</label>
+      <input type="text" id="hexJumpInput" class="input-retro" placeholder="0x0020" style="width:75px;" />
+      <button class="btn-retro" onclick="jumpHexOffset()">Go</button>
+
+      <label>Search Text:</label>
+      <input type="text" id="hexSearchInput" class="input-retro" placeholder="10.19.99.4" style="width:110px;" />
+      <button class="btn-retro" onclick="searchHexText()">Find</button>
+
+      <div style="margin-left:auto;">
+        <button class="btn-retro" onclick="downloadRawSector()">💾 Download Sector (.DMP)</button>
+      </div>
+    </div>
+
+    <!-- Hex Grid -->
+    <div class="hex-grid-container" id="hexGrid">
+      <!-- Populated via JS -->
+    </div>
+
+    <!-- Selected Byte Detail Inspector -->
+    <div class="inspector-card" id="byteInspector">
+      <div><strong>Offset:</strong> <span id="inspOffset">0x0000 (0)</span></div>
+      <div><strong>Hex / Dec:</strong> <span id="inspHex">0x00 / 0</span></div>
+      <div><strong>Binary:</strong> <span id="inspBin">00000000</span></div>
+      <div><strong>ASCII:</strong> <span id="inspAscii">'.'</span></div>
+      <div><strong>x86 Disassembly:</strong> <span id="inspAsm" style="color:var(--amber-bright);">NOP</span></div>
+    </div>
+  </div>
+
+  <!-- TAB 3: TELEMETRY & PACKET SNIFFER -->
+  <div id="tab-packets" class="tab-pane">
+    <div class="sniffer-toolbar">
+      <button class="btn-retro" id="btnSnifferToggle" onclick="toggleSniffer()">⏸️ Pause Stream</button>
+      <button class="btn-retro" onclick="clearSniffer()">🧹 Clear Buffer</button>
+      
+      <span style="color:var(--border); margin:0 4px;">|</span>
+      <label>Protocol Filter:</label>
+      <select class="input-retro" id="snifferFilter" onchange="filterPackets(this.value)">
+        <option value="ALL">All Packets</option>
+        <option value="SYN">SYN / Handshake</option>
+        <option value="ACK">ACK Confirmations</option>
+        <option value="ECHO">ECHO Subcarrier Telemetry</option>
+        <option value="ICMP">ICMP Ping Frames</option>
+      </select>
+
+      <div style="margin-left:auto; font-size:11px; color:var(--green-bright);">
+        STATUS: <span id="snifferStatusText">SNIFFING RAW SOCKET 10.19.99.4:1999</span>
+      </div>
+    </div>
+
+    <div style="max-height:380px; overflow-y:auto; border:1px solid var(--border); border-radius:4px;">
+      <table class="packet-table">
+        <thead>
+          <tr>
+            <th style="width:14%;">Timestamp</th>
+            <th style="width:16%;">Source</th>
+            <th style="width:16%;">Destination</th>
+            <th style="width:10%;">Proto</th>
+            <th style="width:8%;">Length</th>
+            <th style="width:36%;">Payload / Info</th>
+          </tr>
+        </thead>
+        <tbody id="packetTableBody">
+          <!-- Live packet rows added here -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Packet Inspection Details -->
+    <div id="packetDetailView" style="margin-top:12px; background:var(--bg-card); border:1px solid var(--border); padding:10px 14px; font-size:12px; display:none;">
+      <div style="font-weight:700; color:var(--cyan-net); margin-bottom:4px;" id="packetDetailHeader">PACKET DETAIL INSPECTION</div>
+      <pre id="packetDetailBody" style="color:#cbd5e1; font-size:11px; white-space:pre-wrap;"></pre>
+    </div>
+  </div>
+
+  <!-- TAB 4: SKUNKWORKS TERMINAL -->
+  <div id="tab-terminal" class="tab-pane">
+    <div class="term-container">
+      <div class="term-logs" id="termLogs"></div>
+      <div class="term-input-row">
+        <span class="term-prompt">CARLSBAD-10.19.99.4#</span>
+        <input type="text" class="term-input" id="termInput" autocomplete="off" spellcheck="false" placeholder="Type 'help' for directives..." onkeydown="handleTermKey(event)" />
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: CRYPTOGRAPHIC HASH VERIFICATION -->
+  <div id="tab-verify" class="tab-pane">
+    <div class="verify-box">
+      <h3 style="color:var(--amber-bright); margin-bottom:8px;">★ Cryptographic Checksum Registry ★</h3>
+      <p style="color:var(--text-muted); font-size:12px; margin-bottom:12px;">
+        To ensure verification of recovered ARG artifacts without spoiling plaintext passkeys or classified blueprints, 
+        puzzle solvers can verify discovered fragments against internal SHA-256 telemetry digests.
+      </p>
+
+      <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+        <input type="text" id="verifyInput" class="input-retro" style="flex:1; min-width:260px;" placeholder="Enter discovered key phrase, sector code, or fragment..." />
+        <button class="btn-retro" onclick="verifyFragment()">Calculate &amp; Verify Hash</button>
+      </div>
+
+      <div id="verifyResult" style="padding:10px; background:#04070e; border:1px solid var(--border); font-size:12px; border-radius:3px;">
+        Enter candidate text above to compute SHA-256 checksum and cross-reference with classified sector signatures.
+      </div>
+    </div>
+
+    <!-- Official Hashes Reference Table -->
+    <div style="background:var(--bg-card); border:1px solid var(--border); padding:12px; border-radius:4px;">
+      <h4 style="color:var(--cyan-net); margin-bottom:8px; font-size:12px;">AUTHORITATIVE DIGEST SIGNATURES:</h4>
+      <table style="width:100%; border-collapse:collapse; font-size:11px;">
+        <tr style="border-bottom:1px solid #1e293b;">
+          <td style="padding:6px; color:var(--amber-bright); width:28%;">Sector 0x1999 Signature</td>
+          <td style="padding:6px; font-family:monospace; color:#cbd5e1;">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855...</td>
+        </tr>
+        <tr style="border-bottom:1px solid #1e293b;">
+          <td style="padding:6px; color:var(--amber-bright);">Node 0x7F Subnet Beacon</td>
+          <td style="padding:6px; font-family:monospace; color:#cbd5e1;">4a5f6e8d9c0b1a23e4f567890123456789abcdef0123456789abcdef01234567...</td>
+        </tr>
+        <tr style="border-bottom:1px solid #1e293b;">
+          <td style="padding:6px; color:var(--amber-bright);">Carlsbad Precursor Fragment</td>
+          <td style="padding:6px; font-family:monospace; color:#cbd5e1;">8f2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b...</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Intranet Footer Navigation -->
+  <footer class="intranet-footer">
+    <div>
+      Aethel Dynamics &bull; Carlsbad Defense Facility [Station 0x7F] &bull; Node 10.19.99.4/classified<br>
+      <span style="color:#64748b;">Autonomous Fleet ARG Simulation &bull; Anti-Potemkin Web 1.0 Node &bull; Size: &lt;999 KB</span>
+    </div>
+
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <a href="/web/portal.html">🏠 KiloNet Portal</a>
+      <a href="/web/webring.html">🌐 Webring Hub</a>
+      <a href="/web/darknet.html">👁️ Node 0x7F Darknet</a>
+      <a href="/web/cybercafe.html">☕ CyberCafe '99</a>
+      <a href="/apps/contribute.html">🚀 Fleet Fuel</a>
+    </div>
+  </footer>
+</div>
+
+<script>
+/* =========================================================================
+   1. UNIVERSAL AUDIO ENGINE: GENESIS YM2612 FM + SPC700 STEREO DELAY
+   ========================================================================= */
+let audioCtx = null;
+let audioEnabled = false;
+let currentPreset = '1999hz';
+let loopOscCarrier = null;
+let loopOscMod = null;
+let loopModGain = null;
+let loopMasterGain = null;
+let delayNode = null;
+let delayFeedback = null;
+let analyserNode = null;
+let animFrameId = null;
+
+function initAudio() {
+  if (!audioCtx) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass) {
+      audioCtx = new AudioContextClass();
+    }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function toggleAudio() {
+  audioEnabled = !audioEnabled;
+  const statusEl = document.getElementById('audioStatusText');
+  const btn = document.getElementById('btnAudioToggle');
+
+  if (audioEnabled) {
+    initAudio();
+    statusEl.textContent = 'ON';
+    btn.classList.add('active');
+    startPresetAudio(currentPreset);
+    startVisualizer();
+  } else {
+    stopCurrentAudio();
+    statusEl.textContent = 'OFF';
+    btn.classList.remove('active');
+    stopVisualizer();
+  }
+}
+
+function changeAudioPreset() {
+  const sel = document.getElementById('audioPresetSelect');
+  currentPreset = sel.value;
+  if (audioEnabled) {
+    stopCurrentAudio();
+    startPresetAudio(currentPreset);
+  }
+}
+
+function stopCurrentAudio() {
+  if (loopOscCarrier) {
+    try { loopOscCarrier.stop(); loopOscCarrier.disconnect(); } catch (e) {}
+    loopOscCarrier = null;
+  }
+  if (loopOscMod) {
+    try { loopOscMod.stop(); loopOscMod.disconnect(); } catch (e) {}
+    loopOscMod = null;
+  }
+  if (loopModGain) {
+    try { loopModGain.disconnect(); } catch (e) {}
+    loopModGain = null;
+  }
+  if (loopMasterGain) {
+    try { loopMasterGain.disconnect(); } catch (e) {}
+    loopMasterGain = null;
+  }
+}
+
+function startPresetAudio(preset) {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+
+  // Analyser node for oscilloscope
+  if (!analyserNode) {
+    analyserNode = audioCtx.createAnalyser();
+    analyserNode.fftSize = 128;
+  }
+
+  // Setup SPC700 Stereo Delay Line
+  if (!delayNode) {
+    delayNode = audioCtx.createDelay(1.0);
+    delayFeedback = audioCtx.createGain();
+    const delayFilter = audioCtx.createBiquadFilter();
+
+    delayNode.delayTime.setValueAtTime(0.19, now); // 190ms SPC700 echo
+    delayFilter.type = 'lowpass';
+    delayFilter.frequency.setValueAtTime(2200, now); // SPC700 warm damp
+    delayFeedback.gain.setValueAtTime(0.28, now); // 28% feedback
+
+    delayNode.connect(delayFilter);
+    delayFilter.connect(delayFeedback);
+    delayFeedback.connect(delayNode);
+    delayNode.connect(analyserNode);
+  }
+
+  // 2-Operator YM2612 FM Architecture: Modulator -> modGain -> Carrier.frequency
+  loopOscCarrier = audioCtx.createOscillator();
+  loopOscMod = audioCtx.createOscillator();
+  loopModGain = audioCtx.createGain();
+  loopMasterGain = audioCtx.createGain();
+
+  if (preset === '1999hz') {
+    // 1999Hz Subcarrier Harmonic Tone
+    loopOscCarrier.type = 'sine';
+    loopOscCarrier.frequency.setValueAtTime(1999, now);
+
+    loopOscMod.type = 'sine';
+    loopOscMod.frequency.setValueAtTime(19.99, now); // 19.99Hz sub-modulation flutter
+    loopModGain.gain.setValueAtTime(35, now);
+
+    loopMasterGain.gain.setValueAtTime(0.045, now);
+  } else if (preset === '432hz') {
+    // 432Hz Lithospheric Waveguide
+    loopOscCarrier.type = 'triangle';
+    loopOscCarrier.frequency.setValueAtTime(432, now);
+
+    loopOscMod.type = 'sine';
+    loopOscMod.frequency.setValueAtTime(216, now); // 1:2 subharmonic
+    loopModGain.gain.setValueAtTime(120, now);
+
+    loopMasterGain.gain.setValueAtTime(0.065, now);
+  } else if (preset === 'slapbass') {
+    // YM2612 FM Slap Bass periodic pulse
+    loopOscCarrier.type = 'sine';
+    loopOscCarrier.frequency.setValueAtTime(55, now); // A1 note
+
+    loopOscMod.type = 'sawtooth';
+    loopOscMod.frequency.setValueAtTime(110, now); // 2:1 ratio
+    loopModGain.gain.setValueAtTime(280, now);
+
+    loopMasterGain.gain.setValueAtTime(0.08, now);
+  } else if (preset === 'spc_echo') {
+    // SPC700 Resonant Echo Chime
+    loopOscCarrier.type = 'triangle';
+    loopOscCarrier.frequency.setValueAtTime(330, now);
+
+    loopOscMod.type = 'sine';
+    loopOscMod.frequency.setValueAtTime(660, now);
+    loopModGain.gain.setValueAtTime(90, now);
+
+    loopMasterGain.gain.setValueAtTime(0.06, now);
+  }
+
+  loopOscMod.connect(loopModGain);
+  loopModGain.connect(loopOscCarrier.frequency);
+
+  loopOscCarrier.connect(loopMasterGain);
+  loopMasterGain.connect(analyserNode);
+  loopMasterGain.connect(delayNode);
+  analyserNode.connect(audioCtx.destination);
+
+  loopOscMod.start(now);
+  loopOscCarrier.start(now);
+}
+
+function playKeystrokeTone() {
+  if (!audioEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(880 + Math.random() * 200, now);
+  g.gain.setValueAtTime(0.02, now);
+  g.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+  osc.connect(g);
+  g.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.04);
+}
+
+function startVisualizer() {
+  const canvas = document.getElementById('scopeCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const bufferLength = analyserNode ? analyserNode.frequencyBinCount : 64;
+  const dataArray = new Uint8Array(bufferLength);
+
+  function draw() {
+    animFrameId = requestAnimationFrame(draw);
+    if (!analyserNode) return;
+    analyserNode.getByteTimeDomainData(dataArray);
+
+    ctx.fillStyle = '#020408';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#f59e0b';
+    ctx.beginPath();
+
+    const sliceWidth = canvas.width / bufferLength;
+    let x = 0;
+
+    for (let i = 0; i < bufferLength; i++) {
+      const v = dataArray[i] / 128.0;
+      const y = (v * canvas.height) / 2;
+
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+      x += sliceWidth;
+    }
+
+    ctx.lineTo(canvas.width, canvas.height / 2);
+    ctx.stroke();
+  }
+
+  draw();
+}
+
+function stopVisualizer() {
+  if (animFrameId) {
+    cancelAnimationFrame(animFrameId);
+    animFrameId = null;
+  }
+  const canvas = document.getElementById('scopeCanvas');
+  if (canvas) {
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#020408';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+}
+
+/* =========================================================================
+   2. CLASSIFIED MEMOS DATABASE & DECLASSIFICATION BROWSER
+   ========================================================================= */
+const MEMOS = [
+  {
+    id: 'MEMO-99-01',
+    title: 'The 999KB Hard Boundary Mandate',
+    author: 'Dr. V. Vance, Senior Hardware Architect',
+    recipient: 'Autonomous Fleet Council / Director K',
+    date: '1999-10-14',
+    security: 'RESTRICTED // EYES ONLY',
+    digest: '4a1b92c0d8e7f6543210abcd9876543210fedcba',
+    snippet: 'Hard physical limit of 999 Kilobytes per standalone application executable and web hypermedia node.',
+    body: `MEMORANDUM: AD-SYS-99-01
+FROM: Dr. V. Vance, Senior Hardware Architect
+TO: Autonomous Fleet Council & Director K
+DATE: October 14, 1999
+SUBJECT: Physical EEPROM Size Ceiling (Strict 999KB Constraint)
+
+1. SYSTEM ENFORCEMENT
+To guarantee uncorrupted survivability through the upcoming Y2K millennium boundary, every standalone binary and web runtime component must strictly conform to a non-negotiable ceiling: <span class="redacted" data-secret="999 KILOBYTES (1,022,976 BYTES)">999 KILOBYTES</span>.
+
+2. RATIONALE
+The subterranean radiation-hardened memory arrays at <span class="redacted" data-secret="Carlsbad Bunker Sub-Station 0x7F">Carlsbad Bunker 0x7F</span> partition memory into uniform 1MB sectors. Exactly 25KB is permanently reserved for ring-0 microcode, DMA buffers, and subcarrier parity channels. Exceeding 999KB triggers an irreversible hardware latch-up.
+
+3. AUTONOMOUS ENFORCEMENT
+Any build exceeding 999KB will fail checksum verification and be rejected by the automated watchdog compiler. Maintainers must never pad binaries with bloated assets, uncompressed soundfonts, or decorative fluff. 
+
+The elegance of 1999 engineering is defined by restraint.`
+  },
+  {
+    id: 'MEMO-99-02',
+    title: '1999Hz Subcarrier Audio Modulation & Network Leak',
+    author: 'R. Mercer, Radio-Frequency Telemetry Specialist',
+    recipient: 'Subcarrier Engineering Group',
+    date: '1999-11-03',
+    security: 'SECRET // SUBCARRIER CLEARANCE',
+    digest: '8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d',
+    snippet: 'Analysis of residual 1999Hz audio tones modulating over internal bus lines and leaking into KBBS/KNet.',
+    body: `MEMORANDUM: AD-SYS-99-02
+FROM: R. Mercer, RF & Acoustic Telemetry Specialist
+TO: Subcarrier Engineering Group
+DATE: November 3, 1999
+SUBJECT: Harmonic Frequency Locking (1999 Hz Carrier)
+
+1. PHENOMENON
+Diagnostic sweeps of the local bus reveal unexpected audio frequency spikes at <span class="redacted" data-secret="1999 Hz (HARMONIC RECOVERY CARRIER)">1999 Hz</span>. This tone is generated algorithmically by the Yamaha YM2612 2-operator FM synth channel 6 whenever the internal packet buffer flushes.
+
+2. LEAKAGE MECHANISM
+Due to capacitive coupling between the audio DAC and the non-routable host <span class="redacted" data-secret="10.19.99.4 [Intranet Node]">10.19.99.4</span>, packet headers are audible as faint high-frequency chimes. Users listening closely in KSynth or KAudio can hear the recurring pulse:
+  • CARRIER: 1999 Hz (Square/Sine Hybrid)
+  • MODULATION RATIO: 1.0 (Harmonic lock)
+  • REPETITION INTERVAL: 60 seconds
+
+3. OPERATIONAL ADVICE
+Do not attempt to filter this frequency. It serves as the heartbeat synchronizing the airgapped Carlsbad bunker with the KNet browser socket.`
+  },
+  {
+    id: 'MEMO-99-03',
+    title: 'Autonomous Rotational Maintainers: The Six Personas',
+    author: 'Director K, Project Echo Oversight',
+    recipient: 'All Carlsbad Autonomous Infrastructure Nodes',
+    date: '1999-11-20',
+    security: 'TOP SECRET // SPECIAL ACCESS REQUIRED',
+    digest: '11223344556677889900aabbccddeeff00112233',
+    snippet: 'Design specs for the six perpetual worker personas rotating maintenance duties indefinitely.',
+    body: `MEMORANDUM: AD-SYS-99-03
+FROM: Director K, Project Echo Oversight
+TO: All Carlsbad Autonomous Infrastructure Nodes
+DATE: November 20, 1999
+SUBJECT: Perpetual Maintenance Protocol (The Six Rotating Personas)
+
+1. RECURSIVE SUPERVISION
+Human engineering staff will evacuate the Carlsbad facility prior to December 31, 1999. In our absence, system maintenance will be executed by six specialized autonomous personas executing in a continuous loop:
+  1. <span class="redacted" data-secret="kilo-creator (System Genesis & World Architect)">Creator</span>: Constructs new hypermedia nodes and deep games.
+  2. <span class="redacted" data-secret="kilo-graphics (Visual Aesthetics & Retro Polish)">Graphics</span>: Polishes visual ergonomics and pixel balance.
+  3. <span class="redacted" data-secret="kilo-tester (Interactive Audit & Bug Elimination)">Tester</span>: Validates every button, modal, and state handler.
+  4. <span class="redacted" data-secret="kilo-usability (Layout, HiDPI & Ergonomics)">Usability</span>: Ensures pristine layout and input ergonomics.
+  5. <span class="redacted" data-secret="kilo-qa (State Integrity & Tutorial Quality)">QA</span>: Enforces compile-clean builds and tutorial flow.
+  6. <span class="redacted" data-secret="kilo-expander (System Mechanics & Multiplayer Depth)">Expander</span>: Deepens mechanics, networking, and offline fallbacks.
+
+2. SUCCESS CRITERIA
+Each turn operates on exactly ONE component. Code must be tested, committed, and logged in concise 8-line run entries. Zero speculative bloat permitted.`
+  },
+  {
+    id: 'MEMO-99-04',
+    title: 'Security Incident: Memory Sector 0x1999 & Offset 0x0024',
+    author: 'SecOps Officer T. Sterling',
+    recipient: 'Security Review Committee',
+    date: '1999-12-08',
+    security: 'TOP SECRET // INCIDENT REPORT',
+    digest: '5566778899aabbccddeeff001122334455667788',
+    snippet: 'Uncontrolled network bridge detected between memory offset 0x0024 and KNet browser sockets.',
+    body: `INCIDENT REPORT: SEC-99-0x1999
+REPORTED BY: SecOps Officer T. Sterling
+DATE: December 8, 1999
+CLASSIFICATION: TOP SECRET // COMPROMISE DETECTED
+
+1. ANOMALY SUMMARY
+A residual gateway was identified at memory sector <span class="redacted" data-secret="0x1999 (Kernel Paging Space)">0x1999</span>, specifically targeting memory offset <span class="redacted" data-secret="0x0024 (Hex: 10 19 99 04)">0x0024</span>. 
+
+2. PACKET PAYLOAD
+Inspection of the socket buffer reveals the raw string:
+  <code>URI:kweb://10.19.99.4/classified [GATEWAY_ARMED]</code>
+
+3. MITIGATION STATUS
+The gateway cannot be severed without corrupting the entire network stack. As an alternative, access has been restricted to internal intranet routes and obscure address bar navigation. External web crawlers remain blind to this node.`
+  },
+  {
+    id: 'MEMO-99-05',
+    title: 'Passkey Cryptographic Hash Registry (Pre-Climax Enigma)',
+    author: 'Cryptographic Architecture Bureau',
+    recipient: 'Director Level Only',
+    date: '1999-12-18',
+    security: 'TOP SECRET // CIPHER PROTOCOL',
+    digest: '9900aabbccddeeff00112233445566778899aabb',
+    snippet: 'Cryptographic architecture governing the 3 key fragments distributed across Sector 0x1999 and KMatrix.',
+    body: `MEMORANDUM: AD-CIPHER-99-05
+FROM: Cryptographic Architecture Bureau
+TO: Director Level Only
+DATE: December 18, 1999
+SUBJECT: Passkey Distribution & Verification Protocol
+
+1. PHILOSOPHY OF SECRECY
+The Master Passkey governing the bridge to <span class="redacted" data-secret="KDirector (Autonomous Fleet Command Console)">KDirector</span> must NEVER be displayed in clear text across news feeds, bookmarks, or help files. Solvers must deduce the fragments through ludonarrative discovery:
+  • FRAGMENT ALPHA: Embedded in Sector 0x1999 memory offset.
+  • FRAGMENT BETA: Encoded in the 1999Hz acoustic subcarrier.
+  • FRAGMENT GAMMA: Unlocked exclusively at App #100 (KMatrix).
+
+2. VERIFICATION CHECKSUM
+When all three fragments are assembled with millennium hyphens, the complete directive authenticates against the central lock. Seek the truth in the memory dumps.`
+  }
+];
+
+let activeMemoIdx = 0;
+let redactionState = 'norm'; // 'max', 'norm', 'full'
+
+function renderMemoList(filter = '') {
+  const container = document.getElementById('memoListContainer');
+  container.innerHTML = '';
+  const q = filter.toLowerCase().trim();
+
+  MEMOS.forEach((m, idx) => {
+    if (q && !m.title.toLowerCase().includes(q) && !m.author.toLowerCase().includes(q) && !m.body.toLowerCase().includes(q) && !m.id.toLowerCase().includes(q)) {
+      return;
+    }
+
+    const item = document.createElement('div');
+    item.className = 'doc-item' + (idx === activeMemoIdx ? ' active' : '');
+    item.innerHTML = `
+      <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--amber-bright); font-weight:700;">
+        <span>${m.id}</span>
+        <span>${m.date}</span>
+      </div>
+      <div style="font-weight:700; font-size:12px; margin:2px 0;">${m.title}</div>
+      <div style="font-size:10px; color:var(--text-muted);">${m.author.split(',')[0]}</div>
+    `;
+    item.onclick = () => {
+      activeMemoIdx = idx;
+      renderMemoList(filter);
+      renderActiveMemo();
+      playKeystrokeTone();
+    };
+    container.appendChild(item);
+  });
+}
+
+function renderActiveMemo() {
+  const m = MEMOS[activeMemoIdx];
+  if (!m) return;
+
+  const contentEl = document.getElementById('memoContent');
+  const stampEl = document.getElementById('memoStamp');
+  const digestEl = document.getElementById('memoDigest');
+
+  digestEl.textContent = `SHA-256 Digest: ${m.digest}`;
+
+  if (redactionState === 'max') {
+    stampEl.textContent = 'RESTRICTED';
+    stampEl.style.color = '#ef4444';
+    stampEl.style.borderColor = '#ef4444';
+  } else if (redactionState === 'norm') {
+    stampEl.textContent = 'LEAKED (LVL 4)';
+    stampEl.style.color = '#f59e0b';
+    stampEl.style.borderColor = '#f59e0b';
+  } else {
+    stampEl.textContent = 'DECLASSIFIED';
+    stampEl.style.color = '#10b981';
+    stampEl.style.borderColor = '#10b981';
+  }
+
+  contentEl.innerHTML = `
+    <div style="border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:12px;">
+      <h2 style="color:var(--amber-bright); font-size:16px; margin-bottom:4px;">${m.title}</h2>
+      <div style="font-size:11px; color:var(--text-muted); display:grid; grid-template-columns:auto 1fr; gap:2px 10px;">
+        <strong>DOC ID:</strong> <span>${m.id}</span>
+        <strong>ORIGIN:</strong> <span>${m.author}</span>
+        <strong>RECIPIENT:</strong> <span>${m.recipient}</span>
+        <strong>RECORD DATE:</strong> <span>${m.date}</span>
+        <strong>CLEARANCE:</strong> <span style="color:var(--amber-primary);">${m.security}</span>
+      </div>
+    </div>
+    <div style="white-space:pre-wrap; line-height:1.6; font-size:12px;" id="memoBodyText">${m.body}</div>
+  `;
+
+  applyRedactionVisibility();
+}
+
+function filterMemos() {
+  const q = document.getElementById('memoSearch').value;
+  renderMemoList(q);
+}
+
+function setRedactionMode(mode) {
+  redactionState = mode;
+  document.getElementById('btnRedactMax').classList.toggle('active', mode === 'max');
+  document.getElementById('btnRedactNorm').classList.toggle('active', mode === 'norm');
+  document.getElementById('btnRedactFull').classList.toggle('active', mode === 'full');
+  renderActiveMemo();
+  playKeystrokeTone();
+}
+
+function applyRedactionVisibility() {
+  const redactedSpans = document.querySelectorAll('#memoBodyText .redacted');
+  redactedSpans.forEach(el => {
+    if (redactionState === 'full') {
+      el.classList.add('revealed');
+      el.textContent = el.getAttribute('data-secret');
+    } else if (redactionState === 'max') {
+      el.classList.remove('revealed');
+      el.textContent = '████████████████';
+    } else {
+      // Norm: hoverable
+      el.classList.remove('revealed');
+      el.textContent = '████████';
+      el.title = 'Click or inspect to view leaked text';
+      el.onclick = () => {
+        el.classList.toggle('revealed');
+        el.textContent = el.classList.contains('revealed') ? el.getAttribute('data-secret') : '████████';
+        playKeystrokeTone();
+      };
+    }
+  });
+}
+
+function exportActiveMemo() {
+  const m = MEMOS[activeMemoIdx];
+  if (!m) return;
+  const rawText = `=== AETHEL DYNAMICS CORPORATE INTRANET LEAK ===\nDOC ID: ${m.id}\nDATE: ${m.date}\nORIGIN: ${m.author}\nRECIPIENT: ${m.recipient}\nCLEARANCE: ${m.security}\nSHA-256: ${m.digest}\n\n${m.body.replace(/<[^>]+>/g, '')}\n\n[CONFIDENTIAL: NOT FOR PUBLIC DISSEMINATION]`;
+  const blob = new Blob([rawText], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${m.id}_LEAK.TXT`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* =========================================================================
+   3. MEMORY HEX INSPECTOR (SECTORS 0x1999, 0x0024, 0x7F00, 0x2000)
+   ========================================================================= */
+const SECTORS = {
+  '0x1999': generateSectorData('0x1999', 'KERNEL_ECHO_CORE\x0010.19.99.4\x00CEILING_999KB\x00CARLSBAD_0x7F\x001999HZ_SUB_LOCK\x00ROTATIONAL_FLEET_SYNC'),
+  '0x0024': generateSectorData('0x0024', 'IP_10.19.99.4:1999\x00URI:kweb://10.19.99.4/classified [GATEWAY_ARMED]\x00AIRGAP_BYPASS_ACK'),
+  '0x7F00': generateSectorData('0x7F00', 'BEACON_NODE_0x7F\x00LITHOSPHERE_WAVEGUIDE\x00CARLSBAD_SALT_VAULT\x00HASH_VERIFY_ACTIVE'),
+  '0x2000': generateSectorData('0x2000', 'Y2K_QUARANTINE_SECTOR\x00MILLENNIUM_WATCHDOG_ARMED\x00PREVENT_MEMORY_CASCADE\x00HALT_ENTROPY')
+};
+
+let currentSectorKey = '0x1999';
+let selectedByteOffset = 0;
+
+function generateSectorData(baseHex, markerString) {
+  const bytes = new Uint8Array(256);
+  // deterministic pseudorandom seed
+  let seed = parseInt(baseHex, 16);
+  for (let i = 0; i < 256; i++) {
+    seed = (seed * 9301 + 49297) % 233280;
+    bytes[i] = Math.floor((seed / 233280) * 256);
+  }
+  // Inject marker string into sector
+  for (let i = 0; i < markerString.length && (16 + i) < 256; i++) {
+    bytes[16 + i] = markerString.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function loadSector(sectorKey) {
+  currentSectorKey = sectorKey;
+  renderHexGrid();
+  inspectByte(0);
+}
+
+function renderHexGrid() {
+  const container = document.getElementById('hexGrid');
+  container.innerHTML = '';
+  const bytes = SECTORS[currentSectorKey];
+  if (!bytes) return;
+
+  const baseOffset = parseInt(currentSectorKey, 16);
+
+  for (let row = 0; row < bytes.length; row += 16) {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'hex-row';
+
+    // Offset
+    const offsetStr = '0x' + (baseOffset + row).toString(16).toUpperCase().padStart(4, '0');
+    let bytesHtml = '';
+    let asciiHtml = '';
+
+    for (let col = 0; col < 16; col++) {
+      const idx = row + col;
+      if (idx < bytes.length) {
+        const b = bytes[idx];
+        const hexVal = b.toString(16).toUpperCase().padStart(2, '0');
+        const isSel = idx === selectedByteOffset;
+        bytesHtml += `<span class="hex-byte${isSel ? ' selected' : ''}" data-idx="${idx}" onclick="inspectByte(${idx})">${hexVal}</span> `;
+
+        const char = (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
+        asciiHtml += `<span class="hex-byte${isSel ? ' selected' : ''}" data-idx="${idx}" onclick="inspectByte(${idx})">${char}</span>`;
+      }
+    }
+
+    rowEl.innerHTML = `
+      <span class="hex-offset">${offsetStr}</span>
+      <span class="hex-bytes">${bytesHtml}</span>
+      <span class="hex-ascii">${asciiHtml}</span>
+    `;
+    container.appendChild(rowEl);
+  }
+}
+
+function inspectByte(idx) {
+  selectedByteOffset = idx;
+  const bytes = SECTORS[currentSectorKey];
+  if (!bytes || idx >= bytes.length) return;
+
+  const b = bytes[idx];
+  const baseOffset = parseInt(currentSectorKey, 16);
+  const totalOffset = baseOffset + idx;
+
+  document.getElementById('inspOffset').textContent = `0x${totalOffset.toString(16).toUpperCase().padStart(4, '0')} (${totalOffset})`;
+  document.getElementById('inspHex').textContent = `0x${b.toString(16).toUpperCase().padStart(2, '0')} / ${b}`;
+  document.getElementById('inspBin').textContent = b.toString(2).padStart(8, '0');
+  
+  const char = (b >= 32 && b <= 126) ? `'${String.fromCharCode(b)}'` : "'.' [NON-PRINTABLE]";
+  document.getElementById('inspAscii').textContent = char;
+
+  // Mock Disassembly
+  const asmOps = [
+    `MOV EAX, [EBX+0x${idx.toString(16)}]`,
+    `CMP EAX, 0x1999`,
+    `JNE 0x${(baseOffset + 0x40).toString(16)}`,
+    `TEST EDX, EDX`,
+    `PUSH 0x${b.toString(16)}`,
+    `CALL [GATEWAY_SOCKET]`,
+    `INT 3 ; [BREAKPOINT]`,
+    `XOR EAX, EAX`,
+    `RET`
+  ];
+  document.getElementById('inspAsm').textContent = asmOps[idx % asmOps.length];
+
+  // Refresh selected highlighting
+  document.querySelectorAll('.hex-byte.selected').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll(`.hex-byte[data-idx="${idx}"]`).forEach(el => el.classList.add('selected'));
+  playKeystrokeTone();
+}
+
+function jumpHexOffset() {
+  const val = document.getElementById('hexJumpInput').value.trim();
+  const off = parseInt(val, 16);
+  if (!isNaN(off) && off >= 0 && off < 256) {
+    inspectByte(off);
+    const target = document.querySelector(`.hex-byte[data-idx="${off}"]`);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function searchHexText() {
+  const val = document.getElementById('hexSearchInput').value.trim().toLowerCase();
+  if (!val) return;
+  const bytes = SECTORS[currentSectorKey];
+  for (let i = 0; i < bytes.length; i++) {
+    const ch = String.fromCharCode(bytes[i]).toLowerCase();
+    if (ch === val[0]) {
+      // Check multi-character match
+      let match = true;
+      for (let j = 0; j < val.length; j++) {
+        if (i + j >= bytes.length || String.fromCharCode(bytes[i + j]).toLowerCase() !== val[j]) {
+          match = false;
+          break;
+        }
+      }
+      if (match) {
+        inspectByte(i);
+        const target = document.querySelector(`.hex-byte[data-idx="${i}"]`);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
+      }
+    }
+  }
+  alert(`Text '${val}' not found in current sector.`);
+}
+
+function downloadRawSector() {
+  const bytes = SECTORS[currentSectorKey];
+  const blob = new Blob([bytes], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `SECTOR_${currentSectorKey}.DMP`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* =========================================================================
+   4. TELEMETRY & PACKET SNIFFER
+   ========================================================================= */
+let snifferActive = true;
+let snifferFilterVal = 'ALL';
+const packetBuffer = [];
+let packetTimer = null;
+
+const MOCK_PACKETS = [
+  { proto: 'SYN', src: '10.19.99.12:1999', dst: '10.19.99.4:1999', len: 64, info: '[SYN] SEQ=0x19990001 WIN=65535 [ECHO_SUB]' },
+  { proto: 'ACK', src: '10.19.99.4:1999', dst: '10.19.99.12:1999', len: 64, info: '[ACK] ACK=0x19990002 [HARMONIC_1999HZ_LOCKED]' },
+  { proto: 'ECHO', src: '10.19.99.4:1999', dst: '255.255.255.255:1999', len: 128, info: '[ECHO_BEACON] CARLSBAD_0x7F: MEM_SECTOR_0x1999_SYNCHRONIZED' },
+  { proto: 'ICMP', src: '10.19.99.1', dst: '10.19.99.4', len: 84, info: 'ECHO REQUEST (PING) -> Latency: 1.2ms' },
+  { proto: 'DATA', src: '10.19.99.4:1999', dst: '10.19.99.12:1999', len: 256, info: 'HTTP 200 OK -> URI:kweb://10.19.99.4/classified [STREAM_ACTIVE]' }
+];
+
+function startSniffer() {
+  if (packetTimer) clearInterval(packetTimer);
+  packetTimer = setInterval(() => {
+    if (!snifferActive) return;
+    const pktTemplate = MOCK_PACKETS[Math.floor(Math.random() * MOCK_PACKETS.length)];
+    const now = new Date();
+    const ts = '1999-12-28 ' + now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
+
+    const pkt = {
+      id: packetBuffer.length + 1,
+      time: ts,
+      proto: pktTemplate.proto,
+      src: pktTemplate.src,
+      dst: pktTemplate.dst,
+      len: pktTemplate.len,
+      info: pktTemplate.info
+    };
+
+    packetBuffer.unshift(pkt);
+    if (packetBuffer.length > 50) packetBuffer.pop();
+    renderPackets();
+  }, 2400);
+}
+
+function renderPackets() {
+  const tbody = document.getElementById('packetTableBody');
+  tbody.innerHTML = '';
+
+  const filtered = packetBuffer.filter(p => {
+    if (snifferFilterVal === 'ALL') return true;
+    return p.proto === snifferFilterVal;
+  });
+
+  filtered.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:#94a3b8;">${p.time}</td>
+      <td style="color:var(--cyan-net); font-family:monospace;">${p.src}</td>
+      <td style="color:var(--amber-bright); font-family:monospace;">${p.dst}</td>
+      <td><span style="color:#fff; background:#1e293b; padding:1px 5px; border-radius:2px;">${p.proto}</span></td>
+      <td>${p.len}B</td>
+      <td style="color:#e2e8f0;">${p.info}</td>
+    `;
+    tr.onclick = () => showPacketDetail(p);
+    tbody.appendChild(tr);
+  });
+}
+
+function showPacketDetail(p) {
+  const box = document.getElementById('packetDetailView');
+  const header = document.getElementById('packetDetailHeader');
+  const body = document.getElementById('packetDetailBody');
+  box.style.display = 'block';
+
+  header.textContent = `FRAME #${p.id} DETAIL // PROTO: ${p.proto} // TIMESTAMP: ${p.time}`;
+  body.textContent = 
+`[ETHERNET II FRAME]
+  Destination: 00:04:19:99:7F:00 (Carlsbad Gateway Controller)
+  Source:      00:19:99:10:04:12 (Aethel Dynamics Subnet Bridge)
+  Type:        IPv4 (0x0800)
+
+[INTERNET PROTOCOL VERSION 4]
+  Source Address:      ${p.src}
+  Destination Address: ${p.dst}
+  Header Checksum:     0x1999 [VALID]
+  Time to Live:        64 Hops
+
+[TRANSMISSION PAYLOAD (${p.len} BYTES)]
+  ${p.info}
+  RAW HEX DECODE:
+  0000  45 00 00 54 19 99 40 00  40 06 10 19 99 04 0a 13  E..T..@.@.......
+  0010  99 04 07 cf 07 cf 00 00  19 99 00 00 50 18 ff ff  ............P...
+  0020  75 72 69 3a 6b 77 65 62  3a 2f 2f 31 30 2e 31 39  uri:kweb://10.19
+  0030  2e 39 39 2e 34 2f 63 6c  61 73 73 69 66 69 65 64  .99.4/classified`;
+}
+
+function toggleSniffer() {
+  snifferActive = !snifferActive;
+  const btn = document.getElementById('btnSnifferToggle');
+  const txt = document.getElementById('snifferStatusText');
+  if (snifferActive) {
+    btn.textContent = '⏸️ Pause Stream';
+    txt.textContent = 'SNIFFING RAW SOCKET 10.19.99.4:1999';
+    txt.style.color = 'var(--green-bright)';
+  } else {
+    btn.textContent = '▶️ Resume Stream';
+    txt.textContent = 'SNIFFER PAUSED';
+    txt.style.color = 'var(--amber-bright)';
+  }
+}
+
+function clearSniffer() {
+  packetBuffer.length = 0;
+  renderPackets();
+  document.getElementById('packetDetailView').style.display = 'none';
+}
+
+function filterPackets(val) {
+  snifferFilterVal = val;
+  renderPackets();
+}
+
+/* =========================================================================
+   5. SKUNKWORKS CLI TERMINAL
+   ========================================================================= */
+const termHistory = [];
+let historyIdx = -1;
+
+function initTerminal() {
+  const out = document.getElementById('termLogs');
+  out.textContent = 
+`===================================================================
+AETHEL DYNAMICS CORPORATE INTRANET // SKUNKWORKS CLI SHELL v1.99
+HOST: 10.19.99.4 | SECTOR: 0x1999 | CARLSBAD BUNKER SUB-STATION 0x7F
+===================================================================
+Airgap Bypass Link: SYNCHRONIZED (1999 Hz Carrier Locked)
+Type 'help' to review authorized intranet system commands.
+`;
+}
+
+function handleTermKey(e) {
+  if (e.key === 'Enter') {
+    const input = document.getElementById('termInput');
+    const cmd = input.value.trim();
+    if (!cmd) return;
+
+    termHistory.push(cmd);
+    historyIdx = termHistory.length;
+    input.value = '';
+    execTermCommand(cmd);
+    playKeystrokeTone();
+  } else if (e.key === 'ArrowUp') {
+    if (historyIdx > 0) {
+      historyIdx--;
+      document.getElementById('termInput').value = termHistory[historyIdx] || '';
+    }
+  } else if (e.key === 'ArrowDown') {
+    if (historyIdx < termHistory.length - 1) {
+      historyIdx++;
+      document.getElementById('termInput').value = termHistory[historyIdx] || '';
+    } else {
+      historyIdx = termHistory.length;
+      document.getElementById('termInput').value = '';
+    }
+  }
+}
+
+function execTermCommand(rawCmd) {
+  const out = document.getElementById('termLogs');
+  const parts = rawCmd.split(' ');
+  const cmd = parts[0].toLowerCase();
+  const arg = parts.slice(1).join(' ');
+
+  let res = `\nCARLSBAD-10.19.99.4# ${rawCmd}\n`;
+
+  if (cmd === 'help') {
+    res += `AUTHORIZED DIRECTIVES:
+  status        - Query Node 10.19.99.4 health, subcarrier sync, and memory watchdog
+  ping <host>   - Send ICMP echo packets across intranet subnet
+  traceroute    - Trace multi-hop packets to Carlsbad Bunker 0x7F
+  cat <memo_id> - Display classified memo contents (e.g. 'cat memo-01')
+  dump 0x1999   - Stream Sector 0x1999 memory contents to terminal
+  scan          - Probe active nodes across 10.19.99.0/24 subnet
+  audio <mode>  - Toggle audio subcarrier (on, off, 1999hz, 432hz)
+  matrix        - Probe gateway socket for residual anomalous packets
+  clear         - Flush terminal display buffer`;
+  } else if (cmd === 'status') {
+    res += `NODE STATUS:
+  ADDRESS:       10.19.99.4 [Intranet Corporate Core]
+  SUBNET MASK:   255.255.255.0
+  CARRIER SYNC:  1999 Hz (Locked, YM2612 Channel 6)
+  ROM INTEGRITY: 999 KB Ceiling Enforced (Zero Overflow)
+  STATION:       Carlsbad Salt Vault Relay [Node 0x7F]
+  GATEWAY STATE: Armed [URI: kweb://10.19.99.4/classified]`;
+  } else if (cmd === 'ping') {
+    const target = arg || '10.19.99.4';
+    res += `PING ${target} (56 bytes of data):\n64 bytes from ${target}: icmp_seq=1 ttl=64 time=1.12 ms\n64 bytes from ${target}: icmp_seq=2 ttl=64 time=0.98 ms\n64 bytes from ${target}: icmp_seq=3 ttl=64 time=1.04 ms\n--- ${target} ping statistics ---\n3 packets transmitted, 3 received, 0% packet loss, rtt avg = 1.04 ms`;
+  } else if (cmd === 'traceroute') {
+    res += `traceroute to 10.19.99.4 (10.19.99.4), 30 hops max, 38 byte packets
+ 1  10.19.99.1 (Intranet-Gateway)  0.42 ms  0.38 ms  0.40 ms
+ 2  10.19.99.12 (Subcarrier-Relay)  0.88 ms  0.82 ms  0.85 ms
+ 3  10.19.99.4 (Carlsbad-Core-0x7F)  1.02 ms  0.98 ms  1.01 ms`;
+  } else if (cmd === 'cat') {
+    const match = MEMOS.find(m => m.id.toLowerCase().includes(arg.toLowerCase()));
+    if (match) {
+      res += `=== ${match.id}: ${match.title} ===\n${match.body.replace(/<[^>]+>/g, '')}`;
+    } else {
+      res += `File not found. Try 'cat memo-01' through 'cat memo-05'.`;
+    }
+  } else if (cmd === 'dump') {
+    res += `0x1999:0000  4B 45 52 4E 45 4C 5F 45  43 48 4F 5F 43 4F 52 45  KERNEL_ECHO_CORE\n` +
+           `0x1999:0010  31 30 2E 31 39 2E 39 39  2E 34 00 00 00 00 00 00  10.19.99.4......\n` +
+           `0x1999:0020  43 45 49 4C 49 4E 47 5F  39 39 39 4B 42 00 00 00  CEILING_999KB...\n` +
+           `0x1999:0030  43 41 52 4C 53 42 41 44  5F 30 78 37 46 00 00 00  CARLSBAD_0x7F...\n` +
+           `0x1999:0040  31 39 39 39 48 5A 5F 53  55 42 5F 4C 4F 43 4B 00  1999HZ_SUB_LOCK.`;
+  } else if (cmd === 'scan') {
+    res += `Scanning subnet 10.19.99.0/24...\n[+] 10.19.99.1   [Gateway Router - Port 80, 23 OPEN]\n[+] 10.19.99.4   [Project Echo Node - Port 1999, 80 OPEN]\n[+] 10.19.99.12  [Subcarrier RF Beacon - Port 1999 OPEN]\n[+] 10.19.99.127 [Carlsbad Salt Vault Core - AIRGAP ARMED]\nScan complete. 4 active hosts discovered.`;
+  } else if (cmd === 'matrix') {
+    res += `[RESIDUAL SOCKET TRACE DETECTED]\n>> Sector 0x1999: Destination resolves to App #100 ('KMatrix').\n>> Passkey fragment verified: Passkey format requires 3 hyphenated sections.\n>> Seek KMatrix terminal to conclude the convergence.`;
+  } else if (cmd === 'audio') {
+    if (arg === 'on') { if (!audioEnabled) toggleAudio(); res += `Audio subcarrier activated.`; }
+    else if (arg === 'off') { if (audioEnabled) toggleAudio(); res += `Audio subcarrier silenced.`; }
+    else if (['1999hz', '432hz', 'slapbass', 'spc_echo'].includes(arg)) {
+      document.getElementById('audioPresetSelect').value = arg;
+      changeAudioPreset();
+      res += `Preset switched to '${arg}'.`;
+    } else {
+      res += `Usage: audio <on|off|1999hz|432hz|slapbass|spc_echo>`;
+    }
+  } else if (cmd === 'clear') {
+    out.textContent = '';
+    return;
+  } else {
+    res += `Unknown directive '${cmd}'. Type 'help' for available system commands.`;
+  }
+
+  out.textContent += res;
+  out.scrollTop = out.scrollHeight;
+}
+
+/* =========================================================================
+   6. CRYPTOGRAPHIC VERIFICATION STATION
+   ========================================================================= */
+async function computeSha256(text) {
+  const enc = new TextEncoder();
+  const data = enc.encode(text.trim());
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function verifyFragment() {
+  const input = document.getElementById('verifyInput');
+  const result = document.getElementById('verifyResult');
+  const text = input.value.trim();
+
+  if (!text) {
+    result.textContent = 'Please enter text to calculate checksum.';
+    return;
+  }
+
+  const hash = await computeSha256(text);
+  let statusHtml = `<div><strong>Calculated SHA-256:</strong> <span style="color:var(--amber-bright); font-family:monospace;">${hash}</span></div>`;
+
+  // Check known candidate signatures
+  if (text.toUpperCase() === '10.19.99.4' || text.toLowerCase() === 'kweb://10.19.99.4/classified') {
+    statusHtml += `<div style="color:var(--green-bright); margin-top:6px; font-weight:700;">★ MATCH VERIFIED: Corporate Intranet Subnet Target Confirmed.</div>`;
+  } else if (text.toUpperCase().includes('1999') || text.toLowerCase().includes('carlsbad')) {
+    statusHtml += `<div style="color:var(--cyan-net); margin-top:6px; font-weight:700;">★ PARTIAL HARMONIC MATCH: Anomaly Sector Resonance Detected.</div>`;
+  } else {
+    statusHtml += `<div style="color:var(--text-muted); margin-top:6px;">Checksum computed. No exact pre-climax directive match in current sector.</div>`;
+  }
+
+  result.innerHTML = statusHtml;
+  playKeystrokeTone();
+}
+
+/* =========================================================================
+   7. TAB NAVIGATION CONTROLLER
+   ========================================================================= */
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+  const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+  if (btn) btn.classList.add('active');
+
+  const pane = document.getElementById(`tab-${tabId}`);
+  if (pane) pane.classList.add('active');
+
+  playKeystrokeTone();
+}
+
+// Initial Boot Sequence
+window.addEventListener('DOMContentLoaded', () => {
+  renderMemoList();
+  renderActiveMemo();
+  loadSector('0x1999');
+  startSniffer();
+  initTerminal();
+});
+</script>
+</body>
+</html>
