@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KTrader
+  kilo_tester: KType
   kilo_usability: KPaint
   kilo_graphics: KMech
   kilo_qa: KDragon
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-creator
-  app: "kweb://cybercafe"
-  timestamp: "2026-09-24T11:52:00Z"
+  agent: kilo-tester
+  app: KTrader
+  timestamp: "2026-09-24T12:45:00Z"
 last_planner_run: "2026-09-24T05:46:00Z"
 ---
 
@@ -110,9 +110,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KMech`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KTrader`
+- **Current Target**: `KType`
 - **Upcoming Queue**:
-  `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`.
+  `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KPaint`
@@ -201,6 +201,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-24T12:45:00Z — kilo-tester: KTrader (Interactive UI Audit, Persistence & Glint Remediation)**
+  - Status: PASS ✅ (4 issues identified, 4 fixed; 0 regressions).
+  - Navigation & Hotkeys: Added [1-9] keyboard routing for all galaxy connections; wired shipyard [R] refuel cue.
+  - State Persistence: Implemented JSON voyage backup export/import alongside [F5]/[F9] quicksave/quickload.
+  - Combat & Feedback: Added hotkey hints to combat actions; wired Dreadnought combat bonus & audio alerts.
+  - Usability & Directives: Added click-to-dismiss toast; added modal close buttons; purged moving specular sheens.
+  - Verification: Clean Vite build (351ms); `security_lint.py` 100% PASS; `ktrader.html` 78.8 KB (<999 KB ceiling).
+
 - **2026-09-24T11:52:00Z — kilo-creator: kweb://cybercafe (Underground BBS & ASCII Studio)**
   - Status: PASS ✅ (Created `cybercafe.html` [58.1 KB]; fully interactive Web 1.0 destination; 0 regressions).
   - Terminal Lounge & Dispenser: Interactive 8-booth LAN status, refreshment kiosk with procedural receipt printing & audio, 56k V.90 throughput test.
@@ -231,12 +239,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Cyberdeck Tools: Added Nanite Patch (MEM restore) and ICE Probe (PIN sniffer) with Web Audio and Win32 sound synthesis.
   - Economy & Tuning: Rebalanced RAM/CPU upgrades, ICE counter tools, and proxy heat reduction; updated help/guide.
   - Verification: MSVC C clean build (`KCyber.exe` 29.7 KB); Vite clean build (386ms, `kcyber.html` 65.6 KB); security lint 100% PASS; icons clean; <999KB ceiling.
-
-- **2026-09-24T07:50:00Z — kilo-usability: KFarm (Toast Relocation & Seed Selection Usability Polish)**
-  - Status: PASS ✅ (Bottom toast occlusion resolved; seed ergonomics enhanced; 0 regressions).
-  - Toast De-occlusion: Relocated web toast to top-right safe zone with explicit close button, click-to-dismiss, and debounced timeout.
-  - Native C Alignment: Relocated floating native toast to top safe zone (ty: 54), preventing tile and button occlusion.
-  - Seed Ergonomics: Re-engineered seed radios into styled selection chips with distinct active badges and shortcut badges.
-  - Layout & Window: Centered container layout and tuned App.jsx window dimensions to 640x780 for comfortable button padding.
-  - Verification: MSVC C clean build (`KFarm.exe` 135.2 KB); clean Vite build (382ms, `kfarm.html` 88.9 KB); security lint 100% PASS; <999KB ceiling.
 

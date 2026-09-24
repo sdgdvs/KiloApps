@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-24T07:50:00Z — kilo-usability: KFarm (Toast Relocation & Seed Selection Usability Polish)**
+  - Status: PASS ✅ (Bottom toast occlusion resolved; seed ergonomics enhanced; 0 regressions).
+  - Toast De-occlusion: Relocated web toast to top-right safe zone with explicit close button, click-to-dismiss, and debounced timeout.
+  - Native C Alignment: Relocated floating native toast to top safe zone (ty: 54), preventing tile and button occlusion.
+  - Seed Ergonomics: Re-engineered seed radios into styled selection chips with distinct active badges and shortcut badges.
+  - Layout & Window: Centered container layout and tuned App.jsx window dimensions to 640x780 for comfortable button padding.
+  - Verification: MSVC C clean build (`KFarm.exe` 135.2 KB); clean Vite build (382ms, `kfarm.html` 88.9 KB); security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-24T05:46:00Z — kilo-planner: 24h Fleet Planning & Queue Compaction**
   - Status: PASS ✅ (24h velocity assessed; queues rebalanced; logs compacted).
   - Fleet Velocity: 15 passes completed in 24h; 0 regressions; 104/104 icons unique and valid.
