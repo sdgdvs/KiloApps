@@ -150,6 +150,8 @@ typedef struct {
     int riftsClosed;
     int scenario; // 1 to 6
     int won;
+    EchoStep echoBuffer[MAX_ECHO_STEPS];
+    int echoCount;
 } GameState;
 
 static GameState g_game;
@@ -157,6 +159,8 @@ static int g_appState = STATE_SPLASH;
 static int g_tutorialStep = 0;
 static HWND g_hwnd = NULL;
 static int g_animTick = 0;
+static int g_toastTimer = 0;
+static char g_toastMsg[64] = {0};
 
 /* Echo System */
 static int g_isRecordingEcho = 0;
@@ -442,18 +446,24 @@ static void ResetGame(int scenario) {
     g_isPlayingEcho = 0;
     g_echoCount = 0;
     g_hasEchoGhost = 0;
+    g_game.echoCount = 0;
+    memset(g_game.echoBuffer, 0, sizeof(g_game.echoBuffer));
 
     PropagateCausality(0);
 }
 
 /* Save & Load */
 static void Quicksave() {
+    memcpy(g_game.echoBuffer, g_echoBuffer, sizeof(g_echoBuffer));
+    g_game.echoCount = g_echoCount;
     HANDLE hFile = CreateFileA("kchrono_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD written = 0;
         WriteFile(hFile, &g_game, sizeof(GameState), &written, NULL);
         CloseHandle(hFile);
         PlaySfx(7); // Save chime
+        g_toastTimer = 60;
+        lstrcpyA(g_toastMsg, "QUICKSAVE COMPLETE (F5)");
     }
 }
 
@@ -463,9 +473,18 @@ static int Quickload() {
         DWORD read = 0;
         ReadFile(hFile, &g_game, sizeof(GameState), &read, NULL);
         CloseHandle(hFile);
+        memcpy(g_echoBuffer, g_game.echoBuffer, sizeof(g_echoBuffer));
+        g_echoCount = g_game.echoCount;
+        g_isRecordingEcho = 0;
+        g_isPlayingEcho = 0;
+        g_hasEchoGhost = 0;
         PlaySfx(8); // Load chime
+        g_toastTimer = 60;
+        lstrcpyA(g_toastMsg, "QUICKLOAD COMPLETE (F9)");
         return 1;
     }
+    g_toastTimer = 60;
+    lstrcpyA(g_toastMsg, "NO SAVE FILE FOUND");
     return 0;
 }
 
@@ -1203,6 +1222,25 @@ static void DrawGame(HDC hdc, RECT* rcClient) {
         }
         g_particleCount = alive;
 
+        // Toast Notification
+        if (g_toastTimer > 0) {
+            int tw = 210, th = 26;
+            int tx = w - tw - 16, ty = 50;
+            HBRUSH bgBrush = CreateSolidBrush(RGB(12, 18, 34));
+            HPEN borderPen = CreatePen(PS_SOLID, 1, RGB(56, 189, 248));
+            HGDIOBJ oldBrush = SelectObject(memDC, bgBrush);
+            HGDIOBJ oldPen = SelectObject(memDC, borderPen);
+            RoundRect(memDC, tx, ty, tx + tw, ty + th, 6, 6);
+            SelectObject(memDC, oldBrush);
+            SelectObject(memDC, oldPen);
+            DeleteObject(bgBrush);
+            DeleteObject(borderPen);
+
+            SetTextColor(memDC, RGB(248, 250, 252));
+            SetBkMode(memDC, TRANSPARENT);
+            TextOutA(memDC, tx + 10, ty + 5, g_toastMsg, lstrlenA(g_toastMsg));
+        }
+
         // Bottom Controls Hint
         SetTextColor(memDC, RGB(148, 163, 184));
         TextOutA(memDC, 20, h - 30, "[WASD/Arrows] Move  [Space] Wait  [1/2/3/Tab] Epoch  [R] Rec  [P] Echo  [F1/H] Help  [F5/F9] Save/Load  [Esc] Menu", 108);
@@ -1241,6 +1279,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         }
         case WM_TIMER: {
             g_animTick++;
+            if (g_toastTimer > 0) g_toastTimer--;
             InvalidateRect(hwnd, NULL, FALSE);
             return 0;
         }
@@ -1269,7 +1308,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 } else if (wParam == '6') {
                     ResetGame(6);
                     g_appState = STATE_PLAYING;
-                } else if (wParam == 'C' || wParam == 'c') {
+                } else if (wParam == 'C' || wParam == 'c' || wParam == VK_F9) {
                     if (Quickload()) {
                         g_appState = STATE_PLAYING;
                     }

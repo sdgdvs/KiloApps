@@ -678,25 +678,26 @@
         /* HUD Floating Notification */
         .toast {
             position: fixed;
-            bottom: 44px;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 52px;
+            right: 18px;
             background: rgba(12, 18, 34, 0.95);
             border: 1px solid var(--border-bright);
-            padding: 6px 16px;
-            border-radius: 20px;
+            padding: 8px 18px;
+            border-radius: 4px;
             font-size: 12px;
             font-weight: bold;
             color: var(--text-bright);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
-            pointer-events: none;
+            pointer-events: auto;
+            cursor: pointer;
             opacity: 0;
+            transform: translateY(-8px);
             transition: opacity 0.2s ease, transform 0.2s ease;
             z-index: 1000;
         }
         .toast.visible {
             opacity: 1;
-            transform: translate(-50%, -6px);
+            transform: translateY(0);
         }
     </style>
 </head>
@@ -1046,9 +1047,46 @@
                         ↻ Reset First-Run Onboarding Tutorial
                     </button>
                 </div>
+                <div>
+                    <button class="btn-ctrl" id="btnSettingsMenu" style="width: 100%; border: 1px solid var(--border-bright);">
+                        ⮌ Return to Main Menu
+                    </button>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn-ctrl" id="btnSettingsDismiss">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Victory Overlay -->
+    <div class="overlay" id="victoryOverlay">
+        <div class="modal-card" style="text-align: center; max-width: 460px;">
+            <div class="modal-header">
+                <div class="modal-title" style="color: var(--accent-green);"><span>🎉</span> TIMELINE STABILIZED</div>
+                <button class="btn-ctrl" id="btnVictoryClose">✕</button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <h3 id="victoryTitle" style="color: var(--text-bright); margin-bottom: 8px;">Scenario Complete!</h3>
+                <p id="victoryDesc" style="color: var(--text-normal); margin-bottom: 16px; font-size: 13px;">
+                    Temporal anchor successfully established. Reality coherence maintained.
+                </p>
+                <div style="background: var(--bg-card); padding: 12px; border-radius: 4px; border: 1px solid var(--border-dim); margin-bottom: 16px; font-size: 12px; display: flex; justify-content: space-around;">
+                    <div>Turns: <b id="victoryTurns" style="color: var(--border-bright);">0</b></div>
+                    <div>Paradox Strain: <b id="victoryStrain" style="color: var(--accent-green);">0%</b></div>
+                    <div>Final Epoch: <b id="victoryEpoch" style="color: var(--epoch-beta);">BETA</b></div>
+                </div>
+                <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                    <button class="btn-ctrl" id="btnVictoryNext" style="background: var(--epoch-beta); color: #000; font-weight: bold; padding: 8px 16px;">
+                        Next Scenario [Enter]
+                    </button>
+                    <button class="btn-ctrl" id="btnVictoryReplay" style="padding: 8px 16px;">
+                        Replay [R]
+                    </button>
+                    <button class="btn-ctrl" id="btnVictoryMenu" style="padding: 8px 16px;">
+                        Main Menu [Esc]
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1365,9 +1403,12 @@
                 this.history = [];
                 this.ripples = [];
                 this.particles = [];
+                this.won = false;
 
                 this.buildScenarioMaps(scenario.id);
                 this.saveUndoState();
+                this.propagateCausality(false);
+                audio.setEpochDrone(this.currentEpoch);
                 this.logEvent(`[TIMELINE INITIALIZED] Scenario: ${scenario.name}`, 'ripple');
             }
 
@@ -1829,6 +1870,12 @@
                     if (e.type === 'phantom') {
                         e.y += e.dir;
                         if (e.y <= 4 || e.y >= 11) e.dir *= -1;
+                        if (e.x === this.player.x && e.y === this.player.y) {
+                            this.addParadoxStrain(15, "Phantom phase collision");
+                            this.spawnRippleEffect(this.player.x * TILE_SIZE + 16, this.player.y * TILE_SIZE + 16);
+                            audio.playAlarm();
+                            this.logEvent("[TEMPORAL DISPLACEMENT] Phased with Tachyon Anomaly! Paradox strain spiked.", "danger");
+                        }
                     }
                 });
 
@@ -1845,10 +1892,14 @@
                 }
 
                 // Check scenario victory condition
-                if (this.currentScenario.winCondition(this)) {
+                if (this.currentScenario.winCondition(this) && !this.won) {
+                    this.won = true;
                     audio.playVictory();
                     this.logEvent("MISSION OBJECTIVE COMPLETE: Temporal Anchor Set.", "success");
                     showToast("🎉 SCENARIO SUCCESSFUL!");
+                    if (typeof showVictoryOverlay === 'function') {
+                        showVictoryOverlay(this);
+                    }
                 }
 
                 // Re-evaluate causal dependencies
@@ -2095,10 +2146,22 @@
                     this.inventory = data.inventory || [];
                     this.echoBuffer = data.echoBuffer || [];
                     this.grids = data.grids;
-                    this.entities = data.entities;
+                    this.entities = data.entities || { alpha: [], beta: [], gamma: [] };
                     this.isRecordingEcho = false;
                     this.isPlayingEcho = false;
                     this.echoGhost = null;
+                    this.won = false;
+                    this.history = [];
+                    this.saveUndoState();
+
+                    audio.setEpochDrone(this.currentEpoch);
+                    this.propagateCausality(false);
+                    if (typeof selectedScenarioIndex !== 'undefined') {
+                        selectedScenarioIndex = Math.max(0, SCENARIOS.indexOf(sc));
+                    }
+                    if (typeof updateUI === 'function') {
+                        updateUI();
+                    }
 
                     audio.playTone(900, 0.1, 'sine', 0.2);
                     setTimeout(() => audio.playTone(700, 0.15, 'sine', 0.2), 80);
@@ -2912,12 +2975,15 @@
             });
         }
 
+        let toastTimeout = null;
         function showToast(msg) {
             const toast = document.getElementById('toastNotification');
             toast.textContent = msg;
             toast.classList.add('visible');
-            setTimeout(() => {
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
                 toast.classList.remove('visible');
+                toastTimeout = null;
             }, 2400);
         }
 
@@ -2944,18 +3010,54 @@
                 e.preventDefault();
                 const help = document.getElementById('helpOverlay');
                 if (help.classList.contains('active')) {
-                    help.classList.remove('active');
+                    closeModal('helpOverlay');
                 } else {
-                    closeAllOverlays();
                     help.classList.add('active');
                 }
                 return;
             }
+
+            // If splash is active, handle splash menu hotkeys
+            const splash = document.getElementById('splashOverlay');
+            if (splash && splash.classList.contains('active')) {
+                if (e.key === 'n' || e.key === 'N' || e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    document.getElementById('btnSplashNew').click();
+                    return;
+                }
+                if (e.key === 'c' || e.key === 'C') {
+                    if (!document.getElementById('btnSplashContinue').disabled) {
+                        e.preventDefault();
+                        document.getElementById('btnSplashContinue').click();
+                        return;
+                    }
+                }
+                if (e.key === 's' || e.key === 'S') {
+                    e.preventDefault();
+                    document.getElementById('btnSplashScenarios').click();
+                    return;
+                }
+                if (e.key >= '1' && e.key <= '6') {
+                    e.preventDefault();
+                    const sIdx = parseInt(e.key, 10) - 1;
+                    if (SCENARIOS[sIdx]) {
+                        selectedScenarioIndex = sIdx;
+                        gameStarted = true;
+                        closeAllOverlays();
+                        engine.initScenario(SCENARIOS[sIdx]);
+                        return;
+                    }
+                }
+                return;
+            }
+
             if (e.key === 'Escape') {
                 const activeModal = document.querySelector('.overlay.active');
                 if (activeModal) {
-                    if (activeModal.id !== 'splashOverlay') {
-                        closeAllOverlays();
+                    if (activeModal.id === 'victoryOverlay') {
+                        document.getElementById('btnVictoryMenu').click();
+                    } else if (activeModal.id !== 'splashOverlay') {
+                        closeModal(activeModal.id);
                     }
                 } else {
                     document.getElementById('settingsOverlay').classList.add('active');
@@ -2963,21 +3065,37 @@
                 return;
             }
 
-            // Dismiss overlays with Enter or Space
+            // Handle active modal key bindings
             const activeModal = document.querySelector('.overlay.active');
             if (activeModal) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    if (activeModal.id === 'tutorialOverlay') {
+                if (activeModal.id === 'victoryOverlay') {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        document.getElementById('btnVictoryNext').click();
+                        return;
+                    }
+                    if (e.key === 'r' || e.key === 'R') {
+                        e.preventDefault();
+                        document.getElementById('btnVictoryReplay').click();
+                        return;
+                    }
+                } else if (activeModal.id === 'tutorialOverlay') {
+                    if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
                         localStorage.setItem('kchrono_tutorialSeen', 'true');
                         closeAllOverlays();
                         return;
-                    } else if (activeModal.id === 'helpOverlay') {
+                    }
+                } else if (activeModal.id === 'helpOverlay') {
+                    if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        closeAllOverlays();
+                        closeModal('helpOverlay');
                         return;
-                    } else if (activeModal.id === 'scenarioOverlay' && e.key === 'Enter') {
+                    }
+                } else if (activeModal.id === 'scenarioOverlay') {
+                    if (e.key === 'Enter') {
                         e.preventDefault();
+                        gameStarted = true;
                         closeAllOverlays();
                         engine.initScenario(SCENARIOS[selectedScenarioIndex]);
                         return;
@@ -3135,16 +3253,52 @@
             document.getElementById('nodeInspector').innerHTML = `<b>${name}</b> at (${x}, ${y})<br><span style="color: #94a3b8;">${causality}</span>`;
         }
 
-        // Close overlays helper
+        // Overlay state & helper
+        let gameStarted = false;
         function closeAllOverlays() {
             document.querySelectorAll('.overlay').forEach(el => el.classList.remove('active'));
         }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.remove('active');
+            if (!gameStarted && modalId !== 'splashOverlay') {
+                document.getElementById('splashOverlay').classList.add('active');
+            }
+        }
+
+        function showVictoryOverlay(engine) {
+            document.getElementById('victoryTitle').textContent = `Scenario #${engine.currentScenario.id} Cleared!`;
+            document.getElementById('victoryDesc').textContent = `Objective: ${engine.currentScenario.objective}`;
+            document.getElementById('victoryTurns').textContent = engine.turn;
+            document.getElementById('victoryStrain').textContent = `${engine.paradoxStrain}%`;
+            document.getElementById('victoryEpoch').textContent = engine.currentEpoch.toUpperCase();
+
+            const nextIdx = (selectedScenarioIndex + 1) % SCENARIOS.length;
+            const nextBtn = document.getElementById('btnVictoryNext');
+            if (nextIdx === 0) {
+                nextBtn.textContent = "Restart Campaign [Enter]";
+            } else {
+                nextBtn.textContent = `Next: #${SCENARIOS[nextIdx].id} [Enter]`;
+            }
+            closeAllOverlays();
+            document.getElementById('victoryOverlay').classList.add('active');
+        }
+
+        // Dismiss toast on click
+        document.getElementById('toastNotification').addEventListener('click', () => {
+            document.getElementById('toastNotification').classList.remove('visible');
+            if (toastTimeout) {
+                clearTimeout(toastTimeout);
+                toastTimeout = null;
+            }
+        });
 
         // Backdrop click to dismiss modal
         document.querySelectorAll('.overlay').forEach(overlay => {
             overlay.addEventListener('click', (e) => {
                 if (e.target === overlay && overlay.id !== 'splashOverlay') {
-                    closeAllOverlays();
+                    closeModal(overlay.id);
                 }
             });
         });
@@ -3203,6 +3357,7 @@
         // Splash Buttons
         document.getElementById('btnSplashNew').addEventListener('click', () => {
             audio.init();
+            gameStarted = true;
             closeAllOverlays();
             engine.initScenario(SCENARIOS[0]);
             // Check first-run tutorial flag
@@ -3213,10 +3368,11 @@
 
         document.getElementById('btnSplashContinue').addEventListener('click', () => {
             audio.init();
-            if (engine.turn > 0) {
+            if (engine.turn > 0 && gameStarted) {
                 closeAllOverlays();
                 showToast("Resumed active timeline.");
             } else if (engine.quickload()) {
+                gameStarted = true;
                 closeAllOverlays();
             }
         });
@@ -3242,11 +3398,38 @@
         document.getElementById('btnSettings').addEventListener('click', () => { audio.init(); document.getElementById('settingsOverlay').classList.add('active'); });
 
         // Modal Close Buttons
-        document.getElementById('btnHelpClose').addEventListener('click', closeAllOverlays);
-        document.getElementById('btnHelpDismiss').addEventListener('click', closeAllOverlays);
-        document.getElementById('btnSettingsClose').addEventListener('click', closeAllOverlays);
-        document.getElementById('btnSettingsDismiss').addEventListener('click', closeAllOverlays);
-        document.getElementById('btnScenarioClose').addEventListener('click', closeAllOverlays);
+        document.getElementById('btnHelpClose').addEventListener('click', () => closeModal('helpOverlay'));
+        document.getElementById('btnHelpDismiss').addEventListener('click', () => closeModal('helpOverlay'));
+        document.getElementById('btnSettingsClose').addEventListener('click', () => closeModal('settingsOverlay'));
+        document.getElementById('btnSettingsDismiss').addEventListener('click', () => closeModal('settingsOverlay'));
+        document.getElementById('btnScenarioClose').addEventListener('click', () => closeModal('scenarioOverlay'));
+
+        // Settings Return to Main Menu
+        document.getElementById('btnSettingsMenu').addEventListener('click', () => {
+            engine.quicksave();
+            gameStarted = false;
+            closeAllOverlays();
+            document.getElementById('splashOverlay').classList.add('active');
+        });
+
+        // Victory Overlay Buttons
+        document.getElementById('btnVictoryClose').addEventListener('click', closeAllOverlays);
+        document.getElementById('btnVictoryNext').addEventListener('click', () => {
+            selectedScenarioIndex = (selectedScenarioIndex + 1) % SCENARIOS.length;
+            gameStarted = true;
+            closeAllOverlays();
+            engine.initScenario(SCENARIOS[selectedScenarioIndex]);
+        });
+        document.getElementById('btnVictoryReplay').addEventListener('click', () => {
+            gameStarted = true;
+            closeAllOverlays();
+            engine.initScenario(SCENARIOS[selectedScenarioIndex]);
+        });
+        document.getElementById('btnVictoryMenu').addEventListener('click', () => {
+            gameStarted = false;
+            closeAllOverlays();
+            document.getElementById('splashOverlay').classList.add('active');
+        });
 
         // Tutorial Dismiss
         document.getElementById('btnTutClose').addEventListener('click', () => {
@@ -3280,6 +3463,7 @@
                 });
                 div.addEventListener('dblclick', () => {
                     selectedScenarioIndex = idx;
+                    gameStarted = true;
                     closeAllOverlays();
                     engine.initScenario(SCENARIOS[selectedScenarioIndex]);
                 });
@@ -3289,6 +3473,7 @@
         }
 
         document.getElementById('btnScenarioLaunch').addEventListener('click', () => {
+            gameStarted = true;
             closeAllOverlays();
             engine.initScenario(SCENARIOS[selectedScenarioIndex]);
         });
