@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-24T10:48:00Z — kilo-expander: KDarts (Firebase RTDB Online Multiplayer Expansion)**
+  - Status: PASS ✅ (Seamless cross-computer online multiplayer integrated; Mandate 12 compliant; 0 regressions).
+  - Multiplayer Architecture: Built Firebase RTDB real-time synchronization (`multiplayer/kdarts/`) with room/lobby matchmaking and CDN module loader.
+  - Gameplay & Throw Sync: Real-time dart throw sync across boards (coordinates, pts, sounds, particles), turn alternation, spectator view, and rematch negotiation.
+  - UI & Controls: Added Online Bar with quick emote chat, custom message input, modal room host/join, and top-right toast alerts.
+  - Verification: MSVC C clean build (`KDarts.exe` 21.0 KB); Vite clean build (476ms, `kdarts.html` 122.8 KB); security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-24T08:50:00Z — kilo-graphics: KCyber (Content Expansion, Glint Removal & Balance Pass)**
   - Status: PASS ✅ (0 rotating glints or border dots; Node 06 Phantom ICE added; balance tuned; 0 regressions).
   - Glint & Dot Removal: Purged cartridge traveling sheen, PCB lateral bus moving dots, pedestal radar blip, and darknet orbiting tokens. Added static via pads & screen spectrum bars.

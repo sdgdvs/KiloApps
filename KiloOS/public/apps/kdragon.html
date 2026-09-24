@@ -64,19 +64,7 @@
         .corner-bl { bottom: 6px; left: 6px; border-bottom: 3px solid #d4af37; border-left: 3px solid #d4af37; }
         .corner-br { bottom: 6px; right: 6px; border-bottom: 3px solid #d4af37; border-right: 3px solid #d4af37; }
 
-        .corner-filigree::after {
-            content: '';
-            position: absolute;
-            width: 5px;
-            height: 5px;
-            background: #d4af37;
-            border-radius: 50%;
-            box-shadow: 0 0 4px #ffd700;
-        }
-        .corner-tl::after { top: 2px; left: 2px; }
-        .corner-tr::after { top: 2px; right: 2px; }
-        .corner-bl::after { bottom: 2px; left: 2px; }
-        .corner-br::after { bottom: 2px; right: 2px; }
+        /* Perimeter dots purged per Director Mandate 11 */
 
         .stats {
             display: flex;
@@ -248,6 +236,7 @@
             font-family: 'Cinzel', serif;
             box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 0 8px rgba(212,175,55,0.3);
             pointer-events: auto;
+            cursor: pointer;
             animation: toastIn 0.3s ease-out;
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
@@ -380,6 +369,8 @@
                 <button id="btn-hoard"><span class="btn-badge">5</span> Hoard (🗺️)</button>
                 <button id="btn-battle"><span class="btn-badge">6</span> Battle (⚔️)</button>
                 <button id="btn-shop"><span class="btn-badge">7</span> Shop (🛒)</button>
+                <button id="btn-save"><span class="btn-badge">F5</span> Save (💾)</button>
+                <button id="btn-load"><span class="btn-badge">F9</span> Load (📂)</button>
                 <button id="btn-help"><span class="btn-badge">F1</span> Help (❓)</button>
             </div>
             <div class="controls" id="shop-controls" style="display: none; flex-wrap: wrap; justify-content: center; gap: 14px;">
@@ -521,6 +512,8 @@
                 <table class="guide-table">
                     <tr><th>Action</th><th>Key Shortcut</th><th>Description</th></tr>
                     <tr><td>Guide / Help</td><td><span class="kbd-chip">F1</span> or <span class="kbd-chip">H</span></td><td>Toggle this Guide dialog</td></tr>
+                    <tr><td>Quicksave</td><td><span class="kbd-chip">F5</span></td><td>Save complete dragon vitals, gold &amp; relics</td></tr>
+                    <tr><td>Quickload</td><td><span class="kbd-chip">F9</span></td><td>Restore saved dragon sanctuary state</td></tr>
                     <tr><td>Incubate Egg</td><td><span class="kbd-chip">Space</span> or <span class="kbd-chip">1</span></td><td>Hatch mystical dragon egg</td></tr>
                     <tr><td>Feed</td><td><span class="kbd-chip">1</span> or <span class="kbd-chip">F</span></td><td>Restore +20 Hunger (-5 Energy)</td></tr>
                     <tr><td>Play</td><td><span class="kbd-chip">2</span> or <span class="kbd-chip">P</span></td><td>Restore +20 Happiness (-20 Energy)</td></tr>
@@ -599,8 +592,9 @@
   <rect x="5" y="12" width="6" height="1" fill="rgb(180,150,100)" />
 </svg></div>
             <p>A mysterious egg awaits...</p>
-            <p style="font-size: 14px; font-style: italic;">Press H or F1 for Help</p>
+            <p style="font-size: 14px; font-style: italic;">Press H or F1 for Help | F5/F9 to Save/Load</p>
             <button id="btn-hatch"><span class="btn-badge">Space</span> Incubate Egg</button>
+            <button id="btn-start-load"><span class="btn-badge">F9</span> Load Saved Dragon</button>
             <button id="btn-start-help"><span class="btn-badge">F1</span> Help (❓)</button>
         </div>
     </div>
@@ -1090,6 +1084,28 @@
             }
         ];
 
+        const STORAGE_KEY = 'kdragon_save';
+        const TUTORIAL_KEY = 'kdragon_tutorialSeen';
+
+        function safeSetStorage(key, val) {
+            try {
+                localStorage.setItem(key, val);
+                return true;
+            } catch (e) {
+                console.warn('Storage write failed', e);
+                return false;
+            }
+        }
+
+        function safeGetStorage(key) {
+            try {
+                return localStorage.getItem(key);
+            } catch (e) {
+                console.warn('Storage read failed', e);
+                return null;
+            }
+        }
+
         const Game = {
             state: 'egg',
             element: 'None',
@@ -1116,11 +1132,144 @@
                 const toast = document.createElement('div');
                 toast.className = `toast toast-${type}`;
                 toast.innerHTML = text;
+                toast.title = "Click to dismiss";
+                toast.style.cursor = "pointer";
+                toast.onclick = () => {
+                    toast.classList.add('hide');
+                    setTimeout(() => toast.remove(), 250);
+                };
                 tc.appendChild(toast);
                 setTimeout(() => {
-                    toast.classList.add('hide');
-                    setTimeout(() => toast.remove(), 300);
+                    if (toast.parentElement) {
+                        toast.classList.add('hide');
+                        setTimeout(() => toast.remove(), 300);
+                    }
                 }, duration);
+            },
+
+            quickSave() {
+                const payload = {
+                    state: this.state,
+                    element: this.element,
+                    feedCount: this.feedCount,
+                    playCount: this.playCount,
+                    sleepCount: this.sleepCount,
+                    stats: {
+                        hunger: this.stats.hunger,
+                        happiness: this.stats.happiness,
+                        energy: this.stats.energy,
+                        age: this.stats.age,
+                        strength: this.stats.strength,
+                        speed: this.stats.speed,
+                        loyalty: this.stats.loyalty,
+                        gold: this.stats.gold,
+                        relics: [...(this.stats.relics || [])]
+                    },
+                    battleState: this.battleState ? {
+                        playerHp: this.battleState.playerHp,
+                        playerMaxHp: this.battleState.playerMaxHp,
+                        enemyHp: this.battleState.enemyHp,
+                        enemyMaxHp: this.battleState.enemyMaxHp,
+                        enemyStr: this.battleState.enemyStr,
+                        enemySpd: this.battleState.enemySpd,
+                        enemy: this.battleState.enemy
+                    } : null,
+                    timestamp: Date.now()
+                };
+                const ok = safeSetStorage(STORAGE_KEY, JSON.stringify(payload));
+                if (ok) {
+                    this.log("Dragon sanctuary state saved! [F5]");
+                    this.showToast("💾 <b>Quicksave Created! [F5]</b>", "gold");
+                    AudioEngine.playPreset('gold');
+                    VFX.spawnBurst(width / 2, height / 2 - 40, '#ffd700', 15, true);
+                } else {
+                    this.log("Storage quota error: failed to create quicksave.");
+                    this.showToast("Storage quota error: failed to save!", "warn");
+                }
+            },
+
+            quickLoad() {
+                const raw = safeGetStorage(STORAGE_KEY);
+                if (!raw) {
+                    this.log("No saved dragon state found! [F9]");
+                    this.showToast("No saved dragon found! [F9]", "warn");
+                    AudioEngine.playPreset('click');
+                    return false;
+                }
+                try {
+                    const data = JSON.parse(raw);
+                    if (!data || !data.stats) {
+                        throw new Error("Invalid save structure");
+                    }
+                    
+                    // Clear existing tick and minigame timers
+                    if (this.tickInterval) clearInterval(this.tickInterval);
+                    if (this.minigameInterval) clearInterval(this.minigameInterval);
+                    if (this.minigameTimeout) clearTimeout(this.minigameTimeout);
+                    this.minigameState = null;
+                    
+                    this.state = data.state || 'dragon';
+                    this.element = data.element || 'None';
+                    this.feedCount = data.feedCount || 0;
+                    this.playCount = data.playCount || 0;
+                    this.sleepCount = data.sleepCount || 0;
+                    this.stats = {
+                        hunger: typeof data.stats.hunger === 'number' ? data.stats.hunger : 50,
+                        happiness: typeof data.stats.happiness === 'number' ? data.stats.happiness : 50,
+                        energy: typeof data.stats.energy === 'number' ? data.stats.energy : 100,
+                        age: typeof data.stats.age === 'number' ? data.stats.age : 0,
+                        strength: typeof data.stats.strength === 'number' ? data.stats.strength : 0,
+                        speed: typeof data.stats.speed === 'number' ? data.stats.speed : 0,
+                        loyalty: typeof data.stats.loyalty === 'number' ? data.stats.loyalty : 0,
+                        gold: typeof data.stats.gold === 'number' ? data.stats.gold : 0,
+                        relics: Array.isArray(data.stats.relics) ? [...data.stats.relics] : []
+                    };
+                    
+                    // Reset overlay containers
+                    document.getElementById('start-screen').style.display = 'none';
+                    document.getElementById('game-screen').style.display = 'block';
+                    document.getElementById('shop-controls').style.display = 'none';
+                    document.getElementById('train-controls').style.display = 'none';
+                    document.getElementById('minigame-str').style.display = 'none';
+                    document.getElementById('minigame-spd').style.display = 'none';
+                    document.getElementById('minigame-loy').style.display = 'none';
+                    document.getElementById('event-controls').style.display = 'none';
+                    
+                    if (data.battleState) {
+                        this.battleState = data.battleState;
+                        this.isBusy = true;
+                        document.getElementById('controls').style.display = 'none';
+                        document.getElementById('battle-controls').style.display = 'flex';
+                        document.getElementById('btn-battle-special').style.display = (this.element === 'None') ? 'none' : 'inline-block';
+                    } else {
+                        this.battleState = null;
+                        this.isBusy = false;
+                        document.getElementById('battle-controls').style.display = 'none';
+                        document.getElementById('controls').style.display = 'flex';
+                    }
+                    
+                    if (this.state !== 'egg') {
+                        this.tickInterval = setInterval(() => this.tick(), 3000);
+                    } else {
+                        document.getElementById('start-screen').style.display = 'block';
+                        document.getElementById('game-screen').style.display = 'none';
+                    }
+                    
+                    safeSetStorage(TUTORIAL_KEY, '1');
+                    
+                    this.updateUI();
+                    this.log("Dragon state restored successfully! [F9]");
+                    this.showToast("🚀 <b>Dragon Restored! [F9]</b>", "gold");
+                    AudioEngine.playPreset('victory');
+                    VFX.spawnBurst(width / 2, height / 2 - 40, '#ffd700', 25, true);
+                    return true;
+                } catch (e) {
+                    console.error("Save load error", e);
+                    this.log("Save file corrupted or invalid! [F9]");
+                    this.showToast("Failed to load save state!", "warn");
+                    AudioEngine.playPreset('defeat');
+                    return false;
+                }
             },
 
             spawnParticles(color, count, target = 'player', isStar = false) {
@@ -1155,9 +1304,13 @@
             
             init() {
                 document.getElementById('btn-hatch').addEventListener('click', () => this.hatch());
+                document.getElementById('btn-start-load')?.addEventListener('click', () => this.quickLoad());
                 document.getElementById('btn-start-help')?.addEventListener('click', () => {
+                    safeSetStorage(TUTORIAL_KEY, '1');
                     document.getElementById('help-modal').style.display = 'block';
                 });
+                document.getElementById('btn-save')?.addEventListener('click', () => this.quickSave());
+                document.getElementById('btn-load')?.addEventListener('click', () => this.quickLoad());
                 document.getElementById('btn-feed').addEventListener('click', () => this.action('feed'));
                 document.getElementById('btn-play').addEventListener('click', () => this.action('play'));
                 document.getElementById('btn-sleep').addEventListener('click', () => this.action('sleep'));
@@ -1170,6 +1323,7 @@
                     document.getElementById('shop-controls').style.display = 'flex';
                 });
                 document.getElementById('btn-help').addEventListener('click', () => {
+                    safeSetStorage(TUTORIAL_KEY, '1');
                     document.getElementById('help-modal').style.display = 'block';
                 });
                 document.getElementById('close-help').addEventListener('click', () => {
@@ -1185,10 +1339,23 @@
                 window.addEventListener('keydown', (e) => {
                     if (e.ctrlKey || e.altKey || e.metaKey) return;
 
+                    if (e.key === 'F5') {
+                        e.preventDefault();
+                        this.quickSave();
+                        return;
+                    }
+                    if (e.key === 'F9') {
+                        e.preventDefault();
+                        this.quickLoad();
+                        return;
+                    }
+
                     if (e.key === 'F1' || e.key.toLowerCase() === 'h') {
                         e.preventDefault();
                         const hm = document.getElementById('help-modal');
-                        hm.style.display = hm.style.display === 'block' ? 'none' : 'block';
+                        const isClosing = hm.style.display === 'block';
+                        hm.style.display = isClosing ? 'none' : 'block';
+                        if (!isClosing) safeSetStorage(TUTORIAL_KEY, '1');
                         return;
                     }
                     if (e.key === 'Escape') {
@@ -1311,8 +1478,12 @@
                 document.getElementById('btn-train-spd').addEventListener('click', () => this.startMinigame('spd'));
                 document.getElementById('btn-train-loy').addEventListener('click', () => this.startMinigame('loy'));
 
-                // Startup welcome toast
-                this.showToast("🐉 <b>Welcome to KDragon!</b><br>Incubate your egg & press <b>[F1]</b> or <b>[H]</b> anytime for the Guide.", "gold", 6000);
+                // Startup welcome toast only on fresh sessions without saved state
+                const tutorialSeen = safeGetStorage(TUTORIAL_KEY) === '1';
+                const hasSave = !!safeGetStorage(STORAGE_KEY);
+                if (!tutorialSeen && !hasSave) {
+                    this.showToast("🐉 <b>Welcome to KDragon!</b><br>Incubate your egg & press <b>[F1]</b> or <b>[H]</b> anytime for the Guide.", "gold", 6000);
+                }
             },
             
             log(msg) {
@@ -1575,6 +1746,7 @@
             },
             
             hatch() {
+                safeSetStorage(TUTORIAL_KEY, '1');
                 document.getElementById('start-screen').style.display = 'none';
                 document.getElementById('game-screen').style.display = 'block';
                 this.state = 'dragon';

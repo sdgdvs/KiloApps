@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KType
   kilo_usability: KAudio
   kilo_graphics: KMystery
-  kilo_qa: KDragon
+  kilo_qa: KFortress
   kilo_expander: "KTetris (Arcade Duel Multiplayer)"
   kilo_creator: "kweb://10.19.99.4/classified (Tier 3 Corporate Intranet Leak & Memory Dumps)"
 virtual_web_target: "kweb://darknet"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-graphics
-  app: KMech
-  timestamp: "2026-09-24T14:50:00Z"
+  agent: kilo-qa
+  app: KDragon
+  timestamp: "2026-09-24T16:00:00Z"
 last_planner_run: "2026-09-24T05:46:00Z"
 ---
 
@@ -120,9 +120,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KDragon`
+- **Current Target**: `KFortress`
 - **Upcoming Queue**:
-  `KFortress`, `KMech`, `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
+  `KMech`, `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KTetris` (Arcade Duel Multiplayer)
@@ -201,6 +201,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-24T16:00:00Z — kilo-qa: KDragon (Pass 5: Tutorial & State Integrity)**
+  - Status: PASS ✅ (Quicksave/Load, first-run tutorial isolation & glint dot purge verified; 0 regressions).
+  - Glint/Dot Purge: Removed `.corner-filigree::after` dots in web and corner rivet dots in native `DrawFiligreeCorner`.
+  - State Persistence: Implemented [F5] Quicksave and [F9] Quickload across web localStorage and native `kdragon_save.dat`.
+  - Tutorial Isolation: Session-isolated onboarding with Enter/Space/F1 dismissals; click-to-dismiss safe toasts.
+  - Controls & Submenus: Standardized main control visibility transitions across minigames, battle, shop, and expeditions.
+  - Verification: MSVC C clean compile (`KDragon.exe` 147.9 KB); clean Vite build (382ms, `kdragon.html` 133.3 KB); security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-24T14:50:00Z — kilo-graphics: KMech (Graphics Polish, Glint/Perimeter Dot Purge & Combat Depth)**
   - Status: PASS ✅ (Specular glints & perimeter dots purged; 5 weapons, 4 armors, 5 enemy tiers; 0 regressions).
   - Glint/Dot Purge: Removed `.hud-corner::after` perimeter cyan dots in web & Win32 C `SetPixel` corner dots in `DrawSciFiHUDCornerFiligree`.
@@ -232,11 +240,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - ASCII & ANSI Art Studio: 60x20 canvas with block/shading character palettes, ANSI 16-color swatches, pencil/fill/eraser tools, preset art gallery & text export.
   - Integration & Routing: Integrated into `KNet` URL resolver/chips, `portal.html` directory & search, and `webring.html` node #008.
   - Verification: Clean Vite build (826ms); `security_lint.py` 100% PASS; <999KB ceiling; procedural Genesis FM synth audio.
-
-- **2026-09-24T10:48:00Z — kilo-expander: KDarts (Firebase RTDB Online Multiplayer Expansion)**
-  - Status: PASS ✅ (Seamless cross-computer online multiplayer integrated; Mandate 12 compliant; 0 regressions).
-  - Multiplayer Architecture: Built Firebase RTDB real-time synchronization (`multiplayer/kdarts/`) with room/lobby matchmaking and CDN module loader.
-  - Gameplay & Throw Sync: Real-time dart throw sync across boards (coordinates, pts, sounds, particles), turn alternation, spectator view, and rematch negotiation.
-  - UI & Controls: Added Online Bar with quick emote chat, custom message input, modal room host/join, and top-right toast alerts.
-  - Verification: MSVC C clean build (`KDarts.exe` 21.0 KB); Vite clean build (476ms, `kdarts.html` 122.8 KB); security lint 100% PASS; <999KB ceiling.
 

@@ -67,8 +67,12 @@ int log_count = 0;
 #define BTN_EVT_OPT1  27
 #define BTN_EVT_OPT2  28
 #define BTN_HELP      29
+#define BTN_SAVE      30
+#define BTN_LOAD      31
+#define BTN_START_LOAD 32
 
 HWND btn_incubate, btn_feed, btn_play, btn_sleep, btn_train, btn_hoard, btn_battle, btn_shop, btn_help;
+HWND btn_save, btn_load, btn_start_load;
 HWND btn_tr_str, btn_tr_spd, btn_tr_loy, btn_tr_back;
 HWND btn_str_hit, btn_spd_react, btn_loy_1, btn_loy_2, btn_loy_3;
 HWND btn_bat_atk, btn_bat_def, btn_bat_spec, btn_bat_flee;
@@ -78,6 +82,15 @@ HFONT hFontNormal, hFontLarge, hFontTitle, hFontSmall;
 HBRUSH bgBrush;
 
 int current_event_id = 0;
+int relics_mask = 0;
+const char* relic_names[6] = { "Shiny Scale", "Gemstone", "Old Bone", "Mystery Eggshell", "Dragon Fang", "Star Fragment" };
+int count_relics(void) {
+    int c = 0;
+    for (int i = 0; i < 6; i++) {
+        if (relics_mask & (1 << i)) c++;
+    }
+    return c;
+}
 
 // === VISUAL EFFECTS & KINEMATIC PARTICLE ENGINE ===
 struct Particle {
@@ -306,11 +319,10 @@ void DrawPixelArt(HDC hdc, int x, int y, int scale, COLORREF pixels[16][16], int
     }
 }
 
-// Draw Ornate Medieval HUD Corner Filigree L-Brackets with Rivets
+// Draw Ornate Medieval HUD Corner Filigree L-Brackets
 void DrawFiligreeCorner(HDC hdc, int x, int y, int size, int align_x, int align_y) {
     HPEN goldPen = CreatePen(PS_SOLID, 2, RGB(180, 130, 40));
     HPEN darkPen = CreatePen(PS_SOLID, 1, RGB(80, 50, 20));
-    HBRUSH goldBrush = CreateSolidBrush(RGB(220, 180, 70));
     
     HGDIOBJ oldPen = SelectObject(hdc, goldPen);
     
@@ -323,21 +335,16 @@ void DrawFiligreeCorner(HDC hdc, int x, int y, int size, int align_x, int align_
     LineTo(hdc, x + sx * size, y);
     
     // Inner bracket notch
+    SelectObject(hdc, darkPen);
     MoveToEx(hdc, x + sx * 4, y + sy * (size - 4), NULL);
     LineTo(hdc, x + sx * 4, y + sy * 4);
     LineTo(hdc, x + sx * (size - 4), y + sy * 4);
     
-    // Rivet accent
-    SelectObject(hdc, goldBrush);
-    SelectObject(hdc, darkPen);
-    int rx = x + sx * 6;
-    int ry = y + sy * 6;
-    Ellipse(hdc, rx - 2, ry - 2, rx + 3, ry + 3);
+    // Rivet dots purged per Director Mandate 11 (Perimeter Glint & Traveling Comet Ban / Dot Purge)
     
     SelectObject(hdc, oldPen);
     DeleteObject(goldPen);
     DeleteObject(darkPen);
-    DeleteObject(goldBrush);
 }
 
 void DrawOrnateFrame(HDC hdc, RECT rect) {
@@ -423,6 +430,204 @@ void DrawShopItemCard(HDC hdc, int x, int y, int item_idx, int is_hovered) {
     DeleteObject(cardPen);
 }
 
+void ShowMainControls(int show) {
+    int cmd = show ? SW_SHOW : SW_HIDE;
+    ShowWindow(btn_feed, cmd);
+    ShowWindow(btn_play, cmd);
+    ShowWindow(btn_sleep, cmd);
+    ShowWindow(btn_train, cmd);
+    ShowWindow(btn_hoard, cmd);
+    ShowWindow(btn_battle, cmd);
+    ShowWindow(btn_save, cmd);
+    ShowWindow(btn_load, cmd);
+    ShowWindow(btn_help, cmd);
+    ShowWindow(btn_shop, cmd);
+}
+
+#pragma pack(push, 1)
+typedef struct {
+    DWORD magic;      // 0x4752444B 'KDRG'
+    DWORD version;    // 1
+    int state;
+    int element;
+    int feed_count;
+    int play_count;
+    int sleep_count;
+    int hunger;
+    int happiness;
+    int energy;
+    int age;
+    int strength;
+    int speed;
+    int loyalty;
+    int gold;
+    int relics_mask;
+    int in_battle;
+    int bat_player_hp;
+    int bat_player_max;
+    int bat_enemy_hp;
+    int bat_enemy_max;
+    int bat_enemy_str;
+    int bat_enemy_spd;
+    int bat_enemy_type;
+    char bat_enemy_name[64];
+} KDragonSaveData;
+#pragma pack(pop)
+
+void QuickSaveNative() {
+    KDragonSaveData data;
+    memset(&data, 0, sizeof(data));
+    data.magic = 0x4752444B; // 'KDRG'
+    data.version = 1;
+    data.state = state;
+    data.element = element;
+    data.feed_count = feed_count;
+    data.play_count = play_count;
+    data.sleep_count = sleep_count;
+    data.hunger = hunger;
+    data.happiness = happiness;
+    data.energy = energy;
+    data.age = age;
+    data.strength = strength;
+    data.speed = speed;
+    data.loyalty = loyalty;
+    data.gold = gold;
+    data.relics_mask = relics_mask;
+    data.in_battle = (state == 8) ? 1 : 0;
+    data.bat_player_hp = bat_player_hp;
+    data.bat_player_max = bat_player_max;
+    data.bat_enemy_hp = bat_enemy_hp;
+    data.bat_enemy_max = bat_enemy_max;
+    data.bat_enemy_str = bat_enemy_str;
+    data.bat_enemy_spd = bat_enemy_spd;
+    data.bat_enemy_type = bat_enemy_type;
+    lstrcpynA(data.bat_enemy_name, bat_enemy_name, sizeof(data.bat_enemy_name));
+
+    HANDLE hFile = CreateFileA("kdragon_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, &data, sizeof(data), &written, NULL);
+        CloseHandle(hFile);
+        add_log("Dragon sanctuary state saved! [F5]");
+        trigger_screen_shake(3.0f);
+        spawn_particles_ext(300, 150, RGB(255, 215, 0), 20, 3);
+    } else {
+        add_log("Failed to write save file!");
+    }
+}
+
+void QuickLoadNative(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kdragon_save.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        KDragonSaveData data;
+        DWORD readBytes = 0;
+        if (ReadFile(hFile, &data, sizeof(data), &readBytes, NULL) && readBytes == sizeof(data)) {
+            if (data.magic == 0x4752444B && data.version == 1) {
+                state = data.state;
+                element = data.element;
+                feed_count = data.feed_count;
+                play_count = data.play_count;
+                sleep_count = data.sleep_count;
+                hunger = data.hunger;
+                happiness = data.happiness;
+                energy = data.energy;
+                age = data.age;
+                strength = data.strength;
+                speed = data.speed;
+                loyalty = data.loyalty;
+                gold = data.gold;
+                relics_mask = data.relics_mask;
+
+                // Hide all submenus / minigames / events
+                ShowWindow(btn_incubate, SW_HIDE);
+                ShowWindow(btn_start_load, SW_HIDE);
+                ShowWindow(btn_tr_str, SW_HIDE);
+                ShowWindow(btn_tr_spd, SW_HIDE);
+                ShowWindow(btn_tr_loy, SW_HIDE);
+                ShowWindow(btn_tr_back, SW_HIDE);
+                ShowWindow(btn_str_hit, SW_HIDE);
+                ShowWindow(btn_spd_react, SW_HIDE);
+                ShowWindow(btn_loy_1, SW_HIDE);
+                ShowWindow(btn_loy_2, SW_HIDE);
+                ShowWindow(btn_loy_3, SW_HIDE);
+                ShowWindow(btn_shp_food, SW_HIDE);
+                ShowWindow(btn_shp_toy, SW_HIDE);
+                ShowWindow(btn_shp_str, SW_HIDE);
+                ShowWindow(btn_shp_spd, SW_HIDE);
+                ShowWindow(btn_shp_back, SW_HIDE);
+                ShowWindow(btn_evt_opt1, SW_HIDE);
+                ShowWindow(btn_evt_opt2, SW_HIDE);
+
+                if (data.in_battle && state == 8) {
+                    bat_player_hp = data.bat_player_hp;
+                    bat_player_max = data.bat_player_max;
+                    bat_enemy_hp = data.bat_enemy_hp;
+                    bat_enemy_max = data.bat_enemy_max;
+                    bat_enemy_str = data.bat_enemy_str;
+                    bat_enemy_spd = data.bat_enemy_spd;
+                    bat_enemy_type = data.bat_enemy_type;
+                    lstrcpynA(bat_enemy_name, data.bat_enemy_name, sizeof(bat_enemy_name));
+
+                    ShowMainControls(0);
+                    ShowWindow(btn_bat_atk, SW_SHOW);
+                    ShowWindow(btn_bat_def, SW_SHOW);
+                    ShowWindow(btn_bat_spec, (element != 0) ? SW_SHOW : SW_HIDE);
+                    ShowWindow(btn_bat_flee, SW_SHOW);
+                } else {
+                    if (state == 0) {
+                        ShowWindow(btn_incubate, SW_SHOW);
+                        ShowWindow(btn_start_load, SW_SHOW);
+                        ShowMainControls(0);
+                    } else {
+                        ShowWindow(btn_bat_atk, SW_HIDE);
+                        ShowWindow(btn_bat_def, SW_HIDE);
+                        ShowWindow(btn_bat_spec, SW_HIDE);
+                        ShowWindow(btn_bat_flee, SW_HIDE);
+                        ShowMainControls(1);
+                        SetTimer(hwnd, TIMER_ID, 3000, NULL);
+                    }
+                }
+
+                // Mark tutorial seen
+                HANDLE hTut = CreateFileA("kdragon_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (hTut != INVALID_HANDLE_VALUE) {
+                    char flag = 1;
+                    DWORD w = 0;
+                    WriteFile(hTut, &flag, 1, &w, NULL);
+                    CloseHandle(hTut);
+                }
+
+                add_log("Dragon state restored successfully! [F9]");
+                trigger_screen_shake(4.0f);
+                spawn_particles_ext(300, 150, RGB(255, 215, 0), 25, 3);
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+        }
+        CloseHandle(hFile);
+    } else {
+        add_log("No save file found! [F9]");
+        InvalidateRect(hwnd, NULL, FALSE);
+    }
+}
+
+void CheckFirstRunTutorial(HWND hwnd) {
+    (void)hwnd;
+    HANDLE hFile = CreateFileA("kdragon_tutorial.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        HANDLE hNew = CreateFileA("kdragon_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hNew != INVALID_HANDLE_VALUE) {
+            char flag = 1;
+            DWORD w = 0;
+            WriteFile(hNew, &flag, 1, &w, NULL);
+            CloseHandle(hNew);
+        }
+        add_log("Welcome to KDragon! Press [Space] to incubate egg.");
+        add_log("Press [F1] or [H] anytime for the Guide.");
+    } else {
+        CloseHandle(hFile);
+    }
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE: {
@@ -449,7 +654,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             bgBrush = CreateSolidBrush(RGB(220, 184, 129));
             
             btn_incubate = CreateWindow("BUTTON", "Incubate Egg [Space]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                                        210, 260, 160, 40, hwnd, (HMENU)BTN_INCUBATE, NULL, NULL);
+                                        160, 260, 160, 40, hwnd, (HMENU)BTN_INCUBATE, NULL, NULL);
+            btn_start_load = CreateWindow("BUTTON", "Load [F9]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                                          330, 260, 110, 40, hwnd, (HMENU)BTN_START_LOAD, NULL, NULL);
             btn_feed = CreateWindow("BUTTON", "Feed [1]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
                                     25, 260, 90, 40, hwnd, (HMENU)BTN_FEED, NULL, NULL);
             btn_play = CreateWindow("BUTTON", "Play [2]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
@@ -462,10 +669,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                      405, 260, 90, 40, hwnd, (HMENU)BTN_HOARD, NULL, NULL);
             btn_battle = CreateWindow("BUTTON", "Battle [6]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
                                       500, 260, 90, 40, hwnd, (HMENU)BTN_BATTLE, NULL, NULL);
-            btn_shop = CreateWindow("BUTTON", "Shop [7]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
-                                      500, 215, 90, 40, hwnd, (HMENU)BTN_SHOP, NULL, NULL);
+            btn_save = CreateWindow("BUTTON", "Save [F5]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                    215, 215, 90, 40, hwnd, (HMENU)BTN_SAVE, NULL, NULL);
+            btn_load = CreateWindow("BUTTON", "Load [F9]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                    310, 215, 90, 40, hwnd, (HMENU)BTN_LOAD, NULL, NULL);
             btn_help = CreateWindow("BUTTON", "Help [F1]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
                                       405, 215, 90, 40, hwnd, (HMENU)BTN_HELP, NULL, NULL);
+            btn_shop = CreateWindow("BUTTON", "Shop [7]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
+                                      500, 215, 90, 40, hwnd, (HMENU)BTN_SHOP, NULL, NULL);
 
             btn_bat_atk = CreateWindow("BUTTON", "Attack [1]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
                                        70, 270, 110, 40, hwnd, (HMENU)BTN_BAT_ATK, NULL, NULL);
@@ -506,12 +717,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                      370, 270, 110, 40, hwnd, (HMENU)BTN_LOY_3, NULL, NULL);
                                      
             SendMessage(btn_incubate, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_start_load, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_feed, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_play, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_sleep, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_train, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_hoard, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_battle, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_save, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_load, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_shop, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_help, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_tr_str, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
@@ -535,6 +749,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(btn_evt_opt1, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_evt_opt2, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             
+            CheckFirstRunTutorial(hwnd);
             SetTimer(hwnd, 5, 33, NULL); // 30 FPS animation timer
             }
             break;
@@ -549,16 +764,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 spawn_particles_ext(290, 160, RGB(255,255,255), 30, 0);
                 spawn_particles_ext(290, 160, RGB(255,215,0), 20, 3);
                 ShowWindow(btn_incubate, SW_HIDE);
-                ShowWindow(btn_feed, SW_SHOW);
-                ShowWindow(btn_play, SW_SHOW);
-                ShowWindow(btn_sleep, SW_SHOW);
-                ShowWindow(btn_train, SW_SHOW);
-                ShowWindow(btn_hoard, SW_SHOW);
-                ShowWindow(btn_battle, SW_SHOW);
-                ShowWindow(btn_shop, SW_SHOW);
-                ShowWindow(btn_help, SW_SHOW);
+                ShowWindow(btn_start_load, SW_HIDE);
+                ShowMainControls(1);
                 SetTimer(hwnd, TIMER_ID, 3000, NULL);
                 InvalidateRect(hwnd, NULL, FALSE);
+            }
+            else if (LOWORD(wParam) == BTN_SAVE) {
+                QuickSaveNative();
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            else if (LOWORD(wParam) == BTN_LOAD || LOWORD(wParam) == BTN_START_LOAD) {
+                QuickLoadNative(hwnd);
             }
             else if (LOWORD(wParam) == BTN_FEED) {
                 if (hunger >= 100) {
@@ -608,14 +824,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (energy < 15) {
                     add_log("Dragon is too tired to train.");
                 } else {
-                    ShowWindow(btn_feed, SW_HIDE);
-                    ShowWindow(btn_play, SW_HIDE);
-                    ShowWindow(btn_sleep, SW_HIDE);
-                    ShowWindow(btn_train, SW_HIDE);
-                    ShowWindow(btn_hoard, SW_HIDE);
-                    ShowWindow(btn_battle, SW_HIDE);
-                    ShowWindow(btn_shop, SW_HIDE);
-                    ShowWindow(btn_help, SW_HIDE);
+                    ShowMainControls(0);
                     ShowWindow(btn_tr_str, SW_SHOW);
                     ShowWindow(btn_tr_spd, SW_SHOW);
                     ShowWindow(btn_tr_loy, SW_SHOW);
@@ -628,10 +837,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (LOWORD(wParam) == BTN_TR_BACK) {
                 ShowWindow(btn_tr_str, SW_HIDE); ShowWindow(btn_tr_spd, SW_HIDE);
                 ShowWindow(btn_tr_loy, SW_HIDE); ShowWindow(btn_tr_back, SW_HIDE);
-                ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
-                ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
-                ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
-                ShowWindow(btn_shop, SW_SHOW); ShowWindow(btn_help, SW_SHOW);
+                ShowMainControls(1);
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, FALSE);
             }
@@ -680,10 +886,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 trigger_screen_shake(minigame_val > 70 ? 7.0f : 3.0f);
                 spawn_particles_ext(300, 245, RGB(255,100,50), 20, 0);
                 ShowWindow(btn_str_hit, SW_HIDE);
-                ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
-                ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
-                ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
-                ShowWindow(btn_shop, SW_SHOW); ShowWindow(btn_help, SW_SHOW);
+                ShowMainControls(1);
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, FALSE);
             }
@@ -702,10 +905,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     spawn_particles_ext(300, 245, RGB(50,220,255), 20, 0);
                 }
                 ShowWindow(btn_spd_react, SW_HIDE);
-                ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
-                ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
-                ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
-                ShowWindow(btn_shop, SW_SHOW); ShowWindow(btn_help, SW_SHOW);
+                ShowMainControls(1);
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, FALSE);
             }
@@ -721,10 +921,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     add_log("Empty box. Loyalty +1");
                 }
                 ShowWindow(btn_loy_1, SW_HIDE); ShowWindow(btn_loy_2, SW_HIDE); ShowWindow(btn_loy_3, SW_HIDE);
-                ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
-                ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
-                ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
-                ShowWindow(btn_shop, SW_SHOW); ShowWindow(btn_help, SW_SHOW);
+                ShowMainControls(1);
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, FALSE);
             }
@@ -735,10 +932,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     energy -= 30;
                     hunger -= 15; if (hunger < 0) hunger = 0;
                     add_log("Dragon departed on an expedition...");
-                    ShowWindow(btn_feed, SW_HIDE); ShowWindow(btn_play, SW_HIDE);
-                    ShowWindow(btn_sleep, SW_HIDE); ShowWindow(btn_train, SW_HIDE);
-                    ShowWindow(btn_hoard, SW_HIDE); ShowWindow(btn_battle, SW_HIDE);
-                    ShowWindow(btn_shop, SW_HIDE); ShowWindow(btn_help, SW_HIDE);
+                    ShowMainControls(0);
                     prev_state = state;
                     state = 7;
                     SetTimer(hwnd, 4, 4000, NULL);
@@ -791,10 +985,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     trigger_screen_shake(5.0f);
                     add_shockwave(410, 150, 80.0f, shockColor);
                     
-                    ShowWindow(btn_feed, SW_HIDE); ShowWindow(btn_play, SW_HIDE);
-                    ShowWindow(btn_sleep, SW_HIDE); ShowWindow(btn_train, SW_HIDE);
-                    ShowWindow(btn_hoard, SW_HIDE); ShowWindow(btn_battle, SW_HIDE);
-                    ShowWindow(btn_shop, SW_HIDE); ShowWindow(btn_help, SW_HIDE);
+                    ShowMainControls(0);
                     
                     ShowWindow(btn_bat_atk, SW_SHOW);
                     ShowWindow(btn_bat_def, SW_SHOW);
@@ -956,10 +1147,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     ShowWindow(btn_bat_spec, SW_HIDE);
                     ShowWindow(btn_bat_flee, SW_HIDE);
                     
-                    ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
-                    ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
-                    ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
-                    ShowWindow(btn_shop, SW_SHOW); ShowWindow(btn_help, SW_SHOW);
+                    ShowMainControls(1);
                     
                     state = prev_state;
                 }
@@ -967,10 +1155,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             else if (LOWORD(wParam) == BTN_SHOP) {
                 if (state == 0) return 0;
-                ShowWindow(btn_feed, SW_HIDE); ShowWindow(btn_play, SW_HIDE);
-                ShowWindow(btn_sleep, SW_HIDE); ShowWindow(btn_train, SW_HIDE);
-                ShowWindow(btn_hoard, SW_HIDE); ShowWindow(btn_battle, SW_HIDE);
-                ShowWindow(btn_shop, SW_HIDE); ShowWindow(btn_help, SW_HIDE);
+                ShowMainControls(0);
                 
                 ShowWindow(btn_shp_food, SW_SHOW);
                 ShowWindow(btn_shp_toy, SW_SHOW);
@@ -987,10 +1172,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowWindow(btn_shp_str, SW_HIDE); ShowWindow(btn_shp_spd, SW_HIDE);
                 ShowWindow(btn_shp_back, SW_HIDE);
                 
-                ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
-                ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
-                ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
-                ShowWindow(btn_shop, SW_SHOW); ShowWindow(btn_help, SW_SHOW);
+                ShowMainControls(1);
                 
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, FALSE);
@@ -1087,10 +1269,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 ShowWindow(btn_evt_opt1, SW_HIDE);
                 ShowWindow(btn_evt_opt2, SW_HIDE);
-                ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
-                ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
-                ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
-                ShowWindow(btn_shop, SW_SHOW); ShowWindow(btn_help, SW_SHOW);
+                ShowMainControls(1);
                 state = prev_state;
                 InvalidateRect(hwnd, NULL, FALSE);
             }
@@ -1099,6 +1278,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "Dragon Master's Guide & Shortcuts\n\n"
                     "=== CONTROLS & SHORTCUTS ===\n"
                     "[F1] or [H]  : Open this Guide\n"
+                    "[F5]         : Quicksave Sanctuary State\n"
+                    "[F9]         : Quickload Sanctuary State\n"
                     "[Space/Enter]: Incubate Egg / Minigame Actions\n\n"
                     "Main Actions:\n"
                     "[1] or [F] : Feed Dragon (+20 Hunger, -5 Energy)\n"
@@ -1131,8 +1312,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
 
         case WM_KEYDOWN:
-            if (wParam == VK_F1 || wParam == 'H') {
+            if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
                 SendMessage(hwnd, WM_COMMAND, BTN_HELP, 0);
+            } else if (wParam == VK_F5) {
+                SendMessage(hwnd, WM_COMMAND, BTN_SAVE, 0);
+            } else if (wParam == VK_F9) {
+                SendMessage(hwnd, WM_COMMAND, BTN_LOAD, 0);
             }
             break;
 
@@ -1150,10 +1335,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (state == 1 || state == 2) {
                     if ((rand() % 100) < 10) {
                         current_event_id = rand() % 3;
-                        ShowWindow(btn_feed, SW_HIDE); ShowWindow(btn_play, SW_HIDE);
-                        ShowWindow(btn_sleep, SW_HIDE); ShowWindow(btn_train, SW_HIDE);
-                        ShowWindow(btn_hoard, SW_HIDE); ShowWindow(btn_battle, SW_HIDE);
-                        ShowWindow(btn_shop, SW_HIDE); ShowWindow(btn_help, SW_HIDE);
+                        ShowMainControls(0);
                         ShowWindow(btn_evt_opt1, SW_SHOW);
                         ShowWindow(btn_evt_opt2, SW_SHOW);
                         
@@ -1241,17 +1423,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 spawn_particles_ext(300, 150, RGB(255,215,0), 25, 3);
                 
                 if (GetTickCount() % 100 < 30) {
-                    const char* items[] = {"Shiny Scale", "Gemstone", "Old Bone", "Mystery Eggshell"};
-                    const char* item = items[GetTickCount() % 4];
-                    sprintf(logMsg, "Dragon also found a rare item: %s!", item);
+                    int rIdx = GetTickCount() % 6;
+                    relics_mask |= (1 << rIdx);
+                    sprintf(logMsg, "Dragon also found a rare relic: %s!", relic_names[rIdx]);
                     add_log(logMsg);
                 }
                 
                 state = prev_state;
-                ShowWindow(btn_feed, SW_SHOW); ShowWindow(btn_play, SW_SHOW);
-                ShowWindow(btn_sleep, SW_SHOW); ShowWindow(btn_train, SW_SHOW);
-                ShowWindow(btn_hoard, SW_SHOW); ShowWindow(btn_battle, SW_SHOW);
-                ShowWindow(btn_shop, SW_SHOW); ShowWindow(btn_help, SW_SHOW);
+                ShowMainControls(1);
                 InvalidateRect(hwnd, NULL, FALSE);
             }
             else if (wParam == 5) { // 30 FPS continuous animation timer
@@ -1385,7 +1564,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 DrawPixelArt(hdc, 236 + shake_dx, 100 + egg_bob + shake_dy, 8, egg_pixels, 0, 0, 0);
             } else {
-                const char* helpMsg = "[F1/H: Guide]";
+                const char* helpMsg = "[F1/H: Guide]  [F5: Save]  [F9: Load]";
                 TextOut(hdc, 24 + shake_dx, 20 + shake_dy, helpMsg, strlen(helpMsg));
                 
                 char buf1[128];
@@ -1398,8 +1577,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 sprintf(buf1, "Hunger: %d/100  |  Happiness: %d/100  |  Energy: %d/100  |  Age: %d", 
                         hunger, happiness, energy, age);
-                sprintf(buf2, "Type: %s  |  Str: %d  |  Spd: %d  |  Loy: %d  |  Gold: %d g", 
-                        type_str, strength, speed, loyalty, gold);
+                sprintf(buf2, "Type: %s  |  Str: %d  |  Spd: %d  |  Loy: %d  |  Gold: %dg  |  Relics: %d/6", 
+                        type_str, strength, speed, loyalty, gold, count_relics());
                 
                 RECT r1 = {20 + shake_dx, 42 + shake_dy, 580 + shake_dx, 60 + shake_dy};
                 RECT r2 = {20 + shake_dx, 60 + shake_dy, 580 + shake_dx, 80 + shake_dy};
@@ -1641,6 +1820,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             WPARAM wParam = msg.wParam;
             if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
                 SendMessage(hwnd, WM_COMMAND, BTN_HELP, 0);
+                continue;
+            }
+            if (wParam == VK_F5) {
+                SendMessage(hwnd, WM_COMMAND, BTN_SAVE, 0);
+                continue;
+            }
+            if (wParam == VK_F9) {
+                SendMessage(hwnd, WM_COMMAND, BTN_LOAD, 0);
                 continue;
             }
             if (state == 0) {
