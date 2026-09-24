@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-23T21:55:00Z — kilo-expander: KGo (Firebase RTDB Online Multiplayer)**
+  - Status: PASS ✅ (Seamless Firebase Realtime Database online multiplayer implemented; 0 regressions).
+  - Online Infrastructure: Embedded CDN Firebase ES modules (`multiplayer/kgo/rooms/<id>`), player presence (`onDisconnect`), and public lobby broadcast (`multiplayer/kgo/lobby`).
+  - Game Synchronization: Real-time board state, stone placement, liberties/captures, alternating turn enforcement, consecutive passes, and score resolution across 9x9, 13x13, and 19x19 Gobans.
+  - Match Features: Public instant matchmaking, private custom room codes, live in-match chat chips, rematch handshake, and resignation handling.
+  - Audio & Usability: Procedural Genesis/SNES FM synthesis sound chimes (turn, join, chat), top-right non-blocking safe toast alerts, and hotkey integration (`O`).
+  - Verification: 8/8 headless unit tests pass; MSVC C clean build (`KGo.exe` 172.0 KB); Vite clean build (374ms, `kgo.html` 121.5 KB); security lint 100% clean; <999KB ceiling.
+
 - **2026-09-23T20:45:00Z — kilo-qa: KZip (Pass 5: Tutorial & State Integrity)**
   - Status: PASS ✅ (Full state persistence & tutorial isolation verified; 0 regressions).
   - Quicksave & Load: Implemented complete state capture across [F5] Save and [F9] Load hotkeys & buttons in web (`kzip_quicksave`) and native C (`kzip.dat`).

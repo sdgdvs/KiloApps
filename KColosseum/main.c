@@ -74,6 +74,7 @@ typedef struct {
     int damageTaken;
     int isTwins;
     int isBeast;
+    int isBehemoth;
 } Gladiator;
 
 typedef struct {
@@ -108,6 +109,7 @@ int g_playerFlash = 0;
 int g_enemyFlash = 0;
 int g_playerStance = 0; // 0: idle, 1: attack, 2: defend, 3: showboat, 4: dead
 int g_enemyStance = 0;
+int g_enemyStaggered = 0;
 int g_animTick = 0;
 int g_currentView = 0; // 0: Dash, 1: Combat, 2: Help
 
@@ -150,6 +152,7 @@ Gladiator GenerateGladiator(int forArena) {
     g.damageTaken = 0;
     g.isTwins = 0;
     g.isBeast = 0;
+    g.isBehemoth = 0;
     g.desc[0] = '\0';
     g.id = nextId++;
     
@@ -408,7 +411,8 @@ void EnterArena(int index) {
     
     int isSpecial = (arenaLevel > 2 && (my_rand() % 100) < 35);
     if (isSpecial) {
-        int eventType = my_rand() % 3;
+        int maxEvents = (arenaLevel >= 4) ? 4 : 3;
+        int eventType = my_rand() % maxEvents;
         if (eventType == 0) {
             lstrcpyA(enemyFighter.name, "Ferocious Lion");
             enemyFighter.str += arenaLevel * 2;
@@ -421,11 +425,18 @@ void EnterArena(int index) {
             enemyFighter.vit += arenaLevel * 3;
             enemyFighter.str += (arenaLevel * 3) / 2;
             enemyFighter.armor = 1; enemyFighter.shield = 1;
-        } else {
+        } else if (eventType == 2) {
             lstrcpyA(enemyFighter.name, "Twin Gladiators");
             enemyFighter.vit += (arenaLevel * 3) / 2;
             enemyFighter.str += (arenaLevel * 3) / 2;
             enemyFighter.isTwins = 1;
+        } else {
+            lstrcpyA(enemyFighter.name, "Gallic Behemoth");
+            enemyFighter.vit += (arenaLevel * 7) / 2;
+            enemyFighter.str += (arenaLevel * 5) / 2;
+            enemyFighter.agi = (enemyFighter.agi > 2) ? (enemyFighter.agi - 1) : 2;
+            enemyFighter.armor = 1;
+            enemyFighter.isBehemoth = 1;
         }
     } else {
         enemyFighter.str += (arenaLevel * 3) / 2;
@@ -445,6 +456,7 @@ void EnterArena(int index) {
     combatOver = 0;
     playerDefending = 0;
     enemyDefending = 0;
+    g_enemyStaggered = 0;
     crowdFavor = 0;
     g_particleCount = 0;
     g_floaterCount = 0;
@@ -522,9 +534,32 @@ void CombatAction(int action) {
             int dmg = GetEffStr(currentFighter) + (my_rand() % 4);
             if (enemyDefending) dmg -= (enemyFighter.shield == 1 ? 5 : 3);
             if (dmg < 1) dmg = 1;
+
+            int rendActive = (currentFighter->weapon == 1 && (my_rand() % 100) < 20);
+            if (rendActive) dmg += 4;
+
+            int entangleActive = (currentFighter->weapon == 2 && (my_rand() % 100) < 20);
+            if (entangleActive) g_enemyStaggered = 1;
+
+            if (currentFighter->weapon == 0) {
+                crowdFavor += 6;
+                AddFloatingText("+FAVOR", 135, 55, RGB(255, 215, 0));
+            }
+
             enemyHp -= dmg;
             crowdFavor += 5 + (my_rand() % 11);
-            wsprintfA(buf, "%s hits for %d damage!", currentFighter->name, dmg);
+
+            if (rendActive) {
+                wsprintfA(buf, "%s lands an arterial REND for %d damage!", currentFighter->name, dmg);
+                AddFloatingText("REND!", 415, 50, RGB(255, 40, 40));
+                SpawnParticles(415, 95, 22, 5, RGB(180, 20, 20));
+            } else if (entangleActive) {
+                wsprintfA(buf, "%s ENTANGLES the foe for %d damage!", currentFighter->name, dmg);
+                AddFloatingText("ENTANGLED!", 415, 50, RGB(255, 215, 0));
+                SpawnParticles(415, 95, 14, 0, RGB(255, 215, 0));
+            } else {
+                wsprintfA(buf, "%s hits for %d damage!", currentFighter->name, dmg);
+            }
             LogCombat(buf);
             PlaySoundAsync(1);
             g_enemyFlash = 8;
@@ -532,7 +567,7 @@ void CombatAction(int action) {
             if (enemyDefending) {
                 SpawnParticles(415, 95, 18, 0, RGB(255, 240, 150));
                 SpawnParticles(415, 95, 8, 2, RGB(212, 175, 55));
-            } else {
+            } else if (!rendActive) {
                 SpawnParticles(415, 95, 15, 5, RGB(160, 20, 20)); // Blood
                 SpawnParticles(415, 95, 8, 1, RGB(180, 150, 110)); // Dust
             }
@@ -556,8 +591,8 @@ void CombatAction(int action) {
         g_enemyStance = 4;
         UpdateCombatUI();
         int reward = 100 + (arenaLevel * 50);
-        if (lstrcmpA(enemyFighter.name, "Ferocious Lion") == 0 || lstrcmpA(enemyFighter.name, "Armed Chariot") == 0 || enemyFighter.isTwins) {
-            reward += 100 + (arenaLevel * 20);
+        if (lstrcmpA(enemyFighter.name, "Ferocious Lion") == 0 || lstrcmpA(enemyFighter.name, "Armed Chariot") == 0 || enemyFighter.isTwins || enemyFighter.isBehemoth) {
+            reward += 100 + (arenaLevel * 25);
         }
         wsprintfA(buf, "%s is defeated! You win %d Denarii!", enemyFighter.name, reward);
         LogCombat(buf);
@@ -591,12 +626,25 @@ void CombatAction(int action) {
     } else {
         g_enemyStance = 1;
         g_enemyLunge = 35;
+
+        if (enemyFighter.isBehemoth) {
+            AddScreenShake(12);
+            SpawnParticles(135, 115, 16, 1, RGB(180, 150, 110));
+            LogCombat("The Gallic Behemoth slams his colossal war maul into the ground!");
+        }
+
         int hitChance = 75 + (GetEffAgi(&enemyFighter) - GetEffAgi(currentFighter)) * 5;
         if (playerDefending) hitChance -= (currentFighter->shield == 1 ? 50 : 30);
         
         if ((my_rand() % 100) < hitChance) {
             int dmg = GetEffStr(&enemyFighter) + (my_rand() % 4);
             if (playerDefending) dmg -= (currentFighter->shield == 1 ? 5 : 3);
+            if (g_enemyStaggered) {
+                dmg = dmg / 2;
+                if (dmg < 1) dmg = 1;
+                LogCombat("Enemy is entangled and strikes weakly!");
+                g_enemyStaggered = 0;
+            }
             if (dmg < 1) dmg = 1;
             playerHp -= dmg;
             currentFighter->damageTaken += dmg;
@@ -621,6 +669,20 @@ void CombatAction(int action) {
             PlaySoundAsync(2);
             AddFloatingText("MISS!", 135, 70, RGB(180, 180, 180));
             SpawnParticles(135, 115, 6, 1, RGB(180, 150, 110));
+
+            // Shield Bash Counter-Attack
+            if (playerDefending && currentFighter->shield == 1) {
+                int bashDmg = 2 + (my_rand() % 3);
+                enemyHp -= bashDmg;
+                if (enemyHp < 0) enemyHp = 0;
+                wsprintfA(buf, "%s executes a Shield Bash counter for %d damage!", currentFighter->name, bashDmg);
+                LogCombat(buf);
+                char bashStr[16];
+                wsprintfA(bashStr, "BASH -%d", bashDmg);
+                AddFloatingText(bashStr, 415, 70, RGB(255, 215, 0));
+                SpawnParticles(415, 95, 12, 0, RGB(255, 215, 0));
+                PlaySoundAsync(1);
+            }
         }
         
         if (enemyFighter.isTwins && playerHp > 0) {
@@ -712,6 +774,32 @@ void DrawArenaGDI(HDC hdc, int width, int height) {
         SelectObject(hdc, hbrPillar);
     }
 
+    // Imperial Aquila Eagle Motif above center arch
+    int centerArchX = width / 2;
+    HBRUSH hbrEagle = CreateSolidBrush(RGB(212, 175, 55));
+    SelectObject(hdc, hbrEagle);
+    Ellipse(hdc, centerArchX - 5, 26, centerArchX + 5, 36);
+    POINT eagleWings[6] = {
+        {centerArchX - 16, 24}, {centerArchX, 30}, {centerArchX + 16, 24},
+        {centerArchX + 10, 36}, {centerArchX, 33}, {centerArchX - 10, 36}
+    };
+    Polygon(hdc, eagleWings, 6);
+    DeleteObject(hbrEagle);
+
+    // Crowd tier silhouettes & dynamic cheering
+    HBRUSH hbrCrowd = CreateSolidBrush(RGB(22, 12, 6));
+    SelectObject(hdc, hbrCrowd);
+    int isCheer = (crowdFavor >= 30);
+    for (int cx = 10; cx < width; cx += 14) {
+        int cBob = (FastSin(g_animTick * (isCheer ? 6 : 2) + cx * 2) * (isCheer ? 3 : 1)) / 1000;
+        Ellipse(hdc, cx - 4, 68 + cBob, cx + 4, 76 + cBob);
+        if (isCheer && (cx % 28 == 0)) {
+            MoveToEx(hdc, cx - 2, 70 + cBob, NULL); LineTo(hdc, cx - 5, 62 + cBob);
+            MoveToEx(hdc, cx + 2, 70 + cBob, NULL); LineTo(hdc, cx + 5, 62 + cBob);
+        }
+    }
+    DeleteObject(hbrCrowd);
+
     // Imperial Banners (SPQR)
     HBRUSH hbrCrim = CreateSolidBrush(RGB(139, 0, 0));
     HPEN hpenGold = CreatePen(PS_SOLID, 2, RGB(212, 175, 55));
@@ -757,6 +845,13 @@ void DrawArenaGDI(HDC hdc, int width, int height) {
     SelectObject(hdc, hpenRim);
     MoveToEx(hdc, 0, height / 2, NULL);
     LineTo(hdc, width, height / 2);
+
+    // Sand footstep disturbance decals
+    HBRUSH hbrScuff = CreateSolidBrush(RGB(170, 130, 80));
+    SelectObject(hdc, hbrScuff);
+    Ellipse(hdc, 115, 115, 155, 125);
+    Ellipse(hdc, 395, 115, 435, 125);
+    DeleteObject(hbrScuff);
 
     // 3. Ornate Golden L-Bracket Corner Filigree
     SelectObject(hdc, hpenGold);
@@ -1149,6 +1244,127 @@ void DrawChariotGDI(HDC hdc, int x, int y, int lunge, int flash) {
     DeleteObject(hpenWheel);
 }
 
+void DrawBehemothGDI(HDC hdc, int x, int y, int lunge, int flash) {
+    int bob = (FastSin(g_animTick * 3) * 2) / 1000;
+    int drawX = x - lunge;
+    int drawY = y + bob;
+
+    if (g_enemyStance == 4) { // Defeat pose
+        HBRUSH hbrBlood = CreateSolidBrush(RGB(70, 15, 15));
+        HGDIOBJ oldB0 = SelectObject(hdc, hbrBlood);
+        HPEN hpenNull0 = (HPEN)GetStockObject(NULL_PEN);
+        HGDIOBJ oldP0 = SelectObject(hdc, hpenNull0);
+        Ellipse(hdc, drawX - 35, drawY + 16, drawX + 35, drawY + 36);
+
+        // Giant slumped body
+        HBRUSH hbrTorsoDead = CreateSolidBrush(RGB(139, 90, 43));
+        SelectObject(hdc, hbrTorsoDead);
+        Ellipse(hdc, drawX - 24, drawY + 10, drawX + 24, drawY + 30);
+        DeleteObject(hbrTorsoDead);
+
+        // Fallen horned helm
+        HBRUSH hbrHelmDead = CreateSolidBrush(RGB(50, 50, 60));
+        SelectObject(hdc, hbrHelmDead);
+        Ellipse(hdc, drawX + 18, drawY + 14, drawX + 36, drawY + 30);
+        DeleteObject(hbrHelmDead);
+
+        // Dropped War Maul
+        HPEN hpenHaft = CreatePen(PS_SOLID, 3, RGB(60, 35, 15));
+        SelectObject(hdc, hpenHaft);
+        MoveToEx(hdc, drawX - 34, drawY + 28, NULL);
+        LineTo(hdc, drawX - 10, drawY + 24);
+        DeleteObject(hpenHaft);
+
+        SelectObject(hdc, oldB0);
+        SelectObject(hdc, oldP0);
+        DeleteObject(hbrBlood);
+        return;
+    }
+
+    // Shadow
+    HBRUSH hbrShadow = CreateSolidBrush(RGB(140, 110, 70));
+    HPEN hpenNull = (HPEN)GetStockObject(NULL_PEN);
+    HGDIOBJ oldB = SelectObject(hdc, hbrShadow);
+    HGDIOBJ oldP = SelectObject(hdc, hpenNull);
+    Ellipse(hdc, x - 28, y + 28, x + 28, y + 42);
+
+    // Giant Muscular Torso (Tanned with War Paint)
+    COLORREF skinCol = flash > 0 ? RGB(255, 80, 80) : RGB(200, 144, 101);
+    HBRUSH hbrSkin = CreateSolidBrush(skinCol);
+    SelectObject(hdc, hbrSkin);
+    Rectangle(hdc, drawX - 18, drawY - 6, drawX + 18, drawY + 20);
+
+    // Blue War Paint stripes
+    HPEN hpenPaint = CreatePen(PS_SOLID, 2, RGB(43, 77, 122));
+    SelectObject(hdc, hpenPaint);
+    MoveToEx(hdc, drawX - 12, drawY - 2, NULL); LineTo(hdc, drawX - 4, drawY + 12);
+    MoveToEx(hdc, drawX + 12, drawY - 2, NULL); LineTo(hdc, drawX + 4, drawY + 12);
+    DeleteObject(hpenPaint);
+
+    // Massive Legs & Spiked Greaves
+    HBRUSH hbrLegs = CreateSolidBrush(RGB(90, 53, 23));
+    SelectObject(hdc, hbrLegs);
+    Rectangle(hdc, drawX - 14, drawY + 18, drawX - 4, drawY + 36);
+    Rectangle(hdc, drawX + 4, drawY + 18, drawX + 14, drawY + 36);
+    DeleteObject(hbrLegs);
+
+    // Iron pauldrons on shoulder
+    HBRUSH hbrIron = CreateSolidBrush(RGB(44, 44, 54));
+    SelectObject(hdc, hbrIron);
+    RoundRect(hdc, drawX - 22, drawY - 10, drawX - 12, drawY + 6, 4, 4);
+    RoundRect(hdc, drawX + 12, drawY - 10, drawX + 22, drawY + 6, 4, 4);
+
+    // Head & Beard
+    Ellipse(hdc, drawX - 12, drawY - 22, drawX + 12, drawY - 2);
+    HBRUSH hbrBeard = CreateSolidBrush(RGB(102, 34, 0));
+    SelectObject(hdc, hbrBeard);
+    Ellipse(hdc, drawX - 10, drawY - 14, drawX + 10, drawY - 2);
+    DeleteObject(hbrBeard);
+
+    // Horned Iron Helm
+    SelectObject(hdc, hbrIron);
+    Ellipse(hdc, drawX - 13, drawY - 24, drawX + 13, drawY - 10);
+    // Horns
+    HPEN hpenHorns = CreatePen(PS_SOLID, 3, RGB(230, 200, 136));
+    SelectObject(hdc, hpenHorns);
+    MoveToEx(hdc, drawX - 10, drawY - 20, NULL); LineTo(hdc, drawX - 22, drawY - 32);
+    MoveToEx(hdc, drawX + 10, drawY - 20, NULL); LineTo(hdc, drawX + 22, drawY - 32);
+    DeleteObject(hpenHorns);
+
+    // Spiked War Maul
+    HPEN hpenMaul = CreatePen(PS_SOLID, 3, RGB(60, 35, 15));
+    SelectObject(hdc, hpenMaul);
+    int maulX = drawX - 18;
+    int maulY = drawY - 2;
+    if (g_enemyStance == 1) { // Attack slam
+        MoveToEx(hdc, maulX, maulY + 16, NULL);
+        LineTo(hdc, maulX - 24, maulY - 18);
+        SelectObject(hdc, hbrIron);
+        Rectangle(hdc, maulX - 34, maulY - 28, maulX - 14, maulY - 8);
+    } else {
+        MoveToEx(hdc, maulX, maulY + 20, NULL);
+        LineTo(hdc, maulX - 8, maulY - 26);
+        SelectObject(hdc, hbrIron);
+        Rectangle(hdc, maulX - 18, maulY - 36, maulX + 2, maulY - 16);
+    }
+    DeleteObject(hpenMaul);
+
+    // Shockwave ring on attack
+    if (lunge > 10) {
+        HPEN hpenShock = CreatePen(PS_SOLID, 2, RGB(255, 180, 50));
+        SelectObject(hdc, (HBRUSH)GetStockObject(NULL_BRUSH));
+        SelectObject(hdc, hpenShock);
+        Ellipse(hdc, drawX - 36, drawY + 26, drawX + 12, drawY + 40);
+        DeleteObject(hpenShock);
+    }
+
+    SelectObject(hdc, oldB);
+    SelectObject(hdc, oldP);
+    DeleteObject(hbrShadow);
+    DeleteObject(hbrSkin);
+    DeleteObject(hbrIron);
+}
+
 void DrawHealthBarGDI(HDC hdc, int x, int y, int hp, int maxHp, const char* name, COLORREF fillCol) {
     SetTextColor(hdc, RGB(255, 215, 0));
     SetBkMode(hdc, TRANSPARENT);
@@ -1334,14 +1550,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             const char* helpStr = "HOW TO PLAY:\n"
                                   "Buy gladiators from the market, equip them, and train their stats.\n"
                                   "Send them to the Arena to fight and earn Denarii. Dead gladiators are lost forever!\n\n"
-                                  "COMBAT TACTICS:\n"
+                                  "COMBAT TACTICS & WEAPON MASTERY:\n"
                                   "Attack: Uses STR for damage, AGI for hit chance vs enemy AGI.\n"
-                                  "Defend: Skips turn but drastically reduces enemy hit chance & damage.\n"
-                                  "Showboat: Skips turn to build Crowd Favor. At 100%, the crowd rewards you!\n"
+                                  "Defend: Skips turn; reduces hit & dmg. Shield Defend executes Shield Bash counter!\n"
+                                  "Showboat: Skips turn to build Crowd Favor. Bare fists generate double Favor!\n"
                                   "Flee: Saves your gladiator, but you drop an Arena Level.\n\n"
                                   "EQUIPMENT:\n"
-                                  "Glad: +3 STR (More dmg) | Trid: +3 AGI (Higher hit/dodge)\n"
-                                  "Armr: +5 VIT (+50 HP)    | Shld: Increases Defend effectiveness\n";
+                                  "Glad: +3 STR, 20% Rend (+4 bleed) | Trid: +3 AGI, 20% Entangle\n"
+                                  "Armr: +5 VIT (+50 HP)              | Shld: Increases Defend & Counter\n";
 
             hHelpText = CreateWindowA("STATIC", helpStr, WS_CHILD | SS_LEFT,
                           20, 50, 540, 250, hwnd, NULL, NULL, NULL);
@@ -1420,6 +1636,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     } else if (enemyFighter.isTwins) {
                         DrawGladiatorGDI(memDC, 435, 88, &enemyFighter, 1, g_enemyStance, g_enemyLunge, g_enemyFlash);
                         DrawGladiatorGDI(memDC, 395, 98, &enemyFighter, 1, g_enemyStance, g_enemyLunge, g_enemyFlash);
+                    } else if (enemyFighter.isBehemoth) {
+                        DrawBehemothGDI(memDC, 415, 95, g_enemyLunge, g_enemyFlash);
                     } else {
                         DrawGladiatorGDI(memDC, 415, 95, &enemyFighter, 1, g_enemyStance, g_enemyLunge, g_enemyFlash);
                     }

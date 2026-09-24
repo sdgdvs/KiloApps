@@ -173,12 +173,13 @@
           <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Flee:</strong>&nbsp;Saves your gladiator's life, but you drop an Arena Level in disgrace.</li>
         </ul>
 
-        <p><strong>EQUIPMENT REFERENCE:</strong></p>
+        <p><strong>EQUIPMENT & WEAPON MASTERY:</strong></p>
         <ul style="list-style-type:disc; padding-left:20px;">
-          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Gladius (Glad):</strong>&nbsp;+3 STR (More damage)</li>
-          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Trident (Trid):</strong>&nbsp;+3 AGI (Higher hit & dodge chance)</li>
-          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Armor (Armr):</strong>&nbsp;+5 VIT (+50 Max HP)</li>
-          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Shield (Shld):</strong>&nbsp;Greatly increases effectiveness of the Defend command.</li>
+          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Gladius (Glad):</strong>&nbsp;+3 STR; 20% chance to inflict Rend (+4 bleed damage & blood spray)</li>
+          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Trident (Trid):</strong>&nbsp;+3 AGI; 20% chance to Entangle (staggers foe, halving their attack)</li>
+          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Armor (Armr):</strong>&nbsp;+5 VIT (+50 Max HP) with bronze muscle cuirass</li>
+          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Shield (Shld):</strong>&nbsp;Greatly increases Defend block, with Shield Bash counter-strike on enemy miss</li>
+          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Bare Fists:</strong>&nbsp;Brawler's Fury generates double Crowd Favor per strike!</li>
         </ul>
       </div>
     </div>
@@ -561,6 +562,7 @@
     let enemyFighter = null;
     let playerDefending = false;
     let enemyDefending = false;
+    let enemyStaggered = false;
     let combatOver = false;
     let crowdFavor = 0;
 
@@ -1262,6 +1264,221 @@
       ctx.restore();
     }
 
+    function drawBehemothVisual(ctx, x, y, state, time) {
+      ctx.save();
+      
+      if (state.flash > 0) {
+        ctx.shadowColor = '#ff2200';
+        ctx.shadowBlur = 18;
+      }
+
+      let bob = Math.sin(time * 3.5) * 2;
+      let lungeX = state.lunge || 0;
+      let drawX = x - lungeX;
+      let drawY = y + (state.stance === 'dead' ? 26 : bob);
+
+      if (state.stance === 'dead') {
+        // Massive fallen giant pose
+        ctx.fillStyle = 'rgba(40, 5, 5, 0.5)';
+        ctx.beginPath();
+        ctx.ellipse(drawX, drawY + 20, 42, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Slumped giant body
+        ctx.fillStyle = '#8b5a2b';
+        ctx.fillRect(drawX - 25, drawY + 12, 28, 10);
+        ctx.fillStyle = '#4a2d11';
+        ctx.beginPath();
+        ctx.ellipse(drawX + 4, drawY + 10, 26, 14, -0.15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head slumped on sand
+        ctx.fillStyle = '#c89065';
+        ctx.beginPath();
+        ctx.arc(drawX - 22, drawY + 12, 12, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Knocked-off horned iron helm
+        ctx.fillStyle = '#3a3a44';
+        ctx.beginPath();
+        ctx.arc(drawX - 38, drawY + 16, 12, 0, Math.PI * 2);
+        ctx.fill();
+        // Horns on fallen helmet
+        ctx.strokeStyle = '#d4af37';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(drawX - 44, drawY + 12);
+        ctx.quadraticCurveTo(drawX - 52, drawY + 4, drawX - 48, drawY - 2);
+        ctx.stroke();
+
+        // Dropped Colossal Spiked War Maul
+        ctx.save();
+        ctx.translate(drawX + 22, drawY + 18);
+        ctx.rotate(0.35);
+        ctx.fillStyle = '#3a2010';
+        ctx.fillRect(-3, -36, 6, 40);
+        ctx.fillStyle = '#2a2a32';
+        ctx.fillRect(-12, -48, 24, 16);
+        ctx.fillStyle = '#888894';
+        for (let sp = -10; sp <= 10; sp += 10) {
+          ctx.beginPath();
+          ctx.moveTo(sp - 2, -48);
+          ctx.lineTo(sp, -54);
+          ctx.lineTo(sp + 2, -48);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        ctx.restore();
+        return;
+      }
+
+      // Giant Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.beginPath();
+      ctx.ellipse(x - lungeX * 0.6, y + 44, 34, 10, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Massive Legs with Spiked Greaves
+      ctx.fillStyle = '#5a3517';
+      ctx.fillRect(drawX - 16, drawY + 18, 10, 24);
+      ctx.fillRect(drawX + 4, drawY + 18, 10, 24);
+      // Iron banded greaves
+      ctx.fillStyle = '#3a3a42';
+      ctx.fillRect(drawX - 17, drawY + 28, 12, 12);
+      ctx.fillRect(drawX + 3, drawY + 28, 12, 12);
+      ctx.fillStyle = '#b8860b';
+      ctx.fillRect(drawX - 15, drawY + 32, 8, 3);
+      ctx.fillRect(drawX + 5, drawY + 32, 8, 3);
+
+      // Colossal Muscular Torso (Tanned with War Paint)
+      ctx.fillStyle = '#c89065';
+      ctx.beginPath();
+      ctx.moveTo(drawX - 22, drawY - 4);
+      ctx.lineTo(drawX + 22, drawY - 4);
+      ctx.lineTo(drawX + 18, drawY + 22);
+      ctx.lineTo(drawX - 18, drawY + 22);
+      ctx.closePath();
+      ctx.fill();
+
+      // War Paint Runes (Blue / Indigo tribal markings)
+      ctx.strokeStyle = '#2b4d7a';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(drawX - 12, drawY);
+      ctx.lineTo(drawX - 4, drawY + 14);
+      ctx.lineTo(drawX - 12, drawY + 18);
+      ctx.moveTo(drawX + 12, drawY);
+      ctx.lineTo(drawX + 4, drawY + 14);
+      ctx.lineTo(drawX + 12, drawY + 18);
+      ctx.stroke();
+
+      // Heavy Iron-Studded Harness & Skull Buckle
+      ctx.fillStyle = '#3e2210';
+      ctx.fillRect(drawX - 19, drawY + 14, 38, 7);
+      ctx.fillStyle = '#ffd700';
+      ctx.beginPath();
+      ctx.arc(drawX, drawY + 17, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Spiked Iron Pauldron (Left shoulder)
+      ctx.fillStyle = '#2c2c36';
+      ctx.strokeStyle = '#4a4a58';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(drawX + 16, drawY - 10, 14, 16, 4);
+      ctx.fill();
+      ctx.stroke();
+      // Shoulder spikes
+      ctx.fillStyle = '#888894';
+      ctx.beginPath();
+      ctx.moveTo(drawX + 22, -10 + drawY);
+      ctx.lineTo(drawX + 24, -18 + drawY);
+      ctx.lineTo(drawX + 26, -10 + drawY);
+      ctx.fill();
+
+      // Head & Rugged Beard
+      ctx.fillStyle = '#c89065';
+      ctx.beginPath();
+      ctx.arc(drawX, drawY - 16, 14, 0, Math.PI * 2);
+      ctx.fill();
+      // Thick red/brown beard
+      ctx.fillStyle = '#662200';
+      ctx.beginPath();
+      ctx.ellipse(drawX, drawY - 8, 11, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Horned Iron Helm
+      ctx.fillStyle = '#2c2c36';
+      ctx.beginPath();
+      ctx.arc(drawX, drawY - 18, 15, Math.PI * 0.85, Math.PI * 2.15);
+      ctx.fill();
+      ctx.fillStyle = '#111116';
+      ctx.fillRect(drawX - 8, drawY - 15, 16, 4); // Eye slit visor
+      ctx.fillStyle = '#ff3300';
+      ctx.fillRect(drawX - 5, drawY - 14, 3, 2); // Glowing red eyes
+      ctx.fillRect(drawX + 2, drawY - 14, 3, 2);
+
+      // Colossal Horns
+      ctx.strokeStyle = '#e6c888';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.moveTo(drawX - 13, drawY - 22);
+      ctx.quadraticCurveTo(drawX - 26, drawY - 34, drawX - 22, drawY - 42);
+      ctx.moveTo(drawX + 13, drawY - 22);
+      ctx.quadraticCurveTo(drawX + 26, drawY - 34, drawX + 22, drawY - 42);
+      ctx.stroke();
+
+      // Two-handed Spiked War Maul Weapon
+      let maulAngle = (state.stance === 'attack') ? -1.8 : -0.4;
+      let maulX = drawX - 16;
+      let maulY = drawY + 8;
+      if (state.stance === 'attack') {
+        maulX = drawX - 28;
+        maulY = drawY + 12;
+      }
+
+      ctx.save();
+      ctx.translate(maulX, maulY);
+      ctx.rotate(maulAngle);
+      // Heavy timber haft
+      ctx.fillStyle = '#3a2010';
+      ctx.fillRect(-4, -48, 8, 54);
+      // Iron bands on haft
+      ctx.fillStyle = '#888894';
+      ctx.fillRect(-5, -34, 10, 3);
+      ctx.fillRect(-5, -20, 10, 3);
+      // Massive Spiked Maul Head
+      ctx.fillStyle = '#24242c';
+      ctx.strokeStyle = '#484856';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(-16, -64, 32, 20, 3);
+      ctx.fill();
+      ctx.stroke();
+      // Iron Spikes on Maul Head
+      ctx.fillStyle = '#a0a0b0';
+      for (let sx of [-12, -4, 4, 12]) {
+        ctx.beginPath();
+        ctx.moveTo(sx - 2, -64);
+        ctx.lineTo(sx, -72);
+        ctx.lineTo(sx + 2, -64);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      // Shockwave ring when attacking
+      if (state.stance === 'attack' || state.lunge > 15) {
+        ctx.strokeStyle = 'rgba(255, 180, 50, 0.85)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.ellipse(drawX - 32, drawY + 36, 32, 10, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
     function drawArenaEnvironment(ctx, width, height, time) {
       // Sky / Colosseum Upper Tier Gradient
       const skyGrad = ctx.createLinearGradient(0, 0, 0, height * 0.55);
@@ -1285,13 +1502,73 @@
         ctx.fillStyle = '#7a4e28';
       }
 
-      // Crowd Tier Silhouettes
-      ctx.fillStyle = 'rgba(20, 8, 2, 0.7)';
+      // Center Imperial Aquila Roman Eagle Motif
+      const centerArchX = width * 0.5;
+      ctx.save();
+      ctx.fillStyle = '#d4af37';
+      ctx.strokeStyle = '#8b6508';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(centerArchX, 35, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(centerArchX - 16, 31);
+      ctx.quadraticCurveTo(centerArchX - 8, 27, centerArchX, 35);
+      ctx.quadraticCurveTo(centerArchX + 8, 27, centerArchX + 16, 31);
+      ctx.quadraticCurveTo(centerArchX + 10, 38, centerArchX, 40);
+      ctx.quadraticCurveTo(centerArchX - 10, 38, centerArchX - 16, 31);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(centerArchX, 46, 5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      // Atmospheric God Rays angling through stone arches
+      ctx.save();
+      const beamGrad = ctx.createLinearGradient(0, 0, width * 0.7, height);
+      beamGrad.addColorStop(0, 'rgba(255, 235, 170, 0.10)');
+      beamGrad.addColorStop(0.5, 'rgba(255, 220, 140, 0.04)');
+      beamGrad.addColorStop(1, 'rgba(255, 210, 120, 0)');
+      ctx.fillStyle = beamGrad;
+      ctx.beginPath();
+      ctx.moveTo(40, 0);
+      ctx.lineTo(160, 0);
+      ctx.lineTo(width * 0.55, height);
+      ctx.lineTo(width * 0.28, height);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(190, 0);
+      ctx.lineTo(320, 0);
+      ctx.lineTo(width * 0.85, height);
+      ctx.lineTo(width * 0.62, height);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // Crowd Tier Silhouettes & Dynamic Cheering
+      const isCheering = (crowdFavor >= 30);
       for (let x = 10; x < width; x += 14) {
-        let crowdBob = Math.sin(time * 3 + x * 0.2) * 2;
+        let crowdBob = Math.sin(time * (isCheering ? 7 : 3) + x * 0.2) * (isCheering ? 3.5 : 2);
+        let headY = 78 + crowdBob;
+        ctx.fillStyle = 'rgba(20, 8, 2, 0.75)';
         ctx.beginPath();
-        ctx.arc(x, 78 + crowdBob, 5, 0, Math.PI * 2);
+        ctx.arc(x, headY, 5, 0, Math.PI * 2);
         ctx.fill();
+        if (isCheering && (x % 28 === 0)) {
+          ctx.strokeStyle = 'rgba(20, 8, 2, 0.75)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(x - 3, headY + 5);
+          ctx.lineTo(x - 6, headY - 4);
+          ctx.moveTo(x + 3, headY + 5);
+          ctx.lineTo(x + 6, headY - 4);
+          ctx.stroke();
+        }
       }
 
       // Imperial Velarium Banners with Gold Laurels
@@ -1354,6 +1631,13 @@
       ctx.fill();
       ctx.beginPath();
       ctx.ellipse(width * 0.7, height * 0.82, 22, 8, -0.1, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Footstep sand scuff decals under combatants
+      ctx.fillStyle = 'rgba(100, 65, 30, 0.35)';
+      ctx.beginPath();
+      ctx.ellipse(width * 0.28, height * 0.78, 28, 8, 0, 0, Math.PI * 2);
+      ctx.ellipse(width * 0.72, height * 0.78, 28, 8, 0, 0, Math.PI * 2);
       ctx.fill();
 
       // Ornate Golden L-Bracket Corner Filigree
@@ -1432,6 +1716,8 @@
           // Draw Twin 2 slightly behind
           drawGladiatorVisual(arenaCtx, enemyX + 26, enemyY - 8, enemyFighter, true, enemyState, time + 0.5);
           drawGladiatorVisual(arenaCtx, enemyX - 6, enemyY + 4, enemyFighter, true, enemyState, time);
+        } else if (enemyFighter.isBehemoth) {
+          drawBehemothVisual(arenaCtx, enemyX, enemyY, enemyState, time);
         } else {
           drawGladiatorVisual(arenaCtx, enemyX, enemyY, enemyFighter, true, enemyState, time);
         }
@@ -1555,7 +1841,8 @@
       
       let isSpecial = (arenaLevel > 2 && Math.random() < 0.35);
       if (isSpecial) {
-        let eventType = Math.floor(Math.random() * 3);
+        let maxEvents = (arenaLevel >= 4) ? 4 : 3;
+        let eventType = Math.floor(Math.random() * maxEvents);
         if (eventType === 0) {
           enemyFighter.name = "Ferocious Lion";
           enemyFighter.str += Math.floor(arenaLevel * 2);
@@ -1568,11 +1855,18 @@
           enemyFighter.vit += Math.floor(arenaLevel * 3);
           enemyFighter.str += Math.floor(arenaLevel * 1.5);
           enemyFighter.armor = 1; enemyFighter.shield = 1;
-        } else {
+        } else if (eventType === 2) {
           enemyFighter.name = "Twin Gladiators";
           enemyFighter.vit += Math.floor(arenaLevel * 1.5);
           enemyFighter.str += Math.floor(arenaLevel * 1.5);
           enemyFighter.isTwins = true;
+        } else {
+          enemyFighter.name = "Gallic Behemoth";
+          enemyFighter.vit += Math.floor(arenaLevel * 3.5);
+          enemyFighter.str += Math.floor(arenaLevel * 2.5);
+          enemyFighter.agi = Math.max(2, enemyFighter.agi - 1);
+          enemyFighter.armor = 1;
+          enemyFighter.isBehemoth = true;
         }
       } else {
         enemyFighter.str += Math.floor(arenaLevel * 1.5);
@@ -1592,6 +1886,7 @@
       combatOver = false;
       playerDefending = false;
       enemyDefending = false;
+      enemyStaggered = false;
       crowdFavor = 0;
       particles = [];
       floaters = [];
@@ -1715,9 +2010,37 @@
         if (Math.random() * 100 < hitChance) {
           let dmg = Math.max(1, getEffStr(currentFighter) + Math.floor(Math.random() * 4));
           if (enemyDefending) dmg = Math.max(1, dmg - (enemyFighter.shield === 1 ? 5 : 3));
+
+          // Weapon Mastery: Gladius Rend
+          let rendActive = (currentFighter.weapon === 1 && Math.random() < 0.20);
+          if (rendActive) dmg += 4;
+
+          // Weapon Mastery: Trident Entangle
+          let entangleActive = (currentFighter.weapon === 2 && Math.random() < 0.20);
+          if (entangleActive) enemyStaggered = true;
+
+          // Weapon Mastery: Bare Fists Crowd Favor Boost
+          if (currentFighter.weapon === 0) {
+            crowdFavor += 6;
+            addFloatingText("+FAVOR!", pX, pY - 45, '#ffd700');
+          }
+
           enemyFighter.hp -= dmg;
           crowdFavor += 5 + Math.floor(Math.random() * 11);
-          logCombat(`<strong>${currentFighter.name}</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
+
+          if (rendActive) {
+            logCombat(`<strong>${currentFighter.name}</strong> strikes a deep arterial rend for <span style="color:#8b0000;">${dmg} damage</span>!`);
+            addFloatingText("REND! -" + dmg, eX, eY - 30, '#ff1111');
+            spawnParticles(eX, eY, 22, 'blood');
+          } else if (entangleActive) {
+            logCombat(`<strong>${currentFighter.name}</strong> hits for <span style="color:#8b0000;">${dmg} damage</span> and entangles foe!`);
+            addFloatingText("ENTANGLED!", eX, eY - 45, '#ffd700');
+            addFloatingText(`-${dmg}`, eX, eY - 30, '#ff2222');
+            spawnParticles(eX, eY, 14, 'sparks');
+          } else {
+            logCombat(`<strong>${currentFighter.name}</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
+            addFloatingText(`-${dmg}`, eX, eY - 30, '#ff2222');
+          }
           playClash();
           
           enemyState.flash = 12;
@@ -1729,7 +2052,6 @@
             spawnParticles(eX, eY, 15, 'blood');
             spawnParticles(eX, eY, 10, 'dust');
           }
-          addFloatingText(`-${dmg}`, eX, eY - 30, '#ff2222');
           checkCrowdFavor();
         } else {
           crowdFavor = Math.max(0, crowdFavor - 5);
@@ -1745,8 +2067,8 @@
         enemyState.stance = 'dead';
         updateCombatUI();
         let reward = 100 + (arenaLevel * 50);
-        if (enemyFighter.isBeast || enemyFighter.isTwins || enemyFighter.name === "Armed Chariot") {
-            reward += 100 + (arenaLevel * 20);
+        if (enemyFighter.isBeast || enemyFighter.isTwins || enemyFighter.name === "Armed Chariot" || enemyFighter.isBehemoth) {
+            reward += 100 + (arenaLevel * 25);
         }
         logCombat(`<strong>${enemyFighter.name} is defeated! You win ${reward} Denarii!</strong>`);
         playVictory();
@@ -1781,12 +2103,23 @@
           enemyState.lunge = 45;
           setTimeout(() => { enemyState.stance = enemyDefending ? 'defend' : 'idle'; }, 300);
 
+          if (enemyFighter.isBehemoth) {
+            addScreenShake(12);
+            spawnParticles(pX, pY, 16, 'dust');
+            logCombat(`<em>The Gallic Behemoth slams his colossal war maul into the earth!</em>`);
+          }
+
           let hitChance = 75 + (getEffAgi(enemyFighter) - getEffAgi(currentFighter)) * 5;
           if (playerDefending) hitChance -= (currentFighter.shield === 1 ? 50 : 30);
           
           if (Math.random() * 100 < hitChance) {
             let dmg = Math.max(1, getEffStr(enemyFighter) + Math.floor(Math.random() * 4));
             if (playerDefending) dmg = Math.max(1, dmg - (currentFighter.shield === 1 ? 5 : 3));
+            if (enemyStaggered) {
+              dmg = Math.max(1, Math.floor(dmg * 0.5));
+              logCombat(`<em>${enemyFighter.name} is entangled and strikes weakly!</em>`);
+              enemyStaggered = false;
+            }
             currentFighter.hp -= dmg;
             currentFighter.damageTaken += dmg;
             logCombat(`<strong>${enemyFighter.name}</strong> hits for <span style="color:#8b0000;">${dmg} damage</span>!`);
@@ -1807,6 +2140,16 @@
             playMiss();
             addFloatingText("MISS!", pX, pY - 30, '#aaaaaa');
             spawnParticles(pX, pY + 20, 6, 'dust');
+
+            // Shield Bash Counter-Attack
+            if (playerDefending && currentFighter.shield === 1) {
+              let bashDmg = 2 + Math.floor(Math.random() * 3);
+              enemyFighter.hp = Math.max(0, enemyFighter.hp - bashDmg);
+              logCombat(`<strong>${currentFighter.name}</strong> counters with a ferocious <strong>Shield Bash</strong> for <span style="color:#d4af37;">${bashDmg} damage</span>!`);
+              addFloatingText(`BASH -${bashDmg}`, eX, eY - 30, '#ffd700');
+              spawnParticles(eX, eY, 12, 'sparks', '#ffd700');
+              playClash();
+            }
           }
           
           if (enemyFighter.isTwins && currentFighter.hp > 0) {

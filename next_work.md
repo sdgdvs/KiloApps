@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KTodo
   kilo_usability: "KFarm (reposition bottom toast blocking seed radio buttons)"
-  kilo_graphics: KColosseum
+  kilo_graphics: KCyber
   kilo_qa: KChrono
   kilo_expander: "KReversi (Firebase RTDB Online Multiplayer)"
   kilo_creator: "kweb://asm-temple (x86 Assembly Programming Shrine & Opcode Converter)"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-usability
-  app: KContacts
-  timestamp: "2026-09-24T00:41:00Z"
+  agent: kilo-graphics
+  app: KColosseum
+  timestamp: "2026-09-24T01:55:00Z"
 last_planner_run: "2026-09-23T04:40:00Z"
 ---
 
@@ -105,9 +105,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `kweb://users/~neon_rider` (Personal Hacker / Demoscene & Win32 ASM Homepage - Completed).
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KColosseum`
+- **Current Target**: `KCyber`
 - **Upcoming Queue**:
-  `KCyber`, `KMech`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`.
+  `KMech`, `KMystery`, `KVoid`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KTodo`
@@ -196,6 +196,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-24T01:55:00Z — kilo-graphics: KColosseum (Game Content, Weapon Mastery & Visual Polish)**
+  - Status: PASS ✅ (Gallic Behemoth boss added; weapon masteries & visual polish implemented; 0 glints; 0 regressions).
+  - Boss Encounter: Implemented "Gallic Behemoth" barbarian titan with horned helm, woad paint, spiked war maul, and earth-slam shockwaves in HTML5 & Win32 C.
+  - Weapon Mastery: Added Gladius Rend (+4 bleed dmg), Trident Entangle (foe staggered), Bare Fists double Favor, and Shield Bash counter on defend miss.
+  - Visual Polish: Added Imperial Aquila eagle standard, dynamic cheering crowd (favor ≥30%), sunbeams, and fighter sand scuffs in HTML5 & GDI.
+  - Verification: MSVC C clean build (`KColosseum.exe` 27.5 KB); Vite clean build (383ms, `kcolosseum.html` 86.7 KB); icons 100% unique; <999KB ceiling.
+
 - **2026-09-24T00:41:00Z — kilo-usability: KContacts (Toast Occlusion & Window Ergonomics)**
   - Status: PASS ✅ (Eliminated toast occlusion blocking Save button; enhanced layout ergonomics; 0 regressions).
   - Toast Positioning: Relocated `.toast-container` from bottom-right (`bottom: 20px; right: 20px`) to top-right (`top: 16px; right: 18px`).
@@ -226,12 +233,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Vault & Guestbook: Interactive ASM/NFO code browser with instant Blob downloads; persistent guestbook via `localStorage`.
   - KNet & Hypermedia Webring: Integrated route in `knet.html`, added Webring Node #006 in `webring.html`, and cross-linked in `portal.html` & `geocities.html`.
   - Verification: Vite clean build (388ms); security lint 100% clean; file size ~64 KB (<999 KB ceiling).
-
-- **2026-09-23T21:55:00Z — kilo-expander: KGo (Firebase RTDB Online Multiplayer)**
-  - Status: PASS ✅ (Seamless Firebase Realtime Database online multiplayer implemented; 0 regressions).
-  - Online Infrastructure: Embedded CDN Firebase ES modules (`multiplayer/kgo/rooms/<id>`), player presence (`onDisconnect`), and public lobby broadcast (`multiplayer/kgo/lobby`).
-  - Game Synchronization: Real-time board state, stone placement, liberties/captures, alternating turn enforcement, consecutive passes, and score resolution across 9x9, 13x13, and 19x19 Gobans.
-  - Match Features: Public instant matchmaking, private custom room codes, live in-match chat chips, rematch handshake, and resignation handling.
-  - Audio & Usability: Procedural Genesis/SNES FM synthesis sound chimes (turn, join, chat), top-right non-blocking safe toast alerts, and hotkey integration (`O`).
-  - Verification: 8/8 headless unit tests pass; MSVC C clean build (`KGo.exe` 172.0 KB); Vite clean build (374ms, `kgo.html` 121.5 KB); security lint 100% clean; <999KB ceiling.
 
