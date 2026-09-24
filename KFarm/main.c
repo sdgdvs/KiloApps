@@ -1566,12 +1566,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 DeleteObject(hHoverPen);
             }
 
-            // On-screen floating toast notification
+            // On-screen floating toast notification (top safe zone to avoid occluding controls)
             if (toast_timer > 0 && toast_msg[0] != '\0') {
                 SIZE sz;
                 GetTextExtentPoint32(hdc, toast_msg, lstrlen(toast_msg), &sz);
                 int tx = 210;
-                int ty = 410;
+                int ty = 54;
                 int boxW = sz.cx + 24;
                 int boxH = sz.cy + 10;
                 int left = tx - boxW / 2;

@@ -6,7 +6,7 @@
     <title>KFarm</title>
     <style>
         body { 
-            margin: 0; padding: 0; 
+            margin: 0; padding: 12px; 
             background-color: #87CEEB; /* Sunny sky blue */
             color: #4E342E; /* Earthy dark brown */
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -15,6 +15,7 @@
             user-select: none;
             display: flex; justify-content: center; align-items: center; 
             min-height: 100vh; overflow-y: auto; 
+            box-sizing: border-box;
         }
         .container {
             background-color: #FFF3E0; /* Warm sunny white */
@@ -22,6 +23,10 @@
             border-radius: 12px;
             box-shadow: 0 8px 16px rgba(0,0,0,0.2);
             border: 4px solid #8D6E63;
+            max-width: 580px;
+            width: 100%;
+            box-sizing: border-box;
+            margin: auto;
         }
         canvas { 
             background-color: #8BC34A; 
@@ -47,26 +52,97 @@
             opacity: 0.65;
             cursor: not-allowed !important;
         }
+        .seed-selector-group {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .seed-card-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: #EDE0D4;
+            border: 2px solid #BCAAA4;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4E342E;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+        .seed-card-label:hover {
+            background: #EFEBE9;
+            border-color: #8D6E63;
+            transform: translateY(-1px);
+        }
+        .seed-card-label:active {
+            transform: translateY(0);
+        }
+        .seed-card-label.selected,
+        .seed-card-label:has(input[type="radio"]:checked) {
+            background: #E8F5E9;
+            border-color: #4CAF50;
+            color: #1B5E20;
+            box-shadow: 0 2px 6px rgba(76, 175, 80, 0.25);
+        }
+        .seed-card-label input[type="radio"] {
+            accent-color: #2E7D32;
+            cursor: pointer;
+            margin: 0;
+        }
         .toast-notify {
             position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(62, 39, 35, 0.95);
+            top: 16px;
+            right: 16px;
+            transform: translateY(-8px);
+            background-color: rgba(62, 39, 35, 0.96);
             color: #FFF3E0;
-            padding: 10px 20px;
-            border-radius: 20px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.35);
-            font-size: 14px;
+            padding: 9px 14px;
+            border-radius: 8px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+            font-size: 13px;
             font-weight: bold;
-            z-index: 999;
-            pointer-events: auto;
+            z-index: 1000;
+            pointer-events: none;
             cursor: pointer;
             opacity: 0;
-            transition: opacity 0.25s ease, transform 0.25s ease;
+            transition: opacity 0.2s ease, transform 0.2s ease;
             border: 2px solid #81C784;
-            max-width: 90vw;
-            text-align: center;
+            max-width: min(380px, calc(100vw - 32px));
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            line-height: 1.35;
+        }
+        .toast-notify.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        .toast-notify .toast-text {
+            flex: 1;
+        }
+        .toast-notify .toast-close-btn {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: #FFF3E0;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .toast-notify .toast-close-btn:hover {
+            background: rgba(255,255,255,0.3);
+            color: #FFFFFF;
         }
     </style>
 </head>
@@ -79,11 +155,11 @@
         <canvas id="gameCanvas" width="400" height="400"></canvas>
         <p>Click: Grass(Till) &rarr; Soil(Plant) &rarr; 🌱(Water) &rarr; 🌾(Harvest) | <span style="color:#2196F3;">Shortcuts: [1-4] Seeds, [Space] Sleep, [H/F1] Almanac</span></p>
         <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:15px;">
-            <div style="width:100%; margin-bottom: 5px; font-size: 14px;">
-                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="0" checked> [1] Wheat (-$5) [Sp/Fa]</label>
-                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="1"> [2] Corn (-$10) [Su]</label>
-                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="2"> [3] Tomato (-$15) [Su/Fa]</label>
-                <label style="margin: 0 5px; cursor: pointer;"><input type="radio" name="seed" value="3"> [4] Pumpkin (-$25) [Fa]</label>
+            <div class="seed-selector-group">
+                <label class="seed-card-label selected"><input type="radio" name="seed" value="0" checked> [1] Wheat (-$5) [Sp/Fa]</label>
+                <label class="seed-card-label"><input type="radio" name="seed" value="1"> [2] Corn (-$10) [Su]</label>
+                <label class="seed-card-label"><input type="radio" name="seed" value="2"> [3] Tomato (-$15) [Su/Fa]</label>
+                <label class="seed-card-label"><input type="radio" name="seed" value="3"> [4] Pumpkin (-$25) [Fa]</label>
             </div>
             <button id="sleepBtn" onclick="nextDay()" style="padding:10px 20px; font-size:16px; background-color:#FF9800; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Sleep [Space]</button>
             <button id="upgradeBtn" onclick="buyUpgrade()" style="padding:10px 20px; font-size:16px; background-color:#4CAF50; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Fertilizer ($100) [F]</button>
@@ -156,18 +232,45 @@
             </div>
         </div>
     </div>
-    <div id="kfarmToast" class="toast-notify" onclick="this.style.opacity='0'" title="Click to dismiss"></div>
+    <div id="kfarmToast" class="toast-notify" onclick="hideToast()" title="Click to dismiss">
+        <span id="kfarmToastText" class="toast-text"></span>
+        <button class="toast-close-btn" onclick="event.stopPropagation(); hideToast();" title="Dismiss">✕</button>
+    </div>
     <script>
+        let toastTimer = null;
         function showToast(msg, isError = false) {
             const toast = document.getElementById('kfarmToast');
+            const toastText = document.getElementById('kfarmToastText');
             if (!toast) return;
-            toast.textContent = msg;
+            if (toastText) toastText.textContent = msg;
+            else toast.textContent = msg;
             toast.style.borderColor = isError ? '#F44336' : '#81C784';
-            toast.style.opacity = '1';
-            clearTimeout(toast.timer);
-            toast.timer = setTimeout(() => {
-                toast.style.opacity = '0';
+            toast.classList.add('visible');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                hideToast();
             }, 3000);
+        }
+
+        function hideToast() {
+            const toast = document.getElementById('kfarmToast');
+            if (!toast) return;
+            if (toastTimer) {
+                clearTimeout(toastTimer);
+                toastTimer = null;
+            }
+            toast.classList.remove('visible');
+        }
+
+        function updateSeedLabelSelection() {
+            document.querySelectorAll('.seed-card-label').forEach(lbl => {
+                const radio = lbl.querySelector('input[name="seed"]');
+                if (radio && radio.checked) {
+                    lbl.classList.add('selected');
+                } else {
+                    lbl.classList.remove('selected');
+                }
+            });
         }
 
         function showHelp() { document.getElementById('helpModal').style.display = 'flex'; }
@@ -207,6 +310,13 @@
                 if (isModalOpen) {
                     e.preventDefault();
                     hideHelp();
+                    return;
+                }
+                const toast = document.getElementById('kfarmToast');
+                if (toast && toast.classList.contains('visible')) {
+                    e.preventDefault();
+                    hideToast();
+                    return;
                 }
                 return;
             }
@@ -222,6 +332,7 @@
                 const radios = document.querySelectorAll('input[name="seed"]');
                 if (radios[idx]) {
                     radios[idx].checked = true;
+                    updateSeedLabelSelection();
                     showToast(`Selected seed: [${e.key}] ${cropData[idx].name} ($${cropData[idx].cost})`);
                 }
                 return;
@@ -1810,12 +1921,14 @@
         document.querySelectorAll('input[name="seed"]').forEach((r, idx) => {
             r.addEventListener('change', () => {
                 if (r.checked) {
+                    updateSeedLabelSelection();
                     showToast(`Selected seed: [${idx + 1}] ${cropData[idx].name} ($${cropData[idx].cost})`);
                 }
             });
         });
 
         loadGame();
+        updateSeedLabelSelection();
         checkBankruptcy();
         updateAnimals();
         updateMoney();

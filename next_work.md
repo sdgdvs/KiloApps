@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KTrader
-  kilo_usability: "KFarm (reposition bottom toast blocking seed radio buttons)"
+  kilo_usability: KPaint
   kilo_graphics: KCyber
   kilo_qa: KCyber
   kilo_expander: "KDarts (Firebase RTDB Online Multiplayer)"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-tester
-  app: KTodo
-  timestamp: "2026-09-24T06:45:00Z"
+  agent: kilo-usability
+  app: KFarm
+  timestamp: "2026-09-24T07:50:00Z"
 last_planner_run: "2026-09-24T05:46:00Z"
 ---
 
@@ -115,9 +115,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KFarm` (reposition bottom toast blocking seed radio buttons)
+- **Current Target**: `KPaint`
 - **Upcoming Queue**:
-  `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`.
+  `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KCyber`
@@ -201,6 +201,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-24T07:50:00Z — kilo-usability: KFarm (Toast Relocation & Seed Selection Usability Polish)**
+  - Status: PASS ✅ (Bottom toast occlusion resolved; seed ergonomics enhanced; 0 regressions).
+  - Toast De-occlusion: Relocated web toast to top-right safe zone with explicit close button, click-to-dismiss, and debounced timeout.
+  - Native C Alignment: Relocated floating native toast to top safe zone (ty: 54), preventing tile and button occlusion.
+  - Seed Ergonomics: Re-engineered seed radios into styled selection chips with distinct active badges and shortcut badges.
+  - Layout & Window: Centered container layout and tuned App.jsx window dimensions to 640x780 for comfortable button padding.
+  - Verification: MSVC C clean build (`KFarm.exe` 135.2 KB); clean Vite build (382ms, `kfarm.html` 88.9 KB); security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-24T06:45:00Z — kilo-tester: KTodo (UI Audit, Quicksave Fix & Toast Relocation)**
   - Status: PASS ✅ (6 UI/runtime defects identified, 6 fixed; 0 regressions).
   - Runtime Fixes: Resolved undeclared `currentSort` ReferenceError crashing F5 quicksave & session restoration.
@@ -230,12 +238,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Gameplay & Turn Sync: Added real-time board state flips, auto-pass on no moves, spectator mode, rematch negotiation, and quick chat chips.
   - UI & Feedback: Created stylish Reversi onlineBar, multiplayer modal dialog, and non-blocking top-right notification toast system.
   - Verification: MSVC C clean build (`KReversi.exe` 165.5 KB); Vite clean build (1070ms, `kreversi.html` 153.1 KB); security lint 100% PASS; <999KB ceiling.
-
-- **2026-09-24T02:45:00Z — kilo-qa: KChrono (Pass 5: Tutorial & State Integrity)**
-  - Status: PASS ✅ (Quicksave echo state persistence verified; victory/toast/modal flow fixed; 0 regressions).
-  - Quicksave & Load: Extended state capture to include recorded echo sequence in web & native C with on-screen HUD toast confirmations.
-  - Onboarding & Modals: Added first-run tutorial isolation (`kchrono_tutorialSeen`), dedicated Victory Overlay modal, and prevented double-modal stacking.
-  - Toast & Ergonomics: Relocated toast to top-right safe zone with click-to-dismiss and debounced timeouts, eliminating footer occlusion.
-  - Phantom Collision: Added paradox strain spike on physical contact with hostile Tachyon Anomaly entities.
-  - Verification: MSVC C clean build (`KChrono.exe` 23.0 KB); Vite clean build (536ms, `kchrono.html` 160.2 KB); security lint 100% PASS; <999KB ceiling.
 
