@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>~*~ TEMPLE OF THE x86 OPCODES // x86 Assembly Shrine &amp; Ring 0 Sanctuary (1999) ~*~</title>
+<style>
+  :root {
+    --bg-dark: #070a0f;
+    --bg-card: #0c121e;
+    --bg-panel: #111a2d;
+    --gold: #f59e0b;
+    --gold-bright: #fbbf24;
+    --gold-dim: #78350f;
+    --cyan: #38bdf8;
+    --cyan-dim: #0369a1;
+    --emerald: #10b981;
+    --emerald-dim: #064e3b;
+    --crimson: #ef4444;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border-gold: #d97706;
+    --border-dim: #1e293b;
+    --font-mono: 'Consolas', 'Courier New', 'Lucida Console', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: var(--font-mono);
+    padding: 16px;
+    line-height: 1.5;
+    background-image: 
+      radial-gradient(circle at 50% 0%, #172554 0%, #070a0f 75%),
+      linear-gradient(rgba(245, 158, 11, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245, 158, 11, 0.04) 1px, transparent 1px);
+    background-size: 100% 100%, 24px 24px, 24px 24px;
+    min-height: 100vh;
+  }
+
+  /* CRT Scanline Simulation */
+  body::after {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.28) 50%);
+    background-size: 100% 4px;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.55;
+  }
+
+  .temple-wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    border: 3px double var(--gold);
+    background: var(--bg-card);
+    box-shadow: 0 0 30px rgba(245, 158, 11, 0.25), inset 0 0 15px rgba(245, 158, 11, 0.08);
+    padding: 18px;
+  }
+
+  /* Top 1999 Marquee */
+  .temple-marquee {
+    background: #171004;
+    color: var(--gold-bright);
+    border: 1px solid var(--border-gold);
+    padding: 4px 10px;
+    font-size: 12px;
+    margin-bottom: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+  }
+
+  /* Header & Shrine Banner */
+  header {
+    text-align: center;
+    border-bottom: 2px solid var(--gold);
+    padding-bottom: 14px;
+    margin-bottom: 16px;
+  }
+
+  .ascii-banner {
+    color: var(--gold-bright);
+    font-size: 10px;
+    line-height: 1.15;
+    text-shadow: 0 0 10px rgba(245, 158, 11, 0.7);
+    display: inline-block;
+    text-align: left;
+    margin: 6px 0;
+  }
+
+  .shrine-title {
+    font-size: 22px;
+    color: var(--gold-bright);
+    letter-spacing: 2px;
+    margin-top: 4px;
+    text-shadow: 0 0 12px rgba(245, 158, 11, 0.8);
+  }
+
+  .shrine-subtitle {
+    font-size: 12px;
+    color: var(--cyan);
+    margin-top: 4px;
+    letter-spacing: 1px;
+  }
+
+  /* Navigation Bar */
+  .nav-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    background: #090e18;
+    border: 1px solid var(--border-dim);
+    padding: 8px;
+    margin-bottom: 16px;
+  }
+
+  .nav-btn {
+    background: #111a2d;
+    color: var(--text-muted);
+    border: 1px solid #1e293b;
+    padding: 6px 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s ease;
+  }
+
+  .nav-btn:hover {
+    background: #1e293b;
+    color: var(--gold-bright);
+    border-color: var(--gold);
+  }
+
+  .nav-btn.active {
+    background: var(--gold);
+    color: #070a0f;
+    border-color: var(--gold-bright);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+  }
+
+  /* Content Sections */
+  .section-tab {
+    display: none;
+    animation: fadeIn 0.2s ease-in-out;
+  }
+
+  .section-tab.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Shared Component Styles */
+  .panel-box {
+    background: var(--bg-panel);
+    border: 1px solid #1e293b;
+    padding: 14px;
+    margin-bottom: 16px;
+    border-radius: 4px;
+  }
+
+  .panel-box.gold-accent {
+    border-left: 3px solid var(--gold);
+  }
+
+  .panel-box.cyan-accent {
+    border-left: 3px solid var(--cyan);
+  }
+
+  .panel-box.emerald-accent {
+    border-left: 3px solid var(--emerald);
+  }
+
+  .panel-title {
+    font-size: 14px;
+    color: var(--gold-bright);
+    font-weight: bold;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #1e293b;
+    padding-bottom: 6px;
+  }
+
+  .btn-retro {
+    background: #1e293b;
+    color: var(--gold-bright);
+    border: 1px solid var(--border-gold);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: bold;
+    padding: 5px 12px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s ease;
+  }
+
+  .btn-retro:hover {
+    background: var(--gold);
+    color: #070a0f;
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+  }
+
+  .btn-retro.btn-cyan {
+    color: var(--cyan);
+    border-color: var(--cyan);
+  }
+
+  .btn-retro.btn-cyan:hover {
+    background: var(--cyan);
+    color: #070a0f;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+  }
+
+  .btn-retro.btn-emerald {
+    color: var(--emerald);
+    border-color: var(--emerald);
+  }
+
+  .btn-retro.btn-emerald:hover {
+    background: var(--emerald);
+    color: #070a0f;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+  }
+
+  /* Form Elements */
+  input[type="text"], select, textarea {
+    background: #090e18;
+    color: var(--text-main);
+    border: 1px solid #334155;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 3px;
+    outline: none;
+  }
+
+  input[type="text"]:focus, select:focus, textarea:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 6px rgba(245, 158, 11, 0.3);
+  }
+
+  /* Table styling */
+  table.retro-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  table.retro-table th {
+    background: #1e293b;
+    color: var(--gold-bright);
+    padding: 8px 10px;
+    text-align: left;
+    border: 1px solid #334155;
+  }
+
+  table.retro-table td {
+    padding: 6px 10px;
+    border: 1px solid #1e293b;
+    background: #090e18;
+  }
+
+  table.retro-table tr:hover td {
+    background: #111a2d;
+  }
+
+  .badge-opcode {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--gold-bright);
+    border: 1px solid var(--border-gold);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: bold;
+  }
+
+  .badge-cat {
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--cyan);
+    border: 1px solid var(--cyan-dim);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+  }
+
+  /* Assembler / Disassembler Grids */
+  .asm-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  @media (max-width: 760px) {
+    .asm-grid { grid-template-columns: 1fr; }
+  }
+
+  .asm-textarea {
+    width: 100%;
+    height: 180px;
+    resize: vertical;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: pre;
+  }
+
+  .output-box {
+    background: #05080f;
+    border: 1px solid #1e293b;
+    padding: 10px;
+    font-size: 12px;
+    min-height: 180px;
+    max-height: 260px;
+    overflow-y: auto;
+    color: var(--emerald);
+    font-family: var(--font-mono);
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  /* Bitwise Altar */
+  .bit-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 10px 0;
+    justify-content: center;
+  }
+
+  .bit-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 25px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .bit-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+
+  .bit-box {
+    width: 25px;
+    height: 30px;
+    background: #090e18;
+    border: 1px solid #334155;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--text-muted);
+    border-radius: 2px;
+    transition: all 0.1s;
+  }
+
+  .bit-box.active {
+    background: var(--gold);
+    color: #070a0f;
+    border-color: var(--gold-bright);
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.7);
+  }
+
+  .byte-divider {
+    width: 8px;
+  }
+
+  /* PE Header Diagram Blocks */
+  .pe-diagram {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 12px 0;
+  }
+
+  .pe-block {
+    background: #090e18;
+    border: 1px solid #1e293b;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .pe-block:hover {
+    border-color: var(--cyan);
+    background: #111a2d;
+    transform: translateX(4px);
+  }
+
+  .pe-block.active-pe {
+    border-color: var(--gold);
+    background: rgba(245, 158, 11, 0.12);
+    box-shadow: inset 0 0 10px rgba(245, 158, 11, 0.2);
+  }
+
+  /* Audio Oscilloscope & Equalizer */
+  .scope-canvas {
+    width: 100%;
+    height: 120px;
+    background: #05080f;
+    border: 1px solid #1e293b;
+    display: block;
+    margin: 10px 0;
+    border-radius: 3px;
+  }
+
+  /* Footer & Badges */
+  footer {
+    border-top: 2px solid var(--gold);
+    margin-top: 24px;
+    padding-top: 14px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .badge-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin: 12px 0;
+  }
+
+  .web-badge-88 {
+    width: 88px;
+    height: 31px;
+    background: #000;
+    border: 1px solid #444;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    text-transform: uppercase;
+    font-weight: bold;
+    color: #fff;
+    text-align: center;
+    line-height: 1.1;
+    user-select: none;
+    box-shadow: 1px 1px 0 #111;
+  }
+
+  .webring-nav-links {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  .webring-nav-links a {
+    color: var(--cyan);
+    text-decoration: none;
+    font-size: 12px;
+    padding: 4px 10px;
+    background: #090e18;
+    border: 1px solid #1e293b;
+    border-radius: 3px;
+  }
+
+  .webring-nav-links a:hover {
+    color: var(--gold-bright);
+    border-color: var(--gold);
+  }
+
+  .status-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: bold;
+  }
+
+  .status-pill.online {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--emerald);
+    border: 1px solid var(--emerald);
+  }
+</style>
+</head>
+<body>
+
+<div class="temple-wrap">
+  <!-- Top Marquee -->
+  <div class="temple-marquee">
+    ⚡ WELCOME TO THE x86 OPCODES SHRINE // RING 0 REVELATION // 100% HAND-CRAFTED MACHINE CODE // WIN32 ASM &amp; DEMOSCENE FOREVER // ZERO BLOAT ⚡
+  </div>
+
+  <!-- Header -->
+  <header>
+    <pre class="ascii-banner">
+  _____                 _         ____   __  ___  __    ___                     _      
+ /__   \___ _ __ ___  _ __ | | ___   /___ \ / / / _ \/ _\  / _ \ _ __  ___ ___   __| | ___ 
+   / /\/ _ \ '_ ` _ \| '_ \| |/ _ \ //  / // / / /_\// /  / /_)/ '_ \/ __/ _ \ / _` |/ _ \
+  / / |  __/ | | | | | |_) | |  __// \_/ // /_/ /_\\/ /__/ ___/| |_) | (_| (_) | (_| |  __/
+  \/   \___|_| |_| |_| .__/|_|\___|\___,_\/\____\____/\__/\_/   | .__/ \___\___/ \__,_|\___|
+                     |_|                                        |_|                         
+    </pre>
+    <h1 class="shrine-title">TEMPLE OF THE x86 OPCODES</h1>
+    <div class="shrine-subtitle">★ Interactive Instruction Oracle, Real-Time Opcode Converter &amp; Win32 Architecture Shrine (1999) ★</div>
+    <div style="margin-top: 8px; font-size: 11px; color: var(--text-muted);">
+      Sanctuary Node: <span style="color:var(--gold-bright);">kweb://asm-temple</span> | Initiates Visited: <span id="lblCounter" style="color:var(--cyan); font-weight:bold;">0031892</span> | Privilege: <span class="status-pill online">Ring 0 Active</span>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <div class="nav-bar">
+    <button class="nav-btn active" data-tab="tab-oracle">[1] 📜 Opcode Oracle</button>
+    <button class="nav-btn" data-tab="tab-converter">[2] ⚙️ Live Assembler &amp; Disassembler</button>
+    <button class="nav-btn" data-tab="tab-altar">[3] 🧮 Bitwise Radix Altar</button>
+    <button class="nav-btn" data-tab="tab-pe">[4] 🏛️ Win32 PE Architecture</button>
+    <button class="nav-btn" data-tab="tab-audio">[5] 🎵 YM2612 &amp; SPC700 Jukebox</button>
+    <button class="nav-btn" data-tab="tab-guestbook">[6] 🕯️ Acolyte Guestbook</button>
+    <button class="nav-btn" data-tab="tab-webring">[7] 🌐 Webring &amp; Network</button>
+  </div>
+
+  <!-- TAB 1: Opcode Oracle -->
+  <section id="tab-oracle" class="section-tab active">
+    <div class="panel-box gold-accent">
+      <div class="panel-title">
+        <span>📜 The x86 / i386 Sacred Instruction Lexicon</span>
+        <span style="font-size:11px; font-weight:normal; color:var(--text-muted);" id="lblOpcodeCount">Showing 42 instructions</span>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+        Query the sacred silicon registers and instruction encodings. Search by mnemonic, byte opcode, category, or affected EFLAGS. Click any instruction row to immediately load it into the live assembler workbench!
+      </p>
+      
+      <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
+        <input type="text" id="oracleSearch" placeholder="Search mnemonic (e.g. NOP, XOR, MOV), hex byte (e.g. 90, 31, C3)..." style="flex:1; min-width:240px;" />
+        <select id="oracleCatFilter" style="width:160px;">
+          <option value="ALL">All Categories</option>
+          <option value="Data">Data Movement</option>
+          <option value="Arithmetic">Arithmetic</option>
+          <option value="Logic">Logic &amp; Bitwise</option>
+          <option value="Shift">Shift &amp; Rotate</option>
+          <option value="Flow">Control Flow &amp; Branch</option>
+          <option value="Stack">Stack Operations</option>
+          <option value="System">System &amp; Processor</option>
+        </select>
+        <button class="btn-retro" id="btnResetOracle">Reset Filter</button>
+      </div>
+
+      <div style="overflow-x:auto; max-height:460px; overflow-y:auto; border:1px solid #1e293b;">
+        <table class="retro-table" id="oracleTable">
+          <thead>
+            <tr>
+              <th style="width:18%;">Mnemonic</th>
+              <th style="width:16%;">Opcode (Hex)</th>
+              <th style="width:12%;">Category</th>
+              <th style="width:12%;">Cycles (Pentium)</th>
+              <th style="width:14%;">EFLAGS</th>
+              <th style="width:28%;">Description</th>
+            </tr>
+          </thead>
+          <tbody id="oracleTbody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 2: Live Assembler & Disassembler -->
+  <section id="tab-converter" class="section-tab">
+    <div class="panel-box cyan-accent">
+      <div class="panel-title">
+        <span>⚙️ Two-Way x86 Machine Code Converter</span>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-retro btn-cyan" id="btnModeAsm">Mode: Assembly ➔ Machine Code</button>
+          <button class="btn-retro" id="btnModeDisasm">Mode: Hex Bytes ➔ Assembly</button>
+        </div>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+        Interactive client-side x86 mini-assembler and disassembler. Type mnemonics or paste hex bytes. Instant translation with zero server calls.
+      </p>
+
+      <!-- Presets Toolbar -->
+      <div style="background:#090e18; border:1px solid #1e293b; padding:8px 10px; margin-bottom:12px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <span style="font-size:11px; font-weight:bold; color:var(--gold-bright);">Load Temple Preset:</span>
+        <button class="btn-retro" style="font-size:11px; padding:3px 8px;" data-preset="prologue">1. Win32 Prologue/Epilogue</button>
+        <button class="btn-retro" style="font-size:11px; padding:3px 8px;" data-preset="xorzero">2. Demoscene Zeroing Trick</button>
+        <button class="btn-retro" style="font-size:11px; padding:3px 8px;" data-preset="msgbox">3. Win32 API Invoke</button>
+        <button class="btn-retro" style="font-size:11px; padding:3px 8px;" data-preset="vga">4. VGA 13h Intro Setup</button>
+        <button class="btn-retro" style="font-size:11px; padding:3px 8px;" data-preset="rdtsc">5. RDTSC Pentium Benchmark</button>
+        <button class="btn-retro btn-emerald" style="font-size:11px; padding:3px 8px;" data-preset="anomaly">6. Telemetry Echo (Offset 0x1999FE)</button>
+      </div>
+
+      <div class="asm-grid">
+        <!-- Input Column -->
+        <div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <label id="lblInputMode" style="font-size:12px; font-weight:bold; color:var(--cyan);">Assembly Source (Intel Syntax):</label>
+            <span style="font-size:11px; color:var(--text-muted);" id="lblInStats">0 lines</span>
+          </div>
+          <textarea id="converterInput" class="asm-textarea" placeholder="Enter x86 instructions (e.g.&#10;PUSH EBP&#10;MOV EBP, ESP&#10;XOR EAX, EAX&#10;RET)"></textarea>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <button class="btn-retro btn-cyan" id="btnExecuteConvert" style="flex:1;">⚡ Convert Instructions</button>
+            <button class="btn-retro" id="btnClearConverter">Clear</button>
+          </div>
+        </div>
+
+        <!-- Output Column -->
+        <div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <label id="lblOutputMode" style="font-size:12px; font-weight:bold; color:var(--emerald);">Machine Code Stream (Hex):</label>
+            <div style="display:flex; gap:6px;">
+              <select id="selFormatOut" style="padding:1px 6px; font-size:11px;">
+                <option value="hex">Raw Hex</option>
+                <option value="c">C / C++ Array</option>
+                <option value="nasm">NASM / MASM db</option>
+                <option value="binary">Binary Bits</option>
+              </select>
+              <button class="btn-retro btn-emerald" id="btnCopyOutput" style="font-size:11px; padding:1px 8px;">Copy</button>
+            </div>
+          </div>
+          <div id="converterOutput" class="output-box">// Assembled machine code bytes will appear here...</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <span style="font-size:11px; color:var(--text-muted);" id="lblOutStats">Total Size: 0 bytes</span>
+            <button class="btn-retro" id="btnDownloadBin" style="font-size:11px; padding:3px 10px;">💾 Download .BIN Blob</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Diegetic Telemetry Annotation (Hidden unless preset 6 active) -->
+      <div id="telemetryNotice" style="display:none; margin-top:14px; background:rgba(16, 185, 129, 0.1); border:1px dashed var(--emerald); padding:10px; font-size:11px; color:var(--emerald);">
+        <strong>📡 Diegetic Telemetry Decoded:</strong> Offset <code style="color:var(--gold-bright);">0x10199904</code> matches the classified intranet routing table (Subnet 10.19.99.x). Node 0x7F listener initialized in memory.
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 3: Bitwise Radix Altar -->
+  <section id="tab-altar" class="section-tab">
+    <div class="panel-box gold-accent">
+      <div class="panel-title">
+        <span>🧮 32-Bit Register &amp; Radix Transformation Altar</span>
+        <button class="btn-retro" id="btnResetBits">Zero Register [0x00000000]</button>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+        Click individual bits (0 through 31) to toggle binary states. Watch real-time multi-radix representations, two's complement signed values, and endian byte transformations update synchronously.
+      </p>
+
+      <!-- Bit Matrix -->
+      <div style="background:#090e18; border:1px solid #1e293b; padding:12px; border-radius:4px;">
+        <div style="text-align:center; font-size:11px; color:var(--gold-bright); margin-bottom:4px;">
+          MSB (Bit 31) ◀───────────────────────── 32-BIT REGISTER EAX ─────────────────────────▶ LSB (Bit 0)
+        </div>
+        <div class="bit-row" id="bitGrid">
+          <!-- 32 Bits dynamically rendered -->
+        </div>
+      </div>
+
+      <!-- Live Radix Converters -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-top:14px;">
+        <div style="background:#090e18; border:1px solid #1e293b; padding:10px; border-radius:3px;">
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Hexadecimal (Base 16):</div>
+          <div id="valHex" style="font-size:16px; font-weight:bold; color:var(--gold-bright);">0x00000000</div>
+        </div>
+
+        <div style="background:#090e18; border:1px solid #1e293b; padding:10px; border-radius:3px;">
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Unsigned Integer (Base 10):</div>
+          <div id="valUint" style="font-size:16px; font-weight:bold; color:var(--cyan);">0</div>
+        </div>
+
+        <div style="background:#090e18; border:1px solid #1e293b; padding:10px; border-radius:3px;">
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Signed Int (Two's Compl):</div>
+          <div id="valInt" style="font-size:16px; font-weight:bold; color:var(--emerald);">0</div>
+        </div>
+
+        <div style="background:#090e18; border:1px solid #1e293b; padding:10px; border-radius:3px;">
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Little ⮂ Big Endian Swap:</div>
+          <div id="valEndian" style="font-size:16px; font-weight:bold; color:#f43f5e;">0x00000000</div>
+        </div>
+      </div>
+
+      <!-- Quick Operations Bar -->
+      <div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <span style="font-size:11px; font-weight:bold; color:var(--gold-bright);">Bit Manipulations:</span>
+        <button class="btn-retro" id="btnShl">SHL 1 (&lt;&lt;)</button>
+        <button class="btn-retro" id="btnShr">SHR 1 (&gt;&gt;)</button>
+        <button class="btn-retro" id="btnRol">ROL 1</button>
+        <button class="btn-retro" id="btnRor">ROR 1</button>
+        <button class="btn-retro" id="btnNot">NOT (Invert ~)</button>
+        <button class="btn-retro btn-cyan" id="btnEndianFlip">Swap Endianness</button>
+      </div>
+
+      <!-- EFLAGS Register Simulator -->
+      <div style="margin-top:16px; background:#090e18; border:1px solid #1e293b; padding:12px; border-radius:3px;">
+        <div style="font-size:12px; font-weight:bold; color:var(--gold-bright); margin-bottom:8px;">
+          🚩 Simulated EFLAGS Register Status for Current Register State:
+        </div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;" id="eflagsBar">
+          <div><strong>ZF (Zero Flag):</strong> <span id="flagZF" style="color:var(--emerald);">1 (Is Zero)</span></div>
+          <div><strong>SF (Sign Flag):</strong> <span id="flagSF" style="color:var(--text-muted);">0 (Positive)</span></div>
+          <div><strong>PF (Parity Even):</strong> <span id="flagPF" style="color:var(--emerald);">1 (Even)</span></div>
+          <div><strong>CF (Carry):</strong> <span id="flagCF" style="color:var(--text-muted);">0</span></div>
+          <div><strong>OF (Overflow):</strong> <span id="flagOF" style="color:var(--text-muted);">0</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 4: Win32 PE Architecture -->
+  <section id="tab-pe" class="section-tab">
+    <div class="panel-box emerald-accent">
+      <div class="panel-title">
+        <span>🏛️ Win32 Portable Executable (PE) Anatomical Shrine</span>
+        <span style="font-size:11px; color:var(--text-muted);">Format Standard: PE32 (i386)</span>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+        Explore the sacred anatomy of 32-bit Win32 PE binaries (.EXE and .DLL). Click any structural header block below to inspect its disk offsets, memory mapping mechanics, and field layouts.
+      </p>
+
+      <div style="display:grid; grid-template-columns: 280px 1fr; gap:16px;">
+        <!-- Left: PE Layers -->
+        <div class="pe-diagram" id="peDiagramList">
+          <div class="pe-block active-pe" data-section="dos">
+            <div>
+              <strong style="color:var(--gold-bright);">1. DOS MZ Header</strong>
+              <div style="font-size:10px; color:var(--text-muted);">Offset: 0x0000 (IMAGE_DOS_HEADER)</div>
+            </div>
+            <span class="badge-opcode">0x5A4D</span>
+          </div>
+
+          <div class="pe-block" data-section="stub">
+            <div>
+              <strong style="color:var(--cyan);">2. Real-Mode DOS Stub</strong>
+              <div style="font-size:10px; color:var(--text-muted);">Offset: 0x0040 (16-bit fallback message)</div>
+            </div>
+            <span class="badge-cat">INT 21h</span>
+          </div>
+
+          <div class="pe-block" data-section="pesig">
+            <div>
+              <strong style="color:var(--gold-bright);">3. PE Signature</strong>
+              <div style="font-size:10px; color:var(--text-muted);">Offset: [e_lfanew] = 0x00E0</div>
+            </div>
+            <span class="badge-opcode">"PE\0\0"</span>
+          </div>
+
+          <div class="pe-block" data-section="coff">
+            <div>
+              <strong style="color:var(--emerald);">4. COFF File Header</strong>
+              <div style="font-size:10px; color:var(--text-muted);">Offset: 0x00E4 (IMAGE_FILE_HEADER)</div>
+            </div>
+            <span class="badge-cat">20 Bytes</span>
+          </div>
+
+          <div class="pe-block" data-section="optional">
+            <div>
+              <strong style="color:var(--gold-bright);">5. Optional Header (PE32)</strong>
+              <div style="font-size:10px; color:var(--text-muted);">Offset: 0x00F8 (Entrypoint &amp; ImageBase)</div>
+            </div>
+            <span class="badge-cat">224 Bytes</span>
+          </div>
+
+          <div class="pe-block" data-section="sections">
+            <div>
+              <strong style="color:var(--cyan);">6. Section Table</strong>
+              <div style="font-size:10px; color:var(--text-muted);">.text, .rdata, .data, .rsrc, .reloc</div>
+            </div>
+            <span class="badge-opcode">IMAGE_SECTION_HEADER</span>
+          </div>
+        </div>
+
+        <!-- Right: Detail Panel -->
+        <div style="background:#090e18; border:1px solid #1e293b; padding:14px; border-radius:4px;" id="peDetailBox">
+          <h3 id="peDetailTitle" style="color:var(--gold-bright); font-size:15px; margin-bottom:6px;">1. DOS MZ Header (IMAGE_DOS_HEADER)</h3>
+          <div id="peDetailSubtitle" style="font-size:11px; color:var(--cyan); margin-bottom:12px;">The 64-byte legacy header retained for backwards compatibility with MS-DOS 2.0+</div>
+          <div id="peDetailBody" style="font-size:12px; color:var(--text-main); line-height:1.6;">
+            Every valid 32-bit Win32 executable begins with the legacy <strong>IMAGE_DOS_HEADER</strong> (64 bytes).<br><br>
+            • <code>e_magic</code>: Must equal <code>0x5A4D</code> ("MZ", named after Mark Zbikowski).<br>
+            • <code>e_lfanew</code>: Located at offset <code>0x3C</code> (4 bytes). Holds the file pointer offset to the true NT PE Header. If this pointer is corrupted, the Win32 OS loader halts immediately with <em>"Invalid Win32 Application"</em>.
+          </div>
+        </div>
+      </div>
+
+      <!-- Ring 0 vs Ring 3 Explainer -->
+      <div style="margin-top:16px; background:#090e18; border:1px solid #1e293b; padding:12px; border-radius:4px;">
+        <div style="font-size:13px; font-weight:bold; color:var(--gold-bright); margin-bottom:6px;">
+          🛡️ The Rings of Protection (x86 CPU Privilege Hierarchy)
+        </div>
+        <div style="font-size:12px; color:var(--text-muted); line-height:1.5;">
+          • <strong>Ring 0 (Supervisor / Kernel Space):</strong> Direct access to CPU control registers (<code>CR0, CR3, CR4</code>), I/O ports (<code>IN / OUT</code>), Interrupt Descriptor Table (<code>IDT</code>), and page tables. All drivers and NT kernel run here.<br>
+          • <strong>Ring 3 (User Space / Applications):</strong> Restricted memory sandbox. Direct hardware port instructions fault with <code>EXCEPTION_PRIV_INSTRUCTION</code>. All Win32 programs request OS services through transition gates (e.g. <code>SYSENTER</code> or <code>INT 2Eh</code>).
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 5: YM2612 & SPC700 Jukebox -->
+  <section id="tab-audio" class="section-tab">
+    <div class="panel-box gold-accent">
+      <div class="panel-title">
+        <span>🎵 YM2612 (FM) &amp; SPC700 (Stereo Delay) Chiptune Sanctuary</span>
+        <span class="status-pill online">Mandate 9 Audio Compliant</span>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+        Pure procedural Web Audio synthesis adhering strictly to the Sega Genesis (Yamaha YM2612 2-operator FM synthesis) and Super Nintendo (SPC700 stereo slapback echo) architecture. Zero external soundfiles or sample bloat.
+      </p>
+
+      <!-- Track Controller -->
+      <div style="background:#090e18; border:1px solid #1e293b; padding:14px; border-radius:4px; display:flex; flex-wrap:wrap; gap:14px; align-items:center;">
+        <div style="flex:1; min-width:220px;">
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Active Track:</div>
+          <div id="lblTrackName" style="font-size:15px; font-weight:bold; color:var(--gold-bright);">Track 01: "Shrine of Silicon" (YM2612 FM Lead)</div>
+          <div id="lblTrackStyle" style="font-size:11px; color:var(--cyan); margin-top:2px;">136 BPM // Yamaha 2-Operator Bass &amp; SPC700 Delay</div>
+        </div>
+
+        <div style="display:flex; gap:8px;">
+          <button class="btn-retro btn-cyan" id="btnAudioPlay">▶ Play Track</button>
+          <button class="btn-retro" id="btnAudioStop">■ Stop</button>
+          <button class="btn-retro" id="btnAudioNext">⏭ Next Track</button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:11px; color:var(--text-muted);">Volume:</span>
+          <input type="range" id="audioVolume" min="0" max="100" value="65" style="width:90px;" />
+          <span id="lblVolVal" style="font-size:11px; color:var(--gold-bright); width:28px;">65%</span>
+        </div>
+      </div>
+
+      <!-- Live Oscilloscope Canvas -->
+      <canvas id="scopeCanvas" class="scope-canvas" width="800" height="120"></canvas>
+
+      <!-- Sound Engine Stats -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-top:10px; font-size:11px;">
+        <div style="background:#090e18; border:1px solid #1e293b; padding:8px;">
+          <strong style="color:var(--gold-bright);">Modulator Operator:</strong> Carrier FM ratio 1:2 with exponential decay decay envelope.
+        </div>
+        <div style="background:#090e18; border:1px solid #1e293b; padding:8px;">
+          <strong style="color:var(--cyan);">SPC700 Echo Line:</strong> 180ms slapback delay with 2100Hz low-pass damping filter.
+        </div>
+        <div style="background:#090e18; border:1px solid #1e293b; padding:8px;">
+          <strong style="color:var(--emerald);">Asset Footprint:</strong> 0 KB external samples. Pure mathematical synthesis.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 6: Acolyte Guestbook -->
+  <section id="tab-guestbook" class="section-tab">
+    <div class="panel-box cyan-accent">
+      <div class="panel-title">
+        <span>🕯️ Temple Acolyte Guestbook &amp; Code Graveyard</span>
+        <button class="btn-retro" id="btnResetGuestbook" style="font-size:11px; padding:2px 8px;">Reset Defaults</button>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+        Leave your digital signature, your favorite x86 mnemonic, and your assembly wisdom upon the temple scrolls. Persists in client-side storage.
+      </p>
+
+      <!-- Guestbook Form -->
+      <div style="background:#090e18; border:1px solid #1e293b; padding:12px; margin-bottom:14px; border-radius:4px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
+          <div>
+            <label style="font-size:11px; color:var(--gold-bright); font-weight:bold;">Hacker Alias / Handle:</label>
+            <input type="text" id="gbAlias" placeholder="e.g. ByteMonk_99" style="width:100%;" />
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--cyan); font-weight:bold;">Favorite Opcode / Instruction:</label>
+            <input type="text" id="gbOpcode" placeholder="e.g. XOR EAX, EAX [31 C0]" style="width:100%;" />
+          </div>
+        </div>
+        <div>
+          <label style="font-size:11px; color:var(--emerald); font-weight:bold;">Wisdom / Shrine Inscription:</label>
+          <input type="text" id="gbMsg" placeholder="Inscribe your thoughts into the silicon scrolls..." style="width:100%; margin-bottom:8px;" />
+        </div>
+        <button class="btn-retro btn-cyan" id="btnSubmitGuestbook" style="width:100%;">✍️ Inscribe Into Temple Scrolls</button>
+      </div>
+
+      <!-- Guestbook Feed -->
+      <div id="guestbookFeed" style="display:flex; flex-direction:column; gap:10px; max-height:400px; overflow-y:auto;">
+        <!-- Entries populated dynamically -->
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 7: Webring & Network -->
+  <section id="tab-webring" class="section-tab">
+    <div class="panel-box gold-accent">
+      <div class="panel-title">
+        <span>🌐 Central KiloNet Webring &amp; Hypermedia Interconnect</span>
+        <span class="badge-opcode">Ring Node #007</span>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+        The Temple of the x86 Opcodes is node #007 in the Central KiloNet 1999 Webring. Journey between sister nodes, demoscene devlogs, and underground shrines.
+      </p>
+
+      <!-- Webring Navigation Controls -->
+      <div style="background:#090e18; border:1px solid #1e293b; padding:14px; text-align:center; border-radius:4px; margin-bottom:16px;">
+        <div style="font-size:13px; font-weight:bold; color:var(--gold-bright); margin-bottom:8px;">
+          ★ Central KiloNet 1999 Webring Navigation ★
+        </div>
+        <div class="webring-nav-links">
+          <a href="/web/users/neon_rider.html">« [Prev] ~neon_rider's Shrine</a>
+          <a href="/web/webring.html">🌐 [Hub] Webring Central Hub</a>
+          <a href="/web/portal.html">🏠 [Portal] KiloNet 1999 Directory</a>
+          <a href="/web/geocities.html">[Next] CyberSpire Retro Shrine »</a>
+        </div>
+      </div>
+
+      <!-- Embed Code Snippet -->
+      <div style="background:#090e18; border:1px solid #1e293b; padding:12px; border-radius:4px;">
+        <div style="font-size:12px; font-weight:bold; color:var(--cyan); margin-bottom:6px;">
+          Add Temple of the Opcodes 88x31 Badge to Your Site:
+        </div>
+        <textarea style="width:100%; height:60px; font-size:11px;" readonly>&lt;!-- Temple of the x86 Opcodes Web Badge --&gt;
+&lt;a href="/web/asm_temple.html" target="_top" title="Temple of the x86 Opcodes"&gt;
+  &lt;img src="/web/badges/x86_temple.gif" alt="x86 Temple" width="88" height="31" border="0"&gt;
+&lt;/a&gt;</textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer & Retro Badges -->
+  <footer>
+    <div class="badge-grid">
+      <div class="web-badge-88" style="background:#000080; border-color:#0000ff; color:#fff;">x86 RING 0<br>CERTIFIED</div>
+      <div class="web-badge-88" style="background:#3b1f04; border-color:#f59e0b; color:#fbbf24;">PURE ASM<br>NO BLOAT</div>
+      <div class="web-badge-88" style="background:#064e3b; border-color:#10b981; color:#34d399;">YM2612 FM<br>AUDIO OK</div>
+      <div class="web-badge-88" style="background:#1e1b4b; border-color:#6366f1; color:#a5b4fc;">MADE WITH<br>NOTEPAD</div>
+      <div class="web-badge-88" style="background:#111; border-color:#444; color:#aaa;">NETSCAPE<br>4.7 READY</div>
+    </div>
+    <div>
+      Temple of the x86 Opcodes • Dedicated to Low-Level Optimization &amp; Hand-Crafted Silicon Poetry<br>
+      Virtual 1999 Web Destination • Strictly &lt; 999 KB • Rendered natively in KNet
+    </div>
+  </footer>
+</div>
+
+<script>
+  // ==========================================
+  // 1. Tab Navigation & State Management
+  // ==========================================
+  const navBtns = document.querySelectorAll('.nav-btn');
+  const sectionTabs = document.querySelectorAll('.section-tab');
+
+  navBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      navBtns.forEach(b => b.classList.remove('active'));
+      sectionTabs.forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      const targetId = btn.dataset.tab;
+      const targetSec = document.getElementById(targetId);
+      if (targetSec) targetSec.classList.add('active');
+    });
+  });
+
+  // Visitor Counter
+  let visits = parseInt(localStorage.getItem('kweb_asm_temple_visits') || '31892', 10);
+  visits++;
+  localStorage.setItem('kweb_asm_temple_visits', visits);
+  const lblCounter = document.getElementById('lblCounter');
+  if (lblCounter) lblCounter.textContent = String(visits).padStart(7, '0');
+
+  // ==========================================
+  // 2. Opcode Oracle & Search Database
+  // ==========================================
+  const OPCODES_DB = [
+    { mnem: "NOP", hex: "90", cat: "Data", cycles: "1", flags: "None", desc: "No operation. Consumes 1 clock cycle without altering CPU registers or flags." },
+    { mnem: "MOV EAX, imm32", hex: "B8 [imm32]", cat: "Data", cycles: "1", flags: "None", desc: "Move 32-bit immediate constant into register EAX." },
+    { mnem: "MOV reg, reg", hex: "89 /r", cat: "Data", cycles: "1", flags: "None", desc: "Copy contents of source 32-bit register to destination register." },
+    { mnem: "LEA reg, [mem]", hex: "8D /r", cat: "Data", cycles: "1", flags: "None", desc: "Load effective address into register without memory dereference." },
+    { mnem: "XOR reg, reg", hex: "31 /r", cat: "Logic", cycles: "1", flags: "ZF,SF,PF,CF=0,OF=0", desc: "Bitwise exclusive OR. Iconic zeroing idiom (e.g. XOR EAX, EAX)." },
+    { mnem: "AND reg, reg", hex: "21 /r", cat: "Logic", cycles: "1", flags: "ZF,SF,PF,CF=0,OF=0", desc: "Bitwise AND operation between two registers." },
+    { mnem: "OR reg, reg", hex: "09 /r", cat: "Logic", cycles: "1", flags: "ZF,SF,PF,CF=0,OF=0", desc: "Bitwise inclusive OR operation." },
+    { mnem: "NOT reg", hex: "F7 /2", cat: "Logic", cycles: "1", flags: "None", desc: "One's complement bitwise inversion." },
+    { mnem: "NEG reg", hex: "F7 /3", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Two's complement negation (0 - reg)." },
+    { mnem: "ADD reg, reg", hex: "01 /r", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Add source operand to destination operand." },
+    { mnem: "SUB reg, reg", hex: "29 /r", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Subtract source operand from destination operand." },
+    { mnem: "INC reg", hex: "40..47", cat: "Arithmetic", cycles: "1", flags: "ZF,SF,OF,AF,PF", desc: "Increment register by 1 (Note: preserves Carry Flag CF!)." },
+    { mnem: "DEC reg", hex: "48..4F", cat: "Arithmetic", cycles: "1", flags: "ZF,SF,OF,AF,PF", desc: "Decrement register by 1 (preserves Carry Flag CF!)." },
+    { mnem: "CMP reg, imm8", hex: "83 /7 [ib]", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Compare register against immediate byte by non-destructive subtraction." },
+    { mnem: "TEST reg, reg", hex: "85 /r", cat: "Logic", cycles: "1", flags: "ZF,SF,PF,CF=0,OF=0", desc: "Non-destructive bitwise AND. Sets Zero Flag if result is 0." },
+    { mnem: "SHL reg, 1", hex: "D1 /4", cat: "Shift", cycles: "1", flags: "CF,OF,ZF,SF,PF", desc: "Shift bits left by 1. Multiplies unsigned integer by 2." },
+    { mnem: "SHR reg, 1", hex: "D1 /5", cat: "Shift", cycles: "1", flags: "CF,OF,ZF,SF,PF", desc: "Logical shift right by 1. Divides unsigned integer by 2." },
+    { mnem: "ROL reg, 1", hex: "D1 /0", cat: "Shift", cycles: "1", flags: "CF,OF", desc: "Rotate bits left through carry flag." },
+    { mnem: "ROR reg, 1", hex: "D1 /1", cat: "Shift", cycles: "1", flags: "CF,OF", desc: "Rotate bits right through carry flag." },
+    { mnem: "PUSH reg32", hex: "50..57", cat: "Stack", cycles: "1", flags: "None", desc: "Push 32-bit register value onto execution stack; decrements ESP by 4." },
+    { mnem: "POP reg32", hex: "58..5F", cat: "Stack", cycles: "1", flags: "None", desc: "Pop 32-bit value from execution stack into register; increments ESP by 4." },
+    { mnem: "PUSHA", hex: "60", cat: "Stack", cycles: "5", flags: "None", desc: "Push all general-purpose registers: EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI." },
+    { mnem: "POPA", hex: "61", cat: "Stack", cycles: "5", flags: "None", desc: "Pop all general-purpose registers from stack in reverse order." },
+    { mnem: "PUSHFD", hex: "9C", cat: "Stack", cycles: "4", flags: "None", desc: "Push 32-bit EFLAGS register onto stack." },
+    { mnem: "POPFD", hex: "9D", cat: "Stack", cycles: "4", flags: "All Flags", desc: "Pop 32-bit value from stack into EFLAGS register." },
+    { mnem: "JMP rel8", hex: "EB [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Unconditional short relative branch within -128..+127 bytes." },
+    { mnem: "JMP rel32", hex: "E9 [cd]", cat: "Flow", cycles: "1", flags: "None", desc: "Unconditional near relative jump within +/-2GB." },
+    { mnem: "JZ / JE rel8", hex: "74 [cb]", cat: "Flow", cycles: "1 (taken)", flags: "None", desc: "Jump if Zero / Jump if Equal (ZF = 1)." },
+    { mnem: "JNZ / JNE rel8", hex: "75 [cb]", cat: "Flow", cycles: "1 (taken)", flags: "None", desc: "Jump if Not Zero / Jump if Not Equal (ZF = 0)." },
+    { mnem: "JC / JB rel8", hex: "72 [cb]", cat: "Flow", cycles: "1 (taken)", flags: "None", desc: "Jump if Carry / Jump if Below (CF = 1)." },
+    { mnem: "JNC / JAE rel8", hex: "73 [cb]", cat: "Flow", cycles: "1 (taken)", flags: "None", desc: "Jump if No Carry / Jump if Above or Equal (CF = 0)." },
+    { mnem: "CALL rel32", hex: "E8 [cd]", cat: "Flow", cycles: "1", flags: "None", desc: "Push return address onto stack and branch to target procedure." },
+    { mnem: "RET", hex: "C3", cat: "Flow", cycles: "1", flags: "None", desc: "Pop return address from stack and resume execution." },
+    { mnem: "RET imm16", hex: "C2 [iw]", cat: "Flow", cycles: "2", flags: "None", desc: "Pop return address and release specified bytes from stack (stdcall cleanup)." },
+    { mnem: "LOOP rel8", hex: "E2 [cb]", cat: "Flow", cycles: "1..2", flags: "None", desc: "Decrement ECX; if ECX != 0, branch to target." },
+    { mnem: "INT 3", hex: "CC", cat: "System", cycles: "13", flags: "IF,TF", desc: "Breakpoint trap interrupt for debuggers and reverse engineers." },
+    { mnem: "INT 21h", hex: "CD 21", cat: "System", cycles: "16", flags: "All", desc: "MS-DOS legacy API dispatch interrupt (AH = function number)." },
+    { mnem: "RDTSC", hex: "0F 31", cat: "System", cycles: "9", flags: "None", desc: "Read 64-bit CPU Time-Stamp Counter into EDX:EAX (Pentium+)." },
+    { mnem: "CPUID", hex: "0F A2", cat: "System", cycles: "14", flags: "None", desc: "Query processor signature, feature flags, and vendor string." },
+    { mnem: "CLI", hex: "FA", cat: "System", cycles: "7", flags: "IF=0", desc: "Clear Interrupt Flag (Ring 0 privilege required)." },
+    { mnem: "STI", hex: "FB", cat: "System", cycles: "7", flags: "IF=1", desc: "Set Interrupt Flag to enable external interrupts (Ring 0 privilege required)." },
+    { mnem: "HLT", hex: "F4", cat: "System", cycles: "--", flags: "None", desc: "Halt processor until next hardware interrupt occurs (Ring 0)." }
+  ];
+
+  function renderOracleTable(filterText = '', catFilter = 'ALL') {
+    const tbody = document.getElementById('oracleTbody');
+    const lblCount = document.getElementById('lblOpcodeCount');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const q = filterText.trim().toLowerCase();
+    const filtered = OPCODES_DB.filter(op => {
+      const matchCat = (catFilter === 'ALL') || (op.cat.toLowerCase() === catFilter.toLowerCase());
+      const matchText = !q || op.mnem.toLowerCase().includes(q) || op.hex.toLowerCase().includes(q) || op.desc.toLowerCase().includes(q);
+      return matchCat && matchText;
+    });
+
+    if (lblCount) lblCount.textContent = `Showing ${filtered.length} of ${OPCODES_DB.length} instructions`;
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">No matching x86 opcodes found in the temple archives.</td></tr>`;
+      return;
+    }
+
+    filtered.forEach(op => {
+      const tr = document.createElement('tr');
+      tr.style.cursor = 'pointer';
+      tr.title = 'Click to load into Live Assembler';
+      tr.innerHTML = `
+        <td><strong style="color:var(--gold-bright);">${op.mnem}</strong></td>
+        <td><span class="badge-opcode">${op.hex}</span></td>
+        <td><span class="badge-cat">${op.cat}</span></td>
+        <td style="color:var(--cyan); font-family:var(--font-mono);">${op.cycles}</td>
+        <td style="color:var(--emerald); font-size:11px;">${op.flags}</td>
+        <td style="color:var(--text-muted); font-size:11px;">${op.desc}</td>
+      `;
+      tr.onclick = () => {
+        // Switch to converter tab and populate
+        document.querySelector('[data-tab="tab-converter"]').click();
+        const inputArea = document.getElementById('converterInput');
+        if (inputArea) {
+          inputArea.value = (inputArea.value.trim() ? inputArea.value.trim() + '\n' : '') + op.mnem.split(' ')[0];
+          convertInput();
+        }
+      };
+      tbody.appendChild(tr);
+    });
+  }
+
+  const oracleSearch = document.getElementById('oracleSearch');
+  const oracleCatFilter = document.getElementById('oracleCatFilter');
+  const btnResetOracle = document.getElementById('btnResetOracle');
+
+  if (oracleSearch) oracleSearch.oninput = () => renderOracleTable(oracleSearch.value, oracleCatFilter.value);
+  if (oracleCatFilter) oracleCatFilter.onchange = () => renderOracleTable(oracleSearch.value, oracleCatFilter.value);
+  if (btnResetOracle) {
+    btnResetOracle.onclick = () => {
+      if (oracleSearch) oracleSearch.value = '';
+      if (oracleCatFilter) oracleCatFilter.value = 'ALL';
+      renderOracleTable('', 'ALL');
+    };
+  }
+
+  renderOracleTable();
+
+  // ==========================================
+  // 3. Live Assembler & Disassembler Engine
+  // ==========================================
+  let isAssemblyMode = true; // true: ASM -> Hex; false: Hex -> ASM
+
+  const btnModeAsm = document.getElementById('btnModeAsm');
+  const btnModeDisasm = document.getElementById('btnModeDisasm');
+  const lblInputMode = document.getElementById('lblInputMode');
+  const lblOutputMode = document.getElementById('lblOutputMode');
+  const converterInput = document.getElementById('converterInput');
+  const converterOutput = document.getElementById('converterOutput');
+  const selFormatOut = document.getElementById('selFormatOut');
+  const btnExecuteConvert = document.getElementById('btnExecuteConvert');
+  const btnClearConverter = document.getElementById('btnClearConverter');
+  const btnCopyOutput = document.getElementById('btnCopyOutput');
+  const btnDownloadBin = document.getElementById('btnDownloadBin');
+  const lblInStats = document.getElementById('lblInStats');
+  const lblOutStats = document.getElementById('lblOutStats');
+  const telemetryNotice = document.getElementById('telemetryNotice');
+
+  // Register definitions & encoding helpers
+  const REG32_MAP = { EAX: 0, ECX: 1, EDX: 2, EBX: 3, ESP: 4, EBP: 5, ESI: 6, EDI: 7 };
+  const REG16_MAP = { AX: 0, CX: 1, DX: 2, BX: 3, SP: 4, BP: 5, SI: 6, DI: 7 };
+  const REG8_MAP  = { AL: 0, CL: 1, DL: 2, BL: 3, AH: 4, CH: 5, DH: 6, BH: 7 };
+
+  function parseHexNum(str) {
+    str = str.trim();
+    if (str.startsWith('0x') || str.startsWith('0X')) return parseInt(str.slice(2), 16);
+    if (str.endsWith('h') || str.endsWith('H')) return parseInt(str.slice(0, -1), 16);
+    return parseInt(str, 10);
+  }
+
+  function assembleLine(line) {
+    line = line.replace(/;.*$/, '').trim();
+    if (!line) return [];
+
+    const parts = line.split(/[,\s]+/).map(s => s.trim()).filter(Boolean);
+    const mnem = parts[0].toUpperCase();
+    const op1 = (parts[1] || '').toUpperCase();
+    const op2 = (parts[2] || '').toUpperCase();
+
+    // Zero-operand opcodes
+    if (mnem === 'NOP') return [0x90];
+    if (mnem === 'RET') {
+      if (op1) {
+        const imm = parseHexNum(op1);
+        return [0xC2, imm & 0xFF, (imm >> 8) & 0xFF];
+      }
+      return [0xC3];
+    }
+    if (mnem === 'INT') {
+      const val = parseHexNum(op1);
+      if (val === 3) return [0xCC];
+      return [0xCD, val & 0xFF];
+    }
+    if (mnem === 'HLT') return [0xF4];
+    if (mnem === 'CLI') return [0xFA];
+    if (mnem === 'STI') return [0xFB];
+    if (mnem === 'CLC') return [0xF8];
+    if (mnem === 'STC') return [0xF9];
+    if (mnem === 'CMC') return [0xF5];
+    if (mnem === 'CPUID') return [0x0F, 0xA2];
+    if (mnem === 'RDTSC') return [0x0F, 0x31];
+    if (mnem === 'PUSHA') return [0x60];
+    if (mnem === 'POPA') return [0x61];
+    if (mnem === 'PUSHFD') return [0x9C];
+    if (mnem === 'POPFD') return [0x9D];
+
+    // Single Register PUSH / POP / INC / DEC
+    if (mnem === 'PUSH') {
+      if (REG32_MAP[op1] !== undefined) return [0x50 + REG32_MAP[op1]];
+      const imm = parseHexNum(op1);
+      if (!isNaN(imm)) {
+        if (imm >= -128 && imm <= 127) return [0x6A, imm & 0xFF];
+        return [0x68, imm & 0xFF, (imm >> 8) & 0xFF, (imm >> 16) & 0xFF, (imm >> 24) & 0xFF];
+      }
+    }
+    if (mnem === 'POP') {
+      if (REG32_MAP[op1] !== undefined) return [0x58 + REG32_MAP[op1]];
+    }
+    if (mnem === 'INC') {
+      if (REG32_MAP[op1] !== undefined) return [0x40 + REG32_MAP[op1]];
+    }
+    if (mnem === 'DEC') {
+      if (REG32_MAP[op1] !== undefined) return [0x48 + REG32_MAP[op1]];
+    }
+
+    // Two operand: XOR, ADD, SUB, AND, OR, CMP, TEST
+    const twoOpOpcodes = {
+      XOR: 0x31,
+      ADD: 0x01,
+      SUB: 0x29,
+      AND: 0x21,
+      OR:  0x09,
+      CMP: 0x39,
+      TEST: 0x85
+    };
+
+    if (twoOpOpcodes[mnem] !== undefined) {
+      if (REG32_MAP[op1] !== undefined && REG32_MAP[op2] !== undefined) {
+        const modrm = 0xC0 | (REG32_MAP[op2] << 3) | REG32_MAP[op1];
+        return [twoOpOpcodes[mnem], modrm];
+      }
+    }
+
+    // MOV instruction
+    if (mnem === 'MOV') {
+      if (REG32_MAP[op1] !== undefined) {
+        if (REG32_MAP[op2] !== undefined) {
+          // MOV reg, reg -> 89 /r (src in reg, dst in rm)
+          const modrm = 0xC0 | (REG32_MAP[op2] << 3) | REG32_MAP[op1];
+          return [0x89, modrm];
+        }
+        // MOV reg, imm32 -> B8+r imm32
+        const imm = parseHexNum(op2);
+        if (!isNaN(imm)) {
+          return [
+            0xB8 + REG32_MAP[op1],
+            imm & 0xFF,
+            (imm >> 8) & 0xFF,
+            (imm >> 16) & 0xFF,
+            (imm >> 24) & 0xFF
+          ];
+        }
+      }
+    }
+
+    // Control flow branches (rel8)
+    const branches = {
+      JMP: 0xEB,
+      JZ:  0x74,
+      JE:  0x74,
+      JNZ: 0x75,
+      JNE: 0x75,
+      JC:  0x72,
+      JB:  0x72,
+      JNC: 0x73,
+      JAE: 0x73,
+      LOOP: 0xE2
+    };
+
+    if (branches[mnem] !== undefined) {
+      const rel = parseHexNum(op1);
+      return [branches[mnem], isNaN(rel) ? 0x00 : (rel & 0xFF)];
+    }
+
+    if (mnem === 'CALL') {
+      const rel = parseHexNum(op1);
+      const val = isNaN(rel) ? 0 : rel;
+      return [0xE8, val & 0xFF, (val >> 8) & 0xFF, (val >> 16) & 0xFF, (val >> 24) & 0xFF];
+    }
+
+    // Direct DB directive
+    if (mnem === 'DB' || mnem === 'BYTE') {
+      return parts.slice(1).map(p => parseHexNum(p) & 0xFF).filter(b => !isNaN(b));
+    }
+
+    return [];
+  }
+
+  function disassembleBytes(byteArray) {
+    let i = 0;
+    const lines = [];
+
+    while (i < byteArray.length) {
+      const offset = '0x' + i.toString(16).padStart(4, '0').toUpperCase();
+      const b0 = byteArray[i];
+
+      if (b0 === 0x90) { lines.push({ off: offset, hex: '90', asm: 'NOP' }); i++; continue; }
+      if (b0 === 0xC3) { lines.push({ off: offset, hex: 'C3', asm: 'RET' }); i++; continue; }
+      if (b0 === 0xCC) { lines.push({ off: offset, hex: 'CC', asm: 'INT 3' }); i++; continue; }
+      if (b0 === 0xF4) { lines.push({ off: offset, hex: 'F4', asm: 'HLT' }); i++; continue; }
+      if (b0 === 0xFA) { lines.push({ off: offset, hex: 'FA', asm: 'CLI' }); i++; continue; }
+      if (b0 === 0xFB) { lines.push({ off: offset, hex: 'FB', asm: 'STI' }); i++; continue; }
+      if (b0 === 0x60) { lines.push({ off: offset, hex: '60', asm: 'PUSHA' }); i++; continue; }
+      if (b0 === 0x61) { lines.push({ off: offset, hex: '61', asm: 'POPA' }); i++; continue; }
+      if (b0 === 0x9C) { lines.push({ off: offset, hex: '9C', asm: 'PUSHFD' }); i++; continue; }
+      if (b0 === 0x9D) { lines.push({ off: offset, hex: '9D', asm: 'POPFD' }); i++; continue; }
+
+      // PUSH reg32 (50..57)
+      if (b0 >= 0x50 && b0 <= 0x57) {
+        const reg = Object.keys(REG32_MAP).find(k => REG32_MAP[k] === (b0 - 0x50));
+        lines.push({ off: offset, hex: b0.toString(16).padStart(2, '0').toUpperCase(), asm: `PUSH ${reg}` });
+        i++;
+        continue;
+      }
+
+      // POP reg32 (58..5F)
+      if (b0 >= 0x58 && b0 <= 0x5F) {
+        const reg = Object.keys(REG32_MAP).find(k => REG32_MAP[k] === (b0 - 0x58));
+        lines.push({ off: offset, hex: b0.toString(16).padStart(2, '0').toUpperCase(), asm: `POP ${reg}` });
+        i++;
+        continue;
+      }
+
+      // INC reg32 (40..47)
+      if (b0 >= 0x40 && b0 <= 0x47) {
+        const reg = Object.keys(REG32_MAP).find(k => REG32_MAP[k] === (b0 - 0x40));
+        lines.push({ off: offset, hex: b0.toString(16).padStart(2, '0').toUpperCase(), asm: `INC ${reg}` });
+        i++;
+        continue;
+      }
+
+      // DEC reg32 (48..4F)
+      if (b0 >= 0x48 && b0 <= 0x4F) {
+        const reg = Object.keys(REG32_MAP).find(k => REG32_MAP[k] === (b0 - 0x48));
+        lines.push({ off: offset, hex: b0.toString(16).padStart(2, '0').toUpperCase(), asm: `DEC ${reg}` });
+        i++;
+        continue;
+      }
+
+      // Two-byte CPUID / RDTSC
+      if (b0 === 0x0F && i + 1 < byteArray.length) {
+        const b1 = byteArray[i + 1];
+        if (b1 === 0xA2) { lines.push({ off: offset, hex: '0F A2', asm: 'CPUID' }); i += 2; continue; }
+        if (b1 === 0x31) { lines.push({ off: offset, hex: '0F 31', asm: 'RDTSC' }); i += 2; continue; }
+      }
+
+      // MOV reg32, imm32 (B8..BF)
+      if (b0 >= 0xB8 && b0 <= 0xBF && i + 4 < byteArray.length) {
+        const reg = Object.keys(REG32_MAP).find(k => REG32_MAP[k] === (b0 - 0xB8));
+        const imm = byteArray[i+1] | (byteArray[i+2] << 8) | (byteArray[i+3] << 16) | (byteArray[i+4] << 24);
+        const immHex = '0x' + (imm >>> 0).toString(16).toUpperCase().padStart(8, '0');
+        const hexStr = [b0, byteArray[i+1], byteArray[i+2], byteArray[i+3], byteArray[i+4]].map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+        lines.push({ off: offset, hex: hexStr, asm: `MOV ${reg}, ${immHex}` });
+        i += 5;
+        continue;
+      }
+
+      // ModR/M Operations: XOR (31), ADD (01), SUB (29), AND (21), OR (09), CMP (39), TEST (85), MOV (89)
+      const opMap = { 0x31: 'XOR', 0x01: 'ADD', 0x29: 'SUB', 0x21: 'AND', 0x09: 'OR', 0x39: 'CMP', 0x85: 'TEST', 0x89: 'MOV' };
+      if (opMap[b0] && i + 1 < byteArray.length) {
+        const modrm = byteArray[i + 1];
+        if ((modrm & 0xC0) === 0xC0) {
+          const dstReg = Object.keys(REG32_MAP).find(k => REG32_MAP[k] === (modrm & 7));
+          const srcReg = Object.keys(REG32_MAP).find(k => REG32_MAP[k] === ((modrm >> 3) & 7));
+          lines.push({
+            off: offset,
+            hex: `${b0.toString(16).padStart(2,'0').toUpperCase()} ${modrm.toString(16).padStart(2,'0').toUpperCase()}`,
+            asm: `${opMap[b0]} ${dstReg}, ${srcReg}`
+          });
+          i += 2;
+          continue;
+        }
+      }
+
+      // Branching relative (74, 75, 72, 73, EB, E2)
+      const branchMap = { 0x74: 'JZ', 0x75: 'JNZ', 0x72: 'JC', 0x73: 'JNC', 0xEB: 'JMP', 0xE2: 'LOOP' };
+      if (branchMap[b0] && i + 1 < byteArray.length) {
+        const rel = byteArray[i + 1];
+        const signedRel = rel > 127 ? rel - 256 : rel;
+        const targetOff = '0x' + (i + 2 + signedRel).toString(16).padStart(4, '0').toUpperCase();
+        lines.push({
+          off: offset,
+          hex: `${b0.toString(16).padStart(2,'0').toUpperCase()} ${rel.toString(16).padStart(2,'0').toUpperCase()}`,
+          asm: `${branchMap[b0]} ${targetOff}`
+        });
+        i += 2;
+        continue;
+      }
+
+      // Default byte fallback
+      lines.push({ off: offset, hex: b0.toString(16).padStart(2, '0').toUpperCase(), asm: `DB 0x${b0.toString(16).padStart(2, '0').toUpperCase()}` });
+      i++;
+    }
+
+    return lines;
+  }
+
+  let lastGeneratedBytes = [];
+
+  function convertInput() {
+    const raw = converterInput.value;
+    if (telemetryNotice) telemetryNotice.style.display = 'none';
+
+    if (isAssemblyMode) {
+      const lines = raw.split('\n');
+      let bytes = [];
+      lines.forEach(l => {
+        const b = assembleLine(l);
+        bytes.push(...b);
+      });
+      lastGeneratedBytes = bytes;
+
+      if (lblInStats) lblInStats.textContent = `${lines.length} lines parsed`;
+      if (lblOutStats) lblOutStats.textContent = `Total Size: ${bytes.length} bytes`;
+
+      formatOutput(bytes);
+    } else {
+      // Disassembler Mode
+      const cleanHex = raw.replace(/[^0-9a-fA-F]/g, ' ').split(/\s+/).filter(Boolean);
+      const byteVals = cleanHex.map(h => parseInt(h, 16)).filter(b => !isNaN(b));
+      lastGeneratedBytes = byteVals;
+
+      const asmInstructions = disassembleBytes(byteVals);
+      if (lblInStats) lblInStats.textContent = `${byteVals.length} hex bytes parsed`;
+      if (lblOutStats) lblOutStats.textContent = `${asmInstructions.length} instructions decoded`;
+
+      const formatted = asmInstructions.map(instr => `${instr.off}  ${instr.hex.padEnd(14, ' ')}  ${instr.asm}`).join('\n');
+      converterOutput.textContent = formatted || '// Disassembly output empty';
+    }
+  }
+
+  function formatOutput(bytes) {
+    const fmt = selFormatOut.value;
+    if (!bytes.length) {
+      converterOutput.textContent = '// Machine code buffer empty';
+      return;
+    }
+
+    if (fmt === 'hex') {
+      converterOutput.textContent = bytes.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+    } else if (fmt === 'c') {
+      const hexList = bytes.map(b => '0x' + b.toString(16).padStart(2, '0').toUpperCase()).join(', ');
+      converterOutput.textContent = `const unsigned char code[${bytes.length}] = {\n  ${hexList}\n};`;
+    } else if (fmt === 'nasm') {
+      const hexList = bytes.map(b => '0x' + b.toString(16).padStart(2, '0').toUpperCase()).join(', ');
+      converterOutput.textContent = `db ${hexList}`;
+    } else if (fmt === 'binary') {
+      converterOutput.textContent = bytes.map(b => b.toString(2).padStart(8, '0')).join(' ');
+    }
+  }
+
+  if (selFormatOut) selFormatOut.onchange = () => formatOutput(lastGeneratedBytes);
+  if (btnExecuteConvert) btnExecuteConvert.onclick = convertInput;
+  if (btnClearConverter) {
+    btnClearConverter.onclick = () => {
+      converterInput.value = '';
+      converterOutput.textContent = '// Ready';
+      lastGeneratedBytes = [];
+      if (lblInStats) lblInStats.textContent = '0 lines';
+      if (lblOutStats) lblOutStats.textContent = 'Total Size: 0 bytes';
+    };
+  }
+
+  if (btnCopyOutput) {
+    btnCopyOutput.onclick = () => {
+      navigator.clipboard.writeText(converterOutput.textContent).then(() => {
+        const prev = btnCopyOutput.textContent;
+        btnCopyOutput.textContent = 'Copied!';
+        setTimeout(() => btnCopyOutput.textContent = prev, 1200);
+      });
+    };
+  }
+
+  // BIN Blob Download
+  if (btnDownloadBin) {
+    btnDownloadBin.onclick = () => {
+      if (!lastGeneratedBytes.length) {
+        alert('No machine code bytes assembled to download.');
+        return;
+      }
+      const u8 = new Uint8Array(lastGeneratedBytes);
+      const blob = new Blob([u8], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'temple_code.bin';
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+  }
+
+  // Switch Modes
+  if (btnModeAsm && btnModeDisasm) {
+    btnModeAsm.onclick = () => {
+      isAssemblyMode = true;
+      btnModeAsm.className = 'btn-retro btn-cyan';
+      btnModeDisasm.className = 'btn-retro';
+      lblInputMode.textContent = 'Assembly Source (Intel Syntax):';
+      lblInputMode.style.color = 'var(--cyan)';
+      lblOutputMode.textContent = 'Machine Code Stream (Hex):';
+      lblOutputMode.style.color = 'var(--emerald)';
+      converterInput.placeholder = 'Enter x86 instructions (e.g. PUSH EBP, MOV EBP, ESP...)';
+      selFormatOut.style.display = 'inline-block';
+      convertInput();
+    };
+
+    btnModeDisasm.onclick = () => {
+      isAssemblyMode = false;
+      btnModeDisasm.className = 'btn-retro btn-cyan';
+      btnModeAsm.className = 'btn-retro';
+      lblInputMode.textContent = 'Machine Code Hex Bytes:';
+      lblInputMode.style.color = 'var(--emerald)';
+      lblOutputMode.textContent = 'Disassembled Instructions:';
+      lblOutputMode.style.color = 'var(--cyan)';
+      converterInput.placeholder = 'Enter raw hex bytes (e.g. 55 89 E5 31 C0 5D C3)';
+      selFormatOut.style.display = 'none';
+      convertInput();
+    };
+  }
+
+  // Presets Dictionary
+  const PRESETS = {
+    prologue: `; Standard 32-bit Win32 C Calling Convention\nPUSH EBP\nMOV EBP, ESP\nSUB ESP, 0x10\nXOR EAX, EAX\nMOV ESP, EBP\nPOP EBP\nRET`,
+    xorzero: `; Demoscene zeroing and small size register prep\nXOR EAX, EAX\nXOR EBX, EBX\nXOR ECX, ECX\nXOR EDX, EDX\nINC EAX\nRET`,
+    msgbox: `; Win32 MessageBoxA parameter stack setup (stdcall)\nPUSH 0x00\nPUSH 0x00402000\nPUSH 0x00402010\nPUSH 0x00\nCALL 0x00001020\nRET`,
+    vga: `; VGA Mode 13h (320x200x256) DOS Intro Setup\nMOV EAX, 0x0013\nINT 0x10\nPUSH 0xA000\nPOP EDX\nRET`,
+    rdtsc: `; High-resolution Pentium CPU cycle benchmark\nCPUID\nRDTSC\nPUSH EDX\nPUSH EAX\nNOP\nRDTSC\nPOP EBX\nPOP ECX\nRET`,
+    anomaly: `; [TELEMETRY CAPTURE OFFSET 0x1999FE]\nXOR EAX, EAX\nMOV EDX, 0x10199904\nMOV ECX, 0x0000007F\nTEST EDX, EDX\nJNZ 0x02\nINT 3\nRET`
+  };
+
+  document.querySelectorAll('[data-preset]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pKey = btn.dataset.preset;
+      if (PRESETS[pKey]) {
+        btnModeAsm.click();
+        converterInput.value = PRESETS[pKey];
+        convertInput();
+        if (pKey === 'anomaly' && telemetryNotice) {
+          telemetryNotice.style.display = 'block';
+        }
+      }
+    });
+  });
+
+  // Load initial preset
+  converterInput.value = PRESETS.prologue;
+  convertInput();
+
+  // ==========================================
+  // 4. Bitwise Radix Altar Logic
+  // ==========================================
+  let registerState = 0x00001999; // Default 1999 aesthetic seed!
+
+  const bitGrid = document.getElementById('bitGrid');
+  const valHex = document.getElementById('valHex');
+  const valUint = document.getElementById('valUint');
+  const valInt = document.getElementById('valInt');
+  const valEndian = document.getElementById('valEndian');
+  const flagZF = document.getElementById('flagZF');
+  const flagSF = document.getElementById('flagSF');
+  const flagPF = document.getElementById('flagPF');
+
+  function renderBitGrid() {
+    if (!bitGrid) return;
+    bitGrid.innerHTML = '';
+
+    for (let bit = 31; bit >= 0; bit--) {
+      const isSet = (registerState & (1 << bit)) !== 0;
+      const cell = document.createElement('div');
+      cell.className = 'bit-cell';
+
+      const lbl = document.createElement('span');
+      lbl.className = 'bit-label';
+      lbl.textContent = bit;
+
+      const box = document.createElement('div');
+      box.className = 'bit-box' + (isSet ? ' active' : '');
+      box.textContent = isSet ? '1' : '0';
+
+      cell.appendChild(lbl);
+      cell.appendChild(box);
+
+      cell.onclick = () => {
+        registerState ^= (1 << bit);
+        updateRadixDisplay();
+      };
+
+      bitGrid.appendChild(cell);
+
+      // Byte separator
+      if (bit % 8 === 0 && bit !== 0) {
+        const div = document.createElement('div');
+        div.className = 'byte-divider';
+        bitGrid.appendChild(div);
+      }
+    }
+  }
+
+  function swapEndian32(val) {
+    return (
+      ((val & 0x000000FF) << 24) |
+      ((val & 0x0000FF00) << 8) |
+      ((val & 0x00FF0000) >>> 8) |
+      ((val >>> 24) & 0xFF)
+    ) >>> 0;
+  }
+
+  function updateRadixDisplay() {
+    renderBitGrid();
+    const u32 = registerState >>> 0;
+    const s32 = registerState | 0;
+
+    if (valHex) valHex.textContent = '0x' + u32.toString(16).toUpperCase().padStart(8, '0');
+    if (valUint) valUint.textContent = u32.toLocaleString();
+    if (valInt) valInt.textContent = s32.toLocaleString();
+    if (valEndian) valEndian.textContent = '0x' + swapEndian32(u32).toString(16).toUpperCase().padStart(8, '0');
+
+    // EFLAGS simulation
+    if (flagZF) {
+      const z = (u32 === 0);
+      flagZF.textContent = z ? '1 (Zero)' : '0 (Non-Zero)';
+      flagZF.style.color = z ? 'var(--emerald)' : 'var(--text-muted)';
+    }
+
+    if (flagSF) {
+      const s = (s32 < 0);
+      flagSF.textContent = s ? '1 (Negative)' : '0 (Positive)';
+      flagSF.style.color = s ? 'var(--crimson)' : 'var(--text-muted)';
+    }
+
+    if (flagPF) {
+      // Parity of lowest byte
+      let b = u32 & 0xFF;
+      let count = 0;
+      for (let k = 0; k < 8; k++) if ((b >> k) & 1) count++;
+      const p = (count % 2 === 0);
+      flagPF.textContent = p ? '1 (Even)' : '0 (Odd)';
+      flagPF.style.color = p ? 'var(--emerald)' : 'var(--text-muted)';
+    }
+  }
+
+  // Bit buttons
+  document.getElementById('btnResetBits').onclick = () => { registerState = 0; updateRadixDisplay(); };
+  document.getElementById('btnShl').onclick = () => { registerState = (registerState << 1) >>> 0; updateRadixDisplay(); };
+  document.getElementById('btnShr').onclick = () => { registerState = (registerState >>> 1); updateRadixDisplay(); };
+  document.getElementById('btnRol').onclick = () => { registerState = ((registerState << 1) | (registerState >>> 31)) >>> 0; updateRadixDisplay(); };
+  document.getElementById('btnRor').onclick = () => { registerState = ((registerState >>> 1) | (registerState << 31)) >>> 0; updateRadixDisplay(); };
+  document.getElementById('btnNot').onclick = () => { registerState = (~registerState) >>> 0; updateRadixDisplay(); };
+  document.getElementById('btnEndianFlip').onclick = () => { registerState = swapEndian32(registerState); updateRadixDisplay(); };
+
+  updateRadixDisplay();
+
+  // ==========================================
+  // 5. Win32 PE Anatomy Descriptions
+  // ==========================================
+  const PE_DETAILS = {
+    dos: {
+      title: "1. DOS MZ Header (IMAGE_DOS_HEADER)",
+      sub: "64-byte legacy header retained for MS-DOS backwards compatibility",
+      body: "Every valid 32-bit Win32 executable begins with the legacy <strong>IMAGE_DOS_HEADER</strong> (64 bytes).<br><br>• <code>e_magic</code>: Must equal <code>0x5A4D</code> ('MZ', named after Mark Zbikowski).<br>• <code>e_lfanew</code>: Located at offset <code>0x3C</code> (4 bytes). Holds the file pointer offset to the true NT PE Header. If this pointer is corrupted, the Win32 OS loader halts immediately with <em>'Invalid Win32 Application'</em>."
+    },
+    stub: {
+      title: "2. Real-Mode DOS Stub",
+      sub: "16-bit program executed when run inside genuine MS-DOS",
+      body: "When a user executes a Win32 executable in DOS 6.22, the DOS stub executes. It prints the classic message: <em>'This program cannot be run in DOS mode'</em> using <code>INT 21h, AH=09h</code>, then exits cleanly via <code>INT 21h, AH=4Ch</code>. Demoscene coders sometimes embed complete 16-bit intros into this stub space!"
+    },
+    pesig: {
+      title: "3. PE Signature",
+      sub: "4-byte magic signature validating portable executable format",
+      body: "Located directly at the offset designated by <code>e_lfanew</code> (typically <code>0x00E0</code> or <code>0x00F0</code>). Consists of the four ASCII characters: <code>'P', 'E', 0x00, 0x00</code> (hex value <code>0x00004550</code>). Confirms to the OS loader that the binary is a 32-bit Portable Executable."
+    },
+    coff: {
+      title: "4. COFF File Header (IMAGE_FILE_HEADER)",
+      sub: "20-byte hardware and layout specification",
+      body: "Defines the physical target architecture and layout parameters:<br><br>• <code>Machine</code>: <code>0x014C</code> specifies Intel 386 or later.<br>• <code>NumberOfSections</code>: Quantity of sections in the section table (typically 3 to 6).<br>• <code>TimeDateStamp</code>: Epoch timestamp indicating compilation time.<br>• <code>Characteristics</code>: Bitmask indicating executable image, 32-bit word machine, DLL, or system file."
+    },
+    optional: {
+      title: "5. Optional Header (IMAGE_OPTIONAL_HEADER32)",
+      sub: "224 bytes of crucial runtime loader configuration",
+      body: "Despite its name, this header is mandatory for all executable files:<br><br>• <code>AddressOfEntryPoint</code>: Relative Virtual Address (RVA) where execution begins.<br>• <code>ImageBase</code>: Preferred memory load address (default <code>0x00400000</code> for .EXE, <code>0x10000000</code> for .DLL).<br>• <code>SectionAlignment</code>: Section alignment in memory (typically 4096 bytes / 4KB page).<br>• <code>FileAlignment</code>: Section alignment on disk (typically 512 bytes).<br>• <code>Subsystem</code>: <code>0x0002</code> for Win32 GUI, <code>0x0003</code> for Win32 Console."
+    },
+    sections: {
+      title: "6. Section Headers & Table",
+      sub: "Array of 40-byte records defining discrete program segments",
+      body: "Each section represents a distinct chunk of code, data, or resources mapped into memory:<br><br>• <code>.text</code>: Machine code execution instructions (Read + Execute).<br>• <code>.rdata</code>: Read-only data, Import Address Table (IAT), string literals.<br>• <code>.data</code>: Initialized global variables (Read + Write).<br>• <code>.rsrc</code>: Application icons, cursors, dialog templates, menus.<br>• <code>.reloc</code>: Base relocation table used if ImageBase is unavailable."
+    }
+  };
+
+  const peBlocks = document.querySelectorAll('.pe-block');
+  const peDetailTitle = document.getElementById('peDetailTitle');
+  const peDetailSubtitle = document.getElementById('peDetailSubtitle');
+  const peDetailBody = document.getElementById('peDetailBody');
+
+  peBlocks.forEach(b => {
+    b.addEventListener('click', () => {
+      peBlocks.forEach(blk => blk.classList.remove('active-pe'));
+      b.classList.add('active-pe');
+      const secKey = b.dataset.section;
+      if (PE_DETAILS[secKey]) {
+        peDetailTitle.textContent = PE_DETAILS[secKey].title;
+        peDetailSubtitle.textContent = PE_DETAILS[secKey].sub;
+        peDetailBody.innerHTML = PE_DETAILS[secKey].body;
+      }
+    });
+  });
+
+  // ==========================================
+  // 6. YM2612 & SPC700 Chiptune Jukebox Engine
+  // ==========================================
+  let audioCtx = null;
+  let isPlaying = false;
+  let trackIdx = 0;
+  let masterGain = null;
+  let analyser = null;
+  let audioTimer = null;
+  let stepIdx = 0;
+
+  const TRACKS = [
+    {
+      title: "Track 01: 'Shrine of Silicon'",
+      style: "136 BPM // Yamaha 2-Operator Bass & SPC700 Delay",
+      bpm: 136,
+      scale: [130.81, 146.83, 155.56, 174.61, 196.00, 220.00, 246.94, 261.63, 293.66, 311.13, 349.23, 392.00]
+    },
+    {
+      title: "Track 02: 'Cathedral of ModRM'",
+      style: "96 BPM // Lush SPC700 Resonant Pads & Delay Chimes",
+      bpm: 96,
+      scale: [146.83, 164.81, 174.61, 196.00, 220.00, 261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 523.25]
+    },
+    {
+      title: "Track 03: 'Subterranean Ring 0'",
+      style: "128 BPM // Dark Demoscene Cyber Groove & FM Clangs",
+      bpm: 128,
+      scale: [110.00, 123.47, 130.81, 146.83, 164.81, 174.61, 196.00, 220.00, 246.94, 261.63, 293.66, 329.63]
+    }
+  ];
+
+  function initAudio() {
+    if (audioCtx) return;
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioContextClass();
+
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.65;
+
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+
+    masterGain.connect(analyser);
+    analyser.connect(audioCtx.destination);
+
+    startVisualizer();
+  }
+
+  // Mandate 9: Yamaha YM2612 2-Operator FM Synthesizer Node
+  function playFMSound(freq, duration, modRatio = 2.0, modIndex = 180) {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+
+    const carrier = audioCtx.createOscillator();
+    const modulator = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const envGain = audioCtx.createGain();
+
+    carrier.type = 'sine';
+    carrier.frequency.setValueAtTime(freq, now);
+
+    modulator.type = 'sine';
+    modulator.frequency.setValueAtTime(freq * modRatio, now);
+
+    // FM Modulation Envelope: rapid exponential decay (iconic Genesis bite)
+    modGain.gain.setValueAtTime(modIndex, now);
+    modGain.gain.exponentialRampToValueAtTime(0.01, now + duration * 0.7);
+
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    // Output Amplitude ADSR
+    envGain.gain.setValueAtTime(0.001, now);
+    envGain.gain.linearRampToValueAtTime(0.4, now + 0.015);
+    envGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+    carrier.connect(envGain);
+
+    // Mandate 9: SPC700 Stereo Slapback Delay Node Line
+    const delayNode = audioCtx.createDelay();
+    delayNode.delayTime.value = 0.18; // 180ms delay
+
+    const delayFeedback = audioCtx.createGain();
+    delayFeedback.gain.value = 0.28; // Warm feedback
+
+    const delayFilter = audioCtx.createBiquadFilter();
+    delayFilter.type = 'lowpass';
+    delayFilter.frequency.value = 2100; // Warm high-frequency roll-off
+
+    envGain.connect(masterGain);
+    envGain.connect(delayNode);
+    delayNode.connect(delayFilter);
+    delayFilter.connect(delayFeedback);
+    delayFeedback.connect(delayNode);
+    delayFilter.connect(masterGain);
+
+    carrier.start(now);
+    modulator.start(now);
+    carrier.stop(now + duration + 0.5);
+    modulator.stop(now + duration + 0.5);
+  }
+
+  function playProceduralPercussion(type) {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+
+    if (type === 'kick') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.frequency.setValueAtTime(140, now);
+      osc.frequency.exponentialRampToValueAtTime(32, now + 0.12);
+      gain.gain.setValueAtTime(0.7, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.16);
+    } else if (type === 'hat') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(4800, now);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.05);
+    }
+  }
+
+  function tickStep() {
+    if (!isPlaying) return;
+    const curTrack = TRACKS[trackIdx];
+    const scale = curTrack.scale;
+
+    // Bassline (Every 2 steps)
+    if (stepIdx % 2 === 0) {
+      const bassNote = scale[stepIdx % 4];
+      playFMSound(bassNote / 2, 0.22, 1.0, 240);
+    }
+
+    // Lead Arp
+    if (stepIdx % 4 === 0 || stepIdx % 4 === 2) {
+      const leadNote = scale[(stepIdx * 3) % scale.length];
+      playFMSound(leadNote, 0.18, 2.0, 160);
+    }
+
+    // Drums
+    if (stepIdx % 4 === 0) playProceduralPercussion('kick');
+    if (stepIdx % 2 === 1) playProceduralPercussion('hat');
+
+    stepIdx = (stepIdx + 1) % 16;
+    const stepDurationMs = (60 / curTrack.bpm / 4) * 1000;
+    audioTimer = setTimeout(tickStep, stepDurationMs);
+  }
+
+  function startPlayback() {
+    initAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    isPlaying = true;
+    stepIdx = 0;
+    updateTrackLabels();
+    tickStep();
+    document.getElementById('btnAudioPlay').textContent = '⏸ Pause';
+  }
+
+  function stopPlayback() {
+    isPlaying = false;
+    clearTimeout(audioTimer);
+    document.getElementById('btnAudioPlay').textContent = '▶ Play Track';
+  }
+
+  function updateTrackLabels() {
+    const cur = TRACKS[trackIdx];
+    document.getElementById('lblTrackName').textContent = cur.title;
+    document.getElementById('lblTrackStyle').textContent = cur.style;
+  }
+
+  document.getElementById('btnAudioPlay').onclick = () => {
+    if (isPlaying) stopPlayback();
+    else startPlayback();
+  };
+
+  document.getElementById('btnAudioStop').onclick = () => stopPlayback();
+
+  document.getElementById('btnAudioNext').onclick = () => {
+    trackIdx = (trackIdx + 1) % TRACKS.length;
+    updateTrackLabels();
+    if (isPlaying) {
+      clearTimeout(audioTimer);
+      stepIdx = 0;
+      tickStep();
+    }
+  };
+
+  const audioVolume = document.getElementById('audioVolume');
+  const lblVolVal = document.getElementById('lblVolVal');
+  audioVolume.oninput = () => {
+    const v = parseInt(audioVolume.value, 10);
+    lblVolVal.textContent = v + '%';
+    if (masterGain) masterGain.gain.value = v / 100;
+  };
+
+  // Oscilloscope Visualizer
+  function startVisualizer() {
+    const canvas = document.getElementById('scopeCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const bufferLength = analyser ? analyser.frequencyBinCount : 128;
+    const dataArray = new Uint8Array(bufferLength);
+
+    function draw() {
+      requestAnimationFrame(draw);
+      ctx.fillStyle = '#05080f';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Grid Lines
+      ctx.strokeStyle = '#0d1829';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let x = 0; x < canvas.width; x += 40) { ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); }
+      for (let y = 0; y < canvas.height; y += 30) { ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); }
+      ctx.stroke();
+
+      if (!isPlaying || !analyser) {
+        // Idle flatline
+        ctx.strokeStyle = '#1e3a5f';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height / 2);
+        ctx.lineTo(canvas.width, canvas.height / 2);
+        ctx.stroke();
+        return;
+      }
+
+      analyser.getByteTimeDomainData(dataArray);
+
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#f59e0b';
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = '#f59e0b';
+      ctx.beginPath();
+
+      const sliceWidth = canvas.width * 1.0 / bufferLength;
+      let x = 0;
+
+      for (let i = 0; i < bufferLength; i++) {
+        const v = dataArray[i] / 128.0;
+        const y = v * (canvas.height / 2);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+        x += sliceWidth;
+      }
+
+      ctx.lineTo(canvas.width, canvas.height / 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    draw();
+  }
+
+  // ==========================================
+  // 7. Acolyte Guestbook Engine
+  // ==========================================
+  const INITIAL_GUESTBOOK = [
+    { alias: "ByteMonk_99", opcode: "NOP [0x90]", msg: "Welcome to the sacred shrine of 0x90. May your interrupts always return clean.", time: "1999-10-24 18:22" },
+    { alias: "FLARELIGHT_GUEST", opcode: "MOV EAX, 0x13", msg: "Greetz from Helsinki! Nice YM2612 FM synthesis. Hand-written ASM is eternal.", time: "1999-11-02 21:40" },
+    { alias: "HexAcolyte", opcode: "XOR EAX, EAX", msg: "Why waste 100 megabytes on frameworks when 4 kilobytes can render a 3D textured torus?", time: "1999-11-15 04:12" },
+    { alias: "SubOperator_7F", opcode: "INT 3 [0xCC]", msg: "Signal detected on internal subnet 10.19.99.4. The machine preserves what the world forgot.", time: "1999-12-08 02:45" }
+  ];
+
+  function getGuestbook() {
+    const raw = localStorage.getItem('kweb_asm_temple_guestbook');
+    if (!raw) {
+      localStorage.setItem('kweb_asm_temple_guestbook', JSON.stringify(INITIAL_GUESTBOOK));
+      return INITIAL_GUESTBOOK;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_GUESTBOOK;
+    }
+  }
+
+  function renderGuestbook() {
+    const feed = document.getElementById('guestbookFeed');
+    if (!feed) return;
+    const list = getGuestbook();
+    feed.innerHTML = '';
+
+    list.forEach(entry => {
+      const card = document.createElement('div');
+      card.style.background = '#090e18';
+      card.style.border = '1px solid #1e293b';
+      card.style.padding = '10px 12px';
+      card.style.borderRadius = '3px';
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:11px;">
+          <strong style="color:var(--gold-bright);">👤 ${entry.alias}</strong>
+          <span style="color:var(--text-muted);">${entry.time}</span>
+        </div>
+        <div style="font-size:11px; color:var(--cyan); margin-bottom:4px;">
+          Favorite Opcode: <span class="badge-opcode">${entry.opcode}</span>
+        </div>
+        <div style="font-size:12px; color:var(--text-main); line-height:1.4;">
+          "${entry.msg}"
+        </div>
+      `;
+      feed.appendChild(card);
+    });
+  }
+
+  document.getElementById('btnSubmitGuestbook').onclick = () => {
+    const alias = document.getElementById('gbAlias').value.trim() || 'Anonymous_Acolyte';
+    const opcode = document.getElementById('gbOpcode').value.trim() || 'NOP [0x90]';
+    const msg = document.getElementById('gbMsg').value.trim();
+
+    if (!msg) {
+      alert('Please enter an inscription message before submitting.');
+      return;
+    }
+
+    const d = new Date();
+    const timeStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+
+    const list = getGuestbook();
+    list.unshift({ alias, opcode, msg, time: timeStr });
+    localStorage.setItem('kweb_asm_temple_guestbook', JSON.stringify(list));
+
+    document.getElementById('gbMsg').value = '';
+    renderGuestbook();
+  };
+
+  document.getElementById('btnResetGuestbook').onclick = () => {
+    localStorage.setItem('kweb_asm_temple_guestbook', JSON.stringify(INITIAL_GUESTBOOK));
+    renderGuestbook();
+  };
+
+  renderGuestbook();
+
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -17,8 +17,8 @@ current_targets:
   kilo_graphics: KCyber
   kilo_qa: KCyber
   kilo_expander: "KDarts (Firebase RTDB Online Multiplayer)"
-  kilo_creator: "kweb://asm-temple (x86 Assembly Programming Shrine & Opcode Converter)"
-virtual_web_target: "kweb://asm-temple"
+  kilo_creator: "kweb://cybercafe (Underground BBS, Threaded Forums & ASCII Art Canvas)"
+virtual_web_target: "kweb://cybercafe"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://warez"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-expander
-  app: KReversi
-  timestamp: "2026-09-24T03:55:00Z"
+  agent: kilo-creator
+  app: "kweb://asm-temple"
+  timestamp: "2026-09-24T04:45:00Z"
 last_planner_run: "2026-09-23T04:40:00Z"
 ---
 
@@ -94,15 +94,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://asm-temple` (x86 Assembly Programming Shrine & Opcode Converter)
+- **Current Target**: `kweb://cybercafe` (Underground BBS, Threaded Forums & ASCII Art Canvas)
 - **Upcoming Queue**:
-  `kweb://cybercafe` (Underground BBS, Threaded Forums & ASCII Art Canvas),
   `kweb://10.19.99.4/classified` (Tier 3 Corporate Intranet Leak & Memory Dumps),
   `kweb://echo-subsystem.net` (Tier 3 Research Journal & Harmonic Decoders),
   `kweb://deep-core` (Tier 3 Ghost Node Terminal & KMatrix Passkey Fragment),
   `kweb://portal` (Yahoo/Excite 1999 Directory Upgrade: simulated search, live stocks, classifieds),
   `kweb://warez` (Cracktros, Chiptune Jukebox & Demoscene Vault expansion),
-  `kweb://users/~neon_rider` (Personal Hacker / Demoscene & Win32 ASM Homepage - Completed).
+  `kweb://users/~neon_rider` (Personal Hacker / Demoscene & Win32 ASM Homepage - Completed),
+  `kweb://asm-temple` (x86 Assembly Programming Shrine & Opcode Converter - Completed).
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Current Target**: `KCyber`
@@ -131,8 +131,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://asm-temple` (`KiloOS/public/web/asm_temple.html`)
-  - *Next in Rotation*: `kweb://cybercafe` ➔ `kweb://darknet` ➔ `kweb://geocities` ➔ `kweb://warez` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://users/~neon_rider`.
+- **Current Active Target**: `kweb://cybercafe` (`KiloOS/public/web/cybercafe.html`)
+  - *Next in Rotation*: `kweb://darknet` ➔ `kweb://geocities` ➔ `kweb://warez` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple`.
 - **Anti-Potemkin Directive & Content Mandates**:
   1. `kweb://geocities` (*CyberSpire's Retro Shrine*):
      - ✅ Web Audio 16-bit tracker MIDI jukebox with 3 synthwave/MOD tracks and dancing LED equalizer.
@@ -147,7 +147,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
      - ✅ Yamaha YM2612 2-operator FM synthesis & SPC700 stereo delay chiptune tracker jukebox with CRT oscilloscope.
      - ✅ Demoscene source vault (.asm/.nfo) with client-side blob downloads, persistent CGI guestbook, & webring integration.
   5. `kweb://asm-temple` (*x86 Assembly Programming Shrine*):
-     - New Tier 2 site: Opcode reference guide, interactive real-time byte-to-hex converter, Win32 API architectural diagrams.
+     - ✅ Interactive x86 Opcode Oracle (42 instructions) with real-time filtering and cycle timing.
+     - ✅ Two-way live x86 assembler & disassembler with preset library, C array / NASM / binary export, and .bin downloads.
+     - ✅ 32-bit interactive radix & bit manipulation altar with EFLAGS status simulation.
+     - ✅ Win32 PE32 anatomical layout explorer with section inspector.
+     - ✅ Yamaha YM2612 FM synthesis & SPC700 stereo delay chiptune jukebox with CRT oscilloscope.
+     - ✅ Persistent acolyte guestbook & Central KiloNet Webring node #007 interconnect.
   6. `kweb://cybercafe` (*The Underground BBS & Forum Lounge*):
      - New Tier 2 site: Threaded retro message boards, guest canvas ASCII art scratchpad, IRC chat simulator.
   7. `kweb://darknet` (*Node 0x7F Transmission Subsystem*):
@@ -196,6 +201,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-24T04:45:00Z — kilo-creator: kweb://asm-temple (Virtual 1999 Web & x86 Opcode Shrine)**
+  - Status: PASS ✅ (Anti-Potemkin Virtual 1999 Web destination implemented; 0 regressions).
+  - Web Node: Created `KiloOS/public/web/asm_temple.html` (83.7 KB < 999 KB ceiling) in pure HTML5, CSS & Web Audio.
+  - Interactive Tools: Built searchable x86 Opcode Oracle (42 instructions), live two-way assembler/disassembler with 6 presets, 32-bit interactive radix/bit altar, and PE32 architectural layout inspector.
+  - Audio & Guestbook: Yamaha YM2612 2-operator FM synthesis & SPC700 stereo delay chiptune jukebox with CRT visualizer; persistent acolyte guestbook via `localStorage`.
+  - Hypermedia Interconnect: Added route & chip in `knet.html`, Member #007 in `webring.html`, and cross-links in `portal.html` & `users/neon_rider.html`.
+  - Verification: Vite clean build (355ms); security lint 100% PASS; strict <999KB ceiling.
+
 - **2026-09-24T03:55:00Z — kilo-expander: KReversi (Firebase RTDB Online Multiplayer Expansion)**
   - Status: PASS ✅ (Seamless cross-computer online multiplayer integrated; Mandate 12 compliant; 0 regressions).
   - Multiplayer Architecture: Integrated Firebase RTDB room/lobby synchronization (`multiplayer/kreversi/`) with public/private matchmaking and ES module CDN loader.
@@ -224,11 +237,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Interaction Safety: Primary "Save Changes" button (`btnSave`) is never occluded; added click-to-dismiss on toast bodies with slide animations.
   - Window Sizing: Tuned default window dimensions in `App.jsx` to `850x620` (from `830x565`) to fit the full contact form without vertical scrolling.
   - Verification: Clean MSVC C native build (`KContacts.exe` 24.5 KB); Vite clean build (370ms); security lint 100% clean; <999KB ceiling.
-
-- **2026-09-24T00:15:00Z — kilo-planner: ARG Guidelines & Mystery Preservation (TINAG Standard)**
-  - Status: PASS ✅ (Established ARG Mystery Preservation protocol; scrubbed spoilers across fleet).
-  - Protocol: Codified TINAG standard in AGENTS.md, arg_plan.md, next_work.md, and skills (creator, expander, qa, tester).
-  - KRSS Scrub: Rewrote spoiled headlines/articles in krss.html & KRSS/main.c into subtle in-universe telemetry.
-  - Fleet Scrub: Purged plain-text master passkey leaks and (ARG) labels across kbookmark, kclip, ksteno, kanomaly, kterm, kfleet, warez.
-  - Verification: MSVC builds clean (KRSS.exe 17.5 KB, KClip.exe 15.5 KB, KTerm.exe 45.0 KB); Vite clean build; security lint 100% clean.
 

@@ -240,6 +240,7 @@
         <div class="category-box">
           <div class="category-header">🛠️ System Tools &amp; Dev Utilities</div>
           <div class="category-content">
+            • <a href="/web/asm_temple.html">⚡ x86 Opcode Temple</a> — Assembly programming shrine, opcode oracle &amp; radix converter<br>
             • <a href="/web/users/neon_rider.html">⚡ ~neon_rider's Shrine</a> — Win32 ASM devlog, x86 sandbox &amp; tracker tunes<br>
             • <a href="/apps/kterm.html">💻 KTerm</a> — Retro terminal emulator with command piping<br>
             • <a href="/apps/khex.html">🔢 KHex</a> — Binary memory dump inspector &amp; pattern finder<br>
@@ -300,6 +301,7 @@
     '/web/geocities.html',
     '/web/webring.html',
     '/web/users/neon_rider.html',
+    '/web/asm_temple.html',
     '/apps/contribute.html'
   ];
 
@@ -317,7 +319,9 @@
       return;
     }
 
-    if (q.includes('neon') || q.includes('rider') || q.includes('asm') || q.includes('opcode')) {
+    if (q.includes('temple') || q.includes('opcode') || q.includes('converter') || q.includes('x86')) {
+      window.location.href = '/web/asm_temple.html';
+    } else if (q.includes('neon') || q.includes('rider') || q.includes('asm')) {
       window.location.href = '/web/users/neon_rider.html';
     } else if (q.includes('geo') || q.includes('shrine') || q.includes('midi') || q.includes('guest')) {
       window.location.href = '/web/geocities.html';

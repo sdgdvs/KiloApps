@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-24T00:15:00Z — kilo-planner: ARG Guidelines & Mystery Preservation (TINAG Standard)**
+  - Status: PASS ✅ (Established ARG Mystery Preservation protocol; scrubbed spoilers across fleet).
+  - Protocol: Codified TINAG standard in AGENTS.md, arg_plan.md, next_work.md, and skills (creator, expander, qa, tester).
+  - KRSS Scrub: Rewrote spoiled headlines/articles in krss.html & KRSS/main.c into subtle in-universe telemetry.
+  - Fleet Scrub: Purged plain-text master passkey leaks and (ARG) labels across kbookmark, kclip, ksteno, kanomaly, kterm, kfleet, warez.
+  - Verification: MSVC builds clean (KRSS.exe 17.5 KB, KClip.exe 15.5 KB, KTerm.exe 45.0 KB); Vite clean build; security lint 100% clean.
+
 - **2026-09-23T22:45:00Z — kilo-creator: kweb://users/~neon_rider (Virtual Web 1999 & ASM Devlog)**
   - Status: PASS ✅ (Anti-Potemkin Virtual 1999 Web destination fully implemented; 0 regressions).
   - Architecture: Created `KiloOS/public/web/users/neon_rider.html` (64.2 KB < 999 KB ceiling) in pure HTML5, CSS & Web Audio.
