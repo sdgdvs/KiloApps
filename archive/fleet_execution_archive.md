@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-23T20:45:00Z — kilo-qa: KZip (Pass 5: Tutorial & State Integrity)**
+  - Status: PASS ✅ (Full state persistence & tutorial isolation verified; 0 regressions).
+  - Quicksave & Load: Implemented complete state capture across [F5] Save and [F9] Load hotkeys & buttons in web (`kzip_quicksave`) and native C (`kzip.dat`).
+  - First-Run Tutorial: Added session-isolated onboarding (`kzip_tutorialSeen` / `kzip_tutorial.dat`) with Esc/Enter/Space dismissals without interrupting saves.
+  - Modal & Overlay Hardening: Trapped background shortcuts during active modals, routed Esc/Enter dismissal, and enabled click-to-dismiss on toasts.
+  - Resource Safety: Added storage quota error handlers and verified automatic ObjectURL cleanup on archive download.
+  - Verification: Clean MSVC C native build (`KZip.exe` 25.6 KB); clean Vite build (353ms, `kzip.html` 61.6 KB); security lint 100% clean; <999KB ceiling.
+
 - **2026-09-23T18:45:00Z — kilo-usability: KHex (Tab 2 Label, Scrollbars, Row Cutoff & Arc 1 Clue)**
   - Status: PASS ✅ (Resolved Tab 2 label, dark themed scrollbars, row cutoff, and weaved Arc 1 memory offset IP clue).
   - Usability & Layout: Renamed Tab 2 to "Hex Editor & Viewer", added custom 6px cyber scrollbars, and expanded window to 920x800.

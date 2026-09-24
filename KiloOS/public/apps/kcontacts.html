@@ -607,16 +607,18 @@
     color: var(--text-muted);
   }
 
-  /* Toast notification */
+  /* Toast notification - Repositioned to top-right to prevent blocking submit/save buttons */
   .toast-container {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    top: 16px;
+    right: 18px;
     display: flex;
     flex-direction: column;
+    align-items: flex-end;
     gap: 8px;
     z-index: 3000;
     pointer-events: none;
+    max-width: min(380px, calc(100vw - 36px));
   }
 
   .toast {
@@ -627,11 +629,13 @@
     border-radius: 6px;
     font-size: 12px;
     box-shadow: 0 4px 14px rgba(0,0,0,0.45);
-    animation: fadeIn 0.2s ease-out;
+    animation: toastSlideDown 0.2s ease-out;
     pointer-events: auto;
     display: flex;
     align-items: center;
     gap: 10px;
+    cursor: pointer;
+    user-select: none;
   }
 
   .toast-close {
@@ -647,6 +651,11 @@
   .toast-close:hover {
     opacity: 1;
     background: rgba(255,255,255,0.15);
+  }
+
+  @keyframes toastSlideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   /* Quick Presets Bar */
@@ -1021,9 +1030,10 @@
       if (dirtyIndicator) dirtyIndicator.classList.remove('visible');
     }
 
-    // Utility: Interactive Toast
+    // Utility: Interactive Toast (Non-blocking top-right notification)
     function showToast(msg, duration = 2800) {
       const container = document.getElementById('toastContainer');
+      if (!container) return;
       const toast = document.createElement('div');
       toast.className = 'toast';
 
@@ -1040,11 +1050,15 @@
       const dismiss = () => {
         if (timer) clearTimeout(timer);
         toast.style.opacity = '0';
-        toast.style.transform = 'translateY(6px)';
+        toast.style.transform = 'translateY(-8px)';
         toast.style.transition = 'all 0.2s ease-out';
         setTimeout(() => toast.remove(), 220);
       };
-      closeBtn.onclick = dismiss;
+      closeBtn.onclick = (e) => {
+        e.stopPropagation();
+        dismiss();
+      };
+      toast.onclick = dismiss;
       toast.appendChild(closeBtn);
 
       container.appendChild(toast);
@@ -2378,7 +2392,7 @@
     });
 
     // Initialization
-    if (window.resizeTo) window.resizeTo(830, 565);
+    if (window.resizeTo) window.resizeTo(850, 620);
     seedData();
     updateTagPills();
     renderList();

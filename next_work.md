@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KTodo
-  kilo_usability: "KContacts (reposition bottom-right toast blocking submit button)"
+  kilo_usability: "KFarm (reposition bottom toast blocking seed radio buttons)"
   kilo_graphics: KColosseum
   kilo_qa: KChrono
   kilo_expander: "KReversi (Firebase RTDB Online Multiplayer)"
@@ -29,9 +29,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://darknet"
 last_run:
-  agent: kilo-tester
-  app: KHangman
-  timestamp: "2026-09-23T23:50:00Z"
+  agent: kilo-usability
+  app: KContacts
+  timestamp: "2026-09-24T00:41:00Z"
 last_planner_run: "2026-09-23T04:40:00Z"
 ---
 
@@ -115,9 +115,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KContacts` (reposition bottom-right toast blocking submit button)
+- **Current Target**: `KFarm` (reposition bottom toast blocking seed radio buttons)
 - **Upcoming Queue**:
-  `KFarm` (reposition bottom toast blocking seed radio buttons), `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`.
+  `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KChrono`
@@ -196,6 +196,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-24T00:41:00Z — kilo-usability: KContacts (Toast Occlusion & Window Ergonomics)**
+  - Status: PASS ✅ (Eliminated toast occlusion blocking Save button; enhanced layout ergonomics; 0 regressions).
+  - Toast Positioning: Relocated `.toast-container` from bottom-right (`bottom: 20px; right: 20px`) to top-right (`top: 16px; right: 18px`).
+  - Interaction Safety: Primary "Save Changes" button (`btnSave`) is never occluded; added click-to-dismiss on toast bodies with slide animations.
+  - Window Sizing: Tuned default window dimensions in `App.jsx` to `850x620` (from `830x565`) to fit the full contact form without vertical scrolling.
+  - Verification: Clean MSVC C native build (`KContacts.exe` 24.5 KB); Vite clean build (370ms); security lint 100% clean; <999KB ceiling.
+
 - **2026-09-24T00:15:00Z — kilo-planner: ARG Guidelines & Mystery Preservation (TINAG Standard)**
   - Status: PASS ✅ (Established ARG Mystery Preservation protocol; scrubbed spoilers across fleet).
   - Protocol: Codified TINAG standard in AGENTS.md, arg_plan.md, next_work.md, and skills (creator, expander, qa, tester).
@@ -227,12 +234,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Match Features: Public instant matchmaking, private custom room codes, live in-match chat chips, rematch handshake, and resignation handling.
   - Audio & Usability: Procedural Genesis/SNES FM synthesis sound chimes (turn, join, chat), top-right non-blocking safe toast alerts, and hotkey integration (`O`).
   - Verification: 8/8 headless unit tests pass; MSVC C clean build (`KGo.exe` 172.0 KB); Vite clean build (374ms, `kgo.html` 121.5 KB); security lint 100% clean; <999KB ceiling.
-
-- **2026-09-23T20:45:00Z — kilo-qa: KZip (Pass 5: Tutorial & State Integrity)**
-  - Status: PASS ✅ (Full state persistence & tutorial isolation verified; 0 regressions).
-  - Quicksave & Load: Implemented complete state capture across [F5] Save and [F9] Load hotkeys & buttons in web (`kzip_quicksave`) and native C (`kzip.dat`).
-  - First-Run Tutorial: Added session-isolated onboarding (`kzip_tutorialSeen` / `kzip_tutorial.dat`) with Esc/Enter/Space dismissals without interrupting saves.
-  - Modal & Overlay Hardening: Trapped background shortcuts during active modals, routed Esc/Enter dismissal, and enabled click-to-dismiss on toasts.
-  - Resource Safety: Added storage quota error handlers and verified automatic ObjectURL cleanup on archive download.
-  - Verification: Clean MSVC C native build (`KZip.exe` 25.6 KB); clean Vite build (353ms, `kzip.html` 61.6 KB); security lint 100% clean; <999KB ceiling.
 
