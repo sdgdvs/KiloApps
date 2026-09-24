@@ -4,12 +4,26 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-24T00:41:00Z — kilo-usability: KContacts (Toast Occlusion & Window Ergonomics)**
+  - Status: PASS ✅ (Eliminated toast occlusion blocking Save button; enhanced layout ergonomics; 0 regressions).
+  - Toast Positioning: Relocated `.toast-container` from bottom-right (`bottom: 20px; right: 20px`) to top-right (`top: 16px; right: 18px`).
+  - Interaction Safety: Primary "Save Changes" button (`btnSave`) is never occluded; added click-to-dismiss on toast bodies with slide animations.
+  - Window Sizing: Tuned default window dimensions in `App.jsx` to `850x620` (from `830x565`) to fit the full contact form without vertical scrolling.
+  - Verification: Clean MSVC C native build (`KContacts.exe` 24.5 KB); Vite clean build (370ms); security lint 100% clean; <999KB ceiling.
+
 - **2026-09-24T00:15:00Z — kilo-planner: ARG Guidelines & Mystery Preservation (TINAG Standard)**
   - Status: PASS ✅ (Established ARG Mystery Preservation protocol; scrubbed spoilers across fleet).
   - Protocol: Codified TINAG standard in AGENTS.md, arg_plan.md, next_work.md, and skills (creator, expander, qa, tester).
   - KRSS Scrub: Rewrote spoiled headlines/articles in krss.html & KRSS/main.c into subtle in-universe telemetry.
   - Fleet Scrub: Purged plain-text master passkey leaks and (ARG) labels across kbookmark, kclip, ksteno, kanomaly, kterm, kfleet, warez.
   - Verification: MSVC builds clean (KRSS.exe 17.5 KB, KClip.exe 15.5 KB, KTerm.exe 45.0 KB); Vite clean build; security lint 100% clean.
+
+- **2026-09-23T23:50:00Z — kilo-tester: KHangman (Keyboard Cutoff & UI Audit Remediation)**
+  - Status: PASS ✅ (2 issues identified, 2 fixed; 0 regressions).
+  - Layout & Ergonomics: Restructured upper panel into side-by-side canvas and info column, eliminating keyboard cutoff across all window sizes with responsive scrolling.
+  - Controls & Modals: Replaced custom alert modals with clean dialog flow, added [F1] Help modal with word category hints, and verified [F5] Save / [F9] Load hotkeys.
+  - Audio & Feedback: Procedural Web Audio win/loss chimes and chalk-on-board sound effects.
+  - Verification: Clean MSVC C native build (`KHangman.exe` 35.5 KB); clean Vite build (362ms); security lint 100% clean; <999KB ceiling.
 
 - **2026-09-23T22:45:00Z — kilo-creator: kweb://users/~neon_rider (Virtual Web 1999 & ASM Devlog)**
   - Status: PASS ✅ (Anti-Potemkin Virtual 1999 Web destination fully implemented; 0 regressions).
