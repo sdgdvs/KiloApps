@@ -786,8 +786,201 @@ void SaveGame() {
     }
 }
 
+#define FORTRESS_SAVE_MAGIC 0x464F5254 // "FORT"
+#define FORTRESS_SAVE_VER 1
+
+typedef struct {
+    int magic;
+    int version;
+    int gameMode;
+    int currentMap;
+    int wave;
+    BOOL waveActive;
+    BOOL gameOver;
+    int gold;
+    int baseHp;
+    int maxBaseHp;
+    int bossesKilled;
+    int hsEndless;
+    int hsBoss;
+    int trebuchetCd;
+    int castleBallistaCd;
+    int meteorTimer;
+    int blizzTimer;
+    int mutators;
+
+    int techStartingGold;
+    int techWallHp;
+    int techHeroCd;
+    int techTowerDmg;
+    int techMilitia;
+    int techSiegeEng;
+    int techFusion;
+    int techFortTraps;
+
+    int slotCount;
+    TowerSlot slots[MAX_SLOTS];
+    Hero hero;
+    Trap traps[MAX_TRAPS];
+    LavaPool lavaPools[MAX_LAVA_POOLS];
+    Militia militia[MAX_MILITIA];
+    Enemy enemies[MAX_ENEMIES];
+
+    int spawnQueueCount;
+    int spawnQueueHead;
+    int spawnTimer;
+    int spawnQueue[MAX_SPAWN_QUEUE];
+} FortressQuickSave;
+
+void QuickSaveGame() {
+    FILE *f = fopen("kfortress_quicksave.dat", "wb");
+    if (!f) {
+        ShowNativeToast("Quicksave Failed: File write error", RGB(239, 68, 68), 90);
+        Beep(200, 80);
+        return;
+    }
+    FortressQuickSave qs;
+    memset(&qs, 0, sizeof(qs));
+    qs.magic = FORTRESS_SAVE_MAGIC;
+    qs.version = FORTRESS_SAVE_VER;
+    qs.gameMode = g_gameMode;
+    qs.currentMap = g_currentMap;
+    qs.wave = g_wave;
+    qs.waveActive = g_waveActive;
+    qs.gameOver = g_gameOver;
+    qs.gold = g_gold;
+    qs.baseHp = g_baseHp;
+    qs.maxBaseHp = g_maxBaseHp;
+    qs.bossesKilled = g_bossesKilled;
+    qs.hsEndless = g_hsEndless;
+    qs.hsBoss = g_hsBoss;
+    qs.trebuchetCd = g_trebuchetCd;
+    qs.castleBallistaCd = g_castleBallistaCd;
+    qs.meteorTimer = g_meteorTimer;
+    qs.blizzTimer = g_blizzTimer;
+    qs.mutators = g_mutators;
+
+    qs.techStartingGold = g_techStartingGold;
+    qs.techWallHp = g_techWallHp;
+    qs.techHeroCd = g_techHeroCd;
+    qs.techTowerDmg = g_techTowerDmg;
+    qs.techMilitia = g_techMilitia;
+    qs.techSiegeEng = g_techSiegeEng;
+    qs.techFusion = g_techFusion;
+    qs.techFortTraps = g_techFortTraps;
+
+    qs.slotCount = g_slotCount;
+    memcpy(qs.slots, g_slots, sizeof(g_slots));
+    qs.hero = g_hero;
+    memcpy(qs.traps, g_traps, sizeof(g_traps));
+    memcpy(qs.lavaPools, g_lavaPools, sizeof(g_lavaPools));
+    memcpy(qs.militia, g_militia, sizeof(g_militia));
+    memcpy(qs.enemies, g_enemies, sizeof(g_enemies));
+
+    qs.spawnQueueCount = g_spawnQueueCount;
+    qs.spawnQueueHead = g_spawnQueueHead;
+    qs.spawnTimer = g_spawnTimer;
+    memcpy(qs.spawnQueue, g_spawnQueue, sizeof(g_spawnQueue));
+
+    fwrite(&qs, sizeof(FortressQuickSave), 1, f);
+    fclose(f);
+
+    Beep(750, 60);
+    ShowNativeToast("Battlefield Quicksaved [F5]!", TEXT_GOLD, 90);
+}
+
+BOOL QuickLoadGame() {
+    FILE *f = fopen("kfortress_quicksave.dat", "rb");
+    if (!f) {
+        ShowNativeToast("No Quicksave Found [F5 to save]", RGB(239, 68, 68), 90);
+        Beep(200, 80);
+        return FALSE;
+    }
+    FortressQuickSave qs;
+    if (fread(&qs, sizeof(FortressQuickSave), 1, f) != 1 || qs.magic != FORTRESS_SAVE_MAGIC) {
+        fclose(f);
+        ShowNativeToast("Quicksave Corrupt or Incompatible", RGB(239, 68, 68), 90);
+        Beep(200, 80);
+        return FALSE;
+    }
+    fclose(f);
+
+    g_gameMode = qs.gameMode;
+    g_currentMap = qs.currentMap;
+    if (g_currentMap < 0 || g_currentMap >= MAX_MAPS) g_currentMap = 0;
+    LoadCurrentMap(10, 70, WINDOW_WIDTH - 220);
+
+    g_wave = qs.wave;
+    g_waveActive = qs.waveActive;
+    g_gameOver = qs.gameOver;
+    g_gold = qs.gold;
+    g_baseHp = qs.baseHp;
+    g_maxBaseHp = qs.maxBaseHp;
+    g_bossesKilled = qs.bossesKilled;
+    g_hsEndless = qs.hsEndless;
+    g_hsBoss = qs.hsBoss;
+    g_trebuchetCd = qs.trebuchetCd;
+    g_castleBallistaCd = qs.castleBallistaCd;
+    g_meteorTimer = qs.meteorTimer;
+    g_blizzTimer = qs.blizzTimer;
+    g_mutators = qs.mutators;
+
+    g_techStartingGold = qs.techStartingGold;
+    g_techWallHp = qs.techWallHp;
+    g_techHeroCd = qs.techHeroCd;
+    g_techTowerDmg = qs.techTowerDmg;
+    g_techMilitia = qs.techMilitia;
+    g_techSiegeEng = qs.techSiegeEng;
+    g_techFusion = qs.techFusion;
+    g_techFortTraps = qs.techFortTraps;
+
+    g_slotCount = qs.slotCount;
+    memcpy(g_slots, qs.slots, sizeof(g_slots));
+    g_hero = qs.hero;
+    memcpy(g_traps, qs.traps, sizeof(g_traps));
+    memcpy(g_lavaPools, qs.lavaPools, sizeof(g_lavaPools));
+    memcpy(g_militia, qs.militia, sizeof(g_militia));
+    memcpy(g_enemies, qs.enemies, sizeof(g_enemies));
+
+    g_spawnQueueCount = qs.spawnQueueCount;
+    g_spawnQueueHead = qs.spawnQueueHead;
+    g_spawnTimer = qs.spawnTimer;
+    memcpy(g_spawnQueue, qs.spawnQueue, sizeof(g_spawnQueue));
+
+    // Clear transient projectiles / floating texts / particles
+    memset(g_projectiles, 0, sizeof(g_projectiles));
+    memset(g_floatingTexts, 0, sizeof(g_floatingTexts));
+    memset(g_particles, 0, sizeof(g_particles));
+    memset(g_shockwaves, 0, sizeof(g_shockwaves));
+    g_selectedSlot = -1;
+
+    Beep(523, 50); Beep(659, 50); Beep(784, 80);
+    ShowNativeToast("Quicksave Restored [F9]!", RGB(16, 185, 129), 90);
+    return TRUE;
+}
+
+static BOOL g_tutorialChecked = FALSE;
+void CheckFirstRunTutorial() {
+    if (g_tutorialChecked) return;
+    g_tutorialChecked = TRUE;
+    FILE *f = fopen("kfortress_tutorialSeen.dat", "rb");
+    if (f) {
+        fclose(f);
+        return;
+    }
+    f = fopen("kfortress_tutorialSeen.dat", "wb");
+    if (f) {
+        char val = 1;
+        fwrite(&val, 1, 1, f);
+        fclose(f);
+    }
+    g_showHelp = TRUE;
+    ShowNativeToast("Welcome Commander! Field Guide opened. [Esc/Enter] Close", TEXT_GOLD, 150);
+}
+
 void InitGameState() {
     LoadGame();
+    CheckFirstRunTutorial();
     InitMaps();
     LoadCurrentMap(10, 70, WINDOW_WIDTH - 220);
 
@@ -2869,7 +3062,7 @@ void Render(HDC hdc, HWND hwnd) {
         SetTextColor(memDC, RGB(34, 197, 94)); TextOutA(memDC, hX + 20, cy, "KEYBOARD SHORTCUTS & CONTROLS", 29); cy += 18;
         SetTextColor(memDC, TEXT_WHITE);
         TextOutA(memDC, hX + 20, cy, "- [Space]: Start Wave | [Esc]: Close Modals | [F1] / [H]: Field Guide | [R]: Reset Battle", 88); cy += 16;
-        TextOutA(memDC, hX + 20, cy, "- [1-4]: Hero Skills (Heal, Shield Wall, Meteor Strike, Militia Reinforcements)", 79); cy += 16;
+        TextOutA(memDC, hX + 20, cy, "- [F5]: Quicksave State | [F9]: Quickload State | [1-4]: Hero Skills", 68); cy += 16;
         TextOutA(memDC, hX + 20, cy, "- [5]: Siege Trebuchet | [F]: Firestorm | [B]: Blizzard | [A]: Academy | [M]: Mutators", 86); cy += 25;
         
         DrawRoundedRect(memDC, hX + 260, hY + hH - 45, hX + 420, hY + hH - 15, RGB(16, 185, 129), BORDER_COLOR, 6);
@@ -2904,6 +3097,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
             }
+        }
+        if (wParam == VK_RETURN) {
+            if (g_showHelp || g_showMutators || g_showAcademy) {
+                g_showHelp = FALSE;
+                g_showMutators = FALSE;
+                g_showAcademy = FALSE;
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+            if (g_gameOver) {
+                InitGameState();
+                Beep(300, 60);
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+        }
+        if (wParam == VK_F5) {
+            QuickSaveGame();
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        }
+        if (wParam == VK_F9) {
+            QuickLoadGame();
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
         }
         if (wParam == 'h' || wParam == 'H' || wParam == VK_F1) {
             g_showHelp = !g_showHelp;
@@ -2964,7 +3182,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         if (wParam == VK_SPACE) {
-            if (!g_waveActive && !g_gameOver) {
+            if (g_showHelp) {
+                g_showHelp = FALSE;
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+            if (g_gameOver) {
+                InitGameState();
+                Beep(300, 60);
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+            if (!g_waveActive) {
                 g_waveActive = TRUE;
                 if (g_gameMode == 2) {
                     g_spawnQueueCount = g_wave * 2;
@@ -3043,6 +3272,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         GetClientRect(hwnd, &clientRect);
         int w = clientRect.right;
         int h = clientRect.bottom;
+
+        if (g_gameOver) {
+            InitGameState();
+            Beep(300, 60);
+            InvalidateRect(hwnd, NULL, FALSE);
+            return 0;
+        }
         
         if (g_showHelp) {
             int hW = 680, hH = 550;

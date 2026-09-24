@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-24T16:50:00Z — kilo-expander: KTetris (Arcade Duel Multiplayer Expansion)**
+  - Status: PASS ✅ (Firebase RTDB online multiplayer & Cyber-AI bot duel added; Mandate 12 compliant; 0 regressions).
+  - Arcade Duel: Side-by-side split board (760x510), garbage lines, combo counter-attacks, and animated KO/VS display.
+  - Multiplayer Architecture: Firebase RTDB synchronization (`multiplayer/ktetris/`) with lobby table, room codes, and CDN loader.
+  - Cyber-AI Bot: 4 bot heuristics (Rookie to Grandmaster) for offline duel practice; live chat/emotes.
+  - Verification: MSVC C clean compile (`KTetris.exe` 56.3 KB); Vite build clean (536ms, `ktetris.html` 172.5 KB); security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-24T16:00:00Z — kilo-qa: KDragon (Pass 5: Tutorial & State Integrity)**
   - Status: PASS ✅ (Quicksave/Load, first-run tutorial isolation & glint dot purge verified; 0 regressions).
   - Glint/Dot Purge: Removed `.corner-filigree::after` dots in web and corner rivet dots in native `DrawFiligreeCorner`.

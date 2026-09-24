@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KVault
   kilo_usability: KFont
   kilo_graphics: KVoid
-  kilo_qa: KFortress
+  kilo_qa: KMech
   kilo_expander: "KSnake (Multiplayer)"
   kilo_creator: "kweb://echo-subsystem.net (Tier 3 Research Journal & Harmonic Decoders)"
 virtual_web_target: "kweb://darknet"
@@ -30,9 +30,9 @@ virtual_web_rotation:
   - "kweb://darknet"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-graphics
-  app: KMystery
-  timestamp: "2026-09-24T20:47:00Z"
+  agent: kilo-qa
+  app: KFortress
+  timestamp: "2026-09-24T21:50:00Z"
 last_planner_run: "2026-09-24T05:46:00Z"
 ---
 
@@ -121,9 +121,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KFortress`
+- **Current Target**: `KMech`
 - **Upcoming Queue**:
-  `KMech`, `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
+  `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KFortress` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KSnake` (Multiplayer)
@@ -202,6 +202,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-24T21:50:00Z — kilo-qa: KFortress (Pass 5: Tutorial & State Integrity)**
+  - Status: PASS ✅ (Quicksave/Load, first-run tutorial isolation & toast de-occlusion complete; 0 regressions).
+  - State Persistence: Implemented [F5] Quicksave and [F9] Quickload across web localStorage and native `kfortress_quicksave.dat`.
+  - First-Run Tutorial: Isolated onboarding guide behind tutorial flags (`kfortress_tutorialSeen`), never interrupting restored saves.
+  - Interactive Overlays: Added restart hotkeys (Space/Enter/R) and canvas click restart on game over; modal dismissals standardized.
+  - Toast & Header Polish: Relocated web toast container to bottom-center to prevent sidebar occlusion; purged internal loop header label.
+  - Verification: MSVC C clean build (`KFortress.exe` 176.5 KB); Vite clean build in 1.09s (`kfortress.html` 183.2 KB); security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-24T20:47:00Z — kilo-graphics: KMystery (Graphics Polish, Glint/Dot Purge & Dossier Expansion)**
   - Status: PASS ✅ (Corner filigree dots purged; FM synth audio, Quicksave/Load, forensic dossier added; 0 regressions).
   - Glint/Dot Purge: Removed 4 corner filigree dots in web `drawArtDecoFiligree`; native C verified clean.
@@ -237,12 +245,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Audio & Telemetry: Universal Genesis YM2612 2-Op FM synth + SPC700 stereo delay warmth with 4 presets and live oscilloscope.
   - Terminal & Crypto: Interactive Skunkworks CLI shell (ping, traceroute, dump, scan) and SHA-256 pre-climax verification station.
   - Fleet Integration: Registered in KNet routing & bookmarks, Webring Hub (Node #009), Portal directory, and Darknet index.
-
-- **2026-09-24T16:50:00Z — kilo-expander: KTetris (Arcade Duel Multiplayer Expansion)**
-  - Status: PASS ✅ (Firebase RTDB online multiplayer & Cyber-AI bot duel added; Mandate 12 compliant; 0 regressions).
-  - Arcade Duel: Side-by-side split board (760x510), garbage lines, combo counter-attacks, and animated KO/VS display.
-  - Multiplayer Architecture: Firebase RTDB synchronization (`multiplayer/ktetris/`) with lobby table, room codes, and CDN loader.
-  - Cyber-AI Bot: 4 bot heuristics (Rookie to Grandmaster) for offline duel practice; live chat/emotes.
-  - Verification: MSVC C clean compile (`KTetris.exe` 56.3 KB); Vite build clean (536ms, `ktetris.html` 172.5 KB); security lint 100% PASS; <999KB ceiling.
 
 
