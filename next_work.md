@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-tester
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -16,7 +16,7 @@ current_targets:
   kilo_usability: KMail
   kilo_graphics: KStarForge
   kilo_qa: KStarDredge
-  kilo_expander: KCalendar
+  kilo_expander: KContacts
   kilo_creator: "kweb://warez (Cracktros, Chiptune Jukebox & Demoscene Vault expansion)"
 virtual_web_target: "kweb://warez"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-qa
-  app: KSanctuary
-  timestamp: "2026-09-25T22:45:00Z"
+  agent: kilo-expander
+  app: KCalendar
+  timestamp: "2026-09-25T23:55:00Z"
 last_planner_run: "2026-09-25T06:42:00Z"
 ---
 
@@ -205,6 +205,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-25T23:55:00Z — kilo-expander: KCalendar (Deep Feature Expansion: Task Completion & Interoperability)**
+  - Status: PASS ✅ (Task completion toggle [Space], dynamic tag system, location/kweb links, export suite; 0 regressions).
+  - Task Completion System: Interactive completion toggle (`[X]`/`[✓]`, strikethrough, progress meters) across Day, Week, Agenda views and Win32 listbox.
+  - Dynamic Tagging & Location: Event `#tags` filtering, tag chips, location field with `kweb://` browser linking.
+  - Status & Filter Bar: Added completion status filter (`All`, `⏳ Pending`, `✅ Done`) and tag filter in toolbar.
+  - Interoperability & Export: Enhanced Markdown agenda (`- [x]` checkboxes), CSV, RFC 5545 iCalendar (`STATUS:COMPLETED`), and JSON backup.
+  - Analytics & Tutorial: Analytics modal displays task completion rate %, pending tally, and tag breakdowns; updated F1 tutorial.
+  - Verification: Clean MSVC compile (`KCalendar.exe` 21.5 KB); Vite clean build in 383ms (`kcalendar.html` 100.7 KB); security lint 100% PASS.
+
 - **2026-09-25T22:45:00Z — kilo-qa: KSanctuary (Pass 5: Tutorial & State Integrity Pass)**
   - Status: PASS ✅ (F5 quicksave / F9 quickload persistence, first-run tutorial modal, modal Esc/Enter navigation, non-occluding toasts; 0 regressions).
   - State Persistence: Implemented complete state quicksave (F5) and quickload (F9) across both HTML (localStorage) and native C (`ksanctuary.dat`).
@@ -238,15 +247,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Batch & Formats: Added case-insensitive `.kza` matching and legacy format support to batch extraction; validated inputs non-destructively.
   - Data & Storage: Fixed UTF-8 base64 encoding in pack/unpack; handled VFS open/save cancellation cleanly; audited quicksave storage quota.
   - Verification: Clean MSVC compile (`KZip.exe` 10.4 KB); clean Vite build in 389ms (`kzip.html` 65.7 KB); security lint 100% PASS.
-
-- **2026-09-25T18:42:00Z — kilo-creator: kweb://darknet (Tier 3 Ghost Node Terminal & Cryptic Decoders)**
-  - Status: PASS ✅ (VT-100 terminal, 6-algo decoder workbench, packet sniffer & RF spectrum monitor; 0 regressions).
-  - Terminal Shell: Interactive prompt with command history, autocomplete, export log (.txt), and built-in directives (status, telemetry, scan, peers, ping, matrix).
-  - Cryptic Decoders: 6 operational algorithms (Hex->ASCII, ASCII->Hex, XOR Key, Rot13 slider, Base64, Bitwise, Polybius) with 5 subterranean signal presets.
-  - Packet Sniffer: Subnet 10.19.99.0/24 packet monitor with live capture, pause/resume, protocol filter, hex dump inspector & 1-click decode pipeline.
-  - RF Spectrum & Oscilloscope: Canvas waveform monitor with carrier frequency tuning (144.390MHz, 10.19MHz, 1999Hz, 433.92MHz) and transponder telemetry.
-  - Universal Audio: Yamaha YM2612 FM synthesis & SPC700 stereo delay warmth sound effects (keyclicks, FM chirps, decode arpeggios, 1999Hz carrier drone).
-  - Verification: Clean Vite build in 383ms; security lint 100% PASS; darknet.html 66.5 KB (<999KB ceiling); Central KiloNet Webring #012 linked.
 
 
 

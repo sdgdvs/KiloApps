@@ -19,6 +19,7 @@
 #define ID_COMBO_PRIO_FILTER     1014
 #define ID_BTN_STATS             1015
 #define ID_BTN_EXPORT_MD         1016
+#define ID_BTN_TOGGLE_DONE       1017
 
 #define MAX_EVENTS 1000
 
@@ -27,6 +28,7 @@ typedef struct {
     char category[32]; // Work, Personal, Health, Important, Other
     int recurring;     // 0=None, 1=Daily, 2=Weekly, 3=Monthly, 4=Yearly
     int priority;      // 0=Low, 1=Normal, 2=High, 3=Urgent
+    int completed;     // 0=Pending, 1=Done
     char text[128];
 } Event;
 
@@ -34,7 +36,7 @@ static Event events[MAX_EVENTS];
 static int event_count = 0;
 static SYSTEMTIME selected_date;
 
-static HWND hMonthCal, hBtnToday, hListEvents, hEditEvent, hBtnAdd, hBtnDel;
+static HWND hMonthCal, hBtnToday, hListEvents, hEditEvent, hBtnAdd, hBtnDel, hBtnToggleDone;
 static HWND hComboCategory, hComboRecur, hComboPriority, hComboFilter, hComboPrioFilter, hEditSearch;
 static HWND hBtnExportIcs, hBtnExportCsv, hBtnExportMd, hBtnStats, hBtnHelp;
 static HWND hStaticHeader = NULL;
@@ -146,7 +148,7 @@ static void LoadEvents() {
         event_count = 0;
         char* ptr = buf;
         while (*ptr && event_count < MAX_EVENTS) {
-            int y = 0, m = 0, d = 0, recur = 0, prio = 1;
+            int y = 0, m = 0, d = 0, recur = 0, prio = 1, completed = 0;
             char cat[32] = "Work";
             while (*ptr == ' ' || *ptr == '\t' || *ptr == '\r' || *ptr == '\n') ptr++;
             if (!*ptr) break;
@@ -180,6 +182,13 @@ static void LoadEvents() {
                 while (*ptr == ' ') ptr++;
             }
 
+            // Optional completed flag
+            if (*ptr >= '0' && *ptr <= '9' && (*(ptr+1) == ' ' || *(ptr+1) == '\t')) {
+                completed = *ptr - '0';
+                ptr++;
+                while (*ptr == ' ') ptr++;
+            }
+
             int textIdx = 0;
             while (*ptr && *ptr != '\r' && *ptr != '\n' && textIdx < 127) {
                 events[event_count].text[textIdx++] = *ptr++;
@@ -195,6 +204,7 @@ static void LoadEvents() {
                 my_strcpy(events[event_count].category, cat);
                 events[event_count].recurring = (recur >= 0 && recur <= 4) ? recur : 0;
                 events[event_count].priority = (prio >= 0 && prio <= 3) ? prio : 1;
+                events[event_count].completed = (completed == 1) ? 1 : 0;
                 event_count++;
             }
         }
@@ -210,10 +220,10 @@ static void SaveEvents() {
 
     for (int i = 0; i < event_count; i++) {
         char line[256];
-        int len = wsprintfA(line, "%d %d %d %s %d %d %s\r\n", 
+        int len = wsprintfA(line, "%d %d %d %s %d %d %d %s\r\n", 
             events[i].year, events[i].month, events[i].day, 
             events[i].category[0] ? events[i].category : "Work", 
-            events[i].recurring, events[i].priority, events[i].text);
+            events[i].recurring, events[i].priority, events[i].completed, events[i].text);
         DWORD written = 0;
         WriteFile(hFile, line, len, &written, NULL);
     }
@@ -231,8 +241,8 @@ static void ExportToIcs() {
     for (int i = 0; i < event_count; i++) {
         char buf[512];
         int prioNum = (events[i].priority == 3) ? 1 : (events[i].priority == 2) ? 3 : (events[i].priority == 1) ? 5 : 9;
-        int len = wsprintfA(buf, "BEGIN:VEVENT\r\nUID:native_%d@kcalendar\r\nDTSTART:%04d%02d%02dT090000\r\nSUMMARY:%s\r\nCATEGORIES:%s\r\nPRIORITY:%d\r\nEND:VEVENT\r\n",
-            i, events[i].year, events[i].month, events[i].day, events[i].text, events[i].category, prioNum);
+        int len = wsprintfA(buf, "BEGIN:VEVENT\r\nUID:native_%d@kcalendar\r\nDTSTART:%04d%02d%02dT090000\r\nSUMMARY:%s\r\nCATEGORIES:%s\r\nSTATUS:%s\r\nPRIORITY:%d\r\nEND:VEVENT\r\n",
+            i, events[i].year, events[i].month, events[i].day, events[i].text, events[i].category, events[i].completed ? "COMPLETED" : "CONFIRMED", prioNum);
         WriteFile(hFile, buf, len, &written, NULL);
     }
 
@@ -246,16 +256,17 @@ static void ExportToCsv() {
     HANDLE hFile = CreateFileA("kcalendar_export.csv", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) return;
 
-    const char* header = "Year,Month,Day,Category,Recurrence,Priority,Title\r\n";
+    const char* header = "Year,Month,Day,Category,Recurrence,Priority,Completed,Title\r\n";
     DWORD written = 0;
     WriteFile(hFile, header, my_strlen(header), &written, NULL);
 
     for (int i = 0; i < event_count; i++) {
         char buf[512];
         int prioIdx = (events[i].priority >= 0 && events[i].priority <= 3) ? events[i].priority : 1;
-        int len = wsprintfA(buf, "%d,%d,%d,%s,%s,%s,\"%s\"\r\n",
+        int len = wsprintfA(buf, "%d,%d,%d,%s,%s,%s,%s,\"%s\"\r\n",
             events[i].year, events[i].month, events[i].day, 
-            events[i].category, RECURRENCES[events[i].recurring], PRIORITIES[prioIdx], events[i].text);
+            events[i].category, RECURRENCES[events[i].recurring], PRIORITIES[prioIdx],
+            events[i].completed ? "Yes" : "No", events[i].text);
         WriteFile(hFile, buf, len, &written, NULL);
     }
 
@@ -277,6 +288,7 @@ static void ExportToMarkdown() {
         char buf[512];
         const char* prioEmoji = (events[i].priority == 3) ? "[URGENT]" : (events[i].priority == 2) ? "[HIGH]" : (events[i].priority == 0) ? "[LOW]" : "[NORMAL]";
         int recurIdx = (events[i].recurring >= 0 && events[i].recurring <= 4) ? events[i].recurring : 0;
+        const char* statusBox = events[i].completed ? "- [x]" : "- [ ]";
         
         char cleanText[128];
         int t = 0;
@@ -289,7 +301,8 @@ static void ExportToMarkdown() {
         }
         cleanText[t] = '\0';
 
-        int len = wsprintfA(buf, "| - [ ] | %04d-%02d-%02d | %s | %s | %s | %s |\r\n",
+        int len = wsprintfA(buf, "| %s | %04d-%02d-%02d | %s | %s | %s | %s |\r\n",
+            statusBox,
             events[i].year, events[i].month, events[i].day,
             prioEmoji,
             events[i].category,
@@ -311,11 +324,13 @@ static void ShowHelpDialog(HWND hwnd) {
         "1. Select a Date: Click any date on the month calendar to view its schedule.\r\n"
         "2. Add an Event: Type the title in the input box, pick category/priority/recurrence, and press Enter or 'Add Event'.\r\n"
         "3. Search & Filter: Filter events instantly using the search box or category/priority dropdowns.\r\n"
-        "4. Manage Events: Select an event from the list and press Delete [Del] to remove it.\r\n"
-        "5. Export & Share: Click 'Export .ics' for calendar apps, 'Export CSV' for spreadsheets, or 'Export MD' for Markdown agendas.\r\n"
-        "6. Analytics: Press [S] or click 'Analytics' to view a summary breakdown of your commitments.\r\n\r\n"
+        "4. Task Completion: Select an event and press [Space] or 'Done [Space]' to toggle completion status.\r\n"
+        "5. Manage Events: Select an event from the list and press Delete [Del] to remove it.\r\n"
+        "6. Export & Share: Click 'Export .ics' for calendar apps, 'Export CSV' for spreadsheets, or 'Export MD' for Markdown agendas.\r\n"
+        "7. Analytics: Press [S] or click 'Analytics' to view a summary breakdown of your commitments.\r\n\r\n"
         "KEYBOARD SHORTCUTS:\r\n"
         "- [F1] or [H]: Open this Help Guide\r\n"
+        "- [Space]: Toggle Completed status of selected event\r\n"
         "- [T]: Jump to Today\r\n"
         "- [S]: Open Analytics & Statistics\r\n"
         "- [N]: Focus Add Event input box\r\n"
@@ -330,11 +345,13 @@ static void ShowStatistics(HWND hwnd) {
     int totalEvents = event_count;
     int thisMonthCount = 0;
     int selectedDateCount = 0;
+    int completedCount = 0;
     int catCounts[5] = {0};
     int prioCounts[4] = {0};
     int recurringCount = 0;
 
     for (int i = 0; i < event_count; i++) {
+        if (events[i].completed) completedCount++;
         if (events[i].month == selected_date.wMonth && events[i].year == selected_date.wYear) {
             thisMonthCount++;
         }
@@ -355,11 +372,16 @@ static void ShowStatistics(HWND hwnd) {
         else prioCounts[1]++;
     }
 
+    int completionRate = (totalEvents > 0) ? (completedCount * 100 / totalEvents) : 0;
+    int pendingCount = totalEvents - completedCount;
+
     char statsMsg[1024];
     wsprintfA(statsMsg,
         "=== KCalendar Analytics & Summary ===\r\n\r\n"
         "Date Selected: %04d-%02d-%02d\r\n"
         "Total Database Events: %d\r\n"
+        "Tasks Completed: %d (%d%%)\r\n"
+        "Tasks Pending: %d\r\n"
         "Events on Selected Date: %d\r\n"
         "Events in Current Month (%04d-%02d): %d\r\n"
         "Recurring Events: %d\r\n\r\n"
@@ -371,9 +393,12 @@ static void ShowStatistics(HWND hwnd) {
         "--- Category Distribution ---\r\n"
         "Work: %d | Personal: %d | Health: %d\r\n"
         "Important: %d | Other: %d\r\n\r\n"
-        "Tip: Click 'Export MD' to create a Markdown agenda file.",
+        "Tip: Press [Space] on an event to toggle completed status.",
         selected_date.wYear, selected_date.wMonth, selected_date.wDay,
-        totalEvents, selectedDateCount,
+        totalEvents,
+        completedCount, completionRate,
+        pendingCount,
+        selectedDateCount,
         selected_date.wYear, selected_date.wMonth, thisMonthCount,
         recurringCount,
         prioCounts[3], prioCounts[2], prioCounts[1], prioCounts[0],
@@ -415,8 +440,10 @@ static void RefreshList() {
             }
 
             const char* prioTag = (events[i].priority == 3) ? "[!]" : (events[i].priority == 2) ? "[^]" : (events[i].priority == 0) ? "[v]" : "[-]";
+            const char* doneTag = events[i].completed ? "[X]" : "[ ]";
             char displayStr[256];
-            wsprintfA(displayStr, "%s [%s] %s %s", 
+            wsprintfA(displayStr, "%s %s [%s] %s %s", 
+                doneTag,
                 prioTag,
                 events[i].category, 
                 events[i].text, 
@@ -473,6 +500,18 @@ static int GetEventIndexFromListIndex(int selIndex) {
     return -1;
 }
 
+static void ToggleSelectedEventCompleted(HWND hwnd) {
+    int sel = (int)SendMessage(hListEvents, LB_GETCURSEL, 0, 0);
+    if (sel == LB_ERR) return;
+    int idx = GetEventIndexFromListIndex(sel);
+    if (idx >= 0 && idx < event_count) {
+        events[idx].completed = !events[idx].completed;
+        SaveEvents();
+        RefreshList();
+        SendMessage(hListEvents, LB_SETCURSEL, sel, 0);
+    }
+}
+
 static void DeleteSelectedEvent(HWND hwnd) {
     int sel = (int)SendMessage(hListEvents, LB_GETCURSEL, 0, 0);
     if (sel == LB_ERR) return;
@@ -500,6 +539,7 @@ static void AddEventFromInput() {
         events[event_count].year = selected_date.wYear;
         events[event_count].month = selected_date.wMonth;
         events[event_count].day = selected_date.wDay;
+        events[event_count].completed = 0;
         my_strcpy(events[event_count].text, buf);
 
         int catSel = (int)SendMessage(hComboCategory, CB_GETCURSEL, 0, 0);
@@ -553,9 +593,15 @@ static LRESULT CALLBACK SearchSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, L
 
 static WNDPROC oldListProc = NULL;
 static LRESULT CALLBACK ListSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    if (msg == WM_KEYDOWN && (wParam == VK_DELETE || wParam == VK_BACK)) {
-        DeleteSelectedEvent(GetParent(hwnd));
-        return 0;
+    if (msg == WM_KEYDOWN) {
+        if (wParam == VK_DELETE || wParam == VK_BACK) {
+            DeleteSelectedEvent(GetParent(hwnd));
+            return 0;
+        }
+        if (wParam == VK_SPACE) {
+            ToggleSelectedEventCompleted(GetParent(hwnd));
+            return 0;
+        }
     }
     return CallWindowProc(oldListProc, hwnd, msg, wParam, lParam);
 }
@@ -630,7 +676,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Visible help & hotkeys prompt in left column
             hStaticHelpPrompt = CreateWindowEx(0, "STATIC",
-                "Hotkeys:\n[F1] Help / Tutorial\n[T] Today  |  [S] Stats\n[N] New Event  |  [/] Search\n[Enter] Add  |  [Del] Delete",
+                "Hotkeys:\n[F1] Help / Tutorial\n[Space] Toggle Done\n[T] Today  |  [S] Stats\n[N] New Event\n[/] Search  |  [Del] Del",
                 WS_CHILD | WS_VISIBLE,
                 pad, btnY + btnH + SCALE(10), rc.right, SCALE(100),
                 hwnd, NULL, GetModuleHandle(NULL), NULL);
@@ -705,14 +751,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hComboPriority, CB_SETCURSEL, 1, 0); // Default: Normal (index 1)
 
             btmY += SCALE(30);
-            int btnW = (rightW - SCALE(5)) / 2;
-            hBtnAdd = CreateWindowEx(0, "BUTTON", "Add Event [Enter]",
+            int btnW = (rightW - SCALE(10)) / 3;
+            hBtnAdd = CreateWindowEx(0, "BUTTON", "Add [Enter]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
                 listX, btmY, btnW, btnH, hwnd, (HMENU)ID_BTN_ADD, GetModuleHandle(NULL), NULL);
 
+            hBtnToggleDone = CreateWindowEx(0, "BUTTON", "Done [Space]",
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
+                listX + btnW + SCALE(5), btmY, btnW, btnH, hwnd, (HMENU)ID_BTN_TOGGLE_DONE, GetModuleHandle(NULL), NULL);
+
             hBtnDel = CreateWindowEx(0, "BUTTON", "Delete [Del]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
-                listX + btnW + SCALE(5), btmY, btnW, btnH, hwnd, (HMENU)ID_BTN_DEL, GetModuleHandle(NULL), NULL);
+                listX + (btnW + SCALE(5)) * 2, btmY, btnW, btnH, hwnd, (HMENU)ID_BTN_DEL, GetModuleHandle(NULL), NULL);
 
             oldEditProc = (WNDPROC)SetWindowLongPtr(hEditEvent, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
             oldSearchProc = (WNDPROC)SetWindowLongPtr(hEditSearch, GWLP_WNDPROC, (LONG_PTR)SearchSubclassProc);
@@ -776,6 +826,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RefreshList();
             } else if (LOWORD(wParam) == ID_BTN_ADD) {
                 AddEventFromInput();
+            } else if (LOWORD(wParam) == ID_BTN_TOGGLE_DONE) {
+                ToggleSelectedEventCompleted(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_DEL) {
                 DeleteSelectedEvent(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_EXPORT_ICS) {
@@ -789,7 +841,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (LOWORD(wParam) == ID_BTN_HELP) {
                 ShowHelpDialog(hwnd);
             } else if (LOWORD(wParam) == ID_LIST_EVENTS && HIWORD(wParam) == LBN_DBLCLK) {
-                DeleteSelectedEvent(hwnd);
+                ToggleSelectedEventCompleted(hwnd);
             }
             break;
         case WM_CTLCOLORSTATIC: {
@@ -872,6 +924,8 @@ void MainEntry() {
                 SetFocus(hEditEvent);
             } else if (!inEdit && (msg.wParam == '/' || msg.wParam == 'F' || msg.wParam == 'f')) {
                 SetFocus(hEditSearch);
+            } else if (!inEdit && msg.wParam == VK_SPACE) {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_TOGGLE_DONE, BN_CLICKED), (LPARAM)hBtnToggleDone);
             }
         }
         if (!IsDialogMessage(hwnd, &msg)) {

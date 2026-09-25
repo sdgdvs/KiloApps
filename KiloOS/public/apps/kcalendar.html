@@ -591,6 +591,109 @@
     color: #fff;
   }
 
+  .event-pill.completed {
+    opacity: 0.6;
+    text-decoration: line-through;
+    filter: grayscale(35%);
+  }
+
+  .agenda-card.completed {
+    opacity: 0.72;
+    border-left-color: #10b981 !important;
+  }
+
+  .agenda-card.completed .agenda-title {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+
+  .checkbox-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+    color: transparent;
+    user-select: none;
+  }
+  .checkbox-btn:hover {
+    border-color: var(--accent);
+    background: rgba(245, 158, 11, 0.15);
+  }
+  .checkbox-btn.checked {
+    background: #10b981;
+    border-color: #10b981;
+    color: #ffffff;
+  }
+
+  .tag-pill {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 10px;
+    font-family: 'Consolas', monospace;
+    font-weight: 600;
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .tag-pill:hover {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .location-link {
+    color: var(--accent);
+    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .location-link:hover {
+    text-decoration: underline;
+    color: #fbbf24;
+  }
+
+  .progress-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+  .progress-bar-bg {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    background: linear-gradient(90deg, var(--accent), #10b981);
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+
   .empty-state {
     text-align: center;
     padding: 40px;
@@ -860,6 +963,16 @@
       <option value="normal">🔵 Normal</option>
       <option value="low">⚪ Low</option>
     </select>
+
+    <select class="category-select" id="statusFilter" aria-label="Filter by Status">
+      <option value="ALL">All Status</option>
+      <option value="pending">⏳ Pending</option>
+      <option value="completed">✅ Done</option>
+    </select>
+
+    <select class="category-select" id="tagFilter" aria-label="Filter by Tag">
+      <option value="ALL">All Tags</option>
+    </select>
   </div>
 </div>
 
@@ -922,6 +1035,24 @@
           <option value="yearly">Yearly</option>
         </select>
       </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group" style="flex: 1;">
+        <label for="eventLocationInput">Location / URL</label>
+        <input type="text" class="input-field" id="eventLocationInput" placeholder="Location or Virtual Net link (e.g. Server Vault, kweb://portal)..." maxlength="128" />
+      </div>
+      <div class="form-group" style="flex: 1;">
+        <label for="eventTagsInput">Tags (e.g. #ops, #meeting)</label>
+        <input type="text" class="input-field" id="eventTagsInput" placeholder="#ops, #meeting, #y2k..." maxlength="128" />
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-top:2px;">
+      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:var(--text-main); font-size:12px; font-weight:600;">
+        <input type="checkbox" id="eventCompletedCheck" style="width:16px; height:16px; accent-color:var(--accent); cursor:pointer;">
+        <span>Mark as Completed (Done)</span>
+      </label>
     </div>
 
     <div class="form-group">
@@ -1036,11 +1167,12 @@
         <h4>📋 Features & Capabilities</h4>
         <div style="color:var(--text-muted); line-height:1.5; font-size:12px;">
           • <strong>Interactive Views:</strong> Click any day or time slot to instantly schedule an event.<br/>
-          • <strong>Recurrence:</strong> Support for Daily, Weekly, Monthly, and Yearly recurring schedules.<br/>
-          • <strong>Priorities:</strong> Flag critical events with Urgent (🔴), High (🟠), Normal (🔵), or Low (⚪) priority tags.<br/>
-          • <strong>Duplicate Events:</strong> Easily clone existing events to save re-typing.<br/>
-          • <strong>Import / Export:</strong> Full support for standard iCalendar (<span style="color:var(--accent);">.ics</span>), Spreadsheets (<span style="color:var(--accent);">.csv</span>), Markdown agendas (<span style="color:var(--accent);">.md</span>), and JSON backups.<br/>
-          • <strong>Analytics:</strong> Real-time category breakdown and priority distribution metrics.
+          • <strong>Task Checklist & Completion:</strong> Click the <span style="color:#10b981; font-weight:700;">[✓]</span> button in Day, Week, or Agenda view to toggle Done/Pending. Progress is tracked in real-time with progress meters.<br/>
+          • <strong>Tagging & Search Index:</strong> Tag events with <code>#tags</code> (e.g. <code>#ops, #meeting, #y2k</code>). Filter instantly with the Tag dropdown or interactive tag chips.<br/>
+          • <strong>Locations & Virtual Links:</strong> Assign physical rooms or click <code>kweb://</code> virtual links directly to browse KiloNet nodes.<br/>
+          • <strong>Recurrence & Priorities:</strong> Daily, Weekly, Monthly, and Yearly schedules with Urgent (🔴) to Low (⚪) priorities.<br/>
+          • <strong>Import / Export:</strong> Full support for standard iCalendar (<span style="color:var(--accent);">.ics</span>), Spreadsheets (<span style="color:var(--accent);">.csv</span> with tags/completion), Markdown agendas (<span style="color:var(--accent);">.md</span> with task checkboxes), and JSON backups.<br/>
+          • <strong>Analytics & Metrics:</strong> Overall completion rates, category distributions, priority breakdowns, and active tag clouds.
         </div>
       </div>
     </div>
@@ -1106,6 +1238,8 @@
   let searchQuery = '';
   let activeCategoryFilter = 'ALL';
   let activePriorityFilter = 'ALL';
+  let activeStatusFilter = 'ALL'; // ALL, pending, completed
+  let activeTagFilter = 'ALL';
 
   const CATEGORY_COLORS = {
     Work: '#3b82f6',
@@ -1131,6 +1265,9 @@
         events = JSON.parse(storedV2);
         events.forEach(ev => {
           if (!ev.priority) ev.priority = 'normal';
+          if (typeof ev.completed !== 'boolean') ev.completed = false;
+          if (!ev.tags) ev.tags = '';
+          if (!ev.location) ev.location = '';
         });
       } else {
         // Fallback migration from old key
@@ -1149,7 +1286,10 @@
                   category: 'Work',
                   priority: 'normal',
                   recurring: 'none',
-                  description: ''
+                  description: '',
+                  completed: false,
+                  tags: '',
+                  location: ''
                 });
               });
             }
@@ -1159,9 +1299,10 @@
           // Default sample events for first load
           const todayStr = formatDateStr(new Date());
           events = [
-            { id: generateId(), title: 'Project Kickoff', date: todayStr, time: '09:00', category: 'Work', priority: 'high', recurring: 'none', description: 'Initial team alignment meeting.' },
-            { id: generateId(), title: 'Gym Workout', date: todayStr, time: '18:00', category: 'Health', priority: 'normal', recurring: 'daily', description: '30 mins cardio & strength.' },
-            { id: generateId(), title: 'Weekly Planning', date: todayStr, time: '11:00', category: 'Important', priority: 'urgent', recurring: 'weekly', description: 'Review quarterly goals for the week.' }
+            { id: generateId(), title: 'Project Kickoff', date: todayStr, time: '09:00', category: 'Work', priority: 'high', recurring: 'none', description: 'Initial team alignment meeting.', completed: true, tags: '#planning, #ops', location: 'Meeting Room 402' },
+            { id: generateId(), title: 'Gym Workout', date: todayStr, time: '18:00', category: 'Health', priority: 'normal', recurring: 'daily', description: '30 mins cardio & strength.', completed: false, tags: '#fitness', location: 'Fitness Center' },
+            { id: generateId(), title: 'Weekly Planning', date: todayStr, time: '11:00', category: 'Important', priority: 'urgent', recurring: 'weekly', description: 'Review quarterly goals for the week.', completed: false, tags: '#strategy', location: 'Executive Suite' },
+            { id: generateId(), title: 'Y2K Readiness Protocol', date: '1999-12-31', time: '23:50', category: 'Important', priority: 'urgent', recurring: 'none', description: 'Verify subnet 10.19.99.4 isolation & gateway ping before rollover.', completed: false, tags: '#y2k, #sysadmin, #audit', location: 'kweb://portal' }
           ];
           saveEvents();
         }
@@ -1203,6 +1344,58 @@
     return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
   }
 
+  function getAllUniqueTags() {
+    const set = new Set();
+    events.forEach(ev => {
+      if (ev.tags) {
+        const parts = String(ev.tags).split(/[,\s]+/).map(t => t.trim()).filter(Boolean);
+        parts.forEach(p => {
+          const clean = p.startsWith('#') ? p.toLowerCase() : '#' + p.toLowerCase();
+          set.add(clean);
+        });
+      }
+    });
+    return Array.from(set).sort();
+  }
+
+  function updateTagFilterOptions() {
+    const select = document.getElementById('tagFilter');
+    if (!select) return;
+    const currentVal = activeTagFilter;
+    select.innerHTML = '<option value="ALL">All Tags</option>';
+    const tags = getAllUniqueTags();
+    tags.forEach(tag => {
+      const opt = document.createElement('option');
+      opt.value = tag;
+      opt.textContent = tag;
+      if (tag === currentVal) opt.selected = true;
+      select.appendChild(opt);
+    });
+    if (activeTagFilter !== 'ALL' && !tags.includes(activeTagFilter)) {
+      activeTagFilter = 'ALL';
+      select.value = 'ALL';
+    }
+  }
+
+  function toggleEventCompleted(eventId, e) {
+    if (e) e.stopPropagation();
+    const ev = events.find(item => item.id === eventId);
+    if (!ev) return;
+    ev.completed = !ev.completed;
+    saveEvents();
+    renderApp();
+    showToast(ev.completed ? `Completed: "${ev.title}"` : `Marked pending: "${ev.title}"`, 'info', 2000);
+  }
+
+  function renderLocationLink(loc) {
+    if (!loc) return '';
+    const clean = escapeHtml(loc);
+    if (loc.startsWith('kweb://') || loc.startsWith('http://') || loc.startsWith('https://')) {
+      return `<a class="location-link" href="${clean}" target="_blank" onclick="event.stopPropagation();">📍 ${clean} ↗</a>`;
+    }
+    return `<span class="location-link" style="cursor:default;" onclick="event.stopPropagation();">📍 ${clean}</span>`;
+  }
+
   // Check if an event occurs on a specific target date string (handling recurrence & filters)
   function isEventOnDate(event, targetDateStr) {
     if (activeCategoryFilter !== 'ALL' && event.category !== activeCategoryFilter) {
@@ -1211,11 +1404,27 @@
     if (activePriorityFilter !== 'ALL' && (event.priority || 'normal') !== activePriorityFilter) {
       return false;
     }
+    if (activeStatusFilter === 'pending' && event.completed) {
+      return false;
+    }
+    if (activeStatusFilter === 'completed' && !event.completed) {
+      return false;
+    }
+    if (activeTagFilter !== 'ALL') {
+      const evTags = (event.tags || '').toLowerCase();
+      const cleanFilter = activeTagFilter.toLowerCase().replace(/^#/, '');
+      if (!evTags.includes(cleanFilter)) {
+        return false;
+      }
+    }
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      const titleMatch = event.title.toLowerCase().includes(q);
+      const titleMatch = (event.title || '').toLowerCase().includes(q);
       const descMatch = (event.description || '').toLowerCase().includes(q);
-      if (!titleMatch && !descMatch) return false;
+      const locMatch = (event.location || '').toLowerCase().includes(q);
+      const tagMatch = (event.tags || '').toLowerCase().includes(q);
+      const catMatch = (event.category || '').toLowerCase().includes(q);
+      if (!titleMatch && !descMatch && !locMatch && !tagMatch && !catMatch) return false;
     }
 
     if (event.date === targetDateStr) return true;
@@ -1245,6 +1454,7 @@
 
   function getEventsForDate(dateStr) {
     return events.filter(ev => isEventOnDate(ev, dateStr)).sort((a, b) => {
+      if (a.completed !== b.completed) return a.completed ? 1 : -1; // Pending first
       const prioA = PRIORITY_MAP[a.priority || 'normal']?.weight || 2;
       const prioB = PRIORITY_MAP[b.priority || 'normal']?.weight || 2;
       if (prioA !== prioB) return prioB - prioA; // Higher priority first
@@ -1254,6 +1464,7 @@
 
   // Rendering Routing
   function renderApp() {
+    updateTagFilterOptions();
     updateHeaderTitle();
     const mainContent = document.getElementById('mainContent');
     mainContent.innerHTML = '';
@@ -1368,15 +1579,17 @@
     const maxVisible = 3;
     dayEvents.slice(0, maxVisible).forEach(ev => {
       const pill = document.createElement('div');
-      pill.className = 'event-pill';
+      pill.className = 'event-pill' + (ev.completed ? ' completed' : '');
       pill.style.backgroundColor = CATEGORY_COLORS[ev.category] || CATEGORY_COLORS.Other;
       
-      const prioObj = PRIORITY_MAP[ev.priority || 'normal'];
+      const prioObj = PRIORITY_MAP[ev.priority || 'normal'] || PRIORITY_MAP.normal;
       const prioIcon = (ev.priority === 'urgent' || ev.priority === 'high') ? prioObj.icon + ' ' : '';
-      let titleText = ev.time ? `${prioIcon}${ev.time} ${ev.title}` : `${prioIcon}${ev.title}`;
+      const checkMark = ev.completed ? '✓ ' : '';
+      let titleText = ev.time ? `${checkMark}${prioIcon}${ev.time} ${ev.title}` : `${checkMark}${prioIcon}${ev.title}`;
       pill.textContent = titleText;
+      pill.title = `${ev.title}${ev.completed ? ' (Completed)' : ''}${ev.location ? ' @ ' + ev.location : ''}${ev.tags ? ' [' + ev.tags + ']' : ''}`;
 
-      if (ev.priority === 'urgent') {
+      if (ev.priority === 'urgent' && !ev.completed) {
         pill.style.boxShadow = '0 0 4px #ef4444';
       }
 
@@ -1452,13 +1665,32 @@
       } else {
         dayEvents.forEach(ev => {
           const card = document.createElement('div');
-          card.className = 'event-pill';
+          card.className = 'event-pill' + (ev.completed ? ' completed' : '');
           card.style.backgroundColor = CATEGORY_COLORS[ev.category] || CATEGORY_COLORS.Other;
-          card.style.padding = '6px';
+          card.style.padding = '6px 8px';
           card.style.borderRadius = '6px';
           card.style.cursor = 'pointer';
+          card.style.display = 'flex';
+          card.style.alignItems = 'center';
+          card.style.justifyContent = 'space-between';
+          card.style.gap = '6px';
+
           const prioObj = PRIORITY_MAP[ev.priority || 'normal'] || PRIORITY_MAP.normal;
-          card.innerHTML = `<span>${prioObj.icon} <strong>${escapeHtml(ev.time || 'All day')}</strong> ${escapeHtml(ev.title)}</span>`;
+          const leftSpan = document.createElement('span');
+          leftSpan.style.flex = '1';
+          leftSpan.style.overflow = 'hidden';
+          leftSpan.style.textOverflow = 'ellipsis';
+          leftSpan.style.whiteSpace = 'nowrap';
+          leftSpan.innerHTML = `<span>${prioObj.icon} <strong>${escapeHtml(ev.time || 'All day')}</strong> ${escapeHtml(ev.title)}</span>`;
+
+          const chk = document.createElement('span');
+          chk.className = 'checkbox-btn' + (ev.completed ? ' checked' : '');
+          chk.innerHTML = ev.completed ? '✓' : '';
+          chk.title = ev.completed ? 'Mark Pending' : 'Mark Completed';
+          chk.onclick = (e) => toggleEventCompleted(ev.id, e);
+
+          card.appendChild(leftSpan);
+          card.appendChild(chk);
           card.onclick = (e) => {
             e.stopPropagation();
             openModal(ev.id);
@@ -1512,13 +1744,35 @@
 
       matchingEvents.forEach(ev => {
         const card = document.createElement('div');
-        card.className = 'event-pill';
+        card.className = 'event-pill' + (ev.completed ? ' completed' : '');
         card.style.backgroundColor = CATEGORY_COLORS[ev.category] || CATEGORY_COLORS.Other;
         card.style.padding = '6px 10px';
         card.style.borderRadius = '6px';
         card.style.cursor = 'pointer';
+        card.style.display = 'flex';
+        card.style.alignItems = 'center';
+        card.style.justifyContent = 'space-between';
+        card.style.gap = '8px';
+
         const prioObj = PRIORITY_MAP[ev.priority || 'normal'] || PRIORITY_MAP.normal;
-        card.innerHTML = `<strong>${prioObj.icon} ${escapeHtml(ev.time || 'All day')}</strong> - ${escapeHtml(ev.title)} <span style="opacity:0.8; font-size:11px;">(${escapeHtml(ev.category)} • ${escapeHtml(prioObj.label)})</span>`;
+        const leftSpan = document.createElement('div');
+        leftSpan.style.flex = '1';
+        let subMeta = '';
+        if (ev.location) subMeta += ` • ${renderLocationLink(ev.location)}`;
+        if (ev.tags) {
+          const tagsHtml = String(ev.tags).split(/[,\s]+/).filter(Boolean).map(t => `<span class="tag-pill">${escapeHtml(t.startsWith('#')?t:'#'+t)}</span>`).join(' ');
+          subMeta += ` ${tagsHtml}`;
+        }
+        leftSpan.innerHTML = `<strong>${prioObj.icon} ${escapeHtml(ev.time || 'All day')}</strong> - <span>${escapeHtml(ev.title)}</span> <span style="opacity:0.85; font-size:11px;">(${escapeHtml(ev.category)} • ${escapeHtml(prioObj.label)}${subMeta})</span>`;
+
+        const chk = document.createElement('span');
+        chk.className = 'checkbox-btn' + (ev.completed ? ' checked' : '');
+        chk.innerHTML = ev.completed ? '✓' : '';
+        chk.title = ev.completed ? 'Mark Pending' : 'Mark Completed';
+        chk.onclick = (e) => toggleEventCompleted(ev.id, e);
+
+        card.appendChild(leftSpan);
+        card.appendChild(chk);
         card.onclick = (e) => {
           e.stopPropagation();
           openModal(ev.id);
@@ -1543,15 +1797,25 @@
     const agendaView = document.createElement('div');
     agendaView.className = 'agenda-view';
 
-    // Get all events matching category/priority/search
+    // Get all events matching category/priority/status/tag/search
     let matchingEvents = events.filter(ev => {
       if (activeCategoryFilter !== 'ALL' && ev.category !== activeCategoryFilter) return false;
       if (activePriorityFilter !== 'ALL' && (ev.priority || 'normal') !== activePriorityFilter) return false;
+      if (activeStatusFilter === 'pending' && ev.completed) return false;
+      if (activeStatusFilter === 'completed' && !ev.completed) return false;
+      if (activeTagFilter !== 'ALL') {
+        const evTags = (ev.tags || '').toLowerCase();
+        const cleanFilter = activeTagFilter.toLowerCase().replace(/^#/, '');
+        if (!evTags.includes(cleanFilter)) return false;
+      }
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
-        const titleMatch = ev.title.toLowerCase().includes(q);
+        const titleMatch = (ev.title || '').toLowerCase().includes(q);
         const descMatch = (ev.description || '').toLowerCase().includes(q);
-        if (!titleMatch && !descMatch) return false;
+        const locMatch = (ev.location || '').toLowerCase().includes(q);
+        const tagMatch = (ev.tags || '').toLowerCase().includes(q);
+        const catMatch = (ev.category || '').toLowerCase().includes(q);
+        if (!titleMatch && !descMatch && !locMatch && !tagMatch && !catMatch) return false;
       }
       return true;
     });
@@ -1561,10 +1825,35 @@
     if (matchingEvents.length === 0) {
       agendaView.innerHTML = '<div class="empty-state">No events found matching criteria.</div>';
     } else {
+      const totalAgenda = matchingEvents.length;
+      const completedAgenda = matchingEvents.filter(e => e.completed).length;
+      const pct = totalAgenda > 0 ? Math.round((completedAgenda / totalAgenda) * 100) : 0;
+
+      const progressDiv = document.createElement('div');
+      progressDiv.className = 'progress-card';
+      progressDiv.innerHTML = `
+        <div style="font-weight:600; color:var(--text-main); display:flex; align-items:center; gap:6px;">
+          <span>📋 Progress:</span>
+          <span style="color:var(--accent); font-weight:700;">${completedAgenda}/${totalAgenda}</span>
+          <span style="color:var(--text-muted);">(${pct}%)</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" style="width: ${pct}%;"></div>
+        </div>
+        <div style="font-size:11px; color:var(--text-muted);">${totalAgenda - completedAgenda} pending</div>
+      `;
+      agendaView.appendChild(progressDiv);
+
       matchingEvents.forEach(ev => {
         const card = document.createElement('div');
-        card.className = 'agenda-card';
-        card.style.borderLeftColor = CATEGORY_COLORS[ev.category] || CATEGORY_COLORS.Other;
+        card.className = 'agenda-card' + (ev.completed ? ' completed' : '');
+        card.style.borderLeftColor = ev.completed ? '#10b981' : (CATEGORY_COLORS[ev.category] || CATEGORY_COLORS.Other);
+
+        const chk = document.createElement('span');
+        chk.className = 'checkbox-btn' + (ev.completed ? ' checked' : '');
+        chk.innerHTML = ev.completed ? '✓' : '';
+        chk.title = ev.completed ? 'Mark Pending' : 'Mark Completed';
+        chk.onclick = (e) => toggleEventCompleted(ev.id, e);
 
         const details = document.createElement('div');
         details.className = 'agenda-details';
@@ -1574,12 +1863,23 @@
         const prioObj = PRIORITY_MAP[ev.priority || 'normal'] || PRIORITY_MAP.normal;
         title.innerHTML = `<span>${prioObj.icon} ${escapeHtml(ev.title)}</span>`;
 
+        let tagsHtml = '';
+        if (ev.tags) {
+          tagsHtml = String(ev.tags).split(/[,\s]+/).filter(Boolean).map(t => {
+            const clean = t.startsWith('#') ? t : '#' + t;
+            return `<span class="tag-pill" onclick="event.stopPropagation(); document.getElementById('tagFilter').value='${escapeHtml(clean.toLowerCase())}'; activeTagFilter='${escapeHtml(clean.toLowerCase())}'; renderApp();">${escapeHtml(clean)}</span>`;
+          }).join(' ');
+        }
+
         const meta = document.createElement('div');
         meta.className = 'agenda-meta';
         meta.innerHTML = `<span>📅 ${escapeHtml(ev.date)} ${ev.time ? '⏰ ' + escapeHtml(ev.time) : ''}</span>` +
           `<span class="badge" style="background-color:${CATEGORY_COLORS[ev.category] || CATEGORY_COLORS.Other}">${escapeHtml(ev.category)}</span>` +
           `<span class="badge" style="background-color:${prioObj.color}; color:#fff;">${escapeHtml(prioObj.label)}</span>` +
-          (ev.recurring && ev.recurring !== 'none' ? `<span style="color:var(--accent);">🔄 ${escapeHtml(ev.recurring)}</span>` : '');
+          `<span class="badge" style="background-color:${ev.completed ? '#10b981' : '#64748b'}; color:#fff;">${ev.completed ? '✅ Done' : '⏳ Pending'}</span>` +
+          (ev.location ? renderLocationLink(ev.location) : '') +
+          (ev.recurring && ev.recurring !== 'none' ? `<span style="color:var(--accent);">🔄 ${escapeHtml(ev.recurring)}</span>` : '') +
+          (tagsHtml ? `<span>${tagsHtml}</span>` : '');
 
         details.appendChild(title);
         details.appendChild(meta);
@@ -1603,6 +1903,7 @@
 
         card.style.cursor = 'pointer';
         card.onclick = () => openModal(ev.id);
+        card.appendChild(chk);
         card.appendChild(details);
         card.appendChild(editBtn);
         agendaView.appendChild(card);
@@ -1620,6 +1921,9 @@
   const eventCategorySelect = document.getElementById('eventCategorySelect');
   const eventPrioritySelect = document.getElementById('eventPrioritySelect');
   const eventRecurrenceSelect = document.getElementById('eventRecurrenceSelect');
+  const eventLocationInput = document.getElementById('eventLocationInput');
+  const eventTagsInput = document.getElementById('eventTagsInput');
+  const eventCompletedCheck = document.getElementById('eventCompletedCheck');
   const eventDescInput = document.getElementById('eventDescInput');
   const deleteEventBtn = document.getElementById('deleteEventBtn');
   const duplicateEventBtn = document.getElementById('duplicateEventBtn');
@@ -1637,6 +1941,9 @@
       eventCategorySelect.value = ev.category || 'Work';
       eventPrioritySelect.value = ev.priority || 'normal';
       eventRecurrenceSelect.value = ev.recurring || 'none';
+      eventLocationInput.value = ev.location || '';
+      eventTagsInput.value = ev.tags || '';
+      eventCompletedCheck.checked = Boolean(ev.completed);
       eventDescInput.value = ev.description || '';
       deleteEventBtn.style.display = 'inline-block';
       duplicateEventBtn.style.display = 'inline-block';
@@ -1648,6 +1955,9 @@
       eventCategorySelect.value = 'Work';
       eventPrioritySelect.value = 'normal';
       eventRecurrenceSelect.value = 'none';
+      eventLocationInput.value = '';
+      eventTagsInput.value = '';
+      eventCompletedCheck.checked = false;
       eventDescInput.value = '';
       deleteEventBtn.style.display = 'none';
       duplicateEventBtn.style.display = 'none';
@@ -1681,6 +1991,9 @@
           category: eventCategorySelect.value,
           priority: eventPrioritySelect.value,
           recurring: eventRecurrenceSelect.value,
+          location: eventLocationInput.value.trim(),
+          tags: eventTagsInput.value.trim(),
+          completed: eventCompletedCheck.checked,
           description: eventDescInput.value
         };
         showToast(`Updated event "${title}"`, 'success');
@@ -1694,6 +2007,9 @@
         category: eventCategorySelect.value,
         priority: eventPrioritySelect.value,
         recurring: eventRecurrenceSelect.value,
+        location: eventLocationInput.value.trim(),
+        tags: eventTagsInput.value.trim(),
+        completed: eventCompletedCheck.checked,
         description: eventDescInput.value
       });
       showToast(`Created event "${title}"`, 'success');
@@ -1756,13 +2072,19 @@
     let highCount = 0;
     let normalCount = 0;
     let lowCount = 0;
+    let completedCount = 0;
+    let recurringCount = 0;
     const catMap = { Work: 0, Personal: 0, Health: 0, Important: 0, Other: 0 };
+    const tagCountMap = {};
 
     events.forEach(ev => {
       const d = parseDateStr(ev.date);
       if (d.getFullYear() === curYear && d.getMonth() === curMonth) {
         thisMonthCount++;
       }
+      if (ev.completed) completedCount++;
+      if (ev.recurring && ev.recurring !== 'none') recurringCount++;
+
       const p = ev.priority || 'normal';
       if (p === 'urgent') urgentCount++;
       else if (p === 'high') highCount++;
@@ -1771,7 +2093,18 @@
 
       const c = ev.category || 'Other';
       catMap[c] = (catMap[c] || 0) + 1;
+
+      if (ev.tags) {
+        const parts = String(ev.tags).split(/[,\s]+/).map(t => t.trim()).filter(Boolean);
+        parts.forEach(p => {
+          const clean = p.startsWith('#') ? p.toLowerCase() : '#' + p.toLowerCase();
+          tagCountMap[clean] = (tagCountMap[clean] || 0) + 1;
+        });
+      }
     });
+
+    const pendingCount = totalEvents - completedCount;
+    const completionPct = totalEvents > 0 ? Math.round((completedCount / totalEvents) * 100) : 0;
 
     let catBarsHtml = '';
     Object.keys(catMap).forEach(cat => {
@@ -1810,23 +2143,45 @@
         </div>`;
     });
 
+    const sortedTags = Object.keys(tagCountMap).sort((a, b) => tagCountMap[b] - tagCountMap[a]);
+    let tagsHtml = '';
+    if (sortedTags.length > 0) {
+      tagsHtml = sortedTags.map(t => `<span class="tag-pill" style="cursor:default;">${escapeHtml(t)} (${tagCountMap[t]})</span>`).join(' ');
+    } else {
+      tagsHtml = '<span style="color:var(--text-muted); font-size:12px;">No tags assigned yet. Use #tags in events.</span>';
+    }
+
     statsModalBody.innerHTML = `
-      <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
+      <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;">
         <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:8px; padding:10px; text-align:center;">
           <div style="font-size:22px; font-weight:700; color:var(--accent);">${totalEvents}</div>
-          <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">Total Events</div>
+          <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">Total Events</div>
         </div>
         <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:8px; padding:10px; text-align:center;">
-          <div style="font-size:22px; font-weight:700; color:#3b82f6;">${thisMonthCount}</div>
-          <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">This Month</div>
+          <div style="font-size:22px; font-weight:700; color:#10b981;">${completedCount}</div>
+          <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">Done (${completionPct}%)</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:8px; padding:10px; text-align:center;">
+          <div style="font-size:22px; font-weight:700; color:#3b82f6;">${pendingCount}</div>
+          <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">Pending</div>
         </div>
         <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:8px; padding:10px; text-align:center;">
           <div style="font-size:22px; font-weight:700; color:#ef4444;">${urgentCount + highCount}</div>
-          <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">Urgent / High</div>
+          <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">Urgent / High</div>
         </div>
       </div>
 
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-top:8px;">
+      <div style="background:rgba(0,0,0,0.25); border:1px solid var(--border-color); border-radius:8px; padding:10px; margin-top:4px;">
+        <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:4px;">
+          <span>Overall Schedule Completion</span>
+          <span style="color:var(--accent); font-weight:700;">${completionPct}% (${completedCount}/${totalEvents})</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.1); border-radius:4px; height:10px; overflow:hidden;">
+          <div style="background:linear-gradient(90deg, var(--accent), #10b981); width:${completionPct}%; height:100%; border-radius:4px; transition:width 0.4s ease;"></div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:4px;">
         <div style="background:rgba(0,0,0,0.2); border:1px solid var(--border-color); border-radius:8px; padding:10px;">
           <h4 style="margin:0 0 8px 0; font-size:12px; color:var(--accent); text-transform:uppercase; letter-spacing:0.5px;">Categories</h4>
           ${catBarsHtml}
@@ -1834,6 +2189,13 @@
         <div style="background:rgba(0,0,0,0.2); border:1px solid var(--border-color); border-radius:8px; padding:10px;">
           <h4 style="margin:0 0 8px 0; font-size:12px; color:var(--accent); text-transform:uppercase; letter-spacing:0.5px;">Priorities</h4>
           ${prioBarsHtml}
+        </div>
+      </div>
+
+      <div style="background:rgba(0,0,0,0.2); border:1px solid var(--border-color); border-radius:8px; padding:10px; margin-top:4px;">
+        <h4 style="margin:0 0 8px 0; font-size:12px; color:var(--accent); text-transform:uppercase; letter-spacing:0.5px;">🏷️ Active Tags Breakdown</h4>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+          ${tagsHtml}
         </div>
       </div>
     `;
@@ -1871,7 +2233,10 @@
       }
       icsContent += `SUMMARY:${cleanIcsText(ev.title)}\r\n`;
       if (ev.description) icsContent += `DESCRIPTION:${cleanIcsText(ev.description)}\r\n`;
-      icsContent += `CATEGORIES:${ev.category || 'Work'}\r\n`;
+      if (ev.location) icsContent += `LOCATION:${cleanIcsText(ev.location)}\r\n`;
+      const catVal = (ev.category || 'Work') + (ev.tags ? ',' + ev.tags.replace(/#/g, '') : '');
+      icsContent += `CATEGORIES:${cleanIcsText(catVal)}\r\n`;
+      icsContent += `STATUS:${ev.completed ? 'COMPLETED' : 'CONFIRMED'}\r\n`;
       icsContent += `PRIORITY:${prioNum}\r\n`;
       if (ev.recurring && ev.recurring !== 'none') {
         let rrule = ev.recurring.toUpperCase();
@@ -1886,7 +2251,7 @@
   }
 
   function exportCsv() {
-    let csv = "ID,Title,Date,Time,Category,Priority,Recurrence,Description\n";
+    let csv = "ID,Title,Date,Time,Category,Priority,Recurrence,Completed,Tags,Location,Description\n";
     events.forEach(ev => {
       const row = [
         ev.id,
@@ -1896,6 +2261,9 @@
         ev.category,
         ev.priority || 'normal',
         ev.recurring || 'none',
+        ev.completed ? 'TRUE' : 'FALSE',
+        escapeCsv(ev.tags || ''),
+        escapeCsv(ev.location || ''),
         escapeCsv(ev.description || '')
       ].join(',');
       csv += row + "\n";
@@ -1907,11 +2275,15 @@
 
   function exportMarkdownAgenda() {
     const todayStr = formatDateStr(new Date());
+    const total = events.length;
+    const completed = events.filter(e => e.completed).length;
+    const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
     let md = `# KCalendar Agenda & Schedule Report\n\n`;
-    md += `**Generated:** ${todayStr} | **Total Events:** ${events.length}\n\n`;
+    md += `**Generated:** ${todayStr} | **Total Events:** ${total} | **Completed:** ${completed}/${total} (${pct}%)\n\n`;
     md += `## 📋 Event Overview\n\n`;
-    md += `| Status | Date | Time | Priority | Category | Recurrence | Title | Description |\n`;
-    md += `|:---:|:---:|:---:|:---:|:---:|:---:|:---|:---|\n`;
+    md += `| Status | Date | Time | Priority | Category | Tags | Location | Recurrence | Title | Description |\n`;
+    md += `|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---|:---|\n`;
 
     const sortedEvents = [...events].sort((a, b) => a.date.localeCompare(b.date) || (a.time || '00:00').localeCompare(b.time || '00:00'));
 
@@ -1920,7 +2292,10 @@
       const prioBadge = `${prioObj.icon} ${prioObj.label}`;
       const desc = (ev.description || '').replace(/\n/g, ' ').replace(/\|/g, '\\|');
       const title = (ev.title || 'Untitled').replace(/\|/g, '\\|');
-      md += `| - [ ] | ${ev.date} | ${ev.time || 'All day'} | ${prioBadge} | ${ev.category} | ${ev.recurring || 'none'} | **${title}** | ${desc} |\n`;
+      const tags = (ev.tags || '').replace(/\|/g, '\\|');
+      const loc = (ev.location || '').replace(/\|/g, '\\|');
+      const statusBox = ev.completed ? '- [x]' : '- [ ]';
+      md += `| ${statusBox} | ${ev.date} | ${ev.time || 'All day'} | ${prioBadge} | ${ev.category} | ${tags} | ${loc} | ${ev.recurring || 'none'} | **${title}** | ${desc} |\n`;
     });
 
     md += `\n---\n*Report generated by KCalendar*\n`;
@@ -1998,6 +2373,9 @@
               category: item.category || 'Work',
               priority: item.priority || 'normal',
               recurring: item.recurring || 'none',
+              completed: Boolean(item.completed),
+              tags: item.tags || '',
+              location: item.location || '',
               description: item.description || ''
             });
           }
@@ -2017,7 +2395,7 @@
       line = line.trim();
       if (line === 'BEGIN:VEVENT') {
         inEvent = true;
-        curEvent = { id: generateId(), category: 'Work', priority: 'normal', recurring: 'none', description: '' };
+        curEvent = { id: generateId(), category: 'Work', priority: 'normal', recurring: 'none', completed: false, tags: '', location: '', description: '' };
       } else if (line === 'END:VEVENT') {
         if (curEvent.title && curEvent.date) {
           events.push(curEvent);
@@ -2047,6 +2425,13 @@
           else if (p === 3 || p === 4) curEvent.priority = 'high';
           else if (p === 9) curEvent.priority = 'low';
           else curEvent.priority = 'normal';
+        } else if (line.startsWith('STATUS:') || line.startsWith('STATUS;')) {
+          const colonIdx = line.indexOf(':');
+          const stat = line.substring(colonIdx + 1).trim().toUpperCase();
+          if (stat === 'COMPLETED') curEvent.completed = true;
+        } else if (line.startsWith('LOCATION:') || line.startsWith('LOCATION;')) {
+          const colonIdx = line.indexOf(':');
+          curEvent.location = line.substring(colonIdx + 1).replace(/\\([;,nN\\])/g, (m, c) => c === 'n' || c === 'N' ? '\n' : c);
         } else if (line.startsWith('DESCRIPTION:') || line.startsWith('DESCRIPTION;')) {
           const colonIdx = line.indexOf(':');
           curEvent.description = line.substring(colonIdx + 1).replace(/\\([;,nN\\])/g, (m, c) => c === 'n' || c === 'N' ? '\n' : c);
@@ -2094,6 +2479,9 @@
     let catIdx = headerRow.indexOf('category');
     let prioIdx = headerRow.indexOf('priority');
     let recIdx = headerRow.indexOf('recurrence');
+    let compIdx = headerRow.indexOf('completed');
+    let tagsIdx = headerRow.indexOf('tags');
+    let locIdx = headerRow.indexOf('location');
     let descIdx = headerRow.indexOf('description');
 
     if (titleIdx === -1) {
@@ -2120,6 +2508,9 @@
           category: parts[catIdx] || 'Work',
           priority: parts[prioIdx] || 'normal',
           recurring: parts[recIdx] || 'none',
+          completed: compIdx !== -1 ? (parts[compIdx] || '').toUpperCase() === 'TRUE' : false,
+          tags: tagsIdx !== -1 ? (parts[tagsIdx] || '').replace(/^"|"$/g, '') : '',
+          location: locIdx !== -1 ? (parts[locIdx] || '').replace(/^"|"$/g, '') : '',
           description: (parts[descIdx] || '').replace(/^"|"$/g, '')
         });
       }
@@ -2227,6 +2618,16 @@
     renderApp();
   };
 
+  document.getElementById('statusFilter').onchange = (e) => {
+    activeStatusFilter = e.target.value;
+    renderApp();
+  };
+
+  document.getElementById('tagFilter').onchange = (e) => {
+    activeTagFilter = e.target.value;
+    renderApp();
+  };
+
   document.getElementById('newEventBtn').onclick = () => openModal();
   document.getElementById('closeModalBtn').onclick = closeModal;
   document.getElementById('cancelModalBtn').onclick = closeModal;
@@ -2244,6 +2645,9 @@
       category: eventCategorySelect.value,
       priority: eventPrioritySelect.value,
       recurring: eventRecurrenceSelect.value,
+      location: eventLocationInput.value.trim(),
+      tags: eventTagsInput.value.trim(),
+      completed: false,
       description: eventDescInput.value
     });
     saveEvents();
