@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KZip
-  kilo_usability: KImage
+  kilo_usability: KJournal
   kilo_graphics: KStarship
   kilo_qa: KQuest
   kilo_expander: KJournal
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-tester
-  app: KWizard
-  timestamp: "2026-09-25T13:51:00Z"
+  agent: kilo-usability
+  app: KImage
+  timestamp: "2026-09-25T14:45:00Z"
 last_planner_run: "2026-09-25T06:42:00Z"
 ---
 
@@ -115,9 +115,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KImage`
+- **Current Target**: `KJournal`
 - **Upcoming Queue**:
-  `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`.
+  `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KQuest`
@@ -206,6 +206,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-25T14:45:00Z — kilo-usability: KImage (UI/UX, Layout & Usability Polish)**
+  - Status: PASS ✅ (HiDPI histogram scaling, crisp pixel art mode, zoom pan & toast de-occlusion; 0 regressions).
+  - Canvas Crispness: Sized histogram canvas with window.devicePixelRatio and transform scaling for razor-sharp Retina/4K display.
+  - Zoom & Pan: Added pointer pan navigation on zoomed canvas with grab/grabbing cursor and 0-key / 1:1 button center reset.
+  - Pixel Art Mode: Added toggleable Crisp Pixel Art Mode (hotkey P) with image-rendering: pixelated for retro icon/sprite editing.
+  - Toast De-Occlusion: Re-anchored toasts to top-center (top: 56px) with click-to-dismiss, preventing panel and bottom bar occlusion.
+  - Onboarding & UX: Added first-run onboarding guide toast via localStorage, updated help modal shortcuts, and scoped tab arrow keys.
+  - Verification: Clean MSVC compile (`KImage.exe` 24.0 KB); Vite clean build in 361ms (`kimage.html` 96.8 KB); security lint 100% PASS.
+
 - **2026-09-25T13:51:00Z — kilo-tester: KWizard (UI Element Audit & Inline Fixes)**
   - Status: PASS ✅ (6 UI issues identified and resolved; 0 regressions).
   - Modals & Backdrops: Added backdrop click dismissal to deck builder and Grimoire modals; replaced blocking alert with toast.
@@ -240,14 +249,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast & Modals: Re-anchored toast bar to top-center (top: 52px) preventing action/travel button occlusion; added backdrop dismissal to modals.
   - Keyboard & UX: Added Enter/Space modal dismiss, escape handlers, and start screen Resume Saved Case [F9] button.
   - Verification: Clean MSVC compile (`KMystery.exe` 33.5 KB); clean Vite build in 392ms (`kmystery.html` 118.8 KB); security lint 100% PASS; <999KB ceiling.
-
-- **2026-09-25T09:51:00Z — kilo-graphics: KWizard (Visual Polish, Glint Purge & Spell Balance Pass)**
-  - Status: PASS ✅ (Perimeter dots & rotating glints purged; Time Warp, Counterspell & Cold Snap activated; 0 regressions).
-  - Glint Purge: Removed rotating staff ring and orbital perimeter dots from arcane runic circle in web and Win32 C.
-  - Visual Polish: Rendered static, period-accurate gold runes, cardinal filigree brackets, and stable arcane chamber floor.
-  - Spell Mechanics: Activated Time Warp (refills mana + draws card), Counterspell (banishes high-cost card), and Polymorph (dispels shield).
-  - Balance & Audio: Buffed Cold Snap to 3 dmg + 2 freeze; added bubbling poison audio SFX across web & native Beep synth.
-  - Verification: Clean MSVC compile (`KWizard.exe` 10.4 KB); Vite clean build in 439ms (`kwizard.html` 83.9 KB); security lint 100% PASS.
 
 
 

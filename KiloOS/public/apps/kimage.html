@@ -134,16 +134,21 @@
     display: flex;
     border-bottom: 1px solid var(--glass-border);
     background: rgba(0,0,0,0.2);
+    overflow-x: auto;
   }
+  .panel-tabs::-webkit-scrollbar { height: 2px; }
+  .panel-tabs::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
   .tab-btn {
     flex: 1;
-    padding: 10px 4px;
+    padding: 9px 4px;
     border: none;
     border-bottom: 2px solid transparent;
     border-radius: 0;
     background: transparent;
-    font-size: 12px;
+    font-size: 11.5px;
     color: var(--text-muted);
+    white-space: nowrap;
+    text-align: center;
   }
   .tab-btn:hover { background: rgba(255,255,255,0.04); color: var(--text-main); transform: none; }
   .tab-btn.active {
@@ -393,42 +398,47 @@
     transition: width 0.1s linear;
   }
 
-  /* Toast Notification System */
+  /* Toast Notification System (Top-Center Non-Occluding) */
   .toast-container {
     position: fixed;
-    bottom: 60px;
-    right: 20px;
+    top: 56px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 8px;
     z-index: 9999;
     pointer-events: none;
   }
   .toast {
-    padding: 10px 16px;
-    background: rgba(15, 23, 42, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 8px 16px;
+    background: rgba(15, 23, 42, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-left: 4px solid var(--accent);
     color: var(--text-main);
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 13px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    font-weight: 500;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(10px);
     pointer-events: auto;
-    animation: toastIn 0.25s ease-out forwards;
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    cursor: pointer;
+    animation: toastIn 0.22s ease-out forwards;
+    transition: opacity 0.25s ease, transform 0.25s ease;
     display: flex;
     align-items: center;
     gap: 10px;
-    max-width: 360px;
+    max-width: 440px;
   }
   .toast.success { border-left-color: var(--success); }
   .toast.warning { border-left-color: #f59e0b; }
   .toast.error { border-left-color: var(--danger); }
   @keyframes toastIn {
-    from { opacity: 0; transform: translateY(12px) scale(0.95); }
+    from { opacity: 0; transform: translateY(-8px) scale(0.96); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
+
 
   /* Modal Dialog */
   .modal-backdrop {
@@ -600,8 +610,9 @@
       <button id="btnZoomOut" class="icon-btn" title="Zoom Out (-)">-</button>
       <span id="zoomLevel" style="font-size:12px; min-width:44px; text-align:center;">100%</span>
       <button id="btnZoomIn" class="icon-btn" title="Zoom In (+)">+</button>
-      <button id="btnZoomReset" title="Fit to Screen (0)">1:1</button>
-      <button id="btnToggleRight" title="Histogram & Metadata">
+      <button id="btnZoomReset" title="Reset Zoom & Pan (0)">1:1</button>
+      <button id="btnPixelMode" title="Toggle Crisp Pixel Art Mode (P)" style="font-size:12px; padding:6px 9px;">Crisp</button>
+      <button id="btnToggleRight" title="Histogram & Metadata (I)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         Inspector
       </button>
@@ -938,12 +949,14 @@
             <div class="shortcut-item"><span>Remove Current Image</span><kbd>X</kbd></div>
             <div class="shortcut-item"><span>Toggle Crop Tool</span><kbd>C</kbd></div>
             <div class="shortcut-item"><span>Toggle Annotation Brush</span><kbd>D</kbd></div>
+            <div class="shortcut-item"><span>Crisp Pixel Art Mode</span><kbd>P</kbd></div>
+            <div class="shortcut-item"><span>Toggle Inspector</span><kbd>I</kbd></div>
             <div class="shortcut-item"><span>Rotate CCW / CW</span><kbd>[</kbd> / <kbd>]</kbd></div>
             <div class="shortcut-item"><span>Slideshow Play/Pause</span><kbd>Space</kbd></div>
             <div class="shortcut-item"><span>Previous / Next Image</span><kbd>←</kbd> / <kbd>→</kbd></div>
             <div class="shortcut-item"><span>Toggle Fullscreen</span><kbd>F</kbd></div>
-            <div class="shortcut-item"><span>Zoom (Keyboard / Wheel)</span><kbd>+</kbd> / <kbd>-</kbd> / <kbd>Wheel</kbd></div>
-            <div class="shortcut-item"><span>Reset Zoom (1:1)</span><kbd>0</kbd></div>
+            <div class="shortcut-item"><span>Zoom & Pan Canvas</span><kbd>+</kbd> / <kbd>-</kbd> / <kbd>Drag</kbd></div>
+            <div class="shortcut-item"><span>Reset Zoom & Center</span><kbd>0</kbd></div>
             <div class="shortcut-item"><span>Switch Tabs 1-5</span><kbd>1</kbd> .. <kbd>5</kbd></div>
             <div class="shortcut-item"><span>Close Modal / Cancel</span><kbd>Esc</kbd></div>
           </div>
@@ -979,6 +992,11 @@
     playlist: [], // Array of { file, img, name, size, type, exif }
     currentIndex: -1,
     zoom: 1,
+    panX: 0,
+    panY: 0,
+    isPanning: false,
+    panStart: { x: 0, y: 0 },
+    pixelated: false,
     rotation: 0,
     flipH: 1,
     flipV: 1,
@@ -1016,33 +1034,45 @@
     slideshowBar: document.getElementById('slideshowBar')
   };
 
-  // Toast System
-  function showToast(msg, type = 'info', duration = 3000) {
+  // Toast System (Non-occluding, Click to Dismiss)
+  function showToast(msg, type = 'info', duration = 2800) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
+    toast.title = 'Click to dismiss';
     
     let iconSvg = '';
     if (type === 'success') {
-      iconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+      iconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
     } else if (type === 'error') {
-      iconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+      iconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
     } else if (type === 'warning') {
-      iconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+      iconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
     } else {
       iconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
     }
 
     toast.innerHTML = `${iconSvg}<span>${msg}</span>`;
+    toast.onclick = () => toast.remove();
     container.appendChild(toast);
 
     setTimeout(() => {
       toast.style.opacity = '0';
-      toast.style.transform = 'translateY(8px) scale(0.95)';
-      setTimeout(() => toast.remove(), 300);
+      toast.style.transform = 'translateY(-8px) scale(0.96)';
+      setTimeout(() => toast.remove(), 250);
     }, duration);
   }
+
+  // First-run Onboarding Prompt
+  try {
+    if (!localStorage.getItem('kimage_tutorial_seen')) {
+      setTimeout(() => {
+        showToast('Welcome to KImage Pro! Press H or F1 for Studio Guide & Hotkeys', 'info', 4500);
+      }, 500);
+      localStorage.setItem('kimage_tutorial_seen', '1');
+    }
+  } catch (_) {}
 
   // Help Modal Handlers
   const helpModal = document.getElementById('helpModal');
@@ -1189,7 +1219,7 @@
   function switchTab(tabId) {
     const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
     if (!btn) return;
-    document.querySelectorAll('.tab-btn').forEach(b => {
+    document.querySelectorAll('#leftPanel .tab-btn').forEach(b => {
       b.classList.remove('active');
       b.setAttribute('aria-selected', 'false');
     });
@@ -1248,6 +1278,10 @@
       openHelpModal();
     } else if (e.key === 'n' || e.key === 'N') {
       loadSampleImage();
+    } else if (e.key === 'p' || e.key === 'P') {
+      document.getElementById('btnPixelMode')?.click();
+    } else if (e.key === 'i' || e.key === 'I') {
+      document.getElementById('btnToggleRight')?.click();
     } else if (e.key === 'x' || e.key === 'X') {
       if (state.playlist.length > 0) {
         removeImage(state.currentIndex);
@@ -1265,14 +1299,18 @@
     } else if (e.key === '5') {
       switchTab('tabDraw');
     } else if (e.key === '+' || e.key === '=') {
-      state.zoom = Math.min(5, state.zoom * 1.2);
+      state.zoom = Math.min(5, Number((state.zoom * 1.2).toFixed(2)));
       renderCanvas();
     } else if (e.key === '-' || e.key === '_') {
-      state.zoom = Math.max(0.2, state.zoom / 1.2);
+      state.zoom = Math.max(0.2, Number((state.zoom / 1.2).toFixed(2)));
+      if (state.zoom <= 1) { state.panX = 0; state.panY = 0; }
       renderCanvas();
     } else if (e.key === '0') {
       state.zoom = 1;
+      state.panX = 0;
+      state.panY = 0;
       renderCanvas();
+      showToast("Zoom reset (1:1)", "info");
     } else if (e.key === 'ArrowLeft') {
       if (state.playlist.length > 0) {
         selectImage((state.currentIndex - 1 + state.playlist.length) % state.playlist.length);
@@ -1302,15 +1340,54 @@
     e.preventDefault();
     if (state.playlist.length === 0) return;
     if (e.deltaY < 0) {
-      state.zoom = Math.min(5, state.zoom * 1.15);
+      state.zoom = Math.min(5, Number((state.zoom * 1.15).toFixed(2)));
     } else {
-      state.zoom = Math.max(0.2, state.zoom / 1.15);
+      state.zoom = Math.max(0.2, Number((state.zoom / 1.15).toFixed(2)));
+      if (state.zoom <= 1) { state.panX = 0; state.panY = 0; }
     }
     renderCanvas();
   }, { passive: false });
 
+  // Pan interaction for zoomed canvas
+  ui.workspace.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select')) return;
+    if (state.crop.active || state.draw.active) return;
+    if (state.playlist.length === 0) return;
+
+    if (state.zoom > 1 || e.button === 1 || e.shiftKey) {
+      e.preventDefault();
+      state.isPanning = true;
+      state.panStart = { x: e.clientX - state.panX, y: e.clientY - state.panY };
+      ui.workspace.style.cursor = 'grabbing';
+      try { ui.workspace.setPointerCapture(e.pointerId); } catch (_) {}
+    }
+  });
+
+  ui.workspace.addEventListener('pointermove', (e) => {
+    if (!state.isPanning) {
+      if (state.playlist.length > 0 && !state.draw.active && !state.crop.active && state.zoom > 1) {
+        ui.workspace.style.cursor = 'grab';
+      }
+      return;
+    }
+    e.preventDefault();
+    state.panX = Math.round(e.clientX - state.panStart.x);
+    state.panY = Math.round(e.clientY - state.panStart.y);
+    ui.canvasWrapper.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
+  });
+
+  const stopPanning = (e) => {
+    if (state.isPanning) {
+      state.isPanning = false;
+      try { ui.workspace.releasePointerCapture(e.pointerId); } catch (_) {}
+      ui.workspace.style.cursor = (state.zoom > 1 && !state.draw.active && !state.crop.active) ? 'grab' : '';
+    }
+  };
+  ui.workspace.addEventListener('pointerup', stopPanning);
+  ui.workspace.addEventListener('pointercancel', stopPanning);
+
   // Tab switching
-  const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
+  const tabButtons = Array.from(document.querySelectorAll('#leftPanel .tab-btn'));
   tabButtons.forEach((btn, idx) => {
     btn.onclick = () => {
       if (btn.dataset.tab) switchTab(btn.dataset.tab);
@@ -1440,6 +1517,8 @@
     state.flipH = 1;
     state.flipV = 1;
     state.zoom = 1;
+    state.panX = 0;
+    state.panY = 0;
     state.draw.paths = [];
     resetAdjustments();
     
@@ -1531,9 +1610,10 @@
       }
     });
 
-    // Update Zoom Transform CSS
-    ui.canvasWrapper.style.transform = `scale(${state.zoom})`;
+    // Update Zoom & Pan Transform CSS
+    ui.canvasWrapper.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
     ui.zoomLevel.textContent = `${Math.round(state.zoom * 100)}%`;
+    ui.mainCanvas.style.imageRendering = state.pixelated ? 'pixelated' : 'auto';
 
     // Synchronize active canvas dimensions to Inspector and Resize fields
     const metaDim = document.getElementById('metaDim');
@@ -1546,7 +1626,7 @@
     renderHistogram();
   }
 
-  // Render RGB Color Histogram
+  // Render RGB Color Histogram with Crisp HiDPI Scaling
   function renderHistogram() {
     if (ui.rightPanel.classList.contains('hidden')) return;
     const w = ui.mainCanvas.width;
@@ -1567,9 +1647,16 @@
     }
 
     const maxVal = Math.max(...rCount, ...gCount, ...bCount) || 1;
-    const hw = ui.histCanvas.width = ui.histCanvas.clientWidth || 280;
-    const hh = ui.histCanvas.height = ui.histCanvas.clientHeight || 125;
+    const dpr = window.devicePixelRatio || 1;
+    const displayW = ui.histCanvas.clientWidth || 240;
+    const displayH = ui.histCanvas.clientHeight || 125;
+    ui.histCanvas.width = Math.round(displayW * dpr);
+    ui.histCanvas.height = Math.round(displayH * dpr);
     const hctx = ui.histCtx;
+    hctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const hw = displayW;
+    const hh = displayH;
 
     hctx.clearRect(0, 0, hw, hh);
 
@@ -1815,16 +1902,53 @@
   document.getElementById('btnFlipH').onclick = () => { state.flipH *= -1; renderCanvas(); showToast("Flipped horizontally", "info"); };
   document.getElementById('btnFlipV').onclick = () => { state.flipV *= -1; renderCanvas(); showToast("Flipped vertically", "info"); };
 
-  // Zoom
-  ui.btnZoomIn.onclick = () => { state.zoom = Math.min(5, state.zoom * 1.2); renderCanvas(); };
-  ui.btnZoomOut.onclick = () => { state.zoom = Math.max(0.2, state.zoom / 1.2); renderCanvas(); };
-  ui.btnZoomReset.onclick = () => { state.zoom = 1; renderCanvas(); showToast("Zoom reset (1:1)", "info"); };
+  // Zoom & Pan Handlers
+  ui.btnZoomIn.onclick = () => {
+    state.zoom = Math.min(5, Number((state.zoom * 1.2).toFixed(2)));
+    renderCanvas();
+  };
+  ui.btnZoomOut.onclick = () => {
+    state.zoom = Math.max(0.2, Number((state.zoom / 1.2).toFixed(2)));
+    if (state.zoom <= 1) { state.panX = 0; state.panY = 0; }
+    renderCanvas();
+  };
+  ui.btnZoomReset.onclick = () => {
+    state.zoom = 1;
+    state.panX = 0;
+    state.panY = 0;
+    renderCanvas();
+    showToast("Zoom reset (1:1)", "info");
+  };
 
   // Toggle Right Inspector
-  document.getElementById('btnToggleRight').onclick = () => {
-    ui.rightPanel.classList.toggle('hidden');
-    renderHistogram();
-  };
+  const btnToggleRight = document.getElementById('btnToggleRight');
+  if (btnToggleRight) {
+    btnToggleRight.onclick = () => {
+      ui.rightPanel.classList.toggle('hidden');
+      btnToggleRight.classList.toggle('active', !ui.rightPanel.classList.contains('hidden'));
+      if (!ui.rightPanel.classList.contains('hidden')) {
+        renderHistogram();
+      }
+    };
+  }
+
+  // Crisp Pixel Art Mode Toggle
+  const btnPixelMode = document.getElementById('btnPixelMode');
+  if (btnPixelMode) {
+    btnPixelMode.onclick = () => {
+      state.pixelated = !state.pixelated;
+      btnPixelMode.classList.toggle('active', state.pixelated);
+      ui.mainCanvas.style.imageRendering = state.pixelated ? 'pixelated' : 'auto';
+      showToast(state.pixelated ? "Crisp Pixel Art Mode enabled" : "Smooth scaling enabled", "info");
+    };
+  }
+
+  // Window Resize Responsiveness
+  window.addEventListener('resize', () => {
+    if (state.playlist.length > 0 && !ui.rightPanel.classList.contains('hidden')) {
+      renderHistogram();
+    }
+  });
 
   // Crop Tool Implementation
   const btnToggleCrop = document.getElementById('btnToggleCrop');
@@ -2118,11 +2242,7 @@
   };
 
   ui.btnSaveModal.onclick = () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-page').forEach(p => p.classList.add('hidden'));
-    const tabResizeBtn = document.querySelector('[data-tab="tabResize"]');
-    tabResizeBtn?.classList.add('active');
-    document.getElementById('tabResize')?.classList.remove('hidden');
+    switchTab('tabResize');
     showToast("Configure format & download", "info");
   };
 

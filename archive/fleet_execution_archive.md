@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-25T09:51:00Z — kilo-graphics: KWizard (Visual Polish, Glint Purge & Spell Balance Pass)**
+  - Status: PASS ✅ (Perimeter dots & rotating glints purged; Time Warp, Counterspell & Cold Snap activated; 0 regressions).
+  - Glint Purge: Removed rotating staff ring and orbital perimeter dots from arcane runic circle in web and Win32 C.
+  - Visual Polish: Rendered static, period-accurate gold runes, cardinal filigree brackets, and stable arcane chamber floor.
+  - Spell Mechanics: Activated Time Warp (refills mana + draws card), Counterspell (banishes high-cost card), and Polymorph (dispels shield).
+  - Balance & Audio: Buffed Cold Snap to 3 dmg + 2 freeze; added bubbling poison audio SFX across web & native Beep synth.
+  - Verification: Clean MSVC compile (`KWizard.exe` 10.4 KB); Vite clean build in 439ms (`kwizard.html` 83.9 KB); security lint 100% PASS.
+
 - **2026-09-25T08:44:00Z — kilo-usability: KGraph (UI/UX, Layout & Usability Polish)**
   - Status: PASS ✅ (Collapsible sidebar, HiDPI rendering, touch pinch-to-zoom & toast de-occlusion; 0 regressions).
   - Responsive & Layout: Added collapsible function sidebar with Ctrl+B/backslash hotkeys, canvas expand button, and mobile media queries.
