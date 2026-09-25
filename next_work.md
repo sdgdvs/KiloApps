@@ -20,20 +20,22 @@ current_targets:
   kilo_creator: "kweb://portal (Yahoo/Excite 1999 Directory Upgrade: simulated search, live stocks, classifieds)"
 virtual_web_target: "kweb://darknet"
 virtual_web_rotation:
-  - "kweb://geocities"
-  - "kweb://warez"
+  - "kweb://darknet"
   - "kweb://portal"
   - "kweb://webring"
+  - "kweb://warez"
+  - "kweb://geocities"
   - "kweb://users/~neon_rider"
   - "kweb://asm-temple"
   - "kweb://cybercafe"
-  - "kweb://darknet"
   - "kweb://10.19.99.4/classified"
+  - "kweb://echo-subsystem.net"
+  - "kweb://deep-core"
 last_run:
   agent: kilo-creator
   app: "kweb://deep-core"
   timestamp: "2026-09-25T05:52:00Z"
-last_planner_run: "2026-09-24T05:46:00Z"
+last_planner_run: "2026-09-25T06:42:00Z"
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -97,18 +99,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
 - **Current Target**: `kweb://portal` (Yahoo/Excite 1999 Directory Upgrade: simulated search, live stocks, classifieds)
 - **Upcoming Queue**:
+  `kweb://darknet` (Tier 3 Ghost Node Terminal & Cryptic Decoders),
   `kweb://warez` (Cracktros, Chiptune Jukebox & Demoscene Vault expansion),
-  `kweb://deep-core` (Tier 3 Ghost Node Terminal & KMatrix Passkey Fragment - Completed),
-  `kweb://echo-subsystem.net` (Tier 3 Research Journal & Harmonic Decoders - Completed),
-  `kweb://cybercafe` (Underground BBS, Threaded Forums & ASCII Art Studio - Completed),
-  `kweb://users/~neon_rider` (Personal Hacker / Demoscene & Win32 ASM Homepage - Completed),
-  `kweb://asm-temple` (x86 Assembly Programming Shrine & Opcode Converter - Completed),
-  `kweb://10.19.99.4/classified` (Corporate Intranet Leak & Memory Dumps - Completed).
+  `kweb://webring` (Central Hub & Random Teleporter),
+  `kweb://geocities` (Pixel Art & MOD Downloads)
+  *(Completed: kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Current Target**: `KWizard`
 - **Upcoming Queue**:
-  `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KVoid`.
+  `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KVoid`
@@ -123,7 +123,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KMystery`
 - **Upcoming Queue**:
-  `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KFortress`, `KMech` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KMaze, KMech, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
+  `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KMaze, KMech, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KTodo`
@@ -132,8 +132,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://cybercafe` (`KiloOS/public/web/cybercafe.html`)
-  - *Next in Rotation*: `kweb://darknet` ➔ `kweb://geocities` ➔ `kweb://warez` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple`.
+- **Current Active Target**: `kweb://darknet` (`KiloOS/public/web/darknet.html`)
+  - *Next in Rotation*: `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core`.
 - **Anti-Potemkin Directive & Content Mandates**:
   1. `kweb://geocities` (*CyberSpire's Retro Shrine*):
      - ✅ Web Audio 16-bit tracker MIDI jukebox with 3 synthwave/MOD tracks and dancing LED equalizer.
