@@ -221,6 +221,15 @@ DWORD WINAPI SoundThread(LPVOID lpParam) {
         Beep(700, 120);
         Beep(350, 120);
         Beep(700, 120);
+    } else if (type == 5) {
+        Beep(500, 70);
+        Beep(700, 70);
+        Beep(1000, 90);
+    } else if (type == 6) {
+        Beep(523, 60);
+        Beep(659, 60);
+        Beep(784, 60);
+        Beep(1046, 120);
     }
     return 0;
 }
@@ -403,6 +412,14 @@ void TriggerEncounter(int type) {
         pirate_hp = 200;
         enemy_max_hp = 200;
         lstrcpyA(combat_log, "An ancient Precursor Monolith Guardian awakens!");
+    } else if (type == 22) {
+        PlaySoundEffect(2);
+        pirate_hp = 180;
+        enemy_max_hp = 180;
+        lstrcpyA(combat_log, "A colossal Void Leviathan bioship uncoils bio-electric tentacles!");
+    } else if (type == 23) {
+        PlaySoundEffect(6);
+        lstrcpyA(combat_log, "Vintage FLARELIGHT demoscene archive satellite broadcasting 16-bit tracker MODs.");
     } else if (type == 16) {
         PlaySoundEffect(2);
         lstrcpyA(combat_log, "WARNING: Entered active Faction War combat zone!");
@@ -519,7 +536,7 @@ void InitStars() {
             systems[i].planets[p] = rand() % 5;
         }
 
-        int enc = rand() % 15;
+        int enc = rand() % 17;
         if (enc == 0) systems[i].encounter_type = 1;
         else if (enc == 1) systems[i].encounter_type = 2;
         else if (enc == 2) systems[i].encounter_type = 3;
@@ -533,6 +550,8 @@ void InitStars() {
         else if (enc == 10) systems[i].encounter_type = 19;
         else if (enc == 11) systems[i].encounter_type = 20;
         else if (enc == 12) systems[i].encounter_type = 21;
+        else if (enc == 13) systems[i].encounter_type = 22; // Void Leviathan
+        else if (enc == 14) systems[i].encounter_type = 23; // FLARELIGHT Beacon
         else systems[i].encounter_type = 0;
         
         systems[i].visited = 0;
@@ -591,7 +610,7 @@ void Update() {
         ship_y += dy;
         is_moving = 1;
         target_angle = (float)atan2((double)dx, (double)-dy);
-        float f_burn = mod_ramscoop ? 0.65f : 1.0f;
+        float f_burn = mod_ramscoop ? 0.45f : 0.8f;
         res_fuel -= f_burn;
         if (res_fuel < 0) res_fuel = 0;
         if (rand() % 10 == 0) AddXP(1, 1);
@@ -1134,6 +1153,90 @@ void DrawEncounterTacticalView(HDC memDC, int cx, int cy, int enc_type) {
         SelectObject(memDC, rl); MoveToEx(memDC, cx + 18, wy + 2, NULL); LineTo(memDC, cx + 2, wy + 2);
         DeleteObject(rl);
     }
+    else if (enc_type == 22) {
+        // Void Leviathan Bioship
+        int bob = (int)(sin(time / 450.0f) * 4.0f);
+        int vy = cy - 20 + bob;
+
+        // Bioluminescent Undulating Tentacles
+        HPEN tPen = CreatePen(PS_SOLID, 2, RGB(6, 182, 212));
+        HPEN oTPen = SelectObject(memDC, tPen);
+        for (int t = -2; t <= 2; t++) {
+            int wave = (int)(sin(time / 250.0f + t) * 8.0f);
+            MoveToEx(memDC, cx + t * 10, vy + 14, NULL);
+            LineTo(memDC, cx + t * 14 + wave, vy + 28);
+            LineTo(memDC, cx + t * 12 - wave, vy + 44);
+        }
+        SelectObject(memDC, oTPen);
+        DeleteObject(tPen);
+
+        // Chitinous Organic Bioship Carapace
+        POINT vPts[8] = {
+            {cx, vy - 28},
+            {cx + 24, vy - 14},
+            {cx + 28, vy + 8},
+            {cx + 12, vy + 18},
+            {cx, vy + 12},
+            {cx - 12, vy + 18},
+            {cx - 28, vy + 8},
+            {cx - 24, vy - 14}
+        };
+        HBRUSH vBrush = CreateSolidBrush(RGB(6, 44, 32));
+        HPEN vPen = CreatePen(PS_SOLID, 2, RGB(16, 185, 129));
+        SelectObject(memDC, vBrush); SelectObject(memDC, vPen);
+        Polygon(memDC, vPts, 8);
+        DeleteObject(vBrush); DeleteObject(vPen);
+
+        // Ocular Cluster
+        HBRUSH eyeBrush = CreateSolidBrush(RGB(52, 211, 153));
+        SelectObject(memDC, eyeBrush); SelectObject(memDC, GetStockObject(NULL_PEN));
+        Ellipse(memDC, cx - 4, vy - 8, cx + 4, vy);
+        Ellipse(memDC, cx - 12, vy - 4, cx - 6, vy + 2);
+        Ellipse(memDC, cx + 6, vy - 4, cx + 12, vy + 2);
+        DeleteObject(eyeBrush);
+    }
+    else if (enc_type == 23) {
+        // FLARELIGHT Archive Beacon
+        int by = cy - 20;
+
+        // Expanding RF Broadcast Wave
+        int rWave = 10 + (time % 1600) / 45;
+        HPEN wPen = CreatePen(PS_SOLID, 1, RGB(56, 189, 248));
+        SelectObject(memDC, wPen); SelectObject(memDC, GetStockObject(NULL_BRUSH));
+        Ellipse(memDC, cx - rWave, by - rWave, cx + rWave, by + rWave);
+        DeleteObject(wPen);
+
+        // Photovoltaic Solar Panels
+        HBRUSH spBrush = CreateSolidBrush(RGB(15, 23, 42));
+        HPEN spPen = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
+        SelectObject(memDC, spBrush); SelectObject(memDC, spPen);
+        Rectangle(memDC, cx - 48, by - 12, cx - 20, by + 12);
+        Rectangle(memDC, cx + 20, by - 12, cx + 48, by + 12);
+        DeleteObject(spBrush); DeleteObject(spPen);
+
+        // Central Satellite Body
+        HBRUSH sbBrush = CreateSolidBrush(RGB(51, 65, 85));
+        HPEN sbPen = CreatePen(PS_SOLID, 2, RGB(245, 158, 11));
+        SelectObject(memDC, sbBrush); SelectObject(memDC, sbPen);
+        Rectangle(memDC, cx - 12, by - 16, cx + 12, by + 16);
+        DeleteObject(sbBrush); DeleteObject(sbPen);
+
+        // Antenna Spire
+        HPEN antPen = CreatePen(PS_SOLID, 2, RGB(248, 250, 252));
+        SelectObject(memDC, antPen);
+        MoveToEx(memDC, cx, by - 16, NULL); LineTo(memDC, cx, by - 34);
+        MoveToEx(memDC, cx - 6, by - 30, NULL); LineTo(memDC, cx + 6, by - 30);
+        DeleteObject(antPen);
+
+        // Blinking Tracker LEDs
+        int strobe = ((time / 300) % 2 == 0);
+        HBRUSH led1 = CreateSolidBrush(strobe ? RGB(16, 185, 129) : RGB(4, 120, 87));
+        HBRUSH led2 = CreateSolidBrush(!strobe ? RGB(234, 179, 8) : RGB(113, 63, 18));
+        RECT lr1 = { cx - 6, by + 2, cx - 2, by + 6 };
+        RECT lr2 = { cx + 2, by + 2, cx + 6, by + 6 };
+        FillRect(memDC, &lr1, led1); FillRect(memDC, &lr2, led2);
+        DeleteObject(led1); DeleteObject(led2);
+    }
 }
 
 void Draw(HDC hdc, RECT* rect) {
@@ -1489,6 +1592,8 @@ void Draw(HDC hdc, RECT* rect) {
             else if (sys->encounter_type == 19) eN = "Xenon Hunter";
             else if (sys->encounter_type == 20) eN = "Syndicate Frigate";
             else if (sys->encounter_type == 21) eN = "Precursor Ruin";
+            else if (sys->encounter_type == 22) eN = "Void Leviathan";
+            else if (sys->encounter_type == 23) eN = "FLARELIGHT Relay";
             else if (sys->encounter_type == 4) eN = "Orbital Station";
             else if (sys->encounter_type == 16) eN = "War Zone";
             else if (sys->encounter_type == 14) eN = "Alien Vessel";
@@ -1546,12 +1651,13 @@ void Draw(HDC hdc, RECT* rect) {
         char* desc = "";
         char desc_buf[512] = "";
 
-        if (modal_enc_type == 1 || modal_enc_type == 13 || modal_enc_type == 19 || modal_enc_type == 20 || modal_enc_type == 21) { 
+        if (modal_enc_type == 1 || modal_enc_type == 13 || modal_enc_type == 19 || modal_enc_type == 20 || modal_enc_type == 21 || modal_enc_type == 22) { 
             if (modal_enc_type == 1) title = "PIRATE RAIDER CORVETTE";
             else if (modal_enc_type == 13) title = "DREADNOUGHT FLEET";
             else if (modal_enc_type == 19) title = "XENON HUNTER-KILLER";
             else if (modal_enc_type == 20) title = "SYNDICATE STEALTH FRIGATE";
             else if (modal_enc_type == 21) title = "PRECURSOR WAR GUARDIAN";
+            else if (modal_enc_type == 22) title = "VOID LEVIATHAN BIOSHIP";
 
             if (res_hull <= 0) {
                 if (HasSavedGame()) {
@@ -1565,6 +1671,7 @@ void Draw(HDC hdc, RECT* rect) {
                 else if (modal_enc_type == 19) wsprintfA(desc_buf, "%s\r\nSPACE: Harvest Bio-Weave (+300C, +3 Tech)", combat_log);
                 else if (modal_enc_type == 20) wsprintfA(desc_buf, "%s\r\nSPACE: Salvage Railgun Tech (+240C, +2 Tech)", combat_log);
                 else if (modal_enc_type == 21) wsprintfA(desc_buf, "%s\r\nSPACE: Extract Precursor Artifact (+500C, +4 Tech)", combat_log);
+                else if (modal_enc_type == 22) wsprintfA(desc_buf, "%s\r\nSPACE: Harvest Leviathan Biomass (+420C, +3 Tech, +4 Min)", combat_log);
                 desc = desc_buf;
             } else {
                 char bar[12];
@@ -1572,9 +1679,13 @@ void Draw(HDC hdc, RECT* rect) {
                 if (filled < 0) filled = 0; if (filled > 10) filled = 10;
                 for (int b = 0; b < 10; b++) bar[b] = (b < filled) ? '=' : '-';
                 bar[10] = '\0';
-                wsprintfA(desc_buf, "%s\r\nEnemy HP: [%s] %d/%d | Hull: %d%%\r\n1: Fire Lasers  2: Flee\r\n3: Fire Superweapon [%d charges]", combat_log, bar, pirate_hp, enemy_max_hp, res_hull, superweapon_charges);
+                wsprintfA(desc_buf, "%s\r\nEnemy HP: [%s] %d/%d | Hull: %d%%\r\n1: Lasers  2: Flee  3: Superweapon [%d]  4: Shield Matrix (+20%%)", combat_log, bar, pirate_hp, enemy_max_hp, res_hull, superweapon_charges);
                 desc = desc_buf;
             }
+        }
+        else if (modal_enc_type == 23) {
+            title = "FLARELIGHT ARCHIVE BEACON";
+            desc = "Demoscene FLARELIGHT 1999 satellite relay.\r\n1: Download Tracker MODs (+25 Morale, +150C)\r\n2: Extract x86 Kernels (+2 Tech, +200C)\r\nSPACE: Leave Orbit";
         }
         else if (modal_enc_type == 16) {
             title = "FACTION WAR ZONE";
@@ -1634,15 +1745,15 @@ void Draw(HDC hdc, RECT* rect) {
                 ptype = systems[active_sys_idx].planets[0];
             }
             if (ptype == 1) {
-                desc = "Gas Giant Atmosphere:\r\n1: Skim Atmospheric Hydrogen (+450 Fuel, Risk Hull)\r\n2: Orbital Slingshot (+20 Morale)\r\nSPACE: Leave Orbit";
+                desc = "Gas Giant Atmosphere:\r\n1: Skim Atmospheric Hydrogen (+450 Fuel, Risk Hull)\r\n2: Orbital Slingshot (+20 Morale)\r\n3: Deep Sensor Ping (-80 Fuel, +Tech/Min)\r\nSPACE: Leave Orbit";
             } else if (ptype == 2) {
-                desc = "Glacial Ice World:\r\n1: Drill Glacial Core (+2 Min, +200 Fuel, Risk Morale)\r\n2: Establish Sub-Ice Outpost (+25 Morale)\r\nSPACE: Leave Orbit";
+                desc = "Glacial Ice World:\r\n1: Drill Glacial Core (+2 Min, +200 Fuel, Risk Morale)\r\n2: Establish Sub-Ice Outpost (+25 Morale)\r\n3: Deep Sensor Ping (-80 Fuel, +Tech/Min)\r\nSPACE: Leave Orbit";
             } else if (ptype == 3) {
-                desc = "Molten Volcanic World:\r\n1: Excavate Magma Caldera (+3 Min, +1 Tech, Risk Hull)\r\n2: Siphon Geothermal Energy (+300 Fuel)\r\nSPACE: Leave Orbit";
+                desc = "Molten Volcanic World:\r\n1: Excavate Magma Caldera (+3 Min, +1 Tech, Risk Hull)\r\n2: Siphon Geothermal Energy (+300 Fuel)\r\n3: Deep Sensor Ping (-80 Fuel, +Tech/Min)\r\nSPACE: Leave Orbit";
             } else if (ptype == 4) {
-                desc = "Barren Dead Rock:\r\n1: Unearth Subterranean Vaults (+2 Tech, Risk Crew)\r\n2: Surface Sensor Survey (+1 Tech, +15 Morale)\r\nSPACE: Leave Orbit";
+                desc = "Barren Dead Rock:\r\n1: Unearth Subterranean Vaults (+2 Tech, Risk Crew)\r\n2: Surface Sensor Survey (+1 Tech, +15 Morale)\r\n3: Deep Sensor Ping (-80 Fuel, +Tech/Min)\r\nSPACE: Leave Orbit";
             } else {
-                desc = "Terrestrial World:\r\n1: Explore Lush Ecosystem (+2 Min, Risk Morale)\r\n2: Crew Shore Leave (+25 Morale)\r\nSPACE: Leave Orbit";
+                desc = "Terrestrial World:\r\n1: Explore Lush Ecosystem (+2 Min, Risk Morale)\r\n2: Crew Shore Leave (+25 Morale)\r\n3: Deep Sensor Ping (-80 Fuel, +Tech/Min)\r\nSPACE: Leave Orbit";
             }
         }
         else if (modal_enc_type == 12) {
@@ -1850,14 +1961,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 return 0;
             }
             if (modal_open && wParam == VK_ESCAPE) {
-                int in_combat = (modal_enc_type == 1 || modal_enc_type == 13 || modal_enc_type == 19 || modal_enc_type == 20 || modal_enc_type == 21);
+                int in_combat = (modal_enc_type == 1 || modal_enc_type == 13 || modal_enc_type == 19 || modal_enc_type == 20 || modal_enc_type == 21 || modal_enc_type == 22);
                 if (!in_combat || pirate_hp <= 0) {
                     modal_open = 0;
                     return 0;
                 }
             }
             if (modal_open) {
-                if (modal_enc_type == 1 || modal_enc_type == 13 || modal_enc_type == 19 || modal_enc_type == 20 || modal_enc_type == 21) {
+                if (modal_enc_type == 1 || modal_enc_type == 13 || modal_enc_type == 19 || modal_enc_type == 20 || modal_enc_type == 21 || modal_enc_type == 22) {
                     if (res_hull <= 0) {
                         if (wParam == VK_SPACE || wParam == VK_RETURN || wParam == VK_ESCAPE) { PostQuitMessage(0); }
                     } else if (pirate_hp <= 0) {
@@ -1881,6 +1992,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 res_credits += 500;
                                 cargo_tech += 4;
                                 faction_rep[1] += 20;
+                            } else if (modal_enc_type == 22) {
+                                res_credits += 420;
+                                cargo_tech += 3;
+                                cargo_minerals += 4;
+                                res_morale = (res_morale + 15 > 100) ? 100 : res_morale + 15;
                             }
                             modal_open = 0;
                         }
@@ -1906,6 +2022,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             else if (modal_enc_type == 19) base_enemy_dmg = 24;
                             else if (modal_enc_type == 20) base_enemy_dmg = 26;
                             else if (modal_enc_type == 21) base_enemy_dmg = 34;
+                            else if (modal_enc_type == 22) base_enemy_dmg = 28;
 
                             int s_dmg = base_enemy_dmg - upg_shields * 3 + (rand() % 6);
                             int e_idx = GetOfficer(3);
@@ -1939,7 +2056,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 }
                             } else {
                                 SpawnExplosion((float)ship_x, (float)(ship_y - 40), 60, RGB(255, 50, 0), RGB(200, 200, 200));
-                                if (modal_enc_type == 13 || modal_enc_type == 21) {
+                                if (modal_enc_type == 13 || modal_enc_type == 21 || modal_enc_type == 22) {
                                     boss_whiteout = 1.0f;
                                     screen_shake = 30;
                                 }
@@ -1952,7 +2069,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 AddXP(2, 25);
                             }
                         } else if (wParam == '2') {
-                            int s_dmg = (modal_enc_type == 13 || modal_enc_type == 21 ? 25 : 15) - upg_shields * 2;
+                            int s_dmg = (modal_enc_type == 13 || modal_enc_type == 21 || modal_enc_type == 22 ? 25 : 15) - upg_shields * 2;
                             if (s_dmg < 0) s_dmg = 0;
                             res_hull -= s_dmg;
                             res_morale -= 5;
@@ -1961,8 +2078,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             wsprintfA(combat_log, "You fled! Took %d damage.", s_dmg);
                             modal_enc_type = 10;
                         } else if (wParam == '3') {
-                            ExecuteSuperweaponAttack(modal_enc_type == 13 || modal_enc_type == 21);
+                            ExecuteSuperweaponAttack(modal_enc_type == 13 || modal_enc_type == 21 || modal_enc_type == 22);
+                        } else if (wParam == '4' || wParam == 'B' || wParam == 'b') {
+                            if (res_fuel >= 250.0f && res_hull < 100) {
+                                res_fuel -= 250.0f;
+                                res_hull = (res_hull + 20 > 100) ? 100 : res_hull + 20;
+                                int e_idx = GetOfficer(3);
+                                if (e_idx != -1) AddXP(3, 15);
+                                PlaySoundEffect(5);
+                                SpawnShockwave((float)ship_x, (float)ship_y, 45.0f, RGB(0, 255, 255));
+                                wsprintfA(combat_log, "Emergency deflectors boosted (+20%% Hull, -250 Fuel)!");
+                            } else if (res_fuel < 250.0f) {
+                                wsprintfA(combat_log, "Insufficient fuel for deflector matrix (-250 Fuel needed)!");
+                            } else {
+                                wsprintfA(combat_log, "Hull integrity already at 100%%!");
+                            }
                         }
+                    }
+                } else if (modal_enc_type == 23) {
+                    if (wParam == '1') {
+                        res_morale = (res_morale + 25 > 100) ? 100 : res_morale + 25;
+                        res_credits += 150;
+                        PlaySoundEffect(6);
+                        lstrcpyA(combat_log, "Decoded FLARELIGHT tracker chiptunes! Crew spirits soared (+25 Morale, +150C).");
+                        modal_enc_type = 11;
+                    } else if (wParam == '2') {
+                        cargo_tech += 2;
+                        res_credits += 200;
+                        PlaySoundEffect(3);
+                        lstrcpyA(combat_log, "Extracted optimized x86 assembly routines (+2 Tech, +200C).");
+                        modal_enc_type = 11;
+                    } else if (wParam == VK_SPACE || wParam == VK_RETURN) {
+                        modal_open = 0;
                     }
                 } else if (modal_enc_type == 16) {
                     if (wParam == '1') {
@@ -2144,6 +2291,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         } else {
                             res_morale += 25; if (res_morale > 100) res_morale = 100;
                             lstrcpyA(combat_log, "Crew shore leave on idyllic world (+25 Morale).");
+                        }
+                        modal_enc_type = 11;
+                    } else if (wParam == '3') {
+                        if (res_fuel >= 80.0f) {
+                            res_fuel -= 80.0f;
+                            int roll = rand() % 3;
+                            if (roll == 0) {
+                                cargo_minerals += 3;
+                                lstrcpyA(combat_log, "Orbital spectrometry discovered subterranean mineral veins (+3 Minerals).");
+                            } else if (roll == 1) {
+                                cargo_tech += 2;
+                                lstrcpyA(combat_log, "Deep sub-surface radar mapped a buried alien satellite probe (+2 Tech).");
+                            } else {
+                                res_credits += 160;
+                                lstrcpyA(combat_log, "Detected anomalous rare isotope telemetry. Sold data for 160 Credits.");
+                            }
+                            PlaySoundEffect(6);
+                        } else {
+                            lstrcpyA(combat_log, "Insufficient fuel for orbital sensor sweep (-80 Fuel needed).");
                         }
                         modal_enc_type = 11;
                     } else if (wParam == VK_SPACE) {

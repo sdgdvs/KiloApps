@@ -279,81 +279,104 @@
       showToast(soundMuted ? 'Audio muted' : 'Audio enabled');
     }
 
-    function playLaser() {
+    function playFM(cType, mType, cFreq, mRatio, modIndex, duration, envDecay, gainAmt = 0.28) {
       if (soundMuted) return;
-      if(audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
-      gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.2);
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      try {
+        const now = audioCtx.currentTime;
+        const carrier = audioCtx.createOscillator();
+        const modulator = audioCtx.createOscillator();
+        const modGain = audioCtx.createGain();
+        const mainGain = audioCtx.createGain();
+
+        carrier.type = cType;
+        modulator.type = mType;
+
+        carrier.frequency.setValueAtTime(cFreq, now);
+        modulator.frequency.setValueAtTime(cFreq * mRatio, now);
+
+        modGain.gain.setValueAtTime(cFreq * modIndex, now);
+        modGain.gain.exponentialRampToValueAtTime(0.01, now + envDecay);
+
+        mainGain.gain.setValueAtTime(gainAmt, now);
+        mainGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(mainGain);
+        mainGain.connect(audioCtx.destination);
+
+        modulator.start(now);
+        carrier.start(now);
+        modulator.stop(now + duration);
+        carrier.stop(now + duration);
+      } catch (e) {}
+    }
+
+    function playLaser() {
+      playFM('sawtooth', 'sine', 760, 2.5, 4.0, 0.22, 0.16, 0.32);
     }
     function playSuperweapon() {
-      if (soundMuted) return;
-      if(audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(200, audioCtx.currentTime);
-      osc.frequency.linearRampToValueAtTime(1200, audioCtx.currentTime + 0.4);
-      gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.5);
+      playFM('triangle', 'sawtooth', 140, 0.5, 6.5, 0.55, 0.45, 0.45);
+    }
+    function playShieldBoost() {
+      playFM('sine', 'sine', 340, 1.5, 3.2, 0.38, 0.3, 0.28);
     }
     function playAlarm() {
-      if (soundMuted) return;
-      if(audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-      osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.2);
-      osc.frequency.setValueAtTime(400, audioCtx.currentTime + 0.4);
-      osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.6);
-      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.8);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.8);
+      playFM('square', 'sine', 480, 1.25, 2.0, 0.35, 0.25, 0.22);
     }
-    
+    function playBeacon() {
+      playFM('sine', 'sine', 880, 2.0, 1.8, 0.45, 0.38, 0.22);
+    }
+    function playChime() {
+      playFM('sine', 'sine', 660, 1.5, 2.2, 0.32, 0.26, 0.26);
+    }
+
     let humOsc = null;
+    let humMod = null;
+    let humModGain = null;
     let humGain = null;
     function setHum(active) {
       if (soundMuted) {
         if (humOsc) {
-          try { humOsc.stop(); humOsc.disconnect(); } catch(e) {}
-          humOsc = null;
-          humGain = null;
+          try {
+            humOsc.stop(); humMod.stop();
+            humOsc.disconnect(); humMod.disconnect();
+          } catch(e) {}
+          humOsc = null; humMod = null; humModGain = null; humGain = null;
         }
         return;
       }
-      if(audioCtx.state === 'suspended') audioCtx.resume();
-      if(active && !humOsc) {
-        humOsc = audioCtx.createOscillator();
-        humGain = audioCtx.createGain();
-        humOsc.type = 'sine';
-        humOsc.frequency.value = 60;
-        humGain.gain.value = 0.08;
-        humOsc.connect(humGain);
-        humGain.connect(audioCtx.destination);
-        humOsc.start();
-      } else if(!active && humOsc) {
-        humOsc.stop();
-        humOsc.disconnect();
-        humGain.disconnect();
-        humOsc = null;
-        humGain = null;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (active && !humOsc) {
+        try {
+          humOsc = audioCtx.createOscillator();
+          humMod = audioCtx.createOscillator();
+          humModGain = audioCtx.createGain();
+          humGain = audioCtx.createGain();
+
+          humOsc.type = 'sine';
+          humMod.type = 'triangle';
+          humOsc.frequency.value = 58;
+          humMod.frequency.value = 14.5;
+          humModGain.gain.value = 12;
+          humGain.gain.value = 0.07;
+
+          humMod.connect(humModGain);
+          humModGain.connect(humOsc.frequency);
+          humOsc.connect(humGain);
+          humGain.connect(audioCtx.destination);
+
+          humMod.start();
+          humOsc.start();
+        } catch (e) {}
+      } else if (!active && humOsc) {
+        try {
+          humOsc.stop(); humMod.stop();
+          humOsc.disconnect(); humMod.disconnect();
+          humModGain.disconnect(); humGain.disconnect();
+        } catch (e) {}
+        humOsc = null; humMod = null; humModGain = null; humGain = null;
       }
     }
 
@@ -500,7 +523,7 @@
         { type: 'White Dwarf', color: '#ffffff', corona: 'rgba(200, 240, 255, 0.5)', minP: 0, maxP: 1, size: 2.5 }
       ];
       const planetTypes = ['Terrestrial', 'Gas Giant', 'Ice World', 'Lava', 'Barren'];
-      const encounterPool = ['Pirates', 'Anomaly', 'Trader', 'Station', 'Story', 'None', 'Fleet', 'Diplomacy', 'FactionWar', 'Boarding', 'Superweapon', 'XenonHunter', 'SyndicateFrigate', 'PrecursorRuin'];
+      const encounterPool = ['Pirates', 'Anomaly', 'Trader', 'Station', 'Story', 'None', 'Fleet', 'Diplomacy', 'FactionWar', 'Boarding', 'Superweapon', 'XenonHunter', 'SyndicateFrigate', 'PrecursorRuin', 'VoidLeviathan', 'FlarelightBeacon'];
 
       for (let i = 0; i < 220; i++) {
         const sType = starTypes[Math.floor(Math.random() * starTypes.length)];
@@ -1123,6 +1146,105 @@
         pCtx.beginPath();
         pCtx.arc(0, 2, 5, 0, Math.PI * 2);
         pCtx.fill();
+        pCtx.restore();
+      } else if (type === 'VoidLeviathan') {
+        pCtx.save();
+        pCtx.translate(cx, cy + Math.sin(time * 0.002) * 4);
+
+        // Bioluminescent Undulating Tentacles
+        pCtx.strokeStyle = 'rgba(6, 182, 212, 0.7)';
+        pCtx.lineWidth = 2;
+        for (let t = -3; t <= 3; t++) {
+          pCtx.beginPath();
+          pCtx.moveTo(t * 8, 14);
+          let wave = Math.sin(time * 0.004 + t) * 12;
+          pCtx.bezierCurveTo(t * 12 + wave, 28, t * 16 - wave, 42, t * 10 + wave * 1.5, 54);
+          pCtx.stroke();
+        }
+
+        // Chitinous Organic Bioship Carapace
+        let bioGrad = pCtx.createRadialGradient(0, -6, 4, 0, -2, 34);
+        bioGrad.addColorStop(0, '#064e3b');
+        bioGrad.addColorStop(0.5, '#022c22');
+        bioGrad.addColorStop(1, '#06131c');
+
+        pCtx.fillStyle = bioGrad;
+        pCtx.strokeStyle = '#10b981';
+        pCtx.lineWidth = 2;
+        pCtx.beginPath();
+        pCtx.moveTo(0, -32);
+        pCtx.bezierCurveTo(28, -26, 36, 4, 18, 18);
+        pCtx.bezierCurveTo(6, 24, -6, 24, -18, 18);
+        pCtx.bezierCurveTo(-36, 4, -28, -26, 0, -32);
+        pCtx.closePath();
+        pCtx.fill();
+        pCtx.stroke();
+
+        // Pulsing Ocular Cluster
+        let pulseGlow = Math.sin(time * 0.006) * 3 + 6;
+        pCtx.fillStyle = '#34d399';
+        pCtx.shadowColor = '#34d399';
+        pCtx.shadowBlur = pulseGlow;
+        pCtx.beginPath();
+        pCtx.arc(0, -8, 5, 0, Math.PI * 2);
+        pCtx.arc(-10, -4, 3, 0, Math.PI * 2);
+        pCtx.arc(10, -4, 3, 0, Math.PI * 2);
+        pCtx.fill();
+
+        pCtx.restore();
+      } else if (type === 'FlarelightBeacon') {
+        pCtx.save();
+        pCtx.translate(cx, cy);
+
+        // Expanding RF Chiptune Broadcast Waves
+        let rWave = (time % 1600) / 1600;
+        pCtx.strokeStyle = `rgba(56, 189, 248, ${1.0 - rWave})`;
+        pCtx.lineWidth = 1.5;
+        pCtx.beginPath();
+        pCtx.arc(0, 0, 10 + rWave * 38, 0, Math.PI * 2);
+        pCtx.stroke();
+
+        // Photovoltaic Solar Panels
+        pCtx.fillStyle = '#0f172a';
+        pCtx.strokeStyle = '#38bdf8';
+        pCtx.lineWidth = 1.5;
+        pCtx.fillRect(-48, -12, 28, 24);
+        pCtx.strokeRect(-48, -12, 28, 24);
+        pCtx.fillRect(20, -12, 28, 24);
+        pCtx.strokeRect(20, -12, 28, 24);
+
+        // Solar Grid Lines
+        pCtx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+        pCtx.beginPath();
+        pCtx.moveTo(-34, -12); pCtx.lineTo(-34, 12);
+        pCtx.moveTo(-48, 0); pCtx.lineTo(-20, 0);
+        pCtx.moveTo(34, -12); pCtx.lineTo(34, 12);
+        pCtx.moveTo(20, 0); pCtx.lineTo(48, 0);
+        pCtx.stroke();
+
+        // Central Satellite Body
+        pCtx.fillStyle = '#334155';
+        pCtx.strokeStyle = '#f59e0b';
+        pCtx.lineWidth = 2;
+        pCtx.fillRect(-12, -16, 24, 32);
+        pCtx.strokeRect(-12, -16, 24, 32);
+
+        // Antenna Spire
+        pCtx.strokeStyle = '#f8fafc';
+        pCtx.beginPath();
+        pCtx.moveTo(0, -16);
+        pCtx.lineTo(0, -34);
+        pCtx.moveTo(-6, -30);
+        pCtx.lineTo(6, -30);
+        pCtx.stroke();
+
+        // Blinking Tracker LEDs
+        let ledStrobe = (Math.floor(time / 250) % 2 === 0);
+        pCtx.fillStyle = ledStrobe ? '#10b981' : '#047857';
+        pCtx.fillRect(-6, 2, 4, 4);
+        pCtx.fillStyle = !ledStrobe ? '#eab308' : '#713f12';
+        pCtx.fillRect(2, 2, 4, 4);
+
         pCtx.restore();
       } else if (type === 'FactionWar') {
         pCtx.save();
@@ -1896,7 +2018,7 @@
         });
       };
 
-      if (['Pirates', 'Fleet', 'XenonHunter', 'SyndicateFrigate', 'PrecursorRuin'].includes(type)) {
+      if (['Pirates', 'Fleet', 'XenonHunter', 'SyndicateFrigate', 'PrecursorRuin', 'VoidLeviathan'].includes(type)) {
         playAlarm();
         let enemyHp = 50;
         let enemyMaxHp = 50;
@@ -1924,6 +2046,11 @@
           baseEnemyDmg = 34;
           enemyName = "Precursor Monolith Guardian";
           introMsg = "An ancient automated Precursor Monolith awakens and opens fire!";
+        } else if (type === 'VoidLeviathan') {
+          enemyHp = enemyMaxHp = 180;
+          baseEnemyDmg = 28;
+          enemyName = "Void Leviathan Bioship";
+          introMsg = "A colossal Void Leviathan uncoils ancient bio-electric tentacles!";
         }
 
         state.bossHp = enemyHp;
@@ -1950,6 +2077,10 @@
                   rewardC = 500; techBonus = 3;
                   state.superweapon.charges = state.superweapon.maxCharges;
                   state.factions.Independent += 20;
+                } else if (type === 'VoidLeviathan') {
+                  rewardC = 420; techBonus = 3; minBonus = 4;
+                  state.resources.morale = Math.min(100, state.resources.morale + 15);
+                  state.factions.Independent += 15;
                 }
 
                 addBtn(`Claim Victory Loot (+${rewardC}C${techBonus ? ', +'+techBonus+'T' : ''}${minBonus ? ', +'+minBonus+'M' : ''})`, () => {
@@ -2044,6 +2175,19 @@
                         updateCombatBtns(result);
                         updateUI();
                     }, true);
+                }
+                if (state.resources.fuel >= 250 && state.resources.hull < 100) {
+                    addBtn('Shield Matrix Boost (-250 Fuel, +20% Hull)', () => {
+                        state.resources.fuel -= 250;
+                        state.resources.hull = Math.min(100, state.resources.hull + 20);
+                        playShieldBoost();
+                        spawnShockwave(state.ship.x, state.ship.y, 50, '#00ffff');
+                        let eIdx = getOfficer(3);
+                        if (eIdx !== -1) addXP(3, 15);
+                        showToast('Emergency deflector shields restored +20% Hull!');
+                        updateCombatBtns(`Diverted 250 fuel to recharge emergency deflectors (+20% Hull)!`);
+                        updateUI();
+                    });
                 }
                 addBtn('Flee', () => {
                     let sDmg = Math.max(0, 15 - state.upgrades.shields * 2);
@@ -2517,6 +2661,31 @@
                 state.modalOpen = false;
             });
         }
+      } else if (type === 'FlarelightBeacon') {
+        playBeacon();
+        title.innerText = "FLARELIGHT ARCHIVE BEACON";
+        desc.innerText = "Deep-space optical scanners intercept a vintage 1999 FLARELIGHT demoscene archival satellite! Its high-gain dish is broadcasting 16-bit tracker chiptunes and optimized x86 assembly routines across the cosmos.";
+        addBtn('Download Chiptune Modules (+25 Morale, +150C)', () => {
+          state.resources.morale = Math.min(100, state.resources.morale + 25);
+          state.resources.credits += 150;
+          playChime();
+          showToast('Crew morale surges listening to classic FLARELIGHT tracker chiptunes!');
+          desc.innerText = "Decoded 4-channel MOD tracker files. Crew spirits soared (+25 Morale, +150 Credits)!";
+          actions.innerHTML = ''; closeBtn(); updateUI();
+        });
+        addBtn('Decompile Demoscene Assembler Kernels (+2 Tech, +200C)', () => {
+          state.cargo.tech += 2;
+          state.resources.credits += 200;
+          playLaser();
+          showToast('Recovered demoscene assembly kernels (+2 Tech, +200C)!');
+          desc.innerText = "Extracted mathematical assembly transformation routines from satellite firmware (+2 Tech, +200 Credits)!";
+          actions.innerHTML = ''; closeBtn(); updateUI();
+        });
+        addBtn('Leave Beacon in Orbit', () => {
+          modal.style.display = 'none';
+          state.modalOpen = false;
+          updateUI();
+        });
       } else if (type === 'Land') {
         const nearby = state.stars.filter(s => Math.hypot(s.x - state.ship.x, s.y - state.ship.y) < 55);
         const curStar = nearby.length > 0 ? nearby[0] : null;
@@ -2627,6 +2796,26 @@
                 actions.innerHTML = ''; closeBtn(); updateUI();
             });
         }
+        addBtn('Deep Spectrometric Sensor Scan (-80 Fuel)', () => {
+            if (state.resources.fuel >= 80) {
+                state.resources.fuel -= 80;
+                playChime();
+                let roll = Math.random();
+                if (roll < 0.4) {
+                    state.cargo.minerals += 3;
+                    desc.innerText = "Orbital spectrometry located subterranean mineral vein! (+3 Minerals)";
+                } else if (roll < 0.75) {
+                    state.cargo.tech += 2;
+                    desc.innerText = "Deep sub-surface radar mapped an ancient buried satellite probe! (+2 Tech)";
+                } else {
+                    state.resources.credits += 160;
+                    desc.innerText = "Detected anomalous rare element isotopes. Sold data to cartographers (+160 Credits)!";
+                }
+            } else {
+                desc.innerText = "Insufficient fuel to power deep orbital sensor arrays (-80 Fuel needed).";
+            }
+            actions.innerHTML = ''; closeBtn(); updateUI();
+        });
         addBtn('Leave Orbit', () => {
             modal.style.display = 'none';
             state.modalOpen = false;
@@ -2771,7 +2960,7 @@
         state.ship.moving = true;
         state.ship.targetAngle = Math.atan2(dx, -dy);
         setHum(true);
-        let fuelBurn = (state.modules && state.modules.ramscoop) ? 0.65 : 1.0;
+        let fuelBurn = (state.modules && state.modules.ramscoop) ? 0.45 : 0.8;
         state.resources.fuel -= fuelBurn;
         if (state.resources.fuel < 0) state.resources.fuel = 0;
         if (Math.random() < 0.1) addXP(1, 1);
@@ -3217,7 +3406,7 @@
       }
       if (e.key === 'Escape') {
         const modal = document.getElementById('modal');
-        const isCombat = ['Pirates', 'Fleet', 'XenonHunter', 'SyndicateFrigate', 'PrecursorRuin'].includes(state.currentEncounter);
+        const isCombat = ['Pirates', 'Fleet', 'XenonHunter', 'SyndicateFrigate', 'PrecursorRuin', 'VoidLeviathan'].includes(state.currentEncounter);
         if (state.modalOpen) {
           if (state.resources.hull <= 0) {
             location.reload();

@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-25T10:45:00Z — kilo-qa: KMystery (Pass 5: Tutorial & State Integrity Audit)**
+  - Status: PASS ✅ (Quicksave/load full-state restoration, first-run tutorial flag & toast de-occlusion complete; 0 regressions).
+  - State Persistence: Upgraded Quicksave/Load (F5/F9) across web localStorage & native `kmystery_save.dat` to capture complete state including active lab analysis & interrogations.
+  - Tutorial Integrity: Enforced first-run Detective's Manual prompt behind `kmystery_tutorialSeen` / `kmystery_tutorial.dat` without interrupting saved cases.
+  - Toast & Modals: Re-anchored toast bar to top-center (top: 52px) preventing action/travel button occlusion; added backdrop dismissal to modals.
+  - Keyboard & UX: Added Enter/Space modal dismiss, escape handlers, and start screen Resume Saved Case [F9] button.
+  - Verification: Clean MSVC compile (`KMystery.exe` 33.5 KB); clean Vite build in 392ms (`kmystery.html` 118.8 KB); security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-25T09:51:00Z — kilo-graphics: KWizard (Visual Polish, Glint Purge & Spell Balance Pass)**
   - Status: PASS ✅ (Perimeter dots & rotating glints purged; Time Warp, Counterspell & Cold Snap activated; 0 regressions).
   - Glint Purge: Removed rotating staff ring and orbital perimeter dots from arcane runic circle in web and Win32 C.
