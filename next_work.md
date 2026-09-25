@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-tester
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -16,7 +16,7 @@ current_targets:
   kilo_usability: KJournal
   kilo_graphics: KChrono
   kilo_qa: KSanctuary
-  kilo_expander: KJournal
+  kilo_expander: KCalendar
   kilo_creator: "kweb://darknet (Tier 3 Ghost Node Terminal & Cryptic Decoders)"
 virtual_web_target: "kweb://webring"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-qa
-  app: KQuest
-  timestamp: "2026-09-25T16:45:00Z"
+  agent: kilo-expander
+  app: KJournal
+  timestamp: "2026-09-25T17:55:00Z"
 last_planner_run: "2026-09-25T06:42:00Z"
 ---
 
@@ -125,9 +125,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KMystery`, `KQuest` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KMaze, KMech, KMystery, KQuest, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KJournal`
+- **Current Target**: `KCalendar`
 - **Upcoming Queue**:
-  `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote` *(Completed: KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo)*.
+  `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote` *(Completed: KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -206,6 +206,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-25T17:55:00Z — kilo-expander: KJournal (Deep Feature Expansion & Multi-Notebook Pass)**
+  - Status: PASS ✅ (Multi-notebook categories, live markdown preview, CSV/Book exports, mood filter; 0 regressions).
+  - Notebook Categories: Added 5 notebook categories (Personal, Work, Ideas, Dreams, Wellness) with tab filtering.
+  - Markdown Engine: Integrated live split & preview mode with custom parser (headings, quotes, task checkboxes, lists).
+  - Toolbar & Productivity: Added formatting toolbar, daily prompt generator (25+ prompts), and day-of-week rhythm analytics.
+  - Export & Portability: Expanded data exports to include spreadsheet CSV and printable HTML chronicle; added CSV to native C.
+  - Toast & Ergonomics: Positioned toast alerts safely to top-right (top: 60px) preventing bottom goal bar occlusion.
+  - Verification: Clean MSVC compile (`KJournal.exe` 196 KB); Vite clean build in 386ms (`kjournal.html` 114.1 KB); security lint 100% PASS.
+
 - **2026-09-25T16:45:00Z — kilo-qa: KQuest (Pass 5: Tutorial & State Integrity Audit)**
   - Status: PASS ✅ (Full state persistence, first-run tutorial flag, toast de-occlusion & glint purge; 0 regressions).
   - State Persistence: Upgraded quicksave/load (F5/F9) across web & native to capture active battle/enemy state and prevent quota exceptions.
@@ -240,15 +249,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Storage & Presets: Added JSON export/import for game saves and decks; added 4 deck archetypes (Pyro, Cryo, Arcane, Druid).
   - Toast Occlusion: Re-anchored toasts to bottom-center pill preventing occlusion of top action buttons and modal controls.
   - Verification: Clean MSVC compile (`KWizard.exe` 10.4 KB); clean Vite build in 389ms (`kwizard.html` 94.4 KB); security lint 100% PASS.
-
-- **2026-09-25T12:42:00Z — kilo-creator: kweb://portal (Yahoo/Excite 1999 Directory Upgrade & Deep Expansion)**
-  - Status: PASS ✅ (Simulated search across 98 apps, live stocks with portfolio trader, classifieds & trivia complete; 0 regressions).
-  - Search Engine: KiloSearch 1.0 indexing all 98 apps and webring destinations with instant live query and category filtering.
-  - Stock Exchange & Portfolio: Real-time NASDAQ-1999 ticker banner & $10k interactive brokerage desk with buy/sell order execution.
-  - Classified Ads Board: Categorized listings with local persistence, free ad submission modal, and simulated KMail reply dispatcher.
-  - Meteorological Station: Multi-city weather outlook (NY, SF, London, Tokyo, Orbital Station) with live atmospheric metrics & 3-day forecast.
-  - Retro Trivia & Audio: 12-question computing quiz with streak scoring; Yamaha YM2612 2-operator FM synth & SPC700 stereo delay sound effects.
-  - Verification: Clean Vite build in 351ms; security lint 100% PASS; portal.html 110.2 KB (<999KB ceiling); Webring member #001 verified.
 
 
 

@@ -430,15 +430,230 @@
     transform: translateY(-1px);
   }
 
-  /* Notification Toast */
+  /* Notebook Tabs & Sections */
+  .notebook-section {
+    padding: 8px 12px 6px 12px;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(33, 38, 49, 0.4);
+  }
+  .notebook-tabs {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: thin;
+  }
+  .notebook-tab {
+    font-size: 11px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 3px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .notebook-tab:hover {
+    background: var(--border-color);
+    color: var(--text-bright);
+  }
+  .notebook-tab.active {
+    background: var(--accent-gold);
+    color: #111;
+    border-color: var(--accent-gold);
+    font-weight: 600;
+  }
+
+  /* Mood Filter Bar in Sidebar */
+  .mood-filter-section {
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .mood-filter-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: bold;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .mood-filter-chips {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .mood-filter-chip {
+    font-size: 11px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    padding: 2px 7px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text-main);
+  }
+  .mood-filter-chip:hover {
+    background: var(--border-color);
+    color: var(--text-bright);
+  }
+  .mood-filter-chip.active {
+    border-color: var(--accent-gold);
+    background: rgba(229, 192, 123, 0.15);
+    color: var(--accent-gold);
+    font-weight: 600;
+  }
+
+  /* Formatting Toolbar & Editor Mode Switcher */
+  .editor-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 16px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .format-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .fmt-btn {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+  .fmt-btn:hover {
+    background: var(--border-color);
+    color: var(--text-bright);
+    border-color: var(--accent-gold);
+  }
+  .view-mode-toggle {
+    display: flex;
+    gap: 2px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 2px;
+  }
+  .mode-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .mode-btn:hover { color: var(--text-bright); }
+  .mode-btn.active {
+    background: var(--bg-secondary);
+    color: var(--accent-gold);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  /* Editor Workspace */
+  .editor-workspace {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+    min-height: 0;
+  }
+  .editor-workspace.mode-edit textarea.journal-editor { display: block; flex: 1; width: 100%; }
+  .editor-workspace.mode-edit .journal-preview { display: none; }
+
+  .editor-workspace.mode-preview textarea.journal-editor { display: none; }
+  .editor-workspace.mode-preview .journal-preview { display: block; flex: 1; width: 100%; }
+
+  .editor-workspace.mode-split textarea.journal-editor { display: block; flex: 1; width: 50%; border-right: 1px solid var(--border-color); }
+  .editor-workspace.mode-split .journal-preview { display: block; flex: 1; width: 50%; }
+
+  .journal-preview {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    padding: 16px 20px;
+    overflow-y: auto;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-main);
+    background: transparent;
+  }
+  .journal-preview h1, .journal-preview h2, .journal-preview h3 {
+    color: var(--accent-gold);
+    margin: 14px 0 8px 0;
+  }
+  .journal-preview h1 { font-size: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; }
+  .journal-preview h2 { font-size: 17px; }
+  .journal-preview h3 { font-size: 15px; }
+  .journal-preview p { margin-bottom: 10px; }
+  .journal-preview blockquote {
+    border-left: 3px solid var(--accent-gold);
+    padding: 6px 12px;
+    margin: 10px 0;
+    background: rgba(229, 192, 123, 0.06);
+    color: var(--text-bright);
+    font-style: italic;
+    border-radius: 0 4px 4px 0;
+  }
+  .journal-preview ul, .journal-preview ol {
+    margin: 8px 0 10px 24px;
+  }
+  .journal-preview li {
+    margin-bottom: 4px;
+  }
+  .journal-preview hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 16px 0;
+  }
+  .journal-preview .task-item {
+    list-style: none;
+    margin-left: -20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .journal-preview .task-check {
+    accent-color: var(--accent-gold);
+  }
+  .journal-preview .preview-tag {
+    display: inline-block;
+    color: var(--accent-cyan);
+    background: rgba(86, 182, 194, 0.12);
+    border: 1px solid rgba(86, 182, 194, 0.3);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  /* Notification Toast (Non-occluding top-anchored bar per fleet standard) */
   #toast {
-    position: fixed; bottom: 20px; right: 20px;
+    position: fixed; top: 60px; right: 20px;
     background: var(--accent-gold); color: #111; font-weight: 600;
     padding: 10px 14px 10px 18px; border-radius: 8px; box-shadow: var(--card-shadow);
-    transform: translateY(100px); opacity: 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateY(-20px); opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 2000; display: flex; align-items: center; gap: 12px; max-width: 420px;
   }
-  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
   #toast button {
     background: rgba(0,0,0,0.15); border: none; color: #111; width: 22px; height: 22px;
     border-radius: 50%; cursor: pointer; font-size: 11px; font-weight: bold;
@@ -507,6 +722,18 @@
       </div>
     </div>
 
+    <!-- Notebook / Category Filter Tabs -->
+    <div class="notebook-section">
+      <div class="notebook-tabs" id="notebookTabs" role="tablist" title="Filter by Journal Notebook">
+        <button class="notebook-tab active" data-category="all" onclick="selectCategoryFilter('all')">🌟 All</button>
+        <button class="notebook-tab" data-category="personal" onclick="selectCategoryFilter('personal')">📔 Personal</button>
+        <button class="notebook-tab" data-category="work" onclick="selectCategoryFilter('work')">💼 Work</button>
+        <button class="notebook-tab" data-category="ideas" onclick="selectCategoryFilter('ideas')">💡 Ideas</button>
+        <button class="notebook-tab" data-category="dreams" onclick="selectCategoryFilter('dreams')">🌙 Dreams</button>
+        <button class="notebook-tab" data-category="wellness" onclick="selectCategoryFilter('wellness')">🧘 Health</button>
+      </div>
+    </div>
+
     <!-- Calendar View -->
     <div class="cal-container">
       <div class="cal-header">
@@ -518,6 +745,23 @@
         </div>
       </div>
       <div class="cal-grid" id="calGrid"></div>
+    </div>
+
+    <!-- Quick Mood Filter Section -->
+    <div class="mood-filter-section">
+      <div class="mood-filter-title">
+        <span>Mood Filter</span>
+        <span id="moodFilterActiveLabel" style="font-size:10px; color:var(--accent-gold); text-transform:none; cursor:pointer;" onclick="selectMoodFilter('')">Reset [All]</span>
+      </div>
+      <div class="mood-filter-chips" id="moodFilterChips">
+        <span class="mood-filter-chip active" data-filter-mood="" onclick="selectMoodFilter('')">All</span>
+        <span class="mood-filter-chip" data-filter-mood="😀" onclick="selectMoodFilter('😀')">😀 Happy</span>
+        <span class="mood-filter-chip" data-filter-mood="😊" onclick="selectMoodFilter('😊')">😊 Calm</span>
+        <span class="mood-filter-chip" data-filter-mood="😐" onclick="selectMoodFilter('😐')">😐 Neutral</span>
+        <span class="mood-filter-chip" data-filter-mood="😔" onclick="selectMoodFilter('😔')">😔 Sad</span>
+        <span class="mood-filter-chip" data-filter-mood="⚡" onclick="selectMoodFilter('⚡')">⚡ Energetic</span>
+        <span class="mood-filter-chip" data-filter-mood="🧘" onclick="selectMoodFilter('🧘')">🧘 Focused</span>
+      </div>
     </div>
 
     <!-- Hashtag Cloud -->
@@ -546,6 +790,13 @@
           <button class="icon-btn" onclick="navigateDay(1)" title="Next Day (Alt+Right)" style="padding:4px 8px; font-weight:bold;">▶</button>
           <button class="icon-btn" onclick="jumpToToday()" title="Today's Entry (Ctrl+N)" style="padding:4px 8px; font-size:11px; font-weight:600; color:var(--accent-gold);">Today [^N]</button>
         </div>
+        <select id="entryCategorySelect" class="form-control" style="width: auto; padding: 4px 8px; font-size: 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-bright); border-radius: 6px;" onchange="onCategoryChange(this.value)" title="Journal Notebook / Category">
+          <option value="personal">📔 Personal</option>
+          <option value="work">💼 Work & Projects</option>
+          <option value="ideas">💡 Ideas & Creative</option>
+          <option value="dreams">🌙 Dreams</option>
+          <option value="wellness">🧘 Health & Wellness</option>
+        </select>
         <div class="mood-picker" title="Quick Mood Selector (Alt+1 to Alt+6)">
           <button class="mood-opt" data-mood="😀" title="Happy [Alt+1]" onclick="selectMood('😀')">😀</button>
           <button class="mood-opt" data-mood="😊" title="Calm [Alt+2]" onclick="selectMood('😊')">😊</button>
@@ -557,11 +808,32 @@
       </div>
 
       <div class="toolbar-right">
+        <button class="btn" onclick="insertRandomPrompt()" style="color:var(--accent-gold);" title="Get Inspired with a Daily Reflection Prompt (Alt+P)">💡 Daily Prompt <span style="font-size:10px; opacity:0.8;">[Alt+P]</span></button>
         <button class="btn" onclick="copyCurrentEntry()" title="Copy Entry to Clipboard (Alt+C)">📋 Copy <span style="font-size:10px; opacity:0.75;">[Alt+C]</span></button>
         <button class="btn" onclick="openTemplatesModal()" title="Prompt Templates (Ctrl+T)">📋 Templates <span style="font-size:10px; opacity:0.75;">[^T]</span></button>
         <button class="btn" onclick="openImportExportModal()" title="Import / Export Data (Ctrl+I)">📥/📤 Data <span style="font-size:10px; opacity:0.75;">[^I]</span></button>
         <button class="btn btn-danger" onclick="deleteCurrentEntry()" title="Delete Current Entry (Del)">Delete <span style="font-size:10px; opacity:0.75;">[Del]</span></button>
         <button class="btn btn-primary" onclick="saveEntry()" title="Save Entry (Ctrl+S)">Save Entry <span style="font-size:10px; opacity:0.85;">[^S]</span></button>
+      </div>
+    </div>
+
+    <!-- Quick Markdown Formatting & Mode Bar -->
+    <div class="editor-header-bar">
+      <div class="format-toolbar">
+        <button class="fmt-btn" onclick="insertMarkdown('**', '**')" title="Bold (Ctrl+B)"><b>B</b></button>
+        <button class="fmt-btn" onclick="insertMarkdown('*', '*')" title="Italic (Ctrl+I)"><i>I</i></button>
+        <button class="fmt-btn" onclick="insertMarkdown('## ', '')" title="Header 2">H2</button>
+        <button class="fmt-btn" onclick="insertMarkdown('### ', '')" title="Header 3">H3</button>
+        <button class="fmt-btn" onclick="insertMarkdown('> ', '')" title="Blockquote">“ ”</button>
+        <button class="fmt-btn" onclick="insertMarkdown('- ', '')" title="Bulleted List">• List</button>
+        <button class="fmt-btn" onclick="insertMarkdown('- [ ] ', '')" title="Task Checkbox">☑ Task</button>
+        <button class="fmt-btn" onclick="insertMarkdown('\n---\n', '')" title="Horizontal Divider">—</button>
+        <button class="fmt-btn" onclick="insertTimestamp()" title="Insert Current Timestamp">⏱ Time</button>
+      </div>
+      <div class="view-mode-toggle">
+        <button class="mode-btn active" id="btnModeEdit" onclick="setEditorMode('edit')" title="Raw Textarea Editor">✏️ Edit</button>
+        <button class="mode-btn" id="btnModeSplit" onclick="setEditorMode('split')" title="Side-by-Side Editor & Live Rendered Markdown">⚡ Split</button>
+        <button class="mode-btn" id="btnModePreview" onclick="setEditorMode('preview')" title="Rendered Markdown Preview (Ctrl+P)">👁️ Preview</button>
       </div>
     </div>
 
@@ -575,7 +847,10 @@
         <button class="quick-starter-chip" onclick="applyTemplate('stoic', 'replace')">🏛️ Stoic</button>
         <button class="quick-starter-chip" onclick="openTemplatesModal()">📋 More...</button>
       </div>
-      <textarea id="journalArea" class="journal-editor" placeholder="Write your thoughts, ideas, or reflection for today... Use #hashtags to categorize. (Press 'H' or F1 for Help, Ctrl+S to Save)" oninput="onEditorInput()"></textarea>
+      <div class="editor-workspace mode-edit" id="editorWorkspace">
+        <textarea id="journalArea" class="journal-editor" placeholder="Write your thoughts, ideas, or reflection for today... Use #hashtags to categorize. (Press 'H' or F1 for Help, Ctrl+S to Save, Ctrl+P for Preview)" oninput="onEditorInput()"></textarea>
+        <div id="journalPreview" class="journal-preview" style="display:none;"></div>
+      </div>
       <div class="editor-footer">
         <div id="editorStats">0 words | 0 chars | ~0 min read</div>
         <div id="goalProgressWrapper" class="goal-wrapper" title="Daily Writing Goal Progress - Click to cycle word goal" style="cursor:pointer;" onclick="cycleGoalTarget()">
@@ -655,6 +930,21 @@
         <div class="chart-title">Mood Breakdown</div>
         <div id="moodBreakdown"></div>
       </div>
+
+      <div class="chart-section" style="margin-top: 18px;">
+        <div class="chart-title">Top Keywords & Frequent Themes</div>
+        <div id="modalTopKeywords" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+      </div>
+
+      <div class="chart-section" style="margin-top: 18px;">
+        <div class="chart-title">Day-of-Week Journaling Rhythm</div>
+        <div id="modalDayOfWeekBars" style="display:grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center;"></div>
+      </div>
+
+      <div class="chart-section" style="margin-top: 18px;">
+        <div class="chart-title">Entries by Notebook Category</div>
+        <div id="modalCategoryBreakdown"></div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-primary" onclick="closeModal('analyticsModal')">Close</button>
@@ -733,12 +1023,14 @@
       <div class="form-group">
         <label><strong>Export Entries</strong></label>
         <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
-          Download your complete journal backup in JSON, Markdown, or Plain Text format.
+          Download your complete journal backup, spreadsheet analysis file, or formatted printable book.
         </p>
-        <div style="display:flex; gap:8px;">
-          <button class="btn" onclick="exportData('json')">Export JSON</button>
-          <button class="btn" onclick="exportData('md')">Export Markdown</button>
-          <button class="btn" onclick="exportData('txt')">Export TXT</button>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+          <button class="btn" onclick="exportData('json')" title="Complete JSON backup with all entries and metadata">JSON Backup</button>
+          <button class="btn" onclick="exportData('csv')" title="Spreadsheet format for Excel, KBase, KCalc">📊 CSV Spreadsheet</button>
+          <button class="btn" onclick="exportData('md')" title="Standard Markdown documents">Markdown (.md)</button>
+          <button class="btn" onclick="exportData('txt')" title="Plain text format">Plain Text (.txt)</button>
+          <button class="btn btn-primary" onclick="exportData('book')" title="Standalone printable journal chronicle with TOC">📖 Printable Book / PDF</button>
         </div>
       </div>
 
@@ -795,6 +1087,9 @@
         <li><strong style="color:var(--text-bright);">F1</strong> or <strong style="color:var(--text-bright);">H</strong> — Open this Help guide</li>
         <li><strong style="color:var(--text-bright);">Ctrl + S</strong> — Save current journal entry immediately</li>
         <li><strong style="color:var(--text-bright);">Ctrl + N</strong> — Jump to today's entry</li>
+        <li><strong style="color:var(--text-bright);">Ctrl + P</strong> — Toggle Markdown Preview mode</li>
+        <li><strong style="color:var(--text-bright);">Alt + P</strong> — Insert Random Reflective Inspiration Prompt</li>
+        <li><strong style="color:var(--text-bright);">Ctrl + B / Ctrl + I</strong> — Bold / Italic formatting</li>
         <li><strong style="color:var(--text-bright);">Alt + Left / Right</strong> — Navigate to previous / next calendar day</li>
         <li><strong style="color:var(--text-bright);">Alt + C</strong> or <strong style="color:var(--text-bright);">Ctrl+Shift+C</strong> — Copy active journal entry to clipboard</li>
         <li><strong style="color:var(--text-bright);">Ctrl + T</strong> — Open Prompt Templates Library</li>
@@ -806,15 +1101,19 @@
       </ul>
       <p><strong>Core Features:</strong></p>
       <ul style="margin-left: 20px; margin-bottom: 12px; color: var(--text-muted);">
+        <li><strong>Multi-Notebook Categories:</strong> Organize entries into Personal, Work, Ideas, Dreams, and Health.</li>
+        <li><strong>Live Markdown Preview & Split View:</strong> Write with headings, blockquotes, and checkboxes with real-time rendering.</li>
+        <li><strong>Formatting Toolbar:</strong> One-click buttons to insert headings, task checkboxes, lists, quotes, and timestamps.</li>
+        <li><strong>Quick Mood Filter:</strong> Filter journal history instantly by mood in the sidebar.</li>
+        <li><strong>Rich Data Exports:</strong> Export to JSON, CSV (spreadsheets), Markdown, TXT, and printable HTML chronicle.</li>
         <li><strong>Toolbar Day Navigator:</strong> Move between days with ◀ / ▶ buttons or jump straight to today.</li>
         <li><strong>Calendar Navigator:</strong> Pick any day from the visual monthly grid to review or edit entries.</li>
         <li><strong>Guided Prompts & Templates:</strong> Click '📋 Templates [^T]' to choose from 6 structured frameworks.</li>
-        <li><strong>Quick Starters:</strong> When viewing an empty day, 1-click quick starter chips appear above the editor.</li>
+        <li><strong>Daily Inspiration:</strong> Click '💡 Daily Prompt [Alt+P]' for 25+ curated self-reflection prompts.</li>
         <li><strong>Interactive Daily Word Goal:</strong> Click the goal progress bar in the footer or adjust in Settings.</li>
         <li><strong>Real-time Search & Hashtags:</strong> Use hashtags (e.g. #gratitude #goals) to categorize and filter.</li>
-        <li><strong>Analytics & Streaks:</strong> Track current streak, best streak, total words, and mood breakdown charts.</li>
+        <li><strong>Analytics & Streaks:</strong> Track current streak, best streak, total words, keywords, and mood breakdown charts.</li>
         <li><strong>PIN Lock Protection:</strong> Secure your personal entries with a 4-digit numeric PIN in Settings.</li>
-        <li><strong>Data Portability:</strong> Export backups in JSON, Markdown, or TXT format and restore anytime.</li>
       </ul>
     </div>
     <div class="modal-footer">
@@ -825,11 +1124,14 @@
 
 <script>
   // Core State
-  let entries = {}; // { 'YYYY-MM-DD': { text: '', mood: '😀', updatedAt: timestamp } }
+  let entries = {}; // { 'YYYY-MM-DD': { text: '', mood: '😀', category: 'personal', updatedAt: timestamp } }
   let settings = { pin: '', pinEnabled: false, dailyGoal: 150 };
   let selectedDate = '';
   let selectedMood = '';
   let selectedTagFilter = '';
+  let selectedCategoryFilter = 'all'; // 'all', 'personal', 'work', 'ideas', 'dreams', 'wellness'
+  let selectedMoodFilter = ''; // '', '😀', '😊', '😐', '😔', '⚡', '🧘'
+  let editorMode = 'edit'; // 'edit', 'split', 'preview'
   let calCurrentYear = new Date().getFullYear();
   let calCurrentMonth = new Date().getMonth(); // 0-indexed
 
@@ -884,6 +1186,204 @@
       content: `## 💡 Brain Dump & Problem Solving\n\n### 🔍 The Core Challenge / Question:\n- \n\n### 🚀 Wild, Radical, or Alternative Approaches:\n- \n- \n\n### 📝 Immediate Next Action Step (Within 24 Hours):\n1. `
     }
   ];
+
+  // Curated Daily Reflective Inspiration Prompts
+  const REFLECTIVE_PROMPTS = [
+    "What is one small victory from today that you haven't given yourself credit for?",
+    "What is something that felt difficult earlier but taught you an important lesson?",
+    "If you could whisper one piece of advice to yourself this morning, what would it be?",
+    "What drained your mental energy today, and how can you protect your focus tomorrow?",
+    "Name one person who helped you recently. How could you express appreciation to them?",
+    "What was completely outside your control today, and how did you choose to respond?",
+    "What is the single most important task on your horizon right now, and why?",
+    "What simple, sensory pleasure brought you joy today (a sound, a taste, a breeze)?",
+    "Where are you currently holding unnecessary tension or worry? What can you let go of?",
+    "What habit or behavior made you feel most proud of yourself over the last week?",
+    "If you were looking back on this phase of your life in 10 years, what will stand out most?",
+    "What is a truth you have been avoiding confronting lately?",
+    "What question are you currently trying to answer in your life or work?",
+    "How did you practice courage, kindness, or patience today?",
+    "What is something you used to believe that you have recently reconsidered?",
+    "What would you do tomorrow if you knew you could not fail?",
+    "How did you nourish your body, mind, and spirit today?",
+    "What are three things in your immediate surroundings right now that you are grateful for?",
+    "What boundary do you need to set or maintain to protect your peace of mind?",
+    "What is a creative idea or curiosity that sparked in your mind today?"
+  ];
+
+  // Markdown Parser
+  function renderMarkdown(md) {
+    if (!md || !md.trim()) {
+      return '<p style="color:var(--text-muted); font-style:italic;">No content written yet for this day. Switch to Edit mode to write or insert a template.</p>';
+    }
+    let html = md
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // Fenced code blocks
+    html = html.replace(/```([\s\S]*?)```/g, (match, p1) => {
+      return `<pre style="background:var(--bg-tertiary); padding:10px 12px; border-radius:6px; border:1px solid var(--border-color); overflow-x:auto; font-family:monospace; margin:10px 0;"><code>${p1.trim()}</code></pre>`;
+    });
+
+    // Inline code
+    html = html.replace(/`([^`]+)`/g, '<code style="background:var(--bg-tertiary); padding:2px 5px; border-radius:4px; font-family:monospace; font-size:13px; color:var(--accent-gold); border:1px solid var(--border-color);">$1</code>');
+
+    // Headings
+    html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+    html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+    html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+    // Horizontal rule
+    html = html.replace(/^(?:---|\*\*\*|___)\s*$/gim, '<hr>');
+
+    // Blockquotes
+    html = html.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+
+    // Task list items
+    html = html.replace(/^- \[([xX])\] (.*$)/gim, '<li class="task-item"><input type="checkbox" class="task-check" checked disabled> <span>$2</span></li>');
+    html = html.replace(/^- \[ \] (.*$)/gim, '<li class="task-item"><input type="checkbox" class="task-check" disabled> <span>$2</span></li>');
+
+    // Standard list items
+    html = html.replace(/^[\*\-] (?!<input)(.*$)/gim, '<li>$1</li>');
+    html = html.replace(/^\d+\. (.*$)/gim, '<li>$1</li>');
+    html = html.replace(/(<li>[\s\S]*?<\/li>)/g, '<ul style="margin:6px 0 10px 20px;">$1</ul>');
+    html = html.replace(/<\/ul>\s*<ul style="margin:6px 0 10px 20px;">/g, '');
+
+    // Bold, italic, strike
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
+    html = html.replace(/~~([^~]+)~~/g, '<del style="opacity:0.7;">$1</del>');
+
+    // Hashtags
+    html = html.replace(/#([a-zA-Z0-9_\-]+)/g, '<span class="preview-tag">#$1</span>');
+
+    // Paragraph wrapping
+    const paragraphs = html.split(/\n{2,}/);
+    html = paragraphs.map(p => {
+      p = p.trim();
+      if (!p) return '';
+      if (p.startsWith('<h1') || p.startsWith('<h2') || p.startsWith('<h3') ||
+          p.startsWith('<pre') || p.startsWith('<blockquote') ||
+          p.startsWith('<ul') || p.startsWith('<hr')) {
+        return p;
+      }
+      return `<p>${p.replace(/\n/g, '<br>')}</p>`;
+    }).filter(Boolean).join('\n');
+
+    return html;
+  }
+
+  // Formatting & Editor Mode Helpers
+  function insertMarkdown(prefix, suffix = '') {
+    const area = document.getElementById('journalArea');
+    if (!area) return;
+    area.focus();
+    const start = area.selectionStart;
+    const end = area.selectionEnd;
+    const selected = area.value.substring(start, end);
+    const replacement = prefix + (selected || (prefix.endsWith(' ') ? 'Heading' : 'text')) + suffix;
+    area.value = area.value.substring(0, start) + replacement + area.value.substring(end);
+    area.selectionStart = start + prefix.length;
+    area.selectionEnd = start + prefix.length + (selected ? selected.length : (prefix.endsWith(' ') ? 7 : 4));
+    onEditorInput();
+  }
+
+  function insertTimestamp() {
+    const area = document.getElementById('journalArea');
+    if (!area) return;
+    area.focus();
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const insertStr = `[${timeStr}] `;
+    const start = area.selectionStart;
+    const end = area.selectionEnd;
+    area.value = area.value.substring(0, start) + insertStr + area.value.substring(end);
+    area.selectionStart = area.selectionEnd = start + insertStr.length;
+    onEditorInput();
+  }
+
+  function insertRandomPrompt() {
+    const area = document.getElementById('journalArea');
+    if (!area) return;
+    const prompt = REFLECTIVE_PROMPTS[Math.floor(Math.random() * REFLECTIVE_PROMPTS.length)];
+    const promptBlock = `\n\n> 💡 Prompt: ${prompt}\n\n`;
+    area.focus();
+    const start = area.selectionStart;
+    area.value = area.value.substring(0, start) + promptBlock + area.value.substring(start);
+    area.selectionStart = area.selectionEnd = start + promptBlock.length;
+    onEditorInput();
+    showToast('💡 Daily prompt inserted!');
+  }
+
+  function setEditorMode(mode) {
+    editorMode = mode;
+    const ws = document.getElementById('editorWorkspace');
+    if (ws) {
+      ws.className = `editor-workspace mode-${mode}`;
+    }
+    const btnEdit = document.getElementById('btnModeEdit');
+    const btnSplit = document.getElementById('btnModeSplit');
+    const btnPreview = document.getElementById('btnModePreview');
+    if (btnEdit) btnEdit.className = `mode-btn ${mode === 'edit' ? 'active' : ''}`;
+    if (btnSplit) btnSplit.className = `mode-btn ${mode === 'split' ? 'active' : ''}`;
+    if (btnPreview) btnPreview.className = `mode-btn ${mode === 'preview' ? 'active' : ''}`;
+
+    updatePreview();
+  }
+
+  function updatePreview() {
+    if (editorMode === 'edit') return;
+    const area = document.getElementById('journalArea');
+    const preview = document.getElementById('journalPreview');
+    if (area && preview) {
+      preview.innerHTML = renderMarkdown(area.value);
+    }
+  }
+
+  // Category and Mood Filters
+  function selectCategoryFilter(cat) {
+    selectedCategoryFilter = cat;
+    document.querySelectorAll('.notebook-tab').forEach(tab => {
+      if (tab.getAttribute('data-category') === cat) {
+        tab.classList.add('active');
+      } else {
+        tab.classList.remove('active');
+      }
+    });
+    renderEntryList();
+  }
+
+  function onCategoryChange(cat) {
+    if (!selectedDate) return;
+    if (!entries[selectedDate]) {
+      entries[selectedDate] = { text: '', mood: selectedMood || '😊', category: cat, updatedAt: Date.now() };
+    } else {
+      entries[selectedDate].category = cat;
+    }
+    isDirty = true;
+    saveEntry(false);
+    renderEntryList();
+    showToast(`Saved to ${cat.toUpperCase()} notebook`);
+  }
+
+  function selectMoodFilter(mood) {
+    selectedMoodFilter = mood;
+    document.querySelectorAll('.mood-filter-chip').forEach(chip => {
+      if (chip.getAttribute('data-filter-mood') === mood) {
+        chip.classList.add('active');
+      } else {
+        chip.classList.remove('active');
+      }
+    });
+    const lbl = document.getElementById('moodFilterActiveLabel');
+    if (lbl) {
+      lbl.innerText = mood ? `Filtered [${mood}]` : 'Reset [All]';
+    }
+    renderEntryList();
+  }
 
   // Confirmation Dialog State & Helper
   let onConfirmCallback = null;
@@ -959,11 +1459,12 @@
         for (let k in parsed) {
           if (!parsed.hasOwnProperty(k)) continue;
           if (typeof parsed[k] === 'string') {
-            entries[k] = { text: parsed[k], mood: '😊', updatedAt: Date.now() };
+            entries[k] = { text: parsed[k], mood: '😊', category: 'personal', updatedAt: Date.now() };
           } else if (parsed[k] && typeof parsed[k] === 'object') {
             entries[k] = {
               text: typeof parsed[k].text === 'string' ? parsed[k].text : '',
               mood: typeof parsed[k].mood === 'string' ? parsed[k].mood : '😊',
+              category: typeof parsed[k].category === 'string' ? parsed[k].category : 'personal',
               updatedAt: Number(parsed[k].updatedAt) || Date.now()
             };
           }
@@ -1405,6 +1906,17 @@
       const entry = entries[date];
       if (!entry || typeof entry.text !== 'string' || !entry.text.trim()) return false;
 
+      // Category / Notebook Filter
+      if (selectedCategoryFilter !== 'all') {
+        const cat = entry.category || 'personal';
+        if (cat !== selectedCategoryFilter) return false;
+      }
+
+      // Mood Filter
+      if (selectedMoodFilter && entry.mood !== selectedMoodFilter) {
+        return false;
+      }
+
       // Hashtag Filter
       if (selectedTagFilter && !entry.text.toLowerCase().includes(selectedTagFilter)) {
         return false;
@@ -1440,6 +1952,8 @@
       return;
     }
 
+    const catIcons = { personal: '📔', work: '💼', ideas: '💡', dreams: '🌙', wellness: '🧘' };
+
     dates.forEach(date => {
       const entry = entries[date];
       const div = document.createElement('div');
@@ -1447,7 +1961,9 @@
       div.setAttribute('role', 'button');
       div.tabIndex = 0;
       const cleanMood = (entry.mood || '😊').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      div.setAttribute('aria-label', `Entry for ${formatReadableDate(date)}, Mood: ${cleanMood}`);
+      const cat = entry.category || 'personal';
+      const catIcon = catIcons[cat] || '📔';
+      div.setAttribute('aria-label', `Entry for ${formatReadableDate(date)}, Mood: ${cleanMood}, Notebook: ${cat}`);
 
       div.onclick = () => selectDateWithAutoSave(date);
       div.onkeydown = (e) => {
@@ -1459,7 +1975,13 @@
 
       const header = document.createElement('div');
       header.className = 'entry-item-header';
-      header.innerHTML = `<span class="entry-item-date">${formatReadableDate(date)}</span><span class="entry-item-mood">${cleanMood}</span>`;
+      header.innerHTML = `
+        <span class="entry-item-date">${formatReadableDate(date)}</span>
+        <span style="display:flex; align-items:center; gap:4px;">
+          <span style="font-size:11px;" title="Notebook: ${cat}">${catIcon}</span>
+          <span class="entry-item-mood">${cleanMood}</span>
+        </span>
+      `;
 
       const snippet = document.createElement('div');
       snippet.className = 'entry-item-snippet';
@@ -1484,10 +2006,13 @@
       calCurrentMonth = parseInt(parts[1], 10) - 1;
     }
 
-    const entry = entries[selectedDate] || { text: '', mood: '😊' };
+    const entry = entries[selectedDate] || { text: '', mood: '😊', category: 'personal' };
     const area = document.getElementById('journalArea');
     area.value = entry.text || '';
     selectMood(entry.mood || '😊', false);
+
+    const catSel = document.getElementById('entryCategorySelect');
+    if (catSel) catSel.value = entry.category || 'personal';
 
     isDirty = false;
     const saveStatus = document.getElementById('saveStatus');
@@ -1496,6 +2021,7 @@
     }
 
     updateEditorStats();
+    updatePreview();
     renderEntryList();
   }
 
@@ -1513,6 +2039,7 @@
   function onEditorInput() {
     isDirty = true;
     updateEditorStats();
+    updatePreview();
     const saveStatus = document.getElementById('saveStatus');
     if (saveStatus) saveStatus.innerText = 'Unsaved changes...';
 
@@ -1529,11 +2056,14 @@
     }
     if (!selectedDate) return;
     const text = document.getElementById('journalArea').value.trim();
+    const catSel = document.getElementById('entryCategorySelect');
+    const cat = catSel ? catSel.value : 'personal';
 
     if (text) {
       entries[selectedDate] = {
         text: text,
         mood: selectedMood || '😊',
+        category: cat,
         updatedAt: Date.now()
       };
       if (showFeedback) showToast('Entry saved!');
@@ -1555,6 +2085,7 @@
     renderTagCloud();
     renderEntryList();
     updateEditorStats();
+    updatePreview();
   }
 
   function deleteCurrentEntry() {
@@ -1632,9 +2163,21 @@
     let goalMetCount = 0;
     const moodCounts = {};
     const goal = settings.dailyGoal || 150;
+    const stopWords = new Set([
+      'the','and','to','of','a','in','is','it','i','my','that','you','for','was','on','with','as','at','be','this',
+      'have','from','or','one','had','by','word','but','not','what','all','were','we','when','your','can','said',
+      'there','use','an','each','which','she','do','how','their','if','will','up','other','about','out','many',
+      'then','them','these','so','some','her','would','make','like','him','into','time','has','look','two','more',
+      'write','go','see','number','no','way','could','people','than','first','water','been','call','who','its',
+      'now','find','long','down','day','did','get','come','made','may','part','am','are','today','me'
+    ]);
+    const wordFreq = {};
+    const dayOfWeekCounts = [0, 0, 0, 0, 0, 0, 0];
+    const categoryCounts = { personal: 0, work: 0, ideas: 0, dreams: 0, wellness: 0 };
 
     dates.forEach(d => {
-      const text = entries[d].text || '';
+      const e = entries[d];
+      const text = e.text || '';
       const words = text.trim() ? text.trim().split(/\s+/).length : 0;
       totalWords += words;
 
@@ -1642,9 +2185,32 @@
         goalMetCount++;
       }
 
-      const mood = entries[d].mood || '😊';
+      const mood = e.mood || '😊';
       moodCounts[mood] = (moodCounts[mood] || 0) + 1;
+
+      const cat = e.category || 'personal';
+      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+
+      const parts = d.split('-');
+      if (parts.length === 3) {
+        const dt = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        if (!isNaN(dt.getTime())) {
+          dayOfWeekCounts[dt.getDay()]++;
+        }
+      }
+
+      const wordsArr = text.toLowerCase().match(/[a-z]{3,}/g) || [];
+      wordsArr.forEach(w => {
+        if (!stopWords.has(w) && !w.startsWith('http')) {
+          wordFreq[w] = (wordFreq[w] || 0) + 1;
+        }
+      });
     });
+
+    const topKeywords = Object.keys(wordFreq)
+      .sort((a,b) => wordFreq[b] - wordFreq[a])
+      .slice(0, 10)
+      .map(w => ({ word: w, count: wordFreq[w] }));
 
     const avgWords = totalEntries > 0 ? Math.round(totalWords / totalEntries) : 0;
     const goalHitRate = (totalEntries > 0 && goal > 0) ? Math.round((goalMetCount / totalEntries) * 100) : 0;
@@ -1699,7 +2265,7 @@
       });
     }
 
-    return { totalEntries, totalWords, avgWords, currentStreak, longestStreak, moodCounts, goalHitRate, totalReadTime, goal };
+    return { totalEntries, totalWords, avgWords, currentStreak, longestStreak, moodCounts, goalHitRate, totalReadTime, goal, topKeywords, dayOfWeekCounts, categoryCounts };
   }
 
   function updateStreakWidget() {
@@ -1747,6 +2313,72 @@
       `;
       breakdown.appendChild(item);
     });
+
+    // Top Keywords
+    const kwContainer = document.getElementById('modalTopKeywords');
+    if (kwContainer) {
+      kwContainer.innerHTML = '';
+      if (!stats.topKeywords || stats.topKeywords.length === 0) {
+        kwContainer.innerHTML = '<span style="font-size:12px; color:var(--text-muted);">Not enough data yet</span>';
+      } else {
+        stats.topKeywords.forEach(k => {
+          const badge = document.createElement('span');
+          badge.className = 'quick-starter-chip';
+          badge.style.cursor = 'default';
+          badge.innerHTML = `<strong>${k.word}</strong> <span style="opacity:0.75; font-size:10px;">(${k.count})</span>`;
+          kwContainer.appendChild(badge);
+        });
+      }
+    }
+
+    // Day of Week Rhythm
+    const dowContainer = document.getElementById('modalDayOfWeekBars');
+    if (dowContainer) {
+      dowContainer.innerHTML = '';
+      const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const maxDow = Math.max(1, ...stats.dayOfWeekCounts);
+      stats.dayOfWeekCounts.forEach((cnt, idx) => {
+        const col = document.createElement('div');
+        const heightPct = Math.round((cnt / maxDow) * 100);
+        col.innerHTML = `
+          <div style="font-size:10px; color:var(--text-muted); margin-bottom:4px;">${cnt}</div>
+          <div style="background:var(--bg-tertiary); height:40px; border-radius:4px; display:flex; align-items:flex-end; border:1px solid var(--border-color); overflow:hidden;">
+            <div style="width:100%; height:${heightPct}%; background:var(--accent-gold); border-radius:3px 3px 0 0;"></div>
+          </div>
+          <div style="font-size:10px; font-weight:bold; margin-top:4px; color:var(--text-bright);">${dayLabels[idx]}</div>
+        `;
+        dowContainer.appendChild(col);
+      });
+    }
+
+    // Category Breakdown
+    const catContainer = document.getElementById('modalCategoryBreakdown');
+    if (catContainer) {
+      catContainer.innerHTML = '';
+      const catMeta = [
+        { id: 'personal', name: '📔 Personal' },
+        { id: 'work', name: '💼 Work & Projects' },
+        { id: 'ideas', name: '💡 Ideas & Creative' },
+        { id: 'dreams', name: '🌙 Dreams' },
+        { id: 'wellness', name: '🧘 Health & Wellness' }
+      ];
+      catMeta.forEach(c => {
+        const count = stats.categoryCounts[c.id] || 0;
+        const pct = stats.totalEntries > 0 ? Math.round((count / stats.totalEntries) * 100) : 0;
+        const item = document.createElement('div');
+        item.className = 'mood-bar-item';
+        item.innerHTML = `
+          <div class="mood-bar-label">
+            <span>${c.name} (${count})</span>
+            <span>${pct}%</span>
+          </div>
+          <div class="mood-bar-bg">
+            <div class="mood-bar-fill" style="width: ${pct}%; background:var(--accent-cyan);"></div>
+          </div>
+        `;
+        catContainer.appendChild(item);
+      });
+    }
 
     openModal('analyticsModal');
   }
@@ -1798,11 +2430,24 @@
       content = JSON.stringify(exportObj, null, 2);
       filename += '.json';
       mimeType = 'application/json';
+    } else if (format === 'csv') {
+      filename += '.csv';
+      mimeType = 'text/csv';
+      content = 'Date,Notebook,Mood,Words,Chars,ReadTimeMin,Hashtags,Content\r\n';
+      dates.forEach(d => {
+        const e = entries[d];
+        const words = e.text ? e.text.trim().split(/\s+/).length : 0;
+        const chars = e.text ? e.text.length : 0;
+        const readTime = words > 0 ? Math.max(1, Math.ceil(words / 200)) : 0;
+        const tags = (e.text.match(/#[a-zA-Z0-9_\-]+/g) || []).join(' ');
+        const escapedContent = (e.text || '').replace(/"/g, '""');
+        content += `"${d}","${e.category || 'personal'}","${e.mood || '😊'}",${words},${chars},${readTime},"${tags}","${escapedContent}"\r\n`;
+      });
     } else if (format === 'md') {
       dates.forEach(d => {
         const e = entries[d];
         content += `# ${formatReadableDate(d)}\n\n`;
-        content += `**Mood:** ${e.mood || '😊'}\n\n`;
+        content += `**Notebook:** ${(e.category || 'personal').toUpperCase()} • **Mood:** ${e.mood || '😊'}\n\n`;
         content += `${e.text}\n\n---\n\n`;
       });
       filename += '.md';
@@ -1810,10 +2455,74 @@
     } else if (format === 'txt') {
       dates.forEach(d => {
         const e = entries[d];
-        content += `=== Entry: ${d} (Mood: ${e.mood || '😊'}) ===\n`;
+        content += `=== Entry: ${d} (Notebook: ${e.category || 'personal'} | Mood: ${e.mood || '😊'}) ===\n`;
         content += `${e.text}\n\n`;
       });
       filename += '.txt';
+    } else if (format === 'book') {
+      filename = `kjournal_chronicle_${new Date().toISOString().slice(0,10)}.html`;
+      mimeType = 'text/html';
+      let tocHtml = '';
+      let entriesHtml = '';
+      dates.forEach(d => {
+        const e = entries[d];
+        const words = e.text ? e.text.trim().split(/\s+/).length : 0;
+        tocHtml += `<li><a href="#entry-${d}">${formatReadableDate(d)}</a> (${e.mood || '😊'}, ${words} words)</li>`;
+        entriesHtml += `
+          <article class="entry-card" id="entry-${d}">
+            <header class="entry-header">
+              <h2 class="entry-date">${formatReadableDate(d)}</h2>
+              <div class="entry-meta">
+                <span>Mood: <strong>${e.mood || '😊'}</strong></span> • 
+                <span>Notebook: <strong>${(e.category || 'personal').toUpperCase()}</strong></span> • 
+                <span>${words} words</span>
+              </div>
+            </header>
+            <div class="entry-content">${renderMarkdown(e.text || '')}</div>
+          </article>
+        `;
+      });
+
+      content = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>KJournal - Personal Chronicle</title>
+<style>
+  body { font-family: 'Georgia', serif; line-height: 1.8; color: #2d3748; max-width: 800px; margin: 40px auto; padding: 0 24px; background: #fafaf9; }
+  h1.book-title { font-size: 32px; text-align: center; color: #1a202c; margin-bottom: 4px; }
+  .book-subtitle { text-align: center; color: #718096; font-style: italic; margin-bottom: 36px; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; }
+  .toc-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px 24px; margin-bottom: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+  .toc-title { font-weight: bold; font-size: 16px; margin-bottom: 12px; color: #2d3748; font-family: sans-serif; }
+  .toc-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 13px; font-family: sans-serif; }
+  .toc-list a { color: #3182ce; text-decoration: none; }
+  .toc-list a:hover { text-decoration: underline; }
+  .entry-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 28px; margin-bottom: 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); page-break-inside: avoid; }
+  .entry-date { font-size: 20px; color: #b7791f; margin-bottom: 4px; border-bottom: 1px solid #edf2f7; padding-bottom: 6px; }
+  .entry-meta { font-size: 12px; color: #718096; margin-bottom: 18px; font-family: sans-serif; text-transform: uppercase; letter-spacing: 0.5px; }
+  .entry-content { font-size: 15px; }
+  .entry-content p { margin-bottom: 12px; }
+  .entry-content blockquote { border-left: 3px solid #b7791f; padding: 8px 14px; background: #fffaf0; margin: 14px 0; font-style: italic; }
+  .entry-content h1, .entry-content h2, .entry-content h3 { color: #2d3748; margin: 16px 0 8px 0; }
+  .entry-content ul, .entry-content ol { margin: 8px 0 12px 24px; }
+  .preview-tag { display: inline-block; color: #2b6cb0; background: #ebf8ff; border: 1px solid #bee3f8; padding: 1px 6px; border-radius: 4px; font-size: 12px; }
+  @media print {
+    body { background: #fff; color: #000; max-width: 100%; margin: 0; padding: 0; }
+    .toc-card { box-shadow: none; border-color: #ccc; }
+    .entry-card { box-shadow: none; border: none; border-bottom: 1px solid #ddd; border-radius: 0; padding: 20px 0; }
+  }
+</style>
+</head>
+<body>
+  <h1 class="book-title">📖 KJournal Personal Chronicle</h1>
+  <div class="book-subtitle">Chronicle of ${dates.length} Entries • Generated on ${new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+  <nav class="toc-card">
+    <div class="toc-title">📑 Table of Contents</div>
+    <ul class="toc-list">${tocHtml}</ul>
+  </nav>
+  <main>${entriesHtml}</main>
+</body>
+</html>`;
     }
 
     const blob = new Blob([content], { type: mimeType });
@@ -1849,12 +2558,13 @@
           if (!imported.hasOwnProperty(d)) continue;
           const val = imported[d];
           if (typeof val === 'string') {
-            entries[d] = { text: val, mood: '😊', updatedAt: Date.now() };
+            entries[d] = { text: val, mood: '😊', category: 'personal', updatedAt: Date.now() };
             count++;
           } else if (val && typeof val === 'object') {
             entries[d] = {
               text: typeof val.text === 'string' ? val.text : '',
               mood: typeof val.mood === 'string' ? val.mood : '😊',
+              category: typeof val.category === 'string' ? val.category : 'personal',
               updatedAt: Number(val.updatedAt) || Date.now()
             };
             count++;
@@ -1955,18 +2665,21 @@
     entries[s2] = {
       text: `## 🌅 Morning Reflection\n\n### 🙏 3 Things I am Grateful For:\n1. Crisp early morning breeze and quiet coffee.\n2. Productive collaboration on KiloApps features.\n3. Good physical health and positive energy.\n\n### 🎯 What Would Make Today Great?\n- Shipping the next release with complete usability tests.\n- An evening walk in the neighborhood.\n\n### 💭 Daily Focus:\n> Small consistent habits create extraordinary long-term compounding results.\n\n#gratitude #morning #productivity`,
       mood: '😀',
+      category: 'personal',
       updatedAt: Date.now() - 172800000
     };
 
     entries[s1] = {
       text: `## 🎯 Daily Goals & Priorities\n\n### 📌 Top 3 Non-Negotiable Priorities Today:\n1. [x] Refactor UI components and fix window boundaries\n2. [x] Implement non-blocking notification alerts\n3. [x] Document keyboard shortcuts & help guides\n\n### 🚧 Potential Obstacles & Mitigation Strategy:\n- Obstacle: Context switching across multiple apps.\n- Strategy: Focus on one app at a time with thorough verification.\n\n### ⚡ End-of-Day Key Deliverable / Milestone:\n- All test suites passing cleanly with zero warnings!\n\n#goals #coding #achievement`,
       mood: '⚡',
+      category: 'work',
       updatedAt: Date.now() - 86400000
     };
 
     entries[s0] = {
       text: `## 🏛️ Stoic Reflection\n\n### ⚖️ What Was Fully Within My Control Today?\n- My attitude toward challenges, attention to code quality, and deliberate practice.\n\n### 🍃 What Was Outside My Control (and how did I react)?\n- Unexpected network latency; took a deep breath and stayed patient and composed.\n\n### 🛡️ Core Virtue Practiced Today:\n- Wisdom and Moderation in work-life rhythm and sustained focus.\n\n#stoic #mindset #focus`,
       mood: '🧘',
+      category: 'wellness',
       updatedAt: Date.now()
     };
 
@@ -2078,9 +2791,30 @@
       openTemplatesModal();
       return;
     }
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'b') {
+      e.preventDefault();
+      insertMarkdown('**', '**');
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'p') {
+      e.preventDefault();
+      if (editorMode === 'edit') setEditorMode('preview');
+      else if (editorMode === 'preview') setEditorMode('edit');
+      else setEditorMode('preview');
+      return;
+    }
+    if (e.altKey && e.key.toLowerCase() === 'p') {
+      e.preventDefault();
+      insertRandomPrompt();
+      return;
+    }
     if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'i') {
       e.preventDefault();
-      openImportExportModal();
+      if (document.activeElement && document.activeElement.id === 'journalArea') {
+        insertMarkdown('*', '*');
+      } else {
+        openImportExportModal();
+      }
       return;
     }
     if ((e.altKey && e.key.toLowerCase() === 'c') || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'c')) {

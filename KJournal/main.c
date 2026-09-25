@@ -1155,8 +1155,9 @@ void export_import_menu() {
         printf("=========================================\n");
         printf("1. Export to Markdown (kjournal_export.md)\n");
         printf("2. Export to JSON (kjournal_export.json)\n");
-        printf("3. Import entries from file\n");
-        printf("4. Return to Main Menu\n");
+        printf("3. Export to CSV (kjournal_export.csv)\n");
+        printf("4. Import entries from file\n");
+        printf("5. Return to Main Menu\n");
         printf("H. Help / Instructions\n");
         printf("=========================================\n");
         printf("Choice: ");
@@ -1224,6 +1225,42 @@ void export_import_menu() {
             printf("Press Enter to continue...");
             getchar();
         } else if (choice[0] == '3') {
+            JournalEntry *entries = (JournalEntry *)malloc(sizeof(JournalEntry) * MAX_ENTRIES);
+            if (!entries) {
+                printf("Memory allocation failed.\n");
+                printf("Press Enter to continue...");
+                getchar();
+                continue;
+            }
+            int count = load_all_entries(entries, MAX_ENTRIES);
+
+            FILE *out = fopen("kjournal_export.csv", "w");
+            if (out) {
+                fprintf(out, "Date,Time,Mood,Words,Content\n");
+                for (int i = 0; i < count; i++) {
+                    int words = count_words_in_string(entries[i].content);
+                    fprintf(out, "\"%s\",\"%s\",\"%s\",%d,\"",
+                            entries[i].date_str, entries[i].time_str, entries[i].mood, words);
+                    const char *p = entries[i].content ? entries[i].content : "";
+                    while (*p) {
+                        if (*p == '"') fprintf(out, "\"\"");
+                        else if (*p == '\n') fprintf(out, " ");
+                        else if (*p == '\r') { }
+                        else fputc(*p, out);
+                        p++;
+                    }
+                    fprintf(out, "\"\n");
+                }
+                fclose(out);
+                printf("\nExported %d entries to 'kjournal_export.csv'!\n", count);
+            } else {
+                printf("\nError writing to export file.\n");
+            }
+            free_entries(entries, count);
+            free(entries);
+            printf("Press Enter to continue...");
+            getchar();
+        } else if (choice[0] == '4') {
             printf("\nEnter filename to import (e.g. kjournal_export.md or backup.txt): ");
             char fn[256];
             if (fgets(fn, sizeof(fn), stdin)) {
@@ -1236,7 +1273,7 @@ void export_import_menu() {
             getchar();
         } else if (choice[0] == 'h' || choice[0] == 'H') {
             show_help();
-        } else if (choice[0] == '4') {
+        } else if (choice[0] == '5') {
             break;
         }
     }
@@ -1257,7 +1294,7 @@ void show_help() {
     printf(" - [4] Search & #Hashtags: Real-time keyword, hashtag (#tag), or mood filter.\n");
     printf(" - [5] Mood & Streak Analytics: Track writing streaks, word counts, and mood charts.\n");
     printf(" - [6] Security & PIN Lock: Protect your journal with a 4-digit PIN.\n");
-    printf(" - [7] Data Import & Export: Backup to Markdown or JSON, and restore anytime.\n");
+    printf(" - [7] Data Import & Export: Backup to Markdown, JSON, or CSV, and restore anytime.\n");
     printf(" - [8] Prompts & Templates Library: Choose from 6 guided journaling frameworks.\n");
     printf(" - [D] Load Sample Demo Entries: Populate starter entries across consecutive days.\n");
     printf(" - [C] Copy to Clipboard: Available when viewing entries to copy formatted text.\n");
