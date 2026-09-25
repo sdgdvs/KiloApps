@@ -432,10 +432,10 @@
         .class-gaia { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.5); }
 
         .planet-roster-strip {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 6px;
-            overflow-x: auto;
-            padding: 4px 2px 8px 2px;
+            padding: 2px 0 6px 0;
             margin-bottom: 8px;
         }
         .planet-roster-card {
@@ -444,9 +444,8 @@
             border-radius: 4px;
             padding: 6px 8px;
             cursor: pointer;
-            min-width: 140px;
+            min-width: 0;
             transition: all 0.2s;
-            flex-shrink: 0;
             display: flex;
             flex-direction: column;
             gap: 3px;
