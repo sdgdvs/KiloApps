@@ -79,6 +79,12 @@
   .pin-btn:active { transform: scale(0.95); }
   .pin-btn.action { font-size: 13px; font-weight: normal; color: var(--accent-red); }
 
+  /* Crisp Custom Scrollbars */
+  ::-webkit-scrollbar { width: 7px; height: 7px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
   /* App Layout */
   .app-container { display: flex; width: 100%; height: 100vh; }
 
@@ -90,8 +96,14 @@
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
-    overflow: hidden;
+    overflow-y: auto;
     min-height: 0;
+    transition: margin-left 0.25s ease, opacity 0.2s ease;
+  }
+  .sidebar.collapsed {
+    margin-left: -330px;
+    opacity: 0;
+    pointer-events: none;
   }
 
   .sidebar-header {
@@ -645,22 +657,38 @@
     font-weight: 500;
   }
 
-  /* Notification Toast (Non-occluding top-anchored bar per fleet standard) */
+  /* Notification Toast (Non-occluding centered top bar) */
   #toast {
-    position: fixed; top: 60px; right: 20px;
+    position: fixed; top: 16px; left: 50%;
+    transform: translateX(-50%) translateY(-35px);
     background: var(--accent-gold); color: #111; font-weight: 600;
-    padding: 10px 14px 10px 18px; border-radius: 8px; box-shadow: var(--card-shadow);
-    transform: translateY(-20px); opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 2000; display: flex; align-items: center; gap: 12px; max-width: 420px;
+    padding: 8px 16px 8px 18px; border-radius: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+    opacity: 0; pointer-events: none; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 2500; display: flex; align-items: center; gap: 10px; max-width: 90vw;
+    cursor: pointer;
   }
-  #toast.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
+  #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
   #toast button {
-    background: rgba(0,0,0,0.15); border: none; color: #111; width: 22px; height: 22px;
+    background: rgba(0,0,0,0.15); border: none; color: #111; width: 20px; height: 20px;
     border-radius: 50%; cursor: pointer; font-size: 11px; font-weight: bold;
     display: flex; align-items: center; justify-content: center; transition: background 0.15s;
     flex-shrink: 0;
   }
   #toast button:hover { background: rgba(0,0,0,0.35); }
+
+  /* Responsive UX enhancements */
+  .shortcut-tag { font-size: 10px; opacity: 0.75; }
+  @media (max-width: 1040px) {
+    .shortcut-tag { display: none; }
+  }
+  @media (max-width: 920px) {
+    .btn-lbl-long { display: none; }
+    .btn-lbl-short { display: inline !important; }
+    .toolbar-right .btn { padding: 5px 8px; font-size: 12px; }
+  }
+  @media (max-width: 760px) {
+    .mood-picker { display: none !important; }
+  }
 </style>
 </head>
 <body>
@@ -735,22 +763,26 @@
     </div>
 
     <!-- Calendar View -->
-    <div class="cal-container">
+    <div class="cal-container" id="calSection">
       <div class="cal-header">
-        <span class="cal-month-title" id="calMonthYear">July 2026</span>
+        <span class="cal-month-title" id="calMonthYear" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;" onclick="toggleCalFold()" title="Toggle Calendar Visibility">
+          July 2026 <span id="calFoldIcon" style="font-size:10px; opacity:0.75;">▾</span>
+        </span>
         <div class="cal-nav">
-          <button onclick="prevCalMonth()">‹</button>
-          <button onclick="todayCalMonth()">•</button>
-          <button onclick="nextCalMonth()">›</button>
+          <button onclick="prevCalMonth()" title="Previous Month">‹</button>
+          <button onclick="todayCalMonth()" title="Current Month">•</button>
+          <button onclick="nextCalMonth()" title="Next Month">›</button>
         </div>
       </div>
       <div class="cal-grid" id="calGrid"></div>
     </div>
 
     <!-- Quick Mood Filter Section -->
-    <div class="mood-filter-section">
+    <div class="mood-filter-section" id="moodFilterSection">
       <div class="mood-filter-title">
-        <span>Mood Filter</span>
+        <span style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;" onclick="toggleMoodFold()" title="Toggle Mood Filter Visibility">
+          Mood Filter <span id="moodFoldIcon" style="font-size:10px; opacity:0.75;">▾</span>
+        </span>
         <span id="moodFilterActiveLabel" style="font-size:10px; color:var(--accent-gold); text-transform:none; cursor:pointer;" onclick="selectMoodFilter('')">Reset [All]</span>
       </div>
       <div class="mood-filter-chips" id="moodFilterChips">
@@ -765,8 +797,10 @@
     </div>
 
     <!-- Hashtag Cloud -->
-    <div class="tag-section">
-      <div class="tag-section-title">Hashtags</div>
+    <div class="tag-section" id="tagSection">
+      <div class="tag-section-title" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between;" onclick="toggleTagFold()" title="Toggle Hashtags Visibility">
+        <span>Hashtags <span id="tagFoldIcon" style="font-size:10px; opacity:0.75;">▾</span></span>
+      </div>
       <div class="tag-cloud" id="tagCloud"></div>
     </div>
 
@@ -784,13 +818,14 @@
   <div class="main-content">
     <div class="toolbar">
       <div class="toolbar-left">
-        <div style="display:flex; align-items:center; gap:6px;">
-          <button class="icon-btn" onclick="navigateDay(-1)" title="Previous Day (Alt+Left)" style="padding:4px 8px; font-weight:bold;">◀</button>
-          <div class="date-title" id="currentDateDisplay" style="user-select:none; font-size:16px;">July 24, 2026</div>
-          <button class="icon-btn" onclick="navigateDay(1)" title="Next Day (Alt+Right)" style="padding:4px 8px; font-weight:bold;">▶</button>
-          <button class="icon-btn" onclick="jumpToToday()" title="Today's Entry (Ctrl+N)" style="padding:4px 8px; font-size:11px; font-weight:600; color:var(--accent-gold);">Today [^N]</button>
+        <button id="btnToggleSidebar" class="icon-btn" onclick="toggleSidebar()" title="Toggle Sidebar / Zen Focus Mode (Alt+S or F2)" style="padding:4px 8px; font-weight:bold; font-size:13px; color:var(--accent-gold);">☰</button>
+        <div style="display:flex; align-items:center; gap:5px;">
+          <button class="icon-btn" onclick="navigateDay(-1)" title="Previous Day (Alt+Left)" style="padding:4px 7px; font-weight:bold;">◀</button>
+          <div class="date-title" id="currentDateDisplay" style="user-select:none; font-size:15px; white-space:nowrap;">July 24, 2026</div>
+          <button class="icon-btn" onclick="navigateDay(1)" title="Next Day (Alt+Right)" style="padding:4px 7px; font-weight:bold;">▶</button>
+          <button class="icon-btn" onclick="jumpToToday()" title="Today's Entry (Ctrl+N)" style="padding:4px 7px; font-size:11px; font-weight:600; color:var(--accent-gold);">Today</button>
         </div>
-        <select id="entryCategorySelect" class="form-control" style="width: auto; padding: 4px 8px; font-size: 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-bright); border-radius: 6px;" onchange="onCategoryChange(this.value)" title="Journal Notebook / Category">
+        <select id="entryCategorySelect" class="form-control" style="width: auto; padding: 4px 6px; font-size: 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-bright); border-radius: 6px;" onchange="onCategoryChange(this.value)" title="Journal Notebook / Category">
           <option value="personal">📔 Personal</option>
           <option value="work">💼 Work & Projects</option>
           <option value="ideas">💡 Ideas & Creative</option>
@@ -808,12 +843,13 @@
       </div>
 
       <div class="toolbar-right">
-        <button class="btn" onclick="insertRandomPrompt()" style="color:var(--accent-gold);" title="Get Inspired with a Daily Reflection Prompt (Alt+P)">💡 Daily Prompt <span style="font-size:10px; opacity:0.8;">[Alt+P]</span></button>
-        <button class="btn" onclick="copyCurrentEntry()" title="Copy Entry to Clipboard (Alt+C)">📋 Copy <span style="font-size:10px; opacity:0.75;">[Alt+C]</span></button>
-        <button class="btn" onclick="openTemplatesModal()" title="Prompt Templates (Ctrl+T)">📋 Templates <span style="font-size:10px; opacity:0.75;">[^T]</span></button>
-        <button class="btn" onclick="openImportExportModal()" title="Import / Export Data (Ctrl+I)">📥/📤 Data <span style="font-size:10px; opacity:0.75;">[^I]</span></button>
-        <button class="btn btn-danger" onclick="deleteCurrentEntry()" title="Delete Current Entry (Del)">Delete <span style="font-size:10px; opacity:0.75;">[Del]</span></button>
-        <button class="btn btn-primary" onclick="saveEntry()" title="Save Entry (Ctrl+S)">Save Entry <span style="font-size:10px; opacity:0.85;">[^S]</span></button>
+        <button class="btn" onclick="openModal('helpModal')" title="Help & Keyboard Shortcuts (F1 or H)" style="padding:5px 8px;">❓ <span class="btn-lbl-long">Help</span></button>
+        <button class="btn" onclick="insertRandomPrompt()" style="color:var(--accent-gold);" title="Get Inspired with a Daily Reflection Prompt (Alt+P)">💡 <span class="btn-lbl-long">Daily Prompt</span><span class="btn-lbl-short" style="display:none;">Prompt</span> <span class="shortcut-tag">[Alt+P]</span></button>
+        <button class="btn" onclick="copyCurrentEntry()" title="Copy Entry to Clipboard (Alt+C)">📋 <span class="btn-lbl-long">Copy</span> <span class="shortcut-tag">[Alt+C]</span></button>
+        <button class="btn" onclick="openTemplatesModal()" title="Prompt Templates (Ctrl+T)">📋 <span class="btn-lbl-long">Templates</span> <span class="shortcut-tag">[^T]</span></button>
+        <button class="btn" onclick="openImportExportModal()" title="Import / Export Data (Ctrl+I)">📥/📤 <span class="btn-lbl-long">Data</span> <span class="shortcut-tag">[^I]</span></button>
+        <button class="btn btn-danger" onclick="deleteCurrentEntry()" title="Delete Current Entry (Del)">🗑️ <span class="btn-lbl-long">Delete</span> <span class="shortcut-tag">[Del]</span></button>
+        <button class="btn btn-primary" onclick="saveEntry()" title="Save Entry (Ctrl+S)">💾 Save <span class="shortcut-tag">[^S]</span></button>
       </div>
     </div>
 
@@ -829,8 +865,14 @@
         <button class="fmt-btn" onclick="insertMarkdown('- [ ] ', '')" title="Task Checkbox">☑ Task</button>
         <button class="fmt-btn" onclick="insertMarkdown('\n---\n', '')" title="Horizontal Divider">—</button>
         <button class="fmt-btn" onclick="insertTimestamp()" title="Insert Current Timestamp">⏱ Time</button>
+        <div style="display:inline-flex; align-items:center; gap:2px; margin-left:6px; padding-left:6px; border-left:1px solid var(--border-color);" title="Adjust Editor Font Size (Alt+[ / Alt+])">
+          <button class="fmt-btn" onclick="adjustFontSize(-1)" title="Smaller Font Size (Alt+[)">A-</button>
+          <span id="fontSizeDisplay" style="font-size:11px; color:var(--text-muted); min-width:28px; text-align:center;">16px</span>
+          <button class="fmt-btn" onclick="adjustFontSize(1)" title="Larger Font Size (Alt+])">A+</button>
+        </div>
       </div>
       <div class="view-mode-toggle">
+        <button class="mode-btn" id="btnZenMode" onclick="toggleSidebar()" title="Toggle Zen Focus Mode (Alt+S or F2)">🧘 Zen</button>
         <button class="mode-btn active" id="btnModeEdit" onclick="setEditorMode('edit')" title="Raw Textarea Editor">✏️ Edit</button>
         <button class="mode-btn" id="btnModeSplit" onclick="setEditorMode('split')" title="Side-by-Side Editor & Live Rendered Markdown">⚡ Split</button>
         <button class="mode-btn" id="btnModePreview" onclick="setEditorMode('preview')" title="Rendered Markdown Preview (Ctrl+P)">👁️ Preview</button>
@@ -1051,10 +1093,10 @@
   </div>
 </div>
 
-<!-- Toast notification -->
-<div id="toast">
+<!-- Toast notification (Non-blocking, top-center anchored) -->
+<div id="toast" onclick="hideToast()" title="Click to dismiss">
   <span id="toastMsg">Saved!</span>
-  <button id="toastCloseBtn" onclick="hideToast()" aria-label="Close notification" title="Dismiss">✕</button>
+  <button id="toastCloseBtn" onclick="event.stopPropagation(); hideToast()" aria-label="Close notification" title="Dismiss">✕</button>
 </div>
 
 <!-- Custom Confirmation Modal -->
@@ -1085,6 +1127,8 @@
       <p><strong>Keyboard Shortcuts:</strong></p>
       <ul style="margin-left: 20px; margin-bottom: 12px; color: var(--text-muted);">
         <li><strong style="color:var(--text-bright);">F1</strong> or <strong style="color:var(--text-bright);">H</strong> — Open this Help guide</li>
+        <li><strong style="color:var(--text-bright);">F2</strong> or <strong style="color:var(--text-bright);">Alt + S</strong> — Toggle Sidebar / Zen Focus Mode (Distraction-Free)</li>
+        <li><strong style="color:var(--text-bright);">Alt + [</strong> / <strong style="color:var(--text-bright);">Alt + ]</strong> — Decrease / Increase editor font size (12px - 26px)</li>
         <li><strong style="color:var(--text-bright);">Ctrl + S</strong> — Save current journal entry immediately</li>
         <li><strong style="color:var(--text-bright);">Ctrl + N</strong> — Jump to today's entry</li>
         <li><strong style="color:var(--text-bright);">Ctrl + P</strong> — Toggle Markdown Preview mode</li>
@@ -1097,10 +1141,13 @@
         <li><strong style="color:var(--text-bright);">Ctrl + F</strong> — Focus Search & Hashtag filter bar</li>
         <li><strong style="color:var(--text-bright);">Alt + 1..6</strong> (or <strong style="color:var(--text-bright);">1..6</strong>) — Select Mood (Happy, Calm, Neutral, Sad, Energetic, Focused)</li>
         <li><strong style="color:var(--text-bright);">Delete</strong> — Delete current entry (when editor is unfocused)</li>
-        <li><strong style="color:var(--text-bright);">Esc</strong> — Close active dialog / modal or clear search</li>
+        <li><strong style="color:var(--text-bright);">Esc</strong> — Close active dialog, exit Zen mode, or clear search</li>
       </ul>
       <p><strong>Core Features:</strong></p>
       <ul style="margin-left: 20px; margin-bottom: 12px; color: var(--text-muted);">
+        <li><strong>Zen Focus Mode:</strong> Press F2 or Alt+S (or click ☰ / 🧘 Zen) to collapse the sidebar for distraction-free writing.</li>
+        <li><strong>Adjustable Font Size:</strong> Click A- / A+ or press Alt+[ / Alt+] to customize text size (persisted).</li>
+        <li><strong>Collapsible Sidebar Sections:</strong> Click Calendar, Mood Filter, or Hashtags header to fold/unfold widgets.</li>
         <li><strong>Multi-Notebook Categories:</strong> Organize entries into Personal, Work, Ideas, Dreams, and Health.</li>
         <li><strong>Live Markdown Preview & Split View:</strong> Write with headings, blockquotes, and checkboxes with real-time rendering.</li>
         <li><strong>Formatting Toolbar:</strong> One-click buttons to insert headings, task checkboxes, lists, quotes, and timestamps.</li>
@@ -1125,7 +1172,7 @@
 <script>
   // Core State
   let entries = {}; // { 'YYYY-MM-DD': { text: '', mood: '😀', category: 'personal', updatedAt: timestamp } }
-  let settings = { pin: '', pinEnabled: false, dailyGoal: 150 };
+  let settings = { pin: '', pinEnabled: false, dailyGoal: 150, fontSize: 16 };
   let selectedDate = '';
   let selectedMood = '';
   let selectedTagFilter = '';
@@ -1343,6 +1390,88 @@
     }
   }
 
+  // Sidebar & Zen Mode Toggle
+  let isSidebarCollapsed = false;
+  function toggleSidebar(forceState) {
+    if (typeof forceState === 'boolean') {
+      isSidebarCollapsed = forceState;
+    } else {
+      isSidebarCollapsed = !isSidebarCollapsed;
+    }
+    const sb = document.querySelector('.sidebar');
+    const btn = document.getElementById('btnToggleSidebar');
+    const zenBtn = document.getElementById('btnZenMode');
+    if (sb) {
+      if (isSidebarCollapsed) {
+        sb.classList.add('collapsed');
+        if (btn) {
+          btn.title = "Show Sidebar (Alt+S or F2)";
+          btn.style.color = "var(--accent-gold)";
+        }
+        if (zenBtn) zenBtn.classList.add('active');
+        showToast("🧘 Zen Focus Mode active (Press Alt+S or F2 to exit)");
+      } else {
+        sb.classList.remove('collapsed');
+        if (btn) {
+          btn.title = "Hide Sidebar / Zen Mode (Alt+S or F2)";
+          btn.style.color = "var(--text-main)";
+        }
+        if (zenBtn) zenBtn.classList.remove('active');
+      }
+    }
+  }
+
+  // Collapsible Sidebar Sections
+  let calFolded = false;
+  let moodFolded = false;
+  let tagFolded = false;
+
+  function toggleCalFold() {
+    calFolded = !calFolded;
+    const grid = document.getElementById('calGrid');
+    const icon = document.getElementById('calFoldIcon');
+    if (grid) grid.style.display = calFolded ? 'none' : 'grid';
+    if (icon) icon.innerText = calFolded ? '▸' : '▾';
+  }
+
+  function toggleMoodFold() {
+    moodFolded = !moodFolded;
+    const chips = document.getElementById('moodFilterChips');
+    const icon = document.getElementById('moodFoldIcon');
+    if (chips) chips.style.display = moodFolded ? 'none' : 'flex';
+    if (icon) icon.innerText = moodFolded ? '▸' : '▾';
+  }
+
+  function toggleTagFold() {
+    tagFolded = !tagFolded;
+    const cloud = document.getElementById('tagCloud');
+    const icon = document.getElementById('tagFoldIcon');
+    if (cloud) cloud.style.display = tagFolded ? 'none' : 'flex';
+    if (icon) icon.innerText = tagFolded ? '▸' : '▾';
+  }
+
+  // Font Size Adjustments
+  function adjustFontSize(delta) {
+    const current = settings.fontSize || 16;
+    let newSize = current + delta * 2;
+    if (newSize < 12) newSize = 12;
+    if (newSize > 26) newSize = 26;
+    settings.fontSize = newSize;
+    applyFontSize();
+    saveSettingsToStorage();
+    showToast(`Font size: ${newSize}px`);
+  }
+
+  function applyFontSize() {
+    const size = settings.fontSize || 16;
+    const area = document.getElementById('journalArea');
+    const preview = document.getElementById('journalPreview');
+    const disp = document.getElementById('fontSizeDisplay');
+    if (area) area.style.fontSize = size + 'px';
+    if (preview) preview.style.fontSize = size + 'px';
+    if (disp) disp.innerText = size + 'px';
+  }
+
   // Category and Mood Filters
   function selectCategoryFilter(cat) {
     selectedCategoryFilter = cat;
@@ -1487,12 +1616,13 @@
     try {
       const s = localStorage.getItem('kjournal_settings');
       if (s) {
-        settings = Object.assign({ pin: '', pinEnabled: false, dailyGoal: 150 }, JSON.parse(s));
+        settings = Object.assign({ pin: '', pinEnabled: false, dailyGoal: 150, fontSize: 16 }, JSON.parse(s));
       }
       const goalSel = document.getElementById('dailyGoalSelect');
       if (goalSel && settings.dailyGoal !== undefined) {
         goalSel.value = String(settings.dailyGoal);
       }
+      applyFontSize();
     } catch (e) {}
   }
 
@@ -2753,6 +2883,10 @@
         document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('active'));
         return;
       }
+      if (isSidebarCollapsed) {
+        toggleSidebar(false);
+        return;
+      }
       const s = document.getElementById('searchInput');
       if (s && (document.activeElement === s || s.value)) {
         clearSearch();
@@ -2768,6 +2902,21 @@
     if (e.key === 'F1') {
       e.preventDefault();
       openModal('helpModal');
+      return;
+    }
+    if (e.key === 'F2' || (e.altKey && e.key.toLowerCase() === 's')) {
+      e.preventDefault();
+      toggleSidebar();
+      return;
+    }
+    if (e.altKey && e.key === '[') {
+      e.preventDefault();
+      adjustFontSize(-1);
+      return;
+    }
+    if (e.altKey && e.key === ']') {
+      e.preventDefault();
+      adjustFontSize(1);
       return;
     }
     if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 's') {

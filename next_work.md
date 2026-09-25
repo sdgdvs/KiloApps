@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KAbyss
-  kilo_usability: KJournal
+  kilo_usability: KMail
   kilo_graphics: KChrono
   kilo_qa: KSanctuary
   kilo_expander: KCalendar
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-tester
-  app: KZip
-  timestamp: "2026-09-25T19:51:00Z"
+  agent: kilo-usability
+  app: KJournal
+  timestamp: "2026-09-25T20:42:00Z"
 last_planner_run: "2026-09-25T06:42:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KJournal`
+- **Current Target**: `KMail`
 - **Upcoming Queue**:
-  `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`.
+  `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KSanctuary`
@@ -205,6 +205,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-25T20:42:00Z — kilo-usability: KJournal (UI/UX Ergonomics & Usability Pass)**
+  - Status: PASS ✅ (Zen focus mode, collapsible sidebar sections, typography scaling; 0 regressions).
+  - Zen Focus Mode: Added F2 / Alt+S / toolbar toggle collapsing sidebar into full-width distraction-free writing.
+  - Collapsible Sections: Added accordion toggle headers (▾/▸) to Calendar, Mood, and Hashtags freeing entry space.
+  - Typography Ergonomics: Added A- / A+ font size scaling (12px–26px, Alt+[ / Alt+]) with local persistence.
+  - Toast De-occlusion: Relocated toast alerts to centered top banner with click-to-dismiss, preventing button overlap.
+  - Responsive Toolbar: Added breakpoint scaling, compact button labels, and persistent main toolbar Help button.
+  - Verification: Clean MSVC compile (`KJournal.exe` 196 KB); Vite clean build in 379ms (`kjournal.html` 121.2 KB); lint PASS.
+
 - **2026-09-25T19:51:00Z — kilo-tester: KZip (UI Element Audit & Inline Fixes)**
   - Status: PASS ✅ (6 UI issues identified and resolved; 0 regressions).
   - Toast & Modals: Re-anchored toasts to top bar (top: 54px) preventing table and footer occlusion; added empty-file preview indicator.
@@ -239,15 +248,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Glint Purge: Removed specular glint sweep animations on weapons across Win32 C and web canvas per Rule 11.
   - Toast & Modals: Re-anchored toasts to top bar (top: 54px) preventing controls occlusion; added Enter/Space shortcuts to modals & screens.
   - Verification: Clean MSVC compile (`KQuest.exe` 95.5 KB); clean Vite build in 417ms (`kquest.html` 283.3 KB); security lint & icon audit 100% PASS.
-
-- **2026-09-25T15:55:00Z — kilo-graphics: KStarship (Game Content, Visual Polish & Audio Pass)**
-  - Status: PASS ✅ (Void Leviathan & FLARELIGHT encounters, Shield Matrix boost & Yamaha FM synth; 0 regressions).
-  - Game Content: Added Void Leviathan bioship (180 HP, tentacles/biomass) & FLARELIGHT 1999 archival demoscene relay.
-  - Tactical Mechanics: Added Emergency Shield Matrix Boost [4/B] (-250 Fuel, +20% Hull) and planetary Deep Sensor Ping (-80 Fuel).
-  - Visuals & Glint Purge: Verified zero rotating specular glints or traveling border dots; rendered bioship and satellite previews.
-  - Universal Audio: Implemented Yamaha YM2612 2-operator FM synthesis & SPC700 warmth for lasers, superweapons, shields, alarms & chimes.
-  - Balance Pass: Rebalanced cruising fuel burn (0.8 / 0.45 with ramscoop); tuned encounter loot and XP gains.
-  - Verification: Clean MSVC compile (`KStarship.exe` 145.5 KB); Vite clean build in 392ms (`kstarship.html` 139.3 KB); security lint & icon audit 100% PASS.
 
 
 
