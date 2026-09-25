@@ -870,6 +870,147 @@
     width: 1px; height: 1px; padding: 0; margin: -1px;
     overflow: hidden; clip: rect(0,0,0,0); border: 0;
   }
+  /* Live Collaboration Styling */
+  .btn-collab {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(5, 150, 105, 0.4));
+    border-color: rgba(16, 185, 129, 0.5);
+    color: #a7f3d0;
+  }
+
+  .btn-collab:hover {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.4), rgba(5, 150, 105, 0.6));
+    color: #fff;
+  }
+
+  .btn-collab.connected {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-color: #34d399;
+    color: #fff;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+  }
+
+  .collab-status-card {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+
+  .collab-pill-offline {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .collab-pill-online {
+    background: rgba(16, 185, 129, 0.25);
+    border: 1px solid var(--accent-green);
+    color: #6ee7b7;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+  }
+
+  /* Workspace Bar Styling */
+  .workspace-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.25);
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .workspace-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .workspace-select {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .workspace-select:focus {
+    border-color: var(--accent-blue);
+  }
+
+  /* Tag Cloud Styling */
+  .tag-cloud-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    flex-wrap: wrap;
+  }
+
+  .tag-cloud-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .tag-cloud {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .tag-chip {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tag-chip:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: var(--accent-blue);
+    color: #fff;
+  }
+
+  .tag-chip.active {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(139, 92, 246, 0.4));
+    border-color: var(--accent-blue);
+    color: #fff;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+  }
+
+  /* Batch Actions Bar */
+  .batch-bar {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
 </style>
 </head>
 <body>
@@ -880,6 +1021,9 @@
       <h1>KTodo</h1>
     </div>
     <div class="header-actions">
+      <button class="btn btn-collab" id="btnLiveCollab" onclick="openCollabModal()" title="Live Team Collaboration via Firebase RTDB [O]">
+        🌐 <span id="collabStatusText">Collab [O]</span>
+      </button>
       <button class="btn" id="btnSave" onclick="quicksaveState()" title="Quicksave Workspace State [F5]">
         💾 Save [F5]
       </button>
@@ -905,6 +1049,18 @@
 
     <!-- View Tabs & Category Navigation -->
     <section class="view-tabs-bar">
+      <div class="workspace-bar" id="workspaceBar">
+        <span class="workspace-label">📁 Workspace:</span>
+        <select id="workspaceSelect" class="workspace-select" onchange="handleWorkspaceChange(this.value)">
+          <option value="default">Default Workspace</option>
+          <option value="sprint">🚀 Sprint 1999</option>
+          <option value="personal">🏠 Personal Goals</option>
+          <option value="sysadmin">🖥️ SysAdmin Node 10.19.99</option>
+          <option value="__new__">+ New Workspace...</option>
+        </select>
+        <button class="action-icon-btn" onclick="renameCurrentWorkspace()" title="Rename Workspace">✏️</button>
+        <button class="action-icon-btn delete" onclick="deleteCurrentWorkspace()" title="Delete Workspace">✕</button>
+      </div>
       <div class="category-tabs" id="categoryTabs">
         <!-- Rendered dynamically -->
       </div>
@@ -931,6 +1087,14 @@
       <div class="stat-card">
         <span class="stat-label">Due Today / Overdue</span>
         <span class="stat-value" id="statUrgent" style="color: var(--accent-rose);">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">🔥 Streak</span>
+        <span class="stat-value" id="statStreak" style="color: #f97316;">0d</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">⚡ 24h Done</span>
+        <span class="stat-value" id="statVelocity" style="color: var(--accent-purple);">0</span>
       </div>
       <div class="progress-container">
         <div class="progress-bar-bg">
@@ -1002,7 +1166,21 @@
           <option value="priority">Sort by Priority</option>
           <option value="alpha">Sort A-Z</option>
         </select>
+        <div class="batch-bar">
+          <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="batchMarkAllDone()" title="Mark visible tasks completed">✓ All Done</button>
+          <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="batchSetPriority()" title="Set priority on visible tasks">⚡ Priority</button>
+          <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="batchMoveCategory()" title="Move visible tasks to category">🏷️ Move</button>
+        </div>
       </div>
+    </section>
+
+    <!-- Dynamic Hashtag Cloud -->
+    <section class="tag-cloud-bar" id="tagCloudBar" style="display: none;">
+      <span class="tag-cloud-label">🏷️ Tags:</span>
+      <div class="tag-cloud" id="tagCloud">
+        <!-- Rendered dynamically -->
+      </div>
+      <button class="btn" id="btnClearTag" style="display: none; padding: 2px 8px; font-size: 10px;" onclick="clearTagFilter()">✕ Clear Tag</button>
     </section>
 
     <!-- Main Views -->
@@ -1034,6 +1212,8 @@
           <button class="btn" onclick="copyMarkdownToClipboard()">📋 Copy Markdown</button>
           <button class="btn btn-primary" onclick="exportJSON()">📄 Export JSON</button>
           <button class="btn" onclick="exportCSV()">📊 Export CSV</button>
+          <button class="btn" onclick="exportICalendar()">📅 Export iCal (.ics)</button>
+          <button class="btn" onclick="exportTodoTxt()">📄 Export Todo.txt</button>
         </div>
 
         <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.1);">
@@ -1041,9 +1221,9 @@
         <!-- File Import Drop Area -->
         <div class="file-drop-area" onclick="document.getElementById('importFile').click()">
           <span style="font-size: 24px;">📁</span>
-          <p style="font-size: 13px; margin-top: 4px; font-weight: 600;">Click to select file (.md, .json, .csv)</p>
-          <p style="font-size: 11px; color: var(--text-secondary);">Supports standard Markdown task lists `- [ ] Task`</p>
-          <input type="file" id="importFile" accept=".md, .markdown, .json, .csv" style="display: none;" onchange="importData(event)">
+          <p style="font-size: 13px; margin-top: 4px; font-weight: 600;">Click to select file (.md, .json, .csv, .txt, .ics)</p>
+          <p style="font-size: 11px; color: var(--text-secondary);">Supports Markdown lists, CSV, JSON, Todo.txt, and iCalendar</p>
+          <input type="file" id="importFile" accept=".md, .markdown, .json, .csv, .txt, .ics" style="display: none;" onchange="importData(event)">
         </div>
 
         <!-- Direct Markdown Paste Input -->
@@ -1076,8 +1256,10 @@
             <li><strong style="color: var(--accent-blue);">Space</strong>: Toggle completed on selected task</li>
             <li><strong style="color: var(--accent-blue);">Delete</strong>: Delete selected task</li>
             <li><strong style="color: var(--accent-blue);">1 / 2</strong>: Switch between List and Kanban views</li>
+            <li><strong style="color: var(--accent-blue);">O</strong>: Open Live Team Collaboration dialog (Firebase RTDB)</li>
+            <li><strong style="color: var(--accent-blue);">W</strong>: Switch to next multi-tab Workspace</li>
             <li><strong style="color: var(--accent-blue);">S</strong>: Toggle productivity statistics</li>
-            <li><strong style="color: var(--accent-blue);">I</strong>: Open Import / Export dialog</li>
+            <li><strong style="color: var(--accent-blue);">I</strong>: Open Import / Export dialog (Markdown, CSV, JSON, Todo.txt, iCal)</li>
             <li><strong style="color: var(--accent-blue);">C</strong>: Clear completed tasks</li>
             <li><strong style="color: var(--accent-blue);">F5</strong>: Quicksave workspace snapshot to localStorage</li>
             <li><strong style="color: var(--accent-blue);">F9</strong>: Quickload restored workspace snapshot</li>
@@ -1089,13 +1271,15 @@
         <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px;">
           <h4 style="color: var(--text-primary); margin-bottom: 6px; font-size: 13px;">🚀 Task Management &amp; Features</h4>
           <ul style="list-style: none; display: flex; flex-direction: column; gap: 4px;">
+            <li>• <strong>🌐 Live Team Collaboration:</strong> Connect via Firebase RTDB in real time across computers on kiloapps.web.app without servers.</li>
+            <li>• <strong>📁 Multi-Tab Workspaces:</strong> Switch between distinct project boards (Default, Sprint 1999, Personal, SysAdmin) or add custom ones.</li>
+            <li>• <strong>🏷️ Dynamic Hashtags:</strong> Type <code>#tag</code> in tasks; click tags in the tag bar to filter instantly.</li>
+            <li>• <strong>⚡ Batch Actions:</strong> Mark all visible tasks done, set priorities, or re-categorize in bulk.</li>
             <li>• <strong>Views:</strong> Toggle between detailed List view and Kanban board (To Do, In Progress, Done).</li>
-            <li>• <strong>Categories &amp; Tags:</strong> Group tasks by project (Work, Personal, Project, Health, Shopping).</li>
-            <li>• <strong>Priorities:</strong> High, Medium, and Low with color-coded badges.</li>
-            <li>• <strong>Quick Presets:</strong> 1-click add everyday tasks (Standup, Fix Bug, Groceries, Workout, Sprint Plan).</li>
+            <li>• <strong>Categories &amp; Priorities:</strong> Work, Personal, Project, Health, Shopping with High/Med/Low badges.</li>
             <li>• <strong>Checklists:</strong> Click <span style="color: var(--text-primary);">📋</span> on any task card to expand and add subtasks.</li>
             <li>• <strong>Edit Tasks:</strong> Click <span style="color: var(--text-primary);">✏️</span> or double-click any task title to edit in-place.</li>
-            <li>• <strong>Markdown &amp; Backups:</strong> Click <em>💾 Import / Export</em> to backup JSON/CSV or sync GFM Markdown task lists.</li>
+            <li>• <strong>Data Interoperability:</strong> Import and export Markdown checklists, CSV spreadsheets, JSON backups, Todo.txt, and iCalendar (.ics).</li>
           </ul>
         </div>
         <button class="btn btn-primary" style="justify-content: center; margin-top: 4px;" onclick="closeHelpModal()">Got it</button>
@@ -1142,6 +1326,88 @@
     </div>
   </div>
 
+  <!-- Live Collaboration Modal (Firebase RTDB) -->
+  <div class="modal-overlay" id="collabModal" onclick="if(event.target===this) closeCollabModal()">
+    <div class="modal-box" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3>🌐 Live Team Collaboration (Firebase RTDB)</h3>
+        <button class="action-icon-btn" onclick="closeCollabModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: var(--text-secondary);">
+          Collaborate in real time with team members anywhere on <strong>kiloapps.web.app</strong>. Tasks, checkmarks, subtasks, and edits synchronize instantaneously across computers.
+        </p>
+
+        <div class="collab-status-card" id="collabStatusCard">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span id="collabStateBadge" class="collab-pill-offline">⚪ Offline (Local Workspace)</span>
+            <span id="collabPeerCount" style="font-size: 12px; color: var(--text-secondary);">0 peers online</span>
+          </div>
+          <div id="collabRoomInfo" style="font-size: 12px; margin-top: 6px; color: var(--text-primary); font-family: monospace;"></div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">Room Code / Channel:</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="collabRoomInput" placeholder="e.g. team-1999" value="team-1999" style="flex: 1; font-family: monospace; font-weight: bold;">
+            <button class="btn" onclick="generateRandomRoom()">🎲 Random</button>
+          </div>
+
+          <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">Your Display Nickname:</label>
+          <input type="text" id="collabNickInput" placeholder="e.g. Architect_99" style="font-family: monospace;">
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 4px;">
+          <button class="btn btn-primary" id="btnConnectRoom" style="flex: 1; justify-content: center;" onclick="joinCollabRoom()">🚀 Connect to Room</button>
+          <button class="btn btn-danger" id="btnDisconnectRoom" style="display: none;" onclick="leaveCollabRoom()">Disconnect</button>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button class="btn" style="flex: 1; justify-content: center; font-size: 12px;" onclick="copyCollabShareLink()">🔗 Copy Share Link</button>
+        </div>
+
+        <div id="collabPeerList" style="font-size: 11px; color: var(--text-secondary); max-height: 80px; overflow-y: auto; background: rgba(0,0,0,0.25); border-radius: 6px; padding: 6px 10px; display: none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase Realtime Database Module for Live Team Collaboration -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getDatabase, ref, set, get, onValue, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+      authDomain: "kiloappschat.firebaseapp.com",
+      databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+      projectId: "kiloappschat",
+      storageBucket: "kiloappschat.firebasestorage.app",
+      messagingSenderId: "290208566057",
+      appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+    };
+
+    try {
+      const fbApp = initializeApp(firebaseConfig);
+      const fbDb = getDatabase(fbApp);
+      window.fb = {
+        app: fbApp,
+        db: fbDb,
+        ref,
+        set,
+        get,
+        onValue,
+        off,
+        serverTimestamp,
+        onDisconnect
+      };
+      if (window.onFirebaseLoaded) {
+        window.onFirebaseLoaded();
+      }
+    } catch (err) {
+      console.warn("Firebase initialization skipped or offline:", err);
+    }
+  </script>
+
   <!-- Toast Notification -->
   <div class="toast" id="toast" onclick="hideToast()" title="Click to dismiss">
     <span id="toastText"></span>
@@ -1154,6 +1420,7 @@
     let tasks = [];
     let currentFilter = 'all';
     let activeCategory = 'all';
+    let activeTag = null;
     let currentViewMode = 'list'; // 'list' or 'kanban'
     let currentSort = 'dateAdded';
     let expandedSubtasks = new Set();
@@ -1161,6 +1428,41 @@
     let selectedTaskId = null;
     let editingTaskId = null;
     let taskCounter = 0;
+
+    // Workspaces (Productivity & Multi-Tab Session Management)
+    const WORKSPACES_STORAGE_KEY = 'ktodo_workspaces_v2';
+    const DEFAULT_WORKSPACES = {
+      default: { id: 'default', name: 'Default Workspace', tasks: [] },
+      sprint: { id: 'sprint', name: '🚀 Sprint 1999', tasks: [
+        { id: 1001, text: 'Fix network routing buffer in KNet', category: 'Project', priority: 'High', dueDate: '', completed: false, subtasks: [] },
+        { id: 1002, text: 'Run regression test on modem AT-dialer #net', category: 'Project', priority: 'Medium', dueDate: '', completed: true, subtasks: [] }
+      ]},
+      personal: { id: 'personal', name: '🏠 Personal Goals', tasks: [
+        { id: 2001, text: 'Read assembly optimization manual', category: 'Personal', priority: 'Low', dueDate: '', completed: false, subtasks: [] },
+        { id: 2002, text: 'Organize CD-ROM backups #y2k', category: 'Personal', priority: 'Medium', dueDate: '', completed: false, subtasks: [] }
+      ]},
+      sysadmin: { id: 'sysadmin', name: '🖥️ SysAdmin Node 10.19.99', tasks: [
+        { id: 3001, text: 'Check packet telemetry for subnet 10.19.99.0/24 #net', category: 'Work', priority: 'High', dueDate: '1999-12-30', completed: false, subtasks: [] },
+        { id: 3002, text: 'Verify router NTP clock stability #y2k', category: 'Work', priority: 'High', dueDate: '1999-12-31', completed: true, subtasks: [] },
+        { id: 3003, text: 'Audit node 0x7F transmission queue #classified', category: 'Work', priority: 'Medium', dueDate: '', completed: false, subtasks: [] }
+      ]}
+    };
+    let currentWorkspaceId = safeStorageGet('ktodo_active_ws', 'default');
+    let workspaces = null;
+
+    // Live Collaboration State (Firebase RTDB)
+    let isLiveCollab = false;
+    let currentCollabRoom = '';
+    let collabClientId = safeStorageGet('ktodo_collab_client_id', null);
+    if (!collabClientId) {
+      collabClientId = 'user_' + Math.random().toString(36).substring(2, 8);
+      safeStorageSet('ktodo_collab_client_id', collabClientId);
+    }
+    let collabClientNick = safeStorageGet('ktodo_collab_nick', 'Peer_' + collabClientId.substring(5));
+    let collabUnsubscribe = null;
+    let presenceUnsubscribe = null;
+    let syncDebounceTimer = null;
+    let isRemoteUpdateInProgress = false;
 
     function getUniqueId() {
       return Date.now() + (++taskCounter);
@@ -1210,27 +1512,56 @@
         clearTimeout(toastTimer);
         toastTimer = null;
       }
+      if (syncDebounceTimer) {
+        clearTimeout(syncDebounceTimer);
+        syncDebounceTimer = null;
+      }
+    }
+
+    function normalizeTasksArray(arr) {
+      if (!Array.isArray(arr)) return [];
+      return arr.filter(t => t && typeof t === 'object').map(t => ({
+        id: t.id || getUniqueId(),
+        text: typeof t.text === 'string' ? t.text : 'Task',
+        category: typeof t.category === 'string' ? t.category : 'General',
+        priority: typeof t.priority === 'string' ? t.priority : 'Medium',
+        dueDate: typeof t.dueDate === 'string' ? t.dueDate : '',
+        completed: !!t.completed,
+        completedAt: t.completedAt || (t.completed ? new Date().toISOString() : undefined),
+        subtasks: Array.isArray(t.subtasks) ? t.subtasks.filter(s => s && typeof s === 'object').map(s => ({
+          id: s.id || getUniqueId(),
+          text: typeof s.text === 'string' ? s.text : '',
+          completed: !!s.completed
+        })) : [],
+        createdAt: t.createdAt || new Date().toISOString()
+      }));
+    }
+
+    function loadWorkspaces() {
+      let saved = safeStorageGet(WORKSPACES_STORAGE_KEY, null);
+      if (!saved || typeof saved !== 'object') {
+        saved = JSON.parse(JSON.stringify(DEFAULT_WORKSPACES));
+        safeStorageSet(WORKSPACES_STORAGE_KEY, saved);
+      }
+      return saved;
+    }
+
+    function saveWorkspaces() {
+      safeStorageSet(WORKSPACES_STORAGE_KEY, workspaces);
     }
 
     // Load initial tasks from LocalStorage
     function loadTasks() {
+      workspaces = loadWorkspaces();
+      if (!workspaces[currentWorkspaceId]) {
+        currentWorkspaceId = 'default';
+      }
       try {
         const saved = safeStorageGet('ktodo_v2_tasks', null);
-        if (saved && Array.isArray(saved)) {
-          tasks = saved.filter(t => t && typeof t === 'object').map(t => ({
-            id: t.id || getUniqueId(),
-            text: typeof t.text === 'string' ? t.text : 'Task',
-            category: typeof t.category === 'string' ? t.category : 'General',
-            priority: typeof t.priority === 'string' ? t.priority : 'Medium',
-            dueDate: typeof t.dueDate === 'string' ? t.dueDate : '',
-            completed: !!t.completed,
-            subtasks: Array.isArray(t.subtasks) ? t.subtasks.filter(s => s && typeof s === 'object').map(s => ({
-              id: s.id || getUniqueId(),
-              text: typeof s.text === 'string' ? s.text : '',
-              completed: !!s.completed
-            })) : [],
-            createdAt: t.createdAt || new Date().toISOString()
-          }));
+        if (saved && Array.isArray(saved) && saved.length > 0) {
+          tasks = normalizeTasksArray(saved);
+        } else if (workspaces[currentWorkspaceId] && workspaces[currentWorkspaceId].tasks.length > 0) {
+          tasks = normalizeTasksArray(workspaces[currentWorkspaceId].tasks);
         } else {
           // Legacy check
           const legacy = safeStorageGet('ktodo_tasks', null);
@@ -1253,10 +1584,20 @@
         console.warn('Load error:', e);
         tasks = [];
       }
+      if (workspaces[currentWorkspaceId]) {
+        workspaces[currentWorkspaceId].tasks = tasks;
+      }
     }
 
     function saveTasks(render = true) {
       safeStorageSet('ktodo_v2_tasks', tasks);
+      if (workspaces && workspaces[currentWorkspaceId]) {
+        workspaces[currentWorkspaceId].tasks = tasks;
+        saveWorkspaces();
+      }
+      if (isLiveCollab) {
+        broadcastCollabUpdate();
+      }
       if (render) renderAppView();
     }
 
@@ -1370,6 +1711,581 @@
     function autoSaveSession() {
       const snap = getFullStateSnapshot();
       safeStorageSet('ktodo_session_state', snap);
+    }
+
+    // --- Workspaces Management (Productivity & Multi-Tab Sessions) ---
+    function handleWorkspaceChange(wsId) {
+      if (wsId === '__new__') {
+        const name = prompt('Enter new workspace name (e.g., "Project Omega"):');
+        if (!name || !name.trim()) {
+          renderWorkspaceSelect();
+          return;
+        }
+        const newId = 'ws_' + Date.now();
+        workspaces[newId] = { id: newId, name: name.trim(), tasks: [] };
+        saveWorkspaces();
+        switchWorkspace(newId);
+        showToast(`Workspace "${name.trim()}" created!`);
+        return;
+      }
+      switchWorkspace(wsId);
+    }
+
+    function switchWorkspace(wsId) {
+      if (!workspaces || !workspaces[wsId]) return;
+      // Save current tasks to current workspace
+      if (workspaces[currentWorkspaceId]) {
+        workspaces[currentWorkspaceId].tasks = tasks;
+        saveWorkspaces();
+      }
+      currentWorkspaceId = wsId;
+      tasks = normalizeTasksArray(workspaces[wsId].tasks || []);
+      activeCategory = 'all';
+      activeTag = null;
+      selectedTaskId = tasks.length > 0 ? tasks[0].id : null;
+      safeStorageSet('ktodo_active_ws', currentWorkspaceId);
+      saveTasks(false);
+      renderAppView();
+      showToast(`Switched to "${workspaces[wsId].name}"`);
+    }
+
+    function renameCurrentWorkspace() {
+      if (!workspaces || !workspaces[currentWorkspaceId]) return;
+      const cur = workspaces[currentWorkspaceId];
+      const newName = prompt(`Rename workspace "${cur.name}" to:`, cur.name);
+      if (!newName || !newName.trim() || newName.trim() === cur.name) return;
+      cur.name = newName.trim();
+      saveWorkspaces();
+      renderWorkspaceSelect();
+      showToast(`Workspace renamed to "${cur.name}"`);
+    }
+
+    function deleteCurrentWorkspace() {
+      if (currentWorkspaceId === 'default') {
+        showToast('⚠️ Cannot delete Default Workspace.');
+        return;
+      }
+      if (!workspaces || !workspaces[currentWorkspaceId]) return;
+      const cur = workspaces[currentWorkspaceId];
+      if (!confirm(`Delete workspace "${cur.name}" and all its tasks?`)) return;
+      delete workspaces[currentWorkspaceId];
+      saveWorkspaces();
+      switchWorkspace('default');
+      showToast(`Workspace "${cur.name}" deleted.`);
+    }
+
+    function renderWorkspaceSelect() {
+      const select = document.getElementById('workspaceSelect');
+      if (!select || !workspaces) return;
+      select.innerHTML = '';
+      Object.values(workspaces).forEach(ws => {
+        const opt = document.createElement('option');
+        opt.value = ws.id;
+        opt.textContent = ws.name;
+        if (ws.id === currentWorkspaceId) opt.selected = true;
+        select.appendChild(opt);
+      });
+      const newOpt = document.createElement('option');
+      newOpt.value = '__new__';
+      newOpt.textContent = '+ New Workspace...';
+      select.appendChild(newOpt);
+    }
+
+    // --- Dynamic Hashtag Cloud & Tag Filtering ---
+    function extractHashtags() {
+      const tagCounts = {};
+      tasks.forEach(t => {
+        const matches = (t.text || '').match(/#([a-zA-Z0-9_\-]+)/g);
+        if (matches) {
+          matches.forEach(m => {
+            const tag = m.substring(1).toLowerCase();
+            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+          });
+        }
+      });
+      return tagCounts;
+    }
+
+    function renderTagCloud() {
+      const bar = document.getElementById('tagCloudBar');
+      const cloud = document.getElementById('tagCloud');
+      const clearBtn = document.getElementById('btnClearTag');
+      if (!bar || !cloud) return;
+
+      const tagCounts = extractHashtags();
+      const tags = Object.keys(tagCounts);
+
+      if (tags.length === 0 && !activeTag) {
+        bar.style.display = 'none';
+        return;
+      }
+
+      bar.style.display = 'flex';
+      cloud.innerHTML = '';
+
+      tags.sort((a, b) => tagCounts[b] - tagCounts[a]);
+
+      tags.forEach(tag => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `tag-chip ${activeTag === tag ? 'active' : ''}`;
+        btn.innerHTML = `#${escapeHtml(tag)} <span style="opacity:0.7; font-size:10px;">(${tagCounts[tag]})</span>`;
+        btn.onclick = () => toggleTagFilter(tag);
+        cloud.appendChild(btn);
+      });
+
+      if (clearBtn) {
+        clearBtn.style.display = activeTag ? 'inline-block' : 'none';
+      }
+    }
+
+    function toggleTagFilter(tag) {
+      if (activeTag === tag) {
+        activeTag = null;
+      } else {
+        activeTag = tag;
+      }
+      renderAppView();
+    }
+
+    function clearTagFilter() {
+      activeTag = null;
+      renderAppView();
+    }
+
+    // --- Batch Actions Toolbar Handlers ---
+    function batchMarkAllDone() {
+      const filtered = getFilteredTasks();
+      if (filtered.length === 0) {
+        showToast('No tasks to mark done.');
+        return;
+      }
+      let count = 0;
+      filtered.forEach(t => {
+        if (!t.completed) {
+          t.completed = true;
+          t.completedAt = new Date().toISOString();
+          count++;
+        }
+      });
+      saveTasks();
+      showToast(`Marked ${count} task(s) completed!`);
+    }
+
+    function batchSetPriority() {
+      const filtered = getFilteredTasks();
+      if (filtered.length === 0) {
+        showToast('No tasks selected.');
+        return;
+      }
+      const p = prompt(`Set priority for ${filtered.length} visible task(s):\nType High, Medium, or Low:`, 'High');
+      if (!p) return;
+      const normalized = p.trim().toLowerCase();
+      let prio = 'Medium';
+      if (normalized.startsWith('h')) prio = 'High';
+      else if (normalized.startsWith('l')) prio = 'Low';
+      else if (normalized.startsWith('m')) prio = 'Medium';
+
+      filtered.forEach(t => { t.priority = prio; });
+      saveTasks();
+      showToast(`Set priority "${prio}" on ${filtered.length} task(s).`);
+    }
+
+    function batchMoveCategory() {
+      const filtered = getFilteredTasks();
+      if (filtered.length === 0) {
+        showToast('No tasks selected.');
+        return;
+      }
+      const catList = CATEGORIES.filter(c => c !== 'all').join(', ');
+      const c = prompt(`Move ${filtered.length} task(s) to category:\n(${catList})`, 'Work');
+      if (!c || !c.trim()) return;
+      const catName = c.trim();
+      filtered.forEach(t => { t.category = catName; });
+      saveTasks();
+      showToast(`Moved ${filtered.length} task(s) to category "${catName}".`);
+    }
+
+    // --- Productivity Streak & Velocity Metrics ---
+    function calculateStreak() {
+      const dates = new Set();
+      tasks.forEach(t => {
+        if (t.completed && t.completedAt) {
+          dates.add(t.completedAt.split('T')[0]);
+        }
+      });
+      let streak = 0;
+      let checkDate = new Date();
+      let checkStr = checkDate.toISOString().split('T')[0];
+      if (!dates.has(checkStr)) {
+        checkDate.setDate(checkDate.getDate() - 1);
+        checkStr = checkDate.toISOString().split('T')[0];
+      }
+      while (dates.has(checkStr)) {
+        streak++;
+        checkDate.setDate(checkDate.getDate() - 1);
+        checkStr = checkDate.toISOString().split('T')[0];
+      }
+      return streak;
+    }
+
+    // --- Advanced Interoperability (iCalendar & Todo.txt) ---
+    function generateICalendarText() {
+      let ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//KiloApps//KTodo 1999//EN\r\nCALSCALE:GREGORIAN\r\n";
+      tasks.forEach(t => {
+        ics += "BEGIN:VTODO\r\n";
+        ics += `UID:ktodo-${t.id}@kiloapps.web.app\r\n`;
+        ics += `SUMMARY:${(t.text || '').replace(/[\\;,]/g, '\\$&')}\r\n`;
+        if (t.category) ics += `CATEGORIES:${t.category}\r\n`;
+        const prioMap = { High: 1, Medium: 5, Low: 9 };
+        ics += `PRIORITY:${prioMap[t.priority] || 5}\r\n`;
+        ics += t.completed ? "STATUS:COMPLETED\r\n" : "STATUS:NEEDS-ACTION\r\n";
+        if (t.dueDate) {
+          const dateClean = t.dueDate.replace(/-/g, '');
+          ics += `DUE;VALUE=DATE:${dateClean}\r\n`;
+        }
+        ics += "END:VTODO\r\n";
+      });
+      ics += "END:VCALENDAR\r\n";
+      return ics;
+    }
+
+    function exportICalendar() {
+      const ics = generateICalendarText();
+      const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8;' });
+      const url = trackBlobUrl(URL.createObjectURL(blob));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `ktodo_calendar_${getTodayString()}.ics`;
+      link.click();
+      showToast('Exported tasks to iCalendar (.ics)!');
+    }
+
+    function generateTodoTxt() {
+      let txt = "";
+      tasks.forEach(t => {
+        let line = "";
+        if (t.completed) {
+          line += "x ";
+          if (t.completedAt) line += t.completedAt.split('T')[0] + " ";
+        } else if (t.priority === 'High') {
+          line += "(A) ";
+        } else if (t.priority === 'Medium') {
+          line += "(B) ";
+        } else if (t.priority === 'Low') {
+          line += "(C) ";
+        }
+        line += (t.text || '') + " ";
+        if (t.category && t.category !== 'General') line += "+" + t.category + " ";
+        if (t.dueDate) line += "due:" + t.dueDate + " ";
+        txt += line.trim() + "\r\n";
+      });
+      return txt;
+    }
+
+    function exportTodoTxt() {
+      const txt = generateTodoTxt();
+      const blob = new Blob([txt], { type: 'text/plain;charset=utf-8;' });
+      const url = trackBlobUrl(URL.createObjectURL(blob));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `ktodo_todo_${getTodayString()}.txt`;
+      link.click();
+      showToast('Exported tasks to Todo.txt!');
+    }
+
+    function parseTodoTxtString(content) {
+      const lines = content.split(/\r?\n/).filter(l => l.trim().length > 0);
+      const imported = [];
+      lines.forEach(line => {
+        let trimmed = line.trim();
+        let completed = false;
+        let completedAt = '';
+        if (trimmed.startsWith('x ')) {
+          completed = true;
+          trimmed = trimmed.substring(2).trim();
+          const dateMatch = trimmed.match(/^(\d{4}-\d{2}-\d{2})\s+/);
+          if (dateMatch) {
+            completedAt = dateMatch[1];
+            trimmed = trimmed.substring(dateMatch[0].length).trim();
+          }
+        }
+        let priority = 'Medium';
+        const prioMatch = trimmed.match(/^\(([A-Z])\)\s+/);
+        if (prioMatch) {
+          if (prioMatch[1] === 'A') priority = 'High';
+          else if (prioMatch[1] === 'B') priority = 'Medium';
+          else if (prioMatch[1] === 'C') priority = 'Low';
+          trimmed = trimmed.substring(prioMatch[0].length).trim();
+        }
+        let dueDate = '';
+        const dueMatch = trimmed.match(/due:(\d{4}-\d{2}-\d{2})/);
+        if (dueMatch) dueDate = dueMatch[1];
+
+        let category = 'General';
+        const catMatch = trimmed.match(/\+([a-zA-Z0-9_\-]+)/);
+        if (catMatch) category = catMatch[1];
+
+        imported.push({
+          id: getUniqueId(),
+          text: trimmed,
+          category: category,
+          priority: priority,
+          dueDate: dueDate,
+          completed: completed,
+          completedAt: completedAt ? new Date(completedAt).toISOString() : undefined,
+          subtasks: []
+        });
+      });
+      return imported;
+    }
+
+    function parseICalendarString(content) {
+      const imported = [];
+      const vtodos = content.split(/BEGIN:VTODO/i);
+      for (let i = 1; i < vtodos.length; i++) {
+        const block = vtodos[i].split(/END:VTODO/i)[0];
+        let summary = 'Task';
+        let category = 'General';
+        let priority = 'Medium';
+        let dueDate = '';
+        let completed = false;
+
+        const sumMatch = block.match(/SUMMARY:(.*?)(?:\r?\n|$)/i);
+        if (sumMatch) summary = sumMatch[1].replace(/\\([;,])/g, '$1').trim();
+
+        const catMatch = block.match(/CATEGORIES:(.*?)(?:\r?\n|$)/i);
+        if (catMatch) category = catMatch[1].trim();
+
+        const statMatch = block.match(/STATUS:(COMPLETED)/i);
+        if (statMatch) completed = true;
+
+        const dueMatch = block.match(/DUE(?:;VALUE=DATE)?:(\d{4})(\d{2})(\d{2})/i);
+        if (dueMatch) dueDate = `${dueMatch[1]}-${dueMatch[2]}-${dueMatch[3]}`;
+
+        const prioMatch = block.match(/PRIORITY:(\d+)/i);
+        if (prioMatch) {
+          const p = parseInt(prioMatch[1], 10);
+          if (p >= 1 && p <= 3) priority = 'High';
+          else if (p >= 4 && p <= 6) priority = 'Medium';
+          else if (p >= 7) priority = 'Low';
+        }
+
+        imported.push({
+          id: getUniqueId(),
+          text: summary,
+          category: category,
+          priority: priority,
+          dueDate: dueDate,
+          completed: completed,
+          subtasks: []
+        });
+      }
+      return imported;
+    }
+
+    // --- Firebase Realtime Database Multiplayer & Live Team Collab ---
+    function openCollabModal() {
+      closeHelpModal();
+      closeIOModal();
+      closeTutorialModal();
+      const input = document.getElementById('collabRoomInput');
+      if (input && !input.value) input.value = currentCollabRoom || 'team-1999';
+      const nickInput = document.getElementById('collabNickInput');
+      if (nickInput) nickInput.value = collabClientNick;
+      updateCollabModalUI();
+      document.getElementById('collabModal').classList.add('active');
+    }
+
+    function closeCollabModal() {
+      const modal = document.getElementById('collabModal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function generateRandomRoom() {
+      const code = 'room-' + Math.floor(1000 + Math.random() * 9000);
+      document.getElementById('collabRoomInput').value = code;
+    }
+
+    function updateCollabModalUI() {
+      const stateBadge = document.getElementById('collabStateBadge');
+      const peerCountEl = document.getElementById('collabPeerCount');
+      const roomInfo = document.getElementById('collabRoomInfo');
+      const btnConnect = document.getElementById('btnConnectRoom');
+      const btnDisconnect = document.getElementById('btnDisconnectRoom');
+
+      if (isLiveCollab) {
+        if (stateBadge) {
+          stateBadge.className = 'collab-pill-online';
+          stateBadge.textContent = `🟢 Live: ${currentCollabRoom}`;
+        }
+        if (btnConnect) btnConnect.textContent = '🔄 Re-sync Room';
+        if (btnDisconnect) btnDisconnect.style.display = 'block';
+        if (roomInfo) roomInfo.textContent = `Channel: multiplayer/ktodo/rooms/${currentCollabRoom}`;
+      } else {
+        if (stateBadge) {
+          stateBadge.className = 'collab-pill-offline';
+          stateBadge.textContent = '⚪ Offline (Local Workspace)';
+        }
+        if (btnConnect) btnConnect.textContent = '🚀 Connect to Room';
+        if (btnDisconnect) btnDisconnect.style.display = 'none';
+        if (peerCountEl) peerCountEl.textContent = '0 peers online';
+        if (roomInfo) roomInfo.textContent = 'Local tasks stored safely in browser.';
+      }
+    }
+
+    function updateCollabStatusUI() {
+      const btn = document.getElementById('btnLiveCollab');
+      const label = document.getElementById('collabStatusText');
+      if (!btn || !label) return;
+
+      if (isLiveCollab) {
+        btn.classList.add('connected');
+        label.textContent = `🟢 ${currentCollabRoom}`;
+      } else {
+        btn.classList.remove('connected');
+        label.textContent = 'Collab [O]';
+      }
+    }
+
+    function joinCollabRoom() {
+      const roomInput = document.getElementById('collabRoomInput');
+      const nickInput = document.getElementById('collabNickInput');
+      const rawRoom = roomInput ? roomInput.value.trim().toLowerCase() : '';
+      const roomName = rawRoom.replace(/[^a-z0-9_\-]/g, '') || 'team-1999';
+
+      if (nickInput && nickInput.value.trim()) {
+        collabClientNick = nickInput.value.trim().substring(0, 24);
+        safeStorageSet('ktodo_collab_nick', collabClientNick);
+      }
+
+      if (!window.fb || !window.fb.db) {
+        showToast('⚠️ Firebase RTDB is connecting... please wait a moment.');
+        return;
+      }
+
+      if (isLiveCollab && currentCollabRoom === roomName) {
+        broadcastCollabUpdate(true);
+        showToast('Pushed latest tasks to team room.');
+        return;
+      }
+
+      leaveCollabRoom();
+
+      currentCollabRoom = roomName;
+      isLiveCollab = true;
+      updateCollabStatusUI();
+      updateCollabModalUI();
+
+      const roomDataRef = window.fb.ref(window.fb.db, `multiplayer/ktodo/rooms/${currentCollabRoom}/data`);
+      const presenceRef = window.fb.ref(window.fb.db, `multiplayer/ktodo/rooms/${currentCollabRoom}/presence/${collabClientId}`);
+      const allPresenceRef = window.fb.ref(window.fb.db, `multiplayer/ktodo/rooms/${currentCollabRoom}/presence`);
+
+      // Set self presence
+      window.fb.set(presenceRef, {
+        clientId: collabClientId,
+        nick: collabClientNick,
+        joinedAt: Date.now()
+      });
+      window.fb.onDisconnect(presenceRef).remove();
+
+      // Listen for presence
+      presenceUnsubscribe = window.fb.onValue(allPresenceRef, snapshot => {
+        const val = snapshot.val();
+        let peerCount = 0;
+        let peerList = [];
+        if (val) {
+          Object.values(val).forEach(p => {
+            peerCount++;
+            peerList.push(p.nick || p.clientId);
+          });
+        }
+        const peerCountEl = document.getElementById('collabPeerCount');
+        if (peerCountEl) peerCountEl.textContent = `${peerCount} peer${peerCount === 1 ? '' : 's'} online`;
+        const listEl = document.getElementById('collabPeerList');
+        if (listEl) {
+          if (peerList.length > 0) {
+            listEl.style.display = 'block';
+            listEl.innerHTML = '<strong>Online Teammates:</strong> ' + peerList.map(escapeHtml).join(', ');
+          } else {
+            listEl.style.display = 'none';
+          }
+        }
+      });
+
+      // Listen for task changes
+      collabUnsubscribe = window.fb.onValue(roomDataRef, snapshot => {
+        const val = snapshot.val();
+        if (val && Array.isArray(val.tasks)) {
+          if (val.lastUpdatedBy !== collabClientId) {
+            isRemoteUpdateInProgress = true;
+            tasks = normalizeTasksArray(val.tasks);
+            saveTasks(false);
+            renderAppView();
+            isRemoteUpdateInProgress = false;
+            showToast(`🔄 Synced updates from ${escapeHtml(val.lastUpdatedNick || 'teammate')}`);
+          }
+        } else if (!val || !val.tasks) {
+          // If room is empty, seed it with our local tasks
+          broadcastCollabUpdate(true);
+        }
+      });
+
+      showToast(`Connected to team room "${currentCollabRoom}"!`);
+    }
+
+    function leaveCollabRoom() {
+      if (!isLiveCollab) return;
+
+      if (window.fb && window.fb.db && currentCollabRoom) {
+        if (collabUnsubscribe) {
+          window.fb.off(window.fb.ref(window.fb.db, `multiplayer/ktodo/rooms/${currentCollabRoom}/data`));
+          collabUnsubscribe = null;
+        }
+        if (presenceUnsubscribe) {
+          window.fb.off(window.fb.ref(window.fb.db, `multiplayer/ktodo/rooms/${currentCollabRoom}/presence`));
+          presenceUnsubscribe = null;
+        }
+        const myPresenceRef = window.fb.ref(window.fb.db, `multiplayer/ktodo/rooms/${currentCollabRoom}/presence/${collabClientId}`);
+        window.fb.set(myPresenceRef, null);
+      }
+
+      isLiveCollab = false;
+      currentCollabRoom = '';
+      updateCollabStatusUI();
+      updateCollabModalUI();
+      showToast('Disconnected from team room. Reverted to local workspace.');
+    }
+
+    function broadcastCollabUpdate(immediate = false) {
+      if (!isLiveCollab || !window.fb || !window.fb.db || !currentCollabRoom || isRemoteUpdateInProgress) return;
+
+      if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
+
+      const doSend = () => {
+        const roomDataRef = window.fb.ref(window.fb.db, `multiplayer/ktodo/rooms/${currentCollabRoom}/data`);
+        window.fb.set(roomDataRef, {
+          tasks: tasks,
+          lastUpdatedBy: collabClientId,
+          lastUpdatedNick: collabClientNick,
+          timestamp: Date.now()
+        }).catch(err => {
+          console.warn('Firebase RTDB sync error:', err);
+        });
+      };
+
+      if (immediate) {
+        doSend();
+      } else {
+        syncDebounceTimer = setTimeout(doSend, 300);
+      }
+    }
+
+    function copyCollabShareLink() {
+      const room = currentCollabRoom || (document.getElementById('collabRoomInput') ? document.getElementById('collabRoomInput').value.trim() : 'team-1999');
+      const url = `${window.location.origin}${window.location.pathname}?room=${encodeURIComponent(room)}`;
+      fallbackCopyText(url);
+      showToast(`🔗 Copied room link: ?room=${room}`);
     }
 
     // First-run Tutorial Modal Management
@@ -1685,6 +2601,17 @@
       document.getElementById('statCompleted').textContent = completed;
       document.getElementById('statUrgent').textContent = urgent;
 
+      // 24h Velocity & Streak
+      const nowMs = Date.now();
+      const oneDayAgo = nowMs - 24 * 3600 * 1000;
+      const recentDone = tasks.filter(t => t.completed && t.completedAt && new Date(t.completedAt).getTime() >= oneDayAgo).length;
+      const velEl = document.getElementById('statVelocity');
+      if (velEl) velEl.textContent = recentDone;
+
+      const streak = calculateStreak();
+      const streakEl = document.getElementById('statStreak');
+      if (streakEl) streakEl.textContent = `${streak}d`;
+
       const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
       document.getElementById('statProgressBar').style.width = percent + '%';
       document.getElementById('statProgressText').textContent = `${percent}% Done`;
@@ -1706,6 +2633,12 @@
 
         // Category tab filter
         if (activeCategory !== 'all' && (t.category || 'General') !== activeCategory) return false;
+
+        // Hashtag filter
+        if (activeTag) {
+          const tagRegex = new RegExp(`(^|\\s)#${activeTag}\\b`, 'i');
+          if (!tagRegex.test(t.text || '')) return false;
+        }
 
         // Search text
         if (searchQuery) {
@@ -1740,6 +2673,9 @@
     function renderAppView() {
       updateStats();
       renderCategoryTabs();
+      renderWorkspaceSelect();
+      renderTagCloud();
+      updateCollabStatusUI();
 
       const filtered = getFilteredTasks();
 
@@ -2246,6 +3182,26 @@
             } else {
               showToast('⚠️ CSV file is empty.');
             }
+          } else if (file.name.endsWith('.txt')) {
+            const imported = parseTodoTxtString(content);
+            if (imported.length > 0) {
+              tasks = imported;
+              saveTasks();
+              showToast(`Imported ${tasks.length} tasks from Todo.txt!`);
+              closeIOModal();
+            } else {
+              showToast('⚠️ No valid tasks found in Todo.txt file.');
+            }
+          } else if (file.name.endsWith('.ics')) {
+            const imported = parseICalendarString(content);
+            if (imported.length > 0) {
+              tasks = imported;
+              saveTasks();
+              showToast(`Imported ${tasks.length} tasks from iCalendar (.ics)!`);
+              closeIOModal();
+            } else {
+              showToast('⚠️ No valid VTODO tasks found in .ics file.');
+            }
           }
         } catch (err) {
           showToast('⚠️ Error parsing file: ' + err.message);
@@ -2347,6 +3303,20 @@
         return;
       }
 
+      const collabEl = document.getElementById('collabModal');
+      const isCollabActive = collabEl && collabEl.classList.contains('active');
+      if (isCollabActive) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          closeCollabModal();
+          return;
+        }
+        if (e.target.tagName === 'INPUT') {
+          return;
+        }
+        return;
+      }
+
       // Quicksave & Quickload Shortcuts (always active)
       const isInput = ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName);
       if (e.key === 'F5') {
@@ -2412,6 +3382,15 @@
           openIOModal();
         } else if (e.key.toLowerCase() === 'c') {
           clearCompleted();
+        } else if (e.key.toLowerCase() === 'o') {
+          openCollabModal();
+        } else if (e.key.toLowerCase() === 'w') {
+          if (workspaces) {
+            const wsKeys = Object.keys(workspaces);
+            let curIdx = wsKeys.indexOf(currentWorkspaceId);
+            let nextIdx = (curIdx + 1) % wsKeys.length;
+            switchWorkspace(wsKeys[nextIdx]);
+          }
         } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
           if (currentViewMode === 'list') {
             const filtered = getFilteredTasks();
@@ -2455,13 +3434,32 @@
       renderAppView();
     }
 
+    // Automatic Room Join via URL query string (?room=roomname)
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlRoom = urlParams.get('room');
+      if (urlRoom) {
+        const roomInput = document.getElementById('collabRoomInput');
+        if (roomInput) roomInput.value = urlRoom;
+        setTimeout(() => {
+          if (window.fb && window.fb.db) {
+            joinCollabRoom();
+          } else {
+            window.onFirebaseLoaded = () => joinCollabRoom();
+          }
+        }, 300);
+      }
+    } catch (e) {
+      console.warn('URL param parse error:', e);
+    }
+
     // First-run tutorial onboarding check: only on fresh sessions, never interrupting restored save states
     if (!hasSeenTutorial && !hasQuicksave && !savedSession && tasks.length === 0) {
       loadSampleTasks();
       setTimeout(openTutorialModal, 400);
     } else {
       setTimeout(() => {
-        showToast("✨ Ready. [Space] Done, [F5] Save, [F9] Load, [F1] Help, [N] New task");
+        showToast("✨ Ready. [Space] Done, [F5] Save, [F9] Load, [F1] Help, [O] Collab, [N] New task");
       }, 500);
     }
   </script>
