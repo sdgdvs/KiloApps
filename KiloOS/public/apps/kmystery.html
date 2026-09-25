@@ -264,7 +264,7 @@
         }
         #toast-bar {
             position: fixed;
-            bottom: 24px;
+            top: 52px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(18, 16, 12, 0.96);
@@ -318,7 +318,7 @@
         </div>
     </div>
     
-    <div id="help-modal" class="hidden">
+    <div id="help-modal" class="hidden" onclick="if (event.target === this) hideHelp();">
         <div style="background:#111114; border:2px solid #d4af37; padding:25px; max-width:580px; max-height:85vh; overflow-y:auto; box-shadow: 0 0 30px #000; border-radius:4px;">
             <h2>Detective's Manual</h2>
             <h3>How to Play</h3>
@@ -339,7 +339,7 @@
         </div>
     </div>
 
-    <div id="dossier-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.86); z-index:1200; display:flex; justify-content:center; align-items:center;">
+    <div id="dossier-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.86); z-index:1200; display:flex; justify-content:center; align-items:center;" onclick="if (event.target === this) closeDossier();">
         <div style="background:#111114; border:2px solid #d4af37; padding:22px; max-width:540px; width:90%; max-height:85vh; overflow-y:auto; box-shadow:0 0 35px #000; border-radius:4px; position:relative;">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #4a3e26; padding-bottom:8px;">
                 <h2 id="dossier-title" style="margin:0; font-size:16px; color:#d4af37; letter-spacing:1.5px;">EVIDENCE FORENSIC DOSSIER</h2>
@@ -378,7 +378,10 @@
                     <option value="Hard">Hard (5 suspects, 8h)</option>
                 </select>
             </div>
-            <button onclick="startGame()" class="btn-gold" style="font-size: 15px; padding: 10px 24px; font-weight: bold;">Begin Investigation</button>
+            <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+                <button onclick="startGame()" class="btn-gold" style="font-size: 15px; padding: 10px 24px; font-weight: bold;">Begin Investigation</button>
+                <button id="resume-btn" onclick="quickLoad()" class="btn-gold hidden" style="font-size: 15px; padding: 10px 24px; font-weight: bold;" title="Resume saved case [F9]">Resume Saved Case [F9]</button>
+            </div>
             <div id="stats-area" style="margin-top: 20px; font-size: 13px; color: #9c9586; text-align: left; background: rgba(0,0,0,0.6); padding: 12px; border: 1px dashed #4a3e26; border-radius: 3px;">
                 <h3 style="margin-top: 0; color: #d4af37; font-size: 13px;">Detective Record</h3>
                 <p style="margin: 4px 0;">Rank: <strong id="rank-display" style="color: #fff;">Rookie</strong> (Cases: <span id="cases-solved">0</span>)</p>
@@ -766,11 +769,30 @@
             showToast(on ? "♫ Noir Jazz: Playing" : "♫ Noir Jazz: Muted");
         }
 
+        function safeGetStorage(key, fallback = null) {
+            try {
+                const v = localStorage.getItem(key);
+                return v !== null ? v : fallback;
+            } catch (e) {
+                return fallback;
+            }
+        }
+
+        function safeSetStorage(key, val) {
+            try {
+                localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
         function showHelp() {
             document.getElementById('help-modal').classList.remove('hidden');
         }
         function hideHelp() {
             document.getElementById('help-modal').classList.add('hidden');
+            safeSetStorage('kmystery_tutorialSeen', '1');
         }
         function toggleHelp() {
             const m = document.getElementById('help-modal');
@@ -782,7 +804,7 @@
         function showToast(msg) {
             const toast = document.getElementById('toast-bar');
             if (!toast) return;
-            toast.innerHTML = msg;
+            toast.textContent = msg;
             toast.classList.add('visible');
             if (toastTimer) clearTimeout(toastTimer);
             toastTimer = setTimeout(() => {
@@ -818,15 +840,26 @@
                     showToast("ℹ️ Start a case investigation first before saving.");
                     return;
                 }
+                const gameOverArea = document.getElementById('game-over-area');
+                if ((gameOverArea && !gameOverArea.classList.contains('hidden')) || state.timeLeft <= 0) {
+                    showToast("⚠️ Cannot save concluded case. Start a new case.");
+                    return;
+                }
                 const saveData = {
                     version: 1,
                     timestamp: Date.now(),
-                    state: state,
+                    state: JSON.parse(JSON.stringify(state)),
+                    analysisState: analysisState ? JSON.parse(JSON.stringify(analysisState)) : null,
                     difficulty: document.getElementById('difficulty').value
                 };
-                localStorage.setItem('kmystery_quicksave', JSON.stringify(saveData));
+                const ok = safeSetStorage('kmystery_quicksave', JSON.stringify(saveData));
+                if (!ok) {
+                    showToast("⚠️ Quicksave failed: Storage error or quota reached.");
+                    return;
+                }
                 showToast("💾 Case File Quicksaved! [F5]");
                 noirAudio.playTypewriter();
+                updateStatsUI();
             } catch (err) {
                 showToast("⚠️ Quicksave failed: " + err.message);
             }
@@ -834,12 +867,18 @@
 
         function quickLoad() {
             try {
-                const raw = localStorage.getItem('kmystery_quicksave');
+                const raw = safeGetStorage('kmystery_quicksave');
                 if (!raw) {
                     showToast("ℹ️ No quicksave file found. Press [F5] to save first.");
                     return;
                 }
-                const data = JSON.parse(raw);
+                let data;
+                try {
+                    data = JSON.parse(raw);
+                } catch (e) {
+                    showToast("⚠️ Corrupt quicksave data.");
+                    return;
+                }
                 if (!data || !data.state) {
                     showToast("⚠️ Corrupt quicksave data.");
                     return;
@@ -847,14 +886,36 @@
                 noirAudio.init();
                 noirAudio.resume();
                 Object.assign(state, data.state);
+                analysisState = data.analysisState ? JSON.parse(JSON.stringify(data.analysisState)) : null;
+                if (data.difficulty) {
+                    const diffSelect = document.getElementById('difficulty');
+                    if (diffSelect) diffSelect.value = data.difficulty;
+                }
                 document.getElementById('start-screen').classList.add('hidden');
                 document.getElementById('game-screen').classList.remove('hidden');
                 document.getElementById('game-over-area').classList.add('hidden');
+                document.getElementById('accusation-area').classList.add('hidden');
                 document.getElementById('time-left').textContent = state.timeLeft;
                 updateLocation();
                 updateNotebook();
-                if (state.inLab) openLab();
-                else closeLab();
+
+                if (state.inLab) {
+                    openLab();
+                    if (state.analyzingIdx >= 0 && analysisState) {
+                        document.getElementById('lab-list').innerHTML = '';
+                        document.getElementById('scanner-game').classList.remove('hidden');
+                        updateScannerUI();
+                    }
+                } else if (state.currentInterrogation) {
+                    document.getElementById('action-area').classList.add('hidden');
+                    document.getElementById('travel-container').classList.add('hidden');
+                    document.getElementById('lab-area').classList.add('hidden');
+                    renderInterrogationUI(state.currentInterrogation, '"What do you want, Detective?"');
+                } else {
+                    closeLab();
+                    endInterrogation();
+                    cancelAccusation();
+                }
                 showToast("📂 Case File Restored! [F9]");
                 noirAudio.playTypewriter();
             } catch (err) {
@@ -993,9 +1054,9 @@
         }
 
         function updateStatsUI() {
-            let casesSolved = parseInt(localStorage.getItem('casesSolved') || '0');
-            let fastestSolve = parseInt(localStorage.getItem('fastestSolve') || '999');
-            let perfectSolves = parseInt(localStorage.getItem('perfectSolves') || '0');
+            let casesSolved = parseInt(safeGetStorage('kmystery_casesSolved') || safeGetStorage('casesSolved') || '0');
+            let fastestSolve = parseInt(safeGetStorage('kmystery_fastestSolve') || safeGetStorage('fastestSolve') || '999');
+            let perfectSolves = parseInt(safeGetStorage('kmystery_perfectSolves') || safeGetStorage('perfectSolves') || '0');
             
             let rank = "Rookie";
             if (casesSolved >= 1) rank = "Gumshoe";
@@ -1007,6 +1068,15 @@
             document.getElementById('rank-display').textContent = rank;
             document.getElementById('fastest-solve').textContent = fastestSolve === 999 ? 'N/A' : fastestSolve;
             document.getElementById('perfect-solves').textContent = perfectSolves;
+
+            const resumeBtn = document.getElementById('resume-btn');
+            if (resumeBtn) {
+                if (safeGetStorage('kmystery_quicksave')) {
+                    resumeBtn.classList.remove('hidden');
+                } else {
+                    resumeBtn.classList.add('hidden');
+                }
+            }
         }
         updateStatsUI();
 
@@ -1649,16 +1719,16 @@
                 const hoursTaken = state.initialTime - state.timeLeft;
                 const penaltyFree = (state.failedCalibrations === 0 && state.angrySuspects === 0);
                 
-                let casesSolved = parseInt(localStorage.getItem('casesSolved') || '0') + 1;
-                let fastestSolve = parseInt(localStorage.getItem('fastestSolve') || '999');
-                let perfectSolves = parseInt(localStorage.getItem('perfectSolves') || '0');
+                let casesSolved = parseInt(safeGetStorage('kmystery_casesSolved') || safeGetStorage('casesSolved') || '0') + 1;
+                let fastestSolve = parseInt(safeGetStorage('kmystery_fastestSolve') || safeGetStorage('fastestSolve') || '999');
+                let perfectSolves = parseInt(safeGetStorage('kmystery_perfectSolves') || safeGetStorage('perfectSolves') || '0');
                 
                 if (hoursTaken < fastestSolve) fastestSolve = hoursTaken;
                 if (penaltyFree) perfectSolves++;
                 
-                localStorage.setItem('casesSolved', casesSolved);
-                localStorage.setItem('fastestSolve', fastestSolve);
-                localStorage.setItem('perfectSolves', perfectSolves);
+                safeSetStorage('kmystery_casesSolved', String(casesSolved));
+                safeSetStorage('kmystery_fastestSolve', String(fastestSolve));
+                safeSetStorage('kmystery_perfectSolves', String(perfectSolves));
                 
                 updateStatsUI();
                 noirAudio.playDramaticChord();
@@ -1717,6 +1787,30 @@
             if (e.key === 'Escape') {
                 closeAllModals();
                 return;
+            }
+            const helpModal = document.getElementById('help-modal');
+            const dossierModal = document.getElementById('dossier-modal');
+            const gameOverArea = document.getElementById('game-over-area');
+            if (helpModal && !helpModal.classList.contains('hidden')) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    hideHelp();
+                    return;
+                }
+            }
+            if (dossierModal && !dossierModal.classList.contains('hidden')) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    closeDossier();
+                    return;
+                }
+            }
+            if (gameOverArea && !gameOverArea.classList.contains('hidden')) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    returnToTitle();
+                    return;
+                }
             }
             if (!document.getElementById('game-screen').classList.contains('hidden') && !isInputFocused()) {
                 const k = e.key.toLowerCase();
@@ -2602,6 +2696,18 @@
             ctx.restore();
             requestAnimationFrame(renderLoop);
         }
+
+        function checkFirstRunTutorial() {
+            try {
+                const hasQuicksave = !!safeGetStorage('kmystery_quicksave');
+                const tutorialSeen = safeGetStorage('kmystery_tutorialSeen');
+                if (!tutorialSeen && !hasQuicksave) {
+                    showHelp();
+                    safeSetStorage('kmystery_tutorialSeen', '1');
+                }
+            } catch (e) {}
+        }
+        checkFirstRunTutorial();
 
         requestAnimationFrame(renderLoop);
     </script>

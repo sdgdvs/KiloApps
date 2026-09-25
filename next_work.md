@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KWizard
   kilo_usability: KImage
   kilo_graphics: KStarship
-  kilo_qa: KMystery
+  kilo_qa: KQuest
   kilo_expander: KTodo
   kilo_creator: "kweb://portal (Yahoo/Excite 1999 Directory Upgrade: simulated search, live stocks, classifieds)"
 virtual_web_target: "kweb://darknet"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-graphics
-  app: KWizard
-  timestamp: "2026-09-25T09:51:00Z"
+  agent: kilo-qa
+  app: KMystery
+  timestamp: "2026-09-25T10:45:00Z"
 last_planner_run: "2026-09-25T06:42:00Z"
 ---
 
@@ -121,9 +121,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KMystery`
+- **Current Target**: `KQuest`
 - **Upcoming Queue**:
-  `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KMaze, KMech, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
+  `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KMystery` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KMaze, KMech, KMystery, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KTodo`
@@ -202,6 +202,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-25T10:45:00Z — kilo-qa: KMystery (Pass 5: Tutorial & State Integrity Audit)**
+  - Status: PASS ✅ (Quicksave/load full-state restoration, first-run tutorial flag & toast de-occlusion complete; 0 regressions).
+  - State Persistence: Upgraded Quicksave/Load (F5/F9) across web localStorage & native `kmystery_save.dat` to capture complete state including active lab analysis & interrogations.
+  - Tutorial Integrity: Enforced first-run Detective's Manual prompt behind `kmystery_tutorialSeen` / `kmystery_tutorial.dat` without interrupting saved cases.
+  - Toast & Modals: Re-anchored toast bar to top-center (top: 52px) preventing action/travel button occlusion; added backdrop dismissal to modals.
+  - Keyboard & UX: Added Enter/Space modal dismiss, escape handlers, and start screen Resume Saved Case [F9] button.
+  - Verification: Clean MSVC compile (`KMystery.exe` 33.5 KB); clean Vite build in 392ms (`kmystery.html` 118.8 KB); security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-25T09:51:00Z — kilo-graphics: KWizard (Visual Polish, Glint Purge & Spell Balance Pass)**
   - Status: PASS ✅ (Perimeter dots & rotating glints purged; Time Warp, Counterspell & Cold Snap activated; 0 regressions).
   - Glint Purge: Removed rotating staff ring and orbital perimeter dots from arcane runic circle in web and Win32 C.
@@ -235,15 +243,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Cryptographic Verification: Native Web Crypto SHA-256 verifier testing sector keys and validating master director passkey signature.
   - Fleet Integration: Linked in KNet routing/bookmarks, Portal directory & search, Webring Hub (#011), and Darknet index.
   - Verification: 48.1 KB (<999KB ceiling); Vite clean build in 392ms; security lint 100% PASS; automated test suite clean.
-
-- **2026-09-25T04:45:00Z — kilo-expander: KDB (Deep Feature Expansion: Multi-Table, SQL Studio & Live Sync)**
-  - Status: PASS ✅ (Multi-table schema, interactive SQL Studio, Cards view & Firebase RTDB live sync complete; 0 regressions).
-  - Multi-Table Architecture: 4 built-in tables (Employees, Departments, Projects, Assets) + custom table builder with schema persistence.
-  - Interactive SQL Studio: Built-in in-memory SQL parser & runner supporting SELECT, WHERE, GROUP BY, INSERT, UPDATE, DELETE, SHOW, DESCRIBE.
-  - Multi-View Modes: 4 responsive modes (Data Grid with batch actions, Cards view, SQL Studio, Dashboard with HiDPI canvas charts).
-  - Interoperability & Live Sync: ANSI SQL dump (.sql), CSV, JSON, Markdown & printable HTML export; Firebase RTDB live room synchronization.
-  - Native C Upgrade: Added SQL dump export (IDC_EXPORT_SQL) to Win32 C interface; clean MSVC build (`KDB.exe` 65.0 KB).
-  - Verification: Vite clean build in 355ms (`kdb.html` 93.6 KB); security lint 100% PASS; icons verified; strictly <999KB.
 
 
 

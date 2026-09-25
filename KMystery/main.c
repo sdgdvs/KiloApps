@@ -666,6 +666,24 @@ void UpdateUI() {
     }
 }
 
+static int IsTutorialSeen(void) {
+    HANDLE hFile = CreateFileA("kmystery_tutorial.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFile);
+        return 1;
+    }
+    return 0;
+}
+
+static void MarkTutorialSeen(void) {
+    HANDLE hFile = CreateFileA("kmystery_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, "TUTORIAL_SEEN_V1\r\n", 18, &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
 typedef struct {
     int version;
     int currentState;
@@ -682,10 +700,14 @@ typedef struct {
     Location locations[5];
     Unanalyzed unanalyzed[5];
     int numUnanalyzed;
+    int scanTarget;
+    int scanCurrent;
+    int scanMoves;
+    int scanItemIdx;
 } GameSaveData;
 
 void QuickSaveGame(HWND hwnd) {
-    if (currentState == 0 || currentState == 6) {
+    if (currentState == 0 || currentState == 6 || timeLeft <= 0) {
         MessageBoxA(hwnd, "Start or resume an active case before saving.", "Save Notice", MB_OK | MB_ICONINFORMATION);
         return;
     }
@@ -703,18 +725,26 @@ void QuickSaveGame(HWND hwnd) {
         data.angrySuspects = angrySuspects;
         data.currentSolution = currentSolution;
         data.numUnanalyzed = numUnanalyzed;
+        data.scanTarget = scanTarget;
+        data.scanCurrent = scanCurrent;
+        data.scanMoves = scanMoves;
+        data.scanItemIdx = scanItemIdx;
         for (int i = 0; i < 5; i++) {
             data.suspectPatience[i] = suspectPatience[i];
             my_strcpy(data.suspectAlibis[i], suspectAlibis[i]);
             data.locations[i] = locations[i];
             data.unanalyzed[i] = unanalyzed[i];
         }
-        DWORD written;
+        DWORD written = 0;
         WriteFile(hFile, &data, sizeof(GameSaveData), &written, NULL);
         CloseHandle(hFile);
-        Beep(880, 60);
-        Beep(1174, 120);
-        MessageBoxA(hwnd, "Case file successfully saved to kmystery_save.dat! [F5]", "Quicksave", MB_OK | MB_ICONINFORMATION);
+        if (written == sizeof(GameSaveData)) {
+            Beep(880, 60);
+            Beep(1174, 120);
+            MessageBoxA(hwnd, "Case file successfully saved to kmystery_save.dat! [F5]", "Quicksave", MB_OK | MB_ICONINFORMATION);
+        } else {
+            MessageBoxA(hwnd, "Failed to write complete save data.", "Save Error", MB_OK | MB_ICONERROR);
+        }
     }
 }
 
@@ -725,7 +755,7 @@ void QuickLoadGame(HWND hwnd) {
         return;
     }
     GameSaveData data;
-    DWORD read;
+    DWORD read = 0;
     BOOL ok = ReadFile(hFile, &data, sizeof(GameSaveData), &read, NULL);
     CloseHandle(hFile);
     if (!ok || read != sizeof(GameSaveData) || data.version != 1) {
@@ -742,6 +772,10 @@ void QuickLoadGame(HWND hwnd) {
     angrySuspects = data.angrySuspects;
     currentSolution = data.currentSolution;
     numUnanalyzed = data.numUnanalyzed;
+    scanTarget = data.scanTarget;
+    scanCurrent = data.scanCurrent;
+    scanMoves = data.scanMoves;
+    scanItemIdx = data.scanItemIdx;
     for (int i = 0; i < 5; i++) {
         suspectPatience[i] = data.suspectPatience[i];
         my_strcpy(suspectAlibis[i], data.suspectAlibis[i]);
@@ -751,6 +785,12 @@ void QuickLoadGame(HWND hwnd) {
     char timeBuf[64];
     wsprintfA(timeBuf, "Time Left: %dh", timeLeft);
     SetWindowTextA(hTimeLeft, timeBuf);
+
+    if (currentState == 4) {
+        char scanBuf[128];
+        wsprintfA(scanBuf, "TARGET: %d Hz | TUNED: %d Hz | STABILITY: %d", scanTarget, scanCurrent, scanMoves);
+        SetWindowTextA(hScanDesc, scanBuf);
+    }
 
     SendMessageA(hListSuspects, LB_RESETCONTENT, 0, 0);
     SendMessageA(hListClues, LB_RESETCONTENT, 0, 0);
@@ -1490,6 +1530,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hHelpDesc, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnCloseHelp, WM_SETFONT, (WPARAM)hFontBold, TRUE);
 
+            if (!IsTutorialSeen() && GetFileAttributesA("kmystery_save.dat") == INVALID_FILE_ATTRIBUTES) {
+                prevState = currentState;
+                currentState = 6;
+                MarkTutorialSeen();
+            }
+
             UpdateUI();
             break;
         }
@@ -1859,6 +1905,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RECT r; GetClientRect(hwnd, &r); SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
             } else if (id == ID_BTN_CLOSE_HELP) {
                 currentState = prevState;
+                MarkTutorialSeen();
                 UpdateUI();
                 RECT r; GetClientRect(hwnd, &r); SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
             } else if (id == ID_BTN_QSAVE) {
@@ -1879,6 +1926,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (wParam == VK_F1) {
                 if (currentState == 6) {
                     currentState = prevState;
+                    MarkTutorialSeen();
                 } else {
                     prevState = currentState;
                     currentState = 6;
@@ -1889,6 +1937,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (wParam == VK_ESCAPE) {
                 if (currentState == 6) {
                     currentState = prevState;
+                    MarkTutorialSeen();
                     UpdateUI();
                     RECT r; GetClientRect(hwnd, &r); SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
                     return 0;
