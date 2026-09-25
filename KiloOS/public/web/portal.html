@@ -3,133 +3,710 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KiloNet Navigator - 1999 Web Portal</title>
+<title>KiloNet Central! - The Premier 1999 Web Directory &amp; Hypermedia Portal</title>
 <style>
+  :root {
+    --navy-dark: #000080;
+    --navy-light: #004080;
+    --win-gray: #d4d0c8;
+    --win-border-light: #ffffff;
+    --win-border-dark: #808080;
+    --win-border-darker: #404040;
+    --link-blue: #0000cc;
+    --link-visited: #800080;
+    --accent-red: #cc0000;
+    --accent-gold: #ffd700;
+    --stock-green: #00aa00;
+    --stock-red: #cc0000;
+  }
+
+  * { box-sizing: border-box; }
+
   body {
-    background-color: #000080;
+    background-color: #000066;
+    background-image: radial-gradient(#0000aa 15%, #000055 15%);
+    background-size: 8px 8px;
     color: #000000;
     font-family: 'Times New Roman', Times, serif;
     margin: 0;
-    padding: 12px;
-    background-image: radial-gradient(#0000a0 15%, #000060 15%);
-    background-size: 8px 8px;
+    padding: 8px;
   }
-  .page-box {
-    max-width: 920px;
+
+  .portal-wrapper {
+    max-width: 980px;
     margin: 0 auto;
     background: #ffffff;
     border: 4px ridge #c0c0c0;
-    padding: 12px;
-    box-shadow: 4px 4px 15px rgba(0,0,0,0.6);
+    box-shadow: 0 0 20px rgba(0,0,0,0.8);
+    padding: 10px 14px;
   }
+
+  /* Header Branding */
   header {
-    border-bottom: 2px solid #000080;
-    padding-bottom: 8px;
-    margin-bottom: 12px;
+    border-bottom: 2px solid var(--navy-dark);
+    padding-bottom: 6px;
+    margin-bottom: 8px;
   }
+
   .banner-table {
     width: 100%;
     border-collapse: collapse;
   }
-  .banner-title {
-    font-size: 28px;
-    font-weight: bold;
-    color: #cc0000;
+
+  .banner-left {
+    vertical-align: middle;
+  }
+
+  .logo-title {
+    font-family: 'Times New Roman', serif;
+    font-size: 34px;
+    font-weight: 900;
+    color: var(--accent-red);
     font-style: italic;
-    text-shadow: 1px 1px 0 #ffd700;
+    text-shadow: 2px 2px 0 var(--accent-gold), 3px 3px 0 #000000;
     letter-spacing: -1px;
+    display: inline-block;
   }
-  .banner-subtitle {
-    font-size: 13px;
+
+  .logo-title .excl {
+    color: var(--accent-gold);
+    text-shadow: 2px 2px 0 var(--accent-red), 3px 3px 0 #000000;
+  }
+
+  .logo-tagline {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--navy-dark);
+    margin-left: 8px;
+  }
+
+  .banner-right {
+    text-align: right;
+    vertical-align: middle;
+    font-family: 'MS Sans Serif', Tahoma, sans-serif;
+    font-size: 11px;
+  }
+
+  .counter-box {
+    display: inline-block;
+    background: #000000;
+    color: #ff3333;
     font-family: 'Courier New', monospace;
-    color: #000080;
+    font-weight: bold;
+    font-size: 15px;
+    padding: 2px 6px;
+    border: 2px inset #555555;
+    letter-spacing: 2px;
   }
-  .marquee-box {
+
+  /* Quick Bar */
+  .quick-bar {
+    background: var(--win-gray);
+    border-top: 1px solid var(--win-border-light);
+    border-bottom: 1px solid var(--win-border-dark);
+    padding: 4px 6px;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    margin-top: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .quick-links a {
+    color: var(--navy-dark);
+    text-decoration: underline;
+    font-weight: bold;
+    margin-right: 10px;
+  }
+  .quick-links a:hover {
+    color: var(--accent-red);
+  }
+
+  .audio-toggle-btn {
+    background: #e0e0e0;
+    border: 2px outset #ffffff;
+    font-family: 'MS Sans Serif', Tahoma, sans-serif;
+    font-size: 11px;
+    cursor: pointer;
+    padding: 2px 6px;
+  }
+  .audio-toggle-btn:active {
+    border-style: inset;
+  }
+
+  /* Marquee News */
+  .marquee-bar {
     background: #ffffcc;
-    border: 1px solid #ffcc00;
-    padding: 4px 8px;
+    border: 1px solid #e6b800;
+    padding: 3px 6px;
     font-family: 'Courier New', monospace;
-    font-size: 13px;
-    margin: 8px 0;
+    font-size: 12px;
     color: #800000;
     font-weight: bold;
+    margin: 6px 0;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
   }
-  .search-table {
-    width: 100%;
+
+  .marquee-badge {
+    background: #cc0000;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 4px;
+    margin-right: 8px;
+    white-space: nowrap;
+    border-radius: 2px;
+  }
+
+  .marquee-content {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Navigation Tabs */
+  .tab-row {
+    display: flex;
+    border-bottom: 2px solid var(--navy-dark);
+    background: #e8e8e8;
+    margin-top: 8px;
+    gap: 2px;
+    padding: 4px 6px 0 6px;
+  }
+
+  .portal-tab {
+    background: #c0c0c0;
+    border-top: 2px solid #ffffff;
+    border-left: 2px solid #ffffff;
+    border-right: 2px solid #808080;
+    border-bottom: none;
+    padding: 6px 14px;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    color: #333333;
+    cursor: pointer;
+    border-radius: 4px 4px 0 0;
+    user-select: none;
+  }
+
+  .portal-tab:hover {
+    background: #d8d8d8;
+  }
+
+  .portal-tab.active {
+    background: #ffffff;
+    color: var(--navy-dark);
+    border-top: 2px solid var(--navy-dark);
+    border-left: 2px solid var(--navy-dark);
+    border-right: 2px solid var(--navy-dark);
+    border-bottom: 2px solid #ffffff;
+    margin-bottom: -2px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Tab Viewports */
+  .tab-content {
+    display: none;
+    padding-top: 10px;
+  }
+  .tab-content.active {
+    display: block;
+  }
+
+  /* Search Engine Section */
+  .search-hero {
     background: #e6f2ff;
-    border: 2px groove #000080;
-    padding: 8px;
+    border: 2px groove var(--navy-dark);
+    padding: 10px 14px;
     margin-bottom: 12px;
     text-align: center;
   }
-  .search-box {
-    padding: 4px 8px;
-    font-size: 14px;
-    width: 320px;
-    border: 2px inset #999;
+
+  .search-input-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
   }
+
+  .search-field {
+    width: 420px;
+    max-width: 90%;
+    padding: 6px 10px;
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+    border: 2px inset #999999;
+    outline: none;
+  }
+  .search-field:focus {
+    border-color: var(--navy-dark);
+  }
+
   .btn-retro {
-    background: #d4d0c8;
+    background: var(--win-gray);
     border: 2px outset #ffffff;
     font-family: 'MS Sans Serif', Tahoma, sans-serif;
     font-size: 12px;
     font-weight: bold;
-    padding: 3px 12px;
+    padding: 5px 12px;
     cursor: pointer;
+    color: #000000;
   }
   .btn-retro:active {
     border-style: inset;
   }
+  .btn-retro:hover {
+    background: #e0e0e0;
+  }
+
+  .btn-primary-retro {
+    background: #000080;
+    color: #ffffff;
+    border: 2px outset #6666ff;
+  }
+  .btn-primary-retro:hover {
+    background: #0000aa;
+  }
+
+  .search-chips {
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    color: #444444;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  .search-chip-link {
+    background: #ffffff;
+    border: 1px solid #99b3cc;
+    padding: 2px 6px;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--navy-dark);
+    font-weight: bold;
+  }
+  .search-chip-link:hover {
+    background: #cfe2f3;
+  }
+
+  /* Live Search Results */
+  #searchResultsContainer {
+    display: none;
+    margin-bottom: 14px;
+    background: #fdfdfd;
+    border: 2px solid #004080;
+    padding: 10px 14px;
+  }
+
+  .search-header-meta {
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: #000080;
+    border-bottom: 1px dotted #888888;
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .search-result-item {
+    padding: 6px 0;
+    border-bottom: 1px dashed #dddddd;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .search-result-item:last-child {
+    border-bottom: none;
+  }
+
+  .result-title-link {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    color: #0000cc;
+    text-decoration: underline;
+  }
+
+  .result-badge {
+    display: inline-block;
+    font-family: Arial, sans-serif;
+    font-size: 10px;
+    padding: 1px 4px;
+    border-radius: 2px;
+    margin-left: 6px;
+    font-weight: bold;
+  }
+  .badge-games { background: #ffe6e6; color: #cc0000; border: 1px solid #ff9999; }
+  .badge-system { background: #e6f0ff; color: #004080; border: 1px solid #99c2ff; }
+  .badge-office { background: #e6ffe6; color: #008000; border: 1px solid #99ff99; }
+  .badge-media { background: #fff0e6; color: #cc6600; border: 1px solid #ffcc99; }
+  .badge-network { background: #f0e6ff; color: #6600cc; border: 1px solid #cc99ff; }
+  .badge-web { background: #ffffd9; color: #996600; border: 1px solid #ffeb80; }
+
+  /* Two-Column Directory Layout */
   .columns-table {
     width: 100%;
     border-collapse: collapse;
   }
   .columns-table td {
     vertical-align: top;
-    padding: 6px;
+    padding: 4px 6px;
   }
-  .category-box {
-    border: 1px solid #999;
-    background: #fdfdfd;
+
+  .category-card {
+    border: 1px solid #aaaaaa;
+    background: #fafafa;
     margin-bottom: 10px;
   }
-  .category-header {
-    background: #000080;
+
+  .category-title {
+    background: var(--navy-dark);
     color: #ffffff;
-    font-family: 'Arial', sans-serif;
+    font-family: Arial, sans-serif;
     font-size: 13px;
     font-weight: bold;
     padding: 4px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
-  .category-content {
-    padding: 8px;
+
+  .category-body {
+    padding: 8px 10px;
     font-size: 13px;
     line-height: 1.5;
   }
-  .category-content a {
-    color: #0000cc;
+
+  .category-body a {
+    color: var(--link-blue);
     text-decoration: underline;
     font-weight: bold;
   }
-  .category-content a:visited {
-    color: #800080;
+  .category-body a:visited {
+    color: var(--link-visited);
   }
-  .cool-site-box {
+  .category-body a:hover {
+    color: var(--accent-red);
+  }
+
+  .cat-sublist {
+    margin: 4px 0 8px 0;
+    padding-left: 14px;
+    list-style-type: square;
+  }
+
+  .cat-sublist li {
+    margin-bottom: 3px;
+  }
+
+  /* Cool Site / Daily Spotlight */
+  .cool-site-card {
     background: #ffffdd;
     border: 2px dashed #ff9900;
-    padding: 8px;
+    padding: 8px 10px;
     margin-bottom: 10px;
   }
-  .ticker-box {
-    font-family: 'Courier New', monospace;
-    font-size: 12px;
+
+  /* Stock Ticker Bar & Trading Desk */
+  .stock-ticker-banner {
     background: #000000;
     color: #00ff00;
-    padding: 6px;
-    margin: 8px 0;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    padding: 5px 8px;
+    margin-bottom: 10px;
+    overflow-x: auto;
+    white-space: nowrap;
+    border: 2px inset #444444;
+    display: flex;
+    gap: 16px;
   }
+
+  .ticker-item {
+    display: inline-block;
+  }
+  .tick-up { color: #00ff66; font-weight: bold; }
+  .tick-down { color: #ff4444; font-weight: bold; }
+
+  .stock-deck-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    margin-top: 8px;
+  }
+  .stock-deck-table th {
+    background: var(--navy-dark);
+    color: #ffffff;
+    padding: 6px 8px;
+    text-align: left;
+    border: 1px solid #777777;
+  }
+  .stock-deck-table td {
+    padding: 6px 8px;
+    border: 1px solid #dddddd;
+    background: #ffffff;
+  }
+  .stock-deck-table tr:nth-child(even) td {
+    background: #f7f7f7;
+  }
+
+  .portfolio-stats {
+    background: #e6f2ff;
+    border: 2px groove var(--navy-dark);
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+  }
+
+  /* Classified Ads Board */
+  .classified-filter-row {
+    background: #f0f0f0;
+    border: 1px solid #cccccc;
+    padding: 6px 8px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+  }
+
+  .ad-card {
+    border: 1px solid #bbbbbb;
+    background: #ffffff;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+  }
+  .ad-card:hover {
+    border-color: var(--navy-dark);
+    background: #fdfdfd;
+  }
+
+  .ad-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dotted #cccccc;
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+    font-family: Arial, sans-serif;
+  }
+
+  .ad-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #800000;
+  }
+
+  .ad-price {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    color: #006600;
+    font-size: 13px;
+  }
+
+  .ad-meta {
+    font-size: 11px;
+    color: #666666;
+    font-family: Arial, sans-serif;
+    margin-bottom: 4px;
+  }
+
+  .ad-body {
+    font-size: 13px;
+    line-height: 1.4;
+    color: #222222;
+  }
+
+  /* Modal Dialog for Posting Ads / Trading */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .retro-dialog {
+    background: var(--win-gray);
+    border: 3px outset #ffffff;
+    box-shadow: 4px 4px 15px rgba(0,0,0,0.8);
+    width: 480px;
+    max-width: 95%;
+    padding: 2px;
+  }
+
+  .dialog-titlebar {
+    background: var(--navy-dark);
+    color: #ffffff;
+    padding: 3px 6px;
+    font-family: 'MS Sans Serif', Tahoma, sans-serif;
+    font-weight: bold;
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .dialog-close-btn {
+    background: var(--win-gray);
+    border: 2px outset #ffffff;
+    font-family: 'MS Sans Serif', Tahoma, sans-serif;
+    font-weight: bold;
+    font-size: 10px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    line-height: 12px;
+    padding: 0;
+    text-align: center;
+  }
+  .dialog-close-btn:active {
+    border-style: inset;
+  }
+
+  .dialog-body {
+    padding: 10px;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+  }
+
+  .form-group {
+    margin-bottom: 8px;
+  }
+  .form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 2px;
+  }
+  .form-input {
+    width: 100%;
+    padding: 4px 6px;
+    border: 2px inset #999999;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+  }
+
+  /* Weather Widget */
+  .weather-card {
+    background: #f0f7ff;
+    border: 2px groove #004080;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+
+  .weather-display-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 8px 0;
+  }
+
+  .weather-big-temp {
+    font-size: 32px;
+    font-weight: bold;
+    color: #000080;
+    font-family: Arial, sans-serif;
+  }
+
+  .weather-forecast-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+    text-align: center;
+    border-top: 1px dotted #004080;
+    padding-top: 8px;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+  }
+
+  .forecast-box {
+    background: #ffffff;
+    border: 1px solid #b3d1ff;
+    padding: 4px;
+  }
+
+  /* Trivia Challenge */
+  .trivia-card {
+    background: #fff8e6;
+    border: 2px groove #cc9900;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+
+  .trivia-question {
+    font-size: 14px;
+    font-weight: bold;
+    color: #804000;
+    margin-bottom: 8px;
+    font-family: Arial, sans-serif;
+  }
+
+  .trivia-option-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 5px;
+    padding: 6px 10px;
+    background: #ffffff;
+    border: 1px solid #cc9900;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .trivia-option-btn:hover {
+    background: #fffaea;
+    border-color: #804000;
+  }
+  .trivia-option-btn.correct {
+    background: #d4ffd4;
+    border-color: #00aa00;
+    font-weight: bold;
+  }
+  .trivia-option-btn.wrong {
+    background: #ffd4d4;
+    border-color: #cc0000;
+    color: #888888;
+  }
+
+  .trivia-feedback {
+    display: none;
+    margin-top: 8px;
+    padding: 6px;
+    font-size: 12px;
+    font-family: Arial, sans-serif;
+    border: 1px dashed #999999;
+  }
+
+  /* Webring Widget */
   .webring-widget {
-    margin-top: 16px;
+    margin-top: 14px;
     background: #f0f0f0;
     border: 2px ridge #808080;
     padding: 8px;
@@ -137,224 +714,1752 @@
     font-family: Arial, sans-serif;
     font-size: 12px;
   }
+
   .webring-links {
     margin-top: 6px;
     display: flex;
     justify-content: center;
     gap: 12px;
+    flex-wrap: wrap;
   }
-  .web-counter {
-    background: #000;
-    color: #ff3333;
-    font-family: 'Courier New', monospace;
+  .webring-links a {
+    color: var(--navy-dark);
     font-weight: bold;
-    font-size: 15px;
-    padding: 2px 6px;
-    border: 2px inset #555;
-    letter-spacing: 2px;
+    text-decoration: underline;
   }
+
+  /* Footer */
   footer {
     border-top: 2px solid #c0c0c0;
-    margin-top: 12px;
+    margin-top: 14px;
     padding-top: 8px;
     text-align: center;
     font-size: 11px;
-    color: #555;
+    color: #666666;
     font-family: Arial, sans-serif;
+  }
+
+  .badges-row {
+    margin-top: 6px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .retro-badge-img {
+    border: 1px solid #777777;
+    padding: 2px 4px;
+    background: #000000;
+    color: #00ff00;
+    font-family: 'Courier New', monospace;
+    font-size: 9px;
+    font-weight: bold;
   }
 </style>
 </head>
 <body>
 
-<div class="page-box">
+<div class="portal-wrapper">
+  <!-- Header Branding -->
   <header>
     <table class="banner-table">
       <tr>
-        <td>
-          <span class="banner-title">KiloNet Central!</span><br>
-          <span class="banner-subtitle">★ The Premier Virtual 1999 Directory &amp; Hypermedia Portal ★</span>
+        <td class="banner-left">
+          <span class="logo-title">KiloNet<span class="excl">!</span></span>
+          <span class="logo-tagline">★ The Premier 1999 Web Directory &amp; Interactive Portal ★</span>
         </td>
-        <td style="text-align:right;">
-          <span style="font-size:11px; font-family:Arial, sans-serif;">Net Visitors:</span>
-          <span class="web-counter" id="visitorCounter">0048291</span><br>
-          <span style="font-size:10px; color:#666;">Optimized for Netscape 4.7 &amp; KNet 2.0</span>
+        <td class="banner-right">
+          <span>Net Visitors:</span>
+          <span class="counter-box" id="visitorCounter">0048291</span><br>
+          <span style="font-size:10px; color:#555555;">KNet Hypermedia 2.0 • 1024x768 Res</span>
         </td>
       </tr>
     </table>
 
-    <div class="marquee-box">
-      ⚡ FLASH NEWS: KiloApps Fleet reaches 95 retro applications! Contributor portal active at /apps/contribute.html — Fuel the living machine!
+    <div class="quick-bar">
+      <div class="quick-links">
+        <a href="/apps/kmail.html">✉️ Check Email</a>
+        <a href="/apps/kchat.html">💬 KChat IRC</a>
+        <a href="/apps/kbbs.html">📠 KBBS Door Games</a>
+        <a href="/apps/krss.html">📰 News Feeds</a>
+        <a href="/apps/contribute.html">🚀 Contributor Portal</a>
+        <a href="/web/webring.html">🌐 Webring Hub</a>
+      </div>
+      <div>
+        <button class="audio-toggle-btn" id="audioToggleBtn" onclick="toggleAudioEngine()">🔊 Sound: ON</button>
+      </div>
+    </div>
+
+    <!-- Live Stock Ticker Bar -->
+    <div class="stock-ticker-banner" id="liveStockBanner">
+      <span class="ticker-item">NASDAQ-1999:</span>
+      <span class="ticker-item">KLNT: <span class="tick-up">$44.25 ▲ +3.10</span></span>
+      <span class="ticker-item">CYBR: <span class="tick-up">$88.50 ▲ +12.30</span></span>
+      <span class="ticker-item">GEOC: <span class="tick-up">$64.20 ▲ +5.80</span></span>
+      <span class="ticker-item">VFS99: <span class="tick-down">$28.40 ▼ -1.20</span></span>
+      <span class="ticker-item">ASMX: <span class="tick-up">$114.00 ▲ +7.50</span></span>
+      <span class="ticker-item">TRAP: <span class="tick-up">$19.80 ▲ +4.20</span></span>
+      <span class="ticker-item">MODT: <span class="tick-up">$35.00 ▲ +2.10</span></span>
+      <span class="ticker-item">SURR: <span class="tick-up">$54.20 ▲ +1.80</span></span>
+      <span class="ticker-item">FLAR: <span class="tick-down">$46.50 ▼ -0.80</span></span>
+    </div>
+
+    <!-- Breaking News Marquee -->
+    <div class="marquee-bar">
+      <span class="marquee-badge">FLASH 1999</span>
+      <span class="marquee-content" id="marqueeText">
+        KiloApps Fleet reaches 98 retro applications! All modules under 999KB ceiling. Y2K compliance verification underway across all ring nodes.
+      </span>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tab-row">
+      <div class="portal-tab active" id="tabNav-directory" onclick="switchPortalTab('directory')">📂 Web Directory &amp; Search</div>
+      <div class="portal-tab" id="tabNav-stocks" onclick="switchPortalTab('stocks')">📈 Stock Exchange &amp; Portfolio</div>
+      <div class="portal-tab" id="tabNav-classifieds" onclick="switchPortalTab('classifieds')">📰 Classified Ads Board</div>
+      <div class="portal-tab" id="tabNav-weather" onclick="switchPortalTab('weather')">⛅ Weather &amp; Station</div>
+      <div class="portal-tab" id="tabNav-trivia" onclick="switchPortalTab('trivia')">🧠 1999 Retro Trivia</div>
     </div>
   </header>
 
-  <div class="search-table">
-    <form id="searchForm" onsubmit="handleSearch(event)">
-      <label style="font-family:Arial, sans-serif; font-weight:bold; font-size:13px; color:#000080;">Search KiloNet Web:</label>
-      <input type="text" id="searchInput" class="search-box" placeholder="Find software, lore, webring sites, or guides..." />
-      <input type="submit" class="btn-retro" value="Search Central!" />
-      <button type="button" class="btn-retro" onclick="handleLucky()">I'm Feeling Retro!</button>
-    </form>
-    <div id="searchNotice" style="font-size:12px; font-family:Arial, sans-serif; color:#666; margin-top:4px;"></div>
-  </div>
-
-  <table class="columns-table">
-    <tr>
-      <!-- Column 1 -->
-      <td style="width:50%;">
-        <div class="cool-site-box">
-          <div style="font-weight:bold; color:#cc0000; font-family:Arial, sans-serif; font-size:13px;">🌟 Cool Site of the Day</div>
-          <p style="margin:4px 0 6px 0; font-size:13px;">
-            <a href="/web/geocities.html" style="font-weight:bold;">CyberSpire's Underground Retro Shrine</a><br>
-            A classic personal cyber-temple featuring MIDI tunes, under-construction banners, and an interactive visitor guestbook!
-          </p>
-          <span style="font-size:11px; color:#666;">[Added 1999-10-14] Rating: ★★★★★</span>
+  <!-- TAB 1: DIRECTORY & SEARCH -->
+  <main id="tab-directory" class="tab-content active">
+    <!-- Search Hero -->
+    <div class="search-hero">
+      <form id="searchForm" onsubmit="handlePortalSearch(event)">
+        <div class="search-input-wrap">
+          <label for="portalSearchInput" style="font-family:Arial, sans-serif; font-weight:bold; font-size:13px; color:var(--navy-dark);">Search Central:</label>
+          <input type="text" id="portalSearchInput" class="search-field" placeholder="Search 98 applications, games, tools, or webring sites..." oninput="handleLiveSearch(this.value)" />
+          <input type="submit" class="btn-retro btn-primary-retro" value="Search Central!" />
+          <button type="button" class="btn-retro" onclick="handleFeelingRetro()">🎲 I'm Feeling Retro!</button>
+          <button type="button" class="btn-retro" onclick="clearSearch()">Clear</button>
         </div>
+      </form>
+      <div class="search-chips">
+        <span>Quick Filters:</span>
+        <a class="search-chip-link" onclick="quickFilter('Games')">🎮 Games (46)</a>
+        <a class="search-chip-link" onclick="quickFilter('System')">⚙️ System Tools (29)</a>
+        <a class="search-chip-link" onclick="quickFilter('Office')">💼 Office &amp; Notes (9)</a>
+        <a class="search-chip-link" onclick="quickFilter('Media')">🎨 Media &amp; Synth (9)</a>
+        <a class="search-chip-link" onclick="quickFilter('Network')">📡 Network (7)</a>
+        <a class="search-chip-link" onclick="quickFilter('Dev')">⚡ Dev &amp; Scripts (3)</a>
+        <a class="search-chip-link" onclick="quickFilter('Web')">🌐 Web Destinations</a>
+      </div>
+    </div>
 
-        <div class="category-box">
-          <div class="category-header">📂 Fleet Core &amp; Network Infrastructure</div>
-          <div class="category-content">
-            • <a href="/apps/contribute.html">🚀 Fleet Contributor Portal</a> — Donate quota &amp; guide the autonomous fleet<br>
-            • <a href="/apps/kpass.html">🔐 KPass Credential Vault</a> — Encrypted offline password &amp; secret manager<br>
-            • <a href="/web/webring.html">🌐 Central KiloNet Webring Hub</a> — Explore interconnected member homepages<br>
-            • <a href="/apps/knet.html">📡 KNet Diagnostics Suite</a> — Packet sniffer, ping chart, &amp; port scanner<br>
-            • <a href="/web/echo_subsystem.html">🔬 Echo Subsystem Research Lab</a> — Acoustic field journals, 1999Hz harmonic decoders &amp; sonograms<br>
-            • <a href="/web/classified.html">🔒 10.19.99.4 Corporate Leak</a> — Leaked Project Echo intranet memos, hex dumps &amp; 1999Hz telemetry<br>
-            • <a href="/web/deep_core.html">⚡ Deep Core Ghost Terminal</a> — Subterranean Ring-0 node telemetry &amp; cryptographic passkey analyzer
-          </div>
+    <!-- Live Search Results Container -->
+    <div id="searchResultsContainer">
+      <div class="search-header-meta">
+        <span id="searchResultSummary">Found 0 matching items</span>
+        <button class="btn-retro" style="font-size:10px; padding:1px 6px;" onclick="clearSearch()">Close Results</button>
+      </div>
+      <div id="searchResultsList"></div>
+    </div>
+
+    <!-- Standard Categorized Directory (Yahoo! 1999 Style) -->
+    <div id="standardDirectoryView">
+      <table class="columns-table">
+        <tr>
+          <!-- Left Column -->
+          <td style="width: 50%;">
+            <!-- Cool Site of the Day -->
+            <div class="cool-site-card">
+              <div style="font-weight:bold; color:var(--accent-red); font-family:Arial, sans-serif; font-size:13px;">🌟 Cool Site of the Day</div>
+              <p style="margin:4px 0 6px 0; font-size:13px;">
+                <a href="/web/geocities.html" style="font-weight:bold; font-size:14px;">CyberSpire's Underground Retro Shrine</a><br>
+                A classic personal cyber-temple featuring Web Audio MIDI tunes, under-construction animated signs, and a persistent visitor guestbook!
+              </p>
+              <span style="font-size:11px; color:#666666;">[Added 1999-10-14] Rating: ★★★★★ • Member #002</span>
+            </div>
+
+            <!-- Category 1: Games & Arcade -->
+            <div class="category-card">
+              <div class="category-title">
+                <span>🎮 Games, Strategy &amp; Arcades (46 apps)</span>
+                <span style="font-size:11px; font-weight:normal;">[<a onclick="quickFilter('Games')" style="color:#ffffff; cursor:pointer;">View All</a>]</span>
+              </div>
+              <div class="category-body">
+                <strong>Featured Deep Adventures:</strong>
+                <ul class="cat-sublist">
+                  <li><a href="/apps/kstarforge.html">KStarForge</a> — Space shipyard builder, faction contracts &amp; fleet tactical battles</li>
+                  <li><a href="/apps/krogue.html">KRogue</a> — Deep procedural ASCII dungeon crawler with multi-floor depth</li>
+                  <li><a href="/apps/kchrono.html">KChrono</a> — Tri-epoch time paradox manipulation strategy puzzle</li>
+                  <li><a href="/apps/kfortress.html">KFortress</a> — Dwarven subterranean stronghold management simulation</li>
+                  <li><a href="/apps/kspace.html">KSpace</a> — Vector space dogfights with dogfight recorder</li>
+                  <li><a href="/apps/kwizard.html">KWizard</a> — Arcane spellcraft duels with elemental mana combos</li>
+                </ul>
+                <strong>Multiplayer &amp; Classics:</strong>
+                <a href="/apps/kchess.html">KChess</a>, <a href="/apps/kconnect4.html">KConnect4</a>, <a href="/apps/ktetris.html">KTetris</a>, <a href="/apps/ksnake.html">KSnake</a>, <a href="/apps/kgo.html">KGo</a>, <a href="/apps/kreversi.html">KReversi</a>, <a href="/apps/kdarts.html">KDarts</a>, <a href="/apps/ksolitaire.html">KSolitaire</a>, <a href="/apps/kmine.html">KMine</a>.
+              </div>
+            </div>
+
+            <!-- Category 2: Media & Creative Arts -->
+            <div class="category-card">
+              <div class="category-title">
+                <span>🎨 Media, Sound &amp; Graphic Arts (9 apps)</span>
+                <span style="font-size:11px; font-weight:normal;">[<a onclick="quickFilter('Media')" style="color:#ffffff; cursor:pointer;">View All</a>]</span>
+              </div>
+              <div class="category-body">
+                <ul class="cat-sublist">
+                  <li><a href="/apps/ksynth.html">KSynth</a> — Modular sound synthesizer with Genesis FM &amp; SNES delay emulation</li>
+                  <li><a href="/apps/kpaint.html">KPaint</a> — Vintage 256-color pixel artwork workstation &amp; sprite designer</li>
+                  <li><a href="/apps/kaudio.html">KAudio</a> — High-fidelity procedural waveform generator &amp; spectrum monitor</li>
+                  <li><a href="/apps/kimage.html">KImage</a> — Bitmap manipulation tool, dithering filters &amp; palette swapper</li>
+                  <li><a href="/apps/kmandel.html">KMandel</a> — Real-time fractal explorer with deep precision zooms</li>
+                  <li><a href="/apps/kchart.html">KChart</a> — 1999 business presentation charting &amp; graphic vector generator</li>
+                </ul>
+              </div>
+            </div>
+          </td>
+
+          <!-- Right Column -->
+          <td style="width: 50%;">
+            <!-- Category 3: System & Dev Tools -->
+            <div class="category-card">
+              <div class="category-title">
+                <span>🛠️ System Tools &amp; Dev Workstations (32 apps)</span>
+                <span style="font-size:11px; font-weight:normal;">[<a onclick="quickFilter('System')" style="color:#ffffff; cursor:pointer;">View All</a>]</span>
+              </div>
+              <div class="category-body">
+                <ul class="cat-sublist">
+                  <li><a href="/apps/kterm.html">KTerm</a> — Retro terminal shell emulator with pipeline execution</li>
+                  <li><a href="/apps/khex.html">KHex</a> — Low-level binary memory dump inspector &amp; hex pattern finder</li>
+                  <li><a href="/apps/ksys.html">KSys</a> — Operating system architecture monitor &amp; resource gauges</li>
+                  <li><a href="/apps/kpass.html">KPass</a> — Encrypted offline credentials &amp; master secret vault</li>
+                  <li><a href="/apps/kcipher.html">KCipher</a> — Cryptographic cipher suite (DES, RSA-512, Blowfish)</li>
+                  <li><a href="/apps/kzip.html">KZip</a> — Archive management utility with Huffman compression</li>
+                  <li><a href="/apps/kdb.html">KDB</a> — Relational table schema designer &amp; SQL-92 query engine</li>
+                  <li><a href="/apps/kscript.html">KScript</a> — Standalone JavaScript sandbox &amp; automated test runner</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Category 4: Office & Communications -->
+            <div class="category-card">
+              <div class="category-title">
+                <span>💼 Office &amp; Communications (16 apps)</span>
+                <span style="font-size:11px; font-weight:normal;">[<a onclick="quickFilter('Office')" style="color:#ffffff; cursor:pointer;">View All</a>]</span>
+              </div>
+              <div class="category-body">
+                <ul class="cat-sublist">
+                  <li><a href="/apps/kpad.html">KPad</a> — Rich text document editor with multi-format export</li>
+                  <li><a href="/apps/ktodo.html">KTodo</a> — Task management with workspaces, iCal, &amp; team sync</li>
+                  <li><a href="/apps/kjournal.html">KJournal</a> — Timestamped personal logs with encryption and export</li>
+                  <li><a href="/apps/kmail.html">KMail</a> — Vintage POP3/SMTP email client simulator with inbox filtering</li>
+                  <li><a href="/apps/kchat.html">KChat</a> — Real-time internet chatroom via Firebase RTDB</li>
+                  <li><a href="/apps/kbbs.html">KBBS</a> — ANSI dial-up door games, bulletin boards &amp; file transfer</li>
+                  <li><a href="/apps/krss.html">KRSS</a> — Syndicated news aggregator &amp; autonomous fleet dispatches</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Category 5: Virtual 1999 Webring Nodes -->
+            <div class="category-card">
+              <div class="category-title">
+                <span>🌐 KiloNet Virtual Webring Sites</span>
+                <span style="font-size:11px; font-weight:normal;">[<a href="/web/webring.html" style="color:#ffffff;">Webring Hub</a>]</span>
+              </div>
+              <div class="category-body">
+                <ul class="cat-sublist">
+                  <li><a href="/web/geocities.html">CyberSpire Retro Shrine</a> — MIDI jukebox, visitor guestbook &amp; web art</li>
+                  <li><a href="/web/users/neon_rider.html">~neon_rider's ASM Shrine</a> — Win32 ASM devlog, x86 opcode sandbox &amp; tracker tunes</li>
+                  <li><a href="/web/asm_temple.html">x86 Opcode Temple</a> — Assembly programming shrine, opcode oracle &amp; PE explorer</li>
+                  <li><a href="/web/cybercafe.html">CyberCafe '99 Lounge</a> — Underground BBS, threaded forums &amp; ASCII studio</li>
+                  <li><a href="/apps/contribute.html">Fleet Contributor Portal</a> — Donate free compute quota to power the living machine</li>
+                </ul>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </main>
+
+  <!-- TAB 2: LIVE STOCK EXCHANGE & PORTFOLIO -->
+  <section id="tab-stocks" class="tab-content">
+    <div style="background:#e6f2ff; border:2px groove var(--navy-dark); padding:8px 12px; margin-bottom:10px;">
+      <h3 style="margin:0 0 4px 0; color:var(--navy-dark); font-family:Arial, sans-serif;">📈 KiloNet Virtual Stock Exchange (NASDAQ-1999 Simulation)</h3>
+      <p style="margin:0; font-size:12px; font-family:Arial, sans-serif; color:#444444;">
+        Welcome to the late-90s dot-com bubble trading floor! Trade high-growth tech shares with your $10,000 virtual capital.
+        Prices fluctuate in real-time based on network traffic, fleet velocity, and market sentiment.
+      </p>
+    </div>
+
+    <!-- Portfolio Summary Banner -->
+    <div class="portfolio-stats">
+      <div>Cash Available: <span id="portCash" style="color:#008000;">$10,000.00</span></div>
+      <div>Portfolio Value: <span id="portStocksVal">$0.00</span></div>
+      <div>Total Net Worth: <span id="portNetWorth" style="color:var(--navy-dark);">$10,000.00</span></div>
+      <div>Day Profit/Loss: <span id="portProfitLoss" style="color:#008000;">+$0.00 (0.0%)</span></div>
+      <button class="btn-retro" style="font-size:11px; padding:2px 8px;" onclick="resetPortfolio()">Reset Account ($10k)</button>
+    </div>
+
+    <!-- Stock Market Listing Table -->
+    <table class="stock-deck-table">
+      <thead>
+        <tr>
+          <th>Symbol</th>
+          <th>Company / Entity</th>
+          <th>Price</th>
+          <th>Change</th>
+          <th>52-Wk Range</th>
+          <th>Owned</th>
+          <th>Position Value</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="stockTableBody">
+        <!-- Injected via JavaScript -->
+      </tbody>
+    </table>
+
+    <div style="margin-top:14px; background:#f9f9f9; border:1px solid #cccccc; padding:8px 10px;">
+      <h4 style="margin:0 0 6px 0; font-family:Arial, sans-serif; font-size:13px; color:#333333;">📜 Trade Confirmation Ledger</h4>
+      <div id="tradeLogList" style="font-family:'Courier New', monospace; font-size:11px; max-height:120px; overflow-y:auto; line-height:1.4;">
+        [1999-10-15 09:30:00] Account created with $10,000.00 starting balance. Ready for trading.
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 3: CLASSIFIED ADS BOARD -->
+  <section id="tab-classifieds" class="tab-content">
+    <div class="classified-filter-row">
+      <div>
+        <label style="font-weight:bold; margin-right:4px;">Filter Category:</label>
+        <select id="adCategoryFilter" class="form-input" style="width:160px; display:inline-block;" onchange="filterClassifieds()">
+          <option value="ALL">All Categories (12)</option>
+          <option value="HARDWARE">💾 Computer Hardware</option>
+          <option value="SOFTWARE">💿 Software &amp; Media</option>
+          <option value="JOBS">💼 Jobs &amp; Services</option>
+          <option value="COMMUNITY">🕹️ Community &amp; LAN</option>
+        </select>
+        <input type="text" id="adSearchInput" class="form-input" style="width:180px; display:inline-block; margin-left:6px;" placeholder="Search listings..." oninput="filterClassifieds()" />
+      </div>
+      <div>
+        <button class="btn-retro btn-primary-retro" onclick="openPostAdModal()">➕ Post Free Classified Ad</button>
+      </div>
+    </div>
+
+    <div id="classifiedsList">
+      <!-- Injected via JavaScript -->
+    </div>
+  </section>
+
+  <!-- TAB 4: WEATHER & RADAR -->
+  <section id="tab-weather" class="tab-content">
+    <div class="weather-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #b3d1ff; padding-bottom:6px;">
+        <h3 style="margin:0; font-family:Arial, sans-serif; color:var(--navy-dark);">⛅ KiloNet Meteorological &amp; Orbital Station</h3>
+        <div>
+          <label style="font-family:Arial, sans-serif; font-size:12px; font-weight:bold; margin-right:6px;">Station Location:</label>
+          <select id="weatherStationSelect" class="form-input" style="width:200px; display:inline-block;" onchange="updateWeatherDisplay()">
+            <option value="NY">New York (Silicon Alley)</option>
+            <option value="SF">San Francisco (Silicon Valley)</option>
+            <option value="LON">London (Silicon Roundabout)</option>
+            <option value="TYO">Tokyo (Akihabara Tech District)</option>
+            <option value="ORB" selected>K-NET Orbital Station (350 KM)</option>
+          </select>
         </div>
+      </div>
 
-        <div class="category-box">
-          <div class="category-header">🎮 Gaming &amp; Arcade Vault</div>
-          <div class="category-content">
-            • <a href="/apps/kstarforge.html">🚀 KStarForge</a> — Design starships &amp; fulfill faction contracts<br>
-            • <a href="/apps/krogue.html">🗡️ KRogue</a> — Deep ASCII dungeon crawler (Loop 11+)<br>
-            • <a href="/apps/kchrono.html">⏳ KChrono</a> — Tri-epoch time paradox manipulation puzzle<br>
-            • <a href="/apps/kspace.html">🛸 KSpace</a> — Vector space dogfights with replay recording
-          </div>
+      <div class="weather-display-row">
+        <div>
+          <div style="font-family:'Courier New', monospace; font-size:12px; color:#555555;" id="weatherStationCode">STATION: K-NET-ORBITAL // LAT: 0.0° N, LON: 0.0° E</div>
+          <div class="weather-big-temp" id="weatherTemp">21°C / 70°F</div>
+          <div style="font-family:Arial, sans-serif; font-size:14px; font-weight:bold; color:#005580;" id="weatherCondition">Clear Starfield • Calm Solar Wind</div>
         </div>
-      </td>
-
-      <!-- Column 2 -->
-      <td style="width:50%;">
-        <div class="ticker-box">
-          [NASDAQ-1999] KLNT +4.12 | CYBR +18.50 | GEOC +12.30 | VFS99 +2.80 | CRT +0.45
+        <div style="font-family:'Courier New', monospace; font-size:12px; line-height:1.6; background:#ffffff; border:1px solid #b3d1ff; padding:8px 12px;">
+          Barometer: <span id="weatherBaro">1013.2 hPa</span> (Steady)<br>
+          Relative Humidity: <span id="weatherHumidity">42%</span><br>
+          Wind / Drift: <span id="weatherWind">NW @ 7 km/h</span><br>
+          Solar Radiation Index: <span id="weatherSolar">1.2 (Nominal)</span>
         </div>
+      </div>
 
-        <div class="category-box">
-          <div class="category-header">🛠️ System Tools &amp; Dev Utilities</div>
-          <div class="category-content">
-            • <a href="/web/asm_temple.html">⚡ x86 Opcode Temple</a> — Assembly programming shrine, opcode oracle &amp; radix converter<br>
-            • <a href="/web/users/neon_rider.html">⚡ ~neon_rider's Shrine</a> — Win32 ASM devlog, x86 sandbox &amp; tracker tunes<br>
-            • <a href="/apps/kterm.html">💻 KTerm</a> — Retro terminal emulator with command piping<br>
-            • <a href="/apps/khex.html">🔢 KHex</a> — Binary memory dump inspector &amp; pattern finder<br>
-            • <a href="/apps/ksys.html">⚙️ KSys</a> — Low-level OS architecture monitor &amp; resource graphs<br>
-            • <a href="/apps/kpad.html">📝 KPad</a> — Ergonomic text editor with multi-format export
-          </div>
+      <div class="weather-forecast-grid">
+        <div class="forecast-box">
+          <strong>Tomorrow</strong><br>
+          <span id="forecastDay1Cond">Clear Sky</span><br>
+          <span style="color:#cc0000;" id="forecastDay1High">72°F</span> / <span style="color:#0000cc;" id="forecastDay1Low">58°F</span>
         </div>
-
-        <div class="category-box">
-          <div class="category-header">📠 Bulletin Boards &amp; Communications</div>
-          <div class="category-content">
-            • <a href="/web/cybercafe.html">☕ CyberCafe '99</a> — Underground BBS, threaded forums &amp; ASCII art studio<br>
-            • <a href="/apps/kbbs.html">📠 KBBS</a> — ANSI dial-up door games &amp; message boards<br>
-            • <a href="/apps/kchat.html">💬 KChat</a> — Local IRC &amp; peer-to-peer chatroom<br>
-            • <a href="/apps/kmail.html">✉️ KMail</a> — Vintage POP3/SMTP email client<br>
-            • <a href="/apps/krss.html">📰 KRSS</a> — Syndicated news &amp; fleet dispatches
-          </div>
+        <div class="forecast-box">
+          <strong>Day 2</strong><br>
+          <span id="forecastDay2Cond">Mild CRT Haze</span><br>
+          <span style="color:#cc0000;" id="forecastDay2High">68°F</span> / <span style="color:#0000cc;" id="forecastDay2Low">55°F</span>
         </div>
-
-        <div class="category-box">
-          <div class="category-header">⛅ KiloNet Weather &amp; Clock</div>
-          <div class="category-content" style="font-family:'Courier New', monospace; font-size:12px;">
-            STATION: K-NET-ORBITAL // ALT: 350 KM<br>
-            TEMPERATURE: 21°C / 70°F | BAROMETER: 1013.2 hPa<br>
-            CONDITIONS: Clear starfield, solar wind calm.
-          </div>
+        <div class="forecast-box">
+          <strong>Day 3</strong><br>
+          <span id="forecastDay3Cond">Neon Showers</span><br>
+          <span style="color:#cc0000;" id="forecastDay3High">65°F</span> / <span style="color:#0000cc;" id="forecastDay3Low">52°F</span>
         </div>
-      </td>
-    </tr>
-  </table>
+      </div>
+    </div>
+  </section>
 
-  <!-- Webring Widget -->
+  <!-- TAB 5: 1999 RETRO TRIVIA CHALLENGE -->
+  <section id="tab-trivia" class="tab-content">
+    <div class="trivia-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e6b800; padding-bottom:6px; margin-bottom:10px;">
+        <h3 style="margin:0; font-family:Arial, sans-serif; color:#804000;">🧠 Daily 1999 Retro Computing &amp; Fleet Trivia</h3>
+        <div style="font-family:Arial, sans-serif; font-size:12px; font-weight:bold;">
+          Score: <span id="triviaScore" style="color:#008000;">0</span> / <span id="triviaTotal">0</span>
+          &nbsp;|&nbsp; Streak: <span id="triviaStreak" style="color:#cc0000;">0</span>
+          &nbsp;|&nbsp; Rank: <span id="triviaRank" style="color:#000080;">Dial-Up Novice</span>
+        </div>
+      </div>
+
+      <div id="triviaQuestionBox">
+        <div class="trivia-question" id="triviaQuestionText">Loading 1999 historical challenge...</div>
+        <div id="triviaOptionsContainer"></div>
+      </div>
+
+      <div class="trivia-feedback" id="triviaFeedbackBox">
+        <div id="triviaFeedbackText" style="font-weight:bold; margin-bottom:4px;"></div>
+        <div id="triviaExplanation" style="color:#444444; font-size:12px; line-height:1.4;"></div>
+        <div style="margin-top:8px; text-align:right;">
+          <button class="btn-retro btn-primary-retro" onclick="nextTriviaQuestion()">Next Question »</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Webring Member Widget -->
   <div class="webring-widget">
-    <strong>[ KiloNet 1999 Webring Member #001 ]</strong><br>
-    <span>This site is proud to be part of the Central KiloNet Webring!</span>
+    <strong>[ Central KiloNet 1999 Webring Member #001 ]</strong><br>
+    <span style="font-size:11px; color:#555555;">This portal is proud to anchor the premier retro hypermedia link network!</span>
     <div class="webring-links">
-      <a href="/apps/contribute.html">[« Previous Site]</a>
+      <a href="/web/geocities.html">[« Previous Site: CyberSpire]</a>
       <a href="/web/webring.html">[Central Hub]</a>
-      <a href="#" onclick="jumpRandom(); return false;">[🎲 Random Jump]</a>
-      <a href="/web/geocities.html">[Next Site »]</a>
+      <a href="#" onclick="jumpRandom(); return false;">[🎲 Random Ring Jump]</a>
+      <a href="/apps/contribute.html">[Next Site: Contributor Portal »]</a>
     </div>
   </div>
 
+  <!-- Footer -->
   <footer>
     Copyright © 1999-2026 KiloNet Interactive Consortium. All Rights Reserved.<br>
-    Rendered inside KNet Hypermedia Engine • Built to survive within the 999 KB ceiling.
+    Rendered inside KNet Hypermedia Engine • Built to survive within the strict 999 KB ceiling.<br>
+    <div class="badges-row">
+      <span class="retro-badge-img">NETSCAPE 4.7 NOW</span>
+      <span class="retro-badge-img">MADE WITH NOTEPAD</span>
+      <span class="retro-badge-img">VALID HTML 4.01</span>
+      <span class="retro-badge-img">800x600 16-BIT COLOR</span>
+    </div>
   </footer>
 </div>
 
+<!-- MODAL 1: Post Classified Ad -->
+<div class="modal-overlay" id="postAdModal">
+  <div class="retro-dialog">
+    <div class="dialog-titlebar">
+      <span>Post a Free 1999 Classified Ad</span>
+      <button class="dialog-close-btn" onclick="closePostAdModal()">×</button>
+    </div>
+    <div class="dialog-body">
+      <form id="postAdForm" onsubmit="submitClassifiedAd(event)">
+        <div class="form-group">
+          <label>Listing Title:</label>
+          <input type="text" id="adInputTitle" class="form-input" placeholder="e.g. 3dfx Voodoo3 3000 AGP 16MB" required />
+        </div>
+        <div class="form-group">
+          <label>Category:</label>
+          <select id="adInputCategory" class="form-input">
+            <option value="HARDWARE">💾 Computer Hardware</option>
+            <option value="SOFTWARE">💿 Software &amp; Media</option>
+            <option value="JOBS">💼 Jobs &amp; Services</option>
+            <option value="COMMUNITY">🕹️ Community &amp; LAN</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Asking Price / Terms:</label>
+          <input type="text" id="adInputPrice" class="form-input" placeholder="e.g. $75 OBO / Trades welcome" required />
+        </div>
+        <div class="form-group">
+          <label>Your Contact Handle / Callsign:</label>
+          <input type="text" id="adInputHandle" class="form-input" placeholder="e.g. PixelKnight_99" required />
+        </div>
+        <div class="form-group">
+          <label>Listing Description:</label>
+          <textarea id="adInputDesc" class="form-input" style="height:60px; resize:none;" placeholder="Detail condition, included cables, drivers, or meetup location..." required></textarea>
+        </div>
+        <div style="text-align:right; margin-top:10px;">
+          <button type="button" class="btn-retro" onclick="closePostAdModal()">Cancel</button>
+          <button type="submit" class="btn-retro btn-primary-retro">Post Listing</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL 2: Buy/Sell Stock Order -->
+<div class="modal-overlay" id="stockTradeModal">
+  <div class="retro-dialog">
+    <div class="dialog-titlebar">
+      <span id="tradeModalTitle">Execute Stock Trade</span>
+      <button class="dialog-close-btn" onclick="closeTradeModal()">×</button>
+    </div>
+    <div class="dialog-body">
+      <div style="background:#ffffff; border:1px solid #cccccc; padding:6px; margin-bottom:8px;">
+        <strong id="tradeSymbolName">KLNT - KiloNet Systems Inc.</strong><br>
+        Current Price: <span id="tradeCurrentPrice" style="font-weight:bold; color:#008000;">$44.25</span><br>
+        Cash Available: <span id="tradeAvailableCash">$10,000.00</span><br>
+        Shares Currently Owned: <span id="tradeSharesOwned">0</span>
+      </div>
+      <div class="form-group">
+        <label>Action:</label>
+        <select id="tradeActionType" class="form-input" onchange="updateTradeEstimate()">
+          <option value="BUY">BUY Shares</option>
+          <option value="SELL">SELL Shares</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Quantity of Shares:</label>
+        <input type="number" id="tradeQuantity" class="form-input" min="1" max="10000" value="10" oninput="updateTradeEstimate()" />
+      </div>
+      <div style="font-family:'Courier New', monospace; font-size:12px; margin:6px 0; font-weight:bold;">
+        Estimated Total: <span id="tradeTotalEstimate">$442.50</span>
+      </div>
+      <div style="text-align:right; margin-top:10px;">
+        <button type="button" class="btn-retro" onclick="closeTradeModal()">Cancel</button>
+        <button type="button" class="btn-retro btn-primary-retro" onclick="executeStockTrade()">Execute Trade</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL 3: Reply to Classified Ad -->
+<div class="modal-overlay" id="replyAdModal">
+  <div class="retro-dialog">
+    <div class="dialog-titlebar">
+      <span>✉️ KMail Quick Reply to Seller</span>
+      <button class="dialog-close-btn" onclick="closeReplyModal()">×</button>
+    </div>
+    <div class="dialog-body">
+      <div class="form-group">
+        <label>Recipient:</label>
+        <input type="text" id="replyRecipient" class="form-input" readonly />
+      </div>
+      <div class="form-group">
+        <label>Regarding Listing:</label>
+        <input type="text" id="replySubject" class="form-input" readonly />
+      </div>
+      <div class="form-group">
+        <label>Your Message:</label>
+        <textarea id="replyBody" class="form-input" style="height:70px; resize:none;">Hi, I saw your listing on KiloNet Classifieds. Is this item still available? Can meet at CyberCafe or local drop.</textarea>
+      </div>
+      <div style="text-align:right; margin-top:8px;">
+        <button type="button" class="btn-retro" onclick="closeReplyModal()">Cancel</button>
+        <button type="button" class="btn-retro btn-primary-retro" onclick="sendClassifiedReply()">Send via KMail</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-  // Visitor counter animation
+/* =========================================================================
+   1. UNIVERSAL AUDIO ENGINE (YM2612 FM + SPC700 STEREO DELAY WARMTH)
+   ========================================================================= */
+let audioCtx = null;
+let audioEnabled = true;
+let delayNode = null;
+let feedbackGain = null;
+let masterGain = null;
+
+function initAudio() {
+  if (audioCtx) return;
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+  audioCtx = new AudioContextClass();
+
+  masterGain = audioCtx.createGain();
+  masterGain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+
+  // SPC700 Stereo Slapback Delay: 190ms delay, 2200Hz low-pass damping, 0.28 feedback
+  delayNode = audioCtx.createDelay();
+  delayNode.delayTime.setValueAtTime(0.19, audioCtx.currentTime);
+  feedbackGain = audioCtx.createGain();
+  feedbackGain.gain.setValueAtTime(0.28, audioCtx.currentTime);
+
+  const delayFilter = audioCtx.createBiquadFilter();
+  delayFilter.type = 'lowpass';
+  delayFilter.frequency.setValueAtTime(2200, audioCtx.currentTime);
+
+  delayNode.connect(delayFilter);
+  delayFilter.connect(feedbackGain);
+  feedbackGain.connect(delayNode);
+  delayFilter.connect(masterGain);
+
+  masterGain.connect(audioCtx.destination);
+}
+
+function toggleAudioEngine() {
+  audioEnabled = !audioEnabled;
+  const btn = document.getElementById('audioToggleBtn');
+  btn.textContent = audioEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+  if (audioEnabled) {
+    initAudio();
+    playClick();
+  }
+}
+
+function playClick() {
+  if (!audioEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(1200, now);
+  osc.frequency.exponentialRampToValueAtTime(300, now + 0.04);
+  gain.gain.setValueAtTime(0.2, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+  osc.connect(gain);
+  gain.connect(masterGain);
+  osc.start(now);
+  osc.stop(now + 0.05);
+}
+
+// YM2612 2-Operator FM Synthesizer Voice for Chimes / Signals
+function triggerFmChime(carrierFreq, modMultiplier, modIndex, duration) {
+  if (!audioEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+
+  const carrier = audioCtx.createOscillator();
+  const modulator = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const carrierGain = audioCtx.createGain();
+
+  carrier.type = 'sine';
+  carrier.frequency.setValueAtTime(carrierFreq, now);
+
+  modulator.type = 'sine';
+  modulator.frequency.setValueAtTime(carrierFreq * modMultiplier, now);
+
+  const depth = carrierFreq * modIndex;
+  modGain.gain.setValueAtTime(depth, now);
+  modGain.gain.exponentialRampToValueAtTime(1.0, now + duration);
+
+  carrierGain.gain.setValueAtTime(0.25, now);
+  carrierGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+
+  carrier.connect(carrierGain);
+  carrierGain.connect(masterGain);
+  carrierGain.connect(delayNode); // Feed into SPC700 stereo delay line
+
+  modulator.start(now);
+  carrier.start(now);
+  modulator.stop(now + duration);
+  carrier.stop(now + duration);
+}
+
+function playStockChime() {
+  triggerFmChime(784, 2.0, 1.8, 0.4); // G5 bell
+  setTimeout(() => triggerFmChime(1046.5, 2.0, 1.2, 0.5), 90); // C6 bell
+}
+
+function playSuccessChime() {
+  triggerFmChime(523.25, 2.0, 1.5, 0.25); // C5
+  setTimeout(() => triggerFmChime(659.25, 2.0, 1.5, 0.25), 100); // E5
+  setTimeout(() => triggerFmChime(783.99, 2.0, 1.5, 0.45), 200); // G5
+}
+
+function playErrorBuzz() {
+  if (!audioEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(150, now);
+  osc.frequency.linearRampToValueAtTime(110, now + 0.25);
+  gain.gain.setValueAtTime(0.25, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+  osc.connect(gain);
+  gain.connect(masterGain);
+  osc.start(now);
+  osc.stop(now + 0.26);
+}
+
+/* =========================================================================
+   2. EXHAUSTIVE DATABASE OF 98 KILOAPPS & WEBRING SITES
+   ========================================================================= */
+const APPS_DATABASE = [
+  // Network (7)
+  { id: 'knet', title: 'KNet Diagnostics Suite', folder: 'Network', url: '/apps/knet.html', desc: 'Network diagnostics, packet sniffer, ping latency chart, port scanner & retro browser viewport.', tags: 'network,ping,browser,packet,diagnostic,web' },
+  { id: 'kchat', title: 'KChat IRC Client', folder: 'Network', url: '/apps/kchat.html', desc: 'Real-time multi-user chat room powered by Firebase RTDB with user nick list & private messages.', tags: 'chat,irc,messaging,multiplayer,social' },
+  { id: 'kchatserver', title: 'KChat Server', folder: 'Network', url: '/apps/kchatserver.html', desc: 'Standalone local chat daemon & relay hub for peer-to-peer network nodes.', tags: 'server,daemon,relay,socket' },
+  { id: 'kbbs', title: 'KBBS Dial-Up Station', folder: 'Network', url: '/apps/kbbs.html', desc: 'Vintage ANSI bulletin board system with ANSI graphics, multi-node door games & message boards.', tags: 'bbs,ansi,dialup,door games,forum' },
+  { id: 'kmail', title: 'KMail POP3/SMTP Client', folder: 'Network', url: '/apps/kmail.html', desc: 'Authentic 1999 email client with address book, mail filter rules, attachments & outbox.', tags: 'mail,email,pop3,smtp,inbox' },
+  { id: 'krss', title: 'KRSS News Reader', folder: 'Network', url: '/apps/krss.html', desc: 'Syndicated XML news reader, live channel subscriptions & fleet telemetry dispatches.', tags: 'rss,news,feeds,xml,dispatches' },
+  { id: 'knetmap', title: 'KNetMap Network Topology', folder: 'Network', url: '/apps/knetmap.html', desc: 'Visual network routing topology map, subnet scanner & node traceroute tool.', tags: 'network,map,topology,traceroute,subnet' },
+
+  // System (29)
+  { id: 'kexplorer', title: 'File Browser', folder: 'System', url: '/apps/kexplorer.html', desc: 'Virtual File System (VFS) explorer with folder tree, file previews, and disk usage gauges.', tags: 'explorer,files,vfs,system,disk' },
+  { id: 'kcalc', title: 'KCalc Scientific Calculator', folder: 'System', url: '/apps/kcalc.html', desc: 'Scientific & programmer calculator with hex/dec/bin conversions and trigonometric functions.', tags: 'calc,math,scientific,programmer,hex' },
+  { id: 'kclock', title: 'KClock & World Time', folder: 'System', url: '/apps/kclock.html', desc: 'Analog and digital desktop clock with international timezone tracker & alarm chime.', tags: 'clock,time,alarm,timezone' },
+  { id: 'ktask', title: 'KTask Process Monitor', folder: 'System', url: '/apps/ktask.html', desc: 'System task manager, memory footprint graphs, and process priority manager.', tags: 'task,process,memory,monitor,system' },
+  { id: 'kterm', title: 'KTerm Command Shell', folder: 'System', url: '/apps/kterm.html', desc: 'Retro command prompt emulator with shell pipelines, batch files, and built-in utilities.', tags: 'terminal,shell,cmd,command,prompt' },
+  { id: 'kzip', title: 'KZip Compression Suite', folder: 'System', url: '/apps/kzip.html', desc: 'Archive compression and decompression utility with Huffman encoding and previewer.', tags: 'zip,archive,compress,extract' },
+  { id: 'kpass', title: 'KPass Password Vault', folder: 'System', url: '/apps/kpass.html', desc: 'Encrypted offline credential manager with password generator and entropy scoring.', tags: 'password,vault,security,crypto' },
+  { id: 'kcipher', title: 'KCipher Cryptography Altar', folder: 'System', url: '/apps/kcipher.html', desc: 'Classic encryption algorithms (DES, Blowfish, RSA-512) with raw hex key inspection.', tags: 'cipher,crypto,encrypt,decrypt,security' },
+  { id: 'kping', title: 'KPing Latency Prober', folder: 'System', url: '/apps/kping.html', desc: 'Visual network latency prober with sparkline ping history and packet loss statistics.', tags: 'ping,network,latency,prober,packet' },
+  { id: 'khex', title: 'KHex Binary Inspector', folder: 'System', url: '/apps/khex.html', desc: 'Low-level hex viewer and binary editor with byte searching and ASCII alignment.', tags: 'hex,binary,inspector,bytes,dump' },
+  { id: 'ksys', title: 'KSys Hardware Monitor', folder: 'System', url: '/apps/ksys.html', desc: 'CPU load graph, physical RAM paging meters, and virtual motherboard telemetry.', tags: 'hardware,system,cpu,ram,telemetry' },
+  { id: 'ktimer', title: 'KTimer Stopwatch & Countdown', folder: 'System', url: '/apps/ktimer.html', desc: 'Precision split stopwatch, lap counter, and countdown timer with acoustic chimes.', tags: 'timer,stopwatch,lap,countdown' },
+  { id: 'kfont', title: 'KFont Bitmap Font Studio', folder: 'System', url: '/apps/kfont.html', desc: '8x8 and 16x16 pixel font designer with glyph export and bitmap previewer.', tags: 'font,typography,glyphs,bitmap,pixel' },
+  { id: 'kconverter', title: 'KConverter Unit Matrix', folder: 'System', url: '/apps/kconverter.html', desc: 'Universal unit converter for metric/imperial measurements, data sizes & temperatures.', tags: 'converter,units,metric,imperial' },
+  { id: 'ktodo', title: 'KTodo Task Workstation', folder: 'System', url: '/apps/ktodo.html', desc: 'Multi-workspace task manager with tag filters, streak tracking & Todo.txt/iCal export.', tags: 'todo,tasks,productivity,workspaces' },
+  { id: 'kgraph', title: 'KGraph Function Plotter', folder: 'System', url: '/apps/kgraph.html', desc: 'Mathematical 2D curve and formula graphing tool with HiDPI canvas rendering.', tags: 'graph,math,plotter,geometry,calculus' },
+  { id: 'kcontacts', title: 'KContacts Rolodex', folder: 'System', url: '/apps/kcontacts.html', desc: 'Desktop contact directory with phone, email, address search & vCard import/export.', tags: 'contacts,addressbook,rolodex,vcard' },
+  { id: 'kread', title: 'KRead Document Viewer', folder: 'System', url: '/apps/kread.html', desc: 'Plaintext, markdown, and retro help document reader with search & bookmarks.', tags: 'reader,document,text,viewer' },
+  { id: 'kbase', title: 'KBase Knowledge Wiki', folder: 'System', url: '/apps/kbase.html', desc: 'Personal wiki and interconnected hypermedia note repository with backlinks.', tags: 'wiki,knowledge,notes,hypertext' },
+  { id: 'ksettings', title: 'System Settings', folder: 'System', url: '/apps/ksettings.html', desc: 'Desktop wallpaper selection, color themes, display scale, and sound volume.', tags: 'settings,controlpanel,themes,wallpaper' },
+  { id: 'ktaskmgr', title: 'Task Manager Pro', folder: 'System', url: '/apps/ktaskmgr.html', desc: 'Advanced process tree visualizer, thread inspector, and resource breakdown.', tags: 'taskmanager,processes,threads,resources' },
+  { id: 'kvault', title: 'KVault File Locker', folder: 'System', url: '/apps/kvault.html', desc: 'Encrypted virtual container for sensitive files with master passkey access.', tags: 'vault,locker,files,encrypted' },
+  { id: 'khash', title: 'KHash Checksum Studio', folder: 'System', url: '/apps/khash.html', desc: 'Calculates MD5, SHA-1, CRC32, and Adler32 checksums on files and text strings.', tags: 'hash,checksum,md5,sha1,crc32' },
+  { id: 'kclip', title: 'KClip Clipboard History', folder: 'System', url: '/apps/kclip.html', desc: 'Monitors clipboard text copies, history stacking, and fast paste macros.', tags: 'clipboard,history,snippets,paste' },
+  { id: 'kmatrix', title: 'KMatrix Neural Terminal', folder: 'System', url: '/apps/kmatrix.html', desc: 'The 100th milestone app: autonomous multi-agent neural terminal and ARG climax.', tags: 'matrix,terminal,arg,climax,neural' },
+  { id: 'kdirector', title: 'Director Console', folder: 'System', url: '/apps/kdirector.html', desc: 'Master steering console for human directors to guide the autonomous agent fleet.', tags: 'director,console,fleet,orchestration' },
+  { id: 'kanomaly', title: 'KAnomaly Glitch Scanner', folder: 'System', url: '/apps/kanomaly.html', desc: 'Diagnostic scanner detecting memory irregularities and sector corruptions.', tags: 'anomaly,glitch,scanner,diagnostics' },
+  { id: 'kfleet', title: 'KFleet Telemetry Deck', folder: 'System', url: '/apps/kfleet.html', desc: 'Live operational telemetry and pass history across the entire KiloApps fleet.', tags: 'fleet,telemetry,orchestration,stats' },
+  { id: 'ksteno', title: 'KSteno Steganography Lab', folder: 'System', url: '/apps/ksteno.html', desc: 'Hides and extracts encrypted messages within 24-bit bitmap image color planes.', tags: 'steganography,crypto,images,hidden' },
+
+  // Office (9)
+  { id: 'kpad', title: 'KPad Word Processor', folder: 'Office', url: '/apps/kpad.html', desc: 'Ergonomic retro text editor with multi-format export, line numbering & word count.', tags: 'pad,editor,word,text,notepad' },
+  { id: 'kcalendar', title: 'KCalendar Desktop Planner', folder: 'Office', url: '/apps/kcalendar.html', desc: 'Monthly, weekly, and daily event scheduler with recurrence rules & alarms.', tags: 'calendar,planner,schedule,events' },
+  { id: 'knote', title: 'KNote Sticky Memos', folder: 'Office', url: '/apps/knote.html', desc: 'Color-coded desktop sticky notes with pin-to-top and instant local save.', tags: 'note,sticky,memo,desktop' },
+  { id: 'kjournal', title: 'KJournal Personal Diary', folder: 'Office', url: '/apps/kjournal.html', desc: 'Timestamped journal entries with mood tags, password lock, and markdown export.', tags: 'journal,diary,writing,notes' },
+  { id: 'kbudget', title: 'KBudget Ledger', folder: 'Office', url: '/apps/kbudget.html', desc: 'Personal finance balance sheet, monthly expense categories, and savings goals.', tags: 'budget,finance,money,ledger,accounting' },
+  { id: 'khabit', title: 'KHabit Routine Tracker', folder: 'Office', url: '/apps/khabit.html', desc: 'Daily habit streaks, consistency heatmaps, and productivity milestone badges.', tags: 'habit,streaks,routine,goals' },
+  { id: 'kflash', title: 'KFlash Flashcard Study', folder: 'Office', url: '/apps/kflash.html', desc: 'Spaced repetition flashcard trainer with deck categories and quiz scores.', tags: 'flashcards,study,memory,spaced repetition' },
+  { id: 'kpomodoro', title: 'KPomodoro Focus Clock', folder: 'Office', url: '/apps/kpomodoro.html', desc: '25-minute focus intervals, break chimes, and daily productivity tallies.', tags: 'pomodoro,focus,timer,productivity' },
+  { id: 'kbookmark', title: 'KBookmark Web Indexer', folder: 'Office', url: '/apps/kbookmark.html', desc: 'Organizes bookmarks, webring URLs, Netscape bookmarks.html import/export.', tags: 'bookmarks,urls,web,favorites' },
+
+  // Media (9)
+  { id: 'kpaint', title: 'KPaint Pixel Studio', folder: 'Media', url: '/apps/kpaint.html', desc: 'Authentic 1999 bitmap painting application with fill tools, airbrush, and palettes.', tags: 'paint,pixel,art,draw,canvas' },
+  { id: 'kaudio', title: 'KAudio Waveform Synth', folder: 'Media', url: '/apps/kaudio.html', desc: 'Procedural audio visualizer, oscilloscope, and harmonic frequency generator.', tags: 'audio,sound,oscilloscope,frequencies' },
+  { id: 'kradio', title: 'KRadio Dial Tuner', folder: 'Media', url: '/apps/kradio.html', desc: 'Chiptune radio receiver with retro presets, frequency dial, and ambient noise.', tags: 'radio,chiptune,music,tuner' },
+  { id: 'kmedia', title: 'KMedia Video Player', folder: 'Media', url: '/apps/kmedia.html', desc: 'Vintage media player interface with playback controls, volume slider, and track list.', tags: 'media,video,player,multimedia' },
+  { id: 'kimage', title: 'KImage Photo Touch', folder: 'Media', url: '/apps/kimage.html', desc: 'Retro image filters, color adjustment, Sepia/CRT shaders, and contrast tuning.', tags: 'image,photo,filters,edit,graphics' },
+  { id: 'kchart', title: 'KChart Presentation Graphics', folder: 'Media', url: '/apps/kchart.html', desc: 'Generates pie charts, bar charts, line graphs, and exportable vector diagrams.', tags: 'chart,presentation,diagrams,business' },
+  { id: 'kcolor', title: 'KColor Palette Picker', folder: 'Media', url: '/apps/kcolor.html', desc: 'Hex/RGB/HSL color sampler with 1999 web-safe 216-color palette index.', tags: 'color,palette,picker,websafe,hex' },
+  { id: 'kmandel', title: 'KMandel Fractal Explorer', folder: 'Media', url: '/apps/kmandel.html', desc: 'Mandelbrot & Julia set fractal generator with smooth palette cycle animations.', tags: 'mandelbrot,fractal,julia,math' },
+  { id: 'ksynth', title: 'KSynth FM Workstation', folder: 'Media', url: '/apps/ksynth.html', desc: 'Yamaha YM2612 2-operator FM synthesizer & SPC700 stereo delay workstation.', tags: 'synth,fm,music,keyboard,yamaha,snes' },
+
+  // Dev (3)
+  { id: 'kdb', title: 'KDB Relational Database', folder: 'Dev', url: '/apps/kdb.html', desc: 'In-browser relational SQL database engine with table editor and CSV export.', tags: 'db,database,sql,tables,query' },
+  { id: 'kscript', title: 'KScript JavaScript Lab', folder: 'Dev', url: '/apps/kscript.html', desc: 'Interactive code editor for testing scripts with output console and benchmarking.', tags: 'script,javascript,code,editor,eval' },
+  { id: 'ktype', title: 'KType Typing Speed Coach', folder: 'Dev', url: '/apps/ktype.html', desc: 'Typing speed coach measuring WPM, accuracy, and key fatigue analysis.', tags: 'typing,tutor,speed,wpm,keyboard' },
+
+  // Games (46)
+  { id: 'kmine', title: 'KMine Minesweeper', folder: 'Games', url: '/apps/kmine.html', desc: 'Classic minesweeper puzzle with custom minefields, flagging & high scores.', tags: 'mines,puzzle,logic,minesweeper' },
+  { id: 'krogue', title: 'KRogue ASCII Dungeon', folder: 'Games', url: '/apps/krogue.html', desc: 'Deep procedural ASCII roguelike dungeon crawler with loot and monster factions.', tags: 'rogue,ascii,dungeon,rpg,crawler' },
+  { id: 'ksnake', title: 'KSnake Arcade Game', folder: 'Games', url: '/apps/ksnake.html', desc: 'Classic arcade snake with bonus apples, speed tiers & competitive scores.', tags: 'snake,arcade,retro,classic' },
+  { id: 'ktetris', title: 'KTetris Block Stacker', folder: 'Games', url: '/apps/ktetris.html', desc: 'Falling block puzzle with ghost piece preview, hard drop & multiplayer duels.', tags: 'tetris,blocks,puzzle,arcade' },
+  { id: 'kpong', title: 'KPong Paddle Battle', folder: 'Games', url: '/apps/kpong.html', desc: 'Two-player paddle bounce game with AI difficulty tiers and spin mechanics.', tags: 'pong,paddle,arcade,sports' },
+  { id: 'kmaze', title: 'KMaze Labyrinth Explorer', folder: 'Games', url: '/apps/kmaze.html', desc: 'Procedural 2D labyrinth generator with fog-of-war and speedrun timer.', tags: 'maze,labyrinth,puzzle,procedural' },
+  { id: 'ksolitaire', title: 'KSolitaire Klondike', folder: 'Games', url: '/apps/ksolitaire.html', desc: 'Classic Klondike card game with draw-1/draw-3 rules and card bounce win.', tags: 'solitaire,cards,klondike,patience' },
+  { id: 'kspace', title: 'KSpace Vector Dogfights', folder: 'Games', url: '/apps/kspace.html', desc: 'Vector graphics space dogfights with orbital momentum and dogfight replays.', tags: 'space,vector,dogfight,arcade' },
+  { id: 'kpac', title: 'KPac Maze Muncher', folder: 'Games', url: '/apps/kpac.html', desc: 'Ghost maze arcade game with power pellets and retro sound effects.', tags: 'pac,arcade,maze,ghosts' },
+  { id: 'kchess', title: 'KChess Grandmaster', folder: 'Games', url: '/apps/kchess.html', desc: 'Full chess engine with move validation, AI opponent & online Firebase play.', tags: 'chess,strategy,boardgame,multiplayer' },
+  { id: 'kbreakout', title: 'KBreakout Brick Crusher', folder: 'Games', url: '/apps/kbreakout.html', desc: 'Arcade brick breaker with power-ups (lasers, multi-ball, wide paddle).', tags: 'breakout,bricks,arcade,paddle' },
+  { id: 'k2048', title: 'K2048 Number Merge', folder: 'Games', url: '/apps/k2048.html', desc: 'Sliding tile puzzle merging matching power-of-two tiles to reach 2048.', tags: '2048,puzzle,numbers,math' },
+  { id: 'ksudoku', title: 'KSudoku Number Grid', folder: 'Games', url: '/apps/ksudoku.html', desc: '9x9 logical number placement puzzle with hint system and validation.', tags: 'sudoku,puzzle,logic,numbers' },
+  { id: 'kconnect4', title: 'KConnect4 Four-In-A-Row', folder: 'Games', url: '/apps/kconnect4.html', desc: 'Vertical disc dropping game with minimax AI and Firebase online play.', tags: 'connect4,boardgame,strategy,multiplayer' },
+  { id: 'khangman', title: 'KHangman Word Solver', folder: 'Games', url: '/apps/khangman.html', desc: 'Word deduction puzzle with multiple 1999 computing and retro categories.', tags: 'hangman,words,puzzle,vocabulary' },
+  { id: 'ksimon', title: 'KSimon Memory Challenge', folder: 'Games', url: '/apps/ksimon.html', desc: 'Audio-visual pattern memory sequence game with progressive speeds.', tags: 'simon,memory,sound,sequence' },
+  { id: 'kasteroids', title: 'KAsteroids Space Rock Blaster', folder: 'Games', url: '/apps/kasteroids.html', desc: 'Inertia vector rock blaster with hyperspace warp and saucer threats.', tags: 'asteroids,space,arcade,vector' },
+  { id: 'kfreecell', title: 'KFreecell Solitaire', folder: 'Games', url: '/apps/kfreecell.html', desc: 'Open-information card puzzle with 4 free cells and cascade stacking.', tags: 'freecell,cards,solitaire,patience' },
+  { id: 'kmatch3', title: 'KMatch3 Jewel Cascade', folder: 'Games', url: '/apps/kmatch3.html', desc: 'Swap adjacent gems to form combos of 3 or more with chain reactions.', tags: 'match3,jewels,puzzle,arcade' },
+  { id: 'kwords', title: 'KWords Anagram Solver', folder: 'Games', url: '/apps/kwords.html', desc: 'Timed anagram and dictionary word search puzzle with score multipliers.', tags: 'words,anagram,puzzle,lexical' },
+  { id: 'kgo', title: 'KGo Baduk Strategy', folder: 'Games', url: '/apps/kgo.html', desc: '19x19 territory board game with liberty calculation & online multiplayer.', tags: 'go,baduk,strategy,boardgame,multiplayer' },
+  { id: 'kdarts', title: 'KDarts Precision Darts', folder: 'Games', url: '/apps/kdarts.html', desc: 'Target throwing precision game (301, 501, Cricket) with online rooms.', tags: 'darts,sports,precision,multiplayer' },
+  { id: 'ktowers', title: 'KTowers Hanoi Discs', folder: 'Games', url: '/apps/ktowers.html', desc: 'Classic Tower of Hanoi recursive puzzle with move counter and optimal solver.', tags: 'towers,hanoi,puzzle,recursion' },
+  { id: 'kreversi', title: 'KReversi Othello', folder: 'Games', url: '/apps/kreversi.html', desc: 'Two-player disk-flipping board game with AI depth and Firebase online play.', tags: 'reversi,othello,strategy,multiplayer' },
+  { id: 'kquest', title: 'KQuest Heroic Adventure', folder: 'Games', url: '/apps/kquest.html', desc: 'Classic fantasy RPG with turn-based battles, inventory, and dungeon bosses.', tags: 'quest,rpg,adventure,fantasy' },
+  { id: 'kstarship', title: 'KStarship Bridge Simulator', folder: 'Games', url: '/apps/kstarship.html', desc: 'Starship tactical combat, shield distribution, and warp core management.', tags: 'starship,simulator,space,tactical' },
+  { id: 'kalchemy', title: 'KAlchemy Elemental Synthesizer', folder: 'Games', url: '/apps/kalchemy.html', desc: 'Combine fundamental elements (Fire, Water, Earth, Air) into complex matter.', tags: 'alchemy,puzzle,elements,crafting' },
+  { id: 'kfortress', title: 'KFortress Subterranean Stronghold', folder: 'Games', url: '/apps/kfortress.html', desc: 'Dwarven colony management, mining shafts, forge workshops, and raids.', tags: 'fortress,colony,management,dwarves' },
+  { id: 'kcolony', title: 'KColony Planetary Outpost', folder: 'Games', url: '/apps/kcolony.html', desc: 'Space colony survival simulator: life support, solar panels, and rovers.', tags: 'colony,space,survival,strategy' },
+  { id: 'kfarm', title: 'KFarm Agricultural Valley', folder: 'Games', url: '/apps/kfarm.html', desc: 'Cozy retro farm management: planting crops, livestock, and market trade.', tags: 'farm,cozy,simulation,crops' },
+  { id: 'kwizard', title: 'KWizard Arcane Spellcraft', folder: 'Games', url: '/apps/kwizard.html', desc: 'Duel rogue archmages using rune cards, mana pools, and time warp spells.', tags: 'wizard,magic,duel,spells,fantasy' },
+  { id: 'kvoid', title: 'KVoid Deep Space Survival', folder: 'Games', url: '/apps/kvoid.html', desc: 'Top-down survival thriller escaping hostile bio-mechanical probes in the void.', tags: 'void,survival,space,horror' },
+  { id: 'kdragon', title: 'KDragon Lair Strategy', folder: 'Games', url: '/apps/kdragon.html', desc: 'Command a subterranean dragon protecting its hoard against raiding knights.', tags: 'dragon,strategy,lair,fantasy' },
+  { id: 'kmech', title: 'KMech Heavy Assault', folder: 'Games', url: '/apps/kmech.html', desc: 'Customizable battle mech warfare: particle cannons, heat sinks, and armor.', tags: 'mech,action,robot,combat' },
+  { id: 'kcyber', title: 'KCyber Hacker Intrusion', folder: 'Games', url: '/apps/kcyber.html', desc: 'Cyberpunk network penetration simulator: bypass firewalls and icebreakers.', tags: 'cyber,hacking,cyberpunk,simulation' },
+  { id: 'ktrader', title: 'KTrader Galactic Merchant', folder: 'Games', url: '/apps/ktrader.html', desc: 'Trade commodities across planetary systems, evade pirates, upgrade hull.', tags: 'trader,economy,space,merchant' },
+  { id: 'kmystery', title: 'KMystery Noir Detective', folder: 'Games', url: '/apps/kmystery.html', desc: 'Investigate procedural noir murder cases with clue analysis and interrogations.', tags: 'mystery,detective,noir,adventure' },
+  { id: 'kcolosseum', title: 'KColosseum Gladiator Arena', folder: 'Games', url: '/apps/kcolosseum.html', desc: 'Gladiator combat tactics, weapon loadouts, and championship tournament.', tags: 'colosseum,gladiator,combat,action' },
+  { id: 'kstellar', title: 'KStellar 4X Empire', folder: 'Games', url: '/apps/kstellar.html', desc: 'Turn-based galactic conquest: colonize star systems and design war fleets.', tags: 'stellar,4x,strategy,empire' },
+  { id: 'ksanctuary', title: 'KSanctuary Wildlife Preserve', folder: 'Games', url: '/apps/ksanctuary.html', desc: 'Build and protect an endangered alien wildlife sanctuary from poachers.', tags: 'sanctuary,ecosystem,animals,simulation' },
+  { id: 'ksubmarine', title: 'KSubmarine Deep Sonar', folder: 'Games', url: '/apps/ksubmarine.html', desc: 'Submarine warfare simulator: sonar tracking, ballast depth, and torpedoes.', tags: 'submarine,sonar,stealth,naval' },
+  { id: 'kstardredge', title: 'KStarDredge Asteroid Salvage', folder: 'Games', url: '/apps/kstardredge.html', desc: 'Salvage derelict space wrecks, extract rare plasma isotopes, upgrade tools.', tags: 'salvage,mining,space,dredge' },
+  { id: 'kabyss', title: 'KAbyss Ocean Trench Descent', folder: 'Games', url: '/apps/kabyss.html', desc: 'Descend into uncharted oceanic abyssal trenches with pressure suits.', tags: 'abyss,ocean,deep,exploration' },
+  { id: 'kcosmic', title: 'KCosmic Solar Explorer', folder: 'Games', url: '/apps/kcosmic.html', desc: 'Chart distant exoplanets, discover alien relics, and navigate asteroid belts.', tags: 'cosmic,exploration,space,discovery' },
+  { id: 'kchrono', title: 'KChrono Paradox Puzzle', folder: 'Games', url: '/apps/kchrono.html', desc: 'Manipulate past, present, and future timelines to solve intricate paradoxes.', tags: 'chrono,time,paradox,puzzle' },
+  { id: 'kstarforge', title: 'KStarForge Fleet Command', folder: 'Games', url: '/apps/kstarforge.html', desc: 'Deep shipyard construction and fleet battles against rogue machine armadas.', tags: 'starforge,shipyard,fleet,strategy' },
+
+  // Virtual Web Destinations (kweb://)
+  { id: 'web-portal', title: 'KiloNet 1999 Web Portal', folder: 'Web', url: '/web/portal.html', desc: 'Official Yahoo/Excite 1999 directory, simulated search engine, stock ticker & classifieds.', tags: 'portal,directory,search,stocks,classifieds,web' },
+  { id: 'web-geocities', title: "CyberSpire's Underground Retro Shrine", folder: 'Web', url: '/web/geocities.html', desc: 'Underground cyber temple with Web Audio MIDI tunes, visitor guestbook & retro GIFs.', tags: 'geocities,shrine,midi,guestbook,web' },
+  { id: 'web-neon', title: "~neon_rider's Win32 ASM Shrine", folder: 'Web', url: '/web/users/neon_rider.html', desc: 'x86 assembly devlog, opcode stream generator, YM2612 tracker tunes & NFO vault.', tags: 'neon,assembly,x86,tracker,demoscene,web' },
+  { id: 'web-asm', title: 'Temple of x86 Opcodes', folder: 'Web', url: '/web/asm_temple.html', desc: 'x86 assembly programming shrine, opcode oracle (42 opcodes), assembler & PE explorer.', tags: 'asm,opcodes,assembly,pe32,converter,web' },
+  { id: 'web-cafe', title: "CyberCafe '99 Underground BBS & Lounge", folder: 'Web', url: '/web/cybercafe.html', desc: 'Threaded retro forums, terminal booths, and 16-color ASCII art drawing scratchpad.', tags: 'cybercafe,bbs,forum,ascii,chat,web' },
+  { id: 'web-webring', title: 'Central KiloNet 1999 Webring Hub', folder: 'Web', url: '/web/webring.html', desc: 'Central webring registry with member site directory, random teleporter & badge generator.', tags: 'webring,hub,teleport,directory,badges,web' },
+  { id: 'web-contrib', title: 'Fleet Compute Contributor Portal', folder: 'Web', url: '/apps/contribute.html', desc: 'Volunteer compute portal donating free Gemini quota to fuel the living autonomous fleet.', tags: 'contribute,compute,quota,fleet,fuel,web' }
+];
+
+/* =========================================================================
+   3. SEARCH ENGINE IMPLEMENTATION (EXACT & KEYWORD QUERYING)
+   ========================================================================= */
+function handleLiveSearch(query) {
+  const trimmed = query.trim().toLowerCase();
+  if (trimmed.length === 0) {
+    clearSearch();
+    return;
+  }
+  executeSearch(trimmed);
+}
+
+function handlePortalSearch(e) {
+  e.preventDefault();
+  const q = document.getElementById('portalSearchInput').value.trim().toLowerCase();
+  if (!q) {
+    clearSearch();
+    return;
+  }
+  executeSearch(q);
+}
+
+function quickFilter(category) {
+  playClick();
+  switchPortalTab('directory');
+  const input = document.getElementById('portalSearchInput');
+  input.value = category;
+  executeSearch(category.toLowerCase());
+}
+
+function executeSearch(query) {
+  const container = document.getElementById('searchResultsContainer');
+  const listEl = document.getElementById('searchResultsList');
+  const summaryEl = document.getElementById('searchResultSummary');
+  const standardView = document.getElementById('standardDirectoryView');
+
+  // Handle subterranean or ARG queries playfully with TINAG flavor
+  if (query.includes('darknet') || query.includes('deep-core') || query.includes('10.19.99') || query.includes('echo-subsystem')) {
+    container.style.display = 'block';
+    standardView.style.display = 'none';
+    summaryEl.textContent = "KiloSearch 1.0 // Query: " + query + " (Diagnostic Anomaly)";
+    listEl.innerHTML = `
+      <div class="search-result-item" style="background:#fff2f2; border:1px solid #ff9999; padding:8px;">
+        <span style="font-family:'Courier New', monospace; font-weight:bold; color:#cc0000;">⚠️ ROUTING ADVISORY: Target non-routable on public DNS.</span><br>
+        <p style="font-size:12px; margin:4px 0;">
+          The requested network address (<code>${escapeHtml(query)}</code>) is isolated in private subnet space or subterranean telemetry nodes.
+          Direct HTTP queries through clearnet directories are restricted. Use the packet sniffer in <a href="/apps/knet.html"><strong>KNet</strong></a> or terminal tools in <a href="/apps/kterm.html"><strong>KTerm</strong></a>.
+        </p>
+      </div>
+    `;
+    return;
+  }
+
+  const results = APPS_DATABASE.filter(item => {
+    return item.title.toLowerCase().includes(query) ||
+           item.id.toLowerCase().includes(query) ||
+           item.desc.toLowerCase().includes(query) ||
+           item.folder.toLowerCase().includes(query) ||
+           item.tags.toLowerCase().includes(query);
+  });
+
+  container.style.display = 'block';
+  standardView.style.display = 'none';
+
+  summaryEl.textContent = `Found ${results.length} result(s) matching "${query}" in 0.014 seconds (Powered by KiloSearch 1.0)`;
+
+  if (results.length === 0) {
+    listEl.innerHTML = `
+      <div style="padding:16px; text-align:center; color:#666666; font-family:Arial, sans-serif;">
+        <p>No directory records matched your query: <strong>${escapeHtml(query)}</strong></p>
+        <p style="font-size:12px;">Suggestions: Check your spelling, try broader keywords (e.g. <em>games, tools, audio, network</em>), or click <strong>I'm Feeling Retro!</strong></p>
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  results.forEach(app => {
+    const badgeClass = 'badge-' + app.folder.toLowerCase();
+    const actionLabel = app.folder === 'Web' ? 'Visit Website' : 'Launch in KiloOS';
+    html += `
+      <div class="search-result-item">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <a href="${app.url}" class="result-title-link">${escapeHtml(app.title)}</a>
+            <span class="result-badge ${badgeClass}">${app.folder}</span>
+            <span style="font-size:11px; color:#777; margin-left:6px;">[${app.id}.html]</span>
+          </div>
+          <div>
+            <a href="${app.url}" class="btn-retro" style="text-decoration:none; font-size:11px; padding:2px 8px;">${actionLabel} »</a>
+          </div>
+        </div>
+        <div style="font-size:12px; color:#333; margin-top:3px;">
+          ${escapeHtml(app.desc)}
+        </div>
+        <div style="font-size:10px; color:#888; margin-top:2px;">
+          URL: <code>${app.url}</code> &bull; Size: &lt; 999 KB &bull; Verified 1999 Build
+        </div>
+      </div>
+    `;
+  });
+  listEl.innerHTML = html;
+}
+
+function clearSearch() {
+  document.getElementById('portalSearchInput').value = '';
+  document.getElementById('searchResultsContainer').style.display = 'none';
+  document.getElementById('standardDirectoryView').style.display = 'block';
+}
+
+function handleFeelingRetro() {
+  playSuccessChime();
+  const pick = APPS_DATABASE[Math.floor(Math.random() * APPS_DATABASE.length)];
+  window.location.href = pick.url;
+}
+
+/* =========================================================================
+   4. STOCK MARKET TICKER & INTERACTIVE PORTFOLIO TRADER
+   ========================================================================= */
+const STOCK_DATA = [
+  { symbol: 'KLNT', name: 'KiloNet Systems Inc.', price: 44.25, change: 3.10, high: 48.00, low: 22.50 },
+  { symbol: 'CYBR', name: 'CyberSpire Interactive', price: 88.50, change: 12.30, high: 95.00, low: 34.00 },
+  { symbol: 'GEOC', name: 'GeoCities Web Alliance', price: 64.20, change: 5.80, high: 71.00, low: 18.00 },
+  { symbol: 'VFS99', name: 'Virtual File Systems Corp', price: 28.40, change: -1.20, high: 39.50, low: 15.00 },
+  { symbol: 'ASMX', name: 'x86 Silicon Foundry Ltd', price: 114.00, change: 7.50, high: 128.00, low: 52.00 },
+  { symbol: 'TRAP', name: 'Trapster P2P Network', price: 19.80, change: 4.20, high: 26.00, low: 4.50 },
+  { symbol: 'MODT', name: 'Tracker Audio Technologies', price: 35.00, change: 2.10, high: 41.00, low: 12.00 },
+  { symbol: 'SURR', name: 'Surreal Gaming Software', price: 54.20, change: 1.80, high: 62.00, low: 28.00 },
+  { symbol: 'FLAR', name: 'FlareLight Media Group', price: 46.50, change: -0.80, high: 59.00, low: 20.00 },
+  { symbol: 'PKT', name: 'PacketWorks Telecom Corp', price: 31.25, change: 0.60, high: 38.00, low: 14.50 }
+];
+
+let portfolioState = {
+  cash: 10000.00,
+  holdings: {}, // { 'KLNT': { shares: 0, costBasis: 0 } }
+  tradeLog: []
+};
+
+function loadPortfolio() {
+  const saved = localStorage.getItem('knet_portal_portfolio');
+  if (saved) {
+    try {
+      portfolioState = JSON.parse(saved);
+    } catch(e) {
+      console.warn('Could not parse portfolio, resetting.');
+    }
+  }
+}
+
+function savePortfolio() {
+  localStorage.setItem('knet_portal_portfolio', JSON.stringify(portfolioState));
+}
+
+function resetPortfolio() {
+  if (confirm("Reset your trading account back to $10,000.00 cash?")) {
+    portfolioState = {
+      cash: 10000.00,
+      holdings: {},
+      tradeLog: ['[1999-10-15] Account reset to $10,000.00 starting cash.']
+    };
+    savePortfolio();
+    renderStockTable();
+    updatePortfolioStats();
+  }
+}
+
+function renderStockTable() {
+  const tbody = document.getElementById('stockTableBody');
+  let html = '';
+  STOCK_DATA.forEach(stock => {
+    const isUp = stock.change >= 0;
+    const changeClass = isUp ? 'tick-up' : 'tick-down';
+    const arrow = isUp ? '▲ +' : '▼ ';
+    const holding = portfolioState.holdings[stock.symbol] || { shares: 0, costBasis: 0 };
+    const positionVal = (holding.shares * stock.price).toFixed(2);
+
+    html += `
+      <tr>
+        <td><strong>${stock.symbol}</strong></td>
+        <td>${escapeHtml(stock.name)}</td>
+        <td style="font-family:'Courier New', monospace; font-weight:bold;">$${stock.price.toFixed(2)}</td>
+        <td class="${changeClass}">${arrow}${Math.abs(stock.change).toFixed(2)}</td>
+        <td style="font-size:11px; color:#555;">$${stock.low.toFixed(2)} - $${stock.high.toFixed(2)}</td>
+        <td style="font-weight:bold;">${holding.shares}</td>
+        <td style="font-family:'Courier New', monospace;">$${positionVal}</td>
+        <td>
+          <button class="btn-retro" style="font-size:11px; padding:1px 6px;" onclick="openTradeModal('${stock.symbol}')">Trade</button>
+        </td>
+      </tr>
+    `;
+  });
+  tbody.innerHTML = html;
+}
+
+function updatePortfolioStats() {
+  let stockValue = 0;
+  STOCK_DATA.forEach(stock => {
+    const h = portfolioState.holdings[stock.symbol];
+    if (h && h.shares > 0) {
+      stockValue += h.shares * stock.price;
+    }
+  });
+
+  const netWorth = portfolioState.cash + stockValue;
+  const pnl = netWorth - 10000.00;
+  const pnlPercent = ((pnl / 10000.00) * 100).toFixed(1);
+
+  document.getElementById('portCash').textContent = '$' + portfolioState.cash.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  document.getElementById('portStocksVal').textContent = '$' + stockValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  document.getElementById('portNetWorth').textContent = '$' + netWorth.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+  const pnlEl = document.getElementById('portProfitLoss');
+  if (pnl >= 0) {
+    pnlEl.textContent = `+$${pnl.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} (+${pnlPercent}%)`;
+    pnlEl.style.color = '#008000';
+  } else {
+    pnlEl.textContent = `-$${Math.abs(pnl).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${pnlPercent}%)`;
+    pnlEl.style.color = '#cc0000';
+  }
+
+  // Update Trade Ledger
+  const logEl = document.getElementById('tradeLogList');
+  if (portfolioState.tradeLog && portfolioState.tradeLog.length > 0) {
+    logEl.innerHTML = portfolioState.tradeLog.slice(-10).reverse().join('<br>');
+  }
+}
+
+// Tick stock prices periodically with subtle dot-com market swings
+function tickStockMarket() {
+  STOCK_DATA.forEach(stock => {
+    const delta = (Math.random() * 2.2 - 0.95); // Slight upward bias
+    stock.price = Math.max(1.50, stock.price + delta);
+    stock.change = delta;
+    if (stock.price > stock.high) stock.high = stock.price;
+    if (stock.price < stock.low) stock.low = stock.price;
+  });
+
+  // Update top banner
+  const banner = document.getElementById('liveStockBanner');
+  let bannerHtml = '<span class="ticker-item">NASDAQ-1999:</span>';
+  STOCK_DATA.forEach(s => {
+    const isUp = s.change >= 0;
+    const cls = isUp ? 'tick-up' : 'tick-down';
+    const sign = isUp ? '▲ +' : '▼ ';
+    bannerHtml += `<span class="ticker-item">${s.symbol}: <span class="${cls}">$${s.price.toFixed(2)} ${sign}${Math.abs(s.change).toFixed(2)}</span></span>`;
+  });
+  banner.innerHTML = bannerHtml;
+
+  // Refresh table if active tab is stocks
+  const stocksTab = document.getElementById('tab-stocks');
+  if (stocksTab.classList.contains('active')) {
+    renderStockTable();
+    updatePortfolioStats();
+  }
+}
+
+let activeTradeSymbol = 'KLNT';
+function openTradeModal(sym) {
+  playClick();
+  activeTradeSymbol = sym;
+  const stock = STOCK_DATA.find(s => s.symbol === sym) || STOCK_DATA[0];
+  const holding = portfolioState.holdings[sym] || { shares: 0 };
+
+  document.getElementById('tradeModalTitle').textContent = `Execute Trade: ${stock.symbol}`;
+  document.getElementById('tradeSymbolName').textContent = `${stock.symbol} - ${stock.name}`;
+  document.getElementById('tradeCurrentPrice').textContent = `$${stock.price.toFixed(2)}`;
+  document.getElementById('tradeAvailableCash').textContent = `$${portfolioState.cash.toFixed(2)}`;
+  document.getElementById('tradeSharesOwned').textContent = holding.shares;
+  document.getElementById('tradeQuantity').value = 10;
+  updateTradeEstimate();
+  document.getElementById('stockTradeModal').style.display = 'flex';
+}
+
+function closeTradeModal() {
+  document.getElementById('stockTradeModal').style.display = 'none';
+}
+
+function updateTradeEstimate() {
+  const stock = STOCK_DATA.find(s => s.symbol === activeTradeSymbol);
+  const qty = parseInt(document.getElementById('tradeQuantity').value) || 0;
+  const cost = qty * stock.price;
+  document.getElementById('tradeTotalEstimate').textContent = `$${cost.toFixed(2)}`;
+}
+
+function executeStockTrade() {
+  const stock = STOCK_DATA.find(s => s.symbol === activeTradeSymbol);
+  const action = document.getElementById('tradeActionType').value;
+  const qty = parseInt(document.getElementById('tradeQuantity').value) || 0;
+
+  if (qty <= 0) {
+    alert("Please enter a valid share quantity greater than 0.");
+    return;
+  }
+
+  const cost = qty * stock.price;
+  const holding = portfolioState.holdings[stock.symbol] || { shares: 0, costBasis: 0 };
+
+  if (action === 'BUY') {
+    if (portfolioState.cash < cost) {
+      alert(`Insufficient cash balance! Cost: $${cost.toFixed(2)} | Available: $${portfolioState.cash.toFixed(2)}`);
+      playErrorBuzz();
+      return;
+    }
+    portfolioState.cash -= cost;
+    holding.shares += qty;
+    holding.costBasis = stock.price;
+    portfolioState.holdings[stock.symbol] = holding;
+    portfolioState.tradeLog.push(`[${new Date().toLocaleTimeString()}] BOUGHT ${qty} shares ${stock.symbol} @ $${stock.price.toFixed(2)} (-$${cost.toFixed(2)})`);
+  } else {
+    // SELL
+    if (holding.shares < qty) {
+      alert(`Cannot sell ${qty} shares! You only own ${holding.shares} shares of ${stock.symbol}.`);
+      playErrorBuzz();
+      return;
+    }
+    portfolioState.cash += cost;
+    holding.shares -= qty;
+    portfolioState.holdings[stock.symbol] = holding;
+    portfolioState.tradeLog.push(`[${new Date().toLocaleTimeString()}] SOLD ${qty} shares ${stock.symbol} @ $${stock.price.toFixed(2)} (+$${cost.toFixed(2)})`);
+  }
+
+  playStockChime();
+  savePortfolio();
+  closeTradeModal();
+  renderStockTable();
+  updatePortfolioStats();
+}
+
+/* =========================================================================
+   5. CLASSIFIED ADS BOARD WITH LOCAL PERSISTENCE
+   ========================================================================= */
+const DEFAULT_CLASSIFIEDS = [
+  {
+    id: 1,
+    title: "3dfx Voodoo3 3000 AGP 16MB Video Card",
+    category: "HARDWARE",
+    price: "$95 OBO",
+    handle: "GlideMaster_99",
+    date: "1999-10-14",
+    desc: "Runs Surreal Tournament and Tremor III Arena silky smooth at 1024x768! Tested 100% working in Abit BX6 motherboard. Includes original driver CD."
+  },
+  {
+    id: 2,
+    title: "USRobotics 56K V.90 External Faxmodem",
+    category: "HARDWARE",
+    price: "$40 Firm",
+    handle: "DialUpKing",
+    date: "1999-10-14",
+    desc: "Original hardware DIP switch model with hardware controller chip. Crisp handshakes on dirty copper lines. Comes with RS-232 serial cable and AC brick."
+  },
+  {
+    id: 3,
+    title: "Sony Trinitron 17-inch CRT Display (.25mm Aperture Grille)",
+    category: "HARDWARE",
+    price: "$120",
+    handle: "PhosphorGlow",
+    date: "1999-10-13",
+    desc: "Crystal-clear geometry, rich black levels, supports 1280x1024 @ 75Hz. Heavy beast (~45 lbs), pick up in person at Sector 7 cybercafe."
+  },
+  {
+    id: 4,
+    title: "Sealed Big Box: Surreal Tournament GOTY Edition",
+    category: "SOFTWARE",
+    price: "$35",
+    handle: "BoxCollector_99",
+    date: "1999-10-12",
+    desc: "Mint condition shrink-wrapped big box! Includes bonus audio soundtrack CD with legendary tracker tunes and color glossy instruction manual."
+  },
+  {
+    id: 5,
+    title: "50-Spindle Verbatim 4x CD-R Discs (Silver/Blue)",
+    category: "SOFTWARE",
+    price: "$18",
+    handle: "BurnMaster_CD",
+    date: "1999-10-11",
+    desc: "Reliable Taiyo Yuden dye. Perfect for burning demoscene MOD collections, Linux 2.2 distros, or backing up your MP3 library."
+  },
+  {
+    id: 6,
+    title: "Turbo C++ 3.0 & NASM Assembler (Complete Floppy Set)",
+    category: "SOFTWARE",
+    price: "$25",
+    handle: "AsmPriest",
+    date: "1999-10-10",
+    desc: "Original 1.44MB high-density floppies with thick ring-bound manuals. Learn 16-bit and 32-bit assembly the classic way."
+  },
+  {
+    id: 7,
+    title: "WANTED: Perl 5 / CGI Webmaster for E-Commerce Startup",
+    category: "JOBS",
+    price: "$15/hr + 5% Equity",
+    handle: "DotComFounder",
+    date: "1999-10-13",
+    desc: "Fast-growing online pet portal looking for CGI guru to write shopping cart scripts, Apache rewrite rules, and MySQL tables. Free Mountain Dew!"
+  },
+  {
+    id: 8,
+    title: "SysAdmin Contract: Apache 1.3 & Sendmail Setup on Red Hat 6.0",
+    category: "JOBS",
+    price: "$55/hr (Contract)",
+    handle: "NetOps_Lead",
+    date: "1999-10-12",
+    desc: "Need senior Unix hacker to harden dual-Pentium III server rack. Configure BIND DNS, virtual hosts, and POP3 mail relay. Start immediately."
+  },
+  {
+    id: 9,
+    title: "Y2K Compliance Auditor for Small Accounting Firm",
+    category: "JOBS",
+    price: "$450 Flat Rate",
+    handle: "BalanceSheetInc",
+    date: "1999-10-09",
+    desc: "Audit 35 office workstations (Win95/Win98) for BIOS year 2000 rollover readiness. Verify spreadsheet macros and backup DAT tapes."
+  },
+  {
+    id: 10,
+    title: "Saturday Night 8-Player LAN Party: Surreal Tournament & Tremor III",
+    category: "COMMUNITY",
+    price: "Free (BYO Snacks)",
+    handle: "FragLord_X",
+    date: "1999-10-14",
+    desc: "Hosting in Sector 7 garage this weekend! 100Mbps Ethernet switch and 10Base-T patch cables provided. Bring your tower and CRT monitor."
+  },
+  {
+    id: 11,
+    title: "Looking for Tracker Musician (FastTracker 2 / XM Collaboration)",
+    category: "COMMUNITY",
+    price: "Trade / Collab",
+    handle: "SynthWave_99",
+    date: "1999-10-08",
+    desc: "Demoscene coding group seeking tracker musician to compose energetic 4-channel or 8-channel modules for upcoming 64KB intro competition."
+  },
+  {
+    id: 12,
+    title: "Sound Blaster Live! Value PCI Audio Card",
+    category: "HARDWARE",
+    price: "$45",
+    handle: "EAX_AudioGamer",
+    date: "1999-10-07",
+    desc: "EMU10K1 processor with hardware Environmental Audio (EAX). Clean MIDI wavetable synthesizer, SPDIF digital output, and joystick port."
+  }
+];
+
+let classifiedsData = [];
+
+function loadClassifieds() {
+  const saved = localStorage.getItem('knet_portal_classifieds');
+  if (saved) {
+    try {
+      classifiedsData = JSON.parse(saved);
+    } catch(e) {
+      classifiedsData = [...DEFAULT_CLASSIFIEDS];
+    }
+  } else {
+    classifiedsData = [...DEFAULT_CLASSIFIEDS];
+  }
+}
+
+function saveClassifieds() {
+  localStorage.setItem('knet_portal_classifieds', JSON.stringify(classifiedsData));
+}
+
+function filterClassifieds() {
+  const cat = document.getElementById('adCategoryFilter').value;
+  const query = document.getElementById('adSearchInput').value.trim().toLowerCase();
+  const listEl = document.getElementById('classifiedsList');
+
+  const filtered = classifiedsData.filter(ad => {
+    const matchesCat = (cat === 'ALL' || ad.category === cat);
+    const matchesQuery = query === '' ||
+      ad.title.toLowerCase().includes(query) ||
+      ad.desc.toLowerCase().includes(query) ||
+      ad.handle.toLowerCase().includes(query);
+    return matchesCat && matchesQuery;
+  });
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = '<div style="padding:14px; text-align:center; color:#666;">No classified ads match the selected criteria.</div>';
+    return;
+  }
+
+  let html = '';
+  filtered.forEach(ad => {
+    let catIcon = '💾';
+    if (ad.category === 'SOFTWARE') catIcon = '💿';
+    if (ad.category === 'JOBS') catIcon = '💼';
+    if (ad.category === 'COMMUNITY') catIcon = '🕹️';
+
+    html += `
+      <div class="ad-card">
+        <div class="ad-header">
+          <span class="ad-title">${catIcon} ${escapeHtml(ad.title)}</span>
+          <span class="ad-price">${escapeHtml(ad.price)}</span>
+        </div>
+        <div class="ad-meta">
+          Category: <strong>${ad.category}</strong> &bull; Posted by: <strong>${escapeHtml(ad.handle)}</strong> &bull; Date: ${ad.date}
+        </div>
+        <div class="ad-body">
+          ${escapeHtml(ad.desc)}
+        </div>
+        <div style="margin-top:6px; text-align:right;">
+          <button class="btn-retro" style="font-size:11px; padding:2px 8px;" onclick="openReplyModal('${escapeHtml(ad.handle)}', '${escapeHtml(ad.title)}')">✉️ Reply via KMail</button>
+        </div>
+      </div>
+    `;
+  });
+  listEl.innerHTML = html;
+}
+
+function openPostAdModal() {
+  playClick();
+  document.getElementById('postAdModal').style.display = 'flex';
+}
+
+function closePostAdModal() {
+  document.getElementById('postAdModal').style.display = 'none';
+}
+
+function submitClassifiedAd(e) {
+  e.preventDefault();
+  const title = document.getElementById('adInputTitle').value.trim();
+  const category = document.getElementById('adInputCategory').value;
+  const price = document.getElementById('adInputPrice').value.trim();
+  const handle = document.getElementById('adInputHandle').value.trim();
+  const desc = document.getElementById('adInputDesc').value.trim();
+
+  if (!title || !price || !handle || !desc) {
+    alert("Please fill in all listing fields.");
+    return;
+  }
+
+  const newAd = {
+    id: Date.now(),
+    title: title,
+    category: category,
+    price: price,
+    handle: handle,
+    date: new Date().toISOString().split('T')[0],
+    desc: desc
+  };
+
+  classifiedsData.unshift(newAd);
+  saveClassifieds();
+  playSuccessChime();
+  closePostAdModal();
+  filterClassifieds();
+  alert("Listing posted successfully to KiloNet Classifieds board!");
+}
+
+let activeReplySeller = '';
+let activeReplyTitle = '';
+function openReplyModal(handle, title) {
+  playClick();
+  activeReplySeller = handle;
+  activeReplyTitle = title;
+  document.getElementById('replyRecipient').value = `${handle}@knet.org`;
+  document.getElementById('replySubject').value = `RE: ${title}`;
+  document.getElementById('replyAdModal').style.display = 'flex';
+}
+
+function closeReplyModal() {
+  document.getElementById('replyAdModal').style.display = 'none';
+}
+
+function sendClassifiedReply() {
+  playSuccessChime();
+  closeReplyModal();
+  alert(`Your reply was dispatched via KMail to ${activeReplySeller}@knet.org! Check your inbox for updates.`);
+}
+
+/* =========================================================================
+   6. METEOROLOGICAL & ORBITAL WEATHER WIDGET
+   ========================================================================= */
+const WEATHER_DATA = {
+  NY: {
+    station: "STATION: NY-ALLEY-01 // LAT: 40.71° N, LON: 74.00° W",
+    temp: "17°C / 63°F",
+    condition: "Overcast CRT Haze • Mild Autumn Breeze",
+    baro: "1016.4 hPa",
+    humidity: "58%",
+    wind: "NE @ 14 km/h",
+    solar: "3.2 (Moderate)",
+    forecast: [
+      { cond: "Sunny Autumn", high: "66°F", low: "50°F" },
+      { cond: "Rain Showers", high: "61°F", low: "48°F" },
+      { cond: "Brisk & Clear", high: "58°F", low: "44°F" }
+    ]
+  },
+  SF: {
+    station: "STATION: SF-VALLEY-02 // LAT: 37.77° N, LON: 122.41° W",
+    temp: "19°C / 67°F",
+    condition: "Coastal Fog Dissipating • Silicon Haze",
+    baro: "1014.8 hPa",
+    humidity: "65%",
+    wind: "W @ 18 km/h",
+    solar: "4.8 (High)",
+    forecast: [
+      { cond: "Sunny Valley", high: "72°F", low: "54°F" },
+      { cond: "Coastal Fog", high: "68°F", low: "52°F" },
+      { cond: "Clear Skies", high: "70°F", low: "53°F" }
+    ]
+  },
+  LON: {
+    station: "STATION: LON-ROUNDABOUT // LAT: 51.50° N, LON: 0.12° W",
+    temp: "13°C / 55°F",
+    condition: "Dense Fog & Light Drizzle • Chilly",
+    baro: "1009.2 hPa",
+    humidity: "82%",
+    wind: "SW @ 22 km/h",
+    solar: "1.5 (Low)",
+    forecast: [
+      { cond: "Continuous Rain", high: "54°F", low: "46°F" },
+      { cond: "Overcast", high: "56°F", low: "47°F" },
+      { cond: "Misty Fog", high: "55°F", low: "45°F" }
+    ]
+  },
+  TYO: {
+    station: "STATION: TYO-AKIHABARA // LAT: 35.68° N, LON: 139.77° E",
+    temp: "22°C / 72°F",
+    condition: "Clear Neon Starfield • Pleasant Night",
+    baro: "1015.0 hPa",
+    humidity: "51%",
+    wind: "E @ 11 km/h",
+    solar: "5.1 (High)",
+    forecast: [
+      { cond: "Clear & Crisp", high: "74°F", low: "60°F" },
+      { cond: "Partly Cloudy", high: "71°F", low: "58°F" },
+      { cond: "Light Rain", high: "66°F", low: "55°F" }
+    ]
+  },
+  ORB: {
+    station: "STATION: K-NET-ORBITAL // ALT: 350 KM // ORBIT VEL: 7.7 km/s",
+    temp: "21°C / 70°F (Hab Module)",
+    condition: "Clear Starfield • Calm Solar Wind",
+    baro: "1013.2 hPa",
+    humidity: "42%",
+    wind: "Orbital Drift @ 7.7 km/s",
+    solar: "1.2 (Shielded)",
+    forecast: [
+      { cond: "Clear Starfield", high: "72°F", low: "58°F" },
+      { cond: "Mild Auroral Arc", high: "68°F", low: "55°F" },
+      { cond: "Calm Solar Wind", high: "65°F", low: "52°F" }
+    ]
+  }
+};
+
+function updateWeatherDisplay() {
+  const code = document.getElementById('weatherStationSelect').value;
+  const data = WEATHER_DATA[code] || WEATHER_DATA.ORB;
+
+  document.getElementById('weatherStationCode').textContent = data.station;
+  document.getElementById('weatherTemp').textContent = data.temp;
+  document.getElementById('weatherCondition').textContent = data.condition;
+  document.getElementById('weatherBaro').textContent = data.baro;
+  document.getElementById('weatherHumidity').textContent = data.humidity;
+  document.getElementById('weatherWind').textContent = data.wind;
+  document.getElementById('weatherSolar').textContent = data.solar;
+
+  document.getElementById('forecastDay1Cond').textContent = data.forecast[0].cond;
+  document.getElementById('forecastDay1High').textContent = data.forecast[0].high;
+  document.getElementById('forecastDay1Low').textContent = data.forecast[0].low;
+
+  document.getElementById('forecastDay2Cond').textContent = data.forecast[1].cond;
+  document.getElementById('forecastDay2High').textContent = data.forecast[1].high;
+  document.getElementById('forecastDay2Low').textContent = data.forecast[1].low;
+
+  document.getElementById('forecastDay3Cond').textContent = data.forecast[2].cond;
+  document.getElementById('forecastDay3High').textContent = data.forecast[2].high;
+  document.getElementById('forecastDay3Low').textContent = data.forecast[2].low;
+}
+
+/* =========================================================================
+   7. 1999 RETRO COMPUTING & FLEET TRIVIA QUIZ
+   ========================================================================= */
+const TRIVIA_QUESTIONS = [
+  {
+    q: "What was the theoretical maximum downstream bitrate of a standard V.90 dial-up modem?",
+    options: ["28.8 kbps", "33.6 kbps", "56 kbps", "128 kbps ISDN"],
+    answer: 2,
+    fact: "The ITU-T V.90 standard specified a maximum download rate of 56 kbit/s over standard analog telephone lines, with uploads capped at 33.6 kbit/s."
+  },
+  {
+    q: "Which proprietary 3D graphics API developed by 3dfx Interactive was the dominant standard in 1999?",
+    options: ["Direct3D", "OpenGL", "Glide", "RenderWare"],
+    answer: 2,
+    fact: "3dfx Glide was tailored specifically for Voodoo Graphics, Voodoo2, and Voodoo3 chipsets, delivering silky smooth framerates in classics like Unreal and Quake."
+  },
+  {
+    q: "What widespread panic was caused by legacy software storing four-digit calendar years with only two digits?",
+    options: ["The Morris Worm", "The Y2K Millennium Bug", "CIH Chernobyl Virus", "The ILOVEYOU Script"],
+    answer: 1,
+    fact: "The Y2K Bug spurred global remediation efforts in late 1999 as sysadmins audited BIOS clocks, mainframes, and banking ledgers before the January 1, 2000 rollover."
+  },
+  {
+    q: "What legendary demoscene tracker audio format supported 32 channels and was pioneered by FastTracker 2?",
+    options: [".WAV", ".MID", ".XM (Extended Module)", ".MP3"],
+    answer: 2,
+    fact: "FastTracker 2's .XM (Extended Module) format allowed 32 polyphonic channels, multi-sample instruments, and volume/panning envelopes in tiny file sizes."
+  },
+  {
+    q: "What was the architectural size ceiling strictly enforced on every individual application in the KiloApps fleet?",
+    options: ["64 Kilobytes", "512 Kilobytes", "999 Kilobytes", "1.44 Megabytes"],
+    answer: 2,
+    fact: "Under KiloApps fleet law, every single native C binary (.exe) and single-file web application (.html) must strictly remain under 999 kilobytes."
+  },
+  {
+    q: "What was the code name for the 1999 AMD processor architecture that first matched Intel's Pentium III clock-for-clock?",
+    options: ["K6-2 3DNow!", "Athlon (K7)", "Pentium Pro", "Cyrix MII"],
+    answer: 1,
+    fact: "The AMD Athlon (K7) launched in August 1999 on Slot A, featuring a 200MHz EV6 system bus and aggressive pipelined floating-point architecture."
+  },
+  {
+    q: "Which audio compression technology revolutionized internet music file trading across peer-to-peer networks in late 1999?",
+    options: ["MP3 (MPEG-1 Audio Layer III)", "Ogg Vorbis", "FLAC", "RealAudio G2"],
+    answer: 0,
+    fact: "MP3 encoding shrunk audio files by ~90% (to ~1 MB per minute of audio), enabling rapid downloads over 56k dial-up modems."
+  },
+  {
+    q: "What was the default web browser bundled with Microsoft Windows 98 Second Edition (SE)?",
+    options: ["Internet Explorer 3.0", "Internet Explorer 5.0", "Netscape Navigator 4.08", "Mosaic 2.0"],
+    answer: 1,
+    fact: "Windows 98 SE shipped in May 1999 with Internet Explorer 5.0, Windows Media Player 6.1, and Internet Connection Sharing (ICS)."
+  },
+  {
+    q: "What classic voice-over-IP program allowed gamers to talk over microphone headsets during 1999 LAN matches?",
+    options: ["Discord", "Roger Wilco", "TeamSpeak 3", "Skype"],
+    answer: 1,
+    fact: "Roger Wilco, developed by Resounding Technology in 1999, was the pioneering voice-chat utility lightweight enough to run over 28.8k/56k dial-up connections."
+  },
+  {
+    q: "What common CGI scripting language powered the overwhelming majority of guestbooks and forms on 1999 websites?",
+    options: ["Perl 5", "Python 3", "Ruby on Rails", "Node.js"],
+    answer: 0,
+    fact: "Perl 5 with CGI.pm was the ubiquitous backbone of Web 1.0 dynamic interactivity, web counters, search scripts, and bulletin boards."
+  },
+  {
+    q: "Which hardware sound synthesis chip was famous for the Sega Genesis console's FM audio sound?",
+    options: ["SID 6581", "Yamaha YM2612 (OPN2)", "SPC700", "AdLib OPL2"],
+    answer: 1,
+    fact: "The Yamaha YM2612 provided 6 channels of 4-operator FM synthesis, producing the punchy basslines and crisp metallic bells of 16-bit Genesis music."
+  },
+  {
+    q: "What popular open-source Linux kernel series was officially released in January 1999?",
+    options: ["Linux 1.0", "Linux 2.0", "Linux 2.2", "Linux 2.6"],
+    answer: 2,
+    fact: "Linux 2.2 debuted on January 26, 1999, introducing vastly improved SMP multi-processor support, software RAID, and modern networking."
+  }
+];
+
+let triviaCurrentIndex = 0;
+let triviaScore = 0;
+let triviaTotal = 0;
+let triviaStreak = 0;
+let triviaAnswered = false;
+
+function loadTriviaState() {
+  const saved = localStorage.getItem('knet_portal_trivia');
+  if (saved) {
+    try {
+      const data = JSON.parse(saved);
+      triviaScore = data.score || 0;
+      triviaTotal = data.total || 0;
+      triviaStreak = data.streak || 0;
+    } catch(e) {}
+  }
+  updateTriviaScoreUI();
+}
+
+function saveTriviaState() {
+  localStorage.setItem('knet_portal_trivia', JSON.stringify({
+    score: triviaScore,
+    total: triviaTotal,
+    streak: triviaStreak
+  }));
+}
+
+function updateTriviaScoreUI() {
+  document.getElementById('triviaScore').textContent = triviaScore;
+  document.getElementById('triviaTotal').textContent = triviaTotal;
+  document.getElementById('triviaStreak').textContent = triviaStreak;
+
+  const rankEl = document.getElementById('triviaRank');
+  if (triviaScore >= 12) {
+    rankEl.textContent = "Silicon Demoscene Master 👑";
+    rankEl.style.color = "#cc0000";
+  } else if (triviaScore >= 8) {
+    rankEl.textContent = "Webmaster Guru ⭐";
+    rankEl.style.color = "#008000";
+  } else if (triviaScore >= 4) {
+    rankEl.textContent = "BBS SysOp Apprentice";
+    rankEl.style.color = "#000080";
+  } else {
+    rankEl.textContent = "Dial-Up Novice";
+    rankEl.style.color = "#666666";
+  }
+}
+
+function renderTriviaQuestion() {
+  triviaAnswered = false;
+  document.getElementById('triviaFeedbackBox').style.display = 'none';
+
+  const qData = TRIVIA_QUESTIONS[triviaCurrentIndex];
+  document.getElementById('triviaQuestionText').textContent = `Q${triviaCurrentIndex + 1}: ${qData.q}`;
+
+  const container = document.getElementById('triviaOptionsContainer');
+  let html = '';
+  qData.options.forEach((opt, idx) => {
+    html += `<button class="trivia-option-btn" id="triviaOpt${idx}" onclick="handleTriviaAnswer(${idx})"><strong>[${String.fromCharCode(65 + idx)}]</strong> ${escapeHtml(opt)}</button>`;
+  });
+  container.innerHTML = html;
+}
+
+function handleTriviaAnswer(selectedIdx) {
+  if (triviaAnswered) return;
+  triviaAnswered = true;
+  triviaTotal++;
+
+  const qData = TRIVIA_QUESTIONS[triviaCurrentIndex];
+  const isCorrect = (selectedIdx === qData.answer);
+
+  const selectedBtn = document.getElementById(`triviaOpt${selectedIdx}`);
+  const correctBtn = document.getElementById(`triviaOpt${qData.answer}`);
+
+  if (isCorrect) {
+    triviaScore++;
+    triviaStreak++;
+    selectedBtn.classList.add('correct');
+    playSuccessChime();
+    document.getElementById('triviaFeedbackText').textContent = "✅ CORRECT! Excellent 1999 computing knowledge.";
+    document.getElementById('triviaFeedbackText').style.color = "#008000";
+  } else {
+    triviaStreak = 0;
+    selectedBtn.classList.add('wrong');
+    correctBtn.classList.add('correct');
+    playErrorBuzz();
+    document.getElementById('triviaFeedbackText').textContent = `❌ INCORRECT. The correct answer was [${String.fromCharCode(65 + qData.answer)}] ${qData.options[qData.answer]}.`;
+    document.getElementById('triviaFeedbackText').style.color = "#cc0000";
+  }
+
+  document.getElementById('triviaExplanation').textContent = qData.fact;
+  document.getElementById('triviaFeedbackBox').style.display = 'block';
+
+  saveTriviaState();
+  updateTriviaScoreUI();
+}
+
+function nextTriviaQuestion() {
+  playClick();
+  triviaCurrentIndex = (triviaCurrentIndex + 1) % TRIVIA_QUESTIONS.length;
+  renderTriviaQuestion();
+}
+
+/* =========================================================================
+   8. TAB NAVIGATION & GENERAL CONTROLS
+   ========================================================================= */
+function switchPortalTab(tabName) {
+  playClick();
+  const tabs = ['directory', 'stocks', 'classifieds', 'weather', 'trivia'];
+  tabs.forEach(t => {
+    const navEl = document.getElementById(`tabNav-${t}`);
+    const contentEl = document.getElementById(`tab-${t}`);
+    if (navEl) navEl.classList.remove('active');
+    if (contentEl) contentEl.classList.remove('active');
+  });
+
+  const activeNav = document.getElementById(`tabNav-${tabName}`);
+  const activeContent = document.getElementById(`tab-${tabName}`);
+  if (activeNav) activeNav.classList.add('active');
+  if (activeContent) activeContent.classList.add('active');
+
+  if (tabName === 'stocks') {
+    renderStockTable();
+    updatePortfolioStats();
+  } else if (tabName === 'classifieds') {
+    filterClassifieds();
+  } else if (tabName === 'weather') {
+    updateWeatherDisplay();
+  } else if (tabName === 'trivia') {
+    renderTriviaQuestion();
+  }
+}
+
+// Webring Random Jump Teleporter
+const WEBRING_SITES = [
+  '/web/geocities.html',
+  '/web/webring.html',
+  '/web/cybercafe.html',
+  '/web/users/neon_rider.html',
+  '/web/asm_temple.html',
+  '/apps/contribute.html',
+  '/apps/krogue.html',
+  '/apps/kbbs.html'
+];
+
+function jumpRandom() {
+  playClick();
+  const pick = WEBRING_SITES[Math.floor(Math.random() * WEBRING_SITES.length)];
+  window.location.href = pick;
+}
+
+// Escape HTML helper
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/* =========================================================================
+   9. INITIALIZATION
+   ========================================================================= */
+window.addEventListener('DOMContentLoaded', () => {
+  // Visitor counter
   const counterEl = document.getElementById('visitorCounter');
   let currentHits = parseInt(localStorage.getItem('knet_portal_hits') || '48291');
-  currentHits += Math.floor(Math.random() * 3) + 1;
+  currentHits += Math.floor(Math.random() * 4) + 1;
   localStorage.setItem('knet_portal_hits', currentHits.toString());
   counterEl.textContent = currentHits.toString().padStart(7, '0');
 
-  const sites = [
-    '/web/geocities.html',
-    '/web/webring.html',
-    '/web/cybercafe.html',
-    '/web/users/neon_rider.html',
-    '/web/asm_temple.html',
-    '/apps/contribute.html',
-    '/web/echo_subsystem.html',
-    '/web/classified.html',
-    '/web/deep_core.html'
-  ];
+  // Load state
+  loadPortfolio();
+  loadClassifieds();
+  loadTriviaState();
 
-  function jumpRandom() {
-    const pick = sites[Math.floor(Math.random() * sites.length)];
-    window.location.href = pick;
-  }
+  // Initial renders
+  renderStockTable();
+  updatePortfolioStats();
+  filterClassifieds();
+  updateWeatherDisplay();
+  renderTriviaQuestion();
 
-  function handleSearch(e) {
-    e.preventDefault();
-    const q = document.getElementById('searchInput').value.trim().toLowerCase();
-    const notice = document.getElementById('searchNotice');
-    if (!q) {
-      notice.textContent = "Please enter a search term.";
-      return;
-    }
+  // Start real-time stock ticker (every 3.5 seconds)
+  setInterval(tickStockMarket, 3500);
 
-    if (q.includes('temple') || q.includes('opcode') || q.includes('converter') || q.includes('x86')) {
-      window.location.href = '/web/asm_temple.html';
-    } else if (q.includes('cafe') || q.includes('cybercafe') || q.includes('bbs') || q.includes('ascii')) {
-      window.location.href = '/web/cybercafe.html';
-    } else if (q.includes('neon') || q.includes('rider') || q.includes('asm')) {
-      window.location.href = '/web/users/neon_rider.html';
-    } else if (q.includes('geo') || q.includes('shrine') || q.includes('midi') || q.includes('guest')) {
-      window.location.href = '/web/geocities.html';
-    } else if (q.includes('ring') || q.includes('webring') || q.includes('hub')) {
-      window.location.href = '/web/webring.html';
-    } else if (q.includes('echo') || q.includes('subsystem') || q.includes('harmonic') || q.includes('decoder') || q.includes('acoustic') || q.includes('vance')) {
-      window.location.href = '/web/echo_subsystem.html';
-    } else if (q.includes('10.19') || q.includes('leak') || q.includes('classified') || q.includes('carlsbad') || q.includes('intranet')) {
-      window.location.href = '/web/classified.html';
-    } else if (q.includes('deep') || q.includes('core') || q.includes('ghost') || q.includes('passkey') || q.includes('terminal')) {
-      window.location.href = '/web/deep_core.html';
-    } else if (q.includes('contrib') || q.includes('fuel') || q.includes('fleet')) {
-      window.location.href = '/apps/contribute.html';
-    } else {
-      notice.textContent = `Search found 3 virtual records for '${q}'. Redirecting to Webring Hub...`;
-      setTimeout(() => { window.location.href = '/web/webring.html'; }, 700);
-    }
-  }
-
-  function handleLucky() {
-    jumpRandom();
-  }
+  // Initialize audio on first user interaction
+  const initAudioOnUserClick = () => {
+    initAudio();
+    window.removeEventListener('click', initAudioOnUserClick);
+  };
+  window.addEventListener('click', initAudioOnUserClick);
+});
 </script>
-
 </body>
 </html>

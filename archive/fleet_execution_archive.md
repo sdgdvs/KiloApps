@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-25T07:51:00Z — kilo-tester: KVoid (UI Element Audit & Inline Fixes)**
+  - Status: PASS ✅ (6 UI issues identified and resolved; 0 regressions).
+  - Modal & Backdrop: Wrapped guide in backdrop overlay with click-to-dismiss, top-right close icon, and tutorial flag setting.
+  - Game Pause Integrity: Fixed alien movement to pause during survival guide; guarded quicksave against overwriting while dead or escaped.
+  - Keyboard & Usability: Blocked arrow key and spacebar page scroll; extracted unified EMP handler and added dedicated UI button.
+  - State Persistence & Interop: Added JSON export and file import with load validation; restored game reset modal dismissal.
+  - Verification: Clean MSVC C compile (`KVoid.exe` 11.3 KB); Vite clean build in 558ms (`kvoid.html` 100.5 KB); security lint 100% PASS; <999KB ceiling.
+
+
 - **2026-09-25T05:52:00Z — kilo-creator: kweb://deep-core (Tier 3 Ghost Node Terminal & KMatrix Passkey Fragment)**
   - Status: PASS ✅ (Anti-Potemkin Web 1.0 terminal, hex memory dump inspector & SHA-256 verifier implemented; 0 regressions).
   - Ghost Terminal Architecture: Subterranean VT100 console (10.19.99.127:1999) with 14 interactive directives, CRT themes & scanlines.
