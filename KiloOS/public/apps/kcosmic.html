@@ -3356,6 +3356,407 @@
         <div>KCosmic Engine v1.14 • Fleet Admiral's Codex Edition</div>
     </footer>
 
+    <!-- Toast Notification Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Start Splash Screen Overlay -->
+    <div class="modal-overlay active" id="splashOverlay">
+        <div class="splash-card">
+            <div class="splash-brand-logo">K C O S M I C</div>
+            <div class="splash-sub">Interstellar Fleet Logistics & Planetary Terraforming Simulation</div>
+            <div class="splash-version-tag">VERSION 1.14 // FLEET ADMIRAL'S CODEX EDITION</div>
+            <div class="splash-synopsis">
+                <strong>COMMAND DIRECTIVE:</strong> You have been appointed Fleet Admiral of the Kepler Interstellar Colony Fleet. 
+                Command the flagship Ark Sovereign and its flotilla across procedural star systems. 
+                Harness atmospheric processors, orbital solar mirrors, nitrogen extractors, and core dynamos to transform hostile alien worlds into thriving Garden biospheres. 
+                Establish automated freighter trade routes, excavate precursor tachyon relics, erect planetary orbital rings, and shield your colonists from catastrophic cosmic crises.
+            </div>
+            <div class="splash-actions">
+                <button class="splash-btn primary" id="splashBtnNew">
+                    <span>🚀 COMMENCE NEW EXPEDITION</span>
+                    <span class="splash-btn-key">ENTER / SPACE</span>
+                </button>
+                <button class="splash-btn" id="splashBtnContinue" disabled>
+                    <span id="splashContinueLabel">📂 RESUME MISSION (NO SAVE)</span>
+                    <span class="splash-btn-key">C</span>
+                </button>
+                <button class="splash-btn" id="splashBtnCodex">
+                    <span>📜 FLEET ADMIRAL'S CODEX & MANUAL</span>
+                    <span class="splash-btn-key">H / F1</span>
+                </button>
+                <button class="splash-btn" id="splashBtnBackup">
+                    <span>⚙️ EXPEDITION DATA & JSON BACKUP</span>
+                    <span class="splash-btn-key">DATA</span>
+                </button>
+                <button class="splash-btn" id="splashBtnAudio">
+                    <span id="splashAudioLabel">🔊 AUDIO & CRT THEME: CYAN P4</span>
+                    <span class="splash-btn-key">O / M</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fleet Admiral's Comprehensive Codex Modal -->
+    <div class="modal-overlay" id="codexModal">
+        <div class="codex-card">
+            <div class="codex-top">
+                <div class="codex-title-wrap">
+                    <span class="codex-icon">📜</span>
+                    <div>
+                        <div class="codex-title">FLEET ADMIRAL'S ARCHIVE // CODEX & FIELD MANUAL</div>
+                        <div class="codex-subtitle">Standard Fleet Protocol • Classification Index • Planetary Engineering Formulas</div>
+                    </div>
+                </div>
+                <button class="codex-close-btn" id="codexCloseBtn">✕ CLOSE [ESC]</button>
+            </div>
+            <div class="codex-tabs-bar">
+                <button class="codex-tab-btn active" data-tab="codex-pane-1">1: COMMAND & HOTKEYS</button>
+                <button class="codex-tab-btn" data-tab="codex-pane-2">2: PLANET CLASSIFICATION</button>
+                <button class="codex-tab-btn" data-tab="codex-pane-3">3: TERRAFORMING FORMULAS</button>
+                <button class="codex-tab-btn" data-tab="codex-pane-4">4: FLEET LOGISTICS & TRADE</button>
+                <button class="codex-tab-btn" data-tab="codex-pane-5">5: CRISIS RESPONSE MANUAL</button>
+                <button class="codex-tab-btn" data-tab="codex-pane-6">6: XENOBIOLOGY & RELICS</button>
+            </div>
+            <div class="codex-content-area">
+                <!-- Pane 1: Command & Hotkeys -->
+                <div class="codex-pane active" id="codex-pane-1">
+                    <div class="codex-banner">
+                        <strong>FLEET ADMIRAL INTERFACE MATRIX:</strong> Complete keyboard shortcuts, orbital viewport controls, and real-time telemetry reference. Use the hotkeys below to swiftly command orbital maneuvers and interventions.
+                    </div>
+                    <div class="codex-grid-2">
+                        <div class="codex-box">
+                            <h3>⌨️ PRIMARY HOTKEYS</h3>
+                            <table class="codex-table">
+                                <tr><th>Key</th><th>Function</th></tr>
+                                <tr><td><strong>Space</strong></td><td>Pause / Resume Simulation Clock</td></tr>
+                                <tr><td><strong>1 / 2 / 5</strong></td><td>Simulation Speed (1x Real-time, 2x Warp, 5x Maximum Warp)</td></tr>
+                                <tr><td><strong>H / F1</strong></td><td>Toggle Fleet Admiral's Codex & Comprehensive Manual</td></tr>
+                                <tr><td><strong>F5</strong></td><td>Quicksave Expedition to Local Storage Bank</td></tr>
+                                <tr><td><strong>F9</strong></td><td>Quickload Expedition from Local Storage Bank</td></tr>
+                                <tr><td><strong>S</strong></td><td>Cycle Star System in Sector Catalog</td></tr>
+                                <tr><td><strong>G</strong></td><td>Procedurally Scan & Generate New Star Sector</td></tr>
+                                <tr><td><strong>T</strong></td><td>Designate Selected Body as Active Terraforming Target</td></tr>
+                                <tr><td><strong>P</strong></td><td>Focus Viewport Camera on Active Target Planet</td></tr>
+                                <tr><td><strong>R</strong></td><td>Reset Viewport Camera & Zoom (1.0x)</td></tr>
+                                <tr><td><strong>C</strong></td><td>Cycle CRT Phosphor Theme (Cyan, Amber, Green, White)</td></tr>
+                                <tr><td><strong>M</strong></td><td>Toggle Master Audio On / Off</td></tr>
+                                <tr><td><strong>A</strong></td><td>Cycle Cosmic Ambient Soundscape (Void, Atmo, Engine, Precursor)</td></tr>
+                                <tr><td><strong>Esc</strong></td><td>Dismiss Active Modal / Deselect Celestial Target</td></tr>
+                            </table>
+                        </div>
+                        <div class="codex-box">
+                            <h3>🛰️ VIEWPORT NAVIGATION & HUD</h3>
+                            <p><strong>Orbital Viewport Navigation:</strong> Click and drag anywhere in the space viewport to pan across the star system. Use the mouse wheel to zoom in (up to 2.5x magnification) or zoom out (down to 0.4x macro-view).</p>
+                            <p><strong>Selection Inspector:</strong> Click on any star, exoplanet, asteroid belt, orbital station, or fleet vessel to inspect its telemetry, mass, AU orbital radius, and tactical actions.</p>
+                            <p><strong>Target Designator:</strong> Pressing <em>Designate Target [T]</em> binds the planetary terraforming array to that celestial body, allowing you to deploy surface modules, divert trade routes, and focus biosensing arrays.</p>
+                            <p><strong>Audio Telemetry Visualizer:</strong> The bottom CRT waveform visualizer monitors procedural sound synthesis in real-time, matching harmonic frequencies to active star spectral types and atmospheric density.</p>
+                            <div style="margin-top:10px;">
+                                <button class="splash-btn primary" id="codexBtnLaunchTutorial" style="width:100%; justify-content:center;">🎓 REPLAY ONBOARDING TUTORIAL</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pane 2: Planet Classification Index -->
+                <div class="codex-pane" id="codex-pane-2">
+                    <div class="codex-banner">
+                        <strong>EXOPLANET TAXONOMY & DOSSIERS:</strong> Detailed physical properties, habitability bounds, resource multipliers, and optimal geo-engineering pathways across the 8 primary planetary classes in the Kepler sector.
+                    </div>
+                    <div class="codex-grid-2">
+                        <div class="codex-box">
+                            <h3><span style="color:var(--text-dim);">CLASS-I:</span> BARREN ROCK (SILICATE CHASM)</h3>
+                            <p>Airless, heavily cratered rocky world stripped bare by stellar radiation. Extreme diurnal thermal swings.</p>
+                            <div class="codex-kv"><span>Surface Pressure:</span><span>0.00 - 0.05 atm</span></div>
+                            <div class="codex-kv"><span>Surface Temp:</span><span>-120°C to +140°C</span></div>
+                            <div class="codex-kv"><span>Hydrosphere:</span><span>0.0% (Vacuum)</span></div>
+                            <div class="codex-kv"><span>Yield Multipliers:</span><span>Min x1.4 | Vol x0.2</span></div>
+                            <div class="codex-kv"><span>Base Habitability:</span><span>0% - 15%</span></div>
+                            <p style="margin-top:6px; color:var(--accent-amber);"><strong>Strategy:</strong> Deploy Core Magneto-Dynamos first to generate a magnetic shield before injecting atmosphere, preventing stellar wind stripping. Import volatiles via Boreas freighters.</p>
+                        </div>
+
+                        <div class="codex-box">
+                            <h3><span style="color:var(--accent-rose);">CLASS-II:</span> TOXIC GREENHOUSE (VENUSIAN)</h3>
+                            <p>Crushing, superheated atmosphere dense with carbon dioxide and sulfuric clouds. Searing surface temperatures.</p>
+                            <div class="codex-kv"><span>Surface Pressure:</span><span>2.50 - 5.00 atm</span></div>
+                            <div class="codex-kv"><span>Surface Temp:</span><span>+90°C to +320°C</span></div>
+                            <div class="codex-kv"><span>Hydrosphere:</span><span>0.0% (Superheated Vapor)</span></div>
+                            <div class="codex-kv"><span>Yield Multipliers:</span><span>Min x1.2 | Vol x0.8</span></div>
+                            <div class="codex-kv"><span>Base Habitability:</span><span>5% - 25%</span></div>
+                            <p style="margin-top:6px; color:var(--accent-cyan);"><strong>Strategy:</strong> Deploy Orbital Solar Mirrors configured to COOL (-Temp) and configure Troposphere Processors to TOXIC SCRUBBING (-P) to precipitate sulfur and cool the crust.</p>
+                        </div>
+
+                        <div class="codex-box">
+                            <h3><span style="color:var(--accent-blue);">CLASS-III:</span> FROZEN TUNDRA (CRYO-GLACIAL)</h3>
+                            <p>Sub-zero glacial world locked beneath continental ice sheets. Abundant water ice and volatile reserves.</p>
+                            <div class="codex-kv"><span>Surface Pressure:</span><span>0.15 - 0.45 atm</span></div>
+                            <div class="codex-kv"><span>Surface Temp:</span><span>-85°C to -15°C</span></div>
+                            <div class="codex-kv"><span>Hydrosphere:</span><span>30% - 60% (Solid Ice)</span></div>
+                            <div class="codex-kv"><span>Yield Multipliers:</span><span>Min x0.9 | Vol x1.5</span></div>
+                            <div class="codex-kv"><span>Base Habitability:</span><span>15% - 40%</span></div>
+                            <p style="margin-top:6px; color:var(--accent-emerald);"><strong>Strategy:</strong> Orient Solar Mirrors to HEAT (+Temp) and deploy Greenhouse Stations in WARM mode (+GHG) to melt glacial ice sheets into liquid oceans.</p>
+                        </div>
+
+                        <div class="codex-box">
+                            <h3><span style="color:var(--accent-cyan);">CLASS-IV:</span> OCEAN WORLD (PELAGIC SUPER-EARTH)</h3>
+                            <p>Enormous planetary ocean covering 85% to 100% of the crust. Temperate climate with high organic potential.</p>
+                            <div class="codex-kv"><span>Surface Pressure:</span><span>0.90 - 1.30 atm</span></div>
+                            <div class="codex-kv"><span>Surface Temp:</span><span>+10°C to +25°C</span></div>
+                            <div class="codex-kv"><span>Hydrosphere:</span><span>85% - 100% (Global Ocean)</span></div>
+                            <div class="codex-kv"><span>Yield Multipliers:</span><span>Min x0.5 | Vol x1.3</span></div>
+                            <div class="codex-kv"><span>Base Habitability:</span><span>45% - 70%</span></div>
+                            <p style="margin-top:6px; color:var(--accent-blue);"><strong>Strategy:</strong> Construct Algal Vats and Bioseeding Stations to maximize photosynthetic oxygenation. Establish mineral freight routes from the Tartarus asteroid belt.</p>
+                        </div>
+
+                        <div class="codex-box">
+                            <h3><span style="color:var(--accent-emerald);">CLASS-V:</span> PRIMORDIAL GAIA (GARDEN WORLD)</h3>
+                            <p>Near-ideal planetary biosphere with balanced nitrogen-oxygen atmosphere, active magnetosphere, and liquid oceans.</p>
+                            <div class="codex-kv"><span>Surface Pressure:</span><span>0.90 - 1.10 atm</span></div>
+                            <div class="codex-kv"><span>Surface Temp:</span><span>+14°C to +18°C</span></div>
+                            <div class="codex-kv"><span>Hydrosphere:</span><span>55% - 70% (Balanced Seas)</span></div>
+                            <div class="codex-kv"><span>Yield Multipliers:</span><span>Min x1.0 | Vol x1.0</span></div>
+                            <div class="codex-kv"><span>Base Habitability:</span><span>75% - 98%</span></div>
+                            <p style="margin-top:6px; color:var(--accent-emerald);"><strong>Strategy:</strong> Expand Domed Megacities, erect Planetary Orbital Rings and Star Elevators, and awaken the 75,000 cryo-sleepers to establish a permanent colony.</p>
+                        </div>
+
+                        <div class="codex-box">
+                            <h3><span style="color:var(--accent-amber);">CLASS-VI:</span> MOLTEN CHASM (VOLCANIC CALDERA)</h3>
+                            <p>Young, hyper-tectonic planet covered in magma chasms and volcanic rifts. Hyper-dense heavy mineral deposits.</p>
+                            <div class="codex-kv"><span>Surface Pressure:</span><span>1.80 - 3.20 atm</span></div>
+                            <div class="codex-kv"><span>Surface Temp:</span><span>+150°C to +450°C</span></div>
+                            <div class="codex-kv"><span>Hydrosphere:</span><span>0.0%</span></div>
+                            <div class="codex-kv"><span>Yield Multipliers:</span><span>Min x2.0 | Vol x0.3</span></div>
+                            <div class="codex-kv"><span>Base Habitability:</span><span>0% - 10%</span></div>
+                            <p style="margin-top:6px; color:var(--accent-rose);"><strong>Strategy:</strong> Geothermal relief boreholes to mitigate seismic quakes; mass delivery of cometary ice; geothermal energy tap.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pane 3: Terraforming Formulas -->
+                <div class="codex-pane" id="codex-pane-3">
+                    <div class="codex-banner">
+                        <strong>MATHEMATICAL TERRAFORMING EQUATIONS & FORMULAS:</strong> The exact mathematical models calculating atmospheric dynamics, thermal balance, hydrosphere phase changes, and composite habitability.
+                    </div>
+                    <div class="codex-grid-2">
+                        <div class="codex-box">
+                            <h3>1. ATMOSPHERIC PRESSURE DYNAMICS</h3>
+                            <div class="codex-formula-box">
+                                P_next = P_curr + (N_inject * 0.05 - N_scrub * 0.08) * Δt<br>
+                                Optimal Range: 0.90 atm ≤ P ≤ 1.10 atm
+                            </div>
+                            <p>• <strong>Troposphere Processors (Inject):</strong> Injects compressed nitrogen-inert carrier gas, adding +0.05 atm per operational module per cycle.</p>
+                            <p>• <strong>Troposphere Processors (Scrub):</strong> Filters dense runaway gases, scrubbing -0.08 atm per module and salvaging 25 tons of raw minerals from atmospheric precipitates.</p>
+                        </div>
+
+                        <div class="codex-box">
+                            <h3>2. SURFACE THERMAL EQUILIBRIUM</h3>
+                            <div class="codex-formula-box">
+                                T_surf = T_base + (GHG_factor * 0.45) + (N_heat * 4.5°C) - (N_cool * 5.0°C)<br>
+                                Optimal Range: 12.0°C ≤ T ≤ 20.0°C (Standard: 15.0°C)
+                            </div>
+                            <p>• <strong>Orbital Solar Mirrors (Heat):</strong> Angled to focus stellar irradiance on the planetary terminator, warming surface by +4.5°C per mirror array.</p>
+                            <p>• <strong>Orbital Solar Mirrors (Cool):</strong> Angled as an occulting sunshade to deflect solar flux, cooling surface by -5.0°C per mirror array.</p>
+                        </div>
+
+                        <div class="codex-box">
+                            <h3>3. HYDROSPHERE LIQUID ENVELOPE</h3>
+                            <div class="codex-formula-box">
+                                Liquid Water Envelope: -5.0°C ≤ T ≤ 75.0°C<br>
+                                Optimal Coverage: 50.0% ≤ Water ≤ 70.0%
+                            </div>
+                            <p>• When T < -5.0°C, liquid surface water freezes into glacial sheets, reducing habitability.</p>
+                            <p>• When T > 75.0°C, hydrosphere boils into superheated vapor, escalating greenhouse runaway.</p>
+                            <p>• <strong>Hydro-Condensation Towers:</strong> Condense atmospheric humidity, adding +2.0% liquid water per cycle.</p>
+                        </div>
+
+                        <div class="codex-box">
+                            <h3>4. BIOGENIC GAS EQUILIBRIUM</h3>
+                            <div class="codex-formula-box">
+                                O2 Target: 20.9% (Toxicity: >26%, Hypoxia: <15%)<br>
+                                N2 Target: 78.0% (Inert Atmospheric Buffer)
+                            </div>
+                            <p>• <strong>Bioseeding Stations:</strong> Disperses genetically engineered lichen and moss spores, adding +0.4% O2 per cycle.</p>
+                            <p>• <strong>Algal Bioreactor Vats:</strong> Industrial photosynthetic cultivation generating +0.8% O2 and +15 Food/cyc.</p>
+                            <p>• <strong>Nitrogen Extractors:</strong> Cryogenically separates atmospheric nitrogen buffer, adding +1.2% N2 per cycle.</p>
+                        </div>
+                    </div>
+
+                    <div class="codex-box">
+                        <h3>5. COMPOSITE PLANETARY HABITABILITY FORMULA (H)</h3>
+                        <div class="codex-formula-box">
+                            H = 25% * f(Pressure) + 25% * f(Temp) + 20% * f(Water) + 15% * f(O2) + 10% * f(N2) + 5% * f(Magnet)<br>
+                            Status: Hostile (<25%) • Harsh (25-49%) • Developing (50-74%) • Garden World (75-100%)
+                        </div>
+                        <p>A score of <strong>75.0% or higher</strong> qualifies the world as a <em>Garden World</em>, unlocking permanent surface colonization and complete mission success!</p>
+                    </div>
+                </div>
+
+                <!-- Pane 4: Fleet Logistics & Trade -->
+                <div class="codex-pane" id="codex-pane-4">
+                    <div class="codex-banner">
+                        <strong>INTERSTELLAR SUPPLY CHAINS & TRADE CORRIDORS:</strong> Fleet vessel specifications, automated trade route mechanics, colonist demographic distribution, and food rationing directives.
+                    </div>
+                    <div class="codex-grid-2">
+                        <div class="codex-box">
+                            <h3>🚀 FLEET ARKS & FREIGHTERS</h3>
+                            <p><strong>Colony Ark Sovereign:</strong> The flagship ark vessel preserving 75,000 cryo-sleepers. Provides backup life support and manufacturing fabrication bays.</p>
+                            <p><strong>Deep-Space Freighters:</strong> Heavy haulers carrying bulk mineral containers and pressurized volatile tanks between celestial mining outposts and orbital yards.</p>
+                            <p><strong>Helios Coronal Skimmers:</strong> Automated magnetic-scoop vessels skimming stellar coronae to harvest Helium-3 plasma fuel.</p>
+                        </div>
+                        <div class="codex-box">
+                            <h3>📦 AUTOMATED SUPPLY TRADE ROUTES</h3>
+                            <p><strong>Tartarus Mineral Corridor:</strong> Runs from the outer asteroid belt to ground fabrication depots (+28 t minerals/cyc).</p>
+                            <p><strong>Boreas Cryo-Volatiles Route:</strong> Transports nitrogen and ammonia ice from frozen moons to atmospheric injection arrays (+20 t volatiles/cyc).</p>
+                            <p><strong>Agro-Dome Sustenance Run:</strong> Shuttles fresh food crops from surface biodomes to the orbital ark flotilla (+22 t food/cyc).</p>
+                            <p><strong>Helios Plasma Skimmer:</strong> Generates perpetual high-density energy (+150 kW/cyc).</p>
+                        </div>
+                    </div>
+
+                    <div class="codex-box">
+                        <h3>👥 DEMOGRAPHIC ROLES & RATIONING POLICIES</h3>
+                        <div class="codex-grid-3">
+                            <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:4px;">
+                                <strong style="color:var(--accent-cyan);">Laborers (40%)</strong>
+                                <p style="font-size:10px; margin:4px 0 0 0;">Mining, heavy excavation, structural fabrication, and megastructure assembly.</p>
+                            </div>
+                            <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:4px;">
+                                <strong style="color:var(--accent-emerald);">Agronomists (25%)</strong>
+                                <p style="font-size:10px; margin:4px 0 0 0;">Hydroponic farm management, algal cultivation vats, and bioseeding dispersion.</p>
+                            </div>
+                            <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:4px;">
+                                <strong style="color:var(--accent-amber);">Engineers (20%)</strong>
+                                <p style="font-size:10px; margin:4px 0 0 0;">Reactor maintenance, life support scrubbers, orbital mirror alignment, and shield grid.</p>
+                            </div>
+                        </div>
+                        <p style="margin-top:10px;"><strong>Ration Policies:</strong> <em>Spartan</em> (-15 Morale, -40% Food burn), <em>Standard</em> (Balanced), <em>Abundant</em> (+15 Morale, +35% Food burn, +10% Productivity).</p>
+                    </div>
+                </div>
+
+                <!-- Pane 5: Crisis Response Manual -->
+                <div class="codex-pane" id="codex-pane-5">
+                    <div class="codex-banner">
+                        <strong>EMERGENCY CRISIS MANUAL & HAZARD MITIGATION:</strong> Protocols for surviving Coronal Mass Ejections, Asteroid Impacts, Mantle Quakes, Ecological Blights, and Ionization Storms.
+                    </div>
+                    <div class="codex-grid-2">
+                        <div class="codex-box">
+                            <h3><span style="color:var(--accent-amber);">⚠️ 1. CORONAL MASS EJECTION</span></h3>
+                            <p><strong>Threat:</strong> Searing ionizing solar flare sweeping the system. Strips unshielded atmosphere, damages surface biodomes, and knocks out satellite arrays.</p>
+                            <p><strong>Countdown:</strong> ~15.0 seconds to impact.</p>
+                            <p><strong>Protocol:</strong> Invert Core Magneto-Dynamo polarity to fortify magnetosphere and deploy Thermal Damper Arrays. Ensure Planetary Shield HP is charged.</p>
+                        </div>
+
+                        <div class="codex-box">
+                            <h3><span style="color:var(--accent-rose);">☄️ 2. ASTEROID IMPACT BOLIDE</span></h3>
+                            <p><strong>Threat:</strong> A 5-kilometer metallic-silicate bolide on a direct terminal descent trajectory. Impact produces kinetic shockwaves and dust winter.</p>
+                            <p><strong>Countdown:</strong> ~18.0 seconds to impact.</p>
+                            <p><strong>Protocol:</strong> Discharge Planetary Defense Citadels or fire kinetic mass driver interceptors to shatter bolide before atmospheric entry.</p>
+                        </div>
+
+                        <div class="codex-box">
+                            <h3><span style="color:var(--accent-rose);">🌋 3. TECTONIC MANTLE RUPTURE</span></h3>
+                            <p><strong>Threat:</strong> Magmatic pressure build-up and catastrophic fault displacement threatening surface habitats and geothermal processors.</p>
+                            <p><strong>Countdown:</strong> ~12.0 seconds to rupture.</p>
+                            <p><strong>Protocol:</strong> Vent seismic stress via deep geothermal borehole pressure relief valves and reinforce structural damping struts.</p>
+                        </div>
+
+                        <div class="codex-box">
+                            <h3><span style="color:var(--accent-emerald);">☣️ 4. ECOLOGICAL BLIGHT & OZONE COLLAPSE</span></h3>
+                            <p><strong>Threat:</strong> Mutated atmospheric spores or severe UV ozone depletion poisoning bioseeded crops and killing photosynthetic algae.</p>
+                            <p><strong>Countdown:</strong> ~20.0 seconds to collapse.</p>
+                            <p><strong>Protocol:</strong> Disperse synthesized cryo-containment biophages through Troposphere Processors and re-inoculate hydroponic crop strains.</p>
+                        </div>
+                    </div>
+
+                    <div class="codex-box">
+                        <h3>⚡ 5. MAGNETIC IONIZATION SURGE & REPAIRS</h3>
+                        <p><strong>Threat:</strong> Intense polar aurora ion flux inducing massive electrical surges across all surface power lines and fleet navigation sensors (~16s countdown).</p>
+                        <p><strong>Protocol:</strong> Ground fleet capacitors and route surge energy into orbital battery heat sinks.</p>
+                        <p><strong>Emergency Repair:</strong> At any time, click <em>Emergency Repair</em> in the Hazards tab to spend 120 Minerals and 80 kW to restore 250 HP to damaged Planetary Shields and colony dome hulls.</p>
+                    </div>
+                </div>
+
+                <!-- Pane 6: Xenobiology & Relics -->
+                <div class="codex-pane" id="codex-pane-6">
+                    <div class="codex-banner">
+                        <strong>PRECURSOR ARTIFACT ARCHIVE & ORBITAL MEGASTRUCTURES:</strong> Ancient xeno-ruins, recovered tachyon relics, precursor technology blueprints, and planetary megastructures.
+                    </div>
+                    <div class="codex-grid-2">
+                        <div class="codex-box">
+                            <h3>🏛️ PRECURSOR RUIN SITES & RELICS</h3>
+                            <p>• <strong>Sunken Monolith Vault:</strong> Contains the <em>Tachyon Crystalline Matrix</em>. Unlocks Xenobiological Bio-Catalysis.</p>
+                            <p>• <strong>Progenitor Biosphere Vault:</strong> Contains the <em>Precursor Xenobiotic Genome</em>. Unlocks Crystalline Deflector Harmonics.</p>
+                            <p>• <strong>Sub-Surface Nanite Citadel:</strong> Contains the <em>Autonomous Nanite Core</em>. Unlocks Molecular Nanite Assemblers.</p>
+                            <p>• <strong>Astrometric Zero-Point Conduit:</strong> Contains the <em>Zero-Point Flux Resonator</em>. Unlocks Zero-Point Resonant Tap.</p>
+                        </div>
+
+                        <div class="codex-box">
+                            <h3>⭐ PRECURSOR TECHNOLOGY BLUEPRINTS</h3>
+                            <p>• <strong>Xenobiological Bio-Catalysis:</strong> +50% Terraforming Speed, +40% Food Crop Yield, +15 Morale.</p>
+                            <p>• <strong>Crystalline Deflector Harmonics:</strong> +500 Planetary Shield Max HP, +25% Hazard Deflection.</p>
+                            <p>• <strong>Molecular Nanite Assemblers:</strong> -25% Construction & Upgrade Costs across all modules.</p>
+                            <p>• <strong>Zero-Point Resonant Tap:</strong> +450 kW Perpetual Clean Energy Output per cycle.</p>
+                        </div>
+                    </div>
+
+                    <div class="codex-box">
+                        <h3>🪐 PLANETARY MEGASTRUCTURES</h3>
+                        <p>• <strong>Planetary Orbital Ring:</strong> A geostationary ring circling the equator, providing vast residential space (+50,000 housing), mineral processing, and automated shipyard berths.</p>
+                        <p>• <strong>Space Tether / Star Elevator:</strong> Carbon-nanotube equatorial elevator connecting the planetary surface to orbital docks, eliminating rocket propellant costs.</p>
+                        <p>• <strong>Planetary Shield Grid:</strong> A continuous magnetic deflector envelope enveloping the entire planet, deflecting solar flares and cosmic hazards.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onboarding Tutorial Overlay Modal -->
+    <div class="modal-overlay" id="tutorialOverlay">
+        <div class="tutorial-card">
+            <div class="tutorial-badge" id="tutStepBadge">COMMAND ONBOARDING • STEP 1 OF 7</div>
+            <div class="tutorial-title" id="tutTitle">Orbital Stellar Cartography</div>
+            <div class="tutorial-body" id="tutBody">
+                Welcome, Admiral! The main center viewport displays the Kepler-186 star system in real-time. 
+                Click and drag to pan across space, or use your mouse wheel to zoom in and out. 
+                Click on any planet, asteroid belt, or fleet vessel to inspect its telemetry. 
+                Press <strong>T</strong> to designate a selected planet as your active terraforming target.
+            </div>
+            <div class="tutorial-footer">
+                <div class="tutorial-step-dots" id="tutDots">
+                    <div class="tutorial-dot active"></div>
+                    <div class="tutorial-dot"></div>
+                    <div class="tutorial-dot"></div>
+                    <div class="tutorial-dot"></div>
+                    <div class="tutorial-dot"></div>
+                    <div class="tutorial-dot"></div>
+                    <div class="tutorial-dot"></div>
+                </div>
+                <div class="tutorial-btns">
+                    <button class="splash-btn" id="tutBtnBack" style="padding:6px 12px; font-size:11px;">Back</button>
+                    <button class="splash-btn primary" id="tutBtnNext" style="padding:6px 14px; font-size:11px;">Next Step →</button>
+                    <button class="splash-btn" id="tutBtnSkip" style="padding:6px 10px; font-size:11px; color:var(--text-dim);">Skip [Esc]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JSON Save / Restore Modal -->
+    <div class="modal-overlay" id="jsonModal">
+        <div class="json-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <strong style="color:var(--accent-blue); font-size:14px;">⚙️ EXPEDITION DATA & JSON BACKUP</strong>
+                <button class="codex-close-btn" id="jsonCloseBtn">✕</button>
+            </div>
+            <p style="font-size:11px; color:var(--text-primary); margin:0;">
+                Export your current expedition state to JSON for safekeeping or sharing, or paste a saved JSON state string to restore your mission.
+            </p>
+            <textarea class="json-textarea" id="jsonTextarea" placeholder="Expedition JSON state string will appear here..."></textarea>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button class="splash-btn" id="btnExportJson">📋 COPY TO CLIPBOARD</button>
+                <button class="splash-btn" id="btnDownloadJson">💾 DOWNLOAD .JSON</button>
+                <button class="splash-btn primary" id="btnImportJson">📥 LOAD FROM TEXT</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // =========================================================================
         // --- PHASE 13: PROCEDURAL COSMIC AUDIO & ATMOSPHERIC SOUNDSCAPES ENGINE ---
@@ -9747,7 +10148,7 @@
                     tradeRoutes: sim.tradeRoutes,
                     xenoSites: sim.xenoSites
                 },
-                currentSystemIndex: currentSystemIndex,
+                currentSystemIndex: sim.currentSystemIndex,
                 camX: sim.camX,
                 camY: sim.camY,
                 zoom: sim.zoom
@@ -10148,9 +10549,9 @@
 
             // Sector Navigation
             if (key === 's') {
-                const nextIdx = (currentSystemIndex + 1) % starSystems.length;
+                const nextIdx = (sim.currentSystemIndex + 1) % STAR_SYSTEMS.length;
                 loadStarSystem(nextIdx);
-                showToast(`Warping to star system: ${starSystems[nextIdx].name}`, 'info');
+                showToast(`Warping to star system: ${STAR_SYSTEMS[nextIdx].name}`, 'info');
                 playSound('success');
                 return;
             }
@@ -10177,413 +10578,13 @@
             }
         });
 
+        window.sim = sim;
         loadStarSystem(0);
         renderTechTree();
         calculateHabitability();
         updateUI();
         render();
     </script>
-
-    <!-- Toast Notification Container -->
-    <div id="toastContainer"></div>
-
-    <!-- Start Splash Screen Overlay -->
-    <div class="modal-overlay active" id="splashOverlay">
-        <div class="splash-card">
-            <div class="splash-brand-logo">K C O S M I C</div>
-            <div class="splash-sub">Interstellar Fleet Logistics & Planetary Terraforming Simulation</div>
-            <div class="splash-version-tag">VERSION 1.14 // FLEET ADMIRAL'S CODEX EDITION</div>
-            <div class="splash-synopsis">
-                <strong>COMMAND DIRECTIVE:</strong> You have been appointed Fleet Admiral of the Kepler Interstellar Colony Fleet. 
-                Command the flagship Ark Sovereign and its flotilla across procedural star systems. 
-                Harness atmospheric processors, orbital solar mirrors, nitrogen extractors, and core dynamos to transform hostile alien worlds into thriving Garden biospheres. 
-                Establish automated freighter trade routes, excavate precursor tachyon relics, erect planetary orbital rings, and shield your colonists from catastrophic cosmic crises.
-            </div>
-            <div class="splash-actions">
-                <button class="splash-btn primary" id="splashBtnNew">
-                    <span>🚀 COMMENCE NEW EXPEDITION</span>
-                    <span class="splash-btn-key">ENTER / SPACE</span>
-                </button>
-                <button class="splash-btn" id="splashBtnContinue" disabled>
-                    <span id="splashContinueLabel">📂 RESUME MISSION (NO SAVE)</span>
-                    <span class="splash-btn-key">C</span>
-                </button>
-                <button class="splash-btn" id="splashBtnCodex">
-                    <span>📜 FLEET ADMIRAL'S CODEX & MANUAL</span>
-                    <span class="splash-btn-key">H / F1</span>
-                </button>
-                <button class="splash-btn" id="splashBtnBackup">
-                    <span>⚙️ EXPEDITION DATA & JSON BACKUP</span>
-                    <span class="splash-btn-key">DATA</span>
-                </button>
-                <button class="splash-btn" id="splashBtnAudio">
-                    <span id="splashAudioLabel">🔊 AUDIO & CRT THEME: CYAN P4</span>
-                    <span class="splash-btn-key">O / M</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Fleet Admiral's Comprehensive Codex Modal -->
-    <div class="modal-overlay" id="codexModal">
-        <div class="codex-card">
-            <div class="codex-top">
-                <div class="codex-title-wrap">
-                    <span class="codex-icon">📜</span>
-                    <div>
-                        <div class="codex-title">FLEET ADMIRAL'S ARCHIVE // CODEX & FIELD MANUAL</div>
-                        <div class="codex-subtitle">Standard Fleet Protocol • Classification Index • Planetary Engineering Formulas</div>
-                    </div>
-                </div>
-                <button class="codex-close-btn" id="codexCloseBtn">✕ CLOSE [ESC]</button>
-            </div>
-            <div class="codex-tabs-bar">
-                <button class="codex-tab-btn active" data-tab="codex-pane-1">1: COMMAND & HOTKEYS</button>
-                <button class="codex-tab-btn" data-tab="codex-pane-2">2: PLANET CLASSIFICATION</button>
-                <button class="codex-tab-btn" data-tab="codex-pane-3">3: TERRAFORMING FORMULAS</button>
-                <button class="codex-tab-btn" data-tab="codex-pane-4">4: FLEET LOGISTICS & TRADE</button>
-                <button class="codex-tab-btn" data-tab="codex-pane-5">5: CRISIS RESPONSE MANUAL</button>
-                <button class="codex-tab-btn" data-tab="codex-pane-6">6: XENOBIOLOGY & RELICS</button>
-            </div>
-            <div class="codex-content-area">
-                <!-- Pane 1: Command & Hotkeys -->
-                <div class="codex-pane active" id="codex-pane-1">
-                    <div class="codex-banner">
-                        <strong>FLEET ADMIRAL INTERFACE MATRIX:</strong> Complete keyboard shortcuts, orbital viewport controls, and real-time telemetry reference. Use the hotkeys below to swiftly command orbital maneuvers and interventions.
-                    </div>
-                    <div class="codex-grid-2">
-                        <div class="codex-box">
-                            <h3>⌨️ PRIMARY HOTKEYS</h3>
-                            <table class="codex-table">
-                                <tr><th>Key</th><th>Function</th></tr>
-                                <tr><td><strong>Space</strong></td><td>Pause / Resume Simulation Clock</td></tr>
-                                <tr><td><strong>1 / 2 / 5</strong></td><td>Simulation Speed (1x Real-time, 2x Warp, 5x Maximum Warp)</td></tr>
-                                <tr><td><strong>H / F1</strong></td><td>Toggle Fleet Admiral's Codex & Comprehensive Manual</td></tr>
-                                <tr><td><strong>F5</strong></td><td>Quicksave Expedition to Local Storage Bank</td></tr>
-                                <tr><td><strong>F9</strong></td><td>Quickload Expedition from Local Storage Bank</td></tr>
-                                <tr><td><strong>S</strong></td><td>Cycle Star System in Sector Catalog</td></tr>
-                                <tr><td><strong>G</strong></td><td>Procedurally Scan & Generate New Star Sector</td></tr>
-                                <tr><td><strong>T</strong></td><td>Designate Selected Body as Active Terraforming Target</td></tr>
-                                <tr><td><strong>P</strong></td><td>Focus Viewport Camera on Active Target Planet</td></tr>
-                                <tr><td><strong>R</strong></td><td>Reset Viewport Camera & Zoom (1.0x)</td></tr>
-                                <tr><td><strong>C</strong></td><td>Cycle CRT Phosphor Theme (Cyan, Amber, Green, White)</td></tr>
-                                <tr><td><strong>M</strong></td><td>Toggle Master Audio On / Off</td></tr>
-                                <tr><td><strong>A</strong></td><td>Cycle Cosmic Ambient Soundscape (Void, Atmo, Engine, Precursor)</td></tr>
-                                <tr><td><strong>Esc</strong></td><td>Dismiss Active Modal / Deselect Celestial Target</td></tr>
-                            </table>
-                        </div>
-                        <div class="codex-box">
-                            <h3>🛰️ VIEWPORT NAVIGATION & HUD</h3>
-                            <p><strong>Orbital Viewport Navigation:</strong> Click and drag anywhere in the space viewport to pan across the star system. Use the mouse wheel to zoom in (up to 2.5x magnification) or zoom out (down to 0.4x macro-view).</p>
-                            <p><strong>Selection Inspector:</strong> Click on any star, exoplanet, asteroid belt, orbital station, or fleet vessel to inspect its telemetry, mass, AU orbital radius, and tactical actions.</p>
-                            <p><strong>Target Designator:</strong> Pressing <em>Designate Target [T]</em> binds the planetary terraforming array to that celestial body, allowing you to deploy surface modules, divert trade routes, and focus biosensing arrays.</p>
-                            <p><strong>Audio Telemetry Visualizer:</strong> The bottom CRT waveform visualizer monitors procedural sound synthesis in real-time, matching harmonic frequencies to active star spectral types and atmospheric density.</p>
-                            <div style="margin-top:10px;">
-                                <button class="splash-btn primary" id="codexBtnLaunchTutorial" style="width:100%; justify-content:center;">🎓 REPLAY ONBOARDING TUTORIAL</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pane 2: Planet Classification Index -->
-                <div class="codex-pane" id="codex-pane-2">
-                    <div class="codex-banner">
-                        <strong>EXOPLANET TAXONOMY & DOSSIERS:</strong> Detailed physical properties, habitability bounds, resource multipliers, and optimal geo-engineering pathways across the 8 primary planetary classes in the Kepler sector.
-                    </div>
-                    <div class="codex-grid-2">
-                        <div class="codex-box">
-                            <h3><span style="color:var(--text-dim);">CLASS-I:</span> BARREN ROCK (SILICATE CHASM)</h3>
-                            <p>Airless, heavily cratered rocky world stripped bare by stellar radiation. Extreme diurnal thermal swings.</p>
-                            <div class="codex-kv"><span>Surface Pressure:</span><span>0.00 - 0.05 atm</span></div>
-                            <div class="codex-kv"><span>Surface Temp:</span><span>-120°C to +140°C</span></div>
-                            <div class="codex-kv"><span>Hydrosphere:</span><span>0.0% (Vacuum)</span></div>
-                            <div class="codex-kv"><span>Yield Multipliers:</span><span>Min x1.4 | Vol x0.2</span></div>
-                            <div class="codex-kv"><span>Base Habitability:</span><span>0% - 15%</span></div>
-                            <p style="margin-top:6px; color:var(--accent-amber);"><strong>Strategy:</strong> Deploy Core Magneto-Dynamos first to generate a magnetic shield before injecting atmosphere, preventing stellar wind stripping. Import volatiles via Boreas freighters.</p>
-                        </div>
-
-                        <div class="codex-box">
-                            <h3><span style="color:var(--accent-rose);">CLASS-II:</span> TOXIC GREENHOUSE (VENUSIAN)</h3>
-                            <p>Crushing, superheated atmosphere dense with carbon dioxide and sulfuric clouds. Searing surface temperatures.</p>
-                            <div class="codex-kv"><span>Surface Pressure:</span><span>2.50 - 5.00 atm</span></div>
-                            <div class="codex-kv"><span>Surface Temp:</span><span>+90°C to +320°C</span></div>
-                            <div class="codex-kv"><span>Hydrosphere:</span><span>0.0% (Superheated Vapor)</span></div>
-                            <div class="codex-kv"><span>Yield Multipliers:</span><span>Min x1.2 | Vol x0.8</span></div>
-                            <div class="codex-kv"><span>Base Habitability:</span><span>5% - 25%</span></div>
-                            <p style="margin-top:6px; color:var(--accent-cyan);"><strong>Strategy:</strong> Deploy Orbital Solar Mirrors configured to COOL (-Temp) and configure Troposphere Processors to TOXIC SCRUBBING (-P) to precipitate sulfur and cool the crust.</p>
-                        </div>
-
-                        <div class="codex-box">
-                            <h3><span style="color:var(--accent-blue);">CLASS-III:</span> FROZEN TUNDRA (CRYO-GLACIAL)</h3>
-                            <p>Sub-zero glacial world locked beneath continental ice sheets. Abundant water ice and volatile reserves.</p>
-                            <div class="codex-kv"><span>Surface Pressure:</span><span>0.15 - 0.45 atm</span></div>
-                            <div class="codex-kv"><span>Surface Temp:</span><span>-85°C to -15°C</span></div>
-                            <div class="codex-kv"><span>Hydrosphere:</span><span>30% - 60% (Solid Ice)</span></div>
-                            <div class="codex-kv"><span>Yield Multipliers:</span><span>Min x0.9 | Vol x1.5</span></div>
-                            <div class="codex-kv"><span>Base Habitability:</span><span>15% - 40%</span></div>
-                            <p style="margin-top:6px; color:var(--accent-emerald);"><strong>Strategy:</strong> Orient Solar Mirrors to HEAT (+Temp) and deploy Greenhouse Stations in WARM mode (+GHG) to melt glacial ice sheets into liquid oceans.</p>
-                        </div>
-
-                        <div class="codex-box">
-                            <h3><span style="color:var(--accent-cyan);">CLASS-IV:</span> OCEAN WORLD (PELAGIC SUPER-EARTH)</h3>
-                            <p>Enormous planetary ocean covering 85% to 100% of the crust. Temperate climate with high organic potential.</p>
-                            <div class="codex-kv"><span>Surface Pressure:</span><span>0.90 - 1.30 atm</span></div>
-                            <div class="codex-kv"><span>Surface Temp:</span><span>+10°C to +25°C</span></div>
-                            <div class="codex-kv"><span>Hydrosphere:</span><span>85% - 100% (Global Ocean)</span></div>
-                            <div class="codex-kv"><span>Yield Multipliers:</span><span>Min x0.5 | Vol x1.3</span></div>
-                            <div class="codex-kv"><span>Base Habitability:</span><span>45% - 70%</span></div>
-                            <p style="margin-top:6px; color:var(--accent-blue);"><strong>Strategy:</strong> Construct Algal Vats and Bioseeding Stations to maximize photosynthetic oxygenation. Establish mineral freight routes from the Tartarus asteroid belt.</p>
-                        </div>
-
-                        <div class="codex-box">
-                            <h3><span style="color:var(--accent-emerald);">CLASS-V:</span> PRIMORDIAL GAIA (GARDEN WORLD)</h3>
-                            <p>Near-ideal planetary biosphere with balanced nitrogen-oxygen atmosphere, active magnetosphere, and liquid oceans.</p>
-                            <div class="codex-kv"><span>Surface Pressure:</span><span>0.90 - 1.10 atm</span></div>
-                            <div class="codex-kv"><span>Surface Temp:</span><span>+14°C to +18°C</span></div>
-                            <div class="codex-kv"><span>Hydrosphere:</span><span>55% - 70% (Balanced Seas)</span></div>
-                            <div class="codex-kv"><span>Yield Multipliers:</span><span>Min x1.0 | Vol x1.0</span></div>
-                            <div class="codex-kv"><span>Base Habitability:</span><span>75% - 98%</span></div>
-                            <p style="margin-top:6px; color:var(--accent-emerald);"><strong>Strategy:</strong> Expand Domed Megacities, erect Planetary Orbital Rings and Star Elevators, and awaken the 75,000 cryo-sleepers to establish a permanent colony.</p>
-                        </div>
-
-                        <div class="codex-box">
-                            <h3><span style="color:var(--accent-amber);">CLASS-VI:</span> MOLTEN CHASM (VOLCANIC CALDERA)</h3>
-                            <p>Young, hyper-tectonic planet covered in magma chasms and volcanic rifts. Hyper-dense heavy mineral deposits.</p>
-                            <div class="codex-kv"><span>Surface Pressure:</span><span>1.80 - 3.20 atm</span></div>
-                            <div class="codex-kv"><span>Surface Temp:</span><span>+150°C to +450°C</span></div>
-                            <div class="codex-kv"><span>Hydrosphere:</span><span>0.0%</span></div>
-                            <div class="codex-kv"><span>Yield Multipliers:</span><span>Min x2.0 | Vol x0.3</span></div>
-                            <div class="codex-kv"><span>Base Habitability:</span><span>0% - 10%</span></div>
-                            <p style="margin-top:6px; color:var(--accent-rose);"><strong>Strategy:</strong> Geothermal relief boreholes to mitigate seismic quakes; mass delivery of cometary ice; geothermal energy tap.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pane 3: Terraforming Formulas -->
-                <div class="codex-pane" id="codex-pane-3">
-                    <div class="codex-banner">
-                        <strong>MATHEMATICAL TERRAFORMING EQUATIONS & FORMULAS:</strong> The exact mathematical models calculating atmospheric dynamics, thermal balance, hydrosphere phase changes, and composite habitability.
-                    </div>
-                    <div class="codex-grid-2">
-                        <div class="codex-box">
-                            <h3>1. ATMOSPHERIC PRESSURE DYNAMICS</h3>
-                            <div class="codex-formula-box">
-                                P_next = P_curr + (N_inject * 0.05 - N_scrub * 0.08) * Δt<br>
-                                Optimal Range: 0.90 atm ≤ P ≤ 1.10 atm
-                            </div>
-                            <p>• <strong>Troposphere Processors (Inject):</strong> Injects compressed nitrogen-inert carrier gas, adding +0.05 atm per operational module per cycle.</p>
-                            <p>• <strong>Troposphere Processors (Scrub):</strong> Filters dense runaway gases, scrubbing -0.08 atm per module and salvaging 25 tons of raw minerals from atmospheric precipitates.</p>
-                        </div>
-
-                        <div class="codex-box">
-                            <h3>2. SURFACE THERMAL EQUILIBRIUM</h3>
-                            <div class="codex-formula-box">
-                                T_surf = T_base + (GHG_factor * 0.45) + (N_heat * 4.5°C) - (N_cool * 5.0°C)<br>
-                                Optimal Range: 12.0°C ≤ T ≤ 20.0°C (Standard: 15.0°C)
-                            </div>
-                            <p>• <strong>Orbital Solar Mirrors (Heat):</strong> Angled to focus stellar irradiance on the planetary terminator, warming surface by +4.5°C per mirror array.</p>
-                            <p>• <strong>Orbital Solar Mirrors (Cool):</strong> Angled as an occulting sunshade to deflect solar flux, cooling surface by -5.0°C per mirror array.</p>
-                        </div>
-
-                        <div class="codex-box">
-                            <h3>3. HYDROSPHERE LIQUID ENVELOPE</h3>
-                            <div class="codex-formula-box">
-                                Liquid Water Envelope: -5.0°C ≤ T ≤ 75.0°C<br>
-                                Optimal Coverage: 50.0% ≤ Water ≤ 70.0%
-                            </div>
-                            <p>• When T < -5.0°C, liquid surface water freezes into glacial sheets, reducing habitability.</p>
-                            <p>• When T > 75.0°C, hydrosphere boils into superheated vapor, escalating greenhouse runaway.</p>
-                            <p>• <strong>Hydro-Condensation Towers:</strong> Condense atmospheric humidity, adding +2.0% liquid water per cycle.</p>
-                        </div>
-
-                        <div class="codex-box">
-                            <h3>4. BIOGENIC GAS EQUILIBRIUM</h3>
-                            <div class="codex-formula-box">
-                                O2 Target: 20.9% (Toxicity: >26%, Hypoxia: <15%)<br>
-                                N2 Target: 78.0% (Inert Atmospheric Buffer)
-                            </div>
-                            <p>• <strong>Bioseeding Stations:</strong> Disperses genetically engineered lichen and moss spores, adding +0.4% O2 per cycle.</p>
-                            <p>• <strong>Algal Bioreactor Vats:</strong> Industrial photosynthetic cultivation generating +0.8% O2 and +15 Food/cyc.</p>
-                            <p>• <strong>Nitrogen Extractors:</strong> Cryogenically separates atmospheric nitrogen buffer, adding +1.2% N2 per cycle.</p>
-                        </div>
-                    </div>
-
-                    <div class="codex-box">
-                        <h3>5. COMPOSITE PLANETARY HABITABILITY FORMULA (H)</h3>
-                        <div class="codex-formula-box">
-                            H = 25% * f(Pressure) + 25% * f(Temp) + 20% * f(Water) + 15% * f(O2) + 10% * f(N2) + 5% * f(Magnet)<br>
-                            Status: Hostile (<25%) • Harsh (25-49%) • Developing (50-74%) • Garden World (75-100%)
-                        </div>
-                        <p>A score of <strong>75.0% or higher</strong> qualifies the world as a <em>Garden World</em>, unlocking permanent surface colonization and complete mission success!</p>
-                    </div>
-                </div>
-
-                <!-- Pane 4: Fleet Logistics & Trade -->
-                <div class="codex-pane" id="codex-pane-4">
-                    <div class="codex-banner">
-                        <strong>INTERSTELLAR SUPPLY CHAINS & TRADE CORRIDORS:</strong> Fleet vessel specifications, automated trade route mechanics, colonist demographic distribution, and food rationing directives.
-                    </div>
-                    <div class="codex-grid-2">
-                        <div class="codex-box">
-                            <h3>🚀 FLEET ARKS & FREIGHTERS</h3>
-                            <p><strong>Colony Ark Sovereign:</strong> The flagship ark vessel preserving 75,000 cryo-sleepers. Provides backup life support and manufacturing fabrication bays.</p>
-                            <p><strong>Deep-Space Freighters:</strong> Heavy haulers carrying bulk mineral containers and pressurized volatile tanks between celestial mining outposts and orbital yards.</p>
-                            <p><strong>Helios Coronal Skimmers:</strong> Automated magnetic-scoop vessels skimming stellar coronae to harvest Helium-3 plasma fuel.</p>
-                        </div>
-                        <div class="codex-box">
-                            <h3>📦 AUTOMATED SUPPLY TRADE ROUTES</h3>
-                            <p><strong>Tartarus Mineral Corridor:</strong> Runs from the outer asteroid belt to ground fabrication depots (+28 t minerals/cyc).</p>
-                            <p><strong>Boreas Cryo-Volatiles Route:</strong> Transports nitrogen and ammonia ice from frozen moons to atmospheric injection arrays (+20 t volatiles/cyc).</p>
-                            <p><strong>Agro-Dome Sustenance Run:</strong> Shuttles fresh food crops from surface biodomes to the orbital ark flotilla (+22 t food/cyc).</p>
-                            <p><strong>Helios Plasma Skimmer:</strong> Generates perpetual high-density energy (+150 kW/cyc).</p>
-                        </div>
-                    </div>
-
-                    <div class="codex-box">
-                        <h3>👥 DEMOGRAPHIC ROLES & RATIONING POLICIES</h3>
-                        <div class="codex-grid-3">
-                            <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:4px;">
-                                <strong style="color:var(--accent-cyan);">Laborers (40%)</strong>
-                                <p style="font-size:10px; margin:4px 0 0 0;">Mining, heavy excavation, structural fabrication, and megastructure assembly.</p>
-                            </div>
-                            <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:4px;">
-                                <strong style="color:var(--accent-emerald);">Agronomists (25%)</strong>
-                                <p style="font-size:10px; margin:4px 0 0 0;">Hydroponic farm management, algal cultivation vats, and bioseeding dispersion.</p>
-                            </div>
-                            <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:4px;">
-                                <strong style="color:var(--accent-amber);">Engineers (20%)</strong>
-                                <p style="font-size:10px; margin:4px 0 0 0;">Reactor maintenance, life support scrubbers, orbital mirror alignment, and shield grid.</p>
-                            </div>
-                        </div>
-                        <p style="margin-top:10px;"><strong>Ration Policies:</strong> <em>Spartan</em> (-15 Morale, -40% Food burn), <em>Standard</em> (Balanced), <em>Abundant</em> (+15 Morale, +35% Food burn, +10% Productivity).</p>
-                    </div>
-                </div>
-
-                <!-- Pane 5: Crisis Response Manual -->
-                <div class="codex-pane" id="codex-pane-5">
-                    <div class="codex-banner">
-                        <strong>EMERGENCY CRISIS MANUAL & HAZARD MITIGATION:</strong> Protocols for surviving Coronal Mass Ejections, Asteroid Impacts, Mantle Quakes, Ecological Blights, and Ionization Storms.
-                    </div>
-                    <div class="codex-grid-2">
-                        <div class="codex-box">
-                            <h3><span style="color:var(--accent-amber);">⚠️ 1. CORONAL MASS EJECTION</span></h3>
-                            <p><strong>Threat:</strong> Searing ionizing solar flare sweeping the system. Strips unshielded atmosphere, damages surface biodomes, and knocks out satellite arrays.</p>
-                            <p><strong>Countdown:</strong> ~15.0 seconds to impact.</p>
-                            <p><strong>Protocol:</strong> Invert Core Magneto-Dynamo polarity to fortify magnetosphere and deploy Thermal Damper Arrays. Ensure Planetary Shield HP is charged.</p>
-                        </div>
-
-                        <div class="codex-box">
-                            <h3><span style="color:var(--accent-rose);">☄️ 2. ASTEROID IMPACT BOLIDE</span></h3>
-                            <p><strong>Threat:</strong> A 5-kilometer metallic-silicate bolide on a direct terminal descent trajectory. Impact produces kinetic shockwaves and dust winter.</p>
-                            <p><strong>Countdown:</strong> ~18.0 seconds to impact.</p>
-                            <p><strong>Protocol:</strong> Discharge Planetary Defense Citadels or fire kinetic mass driver interceptors to shatter bolide before atmospheric entry.</p>
-                        </div>
-
-                        <div class="codex-box">
-                            <h3><span style="color:var(--accent-rose);">🌋 3. TECTONIC MANTLE RUPTURE</span></h3>
-                            <p><strong>Threat:</strong> Magmatic pressure build-up and catastrophic fault displacement threatening surface habitats and geothermal processors.</p>
-                            <p><strong>Countdown:</strong> ~12.0 seconds to rupture.</p>
-                            <p><strong>Protocol:</strong> Vent seismic stress via deep geothermal borehole pressure relief valves and reinforce structural damping struts.</p>
-                        </div>
-
-                        <div class="codex-box">
-                            <h3><span style="color:var(--accent-emerald);">☣️ 4. ECOLOGICAL BLIGHT & OZONE COLLAPSE</span></h3>
-                            <p><strong>Threat:</strong> Mutated atmospheric spores or severe UV ozone depletion poisoning bioseeded crops and killing photosynthetic algae.</p>
-                            <p><strong>Countdown:</strong> ~20.0 seconds to collapse.</p>
-                            <p><strong>Protocol:</strong> Disperse synthesized cryo-containment biophages through Troposphere Processors and re-inoculate hydroponic crop strains.</p>
-                        </div>
-                    </div>
-
-                    <div class="codex-box">
-                        <h3>⚡ 5. MAGNETIC IONIZATION SURGE & REPAIRS</h3>
-                        <p><strong>Threat:</strong> Intense polar aurora ion flux inducing massive electrical surges across all surface power lines and fleet navigation sensors (~16s countdown).</p>
-                        <p><strong>Protocol:</strong> Ground fleet capacitors and route surge energy into orbital battery heat sinks.</p>
-                        <p><strong>Emergency Repair:</strong> At any time, click <em>Emergency Repair</em> in the Hazards tab to spend 120 Minerals and 80 kW to restore 250 HP to damaged Planetary Shields and colony dome hulls.</p>
-                    </div>
-                </div>
-
-                <!-- Pane 6: Xenobiology & Relics -->
-                <div class="codex-pane" id="codex-pane-6">
-                    <div class="codex-banner">
-                        <strong>PRECURSOR ARTIFACT ARCHIVE & ORBITAL MEGASTRUCTURES:</strong> Ancient xeno-ruins, recovered tachyon relics, precursor technology blueprints, and planetary megastructures.
-                    </div>
-                    <div class="codex-grid-2">
-                        <div class="codex-box">
-                            <h3>🏛️ PRECURSOR RUIN SITES & RELICS</h3>
-                            <p>• <strong>Sunken Monolith Vault:</strong> Contains the <em>Tachyon Crystalline Matrix</em>. Unlocks Xenobiological Bio-Catalysis.</p>
-                            <p>• <strong>Progenitor Biosphere Vault:</strong> Contains the <em>Precursor Xenobiotic Genome</em>. Unlocks Crystalline Deflector Harmonics.</p>
-                            <p>• <strong>Sub-Surface Nanite Citadel:</strong> Contains the <em>Autonomous Nanite Core</em>. Unlocks Molecular Nanite Assemblers.</p>
-                            <p>• <strong>Astrometric Zero-Point Conduit:</strong> Contains the <em>Zero-Point Flux Resonator</em>. Unlocks Zero-Point Resonant Tap.</p>
-                        </div>
-
-                        <div class="codex-box">
-                            <h3>⭐ PRECURSOR TECHNOLOGY BLUEPRINTS</h3>
-                            <p>• <strong>Xenobiological Bio-Catalysis:</strong> +50% Terraforming Speed, +40% Food Crop Yield, +15 Morale.</p>
-                            <p>• <strong>Crystalline Deflector Harmonics:</strong> +500 Planetary Shield Max HP, +25% Hazard Deflection.</p>
-                            <p>• <strong>Molecular Nanite Assemblers:</strong> -25% Construction & Upgrade Costs across all modules.</p>
-                            <p>• <strong>Zero-Point Resonant Tap:</strong> +450 kW Perpetual Clean Energy Output per cycle.</p>
-                        </div>
-                    </div>
-
-                    <div class="codex-box">
-                        <h3>🪐 PLANETARY MEGASTRUCTURES</h3>
-                        <p>• <strong>Planetary Orbital Ring:</strong> A geostationary ring circling the equator, providing vast residential space (+50,000 housing), mineral processing, and automated shipyard berths.</p>
-                        <p>• <strong>Space Tether / Star Elevator:</strong> Carbon-nanotube equatorial elevator connecting the planetary surface to orbital docks, eliminating rocket propellant costs.</p>
-                        <p>• <strong>Planetary Shield Grid:</strong> A continuous magnetic deflector envelope enveloping the entire planet, deflecting solar flares and cosmic hazards.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Onboarding Tutorial Overlay Modal -->
-    <div class="modal-overlay" id="tutorialOverlay">
-        <div class="tutorial-card">
-            <div class="tutorial-badge" id="tutStepBadge">COMMAND ONBOARDING • STEP 1 OF 7</div>
-            <div class="tutorial-title" id="tutTitle">Orbital Stellar Cartography</div>
-            <div class="tutorial-body" id="tutBody">
-                Welcome, Admiral! The main center viewport displays the Kepler-186 star system in real-time. 
-                Click and drag to pan across space, or use your mouse wheel to zoom in and out. 
-                Click on any planet, asteroid belt, or fleet vessel to inspect its telemetry. 
-                Press <strong>T</strong> to designate a selected planet as your active terraforming target.
-            </div>
-            <div class="tutorial-footer">
-                <div class="tutorial-step-dots" id="tutDots">
-                    <div class="tutorial-dot active"></div>
-                    <div class="tutorial-dot"></div>
-                    <div class="tutorial-dot"></div>
-                    <div class="tutorial-dot"></div>
-                    <div class="tutorial-dot"></div>
-                    <div class="tutorial-dot"></div>
-                    <div class="tutorial-dot"></div>
-                </div>
-                <div class="tutorial-btns">
-                    <button class="splash-btn" id="tutBtnBack" style="padding:6px 12px; font-size:11px;">Back</button>
-                    <button class="splash-btn primary" id="tutBtnNext" style="padding:6px 14px; font-size:11px;">Next Step →</button>
-                    <button class="splash-btn" id="tutBtnSkip" style="padding:6px 10px; font-size:11px; color:var(--text-dim);">Skip [Esc]</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- JSON Save / Restore Modal -->
-    <div class="modal-overlay" id="jsonModal">
-        <div class="json-card">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <strong style="color:var(--accent-blue); font-size:14px;">⚙️ EXPEDITION DATA & JSON BACKUP</strong>
-                <button class="codex-close-btn" id="jsonCloseBtn">✕</button>
-            </div>
-            <p style="font-size:11px; color:var(--text-primary); margin:0;">
-                Export your current expedition state to JSON for safekeeping or sharing, or paste a saved JSON state string to restore your mission.
-            </p>
-            <textarea class="json-textarea" id="jsonTextarea" placeholder="Expedition JSON state string will appear here..."></textarea>
-            <div style="display:flex; gap:10px; justify-content:flex-end;">
-                <button class="splash-btn" id="btnExportJson">📋 COPY TO CLIPBOARD</button>
-                <button class="splash-btn" id="btnDownloadJson">💾 DOWNLOAD .JSON</button>
-                <button class="splash-btn primary" id="btnImportJson">📥 LOAD FROM TEXT</button>
-            </div>
-        </div>
-    </div>
 
 </body>
 </html>
