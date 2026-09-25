@@ -99,7 +99,7 @@ CardDef sampleCards[] = {
     {"Frost Nova", 4, "Freezes enemies in place", 0, 0, 0, 1, 0, 0, 0, 1},
     {"Ice Lance", 1, "Deals 1 Ice dmg (3 if frozen)", 1, 0, 0, 0, 0, 0, 0, 1},
     {"Glacial Spike", 7, "Deals 9 Ice damage", 9, 0, 0, 0, 0, 0, 0, 1},
-    {"Cold Snap", 5, "Resets cooldowns (Ice)", 0, 0, 0, 0, 0, 0, 0, 1},
+    {"Cold Snap", 5, "Deals 3 Ice dmg, deep freezes", 3, 0, 0, 2, 0, 0, 0, 1},
     {"Arcane Missiles", 1, "Fires 3 arcane bolts", 3, 0, 0, 0, 0, 0, 0, 2},
     {"Arcane Intellect", 3, "Draw 2 cards", 0, 0, 0, 0, 0, 0, 0, 2},
     {"Counterspell", 3, "Interrupts a spell", 0, 0, 0, 0, 0, 0, 0, 2},
@@ -404,6 +404,7 @@ void DealDamageToOpponent(int dmg, int cw, int ch) {
 }
 
 const char* GetSoundType(CardDef* cd) {
+    if (cd->type == 4 || cd->poison > 0) return "poison";
     if (cd->damage > 0 && strstr(cd->effect, "Fire") != NULL) return "fire";
     if (cd->damage > 0 && strstr(cd->effect, "Ice") != NULL) return "ice";
     if (cd->damage > 0 && strstr(cd->effect, "Arcane") != NULL) return "arcane";
@@ -420,6 +421,9 @@ void PlaySoundEffect(const char* type) {
     } else if (strcmp(type, "ice") == 0) {
         Beep(800, 30);
         Beep(1200, 30);
+    } else if (strcmp(type, "poison") == 0) {
+        Beep(240, 35);
+        Beep(180, 45);
     } else if (strcmp(type, "arcane") == 0 || strcmp(type, "heal") == 0) {
         Beep(500, 40);
         Beep(800, 50);
@@ -723,6 +727,29 @@ void PlayOpponentTurn(int cw, int ch) {
             
             if (strcmp(cd.name, "Arcane Intellect") == 0) {
                 DrawCard(1); DrawCard(1);
+            } else if (strcmp(cd.name, "Time Warp") == 0) {
+                opponentMana = opponentMaxMana;
+                DrawCard(1);
+                SpawnFloater((float)cw * 0.75f, (float)ch * 0.28f, "EXTRA TURN!", RGB(168, 85, 247));
+            } else if (strcmp(cd.name, "Counterspell") == 0) {
+                if (playerCount > 0) {
+                    int bestIdx = 0;
+                    for (int k = 1; k < playerCount; k++) {
+                        if (sampleCards[playerHand[k]].cost > sampleCards[playerHand[bestIdx]].cost) {
+                            bestIdx = k;
+                        }
+                    }
+                    char b[64];
+                    wsprintf(b, "DISPELLED %s!", sampleCards[playerHand[bestIdx]].name);
+                    for (int k = bestIdx; k < playerCount - 1; k++) {
+                        playerHand[k] = playerHand[k + 1];
+                    }
+                    playerCount--;
+                    SpawnFloater((float)cw * 0.25f, (float)ch * 0.28f, b, RGB(168, 85, 247));
+                }
+            } else if (strcmp(cd.name, "Polymorph") == 0) {
+                playerShield = 0;
+                SpawnFloater((float)cw * 0.25f, (float)ch * 0.28f, "BAAA! SHEEP!", RGB(255, 215, 0));
             }
 
             if (playerHp <= 0) {
@@ -982,7 +1009,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 int cw = cr.right - cr.left;
                 int ch = cr.bottom - cr.top;
 
-                runicAngle += 0.04f;
                 if (screenShake > 0.1f) screenShake *= 0.90f;
                 else screenShake = 0.0f;
 
@@ -1245,6 +1271,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         
                         if (strcmp(cd.name, "Arcane Intellect") == 0) {
                             DrawCard(0); DrawCard(0);
+                        } else if (strcmp(cd.name, "Time Warp") == 0) {
+                            playerMana = playerMaxMana;
+                            DrawCard(0);
+                            SpawnFloater((float)cw * 0.25f, (float)ch * 0.28f, "EXTRA TURN!", RGB(168, 85, 247));
+                        } else if (strcmp(cd.name, "Counterspell") == 0) {
+                            if (opponentCount > 0) {
+                                int bestIdx = 0;
+                                for (int k = 1; k < opponentCount; k++) {
+                                    if (sampleCards[opponentHand[k]].cost > sampleCards[opponentHand[bestIdx]].cost) {
+                                        bestIdx = k;
+                                    }
+                                }
+                                char b[64];
+                                wsprintf(b, "BANISHED %s!", sampleCards[opponentHand[bestIdx]].name);
+                                for (int k = bestIdx; k < opponentCount - 1; k++) {
+                                    opponentHand[k] = opponentHand[k + 1];
+                                }
+                                opponentCount--;
+                                SpawnFloater((float)cw * 0.75f, (float)ch * 0.28f, b, RGB(168, 85, 247));
+                            }
+                        } else if (strcmp(cd.name, "Polymorph") == 0) {
+                            opponentShield = 0;
+                            SpawnFloater((float)cw * 0.75f, (float)ch * 0.28f, "BAAA! SHEEP!", RGB(255, 215, 0));
                         }
 
                         if (opponentHp <= 0) {
@@ -1342,7 +1391,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             FillRect(memDC, &arenaRect, arenaBrush);
             DeleteObject(arenaBrush);
             
-            // Central Rotating Arcane Runic Transmutation Circle
+            // Central Static Arcane Runic Transmutation Circle (Zero Traveling Glints)
             int arenaCX = (arenaRect.left + arenaRect.right) / 2;
             int arenaCY = (arenaRect.top + arenaRect.bottom) / 2;
             
@@ -1355,11 +1404,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             Ellipse(memDC, arenaCX - 60, arenaCY - 25, arenaCX + 60, arenaCY + 25);
 
             for (int i = 0; i < 8; i++) {
-                float a = runicAngle + (float)i * 0.785f;
+                float a = (float)i * 0.785398f;
                 int rx = arenaCX + (int)(cosf(a) * 70.0f);
                 int ry = arenaCY + (int)(sinf(a) * 30.0f);
-                SetPixel(memDC, rx, ry, RGB(255, 215, 0));
-                SetPixel(memDC, rx+1, ry, RGB(255, 215, 0));
+                SetPixel(memDC, rx, ry, RGB(184, 153, 71));
+                SetPixel(memDC, rx+1, ry, RGB(184, 153, 71));
             }
 
             // Draw Wizards

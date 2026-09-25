@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-25T03:53:00Z — kilo-qa: KMech (Pass 5: Tutorial & State Integrity)**
+  - Status: PASS ✅ (Combat state persistence, first-run tutorial guard & toast de-occlusion complete; 0 regressions).
+  - State Persistence: Upgraded Quicksave/Load (F5/F9) across web localStorage & native `kmech_save.dat` (v3) to capture active combat telemetry (enemy stats, limb targeting, limb damage, evasion, heat).
+  - Combat UI: Added [F9] Load button to combat zone header bar for seamless mid-battle restoration.
+  - Tutorial Integrity: Guarded startup welcome prompt behind `kmech_tutorialSeen` / `kmech_save` in web and first-run check launching Pilot's Manual in native C.
+  - Toast & Modals: Re-anchored toast container to bottom-center pill to prevent control occlusion in garage and battle.
+  - Verification: Clean MSVC compile (`KMech.exe` 31.7 KB); Vite clean build in 381ms (`kmech.html` 108.2 KB); security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-25T02:49:00Z — kilo-graphics: KVoid (Game Content, Visual Polish & Glint Purge Pass)**
   - Status: PASS ✅ (Distress flare system, 4 alien species biotypes & resource tiles added; glint purged; 0 regressions).
   - Game Mechanics: Chem flare deployment ([F]) repelling stalkers/phantoms; O2 canisters (+35%) & lithium cells (+40%).

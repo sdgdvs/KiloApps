@@ -450,6 +450,14 @@
                 gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
                 osc.start(now);
                 osc.stop(now + 0.2);
+            } else if (type === 'poison') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(240, now);
+                osc.frequency.exponentialRampToValueAtTime(80, now + 0.35);
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
             } else if (type === 'arcane' || type === 'heal') {
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(400, now);
@@ -505,7 +513,7 @@
             { name: "Frost Nova", cost: 4, effect: "Freezes enemies in place", type: "ice", damage: 0, heal: 0, burn: 0, freeze: 1, shield: 0, regen: 0, poison: 0 },
             { name: "Ice Lance", cost: 1, effect: "Deals 1 Ice dmg (3 if frozen)", type: "ice", damage: 1, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 0 },
             { name: "Glacial Spike", cost: 7, effect: "Deals 9 Ice damage", type: "ice", damage: 9, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 0 },
-            { name: "Cold Snap", cost: 5, effect: "Resets cooldowns (Ice)", type: "ice", damage: 0, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 0 },
+            { name: "Cold Snap", cost: 5, effect: "Deals 3 Ice dmg, deep freezes", type: "ice", damage: 3, heal: 0, burn: 0, freeze: 2, shield: 0, regen: 0, poison: 0 },
             { name: "Arcane Missiles", cost: 1, effect: "Fires 3 arcane bolts", type: "arcane", damage: 3, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 0 },
             { name: "Arcane Intellect", cost: 3, effect: "Draw 2 cards", type: "arcane", damage: 0, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 0 },
             { name: "Counterspell", cost: 3, effect: "Interrupts a spell", type: "arcane", damage: 0, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 0 },
@@ -559,6 +567,7 @@
         }
 
         function getSoundType(card) {
+            if (card.type === 'poison' || card.poison > 0) return 'poison';
             if (card.damage > 0 && card.effect.includes("Fire")) return 'fire';
             if (card.damage > 0 && card.effect.includes("Ice")) return 'ice';
             if (card.damage > 0 && card.effect.includes("Arcane")) return 'arcane';
@@ -846,9 +855,9 @@
             ctx.fill();
             ctx.shadowBlur = 0;
 
-            // Orbiting magic ring around staff
+            // Static arcane halo around staff (zero traveling/spinning glints)
             ctx.beginPath();
-            ctx.ellipse(staffX, -34, 10, 4, time * 2, 0, Math.PI * 2);
+            ctx.ellipse(staffX, -34, 9, 3, 0, 0, Math.PI * 2);
             ctx.strokeStyle = '#ffd700';
             ctx.lineWidth = 1;
             ctx.stroke();
@@ -893,8 +902,7 @@
                 ctx.fill();
             });
 
-            // Central Runic Circle
-            runicAngle += 0.006;
+            // Central Static Runic Circle (zero traveling perimeter dots or spin)
             ctx.save();
             ctx.translate(w/2, h * 0.58);
             ctx.scale(1, 0.42);
@@ -911,8 +919,7 @@
             ctx.lineWidth = 1.5;
             ctx.stroke();
 
-            // Rotating 8-Point Arcane Star
-            ctx.rotate(runicAngle);
+            // Static 8-Point Arcane Star
             for (let i = 0; i < 8; i++) {
                 ctx.rotate(Math.PI / 4);
                 ctx.beginPath();
@@ -1353,6 +1360,28 @@
                         
                         if (cardData.name === "Arcane Intellect") {
                             drawCard(false); drawCard(false);
+                        } else if (cardData.name === "Time Warp") {
+                            playerMana = playerMaxMana;
+                            drawCard(false);
+                            const w = arenaCanvas.width || 800, h = arenaCanvas.height || 220;
+                            spawnFloater(w * 0.22, h * 0.35, "EXTRA TURN!", "#a855f7");
+                        } else if (cardData.name === "Counterspell") {
+                            if (opponentCards.length > 0) {
+                                let bestIdx = 0;
+                                for (let k = 1; k < opponentCards.length; k++) {
+                                    if (opponentCards[k].cost > opponentCards[bestIdx].cost) bestIdx = k;
+                                }
+                                const dispelled = opponentCards.splice(bestIdx, 1)[0];
+                                if (opponentHand.children[bestIdx]) {
+                                    opponentHand.removeChild(opponentHand.children[bestIdx]);
+                                }
+                                const w = arenaCanvas.width || 800, h = arenaCanvas.height || 220;
+                                spawnFloater(w * 0.78, h * 0.35, `BANISHED ${dispelled.name.toUpperCase()}!`, "#c084fc");
+                            }
+                        } else if (cardData.name === "Polymorph") {
+                            opponentShield = 0;
+                            const w = arenaCanvas.width || 800, h = arenaCanvas.height || 220;
+                            spawnFloater(w * 0.78, h * 0.35, "BAAA! SHEEP!", "#fde047");
                         }
 
                         if (opponentHp <= 0) {
@@ -1457,6 +1486,32 @@
                     
                     if (cardData.name === "Arcane Intellect") {
                         drawCard(true); drawCard(true);
+                    } else if (cardData.name === "Time Warp") {
+                        opponentMana = opponentMaxMana;
+                        drawCard(true);
+                        const w = arenaCanvas.width || 800, h = arenaCanvas.height || 220;
+                        spawnFloater(w * 0.78, h * 0.35, "EXTRA TURN!", "#a855f7");
+                    } else if (cardData.name === "Counterspell") {
+                        if (playerHand.children.length > 0) {
+                            let bestIdx = 0;
+                            let maxCost = -1;
+                            for (let k = 0; k < playerHand.children.length; k++) {
+                                const cD = playerHand.children[k].cardData;
+                                if (cD && cD.cost > maxCost) {
+                                    maxCost = cD.cost;
+                                    bestIdx = k;
+                                }
+                            }
+                            const lostEl = playerHand.children[bestIdx];
+                            const lostName = lostEl && lostEl.cardData ? lostEl.cardData.name : "Spell";
+                            if (lostEl) playerHand.removeChild(lostEl);
+                            const w = arenaCanvas.width || 800, h = arenaCanvas.height || 220;
+                            spawnFloater(w * 0.22, h * 0.35, `DISPELLED ${lostName.toUpperCase()}!`, "#c084fc");
+                        }
+                    } else if (cardData.name === "Polymorph") {
+                        playerShield = 0;
+                        const w = arenaCanvas.width || 800, h = arenaCanvas.height || 220;
+                        spawnFloater(w * 0.22, h * 0.35, "BAAA! SHEEP!", "#fde047");
                     }
                     
                     if (playerHp <= 0) {

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KWizard
   kilo_usability: KImage
-  kilo_graphics: KWizard
+  kilo_graphics: KStarship
   kilo_qa: KMystery
   kilo_expander: KTodo
   kilo_creator: "kweb://portal (Yahoo/Excite 1999 Directory Upgrade: simulated search, live stocks, classifieds)"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-usability
-  app: KGraph
-  timestamp: "2026-09-25T08:44:00Z"
+  agent: kilo-graphics
+  app: KWizard
+  timestamp: "2026-09-25T09:51:00Z"
 last_planner_run: "2026-09-25T06:42:00Z"
 ---
 
@@ -106,9 +106,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KWizard`
+- **Current Target**: `KStarship`
 - **Upcoming Queue**:
-  `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`.
+  `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KWizard`
@@ -202,6 +202,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-25T09:51:00Z — kilo-graphics: KWizard (Visual Polish, Glint Purge & Spell Balance Pass)**
+  - Status: PASS ✅ (Perimeter dots & rotating glints purged; Time Warp, Counterspell & Cold Snap activated; 0 regressions).
+  - Glint Purge: Removed rotating staff ring and orbital perimeter dots from arcane runic circle in web and Win32 C.
+  - Visual Polish: Rendered static, period-accurate gold runes, cardinal filigree brackets, and stable arcane chamber floor.
+  - Spell Mechanics: Activated Time Warp (refills mana + draws card), Counterspell (banishes high-cost card), and Polymorph (dispels shield).
+  - Balance & Audio: Buffed Cold Snap to 3 dmg + 2 freeze; added bubbling poison audio SFX across web & native Beep synth.
+  - Verification: Clean MSVC compile (`KWizard.exe` 10.4 KB); Vite clean build in 439ms (`kwizard.html` 83.9 KB); security lint 100% PASS.
+
 - **2026-09-25T08:44:00Z — kilo-usability: KGraph (UI/UX, Layout & Usability Polish)**
   - Status: PASS ✅ (Collapsible sidebar, HiDPI rendering, touch pinch-to-zoom & toast de-occlusion; 0 regressions).
   - Responsive & Layout: Added collapsible function sidebar with Ctrl+B/backslash hotkeys, canvas expand button, and mobile media queries.
@@ -236,14 +244,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Interoperability & Live Sync: ANSI SQL dump (.sql), CSV, JSON, Markdown & printable HTML export; Firebase RTDB live room synchronization.
   - Native C Upgrade: Added SQL dump export (IDC_EXPORT_SQL) to Win32 C interface; clean MSVC build (`KDB.exe` 65.0 KB).
   - Verification: Vite clean build in 355ms (`kdb.html` 93.6 KB); security lint 100% PASS; icons verified; strictly <999KB.
-
-- **2026-09-25T03:53:00Z — kilo-qa: KMech (Pass 5: Tutorial & State Integrity)**
-  - Status: PASS ✅ (Combat state persistence, first-run tutorial guard & toast de-occlusion complete; 0 regressions).
-  - State Persistence: Upgraded Quicksave/Load (F5/F9) across web localStorage & native `kmech_save.dat` (v3) to capture active combat telemetry (enemy stats, limb targeting, limb damage, evasion, heat).
-  - Combat UI: Added [F9] Load button to combat zone header bar for seamless mid-battle restoration.
-  - Tutorial Integrity: Guarded startup welcome prompt behind `kmech_tutorialSeen` / `kmech_save` in web and first-run check launching Pilot's Manual in native C.
-  - Toast & Modals: Re-anchored toast container to bottom-center pill to prevent control occlusion in garage and battle.
-  - Verification: Clean MSVC compile (`KMech.exe` 31.7 KB); Vite clean build in 381ms (`kmech.html` 108.2 KB); security lint 100% PASS; <999KB ceiling.
 
 
 
