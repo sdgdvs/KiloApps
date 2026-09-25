@@ -565,19 +565,19 @@
     /* Toast Notification */
     #toast {
       position: fixed;
-      bottom: 24px;
+      top: 54px;
       left: 50%;
-      transform: translateX(-50%) translateY(40px);
+      transform: translateX(-50%) translateY(-20px);
       background: rgba(24, 24, 37, 0.95);
       color: #f9e2af;
       border: 1px solid #89b4fa;
       box-shadow: 0 8px 24px rgba(0,0,0,0.8), 0 0 14px rgba(137, 180, 250, 0.3);
       border-radius: 8px;
-      padding: 10px 22px;
+      padding: 8px 20px;
       font-size: 0.85rem;
       font-weight: 600;
       z-index: 10000;
-      pointer-events: auto;
+      pointer-events: none;
       cursor: pointer;
       opacity: 0;
       transition: all 0.25s ease-out;
@@ -587,6 +587,7 @@
     #toast.show {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
     }
   </style>
 </head>
@@ -1584,10 +1585,6 @@
         }
         ctx.fillStyle = bladeC;
         ctx.fillRect(0, -30, 6, 35);
-        // Specular glint sheen sweep
-        const glintY = -30 + ((frame * 1.5) % 35);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-        ctx.fillRect(0, glintY, 6, 3);
         ctx.fillStyle = hiltC;
         ctx.fillRect(-6, 2, 18, 4);
         ctx.restore();
@@ -1650,10 +1647,6 @@
           ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.stroke();
         }
         ctx.fillRect(0, 0, 4, 25);
-        // Dagger glint
-        const dGlintY = ((frame * 1.8) % 25);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-        ctx.fillRect(0, dGlintY, 4, 2);
         ctx.restore();
 
         ctx.save();
@@ -1665,8 +1658,6 @@
         }
         ctx.fillStyle = bladeC;
         ctx.fillRect(0, 0, 4, 25);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-        ctx.fillRect(0, dGlintY, 4, 2);
         ctx.restore();
       }
 
@@ -3032,24 +3023,37 @@
 
     function saveSlot(slotNum) {
       const data = {
-        player: player,
+        player: JSON.parse(JSON.stringify(player)),
+        savedState: (currentState === STATE.SAVE_LOAD || currentState === STATE.CHAR_CREATE || currentState === STATE.GAME_OVER) ? STATE.TOWN : currentState,
+        savedEnemy: currentEnemy ? JSON.parse(JSON.stringify(currentEnemy)) : null,
         ngLevel: player.ngLevel || 0,
         achievements: player.achievements || [0,0,0,0,0,0,0,0,0,0],
         savedAt: new Date().toLocaleString()
       };
-      localStorage.setItem('kquest_save_slot_' + slotNum, JSON.stringify(data));
-      unlockAchievement(9);
-      const slotLabel = slotNum === 0 ? 'Quick Save Slot' : `Slot ${slotNum}`;
-      showToast(`💾 Game saved to ${slotLabel}!`, 2500);
-      logMsg(`💾 Game saved to ${slotLabel} successfully!`, 'system');
-      if (currentState === STATE.SAVE_LOAD) {
-        renderSaveLoad();
+      try {
+        localStorage.setItem('kquest_save_slot_' + slotNum, JSON.stringify(data));
+        unlockAchievement(9);
+        const slotLabel = slotNum === 0 ? 'Quick Save Slot (F5)' : `Slot ${slotNum}`;
+        showToast(`💾 Game saved to ${slotLabel}!`, 2500);
+        logMsg(`💾 Game saved to ${slotLabel} successfully!`, 'system');
+        if (currentState === STATE.SAVE_LOAD) {
+          renderSaveLoad();
+        }
+      } catch (err) {
+        showToast('⚠️ Storage quota exceeded or disabled! Export JSON instead.', 3500);
+        logMsg('⚠️ Storage quota error while saving. Please use Export JSON.', 'warning');
       }
     }
 
     function loadSlot(slotNum) {
-      const raw = localStorage.getItem('kquest_save_slot_' + slotNum);
-      const slotLabel = slotNum === 0 ? 'Quick Save Slot' : `Slot ${slotNum}`;
+      const slotLabel = slotNum === 0 ? 'Quick Save Slot (F9)' : `Slot ${slotNum}`;
+      let raw = null;
+      try {
+        raw = localStorage.getItem('kquest_save_slot_' + slotNum);
+      } catch (e) {
+        showToast('❌ Unable to access local storage.', 2500);
+        return;
+      }
       if (!raw) {
         showToast(`❌ ${slotLabel} is empty!`, 2500);
         logMsg(`❌ ${slotLabel} is empty!`, 'warning');
@@ -3060,10 +3064,20 @@
         player = data.player;
         if (data.ngLevel !== undefined) player.ngLevel = data.ngLevel;
         if (data.achievements) player.achievements = data.achievements;
-        localStorage.setItem('kquest_tutorialSeen', 'true');
+        if (data.savedEnemy) {
+          currentEnemy = data.savedEnemy;
+        } else {
+          currentEnemy = null;
+        }
+        try { localStorage.setItem('kquest_tutorialSeen', 'true'); } catch (_) {}
         showToast(`📂 Loaded ${slotLabel}! Welcome back, ${player.name}!`, 2500);
         logMsg(`📂 Loaded ${slotLabel}! Welcome back, ${player.name}!`, 'system');
-        setGameState(STATE.TOWN);
+
+        if (data.savedState && data.savedState !== STATE.CHAR_CREATE && data.savedState !== STATE.SAVE_LOAD && data.savedState !== STATE.GAME_OVER) {
+          setGameState(data.savedState);
+        } else {
+          setGameState(STATE.TOWN);
+        }
       } catch (e) {
         showToast(`❌ Error loading ${slotLabel}!`, 2500);
         logMsg(`❌ Error loading ${slotLabel}!`, 'warning');
@@ -3072,7 +3086,9 @@
 
     function deleteSlot(slotNum) {
       const slotLabel = slotNum === 0 ? 'Quick Save Slot' : `Slot ${slotNum}`;
-      localStorage.removeItem('kquest_save_slot_' + slotNum);
+      try {
+        localStorage.removeItem('kquest_save_slot_' + slotNum);
+      } catch (_) {}
       logMsg(`🗑️ ${slotLabel} cleared.`, 'system');
       renderSaveLoad();
     }
@@ -3345,10 +3361,12 @@
 
       logMsg(`Welcome, ${player.name} the ${player.class}! Your journey begins in Oakhaven Town.`, 'system');
       setGameState(STATE.TOWN);
-      if (!localStorage.getItem('kquest_tutorialSeen')) {
-        localStorage.setItem('kquest_tutorialSeen', 'true');
-        openHelpModal('play');
-      }
+      try {
+        if (!localStorage.getItem('kquest_tutorialSeen')) {
+          localStorage.setItem('kquest_tutorialSeen', 'true');
+          openHelpModal('play');
+        }
+      } catch (_) {}
     }
 
     // --- TOWN HUB ---
@@ -6040,7 +6058,23 @@
 
     // Global Hotkey Listener for Quick Help & Action Keys
     window.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        if (e.key === 'Enter' && e.target.id === 'name-input') {
+          e.preventDefault();
+          e.target.blur();
+          confirmCharacter();
+        }
+        return;
+      }
+
+      const helpModal = document.getElementById('help-modal-overlay');
+      if (helpModal && helpModal.style.display === 'flex') {
+        if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          closeHelpModal();
+          return;
+        }
+      }
 
       if (g_BindingAction !== -1) {
         e.preventDefault();
@@ -6049,6 +6083,28 @@
         g_BindingAction = -1;
         setGameState(STATE.CONFIG);
         return;
+      }
+
+      if (currentState === STATE.CHAR_CREATE) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          confirmCharacter();
+          return;
+        }
+        if (['1', '2', '3', '4', '5'].includes(e.key)) {
+          e.preventDefault();
+          const classes = ['Warrior', 'Mage', 'Rogue', 'Paladin', 'Ranger'];
+          selectClass(classes[parseInt(e.key) - 1]);
+          return;
+        }
+      }
+
+      if (currentState === STATE.GAME_OVER) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          resetGame();
+          return;
+        }
       }
 
       if (e.key === 'F5') {
@@ -6066,10 +6122,7 @@
         e.preventDefault();
         toggleHelpModal();
       } else if (e.key === 'Escape') {
-        const modal = document.getElementById('help-modal-overlay');
-        if (modal && modal.style.display === 'flex') {
-          closeHelpModal();
-        } else if (currentState !== STATE.TOWN && currentState !== STATE.CHAR_CREATE && currentState !== STATE.COMBAT && currentState !== STATE.ARMY_BATTLE && currentState !== STATE.CASTLE_DEFENSE) {
+        if (currentState !== STATE.TOWN && currentState !== STATE.CHAR_CREATE && currentState !== STATE.COMBAT && currentState !== STATE.ARMY_BATTLE && currentState !== STATE.CASTLE_DEFENSE) {
           setGameState(STATE.TOWN);
           showToast('🏰 Returned to Town Square [Esc]', 2000);
           logMsg('Returned to Town Square.', 'town');
@@ -6148,15 +6201,21 @@
     function exportScoreJSON() {
         const payload = {
             player: player,
+            savedState: (currentState === STATE.SAVE_LOAD || currentState === STATE.CHAR_CREATE || currentState === STATE.GAME_OVER) ? STATE.TOWN : currentState,
+            savedEnemy: currentEnemy ? currentEnemy : null,
             ngLevel: player.ngLevel || 0,
             achievements: player.achievements || [0,0,0,0,0,0,0,0,0,0],
             savedAt: new Date().toLocaleString()
         };
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = dataStr;
+        a.href = url;
         a.download = "kquest_save.json";
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
         showToast('💾 Save File JSON Exported!', 2500);
         logMsg('💾 Save File JSON Exported!', 'system');
     }
@@ -6172,6 +6231,7 @@
                         player = imported.player;
                         if (imported.ngLevel !== undefined) player.ngLevel = imported.ngLevel;
                         if (imported.achievements) player.achievements = imported.achievements;
+                        if (imported.savedEnemy) currentEnemy = imported.savedEnemy;
                     } else if (imported.name) {
                         player = imported;
                     } else {
@@ -6179,10 +6239,14 @@
                         logMsg('❌ Invalid JSON format.', 'warning');
                         return;
                     }
-                    localStorage.setItem('kquest_tutorialSeen', 'true');
+                    try { localStorage.setItem('kquest_tutorialSeen', 'true'); } catch (_) {}
                     showToast('📂 Save File JSON Imported Successfully!', 2500);
                     logMsg('📂 Save File JSON Imported Successfully!', 'system');
-                    setGameState(STATE.TOWN);
+                    if (imported.savedState && imported.savedState !== STATE.CHAR_CREATE && imported.savedState !== STATE.SAVE_LOAD && imported.savedState !== STATE.GAME_OVER) {
+                        setGameState(imported.savedState);
+                    } else {
+                        setGameState(STATE.TOWN);
+                    }
                 } else {
                     showToast('❌ Invalid JSON format.', 3000);
                     logMsg('❌ Invalid JSON format.', 'warning');
@@ -6193,6 +6257,7 @@
             }
         };
         reader.readAsText(file);
+        event.target.value = '';
     }
 
   </script>

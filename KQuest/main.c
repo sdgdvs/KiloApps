@@ -551,7 +551,32 @@ typedef struct {
     BountyContract activeBounties[3];
     int activeBountyCount;
     char timestamp[32];
+} OldSaveSlotData;
+
+typedef struct {
+    char magic[8]; // "KQUEST13"
+    int ngLevel;
+    int achievements[10];
+    Hero hero;
+    BountyContract activeBounties[3];
+    int activeBountyCount;
+    char timestamp[32];
+    int savedGameState;
+    Enemy savedEnemy;
 } SaveSlotData;
+
+static int CheckFirstRunTutorial() {
+    HANDLE hFile = CreateFileA("kquest_tutorial.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFile);
+        return 0;
+    }
+    hFile = CreateFileA("kquest_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFile);
+    }
+    return 1;
+}
 
 void LogMessage(const char* msg);
 void SetupButtons();
@@ -637,12 +662,14 @@ void SaveToSlot(int slotIdx) {
     }
     SaveSlotData data;
     my_memset(&data, 0, sizeof(SaveSlotData));
-    lstrcpyA(data.magic, "KQUEST12");
+    lstrcpyA(data.magic, "KQUEST13");
     data.ngLevel = player.ngLevel;
     my_memcpy(data.achievements, g_Achievements, sizeof(g_Achievements));
     my_memcpy(&data.hero, &player, sizeof(Hero));
     my_memcpy(data.activeBounties, g_ActiveBounties, sizeof(g_ActiveBounties));
     data.activeBountyCount = g_ActiveBountyCount;
+    data.savedGameState = (gameState == STATE_SAVE_LOAD || gameState == STATE_HELP || gameState == STATE_CHAR_CREATE) ? STATE_TOWN : gameState;
+    my_memcpy(&data.savedEnemy, &currentEnemy, sizeof(Enemy));
 
     SYSTEMTIME st;
     GetLocalTime(&st);
@@ -674,17 +701,30 @@ void LoadFromSlot(int slotIdx) {
     ReadFile(hFile, &data, sizeof(SaveSlotData), &bytesRead, NULL);
     CloseHandle(hFile);
 
-    if (bytesRead == sizeof(SaveSlotData) && lstrcmpA(data.magic, "KQUEST12") == 0) {
+    int isV13 = (bytesRead == sizeof(SaveSlotData) && lstrcmpA(data.magic, "KQUEST13") == 0);
+    int isV12 = (bytesRead >= sizeof(OldSaveSlotData) && (lstrcmpA(data.magic, "KQUEST12") == 0 || lstrcmpA(data.magic, "KQUEST13") == 0));
+
+    if (isV13 || isV12) {
         player = data.hero;
         player.ngLevel = data.ngLevel;
         my_memcpy(g_Achievements, data.achievements, sizeof(g_Achievements));
         my_memcpy(g_ActiveBounties, data.activeBounties, sizeof(g_ActiveBounties));
         g_ActiveBountyCount = data.activeBountyCount;
 
+        if (isV13 && data.savedGameState > 0) {
+            gameState = data.savedGameState;
+            currentEnemy = data.savedEnemy;
+        } else {
+            gameState = STATE_TOWN;
+        }
+
+        // Ensure tutorial flag is marked seen so loaded save states are never interrupted
+        HANDLE hTut = CreateFileA("kquest_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTut != INVALID_HANDLE_VALUE) CloseHandle(hTut);
+
         char msg[128];
         wsprintfA(msg, "📂 Loaded Save Slot %d! Welcome back, %s!", slotIdx + 1, player.name);
         LogMessage(msg);
-        gameState = STATE_TOWN;
         SetupButtons();
         UpdateUI();
     } else {
@@ -715,7 +755,7 @@ void GetSlotSummary(int slotIdx, char* outBuf, int maxLen) {
     ReadFile(hFile, &data, sizeof(SaveSlotData), &bytesRead, NULL);
     CloseHandle(hFile);
 
-    if (bytesRead == sizeof(SaveSlotData) && lstrcmpA(data.magic, "KQUEST12") == 0) {
+    if (bytesRead >= sizeof(OldSaveSlotData) && (lstrcmpA(data.magic, "KQUEST13") == 0 || lstrcmpA(data.magic, "KQUEST12") == 0)) {
         char ng[16] = "";
         if (data.ngLevel > 0) wsprintfA(ng, " NG+%d", data.ngLevel);
         wsprintfA(outBuf, "[Slot %d]: %s (Lvl %d %s, Fl %d, %dG%s) Saved: %s",
@@ -4419,12 +4459,6 @@ void DrawGdiHeroSprite(HDC hdc, int x, int y, const char* heroClass, int frame, 
         }
         SelectObject(hdc, hOldP); DeleteObject(hSwP);
 
-        // Specular glint sheen sweep on blade
-        int glintY = -15 + ((frame * 2) % 30);
-        HPEN hGlintP = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
-        HPEN hOldGP = (HPEN)SelectObject(hdc, hGlintP);
-        MoveToEx(hdc, x + 13, sy + glintY, NULL); LineTo(hdc, x + 16, sy + glintY);
-        SelectObject(hdc, hOldGP); DeleteObject(hGlintP);
     }
 
     // Weapon Rune / Prefix Sheen
@@ -5113,12 +5147,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             SetTimer(hwnd, 1, 40, NULL);
 
+            int isFirstRun = CheckFirstRunTutorial();
             InitHero(0);
             SetupButtons();
             UpdateUI();
             LogMessage("=== Welcome to KQuest: Fantasy Dungeon RPG ===");
-            LogMessage("Press 'H' at any time to view the Help & Codex.");
-            LogMessage("Phase 14: Comprehensive Help & Lore Codex Active (Press F1 / H or click Help)!");
+            LogMessage("Press 'H' or 'F1' at any time to view the Help & Lore Codex.");
+            LogMessage("Hotkeys: [1-6] Actions | [F5/S] Quick Save | [F9/L] Quick Load/Manager | [Esc] Back");
+            if (isFirstRun) {
+                g_HelpTab = 0;
+                gameState = STATE_HELP;
+                SetupButtons();
+                UpdateUI();
+                LogMessage("📖 Tutorial: Welcome to your first quest! Press [Esc] or click [Back to Town] to begin.");
+            }
             break;
         }
         case WM_TIMER:
@@ -5149,9 +5191,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
-                if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return 0; }
-    if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return 0; }
-    if (gameState == STATE_HELP) {
+                if (gameState == STATE_HELP) {
                     gameState = STATE_TOWN;
                     LogMessage("Closed Help Overlay. Returned to Town.");
                 } else {

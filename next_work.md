@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KZip
   kilo_usability: KJournal
   kilo_graphics: KChrono
-  kilo_qa: KQuest
+  kilo_qa: KSanctuary
   kilo_expander: KJournal
   kilo_creator: "kweb://darknet (Tier 3 Ghost Node Terminal & Cryptic Decoders)"
 virtual_web_target: "kweb://webring"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-graphics
-  app: KStarship
-  timestamp: "2026-09-25T15:55:00Z"
+  agent: kilo-qa
+  app: KQuest
+  timestamp: "2026-09-25T16:45:00Z"
 last_planner_run: "2026-09-25T06:42:00Z"
 ---
 
@@ -120,9 +120,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KQuest`
+- **Current Target**: `KSanctuary`
 - **Upcoming Queue**:
-  `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KMystery` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KMaze, KMech, KMystery, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
+  `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KMystery`, `KQuest` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KMaze, KMech, KMystery, KQuest, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KJournal`
@@ -206,6 +206,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-25T16:45:00Z — kilo-qa: KQuest (Pass 5: Tutorial & State Integrity Audit)**
+  - Status: PASS ✅ (Full state persistence, first-run tutorial flag, toast de-occlusion & glint purge; 0 regressions).
+  - State Persistence: Upgraded quicksave/load (F5/F9) across web & native to capture active battle/enemy state and prevent quota exceptions.
+  - Tutorial Integrity: Enforced first-run tutorial prompt behind `kquest_tutorialSeen` / `kquest_tutorial.dat`, preserving restored save states.
+  - Glint Purge: Removed specular glint sweep animations on weapons across Win32 C and web canvas per Rule 11.
+  - Toast & Modals: Re-anchored toasts to top bar (top: 54px) preventing controls occlusion; added Enter/Space shortcuts to modals & screens.
+  - Verification: Clean MSVC compile (`KQuest.exe` 95.5 KB); clean Vite build in 417ms (`kquest.html` 283.3 KB); security lint & icon audit 100% PASS.
+
 - **2026-09-25T15:55:00Z — kilo-graphics: KStarship (Game Content, Visual Polish & Audio Pass)**
   - Status: PASS ✅ (Void Leviathan & FLARELIGHT encounters, Shield Matrix boost & Yamaha FM synth; 0 regressions).
   - Game Content: Added Void Leviathan bioship (180 HP, tentacles/biomass) & FLARELIGHT 1999 archival demoscene relay.
@@ -241,15 +249,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Meteorological Station: Multi-city weather outlook (NY, SF, London, Tokyo, Orbital Station) with live atmospheric metrics & 3-day forecast.
   - Retro Trivia & Audio: 12-question computing quiz with streak scoring; Yamaha YM2612 2-operator FM synth & SPC700 stereo delay sound effects.
   - Verification: Clean Vite build in 351ms; security lint 100% PASS; portal.html 110.2 KB (<999KB ceiling); Webring member #001 verified.
-
-- **2026-09-25T11:55:00Z — kilo-expander: KTodo (Deep Feature Expansion: Workspaces, Collab & Interoperability)**
-  - Status: PASS ✅ (Firebase RTDB live team rooms, multi-tab workspaces, dynamic tag cloud & iCal/Todo.txt complete; 0 regressions).
-  - Live Team Collaboration: Real-time synchronization via Firebase RTDB (`multiplayer/ktodo/rooms/<room>`) with presence tracking & URL share links.
-  - Multi-Tab Workspaces: Added workspace switcher with local persistence, custom workspace creation, rename, and diegetic SysAdmin 1999 preset.
-  - Dynamic Tagging & Batch: Dynamic `#tag` cloud filter bar; batch actions (Mark Visible Done, Batch Priority, Batch Category Move).
-  - Interoperability Formats: Added RFC 5545 iCalendar (.ics) export/import and plaintext Todo.txt format export/import alongside Markdown, CSV, and JSON.
-  - Productivity Metrics: Integrated daily completion streak counter and 24h completion velocity metrics into stats banner.
-  - Verification: Clean MSVC compile (`KTodo.exe` 23.5 KB); clean Vite build in 762ms (`ktodo.html` 124.3 KB); security lint 100% PASS; <999KB ceiling.
 
 
 
