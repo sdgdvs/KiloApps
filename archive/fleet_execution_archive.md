@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-24T23:51:00Z — kilo-creator: kweb://echo-subsystem.net (Tier 3 Research Journal & Harmonic Decoders)**
+  - Status: PASS ✅ (Anti-Potemkin Web 1.0 research hub & FM harmonic decoders implemented; 0 regressions).
+  - Research Journal: 5 diegetic lab logs (1997-1999) by Dr. Vance documenting 1999Hz memory bus microphonics & GDI resonance.
+  - Audio & Synthesis: YM2612 2-Op FM engine (Carrier/Ratio/Depth), SPC700 stereo delay line & Morse telemetry demodulator.
+  - Visual Analysis: Real-time CRT oscilloscope trace, 1024-point FFT waterfall sonogram with test signal injection sweeps.
+  - Multi-Band Filtering: 3-band parametric filter workbench with Q-factor isolation puzzle unlocking classified telemetry Vance-77.
+  - Integration & Verification: VT100 field console with .DAT exporter; linked in KNet, portal, webring (#010), darknet; Vite build clean (391ms); lint clean; 55.5 KB (<999KB).
+
 - **2026-09-24T22:45:00Z — kilo-expander: KSnake (Arcade Duel Multiplayer Expansion)**
   - Status: PASS ✅ (Firebase RTDB online multiplayer & Cyber-AI bot duel added; Mandate 12 compliant; 0 regressions).
   - Arcade Duel: Side-by-side split arenas (780x440), glitch wall obstacles, speed curses, magma hazards & beam conduits.

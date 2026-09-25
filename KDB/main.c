@@ -21,11 +21,12 @@
 #define IDC_HELP_BTN 114
 #define IDC_STATS_BTN 115
 #define IDC_EXPORT_MD 116
+#define IDC_EXPORT_SQL 117
 
 HWND hListView;
 HWND hSearch;
 HWND hAddId, hAddName, hAddDept, hAddRole, hAddBtn, hDelBtn;
-HWND hPwd, hExpCSV, hImpCSV, hExpJSON, hImpJSON, hExpMD, hStatsBtn, hReload, hHelpBtn;
+HWND hPwd, hExpCSV, hImpCSV, hExpJSON, hImpJSON, hExpMD, hExpSQL, hStatsBtn, hReload, hHelpBtn;
 HFONT hFont;
 HBRUSH hBgBrush;
 HBRUSH hEditBgBrush;
@@ -613,6 +614,31 @@ void ExportMarkdown(HWND hwnd) {
     }
 }
 
+void ExportSQL(HWND hwnd) {
+    char path[MAX_PATH];
+    if (PromptFile(hwnd, path, 1, "SQL Files\0*.sql\0All Files\0*.*\0", "sql")) {
+        HANDLE hFile = CreateFileA(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD w;
+            const char* header = "-- KDB Database SQL Dump\r\n-- Generated on 1999 Enterprise Suite\r\n\r\nCREATE TABLE employees (\r\n  id VARCHAR(16) PRIMARY KEY,\r\n  name VARCHAR(64) NOT NULL,\r\n  dept VARCHAR(64),\r\n  role VARCHAR(64)\r\n);\r\n\r\n";
+            WriteFile(hFile, header, lstrlenA(header), &w, NULL);
+            if (data_count > 0) {
+                const char* insHdr = "INSERT INTO employees (id, name, dept, role) VALUES\r\n";
+                WriteFile(hFile, insHdr, lstrlenA(insHdr), &w, NULL);
+                char line[256];
+                for (int i = 0; i < data_count; i++) {
+                    wsprintfA(line, "('%s', '%s', '%s', '%s')%s\r\n",
+                        data[i].id, data[i].name, data[i].dept, data[i].role,
+                        (i == data_count - 1) ? ";" : ",");
+                    WriteFile(hFile, line, lstrlenA(line), &w, NULL);
+                }
+            }
+            CloseHandle(hFile);
+            MessageBoxA(hwnd, "Exported SQL statements successfully.", "Success", MB_OK);
+        }
+    }
+}
+
 void ShowStats(HWND hwnd) {
     char depts[64][64];
     int dept_counts[64] = {0};
@@ -714,7 +740,8 @@ void InitListView(HWND hwnd) {
     hExpJSON = CreateWindowEx(0, "BUTTON", "JSON [J]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 503, 10, 66, 25, hwnd, (HMENU)IDC_EXPORT_JSON, GetModuleHandle(NULL), NULL);
     hImpJSON = CreateWindowEx(0, "BUTTON", "Imp [O]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 572, 10, 64, 25, hwnd, (HMENU)IDC_IMPORT_JSON, GetModuleHandle(NULL), NULL);
     hExpMD = CreateWindowEx(0, "BUTTON", "MD [M]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 639, 10, 58, 25, hwnd, (HMENU)IDC_EXPORT_MD, GetModuleHandle(NULL), NULL);
-    hHelpBtn = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 700, 10, 70, 25, hwnd, (HMENU)IDC_HELP_BTN, GetModuleHandle(NULL), NULL);
+    hExpSQL = CreateWindowEx(0, "BUTTON", "SQL", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 700, 10, 52, 25, hwnd, (HMENU)IDC_EXPORT_SQL, GetModuleHandle(NULL), NULL);
+    hHelpBtn = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 755, 10, 68, 25, hwnd, (HMENU)IDC_HELP_BTN, GetModuleHandle(NULL), NULL);
     
     g_pfnOrigSearchProc = (WNDPROC)SetWindowLongPtrA(hSearch, GWLP_WNDPROC, (LONG_PTR)SearchSubclassProc);
 
@@ -752,6 +779,7 @@ void InitListView(HWND hwnd) {
     SendMessage(hExpJSON, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hImpJSON, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hExpMD, WM_SETFONT, (WPARAM)hFont, TRUE);
+    SendMessage(hExpSQL, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hHelpBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
     
     SendMessage(hAddId, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -862,6 +890,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 PopulateListView(buf);
             } else if (LOWORD(wParam) == IDC_EXPORT_MD) {
                 ExportMarkdown(hwnd);
+            } else if (LOWORD(wParam) == IDC_EXPORT_SQL) {
+                ExportSQL(hwnd);
             } else if (LOWORD(wParam) == IDC_HELP_BTN) {
                 ShowHelpDialog(hwnd);
             } else if (LOWORD(wParam) == IDC_ADD_BTN) {
@@ -955,7 +985,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hPwd, 10, 10, 85, 25, TRUE);
             MoveWindow(hReload, 98, 10, 60, 25, TRUE);
             
-            int btnSpace = 485;
+            int btnSpace = 540;
             int sh = nw - 165 - btnSpace - 20;
             if (sh < 80) sh = 80;
             MoveWindow(hSearch, 163, 10, sh, 25, TRUE);
@@ -967,7 +997,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hExpJSON, rx + 193, 10, 66, 25, TRUE);
             MoveWindow(hImpJSON, rx + 262, 10, 64, 25, TRUE);
             MoveWindow(hExpMD, rx + 329, 10, 58, 25, TRUE);
-            MoveWindow(hHelpBtn, rx + 390, 10, 70, 25, TRUE);
+            MoveWindow(hExpSQL, rx + 390, 10, 52, 25, TRUE);
+            MoveWindow(hHelpBtn, rx + 445, 10, 68, 25, TRUE);
 
             MoveWindow(hListView, 10, 45, nw - 20, nh - 90, TRUE);
             
