@@ -102,7 +102,8 @@
   .dissector-table td { padding: 7px 10px; border-bottom: 1px solid #e2e8f0; font-family: "Consolas", monospace; color: #1e293b; }
   .dissector-table tr:hover td { background: #f8fafc; }
 
-  #toastNotification { display: none; position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: #fff; padding: 10px 18px; border-radius: 6px; box-shadow: 0 4px 14px rgba(0,0,0,0.3); font-size: 12px; z-index: 2000; cursor: pointer; border-left: 4px solid #3b82f6; }
+  #toastNotification { display: none; position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: #1e293b; color: #fff; padding: 10px 22px; border-radius: 20px; box-shadow: 0 4px 18px rgba(0,0,0,0.35); font-size: 12px; font-weight: 500; z-index: 2000; cursor: pointer; border-bottom: 2px solid #3b82f6; max-width: 90vw; text-align: center; pointer-events: auto; }
+  #toastNotification:hover { background: #273142; }
 
   #helpOverlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
   #helpOverlay.visible { display: flex; animation: fadeIn 0.15s ease-out; }
@@ -111,6 +112,18 @@
   .help-modal ul { margin-bottom: 14px; line-height: 1.6; font-size: 13px; color: #334155; }
   .help-close-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: #64748b; padding: 0 4px; line-height: 1; }
   .help-close-btn:hover { color: #0f172a; }
+
+  :focus-visible { outline: 2px solid #3b82f6; outline-offset: 1px; }
+  .tab-btn:focus-visible { outline: 2px solid #3b82f6; outline-offset: -2px; }
+
+  @media (max-width: 768px) {
+    .header { padding: 8px 12px; gap: 8px; }
+    .main { flex-direction: column; }
+    .sidebar { width: 100%; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid #e1e4e8; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+    .tab-btn { padding: 8px 12px; border-bottom: none; border-right: 1px solid #f0f2f5; flex-shrink: 0; gap: 6px; }
+    .tab-btn.active { border-left: none; border-bottom: 3px solid #0066cc; }
+    .content { padding: 14px 16px; }
+  }
 </style>
 </head>
 <body>
@@ -373,6 +386,10 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
 
         <h3>String Run &amp; Glyph Advance Dissector</h3>
         <p>Granular character-by-character analysis of the active text run showing advance widths, running coordinate X offsets, and encoding representations.</p>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+          <div id="dissectorCountInfo" style="font-size:12px; color:#64748b;"></div>
+          <button class="chip-btn" id="copyDissectorBtn">Copy Dissector Data [JSON]</button>
+        </div>
         <div style="overflow-x:auto;">
           <table class="dissector-table" id="dissectorTable">
             <thead>
@@ -424,6 +441,9 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">H</kbd> / <kbd style="background:#eee; padding:1px 5px; border-radius:3px;">F1</kbd> : Toggle this Help dialog</li>
         <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">Esc</kbd> : Dismiss Help dialog or Toast</li>
       </ul>
+      <div style="margin-top:16px; display:flex; justify-content:flex-end;">
+        <button class="action-btn" id="helpModalCloseBtn" style="padding:8px 18px; font-size:13px;">Close [Esc]</button>
+      </div>
     </div>
   </div>
   
@@ -629,19 +649,21 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       // Custom Pair calculation
       updateCustomPair();
 
-      // Hinting canvas
+      // Hinting canvas (responsive & crisp with HiDPI support)
       const canvas = document.getElementById('hintingCanvas');
       const ctx = canvas.getContext('2d');
       const dpr = window.devicePixelRatio || 1;
+      const containerW = canvas.parentElement ? canvas.parentElement.clientWidth : 840;
+      const displayW = Math.max(300, Math.min(840, containerW || 840));
       
-      if (canvas.width !== 840 * dpr) {
-        canvas.width = 840 * dpr;
-        canvas.height = 240 * dpr;
-        canvas.style.width = '840px';
+      if (canvas.width !== Math.floor(displayW * dpr)) {
+        canvas.width = Math.floor(displayW * dpr);
+        canvas.height = Math.floor(240 * dpr);
+        canvas.style.width = `${displayW}px`;
         canvas.style.height = '240px';
       }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, 840, 240);
+      ctx.clearRect(0, 0, displayW, 240);
       
       ctx.fillStyle = '#1e293b';
       const text = "Rasterization & Hinting Test: Pack my box with five dozen liquor jugs 12345";
@@ -778,7 +800,7 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       const canvas = document.getElementById('anatomyCanvas');
       const ctx = canvas.getContext('2d');
       const dpr = window.devicePixelRatio || 1;
-      const w = canvas.parentElement.clientWidth || 840;
+      const w = Math.max(320, (canvas.parentElement ? canvas.parentElement.clientWidth : 840) || 840);
       const h = 320;
 
       canvas.width = w * dpr;
@@ -804,7 +826,9 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       const advWidth = metrics.width;
 
       const baselineY = 220;
-      const originX = Math.max(80, Math.floor(w / 2 - advWidth / 2));
+      let originX = Math.floor(w / 2 - advWidth / 2);
+      if (originX < 60) originX = 60;
+      if (originX + advWidth > w - 40) originX = Math.max(30, w - advWidth - 40);
 
       const capH = fontAsc * 0.72;
       const xH = fontAsc * 0.50;
@@ -968,9 +992,12 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         const passAA = ratio >= 4.5;
         const passAAA = ratio >= 7.0;
         html += `
-          <div class="contrast-card" style="background:${p.bg}; color:${p.fg}; border-color:${p.bg === '#ffffff' ? '#cbd5e1' : '#334155'};">
+          <div class="contrast-card" data-fg="${escapeAttr(p.fg)}" data-bg="${escapeAttr(p.bg)}" data-name="${escapeAttr(p.name)}" title="Click to test ${escapeAttr(p.name)} in custom calculator" style="background:${p.bg}; color:${p.fg}; border-color:${p.bg === '#ffffff' ? '#cbd5e1' : '#334155'}; cursor:pointer;">
             <div>
-              <div style="font-size:11px; opacity:0.75; font-weight:600; text-transform:uppercase; margin-bottom:4px;">${escapeHtml(p.name)}</div>
+              <div style="font-size:11px; opacity:0.75; font-weight:600; text-transform:uppercase; margin-bottom:4px; display:flex; justify-content:space-between;">
+                <span>${escapeHtml(p.name)}</span>
+                <span style="font-size:10px; opacity:0.7;">Click to test</span>
+              </div>
               <div class="contrast-sample-text" style="font-family:'${safeFont}', sans-serif; font-weight:${weight}; font-style:${style};">KFont Retro 1999</div>
             </div>
             <div class="contrast-meta">
@@ -984,6 +1011,14 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         `;
       });
       document.getElementById('contrastGrid').innerHTML = html;
+      document.querySelectorAll('#contrastGrid .contrast-card').forEach(card => {
+        card.onclick = () => {
+          customFg.value = card.getAttribute('data-fg');
+          customBg.value = card.getAttribute('data-bg');
+          updateCustomContrast();
+          showToast(`Loaded "${card.getAttribute('data-name')}" into Custom Calculator`);
+        };
+      });
 
       // Update custom contrast
       updateCustomContrast();
@@ -1077,6 +1112,7 @@ body {
     function updateDissectorTable() {
       const text = sampleOutput.innerText || '';
       const tbody = document.getElementById('dissectorBody');
+      const countEl = document.getElementById('dissectorCountInfo');
       const safeFont = fontList.value.replace(/["\\]/g, '');
       const weight = boldCheck.checked ? 'bold' : 'normal';
       const style = italicCheck.checked ? 'italic' : 'normal';
@@ -1089,6 +1125,7 @@ body {
       let html = '';
       let count = 0;
       const chars = Array.from(text);
+      const totalChars = chars.filter(ch => ch !== '\n' && ch !== '\r').length;
 
       for (let i = 0; i < chars.length && count < 25; i++) {
         const ch = chars[i];
@@ -1115,6 +1152,9 @@ body {
         `;
       }
       tbody.innerHTML = html || '<tr><td colspan="8" style="text-align:center; color:#94a3b8; padding:16px;">Type sample text above to dissect run.</td></tr>';
+      if (countEl) {
+        countEl.textContent = count > 0 ? `Showing first ${count} of ${totalChars} glyphs in run (Total advance: ${cumX.toFixed(1)}px)` : '';
+      }
     }
     
     function updateSample() {
@@ -1312,6 +1352,40 @@ body {
       showToast("Cleared Sample Text");
     };
 
+    const copyDissectorBtn = document.getElementById('copyDissectorBtn');
+    if (copyDissectorBtn) {
+      copyDissectorBtn.onclick = () => {
+        const text = sampleOutput.innerText || '';
+        const canvas = document.getElementById('canvasMetrics');
+        const ctx = canvas.getContext('2d');
+        ctx.font = getFontString();
+        const chars = Array.from(text);
+        const data = [];
+        let cumX = 0;
+        let count = 0;
+        for (let i = 0; i < chars.length && count < 50; i++) {
+          const ch = chars[i];
+          if (ch === '\n' || ch === '\r') continue;
+          const info = getCharInfo(ch);
+          if (!info) continue;
+          const adv = ctx.measureText(ch).width;
+          cumX += adv;
+          count++;
+          data.push({
+            index: count,
+            glyph: ch,
+            unicode: info.hex,
+            advancePx: parseFloat(adv.toFixed(2)),
+            cumulativeXPx: parseFloat(cumX.toFixed(2)),
+            utf8Hex: info.utf8Hex,
+            htmlEntity: info.decEntity,
+            category: info.category
+          });
+        }
+        copyToClipboard(JSON.stringify(data, null, 2), "Copied Dissector Data [JSON] to clipboard!");
+      };
+    }
+
     if (toastNotification) {
       toastNotification.onclick = () => {
         toastNotification.style.display = 'none';
@@ -1350,24 +1424,40 @@ body {
     
     updateAll();
 
-    setTimeout(() => {
-      showToast("Welcome to KFont! Press F1 or H for Help & Shortcuts.");
-    }, 400);
+    // First-run tutorial onboarding flag
+    const tutorialSeen = safeGetStorage('kfont_tutorialSeen', '0');
+    if (tutorialSeen !== '1') {
+      setTimeout(() => {
+        showToast("Welcome to KFont! Press F1 or H for Help & Shortcuts.");
+      }, 400);
+      safeSetStorage('kfont_tutorialSeen', '1');
+    }
 
     window.addEventListener('resize', () => {
       updateAnatomy();
       updateDiagnostics();
     });
 
-    document.getElementById('helpBtn').addEventListener('click', () => {
+    function openHelp() {
       helpOverlay.classList.add('visible');
-    });
+      const closeBtn = document.getElementById('helpModalCloseBtn') || document.getElementById('helpCloseBtn');
+      if (closeBtn) closeBtn.focus();
+    }
+
+    function closeHelp() {
+      helpOverlay.classList.remove('visible');
+    }
+
+    document.getElementById('helpBtn').addEventListener('click', openHelp);
 
     const helpCloseBtn = document.getElementById('helpCloseBtn');
     if (helpCloseBtn) {
-      helpCloseBtn.onclick = () => {
-        helpOverlay.classList.remove('visible');
-      };
+      helpCloseBtn.onclick = closeHelp;
+    }
+
+    const helpModalCloseBtn = document.getElementById('helpModalCloseBtn');
+    if (helpModalCloseBtn) {
+      helpModalCloseBtn.onclick = closeHelp;
     }
 
     document.addEventListener('keydown', (e) => {
@@ -1390,21 +1480,25 @@ body {
 
       if (e.key === 'F1') {
         e.preventDefault();
-        helpOverlay.classList.toggle('visible');
+        if (helpOverlay.classList.contains('visible')) {
+          closeHelp();
+        } else {
+          openHelp();
+        }
         return;
       }
 
       if (e.ctrlKey || e.altKey || e.metaKey) return;
       if (helpOverlay.classList.contains('visible')) {
         if (e.key.toLowerCase() === 'h') {
-          helpOverlay.classList.remove('visible');
+          closeHelp();
         }
         return;
       }
 
       if (!isInput) {
         if (e.key.toLowerCase() === 'h') {
-          helpOverlay.classList.toggle('visible');
+          openHelp();
         } else if (e.key >= '1' && e.key <= '8') {
           const tabMap = [
             'panel-metrics', 'panel-glyphs', 'panel-diagnostics', 'panel-anatomy',

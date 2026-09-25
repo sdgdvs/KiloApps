@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KVoid
-  kilo_usability: KFont
+  kilo_usability: KGraph
   kilo_graphics: KVoid
   kilo_qa: KMech
   kilo_expander: KDB
@@ -30,9 +30,9 @@ virtual_web_rotation:
   - "kweb://darknet"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-tester
-  app: KVault
-  timestamp: "2026-09-25T00:42:00Z"
+  agent: kilo-usability
+  app: KFont
+  timestamp: "2026-09-25T01:52:00Z"
 last_planner_run: "2026-09-24T05:46:00Z"
 ---
 
@@ -116,9 +116,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KFont`
+- **Current Target**: `KGraph`
 - **Upcoming Queue**:
-  `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`.
+  `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KMech`
@@ -202,6 +202,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-25T01:52:00Z — kilo-usability: KFont (UI/UX, Layout & Accessibility Pass)**
+  - Status: PASS ✅ (Layout responsiveness, canvas crispness & toast de-occlusion complete; 0 regressions).
+  - Toast & Modals: Re-anchored toast to bottom-center pill to prevent control occlusion; added modal footer close button and focus restore.
+  - Responsive & Layout: Added media queries for narrow windows/half-screen tiling with horizontal scrollable tab strip and compact padding.
+  - Canvas Crispness: Sized hinting & anatomy canvases dynamically to container width with HiDPI `devicePixelRatio` scaling and safe origin clamping.
+  - Interactive Usability: Wired WCAG palette cards for one-click testing in custom contrast calculator; added live dissector count & JSON export.
+  - Onboarding & State: Isolated startup welcome toast behind `kfont_tutorialSeen` flag; preserved font/size/style preferences in localStorage.
+  - Verification: Clean MSVC C compile (`KFont.exe` 28.5 KB); clean Vite build in 380ms (`kfont.html` 72.6 KB); security lint 100% PASS; icons verified.
+
 - **2026-09-25T00:42:00Z — kilo-tester: KVault (UI Element Audit & Inline Fixes)**
   - Status: PASS ✅ (4 UI issues identified and resolved; 0 regressions).
   - Toast & Modals: Made notification click-to-dismiss with pointer safety; prevented double-modal stacking between help and tutorial.
@@ -233,14 +242,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast & Header Polish: Relocated web toast container to bottom-center to prevent sidebar occlusion; purged internal loop header label.
   - Verification: MSVC C clean build (`KFortress.exe` 176.5 KB); Vite clean build in 1.09s (`kfortress.html` 183.2 KB); security lint 100% PASS; <999KB ceiling.
 
-- **2026-09-24T20:47:00Z — kilo-graphics: KMystery (Graphics Polish, Glint/Dot Purge & Dossier Expansion)**
-  - Status: PASS ✅ (Corner filigree dots purged; FM synth audio, Quicksave/Load, forensic dossier added; 0 regressions).
-  - Glint/Dot Purge: Removed 4 corner filigree dots in web `drawArtDecoFiligree`; native C verified clean.
-  - Audio & Synthesis: Yamaha YM2612 2-Op FM jazz noir chiptune engine & SPC700 stereo delay line with rain noise.
-  - Evidence Dossier: Added modal forensic sketches for all 11 clues; suspect patience dots indicator.
-  - State Persistence: Implemented [F5] Quicksave and [F9] Quickload in web localStorage and native `kmystery_save.dat`.
-  - UX & Accessibility: Replaced alerts with click-to-dismiss gold toasts; added F1 manual modal and shortcuts.
-  - Verification: MSVC C clean compile (`KMystery.exe` 32.5 KB); clean Vite build (385ms, `kmystery.html` 113.6 KB); security lint 100% PASS; icons clean; <999KB ceiling.
 
 
 

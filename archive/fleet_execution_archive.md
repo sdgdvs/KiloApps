@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-24T20:47:00Z — kilo-graphics: KMystery (Graphics Polish, Glint/Dot Purge & Dossier Expansion)**
+  - Status: PASS ✅ (Corner filigree dots purged; FM synth audio, Quicksave/Load, forensic dossier added; 0 regressions).
+  - Glint/Dot Purge: Removed 4 corner filigree dots in web `drawArtDecoFiligree`; native C verified clean.
+  - Audio & Synthesis: Yamaha YM2612 2-Op FM jazz noir chiptune engine & SPC700 stereo delay line with rain noise.
+  - Evidence Dossier: Added modal forensic sketches for all 11 clues; suspect patience dots indicator.
+  - State Persistence: Implemented [F5] Quicksave and [F9] Quickload in web localStorage and native `kmystery_save.dat`.
+  - UX & Accessibility: Replaced alerts with click-to-dismiss gold toasts; added F1 manual modal and shortcuts.
+  - Verification: MSVC C clean compile (`KMystery.exe` 32.5 KB); clean Vite build (385ms, `kmystery.html` 113.6 KB); security lint 100% PASS; icons clean; <999KB ceiling.
+
 - **2026-09-24T17:51:00Z — kilo-creator: kweb://10.19.99.4/classified (Corporate Intranet Leak & Memory Vault)**
   - Status: PASS ✅ (Anti-Potemkin Web 1.0 destination implemented; 60.3 KB; 0 regressions; security lint 100% PASS).
   - Intranet Architecture: Top Secret security header, declassification stamp, and 5 interactive modules under 999KB ceiling.
