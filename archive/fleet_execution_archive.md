@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-25T02:49:00Z — kilo-graphics: KVoid (Game Content, Visual Polish & Glint Purge Pass)**
+  - Status: PASS ✅ (Distress flare system, 4 alien species biotypes & resource tiles added; glint purged; 0 regressions).
+  - Game Mechanics: Chem flare deployment ([F]) repelling stalkers/phantoms; O2 canisters (+35%) & lithium cells (+40%).
+  - Specimen Bestiary: 4 biotypes rendered (Stalker, Phantom, Bloater with acid pools, Apex Behemoth with screen tremor).
+  - Visual Polish: Purged visor specular glint; added active flare illumination sparks and toxic acid puddle bubbling.
+  - Universal Audio: 2-Op Yamaha YM2612 FM synthesis for O2 hiss, battery surge, flare ignition, acid sizzle & apex screech.
+  - Lore & Controls: 8 diegetic alternate-1999 terminal logs; survival guide expanded with bestiary and equipment guide.
+  - Verification: Clean MSVC compile (`KVoid.exe` 30.0 KB); Vite clean build in 339ms (`kvoid.html` 94.7 KB); security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-25T01:52:00Z — kilo-usability: KFont (UI/UX, Layout & Accessibility Pass)**
   - Status: PASS ✅ (Layout responsiveness, canvas crispness & toast de-occlusion complete; 0 regressions).
   - Toast & Modals: Re-anchored toast to bottom-center pill to prevent control occlusion; added modal footer close button and focus restore.

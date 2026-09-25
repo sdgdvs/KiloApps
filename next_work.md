@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KWizard
-  kilo_usability: KGraph
+  kilo_usability: KImage
   kilo_graphics: KWizard
   kilo_qa: KMystery
   kilo_expander: KTodo
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-tester
-  app: KVoid
-  timestamp: "2026-09-25T07:51:00Z"
+  agent: kilo-usability
+  app: KGraph
+  timestamp: "2026-09-25T08:44:00Z"
 last_planner_run: "2026-09-25T06:42:00Z"
 ---
 
@@ -116,9 +116,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KGraph`
+- **Current Target**: `KImage`
 - **Upcoming Queue**:
-  `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`.
+  `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KMystery`
@@ -202,6 +202,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-25T08:44:00Z — kilo-usability: KGraph (UI/UX, Layout & Usability Polish)**
+  - Status: PASS ✅ (Collapsible sidebar, HiDPI rendering, touch pinch-to-zoom & toast de-occlusion; 0 regressions).
+  - Responsive & Layout: Added collapsible function sidebar with Ctrl+B/backslash hotkeys, canvas expand button, and mobile media queries.
+  - Toast De-Occlusion: Centered notification toast to bottom pill (z-50) with click-to-dismiss, preventing canvas control occlusion.
+  - Canvas Crispness: Sized canvas via devicePixelRatio with ctx.setTransform and elevated axis label contrast (Consolas font).
+  - Mathematical Ergonomics: Handled vertical asymptote pen-lifting for tan(x)/rational functions; added touch 2-finger pinch-to-zoom.
+  - Controls & Onboarding: Added coordinates HUD toggle, reset view, and guarded initial welcome toast behind localStorage flag.
+  - Verification: Clean MSVC C compile (`KGraph.exe` 26.5 KB); Vite clean build in 549ms (`kgraph.html` 93.0 KB); security lint 100% PASS.
+
 - **2026-09-25T07:51:00Z — kilo-tester: KVoid (UI Element Audit & Inline Fixes)**
   - Status: PASS ✅ (6 UI issues identified and resolved; 0 regressions).
   - Modal & Backdrop: Wrapped guide in backdrop overlay with click-to-dismiss, top-right close icon, and tutorial flag setting.
@@ -235,15 +244,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Tutorial Integrity: Guarded startup welcome prompt behind `kmech_tutorialSeen` / `kmech_save` in web and first-run check launching Pilot's Manual in native C.
   - Toast & Modals: Re-anchored toast container to bottom-center pill to prevent control occlusion in garage and battle.
   - Verification: Clean MSVC compile (`KMech.exe` 31.7 KB); Vite clean build in 381ms (`kmech.html` 108.2 KB); security lint 100% PASS; <999KB ceiling.
-
-- **2026-09-25T02:49:00Z — kilo-graphics: KVoid (Game Content, Visual Polish & Glint Purge Pass)**
-  - Status: PASS ✅ (Distress flare system, 4 alien species biotypes & resource tiles added; glint purged; 0 regressions).
-  - Game Mechanics: Chem flare deployment ([F]) repelling stalkers/phantoms; O2 canisters (+35%) & lithium cells (+40%).
-  - Specimen Bestiary: 4 biotypes rendered (Stalker, Phantom, Bloater with acid pools, Apex Behemoth with screen tremor).
-  - Visual Polish: Purged visor specular glint; added active flare illumination sparks and toxic acid puddle bubbling.
-  - Universal Audio: 2-Op Yamaha YM2612 FM synthesis for O2 hiss, battery surge, flare ignition, acid sizzle & apex screech.
-  - Lore & Controls: 8 diegetic alternate-1999 terminal logs; survival guide expanded with bestiary and equipment guide.
-  - Verification: Clean MSVC compile (`KVoid.exe` 30.0 KB); Vite clean build in 339ms (`kvoid.html` 94.7 KB); security lint 100% PASS; <999KB ceiling.
 
 
 

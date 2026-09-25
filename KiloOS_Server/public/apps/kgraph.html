@@ -123,7 +123,14 @@
     display: flex;
     flex-direction: column;
     z-index: 5;
-    transition: width 0.3s ease;
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .sidebar.collapsed {
+    width: 0 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    border-right: none !important;
+    pointer-events: none;
   }
   
   /* Mode Selector Switcher Bar */
@@ -255,6 +262,7 @@
     display: flex;
     gap: 6px;
     margin-bottom: 4px;
+    align-items: center;
   }
   .input-row:last-child {
     margin-bottom: 0;
@@ -275,7 +283,104 @@
     border-color: #38bdf8;
     box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
   }
-  
+  .input-clear-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    font-size: 16px;
+    line-height: 1;
+    width: 26px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .input-clear-btn:hover {
+    color: #f43f5e;
+    background: rgba(244, 63, 94, 0.15);
+    border-color: rgba(244, 63, 94, 0.35);
+  }
+
+  /* Quick Presets Bar */
+  .quick-presets-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 8px 12px;
+    background: rgba(15, 17, 26, 0.85);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    scrollbar-width: thin;
+  }
+  .quick-preset-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #38bdf8;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .preset-chip {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+  }
+  .preset-chip:hover {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: #38bdf8;
+    color: #38bdf8;
+    transform: translateY(-1px);
+  }
+
+  .funcs-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .funcs-toolbar {
+    display: flex;
+    gap: 4px;
+  }
+  .mini-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 7px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .mini-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #f1f5f9;
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  .shortcut-badge {
+    background: rgba(255, 255, 255, 0.14);
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-family: monospace;
+    margin-left: 4px;
+    opacity: 0.9;
+  }
+
   /* Form Controls & Tools */
   .control-group {
     background: rgba(30, 41, 59, 0.4);
@@ -416,17 +521,20 @@
     position: absolute;
     top: 14px;
     right: 14px;
-    background: rgba(15, 23, 42, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 8px;
     padding: 10px 14px;
     font-family: 'Consolas', monospace;
     font-size: 12px;
     color: #e2e8f0;
     backdrop-filter: blur(8px);
-    pointer-events: none;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
     z-index: 4;
+    transition: opacity 0.2s ease;
+  }
+  .cursor-readout.hidden {
+    display: none !important;
   }
   .readout-line {
     display: flex;
@@ -439,6 +547,38 @@
   }
   .readout-val {
     font-weight: bold;
+  }
+
+  /* Floating Canvas Sidebar Toggle Button */
+  .canvas-toggle-btn {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    color: #38bdf8;
+    padding: 7px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    gap: 6px;
+    z-index: 6;
+    transition: all 0.2s ease;
+    user-select: none;
+  }
+  .canvas-toggle-btn:hover {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: #38bdf8;
+    color: #fff;
+    transform: translateY(-1px);
+  }
+  .sidebar.collapsed ~ .canvas-wrap .canvas-toggle-btn {
+    display: flex;
   }
   
   /* Canvas Controls Toolbar */
@@ -466,39 +606,65 @@
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    font-size: 16px;
+    font-size: 15px;
     cursor: pointer;
     transition: all 0.2s;
   }
   .tool-btn:hover {
     background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(56, 189, 248, 0.4);
   }
   
-  /* Toast Message */
+  /* Interactive Centered Toast Notification (Non-Occluding Pill) */
   .toast-msg {
     position: absolute;
-    bottom: 16px;
-    left: 16px;
-    background: rgba(19, 23, 36, 0.95);
-    border: 1px solid rgba(56, 189, 248, 0.4);
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    background: rgba(19, 23, 36, 0.96);
+    border: 1px solid rgba(56, 189, 248, 0.45);
     color: #f1f5f9;
-    padding: 12px 18px;
-    border-radius: 8px;
+    padding: 10px 18px;
+    border-radius: 20px;
     font-size: 13px;
     font-weight: 500;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 12px rgba(56, 189, 248, 0.15);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), 0 0 16px rgba(56, 189, 248, 0.2);
     opacity: 0;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    transform: translateY(8px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
     pointer-events: none;
-    z-index: 20;
-    white-space: pre-line;
-    line-height: 1.5;
-    backdrop-filter: blur(8px);
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 90%;
+    width: auto;
+    backdrop-filter: blur(12px);
+    cursor: pointer;
   }
   .toast-msg.visible {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+  }
+  .toast-text {
+    flex: 1;
+    white-space: pre-line;
+    line-height: 1.45;
+  }
+  .toast-close {
+    cursor: pointer;
+    color: #94a3b8;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    user-select: none;
+    line-height: 1;
+  }
+  .toast-close:hover {
+    color: #f43f5e;
+    background: rgba(244, 63, 94, 0.15);
   }
 
   /* Help Modal Dialog */
@@ -615,6 +781,55 @@
     align-items: center;
     gap: 6px;
   }
+  /* Responsive Breakpoints & Ergonomics */
+  @media (max-width: 960px) {
+    .sidebar {
+      width: 320px;
+    }
+    .header-actions .btn {
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .app-header {
+      padding: 8px 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .header-actions {
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .header-actions .btn {
+      padding: 5px 8px;
+      font-size: 11px;
+    }
+    .workspace {
+      flex-direction: column;
+    }
+    .sidebar {
+      width: 100%;
+      height: 280px;
+      border-right: none;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .sidebar.collapsed {
+      height: 0 !important;
+      width: 100% !important;
+    }
+    .canvas-tools {
+      bottom: 12px;
+      right: 12px;
+    }
+    .cursor-readout {
+      top: 10px;
+      right: 10px;
+      padding: 8px 10px;
+      font-size: 11px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -626,15 +841,16 @@
       <div class="app-title">KGraph Studio</div>
     </div>
     <div class="header-actions">
-      <button class="btn" onclick="exportPNG()">📷 Save PNG</button>
-      <button class="btn" onclick="exportCSV()">📊 Export CSV</button>
-      <button class="btn" onclick="exportJSON()">💾 Save Config</button>
-      <label class="btn" style="cursor:pointer">
-        📂 Load Config
+      <button class="btn" id="sidebarToggleBtn" onclick="toggleSidebar()" title="Toggle Sidebar (Ctrl+B or \)">◀ Sidebar <span class="shortcut-badge">^B</span></button>
+      <button class="btn" onclick="exportPNG()" title="Export PNG Snapshot (Ctrl+S)">📷 PNG <span class="shortcut-badge">^S</span></button>
+      <button class="btn" onclick="exportCSV()" title="Export CSV Data Points (E)">📊 CSV <span class="shortcut-badge">E</span></button>
+      <button class="btn" onclick="exportJSON()" title="Save Configuration to JSON">💾 Config</button>
+      <label class="btn" style="cursor:pointer" title="Load Configuration File (O)">
+        📂 Load <span class="shortcut-badge">O</span>
         <input type="file" id="jsonInput" accept=".json" style="display:none" onchange="importJSON(event)">
       </label>
-      <button class="btn" onclick="openHelpModal()">❓ Help (F1)</button>
-      <button class="btn btn-primary" onclick="replotAll()">▶ Plot [Enter]</button>
+      <button class="btn" onclick="openHelpModal()" title="Help & Reference Guide (F1 or H)">❓ Help <span class="shortcut-badge">F1</span></button>
+      <button class="btn btn-primary" onclick="replotAll()" title="Plot Graph (Enter)">▶ Plot <span class="shortcut-badge">↵</span></button>
     </div>
   </div>
 
@@ -651,6 +867,17 @@
         <div class="mode-btn" id="modeBtn_parametric" onclick="setPlotMode('parametric')">[M] (x,y)(t) Parametric</div>
       </div>
 
+      <!-- Quick Presets Carousel -->
+      <div class="quick-presets-bar">
+        <span class="quick-preset-label">Quick:</span>
+        <button class="preset-chip" onclick="loadCartesianPreset('sin(x)')" title="Load Sine Wave">🌊 sin(x)</button>
+        <button class="preset-chip" onclick="loadCartesianPreset('exp(-x^2)')" title="Load Gaussian Bell">🔔 Gaussian</button>
+        <button class="preset-chip" onclick="loadCartesianPreset('x^3 - 3*x')" title="Load Cubic Polynomial">📉 x³-3x</button>
+        <button class="preset-chip" onclick="loadCartesianPreset('1 / (1 + x^2)')" title="Load Witch of Agnesi">🧮 1/(1+x²)</button>
+        <button class="preset-chip" onclick="loadPolarPreset('3 * cos(4 * t)')" title="Load 4-Leaf Rose">🎯 4-Rose</button>
+        <button class="preset-chip" onclick="loadParametricPreset('sin(t)*(exp(cos(t))-2*cos(4*t))', 'cos(t)*(exp(cos(t))-2*cos(4*t))')" title="Load Butterfly Curve">🦋 Butterfly</button>
+      </div>
+
       <div class="tab-nav">
         <div class="tab-btn active" onclick="switchTab('tabFuncs')">[1] Functions</div>
         <div class="tab-btn" onclick="switchTab('tabCalc')">[2] Calculus</div>
@@ -660,7 +887,14 @@
       
       <!-- Functions Tab -->
       <div class="tab-content active" id="tabFuncs">
-        <div class="section-title" id="funcsSectionTitle">Functions (y1 - y5)</div>
+        <div class="funcs-header-row">
+          <div class="section-title" id="funcsSectionTitle" style="margin-bottom:0">Functions (y1 - y5)</div>
+          <div class="funcs-toolbar">
+            <button class="mini-btn" onclick="resetDefaultFuncs()" title="Reset to standard default functions">✨ Defaults</button>
+            <button class="mini-btn" onclick="enableAllFuncs(true)" title="Show all active functions">👁️ All</button>
+            <button class="mini-btn" onclick="clearAllFuncs()" title="Clear all expressions">✕ Clear</button>
+          </div>
+        </div>
         
         <!-- Mode Options Bar -->
         <div class="control-group" id="modeSettingsContainer">
@@ -753,25 +987,31 @@
     
     <!-- Canvas Area -->
     <div class="canvas-wrap">
+      <button class="canvas-toggle-btn" id="canvasSidebarOpenBtn" onclick="toggleSidebar()" title="Expand Sidebar (Ctrl+B or \)">▶ Functions</button>
       <canvas id="graphCanvas"></canvas>
       
       <!-- Floating Readout -->
       <div class="cursor-readout" id="cursorReadout">
-        <div class="readout-line" id="readoutHeaderLine">
-          <span>x:</span> <span class="readout-val" id="readoutX">0.000</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:3px;">
+          <div class="readout-line" id="readoutHeaderLine" style="margin-bottom:0">
+            <span>x:</span> <span class="readout-val" id="readoutX">0.000</span>
+          </div>
+          <button onclick="toggleReadout()" title="Hide Readout Overlay" style="background:none; border:none; color:#64748b; cursor:pointer; font-size:12px; line-height:1; padding:0 2px;">✕</button>
         </div>
         <div id="readoutYList"></div>
       </div>
       
       <!-- Canvas Tools Bar -->
       <div class="canvas-tools">
-        <button class="tool-btn" onclick="zoomIn()" title="Zoom In">+</button>
-        <button class="tool-btn" onclick="zoomOut()" title="Zoom Out">-</button>
-        <button class="tool-btn" onclick="resetView()" title="Reset View">⟲</button>
+        <button class="tool-btn" onclick="toggleSidebar()" id="toolBtnSidebar" title="Toggle Sidebar (Ctrl+B or \)">◀</button>
+        <button class="tool-btn" onclick="toggleReadout()" id="toolBtnReadout" title="Toggle Coordinates HUD">📊</button>
+        <button class="tool-btn" onclick="zoomIn()" title="Zoom In (+)">+</button>
+        <button class="tool-btn" onclick="zoomOut()" title="Zoom Out (-)">-</button>
+        <button class="tool-btn" onclick="resetView()" title="Reset View (R or 0)">⟲</button>
       </div>
       
-      <!-- Toast -->
-      <div class="toast-msg" id="toastMsg"></div>
+      <!-- Toast Notification -->
+      <div class="toast-msg" id="toastMsg" onclick="hideToast()" title="Click to dismiss"></div>
     </div>
     
   </div>
@@ -794,12 +1034,17 @@
           </thead>
           <tbody>
             <tr><td><span class="kbd-key">F1</span> / <span class="kbd-key">H</span></td><td>Toggle this Help & Reference guide</td></tr>
-            <tr><td><span class="kbd-key">Enter</span> (in input)</td><td>Immediately plot / re-evaluate expressions</td></tr>
+            <tr><td><span class="kbd-key">Ctrl+B</span> / <span class="kbd-key">\</span> / <span class="kbd-key">[</span></td><td>Toggle collapsible function sidebar (maximize canvas)</td></tr>
+            <tr><td><span class="kbd-key">Enter</span></td><td>Plot / re-evaluate expressions immediately</td></tr>
+            <tr><td><span class="kbd-key">←</span> <span class="kbd-key">→</span> <span class="kbd-key">↑</span> <span class="kbd-key">↓</span></td><td>Smoothly pan viewport across canvas</td></tr>
             <tr><td><span class="kbd-key">1</span> / <span class="kbd-key">2</span> / <span class="kbd-key">3</span> / <span class="kbd-key">4</span></td><td>Switch tabs: Functions, Calculus, Analysis, Presets</td></tr>
             <tr><td><span class="kbd-key">C</span> / <span class="kbd-key">P</span> / <span class="kbd-key">M</span></td><td>Switch plot modes: [C]artesian, [P]olar, Para[M]etric</td></tr>
-            <tr><td><span class="kbd-key">+</span> / <span class="kbd-key">-</span></td><td>Zoom viewport in / out</td></tr>
-            <tr><td><span class="kbd-key">0</span> / <span class="kbd-key">R</span></td><td>Reset viewport to default [-10, 10] range</td></tr>
-            <tr><td><span class="kbd-key">Esc</span></td><td>Close any active modal dialog</td></tr>
+            <tr><td><span class="kbd-key">+</span> / <span class="kbd-key">-</span> (or <span class="kbd-key">PgUp</span>/<span class="kbd-key">PgDn</span>)</td><td>Zoom viewport in / out</td></tr>
+            <tr><td><span class="kbd-key">0</span> / <span class="kbd-key">R</span> / <span class="kbd-key">Home</span></td><td>Reset viewport to origin and default [-10, 10] range</td></tr>
+            <tr><td><span class="kbd-key">Ctrl+S</span></td><td>Export high-res PNG graph snapshot</td></tr>
+            <tr><td><span class="kbd-key">E</span></td><td>Export sampled curve points to CSV</td></tr>
+            <tr><td><span class="kbd-key">Ctrl+O</span> / <span class="kbd-key">O</span></td><td>Load saved graph configuration JSON</td></tr>
+            <tr><td><span class="kbd-key">Esc</span></td><td>Unfocus input fields or close any active modal dialog</td></tr>
           </tbody>
         </table>
 
@@ -894,10 +1139,12 @@
       // Exponent substitution
       expr = expr.replace(/\^/g, '**');
       
-      // Substitute angle / parameter variables 'theta', 'th', 't' with 'x' for unified evaluation
+      // Substitute angle / parameter variables 'theta', 'th', 't', 'θ' with 'x' for unified evaluation
       expr = expr.replace(/\btheta\b/gi, 'x');
       expr = expr.replace(/\bth\b/gi, 'x');
       expr = expr.replace(/\bt\b/gi, 'x');
+      expr = expr.replace(/θ/g, 'x');
+      expr = expr.replace(/\bX\b/g, 'x');
       
       // Replace Math functions
       const funcs = ['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sqrt', 'abs', 'log', 'exp', 'floor', 'ceil', 'round', 'sign', 'min', 'max'];
@@ -998,18 +1245,19 @@
                 <span>y${idx+1}(x) =</span>
               </div>
               <div class="func-controls">
-                <label class="checkbox-label">
+                <label class="checkbox-label" title="Toggle visibility">
                   <input type="checkbox" ${f.enabled ? 'checked' : ''} onchange="toggleCartFunc(${idx}, this.checked)">
                   Show
                 </label>
-                <label class="checkbox-label">
+                <label class="checkbox-label" title="Show numerical derivative f'(x) curve">
                   <input type="checkbox" ${f.showDeriv ? 'checked' : ''} onchange="toggleCartDeriv(${idx}, this.checked)">
                   f'
                 </label>
               </div>
             </div>
             <div class="input-row">
-              <input type="text" class="func-input" value="${f.expr}" id="cartInput_${idx}" placeholder="e.g. sin(x)" oninput="updateCartExpr(${idx}, this.value)" onkeydown="if(event.key==='Enter'){replotAll(); showToast('Graph plotted!');}">
+              <input type="text" class="func-input" value="${f.expr}" id="cartInput_${idx}" placeholder="e.g. sin(x)" oninput="updateCartExpr(${idx}, this.value)" onkeydown="handleFuncInputKeyDown(event, ${idx})">
+              <button class="input-clear-btn" title="Clear expression" onclick="clearCartFunc(${idx})">&times;</button>
             </div>
           `;
           container.appendChild(card);
@@ -1052,7 +1300,8 @@
               </div>
             </div>
             <div class="input-row">
-              <input type="text" class="func-input" value="${f.expr}" id="polarInput_${idx}" placeholder="e.g. 3*cos(4*θ)" oninput="updatePolarExpr(${idx}, this.value)" onkeydown="if(event.key==='Enter'){replotAll(); showToast('Graph plotted!');}">
+              <input type="text" class="func-input" value="${f.expr}" id="polarInput_${idx}" placeholder="e.g. 3*cos(4*θ)" oninput="updatePolarExpr(${idx}, this.value)" onkeydown="handleFuncInputKeyDown(event, ${idx})">
+              <button class="input-clear-btn" title="Clear expression" onclick="clearPolarFunc(${idx})">&times;</button>
             </div>
           `;
           container.appendChild(card);
@@ -1090,15 +1339,108 @@
             </div>
             <div class="input-row">
               <span style="font-size:12px; width:35px; color:#94a3b8; align-self:center;">x(t)=</span>
-              <input type="text" class="func-input" value="${c.exprX}" id="paramInputX_${idx}" oninput="updateParamExpr(${idx}, 'X', this.value)" onkeydown="if(event.key==='Enter'){replotAll(); showToast('Graph plotted!');}">
+              <input type="text" class="func-input" value="${c.exprX}" id="paramInputX_${idx}" oninput="updateParamExpr(${idx}, 'X', this.value)" onkeydown="handleFuncInputKeyDown(event, ${idx})">
+              <button class="input-clear-btn" title="Clear x(t)" onclick="clearParamFunc(${idx}, 'X')">&times;</button>
             </div>
             <div class="input-row" style="margin-top:6px;">
               <span style="font-size:12px; width:35px; color:#94a3b8; align-self:center;">y(t)=</span>
-              <input type="text" class="func-input" value="${c.exprY}" id="paramInputY_${idx}" oninput="updateParamExpr(${idx}, 'Y', this.value)" onkeydown="if(event.key==='Enter'){replotAll(); showToast('Graph plotted!');}">
+              <input type="text" class="func-input" value="${c.exprY}" id="paramInputY_${idx}" oninput="updateParamExpr(${idx}, 'Y', this.value)" onkeydown="handleFuncInputKeyDown(event, ${idx})">
+              <button class="input-clear-btn" title="Clear y(t)" onclick="clearParamFunc(${idx}, 'Y')">&times;</button>
             </div>
           `;
           container.appendChild(card);
         });
+      }
+    }
+
+    function clearCartFunc(idx) {
+      cartesianFuncs[idx].expr = '';
+      const el = document.getElementById('cartInput_' + idx);
+      if (el) { el.value = ''; el.focus(); }
+      replotAll();
+      showToast(`Cleared y${idx+1}(x)`);
+    }
+
+    function clearPolarFunc(idx) {
+      polarFuncs[idx].expr = '';
+      const el = document.getElementById('polarInput_' + idx);
+      if (el) { el.value = ''; el.focus(); }
+      replotAll();
+      showToast(`Cleared r${idx+1}(θ)`);
+    }
+
+    function clearParamFunc(idx, axis) {
+      if (axis === 'X') {
+        parametricCurves[idx].exprX = '';
+        const el = document.getElementById('paramInputX_' + idx);
+        if (el) { el.value = ''; el.focus(); }
+      } else {
+        parametricCurves[idx].exprY = '';
+        const el = document.getElementById('paramInputY_' + idx);
+        if (el) { el.value = ''; el.focus(); }
+      }
+      replotAll();
+      showToast(`Cleared Curve ${idx+1} ${axis}(t)`);
+    }
+
+    function resetDefaultFuncs() {
+      if (currentMode === 'cartesian') {
+        cartesianFuncs = [
+          { expr: 'sin(x)', enabled: true, showDeriv: false },
+          { expr: 'cos(x)', enabled: true, showDeriv: false },
+          { expr: 'x^2 / 4 - 2', enabled: false, showDeriv: false },
+          { expr: 'exp(-x^2)', enabled: false, showDeriv: false },
+          { expr: 'x^3 - 3*x', enabled: false, showDeriv: false }
+        ];
+      } else if (currentMode === 'polar') {
+        polarFuncs = [
+          { expr: '3 * cos(4 * t)', enabled: true },
+          { expr: '2 * (1 - cos(t))', enabled: true },
+          { expr: 't / 2', enabled: false }
+        ];
+      } else if (currentMode === 'parametric') {
+        parametricCurves = [
+          { exprX: '4 * cos(3 * t)', exprY: '4 * sin(2 * t)', enabled: true },
+          { exprX: 'sin(t)*(exp(cos(t))-2*cos(4*t))', exprY: 'cos(t)*(exp(cos(t))-2*cos(4*t))', enabled: false }
+        ];
+      }
+      buildModeControls();
+      replotAll();
+      showToast('Reset to default functions');
+    }
+
+    function enableAllFuncs(enabled) {
+      if (currentMode === 'cartesian') {
+        cartesianFuncs.forEach(f => { if (f.expr && f.expr.trim()) f.enabled = enabled; });
+      } else if (currentMode === 'polar') {
+        polarFuncs.forEach(f => { if (f.expr && f.expr.trim()) f.enabled = enabled; });
+      } else if (currentMode === 'parametric') {
+        parametricCurves.forEach(c => { if ((c.exprX && c.exprX.trim()) || (c.exprY && c.exprY.trim())) c.enabled = enabled; });
+      }
+      buildModeControls();
+      replotAll();
+      showToast(enabled ? 'Enabled all non-empty functions' : 'Disabled all functions');
+    }
+
+    function clearAllFuncs() {
+      if (currentMode === 'cartesian') {
+        cartesianFuncs.forEach(f => { f.expr = ''; f.enabled = false; });
+      } else if (currentMode === 'polar') {
+        polarFuncs.forEach(f => { f.expr = ''; f.enabled = false; });
+      } else if (currentMode === 'parametric') {
+        parametricCurves.forEach(c => { c.exprX = ''; c.exprY = ''; c.enabled = false; });
+      }
+      buildModeControls();
+      replotAll();
+      showToast('Cleared all functions');
+    }
+
+    function handleFuncInputKeyDown(event, idx) {
+      if (event.key === 'Enter') {
+        replotAll();
+        showToast('Graph plotted!');
+      } else if (event.key === 'Escape') {
+        event.target.blur();
       }
     }
 
@@ -1187,8 +1529,11 @@
     
     function loadCartesianPreset(expr) {
       setPlotMode('cartesian');
-      cartesianFuncs[0].expr = expr;
-      cartesianFuncs[0].enabled = true;
+      cartesianFuncs.forEach((f, i) => {
+        if (i === 0) { f.expr = expr; f.enabled = true; }
+        else { f.enabled = false; }
+      });
+      resetView();
       buildModeControls();
       replotAll();
       switchTab('tabFuncs');
@@ -1196,8 +1541,11 @@
 
     function loadPolarPreset(expr) {
       setPlotMode('polar');
-      polarFuncs[0].expr = expr;
-      polarFuncs[0].enabled = true;
+      polarFuncs.forEach((f, i) => {
+        if (i === 0) { f.expr = expr; f.enabled = true; }
+        else { f.enabled = false; }
+      });
+      resetView();
       buildModeControls();
       replotAll();
       switchTab('tabFuncs');
@@ -1205,9 +1553,11 @@
 
     function loadParametricPreset(exprX, exprY) {
       setPlotMode('parametric');
-      parametricCurves[0].exprX = exprX;
-      parametricCurves[0].exprY = exprY;
-      parametricCurves[0].enabled = true;
+      parametricCurves.forEach((c, i) => {
+        if (i === 0) { c.exprX = exprX; c.exprY = exprY; c.enabled = true; }
+        else { c.enabled = false; }
+      });
+      resetView();
       buildModeControls();
       replotAll();
       switchTab('tabFuncs');
@@ -1232,8 +1582,10 @@
     function togglePolarFunc(idx, enabled) { polarFuncs[idx].enabled = enabled; replotAll(); }
     function updatePolarExpr(idx, expr) { polarFuncs[idx].expr = expr; replotAll(); }
     function updatePolarRange() {
-      polarMinTh = parseFloat(document.getElementById('polarMinInput').value) || 0;
-      polarMaxTh = parseFloat(document.getElementById('polarMaxInput').value) || (4 * Math.PI);
+      const minEl = document.getElementById('polarMinInput');
+      const maxEl = document.getElementById('polarMaxInput');
+      if (minEl) polarMinTh = !isNaN(parseFloat(minEl.value)) ? parseFloat(minEl.value) : 0;
+      if (maxEl) polarMaxTh = !isNaN(parseFloat(maxEl.value)) ? parseFloat(maxEl.value) : (4 * Math.PI);
       replotAll();
     }
 
@@ -1244,8 +1596,10 @@
       replotAll();
     }
     function updateParamRange() {
-      paramMinT = parseFloat(document.getElementById('paramMinInput').value) || 0;
-      paramMaxT = parseFloat(document.getElementById('paramMaxInput').value) || (2 * Math.PI);
+      const minEl = document.getElementById('paramMinInput');
+      const maxEl = document.getElementById('paramMaxInput');
+      if (minEl) paramMinT = !isNaN(parseFloat(minEl.value)) ? parseFloat(minEl.value) : 0;
+      if (maxEl) paramMaxT = !isNaN(parseFloat(maxEl.value)) ? parseFloat(maxEl.value) : (2 * Math.PI);
       replotAll();
     }
 
@@ -1327,7 +1681,7 @@
           }
           const rootX = (low + high) / 2;
           const rootY = fn(rootX);
-          if (Math.abs(rootY) < 1e-4) {
+          if (Math.abs(rootY) < 1e-4 && !computedRoots.some(r => Math.abs(r.x - rootX) < 1e-3)) {
             computedRoots.push({ x: rootX, y: rootY, funcIdx: idx });
           }
         }
@@ -1391,7 +1745,7 @@
               }
               const interX = (low + high) / 2;
               const interY = fn1(interX);
-              if (!isNaN(interY)) {
+              if (!isNaN(interY) && !computedIntersections.some(pt => Math.abs(pt.x - interX) < 1e-3 && pt.f1 === i1 && pt.f2 === i2)) {
                 computedIntersections.push({ x: interX, y: interY, f1: i1, f2: i2 });
               }
             }
@@ -1421,6 +1775,7 @@
       view_cx = x;
       view_cy = y;
       drawGraph();
+      showToast(`Focused on (${x.toFixed(4)}, ${y.toFixed(4)})`);
     }
 
     // --- Graph Rendering ---
@@ -1428,9 +1783,12 @@
       const dpr = window.devicePixelRatio || 1;
       const w = canvas.parentElement.clientWidth;
       const h = canvas.parentElement.clientHeight;
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      ctx.scale(dpr, dpr);
+      if (!w || !h) return;
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       drawGraph();
     }
 
@@ -1548,8 +1906,8 @@
         const firstGridX = Math.floor(minX / gridStep) * gridStep;
         const firstGridY = Math.floor(minY / gridStep) * gridStep;
 
-        ctx.fillStyle = '#64748b';
-        ctx.font = '11px monospace';
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '11px Consolas, monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
         
@@ -1611,13 +1969,18 @@
           ctx.lineWidth = 2.5;
           ctx.beginPath();
           let first = true;
+          let prevY = null;
           
           for (let px = 0; px <= width; px += 2) {
             const x = toWorldX(px, width);
             const y = fn(x);
             if (isNaN(y) || !isFinite(y)) {
               first = true;
+              prevY = null;
               continue;
+            }
+            if (prevY !== null && Math.abs(y - prevY) > view_height * 1.5 && (y * prevY < 0 || Math.abs(y) > view_scale * 5)) {
+              first = true;
             }
             const py = toScreenY(y, height);
             if (first) {
@@ -1626,6 +1989,7 @@
             } else {
               ctx.lineTo(px, py);
             }
+            prevY = y;
           }
           ctx.stroke();
           
@@ -1785,7 +2149,6 @@
       const headerLine = document.getElementById('readoutHeaderLine');
       
       if (currentMode === 'cartesian') {
-        document.getElementById('readoutX').innerText = currentHoverX.toFixed(4);
         headerLine.innerHTML = `<span>x:</span> <span class="readout-val">${currentHoverX.toFixed(4)}</span>`;
         
         let html = '';
@@ -1861,6 +2224,57 @@
       drawGraph();
     });
     
+    let lastTouch = { x: 0, y: 0 };
+    let initialPinchDist = null;
+    let initialPinchScale = view_scale;
+
+    canvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        isDragging = true;
+        initialPinchDist = null;
+        lastTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      } else if (e.touches.length === 2) {
+        isDragging = false;
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        initialPinchDist = Math.hypot(dx, dy);
+        initialPinchScale = view_scale;
+      }
+    }, { passive: true });
+    
+    window.addEventListener('touchend', () => {
+      isDragging = false;
+      initialPinchDist = null;
+    });
+    
+    canvas.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && initialPinchDist) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const currentDist = Math.hypot(dx, dy);
+        if (currentDist > 10) {
+          const ratio = initialPinchDist / currentDist;
+          view_scale = Math.max(0.01, Math.min(10000, initialPinchScale * ratio));
+          drawGraph();
+        }
+        return;
+      }
+      if (!isDragging || e.touches.length !== 1) return;
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches[0].clientX;
+      const clientY = e.touches[0].clientY;
+      const dx = clientX - lastTouch.x;
+      const dy = clientY - lastTouch.y;
+      lastTouch = { x: clientX, y: clientY };
+      
+      const w = rect.width;
+      const h = rect.height;
+      const view_height = 2 * view_scale * (h / w);
+      view_cx -= (dx / w) * (2 * view_scale);
+      view_cy += (dy / h) * view_height;
+      drawGraph();
+    }, { passive: true });
+    
     canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
       const zoomFactor = e.deltaY < 0 ? 0.85 : 1.18;
@@ -1886,43 +2300,118 @@
       showToast('Viewport reset to [-10, 10]');
     }
 
+    function toggleSidebar() {
+      const sb = document.querySelector('.sidebar');
+      const toggleBtn = document.getElementById('sidebarToggleBtn');
+      const toolBtn = document.getElementById('toolBtnSidebar');
+      if (!sb) return;
+      const isCollapsed = sb.classList.toggle('collapsed');
+      if (toggleBtn) {
+        toggleBtn.innerHTML = isCollapsed ? '▶ Sidebar <span class="shortcut-badge">^B</span>' : '◀ Sidebar <span class="shortcut-badge">^B</span>';
+      }
+      if (toolBtn) {
+        toolBtn.innerText = isCollapsed ? '▶' : '◀';
+        toolBtn.title = isCollapsed ? 'Expand Sidebar (Ctrl+B or \\)' : 'Collapse Sidebar (Ctrl+B or \\)';
+      }
+      setTimeout(resizeCanvas, 50);
+      setTimeout(resizeCanvas, 260);
+    }
+
+    let isReadoutVisible = true;
+    function toggleReadout() {
+      const ro = document.getElementById('cursorReadout');
+      const toolBtn = document.getElementById('toolBtnReadout');
+      if (!ro) return;
+      isReadoutVisible = !isReadoutVisible;
+      if (isReadoutVisible) {
+        ro.classList.remove('hidden');
+        if (toolBtn) toolBtn.style.opacity = '1';
+        showToast('Coordinates HUD enabled');
+      } else {
+        ro.classList.add('hidden');
+        if (toolBtn) toolBtn.style.opacity = '0.5';
+        showToast('Coordinates HUD hidden');
+      }
+    }
+
     // --- Export & Import ---
     function exportPNG() {
       const link = document.createElement('a');
       link.download = `KGraph_${currentMode}_snapshot.png`;
       link.href = canvas.toDataURL('image/png');
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
       showToast('📷 PNG snapshot exported!');
     }
     
     function exportCSV() {
-      const minX = view_cx - view_scale;
-      const maxX = view_cx + view_scale;
-      const steps = 200;
-      const dx = (maxX - minX) / steps;
-      
-      let csv = 'x,y1,y2,y3,y4,y5\n';
-      for (let i = 0; i <= steps; i++) {
-        const x = minX + i * dx;
-        let row = [x.toFixed(5)];
-        compiledCartesian.forEach((fn, idx) => {
-          if (fn && cartesianFuncs[idx].enabled) {
-            const y = fn(x);
-            row.push(isNaN(y) ? '' : y.toFixed(5));
-          } else {
-            row.push('');
-          }
-        });
-        csv += row.join(',') + '\n';
+      let csv = '';
+      if (currentMode === 'cartesian') {
+        const minX = view_cx - view_scale;
+        const maxX = view_cx + view_scale;
+        const steps = 200;
+        const dx = (maxX - minX) / steps;
+        csv = 'x,y1,y2,y3,y4,y5\n';
+        for (let i = 0; i <= steps; i++) {
+          const x = minX + i * dx;
+          let row = [x.toFixed(5)];
+          compiledCartesian.forEach((fn, idx) => {
+            if (fn && cartesianFuncs[idx].enabled) {
+              const y = fn(x);
+              row.push(isNaN(y) ? '' : y.toFixed(5));
+            } else {
+              row.push('');
+            }
+          });
+          csv += row.join(',') + '\n';
+        }
+      } else if (currentMode === 'polar') {
+        const steps = 200;
+        const dTh = (polarMaxTh - polarMinTh) / steps;
+        csv = 'theta_rad,theta_deg,r1,r2,r3\n';
+        for (let i = 0; i <= steps; i++) {
+          const th = polarMinTh + i * dTh;
+          let row = [th.toFixed(5), (th * 180 / Math.PI).toFixed(2)];
+          compiledPolar.forEach((fn, idx) => {
+            if (fn && polarFuncs[idx].enabled) {
+              const r = fn(th);
+              row.push(isNaN(r) ? '' : r.toFixed(5));
+            } else {
+              row.push('');
+            }
+          });
+          csv += row.join(',') + '\n';
+        }
+      } else if (currentMode === 'parametric') {
+        const steps = 200;
+        const dt = (paramMaxT - paramMinT) / steps;
+        csv = 't,curve1_x,curve1_y,curve2_x,curve2_y\n';
+        for (let i = 0; i <= steps; i++) {
+          const t = paramMinT + i * dt;
+          let row = [t.toFixed(5)];
+          compiledParametric.forEach((p, idx) => {
+            if (p && parametricCurves[idx].enabled && p.fnX && p.fnY) {
+              const x = p.fnX(t);
+              const y = p.fnY(t);
+              row.push(isNaN(x) ? '' : x.toFixed(5), isNaN(y) ? '' : y.toFixed(5));
+            } else {
+              row.push('', '');
+            }
+          });
+          csv += row.join(',') + '\n';
+        }
       }
       
-      const blob = new Blob([csv], { type: 'text/csv' });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `KGraph_${currentMode}_data.csv`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
       showToast('📊 CSV data points exported!');
     }
     
@@ -1932,6 +2421,11 @@
         cartesianFuncs: cartesianFuncs,
         polarFuncs: polarFuncs,
         parametricCurves: parametricCurves,
+        polarMinTh: polarMinTh,
+        polarMaxTh: polarMaxTh,
+        showPolarGrid: showPolarGrid,
+        paramMinT: paramMinT,
+        paramMaxT: paramMaxT,
         view_cx: view_cx,
         view_cy: view_cy,
         view_scale: view_scale
@@ -1942,8 +2436,10 @@
       const a = document.createElement('a');
       a.href = url;
       a.download = 'KGraph_config.json';
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
       showToast('💾 Graph configuration saved to JSON!');
     }
     
@@ -1957,6 +2453,11 @@
           if (config.cartesianFuncs) cartesianFuncs = config.cartesianFuncs;
           if (config.polarFuncs) polarFuncs = config.polarFuncs;
           if (config.parametricCurves) parametricCurves = config.parametricCurves;
+          if (config.polarMinTh !== undefined) polarMinTh = config.polarMinTh;
+          if (config.polarMaxTh !== undefined) polarMaxTh = config.polarMaxTh;
+          if (config.showPolarGrid !== undefined) showPolarGrid = config.showPolarGrid;
+          if (config.paramMinT !== undefined) paramMinT = config.paramMinT;
+          if (config.paramMaxT !== undefined) paramMaxT = config.paramMaxT;
           if (config.mode) currentMode = config.mode;
           if (config.view_cx !== undefined) view_cx = config.view_cx;
           if (config.view_cy !== undefined) view_cy = config.view_cy;
@@ -1969,15 +2470,24 @@
         }
       };
       reader.readAsText(file);
+      event.target.value = '';
     }
     
     let toastTimeout;
-    function showToast(msg, duration = 4000) {
+    function showToast(msg, duration = 4500) {
       const t = document.getElementById('toastMsg');
-      t.innerText = msg;
+      if (!t) return;
+      t.innerHTML = `
+        <span class="toast-text">${msg}</span>
+        <span class="toast-close" onclick="hideToast()" title="Dismiss">&times;</span>
+      `;
       t.classList.add('visible');
       clearTimeout(toastTimeout);
-      toastTimeout = setTimeout(() => t.classList.remove('visible'), duration);
+      toastTimeout = setTimeout(() => hideToast(), duration);
+    }
+    function hideToast() {
+      const t = document.getElementById('toastMsg');
+      if (t) t.classList.remove('visible');
     }
     
     // Window Resize Event & High-DPI Observer
@@ -1988,25 +2498,111 @@
     }
 
     // Initialization
-    window.resizeTo(1024, 768);
+    try { window.resizeTo(1024, 768); } catch(e) {}
+    replotAll();
     buildModeControls();
     buildPresets();
     setTimeout(resizeCanvas, 100);
-    setTimeout(() => showToast("Welcome to KGraph Studio!\nPress F1 or H for Help & Shortcuts.\n[C]artesian, [P]olar, Para[M]etric", 5000), 500);
+
+    // Auto-collapse sidebar on narrow mobile viewports
+    if (window.innerWidth < 768) {
+      const sb = document.querySelector('.sidebar');
+      if (sb) sb.classList.add('collapsed');
+      const toggleBtn = document.getElementById('sidebarToggleBtn');
+      if (toggleBtn) toggleBtn.innerHTML = '▶ Sidebar <span class="shortcut-badge">^B</span>';
+      const toolBtn = document.getElementById('toolBtnSidebar');
+      if (toolBtn) { toolBtn.innerText = '▶'; toolBtn.title = 'Expand Sidebar (Ctrl+B or \\)'; }
+    }
+
+    // First-run tutorial onboarding check
+    const hasSeenTutorial = localStorage.getItem('kgraph_firstRunSeen');
+    if (!hasSeenTutorial) {
+      setTimeout(() => {
+        showToast("👋 Welcome to KGraph Studio!\nPress F1 or H for Help & Shortcuts.\nDrag or use arrow keys to pan, scroll wheel or +/- to zoom.\nExplore Calculus & Analysis in tabs [2] and [3].", 6500);
+        localStorage.setItem('kgraph_firstRunSeen', 'true');
+      }, 400);
+    }
 
     // Global Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
+      const modal = document.getElementById('helpModal');
+      const isModalOpen = modal && modal.classList.contains('active');
+
       if (e.key === 'Escape') {
-        closeHelpModal();
+        if (isModalOpen) {
+          closeHelpModal();
+        } else {
+          hideToast();
+        }
         return;
       }
+      
+      // If editing an input, only handle Escape/Enter handled in input listener
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
       
+      // Ctrl / Meta Hotkeys
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key.toLowerCase() === 'b') {
+          e.preventDefault();
+          toggleSidebar();
+          return;
+        }
+        if (e.key.toLowerCase() === 's') {
+          e.preventDefault();
+          exportPNG();
+          return;
+        }
+        if (e.key.toLowerCase() === 'o') {
+          e.preventDefault();
+          const fileIn = document.getElementById('jsonInput');
+          if (fileIn) fileIn.click();
+          return;
+        }
+        return;
+      }
+      if (e.altKey) return;
+
+      if (e.key === '\\' || e.key === '[') {
+        e.preventDefault();
+        toggleSidebar();
+        return;
+      }
+      
       if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
-        if (e.key === 'F1') e.preventDefault();
-        const modal = document.getElementById('helpModal');
-        if (modal.classList.contains('active')) closeHelpModal();
+        e.preventDefault();
+        if (isModalOpen) closeHelpModal();
         else openHelpModal();
+        return;
+      }
+      
+      if (isModalOpen) return;
+      
+      // Arrow navigation / viewport panning
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        view_cx -= 0.15 * view_scale;
+        drawGraph();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        view_cx += 0.15 * view_scale;
+        drawGraph();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        view_cy += 0.15 * view_scale;
+        drawGraph();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        view_cy -= 0.15 * view_scale;
+        drawGraph();
+      } else if (e.key === 'PageUp') {
+        e.preventDefault();
+        zoomIn();
+      } else if (e.key === 'PageDown') {
+        e.preventDefault();
+        zoomOut();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        resetView();
       } else if (e.key === '1') {
         switchTab('tabFuncs');
         showToast('Tab: [1] Functions');
@@ -2025,6 +2621,11 @@
         setPlotMode('polar');
       } else if (e.key.toLowerCase() === 'm') {
         setPlotMode('parametric');
+      } else if (e.key.toLowerCase() === 'e') {
+        exportCSV();
+      } else if (e.key.toLowerCase() === 'o') {
+        const fileIn = document.getElementById('jsonInput');
+        if (fileIn) fileIn.click();
       } else if (e.key === '+' || e.key === '=') {
         zoomIn();
       } else if (e.key === '-' || e.key === '_') {

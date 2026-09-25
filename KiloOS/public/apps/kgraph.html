@@ -123,7 +123,14 @@
     display: flex;
     flex-direction: column;
     z-index: 5;
-    transition: width 0.3s ease;
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .sidebar.collapsed {
+    width: 0 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    border-right: none !important;
+    pointer-events: none;
   }
   
   /* Mode Selector Switcher Bar */
@@ -514,17 +521,20 @@
     position: absolute;
     top: 14px;
     right: 14px;
-    background: rgba(15, 23, 42, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 8px;
     padding: 10px 14px;
     font-family: 'Consolas', monospace;
     font-size: 12px;
     color: #e2e8f0;
     backdrop-filter: blur(8px);
-    pointer-events: none;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
     z-index: 4;
+    transition: opacity 0.2s ease;
+  }
+  .cursor-readout.hidden {
+    display: none !important;
   }
   .readout-line {
     display: flex;
@@ -537,6 +547,38 @@
   }
   .readout-val {
     font-weight: bold;
+  }
+
+  /* Floating Canvas Sidebar Toggle Button */
+  .canvas-toggle-btn {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    color: #38bdf8;
+    padding: 7px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    gap: 6px;
+    z-index: 6;
+    transition: all 0.2s ease;
+    user-select: none;
+  }
+  .canvas-toggle-btn:hover {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: #38bdf8;
+    color: #fff;
+    transform: translateY(-1px);
+  }
+  .sidebar.collapsed ~ .canvas-wrap .canvas-toggle-btn {
+    display: flex;
   }
   
   /* Canvas Controls Toolbar */
@@ -564,41 +606,44 @@
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    font-size: 16px;
+    font-size: 15px;
     cursor: pointer;
     transition: all 0.2s;
   }
   .tool-btn:hover {
     background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(56, 189, 248, 0.4);
   }
   
-  /* Interactive Toast Notification */
+  /* Interactive Centered Toast Notification (Non-Occluding Pill) */
   .toast-msg {
     position: absolute;
-    bottom: 16px;
-    left: 16px;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
     background: rgba(19, 23, 36, 0.96);
     border: 1px solid rgba(56, 189, 248, 0.45);
     color: #f1f5f9;
-    padding: 10px 14px;
-    border-radius: 8px;
+    padding: 10px 18px;
+    border-radius: 20px;
     font-size: 13px;
     font-weight: 500;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 16px rgba(56, 189, 248, 0.2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), 0 0 16px rgba(56, 189, 248, 0.2);
     opacity: 0;
     transition: opacity 0.25s ease, transform 0.25s ease;
-    transform: translateY(8px);
     pointer-events: none;
-    z-index: 30;
+    z-index: 50;
     display: flex;
     align-items: center;
     gap: 12px;
-    max-width: 480px;
+    max-width: 90%;
+    width: auto;
     backdrop-filter: blur(12px);
+    cursor: pointer;
   }
   .toast-msg.visible {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
     pointer-events: auto;
   }
   .toast-text {
@@ -736,6 +781,55 @@
     align-items: center;
     gap: 6px;
   }
+  /* Responsive Breakpoints & Ergonomics */
+  @media (max-width: 960px) {
+    .sidebar {
+      width: 320px;
+    }
+    .header-actions .btn {
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .app-header {
+      padding: 8px 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .header-actions {
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .header-actions .btn {
+      padding: 5px 8px;
+      font-size: 11px;
+    }
+    .workspace {
+      flex-direction: column;
+    }
+    .sidebar {
+      width: 100%;
+      height: 280px;
+      border-right: none;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .sidebar.collapsed {
+      height: 0 !important;
+      width: 100% !important;
+    }
+    .canvas-tools {
+      bottom: 12px;
+      right: 12px;
+    }
+    .cursor-readout {
+      top: 10px;
+      right: 10px;
+      padding: 8px 10px;
+      font-size: 11px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -747,6 +841,7 @@
       <div class="app-title">KGraph Studio</div>
     </div>
     <div class="header-actions">
+      <button class="btn" id="sidebarToggleBtn" onclick="toggleSidebar()" title="Toggle Sidebar (Ctrl+B or \)">◀ Sidebar <span class="shortcut-badge">^B</span></button>
       <button class="btn" onclick="exportPNG()" title="Export PNG Snapshot (Ctrl+S)">📷 PNG <span class="shortcut-badge">^S</span></button>
       <button class="btn" onclick="exportCSV()" title="Export CSV Data Points (E)">📊 CSV <span class="shortcut-badge">E</span></button>
       <button class="btn" onclick="exportJSON()" title="Save Configuration to JSON">💾 Config</button>
@@ -892,25 +987,31 @@
     
     <!-- Canvas Area -->
     <div class="canvas-wrap">
+      <button class="canvas-toggle-btn" id="canvasSidebarOpenBtn" onclick="toggleSidebar()" title="Expand Sidebar (Ctrl+B or \)">▶ Functions</button>
       <canvas id="graphCanvas"></canvas>
       
       <!-- Floating Readout -->
       <div class="cursor-readout" id="cursorReadout">
-        <div class="readout-line" id="readoutHeaderLine">
-          <span>x:</span> <span class="readout-val" id="readoutX">0.000</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:3px;">
+          <div class="readout-line" id="readoutHeaderLine" style="margin-bottom:0">
+            <span>x:</span> <span class="readout-val" id="readoutX">0.000</span>
+          </div>
+          <button onclick="toggleReadout()" title="Hide Readout Overlay" style="background:none; border:none; color:#64748b; cursor:pointer; font-size:12px; line-height:1; padding:0 2px;">✕</button>
         </div>
         <div id="readoutYList"></div>
       </div>
       
       <!-- Canvas Tools Bar -->
       <div class="canvas-tools">
-        <button class="tool-btn" onclick="zoomIn()" title="Zoom In">+</button>
-        <button class="tool-btn" onclick="zoomOut()" title="Zoom Out">-</button>
-        <button class="tool-btn" onclick="resetView()" title="Reset View">⟲</button>
+        <button class="tool-btn" onclick="toggleSidebar()" id="toolBtnSidebar" title="Toggle Sidebar (Ctrl+B or \)">◀</button>
+        <button class="tool-btn" onclick="toggleReadout()" id="toolBtnReadout" title="Toggle Coordinates HUD">📊</button>
+        <button class="tool-btn" onclick="zoomIn()" title="Zoom In (+)">+</button>
+        <button class="tool-btn" onclick="zoomOut()" title="Zoom Out (-)">-</button>
+        <button class="tool-btn" onclick="resetView()" title="Reset View (R or 0)">⟲</button>
       </div>
       
-      <!-- Toast -->
-      <div class="toast-msg" id="toastMsg"></div>
+      <!-- Toast Notification -->
+      <div class="toast-msg" id="toastMsg" onclick="hideToast()" title="Click to dismiss"></div>
     </div>
     
   </div>
@@ -933,13 +1034,14 @@
           </thead>
           <tbody>
             <tr><td><span class="kbd-key">F1</span> / <span class="kbd-key">H</span></td><td>Toggle this Help & Reference guide</td></tr>
+            <tr><td><span class="kbd-key">Ctrl+B</span> / <span class="kbd-key">\</span> / <span class="kbd-key">[</span></td><td>Toggle collapsible function sidebar (maximize canvas)</td></tr>
             <tr><td><span class="kbd-key">Enter</span></td><td>Plot / re-evaluate expressions immediately</td></tr>
             <tr><td><span class="kbd-key">←</span> <span class="kbd-key">→</span> <span class="kbd-key">↑</span> <span class="kbd-key">↓</span></td><td>Smoothly pan viewport across canvas</td></tr>
             <tr><td><span class="kbd-key">1</span> / <span class="kbd-key">2</span> / <span class="kbd-key">3</span> / <span class="kbd-key">4</span></td><td>Switch tabs: Functions, Calculus, Analysis, Presets</td></tr>
             <tr><td><span class="kbd-key">C</span> / <span class="kbd-key">P</span> / <span class="kbd-key">M</span></td><td>Switch plot modes: [C]artesian, [P]olar, Para[M]etric</td></tr>
             <tr><td><span class="kbd-key">+</span> / <span class="kbd-key">-</span> (or <span class="kbd-key">PgUp</span>/<span class="kbd-key">PgDn</span>)</td><td>Zoom viewport in / out</td></tr>
             <tr><td><span class="kbd-key">0</span> / <span class="kbd-key">R</span> / <span class="kbd-key">Home</span></td><td>Reset viewport to origin and default [-10, 10] range</td></tr>
-            <tr><td><span class="kbd-key">Ctrl+S</span> / <span class="kbd-key">S</span></td><td>Export high-res PNG graph snapshot</td></tr>
+            <tr><td><span class="kbd-key">Ctrl+S</span></td><td>Export high-res PNG graph snapshot</td></tr>
             <tr><td><span class="kbd-key">E</span></td><td>Export sampled curve points to CSV</td></tr>
             <tr><td><span class="kbd-key">Ctrl+O</span> / <span class="kbd-key">O</span></td><td>Load saved graph configuration JSON</td></tr>
             <tr><td><span class="kbd-key">Esc</span></td><td>Unfocus input fields or close any active modal dialog</td></tr>
@@ -1681,9 +1783,12 @@
       const dpr = window.devicePixelRatio || 1;
       const w = canvas.parentElement.clientWidth;
       const h = canvas.parentElement.clientHeight;
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      ctx.scale(dpr, dpr);
+      if (!w || !h) return;
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       drawGraph();
     }
 
@@ -1801,8 +1906,8 @@
         const firstGridX = Math.floor(minX / gridStep) * gridStep;
         const firstGridY = Math.floor(minY / gridStep) * gridStep;
 
-        ctx.fillStyle = '#64748b';
-        ctx.font = '11px monospace';
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '11px Consolas, monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
         
@@ -1864,13 +1969,18 @@
           ctx.lineWidth = 2.5;
           ctx.beginPath();
           let first = true;
+          let prevY = null;
           
           for (let px = 0; px <= width; px += 2) {
             const x = toWorldX(px, width);
             const y = fn(x);
             if (isNaN(y) || !isFinite(y)) {
               first = true;
+              prevY = null;
               continue;
+            }
+            if (prevY !== null && Math.abs(y - prevY) > view_height * 1.5 && (y * prevY < 0 || Math.abs(y) > view_scale * 5)) {
+              first = true;
             }
             const py = toScreenY(y, height);
             if (first) {
@@ -1879,6 +1989,7 @@
             } else {
               ctx.lineTo(px, py);
             }
+            prevY = y;
           }
           ctx.stroke();
           
@@ -2114,18 +2225,40 @@
     });
     
     let lastTouch = { x: 0, y: 0 };
+    let initialPinchDist = null;
+    let initialPinchScale = view_scale;
+
     canvas.addEventListener('touchstart', (e) => {
       if (e.touches.length === 1) {
         isDragging = true;
+        initialPinchDist = null;
         lastTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      } else if (e.touches.length === 2) {
+        isDragging = false;
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        initialPinchDist = Math.hypot(dx, dy);
+        initialPinchScale = view_scale;
       }
     }, { passive: true });
     
     window.addEventListener('touchend', () => {
       isDragging = false;
+      initialPinchDist = null;
     });
     
     canvas.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && initialPinchDist) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const currentDist = Math.hypot(dx, dy);
+        if (currentDist > 10) {
+          const ratio = initialPinchDist / currentDist;
+          view_scale = Math.max(0.01, Math.min(10000, initialPinchScale * ratio));
+          drawGraph();
+        }
+        return;
+      }
       if (!isDragging || e.touches.length !== 1) return;
       const rect = canvas.getBoundingClientRect();
       const clientX = e.touches[0].clientX;
@@ -2165,6 +2298,40 @@
       view_scale = 10;
       drawGraph();
       showToast('Viewport reset to [-10, 10]');
+    }
+
+    function toggleSidebar() {
+      const sb = document.querySelector('.sidebar');
+      const toggleBtn = document.getElementById('sidebarToggleBtn');
+      const toolBtn = document.getElementById('toolBtnSidebar');
+      if (!sb) return;
+      const isCollapsed = sb.classList.toggle('collapsed');
+      if (toggleBtn) {
+        toggleBtn.innerHTML = isCollapsed ? '▶ Sidebar <span class="shortcut-badge">^B</span>' : '◀ Sidebar <span class="shortcut-badge">^B</span>';
+      }
+      if (toolBtn) {
+        toolBtn.innerText = isCollapsed ? '▶' : '◀';
+        toolBtn.title = isCollapsed ? 'Expand Sidebar (Ctrl+B or \\)' : 'Collapse Sidebar (Ctrl+B or \\)';
+      }
+      setTimeout(resizeCanvas, 50);
+      setTimeout(resizeCanvas, 260);
+    }
+
+    let isReadoutVisible = true;
+    function toggleReadout() {
+      const ro = document.getElementById('cursorReadout');
+      const toolBtn = document.getElementById('toolBtnReadout');
+      if (!ro) return;
+      isReadoutVisible = !isReadoutVisible;
+      if (isReadoutVisible) {
+        ro.classList.remove('hidden');
+        if (toolBtn) toolBtn.style.opacity = '1';
+        showToast('Coordinates HUD enabled');
+      } else {
+        ro.classList.add('hidden');
+        if (toolBtn) toolBtn.style.opacity = '0.5';
+        showToast('Coordinates HUD hidden');
+      }
     }
 
     // --- Export & Import ---
@@ -2336,7 +2503,25 @@
     buildModeControls();
     buildPresets();
     setTimeout(resizeCanvas, 100);
-    setTimeout(() => showToast("👋 Welcome to KGraph Studio!\nPress F1 or H for Help & Shortcuts.\nUse arrow keys to pan, scroll wheel or +/- to zoom, and click quick presets above.", 6000), 400);
+
+    // Auto-collapse sidebar on narrow mobile viewports
+    if (window.innerWidth < 768) {
+      const sb = document.querySelector('.sidebar');
+      if (sb) sb.classList.add('collapsed');
+      const toggleBtn = document.getElementById('sidebarToggleBtn');
+      if (toggleBtn) toggleBtn.innerHTML = '▶ Sidebar <span class="shortcut-badge">^B</span>';
+      const toolBtn = document.getElementById('toolBtnSidebar');
+      if (toolBtn) { toolBtn.innerText = '▶'; toolBtn.title = 'Expand Sidebar (Ctrl+B or \\)'; }
+    }
+
+    // First-run tutorial onboarding check
+    const hasSeenTutorial = localStorage.getItem('kgraph_firstRunSeen');
+    if (!hasSeenTutorial) {
+      setTimeout(() => {
+        showToast("👋 Welcome to KGraph Studio!\nPress F1 or H for Help & Shortcuts.\nDrag or use arrow keys to pan, scroll wheel or +/- to zoom.\nExplore Calculus & Analysis in tabs [2] and [3].", 6500);
+        localStorage.setItem('kgraph_firstRunSeen', 'true');
+      }, 400);
+    }
 
     // Global Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
@@ -2357,6 +2542,11 @@
       
       // Ctrl / Meta Hotkeys
       if (e.ctrlKey || e.metaKey) {
+        if (e.key.toLowerCase() === 'b') {
+          e.preventDefault();
+          toggleSidebar();
+          return;
+        }
         if (e.key.toLowerCase() === 's') {
           e.preventDefault();
           exportPNG();
@@ -2371,6 +2561,12 @@
         return;
       }
       if (e.altKey) return;
+
+      if (e.key === '\\' || e.key === '[') {
+        e.preventDefault();
+        toggleSidebar();
+        return;
+      }
       
       if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
         e.preventDefault();
