@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-25T14:45:00Z — kilo-usability: KImage (UI/UX, Layout & Usability Polish)**
+  - Status: PASS ✅ (HiDPI histogram scaling, crisp pixel art mode, zoom pan & toast de-occlusion; 0 regressions).
+  - Canvas Crispness: Sized histogram canvas with window.devicePixelRatio and transform scaling for razor-sharp Retina/4K display.
+  - Zoom & Pan: Added pointer pan navigation on zoomed canvas with grab/grabbing cursor and 0-key / 1:1 button center reset.
+  - Pixel Art Mode: Added toggleable Crisp Pixel Art Mode (hotkey P) with image-rendering: pixelated for retro icon/sprite editing.
+  - Toast De-Occlusion: Re-anchored toasts to top-center (top: 56px) with click-to-dismiss, preventing panel and bottom bar occlusion.
+  - Onboarding & UX: Added first-run onboarding guide toast via localStorage, updated help modal shortcuts, and scoped tab arrow keys.
+  - Verification: Clean MSVC compile (`KImage.exe` 24.0 KB); Vite clean build in 361ms (`kimage.html` 96.8 KB); security lint 100% PASS.
+
 - **2026-09-25T13:51:00Z — kilo-tester: KWizard (UI Element Audit & Inline Fixes)**
   - Status: PASS ✅ (6 UI issues identified and resolved; 0 regressions).
   - Modals & Backdrops: Added backdrop click dismissal to deck builder and Grimoire modals; replaced blocking alert with toast.
