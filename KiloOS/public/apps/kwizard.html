@@ -281,10 +281,12 @@
             transition: transform 0.15s, border-color 0.2s;
         }
         .deck-card:hover { border-color: #ffd700; transform: scale(1.06); box-shadow: 0 0 10px #b89947; }
-        .deck-card-title { font-weight: bold; font-size: 10px; }
-        #close-deck-btn {
-            position: absolute; top: 12px; right: 24px;
+        .deck-card:focus-visible, .card:focus-visible, button:focus-visible, select:focus-visible {
+            outline: 2px solid #ffd700;
+            outline-offset: 2px;
+            box-shadow: 0 0 10px #ffd700;
         }
+        .deck-card-title { font-weight: bold; font-size: 10px; }
         .help-content {
             max-width: 800px;
             margin: 0 auto;
@@ -299,12 +301,14 @@
         .help-content p, .help-content ul { margin-top: 5px; margin-bottom: 10px; font-size: 13px; color: #e8d8b7; }
         #toast-container {
             position: fixed;
-            top: 18px;
-            right: 18px;
-            z-index: 250;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 300;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            align-items: center;
+            gap: 6px;
             pointer-events: none;
         }
         .toast {
@@ -327,6 +331,18 @@
         .toast.toast-success { border-color: #22c55e; color: #bbf7d0; }
         .toast.toast-warn { border-color: #eab308; color: #fef08a; }
         .toast.toast-error { border-color: #ef4444; color: #fecaca; }
+        .deck-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+        @media (max-width: 640px) {
+            #deck-modal { padding: 12px; }
+            .deck-modal-body { flex-direction: column !important; }
+            .deck-column { margin: 6px 0; }
+        }
     </style>
 </head>
 <body>
@@ -346,6 +362,9 @@
             <button id="help-btn" style="background: linear-gradient(180deg, #6b21a8 0%, #3b0764 100%); border-color: #c084fc;">Grimoire</button>
             <button id="save-btn" title="Quicksave Game (F5)" style="background: linear-gradient(180deg, #1e3a8a 0%, #0f172a 100%); border-color: #3b82f6;">Save [F5]</button>
             <button id="load-btn" title="Quickload Game (F9)" style="background: linear-gradient(180deg, #065f46 0%, #064e3b 100%); border-color: #10b981;">Load [F9]</button>
+            <button id="export-save-btn" title="Export Game Save to JSON file" style="background: linear-gradient(180deg, #374151 0%, #1f2937 100%); border-color: #9ca3af;">Export</button>
+            <button id="import-save-btn" title="Import Game Save from JSON file" style="background: linear-gradient(180deg, #374151 0%, #1f2937 100%); border-color: #9ca3af;">Import</button>
+            <input type="file" id="import-save-file" accept=".json" style="display: none;">
         </div>
         
         <div>
@@ -371,16 +390,30 @@
         </div>
     </div>
 
-    <div id="deck-modal" style="display: none; flex-direction: row;">
-        <div class="deck-column">
-            <h2>Available Spells (Click to Add)</h2>
-            <div id="avail-cards" class="deck-grid"></div>
+    <div id="deck-modal" style="display: none; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; padding: 0 4px;">
+            <h2 style="margin: 0; color: #ffd700; font-size: 18px;">Arcane Deck Builder (<span id="deck-count">20</span>/20)</h2>
+            <button id="close-deck-btn">Save & Close</button>
         </div>
-        <div class="deck-column">
-            <h2>Your Deck (<span id="deck-count">20</span>/20) (Click to Remove)</h2>
-            <div id="curr-deck" class="deck-grid"></div>
+        <div class="deck-toolbar">
+            <button id="preset-pyro-btn" style="font-size: 11px; padding: 3px 8px; border-color: #ef4444;">Pyro Preset</button>
+            <button id="preset-cryo-btn" style="font-size: 11px; padding: 3px 8px; border-color: #06b6d4;">Cryo Preset</button>
+            <button id="preset-arcane-btn" style="font-size: 11px; padding: 3px 8px; border-color: #a855f7;">Arcane Preset</button>
+            <button id="preset-druid-btn" style="font-size: 11px; padding: 3px 8px; border-color: #22c55e;">Druid Preset</button>
+            <button id="export-deck-btn" style="font-size: 11px; padding: 3px 8px; border-color: #60a5fa;">Export Deck</button>
+            <button id="import-deck-btn" style="font-size: 11px; padding: 3px 8px; border-color: #60a5fa;">Import Deck</button>
+            <button id="clear-deck-btn" style="font-size: 11px; padding: 3px 8px; border-color: #ef4444;">Clear</button>
         </div>
-        <button id="close-deck-btn">Save & Close</button>
+        <div class="deck-modal-body" style="display: flex; flex: 1; min-height: 0; overflow: hidden; width: 100%;">
+            <div class="deck-column">
+                <h2>Available Spells (Click to Add)</h2>
+                <div id="avail-cards" class="deck-grid"></div>
+            </div>
+            <div class="deck-column">
+                <h2>Your Deck (Click to Remove)</h2>
+                <div id="curr-deck" class="deck-grid"></div>
+            </div>
+        </div>
     </div>
 
     <div id="help-modal">
@@ -392,6 +425,7 @@
 
             <h3>Controls & Shortcuts</h3>
             <ul>
+                <li><b>[1] - [7]:</b> Cast Card from Hand (Keyboard Hotkey)</li>
                 <li><b>[F1] / [H]:</b> Open / Close Grimoire</li>
                 <li><b>[F5]:</b> Quicksave State (persists HP, Mana, hands, deck, status effects, campaign)</li>
                 <li><b>[F9]:</b> Quickload State</li>
@@ -1097,6 +1131,16 @@
         const spellIndexList = document.getElementById('spell-index-list');
         const saveBtn = document.getElementById('save-btn');
         const loadBtn = document.getElementById('load-btn');
+        const exportSaveBtn = document.getElementById('export-save-btn');
+        const importSaveBtn = document.getElementById('import-save-btn');
+        const importSaveFile = document.getElementById('import-save-file');
+        const presetPyroBtn = document.getElementById('preset-pyro-btn');
+        const presetCryoBtn = document.getElementById('preset-cryo-btn');
+        const presetArcaneBtn = document.getElementById('preset-arcane-btn');
+        const presetDruidBtn = document.getElementById('preset-druid-btn');
+        const exportDeckBtn = document.getElementById('export-deck-btn');
+        const importDeckBtn = document.getElementById('import-deck-btn');
+        const clearDeckBtn = document.getElementById('clear-deck-btn');
 
         function showToast(msg, type = 'info', duration = 3000) {
             const container = document.getElementById('toast-container');
@@ -1127,6 +1171,9 @@
             sampleCards.forEach((c, idx) => {
                 let el = document.createElement('div');
                 el.className = 'deck-card';
+                el.tabIndex = 0;
+                el.setAttribute('role', 'button');
+                el.setAttribute('aria-label', `Add ${c.name}, cost ${c.cost}, ${c.type}`);
                 el.innerHTML = `
                     <div class="card-mana-gem" style="width:16px;height:16px;font-size:9px;">${c.cost}</div>
                     <div class="deck-card-title">${c.name}</div>
@@ -1136,6 +1183,14 @@
                     if (playerDeck.length < 20) {
                         playerDeck.push(idx);
                         renderDeckBuilder();
+                    } else {
+                        showToast("Deck is full (20/20 cards). Click a card in your deck to remove.", "warn");
+                    }
+                };
+                el.onkeydown = (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        el.click();
                     }
                 };
                 availCardsDiv.appendChild(el);
@@ -1145,6 +1200,9 @@
                 let c = sampleCards[idx];
                 let el = document.createElement('div');
                 el.className = 'deck-card';
+                el.tabIndex = 0;
+                el.setAttribute('role', 'button');
+                el.setAttribute('aria-label', `Remove ${c.name}, cost ${c.cost}, ${c.type}`);
                 el.innerHTML = `
                     <div class="card-mana-gem" style="width:16px;height:16px;font-size:9px;">${c.cost}</div>
                     <div class="deck-card-title">${c.name}</div>
@@ -1153,6 +1211,12 @@
                 el.onclick = () => {
                     playerDeck.splice(i, 1);
                     renderDeckBuilder();
+                };
+                el.onkeydown = (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        el.click();
+                    }
                 };
                 currDeckDiv.appendChild(el);
             });
@@ -1165,13 +1229,85 @@
 
         closeDeckBtn.onclick = () => {
             if (playerDeck.length !== 20) {
-                alert("You must have exactly 20 cards in your deck.");
+                showToast("You must have exactly 20 cards in your deck! (" + playerDeck.length + "/20)", "warn");
                 return;
             }
             try {
                 localStorage.setItem('kwizard_playerDeck', JSON.stringify(playerDeck));
             } catch (e) {}
             deckModal.style.display = 'none';
+        };
+
+        deckModal.addEventListener('click', (e) => {
+            if (e.target === deckModal) {
+                if (playerDeck.length === 20) {
+                    try { localStorage.setItem('kwizard_playerDeck', JSON.stringify(playerDeck)); } catch (err) {}
+                    deckModal.style.display = 'none';
+                } else {
+                    showToast("Deck must have exactly 20 cards! (" + playerDeck.length + "/20)", "warn");
+                }
+            }
+        });
+
+        helpModal.addEventListener('click', (e) => {
+            if (e.target === helpModal) {
+                closeHelp();
+            }
+        });
+
+        if (presetPyroBtn) presetPyroBtn.onclick = () => {
+            playerDeck = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 16, 16, 22, 22];
+            renderDeckBuilder();
+            showToast("Loaded Pyromancer Preset (20 cards)", "info");
+        };
+        if (presetCryoBtn) presetCryoBtn.onclick = () => {
+            playerDeck = [8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 16, 16, 18, 18, 22, 22];
+            renderDeckBuilder();
+            showToast("Loaded Cryomancer Preset (20 cards)", "info");
+        };
+        if (presetArcaneBtn) presetArcaneBtn.onclick = () => {
+            playerDeck = [15, 15, 16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 0, 1, 8, 9];
+            renderDeckBuilder();
+            showToast("Loaded Arcane Preset (20 cards)", "info");
+        };
+        if (presetDruidBtn) presetDruidBtn.onclick = () => {
+            playerDeck = [23, 23, 24, 24, 25, 25, 26, 26, 27, 28, 28, 29, 29, 30, 30, 31, 31, 34, 35, 22];
+            renderDeckBuilder();
+            showToast("Loaded Druid Preset (20 cards)", "info");
+        };
+        if (clearDeckBtn) clearDeckBtn.onclick = () => {
+            playerDeck = [];
+            renderDeckBuilder();
+            showToast("Deck Cleared (0/20)", "warn");
+        };
+        if (exportDeckBtn) exportDeckBtn.onclick = () => {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(playerDeck));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", "kwizard_deck.json");
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(JSON.stringify(playerDeck)).catch(() => {});
+            }
+            showToast("Deck Exported to JSON & Clipboard", "success");
+        };
+        if (importDeckBtn) importDeckBtn.onclick = () => {
+            const input = prompt("Paste deck JSON array (e.g. [0,1,2,...] with 20 card IDs):");
+            if (!input) return;
+            try {
+                const parsed = JSON.parse(input);
+                if (Array.isArray(parsed) && parsed.length === 20 && parsed.every(id => typeof id === 'number' && id >= 0 && id < sampleCards.length)) {
+                    playerDeck = parsed;
+                    renderDeckBuilder();
+                    showToast("Deck Imported Successfully (20 cards)", "success");
+                } else {
+                    showToast("Invalid Deck JSON! Must be array of 20 card IDs (0-35).", "error");
+                }
+            } catch (err) {
+                showToast("Failed to parse Deck JSON!", "error");
+            }
         };
 
         function openHelp() {
@@ -1322,6 +1458,9 @@
                     </div>
                 `;
             } else {
+                card.tabIndex = 0;
+                card.setAttribute('role', 'button');
+                card.setAttribute('aria-label', `${cardData.name}, Cost ${cardData.cost} Mana. ${cardData.effect}`);
                 card.innerHTML = `
                     <div class="card-header">
                         <div class="card-mana-gem">${cardData.cost}</div>
@@ -1330,6 +1469,12 @@
                     <div class="card-art">${getCardSVG(cardData)}</div>
                     <div class="card-desc">${cardData.effect}</div>
                 `;
+                card.onkeydown = (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        card.click();
+                    }
+                };
                 card.onclick = () => {
                     if (gameState !== 0) return;
                     if (playerFreeze > 0) {
@@ -1338,6 +1483,8 @@
                         return;
                     }
                     if (playerMana >= cardData.cost) {
+                        card.onclick = null;
+                        card.style.pointerEvents = 'none';
                         playerMana -= cardData.cost;
                         
                         let dmg = cardData.damage || 0;
@@ -1546,6 +1693,10 @@
 
         drawBtn.onclick = () => {
             if (gameState === 0) {
+                if (playerHand.children.length >= 7) {
+                    showToast("Hand is full! (Max 7 cards)", "warn");
+                    return;
+                }
                 drawCard(false);
                 drawCard(true);
             }
@@ -1775,6 +1926,47 @@
         if (saveBtn) saveBtn.onclick = quickSave;
         if (loadBtn) loadBtn.onclick = quickLoad;
 
+        function exportSaveToFile() {
+            quickSave();
+            const raw = localStorage.getItem('kwizard_save');
+            if (!raw) return;
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(raw);
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", "kwizard_save.json");
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+            showToast("Game Save Exported (kwizard_save.json)", "success");
+        }
+
+        if (exportSaveBtn) exportSaveBtn.onclick = exportSaveToFile;
+
+        if (importSaveBtn && importSaveFile) {
+            importSaveBtn.onclick = () => importSaveFile.click();
+            importSaveFile.onchange = (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        const s = JSON.parse(evt.target.result);
+                        if (s && typeof s.playerHp === 'number' && typeof s.playerMana === 'number') {
+                            localStorage.setItem('kwizard_save', JSON.stringify(s));
+                            quickLoad();
+                            showToast("Save Imported Successfully!", "success");
+                        } else {
+                            showToast("Invalid Save File!", "error");
+                        }
+                    } catch (err) {
+                        showToast("Failed to read save file!", "error");
+                    }
+                    importSaveFile.value = '';
+                };
+                reader.readAsText(file);
+            };
+        }
+
         window.addEventListener('keydown', (e) => {
             if (e.key === 'F5') {
                 e.preventDefault();
@@ -1817,6 +2009,15 @@
                     return;
                 }
                 return;
+            }
+
+            if (e.key >= '1' && e.key <= '7') {
+                const idx = parseInt(e.key, 10) - 1;
+                if (gameState === 0 && playerHand.children[idx]) {
+                    e.preventDefault();
+                    playerHand.children[idx].click();
+                    return;
+                }
             }
 
             if (e.key === 'h' || e.key === 'H') {

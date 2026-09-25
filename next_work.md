@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KWizard
+  kilo_tester: KZip
   kilo_usability: KImage
   kilo_graphics: KStarship
   kilo_qa: KQuest
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-creator
-  app: "kweb://portal"
-  timestamp: "2026-09-25T12:42:00Z"
+  agent: kilo-tester
+  app: KWizard
+  timestamp: "2026-09-25T13:51:00Z"
 last_planner_run: "2026-09-25T06:42:00Z"
 ---
 
@@ -110,9 +110,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KWizard`
+- **Current Target**: `KZip`
 - **Upcoming Queue**:
-  `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`.
+  `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KImage`
@@ -206,6 +206,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-25T13:51:00Z — kilo-tester: KWizard (UI Element Audit & Inline Fixes)**
+  - Status: PASS ✅ (6 UI issues identified and resolved; 0 regressions).
+  - Modals & Backdrops: Added backdrop click dismissal to deck builder and Grimoire modals; replaced blocking alert with toast.
+  - Race Conditions: Eliminated double-click rapid-cast exploit by disabling pointer events on card click until animation resolves.
+  - Controls & Accessibility: Added [1]-[7] number key hotkeys for casting hand spells; added ARIA attributes and focus styles.
+  - Storage & Presets: Added JSON export/import for game saves and decks; added 4 deck archetypes (Pyro, Cryo, Arcane, Druid).
+  - Toast Occlusion: Re-anchored toasts to bottom-center pill preventing occlusion of top action buttons and modal controls.
+  - Verification: Clean MSVC compile (`KWizard.exe` 10.4 KB); clean Vite build in 389ms (`kwizard.html` 94.4 KB); security lint 100% PASS.
+
 - **2026-09-25T12:42:00Z — kilo-creator: kweb://portal (Yahoo/Excite 1999 Directory Upgrade & Deep Expansion)**
   - Status: PASS ✅ (Simulated search across 98 apps, live stocks with portfolio trader, classifieds & trivia complete; 0 regressions).
   - Search Engine: KiloSearch 1.0 indexing all 98 apps and webring destinations with instant live query and category filtering.
@@ -239,15 +248,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Spell Mechanics: Activated Time Warp (refills mana + draws card), Counterspell (banishes high-cost card), and Polymorph (dispels shield).
   - Balance & Audio: Buffed Cold Snap to 3 dmg + 2 freeze; added bubbling poison audio SFX across web & native Beep synth.
   - Verification: Clean MSVC compile (`KWizard.exe` 10.4 KB); Vite clean build in 439ms (`kwizard.html` 83.9 KB); security lint 100% PASS.
-
-- **2026-09-25T08:44:00Z — kilo-usability: KGraph (UI/UX, Layout & Usability Polish)**
-  - Status: PASS ✅ (Collapsible sidebar, HiDPI rendering, touch pinch-to-zoom & toast de-occlusion; 0 regressions).
-  - Responsive & Layout: Added collapsible function sidebar with Ctrl+B/backslash hotkeys, canvas expand button, and mobile media queries.
-  - Toast De-Occlusion: Centered notification toast to bottom pill (z-50) with click-to-dismiss, preventing canvas control occlusion.
-  - Canvas Crispness: Sized canvas via devicePixelRatio with ctx.setTransform and elevated axis label contrast (Consolas font).
-  - Mathematical Ergonomics: Handled vertical asymptote pen-lifting for tan(x)/rational functions; added touch 2-finger pinch-to-zoom.
-  - Controls & Onboarding: Added coordinates HUD toggle, reset view, and guarded initial welcome toast behind localStorage flag.
-  - Verification: Clean MSVC C compile (`KGraph.exe` 26.5 KB); Vite clean build in 549ms (`kgraph.html` 93.0 KB); security lint 100% PASS.
 
 
 

@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-25T08:44:00Z — kilo-usability: KGraph (UI/UX, Layout & Usability Polish)**
+  - Status: PASS ✅ (Collapsible sidebar, HiDPI rendering, touch pinch-to-zoom & toast de-occlusion; 0 regressions).
+  - Responsive & Layout: Added collapsible function sidebar with Ctrl+B/backslash hotkeys, canvas expand button, and mobile media queries.
+  - Toast De-Occlusion: Centered notification toast to bottom pill (z-50) with click-to-dismiss, preventing canvas control occlusion.
+  - Canvas Crispness: Sized canvas via devicePixelRatio with ctx.setTransform and elevated axis label contrast (Consolas font).
+  - Mathematical Ergonomics: Handled vertical asymptote pen-lifting for tan(x)/rational functions; added touch 2-finger pinch-to-zoom.
+  - Controls & Onboarding: Added coordinates HUD toggle, reset view, and guarded initial welcome toast behind localStorage flag.
+  - Verification: Clean MSVC C compile (`KGraph.exe` 26.5 KB); Vite clean build in 549ms (`kgraph.html` 93.0 KB); security lint 100% PASS.
+
 - **2026-09-25T07:51:00Z — kilo-tester: KVoid (UI Element Audit & Inline Fixes)**
   - Status: PASS ✅ (6 UI issues identified and resolved; 0 regressions).
   - Modal & Backdrop: Wrapped guide in backdrop overlay with click-to-dismiss, top-right close icon, and tutorial flag setting.
