@@ -1871,10 +1871,10 @@
                         e.y += e.dir;
                         if (e.y <= 4 || e.y >= 11) e.dir *= -1;
                         if (e.x === this.player.x && e.y === this.player.y) {
-                            this.addParadoxStrain(15, "Phantom phase collision");
+                            this.addParadoxStrain(10, "Phantom phase collision");
                             this.spawnRippleEffect(this.player.x * TILE_SIZE + 16, this.player.y * TILE_SIZE + 16);
                             audio.playAlarm();
-                            this.logEvent("[TEMPORAL DISPLACEMENT] Phased with Tachyon Anomaly! Paradox strain spiked.", "danger");
+                            this.logEvent("[TEMPORAL DISPLACEMENT] Phased with Tachyon Anomaly! Paradox strain increased.", "danger");
                         }
                     }
                 });
@@ -1960,80 +1960,123 @@
                 audio.playAlarm();
                 this.logEvent("[CRITICAL PARADOX BREACH] Reality collapsing! Chrono-Quake detected!", "danger");
                 showToast("⚠️ PARADOX BREACH! Causality rupture active!");
-                // Spawn a tachyon anomaly
-                this.entities[this.currentEpoch].push({
-                    id: 'breach_' + Date.now(),
-                    type: 'phantom',
-                    x: Math.min(GRID_W - 2, this.player.x + 2),
-                    y: this.player.y,
-                    dir: 1
-                });
+                // Spawn a tachyon anomaly (capped at 3 per epoch)
+                const currentPhantoms = this.entities[this.currentEpoch].filter(e => e.type === 'phantom');
+                if (currentPhantoms.length < 3) {
+                    this.entities[this.currentEpoch].push({
+                        id: 'breach_' + Date.now(),
+                        type: 'phantom',
+                        x: Math.min(GRID_W - 2, this.player.x + 2),
+                        y: this.player.y,
+                        dir: 1
+                    });
+                }
             }
 
             accessChronoLocker() {
                 if (!this.flags.lockerItem) {
-                    if (this.currentEpoch === 'alpha') {
-                        const item = {
-                            id: 'cell_alpha',
-                            name: 'Precursor Cell (1984)',
-                            icon: '🔋',
-                            epoch: 'alpha',
-                            desc: 'Uncharged precursor power cell. Deposit in locker to age across timelines.'
-                        };
-                        if (this.inventory.length < 4) {
-                            this.inventory.push(item);
-                            this.flags.lockerDiscovered = true;
-                            this.logEvent("[CHRONO-LOCKER] Retrieved Precursor Cell from 1984 locker!", "success");
-                            audio.playTone(550, 0.2, 'triangle', 0.2);
-                            showToast("Retrieved Precursor Cell [🔋]. Click slot to discharge or store.");
+                    if (!this.flags.lockerDiscovered) {
+                        this.flags.lockerDiscovered = true;
+                        if (this.currentEpoch === 'alpha') {
+                            const item = {
+                                id: 'cell_alpha',
+                                name: 'Precursor Cell (1984)',
+                                icon: '🔋',
+                                epoch: 'alpha',
+                                depositedEpoch: 'alpha',
+                                desc: 'Uncharged precursor power cell. Deposit in locker to age across timelines.'
+                            };
+                            if (this.inventory.length < 4) {
+                                this.inventory.push(item);
+                                this.logEvent("[CHRONO-LOCKER] Retrieved Precursor Cell from 1984 locker!", "success");
+                                audio.playTone(550, 0.2, 'triangle', 0.2);
+                                showToast("Retrieved Precursor Cell [🔋]. Deposit into locker to age it!");
+                            } else {
+                                showToast("Chrono-Deck full! Free a slot first.");
+                            }
+                        } else if (this.currentEpoch === 'beta') {
+                            const item = {
+                                id: 'cell_beta',
+                                name: 'Chrono-Battery (2042)',
+                                icon: '⚡',
+                                epoch: 'beta',
+                                depositedEpoch: 'beta',
+                                desc: 'Energized cell aged 58 years. Click slot to discharge -25% Paradox Strain.'
+                            };
+                            if (this.inventory.length < 4) {
+                                this.inventory.push(item);
+                                this.logEvent("[CHRONO-LOCKER] Found energized Chrono-Battery in 2042 locker!", "success");
+                                audio.playTone(700, 0.2, 'sine', 0.2);
+                                showToast("Retrieved Chrono-Battery [⚡]. Use to discharge -25% Paradox Strain.");
+                            } else {
+                                showToast("Chrono-Deck full!");
+                            }
                         } else {
-                            showToast("Chrono-Deck full! Free a slot first.");
+                            const item = {
+                                id: 'cell_gamma',
+                                name: 'Singularity Core (2188)',
+                                icon: '🔮',
+                                epoch: 'gamma',
+                                depositedEpoch: 'gamma',
+                                desc: 'Overcharged core aged 204 years. Click slot to discharge -40% Paradox Strain.'
+                            };
+                            if (this.inventory.length < 4) {
+                                this.inventory.push(item);
+                                this.logEvent("[CHRONO-LOCKER] Extracted Singularity Core aged 204 years!", "success");
+                                audio.playTone(880, 0.25, 'sine', 0.25);
+                                showToast("Retrieved Singularity Core [🔮]. Super-discharges Paradox Strain!");
+                            } else {
+                                showToast("Chrono-Deck full!");
+                            }
                         }
-                    } else if (this.currentEpoch === 'beta') {
-                        const item = {
+                    } else if (this.inventory.length > 0) {
+                        // Deposit an item from inventory to let it age across timelines
+                        const deposited = this.inventory.pop();
+                        this.flags.lockerItem = {
+                            ...deposited,
+                            depositedEpoch: this.currentEpoch
+                        };
+                        audio.playTone(450, 0.15, 'triangle', 0.2);
+                        this.logEvent(`[CHRONO-LOCKER] Deposited ${deposited.name} into temporal locker.`, 'normal');
+                        showToast(`Deposited ${deposited.name} into Chrono-Locker.`);
+                    } else {
+                        showToast("Chrono-Locker is empty. Deposit an artifact to age it.");
+                    }
+                } else {
+                    // Locker has an item! Check if it has aged across epochs
+                    const baseItem = this.flags.lockerItem;
+                    let retrievedItem = { ...baseItem };
+
+                    if (baseItem.depositedEpoch === 'alpha' && this.currentEpoch === 'beta') {
+                        retrievedItem = {
                             id: 'cell_beta',
                             name: 'Chrono-Battery (2042)',
                             icon: '⚡',
                             epoch: 'beta',
-                            desc: 'Energized cell aged 58 years. Click slot to discharge -25% Paradox Strain.'
+                            depositedEpoch: 'beta',
+                            desc: 'Precursor cell matured 58 years into a stable Chrono-Battery (-25% Strain).'
                         };
-                        if (this.inventory.length < 4) {
-                            this.inventory.push(item);
-                            this.flags.lockerDiscovered = true;
-                            this.logEvent("[CHRONO-LOCKER] Found energized Chrono-Battery in 2042 locker!", "success");
-                            audio.playTone(700, 0.2, 'sine', 0.2);
-                            showToast("Retrieved Chrono-Battery [⚡]. Use to discharge -25% Paradox Strain.");
-                        } else {
-                            showToast("Chrono-Deck full!");
-                        }
-                    } else {
-                        const item = {
+                        this.logEvent("[CAUSAL AGING] Precursor cell matured 58 years into an energized Chrono-Battery!", "success");
+                    } else if ((baseItem.depositedEpoch === 'alpha' || baseItem.depositedEpoch === 'beta') && this.currentEpoch === 'gamma') {
+                        retrievedItem = {
                             id: 'cell_gamma',
                             name: 'Singularity Core (2188)',
                             icon: '🔮',
                             epoch: 'gamma',
-                            desc: 'Overcharged core aged 204 years. Click slot to discharge -40% Paradox Strain.'
+                            depositedEpoch: 'gamma',
+                            desc: 'Artifact overcharged across centuries into a Singularity Core (-40% Strain).'
                         };
-                        if (this.inventory.length < 4) {
-                            this.inventory.push(item);
-                            this.flags.lockerDiscovered = true;
-                            this.logEvent("[CHRONO-LOCKER] Extracted Singularity Core aged 204 years!", "success");
-                            audio.playTone(880, 0.25, 'sine', 0.25);
-                            showToast("Retrieved Singularity Core [🔮]. Super-discharges Paradox Strain!");
-                        } else {
-                            showToast("Chrono-Deck full!");
-                        }
+                        this.logEvent("[CAUSAL AGING] Artifact aged across centuries into an overcharged Singularity Core!", "success");
                     }
-                } else {
+
                     if (this.inventory.length < 4) {
-                        const itm = this.flags.lockerItem;
                         this.flags.lockerItem = null;
-                        this.inventory.push(itm);
-                        this.logEvent(`[CHRONO-LOCKER] Retrieved ${itm.name} from locker.`, 'success');
-                        audio.playTone(600, 0.2, 'sine', 0.2);
-                        showToast(`Retrieved ${itm.name}!`);
+                        this.inventory.push(retrievedItem);
+                        this.logEvent(`[CHRONO-LOCKER] Retrieved ${retrievedItem.name} from locker.`, 'success');
+                        audio.playTone(620, 0.2, 'sine', 0.2);
+                        showToast(`Retrieved ${retrievedItem.name}!`);
                     } else {
-                        showToast("Chrono-Deck full!");
+                        showToast("Chrono-Deck full! Free a slot first.");
                     }
                 }
             }
@@ -2824,23 +2867,17 @@
             c.strokeStyle = "#64748b";
             c.stroke();
 
-            // Dynamic Visor & Specular Glint based on Facing Direction
+            // Dynamic Visor based on Facing Direction (Static, Glint-Free)
             c.fillStyle = epochColor;
             if (facing === 'down') {
                 c.fillRect(x + 13, y + 9, 6, 3);
-                c.fillStyle = "#ffffff";
-                c.fillRect(x + 14, y + 9, 2, 1);
             } else if (facing === 'up') {
                 c.fillStyle = "#64748b";
                 c.fillRect(x + 15, y + 7, 2, 3);
             } else if (facing === 'left') {
                 c.fillRect(x + 11, y + 9, 4, 3);
-                c.fillStyle = "#ffffff";
-                c.fillRect(x + 11, y + 9, 1, 1);
             } else if (facing === 'right') {
                 c.fillRect(x + 17, y + 9, 4, 3);
-                c.fillStyle = "#ffffff";
-                c.fillRect(x + 19, y + 9, 1, 1);
             }
         }
 
@@ -2859,7 +2896,7 @@
                 { id: 'gamma', label: '2188 (γ)', x: Math.round(w * 0.85), y: Math.round(h * 0.5), color: '#c084fc' }
             ];
 
-            // Draw Causal Link Arrows
+            // Draw Causal Link Line Connectors
             chronoCtx.strokeStyle = "#334155";
             chronoCtx.lineWidth = 2;
             chronoCtx.beginPath();
@@ -2867,11 +2904,28 @@
             chronoCtx.moveTo(nodes[1].x, nodes[1].y); chronoCtx.lineTo(nodes[2].x, nodes[2].y);
             chronoCtx.stroke();
 
-            // Ripple pulse along active causal path
-            const span = nodes[2].x - nodes[0].x;
-            const pulseT = span > 0 ? (Date.now() / 15) % span : 0;
-            chronoCtx.fillStyle = "#38bdf8";
-            chronoCtx.fillRect(nodes[0].x + pulseT, nodes[0].y - 2, 4, 4);
+            // Active Epoch Timeline Segment Highlight (Clean Static Line, Zero Traveling Comets)
+            chronoCtx.lineWidth = 2.5;
+            if (engine.currentEpoch === 'alpha' || engine.currentEpoch === 'beta') {
+                chronoCtx.strokeStyle = "rgba(6, 182, 212, 0.7)";
+                chronoCtx.beginPath();
+                chronoCtx.moveTo(nodes[0].x, nodes[0].y); chronoCtx.lineTo(nodes[1].x, nodes[1].y);
+                chronoCtx.stroke();
+            }
+            if (engine.currentEpoch === 'beta' || engine.currentEpoch === 'gamma') {
+                chronoCtx.strokeStyle = "rgba(192, 132, 252, 0.7)";
+                chronoCtx.beginPath();
+                chronoCtx.moveTo(nodes[1].x, nodes[1].y); chronoCtx.lineTo(nodes[2].x, nodes[2].y);
+                chronoCtx.stroke();
+            }
+
+            // Directional Causal Chevrons (Static, Period-Accurate HUD Indicators)
+            chronoCtx.fillStyle = "#64748b";
+            chronoCtx.font = "bold 9px monospace";
+            chronoCtx.textAlign = "center";
+            chronoCtx.textBaseline = "middle";
+            chronoCtx.fillText("►►", Math.round((nodes[0].x + nodes[1].x) / 2), nodes[0].y);
+            chronoCtx.fillText("►►", Math.round((nodes[1].x + nodes[2].x) / 2), nodes[1].y);
 
             nodes.forEach(n => {
                 const isActive = engine.currentEpoch === n.id;

@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-25T16:45:00Z — kilo-qa: KQuest (Pass 5: Tutorial & State Integrity Audit)**
+  - Status: PASS ✅ (Full state persistence, first-run tutorial flag, toast de-occlusion & glint purge; 0 regressions).
+  - State Persistence: Upgraded quicksave/load (F5/F9) across web & native to capture active battle/enemy state and prevent quota exceptions.
+  - Tutorial Integrity: Enforced first-run tutorial prompt behind `kquest_tutorialSeen` / `kquest_tutorial.dat`, preserving restored save states.
+  - Glint Purge: Removed specular glint sweep animations on weapons across Win32 C and web canvas per Rule 11.
+  - Toast & Modals: Re-anchored toasts to top bar (top: 54px) preventing controls occlusion; added Enter/Space shortcuts to modals & screens.
+  - Verification: Clean MSVC compile (`KQuest.exe` 95.5 KB); clean Vite build in 417ms (`kquest.html` 283.3 KB); security lint & icon audit 100% PASS.
+
 - **2026-09-25T15:55:00Z — kilo-graphics: KStarship (Game Content, Visual Polish & Audio Pass)**
   - Status: PASS ✅ (Void Leviathan & FLARELIGHT encounters, Shield Matrix boost & Yamaha FM synth; 0 regressions).
   - Game Content: Added Void Leviathan bioship (180 HP, tentacles/biomass) & FLARELIGHT 1999 archival demoscene relay.

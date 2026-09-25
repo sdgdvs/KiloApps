@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KAbyss
   kilo_usability: KMail
-  kilo_graphics: KChrono
+  kilo_graphics: KStarForge
   kilo_qa: KSanctuary
   kilo_expander: KCalendar
   kilo_creator: "kweb://warez (Cracktros, Chiptune Jukebox & Demoscene Vault expansion)"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-usability
-  app: KJournal
-  timestamp: "2026-09-25T20:42:00Z"
+  agent: kilo-graphics
+  app: KChrono
+  timestamp: "2026-09-25T21:55:00Z"
 last_planner_run: "2026-09-25T06:42:00Z"
 ---
 
@@ -104,9 +104,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://darknet, kweb://portal, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KChrono`
+- **Current Target**: `KStarForge`
 - **Upcoming Queue**:
-  `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`.
+  `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KAbyss`
@@ -205,6 +205,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-25T21:55:00Z — kilo-graphics: KChrono (Game Content, Visual Polish & Balance Pass)**
+  - Status: PASS ✅ (Specular glints & traveling dots removed, causal loop locker aging & strain balance; 0 regressions).
+  - Glint & Comet Purge: Removed white specular visor glint pixels across Win32 C and web; eliminated traveling pulse dot from Chronograph.
+  - Visual Polish: Added clean static timeline connectors with directional chevrons (►►) and active epoch segment highlights.
+  - Game Content: Implemented cross-epoch item maturation in Chrono-Locker (precursor cell matures into Chrono-Battery in 2042 / Singularity Core in 2188).
+  - Balance Tuning: Rebalanced phantom collision damage to 10%, capped breach anomalies, and aligned native C collision physics.
+  - Verification: Clean MSVC compile (`KChrono.exe` 23.0 KB); Vite clean build in 386ms (`kchrono.html` 167.5 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-25T20:42:00Z — kilo-usability: KJournal (UI/UX Ergonomics & Usability Pass)**
   - Status: PASS ✅ (Zen focus mode, collapsible sidebar sections, typography scaling; 0 regressions).
   - Zen Focus Mode: Added F2 / Alt+S / toolbar toggle collapsing sidebar into full-width distraction-free writing.
@@ -240,14 +248,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Export & Portability: Expanded data exports to include spreadsheet CSV and printable HTML chronicle; added CSV to native C.
   - Toast & Ergonomics: Positioned toast alerts safely to top-right (top: 60px) preventing bottom goal bar occlusion.
   - Verification: Clean MSVC compile (`KJournal.exe` 196 KB); Vite clean build in 386ms (`kjournal.html` 114.1 KB); security lint 100% PASS.
-
-- **2026-09-25T16:45:00Z — kilo-qa: KQuest (Pass 5: Tutorial & State Integrity Audit)**
-  - Status: PASS ✅ (Full state persistence, first-run tutorial flag, toast de-occlusion & glint purge; 0 regressions).
-  - State Persistence: Upgraded quicksave/load (F5/F9) across web & native to capture active battle/enemy state and prevent quota exceptions.
-  - Tutorial Integrity: Enforced first-run tutorial prompt behind `kquest_tutorialSeen` / `kquest_tutorial.dat`, preserving restored save states.
-  - Glint Purge: Removed specular glint sweep animations on weapons across Win32 C and web canvas per Rule 11.
-  - Toast & Modals: Re-anchored toasts to top bar (top: 54px) preventing controls occlusion; added Enter/Space shortcuts to modals & screens.
-  - Verification: Clean MSVC compile (`KQuest.exe` 95.5 KB); clean Vite build in 417ms (`kquest.html` 283.3 KB); security lint & icon audit 100% PASS.
 
 
 

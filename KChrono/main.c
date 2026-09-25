@@ -596,6 +596,12 @@ static void MovePlayer(int dx, int dy) {
         if (e->type == 2) {
             e->y += e->dir;
             if (e->y <= 4 || e->y >= 11) e->dir *= -1;
+            if (e->x == g_game.playerX && e->y == g_game.playerY) {
+                g_game.paradoxStrain += 10;
+                if (g_game.paradoxStrain > 100) g_game.paradoxStrain = 100;
+                PlaySfx(8); // Alarm
+                TriggerRipple(g_game.playerX * TILE_SZ + 13, g_game.playerY * TILE_SZ + 13);
+            }
         }
     }
 
@@ -1177,21 +1183,18 @@ static void DrawGame(HDC hdc, RECT* rcClient) {
         SelectObject(memDC, oldB);
         DeleteObject(hlBr);
 
-        // Directional Visor
+        // Directional Visor (Static, Glint-Free)
         COLORREF visorCol = (g_game.epoch == EPOCH_ALPHA) ? RGB(245, 158, 11) : (g_game.epoch == EPOCH_BETA) ? RGB(6, 182, 212) : RGB(192, 132, 252);
         HBRUSH vsBr = CreateSolidBrush(visorCol);
         if (g_game.playerDir == 0) { // Down
             RECT rVisor = { px + 10, py + 9, px + 16, py + 12 };
             FillRect(memDC, &rVisor, vsBr);
-            SetPixel(memDC, px + 11, py + 9, RGB(255, 255, 255));
         } else if (g_game.playerDir == 2) { // Left
             RECT rVisor = { px + 9, py + 9, px + 13, py + 12 };
             FillRect(memDC, &rVisor, vsBr);
-            SetPixel(memDC, px + 9, py + 9, RGB(255, 255, 255));
         } else if (g_game.playerDir == 3) { // Right
             RECT rVisor = { px + 13, py + 9, px + 17, py + 12 };
             FillRect(memDC, &rVisor, vsBr);
-            SetPixel(memDC, px + 15, py + 9, RGB(255, 255, 255));
         } else { // Up
             SetPixel(memDC, px + 13, py + 7, RGB(100, 116, 139));
         }
