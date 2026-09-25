@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KAbyss
   kilo_usability: KMail
   kilo_graphics: KStarForge
-  kilo_qa: KSanctuary
+  kilo_qa: KStarDredge
   kilo_expander: KCalendar
   kilo_creator: "kweb://warez (Cracktros, Chiptune Jukebox & Demoscene Vault expansion)"
 virtual_web_target: "kweb://warez"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-graphics
-  app: KChrono
-  timestamp: "2026-09-25T21:55:00Z"
+  agent: kilo-qa
+  app: KSanctuary
+  timestamp: "2026-09-25T22:45:00Z"
 last_planner_run: "2026-09-25T06:42:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KSanctuary`
+- **Current Target**: `KStarDredge`
 - **Upcoming Queue**:
-  `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KMystery`, `KQuest` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KMaze, KMech, KMystery, KQuest, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
+  `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KMystery`, `KQuest`, `KSanctuary` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KCalendar`
@@ -205,6 +205,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-25T22:45:00Z — kilo-qa: KSanctuary (Pass 5: Tutorial & State Integrity Pass)**
+  - Status: PASS ✅ (F5 quicksave / F9 quickload persistence, first-run tutorial modal, modal Esc/Enter navigation, non-occluding toasts; 0 regressions).
+  - State Persistence: Implemented complete state quicksave (F5) and quickload (F9) across both HTML (localStorage) and native C (`ksanctuary.dat`).
+  - First-Run Tutorial: Added diegetic Overseer Orientation modal on fresh sessions (`ksanctuary_tutorialSeen`), never interrupting restored saves.
+  - Interactive Overlays: Added Esc/Enter/Space modal shortcuts to close active briefings and summaries cleanly without triggering cycles.
+  - Toast Notifications: Added non-occluding retro toast system with auto-dismiss and click-to-dismiss across web and native GDI.
+  - Verification: Clean MSVC compile (`KSanctuary.exe` 258 KB); clean Vite build in 374ms (`ksanctuary.html` 397 KB); security lint 100% PASS.
+
 - **2026-09-25T21:55:00Z — kilo-graphics: KChrono (Game Content, Visual Polish & Balance Pass)**
   - Status: PASS ✅ (Specular glints & traveling dots removed, causal loop locker aging & strain balance; 0 regressions).
   - Glint & Comet Purge: Removed white specular visor glint pixels across Win32 C and web; eliminated traveling pulse dot from Chronograph.
@@ -239,15 +247,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - RF Spectrum & Oscilloscope: Canvas waveform monitor with carrier frequency tuning (144.390MHz, 10.19MHz, 1999Hz, 433.92MHz) and transponder telemetry.
   - Universal Audio: Yamaha YM2612 FM synthesis & SPC700 stereo delay warmth sound effects (keyclicks, FM chirps, decode arpeggios, 1999Hz carrier drone).
   - Verification: Clean Vite build in 383ms; security lint 100% PASS; darknet.html 66.5 KB (<999KB ceiling); Central KiloNet Webring #012 linked.
-
-- **2026-09-25T17:55:00Z — kilo-expander: KJournal (Deep Feature Expansion & Multi-Notebook Pass)**
-  - Status: PASS ✅ (Multi-notebook categories, live markdown preview, CSV/Book exports, mood filter; 0 regressions).
-  - Notebook Categories: Added 5 notebook categories (Personal, Work, Ideas, Dreams, Wellness) with tab filtering.
-  - Markdown Engine: Integrated live split & preview mode with custom parser (headings, quotes, task checkboxes, lists).
-  - Toolbar & Productivity: Added formatting toolbar, daily prompt generator (25+ prompts), and day-of-week rhythm analytics.
-  - Export & Portability: Expanded data exports to include spreadsheet CSV and printable HTML chronicle; added CSV to native C.
-  - Toast & Ergonomics: Positioned toast alerts safely to top-right (top: 60px) preventing bottom goal bar occlusion.
-  - Verification: Clean MSVC compile (`KJournal.exe` 196 KB); Vite clean build in 386ms (`kjournal.html` 114.1 KB); security lint 100% PASS.
 
 
 

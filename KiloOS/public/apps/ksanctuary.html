@@ -1334,6 +1334,56 @@
             gap: 12px;
         }
 
+        /* Non-occluding Retro Toast Notifications */
+        #toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 8px;
+            z-index: 2000;
+            pointer-events: none;
+        }
+
+        .retro-toast {
+            pointer-events: auto;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-corner);
+            color: var(--text-bright);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            padding: 8px 14px;
+            border-radius: 2px;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.8), 0 0 6px var(--crt-glow);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            animation: toast-fade-in 0.2s ease-out;
+            letter-spacing: 0.5px;
+        }
+
+        .retro-toast.success {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .retro-toast.warn {
+            border-color: var(--accent-amber);
+            color: var(--accent-amber);
+        }
+
+        .retro-toast.error {
+            border-color: var(--danger-red);
+            color: var(--danger-red);
+        }
+
+        @keyframes toast-fade-in {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .help-tab-bar {
             display: flex;
             gap: 4px;
@@ -1696,6 +1746,8 @@
         </div>
         <div class="header-actions">
             <button class="btn-header" onclick="toggleTheme()" id="btn-theme">THEME: AMBER CRT</button>
+            <button class="btn-header" onclick="quicksaveGame()" id="btn-quicksave" title="Quicksave (F5)">SAVE (F5)</button>
+            <button class="btn-header" onclick="quickloadGame()" id="btn-quickload" title="Quickload (F9)">LOAD (F9)</button>
             <button class="btn-header" onclick="toggleAudio()" id="btn-audio">AUDIO: ON</button>
             <button class="btn-header" onclick="toggleAmbientWind()" id="btn-wind">WIND: OFF</button>
             <button class="btn-header" onclick="toggleScanlines()" id="btn-scanlines">CRT: ON</button>
@@ -2558,6 +2610,55 @@
         <span id="footer-status">VAULT STATUS: SECURE &bull; AIRLOCK CLOSED &bull; SENSORS NORMAL</span>
     </footer>
 
+    <!-- Overseer Orientation / First-Run Tutorial Modal -->
+    <div class="modal-overlay" id="tutorial-modal">
+        <div class="modal-box" style="max-width: 640px;">
+            <div class="modal-header">
+                <div class="modal-title">OVERSEER ORIENTATION // VAULT 704 INDUCTION</div>
+                <button class="btn-close" onclick="closeTutorialModal()">&times;</button>
+            </div>
+            <div style="font-size: 11px; line-height: 1.5; color: var(--text-main); display: flex; flex-direction: column; gap: 10px;">
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid var(--accent-green); padding: 8px; border-radius: 2px;">
+                    <strong style="color: var(--text-bright);">EMERGENCY MANDATE:</strong> Welcome to the command console of Vault 704. As designated Overseer, you are tasked with shepherding your survivors through radioactive fallout, balancing essential life support resources, defending against raider incursions, and organizing scouting sorties into the wasteland ruins.
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div style="background: var(--card-bg); border: 1px solid var(--panel-border); padding: 8px; border-radius: 2px;">
+                        <div style="font-weight: bold; color: var(--accent-amber); margin-bottom: 4px;">1. LIFE SUPPORT & ENERGY</div>
+                        <p style="color: var(--text-dim);">The Diesel-Bio Generator powers Water Purifiers, Hydroponics, and defenses. Power deficits trigger brownouts and morale decay.</p>
+                    </div>
+                    <div style="background: var(--card-bg); border: 1px solid var(--panel-border); padding: 8px; border-radius: 2px;">
+                        <div style="font-weight: bold; color: var(--accent-cyan); margin-bottom: 4px;">2. CITIZENS & ROSTER</div>
+                        <p style="color: var(--text-dim);">Assign idle dwellers to rooms matching their stats. Monitor Health, Morale, and Rads. Treat injuries with stimpacks.</p>
+                    </div>
+                    <div style="background: var(--card-bg); border: 1px solid var(--panel-border); padding: 8px; border-radius: 2px;">
+                        <div style="font-weight: bold; color: var(--text-bright); margin-bottom: 4px;">3. WASTELAND EXPEDITIONS</div>
+                        <p style="color: var(--text-dim);">Dispatch scouts with survival stimpacks into radioactive ruins to scavenge scrap, tech blueprints, and medical supplies.</p>
+                    </div>
+                    <div style="background: var(--card-bg); border: 1px solid var(--panel-border); padding: 8px; border-radius: 2px;">
+                        <div style="font-weight: bold; color: var(--danger-red); margin-bottom: 4px;">4. DEFENSE & RAID COUNTER</div>
+                        <p style="color: var(--text-dim);">Raiders attack when the Threat countdown hits 0. Upgrade barricades, manufacture sentry turrets, and assign armed guards.</p>
+                    </div>
+                </div>
+                <div style="background: var(--card-bg); border: 1px solid var(--panel-border); padding: 8px; border-radius: 2px;">
+                    <div style="font-weight: bold; color: var(--text-bright); margin-bottom: 4px;">KEYBOARD & COMMAND PROTOCOLS:</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 10px; color: var(--text-dim);">
+                        <div><strong style="color:var(--text-main);">[SPACE]</strong> Advance Day Cycle</div>
+                        <div><strong style="color:var(--text-main);">[1 - 8]</strong> Console Navigation</div>
+                        <div><strong style="color:var(--text-main);">[F5]</strong> Quicksave Vault State</div>
+                        <div><strong style="color:var(--text-main);">[F9]</strong> Quickload Vault State</div>
+                        <div><strong style="color:var(--text-main);">[T]</strong> Cycle Phosphor Themes</div>
+                        <div><strong style="color:var(--text-main);">[C]</strong> Toggle CRT Scanlines</div>
+                        <div><strong style="color:var(--text-main);">[H]</strong> Technical Survival Manual</div>
+                        <div><strong style="color:var(--text-main);">[ESC]</strong> Close Active Modals</div>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px;">
+                    <button class="btn-upgrade" onclick="closeTutorialModal()" style="padding: 7px 18px; font-weight: bold; background: var(--btn-bg); border-color: var(--accent-green); color: var(--text-bright);">COMMENCE OVERSEER DUTIES [ENTER / SPACE]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Help / Overseer's Survival Manual Modal -->
     <div class="modal-overlay" id="help-modal">
         <div class="modal-box">
@@ -2688,6 +2789,10 @@
                         <tr><th>Key</th><th>Function</th><th>Description</th></tr>
                         <tr><td><strong>[SPACE]</strong></td><td>Advance Day Cycle</td><td>Processes 1 full cycle of consumption, production, and wasteland events.</td></tr>
                         <tr><td><strong>[1] - [8]</strong></td><td>Console Navigation</td><td>Switch between Facilities, Survivors, Expeditions, Defense, Research, Hazards, Caravan, Directives.</td></tr>
+                        <tr><td><strong>[F5]</strong></td><td>Quicksave State</td><td>Archives full shelter state to browser local storage.</td></tr>
+                        <tr><td><strong>[F9]</strong></td><td>Quickload State</td><td>Restores latest shelter quicksave archive immediately.</td></tr>
+                        <tr><td><strong>[ESC]</strong></td><td>Dismiss Overlays</td><td>Instantly closes active modals, battle reports, or orientation codex.</td></tr>
+                        <tr><td><strong>[H]</strong></td><td>Overseer Manual</td><td>Opens this technical survival manual and reference codex.</td></tr>
                         <tr><td><strong>[T]</strong></td><td>Cycle CRT Theme</td><td>Toggles Amber (P3), Wasteland Rust, Phosphor Green (P1), and Monochrome (P4).</td></tr>
                         <tr><td><strong>[C]</strong></td><td>Toggle Scanlines</td><td>Toggles CRT raster scanline overlay on/off.</td></tr>
                         <tr><td><strong>[A]</strong></td><td>Toggle Auto-Run</td><td>Automatically steps cycles forward every 1.8 seconds.</td></tr>
@@ -4540,93 +4645,170 @@
         let state = JSON.parse(JSON.stringify(defaultState));
         let autoRunTimer = null;
 
+        // Non-occluding Retro Toast Notification System
+        function showToast(msg, type = 'info') {
+            try {
+                let container = document.getElementById('toast-container');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'toast-container';
+                    document.body.appendChild(container);
+                }
+                const toast = document.createElement('div');
+                toast.className = `retro-toast ${type}`;
+                toast.textContent = msg;
+                toast.title = "Click to dismiss notification";
+                toast.onclick = () => {
+                    if (toast.parentNode) toast.parentNode.removeChild(toast);
+                };
+                container.appendChild(toast);
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+                        toast.style.opacity = '0';
+                        toast.style.transform = 'translateY(6px)';
+                        setTimeout(() => {
+                            if (toast.parentNode) toast.parentNode.removeChild(toast);
+                        }, 300);
+                    }
+                }, 2800);
+            } catch (e) {}
+        }
+
         // Save & Load State
         function saveState() {
             try {
                 localStorage.setItem('ksanctuary_save', JSON.stringify(state));
-            } catch (e) {}
+            } catch (e) {
+                console.warn('LocalStorage save failed:', e);
+            }
+        }
+
+        function quicksaveGame() {
+            try {
+                const payload = JSON.stringify(state);
+                localStorage.setItem('ksanctuary_save', payload);
+                localStorage.setItem('ksanctuary_quicksave', payload);
+                showToast(`QUICKSAVE ARCHIVED // DAY ${state.day} PHASE ${state.phase}`, 'success');
+                logEvent(`[SYSTEM] Quicksave archive stored (Day ${state.day}, Phase ${state.phase}).`, 'cycle');
+                playSound('craft');
+            } catch (e) {
+                showToast('QUICKSAVE FAILED: STORAGE QUOTA FULL', 'error');
+                logEvent('[SYSTEM] Quicksave error: Local storage quota exceeded.', 'crit');
+            }
+        }
+
+        function restoreParsedState(parsed) {
+            state = parsed;
+            if (!state.researched) {
+                state.researched = JSON.parse(JSON.stringify(defaultState.researched));
+            } else {
+                Object.keys(defaultState.researched).forEach(k => {
+                    if (state.researched[k] === undefined) state.researched[k] = false;
+                });
+            }
+            if (state.meds === undefined) state.meds = 5;
+            if (!state.blueprints || state.blueprints.length < defaultState.blueprints.length) {
+                const curBps = state.blueprints || [];
+                defaultState.blueprints.forEach(dbp => {
+                    const existing = curBps.find(b => b.id === dbp.id);
+                    if (!existing) {
+                        const copy = JSON.parse(JSON.stringify(dbp));
+                        if (copy.reqTech && state.researched[copy.reqTech]) copy.locked = false;
+                        curBps.push(copy);
+                    } else {
+                        if (dbp.reqTech) existing.reqTech = dbp.reqTech;
+                        if (existing.reqTech && state.researched[existing.reqTech]) existing.locked = false;
+                    }
+                });
+                state.blueprints = curBps;
+            }
+            if (!state.expeditions || state.expeditions.length < defaultState.expeditions.length) {
+                state.expeditions = JSON.parse(JSON.stringify(defaultState.expeditions));
+            }
+            if (!state.facilitySubTab) state.facilitySubTab = 'rooms';
+            if (!state.survivorSubTab) state.survivorSubTab = 'roster';
+            if (!state.candidates) state.candidates = JSON.parse(JSON.stringify(defaultState.candidates));
+            state.facilities.forEach(f => {
+                if (!f.level) f.level = 1;
+            });
+            if (state.barricadeHp === undefined) state.barricadeHp = 100;
+            if (state.barricadeMaxHp === undefined) state.barricadeMaxHp = 100;
+            if (state.turretCount === undefined) state.turretCount = 1;
+            if (state.turretOverclock === undefined) state.turretOverclock = false;
+            if (state.combatDrillLevel === undefined) state.combatDrillLevel = 1;
+            if (state.raidThreatDays === undefined) state.raidThreatDays = 3;
+            if (!state.weather) {
+                state.weather = JSON.parse(JSON.stringify(defaultState.weather));
+            }
+            if (!state.forecast) {
+                state.forecast = JSON.parse(JSON.stringify(defaultState.forecast));
+            }
+            if (!state.countermeasures) {
+                state.countermeasures = JSON.parse(JSON.stringify(defaultState.countermeasures));
+            }
+            if (!state.caravan) {
+                state.caravan = JSON.parse(JSON.stringify(defaultState.caravan));
+            }
+            if (state.waterPurity === undefined) state.waterPurity = 95;
+            if (state.unrestLevel === undefined) state.unrestLevel = 0;
+            if (state.martialLaw === undefined) state.martialLaw = false;
+            if (state.fortifiedRationsDays === undefined) state.fortifiedRationsDays = 0;
+            if (state.communalFeastDays === undefined) state.communalFeastDays = 0;
+            if (state.addressCooldown === undefined) state.addressCooldown = 0;
+            if (state.survivors) {
+                state.survivors.forEach(s => {
+                    if (s.rads === undefined) s.rads = 0;
+                });
+            }
+        }
+
+        function quickloadGame() {
+            try {
+                const raw = localStorage.getItem('ksanctuary_quicksave') || localStorage.getItem('ksanctuary_save');
+                if (!raw) {
+                    showToast('NO QUICKSAVE ARCHIVE FOUND (PRESS F5 TO SAVE)', 'warn');
+                    return;
+                }
+                const parsed = JSON.parse(raw);
+                if (parsed && parsed.facilities && parsed.survivors) {
+                    restoreParsedState(parsed);
+                    updateAll();
+                    updateVaultCutawayRooms();
+                    showToast(`QUICKSAVE RESTORED // DAY ${state.day} PHASE ${state.phase}`, 'success');
+                    logEvent(`[SYSTEM] Quicksave archive restored (Day ${state.day}, Phase ${state.phase}).`, 'cycle');
+                    playSound('alert');
+                } else {
+                    showToast('CORRUPTED SAVE DATA ARCHIVE', 'error');
+                }
+            } catch (e) {
+                showToast('FAILED TO RESTORE QUICKSAVE', 'error');
+            }
         }
 
         function loadState() {
             try {
-                const raw = localStorage.getItem('ksanctuary_save');
+                const raw = localStorage.getItem('ksanctuary_quicksave') || localStorage.getItem('ksanctuary_save');
                 if (raw) {
                     const parsed = JSON.parse(raw);
-                    // Basic sanity check
-                    if (parsed.facilities && parsed.survivors) {
-                        state = parsed;
-                        if (!state.researched) {
-                            state.researched = JSON.parse(JSON.stringify(defaultState.researched));
-                        } else {
-                            Object.keys(defaultState.researched).forEach(k => {
-                                if (state.researched[k] === undefined) state.researched[k] = false;
-                            });
-                        }
-                        if (state.meds === undefined) state.meds = 5;
-                        if (!state.blueprints || state.blueprints.length < defaultState.blueprints.length) {
-                            const curBps = state.blueprints || [];
-                            defaultState.blueprints.forEach(dbp => {
-                                const existing = curBps.find(b => b.id === dbp.id);
-                                if (!existing) {
-                                    const copy = JSON.parse(JSON.stringify(dbp));
-                                    if (copy.reqTech && state.researched[copy.reqTech]) copy.locked = false;
-                                    curBps.push(copy);
-                                } else {
-                                    if (dbp.reqTech) existing.reqTech = dbp.reqTech;
-                                    if (existing.reqTech && state.researched[existing.reqTech]) existing.locked = false;
-                                }
-                            });
-                            state.blueprints = curBps;
-                        }
-                        if (!state.expeditions || state.expeditions.length < defaultState.expeditions.length) {
-                            state.expeditions = JSON.parse(JSON.stringify(defaultState.expeditions));
-                        }
-                        if (!state.facilitySubTab) state.facilitySubTab = 'rooms';
-                        if (!state.survivorSubTab) state.survivorSubTab = 'roster';
-                        if (!state.candidates) state.candidates = JSON.parse(JSON.stringify(defaultState.candidates));
-                        state.facilities.forEach(f => {
-                            if (!f.level) f.level = 1;
-                        });
-                        if (state.barricadeHp === undefined) state.barricadeHp = 100;
-                        if (state.barricadeMaxHp === undefined) state.barricadeMaxHp = 100;
-                        if (state.turretCount === undefined) state.turretCount = 1;
-                        if (state.turretOverclock === undefined) state.turretOverclock = false;
-                        if (state.combatDrillLevel === undefined) state.combatDrillLevel = 1;
-                        if (state.raidThreatDays === undefined) state.raidThreatDays = 3;
-                        if (!state.weather) {
-                            state.weather = JSON.parse(JSON.stringify(defaultState.weather));
-                        }
-                        if (!state.forecast) {
-                            state.forecast = JSON.parse(JSON.stringify(defaultState.forecast));
-                        }
-                        if (!state.countermeasures) {
-                            state.countermeasures = JSON.parse(JSON.stringify(defaultState.countermeasures));
-                        }
-                        if (!state.caravan) {
-                            state.caravan = JSON.parse(JSON.stringify(defaultState.caravan));
-                        }
-                        if (state.waterPurity === undefined) state.waterPurity = 95;
-                        if (state.unrestLevel === undefined) state.unrestLevel = 0;
-                        if (state.martialLaw === undefined) state.martialLaw = false;
-                        if (state.fortifiedRationsDays === undefined) state.fortifiedRationsDays = 0;
-                        if (state.communalFeastDays === undefined) state.communalFeastDays = 0;
-                        if (state.addressCooldown === undefined) state.addressCooldown = 0;
-                        if (state.survivors) {
-                            state.survivors.forEach(s => {
-                                if (s.rads === undefined) s.rads = 0;
-                            });
-                        }
+                    if (parsed && parsed.facilities && parsed.survivors) {
+                        restoreParsedState(parsed);
+                        return true;
                     }
                 }
             } catch (e) {}
+            return false;
         }
 
         function resetShelter() {
             if (confirm("Initiate Vault Emergency Reboot? All progress will reset to Day 1.")) {
                 state = JSON.parse(JSON.stringify(defaultState));
                 localStorage.removeItem('ksanctuary_save');
+                localStorage.removeItem('ksanctuary_quicksave');
                 logEvent('Vault Overseer OS restarted. Standard emergency parameters restored.', 'crit');
                 updateAll();
+                updateVaultCutawayRooms();
+                showToast('VAULT PARAMETERS RESET TO DAY 1', 'warn');
                 playSound('alert');
             }
         }
@@ -7692,12 +7874,66 @@
         }
 
         function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
             playSound('click');
+        }
+
+        function showTutorialModal() {
+            const el = document.getElementById('tutorial-modal');
+            if (el) el.style.display = 'flex';
+            playSound('alert');
+        }
+
+        function closeTutorialModal() {
+            closeModal('tutorial-modal');
+            try {
+                localStorage.setItem('ksanctuary_tutorialSeen', '1');
+            } catch (e) {}
+        }
+
+        function getActiveModal() {
+            const modalIds = ['tutorial-modal', 'raid-modal', 'summary-modal', 'scout-modal', 'help-modal'];
+            for (const id of modalIds) {
+                const el = document.getElementById(id);
+                if (el && el.style.display && el.style.display !== 'none') {
+                    return id;
+                }
+            }
+            return null;
         }
 
         // Hotkey bindings
         window.addEventListener('keydown', (e) => {
+            // Quicksave / Quickload
+            if (e.key === 'F5' || e.code === 'F5') {
+                e.preventDefault();
+                quicksaveGame();
+                return;
+            }
+            if (e.key === 'F9' || e.code === 'F9') {
+                e.preventDefault();
+                quickloadGame();
+                return;
+            }
+
+            // Modal Dismissal (Esc, Enter, Space when modal is active)
+            const activeModal = getActiveModal();
+            if (e.key === 'Escape' || e.code === 'Escape') {
+                if (activeModal) {
+                    e.preventDefault();
+                    if (activeModal === 'tutorial-modal') closeTutorialModal();
+                    else closeModal(activeModal);
+                    return;
+                }
+            }
+            if ((e.code === 'Enter' || e.code === 'Space') && activeModal) {
+                e.preventDefault();
+                if (activeModal === 'tutorial-modal') closeTutorialModal();
+                else closeModal(activeModal);
+                return;
+            }
+
             if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
                 e.preventDefault();
                 advanceCycle();
@@ -7740,11 +7976,19 @@
             } catch (e) {
                 applyTheme(0);
             }
-            loadState();
+            const hasRestored = loadState();
             logEvent('Vault 704 Overseer System initialized. All security bulkheads sealed.', 'cycle');
             logEvent('Life support and biometric sensors operating on standby power.', 'info');
             updateAll();
             initVaultCutaway();
+
+            // First-run tutorial check (only triggers on fresh Day 1 sessions without existing save)
+            try {
+                const tutorialSeen = localStorage.getItem('ksanctuary_tutorialSeen') === '1';
+                if (!tutorialSeen && !hasRestored) {
+                    showTutorialModal();
+                }
+            } catch (e) {}
         });
     </script>
 </body>

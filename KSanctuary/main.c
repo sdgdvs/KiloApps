@@ -441,6 +441,8 @@ typedef struct {
     int manualSubTab; // 0: Basics, 1: Facilities, 2: Expeditions, 3: Hazards, 4: Controls
     
     int autoRun;
+    int showTutorialModal;
+    int tutorialSeen;
 } GameState;
 
 static GameState g_state;
@@ -469,7 +471,7 @@ typedef struct {
     int param2;
 } ClickableButton;
 
-#define MAX_BUTTONS 150
+#define MAX_BUTTONS 180
 static ClickableButton g_buttons[MAX_BUTTONS];
 static int g_buttonCount = 0;
 
@@ -550,7 +552,10 @@ enum {
     BTN_HAIL_CARAVAN,
     BTN_MANUAL_SUBTAB,
     BTN_CLOSE_RAID_MODAL,
-    BTN_CLOSE_MODAL
+    BTN_CLOSE_MODAL,
+    BTN_QUICKSAVE,
+    BTN_QUICKLOAD,
+    BTN_CLOSE_TUTORIAL_MODAL
 };
 
 // Logging
@@ -567,6 +572,98 @@ static void AddLog(const char* text, int type) {
     le->type = type;
     le->day = g_state.day;
     le->phase = g_state.phase;
+}
+
+#define SAVE_MAGIC "KSAN1999"
+typedef struct {
+    char magic[8];
+    int version;
+    GameState state;
+} SaveFileData;
+
+static char g_toastMessage[128] = "";
+static DWORD g_toastExpiry = 0;
+static COLORREF g_toastColor = RGB(110, 231, 183);
+
+static void ShowToast(const char* msg, COLORREF col) {
+    strncpy(g_toastMessage, msg, sizeof(g_toastMessage) - 1);
+    g_toastMessage[sizeof(g_toastMessage) - 1] = '\0';
+    g_toastExpiry = GetTickCount() + 3000;
+    g_toastColor = col;
+}
+
+static int SaveGameToFile(const char* overridePath) {
+    char path[MAX_PATH];
+    if (overridePath) {
+        strncpy(path, overridePath, MAX_PATH - 1);
+        path[MAX_PATH - 1] = '\0';
+    } else {
+        GetModuleFileNameA(NULL, path, MAX_PATH);
+        char* p = strrchr(path, '\\');
+        if (p) *(p + 1) = '\0';
+        strcat(path, "ksanctuary.dat");
+    }
+    FILE* fp = fopen(path, "wb");
+    if (!fp) {
+        ShowToast("QUICKSAVE FAILED: DISK WRITE ERROR", RGB(239, 68, 68));
+        return 0;
+    }
+    SaveFileData data;
+    memcpy(data.magic, SAVE_MAGIC, 8);
+    data.version = 1;
+    data.state = g_state;
+    data.state.showTutorialModal = 0;
+    data.state.showSummary = 0;
+    data.state.showRaidModal = 0;
+    data.state.autoRun = 0;
+    data.state.tutorialSeen = 1;
+    fwrite(&data, sizeof(SaveFileData), 1, fp);
+    fclose(fp);
+    char buf[128];
+    sprintf(buf, "QUICKSAVE ARCHIVED [DAY %d // PHASE %d]", g_state.day, g_state.phase);
+    AddLog(buf, 0);
+    ShowToast(buf, RGB(110, 231, 183));
+    PlaySfx(SFX_CLICK);
+    return 1;
+}
+
+static int LoadGameFromFile(const char* overridePath) {
+    char path[MAX_PATH];
+    if (overridePath) {
+        strncpy(path, overridePath, MAX_PATH - 1);
+        path[MAX_PATH - 1] = '\0';
+    } else {
+        GetModuleFileNameA(NULL, path, MAX_PATH);
+        char* p = strrchr(path, '\\');
+        if (p) *(p + 1) = '\0';
+        strcat(path, "ksanctuary.dat");
+    }
+    FILE* fp = fopen(path, "rb");
+    if (!fp) {
+        ShowToast("NO QUICKSAVE ARCHIVE FOUND (PRESS F5)", RGB(245, 158, 11));
+        return 0;
+    }
+    SaveFileData data;
+    size_t read = fread(&data, sizeof(SaveFileData), 1, fp);
+    fclose(fp);
+    if (read != 1 || memcmp(data.magic, SAVE_MAGIC, 8) != 0) {
+        ShowToast("ERROR: CORRUPT SAVE DATA ARCHIVE", RGB(239, 68, 68));
+        return 0;
+    }
+    g_state = data.state;
+    g_state.showTutorialModal = 0;
+    g_state.showSummary = 0;
+    g_state.showRaidModal = 0;
+    g_state.autoRun = 0;
+    g_state.tutorialSeen = 1;
+    if (g_state.currentTab < 0 || g_state.currentTab > 8) g_state.currentTab = 0;
+    if (g_state.day < 1) g_state.day = 1;
+    char buf[128];
+    sprintf(buf, "QUICKSAVE RESTORED [DAY %d // PHASE %d]", g_state.day, g_state.phase);
+    AddLog(buf, 0);
+    ShowToast(buf, RGB(110, 231, 183));
+    PlaySfx(SFX_ALERT);
+    return 1;
 }
 
 static int GetUnassignedCount() {
@@ -4612,6 +4709,8 @@ static void DrawManualView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, in
         SetTextColor(hdc, COL_TEXT_MAIN);
         TextOutA(hdc, x + 16, curY, "* [SPACE]: Advance Day Cycle by 1 quarter (Dawn -> Midday -> Dusk -> Night).", 76); curY += lineH;
         TextOutA(hdc, x + 16, curY, "* [1] - [9]: Quick-switch console workspace tabs (Facilities, Citizens, Scavenge, Defense, etc).", 96); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* [F5]: Quicksave State to file (ksanctuary.dat) | [F9]: Quickload State from file.", 83); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* [ESC]: Instantly dismiss active modals / battle reports / first-run orientation.", 82); curY += lineH;
         TextOutA(hdc, x + 16, curY, "* [T]: Cycle Retro CRT Theme (Amber CRT, Wasteland Rust, Phosphor Green, Monochrome).", 86); curY += lineH;
         TextOutA(hdc, x + 16, curY, "* [C]: Toggle CRT raster scanline overlay | [A]: Toggle Auto-Run cycle simulator.", 81); curY += lineH;
         TextOutA(hdc, x + 16, curY, "* [S]: Toggle Audio FX | [W]: Play Wasteland Wind | [H]: Open Manual | [R]: Reset.", 82);
@@ -4793,12 +4892,122 @@ static void DrawRaidModal(HDC hdc, HFONT hFontBold, HFONT hFontSmall) {
     DrawButtonControl(hdc, hFontBold, mx + modalW - 200, my + modalH - 40, 180, 26, "ACKNOWLEDGE [OK]", COL_TEXT_BRIGHT, COL_BTN_BG, borderCol, BTN_CLOSE_RAID_MODAL, 0, 0);
 }
 
+static void DrawTutorialModal(HDC hdc, HFONT hFontBold, HFONT hFontSmall) {
+    // Dim background
+    FillSolidRect(hdc, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, RGB(5, 10, 6));
+
+    int modalW = 680;
+    int modalH = 460;
+    int mx = (WINDOW_WIDTH - modalW) / 2;
+    int my = (WINDOW_HEIGHT - modalH) / 2;
+
+    DrawStyledBox(hdc, mx, my, modalW, modalH, COL_PANEL_BG, COL_BORDER_HI);
+
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, mx + 16, my + 14, "OVERSEER PROTOCOL // VAULT 704 INDUCTION", 41);
+
+    DrawButtonControl(hdc, hFontBold, mx + modalW - 32, my + 10, 22, 22, "X", COL_TEXT_DIM, COL_PANEL_BG, COL_BORDER, BTN_CLOSE_TUTORIAL_MODAL, 0, 0);
+
+    // Mandate Box
+    int inX = mx + 16;
+    int inY = my + 44;
+    int inW = modalW - 32;
+    DrawStyledBox(hdc, inX, inY, inW, 50, COL_DARK_CARD, COL_GREEN);
+    SelectObject(hdc, hFontSmall);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, inX + 10, inY + 8, "EMERGENCY MANDATE:", 18);
+    SetTextColor(hdc, COL_TEXT_MAIN);
+    TextOutA(hdc, inX + 10, inY + 26, "Welcome, Overseer. You have been appointed to manage Vault 704 life support, energy, and defense.", 97);
+
+    // 4 Pillar Grid
+    int gridY = inY + 58;
+    int cardW = (inW - 10) / 2;
+    int cardH = 75;
+
+    // Card 1: Energy & Life Support
+    DrawStyledBox(hdc, inX, gridY, cardW, cardH, COL_DARK_CARD, COL_BORDER);
+    SetTextColor(hdc, COL_AMBER);
+    TextOutA(hdc, inX + 8, gridY + 8, "1. LIFE SUPPORT & ENERGY", 24);
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, inX + 8, gridY + 28, "Diesel-Bio Generator supplies power to Water", 44);
+    TextOutA(hdc, inX + 8, gridY + 46, "Purifiers & Hydroponics. Avoid brownouts!", 41);
+
+    // Card 2: Citizens & Health
+    int c2X = inX + cardW + 10;
+    DrawStyledBox(hdc, c2X, gridY, cardW, cardH, COL_DARK_CARD, COL_BORDER);
+    SetTextColor(hdc, COL_CYAN);
+    TextOutA(hdc, c2X + 8, gridY + 8, "2. CITIZEN ASSIGNMENTS", 22);
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, c2X + 8, gridY + 28, "Assign idle dwellers to rooms matching stats.", 45);
+    TextOutA(hdc, c2X + 8, gridY + 46, "Monitor Health, Morale, and Rads carefully.", 43);
+
+    // Card 3: Expeditions
+    int r2Y = gridY + cardH + 8;
+    DrawStyledBox(hdc, inX, r2Y, cardW, cardH, COL_DARK_CARD, COL_BORDER);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, inX + 8, r2Y + 8, "3. WASTELAND EXPEDITIONS", 24);
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, inX + 8, r2Y + 28, "Dispatch armed scouts into radioactive ruins", 44);
+    TextOutA(hdc, inX + 8, r2Y + 46, "to scavenge scrap, tech blueprints, and meds.", 45);
+
+    // Card 4: Perimeter Defense
+    DrawStyledBox(hdc, c2X, r2Y, cardW, cardH, COL_DARK_CARD, COL_BORDER);
+    SetTextColor(hdc, COL_RED);
+    TextOutA(hdc, c2X + 8, r2Y + 8, "4. DEFENSE & RAID COUNTER", 25);
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, c2X + 8, r2Y + 28, "Raiders assault when threat countdown hits 0.", 45);
+    TextOutA(hdc, c2X + 8, r2Y + 46, "Repair barricades and build automated turrets.", 46);
+
+    // Hotkey Reference Card
+    int ctrlY = r2Y + cardH + 8;
+    DrawStyledBox(hdc, inX, ctrlY, inW, 76, COL_DARK_CARD, COL_BORDER);
+    SetTextColor(hdc, COL_TEXT_BRIGHT);
+    TextOutA(hdc, inX + 8, ctrlY + 6, "COMMAND PROTOCOLS & KEYBOARD CONTROLS:", 38);
+    SetTextColor(hdc, COL_TEXT_DIM);
+    TextOutA(hdc, inX + 8, ctrlY + 26, "[SPACE] Advance Day Cycle    |  [1 - 8] Console Navigation    |  [ESC] Close Overlays", 85);
+    TextOutA(hdc, inX + 8, ctrlY + 42, "[F5] Quicksave Vault State   |  [F9] Quickload Vault State    |  [H] Overseer Codex", 83);
+    TextOutA(hdc, inX + 8, ctrlY + 58, "[T] Cycle Phosphor Themes    |  [C] Toggle CRT Scanlines      |  [A] Auto-Run Toggle", 84);
+
+    // Action Button
+    DrawButtonControl(hdc, hFontBold, mx + (modalW - 340) / 2, my + modalH - 42, 340, 30, "COMMENCE OVERSEER DUTIES [ENTER / SPACE]", COL_TEXT_BRIGHT, COL_BTN_BG, COL_GREEN, BTN_CLOSE_TUTORIAL_MODAL, 0, 0);
+}
+
+static void DrawToast(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int clientW, int clientH) {
+    if (GetTickCount() >= g_toastExpiry || g_toastMessage[0] == '\0') return;
+    int tw = 380;
+    int th = 28;
+    int tx = clientW - tw - 24;
+    int ty = clientH - 58;
+
+    DrawStyledBox(hdc, tx, ty, tw, th, COL_DARK_CARD, g_toastColor);
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, g_toastColor);
+    SetBkMode(hdc, TRANSPARENT);
+    RECT tr = { tx + 8, ty + 5, tx + tw - 8, ty + th - 5 };
+    DrawTextA(hdc, g_toastMessage, -1, &tr, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+}
+
 // Main Window Procedure
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
             srand((unsigned int)time(NULL));
             InitGameState();
+            char savePath[MAX_PATH];
+            GetModuleFileNameA(NULL, savePath, MAX_PATH);
+            char* p = strrchr(savePath, '\\');
+            if (p) *(p + 1) = '\0';
+            strcat(savePath, "ksanctuary.dat");
+            FILE* fp = fopen(savePath, "rb");
+            if (fp) {
+                fclose(fp);
+                g_state.tutorialSeen = 1;
+                g_state.showTutorialModal = 0;
+            } else {
+                g_state.tutorialSeen = 0;
+                g_state.showTutorialModal = 1;
+            }
             break;
         }
         case WM_TIMER: {
@@ -4809,6 +5018,51 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             break;
         }
         case WM_KEYDOWN: {
+            if (wParam == VK_F5) {
+                SaveGameToFile(NULL);
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            } else if (wParam == VK_F9) {
+                LoadGameFromFile(NULL);
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+
+            // Modal Dismissal with Escape / Return / Space
+            if (g_state.showTutorialModal) {
+                if (wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE) {
+                    g_state.showTutorialModal = 0;
+                    g_state.tutorialSeen = 1;
+                    PlaySfx(SFX_CLICK);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
+            }
+            if (g_state.showSummary) {
+                if (wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE) {
+                    g_state.showSummary = 0;
+                    PlaySfx(SFX_CLICK);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
+            }
+            if (g_state.showRaidModal) {
+                if (wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE) {
+                    g_state.showRaidModal = 0;
+                    PlaySfx(SFX_CLICK);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
+            }
+            if (wParam == VK_ESCAPE) {
+                if (g_state.currentTab == 8) {
+                    g_state.currentTab = 0;
+                    PlaySfx(SFX_CLICK);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
+            }
+
             if (wParam == VK_SPACE) {
                 AdvanceCycle();
                 InvalidateRect(hwnd, NULL, FALSE);
@@ -4842,6 +5096,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 PlaySfx(SFX_WIND);
             } else if (wParam == 'R' || wParam == 'r') {
                 InitGameState();
+                g_state.showTutorialModal = 0;
+                g_state.tutorialSeen = 1;
                 PlaySfx(SFX_ALERT);
                 InvalidateRect(hwnd, NULL, FALSE);
             }
@@ -4850,6 +5106,21 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
         case WM_LBUTTONDOWN: {
             int mx = LOWORD(lParam);
             int my = HIWORD(lParam);
+
+            if (g_state.showTutorialModal) {
+                for (int i = 0; i < g_buttonCount; i++) {
+                    if (g_buttons[i].id == BTN_CLOSE_TUTORIAL_MODAL) {
+                        RECT r = g_buttons[i].rect;
+                        if (mx >= r.left && mx <= r.right && my >= r.top && my <= r.bottom) {
+                            g_state.showTutorialModal = 0;
+                            g_state.tutorialSeen = 1;
+                            PlaySfx(SFX_CLICK);
+                            InvalidateRect(hwnd, NULL, FALSE);
+                        }
+                    }
+                }
+                break;
+            }
 
             // Check buttons
             for (int i = 0; i < g_buttonCount; i++) {
@@ -4874,6 +5145,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     } else if (bId == BTN_RESET) {
                         if (MessageBoxA(hwnd, "Initiate Vault Emergency Reboot? All progress resets to Day 1.", "Reset Sanctuary", MB_YESNO | MB_ICONWARNING) == IDYES) {
                             InitGameState();
+                            g_state.showTutorialModal = 0;
+                            g_state.tutorialSeen = 1;
                             PlaySfx(3);
                         }
                     } else if (bId == BTN_TAB) {
@@ -5418,6 +5691,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     } else if (bId == BTN_CLOSE_MODAL) {
                         g_state.showSummary = 0;
                         PlaySfx(1);
+                    } else if (bId == BTN_QUICKSAVE) {
+                        SaveGameToFile(NULL);
+                    } else if (bId == BTN_QUICKLOAD) {
+                        LoadGameFromFile(NULL);
+                    } else if (bId == BTN_CLOSE_TUTORIAL_MODAL) {
+                        g_state.showTutorialModal = 0;
+                        g_state.tutorialSeen = 1;
+                        PlaySfx(SFX_CLICK);
                     }
 
                     InvalidateRect(hwnd, NULL, FALSE);
@@ -5467,13 +5748,15 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             int rightX = clientW - 20;
             DrawButtonControl(memDC, hFontSmall, rightX - 55, 14, 50, 24, "RESET", COL_TEXT_DIM, COL_BTN_BG, COL_BORDER, BTN_RESET, 0, 0);
             DrawButtonControl(memDC, hFontSmall, rightX - 145, 14, 85, 24, "HELP / MANUAL", COL_TEXT_MAIN, COL_BTN_BG, COL_BORDER, BTN_HELP, 0, 0);
+            DrawButtonControl(memDC, hFontSmall, rightX - 215, 14, 65, 24, "LOAD (F9)", COL_TEXT_MAIN, COL_BTN_BG, COL_BORDER, BTN_QUICKLOAD, 0, 0);
+            DrawButtonControl(memDC, hFontSmall, rightX - 285, 14, 65, 24, "SAVE (F5)", COL_TEXT_MAIN, COL_BTN_BG, COL_BORDER, BTN_QUICKSAVE, 0, 0);
             const char* crtLabel = g_crtScanlines ? "CRT: ON" : "CRT: OFF";
-            DrawButtonControl(memDC, hFontSmall, rightX - 215, 14, 65, 24, crtLabel, g_crtScanlines ? COL_GREEN : COL_TEXT_DIM, COL_BTN_BG, COL_BORDER, BTN_CRT, 0, 0);
+            DrawButtonControl(memDC, hFontSmall, rightX - 355, 14, 65, 24, crtLabel, g_crtScanlines ? COL_GREEN : COL_TEXT_DIM, COL_BTN_BG, COL_BORDER, BTN_CRT, 0, 0);
             const char* audLabel = g_soundEnabled ? "AUDIO: ON" : "AUDIO: OFF";
-            DrawButtonControl(memDC, hFontSmall, rightX - 295, 14, 75, 24, audLabel, g_soundEnabled ? COL_GREEN : COL_TEXT_DIM, COL_BTN_BG, COL_BORDER, BTN_AUDIO, 0, 0);
+            DrawButtonControl(memDC, hFontSmall, rightX - 435, 14, 75, 24, audLabel, g_soundEnabled ? COL_GREEN : COL_TEXT_DIM, COL_BTN_BG, COL_BORDER, BTN_AUDIO, 0, 0);
             char themeLabel[40];
             sprintf(themeLabel, "THEME: %s", g_palettes[g_currentTheme].name);
-            DrawButtonControl(memDC, hFontSmall, rightX - 445, 14, 145, 24, themeLabel, COL_TEXT_BRIGHT, COL_BTN_BG, COL_BORDER_HI, BTN_THEME, 0, 0);
+            DrawButtonControl(memDC, hFontSmall, rightX - 580, 14, 140, 24, themeLabel, COL_TEXT_BRIGHT, COL_BTN_BG, COL_BORDER_HI, BTN_THEME, 0, 0);
 
             // Resource HUD (y: 48 to 110)
             DrawHUD(memDC, hFontBold, hFontSmall, 48);
@@ -5549,6 +5832,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             if (g_state.showRaidModal) {
                 DrawRaidModal(memDC, hFontBold, hFontSmall);
             }
+
+            // Tutorial Modal if open
+            if (g_state.showTutorialModal) {
+                DrawTutorialModal(memDC, hFontBold, hFontSmall);
+            }
+
+            // Non-occluding Retro Toast Notification
+            DrawToast(memDC, hFontBold, hFontSmall, clientW, clientH);
 
             // CRT scanlines overlay
             if (g_crtScanlines) {
