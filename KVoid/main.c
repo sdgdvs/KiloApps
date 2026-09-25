@@ -518,6 +518,7 @@ typedef struct {
     int flareCount;
     Flare activeFlares[MAX_FLARES];
 } KVoidSaveState;
+static KVoidSaveState g_saveState;
 
 int IsTutorialSeen(void) {
     DWORD attr = GetFileAttributesA("kvoid_tutorial.dat");
@@ -536,45 +537,50 @@ void MarkTutorialSeen(void) {
 }
 
 void SaveGameState(void) {
-    KVoidSaveState s;
-    BYTE* pByte = (BYTE*)&s;
+    if (isDead || wonGame) {
+        lstrcpy(sysMsg, "CANNOT SAVE WHILE DEAD OR ESCAPED");
+        msgTimer = 60;
+        return;
+    }
+    KVoidSaveState* s = &g_saveState;
+    BYTE* pByte = (BYTE*)s;
     for (int i = 0; i < (int)sizeof(KVoidSaveState); i++) pByte[i] = 0;
 
-    s.magic = 0x4B564F44; // 'KVOD'
-    s.version = 2;
-    s.playerX = playerX;
-    s.playerY = playerY;
-    s.playerDir = playerDir;
-    s.deck = deck;
-    s.oxygen = oxygen;
-    s.battery = battery;
-    s.hasRedKey = hasRedKey;
-    s.hasGreenKey = hasGreenKey;
-    s.hasBlueKey = hasBlueKey;
-    s.emps = emps;
-    s.flares = flares;
-    s.totalTime = totalTime;
-    s.selfDestructActive = selfDestructActive;
-    s.selfDestructTimer = selfDestructTimer;
-    s.isDead = isDead;
-    s.wonGame = wonGame;
-    lstrcpynA(s.winEnding, winEnding, sizeof(s.winEnding));
-    s.roomCount = roomCount;
-    for (int i = 0; i < 30; i++) s.rooms[i] = rooms[i];
-    s.alienCount = alienCount;
-    for (int i = 0; i < MAX_ALIENS; i++) s.aliens[i] = aliens[i];
+    s->magic = 0x4B564F44; // 'KVOD'
+    s->version = 2;
+    s->playerX = playerX;
+    s->playerY = playerY;
+    s->playerDir = playerDir;
+    s->deck = deck;
+    s->oxygen = oxygen;
+    s->battery = battery;
+    s->hasRedKey = hasRedKey;
+    s->hasGreenKey = hasGreenKey;
+    s->hasBlueKey = hasBlueKey;
+    s->emps = emps;
+    s->flares = flares;
+    s->totalTime = totalTime;
+    s->selfDestructActive = selfDestructActive;
+    s->selfDestructTimer = selfDestructTimer;
+    s->isDead = isDead;
+    s->wonGame = wonGame;
+    lstrcpynA(s->winEnding, winEnding, sizeof(s->winEnding));
+    s->roomCount = roomCount;
+    for (int i = 0; i < 30; i++) s->rooms[i] = rooms[i];
+    s->alienCount = alienCount;
+    for (int i = 0; i < MAX_ALIENS; i++) s->aliens[i] = aliens[i];
     for (int y = 0; y < ROWS; y++) {
         for (int x = 0; x < COLS; x++) {
-            s.map[y][x] = map[y][x];
+            s->map[y][x] = map[y][x];
         }
     }
-    s.flareCount = flareCount;
-    for (int i = 0; i < MAX_FLARES; i++) s.activeFlares[i] = activeFlares[i];
+    s->flareCount = flareCount;
+    for (int i = 0; i < MAX_FLARES; i++) s->activeFlares[i] = activeFlares[i];
 
     HANDLE hFile = CreateFileA("kvoid_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD written = 0;
-        WriteFile(hFile, &s, sizeof(KVoidSaveState), &written, NULL);
+        WriteFile(hFile, s, sizeof(KVoidSaveState), &written, NULL);
         CloseHandle(hFile);
         lstrcpy(sysMsg, "STATE QUICKSAVED (F5)");
     } else {
@@ -584,14 +590,14 @@ void SaveGameState(void) {
 }
 
 int LoadGameState(void) {
-    KVoidSaveState s;
+    KVoidSaveState* s = &g_saveState;
     int success = 0;
 
     HANDLE hFile = CreateFileA("kvoid_save.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD readBytes = 0;
-        if (ReadFile(hFile, &s, sizeof(KVoidSaveState), &readBytes, NULL) && readBytes >= sizeof(DWORD) * 2) {
-            if (s.magic == 0x4B564F44) {
+        if (ReadFile(hFile, s, sizeof(KVoidSaveState), &readBytes, NULL) && readBytes >= sizeof(DWORD) * 2) {
+            if (s->magic == 0x4B564F44) {
                 success = 1;
             }
         }
@@ -604,34 +610,34 @@ int LoadGameState(void) {
         return 0;
     }
 
-    playerX = s.playerX;
-    playerY = s.playerY;
-    playerDir = s.playerDir;
-    deck = s.deck;
-    oxygen = s.oxygen;
-    battery = s.battery;
-    hasRedKey = s.hasRedKey;
-    hasGreenKey = s.hasGreenKey;
-    hasBlueKey = s.hasBlueKey;
-    emps = s.emps;
-    flares = (s.version >= 2) ? s.flares : 1;
-    totalTime = s.totalTime;
-    selfDestructActive = s.selfDestructActive;
-    selfDestructTimer = s.selfDestructTimer;
-    isDead = s.isDead;
-    wonGame = s.wonGame;
-    lstrcpy(winEnding, s.winEnding);
-    roomCount = s.roomCount;
-    for (int i = 0; i < 30; i++) rooms[i] = s.rooms[i];
-    alienCount = s.alienCount;
-    for (int i = 0; i < MAX_ALIENS; i++) aliens[i] = s.aliens[i];
+    playerX = s->playerX;
+    playerY = s->playerY;
+    playerDir = s->playerDir;
+    deck = s->deck;
+    oxygen = s->oxygen;
+    battery = s->battery;
+    hasRedKey = s->hasRedKey;
+    hasGreenKey = s->hasGreenKey;
+    hasBlueKey = s->hasBlueKey;
+    emps = s->emps;
+    flares = (s->version >= 2) ? s->flares : 1;
+    totalTime = s->totalTime;
+    selfDestructActive = s->selfDestructActive;
+    selfDestructTimer = s->selfDestructTimer;
+    isDead = s->isDead;
+    wonGame = s->wonGame;
+    lstrcpy(winEnding, s->winEnding);
+    roomCount = s->roomCount;
+    for (int i = 0; i < 30; i++) rooms[i] = s->rooms[i];
+    alienCount = s->alienCount;
+    for (int i = 0; i < MAX_ALIENS; i++) aliens[i] = s->aliens[i];
     for (int y = 0; y < ROWS; y++) {
         for (int x = 0; x < COLS; x++) {
-            map[y][x] = s.map[y][x];
+            map[y][x] = s->map[y][x];
         }
     }
-    flareCount = (s.version >= 2) ? s.flareCount : 0;
-    for (int i = 0; i < MAX_FLARES; i++) activeFlares[i] = s.activeFlares[i];
+    flareCount = (s->version >= 2) ? s->flareCount : 0;
+    for (int i = 0; i < MAX_FLARES; i++) activeFlares[i] = s->activeFlares[i];
 
     for (int i = 0; i < MAX_PARTICLES; i++) particles[i].life = 0;
     for (int i = 0; i < MAX_SHOCKWAVES; i++) shockwaves[i].life = 0;

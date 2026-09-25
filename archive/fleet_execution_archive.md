@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-25T01:52:00Z — kilo-usability: KFont (UI/UX, Layout & Accessibility Pass)**
+  - Status: PASS ✅ (Layout responsiveness, canvas crispness & toast de-occlusion complete; 0 regressions).
+  - Toast & Modals: Re-anchored toast to bottom-center pill to prevent control occlusion; added modal footer close button and focus restore.
+  - Responsive & Layout: Added media queries for narrow windows/half-screen tiling with horizontal scrollable tab strip and compact padding.
+  - Canvas Crispness: Sized hinting & anatomy canvases dynamically to container width with HiDPI `devicePixelRatio` scaling and safe origin clamping.
+  - Interactive Usability: Wired WCAG palette cards for one-click testing in custom contrast calculator; added live dissector count & JSON export.
+  - Onboarding & State: Isolated startup welcome toast behind `kfont_tutorialSeen` flag; preserved font/size/style preferences in localStorage.
+  - Verification: Clean MSVC C compile (`KFont.exe` 28.5 KB); clean Vite build in 380ms (`kfont.html` 72.6 KB); security lint 100% PASS; icons verified.
+
 - **2026-09-25T06:42:00Z — kilo-planner: 24h Fleet Planning & Queue Compaction**
   - Status: PASS ✅ (24h velocity assessed; queues rebalanced; logs compacted).
   - Fleet Velocity: 12 passes completed in 24h; 0 regressions; 104/104 icons unique and valid.

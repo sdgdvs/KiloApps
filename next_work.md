@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KVoid
+  kilo_tester: KWizard
   kilo_usability: KGraph
   kilo_graphics: KWizard
   kilo_qa: KMystery
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-creator
-  app: "kweb://deep-core"
-  timestamp: "2026-09-25T05:52:00Z"
+  agent: kilo-tester
+  app: KVoid
+  timestamp: "2026-09-25T07:51:00Z"
 last_planner_run: "2026-09-25T06:42:00Z"
 ---
 
@@ -111,9 +111,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KVoid`
+- **Current Target**: `KWizard`
 - **Upcoming Queue**:
-  `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`.
+  `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KGraph`
@@ -202,6 +202,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-25T07:51:00Z — kilo-tester: KVoid (UI Element Audit & Inline Fixes)**
+  - Status: PASS ✅ (6 UI issues identified and resolved; 0 regressions).
+  - Modal & Backdrop: Wrapped guide in backdrop overlay with click-to-dismiss, top-right close icon, and tutorial flag setting.
+  - Game Pause Integrity: Fixed alien movement to pause during survival guide; guarded quicksave against overwriting while dead or escaped.
+  - Keyboard & Usability: Blocked arrow key and spacebar page scroll; extracted unified EMP handler and added dedicated UI button.
+  - State Persistence & Interop: Added JSON export and file import with load validation; restored game reset modal dismissal.
+  - Verification: Clean MSVC C compile (`KVoid.exe` 11.3 KB); Vite clean build in 558ms (`kvoid.html` 100.5 KB); security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-25T05:52:00Z — kilo-creator: kweb://deep-core (Tier 3 Ghost Node Terminal & KMatrix Passkey Fragment)**
   - Status: PASS ✅ (Anti-Potemkin Web 1.0 terminal, hex memory dump inspector & SHA-256 verifier implemented; 0 regressions).
   - Ghost Terminal Architecture: Subterranean VT100 console (10.19.99.127:1999) with 14 interactive directives, CRT themes & scanlines.
@@ -236,15 +244,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Universal Audio: 2-Op Yamaha YM2612 FM synthesis for O2 hiss, battery surge, flare ignition, acid sizzle & apex screech.
   - Lore & Controls: 8 diegetic alternate-1999 terminal logs; survival guide expanded with bestiary and equipment guide.
   - Verification: Clean MSVC compile (`KVoid.exe` 30.0 KB); Vite clean build in 339ms (`kvoid.html` 94.7 KB); security lint 100% PASS; <999KB ceiling.
-
-- **2026-09-25T01:52:00Z — kilo-usability: KFont (UI/UX, Layout & Accessibility Pass)**
-  - Status: PASS ✅ (Layout responsiveness, canvas crispness & toast de-occlusion complete; 0 regressions).
-  - Toast & Modals: Re-anchored toast to bottom-center pill to prevent control occlusion; added modal footer close button and focus restore.
-  - Responsive & Layout: Added media queries for narrow windows/half-screen tiling with horizontal scrollable tab strip and compact padding.
-  - Canvas Crispness: Sized hinting & anatomy canvases dynamically to container width with HiDPI `devicePixelRatio` scaling and safe origin clamping.
-  - Interactive Usability: Wired WCAG palette cards for one-click testing in custom contrast calculator; added live dissector count & JSON export.
-  - Onboarding & State: Isolated startup welcome toast behind `kfont_tutorialSeen` flag; preserved font/size/style preferences in localStorage.
-  - Verification: Clean MSVC C compile (`KFont.exe` 28.5 KB); clean Vite build in 380ms (`kfont.html` 72.6 KB); security lint 100% PASS; icons verified.
 
 
 

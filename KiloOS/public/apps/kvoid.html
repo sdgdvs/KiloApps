@@ -9,15 +9,17 @@
             margin: 0;
             padding: 0;
             width: 100%;
-            height: 100%;
+            min-height: 100%;
             background-color: #020202;
             color: #0f0;
             font-family: 'Courier New', Courier, monospace;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            box-sizing: border-box;
         }
         #game-container {
             position: relative;
@@ -129,18 +131,64 @@
             font-size: 14px;
             text-align: center;
         }
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
         #help-modal {
-            position: absolute;
-            top: 50px; left: 20px; right: 20px; bottom: 50px;
-            background-color: rgba(0, 0, 0, 0.9);
+            position: relative;
+            max-width: 600px;
+            width: 95%;
+            max-height: 85vh;
+            background-color: #040905;
             border: 2px solid #0f0;
-            box-shadow: 0 0 10px #0f0;
-            z-index: 20;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
             padding: 20px;
             overflow-y: auto;
             color: #0f0;
+            box-sizing: border-box;
         }
-        #help-modal h2 { margin-top: 0; text-align: center; }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #0f0;
+            padding-bottom: 8px;
+        }
+        .modal-header h2 {
+            margin: 0;
+            font-size: 18px;
+            text-align: left;
+            text-shadow: 0 0 5px #0f0;
+        }
+        .modal-close-icon {
+            background: #0a140a;
+            border: 1px solid #0f0;
+            color: #0f0;
+            font-size: 20px;
+            line-height: 1;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            transition: background 0.15s, color 0.15s;
+        }
+        .modal-close-icon:hover {
+            background: #0f0;
+            color: #000;
+        }
         .help-section { margin-bottom: 15px; }
         .help-section h3 { border-bottom: 1px solid #0f0; padding-bottom: 5px; }
     </style>
@@ -169,40 +217,50 @@
         <div id="message">Use WASD to move &bull; Space for EMP &bull; [F] Flare &bull; [F1] Guide &bull; [F5] Save &bull; [F9] Load</div>
         <div class="btn-panel">
             <button class="retro-btn" id="btn-help" onclick="toggleHelp()">[F1/H] Guide</button>
+            <button class="retro-btn" id="btn-emp" onclick="deployEMP()">[Space] EMP</button>
             <button class="retro-btn" id="btn-flare" onclick="deployFlare()">[F] Flare</button>
             <button class="retro-btn" id="btn-save" onclick="quickSave()">[F5] Quicksave</button>
             <button class="retro-btn" id="btn-load" onclick="quickLoad()">[F9] Quickload</button>
+            <button class="retro-btn" id="btn-export" onclick="exportSaveFile()" title="Export JSON Save">Export</button>
+            <button class="retro-btn" id="btn-import" onclick="document.getElementById('import-file-input').click()" title="Import JSON Save">Import</button>
             <button class="retro-btn" id="btn-restart" onclick="resetGame()">[R] Restart</button>
+            <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importSaveFile(this.files[0]); this.value='';">
         </div>
-        <div id="help-modal" style="display:none;" role="dialog" aria-modal="true" aria-label="Survival Guide">
-            <h2>Survival Guide (Press H, Esc, Space, or Enter to close)</h2>
-            <div class="help-section">
-                <h3>Controls & How to Play</h3>
-                <p><b>WASD / Arrows:</b> Move Explorer<br>
-                <b>Space:</b> Use EMP Charge (Stuns nearby entities)<br>
-                <b>F:</b> Deploy Distress Flare (Creates illuminated safe zone that repels lurkers)<br>
-                <b>F1 / H / Esc:</b> Toggle / Close Survival Guide<br>
-                <b>F5:</b> Quicksave State &bull; <b>F9:</b> Quickload State<br>
-                <b>R / Enter / Space:</b> Restart (when game over)<br>
-                Navigate derelict decks (1 to 5), locate access keys and escape pods. Maintain Oxygen and Flashlight Battery. If either runs dry, life support terminates.</p>
+        <div id="help-modal-overlay" class="modal-overlay" onclick="handleOverlayClick(event)">
+            <div id="help-modal" role="dialog" aria-modal="true" aria-label="Survival Guide" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h2>Survival Guide (H / Esc to close)</h2>
+                    <button class="modal-close-icon" onclick="closeHelp()" title="Close Guide" aria-label="Close Guide">&times;</button>
+                </div>
+                <div class="help-section">
+                    <h3>Controls & How to Play</h3>
+                    <p><b>WASD / Arrows:</b> Move Explorer<br>
+                    <b>Space / [Space] Button:</b> Use EMP Charge (Stuns nearby entities)<br>
+                    <b>F / [F] Button:</b> Deploy Distress Flare (Creates illuminated safe zone that repels lurkers)<br>
+                    <b>F1 / H / Esc:</b> Toggle / Close Survival Guide<br>
+                    <b>F5 / Quicksave:</b> Quicksave State &bull; <b>F9 / Quickload:</b> Quickload State<br>
+                    <b>Export / Import:</b> Backup or restore game state to/from JSON files<br>
+                    <b>R / Enter / Space:</b> Restart (when game over)<br>
+                    Navigate derelict decks (1 to 5), locate access keys and escape pods. Maintain Oxygen and Flashlight Battery. If either runs dry, life support terminates.</p>
+                </div>
+                <div class="help-section">
+                    <h3>Station Hardware & Resources</h3>
+                    <p><b>Security Keycards [Red / Green / Blue]:</b> Unlock color-coded bulkhead blast doors.<br>
+                    <b>Mainframe Terminals:</b> Override remote security locks and access classified telemetry logs.<br>
+                    <b>O2 Rebreather Cylinder (Cyan):</b> Pressurized life-support tank; restores +35% Oxygen.<br>
+                    <b>Lithium Power Cell (Gold):</b> High-capacity capacitor pack; restores +40% Battery.<br>
+                    <b>Survival Lockers:</b> Conceal inside to evade detection from pursuing entities.<br>
+                    <b>Distress Flare [F]:</b> Illuminates a wide perimeter and deters aggressive organisms for 25s.</p>
+                </div>
+                <div class="help-section">
+                    <h3>Entity Bestiary</h3>
+                    <p><b>Stalker (Violet):</b> Agile chitinous hunter. Sensitive to movement and sound. Lethal contact.<br>
+                    <b>Phantom (Cyan, Deck 2+):</b> Electromagnetic phase organism. Shimmers invisibly in darkness until exposed to direct flashlight or flare light.<br>
+                    <b>Bloater (Green, Deck 3+):</b> Sluggish toxic carrier. Discharges puddles of corrosive bio-acid that breach suit integrity (-5% O2).<br>
+                    <b>Apex Behemoth (Crimson, Deck 4-5):</b> Armored dread bio-titan. Tremors announce its approach. Resists EMP disruption (short stun).</p>
+                </div>
+                <button class="retro-btn close-help-btn" id="btn-close-modal" onclick="closeHelp()">ENTER THE VOID [CLOSE GUIDE]</button>
             </div>
-            <div class="help-section">
-                <h3>Station Hardware & Resources</h3>
-                <p><b>Security Keycards [Red / Green / Blue]:</b> Unlock color-coded bulkhead blast doors.<br>
-                <b>Mainframe Terminals:</b> Override remote security locks and access classified telemetry logs.<br>
-                <b>O2 Rebreather Cylinder (Cyan):</b> Pressurized life-support tank; restores +35% Oxygen.<br>
-                <b>Lithium Power Cell (Gold):</b> High-capacity capacitor pack; restores +40% Battery.<br>
-                <b>Survival Lockers:</b> Conceal inside to evade detection from pursuing entities.<br>
-                <b>Distress Flare [F]:</b> Illuminates a wide perimeter and deters aggressive organisms for 25s.</p>
-            </div>
-            <div class="help-section">
-                <h3>Entity Bestiary</h3>
-                <p><b>Stalker (Violet):</b> Agile chitinous hunter. Sensitive to movement and sound. Lethal contact.<br>
-                <b>Phantom (Cyan, Deck 2+):</b> Electromagnetic phase organism. Shimmers invisibly in darkness until exposed to direct flashlight or flare light.<br>
-                <b>Bloater (Green, Deck 3+):</b> Sluggish toxic carrier. Discharges puddles of corrosive bio-acid that breach suit integrity (-5% O2).<br>
-                <b>Apex Behemoth (Crimson, Deck 4-5):</b> Armored dread bio-titan. Tremors announce its approach. Resists EMP disruption (short stun).</p>
-            </div>
-            <button class="retro-btn close-help-btn" id="btn-close-modal" onclick="closeHelp()">ENTER THE VOID [CLOSE GUIDE]</button>
         </div>
     </div>
     <script>
@@ -404,6 +462,30 @@
                 osc.start();
                 osc.stop(actx.currentTime + 0.5);
             } catch (e) {}
+        }
+
+        function deployEMP() {
+            if (isDead || wonGame || showHelp) return;
+            if (emps <= 0) {
+                showMessage("NO EMP CHARGES REMAINING.", "#ff5555");
+                return;
+            }
+            emps--;
+            showMessage("EMP DEPLOYED. ALIENS STUNNED.", "#0ff");
+            playFMTone(320, 2.5, 180, 0.35, 0.25, 'sawtooth');
+            let pCentX = player.x * TILE_SIZE + TILE_SIZE / 2;
+            let pCentY = player.y * TILE_SIZE + TILE_SIZE / 2;
+            spawnParticles(pCentX, pCentY, '#0ff', 40);
+            addShockwave(pCentX, pCentY, '#00ffff', 140);
+            triggerScreenShake(4);
+            for (let a of aliens) {
+                if (Math.abs(a.x - player.x) + Math.abs(a.y - player.y) <= 8) {
+                    a.state = 'stunned';
+                    a.stunTimer = (a.type === 3) ? 5 : (a.type === 1) ? 12 : 10;
+                }
+            }
+            updateInventoryDisplay();
+            draw();
         }
 
         function deployFlare() {
@@ -1581,7 +1663,7 @@
         }
 
         function updateAliens() {
-            if (isDead || wonGame) return;
+            if (isDead || wonGame || showHelp) return;
             let hidden = (map[player.y][player.x] === 11);
             if (hidden) {
                 showMessage("HIDDEN IN LOCKER.", "#888");
@@ -1676,7 +1758,7 @@
         }
 
         function movePlayer(dx, dy) {
-            if (isDead || wonGame) return;
+            if (isDead || wonGame || showHelp) return;
             let newX = player.x + dx;
             let newY = player.y + dy;
             
@@ -1718,6 +1800,7 @@
                         }
                     }
                     map[newY][newX] = 10;
+                    playFMTone(780, 1.5, 80, 0.2, 0.15);
                     showMessage(msg, "#0ff");
                     draw();
                 } else if (target === 10) {
@@ -1829,22 +1912,37 @@
         }
 
         function toggleHelp() {
-            showHelp = !showHelp;
-            const modal = document.getElementById('help-modal');
-            if (modal) modal.style.display = showHelp ? 'block' : 'none';
-            if (!showHelp) {
-                try { localStorage.setItem('kvoid_tutorialSeen', '1'); } catch (err) {}
+            if (showHelp) {
+                closeHelp();
+            } else {
+                openHelp();
             }
+        }
+
+        function openHelp() {
+            showHelp = true;
+            const overlay = document.getElementById('help-modal-overlay');
+            if (overlay) overlay.style.display = 'flex';
         }
 
         function closeHelp() {
             showHelp = false;
-            const modal = document.getElementById('help-modal');
-            if (modal) modal.style.display = 'none';
+            const overlay = document.getElementById('help-modal-overlay');
+            if (overlay) overlay.style.display = 'none';
             try { localStorage.setItem('kvoid_tutorialSeen', '1'); } catch (err) {}
         }
 
+        function handleOverlayClick(e) {
+            if (e.target === document.getElementById('help-modal-overlay')) {
+                closeHelp();
+            }
+        }
+
         function quickSave() {
+            if (isDead || wonGame) {
+                showMessage("CANNOT QUICKSAVE WHILE DEAD OR ESCAPED.", "#ff5555");
+                return;
+            }
             try {
                 const saveState = {
                     player: { x: player.x, y: player.y },
@@ -1926,6 +2024,56 @@
             }
         }
 
+        function exportSaveFile() {
+            try {
+                let raw = localStorage.getItem('kvoid_save');
+                let stateObj;
+                if (!raw) {
+                    if (isDead || wonGame) {
+                        showMessage("NO SAVE TO EXPORT. QUICKSAVE FIRST (F5).", "#ff5555");
+                        return;
+                    }
+                    quickSave();
+                    raw = localStorage.getItem('kvoid_save');
+                }
+                if (!raw) {
+                    showMessage("EXPORT FAILED: NO SAVE DATA FOUND.", "#f00");
+                    return;
+                }
+                stateObj = JSON.parse(raw);
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(stateObj, null, 2));
+                const dlAnchor = document.createElement('a');
+                dlAnchor.setAttribute("href", dataStr);
+                dlAnchor.setAttribute("download", `kvoid_deck${stateObj.deck || 1}_save.json`);
+                document.body.appendChild(dlAnchor);
+                dlAnchor.click();
+                dlAnchor.remove();
+                showMessage("SAVE EXPORTED AS JSON FILE.", "#00ffcc");
+            } catch (err) {
+                showMessage("EXPORT FAILED: " + err.message, "#f00");
+            }
+        }
+
+        function importSaveFile(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!data || !data.map || !data.player) {
+                        showMessage("INVALID SAVE FILE STRUCTURE.", "#f00");
+                        return;
+                    }
+                    localStorage.setItem('kvoid_save', JSON.stringify(data));
+                    quickLoad();
+                    showMessage("EXTERNAL SAVE IMPORTED & LOADED.", "#00ffcc");
+                } catch (err) {
+                    showMessage("IMPORT ERROR: CORRUPT JSON.", "#f00");
+                }
+            };
+            reader.readAsText(file);
+        }
+
         canvas.addEventListener('click', () => {
             if (showHelp) {
                 closeHelp();
@@ -1937,6 +2085,7 @@
         });
 
         function resetGame() {
+            closeHelp();
             deck = 1;
             player = { x: 2, y: 2 };
             playerDir = 0;
@@ -2006,21 +2155,33 @@
             }
             switch(e.key) {
                 case 'ArrowUp':
+                    e.preventDefault();
+                    movePlayer(0, -1); playerDir = 0;
+                    break;
                 case 'w':
                 case 'W':
                     movePlayer(0, -1); playerDir = 0;
                     break;
                 case 'ArrowDown':
+                    e.preventDefault();
+                    movePlayer(0, 1); playerDir = 1;
+                    break;
                 case 's':
                 case 'S':
                     movePlayer(0, 1); playerDir = 1;
                     break;
                 case 'ArrowLeft':
+                    e.preventDefault();
+                    movePlayer(-1, 0); playerDir = 2;
+                    break;
                 case 'a':
                 case 'A':
                     movePlayer(-1, 0); playerDir = 2;
                     break;
                 case 'ArrowRight':
+                    e.preventDefault();
+                    movePlayer(1, 0); playerDir = 3;
+                    break;
                 case 'd':
                 case 'D':
                     movePlayer(1, 0); playerDir = 3;
@@ -2030,30 +2191,15 @@
                     deployFlare();
                     break;
                 case ' ':
-                    if (emps > 0) {
-                        emps--;
-                        showMessage("EMP DEPLOYED. ALIENS STUNNED.", "#0ff");
-                        let pCentX = player.x * TILE_SIZE + TILE_SIZE/2;
-                        let pCentY = player.y * TILE_SIZE + TILE_SIZE/2;
-                        spawnParticles(pCentX, pCentY, '#0ff', 40);
-                        addShockwave(pCentX, pCentY, '#00ffff', 140);
-                        triggerScreenShake(4);
-                        for (let a of aliens) {
-                            if (Math.abs(a.x - player.x) + Math.abs(a.y - player.y) <= 8) {
-                                a.state = 'stunned';
-                                a.stunTimer = (a.type === 3) ? 5 : (a.type === 1) ? 12 : 10;
-                            }
-                        }
-                        updateInventoryDisplay();
-                    }
+                    e.preventDefault();
+                    deployEMP();
                     break;
             }
         });
 
         try {
             if (!localStorage.getItem('kvoid_tutorialSeen')) {
-                showHelp = true;
-                document.getElementById('help-modal').style.display = 'block';
+                openHelp();
             }
         } catch (err) {}
 
