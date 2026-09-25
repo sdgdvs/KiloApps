@@ -159,15 +159,17 @@
             <span id="key-g" class="key-green" style="margin-left:10px;">[GREEN]</span>
             <span id="key-b" class="key-blue" style="margin-left:10px;">[BLUE]</span>
             <span class="inv-item">EMP: <span id="emp-val">0</span></span>
+            <span class="inv-item">FLARES: <span id="flare-val" style="color:#ffaa00;">1</span></span>
         </div>
         <div id="canvas-wrapper">
             <canvas id="gameCanvas" width="640" height="480"></canvas>
             <div class="scanlines"></div>
             <div class="crt-overlay"></div>
         </div>
-        <div id="message">Use WASD to move. Space for EMP. [F1] Help &bull; [F5] Save &bull; [F9] Load</div>
+        <div id="message">Use WASD to move &bull; Space for EMP &bull; [F] Flare &bull; [F1] Guide &bull; [F5] Save &bull; [F9] Load</div>
         <div class="btn-panel">
             <button class="retro-btn" id="btn-help" onclick="toggleHelp()">[F1/H] Guide</button>
+            <button class="retro-btn" id="btn-flare" onclick="deployFlare()">[F] Flare</button>
             <button class="retro-btn" id="btn-save" onclick="quickSave()">[F5] Quicksave</button>
             <button class="retro-btn" id="btn-load" onclick="quickLoad()">[F9] Quickload</button>
             <button class="retro-btn" id="btn-restart" onclick="resetGame()">[R] Restart</button>
@@ -176,21 +178,29 @@
             <h2>Survival Guide (Press H, Esc, Space, or Enter to close)</h2>
             <div class="help-section">
                 <h3>Controls & How to Play</h3>
-                <p><b>WASD / Arrows:</b> Move<br>
-                <b>Space:</b> Use EMP (Stuns nearby aliens)<br>
+                <p><b>WASD / Arrows:</b> Move Explorer<br>
+                <b>Space:</b> Use EMP Charge (Stuns nearby entities)<br>
+                <b>F:</b> Deploy Distress Flare (Creates illuminated safe zone that repels lurkers)<br>
                 <b>F1 / H / Esc:</b> Toggle / Close Survival Guide<br>
                 <b>F5:</b> Quicksave State &bull; <b>F9:</b> Quickload State<br>
                 <b>R / Enter / Space:</b> Restart (when game over)<br>
-                Survive, find the elevator to the next deck. Watch your Oxygen and Battery. If either hits zero, you die.</p>
+                Navigate derelict decks (1 to 5), locate access keys and escape pods. Maintain Oxygen and Flashlight Battery. If either runs dry, life support terminates.</p>
             </div>
             <div class="help-section">
-                <h3>Lore Index</h3>
-                <p>You are trapped on a derelict station. The crew was experimenting on alien lifeforms... it didn't go well. You must escape before life support fails completely or they find you.</p>
+                <h3>Station Hardware & Resources</h3>
+                <p><b>Security Keycards [Red / Green / Blue]:</b> Unlock color-coded bulkhead blast doors.<br>
+                <b>Mainframe Terminals:</b> Override remote security locks and access classified telemetry logs.<br>
+                <b>O2 Rebreather Cylinder (Cyan):</b> Pressurized life-support tank; restores +35% Oxygen.<br>
+                <b>Lithium Power Cell (Gold):</b> High-capacity capacitor pack; restores +40% Battery.<br>
+                <b>Survival Lockers:</b> Conceal inside to evade detection from pursuing entities.<br>
+                <b>Distress Flare [F]:</b> Illuminates a wide perimeter and deters aggressive organisms for 25s.</p>
             </div>
             <div class="help-section">
-                <h3>Enemy Bestiary</h3>
-                <p><b>The Entities:</b> Sensitive to noise and movement. If they catch you, it's instant death. They glow magenta. Hide in Lockers to avoid detection.<br>
-                <b>Stunned Entities:</b> Glow blue. Safe to pass temporarily.</p>
+                <h3>Entity Bestiary</h3>
+                <p><b>Stalker (Violet):</b> Agile chitinous hunter. Sensitive to movement and sound. Lethal contact.<br>
+                <b>Phantom (Cyan, Deck 2+):</b> Electromagnetic phase organism. Shimmers invisibly in darkness until exposed to direct flashlight or flare light.<br>
+                <b>Bloater (Green, Deck 3+):</b> Sluggish toxic carrier. Discharges puddles of corrosive bio-acid that breach suit integrity (-5% O2).<br>
+                <b>Apex Behemoth (Crimson, Deck 4-5):</b> Armored dread bio-titan. Tremors announce its approach. Resists EMP disruption (short stun).</p>
             </div>
             <button class="retro-btn close-help-btn" id="btn-close-modal" onclick="closeHelp()">ENTER THE VOID [CLOSE GUIDE]</button>
         </div>
@@ -213,6 +223,8 @@
         let isDead = false;
         let keys = { r: false, g: false, b: false };
         let emps = 0;
+        let flares = 1;
+        let activeFlares = [];
         let alienInterval;
         let totalTime = 0;
         let selfDestructActive = false;
@@ -285,6 +297,87 @@
             } catch (e) {}
         }
 
+        // Yamaha YM2612 2-Operator FM Synthesis Engine & SNES Stereo Delay Warmth
+        function playFMTone(carrierFreq, modRatio, modDepth, duration, vol=0.15, waveform='sine') {
+            try {
+                let actx = getAudioContext();
+                if (!actx) return;
+                let now = actx.currentTime;
+                let carrier = actx.createOscillator();
+                let modulator = actx.createOscillator();
+                let modGain = actx.createGain();
+                let masterGain = actx.createGain();
+
+                carrier.type = waveform;
+                modulator.type = waveform;
+                carrier.frequency.setValueAtTime(carrierFreq, now);
+                modulator.frequency.setValueAtTime(carrierFreq * modRatio, now);
+
+                modGain.gain.setValueAtTime(modDepth, now);
+                modGain.gain.exponentialRampToValueAtTime(1.0, now + duration);
+
+                modulator.connect(modGain);
+                modGain.connect(carrier.frequency);
+
+                masterGain.gain.setValueAtTime(vol, now);
+                masterGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+                carrier.connect(masterGain);
+                masterGain.connect(actx.destination);
+
+                carrier.start(now);
+                modulator.start(now);
+                carrier.stop(now + duration);
+                modulator.stop(now + duration);
+            } catch (e) {}
+        }
+
+        function playO2Hiss() {
+            try {
+                let actx = getAudioContext();
+                if (!actx) return;
+                let now = actx.currentTime;
+                let bufferSize = Math.floor(actx.sampleRate * 0.3);
+                let buffer = actx.createBuffer(1, bufferSize, actx.sampleRate);
+                let data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.3;
+                let noise = actx.createBufferSource();
+                noise.buffer = buffer;
+                let filter = actx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(1500, now);
+                filter.frequency.exponentialRampToValueAtTime(350, now + 0.3);
+                filter.Q.value = 3.0;
+                let gain = actx.createGain();
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(actx.destination);
+                noise.start(now);
+                playFMTone(540, 1.5, 90, 0.25, 0.12);
+            } catch (e) {}
+        }
+
+        function playBatterySurge() {
+            playFMTone(220, 2.0, 120, 0.1, 0.15);
+            setTimeout(() => playFMTone(440, 2.0, 160, 0.12, 0.18), 70);
+            setTimeout(() => playFMTone(880, 1.0, 80, 0.22, 0.2), 140);
+        }
+
+        function playFlareIgnite() {
+            playFMTone(180, 3.5, 200, 0.4, 0.22, 'sawtooth');
+            setTimeout(() => playBeep(920, 'triangle', 0.2, 0.15), 100);
+        }
+
+        function playAcidSizzle() {
+            playFMTone(140, 4.0, 160, 0.3, 0.25, 'sawtooth');
+        }
+
+        function playApexRoar() {
+            playFMTone(55, 1.5, 100, 0.7, 0.35, 'sawtooth');
+        }
+
         function playHeartbeat() {
             playBeep(40, 'sine', 0.5, 0.5);
             setTimeout(() => playBeep(40, 'sine', 0.5, 0.5), 200);
@@ -311,6 +404,21 @@
                 osc.start();
                 osc.stop(actx.currentTime + 0.5);
             } catch (e) {}
+        }
+
+        function deployFlare() {
+            if (isDead || wonGame || showHelp) return;
+            if (flares <= 0) {
+                showMessage("NO FLARES REMAINING.", "#ff5555");
+                return;
+            }
+            flares--;
+            activeFlares.push({ x: player.x, y: player.y, life: 25 });
+            playFlareIgnite();
+            spawnParticles(player.x * TILE_SIZE + 8, player.y * TILE_SIZE + 8, '#ffaa00', 30);
+            showMessage("DISTRESS FLARE DEPLOYED (SAFE LIGHT ZONE).", "#ffaa00");
+            updateInventoryDisplay();
+            draw();
         }
 
         function generateMap() {
@@ -483,6 +591,36 @@
                 }
             }
 
+            // Emergency O2 Rebreather Canisters (Tile 16)
+            for (let i = 0; i < 3; i++) {
+                let placed = false;
+                let att = 0;
+                while (!placed && att < 1000) {
+                    let rx = Math.floor(Math.random() * COLS);
+                    let ry = Math.floor(Math.random() * ROWS);
+                    if (map[ry][rx] === 0 && (rx !== player.x || ry !== player.y)) {
+                        map[ry][rx] = 16;
+                        placed = true;
+                    }
+                    att++;
+                }
+            }
+
+            // Lithium Battery Power Cells (Tile 17)
+            for (let i = 0; i < 3; i++) {
+                let placed = false;
+                let att = 0;
+                while (!placed && att < 1000) {
+                    let rx = Math.floor(Math.random() * COLS);
+                    let ry = Math.floor(Math.random() * ROWS);
+                    if (map[ry][rx] === 0 && (rx !== player.x || ry !== player.y)) {
+                        map[ry][rx] = 17;
+                        placed = true;
+                    }
+                    att++;
+                }
+            }
+
             if (deck === 5) {
                 let placed = false;
                 let att = 0;
@@ -555,11 +693,17 @@
             for (let i = 0; i < numAliens; i++) {
                 let placed = false;
                 let att = 0;
+                let aType = 0; // 0=Stalker (Default)
+                if (deck >= 2 && i === 1) aType = 1; // Phantom (Electromagnetic phase)
+                if (deck >= 3 && i === 2) aType = 2; // Bloater (Acid carrier)
+                if (deck >= 4 && i === 0) aType = 3; // Apex Behemoth (Dread titan)
+                if (deck >= 5 && i === 3) aType = 1; // 2nd Phantom
+
                 while (!placed && att < 1000) {
                     let rx = Math.floor(Math.random() * COLS);
                     let ry = Math.floor(Math.random() * ROWS);
                     if (map[ry][rx] === 0 && (Math.abs(rx - player.x) > 5 || Math.abs(ry - player.y) > 5)) {
-                        aliens.push({x: rx, y: ry, state: 'patrol', stunTimer: 0});
+                        aliens.push({x: rx, y: ry, state: 'patrol', stunTimer: 0, type: aType});
                         placed = true;
                     }
                     att++;
@@ -568,7 +712,7 @@
                     for (let y = 1; y < ROWS - 1 && !placed; y++) {
                         for (let x = 1; x < COLS - 1 && !placed; x++) {
                             if (map[y][x] === 0 && (x !== player.x || y !== player.y)) {
-                                aliens.push({x, y, state: 'patrol', stunTimer: 0});
+                                aliens.push({x, y, state: 'patrol', stunTimer: 0, type: aType});
                                 placed = true;
                             }
                         }
@@ -578,14 +722,17 @@
         }
         generateMap();
 
-        // Duplicate var declarations removed
-
         function updateInventoryDisplay() {
             document.getElementById('key-r').classList.toggle('has-key', keys.r);
             document.getElementById('key-g').classList.toggle('has-key', keys.g);
             document.getElementById('key-b').classList.toggle('has-key', keys.b);
             document.getElementById('emp-val').innerText = emps;
             document.getElementById('emp-val').style.color = emps > 0 ? '#0ff' : '#555';
+            const flEl = document.getElementById('flare-val');
+            if (flEl) {
+                flEl.innerText = flares;
+                flEl.style.color = flares > 0 ? '#ffaa00' : '#555';
+            }
         }
 
         function updateStatsDisplay() {
@@ -602,6 +749,13 @@
             totalTime++;
             oxygen -= 0.5;
             battery -= 0.2;
+
+            for (let i = activeFlares.length - 1; i >= 0; i--) {
+                activeFlares[i].life--;
+                if (activeFlares[i].life <= 0) {
+                    activeFlares.splice(i, 1);
+                }
+            }
             
             let chasing = aliens.some(a => a.state === 'chase');
             
@@ -947,7 +1101,89 @@
                         ctx.fillRect(px + 7, py + 6, 2, 2);
                         ctx.fillRect(px + 7, py + 9, 2, 1);
                         ctx.restore();
+                    } else if (tile === 16) {
+                        // Emergency O2 Rebreather Cylinder
+                        let bob = Math.sin(time * 0.007 + x) * 1.5;
+                        ctx.save();
+                        ctx.shadowBlur = 8;
+                        ctx.shadowColor = '#00bfff';
+                        ctx.fillStyle = '#0077b6';
+                        ctx.fillRect(px + 4, py + 3 + bob, 8, 10);
+                        ctx.beginPath();
+                        ctx.arc(px + 8, py + 4 + bob, 4, Math.PI, 0);
+                        ctx.fill();
+                        ctx.fillStyle = '#90e0ef';
+                        ctx.fillRect(px + 4, py + 6 + bob, 8, 1);
+                        ctx.fillRect(px + 4, py + 10 + bob, 8, 1);
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(px + 7, py + 1 + bob, 2, 2);
+                        ctx.fillStyle = '#00ffff';
+                        ctx.fillRect(px + 6, py + 7 + bob, 4, 2);
+                        ctx.restore();
+                    } else if (tile === 17) {
+                        // Lithium Battery Power Cell
+                        let bob = Math.sin(time * 0.006 + y) * 1.5;
+                        ctx.save();
+                        ctx.shadowBlur = 8;
+                        ctx.shadowColor = '#ffd700';
+                        ctx.fillStyle = '#b8860b';
+                        ctx.fillRect(px + 3, py + 4 + bob, 10, 8);
+                        ctx.fillStyle = '#1c1b17';
+                        ctx.fillRect(px + 5, py + 5 + bob, 6, 6);
+                        ctx.fillStyle = '#ffd700';
+                        ctx.fillRect(px + 4, py + 2 + bob, 2, 2);
+                        ctx.fillRect(px + 10, py + 2 + bob, 2, 2);
+                        ctx.fillStyle = '#ffff55';
+                        ctx.beginPath();
+                        ctx.moveTo(px + 8, py + 5 + bob);
+                        ctx.lineTo(px + 6, py + 8 + bob);
+                        ctx.lineTo(px + 8, py + 8 + bob);
+                        ctx.lineTo(px + 7, py + 10 + bob);
+                        ctx.lineTo(px + 10, py + 7 + bob);
+                        ctx.lineTo(px + 8, py + 7 + bob);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.restore();
+                    } else if (tile === 18) {
+                        // Corrosive Acid Puddle (Bio-hazard left by Bloaters)
+                        let pulse = (Math.sin(time * 0.01 + x + y) + 1) * 0.5;
+                        ctx.save();
+                        ctx.fillStyle = `rgba(50, 205, 50, ${0.45 + pulse * 0.25})`;
+                        ctx.beginPath();
+                        ctx.ellipse(px + 8, py + 8, 6, 4, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#adff2f';
+                        ctx.fillRect(px + 5, py + 7, 2, 2);
+                        ctx.fillRect(px + 9, py + 6, 2, 2);
+                        ctx.fillRect(px + 7, py + 9, 2, 1);
+                        ctx.restore();
                     }
+                }
+            }
+        }
+
+        function drawActiveFlares(time) {
+            for (let f of activeFlares) {
+                let fx = f.x * TILE_SIZE + 8;
+                let fy = f.y * TILE_SIZE + 8;
+                let flicker = Math.sin(time * 0.02 + f.x) * 4;
+                let rad = 56 + flicker;
+                let grad = ctx.createRadialGradient(fx, fy, 2, fx, fy, rad);
+                grad.addColorStop(0, 'rgba(255, 170, 0, 0.35)');
+                grad.addColorStop(0.5, 'rgba(255, 100, 0, 0.12)');
+                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(fx, fy, rad, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Flare stick
+                ctx.fillStyle = '#ff3300';
+                ctx.fillRect(fx - 1, fy - 4, 3, 8);
+                ctx.fillStyle = '#ffff66';
+                ctx.fillRect(fx - 1, fy - 5, 3, 3);
+                if (Math.random() < 0.25) {
+                    spawnParticles(fx, fy - 3, '#ffcc00', 1);
                 }
             }
         }
@@ -1063,9 +1299,10 @@
                 ctx.beginPath();
                 ctx.arc(px, py - 4 + bob, 3.5, 0.1 * Math.PI, 0.9 * Math.PI, false);
                 ctx.fill();
-                // Visor Specular Glint
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(px - 2, py - 5 + bob, 2, 1);
+                // Visor rim contour (Clean, static, NO specular glints)
+                ctx.strokeStyle = '#005577';
+                ctx.lineWidth = 0.8;
+                ctx.stroke();
                 // Boots
                 ctx.fillStyle = '#485a6a';
                 ctx.fillRect(px - 4, py + 6 + step, 3, 3);
@@ -1080,15 +1317,13 @@
                 ctx.fillRect(px + 2, py - 1 + bob, 3, 6);
                 ctx.fillStyle = '#00ff66';
                 ctx.fillRect(px + 3, py + bob, 1, 3);
-                // Helmet & Visor facing left
+                // Helmet & Visor facing left (Clean static visor, no glints)
                 ctx.fillStyle = '#eaf2f8';
                 ctx.beginPath();
                 ctx.arc(px - 1, py - 4 + bob, 4.5, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.fillStyle = '#00ffff';
                 ctx.fillRect(px - 5, py - 5 + bob, 3, 3);
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(px - 4, py - 5 + bob, 1, 1);
                 // Boots
                 ctx.fillStyle = '#485a6a';
                 ctx.fillRect(px - 4 + step, py + 6, 3, 3);
@@ -1103,15 +1338,13 @@
                 ctx.fillRect(px - 5, py - 1 + bob, 3, 6);
                 ctx.fillStyle = '#00ff66';
                 ctx.fillRect(px - 4, py + bob, 1, 3);
-                // Helmet & Visor facing right
+                // Helmet & Visor facing right (Clean static visor, no glints)
                 ctx.fillStyle = '#eaf2f8';
                 ctx.beginPath();
                 ctx.arc(px + 1, py - 4 + bob, 4.5, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.fillStyle = '#00ffff';
                 ctx.fillRect(px + 2, py - 5 + bob, 3, 3);
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(px + 3, py - 5 + bob, 1, 1);
                 // Boots
                 ctx.fillStyle = '#485a6a';
                 ctx.fillRect(px - 3 + step, py + 6, 3, 3);
@@ -1127,88 +1360,176 @@
                 let ay = a.y * TILE_SIZE + TILE_SIZE / 2;
                 let isStunned = (a.state === 'stunned');
                 let isChasing = (a.state === 'chase');
+                let aType = a.type || 0;
                 let legWave = Math.sin(time * 0.015 + a.x * 2) * 2;
 
                 ctx.save();
-                if (isStunned) {
-                    ctx.shadowBlur = 12;
-                    ctx.shadowColor = '#00ffff';
-                } else if (isChasing) {
-                    ctx.shadowBlur = 16;
-                    ctx.shadowColor = '#ff0055';
-                } else {
+                if (aType === 1) { // PHANTOM (Phase Organism)
+                    let inLight = (Math.abs(a.x - player.x) <= 4 && Math.abs(a.y - player.y) <= 4) ||
+                                  activeFlares.some(f => Math.abs(f.x - a.x) <= 3 && Math.abs(f.y - a.y) <= 3);
+                    let alpha = isStunned ? 0.9 : inLight ? 0.85 : 0.4;
+                    ctx.globalAlpha = alpha;
+                    ctx.shadowBlur = inLight ? 16 : 8;
+                    ctx.shadowColor = '#00e5ff';
+
+                    // 4 Spectral Tendrils
+                    ctx.strokeStyle = isStunned ? '#ffffff' : '#00ffff';
+                    ctx.lineWidth = 1.2;
+                    let tendrilWave = Math.sin(time * 0.02 + a.y) * 3;
+                    for (let sign of [-1, 1]) {
+                        ctx.beginPath();
+                        ctx.moveTo(ax, ay);
+                        ctx.quadraticCurveTo(ax + sign * 6, ay - 6 + tendrilWave, ax + sign * 10, ay - 10);
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(ax, ay);
+                        ctx.quadraticCurveTo(ax + sign * 7, ay + 6 - tendrilWave, ax + sign * 11, ay + 10);
+                        ctx.stroke();
+                    }
+
+                    // Phased Core Sphere
+                    let pGrad = ctx.createRadialGradient(ax, ay, 1, ax, ay, 6);
+                    pGrad.addColorStop(0, '#ffffff');
+                    pGrad.addColorStop(0.4, '#00e5ff');
+                    pGrad.addColorStop(1, '#002244');
+                    ctx.fillStyle = pGrad;
+                    ctx.beginPath();
+                    ctx.arc(ax, ay, 5.5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Electromagnetic Nucleus Eye
+                    ctx.fillStyle = isChasing ? '#ff0055' : '#00ffff';
+                    ctx.beginPath();
+                    ctx.arc(ax, ay, 2, 0, Math.PI * 2);
+                    ctx.fill();
+
+                } else if (aType === 2) { // BLOATER (Toxic Bio-Carrier)
                     ctx.shadowBlur = 10;
-                    ctx.shadowColor = '#ff00ff';
-                }
+                    ctx.shadowColor = '#00ff44';
 
-                // 6 Undulating Tendril / Arachnid Shadow Legs
-                ctx.strokeStyle = isStunned ? '#3388ff' : isChasing ? '#ff1144' : '#aa00aa';
-                ctx.lineWidth = 1.5;
-                let legPairs = [
-                    [-6, -4, -10 + legWave, -8],
-                    [-7, 0, -11 - legWave, 0],
-                    [-6, 4, -10 + legWave, 8],
-                    [6, -4, 10 - legWave, -8],
-                    [7, 0, 11 + legWave, 0],
-                    [6, 4, 10 - legWave, 8]
-                ];
-                for (let lp of legPairs) {
+                    // 6 Heavy Short Chitin Claws
+                    ctx.strokeStyle = '#2d5a27';
+                    ctx.lineWidth = 2;
+                    for (let sign of [-1, 1]) {
+                        ctx.beginPath(); ctx.moveTo(ax + sign * 5, ay - 4); ctx.lineTo(ax + sign * 8, ay - 7); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(ax + sign * 6, ay); ctx.lineTo(ax + sign * 9, ay); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(ax + sign * 5, ay + 4); ctx.lineTo(ax + sign * 8, ay + 7); ctx.stroke();
+                    }
+
+                    // Bulging Bile-Green Carapace
+                    let pustulePulse = (Math.sin(time * 0.008 + a.x) + 1) * 0.5;
+                    ctx.fillStyle = isStunned ? '#1d3b20' : '#14421b';
                     ctx.beginPath();
-                    ctx.moveTo(ax + lp[0], ay + lp[1]);
-                    ctx.lineTo(ax + lp[2], ay + lp[3]);
+                    ctx.ellipse(ax, ay, 7, 7.5, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Glowing Toxic Pustule Nodes
+                    ctx.fillStyle = `rgb(${Math.floor(160 + pustulePulse * 90)}, 255, 0)`;
+                    ctx.beginPath(); ctx.arc(ax - 2.5, ay - 2.5, 2, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(ax + 2.5, ay - 1.5, 2.2, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(ax, ay + 3, 2.5, 0, Math.PI * 2); ctx.fill();
+
+                    // Slime mandibles
+                    ctx.strokeStyle = '#76ff03';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(ax - 2, ay + 6); ctx.lineTo(ax, ay + 9);
+                    ctx.moveTo(ax + 2, ay + 6); ctx.lineTo(ax, ay + 9);
                     ctx.stroke();
-                }
 
-                // Biomechanical Chitinous Carapace Shell
-                ctx.fillStyle = isStunned ? '#101c3d' : isChasing ? '#3b0814' : '#22082b';
-                ctx.beginPath();
-                ctx.ellipse(ax, ay, 6, 7, 0, 0, Math.PI * 2);
-                ctx.fill();
+                } else if (aType === 3) { // APEX BEHEMOTH (Dread bio-titan)
+                    ctx.shadowBlur = isChasing ? 20 : 12;
+                    ctx.shadowColor = '#ff0033';
 
-                // Chitin Plate Segments
-                ctx.fillStyle = isStunned ? '#1f3d7a' : isChasing ? '#661426' : '#4d145c';
-                ctx.beginPath();
-                ctx.ellipse(ax, ay - 2, 4, 3, 0, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.ellipse(ax, ay + 2, 4, 3, 0, 0, Math.PI * 2);
-                ctx.fill();
+                    // 8 Spiked Heavy Chitin Legs
+                    ctx.strokeStyle = isStunned ? '#4466aa' : '#aa1122';
+                    ctx.lineWidth = 2.2;
+                    let heavyWalk = Math.sin(time * 0.01 + a.x) * 2;
+                    for (let sign of [-1, 1]) {
+                        ctx.beginPath(); ctx.moveTo(ax + sign * 6, ay - 6); ctx.lineTo(ax + sign * 11 + heavyWalk, ay - 10); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(ax + sign * 7, ay - 2); ctx.lineTo(ax + sign * 12, ay - 3); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(ax + sign * 7, ay + 2); ctx.lineTo(ax + sign * 12, ay + 3); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(ax + sign * 6, ay + 6); ctx.lineTo(ax + sign * 11 - heavyWalk, ay + 10); ctx.stroke();
+                    }
 
-                // Central Optic Core Eye
-                let eyePulse = (Math.sin(time * 0.01 + a.x) + 1) * 0.5;
-                if (isStunned) {
-                    // Electric Blue Stun Matrix
-                    ctx.fillStyle = '#00ffff';
+                    // Heavy Armored Chitin Husk
+                    ctx.fillStyle = isStunned ? '#1f1b2b' : '#3d0810';
                     ctx.beginPath();
-                    ctx.arc(ax, ay, 3, 0, Math.PI * 2);
+                    ctx.ellipse(ax, ay, 7.5, 8.5, 0, 0, Math.PI * 2);
                     ctx.fill();
-                    ctx.strokeStyle = '#ffffff';
-                    ctx.strokeRect(ax - 2, ay - 2, 4, 4);
-                } else if (isChasing) {
-                    // Aggressive Flashing Crimson Hunter Eye with Slit Pupil
-                    ctx.fillStyle = `rgb(255, ${Math.floor(eyePulse * 80)}, 0)`;
+
+                    // Spiked Horn Crest
+                    ctx.fillStyle = '#8a1826';
                     ctx.beginPath();
-                    ctx.arc(ax, ay, 3.5, 0, Math.PI * 2);
+                    ctx.moveTo(ax - 6, ay - 5); ctx.lineTo(ax - 9, ay - 11); ctx.lineTo(ax - 3, ay - 7);
+                    ctx.moveTo(ax + 6, ay - 5); ctx.lineTo(ax + 9, ay - 11); ctx.lineTo(ax + 3, ay - 7);
                     ctx.fill();
-                    ctx.fillStyle = '#000000';
-                    ctx.fillRect(ax - 0.5, ay - 3, 1, 6); // Slit pupil
-                    // Jagged Mandibles snapping
-                    ctx.strokeStyle = '#ff3366';
+
+                    // Triple Optic Cluster
+                    ctx.fillStyle = isStunned ? '#00e5ff' : '#ff0033';
+                    ctx.beginPath(); ctx.arc(ax - 2.5, ay, 1.6, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(ax + 2.5, ay, 1.6, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(ax, ay - 3, 1.8, 0, Math.PI * 2); ctx.fill();
+
+                } else { // TYPE 0: STALKER (Standard Predator)
+                    if (isStunned) {
+                        ctx.shadowBlur = 12; ctx.shadowColor = '#00ffff';
+                    } else if (isChasing) {
+                        ctx.shadowBlur = 16; ctx.shadowColor = '#ff0055';
+                    } else {
+                        ctx.shadowBlur = 10; ctx.shadowColor = '#ff00ff';
+                    }
+
+                    // 6 Undulating Tendril Legs
+                    ctx.strokeStyle = isStunned ? '#3388ff' : isChasing ? '#ff1144' : '#aa00aa';
                     ctx.lineWidth = 1.5;
-                    ctx.beginPath();
-                    ctx.moveTo(ax - 3, ay + 5); ctx.lineTo(ax, ay + 8 + legWave);
-                    ctx.moveTo(ax + 3, ay + 5); ctx.lineTo(ax, ay + 8 + legWave);
-                    ctx.stroke();
-                } else {
-                    // Eerie Violet Patrol Eye
-                    ctx.fillStyle = `rgb(${Math.floor(200 + eyePulse * 55)}, 0, 255)`;
-                    ctx.beginPath();
-                    ctx.arc(ax, ay, 3, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(ax - 1, ay - 1, 2, 2);
-                }
+                    let legPairs = [
+                        [-6, -4, -10 + legWave, -8],
+                        [-7, 0, -11 - legWave, 0],
+                        [-6, 4, -10 + legWave, 8],
+                        [6, -4, 10 - legWave, -8],
+                        [7, 0, 11 + legWave, 0],
+                        [6, 4, 10 - legWave, 8]
+                    ];
+                    for (let lp of legPairs) {
+                        ctx.beginPath();
+                        ctx.moveTo(ax + lp[0], ay + lp[1]);
+                        ctx.lineTo(ax + lp[2], ay + lp[3]);
+                        ctx.stroke();
+                    }
 
+                    // Biomechanical Chitinous Carapace Shell
+                    ctx.fillStyle = isStunned ? '#101c3d' : isChasing ? '#3b0814' : '#22082b';
+                    ctx.beginPath();
+                    ctx.ellipse(ax, ay, 6, 7, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Chitin Plate Segments
+                    ctx.fillStyle = isStunned ? '#1f3d7a' : isChasing ? '#661426' : '#4d145c';
+                    ctx.beginPath(); ctx.ellipse(ax, ay - 2, 4, 3, 0, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.ellipse(ax, ay + 2, 4, 3, 0, 0, Math.PI * 2); ctx.fill();
+
+                    // Central Optic Core Eye
+                    let eyePulse = (Math.sin(time * 0.01 + a.x) + 1) * 0.5;
+                    if (isStunned) {
+                        ctx.fillStyle = '#00ffff';
+                        ctx.beginPath(); ctx.arc(ax, ay, 3, 0, Math.PI * 2); ctx.fill();
+                        ctx.strokeStyle = '#ffffff'; ctx.strokeRect(ax - 2, ay - 2, 4, 4);
+                    } else if (isChasing) {
+                        ctx.fillStyle = `rgb(255, ${Math.floor(eyePulse * 80)}, 0)`;
+                        ctx.beginPath(); ctx.arc(ax, ay, 3.5, 0, Math.PI * 2); ctx.fill();
+                        ctx.fillStyle = '#000000'; ctx.fillRect(ax - 0.5, ay - 3, 1, 6);
+                        ctx.strokeStyle = '#ff3366'; ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.moveTo(ax - 3, ay + 5); ctx.lineTo(ax, ay + 8 + legWave);
+                        ctx.moveTo(ax + 3, ay + 5); ctx.lineTo(ax, ay + 8 + legWave);
+                        ctx.stroke();
+                    } else {
+                        ctx.fillStyle = `rgb(${Math.floor(200 + eyePulse * 55)}, 0, 255)`;
+                        ctx.beginPath(); ctx.arc(ax, ay, 3, 0, Math.PI * 2); ctx.fill();
+                        ctx.fillStyle = '#ffffff'; ctx.fillRect(ax - 1, ay - 1, 2, 2);
+                    }
+                }
                 ctx.restore();
             }
         }
@@ -1225,6 +1546,7 @@
 
             ctx.clearRect(-10, -10, canvas.width + 20, canvas.height + 20);
             drawMap(time);
+            drawActiveFlares(time);
             drawShockwaves();
             drawAliens(time);
             if (!isDead) drawPlayer(time);
@@ -1276,19 +1598,32 @@
                 a.state = canSee ? 'chase' : 'patrol';
 
                 let dx = 0, dy = 0;
-                if (a.state === 'chase') {
+                let aType = a.type || 0;
+
+                // Bloaters move slower (50% pace)
+                if (aType === 2 && Math.random() < 0.45) {
+                    continue;
+                }
+
+                // Check flare deterrence: Stalkers & Phantoms avoid flares
+                let nearFlare = activeFlares.find(f => Math.abs(f.x - a.x) <= 3 && Math.abs(f.y - a.y) <= 3);
+                if (nearFlare && (aType === 0 || aType === 1)) {
+                    // Repelled by flare light: move away from flare
+                    dx = Math.sign(a.x - nearFlare.x);
+                    dy = Math.sign(a.y - nearFlare.y);
+                } else if (a.state === 'chase') {
                     if (Math.abs(player.x - a.x) > Math.abs(player.y - a.y)) {
                         dx = Math.sign(player.x - a.x);
                         let testX = a.x + dx;
                         let nextTarget = (testX >= 0 && testX < COLS) ? map[a.y][testX] : 1;
-                        if (nextTarget !== 0 && (nextTarget < 6 || nextTarget > 8)) {
+                        if (nextTarget !== 0 && (nextTarget < 6 || nextTarget > 8) && nextTarget < 16) {
                             dx = 0; dy = Math.sign(player.y - a.y);
                         }
                     } else {
                         dy = Math.sign(player.y - a.y);
                         let testY = a.y + dy;
                         let nextTarget = (testY >= 0 && testY < ROWS) ? map[testY][a.x] : 1;
-                        if (nextTarget !== 0 && (nextTarget < 6 || nextTarget > 8)) {
+                        if (nextTarget !== 0 && (nextTarget < 6 || nextTarget > 8) && nextTarget < 16) {
                             dy = 0; dx = Math.sign(player.x - a.x);
                         }
                     }
@@ -1305,7 +1640,15 @@
                     let ny = a.y + dy;
                     if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
                         let target = map[ny][nx];
-                        if (target === 0 || (target >= 6 && target <= 8) || target === 11 || target === 12) {
+                        if (target === 0 || (target >= 6 && target <= 8) || target === 11 || target === 12 || (target >= 16 && target <= 18)) {
+                            // Bloater drops acid puddle behind it
+                            if (aType === 2 && map[a.y][a.x] === 0 && Math.random() < 0.2) {
+                                map[a.y][a.x] = 18;
+                            }
+                            // Apex footsteps cause subtle screen tremor when near player
+                            if (aType === 3 && dist <= 5) {
+                                triggerScreenShake(1);
+                            }
                             a.x = nx;
                             a.y = ny;
                         }
@@ -1356,10 +1699,14 @@
                     }
                 } else if (target === 9) {
                     const lores = [
-                        "LOG: EXPERIMENT FAILED.",
-                        "LOG: THEY ARE IN THE VENTS.",
-                        "LOG: OXYGEN LEAK DETECTED.",
-                        "LOG: DIRECTOR IS DEAD."
+                        "LOG 01: Dr. Vance recorded 1999Hz harmonic hum in Bulkhead 4.",
+                        "LOG 02: Specimen-Alpha breached containment during power flux.",
+                        "LOG 03: Phantom organisms cloaked by electromagnetic phase shift.",
+                        "LOG 04: Emergency rebreathers & battery cells placed in crew sectors.",
+                        "LOG 05: Bloater specimens discharge corrosive acid on contact.",
+                        "LOG 06: Distress Flares emit thermal wavelengths that deter lurkers.",
+                        "LOG 07: Subnet 10.19.99.4 intranet flooded with classified evac orders.",
+                        "LOG 08: Director evacuated to Pod Alpha. Bulkhead doors locked."
                     ];
                     let colors = [3, 4, 5];
                     let colorNames = {3: "RED", 4: "GREEN", 5: "BLUE"};
@@ -1380,11 +1727,13 @@
                     keys = { r: false, g: false, b: false };
                     oxygen = 100.0;
                     battery = 100.0;
+                    flares = Math.min(3, flares + 1);
+                    activeFlares = [];
                     generateMap();
                     updateInventoryDisplay();
                     updateStatsDisplay();
                     startAlienInterval();
-                    showMessage(`ELEVATOR TO DECK ${deck}. STATS RESTORED.`, "#ff0");
+                    showMessage(`ELEVATOR TO DECK ${deck}. STATS & EQUIPMENT RESTORED.`, "#ff0");
                     draw();
                 } else if (target === 14) {
                     wonGame = true;
@@ -1411,7 +1760,7 @@
                         showMessage("SELF DESTRUCT ACTIVATED. 45 SECONDS TO ESCAPE!", "#f00");
                         draw();
                     }
-                } else if (target === 0 || (target >= 6 && target <= 8) || target === 11 || target === 12) {
+                } else if (target === 0 || (target >= 6 && target <= 8) || target === 11 || target === 12 || (target >= 16 && target <= 18)) {
                     if (target >= 6 && target <= 8) {
                         if (target === 6) { keys.r = true; showMessage("PICKED UP RED KEYCARD.", "#f00"); }
                         if (target === 7) { keys.g = true; showMessage("PICKED UP GREEN KEYCARD.", "#0f0"); }
@@ -1425,6 +1774,37 @@
                         map[newY][newX] = 0;
                         updateInventoryDisplay();
                     }
+                    if (target === 16) {
+                        oxygen = Math.min(100.0, oxygen + 35.0);
+                        map[newY][newX] = 0;
+                        playO2Hiss();
+                        let pCentX = newX * TILE_SIZE + TILE_SIZE / 2;
+                        let pCentY = newY * TILE_SIZE + TILE_SIZE / 2;
+                        spawnParticles(pCentX, pCentY, '#00ffff', 25);
+                        showMessage("O2 REBREATHER ENGAGED (+35% OXYGEN).", "#00ffff");
+                        updateStatsDisplay();
+                    }
+                    if (target === 17) {
+                        battery = Math.min(100.0, battery + 40.0);
+                        map[newY][newX] = 0;
+                        playBatterySurge();
+                        let pCentX = newX * TILE_SIZE + TILE_SIZE / 2;
+                        let pCentY = newY * TILE_SIZE + TILE_SIZE / 2;
+                        spawnParticles(pCentX, pCentY, '#ffd700', 25);
+                        showMessage("POWER CELL LOADED (+40% BATTERY).", "#ffd700");
+                        updateStatsDisplay();
+                    }
+                    if (target === 18) {
+                        oxygen = Math.max(0.0, oxygen - 5.0);
+                        map[newY][newX] = 0;
+                        playAcidSizzle();
+                        triggerScreenShake(3);
+                        let pCentX = newX * TILE_SIZE + TILE_SIZE / 2;
+                        let pCentY = newY * TILE_SIZE + TILE_SIZE / 2;
+                        spawnParticles(pCentX, pCentY, '#76ff03', 25);
+                        showMessage("WARNING: ACID CONTACT! SUIT BREACH (-5% O2).", "#ff5500");
+                        updateStatsDisplay();
+                    }
                     player.x = newX;
                     player.y = newY;
                     for (let a of aliens) {
@@ -1435,7 +1815,7 @@
                         }
                     }
                     oxygen -= 0.2;
-                    if (target === 0) showMessage("Use WASD to move. Space to use EMP. Press H for Help.");
+                    if (target === 0) showMessage("Use WASD to move &bull; Space for EMP &bull; [F] Flare &bull; [F1] Guide");
                     if (oxygen <= 0) {
                         oxygen = 0;
                         updateStatsDisplay();
@@ -1474,6 +1854,7 @@
                     battery,
                     keys: { r: keys.r, g: keys.g, b: keys.b },
                     emps,
+                    flares,
                     totalTime,
                     selfDestructActive,
                     selfDestructTimer,
@@ -1481,7 +1862,8 @@
                     wonGame,
                     winEnding,
                     rooms: rooms.map(r => ({ x: r.x, y: r.y, w: r.w, h: r.h })),
-                    aliens: aliens.map(a => ({ x: a.x, y: a.y, state: a.state, stunTimer: a.stunTimer })),
+                    aliens: aliens.map(a => ({ x: a.x, y: a.y, state: a.state, stunTimer: a.stunTimer, type: a.type || 0 })),
+                    activeFlares: activeFlares.map(f => ({ x: f.x, y: f.y, life: f.life })),
                     map: map.map(row => row.slice())
                 };
                 localStorage.setItem('kvoid_save', JSON.stringify(saveState));
@@ -1512,6 +1894,8 @@
                 battery = s.battery !== undefined ? s.battery : 100;
                 keys = s.keys || { r: false, g: false, b: false };
                 emps = s.emps || 0;
+                flares = s.flares !== undefined ? s.flares : 1;
+                activeFlares = (s.activeFlares || []).map(f => ({ x: f.x, y: f.y, life: f.life }));
                 totalTime = s.totalTime || 0;
                 selfDestructActive = !!s.selfDestructActive;
                 selfDestructTimer = s.selfDestructTimer || 0;
@@ -1519,7 +1903,7 @@
                 wonGame = !!s.wonGame;
                 winEnding = s.winEnding || "";
                 rooms = (s.rooms || []).map(r => ({ x: r.x, y: r.y, w: r.w, h: r.h }));
-                aliens = (s.aliens || []).map(a => ({ x: a.x, y: a.y, state: a.state, stunTimer: a.stunTimer || 0 }));
+                aliens = (s.aliens || []).map(a => ({ x: a.x, y: a.y, state: a.state, stunTimer: a.stunTimer || 0, type: a.type || 0 }));
                 map = s.map.map(row => row.slice());
 
                 particles = [];
@@ -1563,6 +1947,8 @@
             winEnding = "";
             keys = { r: false, g: false, b: false };
             emps = 0;
+            flares = 1;
+            activeFlares = [];
             totalTime = 0;
             selfDestructActive = false;
             selfDestructTimer = 0;
@@ -1573,7 +1959,7 @@
             updateInventoryDisplay();
             updateStatsDisplay();
             startAlienInterval();
-            showMessage("Use WASD to move. Space for EMP. [F1] Help • [F5] Save • [F9] Load");
+            showMessage("Use WASD to move • Space for EMP • [F] Flare • [F1] Guide");
             draw();
         }
 
@@ -1639,6 +2025,10 @@
                 case 'D':
                     movePlayer(1, 0); playerDir = 3;
                     break;
+                case 'f':
+                case 'F':
+                    deployFlare();
+                    break;
                 case ' ':
                     if (emps > 0) {
                         emps--;
@@ -1651,7 +2041,7 @@
                         for (let a of aliens) {
                             if (Math.abs(a.x - player.x) + Math.abs(a.y - player.y) <= 8) {
                                 a.state = 'stunned';
-                                a.stunTimer = 10;
+                                a.stunTimer = (a.type === 3) ? 5 : (a.type === 1) ? 12 : 10;
                             }
                         }
                         updateInventoryDisplay();

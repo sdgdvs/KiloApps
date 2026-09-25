@@ -34,6 +34,19 @@ DWORD WINAPI SoundThread(LPVOID lpParam) {
         Beep(600, 200);
     } else if (type == 3) { // Screech
         for (int i=2000; i>100; i-=200) Beep(i, 20);
+    } else if (type == 4) { // O2 Rebreather Hiss
+        Beep(1200, 70);
+        Beep(700, 50);
+    } else if (type == 5) { // Battery Charge Surge
+        Beep(260, 50);
+        Beep(520, 50);
+        Beep(1040, 70);
+    } else if (type == 6) { // Flare Ignite
+        Beep(320, 40);
+        Beep(880, 60);
+    } else if (type == 7) { // Acid Sizzle
+        Beep(220, 40);
+        Beep(160, 40);
     }
     return 0;
 }
@@ -70,6 +83,15 @@ int hasRedKey = 0;
 int hasGreenKey = 0;
 int hasBlueKey = 0;
 int emps = 0;
+int flares = 1;
+
+typedef struct {
+    int x, y, life;
+} Flare;
+#define MAX_FLARES 16
+Flare activeFlares[MAX_FLARES];
+int flareCount = 0;
+
 int totalTime = 0;
 int selfDestructActive = 0;
 int selfDestructTimer = 0;
@@ -138,6 +160,7 @@ int roomCount = 0;
 typedef struct {
     int x, y, state;
     int stunTimer;
+    int type; // 0=Stalker, 1=Phantom, 2=Bloater, 3=Apex Behemoth
 } Alien;
 
 #define MAX_ALIENS 32
@@ -315,6 +338,32 @@ void GenerateMap() {
         }
     }
 
+    // Emergency O2 Rebreather Canisters (Tile 16)
+    for (int i = 0; i < 3; i++) {
+        int placed = 0;
+        for (int att = 0; att < 1000 && !placed; att++) {
+            int rx = rand() % COLS;
+            int ry = rand() % ROWS;
+            if (map[ry][rx] == 0 && (rx != playerX || ry != playerY)) {
+                map[ry][rx] = 16;
+                placed = 1;
+            }
+        }
+    }
+
+    // Lithium Battery Power Cells (Tile 17)
+    for (int i = 0; i < 3; i++) {
+        int placed = 0;
+        for (int att = 0; att < 1000 && !placed; att++) {
+            int rx = rand() % COLS;
+            int ry = rand() % ROWS;
+            if (map[ry][rx] == 0 && (rx != playerX || ry != playerY)) {
+                map[ry][rx] = 17;
+                placed = 1;
+            }
+        }
+    }
+
     if (deck == 5) {
         int placed = 0;
         for (int att = 0; att < 1000 && !placed; att++) {
@@ -382,6 +431,12 @@ void GenerateMap() {
     if (numAliens > MAX_ALIENS) numAliens = MAX_ALIENS;
     for (int i = 0; i < numAliens; i++) {
         int placed = 0;
+        int aType = 0; // 0=Stalker
+        if (deck >= 2 && i == 1) aType = 1; // Phantom
+        if (deck >= 3 && i == 2) aType = 2; // Bloater
+        if (deck >= 4 && i == 0) aType = 3; // Apex Behemoth
+        if (deck >= 5 && i == 3) aType = 1; // 2nd Phantom
+
         for (int att = 0; att < 1000 && !placed; att++) {
             int rx = rand() % COLS;
             int ry = rand() % ROWS;
@@ -391,6 +446,7 @@ void GenerateMap() {
                     aliens[alienCount].y = ry;
                     aliens[alienCount].state = 0;
                     aliens[alienCount].stunTimer = 0;
+                    aliens[alienCount].type = aType;
                     alienCount++;
                 }
                 placed = 1;
@@ -404,6 +460,7 @@ void GenerateMap() {
                         aliens[alienCount].y = y;
                         aliens[alienCount].state = 0;
                         aliens[alienCount].stunTimer = 0;
+                        aliens[alienCount].type = aType;
                         alienCount++;
                         placed = 1;
                     }
@@ -427,6 +484,8 @@ void ResetGame() {
     hasGreenKey = 0;
     hasBlueKey = 0;
     emps = 0;
+    flares = 1;
+    flareCount = 0;
     totalTime = 0;
     selfDestructActive = 0;
     selfDestructTimer = 0;
@@ -440,12 +499,13 @@ void ResetGame() {
 
 typedef struct {
     DWORD magic; // 0x4B564F44 ('KVOD')
-    DWORD version; // 1
+    DWORD version; // 2
     int playerX, playerY, playerDir;
     int deck;
     float oxygen, battery;
     int hasRedKey, hasGreenKey, hasBlueKey;
     int emps;
+    int flares;
     int totalTime;
     int selfDestructActive, selfDestructTimer;
     int isDead, wonGame;
@@ -455,6 +515,8 @@ typedef struct {
     int alienCount;
     Alien aliens[MAX_ALIENS];
     int map[ROWS][COLS];
+    int flareCount;
+    Flare activeFlares[MAX_FLARES];
 } KVoidSaveState;
 
 int IsTutorialSeen(void) {
@@ -479,7 +541,7 @@ void SaveGameState(void) {
     for (int i = 0; i < (int)sizeof(KVoidSaveState); i++) pByte[i] = 0;
 
     s.magic = 0x4B564F44; // 'KVOD'
-    s.version = 1;
+    s.version = 2;
     s.playerX = playerX;
     s.playerY = playerY;
     s.playerDir = playerDir;
@@ -490,6 +552,7 @@ void SaveGameState(void) {
     s.hasGreenKey = hasGreenKey;
     s.hasBlueKey = hasBlueKey;
     s.emps = emps;
+    s.flares = flares;
     s.totalTime = totalTime;
     s.selfDestructActive = selfDestructActive;
     s.selfDestructTimer = selfDestructTimer;
@@ -505,6 +568,8 @@ void SaveGameState(void) {
             s.map[y][x] = map[y][x];
         }
     }
+    s.flareCount = flareCount;
+    for (int i = 0; i < MAX_FLARES; i++) s.activeFlares[i] = activeFlares[i];
 
     HANDLE hFile = CreateFileA("kvoid_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -525,7 +590,7 @@ int LoadGameState(void) {
     HANDLE hFile = CreateFileA("kvoid_save.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD readBytes = 0;
-        if (ReadFile(hFile, &s, sizeof(KVoidSaveState), &readBytes, NULL) && readBytes == sizeof(KVoidSaveState)) {
+        if (ReadFile(hFile, &s, sizeof(KVoidSaveState), &readBytes, NULL) && readBytes >= sizeof(DWORD) * 2) {
             if (s.magic == 0x4B564F44) {
                 success = 1;
             }
@@ -549,6 +614,7 @@ int LoadGameState(void) {
     hasGreenKey = s.hasGreenKey;
     hasBlueKey = s.hasBlueKey;
     emps = s.emps;
+    flares = (s.version >= 2) ? s.flares : 1;
     totalTime = s.totalTime;
     selfDestructActive = s.selfDestructActive;
     selfDestructTimer = s.selfDestructTimer;
@@ -564,6 +630,8 @@ int LoadGameState(void) {
             map[y][x] = s.map[y][x];
         }
     }
+    flareCount = (s.version >= 2) ? s.flareCount : 0;
+    for (int i = 0; i < MAX_FLARES; i++) activeFlares[i] = s.activeFlares[i];
 
     for (int i = 0; i < MAX_PARTICLES; i++) particles[i].life = 0;
     for (int i = 0; i < MAX_SHOCKWAVES; i++) shockwaves[i].life = 0;
@@ -609,6 +677,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     totalTime++;
                     oxygen -= 0.5f;
                     battery -= 0.2f;
+
+                    for (int i = flareCount - 1; i >= 0; i--) {
+                        activeFlares[i].life--;
+                        if (activeFlares[i].life <= 0) {
+                            for (int j = i; j < flareCount - 1; j++) {
+                                activeFlares[j] = activeFlares[j + 1];
+                            }
+                            flareCount--;
+                        }
+                    }
                     
                     int chasing = 0;
                     for (int i = 0; i < alienCount; i++) {
@@ -657,12 +735,31 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         else aliens[i].state = 0;
                         
                         int dx = 0, dy = 0;
-                        if (aliens[i].state == 1) {
+                        int aType = aliens[i].type;
+
+                        // Bloaters move slower (50% pace)
+                        if (aType == 2 && (rand() % 100 < 45)) {
+                            continue;
+                        }
+
+                        // Check flare deterrence: Stalkers & Phantoms avoid flares
+                        int nearFlareIdx = -1;
+                        for (int f = 0; f < flareCount; f++) {
+                            if (abs(activeFlares[f].x - aliens[i].x) <= 3 && abs(activeFlares[f].y - aliens[i].y) <= 3) {
+                                nearFlareIdx = f;
+                                break;
+                            }
+                        }
+
+                        if (nearFlareIdx >= 0 && (aType == 0 || aType == 1)) {
+                            dx = (aliens[i].x > activeFlares[nearFlareIdx].x) ? 1 : ((aliens[i].x < activeFlares[nearFlareIdx].x) ? -1 : 0);
+                            dy = (aliens[i].y > activeFlares[nearFlareIdx].y) ? 1 : ((aliens[i].y < activeFlares[nearFlareIdx].y) ? -1 : 0);
+                        } else if (aliens[i].state == 1) {
                             if (abs(playerX - aliens[i].x) > abs(playerY - aliens[i].y)) {
                                 dx = (playerX > aliens[i].x) ? 1 : -1;
                                 int testX = aliens[i].x + dx;
                                 int target = (testX >= 0 && testX < COLS) ? map[aliens[i].y][testX] : 1;
-                                if (target != 0 && (target < 6 || target > 8)) {
+                                if (target != 0 && (target < 6 || target > 8) && target < 16) {
                                     dx = 0; 
                                     dy = (playerY > aliens[i].y) ? 1 : (playerY < aliens[i].y ? -1 : 0);
                                 }
@@ -670,7 +767,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                 dy = (playerY > aliens[i].y) ? 1 : -1;
                                 int testY = aliens[i].y + dy;
                                 int target = (testY >= 0 && testY < ROWS) ? map[testY][aliens[i].x] : 1;
-                                if (target != 0 && (target < 6 || target > 8)) {
+                                if (target != 0 && (target < 6 || target > 8) && target < 16) {
                                     dy = 0; 
                                     dx = (playerX > aliens[i].x) ? 1 : (playerX < aliens[i].x ? -1 : 0);
                                 }
@@ -690,7 +787,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             int ny = aliens[i].y + dy;
                             if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
                                 int target = map[ny][nx];
-                                if (target == 0 || (target >= 6 && target <= 8) || target == 11 || target == 12) {
+                                if (target == 0 || (target >= 6 && target <= 8) || target == 11 || target == 12 || (target >= 16 && target <= 18)) {
+                                    if (aType == 2 && map[aliens[i].y][aliens[i].x] == 0 && (rand() % 10 < 2)) {
+                                        map[aliens[i].y][aliens[i].x] = 18;
+                                    }
+                                    if (aType == 3 && dist <= 5) {
+                                        screenShake = 1;
+                                    }
                                     aliens[i].x = nx;
                                     aliens[i].y = ny;
                                 }
@@ -974,6 +1077,48 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         DeleteObject(hSdFrame);
                         DeleteObject(hSdConsole);
                         DeleteObject(hSdBeacon);
+                    } else if (tile == 16) {
+                        // Emergency O2 Rebreather Canister
+                        HBRUSH hO2Body = CreateSolidBrush(RGB(0, 180, 216));
+                        HBRUSH hO2Valve = CreateSolidBrush(RGB(220, 220, 220));
+                        HBRUSH hO2Stripe = CreateSolidBrush(RGB(255, 255, 255));
+                        RECT o2B = {px + 5, py + 4, px + 11, py + 13};
+                        FillRect(hdcMem, &o2B, hO2Body);
+                        RECT o2V = {px + 6, py + 2, px + 10, py + 4};
+                        FillRect(hdcMem, &o2V, hO2Valve);
+                        RECT o2S = {px + 5, py + 7, px + 11, py + 9};
+                        FillRect(hdcMem, &o2S, hO2Stripe);
+                        DeleteObject(hO2Body);
+                        DeleteObject(hO2Valve);
+                        DeleteObject(hO2Stripe);
+                    } else if (tile == 17) {
+                        // Lithium Battery Power Cell
+                        HBRUSH hBatBody = CreateSolidBrush(RGB(255, 180, 0));
+                        HBRUSH hBatCap = CreateSolidBrush(RGB(40, 40, 40));
+                        HBRUSH hBatCore = CreateSolidBrush(RGB(255, 240, 100));
+                        RECT bbR = {px + 4, py + 4, px + 12, py + 12};
+                        FillRect(hdcMem, &bbR, hBatBody);
+                        RECT bcR1 = {px + 4, py + 4, px + 6, py + 12};
+                        RECT bcR2 = {px + 10, py + 4, px + 12, py + 12};
+                        FillRect(hdcMem, &bcR1, hBatCap);
+                        FillRect(hdcMem, &bcR2, hBatCap);
+                        RECT bCore = {px + 7, py + 6, px + 9, py + 10};
+                        FillRect(hdcMem, &bCore, hBatCore);
+                        DeleteObject(hBatBody);
+                        DeleteObject(hBatCap);
+                        DeleteObject(hBatCore);
+                    } else if (tile == 18) {
+                        // Corrosive Acid Puddle
+                        HBRUSH hAcid = CreateSolidBrush(RGB(50, 180, 30));
+                        HBRUSH hAcidBub = CreateSolidBrush(RGB(140, 255, 40));
+                        RECT acR = {px + 2, py + 5, px + 14, py + 12};
+                        FillRect(hdcMem, &acR, hAcid);
+                        RECT bub1 = {px + 4, py + 6, px + 7, py + 8};
+                        RECT bub2 = {px + 9, py + 7, px + 12, py + 9};
+                        FillRect(hdcMem, &bub1, hAcidBub);
+                        FillRect(hdcMem, &bub2, hAcidBub);
+                        DeleteObject(hAcid);
+                        DeleteObject(hAcidBub);
                     }
                 }
             }
@@ -1029,6 +1174,27 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             }
 
+            // Draw Active Flares
+            for (int f = 0; f < flareCount; f++) {
+                int fx = activeFlares[f].x * TILE_SIZE + TILE_SIZE / 2;
+                int fy = activeFlares[f].y * TILE_SIZE + TILE_SIZE / 2 + UI_HEIGHT;
+                HBRUSH hFlareBody = CreateSolidBrush(RGB(240, 70, 20));
+                HBRUSH hFlareSpark = CreateSolidBrush(RGB(255, 220, 80));
+                RECT fbR = {fx - 2, fy - 4, fx + 2, fy + 5};
+                FillRect(hdcMem, &fbR, hFlareBody);
+                RECT fsR = {fx - 3, fy - 5, fx + 3, fy - 1};
+                FillRect(hdcMem, &fsR, hFlareSpark);
+                DeleteObject(hFlareBody);
+                DeleteObject(hFlareSpark);
+                HPEN hFlarePen = CreatePen(PS_SOLID, 1, RGB(255, 160, 40));
+                HPEN hOldP = (HPEN)SelectObject(hdcMem, hFlarePen);
+                int spk = (ticks / 80) % 4;
+                MoveToEx(hdcMem, fx, fy - 4, NULL); LineTo(hdcMem, fx - 4 - spk, fy - 8);
+                MoveToEx(hdcMem, fx, fy - 4, NULL); LineTo(hdcMem, fx + 4 + spk, fy - 8);
+                SelectObject(hdcMem, hOldP);
+                DeleteObject(hFlarePen);
+            }
+
             // Draw Alien Entities
             for (int i = 0; i < alienCount; i++) {
                 int acx = aliens[i].x * TILE_SIZE + TILE_SIZE / 2;
@@ -1036,64 +1202,147 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 int isStun = (aliens[i].state == 2);
                 int isChase = (aliens[i].state == 1);
                 int legAnim = (ticks / 100) % 3;
+                int aType = aliens[i].type;
 
-                // 6 Undulating Tendril Legs
-                COLORREF legCol = isStun ? RGB(50, 130, 255) : isChase ? RGB(255, 20, 60) : RGB(170, 0, 170);
-                HPEN hLegPen = CreatePen(PS_SOLID, 2, legCol);
-                HPEN hOldP = (HPEN)SelectObject(hdcMem, hLegPen);
+                if (aType == 1) {
+                    // Type 1: Phantom (Electromagnetic Phase Entity)
+                    COLORREF tendCol = isStun ? RGB(30, 80, 160) : RGB(60, 160, 240);
+                    HPEN hTendPen = CreatePen(PS_SOLID, 1, tendCol);
+                    HPEN hOldP = (HPEN)SelectObject(hdcMem, hTendPen);
+                    MoveToEx(hdcMem, acx - 4, acy - 2, NULL); LineTo(hdcMem, acx - 8 - legAnim, acy - 5);
+                    MoveToEx(hdcMem, acx - 4, acy + 2, NULL); LineTo(hdcMem, acx - 8 - legAnim, acy + 5);
+                    MoveToEx(hdcMem, acx + 4, acy - 2, NULL); LineTo(hdcMem, acx + 8 + legAnim, acy - 5);
+                    MoveToEx(hdcMem, acx + 4, acy + 2, NULL); LineTo(hdcMem, acx + 8 + legAnim, acy + 5);
+                    SelectObject(hdcMem, hOldP);
+                    DeleteObject(hTendPen);
 
-                MoveToEx(hdcMem, acx - 5, acy - 3, NULL); LineTo(hdcMem, acx - 9 - legAnim, acy - 6);
-                MoveToEx(hdcMem, acx - 6, acy, NULL); LineTo(hdcMem, acx - 10, acy + legAnim - 1);
-                MoveToEx(hdcMem, acx - 5, acy + 3, NULL); LineTo(hdcMem, acx - 9 - legAnim, acy + 6);
+                    HBRUSH hPhBody = CreateSolidBrush(isChase ? RGB(30, 70, 120) : RGB(15, 35, 65));
+                    HBRUSH hPhCore = CreateSolidBrush(isStun ? RGB(0, 180, 255) : isChase ? RGB(140, 240, 255) : RGB(80, 200, 240));
+                    HBRUSH hOldB = (HBRUSH)SelectObject(hdcMem, hPhBody);
+                    hOldP = (HPEN)SelectObject(hdcMem, GetStockObject(NULL_PEN));
+                    Ellipse(hdcMem, acx - 5, acy - 5, acx + 5, acy + 5);
+                    SelectObject(hdcMem, hPhCore);
+                    Ellipse(hdcMem, acx - 2, acy - 2, acx + 2, acy + 2);
+                    SelectObject(hdcMem, hOldB);
+                    SelectObject(hdcMem, hOldP);
+                    DeleteObject(hPhBody);
+                    DeleteObject(hPhCore);
+                } else if (aType == 2) {
+                    // Type 2: Bloater (Toxic Sluggish Bio-Carrier)
+                    COLORREF legCol = isStun ? RGB(40, 80, 30) : RGB(60, 130, 35);
+                    HPEN hLegPen = CreatePen(PS_SOLID, 2, legCol);
+                    HPEN hOldP = (HPEN)SelectObject(hdcMem, hLegPen);
+                    MoveToEx(hdcMem, acx - 5, acy - 2, NULL); LineTo(hdcMem, acx - 8, acy - 4);
+                    MoveToEx(hdcMem, acx - 5, acy + 3, NULL); LineTo(hdcMem, acx - 8, acy + 5);
+                    MoveToEx(hdcMem, acx + 5, acy - 2, NULL); LineTo(hdcMem, acx + 8, acy - 4);
+                    MoveToEx(hdcMem, acx + 5, acy + 3, NULL); LineTo(hdcMem, acx + 8, acy + 5);
+                    SelectObject(hdcMem, hOldP);
+                    DeleteObject(hLegPen);
 
-                MoveToEx(hdcMem, acx + 5, acy - 3, NULL); LineTo(hdcMem, acx + 9 + legAnim, acy - 6);
-                MoveToEx(hdcMem, acx + 6, acy, NULL); LineTo(hdcMem, acx + 10, acy - legAnim + 1);
-                MoveToEx(hdcMem, acx + 5, acy + 3, NULL); LineTo(hdcMem, acx + 9 + legAnim, acy + 6);
+                    HBRUSH hBlBody = CreateSolidBrush(isStun ? RGB(25, 55, 20) : RGB(45, 95, 30));
+                    HBRUSH hPustule = CreateSolidBrush(isChase ? RGB(255, 220, 40) : RGB(200, 180, 30));
+                    HBRUSH hOldB = (HBRUSH)SelectObject(hdcMem, hBlBody);
+                    hOldP = (HPEN)SelectObject(hdcMem, GetStockObject(NULL_PEN));
+                    Ellipse(hdcMem, acx - 6, acy - 6, acx + 6, acy + 6);
+                    SelectObject(hdcMem, hPustule);
+                    Ellipse(hdcMem, acx - 3, acy - 4, acx - 1, acy - 2);
+                    Ellipse(hdcMem, acx + 1, acy - 3, acx + 4, acy);
+                    Ellipse(hdcMem, acx - 2, acy + 1, acx + 1, acy + 4);
+                    SelectObject(hdcMem, hOldB);
+                    SelectObject(hdcMem, hOldP);
+                    DeleteObject(hBlBody);
+                    DeleteObject(hPustule);
+                } else if (aType == 3) {
+                    // Type 3: Apex Behemoth (Armored Bio-Titan)
+                    COLORREF legCol = isStun ? RGB(80, 20, 25) : RGB(220, 30, 45);
+                    HPEN hLegPen = CreatePen(PS_SOLID, 2, legCol);
+                    HPEN hOldP = (HPEN)SelectObject(hdcMem, hLegPen);
+                    MoveToEx(hdcMem, acx - 6, acy - 5, NULL); LineTo(hdcMem, acx - 10 - legAnim, acy - 7);
+                    MoveToEx(hdcMem, acx - 7, acy - 1, NULL); LineTo(hdcMem, acx - 11, acy - 1);
+                    MoveToEx(hdcMem, acx - 7, acy + 2, NULL); LineTo(hdcMem, acx - 11, acy + 3);
+                    MoveToEx(hdcMem, acx - 6, acy + 5, NULL); LineTo(hdcMem, acx - 10 - legAnim, acy + 7);
+                    MoveToEx(hdcMem, acx + 6, acy - 5, NULL); LineTo(hdcMem, acx + 10 + legAnim, acy - 7);
+                    MoveToEx(hdcMem, acx + 7, acy - 1, NULL); LineTo(hdcMem, acx + 11, acy - 1);
+                    MoveToEx(hdcMem, acx + 7, acy + 2, NULL); LineTo(hdcMem, acx + 11, acy + 3);
+                    MoveToEx(hdcMem, acx + 6, acy + 5, NULL); LineTo(hdcMem, acx + 10 + legAnim, acy + 7);
+                    SelectObject(hdcMem, hOldP);
+                    DeleteObject(hLegPen);
 
-                SelectObject(hdcMem, hOldP);
-                DeleteObject(hLegPen);
+                    HBRUSH hApBody = CreateSolidBrush(isStun ? RGB(40, 10, 15) : RGB(75, 12, 20));
+                    HBRUSH hApHorn = CreateSolidBrush(RGB(190, 180, 170));
+                    HBRUSH hApEye = CreateSolidBrush(isStun ? RGB(0, 220, 255) : RGB(255, 30, 20));
+                    HBRUSH hOldB = (HBRUSH)SelectObject(hdcMem, hApBody);
+                    hOldP = (HPEN)SelectObject(hdcMem, GetStockObject(NULL_PEN));
+                    Ellipse(hdcMem, acx - 7, acy - 7, acx + 7, acy + 7);
+                    SelectObject(hdcMem, hApHorn);
+                    RECT h1 = {acx - 6, acy - 8, acx - 4, acy - 5};
+                    RECT h2 = {acx + 4, acy - 8, acx + 6, acy - 5};
+                    FillRect(hdcMem, &h1, hApHorn);
+                    FillRect(hdcMem, &h2, hApHorn);
+                    SelectObject(hdcMem, hApEye);
+                    Ellipse(hdcMem, acx - 4, acy - 2, acx - 1, acy + 1);
+                    Ellipse(hdcMem, acx - 1, acy - 3, acx + 2, acy);
+                    Ellipse(hdcMem, acx + 2, acy - 2, acx + 5, acy + 1);
+                    SelectObject(hdcMem, hOldB);
+                    SelectObject(hdcMem, hOldP);
+                    DeleteObject(hApBody);
+                    DeleteObject(hApHorn);
+                    DeleteObject(hApEye);
+                } else {
+                    // Type 0: Stalker (Agile Carapace Hunter)
+                    COLORREF legCol = isStun ? RGB(50, 130, 255) : isChase ? RGB(255, 20, 60) : RGB(170, 0, 170);
+                    HPEN hLegPen = CreatePen(PS_SOLID, 2, legCol);
+                    HPEN hOldP = (HPEN)SelectObject(hdcMem, hLegPen);
 
-                // Biomechanical Carapace Body
-                COLORREF shellCol = isStun ? RGB(16, 28, 60) : isChase ? RGB(59, 8, 20) : RGB(34, 8, 43);
-                COLORREF plateCol = isStun ? RGB(31, 61, 122) : isChase ? RGB(102, 20, 38) : RGB(77, 20, 92);
-                HBRUSH hShell = CreateSolidBrush(shellCol);
-                HBRUSH hPlate = CreateSolidBrush(plateCol);
-                HBRUSH hOldB = (HBRUSH)SelectObject(hdcMem, hShell);
-                hOldP = (HPEN)SelectObject(hdcMem, GetStockObject(NULL_PEN));
+                    MoveToEx(hdcMem, acx - 5, acy - 3, NULL); LineTo(hdcMem, acx - 9 - legAnim, acy - 6);
+                    MoveToEx(hdcMem, acx - 6, acy, NULL); LineTo(hdcMem, acx - 10, acy + legAnim - 1);
+                    MoveToEx(hdcMem, acx - 5, acy + 3, NULL); LineTo(hdcMem, acx - 9 - legAnim, acy + 6);
 
-                Ellipse(hdcMem, acx - 6, acy - 6, acx + 6, acy + 6);
-                SelectObject(hdcMem, hPlate);
-                Ellipse(hdcMem, acx - 4, acy - 5, acx + 4, acy - 1);
-                Ellipse(hdcMem, acx - 4, acy + 1, acx + 4, acy + 5);
+                    MoveToEx(hdcMem, acx + 5, acy - 3, NULL); LineTo(hdcMem, acx + 9 + legAnim, acy - 6);
+                    MoveToEx(hdcMem, acx + 6, acy, NULL); LineTo(hdcMem, acx + 10, acy - legAnim + 1);
+                    MoveToEx(hdcMem, acx + 5, acy + 3, NULL); LineTo(hdcMem, acx + 9 + legAnim, acy + 6);
 
-                // Optic Core Eye
-                COLORREF eyeCol = isStun ? RGB(0, 255, 255) : isChase ? RGB(255, 30, 0) : RGB(220, 0, 255);
-                HBRUSH hEye = CreateSolidBrush(eyeCol);
-                SelectObject(hdcMem, hEye);
-                Ellipse(hdcMem, acx - 3, acy - 3, acx + 3, acy + 3);
+                    SelectObject(hdcMem, hOldP);
+                    DeleteObject(hLegPen);
 
-                if (isChase) {
-                    // Slit pupil
-                    HBRUSH hPupil = (HBRUSH)GetStockObject(BLACK_BRUSH);
-                    RECT pupilR = {acx - 1, acy - 2, acx + 1, acy + 2};
-                    FillRect(hdcMem, &pupilR, hPupil);
-                    // Snapping red mandibles
-                    HPEN hMandPen = CreatePen(PS_SOLID, 1, RGB(255, 50, 80));
-                    SelectObject(hdcMem, hMandPen);
-                    MoveToEx(hdcMem, acx - 3, acy + 4, NULL); LineTo(hdcMem, acx, acy + 7 + legAnim);
-                    MoveToEx(hdcMem, acx + 3, acy + 4, NULL); LineTo(hdcMem, acx, acy + 7 + legAnim);
-                    DeleteObject(hMandPen);
-                } else if (!isStun) {
-                    HBRUSH hPupil = (HBRUSH)GetStockObject(WHITE_BRUSH);
-                    RECT pupilR = {acx - 1, acy - 1, acx + 1, acy + 1};
-                    FillRect(hdcMem, &pupilR, hPupil);
+                    COLORREF shellCol = isStun ? RGB(16, 28, 60) : isChase ? RGB(59, 8, 20) : RGB(34, 8, 43);
+                    COLORREF plateCol = isStun ? RGB(31, 61, 122) : isChase ? RGB(102, 20, 38) : RGB(77, 20, 92);
+                    HBRUSH hShell = CreateSolidBrush(shellCol);
+                    HBRUSH hPlate = CreateSolidBrush(plateCol);
+                    HBRUSH hOldB = (HBRUSH)SelectObject(hdcMem, hShell);
+                    hOldP = (HPEN)SelectObject(hdcMem, GetStockObject(NULL_PEN));
+
+                    Ellipse(hdcMem, acx - 6, acy - 6, acx + 6, acy + 6);
+                    SelectObject(hdcMem, hPlate);
+                    Ellipse(hdcMem, acx - 4, acy - 5, acx + 4, acy - 1);
+                    Ellipse(hdcMem, acx - 4, acy + 1, acx + 4, acy + 5);
+
+                    COLORREF eyeCol = isStun ? RGB(0, 255, 255) : isChase ? RGB(255, 30, 0) : RGB(220, 0, 255);
+                    HBRUSH hEye = CreateSolidBrush(eyeCol);
+                    SelectObject(hdcMem, hEye);
+                    Ellipse(hdcMem, acx - 3, acy - 3, acx + 3, acy + 3);
+
+                    if (isChase) {
+                        HBRUSH hPupil = (HBRUSH)GetStockObject(BLACK_BRUSH);
+                        RECT pupilR = {acx - 1, acy - 2, acx + 1, acy + 2};
+                        FillRect(hdcMem, &pupilR, hPupil);
+                        HPEN hMandPen = CreatePen(PS_SOLID, 1, RGB(255, 50, 80));
+                        SelectObject(hdcMem, hMandPen);
+                        MoveToEx(hdcMem, acx - 3, acy + 4, NULL); LineTo(hdcMem, acx, acy + 7 + legAnim);
+                        MoveToEx(hdcMem, acx + 3, acy + 4, NULL); LineTo(hdcMem, acx, acy + 7 + legAnim);
+                        DeleteObject(hMandPen);
+                    } else if (!isStun) {
+                        HBRUSH hPupil = (HBRUSH)GetStockObject(WHITE_BRUSH);
+                        RECT pupilR = {acx - 1, acy - 1, acx + 1, acy + 1};
+                        FillRect(hdcMem, &pupilR, hPupil);
+                    }
+
+                    SelectObject(hdcMem, hOldB);
+                    SelectObject(hdcMem, hOldP);
+                    DeleteObject(hShell);
+                    DeleteObject(hPlate);
+                    DeleteObject(hEye);
                 }
-
-                SelectObject(hdcMem, hOldB);
-                SelectObject(hdcMem, hOldP);
-                DeleteObject(hShell);
-                DeleteObject(hPlate);
-                DeleteObject(hEye);
             }
 
             // Draw Player Spacesuit Explorer Sprite
@@ -1152,13 +1401,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     FillRect(hdcMem, &chest, hBackpack);
                     RECT cLed1 = {pcx - 2, pcy + 2, pcx, pcy + 4};
                     FillRect(hdcMem, &cLed1, hOxyLed);
-                    // Helmet & Visor
+                    // Helmet & Visor (no specular glint)
                     SelectObject(hdcMem, hHelmet);
                     Ellipse(hdcMem, pcx - 4, pcy - 8, pcx + 4, pcy);
                     SelectObject(hdcMem, hVisor);
                     Ellipse(hdcMem, pcx - 3, pcy - 6, pcx + 3, pcy - 1);
-                    RECT glint = {pcx - 2, pcy - 5, pcx, pcy - 4};
-                    FillRect(hdcMem, &glint, hWhite);
                     // Boots
                     RECT b1 = {pcx - 4, pcy + 6 + step, pcx - 1, pcy + 9 + step};
                     RECT b2 = {pcx + 1, pcy + 6 - step + 1, pcx + 4, pcy + 9 - step + 1};
@@ -1237,18 +1484,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (hasRedKey) lstrcat(keyText, "[RED] ");
             if (hasGreenKey) lstrcat(keyText, "[GREEN] ");
             if (hasBlueKey) lstrcat(keyText, "[BLUE] ");
-            char empText[32];
-            wsprintf(empText, "  EMP: %d", emps);
+            char empText[48];
+            wsprintf(empText, "  EMP: %d  FLARE: %d", emps, flares);
             lstrcat(keyText, empText);
             SetTextColor(hdcMem, RGB(170, 170, 170));
-            TextOut(hdcMem, 350, 5, keyText, lstrlen(keyText));
+            TextOut(hdcMem, 330, 5, keyText, lstrlen(keyText));
 
             if (sysMsg[0] != '\0') {
                 SetTextColor(hdcMem, RGB(0, 255, 0));
                 TextOut(hdcMem, 10, 25, sysMsg, lstrlen(sysMsg));
             } else {
                 SetTextColor(hdcMem, RGB(0, 150, 0));
-                char* hint = "[F1] Guide   [F5] Save   [F9] Load";
+                char* hint = "[F1] Guide   [F] Flare   [F5] Save   [F9] Load";
                 TextOut(hdcMem, 10, 25, hint, lstrlen(hint));
             }
 
@@ -1274,7 +1521,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             if (showHelp) {
                 HBRUSH hHelpBrush = CreateSolidBrush(RGB(10, 10, 10));
-                RECT helpRect = {40, 30, WINDOW_WIDTH - 40, WINDOW_HEIGHT - 30};
+                RECT helpRect = {40, 20, WINDOW_WIDTH - 40, WINDOW_HEIGHT - 20};
                 FillRect(hdcMem, &helpRect, hHelpBrush);
                 
                 HPEN hHelpPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 0));
@@ -1288,25 +1535,25 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                 SetTextColor(hdcMem, RGB(0, 255, 0));
                 SetBkMode(hdcMem, TRANSPARENT);
-                int y = 42;
+                int y = 30;
                 TextOut(hdcMem, WINDOW_WIDTH / 2 - 130, y, "SURVIVAL GUIDE (Press Esc / Space / Enter)", 42);
-                y += 30;
-                TextOut(hdcMem, 60, y, "Controls & How to Play:", 23); y += 18;
-                TextOut(hdcMem, 70, y, "WASD / Arrows: Move", 19); y += 18;
-                TextOut(hdcMem, 70, y, "Space: Use EMP (Stuns nearby aliens)", 36); y += 18;
-                TextOut(hdcMem, 70, y, "F1 / H / Esc: Toggle / Close Guide", 34); y += 18;
-                TextOut(hdcMem, 70, y, "F5: Quicksave State   F9: Quickload State", 41); y += 18;
-                TextOut(hdcMem, 70, y, "R / Space / Enter: Restart (when game over)", 43); y += 22;
-                TextOut(hdcMem, 70, y, "Survive, find elevator. Watch Oxygen & Battery.", 47); y += 28;
-                
-                TextOut(hdcMem, 60, y, "Lore Index:", 11); y += 18;
-                TextOut(hdcMem, 70, y, "Trapped on a derelict station. The crew was", 43); y += 18;
-                TextOut(hdcMem, 70, y, "experimenting on aliens... it didn't go well.", 45); y += 28;
-                
-                TextOut(hdcMem, 60, y, "Enemy Bestiary:", 15); y += 18;
-                TextOut(hdcMem, 70, y, "Entities: Sensitive to noise & movement.", 40); y += 18;
-                TextOut(hdcMem, 70, y, "They glow magenta. Hide in Lockers to avoid.", 44); y += 18;
-                TextOut(hdcMem, 70, y, "Stunned Entities: Glow blue. Safe temporarily.", 46);
+                y += 24;
+                TextOut(hdcMem, 55, y, "Controls & How to Play:", 23); y += 15;
+                TextOut(hdcMem, 65, y, "WASD / Arrows: Move (Consumes O2)", 33); y += 15;
+                TextOut(hdcMem, 65, y, "Space: EMP Blast (Stun)    F: Deploy Chem Flare (Repel)", 55); y += 15;
+                TextOut(hdcMem, 65, y, "F1 / H: Guide   F5: Save   F9: Load   R: Restart", 48); y += 20;
+
+                TextOut(hdcMem, 55, y, "Station Resources & Hazards:", 28); y += 15;
+                TextOut(hdcMem, 65, y, "Cyan Canister: Emergency O2 (+35%)   Gold Cell: Battery (+40%)", 62); y += 15;
+                TextOut(hdcMem, 65, y, "EMP Canister: Stun charges           Green Slime: Acid (-5% O2)", 63); y += 20;
+
+                TextOut(hdcMem, 55, y, "Specimen Bestiary:", 18); y += 15;
+                TextOut(hdcMem, 65, y, "Stalker: 6-legged hunter (magenta). Flees chem flares.", 54); y += 15;
+                TextOut(hdcMem, 65, y, "Phantom: Cloaked phase organism (cyan). Shimmers in light.", 57); y += 15;
+                TextOut(hdcMem, 65, y, "Bloater: Sluggish bile-carrier. Drops corrosive acid puddles.", 61); y += 15;
+                TextOut(hdcMem, 65, y, "Apex Behemoth: Massive armored bio-titan. Stun duration short.", 62); y += 20;
+
+                TextOut(hdcMem, 55, y, "Mission: Reach Elevator (Decks 1-4) or Escape Pod (Deck 5).", 59);
 
                 RECT btnRect = {WINDOW_WIDTH / 2 - 140, helpRect.bottom - 36, WINDOW_WIDTH / 2 + 140, helpRect.bottom - 12};
                 HBRUSH hBtnBrush = CreateSolidBrush(RGB(15, 30, 15));
@@ -1420,6 +1667,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 case 'D':
                     newX++; playerDir = 3;
                     break;
+                case 'F':
+                    if (flares > 0) {
+                        flares--;
+                        if (flareCount < MAX_FLARES) {
+                            activeFlares[flareCount].x = playerX;
+                            activeFlares[flareCount].y = playerY;
+                            activeFlares[flareCount].life = 25;
+                            flareCount++;
+                        }
+                        lstrcpy(sysMsg, "DISTRESS FLARE DEPLOYED. RADIUS ILLUMINATED.");
+                        msgTimer = 60;
+                        PlaySoundEffect(6);
+                        float fpx = playerX * TILE_SIZE + TILE_SIZE / 2.0f;
+                        float fpy = playerY * TILE_SIZE + TILE_SIZE / 2.0f + UI_HEIGHT;
+                        SpawnParticles(fpx, fpy, RGB(255, 160, 40), 30);
+                        AddShockwave(fpx, fpy, RGB(255, 120, 20), 80.0f);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    } else {
+                        lstrcpy(sysMsg, "OUT OF DISTRESS FLARES.");
+                        msgTimer = 40;
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    }
+                    break;
                 case VK_SPACE:
                     if (emps > 0) {
                         emps--;
@@ -1434,7 +1704,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             int dist = abs(aliens[i].x - playerX) + abs(aliens[i].y - playerY);
                             if (dist <= 8) {
                                 aliens[i].state = 2; // stunned
-                                aliens[i].stunTimer = 10;
+                                if (aliens[i].type == 3) aliens[i].stunTimer = 5;
+                                else if (aliens[i].type == 1) aliens[i].stunTimer = 12;
+                                else aliens[i].stunTimer = 10;
                             }
                         }
                         InvalidateRect(hwnd, NULL, FALSE);
@@ -1465,12 +1737,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                 } else if (target == 9) {
                     const char* lores[] = {
-                        "LOG: EXPERIMENT FAILED.",
-                        "LOG: THEY ARE IN THE VENTS.",
-                        "LOG: OXYGEN LEAK DETECTED.",
-                        "LOG: DIRECTOR IS DEAD."
+                        "LOG 1999.08: ARCHIVAL NODE CORRUPTED. 1999Hz SUB-CARRIER DETECTED.",
+                        "LOG 1999.09: DR. VANCE: SPECIMENS ARE SENSITIVE TO PYROTECHNIC FLARES.",
+                        "LOG 1999.10: BIO-SECURITY BREACH IN SECTOR 4. CONTAINMENT PURGE INITIATED.",
+                        "LOG 1999.11: DISTRESS PACKETS ROUTED THROUGH NON-ROUTABLE SUBNET 10.19.99.4.",
+                        "LOG 1999.12: BLOATER CORROSIVE BILE BREACHES SUIT INTEGRITY RAPIDLY.",
+                        "LOG 1999.13: PHANTOM CLOAKING FAILS UNDER DIRECT FLASHLIGHT CONE.",
+                        "LOG 1999.14: APEX TITAN HULL RESISTANCE OVERWHELMS STANDARD EMP.",
+                        "LOG 1999.15: ELEVATOR SHAFT 01 LEADS TO ESCAPE AIRLOCK. DEPLOY ALL GEAR."
                     };
-                    int l_idx = rand() % 4;
+                    int l_idx = rand() % 8;
                     int unlockColor = 3 + (rand() % 3);
                     const char* colorName = (unlockColor == 3) ? "RED" : (unlockColor == 4) ? "GREEN" : "BLUE";
                     wsprintf(sysMsg, "%s %s DOORS OPENED.", lores[l_idx], colorName);
@@ -1492,8 +1768,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     hasRedKey = 0; hasGreenKey = 0; hasBlueKey = 0;
                     oxygen = 100.0f;
                     battery = 100.0f;
+                    if (flares < 3) flares++;
+                    flareCount = 0;
                     GenerateMap();
-                    wsprintf(sysMsg, "ELEVATOR TO DECK %d. STATS RESTORED.", deck);
+                    wsprintf(sysMsg, "ELEVATOR TO DECK %d. STATS & FLARES RESTORED.", deck);
                     msgTimer = 60;
                     InvalidateRect(hwnd, NULL, FALSE);
                 } else if (target == 14) {
@@ -1522,7 +1800,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         msgTimer = 60;
                         InvalidateRect(hwnd, NULL, FALSE);
                     }
-                } else if (target == 0 || (target >= 6 && target <= 8) || target == 11 || target == 12) {
+                } else if (target == 0 || (target >= 6 && target <= 8) || target == 11 || target == 12 || (target >= 16 && target <= 18)) {
                     if (target >= 6 && target <= 8) {
                         if (target == 6) { hasRedKey = 1; lstrcpy(sysMsg, "PICKED UP RED KEYCARD."); }
                         if (target == 7) { hasGreenKey = 1; lstrcpy(sysMsg, "PICKED UP GREEN KEYCARD."); }
@@ -1535,6 +1813,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         lstrcpy(sysMsg, "PICKED UP EMP CHARGE.");
                         map[newY][newX] = 0;
                         msgTimer = 40;
+                    }
+                    if (target == 16) {
+                        oxygen += 35.0f;
+                        if (oxygen > 100.0f) oxygen = 100.0f;
+                        map[newY][newX] = 0;
+                        lstrcpy(sysMsg, "O2 REBREATHER CANISTER ACQUIRED (+35% O2).");
+                        msgTimer = 40;
+                        PlaySoundEffect(4);
+                    }
+                    if (target == 17) {
+                        battery += 40.0f;
+                        if (battery > 100.0f) battery = 100.0f;
+                        map[newY][newX] = 0;
+                        lstrcpy(sysMsg, "LITHIUM POWER CELL ACQUIRED (+40% BATTERY).");
+                        msgTimer = 40;
+                        PlaySoundEffect(5);
+                    }
+                    if (target == 18) {
+                        oxygen -= 5.0f;
+                        lstrcpy(sysMsg, "CORROSIVE ACID CONTACT! SUIT BREACHED (-5% O2).");
+                        msgTimer = 40;
+                        PlaySoundEffect(7);
+                        screenShake = 3;
                     }
                     playerX = newX;
                     playerY = newY;

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KVoid
   kilo_usability: KGraph
-  kilo_graphics: KVoid
+  kilo_graphics: KWizard
   kilo_qa: KMech
   kilo_expander: KDB
   kilo_creator: "kweb://deep-core (Tier 3 Ghost Node Terminal & KMatrix Passkey Fragment)"
@@ -30,9 +30,9 @@ virtual_web_rotation:
   - "kweb://darknet"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-usability
-  app: KFont
-  timestamp: "2026-09-25T01:52:00Z"
+  agent: kilo-graphics
+  app: KVoid
+  timestamp: "2026-09-25T02:49:00Z"
 last_planner_run: "2026-09-24T05:46:00Z"
 ---
 
@@ -106,9 +106,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `kweb://10.19.99.4/classified` (Corporate Intranet Leak & Memory Dumps - Completed).
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KVoid`
+- **Current Target**: `KWizard`
 - **Upcoming Queue**:
-  `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`.
+  `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KVoid`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KVoid`
@@ -202,6 +202,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-25T02:49:00Z — kilo-graphics: KVoid (Game Content, Visual Polish & Glint Purge Pass)**
+  - Status: PASS ✅ (Distress flare system, 4 alien species biotypes & resource tiles added; glint purged; 0 regressions).
+  - Game Mechanics: Chem flare deployment ([F]) repelling stalkers/phantoms; O2 canisters (+35%) & lithium cells (+40%).
+  - Specimen Bestiary: 4 biotypes rendered (Stalker, Phantom, Bloater with acid pools, Apex Behemoth with screen tremor).
+  - Visual Polish: Purged visor specular glint; added active flare illumination sparks and toxic acid puddle bubbling.
+  - Universal Audio: 2-Op Yamaha YM2612 FM synthesis for O2 hiss, battery surge, flare ignition, acid sizzle & apex screech.
+  - Lore & Controls: 8 diegetic alternate-1999 terminal logs; survival guide expanded with bestiary and equipment guide.
+  - Verification: Clean MSVC compile (`KVoid.exe` 30.0 KB); Vite clean build in 339ms (`kvoid.html` 94.7 KB); security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-25T01:52:00Z — kilo-usability: KFont (UI/UX, Layout & Accessibility Pass)**
   - Status: PASS ✅ (Layout responsiveness, canvas crispness & toast de-occlusion complete; 0 regressions).
   - Toast & Modals: Re-anchored toast to bottom-center pill to prevent control occlusion; added modal footer close button and focus restore.
@@ -233,14 +242,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Cyber-AI Bot: 4 bot heuristics (Rookie, Hunter, Glitch Viper, Grandmaster) with flood-fill space safety lookahead.
   - Combat & Chat: Quick battle taunts, floating combat alerts, attack beam trajectories, rematch negotiation.
   - Verification: MSVC C clean compile (`KSnake.exe` 54.2 KB); Vite clean build (386ms, `ksnake.html` 224.0 KB); security lint 100% PASS; <999KB ceiling.
-
-- **2026-09-24T21:50:00Z — kilo-qa: KFortress (Pass 5: Tutorial & State Integrity)**
-  - Status: PASS ✅ (Quicksave/Load, first-run tutorial isolation & toast de-occlusion complete; 0 regressions).
-  - State Persistence: Implemented [F5] Quicksave and [F9] Quickload across web localStorage and native `kfortress_quicksave.dat`.
-  - First-Run Tutorial: Isolated onboarding guide behind tutorial flags (`kfortress_tutorialSeen`), never interrupting restored saves.
-  - Interactive Overlays: Added restart hotkeys (Space/Enter/R) and canvas click restart on game over; modal dismissals standardized.
-  - Toast & Header Polish: Relocated web toast container to bottom-center to prevent sidebar occlusion; purged internal loop header label.
-  - Verification: MSVC C clean build (`KFortress.exe` 176.5 KB); Vite clean build in 1.09s (`kfortress.html` 183.2 KB); security lint 100% PASS; <999KB ceiling.
 
 
 
