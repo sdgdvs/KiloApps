@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-24T22:45:00Z — kilo-expander: KSnake (Arcade Duel Multiplayer Expansion)**
+  - Status: PASS ✅ (Firebase RTDB online multiplayer & Cyber-AI bot duel added; Mandate 12 compliant; 0 regressions).
+  - Arcade Duel: Side-by-side split arenas (780x440), glitch wall obstacles, speed curses, magma hazards & beam conduits.
+  - Multiplayer Architecture: Firebase RTDB synchronization (`multiplayer/ksnake/`) with lobby table, room codes, and CDN loader.
+  - Cyber-AI Bot: 4 bot heuristics (Rookie, Hunter, Glitch Viper, Grandmaster) with flood-fill space safety lookahead.
+  - Combat & Chat: Quick battle taunts, floating combat alerts, attack beam trajectories, rematch negotiation.
+  - Verification: MSVC C clean compile (`KSnake.exe` 54.2 KB); Vite clean build (386ms, `ksnake.html` 224.0 KB); security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-24T20:47:00Z — kilo-graphics: KMystery (Graphics Polish, Glint/Dot Purge & Dossier Expansion)**
   - Status: PASS ✅ (Corner filigree dots purged; FM synth audio, Quicksave/Load, forensic dossier added; 0 regressions).
   - Glint/Dot Purge: Removed 4 corner filigree dots in web `drawArtDecoFiligree`; native C verified clean.

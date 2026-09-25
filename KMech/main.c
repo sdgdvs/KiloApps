@@ -335,13 +335,35 @@ typedef struct {
     int equipSpec;
     int playerHp;
     int playerHeat;
+    int inBattle;
+    int enemyHp;
+    int enemyHeat;
+    int targetLimb;
+    int playerLimbDmg[5];
 } KMechSaveData;
 #pragma pack(pop)
 
+void* memset(void* dst, int val, size_t count) {
+    unsigned char* p = (unsigned char*)dst;
+    while (count--) *p++ = (unsigned char)val;
+    return dst;
+}
+
+void MarkTutorialSeen() {
+    HANDLE hFile = CreateFileA("kmech_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        char flag = '1';
+        WriteFile(hFile, &flag, 1, &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
 void QuickSaveNative() {
     KMechSaveData data;
+    ZeroMemory(&data, sizeof(data));
     data.magic = 0x48434D4B; // 'KMCH'
-    data.version = 2;
+    data.version = 3;
     data.credits = credits;
     data.salvage = salvage;
     data.battleCount = battleCount;
@@ -353,12 +375,20 @@ void QuickSaveNative() {
     data.equipSpec = equipSpec;
     data.playerHp = playerStats.hp;
     data.playerHeat = playerStats.heat;
+    data.inBattle = (gameState == STATE_BATTLE) ? 1 : 0;
+    data.enemyHp = enemyStats.hp;
+    data.enemyHeat = enemyStats.heat;
+    data.targetLimb = currentTargetLimb;
+    for (int i = 0; i < 5; i++) {
+        data.playerLimbDmg[i] = playerLimbDamage[i];
+    }
 
     HANDLE hFile = CreateFileA("kmech_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD written = 0;
         WriteFile(hFile, &data, sizeof(data), &written, NULL);
         CloseHandle(hFile);
+        MarkTutorialSeen();
         lstrcpyA(garageInfo, "Pilot telemetry state saved (F5).");
         addLog("Pilot telemetry state saved (F5).");
     } else {
@@ -370,9 +400,10 @@ void QuickLoadNative() {
     HANDLE hFile = CreateFileA("kmech_save.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         KMechSaveData data;
+        ZeroMemory(&data, sizeof(data));
         DWORD readBytes = 0;
-        if (ReadFile(hFile, &data, sizeof(data), &readBytes, NULL) && readBytes == sizeof(data)) {
-            if (data.magic == 0x48434D4B && data.version == 2) {
+        if (ReadFile(hFile, &data, sizeof(data), &readBytes, NULL) && readBytes >= 48) {
+            if (data.magic == 0x48434D4B) {
                 credits = data.credits;
                 salvage = data.salvage;
                 battleCount = data.battleCount;
@@ -393,8 +424,27 @@ void QuickLoadNative() {
                 playerStats.atk = weapons[equipWpn].atk;
                 playerStats.heat = data.playerHeat;
 
-                lstrcpyA(garageInfo, "Pilot telemetry state restored (F9).");
-                addLog("Pilot telemetry state restored (F9).");
+                MarkTutorialSeen();
+
+                if (data.version >= 3 && readBytes == sizeof(data) && data.inBattle && data.enemyHp > 0 && playerStats.hp > 0) {
+                    gameState = STATE_BATTLE;
+                    enemyStats.hp = data.enemyHp;
+                    enemyStats.heat = data.enemyHeat;
+                    currentTargetLimb = data.targetLimb % 5;
+                    for (int i = 0; i < 5; i++) {
+                        playerLimbDamage[i] = data.playerLimbDmg[i];
+                    }
+                    isDefending = false;
+                    enemyIsDefending = false;
+                    lstrcpyA(garageInfo, "Battle telemetry restored (F9).");
+                    addLog("Battle telemetry restored (F9).");
+                } else {
+                    gameState = STATE_GARAGE;
+                    playerStats.heat = 0;
+                    isDefending = false;
+                    lstrcpyA(garageInfo, "Pilot telemetry state restored (F9).");
+                    addLog("Pilot telemetry state restored (F9).");
+                }
             }
         }
         CloseHandle(hFile);
@@ -1307,6 +1357,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (gameState == STATE_HELP) {
                 if (PtInRectLocal(&rectReturnHelp, x, y)) {
+                    MarkTutorialSeen();
                     gameState = STATE_GARAGE;
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
@@ -1648,6 +1699,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (gameState != STATE_HELP) {
                     gameState = STATE_HELP;
                 } else {
+                    MarkTutorialSeen();
                     gameState = STATE_GARAGE;
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -1655,6 +1707,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             if (gameState == STATE_HELP) {
                 if (wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE || wParam == VK_BACK) {
+                    MarkTutorialSeen();
                     gameState = STATE_GARAGE;
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
@@ -1751,6 +1804,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 void MainEntry() {
     SetProcessDPIAware();
     my_srand(GetTickCount());
+    
+    // First-run tutorial check: Launch Pilot's Manual on fresh installation
+    if (GetFileAttributesA("kmech_tutorial.dat") == INVALID_FILE_ATTRIBUTES &&
+        GetFileAttributesA("kmech_save.dat") == INVALID_FILE_ATTRIBUTES) {
+        gameState = STATE_HELP;
+    }
     
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASSA wc = {0};

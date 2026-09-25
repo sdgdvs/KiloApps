@@ -443,27 +443,31 @@
         /* Toast Notifications */
         #toast-container {
             position: absolute;
-            top: 38px;
-            right: 12px;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 1000;
             display: flex;
-            flex-direction: column;
+            flex-direction: column-reverse;
+            align-items: center;
             gap: 6px;
             pointer-events: none;
-            max-width: 320px;
+            max-width: 90%;
+            width: max-content;
         }
         .toast {
             background: rgba(0, 20, 10, 0.95);
             border: 1px solid #00ff88;
             color: #00ffaa;
-            padding: 6px 10px;
+            padding: 6px 12px;
             font-size: 11px;
             line-height: 14px;
-            border-radius: 3px;
-            box-shadow: 0 0 10px rgba(0, 255, 100, 0.5);
+            border-radius: 4px;
+            box-shadow: 0 0 12px rgba(0, 255, 100, 0.5);
             animation: toastIn 0.25s ease-out, toastOut 0.25s ease-in 2.75s forwards;
             pointer-events: auto;
             cursor: pointer;
+            text-align: center;
         }
         .toast.warning {
             border-color: #f90;
@@ -476,12 +480,12 @@
             box-shadow: 0 0 10px rgba(255, 50, 50, 0.5);
         }
         @keyframes toastIn {
-            from { opacity: 0; transform: translateY(-10px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
         @keyframes toastOut {
             from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 0; transform: translateY(10px); }
         }
 
         /* Help screen */
@@ -616,6 +620,7 @@
                 <h2>⚔️ Combat Zone</h2>
                 <div style="display:flex; gap:5px;">
                     <button class="btn-help-top" onclick="quickSave()">[F5] Save</button>
+                    <button class="btn-help-top" onclick="quickLoad()">[F9] Load</button>
                     <button class="btn-help-top" onclick="showScreen('help')">[F1] Manual</button>
                 </div>
             </div>
@@ -883,6 +888,24 @@
             { name: "Repair Nanodrones", evadeBonus: 0, shieldDmgReduction: 0 }
         ];
 
+        function safeGetStorage(key, defVal = null) {
+            try {
+                const val = localStorage.getItem(key);
+                return val !== null ? val : defVal;
+            } catch (e) {
+                return defVal;
+            }
+        }
+
+        function safeSetStorage(key, val) {
+            try {
+                localStorage.setItem(key, val);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
         function getPilotRank(lvl) {
             if (lvl >= 6) return "Mech Commander";
             if (lvl === 5) return "Strike Commander";
@@ -892,26 +915,72 @@
             return "Cadet";
         }
 
+        let equipWpn = 0, equipArm = 0, equipSink = 0, equipSpec = 0;
+        let playerHeatGen = 30;
+        let playerCooling = 20;
+        let credits = 100;
+        let salvage = 0;
+        let battleCount = 1;
+        let playerLevel = 1;
+        let playerXp = 0;
+        let previousScreen = 'garage';
+
+        const playerStats = { maxHp: 100, hp: 100, atk: 15, def: 5, maxHeat: 100, heat: 0 };
+        let enemyStats = { maxHp: 80, hp: 80, atk: 12, def: 3, maxHeat: 100, heat: 0 };
+        let isDefending = false;
+        let enemyIsDefending = false;
+        let isProcessingTurn = false;
+        let playerLimbDamage = [0, 0, 0, 0, 0];
+        let currentTargetLimb = 1;
+        let playerLegEvadeBoost = 0;
+
+        const limbs = [
+            {name: 'Head', chance: 0.2, mult: 3.0},
+            {name: 'Torso', chance: 0.8, mult: 1.0},
+            {name: 'L.Arm', chance: 0.6, mult: 1.5},
+            {name: 'R.Arm', chance: 0.6, mult: 1.5},
+            {name: 'Legs', chance: 0.5, mult: 1.2}
+        ];
+
         function quickSave(silent = false) {
             try {
+                const inBattle = getCurrentScreen() === 'battle';
                 const savePayload = {
                     credits, salvage, battleCount, playerLevel, playerXp,
                     equipWpn, equipArm, equipSink, equipSpec,
-                    playerHp: playerStats.hp
+                    playerHp: playerStats.hp,
+                    playerHeat: playerStats.heat,
+                    inBattle,
+                    enemyStats: inBattle ? {
+                        maxHp: enemyStats.maxHp,
+                        hp: enemyStats.hp,
+                        atk: enemyStats.atk,
+                        def: enemyStats.def,
+                        maxHeat: enemyStats.maxHeat,
+                        heat: enemyStats.heat
+                    } : null,
+                    currentTargetLimb,
+                    playerLimbDamage: [...playerLimbDamage],
+                    playerLegEvadeBoost,
+                    isDefending,
+                    enemyIsDefending
                 };
-                localStorage.setItem('kmech_save', JSON.stringify(savePayload));
+                if (!safeSetStorage('kmech_save', JSON.stringify(savePayload))) {
+                    throw new Error("QuotaExceeded");
+                }
+                safeSetStorage('kmech_tutorialSeen', '1');
                 if (!silent) {
                     showToast("💾 Mission telemetry saved [F5]", 2500, 'info');
                     playSound('click');
                 }
             } catch(e) {
-                if (!silent) showToast("Save failed", 2500, 'danger');
+                if (!silent) showToast("⚠️ Telemetry save failed: Storage quota or error.", 2500, 'danger');
             }
         }
 
         function quickLoad() {
             try {
-                const raw = localStorage.getItem('kmech_save');
+                const raw = safeGetStorage('kmech_save');
                 if (!raw) {
                     showToast("⚠️ No telemetry file found. Press [F5] to save.", 3000, 'warning');
                     return;
@@ -934,40 +1003,45 @@
                 playerStats.maxHeat = heatSinks[equipSink].maxHeat;
                 playerCooling = heatSinks[equipSink].cooling;
                 playerStats.hp = (d.playerHp !== undefined && d.playerHp > 0) ? Math.min(d.playerHp, playerStats.maxHp) : playerStats.maxHp;
-                playerStats.heat = 0;
+                playerStats.heat = (d.playerHeat !== undefined) ? Math.min(d.playerHeat, playerStats.maxHeat) : 0;
 
-                updateGarage();
+                safeSetStorage('kmech_tutorialSeen', '1');
+
+                if (d.inBattle && d.enemyStats && d.enemyStats.hp > 0 && playerStats.hp > 0) {
+                    enemyStats = { ...d.enemyStats };
+                    currentTargetLimb = (d.currentTargetLimb !== undefined) ? d.currentTargetLimb % limbs.length : 1;
+                    if (Array.isArray(d.playerLimbDamage) && d.playerLimbDamage.length === 5) {
+                        playerLimbDamage = [...d.playerLimbDamage];
+                    }
+                    playerLegEvadeBoost = d.playerLegEvadeBoost ?? 0;
+                    isDefending = !!d.isDefending;
+                    enemyIsDefending = !!d.enemyIsDefending;
+                    isProcessingTurn = false;
+                    const bActions = document.getElementById('battle-actions');
+                    const pbActions = document.getElementById('post-battle-actions');
+                    if (bActions) bActions.style.display = 'flex';
+                    if (pbActions) pbActions.style.display = 'none';
+                    const tgtName = limbs[currentTargetLimb].name;
+                    const btnTgt = document.getElementById('btn-target');
+                    if (btnTgt) btnTgt.innerHTML = `<span class="key-badge">T</span> TGT: ${tgtName}`;
+                    logMsg(`Combat telemetry resumed: ${getPilotRank(playerLevel)} (Battle #${battleCount}) [F9]`);
+                    updateBattle();
+                    showScreen('battle');
+                } else {
+                    isProcessingTurn = false;
+                    isDefending = false;
+                    playerLegEvadeBoost = 0;
+                    playerStats.heat = 0;
+                    updateGarage();
+                    showScreen('garage');
+                }
+
                 showToast(`📂 Telemetry restored: ${getPilotRank(playerLevel)} (Battle #${battleCount}) [F9]`, 3500, 'info');
                 playSound('victory');
             } catch(e) {
                 showToast("Failed to load telemetry", 3000, 'danger');
             }
         }
-
-        let equipWpn = 0, equipArm = 0, equipSink = 0, equipSpec = 0;
-        let playerHeatGen = 30;
-        let playerCooling = 20;
-        let credits = 100;
-        let salvage = 0;
-        let battleCount = 1;
-        let playerLevel = 1;
-        let playerXp = 0;
-        let previousScreen = 'garage';
-
-        const playerStats = { maxHp: 100, hp: 100, atk: 15, def: 5, maxHeat: 100, heat: 0 };
-        let enemyStats = { maxHp: 80, hp: 80, atk: 12, def: 3, maxHeat: 100, heat: 0 };
-        let isDefending = false;
-        let enemyIsDefending = false;
-        let isProcessingTurn = false;
-        let playerLimbDamage = [0, 0, 0, 0, 0];
-
-        let currentTargetLimb = 1;
-        const limbs = [
-            {name: 'Head', chance: 0.2, mult: 3.0},
-            {name: 'Torso', chance: 0.8, mult: 1.0},
-            {name: 'L.Arm', chance: 0.6, mult: 1.5},
-            {name: 'R.Arm', chance: 0.6, mult: 1.5},
-            {name: 'Legs', chance: 0.5, mult: 1.2}
         ];
 
         /* ==================== PROCEDURAL SPRITE RENDERERS ==================== */
@@ -1600,10 +1674,14 @@
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             const target = document.getElementById('screen-' + id);
             if (target) target.classList.add('active');
+            if (id === 'help') {
+                safeSetStorage('kmech_tutorialSeen', '1');
+            }
             updateMechVisuals();
         }
 
         function returnFromHelp() {
+            safeSetStorage('kmech_tutorialSeen', '1');
             showScreen(previousScreen || 'garage');
         }
 
@@ -1638,7 +1716,7 @@
             updateMechVisuals();
         }
 
-        let playerLegEvadeBoost = 0;
+        playerLegEvadeBoost = 0;
 
         function cycleWpn() {
             equipWpn = (equipWpn + 1) % weapons.length;
@@ -2090,10 +2168,15 @@
 
         updateGarage();
 
-        // Welcome prompt on startup
-        setTimeout(() => {
-            showToast("🤖 PILOT ONLINE: Systems nominal. Press [F1] for Pilot's Manual, [F5] Save, [D] to deploy.", 4500);
-        }, 300);
+        // Welcome prompt on fresh startup only (Pass 5 tutorial integrity)
+        const seenTutorial = safeGetStorage('kmech_tutorialSeen');
+        const hasSavedGame = safeGetStorage('kmech_save');
+        if (!seenTutorial && !hasSavedGame) {
+            setTimeout(() => {
+                showToast("🤖 PILOT ONLINE: Systems nominal. Press [F1] for Pilot's Manual, [F5] Save, [D] to deploy.", 4500);
+                safeSetStorage('kmech_tutorialSeen', '1');
+            }, 300);
+        }
 
         // Comprehensive keyboard navigation
         window.addEventListener('keydown', (e) => {

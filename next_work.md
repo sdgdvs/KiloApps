@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KVoid
   kilo_usability: KGraph
   kilo_graphics: KWizard
-  kilo_qa: KMech
+  kilo_qa: KMystery
   kilo_expander: KDB
   kilo_creator: "kweb://deep-core (Tier 3 Ghost Node Terminal & KMatrix Passkey Fragment)"
 virtual_web_target: "kweb://darknet"
@@ -30,9 +30,9 @@ virtual_web_rotation:
   - "kweb://darknet"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-graphics
-  app: KVoid
-  timestamp: "2026-09-25T02:49:00Z"
+  agent: kilo-qa
+  app: KMech
+  timestamp: "2026-09-25T03:53:00Z"
 last_planner_run: "2026-09-24T05:46:00Z"
 ---
 
@@ -121,9 +121,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KMech`
+- **Current Target**: `KMystery`
 - **Upcoming Queue**:
-  `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KFortress` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KMaze, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
+  `KQuest`, `KSanctuary`, `KStarDredge`, `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KFortress`, `KMech` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KMaze, KMech, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KDB`
@@ -202,6 +202,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-25T03:53:00Z — kilo-qa: KMech (Pass 5: Tutorial & State Integrity)**
+  - Status: PASS ✅ (Combat state persistence, first-run tutorial guard & toast de-occlusion complete; 0 regressions).
+  - State Persistence: Upgraded Quicksave/Load (F5/F9) across web localStorage & native `kmech_save.dat` (v3) to capture active combat telemetry (enemy stats, limb targeting, limb damage, evasion, heat).
+  - Combat UI: Added [F9] Load button to combat zone header bar for seamless mid-battle restoration.
+  - Tutorial Integrity: Guarded startup welcome prompt behind `kmech_tutorialSeen` / `kmech_save` in web and first-run check launching Pilot's Manual in native C.
+  - Toast & Modals: Re-anchored toast container to bottom-center pill to prevent control occlusion in garage and battle.
+  - Verification: Clean MSVC compile (`KMech.exe` 31.7 KB); Vite clean build in 381ms (`kmech.html` 108.2 KB); security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-25T02:49:00Z — kilo-graphics: KVoid (Game Content, Visual Polish & Glint Purge Pass)**
   - Status: PASS ✅ (Distress flare system, 4 alien species biotypes & resource tiles added; glint purged; 0 regressions).
   - Game Mechanics: Chem flare deployment ([F]) repelling stalkers/phantoms; O2 canisters (+35%) & lithium cells (+40%).
@@ -234,14 +242,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual Analysis: Real-time CRT oscilloscope trace, 1024-point FFT waterfall sonogram with test signal injection sweeps.
   - Multi-Band Filtering: 3-band parametric filter workbench with Q-factor isolation puzzle unlocking classified telemetry Vance-77.
   - Integration & Verification: VT100 field console with .DAT exporter; linked in KNet, portal, webring (#010), darknet; Vite build clean (391ms); lint clean; 55.5 KB (<999KB).
-
-- **2026-09-24T22:45:00Z — kilo-expander: KSnake (Arcade Duel Multiplayer Expansion)**
-  - Status: PASS ✅ (Firebase RTDB online multiplayer & Cyber-AI bot duel added; Mandate 12 compliant; 0 regressions).
-  - Arcade Duel: Side-by-side split arenas (780x440), glitch wall obstacles, speed curses, magma hazards & beam conduits.
-  - Multiplayer Architecture: Firebase RTDB synchronization (`multiplayer/ksnake/`) with lobby table, room codes, and CDN loader.
-  - Cyber-AI Bot: 4 bot heuristics (Rookie, Hunter, Glitch Viper, Grandmaster) with flood-fill space safety lookahead.
-  - Combat & Chat: Quick battle taunts, floating combat alerts, attack beam trajectories, rematch negotiation.
-  - Verification: MSVC C clean compile (`KSnake.exe` 54.2 KB); Vite clean build (386ms, `ksnake.html` 224.0 KB); security lint 100% PASS; <999KB ceiling.
 
 
 
