@@ -118,12 +118,13 @@
     &bull; <a href="/web/geocities.html">kweb://geocities</a> &mdash; CyberSpire Underground Shrine<br>
     &bull; <a href="/web/classified.html">kweb://10.19.99.4/classified</a> &mdash; Project Echo Corporate Leak &amp; Sector 0x1999 Dumps<br>
     &bull; <a href="/web/echo_subsystem.html">kweb://echo-subsystem.net</a> &mdash; Echo Subsystem Acoustic Research &amp; Harmonic Decoders<br>
+    &bull; <a href="/web/deep_core.html">kweb://deep-core</a> &mdash; Tier 3 Ghost Node Terminal &amp; Passkey Analyzer<br>
     &bull; <a href="echoes">kweb://echoes</a> &mdash; Deep Core Memory Dump<br>
     &bull; <a href="/apps/contribute.html">/apps/contribute.html</a> &mdash; Autonomous Quota Fuel Station
   </div>
 
   <div style="margin-top:16px;">
-    <label style="font-size:12px; display:block; margin-bottom:4px;">&gt; NODE TERMINAL INPUT (Type 'help', 'status', 'decrypt', 'clue'):</label>
+    <label style="font-size:12px; display:block; margin-bottom:4px;">&gt; NODE TERMINAL INPUT (Type 'help', 'status', 'decrypt', 'clue', 'deep-core'):</label>
     <div style="display:flex; gap:8px;">
       <input type="text" id="cmdInput" class="prompt-input" placeholder="Enter node command..." onkeydown="if(event.key==='Enter') execCmd()" />
       <button class="btn-cmd" onclick="execCmd()">Transmit</button>
@@ -150,13 +151,16 @@
     let res = `> ${cmd}\n`;
 
     if (cmd === 'help') {
-      res += "AVAILABLE COMMANDS:\n- status    : Query Node 0x7F carrier signal & peer count\n- decrypt   : Attempt cipher resolution on packet buffer\n- clue      : Query subterranean anomaly coordinate\n- echoes    : Jump to deep Echoes archive\n- clear     : Flush terminal output";
+      res += "AVAILABLE COMMANDS:\n- status    : Query Node 0x7F carrier signal & peer count\n- decrypt   : Attempt cipher resolution on packet buffer\n- clue      : Query subterranean anomaly coordinate\n- deep-core : Jump to Tier 3 Ghost Node Terminal\n- echoes    : Jump to deep Echoes archive\n- clear     : Flush terminal output";
     } else if (cmd === 'status') {
       res += "NODE 0x7F: ONLINE\nCARRIER FREQ: 144.390 MHz\nPEER NODES: 95 active apps\nLATENCY TO KILO-CORE: 1.2ms\nQUOTA POOL: Operational";
     } else if (cmd === 'decrypt') {
       res += "DECRYPTING STREAM 0xAF43...\n[SUCCESS] Decoded fragment:\n'When App #100 is born, the bridge across the millennium opens in KDirector.'";
     } else if (cmd === 'clue') {
       res += "COORDINATE CLUE: Inspect KHex at memory offset 0x0000FF00 for the signature 'K-MATRIX-1999'.";
+    } else if (cmd === 'deep-core' || cmd === 'deepcore') {
+      window.location.href = '/web/deep_core.html';
+      return;
     } else if (cmd === 'echoes') {
       window.location.href = 'echoes';
       return;

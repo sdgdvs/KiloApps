@@ -528,6 +528,7 @@
         <option value="kweb://warez">💾 Warez &amp; Cracktro Vault</option>
         <option value="kweb://echo-subsystem.net">🔬 Echo Subsystem Acoustic Labs</option>
         <option value="kweb://10.19.99.4/classified">🔒 10.19.99.4 Corporate Leak</option>
+        <option value="kweb://deep-core">⚡ Deep Core Ghost Terminal</option>
       </optgroup>
       <optgroup label="🚀 KiloApps Fleet">
         <option value="/apps/contribute.html">🚀 Fleet Contributor Guide</option>
@@ -592,6 +593,7 @@
         <button class="btn-chip" data-url="kweb://asm-temple" style="color:#fbbf24; border-color:rgba(245, 158, 11, 0.4);">⚡ ASM Temple</button>
         <button class="btn-chip" data-url="kweb://echo-subsystem.net" style="color:#a78bfa; border-color:rgba(167, 139, 250, 0.4);">🔬 Echo Subsystem</button>
         <button class="btn-chip" data-url="kweb://10.19.99.4/classified" style="color:#f59e0b; border-color:rgba(245, 158, 11, 0.4);">🔒 10.19.99.4</button>
+        <button class="btn-chip" data-url="kweb://deep-core" style="color:#22ff66; border-color:rgba(34, 255, 102, 0.4);">⚡ Deep Core</button>
         <span style="font-size:11px; color:var(--text-muted); font-weight:700; margin-left:6px;">FLEET:</span>
         <button class="btn-chip" data-url="/apps/contribute.html" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; font-weight:700; color:#fff;">🚀 Contributor</button>
         <button class="btn-chip" data-url="ping:8.8.8.8">📡 Ping</button>
@@ -874,6 +876,7 @@
           <tr><td><code>kweb://warez</code></td><td>Access Underground Demoscene, Cracktro &amp; Chiptune Vault</td></tr>
           <tr><td><code>kweb://echo-subsystem.net</code></td><td>Access Tier 3 Acoustic Research Journal &amp; Harmonic Decoders</td></tr>
           <tr><td><code>kweb://10.19.99.4/classified</code></td><td>Access Classified Corporate Intranet Leak &amp; Memory Dumps</td></tr>
+          <tr><td><code>kweb://deep-core</code></td><td>Access Tier 3 Ghost Node Terminal &amp; Cryptographic Passkey Analyzer</td></tr>
           <tr><td><code>Click Sniffer Row</code></td><td>Open deep frame dissection drawer (Ethernet, IP, Hex)</td></tr>
           <tr><td><code>ping:&lt;host&gt;</code></td><td>URL prefix to run Ping test on target host</td></tr>
           <tr><td><code>scan:&lt;host&gt;</code></td><td>URL prefix to run Port Scan on target host</td></tr>
@@ -1485,6 +1488,8 @@
       url = '/web/echo_subsystem.html';
     } else if (url.toLowerCase() === 'kweb://10.19.99.4/classified' || url.toLowerCase() === '10.19.99.4/classified' || url.toLowerCase() === 'kweb://10.19.99.4' || url.toLowerCase() === '10.19.99.4' || url.toLowerCase() === 'kweb://classified' || url.toLowerCase() === 'classified' || url.toLowerCase() === 'http://10.19.99.4/classified' || url.toLowerCase() === 'http://10.19.99.4') {
       url = '/web/classified.html';
+    } else if (url.toLowerCase() === 'kweb://deep-core' || url.toLowerCase() === 'deep-core' || url.toLowerCase() === 'kweb://deep_core' || url.toLowerCase() === 'deep_core' || url.toLowerCase() === 'kweb://ghost-node' || url.toLowerCase() === 'ghost-node') {
+      url = '/web/deep_core.html';
     } else if (url.toLowerCase().startsWith('kweb://users/')) {
       const uClean = url.slice(13).replace('~', '');
       url = '/web/users/' + uClean + (uClean.endsWith('.html') ? '' : '.html');

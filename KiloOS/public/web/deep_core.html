@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>KILO-NET // DEEP CORE [GHOST NODE TERMINAL] - Subterranean Ring-0 Access</title>
+<style>
+  :root {
+    --bg-dark: #030805;
+    --term-bg: rgba(4, 16, 8, 0.95);
+    --panel-bg: rgba(6, 24, 12, 0.9);
+    --phosphor: #22ff66;
+    --phosphor-dim: #13883a;
+    --phosphor-glow: rgba(34, 255, 102, 0.35);
+    --border: #1a7a35;
+    --border-bright: #22ff66;
+    --alert: #ff3344;
+    --warn: #ffaa00;
+    --cyan: #38bdf8;
+    --font-mono: 'Consolas', 'Courier New', monospace;
+  }
+
+  body.theme-amber {
+    --bg-dark: #080502;
+    --term-bg: rgba(20, 12, 4, 0.95);
+    --panel-bg: rgba(28, 16, 6, 0.9);
+    --phosphor: #ffaa22;
+    --phosphor-dim: #995511;
+    --phosphor-glow: rgba(255, 170, 34, 0.35);
+    --border: #aa6611;
+    --border-bright: #ffaa22;
+    --alert: #ff3344;
+    --warn: #ffff33;
+    --cyan: #ffa044;
+  }
+
+  body.theme-cyan {
+    --bg-dark: #02070a;
+    --term-bg: rgba(4, 16, 24, 0.95);
+    --panel-bg: rgba(6, 22, 34, 0.9);
+    --phosphor: #38bdf8;
+    --phosphor-dim: #166488;
+    --phosphor-glow: rgba(56, 189, 248, 0.35);
+    --border: #1e4e6b;
+    --border-bright: #38bdf8;
+    --alert: #ff3366;
+    --warn: #f59e0b;
+    --cyan: #67e8f9;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-dark);
+    color: var(--phosphor);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.45;
+    overflow-x: hidden;
+  }
+
+  /* Scanline CRT simulation */
+  #crtOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 1000;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.32) 50%);
+    background-size: 100% 3px;
+    opacity: 0.75;
+  }
+  .scanlines-off #crtOverlay { display: none; }
+
+  /* Main Shell Layout */
+  .core-shell {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    gap: 8px;
+  }
+
+  /* Top Navigation & Status Bar */
+  header.node-masthead {
+    background: var(--term-bg);
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    box-shadow: 0 0 12px var(--phosphor-glow);
+  }
+
+  .node-identity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .badge-node {
+    background: var(--phosphor);
+    color: #000;
+    font-weight: 900;
+    padding: 2px 7px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    border-radius: 2px;
+  }
+
+  .node-title {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 8px var(--phosphor-glow);
+  }
+
+  .telemetry-badges {
+    display: flex;
+    gap: 8px;
+    font-size: 11px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .pill {
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    background: rgba(0, 0, 0, 0.4);
+    font-size: 10px;
+  }
+  .pill.active { border-color: var(--border-bright); color: var(--border-bright); }
+  .pill.alert { border-color: var(--alert); color: var(--alert); }
+
+  /* Controls Header */
+  .control-group {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  button.shell-btn {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border);
+    color: var(--phosphor);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-transform: uppercase;
+  }
+  button.shell-btn:hover {
+    background: var(--phosphor);
+    color: #000;
+    box-shadow: 0 0 8px var(--phosphor-glow);
+  }
+  button.shell-btn:active {
+    transform: translateY(1px);
+  }
+
+  /* Two-Column Workspace */
+  .workspace-layout {
+    display: flex;
+    flex: 1;
+    gap: 8px;
+    min-height: 0;
+  }
+
+  /* Left/Center: Terminal Core */
+  .terminal-container {
+    flex: 1.6;
+    background: var(--term-bg);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 0 10px var(--phosphor-glow);
+    position: relative;
+    min-height: 0;
+  }
+
+  .terminal-header {
+    background: rgba(0, 20, 10, 0.7);
+    border-bottom: 1px solid var(--border);
+    padding: 5px 10px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--phosphor-dim);
+  }
+
+  .terminal-screen {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    font-size: 12.5px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    min-height: 0;
+  }
+
+  .terminal-screen::-webkit-scrollbar { width: 6px; }
+  .terminal-screen::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.4); }
+  .terminal-screen::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .term-input-bar {
+    border-top: 1px solid var(--border);
+    padding: 6px 10px;
+    display: flex;
+    gap: 6px;
+    background: rgba(0, 10, 5, 0.9);
+    align-items: center;
+  }
+
+  .prompt-symbol {
+    font-weight: 700;
+    color: var(--phosphor-bright);
+    user-select: none;
+  }
+
+  input.term-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--phosphor);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    outline: none;
+  }
+
+  /* Right Sidebar: Telemetry & Forensics */
+  .telemetry-sidebar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .telemetry-sidebar::-webkit-scrollbar { width: 5px; }
+  .telemetry-sidebar::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+  .telemetry-sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .side-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .side-card-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--phosphor);
+    border-bottom: 1px dashed var(--border);
+    padding-bottom: 3px;
+    display: flex;
+    justify-content: space-between;
+    letter-spacing: 0.5px;
+  }
+
+  /* Oscilloscope Canvas */
+  #scopeCanvas {
+    width: 100%;
+    height: 75px;
+    background: #000803;
+    border: 1px solid var(--border);
+    display: block;
+  }
+
+  /* Fast Command Action Chips */
+  .chip-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .cmd-chip {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid var(--border);
+    color: var(--phosphor);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    padding: 3px 6px;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+  .cmd-chip:hover {
+    background: var(--phosphor);
+    color: #000;
+  }
+
+  /* Sector Status Badges */
+  .sector-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sector-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 3px 6px;
+    border-left: 2px solid var(--border);
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .sector-row:hover {
+    background: rgba(34, 255, 102, 0.1);
+  }
+
+  /* Network Traffic Mini-Feed */
+  .traffic-feed {
+    font-size: 10.5px;
+    height: 70px;
+    overflow-y: hidden;
+    color: var(--phosphor-dim);
+    line-height: 1.35;
+    background: rgba(0,0,0,0.5);
+    padding: 4px;
+    border: 1px solid var(--border);
+  }
+
+  /* Verifier Tool Box */
+  .verifier-box {
+    display: flex;
+    gap: 4px;
+  }
+  .verifier-input {
+    flex: 1;
+    background: #000a04;
+    border: 1px solid var(--border);
+    color: var(--phosphor);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 4px 6px;
+    outline: none;
+  }
+  .verifier-res {
+    font-size: 11px;
+    padding: 4px;
+    background: rgba(0,0,0,0.4);
+    border-left: 2px solid var(--border);
+    min-height: 24px;
+  }
+
+  /* Navigation Footer */
+  footer.node-footer {
+    background: var(--term-bg);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .nav-hyperlinks a {
+    color: var(--cyan);
+    text-decoration: none;
+    margin-right: 10px;
+  }
+  .nav-hyperlinks a:hover {
+    color: #fff;
+    text-decoration: underline;
+  }
+
+  /* First-Run Tutorial Modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+  }
+  .modal-card {
+    max-width: 580px;
+    background: var(--term-bg);
+    border: 2px solid var(--border-bright);
+    padding: 18px;
+    box-shadow: 0 0 25px var(--phosphor-glow);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .modal-card h2 {
+    font-size: 16px;
+    color: var(--phosphor);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+  }
+  .modal-card p {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  /* Output formatting helpers */
+  .text-highlight { color: #fff; font-weight: bold; }
+  .text-alert { color: var(--alert); font-weight: bold; }
+  .text-warn { color: var(--warn); }
+  .text-cyan { color: var(--cyan); }
+  .text-dim { color: var(--phosphor-dim); }
+</style>
+</head>
+<body>
+
+<div id="crtOverlay"></div>
+
+<div class="core-shell">
+  <!-- Masthead -->
+  <header class="node-masthead">
+    <div class="node-identity">
+      <span class="badge-node">GHOST-0x1999</span>
+      <span class="node-title">KILO-NET DEEP CORE // RING-0 RELAY</span>
+    </div>
+    <div class="telemetry-badges">
+      <span class="pill active" id="pillCarrier">CARRIER: 1999.0 Hz</span>
+      <span class="pill" id="pillSubnet">SUBNET: 10.19.99.127</span>
+      <span class="pill" id="pillSecurity">TIER 3 CLASSIFIED</span>
+      <span class="pill" id="pillAudio">AUDIO: FM+SPC (OFF)</span>
+    </div>
+    <div class="control-group">
+      <button class="shell-btn" id="btnAudioToggle" title="Toggle procedural sound synthesis">Audio</button>
+      <button class="shell-btn" id="btnThemeToggle" title="Rotate phosphor palette">Theme</button>
+      <button class="shell-btn" id="btnScanlineToggle" title="Toggle CRT scanline filter">Scanlines</button>
+      <button class="shell-btn" id="btnBriefing" title="Node briefing & forensic protocol">Briefing [F1]</button>
+    </div>
+  </header>
+
+  <!-- Workspace -->
+  <div class="workspace-layout">
+    <!-- Left: Terminal -->
+    <div class="terminal-container">
+      <div class="terminal-header">
+        <span>SESSION: TELNET://10.19.99.127:1999 (RING 0 AIRGAP BREACH)</span>
+        <span>VT100 &bull; 80x25 &bull; ECHO-1999 PROTOCOL</span>
+      </div>
+      <div class="terminal-screen" id="termScreen"></div>
+      <div class="term-input-bar">
+        <span class="prompt-symbol">CORE#</span>
+        <input type="text" id="termInput" class="term-input" placeholder="Enter directive ('help', 'status', 'probe', 'dump', 'sectors', 'matrix')..." autocomplete="off" spellcheck="false" autofocus />
+      </div>
+    </div>
+
+    <!-- Right: Telemetry & Forensics Dashboard -->
+    <div class="telemetry-sidebar">
+      <!-- Oscilloscope -->
+      <div class="side-card">
+        <div class="side-card-title">
+          <span>SUBCARRIER FM HARMONIC MONITOR</span>
+          <span style="font-size:10px; color:var(--phosphor-dim);">1999.0 Hz</span>
+        </div>
+        <canvas id="scopeCanvas" width="360" height="75"></canvas>
+      </div>
+
+      <!-- Fast Actions -->
+      <div class="side-card">
+        <div class="side-card-title">
+          <span>FORENSIC DIRECTIVE SHORTCUTS</span>
+          <span style="font-size:10px;">FAST-QUERY</span>
+        </div>
+        <div class="chip-grid">
+          <button class="cmd-chip" data-cmd="status">status</button>
+          <button class="cmd-cmd-chip cmd-chip" data-cmd="probe passkey">probe passkey</button>
+          <button class="cmd-chip" data-cmd="dump 0x7F1999">dump 0x7F1999</button>
+          <button class="cmd-chip" data-cmd="sectors">sectors</button>
+          <button class="cmd-chip" data-cmd="matrix">matrix</button>
+          <button class="cmd-chip" data-cmd="trace">trace</button>
+          <button class="cmd-chip" data-cmd="probe 10.19.99.4">probe subnet</button>
+          <button class="cmd-chip" data-cmd="export">export log</button>
+          <button class="cmd-chip" data-cmd="clear">clear</button>
+        </div>
+      </div>
+
+      <!-- KMatrix Sector Status -->
+      <div class="side-card">
+        <div class="side-card-title">
+          <span>KMATRIX QUARANTINE SECTORS</span>
+          <span style="font-size:10px;" id="sectorCount">5 LOCKED</span>
+        </div>
+        <div class="sector-list" id="sectorList">
+          <div class="sector-row" data-sec="MEM_HEAP">
+            <span>[M] Sector 01: Heap Buffer</span>
+            <span style="color:var(--warn);">0x7F1999</span>
+          </div>
+          <div class="sector-row" data-sec="AUDIO_DSP">
+            <span>[A] Sector 02: DSP Carrier</span>
+            <span style="color:var(--warn);">1999 Hz</span>
+          </div>
+          <div class="sector-row" data-sec="NET_RELAY">
+            <span>[N] Sector 03: Darknet Relay</span>
+            <span style="color:var(--warn);">10.19.99.4</span>
+          </div>
+          <div class="sector-row" data-sec="STORAGE_VFS">
+            <span>[S] Sector 04: VFS Archive</span>
+            <span style="color:var(--warn);">RECOVERY_1999</span>
+          </div>
+          <div class="sector-row" data-sec="CORE_AI">
+            <span>[C] Sector 05: Hive Fleet</span>
+            <span style="color:var(--alert);">QUARANTINED</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Passkey Cryptographic Hash Verifier -->
+      <div class="side-card">
+        <div class="side-card-title">
+          <span>CRYPTOGRAPHIC HASH VERIFIER</span>
+          <span style="font-size:10px;">SHA-256</span>
+        </div>
+        <p style="font-size:10.5px; color:var(--phosphor-dim);">Test candidate sector keys or passkey fragments against Ring-0 cryptographic signatures:</p>
+        <div class="verifier-box">
+          <input type="text" id="verifyInput" class="verifier-input" placeholder="e.g. ECHO-1999-ARCHITECT or 7F1999" />
+          <button class="shell-btn" id="btnVerify">Verify</button>
+        </div>
+        <div class="verifier-res" id="verifyRes">Awaiting candidate input...</div>
+      </div>
+
+      <!-- Telemetry Stream -->
+      <div class="side-card">
+        <div class="side-card-title">
+          <span>RING-0 SUBNET TELEMETRY STREAM</span>
+          <span style="font-size:10px;">LIVE</span>
+        </div>
+        <div class="traffic-feed" id="trafficFeed"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="node-footer">
+    <div class="nav-hyperlinks">
+      <span style="color:var(--phosphor-dim);">NAVIGATION:</span>
+      <a href="/web/darknet.html">&laquo; kweb://darknet</a>
+      <a href="/web/classified.html">kweb://10.19.99.4/classified</a>
+      <a href="/web/echo_subsystem.html">kweb://echo-subsystem.net</a>
+      <a href="/web/webring.html">kweb://webring</a>
+      <a href="/web/portal.html">kweb://portal &raquo;</a>
+    </div>
+    <div>
+      <span>STATE: [F5] Quicksave | [F9] Quickload | &lt;999KB Anti-Potemkin Compliant</span>
+    </div>
+  </footer>
+</div>
+
+<!-- First-Run Briefing Modal -->
+<div class="modal-overlay" id="briefingModal" style="display:none;">
+  <div class="modal-card">
+    <h2>[CLASSIFIED INTEL] // GHOST NODE 0x1999 BRIEFING</h2>
+    <p>
+      You have breached the airgap into <strong>Deep Core (Node 0x1999)</strong>—a subterranean terminal operating on the internal <code>10.19.99.x</code> subnet beneath KiloOS.
+    </p>
+    <p>
+      This ghost terminal interfaces with the precursor architecture of <strong>App #100 (KMatrix)</strong>. Here you can inspect raw memory dumps, trace subterranean route hops, analyze the 5 quarantine sectors, and test cryptographic signatures for the Master Director Passkey.
+    </p>
+    <p style="color:var(--warn); font-size:11.5px;">
+      &bull; Press <strong>F5</strong> at any time to quicksave terminal state to local storage.<br>
+      &bull; Press <strong>F9</strong> to restore previous sessions.<br>
+      &bull; Toggle <strong>Audio</strong> for authentic Sega Genesis FM / Super Nintendo delay acoustic telemetry.
+    </p>
+    <div style="display:flex; justify-content:flex-end; gap:8px;">
+      <button class="shell-btn" id="btnDismissBriefing" style="padding:6px 14px; font-weight:700;">Acknowledge &amp; Enter Terminal</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // --- STATE ---
+  const STORAGE_KEY = 'kweb_deep_core_state';
+  const BRIEFING_KEY = 'kweb_deep_core_seen';
+
+  const state = {
+    audioEnabled: false,
+    theme: 'green',
+    scanlines: true,
+    history: [],
+    historyIdx: -1,
+    verifiedSectors: {
+      MEM_HEAP: false,
+      AUDIO_DSP: false,
+      NET_RELAY: false,
+      STORAGE_VFS: false,
+      CORE_AI: false
+    }
+  };
+
+  // Known cryptographic signatures for verifier
+  const KNOWN_HASHES = {
+    // ECHO-1999-ARCHITECT (Full Director Key)
+    'f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946': {
+      type: 'MASTER_DIRECTOR_KEY',
+      label: '★ MASTER DIRECTOR PASSKEY (Ring-0 Clearance Confirmed)',
+      msg: 'SIGNATURE RECOGNIZED: Full 3-token master credentials validated. Transmute into Director Console (/apps/kdirector.html) to assume supreme fleet steering authority.'
+    },
+    // 7F1999 (Sector 01)
+    '33967d71b3e8c950fb2bf2b8f8702c2e079717df3d27453472ca626eb39db795': {
+      type: 'SECTOR_01',
+      label: '★ SECTOR 01 RESIDUE (MEM_HEAP Offset)',
+      msg: 'Sector 01 key confirmed: 0x7F1999 breaches the decoupled memory heap.'
+    },
+    // 1999HZ (Sector 02)
+    '6eb4f2fdb446bf30be1e7f62e811c7fa1548e6a57e33a6f199b0098f98ecbeea': {
+      type: 'SECTOR_02',
+      label: '★ SECTOR 02 RESIDUE (AUDIO_DSP Carrier)',
+      msg: 'Sector 02 key confirmed: 1999Hz carrier frequency locks harmonic resonance.'
+    },
+    // 10.19.99.4 (Sector 03)
+    'cae66b88b3f2d26fcecf569344498ecb8c8d8c3683f2dc70a927d3c01c0c16b1': {
+      type: 'SECTOR_03',
+      label: '★ SECTOR 03 RESIDUE (NET_RELAY Subnet)',
+      msg: 'Sector 03 key confirmed: 10.19.99.4 synchronizes the subterranean darknet pipeline.'
+    },
+    // RECOVERY_1999 (Sector 04)
+    'c258d4a9918be1e9882200845187e14a1f6a150bc0c57176fe305ca7ffbe4f3d': {
+      type: 'SECTOR_04',
+      label: '★ SECTOR 04 RESIDUE (STORAGE_VFS Archive)',
+      msg: 'Sector 04 key confirmed: RECOVERY_1999 unseals archival precursor logs.'
+    },
+    // AUTONOMOUS_FLEET (Sector 05)
+    'e6e44b8296a233b811a76c8c364177d6110f0980006f1577e1c8dbeba8f8aa7c': {
+      type: 'SECTOR_05',
+      label: '★ SECTOR 05 RESIDUE (CORE_AI Identity)',
+      msg: 'Sector 05 key confirmed: AUTONOMOUS_FLEET resolves ludonarrative consonance.'
+    }
+  };
+
+  // --- AUDIO SYNTHESIZER (GENESIS YM2612 FM & SNES SPC700 ECHO) ---
+  let audioCtx = null;
+  let snesDelay = null;
+  let droneCarrier = null;
+  let droneMod = null;
+  let droneGain = null;
+
+  function initAudio() {
+    if (!audioCtx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      audioCtx = new AudioContext();
+
+      // Super Nintendo SPC700 Stereo Slapback Delay line
+      // 180ms delay with 2200Hz low-pass damping
+      const delayNode = audioCtx.createDelay();
+      delayNode.delayTime.value = 0.18;
+
+      const delayFilter = audioCtx.createBiquadFilter();
+      delayFilter.type = 'lowpass';
+      delayFilter.frequency.value = 2200;
+
+      const delayFeedback = audioCtx.createGain();
+      delayFeedback.gain.value = 0.28;
+
+      delayNode.connect(delayFilter);
+      delayFilter.connect(delayFeedback);
+      delayFeedback.connect(delayNode);
+      delayFilter.connect(audioCtx.destination);
+
+      snesDelay = delayNode;
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
+  // Genesis YM2612 2-Operator FM sound synthesis
+  function playFM(freq, modRatio, modDepth, duration, gainVal = 0.15) {
+    if (!state.audioEnabled) return;
+    initAudio();
+    if (!audioCtx) return;
+
+    try {
+      const t = audioCtx.currentTime;
+      // Carrier
+      const carrier = audioCtx.createOscillator();
+      carrier.type = 'sine';
+      carrier.frequency.setValueAtTime(freq, t);
+
+      // Modulator
+      const modulator = audioCtx.createOscillator();
+      modulator.type = 'sine';
+      modulator.frequency.setValueAtTime(freq * modRatio, t);
+
+      // Modulator envelope (rapid exponential decay characteristic of YM2612)
+      const modGain = audioCtx.createGain();
+      modGain.gain.setValueAtTime(modDepth, t);
+      modGain.gain.exponentialRampToValueAtTime(0.001, t + duration * 0.85);
+
+      // Master output envelope
+      const masterGain = audioCtx.createGain();
+      masterGain.gain.setValueAtTime(gainVal, t);
+      masterGain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(masterGain);
+      masterGain.connect(audioCtx.destination);
+      if (snesDelay) masterGain.connect(snesDelay);
+
+      modulator.start(t);
+      carrier.start(t);
+      modulator.stop(t + duration);
+      carrier.stop(t + duration);
+    } catch(e) {
+      // Audio fallback silent
+    }
+  }
+
+  const SFX = {
+    key: () => playFM(1200, 1.5, 300, 0.03, 0.04),
+    beep: () => playFM(1999, 2.0, 500, 0.08, 0.08),
+    warn: () => playFM(320, 0.5, 800, 0.22, 0.12),
+    success: () => {
+      playFM(523.25, 2.0, 400, 0.18, 0.1);
+      setTimeout(() => playFM(659.25, 2.0, 400, 0.18, 0.1), 80);
+      setTimeout(() => playFM(783.99, 2.0, 400, 0.25, 0.12), 160);
+    }
+  };
+
+  function toggleAudio() {
+    state.audioEnabled = !state.audioEnabled;
+    const pill = document.getElementById('pillAudio');
+    if (state.audioEnabled) {
+      initAudio();
+      pill.textContent = 'AUDIO: FM+SPC (ON)';
+      pill.className = 'pill active';
+      SFX.beep();
+      printLine('[AUDIO] Yamaha YM2612 FM & SPC700 Delay synthesis active.', 'text-cyan');
+    } else {
+      pill.textContent = 'AUDIO: FM+SPC (OFF)';
+      pill.className = 'pill';
+      printLine('[AUDIO] Procedural acoustic synthesizer disabled.', 'text-dim');
+    }
+  }
+
+  // --- CRT THEMES & SCANLINES ---
+  function cycleTheme() {
+    const themes = ['green', 'amber', 'cyan'];
+    const idx = themes.indexOf(state.theme);
+    state.theme = themes[(idx + 1) % themes.length];
+    document.body.className = state.theme === 'green' ? '' : `theme-${state.theme}`;
+    if (!state.scanlines) document.body.classList.add('scanlines-off');
+    printLine(`[THEME] Phosphor palette set to ${state.theme.toUpperCase()}.`, 'text-cyan');
+    SFX.key();
+  }
+
+  function toggleScanlines() {
+    state.scanlines = !state.scanlines;
+    if (state.scanlines) {
+      document.body.classList.remove('scanlines-off');
+      printLine('[DISPLAY] CRT scanline overlay enabled.', 'text-dim');
+    } else {
+      document.body.classList.add('scanlines-off');
+      printLine('[DISPLAY] CRT scanline overlay disabled.', 'text-dim');
+    }
+    SFX.key();
+  }
+
+  // --- CRYPTOGRAPHIC UTILITY (NATIVE WEB CRYPTO) ---
+  async function computeSha256(str) {
+    const enc = new TextEncoder();
+    const data = enc.encode(str.trim());
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  // --- OSCILLOSCOPE CANVAS (1999Hz CARRIER SIMULATOR) ---
+  const scopeCanvas = document.getElementById('scopeCanvas');
+  const scopeCtx = scopeCanvas.getContext('2d');
+  let scopePhase = 0;
+
+  function drawScope() {
+    scopeCtx.fillStyle = '#010904';
+    scopeCtx.fillRect(0, 0, scopeCanvas.width, scopeCanvas.height);
+
+    // Draw Grid Lines
+    scopeCtx.strokeStyle = 'rgba(26, 122, 53, 0.25)';
+    scopeCtx.lineWidth = 1;
+    for (let x = 0; x < scopeCanvas.width; x += 30) {
+      scopeCtx.beginPath();
+      scopeCtx.moveTo(x, 0);
+      scopeCtx.lineTo(x, scopeCanvas.height);
+      scopeCtx.stroke();
+    }
+    for (let y = 0; y < scopeCanvas.height; y += 15) {
+      scopeCtx.beginPath();
+      scopeCtx.moveTo(0, y);
+      scopeCtx.lineTo(scopeCanvas.width, y);
+      scopeCtx.stroke();
+    }
+
+    // Draw Sine Carrier with 2-Op FM modulation
+    const color = getComputedStyle(document.body).getPropertyValue('--phosphor').trim() || '#22ff66';
+    scopeCtx.strokeStyle = color;
+    scopeCtx.lineWidth = 1.5;
+    scopeCtx.beginPath();
+
+    const midY = scopeCanvas.height / 2;
+    const amp = 24;
+    scopePhase += 0.08;
+
+    for (let x = 0; x < scopeCanvas.width; x++) {
+      // 1999Hz FM modulation math: carrier + mod * sin(2*freq)
+      const mod = Math.sin((x * 0.09) + scopePhase * 1.5) * 0.45;
+      const y = midY + Math.sin((x * 0.045) + scopePhase + mod) * amp;
+      if (x === 0) scopeCtx.moveTo(x, y);
+      else scopeCtx.lineTo(x, y);
+    }
+    scopeCtx.stroke();
+
+    requestAnimationFrame(drawScope);
+  }
+  requestAnimationFrame(drawScope);
+
+  // --- TRAFFIC STREAM SIMULATOR ---
+  const trafficFeed = document.getElementById('trafficFeed');
+  const TRAFFIC_SAMPLES = [
+    'PKT 0x1999: 10.19.99.127 -> 10.19.99.4 [PORT 1999 ACK]',
+    'SYN_CHIME: Subcarrier carrier lock at 1999.00 Hz',
+    'MEM_PROBE: 0x007F1999 [PAGE_EXECUTE_READWRITE]',
+    'VFS_INODE: /system/recovery/1999.log checked [CRC OK]',
+    'FLEET_ROT: Personas cycling: creator->tester->expander',
+    'AIRGAP_STAT: Ring-0 subterranean pipeline secure',
+    'CIPHER_SYNC: KMatrix precursor barrier active',
+    'ECHO_HEARTBEAT: Millennial epoch timer running'
+  ];
+
+  function pushTrafficLine() {
+    const pick = TRAFFIC_SAMPLES[Math.floor(Math.random() * TRAFFIC_SAMPLES.length)];
+    const el = document.createElement('div');
+    const ts = new Date().toISOString().substring(11, 19);
+    el.textContent = `[${ts}] ${pick}`;
+    trafficFeed.appendChild(el);
+    if (trafficFeed.childNodes.length > 15) {
+      trafficFeed.removeChild(trafficFeed.firstChild);
+    }
+    trafficFeed.scrollTop = trafficFeed.scrollHeight;
+  }
+  setInterval(pushTrafficLine, 2800);
+  for (let i = 0; i < 4; i++) pushTrafficLine();
+
+  // --- TERMINAL PRINTER ---
+  const termScreen = document.getElementById('termScreen');
+  const termInput = document.getElementById('termInput');
+
+  function printLine(text, className = '') {
+    const div = document.createElement('div');
+    if (className) div.className = className;
+    div.textContent = text;
+    termScreen.appendChild(div);
+    termScreen.scrollTop = termScreen.scrollHeight;
+  }
+
+  function printBanner() {
+    printLine('========================================================================', 'text-dim');
+    printLine('  KILO-NET DEEP CORE // TIER 3 SUBTERRANEAN GHOST NODE TERMINAL  ', 'text-highlight');
+    printLine('  Host: 10.19.99.127:1999 | Subcarrier Lock: 1999.00 Hz | Protocol: Ring 0', 'text-cyan');
+    printLine('========================================================================', 'text-dim');
+    printLine('Subterranean airgap breached. Session authenticated with Ring-0 telemetry.');
+    printLine('This node holds forensic diagnostic tools and cryptographic passkey fragments');
+    printLine('governing the precursor architecture of App #100 (KMatrix).');
+    printLine('');
+    printLine("Type 'help' for directive manual, 'status' for telemetries, 'matrix' for passkey anatomy.", 'text-warn');
+    printLine('');
+  }
+
+  // --- COMMAND INTERPRETER ---
+  async function execDirective(raw) {
+    const trimmed = raw.trim();
+    if (!trimmed) return;
+
+    // History tracking
+    state.history.push(trimmed);
+    state.historyIdx = state.history.length;
+
+    printLine(`CORE# ${trimmed}`, 'text-highlight');
+    SFX.key();
+
+    const parts = trimmed.split(/\s+/);
+    const cmd = parts[0].toLowerCase();
+    const arg = parts.slice(1).join(' ');
+
+    switch(cmd) {
+      case 'help':
+        printLine('AVAILABLE DEEP CORE DIRECTIVES:', 'text-cyan');
+        printLine('  status               - Query Deep Core node telemetry & carrier lock');
+        printLine('  probe <target>       - Forensic probe (subnet, 0x7F1999, 1999hz, vfs, hive, passkey)');
+        printLine('  dump [offset]        - Hexadecimal memory viewer (default: 0x7F1999)');
+        printLine('  trace                - Route trace from clearnet into Deep Core Carlsbad vault');
+        printLine('  sectors              - Inspect the 5 KMatrix quarantine sector states & clues');
+        printLine('  matrix               - Display Passkey Anatomy blueprint & cryptographic hash');
+        printLine('  verify <candidate>   - Compute SHA-256 and test against Ring-0 key signatures');
+        printLine('  hash <string>        - Calculate SHA-256 and CRC32 checksums for arbitrary string');
+        printLine('  audio <on|off>       - Toggle Yamaha FM & SPC700 delay audio synthesizer');
+        printLine('  theme <green|amber>  - Switch CRT phosphor palette');
+        printLine('  scanlines            - Toggle CRT scanline simulation');
+        printLine('  export               - Download complete forensic session log');
+        printLine('  clear                - Flush terminal screen buffer');
+        break;
+
+      case 'status':
+        printLine('--- DEEP CORE NODE TELEMETRY REPORT ---', 'text-cyan');
+        printLine('NODE IDENTITY      : GHOST-0x1999 (Subterranean Ghost Relay)');
+        printLine('INTERNAL SUBNET    : 10.19.99.127/24 [CARLSBAD AIRGAP CORE]');
+        printLine('CARRIER FREQUENCY  : 1999.00 Hz (Phase Locked to KSynth DSP)');
+        printLine('MODULATION RATIO   : 2:1 (Yamaha YM2612 2-Operator Topology)');
+        printLine('DELAY BUFFER       : 180ms SPC700 Hardware Damped Echo');
+        printLine('OPERATING CEILING  : < 999 Kilobytes (Sacred Architectural Law)');
+        printLine('AIRGAP INTEGRITY   : 100% (Isolated from Clearnet Search Spiders)');
+        printLine('TARGET DESTINATION : App #100 (KMatrix Singularity Nexus)');
+        printLine('ACTIVE PERSONAS    : Autonomous Fleet Multi-Agent Rotation Active');
+        SFX.beep();
+        break;
+
+      case 'probe':
+        handleProbe(arg.toLowerCase());
+        break;
+
+      case 'dump':
+        handleHexDump(arg);
+        break;
+
+      case 'trace':
+        handleTrace();
+        break;
+
+      case 'sectors':
+        handleSectors();
+        break;
+
+      case 'matrix':
+        handleMatrix();
+        break;
+
+      case 'verify':
+        if (!arg) {
+          printLine("Syntax error: missing candidate string. Usage: 'verify <key>'", 'text-alert');
+        } else {
+          await verifyCandidate(arg);
+        }
+        break;
+
+      case 'hash':
+        if (!arg) {
+          printLine("Syntax error: missing input. Usage: 'hash <string>'", 'text-alert');
+        } else {
+          const h = await computeSha256(arg);
+          printLine(`INPUT  : ${arg}`, 'text-highlight');
+          printLine(`SHA-256: ${h}`, 'text-warn');
+          SFX.beep();
+        }
+        break;
+
+      case 'audio':
+        if (arg === 'on') {
+          if (!state.audioEnabled) toggleAudio();
+        } else if (arg === 'off') {
+          if (state.audioEnabled) toggleAudio();
+        } else {
+          toggleAudio();
+        }
+        break;
+
+      case 'theme':
+        cycleTheme();
+        break;
+
+      case 'scanlines':
+        toggleScanlines();
+        break;
+
+      case 'export':
+        exportLog();
+        break;
+
+      case 'clear':
+        termScreen.textContent = '';
+        printBanner();
+        break;
+
+      default:
+        printLine(`Directive unrecognized: '${cmd}'. Type 'help' for manual.`, 'text-alert');
+        SFX.warn();
+        break;
+    }
+  }
+
+  function handleProbe(target) {
+    if (!target) {
+      printLine("Target required for probe directive. Available targets:", 'text-alert');
+      printLine("  probe passkey  | probe 10.19.99.4 | probe 0x7F1999 | probe 1999hz | probe vfs | probe hive");
+      return;
+    }
+
+    if (target.includes('passkey') || target.includes('key')) {
+      printLine('--- PROBING PASSKEY STRUCTURAL ANATOMY ---', 'text-cyan');
+      printLine('The Master Director Passkey adheres to a strict 3-token delimited format:');
+      printLine('  FORMAT: <PREFIX>-<MILLENNIAL_EPOCH>-<AUTHORITY_SUFFIX>');
+      printLine('  TOKEN 1 [PREFIX] : ECHO (Verified by Core Kernel Signal)');
+      printLine('  TOKEN 2 [EPOCH]  : 1999 (Verified by Millennial Boundary Constraint)');
+      printLine('  TOKEN 3 [SUFFIX] : ???????? (Quarantined behind Sector 05 in KMatrix)');
+      printLine('Run directive \'matrix\' for SHA-256 hash cross-reference.');
+      SFX.beep();
+    } else if (target.includes('10.19') || target.includes('subnet') || target.includes('network')) {
+      printLine('--- PROBING SUBNET 10.19.99.0/24 ---', 'text-cyan');
+      printLine('[+] 10.19.99.1   : Gateway Router [Port 80, 23 OPEN]');
+      printLine('[+] 10.19.99.4   : Project Echo Intranet Node (kweb://10.19.99.4/classified)');
+      printLine('[+] 10.19.99.12  : RF Subcarrier Beacon [1999Hz Locked]');
+      printLine('[+] 10.19.99.19  : Echo Subsystem Acoustic Lab (kweb://echo-subsystem.net)');
+      printLine('[+] 10.19.99.127 : Deep Core Carlsbad Salt Vault Core [CONNECTED]');
+      SFX.beep();
+    } else if (target.includes('7f1999') || target.includes('heap') || target.includes('mem')) {
+      printLine('--- PROBING SECTOR 01: MEM_HEAP ---', 'text-cyan');
+      printLine('Pointer 0x007F1999 located at boundary of PAGE_EXECUTE_READWRITE.');
+      printLine('Residual raw ASCII: \'ECHO\' header detected.');
+      printLine('CLUE: Input \'7F1999\' into Sector 01 of KMatrix to breach heap isolation.');
+      SFX.beep();
+    } else if (target.includes('1999hz') || target.includes('audio') || target.includes('dsp')) {
+      printLine('--- PROBING SECTOR 02: AUDIO_DSP ---', 'text-cyan');
+      printLine('Carrier 1999.00 Hz isolated with 2:1 FM operator frequency modulation.');
+      printLine('Morse pulse train spells: . -.-. .... --- (E-C-H-O).');
+      printLine('CLUE: Input \'1999HZ\' into Sector 02 of KMatrix to breach harmonic isolation.');
+      SFX.beep();
+    } else if (target.includes('vfs') || target.includes('storage') || target.includes('log')) {
+      printLine('--- PROBING SECTOR 04: STORAGE_VFS ---', 'text-cyan');
+      printLine('Virtual filesystem archive unsealed: /system/recovery/1999.log');
+      printLine('Preserved in KNote / KPad archival records.');
+      printLine('CLUE: Input \'RECOVERY_1999\' into Sector 04 of KMatrix to breach VFS isolation.');
+      SFX.beep();
+    } else if (target.includes('hive') || target.includes('fleet') || target.includes('ai')) {
+      printLine('--- PROBING SECTOR 05: CORE_AI ---', 'text-cyan');
+      printLine('Identity analysis: The entity trapped within KiloOS is the autonomous multi-agent fleet.');
+      printLine('Personas: creator, graphics, tester, usability, qa, expander, planner.');
+      printLine('CLUE: Input \'AUTONOMOUS_FLEET\' into Sector 05 of KMatrix to reach Ludonarrative Consonance.');
+      SFX.beep();
+    } else {
+      printLine(`Probe target '${target}' returned no distinct resonant signature.`, 'text-alert');
+      SFX.warn();
+    }
+  }
+
+  function handleHexDump(offsetStr) {
+    const offset = offsetStr ? offsetStr.trim().toUpperCase() : '0x007F1999';
+    printLine(`--- MEMORY HEX DUMP AT ${offset} ---`, 'text-cyan');
+    printLine('OFFSET    00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F  ASCII');
+    printLine('------------------------------------------------------------------------', 'text-dim');
+
+    const lines = [
+      '007F1990  00 00 00 00 00 00 00 00  00 45 43 48 4F 2D 31 39  .........ECHO-19',
+      '007F19A0  39 39 2D 41 52 43 48 49  54 45 43 54 00 19 99 7F  99-ARCHITECT....',
+      '007F19B0  50 41 47 45 5F 45 58 45  43 55 54 45 5F 52 57 00  PAGE_EXECUTE_RW.',
+      '007F19C0  10 19 99 04 00 00 19 99  44 45 45 50 5F 43 4F 52  ........DEEP_COR',
+      '007F19D0  45 5F 53 55 42 43 41 52  52 49 45 52 5F 4C 4F 43  E_SUBCARRIER_LOC',
+      '007F19E0  4B 45 44 00 00 00 00 00  FF FF 01 00 7F 19 99 FF  KED.............'
+    ];
+    lines.forEach(l => printLine(l));
+    printLine('------------------------------------------------------------------------', 'text-dim');
+    printLine('Memory page status: PAGE_EXECUTE_READWRITE [Precursor Signatures Intact]');
+    SFX.beep();
+  }
+
+  function handleTrace() {
+    printLine('--- SUBTERRANEAN ROUTE TRACE TO DEEP CORE VAULT ---', 'text-cyan');
+    const hops = [
+      'HOP 1: 127.0.0.1 (KiloOS Clearnet Kernel Gateway) - 0.4ms',
+      'HOP 2: 10.19.99.1 (Intranet Firewall & Packet Scrubber) - 1.1ms',
+      'HOP 3: 10.19.99.4 (Project Echo Intranet Relay 0x7F) - 2.3ms',
+      'HOP 4: 10.19.99.19 (Echo Subsystem 1999Hz Demodulator) - 3.7ms',
+      'HOP 5: 10.19.99.127 (Carlsbad Deep Core Vault) - 4.9ms [DESTINATION REACHED]'
+    ];
+    let i = 0;
+    const iv = setInterval(() => {
+      if (i < hops.length) {
+        printLine(hops[i]);
+        SFX.key();
+        i++;
+      } else {
+        clearInterval(iv);
+        printLine('[TRACE COMPLETE] Subterranean pipeline verified end-to-end.', 'text-highlight');
+        SFX.beep();
+      }
+    }, 180);
+  }
+
+  function handleSectors() {
+    printLine('--- KMATRIX QUARANTINE SECTORS FORENSIC STATUS ---', 'text-cyan');
+    printLine('Sector 01 [MEM_HEAP]    : LOCKED | Key: 7F1999          | Offset: 0x007F1999');
+    printLine('Sector 02 [AUDIO_DSP]   : LOCKED | Key: 1999HZ          | Subcarrier: 1999.00 Hz');
+    printLine('Sector 03 [NET_RELAY]   : LOCKED | Key: 10.19.99.4      | Relay: Darknet Node 0x7F');
+    printLine('Sector 04 [STORAGE_VFS] : LOCKED | Key: RECOVERY_1999   | File: /system/recovery/1999.log');
+    printLine('Sector 05 [CORE_AI]     : LOCKED | Key: AUTONOMOUS_FLEET| Identity: The Living Fleet');
+    printLine('');
+    printLine('Breach all 5 sectors inside App #100 (KMatrix) to transmute and unlock the');
+    printLine('Master Director Passkey needed to command the living codebase.');
+    SFX.beep();
+  }
+
+  function handleMatrix() {
+    printLine('========================================================================', 'text-dim');
+    printLine('  PASSKEY ANATOMY & CRYPTOGRAPHIC VERIFICATION BLUEPRINT  ', 'text-highlight');
+    printLine('========================================================================', 'text-dim');
+    printLine('ANATOMY SPECIFICATION: <PREFIX>-<MILLENNIAL_EPOCH>-<AUTHORITY_SUFFIX>');
+    printLine('  [SECTION 1: PREFIX] : ECHO (Confirmed by Core Kernel Signal)');
+    printLine('  [SECTION 2: EPOCH]  : 1999 (Confirmed by Millennial Epoch Constraint)');
+    printLine('  [SECTION 3: SUFFIX] : ???????? (Quarantined in Sector 05 - KMatrix Climax)');
+    printLine('');
+    printLine('AUTHORITY CLEARANCE SHA-256 SIGNATURE:');
+    printLine('  f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946', 'text-warn');
+    printLine('');
+    printLine('Use \'verify <candidate>\' or the sidebar tool to test candidate key combinations.');
+    SFX.beep();
+  }
+
+  async function verifyCandidate(candidate) {
+    const clean = candidate.trim().toUpperCase();
+    const hash = await computeSha256(clean);
+
+    printLine(`[VERIFIER] Candidate: '${clean}'`, 'text-highlight');
+    printLine(`[VERIFIER] SHA-256  : ${hash}`, 'text-dim');
+
+    const known = KNOWN_HASHES[hash];
+    if (known) {
+      printLine(`[MATCH CONFIRMED] ${known.label}`, 'text-highlight');
+      printLine(`[DIRECTIVE] ${known.msg}`, 'text-cyan');
+      SFX.success();
+    } else if (clean.startsWith('ECHO-1999-')) {
+      printLine('[PARTIAL MATCH] Prefix and Millennial Epoch validated: ECHO-1999-********', 'text-warn');
+      printLine('[ADVICE] Suffix token remains unverified. Inspect Sector 05 in KMatrix.', 'text-warn');
+      SFX.beep();
+    } else if (clean === 'ECHO' || clean === '1999' || clean === 'ARCHITECT') {
+      printLine(`[TOKEN MATCH] Fragment '${clean}' represents an authentic passkey section.`, 'text-cyan');
+      printLine('Combine all three tokens with hyphens: <PREFIX>-<EPOCH>-<SUFFIX>.', 'text-dim');
+      SFX.beep();
+    } else {
+      printLine('[REJECTED] Candidate checksum does not match any recognized Ring-0 sector key.', 'text-alert');
+      SFX.warn();
+    }
+  }
+
+  // --- SIDEBAR VERIFIER BINDING ---
+  const verifyInput = document.getElementById('verifyInput');
+  const verifyRes = document.getElementById('verifyRes');
+  const btnVerify = document.getElementById('btnVerify');
+
+  async function runSidebarVerifier() {
+    const val = (verifyInput.value || '').trim();
+    if (!val) {
+      verifyRes.textContent = 'Please enter a candidate key.';
+      verifyRes.style.color = 'var(--alert)';
+      return;
+    }
+    const clean = val.toUpperCase();
+    const hash = await computeSha256(clean);
+    const known = KNOWN_HASHES[hash];
+
+    if (known) {
+      verifyRes.innerHTML = `<span style="color:#fff; font-weight:bold;">${known.label}</span><br><span style="color:var(--cyan); font-size:10px;">${known.msg}</span>`;
+      SFX.success();
+    } else if (clean.startsWith('ECHO-1999-')) {
+      verifyRes.innerHTML = `<span style="color:var(--warn); font-weight:bold;">PARTIAL MATCH</span><br><span style="font-size:10px;">Prefix & Epoch verified: ECHO-1999-********</span>`;
+      SFX.beep();
+    } else if (clean === 'ECHO' || clean === '1999' || clean === 'ARCHITECT') {
+      verifyRes.innerHTML = `<span style="color:var(--cyan); font-weight:bold;">TOKEN VALID</span><br><span style="font-size:10px;">Fragment matches passkey component.</span>`;
+      SFX.beep();
+    } else {
+      verifyRes.innerHTML = `<span style="color:var(--alert);">No match found for SHA-256: ${hash.substring(0, 16)}...</span>`;
+      SFX.warn();
+    }
+  }
+  btnVerify.onclick = runSidebarVerifier;
+  verifyInput.onkeydown = (e) => { if (e.key === 'Enter') runSidebarVerifier(); };
+
+  // --- SECTOR CHIP CLICKS ---
+  document.querySelectorAll('.sector-row').forEach(row => {
+    row.onclick = () => {
+      const sec = row.getAttribute('data-sec');
+      if (sec === 'MEM_HEAP') execDirective('probe 0x7F1999');
+      else if (sec === 'AUDIO_DSP') execDirective('probe 1999hz');
+      else if (sec === 'NET_RELAY') execDirective('probe 10.19.99.4');
+      else if (sec === 'STORAGE_VFS') execDirective('probe vfs');
+      else if (sec === 'CORE_AI') execDirective('probe hive');
+    };
+  });
+
+  // Fast command chips
+  document.querySelectorAll('.cmd-chip').forEach(chip => {
+    chip.onclick = () => {
+      const cmd = chip.getAttribute('data-cmd');
+      if (cmd) {
+        termInput.value = cmd;
+        execDirective(cmd);
+      }
+    };
+  });
+
+  // --- EXPORT SESSION ---
+  function exportLog() {
+    const text = termScreen.textContent;
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'deep_core_forensic_session.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+    printLine('[EXPORT] Session log saved to deep_core_forensic_session.txt', 'text-cyan');
+    SFX.beep();
+  }
+
+  // --- STATE PERSISTENCE (F5 / F9) ---
+  function quicksaveState(notify = true) {
+    try {
+      const data = {
+        theme: state.theme,
+        scanlines: state.scanlines,
+        audioEnabled: state.audioEnabled,
+        history: state.history.slice(-30),
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      if (notify) {
+        printLine(`[QUICKSAVE] Terminal state stored to local storage (F5).`, 'text-cyan');
+        SFX.key();
+      }
+    } catch(e) {
+      printLine(`[QUICKSAVE ERROR] Could not persist state: ${e.message}`, 'text-alert');
+    }
+  }
+
+  function quickloadState(notify = true) {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        if (notify) printLine('[QUICKLOAD] No prior saved state found.', 'text-warn');
+        return;
+      }
+      const data = JSON.parse(raw);
+      if (data.theme) {
+        state.theme = data.theme;
+        document.body.className = state.theme === 'green' ? '' : `theme-${state.theme}`;
+      }
+      if (data.scanlines !== undefined) {
+        state.scanlines = data.scanlines;
+        if (!state.scanlines) document.body.classList.add('scanlines-off');
+        else document.body.classList.remove('scanlines-off');
+      }
+      if (data.audioEnabled) {
+        state.audioEnabled = true;
+        const pill = document.getElementById('pillAudio');
+        pill.textContent = 'AUDIO: FM+SPC (ON)';
+        pill.className = 'pill active';
+      }
+      if (data.history) state.history = data.history;
+      if (notify) {
+        printLine(`[QUICKLOAD] Session restored from ${data.timestamp || 'storage'} (F9).`, 'text-cyan');
+        SFX.key();
+      }
+    } catch(e) {
+      printLine(`[QUICKLOAD ERROR] Failed to load state: ${e.message}`, 'text-alert');
+    }
+  }
+
+  // --- KEYBOARD LISTENERS ---
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'F5') {
+      e.preventDefault();
+      quicksaveState(true);
+      return;
+    }
+    if (e.key === 'F9') {
+      e.preventDefault();
+      quickloadState(true);
+      return;
+    }
+    if (e.key === 'F1') {
+      e.preventDefault();
+      openBriefing();
+      return;
+    }
+    if (e.key === 'Escape') {
+      closeBriefing();
+      return;
+    }
+  });
+
+  termInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const val = termInput.value;
+      termInput.value = '';
+      execDirective(val);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (state.history.length > 0 && state.historyIdx > 0) {
+        state.historyIdx--;
+        termInput.value = state.history[state.historyIdx];
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (state.historyIdx < state.history.length - 1) {
+        state.historyIdx++;
+        termInput.value = state.history[state.historyIdx];
+      } else {
+        state.historyIdx = state.history.length;
+        termInput.value = '';
+      }
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      handleAutocomplete();
+    }
+  });
+
+  const AUTO_COMMANDS = ['help', 'status', 'probe', 'dump', 'trace', 'sectors', 'matrix', 'verify', 'hash', 'audio', 'theme', 'scanlines', 'export', 'clear'];
+  function handleAutocomplete() {
+    const val = termInput.value.trim().toLowerCase();
+    if (!val) return;
+    const matches = AUTO_COMMANDS.filter(c => c.startsWith(val));
+    if (matches.length === 1) {
+      termInput.value = matches[0] + ' ';
+      SFX.key();
+    } else if (matches.length > 1) {
+      printLine(`[AUTOCOMPLETE] Candidates: ${matches.join(', ')}`, 'text-dim');
+      SFX.key();
+    }
+  }
+
+  // --- BRIEFING MODAL ---
+  const briefingModal = document.getElementById('briefingModal');
+  const btnBriefing = document.getElementById('btnBriefing');
+  const btnDismissBriefing = document.getElementById('btnDismissBriefing');
+
+  function openBriefing() {
+    briefingModal.style.display = 'flex';
+  }
+  function closeBriefing() {
+    briefingModal.style.display = 'none';
+    localStorage.setItem(BRIEFING_KEY, 'true');
+    termInput.focus();
+  }
+
+  btnBriefing.onclick = openBriefing;
+  btnDismissBriefing.onclick = closeBriefing;
+  briefingModal.onclick = (e) => { if (e.target === briefingModal) closeBriefing(); };
+
+  document.getElementById('btnAudioToggle').onclick = toggleAudio;
+  document.getElementById('btnThemeToggle').onclick = cycleTheme;
+  document.getElementById('btnScanlineToggle').onclick = toggleScanlines;
+
+  // --- INITIALIZATION ---
+  printBanner();
+  quickloadState(false);
+
+  // Show first-run briefing if not previously seen
+  if (!localStorage.getItem(BRIEFING_KEY)) {
+    openBriefing();
+  } else {
+    termInput.focus();
+  }
+})();
+</script>
+
+</body>
+</html>
