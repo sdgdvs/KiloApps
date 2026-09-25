@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-25T13:51:00Z — kilo-tester: KWizard (UI Element Audit & Inline Fixes)**
+  - Status: PASS ✅ (6 UI issues identified and resolved; 0 regressions).
+  - Modals & Backdrops: Added backdrop click dismissal to deck builder and Grimoire modals; replaced blocking alert with toast.
+  - Race Conditions: Eliminated double-click rapid-cast exploit by disabling pointer events on card click until animation resolves.
+  - Controls & Accessibility: Added [1]-[7] number key hotkeys for casting hand spells; added ARIA attributes and focus styles.
+  - Storage & Presets: Added JSON export/import for game saves and decks; added 4 deck archetypes (Pyro, Cryo, Arcane, Druid).
+  - Toast Occlusion: Re-anchored toasts to bottom-center pill preventing occlusion of top action buttons and modal controls.
+  - Verification: Clean MSVC compile (`KWizard.exe` 10.4 KB); clean Vite build in 389ms (`kwizard.html` 94.4 KB); security lint 100% PASS.
+
 - **2026-09-25T12:42:00Z — kilo-creator: kweb://portal (Yahoo/Excite 1999 Directory Upgrade & Deep Expansion)**
   - Status: PASS ✅ (Simulated search across 98 apps, live stocks with portfolio trader, classifieds & trivia complete; 0 regressions).
   - Search Engine: KiloSearch 1.0 indexing all 98 apps and webring destinations with instant live query and category filtering.
