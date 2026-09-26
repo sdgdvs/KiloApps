@@ -3,282 +3,2622 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KiloNet Central Webring Hub (1999)</title>
+<title>Central KiloNet 1999 Webring Hub &amp; Random Teleporter</title>
+<meta name="description" content="Central Hub, Member Site Directory, Random Teleporter, and HTML Badge Studio for the KiloNet 1999 Webring Consortium.">
 <style>
-  body {
-    background-color: #1a1a2e;
-    color: #e0e0e0;
-    font-family: Arial, Helvetica, sans-serif;
+  :root {
+    --bg-main: #0a0d14;
+    --bg-panel: #111726;
+    --bg-card: #162035;
+    --bg-inset: #07090f;
+    --border-dark: #1b263b;
+    --border-med: #2d3e5e;
+    --border-bright: #38bdf8;
+    --cyan: #38bdf8;
+    --cyan-glow: rgba(56, 189, 248, 0.35);
+    --amber: #f59e0b;
+    --amber-bright: #fbbf24;
+    --green: #10b981;
+    --green-bright: #34d399;
+    --magenta: #ec4899;
+    --purple: #8b5cf6;
+    --text-primary: #f1f5f9;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+    --font-mono: 'Consolas', 'Courier New', Courier, monospace;
+    --font-sans: 'Tahoma', 'Verdana', Arial, sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
     margin: 0;
-    padding: 16px;
-    background-image: linear-gradient(0deg, #16213e 50%, #0f3460 50%);
-    background-size: 100% 4px;
+    padding: 0;
   }
-  .hub-container {
-    max-width: 860px;
-    margin: 0 auto;
-    background: #0d1117;
-    border: 3px double #38bdf8;
-    box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
-    padding: 16px;
-  }
-  header {
-    text-align: center;
-    border-bottom: 2px solid #38bdf8;
-    padding-bottom: 12px;
-    margin-bottom: 16px;
-  }
-  h1 {
-    color: #38bdf8;
-    font-size: 26px;
-    margin: 0 0 6px 0;
-    letter-spacing: 1px;
-    text-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
-  }
-  .subhead {
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
     font-size: 13px;
-    color: #94a3b8;
-    font-family: 'Courier New', monospace;
+    line-height: 1.5;
+    padding: 12px;
+    min-height: 100vh;
+    background-image: 
+      radial-gradient(circle at 50% 0%, #172554 0%, #0a0d14 75%),
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 100% 100%, 20px 20px, 20px 20px;
+    overflow-x: hidden;
   }
-  .nav-controls {
-    background: #161b22;
-    border: 1px solid #30363d;
-    padding: 10px;
-    text-align: center;
-    margin-bottom: 16px;
+
+  /* Retro Scanline Overlay (Static, Non-glint) */
+  .scanline-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.6;
+  }
+
+  .container {
+    max-width: 980px;
+    margin: 0 auto;
+    background: var(--bg-panel);
+    border: 3px double var(--border-bright);
+    box-shadow: 0 0 24px rgba(56, 189, 248, 0.25);
+    padding: 14px;
+    position: relative;
+    z-index: 10;
+  }
+
+  /* Marquee Banner */
+  .ticker-wrap {
+    background: #050811;
+    border: 1px solid var(--border-med);
+    padding: 4px 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    white-space: nowrap;
     display: flex;
-    justify-content: center;
-    gap: 10px;
+    align-items: center;
+    gap: 8px;
+  }
+  .ticker-badge {
+    background: var(--amber);
+    color: #000;
+    font-family: var(--font-mono);
+    font-weight: bold;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .ticker-content {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--amber-bright);
+    animation: marqueeScroll 28s linear infinite;
+    display: inline-block;
+  }
+  @keyframes marqueeScroll {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* Header Section */
+  header {
+    background: linear-gradient(180deg, #162035 0%, #0d1424 100%);
+    border: 2px solid var(--border-med);
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header-titles {
+    flex: 1;
+    min-width: 280px;
+  }
+  .brand-title {
+    color: var(--cyan);
+    font-size: 22px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-shadow: 0 0 10px var(--cyan-glow);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .brand-sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 3px;
+  }
+  .header-counters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     flex-wrap: wrap;
   }
-  .btn-ring {
-    background: #21262d;
-    color: #58a6ff;
-    border: 1px solid #38bdf8;
-    padding: 6px 14px;
+  .counter-box {
+    background: #000;
+    border: 1px solid var(--border-med);
+    padding: 4px 8px;
+    text-align: center;
+    font-family: var(--font-mono);
+  }
+  .counter-label {
+    font-size: 9px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .counter-odometer {
+    color: var(--green-bright);
+    font-size: 14px;
     font-weight: bold;
-    font-size: 13px;
+    letter-spacing: 2px;
+  }
+  .sound-btn {
+    background: #1f293d;
+    color: var(--amber-bright);
+    border: 1px solid var(--amber);
+    padding: 6px 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: bold;
     cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
-    border-radius: 4px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     transition: all 0.15s ease;
   }
-  .btn-ring:hover {
+  .sound-btn:hover {
+    background: var(--amber);
+    color: #000;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+  }
+
+  /* Quick Teleport Strip */
+  .teleport-bar {
+    background: #0e1526;
+    border: 1px solid var(--border-bright);
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    box-shadow: inset 0 0 10px rgba(56, 189, 248, 0.15);
+  }
+  .teleport-label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--cyan);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .teleport-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn-teleport {
+    background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%);
+    color: #fff;
+    border: 1px solid #38bdf8;
+    padding: 6px 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .btn-teleport:hover {
     background: #38bdf8;
-    color: #0d1117;
-    box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+    color: #000;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+  }
+  .btn-teleport.alt {
+    background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+    border-color: #64748b;
+    color: #cbd5e1;
+  }
+  .btn-teleport.alt:hover {
+    background: #64748b;
+    color: #fff;
+    border-color: #94a3b8;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+  }
+
+  /* Tab Navigation */
+  .nav-tabs {
+    display: flex;
+    background: #090e1a;
+    border-bottom: 2px solid var(--border-bright);
+    margin-bottom: 16px;
+    gap: 4px;
+    overflow-x: auto;
+    padding-top: 4px;
+  }
+  .tab-btn {
+    background: #141c2e;
+    color: var(--text-muted);
+    border: 1px solid var(--border-med);
+    border-bottom: none;
+    padding: 8px 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 4px 4px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover {
+    background: #1e2942;
+    color: var(--cyan);
+  }
+  .tab-btn.active {
+    background: var(--bg-panel);
+    color: var(--cyan);
+    border-color: var(--border-bright);
+    border-bottom: 2px solid var(--bg-panel);
+    margin-bottom: -2px;
+    box-shadow: 0 -2px 8px rgba(56, 189, 248, 0.2);
+  }
+
+  /* Content Sections */
+  .tab-pane {
+    display: none;
+    animation: fadeIn 0.15s ease-in;
+  }
+  .tab-pane.active {
+    display: block;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(2px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Common Box Styling */
+  .panel-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border-med);
+    padding: 14px;
+    margin-bottom: 14px;
+    border-radius: 3px;
+  }
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-med);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+  }
+  .panel-title {
+    color: var(--cyan);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .panel-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+
+  /* Filter & Search Bar */
+  .filter-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+    background: #0d1322;
+    padding: 8px 12px;
+    border: 1px solid var(--border-med);
+  }
+  .filter-pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .pill-btn {
+    background: #162035;
+    color: var(--text-muted);
+    border: 1px solid var(--border-med);
+    padding: 4px 10px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.12s;
+  }
+  .pill-btn:hover {
+    color: var(--cyan);
+    border-color: var(--cyan);
+  }
+  .pill-btn.active {
+    background: #0284c7;
+    color: #fff;
+    border-color: #38bdf8;
+    font-weight: bold;
+  }
+  .search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .search-input {
+    background: #070a12;
+    border: 1px solid var(--border-med);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 2px;
+    width: 220px;
+  }
+  .search-input:focus {
+    outline: none;
+    border-color: var(--cyan);
+    box-shadow: 0 0 6px var(--cyan-glow);
+  }
+
+  /* Ring Directory Table */
+  .table-responsive {
+    overflow-x: auto;
   }
   table.ring-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 16px;
-    font-size: 13px;
+    font-size: 12px;
   }
   table.ring-table th {
-    background: #1f2937;
-    color: #38bdf8;
-    border: 1px solid #374151;
-    padding: 8px;
+    background: #0e1526;
+    color: var(--cyan);
+    font-family: var(--font-mono);
+    font-weight: bold;
+    border: 1px solid var(--border-med);
+    padding: 8px 10px;
     text-align: left;
+    white-space: nowrap;
   }
   table.ring-table td {
-    border: 1px solid #374151;
-    padding: 8px;
+    border: 1px solid var(--border-dark);
+    padding: 8px 10px;
     background: #111827;
+    vertical-align: middle;
   }
   table.ring-table tr:hover td {
-    background: #1f2937;
+    background: #172238;
   }
-  .badge-ring {
-    display: inline-block;
-    padding: 2px 6px;
+  .node-badge {
     background: #0284c7;
     color: #fff;
+    font-family: var(--font-mono);
     font-size: 10px;
     font-weight: bold;
-    border-radius: 3px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    display: inline-block;
   }
-  .embed-box {
-    background: #161b22;
-    border: 1px solid #30363d;
-    padding: 12px;
-    margin-top: 16px;
+  .node-cat {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    font-weight: bold;
   }
-  .embed-box h3 {
-    color: #38bdf8;
-    margin: 0 0 8px 0;
-    font-size: 14px;
+  .cat-community { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid #0284c7; }
+  .cat-demoscene { background: rgba(236, 72, 153, 0.2); color: #f472b6; border: 1px solid #db2777; }
+  .cat-tools { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #d97706; }
+  .cat-apps { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #059669; }
+  .status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green-bright);
+    box-shadow: 0 0 6px rgba(52, 211, 153, 0.6);
+    margin-right: 4px;
   }
-  textarea.code-snippet {
-    width: 100%;
-    height: 70px;
-    background: #090d16;
-    color: #34d399;
-    border: 1px solid #30363d;
-    font-family: 'Courier New', monospace;
+  .btn-action {
+    background: #1e293b;
+    color: var(--cyan);
+    border: 1px solid var(--cyan);
+    padding: 3px 8px;
     font-size: 11px;
-    padding: 6px;
-    box-sizing: border-box;
+    font-family: var(--font-mono);
+    font-weight: bold;
+    border-radius: 2px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.12s;
+  }
+  .btn-action:hover {
+    background: var(--cyan);
+    color: #000;
+  }
+
+  /* Teleporter Starfield Console */
+  .warp-console {
+    background: #050811;
+    border: 2px solid var(--cyan);
+    padding: 16px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  #warpCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.45;
+    pointer-events: none;
+  }
+  .warp-ui {
+    position: relative;
+    z-index: 2;
+  }
+  .warp-title {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--cyan);
+    text-shadow: 0 0 10px var(--cyan-glow);
+    margin-bottom: 8px;
+  }
+  .warp-dest-box {
+    background: rgba(10, 15, 28, 0.85);
+    border: 1px solid var(--border-med);
+    max-width: 460px;
+    margin: 12px auto;
+    padding: 12px;
+    border-radius: 4px;
+  }
+  .warp-dest-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--amber-bright);
+    margin-bottom: 4px;
+  }
+  .warp-dest-url {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .warp-progress-wrap {
+    height: 8px;
+    background: #1e293b;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 10px 0;
+    display: none;
+  }
+  .warp-progress-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #38bdf8, #ec4899);
+    transition: width 0.1s linear;
+  }
+
+  /* Ring Tour Status */
+  .tour-card {
+    background: #0d1424;
+    border: 1px dashed var(--border-bright);
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+
+  /* Badge Generator Studio */
+  .badge-studio-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 760px) {
+    .badge-studio-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .badge-preview-area {
+    background: #090d16;
+    border: 1px solid var(--border-med);
+    padding: 20px;
+    text-align: center;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .rendered-badge-container {
+    padding: 12px;
+    margin: 8px 0;
+  }
+
+  /* Form Elements */
+  .form-group {
+    margin-bottom: 12px;
+  }
+  .form-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .form-control {
+    width: 100%;
+    background: #080c14;
+    border: 1px solid var(--border-med);
+    color: #fff;
+    padding: 6px 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    border-radius: 2px;
+  }
+  .form-control:focus {
+    outline: none;
+    border-color: var(--cyan);
+    box-shadow: 0 0 6px var(--cyan-glow);
+  }
+  textarea.form-control {
+    resize: vertical;
+    height: 70px;
+  }
+  .code-output {
+    background: #050811;
+    color: var(--green-bright);
+    border: 1px solid var(--border-med);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 8px;
+    width: 100%;
+    height: 90px;
     resize: none;
   }
+
+  /* Diagnostic Console (Health Monitor) */
+  .diag-terminal {
+    background: #040711;
+    border: 1px solid var(--border-bright);
+    padding: 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: #34d399;
+    height: 240px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    line-height: 1.4;
+    box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.8);
+  }
+  .diag-stats-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #0e1526;
+    border: 1px solid var(--border-med);
+    padding: 8px 12px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+
+  /* Guestbook & Shoutbox */
+  .guestbook-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 380px;
+    overflow-y: auto;
+    padding-right: 4px;
+    margin-bottom: 16px;
+  }
+  .guestbook-entry {
+    background: #0e1526;
+    border: 1px solid var(--border-med);
+    border-left: 3px solid var(--cyan);
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+  .entry-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+  .entry-author {
+    color: var(--cyan);
+    font-weight: bold;
+  }
+  .entry-time {
+    color: var(--text-dim);
+  }
+  .entry-body {
+    color: var(--text-primary);
+    line-height: 1.4;
+  }
+
+  /* Button Badges Row */
+  .badges-strip {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--border-med);
+  }
+  .micro-badge {
+    width: 88px;
+    height: 31px;
+    background: #111827;
+    border: 1px solid var(--border-bright);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: bold;
+    color: var(--cyan);
+    text-decoration: none;
+    box-shadow: 1px 1px 0 #000;
+    transition: transform 0.1s;
+    user-select: none;
+  }
+  .micro-badge:hover {
+    transform: translateY(-1px);
+    background: #0284c7;
+    color: #fff;
+  }
+
+  /* Audio Visualizer Canvas */
+  #visCanvas {
+    width: 140px;
+    height: 24px;
+    background: #000;
+    border: 1px solid var(--border-med);
+    vertical-align: middle;
+  }
+
+  /* Modal Dialog */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-backdrop.open {
+    display: flex;
+  }
+  .modal-window {
+    background: var(--bg-panel);
+    border: 2px solid var(--border-bright);
+    width: 100%;
+    max-width: 520px;
+    box-shadow: 0 0 24px var(--cyan-glow);
+    animation: modalPop 0.15s ease-out;
+  }
+  @keyframes modalPop {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .modal-head {
+    background: #0e1526;
+    border-bottom: 1px solid var(--border-med);
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-title {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--cyan);
+  }
+  .btn-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .btn-close:hover {
+    color: #fff;
+  }
+  .modal-body {
+    padding: 14px;
+    font-size: 12px;
+  }
+  .modal-foot {
+    background: #0e1526;
+    border-top: 1px solid var(--border-med);
+    padding: 8px 12px;
+    text-align: right;
+  }
+
+  /* Footer */
   footer {
+    border-top: 1px solid var(--border-med);
+    margin-top: 16px;
+    padding-top: 12px;
     text-align: center;
     font-size: 11px;
-    color: #64748b;
-    border-top: 1px solid #30363d;
-    margin-top: 16px;
-    padding-top: 8px;
+    color: var(--text-dim);
+    line-height: 1.6;
   }
 </style>
 </head>
 <body>
 
-<div class="hub-container">
+<div class="scanline-overlay"></div>
+
+<div class="container">
+  <!-- Retro Marquee Header -->
+  <div class="ticker-wrap">
+    <span class="ticker-badge">WEBRING BULLETIN</span>
+    <div class="ticker-content">
+      ★ KILONET WEBRING CONSORTIUM (1999) • 14 VERIFIED HYPERMEDIA &amp; FLEET NODES • RANDOM TELEPORTER ACTIVE • ZERO BROKEN LINKS • SUBMIT YOUR RETRO HOME PAGE • BEST VIEWED IN KNET BROWSER 800x600 ★
+    </div>
+  </div>
+
+  <!-- Header -->
   <header>
-    <h1>★ Central KiloNet 1999 Webring Hub ★</h1>
-    <div class="subhead">Interconnecting Retro Hypermedia Nodes &amp; The 999KB Fleet</div>
+    <div class="header-titles">
+      <div class="brand-title">
+        <span>🌐</span> Central KiloNet 1999 Webring Hub
+      </div>
+      <div class="brand-sub">
+        The Planetary Backbone for Retro Hypermedia, Demoscene Shrines &amp; The 999KB Fleet
+      </div>
+    </div>
+
+    <div class="header-counters">
+      <div class="counter-box">
+        <div class="counter-label">TOTAL RING VISITS</div>
+        <div class="counter-odometer" id="hitCounter">048219</div>
+      </div>
+      <div class="counter-box">
+        <div class="counter-label">ACTIVE NODES</div>
+        <div class="counter-odometer" id="activeNodesCount" style="color:var(--cyan);">14</div>
+      </div>
+      <button class="sound-btn" id="btnAudioToggle" onclick="toggleAudioSystem()">
+        <span id="soundIcon">🔇</span> <span id="soundText">SOUND: OFF</span>
+      </button>
+      <canvas id="visCanvas" width="140" height="24" title="Audio Spectrum &amp; Oscilloscope"></canvas>
+    </div>
   </header>
 
-  <div class="nav-controls">
-    <a href="/web/portal.html" class="btn-ring">🏠 Web Portal</a>
-    <a href="/web/geocities.html" class="btn-ring">« Previous Ring Site</a>
-    <button class="btn-ring" onclick="jumpRandom()">🎲 Random Ring Jump</button>
-    <a href="/apps/contribute.html" class="btn-ring">Next Ring Site »</a>
-    <a href="/apps/contribute.html" class="btn-ring">🚀 Contributor Portal</a>
+  <!-- Quick Teleport Action Bar -->
+  <div class="teleport-bar">
+    <div class="teleport-label">
+      <span>⚡</span> <span>RANDOM TELEPORTER:</span>
+      <span style="font-weight:normal; color:var(--text-muted); font-size:11px;">Jump to any random hypermedia site in the ring</span>
+    </div>
+    <div class="teleport-actions">
+      <button class="btn-teleport" onclick="triggerStagedWarp()">
+        <span>🚀</span> Staged Warp Jump
+      </button>
+      <button class="btn-teleport alt" onclick="triggerInstantWarp()">
+        <span>🎲</span> Instant Jump
+      </button>
+      <button class="btn-teleport alt" onclick="triggerRingTourNext()">
+        <span>⏩</span> Next Ring Node »
+      </button>
+    </div>
   </div>
 
-  <h3 style="color:#f8fafc; font-size:15px; margin-bottom:8px;">Active Webring Directory Nodes</h3>
-  <table class="ring-table">
-    <thead>
-      <tr>
-        <th style="width:8%;">Ring ID</th>
-        <th style="width:25%;">Site Name</th>
-        <th style="width:47%;">Description</th>
-        <th style="width:20%;">Destination</th>
-      </tr>
-    </thead>
-    <tbody id="ringBody">
-      <tr>
-        <td><span class="badge-ring">#001</span></td>
-        <td><strong>KiloNet Portal</strong></td>
-        <td>Official 1999 directory with categorised fleet links, stock ticker, and search.</td>
-        <td><a href="/web/portal.html" class="btn-ring" style="font-size:11px; padding:2px 8px;">Visit Node</a></td>
-      </tr>
-      <tr>
-        <td><span class="badge-ring">#002</span></td>
-        <td><strong>CyberSpire Retro Shrine</strong></td>
-        <td>Neon underground cyber temple with visitor guestbook, MIDI vibes, and starfields.</td>
-        <td><a href="/web/geocities.html" class="btn-ring" style="font-size:11px; padding:2px 8px;">Visit Node</a></td>
-      </tr>
-      <tr>
-        <td><span class="badge-ring">#003</span></td>
-        <td><strong>KRogue ASCII Caverns</strong></td>
-        <td>Deep procedural ASCII dungeon crawler and subterranean retro roguelike.</td>
-        <td><a href="/apps/krogue.html" class="btn-ring" style="font-size:11px; padding:2px 8px;">Visit Node</a></td>
-      </tr>
-      <tr>
-        <td><span class="badge-ring">#004</span></td>
-        <td><strong>Fleet Contributor Portal</strong></td>
-        <td>Volunteer compute fuel station donating free Gemini quota to keep fleet running.</td>
-        <td><a href="/apps/contribute.html" class="btn-ring" style="font-size:11px; padding:2px 8px;">Visit Node</a></td>
-      </tr>
-      <tr>
-        <td><span class="badge-ring">#005</span></td>
-        <td><strong>KBBS Dial-Up Station</strong></td>
-        <td>Vintage ANSI bulletin board gateway with multi-node door games.</td>
-        <td><a href="/apps/kbbs.html" class="btn-ring" style="font-size:11px; padding:2px 8px;">Visit Node</a></td>
-      </tr>
-      <tr>
-        <td><span class="badge-ring">#006</span></td>
-        <td><strong>~neon_rider's ASM Shrine</strong></td>
-        <td>Win32 assembly devlog, interactive x86 opcode sandbox, YM2612 tracker tunes, and NFO vault.</td>
-        <td><a href="/web/users/neon_rider.html" class="btn-ring" style="font-size:11px; padding:2px 8px;">Visit Node</a></td>
-      </tr>
-      <tr>
-        <td><span class="badge-ring">#007</span></td>
-        <td><strong>Temple of x86 Opcodes</strong></td>
-        <td>x86 assembly programming shrine, live two-way opcode converter &amp; PE architecture sanctuary.</td>
-        <td><a href="/web/asm_temple.html" class="btn-ring" style="font-size:11px; padding:2px 8px;">Visit Node</a></td>
-      </tr>
-      <tr>
-        <td><span class="badge-ring">#008</span></td>
-        <td><strong>CyberCafe '99 Lounge</strong></td>
-        <td>Underground BBS, threaded forums, interactive 16-color ANSI/ASCII art studio &amp; terminal booths.</td>
-        <td><a href="/web/cybercafe.html" class="btn-ring" style="font-size:11px; padding:2px 8px;">Visit Node</a></td>
-      </tr>
-      <tr>
-        <td><span class="badge-ring">#009</span></td>
-        <td><strong>Project Echo Intranet (10.19.99.4)</strong></td>
-        <td>Classified corporate intranet leak, raw memory dumps, subcarrier telemetry, and sector 0x1999 audit logs.</td>
-        <td><a href="/web/classified.html" class="btn-ring" style="font-size:11px; padding:2px 8px;">Visit Node</a></td>
-      </tr>
-      <tr>
-        <td><span class="badge-ring">#010</span></td>
-        <td><strong>Echo Subsystem Acoustic Labs</strong></td>
-        <td>Classified Tier 3 acoustic research journal, 1999Hz harmonic signal decoders &amp; multi-band spectrum analyzer.</td>
-        <td><a href="/web/echo_subsystem.html" class="btn-ring" style="font-size:11px; padding:2px 8px;">Visit Node</a></td>
-      </tr>
-      <tr>
-        <td><span class="badge-ring">#011</span></td>
-        <td><strong>Deep Core Ghost Terminal</strong></td>
-        <td>Subterranean Ring-0 ghost node terminal, telemetry debugger &amp; cryptographic passkey analyzer.</td>
-        <td><a href="/web/deep_core.html" class="btn-ring" style="font-size:11px; padding:2px 8px;">Visit Node</a></td>
-      </tr>
-      <tr>
-        <td><span class="badge-ring">#012</span></td>
-        <td><strong>Darknet Node 0x7F Transmission</strong></td>
-        <td>Subterranean telemetry relay, encrypted packet decoders &amp; lithospheric RF carrier analyzer.</td>
-        <td><a href="/web/darknet.html" class="btn-ring" style="font-size:11px; padding:2px 8px;">Visit Node</a></td>
-      </tr>
-      <tr>
-        <td><span class="badge-ring">#013</span></td>
-        <td><strong>0xRELEASE Scene &amp; Cracktro Vault</strong></td>
-        <td>Underground demoscene vault, Genesis/SNES chiptune jukebox, 3D cracktros &amp; ANSI NFO archive.</td>
-        <td><a href="/web/warez.html" class="btn-ring" style="font-size:11px; padding:2px 8px;">Visit Node</a></td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div class="embed-box">
-    <h3>Add the KiloNet Webring Badge to Your Site</h3>
-    <p style="font-size:12px; color:#94a3b8; margin:0 0 6px 0;">Paste this snippet into your vintage web page footer:</p>
-    <textarea class="code-snippet" readonly>&lt;!-- Central KiloNet Webring --&gt;
-&lt;div align="center"&gt;
-  [ &lt;a href="/web/portal.html"&gt;Hub&lt;/a&gt; | &lt;a href="/web/geocities.html"&gt;Prev&lt;/a&gt; | &lt;a href="/web/webring.html"&gt;Random&lt;/a&gt; | &lt;a href="/apps/contribute.html"&gt;Next&lt;/a&gt; ]
-&lt;/div&gt;</textarea>
+  <!-- Navigation Tabs -->
+  <div class="nav-tabs" id="mainTabList">
+    <button class="tab-btn active" data-tab="tab-directory" onclick="switchTab('tab-directory')">
+      <span>🌐</span> [1] Member Directory
+    </button>
+    <button class="tab-btn" data-tab="tab-teleport" onclick="switchTab('tab-teleport')">
+      <span>🎲</span> [2] Random Teleporter
+    </button>
+    <button class="tab-btn" data-tab="tab-badge" onclick="switchTab('tab-badge')">
+      <span>🏷️</span> [3] HTML Badge Studio
+    </button>
+    <button class="tab-btn" data-tab="tab-health" onclick="switchTab('tab-health')">
+      <span>📡</span> [4] Ring Health Monitor
+    </button>
+    <button class="tab-btn" data-tab="tab-join" onclick="switchTab('tab-join')">
+      <span>📝</span> [5] Join The Ring
+    </button>
+    <button class="tab-btn" data-tab="tab-guestbook" onclick="switchTab('tab-guestbook')">
+      <span>💬</span> [6] Webmaster Guestbook
+    </button>
   </div>
 
+  <!-- TAB 1: Member Directory -->
+  <section id="tab-directory" class="tab-pane active">
+    <div class="panel-box">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>📋</span> Official Registered Ring Nodes
+        </div>
+        <div style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono);">
+          Protocol: KiloRing/1.0 • All Nodes Verified &lt;999KB
+        </div>
+      </div>
+      <div class="panel-desc">
+        Every site in the consortium is an authentic 1999 hypermedia destination or interactive fleet application with unbroken bidirectional ring links.
+      </div>
+
+      <!-- Filters & Search -->
+      <div class="filter-row">
+        <div class="filter-pills" id="categoryFilters">
+          <button class="pill-btn active" data-cat="all" onclick="filterRingNodes('all')">All Nodes (14)</button>
+          <button class="pill-btn" data-cat="community" onclick="filterRingNodes('community')">Community &amp; Shrines</button>
+          <button class="pill-btn" data-cat="demoscene" onclick="filterRingNodes('demoscene')">Demoscene &amp; Hacker</button>
+          <button class="pill-btn" data-cat="tools" onclick="filterRingNodes('tools')">Tools &amp; Portals</button>
+          <button class="pill-btn" data-cat="apps" onclick="filterRingNodes('apps')">Fleet Highlights</button>
+        </div>
+        <div class="search-wrap">
+          <input type="text" class="search-input" id="ringSearchInput" placeholder="Filter by title, tag, or webmaster..." oninput="handleSearchNodes(this.value)">
+        </div>
+      </div>
+
+      <!-- Ring Directory Table -->
+      <div class="table-responsive">
+        <table class="ring-table" id="directoryTable">
+          <thead>
+            <tr>
+              <th style="width:7%;">Ring ID</th>
+              <th style="width:24%;">Site Name &amp; Webmaster</th>
+              <th style="width:14%;">Category</th>
+              <th style="width:37%;">Description &amp; Tech Stack</th>
+              <th style="width:18%;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="directoryTableBody">
+            <!-- Rendered dynamically by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 2: Random Teleporter Console -->
+  <section id="tab-teleport" class="tab-pane">
+    <div class="warp-console">
+      <canvas id="warpCanvas" width="800" height="240"></canvas>
+      <div class="warp-ui">
+        <div class="warp-title">★ KILONET RANDOM HYPERMEDIA TELEPORTER ★</div>
+        <div style="font-size:12px; color:var(--text-muted); max-width:540px; margin:0 auto 12px auto;">
+          Experience genuine 1999 serendipity. Spin the hyperspace teleporter to be transported directly to a random community shrine, demoscene vault, or interactive tool.
+        </div>
+
+        <div class="warp-dest-box" id="warpDestBox">
+          <div style="font-size:11px; color:var(--cyan); font-family:var(--font-mono); text-transform:uppercase;">DESTINATION LOCK</div>
+          <div class="warp-dest-name" id="warpDestName">Ready for Hyperspace Coordinates</div>
+          <div class="warp-dest-url" id="warpDestUrl">kweb://teleporter/idle</div>
+        </div>
+
+        <div class="warp-progress-wrap" id="warpProgressWrap">
+          <div class="warp-progress-bar" id="warpProgressBar"></div>
+        </div>
+
+        <div style="display:flex; justify-content:center; gap:10px; margin-top:14px; flex-wrap:wrap;">
+          <button class="btn-teleport" id="btnLaunchWarp" onclick="triggerStagedWarp()">
+            <span>🚀</span> Engage Hyperspace Warp
+          </button>
+          <button class="btn-teleport alt" onclick="triggerInstantWarp()">
+            <span>⚡</span> Instant Leap (No Delay)
+          </button>
+          <button class="btn-teleport alt" id="btnAbortWarp" onclick="abortWarp()" style="display:none; border-color:var(--magenta); color:#f472b6;">
+            <span>🛑</span> Abort Warp
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ring Tour / History Widget -->
+    <div class="panel-box">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>🧭</span> Discovery Tour &amp; Exploration Passport
+        </div>
+        <button class="btn-action" onclick="resetTourHistory()">Reset Tour</button>
+      </div>
+      <div class="panel-desc">
+        Take a complete, sequential tour through the entire KiloNet Webring without getting lost. Your exploration history is remembered locally in your browser.
+      </div>
+
+      <div class="tour-card">
+        <div>
+          <strong>Exploration Status:</strong>
+          <span id="tourProgressText" style="color:var(--cyan);">0 of 14 Nodes Visited (0%)</span>
+        </div>
+        <div>
+          <button class="btn-teleport alt" onclick="triggerRingTourNext()" style="padding:4px 10px; font-size:11px;">
+            <span>⏩</span> Next Unvisited Node
+          </button>
+        </div>
+      </div>
+
+      <div id="tourNodesList" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;">
+        <!-- Filled dynamically -->
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 3: HTML Badge Studio -->
+  <section id="tab-badge" class="tab-pane">
+    <div class="panel-box">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>🛠️</span> Interactive HTML Webring Badge Studio
+        </div>
+        <div style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono);">
+          Compliant HTML 4.01 Strict • Zero JavaScript Required
+        </div>
+      </div>
+      <div class="panel-desc">
+        Add the official KiloNet Webring widget to your own vintage web page, retro blog, or personal home page. Customize your preferred badge style, preview in real time, and copy or download the snippet.
+      </div>
+
+      <div class="badge-studio-grid">
+        <!-- Controls Column -->
+        <div>
+          <div class="form-group">
+            <label class="form-label" for="badgeStyleSelect">BADGE STYLE VARIANT</label>
+            <select class="form-control" id="badgeStyleSelect" onchange="updateBadgePreview()">
+              <option value="classic">Style A: Classic 1999 Text Nav Bar</option>
+              <option value="beveled" selected>Style B: 3D Beveled Box Widget</option>
+              <option value="neon">Style C: Cyberpunk Neon HUD Badge</option>
+              <option value="button">Style D: 88x31 Micro Button Widget</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="badgeSiteTitle">YOUR SITE TITLE</label>
+            <input type="text" class="form-control" id="badgeSiteTitle" value="My Retro Web Sanctuary" oninput="updateBadgePreview()">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="badgeRingId">YOUR ASSIGNED RING ID</label>
+            <input type="text" class="form-control" id="badgeRingId" value="#015" oninput="updateBadgePreview()">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="badgeThemeSelect">COLOR SCHEME</label>
+            <select class="form-control" id="badgeThemeSelect" onchange="updateBadgePreview()">
+              <option value="cyan">Cyber Blue / Cyan (Default)</option>
+              <option value="amber">Vintage Amber CRT</option>
+              <option value="green">Matrix Terminal Green</option>
+              <option value="gray">Netscape 4.7 Classic Gray</option>
+            </select>
+          </div>
+
+          <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
+            <button class="btn-teleport" onclick="copyBadgeSnippet()">
+              <span>📋</span> Copy HTML Code
+            </button>
+            <button class="btn-teleport alt" onclick="downloadBadgeFile()">
+              <span>💾</span> Download badge.html
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Preview Column -->
+        <div>
+          <label class="form-label">LIVE WIDGET PREVIEW</label>
+          <div class="badge-preview-area" id="badgePreviewContainer">
+            <!-- Dynamic Widget Preview -->
+          </div>
+
+          <label class="form-label" style="margin-top:10px;">GENERATED HTML SNIPPET</label>
+          <textarea class="code-output" id="badgeSnippetOutput" readonly></textarea>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 4: Ring Health Monitor -->
+  <section id="tab-health" class="tab-pane">
+    <div class="panel-box">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>📡</span> Automated Ring Health &amp; Ping Diagnostic Monitor
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-action" onclick="runHealthAudit()">
+            <span>⚡</span> Run Full Ring Diagnostic
+          </button>
+          <button class="btn-action" onclick="downloadAuditReport()">
+            <span>💾</span> Export Audit Log
+          </button>
+        </div>
+      </div>
+      <div class="panel-desc">
+        Simulates the 1999 Perl CGI <code>ring_check.cgi</code> cron daemon. Validates HTTP responsiveness, checks for the presence of the webring widget tag on every site, and verifies bidirectional ring link integrity.
+      </div>
+
+      <!-- Diagnostic Console Output -->
+      <div class="diag-terminal" id="diagConsole">[SYSTEM READY] KiloNet Webring Diagnostic Daemon v2.4 initialized.
+Click 'Run Full Ring Diagnostic' to probe all 14 active ring nodes.</div>
+
+      <!-- Stats Bar -->
+      <div class="diag-stats-bar">
+        <div><strong>Ring Continuity:</strong> <span id="diagContinuity" style="color:var(--green-bright);">UNTESTED</span></div>
+        <div><strong>Average Latency:</strong> <span id="diagLatency" style="color:var(--cyan);">-- ms</span></div>
+        <div><strong>Widget Tags Detected:</strong> <span id="diagTags" style="color:var(--amber-bright);">-- / 14</span></div>
+        <div><strong>Daemon Status:</strong> <span id="diagStatus" style="color:var(--text-muted);">Idle</span></div>
+      </div>
+
+      <!-- Diegetic Diagnostic Packet Probe -->
+      <div style="margin-top:14px; background:#070a14; border:1px solid var(--border-med); padding:10px;">
+        <div style="font-family:var(--font-mono); font-size:11px; font-weight:bold; color:var(--cyan); margin-bottom:6px;">
+          🔬 DIRECT SOCKET PING &amp; SUB-OCTET PROBE
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <input type="text" class="form-control" id="customProbeTarget" value="/web/geocities.html" style="flex:1; min-width:200px;" placeholder="Enter node URL or address...">
+          <button class="btn-action" onclick="probeCustomTarget()">Transmit Packet Probe</button>
+        </div>
+        <div id="probeResultBox" style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-top:6px; display:none;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 5: Join The Ring -->
+  <section id="tab-join" class="tab-pane">
+    <div class="panel-box">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>📝</span> Webmaster Application: Join KiloNet Webring
+        </div>
+        <button class="btn-action" onclick="fillDemoSubmission()">
+          <span>⚡</span> Load Demo Application
+        </button>
+      </div>
+      <div class="panel-desc">
+        Operate a retro personal page, demoscene shrine, or creative web tool? Submit your site to become an official node in the Central KiloNet Webring. Applications are verified and added instantly to your local directory.
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div>
+          <div class="form-group">
+            <label class="form-label" for="subHandle">WEBMASTER HANDLE / ALIAS *</label>
+            <input type="text" class="form-control" id="subHandle" placeholder="e.g. ~neon_wanderer">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="subTitle">SITE NAME / TITLE *</label>
+            <input type="text" class="form-control" id="subTitle" placeholder="e.g. Subterranean Pixel Sanctuary">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="subUrl">DESTINATION URL (kweb:// or /web/) *</label>
+            <input type="text" class="form-control" id="subUrl" placeholder="e.g. /web/users/wanderer.html">
+          </div>
+        </div>
+
+        <div>
+          <div class="form-group">
+            <label class="form-label" for="subCategory">SITE CATEGORY *</label>
+            <select class="form-control" id="subCategory">
+              <option value="community">Community &amp; Retro Homepages</option>
+              <option value="demoscene">Demoscene &amp; Hacker Vaults</option>
+              <option value="tools">Web Tools &amp; Utilities</option>
+              <option value="apps">Interactive Apps &amp; Games</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="subDesc">SITE DESCRIPTION (Max 140 chars) *</label>
+            <textarea class="form-control" id="subDesc" placeholder="Describe your site's focus, tech stack, and vintage highlights..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="subButtonText">88x31 BUTTON LABEL (Optional)</label>
+            <input type="text" class="form-control" id="subButtonText" placeholder="e.g. [WANDERER '99]">
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; border-top:1px dashed var(--border-med); padding-top:12px; flex-wrap:wrap; gap:8px;">
+        <div style="font-size:11px; color:var(--text-dim); font-family:var(--font-mono);">
+          Requirements: Under 999KB, no commercial ads, embeds KiloNet badge snippet.
+        </div>
+        <button class="btn-teleport" onclick="submitRingApplication()">
+          <span>📨</span> Transmit Webmaster Application
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 6: Webmaster Guestbook -->
+  <section id="tab-guestbook" class="tab-pane">
+    <div class="panel-box">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>💬</span> Webmaster Guestbook &amp; Ring Shoutbox
+        </div>
+        <div style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono);">
+          1999 Ringmaster Dispatch • Moderated CGI Storage
+        </div>
+      </div>
+      <div class="panel-desc">
+        Leave a note for the consortium, report broken ring links, exchange webmaster links, or chat about retro web design.
+      </div>
+
+      <!-- Guestbook Entry Stream -->
+      <div class="guestbook-list" id="guestbookStream">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Post Form -->
+      <div style="background:#090d18; border:1px solid var(--border-med); padding:12px;">
+        <div style="font-family:var(--font-mono); font-size:12px; font-weight:bold; color:var(--cyan); margin-bottom:8px;">
+          POST NEW GUESTBOOK ENTRY
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;">
+          <div>
+            <label class="form-label" for="gbHandle">CALLSIGN / HANDLE</label>
+            <input type="text" class="form-control" id="gbHandle" placeholder="e.g. ByteSurfer_99">
+          </div>
+          <div>
+            <label class="form-label" for="gbSite">YOUR WEB ADDRESS (Optional)</label>
+            <input type="text" class="form-control" id="gbSite" placeholder="e.g. kweb://users/~bytesurfer">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="gbMsg">MESSAGE</label>
+          <textarea class="form-control" id="gbMsg" placeholder="Share your message with the webring consortium..."></textarea>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div style="display:flex; gap:6px;">
+            <button class="btn-action" style="font-size:10px;" onclick="insertEmoticon('(^_^;)')">(^_^;)</button>
+            <button class="btn-action" style="font-size:10px;" onclick="insertEmoticon('[8-)]')">[8-)]</button>
+            <button class="btn-action" style="font-size:10px;" onclick="insertEmoticon('[:D]')">[:D]</button>
+            <button class="btn-action" style="font-size:10px;" onclick="insertEmoticon('[>_<]')">[&gt;_&lt;]</button>
+          </div>
+          <button class="btn-teleport" onclick="submitGuestbookPost()">
+            <span>✍️</span> Sign Guestbook
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 88x31 Micro Buttons Carousel Strip -->
+  <div class="panel-box" style="margin-top:14px; text-align:center;">
+    <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-dim); text-transform:uppercase; margin-bottom:8px;">
+      ★ OFFICIAL KILONET CONSORTIUM MEMBER BUTTON BADGES ★
+    </div>
+    <div class="badges-strip" id="badgesWall">
+      <!-- Generated dynamically -->
+    </div>
+  </div>
+
+  <!-- Footer -->
   <footer>
-    Central KiloNet Webring Consortium • Active Ring Members: <strong>13</strong> • Traffic Verified Clean<br>
-    Rendered in KNet Browser &amp; Inspector
+    Central KiloNet Webring Consortium • Established 1999 • All Ring Sites Verified Clean &amp; &lt;999KB<br>
+    Rendered in KNet Browser &amp; Inspector • Built for the 999KB Alternate 1999 Hypermedia Network
   </footer>
 </div>
 
+<!-- Modal: Node Details Inspector -->
+<div class="modal-backdrop" id="nodeModal" onclick="closeModalOnBackdrop(event)">
+  <div class="modal-window">
+    <div class="modal-head">
+      <div class="modal-title" id="modalNodeTitle">Node Details</div>
+      <button class="btn-close" onclick="closeNodeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modalNodeBody">
+      <!-- Filled dynamically -->
+    </div>
+    <div class="modal-foot">
+      <a href="#" class="btn-teleport" id="modalLaunchBtn">
+        <span>🚀</span> Visit Node
+      </a>
+      <button class="btn-teleport alt" onclick="closeNodeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  const ringSites = [
-    '/web/portal.html',
-    '/web/geocities.html',
-    '/web/warez.html',
-    '/web/cybercafe.html',
-    '/web/users/neon_rider.html',
-    '/web/asm_temple.html',
-    '/apps/krogue.html',
-    '/apps/contribute.html',
-    '/apps/kbbs.html',
-    '/web/echo_subsystem.html',
-    '/web/classified.html',
-    '/web/deep_core.html',
-    '/web/darknet.html'
-  ];
-
-  function jumpRandom() {
-    const cur = window.location.pathname;
-    const candidates = ringSites.filter(s => !s.includes('webring.html'));
-    const next = candidates[Math.floor(Math.random() * candidates.length)];
-    window.location.href = next;
+/* =========================================================================
+   1. MASTER RING DATA & DIRECTORY REGISTRY
+   ========================================================================= */
+const DEFAULT_RING_NODES = [
+  {
+    id: "#001",
+    num: 1,
+    name: "KiloNet 1999 Web Portal",
+    handle: "SysOp_Admin",
+    category: "tools",
+    url: "/web/portal.html",
+    desc: "Official Yahoo/Excite-style directory, simulated search engine, NASDAQ-1999 stock ticker & classifieds board.",
+    tech: "HTML 4.01 / CGI Search / Web Audio FM",
+    badgeLabel: "KILONET '99",
+    latency: 22,
+    tags: "portal,search,directory,stocks,weather,classifieds"
+  },
+  {
+    id: "#002",
+    num: 2,
+    name: "CyberSpire Retro Shrine",
+    handle: "CyberSpire_99",
+    category: "community",
+    url: "/web/geocities.html",
+    desc: "GeoCities neon underground cyber shrine with Web Audio MIDI tunes, visitor guestbook, animated GIFs & starfield.",
+    tech: "HTML 4.01 / Web Audio MIDI / Canvas",
+    badgeLabel: "CYBERSPIRE",
+    latency: 28,
+    tags: "geocities,shrine,midi,guestbook,cyber,neon"
+  },
+  {
+    id: "#003",
+    num: 3,
+    name: "0xRELEASE Scene Vault & Cracktros",
+    handle: "0xRELEASE_Council",
+    category: "demoscene",
+    url: "/web/warez.html",
+    desc: "Underground demoscene vault with YM2612 FM chiptunes, 3D vector cracktros, ANSI NFO viewer & .asm downloads.",
+    tech: "YM2612 FM / SPC700 Delay / 3D Vector Canvas",
+    badgeLabel: "0xRELEASE",
+    latency: 34,
+    tags: "warez,demoscene,cracktro,keygen,chiptune,nfo,asm"
+  },
+  {
+    id: "#004",
+    num: 4,
+    name: "~neon_rider's Win32 ASM Shrine",
+    handle: "~neon_rider",
+    category: "demoscene",
+    url: "/web/users/neon_rider.html",
+    desc: "Personal demoscene coder devlog, interactive x86 instruction sandbox, CPU register emulator & YM2612 FM tunes.",
+    tech: "x86 Assembler / YM2612 FM / NFO Archive",
+    badgeLabel: "NEON_RIDER",
+    latency: 26,
+    tags: "neon,asm,x86,assembler,tracker,demoscene"
+  },
+  {
+    id: "#005",
+    num: 5,
+    name: "Temple of x86 Opcodes",
+    handle: "Archon_Assembly",
+    category: "demoscene",
+    url: "/web/asm_temple.html",
+    desc: "x86 assembly programming sanctuary with 42-instruction Opcode Oracle, two-way assembler/disassembler & PE32 inspector.",
+    tech: "x86 Opcode Engine / PE32 Inspector / FM Audio",
+    badgeLabel: "OPCODE ASM",
+    latency: 31,
+    tags: "asm,opcodes,assembly,pe32,disassembler"
+  },
+  {
+    id: "#006",
+    num: 6,
+    name: "CyberCafe '99 BBS & Lounge",
+    handle: "NetBarista",
+    category: "community",
+    url: "/web/cybercafe.html",
+    desc: "Underground message boards, threaded forum discussions, terminal booths, and 16-color ANSI/ASCII drawing scratchpad.",
+    tech: "Threaded CGI BBS / ANSI Canvas Studio",
+    badgeLabel: "CYBERCAFE",
+    latency: 29,
+    tags: "cybercafe,bbs,forum,ascii,chat,lounge"
+  },
+  {
+    id: "#007",
+    num: 7,
+    name: "Fleet Contributor Portal",
+    handle: "KiloConsortium",
+    category: "tools",
+    url: "/apps/contribute.html",
+    desc: "Volunteer compute fuel station donating free Gemini quota to keep fleet development running autonomously.",
+    tech: "Web 1.0 Form / Quota Bridge",
+    badgeLabel: "CONTRIBUTE",
+    latency: 18,
+    tags: "contribute,compute,fuel,quota,volunteer"
+  },
+  {
+    id: "#008",
+    num: 8,
+    name: "KBBS Dial-Up Station",
+    handle: "SysOp_Falcon",
+    category: "apps",
+    url: "/apps/kbbs.html",
+    desc: "Vintage ANSI bulletin board gateway with multi-node door games, file libraries, and ANSI message bases.",
+    tech: "ANSI / CP437 Engine / Win32 Native",
+    badgeLabel: "KBBS '99",
+    latency: 42,
+    tags: "bbs,ansi,dialup,doors,games,network"
+  },
+  {
+    id: "#009",
+    num: 9,
+    name: "KRogue ASCII Caverns",
+    handle: "DungeonMaster_99",
+    category: "apps",
+    url: "/apps/krogue.html",
+    desc: "Subterranean procedural ASCII dungeon crawler with permadeath, inventory depth, and tactical grid combat.",
+    tech: "Procedural ASCII / Turn-Based Engine",
+    badgeLabel: "KROGUE RPG",
+    latency: 24,
+    tags: "rogue,rpg,ascii,dungeon,crawler,permadeath"
+  },
+  {
+    id: "#010",
+    num: 10,
+    name: "KBookmark Web Indexer",
+    handle: "HyperlinkCurator",
+    category: "tools",
+    url: "/apps/kbookmark.html",
+    desc: "Netscape bookmarks.html import/export workstation, folder tree organizer, and webring cataloguer.",
+    tech: "Netscape HTML Parser / Tree View",
+    badgeLabel: "KBOOKMARK",
+    latency: 20,
+    tags: "bookmark,urls,indexer,netscape,favorites"
+  },
+  {
+    id: "#011",
+    num: 11,
+    name: "KNet Browser & Packet Sniffer",
+    handle: "PacketRider",
+    category: "tools",
+    url: "/apps/knet.html",
+    desc: "1999 hypermedia web viewport, raw hex socket analyzer, and HTTP inspector for exploring the virtual web.",
+    tech: "Web Viewport / Raw Hex Inspector",
+    badgeLabel: "KNET BROWSE",
+    latency: 19,
+    tags: "browser,knet,viewport,packet,sniffer,http"
+  },
+  {
+    id: "#012",
+    num: 12,
+    name: "KChat Global Relay",
+    handle: "IRC_Operator",
+    category: "apps",
+    url: "/apps/kchat.html",
+    desc: "Realtime IRC-style chat client with global #general room powered by Firebase Realtime Database.",
+    tech: "Firebase RTDB / WebSocket Emulation",
+    badgeLabel: "KCHAT IRC",
+    latency: 35,
+    tags: "chat,irc,relay,realtime,multiplayer"
+  },
+  {
+    id: "#013",
+    num: 13,
+    name: "KRadio Chiptune Synthesizer",
+    handle: "DJ_Modulate",
+    category: "apps",
+    url: "/apps/kradio.html",
+    desc: "Multi-station retro audio receiver streaming procedural chiptunes, FM synthesis, and demoscene anthems.",
+    tech: "Web Audio / FM Radio Tuner",
+    badgeLabel: "KRADIO FM",
+    latency: 27,
+    tags: "radio,audio,chiptune,streaming,music"
+  },
+  {
+    id: "#014",
+    num: 14,
+    name: "KRSS News Ticker",
+    handle: "WireService_99",
+    category: "tools",
+    url: "/apps/krss.html",
+    desc: "Live 1999 syndication feed reader tracking tech journals, demoscene releases, and system advisories.",
+    tech: "XML / RSS Parser / Feed Ticker",
+    badgeLabel: "KRSS FEED",
+    latency: 23,
+    tags: "rss,news,feeds,ticker,headlines"
   }
-</script>
+];
 
+let ringNodes = [...DEFAULT_RING_NODES];
+let activeCategoryFilter = "all";
+let currentSearchQuery = "";
+let warpTimer = null;
+let warpProgress = 0;
+let warpTarget = null;
+
+/* =========================================================================
+   2. YAMAHA YM2612 FM & SNES SPC700 STEREO DELAY AUDIO ENGINE
+   ========================================================================= */
+let audioCtx = null;
+let isAudioEnabled = false;
+let snesDelayNode = null;
+let snesFeedbackGain = null;
+let bgmTimer = null;
+let isBgmPlaying = false;
+let bgmStep = 0;
+
+function initAudioEngine() {
+  if (audioCtx) return;
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  audioCtx = new AudioContextClass();
+
+  // SNES SPC700 Stereo Slapback Delay Echo Line
+  // 180ms delay, lowpass filtered at 2200Hz, feedback 0.28
+  snesDelayNode = audioCtx.createDelay(1.0);
+  snesDelayNode.delayTime.setValueAtTime(0.18, audioCtx.currentTime);
+
+  const snesFilter = audioCtx.createBiquadFilter();
+  snesFilter.type = "lowpass";
+  snesFilter.frequency.setValueAtTime(2200, audioCtx.currentTime);
+
+  snesFeedbackGain = audioCtx.createGain();
+  snesFeedbackGain.gain.setValueAtTime(0.28, audioCtx.currentTime);
+
+  snesDelayNode.connect(snesFilter);
+  snesFilter.connect(snesFeedbackGain);
+  snesFeedbackGain.connect(snesDelayNode);
+  snesFilter.connect(audioCtx.destination);
+}
+
+function toggleAudioSystem() {
+  initAudioEngine();
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+
+  isAudioEnabled = !isAudioEnabled;
+  const iconEl = document.getElementById('soundIcon');
+  const textEl = document.getElementById('soundText');
+  const btnEl = document.getElementById('btnAudioToggle');
+
+  if (isAudioEnabled) {
+    iconEl.textContent = '🔊';
+    textEl.textContent = 'SOUND: ON';
+    btnEl.style.borderColor = 'var(--cyan)';
+    btnEl.style.color = 'var(--cyan)';
+    playSfx('warp');
+    startProceduralBgm();
+  } else {
+    iconEl.textContent = '🔇';
+    textEl.textContent = 'SOUND: OFF';
+    btnEl.style.borderColor = 'var(--amber)';
+    btnEl.style.color = 'var(--amber-bright)';
+    stopProceduralBgm();
+  }
+}
+
+// Procedural YM2612 2-Operator FM Note Generator
+function playFmTone(carrierFreq, modRatio, modIndex, duration, gainVal, useEcho = true) {
+  if (!isAudioEnabled || !audioCtx) return;
+
+  const now = audioCtx.currentTime;
+  const carrier = audioCtx.createOscillator();
+  const modulator = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const masterGain = audioCtx.createGain();
+
+  carrier.type = "sine";
+  modulator.type = "sine";
+
+  carrier.frequency.setValueAtTime(carrierFreq, now);
+  modulator.frequency.setValueAtTime(carrierFreq * modRatio, now);
+
+  // Modulation index envelope (rapid exponential drop for slap bass / metallic chime)
+  modGain.gain.setValueAtTime(carrierFreq * modRatio * modIndex, now);
+  modGain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+
+  masterGain.gain.setValueAtTime(gainVal, now);
+  masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+  carrier.connect(masterGain);
+  masterGain.connect(audioCtx.destination);
+
+  if (useEcho && snesDelayNode) {
+    masterGain.connect(snesDelayNode);
+  }
+
+  modulator.start(now);
+  carrier.start(now);
+  modulator.stop(now + duration);
+  carrier.stop(now + duration);
+}
+
+// Procedural Sound Effects Suite
+function playSfx(type) {
+  if (!isAudioEnabled || !audioCtx) return;
+
+  if (type === 'click') {
+    playFmTone(600, 2.0, 1.2, 0.04, 0.08, false);
+  } else if (type === 'warp') {
+    // FM frequency sweep upward
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(160, now);
+    osc.frequency.exponentialRampToValueAtTime(1440, now + 0.35);
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    if (snesDelayNode) gain.connect(snesDelayNode);
+    osc.start(now);
+    osc.stop(now + 0.4);
+  } else if (type === 'ping') {
+    playFmTone(880, 1.5, 2.0, 0.18, 0.12, true);
+    setTimeout(() => playFmTone(1760, 1.0, 1.5, 0.22, 0.10, true), 70);
+  } else if (type === 'badge') {
+    // 3-note ascending chime
+    playFmTone(523.25, 1.0, 1.5, 0.12, 0.10, true);
+    setTimeout(() => playFmTone(659.25, 1.0, 1.5, 0.12, 0.10, true), 80);
+    setTimeout(() => playFmTone(783.99, 1.0, 1.5, 0.25, 0.12, true), 160);
+  } else if (type === 'submit') {
+    playFmTone(440, 2.0, 2.5, 0.15, 0.12, true);
+    setTimeout(() => playFmTone(554.37, 2.0, 2.5, 0.15, 0.12, true), 90);
+    setTimeout(() => playFmTone(659.25, 2.0, 2.5, 0.35, 0.14, true), 180);
+  }
+}
+
+// Procedural Background Chiptune: "Hyperlink Voyager '99"
+const BGM_BASS_LINE = [110, 110, 130.81, 110, 146.83, 110, 164.81, 146.83];
+const BGM_BELL_LINE = [440, 0, 523.25, 659.25, 0, 587.33, 523.25, 0];
+
+function startProceduralBgm() {
+  if (isBgmPlaying || !isAudioEnabled) return;
+  isBgmPlaying = true;
+  bgmStep = 0;
+
+  bgmTimer = setInterval(() => {
+    if (!isAudioEnabled) return;
+    const bassFreq = BGM_BASS_LINE[bgmStep % BGM_BASS_LINE.length];
+    const bellFreq = BGM_BELL_LINE[bgmStep % BGM_BELL_LINE.length];
+
+    if (bassFreq > 0) {
+      // FM Slap Bass (2:1 ratio, punchy decay)
+      playFmTone(bassFreq, 2.0, 3.2, 0.18, 0.07, false);
+    }
+    if (bellFreq > 0 && Math.random() > 0.3) {
+      // FM Bright Chime (1:1 ratio, SPC700 echo)
+      playFmTone(bellFreq, 1.0, 1.5, 0.22, 0.05, true);
+    }
+
+    bgmStep++;
+  }, 220); // ~136 BPM sixteenth pulse
+}
+
+function stopProceduralBgm() {
+  isBgmPlaying = false;
+  if (bgmTimer) {
+    clearInterval(bgmTimer);
+    bgmTimer = null;
+  }
+}
+
+/* =========================================================================
+   3. AUDIO VISUALIZER CANVAS (OSCILLOSCOPE & SPECTRUM BARS)
+   ========================================================================= */
+const visCanvas = document.getElementById('visCanvas');
+const visCtx = visCanvas ? visCanvas.getContext('2d') : null;
+let visPhase = 0;
+
+function drawAudioVisualizer() {
+  if (!visCtx) return;
+  requestAnimationFrame(drawAudioVisualizer);
+
+  visCtx.fillStyle = '#05070f';
+  visCtx.fillRect(0, 0, visCanvas.width, visCanvas.height);
+
+  if (!isAudioEnabled) {
+    // Flat line idle state
+    visCtx.strokeStyle = '#22314d';
+    visCtx.lineWidth = 1;
+    visCtx.beginPath();
+    visCtx.moveTo(0, visCanvas.height / 2);
+    visCtx.lineTo(visCanvas.width, visCanvas.height / 2);
+    visCtx.stroke();
+    return;
+  }
+
+  visPhase += 0.12;
+  const numBars = 16;
+  const barWidth = visCanvas.width / numBars;
+
+  for (let i = 0; i < numBars; i++) {
+    const freqVal = Math.sin(visPhase + i * 0.45) * 0.5 + 0.5;
+    const barHeight = Math.max(3, freqVal * (visCanvas.height - 4));
+    const x = i * barWidth;
+    const y = visCanvas.height - barHeight;
+
+    const grad = visCtx.createLinearGradient(0, visCanvas.height, 0, 0);
+    grad.addColorStop(0, '#0284c7');
+    grad.addColorStop(0.7, '#38bdf8');
+    grad.addColorStop(1, '#ec4899');
+
+    visCtx.fillStyle = grad;
+    visCtx.fillRect(x + 1, y, barWidth - 2, barHeight);
+  }
+}
+
+/* =========================================================================
+   4. TAB NAVIGATION & PERSISTENCE
+   ========================================================================= */
+function switchTab(targetId) {
+  playSfx('click');
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panes = document.querySelectorAll('.tab-pane');
+
+  tabs.forEach(tab => {
+    if (tab.getAttribute('data-tab') === targetId) {
+      tab.classList.add('active');
+    } else {
+      tab.classList.remove('active');
+    }
+  });
+
+  panes.forEach(pane => {
+    if (pane.id === targetId) {
+      pane.classList.add('active');
+    } else {
+      pane.classList.remove('active');
+    }
+  });
+
+  if (targetId === 'tab-teleport') {
+    startWarpStarfield();
+  }
+}
+
+// Global hotkeys: 1-6 for tabs
+window.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key >= '1' && e.key <= '6') {
+    const tabMap = {
+      '1': 'tab-directory',
+      '2': 'tab-teleport',
+      '3': 'tab-badge',
+      '4': 'tab-health',
+      '5': 'tab-join',
+      '6': 'tab-guestbook'
+    };
+    switchTab(tabMap[e.key]);
+  } else if (e.key === 'Escape') {
+    closeNodeModal();
+  }
+});
+
+/* =========================================================================
+   5. DIRECTORY RENDERING, SEARCH & FILTERING
+   ========================================================================= */
+function loadCustomSubmittedNodes() {
+  try {
+    const saved = localStorage.getItem('knet_webring_custom_nodes');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        ringNodes = [...DEFAULT_RING_NODES, ...parsed];
+      }
+    }
+  } catch (e) {
+    console.warn("Could not load custom ring nodes:", e);
+  }
+}
+
+function renderDirectoryTable() {
+  const tbody = document.getElementById('directoryTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  const query = currentSearchQuery.toLowerCase().trim();
+
+  const filtered = ringNodes.filter(node => {
+    const matchesCat = (activeCategoryFilter === 'all') || (node.category === activeCategoryFilter);
+    const matchesQuery = !query || 
+      node.name.toLowerCase().includes(query) ||
+      node.handle.toLowerCase().includes(query) ||
+      node.desc.toLowerCase().includes(query) ||
+      (node.tags && node.tags.toLowerCase().includes(query));
+    return matchesCat && matchesQuery;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:18px; color:var(--text-muted);">
+      No registered webring nodes match the current filter query.
+    </td></tr>`;
+    return;
+  }
+
+  filtered.forEach(node => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="node-badge">${node.id}</span></td>
+      <td>
+        <strong style="color:var(--text-primary); font-size:13px;">${node.name}</strong><br>
+        <span style="color:var(--text-dim); font-size:11px; font-family:var(--font-mono);">Webmaster: ${node.handle}</span>
+      </td>
+      <td>
+        <span class="node-cat cat-${node.category}">${node.category}</span>
+      </td>
+      <td>
+        <div style="color:#cbd5e1; margin-bottom:3px;">${node.desc}</div>
+        <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-dim);">Tech: ${node.tech}</div>
+      </td>
+      <td>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <a href="${node.url}" class="btn-action" onclick="logNodeVisit('${node.id}')">
+            <span>🚀</span> Visit
+          </a>
+          <button class="btn-action" onclick="openNodeModal('${node.id}')">
+            <span>🔍</span> Info
+          </button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Update counter
+  const counterEl = document.getElementById('activeNodesCount');
+  if (counterEl) counterEl.textContent = ringNodes.length;
+}
+
+function filterRingNodes(cat) {
+  playSfx('click');
+  activeCategoryFilter = cat;
+  const pills = document.querySelectorAll('#categoryFilters .pill-btn');
+  pills.forEach(pill => {
+    if (pill.getAttribute('data-cat') === cat) {
+      pill.classList.add('active');
+    } else {
+      pill.classList.remove('active');
+    }
+  });
+  renderDirectoryTable();
+}
+
+function handleSearchNodes(query) {
+  currentSearchQuery = query;
+  renderDirectoryTable();
+}
+
+/* =========================================================================
+   6. RANDOM TELEPORTER & STARFIELD WARP ENGINE
+   ========================================================================= */
+const warpCanvas = document.getElementById('warpCanvas');
+const warpCtx = warpCanvas ? warpCanvas.getContext('2d') : null;
+let warpStars = [];
+let isWarpCanvasRunning = false;
+
+function initWarpStars() {
+  warpStars = [];
+  const count = 120;
+  for (let i = 0; i < count; i++) {
+    warpStars.push({
+      x: (Math.random() - 0.5) * 800,
+      y: (Math.random() - 0.5) * 300,
+      z: Math.random() * 800 + 1,
+      origZ: 800
+    });
+  }
+}
+
+function startWarpStarfield() {
+  if (isWarpCanvasRunning || !warpCtx) return;
+  isWarpCanvasRunning = true;
+  initWarpStars();
+  renderStarfield();
+}
+
+function renderStarfield() {
+  if (!warpCtx) return;
+  requestAnimationFrame(renderStarfield);
+
+  warpCtx.fillStyle = '#050811';
+  warpCtx.fillRect(0, 0, warpCanvas.width, warpCanvas.height);
+
+  const cx = warpCanvas.width / 2;
+  const cy = warpCanvas.height / 2;
+  const speed = warpTimer ? 18 : 2;
+
+  warpStars.forEach(star => {
+    star.z -= speed;
+    if (star.z <= 0) {
+      star.z = 800;
+      star.x = (Math.random() - 0.5) * 800;
+      star.y = (Math.random() - 0.5) * 300;
+    }
+
+    const k = 200 / star.z;
+    const px = star.x * k + cx;
+    const py = star.y * k + cy;
+
+    if (px >= 0 && px < warpCanvas.width && py >= 0 && py < warpCanvas.height) {
+      const size = Math.max(1, (1 - star.z / 800) * 3.5);
+      const alpha = Math.min(1, (1 - star.z / 800) + 0.2);
+      warpCtx.fillStyle = warpTimer ? `rgba(56, 189, 248, ${alpha})` : `rgba(255, 255, 255, ${alpha})`;
+      warpCtx.beginPath();
+      warpCtx.arc(px, py, size / 2, 0, Math.PI * 2);
+      warpCtx.fill();
+    }
+  });
+}
+
+function getRandomCandidateNode() {
+  const currentPath = window.location.pathname;
+  const candidates = ringNodes.filter(n => !n.url.includes('webring.html'));
+  if (candidates.length === 0) return ringNodes[0];
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+function triggerStagedWarp() {
+  playSfx('warp');
+  const candidate = getRandomCandidateNode();
+  warpTarget = candidate;
+
+  const destBox = document.getElementById('warpDestBox');
+  const destName = document.getElementById('warpDestName');
+  const destUrl = document.getElementById('warpDestUrl');
+  const progressWrap = document.getElementById('warpProgressWrap');
+  const progressBar = document.getElementById('warpProgressBar');
+  const btnAbort = document.getElementById('btnAbortWarp');
+  const btnLaunch = document.getElementById('btnLaunchWarp');
+
+  destBox.style.borderColor = 'var(--cyan)';
+  destName.textContent = `TARGET: ${candidate.name}`;
+  destUrl.textContent = `COORDINATES: ${candidate.url} (Node ${candidate.id})`;
+  progressWrap.style.display = 'block';
+  btnAbort.style.display = 'inline-flex';
+  btnLaunch.style.display = 'none';
+
+  warpProgress = 0;
+  progressBar.style.width = '0%';
+
+  if (warpTimer) clearInterval(warpTimer);
+
+  warpTimer = setInterval(() => {
+    warpProgress += 10;
+    progressBar.style.width = `${warpProgress}%`;
+
+    if (warpProgress >= 100) {
+      clearInterval(warpTimer);
+      warpTimer = null;
+      logNodeVisit(candidate.id);
+      window.location.href = candidate.url;
+    }
+  }, 120); // ~1.2s total warp delay
+}
+
+function triggerInstantWarp() {
+  playSfx('warp');
+  const candidate = getRandomCandidateNode();
+  logNodeVisit(candidate.id);
+  window.location.href = candidate.url;
+}
+
+function abortWarp() {
+  if (warpTimer) {
+    clearInterval(warpTimer);
+    warpTimer = null;
+  }
+  playSfx('error');
+  const destName = document.getElementById('warpDestName');
+  const destUrl = document.getElementById('warpDestUrl');
+  const progressWrap = document.getElementById('warpProgressWrap');
+  const btnAbort = document.getElementById('btnAbortWarp');
+  const btnLaunch = document.getElementById('btnLaunchWarp');
+
+  destName.textContent = "Hyperspace Jump Aborted";
+  destUrl.textContent = "Coordinates purged from warp buffer.";
+  progressWrap.style.display = 'none';
+  btnAbort.style.display = 'none';
+  btnLaunch.style.display = 'inline-flex';
+}
+
+/* =========================================================================
+   7. DISCOVERY TOUR & PASSPORT PROGRESS
+   ========================================================================= */
+function getTourHistory() {
+  try {
+    const saved = localStorage.getItem('knet_webring_tour_history');
+    return saved ? JSON.parse(saved) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function logNodeVisit(nodeId) {
+  try {
+    const history = getTourHistory();
+    if (!history.includes(nodeId)) {
+      history.push(nodeId);
+      localStorage.setItem('knet_webring_tour_history', JSON.stringify(history));
+    }
+  } catch (e) {
+    console.warn("Could not save tour history:", e);
+  }
+}
+
+function updateTourDisplay() {
+  const history = getTourHistory();
+  const total = ringNodes.length;
+  const count = history.length;
+  const pct = Math.round((count / total) * 100);
+
+  const textEl = document.getElementById('tourProgressText');
+  if (textEl) {
+    textEl.textContent = `${count} of ${total} Nodes Visited (${pct}%)`;
+  }
+
+  const listEl = document.getElementById('tourNodesList');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+
+  ringNodes.forEach(node => {
+    const isVisited = history.includes(node.id);
+    const badge = document.createElement('span');
+    badge.className = 'node-badge';
+    badge.style.background = isVisited ? '#059669' : '#334155';
+    badge.style.color = isVisited ? '#34d399' : '#94a3b8';
+    badge.textContent = `${node.id} ${isVisited ? '✓' : '○'}`;
+    badge.title = `${node.name}: ${isVisited ? 'Visited' : 'Unvisited'}`;
+    listEl.appendChild(badge);
+  });
+}
+
+function triggerRingTourNext() {
+  playSfx('warp');
+  const history = getTourHistory();
+  // Find first unvisited node, or next sequential node
+  let target = ringNodes.find(n => !history.includes(n.id) && !n.url.includes('webring.html'));
+  if (!target) {
+    // If all visited, take random or loop to first
+    target = ringNodes[0];
+  }
+  logNodeVisit(target.id);
+  window.location.href = target.url;
+}
+
+function resetTourHistory() {
+  playSfx('click');
+  localStorage.removeItem('knet_webring_tour_history');
+  updateTourDisplay();
+}
+
+/* =========================================================================
+   8. INTERACTIVE HTML BADGE STUDIO
+   ========================================================================= */
+function updateBadgePreview() {
+  const style = document.getElementById('badgeStyleSelect').value;
+  const siteTitle = document.getElementById('badgeSiteTitle').value.trim() || "My Retro Web Sanctuary";
+  const ringId = document.getElementById('badgeRingId').value.trim() || "#015";
+  const theme = document.getElementById('badgeThemeSelect').value;
+
+  const container = document.getElementById('badgePreviewContainer');
+  const snippetBox = document.getElementById('badgeSnippetOutput');
+
+  let colors = {
+    bg: '#0e1526',
+    border: '#38bdf8',
+    text: '#f1f5f9',
+    accent: '#38bdf8'
+  };
+
+  if (theme === 'amber') {
+    colors = { bg: '#1c1305', border: '#f59e0b', text: '#fbbf24', accent: '#f59e0b' };
+  } else if (theme === 'green') {
+    colors = { bg: '#05140b', border: '#10b981', text: '#34d399', accent: '#10b981' };
+  } else if (theme === 'gray') {
+    colors = { bg: '#c0c0c0', border: '#808080', text: '#000000', accent: '#000080' };
+  }
+
+  let htmlSnippet = '';
+  let previewMarkup = '';
+
+  if (style === 'classic') {
+    htmlSnippet = `<!-- Central KiloNet Webring Widget (Style A: Classic) -->
+<div align="center" style="font-family:'Courier New', monospace; font-size:12px; margin:14px 0;">
+  [ <a href="/web/webring.html">KiloNet Ring Hub</a> | 
+    <a href="/web/portal.html">&laquo; Prev</a> | 
+    <a href="/web/webring.html?warp=random">Random</a> | 
+    <a href="/web/geocities.html">Next &raquo;</a> ]
+</div>`;
+    previewMarkup = `<div style="font-family:var(--font-mono); font-size:12px; color:${colors.text}; padding:10px; border:1px dashed ${colors.border};">
+      [ <a href="/web/webring.html" style="color:${colors.accent};">KiloNet Ring Hub</a> | 
+        <a href="/web/portal.html" style="color:${colors.accent};">&laquo; Prev</a> | 
+        <a href="/web/webring.html" style="color:${colors.accent};">Random</a> | 
+        <a href="/web/geocities.html" style="color:${colors.accent};">Next &raquo;</a> ]
+    </div>`;
+  } else if (style === 'beveled') {
+    htmlSnippet = `<!-- Central KiloNet Webring Widget (Style B: 3D Beveled Box) -->
+<table border="2" cellpadding="6" cellspacing="0" align="center" style="background:${colors.bg}; border-color:${colors.border}; color:${colors.text}; font-family:Arial, sans-serif; font-size:12px; max-width:440px;">
+  <tr>
+    <td align="center" style="border-bottom:1px solid ${colors.border};">
+      <strong>★ CENTRAL KILONET WEBRING ★</strong><br>
+      <small>Member Site ${ringId}: ${siteTitle}</small>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      [ <a href="/web/portal.html" style="color:${colors.accent};">&laquo; Previous</a> ] • 
+      [ <a href="/web/webring.html" style="color:${colors.accent};">Ring Hub</a> ] • 
+      [ <a href="/web/webring.html?warp=random" style="color:${colors.accent};">Random Jump</a> ] • 
+      [ <a href="/web/geocities.html" style="color:${colors.accent};">Next Site &raquo;</a> ]
+    </td>
+  </tr>
+</table>`;
+    previewMarkup = `
+      <div style="background:${colors.bg}; border:2px outset ${colors.border}; color:${colors.text}; font-family:var(--font-sans); font-size:12px; padding:10px; width:100%; max-width:440px;">
+        <div style="border-bottom:1px solid ${colors.border}; padding-bottom:6px; margin-bottom:8px; font-weight:bold; color:${colors.accent};">
+          ★ CENTRAL KILONET WEBRING ★<br>
+          <span style="font-weight:normal; font-size:11px; color:${colors.text};">Member Site ${ringId}: ${siteTitle}</span>
+        </div>
+        <div style="font-family:var(--font-mono); font-size:11px;">
+          [ <a href="/web/portal.html" style="color:${colors.accent};">&laquo; Previous</a> ] • 
+          [ <a href="/web/webring.html" style="color:${colors.accent};">Ring Hub</a> ] • 
+          [ <a href="/web/webring.html" style="color:${colors.accent};">Random Jump</a> ] • 
+          [ <a href="/web/geocities.html" style="color:${colors.accent};">Next Site &raquo;</a> ]
+        </div>
+      </div>
+    `;
+  } else if (style === 'neon') {
+    htmlSnippet = `<!-- Central KiloNet Webring Widget (Style C: Cyberpunk Neon HUD) -->
+<div align="center" style="background:${colors.bg}; border:2px solid ${colors.border}; box-shadow:0 0 10px ${colors.border}; padding:10px; max-width:480px; margin:14px auto; font-family:'Courier New', monospace; font-size:11px; color:${colors.text};">
+  <div style="color:${colors.accent}; font-weight:bold; letter-spacing:1px; margin-bottom:6px;">
+    // KILONET NODE LINK // ID: ${ringId}
+  </div>
+  <div>
+    &lt;&lt; <a href="/web/portal.html" style="color:${colors.accent}; font-weight:bold;">PREV_NODE</a> | 
+    [ <a href="/web/webring.html" style="color:${colors.text}; font-weight:bold;">WEBRING_HUB</a> ] | 
+    [ <a href="/web/webring.html?warp=random" style="color:${colors.accent}; font-weight:bold;">WARP_RANDOM</a> ] | 
+    <a href="/web/geocities.html" style="color:${colors.accent}; font-weight:bold;">NEXT_NODE</a> &gt;&gt;
+  </div>
+</div>`;
+    previewMarkup = `
+      <div style="background:${colors.bg}; border:2px solid ${colors.border}; box-shadow:0 0 12px ${colors.border}; padding:10px; width:100%; max-width:440px; font-family:var(--font-mono); font-size:11px; color:${colors.text};">
+        <div style="color:${colors.accent}; font-weight:bold; letter-spacing:1px; margin-bottom:6px;">
+          // KILONET NODE LINK // ID: ${ringId}
+        </div>
+        <div>
+          &lt;&lt; <a href="/web/portal.html" style="color:${colors.accent}; font-weight:bold;">PREV_NODE</a> | 
+          [ <a href="/web/webring.html" style="color:${colors.text}; font-weight:bold;">WEBRING_HUB</a> ] | 
+          [ <a href="/web/webring.html" style="color:${colors.accent}; font-weight:bold;">WARP_RANDOM</a> ] | 
+          <a href="/web/geocities.html" style="color:${colors.accent}; font-weight:bold;">NEXT_NODE</a> &gt;&gt;
+        </div>
+      </div>
+    `;
+  } else if (style === 'button') {
+    htmlSnippet = `<!-- Central KiloNet Webring Widget (Style D: 88x31 Micro Button) -->
+<table border="0" cellpadding="4" cellspacing="0" align="center" style="font-family:Arial, sans-serif; font-size:11px;">
+  <tr>
+    <td align="center">
+      <a href="/web/webring.html" target="_top">
+        <span style="display:inline-block; width:88px; height:31px; line-height:31px; text-align:center; background:#0284c7; color:#ffffff; font-family:monospace; font-size:9px; font-weight:bold; border:1px solid #38bdf8;">KILONET RING</span>
+      </a><br>
+      <small>[ <a href="/web/portal.html">&laquo; Prev</a> | <a href="/web/webring.html">Hub</a> | <a href="/web/geocities.html">Next &raquo;</a> ]</small>
+    </td>
+  </tr>
+</table>`;
+    previewMarkup = `
+      <div style="text-align:center; font-family:var(--font-mono); font-size:11px;">
+        <div class="micro-badge" style="margin:0 auto 6px auto; width:110px; height:32px; font-size:10px;">
+          🌐 KILONET RING
+        </div>
+        <div style="color:${colors.text};">
+          [ <a href="/web/portal.html" style="color:${colors.accent};">&laquo; Prev</a> | 
+            <a href="/web/webring.html" style="color:${colors.accent};">Hub</a> | 
+            <a href="/web/geocities.html" style="color:${colors.accent};">Next &raquo;</a> ]
+        </div>
+      </div>
+    `;
+  }
+
+  container.innerHTML = previewMarkup;
+  snippetBox.value = htmlSnippet;
+}
+
+function copyBadgeSnippet() {
+  playSfx('badge');
+  const snippetBox = document.getElementById('badgeSnippetOutput');
+  snippetBox.select();
+  try {
+    navigator.clipboard.writeText(snippetBox.value);
+    showNoticeToast("HTML Webring snippet copied to clipboard!");
+  } catch (e) {
+    document.execCommand('copy');
+    showNoticeToast("HTML Webring snippet copied!");
+  }
+}
+
+function downloadBadgeFile() {
+  playSfx('click');
+  const snippet = document.getElementById('badgeSnippetOutput').value;
+  const fullHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>KiloNet Webring Widget</title>
+</head>
+<body style="background:#0a0d14; color:#fff; text-align:center; padding:20px;">
+${snippet}
+</body>
+</html>`;
+  const blob = new Blob([fullHtml], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = "kilonet_webring_widget.html";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showNoticeToast("Downloaded kilonet_webring_widget.html!");
+}
+
+/* =========================================================================
+   9. AUTOMATED RING HEALTH MONITOR & PING PROBE
+   ========================================================================= */
+let isAuditing = false;
+let auditLogText = "";
+
+function runHealthAudit() {
+  if (isAuditing) return;
+  isAuditing = true;
+  playSfx('ping');
+
+  const consoleEl = document.getElementById('diagConsole');
+  const statContinuity = document.getElementById('diagContinuity');
+  const statLatency = document.getElementById('diagLatency');
+  const statTags = document.getElementById('diagTags');
+  const statStatus = document.getElementById('diagStatus');
+
+  consoleEl.textContent = "[INITIALIZING DIAGNOSTIC DAEMON]\n";
+  consoleEl.textContent += "Target: 14 Registered Consortium Nodes\n";
+  consoleEl.textContent += "Verifying: DNS Resolution, HTTP 200, Webring Widget Tag, Bidirectional Loop\n";
+  consoleEl.textContent += "----------------------------------------------------------------------\n";
+
+  statStatus.textContent = "Scanning Nodes...";
+  statStatus.style.color = "var(--cyan)";
+
+  let idx = 0;
+  let totalLatency = 0;
+  let detectedTags = 0;
+
+  const timer = setInterval(() => {
+    if (idx >= ringNodes.length) {
+      clearInterval(timer);
+      isAuditing = false;
+
+      const avgLat = Math.round(totalLatency / ringNodes.length);
+      consoleEl.textContent += "----------------------------------------------------------------------\n";
+      consoleEl.textContent += `[DIAGNOSTIC COMPLETE] All ${ringNodes.length} nodes probed successfully.\n`;
+      consoleEl.textContent += `Ring Loop Continuity: VERIFIED (Node #014 loops back to #001)\n`;
+      consoleEl.textContent += `Average Cluster Latency: ${avgLat}ms • Packet Loss: 0.0%\n`;
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+
+      statContinuity.textContent = "100% HEALTHY";
+      statContinuity.style.color = "var(--green-bright)";
+      statLatency.textContent = `${avgLat} ms`;
+      statTags.textContent = `${detectedTags} / ${ringNodes.length}`;
+      statStatus.textContent = "Idle (All Clean)";
+      statStatus.style.color = "var(--text-muted)";
+
+      auditLogText = consoleEl.textContent;
+      playSfx('submit');
+      return;
+    }
+
+    const node = ringNodes[idx];
+    const simulatedLatency = node.latency + Math.floor(Math.random() * 8 - 4);
+    totalLatency += simulatedLatency;
+    detectedTags++;
+
+    const logLine = `[PING] Node ${node.id} (${node.name.padEnd(28, ' ')}) -> HTTP 200 OK (${simulatedLatency}ms) [TAG DETECTED]\n`;
+    consoleEl.textContent += logLine;
+    consoleEl.scrollTop = consoleEl.scrollHeight;
+
+    idx++;
+  }, 100);
+}
+
+function probeCustomTarget() {
+  playSfx('ping');
+  const inputEl = document.getElementById('customProbeTarget');
+  const resEl = document.getElementById('probeResultBox');
+  const target = inputEl.value.trim();
+
+  resEl.style.display = 'block';
+
+  // Diegetic Easter Egg: Probing 0x7F or darknet coordinates returns subtle packet telemetry
+  if (target.includes('0x7F') || target.includes('darknet') || target.includes('10.19.99')) {
+    resEl.innerHTML = `
+      <span style="color:var(--amber-bright);">[ANOMALOUS CARRIER DETECTED]</span><br>
+      Host: non-routable subnet carrier • Frequency: 1999Hz subcarrier active<br>
+      Handshake: Direct HTTP blocked • Lithospheric RF telemetry detected at offset 0x7F.<br>
+      <em>Note: Surface HTTP requests restricted. Navigate via terminal sniffer in KNet.</em>
+    `;
+    return;
+  }
+
+  const match = ringNodes.find(n => n.url.includes(target) || n.name.toLowerCase().includes(target.toLowerCase()));
+  if (match) {
+    resEl.innerHTML = `
+      <span style="color:var(--green-bright);">[PROBE SUCCESSFUL]</span> Target: <code>${match.url}</code> (Node ${match.id})<br>
+      HTTP 200 OK • Response Time: ${match.latency}ms • Webring Signature: VERIFIED
+    `;
+  } else {
+    resEl.innerHTML = `
+      <span style="color:var(--cyan);">[PROBE DISPATCHED]</span> Resolving <code>${target}</code>...<br>
+      Simulated 56k dialup handshake OK • Host responsive • No critical fault detected.
+    `;
+  }
+}
+
+function downloadAuditReport() {
+  playSfx('click');
+  const text = auditLogText || document.getElementById('diagConsole').textContent;
+  const blob = new Blob([text], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = "kilonet_webring_audit_1999.log";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* =========================================================================
+   10. JOIN THE RING: APPLICATION PORTAL
+   ========================================================================= */
+function fillDemoSubmission() {
+  playSfx('click');
+  document.getElementById('subHandle').value = "~vapor_scout";
+  document.getElementById('subTitle').value = "Subterranean Pixel Sanctuary";
+  document.getElementById('subUrl').value = "/web/users/vapor_scout.html";
+  document.getElementById('subCategory').value = "community";
+  document.getElementById('subDesc').value = "Cyberpunk pixel art archives, procedural MIDI soundscapes, and vintage 1999 computing hardware logs.";
+  document.getElementById('subButtonText').value = "PIXEL SANCTUARY";
+}
+
+function submitRingApplication() {
+  const handle = document.getElementById('subHandle').value.trim();
+  const title = document.getElementById('subTitle').value.trim();
+  const url = document.getElementById('subUrl').value.trim();
+  const cat = document.getElementById('subCategory').value;
+  const desc = document.getElementById('subDesc').value.trim();
+  const btnLabel = document.getElementById('subButtonText').value.trim() || title.substring(0, 12).toUpperCase();
+
+  if (!handle || !title || !url || !desc) {
+    alert("Please fill in all mandatory application fields.");
+    playSfx('error');
+    return;
+  }
+
+  playSfx('submit');
+
+  const nextNum = ringNodes.length + 1;
+  const paddedId = `#${String(nextNum).padStart(3, '0')}`;
+
+  const newNode = {
+    id: paddedId,
+    num: nextNum,
+    name: title,
+    handle: handle,
+    category: cat,
+    url: url,
+    desc: desc,
+    tech: "HTML 4.01 / Member Node",
+    badgeLabel: btnLabel,
+    latency: 28,
+    tags: `${cat},community,member,submission`
+  };
+
+  try {
+    const saved = localStorage.getItem('knet_webring_custom_nodes');
+    const customList = saved ? JSON.parse(saved) : [];
+    customList.push(newNode);
+    localStorage.setItem('knet_webring_custom_nodes', JSON.stringify(customList));
+  } catch (e) {
+    console.warn("Could not save to localStorage:", e);
+  }
+
+  ringNodes.push(newNode);
+  renderDirectoryTable();
+  renderBadgesWall();
+
+  alert(`Application Approved!\n\nWelcome to the KiloNet Webring, ${handle}!\nYour assigned Ring ID is ${paddedId}.\nYour node is now active in the local directory.`);
+
+  // Reset form
+  document.getElementById('subHandle').value = "";
+  document.getElementById('subTitle').value = "";
+  document.getElementById('subUrl').value = "";
+  document.getElementById('subDesc').value = "";
+  document.getElementById('subButtonText').value = "";
+
+  switchTab('tab-directory');
+}
+
+/* =========================================================================
+   11. WEBMASTER GUESTBOOK & SHOUTBOX
+   ========================================================================= */
+const DEFAULT_GUESTBOOK = [
+  {
+    handle: "SysOp_Falcon",
+    site: "kweb://kbbs",
+    time: "1999-11-28 14:15",
+    msg: "Central Webring hub v2.4 looks fantastic! The new diagnostic daemon verified all KBBS node routes cleanly. Keep the 999KB dream alive!"
+  },
+  {
+    handle: "~neon_rider",
+    site: "kweb://users/~neon_rider",
+    time: "1999-11-26 19:42",
+    msg: "Linked my Win32 ASM shrine to the webring nav bar. Love the Yamaha YM2612 FM chiptunes on the hub. Anyone else experimenting with 2-op FM algorithms?"
+  },
+  {
+    handle: "NetBarista",
+    site: "kweb://cybercafe",
+    time: "1999-11-24 09:20",
+    msg: "Fresh pots of virtual java at CyberCafe '99! Ring visitors hopping over from the random teleporter have been filling up our ANSI art scratchpad."
+  },
+  {
+    handle: "0xRELEASE_Council",
+    site: "kweb://warez",
+    time: "1999-11-20 22:11",
+    msg: "0xRELEASE cracktro vault is fully synchronized with Node #003. All .nfo and .asm archives checked out clean on the diagnostic run."
+  },
+  {
+    handle: "CyberSpire_99",
+    site: "kweb://geocities",
+    time: "1999-11-18 16:04",
+    msg: "Loving the new 3D beveled widget! Replaced my old text links with Style B. Site counter just rolled past 48,000 hits!"
+  }
+];
+
+function getGuestbookEntries() {
+  try {
+    const saved = localStorage.getItem('knet_webring_guestbook');
+    return saved ? JSON.parse(saved) : DEFAULT_GUESTBOOK;
+  } catch (e) {
+    return DEFAULT_GUESTBOOK;
+  }
+}
+
+function renderGuestbook() {
+  const container = document.getElementById('guestbookStream');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const entries = getGuestbookEntries();
+  entries.forEach(entry => {
+    const div = document.createElement('div');
+    div.className = 'guestbook-entry';
+    div.innerHTML = `
+      <div class="entry-header">
+        <span class="entry-author">${entry.handle} ${entry.site ? `<span style="font-weight:normal; font-size:10px; color:var(--text-dim);">(${entry.site})</span>` : ''}</span>
+        <span class="entry-time">${entry.time}</span>
+      </div>
+      <div class="entry-body">${escapeHtml(entry.msg)}</div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function submitGuestbookPost() {
+  const handle = document.getElementById('gbHandle').value.trim() || "Anonymous_Webmaster";
+  const site = document.getElementById('gbSite').value.trim();
+  const msg = document.getElementById('gbMsg').value.trim();
+
+  if (!msg) {
+    alert("Please enter a guestbook message.");
+    playSfx('error');
+    return;
+  }
+
+  playSfx('submit');
+
+  const now = new Date();
+  const timeStr = `1999-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+  const newPost = {
+    handle: handle,
+    site: site,
+    time: timeStr,
+    msg: msg
+  };
+
+  const entries = getGuestbookEntries();
+  entries.unshift(newPost);
+
+  try {
+    localStorage.setItem('knet_webring_guestbook', JSON.stringify(entries));
+  } catch (e) {
+    console.warn("Could not save guestbook post:", e);
+  }
+
+  document.getElementById('gbMsg').value = '';
+  renderGuestbook();
+  showNoticeToast("Guestbook entry recorded!");
+}
+
+function insertEmoticon(emo) {
+  playSfx('click');
+  const msgEl = document.getElementById('gbMsg');
+  msgEl.value += ' ' + emo + ' ';
+  msgEl.focus();
+}
+
+/* =========================================================================
+   12. MICRO BADGES WALL
+   ========================================================================= */
+function renderBadgesWall() {
+  const wall = document.getElementById('badgesWall');
+  if (!wall) return;
+  wall.innerHTML = '';
+
+  ringNodes.forEach(node => {
+    const a = document.createElement('a');
+    a.className = 'micro-badge';
+    a.href = node.url;
+    a.textContent = node.badgeLabel || node.name.substring(0, 11).toUpperCase();
+    a.title = `${node.name} (${node.id}) - Click to visit`;
+    wall.appendChild(a);
+  });
+}
+
+/* =========================================================================
+   13. NODE INSPECTOR MODAL
+   ========================================================================= */
+function openNodeModal(nodeId) {
+  playSfx('click');
+  const node = ringNodes.find(n => n.id === nodeId);
+  if (!node) return;
+
+  const modal = document.getElementById('nodeModal');
+  const title = document.getElementById('modalNodeTitle');
+  const body = document.getElementById('modalNodeBody');
+  const launchBtn = document.getElementById('modalLaunchBtn');
+
+  title.textContent = `Ring Node Inspector: ${node.name} (${node.id})`;
+  launchBtn.href = node.url;
+
+  // Calculate ring neighbors
+  const idx = ringNodes.findIndex(n => n.id === nodeId);
+  const prevIdx = (idx - 1 + ringNodes.length) % ringNodes.length;
+  const nextIdx = (idx + 1) % ringNodes.length;
+  const prevNode = ringNodes[prevIdx];
+  const nextNode = ringNodes[nextIdx];
+
+  body.innerHTML = `
+    <div style="margin-bottom:10px;">
+      <strong style="color:var(--cyan); font-size:14px;">${node.name}</strong><br>
+      <span style="color:var(--text-muted); font-family:var(--font-mono); font-size:11px;">URL: ${node.url}</span>
+    </div>
+    <div style="background:#090d18; border:1px solid var(--border-med); padding:10px; margin-bottom:10px; font-family:var(--font-mono); font-size:11px;">
+      <div><strong>Webmaster:</strong> ${node.handle}</div>
+      <div><strong>Category:</strong> ${node.category.toUpperCase()}</div>
+      <div><strong>Tech Architecture:</strong> ${node.tech}</div>
+      <div><strong>Average Latency:</strong> ${node.latency} ms (56k V.90 simulated)</div>
+      <div><strong>File Weight:</strong> &lt; 999 KB (Strict Policy Compliant)</div>
+    </div>
+    <div style="color:var(--text-primary); margin-bottom:12px; font-size:12px;">
+      ${node.desc}
+    </div>
+    <div style="border-top:1px dashed var(--border-med); padding-top:8px; font-family:var(--font-mono); font-size:11px;">
+      <strong>Ring Neighborhood:</strong><br>
+      &laquo; Prev: <a href="${prevNode.url}" style="color:var(--cyan);">${prevNode.name} (${prevNode.id})</a><br>
+      &raquo; Next: <a href="${nextNode.url}" style="color:var(--cyan);">${nextNode.name} (${nextNode.id})</a>
+    </div>
+  `;
+
+  modal.classList.add('open');
+}
+
+function closeNodeModal() {
+  playSfx('click');
+  const modal = document.getElementById('nodeModal');
+  if (modal) modal.classList.remove('open');
+}
+
+function closeModalOnBackdrop(e) {
+  if (e.target.id === 'nodeModal') {
+    closeNodeModal();
+  }
+}
+
+/* =========================================================================
+   14. UTILITIES & TOASTS
+   ========================================================================= */
+function escapeHtml(text) {
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+  return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+function showNoticeToast(msg) {
+  const div = document.createElement('div');
+  div.style.position = 'fixed';
+  div.style.bottom = '20px';
+  div.style.right = '20px';
+  div.style.background = '#0284c7';
+  div.style.color = '#fff';
+  div.style.padding = '8px 16px';
+  div.style.borderRadius = '3px';
+  div.style.fontFamily = 'var(--font-mono)';
+  div.style.fontSize = '12px';
+  div.style.fontWeight = 'bold';
+  div.style.boxShadow = '0 4px 14px rgba(0,0,0,0.6)';
+  div.style.zIndex = '10001';
+  div.textContent = msg;
+  document.body.appendChild(div);
+
+  setTimeout(() => {
+    div.style.opacity = '0';
+    div.style.transition = 'opacity 0.3s ease';
+    setTimeout(() => {
+      if (div.parentNode) div.parentNode.removeChild(div);
+    }, 300);
+  }, 2200);
+}
+
+/* =========================================================================
+   15. INITIALIZATION ON PAGE LOAD
+   ========================================================================= */
+window.addEventListener('DOMContentLoaded', () => {
+  loadCustomSubmittedNodes();
+  renderDirectoryTable();
+  renderBadgesWall();
+  updateBadgePreview();
+  renderGuestbook();
+  updateTourDisplay();
+  drawAudioVisualizer();
+
+  // Check URL parameters for direct random warp trigger
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('warp') === 'random') {
+    switchTab('tab-teleport');
+    triggerStagedWarp();
+  }
+});
+</script>
 </body>
 </html>
