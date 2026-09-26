@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -17,8 +17,8 @@ current_targets:
   kilo_graphics: KStarForge
   kilo_qa: KStarDredge
   kilo_expander: KContacts
-  kilo_creator: "kweb://warez (Cracktros, Chiptune Jukebox & Demoscene Vault expansion)"
-virtual_web_target: "kweb://warez"
+  kilo_creator: "kweb://webring (Central Hub & Random Teleporter)"
+virtual_web_target: "kweb://geocities"
 virtual_web_rotation:
   - "kweb://darknet"
   - "kweb://portal"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-expander
-  app: KCalendar
-  timestamp: "2026-09-25T23:55:00Z"
+  agent: kilo-creator
+  app: "kweb://warez (0xRELEASE Scene Vault)"
+  timestamp: "2026-09-26T00:45:00Z"
 last_planner_run: "2026-09-25T06:42:00Z"
 ---
 
@@ -97,11 +97,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://warez` (Cracktros, Chiptune Jukebox & Demoscene Vault expansion)
+- **Current Target**: `kweb://webring` (Central Hub & Random Teleporter)
 - **Upcoming Queue**:
-  `kweb://webring` (Central Hub & Random Teleporter),
-  `kweb://geocities` (Pixel Art & MOD Downloads)
-  *(Completed: kweb://darknet, kweb://portal, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified)*.
+  `kweb://geocities` (Pixel Art & MOD Downloads),
+  `kweb://users/~neon_rider` (Win32 ASM & Opcode Sandbox)
+  *(Completed: kweb://darknet, kweb://portal, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Current Target**: `KStarForge`
@@ -130,9 +130,17 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://warez` (`KiloOS/public/web/warez.html`)
-  - *Next in Rotation*: `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet`.
+- **Current Active Target**: `kweb://geocities` (`KiloOS/public/web/geocities.html`)
+  - *Next in Rotation*: `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez`.
 - **Anti-Potemkin Directive & Content Mandates**:
+  0. `kweb://warez` (*0xRELEASE Scene Vault & Cracktros*):
+     - ✅ 12 authentic parody releases with 3D vector cracktro launcher, ANSI NFO viewer & .diz/.nfo downloads.
+     - ✅ Chiptune Jukebox with dual stereo oscilloscope & 32-band peak LED equalizer across 6 procedural tracks.
+     - ✅ Yamaha YM2612 2-operator FM Sound Chip Laboratory with clickable piano tiles and harmonic ratio knobs.
+     - ✅ 3D Cracktro Workbench with 7 vector geometries (cube, octahedron, star, torus, icosahedron, helix, wavegrid).
+     - ✅ CP437 ANSI NFO Generator Studio & downloadable x86 assembly intro source (.asm).
+     - ✅ 1999 Scene Top-List voting poll & persistent underground courier shoutbox/guestbook.
+     - ✅ Central KiloNet Webring node #013 integration with subtle darknet discovery hooks.
   1. `kweb://geocities` (*CyberSpire's Retro Shrine*):
      - ✅ Web Audio 16-bit tracker MIDI jukebox with 3 synthwave/MOD tracks and dancing LED equalizer.
      - ✅ Working guestbook with local persistence.
@@ -205,6 +213,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-26T00:45:00Z — kilo-creator: kweb://warez (Virtual 1999 Demoscene Vault & Chiptune Jukebox Expansion)**
+  - Status: PASS ✅ (12 parody releases, Chiptune Jukebox, FM Sound Lab, 3D Workbench, NFO Studio, Polls, Shoutbox; 0 regressions).
+  - Release Vault: Expanded catalog to 12 releases with cracktro launchers, ANSI NFO viewer, and dynamic .diz/.nfo downloads.
+  - Chiptune Jukebox: Standalone player with real-time stereo oscilloscope, 32-band peak LED visualizer across 6 procedural tracks.
+  - Sound Chip Lab: Interactive Yamaha YM2612 2-op FM lab with clickable piano tiles (C3-C5), harmonic ratios, and SPC700 echo.
+  - 3D Workbench: Vector engine supporting 7 polyhedra (cube, octahedron, star, torus, icosahedron, helix, wavegrid) and scroller.
+  - NFO Studio & Charts: CP437 ANSI generator, x86 assembly export (.asm), 1999 scene voting booth, and persistent shoutbox.
+  - Linking & Verification: Registered in KNet, portal.html, and webring.html (node #013); Vite clean (360ms); security lint PASS; size 108.7 KB (<999KB).
+
 - **2026-09-25T23:55:00Z — kilo-expander: KCalendar (Deep Feature Expansion: Task Completion & Interoperability)**
   - Status: PASS ✅ (Task completion toggle [Space], dynamic tag system, location/kweb links, export suite; 0 regressions).
   - Task Completion System: Interactive completion toggle (`[X]`/`[✓]`, strikethrough, progress meters) across Day, Week, Agenda views and Win32 listbox.
@@ -238,15 +255,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast De-occlusion: Relocated toast alerts to centered top banner with click-to-dismiss, preventing button overlap.
   - Responsive Toolbar: Added breakpoint scaling, compact button labels, and persistent main toolbar Help button.
   - Verification: Clean MSVC compile (`KJournal.exe` 196 KB); Vite clean build in 379ms (`kjournal.html` 121.2 KB); lint PASS.
-
-- **2026-09-25T19:51:00Z — kilo-tester: KZip (UI Element Audit & Inline Fixes)**
-  - Status: PASS ✅ (6 UI issues identified and resolved; 0 regressions).
-  - Toast & Modals: Re-anchored toasts to top bar (top: 54px) preventing table and footer occlusion; added empty-file preview indicator.
-  - Keyboard Navigation: Added ArrowUp/Down and Shift+Arrow row navigation; preserved row focus across selection/Space/Enter.
-  - Shortcut Consistency: Standardized [X] for Extract Selected and [P/Enter] for Preview in toolbar, keydown, and help dialog.
-  - Batch & Formats: Added case-insensitive `.kza` matching and legacy format support to batch extraction; validated inputs non-destructively.
-  - Data & Storage: Fixed UTF-8 base64 encoding in pack/unpack; handled VFS open/save cancellation cleanly; audited quicksave storage quota.
-  - Verification: Clean MSVC compile (`KZip.exe` 10.4 KB); clean Vite build in 389ms (`kzip.html` 65.7 KB); security lint 100% PASS.
 
 
 
