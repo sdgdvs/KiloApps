@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-25T23:55:00Z — kilo-expander: KCalendar (Deep Feature Expansion: Task Completion & Interoperability)**
+  - Status: PASS ✅ (Task completion toggle [Space], dynamic tag system, location/kweb links, export suite; 0 regressions).
+  - Task Completion System: Interactive completion toggle (`[X]`/`[✓]`, strikethrough, progress meters) across Day, Week, Agenda views and Win32 listbox.
+  - Dynamic Tagging & Location: Event `#tags` filtering, tag chips, location field with `kweb://` browser linking.
+  - Status & Filter Bar: Added completion status filter (`All`, `⏳ Pending`, `✅ Done`) and tag filter in toolbar.
+  - Interoperability & Export: Enhanced Markdown agenda (`- [x]` checkboxes), CSV, RFC 5545 iCalendar (`STATUS:COMPLETED`), and JSON backup.
+  - Analytics & Tutorial: Analytics modal displays task completion rate %, pending tally, and tag breakdowns; updated F1 tutorial.
+  - Verification: Clean MSVC compile (`KCalendar.exe` 21.5 KB); Vite clean build in 383ms (`kcalendar.html` 100.7 KB); security lint 100% PASS.
+
 - **2026-09-25T21:55:00Z — kilo-graphics: KChrono (Game Content, Visual Polish & Balance Pass)**
   - Status: PASS ✅ (Specular glints & traveling dots removed, causal loop locker aging & strain balance; 0 regressions).
   - Glint & Comet Purge: Removed white specular visor glint pixels across Win32 C and web; eliminated traveling pulse dot from Chronograph.

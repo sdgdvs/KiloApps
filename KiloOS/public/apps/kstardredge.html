@@ -1692,6 +1692,82 @@
             flex-direction: column;
             gap: 4px;
         }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-hdr {
+            background: rgba(0, 240, 255, 0.12);
+            border: 1px solid var(--border-panel);
+            color: var(--text-bright);
+            padding: 3px 8px;
+            font-family: inherit;
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-hdr:hover {
+            background: rgba(0, 240, 255, 0.25);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 6px var(--accent-cyan);
+        }
+
+        /* Non-occluding Retro Toast Notifications */
+        #toast-container {
+            position: fixed;
+            top: 42px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .retro-toast {
+            pointer-events: auto;
+            background: rgba(2, 6, 23, 0.95);
+            border: 1px solid var(--accent-cyan);
+            color: var(--text-bright);
+            font-family: var(--font-mono, monospace);
+            font-size: 11px;
+            padding: 6px 12px;
+            border-radius: 3px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.8), 0 0 6px rgba(0, 240, 255, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            animation: toast-fade-in 0.2s ease-out;
+            letter-spacing: 0.5px;
+        }
+
+        .retro-toast.success {
+            border-color: #10b981;
+            color: #6ee7b7;
+        }
+
+        .retro-toast.warn {
+            border-color: #f59e0b;
+            color: #fde68a;
+        }
+
+        .retro-toast.error {
+            border-color: #ef4444;
+            color: #fca5a5;
+        }
+
+        @keyframes toast-fade-in {
+            from { opacity: 0; transform: translateY(-6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -1706,7 +1782,15 @@
             <div class="stat-badge">HOLD: <span id="hdrCargo">0</span> / <span id="hdrCargoMax">200</span> T</div>
             <div class="stat-badge">HULL: <span id="hdrHull">100%</span></div>
         </div>
+        <div class="header-actions">
+            <button class="btn-hdr" id="btnHdrSave" title="Quicksave flight state to local storage (F5)">💾 SAVE (F5)</button>
+            <button class="btn-hdr" id="btnHdrLoad" title="Quickload saved flight state (F9)">⚡ LOAD (F9)</button>
+            <button class="btn-hdr" id="btnHdrTutorial" title="View Captain's Induction / Operations Briefing">ℹ️ BRIEFING</button>
+        </div>
     </header>
+
+    <!-- Non-occluding Retro Toast Notifications -->
+    <div id="toast-container"></div>
 
     <div class="main-container">
         <!-- Left: Ship Systems & Telemetry -->
@@ -1973,6 +2057,66 @@
                     <div class="log-entry system">[SYSTEM] KStarDredge Mk-IV cockpit operational. Core reactor online.</div>
                     <div class="log-entry mining">[MINING] High-frequency mining laser ready. Aim at asteroids and hold [SPACE].</div>
                     <div class="log-entry cargo">[TRACTOR] Tractor emitter active. Hold [T] to gather extracted mineral chunks.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Captain's Induction / First-Run Operations Briefing Modal -->
+    <div class="modal-overlay" id="tutorialModal">
+        <div class="modal-box" style="width: 820px; max-width: 95vw;">
+            <div class="modal-header">
+                <span>🛰️ CAPTAIN'S INDUCTION // MK-IV DREDGER OPERATIONS BRIEFING</span>
+                <button class="btn" id="btnCloseTutorial" style="padding: 2px 8px; border-color: var(--accent-red); color: var(--accent-red);">✕ CLOSE [ESC]</button>
+            </div>
+            <div class="modal-body" style="gap: 10px; max-height: 75vh; overflow-y: auto;">
+                <div style="background: rgba(0, 240, 255, 0.08); border: 1px solid var(--accent-cyan); padding: 8px 12px; border-radius: 3px;">
+                    <strong style="color: var(--accent-cyan);">OPERATIONAL MANDATE:</strong>
+                    Welcome to the bridge of the <strong style="color: #fff;">Iron Dredge Mk-IV</strong> heavy industrial salvage platform. You are deployed across deep asteroid fields to extract rare mineral deposits, breach derelict alien & human starships, refine raw ores into hyper-alloys, fulfill station trade contracts, and repel opportunistic pirate raiders.
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-panel); padding: 8px; border-radius: 3px;">
+                        <div style="font-weight: bold; color: var(--accent-amber); margin-bottom: 4px;">1. HELM & EXTRACTION CONTROLS</div>
+                        <ul style="margin: 0; padding-left: 16px; color: var(--text-dim); line-height: 1.4;">
+                            <li><strong style="color: #fff;">[W / Up]:</strong> Main Thrusters &bull; <strong style="color: #fff;">[S / Down]:</strong> Retro-Thrust</li>
+                            <li><strong style="color: #fff;">[A / D / Left / Right]:</strong> Steer & Yaw</li>
+                            <li><strong style="color: #fff;">[SPACE]:</strong> Thermal Mining Beam (Hold to fracture ore)</li>
+                            <li><strong style="color: #fff;">[T]:</strong> Tractor Emitter (Collects floating mineral chunks)</li>
+                            <li><strong style="color: #fff;">[Z]:</strong> Toggle Inertia Dampeners</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-panel); padding: 8px; border-radius: 3px;">
+                        <div style="font-weight: bold; color: var(--accent-cyan); margin-bottom: 4px;">2. DREDGER STATIONS & SYSTEMS</div>
+                        <ul style="margin: 0; padding-left: 16px; color: var(--text-dim); line-height: 1.4;">
+                            <li><strong style="color: #fff;">[P] Prospecting:</strong> Spectrometry & resonance lock (+50%)</li>
+                            <li><strong style="color: #fff;">[E] EVA Salvage:</strong> Cut derelict airlocks & extract cores</li>
+                            <li><strong style="color: #fff;">[K] Crisis Ops:</strong> Patch hull breaches, vent plasma fires</li>
+                            <li><strong style="color: #fff;">[R] Refinery:</strong> Smelt raw minerals into hyper-alloys</li>
+                            <li><strong style="color: #fff;">[D] Station:</strong> Dock for repairs, fuel, & trade contracts</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-panel); padding: 8px; border-radius: 3px;">
+                        <div style="font-weight: bold; color: #ef4444; margin-bottom: 4px;">3. TACTICAL DEFENSE & ARMORY</div>
+                        <ul style="margin: 0; padding-left: 16px; color: var(--text-dim); line-height: 1.4;">
+                            <li><strong style="color: #fff;">[1..4]:</strong> Select Thermal Beam, Railgun, EMP, or PDL</li>
+                            <li><strong style="color: #fff;">[F]:</strong> Fire Kinetic Railgun Cannon</li>
+                            <li><strong style="color: #fff;">[G]:</strong> Fire EMP Flak Shockwave</li>
+                            <li><strong style="color: #fff;">[C]:</strong> Deploy Countermeasure Chaff against torpedoes</li>
+                            <li><strong style="color: #fff;">[X]:</strong> Open Armory console to craft slugs & recharge</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-panel); padding: 8px; border-radius: 3px;">
+                        <div style="font-weight: bold; color: var(--accent-emerald); margin-bottom: 4px;">4. PERSISTENCE & PROTOCOLS</div>
+                        <ul style="margin: 0; padding-left: 16px; color: var(--text-dim); line-height: 1.4;">
+                            <li><strong style="color: #fff;">[F5]:</strong> Quicksave full flight state to local storage</li>
+                            <li><strong style="color: #fff;">[F9]:</strong> Quickload state instantly</li>
+                            <li><strong style="color: #fff;">[H]:</strong> Captain's Codex & Comprehensive Manual</li>
+                            <li>Review this briefing anytime via top <strong style="color: #fff;">[BRIEFING]</strong> button</li>
+                        </ul>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
+                    <button class="btn" id="btnDismissTutorial" style="background: var(--accent-cyan); color: #020617; font-weight: bold; padding: 7px 18px; border-radius: 3px; cursor: pointer; border: none;">PROCEED TO HELM [ENTER / ESC]</button>
                 </div>
             </div>
         </div>
@@ -4154,23 +4298,291 @@
             });
         }
 
-        function cycleTheme() {
-            state.themeIndex = (state.themeIndex + 1) % THEMES.length;
+        function showToast(msg, type = 'info', duration = 3200) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `retro-toast ${type}`;
+            toast.textContent = msg;
+            toast.addEventListener('click', () => {
+                if (toast.parentNode) toast.parentNode.removeChild(toast);
+            });
+            container.appendChild(toast);
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(-6px)';
+                    setTimeout(() => {
+                        if (toast.parentNode) toast.parentNode.removeChild(toast);
+                    }, 300);
+                }
+            }, duration);
+            addLog(msg, type === 'error' ? 'critical' : (type === 'warn' ? 'warning' : 'system'));
+        }
+
+        function applyTheme(idx) {
+            state.themeIndex = ((idx % THEMES.length) + THEMES.length) % THEMES.length;
             const theme = THEMES[state.themeIndex];
             document.body.setAttribute('data-theme', theme.id);
-            document.getElementById('txtBtnTheme').textContent = theme.label;
+            const btn = document.getElementById('txtBtnTheme');
+            if (btn) btn.textContent = theme.label;
+        }
+
+        function applyScanlines(idx) {
+            if (SCANLINE_MODES[state.scanlineIndex]) {
+                document.body.classList.remove(SCANLINE_MODES[state.scanlineIndex].id);
+            }
+            state.scanlineIndex = ((idx % SCANLINE_MODES.length) + SCANLINE_MODES.length) % SCANLINE_MODES.length;
+            const mode = SCANLINE_MODES[state.scanlineIndex];
+            document.body.classList.add(mode.id);
+            const btn = document.getElementById('txtBtnScanlines');
+            if (btn) btn.textContent = mode.label;
+        }
+
+        function cycleTheme() {
+            applyTheme(state.themeIndex + 1);
+            const theme = THEMES[state.themeIndex];
             audio.playBeep(600, 'sine', 0.08, 0.12);
             addLog(`Cockpit HUD theme switched to: [${theme.name}]`, 'system');
         }
 
         function cycleScanlines() {
-            document.body.classList.remove(SCANLINE_MODES[state.scanlineIndex].id);
-            state.scanlineIndex = (state.scanlineIndex + 1) % SCANLINE_MODES.length;
+            applyScanlines(state.scanlineIndex + 1);
             const mode = SCANLINE_MODES[state.scanlineIndex];
-            document.body.classList.add(mode.id);
-            document.getElementById('txtBtnScanlines').textContent = mode.label;
             audio.playBeep(520, 'square', 0.06, 0.1);
             addLog(`CRT scanline raster filter: [${mode.name}]`, 'system');
+        }
+
+        function closeAllModals() {
+            const modals = [
+                'tutorialModal', 'helpModal', 'audioModal', 'defenseModal',
+                'stationModal', 'refineryModal', 'crisisModal', 'evaModal',
+                'prospectModal', 'upgradeModal', 'navModal'
+            ];
+            let closedAny = false;
+            modals.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.classList.contains('open')) {
+                    el.classList.remove('open');
+                    closedAny = true;
+                }
+            });
+            return closedAny;
+        }
+
+        function openTutorialModal() {
+            const modal = document.getElementById('tutorialModal');
+            if (modal) {
+                modal.classList.add('open');
+                if (typeof audio !== 'undefined' && audio.playBeep) audio.playBeep(600, 'sine', 0.08, 0.12);
+            }
+        }
+
+        function closeTutorialModal() {
+            const modal = document.getElementById('tutorialModal');
+            if (modal) modal.classList.remove('open');
+            try {
+                localStorage.setItem('kstardredge_tutorialSeen', '1');
+            } catch (e) {}
+        }
+
+        function quicksaveGame() {
+            try {
+                const payload = {
+                    version: 1,
+                    timestamp: Date.now(),
+                    credits: state.credits,
+                    currentSectorIndex: state.currentSectorIndex,
+                    selectedSectorIndex: state.selectedSectorIndex,
+                    warpActive: false,
+                    warpTimer: 0,
+                    hull: state.hull,
+                    maxHull: state.maxHull,
+                    shield: state.shield,
+                    maxShield: state.maxShield,
+                    fuel: state.fuel,
+                    maxFuel: state.maxFuel,
+                    heat: state.heat,
+                    maxHeat: state.maxHeat,
+                    reactor: state.reactor,
+                    o2: state.o2,
+                    o2Scrubber: state.o2Scrubber,
+                    radiation: state.radiation,
+                    maxRadiation: state.maxRadiation,
+                    hullBreaches: state.hullBreaches,
+                    plasmaLeaks: state.plasmaLeaks,
+                    repairDronesActive: state.repairDronesActive,
+                    droneTimer: state.droneTimer,
+                    cargo: state.cargo,
+                    maxCargo: state.maxCargo,
+                    dampeners: state.dampeners,
+                    laserOverheated: state.laserOverheated,
+                    themeIndex: state.themeIndex,
+                    scanlineIndex: state.scanlineIndex,
+                    catalyticBoost: state.catalyticBoost,
+                    station: state.station,
+                    factionRep: state.factionRep,
+                    completedContracts: state.completedContracts,
+                    totalContractsDone: state.totalContractsDone,
+                    refined: state.refined,
+                    upgrades: state.upgrades,
+                    cargoHold: state.cargoHold,
+                    ship: {
+                        x: state.ship.x,
+                        y: state.ship.y,
+                        vx: state.ship.vx,
+                        vy: state.ship.vy,
+                        angle: state.ship.angle,
+                        rotSpeed: state.ship.rotSpeed
+                    },
+                    weapons: {
+                        selected: state.weapons.selected,
+                        railgunSlugs: state.weapons.railgunSlugs,
+                        empCharges: state.weapons.empCharges,
+                        autoPDL: state.weapons.autoPDL,
+                        railgunCooldown: state.weapons.railgunCooldown,
+                        flakCooldown: state.weapons.flakCooldown,
+                        pdlCooldown: state.weapons.pdlCooldown,
+                        chaffCooldown: state.weapons.chaffCooldown
+                    },
+                    piratesDefeated: state.piratesDefeated,
+                    bountiesClaimed: state.bountiesClaimed,
+                    asteroids: state.asteroids,
+                    derelicts: state.derelicts,
+                    raiders: state.raiders,
+                    oreChunks: state.oreChunks
+                };
+                localStorage.setItem('kstardredge_quicksave', JSON.stringify(payload));
+                const secName = SECTORS[state.currentSectorIndex] ? SECTORS[state.currentSectorIndex].name : 'Sector';
+                const msg = `QUICKSAVE ARCHIVED: ${secName} // ${state.credits.toLocaleString()} CR`;
+                showToast(msg, 'success');
+                if (typeof audio !== 'undefined' && audio.playBeep) audio.playBeep(880, 'sine', 0.1, 0.15);
+            } catch (err) {
+                console.error('Quicksave error:', err);
+                showToast("STORAGE ERROR: Quicksave failed (quota or privacy restriction)", "error");
+            }
+        }
+
+        function quickloadGame() {
+            try {
+                const raw = localStorage.getItem('kstardredge_quicksave');
+                if (!raw) {
+                    showToast("QUICKLOAD FAILED: No saved flight record found.", "warn");
+                    return;
+                }
+                const data = JSON.parse(raw);
+                if (!data || !data.version) {
+                    showToast("QUICKLOAD FAILED: Corrupted save data format.", "error");
+                    return;
+                }
+
+                state.credits = data.credits ?? state.credits;
+                state.currentSectorIndex = data.currentSectorIndex ?? state.currentSectorIndex;
+                state.selectedSectorIndex = data.selectedSectorIndex ?? state.currentSectorIndex;
+                state.warpActive = false;
+                state.warpTimer = 0;
+                state.hull = data.hull ?? state.hull;
+                state.maxHull = data.maxHull ?? state.maxHull;
+                state.shield = data.shield ?? state.shield;
+                state.maxShield = data.maxShield ?? state.maxShield;
+                state.fuel = data.fuel ?? state.fuel;
+                state.maxFuel = data.maxFuel ?? state.maxFuel;
+                state.heat = data.heat ?? state.heat;
+                state.maxHeat = data.maxHeat ?? state.maxHeat;
+                state.reactor = data.reactor ?? state.reactor;
+                state.o2 = data.o2 ?? state.o2;
+                state.o2Scrubber = data.o2Scrubber ?? state.o2Scrubber;
+                state.radiation = data.radiation ?? state.radiation;
+                state.maxRadiation = data.maxRadiation ?? state.maxRadiation;
+                state.hullBreaches = Array.isArray(data.hullBreaches) ? data.hullBreaches : [];
+                state.plasmaLeaks = Boolean(data.plasmaLeaks);
+                state.repairDronesActive = Boolean(data.repairDronesActive);
+                state.droneTimer = data.droneTimer ?? 0;
+                state.cargo = data.cargo ?? 0;
+                state.maxCargo = data.maxCargo ?? 200;
+                state.dampeners = Boolean(data.dampeners);
+                state.laserOverheated = Boolean(data.laserOverheated);
+                state.catalyticBoost = Boolean(data.catalyticBoost);
+
+                if (data.station) Object.assign(state.station, data.station);
+                if (data.factionRep) Object.assign(state.factionRep, data.factionRep);
+                if (data.completedContracts) state.completedContracts = Object.assign({}, data.completedContracts);
+                state.totalContractsDone = data.totalContractsDone ?? state.totalContractsDone;
+
+                if (data.refined) Object.assign(state.refined, data.refined);
+                if (data.upgrades) Object.assign(state.upgrades, data.upgrades);
+                if (data.cargoHold) Object.assign(state.cargoHold, data.cargoHold);
+
+                if (data.ship) {
+                    state.ship.x = data.ship.x ?? 0;
+                    state.ship.y = data.ship.y ?? 0;
+                    state.ship.vx = data.ship.vx ?? 0;
+                    state.ship.vy = data.ship.vy ?? 0;
+                    state.ship.angle = data.ship.angle ?? -Math.PI / 2;
+                    state.ship.rotSpeed = data.ship.rotSpeed ?? 0;
+                }
+                state.ship.miningActive = false;
+                state.ship.tractorActive = false;
+                state.ship.thrusting = false;
+                state.ship.reversing = false;
+
+                if (data.weapons) {
+                    Object.assign(state.weapons, data.weapons);
+                }
+                state.piratesDefeated = data.piratesDefeated ?? 0;
+                state.bountiesClaimed = data.bountiesClaimed ?? 0;
+
+                if (Array.isArray(data.asteroids) && data.asteroids.length > 0) {
+                    state.asteroids = data.asteroids;
+                }
+                if (Array.isArray(data.derelicts)) {
+                    state.derelicts = data.derelicts;
+                }
+                if (Array.isArray(data.raiders)) {
+                    state.raiders = data.raiders;
+                }
+                if (Array.isArray(data.oreChunks)) {
+                    state.oreChunks = data.oreChunks;
+                }
+
+                state.projectiles = [];
+                state.enemyProjectiles = [];
+                state.shockwaves = [];
+                state.particles = [];
+                state.floatingTexts = [];
+                state.selectedTarget = null;
+                state.selectedDerelict = null;
+                state.selectedRaider = null;
+                state.evaTarget = null;
+
+                if (typeof data.themeIndex === 'number') applyTheme(data.themeIndex);
+                if (typeof data.scanlineIndex === 'number') applyScanlines(data.scanlineIndex);
+
+                const sector = SECTORS[state.currentSectorIndex];
+                if (sector) document.getElementById('hdrSector').textContent = sector.name;
+                document.getElementById('hdrCredits').textContent = state.credits.toLocaleString();
+                document.getElementById('hdrCargo').textContent = state.cargo;
+                document.getElementById('hdrCargoMax').textContent = state.maxCargo;
+                document.getElementById('hdrHull').textContent = `${Math.round(state.hull)}%`;
+
+                document.getElementById('btnTractor').classList.toggle('active-tractor', state.ship.tractorActive);
+                document.getElementById('btnDampener').classList.toggle('active-dampener', state.dampeners);
+                document.getElementById('txtDampener').textContent = state.dampeners ? "ACTIVE" : "OFFLINE";
+                document.getElementById('txtDampener').style.color = state.dampeners ? "var(--accent-emerald)" : "var(--accent-amber)";
+
+                closeAllModals();
+                updateCargoUI();
+                updateDefenseModalUI();
+
+                const secName = sector ? sector.name : 'Sector';
+                const msg = `STATE RESTORED: ${secName} // ${Math.round(state.hull)}% HULL // ${state.credits.toLocaleString()} CR`;
+                showToast(msg, 'success');
+                if (typeof audio !== 'undefined' && audio.playBeep) audio.playBeep(440, 'triangle', 0.15, 0.2);
+            } catch (err) {
+                console.error('Quickload error:', err);
+                showToast("PARSE ERROR: Failed to restore flight state", "error");
+            }
         }
 
         // Initialize Procedural Starfield & Asteroid Field
@@ -6279,6 +6691,35 @@
         // --- Keyboard & Input Listeners ---
         window.addEventListener('keydown', (e) => {
             audio.init();
+
+            if (e.code === 'F5') {
+                e.preventDefault();
+                quicksaveGame();
+                return;
+            }
+            if (e.code === 'F9') {
+                e.preventDefault();
+                quickloadGame();
+                return;
+            }
+
+            const tutModal = document.getElementById('tutorialModal');
+            if (tutModal && tutModal.classList.contains('open')) {
+                if (e.code === 'Escape' || e.code === 'Enter' || e.code === 'Space' || e.code === 'KeyH') {
+                    e.preventDefault();
+                    closeTutorialModal();
+                    return;
+                }
+                return;
+            }
+
+            if (e.code === 'Escape') {
+                if (closeAllModals()) {
+                    e.preventDefault();
+                    return;
+                }
+            }
+
             state.keys[e.code] = true;
             if (e.code === 'Space') {
                 e.preventDefault();
@@ -6839,6 +7280,17 @@
         function closeHelpModal() {
             document.getElementById('helpModal').classList.remove('open');
         }
+
+        const btnHdrSave = document.getElementById('btnHdrSave');
+        if (btnHdrSave) btnHdrSave.addEventListener('click', quicksaveGame);
+        const btnHdrLoad = document.getElementById('btnHdrLoad');
+        if (btnHdrLoad) btnHdrLoad.addEventListener('click', quickloadGame);
+        const btnHdrTutorial = document.getElementById('btnHdrTutorial');
+        if (btnHdrTutorial) btnHdrTutorial.addEventListener('click', openTutorialModal);
+        const btnCloseTutorial = document.getElementById('btnCloseTutorial');
+        if (btnCloseTutorial) btnCloseTutorial.addEventListener('click', closeTutorialModal);
+        const btnDismissTutorial = document.getElementById('btnDismissTutorial');
+        if (btnDismissTutorial) btnDismissTutorial.addEventListener('click', closeTutorialModal);
 
         function switchHelpTab(tabIdx) {
             const tabBtns = document.querySelectorAll('.help-tab-btn');
@@ -9315,6 +9767,17 @@
         initConsoleResizers();
         resizeCanvas();
         updateCargoUI();
+
+        // First-Run Tutorial Check
+        try {
+            const seen = localStorage.getItem('kstardredge_tutorialSeen');
+            if (!seen) {
+                openTutorialModal();
+            }
+        } catch (e) {
+            openTutorialModal();
+        }
+
         requestAnimationFrame(gameLoop);
     </script>
 </body>

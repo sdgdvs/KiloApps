@@ -27,6 +27,9 @@
 #define ID_BTN_REFINERY    115
 #define ID_BTN_STATION     116
 #define ID_BTN_DEFENSE     117
+#define ID_BTN_QUICKSAVE   118
+#define ID_BTN_QUICKLOAD   119
+#define ID_BTN_TUTORIAL    120
 
 #define SFX_NONE           0
 #define SFX_COLLECT        1
@@ -787,15 +790,28 @@ typedef struct {
     FloatingText texts[MAX_FLOATING_TEXTS];
     LogEntry logs[MAX_LOG_ENTRIES];
     int logCount;
+    int showTutorialModal;
+    int tutorialSeen;
 } GameState;
 
 static GameState g_state;
 static HWND g_hwnd = NULL;
-static HWND g_btnLaser, g_btnTractor, g_btnDampener, g_btnScan, g_btnNav, g_btnStation, g_btnEva, g_btnCrisis, g_btnDefense, g_btnRefinery, g_btnUpgrades, g_btnTheme, g_btnScanlines, g_btnAudio, g_btnHelp, g_btnJettison, g_btnSell;
+static HWND g_btnLaser, g_btnTractor, g_btnDampener, g_btnScan, g_btnNav, g_btnStation, g_btnEva, g_btnCrisis, g_btnDefense, g_btnRefinery, g_btnUpgrades, g_btnTheme, g_btnScanlines, g_btnAudio, g_btnHelp, g_btnJettison, g_btnSell, g_btnQuicksave, g_btnQuickload, g_btnTutorial;
 static HFONT g_fontMono = NULL;
 static HFONT g_fontMonoBold = NULL;
 static HFONT g_fontSmall = NULL;
 static HFONT g_fontHeader = NULL;
+
+static char g_toastMessage[128] = "";
+static DWORD g_toastExpiry = 0;
+static COLORREF g_toastColor = RGB(56, 189, 248);
+
+void ShowToast(const char* msg, COLORREF col) {
+    strncpy(g_toastMessage, msg, sizeof(g_toastMessage) - 1);
+    g_toastMessage[sizeof(g_toastMessage) - 1] = '\0';
+    g_toastExpiry = GetTickCount() + 3200;
+    g_toastColor = col;
+}
 
 // Audio System (Phase 13 Deep Expansion)
 #define MAX_SFX_QUEUE 64
@@ -1028,6 +1044,113 @@ void AddLog(const char* text, int type) {
         g_state.logs[MAX_LOG_ENTRIES - 1].text[127] = '\0';
         g_state.logs[MAX_LOG_ENTRIES - 1].type = type;
     }
+}
+
+#define SAVE_MAGIC "KDRD1999"
+typedef struct {
+    char magic[8];
+    int version;
+    GameState state;
+} SaveFileData;
+
+static SaveFileData s_saveBuffer;
+
+int SaveGameToFile(const char* overridePath) {
+    char path[MAX_PATH];
+    if (overridePath) {
+        strncpy(path, overridePath, MAX_PATH - 1);
+        path[MAX_PATH - 1] = '\0';
+    } else {
+        GetModuleFileNameA(NULL, path, MAX_PATH);
+        char* p = strrchr(path, '\\');
+        if (p) *(p + 1) = '\0';
+        strcat(path, "kstardredge.dat");
+    }
+    FILE* fp = fopen(path, "wb");
+    if (!fp) {
+        ShowToast("QUICKSAVE FAILED: DISK WRITE ERROR", RGB(239, 68, 68));
+        AddLog("[SAVE] ERROR: Could not open kstardredge.dat for writing.", 4);
+        return 0;
+    }
+    memset(&s_saveBuffer, 0, sizeof(SaveFileData));
+    memcpy(s_saveBuffer.magic, SAVE_MAGIC, 8);
+    s_saveBuffer.version = 1;
+    s_saveBuffer.state = g_state;
+    s_saveBuffer.state.showStarChart = 0;
+    s_saveBuffer.state.showUpgrades = 0;
+    s_saveBuffer.state.showSpectrometer = 0;
+    s_saveBuffer.state.showEva = 0;
+    s_saveBuffer.state.showCrisis = 0;
+    s_saveBuffer.state.showRefinery = 0;
+    s_saveBuffer.state.showStation = 0;
+    s_saveBuffer.state.showHelp = 0;
+    s_saveBuffer.state.showDefense = 0;
+    s_saveBuffer.state.showTutorialModal = 0;
+    s_saveBuffer.state.tutorialSeen = 1;
+    fwrite(&s_saveBuffer, sizeof(SaveFileData), 1, fp);
+    fclose(fp);
+
+    char buf[128];
+    const char* secName = SECTOR_DEFS[g_state.currentSectorIndex].name;
+    sprintf(buf, "QUICKSAVE ARCHIVED: %s // %d CR", secName, g_state.credits);
+    AddLog(buf, 0);
+    ShowToast(buf, RGB(16, 185, 129));
+    TriggerSound(SFX_COLLECT);
+    return 1;
+}
+
+int LoadGameFromFile(const char* overridePath) {
+    char path[MAX_PATH];
+    if (overridePath) {
+        strncpy(path, overridePath, MAX_PATH - 1);
+        path[MAX_PATH - 1] = '\0';
+    } else {
+        GetModuleFileNameA(NULL, path, MAX_PATH);
+        char* p = strrchr(path, '\\');
+        if (p) *(p + 1) = '\0';
+        strcat(path, "kstardredge.dat");
+    }
+    FILE* fp = fopen(path, "rb");
+    if (!fp) {
+        ShowToast("QUICKLOAD FAILED: NO SAVE FILE FOUND", RGB(239, 68, 68));
+        AddLog("[LOAD] ERROR: No kstardredge.dat file found.", 4);
+        return 0;
+    }
+    size_t read = fread(&s_saveBuffer, sizeof(SaveFileData), 1, fp);
+    fclose(fp);
+    if (read != 1 || memcmp(s_saveBuffer.magic, SAVE_MAGIC, 8) != 0) {
+        ShowToast("QUICKLOAD FAILED: CORRUPT SAVE DATA", RGB(239, 68, 68));
+        AddLog("[LOAD] ERROR: Invalid save data header.", 4);
+        return 0;
+    }
+    g_state = s_saveBuffer.state;
+    g_state.showStarChart = 0;
+    g_state.showUpgrades = 0;
+    g_state.showSpectrometer = 0;
+    g_state.showEva = 0;
+    g_state.showCrisis = 0;
+    g_state.showRefinery = 0;
+    g_state.showStation = 0;
+    g_state.showHelp = 0;
+    g_state.showDefense = 0;
+    g_state.showTutorialModal = 0;
+    g_state.tutorialSeen = 1;
+    g_state.miningActive = 0;
+    g_state.tractorActive = 0;
+    g_state.thrusting = 0;
+    g_state.reversing = 0;
+    g_state.turningLeft = 0;
+    g_state.turningRight = 0;
+
+    UpdateCargoTotal();
+
+    char buf[128];
+    const char* secName = SECTOR_DEFS[g_state.currentSectorIndex].name;
+    sprintf(buf, "STATE RESTORED: %s // %.0f%% HULL // %d CR", secName, g_state.hull, g_state.credits);
+    AddLog(buf, 5);
+    ShowToast(buf, RGB(56, 189, 248));
+    TriggerSound(SFX_WARP);
+    return 1;
 }
 
 void AddFloatingText(const char* text, float x, float y, COLORREF color) {
@@ -2484,7 +2607,24 @@ void InitGame(void) {
     
     InitSectorField(0);
     
+    // Check if save file already exists; if not, trigger first-run tutorial briefing
+    char savePath[MAX_PATH];
+    GetModuleFileNameA(NULL, savePath, MAX_PATH);
+    char* pEnd = strrchr(savePath, '\\');
+    if (pEnd) *(pEnd + 1) = '\0';
+    strcat(savePath, "kstardredge.dat");
+    FILE* fpCheck = fopen(savePath, "rb");
+    if (fpCheck) {
+        fclose(fpCheck);
+        g_state.tutorialSeen = 1;
+        g_state.showTutorialModal = 0;
+    } else {
+        g_state.tutorialSeen = 0;
+        g_state.showTutorialModal = 1;
+    }
+
     AddLog("[SYSTEM] KStarDredge Mk-IV cockpit operational. Core reactor online.", 0);
+    AddLog("[PERSIST] Flight recorder active. Quicksave with [F5], Quickload with [F9].", 5);
     AddLog("[DEFENSE] Armory online: Railguns, EMP Flak, Auto-PDL active [X].", 0);
     AddLog("[MINING] High-frequency mining laser ready. Aim at asteroids and hold [SPACE].", 1);
     AddLog("[TRACTOR] Tractor emitter active. Hold [T] to gather extracted mineral chunks.", 2);
@@ -6794,6 +6934,184 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         SelectObject(hdc, oldPenH);
         DeleteObject(hPenHBorder);
     }
+
+    // Captain's Induction / First-Run Operations Briefing Modal
+    if (g_state.showTutorialModal) {
+        int modalW = 760;
+        int modalH = 480;
+        int hx = (totalW - modalW) / 2;
+        int hy = (totalH - modalH) / 2;
+
+        RECT rcBackdrop = { 0, 0, totalW, totalH };
+        HBRUSH hBrBackdrop = CreateSolidBrush(RGB(2, 6, 18));
+        FillRect(hdc, &rcBackdrop, hBrBackdrop);
+        DeleteObject(hBrBackdrop);
+
+        RECT rcModal = { hx, hy, hx + modalW, hy + modalH };
+        HBRUSH hBrBox = CreateSolidBrush(RGB(10, 20, 36));
+        HPEN hPenBox = CreatePen(PS_SOLID, 2, RGB(0, 240, 255));
+        HGDIOBJ oldBr = SelectObject(hdc, hBrBox);
+        HGDIOBJ oldPenBox = SelectObject(hdc, hPenBox);
+        Rectangle(hdc, hx, hy, hx + modalW, hy + modalH);
+
+        RECT rcHdr = { hx, hy, hx + modalW, hy + 32 };
+        HBRUSH hBrHdr = CreateSolidBrush(RGB(15, 30, 56));
+        FillRect(hdc, &rcHdr, hBrHdr);
+        DeleteObject(hBrHdr);
+
+        SelectObject(hdc, g_fontHeader);
+        SetTextColor(hdc, RGB(0, 240, 255));
+        SetBkMode(hdc, TRANSPARENT);
+        TextOutA(hdc, hx + 14, hy + 6, "CAPTAIN'S INDUCTION // MK-IV DREDGER OPERATIONS BRIEFING", 55);
+
+        RECT rcClose = { hx + modalW - 36, hy + 4, hx + modalW - 8, hy + 28 };
+        HBRUSH hBrClose = CreateSolidBrush(RGB(60, 15, 25));
+        HPEN hPenClose = CreatePen(PS_SOLID, 1, RGB(239, 68, 68));
+        SelectObject(hdc, hBrClose);
+        SelectObject(hdc, hPenClose);
+        Rectangle(hdc, rcClose.left, rcClose.top, rcClose.right, rcClose.bottom);
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, RGB(244, 63, 94));
+        DrawTextA(hdc, "X", 1, &rcClose, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        DeleteObject(hBrClose);
+        DeleteObject(hPenClose);
+
+        RECT rcMandate = { hx + 14, hy + 40, hx + modalW - 14, hy + 96 };
+        HBRUSH hBrMandate = CreateSolidBrush(RGB(6, 26, 44));
+        HPEN hPenMandate = CreatePen(PS_SOLID, 1, RGB(0, 240, 255));
+        SelectObject(hdc, hBrMandate);
+        SelectObject(hdc, hPenMandate);
+        Rectangle(hdc, rcMandate.left, rcMandate.top, rcMandate.right, rcMandate.bottom);
+        DeleteObject(hBrMandate);
+        DeleteObject(hPenMandate);
+
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, RGB(0, 240, 255));
+        TextOutA(hdc, hx + 22, hy + 46, "OPERATIONAL MANDATE:", 20);
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(226, 232, 240));
+        TextOutA(hdc, hx + 22, hy + 62, "Welcome aboard the Iron Dredge Mk-IV heavy industrial salvage platform. Your mission is to strip", 96);
+        TextOutA(hdc, hx + 22, hy + 76, "valuable ores, breach derelict hulks, smelt hyper-alloys, fulfill trade contracts, and repel raiders.", 101);
+
+        int cardW = (modalW - 40) / 2;
+        int cardH = 150;
+        int c1x = hx + 14;
+        int c2x = hx + 20 + cardW;
+        int r1y = hy + 104;
+        int r2y = hy + 262;
+
+        RECT rcC1 = { c1x, r1y, c1x + cardW, r1y + cardH };
+        HBRUSH hBrCard = CreateSolidBrush(RGB(8, 16, 30));
+        HPEN hPenCard = CreatePen(PS_SOLID, 1, RGB(30, 58, 95));
+        SelectObject(hdc, hBrCard);
+        SelectObject(hdc, hPenCard);
+        Rectangle(hdc, rcC1.left, rcC1.top, rcC1.right, rcC1.bottom);
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, RGB(245, 158, 11));
+        TextOutA(hdc, c1x + 10, r1y + 8, "1. HELM & EXTRACTION CONTROLS", 29);
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(203, 213, 225));
+        TextOutA(hdc, c1x + 10, r1y + 28, "* [W / UP]: Main Thruster Propulsion", 36);
+        TextOutA(hdc, c1x + 10, r1y + 46, "* [S / DOWN]: Retro-Braking Thrusters", 37);
+        TextOutA(hdc, c1x + 10, r1y + 64, "* [A / D / LEFT / RIGHT]: Steering & Yaw", 40);
+        TextOutA(hdc, c1x + 10, r1y + 82, "* [SPACE]: Thermal Mining Beam (Hold)", 37);
+        TextOutA(hdc, c1x + 10, r1y + 100, "* [T]: Tractor Emitter (Pulls Ore Chunks)", 41);
+        TextOutA(hdc, c1x + 10, r1y + 118, "* [Z]: Toggle Inertia Dampeners", 31);
+
+        RECT rcC2 = { c2x, r1y, c2x + cardW, r1y + cardH };
+        SelectObject(hdc, hBrCard);
+        SelectObject(hdc, hPenCard);
+        Rectangle(hdc, rcC2.left, rcC2.top, rcC2.right, rcC2.bottom);
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, RGB(56, 189, 248));
+        TextOutA(hdc, c2x + 10, r1y + 8, "2. DREDGER STATIONS & SYSTEMS", 29);
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(203, 213, 225));
+        TextOutA(hdc, c2x + 10, r1y + 28, "* [P]: Prospecting Scanner & Resonance (+50%)", 45);
+        TextOutA(hdc, c2x + 10, r1y + 46, "* [E]: EVA Salvage Ops (Cut Airlocks & Cores)", 45);
+        TextOutA(hdc, c2x + 10, r1y + 64, "* [K]: Crisis Ops (Vent Plasma & Patch Breaches)", 48);
+        TextOutA(hdc, c2x + 10, r1y + 82, "* [R]: Refinery Smelter (Produce Hyper-Alloys)", 46);
+        TextOutA(hdc, c2x + 10, r1y + 100, "* [D]: Orbital Station (Repairs & Contracts)", 44);
+        TextOutA(hdc, c2x + 10, r1y + 118, "* [N]: Sector Star Chart (Warp Hyperspace)", 42);
+
+        RECT rcC3 = { c1x, r2y, c1x + cardW, r2y + cardH };
+        SelectObject(hdc, hBrCard);
+        SelectObject(hdc, hPenCard);
+        Rectangle(hdc, rcC3.left, rcC3.top, rcC3.right, rcC3.bottom);
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, RGB(244, 63, 94));
+        TextOutA(hdc, c1x + 10, r2y + 8, "3. TACTICAL DEFENSE & ARMORY", 28);
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(203, 213, 225));
+        TextOutA(hdc, c1x + 10, r2y + 28, "* [1..4]: Select Beam, Railgun, EMP, or PDL", 43);
+        TextOutA(hdc, c1x + 10, r2y + 46, "* [F]: Fire Kinetic Railgun Cannon", 34);
+        TextOutA(hdc, c1x + 10, r2y + 64, "* [G]: Fire EMP Flak Shockwave", 30);
+        TextOutA(hdc, c1x + 10, r2y + 82, "* [C]: Deploy Chaff vs Torpedoes", 32);
+        TextOutA(hdc, c1x + 10, r2y + 100, "* [X]: Open Armory to craft slugs & recharge", 44);
+        TextOutA(hdc, c1x + 10, r2y + 118, "* Defeat raiders to claim massive bounties", 42);
+
+        RECT rcC4 = { c2x, r2y, c2x + cardW, r2y + cardH };
+        SelectObject(hdc, hBrCard);
+        SelectObject(hdc, hPenCard);
+        Rectangle(hdc, rcC4.left, rcC4.top, rcC4.right, rcC4.bottom);
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, RGB(16, 185, 129));
+        TextOutA(hdc, c2x + 10, r2y + 8, "4. PERSISTENCE & PROTOCOLS", 26);
+        SelectObject(hdc, g_fontSmall);
+        SetTextColor(hdc, RGB(203, 213, 225));
+        TextOutA(hdc, c2x + 10, r2y + 28, "* [F5]: Quicksave full state to kstardredge.dat", 47);
+        TextOutA(hdc, c2x + 10, r2y + 46, "* [F9]: Quickload saved flight records", 38);
+        TextOutA(hdc, c2x + 10, r2y + 64, "* [H]: Dredger Captain's Codex & Manual", 39);
+        TextOutA(hdc, c2x + 10, r2y + 82, "* [V]: Switch CRT Themes (Cyan / Amber / etc.)", 46);
+        TextOutA(hdc, c2x + 10, r2y + 100, "* Click [BRIEFING] button to review anytime", 43);
+        TextOutA(hdc, c2x + 10, r2y + 118, "* All upgrades and contracts persist safely", 43);
+
+        DeleteObject(hBrCard);
+        DeleteObject(hPenCard);
+
+        int btnW = 320;
+        int btnH = 34;
+        int bx = hx + (modalW - btnW) / 2;
+        int by = hy + modalH - 48;
+        RECT rcBtn = { bx, by, bx + btnW, by + btnH };
+        HBRUSH hBrBtn = CreateSolidBrush(RGB(0, 180, 200));
+        HPEN hPenBtn = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+        SelectObject(hdc, hBrBtn);
+        SelectObject(hdc, hPenBtn);
+        Rectangle(hdc, bx, by, bx + btnW, by + btnH);
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, RGB(2, 6, 23));
+        DrawTextA(hdc, "PROCEED TO HELM [ENTER / ESC]", 29, &rcBtn, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        DeleteObject(hBrBtn);
+        DeleteObject(hPenBtn);
+
+        SelectObject(hdc, oldBr);
+        SelectObject(hdc, oldPenBox);
+        DeleteObject(hBrBox);
+        DeleteObject(hPenBox);
+    }
+
+    // Non-occluding Retro Toast Notification (Top-Right)
+    if (GetTickCount() < g_toastExpiry && g_toastMessage[0] != '\0') {
+        int toastW = 360;
+        int toastH = 28;
+        int tx = totalW - toastW - 14;
+        int ty = topHeaderH + 10;
+        RECT rcToast = { tx, ty, tx + toastW, ty + toastH };
+        HBRUSH hBrToast = CreateSolidBrush(RGB(5, 12, 26));
+        HPEN hPenToast = CreatePen(PS_SOLID, 1, g_toastColor);
+        HGDIOBJ oldTBr = SelectObject(hdc, hBrToast);
+        HGDIOBJ oldTPen = SelectObject(hdc, hPenToast);
+        Rectangle(hdc, tx, ty, tx + toastW, ty + toastH);
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, g_toastColor);
+        SetBkMode(hdc, TRANSPARENT);
+        DrawTextA(hdc, g_toastMessage, -1, &rcToast, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        SelectObject(hdc, oldTBr);
+        SelectObject(hdc, oldTPen);
+        DeleteObject(hBrToast);
+        DeleteObject(hPenToast);
+    }
     
     SelectObject(hdc, oldPen);
     DeleteObject(hPenBorder);
@@ -6838,6 +7156,12 @@ void RepositionControls(HWND hwnd) {
     MoveWindow(g_btnAudio,      bx + (bw2 + gap) * 5 + 14, by2, bw2 + 2, bh, TRUE);
     MoveWindow(g_btnHelp,       bx + (bw2 + gap) * 6 + 16, by2, bw2 + 2, bh, TRUE);
     
+    int by3 = botY + 96;
+    int bw3 = 70;
+    MoveWindow(g_btnQuicksave, bx,                       by3, bw3 + 4, bh, TRUE);
+    MoveWindow(g_btnQuickload, bx + (bw3 + gap) + 4,     by3, bw3 + 4, bh, TRUE);
+    MoveWindow(g_btnTutorial,  bx + (bw3 + gap) * 2 + 8, by3, bw3 + 12, bh, TRUE);
+
     // Right panel buttons: Jettison & Liquidate
     int rightX = totalW - rightPanelW + 10;
     int rightY = totalH - bottomCtrlH - 36;
@@ -6874,6 +7198,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_btnScanlines = CreateWindowA("BUTTON", "SCAN: ON",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SCANLINES, NULL, NULL);
             g_btnAudio     = CreateWindowA("BUTTON", "AUDIO [M]",     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_AUDIO, NULL, NULL);
             g_btnHelp      = CreateWindowA("BUTTON", "MANUAL [H]",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            g_btnQuicksave = CreateWindowA("BUTTON", "SAVE [F5]",     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_QUICKSAVE, NULL, NULL);
+            g_btnQuickload = CreateWindowA("BUTTON", "LOAD [F9]",     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_QUICKLOAD, NULL, NULL);
+            g_btnTutorial  = CreateWindowA("BUTTON", "BRIEFING",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TUTORIAL, NULL, NULL);
             
             g_btnJettison  = CreateWindowA("BUTTON", "JETTISON",      WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_JETTISON, NULL, NULL);
             g_btnSell      = CreateWindowA("BUTTON", "LIQUIDATE",     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_SELL, NULL, NULL);
@@ -6960,6 +7287,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case ID_BTN_HELP:
                     g_state.showHelp = !g_state.showHelp;
                     break;
+                case ID_BTN_QUICKSAVE:
+                    SaveGameToFile(NULL);
+                    break;
+                case ID_BTN_QUICKLOAD:
+                    LoadGameFromFile(NULL);
+                    break;
+                case ID_BTN_TUTORIAL:
+                    g_state.showTutorialModal = !g_state.showTutorialModal;
+                    if (g_state.showTutorialModal) {
+                        g_state.showHelp = 0; g_state.showDefense = 0; g_state.showStation = 0; g_state.showRefinery = 0; g_state.showCrisis = 0; g_state.showEva = 0; g_state.showSpectrometer = 0; g_state.showUpgrades = 0; g_state.showStarChart = 0;
+                    }
+                    TriggerSound(SFX_BEEP);
+                    break;
                 case ID_BTN_JETTISON:
                     UpdateCargoTotal();
                     if (g_state.totalCargo == 0) {
@@ -7007,6 +7347,40 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int totalW = rc.right - rc.left;
             int totalH = rc.bottom - rc.top;
             
+            if (g_state.showTutorialModal) {
+                int modalW = 760;
+                int modalH = 480;
+                int hx = (totalW - modalW) / 2;
+                int hy = (totalH - modalH) / 2;
+
+                if (mx >= hx + modalW - 36 && mx <= hx + modalW - 8 && my >= hy + 4 && my <= hy + 28) {
+                    g_state.showTutorialModal = 0;
+                    g_state.tutorialSeen = 1;
+                    TriggerSound(SFX_BEEP);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+
+                int bx = hx + (modalW - 320) / 2;
+                int by = hy + modalH - 48;
+                if (mx >= bx && mx <= bx + 320 && my >= by && my <= by + 34) {
+                    g_state.showTutorialModal = 0;
+                    g_state.tutorialSeen = 1;
+                    TriggerSound(SFX_COLLECT);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+
+                if (mx < hx || mx > hx + modalW || my < hy || my > hy + modalH) {
+                    g_state.showTutorialModal = 0;
+                    g_state.tutorialSeen = 1;
+                    TriggerSound(SFX_BEEP);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                return 0;
+            }
+
             if (g_state.showHelp) {
                 int helpW = 780;
                 int helpH = 500;
@@ -7603,6 +7977,47 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         
         case WM_KEYDOWN: {
+            if (wParam == VK_F5) {
+                SaveGameToFile(NULL);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (wParam == VK_F9) {
+                LoadGameFromFile(NULL);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+
+            if (g_state.showTutorialModal) {
+                if (wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE || wParam == 'H') {
+                    g_state.showTutorialModal = 0;
+                    g_state.tutorialSeen = 1;
+                    TriggerSound(SFX_BEEP);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                return 0;
+            }
+
+            if (wParam == VK_ESCAPE) {
+                int closedAny = 0;
+                if (g_state.showTutorialModal) { g_state.showTutorialModal = 0; g_state.tutorialSeen = 1; closedAny = 1; }
+                if (g_state.showHelp)          { g_state.showHelp = 0; closedAny = 1; }
+                if (g_state.showDefense)       { g_state.showDefense = 0; closedAny = 1; }
+                if (g_state.showStation)       { g_state.showStation = 0; closedAny = 1; }
+                if (g_state.showRefinery)      { g_state.showRefinery = 0; closedAny = 1; }
+                if (g_state.showCrisis)        { g_state.showCrisis = 0; closedAny = 1; }
+                if (g_state.showEva)           { g_state.showEva = 0; closedAny = 1; }
+                if (g_state.showSpectrometer)  { g_state.showSpectrometer = 0; closedAny = 1; }
+                if (g_state.showUpgrades)      { g_state.showUpgrades = 0; closedAny = 1; }
+                if (g_state.showStarChart)     { g_state.showStarChart = 0; closedAny = 1; }
+                if (closedAny) {
+                    TriggerSound(SFX_BEEP);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+            }
+
             if (g_state.showDefense) {
                 if (wParam == '1') { g_state.selectedWeapon = 0; TriggerSound(SFX_BEEP); InvalidateRect(hwnd, NULL, FALSE); return 0; }
                 if (wParam == '2') { g_state.selectedWeapon = 1; TriggerSound(SFX_BEEP); InvalidateRect(hwnd, NULL, FALSE); return 0; }

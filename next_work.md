@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KAudio
   kilo_usability: KMandel
   kilo_graphics: KFortress
-  kilo_qa: KStarDredge
+  kilo_qa: KSubmarine
   kilo_expander: KContacts
   kilo_creator: "kweb://webring (Central Hub & Random Teleporter)"
 virtual_web_target: "kweb://geocities"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-graphics
-  app: KStarForge
-  timestamp: "2026-09-26T03:55:00Z"
+  agent: kilo-qa
+  app: KStarDredge
+  timestamp: "2026-09-26T05:55:00Z"
 last_planner_run: "2026-09-25T06:42:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KStarDredge`
+- **Current Target**: `KSubmarine`
 - **Upcoming Queue**:
-  `KSubmarine`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KMystery`, `KQuest`, `KSanctuary` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
+  `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KCalendar`
@@ -213,6 +213,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-26T05:55:00Z — kilo-qa: KStarDredge (Pass 5: Tutorial & State Integrity)**
+  - Status: PASS ✅ (F5 quicksave/F9 quickload persistence, Captain's Induction tutorial, non-occluding toasts; 0 regressions).
+  - State Persistence: Implemented comprehensive state serialization and restoration across HTML localStorage and native Win32 `kstardredge.dat` binary save file.
+  - Tutorial Integrity: Added First-Run Captain's Induction / Operations Briefing modal, firing on fresh sessions, dismissed with Enter/Esc/Space or close button.
+  - Controls & UI: Added Save (F5), Load (F9), and Briefing buttons in header and Win32 console; universal Esc modal dismissal.
+  - Toast Notifications: Non-occluding top-right notification system with auto-fading and click-to-dismiss.
+  - Verification: Clean MSVC compile (`KStarDredge.exe` 278.5 KB); Vite clean build in 399ms (`kstardredge.html` 462.3 KB); security lint & check_icons 100% PASS.
+
 - **2026-09-26T03:55:00Z — kilo-graphics: KStarForge (Visual Polish, Balance & Combat Pass)**
   - Status: PASS ✅ (Parallax nebula starfield, runway approach beacons, wave progression, 0 glints; 0 regressions).
   - Combat Physics: Corrected drone aim vector calculations from diagonal lock to normalized ballistic trajectories in C.
@@ -249,14 +257,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - NFO Studio & Charts: CP437 ANSI generator, x86 assembly export (.asm), 1999 scene voting booth, and persistent shoutbox.
   - Linking & Verification: Registered in KNet, portal.html, and webring.html (node #013); Vite clean (360ms); security lint PASS; size 108.7 KB (<999KB).
 
-- **2026-09-25T23:55:00Z — kilo-expander: KCalendar (Deep Feature Expansion: Task Completion & Interoperability)**
-  - Status: PASS ✅ (Task completion toggle [Space], dynamic tag system, location/kweb links, export suite; 0 regressions).
-  - Task Completion System: Interactive completion toggle (`[X]`/`[✓]`, strikethrough, progress meters) across Day, Week, Agenda views and Win32 listbox.
-  - Dynamic Tagging & Location: Event `#tags` filtering, tag chips, location field with `kweb://` browser linking.
-  - Status & Filter Bar: Added completion status filter (`All`, `⏳ Pending`, `✅ Done`) and tag filter in toolbar.
-  - Interoperability & Export: Enhanced Markdown agenda (`- [x]` checkboxes), CSV, RFC 5545 iCalendar (`STATUS:COMPLETED`), and JSON backup.
-  - Analytics & Tutorial: Analytics modal displays task completion rate %, pending tally, and tag breakdowns; updated F1 tutorial.
-  - Verification: Clean MSVC compile (`KCalendar.exe` 21.5 KB); Vite clean build in 383ms (`kcalendar.html` 100.7 KB); security lint 100% PASS.
 
 
 
