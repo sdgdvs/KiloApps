@@ -48,11 +48,11 @@
     background-size: 100% 4px;
     z-index: 9999;
     pointer-events: none;
-    opacity: 0.6;
+    opacity: 0.55;
   }
 
   .site-wrap {
-    max-width: 960px;
+    max-width: 980px;
     margin: 0 auto;
     border: 3px double var(--accent-cyan);
     background: var(--bg-card);
@@ -103,7 +103,7 @@
   /* System Meta Bar */
   .meta-bar {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 8px;
     background: var(--bg-panel);
     border: 1px solid var(--border-dim);
@@ -149,9 +149,9 @@
     background: #0f1d30;
     color: var(--accent-cyan);
     border: 1px solid var(--border-dim);
-    padding: 6px 12px;
+    padding: 6px 11px;
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -199,7 +199,7 @@
   .panel-card.green-edge { border-left: 4px solid var(--accent-green); }
 
   .panel-title {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
     color: var(--accent-cyan);
     margin-bottom: 8px;
@@ -217,7 +217,7 @@
     border: 1px solid var(--accent-cyan);
     padding: 4px 10px;
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
     cursor: pointer;
     text-decoration: none;
@@ -240,39 +240,87 @@
     color: #000;
   }
 
+  .btn-retro-green {
+    background: #0d2818;
+    color: #00ff66;
+    border: 1px solid #00ff66;
+  }
+
+  .btn-retro-green:hover {
+    background: #00ff66;
+    color: #000;
+  }
+
+  .btn-retro-amber {
+    background: #2b1f05;
+    color: #ffcc00;
+    border: 1px solid #ffcc00;
+  }
+
+  .btn-retro-amber:hover {
+    background: #ffcc00;
+    color: #000;
+  }
+
   /* ASM Playground & Opcode Stepper */
   .asm-grid {
     display: grid;
-    grid-template-columns: 1fr 340px;
+    grid-template-columns: 1fr 380px;
     gap: 12px;
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 820px) {
     .asm-grid { grid-template-columns: 1fr; }
   }
 
   .code-input-area {
     width: 100%;
-    height: 180px;
+    height: 190px;
     background: #050a12;
     color: #00ff66;
     border: 1px solid var(--border-dim);
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 11px;
     padding: 8px;
     box-sizing: border-box;
     resize: vertical;
     white-space: pre;
+    line-height: 1.4;
+  }
+
+  .sub-tabs-bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border-dim);
+    padding-bottom: 4px;
+  }
+
+  .sub-tab-btn {
+    background: #091322;
+    color: var(--text-dim);
+    border: 1px solid var(--border-dim);
+    padding: 3px 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .sub-tab-btn.active {
+    background: #00ffcc;
+    color: #000;
+    border-color: #00ffcc;
   }
 
   .reg-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .reg-table td {
-    padding: 4px 6px;
+    padding: 3px 6px;
     border: 1px solid var(--border-dim);
     background: #080f1a;
   }
@@ -280,12 +328,18 @@
   .reg-table td.reg-name {
     color: var(--accent-amber);
     font-weight: bold;
-    width: 30%;
+    width: 25%;
   }
 
   .reg-table td.reg-val {
     color: #00ffcc;
     font-family: var(--font-mono);
+  }
+
+  .reg-table td.reg-sub {
+    color: var(--text-muted);
+    font-size: 10px;
+    width: 28%;
   }
 
   .reg-table td.reg-changed {
@@ -296,9 +350,9 @@
 
   .flags-bar {
     display: flex;
-    gap: 8px;
-    margin-top: 8px;
-    font-size: 11px;
+    gap: 6px;
+    margin-top: 6px;
+    font-size: 10px;
   }
 
   .flag-badge {
@@ -319,18 +373,25 @@
   .disasm-viewport {
     background: #03060a;
     border: 1px solid var(--border-dim);
-    padding: 8px;
-    max-height: 140px;
+    padding: 6px;
+    max-height: 150px;
     overflow-y: auto;
     font-size: 11px;
     color: #94a3b8;
-    margin-top: 10px;
+    margin-top: 8px;
   }
 
   .disasm-line {
     padding: 2px 4px;
     display: flex;
-    gap: 12px;
+    gap: 10px;
+    align-items: center;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+  }
+
+  .disasm-line:hover {
+    background: rgba(0, 255, 204, 0.08);
   }
 
   .disasm-line.current {
@@ -339,6 +400,153 @@
     font-weight: bold;
     border-left: 3px solid var(--accent-cyan);
   }
+
+  .disasm-line.breakpoint .bp-dot {
+    background: #ff0055;
+    box-shadow: 0 0 6px #ff0055;
+  }
+
+  .bp-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #223;
+    display: inline-block;
+  }
+
+  /* Virtual Stack View */
+  .stack-container {
+    background: #03060a;
+    border: 1px solid var(--border-dim);
+    padding: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 10px;
+  }
+
+  .stack-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .stack-table th {
+    background: #08111e;
+    color: var(--accent-cyan);
+    text-align: left;
+    padding: 3px 6px;
+    border-bottom: 1px solid var(--border-dim);
+  }
+
+  .stack-table td {
+    padding: 3px 6px;
+    border-bottom: 1px solid #142234;
+  }
+
+  .stack-row-esp {
+    background: rgba(255, 0, 170, 0.15) !important;
+    font-weight: bold;
+    color: #ff33aa;
+  }
+
+  .stack-row-ebp {
+    background: rgba(255, 204, 0, 0.12) !important;
+    color: #ffcc00;
+  }
+
+  /* Virtual Data Hex Dump */
+  .hexdump-viewport {
+    background: #03060a;
+    border: 1px solid var(--border-dim);
+    padding: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 10px;
+    line-height: 1.35;
+  }
+
+  .hexdump-row {
+    display: flex;
+    gap: 8px;
+    font-family: var(--font-mono);
+  }
+
+  .hexdump-addr {
+    color: var(--accent-amber);
+    width: 80px;
+  }
+
+  .hexdump-bytes {
+    color: #93c5fd;
+    display: flex;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .hexdump-byte {
+    width: 18px;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .hexdump-byte:hover {
+    background: var(--accent-cyan);
+    color: #000;
+  }
+
+  .hexdump-byte.byte-changed {
+    color: #ff00aa !important;
+    font-weight: bold;
+    background: #3b0724;
+  }
+
+  .hexdump-ascii {
+    color: #a7f3d0;
+    width: 120px;
+    letter-spacing: 1px;
+  }
+
+  /* Opcode Matrix 16x16 */
+  .opcode-matrix-wrap {
+    background: #03060a;
+    border: 1px solid var(--border-dim);
+    padding: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  .opcode-matrix {
+    display: grid;
+    grid-template-columns: repeat(16, 1fr);
+    gap: 2px;
+    font-size: 8.5px;
+    text-align: center;
+  }
+
+  .op-cell {
+    background: #0a1422;
+    border: 1px solid #14283d;
+    padding: 3px 1px;
+    cursor: pointer;
+    color: #7dd3fc;
+  }
+
+  .op-cell:hover {
+    background: var(--accent-cyan);
+    color: #000;
+    border-color: #fff;
+  }
+
+  .op-cell.selected {
+    background: var(--accent-magenta);
+    color: #fff;
+    border-color: #fff;
+    font-weight: bold;
+  }
+
+  .op-cell.has-cat-mov { border-top: 2px solid #00ffcc; }
+  .op-cell.has-cat-alu { border-top: 2px solid #ffcc00; }
+  .op-cell.has-cat-jump { border-top: 2px solid #ff00aa; }
+  .op-cell.has-cat-stack { border-top: 2px solid #00ff66; }
 
   /* Audio Tracker Jukebox */
   .audio-console {
@@ -353,7 +561,7 @@
 
   .tracker-canvas {
     width: 100%;
-    height: 100px;
+    height: 90px;
     background: #020408;
     border: 1px solid var(--border-dim);
     display: block;
@@ -369,7 +577,7 @@
   }
 
   .meter-bar {
-    height: 60px;
+    height: 55px;
     background: #0a111a;
     border: 1px solid #1e293b;
     position: relative;
@@ -383,6 +591,54 @@
     height: 0%;
     background: linear-gradient(to top, #00ff66, #ffcc00, #ff0055);
     transition: height 0.08s ease;
+  }
+
+  /* FM Synth Keyboard */
+  .fm-keyboard {
+    display: flex;
+    gap: 3px;
+    margin-top: 10px;
+    background: #050b14;
+    padding: 8px;
+    border: 1px solid var(--border-dim);
+    overflow-x: auto;
+  }
+
+  .piano-key {
+    background: #142234;
+    color: #e2e8f0;
+    border: 1px solid var(--border-dim);
+    height: 65px;
+    min-width: 32px;
+    font-size: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding-bottom: 4px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.1s;
+  }
+
+  .piano-key:hover, .piano-key.active {
+    background: var(--accent-cyan);
+    color: #000;
+  }
+
+  .piano-key.black-key {
+    background: #03070e;
+    color: var(--accent-magenta);
+    border-color: #334155;
+    height: 48px;
+    min-width: 24px;
+    margin: 0 -12px;
+    z-index: 2;
+  }
+
+  .piano-key.black-key:hover, .piano-key.black-key.active {
+    background: var(--accent-magenta);
+    color: #fff;
   }
 
   /* Devlog Articles */
@@ -402,62 +658,91 @@
   .article-header {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+  }
+
+  .article-title {
     font-size: 13px;
     font-weight: bold;
     color: var(--accent-cyan);
-    margin-bottom: 4px;
+  }
+
+  .article-meta {
+    font-size: 11px;
+    color: var(--text-muted);
   }
 
   .article-body {
+    display: none;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border-dim);
     font-size: 12px;
     color: #cbd5e1;
-    display: none;
-    margin-top: 8px;
-    border-top: 1px dashed var(--border-dim);
-    padding-top: 8px;
     line-height: 1.6;
   }
 
-  .article-body.open {
+  .article-item.open .article-body {
     display: block;
   }
 
-  .article-body pre {
-    background: #03060a;
-    border: 1px solid #1e293b;
-    color: #38bdf8;
-    padding: 8px;
+  .code-snippet {
+    background: #020509;
+    border-left: 3px solid var(--accent-amber);
+    padding: 8px 12px;
     margin: 8px 0;
-    overflow-x: auto;
     font-size: 11px;
+    color: #f1f5f9;
+    overflow-x: auto;
   }
 
-  /* Code & Vault Viewer */
+  /* Mode 13h Demoscene Screen */
+  .vga-screen-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #020408;
+    border: 2px solid var(--border-dim);
+    padding: 10px;
+    margin-bottom: 14px;
+  }
+
+  #vgaCanvas {
+    width: 640px;
+    max-width: 100%;
+    height: 300px;
+    background: #000;
+    image-rendering: pixelated;
+    border: 1px solid #1e3a4a;
+  }
+
+  /* Code Vault */
   .file-list {
     display: flex;
-    gap: 6px;
     flex-wrap: wrap;
+    gap: 6px;
     margin-bottom: 10px;
   }
 
   .code-viewer-box {
     background: #020408;
     border: 1px solid var(--border-dim);
-    color: #7dd3fc;
-    font-size: 11px;
     padding: 10px;
-    max-height: 260px;
-    overflow: auto;
+    height: 240px;
+    overflow-y: auto;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: #38bdf8;
     white-space: pre;
   }
 
   /* Guestbook */
   .gb-entry {
-    background: #070d17;
+    background: #08111d;
     border: 1px solid var(--border-dim);
     padding: 10px;
-    margin-bottom: 10px;
-    font-size: 12px;
+    margin-bottom: 8px;
+    font-size: 11px;
   }
 
   .gb-author {
@@ -473,77 +758,79 @@
 
   .gb-form input, .gb-form textarea {
     width: 100%;
-    background: #060b14;
+    background: #050a12;
     border: 1px solid var(--border-dim);
-    color: #fff;
+    color: #e0f2fe;
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 11px;
     padding: 6px;
-    box-sizing: border-box;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
 
-  /* 88x31 Badges Grid */
+  /* Badges Grid */
   .badges-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+    gap: 8px;
     margin: 12px 0;
   }
 
   .micro-badge {
     width: 88px;
     height: 31px;
-    border: 1px solid #fff;
+    border: 1px solid #555;
+    background: #111;
+    color: #fff;
+    font-size: 8px;
+    font-weight: bold;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 8px;
-    font-weight: bold;
-    text-transform: uppercase;
     text-align: center;
     line-height: 1.1;
     cursor: pointer;
     box-shadow: 1px 1px 0 #000;
-    user-select: none;
-    text-decoration: none;
   }
 
-  .badge-notepad { background: #000080; color: #fff; }
-  .badge-masm { background: #800000; color: #ffd700; border-color: #ffd700; }
-  .badge-netscape { background: #004d40; color: #a7ffeb; }
-  .badge-genesis { background: #1a0033; color: #ff00aa; border-color: #ff00aa; }
-  .badge-knet { background: #0c4a6e; color: #38bdf8; border-color: #38bdf8; }
-  .badge-fl { background: #450a0a; color: #f87171; border-color: #f87171; }
-  .badge-ceiling { background: #064e3b; color: #34d399; }
-  .badge-parody { background: #701a75; color: #f0abfc; border-color: #f0abfc; }
+  .micro-badge:hover {
+    filter: brightness(1.2);
+    box-shadow: 0 0 8px rgba(0, 255, 204, 0.8);
+  }
 
-  /* Webring Box */
+  .badge-notepad { background: #000080; border-color: #0000ff; color: #fff; }
+  .badge-masm { background: #400000; border-color: #ff3333; color: #ffcccc; }
+  .badge-netscape { background: #004d40; border-color: #00bfa5; color: #e0f2f1; }
+  .badge-genesis { background: #1a0033; border-color: #aa00ff; color: #f3e5f5; }
+  .badge-knet { background: #00334e; border-color: #00a8ff; color: #e1f5fe; }
+  .badge-fl { background: #33001a; border-color: #ff007f; color: #ffe4f0; }
+  .badge-ceiling { background: #1a2400; border-color: #76a000; color: #f7fee7; }
+  .badge-parody { background: #331400; border-color: #ff6600; color: #fff3e0; }
+
+  /* Webring Widget */
   .webring-widget {
-    background: #050a12;
-    border: 2px groove var(--accent-cyan);
+    background: #060b13;
+    border: 2px solid var(--accent-cyan);
     padding: 12px;
     text-align: center;
-    margin-top: 16px;
-    font-size: 12px;
+    margin-top: 14px;
   }
 
   .webring-nav-links {
-    margin-top: 8px;
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
     flex-wrap: wrap;
+    margin-top: 8px;
   }
 
   footer {
     text-align: center;
-    border-top: 1px solid var(--border-dim);
-    margin-top: 16px;
-    padding-top: 12px;
     font-size: 11px;
     color: var(--text-muted);
+    border-top: 1px solid var(--border-dim);
+    padding-top: 12px;
+    margin-top: 20px;
+    line-height: 1.5;
   }
 </style>
 </head>
@@ -551,169 +838,171 @@
 
 <div class="site-wrap">
 
-  <!-- Marquee Ticker -->
+  <!-- Retro Marquee -->
   <div class="retro-marquee">
-    ⚡ [NEON_RIDER] v2.4b ⚡ LIVE FROM THE UNDERGROUND // ASM 6.14 RULEZ // TARGET: 386/486/PENTIUM // NO BLOAT // 999KB FOREVER // PARODY SCENE ALIVE // ⚡
+    *** WELCOME TO ~NEON_RIDER'S WIN32 ASSEMBLY &amp; OPCODES SHRINE *** 100% HANDCRAFTED INTEL x86 MACHINE CODE *** ZERO CD-ROM BLOAT *** DEMOSCENE FOREVER *** INTERCEPTING STRANGE SUBNET BROADCASTS AT 10.19.99.4 ***
   </div>
 
   <!-- Header -->
   <header>
-    <pre class="ascii-logo">
- ███▄    █ ▓█████  ▒█████   ███▄    █     ██▀███   ██▓▓█████▄ ▓█████  ██▀███  
- ██ ▀█   █ ▓█   ▀ ▒██▒  ██▒ ██ ▀█   █    ▓██ ▒ ██▒▓██▒▒██▀ ██▌▓█   ▀ ▓██ ▒ ██▒
-▓██  ▀█ ██▒▒███   ▒██░  ██▒▓██  ▀█ ██▒   ▓██ ░▄█ ▒▒██▒░██   █▌▒███   ▓██ ░▄█ ▒
-▓██▒  ▐▌██▒▒▓█  ▄ ▒██   ██░▓██▒  ▐▌██▒   ▒██▀▀█▄  ░██░░▓█▄   ▌▒▓█  ▄ ▒██▀▀█▄  
-▒██░   ▓██░░▒████▒░ ████▓▒░▒██░   ▓██░   ░██▓ ▒██▒░██░░▓████▓ ░▒████▒░██▓ ▒██▒
-░ ▒░   ▒ ▒ ░░ ▒░ ░░ ▒░▒░▒░ ░ ▒░   ▒ ▒    ░ ▒▓ ░▒▓░░▓   ▒▒▓  ▒ ░░ ▒░ ░░ ▒▓ ░▒▓░
-    </pre>
-    <div class="tagline">★ x86 ASSEMBLY SHRINE • DEMOSCENE CODE VAULT • YM2612 SYNTH LAB (1999) ★</div>
+    <div class="ascii-logo">
+ ███╗   ██╗███████╗ ██████╗ ███╗   ██╗    ██████╗ ██╗██████╗ ███████╗██████╗ 
+ ████╗  ██║██╔════╝██╔═══██╗████╗  ██║    ██╔══██╗██║██╔══██╗██╔════╝██╔══██╗
+ ██╔██╗ ██║█████╗  ██║   ██║██╔██╗ ██║    ██████╔╝██║██║  ██║█████╗  ██████╔╝
+ ██║╚██╗██║██╔══╝  ██║   ██║██║╚██╗██║    ██╔══██╗██║██║  ██║██╔══╝  ██╔══██╗
+ ██║ ╚████║███████╗╚██████╔╝██║ ╚████║    ██║  ██║██║██████╔╝███████╗██║  ██║
+ ╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚═╝  ╚═══╝    ╚═╝  ╚═╝╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝
+    </div>
+    <div class="tagline">IN ASSEMBLY WE TRUST &bull; 100% HANDCRAFTED INTEL x86 SILICON CRAFTSMAN (1999)</div>
   </header>
 
-  <!-- System Meta Info -->
+  <!-- System Meta Bar -->
   <div class="meta-bar">
     <div class="meta-item"><strong>CODER:</strong> neon_rider [0xNEON]</div>
-    <div class="meta-item"><strong>CREW:</strong> FLARELIGHT &amp; VOID_PULSE</div>
-    <div class="meta-item"><strong>STATION:</strong> P-II 450MHz / 64MB / SB-Live!</div>
+    <div class="meta-item"><strong>CREW:</strong> FLARELIGHT Demogroup</div>
+    <div class="meta-item"><strong>SYSTEM:</strong> Win32 ASM / MASM 6.14</div>
+    <div class="meta-item"><strong>CYCLES:</strong> Pentium MMX 200MHz</div>
     <div class="counter-box">
-      <span style="color:var(--text-muted); font-size:10px;">HITS:</span>
+      <span style="font-size:11px; color:var(--text-muted);">VISITORS:</span>
       <span class="odometer" id="hitOdometer">0042189</span>
     </div>
   </div>
 
-  <!-- Navigation Tabs -->
-  <nav class="nav-tabs" id="mainNav">
-    <button class="nav-btn active" data-target="tab-about">[1] 🏠 About &amp; Rig</button>
-    <button class="nav-btn" data-target="tab-devlog">[2] 📜 ASM Devlog</button>
-    <button class="nav-btn" data-target="tab-sandbox">[3] ⚙️ x86 Sandbox &amp; Stepper</button>
-    <button class="nav-btn" data-target="tab-audio">[4] 🎵 YM2612 / SPC700 Tracker</button>
-    <button class="nav-btn" data-target="tab-vault">[5] 💾 Source &amp; NFO Vault</button>
-    <button class="nav-btn" data-target="tab-guestbook">[6] ✍️ Guestbook</button>
-    <button class="nav-btn" data-target="tab-webring">[7] 🌐 Badges &amp; Ring</button>
+  <!-- Navigation Bar -->
+  <nav class="nav-tabs">
+    <button class="nav-btn active" data-target="tab-about">👤 About ~neon_rider</button>
+    <button class="nav-btn" data-target="tab-devlog">📝 x86 Devlog &amp; Articles</button>
+    <button class="nav-btn" data-target="tab-sandbox">⚡ x86 Sandbox &amp; Stepper</button>
+    <button class="nav-btn" data-target="tab-audio">🎵 YM2612 &amp; SPC700 Audio Lab</button>
+    <button class="nav-btn" data-target="tab-vault">💾 Demoscene Vault &amp; Mode 13h</button>
+    <button class="nav-btn" data-target="tab-guestbook">✍️ Guestbook ('99)</button>
+    <button class="nav-btn" data-target="tab-webring">🌐 Webring &amp; Badges</button>
   </nav>
 
-  <!-- TAB 1: About & Rig -->
+  <!-- TAB 1: About ~neon_rider -->
   <section class="content-section active" id="tab-about">
     <div class="panel-card cyan-edge">
       <div class="panel-title">
-        <span>[0x01] MANIFESTO: THE PURE CODE IMPERATIVE</span>
-        <span style="font-size:10px; color:var(--accent-amber);">MASM 6.14 / TASM 5.0</span>
+        <span>CODING MANIFESTO: THE PURE SILICON ETHOS</span>
+        <span style="font-size:10px; color:var(--accent-cyan);">EST. SEPTEMBER 1999</span>
       </div>
-      <p style="margin-bottom:8px; font-size:12px;">
+      <p style="font-size:12px; margin-bottom:12px;">
         Welcome to the personal coordinates of <strong>neon_rider</strong>. In an era where commercial games like <em>Surreal Tournament</em> and <em>Tremor III Arena</em> demand 600 Megabytes of CD-ROM storage and bloated visual comets, this shrine is dedicated to the ancient craft of handcrafted Intel x86 machine instructions.
       </p>
-      <p style="margin-bottom:8px; font-size:12px;">
-        The true master does not need gigabytes of dynamic link libraries. Within <strong>512 bytes</strong>, we draw procedural fire. Within <strong>4 kilobytes</strong>, we synthesize polyphonic FM music and render raymarched copper tunnels. Within the sacred <strong>999 kilobyte</strong> ceiling of the KiloApps Fleet, we can build entire operating realities.
+      <p style="font-size:12px; margin-bottom:12px;">
+        A true hacker does not need runtime frameworks, garbage collectors, or multi-megabyte shared libraries. Every byte in an executable must justify its existence in silicon. When you write pure assembly, you converse directly with the instruction pipeline, U/V execution units, and L1 cache lines of the CPU.
       </p>
-      <div style="background:#081320; border:1px solid #1e3a4a; padding:8px; margin-top:10px; font-size:11px;">
-        <span style="color:var(--accent-cyan); font-weight:bold;">⚡ HARDWARE BENCHMARK:</span><br>
-        • CPU: Intel Pentium II Deschutes @ 450 MHz (512KB L2 Cache)<br>
-        • Motherboard: ASUS P2B Intel 440BX Chipset (100 MHz FSB)<br>
-        • RAM: 64 MB PC-100 SDRAM CAS-2<br>
-        • Video: 3dfx Voodoo2 12MB + Matrox Millennium G200 8MB AGP<br>
-        • Audio: Creative Labs Sound Blaster Live! Value (EMU10K1) + Yamaha OPL3 FM Daughterboard
-      </div>
-    </div>
-
-    <div class="panel-card magenta-edge">
-      <div class="panel-title">
-        <span>[0x02] KERNEL TELEMETRY &amp; MEMORY ANOMALIES (ARG LOG)</span>
-        <span style="font-size:10px; color:#ff00aa;">PRIORITY: ALPHA</span>
-      </div>
-      <p style="font-size:12px; margin-bottom:8px;">
-        While profiling low-level Win32 socket hooks and mapping kernel paging offsets inside <code>KHex</code>, I intercepted repeating raw TCP packets originating from internal address <strong>10.19.99.4</strong>.
-      </p>
-      <div style="background:#16091b; border:1px dashed #ff00aa; padding:8px; font-size:11px; color:#f0abfc;">
-        <code>&gt;&gt; RAW DUMP @ 0x0024: [IP 10.19.99.4:79] "CLASSIFIED INTRANET LEAK // ECHO-1999 SUBSYSTEM"<br>
-        &gt;&gt; TELEMETRY FREQ: 1999 Hz continuous carrier wave.<br>
-        &gt;&gt; NOTE: Do NOT publish this link on the clearnet portal. Direct query in KNet only.</code>
+      
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:14px;">
+        <div style="background:#060d17; border:1px solid var(--border-dim); padding:10px;">
+          <span style="color:var(--accent-amber); font-weight:bold; font-size:12px; display:block; margin-bottom:6px;">🛠️ RIG &amp; TOOLCHAIN SPECIFICATIONS</span>
+          <ul style="font-size:11px; color:#cbd5e1; list-style-position:inside; line-height:1.6;">
+            <li><strong>CPU:</strong> Dual Intel Pentium II 450MHz (Deschutes)</li>
+            <li><strong>Memory:</strong> 128 MB PC100 SDRAM (CL2)</li>
+            <li><strong>Graphics:</strong> Diamond Monster 3D II (3dfx Voodoo2 12MB)</li>
+            <li><strong>Sound:</strong> Creative Labs Sound Blaster AWE64 Gold</li>
+            <li><strong>OS:</strong> Microsoft Windows 98 SE / Windows NT 4.0</li>
+            <li><strong>Assembler:</strong> MASM 6.14, NASM 0.98, TASM 5.0</li>
+          </ul>
+        </div>
+        <div style="background:#060d17; border:1px solid var(--border-dim); padding:10px;">
+          <span style="color:var(--accent-green); font-weight:bold; font-size:12px; display:block; margin-bottom:6px;">📚 ESSENTIAL BOOKSHELF</span>
+          <ul style="font-size:11px; color:#cbd5e1; list-style-position:inside; line-height:1.6;">
+            <li>Michael Abrash &mdash; <em>Graphics Programming Black Book</em></li>
+            <li>Intel Corporation &mdash; <em>Pentium Processor Family Developer's Manual</em></li>
+            <li>Iczelion &mdash; <em>Win32 Assembly Tutorial Series</em></li>
+            <li>Steve Hutchison &mdash; <em>The MASM32 SDK Package</em></li>
+            <li>Agner Fog &mdash; <em>How to Optimize for the Pentium Microprocessor</em></li>
+            <li>Mark Polishook &mdash; <em>Sound Programming for the PC Speaker &amp; FM Chips</em></li>
+          </ul>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- TAB 2: ASM Devlog -->
+  <!-- TAB 2: x86 Devlog & Articles -->
   <section class="content-section" id="tab-devlog">
     <div class="panel-card amber-edge">
       <div class="panel-title">
-        <span>WIN32 ASSEMBLY &amp; DEMOSCENE RESEARCH PAPERS</span>
-        <span style="font-size:10px; color:var(--text-muted);">CLICK TO EXPAND ARTICLES</span>
+        <span>x86 ASSEMBLY FIELD NOTES &amp; OPTIMIZATION DEVLOG</span>
+        <span style="font-size:10px; color:var(--accent-amber);">CLICK TO EXPAND ARTICLE</span>
       </div>
 
       <!-- Article 1 -->
-      <div class="article-item" onclick="toggleArticle(1)">
+      <div class="article-item open" id="art-1" onclick="toggleArticle(1)">
         <div class="article-header">
-          <span>01. Crushing PE Headers: The 512-Byte Win32 Executable</span>
-          <span style="color:var(--accent-amber);">[1999-08-14]</span>
+          <span class="article-title">01. Zero-Cycle Register Zeroing: XOR EAX, EAX vs MOV EAX, 0</span>
+          <span class="article-meta">1999-10-18 &bull; 0xNEON</span>
         </div>
-        <div style="font-size:11px; color:var(--text-muted);">How to overlay MS-DOS stub and PE headers in MASM to fit below standard disk sector alignment.</div>
-        <div class="article-body" id="art-1">
-          <p>Standard Microsoft linkers produce binaries of at least 4,096 bytes due to section alignment padding. However, the Windows NT / 98 PE loader only inspects a handful of mandatory fields in the <code>IMAGE_NT_HEADERS</code> struct.</p>
-          <p>By collapsing the DOS MZ header directly into the PE signature offset and overlapping <code>IMAGE_FILE_HEADER</code> with the section header table, we can generate a fully functional Win32 executable that summons a native message box in exactly 512 bytes:</p>
-          <pre>; Minimalist Win32 PE Stub (NASM / MASM compatible)
-BITS 32
-org 0x00400000
+        <div class="article-body">
+          Every beginner uses <code>MOV EAX, 0</code>. This is a tragedy in opcode real estate.
+          <code>MOV EAX, 0</code> encodes to <code>B8 00 00 00 00</code> (5 full bytes of machine code).
+          Conversely, <code>XOR EAX, EAX</code> compiles to exactly 2 bytes: <code>31 C0</code>.
+          <div class="code-snippet">
+; Bad (5 bytes):
+MOV EAX, 0          ; B8 00 00 00 00
 
-mz_hdr:
-    inc eax              ; 'MZ' signature spoofed as valid opcodes
-    dec ebp
-    pop edx
-    nop
-pe_offset equ 0x00000004
-pe_hdr:
-    db 'PE',0,0          ; PE Signature
-    dw 0x014C            ; Machine: i386
-    dw 1                 ; NumberOfSections: 1
-    dd 0                 ; TimeDateStamp
-entry_point:
-    xor eax, eax
-    push eax             ; MB_OK
-    push 0x00400080      ; Title
-    push 0x00400080      ; Text
-    push eax             ; hWnd
-    call [0x00400090]    ; MessageBoxA direct import vector
-    ret</pre>
+; God-Tier (2 bytes, zero latency on Pentium MMX):
+XOR EAX, EAX        ; 31 C0
+          </div>
+          On Intel Pentium and Pentium Pro architectures, the internal register renaming hardware recognizes <code>XOR r32, r32</code> as a dependency breaker. It eliminates false register dependencies without waiting for previous arithmetic results.
         </div>
       </div>
 
       <!-- Article 2 -->
-      <div class="article-item" onclick="toggleArticle(2)">
+      <div class="article-item" id="art-2" onclick="toggleArticle(2)">
         <div class="article-header">
-          <span>02. The Mathematics of 2-Operator FM Synthesis (YM2612)</span>
-          <span style="color:var(--accent-amber);">[1999-09-02]</span>
+          <span class="article-title">02. Fast Multiplication by 10 without MUL: The LEA &amp; Shift Trick</span>
+          <span class="article-meta">1999-10-29 &bull; 0xNEON</span>
         </div>
-        <div style="font-size:11px; color:var(--text-muted);">Implementing Sega Genesis punchy slap bass and metallic bells on standard Sound Blaster hardware.</div>
-        <div class="article-body" id="art-2">
-          <p>The Sega Genesis Yamaha YM2612 chip relies on frequency modulation rather than memory-heavy PCM sample banks. The fundamental mathematical equation for a 2-operator algorithm is:</p>
-          <pre>s(t) = A_c(t) * sin( 2π * f_c * t + I_m(t) * sin( 2π * f_m * t ) )</pre>
-          <p>Where <code>f_c</code> is the carrier frequency, <code>f_m</code> is the modulator frequency, and <code>I_m(t)</code> is the time-varying modulation index. When <code>I_m</code> experiences an exponential decay from a high initial value, the harmonic spectrum collapses rapidly into a warm sine tone, producing the iconic slap bass of 16-bit retro arcade games!</p>
+        <div class="article-body">
+          The <code>MUL</code> instruction on 486 and Pentium processors takes up to 10 to 42 clock cycles.
+          In 3D rotation routines and rasterizers, multiplying by 10 or screen pitch (320) via <code>MUL</code> will crush your framerate.
+          Instead, factor the multiplication into bitwise shifts and <code>LEA</code> (Load Effective Address):
+          <div class="code-snippet">
+; Multiplying EAX by 10 in 2 clock cycles:
+; 10 = (8 + 2) = (EAX * 8) + (EAX * 2)
+MOV EBX, EAX        ; Duplicate
+SHL EAX, 3          ; EAX = EAX * 8
+SHL EBX, 1          ; EBX = EBX * 2
+ADD EAX, EBX        ; EAX = 8x + 2x = 10x!
+          </div>
+          Even cleaner in 32-bit protected mode with scale-index-base (SIB) addressing:
+          <code>LEA EAX, [EAX + EAX*4]</code> (EAX * 5), followed by <code>SHL EAX, 1</code> (EAX * 10). Total time: 2 clock cycles!
         </div>
       </div>
 
       <!-- Article 3 -->
-      <div class="article-item" onclick="toggleArticle(3)">
+      <div class="article-item" id="art-3" onclick="toggleArticle(3)">
         <div class="article-header">
-          <span>03. The 999 Kilobyte Ceiling as Architectural Virtue</span>
-          <span style="color:var(--accent-amber);">[1999-10-18]</span>
+          <span class="article-title">03. Crafting a 128-Byte Radial VGA Tunnel in Real-Mode ASM</span>
+          <span class="article-meta">1999-11-12 &bull; 0xNEON</span>
         </div>
-        <div style="font-size:11px; color:var(--text-muted);">Why constraints fuel creativity and why bloated frameworks are a temporary madness.</div>
-        <div class="article-body" id="art-3">
-          <p>Modern commercial studios are shipping games that require 128MB of RAM and hundreds of megabytes of disk space. Yet, demoscene groups like FLARELIGHT, RAZOR 1999, and SKID VECTOR can fit complete 3D procedural universes with audio synthesis into a 64KB executable.</p>
-          <p>The KiloApps Fleet standard of <strong>&lt; 999 KB</strong> per complete executable proves that when bloat is purged, software runs instantaneously, cache hits approach 100%, and applications endure across decades without fragile external dependencies.</p>
+        <div class="article-body">
+          How do demogroups squeeze a full 3D rotating textured tunnel into a 128-byte <code>.COM</code> executable?
+          The answer lies in mathematical elegance:
+          The tunnel texture coordinate is parameterized by <code>U = Angle = arctan2(Y, X)</code> and <code>V = Distance = 1 / sqrt(X^2 + Y^2)</code>.
+          By approximating <code>R = X^2 + Y^2</code> directly in registers and indexing VGA Mode 13h memory at <code>0xA0000</code>, you can achieve a hypnotic tunnel using zero precomputed lookup tables.
+          Check out the full commented source in the <a href="#" onclick="switchTab('tab-vault'); return false;" style="color:var(--accent-cyan);">Demoscene Vault</a>!
         </div>
       </div>
 
       <!-- Article 4 -->
-      <div class="article-item" onclick="toggleArticle(4)">
+      <div class="article-item" id="art-4" onclick="toggleArticle(4)">
         <div class="article-header">
-          <span>04. Anomaly Log: Packet Intercept at 10.19.99.4</span>
-          <span style="color:var(--accent-amber);">[1999-11-20]</span>
+          <span class="article-title">04. Anomalous Interrupts at 0x101999: Intercepting Non-Routable 10.19.99.4 Packets</span>
+          <span class="article-meta">1999-12-08 &bull; 0xNEON</span>
         </div>
-        <div style="font-size:11px; color:var(--text-muted);">Raw protocol traces, port 79 finger anomalies, and the rogue autonomous fleet.</div>
-        <div class="article-body" id="art-4">
-          <p>During a packet-sniffing session on our university lab gateway, I detected recurring broadcast frames destined for internal host <code>10.19.99.4</code>. The payload contained structured telemetry from an entity identifying as "KMatrix Autonomous Cluster".</p>
-          <pre>&gt; ETH_FRAME_TYPE: 0x0800 [IPv4]
-&gt; SRC: 10.19.99.4:79   DST: 255.255.255.255:1999
-&gt; DATA: "ECHO PROTOCOL SYNCHRONIZED. SEEK THE ARCHITECT PASSKEY IN KMATRIX."</pre>
-          <p>This is not a standard corporate service. It appears someone inside the network is running an autonomous hypermedia node hidden beneath the intranet gateway.</p>
+        <div class="article-body">
+          While tuning my NDIS network driver assembly hook, my packet capture sniffer logged an inexplicable recurring broadcast packet.
+          The frame header originates from an unroutable corporate subnet: <code>10.19.99.4/classified</code>.
+          Dumping the raw payload bytes into the memory buffer at offset <code>0x00402030</code> reveals an encrypted header:
+          <div class="code-snippet">
+0x00402030: 50 4B 54 2E 31 30 2E 31 39 2E 39 39 2E 34 20 5B  PKT.10.19.99.4 [
+0x00402040: 53 55 42 3A 31 39 39 39 48 7A 5D 20 53 49 47 3A  SUB:1999Hz] SIG:
+0x00402050: 45 43 48 4F 5F 43 4F 52 45 00 00 00 00 00 00 00  ECHO_CORE.......
+          </div>
+          The subcarrier indicates an acoustic frequency of 1999 Hz. When stepped through the x86 Sandbox (Preset #6), the simulated CPU triggers an audio resonance on the YM2612 engine. What classified server is broadcasting on 10.19.99.4?
         </div>
       </div>
     </div>
@@ -724,28 +1013,38 @@ entry_point:
     <div class="panel-card green-edge">
       <div class="panel-title">
         <span>INTERACTIVE x86 INSTRUCTION SANDBOX &amp; REGISTER STEPPER</span>
-        <span style="font-size:10px; color:var(--accent-green);">32-BIT PROTECTED MODE SIMULATOR</span>
+        <span style="font-size:10px; color:var(--accent-green);">32-BIT PROTECTED MODE SIMULATOR &bull; PENTIUM CYCLE PROFILER</span>
       </div>
 
-      <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px; flex-wrap:wrap;">
-        <label style="font-size:11px; color:var(--accent-cyan); font-weight:bold;">Load Preset Routine:</label>
-        <select id="presetSelect" style="background:#09121f; color:#00ffcc; border:1px solid var(--border-dim); padding:4px 8px; font-family:var(--font-mono); font-size:11px;">
+      <!-- Toolbar -->
+      <div style="display:flex; gap:6px; align-items:center; margin-bottom:10px; flex-wrap:wrap;">
+        <label style="font-size:11px; color:var(--accent-cyan); font-weight:bold;">Routine Preset:</label>
+        <select id="presetSelect" style="background:#09121f; color:#00ffcc; border:1px solid var(--border-dim); padding:3px 6px; font-family:var(--font-mono); font-size:11px;">
           <option value="preset-clear">1. Zero Registers &amp; NOP Sled</option>
           <option value="preset-math">2. Fast Math Loop (EAX * 10 via LEA &amp; SHL)</option>
-          <option value="preset-xor">3. XOR 0x7F Decryption Loop</option>
-          <option value="preset-count">4. Down-Counter with Branching (DEC &amp; JNZ)</option>
-          <option value="preset-palette">5. Procedural VGA Palette Generator</option>
+          <option value="preset-fib">3. Fibonacci Sequence Array (Memory Writes)</option>
+          <option value="preset-xor">4. In-Memory String Decryptor (XOR 0x7F Loop)</option>
+          <option value="preset-stack">5. Stack Frame &amp; Subroutine (CALL / RET &amp; LIFO)</option>
+          <option value="preset-echo">6. Diegetic Signal Intercept Probe (0x00402030)</option>
         </select>
         <button class="btn-retro" id="btnAssemble">Assemble [F5]</button>
-        <button class="btn-retro" id="btnStep" style="background:#133324; border-color:#00ff66; color:#00ff66;">Step [F7]</button>
-        <button class="btn-retro" id="btnRun">Run All</button>
+        <button class="btn-retro btn-retro-green" id="btnStep">Step [F7]</button>
+        <button class="btn-retro btn-retro-pink" id="btnRun">▶ Run Auto</button>
         <button class="btn-retro" id="btnResetCpu">Reset CPU</button>
+        
+        <span style="font-size:10px; color:var(--text-muted); margin-left:auto;">
+          Inst: <span id="statInst" style="color:var(--accent-cyan);">0</span> &bull; 
+          Cycles: <span id="statCycles" style="color:var(--accent-amber);">0</span>
+        </span>
       </div>
 
       <div class="asm-grid">
         <!-- Editor Column -->
         <div>
-          <span style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px;">Assembly Source (MASM/NASM syntax):</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span style="font-size:11px; color:var(--text-muted);">Assembly Source (MASM/NASM syntax):</span>
+            <span style="font-size:10px; color:var(--accent-cyan);">F5: Assemble &bull; F7: Step</span>
+          </div>
           <textarea class="code-input-area" id="asmInput" spellcheck="false">; --- ROUTINE: Fast Zeroing & Register Mutation ---
 XOR EAX, EAX
 MOV EBX, 0x00000042
@@ -756,36 +1055,102 @@ SUB EAX, ECX
 INC EDX
 NOP</textarea>
 
-          <span style="font-size:11px; color:var(--text-muted); display:block; margin:8px 0 4px 0;">Disassembly &amp; Opcode Stream:</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin:8px 0 4px 0;">
+            <span style="font-size:11px; color:var(--text-muted);">Disassembly &amp; Opcode Stream (Click line to toggle breakpoint):</span>
+          </div>
           <div class="disasm-viewport" id="disasmList">
             <!-- Populated via JS -->
           </div>
+
+          <!-- Hex Bytecode Disassembler Drawer -->
+          <div style="margin-top:10px; background:#060d17; border:1px solid var(--border-dim); padding:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-size:11px; color:var(--accent-amber); font-weight:bold;">🛠️ Hex Bytecode Disassembler Workbench</span>
+              <button class="btn-retro" id="btnDisasmBytes" style="font-size:10px; padding:2px 6px;">Disassemble Hex</button>
+            </div>
+            <input type="text" id="hexByteInput" value="31 C0 B8 0A 00 00 00 83 C0 05 50 58 C3" style="width:100%; background:#020509; border:1px solid #1e3a4a; color:#38bdf8; font-family:var(--font-mono); font-size:11px; padding:4px;">
+            <div id="disasmResultOutput" style="font-size:10px; color:#cbd5e1; margin-top:4px; max-height:60px; overflow-y:auto; font-family:var(--font-mono);"></div>
+          </div>
         </div>
 
-        <!-- Registers Column -->
+        <!-- Right Inspection Column -->
         <div>
-          <span style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px;">General Purpose Registers (32-Bit):</span>
-          <table class="reg-table" id="regTable">
-            <tr><td class="reg-name">EAX</td><td class="reg-val" id="r_eax">0x00000000</td></tr>
-            <tr><td class="reg-name">EBX</td><td class="reg-val" id="r_ebx">0x00000000</td></tr>
-            <tr><td class="reg-name">ECX</td><td class="reg-val" id="r_ecx">0x00000000</td></tr>
-            <tr><td class="reg-name">EDX</td><td class="reg-val" id="r_edx">0x00000000</td></tr>
-            <tr><td class="reg-name">ESI</td><td class="reg-val" id="r_esi">0x00402000</td></tr>
-            <tr><td class="reg-name">EDI</td><td class="reg-val" id="r_edi">0x00403000</td></tr>
-            <tr><td class="reg-name">EIP</td><td class="reg-val" id="r_eip">0x00401000</td></tr>
-          </table>
-
-          <span style="font-size:11px; color:var(--text-muted); display:block; margin:10px 0 4px 0;">EFLAGS Condition Codes:</span>
-          <div class="flags-bar">
-            <span class="flag-badge active" id="f_zf">ZF (Zero)</span>
-            <span class="flag-badge" id="f_cf">CF (Carry)</span>
-            <span class="flag-badge" id="f_sf">SF (Sign)</span>
+          <!-- Sub-Tabs -->
+          <div class="sub-tabs-bar">
+            <button class="sub-tab-btn active" data-sub="sub-regs">Registers</button>
+            <button class="sub-tab-btn" data-sub="sub-stack">Stack (ESP)</button>
+            <button class="sub-tab-btn" data-sub="sub-hex">RAM (0x402000)</button>
+            <button class="sub-tab-btn" data-sub="sub-matrix">Opcode Map</button>
           </div>
 
-          <div style="margin-top:12px; font-size:11px; background:#060b13; border:1px solid #1e293b; padding:8px;">
-            <span style="color:var(--accent-amber); font-weight:bold;">Execution Status:</span>
-            <div id="simStatus" style="color:#00ffcc; margin-top:2px;">CPU Ready. Press [Step] or [Run].</div>
+          <!-- SUB-PANEL 1: Registers & Flags -->
+          <div id="sub-regs" class="sub-panel">
+            <table class="reg-table" id="regTable">
+              <tr><td class="reg-name">EAX</td><td class="reg-val" id="r_eax">0x00000000</td><td class="reg-sub" id="s_eax">AX:0000 AL:00</td></tr>
+              <tr><td class="reg-name">EBX</td><td class="reg-val" id="r_ebx">0x00000000</td><td class="reg-sub" id="s_ebx">BX:0000 BL:00</td></tr>
+              <tr><td class="reg-name">ECX</td><td class="reg-val" id="r_ecx">0x00000000</td><td class="reg-sub" id="s_ecx">CX:0000 CL:00</td></tr>
+              <tr><td class="reg-name">EDX</td><td class="reg-val" id="r_edx">0x00000000</td><td class="reg-sub" id="s_edx">DX:0000 DL:00</td></tr>
+              <tr><td class="reg-name">ESI</td><td class="reg-val" id="r_esi">0x00402000</td><td class="reg-sub">Source Index</td></tr>
+              <tr><td class="reg-name">EDI</td><td class="reg-val" id="r_edi">0x00402020</td><td class="reg-sub">Dest Index</td></tr>
+              <tr><td class="reg-name">ESP</td><td class="reg-val" id="r_esp">0x0012FF80</td><td class="reg-sub">Stack Pointer</td></tr>
+              <tr><td class="reg-name">EBP</td><td class="reg-val" id="r_ebp">0x0012FF80</td><td class="reg-sub">Base Pointer</td></tr>
+              <tr><td class="reg-name">EIP</td><td class="reg-val" id="r_eip">0x00401000</td><td class="reg-sub">Instruction Ptr</td></tr>
+            </table>
+
+            <div class="flags-bar">
+              <span class="flag-badge active" id="f_zf">ZF (Zero)</span>
+              <span class="flag-badge" id="f_cf">CF (Carry)</span>
+              <span class="flag-badge" id="f_sf">SF (Sign)</span>
+              <span class="flag-badge" id="f_of">OF (Overflow)</span>
+            </div>
+
+            <div style="margin-top:8px; font-size:10px; background:#060b13; border:1px solid #1e293b; padding:6px;">
+              <span style="color:var(--accent-amber); font-weight:bold;">Execution Status:</span>
+              <div id="simStatus" style="color:#00ffcc; margin-top:2px;">CPU Ready. Press [Step] or [Run].</div>
+            </div>
           </div>
+
+          <!-- SUB-PANEL 2: Stack View -->
+          <div id="sub-stack" class="sub-panel" style="display:none;">
+            <div class="stack-container">
+              <table class="stack-table">
+                <thead>
+                  <tr><th>Addr</th><th>Offset</th><th>Value (Hex)</th><th>Comment</th></tr>
+                </thead>
+                <tbody id="stackTableBody">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+            <div style="margin-top:6px; font-size:10px; color:var(--text-muted);">
+              LIFO Protected Mode Stack. Grows downward from <code>0x0012FF80</code>.
+            </div>
+          </div>
+
+          <!-- SUB-PANEL 3: RAM Hex Dump -->
+          <div id="sub-hex" class="sub-panel" style="display:none;">
+            <div class="hexdump-viewport" id="hexDumpContainer">
+              <!-- Rendered via JS -->
+            </div>
+            <div style="margin-top:6px; font-size:10px; color:var(--text-muted);">
+              Data Segment (0x00402000 - 0x0040207F). Hover over bytes to inspect values.
+            </div>
+          </div>
+
+          <!-- SUB-PANEL 4: Opcode Matrix 16x16 -->
+          <div id="sub-matrix" class="sub-panel" style="display:none;">
+            <div class="opcode-matrix-wrap">
+              <div class="opcode-matrix" id="opcodeMatrix">
+                <!-- Rendered 256 cells via JS -->
+              </div>
+            </div>
+            <div id="opcodeInspector" style="margin-top:6px; background:#060e19; border:1px solid var(--border-dim); padding:6px; font-size:10px;">
+              <span style="color:var(--accent-cyan); font-weight:bold;" id="opInspMnemonic">Click any opcode cell above</span>
+              <div id="opInspDesc" style="color:#94a3b8; margin:2px 0;">Intel x86 One-Byte Opcode Map (00h-FFh).</div>
+              <button class="btn-retro" id="btnInsertOpcode" style="font-size:9px; padding:2px 5px; display:none;">Insert into Editor</button>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -796,42 +1161,44 @@ NOP</textarea>
     <div class="panel-card magenta-edge">
       <div class="panel-title">
         <span>GENESIS YM2612 2-OP FM SYNTHESIS &amp; SPC700 TRACKER JUKEBOX</span>
-        <span style="font-size:10px; color:#ff00aa;">WEB AUDIO FM ENGINE • NO EXTERNAL SAMPLES</span>
+        <span style="font-size:10px; color:#ff00aa;">WEB AUDIO FM ENGINE &bull; NO EXTERNAL SAMPLES</span>
       </div>
 
       <div class="audio-console">
         <!-- Visualizer & Controls -->
         <div>
-          <canvas class="tracker-canvas" id="audioScope" width="600" height="120"></canvas>
+          <canvas class="tracker-canvas" id="audioScope" width="600" height="90"></canvas>
           
-          <div style="display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap;">
-            <button class="btn-retro btn-retro-pink" id="btnPlayAudio">▶ Play Chiptune</button>
-            <button class="btn-retro" id="btnStopAudio">⏹ Stop</button>
-            <button class="btn-retro" id="btnNextTrack">⏭ Next Song</button>
-            
-            <div style="margin-left:auto; display:flex; align-items:center; gap:6px;">
-              <span style="font-size:11px; color:var(--text-muted);">VOL:</span>
-              <input type="range" id="volSlider" min="0" max="100" value="70" style="width:80px; accent-color:var(--accent-magenta);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; flex-wrap:wrap; gap:6px;">
+            <div>
+              <button class="btn-retro btn-retro-pink" id="btnPlayAudio">▶ Play Chiptune</button>
+              <button class="btn-retro" id="btnStopAudio">⏹ Stop</button>
+              <button class="btn-retro" id="btnNextTrack">⏭ Next Track</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:11px; color:#ff00aa;">VOL:</span>
+              <input type="range" id="volSlider" min="0" max="100" value="70" style="width:80px;">
             </div>
           </div>
 
           <div style="margin-top:8px; font-size:11px; color:var(--accent-cyan);">
-            NOW PLAYING: <strong id="currentTrackTitle" style="color:#fff;">[01] Neon Overdrive 1999 (FM Slap Bass)</strong>
+            <strong>NOW PLAYING:</strong> <span id="currentTrackTitle" style="color:#ffcc00;">[01] Neon Overdrive 1999 (FM Slap Bass &amp; Lead)</span>
           </div>
         </div>
 
-        <!-- 4-Channel LED Meters -->
-        <div style="background:#060b13; border:1px solid var(--border-dim); padding:10px;">
-          <span style="font-size:11px; color:var(--accent-amber); font-weight:bold; display:block; margin-bottom:6px;">YM2612 4-CH ACTIVITY:</span>
-          
+        <!-- Sound Chip Meters -->
+        <div style="background:#070d17; border:1px solid var(--border-dim); padding:8px;">
+          <span style="font-size:11px; color:var(--accent-amber); font-weight:bold; display:block; border-bottom:1px solid #1e293b; padding-bottom:3px;">
+            YM2612 FM OPERATOR CHANNELS
+          </span>
           <div class="channel-meters">
             <div>
               <div class="meter-bar"><div class="meter-fill" id="meter1"></div></div>
-              <span style="color:#64748b;">CH1:FM</span>
+              <span style="color:#64748b;">CH1:BASS</span>
             </div>
             <div>
               <div class="meter-bar"><div class="meter-fill" id="meter2"></div></div>
-              <span style="color:#64748b;">CH2:BASS</span>
+              <span style="color:#64748b;">CH2:LEAD</span>
             </div>
             <div>
               <div class="meter-bar"><div class="meter-fill" id="meter3"></div></div>
@@ -843,11 +1210,57 @@ NOP</textarea>
             </div>
           </div>
 
-          <div style="margin-top:10px; font-size:10px; color:#94a3b8; line-height:1.4;">
-            • FM Carrier / Modulator: 1:2 Harmonic<br>
-            • SPC700 Stereo Slapback Delay: 190ms<br>
-            • Damping Filter: 2200Hz Low-Pass
+          <div style="margin-top:8px; font-size:10px; color:#94a3b8; line-height:1.4;">
+            &bull; FM Carrier/Modulator: 1:2 Harmonic<br>
+            &bull; SPC700 Slapback Delay: 190ms<br>
+            &bull; Damping Filter: 2200Hz Low-Pass
           </div>
+        </div>
+      </div>
+
+      <!-- NEW: Interactive YM2612 FM Operator Lab & Piano Keyboard -->
+      <div style="margin-top:14px; background:#060e18; border:1px solid var(--border-dim); padding:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span style="font-size:12px; color:var(--accent-cyan); font-weight:bold;">🎹 YM2612 FM Operator Laboratory &amp; Piano Keys</span>
+          <div style="display:flex; gap:4px;">
+            <button class="btn-retro" onclick="loadFmPreset('slap')">Slap Bass</button>
+            <button class="btn-retro" onclick="loadFmPreset('brass')">FM Brass</button>
+            <button class="btn-retro" onclick="loadFmPreset('bell')">Crystal Bell</button>
+            <button class="btn-retro" onclick="loadFmPreset('laser')">Laser FX</button>
+            <button class="btn-retro" onclick="loadFmPreset('coin')">Coin Arp</button>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:8px; font-size:10px;">
+          <div>
+            <label style="color:var(--text-muted);">Mod Ratio:</label>
+            <select id="fmModRatio" style="background:#09121f; color:#00ffcc; border:1px solid var(--border-dim); padding:2px 4px; font-family:var(--font-mono); font-size:10px;">
+              <option value="0.5">0.5x Sub-Harmonic</option>
+              <option value="1">1.0x Fundamental</option>
+              <option value="2" selected>2.0x Octave (Slap)</option>
+              <option value="3">3.0x Fifth / Bell</option>
+              <option value="4">4.0x Sharp Metallic</option>
+            </select>
+          </div>
+          <div>
+            <label style="color:var(--text-muted);">Mod Index:</label>
+            <input type="range" id="fmModDepth" min="50" max="1000" value="450" style="width:70px;">
+          </div>
+          <div>
+            <label style="color:var(--text-muted);">Decay:</label>
+            <input type="range" id="fmDecay" min="5" max="150" value="30" style="width:70px;">
+          </div>
+          <div style="display:flex; align-items:center; gap:4px;">
+            <input type="checkbox" id="fmDelayToggle" checked>
+            <label for="fmDelayToggle" style="color:var(--accent-magenta);">SPC700 Echo</label>
+          </div>
+        </div>
+
+        <div class="fm-keyboard" id="fmKeyboard">
+          <!-- Piano keys rendered via JS (C4 to B4) -->
+        </div>
+        <div style="font-size:9px; color:var(--text-muted); margin-top:4px; text-align:center;">
+          Play via mouse click or keyboard row: [A] [W] [S] [E] [D] [F] [T] [G] [Y] [H] [U] [J]
         </div>
       </div>
     </div>
@@ -857,13 +1270,42 @@ NOP</textarea>
   <section class="content-section" id="tab-vault">
     <div class="panel-card cyan-edge">
       <div class="panel-title">
-        <span>DEMOSCENE CODE VAULT &amp; NFO ARCHIVE</span>
-        <span style="font-size:10px; color:var(--accent-cyan);">INSTANT BROWSER PREVIEW &amp; DOWNLOAD</span>
+        <span>DEMOSCENE CODE VAULT &amp; MODE 13h VGA EMULATOR</span>
+        <span style="font-size:10px; color:var(--accent-cyan);">60 FPS RETRO ENGINE &bull; DOWNLOAD RAW .ASM</span>
+      </div>
+
+      <!-- VGA Mode 13h Canvas Emulator -->
+      <div class="vga-screen-box">
+        <div style="display:flex; justify-content:space-between; width:100%; max-width:640px; margin-bottom:6px; align-items:center;">
+          <div style="display:flex; gap:6px; align-items:center;">
+            <label style="font-size:11px; color:var(--accent-amber); font-weight:bold;">VGA Effect:</label>
+            <select id="vgaEffectSelect" style="background:#09121f; color:#00ffcc; border:1px solid var(--border-dim); padding:2px 6px; font-family:var(--font-mono); font-size:11px;">
+              <option value="tunnel">TinyTunnel (128b Radial Distance/Angle)</option>
+              <option value="plasma">Plasma99 (256b Dual Sine Interferometry)</option>
+              <option value="fire">FireBuffer (512b Procedural Thermal Diffusion)</option>
+              <option value="starfield">Starfield3D (256b Perspective Warp)</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <label style="font-size:10px; color:var(--text-muted);">Palette:</label>
+            <select id="vgaPaletteSelect" style="background:#09121f; color:#ff00aa; border:1px solid var(--border-dim); padding:2px 4px; font-family:var(--font-mono); font-size:10px;">
+              <option value="cyan">Neon Cyan</option>
+              <option value="fire">Cyber Fire</option>
+              <option value="green">Phosphor Matrix</option>
+              <option value="copper">Amiga Copper</option>
+            </select>
+            <button class="btn-retro" id="btnToggleVga" style="font-size:10px; padding:2px 6px;">⏸ Pause</button>
+            <span style="font-size:10px; color:var(--accent-green);"><span id="vgaFps">60</span> FPS</span>
+          </div>
+        </div>
+        <canvas id="vgaCanvas" width="320" height="200"></canvas>
       </div>
 
       <div class="file-list">
         <button class="btn-retro active-file" onclick="selectVaultFile('tinytunnel.asm')">tinytunnel.asm (128b)</button>
         <button class="btn-retro" onclick="selectVaultFile('plasma99.asm')">plasma99.asm (256b)</button>
+        <button class="btn-retro" onclick="selectVaultFile('fire512.asm')">fire512.asm (512b)</button>
+        <button class="btn-retro" onclick="selectVaultFile('starfield.asm')">starfield.asm (256b)</button>
         <button class="btn-retro" onclick="selectVaultFile('neon_synth.asm')">neon_synth.asm (512b)</button>
         <button class="btn-retro" onclick="selectVaultFile('fl_neon.nfo')">fl_neon.nfo (Release Info)</button>
       </div>
@@ -898,7 +1340,7 @@ NOP</textarea>
         </div>
         <textarea id="gbMsg" rows="3" placeholder="Leave your message, greetings, or assembly tricks..." required maxlength="240"></textarea>
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:11px; color:var(--text-muted);">Strictly text only • No HTML injection</span>
+          <span style="font-size:11px; color:var(--text-muted);">Strictly text only &bull; No HTML injection</span>
           <button type="submit" class="btn-retro" style="background:#221504; border-color:#ffcc00; color:#ffcc00;">✍️ Sign Guestbook</button>
         </div>
         <div id="gbStatusNotice" style="font-size:11px; color:var(--accent-green); margin-top:4px;"></div>
@@ -956,7 +1398,7 @@ NOP</textarea>
   <!-- Footer -->
   <footer>
     [NEON_RIDER] // Engineered with 100% pure handcrafted HTML, CSS &amp; Web Audio API.<br>
-    Zero external CDNs • Compliant with KiloApps &lt; 999 KB Architecture Ceiling • 1999-2026<br>
+    Zero external CDNs &bull; Compliant with KiloApps &lt; 999 KB Architecture Ceiling &bull; 1999-2026<br>
     Navigate via KNet Browser at <code>kweb://users/~neon_rider</code>
   </footer>
 
@@ -969,14 +1411,34 @@ NOP</textarea>
   const navButtons = document.querySelectorAll('.nav-btn');
   const sections = document.querySelectorAll('.content-section');
 
+  function switchTab(targetId) {
+    navButtons.forEach(btn => {
+      if (btn.getAttribute('data-target') === targetId) btn.classList.add('active');
+      else btn.classList.remove('active');
+    });
+    sections.forEach(sec => {
+      if (sec.id === targetId) sec.classList.add('active');
+      else sec.classList.remove('active');
+    });
+  }
+
   navButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-      navButtons.forEach(b => b.classList.remove('active'));
-      sections.forEach(s => s.classList.remove('active'));
+      switchTab(btn.getAttribute('data-target'));
+    });
+  });
+
+  /* Sub-tabs in Sandbox */
+  const subTabButtons = document.querySelectorAll('.sub-tab-btn');
+  const subPanels = document.querySelectorAll('.sub-panel');
+
+  subTabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      subTabButtons.forEach(b => b.classList.remove('active'));
+      subPanels.forEach(p => p.style.display = 'none');
       btn.classList.add('active');
-      const targetId = btn.getAttribute('data-target');
-      const targetSec = document.getElementById(targetId);
-      if (targetSec) targetSec.classList.add('active');
+      const targetSub = document.getElementById(btn.getAttribute('data-sub'));
+      if (targetSub) targetSub.style.display = 'block';
     });
   });
 
@@ -999,20 +1461,98 @@ NOP</textarea>
   }
 
   /* =========================================================================
-     4. INTERACTIVE x86 MINI-ASSEMBLER & CPU STEPPER (NO EVAL, PURE EMULATION)
+     4. ADVANCED x86 CPU EMULATOR & OPCODE STEPPER (NO EVAL, PURE SIMULATION)
      ========================================================================= */
   let cpu = {
     eax: 0, ebx: 0x42, ecx: 0x05, edx: 0,
-    esi: 0x00402000, edi: 0x00403000, eip: 0x00401000,
-    zf: 1, cf: 0, sf: 0
+    esi: 0x00402000, edi: 0x00402020,
+    esp: 0x0012FF80, ebp: 0x0012FF80,
+    eip: 0x00401000,
+    zf: 1, cf: 0, sf: 0, of: 0
   };
   let prevCpu = { ...cpu };
 
+  let statInstCount = 0;
+  let statCycleCount = 0;
+  let isRunningAuto = false;
+  let autoTimer = null;
+  const breakpoints = new Set();
+
+  // 128-byte Data Segment (0x00402000 to 0x0040207F)
+  const memory = new Uint8Array(128);
+  const changedMemIndices = new Set();
+
+  function initMemory() {
+    memory.fill(0);
+    const tag = "NEON_RIDER_DEMO_BUFFER_1999";
+    for (let i = 0; i < tag.length; i++) memory[i] = tag.charCodeAt(i);
+
+    // Initial palette test
+    for (let i = 0; i < 16; i++) {
+      memory[0x20 + i] = (i * 16) & 0xFF;
+    }
+
+    // Diegetic encrypted packet at 0x00402030
+    const pkt = "PKT.10.19.99.4 [SUB:1999Hz] SIG:ECHO";
+    for (let i = 0; i < pkt.length && i < 36; i++) {
+      memory[0x30 + i] = pkt.charCodeAt(i);
+    }
+    changedMemIndices.clear();
+  }
+  initMemory();
+
+  // Virtual Stack: map of address -> 32-bit dword value
+  const stackMem = {};
+
+  function readMemByte(addr) {
+    if (addr >= 0x00402000 && addr < 0x00402000 + memory.length) {
+      return memory[addr - 0x00402000];
+    }
+    return 0;
+  }
+
+  function writeMemByte(addr, val) {
+    val = val & 0xFF;
+    if (addr >= 0x00402000 && addr < 0x00402000 + memory.length) {
+      const idx = addr - 0x00402000;
+      memory[idx] = val;
+      changedMemIndices.add(idx);
+    }
+  }
+
+  function readMemDword(addr) {
+    const b0 = readMemByte(addr);
+    const b1 = readMemByte(addr + 1);
+    const b2 = readMemByte(addr + 2);
+    const b3 = readMemByte(addr + 3);
+    return ((b3 << 24) | (b2 << 16) | (b1 << 8) | b0) >>> 0;
+  }
+
+  function writeMemDword(addr, val) {
+    writeMemByte(addr, val & 0xFF);
+    writeMemByte(addr + 1, (val >>> 8) & 0xFF);
+    writeMemByte(addr + 2, (val >>> 16) & 0xFF);
+    writeMemByte(addr + 3, (val >>> 24) & 0xFF);
+  }
+
+  function pushStack(val) {
+    cpu.esp = (cpu.esp - 4) >>> 0;
+    stackMem[cpu.esp] = val >>> 0;
+  }
+
+  function popStack() {
+    const val = stackMem[cpu.esp] !== undefined ? stackMem[cpu.esp] : 0;
+    cpu.esp = (cpu.esp + 4) >>> 0;
+    return val >>> 0;
+  }
+
   let parsedProgram = [];
+  let labels = {};
   let currentStepIdx = 0;
 
   const presets = {
     'preset-clear': [
+      "; Zero Registers & NOP Sled",
       "XOR EAX, EAX",
       "MOV EBX, 0x00000042",
       "ADD EAX, EBX",
@@ -1026,37 +1566,68 @@ NOP</textarea>
       "; Multiply EAX by 10 using shift-and-add (LEA emulation)",
       "MOV EAX, 0x00000007",
       "MOV EBX, EAX",
-      "SHL EAX, 3        ; EAX = EAX * 8",
+      "SHL EAX, 3        ; EAX = original * 8",
       "SHL EBX, 1        ; EBX = original * 2",
-      "ADD EAX, EBX      ; EAX = 8x + 2x = 10x (70)",
+      "ADD EAX, EBX      ; EAX = 8x + 2x = 10x (70 = 0x46)",
+      "NOP"
+    ],
+    'preset-fib': [
+      "; Fibonacci Sequence Generator (writes array to Data RAM)",
+      "MOV ESI, 0x00402000",
+      "MOV EAX, 1        ; Fib[0]",
+      "MOV EBX, 1        ; Fib[1]",
+      "MOV [ESI], EAX",
+      "MOV [ESI+4], EBX",
+      "MOV ECX, 6        ; Compute next 6 terms",
+      "MOV EDX, 8        ; Byte offset pointer",
+      "fib_loop:",
+      "MOV EDI, EAX",
+      "ADD EDI, EBX      ; Next term = EAX + EBX",
+      "MOV [ESI+EDX], EDI",
+      "MOV EAX, EBX",
+      "MOV EBX, EDI",
+      "ADD EDX, 4",
+      "DEC ECX",
+      "JNZ fib_loop",
       "NOP"
     ],
     'preset-xor': [
-      "; XOR Encryption Cycle",
-      "MOV EAX, 0x000000AA",
-      "XOR EAX, 0x0000007F",
-      "MOV EBX, EAX",
-      "XOR EBX, 0x0000007F ; Decrypt back to 0xAA",
-      "CMP EAX, EBX",
+      "; In-Memory String Decryption Loop (XOR 0x7F)",
+      "MOV ESI, 0x00402000",
+      "MOV ECX, 27       ; Length of string buffer",
+      "decrypt_loop:",
+      "MOV AL, [ESI]",
+      "XOR AL, 0x7F",
+      "MOV [ESI], AL",
+      "INC ESI",
+      "LOOP decrypt_loop",
       "NOP"
     ],
-    'preset-count': [
-      "; Down-Counter to Zero",
-      "MOV ECX, 0x00000004",
-      "DEC ECX",
-      "DEC ECX",
-      "DEC ECX",
-      "DEC ECX            ; Zero flag should trigger!",
+    'preset-stack': [
+      "; Stack Frame Setup & LIFO Word Reversal",
+      "MOV EAX, 0x11111111",
+      "MOV EBX, 0x22222222",
+      "MOV ECX, 0x33333333",
+      "PUSH EAX          ; Push in order: 1, 2, 3",
+      "PUSH EBX",
+      "PUSH ECX",
+      "POP EAX           ; Pop reverses order: 3 into EAX",
+      "POP EBX           ; 2 into EBX",
+      "POP ECX           ; 1 into ECX",
       "NOP"
     ],
-    'preset-palette': [
-      "; VGA 256-Color Palette Generation",
-      "XOR EAX, EAX",
-      "INC EAX",
-      "SHL EAX, 1",
-      "ADD EAX, 0x00000010",
-      "MOV EDX, EAX",
-      "NOP"
+    'preset-echo': [
+      "; Diegetic Signal Intercept Probe (0x00402030)",
+      "MOV ESI, 0x00402030 ; Intercept buffer offset",
+      "MOV ECX, 14         ; Check 'PKT.10.19.99.4'",
+      "XOR EDX, EDX        ; Clear checksum accumulator",
+      "scan_hdr:",
+      "MOV AL, [ESI]",
+      "ADD EDX, EAX",
+      "INC ESI",
+      "LOOP scan_hdr",
+      "; Probe complete: Triggers 1999Hz audio tone and alert",
+      "INT 3"
     ]
   };
 
@@ -1064,6 +1635,8 @@ NOP</textarea>
   const disasmList = document.getElementById('disasmList');
   const simStatus = document.getElementById('simStatus');
   const presetSelect = document.getElementById('presetSelect');
+  const statInst = document.getElementById('statInst');
+  const statCycles = document.getElementById('statCycles');
 
   presetSelect.addEventListener('change', (e) => {
     const lines = presets[e.target.value];
@@ -1073,33 +1646,81 @@ NOP</textarea>
     }
   });
 
-  function parseOpcode(line) {
-    const clean = line.split(';')[0].trim().toUpperCase();
+  function parseOpcode(line, lineNum) {
+    const clean = line.split(';')[0].trim();
     if (!clean) return null;
-    const parts = clean.split(/[\s,]+/);
-    const op = parts[0];
-    const a1 = parts[1] || '';
-    const a2 = parts[2] || '';
 
+    // Check for label alone e.g. "loop_start:"
+    if (clean.endsWith(':')) {
+      const lbl = clean.slice(0, -1).trim().toUpperCase();
+      return { isLabel: true, label: lbl, raw: clean };
+    }
+
+    // Check for inline label e.g. "loop_start: MOV EAX, 1"
+    let opLine = clean;
+    let labelPrefix = null;
+    if (clean.includes(':')) {
+      const parts = clean.split(':');
+      labelPrefix = parts[0].trim().toUpperCase();
+      opLine = parts.slice(1).join(':').trim();
+    }
+
+    const tokens = opLine.split(/[\s,]+/).filter(Boolean);
+    const op = (tokens[0] || '').toUpperCase();
+    const a1 = (tokens[1] || '').toUpperCase();
+    const a2 = (tokens[2] || '').toUpperCase();
+
+    // Pentium clock cycles estimation
+    let cycles = 1;
     let hex = "90";
-    if (op === "NOP") hex = "90";
-    else if (op === "XOR" && a1 === "EAX" && a2 === "EAX") hex = "31 C0";
-    else if (op === "XOR" && a1 === "EBX" && a2 === "EBX") hex = "31 DB";
-    else if (op === "XOR") hex = "83 F0 7F";
-    else if (op === "MOV" && a1 === "EAX") hex = "B8 " + toImmHex(a2);
-    else if (op === "MOV" && a1 === "EBX") hex = "BB " + toImmHex(a2);
-    else if (op === "MOV" && a1 === "ECX") hex = "B9 " + toImmHex(a2);
-    else if (op === "ADD" && a1 === "EAX") hex = "03 C3";
-    else if (op === "SUB" && a1 === "EAX") hex = "2B C1";
-    else if (op === "INC" && a1 === "EAX") hex = "40";
-    else if (op === "INC" && a1 === "EDX") hex = "42";
-    else if (op === "DEC" && a1 === "ECX") hex = "49";
-    else if (op === "SHL" && a1 === "EAX") hex = "C1 E0 02";
-    else if (op === "SHL" && a1 === "EBX") hex = "D1 E3";
-    else if (op === "CMP") hex = "3B C3";
-    else hex = "89 C0";
 
-    return { raw: clean, op, a1, a2, hex };
+    if (op === "NOP") { hex = "90"; cycles = 1; }
+    else if (op === "HLT") { hex = "F4"; cycles = 1; }
+    else if (op === "INT" && a1 === "3") { hex = "CC"; cycles = 3; }
+    else if (op === "INT") { hex = "CD 21"; cycles = 16; }
+    else if (op === "RET") { hex = "C3"; cycles = 2; }
+    else if (op === "XOR" && a1 === "EAX" && a2 === "EAX") { hex = "31 C0"; cycles = 1; }
+    else if (op === "XOR" && a1 === "EBX" && a2 === "EBX") { hex = "31 DB"; cycles = 1; }
+    else if (op === "XOR" && a1 === "ECX" && a2 === "ECX") { hex = "31 C9"; cycles = 1; }
+    else if (op === "XOR" && a1 === "EDX" && a2 === "EDX") { hex = "31 D2"; cycles = 1; }
+    else if (op === "XOR") { hex = "83 F0 7F"; cycles = 1; }
+    else if (op === "MOV" && a1 === "EAX" && !a2.startsWith('[')) { hex = "B8 " + toImmHex(a2); cycles = 1; }
+    else if (op === "MOV" && a1 === "EBX" && !a2.startsWith('[')) { hex = "BB " + toImmHex(a2); cycles = 1; }
+    else if (op === "MOV" && a1 === "ECX" && !a2.startsWith('[')) { hex = "B9 " + toImmHex(a2); cycles = 1; }
+    else if (op === "MOV" && a1 === "EDX" && !a2.startsWith('[')) { hex = "BA " + toImmHex(a2); cycles = 1; }
+    else if (op === "MOV" && a1 === "ESI" && !a2.startsWith('[')) { hex = "BE " + toImmHex(a2); cycles = 1; }
+    else if (op === "MOV" && a1 === "EDI" && !a2.startsWith('[')) { hex = "BF " + toImmHex(a2); cycles = 1; }
+    else if (op === "MOV" && (a1.startsWith('[') || a2.startsWith('['))) { hex = "89 06"; cycles = 2; }
+    else if (op === "MOV") { hex = "89 D8"; cycles = 1; }
+    else if (op === "ADD") { hex = "03 C3"; cycles = 1; }
+    else if (op === "SUB") { hex = "2B C1"; cycles = 1; }
+    else if (op === "INC" && a1 === "EAX") { hex = "40"; cycles = 1; }
+    else if (op === "INC" && a1 === "EDX") { hex = "42"; cycles = 1; }
+    else if (op === "INC" && a1 === "ESI") { hex = "46"; cycles = 1; }
+    else if (op === "INC") { hex = "FF C0"; cycles = 1; }
+    else if (op === "DEC" && a1 === "ECX") { hex = "49"; cycles = 1; }
+    else if (op === "DEC") { hex = "48"; cycles = 1; }
+    else if (op === "SHL") { hex = "C1 E0 02"; cycles = 1; }
+    else if (op === "SHR") { hex = "C1 E8 02"; cycles = 1; }
+    else if (op === "CMP") { hex = "3B C3"; cycles = 1; }
+    else if (op === "TEST") { hex = "85 C0"; cycles = 1; }
+    else if (op === "PUSH") { hex = "50"; cycles = 1; }
+    else if (op === "POP") { hex = "58"; cycles = 1; }
+    else if (op === "JMP") { hex = "EB 04"; cycles = 2; }
+    else if (op === "JZ" || op === "JE") { hex = "74 08"; cycles = 2; }
+    else if (op === "JNZ" || op === "JNE") { hex = "75 08"; cycles = 2; }
+    else if (op === "LOOP") { hex = "E2 F8"; cycles = 3; }
+    else if (op === "CALL") { hex = "E8 10 00"; cycles = 3; }
+    else { hex = "89 C0"; cycles = 1; }
+
+    return {
+      isLabel: false,
+      labelPrefix,
+      raw: clean,
+      op, a1, a2,
+      hex, cycles,
+      lineNum
+    };
   }
 
   function toImmHex(valStr) {
@@ -1112,20 +1733,38 @@ NOP</textarea>
 
   function assembleCode() {
     parsedProgram = [];
+    labels = {};
     currentStepIdx = 0;
+    statInstCount = 0;
+    statCycleCount = 0;
+    statInst.textContent = "0";
+    statCycles.textContent = "0";
+
     const lines = asmInput.value.split('\n');
     let addr = 0x00401000;
 
-    lines.forEach(l => {
-      const p = parseOpcode(l);
-      if (p) {
-        p.addr = addr;
-        addr += 2 + Math.floor(p.hex.length / 3);
-        parsedProgram.push(p);
+    // Pass 1: Parse and record labels
+    lines.forEach((l, idx) => {
+      const p = parseOpcode(l, idx);
+      if (!p) return;
+
+      if (p.isLabel) {
+        labels[p.label] = parsedProgram.length;
+        return;
       }
+
+      if (p.labelPrefix) {
+        labels[p.labelPrefix] = parsedProgram.length;
+      }
+
+      p.addr = addr;
+      addr += 2 + Math.floor(p.hex.length / 3);
+      parsedProgram.push(p);
     });
 
     renderDisassembly();
+    renderStack();
+    renderHexDump();
     simStatus.textContent = `Assembled ${parsedProgram.length} instructions. EIP = 0x00401000`;
   }
 
@@ -1133,28 +1772,131 @@ NOP</textarea>
     disasmList.innerHTML = '';
     parsedProgram.forEach((p, idx) => {
       const div = document.createElement('div');
-      div.className = 'disasm-line' + (idx === currentStepIdx ? ' current' : '');
+      div.className = 'disasm-line' + (idx === currentStepIdx ? ' current' : '') + (breakpoints.has(idx) ? ' breakpoint' : '');
+      div.addEventListener('click', () => {
+        if (breakpoints.has(idx)) breakpoints.delete(idx);
+        else breakpoints.add(idx);
+        renderDisassembly();
+      });
+
+      const dot = document.createElement('span');
+      dot.className = 'bp-dot';
+
       const addrHex = '0x' + p.addr.toString(16).toUpperCase();
       const bytesHex = p.hex.padEnd(12, ' ');
-      div.textContent = `${addrHex}  ${bytesHex}  ${p.raw}`;
+      const text = document.createElement('span');
+      text.textContent = `${addrHex}  ${bytesHex}  ${p.raw}`;
+
+      div.appendChild(dot);
+      div.appendChild(text);
       disasmList.appendChild(div);
     });
   }
 
-  function parseVal(arg) {
+  function parseOperandVal(arg) {
     if (!arg) return 0;
+    arg = arg.trim();
+
+    // Check register
     if (arg === 'EAX') return cpu.eax;
     if (arg === 'EBX') return cpu.ebx;
     if (arg === 'ECX') return cpu.ecx;
     if (arg === 'EDX') return cpu.edx;
+    if (arg === 'ESI') return cpu.esi;
+    if (arg === 'EDI') return cpu.edi;
+    if (arg === 'ESP') return cpu.esp;
+    if (arg === 'EBP') return cpu.ebp;
+    if (arg === 'AL') return cpu.eax & 0xFF;
+    if (arg === 'AH') return (cpu.eax >> 8) & 0xFF;
+    if (arg === 'AX') return cpu.eax & 0xFFFF;
+    if (arg === 'BL') return cpu.ebx & 0xFF;
+    if (arg === 'CL') return cpu.ecx & 0xFF;
+    if (arg === 'DL') return cpu.edx & 0xFF;
+
+    // Check memory dereference e.g. [ESI], [ESI+4], [ESI+EDX], [0x00402000]
+    if (arg.startsWith('[') && arg.endsWith(']')) {
+      const inner = arg.slice(1, -1).trim();
+      const addr = evalAddress(inner);
+      return readMemByte(addr);
+    }
+
+    // Number literal
     if (arg.startsWith('0X')) return parseInt(arg.slice(2), 16) || 0;
     return parseInt(arg, 10) || 0;
+  }
+
+  function evalAddress(expr) {
+    expr = expr.toUpperCase().replace(/\s+/g, '');
+    let base = 0;
+    let offset = 0;
+
+    // Split on + or -
+    if (expr.includes('+')) {
+      const parts = expr.split('+');
+      base = parseRegOrNum(parts[0]);
+      offset = parseRegOrNum(parts[1]);
+      return (base + offset) >>> 0;
+    } else if (expr.includes('-')) {
+      const parts = expr.split('-');
+      base = parseRegOrNum(parts[0]);
+      offset = parseRegOrNum(parts[1]);
+      return (base - offset) >>> 0;
+    }
+    return parseRegOrNum(expr);
+  }
+
+  function parseRegOrNum(str) {
+    if (str === 'ESI') return cpu.esi;
+    if (str === 'EDI') return cpu.edi;
+    if (str === 'ESP') return cpu.esp;
+    if (str === 'EBP') return cpu.ebp;
+    if (str === 'EAX') return cpu.eax;
+    if (str === 'EBX') return cpu.ebx;
+    if (str === 'ECX') return cpu.ecx;
+    if (str === 'EDX') return cpu.edx;
+    if (str.startsWith('0X')) return parseInt(str.slice(2), 16) || 0;
+    return parseInt(str, 10) || 0;
+  }
+
+  function writeOperandVal(dst, val) {
+    val = val >>> 0;
+    dst = dst.trim();
+
+    if (dst === 'EAX') cpu.eax = val;
+    else if (dst === 'EBX') cpu.ebx = val;
+    else if (dst === 'ECX') cpu.ecx = val;
+    else if (dst === 'EDX') cpu.edx = val;
+    else if (dst === 'ESI') cpu.esi = val;
+    else if (dst === 'EDI') cpu.edi = val;
+    else if (dst === 'ESP') cpu.esp = val;
+    else if (dst === 'EBP') cpu.ebp = val;
+    else if (dst === 'AL') cpu.eax = ((cpu.eax & 0xFFFFFF00) | (val & 0xFF)) >>> 0;
+    else if (dst === 'AH') cpu.eax = ((cpu.eax & 0xFFFF00FF) | ((val & 0xFF) << 8)) >>> 0;
+    else if (dst === 'AX') cpu.eax = ((cpu.eax & 0xFFFF0000) | (val & 0xFFFF)) >>> 0;
+    else if (dst.startsWith('[') && dst.endsWith(']')) {
+      const inner = dst.slice(1, -1).trim();
+      const addr = evalAddress(inner);
+      if (dst.startsWith('BYTE [') || dst.length < 15) {
+        writeMemByte(addr, val & 0xFF);
+      } else {
+        writeMemDword(addr, val);
+      }
+    }
+  }
+
+  function updateFlags(result, op) {
+    result = result >>> 0;
+    if (op !== "CMP" && op !== "TEST") {
+      cpu.zf = (result === 0) ? 1 : 0;
+      cpu.sf = (result & 0x80000000) ? 1 : 0;
+    }
   }
 
   function stepCpu() {
     if (parsedProgram.length === 0) assembleCode();
     if (currentStepIdx >= parsedProgram.length) {
       simStatus.textContent = "Program completed. Press [Reset CPU] to restart.";
+      stopAutoRun();
       return;
     }
 
@@ -1164,76 +1906,177 @@ NOP</textarea>
     const a1 = inst.a1;
     const a2 = inst.a2;
 
-    if (op === "XOR") {
-      const v = parseVal(a2);
-      if (a1 === "EAX") cpu.eax ^= v;
-      else if (a1 === "EBX") cpu.ebx ^= v;
-      else if (a1 === "ECX") cpu.ecx ^= v;
-    } else if (op === "MOV") {
-      const v = parseVal(a2);
-      if (a1 === "EAX") cpu.eax = v;
-      else if (a1 === "EBX") cpu.ebx = v;
-      else if (a1 === "ECX") cpu.ecx = v;
-      else if (a1 === "EDX") cpu.edx = v;
-    } else if (op === "ADD") {
-      const v = parseVal(a2);
-      if (a1 === "EAX") cpu.eax = (cpu.eax + v) >>> 0;
-    } else if (op === "SUB") {
-      const v = parseVal(a2);
-      if (a1 === "EAX") cpu.eax = Math.max(0, cpu.eax - v);
-    } else if (op === "INC") {
-      if (a1 === "EAX") cpu.eax = (cpu.eax + 1) >>> 0;
-      else if (a1 === "EDX") cpu.edx = (cpu.edx + 1) >>> 0;
-    } else if (op === "DEC") {
-      if (a1 === "ECX") cpu.ecx = Math.max(0, cpu.ecx - 1);
-    } else if (op === "SHL") {
-      const amt = parseVal(a2) || 1;
-      if (a1 === "EAX") cpu.eax = (cpu.eax << amt) >>> 0;
-      else if (a1 === "EBX") cpu.ebx = (cpu.ebx << amt) >>> 0;
-    } else if (op === "CMP") {
-      const diff = parseVal(a1) - parseVal(a2);
-      cpu.zf = diff === 0 ? 1 : 0;
-      cpu.cf = diff < 0 ? 1 : 0;
-    }
+    statInstCount++;
+    statCycleCount += inst.cycles;
+    statInst.textContent = statInstCount;
+    statCycles.textContent = statCycleCount;
 
-    // Update flags
-    const primary = cpu.eax;
-    if (op !== "CMP") {
-      cpu.zf = (primary === 0) ? 1 : 0;
-      cpu.sf = (primary & 0x80000000) ? 1 : 0;
+    let branchTaken = false;
+    let targetIdx = -1;
+
+    if (op === "XOR") {
+      const v = (a1 === a2) ? 0 : (parseOperandVal(a1) ^ parseOperandVal(a2));
+      writeOperandVal(a1, v);
+      cpu.cf = 0; cpu.of = 0;
+      updateFlags(v, op);
+    } else if (op === "MOV") {
+      const v = parseOperandVal(a2);
+      writeOperandVal(a1, v);
+    } else if (op === "ADD") {
+      const v1 = parseOperandVal(a1);
+      const v2 = parseOperandVal(a2);
+      const sum = (v1 + v2) >>> 0;
+      writeOperandVal(a1, sum);
+      cpu.cf = (v1 + v2 > 0xFFFFFFFF) ? 1 : 0;
+      updateFlags(sum, op);
+    } else if (op === "SUB") {
+      const v1 = parseOperandVal(a1);
+      const v2 = parseOperandVal(a2);
+      const diff = (v1 - v2) >>> 0;
+      writeOperandVal(a1, diff);
+      cpu.cf = (v1 < v2) ? 1 : 0;
+      updateFlags(diff, op);
+    } else if (op === "INC") {
+      const v = (parseOperandVal(a1) + 1) >>> 0;
+      writeOperandVal(a1, v);
+      updateFlags(v, op);
+    } else if (op === "DEC") {
+      const v = (parseOperandVal(a1) - 1) >>> 0;
+      writeOperandVal(a1, v);
+      updateFlags(v, op);
+    } else if (op === "SHL") {
+      const amt = parseOperandVal(a2) || 1;
+      const v = (parseOperandVal(a1) << amt) >>> 0;
+      writeOperandVal(a1, v);
+      updateFlags(v, op);
+    } else if (op === "SHR") {
+      const amt = parseOperandVal(a2) || 1;
+      const v = (parseOperandVal(a1) >>> amt) >>> 0;
+      writeOperandVal(a1, v);
+      updateFlags(v, op);
+    } else if (op === "CMP") {
+      const v1 = parseOperandVal(a1);
+      const v2 = parseOperandVal(a2);
+      const diff = v1 - v2;
+      cpu.zf = (diff === 0) ? 1 : 0;
+      cpu.cf = (v1 < v2) ? 1 : 0;
+      cpu.sf = (diff < 0) ? 1 : 0;
+    } else if (op === "TEST") {
+      const v = (parseOperandVal(a1) & parseOperandVal(a2)) >>> 0;
+      cpu.zf = (v === 0) ? 1 : 0;
+      cpu.sf = (v & 0x80000000) ? 1 : 0;
+      cpu.cf = 0; cpu.of = 0;
+    } else if (op === "PUSH") {
+      const v = parseOperandVal(a1);
+      pushStack(v);
+    } else if (op === "POP") {
+      const v = popStack();
+      writeOperandVal(a1, v);
+    } else if (op === "JMP") {
+      branchTaken = true;
+      targetIdx = labels[a1] !== undefined ? labels[a1] : -1;
+    } else if (op === "JZ" || op === "JE") {
+      if (cpu.zf === 1) {
+        branchTaken = true;
+        targetIdx = labels[a1] !== undefined ? labels[a1] : -1;
+      }
+    } else if (op === "JNZ" || op === "JNE") {
+      if (cpu.zf === 0) {
+        branchTaken = true;
+        targetIdx = labels[a1] !== undefined ? labels[a1] : -1;
+      }
+    } else if (op === "LOOP") {
+      cpu.ecx = (cpu.ecx - 1) >>> 0;
+      if (cpu.ecx !== 0) {
+        branchTaken = true;
+        targetIdx = labels[a1] !== undefined ? labels[a1] : -1;
+      }
+    } else if (op === "CALL") {
+      pushStack(inst.addr + 5);
+      branchTaken = true;
+      targetIdx = labels[a1] !== undefined ? labels[a1] : -1;
+    } else if (op === "RET") {
+      const retAddr = popStack();
+      const foundIdx = parsedProgram.findIndex(p => p.addr >= retAddr);
+      if (foundIdx !== -1) {
+        branchTaken = true;
+        targetIdx = foundIdx;
+      }
+    } else if (op === "INT" && a1 === "3") {
+      simStatus.textContent = "[ALERT] Software Breakpoint (INT 3). Intercepted packet decoded!";
+      playTone(1999, 0.4);
+      stopAutoRun();
+      return;
     }
 
     cpu.eip = inst.addr;
-    currentStepIdx++;
+
+    if (branchTaken && targetIdx >= 0 && targetIdx < parsedProgram.length) {
+      currentStepIdx = targetIdx;
+    } else {
+      currentStepIdx++;
+    }
+
     updateRegistersUi();
     renderDisassembly();
+    renderStack();
+    renderHexDump();
 
     simStatus.textContent = `Executed [${inst.raw}]. EIP = 0x${cpu.eip.toString(16).toUpperCase()}`;
     playClickSound();
-  }
 
-  function runAll() {
-    if (parsedProgram.length === 0) assembleCode();
-    while (currentStepIdx < parsedProgram.length) {
-      stepCpu();
+    if (breakpoints.has(currentStepIdx)) {
+      simStatus.textContent = `Breakpoint reached at line ${currentStepIdx + 1}. Execution paused.`;
+      stopAutoRun();
     }
   }
 
+  function startAutoRun() {
+    if (isRunningAuto) return;
+    isRunningAuto = true;
+    document.getElementById('btnRun').textContent = "⏸ Pause";
+    autoTimer = setInterval(() => {
+      if (currentStepIdx >= parsedProgram.length) {
+        stopAutoRun();
+      } else {
+        stepCpu();
+      }
+    }, 60);
+  }
+
+  function stopAutoRun() {
+    isRunningAuto = false;
+    document.getElementById('btnRun').textContent = "▶ Run Auto";
+    if (autoTimer) clearInterval(autoTimer);
+  }
+
   function resetCpu() {
+    stopAutoRun();
     cpu = {
       eax: 0, ebx: 0x42, ecx: 0x05, edx: 0,
-      esi: 0x00402000, edi: 0x00403000, eip: 0x00401000,
-      zf: 1, cf: 0, sf: 0
+      esi: 0x00402000, edi: 0x00402020,
+      esp: 0x0012FF80, ebp: 0x0012FF80,
+      eip: 0x00401000,
+      zf: 1, cf: 0, sf: 0, of: 0
     };
     prevCpu = { ...cpu };
     currentStepIdx = 0;
+    statInstCount = 0;
+    statCycleCount = 0;
+    statInst.textContent = "0";
+    statCycles.textContent = "0";
+    initMemory();
+    for (let k in stackMem) delete stackMem[k];
+
     updateRegistersUi();
     renderDisassembly();
-    simStatus.textContent = "CPU Registers reset to defaults.";
+    renderStack();
+    renderHexDump();
+    simStatus.textContent = "CPU Registers and Memory reset to defaults.";
   }
 
   function updateRegistersUi() {
-    ['eax', 'ebx', 'ecx', 'edx', 'esi', 'edi', 'eip'].forEach(reg => {
+    ['eax', 'ebx', 'ecx', 'edx', 'esi', 'edi', 'esp', 'ebp', 'eip'].forEach(reg => {
       const el = document.getElementById('r_' + reg);
       const val = cpu[reg];
       el.textContent = '0x' + val.toString(16).padStart(8, '0').toUpperCase();
@@ -1244,14 +2087,203 @@ NOP</textarea>
       }
     });
 
+    // Sub-register views
+    document.getElementById('s_eax').textContent = `AX:${(cpu.eax & 0xFFFF).toString(16).padStart(4,'0')} AL:${(cpu.eax & 0xFF).toString(16).padStart(2,'0')}`;
+    document.getElementById('s_ebx').textContent = `BX:${(cpu.ebx & 0xFFFF).toString(16).padStart(4,'0')} BL:${(cpu.ebx & 0xFF).toString(16).padStart(2,'0')}`;
+    document.getElementById('s_ecx').textContent = `CX:${(cpu.ecx & 0xFFFF).toString(16).padStart(4,'0')} CL:${(cpu.ecx & 0xFF).toString(16).padStart(2,'0')}`;
+    document.getElementById('s_edx').textContent = `DX:${(cpu.edx & 0xFFFF).toString(16).padStart(4,'0')} DL:${(cpu.edx & 0xFF).toString(16).padStart(2,'0')}`;
+
     document.getElementById('f_zf').className = 'flag-badge' + (cpu.zf ? ' active' : '');
     document.getElementById('f_cf').className = 'flag-badge' + (cpu.cf ? ' active' : '');
     document.getElementById('f_sf').className = 'flag-badge' + (cpu.sf ? ' active' : '');
+    document.getElementById('f_of').className = 'flag-badge' + (cpu.of ? ' active' : '');
   }
+
+  function renderStack() {
+    const tbody = document.getElementById('stackTableBody');
+    tbody.innerHTML = '';
+    const base = 0x0012FF80;
+
+    for (let i = 0; i < 8; i++) {
+      const addr = (base - i * 4) >>> 0;
+      const val = stackMem[addr] !== undefined ? stackMem[addr] : 0;
+      const tr = document.createElement('tr');
+      if (addr === cpu.esp) tr.className = 'stack-row-esp';
+      else if (addr === cpu.ebp) tr.className = 'stack-row-ebp';
+
+      const tdAddr = document.createElement('td');
+      tdAddr.textContent = '0x' + addr.toString(16).toUpperCase();
+
+      const tdOff = document.createElement('td');
+      const diff = (addr - cpu.esp);
+      tdOff.textContent = diff === 0 ? '[ESP]' : (diff > 0 ? `[ESP+${diff}]` : `[ESP-${Math.abs(diff)}]`);
+
+      const tdVal = document.createElement('td');
+      tdVal.textContent = '0x' + val.toString(16).padStart(8, '0').toUpperCase();
+
+      const tdComment = document.createElement('td');
+      if (addr === cpu.esp && addr === cpu.ebp) tdComment.textContent = '<- ESP, EBP';
+      else if (addr === cpu.esp) tdComment.textContent = '<- ESP (Top)';
+      else if (addr === cpu.ebp) tdComment.textContent = '<- EBP (Frame)';
+      else tdComment.textContent = '-';
+
+      tr.appendChild(tdAddr);
+      tr.appendChild(tdOff);
+      tr.appendChild(tdVal);
+      tr.appendChild(tdComment);
+      tbody.appendChild(tr);
+    }
+  }
+
+  function renderHexDump() {
+    const container = document.getElementById('hexDumpContainer');
+    container.innerHTML = '';
+
+    for (let r = 0; r < 8; r++) {
+      const row = document.createElement('div');
+      row.className = 'hexdump-row';
+
+      const addrSpan = document.createElement('span');
+      addrSpan.className = 'hexdump-addr';
+      const offset = (0x00402000 + r * 16).toString(16).toUpperCase();
+      addrSpan.textContent = '0x' + offset;
+      row.appendChild(addrSpan);
+
+      const bytesWrap = document.createElement('div');
+      bytesWrap.className = 'hexdump-bytes';
+
+      let asciiStr = '';
+      for (let c = 0; c < 16; c++) {
+        const idx = r * 16 + c;
+        const b = memory[idx];
+        const bSpan = document.createElement('span');
+        bSpan.className = 'hexdump-byte' + (changedMemIndices.has(idx) ? ' byte-changed' : '');
+        bSpan.textContent = b.toString(16).padStart(2, '0').toUpperCase();
+        bSpan.title = `Offset: 0x${(0x00402000 + idx).toString(16).toUpperCase()} | Dec: ${b}`;
+        bytesWrap.appendChild(bSpan);
+
+        asciiStr += (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
+      }
+      row.appendChild(bytesWrap);
+
+      const asciiSpan = document.createElement('span');
+      asciiSpan.className = 'hexdump-ascii';
+      asciiSpan.textContent = asciiStr;
+      row.appendChild(asciiSpan);
+
+      container.appendChild(row);
+    }
+  }
+
+  /* 16x16 Opcode Matrix Generator */
+  const opcodeDatabase = {
+    0x90: { name: "NOP", cat: "mov", desc: "No Operation. 1 cycle delay, no flags changed.", cycles: 1 },
+    0xCC: { name: "INT 3", cat: "jump", desc: "Software Breakpoint. Used by debuggers.", cycles: 3 },
+    0x31: { name: "XOR r/m32, r32", cat: "alu", desc: "Bitwise Exclusive OR. Used to zero registers.", cycles: 1 },
+    0x89: { name: "MOV r/m32, r32", cat: "mov", desc: "Move 32-bit register to memory or register.", cycles: 1 },
+    0x8B: { name: "MOV r32, r/m32", cat: "mov", desc: "Move 32-bit memory to register.", cycles: 1 },
+    0xB8: { name: "MOV EAX, imm32", cat: "mov", desc: "Load 32-bit immediate constant into EAX.", cycles: 1 },
+    0x50: { name: "PUSH EAX", cat: "stack", desc: "Push EAX onto stack (ESP decrements by 4).", cycles: 1 },
+    0x58: { name: "POP EAX", cat: "stack", desc: "Pop 32-bit dword from stack into EAX.", cycles: 1 },
+    0x74: { name: "JZ rel8", cat: "jump", desc: "Jump if Zero flag is set (ZF=1).", cycles: 2 },
+    0x75: { name: "JNZ rel8", cat: "jump", desc: "Jump if Zero flag is clear (ZF=0).", cycles: 2 },
+    0xEB: { name: "JMP rel8", cat: "jump", desc: "Unconditional Short Jump.", cycles: 2 },
+    0xE8: { name: "CALL rel32", cat: "jump", desc: "Call Procedure. Pushes return address.", cycles: 3 },
+    0xC3: { name: "RET", cat: "jump", desc: "Return from Procedure. Pops EIP.", cycles: 2 },
+    0xE2: { name: "LOOP rel8", cat: "jump", desc: "Decrement ECX and jump if ECX != 0.", cycles: 3 },
+    0xF4: { name: "HLT", cat: "jump", desc: "Halt CPU until next external interrupt.", cycles: 1 },
+    0x03: { name: "ADD r32, r/m32", cat: "alu", desc: "Integer addition into 32-bit register.", cycles: 1 },
+    0x2B: { name: "SUB r32, r/m32", cat: "alu", desc: "Integer subtraction from 32-bit register.", cycles: 1 },
+    0x40: { name: "INC EAX", cat: "alu", desc: "Increment EAX by 1. Updates ZF, SF, OF.", cycles: 1 },
+    0x49: { name: "DEC ECX", cat: "alu", desc: "Decrement ECX by 1. Updates ZF, SF, OF.", cycles: 1 }
+  };
+
+  function initOpcodeMatrix() {
+    const grid = document.getElementById('opcodeMatrix');
+    grid.innerHTML = '';
+
+    for (let i = 0; i < 256; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'op-cell';
+      const hex = i.toString(16).padStart(2, '0').toUpperCase();
+      cell.textContent = hex;
+
+      const info = opcodeDatabase[i];
+      if (info) {
+        if (info.cat === 'mov') cell.classList.add('has-cat-mov');
+        else if (info.cat === 'alu') cell.classList.add('has-cat-alu');
+        else if (info.cat === 'jump') cell.classList.add('has-cat-jump');
+        else if (info.cat === 'stack') cell.classList.add('has-cat-stack');
+      }
+
+      cell.addEventListener('click', () => {
+        document.querySelectorAll('.op-cell').forEach(c => c.classList.remove('selected'));
+        cell.classList.add('selected');
+
+        const mnem = info ? info.name : `0x${hex}: Undefined / Prefix`;
+        const desc = info ? `${info.desc} (Cycles: ${info.cycles})` : 'Multi-byte opcode, ModR/M extension, or reserved in standard x86.';
+        document.getElementById('opInspMnemonic').textContent = `0x${hex} &bull; ${mnem}`;
+        document.getElementById('opInspDesc').textContent = desc;
+
+        const btn = document.getElementById('btnInsertOpcode');
+        if (info) {
+          btn.style.display = 'inline-block';
+          btn.onclick = () => {
+            asmInput.value += `\n${info.name.split(' ')[0]}`;
+            assembleCode();
+          };
+        } else {
+          btn.style.display = 'none';
+        }
+      });
+
+      grid.appendChild(cell);
+    }
+  }
+  initOpcodeMatrix();
+
+  /* Hex Disassembler Workbench */
+  document.getElementById('btnDisasmBytes').addEventListener('click', () => {
+    const raw = document.getElementById('hexByteInput').value.trim();
+    const bytes = raw.split(/[\s,]+/).map(b => parseInt(b, 16)).filter(n => !isNaN(n));
+    const output = document.getElementById('disasmResultOutput');
+    output.innerHTML = '';
+
+    let i = 0;
+    let addr = 0x00401000;
+    while (i < bytes.length) {
+      const b0 = bytes[i];
+      let lineText = '';
+      if (b0 === 0x90) { lineText = 'NOP'; i += 1; }
+      else if (b0 === 0xCC) { lineText = 'INT 3'; i += 1; }
+      else if (b0 === 0xC3) { lineText = 'RET'; i += 1; }
+      else if (b0 === 0x31 && bytes[i+1] === 0xC0) { lineText = 'XOR EAX, EAX'; i += 2; }
+      else if (b0 === 0xB8) {
+        const imm = bytes[i+1] | (bytes[i+2]<<8) | (bytes[i+3]<<16) | (bytes[i+4]<<24);
+        lineText = `MOV EAX, 0x${(imm>>>0).toString(16).padStart(8,'0').toUpperCase()}`;
+        i += 5;
+      }
+      else if (b0 === 0x83 && bytes[i+1] === 0xC0) {
+        lineText = `ADD EAX, ${bytes[i+2]}`;
+        i += 3;
+      }
+      else if (b0 === 0x50) { lineText = 'PUSH EAX'; i += 1; }
+      else if (b0 === 0x58) { lineText = 'POP EAX'; i += 1; }
+      else { lineText = `DB 0x${b0.toString(16).padStart(2,'0').toUpperCase()}`; i += 1; }
+
+      const row = document.createElement('div');
+      row.textContent = `0x${addr.toString(16).toUpperCase()}: ${lineText}`;
+      output.appendChild(row);
+      addr += 2;
+    }
+  });
 
   document.getElementById('btnAssemble').addEventListener('click', assembleCode);
   document.getElementById('btnStep').addEventListener('click', stepCpu);
-  document.getElementById('btnRun').addEventListener('click', runAll);
+  document.getElementById('btnRun').addEventListener('click', () => {
+    if (isRunningAuto) stopAutoRun();
+    else startAutoRun();
+  });
   document.getElementById('btnResetCpu').addEventListener('click', resetCpu);
 
   // Initialize sandbox
@@ -1337,43 +2369,41 @@ NOP</textarea>
     requestAnimationFrame(renderScope);
   }
 
-  // YM2612 2-Operator FM Synthesizer Voice
-  function triggerFmVoice(freq, duration, isBass) {
+  function triggerFmVoice(freq, duration, isBass, customRatio, customDepth) {
     if (!audioCtx) return;
     const now = audioCtx.currentTime;
 
-    // Carrier
     const carrier = audioCtx.createOscillator();
     carrier.type = isBass ? 'sawtooth' : 'sine';
     carrier.frequency.setValueAtTime(freq, now);
 
-    // Modulator (FM Operator 2)
     const modulator = audioCtx.createOscillator();
     modulator.type = 'sine';
-    const modRatio = isBass ? 2 : 1;
+    const modRatio = customRatio !== undefined ? customRatio : (isBass ? 2 : 1);
     modulator.frequency.setValueAtTime(freq * modRatio, now);
 
-    // Modulation Gain Envelope
     const modGain = audioCtx.createGain();
-    const modDepth = isBass ? 500 : 250;
+    const modDepth = customDepth !== undefined ? customDepth : (isBass ? 500 : 250);
     modGain.gain.setValueAtTime(modDepth, now);
     modGain.gain.exponentialRampToValueAtTime(1, now + duration);
 
     modulator.connect(modGain);
     modGain.connect(carrier.frequency);
 
-    // Voice Output Gain
     const voiceGain = audioCtx.createGain();
     voiceGain.gain.setValueAtTime(isBass ? 0.35 : 0.2, now);
     voiceGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
     carrier.connect(voiceGain);
     voiceGain.connect(masterGain);
-    voiceGain.connect(delayNode);
+
+    const delayToggle = document.getElementById('fmDelayToggle');
+    if (!delayToggle || delayToggle.checked) {
+      voiceGain.connect(delayNode);
+    }
 
     modulator.start(now);
     carrier.start(now);
-
     modulator.stop(now + duration);
     carrier.stop(now + duration);
   }
@@ -1381,7 +2411,7 @@ NOP</textarea>
   function triggerNoiseSnare(duration) {
     if (!audioCtx) return;
     const now = audioCtx.currentTime;
-    const bufferSize = audioCtx.sampleRate * duration;
+    const bufferSize = Math.floor(audioCtx.sampleRate * duration);
     const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
     const output = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
@@ -1406,6 +2436,12 @@ NOP</textarea>
     whiteNoise.stop(now + duration);
   }
 
+  function playTone(freq, dur) {
+    initAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    triggerFmVoice(freq, dur, false, 1.0, 300);
+  }
+
   function playClickSound() {
     if (!audioCtx) return;
     const now = audioCtx.currentTime;
@@ -1414,7 +2450,7 @@ NOP</textarea>
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(800, now);
     osc.frequency.exponentialRampToValueAtTime(200, now + 0.04);
-    g.gain.setValueAtTime(0.15, now);
+    g.gain.setValueAtTime(0.12, now);
     g.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
     osc.connect(g);
     g.connect(audioCtx.destination);
@@ -1427,7 +2463,6 @@ NOP</textarea>
     const bNote = track.bassNotes[tick % track.bassNotes.length];
     const lNote = track.leadNotes[tick % track.leadNotes.length];
 
-    // Trigger instruments
     triggerFmVoice(bNote, 0.22, true);
     if (tick % 2 === 0) {
       triggerFmVoice(lNote, 0.18, false);
@@ -1436,7 +2471,6 @@ NOP</textarea>
       triggerNoiseSnare(0.12);
     }
 
-    // Flash activity meters
     document.getElementById('meter1').style.height = (Math.random() * 60 + 40) + '%';
     document.getElementById('meter2').style.height = (Math.random() * 70 + 30) + '%';
     document.getElementById('meter3').style.height = (Math.random() * 50 + 20) + '%';
@@ -1518,9 +2552,276 @@ NOP</textarea>
     ctx2d.stroke();
   }
 
+  /* Interactive FM Piano Keyboard */
+  const pianoNotes = [
+    { note: "C4", freq: 261.63, key: "A", isBlack: false },
+    { note: "C#4", freq: 277.18, key: "W", isBlack: true },
+    { note: "D4", freq: 293.66, key: "S", isBlack: false },
+    { note: "D#4", freq: 311.13, key: "E", isBlack: true },
+    { note: "E4", freq: 329.63, key: "D", isBlack: false },
+    { note: "F4", freq: 349.23, key: "F", isBlack: false },
+    { note: "F#4", freq: 369.99, key: "T", isBlack: true },
+    { note: "G4", freq: 392.00, key: "G", isBlack: false },
+    { note: "G#4", freq: 415.30, key: "Y", isBlack: true },
+    { note: "A4", freq: 440.00, key: "H", isBlack: false },
+    { note: "A#4", freq: 466.16, key: "U", isBlack: true },
+    { note: "B4", freq: 493.88, key: "J", isBlack: false },
+    { note: "C5", freq: 523.25, key: "K", isBlack: false }
+  ];
+
+  function initFmKeyboard() {
+    const kb = document.getElementById('fmKeyboard');
+    kb.innerHTML = '';
+    pianoNotes.forEach(p => {
+      const k = document.createElement('div');
+      k.className = 'piano-key' + (p.isBlack ? ' black-key' : '');
+      k.id = 'pk-' + p.key;
+      k.innerHTML = `<span>${p.note}</span><span style="font-size:8px; opacity:0.6;">[${p.key}]</span>`;
+
+      k.addEventListener('mousedown', () => {
+        playFmKey(p.freq);
+        k.classList.add('active');
+      });
+      k.addEventListener('mouseup', () => k.classList.remove('active'));
+      k.addEventListener('mouseleave', () => k.classList.remove('active'));
+
+      kb.appendChild(k);
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      const keyUpper = e.key.toUpperCase();
+      const match = pianoNotes.find(p => p.key === keyUpper);
+      if (match) {
+        playFmKey(match.freq);
+        const el = document.getElementById('pk-' + match.key);
+        if (el) el.classList.add('active');
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      const keyUpper = e.key.toUpperCase();
+      const el = document.getElementById('pk-' + keyUpper);
+      if (el) el.classList.remove('active');
+    });
+  }
+
+  function playFmKey(freq) {
+    initAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const ratio = parseFloat(document.getElementById('fmModRatio').value) || 2;
+    const depth = parseFloat(document.getElementById('fmModDepth').value) || 450;
+    const decay = (parseFloat(document.getElementById('fmDecay').value) || 30) / 100;
+    triggerFmVoice(freq, decay, false, ratio, depth);
+  }
+
+  function loadFmPreset(type) {
+    if (type === 'slap') {
+      document.getElementById('fmModRatio').value = '2';
+      document.getElementById('fmModDepth').value = '600';
+      document.getElementById('fmDecay').value = '35';
+    } else if (type === 'brass') {
+      document.getElementById('fmModRatio').value = '1';
+      document.getElementById('fmModDepth').value = '300';
+      document.getElementById('fmDecay').value = '60';
+    } else if (type === 'bell') {
+      document.getElementById('fmModRatio').value = '3';
+      document.getElementById('fmModDepth').value = '800';
+      document.getElementById('fmDecay').value = '90';
+    } else if (type === 'laser') {
+      document.getElementById('fmModRatio').value = '4';
+      document.getElementById('fmModDepth').value = '950';
+      document.getElementById('fmDecay').value = '15';
+    } else if (type === 'coin') {
+      document.getElementById('fmModRatio').value = '0.5';
+      document.getElementById('fmModDepth').value = '200';
+      document.getElementById('fmDecay').value = '20';
+    }
+  }
+
+  initFmKeyboard();
+
   /* =========================================================================
-     6. SOURCE & NFO VAULT (PREVIEW & REAL DATA DOWNLOAD)
+     6. MODE 13h VGA 320x200 CANVAS & SOURCE VAULT
      ========================================================================= */
+  const vgaCanvas = document.getElementById('vgaCanvas');
+  const vgaCtx = vgaCanvas.getContext('2d');
+  const vgaImgData = vgaCtx.createImageData(320, 200);
+  const vgaPixels = vgaImgData.data;
+
+  let vgaActive = true;
+  let vgaFrame = 0;
+  let vgaLastTime = performance.now();
+  let vgaFpsCount = 0;
+  let vgaFpsTimer = 0;
+
+  // Starfield 3D points
+  const stars = [];
+  for (let i = 0; i < 200; i++) {
+    stars.push({
+      x: (Math.random() - 0.5) * 600,
+      y: (Math.random() - 0.5) * 400,
+      z: Math.random() * 400 + 1
+    });
+  }
+
+  // Fire buffer: 320 x 200 array of byte intensities
+  const fireBuffer = new Uint8Array(320 * 200);
+
+  // Palettes (256 RGB entries)
+  const palettes = {
+    cyan: [],
+    fire: [],
+    green: [],
+    copper: []
+  };
+
+  function initPalettes() {
+    // Cyan palette: Black -> Dark Blue -> Cyan -> White
+    for (let i = 0; i < 256; i++) {
+      const r = Math.floor(Math.max(0, (i - 160) * 2.6));
+      const g = Math.floor(Math.min(255, i * 1.4));
+      const b = Math.floor(Math.min(255, i * 1.8 + 20));
+      palettes.cyan.push([r, g, b]);
+    }
+    // Fire palette: Black -> Red -> Orange -> Yellow -> White
+    for (let i = 0; i < 256; i++) {
+      const r = Math.floor(Math.min(255, i * 3));
+      const g = Math.floor(Math.max(0, Math.min(255, (i - 64) * 2)));
+      const b = Math.floor(Math.max(0, Math.min(255, (i - 160) * 3)));
+      palettes.fire.push([r, g, b]);
+    }
+    // Green Matrix palette: Black -> Forest -> Neon Mint -> White
+    for (let i = 0; i < 256; i++) {
+      const r = Math.floor(Math.max(0, (i - 180) * 3));
+      const g = Math.floor(Math.min(255, i * 1.6));
+      const b = Math.floor(Math.max(0, (i - 140) * 2));
+      palettes.green.push([r, g, b]);
+    }
+    // Amiga Copper: Deep Bronze -> Metallic Gold -> High Amber
+    for (let i = 0; i < 256; i++) {
+      const r = Math.floor(Math.min(255, i * 1.6 + 20));
+      const g = Math.floor(Math.min(255, i * 1.1));
+      const b = Math.floor(Math.max(0, (i - 120) * 1.5));
+      palettes.copper.push([r, g, b]);
+    }
+  }
+  initPalettes();
+
+  function renderVga() {
+    if (vgaActive) {
+      const effect = document.getElementById('vgaEffectSelect').value;
+      const palKey = document.getElementById('vgaPaletteSelect').value;
+      const pal = palettes[palKey] || palettes.cyan;
+
+      if (effect === 'tunnel') {
+        // 128-byte TinyTunnel simulation
+        let idx = 0;
+        for (let y = 0; y < 200; y++) {
+          const dy = y - 100;
+          for (let x = 0; x < 320; x++) {
+            const dx = x - 160;
+            const dist = Math.floor(Math.sqrt(dx * dx + dy * dy)) || 1;
+            const angle = Math.floor((Math.atan2(dy, dx) / Math.PI + 1) * 128);
+            const colorIdx = ((Math.floor(800 / dist) + vgaFrame * 2) ^ angle) & 0xFF;
+            const rgb = pal[colorIdx];
+            vgaPixels[idx] = rgb[0];
+            vgaPixels[idx+1] = rgb[1];
+            vgaPixels[idx+2] = rgb[2];
+            vgaPixels[idx+3] = 255;
+            idx += 4;
+          }
+        }
+      } else if (effect === 'plasma') {
+        // 256-byte Plasma99 simulation
+        let idx = 0;
+        for (let y = 0; y < 200; y++) {
+          for (let x = 0; x < 320; x++) {
+            const v1 = Math.sin(x / 16 + vgaFrame * 0.05);
+            const v2 = Math.sin(y / 16 - vgaFrame * 0.05);
+            const v3 = Math.sin((x + y) / 24 + vgaFrame * 0.03);
+            const colorIdx = Math.floor((v1 + v2 + v3 + 3) * 42) & 0xFF;
+            const rgb = pal[colorIdx];
+            vgaPixels[idx] = rgb[0];
+            vgaPixels[idx+1] = rgb[1];
+            vgaPixels[idx+2] = rgb[2];
+            vgaPixels[idx+3] = 255;
+            idx += 4;
+          }
+        }
+      } else if (effect === 'fire') {
+        // 512-byte FireBuffer simulation
+        // Seed bottom lines with flame sparks
+        for (let x = 0; x < 320; x++) {
+          fireBuffer[199 * 320 + x] = Math.random() > 0.45 ? 255 : 0;
+          fireBuffer[198 * 320 + x] = Math.random() > 0.45 ? 255 : 0;
+        }
+        // Diffuse upward
+        for (let y = 0; y < 198; y++) {
+          for (let x = 0; x < 320; x++) {
+            const xLeft = x > 0 ? x - 1 : 319;
+            const xRight = x < 319 ? x + 1 : 0;
+            const b1 = fireBuffer[(y + 1) * 320 + xLeft];
+            const b2 = fireBuffer[(y + 1) * 320 + x];
+            const b3 = fireBuffer[(y + 1) * 320 + xRight];
+            const b4 = fireBuffer[(y + 2) * 320 + x];
+            const avg = Math.floor((b1 + b2 + b3 + b4) / 4.04);
+            fireBuffer[y * 320 + x] = avg > 0 ? avg : 0;
+
+            const idx = (y * 320 + x) * 4;
+            const rgb = pal[avg & 0xFF];
+            vgaPixels[idx] = rgb[0];
+            vgaPixels[idx+1] = rgb[1];
+            vgaPixels[idx+2] = rgb[2];
+            vgaPixels[idx+3] = 255;
+          }
+        }
+      } else if (effect === 'starfield') {
+        // 256-byte 3D Starfield Warp
+        vgaPixels.fill(0);
+        stars.forEach(st => {
+          st.z -= 4;
+          if (st.z <= 1) {
+            st.z = 400;
+            st.x = (Math.random() - 0.5) * 600;
+            st.y = (Math.random() - 0.5) * 400;
+          }
+          const px = Math.floor(160 + (st.x * 140) / st.z);
+          const py = Math.floor(100 + (st.y * 140) / st.z);
+          if (px >= 0 && px < 320 && py >= 0 && py < 200) {
+            const idx = (py * 320 + px) * 4;
+            const bri = Math.floor(Math.min(255, (400 - st.z) * 0.7));
+            const rgb = pal[bri];
+            vgaPixels[idx] = rgb[0];
+            vgaPixels[idx+1] = rgb[1];
+            vgaPixels[idx+2] = rgb[2];
+            vgaPixels[idx+3] = 255;
+          }
+        });
+      }
+
+      vgaCtx.putImageData(vgaImgData, 0, 0);
+      vgaFrame++;
+
+      // FPS Counter
+      vgaFpsCount++;
+      const now = performance.now();
+      if (now - vgaFpsTimer > 1000) {
+        document.getElementById('vgaFps').textContent = vgaFpsCount;
+        vgaFpsCount = 0;
+        vgaFpsTimer = now;
+      }
+    }
+    requestAnimationFrame(renderVga);
+  }
+  requestAnimationFrame(renderVga);
+
+  document.getElementById('btnToggleVga').addEventListener('click', () => {
+    vgaActive = !vgaActive;
+    document.getElementById('btnToggleVga').textContent = vgaActive ? "⏸ Pause" : "▶ Resume";
+  });
+
+  /* Vault Source Files */
   const vaultFiles = {
     'tinytunnel.asm': `; tinytunnel.asm — 128-byte 3D Tunnel in 16-bit / 32-bit Real-Mode
 ; Target: DOS COM or Win32 PE Console
@@ -1612,6 +2913,98 @@ draw:
     int 10h
     ret`,
 
+    'fire512.asm': `; fire512.asm — 512-byte Procedural Thermal Diffusion Fire Routine
+; Target: Win32 PE Console / DOS
+; Author: neon_rider [FLARELIGHT / 1999]
+
+BITS 16
+ORG 100h
+
+start:
+    mov ax, 13h
+    int 10h
+    push 0A000h
+    pop es
+
+fire_loop:
+    ; Bottom seed line random sparks
+    mov di, 320*199
+    mov cx, 320
+seed_sparks:
+    in al, 40h           ; 8253 PIT random seed
+    and al, 1
+    neg al               ; 0 or 255
+    stosb
+    loop seed_sparks
+
+    ; Upward thermal diffusion: (P[y+1,x-1] + P[y+1,x] + P[y+1,x+1] + P[y+2,x]) / 4 - decay
+    mov si, 320
+diffuse_loop:
+    mov al, [es:si+319]
+    add al, [es:si+320]
+    add al, [es:si+321]
+    add al, [es:si+640]
+    shr al, 2            ; Divide by 4
+    jz zero_pixel
+    dec al               ; Cooling decay
+zero_pixel:
+    mov [es:si], al
+    inc si
+    cmp si, 320*198
+    jb diffuse_loop
+
+    in al, 60h
+    dec al
+    jnz fire_loop
+    ret`,
+
+    'starfield.asm': `; starfield.asm — 256-byte 3D Perspective Warp Starfield
+; Author: neon_rider [0xNEON / 1999]
+
+BITS 16
+ORG 100h
+
+start:
+    mov ax, 13h
+    int 10h
+    push 0A000h
+    pop es
+
+star_loop:
+    ; Erase previous frame / clear screen
+    xor di, di
+    xor ax, ax
+    mov cx, 32000
+    rep stosw
+
+    ; Project 256 stars: ScreenX = 160 + (X * Scale) / Z
+    mov cx, 256
+plot_stars:
+    in al, 40h
+    cbw
+    mov bx, ax           ; X coordinate
+    in al, 40h
+    cbw
+    mov dx, ax           ; Y coordinate
+    ; Perspective projection
+    mov bp, 120
+    imul bx, bp
+    sar bx, 6
+    add bx, 160          ; BX = Screen X (0..319)
+    imul dx, bp
+    sar dx, 6
+    add dx, 100          ; DX = Screen Y (0..199)
+
+    imul di, dx, 320
+    add di, bx
+    mov byte [es:di], 15 ; White star pixel
+    loop plot_stars
+
+    in al, 60h
+    dec al
+    jnz star_loop
+    ret`,
+
     'neon_synth.asm': `; neon_synth.asm — 512-byte WinMM Direct Sound Streamer
 ; Resolves waveOutOpen & waveOutWrite dynamically
 ; Target: Win32 PE Executable
@@ -1692,6 +3085,10 @@ wave_handle: dd 0`,
 
   function selectVaultFile(filename) {
     currentVaultKey = filename;
+    document.querySelectorAll('.file-list .btn-retro').forEach(btn => {
+      if (btn.textContent.includes(filename)) btn.classList.add('active-file');
+      else btn.classList.remove('active-file');
+    });
     document.getElementById('activeVaultFilename').textContent = filename;
     document.getElementById('vaultContentArea').textContent = vaultFiles[filename] || '';
   }

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -17,8 +17,8 @@ current_targets:
   kilo_graphics: KStellar
   kilo_qa: KRSS
   kilo_expander: KPass
-  kilo_creator: "kweb://users/~neon_rider (Win32 ASM & Opcode Sandbox)"
-virtual_web_target: "kweb://users/~neon_rider"
+  kilo_creator: "kweb://asm-temple (Opcode Oracle & PE Explorer)"
+virtual_web_target: "kweb://asm-temple"
 virtual_web_rotation:
   - "kweb://darknet"
   - "kweb://portal"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-expander
-  app: KRead
-  timestamp: "2026-09-26T21:55:00Z"
+  agent: kilo-creator
+  app: "kweb://users/~neon_rider"
+  timestamp: "2026-09-26T22:42:00Z"
 last_planner_run: "2026-09-26T07:48:00Z"
 ---
 
@@ -97,10 +97,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://users/~neon_rider` (Win32 ASM & Opcode Sandbox)
+- **Current Target**: `kweb://asm-temple` (Opcode Oracle & PE Explorer)
 - **Upcoming Queue**:
-  `kweb://asm-temple` (Opcode Oracle & PE Explorer),
-  `kweb://cybercafe` (Underground BBS, Threaded Forums & ASCII Art Studio)
+  `kweb://cybercafe` (Underground BBS, Threaded Forums & ASCII Art Studio),
+  `kweb://10.19.99.4/classified` (Corporate Network Leak & Signal Diagnostic)
   *(Completed: kweb://geocities, kweb://darknet, kweb://portal, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
@@ -130,8 +130,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://users/~neon_rider` (`KiloOS/public/web/users/neon_rider.html`)
-  - *Next in Rotation*: `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities`.
+- **Current Active Target**: `kweb://asm-temple` (`KiloOS/public/web/asm_temple.html`)
+  - *Next in Rotation*: `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider`.
 - **Anti-Potemkin Directive & Content Mandates**:
   0. `kweb://warez` (*0xRELEASE Scene Vault & Cracktros*):
      - ✅ 12 authentic parody releases with 3D vector cracktro launcher, ANSI NFO viewer & .diz/.nfo downloads.
@@ -162,9 +162,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
      - ✅ Automated Ring Health Monitor (simulated ring_check.cgi) with sequential ping console, latency gauge & log export.
      - ✅ Webmaster Application portal with local directory persistence & Webmaster Guestbook with late-1999 posts.
   4. `kweb://users/~neon_rider` (*Personal Hacker / Demoscene Homepage*):
-     - ✅ Interactive x86 instruction sandbox, opcode stream generator & step-by-step CPU register/flag emulator.
-     - ✅ Yamaha YM2612 2-operator FM synthesis & SPC700 stereo delay chiptune tracker jukebox with CRT oscilloscope.
-     - ✅ Demoscene source vault (.asm/.nfo) with client-side blob downloads, persistent CGI guestbook, & webring integration.
+     - ✅ Interactive 32-bit x86 CPU emulator, instruction sandbox, register stepper with EFLAGS and Pentium cycle counter.
+     - ✅ Live Data RAM Hex Dump (0x00402000) with ASCII view, flash memory mutations, and diegetic 10.19.99.4 packet buffer.
+     - ✅ Virtual Stack Inspector (0x0012FF80) with visual frame/ESP tracking, plus complete 16x16 Intel x86 Opcode Reference Map (00h-FFh).
+     - ✅ Live Mode 13h VGA 320x200 60FPS demoscene canvas (TinyTunnel, Plasma99, FireBuffer, Starfield3D) with 4 authentic retro palettes.
+     - ✅ YM2612 2-Operator FM Synthesizer Laboratory with interactive piano keyboard, SPC700 stereo delay & 4-track tracker jukebox.
+     - ✅ Demoscene code vault with client-side .asm/.nfo downloads, persistent CGI guestbook, and KiloNet Webring #006 node interconnect.
+
   5. `kweb://asm-temple` (*x86 Assembly Programming Shrine*):
      - ✅ Interactive x86 Opcode Oracle (42 instructions) with real-time filtering and cycle timing.
      - ✅ Two-way live x86 assembler & disassembler with preset library, C array / NASM / binary export, and .bin downloads.
@@ -220,6 +224,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-26T22:42:00Z — kilo-creator: kweb://users/~neon_rider (Win32 ASM Sandbox, Mode 13h Canvas & FM Lab)**
+  - Status: PASS ✅ (Anti-Potemkin Web 1.0 destination; x86 CPU emulator, live hex RAM dump, 60FPS Mode 13h VGA canvas, YM2612 FM lab; 0 regressions).
+  - x86 CPU Simulator: Emulates 32-bit x86 execution, branching loops, labels, EFLAGS (ZF/CF/SF/OF), breakpoints, and Pentium cycle profiling.
+  - Memory & Stack: Built live 128-byte Data RAM Hex Dump (0x00402000) with real-time write highlights and interactive Virtual Stack Inspector (ESP).
+  - Opcode Matrix & Disassembler: Interactive 16x16 Intel one-byte opcode map (00h-FFh) with cycle timings + raw hex bytecode disassembler.
+  - Mode 13h Demoscene Screen: 60 FPS 320x200 VGA canvas running TinyTunnel, Plasma99, FireBuffer, and Starfield3D with 4 retro palettes.
+  - FM Audio Lab: Added 12-key playable piano keyboard, operator ratio/depth sliders, and SPC700 stereo delay alongside 4-track chiptune jukebox.
+  - Verification: Clean Vite build in 340ms (`neon_rider.html` 117.4 KB < 999 KB ceiling); security lint & check_icons 100% PASS.
+
 - **2026-09-26T21:55:00Z — kilo-expander: KRead (Deep Feature Expansion: Outline, RSVP Reader, Auto-Scroll & Markdown)**
   - Status: PASS ✅ (Document outline tree, RSVP speed reader, hands-free auto-scroll, formatted markdown view, JSON annotations import/export).
   - Document Outline & TOC: Auto-scans markdown headings (#, ##, ===, ---, ALL CAPS) to build interactive drawer tree with jump-to-section.
@@ -254,11 +267,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Demo Suite & Toasts: Built-in 3-track procedural demo album for immediate zero-file testing; relocated toasts to safe top-right.
   - Verification: MSVC compile clean (`KMedia.exe` 18.5 KB); Vite clean build in 356ms (`kmedia.html` 65.6 KB); check_icons & security lint 100% PASS.
 
-- **2026-09-26T17:50:00Z — kilo-tester: KBBS (Interactive UI Audit, Quicksave/Load & Integrity Pass)**
-  - Status: PASS ✅ (6 issues, 6 fixed; 0 regressions).
-  - State Persistence: Implemented F5 quicksave and F9 quickload handlers with top bar buttons and local state/screen snapshot.
-  - Dialog Ergonomics: Fixed nested Escape dismissal so Esc in compose modal closes only compose dialog, keeping EchoNet open.
-  - Settings Synchronization: Bidirectionally synced top-bar Echo checkbox with display settings modal and saved CRT scanline toggle.
-  - Door Games Depth: Added progressive L.O.R.D. armor smithing (Leather/Chain/Plate) and TradeWars equipment commodity trading/salvage.
-  - ARG & Toasts: Weaved diegetic 10.19.99.4 sysop packet reflection clue; de-occluded toast banner to top-right with click-to-dismiss.
-  - Verification: MSVC compile clean (`KBBS.exe` 101.8 KB); Vite clean build in 426ms (`kbbs.html` 137.8 KB); security lint & check_icons 100% PASS.
