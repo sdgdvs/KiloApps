@@ -42,8 +42,8 @@
 
   /* Sidebar */
   .sidebar {
-    width: 380px;
-    min-width: 300px;
+    width: 390px;
+    min-width: 320px;
     flex-shrink: 0;
     background-color: #111827;
     border-right: 1px solid var(--border-color);
@@ -53,11 +53,11 @@
   }
 
   .sidebar-header {
-    padding: 14px 16px;
+    padding: 12px 14px;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
 
   .app-title-bar {
@@ -67,12 +67,18 @@
   }
 
   .app-title {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 700;
     display: flex;
     align-items: center;
     gap: 8px;
     color: #f3f4f6;
+  }
+
+  .title-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
   .contact-count-badge {
@@ -86,25 +92,26 @@
 
   .action-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
   }
 
   .btn {
     background: var(--bg-card);
     color: var(--text-main);
     border: 1px solid var(--border-color);
-    padding: 7px 10px;
-    border-radius: 6px;
+    padding: 6px 8px;
+    border-radius: 5px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 4px;
     transition: all 0.15s ease;
     font-family: inherit;
+    white-space: nowrap;
   }
 
   .btn:hover {
@@ -127,6 +134,16 @@
     border-color: #4b5563;
   }
 
+  .btn-success {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: #34d399;
+  }
+  .btn-success:hover {
+    background: var(--accent-green);
+    color: #fff;
+  }
+
   .btn-danger {
     background: rgba(239, 68, 68, 0.15);
     border-color: rgba(239, 68, 68, 0.4);
@@ -138,12 +155,60 @@
   }
 
   .btn-badge {
-    font-size: 10px;
+    font-size: 9px;
     opacity: 0.75;
     background: rgba(0,0,0,0.25);
     padding: 1px 4px;
     border-radius: 3px;
     margin-left: 2px;
+  }
+
+  /* Sort & Filter Controls Row */
+  .control-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .sort-select {
+    flex: 1;
+    background: #1f2937;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    color: #e2e8f0;
+    font-size: 11px;
+    padding: 4px 6px;
+    outline: none;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .sort-select:focus {
+    border-color: var(--accent-blue);
+  }
+
+  .toggle-btn {
+    background: #1f2937;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+    font-weight: 600;
+  }
+
+  .toggle-btn:hover {
+    color: #fff;
+    background: var(--bg-hover);
+  }
+
+  .toggle-btn.active {
+    background: var(--accent-blue);
+    color: #fff;
+    border-color: var(--accent-blue);
   }
 
   /* Search & Filters */
@@ -155,7 +220,7 @@
 
   .search-box input {
     width: 100%;
-    padding: 8px 30px 8px 32px;
+    padding: 7px 28px 7px 30px;
     background: #1f2937;
     border: 1px solid var(--border-color);
     border-radius: 6px;
@@ -172,7 +237,7 @@
 
   .search-icon {
     position: absolute;
-    left: 10px;
+    left: 9px;
     color: var(--text-muted);
     font-size: 12px;
     pointer-events: none;
@@ -182,7 +247,7 @@
     position: absolute;
     right: 8px;
     color: var(--text-muted);
-    font-size: 14px;
+    font-size: 13px;
     cursor: pointer;
     display: none;
     padding: 2px 4px;
@@ -204,9 +269,9 @@
   .category-pills::-webkit-scrollbar { display: none; }
 
   .pill {
-    padding: 3px 8px;
+    padding: 3px 7px;
     border-radius: 12px;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
     background: #1f2937;
     color: var(--text-muted);
@@ -216,7 +281,7 @@
     transition: all 0.15s ease;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
   }
 
   .pill:hover {
@@ -249,7 +314,7 @@
   .tag-pills::-webkit-scrollbar { display: none; }
 
   .tag-pill {
-    padding: 2px 7px;
+    padding: 2px 6px;
     border-radius: 10px;
     font-size: 10px;
     font-weight: 600;
@@ -270,36 +335,32 @@
     border-color: #3b82f6;
   }
 
-  .item-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 3px;
-    margin-top: 3px;
-  }
-
-  .tag-badge {
-    font-size: 9px;
-    padding: 1px 5px;
-    border-radius: 6px;
-    background: rgba(59, 130, 246, 0.15);
-    color: #93c5fd;
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    font-weight: 500;
-    display: inline-flex;
+  /* Batch Actions Bar */
+  .batch-bar {
+    display: none;
+    background: #1e293b;
+    border-bottom: 1px solid var(--accent-blue);
+    padding: 8px 12px;
     align-items: center;
-    cursor: pointer;
-    transition: all 0.12s;
+    gap: 8px;
+    font-size: 11px;
+    animation: fadeIn 0.15s ease-out;
   }
-  .tag-badge:hover {
-    background: rgba(59, 130, 246, 0.35);
-    color: #fff;
+  .batch-bar.visible {
+    display: flex;
   }
 
-  .header-tags-container {
+  .batch-count {
+    font-weight: 700;
+    color: #93c5fd;
+    white-space: nowrap;
+  }
+
+  .batch-btn-group {
     display: flex;
-    flex-wrap: wrap;
     gap: 4px;
-    margin-top: 8px;
+    margin-left: auto;
+    flex-wrap: wrap;
   }
 
   /* Contact List */
@@ -309,13 +370,14 @@
   }
 
   .contact-item {
-    padding: 10px 14px;
+    padding: 9px 12px;
     border-bottom: 1px solid #1f2937;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 9px;
     cursor: pointer;
     transition: background 0.15s;
+    position: relative;
   }
 
   .contact-item:hover {
@@ -327,15 +389,28 @@
     border-left: 4px solid var(--accent-blue);
   }
 
+  .contact-checkbox {
+    display: none;
+    width: 15px;
+    height: 15px;
+    accent-color: var(--accent-blue);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .select-mode .contact-checkbox {
+    display: inline-block;
+  }
+
   .avatar {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 13px;
+    font-size: 12px;
     color: #fff;
     flex-shrink: 0;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -367,6 +442,13 @@
     font-size: 13px;
   }
 
+  .bday-mini-badge {
+    font-size: 10px;
+    color: #f472b6;
+    margin-left: 4px;
+    cursor: help;
+  }
+
   .contact-sub {
     font-size: 11px;
     color: var(--text-muted);
@@ -376,11 +458,12 @@
   }
 
   .category-badge {
-    font-size: 10px;
-    padding: 2px 6px;
+    font-size: 9px;
+    padding: 2px 5px;
     border-radius: 4px;
     font-weight: 600;
     text-transform: uppercase;
+    flex-shrink: 0;
   }
 
   .badge-Work { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
@@ -388,6 +471,31 @@
   .badge-Family { background: rgba(139, 92, 246, 0.2); color: #c084fc; }
   .badge-Friends { background: rgba(236, 72, 153, 0.2); color: #f472b6; }
   .badge-Other { background: rgba(107, 114, 128, 0.2); color: #9ca3af; }
+
+  .item-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-top: 3px;
+  }
+
+  .tag-badge {
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 6px;
+    background: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .tag-badge:hover {
+    background: rgba(59, 130, 246, 0.35);
+    color: #fff;
+  }
 
   /* Details Panel */
   .details-panel {
@@ -415,23 +523,23 @@
   }
 
   .details-header {
-    padding: 20px 24px;
+    padding: 16px 20px;
     background: var(--bg-card);
     border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 16px;
   }
 
   .avatar-lg {
-    width: 64px;
-    height: 64px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 24px;
+    font-size: 22px;
     color: #fff;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     flex-shrink: 0;
@@ -443,44 +551,108 @@
   }
 
   .header-name {
-    font-size: 20px;
+    font-size: 19px;
     font-weight: 700;
     color: #fff;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
   }
 
   .header-meta {
     display: flex;
     align-items: center;
-    gap: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
     margin-top: 4px;
+    font-size: 12px;
+  }
+
+  .header-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+  }
+
+  .header-milestone-badge {
+    background: rgba(236, 72, 153, 0.15);
+    border: 1px solid rgba(236, 72, 153, 0.35);
+    color: #f472b6;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
   }
 
   .quick-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin-top: 12px;
+    margin-top: 10px;
   }
 
   .details-body {
-    padding: 20px 24px;
+    padding: 18px 22px;
     display: flex;
     flex-direction: column;
     gap: 16px;
-    max-width: 650px;
+    max-width: 720px;
+  }
+
+  /* Form Sections & Accordions */
+  .form-section {
+    background: #111827;
+    border: 1px solid var(--border-color);
+    border-radius: 7px;
+    overflow: hidden;
+  }
+
+  .section-header {
+    background: #1e293b;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #93c5fd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+  }
+  .section-header:hover {
+    background: #253349;
+  }
+
+  .section-toggle-icon {
+    font-size: 10px;
+    transition: transform 0.15s;
+  }
+  .form-section.collapsed .section-toggle-icon {
+    transform: rotate(-90deg);
+  }
+  .form-section.collapsed .section-content {
+    display: none;
+  }
+
+  .section-content {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
 
   .form-group {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 4px;
   }
 
   .form-group label {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -488,12 +660,12 @@
   }
 
   .form-group input, .form-group select, .form-group textarea {
-    padding: 8px 10px;
+    padding: 7px 9px;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 5px;
     color: #fff;
-    font-size: 13px;
+    font-size: 12px;
     outline: none;
     font-family: inherit;
     transition: border-color 0.15s;
@@ -505,8 +677,28 @@
 
   .form-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+  }
+
+  .label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .label-link {
+    font-size: 10px;
+    color: var(--accent-blue);
+    cursor: pointer;
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .label-link:hover {
+    text-decoration: underline;
+    color: #93c5fd;
   }
 
   .checkbox-group {
@@ -517,151 +709,45 @@
   }
 
   .checkbox-group input {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
     accent-color: var(--accent-blue);
     cursor: pointer;
   }
 
-  /* Modals */
-  .modal-backdrop {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(2px);
-    z-index: 2000;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .modal-content {
-    background: var(--bg-card);
-    padding: 22px;
-    border-radius: 8px;
-    max-width: 440px;
-    width: 90%;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-    animation: fadeIn 0.15s ease-out;
-  }
-
-  .modal-title {
-    margin-bottom: 12px;
-    font-size: 17px;
-    font-weight: 700;
+  /* Custom Attribute Rows */
+  .custom-field-row {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #fff;
-  }
-
-  .modal-shortcuts-list {
-    margin-left: 18px;
-    margin-bottom: 16px;
-    font-size: 13px;
-    color: var(--text-muted);
-    display: flex;
-    flex-direction: column;
     gap: 6px;
-  }
-
-  .modal-shortcuts-list kbd {
-    background: #0f172a;
-    border: 1px solid #475569;
-    padding: 1px 5px;
-    border-radius: 4px;
-    font-size: 11px;
-    color: #93c5fd;
-    font-family: monospace;
-  }
-
-  .export-option-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin: 16px 0;
-  }
-
-  .export-card {
-    background: #0f172a;
-    border: 1px solid var(--border-color);
-    padding: 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    text-align: left;
-    transition: all 0.15s;
-  }
-  .export-card:hover {
-    border-color: var(--accent-blue);
-    background: #1e293b;
-  }
-  .export-card-title {
-    font-weight: 600;
-    font-size: 13px;
-    color: #fff;
-    margin-bottom: 3px;
-  }
-  .export-card-desc {
-    font-size: 11px;
-    color: var(--text-muted);
-  }
-
-  /* Toast notification - Repositioned to top-right to prevent blocking submit/save buttons */
-  .toast-container {
-    position: fixed;
-    top: 16px;
-    right: 18px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
-    z-index: 3000;
-    pointer-events: none;
-    max-width: min(380px, calc(100vw - 36px));
-  }
-
-  .toast {
-    background: #1e293b;
-    color: #fff;
-    border: 1px solid var(--accent-blue);
-    padding: 8px 12px 8px 14px;
-    border-radius: 6px;
-    font-size: 12px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.45);
-    animation: toastSlideDown 0.2s ease-out;
-    pointer-events: auto;
-    display: flex;
     align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    user-select: none;
   }
-
-  .toast-close {
+  .custom-field-row input {
+    flex: 1;
+    padding: 6px 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    color: #fff;
+    font-size: 11px;
+    font-family: inherit;
+  }
+  .custom-field-row .btn-remove-attr {
+    color: var(--accent-red);
+    background: transparent;
+    border: 1px solid transparent;
     cursor: pointer;
-    opacity: 0.7;
-    font-size: 14px;
-    line-height: 1;
-    padding: 2px 5px;
+    padding: 4px 6px;
+    font-size: 12px;
     border-radius: 4px;
-    margin-left: auto;
-    transition: all 0.15s;
   }
-  .toast-close:hover {
-    opacity: 1;
-    background: rgba(255,255,255,0.15);
-  }
-
-  @keyframes toastSlideDown {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
+  .custom-field-row .btn-remove-attr:hover {
+    background: rgba(239, 68, 68, 0.2);
   }
 
   /* Quick Presets Bar */
   .quick-presets-bar {
     display: flex;
-    gap: 5px;
+    gap: 4px;
     overflow-x: auto;
     padding: 2px 0;
     scrollbar-width: none;
@@ -670,7 +756,7 @@
   .quick-presets-bar::-webkit-scrollbar { display: none; }
 
   .preset-chip {
-    padding: 3px 8px;
+    padding: 2px 7px;
     border-radius: 12px;
     font-size: 10px;
     font-weight: 600;
@@ -692,65 +778,279 @@
   .dirty-indicator {
     display: none;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
     font-size: 11px;
     color: #fbbf24;
     background: rgba(251, 191, 36, 0.15);
     border: 1px solid rgba(251, 191, 36, 0.35);
-    padding: 3px 9px;
+    padding: 3px 8px;
     border-radius: 12px;
     font-weight: 600;
-    animation: fadeIn 0.15s ease-out;
   }
   .dirty-indicator.visible { display: inline-flex; }
 
-  /* Field label row with copy link */
-  .label-row {
-    display: flex;
-    justify-content: space-between;
+  /* Modals */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(2px);
+    z-index: 2000;
     align-items: center;
-  }
-  .label-copy-link {
-    font-size: 10px;
-    color: var(--accent-blue);
-    cursor: pointer;
-    text-transform: none;
-    letter-spacing: normal;
-    font-weight: 500;
-    transition: color 0.15s;
-  }
-  .label-copy-link:hover {
-    text-decoration: underline;
-    color: #93c5fd;
+    justify-content: center;
   }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
+  .modal-content {
+    background: var(--bg-card);
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 480px;
+    width: 92%;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    animation: fadeIn 0.15s ease-out;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-title {
+    margin-bottom: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #fff;
+  }
+
+  .modal-shortcuts-list {
+    margin-left: 18px;
+    margin-bottom: 14px;
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .modal-shortcuts-list kbd {
+    background: #0f172a;
+    border: 1px solid #475569;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 10px;
+    color: #93c5fd;
+    font-family: monospace;
+  }
+
+  .export-option-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 14px 0;
+  }
+
+  .export-card {
+    background: #0f172a;
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+  }
+  .export-card:hover {
+    border-color: var(--accent-blue);
+    background: #1e293b;
+  }
+  .export-card-title {
+    font-weight: 600;
+    font-size: 12px;
+    color: #fff;
+    margin-bottom: 2px;
+  }
+  .export-card-desc {
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  /* Telemetry Stats Styles */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin: 14px 0;
+  }
+  .stat-card {
+    background: #0f172a;
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    border-radius: 6px;
+  }
+  .stat-num {
+    font-size: 20px;
+    font-weight: 700;
+    color: #93c5fd;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* Toast Notification */
+  .toast-container {
+    position: fixed;
+    top: 14px;
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    z-index: 3000;
+    pointer-events: none;
+    max-width: min(380px, calc(100vw - 32px));
+  }
+
+  .toast {
+    background: #1e293b;
+    color: #fff;
+    border: 1px solid var(--accent-blue);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    animation: toastSlideDown 0.2s ease-out;
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .toast-close {
+    cursor: pointer;
+    opacity: 0.7;
+    font-size: 14px;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 4px;
+    margin-left: auto;
+  }
+  .toast-close:hover {
+    opacity: 1;
+    background: rgba(255,255,255,0.15);
+  }
+
+  @keyframes toastSlideDown {
+    from { opacity: 0; transform: translateY(-8px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* File Input Hidden */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Hidden Inputs */
   #fileInput { display: none; }
+
+  /* Print Formatting */
+  #printContainer {
+    display: none;
+  }
+
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    #printContainer, #printContainer * {
+      visibility: visible;
+    }
+    #printContainer {
+      display: block !important;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      background: #fff;
+      color: #000;
+      padding: 10mm;
+      font-family: Arial, sans-serif;
+    }
+    .print-card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10mm;
+    }
+    .print-card {
+      border: 1px solid #444;
+      padding: 5mm;
+      page-break-inside: avoid;
+    }
+    .print-labels-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4mm;
+    }
+    .print-label {
+      border: 1px dashed #ccc;
+      padding: 3mm;
+      font-size: 11pt;
+      height: 25mm;
+      page-break-inside: avoid;
+    }
+    .print-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10pt;
+    }
+    .print-table th, .print-table td {
+      border: 1px solid #999;
+      padding: 4px 6px;
+      text-align: left;
+    }
+  }
 </style>
 </head>
 <body>
 
   <!-- Sidebar -->
-  <div class="sidebar">
+  <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="app-title-bar">
         <div class="app-title">
           <span>📇</span> KContacts
         </div>
-        <span class="contact-count-badge" id="contactCount">0 Contacts</span>
+        <div class="title-actions">
+          <span class="contact-count-badge" id="contactCount">0 Contacts</span>
+        </div>
       </div>
 
       <div class="action-grid">
-        <button class="btn btn-primary" id="btnNew"><span>+</span> Add <span class="btn-badge">N</span></button>
-        <button class="btn btn-secondary" id="btnMerge"><span>🧹</span> Merge <span class="btn-badge">^M</span></button>
-        <button class="btn btn-secondary" id="btnImport"><span>📥</span> Import <span class="btn-badge">^I</span></button>
-        <button class="btn btn-secondary" id="btnExport"><span>📤</span> Export <span class="btn-badge">^E</span></button>
-        <button class="btn btn-secondary" id="btnHelp" style="grid-column: span 2;"><span>❓</span> Help &amp; Guide <span class="btn-badge">F1 / H</span></button>
+        <button class="btn btn-primary" id="btnNew" title="Add Contact [N]"><span>+</span> Add</button>
+        <button class="btn btn-secondary" id="btnToggleSelect" title="Batch Multi-Select Mode"><span>☑️</span> Select</button>
+        <button class="btn btn-secondary" id="btnExport" title="Export Directory [Ctrl+E]"><span>📤</span> Exp</button>
+        <button class="btn btn-secondary" id="btnImport" title="Import Contacts [Ctrl+I]"><span>📥</span> Imp</button>
+        <button class="btn btn-secondary" id="btnPrint" title="Print Rolodex or Mailing Labels"><span>🖨️</span> Print</button>
+        <button class="btn btn-secondary" id="btnMerge" title="Merge Duplicates [Ctrl+M]"><span>🧹</span> Merge</button>
+        <button class="btn btn-secondary" id="btnStats" title="Address Book Statistics"><span>📊</span> Stats</button>
+        <button class="btn btn-secondary" id="btnHelp" title="User Guide & Shortcuts [F1 / H]"><span>❓</span> Help</button>
+      </div>
+
+      <!-- Controls: Sorter & Quick Filters -->
+      <div class="control-row">
+        <select class="sort-select" id="sortSelect" aria-label="Sort contacts by">
+          <option value="name-asc">Sort: Name (A → Z)</option>
+          <option value="name-desc">Sort: Name (Z → A)</option>
+          <option value="company-asc">Sort: Company (A → Z)</option>
+          <option value="category">Sort: Category</option>
+          <option value="bday">Sort: Upcoming Birthday 🎂</option>
+          <option value="recent">Sort: Recently Added ⏱️</option>
+        </select>
+        <button class="toggle-btn" id="btnFilterBday" title="Filter contacts with birthdays this month">🎂 Month</button>
+        <button class="toggle-btn" id="btnFilterIncomplete" title="Filter contacts missing phone or email">⚠️ Missing</button>
       </div>
 
       <!-- Quick Starter Templates Bar -->
@@ -759,13 +1059,13 @@
         <button class="preset-chip" id="chipClient" title="Create Client contact draft">+ 💼 Client</button>
         <button class="preset-chip" id="chipColleague" title="Create Colleague contact draft">+ 👔 Colleague</button>
         <button class="preset-chip" id="chipDoctor" title="Create Doctor contact draft">+ 🩺 Doctor</button>
-        <button class="preset-chip" id="chipFamily" title="Create Family contact draft">+ 🏠 Family</button>
+        <button class="preset-chip" id="chipSysadmin" title="Create IT Sysadmin contact draft">+ 🖥️ Sysadmin</button>
         <button class="preset-chip" id="chipSamples" title="Restore standard sample contacts" style="border-color: rgba(16, 185, 129, 0.4); color: #34d399; background: rgba(16, 185, 129, 0.12);">✨ Samples</button>
       </div>
 
       <div class="search-box">
         <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" placeholder="Search contacts (or #tag)... [/]" aria-label="Search contacts">
+        <input type="text" id="searchInput" placeholder="Search contacts (or #tag, city, company)... [/]" aria-label="Search contacts">
         <span class="search-clear" id="searchClear" title="Clear search">✕</span>
       </div>
 
@@ -781,6 +1081,18 @@
 
       <div class="tag-pills" id="tagPills" style="display: none;" role="tablist" aria-label="Filter by tag">
         <!-- Dynamic Tag Filter Chips -->
+      </div>
+    </div>
+
+    <!-- Batch Selection Toolbar -->
+    <div class="batch-bar" id="batchBar">
+      <span class="batch-count" id="batchCountText">0 selected</span>
+      <div class="batch-btn-group">
+        <button class="btn btn-secondary" id="btnBatchAll" style="padding: 3px 6px;">Select All</button>
+        <button class="btn btn-secondary" id="btnBatchTag" style="padding: 3px 6px;">🏷️ Tag</button>
+        <button class="btn btn-secondary" id="btnBatchCat" style="padding: 3px 6px;">📂 Cat</button>
+        <button class="btn btn-secondary" id="btnBatchExport" style="padding: 3px 6px;">📤 Exp</button>
+        <button class="btn btn-danger" id="btnBatchDelete" style="padding: 3px 6px;">🗑️ Del</button>
       </div>
     </div>
 
@@ -812,80 +1124,178 @@
           </div>
           <div class="header-meta">
             <span class="category-badge" id="headerCategoryBadge">Category</span>
-            <span id="headerCompany" style="color: var(--text-muted); font-size: 13px;"></span>
+            <span id="headerCompany" style="color: var(--text-muted);"></span>
+            <span id="headerBdayBadge" class="header-milestone-badge" style="display: none;"></span>
+            <span id="headerAddress" style="color: var(--text-muted); font-size: 11px;"></span>
           </div>
           <div class="header-tags-container" id="headerTags"></div>
           <div class="quick-actions">
             <button class="btn btn-secondary" id="btnQuickCall" aria-label="Call contact"><span>📞</span> Call <span class="btn-badge">Alt+C</span></button>
             <button class="btn btn-secondary" id="btnQuickEmail" aria-label="Email contact"><span>✉️</span> Email <span class="btn-badge">Alt+M</span></button>
-            <button class="btn btn-secondary" id="btnQuickCopy" aria-label="Copy contact information"><span>📋</span> Copy Info <span class="btn-badge">C</span></button>
+            <button class="btn btn-secondary" id="btnQuickWeb" style="display: none;"><span>🌐</span> Web</button>
+            <button class="btn btn-secondary" id="btnQuickCopy" aria-label="Copy contact information"><span>📋</span> Copy <span class="btn-badge">C</span></button>
+            <button class="btn btn-secondary" id="btnPrintCard"><span>📇</span> Card</button>
             <button class="btn btn-danger" id="btnDelete" aria-label="Delete contact"><span>🗑️</span> Delete <span class="btn-badge">Del</span></button>
           </div>
         </div>
       </div>
 
       <div class="details-body">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Full Name *</label>
-            <input type="text" id="inpName" placeholder="e.g. Sarah Jenkins">
+        <!-- Section 1: Core Contact Info -->
+        <div class="form-section" id="secCore">
+          <div class="section-header" onclick="toggleSection('secCore')">
+            <span>👤 Core Contact Details</span>
+            <span class="section-toggle-icon">▼</span>
           </div>
-          <div class="form-group">
-            <label>Category</label>
-            <select id="inpCategory">
-              <option value="Work">Work</option>
-              <option value="Personal">Personal</option>
-              <option value="Family">Family</option>
-              <option value="Friends">Friends</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <div class="label-row">
-              <label>Phone Number</label>
-              <span class="label-copy-link" id="copyPhoneLink" title="Copy phone number">📋 Copy</span>
+          <div class="section-content">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" id="inpName" placeholder="e.g. Sarah Jenkins">
+              </div>
+              <div class="form-group">
+                <label>Category</label>
+                <select id="inpCategory">
+                  <option value="Work">Work</option>
+                  <option value="Personal">Personal</option>
+                  <option value="Family">Family</option>
+                  <option value="Friends">Friends</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
             </div>
-            <input type="text" id="inpPhone" placeholder="e.g. +1 555-0192">
-          </div>
-          <div class="form-group">
-            <div class="label-row">
-              <label>Email Address</label>
-              <span class="label-copy-link" id="copyEmailLink" title="Copy email address">📋 Copy</span>
+
+            <div class="form-row">
+              <div class="form-group">
+                <div class="label-row">
+                  <label>Phone Number</label>
+                  <span class="label-link" id="copyPhoneLink">📋 Copy</span>
+                </div>
+                <input type="text" id="inpPhone" placeholder="e.g. +1 555-0192">
+              </div>
+              <div class="form-group">
+                <div class="label-row">
+                  <label>Email Address</label>
+                  <span class="label-link" id="copyEmailLink">📋 Copy</span>
+                </div>
+                <input type="text" id="inpEmail" placeholder="e.g. sarah@company.com">
+              </div>
             </div>
-            <input type="text" id="inpEmail" placeholder="e.g. sarah@company.com">
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Company / Organization</label>
+                <input type="text" id="inpCompany" placeholder="e.g. Acme Corp">
+              </div>
+              <div class="form-group">
+                <label>Job Title / Role</label>
+                <input type="text" id="inpTitle" placeholder="e.g. Senior Designer">
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>Company / Organization</label>
-            <input type="text" id="inpCompany" placeholder="e.g. Acme Corp">
+        <!-- Section 2: Mailing Address & Web -->
+        <div class="form-section" id="secAddress">
+          <div class="section-header" onclick="toggleSection('secAddress')">
+            <span>📍 Physical Address &amp; Web</span>
+            <span class="section-toggle-icon">▼</span>
           </div>
-          <div class="form-group">
-            <label>Job Title</label>
-            <input type="text" id="inpTitle" placeholder="e.g. Senior Designer">
+          <div class="section-content">
+            <div class="form-group">
+              <label>Street Address</label>
+              <input type="text" id="inpStreet" placeholder="e.g. 742 Evergreen Terrace, Suite 100">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>City</label>
+                <input type="text" id="inpCity" placeholder="e.g. San Francisco">
+              </div>
+              <div class="form-group">
+                <label>State / Province</label>
+                <input type="text" id="inpState" placeholder="e.g. CA">
+              </div>
+              <div class="form-group">
+                <label>ZIP / Postal Code</label>
+                <input type="text" id="inpZip" placeholder="e.g. 94105">
+              </div>
+              <div class="form-group">
+                <label>Country</label>
+                <input type="text" id="inpCountry" placeholder="e.g. USA">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label>Website / Homepage URL</label>
+                <span class="label-link" id="btnTestWebsite">🌐 Test URL</span>
+              </div>
+              <input type="text" id="inpWebsite" placeholder="e.g. http://www.acme.com/~sjenkins">
+            </div>
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Tags (comma-separated)</label>
-          <input type="text" id="inpTags" placeholder="e.g. vip, client, lead, developer, friend">
+        <!-- Section 3: Birthday & Milestones -->
+        <div class="form-section" id="secBirthday">
+          <div class="section-header" onclick="toggleSection('secBirthday')">
+            <span>🎂 Birthday &amp; Milestones</span>
+            <span class="section-toggle-icon">▼</span>
+          </div>
+          <div class="section-content">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Birthday (YYYY-MM-DD or MM-DD)</label>
+                <input type="text" id="inpBirthday" placeholder="e.g. 1982-10-14">
+              </div>
+              <div class="form-group" style="justify-content: flex-end;">
+                <div id="bdayCalculatedInfo" style="font-size: 11px; color: #f472b6; padding: 7px 0; font-weight: 600;">
+                  No birthday specified
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label>Notes</label>
-          <textarea id="inpNotes" rows="3" placeholder="Additional details, meeting history, or notes..."></textarea>
+        <!-- Section 4: Custom Attributes -->
+        <div class="form-section" id="secCustom">
+          <div class="section-header" onclick="toggleSection('secCustom')">
+            <span>⚙️ Custom Key-Value Attributes</span>
+            <span class="section-toggle-icon">▼</span>
+          </div>
+          <div class="section-content">
+            <div id="customFieldsContainer" style="display: flex; flex-direction: column; gap: 8px;">
+              <!-- Dynamic custom field rows -->
+            </div>
+            <button class="btn btn-secondary" id="btnAddCustomField" style="align-self: flex-start; margin-top: 4px;">+ Add Custom Field</button>
+          </div>
         </div>
 
-        <div class="checkbox-group">
-          <input type="checkbox" id="inpFav">
-          <label for="inpFav" style="font-size: 13px; font-weight: 500; color: #fff; cursor: pointer;">Add to Favorites ★</label>
+        <!-- Section 5: Notes & Tags -->
+        <div class="form-section" id="secNotes">
+          <div class="section-header" onclick="toggleSection('secNotes')">
+            <span>📝 Tags &amp; Notes</span>
+            <span class="section-toggle-icon">▼</span>
+          </div>
+          <div class="section-content">
+            <div class="form-group">
+              <label>Tags (comma-separated)</label>
+              <input type="text" id="inpTags" placeholder="e.g. vip, client, lead, developer, friend">
+            </div>
+
+            <div class="form-group">
+              <label>Notes</label>
+              <textarea id="inpNotes" rows="3" placeholder="Additional details, meeting history, PGP key, or notes..."></textarea>
+            </div>
+
+            <div class="checkbox-group">
+              <input type="checkbox" id="inpFav">
+              <label for="inpFav" style="font-size: 13px; font-weight: 500; color: #fff; cursor: pointer;">Add to Favorites ★</label>
+            </div>
+          </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 12px; margin-top: 6px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: 2px;">
           <button class="btn btn-primary" id="btnSave" style="padding: 9px 20px;"><span>💾</span> Save Changes <span class="btn-badge">Ctrl+S / Enter</span></button>
           <span class="dirty-indicator" id="dirtyIndicator">● Unsaved edits</span>
         </div>
@@ -894,34 +1304,35 @@
   </div>
 
   <!-- Hidden File Input for Import -->
-  <input type="file" id="fileInput" accept=".vcf,.csv,.json,.txt">
+  <input type="file" id="fileInput" accept=".vcf,.csv,.json,.txt,.ldif">
 
   <!-- Help Modal -->
   <div id="helpModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
-    <div class="modal-content" style="max-width: 490px;">
+    <div class="modal-content" style="max-width: 500px;">
       <div class="modal-title" id="helpModalTitle"><span>📇</span> KContacts User Guide &amp; Shortcuts</div>
       <ul class="modal-shortcuts-list">
         <li><kbd>F1</kbd> or <kbd>H</kbd> : Open / close this help guide</li>
         <li><kbd>Esc</kbd> : Close modals, unfocus inputs, or clear search</li>
         <li><kbd>1</kbd> - <kbd>7</kbd> : Quick switch categories (1=All, 2=Favs, 3=Work, 4=Personal, etc.)</li>
-        <li><kbd>Ctrl+S</kbd> or <kbd>Enter</kbd> (in form) : Save contact details</li>
+        <li><kbd>Ctrl+S</kbd> : Save contact details</li>
         <li><kbd>N</kbd> or <kbd>Ctrl+N</kbd> : Create new contact draft</li>
         <li><kbd>C</kbd> : Quick copy contact info to clipboard</li>
         <li><kbd>Alt+C</kbd> : Call selected contact phone</li>
         <li><kbd>Alt+M</kbd> : Email selected contact</li>
         <li><kbd>Ctrl+M</kbd> : Merge duplicate contacts</li>
-        <li><kbd>Ctrl+E</kbd> : Export directory (.md, .json, .vcf, .csv)</li>
+        <li><kbd>Ctrl+E</kbd> : Export directory (.md, .json, .vcf, .csv, .ldif)</li>
         <li><kbd>Ctrl+I</kbd> : Import contacts file</li>
         <li><kbd>/</kbd> or <kbd>Ctrl+F</kbd> : Focus search input</li>
         <li><kbd>↑</kbd> / <kbd>↓</kbd> : Navigate through contact list</li>
         <li><kbd>Delete</kbd> : Delete selected contact</li>
       </ul>
-      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5;">
-        <strong>Features:</strong><br>
-        • <strong>Merge Duplicates:</strong> Cleans up matching contact names and consolidates tags.<br>
-        • <strong>Export:</strong> Markdown Directory, JSON Database, vCard 3.0, and CSV.<br>
-        • <strong>Import:</strong> Auto-detects JSON, vCards, or CSV spreadsheets.<br>
-        • <strong>Templates:</strong> 1-click presets for Client, Colleague, Doctor, and Family.
+      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">
+        <strong>Advanced Capabilities:</strong><br>
+        • <strong>Extended Schema:</strong> Physical street addresses, website links, birthdays with zodiac/age/countdown, and custom key-value attributes.<br>
+        • <strong>Multi-Select Batch Actions:</strong> Click '☑️ Select' to batch-tag, categorize, export, or delete contacts.<br>
+        • <strong>Print Engine:</strong> Print 3x5 Rolodex index cards, Avery 5160 mailing labels, or phonebook directories.<br>
+        • <strong>Interoperability:</strong> Import and export LDIF (Netscape Communicator standard), vCard 3.0, CSV, and JSON.<br>
+        • <strong>Sorting:</strong> Sort by Name, Company, Category, Birthday proximity, or recency.
       </div>
       <button class="btn btn-primary" id="btnCloseHelp" style="width: 100%;">Got it</button>
     </div>
@@ -931,7 +1342,7 @@
   <div id="exportModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
     <div class="modal-content">
       <div class="modal-title" id="exportModalTitle"><span>📤</span> Export Contacts Directory</div>
-      <div style="font-size: 12px; color: var(--text-muted);">Choose your desired export format (or press <kbd>1</kbd>-<kbd>4</kbd>):</div>
+      <div style="font-size: 12px; color: var(--text-muted);">Choose your desired export format (or press <kbd>1</kbd>-<kbd>5</kbd>):</div>
       <div class="export-option-grid">
         <div class="export-card" data-fmt="md" tabindex="0" role="button" aria-label="Export as Markdown">
           <div class="export-card-title">📝 [1] Markdown</div>
@@ -947,10 +1358,85 @@
         </div>
         <div class="export-card" data-fmt="csv" tabindex="0" role="button" aria-label="Export as CSV">
           <div class="export-card-title">📊 [4] CSV</div>
-          <div class="export-card-desc">Spreadsheet table for Excel / Sheets (.csv)</div>
+          <div class="export-card-desc">Spreadsheet table with address &amp; web (.csv)</div>
+        </div>
+        <div class="export-card" data-fmt="ldif" tabindex="0" role="button" aria-label="Export as LDIF" style="grid-column: span 2;">
+          <div class="export-card-title">🌐 [5] Netscape LDIF</div>
+          <div class="export-card-desc">LDAP Data Interchange Format for Netscape / Mozilla Communicator (.ldif)</div>
         </div>
       </div>
       <button class="btn btn-secondary" id="btnCloseExport" style="width: 100%;">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Print Modal -->
+  <div id="printModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="printModalTitle">
+    <div class="modal-content">
+      <div class="modal-title" id="printModalTitle"><span>🖨️</span> Print Address Book</div>
+      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Select format for hardcopy generation:</div>
+      <div class="export-option-grid">
+        <div class="export-card" data-printfmt="rolodex">
+          <div class="export-card-title">📇 3x5 Rolodex Cards</div>
+          <div class="export-card-desc">Individual bordered cards for desk card files</div>
+        </div>
+        <div class="export-card" data-printfmt="labels">
+          <div class="export-card-title">🏷️ Mailing Labels</div>
+          <div class="export-card-desc">Avery 5160 3-column address label sheet</div>
+        </div>
+        <div class="export-card" data-printfmt="directory" style="grid-column: span 2;">
+          <div class="export-card-title">📑 Condensed Phone Directory</div>
+          <div class="export-card-desc">Tabular contact list grouped alphabetically</div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px;">
+        <button class="btn btn-secondary" id="btnClosePrint">Cancel</button>
+        <button class="btn btn-primary" id="btnExecutePrint">Print Hardcopy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Telemetry / Stats Modal -->
+  <div id="statsModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="statsModalTitle">
+    <div class="modal-content" style="max-width: 440px;">
+      <div class="modal-title" id="statsModalTitle"><span>📊</span> Address Book Telemetry</div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-num" id="statTotalContacts">0</div>
+          <div class="stat-label">Total Contacts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statFavContacts">0</div>
+          <div class="stat-label">Starred Favorites</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statAddressesCount">0</div>
+          <div class="stat-label">With Physical Address</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statBdaysCount">0</div>
+          <div class="stat-label">With Birthday Tracked</div>
+        </div>
+      </div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">Category Distribution:</div>
+      <div id="statsCategoryBars" style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px;"></div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Storage Utilization:</div>
+      <div style="font-size: 12px; color: #93c5fd; font-family: monospace;" id="statStorageSize">0.0 KB</div>
+      <button class="btn btn-primary" id="btnCloseStats" style="width: 100%; margin-top: 16px;">Close</button>
+    </div>
+  </div>
+
+  <!-- Batch Tag Modal -->
+  <div id="batchTagModal" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal-content" style="max-width: 360px;">
+      <div class="modal-title"><span>🏷️</span> Add Tag to Selected Contacts</div>
+      <div class="form-group" style="margin: 10px 0;">
+        <label>Tag Name</label>
+        <input type="text" id="inpBatchTag" placeholder="e.g. project1999, client, urgent">
+      </div>
+      <div style="display: flex; gap: 8px; justify-content: flex-end;">
+        <button class="btn btn-secondary" id="btnCancelBatchTag">Cancel</button>
+        <button class="btn btn-primary" id="btnApplyBatchTag">Apply Tag</button>
+      </div>
     </div>
   </div>
 
@@ -959,7 +1445,7 @@
     <div class="modal-content" style="max-width: 360px;">
       <div class="modal-title" id="deleteModalTitle" style="color: var(--accent-red);"><span>🗑️</span> Delete Contact</div>
       <div id="deleteModalText" style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
-        Are you sure you want to delete this contact?
+        Are you sure you want to permanently delete this contact?
       </div>
       <div style="display: flex; gap: 10px; justify-content: flex-end;">
         <button class="btn btn-secondary" id="btnCancelDelete">Cancel</button>
@@ -971,15 +1457,24 @@
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
 
+  <!-- Printable Container (Hidden on Screen, Visible on Print) -->
+  <div id="printContainer"></div>
+
   <script>
     // State
     let contacts = [];
     let selectedId = null;
     let currentFilter = 'All';
     let selectedTag = null;
+    let currentSort = 'name-asc';
+    let filterBdayOnly = false;
+    let filterIncompleteOnly = false;
+    let selectMode = false;
+    let selectedBatchIds = new Set();
     const MAX_CONTACTS = 1000;
 
-    // Dom Elements
+    // DOM Elements
+    const sidebar = document.getElementById('sidebar');
     const contactList = document.getElementById('contactList');
     const contactCount = document.getElementById('contactCount');
     const searchInput = document.getElementById('searchInput');
@@ -990,8 +1485,23 @@
     const contentView = document.getElementById('contentView');
     const fileInput = document.getElementById('fileInput');
 
+    const sortSelect = document.getElementById('sortSelect');
+    const btnFilterBday = document.getElementById('btnFilterBday');
+    const btnFilterIncomplete = document.getElementById('btnFilterIncomplete');
+    const btnToggleSelect = document.getElementById('btnToggleSelect');
+    const batchBar = document.getElementById('batchBar');
+    const batchCountText = document.getElementById('batchCountText');
+    const btnBatchAll = document.getElementById('btnBatchAll');
+    const btnBatchTag = document.getElementById('btnBatchTag');
+    const btnBatchCat = document.getElementById('btnBatchCat');
+    const btnBatchExport = document.getElementById('btnBatchExport');
+    const btnBatchDelete = document.getElementById('btnBatchDelete');
+
     const helpModal = document.getElementById('helpModal');
     const exportModal = document.getElementById('exportModal');
+    const printModal = document.getElementById('printModal');
+    const statsModal = document.getElementById('statsModal');
+    const batchTagModal = document.getElementById('batchTagModal');
     const deleteModal = document.getElementById('deleteModal');
     const deleteModalText = document.getElementById('deleteModalText');
 
@@ -1000,37 +1510,40 @@
     const headerFavStar = document.getElementById('headerFavStar');
     const headerCategoryBadge = document.getElementById('headerCategoryBadge');
     const headerCompany = document.getElementById('headerCompany');
+    const headerAddress = document.getElementById('headerAddress');
+    const headerBdayBadge = document.getElementById('headerBdayBadge');
     const headerTags = document.getElementById('headerTags');
+    const btnQuickWeb = document.getElementById('btnQuickWeb');
 
+    // Inputs
     const inpName = document.getElementById('inpName');
     const inpCategory = document.getElementById('inpCategory');
     const inpPhone = document.getElementById('inpPhone');
     const inpEmail = document.getElementById('inpEmail');
     const inpCompany = document.getElementById('inpCompany');
     const inpTitle = document.getElementById('inpTitle');
+    const inpStreet = document.getElementById('inpStreet');
+    const inpCity = document.getElementById('inpCity');
+    const inpState = document.getElementById('inpState');
+    const inpZip = document.getElementById('inpZip');
+    const inpCountry = document.getElementById('inpCountry');
+    const inpWebsite = document.getElementById('inpWebsite');
+    const inpBirthday = document.getElementById('inpBirthday');
+    const bdayCalculatedInfo = document.getElementById('bdayCalculatedInfo');
+    const customFieldsContainer = document.getElementById('customFieldsContainer');
     const inpTags = document.getElementById('inpTags');
     const inpNotes = document.getElementById('inpNotes');
     const inpFav = document.getElementById('inpFav');
     const dirtyIndicator = document.getElementById('dirtyIndicator');
+
     const copyPhoneLink = document.getElementById('copyPhoneLink');
     const copyEmailLink = document.getElementById('copyEmailLink');
+    const btnTestWebsite = document.getElementById('btnTestWebsite');
     const btnEmptyAdd = document.getElementById('btnEmptyAdd');
     const btnEmptySample = document.getElementById('btnEmptySample');
     let isDirty = false;
 
-    function markDirty() {
-      if (!isDirty) {
-        isDirty = true;
-        if (dirtyIndicator) dirtyIndicator.classList.add('visible');
-      }
-    }
-
-    function clearDirty() {
-      isDirty = false;
-      if (dirtyIndicator) dirtyIndicator.classList.remove('visible');
-    }
-
-    // Utility: Interactive Toast (Non-blocking top-right notification)
+    // Toast Utility
     function showToast(msg, duration = 2800) {
       const container = document.getElementById('toastContainer');
       if (!container) return;
@@ -1066,12 +1579,8 @@
     }
 
     // Modal Helpers
-    function openHelp() {
-      helpModal.style.display = 'flex';
-    }
-    function closeHelp() {
-      helpModal.style.display = 'none';
-    }
+    function openHelp() { helpModal.style.display = 'flex'; }
+    function closeHelp() { helpModal.style.display = 'none'; }
     function openExport() {
       if (contacts.length === 0) {
         showToast('No contacts to export.');
@@ -1079,25 +1588,41 @@
       }
       exportModal.style.display = 'flex';
     }
-    function closeExport() {
-      exportModal.style.display = 'none';
-    }
-    function closeDeleteModal() {
-      deleteModal.style.display = 'none';
-    }
+    function closeExport() { exportModal.style.display = 'none'; }
+    function closeDeleteModal() { deleteModal.style.display = 'none'; }
 
-    // Backdrop click dismissals
-    [helpModal, exportModal, deleteModal].forEach(modal => {
+    [helpModal, exportModal, printModal, statsModal, batchTagModal, deleteModal].forEach(modal => {
       modal.onclick = (e) => {
         if (e.target === modal) modal.style.display = 'none';
       };
     });
     document.getElementById('btnCloseHelp').onclick = closeHelp;
     document.getElementById('btnCloseExport').onclick = closeExport;
+    document.getElementById('btnClosePrint').onclick = () => printModal.style.display = 'none';
+    document.getElementById('btnCloseStats').onclick = () => statsModal.style.display = 'none';
+    document.getElementById('btnCancelBatchTag').onclick = () => batchTagModal.style.display = 'none';
     document.getElementById('btnCancelDelete').onclick = closeDeleteModal;
     document.getElementById('btnHelp').onclick = openHelp;
 
-    // Utility: Initials Generator
+    // Collapsible Sections
+    function toggleSection(secId) {
+      const sec = document.getElementById(secId);
+      if (sec) sec.classList.toggle('collapsed');
+    }
+
+    function markDirty() {
+      if (!isDirty) {
+        isDirty = true;
+        if (dirtyIndicator) dirtyIndicator.classList.add('visible');
+      }
+    }
+
+    function clearDirty() {
+      isDirty = false;
+      if (dirtyIndicator) dirtyIndicator.classList.remove('visible');
+    }
+
+    // Utility: Initials & Color
     function getInitials(name) {
       if (!name) return '?';
       const parts = name.trim().split(/\s+/);
@@ -1107,7 +1632,6 @@
       return name.substring(0, 2).toUpperCase();
     }
 
-    // Utility: Deterministic Avatar Color Generator
     function getAvatarColor(name) {
       if (!name) return 'linear-gradient(135deg, #475569, #334155)';
       let hash = 0;
@@ -1133,31 +1657,114 @@
       return [];
     }
 
-    function parseCsvLine(line) {
-      const result = [];
-      let current = '';
-      let inQuotes = false;
-      for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-        if (char === '"') {
-          if (inQuotes && line[i + 1] === '"') {
-            current += '"';
-            i++;
-          } else {
-            inQuotes = !inQuotes;
-          }
-        } else if (char === ',' && !inQuotes) {
-          result.push(current.trim());
-          current = '';
-        } else {
-          current += char;
-        }
-      }
-      result.push(current.trim());
-      return result;
+    // Birthday and Zodiac Calculations
+    function getZodiac(month, day) {
+      const dates = [20, 19, 21, 20, 21, 21, 23, 23, 23, 23, 22, 22];
+      const signs = [
+        { name: 'Capricorn', icon: '♑' }, { name: 'Aquarius', icon: '♒' },
+        { name: 'Pisces', icon: '♓' }, { name: 'Aries', icon: '♈' },
+        { name: 'Taurus', icon: '♉' }, { name: 'Gemini', icon: '♊' },
+        { name: 'Cancer', icon: '♋' }, { name: 'Leo', icon: '♌' },
+        { name: 'Virgo', icon: '♍' }, { name: 'Libra', icon: '♎' },
+        { name: 'Scorpio', icon: '♏' }, { name: 'Sagittarius', icon: '♐' },
+        { name: 'Capricorn', icon: '♑' }
+      ];
+      return day < dates[month - 1] ? signs[month - 1] : signs[month];
     }
 
-    // Update Category Pill Badges
+    function getBirthdayInfo(bdayStr) {
+      if (!bdayStr) return null;
+      const parts = bdayStr.split(/[-/]/);
+      let year = null, month = null, day = null;
+      if (parts.length === 3) {
+        year = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10);
+        day = parseInt(parts[2], 10);
+      } else if (parts.length === 2) {
+        month = parseInt(parts[0], 10);
+        day = parseInt(parts[1], 10);
+      }
+      if (!month || !day || isNaN(month) || isNaN(day) || month < 1 || month > 12 || day < 1 || day > 31) return null;
+
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      let nextBday = new Date(currentYear, month - 1, day);
+      nextBday.setHours(0, 0, 0, 0);
+      const today = new Date(currentYear, now.getMonth(), now.getDate());
+
+      let diffDays = Math.ceil((nextBday - today) / (1000 * 60 * 60 * 24));
+      if (diffDays < 0) {
+        nextBday = new Date(currentYear + 1, month - 1, day);
+        diffDays = Math.ceil((nextBday - today) / (1000 * 60 * 60 * 24));
+      }
+
+      let age = null;
+      if (year && year > 1900 && year <= currentYear) {
+        age = currentYear - year;
+        if (today < new Date(currentYear, month - 1, day)) {
+          age--;
+        }
+      }
+
+      const zodiac = getZodiac(month, day);
+      return {
+        month, day, year, age, diffDays, zodiac,
+        isThisMonth: (month - 1) === now.getMonth(),
+        isToday: diffDays === 0
+      };
+    }
+
+    function updateBirthdayDisplay() {
+      const bdayStr = inpBirthday.value.trim();
+      const info = getBirthdayInfo(bdayStr);
+      if (!info) {
+        bdayCalculatedInfo.textContent = bdayStr ? '⚠️ Invalid date (use YYYY-MM-DD)' : 'No birthday specified';
+        bdayCalculatedInfo.style.color = bdayStr ? 'var(--accent-red)' : 'var(--text-muted)';
+        return;
+      }
+      let text = `${info.zodiac.icon} ${info.zodiac.name} • `;
+      if (info.isToday) {
+        text += '🎉 Birthday is TODAY!';
+      } else if (info.diffDays === 1) {
+        text += '🎉 Birthday is TOMORROW!';
+      } else {
+        text += `In ${info.diffDays} days`;
+      }
+      if (info.age !== null) {
+        text += ` (Age ${info.age})`;
+      }
+      bdayCalculatedInfo.textContent = text;
+      bdayCalculatedInfo.style.color = '#f472b6';
+    }
+
+    // Normalization & Seed Data
+    function normalizeContact(c) {
+      return {
+        id: c.id || ('c_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9)),
+        name: c.name || 'Unnamed Contact',
+        phone: c.phone || '',
+        email: c.email || '',
+        category: c.category || 'Other',
+        company: c.company || '',
+        title: c.title || '',
+        website: c.website || '',
+        birthday: c.birthday || '',
+        address: {
+          street: (c.address && c.address.street) || '',
+          city: (c.address && c.address.city) || '',
+          state: (c.address && c.address.state) || '',
+          zip: (c.address && c.address.zip) || '',
+          country: (c.address && c.address.country) || ''
+        },
+        customFields: Array.isArray(c.customFields) ? c.customFields.map(f => ({ key: String(f.key || ''), val: String(f.val || '') })) : [],
+        tags: parseTags(c.tags || []),
+        notes: c.notes || '',
+        fav: !!c.fav,
+        createdAt: c.createdAt || Date.now(),
+        updatedAt: c.updatedAt || Date.now()
+      };
+    }
+
     function updateCategoryCounts() {
       const counts = { All: contacts.length, Favorites: 0, Work: 0, Personal: 0, Family: 0, Friends: 0, Other: 0 };
       contacts.forEach(c => {
@@ -1176,17 +1783,13 @@
       document.getElementById('countOther').textContent = counts.Other;
     }
 
-    // Default Seed Data
     function seedData() {
       const saved = localStorage.getItem('kcontacts_data_v3') || localStorage.getItem('kcontacts_data_v2');
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed)) {
-            contacts = parsed.slice(0, MAX_CONTACTS).map(c => ({
-              ...c,
-              tags: parseTags(c.tags || [])
-            }));
+            contacts = parsed.slice(0, MAX_CONTACTS).map(normalizeContact);
             return;
           }
         } catch (e) {
@@ -1203,6 +1806,10 @@
           category: 'Work',
           company: 'Acme Corp',
           title: 'Lead Architect',
+          website: 'http://www.acme.com/~asmith',
+          birthday: '1984-04-18',
+          address: { street: '100 Mission St, Suite 400', city: 'San Francisco', state: 'CA', zip: '94105', country: 'USA' },
+          customFields: [{ key: 'PGP Key', val: '0x4F8A9B21' }, { key: 'Department', val: 'Core Infrastructure' }],
           tags: ['vip', 'cloud', 'architect'],
           notes: 'Key contact for cloud infrastructure project.',
           fav: true
@@ -1215,6 +1822,10 @@
           category: 'Personal',
           company: '',
           title: '',
+          website: '',
+          birthday: '1988-11-22',
+          address: { street: '42 Pine St', city: 'Seattle', state: 'WA', zip: '98101', country: 'USA' },
+          customFields: [{ key: 'ICQ UIN', val: '49910283' }],
           tags: ['tech', 'meetup'],
           notes: 'Met at tech meetup in June.',
           fav: false
@@ -1227,6 +1838,10 @@
           category: 'Work',
           company: 'Design Studio',
           title: 'UX Lead',
+          website: 'http://designstudio.io',
+          birthday: '1990-07-09',
+          address: { street: '88 Creative Way', city: 'New York', state: 'NY', zip: '10012', country: 'USA' },
+          customFields: [],
           tags: ['vip', 'design', 'ux'],
           notes: 'Freelance UI/UX Consultant.',
           fav: true
@@ -1239,11 +1854,31 @@
           category: 'Family',
           company: '',
           title: '',
+          website: '',
+          birthday: '1979-10-14',
+          address: { street: '742 Evergreen Terrace', city: 'Springfield', state: 'IL', zip: '62701', country: 'USA' },
+          customFields: [{ key: 'Relationship', val: 'Cousin' }],
           tags: ['family'],
           notes: 'Cousin - Birthday Oct 14.',
           fav: false
+        },
+        {
+          id: 'c5',
+          name: 'NOC Routing Admin',
+          phone: '555-0199',
+          email: 'sysadmin@10.19.99.4',
+          category: 'Work',
+          company: 'KiloNet Backbone',
+          title: 'Intranet Operator',
+          website: 'http://10.19.99.4/classified',
+          birthday: '1999-01-01',
+          address: { street: 'Subcarrier Node 0x7F', city: 'Cybernetics', state: 'NET', zip: '1999', country: 'KiloNet' },
+          customFields: [{ key: 'Subcarrier Frequency', val: '1999 Hz' }, { key: 'Gate Port', val: '80/classified' }],
+          tags: ['sysadmin', 'infrastructure', 'network'],
+          notes: 'Intranet gateway node. Keycard access only. Backup frequency tuned to 1999Hz. Route queries to port 80/classified.',
+          fav: true
         }
-      ];
+      ].map(normalizeContact);
       saveContacts();
     }
 
@@ -1256,7 +1891,6 @@
       updateCategoryCounts();
     }
 
-    // Refresh Dynamic Tag Filter Pills
     function updateTagPills() {
       const tagSet = new Set();
       contacts.forEach(c => {
@@ -1275,7 +1909,6 @@
       tagPills.style.display = 'flex';
       tagPills.innerHTML = '';
 
-      // All Tags Pill
       const allPill = document.createElement('div');
       allPill.className = `tag-pill ${selectedTag === null ? 'active' : ''}`;
       allPill.setAttribute('role', 'tab');
@@ -1319,21 +1952,27 @@
       });
     }
 
-    // Render Contact List
-    function renderList() {
+    // Sort & Filter
+    function getSortedAndFilteredList() {
       const rawQuery = searchInput.value.substring(0, 100).toLowerCase().trim();
       searchClear.style.display = rawQuery ? 'block' : 'none';
-      contactList.innerHTML = '';
 
-      const filtered = contacts.filter(c => {
+      let list = contacts.filter(c => {
         const tagsStr = (c.tags || []).join(' ').toLowerCase();
+        const addrStr = c.address ? `${c.address.street} ${c.address.city} ${c.address.state} ${c.address.zip} ${c.address.country}`.toLowerCase() : '';
+        const customStr = (c.customFields || []).map(f => `${f.key} ${f.val}`).join(' ').toLowerCase();
+
         const matchesQuery = !rawQuery || 
           (c.name && c.name.toLowerCase().includes(rawQuery)) ||
           (c.email && c.email.toLowerCase().includes(rawQuery)) ||
           (c.phone && c.phone.toLowerCase().includes(rawQuery)) ||
           (c.company && c.company.toLowerCase().includes(rawQuery)) ||
           (c.title && c.title.toLowerCase().includes(rawQuery)) ||
+          (c.website && c.website.toLowerCase().includes(rawQuery)) ||
+          (c.birthday && c.birthday.toLowerCase().includes(rawQuery)) ||
           (c.notes && c.notes.toLowerCase().includes(rawQuery)) ||
+          addrStr.includes(rawQuery) ||
+          customStr.includes(rawQuery) ||
           tagsStr.includes(rawQuery.replace(/^#/, ''));
 
         let matchesCat = true;
@@ -1345,10 +1984,47 @@
           matchesTag = c.tags && c.tags.some(t => t.toLowerCase() === selectedTag.toLowerCase());
         }
 
-        return matchesQuery && matchesCat && matchesTag;
+        let matchesBdayFilter = true;
+        if (filterBdayOnly) {
+          const bInfo = getBirthdayInfo(c.birthday);
+          matchesBdayFilter = !!(bInfo && bInfo.isThisMonth);
+        }
+
+        let matchesIncomplete = true;
+        if (filterIncompleteOnly) {
+          matchesIncomplete = !c.phone || !c.email;
+        }
+
+        return matchesQuery && matchesCat && matchesTag && matchesBdayFilter && matchesIncomplete;
       });
 
-      if (rawQuery || currentFilter !== 'All' || selectedTag) {
+      // Sorting
+      list.sort((a, b) => {
+        if (currentSort === 'name-asc') return (a.name || '').localeCompare(b.name || '');
+        if (currentSort === 'name-desc') return (b.name || '').localeCompare(a.name || '');
+        if (currentSort === 'company-asc') return (a.company || '').localeCompare(b.company || '') || (a.name || '').localeCompare(b.name || '');
+        if (currentSort === 'category') return (a.category || '').localeCompare(b.category || '') || (a.name || '').localeCompare(b.name || '');
+        if (currentSort === 'bday') {
+          const bA = getBirthdayInfo(a.birthday);
+          const bB = getBirthdayInfo(b.birthday);
+          if (!bA && !bB) return 0;
+          if (!bA) return 1;
+          if (!bB) return -1;
+          return bA.diffDays - bB.diffDays;
+        }
+        if (currentSort === 'recent') return (b.updatedAt || 0) - (a.updatedAt || 0);
+        return 0;
+      });
+
+      return list;
+    }
+
+    // Render Contact List
+    function renderList() {
+      const filtered = getSortedAndFilteredList();
+      contactList.innerHTML = '';
+
+      if (searchInput.value || currentFilter !== 'All' || selectedTag || filterBdayOnly || filterIncompleteOnly) {
         contactCount.textContent = `${filtered.length} / ${contacts.length}`;
       } else {
         contactCount.textContent = `${contacts.length} Contact${contacts.length === 1 ? '' : 's'}`;
@@ -1357,7 +2033,7 @@
       if (filtered.length === 0) {
         const emptyDiv = document.createElement('div');
         emptyDiv.style.cssText = 'padding: 24px 16px; text-align: center; color: var(--text-muted); font-size: 13px;';
-        emptyDiv.innerHTML = '<div>🔍 No matching contacts found.</div><div style="font-size:11px; margin-top:6px;">Try clearing search or filters.</div>';
+        emptyDiv.innerHTML = '<div>🔍 No matching contacts found.</div><div style="font-size:11px; margin-top:6px;">Try clearing search, sorting, or active filters.</div>';
         contactList.appendChild(emptyDiv);
         return;
       }
@@ -1368,11 +2044,30 @@
         item.setAttribute('role', 'button');
         item.setAttribute('tabindex', '0');
         item.setAttribute('aria-label', c.name || 'Unnamed Contact');
-        item.onclick = () => selectContact(c.id);
+
+        // Checkbox for batch select
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.className = 'contact-checkbox';
+        chk.checked = selectedBatchIds.has(c.id);
+        chk.onclick = (e) => {
+          e.stopPropagation();
+          toggleBatchSelect(c.id);
+        };
+        item.appendChild(chk);
+
+        item.onclick = () => {
+          if (selectMode) {
+            toggleBatchSelect(c.id);
+          } else {
+            selectContact(c.id);
+          }
+        };
         item.onkeydown = (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            selectContact(c.id);
+            if (selectMode) toggleBatchSelect(c.id);
+            else selectContact(c.id);
           }
         };
 
@@ -1392,12 +2087,29 @@
         nameSpan.textContent = c.name || 'Unnamed Contact';
 
         nameRow.appendChild(nameSpan);
+
+        // Right side indicators (Star & Birthday)
+        const indSpan = document.createElement('span');
+        indSpan.style.display = 'inline-flex';
+        indSpan.style.alignItems = 'center';
+
+        const bInfo = getBirthdayInfo(c.birthday);
+        if (bInfo && bInfo.diffDays <= 14) {
+          const bdayMini = document.createElement('span');
+          bdayMini.className = 'bday-mini-badge';
+          bdayMini.textContent = bInfo.isToday ? '🎂 TODAY!' : `🎂 ${bInfo.diffDays}d`;
+          bdayMini.title = `Birthday in ${bInfo.diffDays} days (${bInfo.zodiac.name})`;
+          indSpan.appendChild(bdayMini);
+        }
+
         if (c.fav) {
           const star = document.createElement('span');
           star.className = 'fav-star';
           star.textContent = '★';
-          nameRow.appendChild(star);
+          star.style.marginLeft = '4px';
+          indSpan.appendChild(star);
         }
+        nameRow.appendChild(indSpan);
 
         const subRow = document.createElement('div');
         subRow.className = 'contact-sub';
@@ -1405,7 +2117,7 @@
         subRow.style.justifyContent = 'space-between';
 
         const subText = document.createElement('span');
-        subText.textContent = c.phone || c.email || 'No contact details';
+        subText.textContent = c.phone || c.email || (c.company ? `@${c.company}` : 'No contact details');
 
         const badge = document.createElement('span');
         badge.className = `category-badge badge-${sanitizeCategoryClass(c.category)}`;
@@ -1422,23 +2134,12 @@
           c.tags.slice(0, 3).forEach(tag => {
             const tagEl = document.createElement('span');
             tagEl.className = 'tag-badge';
-            tagEl.setAttribute('role', 'button');
-            tagEl.setAttribute('tabindex', '0');
-            tagEl.setAttribute('aria-label', `Filter by tag ${tag}`);
             tagEl.textContent = `#${tag}`;
-            const toggleTag = (e) => {
+            tagEl.onclick = (e) => {
               if (e) e.stopPropagation();
               selectedTag = selectedTag === tag ? null : tag;
               updateTagPills();
               renderList();
-            };
-            tagEl.onclick = toggleTag;
-            tagEl.onkeydown = (e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                e.stopPropagation();
-                toggleTag(e);
-              }
             };
             tagsRow.appendChild(tagEl);
           });
@@ -1458,6 +2159,54 @@
         contactList.appendChild(item);
       });
     }
+
+    // Custom Fields Editor
+    function renderCustomFields(fields) {
+      customFieldsContainer.innerHTML = '';
+      fields.forEach((f, idx) => {
+        const row = document.createElement('div');
+        row.className = 'custom-field-row';
+
+        const kInput = document.createElement('input');
+        kInput.placeholder = 'Attribute (e.g. ICQ UIN, Pager)';
+        kInput.value = f.key || '';
+        kInput.oninput = (e) => {
+          f.key = e.target.value;
+          markDirty();
+        };
+
+        const vInput = document.createElement('input');
+        vInput.placeholder = 'Value (e.g. 1999201)';
+        vInput.value = f.val || '';
+        vInput.oninput = (e) => {
+          f.val = e.target.value;
+          markDirty();
+        };
+
+        const rmBtn = document.createElement('button');
+        rmBtn.className = 'btn-remove-attr';
+        rmBtn.textContent = '✕';
+        rmBtn.title = 'Remove attribute';
+        rmBtn.onclick = () => {
+          fields.splice(idx, 1);
+          markDirty();
+          renderCustomFields(fields);
+        };
+
+        row.appendChild(kInput);
+        row.appendChild(vInput);
+        row.appendChild(rmBtn);
+        customFieldsContainer.appendChild(row);
+      });
+    }
+
+    let activeCustomFields = [];
+
+    document.getElementById('btnAddCustomField').onclick = () => {
+      activeCustomFields.push({ key: '', val: '' });
+      renderCustomFields(activeCustomFields);
+      markDirty();
+    };
 
     // Select Contact
     function selectContact(id) {
@@ -1484,40 +2233,68 @@
       headerCategoryBadge.textContent = c.category || 'Other';
       headerCompany.textContent = c.company ? `${c.company} ${c.title ? '• ' + c.title : ''}` : c.title || '';
 
+      // Address in header
+      const addr = c.address || {};
+      const addrParts = [addr.street, addr.city, addr.state, addr.country].filter(Boolean);
+      headerAddress.textContent = addrParts.length > 0 ? `📍 ${addrParts.join(', ')}` : '';
+
+      // Birthday in header
+      const bInfo = getBirthdayInfo(c.birthday);
+      if (bInfo) {
+        headerBdayBadge.style.display = 'inline-flex';
+        headerBdayBadge.textContent = `🎂 ${bInfo.zodiac.icon} ${bInfo.isToday ? 'Today!' : 'in ' + bInfo.diffDays + 'd'}`;
+      } else {
+        headerBdayBadge.style.display = 'none';
+      }
+
+      // Website button in header
+      if (c.website) {
+        btnQuickWeb.style.display = 'inline-flex';
+        btnQuickWeb.onclick = () => {
+          let url = c.website.trim();
+          if (!/^https?:\/\//i.test(url)) url = 'http://' + url;
+          window.open(url, '_blank');
+        };
+      } else {
+        btnQuickWeb.style.display = 'none';
+      }
+
       // Header tags
       headerTags.innerHTML = '';
       if (c.tags && c.tags.length > 0) {
         c.tags.forEach(tag => {
           const tBadge = document.createElement('span');
           tBadge.className = 'tag-badge';
-          tBadge.setAttribute('role', 'button');
-          tBadge.setAttribute('tabindex', '0');
-          tBadge.setAttribute('aria-label', `Filter by tag ${tag}`);
           tBadge.textContent = `#${tag}`;
-          const triggerHeaderTag = () => {
+          tBadge.onclick = () => {
             selectedTag = tag;
             updateTagPills();
             renderList();
             showToast(`Filtered by #${tag}`);
           };
-          tBadge.onclick = triggerHeaderTag;
-          tBadge.onkeydown = (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              triggerHeaderTag();
-            }
-          };
           headerTags.appendChild(tBadge);
         });
       }
 
-      // Form view
+      // Populate Form Fields
       inpName.value = c.name || '';
       inpCategory.value = c.category || 'Other';
       inpPhone.value = c.phone || '';
       inpEmail.value = c.email || '';
       inpCompany.value = c.company || '';
       inpTitle.value = c.title || '';
+      inpStreet.value = (c.address && c.address.street) || '';
+      inpCity.value = (c.address && c.address.city) || '';
+      inpState.value = (c.address && c.address.state) || '';
+      inpZip.value = (c.address && c.address.zip) || '';
+      inpCountry.value = (c.address && c.address.country) || '';
+      inpWebsite.value = c.website || '';
+      inpBirthday.value = c.birthday || '';
+      updateBirthdayDisplay();
+
+      activeCustomFields = (c.customFields || []).map(f => ({ ...f }));
+      renderCustomFields(activeCustomFields);
+
       inpTags.value = (c.tags || []).join(', ');
       inpNotes.value = c.notes || '';
       inpFav.checked = !!c.fav;
@@ -1532,24 +2309,19 @@
       }
       const newCat = (currentFilter !== 'All' && currentFilter !== 'Favorites') ? currentFilter : 'Personal';
       const newFav = currentFilter === 'Favorites';
-      const newContact = {
+      const newContact = normalizeContact({
         id: 'c_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
         name: 'New Contact',
-        phone: '',
-        email: '',
         category: newCat,
-        company: '',
-        title: '',
         tags: selectedTag ? [selectedTag] : [],
-        notes: '',
-        fav: newFav
-      };
+        fav: newFav,
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      });
       contacts.unshift(newContact);
       saveContacts();
       updateTagPills();
-      if (searchInput.value) {
-        searchInput.value = '';
-      }
+      if (searchInput.value) searchInput.value = '';
       selectContact(newContact.id);
       setTimeout(() => {
         inpName.focus();
@@ -1559,7 +2331,7 @@
     }
     document.getElementById('btnNew').onclick = createNewContact;
 
-    // Save Contact
+    // Save Current Contact
     function saveCurrentContact() {
       if (!selectedId) return;
       const c = contacts.find(item => item.id === selectedId);
@@ -1578,9 +2350,22 @@
       c.email = inpEmail.value.trim().substring(0, 100);
       c.company = inpCompany.value.trim().substring(0, 100);
       c.title = inpTitle.value.trim().substring(0, 100);
+
+      c.address = {
+        street: inpStreet.value.trim().substring(0, 120),
+        city: inpCity.value.trim().substring(0, 80),
+        state: inpState.value.trim().substring(0, 60),
+        zip: inpZip.value.trim().substring(0, 30),
+        country: inpCountry.value.trim().substring(0, 60)
+      };
+
+      c.website = inpWebsite.value.trim().substring(0, 150);
+      c.birthday = inpBirthday.value.trim().substring(0, 30);
+      c.customFields = activeCustomFields.filter(f => f.key.trim() || f.val.trim());
       c.tags = parseTags(inpTags.value);
-      c.notes = inpNotes.value.trim().substring(0, 2000);
+      c.notes = inpNotes.value.trim().substring(0, 3000);
       c.fav = inpFav.checked;
+      c.updatedAt = Date.now();
 
       saveContacts();
       updateTagPills();
@@ -1590,13 +2375,14 @@
     }
     document.getElementById('btnSave').onclick = saveCurrentContact;
 
-    // Track input dirty state
-    [inpName, inpCategory, inpPhone, inpEmail, inpCompany, inpTitle, inpTags, inpNotes, inpFav].forEach(el => {
+    // Dirty state tracking
+    [inpName, inpCategory, inpPhone, inpEmail, inpCompany, inpTitle, inpStreet, inpCity, inpState, inpZip, inpCountry, inpWebsite, inpBirthday, inpTags, inpNotes, inpFav].forEach(el => {
       el.addEventListener('input', markDirty);
       el.addEventListener('change', markDirty);
     });
+    inpBirthday.addEventListener('input', updateBirthdayDisplay);
 
-    // Copy Phone / Email quick links
+    // Copy Phone / Email links
     if (copyPhoneLink) {
       copyPhoneLink.onclick = () => {
         const val = inpPhone.value.trim();
@@ -1611,28 +2397,24 @@
         navigator.clipboard.writeText(val).then(() => showToast(`📋 Copied email: ${val}`)).catch(() => showToast('⚠️ Failed to copy'));
       };
     }
+    if (btnTestWebsite) {
+      btnTestWebsite.onclick = () => {
+        let val = inpWebsite.value.trim();
+        if (!val) { showToast('⚠️ No website URL entered'); return; }
+        if (!/^https?:\/\//i.test(val)) val = 'http://' + val;
+        window.open(val, '_blank');
+      };
+    }
 
-    // Enter key to save on inputs
-    [inpName, inpPhone, inpEmail, inpCompany, inpTitle, inpTags].forEach(el => {
-      el.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          saveCurrentContact();
-        }
-      });
-    });
-
-    // Delete Contact Modal Trigger
+    // Delete Modal
     document.getElementById('btnDelete').onclick = () => {
       if (!selectedId) return;
       const c = contacts.find(item => item.id === selectedId);
       if (!c) return;
-
       deleteModalText.textContent = `Are you sure you want to permanently delete "${c.name || 'Unnamed'}"?`;
       deleteModal.style.display = 'flex';
     };
 
-    // Confirm Delete
     document.getElementById('btnConfirmDelete').onclick = () => {
       if (!selectedId) return;
       const c = contacts.find(item => item.id === selectedId);
@@ -1648,7 +2430,7 @@
       showToast(`🗑️ Deleted "${name}"`);
     };
 
-    // Quick Action: Call
+    // Quick Actions
     document.getElementById('btnQuickCall').onclick = () => {
       if (!selectedId) return;
       const c = contacts.find(item => item.id === selectedId);
@@ -1665,7 +2447,6 @@
       }
     };
 
-    // Quick Action: Email
     document.getElementById('btnQuickEmail').onclick = () => {
       if (!selectedId) return;
       const c = contacts.find(item => item.id === selectedId);
@@ -1682,13 +2463,15 @@
       }
     };
 
-    // Quick Action: Copy
     document.getElementById('btnQuickCopy').onclick = () => {
       if (!selectedId) return;
       const c = contacts.find(item => item.id === selectedId);
       if (c) {
         const tagsStr = (c.tags && c.tags.length > 0) ? `\nTags: ${c.tags.map(t => '#' + t).join(' ')}` : '';
-        const text = `Name: ${c.name}\nPhone: ${c.phone}\nEmail: ${c.email}\nCategory: ${c.category}\nCompany: ${c.company}${tagsStr}\nNotes: ${c.notes}`;
+        const addrStr = c.address ? `\nAddress: ${[c.address.street, c.address.city, c.address.state, c.address.zip, c.address.country].filter(Boolean).join(', ')}` : '';
+        const bdayStr = c.birthday ? `\nBirthday: ${c.birthday}` : '';
+        const webStr = c.website ? `\nWebsite: ${c.website}` : '';
+        const text = `Name: ${c.name}\nPhone: ${c.phone}\nEmail: ${c.email}\nCategory: ${c.category}\nCompany: ${c.company}${addrStr}${webStr}${bdayStr}${tagsStr}\nNotes: ${c.notes}`;
         navigator.clipboard.writeText(text).then(() => {
           showToast('📋 Copied contact info to clipboard');
         }).catch(() => {
@@ -1697,7 +2480,6 @@
       }
     };
 
-    // Toggle Favorite from header
     function toggleHeaderFav() {
       if (!selectedId) return;
       const c = contacts.find(item => item.id === selectedId);
@@ -1710,14 +2492,124 @@
       }
     }
     headerFavStar.onclick = toggleHeaderFav;
-    headerFavStar.onkeydown = (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleHeaderFav();
+
+    // Multi-Select Batch Operations
+    function toggleBatchMode() {
+      selectMode = !selectMode;
+      btnToggleSelect.classList.toggle('active', selectMode);
+      sidebar.classList.toggle('select-mode', selectMode);
+      batchBar.classList.toggle('visible', selectMode);
+      if (!selectMode) {
+        selectedBatchIds.clear();
+      }
+      updateBatchCountUI();
+      renderList();
+    }
+    btnToggleSelect.onclick = toggleBatchMode;
+
+    function toggleBatchSelect(id) {
+      if (selectedBatchIds.has(id)) {
+        selectedBatchIds.delete(id);
+      } else {
+        selectedBatchIds.add(id);
+      }
+      updateBatchCountUI();
+      renderList();
+    }
+
+    function updateBatchCountUI() {
+      batchCountText.textContent = `${selectedBatchIds.size} selected`;
+    }
+
+    btnBatchAll.onclick = () => {
+      const filtered = getSortedAndFilteredList();
+      if (selectedBatchIds.size === filtered.length && filtered.length > 0) {
+        selectedBatchIds.clear();
+      } else {
+        filtered.forEach(c => selectedBatchIds.add(c.id));
+      }
+      updateBatchCountUI();
+      renderList();
+    };
+
+    btnBatchTag.onclick = () => {
+      if (selectedBatchIds.size === 0) {
+        showToast('⚠️ No contacts selected');
+        return;
+      }
+      batchTagModal.style.display = 'flex';
+      document.getElementById('inpBatchTag').focus();
+    };
+
+    document.getElementById('btnApplyBatchTag').onclick = () => {
+      const tag = document.getElementById('inpBatchTag').value.trim().replace(/^#/, '');
+      if (!tag) return;
+      let count = 0;
+      contacts.forEach(c => {
+        if (selectedBatchIds.has(c.id)) {
+          c.tags = c.tags || [];
+          if (!c.tags.includes(tag)) {
+            c.tags.push(tag);
+            count++;
+          }
+        }
+      });
+      saveContacts();
+      updateTagPills();
+      renderList();
+      batchTagModal.style.display = 'none';
+      document.getElementById('inpBatchTag').value = '';
+      showToast(`🏷️ Added #${tag} to ${count} contact(s)`);
+    };
+
+    btnBatchCat.onclick = () => {
+      if (selectedBatchIds.size === 0) {
+        showToast('⚠️ No contacts selected');
+        return;
+      }
+      const newCat = prompt('Enter new category for selected contacts (Work, Personal, Family, Friends, Other):', 'Work');
+      if (!newCat) return;
+      let count = 0;
+      contacts.forEach(c => {
+        if (selectedBatchIds.has(c.id)) {
+          c.category = newCat.trim();
+          count++;
+        }
+      });
+      saveContacts();
+      renderList();
+      showToast(`📂 Moved ${count} contacts to "${newCat}"`);
+    };
+
+    btnBatchExport.onclick = () => {
+      if (selectedBatchIds.size === 0) {
+        showToast('⚠️ No contacts selected');
+        return;
+      }
+      const selectedContacts = contacts.filter(c => selectedBatchIds.has(c.id));
+      openExport();
+    };
+
+    btnBatchDelete.onclick = () => {
+      if (selectedBatchIds.size === 0) {
+        showToast('⚠️ No contacts selected');
+        return;
+      }
+      if (confirm(`Are you sure you want to permanently delete ${selectedBatchIds.size} selected contact(s)?`)) {
+        contacts = contacts.filter(c => !selectedBatchIds.has(c.id));
+        selectedBatchIds.clear();
+        selectedId = null;
+        saveContacts();
+        updateTagPills();
+        renderList();
+        emptyState.style.display = 'flex';
+        contentView.style.display = 'none';
+        updateBatchCountUI();
+        showToast('🗑️ Batch deleted selected contacts');
       }
     };
 
-    // Contact Duplicates Merger
+    // Merge Duplicates
     document.getElementById('btnMerge').onclick = () => {
       if (contacts.length < 2) {
         showToast('ℹ️ Not enough contacts to merge');
@@ -1733,18 +2625,29 @@
         const key = (c.name || '').toLowerCase().trim();
         if (key && map.has(key)) {
           const existing = map.get(key);
-          if (c.id === selectedId) {
-            survivingSelectedId = existing.id;
-          }
+          if (c.id === selectedId) survivingSelectedId = existing.id;
           if (!existing.phone && c.phone) existing.phone = c.phone;
           if (!existing.email && c.email) existing.email = c.email;
           if (!existing.company && c.company) existing.company = c.company;
           if (!existing.title && c.title) existing.title = c.title;
+          if (!existing.website && c.website) existing.website = c.website;
+          if (!existing.birthday && c.birthday) existing.birthday = c.birthday;
+
+          // Merge addresses
+          if (c.address) {
+            existing.address = existing.address || {};
+            if (!existing.address.street && c.address.street) existing.address.street = c.address.street;
+            if (!existing.address.city && c.address.city) existing.address.city = c.address.city;
+            if (!existing.address.state && c.address.state) existing.address.state = c.address.state;
+            if (!existing.address.zip && c.address.zip) existing.address.zip = c.address.zip;
+            if (!existing.address.country && c.address.country) existing.address.country = c.address.country;
+          }
 
           // Merge tags
           const mergedTags = new Set([...(existing.tags || []), ...(c.tags || [])]);
           existing.tags = Array.from(mergedTags);
 
+          // Merge notes
           const existingNotes = existing.notes || '';
           const cNotes = c.notes || '';
           if (!existingNotes && cNotes) {
@@ -1774,10 +2677,42 @@
       }
     };
 
-    // Export Modal Handler
+    // Telemetry & Statistics
+    document.getElementById('btnStats').onclick = () => {
+      document.getElementById('statTotalContacts').textContent = contacts.length;
+      document.getElementById('statFavContacts').textContent = contacts.filter(c => c.fav).length;
+      document.getElementById('statAddressesCount').textContent = contacts.filter(c => c.address && (c.address.street || c.address.city)).length;
+      document.getElementById('statBdaysCount').textContent = contacts.filter(c => !!c.birthday).length;
+
+      // Category breakdown bars
+      const cats = ['Work', 'Personal', 'Family', 'Friends', 'Other'];
+      const catBarsContainer = document.getElementById('statsCategoryBars');
+      catBarsContainer.innerHTML = '';
+      cats.forEach(cat => {
+        const count = contacts.filter(c => (c.category || 'Other') === cat).length;
+        const pct = contacts.length > 0 ? Math.round((count / contacts.length) * 100) : 0;
+        const row = document.createElement('div');
+        row.style.cssText = 'display: flex; align-items: center; gap: 8px; font-size: 11px;';
+        row.innerHTML = `<span style="width: 55px; color: var(--text-muted);">${cat}</span>
+                         <div style="flex: 1; background: #0f172a; height: 8px; border-radius: 4px; overflow: hidden;">
+                           <div style="width: ${pct}%; height: 100%; background: var(--accent-blue);"></div>
+                         </div>
+                         <span style="width: 45px; text-align: right; color: #fff;">${count} (${pct}%)</span>`;
+        catBarsContainer.appendChild(row);
+      });
+
+      // Storage size
+      const rawJson = localStorage.getItem('kcontacts_data_v3') || '';
+      const bytes = new Blob([rawJson]).size;
+      document.getElementById('statStorageSize').textContent = `${(bytes / 1024).toFixed(2)} KB in localStorage (UTF-8 payload)`;
+
+      statsModal.style.display = 'flex';
+    };
+
+    // Export Handler
     document.getElementById('btnExport').onclick = openExport;
 
-    document.querySelectorAll('.export-card').forEach(card => {
+    document.querySelectorAll('.export-card[data-fmt]').forEach(card => {
       const handleCardExport = () => {
         const fmt = card.getAttribute('data-fmt');
         closeExport();
@@ -1793,14 +2728,19 @@
     });
 
     function doExport(format) {
-      if (contacts.length === 0) return;
+      let targetContacts = contacts;
+      if (selectMode && selectedBatchIds.size > 0) {
+        targetContacts = contacts.filter(c => selectedBatchIds.has(c.id));
+      }
+      if (targetContacts.length === 0) return;
+
       let content = '';
       let filename = '';
       let mimeType = '';
 
       if (format === 'md') {
-        const total = contacts.length;
-        const favs = contacts.filter(c => c.fav).length;
+        const total = targetContacts.length;
+        const favs = targetContacts.filter(c => c.fav).length;
         const now = new Date().toLocaleDateString();
 
         let md = `# 📇 KContacts Directory\n\n`;
@@ -1809,7 +2749,7 @@
         
         const categories = ['Work', 'Personal', 'Family', 'Friends', 'Other'];
         categories.forEach(cat => {
-          const catList = contacts.filter(c => (c.category || 'Other') === cat);
+          const catList = targetContacts.filter(c => (c.category || 'Other') === cat);
           if (catList.length > 0) {
             md += `- [${cat} (${catList.length})](#${cat.toLowerCase()})\n`;
           }
@@ -1817,7 +2757,7 @@
         md += `\n---\n\n`;
 
         categories.forEach(cat => {
-          const catList = contacts.filter(c => (c.category || 'Other') === cat);
+          const catList = targetContacts.filter(c => (c.category || 'Other') === cat);
           if (catList.length > 0) {
             md += `## <a id="${cat.toLowerCase()}"></a>${cat} Contacts\n\n`;
             catList.forEach(c => {
@@ -1832,6 +2772,12 @@
                 md += `- 📞 **Phone:** [${c.phone}](tel:${cleanPhone})\n`;
               }
               if (c.email) md += `- ✉️ **Email:** [${c.email}](mailto:${encodeURIComponent(c.email.trim())})\n`;
+              if (c.website) md += `- 🌐 **Website:** [${c.website}](${c.website})\n`;
+              if (c.birthday) md += `- 🎂 **Birthday:** ${c.birthday}\n`;
+              if (c.address) {
+                const aParts = [c.address.street, c.address.city, c.address.state, c.address.zip, c.address.country].filter(Boolean);
+                if (aParts.length > 0) md += `- 📍 **Address:** ${aParts.join(', ')}\n`;
+              }
               if (c.notes) md += `- 📝 **Notes:** ${c.notes.replace(/\n/g, ' ')}\n`;
               md += `\n`;
             });
@@ -1843,18 +2789,25 @@
         filename = 'kcontacts_directory.md';
         mimeType = 'text/markdown';
       } else if (format === 'json') {
-        content = JSON.stringify(contacts, null, 2);
+        content = JSON.stringify(targetContacts, null, 2);
         filename = 'kcontacts_backup.json';
         mimeType = 'application/json';
       } else if (format === 'csv') {
-        const headers = ["Name", "Phone", "Email", "Category", "Company", "Title", "Tags", "Favorite", "Notes"];
-        const rows = contacts.map(c => [
+        const headers = ["Name", "Phone", "Email", "Category", "Company", "Title", "Street", "City", "State", "ZIP", "Country", "Website", "Birthday", "Tags", "Favorite", "Notes"];
+        const rows = targetContacts.map(c => [
           `"${(c.name||'').replace(/"/g, '""')}"`,
           `"${(c.phone||'').replace(/"/g, '""')}"`,
           `"${(c.email||'').replace(/"/g, '""')}"`,
           `"${(c.category||'').replace(/"/g, '""')}"`,
           `"${(c.company||'').replace(/"/g, '""')}"`,
           `"${(c.title||'').replace(/"/g, '""')}"`,
+          `"${((c.address&&c.address.street)||'').replace(/"/g, '""')}"`,
+          `"${((c.address&&c.address.city)||'').replace(/"/g, '""')}"`,
+          `"${((c.address&&c.address.state)||'').replace(/"/g, '""')}"`,
+          `"${((c.address&&c.address.zip)||'').replace(/"/g, '""')}"`,
+          `"${((c.address&&c.address.country)||'').replace(/"/g, '""')}"`,
+          `"${(c.website||'').replace(/"/g, '""')}"`,
+          `"${(c.birthday||'').replace(/"/g, '""')}"`,
           `"${(c.tags||[]).join(', ').replace(/"/g, '""')}"`,
           c.fav ? "TRUE" : "FALSE",
           `"${(c.notes||'').replace(/\r?\n/g, ' ').replace(/"/g, '""')}"`
@@ -1862,11 +2815,49 @@
         content = [headers.join(','), ...rows].join('\n');
         filename = 'kcontacts_export.csv';
         mimeType = 'text/csv';
+      } else if (format === 'ldif') {
+        let ldif = `# LDIF Address Book Export - KContacts Standard\nversion: 1\n\n`;
+        targetContacts.forEach(c => {
+          const cleanMail = (c.email || 'contact@knet.local').trim();
+          const cleanCn = (c.name || 'Unnamed').trim();
+          ldif += `dn: cn=${cleanCn},mail=${cleanMail}\n`;
+          ldif += `objectclass: top\nobjectclass: person\nobjectclass: organizationalPerson\n`;
+          ldif += `cn: ${cleanCn}\n`;
+          const parts = cleanCn.split(/\s+/);
+          if (parts.length > 1) {
+            ldif += `givenname: ${parts[0]}\n`;
+            ldif += `sn: ${parts.slice(1).join(' ')}\n`;
+          } else {
+            ldif += `sn: ${cleanCn}\n`;
+          }
+          if (c.email) ldif += `mail: ${c.email}\n`;
+          if (c.phone) ldif += `telephonenumber: ${c.phone}\n`;
+          if (c.company) ldif += `o: ${c.company}\n`;
+          if (c.title) ldif += `title: ${c.title}\n`;
+          if (c.website) ldif += `labeleduri: ${c.website}\n`;
+          if (c.birthday) ldif += `dateofbirth: ${c.birthday}\n`;
+          if (c.address) {
+            if (c.address.street) ldif += `street: ${c.address.street}\n`;
+            if (c.address.city) ldif += `l: ${c.address.city}\n`;
+            if (c.address.state) ldif += `st: ${c.address.state}\n`;
+            if (c.address.zip) ldif += `postalcode: ${c.address.zip}\n`;
+            if (c.address.country) ldif += `c: ${c.address.country}\n`;
+          }
+          if (c.notes) ldif += `description: ${c.notes.replace(/\r?\n/g, ' ')}\n`;
+          if (c.tags && c.tags.length > 0) ldif += `keywords: ${c.tags.join(', ')}\n`;
+          ldif += `\n`;
+        });
+        content = ldif;
+        filename = 'kcontacts_export.ldif';
+        mimeType = 'text/plain';
       } else {
-        content = contacts.map(c => {
+        // vCard 3.0
+        content = targetContacts.map(c => {
           const tagsArr = c.tags || [];
           const categoriesStr = [c.category, ...tagsArr].filter(Boolean).join(',');
-          return [
+          const addr = c.address || {};
+          const adrLine = `ADR;TYPE=WORK,POSTAL:;;${(addr.street||'').replace(/;/g, ' ')};${(addr.city||'').replace(/;/g, ' ')};${(addr.state||'').replace(/;/g, ' ')};${(addr.zip||'').replace(/;/g, ' ')};${(addr.country||'').replace(/;/g, ' ')}`;
+          const lines = [
             'BEGIN:VCARD',
             'VERSION:3.0',
             `FN:${(c.name || '').replace(/\r?\n/g, ' ')}`,
@@ -1874,11 +2865,15 @@
             `EMAIL;TYPE=INTERNET:${(c.email || '').replace(/\r?\n/g, ' ')}`,
             `ORG:${(c.company || '').replace(/\r?\n/g, ' ')}`,
             `TITLE:${(c.title || '').replace(/\r?\n/g, ' ')}`,
+            adrLine,
+            c.website ? `URL:${c.website}` : '',
+            c.birthday ? `BDAY:${c.birthday}` : '',
             `CATEGORIES:${categoriesStr.replace(/\r?\n/g, ' ')}`,
             `X-TAGS:${tagsArr.join(',')}`,
             `NOTE:${(c.notes || '').replace(/\r?\n/g, '\\n')}`,
             'END:VCARD'
-          ].join('\r\n');
+          ].filter(Boolean);
+          return lines.join('\r\n');
         }).join('\r\n');
         filename = 'kcontacts_export.vcf';
         mimeType = 'text/vcard';
@@ -1893,13 +2888,155 @@
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showToast(`📤 Exported ${contacts.length} contacts to ${filename}`);
+      showToast(`📤 Exported ${targetContacts.length} contacts to ${filename}`);
     }
 
-    // Import (.vcf / .csv / .json)
+    // Print Rolodex / Mailing Labels / Directory
+    let selectedPrintFmt = 'rolodex';
+    document.querySelectorAll('.export-card[data-printfmt]').forEach(card => {
+      card.onclick = () => {
+        document.querySelectorAll('.export-card[data-printfmt]').forEach(c => c.style.borderColor = 'var(--border-color)');
+        card.style.borderColor = 'var(--accent-blue)';
+        selectedPrintFmt = card.getAttribute('data-printfmt');
+      };
+    });
+
+    document.getElementById('btnPrint').onclick = () => {
+      printModal.style.display = 'flex';
+    };
+
+    document.getElementById('btnPrintCard').onclick = () => {
+      if (!selectedId) return;
+      const c = contacts.find(item => item.id === selectedId);
+      if (!c) return;
+      generatePrintOutput('rolodex', [c]);
+      window.print();
+    };
+
+    document.getElementById('btnExecutePrint').onclick = () => {
+      printModal.style.display = 'none';
+      let targetContacts = contacts;
+      if (selectMode && selectedBatchIds.size > 0) {
+        targetContacts = contacts.filter(c => selectedBatchIds.has(c.id));
+      } else {
+        targetContacts = getSortedAndFilteredList();
+      }
+      generatePrintOutput(selectedPrintFmt, targetContacts);
+      window.print();
+    };
+
+    function generatePrintOutput(fmt, list) {
+      const container = document.getElementById('printContainer');
+      container.innerHTML = '';
+
+      if (fmt === 'rolodex') {
+        const grid = document.createElement('div');
+        grid.className = 'print-card-grid';
+        list.forEach(c => {
+          const card = document.createElement('div');
+          card.className = 'print-card';
+          const addr = c.address || {};
+          const addrStr = [addr.street, addr.city, addr.state, addr.zip, addr.country].filter(Boolean).join(', ');
+          card.innerHTML = `
+            <div style="font-size: 14pt; font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 4px; margin-bottom: 4px;">
+              ${c.name} ${c.fav ? '★' : ''}
+              <span style="font-size: 9pt; font-weight: normal; float: right;">${c.category}</span>
+            </div>
+            ${c.company || c.title ? `<div style="font-size: 10pt; color: #555; margin-bottom: 4px;">${c.title || ''}${c.title && c.company ? ' • ' : ''}${c.company || ''}</div>` : ''}
+            <div style="font-size: 10pt; line-height: 1.4;">
+              ${c.phone ? `<div><strong>Phone:</strong> ${c.phone}</div>` : ''}
+              ${c.email ? `<div><strong>Email:</strong> ${c.email}</div>` : ''}
+              ${c.website ? `<div><strong>Web:</strong> ${c.website}</div>` : ''}
+              ${addrStr ? `<div><strong>Address:</strong> ${addrStr}</div>` : ''}
+              ${c.birthday ? `<div><strong>Birthday:</strong> ${c.birthday}</div>` : ''}
+              ${c.notes ? `<div style="margin-top: 4px; font-style: italic; font-size: 9pt;">${c.notes}</div>` : ''}
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+        container.appendChild(grid);
+      } else if (fmt === 'labels') {
+        const grid = document.createElement('div');
+        grid.className = 'print-labels-grid';
+        list.forEach(c => {
+          const label = document.createElement('div');
+          label.className = 'print-label';
+          const addr = c.address || {};
+          label.innerHTML = `
+            <strong>${c.name}</strong><br>
+            ${c.company ? `${c.company}<br>` : ''}
+            ${addr.street ? `${addr.street}<br>` : ''}
+            ${addr.city || addr.state || addr.zip ? `${[addr.city, addr.state].filter(Boolean).join(', ')} ${addr.zip || ''}` : ''}
+          `;
+          grid.appendChild(label);
+        });
+        container.appendChild(grid);
+      } else {
+        const title = document.createElement('h2');
+        title.textContent = `KContacts Address Directory (${list.length} Contacts)`;
+        title.style.marginBottom = '10px';
+        container.appendChild(title);
+
+        const table = document.createElement('table');
+        table.className = 'print-table';
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th>Company / Role</th>
+              <th>Location</th>
+              <th>Category</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${list.map(c => {
+              const addr = c.address || {};
+              const loc = [addr.city, addr.state].filter(Boolean).join(', ');
+              return `<tr>
+                <td><strong>${c.name}</strong></td>
+                <td>${c.phone || '-'}</td>
+                <td>${c.email || '-'}</td>
+                <td>${[c.title, c.company].filter(Boolean).join(' / ') || '-'}</td>
+                <td>${loc || '-'}</td>
+                <td>${c.category || 'Other'}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        `;
+        container.appendChild(table);
+      }
+    }
+
+    // Import (.vcf / .csv / .json / .ldif)
     document.getElementById('btnImport').onclick = () => {
       fileInput.click();
     };
+
+    function parseCsvLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          if (inQuotes && line[i + 1] === '"') {
+            current += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim());
+      return result;
+    }
 
     fileInput.onchange = (e) => {
       const file = e.target.files[0];
@@ -1918,18 +3055,7 @@
               parsed.forEach(item => {
                 if (contacts.length >= MAX_CONTACTS) return;
                 if (item && item.name) {
-                  contacts.push({
-                    id: 'c_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
-                    name: String(item.name || 'Unnamed').substring(0, 100),
-                    phone: String(item.phone || '').substring(0, 50),
-                    email: String(item.email || '').substring(0, 100),
-                    category: String(item.category || 'Personal').substring(0, 50),
-                    company: String(item.company || '').substring(0, 100),
-                    title: String(item.title || '').substring(0, 100),
-                    tags: parseTags(item.tags || []),
-                    notes: String(item.notes || '').substring(0, 2000),
-                    fav: !!item.fav
-                  });
+                  contacts.push(normalizeContact(item));
                   count++;
                 }
               });
@@ -1937,8 +3063,41 @@
           } catch (err) {
             showToast('⚠️ Invalid JSON file.');
           }
+        } else if (fname.endsWith('.ldif') || text.includes('objectclass:')) {
+          // LDIF format parser
+          const entries = text.split(/\r?\n\r?\n/);
+          entries.forEach(entry => {
+            if (!entry.trim() || entry.startsWith('#')) return;
+            if (contacts.length >= MAX_CONTACTS) return;
+            const lines = entry.split(/\r?\n/);
+            const item = { name: '', phone: '', email: '', company: '', title: '', address: {}, notes: '', tags: [], website: '', birthday: '' };
+            for (const rawLine of lines) {
+              const colonIdx = rawLine.indexOf(':');
+              if (colonIdx === -1) continue;
+              const key = rawLine.substring(0, colonIdx).trim().toLowerCase();
+              const val = rawLine.substring(colonIdx + 1).trim();
+              if (!val) continue;
+              if (key === 'cn' && !item.name) item.name = val;
+              else if (key === 'mail' && !item.email) item.email = val;
+              else if ((key === 'telephonenumber' || key === 'telephone') && !item.phone) item.phone = val;
+              else if ((key === 'o' || key === 'company') && !item.company) item.company = val;
+              else if (key === 'title' && !item.title) item.title = val;
+              else if (key === 'street') item.address.street = val;
+              else if (key === 'l' || key === 'city') item.address.city = val;
+              else if (key === 'st' || key === 'state') item.address.state = val;
+              else if (key === 'postalcode' || key === 'zip') item.address.zip = val;
+              else if (key === 'c' || key === 'country') item.address.country = val;
+              else if (key === 'labeleduri' || key === 'url') item.website = val;
+              else if (key === 'dateofbirth' || key === 'bday') item.birthday = val;
+              else if (key === 'description' || key === 'note') item.notes = val;
+              else if (key === 'keywords') item.tags = parseTags(val);
+            }
+            if (item.name || item.email || item.phone) {
+              contacts.push(normalizeContact(item));
+              count++;
+            }
+          });
         } else if (fname.endsWith('.vcf') || text.includes('BEGIN:VCARD')) {
-          // Unfold RFC 2426 continuation lines
           const unfolded = text.replace(/\r?\n[ \t]/g, '');
           const cards = unfolded.split(/END:VCARD/i);
           cards.forEach(card => {
@@ -1963,28 +3122,45 @@
             const orgMatch = card.match(/ORG(?:;[^:]*)?:([^\r\n]*)/i);
             const titleMatch = card.match(/TITLE(?:;[^:]*)?:([^\r\n]*)/i);
             const noteMatch = card.match(/NOTE(?:;[^:]*)?:([^\r\n]*)/i);
+            const bdayMatch = card.match(/BDAY(?:;[^:]*)?:([^\r\n]*)/i);
+            const urlMatch = card.match(/URL(?:;[^:]*)?:([^\r\n]*)/i);
+            const adrMatch = card.match(/ADR(?:;[^:]*)?:([^\r\n]*)/i);
+
+            const addrObj = { street: '', city: '', state: '', zip: '', country: '' };
+            if (adrMatch && adrMatch[1]) {
+              const parts = adrMatch[1].split(';');
+              addrObj.street = (parts[2] || '').trim();
+              addrObj.city = (parts[3] || '').trim();
+              addrObj.state = (parts[4] || '').trim();
+              addrObj.zip = (parts[5] || '').trim();
+              addrObj.country = (parts[6] || '').trim();
+            }
 
             const rawCat = catMatch ? catMatch[1].trim() : 'Personal';
             const tagsFromX = tagMatch ? tagMatch[1].trim() : '';
-            contacts.push({
-              id: 'c_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+
+            contacts.push(normalizeContact({
               name: contactName.substring(0, 100),
               phone: telMatch ? telMatch[1].trim().substring(0, 50) : '',
               email: emailMatch ? emailMatch[1].trim().substring(0, 100) : '',
               category: rawCat.split(',')[0].trim().substring(0, 50) || 'Personal',
               company: orgMatch ? orgMatch[1].trim().substring(0, 100) : '',
               title: titleMatch ? titleMatch[1].trim().substring(0, 100) : '',
+              website: urlMatch ? urlMatch[1].trim().substring(0, 150) : '',
+              birthday: bdayMatch ? bdayMatch[1].trim().substring(0, 30) : '',
+              address: addrObj,
               tags: parseTags(tagsFromX || rawCat),
               notes: noteMatch ? noteMatch[1].replace(/\\n/gi, '\n').replace(/\\,/g, ',').replace(/\\;/g, ';').trim().substring(0, 2000) : '',
               fav: false
-            });
+            }));
             count++;
           });
         } else {
+          // CSV Parser
           const lines = text.split(/\r?\n/);
           if (lines.length > 0) {
             const headerCols = parseCsvLine(lines[0]).map(h => h.toLowerCase().replace(/[^a-z]/g, ''));
-            const hasTitle = headerCols.includes('title');
+            const hasStreet = headerCols.includes('street');
             const startIndex = (headerCols.includes('name') || headerCols[0] === 'name') ? 1 : 0;
             for (let i = startIndex; i < lines.length; i++) {
               if (contacts.length >= MAX_CONTACTS) break;
@@ -1997,34 +3173,41 @@
                 const cEmail = (parts[2] || '').substring(0, 100);
                 const cCat = (parts[3] || 'Personal').substring(0, 50);
                 const cComp = (parts[4] || '').substring(0, 100);
-                let cTitle = '';
-                let cTags = [];
-                let cFav = false;
-                let cNotes = '';
+                const cTitle = (parts[5] || '').substring(0, 100);
+                let addrObj = { street: '', city: '', state: '', zip: '', country: '' };
+                let cWeb = '', cBday = '', cTags = [], cFav = false, cNotes = '';
 
-                if (hasTitle) {
-                  cTitle = (parts[5] || '').substring(0, 100);
+                if (hasStreet) {
+                  addrObj.street = parts[6] || '';
+                  addrObj.city = parts[7] || '';
+                  addrObj.state = parts[8] || '';
+                  addrObj.zip = parts[9] || '';
+                  addrObj.country = parts[10] || '';
+                  cWeb = parts[11] || '';
+                  cBday = parts[12] || '';
+                  cTags = parts[13] ? parseTags(parts[13]) : [];
+                  cFav = (parts[14] || '').toUpperCase() === 'TRUE' || parts[14] === '1';
+                  cNotes = (parts[15] || '').substring(0, 2000);
+                } else {
                   cTags = parts[6] ? parseTags(parts[6]) : [];
                   cFav = (parts[7] || '').toUpperCase() === 'TRUE' || parts[7] === '1';
                   cNotes = (parts[8] || '').substring(0, 2000);
-                } else {
-                  cTags = parts[5] ? parseTags(parts[5]) : [];
-                  cFav = (parts[6] || '').toUpperCase() === 'TRUE' || parts[6] === '1';
-                  cNotes = (parts[7] || '').substring(0, 2000);
                 }
 
-                contacts.push({
-                  id: 'c_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+                contacts.push(normalizeContact({
                   name: cName,
                   phone: cPhone,
                   email: cEmail,
-                  category: cCat || 'Personal',
+                  category: cCat,
                   company: cComp,
                   title: cTitle,
+                  address: addrObj,
+                  website: cWeb,
+                  birthday: cBday,
                   tags: cTags,
                   notes: cNotes,
                   fav: cFav
-                });
+                }));
                 count++;
               }
             }
@@ -2051,15 +3234,6 @@
       selectCategoryFilter(pill.getAttribute('data-cat'));
     };
 
-    categoryPills.onkeydown = (e) => {
-      const pill = e.target.closest('.pill');
-      if (!pill) return;
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        selectCategoryFilter(pill.getAttribute('data-cat'));
-      }
-    };
-
     function selectCategoryFilter(cat) {
       document.querySelectorAll('.pill').forEach(p => {
         const isActive = (p.getAttribute('data-cat') === cat);
@@ -2071,6 +3245,24 @@
       renderList();
     }
 
+    // Sort & Quick Filter Events
+    sortSelect.onchange = () => {
+      currentSort = sortSelect.value;
+      renderList();
+    };
+
+    btnFilterBday.onclick = () => {
+      filterBdayOnly = !filterBdayOnly;
+      btnFilterBday.classList.toggle('active', filterBdayOnly);
+      renderList();
+    };
+
+    btnFilterIncomplete.onclick = () => {
+      filterIncompleteOnly = !filterIncompleteOnly;
+      btnFilterIncomplete.classList.toggle('active', filterIncompleteOnly);
+      renderList();
+    };
+
     // Search Listener & Clear
     searchInput.oninput = renderList;
     searchClear.onclick = () => {
@@ -2079,24 +3271,13 @@
       searchInput.focus();
     };
 
-    // Quick Starter Templates & Samples
+    // Templates
     function createContactFromTemplate(tpl) {
       if (contacts.length >= MAX_CONTACTS) {
         showToast(`Contact limit (${MAX_CONTACTS}) reached.`);
         return;
       }
-      const newContact = {
-        id: 'c_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
-        name: tpl.name || 'New Contact',
-        phone: tpl.phone || '',
-        email: tpl.email || '',
-        category: tpl.category || 'Personal',
-        company: tpl.company || '',
-        title: tpl.title || '',
-        tags: parseTags(tpl.tags || []),
-        notes: tpl.notes || '',
-        fav: !!tpl.fav
-      };
+      const newContact = normalizeContact(tpl);
       contacts.unshift(newContact);
       saveContacts();
       updateTagPills();
@@ -2104,136 +3285,94 @@
       showToast(`✨ Created template: "${newContact.name}"`);
     }
 
-    const chipClient = document.getElementById('chipClient');
-    if (chipClient) {
-      chipClient.onclick = () => {
-        createContactFromTemplate({
-          name: 'Jordan Hayes',
-          category: 'Work',
-          phone: '+1 555-0321',
-          email: 'jordan.hayes@nexus.io',
-          company: 'Nexus Corp',
-          title: 'VP of Product',
-          tags: ['vip', 'client', 'lead'],
-          notes: 'Enterprise account lead for cloud rollouts.',
-          fav: true
-        });
-      };
-    }
+    document.getElementById('chipClient').onclick = () => {
+      createContactFromTemplate({
+        name: 'Jordan Hayes',
+        category: 'Work',
+        phone: '+1 555-0321',
+        email: 'jordan.hayes@nexus.io',
+        company: 'Nexus Corp',
+        title: 'VP of Product',
+        website: 'http://nexus.io/~jhayes',
+        birthday: '1981-06-25',
+        address: { street: '500 Technology Sq', city: 'Cambridge', state: 'MA', zip: '02139', country: 'USA' },
+        customFields: [{ key: 'Account Tier', val: 'Enterprise' }],
+        tags: ['vip', 'client', 'lead'],
+        notes: 'Enterprise account lead for cloud rollouts.',
+        fav: true
+      });
+    };
 
-    const chipColleague = document.getElementById('chipColleague');
-    if (chipColleague) {
-      chipColleague.onclick = () => {
-        createContactFromTemplate({
-          name: 'Elena Rostova',
-          category: 'Work',
-          phone: '+1 555-0455',
-          email: 'elena.r@acme.com',
-          company: 'Acme Corp',
-          title: 'Staff Engineer',
-          tags: ['team', 'backend', 'core'],
-          notes: 'Co-lead on distributed systems architecture.',
-          fav: false
-        });
-      };
-    }
+    document.getElementById('chipColleague').onclick = () => {
+      createContactFromTemplate({
+        name: 'Elena Rostova',
+        category: 'Work',
+        phone: '+1 555-0455',
+        email: 'elena.r@acme.com',
+        company: 'Acme Corp',
+        title: 'Staff Engineer',
+        website: 'http://acme.internal/~elena',
+        birthday: '1986-09-12',
+        address: { street: '100 Mission St', city: 'San Francisco', state: 'CA', zip: '94105', country: 'USA' },
+        customFields: [{ key: 'Git Handle', val: '@erostova' }],
+        tags: ['team', 'backend', 'core'],
+        notes: 'Co-lead on distributed systems architecture.',
+        fav: false
+      });
+    };
 
-    const chipDoctor = document.getElementById('chipDoctor');
-    if (chipDoctor) {
-      chipDoctor.onclick = () => {
-        createContactFromTemplate({
-          name: 'Dr. Marcus Vance',
-          category: 'Other',
-          phone: '+1 555-0811',
-          email: 'office@metromedical.org',
-          company: 'Metro Clinic',
-          title: 'Primary Physician',
-          tags: ['health', 'doctor'],
-          notes: 'Clinic hours: Mon-Thu 9am-4pm.',
-          fav: false
-        });
-      };
-    }
+    document.getElementById('chipDoctor').onclick = () => {
+      createContactFromTemplate({
+        name: 'Dr. Marcus Vance',
+        category: 'Other',
+        phone: '+1 555-0811',
+        email: 'office@metromedical.org',
+        company: 'Metro Clinic',
+        title: 'Primary Physician',
+        website: 'http://metromedical.org',
+        birthday: '',
+        address: { street: '120 Health Blvd', city: 'Metro City', state: 'NY', zip: '10001', country: 'USA' },
+        customFields: [{ key: 'Office Hours', val: 'Mon-Thu 9am-4pm' }],
+        tags: ['health', 'doctor'],
+        notes: 'Annual physical exam scheduled each fall.',
+        fav: false
+      });
+    };
 
-    const chipFamily = document.getElementById('chipFamily');
-    if (chipFamily) {
-      chipFamily.onclick = () => {
-        createContactFromTemplate({
-          name: 'Sarah Connor',
-          category: 'Family',
-          phone: '+1 555-0992',
-          email: 'sarah.c@cybernet.org',
-          company: 'Family',
-          title: 'Sister',
-          tags: ['family', 'ice'],
-          notes: 'Birthday Nov 18. Emergency ICE contact.',
-          fav: true
-        });
-      };
-    }
+    document.getElementById('chipSysadmin').onclick = () => {
+      createContactFromTemplate({
+        name: 'Alex Vance (FLARELIGHT)',
+        category: 'Work',
+        phone: '555-0199',
+        email: 'avance@flarelight.scene',
+        company: 'FLARELIGHT Scene Group',
+        title: 'MOD Tracker Composer',
+        website: 'http://flarelight.scene/~alex',
+        birthday: '1980-05-18',
+        address: { street: 'Subcarrier Node 0x7F', city: 'Demoscene', state: 'SCENE', zip: '1999', country: 'Intranet' },
+        customFields: [{ key: 'MOD Format', val: 'XM / IT 32-ch' }, { key: 'BBS Handle', val: 'WaveMaster' }],
+        tags: ['tracker', 'demoscene', 'audio'],
+        notes: 'Composing procedural soundtrack modules for 1999 retro demo intro. IRC: #flarelight.',
+        fav: true
+      });
+    };
 
-    function restoreSampleContacts() {
-      contacts = [
-        {
-          id: 'c1',
-          name: 'Alice Smith',
-          phone: '+1 555-0124',
-          email: 'alice.smith@acme.com',
-          category: 'Work',
-          company: 'Acme Corp',
-          title: 'Lead Architect',
-          tags: ['vip', 'cloud', 'architect'],
-          notes: 'Key contact for cloud infrastructure project.',
-          fav: true
-        },
-        {
-          id: 'c2',
-          name: 'Bob Jones',
-          phone: '+1 555-0189',
-          email: 'bob.jones@gmail.com',
-          category: 'Personal',
-          company: '',
-          title: '',
-          tags: ['tech', 'meetup'],
-          notes: 'Met at tech meetup in June.',
-          fav: false
-        },
-        {
-          id: 'c3',
-          name: 'Carla Rossi',
-          phone: '+1 555-0199',
-          email: 'carla@designstudio.io',
-          category: 'Work',
-          company: 'Design Studio',
-          title: 'UX Lead',
-          tags: ['vip', 'design', 'ux'],
-          notes: 'Freelance UI/UX Consultant.',
-          fav: true
-        },
-        {
-          id: 'c4',
-          name: 'David Miller',
-          phone: '+1 555-0143',
-          email: 'dmiller@familynet.org',
-          category: 'Family',
-          company: '',
-          title: '',
-          tags: ['family'],
-          notes: 'Cousin - Birthday Oct 14.',
-          fav: false
-        }
-      ];
-      saveContacts();
+    document.getElementById('chipSamples').onclick = () => {
+      seedData();
       updateTagPills();
       renderList();
-      selectContact(contacts[0].id);
-      showToast('✨ Restored 4 standard sample contacts');
-    }
+      if (contacts.length > 0) selectContact(contacts[0].id);
+      showToast('✨ Restored 5 standard sample contacts');
+    };
 
-    const chipSamples = document.getElementById('chipSamples');
-    if (chipSamples) chipSamples.onclick = restoreSampleContacts;
     if (btnEmptyAdd) btnEmptyAdd.onclick = createNewContact;
-    if (btnEmptySample) btnEmptySample.onclick = restoreSampleContacts;
+    if (btnEmptySample) btnEmptySample.onclick = () => {
+      seedData();
+      updateTagPills();
+      renderList();
+      if (contacts.length > 0) selectContact(contacts[0].id);
+      showToast('✨ Restored 5 standard sample contacts');
+    };
 
     // Keyboard Navigation & Shortcuts
     const CATEGORIES_LIST = ['All', 'Favorites', 'Work', 'Personal', 'Family', 'Friends', 'Other'];
@@ -2241,18 +3380,22 @@
     document.addEventListener('keydown', (e) => {
       const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT';
 
-      // Export modal 1-4 shortcuts
+      // Export modal 1-5 shortcuts
       if (exportModal.style.display === 'flex') {
         if (e.key === '1') { e.preventDefault(); closeExport(); doExport('md'); return; }
         if (e.key === '2') { e.preventDefault(); closeExport(); doExport('json'); return; }
         if (e.key === '3') { e.preventDefault(); closeExport(); doExport('vcf'); return; }
         if (e.key === '4') { e.preventDefault(); closeExport(); doExport('csv'); return; }
+        if (e.key === '5') { e.preventDefault(); closeExport(); doExport('ldif'); return; }
       }
 
       // Global Escape
       if (e.key === 'Escape') {
         if (helpModal.style.display === 'flex') { closeHelp(); return; }
         if (exportModal.style.display === 'flex') { closeExport(); return; }
+        if (printModal.style.display === 'flex') { printModal.style.display = 'none'; return; }
+        if (statsModal.style.display === 'flex') { statsModal.style.display = 'none'; return; }
+        if (batchTagModal.style.display === 'flex') { batchTagModal.style.display = 'none'; return; }
         if (deleteModal.style.display === 'flex') { closeDeleteModal(); return; }
         if (isInput) {
           e.target.blur();
@@ -2338,7 +3481,6 @@
 
       // Non-input hotkeys
       if (!isInput) {
-        // Quick Category Switch (1 - 7)
         if (!e.ctrlKey && !e.altKey && !e.metaKey && e.key >= '1' && e.key <= '7') {
           const idx = parseInt(e.key, 10) - 1;
           if (idx >= 0 && idx < CATEGORIES_LIST.length) {
@@ -2349,14 +3491,12 @@
           return;
         }
 
-        // Quick Copy contact info: C
         if (!e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 'c' || e.key === 'C') && selectedId) {
           e.preventDefault();
           document.getElementById('btnQuickCopy').click();
           return;
         }
 
-        // New Contact (N or Ctrl+N)
         if (!e.altKey && (e.key === 'n' || e.key === 'N')) {
           e.preventDefault();
           createNewContact();
@@ -2392,7 +3532,7 @@
     });
 
     // Initialization
-    if (window.resizeTo) window.resizeTo(850, 620);
+    if (window.resizeTo) window.resizeTo(920, 680);
     seedData();
     updateTagPills();
     renderList();
