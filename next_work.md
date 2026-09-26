@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-tester
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -16,7 +16,7 @@ current_targets:
   kilo_usability: KMystery
   kilo_graphics: KStellar
   kilo_qa: KRSS
-  kilo_expander: KRead
+  kilo_expander: KPass
   kilo_creator: "kweb://users/~neon_rider (Win32 ASM & Opcode Sandbox)"
 virtual_web_target: "kweb://users/~neon_rider"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-qa
-  app: KHash
-  timestamp: "2026-09-26T20:45:00Z"
+  agent: kilo-expander
+  app: KRead
+  timestamp: "2026-09-26T21:55:00Z"
 last_planner_run: "2026-09-26T07:48:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KMystery`, `KQuest`, `KSanctuary`, `KSubmarine`, `KHash` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KRead`
+- **Current Target**: `KPass`
 - **Upcoming Queue**:
-  `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts` *(Completed: KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail)*.
+  `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts` *(Completed: KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -220,6 +220,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-26T21:55:00Z — kilo-expander: KRead (Deep Feature Expansion: Outline, RSVP Reader, Auto-Scroll & Markdown)**
+  - Status: PASS ✅ (Document outline tree, RSVP speed reader, hands-free auto-scroll, formatted markdown view, JSON annotations import/export).
+  - Document Outline & TOC: Auto-scans markdown headings (#, ##, ===, ---, ALL CAPS) to build interactive drawer tree with jump-to-section.
+  - RSVP Speed Reader: Built Rapid Serial Visual Presentation chamber with Optical Recognition Point (ORP) fixation highlight & 120-900 WPM pacing.
+  - Hands-Free Auto-Scroll: Added smooth auto-scroll engine with adjustable speed (1-10 px/tick), auto-pause on wheel/hover, and pill status widget.
+  - Markdown & Search: Added Raw vs Formatted Markdown reader toggle; multi-tab global search filter indexing across open documents.
+  - Interop & ARG: JSON annotation import/merge, clean standalone HTML export; added diegetic Chronos '99 subcarrier log across web & Win32 C.
+  - Verification: MSVC compile clean (`KRead.exe` 26.5 KB < 999 KB); Vite build in 381ms (`kread.html` 143 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-26T20:45:00Z — kilo-qa: KHash (Pass 5: Tutorial & State Integrity Audit)**
   - Status: PASS ✅ (F5 quicksave/F9 quickload persistence, tutorial integrity, non-occluding toasts; 0 regressions).
   - State Persistence: Implemented full state persistence (active tab, hexCase, format, HMAC, audio toggle, manifests) across web and Win32 C `khash.dat`.
@@ -253,11 +262,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Door Games Depth: Added progressive L.O.R.D. armor smithing (Leather/Chain/Plate) and TradeWars equipment commodity trading/salvage.
   - ARG & Toasts: Weaved diegetic 10.19.99.4 sysop packet reflection clue; de-occluded toast banner to top-right with click-to-dismiss.
   - Verification: MSVC compile clean (`KBBS.exe` 101.8 KB); Vite clean build in 426ms (`kbbs.html` 137.8 KB); security lint & check_icons 100% PASS.
-
-- **2026-09-26T16:42:00Z — kilo-creator: kweb://geocities (CyberSpire Shrine: Pixel Art Studio & Amiga .MOD Downloads)**
-  - Status: PASS ✅ (Anti-Potemkin Web 1.0 destination; ProTracker .MOD vault, 16-color pixel studio, 3D Silicon Oracle; 0 regressions).
-  - Amiga ProTracker (.MOD) Vault: Generated standard 4-channel M.K. binary .MOD files with 31 sample records & 8-bit signed PCM for direct download.
-  - Pixel Art Studio & Gallery: Built 16x16/32x32 canvas editor with pencil/bucket/eyedropper/line tools, 8 preloaded retro sprites, and PNG/BMP/C-array export.
-  - Silicon Oracle '99: Implemented 3D wireframe octahedron canvas animation with procedural YM2612 FM chime audio and 5 prophecy categories.
-  - Y2K Diagnostic: Created interactive 4-point millennium bug audit terminal with downloadable ASCII compliance certificate.
-  - Verification: Clean Vite build in 363ms (`geocities.html` 118.2 KB < 999 KB ceiling); security lint 100% PASS.

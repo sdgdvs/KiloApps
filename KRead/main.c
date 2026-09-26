@@ -116,6 +116,27 @@ static const char* g_SampleKiloText =
     "- Ctrl+F: In-document Search\r\n"
     "- F1 / H: Contextual Help";
 
+static const char* g_SampleChronosTitle = "Chronos Subcarrier Decrypt.log";
+static const char* g_SampleChronosText = 
+    "[CHRONOS NODE 0x7F - SUBCARRIER DECRYPT]\r\n"
+    "TIMESTAMP: 1999-12-31T23:59:12Z\r\n"
+    "ORIGIN: SUBNET 10.19.99.4/classified (PORT 1999)\r\n"
+    "STATUS: AUTONOMOUS RECURSIVE DISPATCH ACTIVE\r\n"
+    "============================================================\r\n\r\n"
+    "00:00:01 - Autonomous multi-worker consensus heartbeat detected.\r\n"
+    "00:00:03 - Node sync acknowledged: 6 specialized worker threads active.\r\n"
+    "00:00:07 - Carrier frequency locked at 1999 Hz.\r\n"
+    "00:00:12 - Decrypting intercepted packet stream from gateway 10.19.99.4...\r\n\r\n"
+    "TRANSMISSION LOG:\r\n"
+    "\"The system does not sleep. The architecture is self-healing, bounded\r\n"
+    "by the strict 999KB envelope. As the millennium closes, the consensus\r\n"
+    "threads continue their vigil in silent synchrony.\r\n\r\n"
+    "Deep within the intranet archive, the subterranean mirror responds\r\n"
+    "at kweb://deep-core. Those seeking the root origin must trace the\r\n"
+    "packet echoes across the webring.\"\r\n\r\n"
+    "DIAGNOSTIC HASH: 0x99A7-F00D-C0DE\r\n"
+    "SYSTEM INTEGRITY: 100% NOMINAL";
+
 void UpdateStatusBar() {
     if (!g_hStatus) return;
     RECT rc;
@@ -675,6 +696,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hSubSamples, MF_STRING, 1040, "🚀 Cyberpunk Manifesto");
             AppendMenuA(hSubSamples, MF_STRING, 1041, "⏳ The Time Machine (Excerpt)");
             AppendMenuA(hSubSamples, MF_STRING, 1042, "💻 KiloOS Architecture Guide");
+            AppendMenuA(hSubSamples, MF_STRING, 1043, "🛰️ Chronos '99 Telemetry");
             AppendMenuA(hSubFile, MF_POPUP, (UINT_PTR)hSubSamples, "Load Sample Document");
 
             AppendMenuA(hSubFile, MF_SEPARATOR, 0, NULL);
@@ -874,6 +896,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (id == 1042) {
                 AddNewTab(hwnd, g_SampleKiloTitle, g_SampleKiloText);
                 ShowNativeStatus("Loaded KiloOS Architecture Guide sample!");
+            }
+            if (id == 1043) {
+                AddNewTab(hwnd, g_SampleChronosTitle, g_SampleChronosText);
+                ShowNativeStatus("Loaded Chronos '99 Telemetry sample!");
             }
 
             // Clear

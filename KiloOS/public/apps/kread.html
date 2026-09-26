@@ -612,10 +612,10 @@
     align-items: center;
   }
 
-  /* Non-Blocking Toast System */
+  /* Non-Blocking Toast System (Top-Right Safe Anchor) */
   .toast-container {
     position: fixed;
-    bottom: 38px;
+    top: 14px;
     right: 20px;
     display: flex;
     flex-direction: column;
@@ -641,11 +641,11 @@
     pointer-events: auto;
   }
   @keyframes toastSlideIn {
-    from { opacity: 0; transform: translateY(15px) scale(0.95); }
+    from { opacity: 0; transform: translateY(-15px) scale(0.95); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
   @keyframes toastFadeOut {
-    to { opacity: 0; transform: translateY(8px) scale(0.95); pointer-events: none; }
+    to { opacity: 0; transform: translateY(-8px) scale(0.95); pointer-events: none; }
   }
 
   /* Modal Form Controls */
@@ -674,6 +674,256 @@
     gap: 8px;
     margin-top: 18px;
   }
+
+  /* Document Outline / Table of Contents */
+  .outline-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background-color 0.15s;
+    border: 1px solid transparent;
+  }
+  .outline-item:hover {
+    background: var(--btn-hover);
+    border-color: var(--border-color);
+  }
+  .outline-lvl-1 { font-weight: 700; color: var(--accent); padding-left: 8px; font-size: 13px; }
+  .outline-lvl-2 { font-weight: 600; padding-left: 20px; font-size: 12.5px; opacity: 0.95; }
+  .outline-lvl-3 { font-weight: 500; padding-left: 32px; font-size: 12px; opacity: 0.85; }
+  .outline-lvl-4 { font-weight: 400; padding-left: 44px; font-size: 11.5px; opacity: 0.75; }
+  .outline-badge {
+    font-size: 10px;
+    opacity: 0.6;
+    background: var(--btn-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    padding: 1px 5px;
+    margin-left: 6px;
+    flex-shrink: 0;
+  }
+
+  /* RSVP Speed Reader Chamber */
+  .rsvp-chamber {
+    background: var(--bg-main);
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 16px 0;
+    position: relative;
+    user-select: none;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .rsvp-word-box {
+    display: flex;
+    align-items: baseline;
+    font-size: 40px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .rsvp-pre {
+    text-align: right;
+    min-width: 140px;
+    color: var(--text-main);
+    opacity: 0.85;
+  }
+  .rsvp-orp {
+    color: var(--accent);
+    font-weight: 800;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    padding: 0 1px;
+  }
+  .rsvp-post {
+    text-align: left;
+    min-width: 140px;
+    color: var(--text-main);
+    opacity: 0.85;
+  }
+  .rsvp-progress-bar-wrap {
+    margin-bottom: 14px;
+  }
+  .rsvp-scrubber {
+    width: 100%;
+    cursor: pointer;
+    accent-color: var(--accent);
+  }
+  .rsvp-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .rsvp-btn-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    align-items: center;
+  }
+  .rsvp-speed-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-toolbar);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px 14px;
+  }
+
+  /* Hands-Free Auto-Scroll Indicator Pill */
+  .auto-scroll-pill {
+    position: fixed;
+    top: 56px;
+    right: 20px;
+    background: var(--toast-bg);
+    color: var(--toast-text);
+    padding: 6px 14px;
+    border-radius: 20px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    font-family: system-ui, sans-serif;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    z-index: 80;
+    animation: fadeIn 0.2s ease-out;
+  }
+  .auto-scroll-pill.active {
+    display: flex;
+  }
+
+  /* Multi-Tab Global Search Results Container */
+  .global-search-container {
+    background: var(--bg-toolbar);
+    border-bottom: 1px solid var(--border-color);
+    padding: 6px 16px;
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    font-size: 12px;
+    font-family: system-ui, sans-serif;
+  }
+  .tab-search-chip {
+    background: var(--btn-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s ease;
+  }
+  .tab-search-chip:hover {
+    background: var(--btn-hover);
+    border-color: var(--accent);
+  }
+  .tab-search-chip.active {
+    background: var(--accent);
+    color: #ffffff;
+    border-color: var(--accent);
+  }
+
+  /* Formatted Markdown Reader Mode Typography */
+  .content.markdown-view {
+    white-space: normal;
+  }
+  .content.markdown-view h1,
+  .content.markdown-view h2,
+  .content.markdown-view h3,
+  .content.markdown-view h4 {
+    margin-top: 1.4em;
+    margin-bottom: 0.5em;
+    font-family: system-ui, -apple-system, sans-serif;
+    line-height: 1.3;
+    font-weight: 700;
+  }
+  .content.markdown-view h1 {
+    font-size: 1.75em;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 6px;
+    color: var(--accent);
+  }
+  .content.markdown-view h2 {
+    font-size: 1.4em;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 4px;
+  }
+  .content.markdown-view h3 {
+    font-size: 1.15em;
+  }
+  .content.markdown-view h4 {
+    font-size: 1.0em;
+    opacity: 0.85;
+  }
+  .content.markdown-view p {
+    margin: 0.8em 0;
+  }
+  .content.markdown-view blockquote {
+    border-left: 4px solid var(--accent);
+    padding: 8px 16px;
+    margin: 1.2em 0;
+    background: var(--bg-toolbar);
+    border-radius: 0 6px 6px 0;
+    font-style: italic;
+    opacity: 0.95;
+  }
+  .content.markdown-view pre {
+    background: var(--bg-toolbar);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 14px;
+    overflow-x: auto;
+    font-family: 'Consolas', monospace;
+    font-size: 0.88em;
+    margin: 1.2em 0;
+    position: relative;
+    white-space: pre;
+  }
+  .content.markdown-view code {
+    background: var(--bg-toolbar);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: 'Consolas', monospace;
+    font-size: 0.88em;
+  }
+  .content.markdown-view pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+  }
+  .content.markdown-view .code-copy-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font-size: 11px;
+    padding: 2px 6px;
+    opacity: 0.75;
+  }
+  .content.markdown-view .code-copy-btn:hover {
+    opacity: 1;
+  }
+  .content.markdown-view ul,
+  .content.markdown-view ol {
+    margin: 0.8em 0 0.8em 2em;
+  }
+  .content.markdown-view li {
+    margin: 0.35em 0;
+  }
+  .content.markdown-view hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 2em 0;
+  }
 </style>
 </head>
 <body class="theme-light">
@@ -693,6 +943,10 @@
       <button class="btn" id="btnBookmark" title="Add Bookmark at Current Position (Ctrl+B)">🔖 Bookmark <kbd>Ctrl+B</kbd></button>
       <button class="btn" id="btnToggleBookmarks" title="Saved Bookmarks (B)">📚 Bookmarks <kbd>B</kbd></button>
       <button class="btn" id="btnToggleNotes" title="Highlights & Annotations (N)">📝 Notes <kbd>N</kbd></button>
+      <button class="btn" id="btnToggleOutline" title="Document Outline / Table of Contents (O)">📑 Outline <kbd>O</kbd></button>
+      <button class="btn" id="btnToggleRsvp" title="RSVP Speed Reader (Alt+S)">⚡ RSVP <kbd>Alt+S</kbd></button>
+      <button class="btn" id="btnToggleAutoScroll" title="Hands-free Auto-Scroll (A)">📜 Auto-Scroll <kbd>A</kbd></button>
+      <button class="btn" id="btnToggleMarkdown" title="Toggle Formatted Markdown / Raw Text View (M)">📖 View: Raw <kbd>M</kbd></button>
     </div>
 
     <div class="toolbar-group">
@@ -720,6 +974,7 @@
       </select>
 
       <button class="btn" id="btnStats" title="Reading Statistics Engine (Ctrl+S)">📊 Stats <kbd>Ctrl+S</kbd></button>
+      <button class="btn" id="btnSession" title="Session Backup & Restore">💾 Session</button>
       <button class="btn" id="btnHelp" title="Help Guide (Press F1 / H)">❓ Help <kbd>F1</kbd></button>
     </div>
   </div>
@@ -737,6 +992,7 @@
     <button class="btn btn-sm" id="qsTime" title="Load The Time Machine">⏳ Time Machine</button>
     <button class="btn btn-sm" id="qsKilo" title="Load KiloOS System Guide">💻 KiloOS Guide</button>
     <button class="btn btn-sm" id="qsAlice" title="Load Alice in Wonderland Excerpt">✨ Alice</button>
+    <button class="btn btn-sm" id="qsChronos" title="Load Chronos '99 Decrypted Telemetry">🛰️ Chronos '99</button>
     <span style="flex: 1;"></span>
     <button class="btn btn-sm" id="btnQuickCopy" title="Copy Active Document Text (Ctrl+Shift+C)">📋 Copy Doc <kbd>^C</kbd></button>
     <button class="btn btn-sm" id="btnQuickTheme" title="Cycle Reading Theme (T)">🎨 Theme <kbd>T</kbd></button>
@@ -746,11 +1002,13 @@
   <div class="search-panel" id="searchPanel">
     <input type="text" class="search-input" id="searchInput" placeholder="Search in active document...">
     <button class="btn" id="btnCaseSensitive" title="Toggle Case Sensitivity">Aa</button>
+    <button class="btn" id="btnSearchAllTabs" title="Search Across All Open Tabs">🌐 All Tabs</button>
     <button class="btn" id="btnPrevMatch" title="Previous Match (Shift+Enter)">▲</button>
     <button class="btn" id="btnNextMatch" title="Next Match (Enter)">▼</button>
     <span class="search-stats" id="searchStats">0 / 0</span>
     <button class="btn" id="btnCloseSearch">✕</button>
   </div>
+  <div class="global-search-container" id="globalSearchResults"></div>
 
   <!-- Reader Body -->
   <div class="reader-container" id="readerContainer">
@@ -764,6 +1022,7 @@
         <button class="btn sample-doc-btn" id="btnSampleTime">⏳ The Time Machine</button>
         <button class="btn sample-doc-btn" id="btnSampleKilo">💻 KiloOS System Guide</button>
         <button class="btn sample-doc-btn" id="btnSampleAlice">✨ Alice in Wonderland</button>
+        <button class="btn sample-doc-btn" id="btnSampleChronos">🛰️ Chronos '99 Telemetry</button>
       </div>
 
       <p style="font-size: 13px; opacity: 0.7; margin-top: 12px;">(Press <strong>F1</strong> or <strong>H</strong> anytime for shortcuts & help)</p>
@@ -801,10 +1060,30 @@
     <div class="drawer-body" id="notesList">
       <p style="opacity: 0.6; font-size: 13px;">No notes or highlights added.</p>
     </div>
-    <div style="padding: 12px; border-top: 1px solid var(--border-color); display: flex; gap: 6px;">
-      <button class="btn" id="btnExportJSON" style="flex: 1; font-size: 12px;" title="Export highlights and bookmarks to JSON">📥 JSON</button>
-      <button class="btn" id="btnExportMD" style="flex: 1; font-size: 12px;" title="Export highlights and bookmarks to Markdown">📝 Markdown</button>
-      <button class="btn" id="btnExportTXT" style="flex: 1; font-size: 12px;" title="Export highlights and bookmarks to Plain Text">📄 Text</button>
+    <div style="padding: 12px; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; gap: 6px;">
+        <button class="btn" id="btnExportJSON" style="flex: 1; font-size: 12px;" title="Export highlights and bookmarks to JSON">📥 JSON</button>
+        <button class="btn" id="btnExportMD" style="flex: 1; font-size: 12px;" title="Export highlights and bookmarks to Markdown">📝 MD</button>
+        <button class="btn" id="btnExportTXT" style="flex: 1; font-size: 12px;" title="Export highlights and bookmarks to Plain Text">📄 Text</button>
+      </div>
+      <div style="display: flex; gap: 6px;">
+        <label class="btn" id="btnImportNotesLabel" style="flex: 1; font-size: 12px; justify-content: center; cursor: pointer;" title="Import highlights and bookmarks from JSON">
+          📤 Import JSON
+          <input type="file" id="importNotesInp" class="file-input" accept=".json">
+        </label>
+        <button class="btn" id="btnClearNotes" style="font-size: 12px;" title="Clear annotations in this tab">🗑️ Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Document Outline Drawer -->
+  <div class="drawer" id="outlineDrawer" role="dialog" aria-label="Document Outline Drawer" aria-modal="false">
+    <div class="drawer-header">
+      <span class="drawer-title">📑 Document Outline</span>
+      <button class="btn" id="btnCloseOutline" aria-label="Close Outline">✕</button>
+    </div>
+    <div class="drawer-body" id="outlineList">
+      <p style="opacity: 0.6; font-size: 13px;">No outline headings detected in this document.</p>
     </div>
   </div>
 
@@ -824,7 +1103,10 @@
           <li><kbd>F2</kbd> - Rename Active Tab</li>
           <li><kbd>Ctrl</kbd> + <kbd>F</kbd> or <kbd>/</kbd> - Find Text in Document</li>
           <li><kbd>Ctrl</kbd> + <kbd>B</kbd> - Quick Add Bookmark</li>
-          <li><kbd>B</kbd> / <kbd>N</kbd> - Toggle Bookmarks / Notes Drawer</li>
+          <li><kbd>B</kbd> / <kbd>N</kbd> / <kbd>O</kbd> - Toggle Bookmarks / Notes / Outline Drawer</li>
+          <li><kbd>Alt</kbd> + <kbd>S</kbd> - Launch RSVP Speed Reader</li>
+          <li><kbd>A</kbd> - Toggle Hands-Free Auto-Scroll</li>
+          <li><kbd>M</kbd> - Toggle Formatted Markdown vs. Raw Text View</li>
           <li><kbd>T</kbd> - Cycle Reading Theme (Light/Dark/Sepia/Contrast)</li>
           <li><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd> - Copy Entire Document Text</li>
           <li><kbd>Del</kbd> - Clear Active Document</li>
@@ -832,18 +1114,19 @@
           <li><kbd>J</kbd> / <kbd>K</kbd> or <kbd>↓</kbd> / <kbd>↑</kbd> - Line Scroll</li>
           <li><kbd>Home</kbd> / <kbd>End</kbd> - Jump to Document Start / End</li>
           <li><kbd>Ctrl</kbd> + <kbd>S</kbd> - Open Reading Statistics</li>
-          <li><kbd>+</kbd> / <kbd>-</kbd> - Zoom Font Size in / out</li>
+          <li><kbd>+</kbd> / <kbd>-</kbd> - Zoom Font Size (or adjust auto-scroll speed)</li>
           <li><kbd>0</kbd> - Reset Font Size to Default (18px)</li>
-          <li><kbd>Esc</kbd> - Close Panels, Drawers, & Modals</li>
+          <li><kbd>Esc</kbd> - Close Panels, Drawers, & Modals / Stop Auto-Scroll</li>
         </ul>
-        <p><strong>Features:</strong></p>
+        <p><strong>Advanced E-Reader Capabilities:</strong></p>
         <ul style="margin-left: 20px;">
-          <li><strong>Quick Load Presets:</strong> Instant 1-click loading for Cyberpunk, Time Machine, KiloOS, and Alice in Wonderland.</li>
-          <li><strong>Multi-Tab Sessions:</strong> Open multiple documents with preserved scroll, notes, and stats.</li>
-          <li><strong>Double-click or F2 on Tab:</strong> Rename any tab with custom title.</li>
-          <li><strong>Annotation & Notes:</strong> Select text to highlight in 4 colors or attach notes; click in text to jump to note.</li>
-          <li><strong>Reading Stats Engine:</strong> Real-time word count, line count, and WPM reading estimates.</li>
-          <li><strong>Themes & Fonts:</strong> High-Contrast, Sepia, Dark, and Light themes with Serif/Sans/Mono typography.</li>
+          <li><strong>Document Outline & TOC:</strong> Automatic heading extraction with clickable navigation tree.</li>
+          <li><strong>RSVP Speed Reader:</strong> Rapid Serial Visual Presentation with optical fixation highlighting and 120-900 WPM pacing.</li>
+          <li><strong>Hands-Free Auto-Scroll:</strong> Smooth continuous reading with variable speed and auto-pause on wheel/hover.</li>
+          <li><strong>Formatted Markdown Mode:</strong> Rich reader rendering for headers, lists, blockquotes, and code blocks with 1-click copy.</li>
+          <li><strong>Multi-Tab Global Search:</strong> Cross-tab search index with hit counters and 1-click jump.</li>
+          <li><strong>Data Interoperability:</strong> Import/export annotations (JSON/Markdown/TXT) and full multi-tab workspace sessions.</li>
+          <li><strong>Quick Load Presets:</strong> Instant 1-click loading for Cyberpunk, Time Machine, KiloOS, Alice, and Chronos '99.</li>
         </ul>
       </div>
       <div style="display: flex; justify-content: flex-end; margin-top: 18px;">
@@ -923,6 +1206,82 @@
         <button class="btn active" id="btnOkConfirm" style="background:#dc2626; border-color:#dc2626; color:#fff;">Proceed</button>
       </div>
     </div>
+  </div>
+
+  <!-- RSVP Speed Reader Modal -->
+  <div class="modal-overlay" id="rsvpModal" role="dialog" aria-modal="true" aria-labelledby="rsvpModalTitle">
+    <div class="modal-content" style="max-width: 580px;">
+      <div class="modal-title" id="rsvpModalTitle">
+        <span>⚡ RSVP Speed Reader</span>
+        <span style="flex: 1;"></span>
+        <span id="rsvpWordCounter" style="font-size: 12px; opacity: 0.7; font-weight: normal;">Word 0 / 0</span>
+      </div>
+      
+      <!-- Word display chamber with optical recognition point -->
+      <div class="rsvp-chamber" id="rsvpChamber">
+        <div class="rsvp-word-box" id="rsvpWordBox">
+          <span class="rsvp-pre" id="rsvpPre"></span><span class="rsvp-orp" id="rsvpOrp">Ready</span><span class="rsvp-post" id="rsvpPost"></span>
+        </div>
+      </div>
+
+      <div class="rsvp-progress-bar-wrap">
+        <input type="range" class="rsvp-scrubber" id="rsvpScrubber" min="0" max="100" value="0" aria-label="Scrub text position">
+      </div>
+
+      <div class="rsvp-controls">
+        <div class="rsvp-btn-row">
+          <button class="btn" id="btnRsvpPrev" title="Back 10 words ([)">⏮️ -10</button>
+          <button class="btn active" id="btnRsvpPlay" title="Play/Pause (Space)" style="min-width: 80px;">▶ Play</button>
+          <button class="btn" id="btnRsvpNext" title="Forward 10 words (])">+10 ⏭️</button>
+          <button class="btn" id="btnRsvpRestart" title="Restart from start">🔄 Restart</button>
+        </div>
+
+        <div class="rsvp-speed-row">
+          <label for="rsvpWpmSlider" style="font-size: 12px; font-weight: 500;">Speed: <strong id="rsvpWpmDisplay">300</strong> WPM</label>
+          <input type="range" id="rsvpWpmSlider" min="120" max="900" step="30" value="300" style="flex: 1;">
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; font-size: 12px; opacity: 0.7;">
+        <span>Controls: <kbd>Space</kbd> Play/Pause, <kbd>[</kbd> / <kbd>]</kbd> Step, <kbd>Esc</kbd> Close</span>
+        <button class="btn" id="btnCloseRsvp">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Session Backup / Restore Modal -->
+  <div class="modal-overlay" id="sessionModal" role="dialog" aria-modal="true" aria-labelledby="sessionModalTitle">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-title" id="sessionModalTitle">💾 Session Backup & Restore</div>
+      <p style="font-size: 13px; opacity: 0.85; margin-bottom: 16px; line-height: 1.5;">
+        Export all open tabs, text contents, bookmarks, annotations, and reading progress into a portable JSON backup file, or restore a previously saved reading session.
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px;">
+        <button class="btn" id="btnExportSession" style="padding: 10px 16px; justify-content: center; font-size: 13px;">
+          📥 Download Full Session Backup (.json)
+        </button>
+        <label class="btn" id="btnImportSessionLabel" style="padding: 10px 16px; justify-content: center; font-size: 13px; cursor: pointer;">
+          📂 Restore Session from File
+          <input type="file" id="importSessionInp" class="file-input" accept=".json">
+        </label>
+        <button class="btn" id="btnExportActiveDocHtml" style="padding: 10px 16px; justify-content: center; font-size: 13px;">
+          🌐 Export Active Document as Standalone HTML
+        </button>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end;">
+        <button class="btn" id="btnCloseSession">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hands-Free Auto-Scroll Indicator Pill -->
+  <div class="auto-scroll-pill" id="autoScrollPill">
+    <span>📜 Auto-Scrolling: <strong id="autoScrollSpeedVal">2</strong> px/tick</span>
+    <button class="btn btn-sm" id="btnAutoScrollSlower" title="Decrease speed (-)">-</button>
+    <button class="btn btn-sm" id="btnAutoScrollFaster" title="Increase speed (+)">+</button>
+    <button class="btn btn-sm" id="btnAutoScrollStop" title="Stop Auto-Scroll (A / Esc)">Stop [A]</button>
   </div>
 
   <!-- Status Bar -->
@@ -1020,13 +1379,62 @@
     const btnSampleTime = document.getElementById('btnSampleTime');
     const btnSampleKilo = document.getElementById('btnSampleKilo');
     const btnSampleAlice = document.getElementById('btnSampleAlice');
+    const btnSampleChronos = document.getElementById('btnSampleChronos');
 
     const qsCyber = document.getElementById('qsCyber');
     const qsTime = document.getElementById('qsTime');
     const qsKilo = document.getElementById('qsKilo');
     const qsAlice = document.getElementById('qsAlice');
+    const qsChronos = document.getElementById('qsChronos');
     const btnQuickCopy = document.getElementById('btnQuickCopy');
     const btnQuickTheme = document.getElementById('btnQuickTheme');
+
+    // Outline Drawer Elements
+    const btnToggleOutline = document.getElementById('btnToggleOutline');
+    const outlineDrawer = document.getElementById('outlineDrawer');
+    const outlineList = document.getElementById('outlineList');
+    const btnCloseOutline = document.getElementById('btnCloseOutline');
+
+    // RSVP Speed Reader Elements
+    const btnToggleRsvp = document.getElementById('btnToggleRsvp');
+    const rsvpModal = document.getElementById('rsvpModal');
+    const btnCloseRsvp = document.getElementById('btnCloseRsvp');
+    const rsvpWordCounter = document.getElementById('rsvpWordCounter');
+    const rsvpPre = document.getElementById('rsvpPre');
+    const rsvpOrp = document.getElementById('rsvpOrp');
+    const rsvpPost = document.getElementById('rsvpPost');
+    const rsvpScrubber = document.getElementById('rsvpScrubber');
+    const btnRsvpPrev = document.getElementById('btnRsvpPrev');
+    const btnRsvpPlay = document.getElementById('btnRsvpPlay');
+    const btnRsvpNext = document.getElementById('btnRsvpNext');
+    const btnRsvpRestart = document.getElementById('btnRsvpRestart');
+    const rsvpWpmSlider = document.getElementById('rsvpWpmSlider');
+    const rsvpWpmDisplay = document.getElementById('rsvpWpmDisplay');
+
+    // Hands-Free Auto-Scroll Elements
+    const btnToggleAutoScroll = document.getElementById('btnToggleAutoScroll');
+    const autoScrollPill = document.getElementById('autoScrollPill');
+    const autoScrollSpeedVal = document.getElementById('autoScrollSpeedVal');
+    const btnAutoScrollSlower = document.getElementById('btnAutoScrollSlower');
+    const btnAutoScrollFaster = document.getElementById('btnAutoScrollFaster');
+    const btnAutoScrollStop = document.getElementById('btnAutoScrollStop');
+
+    // View Mode & Session Elements
+    const btnToggleMarkdown = document.getElementById('btnToggleMarkdown');
+    const btnSession = document.getElementById('btnSession');
+    const sessionModal = document.getElementById('sessionModal');
+    const btnCloseSession = document.getElementById('btnCloseSession');
+    const btnExportSession = document.getElementById('btnExportSession');
+    const btnImportSessionLabel = document.getElementById('btnImportSessionLabel');
+    const importSessionInp = document.getElementById('importSessionInp');
+    const btnExportActiveDocHtml = document.getElementById('btnExportActiveDocHtml');
+
+    // Search and Annotation Elements
+    const btnSearchAllTabs = document.getElementById('btnSearchAllTabs');
+    const globalSearchResults = document.getElementById('globalSearchResults');
+    const btnImportNotesLabel = document.getElementById('btnImportNotesLabel');
+    const importNotesInp = document.getElementById('importNotesInp');
+    const btnClearNotes = document.getElementById('btnClearNotes');
 
     // Built-in Sample Documents
     const SAMPLES = {
@@ -1045,6 +1453,10 @@
       alice: {
         title: 'Alice in Wonderland Excerpt.txt',
         text: `ALICE'S ADVENTURES IN WONDERLAND\nby Lewis Carroll\n================================\n\nAlice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, 'and what is the use of a book,' thought Alice 'without pictures or conversations?'\n\nSo she was considering in her own mind (as well as she could, for the hot day made her feel very sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her.\n\nThere was nothing so VERY remarkable in that; nor did Alice think it so VERY much out of the way to hear the Rabbit say to itself, 'Oh dear! Oh dear! I shall be late!' (when she thought it over afterwards, it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural); but when the Rabbit actually TOOK A WATCH OUT OF ITS WAISTCOAT-POCKET, and looked at it, and then hurried on, Alice started to her feet, for it flashed across her mind that she had never before seen a rabbit with either a waistcoat-pocket, or a watch to take out of it, and burning with curiosity, she ran across the field after it...`
+      },
+      chronos: {
+        title: 'Chronos Subcarrier Decrypt.log',
+        text: `[CHRONOS NODE 0x7F - SUBCARRIER DECRYPT]\nTIMESTAMP: 1999-12-31T23:59:12Z\nORIGIN: SUBNET 10.19.99.4/classified (PORT 1999)\nSTATUS: AUTONOMOUS RECURSIVE DISPATCH ACTIVE\n============================================================\n\n00:00:01 - Autonomous multi-worker consensus heartbeat detected.\n00:00:03 - Node sync acknowledged: 6 specialized worker threads active.\n00:00:07 - Carrier frequency locked at 1999 Hz.\n00:00:12 - Decrypting intercepted packet stream from gateway 10.19.99.4...\n\nTRANSMISSION LOG:\n"The system does not sleep. The architecture is self-healing, bounded\nby the strict 999KB envelope. As the millennium closes, the consensus\nthreads continue their vigil in silent synchrony.\n\nDeep within the intranet archive, the subterranean mirror responds\nat kweb://deep-core. Those seeking the root origin must trace the\npacket echoes across the webring."\n\nDIAGNOSTIC HASH: 0x99A7-F00D-C0DE\nSYSTEM INTEGRITY: 100% NOMINAL`
       }
     };
 
@@ -1053,6 +1465,7 @@
     let theme = 'theme-light';
     let fontFamily = "'Georgia', serif";
     let lineHeight = '1.6';
+    let isMarkdownView = false;
 
     // Tabs Session Data
     let tabs = [];
@@ -1062,6 +1475,21 @@
     let searchMatches = [];
     let currentMatchIdx = -1;
     let isCaseSensitive = false;
+    let searchAllTabs = false;
+
+    // RSVP Speed Reader State
+    let rsvpWords = [];
+    let rsvpCurrentIdx = 0;
+    let rsvpWpm = 300;
+    let rsvpPlaying = false;
+    let rsvpTimer = null;
+
+    // Hands-Free Auto-Scroll State
+    let autoScrollActive = false;
+    let autoScrollSpeed = 2;
+    let autoScrollTimer = null;
+    let autoScrollHoverPause = false;
+    let autoScrollResumeTimeout = null;
 
     // Reading statistics timer
     let timerInterval = null;
@@ -1174,6 +1602,7 @@
       theme = safeGetItem('kread_theme', 'theme-light');
       fontFamily = safeGetItem('kread_fontfamily', "'Georgia', serif");
       lineHeight = safeGetItem('kread_lineheight', '1.6');
+      isMarkdownView = safeGetItem('kread_markdown_view', 'false') === 'true';
       
       const savedTabsJson = safeGetItem('kread_tabs_session', null);
       if (savedTabsJson) {
@@ -1245,6 +1674,10 @@
       textContent.style.fontSize = fontSize + 'px';
       textContent.style.fontFamily = fontFamily;
       textContent.style.lineHeight = lineHeight;
+      if (btnToggleMarkdown) {
+        btnToggleMarkdown.innerHTML = isMarkdownView ? '📖 View: Formatted <kbd>M</kbd>' : '📖 View: Raw <kbd>M</kbd>';
+        btnToggleMarkdown.classList.toggle('active', isMarkdownView);
+      }
     }
 
     selTheme.onchange = (e) => {
@@ -1451,7 +1884,18 @@
       textContent.style.display = 'block';
       statusBar.style.display = 'flex';
 
-      renderTextWithHighlights();
+      if (isMarkdownView) {
+        textContent.classList.add('markdown-view');
+        renderMarkdownContent();
+      } else {
+        textContent.classList.remove('markdown-view');
+        renderTextWithHighlights();
+      }
+
+      if (outlineDrawer && outlineDrawer.classList.contains('open')) {
+        renderOutline();
+      }
+
       updateStats();
       startReadingTimer();
 
@@ -1533,6 +1977,275 @@
         };
       });
     }
+
+    function renderMarkdownContent() {
+      const tab = getActiveTab();
+      if (!tab) return;
+      if (searchMatches.length > 0) return;
+
+      const savedScroll = readerContainer.scrollTop;
+      const text = tab.text || '';
+      
+      textContent.innerHTML = parseMarkdownToHtml(text, tab.notes || []);
+      if (savedScroll > 0) readerContainer.scrollTop = savedScroll;
+
+      // Bind code copy buttons
+      textContent.querySelectorAll('.code-copy-btn').forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const pre = btn.closest('pre');
+          const code = pre ? pre.querySelector('code') : null;
+          if (code) {
+            navigator.clipboard.writeText(code.innerText).then(() => {
+              showToast('Code snippet copied to clipboard!', '📋');
+            }).catch(() => {});
+          }
+        };
+      });
+
+      // Bind highlight clicks in markdown mode
+      textContent.querySelectorAll('mark.user-highlight').forEach(el => {
+        el.onclick = (e) => {
+          e.stopPropagation();
+          const noteId = parseInt(el.getAttribute('data-note-id'));
+          if (noteId) {
+            notesDrawer.classList.add('open');
+            btnToggleNotes.classList.add('active');
+            renderNotes();
+            const card = notesList.querySelector(`[data-card-note-id="${noteId}"]`);
+            if (card) {
+              card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              card.style.outline = '2px solid var(--accent)';
+              setTimeout(() => card.style.outline = '', 1500);
+            }
+          }
+        };
+      });
+    }
+
+    function parseMarkdownToHtml(src, notes) {
+      if (!src) return '';
+      const lines = src.split(/\r\n|\r|\n/);
+      let out = '';
+      let inCodeBlock = false;
+      let codeBuffer = [];
+      let inList = null;
+      let inBlockquote = false;
+      let quoteBuffer = [];
+
+      function flushList() {
+        if (inList) {
+          out += `</${inList}>`;
+          inList = null;
+        }
+      }
+
+      function flushQuote() {
+        if (inBlockquote) {
+          out += `<blockquote>${quoteBuffer.map(q => inlineFormat(q, notes)).join('<br>')}</blockquote>`;
+          inBlockquote = false;
+          quoteBuffer = [];
+        }
+      }
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+
+        if (line.trim().startsWith('```')) {
+          flushList();
+          flushQuote();
+          if (inCodeBlock) {
+            out += `<pre><code>${escapeHtml(codeBuffer.join('\n'))}</code><button class="btn code-copy-btn" title="Copy code">📋</button></pre>`;
+            inCodeBlock = false;
+            codeBuffer = [];
+          } else {
+            inCodeBlock = true;
+            codeBuffer = [];
+          }
+          continue;
+        }
+
+        if (inCodeBlock) {
+          codeBuffer.push(line);
+          continue;
+        }
+
+        // Horizontal rules
+        if (/^(\-{3,}|\*{3,}|_{3,}|={3,})$/.test(line.trim())) {
+          flushList();
+          flushQuote();
+          out += '<hr>';
+          continue;
+        }
+
+        // Blockquotes
+        if (line.trim().startsWith('>')) {
+          flushList();
+          inBlockquote = true;
+          quoteBuffer.push(line.trim().substring(1).trim());
+          continue;
+        } else {
+          flushQuote();
+        }
+
+        // Headers
+        const hMatch = line.match(/^(#{1,4})\s+(.+)$/);
+        if (hMatch) {
+          flushList();
+          const lvl = hMatch[1].length;
+          const hText = inlineFormat(hMatch[2], notes);
+          out += `<h${lvl}>${hText}</h${lvl}>`;
+          continue;
+        }
+
+        // Underlined Headers
+        if (i + 1 < lines.length) {
+          const next = lines[i + 1].trim();
+          if (/^={3,}$/.test(next) && line.trim()) {
+            flushList();
+            out += `<h1>${inlineFormat(line.trim(), notes)}</h1>`;
+            i++;
+            continue;
+          }
+          if (/^-{3,}$/.test(next) && line.trim()) {
+            flushList();
+            out += `<h2>${inlineFormat(line.trim(), notes)}</h2>`;
+            i++;
+            continue;
+          }
+        }
+
+        // Unordered lists
+        const ulMatch = line.match(/^\s*[-*+]\s+(.+)$/);
+        if (ulMatch) {
+          if (inList !== 'ul') {
+            flushList();
+            out += '<ul>';
+            inList = 'ul';
+          }
+          out += `<li>${inlineFormat(ulMatch[1], notes)}</li>`;
+          continue;
+        }
+
+        // Ordered lists
+        const olMatch = line.match(/^\s*\d+\.\s+(.+)$/);
+        if (olMatch) {
+          if (inList !== 'ol') {
+            flushList();
+            out += '<ol>';
+            inList = 'ol';
+          }
+          out += `<li>${inlineFormat(olMatch[1], notes)}</li>`;
+          continue;
+        }
+
+        // Paragraphs or blank lines
+        flushList();
+        if (!line.trim()) {
+          out += '<br>';
+        } else {
+          out += `<p>${inlineFormat(line, notes)}</p>`;
+        }
+      }
+
+      if (inCodeBlock) {
+        out += `<pre><code>${escapeHtml(codeBuffer.join('\n'))}</code><button class="btn code-copy-btn">📋</button></pre>`;
+      }
+      flushList();
+      flushQuote();
+      return out;
+    }
+
+    function inlineFormat(text, notes) {
+      let s = escapeHtml(text);
+      s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      s = s.replace(/__(.+?)__/g, '<strong>$1</strong>');
+      s = s.replace(/\*([^\*]+?)\*/g, '<em>$1</em>');
+      s = s.replace(/_([^_]+?)_/g, '<em>$1</em>');
+      s = s.replace(/`([^`]+?)`/g, '<code>$1</code>');
+
+      if (notes && notes.length > 0) {
+        notes.forEach(n => {
+          if (n.text && n.text.length >= 2) {
+            const esc = escapeHtml(n.text);
+            if (s.includes(esc)) {
+              const colorClass = n.color ? `hl-${n.color}` : 'hl-yellow';
+              const titleText = n.note ? `💬 ${escapeHtml(n.note)}` : 'Highlighted text';
+              s = s.split(esc).join(`<mark class="user-highlight ${colorClass}" data-note-id="${n.id}" title="${titleText}">${esc}</mark>`);
+            }
+          }
+        });
+      }
+      return s;
+    }
+
+    function generateOutline() {
+      const tab = getActiveTab();
+      if (!tab || !tab.text) return [];
+      const lines = tab.text.split(/\r\n|\r|\n/);
+      const items = [];
+      let charOffset = 0;
+      const totalLen = Math.max(1, tab.text.length);
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmed = line.trim();
+        const pct = Math.round((charOffset / totalLen) * 100);
+
+        const m = trimmed.match(/^(#{1,4})\s+(.+)$/);
+        if (m) {
+          items.push({
+            title: m[2].replace(/[*_`#]/g, ''),
+            level: m[1].length,
+            pct: pct,
+            charOffset: charOffset
+          });
+        } else if (i + 1 < lines.length && trimmed.length > 0) {
+          const next = lines[i + 1].trim();
+          if (/^={3,}$/.test(next)) {
+            items.push({ title: trimmed, level: 1, pct: pct, charOffset: charOffset });
+          } else if (/^-{3,}$/.test(next)) {
+            items.push({ title: trimmed, level: 2, pct: pct, charOffset: charOffset });
+          }
+        } else if (/^(CHAPTER|SECTION|PART|APPENDIX|ACT|SCENE)\s+[0-9IVXLCDM]+/i.test(trimmed)) {
+          items.push({ title: trimmed, level: 2, pct: pct, charOffset: charOffset });
+        } else if (/^[A-Z0-9\s:.-]{4,45}$/.test(trimmed) && trimmed.length > 5 && (i === 0 || !lines[i-1].trim()) && (i + 1 < lines.length && !lines[i+1].trim())) {
+          items.push({ title: trimmed, level: 3, pct: pct, charOffset: charOffset });
+        }
+
+        charOffset += line.length + 1;
+      }
+      return items;
+    }
+
+    function renderOutline() {
+      if (!outlineList) return;
+      const outline = generateOutline();
+      if (!outline || outline.length === 0) {
+        outlineList.innerHTML = '<p style="opacity: 0.6; font-size: 13px;">No outline headings detected in this document.</p>';
+        return;
+      }
+
+      outlineList.innerHTML = outline.map(item => `
+        <div class="outline-item outline-lvl-${item.level}" onclick="jumpToOutline(${item.charOffset})" title="Jump to ${escapeHtml(item.title)} (${item.pct}%)">
+          <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">${escapeHtml(item.title)}</span>
+          <span class="outline-badge">${item.pct}%</span>
+        </div>
+      `).join('');
+    }
+
+    window.jumpToOutline = (charOffset) => {
+      const tab = getActiveTab();
+      if (!tab || !tab.text) return;
+      const scrollable = readerContainer.scrollHeight - readerContainer.clientHeight;
+      if (scrollable > 0 && tab.text.length > 0) {
+        const ratio = charOffset / tab.text.length;
+        readerContainer.scrollTop = Math.round(ratio * scrollable);
+      }
+      outlineDrawer.classList.remove('open');
+      btnToggleOutline.classList.remove('active');
+      showToast('Navigated to section', '📍');
+    };
 
     function escapeHtml(str) {
       if (!str) return '';
@@ -1777,15 +2490,49 @@
     if (btnSampleTime) btnSampleTime.onclick = () => loadSampleDoc(SAMPLES.time);
     if (btnSampleKilo) btnSampleKilo.onclick = () => loadSampleDoc(SAMPLES.kilo);
     if (btnSampleAlice) btnSampleAlice.onclick = () => loadSampleDoc(SAMPLES.alice);
+    if (btnSampleChronos) btnSampleChronos.onclick = () => loadSampleDoc(SAMPLES.chronos);
 
     if (qsCyber) qsCyber.onclick = () => loadSampleDoc(SAMPLES.cyber);
     if (qsTime) qsTime.onclick = () => loadSampleDoc(SAMPLES.time);
     if (qsKilo) qsKilo.onclick = () => loadSampleDoc(SAMPLES.kilo);
     if (qsAlice) qsAlice.onclick = () => loadSampleDoc(SAMPLES.alice);
+    if (qsChronos) qsChronos.onclick = () => loadSampleDoc(SAMPLES.chronos);
     if (btnQuickCopy) btnQuickCopy.onclick = copyActiveDocumentText;
     if (btnQuickTheme) btnQuickTheme.onclick = cycleTheme;
 
-    // In-Document Real-Time Search & Highlight Navigation
+    // View Mode Toggle
+    if (btnToggleMarkdown) {
+      btnToggleMarkdown.onclick = () => {
+        isMarkdownView = !isMarkdownView;
+        safeSetItem('kread_markdown_view', isMarkdownView);
+        applyStylesAndTheme();
+        renderContent();
+        showToast(isMarkdownView ? 'Formatted Markdown view enabled [M]' : 'Raw Text view enabled [M]', '📖');
+      };
+    }
+
+    // Outline Drawer Controls
+    if (btnToggleOutline) {
+      btnToggleOutline.onclick = () => {
+        const open = outlineDrawer.classList.toggle('open');
+        btnToggleOutline.classList.toggle('active', open);
+        if (open) {
+          bookmarksDrawer.classList.remove('open');
+          notesDrawer.classList.remove('open');
+          btnToggleBookmarks.classList.remove('active');
+          btnToggleNotes.classList.remove('active');
+          renderOutline();
+        }
+      };
+    }
+    if (btnCloseOutline) {
+      btnCloseOutline.onclick = () => {
+        outlineDrawer.classList.remove('open');
+        btnToggleOutline.classList.remove('active');
+      };
+    }
+
+    // In-Document & Global Search Engine
     btnToggleSearch.onclick = toggleSearchPanel;
     btnCloseSearch.onclick = toggleSearchPanel;
 
@@ -1794,7 +2541,10 @@
       btnToggleSearch.classList.toggle('active', isOpen);
       if (isOpen) {
         searchInput.focus();
-        if (searchInput.value.trim()) executeSearch();
+        if (searchInput.value.trim()) {
+          executeSearch();
+          if (searchAllTabs) executeGlobalTabSearch();
+        }
       } else {
         clearSearchHighlights();
       }
@@ -1804,9 +2554,27 @@
       isCaseSensitive = !isCaseSensitive;
       btnCaseSensitive.classList.toggle('active', isCaseSensitive);
       executeSearch();
+      if (searchAllTabs) executeGlobalTabSearch();
     };
 
-    searchInput.oninput = executeSearch;
+    if (btnSearchAllTabs) {
+      btnSearchAllTabs.onclick = () => {
+        searchAllTabs = !searchAllTabs;
+        btnSearchAllTabs.classList.toggle('active', searchAllTabs);
+        if (searchAllTabs) {
+          executeGlobalTabSearch();
+        } else if (globalSearchResults) {
+          globalSearchResults.style.display = 'none';
+          globalSearchResults.innerHTML = '';
+        }
+      };
+    }
+
+    searchInput.oninput = () => {
+      executeSearch();
+      if (searchAllTabs) executeGlobalTabSearch();
+    };
+
     searchInput.onkeydown = (e) => {
       if (e.key === 'Enter') {
         if (e.shiftKey) navigateSearchMatch(-1);
@@ -1867,11 +2635,73 @@
       }
     }
 
+    function executeGlobalTabSearch() {
+      if (!globalSearchResults) return;
+      const query = searchInput.value.trim();
+      if (!query) {
+        globalSearchResults.style.display = 'none';
+        globalSearchResults.innerHTML = '';
+        return;
+      }
+
+      const flags = isCaseSensitive ? 'g' : 'gi';
+      let regex;
+      try {
+        regex = new RegExp(escapeRegex(query), flags);
+      } catch(e) { return; }
+
+      const results = [];
+      tabs.forEach((t, i) => {
+        if (!t.text) return;
+        const matches = t.text.match(regex);
+        if (matches && matches.length > 0) {
+          results.push({
+            tabId: t.id,
+            tabTitle: t.title || `Document ${i + 1}`,
+            tabIndex: i + 1,
+            count: matches.length
+          });
+        }
+      });
+
+      if (results.length === 0) {
+        globalSearchResults.style.display = 'flex';
+        globalSearchResults.innerHTML = `<span style="opacity:0.7;">No matches found across any of the ${tabs.length} open tab(s).</span>`;
+        return;
+      }
+
+      globalSearchResults.style.display = 'flex';
+      globalSearchResults.innerHTML = `
+        <span style="font-weight:600; margin-right:4px;">Tab Matches:</span>
+        ${results.map(r => `
+          <button class="tab-search-chip ${r.tabId === activeTabId ? 'active' : ''}" onclick="jumpToTabSearchMatch('${r.tabId}')" title="Jump to ${escapeHtml(r.tabTitle)} (${r.count} matches)">
+            <strong>${r.tabIndex}.</strong> ${escapeHtml(r.tabTitle)}: <strong>${r.count}</strong>
+          </button>
+        `).join('')}
+      `;
+    }
+
+    window.jumpToTabSearchMatch = (tabId) => {
+      switchTab(tabId);
+      executeSearch();
+      executeGlobalTabSearch();
+    };
+
     function clearSearchHighlights() {
       searchMatches = [];
       currentMatchIdx = -1;
       const tab = getActiveTab();
-      if (tab && tab.text) renderTextWithHighlights();
+      if (tab && tab.text) {
+        if (isMarkdownView) {
+          renderMarkdownContent();
+        } else {
+          renderTextWithHighlights();
+        }
+      }
+      if (globalSearchResults) {
+        globalSearchResults.style.display = 'none';
+        globalSearchResults.innerHTML = '';
+      }
     }
 
     function navigateSearchMatch(dir) {
@@ -2315,14 +3145,421 @@
       }, 1000);
     }
 
+    // RSVP Speed Reader Handlers
+    if (btnToggleRsvp) btnToggleRsvp.onclick = openRsvpModal;
+    if (btnCloseRsvp) btnCloseRsvp.onclick = () => {
+      stopRsvpTimer();
+      rsvpModal.classList.remove('open');
+    };
+    if (btnRsvpPlay) btnRsvpPlay.onclick = toggleRsvpPlay;
+    if (btnRsvpPrev) btnRsvpPrev.onclick = () => {
+      rsvpCurrentIdx = Math.max(0, rsvpCurrentIdx - 10);
+      updateRsvpDisplay();
+    };
+    if (btnRsvpNext) btnRsvpNext.onclick = () => {
+      rsvpCurrentIdx = Math.min(rsvpWords.length - 1, rsvpCurrentIdx + 10);
+      updateRsvpDisplay();
+    };
+    if (btnRsvpRestart) btnRsvpRestart.onclick = () => {
+      rsvpCurrentIdx = 0;
+      updateRsvpDisplay();
+      if (rsvpPlaying) startRsvpTimer();
+    };
+    if (rsvpWpmSlider) {
+      rsvpWpmSlider.oninput = (e) => {
+        rsvpWpm = parseInt(e.target.value);
+        if (rsvpWpmDisplay) rsvpWpmDisplay.textContent = rsvpWpm;
+      };
+    }
+    if (rsvpScrubber) {
+      rsvpScrubber.oninput = (e) => {
+        const pct = parseInt(e.target.value);
+        rsvpCurrentIdx = Math.max(0, Math.min(Math.floor((pct / 100) * rsvpWords.length), rsvpWords.length - 1));
+        updateRsvpDisplay();
+      };
+    }
+
+    function openRsvpModal() {
+      const tab = getActiveTab();
+      if (!tab || !tab.text) {
+        showToast('Open a document first to use RSVP Speed Reader', '⚠️');
+        return;
+      }
+      const rawWords = tab.text.match(/\S+/g) || [];
+      if (rawWords.length === 0) {
+        showToast('Document contains no readable words', '⚠️');
+        return;
+      }
+
+      rsvpWords = rawWords;
+      const scrollable = readerContainer.scrollHeight - readerContainer.clientHeight;
+      const pct = (scrollable > 0 && tab.text) ? (readerContainer.scrollTop / scrollable) : 0;
+      rsvpCurrentIdx = Math.max(0, Math.min(Math.floor(rsvpWords.length * pct), rsvpWords.length - 1));
+
+      rsvpPlaying = false;
+      if (btnRsvpPlay) {
+        btnRsvpPlay.textContent = '▶ Play';
+        btnRsvpPlay.classList.add('active');
+      }
+      updateRsvpDisplay();
+      rsvpModal.classList.add('open');
+    }
+
+    function updateRsvpDisplay() {
+      if (!rsvpWords || rsvpWords.length === 0) return;
+      if (rsvpCurrentIdx < 0 || rsvpCurrentIdx >= rsvpWords.length) {
+        rsvpPre.textContent = '';
+        rsvpOrp.textContent = 'Finished';
+        rsvpPost.textContent = '';
+        if (rsvpWordCounter) rsvpWordCounter.textContent = `Word ${rsvpWords.length} / ${rsvpWords.length}`;
+        if (rsvpScrubber) rsvpScrubber.value = 100;
+        stopRsvpTimer();
+        return;
+      }
+
+      const word = rsvpWords[rsvpCurrentIdx];
+      const len = word.length;
+      let orpIdx = 0;
+      if (len <= 1) orpIdx = 0;
+      else if (len <= 5) orpIdx = 1;
+      else if (len <= 9) orpIdx = 2;
+      else if (len <= 13) orpIdx = 3;
+      else orpIdx = 4;
+
+      rsvpPre.textContent = word.substring(0, orpIdx);
+      rsvpOrp.textContent = word.charAt(orpIdx);
+      rsvpPost.textContent = word.substring(orpIdx + 1);
+
+      if (rsvpWordCounter) rsvpWordCounter.textContent = `Word ${rsvpCurrentIdx + 1} / ${rsvpWords.length}`;
+      const pct = Math.round(((rsvpCurrentIdx + 1) / rsvpWords.length) * 100);
+      if (rsvpScrubber) rsvpScrubber.value = pct;
+    }
+
+    function toggleRsvpPlay() {
+      if (rsvpPlaying) {
+        stopRsvpTimer();
+      } else {
+        startRsvpTimer();
+      }
+    }
+
+    function startRsvpTimer() {
+      rsvpPlaying = true;
+      if (btnRsvpPlay) {
+        btnRsvpPlay.textContent = '⏸ Pause';
+        btnRsvpPlay.classList.remove('active');
+      }
+      runRsvpStep();
+    }
+
+    function stopRsvpTimer() {
+      rsvpPlaying = false;
+      if (btnRsvpPlay) {
+        btnRsvpPlay.textContent = '▶ Play';
+        btnRsvpPlay.classList.add('active');
+      }
+      if (rsvpTimer) {
+        clearTimeout(rsvpTimer);
+        rsvpTimer = null;
+      }
+    }
+
+    function runRsvpStep() {
+      if (!rsvpPlaying) return;
+      if (rsvpCurrentIdx >= rsvpWords.length - 1) {
+        stopRsvpTimer();
+        showToast('Reached end of document in RSVP Speed Reader', '✨');
+        return;
+      }
+
+      rsvpCurrentIdx++;
+      updateRsvpDisplay();
+
+      const word = rsvpWords[rsvpCurrentIdx] || '';
+      let delay = (60 / rsvpWpm) * 1000;
+      if (/[.?!]$/.test(word)) delay *= 1.6;
+      else if (/[,;:]$/.test(word)) delay *= 1.3;
+
+      rsvpTimer = setTimeout(runRsvpStep, delay);
+    }
+
+    // Hands-Free Auto-Scroll Handlers
+    if (btnToggleAutoScroll) btnToggleAutoScroll.onclick = toggleAutoScroll;
+    if (btnAutoScrollStop) btnAutoScrollStop.onclick = toggleAutoScroll;
+    if (btnAutoScrollFaster) {
+      btnAutoScrollFaster.onclick = () => {
+        autoScrollSpeed = Math.min(10, autoScrollSpeed + 1);
+        if (autoScrollSpeedVal) autoScrollSpeedVal.textContent = autoScrollSpeed;
+        showToast(`Auto-scroll speed: ${autoScrollSpeed} px/tick`, '⏩');
+      };
+    }
+    if (btnAutoScrollSlower) {
+      btnAutoScrollSlower.onclick = () => {
+        autoScrollSpeed = Math.max(1, autoScrollSpeed - 1);
+        if (autoScrollSpeedVal) autoScrollSpeedVal.textContent = autoScrollSpeed;
+        showToast(`Auto-scroll speed: ${autoScrollSpeed} px/tick`, '⏪');
+      };
+    }
+
+    function toggleAutoScroll() {
+      const tab = getActiveTab();
+      if (!tab || !tab.text) {
+        showToast('Document is empty, cannot auto-scroll', '⚠️');
+        return;
+      }
+      autoScrollActive = !autoScrollActive;
+      btnToggleAutoScroll.classList.toggle('active', autoScrollActive);
+      if (autoScrollActive) {
+        autoScrollPill.classList.add('active');
+        if (autoScrollSpeedVal) autoScrollSpeedVal.textContent = autoScrollSpeed;
+        startAutoScrollLoop();
+        showToast(`Auto-Scroll enabled (${autoScrollSpeed} px/tick) [A]`, '📜');
+      } else {
+        stopAutoScrollLoop();
+        autoScrollPill.classList.remove('active');
+        showToast('Auto-Scroll stopped', '⏹️');
+      }
+    }
+
+    function startAutoScrollLoop() {
+      if (autoScrollTimer) clearInterval(autoScrollTimer);
+      autoScrollTimer = setInterval(() => {
+        if (!autoScrollActive) return;
+        if (autoScrollHoverPause) return;
+        
+        const scrollable = readerContainer.scrollHeight - readerContainer.clientHeight;
+        if (readerContainer.scrollTop >= scrollable - 1) {
+          toggleAutoScroll();
+          showToast('Reached end of document', '📖');
+          return;
+        }
+        readerContainer.scrollTop += autoScrollSpeed;
+      }, 40);
+    }
+
+    function stopAutoScrollLoop() {
+      if (autoScrollTimer) {
+        clearInterval(autoScrollTimer);
+        autoScrollTimer = null;
+      }
+    }
+
+    readerContainer.addEventListener('wheel', () => {
+      if (autoScrollActive) {
+        autoScrollHoverPause = true;
+        if (autoScrollResumeTimeout) clearTimeout(autoScrollResumeTimeout);
+        autoScrollResumeTimeout = setTimeout(() => {
+          autoScrollHoverPause = false;
+        }, 1200);
+      }
+    }, { passive: true });
+
+    // Annotation Import & Clear Handlers
+    if (importNotesInp) {
+      importNotesInp.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const parsed = JSON.parse(ev.target.result);
+            const tab = getActiveTab();
+            if (!tab) return;
+
+            let importedCount = 0;
+            let importedBmCount = 0;
+            const notesListToImport = Array.isArray(parsed) ? parsed : (parsed.notes || []);
+            const bmListToImport = parsed.bookmarks || [];
+
+            if (!tab.notes) tab.notes = [];
+            if (!tab.bookmarks) tab.bookmarks = [];
+
+            notesListToImport.forEach(n => {
+              if (n && n.text) {
+                if (!tab.notes.some(existing => existing.text === n.text)) {
+                  tab.notes.unshift({
+                    id: Date.now() + Math.floor(Math.random() * 1000),
+                    text: n.text,
+                    note: n.note || '',
+                    color: n.color || 'yellow',
+                    date: n.date || new Date().toLocaleDateString()
+                  });
+                  importedCount++;
+                }
+              }
+            });
+
+            bmListToImport.forEach(bm => {
+              if (bm && bm.snippet) {
+                if (!tab.bookmarks.some(existing => existing.snippet === bm.snippet)) {
+                  tab.bookmarks.unshift({
+                    id: Date.now() + Math.floor(Math.random() * 1000),
+                    scroll: bm.scroll || 0,
+                    pct: bm.pct || 0,
+                    snippet: bm.snippet,
+                    date: bm.date || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  });
+                  importedBmCount++;
+                }
+              }
+            });
+
+            saveTabsSession();
+            renderContent();
+            renderNotes();
+            renderBookmarks();
+            showToast(`Imported ${importedCount} note(s) & ${importedBmCount} bookmark(s)!`, '📥');
+          } catch(err) {
+            console.error(err);
+            showToast('Failed to parse notes JSON file', '⚠️');
+          }
+        };
+        reader.readAsText(file);
+        importNotesInp.value = '';
+      };
+    }
+
+    if (btnClearNotes) {
+      btnClearNotes.onclick = () => {
+        const tab = getActiveTab();
+        if (!tab || !tab.notes || tab.notes.length === 0) {
+          showToast('No notes to clear in this tab', 'ℹ️');
+          return;
+        }
+        openConfirmModal(
+          'Clear Annotations',
+          `Are you sure you want to remove all ${tab.notes.length} note(s) and highlight(s) from "${tab.title}"?`,
+          () => {
+            tab.notes = [];
+            saveTabsSession();
+            renderContent();
+            renderNotes();
+            showToast('Annotations cleared', '🗑️');
+          }
+        );
+      };
+    }
+
+    // Session Backup & Restore Handlers
+    if (btnSession) btnSession.onclick = () => sessionModal.classList.add('open');
+    if (btnCloseSession) btnCloseSession.onclick = () => sessionModal.classList.remove('open');
+
+    if (btnExportSession) {
+      btnExportSession.onclick = () => {
+        saveActiveTabState();
+        const sessionData = {
+          app: 'KRead',
+          version: '1.2.0',
+          exportedAt: new Date().toISOString(),
+          activeTabId: activeTabId,
+          preferences: {
+            fontSize,
+            theme,
+            fontFamily,
+            lineHeight,
+            isMarkdownView
+          },
+          tabs: tabs
+        };
+        const fname = `kread_session_${new Date().toISOString().slice(0, 10)}.json`;
+        downloadFile(fname, JSON.stringify(sessionData, null, 2), 'application/json');
+        showToast('Full workspace session exported!', '💾');
+        sessionModal.classList.remove('open');
+      };
+    }
+
+    if (importSessionInp) {
+      importSessionInp.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const session = JSON.parse(ev.target.result);
+            if (!session.tabs || !Array.isArray(session.tabs)) {
+              throw new Error('Invalid session file schema');
+            }
+            tabs = session.tabs;
+            activeTabId = session.activeTabId || (tabs[0] ? tabs[0].id : null);
+            if (session.preferences) {
+              fontSize = session.preferences.fontSize || fontSize;
+              theme = session.preferences.theme || theme;
+              fontFamily = session.preferences.fontFamily || fontFamily;
+              lineHeight = session.preferences.lineHeight || lineHeight;
+              isMarkdownView = !!session.preferences.isMarkdownView;
+            }
+            saveTabsSession();
+            applyStylesAndTheme();
+            renderTabs();
+            renderContent();
+            sessionModal.classList.remove('open');
+            showToast(`Restored session with ${tabs.length} document tab(s)!`, '📂');
+          } catch(err) {
+            console.error(err);
+            showToast('Invalid session backup file', '⚠️');
+          }
+        };
+        reader.readAsText(file);
+        importSessionInp.value = '';
+      };
+    }
+
+    if (btnExportActiveDocHtml) {
+      btnExportActiveDocHtml.onclick = () => {
+        const tab = getActiveTab();
+        if (!tab || !tab.text) {
+          showToast('Document is empty, nothing to export', '⚠️');
+          return;
+        }
+        const title = escapeHtml(tab.title);
+        const htmlDoc = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>${title} - KRead Export</title>
+<style>
+  body {
+    background: #fcfcfc;
+    color: #24292e;
+    font-family: ${fontFamily};
+    line-height: ${lineHeight};
+    font-size: ${fontSize}px;
+    max-width: 820px;
+    margin: 40px auto;
+    padding: 0 20px;
+  }
+  h1, h2, h3 { font-family: system-ui, sans-serif; }
+  pre { background: #f3f4f6; border: 1px solid #e5e7eb; padding: 12px; border-radius: 6px; }
+  blockquote { border-left: 4px solid #2563eb; padding-left: 14px; margin-left: 0; color: #555; }
+  mark { background: #fef08a; padding: 1px 3px; border-radius: 3px; }
+  .meta-header { border-bottom: 2px solid #e5e7eb; margin-bottom: 24px; padding-bottom: 12px; font-family: system-ui, sans-serif; font-size: 13px; color: #666; }
+</style>
+</head>
+<body>
+  <div class="meta-header">
+    <strong>KRead Document Export:</strong> ${title} | Exported: ${new Date().toLocaleString()}
+  </div>
+  <div class="content">
+    ${isMarkdownView ? parseMarkdownToHtml(tab.text, tab.notes) : escapeHtml(tab.text).replace(/\\n/g, '<br>')}
+  </div>
+</body>
+</html>`;
+        const fname = `${tab.title.replace(/[^a-zA-Z0-9_-]/g, '_')}.html`;
+        downloadFile(fname, htmlDoc, 'text/html');
+        showToast('Exported standalone HTML file!', '🌐');
+        sessionModal.classList.remove('open');
+      };
+    }
+
     // Modal Overlay Backdrop Dismissal
-    [helpModal, statsModal, renameModal, noteModal, confirmModal].forEach(modal => {
+    [helpModal, statsModal, renameModal, noteModal, confirmModal, rsvpModal, sessionModal].forEach(modal => {
       if (modal) {
         modal.addEventListener('click', (e) => {
           if (e.target === modal) {
             modal.classList.remove('open');
             if (modal === noteModal) pendingNoteData = null;
             if (modal === confirmModal) pendingConfirmCallback = null;
+            if (modal === rsvpModal) stopRsvpTimer();
           }
         });
       }
@@ -2343,20 +3580,54 @@
                           statsModal.classList.contains('open') || 
                           renameModal.classList.contains('open') || 
                           noteModal.classList.contains('open') || 
-                          confirmModal.classList.contains('open');
+                          confirmModal.classList.contains('open') ||
+                          (rsvpModal && rsvpModal.classList.contains('open')) ||
+                          (sessionModal && sessionModal.classList.contains('open'));
+
+      // Dedicated RSVP Modal Keyboard Controls
+      if (rsvpModal && rsvpModal.classList.contains('open')) {
+        if (e.key === ' ') {
+          e.preventDefault();
+          toggleRsvpPlay();
+          return;
+        } else if (e.key === '[' || e.key === 'ArrowLeft') {
+          e.preventDefault();
+          rsvpCurrentIdx = Math.max(0, rsvpCurrentIdx - 10);
+          updateRsvpDisplay();
+          return;
+        } else if (e.key === ']' || e.key === 'ArrowRight') {
+          e.preventDefault();
+          rsvpCurrentIdx = Math.min(rsvpWords.length - 1, rsvpCurrentIdx + 10);
+          updateRsvpDisplay();
+          return;
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          stopRsvpTimer();
+          rsvpModal.classList.remove('open');
+          return;
+        }
+      }
 
       if (e.key === 'Escape') {
         if (searchPanel.classList.contains('open')) toggleSearchPanel();
         bookmarksDrawer.classList.remove('open');
         notesDrawer.classList.remove('open');
+        if (outlineDrawer) outlineDrawer.classList.remove('open');
         statsModal.classList.remove('open');
         if (helpModal) helpModal.classList.remove('open');
         renameModal.classList.remove('open');
         noteModal.classList.remove('open');
         confirmModal.classList.remove('open');
+        if (rsvpModal) {
+          stopRsvpTimer();
+          rsvpModal.classList.remove('open');
+        }
+        if (sessionModal) sessionModal.classList.remove('open');
+        if (autoScrollActive) toggleAutoScroll();
         selectionPopover.style.display = 'none';
         btnToggleBookmarks.classList.remove('active');
         btnToggleNotes.classList.remove('active');
+        if (btnToggleOutline) btnToggleOutline.classList.remove('active');
         pendingNoteData = null;
         pendingConfirmCallback = null;
         return;
@@ -2376,6 +3647,13 @@
         e.preventDefault();
         const tab = getActiveTab();
         if (tab) openRenameModal(tab.id, tab.title);
+        return;
+      }
+
+      // Alt+S: RSVP Speed Reader
+      if (e.altKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        openRsvpModal();
         return;
       }
 
@@ -2438,12 +3716,20 @@
       } else if ((e.key === '+' || e.key === '=')) {
         if (!ctrl && !e.altKey) {
           e.preventDefault();
-          btnFontUp.click();
+          if (autoScrollActive) {
+            btnAutoScrollFaster.click();
+          } else {
+            btnFontUp.click();
+          }
         }
       } else if (e.key === '-') {
         if (!ctrl && !e.altKey) {
           e.preventDefault();
-          btnFontDown.click();
+          if (autoScrollActive) {
+            btnAutoScrollSlower.click();
+          } else {
+            btnFontDown.click();
+          }
         }
       } else if (e.key === '0' && !ctrl && !e.altKey) {
         e.preventDefault();
@@ -2460,6 +3746,15 @@
       } else if ((e.key === 'n' || e.key === 'N') && !ctrl && !e.altKey) {
         e.preventDefault();
         btnToggleNotes.click();
+      } else if ((e.key === 'o' || e.key === 'O') && !ctrl && !e.altKey) {
+        e.preventDefault();
+        if (btnToggleOutline) btnToggleOutline.click();
+      } else if ((e.key === 'a' || e.key === 'A') && !ctrl && !e.altKey) {
+        e.preventDefault();
+        toggleAutoScroll();
+      } else if ((e.key === 'm' || e.key === 'M') && !ctrl && !e.altKey) {
+        e.preventDefault();
+        if (btnToggleMarkdown) btnToggleMarkdown.click();
       } else if (e.key === '[' && !ctrl && !e.altKey) {
         e.preventDefault();
         if (tabs.length > 1) {
