@@ -2,12 +2,12 @@
 current_agent: kilo-expander
 next_agent: kilo-creator
 agent_rotation:
+  - kilo-expander
+  - kilo-creator
   - kilo-tester
   - kilo-usability
   - kilo-graphics
   - kilo-qa
-  - kilo-expander
-  - kilo-creator
 model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
@@ -18,7 +18,7 @@ current_targets:
   kilo_qa: KSubmarine
   kilo_expander: KContacts
   kilo_creator: "kweb://webring (Central Hub & Random Teleporter)"
-virtual_web_target: "kweb://geocities"
+virtual_web_target: "kweb://users/~neon_rider"
 virtual_web_rotation:
   - "kweb://darknet"
   - "kweb://portal"
@@ -35,7 +35,7 @@ last_run:
   agent: kilo-qa
   app: KStarDredge
   timestamp: "2026-09-26T05:55:00Z"
-last_planner_run: "2026-09-25T06:42:00Z"
+last_planner_run: "2026-09-26T07:48:00Z"
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -121,17 +121,17 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KSubmarine`
 - **Upcoming Queue**:
-  `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KMystery`, `KQuest`, `KSanctuary`, `KStarDredge` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
+  `KHash`, `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KMystery`, `KQuest`, `KSanctuary` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KCalendar`
+- **Current Target**: `KContacts`
 - **Upcoming Queue**:
-  `KContacts`, `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote` *(Completed: KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal)*.
+  `KMail`, `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote` *(Completed: KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://geocities` (`KiloOS/public/web/geocities.html`)
-  - *Next in Rotation*: `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez`.
+- **Current Active Target**: `kweb://users/~neon_rider` (`KiloOS/public/web/users/neon_rider.html`)
+  - *Next in Rotation*: `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities`.
 - **Anti-Potemkin Directive & Content Mandates**:
   0. `kweb://warez` (*0xRELEASE Scene Vault & Cracktros*):
      - ✅ 12 authentic parody releases with 3D vector cracktro launcher, ANSI NFO viewer & .diz/.nfo downloads.
@@ -256,10 +256,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - 3D Workbench: Vector engine supporting 7 polyhedra (cube, octahedron, star, torus, icosahedron, helix, wavegrid) and scroller.
   - NFO Studio & Charts: CP437 ANSI generator, x86 assembly export (.asm), 1999 scene voting booth, and persistent shoutbox.
   - Linking & Verification: Registered in KNet, portal.html, and webring.html (node #013); Vite clean (360ms); security lint PASS; size 108.7 KB (<999KB).
-
-
-
-
-
-
-
