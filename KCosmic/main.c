@@ -1421,7 +1421,7 @@ static void SimTick(void) {
             sim.oxygen += (sim.bioseedStations * 0.0008f * rate * catalystBoost);
         }
         if (sim.temp > 0.0f && sim.water < 65.0f) {
-            sim.water += (0.001f * rate * hydroBoost);
+            sim.water += ((0.001f + ((float)sim.hydroTowers * 0.003f)) * rate * hydroBoost);
         }
     }
 
@@ -2491,8 +2491,8 @@ static void DrawExoplanetGDI(HDC hdc, CelestialBody* b, int px, int py, int pr, 
     Ellipse(hdc, px - atmoR1, py - atmoR1, px + atmoR1, py + atmoR1);
     DeleteObject(hPen1);
 
-    // Sunward Mie Scattering Limb Arc
-    HPEN hLimbPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+    // Sunward Mie Scattering Atmospheric Limb Arc
+    HPEN hLimbPen = CreatePen(PS_SOLID, 2, cHaloInner);
     SelectObject(hdc, hLimbPen);
     int limbSX = px + (int)(cosf(sunAngle - 1.2f) * (pr + 2));
     int limbSY = py + (int)(sinf(sunAngle - 1.2f) * (pr + 2));
@@ -3294,10 +3294,10 @@ static void HandleIntervention(int bid) {
             if (sim.volatiles >= 300 && sim.energy >= 150) {
                 sim.volatiles -= 300;
                 sim.energy -= 150;
-                sim.water += 2.5f;
+                sim.water += 5.0f;
                 sim.pressure += 0.02f;
                 CalculateHabitability();
-                SetLogMsg("Ice comet deflected to polar basin (+2.5% Water, +0.02 atm).", 0);
+                SetLogMsg("Ice comet deflected to polar basin (+5.0% Water, +0.02 atm).", 0);
                 PlaySoundFx(SFX_SUCCESS);
             } else {
                 SetLogMsg("Insufficient resources (Req: 300 t Volatiles, 150 kW Energy).", 1);
@@ -4269,7 +4269,7 @@ static void RenderCodexModal(HDC hdc, int width, int height) {
         SelectObject(hdc, hMainFont);
         SetTextColor(hdc, COLOR_TEXT_PRI);
         TextOutA(hdc, px, py, "Freezing: T < -5 C (Permafrost) | Boiling: T > 75 C (Steam) | Target: 50% to 70% Water.", 88); py += 16;
-        TextOutA(hdc, px, py, "Hydro-Towers condense atmospheric humidity (+2.0% water/cyc). Ice comets add +8.0% water.", 89); py += 22;
+        TextOutA(hdc, px, py, "Hydro-Towers condense atmospheric moisture (+0.3% water/cyc). Ice comets add +5.0% water.", 89); py += 22;
 
         SelectObject(hdc, hBoldFont);
         SetTextColor(hdc, COLOR_PURPLE);
@@ -5231,7 +5231,7 @@ static void RenderUI(HDC hdc, int width, int height) {
         AddButton(BID_TOG_GHG_MODE, sbX + 12, gridY + btnStep * 3, btnW, btnH,
                   (sim.greenhouseMode == 0) ? "GHG: [WARMING +]" : "GHG: [COOLING -]", "Toggle Gas Formulation", 1);
         AddButton(BID_ACT_COMET_DROP, sbX + 18 + btnW, gridY + btnStep * 3, btnW, btnH,
-                  "Redirect Ice Comet", "+2.5% Water (300V)", 1);
+                  "Redirect Ice Comet", "+5.0% Water (300V)", 1);
 
         // Row 4: Lichen Bioseeding & Algae Seeding
         AddButton(BID_ACT_BIOSEED, sbX + 12, gridY + btnStep * 4, btnW, btnH,
@@ -6055,8 +6055,8 @@ static void RenderUI(HDC hdc, int width, int height) {
         SelectObject(hdc, hFontBold);
         TextOutA(hdc, sbX + 12, intelY, "CELESTIAL SECTOR INTEL", 22);
 
-        FillSolidRect(hdc, sbX + 12, intelY + 16, sidebarW - 24, 110, COLOR_BG_CARD);
-        FrameSolidRect(hdc, sbX + 12, intelY + 16, sidebarW - 24, 110, COLOR_BORDER);
+        FillSolidRect(hdc, sbX + 12, intelY + 16, sidebarW - 24, 126, COLOR_BG_CARD);
+        FrameSolidRect(hdc, sbX + 12, intelY + 16, sidebarW - 24, 126, COLOR_BORDER);
 
         SelectObject(hdc, hFontSmall);
         SetTextColor(hdc, COLOR_TEXT_PRI);
@@ -6066,6 +6066,8 @@ static void RenderUI(HDC hdc, int width, int height) {
         TextOutA(hdc, sbX + 20, intelY + 78, "Zephyr Station: Fleet Automated Drydocks", 40);
         SetTextColor(hdc, COLOR_AMBER);
         TextOutA(hdc, sbX + 20, intelY + 96, "Precursor Resonance: Signal 420 MHz detected!", 46);
+        SetTextColor(hdc, COLOR_EMERALD);
+        TextOutA(hdc, sbX + 20, intelY + 114, "Deep Subcarrier: 10.19.99.4 packet echo detected", 48);
     }
 
     // 5. Draw All Buttons

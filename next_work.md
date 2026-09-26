@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KBase
   kilo_usability: KMystery
-  kilo_graphics: KCosmic
+  kilo_graphics: KStellar
   kilo_qa: KHash
   kilo_expander: KRead
   kilo_creator: "kweb://users/~neon_rider (Win32 ASM & Opcode Sandbox)"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-usability
-  app: KMedia
-  timestamp: "2026-09-26T18:42:00Z"
+  agent: kilo-graphics
+  app: KCosmic
+  timestamp: "2026-09-26T19:54:00Z"
 last_planner_run: "2026-09-26T07:48:00Z"
 ---
 
@@ -104,9 +104,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://geocities, kweb://darknet, kweb://portal, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KCosmic`
+- **Current Target**: `KStellar`
 - **Upcoming Queue**:
-  `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`.
+  `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KBase`
@@ -220,6 +220,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-26T19:54:00Z — kilo-graphics: KCosmic (Game Content, Glint Purge & Hydrosphere Balance Pass)**
+  - Status: PASS ✅ (Specular glints purged; Hydro-Tower moisture condensation & comet balance; 0 regressions).
+  - Glint & Comet Purge: Removed artificial sunward specular glint gradient on ocean worlds and softened Gaia Mie limb.
+  - Native C Visual Polish: Replaced harsh white GDI limb pen with planetary atmospheric corona color (`cHaloInner`).
+  - Hydrosphere Balance: Wired Hydro-Towers to condense moisture (+0.3%/cyc) when T > 0°C; boosted Ice Comet yield to +5.0%.
+  - ARG Telemetry: Integrated diegetic 10.19.99.4 packet echo telemetry subcarrier into Sector Celestial Intel across web and C.
+  - Verification: MSVC clean compile (`KCosmic.exe` 259.0 KB); clean Vite build in 390ms (`kcosmic.html` 548.7 KB < 999 KB); icon & security lints 100% PASS.
+
 - **2026-09-26T18:42:00Z — kilo-usability: KMedia (Usability & Layout Polish, Multi-Style Visualizer & Audio DSP)**
   - Status: PASS ✅ (0 regressions, clean build, <999KB size).
   - Navigation & Ergonomics: Added 3-tab sidebar (Playlist, Audio DSP, Video FX) for full-height track list and zero nested scrolling.
@@ -254,11 +262,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Outbox & Queue: Added folder 5 (Outbox) with background flush & instant dispatch; updated folder shortcuts 1-6.
   - Hardcopy & Audio: Added email print styling/preview (P) and procedural Yamaha YM2612 FM audio notifications.
   - Verification: MSVC compile clean (`KMail.exe` 504 KB); clean Vite build in 411ms (`kmail.html` 106 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-26T14:48:00Z — kilo-qa: KSubmarine (Pass 5: Tutorial & State Integrity Audit)**
-  - Status: PASS ✅ (F5 quicksave/F9 quickload persistence, Captain's Dive Briefing modal, non-occluding toasts; 0 regressions).
-  - State Persistence: Implemented comprehensive dive state persistence across HTML localStorage and native Win32 `ksubmarine_save.dat` binary file.
-  - Tutorial Integrity: Added First-Run Captain's Dive Briefing modal firing on fresh sessions, dismissed via Enter/Esc/Space or close button.
-  - Controls & UI: Added Save (F5), Load (F9), and Briefing buttons in header and Win32 console; universal Esc modal dismissal.
-  - Toast Notifications: Added non-occluding top-right notification system with auto-fading and click-to-dismiss.
-  - Verification: MSVC compile clean (`KSubmarine.exe` 248.5 KB); Vite clean in 407ms (`ksubmarine.html` 432.2 KB); check_icons & security lint 100% PASS.

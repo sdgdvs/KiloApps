@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-26T14:48:00Z — kilo-qa: KSubmarine (Pass 5: Tutorial & State Integrity Audit)**
+  - Status: PASS ✅ (F5 quicksave/F9 quickload persistence, Captain's Dive Briefing modal, non-occluding toasts; 0 regressions).
+  - State Persistence: Implemented comprehensive dive state persistence across HTML localStorage and native Win32 `ksubmarine_save.dat` binary file.
+  - Tutorial Integrity: Added First-Run Captain's Dive Briefing modal firing on fresh sessions, dismissed via Enter/Esc/Space or close button.
+  - Controls & UI: Added Save (F5), Load (F9), and Briefing buttons in header and Win32 console; universal Esc modal dismissal.
+  - Toast Notifications: Added non-occluding top-right notification system with auto-fading and click-to-dismiss.
+  - Verification: MSVC compile clean (`KSubmarine.exe` 248.5 KB); Vite clean in 407ms (`ksubmarine.html` 432.2 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-26T12:45:00Z — kilo-usability: KMandel (UI/UX Usability, HiDPI Scaling & Ergonomics Pass)**
   - Status: PASS ✅ (HiDPI scaling fixed, collapsible controls [C], F5/F9 quicksave/load, touch pinch; 0 regressions).
   - HiDPI Canvas & Effects: Scaled canvas context by DPR, fixing off-center particle explosions, shockwaves, motes, and filigree.

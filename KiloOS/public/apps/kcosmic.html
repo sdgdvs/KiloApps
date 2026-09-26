@@ -2321,7 +2321,7 @@
 
                     <button class="action-btn" id="btnCometDrop" title="Tug icy comets from the outer belt to collide softly into polar basins">
                         <span class="btn-title">Redirect Ice Comet</span>
-                        <span class="btn-desc">+2.5% Water, +0.02 atm<br>Cost: 300 Vol, 150 kW</span>
+                        <span class="btn-desc">+5.0% Water, +0.02 atm<br>Cost: 300 Vol, 150 kW</span>
                     </button>
 
                     <button class="action-btn" id="btnBioseeding" title="Spread genetically engineered cyanobacteria and lichen across barren crags">
@@ -3329,6 +3329,7 @@
                     <div class="metric-row"><strong>Boreas Minor</strong><span style="color: var(--accent-purple);">Nitrogen / Water Ice Glaciers</span></div>
                     <div class="metric-row"><strong>Zephyr Orbital Yard</strong><span>Automated Fleet Maintenance Dock</span></div>
                     <div class="metric-row"><strong>Precursor Sub-surface Resonance</strong><span style="color: var(--accent-amber);">Signal Detected at 420 MHz</span></div>
+                    <div class="metric-row"><strong>Deep Subcarrier Echo</strong><span style="color: var(--accent-emerald);">Packet echo 10.19.99.4 [Aethelgard Relays]</span></div>
                 </div>
             </div>
         </div>
@@ -5925,7 +5926,7 @@
                             p.oxygen = +(p.oxygen + (pBio * 0.0008 * rate * catalystBoost)).toFixed(3);
                         }
                         if (p.temp > 0 && p.water < 65) {
-                            p.water = +(p.water + 0.001 * rate * hydroThermalBoost).toFixed(2);
+                            p.water = +(p.water + (0.001 + (sim.hydroTowers * 0.003)) * rate * hydroThermalBoost).toFixed(2);
                         }
                     }
 
@@ -5986,7 +5987,7 @@
                     sim.oxygen = +(sim.oxygen + (sim.bioseedStations * 0.0008 * rate * catalystBoost)).toFixed(3);
                 }
                 if (sim.temp > 0 && sim.water < 65) {
-                    sim.water = +(sim.water + 0.001 * rate * hydroThermalBoost).toFixed(2);
+                    sim.water = +(sim.water + (0.001 + (sim.hydroTowers * 0.003)) * rate * hydroThermalBoost).toFixed(2);
                 }
             }
 
@@ -6661,23 +6662,6 @@
             ctx.arc(px, py, pr + atmoThick, 0, Math.PI * 2);
             ctx.fill();
 
-            // Sunward Limb Specular Glint
-            const sunGlint = ctx.createRadialGradient(
-                px + Math.cos(sunAngle) * pr * 0.65,
-                py + Math.sin(sunAngle) * pr * 0.65,
-                1,
-                px + Math.cos(sunAngle) * pr * 0.65,
-                py + Math.sin(sunAngle) * pr * 0.65,
-                pr * 0.45
-            );
-            sunGlint.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-            sunGlint.addColorStop(0.4, 'rgba(56, 189, 248, 0.35)');
-            sunGlint.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            ctx.fillStyle = sunGlint;
-            ctx.beginPath();
-            ctx.arc(px, py, pr, 0, Math.PI * 2);
-            ctx.fill();
-
             ctx.save();
             ctx.beginPath();
             ctx.arc(px, py, pr, 0, Math.PI * 2);
@@ -6785,8 +6769,8 @@
                 py + Math.sin(sunAngle) * pr * 0.9,
                 pr * 0.55
             );
-            sunwardArcGrad.addColorStop(0, 'rgba(255, 255, 255, 0.65)');
-            sunwardArcGrad.addColorStop(0.5, 'rgba(0, 240, 255, 0.35)');
+            sunwardArcGrad.addColorStop(0, 'rgba(0, 240, 220, 0.35)');
+            sunwardArcGrad.addColorStop(0.5, 'rgba(16, 185, 129, 0.15)');
             sunwardArcGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
             ctx.fillStyle = sunwardArcGrad;
             ctx.beginPath();
@@ -8765,13 +8749,13 @@
             if (sim.volatiles >= 300 && sim.energy >= 150) {
                 sim.volatiles -= 300;
                 sim.energy -= 150;
-                sim.water = +(sim.water + 2.5).toFixed(1);
+                sim.water = +(sim.water + 5.0).toFixed(1);
                 sim.pressure = +(sim.pressure + 0.02).toFixed(2);
                 syncActivePlanetModules();
                 calculateHabitability();
                 updateUI();
                 renderPlanetRoster();
-                logMsg('Ice comet deflected into polar basin. Hydrosphere coverage expanded (+2.5% Water).');
+                logMsg('Ice comet deflected into polar basin. Hydrosphere coverage expanded (+5.0% Water).');
                 playSound('success');
             } else {
                 logMsg('Insufficient resources (Req: 300 t Volatiles, 150 kW Energy).', true);
