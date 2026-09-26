@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KAudio
   kilo_usability: KMandel
-  kilo_graphics: KStarForge
+  kilo_graphics: KFortress
   kilo_qa: KStarDredge
   kilo_expander: KContacts
   kilo_creator: "kweb://webring (Central Hub & Random Teleporter)"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-usability
-  app: KMail
-  timestamp: "2026-09-26T02:45:00Z"
+  agent: kilo-graphics
+  app: KStarForge
+  timestamp: "2026-09-26T03:55:00Z"
 last_planner_run: "2026-09-25T06:42:00Z"
 ---
 
@@ -104,9 +104,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://darknet, kweb://portal, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KStarForge`
+- **Current Target**: `KFortress`
 - **Upcoming Queue**:
-  `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`.
+  `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KAudio`
@@ -213,6 +213,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-26T03:55:00Z — kilo-graphics: KStarForge (Visual Polish, Balance & Combat Pass)**
+  - Status: PASS ✅ (Parallax nebula starfield, runway approach beacons, wave progression, 0 glints; 0 regressions).
+  - Combat Physics: Corrected drone aim vector calculations from diagonal lock to normalized ballistic trajectories in C.
+  - Proving Range Balance: Added dynamic wave progression, bounty fanfare, hyperspace reinforcements, and replenishing asteroids.
+  - Visual Atmosphere: Added 2-layer parallax starfield, cosmic nebula gradients, approach beacons, dual-core thrusters, and RCS puffs.
+  - Blueprint Engineering: Added CAD symmetry axis line, coordinate markings, and live module spec telemetry tooltip.
+  - Glint Audit: 100% verified purge of traveling perimeter comets, specular glints, or moving balls across HTML and C.
+  - Verification: MSVC compile clean (`KStarForge.exe` 28 KB); Vite clean build in 384ms (`kstarforge.html` 176 KB); security lint 100% PASS.
+
 - **2026-09-26T02:45:00Z — kilo-usability: KMail (UI/UX Ergonomics & Usability Pass)**
   - Status: PASS ✅ (Status bar, list navigation [↑/↓, J/K], unread toggle [U], toast de-occlusion; 0 regressions).
   - Toast De-Occlusion: Re-anchored toasts to top-right (top: 18px), eliminating occlusion of compose Send & Save buttons.
@@ -249,13 +258,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Analytics & Tutorial: Analytics modal displays task completion rate %, pending tally, and tag breakdowns; updated F1 tutorial.
   - Verification: Clean MSVC compile (`KCalendar.exe` 21.5 KB); Vite clean build in 383ms (`kcalendar.html` 100.7 KB); security lint 100% PASS.
 
-- **2026-09-25T22:45:00Z — kilo-qa: KSanctuary (Pass 5: Tutorial & State Integrity Pass)**
-  - Status: PASS ✅ (F5 quicksave / F9 quickload persistence, first-run tutorial modal, modal Esc/Enter navigation, non-occluding toasts; 0 regressions).
-  - State Persistence: Implemented complete state quicksave (F5) and quickload (F9) across both HTML (localStorage) and native C (`ksanctuary.dat`).
-  - First-Run Tutorial: Added diegetic Overseer Orientation modal on fresh sessions (`ksanctuary_tutorialSeen`), never interrupting restored saves.
-  - Interactive Overlays: Added Esc/Enter/Space modal shortcuts to close active briefings and summaries cleanly without triggering cycles.
-  - Toast Notifications: Added non-occluding retro toast system with auto-dismiss and click-to-dismiss across web and native GDI.
-  - Verification: Clean MSVC compile (`KSanctuary.exe` 258 KB); clean Vite build in 374ms (`ksanctuary.html` 397 KB); security lint 100% PASS.
 
 
 

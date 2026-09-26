@@ -26,6 +26,15 @@ static int MyRand() {
     return (g_seed >> 16) & 0x7FFF;
 }
 
+static float MySqrt(float val) {
+    if (val <= 0.0f) return 0.0f;
+    float guess = val * 0.5f + 1.0f;
+    for (int i = 0; i < 6; i++) {
+        guess = (guess + val / guess) * 0.5f;
+    }
+    return guess;
+}
+
 /* Sound Thread Engine */
 static DWORD WINAPI SoundThread(LPVOID lpParam) {
     int type = (int)(intptr_t)lpParam;
@@ -245,6 +254,8 @@ typedef struct {
     int drydockProgress; /* 0 - 100 */
     char toast[64];
     int toastTimer;
+    int flightWave;
+    int waveCountdown;
 } GameContext;
 
 static GameContext g_game;
@@ -348,6 +359,8 @@ static void InitGame() {
     g_game.tutorialSeen = 0;
     g_game.drydockProgress = 0;
     g_game.toastTimer = 0;
+    g_game.flightWave = 1;
+    g_game.waveCountdown = 0;
 
     ResetShipGrid();
 }
@@ -362,6 +375,8 @@ static void InitFlightSim() {
     p->heat = 0.0f;
     p->currentHp = g_game.stats.totalHp > 0 ? g_game.stats.totalHp : 100;
     p->currentShield = g_game.stats.maxShields;
+    g_game.flightWave = 1;
+    g_game.waveCountdown = 0;
 
     for (int i = 0; i < MAX_ASTEROIDS; i++) {
         Asteroid* a = &g_game.asteroids[i];
@@ -526,33 +541,42 @@ static void StepFlightSim() {
     }
 
     /* Drones Tactical AI */
+    int activeDroneCount = 0;
     for (int k = 0; k < MAX_DRONES; k++) {
         EnemyDrone* d = &g_game.drones[k];
         if (!d->active) continue;
+        activeDroneCount++;
 
         float dx = p->x - d->x;
         float dy = p->y - d->y;
         float distSq = dx * dx + dy * dy;
+        float dist = MySqrt(distSq);
 
-        if (d->droneType == 0) {
-            /* Interceptor: Agile flanker */
-            if (distSq > 15000.0f) {
-                d->vx += (dx > 0 ? 0.12f : -0.12f);
-                d->vy += (dy > 0 ? 0.12f : -0.12f);
+        if (dist > 0.01f) {
+            float ndx = dx / dist;
+            float ndy = dy / dist;
+
+            if (d->droneType == 0) {
+                /* Interceptor: Agile flanker */
+                if (dist > 130.0f) {
+                    d->vx += ndx * 0.15f;
+                    d->vy += ndy * 0.15f;
+                } else {
+                    /* Lateral flanking orbit */
+                    d->vx += -ndy * 0.18f;
+                    d->vy += ndx * 0.18f;
+                }
+            } else if (d->droneType == 1) {
+                /* Gunship: Heavy siege advance */
+                if (dist > 180.0f) {
+                    d->vx += ndx * 0.08f;
+                    d->vy += ndy * 0.08f;
+                }
             } else {
-                d->vx += (dy > 0 ? 0.14f : -0.14f);
-                d->vy += (dx > 0 ? -0.14f : 0.14f);
+                /* Sentry: Slow defensive drift */
+                d->vx *= 0.92f;
+                d->vy *= 0.92f;
             }
-        } else if (d->droneType == 1) {
-            /* Gunship: Steady advance */
-            if (distSq > 25000.0f) {
-                d->vx += (dx > 0 ? 0.06f : -0.06f);
-                d->vy += (dy > 0 ? 0.06f : -0.06f);
-            }
-        } else {
-            /* Sentry: Slow defensive drift */
-            d->vx *= 0.92f;
-            d->vy *= 0.92f;
         }
 
         d->x += d->vx;
@@ -561,7 +585,7 @@ static void StepFlightSim() {
         d->vy *= 0.96f;
 
         d->shootTimer--;
-        if (d->shootTimer <= 0 && distSq < 100000.0f) {
+        if (d->shootTimer <= 0 && distSq < 120000.0f) {
             d->shootTimer = (d->droneType == 0 ? 35 + MyRand() % 30 : (45 + MyRand() % 40));
             for (int i = 0; i < MAX_PROJECTILES; i++) {
                 if (!g_game.projectiles[i].active) {
@@ -570,13 +594,81 @@ static void StepFlightSim() {
                     pr->isEnemy = 1;
                     pr->x = d->x;
                     pr->y = d->y;
-                    float mag = (d->droneType == 0 ? 6.0f : 4.5f);
-                    pr->vx = (dx > 0 ? 1.0f : -1.0f) * mag;
-                    pr->vy = (dy > 0 ? 1.0f : -1.0f) * mag;
+                    float mag = (d->droneType == 0 ? 6.5f : 5.0f);
+                    if (dist > 0.01f) {
+                        pr->vx = (dx / dist) * mag;
+                        pr->vy = (dy / dist) * mag;
+                    } else {
+                        pr->vx = 0.0f;
+                        pr->vy = mag;
+                    }
                     pr->damage = (d->droneType == 1 ? 24 : 14);
                     pr->life = 70;
                     break;
                 }
+            }
+        }
+    }
+
+    /* Wave Progression & Pirate Reinforcements */
+    if (activeDroneCount == 0) {
+        if (g_game.waveCountdown == 0) {
+            g_game.waveCountdown = 90; /* 3 seconds countdown */
+            int waveBounty = 250 + g_game.flightWave * 100;
+            g_game.economy.credits += waveBounty;
+            g_game.economy.reputation += 3;
+            char bBuf[64];
+            wsprintfA(bBuf, "PIRATE WING ROUTED! WAVE %d COMPLETE (+%d$C)", g_game.flightWave, waveBounty);
+            SetToast(bBuf);
+            PlaySfx(9);
+        } else {
+            g_game.waveCountdown--;
+            if (g_game.waveCountdown == 0) {
+                g_game.flightWave++;
+                char wBuf[64];
+                wsprintfA(wBuf, "WARNING: WAVE %d HYPERSPACE REINFORCEMENTS INBOUND!", g_game.flightWave);
+                SetToast(wBuf);
+                PlaySfx(10);
+                for (int i = 0; i < MAX_DRONES; i++) {
+                    EnemyDrone* d = &g_game.drones[i];
+                    d->active = 1;
+                    d->x = (float)(80 + (MyRand() % 660));
+                    d->y = (float)(60 + (MyRand() % 140));
+                    d->vx = 0.0f;
+                    d->vy = 0.0f;
+                    d->angle = 0.0f;
+                    d->droneType = (i % 3);
+                    int bonusHp = g_game.flightWave * 18;
+                    if (d->droneType == 0) { d->hp = 75 + bonusHp; d->maxHp = d->hp; }
+                    else if (d->droneType == 1) { d->hp = 160 + bonusHp; d->maxHp = d->hp; }
+                    else { d->hp = 110 + bonusHp; d->maxHp = d->hp; }
+                    d->shootTimer = 35 + MyRand() % 40;
+                }
+            }
+        }
+    }
+
+    /* Deep-Space Asteroid Replenishment */
+    int activeAsteroidCount = 0;
+    for (int i = 0; i < MAX_ASTEROIDS; i++) {
+        if (g_game.asteroids[i].active) activeAsteroidCount++;
+    }
+    if (activeAsteroidCount < 4) {
+        for (int i = 0; i < MAX_ASTEROIDS; i++) {
+            if (!g_game.asteroids[i].active) {
+                Asteroid* a = &g_game.asteroids[i];
+                a->active = 1;
+                a->x = (float)(60 + (MyRand() % 700));
+                a->y = (float)(60 + (MyRand() % 120));
+                a->vx = ((MyRand() % 20) - 10) * 0.05f;
+                a->vy = ((MyRand() % 15) + 5) * 0.03f;
+                a->radius = (float)(14 + (MyRand() % 16));
+                a->rot = (float)(MyRand() % 360) * 0.0174f;
+                a->rotSpeed = ((MyRand() % 20) - 10) * 0.002f;
+                a->hp = (int)a->radius * 3;
+                a->mineralType = (MyRand() % 3);
+                activeAsteroidCount++;
+                if (activeAsteroidCount >= 10) break;
             }
         }
     }
@@ -763,6 +855,27 @@ static void DrawGame(HDC hdc, RECT* rc) {
             TextOutA(memDC, mx + 34, my + 8, g_moduleDefs[m].name, lstrlenA(g_moduleDefs[m].name));
         }
 
+        if (g_game.selectedModule > 0 && g_game.selectedModule < (int)MOD_COUNT) {
+            const ModuleDef* sm = &g_moduleDefs[g_game.selectedModule];
+            char smBuf[128];
+            wsprintfA(smBuf, "SEL: %s | HP:%d M:%dt PWR:%d/%d HEAT:%d/%d THR:%d DPS:%d",
+                sm->name, sm->hp, sm->mass, sm->powerGen, sm->powerDraw, sm->heatGen, sm->heatDissip, sm->thrust, sm->dps);
+            SetTextColor(memDC, RGB(255, 215, 80));
+            TextOutA(memDC, px, py + 262, smBuf, lstrlenA(smBuf));
+        }
+
+        if (g_game.symmetryMode) {
+            int symX = gx0 + (GRID_SZ / 2) * cSize;
+            HPEN symPen = CreatePen(PS_DOT, 1, RGB(0, 180, 240));
+            HPEN oPen = (HPEN)SelectObject(memDC, symPen);
+            MoveToEx(memDC, symX, gy0 - 4, NULL);
+            LineTo(memDC, symX, gy0 + GRID_SZ * cSize + 4);
+            SelectObject(memDC, oPen);
+            DeleteObject(symPen);
+            SetTextColor(memDC, RGB(0, 200, 240));
+            TextOutA(memDC, symX - 32, gy0 - 16, "SYMMETRY AXIS", 13);
+        }
+
         /* Telemetry Panel */
         int ty = 380;
         RECT telRc = { px, ty, rc->right - 20, rc->bottom - 20 };
@@ -798,8 +911,10 @@ static void DrawGame(HDC hdc, RECT* rc) {
         SetTextColor(memDC, RGB(220, 220, 220));
         TextOutA(memDC, px + 15, ty + 115, tBuf, lstrlenA(tBuf));
 
+        char sModeBuf[64];
+        wsprintfA(sModeBuf, "[S] Symmetry: %s | [R] Reset | [SPACE] To Drydock", g_game.symmetryMode ? "ON" : "OFF");
         SetTextColor(memDC, RGB(120, 160, 200));
-        TextOutA(memDC, px + 15, ty + 140, "[S] Symmetry: ON | [R] Reset | [SPACE] To Drydock", 49);
+        TextOutA(memDC, px + 15, ty + 140, sModeBuf, lstrlenA(sModeBuf));
     }
     else if (g_game.state == STATE_DRYDOCK) {
         /* Drydock Assembly */
@@ -882,11 +997,25 @@ static void DrawGame(HDC hdc, RECT* rc) {
         /* Shakedown Flight Sim */
         PlayerFlight* p = &g_game.flight;
 
-        /* Starfield background */
-        for (int i = 0; i < 45; i++) {
-            int sx = (i * 73 + (int)p->x / 4) % (rc->right - 20) + 10;
-            int sy = (i * 107 + (int)p->y / 4) % (rc->bottom - 80) + 70;
-            SetPixel(memDC, sx, sy, RGB(180, 200, 255));
+        /* Starfield backdrop - 2 layers of parallax */
+        for (int i = 0; i < 55; i++) {
+            int sx = (i * 97 - (int)(p->x * 0.12f)) % (rc->right - 30) + 15;
+            if (sx < 15) sx += (rc->right - 30);
+            int sy = (i * 131 - (int)(p->y * 0.12f)) % (rc->bottom - 110) + 75;
+            if (sy < 75) sy += (rc->bottom - 110);
+            COLORREF starCol = (i % 3 == 0) ? RGB(90, 120, 170) : ((i % 3 == 1) ? RGB(120, 110, 160) : RGB(100, 140, 150));
+            SetPixel(memDC, sx, sy, starCol);
+        }
+        for (int i = 0; i < 28; i++) {
+            int sx = (i * 163 - (int)(p->x * 0.35f)) % (rc->right - 30) + 15;
+            if (sx < 15) sx += (rc->right - 30);
+            int sy = (i * 211 - (int)(p->y * 0.35f)) % (rc->bottom - 110) + 75;
+            if (sy < 75) sy += (rc->bottom - 110);
+            SetPixel(memDC, sx, sy, RGB(225, 240, 255));
+            if (i % 4 == 0) {
+                SetPixel(memDC, sx + 1, sy, RGB(180, 220, 255));
+                SetPixel(memDC, sx, sy + 1, RGB(180, 220, 255));
+            }
         }
 
         /* Orbital Station Dock at (110, 160) */
@@ -907,6 +1036,17 @@ static void DrawGame(HDC hdc, RECT* rc) {
         /* Dock Navigation Beacons */
         SetPixel(memDC, 52, 160, RGB(50, 255, 100));
         SetPixel(memDC, 168, 160, RGB(255, 60, 60));
+
+        /* Approach Runway Beacons */
+        for (int d = 1; d <= 4; d++) {
+            int bx = 110 + d * 28;
+            int by = 160 + d * 18;
+            int pulse = ((GetTickCount() / 250) + d) % 4;
+            COLORREF rCol = (pulse == 0) ? RGB(0, 240, 180) : RGB(0, 90, 60);
+            SetPixel(memDC, bx, by, rCol);
+            SetPixel(memDC, bx + 1, by, rCol);
+        }
+
         SetTextColor(memDC, RGB(0, 200, 255));
         TextOutA(memDC, 60, 195, "STARFORGE IX DOCK", 17);
 
@@ -1016,15 +1156,30 @@ static void DrawGame(HDC hdc, RECT* rc) {
             float midY = (minY + maxY) * 0.5f;
             int sz = 5;
 
-            /* Thruster exhaust flame */
+            /* Thruster exhaust flame (cyan/orange dual core) */
             if (p->vy < 0.0f) {
-                HPEN fPen = CreatePen(PS_SOLID, 2, RGB(255, 140, 0));
+                HPEN fPen = CreatePen(PS_SOLID, 2, RGB(255, 150, 20));
                 HPEN oP = (HPEN)SelectObject(memDC, fPen);
                 MoveToEx(memDC, (int)p->x - 4, (int)p->y + 12, NULL);
-                LineTo(memDC, (int)p->x, (int)p->y + 18);
+                LineTo(memDC, (int)p->x, (int)p->y + 19 + (MyRand() % 5));
                 LineTo(memDC, (int)p->x + 4, (int)p->y + 12);
                 SelectObject(memDC, oP);
                 DeleteObject(fPen);
+
+                HPEN cPen = CreatePen(PS_SOLID, 1, RGB(120, 225, 255));
+                SelectObject(memDC, cPen);
+                MoveToEx(memDC, (int)p->x - 2, (int)p->y + 12, NULL);
+                LineTo(memDC, (int)p->x, (int)p->y + 16);
+                LineTo(memDC, (int)p->x + 2, (int)p->y + 12);
+                SelectObject(memDC, oP);
+                DeleteObject(cPen);
+            }
+            if (p->vx < -0.2f) {
+                SetPixel(memDC, (int)p->x + 10, (int)p->y, RGB(100, 220, 255));
+                SetPixel(memDC, (int)p->x + 12, (int)p->y, RGB(220, 245, 255));
+            } else if (p->vx > 0.2f) {
+                SetPixel(memDC, (int)p->x - 10, (int)p->y, RGB(100, 220, 255));
+                SetPixel(memDC, (int)p->x - 12, (int)p->y, RGB(220, 245, 255));
             }
 
             for (int y = 0; y < GRID_SZ; y++) {
@@ -1063,9 +1218,15 @@ static void DrawGame(HDC hdc, RECT* rc) {
             DeleteObject(pBrush);
         }
 
-        /* HUD Readout */
-        char hBuf[128];
-        wsprintfA(hBuf, "HULL: %d HP | SHIELD: %d | HEAT: %d%%", p->currentHp, p->currentShield, (int)p->heat);
+        /* HUD Readout with Wave Progression */
+        char hBuf[160];
+        int speedVal = (int)(MySqrt(p->vx * p->vx + p->vy * p->vy) * 25.0f);
+        int activeHostiles = 0;
+        for (int k = 0; k < MAX_DRONES; k++) {
+            if (g_game.drones[k].active) activeHostiles++;
+        }
+        wsprintfA(hBuf, "WAVE: %d (HOSTILES: %d) | HULL: %d HP | SHIELD: %d | HEAT: %d%% | SPD: %d m/s",
+            g_game.flightWave, activeHostiles, p->currentHp, p->currentShield, (int)p->heat, speedVal);
         SetTextColor(memDC, RGB(0, 240, 255));
         TextOutA(memDC, 20, 80, hBuf, lstrlenA(hBuf));
 

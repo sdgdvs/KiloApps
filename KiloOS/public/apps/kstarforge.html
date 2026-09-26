@@ -1122,6 +1122,7 @@
 
             <div class="flight-hud">
                 <div style="font-weight: bold; color: var(--accent-cyan); letter-spacing: 1px;">SHAKEDOWN FLIGHT TELEMETRY</div>
+                <div>WAVE: <span id="flight-hud-wave" style="font-weight: bold; color: #c084fc;">1</span> | HOSTILES: <span id="flight-hud-hostiles" style="font-weight: bold; color: #ef4444;">4</span></div>
                 <div>HULL: <span id="flight-hud-hull" style="font-weight: bold; color: #fff;">450 / 450</span></div>
                 <div>SHIELD: <span id="flight-hud-shield" style="font-weight: bold; color: #818cf8;">300 / 300</span></div>
                 <div>REACTOR HEAT: <span id="flight-hud-heat" style="font-weight: bold; color: #38bdf8;">0%</span></div>
@@ -2499,6 +2500,8 @@
             asteroids: [],
             enemies: [],
             particles: [],
+            wave: 1,
+            waveTimer: 0,
             station: { x: 260, y: 240, radius: 55 }
         };
 
@@ -2849,6 +2852,18 @@
                 }
             }
 
+            // Lateral RCS steering puffs
+            const isSteerL = flightSim.keys['a'] || flightSim.keys['arrowleft'];
+            const isSteerR = flightSim.keys['d'] || flightSim.keys['arrowright'];
+            if (isSteerL || isSteerR) {
+                const rcsX = isSteerL ? (minX - midX) * sz - sz * 0.8 : (maxX - midX) * sz + sz * 0.8;
+                const rcsY = (minY - midY) * sz;
+                ctx.fillStyle = '#38bdf8';
+                ctx.fillRect(rcsX, rcsY, 2.5, 2.5);
+                ctx.fillStyle = '#f0f9ff';
+                ctx.fillRect(rcsX + (isSteerL ? -1.5 : 1.5), rcsY, 1.5, 1.5);
+            }
+
             // Shield Bubble
             if (p.currentShield > 0) {
                 const radius = Math.max((maxX - minX + 1), (maxY - minY + 1)) * sz * 0.75 + 6;
@@ -2869,9 +2884,12 @@
         function initFlightSim() {
             resizeFlightCanvas();
             flightSim.active = true;
+            const parent = flightCanvas.parentElement;
+            const simW = parent ? (parent.clientWidth || 800) : 800;
+            const simH = parent ? (parent.clientHeight || 600) : 600;
             const p = flightSim.player;
-            p.x = flightCanvas.width / 2;
-            p.y = flightCanvas.height / 2;
+            p.x = simW / 2;
+            p.y = simH / 2;
             p.vx = 0;
             p.vy = 0;
             p.angle = -Math.PI / 2;
@@ -2879,6 +2897,8 @@
             p.currentHp = state.stats.hp || 450;
             p.currentShield = state.stats.shields || 300;
             p.cargoOre = 0;
+            flightSim.wave = 1;
+            flightSim.waveTimer = 0;
 
             flightSim.projectiles = [];
             flightSim.particles = [];
@@ -2896,8 +2916,8 @@
                     pts.push({ x: Math.cos(ang) * r, y: Math.sin(ang) * r });
                 }
                 flightSim.asteroids.push({
-                    x: Math.random() * flightCanvas.width,
-                    y: Math.random() * flightCanvas.height,
+                    x: Math.random() * simW,
+                    y: Math.random() * simH,
                     vx: (Math.random() - 0.5) * 0.35,
                     vy: (Math.random() - 0.5) * 0.35,
                     radius: rad,
@@ -2920,7 +2940,7 @@
             enemyTypes.forEach(archetype => {
                 flightSim.enemies.push({
                     ...archetype,
-                    x: 100 + Math.random() * (flightCanvas.width - 200),
+                    x: 100 + Math.random() * (simW - 200),
                     y: 80 + Math.random() * 200,
                     vx: 0, vy: 0,
                     angle: 0,
@@ -3114,8 +3134,9 @@
                             color: ast.type === 0 ? '#38bdf8' : (ast.type === 1 ? '#fb923c' : '#c084fc'),
                             life: 15
                         });
-                        if (ast.hp <= 0) {
-                            ast.hp = 99999;
+                        if (ast.hp <= 0 && !ast.dead) {
+                            ast.dead = true;
+                            ast.hp = -9999;
                             if (ast.type === 0) state.resources.titanium += 20;
                             else if (ast.type === 1) state.resources.ferrite += 15;
                             else state.resources.deuterium += 12;
@@ -3155,10 +3176,12 @@
                 // Hit Asteroids
                 if (!pr.isEnemy) {
                     flightSim.asteroids.forEach(ast => {
+                        if (ast.dead) return;
                         if (Math.hypot(pr.x - ast.x, pr.y - ast.y) < ast.radius) {
                             pr.life = 0;
                             ast.hp -= pr.dmg;
-                            if (ast.hp <= 0 && ast.hp > -1000) {
+                            if (ast.hp <= 0 && !ast.dead) {
+                                ast.dead = true;
                                 ast.hp = -9999;
                                 if (ast.type === 0) state.resources.titanium += 12;
                                 else if (ast.type === 1) state.resources.ferrite += 10;
@@ -3226,6 +3249,82 @@
 
             // Update Enemies Tactical AI
             flightSim.enemies = flightSim.enemies.filter(en => !en.dead);
+
+            // Wave progression & Pirate Reinforcements
+            if (!flightSim.wave) flightSim.wave = 1;
+            if (flightSim.waveTimer === undefined) flightSim.waveTimer = 0;
+
+            const parent = flightCanvas.parentElement;
+            const simW = parent ? (parent.clientWidth || 800) : 800;
+            const simH = parent ? (parent.clientHeight || 600) : 600;
+
+            if (flightSim.enemies.length === 0) {
+                if (flightSim.waveTimer === 0) {
+                    flightSim.waveTimer = 180; // 3 seconds at 60fps
+                    const waveBounty = 250 + flightSim.wave * 100;
+                    state.resources.credits += waveBounty;
+                    state.resources.reputation += 3;
+                    showToast(`⚡ PIRATE WING ROUTED! WAVE ${flightSim.wave} COMPLETE (+${waveBounty}$C)`);
+                    audio.playSuccess();
+                    updateUI();
+                } else {
+                    flightSim.waveTimer--;
+                    if (flightSim.waveTimer === 0) {
+                        flightSim.wave++;
+                        showToast(`⚠️ WARNING: WAVE ${flightSim.wave} HYPERSPACE WARP INBOUND!`);
+                        audio.playAlarm();
+                        const count = Math.min(8, 3 + flightSim.wave);
+                        for (let i = 0; i < count; i++) {
+                            const isHeavy = (i % 3 === 1);
+                            const isSentry = (i % 3 === 2);
+                            const extraHp = flightSim.wave * 20;
+                            flightSim.enemies.push({
+                                type: isHeavy ? 'gunship' : (isSentry ? 'sentry' : 'interceptor'),
+                                name: isHeavy ? `Marauder Brute Mk.${flightSim.wave}` : (isSentry ? `Rogue Sentry Rig` : `Syndicate Viper Mk.${flightSim.wave}`),
+                                hp: (isHeavy ? 170 : (isSentry ? 110 : 75)) + extraHp,
+                                maxHp: (isHeavy ? 170 : (isSentry ? 110 : 75)) + extraHp,
+                                speed: isHeavy ? 1.2 : (isSentry ? 0.6 : 2.2),
+                                dmg: (isHeavy ? 26 : (isSentry ? 18 : 14)) + flightSim.wave * 2,
+                                color: isHeavy ? '#f97316' : (isSentry ? '#eab308' : '#ef4444'),
+                                x: 80 + Math.random() * (simW - 160),
+                                y: 60 + Math.random() * 160,
+                                vx: 0, vy: 0,
+                                angle: 0,
+                                shootTimer: 40 + Math.random() * 50
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Asteroid Replenishment
+            flightSim.asteroids = flightSim.asteroids.filter(ast => !ast.dead && ast.hp > 0);
+            if (flightSim.asteroids.length < 5) {
+                for (let k = 0; k < 6; k++) {
+                    const rad = 16 + Math.random() * 20;
+                    const numPts = 10 + Math.floor(Math.random() * 4);
+                    const pts = [];
+                    for (let j = 0; j < numPts; j++) {
+                        const ang = (j / numPts) * Math.PI * 2;
+                        const r = rad * (0.8 + Math.random() * 0.4);
+                        pts.push({ x: Math.cos(ang) * r, y: Math.sin(ang) * r });
+                    }
+                    flightSim.asteroids.push({
+                        x: Math.random() * simW,
+                        y: 40 + Math.random() * 120,
+                        vx: (Math.random() - 0.5) * 0.35,
+                        vy: (Math.random() - 0.5) * 0.35,
+                        radius: rad,
+                        pts: pts,
+                        rot: Math.random() * Math.PI * 2,
+                        rotSpeed: (Math.random() - 0.5) * 0.015,
+                        hp: Math.round(rad * 3.5),
+                        maxHp: Math.round(rad * 3.5),
+                        type: Math.floor(Math.random() * 3)
+                    });
+                }
+            }
+
             flightSim.enemies.forEach(en => {
                 const dx = p.x - en.x;
                 const dy = p.y - en.y;
@@ -3275,6 +3374,10 @@
             });
 
             // Update HUD text
+            const elWave = document.getElementById('flight-hud-wave');
+            if (elWave) elWave.textContent = flightSim.wave || 1;
+            const elHostiles = document.getElementById('flight-hud-hostiles');
+            if (elHostiles) elHostiles.textContent = flightSim.enemies.length;
             document.getElementById('flight-hud-hull').textContent = `${Math.floor(p.currentHp)} / ${s.hp || 450}`;
             document.getElementById('flight-hud-shield').textContent = `${Math.floor(p.currentShield)} / ${s.shields || 300}`;
             document.getElementById('flight-hud-heat').textContent = `${Math.floor(p.heat)}%`;
@@ -3292,13 +3395,32 @@
             const parent = flightCanvas.parentElement;
             const simW = parent ? (parent.clientWidth || 800) : 800;
             const simH = parent ? (parent.clientHeight || 600) : 600;
+            const p = flightSim.player;
 
-            // Starfield backdrop
-            fCtx.fillStyle = '#cbd5e1';
-            for (let i = 0; i < 50; i++) {
-                const sx = (i * 137) % simW;
-                const sy = (i * 97) % simH;
-                fCtx.fillRect(sx, sy, 1.2, 1.2);
+            // Cosmic deep-space nebula glow
+            const nebX = (simW * 0.7) - (p.x * 0.05);
+            const nebY = (simH * 0.35) - (p.y * 0.05);
+            const nebGrad = fCtx.createRadialGradient(nebX, nebY, 10, nebX, nebY, 280);
+            nebGrad.addColorStop(0, 'rgba(30, 58, 138, 0.22)');
+            nebGrad.addColorStop(0.5, 'rgba(88, 28, 135, 0.10)');
+            nebGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            fCtx.fillStyle = nebGrad;
+            fCtx.fillRect(0, 0, simW, simH);
+
+            // Parallax starfield Layer 1 (distant micro-stars)
+            fCtx.fillStyle = 'rgba(148, 163, 184, 0.65)';
+            for (let i = 0; i < 75; i++) {
+                let sx = ((i * 157 - p.x * 0.12) % simW + simW) % simW;
+                let sy = ((i * 113 - p.y * 0.12) % simH + simH) % simH;
+                fCtx.fillRect(sx, sy, 1.1, 1.1);
+            }
+
+            // Parallax starfield Layer 2 (nearer twinkling stars)
+            for (let i = 0; i < 35; i++) {
+                let sx = ((i * 223 - p.x * 0.32) % simW + simW) % simW;
+                let sy = ((i * 179 - p.y * 0.32) % simH + simH) % simH;
+                fCtx.fillStyle = (i % 4 === 0) ? '#38bdf8' : (i % 4 === 1 ? '#fef08a' : '#f8fafc');
+                fCtx.fillRect(sx, sy, 1.8, 1.8);
             }
 
             // Orbital Space Station Dock
