@@ -480,7 +480,7 @@
   /* Toast & Notification */
   .toast {
     position: fixed;
-    bottom: 20px;
+    top: 60px;
     right: 20px;
     background: var(--accent-green);
     color: #000;
@@ -490,13 +490,14 @@
     font-weight: 700;
     box-shadow: 0 4px 16px rgba(0,0,0,0.6);
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(-10px);
     transition: all 0.25s ease;
     pointer-events: none;
     z-index: 3000;
     display: flex;
     align-items: center;
     gap: 12px;
+    cursor: pointer;
   }
 
   .toast.show {
@@ -1260,6 +1261,8 @@
           <button class="btn btn-sm btn-accent" id="btn-export-csv">Export CSV</button>
           <button class="btn btn-sm btn-accent" id="btn-export-md">Export Markdown</button>
           <button class="btn btn-sm btn-primary" id="btn-export-json">Export JSON</button>
+          <button class="btn btn-sm btn-accent" id="btn-import-json">Import JSON</button>
+          <input type="file" id="file-import-json" accept=".json" style="display:none;">
         </div>
       </div>
 
@@ -1301,6 +1304,8 @@
         <div class="modal-section-title">⌨️ Keyboard Shortcuts</div>
         <table class="shortcut-table">
           <tr><td><span class="kbd-key">F1</span> or <span class="kbd-key">H</span></td><td>Toggle this Help &amp; Shortcuts guide</td></tr>
+          <tr><td><span class="kbd-key">F5</span></td><td>Quicksave full studio state to local storage</td></tr>
+          <tr><td><span class="kbd-key">F9</span></td><td>Quickload studio state from local storage</td></tr>
           <tr><td><span class="kbd-key">1</span> &ndash; <span class="kbd-key">5</span></td><td>Switch tabs (1: Multi-Base, 2: 64-Bit Grid, 3: IEEE-754, 4: Varint, 5: History)</td></tr>
           <tr><td><span class="kbd-key">[</span> &amp; <span class="kbd-key">]</span></td><td>Cycle previous / next tab</td></tr>
           <tr><td><span class="kbd-key">Alt+C</span> or <span class="kbd-key">C</span></td><td>Copy active result or history table to clipboard</td></tr>
@@ -1317,8 +1322,14 @@
           <li><strong style="color:var(--accent-green);">64-Bit Toggle Grid &amp; Ops:</strong> Interactive bit manipulation board with instant patterns, Nybble Swap, LSB isolation/clear, and extended bitwise ops: AND, OR, XOR, NOT, NAND, NOR, XNOR, AND-NOT (`A &amp; ~B`), SHL, SHR, SAR, ROL, ROR, and Carryless CLMUL.</li>
           <li><strong style="color:var(--accent-amber);">IEEE-754 &amp; Fixed-Point Suite:</strong> Visual single (FP32), double (FP64), half-precision (FP16 / binary16), and neural (Bfloat16) breakdown with exact formulas, plus DSP fixed-point Q-format inspector (Q8.8, Q16.16, Q0.15, Q7.8).</li>
           <li><strong style="color:var(--accent-purple);">Varint, Bitfields &amp; Code:</strong> LEB128 / SLEB128 / Protobuf ZigZag / MIDI VLQ encoder &amp; decoder, multi-width two's complement inspector, bitfield slicer with Popcount/CLZ/CTZ, and multi-language code generator (C/C++, Rust, Python, NASM).</li>
-          <li><strong style="color:var(--text-main);">Export &amp; History:</strong> Automatic calculation logging with instant TSV clipboard copy, CSV, Markdown table, and JSON export.</li>
+          <li><strong style="color:var(--text-main);">Export &amp; History:</strong> Automatic calculation logging with instant TSV clipboard copy, CSV, Markdown table, and JSON export/import.</li>
         </ul>
+      </div>
+      <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center;">
+        <label style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+          <input type="checkbox" id="check-tutorial-seen"> Don't show this guide on startup
+        </label>
+        <button class="btn btn-sm btn-primary" id="btn-modal-got-it">Got it!</button>
       </div>
     </div>
   </div>
@@ -2077,6 +2088,11 @@
     document.getElementById('fp64-exp-val').textContent = `${exp64} (0b${exp64.toString(2).padStart(11, '0')})`;
     document.getElementById('fp64-exp-unbiased').textContent = unbiased64;
 
+    const mant64 = (BigInt(high64 & 0xFFFFF) << 32n) | BigInt(low64);
+    const mantFrac64 = Number(mant64) / Math.pow(2, 52);
+    document.getElementById('fp64-mant-val').textContent = mantFrac64.toFixed(16) + ` (0x${mant64.toString(16).toUpperCase()})`;
+    document.getElementById('fp64-reconstructed').textContent = view64.getFloat64(0, false);
+
     // 16-Bit Half Precision Float (FP16 / binary16) Breakdown
     let fp16Sign = sign32;
     let fp16Exp = 0;
@@ -2593,6 +2609,149 @@ KBASE_VALUE dq ${hexShort}
     downloadFile(jsonStr, 'kbase_history.json', 'application/json');
   };
 
+  // History JSON Import
+  const btnImportJson = document.getElementById('btn-import-json');
+  const fileImportJson = document.getElementById('file-import-json');
+  if (btnImportJson && fileImportJson) {
+    btnImportJson.onclick = () => fileImportJson.click();
+    fileImportJson.onchange = (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const parsed = JSON.parse(event.target.result);
+          if (Array.isArray(parsed)) {
+            let count = 0;
+            parsed.forEach(item => {
+              if (item && item.category && item.input !== undefined) {
+                historyLog.unshift(item);
+                count++;
+              }
+            });
+            if (historyLog.length > 100) historyLog.length = 100;
+            renderHistory();
+            saveKBaseState(false);
+            showToast(`Imported ${count} history items`);
+          } else if (parsed && typeof parsed === 'object') {
+            loadKBaseStateFromObj(parsed);
+            saveKBaseState(false);
+            showToast('Studio state restored from JSON');
+          } else {
+            showToast('Invalid JSON structure');
+          }
+        } catch(err) {
+          showToast('Failed to parse JSON file');
+        }
+      };
+      reader.readAsText(file);
+      fileImportJson.value = '';
+    };
+  }
+
+  // ==========================================
+  // STATE PERSISTENCE & QUICKSAVE / QUICKLOAD
+  // ==========================================
+  function serializeState() {
+    const activeIdx = Array.from(tabs).findIndex(t => t.classList.contains('active'));
+    return {
+      version: 1,
+      activeTab: activeIdx >= 0 ? activeIdx : 0,
+      baseDec: elDec ? elDec.value : '',
+      bitboardVal: (bitboardVal & 0xFFFFFFFFFFFFFFFFn).toString(16),
+      opA: opAInput ? opAInput.value : '',
+      opB: opBInput ? opBInput.value : '',
+      bitwiseOp: currentBitwiseOp,
+      fpVal: fpInput ? fpInput.value : '',
+      qVal: document.getElementById('q-real-input')?.value || '',
+      varintVal: varintValInput ? varintValInput.value : '',
+      varintHex: varintHexInput ? varintHexInput.value : '',
+      sliceHigh: sliceHighRange ? sliceHighRange.value : 15,
+      sliceLow: sliceLowRange ? sliceLowRange.value : 8,
+      strInput: strInput ? strInput.value : '',
+      history: historyLog.slice(0, 50)
+    };
+  }
+
+  function saveKBaseState(isQuicksave = false) {
+    try {
+      const state = serializeState();
+      const json = JSON.stringify(state);
+      localStorage.setItem('kbase_state', json);
+      if (isQuicksave) {
+        localStorage.setItem('kbase_quicksave', json);
+        showToast('State quicksaved (F5)');
+      }
+    } catch(e) {}
+  }
+
+  function loadKBaseStateFromObj(state) {
+    if (!state || typeof state !== 'object') return false;
+    if (state.history && Array.isArray(state.history)) {
+      historyLog.length = 0;
+      state.history.forEach(item => historyLog.push(item));
+      renderHistory();
+    }
+    if (state.baseDec !== undefined && state.baseDec !== '') {
+      const bigVal = parseBigIntFromBase(state.baseDec, 10);
+      if (bigVal !== null) {
+        updateBasesFromValue(bigVal, null);
+        bitboardVal = bigVal & 0xFFFFFFFFFFFFFFFFn;
+        renderBitboard();
+      }
+    } else if (state.bitboardVal) {
+      try {
+        bitboardVal = BigInt('0x' + state.bitboardVal) & 0xFFFFFFFFFFFFFFFFn;
+        renderBitboard();
+        updateBasesFromValue(bitboardVal, null);
+      } catch(e) {}
+    }
+    if (state.opA && opAInput) opAInput.value = state.opA;
+    if (state.opB && opBInput) opBInput.value = state.opB;
+    if (state.bitwiseOp) executeBitwiseOp(state.bitwiseOp, false);
+
+    if (state.fpVal && fpInput) {
+      fpInput.value = state.fpVal;
+      inspectIEEE754(false);
+    }
+    const qIn = document.getElementById('q-real-input');
+    if (state.qVal && qIn) {
+      qIn.value = state.qVal;
+      renderFixedPoint(false);
+    }
+    if (state.varintVal && varintValInput) {
+      varintValInput.value = state.varintVal;
+      runVarintEncode(false);
+    }
+    if (state.sliceHigh && sliceHighRange) sliceHighRange.value = state.sliceHigh;
+    if (state.sliceLow && sliceLowRange) sliceLowRange.value = state.sliceLow;
+    if (state.strInput && strInput) strInput.value = state.strInput;
+
+    if (typeof state.activeTab === 'number' && state.activeTab >= 0 && state.activeTab < tabs.length) {
+      selectTab(state.activeTab);
+    }
+    return true;
+  }
+
+  function loadKBaseState(isQuickload = false) {
+    try {
+      const raw = isQuickload ? (localStorage.getItem('kbase_quicksave') || localStorage.getItem('kbase_state')) : localStorage.getItem('kbase_state');
+      if (!raw) {
+        if (isQuickload) showToast('No saved state found (F5 to save)');
+        return false;
+      }
+      const state = JSON.parse(raw);
+      const ok = loadKBaseStateFromObj(state);
+      if (ok && isQuickload) {
+        showToast('State quickloaded (F9)');
+      }
+      return ok;
+    } catch(e) {
+      if (isQuickload) showToast('Failed to load state');
+      return false;
+    }
+  }
+
   const btnCopyHistory = document.getElementById('btn-copy-history');
   if (btnCopyHistory) {
     btnCopyHistory.onclick = () => {
@@ -2671,19 +2830,64 @@ KBASE_VALUE dq ${hexShort}
       };
     }
 
+    const toast = document.getElementById('toast');
+    if (toast) {
+      toast.onclick = () => toast.classList.remove('show');
+    }
+
     const toastDismiss = document.getElementById('toast-dismiss');
     if (toastDismiss) {
       toastDismiss.onclick = (e) => {
         e.stopPropagation();
-        const t = document.getElementById('toast');
-        if (t) t.classList.remove('show');
+        if (toast) toast.classList.remove('show');
       };
     }
 
-    // Startup Welcome Toast
-    setTimeout(() => {
-      showToast("⚡ Welcome to KBase Studio! Press F1 for Help, 1-5 for Tabs, [ / ] to Cycle.");
-    }, 350);
+    // Tutorial Seen & Settings Checkbox
+    const checkTutorialSeen = document.getElementById('check-tutorial-seen');
+    if (checkTutorialSeen) {
+      try {
+        checkTutorialSeen.checked = !!localStorage.getItem('kbase_tutorialSeen');
+      } catch(e) {}
+      checkTutorialSeen.onchange = (e) => {
+        try {
+          if (e.target.checked) localStorage.setItem('kbase_tutorialSeen', '1');
+          else localStorage.removeItem('kbase_tutorialSeen');
+        } catch(err) {}
+      };
+    }
+
+    const btnModalGotIt = document.getElementById('btn-modal-got-it');
+    if (btnModalGotIt) {
+      btnModalGotIt.onclick = () => {
+        try { localStorage.setItem('kbase_tutorialSeen', '1'); } catch(e) {}
+        if (checkTutorialSeen) checkTutorialSeen.checked = true;
+        closeHelpModal();
+      };
+    }
+
+    // Auto-restore previous state if available
+    const hasSavedState = !!(localStorage.getItem('kbase_quicksave') || localStorage.getItem('kbase_state'));
+    if (hasSavedState) {
+      loadKBaseState(false);
+    }
+
+    // First-run tutorial display
+    const tutorialSeen = !!localStorage.getItem('kbase_tutorialSeen');
+    if (!tutorialSeen && !hasSavedState) {
+      setTimeout(() => {
+        openHelpModal();
+      }, 350);
+    } else {
+      setTimeout(() => {
+        showToast("⚡ Welcome to KBase Studio! Press F1 for Help, F5 Quicksave, F9 Quickload.");
+      }, 350);
+    }
+
+    // Auto-save state on tab/window close
+    window.addEventListener('beforeunload', () => {
+      saveKBaseState(false);
+    });
   });
 
   // Global Keyboard Shortcuts
@@ -2691,6 +2895,18 @@ KBASE_VALUE dq ${hexShort}
     // Escape closes modals
     if (e.key === 'Escape') {
       closeHelpModal();
+      return;
+    }
+
+    // F5 quicksave & F9 quickload
+    if (e.key === 'F5') {
+      e.preventDefault();
+      saveKBaseState(true);
+      return;
+    }
+    if (e.key === 'F9') {
+      e.preventDefault();
+      loadKBaseState(true);
       return;
     }
 

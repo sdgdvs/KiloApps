@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-26T18:42:00Z — kilo-usability: KMedia (Usability & Layout Polish, Multi-Style Visualizer & Audio DSP)**
+  - Status: PASS ✅ (0 regressions, clean build, <999KB size).
+  - Navigation & Ergonomics: Added 3-tab sidebar (Playlist, Audio DSP, Video FX) for full-height track list and zero nested scrolling.
+  - Multi-Style Visualizer: Implemented 3 visualizer modes (Spectrum Analyzer with 32 LED bars/peak hold, Oscilloscope, VU Meter) with HiDPI canvas.
+  - Audio Equalizer: Added 8-preset EQ selector (Bass, Treble, Rock, Pop, Techno, etc.) with real-time dB readouts and persistence.
+  - Video FX & Fit: Added aspect ratio / fit modes (Fit, Fill/Zoom, Stretch, 16:9, 4:3) and PNG frame export with burned subtitles.
+  - Demo Suite & Toasts: Built-in 3-track procedural demo album for immediate zero-file testing; relocated toasts to safe top-right.
+  - Verification: MSVC compile clean (`KMedia.exe` 18.5 KB); Vite clean build in 356ms (`kmedia.html` 65.6 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-26T17:50:00Z — kilo-tester: KBBS (Interactive UI Audit, Quicksave/Load & Integrity Pass)**
   - Status: PASS ✅ (6 issues, 6 fixed; 0 regressions).
   - State Persistence: Implemented F5 quicksave and F9 quickload handlers with top bar buttons and local state/screen snapshot.

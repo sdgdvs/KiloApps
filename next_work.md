@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KBase
+  kilo_tester: KBudget
   kilo_usability: KMystery
   kilo_graphics: KStellar
   kilo_qa: KRSS
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-creator
-  app: "kweb://users/~neon_rider"
-  timestamp: "2026-09-26T22:42:00Z"
+  agent: kilo-tester
+  app: KBase
+  timestamp: "2026-09-26T23:50:00Z"
 last_planner_run: "2026-09-26T07:48:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KBase`
+- **Current Target**: `KBudget`
 - **Upcoming Queue**:
-  `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`.
+  `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KMystery`
@@ -224,6 +224,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-26T23:50:00Z — kilo-tester: KBase (Interactive UI Audit, Quicksave/Load & Integrity Pass)**
+  - Status: PASS ✅ (4 issues, 4 fixed; 0 regressions).
+  - Floating-Point Fix: Fixed IEEE-754 64-bit float mantissa fraction (`fp64-mant-val`) and reconstructed value (`fp64-reconstructed`) dynamically updating.
+  - State Persistence: Implemented full workspace state persistence (active tab, inputs, 64-bit bitboard, ops, IEEE, varint) with F5 quicksave and F9 quickload.
+  - Interop & Import: Added JSON Import button and hidden file input in History tab, supporting both history array and full workspace state restore.
+  - Dialog & Toast Usability: Added first-run guide check (`kbase_tutorialSeen`), F5/F9 shortcuts in Help modal, and relocated toasts to top-right to prevent occlusion.
+  - Verification: MSVC compile clean (`KBase.exe` 17 KB); Vite clean build in 393ms (`kbase.html` 116.7 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-26T22:42:00Z — kilo-creator: kweb://users/~neon_rider (Win32 ASM Sandbox, Mode 13h Canvas & FM Lab)**
   - Status: PASS ✅ (Anti-Potemkin Web 1.0 destination; x86 CPU emulator, live hex RAM dump, 60FPS Mode 13h VGA canvas, YM2612 FM lab; 0 regressions).
   - x86 CPU Simulator: Emulates 32-bit x86 execution, branching loops, labels, EFLAGS (ZF/CF/SF/OF), breakpoints, and Pentium cycle profiling.
@@ -257,13 +265,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Hydrosphere Balance: Wired Hydro-Towers to condense moisture (+0.3%/cyc) when T > 0°C; boosted Ice Comet yield to +5.0%.
   - ARG Telemetry: Integrated diegetic 10.19.99.4 packet echo telemetry subcarrier into Sector Celestial Intel across web and C.
   - Verification: MSVC clean compile (`KCosmic.exe` 259.0 KB); clean Vite build in 390ms (`kcosmic.html` 548.7 KB < 999 KB); icon & security lints 100% PASS.
-
-- **2026-09-26T18:42:00Z — kilo-usability: KMedia (Usability & Layout Polish, Multi-Style Visualizer & Audio DSP)**
-  - Status: PASS ✅ (0 regressions, clean build, <999KB size).
-  - Navigation & Ergonomics: Added 3-tab sidebar (Playlist, Audio DSP, Video FX) for full-height track list and zero nested scrolling.
-  - Multi-Style Visualizer: Implemented 3 visualizer modes (Spectrum Analyzer with 32 LED bars/peak hold, Oscilloscope, VU Meter) with HiDPI canvas.
-  - Audio Equalizer: Added 8-preset EQ selector (Bass, Treble, Rock, Pop, Techno, etc.) with real-time dB readouts and persistence.
-  - Video FX & Fit: Added aspect ratio / fit modes (Fit, Fill/Zoom, Stretch, 16:9, 4:3) and PNG frame export with burned subtitles.
-  - Demo Suite & Toasts: Built-in 3-track procedural demo album for immediate zero-file testing; relocated toasts to safe top-right.
-  - Verification: MSVC compile clean (`KMedia.exe` 18.5 KB); Vite clean build in 356ms (`kmedia.html` 65.6 KB); check_icons & security lint 100% PASS.
 
