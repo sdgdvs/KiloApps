@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-tester
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -16,7 +16,7 @@ current_targets:
   kilo_usability: KMedia
   kilo_graphics: KCosmic
   kilo_qa: KHash
-  kilo_expander: KMail
+  kilo_expander: KRead
   kilo_creator: "kweb://geocities (Pixel Art & MOD Downloads)"
 virtual_web_target: "kweb://geocities"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-qa
-  app: KSubmarine
-  timestamp: "2026-09-26T14:48:00Z"
+  agent: kilo-expander
+  app: KMail
+  timestamp: "2026-09-26T15:56:00Z"
 last_planner_run: "2026-09-26T07:48:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KMystery`, `KQuest`, `KSanctuary`, `KSubmarine` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KMail`
+- **Current Target**: `KRead`
 - **Upcoming Queue**:
-  `KRead`, `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts` *(Completed: KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts)*.
+  `KPass`, `KPaint`, `KImage`, `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts` *(Completed: KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -218,6 +218,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-26T15:56:00Z — kilo-expander: KMail (Deep Feature Expansion: KiloNet RTDB, Rules Engine & Interoperability)**
+  - Status: PASS ✅ (Firebase RTDB network mail, rule engine, MBOX/CSV/print export, outbox queue; 0 regressions).
+  - KiloNet Realtime Delivery: Added cross-network email delivery via shared Firebase RTDB (`multiplayer/kmail/inboxes/`).
+  - Automated Filter Rules: Created modal rule wizard for subject/from/body criteria with tag, star, delete, or mark actions.
+  - Interoperability & Export: Added RFC 4155 Unix MBOX and tabular CSV exports across web and native Win32 C (`V`/`X`).
+  - Outbox & Queue: Added folder 5 (Outbox) with background flush & instant dispatch; updated folder shortcuts 1-6.
+  - Hardcopy & Audio: Added email print styling/preview (P) and procedural Yamaha YM2612 FM audio notifications.
+  - Verification: MSVC compile clean (`KMail.exe` 504 KB); clean Vite build in 411ms (`kmail.html` 106 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-26T14:48:00Z — kilo-qa: KSubmarine (Pass 5: Tutorial & State Integrity Audit)**
   - Status: PASS ✅ (F5 quicksave/F9 quickload persistence, Captain's Dive Briefing modal, non-occluding toasts; 0 regressions).
   - State Persistence: Implemented comprehensive dive state persistence across HTML localStorage and native Win32 `ksubmarine_save.dat` binary file.
@@ -251,12 +260,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast De-Occlusion: Re-anchored toasts to top-right with click-to-dismiss, clearing bottom sequencer controls.
   - UX & Volume: Added master volume persistence across sessions/exports; strengthened Esc modal dismissal.
   - Verification: Vite build clean (391ms, `kaudio.html` 73.3 KB < 999 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-26T10:40:00Z — kilo-creator: kweb://webring (Central Hub & Random Teleporter Expansion)**
-  - Status: PASS ✅ (Anti-Potemkin Web 1.0 destination; 14-node directory, starfield warp teleporter, badge studio; 0 regressions).
-  - Member Directory: 14 verified ring nodes with category filtering, real-time search, and node inspector modal.
-  - Random Teleporter: 3D canvas starfield warp with staged countdown, instant warp leap, and ring tour passport.
-  - Sound Architecture: Yamaha YM2612 2-op FM synthesis & SNES SPC700 stereo delay procedural audio engine with BGM & visualizer.
-  - Interactive Tools: Live HTML Badge Studio (4 styles), simulated Perl ring_check.cgi health monitor & webmaster application portal.
-  - Guestbook: Moderated webmaster guestbook with localStorage persistence and retro emoticon picker.
-  - Verification: Clean Vite build in 368ms (`webring.html` 88.4 KB < 999 KB ceiling); security lint 100% PASS.

@@ -741,7 +741,124 @@
     .pane-header { flex-direction: column; align-items: stretch; gap: 8px; }
     .pane-actions { justify-content: flex-start; }
   }
+
+  /* Quick Filters & Sorting */
+  .quick-filters {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .qfilter-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    color: var(--text-sec);
+    padding: 3px 7px;
+    border-radius: 12px;
+    font-size: 10.5px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .qfilter-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--text-primary);
+  }
+  .qfilter-btn.active {
+    background: rgba(59, 130, 246, 0.25);
+    border-color: var(--accent);
+    color: #93c5fd;
+    font-weight: 600;
+  }
+  .sort-select {
+    width: 100%;
+    background: #1e293b;
+    border: 1px solid var(--border);
+    color: var(--text-sec);
+    padding: 5px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    margin-top: 6px;
+    outline: none;
+    cursor: pointer;
+  }
+  .rules-item {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .rules-item-info {
+    flex: 1;
+    font-size: 12.5px;
+  }
+  .rules-item-title {
+    font-weight: 600;
+    color: #f1f5f9;
+    margin-bottom: 2px;
+  }
+  .rules-item-desc {
+    color: var(--text-sec);
+    font-size: 11.5px;
+  }
+  .export-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .export-card:hover {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
 </style>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+    authDomain: "kiloappschat.firebaseapp.com",
+    databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+    projectId: "kiloappschat",
+    storageBucket: "kiloappschat.firebasestorage.app",
+    messagingSenderId: "290208566057",
+    appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+  };
+  try {
+    const fbApp = initializeApp(firebaseConfig);
+    const fbDb = getDatabase(fbApp);
+    window.fb = {
+      app: fbApp,
+      db: fbDb,
+      ref,
+      set,
+      get,
+      push,
+      onValue,
+      onChildAdded,
+      off,
+      serverTimestamp,
+      onDisconnect
+    };
+    if (window.initNetworkMail) {
+      window.initNetworkMail();
+    }
+  } catch (err) {
+    console.warn("Firebase initialization skipped or offline:", err);
+  }
+</script>
 </head>
 <body>
 
@@ -780,10 +897,17 @@
       </div>
       <span class="folder-badge" id="b-drafts">0</span>
     </div>
-    <div class="folder" onclick="switchFolder('trash')" id="f-trash" role="button" tabindex="0" aria-label="Trash folder (5)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchFolder('trash');}">
+    <div class="folder" onclick="switchFolder('outbox')" id="f-outbox" role="button" tabindex="0" aria-label="Outbox folder (5)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchFolder('outbox');}">
+      <div class="folder-title">
+        <span>📬 Outbox</span>
+        <kbd>5</kbd>
+      </div>
+      <span class="folder-badge" id="b-outbox">0</span>
+    </div>
+    <div class="folder" onclick="switchFolder('trash')" id="f-trash" role="button" tabindex="0" aria-label="Trash folder (6)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchFolder('trash');}">
       <div class="folder-title">
         <span>🗑️ Trash</span>
-        <kbd>5</kbd>
+        <kbd>6</kbd>
       </div>
       <span class="folder-badge" id="b-trash">0</span>
     </div>
@@ -801,6 +925,20 @@
         <option value="News">News</option>
         <option value="Finance">Finance</option>
         <option value="Follow-up">Follow-up</option>
+        <option value="System">System</option>
+        <option value="Network">Network</option>
+      </select>
+      <div class="quick-filters">
+        <button class="qfilter-btn active" id="qf-all" onclick="setQuickFilter('all')">All</button>
+        <button class="qfilter-btn" id="qf-starred" onclick="setQuickFilter('starred')">★ Starred</button>
+        <button class="qfilter-btn" id="qf-unread" onclick="setQuickFilter('unread')">✉ Unread</button>
+        <button class="qfilter-btn" id="qf-enc" onclick="setQuickFilter('enc')">🔒 Encrypted</button>
+      </div>
+      <select id="sort-select" class="sort-select" onchange="handleSearch()" aria-label="Sort emails">
+        <option value="newest">Sort: Newest First</option>
+        <option value="oldest">Sort: Oldest First</option>
+        <option value="subject">Sort: Subject (A-Z)</option>
+        <option value="sender">Sort: Sender (A-Z)</option>
       </select>
     </div>
     
@@ -809,15 +947,23 @@
         <span>❓ Help & Keys</span>
         <kbd>F1</kbd>
       </button>
+      <button class="side-action-btn" onclick="openRulesModal()" aria-label="Automated Mail Rules & Filters" title="Automated Mail Rules (F3)">
+        <span>⚙️ Filter Rules</span>
+        <kbd>F3</kbd>
+      </button>
+      <button class="side-action-btn" onclick="showModal('network-modal')" aria-label="KiloNet Mail Settings" title="KiloNet Global Mail Delivery (F4)">
+        <span id="side-net-label">🌐 Network Mail</span>
+        <kbd>F4</kbd>
+      </button>
+      <button class="side-action-btn" onclick="showModal('export-modal')" aria-label="Export Mailbox" title="Export MBOX, CSV, or JSON (O)">
+        <span>📤 Export Mail</span>
+        <kbd>O</kbd>
+      </button>
       <button class="side-action-btn" onclick="document.getElementById('import-file').click()" aria-label="Import JSON Mailbox" title="Import JSON (I)">
         <span>📥 Import JSON</span>
         <kbd>I</kbd>
       </button>
       <input type="file" id="import-file" style="display:none" onchange="importJson(event)" accept=".json" aria-label="Upload mailbox JSON file">
-      <button class="side-action-btn" onclick="exportJson()" aria-label="Export JSON Mailbox" title="Export JSON (O)">
-        <span>📤 Export JSON</span>
-        <kbd>O</kbd>
-      </button>
       <button class="side-action-btn" style="color:#f87171;" onclick="confirmEmptyTrash()" aria-label="Empty Trash Folder" title="Permanently delete all trash emails">
         <span>🗑️ Empty Trash</span>
       </button>
@@ -843,7 +989,7 @@
 </div>
 
 <div class="status-bar" id="status-bar" role="status" aria-live="polite">
-  <div class="status-left" id="status-folder-info">📥 Inbox · 6 messages</div>
+  <div class="status-left" id="status-folder-info">📥 Inbox · 7 messages</div>
   <div class="status-mid">
     <span><kbd>F1</kbd> Help</span>
     <span><kbd>C</kbd> Compose</span>
@@ -851,10 +997,10 @@
     <span><kbd>S</kbd> Star</span>
     <span><kbd>U</kbd> Read/Unread</span>
     <span><kbd>R</kbd> Reply</span>
-    <span><kbd>Del</kbd> Trash</span>
-    <span><kbd>Esc</kbd> Close</span>
+    <span><kbd>F3</kbd> Rules</span>
+    <button id="sfx-toggle" onclick="toggleAudio()" style="background:none; border:none; color:var(--text-sec); cursor:pointer; font-size:11px; padding:2px 4px; font-family:inherit;" title="Toggle Retro Sound Effects">🔊 SFX: On</button>
   </div>
-  <div class="status-right" id="status-storage-info">AES-GCM · LocalStorage</div>
+  <div class="status-right" id="status-storage-info" style="cursor:pointer;" onclick="showModal('network-modal')" title="Click for Network Mail Settings">🟢 KiloNet: user@kilo.os</div>
 </div>
 
 <!-- Toast Notifications -->
@@ -869,11 +1015,11 @@
     </div>
     <div class="modal-content">
       <p style="margin-top:0; color:#94a3b8; font-size:13px;">
-        KMail is a lightweight multi-tab email client with encryption, tagging, starring, drafts, and EML/Markdown exporting.
+        KMail is a lightweight multi-tab email client with encryption, automated rules, real-time KiloNet delivery, and MBOX/CSV/JSON exporting.
       </p>
       <h4 style="margin:14px 0 6px 0; color:#93c5fd; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Navigation & Actions</h4>
       <table class="shortcuts-table">
-        <tr><td><kbd>1</kbd> - <kbd>5</kbd></td><td>Switch Folders (Inbox, Starred, Sent, Drafts, Trash)</td></tr>
+        <tr><td><kbd>1</kbd> - <kbd>6</kbd></td><td>Switch Folders (Inbox, Starred, Sent, Drafts, Outbox, Trash)</td></tr>
         <tr><td><kbd>↑</kbd> / <kbd>↓</kbd> or <kbd>J</kbd> / <kbd>K</kbd></td><td>Navigate next / previous email in list</td></tr>
         <tr><td><kbd>C</kbd> / <kbd>N</kbd></td><td>Compose New Message in a tab</td></tr>
         <tr><td><kbd>Ctrl</kbd> + <kbd>F</kbd> / <kbd>/</kbd></td><td>Focus search bar (Esc to clear)</td></tr>
@@ -881,11 +1027,14 @@
         <tr><td><kbd>U</kbd></td><td>Toggle Read / Unread status on active email</td></tr>
         <tr><td><kbd>R</kbd></td><td>Reply to selected email</td></tr>
         <tr><td><kbd>T</kbd></td><td>Add / remove tags on active email</td></tr>
+        <tr><td><kbd>P</kbd></td><td>Print or preview active email</td></tr>
         <tr><td><kbd>Del</kbd></td><td>Move selected email to Trash / Delete</td></tr>
         <tr><td><kbd>E</kbd></td><td>Export single email as .EML</td></tr>
         <tr><td><kbd>M</kbd></td><td>Export single email as Markdown (.MD)</td></tr>
+        <tr><td><kbd>O</kbd></td><td>Open Export menu (Unix .MBOX, .CSV Index, .JSON)</td></tr>
         <tr><td><kbd>I</kbd></td><td>Import Mailbox from JSON</td></tr>
-        <tr><td><kbd>O</kbd></td><td>Export Mailbox as JSON backup</td></tr>
+        <tr><td><kbd>F3</kbd></td><td>Automated Mail Rules & Filters Wizard</td></tr>
+        <tr><td><kbd>F4</kbd></td><td>KiloNet Global Mail Delivery Settings</td></tr>
         <tr><td><kbd>Ctrl</kbd> + <kbd>S</kbd></td><td>Save draft in compose mode</td></tr>
         <tr><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td><td>Send email in compose mode</td></tr>
         <tr><td><kbd>Ctrl</kbd> + <kbd>W</kbd></td><td>Close active tab</td></tr>
@@ -916,6 +1065,8 @@
           <span class="tag-preset-chip" onclick="applyTag('News')">📰 News</span>
           <span class="tag-preset-chip" onclick="applyTag('Finance')">💰 Finance</span>
           <span class="tag-preset-chip" onclick="applyTag('Follow-up')">📌 Follow-up</span>
+          <span class="tag-preset-chip" onclick="applyTag('Network')">🌐 Network</span>
+          <span class="tag-preset-chip" onclick="applyTag('System')">⚙️ System</span>
         </div>
       </div>
       <div>
@@ -947,7 +1098,255 @@
   </div>
 </div>
 
+<!-- Rules & Automated Filters Modal -->
+<div class="modal-backdrop" id="rules-modal" role="dialog" aria-modal="true" aria-labelledby="rules-modal-title" onclick="onModalBackdropClick(event, 'rules-modal')">
+  <div class="modal-window" style="width: 580px;">
+    <div class="modal-header">
+      <h3 id="rules-modal-title"><span>⚙️</span> Automated Mail Rules & Filter Engine</h3>
+      <button class="modal-close-btn" onclick="closeModal('rules-modal')" aria-label="Close rules modal">✕</button>
+    </div>
+    <div class="modal-content">
+      <p style="margin-top:0; color:#94a3b8; font-size:12.5px;">
+        Define automatic incoming & outgoing mail rules. Rules run automatically when network emails arrive or when imported.
+      </p>
+      <div id="rules-list-container" style="max-height: 200px; overflow-y: auto; margin-bottom: 14px;"></div>
+      
+      <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 8px; padding: 12px;">
+        <h4 style="margin: 0 0 8px 0; font-size: 13px; color: #93c5fd;">➕ Add New Rule</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+          <div>
+            <label style="font-size: 11px; color: var(--text-sec); display:block; margin-bottom: 3px;">Field:</label>
+            <select id="new-rule-field" style="width: 100%; background: #1e293b; border: 1px solid var(--border); color: white; padding: 5px; border-radius: 5px; font-size: 12px;">
+              <option value="sender">Sender</option>
+              <option value="subject">Subject</option>
+              <option value="body">Body</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 11px; color: var(--text-sec); display:block; margin-bottom: 3px;">Condition:</label>
+            <select id="new-rule-match" style="width: 100%; background: #1e293b; border: 1px solid var(--border); color: white; padding: 5px; border-radius: 5px; font-size: 12px;">
+              <option value="contains">Contains</option>
+              <option value="equals">Equals</option>
+              <option value="startsWith">Starts With</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 11px; color: var(--text-sec); display:block; margin-bottom: 3px;">Match Text:</label>
+            <input type="text" id="new-rule-val" placeholder="e.g. boss" style="width: 100%; background: #1e293b; border: 1px solid var(--border); color: white; padding: 5px 8px; border-radius: 5px; font-size: 12px;">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div>
+            <label style="font-size: 11px; color: var(--text-sec); display:block; margin-bottom: 3px;">Action:</label>
+            <select id="new-rule-action" style="width: 100%; background: #1e293b; border: 1px solid var(--border); color: white; padding: 5px; border-radius: 5px; font-size: 12px;">
+              <option value="tag">Apply Tag</option>
+              <option value="folder">Move to Folder</option>
+              <option value="star">Mark Starred</option>
+              <option value="read">Mark as Read</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 11px; color: var(--text-sec); display:block; margin-bottom: 3px;">Tag / Folder Param:</label>
+            <input type="text" id="new-rule-param" placeholder="e.g. Work or trash" style="width: 100%; background: #1e293b; border: 1px solid var(--border); color: white; padding: 5px 8px; border-radius: 5px; font-size: 12px;">
+          </div>
+        </div>
+        <button class="modal-btn primary" style="margin-top: 10px; width: 100%; padding: 6px;" onclick="addNewRule()">Add Rule</button>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content: space-between;">
+      <button class="modal-btn" onclick="runRulesOnInbox()">▶️ Run Rules Now on Inbox</button>
+      <button class="modal-btn primary" onclick="closeModal('rules-modal')">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- KiloNet Global Mail Delivery Modal -->
+<div class="modal-backdrop" id="network-modal" role="dialog" aria-modal="true" aria-labelledby="network-modal-title" onclick="onModalBackdropClick(event, 'network-modal')">
+  <div class="modal-window" style="width: 480px;">
+    <div class="modal-header">
+      <h3 id="network-modal-title"><span>🌐</span> KiloNet Global Mail Delivery (Firebase RTDB)</h3>
+      <button class="modal-close-btn" onclick="closeModal('network-modal')" aria-label="Close network modal">✕</button>
+    </div>
+    <div class="modal-content">
+      <p style="margin-top:0; color:#94a3b8; font-size:12.5px;">
+        Connect to real-time decentralized KiloApps global email delivery. Send and receive messages with peers browsing kiloapps.web.app anywhere in the world.
+      </p>
+      
+      <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:8px; padding:14px; margin-bottom:14px;">
+        <label style="font-size:12px; color:var(--text-sec); display:block; margin-bottom:6px;">Your KiloNet Email Address:</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="net-address-input" value="user@kilo.os" style="flex:1; background:#0f172a; border:1px solid var(--border); color:white; padding:8px 10px; border-radius:6px; font-size:13px; font-family:monospace;">
+          <button class="modal-btn" onclick="saveNetAddress()">Save</button>
+        </div>
+        <span style="font-size:11px; color:#64748b; margin-top:4px; display:block;">Tip: Set a custom handle (e.g. neo@kilo.os) so peers can email you directly.</span>
+      </div>
+
+      <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:8px; padding:14px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+          <span style="font-size:13px; font-weight:500;">Realtime Network Sync:</span>
+          <button id="net-toggle-btn" class="modal-btn primary" onclick="toggleNetworkMail()" style="padding:4px 12px; font-size:12px;">Enabled</button>
+        </div>
+        <div style="font-size:12px; color:var(--text-sec);">
+          Status: <strong id="net-status-text" style="color:#10b981;">Connected (RTDB)</strong><br>
+          Gateway: <span style="font-family:monospace; color:#93c5fd;">kiloappschat-default-rtdb.firebaseio.com</span><br>
+          Broadcast Address: <span style="font-family:monospace; color:#f59e0b;">all@kilo.os</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn primary" onclick="closeModal('network-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Export Formats Modal -->
+<div class="modal-backdrop" id="export-modal" role="dialog" aria-modal="true" aria-labelledby="export-modal-title" onclick="onModalBackdropClick(event, 'export-modal')">
+  <div class="modal-window" style="width: 480px;">
+    <div class="modal-header">
+      <h3 id="export-modal-title"><span>📤</span> Export Mailbox Data</h3>
+      <button class="modal-close-btn" onclick="closeModal('export-modal')" aria-label="Close export modal">✕</button>
+    </div>
+    <div class="modal-content">
+      <p style="margin-top:0; color:#94a3b8; font-size:12.5px;">Select an export standard to archive or migrate your KMail data:</p>
+      
+      <div class="export-card" onclick="exportMbox(); closeModal('export-modal');">
+        <div>
+          <div style="font-weight:600; color:#fff; font-size:13px;">📄 Unix Mailbox Archive (.MBOX)</div>
+          <div style="font-size:11.5px; color:var(--text-sec);">Standard RFC 4155 format for Thunderbird, Apple Mail & Pine.</div>
+        </div>
+        <kbd>.MBOX</kbd>
+      </div>
+
+      <div class="export-card" onclick="exportCsv(); closeModal('export-modal');">
+        <div>
+          <div style="font-weight:600; color:#fff; font-size:13px;">📊 Spreadsheet Index (.CSV)</div>
+          <div style="font-size:11.5px; color:var(--text-sec);">Tabular CSV table of IDs, senders, subjects, dates, tags & sizes.</div>
+        </div>
+        <kbd>.CSV</kbd>
+      </div>
+
+      <div class="export-card" onclick="exportJson(); closeModal('export-modal');">
+        <div>
+          <div style="font-weight:600; color:#fff; font-size:13px;">💾 Full JSON Mailbox Backup (.JSON)</div>
+          <div style="font-size:11.5px; color:var(--text-sec);">Complete raw structured archive for full mailbox restore in KMail.</div>
+        </div>
+        <kbd>.JSON</kbd>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn" onclick="closeModal('export-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
+  // Procedural Web Audio Engine (Genesis YM2612 2-op FM & SNES SPC700 Delay)
+  const AudioEngine = {
+    ctx: null,
+    enabled: localStorage.getItem('kmail_sfx_enabled') !== '0',
+    init() {
+      if (!this.ctx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) this.ctx = new AudioCtx();
+      }
+      if (this.ctx && this.ctx.state === 'suspended') {
+        this.ctx.resume();
+      }
+    },
+    toggle() {
+      this.enabled = !this.enabled;
+      localStorage.setItem('kmail_sfx_enabled', this.enabled ? '1' : '0');
+      return this.enabled;
+    },
+    playSend() {
+      if (!this.enabled) return;
+      this.init();
+      if (!this.ctx) return;
+      try {
+        const t = this.ctx.currentTime;
+        const carrier = this.ctx.createOscillator();
+        const mod = this.ctx.createOscillator();
+        const modGain = this.ctx.createGain();
+        const masterGain = this.ctx.createGain();
+
+        carrier.type = 'sine';
+        carrier.frequency.setValueAtTime(440, t);
+        carrier.frequency.exponentialRampToValueAtTime(880, t + 0.15);
+
+        mod.type = 'sine';
+        mod.frequency.setValueAtTime(880, t);
+        modGain.gain.setValueAtTime(300, t);
+        modGain.gain.exponentialRampToValueAtTime(10, t + 0.15);
+
+        mod.connect(carrier.frequency);
+        carrier.connect(masterGain);
+        masterGain.connect(this.ctx.destination);
+
+        masterGain.gain.setValueAtTime(0.2, t);
+        masterGain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+
+        carrier.start(t);
+        mod.start(t);
+        carrier.stop(t + 0.25);
+        mod.stop(t + 0.25);
+      } catch(e) {}
+    },
+    playReceive() {
+      if (!this.enabled) return;
+      this.init();
+      if (!this.ctx) return;
+      try {
+        const t = this.ctx.currentTime;
+        const osc1 = this.ctx.createOscillator();
+        const osc2 = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+
+        osc1.type = 'triangle';
+        osc2.type = 'sine';
+        osc1.frequency.setValueAtTime(587.33, t);
+        osc2.frequency.setValueAtTime(880, t + 0.08);
+
+        g.gain.setValueAtTime(0.22, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+
+        osc1.connect(g);
+        osc2.connect(g);
+        g.connect(this.ctx.destination);
+
+        osc1.start(t);
+        osc2.start(t + 0.08);
+        osc1.stop(t + 0.45);
+        osc2.stop(t + 0.45);
+      } catch(e) {}
+    },
+    playClick() {
+      if (!this.enabled) return;
+      this.init();
+      if (!this.ctx) return;
+      try {
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1200, t);
+        osc.frequency.exponentialRampToValueAtTime(400, t + 0.03);
+        g.gain.setValueAtTime(0.08, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+        osc.connect(g);
+        g.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.03);
+      } catch(e) {}
+    }
+  };
+
+  window.toggleAudio = function() {
+    const en = AudioEngine.toggle();
+    const btn = document.getElementById('sfx-toggle');
+    if (btn) btn.textContent = en ? '🔊 SFX: On' : '🔇 SFX: Off';
+    showToast(en ? 'Sound effects enabled.' : 'Sound effects muted.', 'info', 1500);
+  };
+
   // Non-blocking Toast Notification Helper
   function showToast(message, type = 'info', duration = 3500) {
     const container = document.getElementById('toast-container');
@@ -997,6 +1396,10 @@
   }
   function showHelpModal() {
     showModal('help-modal');
+  }
+  function openRulesModal() {
+    renderRulesList();
+    showModal('rules-modal');
   }
 
   // Tag Modal
@@ -1112,7 +1515,8 @@
     { id: 3, folder: 'inbox', subject: "Top Secret Info", sender: "agent@kilo.os", body: '{"iv":[1,2,3,4,5,6,7,8,9,10,11,12],"cipher":[146,7,100,49,108,195,166,117,136,192,135,247,28,36,70,100,178,101,93,98,94,9,232,3,191,125,52,134,43,18,97,172,213,82,218,197,243,158,39,68,153,108,112,123,100,149,64,56,123,236,93,164,161,253,22,90,125,70,153,189,199,13,210,169,139,240,57,201,250,213,63,51,85,60,114,238,241,116,116,160,89,125,111,87,186,223,35,96,219,242,148]}', unread: true, tags: ["Personal"], encrypted: true, starred: false },
     { id: 4, folder: 'inbox', subject: "Newsletter #42 - Desktop Innovations", sender: "news@kilo.os", body: "Weekly digest on minimalist operating system architecture and high efficiency UI design...", unread: false, tags: ["News"], encrypted: false, starred: false },
     { id: 5, folder: 'sent', subject: "Re: Meeting at 3PM with Team", sender: "boss@kilo.os", body: "I'll be there on time with the slides ready.", unread: false, tags: [], encrypted: false, starred: false },
-    { id: 6, folder: 'drafts', subject: "Draft: Q4 Architecture Roadmap", sender: "architecture@kilo.os", body: "Q4 Key Milestones:\n1. Expand KiloApps ecosystem\n2. Optimize native binary footprints under 999KB\n3. Parity enhancements across Web & Native", unread: false, tags: ["Work"], encrypted: false, starred: false }
+    { id: 6, folder: 'drafts', subject: "Draft: Q4 Architecture Roadmap", sender: "architecture@kilo.os", body: "Q4 Key Milestones:\n1. Expand KiloApps ecosystem\n2. Optimize native binary footprints under 999KB\n3. Parity enhancements across Web & Native", unread: false, tags: ["Work"], encrypted: false, starred: false },
+    { id: 7, folder: 'inbox', subject: "DIAGNOSTIC: 10.19.99.4 Gateway Anomaly", sender: "daemon@echo-subsystem.net", body: "GATEWAY ALERT - NODE 0x7F\n\nRouting reflection detected across gateway 10.19.99.4/classified.\nCarrier signature: 1999Hz subcarrier tone.\nVerify network routing tables in KNet and inspect raw frames via KHex offset 0x0400.\n\n-- KiloNet Daemon v1.99b", unread: true, tags: ["System"], encrypted: false, starred: false }
   ];
 
   function safeSaveEmails() {
@@ -1131,14 +1535,15 @@
         if (Array.isArray(parsed) && parsed.length > 0) {
           emails = parsed.map((m, idx) => ({
             id: typeof m.id === 'number' ? m.id : idx + 1,
-            folder: ['inbox', 'starred', 'sent', 'drafts', 'trash'].includes(m.folder) ? m.folder : 'inbox',
+            folder: ['inbox', 'starred', 'sent', 'drafts', 'outbox', 'trash'].includes(m.folder) ? m.folder : 'inbox',
             subject: typeof m.subject === 'string' ? m.subject : '(No Subject)',
             sender: typeof m.sender === 'string' ? m.sender : 'unknown@kilo.os',
             body: typeof m.body === 'string' ? m.body : '',
             unread: !!m.unread,
             tags: Array.isArray(m.tags) ? m.tags.filter(t => typeof t === 'string') : [],
             encrypted: !!m.encrypted,
-            starred: !!m.starred
+            starred: !!m.starred,
+            timestamp: typeof m.timestamp === 'number' ? m.timestamp : Date.now()
           }));
         }
       }
@@ -1153,32 +1558,315 @@
   let tabs = [];
   let activeTabId = null;
 
+  // Automated Mail Rules & Filter Engine
+  const RULES_KEY = 'kmail_rules_v2';
+  let rules = [
+    { id: 1, name: "Boss / Work Priority", field: "sender", match: "contains", val: "boss", action: "tag", param: "Work", star: true, enabled: true },
+    { id: 2, name: "Security & Confidential", field: "subject", match: "contains", val: "Secret", action: "tag", param: "Urgent", star: false, enabled: true },
+    { id: 3, name: "Weekly Newsletters", field: "subject", match: "contains", val: "Newsletter", action: "tag", param: "News", star: false, enabled: true },
+    { id: 4, name: "System Daemon Alerts", field: "sender", match: "contains", val: "daemon", action: "tag", param: "System", star: true, enabled: true }
+  ];
+
+  function safeLoadRules() {
+    try {
+      const data = localStorage.getItem(RULES_KEY);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) rules = parsed;
+      }
+    } catch(e) {}
+  }
+  safeLoadRules();
+
+  function safeSaveRules() {
+    try {
+      localStorage.setItem(RULES_KEY, JSON.stringify(rules));
+    } catch(e) {}
+  }
+
+  function applyRulesToEmail(em) {
+    let changed = false;
+    for (const r of rules) {
+      if (!r.enabled) continue;
+      let target = '';
+      if (r.field === 'sender') target = em.sender || '';
+      else if (r.field === 'subject') target = em.subject || '';
+      else if (r.field === 'body') target = (typeof em.body === 'string' ? em.body : '');
+
+      let matched = false;
+      const v = (r.val || '').toLowerCase();
+      const t = target.toLowerCase();
+      if (r.match === 'contains' && t.includes(v)) matched = true;
+      else if (r.match === 'equals' && t === v) matched = true;
+      else if (r.match === 'startsWith' && t.startsWith(v)) matched = true;
+
+      if (matched) {
+        if (r.star && !em.starred) {
+          em.starred = true;
+          changed = true;
+        }
+        if (r.action === 'tag' && r.param) {
+          if (!em.tags) em.tags = [];
+          if (!em.tags.includes(r.param)) {
+            em.tags.push(r.param);
+            changed = true;
+          }
+        } else if (r.action === 'folder' && r.param) {
+          if (em.folder !== r.param) {
+            em.folder = r.param;
+            changed = true;
+          }
+        } else if (r.action === 'read' && em.unread) {
+          em.unread = false;
+          changed = true;
+        }
+      }
+    }
+    return changed;
+  }
+
+  window.renderRulesList = function() {
+    const c = document.getElementById('rules-list-container');
+    if (!c) return;
+    if (rules.length === 0) {
+      c.innerHTML = '<div style="color:var(--text-sec); font-size:12px; text-align:center; padding:12px;">No automated rules defined.</div>';
+      return;
+    }
+    c.innerHTML = rules.map(r => `
+      <div class="rules-item">
+        <input type="checkbox" ${r.enabled ? 'checked' : ''} onchange="toggleRule(${r.id}, this.checked)" title="Enable/Disable rule" style="cursor:pointer;">
+        <div class="rules-item-info">
+          <div class="rules-item-title">${escapeHTML(r.name)}</div>
+          <div class="rules-item-desc">IF [${escapeHTML(r.field)}] ${escapeHTML(r.match)} "${escapeHTML(r.val)}" &rarr; ${escapeHTML(r.action)} "${escapeHTML(r.param||'')}" ${r.star ? '+ Star' : ''}</div>
+        </div>
+        <button onclick="deleteRule(${r.id})" style="background:none; border:none; color:#f87171; cursor:pointer; font-size:14px; padding:4px;" title="Delete rule">✕</button>
+      </div>
+    `).join('');
+  };
+
+  window.toggleRule = function(id, val) {
+    const r = rules.find(x => x.id === id);
+    if (r) {
+      r.enabled = val;
+      safeSaveRules();
+      renderRulesList();
+    }
+  };
+
+  window.deleteRule = function(id) {
+    rules = rules.filter(x => x.id !== id);
+    safeSaveRules();
+    renderRulesList();
+    showToast("Rule deleted.", "info");
+  };
+
+  window.addNewRule = function() {
+    const field = document.getElementById('new-rule-field').value;
+    const match = document.getElementById('new-rule-match').value;
+    const val = (document.getElementById('new-rule-val').value || '').trim();
+    const action = document.getElementById('new-rule-action').value;
+    const param = (document.getElementById('new-rule-param').value || '').trim();
+
+    if (!val) {
+      showToast("Please enter match text for the rule.", "warning");
+      return;
+    }
+
+    const newId = rules.reduce((max, r) => Math.max(max, r.id), 0) + 1;
+    const ruleName = `${field.toUpperCase()} ${match} "${val}"`;
+    rules.push({
+      id: newId,
+      name: ruleName,
+      field,
+      match,
+      val,
+      action,
+      param,
+      star: (action === 'star'),
+      enabled: true
+    });
+    safeSaveRules();
+    renderRulesList();
+    document.getElementById('new-rule-val').value = '';
+    document.getElementById('new-rule-param').value = '';
+    showToast(`Rule added: ${ruleName}`, "success");
+  };
+
+  window.runRulesOnInbox = function() {
+    let modified = 0;
+    emails.forEach(em => {
+      if (applyRulesToEmail(em)) modified++;
+    });
+    if (modified > 0) {
+      safeSaveEmails();
+      renderList();
+      updateFolderBadges();
+      showToast(`Processed rules: updated ${modified} email${modified===1?'':'s'}!`, "success");
+    } else {
+      showToast("Rules executed: no matching emails modified.", "info");
+    }
+  };
+
+  // KiloNet Global Mail Delivery via Firebase RTDB
+  let netEnabled = localStorage.getItem('kmail_net_enabled') !== '0';
+  let userAddress = localStorage.getItem('kmail_net_address') || 'user@kilo.os';
+  let processedNetworkMsgIds = new Set();
+  const sessionStartTime = Date.now() - 7200000;
+
+  window.saveNetAddress = function() {
+    const val = (document.getElementById('net-address-input').value || '').trim();
+    if (val && val.includes('@')) {
+      userAddress = val;
+      localStorage.setItem('kmail_net_address', userAddress);
+      updateNetworkUI();
+      updateStatusBar();
+      showToast(`Address updated to ${userAddress}`, 'success');
+    } else {
+      showToast('Please enter a valid email address (e.g. name@kilo.os)', 'warning');
+    }
+  };
+
+  window.toggleNetworkMail = function() {
+    netEnabled = !netEnabled;
+    localStorage.setItem('kmail_net_enabled', netEnabled ? '1' : '0');
+    updateNetworkUI();
+    updateStatusBar();
+    showToast(netEnabled ? 'KiloNet Realtime Mail Delivery Enabled.' : 'KiloNet Realtime Mail Delivery Disabled (Offline Mode).', 'info');
+  };
+
+  function updateNetworkUI() {
+    const netStatusText = document.getElementById('net-status-text');
+    const netToggleBtn = document.getElementById('net-toggle-btn');
+    const netAddressInput = document.getElementById('net-address-input');
+    const sideNetLabel = document.getElementById('side-net-label');
+    if (netAddressInput) netAddressInput.value = userAddress;
+
+    if (!netEnabled) {
+      if (netStatusText) { netStatusText.textContent = 'Disabled (Offline)'; netStatusText.style.color = '#94a3b8'; }
+      if (netToggleBtn) { netToggleBtn.textContent = 'Disabled'; netToggleBtn.className = 'modal-btn'; }
+      if (sideNetLabel) sideNetLabel.textContent = '⚪ Network: Off';
+    } else {
+      const isConnected = !!(window.fb && window.fb.db);
+      if (netStatusText) {
+        netStatusText.textContent = isConnected ? 'Connected (RTDB)' : 'Connecting...';
+        netStatusText.style.color = isConnected ? '#10b981' : '#f59e0b';
+      }
+      if (netToggleBtn) { netToggleBtn.textContent = 'Enabled'; netToggleBtn.className = 'modal-btn primary'; }
+      if (sideNetLabel) sideNetLabel.textContent = isConnected ? '🟢 Network Mail' : '⚡ Network Mail';
+    }
+  }
+
+  window.initNetworkMail = function() {
+    updateNetworkUI();
+    updateStatusBar();
+    if (!window.fb || !window.fb.db) return;
+    try {
+      const mailRef = window.fb.ref(window.fb.db, 'multiplayer/kmail/messages');
+      window.fb.onChildAdded(mailRef, (snapshot) => {
+        if (!netEnabled) return;
+        const msg = snapshot.val();
+        if (!msg) return;
+        const key = snapshot.key || msg.id;
+        if (processedNetworkMsgIds.has(key)) return;
+        processedNetworkMsgIds.add(key);
+
+        if (msg.timestamp && msg.timestamp < sessionStartTime) return;
+        if (msg.sender && msg.sender.toLowerCase() === userAddress.toLowerCase()) return;
+
+        const target = (msg.to || '').toLowerCase();
+        const myAddr = userAddress.toLowerCase();
+        const isForMe = target === myAddr || target === 'all@kilo.os' || target === 'network@kilo.os' || target === '*';
+
+        if (isForMe) {
+          const exists = emails.some(e => e.networkKey === key);
+          if (!exists) {
+            const newEm = {
+              id: nextId++,
+              networkKey: key,
+              folder: 'inbox',
+              subject: msg.subject || '(No Subject)',
+              sender: msg.sender || 'unknown@kilo.os',
+              body: msg.body || '',
+              unread: true,
+              tags: Array.isArray(msg.tags) ? msg.tags : ['Network'],
+              encrypted: !!msg.encrypted,
+              starred: false,
+              timestamp: msg.timestamp || Date.now()
+            };
+            applyRulesToEmail(newEm);
+            emails.unshift(newEm);
+            safeSaveEmails();
+            renderList();
+            updateFolderBadges();
+            AudioEngine.playReceive();
+            showToast(`✉️ Network Mail from ${newEm.sender}: ${newEm.subject}`, 'info', 5000);
+          }
+        }
+      });
+    } catch (e) {
+      console.warn("Failed to attach network mail listener:", e);
+    }
+  };
+
   function updateFolderBadges() {
     const inboxCount = emails.filter(e => e.folder === 'inbox' && e.unread).length;
     const starredCount = emails.filter(e => e.starred && e.folder !== 'trash').length;
     const sentCount = emails.filter(e => e.folder === 'sent').length;
     const draftsCount = emails.filter(e => e.folder === 'drafts').length;
+    const outboxCount = emails.filter(e => e.folder === 'outbox').length;
     const trashCount = emails.filter(e => e.folder === 'trash').length;
 
     document.getElementById('b-inbox').textContent = inboxCount;
     document.getElementById('b-starred').textContent = starredCount;
     document.getElementById('b-sent').textContent = sentCount;
     document.getElementById('b-drafts').textContent = draftsCount;
+    const bOutbox = document.getElementById('b-outbox');
+    if (bOutbox) bOutbox.textContent = outboxCount;
     document.getElementById('b-trash').textContent = trashCount;
   }
+
+  let activeQuickFilter = 'all';
+  window.setQuickFilter = function(f) {
+    activeQuickFilter = f;
+    document.querySelectorAll('.qfilter-btn').forEach(btn => btn.classList.remove('active'));
+    const b = document.getElementById(`qf-${f}`);
+    if (b) b.classList.add('active');
+    AudioEngine.playClick();
+    renderList();
+  };
 
   function getVisibleFilteredEmails() {
     const sq = (document.getElementById('search-box').value || '').toLowerCase().trim();
     const tagF = document.getElementById('tag-filter').value;
-    return emails.filter(e => {
+    const sortVal = (document.getElementById('sort-select') ? document.getElementById('sort-select').value : 'newest');
+
+    let res = emails.filter(e => {
       const matchesFolder = (currentFolder === 'starred') ? (e.starred && e.folder !== 'trash') : (e.folder === currentFolder);
       const subStr = (e.subject || '').toLowerCase();
       const sndStr = (e.sender || '').toLowerCase();
       const bodyStr = (typeof e.body === 'string' ? e.body : '').toLowerCase();
       const matchesSearch = !sq || (subStr.includes(sq) || sndStr.includes(sq) || bodyStr.includes(sq));
       const matchesTag = (tagF === "" || (Array.isArray(e.tags) && e.tags.includes(tagF)));
-      return matchesFolder && matchesSearch && matchesTag;
+      
+      let matchesQuick = true;
+      if (activeQuickFilter === 'starred') matchesQuick = !!e.starred;
+      else if (activeQuickFilter === 'unread') matchesQuick = !!e.unread;
+      else if (activeQuickFilter === 'enc') matchesQuick = !!e.encrypted;
+
+      return matchesFolder && matchesSearch && matchesTag && matchesQuick;
     });
+
+    if (sortVal === 'newest') {
+      res.sort((a, b) => b.id - a.id);
+    } else if (sortVal === 'oldest') {
+      res.sort((a, b) => a.id - b.id);
+    } else if (sortVal === 'subject') {
+      res.sort((a, b) => (a.subject || '').localeCompare(b.subject || ''));
+    } else if (sortVal === 'sender') {
+      res.sort((a, b) => (a.sender || '').localeCompare(b.sender || ''));
+    }
+
+    return res;
   }
 
   window.clearSearch = function() {
@@ -1207,6 +1895,7 @@
     if (currentFolder === 'starred') folderIcon = '⭐';
     else if (currentFolder === 'sent') folderIcon = '📤';
     else if (currentFolder === 'drafts') folderIcon = '📝';
+    else if (currentFolder === 'outbox') folderIcon = '📬';
     else if (currentFolder === 'trash') folderIcon = '🗑️';
 
     let totalInFolder = emails.filter(e => currentFolder === 'starred' ? (e.starred && e.folder !== 'trash') : e.folder === currentFolder).length;
@@ -1216,7 +1905,12 @@
     statusFolder.textContent = `${folderIcon} ${folderName} · ${totalInFolder} message${totalInFolder === 1 ? '' : 's'}${unreadStr}`;
 
     if (statusStorage) {
-      statusStorage.textContent = `${emails.length} total · AES-GCM · LocalStorage`;
+      if (!netEnabled) {
+        statusStorage.innerHTML = `⚪ Offline · ${escapeHTML(userAddress)}`;
+      } else {
+        const isConnected = !!(window.fb && window.fb.db);
+        statusStorage.innerHTML = isConnected ? `<span style="color:#10b981;">🟢</span> KiloNet: ${escapeHTML(userAddress)}` : `<span style="color:#f59e0b;">⚡</span> ${escapeHTML(userAddress)}`;
+      }
     }
   }
 
@@ -1484,8 +2178,12 @@
       actionsHtml += `<button onclick="toggleUnread(${em.id})" title="Toggle Read/Unread status (U)"><span>${em.unread ? '✓ Mark Read' : '✉ Mark Unread'}</span> <kbd>U</kbd></button>`;
       actionsHtml += `<button onclick="newComposeTab(emails.find(e=>e.id==${em.id}))" title="Reply to sender (R)"><span>↩️ Reply</span> <kbd>R</kbd></button>`;
       actionsHtml += `<button onclick="openTagModal(${em.id})" title="Add/remove tags (T)"><span>🏷️ Tag</span> <kbd>T</kbd></button>`;
+      actionsHtml += `<button onclick="printEmail(${em.id})" title="Print or preview email (P)"><span>🖨️ Print</span> <kbd>P</kbd></button>`;
       actionsHtml += `<button onclick="exportSingleEml(${em.id})" title="Export as .EML (E)"><span>📄 .EML</span> <kbd>E</kbd></button>`;
       actionsHtml += `<button onclick="exportSingleMd(${em.id})" title="Export as Markdown (M)"><span>📝 .MD</span> <kbd>M</kbd></button>`;
+      if (em.folder === 'outbox') {
+        actionsHtml += `<button class="modal-btn primary" style="padding:4px 10px;" onclick="sendEmailNowFromOutbox(${em.id})" title="Send this outbox email now"><span>🚀 Dispatch</span></button>`;
+      }
       actionsHtml += `<button class="del-btn" onclick="deleteEmail(${em.id})" title="Delete / Move to Trash (Del)"><span>🗑️ Delete</span> <kbd>Del</kbd></button>`;
 
       let bodyHtml = escapeHTML(em.body);
@@ -1504,7 +2202,7 @@
         <div class="pane-header">
           <div>
             <h2 class="pane-subject">${em.starred ? '<span style="color:var(--gold)">★</span> ' : ''}${em.encrypted ? '🔒 ' : ''}${escapeHTML(em.subject)}</h2>
-            <p class="pane-sender">${em.folder==='sent' ? 'To: ' + escapeHTML(em.sender) : 'From: ' + escapeHTML(em.sender)}</p>
+            <p class="pane-sender">${em.folder==='sent' ? 'To: ' + escapeHTML(em.sender) : (em.folder==='outbox' ? 'Queued To: ' + escapeHTML(em.sender) : 'From: ' + escapeHTML(em.sender))}</p>
             <div class="item-tags" style="margin-top:8px;">${tagsHtml}</div>
           </div>
           <div class="pane-actions">${actionsHtml}</div>
@@ -1514,7 +2212,7 @@
     } else if (tab.type === 'compose') {
       pane.innerHTML = `
         <div class="compose-body">
-          <input type="text" id="c-to-${tab.id}" placeholder="To: recipient@kilo.os" value="${escapeHTML(tab.data.to)}" oninput="updateTabData('${tab.id}', 'to', this.value)">
+          <input type="text" id="c-to-${tab.id}" placeholder="To: recipient@kilo.os (or all@kilo.os)" value="${escapeHTML(tab.data.to)}" oninput="updateTabData('${tab.id}', 'to', this.value)">
           <input type="text" id="c-sub-${tab.id}" placeholder="Subject: Important discussion" value="${escapeHTML(tab.data.sub)}" oninput="updateTabData('${tab.id}', 'sub', this.value)">
           <textarea id="c-body-${tab.id}" placeholder="Write your message here..." oninput="updateTabData('${tab.id}', 'body', this.value)">${escapeHTML(tab.data.body)}</textarea>
           <div class="compose-actions">
@@ -1529,8 +2227,11 @@
               <button class="modal-btn" style="display:flex; align-items:center; gap:6px;" onclick="saveDraft('${tab.id}')">
                 <span>💾 Save Draft</span> <kbd>Ctrl+S</kbd>
               </button>
-              <button class="modal-btn primary" style="display:flex; align-items:center; gap:6px;" onclick="sendEmail('${tab.id}')">
-                <span>✈️ Send</span> <kbd>Ctrl+↵</kbd>
+              <button class="modal-btn" style="display:flex; align-items:center; gap:6px;" onclick="sendEmail('${tab.id}', true)" title="Queue message in Outbox">
+                <span>⏳ Outbox</span>
+              </button>
+              <button class="modal-btn primary" style="display:flex; align-items:center; gap:6px;" onclick="sendEmail('${tab.id}', false)">
+                <span>✈️ Send Now</span> <kbd>Ctrl+↵</kbd>
               </button>
             </div>
           </div>
@@ -1589,7 +2290,7 @@
     showToast("Draft saved to Drafts folder.", "success");
   }
 
-  window.sendEmail = async function(tid) {
+  window.sendEmail = async function(tid, queueInOutbox = false) {
     let t = tabs.find(t => t.id === tid);
     if(!t) return;
     let data = t.data;
@@ -1612,33 +2313,240 @@
       finalBody = await encryptText(data.body, data.password);
     }
 
+    if (queueInOutbox) {
+      const newEmail = {
+        id: t.draftId ? t.draftId : nextId++,
+        folder: 'outbox',
+        subject: data.sub || '(No Subject)',
+        sender: data.to.trim(),
+        body: finalBody,
+        unread: false,
+        tags: ["Queued"],
+        encrypted: isEncrypted,
+        starred: false,
+        timestamp: Date.now()
+      };
+      if (t.draftId) {
+        let existingDraft = emails.find(e => e.id === t.draftId);
+        if (existingDraft) Object.assign(existingDraft, newEmail);
+        else emails.unshift(newEmail);
+      } else {
+        emails.unshift(newEmail);
+      }
+      safeSaveEmails();
+      closeTab(tid);
+      AudioEngine.playClick();
+      renderList();
+      showToast("Message placed in Outbox queue.", "info");
+      return;
+    }
+
     if (t.draftId) {
       let existingDraft = emails.find(e => e.id === t.draftId);
       if (existingDraft) {
         existingDraft.folder = 'sent';
-        existingDraft.subject = data.sub || 'No Subject';
+        existingDraft.subject = data.sub || '(No Subject)';
         existingDraft.sender = data.to.trim();
         existingDraft.body = finalBody;
         existingDraft.encrypted = isEncrypted;
+        existingDraft.timestamp = Date.now();
       }
     } else {
       emails.unshift({
         id: nextId++,
         folder: 'sent',
-        subject: data.sub || 'No Subject',
+        subject: data.sub || '(No Subject)',
         sender: data.to.trim(),
         body: finalBody,
         unread: false,
         tags: [],
         encrypted: isEncrypted,
-        starred: false
+        starred: false,
+        timestamp: Date.now()
       });
     }
+
+    // Broadcast over KiloNet if enabled and connected
+    if (netEnabled && window.fb && window.fb.db) {
+      try {
+        const mailRef = window.fb.ref(window.fb.db, 'multiplayer/kmail/messages');
+        const newMsgRef = window.fb.push(mailRef);
+        const payload = {
+          id: newMsgRef.key,
+          sender: userAddress,
+          to: data.to.trim(),
+          subject: data.sub || '(No Subject)',
+          body: finalBody,
+          encrypted: isEncrypted,
+          tags: ['Network'],
+          timestamp: Date.now()
+        };
+        processedNetworkMsgIds.add(newMsgRef.key);
+        window.fb.set(newMsgRef, payload);
+      } catch (err) {
+        console.warn("Failed to push to Firebase RTDB:", err);
+      }
+    }
+
     safeSaveEmails();
     closeTab(tid);
-    if(currentFolder === 'sent' || currentFolder === 'drafts') renderList();
+    AudioEngine.playSend();
+    if(currentFolder === 'sent' || currentFolder === 'drafts' || currentFolder === 'outbox') renderList();
     showToast("Message sent successfully!", "success");
-  }
+  };
+
+  window.sendEmailNowFromOutbox = async function(eid) {
+    let em = emails.find(e => e.id === eid);
+    if (!em) return;
+    em.folder = 'sent';
+    em.tags = (em.tags || []).filter(t => t !== 'Queued');
+    
+    if (netEnabled && window.fb && window.fb.db) {
+      try {
+        const mailRef = window.fb.ref(window.fb.db, 'multiplayer/kmail/messages');
+        const newMsgRef = window.fb.push(mailRef);
+        const payload = {
+          id: newMsgRef.key,
+          sender: userAddress,
+          to: em.sender,
+          subject: em.subject,
+          body: em.body,
+          encrypted: em.encrypted,
+          tags: ['Network'],
+          timestamp: Date.now()
+        };
+        processedNetworkMsgIds.add(newMsgRef.key);
+        window.fb.set(newMsgRef, payload);
+      } catch (err) {}
+    }
+
+    safeSaveEmails();
+    AudioEngine.playSend();
+    renderList();
+    renderPane();
+    showToast("Outbox message dispatched!", "success");
+  };
+
+  window.flushOutbox = async function() {
+    const outboxEmails = emails.filter(e => e.folder === 'outbox');
+    if (outboxEmails.length === 0) {
+      showToast("Outbox is empty.", "info");
+      return;
+    }
+    let count = 0;
+    for (const em of outboxEmails) {
+      em.folder = 'sent';
+      em.tags = (em.tags || []).filter(t => t !== 'Queued');
+      count++;
+      if (netEnabled && window.fb && window.fb.db) {
+        try {
+          const mailRef = window.fb.ref(window.fb.db, 'multiplayer/kmail/messages');
+          const newMsgRef = window.fb.push(mailRef);
+          const payload = {
+            id: newMsgRef.key,
+            sender: userAddress,
+            to: em.sender,
+            subject: em.subject,
+            body: em.body,
+            encrypted: em.encrypted,
+            tags: ['Network'],
+            timestamp: Date.now()
+          };
+          processedNetworkMsgIds.add(newMsgRef.key);
+          window.fb.set(newMsgRef, payload);
+        } catch (err) {}
+      }
+    }
+    safeSaveEmails();
+    AudioEngine.playSend();
+    renderList();
+    updateFolderBadges();
+    showToast(`Dispatched ${count} message${count===1?'':'s'} from Outbox!`, "success");
+  };
+
+  window.exportMbox = function(folderOnly = false) {
+    const targetEmails = folderOnly ? emails.filter(e => currentFolder === 'starred' ? (e.starred && e.folder !== 'trash') : e.folder === currentFolder) : emails.filter(e => e.folder !== 'trash');
+    let mbox = '';
+    const nowStr = new Date().toUTCString();
+    targetEmails.forEach(e => {
+      const sender = e.sender || 'unknown@kilo.os';
+      const sub = e.subject || '(No Subject)';
+      const cleanBody = (typeof e.body === 'string' ? e.body : '').replace(/\r?\nFrom /g, '\n>From ');
+      mbox += `From ${sender} ${nowStr}\n`;
+      mbox += `From: ${sender}\n`;
+      mbox += `To: ${userAddress}\n`;
+      mbox += `Subject: ${sub}\n`;
+      mbox += `Date: ${nowStr}\n`;
+      mbox += `X-Folder: ${e.folder}\n`;
+      mbox += `X-Starred: ${e.starred ? 'yes' : 'no'}\n`;
+      mbox += `X-Tags: ${(e.tags || []).join(', ')}\n`;
+      mbox += `MIME-Version: 1.0\n`;
+      mbox += `Content-Type: text/plain; charset=utf-8\n\n`;
+      mbox += cleanBody + '\n\n';
+    });
+    const blob = new Blob([mbox], { type: 'application/mbox' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = folderOnly ? `kmail_${currentFolder}.mbox` : `kmail_mailbox.mbox`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    AudioEngine.playClick();
+    showToast(`Exported ${targetEmails.length} messages to Unix MBOX.`, "success");
+  };
+
+  window.exportCsv = function() {
+    const rows = [
+      ['ID', 'Folder', 'Date', 'Sender', 'Subject', 'Starred', 'Unread', 'Encrypted', 'Tags', 'Size']
+    ];
+    emails.filter(e => e.folder !== 'trash').forEach(e => {
+      rows.push([
+        e.id,
+        e.folder,
+        new Date().toISOString(),
+        `"${(e.sender || '').replace(/"/g, '""')}"`,
+        `"${(e.subject || '').replace(/"/g, '""')}"`,
+        e.starred ? 'YES' : 'NO',
+        e.unread ? 'YES' : 'NO',
+        e.encrypted ? 'YES' : 'NO',
+        `"${(e.tags || []).join(';')}"`,
+        (typeof e.body === 'string' ? e.body : '').length
+      ]);
+    });
+    const csvContent = rows.map(r => r.join(',')).join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = "kmail_index.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    AudioEngine.playClick();
+    showToast("Exported mailbox index to CSV.", "success");
+  };
+
+  window.printEmail = function(eid) {
+    let em = emails.find(e => e.id === eid);
+    if (!em) return;
+    const printWin = window.open('', '_blank', 'width=700,height=600');
+    if (printWin) {
+      printWin.document.write(`
+        <!DOCTYPE html><html><head><title>${escapeHTML(em.subject)}</title>
+        <style>body{font-family:system-ui,-apple-system,sans-serif;margin:24px;color:#111;line-height:1.5;} h2{margin:0 0 8px;} hr{border:none;border-top:1px solid #ccc;margin:12px 0;} pre{white-space:pre-wrap;font-family:inherit;font-size:14px;}</style>
+        </head><body>
+        <h2>${escapeHTML(em.subject)}</h2>
+        <div><strong>From:</strong> ${escapeHTML(em.sender)}</div>
+        <div><strong>Folder:</strong> ${escapeHTML(em.folder)} | <strong>Tags:</strong> ${escapeHTML((em.tags||[]).join(', '))}</div>
+        <hr>
+        <pre>${escapeHTML(em.body)}</pre>
+        <script>window.print();<\/script>
+        </body></html>
+      `);
+      printWin.document.close();
+    }
+  };
 
   window.attemptDecrypt = async function(eid) {
     let em = emails.find(e => e.id === eid);
@@ -1655,11 +2563,12 @@
       let resDiv = document.getElementById(`dec-res-${eid}`);
       resDiv.style.display = 'block';
       resDiv.innerHTML = `<strong style="color:#93c5fd;">🔓 Decrypted Content:</strong><br><br>${escapeHTML(dec).replace(/\n/g, '<br>')}`;
+      AudioEngine.playClick();
       showToast("Decrypted successfully!", "success");
     } else {
       showToast("Incorrect password or corrupted data.", "error");
     }
-  }
+  };
 
   window.deleteEmail = function(eid) {
     let em = emails.find(e => e.id === eid);
@@ -1674,8 +2583,9 @@
     let t = tabs.find(t => (t.type === 'read' && t.emailId === eid) || (t.type === 'compose' && t.draftId === eid));
     if(t) closeTab(t.id);
     safeSaveEmails();
+    AudioEngine.playClick();
     renderList();
-  }
+  };
 
   window.exportSingleEml = function(eid) {
     let em = emails.find(e => e.id === eid);
@@ -1689,8 +2599,9 @@
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    AudioEngine.playClick();
     showToast(`Exported email_${em.id}.eml`, "success");
-  }
+  };
 
   window.exportSingleMd = function(eid) {
     let em = emails.find(e => e.id === eid);
@@ -1704,8 +2615,9 @@
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    AudioEngine.playClick();
     showToast(`Exported email_${em.id}.md`, "success");
-  }
+  };
 
   window.exportJson = function() {
     const blob = new Blob([JSON.stringify(emails, null, 2)], { type: 'application/json' });
@@ -1716,8 +2628,9 @@
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    AudioEngine.playClick();
     showToast("Exported mailbox backup JSON.", "success");
-  }
+  };
 
   window.importJson = function(event) {
     const file = event.target.files[0];
@@ -1832,6 +2745,20 @@
       return;
     }
 
+    // F3: Automated Mail Rules Wizard
+    if (e.key === 'F3') {
+      e.preventDefault();
+      openRulesModal();
+      return;
+    }
+
+    // F4: KiloNet Global Network Settings
+    if (e.key === 'F4') {
+      e.preventDefault();
+      showModal('network-modal');
+      return;
+    }
+
     if (!hasModifier && e.key === '/') {
       e.preventDefault();
       const sb = document.getElementById('search-box');
@@ -1857,12 +2784,13 @@
       return;
     }
 
-    // Folder shortcuts [1-5]
+    // Folder shortcuts [1-6]
     if (e.key === '1') { switchFolder('inbox'); return; }
     if (e.key === '2') { switchFolder('starred'); return; }
     if (e.key === '3') { switchFolder('sent'); return; }
     if (e.key === '4') { switchFolder('drafts'); return; }
-    if (e.key === '5') { switchFolder('trash'); return; }
+    if (e.key === '5') { switchFolder('outbox'); return; }
+    if (e.key === '6') { switchFolder('trash'); return; }
 
     // Compose new message [C] or [N]
     if (e.key === 'c' || e.key === 'C' || e.key === 'n' || e.key === 'N') {
@@ -1871,7 +2799,7 @@
       return;
     }
 
-    // Import [I] / Export [O] Mailbox JSON
+    // Import [I] / Export [O]
     if (e.key === 'i' || e.key === 'I') {
       e.preventDefault();
       document.getElementById('import-file').click();
@@ -1879,7 +2807,7 @@
     }
     if (e.key === 'o' || e.key === 'O') {
       e.preventDefault();
-      exportJson();
+      showModal('export-modal');
       return;
     }
 
@@ -1907,6 +2835,11 @@
           if (e.key === 't' || e.key === 'T') {
             e.preventDefault();
             openTagModal(em.id);
+            return;
+          }
+          if (e.key === 'p' || e.key === 'P') {
+            e.preventDefault();
+            printEmail(em.id);
             return;
           }
           if (e.key === 'e' || e.key === 'E') {

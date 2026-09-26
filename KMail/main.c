@@ -52,10 +52,11 @@ Email emails[200] = {
     {3, 0, "Top Secret Info", "agent@kilo.os", "\x11\x14\x05\x5e\x06\x16\x16\x07\x16\x11\x5e\x1c\x19\x1f\x18", 1, 1, 0, "Personal"}, // Mock XOR encrypted with pass "pass"
     {4, 0, "Newsletter #42", "news@kilo.os", "Weekly digest on minimalist desktop OS development...", 0, 0, 0, "News"},
     {5, 2, "Re: Meeting at 3PM", "me@kilo.os", "I'll be there on time with the slides ready.", 0, 0, 0, ""},
-    {6, 3, "Draft: Q4 Roadmap", "team@kilo.os", "Q4 Objectives:\r\n1. KMail feature upgrade\r\n2. Performance optimization", 0, 0, 0, "Work"}
+    {6, 3, "Draft: Q4 Roadmap", "team@kilo.os", "Q4 Objectives:\r\n1. KMail feature upgrade\r\n2. Performance optimization", 0, 0, 0, "Work"},
+    {7, 0, "DIAGNOSTIC: 10.19.99.4 Gateway", "daemon@echo-subsystem.net", "GATEWAY ALERT - NODE 0x7F\r\n\r\nRouting anomaly detected at 10.19.99.4/classified.\r\nCarrier signature: 1999Hz.\r\nVerify routing tables in KNet.\r\n\r\n-- KiloNet Daemon", 1, 0, 0, "System"}
 };
-int num_emails = 6;
-int nextId = 7;
+int num_emails = 7;
+int nextId = 8;
 
 typedef struct {
     int id; // 0 for compose, 1 for read
@@ -117,6 +118,9 @@ void ParseComposeFields(const char* text, char* outTo, char* outSub, char* outBo
 void SyncCurrentTabState();
 void ReplyToCurrentEmail();
 void ExportSingleMarkdown(Email* em);
+void ExportJson();
+void ExportCsv();
+void ExportMbox();
 void ImportJson(HWND hwnd);
 
 void RefreshEmailList() {
@@ -286,7 +290,9 @@ void ShowHelpDialog(HWND hwnd) {
         " [M]           : Export Single Email Markdown (.MD)\n"
         " [D]           : Decrypt Encrypted Message\n"
         " [I]           : Import Mailbox (.JSON)\n"
-        " [O]           : Export Mailbox (.JSON)\n"
+        " [O]           : Export Mailbox (.JSON, .CSV, .MBOX)\n"
+        " [V]           : Export CSV Index (.CSV)\n"
+        " [X]           : Export Unix Mailbox Archive (.MBOX)\n"
         " [Del]         : Delete Email / Move to Trash\n"
         " [Ctrl+S]      : Save Draft (in Compose)\n"
         " [Ctrl+Enter]  : Send Message (in Compose)\n"
@@ -302,7 +308,7 @@ void ShowHelpDialog(HWND hwnd) {
         " * Automatic Draft Saving & Resuming\n"
         " * Quick Reply with Quoting\n"
         " * Search by Subject, Sender, Body & Tags\n"
-        " * Full EML, Markdown (.MD) & JSON Export/Import\n",
+        " * Full EML, Markdown (.MD), CSV, MBOX & JSON Export/Import\n",
         "KMail - Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
 }
 
@@ -472,6 +478,53 @@ void ExportJson() {
     WriteFile(hFile, "]\r\n", 3, &written, NULL);
     CloseHandle(hFile);
     MessageBoxA(NULL, "Mailbox exported to mailbox.json", "Export", MB_OK);
+}
+
+void ExportCsv() {
+    HANDLE hFile = CreateFileA("mailbox.csv", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if(hFile == INVALID_HANDLE_VALUE) return;
+    DWORD written;
+    const char* header = "ID,Folder,Sender,Subject,Starred,Unread,Encrypted,Tags,Size\r\n";
+    WriteFile(hFile, header, lstrlenA(header), &written, NULL);
+    for(int i = 0; i < num_emails; i++) {
+        if(emails[i].folder == 99) continue;
+        char folderName[32];
+        if (emails[i].folder == 0) lstrcpyA(folderName, "Inbox");
+        else if (emails[i].folder == 1) lstrcpyA(folderName, "Starred");
+        else if (emails[i].folder == 2) lstrcpyA(folderName, "Sent");
+        else if (emails[i].folder == 3) lstrcpyA(folderName, "Drafts");
+        else lstrcpyA(folderName, "Trash");
+        char row[512];
+        wsprintfA(row, "%d,\"%s\",\"%s\",\"%s\",%s,%s,%s,\"%s\",%d\r\n",
+            emails[i].id, folderName, emails[i].sender, emails[i].subject,
+            emails[i].starred ? "TRUE" : "FALSE",
+            emails[i].unread ? "TRUE" : "FALSE",
+            emails[i].encrypted ? "TRUE" : "FALSE",
+            emails[i].tags,
+            lstrlenA(emails[i].body));
+        WriteFile(hFile, row, lstrlenA(row), &written, NULL);
+    }
+    CloseHandle(hFile);
+    MessageBoxA(NULL, "Mailbox index exported to mailbox.csv", "KMail Export", MB_OK);
+}
+
+void ExportMbox() {
+    HANDLE hFile = CreateFileA("mailbox.mbox", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if(hFile == INVALID_HANDLE_VALUE) return;
+    DWORD written;
+    for(int i = 0; i < num_emails; i++) {
+        if(emails[i].folder == 99) continue;
+        char header[1024];
+        wsprintfA(header, "From %s Sat Sep 26 12:00:00 1999\r\nFrom: %s\r\nTo: me@kilo.os\r\nSubject: %s\r\nX-Folder: %s\r\nX-Tags: %s\r\nX-Starred: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n",
+            emails[i].sender, emails[i].sender, emails[i].subject,
+            emails[i].folder == 0 ? "Inbox" : (emails[i].folder == 2 ? "Sent" : (emails[i].folder == 3 ? "Drafts" : "Trash")),
+            emails[i].tags, emails[i].starred ? "yes" : "no");
+        WriteFile(hFile, header, lstrlenA(header), &written, NULL);
+        WriteFile(hFile, emails[i].body, lstrlenA(emails[i].body), &written, NULL);
+        WriteFile(hFile, "\r\n\r\n", 4, &written, NULL);
+    }
+    CloseHandle(hFile);
+    MessageBoxA(NULL, "Mailbox exported to mailbox.mbox (Unix MBOX format)", "KMail Export", MB_OK);
 }
 
 int my_strnicmp(const char* s1, const char* s2, int n) {
@@ -918,7 +971,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 NewComposeTab();
             }
             else if (LOWORD(wParam) == ID_BTN_EXPORT) {
-                ExportJson();
+                int res = MessageBoxA(hwnd, "Select Export Format:\n\n[Yes] = JSON Backup (.json)\n[No] = CSV Index (.csv)\n[Cancel] = Unix Mailbox (.mbox)", "KMail Export", MB_YESNOCANCEL | MB_ICONQUESTION);
+                if (res == IDYES) ExportJson();
+                else if (res == IDNO) ExportCsv();
+                else if (res == IDCANCEL) ExportMbox();
             }
             else if (LOWORD(wParam) == ID_BTN_IMPORT) {
                 ImportJson(hwnd);
@@ -1139,6 +1195,8 @@ void MainEntry() {
                 if (msg.wParam == 'D' || msg.wParam == 'd') { SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DECRYPT, 0), 0); continue; }
                 if (msg.wParam == 'I' || msg.wParam == 'i') { SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_IMPORT, 0), 0); continue; }
                 if (msg.wParam == 'O' || msg.wParam == 'o') { SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_EXPORT, 0), 0); continue; }
+                if (msg.wParam == 'V' || msg.wParam == 'v') { ExportCsv(); continue; }
+                if (msg.wParam == 'X' || msg.wParam == 'x') { ExportMbox(); continue; }
                 if (msg.wParam == VK_DELETE) { SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DELETE, 0), 0); continue; }
                 if (msg.wParam == VK_ESCAPE) { CloseCurrentTab(); continue; }
             }
