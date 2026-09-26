@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-26T12:45:00Z — kilo-usability: KMandel (UI/UX Usability, HiDPI Scaling & Ergonomics Pass)**
+  - Status: PASS ✅ (HiDPI scaling fixed, collapsible controls [C], F5/F9 quicksave/load, touch pinch; 0 regressions).
+  - HiDPI Canvas & Effects: Scaled canvas context by DPR, fixing off-center particle explosions, shockwaves, motes, and filigree.
+  - Collapsible Controls: Added header collapse toggle ([—]) and floating pill button ([⚙️ Controls / C]) for unobstructed viewing.
+  - State Persistence: Implemented F5 quicksave and F9 quickload across HTML and native Win32 C with dedicated UI buttons.
+  - Ergonomics & Touch: Added multi-touch 2-finger pinch-to-zoom for mobile/tablets; added first-run tutorial modal onboarding.
+  - Sizing & Layout: Bumped default window to 1024x720 in App.jsx and meta tag, eliminating control panel vertical scroll clipping.
+  - Verification: MSVC compile clean (`KMandel.exe` 25.1 KB); Vite clean build in 391ms (`kmandel.html` 84.4 KB); security lint 100% PASS.
+
 - **2026-09-26T11:55:00Z — kilo-tester: KAudio (Interactive UI Audit & Repair Pass)**
   - Status: PASS ✅ (6 issues, 6 fixed; 0 regressions).
   - Piano Keys Layout: Restored `data-note` attributes on piano key elements, fixing stacked black key positioning.

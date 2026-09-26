@@ -111,7 +111,7 @@
 
         /* Toast Notifications */
         #toastContainer {
-            position: fixed; bottom: 28px; right: 20px; z-index: 9999;
+            position: fixed; top: 48px; right: 20px; z-index: 9999;
             display: flex; flex-direction: column; gap: 8px; pointer-events: none;
         }
         .kbbs-toast {
@@ -122,9 +122,10 @@
             color: #f1f5f9; padding: 10px 16px; border-radius: 8px;
             font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 10px;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.2);
-            opacity: 0; transform: translateY(12px) scale(0.96);
+            opacity: 0; transform: translateY(-8px) scale(0.96);
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             pointer-events: auto; max-width: 380px; line-height: 1.4;
+            cursor: pointer; user-select: none;
         }
         .kbbs-toast.visible { opacity: 1; transform: translateY(0) scale(1); }
         .kbbs-toast.success { border-color: rgba(16, 185, 129, 0.4); border-left-color: #10b981; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.6), 0 0 15px rgba(16, 185, 129, 0.2); }
@@ -136,11 +137,11 @@
     <div id="toastContainer"></div>
     <div class="conn-bar">
         <span>Host:</span>
-        <input type="text" id="host" placeholder="Address..." value="" onkeydown="if(event.key==='Enter') toggleConnect()">
+        <input type="text" id="host" placeholder="Address..." value="" onkeydown="if(event.key==='Enter') { initAudio(); toggleConnect(); }">
         <span>Port:</span>
-        <input type="text" id="port" value="23" onkeydown="if(event.key==='Enter') toggleConnect()">
+        <input type="text" id="port" value="23" onkeydown="if(event.key==='Enter') { initAudio(); toggleConnect(); }">
         <label style="color: #d4d4d8; display: flex; align-items: center; gap: 4px; font-size: 11px; text-transform: uppercase; font-weight: 600; cursor: pointer; user-select: none; margin: 0 2px;">
-            <input type="checkbox" id="localEcho"> Echo
+            <input type="checkbox" id="localEcho" onchange="toggleLocalEcho(this.checked)"> Echo
         </label>
         <label style="color: #d4d4d8; display: flex; align-items: center; gap: 4px; font-size: 11px; text-transform: uppercase; font-weight: 600; cursor: pointer; user-select: none; margin: 0 2px;">
             <input type="checkbox" id="crtToggle" checked onchange="toggleCRT()"> CRT
@@ -151,6 +152,8 @@
         <button id="btnDoorGames" onclick="showDoorGames()" style="background: linear-gradient(180deg, #ec4899 0%, #be185d 100%); border-color: #9d174d;">Door Games [G]</button>
         <button id="btnAnsiArt" onclick="showAnsiArtViewer()" style="background: linear-gradient(180deg, #6366f1 0%, #4338ca 100%); border-color: #3730a3;">ANSI Art [A]</button>
         <button id="btnMsgBase" onclick="showMsgBase()" style="background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); border-color: #b45309;">EchoNet [E]</button>
+        <button id="btnSave" onclick="masterQuicksave()" style="background: linear-gradient(180deg, #059669 0%, #047857 100%); border-color: #065f46;">Save [F5]</button>
+        <button id="btnLoad" onclick="masterQuickload()" style="background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%); border-color: #075985;">Load [F9]</button>
         <button id="btnXmDl" onclick="startTransfer(1)" title="XMODEM Download" style="background: linear-gradient(180deg, #10b981 0%, #059669 100%); border-color: #047857; margin-left:4px;">DL (XM)</button>
         <button id="btnXmUl" onclick="startTransfer(2)" title="XMODEM Upload" style="background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); border-color: #b45309;">UL (XM)</button>
         <button id="btnZmDl" onclick="startTransfer(3)" title="ZMODEM Download" style="background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%); border-color: #0369a1;">DL (ZM)</button>
@@ -580,10 +583,20 @@ SEND:"secret\r"'></textarea>
         '≡','±','≥','≤','⌠','⌡','÷','≈','°','∙','·','√','ⁿ','²','■',' '
     ];
 
-    function toggleCRT() {
+    function toggleCRT(persist = true) {
         const crt = document.getElementById('crtToggle').checked;
         document.querySelector('.term-wrap').style.setProperty('--crt-display', crt ? 'block' : 'none');
         document.getElementById('terminal').style.filter = crt ? 'contrast(1.1) brightness(1.2) drop-shadow(0 0 1px rgba(255,255,255,0.3))' : 'none';
+        if (persist) safeSetStorage('kbbs_crt_enabled', crt ? '1' : '0');
+    }
+
+    function toggleLocalEcho(checked) {
+        kbbsSettings.localEcho = !!checked;
+        document.getElementById('localEcho').checked = !!checked;
+        const setEcho = document.getElementById('setLocalEcho');
+        if (setEcho) setEcho.checked = !!checked;
+        safeSetStorage('kbbs_display_settings', JSON.stringify(kbbsSettings));
+        showToast(`Local Echo ${checked ? 'ON' : 'OFF'}`, "info", 2000);
     }
 
     function showToast(message, type = 'info', duration = 3800) {
@@ -591,6 +604,7 @@ SEND:"secret\r"'></textarea>
         if (!container) return;
         const toast = document.createElement('div');
         toast.className = `kbbs-toast ${type}`;
+        toast.title = "Click to dismiss";
         
         let icon = 'ℹ️';
         if (type === 'success') icon = '✅';
@@ -598,6 +612,15 @@ SEND:"secret\r"'></textarea>
         else if (type === 'error') icon = '❌';
 
         toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+        let removeTimer = null;
+        const dismiss = () => {
+            if (removeTimer) clearTimeout(removeTimer);
+            toast.classList.remove('visible');
+            setTimeout(() => {
+                if (toast.parentNode) toast.parentNode.removeChild(toast);
+            }, 250);
+        };
+        toast.onclick = dismiss;
         container.appendChild(toast);
 
         // Trigger reflow for transition
@@ -605,12 +628,7 @@ SEND:"secret\r"'></textarea>
             toast.classList.add('visible');
         });
 
-        setTimeout(() => {
-            toast.classList.remove('visible');
-            setTimeout(() => {
-                if (toast.parentNode) toast.parentNode.removeChild(toast);
-            }, 300);
-        }, duration);
+        removeTimer = setTimeout(dismiss, duration);
     }
 
     let currentTutStep = 1;
@@ -643,9 +661,9 @@ SEND:"secret\r"'></textarea>
                 <h4 style="color:#ec4899;">🐉 Step 2: Door Games Mini-Suite [G] & Save System</h4>
                 <p>Play classic BBS text adventures built directly into KBBS:</p>
                 <ul style="padding-left:18px; margin-top:6px; display:flex; flex-direction:column; gap:5px;">
-                    <li><strong>Legend of the Red Dragon (L.O.R.D.)</strong>: Hunt monsters in the forest, deposit gold in the bank, upgrade weapons at the armory, and rest at the tavern.</li>
+                    <li><strong>Legend of the Red Dragon (L.O.R.D.)</strong>: Hunt monsters in the forest, deposit gold in the bank, upgrade weapons and armor at the armory, and rest at the tavern.</li>
                     <li><strong>TradeWars 2015</strong>: Warp between sectors, trade commodities at space ports, and destroy pirate raiders for bounty.</li>
-                    <li><strong>Persistent Save State</strong>: Hero stats and ship cargo are automatically saved to local storage, with manual Quicksave & Quickload buttons.</li>
+                    <li><strong>Persistent Save State</strong>: Hero stats and ship cargo are automatically saved to local storage, with manual Quicksave (F5) & Quickload (F9) buttons.</li>
                     <li>Stream your game directly to the retro terminal screen with ANSI color by clicking <em>Stream to Terminal Screen</em>.</li>
                 </ul>
             `;
@@ -665,6 +683,8 @@ SEND:"secret\r"'></textarea>
                 <h4 style="color:#a855f7;">⌨️ Keyboard Shortcuts & Quick Reference</h4>
                 <div style="display:grid; grid-template-columns: 120px 1fr; gap:6px; font-size:11px; margin-top:6px;">
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">Enter</kbd></div><div>Connect / submit host</div>
+                    <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">F5</kbd></div><div>Quicksave all state & screen</div>
+                    <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">F9</kbd></div><div>Quickload all state & screen</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">D</kbd></div><div>Open Dialing Directory</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">G</kbd></div><div>Open Door Games Suite</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">A</kbd></div><div>Open ANSI Art Gallery</div>
@@ -673,7 +693,7 @@ SEND:"secret\r"'></textarea>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">S</kbd></div><div>Open Display Settings</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">C</kbd></div><div>Toggle Session Capture</div>
                     <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">F1 / H</kbd></div><div>Show this Help & Tutorial</div>
-                    <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">Esc</kbd></div><div>Dismiss any open modal</div>
+                    <div><kbd style="background:#27272a; padding:2px 6px; border-radius:4px;">Esc</kbd></div><div>Dismiss active modal dialog</div>
                 </div>
             `;
         }
@@ -691,7 +711,11 @@ SEND:"secret\r"'></textarea>
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-        toggleCRT();
+        const savedCrt = safeGetStorage('kbbs_crt_enabled');
+        if (savedCrt !== null) {
+            document.getElementById('crtToggle').checked = (savedCrt === '1');
+        }
+        toggleCRT(false);
         loadSettings();
         loadDirectory();
         loadMacros();
@@ -1443,8 +1467,8 @@ SEND:"secret\r"'></textarea>
                     </div>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
-                    <button class="btn-secondary" onclick="saveDoorState(); showToast('L.O.R.D. progress quicksaved!','success');">💾 Quicksave</button>
-                    <button class="btn-secondary" onclick="loadDoorState(); renderDoorContent(); showToast('L.O.R.D. progress quickloaded!','success');">📂 Quickload</button>
+                    <button class="btn-secondary" onclick="masterQuicksave()">💾 Quicksave (F5)</button>
+                    <button class="btn-secondary" onclick="masterQuickload()">📂 Quickload (F9)</button>
                     <button class="btn-danger" style="margin-left:auto;" onclick="resetDoorGame('lord')">🔄 New Game</button>
                 </div>
                 <div id="lordLog" style="background:#000; color:#10b981; padding:10px; border-radius:6px; font-family:monospace; height:120px; overflow-y:auto; font-size:11px;">
@@ -1473,8 +1497,8 @@ SEND:"secret\r"'></textarea>
                     </div>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
-                    <button class="btn-secondary" onclick="saveDoorState(); showToast('TradeWars progress quicksaved!','success');">💾 Quicksave</button>
-                    <button class="btn-secondary" onclick="loadDoorState(); renderDoorContent(); showToast('TradeWars progress quickloaded!','success');">📂 Quickload</button>
+                    <button class="btn-secondary" onclick="masterQuicksave()">💾 Quicksave (F5)</button>
+                    <button class="btn-secondary" onclick="masterQuickload()">📂 Quickload (F9)</button>
                     <button class="btn-danger" style="margin-left:auto;" onclick="resetDoorGame('tradewars')">🔄 New Game</button>
                 </div>
                 <div id="twLog" style="background:#000; color:#38bdf8; padding:10px; border-radius:6px; font-family:monospace; height:120px; overflow-y:auto; font-size:11px;">
@@ -1537,8 +1561,40 @@ SEND:"secret\r"'></textarea>
                     showToast("Need 150 gold for Steel Longsword!", "warning");
                 }
             } else {
-                if (log) log.innerHTML += "<br>⚔️ You already wield the finest masterwork weapons!";
-                showToast("Already wielding masterwork armory equipment!", "info");
+                if (lordPlayer.armor === 'Rags') {
+                    if (lordPlayer.gold >= 75) {
+                        lordPlayer.gold -= 75; lordPlayer.armor = "Leather Armor";
+                        lordPlayer.maxHp += 15; lordPlayer.hp += 15;
+                        if (log) log.innerHTML += "<br>🛡️ Fitted Leather Armor (+15 Max HP)!";
+                        showToast("Fitted Leather Armor (+15 Max HP)!", "success");
+                    } else {
+                        if (log) log.innerHTML += "<br>Need 75 gold for Leather Armor!";
+                        showToast("Need 75 gold for Leather Armor!", "warning");
+                    }
+                } else if (lordPlayer.armor === 'Leather Armor') {
+                    if (lordPlayer.gold >= 175) {
+                        lordPlayer.gold -= 175; lordPlayer.armor = "Chainmail";
+                        lordPlayer.maxHp += 25; lordPlayer.hp += 25;
+                        if (log) log.innerHTML += "<br>🛡️ Forged Chainmail armor (+25 Max HP)!";
+                        showToast("Forged Chainmail (+25 Max HP)!", "success");
+                    } else {
+                        if (log) log.innerHTML += "<br>Need 175 gold for Chainmail!";
+                        showToast("Need 175 gold for Chainmail!", "warning");
+                    }
+                } else if (lordPlayer.armor === 'Chainmail') {
+                    if (lordPlayer.gold >= 350) {
+                        lordPlayer.gold -= 350; lordPlayer.armor = "Plate Mail";
+                        lordPlayer.maxHp += 40; lordPlayer.hp += 40;
+                        if (log) log.innerHTML += "<br>🛡️ Donned Masterwork Plate Mail (+40 Max HP)!";
+                        showToast("Donned Plate Mail (+40 Max HP)!", "success");
+                    } else {
+                        if (log) log.innerHTML += "<br>Need 350 gold for Plate Mail!";
+                        showToast("Need 350 gold for Plate Mail!", "warning");
+                    }
+                } else {
+                    if (log) log.innerHTML += "<br>⚔️ You already wield the finest masterwork weapons & plate mail!";
+                    showToast("Already wielding masterwork armory equipment!", "info");
+                }
             }
         }
         saveDoorState();
@@ -1553,11 +1609,13 @@ SEND:"secret\r"'></textarea>
             if (log) log.innerHTML += `<br>🌌 Warped to Sector ${twPlayer.sector}! Navigation stabilized.`;
             showToast(`Warped to Sector ${twPlayer.sector}`, "info");
         } else if (act === 'port') {
-            let profit = (twPlayer.ore * 25) + (twPlayer.organics * 30);
+            let profit = (twPlayer.ore * 25) + (twPlayer.organics * 30) + (twPlayer.equipment * 60);
             twPlayer.credits += profit + 100;
+            let oldEqp = twPlayer.equipment;
             twPlayer.ore = Math.floor(Math.random() * 4) + 1;
             twPlayer.organics = Math.floor(Math.random() * 6) + 1;
-            if (log) log.innerHTML += `<br>🛰️ Traded at Space Port! +$${profit + 100} Credits! New commodities loaded.`;
+            twPlayer.equipment = Math.floor(Math.random() * 3) + 1;
+            if (log) log.innerHTML += `<br>🛰️ Traded at Space Port! +$${profit + 100} Credits (sold ${oldEqp} Eqp)! New commodities loaded.`;
             showToast(`Traded at Space Port! +$${profit + 100} Credits`, "success");
         } else if (act === 'pirate') {
             if (twPlayer.shields <= 0) {
@@ -1568,8 +1626,13 @@ SEND:"secret\r"'></textarea>
             let dmg = Math.floor(Math.random() * 25) + 10;
             twPlayer.shields = Math.max(0, twPlayer.shields - dmg);
             twPlayer.credits += 450;
-            if (log) log.innerHTML += `<br>🏴‍☠️ Destroyed Pirate Raider! +$450 Bounty! Shields took ${dmg}% damage.`;
-            showToast(`Destroyed Pirate! +$450 Bounty (Shields: ${twPlayer.shields}%)`, "success");
+            let lootBonus = "";
+            if (Math.random() < 0.45) {
+                twPlayer.equipment = Math.min(10, twPlayer.equipment + 1);
+                lootBonus = " +1 Salvaged Equipment";
+            }
+            if (log) log.innerHTML += `<br>🏴‍☠️ Destroyed Pirate Raider! +$450 Bounty!${lootBonus} Shields took ${dmg}% damage.`;
+            showToast(`Destroyed Pirate! +$450 Bounty${lootBonus}`, "success");
         } else if (act === 'shield') {
             if (twPlayer.shields >= 100) {
                 if (log) log.innerHTML += "<br>Shields are already at 100% capacity!";
@@ -1736,6 +1799,16 @@ SEND:"secret\r"'></textarea>
             date: "31-Aug-2026 21:55:00",
             subj: "FidoNet Zone 1 Route & EchoMail Policy update",
             body: "Attention all Node SysOps:\n\nNational Zone 1 EchoMail tosser runs at 03:00 UTC daily during ZMH (Zone Mail Hour). Ensure your FrontDoor / BinkleyTerm mailers are configured for CRC32 Zmodem packet transfer.\n\nNode routing table update v2026.08 is available for sync.\n\n--- KBBS EchoReader v2.0\n* Origin: FidoNet Zone 1 Coord (1:1/0.0)"
+        },
+        {
+            id: 108,
+            area: 5,
+            from: "SysOp Merlin",
+            to: "ZoneCoordinator",
+            fido: "1:100/42.0",
+            date: "31-Aug-2026 22:10:00",
+            subj: "Anomalous packet reflection at node 0x7F / 10.19.99.4",
+            body: "During the 03:00 UTC ZMH netmail poll, node 1 intercepted an unlisted packet relay.\nRouting header flags an internal node at 10.19.99.4 with cryptographic checksums.\nPayload contains an automated daemon broadcast repeating hexadecimal pulse bursts.\nI have quarantined the raw trace under classified directory logs on the central hub.\nAdvise if other Zone 1 nodes detect echoes from 10.19.99.4.\n\n--- KBBS EchoReader v2.0\n* Origin: KiloBBS Station Hub (1:100/42.0)"
         }
     ];
 
@@ -2024,7 +2097,9 @@ SEND:"secret\r"'></textarea>
         let s = safeGetStorage('kbbs_display_settings');
         if (s) { try { kbbsSettings = {...kbbsSettings, ...JSON.parse(s)}; } catch(e){} }
         if (kbbsSettings.palette) COLORS = [...kbbsSettings.palette];
-        document.getElementById('localEcho').checked = kbbsSettings.localEcho;
+        document.getElementById('localEcho').checked = !!kbbsSettings.localEcho;
+        const setEcho = document.getElementById('setLocalEcho');
+        if (setEcho) setEcho.checked = !!kbbsSettings.localEcho;
         resizeCanvas();
     }
     function saveSettings() {
@@ -2032,6 +2107,7 @@ SEND:"secret\r"'></textarea>
         kbbsSettings.blinkRateMs = parseInt(document.getElementById('setBlinkRate').value) || 500;
         kbbsSettings.baudRate = parseInt(document.getElementById('setBaudRate').value) || 0;
         kbbsSettings.localEcho = document.getElementById('setLocalEcho').checked;
+        document.getElementById('localEcho').checked = kbbsSettings.localEcho;
         kbbsSettings.palette = [...COLORS];
         safeSetStorage('kbbs_display_settings', JSON.stringify(kbbsSettings));
         resizeCanvas(); closeSettings();
@@ -2082,14 +2158,80 @@ SEND:"secret\r"'></textarea>
         }
     }
 
+    // ─── Master Quicksave & Quickload (F5 / F9) ───
+    function masterQuicksave() {
+        saveDoorState();
+        saveDirectory();
+        saveMacros();
+        saveMsgBase();
+        saveSettings();
+        const host = document.getElementById('host').value.trim();
+        const port = document.getElementById('port').value.trim();
+        if (host) safeSetStorage('kbbs_last_host', host);
+        if (port) safeSetStorage('kbbs_last_port', port);
+        
+        try {
+            safeSetStorage('kbbs_screen_snapshot', JSON.stringify({
+                screen: screen,
+                curX, curY, curFg, curBg, scrollOffset
+            }));
+        } catch (e) {}
+
+        showToast("💾 KBBS State Quicksaved! [F5]", "success");
+    }
+
+    function masterQuickload() {
+        loadDoorState();
+        loadDirectory();
+        loadMacros();
+        loadMsgBase();
+        loadSettings();
+        
+        const lastHost = safeGetStorage('kbbs_last_host');
+        const lastPort = safeGetStorage('kbbs_last_port');
+        if (lastHost) document.getElementById('host').value = lastHost;
+        if (lastPort) document.getElementById('port').value = lastPort;
+
+        const snapStr = safeGetStorage('kbbs_screen_snapshot');
+        if (snapStr) {
+            try {
+                const snap = JSON.parse(snapStr);
+                if (snap && Array.isArray(snap.screen) && snap.screen.length > 0) {
+                    screen = snap.screen;
+                    curX = snap.curX || 0;
+                    curY = Math.min(ROWS - 1, snap.curY || 0);
+                    curFg = snap.curFg || 7;
+                    curBg = snap.curBg || 0;
+                    scrollOffset = snap.scrollOffset || 0;
+                    render();
+                }
+            } catch (e) {}
+        }
+
+        if (document.getElementById('doorGamesModal').style.display === 'flex') renderDoorContent();
+        if (document.getElementById('msgBaseModal').style.display === 'flex') { renderMsgList(); renderMsgViewer(); }
+        if (document.getElementById('dialingDir').style.display === 'flex') renderDirList();
+        if (document.getElementById('macrosDir').style.display === 'flex') renderMacroList();
+
+        showToast("📂 KBBS State Quickloaded! [F9]", "success");
+    }
+
     function closeAnyOpenModal() {
-        let modals = ['dialingDir', 'doorGamesModal', 'ansiArtModal', 'msgBaseModal', 'composeMsgModal', 'captureModal', 'macrosDir', 'settingsModal', 'helpModal'];
+        // If nested compose modal is open, close ONLY it first so msgBaseModal stays open!
+        let composeEl = document.getElementById('composeMsgModal');
+        if (composeEl && composeEl.style.display === 'flex') {
+            composeEl.style.display = 'none';
+            return true;
+        }
+
+        let modals = ['dialingDir', 'doorGamesModal', 'ansiArtModal', 'msgBaseModal', 'captureModal', 'macrosDir', 'settingsModal', 'helpModal'];
         let closedAny = false;
         for (let m of modals) {
             let el = document.getElementById(m);
             if (el && el.style.display === 'flex') {
                 el.style.display = 'none';
                 closedAny = true;
+                break; // Close only one modal at a time!
             }
         }
         if (closedAny && typeof canvas !== 'undefined') canvas.focus();
@@ -2099,7 +2241,11 @@ SEND:"secret\r"'></textarea>
     window.addEventListener('keydown', (e) => {
         let tag = e.target.tagName;
         if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
-            if (e.key === 'Escape') closeAnyOpenModal();
+            if (e.key === 'Escape') {
+                if (closeAnyOpenModal()) {
+                    e.preventDefault();
+                }
+            }
             return;
         }
 
@@ -2108,6 +2254,18 @@ SEND:"secret\r"'></textarea>
                 e.preventDefault();
                 return;
             }
+        }
+
+        if (e.key === 'F5') {
+            e.preventDefault();
+            masterQuicksave();
+            return;
+        }
+
+        if (e.key === 'F9') {
+            e.preventDefault();
+            masterQuickload();
+            return;
         }
 
         if (e.altKey && e.key) {

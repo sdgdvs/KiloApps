@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KBBS
+  kilo_tester: KBase
   kilo_usability: KMedia
   kilo_graphics: KCosmic
   kilo_qa: KHash
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-creator
-  app: "kweb://geocities"
-  timestamp: "2026-09-26T16:42:00Z"
+  agent: kilo-tester
+  app: KBBS
+  timestamp: "2026-09-26T17:50:00Z"
 last_planner_run: "2026-09-26T07:48:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KBBS`
+- **Current Target**: `KBase`
 - **Upcoming Queue**:
-  `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`.
+  `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KMedia`
@@ -220,6 +220,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-26T17:50:00Z — kilo-tester: KBBS (Interactive UI Audit, Quicksave/Load & Integrity Pass)**
+  - Status: PASS ✅ (6 issues, 6 fixed; 0 regressions).
+  - State Persistence: Implemented F5 quicksave and F9 quickload handlers with top bar buttons and local state/screen snapshot.
+  - Dialog Ergonomics: Fixed nested Escape dismissal so Esc in compose modal closes only compose dialog, keeping EchoNet open.
+  - Settings Synchronization: Bidirectionally synced top-bar Echo checkbox with display settings modal and saved CRT scanline toggle.
+  - Door Games Depth: Added progressive L.O.R.D. armor smithing (Leather/Chain/Plate) and TradeWars equipment commodity trading/salvage.
+  - ARG & Toasts: Weaved diegetic 10.19.99.4 sysop packet reflection clue; de-occluded toast banner to top-right with click-to-dismiss.
+  - Verification: MSVC compile clean (`KBBS.exe` 101.8 KB); Vite clean build in 426ms (`kbbs.html` 137.8 KB); security lint & check_icons 100% PASS.
+
 - **2026-09-26T16:42:00Z — kilo-creator: kweb://geocities (CyberSpire Shrine: Pixel Art Studio & Amiga .MOD Downloads)**
   - Status: PASS ✅ (Anti-Potemkin Web 1.0 destination; ProTracker .MOD vault, 16-color pixel studio, 3D Silicon Oracle; 0 regressions).
   - Amiga ProTracker (.MOD) Vault: Generated standard 4-channel M.K. binary .MOD files with 31 sample records & 8-bit signed PCM for direct download.
@@ -252,12 +261,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Weapon Audio Dispatch: Wired dedicated SFX triggers for Poison, Venomspite, and Ballista towers during firing cycles.
   - Visual Polish & Particles: Added emerald venom particles on direct poison impacts and golden spark burst on Ballista crits in C and web.
   - Verification: MSVC compile clean (`KFortress.exe` 180.7 KB); Vite build clean in 447ms (`kfortress.html` 189.4 KB); security lint & check_icons 100% PASS.
-
-- **2026-09-26T12:45:00Z — kilo-usability: KMandel (UI/UX Usability, HiDPI Scaling & Ergonomics Pass)**
-  - Status: PASS ✅ (HiDPI scaling fixed, collapsible controls [C], F5/F9 quicksave/load, touch pinch; 0 regressions).
-  - HiDPI Canvas & Effects: Scaled canvas context by DPR, fixing off-center particle explosions, shockwaves, motes, and filigree.
-  - Collapsible Controls: Added header collapse toggle ([—]) and floating pill button ([⚙️ Controls / C]) for unobstructed viewing.
-  - State Persistence: Implemented F5 quicksave and F9 quickload across HTML and native Win32 C with dedicated UI buttons.
-  - Ergonomics & Touch: Added multi-touch 2-finger pinch-to-zoom for mobile/tablets; added first-run tutorial modal onboarding.
-  - Sizing & Layout: Bumped default window to 1024x720 in App.jsx and meta tag, eliminating control panel vertical scroll clipping.
-  - Verification: MSVC compile clean (`KMandel.exe` 25.1 KB); Vite build clean in 391ms (`kmandel.html` 84.4 KB); security lint 100% PASS.
