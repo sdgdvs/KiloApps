@@ -424,7 +424,7 @@
   /* Toast Notification Container */
   .toast-container {
     position: fixed;
-    bottom: 20px;
+    top: 16px;
     right: 20px;
     z-index: 10000;
     display: flex;
@@ -449,13 +449,17 @@
     -webkit-backdrop-filter: blur(12px);
     animation: toastSlideIn 0.22s ease-out forwards;
     pointer-events: auto;
+    cursor: pointer;
     transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .toast:hover {
+    filter: brightness(1.1);
   }
   .toast.toast-success { border-color: rgba(34, 197, 94, 0.6); box-shadow: 0 0 15px rgba(34, 197, 94, 0.25); color: #86efac; }
   .toast.toast-warning { border-color: rgba(245, 158, 11, 0.6); box-shadow: 0 0 15px rgba(245, 158, 11, 0.25); color: #fde047; }
   .toast.toast-danger { border-color: rgba(244, 63, 94, 0.6); box-shadow: 0 0 15px rgba(244, 63, 94, 0.25); color: #fda4af; }
   @keyframes toastSlideIn {
-    from { opacity: 0; transform: translateY(12px) scale(0.95); }
+    from { opacity: 0; transform: translateY(-12px) scale(0.95); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 </style>
@@ -472,6 +476,8 @@
         <span class="control-label" style="width: auto;">Vol:</span>
         <input type="range" id="masterVol" min="0" max="1" step="0.01" value="0.3" style="width: 70px;">
       </div>
+      <button class="btn" id="btnQuicksave" onclick="quicksaveState()" title="Quicksave session to browser storage (F5)">⚡ Save [F5]</button>
+      <button class="btn" id="btnQuickload" onclick="quickloadState()" title="Quickload session from browser storage (F9)">🔄 Load [F9]</button>
       <button class="btn" id="btnExportWav" title="Export 4-second rendered WAV file (Ctrl+E)">💾 Export WAV [Ctrl+E]</button>
       <button class="btn" id="btnExportJson" title="Save synthesizer state (Ctrl+S)">📄 Save JSON [Ctrl+S]</button>
       <button class="btn" id="btnImportJson" title="Open synthesizer state (Ctrl+O)">📂 Open JSON [Ctrl+O]</button>
@@ -645,7 +651,7 @@
     <div class="seq-controls">
       <div class="section-title">🎶 16-Step Multi-Track Sequencer</div>
       <div style="display: flex; align-items: center; gap: 12px;">
-        <button class="btn btn-accent" id="btnSeqPlay">▶ Play Sequencer [P]</button>
+        <button class="btn btn-accent" id="btnSeqPlay">▶ Play Sequencer [Space / P]</button>
         <button class="btn btn-danger" id="btnSeqClear">🗑 Clear [C]</button>
         <div class="control-row" style="width: auto;">
           <span class="control-label" style="width: auto;">BPM:</span>
@@ -670,8 +676,9 @@
       <strong style="text-align: right; color: #38bdf8;">1 – 8</strong> <span>Trigger Sound FX Presets (Jump, Laser, Explode, Coin...)</span>
       <strong style="text-align: right; color: #38bdf8;">Arrow Keys ← / →</strong> <span>Shift Octave (-4 to +4)</span>
       <strong style="text-align: right; color: #38bdf8;">Z / X</strong> <span>Live Record / Playback Performance</span>
-      <strong style="text-align: right; color: #38bdf8;">P / C</strong> <span>Start/Stop Sequencer / Clear Grid Pattern</span>
+      <strong style="text-align: right; color: #38bdf8;">Space / P / C</strong> <span>Start/Pause Sequencer / Clear Grid Pattern</span>
       <strong style="text-align: right; color: #38bdf8;">L / O / V</strong> <span>Toggle Stereo Delay / Overdrive Saturation / Vis Mode</span>
+      <strong style="text-align: right; color: #38bdf8;">F5 / F9</strong> <span>Quicksave / Quickload State</span>
       <strong style="text-align: right; color: #38bdf8;">Ctrl + S / Ctrl + O</strong> <span>Save / Open JSON Synthesizer Projects</span>
       <strong style="text-align: right; color: #38bdf8;">Ctrl + E</strong> <span>Export 4-second High-Quality DSP WAV File</span>
       <strong style="text-align: right; color: #fbbf24;">F1 / ? / Esc</strong> <span>Toggle Help Manual / Close Dialog</span>
@@ -695,11 +702,19 @@
     if (type === 'warning') icon = '⚠️';
     if (type === 'danger') icon = '❌';
     toast.innerHTML = `<span style="font-size: 15px;">${icon}</span><span>${message}</span>`;
+    toast.title = 'Click to dismiss';
+    toast.onclick = () => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(-10px) scale(0.95)';
+      setTimeout(() => { if (toast.parentNode) toast.remove(); }, 150);
+    };
     container.appendChild(toast);
     setTimeout(() => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateY(10px) scale(0.95)';
-      setTimeout(() => toast.remove(), 250);
+      if (toast.parentNode) {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-10px) scale(0.95)';
+        setTimeout(() => { if (toast.parentNode) toast.remove(); }, 250);
+      }
     }, duration);
   }
 
@@ -708,6 +723,26 @@
   }
   function safeSetStorage(key, val) {
     try { localStorage.setItem(key, val); } catch (e) {}
+  }
+
+  function quicksaveState() {
+    saveAudioState();
+    const raw = safeGetStorage('kaudio_state');
+    if (raw) {
+      safeSetStorage('kaudio_quicksave', raw);
+      showToast('⚡ Quicksave successful! [F5]', 'success', 2200);
+    }
+  }
+
+  function quickloadState() {
+    const raw = safeGetStorage('kaudio_quicksave');
+    if (!raw) {
+      showToast('⚠️ No quicksave slot found! Press [F5] to quicksave first.', 'warning', 2500);
+      return;
+    }
+    safeSetStorage('kaudio_state', raw);
+    loadAudioState();
+    showToast('🔄 Quickload restored session! [F9]', 'success', 2200);
   }
 
   function toggleHelp() {
@@ -814,6 +849,7 @@
       },
       visMode: visMode,
       octaveShift: octaveShift,
+      masterVol: masterVol ? masterVol.value : '0.3',
       bpm: (typeof seqBpmEl !== 'undefined' && seqBpmEl) ? seqBpmEl.value : '120',
       tracks: (typeof seqTracks !== 'undefined' && seqTracks) ? seqTracks.map(t => ({ name: t.name, grid: t.grid })) : []
     };
@@ -842,6 +878,7 @@
   };
   masterVol.oninput = () => {
     if (masterGain && ctx) masterGain.gain.setValueAtTime(parseFloat(masterVol.value), ctx.currentTime);
+    saveAudioState();
   };
 
   chkDelay.onchange = () => {
@@ -995,6 +1032,7 @@
   for (let i = 0; i < binds.length; i++) {
     let el = document.createElement('div');
     el.className = 'key' + (isBlack[i] ? ' black' : '');
+    el.dataset.note = i;
     el.innerHTML = `<span>${binds[i]}</span><span class="key-note">${noteNames[i]}</span>`;
     el.tabIndex = 0;
     el.setAttribute('role', 'button');
@@ -1366,9 +1404,21 @@
       return;
     }
 
+    // Quicksave (F5) and Quickload (F9)
+    if (e.key === 'F5') {
+      e.preventDefault();
+      quicksaveState();
+      return;
+    }
+    if (e.key === 'F9') {
+      e.preventDefault();
+      quickloadState();
+      return;
+    }
+
     // Function keys and Modal Controls
     const helpModalEl = document.getElementById('helpModal');
-    const isHelpOpen = helpModalEl && helpModalEl.style.display === 'flex';
+    const isHelpOpen = helpModalEl && (helpModalEl.style.display === 'flex' || helpModalEl.offsetParent !== null);
 
     if (e.key === 'F1' || e.key === '?' || (e.key === '/' && e.shiftKey)) {
       e.preventDefault();
@@ -1378,10 +1428,18 @@
 
     if (e.key === 'Escape' || (isHelpOpen && (e.key === 'h' || e.key === 'H'))) {
       if (isHelpOpen) {
+        e.preventDefault();
         helpModalEl.style.display = 'none';
         safeSetStorage('kaudio_tutorialSeen', '1');
         return;
       }
+    }
+
+    // Spacebar toggles sequencer Play/Pause (when not focused on a button or input)
+    if (e.code === 'Space' && document.activeElement?.tagName !== 'BUTTON') {
+      e.preventDefault();
+      btnSeqPlay.click();
+      return;
     }
 
     // Performance Recording Hotkeys
@@ -1558,9 +1616,11 @@
 
       for (let st = 0; st < 16; st++) {
         let btn = document.createElement('button');
+        btn.type = 'button';
         btn.className = 'step-btn' + (track.grid[st] ? ' active' : '');
         btn.dataset.track = trIdx;
         btn.dataset.step = st;
+        btn.setAttribute('aria-label', `${track.name}, Step ${st + 1}`);
         btn.title = `Toggle ${track.name} on Step ${st + 1}`;
         btn.onclick = () => {
           track.grid[st] = !track.grid[st];
@@ -1637,6 +1697,7 @@
   document.getElementById('btnExportJson').onclick = () => {
     const projectData = {
       waveType: waveSelect.value,
+      masterVol: masterVol ? masterVol.value : '0.3',
       adsr: { attack: envA.value, decay: envD.value, sustain: envS.value, release: envR.value },
       filter: { type: filterType.value, cutoff: filterCutoff.value, q: filterQ.value },
       effects: {
@@ -1673,6 +1734,10 @@
       try {
         const data = JSON.parse(evt.target.result);
         if (data.waveType) waveSelect.value = data.waveType;
+        if (data.masterVol !== undefined && masterVol) {
+          masterVol.value = data.masterVol;
+          if (masterGain && ctx) masterGain.gain.setValueAtTime(parseFloat(data.masterVol), ctx.currentTime);
+        }
         if (data.adsr) {
           envA.value = data.adsr.attack; valA.textContent = data.adsr.attack + 's';
           envD.value = data.adsr.decay; valD.textContent = data.adsr.decay + 's';
@@ -1821,6 +1886,10 @@
       if (!data || typeof data !== 'object') return false;
 
       if (data.waveType && waveSelect) waveSelect.value = data.waveType;
+      if (data.masterVol !== undefined && masterVol) {
+        masterVol.value = data.masterVol;
+        if (masterGain && ctx) masterGain.gain.setValueAtTime(parseFloat(data.masterVol), ctx.currentTime);
+      }
       if (data.adsr) {
         if (data.adsr.attack !== undefined && envA && valA) {
           envA.value = data.adsr.attack;

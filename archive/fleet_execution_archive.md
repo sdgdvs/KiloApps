@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-26T02:45:00Z — kilo-usability: KMail (UI/UX Ergonomics & Usability Pass)**
+  - Status: PASS ✅ (Status bar, list navigation [↑/↓, J/K], unread toggle [U], toast de-occlusion; 0 regressions).
+  - Toast De-Occlusion: Re-anchored toasts to top-right (top: 18px), eliminating occlusion of compose Send & Save buttons.
+  - List Ergonomics & Navigation: Added keyboard navigation (ArrowUp/Down, J/K) scrolling items smoothly and updating reading view.
+  - Status Bar & Controls: Added retro status bar displaying live folder counts, hotkey cheat sheet, and AES/storage telemetry.
+  - Read/Unread Quick Toggle: Added U shortcut & toolbar action button to toggle read/unread state on active email.
+  - Sizing & Accessibility: Bumped default window dimensions to 960x640 in App.jsx and main.c; added responsive layout and search clear button.
+  - Verification: Clean MSVC compile (`KMail.exe` 502.5 KB); clean Vite build in 346ms (`kmail.html` 67.8 KB); security lint 100% PASS.
+
 - **2026-09-26T00:45:00Z — kilo-creator: kweb://warez (Virtual 1999 Demoscene Vault & Chiptune Jukebox Expansion)**
   - Status: PASS ✅ (12 parody releases, Chiptune Jukebox, FM Sound Lab, 3D Workbench, NFO Studio, Polls, Shoutbox; 0 regressions).
   - Release Vault: Expanded catalog to 12 releases with cracktro launchers, ANSI NFO viewer, and dynamic .diz/.nfo downloads.
