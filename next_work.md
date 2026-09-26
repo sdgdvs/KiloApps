@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KBase
-  kilo_usability: KMedia
+  kilo_usability: KMystery
   kilo_graphics: KCosmic
   kilo_qa: KHash
   kilo_expander: KRead
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-tester
-  app: KBBS
-  timestamp: "2026-09-26T17:50:00Z"
+  agent: kilo-usability
+  app: KMedia
+  timestamp: "2026-09-26T18:42:00Z"
 last_planner_run: "2026-09-26T07:48:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KMedia`
+- **Current Target**: `KMystery`
 - **Upcoming Queue**:
-  `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`.
+  `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KHash`
@@ -220,6 +220,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-26T18:42:00Z — kilo-usability: KMedia (Usability & Layout Polish, Multi-Style Visualizer & Audio DSP)**
+  - Status: PASS ✅ (0 regressions, clean build, <999KB size).
+  - Navigation & Ergonomics: Added 3-tab sidebar (Playlist, Audio DSP, Video FX) for full-height track list and zero nested scrolling.
+  - Multi-Style Visualizer: Implemented 3 visualizer modes (Spectrum Analyzer with 32 LED bars/peak hold, Oscilloscope, VU Meter) with HiDPI canvas.
+  - Audio Equalizer: Added 8-preset EQ selector (Bass, Treble, Rock, Pop, Techno, etc.) with real-time dB readouts and persistence.
+  - Video FX & Fit: Added aspect ratio / fit modes (Fit, Fill/Zoom, Stretch, 16:9, 4:3) and PNG frame export with burned subtitles.
+  - Demo Suite & Toasts: Built-in 3-track procedural demo album for immediate zero-file testing; relocated toasts to safe top-right.
+  - Verification: MSVC compile clean (`KMedia.exe` 18.5 KB); Vite clean build in 356ms (`kmedia.html` 65.6 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-26T17:50:00Z — kilo-tester: KBBS (Interactive UI Audit, Quicksave/Load & Integrity Pass)**
   - Status: PASS ✅ (6 issues, 6 fixed; 0 regressions).
   - State Persistence: Implemented F5 quicksave and F9 quickload handlers with top bar buttons and local state/screen snapshot.
@@ -253,11 +262,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Controls & UI: Added Save (F5), Load (F9), and Briefing buttons in header and Win32 console; universal Esc modal dismissal.
   - Toast Notifications: Added non-occluding top-right notification system with auto-fading and click-to-dismiss.
   - Verification: MSVC compile clean (`KSubmarine.exe` 248.5 KB); Vite clean in 407ms (`ksubmarine.html` 432.2 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-26T13:55:00Z — kilo-graphics: KFortress (Game Content, Visual Polish & Glint Purge Pass)**
-  - Status: PASS ✅ (Specular glint comment purged, poison & ballista audio, visual impact particle polish; 0 regressions).
-  - Glint & Comet Audit: Verified 0 traveling perimeter border dots or orbital comets in C & web; cleansed legacy comment.
-  - Sound Architecture: Implemented procedural Yamaha YM2612 FM bubbling venom discharge & heavy ballista cable whip SFX in Web Audio.
-  - Weapon Audio Dispatch: Wired dedicated SFX triggers for Poison, Venomspite, and Ballista towers during firing cycles.
-  - Visual Polish & Particles: Added emerald venom particles on direct poison impacts and golden spark burst on Ballista crits in C and web.
-  - Verification: MSVC compile clean (`KFortress.exe` 180.7 KB); Vite build clean in 447ms (`kfortress.html` 189.4 KB); security lint & check_icons 100% PASS.
