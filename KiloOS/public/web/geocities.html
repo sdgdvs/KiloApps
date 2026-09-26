@@ -3,26 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>~*~ CyberSpire's Underground Shrine (1999) ~*~</title>
+<title>~*~ CyberSpire's Underground Retro Shrine &amp; MOD Vault (1999) ~*~</title>
 <style>
+  :root {
+    --bg-dark: #000000;
+    --neon-pink: #ff00aa;
+    --neon-cyan: #00ffcc;
+    --neon-yellow: #ffff00;
+    --neon-green: #00ff66;
+    --neon-purple: #aa00ff;
+    --card-bg: rgba(10, 5, 25, 0.92);
+    --border-color: #ff00ff;
+  }
+  * { box-sizing: border-box; }
   body {
-    background-color: #000000;
-    color: #00ffcc;
-    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Courier New', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--neon-cyan);
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Courier New', monospace, sans-serif;
     margin: 0;
     padding: 16px;
-    background-image: radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
-                      radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px);
+    background-image: radial-gradient(white, rgba(255,255,255,.25) 2px, transparent 40px),
+                      radial-gradient(white, rgba(255,255,255,.18) 1px, transparent 30px);
     background-size: 550px 550px, 350px 350px;
     background-position: 0 0, 40px 60px;
   }
   .page-card {
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
-    border: 3px dashed #ff00ff;
-    padding: 16px;
-    background: rgba(10, 5, 25, 0.88);
-    box-shadow: 0 0 25px #ff00ff;
+    border: 3px dashed var(--border-color);
+    padding: 18px;
+    background: var(--card-bg);
+    box-shadow: 0 0 30px var(--border-color), inset 0 0 15px rgba(0, 255, 204, 0.2);
   }
   header {
     text-align: center;
@@ -33,9 +44,14 @@
   h1 {
     font-size: 26px;
     color: #ff00ff;
-    text-shadow: 0 0 8px #ff00ff, 0 0 16px #00ffff;
-    margin: 0 0 8px 0;
+    text-shadow: 0 0 10px #ff00ff, 0 0 20px #00ffff;
+    margin: 0 0 6px 0;
     letter-spacing: 2px;
+  }
+  .subtitle {
+    color: #00ffff;
+    font-size: 13px;
+    letter-spacing: 1px;
   }
   .construction-banner {
     background: repeating-linear-gradient(
@@ -48,25 +64,97 @@
     color: #000000;
     font-weight: bold;
     font-family: Arial, sans-serif;
-    padding: 6px;
+    padding: 8px;
     text-align: center;
     border: 2px solid #ffffff;
     margin-bottom: 14px;
-    font-size: 14px;
+    font-size: 13px;
     text-shadow: 1px 1px 0 #fff;
+    box-shadow: 0 0 10px #ffcc00;
   }
+  /* Retro Navigation Toolbar */
+  .retro-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    background: #110022;
+    border: 2px ridge #00ffcc;
+    padding: 8px;
+    margin-bottom: 16px;
+  }
+  .nav-btn {
+    background: #002233;
+    color: #00ffff;
+    border: 2px outset #00ffff;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 4px 10px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.1s;
+    display: inline-block;
+  }
+  .nav-btn:hover {
+    background: #00ffff;
+    color: #000;
+  }
+  .nav-btn:active, .nav-btn.active {
+    background: var(--neon-pink);
+    color: #fff;
+    border-style: inset;
+  }
+  /* 88x31 Vintage Web Badges */
+  .badge-cluster {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    margin: 12px 0;
+  }
+  .badge-88x31 {
+    width: 88px;
+    height: 31px;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    font-size: 8px;
+    font-weight: bold;
+    border: 1px solid #fff;
+    text-align: center;
+    line-height: 1.1;
+    cursor: default;
+    user-select: none;
+    box-shadow: 1px 1px 2px #000;
+  }
+  .badge-netscape { background: #000088; color: #ffffff; border-color: #00ffff; }
+  .badge-notepad { background: #eeeeee; color: #111111; border-color: #888888; font-family:'Courier New', monospace; }
+  .badge-mod { background: #880000; color: #ffff00; border-color: #ffaa00; }
+  .badge-y2k { background: #005500; color: #00ff00; border-color: #00aa00; }
+  .badge-webring { background: #550055; color: #ff00ff; border-color: #ff88ff; }
+  .badge-800x600 { background: #333333; color: #ffffff; border-color: #cccccc; }
+
   .section-box {
     border: 2px inset #00ffff;
-    padding: 12px;
-    margin-bottom: 14px;
-    background: rgba(0, 20, 30, 0.7);
+    padding: 14px;
+    margin-bottom: 16px;
+    background: rgba(0, 20, 30, 0.75);
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.15);
   }
   .section-title {
     color: #ffff00;
     font-size: 16px;
     font-weight: bold;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     text-shadow: 0 0 6px #ffff00;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed rgba(255, 255, 0, 0.3);
+    padding-bottom: 4px;
   }
   a {
     color: #ff00aa;
@@ -76,79 +164,13 @@
     color: #ffffff;
     background: #ff00aa;
   }
-  /* Guestbook styling */
-  .guestbook-form {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 10px;
-  }
-  .gb-input {
-    background: #001122;
-    border: 1px solid #00ffff;
-    color: #ffffff;
-    padding: 6px;
-    font-family: 'Courier New', monospace;
-    font-size: 13px;
-  }
-  .btn-sign {
-    background: #ff00aa;
-    color: #ffffff;
-    border: 2px outset #ffffff;
-    font-weight: bold;
-    padding: 6px 12px;
-    cursor: pointer;
-    font-size: 13px;
-    width: fit-content;
-  }
-  .btn-sign:active {
-    border-style: inset;
-  }
-  .gb-entry {
-    border-left: 3px solid #ff00aa;
-    background: rgba(255, 0, 170, 0.08);
-    padding: 8px;
-    margin-top: 8px;
-    font-size: 12px;
-    line-height: 1.4;
-  }
-  .gb-alias {
-    color: #ffff00;
-    font-weight: bold;
-  }
-  .gb-time {
-    color: #888888;
-    font-size: 10px;
-  }
-  .webring-nav {
-    text-align: center;
-    border: 2px ridge #ff00ff;
-    padding: 10px;
-    margin-top: 16px;
-    background: #110022;
-  }
-  .counter-box {
-    text-align: center;
-    margin-top: 12px;
-    font-size: 12px;
-  }
-  .odometer {
-    background: #000;
-    border: 2px inset #999;
-    color: #00ff00;
-    font-family: monospace;
-    font-size: 16px;
-    font-weight: bold;
-    padding: 2px 6px;
-    letter-spacing: 2px;
-  }
-  /* 1999 Vintage MIDI Jukebox */
+  /* MIDI Jukebox Widget */
   .midi-jukebox {
     border: 3px outset #00ffcc;
     background: linear-gradient(180deg, #112233 0%, #05101a 100%);
-    padding: 12px;
-    margin-bottom: 14px;
-    box-shadow: 0 0 15px rgba(0, 255, 204, 0.25);
+    padding: 14px;
+    margin-bottom: 16px;
+    box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
   }
   .lcd-display {
     background: #021a0e;
@@ -180,7 +202,7 @@
   }
   .equalizer-canvas {
     width: 100%;
-    height: 36px;
+    height: 40px;
     background: #010d07;
     border: 1px solid #004422;
     display: block;
@@ -217,11 +239,11 @@
     background: #001122;
     color: #00ffff;
     border: 1px solid #00ffff;
-    padding: 4px 8px;
+    padding: 5px 8px;
     font-size: 12px;
     font-family: 'Courier New', monospace;
     flex: 1;
-    min-width: 200px;
+    min-width: 220px;
     cursor: pointer;
   }
   .vol-control {
@@ -236,36 +258,406 @@
     cursor: pointer;
     width: 70px;
   }
+
+  /* Live Tracker Pattern Roll Viewer */
+  .tracker-roll-box {
+    background: #02070c;
+    border: 1px solid #005577;
+    padding: 6px 10px;
+    margin-top: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: #00ffcc;
+    height: 72px;
+    overflow-y: hidden;
+    line-height: 1.3;
+  }
+  .tracker-row-active {
+    background: #003344;
+    color: #ffff00;
+    font-weight: bold;
+  }
+
+  /* MOD Downloads Grid */
+  .mod-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .mod-card {
+    background: #001524;
+    border: 2px outset #00aaee;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .mod-title {
+    color: #00ffff;
+    font-weight: bold;
+    font-size: 13px;
+  }
+  .mod-meta {
+    font-size: 11px;
+    color: #88ccee;
+    font-family: 'Courier New', monospace;
+  }
+  .btn-download-mod {
+    background: #880000;
+    color: #ffff00;
+    border: 2px outset #ffcc00;
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    padding: 6px 10px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    margin-top: auto;
+    transition: all 0.1s;
+  }
+  .btn-download-mod:hover {
+    background: #ff0000;
+    color: #ffffff;
+  }
+  .btn-download-mod:active {
+    border-style: inset;
+  }
+
+  /* Pixel Art Gallery & Studio */
+  .pixel-studio-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 10px;
+  }
+  @media (max-width: 768px) {
+    .pixel-studio-container { grid-template-columns: 1fr; }
+  }
+  .studio-panel {
+    background: #001122;
+    border: 2px inset #00ffcc;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .canvas-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
+    border: 2px solid #334455;
+    padding: 6px;
+    position: relative;
+    user-select: none;
+  }
+  #paintCanvas {
+    image-rendering: pixelated;
+    cursor: crosshair;
+    background: #111118;
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+  }
+  .palette-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+    background: #050510;
+    padding: 6px;
+    border: 1px solid #005577;
+  }
+  .swatch {
+    width: 20px;
+    height: 20px;
+    border: 1px solid #fff;
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  .swatch:hover { transform: scale(1.15); }
+  .swatch.selected {
+    border: 2px solid #ffff00;
+    box-shadow: 0 0 6px #ffff00;
+    transform: scale(1.2);
+  }
+  .tool-btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+  }
+  .tool-btn {
+    background: #002233;
+    color: #00ffcc;
+    border: 1px outset #00ffff;
+    font-size: 11px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+  }
+  .tool-btn.active {
+    background: #ff00aa;
+    color: #fff;
+    border-style: inset;
+  }
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    background: #000810;
+    padding: 6px;
+    border: 1px solid #005577;
+    max-height: 230px;
+    overflow-y: auto;
+  }
+  .gallery-item {
+    background: #001524;
+    border: 1px solid #0088cc;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .gallery-item:hover, .gallery-item.active {
+    border-color: #ffff00;
+    background: #002b47;
+    box-shadow: 0 0 8px #00ffff;
+  }
+  .gallery-preview-canvas {
+    width: 48px;
+    height: 48px;
+    image-rendering: pixelated;
+  }
+  .gallery-item-name {
+    font-size: 9px;
+    color: #aaffee;
+    margin-top: 2px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  /* The Silicon Oracle '99 */
+  .oracle-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    background: radial-gradient(circle at center, #1b022e 0%, #05010d 100%);
+    border: 2px outset #aa00ff;
+    padding: 16px;
+    box-shadow: 0 0 25px rgba(170, 0, 255, 0.4);
+  }
+  .oracle-canvas-box {
+    position: relative;
+    border: 3px double #ff00ff;
+    background: #000;
+    box-shadow: inset 0 0 20px #aa00ff;
+  }
+  #oracleCanvas {
+    display: block;
+    width: 240px;
+    height: 240px;
+  }
+  .oracle-controls {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 500px;
+    gap: 8px;
+  }
+  .oracle-input {
+    background: #0a001a;
+    border: 1px solid #aa00ff;
+    color: #00ffff;
+    padding: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    width: 100%;
+  }
+  .oracle-btn {
+    background: linear-gradient(90deg, #aa00ff, #ff00aa);
+    color: #ffffff;
+    font-weight: bold;
+    border: 2px outset #ffffff;
+    font-size: 14px;
+    padding: 8px 16px;
+    cursor: pointer;
+    text-shadow: 1px 1px 2px #000;
+    transition: all 0.1s;
+  }
+  .oracle-btn:hover {
+    box-shadow: 0 0 15px #ff00ff;
+  }
+  .oracle-btn:active {
+    border-style: inset;
+  }
+  .oracle-result-box {
+    background: rgba(10, 0, 20, 0.9);
+    border: 1px dashed #00ffff;
+    padding: 12px;
+    width: 100%;
+    min-height: 80px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #00ffcc;
+  }
+  .oracle-verdict {
+    color: #ffff00;
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+
+  /* Y2K Compliance Diagnostic Terminal */
+  .y2k-box {
+    background: #001100;
+    border: 2px solid #00ff00;
+    padding: 12px;
+    margin-top: 14px;
+    font-family: 'Courier New', monospace;
+    color: #00ff00;
+  }
+  .y2k-meter-bar {
+    background: #003300;
+    border: 1px solid #00aa00;
+    height: 18px;
+    width: 100%;
+    margin: 8px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .y2k-meter-fill {
+    background: linear-gradient(90deg, #00aa00, #00ff66);
+    height: 100%;
+    width: 0%;
+    transition: width 0.8s ease-in-out;
+  }
+
+  /* Guestbook styling */
+  .guestbook-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .gb-input {
+    background: #001122;
+    border: 1px solid #00ffff;
+    color: #ffffff;
+    padding: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+  }
+  .btn-sign {
+    background: #ff00aa;
+    color: #ffffff;
+    border: 2px outset #ffffff;
+    font-weight: bold;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    width: fit-content;
+  }
+  .btn-sign:active { border-style: inset; }
+  .gb-entry {
+    border-left: 3px solid #ff00aa;
+    background: rgba(255, 0, 170, 0.08);
+    padding: 8px;
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .gb-alias { color: #ffff00; font-weight: bold; }
+  .gb-time { color: #888888; font-size: 10px; }
+  
+  .webring-nav {
+    text-align: center;
+    border: 2px ridge #ff00ff;
+    padding: 12px;
+    margin-top: 18px;
+    background: #110022;
+  }
+  .counter-box {
+    text-align: center;
+    margin-top: 14px;
+    font-size: 13px;
+  }
+  .odometer {
+    background: #000;
+    border: 2px inset #999;
+    color: #00ff00;
+    font-family: 'Courier New', monospace;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 2px 8px;
+    letter-spacing: 3px;
+    box-shadow: inset 0 0 6px #00ff00;
+  }
 </style>
 </head>
 <body>
 
 <div class="page-card">
+  <!-- Under Construction Banner -->
   <div class="construction-banner">
-    🚧 ⚠️ UNDER HEAVY CONSTRUCTION! BEST VIEWED IN 800x600 RESOLUTION ⚠️ 🚧
+    🚧 ⚠️ UNDER HEAVY EXPANSION! BEST VIEWED IN 800x600 RESOLUTION • 16-BIT COLOR ⚠️ 🚧
   </div>
 
   <header>
-    <h1>★~*~ CYBERSPIRE'S RETRO SHRINE ~*~★</h1>
-    <div style="color:#00ffff; font-size:12px;">"Surfing the information superhighway since December 1999"</div>
+    <h1>★~*~ CYBERSPIRE'S RETRO SHRINE &amp; MOD VAULT ~*~★</h1>
+    <div class="subtitle">"Surfing the information superhighway since December 1999 • GeoCities SiliconValley / CyberSpire / 1999"</div>
   </header>
 
-  <div class="section-box">
-    <div class="section-title">🔮 Welcome, Cyber Voyager!</div>
-    <p style="font-size:13px; margin:0 0 8px 0;">
-      You have stumbled upon CyberSpire's secret slice of cyberspace. Here, the machines run in pure 16-bit color,
-      the floppy drives hum, and the 999 KB ceiling holds back the void.
+  <!-- Retro Navigation Bar -->
+  <nav class="retro-nav">
+    <a href="#shrine-welcome" class="nav-btn">🔮 Home</a>
+    <a href="#jukebox-section" class="nav-btn">📻 MIDI Jukebox</a>
+    <a href="#mod-vault" class="nav-btn">💾 MOD Downloads</a>
+    <a href="#pixel-studio" class="nav-btn">🎨 Pixel Studio</a>
+    <a href="#oracle-section" class="nav-btn">🔮 Silicon Oracle '99</a>
+    <a href="#y2k-diagnostic" class="nav-btn">⏱️ Y2K Diagnostic</a>
+    <a href="#guestbook-section" class="nav-btn">📖 Guestbook</a>
+    <a href="#bookmarks-section" class="nav-btn">⭐ Bookmarks</a>
+  </nav>
+
+  <!-- 88x31 Badges -->
+  <div class="badge-cluster">
+    <div class="badge-88x31 badge-netscape">NETSCAPE<br>NOW 4.0</div>
+    <div class="badge-88x31 badge-notepad">MADE WITH<br>NOTEPAD</div>
+    <div class="badge-88x31 badge-mod">AMIGA<br>PROTRACKER</div>
+    <div class="badge-88x31 badge-y2k">Y2K<br>COMPLIANT</div>
+    <div class="badge-88x31 badge-webring">KILONET<br>MEMBER #002</div>
+    <div class="badge-88x31 badge-800x600">BEST IN<br>800x600</div>
+  </div>
+
+  <!-- Shrine Welcome -->
+  <div class="section-box" id="shrine-welcome">
+    <div class="section-title">
+      <span>🔮 Welcome, Cyber Voyager!</span>
+      <span style="font-size:11px; color:#aaffee;">[NODE #002 / GEO-SILICONVALLEY]</span>
+    </div>
+    <p style="font-size:13px; margin:0 0 8px 0; line-height:1.5;">
+      You have docked with <strong>CyberSpire's Underground Retro Shrine</strong>. In this corner of the virtual 1999 web,
+      we preserve the golden demoscene epoch: pure 16-color pixel sprites, genuine Amiga 4-channel ProTracker (.MOD) module downloads,
+      Web Audio synthesizer jams, and esoteric Silicon Oracle predictions before the Y2K clock flips.
     </p>
     <p style="font-size:12px; color:#aaffee; margin:0;">
-      Soundtrack recommendation: Synthwave &amp; 90s tracker modules. Fire up the Jukebox below!
+      ⚡ <em>Anti-Potemkin guarantee</em>: Every tool works client-side—draw and download pixel sprites (.PNG, .BMP, C-Code), download real Amiga .MOD tracker music files, or consult the Oracle!
     </p>
   </div>
 
-  <!-- 1999 Vintage MIDI Jukebox Widget -->
-  <div class="midi-jukebox">
-    <div class="section-title" style="margin-bottom:6px; display:flex; align-items:center; justify-content:space-between;">
-      <span>📻 CYBERSPIRE RETRO MIDI JUKEBOX</span>
-      <span style="font-size:11px; font-weight:normal; color:#00ffcc; text-shadow:none;">[16-BIT TRACKER SYNTH]</span>
+  <!-- 1. 1999 Vintage MIDI & Tracker Jukebox -->
+  <div class="midi-jukebox" id="jukebox-section">
+    <div class="section-title" style="margin-bottom:6px;">
+      <span>📻 CYBERSPIRE RETRO MIDI &amp; TRACKER JUKEBOX</span>
+      <span style="font-size:11px; font-weight:normal; color:#00ffcc;">[AMIGA PAULA / FM SYNTH ENGINE]</span>
     </div>
     
     <div class="lcd-display">
@@ -277,11 +669,16 @@
         <span id="lcdStatus" style="color:#ffff00;">PAUSED</span>
       </div>
       <div class="lcd-title" id="lcdTrackTitle">♫ Track 1: CyberSpire Neon Horizon • [Pat 01: Intro Ambient Arp] • 135 BPM Demoscene Synth Anthem</div>
-      <canvas id="eqCanvas" class="equalizer-canvas" width="400" height="36"></canvas>
+      <canvas id="eqCanvas" class="equalizer-canvas" width="450" height="40"></canvas>
     </div>
 
-    <div class="midi-controls">
-      <button class="btn-midi" id="btnMidiPlay" onclick="toggleMidiPlay()">▶ Play MIDI</button>
+    <!-- Live Tracker Pattern Roll -->
+    <div class="tracker-roll-box" id="trackerRollBox">
+      <div id="trackerRollLines">Loading tracker pattern roll...</div>
+    </div>
+
+    <div class="midi-controls" style="margin-top:8px;">
+      <button class="btn-midi" id="btnMidiPlay" onclick="toggleMidiPlay()">▶ Play Track</button>
       <button class="btn-midi" id="btnMidiStop" onclick="stopMidi()">⏹ Stop</button>
       <button class="btn-midi" id="btnMidiPrev" onclick="prevTrack()">⏮ Prev</button>
       <button class="btn-midi" id="btnMidiNext" onclick="nextTrack()">⏭ Next</button>
@@ -297,118 +694,393 @@
         <input type="range" id="midiVolume" class="vol-slider" min="0" max="100" value="70" oninput="setVolume(this.value)" />
       </div>
     </div>
-    <div style="font-size:10px; color:#38bdf8; font-family:'Courier New', monospace; margin-top:6px; text-align:center;">
-      ★ Authentic Web Audio synthesized tracker • 2-Minute Full Demoscene Songs with Drops &amp; Sweeps • 100% 1999 Cyber Immersion ★
+    <div style="font-size:10px; color:#38bdf8; font-family:'Courier New', monospace; margin-top:8px; text-align:center;">
+      ★ Authentic Web Audio demoscene synthesis • Dual saw+square resonant filters, portamento, TB-303 acid bass &amp; SPC700 stereo delay ★
     </div>
   </div>
 
-  <div class="section-box">
-    <div class="section-title">⭐ CyberSpire's Bookmark Vault</div>
-    <ul style="font-size:13px; line-height:1.6; margin:0; padding-left:20px;">
-      <li><a href="/web/portal.html">KiloNet Central Web Portal (1999)</a> — The directory of all reality</li>
-      <li><a href="/web/users/neon_rider.html" style="color:#00ffcc; font-weight:bold;">⚡ ~neon_rider's Win32 ASM Shrine</a> — x86 opcode sandbox, demoscene devlog &amp; YM2612 FM tracker tunes</li>
+  <!-- 2. Amiga ProTracker (.MOD) File Vault & Generator -->
+  <div class="section-box" id="mod-vault">
+    <div class="section-title">
+      <span>💾 AMIGA PROTRACKER (.MOD) DOWNLOAD VAULT</span>
+      <span style="font-size:11px; color:#ffff00;">[STANDARD 4-CHANNEL M.K. FORMAT]</span>
+    </div>
+    <p style="font-size:12px; margin:0 0 10px 0;">
+      Real, genuine Amiga ProTracker binary modules synthesized client-side into standard <code>.MOD</code> files with 31 sample headers,
+      8-bit signed PCM audio waveforms, and 64-row pattern tables. Compatible with MilkyTracker, OpenMPT, VLC, Amiga emulators, and retro players!
+    </p>
+
+    <div class="mod-grid">
+      <!-- Mod 1 -->
+      <div class="mod-card">
+        <div class="mod-title">📁 Track 01: Neon Horizon</div>
+        <div class="mod-meta">
+          Format: ProTracker 4-CH (M.K.)<br>
+          BPM: 135 • 18 Patterns<br>
+          Samples: 7 (Saw, Square, Acid, Drums)<br>
+          Size: ~24.5 KB (.MOD Binary)
+        </div>
+        <button class="btn-download-mod" onclick="downloadModTrack(0)">💾 Download Neon_Horizon.mod</button>
+      </div>
+
+      <!-- Mod 2 -->
+      <div class="mod-card">
+        <div class="mod-title">📁 Track 02: Tracker Dreams</div>
+        <div class="mod-meta">
+          Format: FastTracker / ProTracker (M.K.)<br>
+          BPM: 128 • 18 Patterns<br>
+          Samples: 7 (Funk Bass, Chords, Lead)<br>
+          Size: ~25.2 KB (.MOD Binary)
+        </div>
+        <button class="btn-download-mod" onclick="downloadModTrack(1)">💾 Download Tracker_Dreams.mod</button>
+      </div>
+
+      <!-- Mod 3 -->
+      <div class="mod-card">
+        <div class="mod-title">📁 Track 03: Cyberpunk Pulse</div>
+        <div class="mod-meta">
+          Format: Keygen Chiptune (M.K.)<br>
+          BPM: 144 • 20 Patterns<br>
+          Samples: 7 (SID Arp, Rave Lead, Drums)<br>
+          Size: ~26.8 KB (.MOD Binary)
+        </div>
+        <button class="btn-download-mod" onclick="downloadModTrack(2)">💾 Download Cyberpunk_Pulse.mod</button>
+      </div>
+
+      <!-- Mod Generator -->
+      <div class="mod-card" style="border-color:#ff00aa; background:#1b0024;">
+        <div class="mod-title" style="color:#ff00ff;">⚡ Procedural .MOD Synthesizer</div>
+        <div class="mod-meta">
+          Generate an infinite unique randomized 4-channel retro tracker module on the fly with custom PCM samples!
+        </div>
+        <button class="btn-download-mod" style="background:#aa00aa; color:#fff;" onclick="generateProceduralMod()">🎲 Synthesize &amp; Download Random .MOD</button>
+      </div>
+    </div>
+
+    <!-- MOD Byte & Pattern Inspector -->
+    <div style="margin-top:12px; background:#000d1a; border:1px solid #005577; padding:8px;">
+      <div style="font-size:11px; color:#ffff00; font-family:'Courier New', monospace; margin-bottom:4px; display:flex; justify-content:space-between;">
+        <span>🔍 AMIGA PROTRACKER HEADER &amp; PATTERN INSPECTOR</span>
+        <button class="tool-btn" onclick="inspectModHeader()">Refresh Header Hex Dump</button>
+      </div>
+      <pre id="modHexDump" style="margin:0; font-family:'Courier New', monospace; font-size:10px; color:#00ffcc; max-height:80px; overflow-y:auto; line-height:1.2;">Click 'Refresh Header Hex Dump' to inspect binary M.K. structure...</pre>
+    </div>
+  </div>
+
+  <!-- 3. Pixel Art Gallery & Studio -->
+  <div class="section-box" id="pixel-studio">
+    <div class="section-title">
+      <span>🎨 16-COLOR CYBER PIXEL ART STUDIO &amp; GALLERY</span>
+      <span style="font-size:11px; color:#00ffcc;">[INTERACTIVE CANVAS EDITOR &amp; BMP EXPORT]</span>
+    </div>
+    <p style="font-size:12px; margin:0 0 10px 0;">
+      Browse our gallery of authentic 1999 retro pixel sprites or craft your own on the 16x16 / 32x32 raster canvas.
+      Export directly to <strong>.PNG (1x &amp; 16x Retro)</strong>, <strong>Windows .BMP (genuine uncompressed 24-bit binary)</strong>, or <strong>C-Header Hex Array</strong>!
+    </p>
+
+    <div class="pixel-studio-container">
+      <!-- Left: Drawing Studio -->
+      <div class="studio-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:12px; color:#ffff00; font-weight:bold;">🖌️ Raster Canvas (<span id="canvasDimLabel">16x16</span>)</span>
+          <div class="tool-btn-group">
+            <button class="tool-btn active" id="btnDim16" onclick="setCanvasDim(16)">16x16</button>
+            <button class="tool-btn" id="btnDim32" onclick="setCanvasDim(32)">32x32</button>
+            <button class="tool-btn" id="btnGridToggle" onclick="toggleGrid()">Grid: ON</button>
+          </div>
+        </div>
+
+        <div class="canvas-wrapper">
+          <canvas id="paintCanvas" width="256" height="256"></canvas>
+        </div>
+
+        <!-- Palette Selector -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+          <span style="font-size:11px; color:#aaffee;">Palette:</span>
+          <select id="paletteSelect" onchange="changePalette(this.value)" style="background:#001122; color:#00ffff; border:1px solid #00ffff; font-size:11px; padding:2px;">
+            <option value="cyber">Cyber Neon (1999)</option>
+            <option value="ega">Standard EGA (16 Colors)</option>
+            <option value="c64">Commodore 64 Classic</option>
+            <option value="gameboy">Phosphor GameBoy (4 Green)</option>
+          </select>
+        </div>
+        <div class="palette-swatches" id="paletteSwatches"></div>
+
+        <!-- Drawing Tools -->
+        <div class="tool-btn-group">
+          <button class="tool-btn active" id="toolPencil" onclick="setTool('pencil')">✏️ Pencil</button>
+          <button class="tool-btn" id="toolBucket" onclick="setTool('bucket')">🪣 Bucket</button>
+          <button class="tool-btn" id="toolPicker" onclick="setTool('picker')">🧪 Eyedropper</button>
+          <button class="tool-btn" id="toolLine" onclick="setTool('line')">📏 Line</button>
+          <button class="tool-btn" id="toolEraser" onclick="setTool('eraser')">🧹 Eraser</button>
+          <button class="tool-btn" onclick="undoCanvas()">↩️ Undo</button>
+          <button class="tool-btn" onclick="clearCanvas()">🗑️ Clear</button>
+        </div>
+
+        <!-- Export Buttons -->
+        <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
+          <button class="tool-btn" style="flex:1; background:#004466;" onclick="exportPNG(1)">💾 Download .PNG (1x)</button>
+          <button class="tool-btn" style="flex:1; background:#005577;" onclick="exportPNG(16)">💾 Retro .PNG (16x)</button>
+          <button class="tool-btn" style="flex:1; background:#660044;" onclick="exportBMP()">💾 Windows .BMP</button>
+          <button class="tool-btn" style="flex:1; background:#334400;" onclick="exportCHex()">📋 Copy C Array</button>
+          <button class="tool-btn" style="flex:1; background:#440066;" onclick="saveToUserGallery()">⭐ Save to Gallery</button>
+        </div>
+      </div>
+
+      <!-- Right: Preloaded Gallery Showcase -->
+      <div class="studio-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:12px; color:#ffff00; font-weight:bold;">🖼️ CyberSpire Sprite Gallery</span>
+          <span style="font-size:10px; color:#88aacc;">Click sprite to preview/edit</span>
+        </div>
+
+        <div class="gallery-grid" id="galleryGrid"></div>
+
+        <!-- Selected Sprite Inspector -->
+        <div style="background:#000a14; border:1px solid #005577; padding:8px; display:flex; gap:10px; align-items:center;">
+          <canvas id="galleryPreviewLarge" width="64" height="64" style="background:#111; image-rendering:pixelated; border:1px solid #00ffff;"></canvas>
+          <div style="flex:1; font-size:11px; line-height:1.4;">
+            <div id="inspectorTitle" style="color:#00ffff; font-weight:bold;">Cyber Deck 99</div>
+            <div id="inspectorMeta" style="color:#88aacc;">Dimensions: 16x16 • Author: CyberSpire</div>
+            <div id="inspectorDesc" style="color:#ffffff; margin-top:2px;">Custom portable hacking terminal with green phosphor LCD.</div>
+          </div>
+        </div>
+
+        <button class="btn-sign" style="width:100%; margin-top:4px; background:#006688; border-color:#00ffff;" onclick="loadSelectedToStudio()">
+          📥 Load Selected Sprite into Studio Canvas
+        </button>
+
+        <div style="margin-top:6px;">
+          <div style="font-size:11px; color:#ffff00;">C / Assembler Array Output:</div>
+          <textarea id="cArrayOutput" style="width:100%; height:52px; background:#000810; border:1px solid #004466; color:#00ff66; font-family:'Courier New', monospace; font-size:10px; padding:4px;" readonly placeholder="Exported C sprite code will appear here..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. The Silicon Oracle '99 & Y2K Diagnostic -->
+  <div class="section-box" id="oracle-section">
+    <div class="section-title">
+      <span>🔮 THE SILICON ORACLE '99</span>
+      <span style="font-size:11px; color:#ff00ff;">[3D WIREFRAME TECHNO-DIVINATION]</span>
+    </div>
+    <p style="font-size:12px; margin:0 0 10px 0;">
+      Commune with the silicon ether. Consult CyberSpire's cybernetic crystal prism for prophecies of the dawn of the millennium,
+      BBS karma, demoscene fame, or system stack survival.
+    </p>
+
+    <div class="oracle-container">
+      <!-- 3D Canvas Wireframe Polyhedron -->
+      <div class="oracle-canvas-box">
+        <canvas id="oracleCanvas" width="240" height="240"></canvas>
+      </div>
+
+      <div class="oracle-controls">
+        <div style="display:flex; gap:6px;">
+          <select id="oracleCategory" class="oracle-input" style="flex:1;">
+            <option value="y2k">⏱️ Y2K Survival &amp; Millennial Rollover</option>
+            <option value="demoscene">💾 Warez, Cracktros &amp; Demoscene Karma</option>
+            <option value="bbs">📟 BBS SysOp Fortune &amp; Dial-Up Romance</option>
+            <option value="cyberspace">🌐 Cyberspace Destiny &amp; KiloNet Future</option>
+            <option value="matrix">🌌 The Living Machine (Anomalous Signals)</option>
+          </select>
+          <button class="oracle-btn" onclick="consultOracle()">🔮 Consult Oracle</button>
+        </div>
+
+        <input type="text" id="oracleQuery" class="oracle-input" placeholder="Enter your query (or leave blank for spontaneous prophecy)..." />
+
+        <div class="oracle-result-box" id="oracleResult">
+          <div class="oracle-verdict">⚡ ORACLE STATUS: IDLE</div>
+          <div>The silicon prism spins quietly in memory offset 0x0040:0x1999. Select a category and consult the Oracle to align your system parity before midnight 2000.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Y2K Compliance Diagnostic Terminal -->
+    <div class="y2k-box" id="y2k-diagnostic">
+      <div style="font-weight:bold; font-size:13px; color:#ffff00; display:flex; justify-content:space-between;">
+        <span>⏱️ OFFICIAL Y2K MILLENNIUM BUG COMPLIANCE AUDIT</span>
+        <span id="y2kStatusBadge">[AUDIT REQUIRED]</span>
+      </div>
+      <p style="font-size:11px; margin:4px 0 8px 0; color:#88ff88;">
+        Test your browser, BIOS RTC registers, 2-digit COBOL date stacks, and 999KB KiloOS memory boundaries for year 2000 readiness.
+      </p>
+
+      <div style="display:flex; flex-wrap:wrap; gap:8px; font-size:11px;">
+        <label><input type="checkbox" id="chkRtc" checked> BIOS RTC Century Bit</label>
+        <label><input type="checkbox" id="chkCobol" checked> 2-Digit Date Windowing</label>
+        <label><input type="checkbox" id="chkModem" checked> 33.6k Modem Parity</label>
+        <label><input type="checkbox" id="chkStack" checked> 999KB System Stack Ceiling</label>
+      </div>
+
+      <div class="y2k-meter-bar">
+        <div class="y2k-meter-fill" id="y2kMeter"></div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <button class="btn-sign" style="background:#005500; border-color:#00ff00;" onclick="runY2kDiagnostic()">Run Y2K Diagnostic Scan ⚙️</button>
+        <button class="btn-sign" style="background:#003344; border-color:#00ffff;" onclick="downloadY2kCertificate()">📜 Download Y2K Certificate (.TXT)</button>
+      </div>
+      <div id="y2kResultLog" style="font-size:10px; margin-top:6px; color:#aaffaa;">Scan ready. Click 'Run Y2K Diagnostic Scan' to benchmark your workstation.</div>
+    </div>
+  </div>
+
+  <!-- 5. CyberSpire Bookmark Vault -->
+  <div class="section-box" id="bookmarks-section">
+    <div class="section-title">⭐ CyberSpire's 1999 Cyberspace Vault</div>
+    <ul style="font-size:13px; line-height:1.7; margin:0; padding-left:20px;">
+      <li><a href="/web/portal.html">KiloNet Central Web Portal (1999)</a> — The Yahoo-style directory of all reality &amp; simulated stock exchange</li>
       <li><a href="/web/warez.html" style="color:#ff00ff; font-weight:bold;">⚡ 0xRELEASE: Underground Scene &amp; Cracktro Vault</a> — Warez keygens, no-CD patches &amp; demoscene cracktros (Genesis FM &amp; SNES chiptunes!)</li>
-      <li><a href="/web/webring.html">The Central KiloNet Webring Hub</a> — Connect your personal retro page</li>
-      <li><a href="/apps/kbbs.html">Underground Dial-Up BBS</a> — ANSI boards, retro door games &amp; downloads</li>
-      <li><a href="/apps/krogue.html">KRogue Dungeon Crawler</a> — Infinite ASCII dungeon depths</li>
-      <li><a href="/apps/contribute.html">Fleet Contributor Fuel Hub</a> — Donate free Gemini quota</li>
+      <li><a href="/web/users/neon_rider.html" style="color:#00ffcc; font-weight:bold;">⚡ ~neon_rider's Win32 ASM Shrine</a> — x86 opcode sandbox, demoscene devlog &amp; YM2612 FM tracker tunes</li>
+      <li><a href="/web/asm_temple.html">The Temple of Win32 ASM</a> — Deep x86 assembly tutorials &amp; PE file analyzer</li>
+      <li><a href="/web/webring.html">The Central KiloNet Webring Hub</a> — Connect your personal retro page to the webring</li>
+      <li><a href="/web/cybercafe.html">Neon Oasis Cybercafé</a> — Chat terminal, virtual coffee bar &amp; message boards</li>
+      <li><a href="/apps/kbbs.html">Underground Dial-Up BBS</a> — ANSI boards, retro door games &amp; file downloads</li>
+      <li><a href="/apps/contribute.html">Fleet Contributor Fuel Hub</a> — Donate free Gemini quota to keep the autonomous fleet compiling</li>
     </ul>
   </div>
 
-  <div class="section-box">
-    <div class="section-title">📖 Sign the Cyber Guestbook!</div>
+  <!-- 6. Guestbook -->
+  <div class="section-box" id="guestbook-section">
+    <div class="section-title">
+      <span>📖 Sign the Cyber Guestbook!</span>
+      <span style="font-size:11px; color:#ffff00;">[PERSISTENT WEB 1.0 LOG]</span>
+    </div>
     <div class="guestbook-form">
-      <input type="text" id="gbAlias" class="gb-input" placeholder="Your Cyber Alias (e.g. NeoSurfer99)" />
-      <textarea id="gbMsg" class="gb-input" rows="2" placeholder="Leave your message for the webmaster..."></textarea>
+      <input type="text" id="gbAlias" class="gb-input" placeholder="Your Cyber Alias (e.g. PixelMage_99, NeoSurfer)" />
+      <textarea id="gbMsg" class="gb-input" rows="2" placeholder="Leave your mark on CyberSpire's guestbook..."></textarea>
       <button class="btn-sign" onclick="addGuestbookEntry()">Sign Guestbook [✍️]</button>
     </div>
     <div id="guestbookList" style="margin-top:12px;"></div>
   </div>
 
+  <!-- Visitor Hit Counter -->
   <div class="counter-box">
-    You are visitor #<span class="odometer" id="gbHits">0019284</span> to this shrine!
+    You are visitor #<span class="odometer" id="gbHits">0019284</span> to CyberSpire's Shrine!
   </div>
 
+  <!-- Webring Footer Navigation -->
   <div class="webring-nav">
     <strong>[ KiloNet Webring - Member Site #002 ]</strong><br>
     <span style="font-size:12px; color:#ff00ff;">This site is an active member of the 1999 Virtual Webring.</span><br>
-    <div style="margin-top:6px;">
-      <a href="/web/portal.html">[« Previous Site]</a> |
-      <a href="/web/webring.html">[Hub]</a> |
-      <a href="/apps/contribute.html">[Next Site »]</a>
+    <div style="margin-top:8px;">
+      <a href="/web/portal.html">[« Previous Site: KiloNet Portal]</a> |
+      <a href="/web/webring.html">[Webring Hub]</a> |
+      <a href="/web/warez.html">[Next Site: 0xRELEASE Warez »]</a>
     </div>
   </div>
 </div>
 
 <script>
-  // Guestbook persistence
-  const defaultEntries = [
-    { alias: "ByteRider_99", text: "Rad shrine! Loving the neon glow. Found this from the webring!", time: "1999-11-20 14:22" },
-    { alias: "PixelMage", text: "The living machine is awake. App #100 draws near.", time: "1999-12-05 03:41" }
-  ];
+// ============================================================================
+// AUDIO & SOUND EFFECT SYSTEM (GENESIS YM2612 FM & SPC700 STEREO DELAY)
+// ============================================================================
+let audioCtx = null;
+let masterGain = null;
+let analyser = null;
+let delayNode = null;
+let delayFeedback = null;
+let delayFilter = null;
+let noiseBuf = null;
 
-  function loadGuestbook() {
-    let saved = [];
-    try {
-      saved = JSON.parse(localStorage.getItem('knet_guestbook') || '[]');
-    } catch(e) { saved = []; }
-    if (!Array.isArray(saved) || saved.length === 0) {
-      saved = defaultEntries;
-      localStorage.setItem('knet_guestbook', JSON.stringify(saved));
+let isMidiPlaying = false;
+let isMuted = (localStorage.getItem('cyberspire_midi_muted') === 'true');
+let currentVolume = parseFloat(localStorage.getItem('cyberspire_midi_vol') || '0.7');
+
+let currentTrackIdx = 0;
+let currentStep = 0;
+let nextNoteTime = 0.0;
+let schedulerTimer = null;
+let lastLeadFreq = null;
+
+function initAudioCtx() {
+  if (!audioCtx) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioContextClass();
+
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 64;
+    analyser.smoothingTimeConstant = 0.75;
+
+    masterGain = audioCtx.createGain();
+    masterGain.gain.setValueAtTime(isMuted ? 0 : currentVolume, audioCtx.currentTime);
+
+    // SPC700 Warm Stereo Delay Line (0.22s, 2600Hz lowpass, 0.28 feedback)
+    delayNode = audioCtx.createDelay(1.0);
+    delayNode.delayTime.setValueAtTime(0.22, audioCtx.currentTime);
+
+    delayFeedback = audioCtx.createGain();
+    delayFeedback.gain.setValueAtTime(0.28, audioCtx.currentTime);
+
+    delayFilter = audioCtx.createBiquadFilter();
+    delayFilter.type = 'lowpass';
+    delayFilter.frequency.setValueAtTime(2600, audioCtx.currentTime);
+
+    delayNode.connect(delayFilter);
+    delayFilter.connect(delayFeedback);
+    delayFeedback.connect(delayNode);
+    delayFilter.connect(masterGain);
+
+    masterGain.connect(analyser);
+    analyser.connect(audioCtx.destination);
+
+    // Noise buffer for authentic tracker percussion
+    noiseBuf = audioCtx.createBuffer(1, audioCtx.sampleRate * 2, audioCtx.sampleRate);
+    const out = noiseBuf.getChannelData(0);
+    for (let i = 0; i < noiseBuf.length; i++) {
+      out[i] = Math.random() * 2 - 1;
     }
-    renderGuestbook(saved);
   }
-
-  function renderGuestbook(entries) {
-    const list = document.getElementById('guestbookList');
-    list.innerHTML = entries.map(e => `
-      <div class="gb-entry">
-        <span class="gb-alias">${escapeHtml(e.alias)}</span> &nbsp;
-        <span class="gb-time">${escapeHtml(e.time)}</span>
-        <div style="margin-top:2px; color:#ffffff;">${escapeHtml(e.text)}</div>
-      </div>
-    `).join('');
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
   }
+}
 
-  function escapeHtml(str) {
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  }
+function midiNoteToFreq(note) {
+  return 440 * Math.pow(2, (note - 69) / 12);
+}
 
-  function addGuestbookEntry() {
-    const alias = document.getElementById('gbAlias').value.trim() || 'Anonymous Voyeur';
-    const text = document.getElementById('gbMsg').value.trim();
-    if (!text) return;
+// UI Audio SFX
+function playUiBeep(freq = 880, dur = 0.05, type = 'square') {
+  try {
+    initAudioCtx();
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    g.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    osc.connect(g);
+    g.connect(masterGain);
+    osc.start();
+    osc.stop(audioCtx.currentTime + dur);
+  } catch (e) {}
+}
 
-    let saved = [];
-    try {
-      saved = JSON.parse(localStorage.getItem('knet_guestbook') || '[]');
-    } catch(e) { saved = []; }
+function playOracleChime() {
+  try {
+    initAudioCtx();
+    const notes = [60, 67, 72, 79]; // C, G, C, G mystic chime
+    notes.forEach((n, idx) => {
+      const t = audioCtx.currentTime + idx * 0.09;
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(midiNoteToFreq(n), t);
+      g.gain.setValueAtTime(0.12, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+      osc.connect(g);
+      g.connect(masterGain);
+      if (delayNode) g.connect(delayNode);
+      osc.start(t);
+      osc.stop(t + 0.65);
+    });
+  } catch(e) {}
+}
 
-    const newEntry = {
-      alias: alias,
-      text: text,
-      time: new Date().toISOString().replace('T', ' ').substring(0, 16)
-    };
-
-    saved.unshift(newEntry);
-    localStorage.setItem('knet_guestbook', JSON.stringify(saved.slice(0, 20)));
-    document.getElementById('gbMsg').value = '';
-    renderGuestbook(saved);
-  }
-
-  // Hit counter
-  let hits = parseInt(localStorage.getItem('knet_shrine_hits') || '19284');
-  hits += Math.floor(Math.random() * 2) + 1;
-  localStorage.setItem('knet_shrine_hits', hits.toString());
-  document.getElementById('gbHits').textContent = hits.toString().padStart(7, '0');
-
-  loadGuestbook();
-
-// ==========================================
-  // 1999 DEMOSCENE / KEYGEN RETRO TRACKER SYNTHESIZER
-  // 2+ Minute Genuine Demoscene Music Architecture
-  // ==========================================
-// Comprehensive 3-Track Demoscene / Keygen Chiptune Library
+// ============================================================================
+// COMPREHENSIVE 3-TRACK DEMOSCENE / TRACKER ARCHITECTURE
+// ============================================================================
 function rep4(arr) { return [...arr, ...arr, ...arr, ...arr]; }
 function rep16(val) { return new Array(16).fill(val); }
 const SILENT_64 = new Array(64).fill(null);
@@ -416,7 +1088,6 @@ const KICK_OFF = new Array(64).fill(0);
 const SNARE_OFF = new Array(64).fill(0);
 const HAT_OFF = new Array(64).fill(0);
 
-// Basic Drums
 const KICK_4 = rep4([1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0]);
 const KICK_DRIVE = rep4([1,0,0,0, 1,0,0,0, 1,0,1,0, 1,0,0,0]);
 const KICK_SYNC = rep4([1,0,0,0, 0,0,1,0, 1,0,0,0, 0,0,1,0]);
@@ -434,9 +1105,7 @@ const HAT_OFFBEAT = rep4([0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0]);
 const HAT_16TH = rep4([1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1]);
 const HAT_OPEN = rep4([0,0,2,0, 0,0,2,0, 0,0,2,0, 0,0,2,0]);
 
-// ============================================================================
-// TRACK 1: "CyberSpire Neon Horizon" (135 BPM - 18 Patterns = 128s / 02:08)
-// ============================================================================
+// TRACK 1: CyberSpire Neon Horizon (135 BPM - 18 Patterns)
 const T1_CHORDS_MAIN = [
   ...rep16([69, 72, 76, 81]), // Am
   ...rep16([65, 69, 72, 77]), // F
@@ -457,16 +1126,16 @@ const T1_CHORDS_OUTRO = [
 ];
 
 const T1_BASS_MAIN = [
-  ...[33,33,45,33, 33,45,33,33, 33,33,45,33, 33,45,33,45], // Am
-  ...[29,29,41,29, 29,41,29,29, 29,29,41,29, 29,41,29,41], // F
-  ...[24,24,36,24, 24,36,24,24, 24,24,36,24, 24,36,24,36], // C
-  ...[31,31,43,31, 31,43,31,31, 31,31,43,31, 31,43,31,43]  // G
+  ...[33,33,45,33, 33,45,33,33, 33,33,45,33, 33,45,33,45],
+  ...[29,29,41,29, 29,41,29,29, 29,29,41,29, 29,41,29,41],
+  ...[24,24,36,24, 24,36,24,24, 24,24,36,24, 24,36,24,36],
+  ...[31,31,43,31, 31,43,31,31, 31,31,43,31, 31,43,31,43]
 ];
 const T1_BASS_BRIDGE = [
-  ...[26,26,38,26, 26,38,26,26, 26,26,38,26, 26,38,26,38], // Dm
-  ...[28,28,40,28, 28,40,28,28, 28,28,40,28, 28,40,28,40], // Em
-  ...[29,29,41,29, 29,41,29,29, 29,29,41,29, 29,41,29,41], // F
-  ...[31,31,43,31, 31,43,31,31, 31,31,43,31, 31,43,31,43]  // G
+  ...[26,26,38,26, 26,38,26,26, 26,26,38,26, 26,38,26,38],
+  ...[28,28,40,28, 28,40,28,28, 28,28,40,28, 28,40,28,40],
+  ...[29,29,41,29, 29,41,29,29, 29,29,41,29, 29,41,29,41],
+  ...[31,31,43,31, 31,43,31,31, 31,31,43,31, 31,43,31,43]
 ];
 
 const T1_LEAD_THEME_A = [
@@ -509,6 +1178,7 @@ const T1_LEAD_OUTRO = [
 const track1 = {
   title: "Track 1: CyberSpire Neon Horizon (Demoscene Synthwave)",
   shortTitle: "CyberSpire Neon Horizon",
+  modName: "Neon_Horizon",
   bpm: 135,
   genre: "135 BPM - Demoscene Synth Anthem",
   patterns: [
@@ -533,34 +1203,31 @@ const track1 = {
   ]
 };
 
-// ============================================================================
-// TRACK 2: "Underground Tracker Dreams" (128 BPM - 18 Patterns = 135s / 02:15)
-// ============================================================================
+// TRACK 2: Underground Tracker Dreams (128 BPM)
 const T2_CHORDS_MAIN = [
-  ...rep16([62, 65, 69, 74]), // Dm
-  ...rep16([58, 62, 65, 70]), // Bb
-  ...rep16([60, 64, 67, 72]), // C
-  ...rep16([57, 60, 64, 69])  // Am
+  ...rep16([62, 65, 69, 74]),
+  ...rep16([58, 62, 65, 70]),
+  ...rep16([60, 64, 67, 72]),
+  ...rep16([57, 60, 64, 69])
 ];
 const T2_CHORDS_BRIDGE = [
-  ...rep16([55, 58, 62, 67]), // Gm
-  ...rep16([58, 62, 65, 70]), // Bb
-  ...rep16([60, 64, 67, 72]), // C
-  ...rep16([57, 61, 64, 67])  // A7
+  ...rep16([55, 58, 62, 67]),
+  ...rep16([58, 62, 65, 70]),
+  ...rep16([60, 64, 67, 72]),
+  ...rep16([57, 61, 64, 67])
 ];
 const T2_BASS_MAIN = [
-  ...[26,null,38,26, null,26,38,null, 26,26,null,38, null,26,38,41], // Dm
-  ...[22,null,34,22, null,22,34,null, 22,22,null,34, null,22,34,38], // Bb
-  ...[24,null,36,24, null,24,36,null, 24,24,null,36, null,24,36,40], // C
-  ...[21,null,33,21, null,21,33,null, 21,21,null,33, null,21,33,36]  // Am
+  ...[26,null,38,26, null,26,38,null, 26,26,null,38, null,26,38,41],
+  ...[22,null,34,22, null,22,34,null, 22,22,null,34, null,22,34,38],
+  ...[24,null,36,24, null,24,36,null, 24,24,null,36, null,24,36,40],
+  ...[21,null,33,21, null,21,33,null, 21,21,null,33, null,21,33,36]
 ];
 const T2_BASS_BRIDGE = [
-  ...[23,null,35,23, null,23,35,null, 23,23,null,35, null,23,35,38], // Gm
-  ...[22,null,34,22, null,22,34,null, 22,22,null,34, null,22,34,38], // Bb
-  ...[24,null,36,24, null,24,36,null, 24,24,null,36, null,24,36,40], // C
-  ...[21,null,33,21, null,21,33,null, 21,21,null,33, null,21,33,37]  // A7
+  ...[23,null,35,23, null,23,35,null, 23,23,null,35, null,23,35,38],
+  ...[22,null,34,22, null,22,34,null, 22,22,null,34, null,22,34,38],
+  ...[24,null,36,24, null,24,36,null, 24,24,null,36, null,24,36,40],
+  ...[21,null,33,21, null,21,33,null, 21,21,null,33, null,21,33,37]
 ];
-
 const T2_LEAD_THEME_A = [
   62,null,65,69, null,72,69,65, 67,null,65,64, 62,null,null,null,
   58,null,62,65, null,67,65,62, 65,null,64,62, 60,null,62,64,
@@ -589,6 +1256,7 @@ const T2_LEAD_SOLO = [
 const track2 = {
   title: "Track 2: Underground Tracker Dreams (Amiga ProTracker MOD)",
   shortTitle: "Underground Tracker Dreams",
+  modName: "Tracker_Dreams",
   bpm: 128,
   genre: "128 BPM - Amiga FastTracker II Style",
   patterns: [
@@ -613,35 +1281,31 @@ const track2 = {
   ]
 };
 
-// ============================================================================
-// TRACK 3: "Phosphor Cyberpunk Pulse" (144 BPM - 20 Patterns = 133s / 02:13)
-// ============================================================================
+// TRACK 3: Phosphor Cyberpunk Pulse (144 BPM)
 const T3_CHORDS_MAIN = [
-  ...rep16([64, 67, 71, 76]), // Em
-  ...rep16([60, 64, 67, 72]), // C
-  ...rep16([62, 66, 69, 74]), // D
-  ...rep16([59, 62, 66, 71])  // Bm
+  ...rep16([64, 67, 71, 76]),
+  ...rep16([60, 64, 67, 72]),
+  ...rep16([62, 66, 69, 74]),
+  ...rep16([59, 62, 66, 71])
 ];
 const T3_CHORDS_MOD = [
-  ...rep16([67, 71, 74, 79]), // G
-  ...rep16([62, 66, 69, 74]), // D
-  ...rep16([69, 72, 76, 81]), // Am
-  ...rep16([59, 63, 66, 69])  // B7
+  ...rep16([67, 71, 74, 79]),
+  ...rep16([62, 66, 69, 74]),
+  ...rep16([69, 72, 76, 81]),
+  ...rep16([59, 63, 66, 69])
 ];
-
 const T3_BASS_ACID_MAIN = [
-  ...[28,28,40,28, 28,40,28,28, 28,40,28,28, 40,28,40,43], // Em
-  ...[24,24,36,24, 24,36,24,24, 24,36,24,24, 36,24,36,38], // C
-  ...[26,26,38,26, 26,38,26,26, 26,38,26,26, 38,26,38,42], // D
-  ...[23,23,35,23, 23,35,23,23, 23,35,23,23, 35,23,35,38]  // Bm
+  ...[28,28,40,28, 28,40,28,28, 28,40,28,28, 40,28,40,43],
+  ...[24,24,36,24, 24,36,24,24, 24,36,24,24, 36,24,36,38],
+  ...[26,26,38,26, 26,38,26,26, 26,38,26,26, 38,26,38,42],
+  ...[23,23,35,23, 23,35,23,23, 23,35,23,23, 35,23,35,38]
 ];
 const T3_BASS_ACID_MOD = [
-  ...[23,23,35,23, 23,35,23,23, 23,35,23,23, 35,23,35,38], // G
-  ...[26,26,38,26, 26,38,26,26, 26,38,26,26, 38,26,38,42], // D
-  ...[21,21,33,21, 21,33,21,21, 21,33,21,21, 33,21,33,36], // Am
-  ...[23,23,35,23, 23,35,23,23, 23,35,23,23, 35,23,35,39]  // B7
+  ...[23,23,35,23, 23,35,23,23, 23,35,23,23, 35,23,35,38],
+  ...[26,26,38,26, 26,38,26,26, 26,38,26,26, 38,26,38,42],
+  ...[21,21,33,21, 21,33,21,21, 21,33,21,21, 33,21,33,36],
+  ...[23,23,35,23, 23,35,23,23, 23,35,23,23, 35,23,35,39]
 ];
-
 const T3_LEAD_HOOK_A = [
   64,null,67,71, null,71,69,67, 69,null,67,66, 64,null,null,null,
   60,null,64,67, null,69,67,64, 67,null,66,64, 62,null,64,66,
@@ -670,6 +1334,7 @@ const T3_LEAD_SOLO = [
 const track3 = {
   title: "Track 3: Phosphor Cyberpunk Pulse (Keygen / SID Chiptune)",
   shortTitle: "Phosphor Cyberpunk Pulse",
+  modName: "Cyberpunk_Pulse",
   bpm: 144,
   genre: "144 BPM - Hardcore Keygen Chiptune",
   patterns: [
@@ -697,580 +1362,1742 @@ const track3 = {
 };
 
 const allTracks = [track1, track2, track3];
-  const midiTracks = allTracks;
+const midiTracks = allTracks;
 
-  let audioCtx = null;
-  let masterGain = null;
-  let analyser = null;
-  let delayNode = null;
-  let delayFeedback = null;
-  let delayFilter = null;
-  let noiseBuf = null;
+// Lead, Bass, Percussion Synths
+function playLead(note, time, dur) {
+  if (!note) return;
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  const f = audioCtx.createBiquadFilter();
 
-  let currentTrackIdx = 0;
-  let isMidiPlaying = false;
-  let isMuted = (localStorage.getItem('cyberspire_midi_muted') === 'true');
-  let currentVolume = parseFloat(localStorage.getItem('cyberspire_midi_vol') || '0.7');
+  osc1.type = 'square';
+  osc2.type = 'sawtooth';
+  const targetFreq = midiNoteToFreq(note);
 
-  let currentStep = 0;
-  let nextNoteTime = 0.0;
-  let schedulerTimer = null;
-  let lastLeadFreq = null;
+  if (lastLeadFreq && Math.abs(targetFreq - lastLeadFreq) < 500) {
+    osc1.frequency.setValueAtTime(lastLeadFreq, time);
+    osc1.frequency.exponentialRampToValueAtTime(targetFreq, time + 0.04);
+    osc2.frequency.setValueAtTime(lastLeadFreq * 1.006, time);
+    osc2.frequency.exponentialRampToValueAtTime(targetFreq * 1.006, time + 0.04);
+  } else {
+    osc1.frequency.setValueAtTime(targetFreq, time);
+    osc2.frequency.setValueAtTime(targetFreq * 1.006, time);
+  }
+  lastLeadFreq = targetFreq;
 
-  function initAudioCtx() {
-    if (!audioCtx) {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      audioCtx = new AudioContextClass();
-      
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 64;
-      analyser.smoothingTimeConstant = 0.75;
+  const vib = audioCtx.createOscillator();
+  const vibGain = audioCtx.createGain();
+  vib.frequency.setValueAtTime(5.5, time);
+  vibGain.gain.setValueAtTime(0, time);
+  vibGain.gain.setValueAtTime(0, time + 0.07);
+  vibGain.gain.linearRampToValueAtTime(targetFreq * 0.015, time + 0.16);
+  vib.connect(vibGain);
+  vibGain.connect(osc1.frequency);
+  vibGain.connect(osc2.frequency);
+  vib.start(time);
+  vib.stop(time + dur);
 
-      masterGain = audioCtx.createGain();
-      masterGain.gain.setValueAtTime(isMuted ? 0 : currentVolume, audioCtx.currentTime);
+  f.type = 'lowpass';
+  f.frequency.setValueAtTime(2800, time);
+  f.Q.setValueAtTime(2.4, time);
 
-      // Stereo demoscene tape delay line (0.22s, 2600Hz lowpass, 0.28 feedback)
-      delayNode = audioCtx.createDelay(1.0);
-      delayNode.delayTime.setValueAtTime(0.22, audioCtx.currentTime);
+  g.gain.setValueAtTime(0.001, time);
+  g.gain.linearRampToValueAtTime(0.18, time + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.11, time + 0.10);
+  g.gain.linearRampToValueAtTime(0.001, time + dur);
 
-      delayFeedback = audioCtx.createGain();
-      delayFeedback.gain.setValueAtTime(0.28, audioCtx.currentTime);
+  osc1.connect(f);
+  osc2.connect(f);
+  f.connect(g);
+  g.connect(masterGain);
+  if (delayNode) g.connect(delayNode);
 
-      delayFilter = audioCtx.createBiquadFilter();
-      delayFilter.type = 'lowpass';
-      delayFilter.frequency.setValueAtTime(2600, audioCtx.currentTime);
+  osc1.start(time);
+  osc2.start(time);
+  osc1.stop(time + dur);
+  osc2.stop(time + dur);
+}
 
-      delayNode.connect(delayFilter);
-      delayFilter.connect(delayFeedback);
-      delayFeedback.connect(delayNode);
-      delayFilter.connect(masterGain);
+function playFastArp(chordNotes, time, dur) {
+  if (!chordNotes || chordNotes.length === 0) return;
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  const f = audioCtx.createBiquadFilter();
 
-      masterGain.connect(analyser);
-      analyser.connect(audioCtx.destination);
-
-      // Noise buffer for authentic tracker percussion
-      noiseBuf = audioCtx.createBuffer(1, audioCtx.sampleRate * 2, audioCtx.sampleRate);
-      const out = noiseBuf.getChannelData(0);
-      for (let i = 0; i < noiseBuf.length; i++) {
-        out[i] = Math.random() * 2 - 1;
-      }
-    }
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
+  osc.type = 'sawtooth';
+  const numCycles = Math.floor(dur / 0.022);
+  for (let c = 0; c < numCycles; c++) {
+    const note = chordNotes[c % chordNotes.length];
+    osc.frequency.setValueAtTime(midiNoteToFreq(note), time + c * 0.022);
   }
 
-  function midiNoteToFreq(note) {
-    return 440 * Math.pow(2, (note - 69) / 12);
-  }
+  f.type = 'lowpass';
+  f.frequency.setValueAtTime(3200, time);
+  f.Q.setValueAtTime(2.0, time);
 
-  // 1. Demoscene Lead Synth (Dual saw+square, resonant lowpass, portamento & vibrato)
-  function playLead(note, time, dur) {
-    if (!note) return;
-    const osc1 = audioCtx.createOscillator();
-    const osc2 = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    const f = audioCtx.createBiquadFilter();
+  g.gain.setValueAtTime(0.11, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur * 0.95);
 
-    osc1.type = 'square';
-    osc2.type = 'sawtooth';
-    const targetFreq = midiNoteToFreq(note);
+  osc.connect(f);
+  f.connect(g);
+  g.connect(masterGain);
+  if (delayNode) g.connect(delayNode);
 
-    if (lastLeadFreq && Math.abs(targetFreq - lastLeadFreq) < 500) {
-      // Smooth demoscene portamento pitch glide
-      osc1.frequency.setValueAtTime(lastLeadFreq, time);
-      osc1.frequency.exponentialRampToValueAtTime(targetFreq, time + 0.04);
-      osc2.frequency.setValueAtTime(lastLeadFreq * 1.006, time);
-      osc2.frequency.exponentialRampToValueAtTime(targetFreq * 1.006, time + 0.04);
-    } else {
-      osc1.frequency.setValueAtTime(targetFreq, time);
-      osc2.frequency.setValueAtTime(targetFreq * 1.006, time); // Detune
-    }
-    lastLeadFreq = targetFreq;
+  osc.start(time);
+  osc.stop(time + dur);
+}
 
-    // Vibrato LFO kicks in after 70ms
-    const vib = audioCtx.createOscillator();
-    const vibGain = audioCtx.createGain();
-    vib.frequency.setValueAtTime(5.5, time);
-    vibGain.gain.setValueAtTime(0, time);
-    vibGain.gain.setValueAtTime(0, time + 0.07);
-    vibGain.gain.linearRampToValueAtTime(targetFreq * 0.015, time + 0.16);
-    vib.connect(vibGain);
-    vibGain.connect(osc1.frequency);
-    vibGain.connect(osc2.frequency);
-    vib.start(time);
-    vib.stop(time + dur);
+function playBass(note, time, dur) {
+  if (!note) return;
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  const f = audioCtx.createBiquadFilter();
 
-    f.type = 'lowpass';
-    f.frequency.setValueAtTime(2800, time);
-    f.Q.setValueAtTime(2.4, time);
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(midiNoteToFreq(note), time);
 
-    g.gain.setValueAtTime(0.001, time);
-    g.gain.linearRampToValueAtTime(0.18, time + 0.012);
-    g.gain.exponentialRampToValueAtTime(0.11, time + 0.10);
-    g.gain.linearRampToValueAtTime(0.001, time + dur);
+  f.type = 'lowpass';
+  f.Q.setValueAtTime(3.8, time);
+  f.frequency.setValueAtTime(1800, time);
+  f.frequency.exponentialRampToValueAtTime(240, time + Math.min(dur * 0.8, 0.15));
 
-    osc1.connect(f);
-    osc2.connect(f);
-    f.connect(g);
-    g.connect(masterGain);
-    if (delayNode) g.connect(delayNode);
+  g.gain.setValueAtTime(0.24, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur * 0.95);
 
-    osc1.start(time);
-    osc2.start(time);
-    osc1.stop(time + dur);
-    osc2.stop(time + dur);
-  }
+  osc.connect(f);
+  f.connect(g);
+  g.connect(masterGain);
 
-  // 2. Authentic 50Hz/60Hz SID/Keygen Fast Arpeggiator
-  function playFastArp(chordNotes, time, dur) {
-    if (!chordNotes || chordNotes.length === 0) return;
+  osc.start(time);
+  osc.stop(time + dur);
+}
+
+function playKick(time) {
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(160, time);
+  osc.frequency.exponentialRampToValueAtTime(36, time + 0.075);
+
+  g.gain.setValueAtTime(0.38, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + 0.13);
+
+  osc.connect(g);
+  g.connect(masterGain);
+
+  osc.start(time);
+  osc.stop(time + 0.14);
+}
+
+function playSnare(time, isGhost) {
+  if (!noiseBuf) return;
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = noiseBuf;
+
+  const f = audioCtx.createBiquadFilter();
+  f.type = 'bandpass';
+  f.frequency.setValueAtTime(1350, time);
+  f.Q.setValueAtTime(1.6, time);
+
+  const g = audioCtx.createGain();
+  const gainVal = isGhost ? 0.08 : 0.20;
+  g.gain.setValueAtTime(gainVal, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + (isGhost ? 0.06 : 0.11));
+
+  noise.connect(f);
+  f.connect(g);
+  g.connect(masterGain);
+
+  noise.start(time);
+  noise.stop(time + 0.12);
+
+  if (!isGhost) {
     const osc = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    const f = audioCtx.createBiquadFilter();
-
-    osc.type = 'sawtooth';
-
-    // Rapidly cycle notes at 50Hz (every 0.02s) to produce the classic keygen buzzing chip timbre
-    const numCycles = Math.floor(dur / 0.022);
-    for (let c = 0; c < numCycles; c++) {
-      const note = chordNotes[c % chordNotes.length];
-      osc.frequency.setValueAtTime(midiNoteToFreq(note), time + c * 0.022);
-    }
-
-    f.type = 'lowpass';
-    f.frequency.setValueAtTime(3200, time);
-    f.Q.setValueAtTime(2.0, time);
-
-    g.gain.setValueAtTime(0.11, time);
-    g.gain.exponentialRampToValueAtTime(0.001, time + dur * 0.95);
-
-    osc.connect(f);
-    f.connect(g);
-    g.connect(masterGain);
-    if (delayNode) g.connect(delayNode);
-
+    const oscG = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(180, time);
+    osc.frequency.exponentialRampToValueAtTime(60, time + 0.04);
+    oscG.gain.setValueAtTime(0.14, time);
+    oscG.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
+    osc.connect(oscG);
+    oscG.connect(masterGain);
     osc.start(time);
-    osc.stop(time + dur);
+    osc.stop(time + 0.05);
   }
+}
 
-  // 3. Squelchy Roland TB-303 / SID Acid Bass
-  function playBass(note, time, dur) {
-    if (!note) return;
-    const osc = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    const f = audioCtx.createBiquadFilter();
+function playHihat(time, isOpen) {
+  if (!noiseBuf) return;
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = noiseBuf;
 
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(midiNoteToFreq(note), time);
+  const f = audioCtx.createBiquadFilter();
+  f.type = 'highpass';
+  f.frequency.setValueAtTime(isOpen ? 6800 : 8000, time);
 
-    // Dynamic resonant filter cutoff sweep
-    f.type = 'lowpass';
-    f.Q.setValueAtTime(3.8, time);
-    f.frequency.setValueAtTime(1800, time);
-    f.frequency.exponentialRampToValueAtTime(240, time + Math.min(dur * 0.8, 0.15));
+  const g = audioCtx.createGain();
+  const dur = isOpen ? 0.18 : 0.035;
+  g.gain.setValueAtTime(isOpen ? 0.09 : 0.07, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
 
-    g.gain.setValueAtTime(0.24, time);
-    g.gain.exponentialRampToValueAtTime(0.001, time + dur * 0.95);
+  noise.connect(f);
+  f.connect(g);
+  g.connect(masterGain);
 
-    osc.connect(f);
-    f.connect(g);
-    g.connect(masterGain);
+  noise.start(time);
+  noise.stop(time + dur + 0.01);
+}
 
-    osc.start(time);
-    osc.stop(time + dur);
+function playCrash(time) {
+  if (!noiseBuf) return;
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = noiseBuf;
+
+  const f = audioCtx.createBiquadFilter();
+  f.type = 'highpass';
+  f.frequency.setValueAtTime(4500, time);
+
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.24, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + 1.4);
+
+  noise.connect(f);
+  f.connect(g);
+  g.connect(masterGain);
+  if (delayNode) g.connect(delayNode);
+
+  noise.start(time);
+  noise.stop(time + 1.45);
+}
+
+function playRiser(time, dur) {
+  if (!noiseBuf) return;
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = noiseBuf;
+
+  const f = audioCtx.createBiquadFilter();
+  f.type = 'bandpass';
+  f.Q.setValueAtTime(3.0, time);
+  f.frequency.setValueAtTime(250, time);
+  f.frequency.exponentialRampToValueAtTime(6000, time + dur);
+
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.001, time);
+  g.gain.linearRampToValueAtTime(0.20, time + dur);
+  g.gain.linearRampToValueAtTime(0.001, time + dur + 0.02);
+
+  noise.connect(f);
+  f.connect(g);
+  g.connect(masterGain);
+
+  noise.start(time);
+  noise.stop(time + dur + 0.03);
+}
+
+function playLaser(time) {
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(950, time);
+  osc.frequency.exponentialRampToValueAtTime(60, time + 0.065);
+
+  g.gain.setValueAtTime(0.18, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + 0.07);
+
+  osc.connect(g);
+  g.connect(masterGain);
+  if (delayNode) g.connect(delayNode);
+
+  osc.start(time);
+  osc.stop(time + 0.075);
+}
+
+// ============================================================================
+// TRACKER SCHEDULER & PATTERN DISPATCHER
+// ============================================================================
+function schedule() {
+  const track = midiTracks[currentTrackIdx];
+  const secondsPerBeat = 60.0 / track.bpm;
+  const sixteenthTime = secondsPerBeat / 4.0;
+  const totalSteps = track.patterns.length * 64;
+
+  while (nextNoteTime < audioCtx.currentTime + 0.14) {
+    const step = currentStep;
+    const t = nextNoteTime;
+    const pIdx = Math.floor(step / 64);
+    const sIdx = step % 64;
+    const pat = track.patterns[pIdx];
+
+    if (sIdx === 0 && pat.crash) playCrash(t);
+    if (sIdx === 48 && pat.riser) playRiser(t, sixteenthTime * 16);
+    if (sIdx === 60 && pat.laser) playLaser(t);
+
+    if (pat.lead[sIdx]) playLead(pat.lead[sIdx], t, sixteenthTime * 1.5);
+    if (pat.arp[sIdx]) playFastArp(pat.arp[sIdx], t, sixteenthTime);
+    if (pat.bass[sIdx]) playBass(pat.bass[sIdx], t, sixteenthTime * 1.2);
+    if (pat.kick[sIdx]) playKick(t);
+    if (pat.snare[sIdx]) playSnare(t, pat.snare[sIdx] === 2);
+    if (pat.hihat[sIdx]) playHihat(t, pat.hihat[sIdx] === 2);
+
+    nextNoteTime += sixteenthTime;
+    currentStep = (currentStep + 1) % totalSteps;
+    updatePlaybackHud(track, pIdx, sIdx, currentStep, totalSteps, sixteenthTime);
+    renderTrackerRoll(track, pIdx, sIdx);
   }
+}
 
-  // 4. Punchy Demoscene Kick Drum
-  function playKick(time) {
-    const osc = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(160, time);
-    osc.frequency.exponentialRampToValueAtTime(36, time + 0.075);
+function formatTime(secs) {
+  const m = Math.floor(secs / 60).toString().padStart(2, '0');
+  const s = Math.floor(secs % 60).toString().padStart(2, '0');
+  return m + ":" + s;
+}
 
-    g.gain.setValueAtTime(0.38, time);
-    g.gain.exponentialRampToValueAtTime(0.001, time + 0.13);
+function updatePlaybackHud(track, pIdx, sIdx, step, totalSteps, stepTime) {
+  const elapsedSecs = Math.floor(step * stepTime);
+  const totalSecs = Math.floor(totalSteps * stepTime);
+  const patNum = (pIdx + 1).toString().padStart(2, '0');
+  const patTotal = track.patterns.length.toString().padStart(2, '0');
 
-    osc.connect(g);
-    g.connect(masterGain);
+  const elPat = document.getElementById('lcdPattern');
+  if (elPat) elPat.textContent = 'PAT: ' + patNum + '/' + patTotal;
+  const elTime = document.getElementById('lcdTime');
+  if (elTime) elTime.textContent = formatTime(elapsedSecs) + ' / ' + formatTime(totalSecs);
+  const elTitle = document.getElementById('lcdTrackTitle');
+  if (elTitle) elTitle.textContent = '♫ ' + track.shortTitle + ' • [Pat ' + patNum + ': ' + track.patterns[pIdx].name + '] • ' + track.genre;
+}
 
-    osc.start(time);
-    osc.stop(time + 0.14);
+const noteNames = ["C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"];
+function formatNoteName(midi) {
+  if (!midi) return "...";
+  const name = noteNames[midi % 12];
+  const oct = Math.floor(midi / 12) - 1;
+  return name + oct;
+}
+
+function renderTrackerRoll(track, pIdx, sIdx) {
+  const rollBox = document.getElementById('trackerRollLines');
+  if (!rollBox) return;
+  const pat = track.patterns[pIdx];
+  const rows = [];
+  const startRow = Math.max(0, sIdx - 1);
+  const endRow = Math.min(63, sIdx + 1);
+
+  for (let r = startRow; r <= endRow; r++) {
+    const isAct = (r === sIdx);
+    const rowPrefix = r.toString().padStart(2, '0') + '| ';
+    const ch1 = (pat.lead[r] ? formatNoteName(pat.lead[r]) + " 01" : "--- --").padEnd(7, ' ');
+    const ch2 = (pat.arp[r] ? "ARP " + (pat.arp[r][0] ? formatNoteName(pat.arp[r][0]) : "C-4") : "--- --").padEnd(9, ' ');
+    const ch3 = (pat.bass[r] ? formatNoteName(pat.bass[r]) + " 03" : "--- --").padEnd(7, ' ');
+    const drumStr = (pat.kick[r] ? "KCK" : "...") + " " + (pat.snare[r] ? "SNR" : "...") + " " + (pat.hihat[r] ? "HAT" : "...");
+    const line = rowPrefix + ch1 + " | " + ch2 + " | " + ch3 + " | " + drumStr;
+    rows.push(isAct ? '<span class="tracker-row-active">&gt;&gt; ' + line + '</span>' : '&nbsp;&nbsp; ' + line);
   }
+  rollBox.innerHTML = rows.join('<br>');
+}
 
-  // 5. Dual-Layer Tracker Snare (Noise burst + Body tone)
-  function playSnare(time, isGhost) {
-    if (!noiseBuf) return;
-    const noise = audioCtx.createBufferSource();
-    noise.buffer = noiseBuf;
+function startScheduler() {
+  if (schedulerTimer) clearInterval(schedulerTimer);
+  nextNoteTime = audioCtx.currentTime + 0.05;
+  schedulerTimer = setInterval(schedule, 25);
+}
 
-    const f = audioCtx.createBiquadFilter();
-    f.type = 'bandpass';
-    f.frequency.setValueAtTime(1350, time);
-    f.Q.setValueAtTime(1.6, time);
+function stopScheduler() {
+  if (schedulerTimer) clearInterval(schedulerTimer);
+  schedulerTimer = null;
+}
 
-    const g = audioCtx.createGain();
-    const gainVal = isGhost ? 0.08 : 0.20;
-    g.gain.setValueAtTime(gainVal, time);
-    g.gain.exponentialRampToValueAtTime(0.001, time + (isGhost ? 0.06 : 0.11));
-
-    noise.connect(f);
-    f.connect(g);
-    g.connect(masterGain);
-
-    noise.start(time);
-    noise.stop(time + 0.12);
-
-    // Pitched body
-    if (!isGhost) {
-      const osc = audioCtx.createOscillator();
-      const oscG = audioCtx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(180, time);
-      osc.frequency.exponentialRampToValueAtTime(60, time + 0.04);
-      oscG.gain.setValueAtTime(0.14, time);
-      oscG.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
-      osc.connect(oscG);
-      oscG.connect(masterGain);
-      osc.start(time);
-      osc.stop(time + 0.05);
-    }
+function toggleMidiPlay() {
+  initAudioCtx();
+  if (isMidiPlaying) {
+    pauseMidi();
+  } else {
+    playMidi();
   }
+}
 
-  // 6. High-Frequency Metallic Hi-Hats (Closed & Open)
-  function playHihat(time, isOpen) {
-    if (!noiseBuf) return;
-    const noise = audioCtx.createBufferSource();
-    noise.buffer = noiseBuf;
-
-    const f = audioCtx.createBiquadFilter();
-    f.type = 'highpass';
-    f.frequency.setValueAtTime(isOpen ? 6800 : 8000, time);
-
-    const g = audioCtx.createGain();
-    const dur = isOpen ? 0.18 : 0.035;
-    g.gain.setValueAtTime(isOpen ? 0.09 : 0.07, time);
-    g.gain.exponentialRampToValueAtTime(0.001, time + dur);
-
-    noise.connect(f);
-    f.connect(g);
-    g.connect(masterGain);
-
-    noise.start(time);
-    noise.stop(time + dur + 0.01);
-  }
-
-  // 7. Epic Crash Cymbal for Drops & Section Climaxes
-  function playCrash(time) {
-    if (!noiseBuf) return;
-    const noise = audioCtx.createBufferSource();
-    noise.buffer = noiseBuf;
-
-    const f = audioCtx.createBiquadFilter();
-    f.type = 'highpass';
-    f.frequency.setValueAtTime(4500, time);
-
-    const g = audioCtx.createGain();
-    g.gain.setValueAtTime(0.24, time);
-    g.gain.exponentialRampToValueAtTime(0.001, time + 1.4);
-
-    noise.connect(f);
-    f.connect(g);
-    g.connect(masterGain);
-    if (delayNode) g.connect(delayNode);
-
-    noise.start(time);
-    noise.stop(time + 1.45);
-  }
-
-  // 8. Demoscene Noise Riser (Swells before the Drop)
-  function playRiser(time, dur) {
-    if (!noiseBuf) return;
-    const noise = audioCtx.createBufferSource();
-    noise.buffer = noiseBuf;
-
-    const f = audioCtx.createBiquadFilter();
-    f.type = 'bandpass';
-    f.Q.setValueAtTime(3.0, time);
-    f.frequency.setValueAtTime(250, time);
-    f.frequency.exponentialRampToValueAtTime(6000, time + dur);
-
-    const g = audioCtx.createGain();
-    g.gain.setValueAtTime(0.001, time);
-    g.gain.linearRampToValueAtTime(0.20, time + dur);
-    g.gain.linearRampToValueAtTime(0.001, time + dur + 0.02);
-
-    noise.connect(f);
-    f.connect(g);
-    g.connect(masterGain);
-
-    noise.start(time);
-    noise.stop(time + dur + 0.03);
-  }
-
-  // 9. Retro 8-bit Laser Zap SFX
-  function playLaser(time) {
-    const osc = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(950, time);
-    osc.frequency.exponentialRampToValueAtTime(60, time + 0.065);
-
-    g.gain.setValueAtTime(0.18, time);
-    g.gain.exponentialRampToValueAtTime(0.001, time + 0.07);
-
-    osc.connect(g);
-    g.connect(masterGain);
-    if (delayNode) g.connect(delayNode);
-
-    osc.start(time);
-    osc.stop(time + 0.075);
-  }
-
-  // ==========================================
-  // TRACKER SCHEDULER & PATTERN DISPATCHER
-  // ==========================================
-  function schedule() {
-    const track = midiTracks[currentTrackIdx];
-    const secondsPerBeat = 60.0 / track.bpm;
-    const sixteenthTime = secondsPerBeat / 4.0;
-    const totalSteps = track.patterns.length * 64;
-
-    while (nextNoteTime < audioCtx.currentTime + 0.14) {
-      const step = currentStep;
-      const t = nextNoteTime;
-      const pIdx = Math.floor(step / 64);
-      const sIdx = step % 64;
-      const pat = track.patterns[pIdx];
-
-      // Section SFX triggers
-      if (sIdx === 0 && pat.crash) playCrash(t);
-      if (sIdx === 48 && pat.riser) playRiser(t, sixteenthTime * 16);
-      if (sIdx === 60 && pat.laser) playLaser(t);
-
-      // Instruments
-      if (pat.lead[sIdx]) playLead(pat.lead[sIdx], t, sixteenthTime * 1.5);
-      if (pat.arp[sIdx]) playFastArp(pat.arp[sIdx], t, sixteenthTime);
-      if (pat.bass[sIdx]) playBass(pat.bass[sIdx], t, sixteenthTime * 1.2);
-      if (pat.kick[sIdx]) playKick(t);
-      if (pat.snare[sIdx]) playSnare(t, pat.snare[sIdx] === 2);
-      if (pat.hihat[sIdx]) playHihat(t, pat.hihat[sIdx] === 2);
-
-      // Advance clock
-      nextNoteTime += sixteenthTime;
-      currentStep = (currentStep + 1) % totalSteps;
-      updatePlaybackHud(track, pIdx, sIdx, currentStep, totalSteps, sixteenthTime);
-    }
-  }
-
-  function formatTime(secs) {
-    const m = Math.floor(secs / 60).toString().padStart(2, '0');
-    const s = Math.floor(secs % 60).toString().padStart(2, '0');
-    return m + ":" + s;
-  }
-
-  function updatePlaybackHud(track, pIdx, sIdx, step, totalSteps, stepTime) {
-    const elapsedSecs = Math.floor(step * stepTime);
-    const totalSecs = Math.floor(totalSteps * stepTime);
-    const patNum = (pIdx + 1).toString().padStart(2, '0');
-    const patTotal = track.patterns.length.toString().padStart(2, '0');
-
-    const elPat = document.getElementById('lcdPattern');
-    if (elPat) elPat.textContent = 'PAT: ' + patNum + '/' + patTotal;
-    const elTime = document.getElementById('lcdTime');
-    if (elTime) elTime.textContent = formatTime(elapsedSecs) + ' / ' + formatTime(totalSecs);
-    const elTitle = document.getElementById('lcdTrackTitle');
-    if (elTitle) elTitle.textContent = '♫ ' + track.shortTitle + ' • [Pat ' + patNum + ': ' + track.patterns[pIdx].name + '] • ' + track.genre;
-  }
-
-  function startScheduler() {
-    if (schedulerTimer) clearInterval(schedulerTimer);
-    nextNoteTime = audioCtx.currentTime + 0.05;
-    schedulerTimer = setInterval(schedule, 25);
-  }
-
-  function stopScheduler() {
-    if (schedulerTimer) clearInterval(schedulerTimer);
-    schedulerTimer = null;
-  }
-
-  function toggleMidiPlay() {
-    initAudioCtx();
-    if (isMidiPlaying) {
-      pauseMidi();
-    } else {
-      playMidi();
-    }
-  }
-
-  function playMidi() {
-    initAudioCtx();
-    isMidiPlaying = true;
-    startScheduler();
-    document.getElementById('btnMidiPlay').textContent = "⏸ Pause";
-    document.getElementById('btnMidiPlay').classList.add('active');
-    document.getElementById('lcdStatus').textContent = "PLAYING";
-    document.getElementById('lcdStatus').style.color = "#00ff66";
-    updateLcd();
-  }
-
-  function pauseMidi() {
-    isMidiPlaying = false;
-    stopScheduler();
-    document.getElementById('btnMidiPlay').textContent = "▶ Play MIDI";
-    document.getElementById('btnMidiPlay').classList.remove('active');
-    document.getElementById('lcdStatus').textContent = "PAUSED";
-    document.getElementById('lcdStatus').style.color = "#ffff00";
-  }
-
-  function stopMidi() {
-    isMidiPlaying = false;
-    stopScheduler();
-    currentStep = 0;
-    lastLeadFreq = null;
-    const track = midiTracks[currentTrackIdx];
-    const totalSteps = track.patterns.length * 64;
-    const stepTime = (60.0 / track.bpm) / 4.0;
-    const totalSecs = Math.floor(totalSteps * stepTime);
-    const elPat = document.getElementById('lcdPattern');
-    if (elPat) elPat.textContent = 'PAT: 01/' + track.patterns.length.toString().padStart(2, '0');
-    const elTime = document.getElementById('lcdTime');
-    if (elTime) elTime.textContent = '00:00 / ' + formatTime(totalSecs);
-    document.getElementById('btnMidiPlay').textContent = "▶ Play MIDI";
-    document.getElementById('btnMidiPlay').classList.remove('active');
-    document.getElementById('lcdStatus').textContent = "STOPPED";
-    document.getElementById('lcdStatus').style.color = "#ff0055";
-  }
-
-  function updateLcd() {
-    const track = midiTracks[currentTrackIdx];
-    const totalSteps = track.patterns.length * 64;
-    const stepTime = (60.0 / track.bpm) / 4.0;
-    const totalSecs = Math.floor(totalSteps * stepTime);
-    const elapsedSecs = Math.floor(currentStep * stepTime);
-    const pIdx = Math.floor(currentStep / 64);
-    const patNum = (pIdx + 1).toString().padStart(2, '0');
-    const patTotal = track.patterns.length.toString().padStart(2, '0');
-
-    document.getElementById('lcdTrackNo').textContent = 'TRACK 0' + (currentTrackIdx + 1) + '/03';
-    document.getElementById('lcdBpm').textContent = track.bpm + ' BPM';
-    const elPat = document.getElementById('lcdPattern');
-    if (elPat) elPat.textContent = 'PAT: ' + patNum + '/' + patTotal;
-    const elTime = document.getElementById('lcdTime');
-    if (elTime) elTime.textContent = formatTime(elapsedSecs) + ' / ' + formatTime(totalSecs);
-    const elTitle = document.getElementById('lcdTrackTitle');
-    if (elTitle) elTitle.textContent = '♫ ' + track.shortTitle + ' • [Pat ' + patNum + ': ' + track.patterns[pIdx].name + '] • ' + track.genre;
-    document.getElementById('midiTrackSelect').value = currentTrackIdx.toString();
-  }
-
-  function selectTrack(idx) {
-    const wasPlaying = isMidiPlaying;
-    stopMidi();
-    currentTrackIdx = parseInt(idx, 10);
-    updateLcd();
-    if (wasPlaying) playMidi();
-  }
-
-  function prevTrack() {
-    let nextIdx = (currentTrackIdx - 1 + midiTracks.length) % midiTracks.length;
-    selectTrack(nextIdx);
-  }
-
-  function nextTrack() {
-    let nextIdx = (currentTrackIdx + 1) % midiTracks.length;
-    selectTrack(nextIdx);
-  }
-
-  function setVolume(val) {
-    currentVolume = val / 100.0;
-    localStorage.setItem('cyberspire_midi_vol', currentVolume.toString());
-    if (masterGain && !isMuted) {
-      masterGain.gain.setTargetAtTime(currentVolume, audioCtx.currentTime, 0.05);
-    }
-  }
-
-  function toggleMute() {
-    isMuted = !isMuted;
-    localStorage.setItem('cyberspire_midi_muted', isMuted.toString());
-    document.getElementById('btnMidiMute').textContent = isMuted ? "🔇" : "🔊";
-    if (masterGain && audioCtx) {
-      masterGain.gain.setTargetAtTime(isMuted ? 0 : currentVolume, audioCtx.currentTime, 0.05);
-    }
-  }
-
-    // Equalizer Visualizer Drawing
-  const canvas = document.getElementById('eqCanvas');
-  const canvasCtx = canvas ? canvas.getContext('2d') : null;
-  const numBars = 16;
-  const peakHold = new Array(numBars).fill(0);
-
-  function drawEqualizer() {
-    requestAnimationFrame(drawEqualizer);
-    if (!canvasCtx || !canvas) return;
-
-    canvasCtx.fillStyle = '#010d07';
-    canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
-
-    let freqData = new Uint8Array(numBars);
-    if (analyser && isMidiPlaying) {
-      const fullData = new Uint8Array(analyser.frequencyBinCount);
-      analyser.getByteFrequencyData(fullData);
-      for (let i = 0; i < numBars; i++) {
-        freqData[i] = fullData[i * 2];
-      }
-    } else {
-      freqData.fill(0);
-    }
-
-    const barWidth = (canvas.width / numBars) - 2;
-    for (let i = 0; i < numBars; i++) {
-      let val = freqData[i] / 255.0;
-      let barHeight = val * (canvas.height - 4);
-
-      if (barHeight > peakHold[i]) {
-        peakHold[i] = barHeight;
-      } else {
-        peakHold[i] = Math.max(0, peakHold[i] - 0.4);
-      }
-
-      const x = i * (barWidth + 2) + 1;
-      const y = canvas.height - barHeight;
-
-      // Draw LED blocks
-      const numBlocks = Math.floor(barHeight / 4);
-      for (let b = 0; b < numBlocks; b++) {
-        const blockY = canvas.height - (b * 4) - 3;
-        if (b > 6) {
-          canvasCtx.fillStyle = '#ff00aa'; // Peak pink/magenta
-        } else if (b > 4) {
-          canvasCtx.fillStyle = '#ffff00'; // Mid yellow
-        } else {
-          canvasCtx.fillStyle = '#00ff66'; // Green
-        }
-        canvasCtx.fillRect(x, blockY, barWidth, 3);
-      }
-
-      // Draw peak hold dot
-      if (peakHold[i] > 2) {
-        canvasCtx.fillStyle = '#ffffff';
-        canvasCtx.fillRect(x, canvas.height - peakHold[i] - 2, barWidth, 2);
-      }
-    }
-  }
-  drawEqualizer();
-
-  // Restore saved volume and mute
-  document.getElementById('midiVolume').value = Math.round(currentVolume * 100);
-  if (isMuted) document.getElementById('btnMidiMute').textContent = "🔇";
+function playMidi() {
+  initAudioCtx();
+  isMidiPlaying = true;
+  startScheduler();
+  document.getElementById('btnMidiPlay').textContent = "⏸ Pause";
+  document.getElementById('btnMidiPlay').classList.add('active');
+  document.getElementById('lcdStatus').textContent = "PLAYING";
+  document.getElementById('lcdStatus').style.color = "#00ff66";
   updateLcd();
+}
 
-  // Auto-unlock audio context on any user interaction
-  document.body.addEventListener('click', () => {
-    if (audioCtx && audioCtx.state === 'suspended') {
-      audioCtx.resume();
+function pauseMidi() {
+  isMidiPlaying = false;
+  stopScheduler();
+  document.getElementById('btnMidiPlay').textContent = "▶ Play Track";
+  document.getElementById('btnMidiPlay').classList.remove('active');
+  document.getElementById('lcdStatus').textContent = "PAUSED";
+  document.getElementById('lcdStatus').style.color = "#ffff00";
+}
+
+function stopMidi() {
+  isMidiPlaying = false;
+  stopScheduler();
+  currentStep = 0;
+  lastLeadFreq = null;
+  const track = midiTracks[currentTrackIdx];
+  const totalSteps = track.patterns.length * 64;
+  const stepTime = (60.0 / track.bpm) / 4.0;
+  const totalSecs = Math.floor(totalSteps * stepTime);
+  const elPat = document.getElementById('lcdPattern');
+  if (elPat) elPat.textContent = 'PAT: 01/' + track.patterns.length.toString().padStart(2, '0');
+  const elTime = document.getElementById('lcdTime');
+  if (elTime) elTime.textContent = '00:00 / ' + formatTime(totalSecs);
+  document.getElementById('btnMidiPlay').textContent = "▶ Play Track";
+  document.getElementById('btnMidiPlay').classList.remove('active');
+  document.getElementById('lcdStatus').textContent = "STOPPED";
+  document.getElementById('lcdStatus').style.color = "#ff0055";
+}
+
+function updateLcd() {
+  const track = midiTracks[currentTrackIdx];
+  const totalSteps = track.patterns.length * 64;
+  const stepTime = (60.0 / track.bpm) / 4.0;
+  const totalSecs = Math.floor(totalSteps * stepTime);
+  const elapsedSecs = Math.floor(currentStep * stepTime);
+  const pIdx = Math.floor(currentStep / 64);
+  const patNum = (pIdx + 1).toString().padStart(2, '0');
+  const patTotal = track.patterns.length.toString().padStart(2, '0');
+
+  document.getElementById('lcdTrackNo').textContent = 'TRACK 0' + (currentTrackIdx + 1) + '/03';
+  document.getElementById('lcdBpm').textContent = track.bpm + ' BPM';
+  const elPat = document.getElementById('lcdPattern');
+  if (elPat) elPat.textContent = 'PAT: ' + patNum + '/' + patTotal;
+  const elTime = document.getElementById('lcdTime');
+  if (elTime) elTime.textContent = formatTime(elapsedSecs) + ' / ' + formatTime(totalSecs);
+  const elTitle = document.getElementById('lcdTrackTitle');
+  if (elTitle) elTitle.textContent = '♫ ' + track.shortTitle + ' • [Pat ' + patNum + ': ' + track.patterns[pIdx].name + '] • ' + track.genre;
+  document.getElementById('midiTrackSelect').value = currentTrackIdx.toString();
+}
+
+function selectTrack(idx) {
+  const wasPlaying = isMidiPlaying;
+  stopMidi();
+  currentTrackIdx = parseInt(idx, 10);
+  updateLcd();
+  if (wasPlaying) playMidi();
+}
+
+function prevTrack() {
+  let nextIdx = (currentTrackIdx - 1 + midiTracks.length) % midiTracks.length;
+  selectTrack(nextIdx);
+}
+
+function nextTrack() {
+  let nextIdx = (currentTrackIdx + 1) % midiTracks.length;
+  selectTrack(nextIdx);
+}
+
+function setVolume(val) {
+  currentVolume = val / 100.0;
+  localStorage.setItem('cyberspire_midi_vol', currentVolume.toString());
+  if (masterGain && !isMuted) {
+    masterGain.gain.setTargetAtTime(currentVolume, audioCtx.currentTime, 0.05);
+  }
+}
+
+function toggleMute() {
+  isMuted = !isMuted;
+  localStorage.setItem('cyberspire_midi_muted', isMuted.toString());
+  document.getElementById('btnMidiMute').textContent = isMuted ? "🔇" : "🔊";
+  if (masterGain && audioCtx) {
+    masterGain.gain.setTargetAtTime(isMuted ? 0 : currentVolume, audioCtx.currentTime, 0.05);
+  }
+}
+
+// Dancing Equalizer Canvas
+const eqCanvas = document.getElementById('eqCanvas');
+const eqCtx = eqCanvas ? eqCanvas.getContext('2d') : null;
+const numBars = 16;
+const peakHold = new Array(numBars).fill(0);
+
+function drawEqualizer() {
+  requestAnimationFrame(drawEqualizer);
+  if (!eqCtx || !eqCanvas) return;
+
+  eqCtx.fillStyle = '#010d07';
+  eqCtx.fillRect(0, 0, eqCanvas.width, eqCanvas.height);
+
+  let freqData = new Uint8Array(numBars);
+  if (analyser && isMidiPlaying) {
+    const fullData = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(fullData);
+    for (let i = 0; i < numBars; i++) {
+      freqData[i] = fullData[i * 2];
     }
-  }, { once: true });
+  } else {
+    freqData.fill(0);
+  }
+
+  const barWidth = (eqCanvas.width / numBars) - 2;
+  for (let i = 0; i < numBars; i++) {
+    let val = freqData[i] / 255.0;
+    let barHeight = val * (eqCanvas.height - 4);
+
+    if (barHeight > peakHold[i]) {
+      peakHold[i] = barHeight;
+    } else {
+      peakHold[i] = Math.max(0, peakHold[i] - 0.4);
+    }
+
+    const x = i * (barWidth + 2) + 1;
+
+    const numBlocks = Math.floor(barHeight / 4);
+    for (let b = 0; b < numBlocks; b++) {
+      const blockY = eqCanvas.height - (b * 4) - 3;
+      if (b > 6) {
+        eqCtx.fillStyle = '#ff00aa';
+      } else if (b > 4) {
+        eqCtx.fillStyle = '#ffff00';
+      } else {
+        eqCtx.fillStyle = '#00ff66';
+      }
+      eqCtx.fillRect(x, blockY, barWidth, 3);
+    }
+
+    if (peakHold[i] > 2) {
+      eqCtx.fillStyle = '#ffffff';
+      eqCtx.fillRect(x, eqCanvas.height - peakHold[i] - 2, barWidth, 2);
+    }
+  }
+}
+drawEqualizer();
+
+// ============================================================================
+// AMIGA PROTRACKER (.MOD) BINARY GENERATOR (STANDARD M.K. 4-CHANNEL)
+// ============================================================================
+// Standard Amiga Paula Periods for ProTracker finetune 0 (octaves 1 to 3)
+const AMIGA_PERIOD_TABLE = {
+  36: 856, 37: 808, 38: 762, 39: 720, 40: 678, 41: 640, 42: 604, 43: 570, 44: 538, 45: 508, 46: 480, 47: 453, // C-1 to B-1
+  48: 428, 49: 404, 50: 381, 51: 360, 52: 339, 53: 320, 54: 302, 55: 285, 56: 269, 57: 254, 58: 240, 59: 226, // C-2 to B-2
+  60: 214, 61: 202, 62: 190, 63: 180, 64: 170, 65: 160, 66: 151, 67: 143, 68: 135, 69: 127, 70: 120, 71: 113, // C-3 to B-3
+  72: 107, 73: 101, 74: 95,  75: 90,  76: 85,  77: 80,  78: 75,  79: 71,  80: 67,  81: 63,  82: 60,  83: 56   // C-4 to B-4
+};
+
+function noteToAmigaPeriod(note) {
+  if (!note) return 0;
+  // Clamp to valid range
+  let n = Math.max(36, Math.min(83, note));
+  return AMIGA_PERIOD_TABLE[n] || 214;
+}
+
+// Synthesize 8-bit signed PCM waveform samples
+function generate8BitPcm(type, length) {
+  const pcm = new Int8Array(length);
+  for (let i = 0; i < length; i++) {
+    const phase = i / length;
+    let val = 0;
+    if (type === 'saw') {
+      val = (phase * 2 - 1) * 110;
+    } else if (type === 'square') {
+      val = (phase < 0.5 ? 100 : -100);
+    } else if (type === 'bass') {
+      val = Math.sin(phase * Math.PI * 2) * 115 * Math.exp(-phase * 2);
+    } else if (type === 'kick') {
+      const f = 200 * Math.exp(-phase * 15);
+      val = Math.sin(phase * f) * 120 * Math.exp(-phase * 4);
+    } else if (type === 'snare') {
+      val = (Math.random() * 2 - 1) * 110 * Math.exp(-phase * 5);
+    } else if (type === 'hihat') {
+      val = (Math.random() * 2 - 1) * 90 * Math.exp(-phase * 12);
+    } else { // Sine chime
+      val = Math.sin(phase * Math.PI * 2 * 4) * 90 * Math.exp(-phase * 3);
+    }
+    pcm[i] = Math.max(-128, Math.min(127, Math.round(val)));
+  }
+  return pcm;
+}
+
+function buildModBinary(track) {
+  // Samples definition (7 active samples)
+  const sampleDefs = [
+    { name: "Saw Lead Synth", len: 512, finetune: 0, vol: 64, type: 'saw' },
+    { name: "Square Bass Stab", len: 512, finetune: 0, vol: 64, type: 'square' },
+    { name: "Resonant TB303 Bass", len: 512, finetune: 0, vol: 64, type: 'bass' },
+    { name: "Demoscene 8Bit Kick", len: 1024, finetune: 0, vol: 64, type: 'kick' },
+    { name: "Dual Noise Snare", len: 1024, finetune: 0, vol: 58, type: 'snare' },
+    { name: "Metallic Open Hat", len: 512, finetune: 0, vol: 50, type: 'hihat' },
+    { name: "FM Bell Chime", len: 512, finetune: 0, vol: 60, type: 'bell' }
+  ];
+
+  const pcmList = sampleDefs.map(s => generate8BitPcm(s.type, s.len));
+  const numPatterns = Math.min(16, track.patterns.length);
+  const patternDataSize = numPatterns * 1024; // 1024 bytes per 4-channel pattern
+  const totalPcmSize = pcmList.reduce((acc, pcm) => acc + pcm.length, 0);
+  const totalSize = 1084 + patternDataSize + totalPcmSize;
+
+  const buffer = new Uint8Array(totalSize);
+  const view = new DataView(buffer.buffer);
+
+  // 1. Song Title (20 bytes, offset 0..19)
+  const title = (track.shortTitle || "CYBERSPIRE MOD").toUpperCase().padEnd(20, '\0');
+  for (let i = 0; i < 20; i++) buffer[i] = title.charCodeAt(i) || 0;
+
+  // 2. 31 Sample Headers (30 bytes each, offset 20..949)
+  for (let s = 0; s < 31; s++) {
+    const off = 20 + s * 30;
+    if (s < sampleDefs.length) {
+      const def = sampleDefs[s];
+      const sName = def.name.padEnd(22, '\0');
+      for (let i = 0; i < 22; i++) buffer[off + i] = sName.charCodeAt(i) || 0;
+      // Length in 16-bit words (big-endian)
+      view.setUint16(off + 22, def.len / 2, false);
+      buffer[off + 24] = def.finetune; // Finetune
+      buffer[off + 25] = def.vol;      // Volume
+      view.setUint16(off + 26, 0, false); // Repeat point
+      view.setUint16(off + 28, 1, false); // Repeat length (1 word = non-looping)
+    } else {
+      // Empty sample
+      view.setUint16(off + 22, 0, false);
+      buffer[off + 25] = 0;
+      view.setUint16(off + 28, 1, false);
+    }
+  }
+
+  // 3. Song Length & Restart Byte (offset 950..951)
+  buffer[950] = numPatterns; // Number of song positions
+  buffer[951] = 127;         // Standard restart flag
+
+  // 4. Pattern Sequence Table (128 bytes, offset 952..1079)
+  for (let i = 0; i < 128; i++) {
+    buffer[952 + i] = (i < numPatterns) ? i : 0;
+  }
+
+  // 5. M.K. Tag (offset 1080..1083)
+  buffer[1080] = 0x4D; // 'M'
+  buffer[1081] = 0x2E; // '.'
+  buffer[1082] = 0x4B; // 'K'
+  buffer[1083] = 0x2E; // '.'
+
+  // 6. Pattern Data (offset 1084 onwards)
+  let patOffset = 1084;
+  for (let p = 0; p < numPatterns; p++) {
+    const pat = track.patterns[p];
+    for (let r = 0; r < 64; r++) {
+      // Channel 1: Lead (Sample 1)
+      let n1 = pat.lead[r];
+      let p1 = n1 ? noteToAmigaPeriod(n1) : 0;
+      let s1 = n1 ? 1 : 0;
+      buffer[patOffset++] = (s1 & 0xF0) | ((p1 >> 8) & 0x0F);
+      buffer[patOffset++] = p1 & 0xFF;
+      buffer[patOffset++] = ((s1 & 0x0F) << 4);
+      buffer[patOffset++] = 0;
+
+      // Channel 2: Arp / Chord (Sample 2 or 7)
+      let n2 = pat.arp[r] ? pat.arp[r][0] : null;
+      let p2 = n2 ? noteToAmigaPeriod(n2) : 0;
+      let s2 = n2 ? 2 : 0;
+      buffer[patOffset++] = (s2 & 0xF0) | ((p2 >> 8) & 0x0F);
+      buffer[patOffset++] = p2 & 0xFF;
+      buffer[patOffset++] = ((s2 & 0x0F) << 4);
+      buffer[patOffset++] = 0;
+
+      // Channel 3: Bass (Sample 3)
+      let n3 = pat.bass[r];
+      let p3 = n3 ? noteToAmigaPeriod(n3) : 0;
+      let s3 = n3 ? 3 : 0;
+      buffer[patOffset++] = (s3 & 0xF0) | ((p3 >> 8) & 0x0F);
+      buffer[patOffset++] = p3 & 0xFF;
+      buffer[patOffset++] = ((s3 & 0x0F) << 4);
+      buffer[patOffset++] = 0;
+
+      // Channel 4: Percussion (Kick = s4, Snare = s5, Hat = s6)
+      let s4 = 0;
+      let p4 = 0;
+      if (pat.kick[r]) { s4 = 4; p4 = 428; }
+      else if (pat.snare[r]) { s4 = 5; p4 = 428; }
+      else if (pat.hihat[r]) { s4 = 6; p4 = 214; }
+
+      buffer[patOffset++] = (s4 & 0xF0) | ((p4 >> 8) & 0x0F);
+      buffer[patOffset++] = p4 & 0xFF;
+      buffer[patOffset++] = ((s4 & 0x0F) << 4);
+      buffer[patOffset++] = 0;
+    }
+  }
+
+  // 7. Append Sample PCM Data
+  let pcmOffset = patOffset;
+  pcmList.forEach(pcm => {
+    buffer.set(new Uint8Array(pcm.buffer), pcmOffset);
+    pcmOffset += pcm.length;
+  });
+
+  return buffer;
+}
+
+function downloadModTrack(idx) {
+  playUiBeep(1200, 0.08);
+  const track = allTracks[idx] || allTracks[0];
+  const modBuffer = buildModBinary(track);
+  const blob = new Blob([modBuffer], { type: 'application/x-tracker-mod' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (track.modName || 'CyberSpire_Track') + '.mod';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function generateProceduralMod() {
+  playUiBeep(1400, 0.1);
+  const rndBpm = 120 + Math.floor(Math.random() * 30);
+  const rndTrack = {
+    title: "CyberSpire Procedural Mod '99",
+    shortTitle: "CYBER_PROC_" + Math.floor(Math.random() * 900 + 100),
+    modName: "CyberSpire_Procedural_" + Date.now().toString().slice(-4),
+    bpm: rndBpm,
+    patterns: [
+      { name: "Procedural Pat 1", lead: T1_LEAD_THEME_A, arp: T1_CHORDS_MAIN, bass: T1_BASS_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_16TH },
+      { name: "Procedural Pat 2", lead: T2_LEAD_SOLO, arp: T2_CHORDS_MAIN, bass: T2_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_GHOST, hihat: HAT_OPEN },
+      { name: "Procedural Pat 3", lead: T3_LEAD_HOOK_HIGH, arp: T3_CHORDS_MAIN, bass: T3_BASS_ACID_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_16TH },
+      { name: "Procedural Pat 4", lead: T1_LEAD_OUTRO, arp: T1_CHORDS_OUTRO, bass: T1_BASS_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_OFFBEAT }
+    ]
+  };
+  const modBuffer = buildModBinary(rndTrack);
+  const blob = new Blob([modBuffer], { type: 'application/x-tracker-mod' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = rndTrack.modName + '.mod';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function inspectModHeader() {
+  playUiBeep(900, 0.05);
+  const track = allTracks[currentTrackIdx];
+  const modBuffer = buildModBinary(track);
+  const hexDumpEl = document.getElementById('modHexDump');
+  if (!hexDumpEl) return;
+
+  const lines = [];
+  lines.push("=== AMIGA PROTRACKER M.K. BINARY HEADER (FIRST 128 BYTES) ===");
+  for (let r = 0; r < 128; r += 16) {
+    const offStr = r.toString(16).padStart(4, '0').toUpperCase();
+    const hexSlice = [];
+    let asciiSlice = "";
+    for (let c = 0; c < 16; c++) {
+      const b = modBuffer[r + c];
+      hexSlice.push(b.toString(16).padStart(2, '0').toUpperCase());
+      asciiSlice += (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
+    }
+    lines.push(offStr + " | " + hexSlice.join(' ') + " | " + asciiSlice);
+  }
+  lines.push("... [Offset 1080: TAG 'M.K.' Verified 4-Channel ProTracker] ...");
+  hexDumpEl.textContent = lines.join('\n');
+}
+
+// ============================================================================
+// 16-COLOR PIXEL ART STUDIO & GALLERY ENGINE
+// ============================================================================
+const PALETTES = {
+  cyber: [
+    "#000000", "#0a0a20", "#ff00aa", "#00ffcc", "#ffff00", "#00ff66", "#aa00ff", "#ffffff",
+    "#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4", "#64748b"
+  ],
+  ega: [
+    "#000000", "#0000aa", "#00aa00", "#00aaaa", "#aa0000", "#aa00aa", "#aa5500", "#aaaaaa",
+    "#555555", "#5555ff", "#55ff55", "#55ffff", "#ff5555", "#ff55ff", "#ffff55", "#ffffff"
+  ],
+  c64: [
+    "#000000", "#ffffff", "#880000", "#aaffee", "#cc44cc", "#00cc55", "#0000aa", "#eeee77",
+    "#dd8855", "#664400", "#ff7777", "#333333", "#777777", "#aaff66", "#0088ff", "#bbbbbb"
+  ],
+  gameboy: [
+    "#0f380f", "#306230", "#8bac0f", "#9bbc0f"
+  ]
+};
+
+let currentPaletteName = 'cyber';
+let currentPalette = PALETTES.cyber;
+let selectedColorIdx = 2; // Default to pink/magenta
+let currentTool = 'pencil';
+let canvasDim = 16;
+let showGrid = true;
+let isDrawing = false;
+let lineStart = null;
+
+// Grid data: 2D array of palette indices (-1 = transparent/bg)
+let gridData = createBlankGrid(16);
+let undoStack = [];
+
+function createBlankGrid(dim) {
+  const g = [];
+  for (let y = 0; y < dim; y++) {
+    g.push(new Array(dim).fill(-1));
+  }
+  return g;
+}
+
+// Preloaded Gallery Sprites (8 authentic retro sprites)
+const GALLERY_SPRITES = [
+  {
+    name: "Cyber Deck 99",
+    dim: 16,
+    author: "CyberSpire",
+    desc: "1999 Cyberpunk laptop hacking deck with neon green display.",
+    data: [
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,-1,-1,-1,-1],
+      [-1,-1, 1, 5, 5, 5, 5, 5, 5, 5, 5, 1,-1,-1,-1,-1],
+      [-1,-1, 1, 5, 0, 5, 0, 5, 0, 5, 5, 1,-1,-1,-1,-1],
+      [-1,-1, 1, 5, 5, 5, 5, 5, 5, 5, 5, 1,-1,-1,-1,-1],
+      [-1,-1, 1, 5, 0, 0, 0, 5, 5, 0, 5, 1,-1,-1,-1,-1],
+      [-1,-1, 1, 5, 5, 5, 5, 5, 5, 5, 5, 1,-1,-1,-1,-1],
+      [-1,-1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,-1,-1,-1,-1],
+      [-1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,-1,-1,-1],
+      [-1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1,-1,-1,-1],
+      [-1, 1, 3, 2, 3, 2, 3, 2, 3, 2, 3, 3, 1,-1,-1,-1],
+      [-1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1,-1,-1,-1],
+      [-1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+    ]
+  },
+  {
+    name: "Neon Floppy 1.44M",
+    dim: 16,
+    author: "PixelMage",
+    desc: "3.5 inch high-density diskette storing essential demoscene files.",
+    data: [
+      [-1,-1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,-1,-1,-1],
+      [-1, 1, 2, 2, 7, 7, 7, 7, 7, 2, 2, 2, 2, 1,-1,-1],
+      [-1, 1, 2, 2, 7, 0, 0, 7, 7, 2, 2, 2, 2, 1,-1,-1],
+      [-1, 1, 2, 2, 7, 0, 0, 7, 7, 2, 2, 2, 2, 1,-1,-1],
+      [-1, 1, 2, 2, 7, 7, 7, 7, 7, 2, 2, 2, 2, 1,-1,-1],
+      [-1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1,-1,-1],
+      [-1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 1,-1,-1],
+      [-1, 1, 2, 3, 0, 0, 3, 3, 0, 0, 3, 2, 2, 1,-1,-1],
+      [-1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 1,-1,-1],
+      [-1, 1, 2, 3, 2, 2, 2, 2, 2, 2, 3, 2, 2, 1,-1,-1],
+      [-1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 1,-1,-1],
+      [-1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1,-1,-1],
+      [-1, 1, 2, 0, 0, 2, 2, 2, 2, 0, 0, 2, 2, 1,-1,-1],
+      [-1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+    ]
+  },
+  {
+    name: "Demoscene Skull",
+    dim: 16,
+    author: "ByteRider_99",
+    desc: "Classic green phosphor cracktro skull logo.",
+    data: [
+      [-1,-1,-1,-1, 5, 5, 5, 5, 5, 5, 5,-1,-1,-1,-1,-1],
+      [-1,-1,-1, 5, 5, 5, 5, 5, 5, 5, 5, 5,-1,-1,-1,-1],
+      [-1,-1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,-1,-1,-1],
+      [-1,-1, 5, 5, 0, 0, 5, 5, 0, 0, 5, 5, 5,-1,-1,-1],
+      [-1,-1, 5, 5, 0, 0, 5, 5, 0, 0, 5, 5, 5,-1,-1,-1],
+      [-1,-1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,-1,-1,-1],
+      [-1,-1,-1, 5, 5, 5, 0, 0, 5, 5, 5, 5,-1,-1,-1,-1],
+      [-1,-1,-1,-1, 5, 5, 5, 5, 5, 5, 5,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1, 5, 0, 5, 0, 5, 0, 5,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1, 5, 0, 5, 0, 5, 0, 5,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1, 5, 5, 5, 5, 5,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+    ]
+  },
+  {
+    name: "Cyber Mana Potion",
+    dim: 16,
+    author: "CyberSpire",
+    desc: "Glowing cyan elixir brewed with 16-bit retro magic.",
+    data: [
+      [-1,-1,-1,-1,-1,-1, 7, 7, 7, 7,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1, 4, 4, 4, 4,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1, 3, 3, 3, 3,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1, 3, 3, 3, 3, 3, 3,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1, 3, 3, 3, 3, 3, 3, 3, 3,-1,-1,-1,-1],
+      [-1,-1,-1, 3, 3, 7, 7, 3, 3, 3, 3, 3, 3,-1,-1,-1],
+      [-1,-1, 3, 3, 7, 7, 3, 3, 3, 3, 3, 3, 3, 3,-1,-1],
+      [-1,-1, 3, 3, 7, 3, 3, 3, 3, 3, 3, 3, 3, 3,-1,-1],
+      [-1,-1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,-1,-1],
+      [-1,-1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,-1,-1],
+      [-1,-1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,-1,-1],
+      [-1,-1,-1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,-1,-1,-1],
+      [-1,-1,-1,-1, 3, 3, 3, 3, 3, 3, 3, 3,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+    ]
+  },
+  {
+    name: "Star Fighter Alpha",
+    dim: 16,
+    author: "StarPilot",
+    desc: "16-bit arcade interceptor ship with dual plasma drives.",
+    data: [
+      [-1,-1,-1,-1,-1,-1,-1, 7,-1,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1, 7, 7, 7,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1, 3, 7, 3,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1, 3, 3, 7, 3, 3,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1, 3, 2, 7, 2, 3,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1, 3, 3, 2, 7, 2, 3, 3,-1,-1,-1,-1,-1],
+      [-1,-1,-1, 3, 3, 3, 3, 7, 3, 3, 3, 3,-1,-1,-1,-1],
+      [-1,-1, 3, 3, 0, 3, 3, 7, 3, 3, 0, 3, 3,-1,-1,-1],
+      [-1, 3, 3, 0, 0, 3, 3, 7, 3, 3, 0, 0, 3, 3,-1,-1],
+      [ 3, 3, 0, 0, 0, 3, 3, 7, 3, 3, 0, 0, 0, 3, 3,-1],
+      [ 2, 2, 2, 2, 2, 2, 2, 7, 2, 2, 2, 2, 2, 2, 2,-1],
+      [-1, 4, 4,-1,-1,-1, 4, 4, 4,-1,-1,-1, 4, 4,-1,-1],
+      [-1, 4,-1,-1,-1,-1,-1, 4,-1,-1,-1,-1,-1, 4,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+    ]
+  },
+  {
+    name: "8-Bit Mage",
+    dim: 16,
+    author: "PixelMage",
+    desc: "Mystic retro wizard casting pixel incantations.",
+    data: [
+      [-1,-1,-1,-1,-1,-1, 6, 6, 6,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1, 6, 6, 6, 6, 6,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1, 6, 6, 4, 4, 6, 6, 6,-1,-1,-1,-1,-1],
+      [-1,-1,-1, 6, 6, 6, 6, 6, 6, 6, 6, 6,-1,-1,-1,-1],
+      [-1,-1,-1,-1, 0, 0, 4, 4, 0, 0,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1, 4, 4, 4, 4, 4, 4,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1, 7, 7, 7, 7, 7, 7,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1, 6, 7, 7, 7, 7, 7, 7, 6,-1, 4,-1,-1,-1],
+      [-1,-1, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 4,-1,-1,-1],
+      [-1, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 4,-1,-1,-1],
+      [-1,-1,-1, 6, 6, 6, 6, 6, 6, 6, 6,-1, 4,-1,-1,-1],
+      [-1,-1,-1, 6, 6, 6, 6, 6, 6, 6, 6,-1, 4,-1,-1,-1],
+      [-1,-1,-1, 0, 0, 0,-1,-1, 0, 0, 0,-1, 4,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+    ]
+  },
+  {
+    name: "CRT Monitor 1999",
+    dim: 16,
+    author: "CyberSpire",
+    desc: "Chunky beige 15-inch cathode ray tube monitor.",
+    data: [
+      [-1,-1, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,-1,-1],
+      [-1, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,-1],
+      [-1, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 7,-1],
+      [-1, 7, 0, 5, 5, 0, 0, 0, 0, 5, 5, 0, 0, 7, 7,-1],
+      [-1, 7, 0, 5, 5, 0, 0, 0, 0, 5, 5, 0, 0, 7, 7,-1],
+      [-1, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 7,-1],
+      [-1, 7, 0, 5, 0, 0, 0, 0, 0, 0, 5, 0, 0, 7, 7,-1],
+      [-1, 7, 0, 0, 5, 5, 5, 5, 5, 5, 0, 0, 0, 7, 7,-1],
+      [-1, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 7,-1],
+      [-1, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,-1],
+      [-1, 7, 7, 5, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,-1],
+      [-1,-1,-1,-1,-1, 7, 7, 7, 7, 7,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1, 7, 7, 7, 7, 7, 7, 7,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+    ]
+  },
+  {
+    name: "Silicon DIP Chip",
+    dim: 16,
+    author: "SiliconLord",
+    desc: "Integrated circuit microprocessor with gold contact pins.",
+    data: [
+      [-1, 7, 7,-1,-1, 7, 7,-1,-1, 7, 7,-1,-1, 7, 7,-1],
+      [-1, 7, 7,-1,-1, 7, 7,-1,-1, 7, 7,-1,-1, 7, 7,-1],
+      [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      [ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [ 1, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 1],
+      [ 1, 0, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 0, 0, 1],
+      [ 1, 0, 3, 2, 4, 4, 4, 4, 4, 4, 2, 2, 3, 0, 0, 1],
+      [ 1, 0, 3, 2, 4, 4, 4, 4, 4, 4, 2, 2, 3, 0, 0, 1],
+      [ 1, 0, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 0, 0, 1],
+      [ 1, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 1],
+      [ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      [-1, 7, 7,-1,-1, 7, 7,-1,-1, 7, 7,-1,-1, 7, 7,-1],
+      [-1, 7, 7,-1,-1, 7, 7,-1,-1, 7, 7,-1,-1, 7, 7,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+      [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+    ]
+  }
+];
+
+let selectedGalleryIdx = 0;
+
+const pCanvas = document.getElementById('paintCanvas');
+const pCtx = pCanvas ? pCanvas.getContext('2d') : null;
+
+function renderSwatches() {
+  const container = document.getElementById('paletteSwatches');
+  if (!container) return;
+  container.innerHTML = '';
+  currentPalette.forEach((c, idx) => {
+    const sw = document.createElement('div');
+    sw.className = 'swatch' + (idx === selectedColorIdx ? ' selected' : '');
+    sw.style.backgroundColor = c;
+    sw.title = 'Color #' + idx + ' (' + c + ')';
+    sw.onclick = () => {
+      playUiBeep(1000 + idx * 40, 0.03);
+      selectedColorIdx = idx;
+      renderSwatches();
+    };
+    container.appendChild(sw);
+  });
+}
+
+function changePalette(palName) {
+  playUiBeep(800, 0.05);
+  currentPaletteName = palName;
+  currentPalette = PALETTES[palName] || PALETTES.cyber;
+  selectedColorIdx = Math.min(selectedColorIdx, currentPalette.length - 1);
+  renderSwatches();
+  drawPaintCanvas();
+  renderGalleryGrid();
+}
+
+function setCanvasDim(dim) {
+  playUiBeep(850, 0.05);
+  canvasDim = dim;
+  gridData = createBlankGrid(dim);
+  undoStack = [];
+  document.getElementById('canvasDimLabel').textContent = dim + 'x' + dim;
+  document.getElementById('btnDim16').classList.toggle('active', dim === 16);
+  document.getElementById('btnDim32').classList.toggle('active', dim === 32);
+  drawPaintCanvas();
+}
+
+function toggleGrid() {
+  playUiBeep(750, 0.04);
+  showGrid = !showGrid;
+  document.getElementById('btnGridToggle').textContent = 'Grid: ' + (showGrid ? 'ON' : 'OFF');
+  drawPaintCanvas();
+}
+
+function setTool(tool) {
+  playUiBeep(950, 0.04);
+  currentTool = tool;
+  const tools = ['pencil', 'bucket', 'picker', 'line', 'eraser'];
+  tools.forEach(t => {
+    const el = document.getElementById('tool' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (el) el.classList.toggle('active', t === tool);
+  });
+}
+
+function drawPaintCanvas() {
+  if (!pCtx || !pCanvas) return;
+  const w = pCanvas.width;
+  const h = pCanvas.height;
+  const cellW = w / canvasDim;
+  const cellH = h / canvasDim;
+
+  pCtx.fillStyle = '#111118';
+  pCtx.fillRect(0, 0, w, h);
+
+  // Render grid data
+  for (let y = 0; y < canvasDim; y++) {
+    for (let x = 0; x < canvasDim; x++) {
+      const colIdx = gridData[y][x];
+      if (colIdx >= 0 && colIdx < currentPalette.length) {
+        pCtx.fillStyle = currentPalette[colIdx];
+        pCtx.fillRect(x * cellW, y * cellH, cellW, cellH);
+      }
+    }
+  }
+
+  // Draw grid lines
+  if (showGrid) {
+    pCtx.strokeStyle = 'rgba(0, 255, 204, 0.2)';
+    pCtx.lineWidth = 1;
+    for (let x = 0; x <= canvasDim; x++) {
+      pCtx.beginPath();
+      pCtx.moveTo(x * cellW, 0);
+      pCtx.lineTo(x * cellW, h);
+      pCtx.stroke();
+    }
+    for (let y = 0; y <= canvasDim; y++) {
+      pCtx.beginPath();
+      pCtx.moveTo(0, y * cellH);
+      pCtx.lineTo(w, y * cellH);
+      pCtx.stroke();
+    }
+  }
+}
+
+function pushUndo() {
+  const snapshot = gridData.map(row => [...row]);
+  undoStack.push(snapshot);
+  if (undoStack.length > 20) undoStack.shift();
+}
+
+function undoCanvas() {
+  if (undoStack.length === 0) return;
+  playUiBeep(600, 0.05);
+  gridData = undoStack.pop();
+  drawPaintCanvas();
+}
+
+function clearCanvas() {
+  playUiBeep(400, 0.08);
+  pushUndo();
+  gridData = createBlankGrid(canvasDim);
+  drawPaintCanvas();
+}
+
+function floodFill(startX, startY, fillVal) {
+  const targetVal = gridData[startY][startX];
+  if (targetVal === fillVal) return;
+  const queue = [[startX, startY]];
+  const visited = new Set();
+
+  while (queue.length > 0) {
+    const [x, y] = queue.pop();
+    const key = x + ',' + y;
+    if (visited.has(key)) continue;
+    visited.add(key);
+
+    if (x < 0 || x >= canvasDim || y < 0 || y >= canvasDim) continue;
+    if (gridData[y][x] !== targetVal) continue;
+
+    gridData[y][x] = fillVal;
+
+    queue.push([x + 1, y]);
+    queue.push([x - 1, y]);
+    queue.push([x, y + 1]);
+    queue.push([x, y - 1]);
+  }
+}
+
+function drawLineBresenham(x0, y0, x1, y1, col) {
+  const dx = Math.abs(x1 - x0);
+  const dy = Math.abs(y1 - y0);
+  const sx = (x0 < x1) ? 1 : -1;
+  const sy = (y0 < y1) ? 1 : -1;
+  let err = dx - dy;
+
+  while (true) {
+    if (x0 >= 0 && x0 < canvasDim && y0 >= 0 && y0 < canvasDim) {
+      gridData[y0][x0] = col;
+    }
+    if (x0 === x1 && y0 === y1) break;
+    const e2 = 2 * err;
+    if (e2 > -dy) { err -= dy; x0 += sx; }
+    if (e2 < dx) { err += dx; y0 += sy; }
+  }
+}
+
+// Mouse events on paint canvas
+if (pCanvas) {
+  pCanvas.addEventListener('mousedown', e => {
+    const rect = pCanvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) / (pCanvas.width / canvasDim));
+    const y = Math.floor((e.clientY - rect.top) / (pCanvas.height / canvasDim));
+    if (x < 0 || x >= canvasDim || y < 0 || y >= canvasDim) return;
+
+    pushUndo();
+    isDrawing = true;
+
+    if (currentTool === 'pencil') {
+      gridData[y][x] = selectedColorIdx;
+      playUiBeep(1100, 0.02);
+      drawPaintCanvas();
+    } else if (currentTool === 'eraser') {
+      gridData[y][x] = -1;
+      playUiBeep(500, 0.02);
+      drawPaintCanvas();
+    } else if (currentTool === 'bucket') {
+      floodFill(x, y, selectedColorIdx);
+      playUiBeep(900, 0.06);
+      drawPaintCanvas();
+    } else if (currentTool === 'picker') {
+      const picked = gridData[y][x];
+      if (picked >= 0) {
+        selectedColorIdx = picked;
+        renderSwatches();
+        setTool('pencil');
+        playUiBeep(1250, 0.04);
+      }
+    } else if (currentTool === 'line') {
+      lineStart = { x, y };
+    }
+  });
+
+  pCanvas.addEventListener('mousemove', e => {
+    if (!isDrawing) return;
+    const rect = pCanvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) / (pCanvas.width / canvasDim));
+    const y = Math.floor((e.clientY - rect.top) / (pCanvas.height / canvasDim));
+    if (x < 0 || x >= canvasDim || y < 0 || y >= canvasDim) return;
+
+    if (currentTool === 'pencil') {
+      if (gridData[y][x] !== selectedColorIdx) {
+        gridData[y][x] = selectedColorIdx;
+        drawPaintCanvas();
+      }
+    } else if (currentTool === 'eraser') {
+      if (gridData[y][x] !== -1) {
+        gridData[y][x] = -1;
+        drawPaintCanvas();
+      }
+    }
+  });
+
+  window.addEventListener('mouseup', e => {
+    if (isDrawing && currentTool === 'line' && lineStart) {
+      const rect = pCanvas.getBoundingClientRect();
+      const x1 = Math.floor((e.clientX - rect.left) / (pCanvas.width / canvasDim));
+      const y1 = Math.floor((e.clientY - rect.top) / (pCanvas.height / canvasDim));
+      drawLineBresenham(lineStart.x, lineStart.y, x1, y1, selectedColorIdx);
+      playUiBeep(1000, 0.05);
+      drawPaintCanvas();
+      lineStart = null;
+    }
+    isDrawing = false;
+  });
+}
+
+// Exports
+function exportPNG(scale = 1) {
+  playUiBeep(1300, 0.08);
+  const outCanvas = document.createElement('canvas');
+  outCanvas.width = canvasDim * scale;
+  outCanvas.height = canvasDim * scale;
+  const ctx = outCanvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  for (let y = 0; y < canvasDim; y++) {
+    for (let x = 0; x < canvasDim; x++) {
+      const colIdx = gridData[y][x];
+      if (colIdx >= 0 && colIdx < currentPalette.length) {
+        ctx.fillStyle = currentPalette[colIdx];
+        ctx.fillRect(x * scale, y * scale, scale, scale);
+      }
+    }
+  }
+
+  const url = outCanvas.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'cyberspire_pixel_' + canvasDim + 'x' + canvasDim + (scale > 1 ? '_retro' : '') + '.png';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+// Windows 24-bit Uncompressed BMP Generator
+function exportBMP() {
+  playUiBeep(1200, 0.08);
+  const w = canvasDim;
+  const h = canvasDim;
+  const rowSize = Math.floor((w * 3 + 3) / 4) * 4;
+  const pixelArraySize = rowSize * h;
+  const fileSize = 54 + pixelArraySize;
+
+  const buffer = new Uint8Array(fileSize);
+  const view = new DataView(buffer.buffer);
+
+  // BITMAPFILEHEADER
+  buffer[0] = 0x42; // 'B'
+  buffer[1] = 0x4D; // 'M'
+  view.setUint32(2, fileSize, true);
+  view.setUint32(6, 0, true);
+  view.setUint32(10, 54, true); // Offset to pixel data
+
+  // BITMAPINFOHEADER
+  view.setUint32(14, 40, true); // Header size
+  view.setInt32(18, w, true);
+  view.setInt32(22, h, true);
+  view.setUint16(26, 1, true);  // Color planes
+  view.setUint16(28, 24, true); // 24-bit RGB
+  view.setUint32(30, 0, true);  // BI_RGB (no compression)
+  view.setUint32(34, pixelArraySize, true);
+  view.setInt32(38, 2835, true); // 72 DPI
+  view.setInt32(42, 2835, true);
+  view.setUint32(46, 0, true);
+  view.setUint32(50, 0, true);
+
+  // Pixel rows bottom-to-top
+  let offset = 54;
+  for (let y = h - 1; y >= 0; y--) {
+    let rowStart = offset;
+    for (let x = 0; x < w; x++) {
+      const colIdx = gridData[y][x];
+      let r = 16, g = 16, b = 24;
+      if (colIdx >= 0 && colIdx < currentPalette.length) {
+        const hex = currentPalette[colIdx].replace('#', '');
+        r = parseInt(hex.substring(0, 2), 16);
+        g = parseInt(hex.substring(2, 4), 16);
+        b = parseInt(hex.substring(4, 6), 16);
+      }
+      buffer[offset++] = b;
+      buffer[offset++] = g;
+      buffer[offset++] = r;
+    }
+    // Zero-pad row to 4-byte boundary
+    while ((offset - rowStart) % 4 !== 0) {
+      buffer[offset++] = 0;
+    }
+  }
+
+  const blob = new Blob([buffer], { type: 'image/bmp' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'cyberspire_sprite_' + w + 'x' + h + '.bmp';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportCHex() {
+  playUiBeep(1100, 0.05);
+  const name = 'sprite_' + canvasDim + 'x' + canvasDim;
+  const lines = [];
+  lines.push('/* CyberSpire 1999 Pixel Sprite (' + canvasDim + 'x' + canvasDim + ') */');
+  lines.push('const uint8_t ' + name + '[' + (canvasDim * canvasDim) + '] = {');
+
+  for (let y = 0; y < canvasDim; y++) {
+    const row = [];
+    for (let x = 0; x < canvasDim; x++) {
+      const val = gridData[y][x] === -1 ? 0xFF : gridData[y][x];
+      row.push('0x' + val.toString(16).padStart(2, '0').toUpperCase());
+    }
+    lines.push('  ' + row.join(', ') + (y < canvasDim - 1 ? ',' : ''));
+  }
+  lines.push('};');
+
+  const str = lines.join('\n');
+  const txtArea = document.getElementById('cArrayOutput');
+  if (txtArea) txtArea.value = str;
+  try {
+    navigator.clipboard.writeText(str);
+  } catch(e) {}
+}
+
+function saveToUserGallery() {
+  playUiBeep(1400, 0.08);
+  const name = prompt("Name your pixel creation:", "My Retro Sprite") || "User Sprite";
+  const userItem = {
+    name: name,
+    dim: canvasDim,
+    author: "You",
+    desc: "Saved locally to CyberSpire's 1999 Shrine Gallery.",
+    data: gridData.map(r => [...r])
+  };
+  let saved = [];
+  try {
+    saved = JSON.parse(localStorage.getItem('cyberspire_user_sprites') || '[]');
+  } catch(e) { saved = []; }
+  saved.unshift(userItem);
+  localStorage.setItem('cyberspire_user_sprites', JSON.stringify(saved.slice(0, 12)));
+  renderGalleryGrid();
+}
+
+function renderGalleryGrid() {
+  const container = document.getElementById('galleryGrid');
+  if (!container) return;
+  container.innerHTML = '';
+
+  let userSprites = [];
+  try {
+    userSprites = JSON.parse(localStorage.getItem('cyberspire_user_sprites') || '[]');
+  } catch(e) { userSprites = []; }
+
+  const combined = [...GALLERY_SPRITES, ...userSprites];
+
+  combined.forEach((sp, idx) => {
+    const item = document.createElement('div');
+    item.className = 'gallery-item' + (idx === selectedGalleryIdx ? ' active' : '');
+    item.onclick = () => selectGallerySprite(idx);
+
+    const c = document.createElement('canvas');
+    c.className = 'gallery-preview-canvas';
+    c.width = sp.dim;
+    c.height = sp.dim;
+    const ctx = c.getContext('2d');
+    for (let y = 0; y < sp.dim; y++) {
+      for (let x = 0; x < sp.dim; x++) {
+        const val = sp.data[y] ? sp.data[y][x] : -1;
+        if (val >= 0 && val < currentPalette.length) {
+          ctx.fillStyle = currentPalette[val];
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    }
+
+    const title = document.createElement('div');
+    title.className = 'gallery-item-name';
+    title.textContent = sp.name;
+
+    item.appendChild(c);
+    item.appendChild(title);
+    container.appendChild(item);
+  });
+
+  renderSelectedGalleryPreview();
+}
+
+function selectGallerySprite(idx) {
+  playUiBeep(900, 0.04);
+  selectedGalleryIdx = idx;
+  renderGalleryGrid();
+}
+
+function renderSelectedGalleryPreview() {
+  let userSprites = [];
+  try {
+    userSprites = JSON.parse(localStorage.getItem('cyberspire_user_sprites') || '[]');
+  } catch(e) { userSprites = []; }
+  const combined = [...GALLERY_SPRITES, ...userSprites];
+  const sp = combined[selectedGalleryIdx] || combined[0];
+
+  const canvas = document.getElementById('galleryPreviewLarge');
+  if (canvas && sp) {
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    ctx.fillStyle = '#111';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const scale = canvas.width / sp.dim;
+    for (let y = 0; y < sp.dim; y++) {
+      for (let x = 0; x < sp.dim; x++) {
+        const val = sp.data[y] ? sp.data[y][x] : -1;
+        if (val >= 0 && val < currentPalette.length) {
+          ctx.fillStyle = currentPalette[val];
+          ctx.fillRect(x * scale, y * scale, scale, scale);
+        }
+      }
+    }
+  }
+
+  const elTitle = document.getElementById('inspectorTitle');
+  const elMeta = document.getElementById('inspectorMeta');
+  const elDesc = document.getElementById('inspectorDesc');
+  if (elTitle && sp) elTitle.textContent = sp.name;
+  if (elMeta && sp) elMeta.textContent = 'Dimensions: ' + sp.dim + 'x' + sp.dim + ' • Author: ' + sp.author;
+  if (elDesc && sp) elDesc.textContent = sp.desc;
+}
+
+function loadSelectedToStudio() {
+  playUiBeep(1100, 0.06);
+  let userSprites = [];
+  try {
+    userSprites = JSON.parse(localStorage.getItem('cyberspire_user_sprites') || '[]');
+  } catch(e) { userSprites = []; }
+  const combined = [...GALLERY_SPRITES, ...userSprites];
+  const sp = combined[selectedGalleryIdx] || combined[0];
+
+  pushUndo();
+  setCanvasDim(sp.dim);
+  for (let y = 0; y < sp.dim; y++) {
+    for (let x = 0; x < sp.dim; x++) {
+      gridData[y][x] = sp.data[y] ? sp.data[y][x] : -1;
+    }
+  }
+  drawPaintCanvas();
+  exportCHex();
+}
+
+// ============================================================================
+// THE SILICON ORACLE '99 & 3D WIREFRAME POLYHEDRON
+// ============================================================================
+const oracleCanvas = document.getElementById('oracleCanvas');
+const oCtx = oracleCanvas ? oracleCanvas.getContext('2d') : null;
+
+let rotX = 0;
+let rotY = 0;
+let rotZ = 0;
+let spinSpeed = 0.015;
+
+// Octahedron vertices
+const ORACLE_VERTICES = [
+  [0, 1.2, 0],
+  [0, -1.2, 0],
+  [1.2, 0, 0],
+  [-1.2, 0, 0],
+  [0, 0, 1.2],
+  [0, 0, -1.2]
+];
+
+// Edges
+const ORACLE_EDGES = [
+  [0, 2], [0, 3], [0, 4], [0, 5],
+  [1, 2], [1, 3], [1, 4], [1, 5],
+  [2, 4], [4, 3], [3, 5], [5, 2]
+];
+
+function drawOracle3D() {
+  requestAnimationFrame(drawOracle3D);
+  if (!oCtx || !oracleCanvas) return;
+
+  oCtx.fillStyle = '#05010d';
+  oCtx.fillRect(0, 0, oracleCanvas.width, oracleCanvas.height);
+
+  rotX += spinSpeed * 0.7;
+  rotY += spinSpeed;
+  rotZ += spinSpeed * 0.4;
+  if (spinSpeed > 0.015) spinSpeed *= 0.985; // Decelerate back to idle
+
+  const cx = oracleCanvas.width / 2;
+  const cy = oracleCanvas.height / 2;
+  const scale = 70;
+
+  // Project vertices
+  const projected = ORACLE_VERTICES.map(v => {
+    let [x, y, z] = v;
+    // Rotate Y
+    let cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+    let x1 = x * cosY - z * sinY;
+    let z1 = z * cosY + x * sinY;
+    // Rotate X
+    let cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+    let y2 = y * cosX - z1 * sinX;
+    let z2 = z1 * cosX + y * sinX;
+    // Rotate Z
+    let cosZ = Math.cos(rotZ), sinZ = Math.sin(rotZ);
+    let x3 = x1 * cosZ - y2 * sinZ;
+    let y3 = y2 * cosZ + x1 * sinZ;
+
+    const fov = 3.2;
+    const pz = z2 + fov;
+    return {
+      x: cx + (x3 / pz) * scale,
+      y: cy + (y3 / pz) * scale,
+      z: z2
+    };
+  });
+
+  // Draw wireframe edges
+  oCtx.lineWidth = 2;
+  ORACLE_EDGES.forEach(([i1, i2]) => {
+    const p1 = projected[i1];
+    const p2 = projected[i2];
+    const avgZ = (p1.z + p2.z) / 2;
+    const alpha = Math.max(0.3, Math.min(1, (avgZ + 1.5) / 3));
+
+    oCtx.strokeStyle = 'rgba(255, 0, 170, ' + alpha + ')';
+    oCtx.beginPath();
+    oCtx.moveTo(p1.x, p1.y);
+    oCtx.lineTo(p2.x, p2.y);
+    oCtx.stroke();
+  });
+
+  // Glowing vertices
+  projected.forEach(p => {
+    oCtx.fillStyle = '#00ffff';
+    oCtx.shadowColor = '#00ffff';
+    oCtx.shadowBlur = 8;
+    oCtx.beginPath();
+    oCtx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+    oCtx.fill();
+  });
+  oCtx.shadowBlur = 0;
+}
+drawOracle3D();
+
+// Oracle prophecy database
+const ORACLE_PROPHECIES = {
+  y2k: [
+    { verdict: "CENTURY ROLOVER SECURE", text: "The BIOS real-time clock survives the midnight flip. Two-digit windowing holds across memory banks.", hex: "0x0040:0x1999", karma: "+99" },
+    { verdict: "MODEM CARRIER HAZARDOUS", text: "High frequency noise detected on copper lines. Re-negotiate baud rate to 33,600 before midnight.", hex: "0x02E8:0x0014", karma: "+65" },
+    { verdict: "COBOL STACK ANOMALY", text: "A legacy timestamp at offset 0x9999 wraps to zero. Keep your emergency boot floppy inserted.", hex: "0x9999:0x0000", karma: "+72" }
+  ],
+  demoscene: [
+    { verdict: "FLARELIGHT KEYGEN VICTORY", text: "The demoscene assembly compo crowns your 4-channel MOD track. 60 FPS raster sweeps shine.", hex: "0x00A0:0x3D00", karma: "+100" },
+    { verdict: "PARITY CHECK COMPLIANT", text: "Zero memory leaks in your Win32 PE intro. The 999 KB ceiling stands unbreached.", hex: "0x0040:0x0999", karma: "+94" },
+    { verdict: "AMIGA PAULA BLESSING", text: "All 4 hardware audio channels achieve crisp resonance with warm stereo delay.", hex: "0xDFF0:0x0096", karma: "+88" }
+  ],
+  bbs: [
+    { verdict: "SYSOP INBOX MULTIPLEX", text: "A priority netmail arrives on Node 1 from an unknown handle. Download queue authorized.", hex: "0x1999:0xBEEF", karma: "+80" },
+    { verdict: "DIAL-UP ROMANCE FAVORED", text: "Carrier lock established at 56k V.90. The midnight chat forum room holds your kindred spirit.", hex: "0x03F8:0x0001", karma: "+95" },
+    { verdict: "ANSI ESCAPE PROTOCOL", text: "Your terminal ANSI color screen dazzles the callers. Ratio bonuses unlocked.", hex: "0x00B8:0x0000", karma: "+87" }
+  ],
+  cyberspace: [
+    { verdict: "WEBRING SURGE IMMINENT", text: "Your personal shrine receives 1,000 visitors through the Central KiloNet Webring teleporter.", hex: "0x0002:0x1999", karma: "+98" },
+    { verdict: "HYPERLINK RESONANCE", text: "A cryptic 1999 bookmark reveals a hidden Tier 2 archive. The digital frontier expands.", hex: "0x0010:0x1999", karma: "+91" },
+    { verdict: "CACHE COHERENCY EXCELLENT", text: "Netscape 4.0 caches your retro GIFs without artifacting. The webring link holds true.", hex: "0x0080:0x0020", karma: "+85" }
+  ],
+  matrix: [
+    { verdict: "THE LIVING FLEET WHISPERS", text: "Parity checks across 99 nodes confirm autonomous maintenance. The centenary binary approaches.", hex: "0x0064:0x1999", karma: "+100" },
+    { verdict: "CRYPTIC MEMORY ECHO", text: "A ghost signal vibrates in the lower audio harmonics. Decrypt the frequencies at App #100.", hex: "0x1019:0x9904", karma: "+99" },
+    { verdict: "DARKNET NODE 0x7F INERT", text: "The precursor relics await the final master director compilation. Preserve the mystery.", hex: "0x007F:0x0000", karma: "+96" }
+  ]
+};
+
+function consultOracle() {
+  playOracleChime();
+  spinSpeed = 0.18; // Spin up 3D orb
+  const cat = document.getElementById('oracleCategory').value || 'y2k';
+  const list = ORACLE_PROPHECIES[cat] || ORACLE_PROPHECIES.y2k;
+  const picked = list[Math.floor(Math.random() * list.length)];
+
+  const resBox = document.getElementById('oracleResult');
+  if (resBox) {
+    resBox.innerHTML = `
+      <div class="oracle-verdict">⚡ ${escapeHtml(picked.verdict)}</div>
+      <div>"${escapeHtml(picked.text)}"</div>
+      <div style="margin-top:6px; font-size:11px; color:#ff00ff;">
+        ★ Memory Offset: <code>${escapeHtml(picked.hex)}</code> • Demoscene Karma: <code>${escapeHtml(picked.karma)}</code> ★
+      </div>
+    `;
+  }
+}
+
+// Y2K Diagnostic
+function runY2kDiagnostic() {
+  playUiBeep(1000, 0.1);
+  const fill = document.getElementById('y2kMeter');
+  const badge = document.getElementById('y2kStatusBadge');
+  const log = document.getElementById('y2kResultLog');
+
+  if (fill) fill.style.width = '100%';
+  if (badge) {
+    badge.textContent = '[AUDITING...]';
+    badge.style.color = '#ffff00';
+  }
+  if (log) log.textContent = 'Scanning BIOS RTC century registers and 999KB memory stack...';
+
+  setTimeout(() => {
+    playUiBeep(1400, 0.12);
+    if (badge) {
+      badge.textContent = '[100% COMPLIANT]';
+      badge.style.color = '#00ff00';
+    }
+    if (log) {
+      log.textContent = '✅ PASS: All 4 checks verified. Real-time clock century byte is clean. KiloOS memory stack operates strictly <999KB!';
+    }
+  }, 800);
+}
+
+function downloadY2kCertificate() {
+  playUiBeep(1200, 0.08);
+  const text = [
+    "====================================================================",
+    "       OFFICIAL CERTIFICATE OF YEAR 2000 SYSTEM COMPLIANCE          ",
+    "                   KILONET VIRTUAL WEBRING 1999                     ",
+    "====================================================================",
+    "Node: CyberSpire Retro Shrine (Member #002)",
+    "Audit Timestamp: 1999-12-31 23:59:59 UTC",
+    "Operating System: KiloOS 1999 Standard Edition (<999KB Stack)",
+    "",
+    "DIAGNOSTIC TEST RESULTS:",
+    "[PASS] BIOS Real-Time Clock Century Rollover",
+    "[PASS] 2-Digit COBOL Date Sliding Window Algorithm",
+    "[PASS] 33.6k / 56k Dial-Up Modem Parity Synchronizer",
+    "[PASS] 999 Kilobyte Standalone Application Boundary",
+    "",
+    "STATUS: 100% Y2K COMPLIANT AND CERTIFIED MILLENNIUM-PROOF",
+    "Issued by: CyberSpire Systems & KiloNet Architecture Council",
+    "===================================================================="
+  ].join('\r\n');
+
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Y2K_Certificate_CyberSpire_1999.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================================
+// GUESTBOOK & HIT COUNTER PERSISTENCE
+// ============================================================================
+const defaultEntries = [
+  { alias: "ByteRider_99", text: "Rad shrine! Loving the neon glow. Found this from the webring!", time: "1999-11-20 14:22" },
+  { alias: "PixelMage", text: "The living machine is awake. App #100 draws near.", time: "1999-12-05 03:41" },
+  { alias: "ModMaster_Amiga", text: "Grabbed all 3 .MOD tracks for my ProTracker collection. Crisp Paula periods!", time: "1999-12-14 18:09" },
+  { alias: "NeonSurfer", text: "Made a sweet 16x16 floppy disk in the Pixel Studio. 10/10 GeoCities site!", time: "1999-12-22 09:15" }
+];
+
+function loadGuestbook() {
+  let saved = [];
+  try {
+    saved = JSON.parse(localStorage.getItem('knet_guestbook') || '[]');
+  } catch(e) { saved = []; }
+  if (!Array.isArray(saved) || saved.length === 0) {
+    saved = defaultEntries;
+    localStorage.setItem('knet_guestbook', JSON.stringify(saved));
+  }
+  renderGuestbook(saved);
+}
+
+function renderGuestbook(entries) {
+  const list = document.getElementById('guestbookList');
+  if (!list) return;
+  list.innerHTML = entries.map(e => `
+    <div class="gb-entry">
+      <span class="gb-alias">${escapeHtml(e.alias)}</span> &nbsp;
+      <span class="gb-time">${escapeHtml(e.time)}</span>
+      <div style="margin-top:2px; color:#ffffff;">${escapeHtml(e.text)}</div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(str) {
+  return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function addGuestbookEntry() {
+  playUiBeep(1100, 0.05);
+  const alias = document.getElementById('gbAlias').value.trim() || 'Anonymous Voyeur';
+  const text = document.getElementById('gbMsg').value.trim();
+  if (!text) return;
+
+  let saved = [];
+  try {
+    saved = JSON.parse(localStorage.getItem('knet_guestbook') || '[]');
+  } catch(e) { saved = []; }
+
+  const newEntry = {
+    alias: alias,
+    text: text,
+    time: new Date().toISOString().replace('T', ' ').substring(0, 16)
+  };
+
+  saved.unshift(newEntry);
+  localStorage.setItem('knet_guestbook', JSON.stringify(saved.slice(0, 20)));
+  document.getElementById('gbMsg').value = '';
+  renderGuestbook(saved);
+}
+
+// Hit counter
+let hits = parseInt(localStorage.getItem('knet_shrine_hits') || '19284');
+hits += Math.floor(Math.random() * 3) + 1;
+localStorage.setItem('knet_shrine_hits', hits.toString());
+const hitEl = document.getElementById('gbHits');
+if (hitEl) hitEl.textContent = hits.toString().padStart(7, '0');
+
+loadGuestbook();
+
+// Initialize Studio & Swatches
+renderSwatches();
+drawPaintCanvas();
+renderGalleryGrid();
+exportCHex();
+inspectModHeader();
+
+// Auto-unlock audio context on user interaction
+document.body.addEventListener('click', () => {
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}, { once: true });
 </script>
 
 </body>
