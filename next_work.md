@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KAbyss
+  kilo_tester: KAudio
   kilo_usability: KMail
   kilo_graphics: KStarForge
   kilo_qa: KStarDredge
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-creator
-  app: "kweb://warez (0xRELEASE Scene Vault)"
-  timestamp: "2026-09-26T00:45:00Z"
+  agent: kilo-tester
+  app: KAbyss
+  timestamp: "2026-09-26T01:52:00Z"
 last_planner_run: "2026-09-25T06:42:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KAbyss`
+- **Current Target**: `KAudio`
 - **Upcoming Queue**:
-  `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`.
+  `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KMail`
@@ -213,6 +213,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-26T01:52:00Z — kilo-tester: KAbyss (Interactive UI Audit & Inline Fixes)**
+  - Status: PASS ✅ (3 issues identified, 3 fixed; 0 regressions).
+  - Unwired Element Fix: Wired `btnDisenchant` to `imbueEnchantment('NONE')` on Relic Enchanting Altar modal.
+  - Crash Resolution: Fixed `player.pack` undefined crash in merchant sell loop and transaction handler; added fallback getter.
+  - State Persistence: Implemented F5 quicksave, F9 quickload, JSON export/import suite, and `kabyss_tutorialSeen` flag.
+  - Non-Occluding Toasts: Added retro top-right toast system with click-to-dismiss and auto-fade.
+  - Controls & UI: Added Save/Load/Export/Import toolbar buttons; updated footer and Delver's Tome manual.
+  - Verification: MSVC compile clean (`KAbyss.exe` 173 KB); Vite clean build in 380ms (`kabyss.html` 405.7 KB); security lint & icons 100% PASS.
+
 - **2026-09-26T00:45:00Z — kilo-creator: kweb://warez (Virtual 1999 Demoscene Vault & Chiptune Jukebox Expansion)**
   - Status: PASS ✅ (12 parody releases, Chiptune Jukebox, FM Sound Lab, 3D Workbench, NFO Studio, Polls, Shoutbox; 0 regressions).
   - Release Vault: Expanded catalog to 12 releases with cracktro launchers, ANSI NFO viewer, and dynamic .diz/.nfo downloads.
@@ -246,15 +255,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Game Content: Implemented cross-epoch item maturation in Chrono-Locker (precursor cell matures into Chrono-Battery in 2042 / Singularity Core in 2188).
   - Balance Tuning: Rebalanced phantom collision damage to 10%, capped breach anomalies, and aligned native C collision physics.
   - Verification: Clean MSVC compile (`KChrono.exe` 23.0 KB); Vite clean build in 386ms (`kchrono.html` 167.5 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-25T20:42:00Z — kilo-usability: KJournal (UI/UX Ergonomics & Usability Pass)**
-  - Status: PASS ✅ (Zen focus mode, collapsible sidebar sections, typography scaling; 0 regressions).
-  - Zen Focus Mode: Added F2 / Alt+S / toolbar toggle collapsing sidebar into full-width distraction-free writing.
-  - Collapsible Sections: Added accordion toggle headers (▾/▸) to Calendar, Mood, and Hashtags freeing entry space.
-  - Typography Ergonomics: Added A- / A+ font size scaling (12px–26px, Alt+[ / Alt+]) with local persistence.
-  - Toast De-occlusion: Relocated toast alerts to centered top banner with click-to-dismiss, preventing button overlap.
-  - Responsive Toolbar: Added breakpoint scaling, compact button labels, and persistent main toolbar Help button.
-  - Verification: Clean MSVC compile (`KJournal.exe` 196 KB); Vite clean build in 379ms (`kjournal.html` 121.2 KB); lint PASS.
 
 
 

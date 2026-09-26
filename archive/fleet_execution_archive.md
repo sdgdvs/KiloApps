@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-25T20:42:00Z — kilo-usability: KJournal (UI/UX Ergonomics & Usability Pass)**
+  - Status: PASS ✅ (Zen focus mode, collapsible sidebar sections, typography scaling; 0 regressions).
+  - Zen Focus Mode: Added F2 / Alt+S / toolbar toggle collapsing sidebar into full-width distraction-free writing.
+  - Collapsible Sections: Added accordion toggle headers (▾/▸) to Calendar, Mood, and Hashtags freeing entry space.
+  - Typography Ergonomics: Added A- / A+ font size scaling (12px–26px, Alt+[ / Alt+]) with local persistence.
+  - Toast De-occlusion: Relocated toast alerts to centered top banner with click-to-dismiss, preventing button overlap.
+  - Responsive Toolbar: Added breakpoint scaling, compact button labels, and persistent main toolbar Help button.
+  - Verification: Clean MSVC compile (`KJournal.exe` 196 KB); Vite clean build in 379ms (`kjournal.html` 121.2 KB); lint PASS.
+
 - **2026-09-25T18:42:00Z — kilo-creator: kweb://darknet (Tier 3 Ghost Node Terminal & Cryptic Decoders)**
   - Status: PASS ✅ (VT-100 terminal, 6-algo decoder workbench, packet sniffer & RF spectrum monitor; 0 regressions).
   - Terminal Shell: Interactive prompt with command history, autocomplete, export log (.txt), and built-in directives (status, telemetry, scan, peers, ping, matrix).

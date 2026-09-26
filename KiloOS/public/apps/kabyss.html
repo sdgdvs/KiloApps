@@ -1013,6 +1013,59 @@
             display: flex;
             justify-content: space-between;
         }
+
+        /* Non-occluding Retro Toast Notifications */
+        #toast-container {
+            position: fixed;
+            top: 48px;
+            right: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            z-index: 2000;
+            pointer-events: none;
+        }
+
+        .retro-toast {
+            pointer-events: auto;
+            background: #090e17;
+            border: 1px solid var(--border-dungeon);
+            color: var(--text-bright);
+            font-family: inherit;
+            font-size: 11px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.8), 0 0 6px rgba(124, 58, 237, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            animation: toast-fade-in 0.2s ease-out;
+            letter-spacing: 0.5px;
+        }
+
+        .retro-toast.success {
+            border-color: #10b981;
+            color: #34d399;
+            background: #061914;
+        }
+
+        .retro-toast.warn {
+            border-color: #f59e0b;
+            color: #fbbf24;
+            background: #181206;
+        }
+
+        .retro-toast.error {
+            border-color: #ef4444;
+            color: #f87171;
+            background: #1c080a;
+        }
+
+        @keyframes toast-fade-in {
+            from { opacity: 0; transform: translateY(-6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -1098,6 +1151,13 @@
                     <button id="btnToggleCRT" class="btn-action" title="Toggle CRT scanlines & phosphors">📺 CRT: On</button>
                     <button id="btnToggleFOV" class="btn-action" title="Toggle full map vision (Debug)">👁️ FOV: On</button>
                     <button id="btnHelp">📖 Delver's Tome</button>
+                </div>
+                <div class="btn-group">
+                    <button id="btnQuicksave" class="btn-action" title="Quicksave delve state to browser storage [F5]">💾 Save [F5]</button>
+                    <button id="btnQuickload" class="btn-action" title="Quickload saved delve state from browser storage [F9]">📂 Load [F9]</button>
+                    <button id="btnExportJSON" class="btn-action" title="Export Delver save data as a JSON file">📤 Export</button>
+                    <button id="btnImportJSON" class="btn-action" title="Import Delver save data from a JSON file">📥 Import</button>
+                    <input type="file" id="fileImportSave" accept=".json" style="display:none;" />
                 </div>
             </div>
         </div>
@@ -1546,6 +1606,8 @@
                             <div class="tome-item-row"><strong>I / Altar:</strong> Open Relic Enchanting Altar (Flamebrand, Frostbite, Voidsever).</div>
                             <div class="tome-item-row"><strong>M / Market:</strong> Open Subterranean Black Market merchant exchange.</div>
                             <div class="tome-item-row"><strong>1 - 4:</strong> Sidebar Tabs (Delver Attributes / Pack / Rune Forge / Bestiary).</div>
+                            <div class="tome-item-row"><strong>F5 / Save:</strong> Quicksave delve state to browser storage (or Export JSON).</div>
+                            <div class="tome-item-row"><strong>F9 / Load:</strong> Quickload and resume your latest archived delve state.</div>
                             <div class="tome-item-row"><strong>O / C / F:</strong> Audio FX & Drone / CRT Phosphors / FOV Lighting toggles.</div>
                         </div>
 
@@ -1776,7 +1838,7 @@
     </div>
 
     <footer>
-        <div>WASD: Move • Space: Rest • E: Interact • B: Cauldron • Z/X/V: Runes • 1-4: Tabs • H: Manual</div>
+        <div>WASD: Move • Space: Rest • E: Interact • B: Cauldron • Z/X/V: Runes • 1-4: Tabs • H: Manual • F5: Save • F9: Load</div>
         <div id="footerStatus">KAbyss Engine v0.5 • Inventory, Equipment & Cauldron Alchemy Active</div>
     </footer>
 
@@ -3276,7 +3338,8 @@
                 relic: 'REL_TORCH',
                 amulet: null
             },
-            weaponEnchant: 'NONE'
+            weaponEnchant: 'NONE',
+            get pack() { return this.inventory; }
         };
 
         // Inventory Management Functions
@@ -3738,10 +3801,10 @@
             const sellSec = document.getElementById('merchantSellSection');
             if (sellSec) {
                 sellSec.innerHTML = '';
-                if (player.pack.length === 0) {
+                if (player.inventory.length === 0) {
                     sellSec.innerHTML = '<div style="text-align:center; color:var(--text-dim); padding:20px; font-style:italic;">Your Delver\'s Pack is currently empty. Delve deeper to loot potions and relics!</div>';
                 } else {
-                    player.pack.forEach((slot, pIdx) => {
+                    player.inventory.forEach((slot, pIdx) => {
                         const it = ITEMS[slot.id];
                         if (!it) return;
                         const sellPrice = getSellPrice(slot.id);
@@ -3877,8 +3940,8 @@
 
         function sellMerchantItem(packIdx) {
             AudioSys.init();
-            if (packIdx < 0 || packIdx >= player.pack.length) return;
-            const slot = player.pack[packIdx];
+            if (packIdx < 0 || packIdx >= player.inventory.length) return;
+            const slot = player.inventory[packIdx];
             const it = ITEMS[slot.id];
             if (!it) return;
 
@@ -8015,8 +8078,219 @@
             if (tabName === 'bestiary') renderBestiaryUI();
         }
 
+        // --- Non-occluding Retro Toast Notifications ---
+        function showToast(msg, type = 'info') {
+            try {
+                let container = document.getElementById('toast-container');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'toast-container';
+                    document.body.appendChild(container);
+                }
+                const toast = document.createElement('div');
+                toast.className = `retro-toast ${type}`;
+                toast.textContent = msg;
+                toast.title = "Click to dismiss notification";
+                toast.onclick = () => {
+                    if (toast.parentNode) toast.parentNode.removeChild(toast);
+                };
+                container.appendChild(toast);
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+                        toast.style.opacity = '0';
+                        toast.style.transform = 'translateY(-6px)';
+                        setTimeout(() => {
+                            if (toast.parentNode) toast.parentNode.removeChild(toast);
+                        }, 300);
+                    }
+                }, 2800);
+            } catch (e) {}
+        }
+
+        // --- Delve Save & State Persistence ---
+        function getSavePayload() {
+            return {
+                version: 1,
+                timestamp: Date.now(),
+                depthLevel,
+                turn,
+                player: {
+                    x: player.x,
+                    y: player.y,
+                    hp: player.hp,
+                    maxHp: player.maxHp,
+                    sanity: player.sanity,
+                    maxSanity: player.maxSanity,
+                    aether: player.aether,
+                    maxAether: player.maxAether,
+                    shield: player.shield,
+                    essence: player.essence,
+                    hunger: player.hunger,
+                    maxHunger: player.maxHunger,
+                    torchFuel: player.torchFuel,
+                    maxTorchFuel: player.maxTorchFuel,
+                    torchLit: player.torchLit,
+                    curse: player.curse,
+                    curseTurns: player.curseTurns,
+                    level: player.level,
+                    exp: player.exp,
+                    maxExp: player.maxExp,
+                    hasPrecursorGlyph: player.hasPrecursorGlyph,
+                    might: player.might,
+                    warding: player.warding,
+                    arcana: player.arcana,
+                    lightRadius: player.lightRadius,
+                    facing: player.facing,
+                    equippedStaff: player.equippedStaff,
+                    staffSockets: [...player.staffSockets],
+                    ownedRunes: [...player.ownedRunes],
+                    inventory: JSON.parse(JSON.stringify(player.inventory)),
+                    equipment: JSON.parse(JSON.stringify(player.equipment)),
+                    weaponEnchant: player.weaponEnchant
+                },
+                dungeon: JSON.parse(JSON.stringify(dungeon)),
+                explored: JSON.parse(JSON.stringify(explored)),
+                chests: JSON.parse(JSON.stringify(chests)),
+                torches: JSON.parse(JSON.stringify(torches)),
+                monsters: JSON.parse(JSON.stringify(monsters))
+            };
+        }
+
+        function restoreGameFromPayload(data) {
+            if (!data || !data.player || !data.dungeon) {
+                showToast('CORRUPTED SAVE DATA ARCHIVE', 'error');
+                return false;
+            }
+            depthLevel = data.depthLevel || 1;
+            turn = data.turn || 1;
+
+            Object.assign(player, data.player);
+            if (data.player.staffSockets) player.staffSockets = [...data.player.staffSockets];
+            if (data.player.ownedRunes) player.ownedRunes = [...data.player.ownedRunes];
+            if (data.player.inventory) player.inventory = JSON.parse(JSON.stringify(data.player.inventory));
+            if (data.player.equipment) player.equipment = JSON.parse(JSON.stringify(data.player.equipment));
+
+            dungeon = JSON.parse(JSON.stringify(data.dungeon));
+            explored = JSON.parse(JSON.stringify(data.explored));
+            chests = JSON.parse(JSON.stringify(data.chests || []));
+            torches = JSON.parse(JSON.stringify(data.torches || []));
+            monsters = JSON.parse(JSON.stringify(data.monsters || []));
+
+            visible = [];
+            lightMap = [];
+            for (let y = 0; y < MAP_HEIGHT; y++) {
+                visible[y] = [];
+                lightMap[y] = [];
+                for (let x = 0; x < MAP_WIDTH; x++) {
+                    visible[y][x] = false;
+                    lightMap[y][x] = 0;
+                }
+            }
+            combatTexts = [];
+            torchParticles = [];
+            spellEffects = [];
+
+            const zoneIdx = getZone(depthLevel);
+            AudioSys.updateAmbienceZone(zoneIdx);
+
+            computeFOV();
+            updateHUD();
+            renderPackUI();
+            renderRuneUI();
+            renderBestiaryUI();
+            render();
+            return true;
+        }
+
+        function quicksaveGame() {
+            try {
+                AudioSys.init();
+                const payload = JSON.stringify(getSavePayload());
+                localStorage.setItem('kabyss_quicksave', payload);
+                localStorage.setItem('kabyss_save', payload);
+                AudioSys.playCoin();
+                showToast(`QUICKSAVE ARCHIVED // DEPTH B${depthLevel} TURN ${turn}`, 'success');
+                logMessage(`💾 DELVER STATE ARCHIVED: Quicksaved delve at Depth B${depthLevel} (Turn ${turn}).`, 'magic');
+            } catch (err) {
+                console.error(err);
+                showToast('QUICKSAVE FAILED: STORAGE FULL', 'error');
+            }
+        }
+
+        function quickloadGame() {
+            try {
+                AudioSys.init();
+                const raw = localStorage.getItem('kabyss_quicksave') || localStorage.getItem('kabyss_save');
+                if (!raw) {
+                    showToast('NO QUICKSAVE ARCHIVE FOUND (PRESS F5 TO SAVE)', 'warn');
+                    logMessage('No archived delve found. Press F5 or [Save] during your descent.', 'important');
+                    return;
+                }
+                const parsed = JSON.parse(raw);
+                if (restoreGameFromPayload(parsed)) {
+                    AudioSys.playAegis();
+                    showToast(`QUICKSAVE RESTORED // DEPTH B${depthLevel} TURN ${turn}`, 'success');
+                    logMessage(`📂 DELVER STATE RESTORED: Resumed delve at Depth B${depthLevel} (Turn ${turn}).`, 'heal');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('FAILED TO RESTORE QUICKSAVE', 'error');
+            }
+        }
+
+        function exportSaveJSON() {
+            try {
+                const payload = JSON.stringify(getSavePayload(), null, 2);
+                const blob = new Blob([payload], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `kabyss_depth_b${depthLevel}_turn${turn}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('SAVE FILE EXPORTED (.JSON)', 'success');
+            } catch (err) {
+                console.error(err);
+                showToast('EXPORT FAILED', 'error');
+            }
+        }
+
+        function importSaveJSON(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (restoreGameFromPayload(parsed)) {
+                        AudioSys.playAegis();
+                        showToast(`IMPORT SUCCESSFUL // DEPTH B${depthLevel}`, 'success');
+                        logMessage(`📥 DELVER SAVE IMPORTED: Restored Depth B${depthLevel} delve from ${file.name}.`, 'heal');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast('INVALID SAVE JSON FILE', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
         // --- Input Event Handlers ---
         window.addEventListener('keydown', (e) => {
+            // Quicksave [F5] & Quickload [F9]
+            if (e.key === 'F5') {
+                e.preventDefault();
+                quicksaveGame();
+                return;
+            }
+            if (e.key === 'F9') {
+                e.preventDefault();
+                quickloadGame();
+                return;
+            }
+
             if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
                 e.preventDefault();
             }
@@ -8256,6 +8530,7 @@
         document.getElementById('btnImbueFrost')?.addEventListener('click', () => imbueEnchantment('FROST'));
         document.getElementById('btnImbueVoid')?.addEventListener('click', () => imbueEnchantment('VOID'));
         document.getElementById('btnAltarCleanse')?.addEventListener('click', altarCleanse);
+        document.getElementById('btnDisenchant')?.addEventListener('click', () => imbueEnchantment('NONE'));
 
         // Merchant Modal Event Listeners
         document.getElementById('btnMerchantTop')?.addEventListener('click', openMerchantModal);
@@ -8322,6 +8597,19 @@
             AudioSys.toggleAmbience();
         });
 
+        document.getElementById('btnQuicksave')?.addEventListener('click', quicksaveGame);
+        document.getElementById('btnQuickload')?.addEventListener('click', quickloadGame);
+        document.getElementById('btnExportJSON')?.addEventListener('click', exportSaveJSON);
+        document.getElementById('btnImportJSON')?.addEventListener('click', () => {
+            document.getElementById('fileImportSave')?.click();
+        });
+        document.getElementById('fileImportSave')?.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                importSaveJSON(e.target.files[0]);
+            }
+            e.target.value = '';
+        });
+
         // Tab Switching
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -8365,6 +8653,14 @@
         window.addEventListener('load', () => {
             generateDungeon(1);
             render();
+            try {
+                const tutorialSeen = localStorage.getItem('kabyss_tutorialSeen') === '1';
+                if (!tutorialSeen) {
+                    const mHelp = document.getElementById('modalHelp');
+                    if (mHelp) mHelp.style.display = 'flex';
+                    localStorage.setItem('kabyss_tutorialSeen', '1');
+                }
+            } catch (e) {}
         });
     </script>
 </body>
