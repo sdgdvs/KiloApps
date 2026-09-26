@@ -1318,10 +1318,285 @@
             font-weight: bold;
             font-family: var(--font-mono);
         }
+
+        /* Non-occluding toast notification container */
+        .ksub-toast-container {
+            position: fixed;
+            top: 48px;
+            right: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 999;
+            pointer-events: none;
+            max-width: 380px;
+        }
+        .ksub-toast {
+            background: rgba(10, 16, 26, 0.95);
+            border: 1px solid var(--accent-sonar);
+            color: var(--text-bright);
+            padding: 8px 14px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+            pointer-events: auto;
+            cursor: pointer;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            animation: toast-slide-in 0.25s ease-out;
+        }
+        .ksub-toast.success { border-color: var(--accent-emerald); color: var(--accent-emerald); }
+        .ksub-toast.warning { border-color: var(--accent-amber); color: var(--accent-amber); }
+        .ksub-toast.danger { border-color: var(--accent-red); color: var(--accent-red); }
+        @keyframes toast-slide-in {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Captain's Dive Briefing & Tutorial Modal */
+        .tutorial-modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(4, 8, 16, 0.85);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .tutorial-modal-card {
+            background: var(--bg-panel);
+            border: 2px solid var(--accent-sonar);
+            border-radius: 6px;
+            width: 760px;
+            max-width: 95vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 35px rgba(0, 210, 255, 0.25), inset 0 0 20px rgba(0, 210, 255, 0.08);
+            overflow: hidden;
+            font-family: var(--font-mono);
+        }
+        .tutorial-modal-header {
+            background: var(--bg-header);
+            border-bottom: 1px solid var(--border-panel);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .tutorial-modal-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--accent-sonar);
+            letter-spacing: 1px;
+        }
+        .tutorial-modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 6px;
+            line-height: 1;
+        }
+        .tutorial-modal-close:hover {
+            color: var(--accent-red);
+        }
+        .tutorial-modal-body {
+            padding: 16px;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .tutorial-alert-box {
+            background: rgba(0, 210, 255, 0.08);
+            border-left: 3px solid var(--accent-sonar);
+            padding: 8px 12px;
+            font-size: 11px;
+            color: var(--text-bright);
+            line-height: 1.5;
+            border-radius: 0 4px 4px 0;
+        }
+        .tutorial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 12px;
+        }
+        .tutorial-section {
+            background: rgba(10, 16, 26, 0.6);
+            border: 1px solid var(--border-panel);
+            border-radius: 4px;
+            padding: 10px 12px;
+        }
+        .tutorial-sec-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--accent-amber);
+            margin-bottom: 6px;
+            border-bottom: 1px solid rgba(245, 158, 11, 0.3);
+            padding-bottom: 3px;
+        }
+        .tutorial-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 10px;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+        .tutorial-list li strong {
+            color: var(--text-bright);
+        }
+        .tutorial-list kbd {
+            background: rgba(0, 210, 255, 0.18);
+            border: 1px solid var(--accent-sonar);
+            color: var(--accent-sonar);
+            padding: 1px 4px;
+            border-radius: 2px;
+            font-size: 9px;
+            font-weight: bold;
+        }
+        .tutorial-modal-footer {
+            background: var(--bg-header);
+            border-top: 1px solid var(--border-panel);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .tutorial-checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            color: var(--text-dim);
+            cursor: pointer;
+            user-select: none;
+        }
+        .tutorial-checkbox-label input {
+            cursor: pointer;
+            accent-color: var(--accent-sonar);
+        }
+        .tutorial-btn-primary {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid var(--accent-emerald);
+            color: var(--accent-emerald);
+            padding: 6px 14px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .tutorial-btn-primary:hover {
+            background: var(--accent-emerald);
+            color: #000;
+        }
+        .tutorial-btn-secondary {
+            background: rgba(0, 210, 255, 0.1);
+            border: 1px solid var(--accent-sonar);
+            color: var(--accent-sonar);
+            padding: 6px 12px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: bold;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .tutorial-btn-secondary:hover {
+            background: var(--accent-sonar);
+            color: #000;
+        }
     
     </style>
 </head>
 <body class="theme-abyss">
+    <div id="ksubToastContainer" class="ksub-toast-container"></div>
+
+    <!-- Captain's Dive Briefing & Tutorial Modal -->
+    <div id="tutorialModal" class="tutorial-modal-backdrop" style="display: none;">
+        <div class="tutorial-modal-card">
+            <div class="tutorial-modal-header">
+                <div class="tutorial-modal-title">
+                    <span style="font-size: 16px;">⚓</span>
+                    <span>DSV ABYSS VOYAGER // CAPTAIN'S DIVE BRIEFING</span>
+                </div>
+                <button class="tutorial-modal-close" id="btnCloseTutorial">&times;</button>
+            </div>
+            <div class="tutorial-modal-body">
+                <div class="tutorial-alert-box">
+                    <strong>CLASSIFIED OPERATION:</strong> You command the Deep-Submergence Bathyscaphe <em>DSV-09</em> exploring the Mariana Trench from the sunlight zone (0m) to the Hadal abyss (11,000m). Monitor pressure, O2 life support, ballast buoyancy, and hostile leviathans.
+                </div>
+                <div class="tutorial-grid">
+                    <div class="tutorial-section">
+                        <div class="tutorial-sec-title">🕹️ VESSEL CONTROL & BUOYANCY</div>
+                        <ul class="tutorial-list">
+                            <li><strong>Ballast Flood / Blow:</strong> Adjust buoyancy. 0% = surface, 45% = neutral hover, 100% = heavy descent.</li>
+                            <li><strong>Pitch Trim:</strong> Bow-down accelerates dive descent; stern-down controls climb.</li>
+                            <li><strong>Engine Throttle:</strong> REV, STOP, HALF (5 kts), FLANK (11.5 kts).</li>
+                            <li><strong>Emergency Blow:</strong> Press [BLOW BALLAST] in panic situations to jettison all ballast tanks.</li>
+                        </ul>
+                    </div>
+                    <div class="tutorial-section">
+                        <div class="tutorial-sec-title">🛰️ ACTIVE SONAR & CARGO SALVAGE</div>
+                        <ul class="tutorial-list">
+                            <li><strong>Active Sonar:</strong> Press <kbd>Space</kbd> to ping the water column and reveal nearby fauna and mineral deposits.</li>
+                            <li><strong>Target Lock:</strong> Press <kbd>Tab</kbd> to cycle targeting brackets onto contacts.</li>
+                            <li><strong>Hydraulic Claw:</strong> Deploy claw arm when within 120m of mineral chimneys to harvest manganese, titanium, and gold.</li>
+                            <li><strong>Cargo Transshipment:</strong> Offload minerals at surface buoys or undersea research outposts for Research Credits.</li>
+                        </ul>
+                    </div>
+                    <div class="tutorial-section">
+                        <div class="tutorial-sec-title">🚀 UNDERSEA COMBAT & DEFENSE</div>
+                        <ul class="tutorial-list">
+                            <li><strong>Torpedo Tubes:</strong> Keys <kbd>1</kbd>-<kbd>4</kbd> fire independent pneumatic tubes.</li>
+                            <li><strong>Ordnance Types:</strong> Acoustic Seeker (85 dmg), EMP Shock (stuns leviathans for 8s), Plasma Torpedo (190 dmg).</li>
+                            <li><strong>Shockwave Discharge:</strong> Press <kbd>X</kbd> to detonate a 360° hydro-acoustic shockwave knocking back threats.</li>
+                            <li><strong>Silent Running:</strong> Press <kbd>C</kbd> to disable high-RPM machinery and evade predator sonar detection.</li>
+                        </ul>
+                    </div>
+                    <div class="tutorial-section">
+                        <div class="tutorial-sec-title">💾 STATE PERSISTENCE & MANUAL</div>
+                        <ul class="tutorial-list">
+                            <li><strong>Quicksave:</strong> Press <kbd>F5</kbd> or click 💾 SAVE to store complete telemetry, cargo, upgrades, and world state.</li>
+                            <li><strong>Quickload:</strong> Press <kbd>F9</kbd> or click 📂 LOAD to restore your stored dive immediately.</li>
+                            <li><strong>Operating Manual:</strong> Press <kbd>H</kbd> or <kbd>F1</kbd> to open the full engineering manual codex anytime.</li>
+                            <li><strong>Escape:</strong> Press <kbd>Esc</kbd> to close any dialog or return to standard 360° Sonar sweep.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="tutorial-modal-footer">
+                <label class="tutorial-checkbox-label">
+                    <input type="checkbox" id="chkDoNotShowTutorial" checked>
+                    <span>Do not show this briefing on future dives</span>
+                </label>
+                <div style="display: flex; gap: 8px;">
+                    <button id="btnOpenManualFromTut" class="tutorial-btn-secondary">📖 READ FULL MANUAL [H]</button>
+                    <button id="btnStartDive" class="tutorial-btn-primary">ENTER BATHYSCAPHE & START DIVE [SPACE / ENTER]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <header>
         <div class="header-title">
             <span class="status-badge" id="masterStatusBadge"></span>
@@ -1338,6 +1613,9 @@
             </select>
             <button id="scanlineToggleBtn">📺 SCANLINES: ON</button>
             <button id="soundToggleBtn">🔊 AUDIO: ON</button>
+            <button id="btnQuickSave" title="Quicksave dive state (F5)" style="border-color: var(--accent-emerald); color: var(--accent-emerald); font-weight: bold;">💾 SAVE [F5]</button>
+            <button id="btnQuickLoad" title="Quickload saved dive state (F9)" style="border-color: var(--accent-sonar); color: var(--accent-sonar); font-weight: bold;">📂 LOAD [F9]</button>
+            <button id="btnBriefing" title="Captain's Dive Briefing & Tutorial" style="border-color: var(--accent-amber); color: var(--accent-amber); font-weight: bold;">⚓ BRIEFING</button>
             <button id="headerHelpBtn" style="border-color: var(--accent-sonar); color: var(--accent-sonar); font-weight: bold;">📖 MANUAL [H]</button>
             <button id="emergencyBlowBtn" style="border-color: var(--accent-red); color: var(--accent-red); font-weight: bold;">🚨 BLOW BALLAST</button>
         </div>
@@ -5740,9 +6018,37 @@
 
             btnQuickLaunchDecoy.addEventListener('click', launchAcousticDecoy);
 
-            // Keyboard Shortcuts for Undersea Combat
+            // Keyboard Shortcuts for Undersea Combat & State Control
             window.addEventListener('keydown', (e) => {
-                if (e.key === '1') {
+                const tutModal = document.getElementById('tutorialModal');
+                if (tutModal && tutModal.style.display === 'flex') {
+                    if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        closeTutorialBriefing();
+                        return;
+                    }
+                    if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
+                        e.preventDefault();
+                        closeTutorialBriefing();
+                        setViewMode('manual');
+                        return;
+                    }
+                }
+
+                if (e.key === 'F5') {
+                    e.preventDefault();
+                    saveGameState();
+                } else if (e.key === 'F9') {
+                    e.preventDefault();
+                    loadGameState();
+                } else if (e.key === 'Escape') {
+                    if (state.viewMode !== 'sonar') {
+                        setViewMode('sonar');
+                    }
+                } else if (e.key === 'F1') {
+                    e.preventDefault();
+                    setViewMode(state.viewMode === 'manual' ? 'sonar' : 'manual');
+                } else if (e.key === '1') {
                     window.fireTube(0);
                 } else if (e.key === '2') {
                     window.fireTube(1);
@@ -5999,6 +6305,299 @@
             updateWaypointUI();
             renderEngineeringUI();
             updateTargetHUD();
+
+            // --- NON-OCCLUDING TOAST SYSTEM ---
+            function showToast(text, type = 'info') {
+                const container = document.getElementById('ksubToastContainer');
+                if (!container) return;
+                const toast = document.createElement('div');
+                toast.className = `ksub-toast ${type}`;
+                toast.textContent = text;
+                toast.addEventListener('click', () => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(-6px)';
+                    setTimeout(() => toast.remove(), 250);
+                });
+                container.appendChild(toast);
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.style.opacity = '0';
+                        toast.style.transform = 'translateY(-6px)';
+                        setTimeout(() => toast.remove(), 250);
+                    }
+                }, 3500);
+            }
+
+            // --- FULL STATE PERSISTENCE (F5 QUICKSAVE / F9 QUICKLOAD) ---
+            function saveGameState(silent = false) {
+                try {
+                    const saveData = {
+                        version: 5,
+                        timestamp: Date.now(),
+                        state: {
+                            depth: state.depth,
+                            vertRate: state.vertRate,
+                            targetVertRate: state.targetVertRate,
+                            speed: state.speed,
+                            targetSpeed: state.targetSpeed,
+                            throttleMode: state.throttleMode,
+                            heading: state.heading,
+                            rudderRate: state.rudderRate,
+                            pitch: state.pitch,
+                            posX: state.posX,
+                            posY: state.posY,
+                            distanceCruised: state.distanceCruised,
+                            currentSectorIdx: state.currentSectorIdx,
+                            activeWaypointIdx: state.activeWaypointIdx,
+                            autopilot: state.autopilot,
+                            surveyPoints: state.surveyPoints,
+                            viewMode: state.viewMode,
+                            breadcrumbs: state.breadcrumbs.slice(0, 32),
+                            seabedElevation: state.seabedElevation,
+                            milestones: { ...state.milestones },
+                            upgrades: { ...state.upgrades },
+                            maxAirReservoir: state.maxAirReservoir,
+                            airRechargeRate: state.airRechargeRate,
+                            ballastStepRate: state.ballastStepRate,
+                            powerDrainMult: state.powerDrainMult,
+                            passiveBatteryRegen: state.passiveBatteryRegen,
+                            surveyMultiplier: state.surveyMultiplier,
+                            opticalRange: state.opticalRange,
+                            selectedTargetIdx: state.selectedTargetIdx,
+                            isScanning: state.isScanning,
+                            scanProgress: state.scanProgress,
+                            cargo: { ...state.cargo },
+                            clawDeployed: state.clawDeployed,
+                            isDredging: state.isDredging,
+                            dredgeProgress: state.dredgeProgress,
+                            torpedoes: state.torpedoes,
+                            empTorpedoes: state.empTorpedoes,
+                            plasmaTorpedoes: state.plasmaTorpedoes,
+                            batteryPacks: state.batteryPacks,
+                            repairKits: state.repairKits,
+                            isDocked: state.isDocked,
+                            dockedStationIdx: state.dockedStationIdx,
+                            selectedOutpostIdx: state.selectedOutpostIdx,
+                            decoys: state.decoys,
+                            silentRunning: state.silentRunning,
+                            shockwaveCooldown: state.shockwaveCooldown,
+                            selectedThreatIdx: state.selectedThreatIdx,
+                            tubes: state.tubes.map(t => ({ id: t.id, type: t.type, status: t.status, reloadTime: t.reloadTime })),
+                            bioSamples: { ...state.bioSamples },
+                            research: { ...state.research },
+                            hull: state.hull,
+                            crushDepth: state.crushDepth,
+                            pressure: state.pressure,
+                            hullStress: state.hullStress,
+                            o2: state.o2,
+                            co2: state.co2,
+                            scrubberStatus: state.scrubberStatus,
+                            scrubberAuto: state.scrubberAuto,
+                            o2PurgeCount: state.o2PurgeCount,
+                            battery: state.battery,
+                            powerDrain: state.powerDrain,
+                            lowPowerMode: state.lowPowerMode,
+                            searchlights: state.searchlights,
+                            ballast: state.ballast,
+                            airReservoir: state.airReservoir,
+                            bilgeWater: state.bilgeWater,
+                            bilgePumpActive: state.bilgePumpActive,
+                            waterIntrusionRate: state.waterIntrusionRate,
+                            temp: state.temp,
+                            salinity: state.salinity,
+                            sonarGain: state.sonarGain,
+                            damageControl: {
+                                cabinPressure: state.damageControl.cabinPressure,
+                                bleedValveOpen: state.damageControl.bleedValveOpen,
+                                bilgePumpMode: state.damageControl.bilgePumpMode,
+                                emergencySirens: state.damageControl.emergencySirens,
+                                compartments: state.damageControl.compartments.map(c => ({
+                                    id: c.id,
+                                    shortCode: c.shortCode,
+                                    integrity: c.integrity,
+                                    water: c.water,
+                                    maxWater: c.maxWater,
+                                    breachTier: c.breachTier,
+                                    leakRate: c.leakRate,
+                                    doorSealed: c.doorSealed,
+                                    airDam: c.airDam,
+                                    repairProgress: c.repairProgress,
+                                    isRepairing: c.isRepairing
+                                }))
+                            }
+                        },
+                        world: {
+                            threats: THREATS.map(t => ({
+                                id: t.id,
+                                hp: t.hp,
+                                state: t.state,
+                                x: t.x,
+                                y: t.y,
+                                defeated: t.defeated,
+                                stunTimer: t.stunTimer,
+                                atkCooldown: t.atkCooldown
+                            })),
+                            fauna: FAUNA_CATALOG.map(f => ({ id: f.id, discovered: f.discovered })),
+                            landmarks: SECTORS.map(s => s.landmarks.map(l => ({ id: l.id, discovered: l.discovered }))),
+                            salvage: SALVAGE_NODES.map(s => ({ id: s.id, harvested: s.harvested }))
+                        },
+                        theme: currentTheme,
+                        scanlines: scanlinesEnabled
+                    };
+
+                    localStorage.setItem('ksubmarine_quicksave', JSON.stringify(saveData));
+                    if (!silent) {
+                        showToast(`💾 Quicksave complete at depth ${state.depth.toFixed(1)}m [F5]`, 'success');
+                        logMessage(`💾 QUICKSAVE CREATED: Stored dive state at depth ${state.depth.toFixed(1)}m [F5].`, 'discovery');
+                        playBeep(750, 'sine', 0.1);
+                    }
+                    return true;
+                } catch (e) {
+                    console.error('Quicksave storage error:', e);
+                    showToast('⚠️ Quicksave failed: Storage quota exceeded or disabled', 'danger');
+                    logMessage('QUICKSAVE ERROR: Local storage quota exceeded or disabled.', 'critical');
+                    return false;
+                }
+            }
+
+            function loadGameState() {
+                try {
+                    const raw = localStorage.getItem('ksubmarine_quicksave');
+                    if (!raw) {
+                        showToast('📂 Quickload failed: No save file found. Press F5 to save.', 'warning');
+                        logMessage('QUICKLOAD FAILED: No saved game found in local storage. Press F5 to save.', 'warning');
+                        playBeep(300, 'square', 0.15);
+                        return false;
+                    }
+                    const parsed = JSON.parse(raw);
+                    if (!parsed || !parsed.state) {
+                        throw new Error('Corrupted save data structure');
+                    }
+
+                    // Restore state fields
+                    Object.assign(state, parsed.state);
+
+                    // Restore world state
+                    if (parsed.world) {
+                        if (Array.isArray(parsed.world.threats)) {
+                            parsed.world.threats.forEach(st => {
+                                const targetThreat = THREATS.find(t => t.id === st.id);
+                                if (targetThreat) {
+                                    targetThreat.hp = st.hp;
+                                    targetThreat.state = st.state;
+                                    targetThreat.x = st.x;
+                                    targetThreat.y = st.y;
+                                    targetThreat.defeated = st.defeated;
+                                    targetThreat.stunTimer = st.stunTimer;
+                                    targetThreat.atkCooldown = st.atkCooldown;
+                                }
+                            });
+                        }
+                        if (Array.isArray(parsed.world.fauna)) {
+                            parsed.world.fauna.forEach(sf => {
+                                const targetFauna = FAUNA_CATALOG.find(f => f.id === sf.id);
+                                if (targetFauna) targetFauna.discovered = sf.discovered;
+                            });
+                        }
+                        if (Array.isArray(parsed.world.landmarks)) {
+                            parsed.world.landmarks.forEach((secLms, sIdx) => {
+                                if (SECTORS[sIdx] && Array.isArray(secLms)) {
+                                    secLms.forEach(sl => {
+                                        const lm = SECTORS[sIdx].landmarks.find(l => l.id === sl.id);
+                                        if (lm) lm.discovered = sl.discovered;
+                                    });
+                                }
+                            });
+                        }
+                        if (Array.isArray(parsed.world.salvage)) {
+                            parsed.world.salvage.forEach(sn => {
+                                const node = SALVAGE_NODES.find(s => s.id === sn.id);
+                                if (node) node.harvested = sn.harvested;
+                            });
+                        }
+                    }
+
+                    // Restore themes if present
+                    if (parsed.theme) {
+                        currentTheme = parsed.theme;
+                        localStorage.setItem('ksubmarine_theme', currentTheme);
+                    }
+                    if (typeof parsed.scanlines === 'boolean') {
+                        scanlinesEnabled = parsed.scanlines;
+                        localStorage.setItem('ksubmarine_scanlines', scanlinesEnabled);
+                    }
+                    applyThemeSettings();
+
+                    // Re-render views
+                    recalculateCargo();
+                    updateWaypointUI();
+                    renderCargoUI();
+                    renderEngineeringUI();
+                    renderLabUI();
+                    renderDamageControlUI();
+                    renderOutpostsUI();
+                    renderCombatUI();
+                    renderCodexUI();
+                    updateTargetHUD();
+                    setViewMode(state.viewMode || 'sonar');
+
+                    showToast(`📂 Quickload restored: Resumed dive at ${state.depth.toFixed(1)}m [F9]`, 'success');
+                    logMessage(`📂 QUICKLOAD RESTORED: Resumed dive state at depth ${state.depth.toFixed(1)}m [F9].`, 'discovery');
+                    playBeep(600, 'sine', 0.1);
+                    return true;
+                } catch (e) {
+                    console.error('Quickload parse error:', e);
+                    showToast('⚠️ Quickload failed: Corrupted save data', 'danger');
+                    logMessage('QUICKLOAD ERROR: Corrupted or incompatible save file.', 'critical');
+                    return false;
+                }
+            }
+
+            // --- TUTORIAL & DIVE BRIEFING MODAL LOGIC ---
+            const tutorialModal = document.getElementById('tutorialModal');
+            const btnCloseTutorial = document.getElementById('btnCloseTutorial');
+            const btnStartDive = document.getElementById('btnStartDive');
+            const btnOpenManualFromTut = document.getElementById('btnOpenManualFromTut');
+            const chkDoNotShowTutorial = document.getElementById('chkDoNotShowTutorial');
+            const btnBriefing = document.getElementById('btnBriefing');
+            const btnQuickSave = document.getElementById('btnQuickSave');
+            const btnQuickLoad = document.getElementById('btnQuickLoad');
+
+            function openTutorialBriefing() {
+                if (tutorialModal) {
+                    tutorialModal.style.display = 'flex';
+                    playBeep(520, 'sine', 0.08);
+                }
+            }
+
+            function closeTutorialBriefing() {
+                if (!tutorialModal) return;
+                tutorialModal.style.display = 'none';
+                if (chkDoNotShowTutorial && chkDoNotShowTutorial.checked) {
+                    try {
+                        localStorage.setItem('ksubmarine_tutorialSeen', '1');
+                    } catch (e) {}
+                }
+                logMessage('⚓ Captain\'s dive briefing acknowledged. All systems online. Good hunting in the abyss.', 'info');
+                playBeep(650, 'sine', 0.1);
+            }
+
+            if (btnCloseTutorial) btnCloseTutorial.addEventListener('click', closeTutorialBriefing);
+            if (btnStartDive) btnStartDive.addEventListener('click', closeTutorialBriefing);
+            if (btnBriefing) btnBriefing.addEventListener('click', openTutorialBriefing);
+            if (btnOpenManualFromTut) {
+                btnOpenManualFromTut.addEventListener('click', () => {
+                    closeTutorialBriefing();
+                    setViewMode('manual');
+                });
+            }
+            if (btnQuickSave) btnQuickSave.addEventListener('click', () => saveGameState());
+            if (btnQuickLoad) btnQuickLoad.addEventListener('click', () => loadGameState());
+
+            // First-run tutorial check: only show if not previously seen
+            if (localStorage.getItem('ksubmarine_tutorialSeen') !== '1') {
+                openTutorialBriefing();
+            }
 
             // --- SIMULATION PHYSICS & NAVIGATION TICK ---
             let lastTime = performance.now();

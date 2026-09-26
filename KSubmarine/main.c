@@ -149,6 +149,13 @@
 #define ID_BTN_MANUAL_TAB_4        236
 #define ID_BTN_MANUAL_PREV         237
 #define ID_BTN_MANUAL_NEXT         238
+#define ID_BTN_QUICK_SAVE          240
+#define ID_BTN_QUICK_LOAD          241
+
+#define KSUB_SAVE_MAGIC            0x4B535542 // 'KSUB'
+#define KSUB_SAVE_VERSION          5
+#define KSUB_SAVE_FILE             "ksubmarine_save.dat"
+#define KSUB_TUTORIAL_FILE         "ksubmarine_tutorial.dat"
 
 typedef enum {
     THEME_ABYSS = 0,
@@ -863,6 +870,19 @@ void DrawUI(HDC hdc, RECT* rcClient);
 int GetSectorFaunaIndices(int sectorIdx, int outIndices[3]);
 int GetUnifiedContacts(int sectorIdx, UnifiedContact outContacts[8]);
 void RecalculateCargo(void);
+void QuickSaveGame(void);
+void QuickLoadGame(void);
+
+typedef struct {
+    DWORD magic;
+    DWORD version;
+    DWORD timestamp;
+    SubmarineState sub;
+    HostileThreat threats[THREAT_COUNT];
+    FaunaAnomaly fauna[FAUNA_COUNT];
+    SalvageNode salvageNodes[SALVAGE_NODE_COUNT];
+    SectorInfo sectors[SECTOR_COUNT];
+} SubmarineSaveData;
 
 DWORD WINAPI SoundThreadProc(LPVOID lpParam) {
     DWORD packed = (DWORD)(UINT_PTR)lpParam;
@@ -1225,6 +1245,68 @@ void RecalculateCargo(void) {
                             (g_sub.cargoHadalPrisms * g_resDefs[4].unitVal);
 }
 
+void QuickSaveGame(void) {
+    FILE* fp = fopen(KSUB_SAVE_FILE, "wb");
+    if (!fp) {
+        AddLog("QUICKSAVE ERROR: Unable to create save file.", g_themes[g_sub.currentTheme].accentRed);
+        PlaySoundAsync(280, 150);
+        return;
+    }
+    SubmarineSaveData data;
+    memset(&data, 0, sizeof(data));
+    data.magic = KSUB_SAVE_MAGIC;
+    data.version = KSUB_SAVE_VERSION;
+    data.timestamp = GetTickCount();
+    data.sub = g_sub;
+    memcpy(data.threats, g_threats, sizeof(g_threats));
+    memcpy(data.fauna, g_fauna, sizeof(g_fauna));
+    memcpy(data.salvageNodes, g_salvageNodes, sizeof(g_salvageNodes));
+    memcpy(data.sectors, g_sectors, sizeof(g_sectors));
+
+    size_t written = fwrite(&data, sizeof(data), 1, fp);
+    fclose(fp);
+
+    if (written == 1) {
+        char msg[128];
+        snprintf(msg, sizeof(msg), "QUICKSAVE COMPLETE: Stored dive state at depth %.1fm [F5].", g_sub.depth);
+        AddLog(msg, g_themes[g_sub.currentTheme].accentEmerald);
+        PlaySoundAsync(750, 70);
+    } else {
+        AddLog("QUICKSAVE ERROR: Incomplete write to save file.", g_themes[g_sub.currentTheme].accentRed);
+        PlaySoundAsync(280, 150);
+    }
+}
+
+void QuickLoadGame(void) {
+    FILE* fp = fopen(KSUB_SAVE_FILE, "rb");
+    if (!fp) {
+        AddLog("QUICKLOAD FAILED: No save file found. Press F5 to save.", g_themes[g_sub.currentTheme].accentAmber);
+        PlaySoundAsync(300, 150);
+        return;
+    }
+    SubmarineSaveData data;
+    size_t r = fread(&data, sizeof(data), 1, fp);
+    fclose(fp);
+
+    if (r != 1 || data.magic != KSUB_SAVE_MAGIC || data.version != KSUB_SAVE_VERSION) {
+        AddLog("QUICKLOAD ERROR: Corrupted or incompatible save file.", g_themes[g_sub.currentTheme].accentRed);
+        PlaySoundAsync(280, 150);
+        return;
+    }
+
+    g_sub = data.sub;
+    memcpy(g_threats, data.threats, sizeof(g_threats));
+    memcpy(g_fauna, data.fauna, sizeof(g_fauna));
+    memcpy(g_salvageNodes, data.salvageNodes, sizeof(g_salvageNodes));
+    memcpy(g_sectors, data.sectors, sizeof(g_sectors));
+
+    char msg[128];
+    snprintf(msg, sizeof(msg), "QUICKLOAD RESTORED: Resumed dive state at depth %.1fm [F9].", g_sub.depth);
+    AddLog(msg, g_themes[g_sub.currentTheme].accentEmerald);
+    PlaySoundAsync(600, 70);
+    if (g_hWnd) InvalidateRect(g_hWnd, NULL, FALSE);
+}
+
 void InitSubmarineState(void) {
     memset(&g_sub, 0, sizeof(g_sub));
     g_sub.depth = 0.0f;
@@ -1369,6 +1451,21 @@ void InitSubmarineState(void) {
     g_sub.currentTheme = THEME_ABYSS;
     g_sub.scanlinesEnabled = 1;
     g_sub.manualTab = 0;
+
+    FILE* ftut = fopen(KSUB_TUTORIAL_FILE, "rb");
+    if (!ftut) {
+        ftut = fopen(KSUB_TUTORIAL_FILE, "wb");
+        if (ftut) {
+            DWORD flag = 1;
+            fwrite(&flag, sizeof(flag), 1, ftut);
+            fclose(ftut);
+        }
+        g_sub.viewMode = 10; // First-run: Captain's Manual opened
+        AddLog("FIRST-RUN BRIEFING: Captain's Operating Manual loaded [H/Esc/Space].", g_themes[THEME_ABYSS].accentEmerald);
+    } else {
+        fclose(ftut);
+        g_sub.viewMode = 0;
+    }
 
     g_sub.logCount = 0;
     AddLog("DSV Abyss Voyager Bathyscaphe computer online. Systems nominal.", g_themes[THEME_ABYSS].textPrimary);
@@ -4359,17 +4456,20 @@ void DrawUI(HDC hdc, RECT* rcClient) {
 
     SelectObject(hdc, g_hFontBold);
     const char* zoneStr = GetZoneName(g_sub.depth);
-    RECT rcZone = { 240, 8, 440, 28 };
+    RECT rcZone = { 230, 8, 375, 28 };
     HBRUSH hBrZone = CreateSolidBrush(th->textDim);
     FillRect(hdc, &rcZone, hBrZone);
     DeleteObject(hBrZone);
     SetTextColor(hdc, RGB(255, 255, 255));
     DrawTextA(hdc, zoneStr, -1, &rcZone, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-    DrawCustomButton(hdc, ID_BTN_THEME_TOGGLE, clientW - 530, 6, 130, 24, th->tag, 1, th->accentSonar, th);
-    DrawCustomButton(hdc, ID_BTN_SCANLINES_TOGGLE, clientW - 392, 6, 116, 24, g_sub.scanlinesEnabled ? "SCANLINES: ON" : "SCANLINES: OFF", g_sub.scanlinesEnabled, th->accentSonar, th);
-    DrawCustomButton(hdc, ID_BTN_SOUND_TOGGLE, clientW - 270, 6, 120, 24, g_sub.soundEnabled ? "AUDIO: ON" : "AUDIO: OFF", g_sub.soundEnabled, th->accentSonar, th);
-    DrawCustomButton(hdc, ID_BTN_EMERGENCY_BLOW, clientW - 142, 6, 130, 24, "BLOW BALLAST", 0, th->accentRed, th);
+    DrawCustomButton(hdc, ID_BTN_QUICK_SAVE, clientW - 690, 6, 80, 24, "SAVE [F5]", 0, th->accentEmerald, th);
+    DrawCustomButton(hdc, ID_BTN_QUICK_LOAD, clientW - 605, 6, 80, 24, "LOAD [F9]", 0, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_THEME_TOGGLE, clientW - 520, 6, 110, 24, th->tag, 1, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_SCANLINES_TOGGLE, clientW - 405, 6, 105, 24, g_sub.scanlinesEnabled ? "SCANLINES: ON" : "SCANLINES: OFF", g_sub.scanlinesEnabled, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_SOUND_TOGGLE, clientW - 295, 6, 95, 24, g_sub.soundEnabled ? "AUDIO: ON" : "AUDIO: OFF", g_sub.soundEnabled, th->accentSonar, th);
+    DrawCustomButton(hdc, ID_BTN_VIEW_MANUAL, clientW - 195, 6, 85, 24, "MANUAL [H]", g_sub.viewMode == 10, th->accentEmerald, th);
+    DrawCustomButton(hdc, ID_BTN_EMERGENCY_BLOW, clientW - 105, 6, 100, 24, "BLOW TANK", 0, th->accentRed, th);
 
     int margin = 8;
     int panelY = 44;
@@ -4876,10 +4976,13 @@ int HitTestButton(int mx, int my, int clientW, int clientH) {
     int rightX = clientW - rightW - margin;
 
     if (my >= 6 && my <= 30) {
-        if (mx >= clientW - 530 && mx <= clientW - 400) return ID_BTN_THEME_TOGGLE;
-        if (mx >= clientW - 392 && mx <= clientW - 276) return ID_BTN_SCANLINES_TOGGLE;
-        if (mx >= clientW - 270 && mx <= clientW - 150) return ID_BTN_SOUND_TOGGLE;
-        if (mx >= clientW - 142 && mx <= clientW - 12) return ID_BTN_EMERGENCY_BLOW;
+        if (mx >= clientW - 690 && mx <= clientW - 610) return ID_BTN_QUICK_SAVE;
+        if (mx >= clientW - 605 && mx <= clientW - 525) return ID_BTN_QUICK_LOAD;
+        if (mx >= clientW - 520 && mx <= clientW - 410) return ID_BTN_THEME_TOGGLE;
+        if (mx >= clientW - 405 && mx <= clientW - 300) return ID_BTN_SCANLINES_TOGGLE;
+        if (mx >= clientW - 295 && mx <= clientW - 200) return ID_BTN_SOUND_TOGGLE;
+        if (mx >= clientW - 195 && mx <= clientW - 110) return ID_BTN_VIEW_MANUAL;
+        if (mx >= clientW - 105 && mx <= clientW - 5) return ID_BTN_EMERGENCY_BLOW;
     }
 
     // View toggles in center panel (11 buttons)
@@ -5257,6 +5360,14 @@ void HandleCommand(int cmdId) {
     const SubmarineTheme* th = &g_themes[g_sub.currentTheme];
 
     switch (cmdId) {
+        case ID_BTN_QUICK_SAVE:
+            QuickSaveGame();
+            break;
+
+        case ID_BTN_QUICK_LOAD:
+            QuickLoadGame();
+            break;
+
         case ID_BTN_THEME_TOGGLE: {
             g_sub.currentTheme = (g_sub.currentTheme + 1) % THEME_COUNT;
             const SubmarineTheme* newTh = &g_themes[g_sub.currentTheme];
@@ -6383,9 +6494,33 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
                 g_sub.viewMode = (g_sub.viewMode == 10 ? 0 : 10);
                 PlaySoundAsync(580, 80);
                 InvalidateRect(hWnd, NULL, FALSE);
-            } else if (wParam == VK_SPACE) {
-                HandleCommand(ID_BTN_SONAR_PING);
+            } else if (wParam == VK_F5) {
+                QuickSaveGame();
                 InvalidateRect(hWnd, NULL, FALSE);
+            } else if (wParam == VK_F9) {
+                QuickLoadGame();
+                InvalidateRect(hWnd, NULL, FALSE);
+            } else if (wParam == VK_ESCAPE) {
+                if (g_sub.viewMode != 0) {
+                    g_sub.viewMode = 0;
+                    PlaySoundAsync(450, 60);
+                    InvalidateRect(hWnd, NULL, FALSE);
+                }
+            } else if (wParam == VK_RETURN) {
+                if (g_sub.viewMode == 10) {
+                    g_sub.viewMode = 0;
+                    PlaySoundAsync(450, 60);
+                    InvalidateRect(hWnd, NULL, FALSE);
+                }
+            } else if (wParam == VK_SPACE) {
+                if (g_sub.viewMode == 10) {
+                    g_sub.viewMode = 0;
+                    PlaySoundAsync(450, 60);
+                    InvalidateRect(hWnd, NULL, FALSE);
+                } else {
+                    HandleCommand(ID_BTN_SONAR_PING);
+                    InvalidateRect(hWnd, NULL, FALSE);
+                }
             } else if (wParam == VK_TAB) {
                 g_sub.selectedThreatIdx = (g_sub.selectedThreatIdx + 1) % THREAT_COUNT;
                 PlaySoundAsync(650, 60);
