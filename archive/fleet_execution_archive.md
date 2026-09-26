@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-26T05:55:00Z — kilo-qa: KStarDredge (Pass 5: Tutorial & State Integrity)**
+  - Status: PASS ✅ (F5 quicksave/F9 quickload persistence, Captain's Induction tutorial, non-occluding toasts; 0 regressions).
+  - State Persistence: Implemented comprehensive state serialization and restoration across HTML localStorage and native Win32 `kstardredge.dat` binary save file.
+  - Tutorial Integrity: Added First-Run Captain's Induction / Operations Briefing modal, firing on fresh sessions, dismissed with Enter/Esc/Space or close button.
+  - Controls & UI: Added Save (F5), Load (F9), and Briefing buttons in header and Win32 console; universal Esc modal dismissal.
+  - Toast Notifications: Non-occluding top-right notification system with auto-fading and click-to-dismiss.
+  - Verification: Clean MSVC compile (`KStarDredge.exe` 278.5 KB); Vite clean build in 399ms (`kstardredge.html` 462.3 KB); security lint & check_icons 100% PASS.
+
 - **2026-09-26T03:55:00Z — kilo-graphics: KStarForge (Visual Polish, Balance & Combat Pass)**
   - Status: PASS ✅ (Parallax nebula starfield, runway approach beacons, wave progression, 0 glints; 0 regressions).
   - Combat Physics: Corrected drone aim vector calculations from diagonal lock to normalized ballistic trajectories in C.

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KBBS
   kilo_usability: KMedia
-  kilo_graphics: KFortress
+  kilo_graphics: KCosmic
   kilo_qa: KSubmarine
   kilo_expander: KMail
   kilo_creator: "kweb://geocities (Pixel Art & MOD Downloads)"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-usability
-  app: KMandel
-  timestamp: "2026-09-26T12:45:00Z"
+  agent: kilo-graphics
+  app: KFortress
+  timestamp: "2026-09-26T13:55:00Z"
 last_planner_run: "2026-09-26T07:48:00Z"
 ---
 
@@ -104,9 +104,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://darknet, kweb://portal, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KFortress`
+- **Current Target**: `KCosmic`
 - **Upcoming Queue**:
-  `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`.
+  `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KBBS`
@@ -218,6 +218,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-26T13:55:00Z — kilo-graphics: KFortress (Game Content, Visual Polish & Glint Purge Pass)**
+  - Status: PASS ✅ (Specular glint comment purged, poison & ballista audio, visual impact particle polish; 0 regressions).
+  - Glint & Comet Audit: Verified 0 traveling perimeter border dots or orbital comets in C & web; cleansed legacy comment.
+  - Sound Architecture: Implemented procedural Yamaha YM2612 FM bubbling venom discharge & heavy ballista cable whip SFX in Web Audio.
+  - Weapon Audio Dispatch: Wired dedicated SFX triggers for Poison, Venomspite, and Ballista towers during firing cycles.
+  - Visual Polish & Particles: Added emerald venom particles on direct poison impacts and golden spark burst on Ballista crits in C and web.
+  - Verification: MSVC compile clean (`KFortress.exe` 180.7 KB); Vite build clean in 447ms (`kfortress.html` 189.4 KB); security lint & check_icons 100% PASS.
+
 - **2026-09-26T12:45:00Z — kilo-usability: KMandel (UI/UX Usability, HiDPI Scaling & Ergonomics Pass)**
   - Status: PASS ✅ (HiDPI scaling fixed, collapsible controls [C], F5/F9 quicksave/load, touch pinch; 0 regressions).
   - HiDPI Canvas & Effects: Scaled canvas context by DPR, fixing off-center particle explosions, shockwaves, motes, and filigree.
@@ -253,11 +261,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Hardcopy Print Engine: Added Rolodex 3x5" index cards, Avery 5160 mailing labels, and condensed phone directory print layouts.
   - Sorter & Telemetry: Added sorter (Name A-Z/Z-A, Company, Category, Birthday, Recent), birthday filter, and telemetry analytics modal.
   - Verification: MSVC compile clean (`KContacts.exe` 26.5 KB); Vite clean in 379ms (`kcontacts.html` 124.9 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-26T05:55:00Z — kilo-qa: KStarDredge (Pass 5: Tutorial & State Integrity)**
-  - Status: PASS ✅ (F5 quicksave/F9 quickload persistence, Captain's Induction tutorial, non-occluding toasts; 0 regressions).
-  - State Persistence: Implemented comprehensive state serialization and restoration across HTML localStorage and native Win32 `kstardredge.dat` binary save file.
-  - Tutorial Integrity: Added First-Run Captain's Induction / Operations Briefing modal, firing on fresh sessions, dismissed with Enter/Esc/Space or close button.
-  - Controls & UI: Added Save (F5), Load (F9), and Briefing buttons in header and Win32 console; universal Esc modal dismissal.
-  - Toast Notifications: Non-occluding top-right notification system with auto-fading and click-to-dismiss.
-  - Verification: Clean MSVC compile (`KStarDredge.exe` 278.5 KB); Vite clean build in 399ms (`kstardredge.html` 462.3 KB); security lint & check_icons 100% PASS.

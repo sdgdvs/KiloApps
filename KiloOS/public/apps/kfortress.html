@@ -625,6 +625,34 @@
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
           osc.connect(gain); gain.connect(audioCtx.destination);
           osc.start(); osc.stop(now + 0.55);
+        } else if (type === 'poison') {
+          const osc = audioCtx.createOscillator();
+          const mod = audioCtx.createOscillator();
+          const modGain = audioCtx.createGain();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(320, now);
+          osc.frequency.exponentialRampToValueAtTime(140, now + 0.16);
+          mod.type = 'sine';
+          mod.frequency.setValueAtTime(45, now);
+          modGain.gain.setValueAtTime(80, now);
+          modGain.gain.exponentialRampToValueAtTime(1, now + 0.16);
+          mod.connect(osc.frequency);
+          gain.gain.setValueAtTime(0.14, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          mod.start(now); mod.stop(now + 0.16);
+          osc.start(now); osc.stop(now + 0.16);
+        } else if (type === 'ballista') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.exponentialRampToValueAtTime(45, now + 0.12);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.start(now); osc.stop(now + 0.12);
         }
       } catch(e){}
     }
@@ -2413,6 +2441,8 @@
             else if (tower.type === 'Mage') playSfx('magic');
             else if (tower.type === 'Tesla' || tower.type === 'Superconductor') playSfx('tesla');
             else if (tower.type === 'Frost') playSfx('frost');
+            else if (tower.type === 'Poison' || tower.type === 'Venomspite') playSfx('poison');
+            else if (tower.type === 'Ballista') playSfx('ballista');
             else playSfx('bow');
           } else {
             tower.beamTarget = null;
@@ -2456,6 +2486,7 @@
           if (p.isCrit) {
             baseDmg *= 2;
             spawnFloatingText(p.target.x, p.target.y - 25, "CRIT!", "#fbbf24");
+            spawnParticleEffect(p.target.x, p.target.y, "#fbbf24");
           }
 
           if (mutators.phaseshift && Math.random() < 0.25 && p.type !== 'Ballista') {
@@ -2493,6 +2524,7 @@
             p.target.hp -= dmg;
             if (p.type === 'Poison') { p.target.poisonTicks = 75; p.target.poisonDmg = 6; }
             if (p.type === 'Cannon') spawnExplosion(p.target.x, p.target.y, "#475569");
+            else if (p.type === 'Poison' || p.type === 'Venomspite') spawnParticleEffect(p.target.x, p.target.y, "#22c55e");
             else spawnParticleEffect(p.target.x, p.target.y, "#ffd700");
           }
 
@@ -4345,7 +4377,7 @@
         ctx.restore();
       });
 
-      // Pulsating Perimeter Inlay Border with Traveling Specular Glint
+      // Perimeter Inlay Border & Corner Filigree (Clean Static Border - No Traveling Glints)
       ctx.save();
       const margin = 6;
       const pW = w - margin * 2;

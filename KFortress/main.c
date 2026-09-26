@@ -1686,6 +1686,7 @@ void UpdateGameLogic() {
             if (g_projectiles[p].isCrit) {
                 baseDmg *= 2;
                 AddFloatingText(g_projectiles[p].targetX, g_projectiles[p].targetY - 20, "CRIT!", TEXT_GOLD);
+                SpawnParticleBurst(g_projectiles[p].targetX, g_projectiles[p].targetY, TEXT_GOLD, 6);
             }
 
             if ((g_mutators & MUTATOR_PHASE_SHIFT) && (rand() % 100 < 25) && g_projectiles[p].type != TOWER_BALLISTA) {
@@ -1724,7 +1725,7 @@ void UpdateGameLogic() {
                                 g_enemies[e2].poisonTicks = 75;
                                 g_enemies[e2].poisonDmg = 6;
                             }
-                            SpawnParticleBurst(g_enemies[e2].x, g_enemies[e2].y, (g_projectiles[p].type == TOWER_INFERNO) ? RGB(249, 115, 22) : RGB(168, 85, 247), 5);
+                            SpawnParticleBurst(g_enemies[e2].x, g_enemies[e2].y, (g_projectiles[p].type == TOWER_INFERNO) ? RGB(249, 115, 22) : ((g_projectiles[p].type == TOWER_POISON) ? RGB(34, 197, 94) : RGB(168, 85, 247)), 5);
                             if (g_enemies[e2].hp <= 0) {
                                 g_enemies[e2].active = FALSE;
                                 int reward = (g_enemies[e2].type == ENEMY_OGRE || g_enemies[e2].type == ENEMY_WYVERN || g_enemies[e2].type == ENEMY_GOLEM) ? 100 : 15;
@@ -1745,6 +1746,7 @@ void UpdateGameLogic() {
                     g_enemies[targetIdx].poisonDmg = 6;
                 }
                 if (g_projectiles[p].type == TOWER_CANNON) SpawnExplosion(g_enemies[targetIdx].x, g_enemies[targetIdx].y, RGB(71, 85, 105));
+                else if (g_projectiles[p].type == TOWER_POISON || g_projectiles[p].type == TOWER_VENOMSPITE) SpawnParticleBurst(g_enemies[targetIdx].x, g_enemies[targetIdx].y, RGB(34, 197, 94), 5);
                 else SpawnParticleBurst(g_enemies[targetIdx].x, g_enemies[targetIdx].y, TEXT_GOLD, 4);
 
                 if (g_enemies[targetIdx].hp <= 0) {
