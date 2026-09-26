@@ -73,6 +73,9 @@ ViewState history[MAX_HISTORY];
 int history_idx = -1;
 int history_max = -1;
 
+static ViewState quicksaveState;
+static int hasQuicksave = 0;
+
 // State for Drag-to-Pan and cached HUD Font
 static HFONT g_hHudFont = NULL;
 static int isDragging = 0;
@@ -685,6 +688,7 @@ void ShowHelpDialog(HWND hwnd) {
         " • [T]: Cycle 7 color spectrum themes\n"
         " • [C]: Pick custom gradient palette\n"
         " • [Z] / [Y]: Undo / Redo view navigation history\n"
+        " • [F5] / [F9]: Quicksave / Quickload Viewport\n"
         " • [S]: Export Ultra-HD 4K BMP image\n"
         " • [F1] / [H]: Open this Help Guide\n"
         " • [Esc]: Dismiss dialogs",
@@ -1020,6 +1024,49 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
+            } else if (wParam == VK_F5) {
+                quicksaveState.minRe = minRe;
+                quicksaveState.maxRe = maxRe;
+                quicksaveState.minIm = minIm;
+                quicksaveState.maxIm = maxIm;
+                quicksaveState.max_iter = max_iter;
+                quicksaveState.isJulia = isJulia;
+                quicksaveState.juliaCRe = juliaCRe;
+                quicksaveState.juliaCIm = juliaCIm;
+                quicksaveState.theme = theme;
+                quicksaveState.fractalType = fractalType;
+                quicksaveState.cc1[0] = customColor1[0];
+                quicksaveState.cc1[1] = customColor1[1];
+                quicksaveState.cc1[2] = customColor1[2];
+                quicksaveState.cc2[0] = customColor2[0];
+                quicksaveState.cc2[1] = customColor2[1];
+                quicksaveState.cc2[2] = customColor2[2];
+                hasQuicksave = 1;
+                TriggerImpact(bmpW / 2, bmpH / 2, 7.0, 30);
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == VK_F9) {
+                if (hasQuicksave) {
+                    minRe = quicksaveState.minRe;
+                    maxRe = quicksaveState.maxRe;
+                    minIm = quicksaveState.minIm;
+                    maxIm = quicksaveState.maxIm;
+                    max_iter = quicksaveState.max_iter;
+                    isJulia = quicksaveState.isJulia;
+                    juliaCRe = quicksaveState.juliaCRe;
+                    juliaCIm = quicksaveState.juliaCIm;
+                    theme = quicksaveState.theme;
+                    fractalType = quicksaveState.fractalType;
+                    customColor1[0] = quicksaveState.cc1[0];
+                    customColor1[1] = quicksaveState.cc1[1];
+                    customColor1[2] = quicksaveState.cc1[2];
+                    customColor2[0] = quicksaveState.cc2[0];
+                    customColor2[1] = quicksaveState.cc2[1];
+                    customColor2[2] = quicksaveState.cc2[2];
+                    TriggerImpact(bmpW / 2, bmpH / 2, 7.0, 30);
+                    SaveState();
+                    RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
             } else if (wParam == 'S') {
                 TriggerImpact(bmpW / 2, bmpH / 2, 8.0, 40);
                 SaveImage4K(hwnd);
@@ -1203,7 +1250,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 char hudMsg[256];
                 const char* curF = (fractalType >= 0 && fractalType < NUM_FRACTAL_TYPES) ? fractalNames[fractalType] : "Fractal";
-                wsprintf(hudMsg, "%s%s | [1-5/F]ormula [L]andmark [T]heme [Arrows/Drag]Pan [+/-]Zoom [F1]Help", curF, isJulia ? " (Julia)" : "");
+                wsprintf(hudMsg, "%s%s | [1-5/F]ormula [L]andmark [T]heme [F5/F9]Save/Load [F1]Help", curF, isJulia ? " (Julia)" : "");
                 
                 int len = 0;
                 while (hudMsg[len]) len++;

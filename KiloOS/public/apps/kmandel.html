@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="window-width" content="1280">
+<meta name="window-width" content="1024">
 <meta name="window-height" content="720">
 <title>KMandel - Fractal Explorer</title>
 <style>
@@ -354,6 +354,113 @@
     color: #fff;
     border-color: rgba(96, 165, 250, 0.6);
   }
+  /* Focus visible accessibility */
+  button:focus-visible, select:focus-visible, input:focus-visible {
+    outline: 2px solid #60a5fa;
+    outline-offset: 2px;
+  }
+  /* Collapsible Controls Header */
+  .controls-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 8px;
+    margin-bottom: 2px;
+    border-bottom: 1px solid rgba(96, 165, 250, 0.2);
+  }
+  .controls-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #60a5fa;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .btn-icon-sm {
+    background: transparent;
+    border: 1px solid rgba(96, 165, 250, 0.25);
+    color: #94a3b8;
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    line-height: 1;
+    min-height: auto;
+    width: auto;
+  }
+  .btn-icon-sm:hover {
+    color: #fff;
+    border-color: rgba(96, 165, 250, 0.6);
+    background: rgba(59, 130, 246, 0.2);
+  }
+  .controls-pill {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--panel-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #f8fafc;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 15px rgba(59, 130, 246, 0.2);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    animation: fadeIn 0.2s ease-out;
+  }
+  .controls-pill:hover {
+    border-color: var(--primary-hover);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.7), 0 0 20px rgba(96, 165, 250, 0.35);
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  /* Responsive Media Queries */
+  @media (max-width: 768px) {
+    .controls {
+      width: 230px;
+      right: 12px;
+      top: 12px;
+      padding: 12px;
+      gap: 8px;
+    }
+    #hud-badge {
+      left: 12px;
+      bottom: 12px;
+      padding: 6px 12px;
+      font-size: 11px;
+    }
+    #toast-container {
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 320px;
+    }
+  }
+  @media (max-height: 640px) {
+    .controls {
+      max-height: 96vh;
+      padding: 10px;
+      gap: 6px;
+    }
+    .control-group label {
+      font-size: 10px;
+    }
+    select, button {
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -361,12 +468,28 @@
   <div id="canvas-container">
     <canvas id="c"></canvas>
     
+    <button id="btn-expand-controls" class="controls-pill" style="display:none;" aria-label="Show Controls (C)" title="Show Controls (C)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      <span>Controls</span>
+      <span class="shortcut-badge">C</span>
+    </button>
+    
     <div class="loading" id="loading">
       <div class="spinner"></div>
       <span id="loading-text">Rendering...</span>
     </div>
     
     <div class="controls">
+      <div class="controls-header">
+        <div class="controls-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          <span>Fractal Controls</span>
+        </div>
+        <button id="btn-toggle-controls" class="btn-icon-sm" aria-label="Collapse Controls (C)" title="Collapse Controls (C)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+      </div>
+
       <div class="control-group">
         <label for="fractal-select">Fractal Formula <span style="color:#60a5fa;font-size:10px;">[1-5/F]</span></label>
         <select id="fractal-select" aria-label="Fractal Formula">
@@ -423,6 +546,15 @@
         </button>
       </div>
 
+      <div class="row">
+        <button id="btn-quicksave" aria-label="Quicksave View (F5)" title="Quicksave Viewport (F5)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Save <span class="shortcut-badge">F5</span>
+        </button>
+        <button id="btn-quickload" aria-label="Quickload View (F9)" title="Quickload Viewport (F9)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> Load <span class="shortcut-badge">F9</span>
+        </button>
+      </div>
+
       <div class="control-group">
         <label for="theme-select">Color Theme <span style="color:#a855f7;font-size:10px;">[T]</span></label>
         <select id="theme-select" aria-label="Color Theme">
@@ -475,6 +607,7 @@
         <div class="help-grid">
           <span class="help-key">Left Drag</span><span>Pan &amp; move viewport</span>
           <span class="help-key">Scroll / + / -</span><span>Zoom In &amp; Out (2x / 0.5x)</span>
+          <span class="help-key">Pinch Zoom</span><span>Two-finger touch zoom on touchscreens</span>
           <span class="help-key">Arrow Keys</span><span>Fine pan viewport in all directions</span>
           <span class="help-key">Shift + Click</span><span>Pick Julia constant from coordinate</span>
           <span class="help-key">1 - 5</span><span>Direct Formula (Mandel, Ship, Tricorn, Celtic, Buffalo)</span>
@@ -483,12 +616,17 @@
           <span class="help-key">J</span><span>Toggle Julia / Mandelbrot Mode</span>
           <span class="help-key">T</span><span>Cycle Color Themes</span>
           <span class="help-key">Z / Y</span><span>Undo / Redo View History</span>
+          <span class="help-key">F5 / F9</span><span>Quicksave / Quickload Viewport</span>
+          <span class="help-key">C</span><span>Toggle Controls Panel Visibility</span>
           <span class="help-key">S</span><span>Export Ultra-HD 4K PNG</span>
           <span class="help-key">R / 0</span><span>Reset Coordinates to default</span>
           <span class="help-key">Esc</span><span>Close Help dialog &amp; dismiss notifications</span>
           <span class="help-key">F1 / H</span><span>Toggle this Help overlay</span>
         </div>
-        <button id="btn-close-help" style="margin-top: 20px; width: 100%;">Close Help [Esc]</button>
+        <div style="display:flex;gap:10px;margin-top:20px;">
+          <button id="btn-close-help" style="flex:1;">Got It! [Esc]</button>
+          <button id="btn-dont-show-help" style="flex:1;background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);font-size:12px;">Don't show on start</button>
+        </div>
       </div>
     </div>
   </div>
@@ -659,10 +797,18 @@
         shakeMagnitude = 0;
       }
 
-      // 1. Draw Offscreen Fractal Buffer
+      // 1. Draw Offscreen Fractal Buffer at physical 1:1 resolution
       if (fractalCanvas.width > 0 && fractalCanvas.height > 0) {
         ctx.drawImage(fractalCanvas, 0, 0, w, h);
       }
+
+      // High-DPI Scaling for overlay elements (motes, shockwaves, particles)
+      const dpr = window.devicePixelRatio || 1;
+      const cssW = window.innerWidth;
+      const cssH = window.innerHeight;
+
+      ctx.save();
+      ctx.scale(dpr, dpr);
 
       // 2. Draw Atmospheric Floating Quantum Motes
       for (let i = 0; i < motes.length; i++) {
@@ -670,9 +816,9 @@
         m.x += m.vx;
         m.y += m.vy;
         m.pulse += 0.03;
-        if (m.y < -10) m.y = h + 10;
-        if (m.x < -10) m.x = w + 10;
-        if (m.x > w + 10) m.x = -10;
+        if (m.y < -10) m.y = cssH + 10;
+        if (m.x < -10) m.x = cssW + 10;
+        if (m.x > cssW + 10) m.x = -10;
 
         const currentAlpha = m.alpha * (0.6 + 0.4 * Math.sin(m.pulse));
         ctx.beginPath();
@@ -775,12 +921,14 @@
         ctx.restore();
       }
 
+      ctx.restore(); // Restore DPR scale
       ctx.restore(); // Restore shake transform
 
       // 5. Ornate Cybernetic HUD Corner Filigree L-Brackets & Gold Rivets
-      drawCornerFiligree(ctx, w, h);
-
-
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      drawCornerFiligree(ctx, cssW, cssH);
+      ctx.restore();
 
       requestAnimationFrame(renderLoop);
     }
@@ -1439,6 +1587,52 @@
         redo();
         showToast(`Redo (step ${historyIdx + 1}/${history.length})`, 'info', 1500);
     });
+
+    function quicksave() {
+        const state = {
+            minRe, maxRe, minIm, maxIm, max_iter,
+            isJulia, juliaCRe, juliaCIm,
+            theme, fractalType,
+            customColor1: [...customColor1],
+            customColor2: [...customColor2],
+            timestamp: Date.now()
+        };
+        safeSetStorage('kmandel_quicksave', state);
+        triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 6, 25);
+        showToast('💾 Viewport quicksaved (F5)', 'success', 2500);
+    }
+
+    function quickload() {
+        const state = safeGetStorage('kmandel_quicksave', null);
+        if (!state) {
+            showToast('⚠️ No quicksave found (Press F5 to save)', 'warning', 2500);
+            return;
+        }
+        loadState(state);
+        triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 7, 30);
+        requestRender();
+        showToast('📂 Viewport quickloaded (F9)', 'purple', 2500);
+    }
+
+    function toggleControls() {
+        const controls = document.querySelector('.controls');
+        const expandBtn = document.getElementById('btn-expand-controls');
+        if (!controls || !expandBtn) return;
+        if (controls.style.display === 'none') {
+            controls.style.display = 'flex';
+            expandBtn.style.display = 'none';
+            showToast('Controls visible', 'info', 1500);
+        } else {
+            controls.style.display = 'none';
+            expandBtn.style.display = 'flex';
+            showToast('Controls hidden (Press C to restore)', 'info', 2000);
+        }
+    }
+
+    document.getElementById('btn-quicksave').addEventListener('click', quicksave);
+    document.getElementById('btn-quickload').addEventListener('click', quickload);
+    document.getElementById('btn-toggle-controls').addEventListener('click', toggleControls);
+    document.getElementById('btn-expand-controls').addEventListener('click', toggleControls);
     
     document.getElementById('btn-help').addEventListener('click', () => {
         const overlay = document.getElementById('help-overlay');
@@ -1549,6 +1743,24 @@
             showToast(`Redo (${historyIdx + 1}/${history.length})`, 'info', 1500);
             return;
         }
+
+        // Quicksave (F5) and Quickload (F9)
+        if (e.key === 'F5') {
+            e.preventDefault();
+            quicksave();
+            return;
+        }
+        if (e.key === 'F9') {
+            e.preventDefault();
+            quickload();
+            return;
+        }
+        // Toggle Controls Panel (C)
+        if (e.key.toLowerCase() === 'c' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+            toggleControls();
+            return;
+        }
+
         if (e.key.toLowerCase() === 's' && !e.ctrlKey && !e.altKey && !e.metaKey) document.getElementById('btn-save').click();
         if ((e.key.toLowerCase() === 'r' || e.key === '0') && !e.ctrlKey && !e.altKey && !e.metaKey) document.getElementById('btn-reset').click();
         
@@ -1638,15 +1850,63 @@
     // Help overlay dismissal
     document.getElementById('btn-close-help').addEventListener('click', () => {
         document.getElementById('help-overlay').style.display = 'none';
+        safeSetStorage('kmandel_tutorial_seen', true);
     });
     document.getElementById('btn-close-help-x').addEventListener('click', () => {
         document.getElementById('help-overlay').style.display = 'none';
+        safeSetStorage('kmandel_tutorial_seen', true);
+    });
+    document.getElementById('btn-dont-show-help').addEventListener('click', () => {
+        document.getElementById('help-overlay').style.display = 'none';
+        safeSetStorage('kmandel_tutorial_seen', true);
+        showToast('Onboarding preference saved. Press F1 or H anytime for help.', 'info', 2500);
     });
     document.getElementById('help-overlay').addEventListener('click', (e) => {
         if (e.target === document.getElementById('help-overlay')) {
             document.getElementById('help-overlay').style.display = 'none';
+            safeSetStorage('kmandel_tutorial_seen', true);
         }
     });
+
+    // Multi-touch pinch-to-zoom support for mobile/touch displays
+    let initialPinchDist = 0;
+    let isPinching = false;
+
+    container.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+            isPinching = true;
+            isDragging = false;
+            const dx = e.touches[0].clientX - e.touches[1].clientX;
+            const dy = e.touches[0].clientY - e.touches[1].clientY;
+            initialPinchDist = Math.hypot(dx, dy);
+        }
+    }, { passive: true });
+
+    container.addEventListener('touchmove', (e) => {
+        if (isPinching && e.touches.length === 2) {
+            const dx = e.touches[0].clientX - e.touches[1].clientX;
+            const dy = e.touches[0].clientY - e.touches[1].clientY;
+            const currentDist = Math.hypot(dx, dy);
+            if (initialPinchDist > 0 && Math.abs(currentDist - initialPinchDist) > 12) {
+                const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                const factor = initialPinchDist / currentDist;
+                zoom(factor, midX, midY, true);
+                initialPinchDist = currentDist;
+                clearTimeout(wheelTimeout);
+                wheelTimeout = setTimeout(saveState, 400);
+            }
+        }
+    }, { passive: true });
+
+    container.addEventListener('touchend', (e) => {
+        if (e.touches.length < 2) {
+            if (isPinching) {
+                isPinching = false;
+                saveState();
+            }
+        }
+    }, { passive: true });
     
     let wheelTimeout;
     container.addEventListener('wheel', (e) => {
@@ -1751,9 +2011,15 @@
     saveState();
     requestRender();
 
-    // Startup Welcome Toast
+    // Startup Welcome Toast & First-Run Tutorial Onboarding
     setTimeout(() => {
-        showToast('✨ Welcome to KMandel Pro! Press <b>F1</b> or <b>H</b> for Help &amp; Controls.', 'info', 5000);
+        const tutorialSeen = safeGetStorage('kmandel_tutorial_seen', false);
+        if (!tutorialSeen) {
+            const overlay = document.getElementById('help-overlay');
+            if (overlay) overlay.style.display = 'flex';
+        } else {
+            showToast('✨ Welcome to KMandel Pro! Press <b>F1</b> or <b>H</b> for Help &amp; Controls.', 'info', 5000);
+        }
     }, 450);
   </script>
 </body>

@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-26T03:55:00Z — kilo-graphics: KStarForge (Visual Polish, Balance & Combat Pass)**
+  - Status: PASS ✅ (Parallax nebula starfield, runway approach beacons, wave progression, 0 glints; 0 regressions).
+  - Combat Physics: Corrected drone aim vector calculations from diagonal lock to normalized ballistic trajectories in C.
+  - Proving Range Balance: Added dynamic wave progression, bounty fanfare, hyperspace reinforcements, and replenishing asteroids.
+  - Visual Atmosphere: Added 2-layer parallax starfield, cosmic nebula gradients, approach beacons, dual-core thrusters, and RCS puffs.
+  - Blueprint Engineering: Added CAD symmetry axis line, coordinate markings, and live module spec telemetry tooltip.
+  - Glint Audit: 100% verified purge of traveling perimeter comets, specular glints, or moving balls across HTML and C.
+  - Verification: MSVC compile clean (`KStarForge.exe` 28 KB); Vite clean build in 384ms (`kstarforge.html` 176 KB); security lint 100% PASS.
+
 - **2026-09-26T02:45:00Z — kilo-usability: KMail (UI/UX Ergonomics & Usability Pass)**
   - Status: PASS ✅ (Status bar, list navigation [↑/↓, J/K], unread toggle [U], toast de-occlusion; 0 regressions).
   - Toast De-Occlusion: Re-anchored toasts to top-right (top: 18px), eliminating occlusion of compose Send & Save buttons.

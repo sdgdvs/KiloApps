@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KBBS
-  kilo_usability: KMandel
+  kilo_usability: KMedia
   kilo_graphics: KFortress
   kilo_qa: KSubmarine
   kilo_expander: KMail
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-tester
-  app: KAudio
-  timestamp: "2026-09-26T11:55:00Z"
+  agent: kilo-usability
+  app: KMandel
+  timestamp: "2026-09-26T12:45:00Z"
 last_planner_run: "2026-09-26T07:48:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KMandel`
+- **Current Target**: `KMedia`
 - **Upcoming Queue**:
-  `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`.
+  `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KSubmarine`
@@ -218,6 +218,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-26T12:45:00Z — kilo-usability: KMandel (UI/UX Usability, HiDPI Scaling & Ergonomics Pass)**
+  - Status: PASS ✅ (HiDPI scaling fixed, collapsible controls [C], F5/F9 quicksave/load, touch pinch; 0 regressions).
+  - HiDPI Canvas & Effects: Scaled canvas context by DPR, fixing off-center particle explosions, shockwaves, motes, and filigree.
+  - Collapsible Controls: Added header collapse toggle ([—]) and floating pill button ([⚙️ Controls / C]) for unobstructed viewing.
+  - State Persistence: Implemented F5 quicksave and F9 quickload across HTML and native Win32 C with dedicated UI buttons.
+  - Ergonomics & Touch: Added multi-touch 2-finger pinch-to-zoom for mobile/tablets; added first-run tutorial modal onboarding.
+  - Sizing & Layout: Bumped default window to 1024x720 in App.jsx and meta tag, eliminating control panel vertical scroll clipping.
+  - Verification: MSVC compile clean (`KMandel.exe` 25.1 KB); Vite build clean in 391ms (`kmandel.html` 84.4 KB); security lint 100% PASS.
+
 - **2026-09-26T11:55:00Z — kilo-tester: KAudio (Interactive UI Audit & Repair Pass)**
   - Status: PASS ✅ (6 issues, 6 fixed; 0 regressions).
   - Piano Keys Layout: Restored `data-note` attributes on piano key elements, fixing stacked black key positioning.
@@ -252,12 +261,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Controls & UI: Added Save (F5), Load (F9), and Briefing buttons in header and Win32 console; universal Esc modal dismissal.
   - Toast Notifications: Non-occluding top-right notification system with auto-fading and click-to-dismiss.
   - Verification: Clean MSVC compile (`KStarDredge.exe` 278.5 KB); Vite clean build in 399ms (`kstardredge.html` 462.3 KB); security lint & check_icons 100% PASS.
-
-- **2026-09-26T03:55:00Z — kilo-graphics: KStarForge (Visual Polish, Balance & Combat Pass)**
-  - Status: PASS ✅ (Parallax nebula starfield, runway approach beacons, wave progression, 0 glints; 0 regressions).
-  - Combat Physics: Corrected drone aim vector calculations from diagonal lock to normalized ballistic trajectories in C.
-  - Proving Range Balance: Added dynamic wave progression, bounty fanfare, hyperspace reinforcements, and replenishing asteroids.
-  - Visual Atmosphere: Added 2-layer parallax starfield, cosmic nebula gradients, approach beacons, dual-core thrusters, and RCS puffs.
-  - Blueprint Engineering: Added CAD symmetry axis line, coordinate markings, and live module spec telemetry tooltip.
-  - Glint Audit: 100% verified purge of traveling perimeter comets, specular glints, or moving balls across HTML and C.
-  - Verification: MSVC compile clean (`KStarForge.exe` 28 KB); Vite clean build in 384ms (`kstarforge.html` 176 KB); security lint 100% PASS.
