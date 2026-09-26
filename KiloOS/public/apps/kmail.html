@@ -26,11 +26,18 @@
     background: var(--bg-main);
     color: var(--text-primary);
     display: flex;
+    flex-direction: column;
     height: 100vh;
     overflow: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+  }
+  .main-view {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
   }
   
   kbd {
@@ -225,12 +232,19 @@
     border: none;
     font-size: 16px;
     cursor: pointer;
-    padding: 0;
+    padding: 4px 6px;
     line-height: 1;
-    transition: transform 0.15s;
+    min-width: 28px;
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: transform 0.15s, background-color 0.15s;
   }
   .star-btn:hover {
-    transform: scale(1.25);
+    transform: scale(1.15);
+    background: rgba(255, 255, 255, 0.08);
   }
   .star-active { color: var(--gold); text-shadow: 0 0 6px rgba(245, 158, 11, 0.5); }
   .star-inactive { color: #64748b; }
@@ -448,7 +462,7 @@
   /* Toast Notification System */
   #toast-container {
     position: fixed;
-    bottom: 18px;
+    top: 18px;
     right: 18px;
     z-index: 9999;
     display: flex;
@@ -479,12 +493,12 @@
   .toast.toast-warning { border-left-color: var(--gold); }
   .toast.toast-error { border-left-color: var(--danger); }
   @keyframes toastIn {
-    from { transform: translateY(20px); opacity: 0; }
+    from { transform: translateY(-16px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
   }
   @keyframes toastOut {
     from { transform: translateY(0); opacity: 1; }
-    to { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(-16px); opacity: 0; }
   }
 
   /* Modal Dialogs */
@@ -635,98 +649,212 @@
     color: #fff;
     transform: translateY(-1px);
   }
+
+  /* Status Bar */
+  .status-bar {
+    height: 26px;
+    flex-shrink: 0;
+    background: #0b1120;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    font-size: 11px;
+    color: var(--text-sec);
+    user-select: none;
+    z-index: 100;
+  }
+  .status-left {
+    font-weight: 500;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .status-mid {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0.9;
+  }
+  .status-mid kbd {
+    font-size: 10px;
+    padding: 1px 4px;
+  }
+  .status-right {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 10.5px;
+    color: #64748b;
+  }
+
+  /* Accessible focus rings */
+  .item:focus-visible,
+  .folder:focus-visible,
+  .modal-btn:focus-visible,
+  .compose-btn:focus-visible,
+  .tab:focus-visible,
+  .side-action-btn:focus-visible,
+  .pane-actions button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  /* Responsive Layout Ergonomics */
+  @media (max-width: 900px) {
+    .sidebar { width: 170px; }
+    .list { width: 270px; }
+    .status-mid span:nth-child(n+5) { display: none; }
+  }
+  @media (max-width: 740px) {
+    .sidebar {
+      width: 52px;
+      padding: 10px 0;
+    }
+    .compose-btn {
+      margin: 0 6px 10px 6px;
+      padding: 8px 6px;
+      justify-content: center;
+    }
+    .compose-btn span:first-child,
+    .folder-title span:last-child,
+    .folder-badge,
+    .folder kbd,
+    .side-action-btn span:first-child,
+    .side-action-btn kbd,
+    .search-container select {
+      display: none;
+    }
+    .folder {
+      justify-content: center;
+      padding: 10px 6px;
+    }
+    .side-action-btn {
+      justify-content: center;
+      padding: 8px 6px;
+    }
+    .list { width: 220px; }
+    .status-mid { display: none; }
+  }
+  @media (max-width: 560px) {
+    .list { width: 180px; }
+    .pane-header { flex-direction: column; align-items: stretch; gap: 8px; }
+    .pane-actions { justify-content: flex-start; }
+  }
 </style>
 </head>
 <body>
 
-<div class="sidebar" role="navigation" aria-label="Mailbox folders">
-  <button class="compose-btn" onclick="newComposeTab()" aria-label="Compose new email (C)">
-    <span>+ New Message</span>
-    <kbd>C</kbd>
-  </button>
-  
-  <div class="folder active" onclick="switchFolder('inbox')" id="f-inbox" role="button" tabindex="0" aria-label="Inbox folder (1)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchFolder('inbox');}">
-    <div class="folder-title">
-      <span>📥 Inbox</span>
-      <kbd>1</kbd>
-    </div>
-    <span class="folder-badge" id="b-inbox">0</span>
-  </div>
-  <div class="folder" onclick="switchFolder('starred')" id="f-starred" role="button" tabindex="0" aria-label="Starred folder (2)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchFolder('starred');}">
-    <div class="folder-title">
-      <span>⭐ Starred</span>
-      <kbd>2</kbd>
-    </div>
-    <span class="folder-badge" id="b-starred">0</span>
-  </div>
-  <div class="folder" onclick="switchFolder('sent')" id="f-sent" role="button" tabindex="0" aria-label="Sent folder (3)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchFolder('sent');}">
-    <div class="folder-title">
-      <span>📤 Sent</span>
-      <kbd>3</kbd>
-    </div>
-    <span class="folder-badge" id="b-sent">0</span>
-  </div>
-  <div class="folder" onclick="switchFolder('drafts')" id="f-drafts" role="button" tabindex="0" aria-label="Drafts folder (4)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchFolder('drafts');}">
-    <div class="folder-title">
-      <span>📝 Drafts</span>
-      <kbd>4</kbd>
-    </div>
-    <span class="folder-badge" id="b-drafts">0</span>
-  </div>
-  <div class="folder" onclick="switchFolder('trash')" id="f-trash" role="button" tabindex="0" aria-label="Trash folder (5)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchFolder('trash');}">
-    <div class="folder-title">
-      <span>🗑️ Trash</span>
-      <kbd>5</kbd>
-    </div>
-    <span class="folder-badge" id="b-trash">0</span>
-  </div>
-  
-  <div class="search-container">
-    <input type="text" id="search-box" placeholder="Search emails... (Ctrl+F)" aria-label="Search emails" oninput="handleSearch()">
-    <select id="tag-filter" aria-label="Filter emails by tag" onchange="handleSearch()">
-      <option value="">All Tags</option>
-      <option value="Urgent">Urgent</option>
-      <option value="Work">Work</option>
-      <option value="Personal">Personal</option>
-      <option value="News">News</option>
-    </select>
-  </div>
-  
-  <div class="sidebar-bottom">
-    <button class="side-action-btn" onclick="showHelpModal()" aria-label="Help and Keyboard Shortcuts">
-      <span>❓ Help & Keys</span>
-      <kbd>F1</kbd>
+<div class="main-view">
+  <div class="sidebar" role="navigation" aria-label="Mailbox folders">
+    <button class="compose-btn" onclick="newComposeTab()" aria-label="Compose new email (C)" title="Compose new message (C)">
+      <span>+ New Message</span>
+      <kbd>C</kbd>
     </button>
-    <button class="side-action-btn" onclick="document.getElementById('import-file').click()" aria-label="Import JSON Mailbox">
-      <span>📥 Import JSON</span>
-      <kbd>I</kbd>
-    </button>
-    <input type="file" id="import-file" style="display:none" onchange="importJson(event)" accept=".json" aria-label="Upload mailbox JSON file">
-    <button class="side-action-btn" onclick="exportJson()" aria-label="Export JSON Mailbox">
-      <span>📤 Export JSON</span>
-      <kbd>O</kbd>
-    </button>
-    <button class="side-action-btn" style="color:#f87171;" onclick="confirmEmptyTrash()" aria-label="Empty Trash Folder">
-      <span>🗑️ Empty Trash</span>
-    </button>
+    
+    <div class="folder active" onclick="switchFolder('inbox')" id="f-inbox" role="button" tabindex="0" aria-label="Inbox folder (1)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchFolder('inbox');}">
+      <div class="folder-title">
+        <span>📥 Inbox</span>
+        <kbd>1</kbd>
+      </div>
+      <span class="folder-badge" id="b-inbox">0</span>
+    </div>
+    <div class="folder" onclick="switchFolder('starred')" id="f-starred" role="button" tabindex="0" aria-label="Starred folder (2)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchFolder('starred');}">
+      <div class="folder-title">
+        <span>⭐ Starred</span>
+        <kbd>2</kbd>
+      </div>
+      <span class="folder-badge" id="b-starred">0</span>
+    </div>
+    <div class="folder" onclick="switchFolder('sent')" id="f-sent" role="button" tabindex="0" aria-label="Sent folder (3)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchFolder('sent');}">
+      <div class="folder-title">
+        <span>📤 Sent</span>
+        <kbd>3</kbd>
+      </div>
+      <span class="folder-badge" id="b-sent">0</span>
+    </div>
+    <div class="folder" onclick="switchFolder('drafts')" id="f-drafts" role="button" tabindex="0" aria-label="Drafts folder (4)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchFolder('drafts');}">
+      <div class="folder-title">
+        <span>📝 Drafts</span>
+        <kbd>4</kbd>
+      </div>
+      <span class="folder-badge" id="b-drafts">0</span>
+    </div>
+    <div class="folder" onclick="switchFolder('trash')" id="f-trash" role="button" tabindex="0" aria-label="Trash folder (5)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchFolder('trash');}">
+      <div class="folder-title">
+        <span>🗑️ Trash</span>
+        <kbd>5</kbd>
+      </div>
+      <span class="folder-badge" id="b-trash">0</span>
+    </div>
+    
+    <div class="search-container">
+      <div style="position:relative; display:flex; align-items:center;">
+        <input type="text" id="search-box" placeholder="Search emails... (/ or Ctrl+F)" aria-label="Search emails" oninput="handleSearch()">
+        <button id="search-clear-btn" style="display:none; position:absolute; right:8px; background:none; border:none; color:var(--text-sec); cursor:pointer; font-size:12px; padding:2px; line-height:1;" onclick="clearSearch()" aria-label="Clear search" title="Clear search">✕</button>
+      </div>
+      <select id="tag-filter" aria-label="Filter emails by tag" onchange="handleSearch()">
+        <option value="">All Tags</option>
+        <option value="Urgent">Urgent</option>
+        <option value="Work">Work</option>
+        <option value="Personal">Personal</option>
+        <option value="News">News</option>
+        <option value="Finance">Finance</option>
+        <option value="Follow-up">Follow-up</option>
+      </select>
+    </div>
+    
+    <div class="sidebar-bottom">
+      <button class="side-action-btn" onclick="showHelpModal()" aria-label="Help and Keyboard Shortcuts" title="Help and Keyboard Shortcuts (F1 or H)">
+        <span>❓ Help & Keys</span>
+        <kbd>F1</kbd>
+      </button>
+      <button class="side-action-btn" onclick="document.getElementById('import-file').click()" aria-label="Import JSON Mailbox" title="Import JSON (I)">
+        <span>📥 Import JSON</span>
+        <kbd>I</kbd>
+      </button>
+      <input type="file" id="import-file" style="display:none" onchange="importJson(event)" accept=".json" aria-label="Upload mailbox JSON file">
+      <button class="side-action-btn" onclick="exportJson()" aria-label="Export JSON Mailbox" title="Export JSON (O)">
+        <span>📤 Export JSON</span>
+        <kbd>O</kbd>
+      </button>
+      <button class="side-action-btn" style="color:#f87171;" onclick="confirmEmptyTrash()" aria-label="Empty Trash Folder" title="Permanently delete all trash emails">
+        <span>🗑️ Empty Trash</span>
+      </button>
+    </div>
   </div>
-</div>
 
-<div class="list" id="list"></div>
+  <div class="list" id="list"></div>
 
-<div class="pane">
-  <div class="tabs" id="tabs"></div>
-  <div id="pane-content" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
-    <div id="empty-state">
-      <div style="font-size: 42px; margin-bottom: 12px; opacity: 0.8;">✉️</div>
-      <h3>No Email Selected</h3>
-      <p>Select an email from the list or press <kbd>C</kbd> to compose a new one.</p>
-      <div style="display:flex; gap:8px; margin-top:8px;">
-        <button class="modal-btn primary" onclick="newComposeTab()">+ New Message <kbd>C</kbd></button>
-        <button class="modal-btn" onclick="showHelpModal()">Help & Shortcuts <kbd>F1</kbd></button>
+  <div class="pane">
+    <div class="tabs" id="tabs"></div>
+    <div id="pane-content" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+      <div id="empty-state">
+        <div style="font-size: 42px; margin-bottom: 12px; opacity: 0.8;">✉️</div>
+        <h3>No Email Selected</h3>
+        <p>Select an email from the list or press <kbd>C</kbd> to compose a new one.</p>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <button class="modal-btn primary" onclick="newComposeTab()">+ New Message <kbd>C</kbd></button>
+          <button class="modal-btn" onclick="showHelpModal()">Help & Shortcuts <kbd>F1</kbd></button>
+        </div>
       </div>
     </div>
   </div>
+</div>
+
+<div class="status-bar" id="status-bar" role="status" aria-live="polite">
+  <div class="status-left" id="status-folder-info">📥 Inbox · 6 messages</div>
+  <div class="status-mid">
+    <span><kbd>F1</kbd> Help</span>
+    <span><kbd>C</kbd> Compose</span>
+    <span><kbd>↑/↓</kbd> Select</span>
+    <span><kbd>S</kbd> Star</span>
+    <span><kbd>U</kbd> Read/Unread</span>
+    <span><kbd>R</kbd> Reply</span>
+    <span><kbd>Del</kbd> Trash</span>
+    <span><kbd>Esc</kbd> Close</span>
+  </div>
+  <div class="status-right" id="status-storage-info">AES-GCM · LocalStorage</div>
 </div>
 
 <!-- Toast Notifications -->
@@ -746,11 +874,13 @@
       <h4 style="margin:14px 0 6px 0; color:#93c5fd; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Navigation & Actions</h4>
       <table class="shortcuts-table">
         <tr><td><kbd>1</kbd> - <kbd>5</kbd></td><td>Switch Folders (Inbox, Starred, Sent, Drafts, Trash)</td></tr>
+        <tr><td><kbd>↑</kbd> / <kbd>↓</kbd> or <kbd>J</kbd> / <kbd>K</kbd></td><td>Navigate next / previous email in list</td></tr>
         <tr><td><kbd>C</kbd> / <kbd>N</kbd></td><td>Compose New Message in a tab</td></tr>
-        <tr><td><kbd>Ctrl</kbd> + <kbd>F</kbd> / <kbd>/</kbd></td><td>Focus search bar</td></tr>
+        <tr><td><kbd>Ctrl</kbd> + <kbd>F</kbd> / <kbd>/</kbd></td><td>Focus search bar (Esc to clear)</td></tr>
         <tr><td><kbd>S</kbd></td><td>Toggle Star priority on active email</td></tr>
+        <tr><td><kbd>U</kbd></td><td>Toggle Read / Unread status on active email</td></tr>
         <tr><td><kbd>R</kbd></td><td>Reply to selected email</td></tr>
-        <tr><td><kbd>T</kbd></td><td>Add tag to active email</td></tr>
+        <tr><td><kbd>T</kbd></td><td>Add / remove tags on active email</td></tr>
         <tr><td><kbd>Del</kbd></td><td>Move selected email to Trash / Delete</td></tr>
         <tr><td><kbd>E</kbd></td><td>Export single email as .EML</td></tr>
         <tr><td><kbd>M</kbd></td><td>Export single email as Markdown (.MD)</td></tr>
@@ -760,7 +890,7 @@
         <tr><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td><td>Send email in compose mode</td></tr>
         <tr><td><kbd>Ctrl</kbd> + <kbd>W</kbd></td><td>Close active tab</td></tr>
         <tr><td><kbd>Esc</kbd></td><td>Close modal / clear search / close tab</td></tr>
-        <tr><td><kbd>F1</kbd> / <kbd>H</kbd></td><td>Open this Help dialog</td></tr>
+        <tr><td><kbd>F1</kbd> / <kbd>H</kbd></td><td>Open this Help & Shortcuts dialog</td></tr>
       </table>
     </div>
     <div class="modal-footer">
@@ -1037,16 +1167,10 @@
     document.getElementById('b-trash').textContent = trashCount;
   }
 
-  function handleSearch() { renderList(); }
-
-  function renderList() {
-    updateFolderBadges();
-    const list = document.getElementById('list');
-    list.innerHTML = '';
+  function getVisibleFilteredEmails() {
     const sq = (document.getElementById('search-box').value || '').toLowerCase().trim();
     const tagF = document.getElementById('tag-filter').value;
-    
-    const filtered = emails.filter(e => {
+    return emails.filter(e => {
       const matchesFolder = (currentFolder === 'starred') ? (e.starred && e.folder !== 'trash') : (e.folder === currentFolder);
       const subStr = (e.subject || '').toLowerCase();
       const sndStr = (e.sender || '').toLowerCase();
@@ -1055,6 +1179,87 @@
       const matchesTag = (tagF === "" || (Array.isArray(e.tags) && e.tags.includes(tagF)));
       return matchesFolder && matchesSearch && matchesTag;
     });
+  }
+
+  window.clearSearch = function() {
+    const sb = document.getElementById('search-box');
+    const clr = document.getElementById('search-clear-btn');
+    if (sb) sb.value = '';
+    if (clr) clr.style.display = 'none';
+    renderList();
+    if (sb) sb.focus();
+  };
+
+  function handleSearch() {
+    const sb = document.getElementById('search-box');
+    const clr = document.getElementById('search-clear-btn');
+    if (clr) clr.style.display = (sb && sb.value) ? 'block' : 'none';
+    renderList();
+  }
+
+  function updateStatusBar() {
+    const statusFolder = document.getElementById('status-folder-info');
+    const statusStorage = document.getElementById('status-storage-info');
+    if (!statusFolder) return;
+
+    let folderName = currentFolder.charAt(0).toUpperCase() + currentFolder.slice(1);
+    let folderIcon = '📥';
+    if (currentFolder === 'starred') folderIcon = '⭐';
+    else if (currentFolder === 'sent') folderIcon = '📤';
+    else if (currentFolder === 'drafts') folderIcon = '📝';
+    else if (currentFolder === 'trash') folderIcon = '🗑️';
+
+    let totalInFolder = emails.filter(e => currentFolder === 'starred' ? (e.starred && e.folder !== 'trash') : e.folder === currentFolder).length;
+    let unreadInFolder = emails.filter(e => (currentFolder === 'starred' ? (e.starred && e.folder !== 'trash') : e.folder === currentFolder) && e.unread).length;
+
+    let unreadStr = unreadInFolder > 0 ? ` (${unreadInFolder} unread)` : '';
+    statusFolder.textContent = `${folderIcon} ${folderName} · ${totalInFolder} message${totalInFolder === 1 ? '' : 's'}${unreadStr}`;
+
+    if (statusStorage) {
+      statusStorage.textContent = `${emails.length} total · AES-GCM · LocalStorage`;
+    }
+  }
+
+  function navigateList(direction) {
+    const filtered = getVisibleFilteredEmails();
+    if (filtered.length === 0) return;
+
+    let currentIdx = -1;
+    if (activeTabId) {
+      const activeTab = tabs.find(t => t.id === activeTabId);
+      if (activeTab) {
+        currentIdx = filtered.findIndex(e => (activeTab.type === 'read' && e.id === activeTab.emailId) || (activeTab.type === 'compose' && e.id === activeTab.draftId));
+      }
+    }
+
+    let nextIdx = currentIdx + direction;
+    if (currentIdx === -1) {
+      nextIdx = direction > 0 ? 0 : filtered.length - 1;
+    } else {
+      if (nextIdx < 0) nextIdx = 0;
+      if (nextIdx >= filtered.length) nextIdx = filtered.length - 1;
+    }
+
+    const targetEmail = filtered[nextIdx];
+    if (targetEmail) {
+      if (targetEmail.folder === 'drafts') {
+        openDraftInCompose(targetEmail.id);
+      } else {
+        openEmailTab(targetEmail.id);
+      }
+      setTimeout(() => {
+        const itemEl = document.querySelector(`.item[data-id="${targetEmail.id}"]`);
+        if (itemEl) itemEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }, 30);
+    }
+  }
+
+  function renderList() {
+    updateFolderBadges();
+    updateStatusBar();
+    const list = document.getElementById('list');
+    list.innerHTML = '';
+    const filtered = getVisibleFilteredEmails();
     
     if (filtered.length === 0) {
       list.innerHTML = `<div style="padding: 32px 16px; color: #64748b; text-align: center; font-size: 13px;">
@@ -1070,6 +1275,7 @@
       d.className = `item ${em.unread ? 'unread' : ''} ${isSelected ? 'selected' : ''}`;
       d.setAttribute('role', 'button');
       d.setAttribute('tabindex', '0');
+      d.setAttribute('data-id', em.id);
       d.setAttribute('aria-label', `${em.starred ? 'Starred ' : ''}${em.unread ? 'Unread ' : ''}${em.subject || 'Email'} from ${em.sender}`);
       
       let starHtml = `<button class="star-btn ${em.starred ? 'star-active' : 'star-inactive'}" onclick="toggleStar(${em.id}, event)" title="${em.starred ? 'Unstar' : 'Star'}" aria-label="${em.starred ? 'Unstar' : 'Star'}">${em.starred ? '★' : '☆'}</button>`;
@@ -1239,6 +1445,20 @@
     }
   }
 
+  window.toggleUnread = function(eid) {
+    let em = emails.find(e => e.id === eid);
+    if (em) {
+      em.unread = !em.unread;
+      safeSaveEmails();
+      renderList();
+      if (activeTabId) {
+        let t = tabs.find(tab => tab.id === activeTabId);
+        if (t && t.emailId === eid) renderPane();
+      }
+      showToast(em.unread ? "Marked message as unread." : "Marked message as read.", "info", 1800);
+    }
+  }
+
   function renderPane() {
     const pane = document.getElementById('pane-content');
     if(!activeTabId) {
@@ -1260,12 +1480,13 @@
       
       let tagsHtml = (em.tags || []).map(t => `<span class="tag">${escapeHTML(t)} <span style="cursor:pointer;margin-left:3px;opacity:0.75;" onclick="removeTag(${em.id}, '${escapeHTML(t)}')" title="Remove tag ${escapeHTML(t)}" aria-label="Remove tag ${escapeHTML(t)}">✕</span></span>`).join('');
       
-      let actionsHtml = `<button onclick="toggleStar(${em.id})" class="${em.starred ? 'btn-star-active' : ''}"><span>${em.starred ? '★ Starred' : '☆ Star'}</span> <kbd>S</kbd></button>`;
-      actionsHtml += `<button onclick="newComposeTab(emails.find(e=>e.id==${em.id}))"><span>↩️ Reply</span> <kbd>R</kbd></button>`;
-      actionsHtml += `<button onclick="openTagModal(${em.id})"><span>🏷️ Tag</span> <kbd>T</kbd></button>`;
-      actionsHtml += `<button onclick="exportSingleEml(${em.id})"><span>📄 .EML</span> <kbd>E</kbd></button>`;
-      actionsHtml += `<button onclick="exportSingleMd(${em.id})"><span>📝 .MD</span> <kbd>M</kbd></button>`;
-      actionsHtml += `<button class="del-btn" onclick="deleteEmail(${em.id})"><span>🗑️ Delete</span> <kbd>Del</kbd></button>`;
+      let actionsHtml = `<button onclick="toggleStar(${em.id})" class="${em.starred ? 'btn-star-active' : ''}" title="Star/Unstar email (S)"><span>${em.starred ? '★ Starred' : '☆ Star'}</span> <kbd>S</kbd></button>`;
+      actionsHtml += `<button onclick="toggleUnread(${em.id})" title="Toggle Read/Unread status (U)"><span>${em.unread ? '✓ Mark Read' : '✉ Mark Unread'}</span> <kbd>U</kbd></button>`;
+      actionsHtml += `<button onclick="newComposeTab(emails.find(e=>e.id==${em.id}))" title="Reply to sender (R)"><span>↩️ Reply</span> <kbd>R</kbd></button>`;
+      actionsHtml += `<button onclick="openTagModal(${em.id})" title="Add/remove tags (T)"><span>🏷️ Tag</span> <kbd>T</kbd></button>`;
+      actionsHtml += `<button onclick="exportSingleEml(${em.id})" title="Export as .EML (E)"><span>📄 .EML</span> <kbd>E</kbd></button>`;
+      actionsHtml += `<button onclick="exportSingleMd(${em.id})" title="Export as Markdown (M)"><span>📝 .MD</span> <kbd>M</kbd></button>`;
+      actionsHtml += `<button class="del-btn" onclick="deleteEmail(${em.id})" title="Delete / Move to Trash (Del)"><span>🗑️ Delete</span> <kbd>Del</kbd></button>`;
 
       let bodyHtml = escapeHTML(em.body);
       if (em.encrypted) {
@@ -1622,6 +1843,20 @@
     // Do not trigger single-key actions if Ctrl, Alt, or Meta is pressed
     if (hasModifier) return;
 
+    // Arrow Down or J: Navigate next email in list
+    if (e.key === 'ArrowDown' || (!hasModifier && (e.key === 'j' || e.key === 'J'))) {
+      e.preventDefault();
+      navigateList(1);
+      return;
+    }
+
+    // Arrow Up or K: Navigate previous email in list
+    if (e.key === 'ArrowUp' || (!hasModifier && (e.key === 'k' || e.key === 'K'))) {
+      e.preventDefault();
+      navigateList(-1);
+      return;
+    }
+
     // Folder shortcuts [1-5]
     if (e.key === '1') { switchFolder('inbox'); return; }
     if (e.key === '2') { switchFolder('starred'); return; }
@@ -1659,6 +1894,11 @@
             toggleStar(em.id);
             return;
           }
+          if (e.key === 'u' || e.key === 'U') {
+            e.preventDefault();
+            toggleUnread(em.id);
+            return;
+          }
           if (e.key === 'r' || e.key === 'R') {
             e.preventDefault();
             newComposeTab(em);
@@ -1690,14 +1930,18 @@
   });
 
   if (window.opener) {
-    window.resizeTo(920, 620);
+    window.resizeTo(960, 640);
   }
 
-  // Initial render & welcome toast
+  // Initial render & welcome onboarding
   renderList();
-  setTimeout(() => {
-    showToast("Welcome to KMail! Press F1 or H for Help & Shortcuts.", "info", 4500);
-  }, 400);
+  const ONBOARD_KEY = 'kmail_onboarded_v1';
+  if (!localStorage.getItem(ONBOARD_KEY)) {
+    localStorage.setItem(ONBOARD_KEY, 'true');
+    setTimeout(() => {
+      showToast("Welcome to KMail! Press F1 or H anytime for Help & Shortcuts.", "info", 5000);
+    }, 300);
+  }
 </script>
 </body>
 </html>

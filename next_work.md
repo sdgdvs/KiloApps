@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KAudio
-  kilo_usability: KMail
+  kilo_usability: KMandel
   kilo_graphics: KStarForge
   kilo_qa: KStarDredge
   kilo_expander: KContacts
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-tester
-  app: KAbyss
-  timestamp: "2026-09-26T01:52:00Z"
+  agent: kilo-usability
+  app: KMail
+  timestamp: "2026-09-26T02:45:00Z"
 last_planner_run: "2026-09-25T06:42:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KMail`
+- **Current Target**: `KMandel`
 - **Upcoming Queue**:
-  `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`.
+  `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KStarDredge`
@@ -213,6 +213,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-26T02:45:00Z — kilo-usability: KMail (UI/UX Ergonomics & Usability Pass)**
+  - Status: PASS ✅ (Status bar, list navigation [↑/↓, J/K], unread toggle [U], toast de-occlusion; 0 regressions).
+  - Toast De-Occlusion: Re-anchored toasts to top-right (top: 18px), eliminating occlusion of compose Send & Save buttons.
+  - List Ergonomics & Navigation: Added keyboard navigation (ArrowUp/Down, J/K) scrolling items smoothly and updating reading view.
+  - Status Bar & Controls: Added retro status bar displaying live folder counts, hotkey cheat sheet, and AES/storage telemetry.
+  - Read/Unread Quick Toggle: Added U shortcut & toolbar action button to toggle read/unread state on active email.
+  - Sizing & Accessibility: Bumped default window dimensions to 960x640 in App.jsx and main.c; added responsive layout and search clear button.
+  - Verification: Clean MSVC compile (`KMail.exe` 502.5 KB); clean Vite build in 346ms (`kmail.html` 67.8 KB); security lint 100% PASS.
+
 - **2026-09-26T01:52:00Z — kilo-tester: KAbyss (Interactive UI Audit & Inline Fixes)**
   - Status: PASS ✅ (3 issues identified, 3 fixed; 0 regressions).
   - Unwired Element Fix: Wired `btnDisenchant` to `imbueEnchantment('NONE')` on Relic Enchanting Altar modal.
@@ -247,14 +256,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Interactive Overlays: Added Esc/Enter/Space modal shortcuts to close active briefings and summaries cleanly without triggering cycles.
   - Toast Notifications: Added non-occluding retro toast system with auto-dismiss and click-to-dismiss across web and native GDI.
   - Verification: Clean MSVC compile (`KSanctuary.exe` 258 KB); clean Vite build in 374ms (`ksanctuary.html` 397 KB); security lint 100% PASS.
-
-- **2026-09-25T21:55:00Z — kilo-graphics: KChrono (Game Content, Visual Polish & Balance Pass)**
-  - Status: PASS ✅ (Specular glints & traveling dots removed, causal loop locker aging & strain balance; 0 regressions).
-  - Glint & Comet Purge: Removed white specular visor glint pixels across Win32 C and web; eliminated traveling pulse dot from Chronograph.
-  - Visual Polish: Added clean static timeline connectors with directional chevrons (►►) and active epoch segment highlights.
-  - Game Content: Implemented cross-epoch item maturation in Chrono-Locker (precursor cell matures into Chrono-Battery in 2042 / Singularity Core in 2188).
-  - Balance Tuning: Rebalanced phantom collision damage to 10%, capped breach anomalies, and aligned native C collision physics.
-  - Verification: Clean MSVC compile (`KChrono.exe` 23.0 KB); Vite clean build in 386ms (`kchrono.html` 167.5 KB); check_icons & security lint 100% PASS.
 
 
 

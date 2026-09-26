@@ -1,13 +1,14 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <commctrl.h>
+#include <commdlg.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <ctype.h>
 
-#define W 920
-#define H 620
+#define W 960
+#define H 640
 
 #define ID_FOLDER_LIST 101
 #define ID_EMAIL_LIST 102
@@ -83,6 +84,26 @@ int contains_nocase(const char* haystack, const char* needle) {
         if (!needle[j]) return 1;
     }
     return 0;
+}
+
+const char* my_strchr(const char* s, int c) {
+    if (!s) return NULL;
+    while (*s) {
+        if (*s == (char)c) return s;
+        s++;
+    }
+    return (c == 0) ? s : NULL;
+}
+
+const char* my_strstr(const char* haystack, const char* needle) {
+    if (!haystack || !needle) return NULL;
+    if (!*needle) return haystack;
+    for (int i = 0; haystack[i]; i++) {
+        int j = 0;
+        while (needle[j] && haystack[i + j] == needle[j]) j++;
+        if (!needle[j]) return &haystack[i];
+    }
+    return NULL;
 }
 
 HBRUSH hbgMain, hbgList;
@@ -556,15 +577,15 @@ void ImportJson(HWND hwnd) {
     int count = 0;
     const char* p = buf;
     while (*p && count < 200) {
-        const char* objStart = strchr(p, '{');
+        const char* objStart = my_strchr(p, '{');
         if (!objStart) break;
-        const char* objEnd = strchr(objStart, '}');
+        const char* objEnd = my_strchr(objStart, '}');
         if (!objEnd) break;
 
         Email em = {0};
         em.folder = 0;
 
-        const char* fId = strstr(objStart, "\"id\":");
+        const char* fId = my_strstr(objStart, "\"id\":");
         if (fId && fId < objEnd) {
             em.id = 0;
             fId += 5;
@@ -574,7 +595,7 @@ void ImportJson(HWND hwnd) {
             em.id = count + 1;
         }
 
-        const char* fF = strstr(objStart, "\"folder\":");
+        const char* fF = my_strstr(objStart, "\"folder\":");
         if (fF && fF < objEnd) {
             fF += 9;
             while (*fF == ' ' || *fF == '"') fF++;
@@ -584,7 +605,7 @@ void ImportJson(HWND hwnd) {
             else em.folder = 0;
         }
 
-        const char* fSub = strstr(objStart, "\"subject\":\"");
+        const char* fSub = my_strstr(objStart, "\"subject\":\"");
         if (fSub && fSub < objEnd) {
             fSub += 11;
             int si = 0;
@@ -596,7 +617,7 @@ void ImportJson(HWND hwnd) {
             em.subject[si] = '\0';
         }
 
-        const char* fSnd = strstr(objStart, "\"sender\":\"");
+        const char* fSnd = my_strstr(objStart, "\"sender\":\"");
         if (fSnd && fSnd < objEnd) {
             fSnd += 10;
             int si = 0;
@@ -607,7 +628,7 @@ void ImportJson(HWND hwnd) {
             em.sender[si] = '\0';
         }
 
-        const char* fBody = strstr(objStart, "\"body\":\"");
+        const char* fBody = my_strstr(objStart, "\"body\":\"");
         if (fBody && fBody < objEnd) {
             fBody += 8;
             int bi = 0;
@@ -620,7 +641,7 @@ void ImportJson(HWND hwnd) {
             em.body[bi] = '\0';
         }
 
-        const char* fTag = strstr(objStart, "\"tags\":");
+        const char* fTag = my_strstr(objStart, "\"tags\":");
         if (fTag && fTag < objEnd) {
             fTag += 7;
             while (*fTag == ' ') fTag++;
@@ -632,9 +653,9 @@ void ImportJson(HWND hwnd) {
             }
         }
 
-        if (strstr(objStart, "\"unread\":true") || strstr(objStart, "\"unread\":1")) em.unread = 1;
-        if (strstr(objStart, "\"starred\":true") || strstr(objStart, "\"starred\":1")) em.starred = 1;
-        if (strstr(objStart, "\"encrypted\":true") || strstr(objStart, "\"encrypted\":1")) em.encrypted = 1;
+        if (my_strstr(objStart, "\"unread\":true") || my_strstr(objStart, "\"unread\":1")) em.unread = 1;
+        if (my_strstr(objStart, "\"starred\":true") || my_strstr(objStart, "\"starred\":1")) em.starred = 1;
+        if (my_strstr(objStart, "\"encrypted\":true") || my_strstr(objStart, "\"encrypted\":1")) em.encrypted = 1;
 
         emails[count++] = em;
         p = objEnd + 1;

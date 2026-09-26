@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-25T21:55:00Z — kilo-graphics: KChrono (Game Content, Visual Polish & Balance Pass)**
+  - Status: PASS ✅ (Specular glints & traveling dots removed, causal loop locker aging & strain balance; 0 regressions).
+  - Glint & Comet Purge: Removed white specular visor glint pixels across Win32 C and web; eliminated traveling pulse dot from Chronograph.
+  - Visual Polish: Added clean static timeline connectors with directional chevrons (►►) and active epoch segment highlights.
+  - Game Content: Implemented cross-epoch item maturation in Chrono-Locker (precursor cell matures into Chrono-Battery in 2042 / Singularity Core in 2188).
+  - Balance Tuning: Rebalanced phantom collision damage to 10%, capped breach anomalies, and aligned native C collision physics.
+  - Verification: Clean MSVC compile (`KChrono.exe` 23.0 KB); Vite clean build in 386ms (`kchrono.html` 167.5 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-25T20:42:00Z — kilo-usability: KJournal (UI/UX Ergonomics & Usability Pass)**
   - Status: PASS ✅ (Zen focus mode, collapsible sidebar sections, typography scaling; 0 regressions).
   - Zen Focus Mode: Added F2 / Alt+S / toolbar toggle collapsing sidebar into full-width distraction-free writing.
