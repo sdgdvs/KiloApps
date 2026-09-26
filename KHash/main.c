@@ -305,11 +305,12 @@ static void QuickSaveState(void) {
     HANDLE hFile = CreateFileA("khash.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD written = 0;
-        char buf[1024] = "";
-        GetWindowTextA(g_hEditInput, buf, sizeof(buf));
-        WriteFile(hFile, buf, sizeof(buf), &written, NULL);
-        GetWindowTextA(g_hEditExpected, buf, sizeof(buf));
-        WriteFile(hFile, buf, sizeof(buf), &written, NULL);
+        char bufIn[2048] = "";
+        char bufExp[512] = "";
+        GetWindowTextA(g_hEditInput, bufIn, sizeof(bufIn));
+        WriteFile(hFile, bufIn, sizeof(bufIn), &written, NULL);
+        GetWindowTextA(g_hEditExpected, bufExp, sizeof(bufExp));
+        WriteFile(hFile, bufExp, sizeof(bufExp), &written, NULL);
         CloseHandle(hFile);
         SetWindowTextA(g_hStatusLabel, "Workstation state quicksaved to khash.dat (F5).");
     }
@@ -319,18 +320,53 @@ static void QuickLoadState(void) {
     HANDLE hFile = CreateFileA("khash.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD read = 0;
-        char buf[1024] = "";
-        if (ReadFile(hFile, buf, sizeof(buf), &read, NULL)) {
-            SetWindowTextA(g_hEditInput, buf);
+        char bufIn[2048] = "";
+        char bufExp[512] = "";
+        if (ReadFile(hFile, bufIn, sizeof(bufIn), &read, NULL)) {
+            SetWindowTextA(g_hEditInput, bufIn);
         }
-        if (ReadFile(hFile, buf, sizeof(buf), &read, NULL)) {
-            SetWindowTextA(g_hEditExpected, buf);
+        if (ReadFile(hFile, bufExp, sizeof(bufExp), &read, NULL)) {
+            SetWindowTextA(g_hEditExpected, bufExp);
         }
         CloseHandle(hFile);
         HashFromTextPayload();
         SetWindowTextA(g_hStatusLabel, "Workstation state quickloaded from khash.dat (F9).");
     } else {
         SetWindowTextA(g_hStatusLabel, "No saved state (khash.dat) found.");
+    }
+}
+
+static void CheckFirstRunTutorial(HWND hwnd) {
+    // Check if saved state already exists (never interrupt restored save states)
+    HANDLE hSaved = CreateFileA("khash.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hSaved != INVALID_HANDLE_VALUE) {
+        CloseHandle(hSaved);
+        return;
+    }
+
+    // Check if tutorial flag exists
+    HANDLE hFlag = CreateFileA("khash_tutorial.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFlag != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFlag);
+        return;
+    }
+
+    // Fresh session: display guide
+    const char* splashText =
+        "Welcome to KHash Workstation v1.0!\r\n\r\n"
+        "Multi-algorithm cryptographic checksum and verification tool.\r\n"
+        "Engines: CRC32, Adler-32, FNV-1a, MD5, SHA-1, SHA-256.\r\n\r\n"
+        "Keyboard Shortcuts:\r\n"
+        "  [F1] Help Manual   |   [F5] Quicksave   |   [F9] Quickload\r\n"
+        "  [Enter] Compute / Verify   |   [Esc] Clear fields\r\n\r\n"
+        "Press OK to enter the workstation.";
+    MessageBoxA(hwnd, splashText, "KHash First-Run Guide", MB_OK | MB_ICONINFORMATION);
+
+    HANDLE hCreateFlag = CreateFileA("khash_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hCreateFlag != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hCreateFlag, "SEEN\r\n", 6, &written, NULL);
+        CloseHandle(hCreateFlag);
     }
 }
 
@@ -536,6 +572,9 @@ void __cdecl MainEntry(void) {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
+    // Verify first-run tutorial integrity on fresh session
+    CheckFirstRunTutorial(hwnd);
+
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
@@ -549,6 +588,21 @@ void __cdecl MainEntry(void) {
             }
             if (msg.wParam == VK_F9) {
                 QuickLoadState();
+                continue;
+            }
+            if (msg.wParam == VK_ESCAPE) {
+                SetWindowTextA(g_hEditInput, "");
+                SetWindowTextA(g_hEditExpected, "");
+                HashFromTextPayload();
+                SetWindowTextA(g_hStatusLabel, "Cleared input fields [Esc].");
+                continue;
+            }
+            if (msg.wParam == VK_RETURN && msg.hwnd != g_hEditInput) {
+                if (msg.hwnd == g_hEditExpected) {
+                    VerifyIntegrity();
+                } else {
+                    HashFromTextPayload();
+                }
                 continue;
             }
         }

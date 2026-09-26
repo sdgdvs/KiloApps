@@ -851,7 +851,7 @@
     /* Toast Notification */
     .toast {
       position: fixed;
-      bottom: 30px;
+      top: 48px;
       right: 20px;
       background: var(--surface);
       border: 1px solid var(--primary);
@@ -862,6 +862,9 @@
       font-size: 12px;
       display: none;
       z-index: 2000;
+      cursor: pointer;
+      user-select: none;
+      max-width: calc(100vw - 40px);
       animation: fadeIn 0.2s ease;
     }
 
@@ -1557,11 +1560,22 @@
     ];
 
     // Status Helper & Toast
+    let toastTimer = null;
     function showToast(msg) {
       const toast = document.getElementById('toastNotice');
+      if (!toast) return;
       toast.textContent = msg;
       toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2400);
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
+    }
+
+    const toastNoticeEl = document.getElementById('toastNotice');
+    if (toastNoticeEl) {
+      toastNoticeEl.addEventListener('click', () => {
+        toastNoticeEl.classList.remove('show');
+        if (toastTimer) clearTimeout(toastTimer);
+      });
     }
 
     function setStatus(msg) {
@@ -1623,7 +1637,9 @@
     const themeSelect = document.getElementById('themeSelect');
     themeSelect.addEventListener('change', (e) => {
       document.body.setAttribute('data-theme', e.target.value);
-      localStorage.setItem('khash_theme', e.target.value);
+      try {
+        localStorage.setItem('khash_theme', e.target.value);
+      } catch (err) {}
     });
 
     // Sound toggle
@@ -2383,14 +2399,17 @@
     // --- State Persistence (F5 Quicksave / F9 Quickload & JSON File Backup) ---
     function getFullStateSnapshot() {
       return {
+        currentTab: APP_STATE.currentTab || 'tabText',
         hexCase: APP_STATE.hexCase,
         formatMode: APP_STATE.formatMode,
         hmacEnabled: APP_STATE.hmacEnabled,
         hmacKey: APP_STATE.hmacKey,
+        soundEnabled: soundEnabled,
         textPayload: document.getElementById('textPayload').value,
         textEncoding: document.getElementById('textEncodingSelect').value,
         verifyExpected: document.getElementById('verifyExpected').value,
         verifyCalculated: document.getElementById('verifyCalculated').value,
+        manifestFormat: document.getElementById('manifestFormatSelect') ? document.getElementById('manifestFormatSelect').value : 'sfv',
         theme: document.body.getAttribute('data-theme') || 'dark',
         savedAt: new Date().toISOString()
       };
@@ -2398,6 +2417,9 @@
 
     function applyLoadedState(rawOrObj) {
       const state = (typeof rawOrObj === 'string') ? JSON.parse(rawOrObj) : rawOrObj;
+      if (state.currentTab) {
+        switchTab(state.currentTab);
+      }
       if (state.hexCase) {
         APP_STATE.hexCase = state.hexCase;
         document.querySelectorAll('#groupHexCase .radio-opt').forEach(o => o.classList.toggle('active', o.dataset.val === state.hexCase));
@@ -2415,6 +2437,11 @@
         APP_STATE.hmacKey = state.hmacKey;
         inputHmacKey.value = state.hmacKey;
       }
+      if (typeof state.soundEnabled === 'boolean') {
+        soundEnabled = state.soundEnabled;
+        const btnSound = document.getElementById('btnSoundToggle');
+        if (btnSound) btnSound.textContent = soundEnabled ? '🔊 Sound' : '🔇 Muted';
+      }
       if (state.textPayload !== undefined) {
         document.getElementById('textPayload').value = state.textPayload;
       }
@@ -2427,9 +2454,13 @@
       if (state.verifyCalculated !== undefined) {
         document.getElementById('verifyCalculated').value = state.verifyCalculated;
       }
+      if (state.manifestFormat && document.getElementById('manifestFormatSelect')) {
+        document.getElementById('manifestFormatSelect').value = state.manifestFormat;
+      }
       if (state.theme) {
         document.body.setAttribute('data-theme', state.theme);
         themeSelect.value = state.theme;
+        try { localStorage.setItem('khash_theme', state.theme); } catch (e) {}
       }
       computeTextDigests();
       runVerification(false);
@@ -2523,26 +2554,41 @@
         return;
       }
       if (e.key === 'Escape') {
+        let dismissed = false;
         document.querySelectorAll('.modal-overlay').forEach(m => {
-          m.classList.remove('active');
-          if (m.id === 'modalSplash') {
-            localStorage.setItem('khash_tutorialSeen', '1');
-            checkTutorialSeen.checked = true;
+          if (m.classList.contains('active')) {
+            m.classList.remove('active');
+            dismissed = true;
+            if (m.id === 'modalSplash') {
+              try { localStorage.setItem('khash_tutorialSeen', '1'); } catch (err) {}
+              checkTutorialSeen.checked = true;
+            }
           }
         });
-        return;
+        if (dismissed) {
+          e.preventDefault();
+          return;
+        }
       }
       if (e.key === 'Enter') {
         const modalSplash = document.getElementById('modalSplash');
-        if (modalSplash.classList.contains('active')) {
+        if (modalSplash && modalSplash.classList.contains('active')) {
           e.preventDefault();
           dismissSplash();
           return;
         }
         const modalHelp = document.getElementById('modalHelp');
-        if (modalHelp.classList.contains('active')) {
+        if (modalHelp && modalHelp.classList.contains('active')) {
           e.preventDefault();
           modalHelp.classList.remove('active');
+          return;
+        }
+      }
+      if (e.key === ' ' || e.code === 'Space') {
+        const modalSplash = document.getElementById('modalSplash');
+        if (modalSplash && modalSplash.classList.contains('active') && !isEditing) {
+          e.preventDefault();
+          dismissSplash();
           return;
         }
       }
@@ -2563,7 +2609,7 @@
         if (e.target === overlay) {
           overlay.classList.remove('active');
           if (overlay.id === 'modalSplash') {
-            localStorage.setItem('khash_tutorialSeen', '1');
+            try { localStorage.setItem('khash_tutorialSeen', '1'); } catch (err) {}
             checkTutorialSeen.checked = true;
           }
         }
@@ -2577,14 +2623,20 @@
 
     function openHelpModal() {
       sfxClick();
-      checkTutorialSeen.checked = !!localStorage.getItem('khash_tutorialSeen');
+      try {
+        checkTutorialSeen.checked = !!localStorage.getItem('khash_tutorialSeen');
+      } catch (err) {}
       modalHelp.classList.add('active');
+      const btnHelpClose = document.getElementById('btnHelpClose');
+      if (btnHelpClose) btnHelpClose.focus();
     }
 
     function dismissSplash() {
       sfxClick();
       modalSplash.classList.remove('active');
-      localStorage.setItem('khash_tutorialSeen', '1');
+      try {
+        localStorage.setItem('khash_tutorialSeen', '1');
+      } catch (err) {}
       checkTutorialSeen.checked = true;
     }
 
@@ -2599,26 +2651,38 @@
     document.getElementById('btnHelpClose').addEventListener('click', () => modalHelp.classList.remove('active'));
 
     checkTutorialSeen.addEventListener('change', (e) => {
-      if (e.target.checked) {
-        localStorage.setItem('khash_tutorialSeen', '1');
-      } else {
-        localStorage.removeItem('khash_tutorialSeen');
-      }
+      try {
+        if (e.target.checked) {
+          localStorage.setItem('khash_tutorialSeen', '1');
+        } else {
+          localStorage.removeItem('khash_tutorialSeen');
+        }
+      } catch (err) {}
     });
 
     // --- Init on DOM Ready ---
     window.addEventListener('DOMContentLoaded', () => {
       // Theme init
-      const savedTheme = localStorage.getItem('khash_theme');
-      if (savedTheme) {
-        document.body.setAttribute('data-theme', savedTheme);
-        themeSelect.value = savedTheme;
-      }
+      try {
+        const savedTheme = localStorage.getItem('khash_theme');
+        if (savedTheme) {
+          document.body.setAttribute('data-theme', savedTheme);
+          themeSelect.value = savedTheme;
+        }
+      } catch (err) {}
 
-      // Check first-run tutorial flag
-      const tutorialSeen = localStorage.getItem('khash_tutorialSeen');
-      if (!tutorialSeen) {
+      // Check first-run tutorial flag & check saved state (never interrupt restored save states)
+      let tutorialSeen = false;
+      let hasSavedState = false;
+      try {
+        tutorialSeen = !!localStorage.getItem('khash_tutorialSeen');
+        hasSavedState = !!(localStorage.getItem('khash_quicksave') || localStorage.getItem('khash_state'));
+      } catch (err) {}
+
+      if (!tutorialSeen && !hasSavedState) {
         modalSplash.classList.add('active');
+        const btnEnter = document.getElementById('btnSplashEnter');
+        if (btnEnter) btnEnter.focus();
       }
 
       // Preload initial demo string

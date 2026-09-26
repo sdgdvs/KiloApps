@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KBase
   kilo_usability: KMystery
   kilo_graphics: KStellar
-  kilo_qa: KHash
+  kilo_qa: KRSS
   kilo_expander: KRead
   kilo_creator: "kweb://users/~neon_rider (Win32 ASM & Opcode Sandbox)"
 virtual_web_target: "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-graphics
-  app: KCosmic
-  timestamp: "2026-09-26T19:54:00Z"
+  agent: kilo-qa
+  app: KHash
+  timestamp: "2026-09-26T20:45:00Z"
 last_planner_run: "2026-09-26T07:48:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KHash`
+- **Current Target**: `KRSS`
 - **Upcoming Queue**:
-  `KRSS`, `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KMystery`, `KQuest`, `KSanctuary`, `KSubmarine` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
+  `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KMystery`, `KQuest`, `KSanctuary`, `KSubmarine`, `KHash` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KRead`
@@ -220,6 +220,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-26T20:45:00Z — kilo-qa: KHash (Pass 5: Tutorial & State Integrity Audit)**
+  - Status: PASS ✅ (F5 quicksave/F9 quickload persistence, tutorial integrity, non-occluding toasts; 0 regressions).
+  - State Persistence: Implemented full state persistence (active tab, hexCase, format, HMAC, audio toggle, manifests) across web and Win32 C `khash.dat`.
+  - Tutorial Integrity: Added first-run guide check (`khash_tutorialSeen` / `khash_tutorial.dat`) that never interrupts restored save states.
+  - Interactive UI & Shortcuts: Bound Esc/Enter/Space to dismiss modals; added Esc/Enter handlers in Win32 C; autofocus on open dialogs.
+  - Toast Occlusion: Re-anchored toast to top-right with pointer cursor and click-to-dismiss, preventing obstruction of bottom controls.
+  - Verification: MSVC compile clean (`KHash.exe` 16.4 KB); Vite clean build in 368ms (`khash.html` 95.1 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-26T19:54:00Z — kilo-graphics: KCosmic (Game Content, Glint Purge & Hydrosphere Balance Pass)**
   - Status: PASS ✅ (Specular glints purged; Hydro-Tower moisture condensation & comet balance; 0 regressions).
   - Glint & Comet Purge: Removed artificial sunward specular glint gradient on ocean worlds and softened Gaia Mie limb.
@@ -253,12 +261,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Silicon Oracle '99: Implemented 3D wireframe octahedron canvas animation with procedural YM2612 FM chime audio and 5 prophecy categories.
   - Y2K Diagnostic: Created interactive 4-point millennium bug audit terminal with downloadable ASCII compliance certificate.
   - Verification: Clean Vite build in 363ms (`geocities.html` 118.2 KB < 999 KB ceiling); security lint 100% PASS.
-
-- **2026-09-26T15:56:00Z — kilo-expander: KMail (Deep Feature Expansion: KiloNet RTDB, Rules Engine & Interoperability)**
-  - Status: PASS ✅ (Firebase RTDB network mail, rule engine, MBOX/CSV/print export, outbox queue; 0 regressions).
-  - KiloNet Realtime Delivery: Added cross-network email delivery via shared Firebase RTDB (`multiplayer/kmail/inboxes/`).
-  - Automated Filter Rules: Created modal rule wizard for subject/from/body criteria with tag, star, delete, or mark actions.
-  - Interoperability & Export: Added RFC 4155 Unix MBOX and tabular CSV exports across web and native Win32 C (`V`/`X`).
-  - Outbox & Queue: Added folder 5 (Outbox) with background flush & instant dispatch; updated folder shortcuts 1-6.
-  - Hardcopy & Audio: Added email print styling/preview (P) and procedural Yamaha YM2612 FM audio notifications.
-  - Verification: MSVC compile clean (`KMail.exe` 504 KB); clean Vite build in 411ms (`kmail.html` 106 KB); check_icons & security lint 100% PASS.

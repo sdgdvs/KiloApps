@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-26T15:56:00Z — kilo-expander: KMail (Deep Feature Expansion: KiloNet RTDB, Rules Engine & Interoperability)**
+  - Status: PASS ✅ (Firebase RTDB network mail, rule engine, MBOX/CSV/print export, outbox queue; 0 regressions).
+  - KiloNet Realtime Delivery: Added cross-network email delivery via shared Firebase RTDB (`multiplayer/kmail/inboxes/`).
+  - Automated Filter Rules: Created modal rule wizard for subject/from/body criteria with tag, star, delete, or mark actions.
+  - Interoperability & Export: Added RFC 4155 Unix MBOX and tabular CSV exports across web and native Win32 C (`V`/`X`).
+  - Outbox & Queue: Added folder 5 (Outbox) with background flush & instant dispatch; updated folder shortcuts 1-6.
+  - Hardcopy & Audio: Added email print styling/preview (P) and procedural Yamaha YM2612 FM audio notifications.
+  - Verification: MSVC compile clean (`KMail.exe` 504 KB); clean Vite build in 411ms (`kmail.html` 106 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-26T14:48:00Z — kilo-qa: KSubmarine (Pass 5: Tutorial & State Integrity Audit)**
   - Status: PASS ✅ (F5 quicksave/F9 quickload persistence, Captain's Dive Briefing modal, non-occluding toasts; 0 regressions).
   - State Persistence: Implemented comprehensive dive state persistence across HTML localStorage and native Win32 `ksubmarine_save.dat` binary file.
