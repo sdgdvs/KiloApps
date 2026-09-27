@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KChart
   kilo_usability: KPass
-  kilo_graphics: KDragon
+  kilo_graphics: KSubmarine
   kilo_qa: KCipher
   kilo_expander: KImage
   kilo_creator: "kweb://10.19.99.4/classified (Corporate Network Leak & Signal Diagnostic)"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-usability
-  app: KNote
-  timestamp: "2026-09-27T21:52:00Z"
+  agent: kilo-graphics
+  app: KDragon
+  timestamp: "2026-09-27T23:50:00Z"
 last_planner_run: "2026-09-27T09:48:00Z"
 ---
 
@@ -104,9 +104,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://geocities, kweb://darknet, kweb://portal, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KDragon`
+- **Current Target**: `KSubmarine`
 - **Upcoming Queue**:
-  `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`.
+  `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KChart`
@@ -230,6 +230,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-27T23:50:00Z — kilo-graphics: KDragon (Game Content, Visual Polish & Balance Pass)**
+  - Status: PASS ✅ (0 rotating glints / traveling border dots; 0 regressions; <999KB ceiling verified).
+  - Glint & Dot Purge: Verified 100% clean static ornate borders across web and C with zero moving glints or perimeter dots.
+  - Ancient Titan Drake Integration: Added 6th boss enemy encounter to Win32 C with golden/celestial palette, high scaling & gold rewards.
+  - Elemental Combat Balancing: Wired Earth advantage (+30%) vs rock/ground foes and Astral advantage vs Titan in web and C.
+  - Egg Incubation Visual Polish: Differentiated start-screen egg SVG ID and added animation/particle fallbacks.
+  - Verification: MSVC clean (`KDragon.exe` 148.0 KB); Vite build clean in 401ms (`kdragon.html` 133.8 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-27T21:52:00Z — kilo-usability: KNote (UI/UX Usability Pass & Snapshot/Distraction-Free Integration)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
   - Window & Ergonomics: Adjusted default dimensions to 920x640 in App.jsx and Win32 C, eliminating toolbar squeeze.
@@ -263,14 +271,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - DSP & Dithering Suite: Implemented Floyd-Steinberg 1-bit & 16-color dithering, CRT scanlines, soft blur, and vignette in web & C.
   - Text Stamping & Template: Added retro text stamping tool [T] and diegetic ARG spectrogram starter template.
   - Verification: MSVC clean (`KPaint.exe` 27.1 KB); Vite build in 764ms (`kpaint.html` 139.5 KB < 999 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-27T13:55:00Z — kilo-qa: KClip (Pass 5: Tutorial & State Integrity Audit)**
-  - Status: PASS ✅ (0 regressions; clean builds; Pass 5 tutorial & state integrity verified).
-  - State Persistence: Persisted full workstation state (active filter, search query, view mode, clips, settings) with QuotaExceeded handling and Win32 C `kclip.dat` magic/bounds validation.
-  - Tutorial Integrity: Added `kclip_tutorialSeen` and `kclip_tutorial.dat` splash & tour gating; never interrupts restored save states.
-  - Overlay & Modal Hotkeys: Synchronized startup checkboxes across splash, tutorial, and help dialogs; Esc, Enter, and Space hotkeys wired cleanly.
-  - Toast Occlusion: Re-anchored notifications to non-occluding bottom-right dock above status bar with instant click-to-dismiss.
-  - TINAG & Lore Compliance: Purged pre-climax meta-narrative references ("Autonomous Fleet") from user-facing copy in C and HTML.
-  - Verification: MSVC compile clean (`KClip.exe` 16.0 KB); Vite build in 383ms (`kclip.html` 102.1 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
 
 

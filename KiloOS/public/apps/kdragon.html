@@ -562,7 +562,7 @@
         </div>
         
         <div id="start-screen">
-            <div class="entity-display"><svg id="player-svg" class="bobbing" width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+            <div class="entity-display"><svg id="start-egg-svg" class="bobbing" width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
   <rect x="6" y="3" width="4" height="1" fill="rgb(180,150,100)" />
   <rect x="5" y="4" width="1" height="1" fill="rgb(180,150,100)" />
   <rect x="6" y="4" width="4" height="1" fill="rgb(230,210,180)" />
@@ -1273,7 +1273,7 @@
             },
 
             spawnParticles(color, count, target = 'player', isStar = false) {
-                const el = target === 'player' ? document.getElementById('player-svg') : document.getElementById('enemy-svg');
+                const el = target === 'player' ? (document.getElementById('player-svg') || document.getElementById('start-egg-svg')) : document.getElementById('enemy-svg');
                 let cx = width / 2;
                 let cy = height / 2 - 50;
                 if (el) {
@@ -1287,7 +1287,7 @@
             },
             
             triggerAnim(target, animClass) {
-                let el = target === 'player' ? document.getElementById('player-svg') : document.getElementById('enemy-svg');
+                let el = target === 'player' ? (document.getElementById('player-svg') || document.getElementById('start-egg-svg')) : document.getElementById('enemy-svg');
                 if (el) {
                     el.classList.remove('bobbing');
                     el.classList.add(animClass);
@@ -2127,6 +2127,11 @@
                         this.spawnParticles('#00ffff', 20, 'player');
                     } else if (this.element === 'Earth') {
                         let dmg = Math.max(1, this.stats.strength * 2 + 6);
+                        if (enemy.element === 'Earth') {
+                            dmg = Math.floor(dmg * 1.3);
+                            this.log(`🌍 ELEMENTAL ADVANTAGE! Earthquake shattered ${enemy.name}'s rocky defense!`);
+                            VFX.addFloatingText(eX, eY - 45, "SUPER EFFECTIVE!", "#a9e34b", 14);
+                        }
                         if (enemyDefending) dmg = Math.floor(dmg / 2);
                         this.battleState.enemyHp -= dmg;
                         this.battleState.enemySpd = Math.max(1, this.battleState.enemySpd - 5);

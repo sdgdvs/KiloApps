@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-27T13:55:00Z — kilo-qa: KClip (Pass 5: Tutorial & State Integrity Audit)**
+  - Status: PASS ✅ (0 regressions; clean builds; Pass 5 tutorial & state integrity verified).
+  - State Persistence: Persisted full workstation state (active filter, search query, view mode, clips, settings) with QuotaExceeded handling and Win32 C `kclip.dat` magic/bounds validation.
+  - Tutorial Integrity: Added `kclip_tutorialSeen` and `kclip_tutorial.dat` splash & tour gating; never interrupts restored save states.
+  - Overlay & Modal Hotkeys: Synchronized startup checkboxes across splash, tutorial, and help dialogs; Esc, Enter, and Space hotkeys wired cleanly.
+  - Toast Occlusion: Re-anchored notifications to non-occluding bottom-right dock above status bar with instant click-to-dismiss.
+  - TINAG & Lore Compliance: Purged pre-climax meta-narrative references ("Autonomous Fleet") from user-facing copy in C and HTML.
+  - Verification: MSVC compile clean (`KClip.exe` 16.0 KB); Vite build in 383ms (`kclip.html` 102.1 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-27T11:52:00Z — kilo-graphics: KSanctuary (Game Content, Visual Polish & Early-Raid Balance Pass)**
   - Status: PASS ✅ (0 rotating glints / traveling border dots; weather reactivity & early-raid balance; 0 regressions).
   - Glint & Dot Purge: Verified 100% clean static retro borders across web and C with zero moving glints or perimeter dots.
