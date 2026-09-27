@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>~*~ TEMPLE OF THE x86 OPCODES // x86 Assembly Shrine &amp; Ring 0 Sanctuary (1999) ~*~</title>
+<title>~*~ TEMPLE OF THE x86 OPCODES // x86 Assembly Shrine &amp; PE32 Dissector (1999) ~*~</title>
 <style>
   :root {
     --bg-dark: #070a0f;
@@ -13,10 +13,13 @@
     --gold-bright: #fbbf24;
     --gold-dim: #78350f;
     --cyan: #38bdf8;
+    --cyan-bright: #7dd3fc;
     --cyan-dim: #0369a1;
     --emerald: #10b981;
+    --emerald-bright: #34d399;
     --emerald-dim: #064e3b;
     --crimson: #ef4444;
+    --crimson-dim: #7f1d1d;
     --text-main: #f1f5f9;
     --text-muted: #94a3b8;
     --border-gold: #d97706;
@@ -41,7 +44,7 @@
   }
 
   /* CRT Scanline Simulation */
-  body::after {
+  .crt-scanlines::after {
     content: " ";
     display: block;
     position: fixed;
@@ -54,12 +57,13 @@
   }
 
   .temple-wrap {
-    max-width: 980px;
+    max-width: 1040px;
     margin: 0 auto;
     border: 3px double var(--gold);
     background: var(--bg-card);
-    box-shadow: 0 0 30px rgba(245, 158, 11, 0.25), inset 0 0 15px rgba(245, 158, 11, 0.08);
+    box-shadow: 0 0 35px rgba(245, 158, 11, 0.25), inset 0 0 15px rgba(245, 158, 11, 0.08);
     padding: 18px;
+    position: relative;
   }
 
   /* Top 1999 Marquee */
@@ -124,9 +128,9 @@
     background: #111a2d;
     color: var(--text-muted);
     border: 1px solid #1e293b;
-    padding: 6px 14px;
+    padding: 6px 13px;
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
     cursor: pointer;
     border-radius: 2px;
@@ -146,137 +150,201 @@
     box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
   }
 
-  /* Content Sections */
-  .section-tab {
-    display: none;
-    animation: fadeIn 0.2s ease-in-out;
-  }
-
-  .section-tab.active {
-    display: block;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Shared Component Styles */
-  .panel-box {
-    background: var(--bg-panel);
-    border: 1px solid #1e293b;
-    padding: 14px;
-    margin-bottom: 16px;
-    border-radius: 4px;
-  }
-
-  .panel-box.gold-accent {
-    border-left: 3px solid var(--gold);
-  }
-
-  .panel-box.cyan-accent {
-    border-left: 3px solid var(--cyan);
-  }
-
-  .panel-box.emerald-accent {
-    border-left: 3px solid var(--emerald);
-  }
-
-  .panel-title {
-    font-size: 14px;
-    color: var(--gold-bright);
-    font-weight: bold;
-    margin-bottom: 10px;
+  /* Subnav Bar inside Tabs */
+  .subnav-bar {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #1e293b;
-    padding-bottom: 6px;
-  }
-
-  .btn-retro {
-    background: #1e293b;
-    color: var(--gold-bright);
-    border: 1px solid var(--border-gold);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: bold;
-    padding: 5px 12px;
-    cursor: pointer;
+    gap: 6px;
+    background: #080d16;
+    border: 1px solid #1e293b;
+    padding: 6px;
+    margin-bottom: 14px;
     border-radius: 3px;
-    transition: all 0.15s ease;
+    flex-wrap: wrap;
   }
 
-  .btn-retro:hover {
-    background: var(--gold);
-    color: #070a0f;
-    box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+  .subnav-btn {
+    background: #0f172a;
+    color: var(--text-muted);
+    border: 1px solid #334155;
+    padding: 4px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    border-radius: 2px;
   }
 
-  .btn-retro.btn-cyan {
+  .subnav-btn:hover {
     color: var(--cyan);
     border-color: var(--cyan);
   }
 
-  .btn-retro.btn-cyan:hover {
-    background: var(--cyan);
-    color: #070a0f;
-    box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+  .subnav-btn.active {
+    background: var(--cyan-dim);
+    color: #fff;
+    border-color: var(--cyan);
+    font-weight: bold;
   }
 
-  .btn-retro.btn-emerald {
-    color: var(--emerald);
+  /* Content Sections */
+  .section-tab {
+    display: none;
+  }
+
+  .section-tab.active {
+    display: block;
+    animation: fadeIn 0.2s ease-in;
+  }
+
+  .subtab-pane {
+    display: none;
+  }
+
+  .subtab-pane.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(3px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Panels & Cards */
+  .panel-box {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-dim);
+    border-radius: 4px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+
+  .panel-box.gold-accent {
+    border-left: 4px solid var(--gold);
+  }
+
+  .panel-box.cyan-accent {
+    border-left: 4px solid var(--cyan);
+  }
+
+  .panel-box.emerald-accent {
+    border-left: 4px solid var(--emerald);
+  }
+
+  .panel-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--gold-bright);
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding-bottom: 6px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Buttons & Inputs */
+  button.btn-retro {
+    background: #1e293b;
+    color: var(--text-main);
+    border: 1px solid #334155;
+    padding: 5px 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 2px;
+    box-shadow: 1px 1px 0 #000;
+  }
+
+  button.btn-retro:hover {
+    background: #334155;
+    color: var(--gold-bright);
+    border-color: var(--gold);
+  }
+
+  button.btn-retro:active {
+    transform: translate(1px, 1px);
+    box-shadow: none;
+  }
+
+  button.btn-gold {
+    background: var(--gold);
+    color: #000;
+    border-color: var(--gold-bright);
+    font-weight: bold;
+  }
+
+  button.btn-gold:hover {
+    background: var(--gold-bright);
+    color: #000;
+  }
+
+  button.btn-cyan {
+    background: var(--cyan-dim);
+    color: #fff;
+    border-color: var(--cyan);
+  }
+
+  button.btn-cyan:hover {
+    background: var(--cyan);
+    color: #000;
+  }
+
+  button.btn-emerald {
+    background: var(--emerald-dim);
+    color: #fff;
     border-color: var(--emerald);
   }
 
-  .btn-retro.btn-emerald:hover {
+  button.btn-emerald:hover {
     background: var(--emerald);
-    color: #070a0f;
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+    color: #000;
   }
 
-  /* Form Elements */
-  input[type="text"], select, textarea {
+  input[type="text"], input[type="number"], select, textarea {
     background: #090e18;
     color: var(--text-main);
     border: 1px solid #334155;
+    padding: 6px 8px;
     font-family: var(--font-mono);
     font-size: 12px;
-    padding: 6px 10px;
-    border-radius: 3px;
-    outline: none;
+    border-radius: 2px;
   }
 
   input[type="text"]:focus, select:focus, textarea:focus {
+    outline: none;
     border-color: var(--gold);
-    box-shadow: 0 0 6px rgba(245, 158, 11, 0.3);
+    box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
   }
 
-  /* Table styling */
+  /* Retro Data Tables */
   table.retro-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
-  }
-
-  table.retro-table th {
-    background: #1e293b;
-    color: var(--gold-bright);
-    padding: 8px 10px;
-    text-align: left;
-    border: 1px solid #334155;
-  }
-
-  table.retro-table td {
-    padding: 6px 10px;
-    border: 1px solid #1e293b;
+    font-size: 11px;
     background: #090e18;
   }
 
-  table.retro-table tr:hover td {
-    background: #111a2d;
+  table.retro-table th, table.retro-table td {
+    border: 1px solid #1e293b;
+    padding: 6px 8px;
+    text-align: left;
   }
 
+  table.retro-table th {
+    background: #111a2d;
+    color: var(--gold-bright);
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  table.retro-table tr:hover td {
+    background: rgba(245, 158, 11, 0.08);
+  }
+
+  /* Badges & Tags */
   .badge-opcode {
     background: rgba(245, 158, 11, 0.15);
     color: var(--gold-bright);
@@ -285,6 +353,7 @@
     border-radius: 3px;
     font-size: 11px;
     font-weight: bold;
+    display: inline-block;
   }
 
   .badge-cat {
@@ -294,6 +363,23 @@
     padding: 2px 6px;
     border-radius: 3px;
     font-size: 10px;
+    display: inline-block;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #0a101d;
+    border: 1px solid #1e293b;
+  }
+
+  .status-pill.online {
+    color: var(--emerald-bright);
+    border-color: var(--emerald-dim);
   }
 
   /* Assembler / Disassembler Grids */
@@ -328,6 +414,47 @@
     font-family: var(--font-mono);
     white-space: pre-wrap;
     word-break: break-all;
+  }
+
+  /* CPU Stepper Sandbox */
+  .cpu-sandbox {
+    background: #080d17;
+    border: 1px solid #1e293b;
+    border-radius: 4px;
+    padding: 12px;
+    margin-top: 14px;
+  }
+
+  .reg-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .reg-card {
+    background: #0e1626;
+    border: 1px solid #1e293b;
+    padding: 6px 8px;
+    border-radius: 2px;
+  }
+
+  .reg-name {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: bold;
+  }
+
+  .reg-val {
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--cyan);
+    font-family: var(--font-mono);
+  }
+
+  .reg-val.modified {
+    color: var(--gold-bright);
+    background: rgba(245, 158, 11, 0.2);
   }
 
   /* Bitwise Altar */
@@ -380,50 +507,111 @@
     width: 8px;
   }
 
-  /* PE Header Diagram Blocks */
+  /* PE Explorer & Architecture */
   .pe-diagram {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    margin: 12px 0;
+    gap: 8px;
   }
 
   .pe-block {
     background: #090e18;
-    border: 1px solid #1e293b;
-    padding: 10px 14px;
+    border: 1px solid #334155;
+    padding: 8px 12px;
     cursor: pointer;
-    border-radius: 3px;
     transition: all 0.15s ease;
+    border-radius: 3px;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
 
   .pe-block:hover {
-    border-color: var(--cyan);
+    border-color: var(--gold);
     background: #111a2d;
-    transform: translateX(4px);
   }
 
   .pe-block.active-pe {
-    border-color: var(--gold);
-    background: rgba(245, 158, 11, 0.12);
-    box-shadow: inset 0 0 10px rgba(245, 158, 11, 0.2);
+    border-color: var(--gold-bright);
+    background: #162238;
+    box-shadow: inset 3px 0 0 var(--gold-bright);
   }
 
-  /* Audio Oscilloscope & Equalizer */
+  .entropy-bar-bg {
+    width: 100%;
+    height: 12px;
+    background: #090e18;
+    border: 1px solid #334155;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .entropy-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981 0%, #f59e0b 60%, #ef4444 100%);
+    width: 0%;
+  }
+
+  .dropzone {
+    border: 2px dashed #334155;
+    padding: 16px;
+    text-align: center;
+    background: #090e18;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--cyan);
+    background: #0d1527;
+  }
+
+  .hex-dump-view {
+    background: #05080f;
+    border: 1px solid #1e293b;
+    padding: 8px;
+    font-size: 11px;
+    color: var(--emerald);
+    max-height: 240px;
+    overflow-y: auto;
+    font-family: var(--font-mono);
+    line-height: 1.4;
+    white-space: pre;
+  }
+
+  /* Audio Oscilloscope */
   .scope-canvas {
     width: 100%;
     height: 120px;
     background: #05080f;
     border: 1px solid #1e293b;
-    display: block;
     margin: 10px 0;
-    border-radius: 3px;
+    display: block;
   }
 
-  /* Footer & Badges */
+  /* Webring & Footer */
+  .webring-nav-links {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .webring-nav-links a {
+    color: var(--cyan);
+    text-decoration: none;
+    font-size: 12px;
+    padding: 3px 8px;
+    border: 1px solid #1e293b;
+    background: #090e18;
+  }
+
+  .webring-nav-links a:hover {
+    color: var(--gold-bright);
+    border-color: var(--gold);
+  }
+
   footer {
     border-top: 2px solid var(--gold);
     margin-top: 24px;
@@ -435,99 +623,101 @@
 
   .badge-grid {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px;
     justify-content: center;
-    margin: 12px 0;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
   }
 
   .web-badge-88 {
     width: 88px;
     height: 31px;
-    background: #000;
-    border: 1px solid #444;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     font-size: 8px;
-    text-transform: uppercase;
     font-weight: bold;
-    color: #fff;
+    border: 1px solid #555;
     text-align: center;
     line-height: 1.1;
     user-select: none;
-    box-shadow: 1px 1px 0 #111;
   }
 
-  .webring-nav-links {
+  /* Encoding Format Box */
+  .encoding-bar {
     display: flex;
-    gap: 8px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 10px;
+    gap: 4px;
+    margin: 8px 0;
+    overflow-x: auto;
+    padding-bottom: 4px;
   }
 
-  .webring-nav-links a {
-    color: var(--cyan);
-    text-decoration: none;
-    font-size: 12px;
-    padding: 4px 10px;
-    background: #090e18;
-    border: 1px solid #1e293b;
+  .encoding-chunk {
+    background: #0a1120;
+    border: 1px solid #334155;
+    padding: 6px 10px;
     border-radius: 3px;
+    text-align: center;
+    flex: 1;
+    min-width: 100px;
   }
 
-  .webring-nav-links a:hover {
-    color: var(--gold-bright);
+  .encoding-chunk.active {
     border-color: var(--gold);
+    background: #18233a;
   }
 
-  .status-pill {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 10px;
+  .enc-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .enc-val {
+    font-size: 12px;
     font-weight: bold;
-  }
-
-  .status-pill.online {
-    background: rgba(16, 185, 129, 0.2);
-    color: var(--emerald);
-    border: 1px solid var(--emerald);
+    color: var(--gold-bright);
+    margin-top: 2px;
   }
 </style>
 </head>
-<body>
+<body class="crt-scanlines">
 
 <div class="temple-wrap">
   <!-- Top Marquee -->
   <div class="temple-marquee">
-    ⚡ WELCOME TO THE x86 OPCODES SHRINE // RING 0 REVELATION // 100% HAND-CRAFTED MACHINE CODE // WIN32 ASM &amp; DEMOSCENE FOREVER // ZERO BLOAT ⚡
+    ⚡ WELCOME TO THE x86 OPCODES SHRINE // RING 0 REVELATION // 100% HAND-CRAFTED MACHINE CODE // WIN32 PE DISSECTOR &amp; DEMOSCENE LAB // ZERO BLOAT ⚡
   </div>
 
   <!-- Header -->
   <header>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+      <span style="font-size:11px; color:var(--text-muted);">Sanctuary Node: <strong style="color:var(--gold-bright);">kweb://asm-temple</strong></span>
+      <button class="btn-retro" id="btnToggleCRT" style="font-size:10px; padding:2px 8px;">CRT Scanlines: ON</button>
+    </div>
     <pre class="ascii-banner">
   _____                 _         ____   __  ___  __    ___                     _      
  /__   \___ _ __ ___  _ __ | | ___   /___ \ / / / _ \/ _\  / _ \ _ __  ___ ___   __| | ___ 
-   / /\/ _ \ '_ ` _ \| '_ \| |/ _ \ //  / // / / /_\// /  / /_)/ '_ \/ __/ _ \ / _` |/ _ \
-  / / |  __/ | | | | | |_) | |  __// \_/ // /_/ /_\\/ /__/ ___/| |_) | (_| (_) | (_| |  __/
+   / /\/ _ \ '_ ` _ \| '_ \| |/ _ \ //  / // / / /_\// /  / /_)/ '_ \/ __/ _ \ / _` |/ _   / / |  __/ | | | | | |_) | |  __// \_/ // /_/ /_\/ /__/ ___/| |_) | (_| (_) | (_| |  __/
   \/   \___|_| |_| |_| .__/|_|\___|\___,_\/\____\____/\__/\_/   | .__/ \___\___/ \__,_|\___|
                      |_|                                        |_|                         
     </pre>
     <h1 class="shrine-title">TEMPLE OF THE x86 OPCODES</h1>
-    <div class="shrine-subtitle">★ Interactive Instruction Oracle, Real-Time Opcode Converter &amp; Win32 Architecture Shrine (1999) ★</div>
+    <div class="shrine-subtitle">★ Interactive Instruction Oracle, Real-Time Assembler, CPU Stepper &amp; Win32 PE32 Dissector (1999) ★</div>
     <div style="margin-top: 8px; font-size: 11px; color: var(--text-muted);">
-      Sanctuary Node: <span style="color:var(--gold-bright);">kweb://asm-temple</span> | Initiates Visited: <span id="lblCounter" style="color:var(--cyan); font-weight:bold;">0031892</span> | Privilege: <span class="status-pill online">Ring 0 Active</span>
+      Initiates Visited: <span id="lblCounter" style="color:var(--cyan); font-weight:bold;">0032481</span> | 
+      Privilege: <span class="status-pill online">Ring 0 Active</span> | 
+      Instruction Lexicon: <span style="color:var(--emerald-bright); font-weight:bold;" id="lblHeaderOpCount">118 Opcodes</span> | 
+      PE Engine: <span style="color:var(--gold-bright); font-weight:bold;">PE32 Native</span>
     </div>
   </header>
 
   <!-- Navigation Tabs -->
   <div class="nav-bar">
-    <button class="nav-btn active" data-tab="tab-oracle">[1] 📜 Opcode Oracle</button>
-    <button class="nav-btn" data-tab="tab-converter">[2] ⚙️ Live Assembler &amp; Disassembler</button>
+    <button class="nav-btn active" data-tab="tab-oracle">[1] 📜 Opcode Oracle (118 Ops)</button>
+    <button class="nav-btn" data-tab="tab-converter">[2] ⚙️ Assembler &amp; Micro-CPU Stepper</button>
     <button class="nav-btn" data-tab="tab-altar">[3] 🧮 Bitwise Radix Altar</button>
-    <button class="nav-btn" data-tab="tab-pe">[4] 🏛️ Win32 PE Architecture</button>
+    <button class="nav-btn" data-tab="tab-pe">[4] 🏛️ Win32 PE Dissector &amp; Builder</button>
     <button class="nav-btn" data-tab="tab-audio">[5] 🎵 YM2612 &amp; SPC700 Jukebox</button>
     <button class="nav-btn" data-tab="tab-guestbook">[6] 🕯️ Acolyte Guestbook</button>
     <button class="nav-btn" data-tab="tab-webring">[7] 🌐 Webring &amp; Network</button>
@@ -537,71 +727,95 @@
   <section id="tab-oracle" class="section-tab active">
     <div class="panel-box gold-accent">
       <div class="panel-title">
-        <span>📜 The x86 / i386 Sacred Instruction Lexicon</span>
-        <span style="font-size:11px; font-weight:normal; color:var(--text-muted);" id="lblOpcodeCount">Showing 42 instructions</span>
+        <span>📜 The x86 / i386 Sacred Instruction Lexicon &amp; Encoding Deconstructor</span>
+        <span style="font-size:11px; font-weight:normal; color:var(--text-muted);" id="lblOpcodeCount">Showing 118 instructions</span>
       </div>
       <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
-        Query the sacred silicon registers and instruction encodings. Search by mnemonic, byte opcode, category, or affected EFLAGS. Click any instruction row to immediately load it into the live assembler workbench!
+        Query the sacred silicon registers and instruction encodings. Search by mnemonic, byte opcode, category, or affected EFLAGS. Click any instruction row to inspect its hardware encoding deconstruction or load it directly into the assembler workbench!
       </p>
+
+      <!-- Active Instruction Inspector Bar -->
+      <div id="inspectorBox" style="background:#080d17; border:1px solid #1e293b; padding:10px; margin-bottom:12px; border-radius:3px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:11px; font-weight:bold; color:var(--gold-bright);">Selected Opcode Encoding Format (Intel IA-32):</span>
+          <span id="inspectMnem" style="font-size:13px; font-weight:bold; color:var(--cyan);">NOP (0x90)</span>
+        </div>
+        <div class="encoding-bar">
+          <div class="encoding-chunk" id="encPrefix"><div class="enc-label">Prefix (0-4B)</div><div class="enc-val">None</div></div>
+          <div class="encoding-chunk active" id="encOpcode"><div class="enc-label">Opcode (1-3B)</div><div class="enc-val">0x90</div></div>
+          <div class="encoding-chunk" id="encModrm"><div class="enc-label">ModR/M (0-1B)</div><div class="enc-val">None</div></div>
+          <div class="encoding-chunk" id="encSib"><div class="enc-label">SIB (0-1B)</div><div class="enc-val">None</div></div>
+          <div class="encoding-chunk" id="encDisp"><div class="enc-label">Displacement</div><div class="enc-val">None</div></div>
+          <div class="encoding-chunk" id="encImm"><div class="enc-label">Immediate</div><div class="enc-val">None</div></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text-muted);">
+          <span id="inspectDetails">1 cycle latency (Pentium) • Affected Flags: None</span>
+          <button class="btn-retro btn-cyan" id="btnLoadToWorkbench" style="font-size:11px; padding:2px 8px;">Load Into Live Assembler ➔</button>
+        </div>
+      </div>
       
       <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
-        <input type="text" id="oracleSearch" placeholder="Search mnemonic (e.g. NOP, XOR, MOV), hex byte (e.g. 90, 31, C3)..." style="flex:1; min-width:240px;" />
-        <select id="oracleCatFilter" style="width:160px;">
-          <option value="ALL">All Categories</option>
-          <option value="Data">Data Movement</option>
-          <option value="Arithmetic">Arithmetic</option>
-          <option value="Logic">Logic &amp; Bitwise</option>
-          <option value="Shift">Shift &amp; Rotate</option>
-          <option value="Flow">Control Flow &amp; Branch</option>
-          <option value="Stack">Stack Operations</option>
-          <option value="System">System &amp; Processor</option>
+        <input type="text" id="oracleSearch" placeholder="Search mnemonic (e.g. NOP, XOR, MOV), hex byte (e.g. 90, 31, C3), flags, description..." style="flex:1; min-width:240px;" />
+        <select id="oracleCatFilter" style="width:170px;">
+          <option value="ALL">All Categories (118)</option>
+          <option value="Data">Data Movement (18)</option>
+          <option value="Arithmetic">Arithmetic (18)</option>
+          <option value="Logic">Logic &amp; Bit Testing (12)</option>
+          <option value="Shift">Shift &amp; Rotate (10)</option>
+          <option value="Flow">Control Flow (22)</option>
+          <option value="Condition">Conditional Set (14)</option>
+          <option value="String">String Operations (10)</option>
+          <option value="Stack">Stack &amp; Frame (8)</option>
+          <option value="System">System &amp; Traps (14)</option>
+          <option value="FPU">FPU &amp; MMX (16)</option>
         </select>
         <button class="btn-retro" id="btnResetOracle">Reset Filter</button>
       </div>
 
-      <div style="overflow-x:auto; max-height:460px; overflow-y:auto; border:1px solid #1e293b;">
+      <div style="overflow-x:auto; max-height:480px; overflow-y:auto; border:1px solid #1e293b;">
         <table class="retro-table" id="oracleTable">
           <thead>
             <tr>
-              <th style="width:18%;">Mnemonic</th>
-              <th style="width:16%;">Opcode (Hex)</th>
+              <th style="width:16%;">Mnemonic</th>
+              <th style="width:15%;">Opcode (Hex)</th>
               <th style="width:12%;">Category</th>
-              <th style="width:12%;">Cycles (Pentium)</th>
+              <th style="width:11%;">Cycles (Pentium)</th>
               <th style="width:14%;">EFLAGS</th>
-              <th style="width:28%;">Description</th>
+              <th style="width:32%;">Description</th>
             </tr>
           </thead>
           <tbody id="oracleTbody">
-            <!-- Dynamically populated -->
+            <!-- Dynamically populated with 118+ instructions -->
           </tbody>
         </table>
       </div>
     </div>
   </section>
 
-  <!-- TAB 2: Live Assembler & Disassembler -->
+  <!-- TAB 2: Live Assembler & Disassembler + Micro-CPU Stepper -->
   <section id="tab-converter" class="section-tab">
     <div class="panel-box cyan-accent">
       <div class="panel-title">
-        <span>⚙️ Two-Way x86 Machine Code Converter</span>
+        <span>⚙️ Two-Way x86 Machine Code Converter &amp; Micro-CPU Stepper</span>
         <div style="display:flex; gap:6px;">
           <button class="btn-retro btn-cyan" id="btnModeAsm">Mode: Assembly ➔ Machine Code</button>
           <button class="btn-retro" id="btnModeDisasm">Mode: Hex Bytes ➔ Assembly</button>
         </div>
       </div>
       <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
-        Interactive client-side x86 mini-assembler and disassembler. Type mnemonics or paste hex bytes. Instant translation with zero server calls.
+        Interactive client-side x86 assembler, disassembler, and single-step CPU emulator. Assemble instructions into raw bytes, disassemble binary streams, or execute code step-by-step in the virtual Pentium execution core.
       </p>
 
       <!-- Presets Toolbar -->
-      <div style="background:#090e18; border:1px solid #1e293b; padding:8px 10px; margin-bottom:12px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+      <div style="background:#090e18; border:1px solid #1e293b; padding:8px 10px; margin-bottom:12px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
         <span style="font-size:11px; font-weight:bold; color:var(--gold-bright);">Load Temple Preset:</span>
-        <button class="btn-retro" style="font-size:11px; padding:3px 8px;" data-preset="prologue">1. Win32 Prologue/Epilogue</button>
-        <button class="btn-retro" style="font-size:11px; padding:3px 8px;" data-preset="xorzero">2. Demoscene Zeroing Trick</button>
-        <button class="btn-retro" style="font-size:11px; padding:3px 8px;" data-preset="msgbox">3. Win32 API Invoke</button>
-        <button class="btn-retro" style="font-size:11px; padding:3px 8px;" data-preset="vga">4. VGA 13h Intro Setup</button>
-        <button class="btn-retro" style="font-size:11px; padding:3px 8px;" data-preset="rdtsc">5. RDTSC Pentium Benchmark</button>
-        <button class="btn-retro btn-emerald" style="font-size:11px; padding:3px 8px;" data-preset="anomaly">6. Telemetry Echo (Offset 0x1999FE)</button>
+        <button class="btn-retro" style="font-size:11px; padding:3px 8px;" data-preset="prologue">1. Win32 Stack Frame</button>
+        <button class="btn-retro" style="font-size:11px; padding:3px 8px;" data-preset="xorzero">2. Demoscene Zeroing</button>
+        <button class="btn-retro" style="font-size:11px; padding:3px 8px;" data-preset="msgbox">3. Win32 MessageBoxA</button>
+        <button class="btn-retro" style="font-size:11px; padding:3px 8px;" data-preset="vga">4. VGA 13h Intro</button>
+        <button class="btn-retro" style="font-size:11px; padding:3px 8px;" data-preset="rdtsc">5. RDTSC Benchmark</button>
+        <button class="btn-retro" style="font-size:11px; padding:3px 8px;" data-preset="loopfib">6. Fibonacci Loop</button>
+        <button class="btn-retro btn-emerald" style="font-size:11px; padding:3px 8px;" data-preset="anomaly">7. Telemetry Echo (10.19.99.4)</button>
       </div>
 
       <div class="asm-grid">
@@ -635,14 +849,74 @@
           <div id="converterOutput" class="output-box">// Assembled machine code bytes will appear here...</div>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
             <span style="font-size:11px; color:var(--text-muted);" id="lblOutStats">Total Size: 0 bytes</span>
-            <button class="btn-retro" id="btnDownloadBin" style="font-size:11px; padding:3px 10px;">💾 Download .BIN Blob</button>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-retro" id="btnDownloadBin" style="font-size:11px; padding:3px 10px;">💾 Download .BIN Blob</button>
+              <button class="btn-retro btn-gold" id="btnSendToPEBuilder" style="font-size:11px; padding:3px 10px;">🔨 Wrap into PE32 .EXE ➔</button>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Diegetic Telemetry Annotation (Hidden unless preset 6 active) -->
+      <!-- Diegetic Telemetry Annotation (Hidden unless preset 7 active) -->
       <div id="telemetryNotice" style="display:none; margin-top:14px; background:rgba(16, 185, 129, 0.1); border:1px dashed var(--emerald); padding:10px; font-size:11px; color:var(--emerald);">
-        <strong>📡 Diegetic Telemetry Decoded:</strong> Offset <code style="color:var(--gold-bright);">0x10199904</code> matches the classified intranet routing table (Subnet 10.19.99.x). Node 0x7F listener initialized in memory.
+        <strong>📡 Diegetic Telemetry Decoded:</strong> Offset <code style="color:var(--gold-bright);">0x10199904</code> matches classified intranet routing subnet (10.19.99.x). Node 0x7F listener initialized in memory.
+      </div>
+
+      <!-- Interactive Micro-CPU Stepper Sandbox -->
+      <div class="cpu-sandbox">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+          <div>
+            <strong style="color:var(--gold-bright); font-size:13px;">🕹️ Interactive 32-Bit x86 Micro-CPU Step Emulator</strong>
+            <div style="font-size:11px; color:var(--text-muted);">Step instruction-by-instruction and observe simulated register, EFLAGS, and stack mutations.</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-retro btn-cyan" id="btnCpuStep">⏯ Step (F7)</button>
+            <button class="btn-retro btn-emerald" id="btnCpuRun">▶ Run Program</button>
+            <button class="btn-retro" id="btnCpuReset">⏹ Reset CPU</button>
+          </div>
+        </div>
+
+        <!-- 32-bit Registers Grid -->
+        <div class="reg-grid">
+          <div class="reg-card"><div class="reg-name">EAX (Accumulator)</div><div class="reg-val" id="regEAX">0x00000000</div></div>
+          <div class="reg-card"><div class="reg-name">EBX (Base)</div><div class="reg-val" id="regEBX">0x00000000</div></div>
+          <div class="reg-card"><div class="reg-name">ECX (Counter)</div><div class="reg-val" id="regECX">0x00000000</div></div>
+          <div class="reg-card"><div class="reg-name">EDX (Data / I/O)</div><div class="reg-val" id="regEDX">0x00000000</div></div>
+          <div class="reg-card"><div class="reg-name">ESI (Source Index)</div><div class="reg-val" id="regESI">0x00402000</div></div>
+          <div class="reg-card"><div class="reg-name">EDI (Dest Index)</div><div class="reg-val" id="regEDI">0x00402100</div></div>
+          <div class="reg-card"><div class="reg-name">EBP (Base Pointer)</div><div class="reg-val" id="regEBP">0x0012FFF0</div></div>
+          <div class="reg-card"><div class="reg-name">ESP (Stack Pointer)</div><div class="reg-val" id="regESP">0x0012FFF0</div></div>
+          <div class="reg-card"><div class="reg-name">EIP (Instruction)</div><div class="reg-val" id="regEIP" style="color:var(--gold-bright);">0x00401000</div></div>
+        </div>
+
+        <!-- EFLAGS Status Bar + Stack View -->
+        <div style="display:grid; grid-template-columns: 2fr 1fr; gap:12px;">
+          <div>
+            <div style="font-size:11px; font-weight:bold; color:var(--text-muted); margin-bottom:4px;">EFLAGS &amp; Telemetry Status:</div>
+            <div style="display:flex; gap:10px; font-size:11px; background:#05080f; padding:6px 10px; border:1px solid #1e293b; border-radius:3px; flex-wrap:wrap;">
+              <span>ZF: <strong id="cpuZF" style="color:var(--emerald);">1</strong></span>
+              <span>SF: <strong id="cpuSF" style="color:var(--text-muted);">0</strong></span>
+              <span>CF: <strong id="cpuCF" style="color:var(--text-muted);">0</strong></span>
+              <span>OF: <strong id="cpuOF" style="color:var(--text-muted);">0</strong></span>
+              <span>PF: <strong id="cpuPF" style="color:var(--emerald);">1</strong></span>
+              <span style="border-left:1px solid #334155; padding-left:8px;">Cycles: <strong id="cpuCycles" style="color:var(--cyan);">0</strong></span>
+              <span>Instructions Executed: <strong id="cpuInstrCount" style="color:var(--gold-bright);">0</strong></span>
+            </div>
+            <!-- Execution Log Box -->
+            <div id="cpuLogBox" style="margin-top:6px; background:#05080f; border:1px solid #1e293b; padding:6px; font-size:11px; color:#94a3b8; height:68px; overflow-y:auto; font-family:var(--font-mono);">
+              // CPU Ready. Press Step (F7) or Run Program to simulate execution...
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:11px; font-weight:bold; color:var(--text-muted); margin-bottom:4px;">Virtual Execution Stack [ESP]:</div>
+            <div id="stackViewBox" style="background:#05080f; border:1px solid #1e293b; padding:6px; font-size:10px; color:var(--emerald); height:92px; overflow-y:auto; font-family:var(--font-mono);">
+              [0x0012FFF0]: 0x00000000 (Top of Stack)<br>
+              [0x0012FFF4]: 0x77E81AF4 (Kernel32 Return)<br>
+              [0x0012FFF8]: 0x00000000 (Arg0)
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -651,11 +925,11 @@
   <section id="tab-altar" class="section-tab">
     <div class="panel-box gold-accent">
       <div class="panel-title">
-        <span>🧮 32-Bit Register &amp; Radix Transformation Altar</span>
+        <span>🧮 32-Bit Register, Radix &amp; IEEE-754 Transformation Altar</span>
         <button class="btn-retro" id="btnResetBits">Zero Register [0x00000000]</button>
       </div>
       <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
-        Click individual bits (0 through 31) to toggle binary states. Watch real-time multi-radix representations, two's complement signed values, and endian byte transformations update synchronously.
+        Click individual bits (0 through 31) to toggle binary states. Watch real-time multi-radix representations, two's complement signed values, endian byte transformations, ASCII characters, and IEEE-754 single float interpretations update synchronously.
       </p>
 
       <!-- Bit Matrix -->
@@ -669,45 +943,64 @@
       </div>
 
       <!-- Live Radix Converters -->
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-top:14px;">
-        <div style="background:#090e18; border:1px solid #1e293b; padding:10px; border-radius:3px;">
-          <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Hexadecimal (Base 16):</div>
-          <div id="valHex" style="font-size:16px; font-weight:bold; color:var(--gold-bright);">0x00000000</div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:10px; margin-top:14px;">
+        <div style="background:#090e18; border:1px solid #1e293b; padding:8px 10px; border-radius:3px;">
+          <div style="font-size:10px; color:var(--text-muted); margin-bottom:2px;">Hexadecimal (Base 16):</div>
+          <div id="valHex" style="font-size:15px; font-weight:bold; color:var(--gold-bright);">0x00000000</div>
         </div>
 
-        <div style="background:#090e18; border:1px solid #1e293b; padding:10px; border-radius:3px;">
-          <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Unsigned Integer (Base 10):</div>
-          <div id="valUint" style="font-size:16px; font-weight:bold; color:var(--cyan);">0</div>
+        <div style="background:#090e18; border:1px solid #1e293b; padding:8px 10px; border-radius:3px;">
+          <div style="font-size:10px; color:var(--text-muted); margin-bottom:2px;">Unsigned Integer (Base 10):</div>
+          <div id="valUint" style="font-size:15px; font-weight:bold; color:var(--cyan);">0</div>
         </div>
 
-        <div style="background:#090e18; border:1px solid #1e293b; padding:10px; border-radius:3px;">
-          <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Signed Int (Two's Compl):</div>
-          <div id="valInt" style="font-size:16px; font-weight:bold; color:var(--emerald);">0</div>
+        <div style="background:#090e18; border:1px solid #1e293b; padding:8px 10px; border-radius:3px;">
+          <div style="font-size:10px; color:var(--text-muted); margin-bottom:2px;">Signed Int (Two's Compl):</div>
+          <div id="valInt" style="font-size:15px; font-weight:bold; color:var(--emerald);">0</div>
         </div>
 
-        <div style="background:#090e18; border:1px solid #1e293b; padding:10px; border-radius:3px;">
-          <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Little ⮂ Big Endian Swap:</div>
-          <div id="valEndian" style="font-size:16px; font-weight:bold; color:#f43f5e;">0x00000000</div>
+        <div style="background:#090e18; border:1px solid #1e293b; padding:8px 10px; border-radius:3px;">
+          <div style="font-size:10px; color:var(--text-muted); margin-bottom:2px;">Little ⮂ Big Endian:</div>
+          <div id="valEndian" style="font-size:15px; font-weight:bold; color:#f43f5e;">0x00000000</div>
+        </div>
+
+        <div style="background:#090e18; border:1px solid #1e293b; padding:8px 10px; border-radius:3px;">
+          <div style="font-size:10px; color:var(--text-muted); margin-bottom:2px;">ASCII Bytes (char[4]):</div>
+          <div id="valAscii" style="font-size:15px; font-weight:bold; color:#a855f7;">"." "." "." "."</div>
+        </div>
+      </div>
+
+      <!-- IEEE-754 Single Float Card -->
+      <div style="background:#090e18; border:1px solid #1e293b; padding:10px; border-radius:3px; margin-top:10px;">
+        <div style="font-size:11px; font-weight:bold; color:var(--cyan); margin-bottom:4px;">
+          📐 IEEE-754 Single-Precision 32-Bit Float Interpretation:
+        </div>
+        <div style="display:flex; gap:16px; font-size:12px; flex-wrap:wrap;">
+          <div>Sign (Bit 31): <strong id="fpSign" style="color:var(--gold-bright);">+</strong></div>
+          <div>Biased Exponent (Bits 30-23): <strong id="fpExp" style="color:var(--emerald);">0 (2^-126)</strong></div>
+          <div>Mantissa (Bits 22-0): <strong id="fpMant" style="color:var(--cyan);">0x000000</strong></div>
+          <div>Calculated Value: <strong id="fpVal" style="color:#f43f5e; font-size:13px;">0.000000e+0</strong></div>
         </div>
       </div>
 
       <!-- Quick Operations Bar -->
-      <div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+      <div style="margin-top:14px; display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
         <span style="font-size:11px; font-weight:bold; color:var(--gold-bright);">Bit Manipulations:</span>
         <button class="btn-retro" id="btnShl">SHL 1 (&lt;&lt;)</button>
         <button class="btn-retro" id="btnShr">SHR 1 (&gt;&gt;)</button>
         <button class="btn-retro" id="btnRol">ROL 1</button>
         <button class="btn-retro" id="btnRor">ROR 1</button>
         <button class="btn-retro" id="btnNot">NOT (Invert ~)</button>
-        <button class="btn-retro btn-cyan" id="btnEndianFlip">Swap Endianness</button>
+        <button class="btn-retro btn-cyan" id="btnEndianFlip">Swap Endian</button>
+        <button class="btn-retro btn-gold" id="btnSetAllBits">Set All 1s (0xFFFFFFFF)</button>
       </div>
 
       <!-- EFLAGS Register Simulator -->
-      <div style="margin-top:16px; background:#090e18; border:1px solid #1e293b; padding:12px; border-radius:3px;">
-        <div style="font-size:12px; font-weight:bold; color:var(--gold-bright); margin-bottom:8px;">
+      <div style="margin-top:14px; background:#090e18; border:1px solid #1e293b; padding:10px; border-radius:3px;">
+        <div style="font-size:12px; font-weight:bold; color:var(--gold-bright); margin-bottom:6px;">
           🚩 Simulated EFLAGS Register Status for Current Register State:
         </div>
-        <div style="display:flex; gap:12px; flex-wrap:wrap;" id="eflagsBar">
+        <div style="display:flex; gap:14px; flex-wrap:wrap; font-size:11px;" id="eflagsBar">
           <div><strong>ZF (Zero Flag):</strong> <span id="flagZF" style="color:var(--emerald);">1 (Is Zero)</span></div>
           <div><strong>SF (Sign Flag):</strong> <span id="flagSF" style="color:var(--text-muted);">0 (Positive)</span></div>
           <div><strong>PF (Parity Even):</strong> <span id="flagPF" style="color:var(--emerald);">1 (Even)</span></div>
@@ -718,89 +1011,307 @@
     </div>
   </section>
 
-  <!-- TAB 4: Win32 PE Architecture -->
+  <!-- TAB 4: Win32 PE Architecture, Interactive Dissector & Builder -->
   <section id="tab-pe" class="section-tab">
     <div class="panel-box emerald-accent">
       <div class="panel-title">
-        <span>🏛️ Win32 Portable Executable (PE) Anatomical Shrine</span>
-        <span style="font-size:11px; color:var(--text-muted);">Format Standard: PE32 (i386)</span>
+        <span>🏛️ Win32 Portable Executable (PE32) Dissector &amp; Binary Workbench</span>
+        <span style="font-size:11px; color:var(--text-muted);">Format Specification: PE32 (i386)</span>
       </div>
       <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
-        Explore the sacred anatomy of 32-bit Win32 PE binaries (.EXE and .DLL). Click any structural header block below to inspect its disk offsets, memory mapping mechanics, and field layouts.
+        Explore, dissect, and build genuine 32-bit Windows Portable Executables. Inspect headers, section entropy, imported DLLs, disassemble entrypoints, or synthesize a valid PE32 binary directly in your browser.
       </p>
 
-      <div style="display:grid; grid-template-columns: 280px 1fr; gap:16px;">
-        <!-- Left: PE Layers -->
-        <div class="pe-diagram" id="peDiagramList">
-          <div class="pe-block active-pe" data-section="dos">
-            <div>
-              <strong style="color:var(--gold-bright);">1. DOS MZ Header</strong>
-              <div style="font-size:10px; color:var(--text-muted);">Offset: 0x0000 (IMAGE_DOS_HEADER)</div>
+      <!-- Subnav inside PE Tab -->
+      <div class="subnav-bar">
+        <button class="subnav-btn active" data-subtab="sub-dissect">🔍 [1] Interactive PE Dissector</button>
+        <button class="subnav-btn" data-subtab="sub-builder">🔨 [2] Win32 PE32 Binary Builder</button>
+        <button class="subnav-btn" data-subtab="sub-rva">🔀 [3] RVA ⮂ Disk Offset Converter</button>
+        <button class="subnav-btn" data-subtab="sub-guide">📚 [4] Anatomical Architecture Guide</button>
+      </div>
+
+      <!-- SUBTAB 1: PE Dissector -->
+      <div id="sub-dissect" class="subtab-pane active">
+        <!-- Sample Ingestion Toolbar -->
+        <div style="background:#090e18; border:1px solid #1e293b; padding:10px; margin-bottom:12px; border-radius:3px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <span style="font-size:11px; font-weight:bold; color:var(--gold-bright);">Load Verified Sample PE:</span>
+              <button class="btn-retro" style="font-size:11px; padding:3px 8px;" id="btnLoadSampleReturn42">1. Console Return 42 (1.5 KB)</button>
+              <button class="btn-retro" style="font-size:11px; padding:3px 8px;" id="btnLoadSampleMsgbox">2. GUI MessageBoxA (2.0 KB)</button>
+              <button class="btn-retro" style="font-size:11px; padding:3px 8px;" id="btnLoadSampleDemo">3. Demoscene Flame Stub (1.5 KB)</button>
+              <button class="btn-retro btn-emerald" style="font-size:11px; padding:3px 8px;" id="btnLoadSampleAnom">4. Subnet 10.19.99.4 Telemetry</button>
             </div>
-            <span class="badge-opcode">0x5A4D</span>
+            <button class="btn-retro" id="btnDownloadLoadedPE" style="font-size:11px; padding:3px 8px;">💾 Export Loaded .EXE</button>
           </div>
 
-          <div class="pe-block" data-section="stub">
-            <div>
-              <strong style="color:var(--cyan);">2. Real-Mode DOS Stub</strong>
-              <div style="font-size:10px; color:var(--text-muted);">Offset: 0x0040 (16-bit fallback message)</div>
-            </div>
-            <span class="badge-cat">INT 21h</span>
-          </div>
-
-          <div class="pe-block" data-section="pesig">
-            <div>
-              <strong style="color:var(--gold-bright);">3. PE Signature</strong>
-              <div style="font-size:10px; color:var(--text-muted);">Offset: [e_lfanew] = 0x00E0</div>
-            </div>
-            <span class="badge-opcode">"PE\0\0"</span>
-          </div>
-
-          <div class="pe-block" data-section="coff">
-            <div>
-              <strong style="color:var(--emerald);">4. COFF File Header</strong>
-              <div style="font-size:10px; color:var(--text-muted);">Offset: 0x00E4 (IMAGE_FILE_HEADER)</div>
-            </div>
-            <span class="badge-cat">20 Bytes</span>
-          </div>
-
-          <div class="pe-block" data-section="optional">
-            <div>
-              <strong style="color:var(--gold-bright);">5. Optional Header (PE32)</strong>
-              <div style="font-size:10px; color:var(--text-muted);">Offset: 0x00F8 (Entrypoint &amp; ImageBase)</div>
-            </div>
-            <span class="badge-cat">224 Bytes</span>
-          </div>
-
-          <div class="pe-block" data-section="sections">
-            <div>
-              <strong style="color:var(--cyan);">6. Section Table</strong>
-              <div style="font-size:10px; color:var(--text-muted);">.text, .rdata, .data, .rsrc, .reloc</div>
-            </div>
-            <span class="badge-opcode">IMAGE_SECTION_HEADER</span>
+          <!-- Drag and Drop Dropzone -->
+          <div class="dropzone" id="peDropzone">
+            <span style="font-size:12px; color:var(--cyan); font-weight:bold;">📁 Click to Browse or Drag &amp; Drop any local Win32 .EXE / .DLL file</span>
+            <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">Parsed 100% locally in browser memory with zero server uploads.</div>
+            <input type="file" id="peFileInput" accept=".exe,.dll,.sys,.bin,.scr" style="display:none;" />
           </div>
         </div>
 
-        <!-- Right: Detail Panel -->
-        <div style="background:#090e18; border:1px solid #1e293b; padding:14px; border-radius:4px;" id="peDetailBox">
-          <h3 id="peDetailTitle" style="color:var(--gold-bright); font-size:15px; margin-bottom:6px;">1. DOS MZ Header (IMAGE_DOS_HEADER)</h3>
-          <div id="peDetailSubtitle" style="font-size:11px; color:var(--cyan); margin-bottom:12px;">The 64-byte legacy header retained for backwards compatibility with MS-DOS 2.0+</div>
-          <div id="peDetailBody" style="font-size:12px; color:var(--text-main); line-height:1.6;">
-            Every valid 32-bit Win32 executable begins with the legacy <strong>IMAGE_DOS_HEADER</strong> (64 bytes).<br><br>
-            • <code>e_magic</code>: Must equal <code>0x5A4D</code> ("MZ", named after Mark Zbikowski).<br>
-            • <code>e_lfanew</code>: Located at offset <code>0x3C</code> (4 bytes). Holds the file pointer offset to the true NT PE Header. If this pointer is corrupted, the Win32 OS loader halts immediately with <em>"Invalid Win32 Application"</em>.
+        <!-- PE Overview Bar -->
+        <div style="background:#090e18; border:1px solid #1e293b; padding:10px; border-radius:3px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <div>
+            <span style="font-size:10px; color:var(--text-muted);">Loaded Image:</span>
+            <strong id="lblPeName" style="color:var(--gold-bright); font-size:13px; margin-left:4px;">return42_sample.exe</strong>
+            <span id="lblPeSize" style="font-size:11px; color:var(--cyan); margin-left:6px;">(1536 bytes)</span>
+          </div>
+          <div style="display:flex; gap:8px; font-size:11px;">
+            <span>DOS Sig: <strong id="lblDosSig" style="color:var(--emerald);">0x5A4D ("MZ")</strong></span>
+            <span>PE Sig: <strong id="lblPeSig" style="color:var(--emerald);">"PE  "</strong></span>
+            <span>Target: <strong id="lblMachine" style="color:var(--cyan);">i386 (0x014C)</strong></span>
+            <span>Subsystem: <strong id="lblSubsys" style="color:var(--gold-bright);">Win32 Console (3)</strong></span>
+          </div>
+        </div>
+
+        <!-- Dissected Tab Panels -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <!-- Left: Headers Summary -->
+          <div>
+            <div style="font-size:11px; font-weight:bold; color:var(--gold-bright); margin-bottom:4px;">📋 NT Header Layout &amp; Addresses:</div>
+            <table class="retro-table" id="peHeaderTable">
+              <tbody>
+                <tr><td>e_lfanew Offset</td><td id="peLfanew">0x00000080</td></tr>
+                <tr><td>Number of Sections</td><td id="peNumSections">2 sections</td></tr>
+                <tr><td>Compilation Timestamp</td><td id="peTimestamp">1999-12-31 23:59:59 UTC</td></tr>
+                <tr><td>Address of EntryPoint (RVA)</td><td id="peEntryPoint">0x00001000</td></tr>
+                <tr><td>Preferred ImageBase</td><td id="peImageBase">0x00400000</td></tr>
+                <tr><td>Section Alignment</td><td id="peSecAlign">4096 bytes (0x1000)</td></tr>
+                <tr><td>File Alignment</td><td id="peFileAlign">512 bytes (0x0200)</td></tr>
+                <tr><td>Size of Image / Headers</td><td id="peSizeImg">12288 B / 512 B</td></tr>
+                <tr><td>Linker Version</td><td id="peLinker">Microsoft Linker 6.00</td></tr>
+              </tbody>
+            </table>
+
+            <!-- Imported APIs Table -->
+            <div style="font-size:11px; font-weight:bold; color:var(--cyan); margin:10px 0 4px 0;">📦 Import Directory Table (IAT / INT):</div>
+            <div style="max-height:140px; overflow-y:auto; border:1px solid #1e293b;">
+              <table class="retro-table" id="peImportsTable">
+                <thead>
+                  <tr><th>Module (DLL)</th><th>Imported Function Name</th><th>Thunk RVA</th></tr>
+                </thead>
+                <tbody id="peImportsTbody">
+                  <tr><td>KERNEL32.dll</td><td>ExitProcess</td><td>0x00002060</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Right: Sections & Entropy Analyzer -->
+          <div>
+            <div style="font-size:11px; font-weight:bold; color:var(--emerald); margin-bottom:4px;">📊 Section Table &amp; Shannon Entropy Analysis:</div>
+            <div style="max-height:220px; overflow-y:auto; border:1px solid #1e293b; margin-bottom:8px;">
+              <table class="retro-table" id="peSectionsTable">
+                <thead>
+                  <tr><th>Name</th><th>RVA</th><th>Raw Size</th><th>Entropy (0-8)</th><th>Status</th></tr>
+                </thead>
+                <tbody id="peSectionsTbody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Entrypoint Disassembly Preview -->
+            <div style="font-size:11px; font-weight:bold; color:var(--gold-bright); margin-bottom:4px;">🔍 EntryPoint Code Disassembly (at AddressOfEntryPoint):</div>
+            <div id="peDisasmBox" style="background:#05080f; border:1px solid #1e293b; padding:8px; font-size:11px; color:var(--emerald); height:110px; overflow-y:auto; font-family:var(--font-mono); white-space:pre;">
+// Disassembled entrypoint code will appear here...
+            </div>
+          </div>
+        </div>
+
+        <!-- Raw Section Hex Dumper -->
+        <div style="margin-top:12px; background:#090e18; border:1px solid #1e293b; padding:10px; border-radius:3px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <strong style="color:var(--gold-bright); font-size:11px;">Hex &amp; ASCII Inspection Dump:</strong>
+              <select id="selDumpSection" style="padding:1px 6px; font-size:11px;">
+                <option value="headers">File Headers (Offset 0x0000 - 0x01FF)</option>
+                <option value="0">Section .text (Code)</option>
+                <option value="1">Section .rdata (Imports &amp; Data)</option>
+              </select>
+            </div>
+            <span style="font-size:10px; color:var(--text-muted);" id="lblDumpOffset">Range: 0x00000000 - 0x000001FF</span>
+          </div>
+          <div id="peHexDumpBox" class="hex-dump-view">
+// Hex dump will render here...
           </div>
         </div>
       </div>
 
-      <!-- Ring 0 vs Ring 3 Explainer -->
-      <div style="margin-top:16px; background:#090e18; border:1px solid #1e293b; padding:12px; border-radius:4px;">
-        <div style="font-size:13px; font-weight:bold; color:var(--gold-bright); margin-bottom:6px;">
-          🛡️ The Rings of Protection (x86 CPU Privilege Hierarchy)
+      <!-- SUBTAB 2: PE32 Binary Builder -->
+      <div id="sub-builder" class="subtab-pane">
+        <div style="background:#090e18; border:1px solid #1e293b; padding:12px; border-radius:3px; margin-bottom:12px;">
+          <h3 style="color:var(--gold-bright); font-size:14px; margin-bottom:4px;">🔨 Win32 PE32 Executable Generator</h3>
+          <p style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">
+            Synthesize a 100% syntactically valid 32-bit Windows Executable (.exe) in pure client-side JavaScript. Generated binaries conform strictly to the Win32 PE32 specification with real DOS headers, PE signatures, Optional Headers, Section Tables, and functional Import Directory Tables.
+          </p>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+            <div>
+              <label style="font-size:11px; color:var(--cyan); font-weight:bold;">Select Binary Payload Template:</label>
+              <select id="builderTemplate" style="width:100%; margin-top:2px;">
+                <option value="return42">1. Console Exit Code Return (ExitProcess(42))</option>
+                <option value="msgbox">2. Win32 GUI MessageBoxA ("Hand-Crafted in 1999")</option>
+                <option value="beep">3. System Audio Alert (MessageBeep &amp; ExitProcess)</option>
+                <option value="custom">4. Custom Machine Code from Live Assembler Tab</option>
+              </select>
+
+              <div style="margin-top:10px;">
+                <label style="font-size:11px; color:var(--gold-bright); font-weight:bold;">Target Win32 Subsystem:</label>
+                <select id="builderSubsystem" style="width:100%; margin-top:2px;">
+                  <option value="3">Console Application (IMAGE_SUBSYSTEM_WINDOWS_CUI = 3)</option>
+                  <option value="2">GUI Application (IMAGE_SUBSYSTEM_WINDOWS_GUI = 2)</option>
+                </select>
+              </div>
+
+              <div style="margin-top:10px;">
+                <label style="font-size:11px; color:var(--emerald); font-weight:bold;">Return Code (0-255):</label>
+                <input type="number" id="builderExitCode" value="42" min="0" max="255" style="width:100%; margin-top:2px;" />
+              </div>
+            </div>
+
+            <div>
+              <label style="font-size:11px; color:var(--gold-bright); font-weight:bold;">MessageBox Title (GUI Template):</label>
+              <input type="text" id="builderMsgTitle" value="Temple of Opcodes" style="width:100%; margin-top:2px;" />
+
+              <label style="font-size:11px; color:var(--cyan); font-weight:bold; margin-top:8px; display:block;">MessageBox Text (GUI Template):</label>
+              <input type="text" id="builderMsgText" value="Hand-Crafted in 1999 // Zero Bloat Ring 0" style="width:100%; margin-top:2px;" />
+
+              <div style="margin-top:10px; background:#05080f; border:1px solid #1e293b; padding:8px; font-size:10px; color:var(--text-muted);">
+                <strong>Binary Layout:</strong> 512B Headers + 512B .text code + 512B .rdata IAT imports = <strong>1,536 bytes</strong> total footprint. Zero bloated CRT dependencies.
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:8px;">
+            <button class="btn-retro btn-gold" id="btnBuildExecutable" style="flex:1; padding:8px;">🔨 Synthesize Valid PE32 Binary</button>
+            <button class="btn-retro btn-cyan" id="btnDownloadBuiltPE" style="padding:8px 16px;">💾 Download .EXE</button>
+            <button class="btn-retro btn-emerald" id="btnInspectBuiltPE" style="padding:8px 16px;">🔍 Inspect In Dissector ➔</button>
+          </div>
         </div>
-        <div style="font-size:12px; color:var(--text-muted); line-height:1.5;">
-          • <strong>Ring 0 (Supervisor / Kernel Space):</strong> Direct access to CPU control registers (<code>CR0, CR3, CR4</code>), I/O ports (<code>IN / OUT</code>), Interrupt Descriptor Table (<code>IDT</code>), and page tables. All drivers and NT kernel run here.<br>
-          • <strong>Ring 3 (User Space / Applications):</strong> Restricted memory sandbox. Direct hardware port instructions fault with <code>EXCEPTION_PRIV_INSTRUCTION</code>. All Win32 programs request OS services through transition gates (e.g. <code>SYSENTER</code> or <code>INT 2Eh</code>).
+
+        <div id="buildOutputLog" style="background:#05080f; border:1px solid #1e293b; padding:10px; font-size:11px; color:var(--emerald); min-height:80px; font-family:var(--font-mono); white-space:pre;">
+// Binary Builder ready. Click "Synthesize Valid PE32 Binary" to compile...
+        </div>
+      </div>
+
+      <!-- SUBTAB 3: RVA to Offset Converter -->
+      <div id="sub-rva" class="subtab-pane">
+        <div style="background:#090e18; border:1px solid #1e293b; padding:12px; border-radius:3px;">
+          <h3 style="color:var(--gold-bright); font-size:14px; margin-bottom:4px;">🔀 Relative Virtual Address (RVA) ⮂ Physical Disk Offset Converter</h3>
+          <p style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">
+            Reverse engineering calculator: seamlessly translate memory addresses (ImageBase + RVA) into exact physical file byte offsets on disk using the active section table mappings.
+          </p>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+            <div style="background:#0e1626; border:1px solid #1e293b; padding:10px; border-radius:3px;">
+              <label style="font-size:11px; color:var(--cyan); font-weight:bold;">Input Relative Virtual Address (RVA):</label>
+              <div style="display:flex; gap:6px; margin-top:4px;">
+                <input type="text" id="rvaInput" value="0x00001000" style="flex:1;" />
+                <button class="btn-retro btn-cyan" id="btnConvertRVA">Convert ➔</button>
+              </div>
+              <div style="margin-top:8px; font-size:11px; color:var(--text-muted);">
+                Memory Address (VA): <strong id="rvaResultVA" style="color:var(--gold-bright);">0x00401000</strong><br>
+                Target Section: <strong id="rvaResultSec" style="color:var(--emerald);">.text</strong><br>
+                Physical File Offset: <strong id="rvaResultOffset" style="color:var(--cyan);">0x00000200 (512 bytes)</strong>
+              </div>
+            </div>
+
+            <div style="background:#0e1626; border:1px solid #1e293b; padding:10px; border-radius:3px;">
+              <label style="font-size:11px; color:var(--emerald); font-weight:bold;">Input Physical File Offset (Disk):</label>
+              <div style="display:flex; gap:6px; margin-top:4px;">
+                <input type="text" id="offsetInput" value="0x00000200" style="flex:1;" />
+                <button class="btn-retro btn-emerald" id="btnConvertOffset">Convert ➔</button>
+              </div>
+              <div style="margin-top:8px; font-size:11px; color:var(--text-muted);">
+                Relative Virtual Address: <strong id="offResultRVA" style="color:var(--cyan);">0x00001000</strong><br>
+                Memory Address (VA): <strong id="offResultVA" style="color:var(--gold-bright);">0x00401000</strong><br>
+                Target Section: <strong id="offResultSec" style="color:var(--emerald);">.text</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBTAB 4: Anatomical Architecture Guide -->
+      <div id="sub-guide" class="subtab-pane">
+        <div style="display:grid; grid-template-columns: 280px 1fr; gap:16px;">
+          <!-- Left: PE Layers -->
+          <div class="pe-diagram" id="peDiagramList">
+            <div class="pe-block active-pe" data-section="dos">
+              <div>
+                <strong style="color:var(--gold-bright);">1. DOS MZ Header</strong>
+                <div style="font-size:10px; color:var(--text-muted);">Offset: 0x0000 (IMAGE_DOS_HEADER)</div>
+              </div>
+              <span class="badge-opcode">0x5A4D</span>
+            </div>
+
+            <div class="pe-block" data-section="stub">
+              <div>
+                <strong style="color:var(--cyan);">2. Real-Mode DOS Stub</strong>
+                <div style="font-size:10px; color:var(--text-muted);">Offset: 0x0040 (16-bit fallback message)</div>
+              </div>
+              <span class="badge-cat">INT 21h</span>
+            </div>
+
+            <div class="pe-block" data-section="pesig">
+              <div>
+                <strong style="color:var(--gold-bright);">3. PE Signature</strong>
+                <div style="font-size:10px; color:var(--text-muted);">Offset: [e_lfanew] = 0x00E0</div>
+              </div>
+              <span class="badge-opcode">"PE  "</span>
+            </div>
+
+            <div class="pe-block" data-section="coff">
+              <div>
+                <strong style="color:var(--emerald);">4. COFF File Header</strong>
+                <div style="font-size:10px; color:var(--text-muted);">Offset: 0x00E4 (IMAGE_FILE_HEADER)</div>
+              </div>
+              <span class="badge-cat">20 Bytes</span>
+            </div>
+
+            <div class="pe-block" data-section="optional">
+              <div>
+                <strong style="color:var(--gold-bright);">5. Optional Header (PE32)</strong>
+                <div style="font-size:10px; color:var(--text-muted);">Offset: 0x00F8 (Entrypoint &amp; ImageBase)</div>
+              </div>
+              <span class="badge-cat">224 Bytes</span>
+            </div>
+
+            <div class="pe-block" data-section="sections">
+              <div>
+                <strong style="color:var(--cyan);">6. Section Table</strong>
+                <div style="font-size:10px; color:var(--text-muted);">.text, .rdata, .data, .rsrc, .reloc</div>
+              </div>
+              <span class="badge-opcode">IMAGE_SECTION_HEADER</span>
+            </div>
+          </div>
+
+          <!-- Right: Detail Panel -->
+          <div style="background:#090e18; border:1px solid #1e293b; padding:14px; border-radius:4px;" id="peDetailBox">
+            <h3 id="peDetailTitle" style="color:var(--gold-bright); font-size:15px; margin-bottom:6px;">1. DOS MZ Header (IMAGE_DOS_HEADER)</h3>
+            <div id="peDetailSubtitle" style="font-size:11px; color:var(--cyan); margin-bottom:12px;">The 64-byte legacy header retained for backwards compatibility with MS-DOS 2.0+</div>
+            <div id="peDetailBody" style="font-size:12px; color:var(--text-main); line-height:1.6;">
+              Every valid 32-bit Win32 executable begins with the legacy <strong>IMAGE_DOS_HEADER</strong> (64 bytes).<br><br>
+              • <code>e_magic</code>: Must equal <code>0x5A4D</code> ("MZ", named after Mark Zbikowski).<br>
+              • <code>e_lfanew</code>: Located at offset <code>0x3C</code> (4 bytes). Holds the file pointer offset to the true NT PE Header. If this pointer is corrupted, the Win32 OS loader halts immediately with <em>"Invalid Win32 Application"</em>.
+            </div>
+          </div>
+        </div>
+
+        <!-- Ring 0 vs Ring 3 Explainer -->
+        <div style="margin-top:16px; background:#090e18; border:1px solid #1e293b; padding:12px; border-radius:4px;">
+          <div style="font-size:13px; font-weight:bold; color:var(--gold-bright); margin-bottom:6px;">
+            🛡️ The Rings of Protection (x86 CPU Privilege Hierarchy)
+          </div>
+          <div style="font-size:12px; color:var(--text-muted); line-height:1.5;">
+            • <strong>Ring 0 (Supervisor / Kernel Space):</strong> Direct access to CPU control registers (<code>CR0, CR3, CR4</code>), I/O ports (<code>IN / OUT</code>), Interrupt Descriptor Table (<code>IDT</code>), and page tables. All drivers and NT kernel run here.<br>
+            • <strong>Ring 3 (User Space / Applications):</strong> Restricted memory sandbox. Direct hardware port instructions fault with <code>EXCEPTION_PRIV_INSTRUCTION</code>. All Win32 programs request OS services through transition gates (e.g. <code>SYSENTER</code> or <code>INT 2Eh</code>).
+          </div>
         </div>
       </div>
     </div>
@@ -811,7 +1322,7 @@
     <div class="panel-box gold-accent">
       <div class="panel-title">
         <span>🎵 YM2612 (FM) &amp; SPC700 (Stereo Delay) Chiptune Sanctuary</span>
-        <span class="status-pill online">Mandate 9 Audio Compliant</span>
+        <span class="status-pill online">Mandate 9 Compliant // 4 Tracks</span>
       </div>
       <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
         Pure procedural Web Audio synthesis adhering strictly to the Sega Genesis (Yamaha YM2612 2-operator FM synthesis) and Super Nintendo (SPC700 stereo slapback echo) architecture. Zero external soundfiles or sample bloat.
@@ -841,16 +1352,35 @@
       <!-- Live Oscilloscope Canvas -->
       <canvas id="scopeCanvas" class="scope-canvas" width="800" height="120"></canvas>
 
-      <!-- Sound Engine Stats -->
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-top:10px; font-size:11px;">
-        <div style="background:#090e18; border:1px solid #1e293b; padding:8px;">
-          <strong style="color:var(--gold-bright);">Modulator Operator:</strong> Carrier FM ratio 1:2 with exponential decay decay envelope.
+      <!-- Interactive FM Operator Tuner -->
+      <div style="background:#090e18; border:1px solid #1e293b; padding:12px; border-radius:3px; margin-top:10px;">
+        <div style="font-size:12px; font-weight:bold; color:var(--gold-bright); margin-bottom:6px;">
+          🎛️ Realtime Yamaha YM2612 FM Operator Timbre Tuner:
         </div>
-        <div style="background:#090e18; border:1px solid #1e293b; padding:8px;">
-          <strong style="color:var(--cyan);">SPC700 Echo Line:</strong> 180ms slapback delay with 2100Hz low-pass damping filter.
-        </div>
-        <div style="background:#090e18; border:1px solid #1e293b; padding:8px;">
-          <strong style="color:var(--emerald);">Asset Footprint:</strong> 0 KB external samples. Pure mathematical synthesis.
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; font-size:11px;">
+          <div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+              <span>Carrier:Modulator Ratio:</span>
+              <strong id="lblFmRatio" style="color:var(--cyan);">2.0x</strong>
+            </div>
+            <input type="range" id="sliderFmRatio" min="5" max="80" value="20" style="width:100%;" />
+          </div>
+
+          <div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+              <span>FM Modulation Index (Bite):</span>
+              <strong id="lblFmIndex" style="color:var(--emerald);">180</strong>
+            </div>
+            <input type="range" id="sliderFmIndex" min="0" max="500" value="180" style="width:100%;" />
+          </div>
+
+          <div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+              <span>SPC700 Echo Feedback:</span>
+              <strong id="lblEchoFeedback" style="color:var(--gold-bright);">28%</strong>
+            </div>
+            <input type="range" id="sliderEchoFeedback" min="0" max="75" value="28" style="width:100%;" />
+          </div>
         </div>
       </div>
     </div>
@@ -913,7 +1443,7 @@
           <a href="/web/users/neon_rider.html">« [Prev] ~neon_rider's Shrine</a>
           <a href="/web/webring.html">🌐 [Hub] Webring Central Hub</a>
           <a href="/web/portal.html">🏠 [Portal] KiloNet 1999 Directory</a>
-          <a href="/web/geocities.html">[Next] CyberSpire Retro Shrine »</a>
+          <a href="/web/geocities.html">🌆 [Next] CyberSpire Retro Shrine »</a>
         </div>
       </div>
 
@@ -948,9 +1478,9 @@
 
 <script>
   // ==========================================
-  // 1. Tab Navigation & State Management
+  // 1. Tab Navigation & CRT Toggle
   // ==========================================
-  const navBtns = document.querySelectorAll('.nav-btn');
+  const navBtns = document.querySelectorAll('.nav-bar .nav-btn');
   const sectionTabs = document.querySelectorAll('.section-tab');
 
   navBtns.forEach(btn => {
@@ -964,75 +1494,214 @@
     });
   });
 
+  // Subnav inside PE tab
+  const subnavBtns = document.querySelectorAll('.subnav-btn');
+  const subtabPanes = document.querySelectorAll('.subtab-pane');
+
+  subnavBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      subnavBtns.forEach(b => b.classList.remove('active'));
+      subtabPanes.forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      const targetId = btn.dataset.subtab;
+      const targetPane = document.getElementById(targetId);
+      if (targetPane) targetPane.classList.add('active');
+    });
+  });
+
+  // CRT Scanlines Toggle
+  const btnToggleCRT = document.getElementById('btnToggleCRT');
+  let crtActive = true;
+  btnToggleCRT.addEventListener('click', () => {
+    crtActive = !crtActive;
+    if (crtActive) {
+      document.body.classList.add('crt-scanlines');
+      btnToggleCRT.textContent = 'CRT Scanlines: ON';
+    } else {
+      document.body.classList.remove('crt-scanlines');
+      btnToggleCRT.textContent = 'CRT Scanlines: OFF';
+    }
+  });
+
   // Visitor Counter
-  let visits = parseInt(localStorage.getItem('kweb_asm_temple_visits') || '31892', 10);
+  let visits = parseInt(localStorage.getItem('kweb_asm_temple_visits') || '32481', 10);
   visits++;
   localStorage.setItem('kweb_asm_temple_visits', visits);
   const lblCounter = document.getElementById('lblCounter');
   if (lblCounter) lblCounter.textContent = String(visits).padStart(7, '0');
 
   // ==========================================
-  // 2. Opcode Oracle & Search Database
+  // 2. Opcode Oracle (Expanded 118 Sacred Opcodes)
   // ==========================================
   const OPCODES_DB = [
-    { mnem: "NOP", hex: "90", cat: "Data", cycles: "1", flags: "None", desc: "No operation. Consumes 1 clock cycle without altering CPU registers or flags." },
-    { mnem: "MOV EAX, imm32", hex: "B8 [imm32]", cat: "Data", cycles: "1", flags: "None", desc: "Move 32-bit immediate constant into register EAX." },
-    { mnem: "MOV reg, reg", hex: "89 /r", cat: "Data", cycles: "1", flags: "None", desc: "Copy contents of source 32-bit register to destination register." },
-    { mnem: "LEA reg, [mem]", hex: "8D /r", cat: "Data", cycles: "1", flags: "None", desc: "Load effective address into register without memory dereference." },
-    { mnem: "XOR reg, reg", hex: "31 /r", cat: "Logic", cycles: "1", flags: "ZF,SF,PF,CF=0,OF=0", desc: "Bitwise exclusive OR. Iconic zeroing idiom (e.g. XOR EAX, EAX)." },
-    { mnem: "AND reg, reg", hex: "21 /r", cat: "Logic", cycles: "1", flags: "ZF,SF,PF,CF=0,OF=0", desc: "Bitwise AND operation between two registers." },
-    { mnem: "OR reg, reg", hex: "09 /r", cat: "Logic", cycles: "1", flags: "ZF,SF,PF,CF=0,OF=0", desc: "Bitwise inclusive OR operation." },
-    { mnem: "NOT reg", hex: "F7 /2", cat: "Logic", cycles: "1", flags: "None", desc: "One's complement bitwise inversion." },
-    { mnem: "NEG reg", hex: "F7 /3", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Two's complement negation (0 - reg)." },
-    { mnem: "ADD reg, reg", hex: "01 /r", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Add source operand to destination operand." },
-    { mnem: "SUB reg, reg", hex: "29 /r", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Subtract source operand from destination operand." },
-    { mnem: "INC reg", hex: "40..47", cat: "Arithmetic", cycles: "1", flags: "ZF,SF,OF,AF,PF", desc: "Increment register by 1 (Note: preserves Carry Flag CF!)." },
-    { mnem: "DEC reg", hex: "48..4F", cat: "Arithmetic", cycles: "1", flags: "ZF,SF,OF,AF,PF", desc: "Decrement register by 1 (preserves Carry Flag CF!)." },
-    { mnem: "CMP reg, imm8", hex: "83 /7 [ib]", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Compare register against immediate byte by non-destructive subtraction." },
-    { mnem: "TEST reg, reg", hex: "85 /r", cat: "Logic", cycles: "1", flags: "ZF,SF,PF,CF=0,OF=0", desc: "Non-destructive bitwise AND. Sets Zero Flag if result is 0." },
-    { mnem: "SHL reg, 1", hex: "D1 /4", cat: "Shift", cycles: "1", flags: "CF,OF,ZF,SF,PF", desc: "Shift bits left by 1. Multiplies unsigned integer by 2." },
-    { mnem: "SHR reg, 1", hex: "D1 /5", cat: "Shift", cycles: "1", flags: "CF,OF,ZF,SF,PF", desc: "Logical shift right by 1. Divides unsigned integer by 2." },
-    { mnem: "ROL reg, 1", hex: "D1 /0", cat: "Shift", cycles: "1", flags: "CF,OF", desc: "Rotate bits left through carry flag." },
-    { mnem: "ROR reg, 1", hex: "D1 /1", cat: "Shift", cycles: "1", flags: "CF,OF", desc: "Rotate bits right through carry flag." },
-    { mnem: "PUSH reg32", hex: "50..57", cat: "Stack", cycles: "1", flags: "None", desc: "Push 32-bit register value onto execution stack; decrements ESP by 4." },
-    { mnem: "POP reg32", hex: "58..5F", cat: "Stack", cycles: "1", flags: "None", desc: "Pop 32-bit value from execution stack into register; increments ESP by 4." },
-    { mnem: "PUSHA", hex: "60", cat: "Stack", cycles: "5", flags: "None", desc: "Push all general-purpose registers: EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI." },
-    { mnem: "POPA", hex: "61", cat: "Stack", cycles: "5", flags: "None", desc: "Pop all general-purpose registers from stack in reverse order." },
-    { mnem: "PUSHFD", hex: "9C", cat: "Stack", cycles: "4", flags: "None", desc: "Push 32-bit EFLAGS register onto stack." },
-    { mnem: "POPFD", hex: "9D", cat: "Stack", cycles: "4", flags: "All Flags", desc: "Pop 32-bit value from stack into EFLAGS register." },
-    { mnem: "JMP rel8", hex: "EB [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Unconditional short relative branch within -128..+127 bytes." },
-    { mnem: "JMP rel32", hex: "E9 [cd]", cat: "Flow", cycles: "1", flags: "None", desc: "Unconditional near relative jump within +/-2GB." },
-    { mnem: "JZ / JE rel8", hex: "74 [cb]", cat: "Flow", cycles: "1 (taken)", flags: "None", desc: "Jump if Zero / Jump if Equal (ZF = 1)." },
-    { mnem: "JNZ / JNE rel8", hex: "75 [cb]", cat: "Flow", cycles: "1 (taken)", flags: "None", desc: "Jump if Not Zero / Jump if Not Equal (ZF = 0)." },
-    { mnem: "JC / JB rel8", hex: "72 [cb]", cat: "Flow", cycles: "1 (taken)", flags: "None", desc: "Jump if Carry / Jump if Below (CF = 1)." },
-    { mnem: "JNC / JAE rel8", hex: "73 [cb]", cat: "Flow", cycles: "1 (taken)", flags: "None", desc: "Jump if No Carry / Jump if Above or Equal (CF = 0)." },
-    { mnem: "CALL rel32", hex: "E8 [cd]", cat: "Flow", cycles: "1", flags: "None", desc: "Push return address onto stack and branch to target procedure." },
-    { mnem: "RET", hex: "C3", cat: "Flow", cycles: "1", flags: "None", desc: "Pop return address from stack and resume execution." },
-    { mnem: "RET imm16", hex: "C2 [iw]", cat: "Flow", cycles: "2", flags: "None", desc: "Pop return address and release specified bytes from stack (stdcall cleanup)." },
-    { mnem: "LOOP rel8", hex: "E2 [cb]", cat: "Flow", cycles: "1..2", flags: "None", desc: "Decrement ECX; if ECX != 0, branch to target." },
-    { mnem: "INT 3", hex: "CC", cat: "System", cycles: "13", flags: "IF,TF", desc: "Breakpoint trap interrupt for debuggers and reverse engineers." },
-    { mnem: "INT 21h", hex: "CD 21", cat: "System", cycles: "16", flags: "All", desc: "MS-DOS legacy API dispatch interrupt (AH = function number)." },
-    { mnem: "RDTSC", hex: "0F 31", cat: "System", cycles: "9", flags: "None", desc: "Read 64-bit CPU Time-Stamp Counter into EDX:EAX (Pentium+)." },
-    { mnem: "CPUID", hex: "0F A2", cat: "System", cycles: "14", flags: "None", desc: "Query processor signature, feature flags, and vendor string." },
-    { mnem: "CLI", hex: "FA", cat: "System", cycles: "7", flags: "IF=0", desc: "Clear Interrupt Flag (Ring 0 privilege required)." },
-    { mnem: "STI", hex: "FB", cat: "System", cycles: "7", flags: "IF=1", desc: "Set Interrupt Flag to enable external interrupts (Ring 0 privilege required)." },
-    { mnem: "HLT", hex: "F4", cat: "System", cycles: "--", flags: "None", desc: "Halt processor until next hardware interrupt occurs (Ring 0)." }
+    // DATA MOVEMENT
+    { mnem: "NOP", hex: "90", cat: "Data", cycles: "1", flags: "None", desc: "No operation. Consumes 1 clock cycle without altering CPU registers or flags.", enc: { p: "None", o: "90", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "MOV EAX, imm32", hex: "B8 [imm32]", cat: "Data", cycles: "1", flags: "None", desc: "Move 32-bit immediate constant into register EAX.", enc: { p: "None", o: "B8", m: "None", s: "None", d: "None", i: "ib (4B)" } },
+    { mnem: "MOV reg, reg", hex: "89 /r", cat: "Data", cycles: "1", flags: "None", desc: "Copy contents of source 32-bit register to destination register.", enc: { p: "None", o: "89", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "MOV reg, [mem]", hex: "8B /r", cat: "Data", cycles: "1..2", flags: "None", desc: "Load 32-bit value from memory address into register.", enc: { p: "None", o: "8B", m: "ModR/M", s: "Optional", d: "0-4B", i: "None" } },
+    { mnem: "MOV [mem], reg", hex: "89 /r", cat: "Data", cycles: "1..2", flags: "None", desc: "Store 32-bit register value into memory address.", enc: { p: "None", o: "89", m: "ModR/M", s: "Optional", d: "0-4B", i: "None" } },
+    { mnem: "LEA reg, [mem]", hex: "8D /r", cat: "Data", cycles: "1", flags: "None", desc: "Load effective address calculation into register without memory access.", enc: { p: "None", o: "8D", m: "ModR/M", s: "SIB", d: "0-4B", i: "None" } },
+    { mnem: "XCHG reg, reg", hex: "87 /r", cat: "Data", cycles: "3", flags: "None", desc: "Atomically exchange contents of two registers without temporary storage.", enc: { p: "None", o: "87", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "BSWAP reg32", hex: "0F C8+r", cat: "Data", cycles: "1", flags: "None", desc: "Reverses byte order of 32-bit register (Little ⮂ Big Endian conversion).", enc: { p: "None", o: "0F C8", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "MOVSX reg, reg8", hex: "0F BE /r", cat: "Data", cycles: "3", flags: "None", desc: "Move with sign-extension from 8-bit/16-bit to 32-bit register.", enc: { p: "None", o: "0F BE", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "MOVZX reg, reg8", hex: "0F B6 /r", cat: "Data", cycles: "3", flags: "None", desc: "Move with zero-extension from 8-bit/16-bit to 32-bit register.", enc: { p: "None", o: "0F B6", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "XLATB", hex: "D7", cat: "Data", cycles: "4", flags: "None", desc: "Table look-up translation: AL = [EBX + AL].", enc: { p: "None", o: "D7", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "PUSH reg32", hex: "50..57", cat: "Stack", cycles: "1", flags: "None", desc: "Push 32-bit register onto stack; decrements ESP by 4.", enc: { p: "None", o: "50+r", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "PUSH imm32", hex: "68 [cd]", cat: "Stack", cycles: "1", flags: "None", desc: "Push 32-bit immediate constant onto stack.", enc: { p: "None", o: "68", m: "None", s: "None", d: "None", i: "imm32" } },
+    { mnem: "POP reg32", hex: "58..5F", cat: "Stack", cycles: "1", flags: "None", desc: "Pop 32-bit value from stack into register; increments ESP by 4.", enc: { p: "None", o: "58+r", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "PUSHA", hex: "60", cat: "Stack", cycles: "5", flags: "None", desc: "Push all general registers: EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI.", enc: { p: "None", o: "60", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "POPA", hex: "61", cat: "Stack", cycles: "5", flags: "None", desc: "Pop all general registers from stack in reverse order.", enc: { p: "None", o: "61", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "PUSHFD", hex: "9C", cat: "Stack", cycles: "4", flags: "None", desc: "Push 32-bit EFLAGS register onto execution stack.", enc: { p: "None", o: "9C", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "POPFD", hex: "9D", cat: "Stack", cycles: "4", flags: "All Flags", desc: "Pop 32-bit value from stack into EFLAGS register.", enc: { p: "None", o: "9D", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "ENTER imm16, imm8", hex: "C8 [iw] [ib]", cat: "Stack", cycles: "11", flags: "None", desc: "Create high-level procedure stack frame and allocate local variables.", enc: { p: "None", o: "C8", m: "None", s: "None", d: "None", i: "iw, ib" } },
+    { mnem: "LEAVE", hex: "C9", cat: "Stack", cycles: "2", flags: "None", desc: "Release procedure stack frame (MOV ESP, EBP; POP EBP).", enc: { p: "None", o: "C9", m: "None", s: "None", d: "None", i: "None" } },
+
+    // ARITHMETIC
+    { mnem: "ADD reg, reg", hex: "01 /r", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Add source operand to destination operand.", enc: { p: "None", o: "01", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "ADC reg, reg", hex: "11 /r", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Add with Carry: dest = dest + src + CarryFlag.", enc: { p: "None", o: "11", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "SUB reg, reg", hex: "29 /r", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Subtract source operand from destination operand.", enc: { p: "None", o: "29", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "SBB reg, reg", hex: "19 /r", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Subtract with Borrow: dest = dest - (src + CarryFlag).", enc: { p: "None", o: "19", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "INC reg32", hex: "40..47", cat: "Arithmetic", cycles: "1", flags: "ZF,SF,OF,AF,PF", desc: "Increment register by 1 (Note: preserves Carry Flag CF!).", enc: { p: "None", o: "40+r", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "DEC reg32", hex: "48..4F", cat: "Arithmetic", cycles: "1", flags: "ZF,SF,OF,AF,PF", desc: "Decrement register by 1 (preserves Carry Flag CF!).", enc: { p: "None", o: "48+r", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "NEG reg", hex: "F7 /3", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Two's complement negation (dest = 0 - dest).", enc: { p: "None", o: "F7", m: "ModR/M (/3)", s: "None", d: "None", i: "None" } },
+    { mnem: "CMP reg, reg", hex: "39 /r", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Compare two operands via subtraction, updating EFLAGS without modifying registers.", enc: { p: "None", o: "39", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "MUL reg32", hex: "F7 /4", cat: "Arithmetic", cycles: "10", flags: "CF,OF", desc: "Unsigned multiplication: EDX:EAX = EAX * reg32.", enc: { p: "None", o: "F7", m: "ModR/M (/4)", s: "None", d: "None", i: "None" } },
+    { mnem: "IMUL reg, reg", hex: "0F AF /r", cat: "Arithmetic", cycles: "10", flags: "CF,OF", desc: "Signed multiplication: dest = dest * src.", enc: { p: "None", o: "0F AF", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "DIV reg32", hex: "F7 /6", cat: "Arithmetic", cycles: "41", flags: "None (undefined)", desc: "Unsigned division: EAX = EDX:EAX / reg32, EDX = remainder.", enc: { p: "None", o: "F7", m: "ModR/M (/6)", s: "None", d: "None", i: "None" } },
+    { mnem: "IDIV reg32", hex: "F7 /7", cat: "Arithmetic", cycles: "43", flags: "None (undefined)", desc: "Signed division: EAX = EDX:EAX / reg32, EDX = remainder.", enc: { p: "None", o: "F7", m: "ModR/M (/7)", s: "None", d: "None", i: "None" } },
+    { mnem: "XADD reg, reg", hex: "0F C1 /r", cat: "Arithmetic", cycles: "3", flags: "CF,ZF,SF,OF,AF,PF", desc: "Exchange and add: temp = dest + src; src = dest; dest = temp.", enc: { p: "None", o: "0F C1", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "CMPXCHG reg, reg", hex: "0F B1 /r", cat: "Arithmetic", cycles: "6", flags: "ZF,CF,PF,AF,SF,OF", desc: "Atomic compare and exchange: if EAX == dest, dest = src; else EAX = dest.", enc: { p: "None", o: "0F B1", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "DAA", hex: "27", cat: "Arithmetic", cycles: "4", flags: "CF,AF,ZF,SF,PF", desc: "Decimal adjust AL after BCD addition.", enc: { p: "None", o: "27", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "DAS", hex: "2F", cat: "Arithmetic", cycles: "4", flags: "CF,AF,ZF,SF,PF", desc: "Decimal adjust AL after BCD subtraction.", enc: { p: "None", o: "2F", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "AAA", hex: "37", cat: "Arithmetic", cycles: "4", flags: "CF,AF", desc: "ASCII adjust AL after addition.", enc: { p: "None", o: "37", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "AAS", hex: "3F", cat: "Arithmetic", cycles: "4", flags: "CF,AF", desc: "ASCII adjust AL after subtraction.", enc: { p: "None", o: "3F", m: "None", s: "None", d: "None", i: "None" } },
+
+    // LOGIC & BIT TESTING
+    { mnem: "XOR reg, reg", hex: "31 /r", cat: "Logic", cycles: "1", flags: "ZF,SF,PF,CF=0,OF=0", desc: "Bitwise exclusive OR. Iconic zeroing idiom (e.g. XOR EAX, EAX).", enc: { p: "None", o: "31", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "AND reg, reg", hex: "21 /r", cat: "Logic", cycles: "1", flags: "ZF,SF,PF,CF=0,OF=0", desc: "Bitwise AND operation between two registers.", enc: { p: "None", o: "21", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "OR reg, reg", hex: "09 /r", cat: "Logic", cycles: "1", flags: "ZF,SF,PF,CF=0,OF=0", desc: "Bitwise inclusive OR operation.", enc: { p: "None", o: "09", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "NOT reg", hex: "F7 /2", cat: "Logic", cycles: "1", flags: "None", desc: "One's complement bitwise inversion (inverts all bits).", enc: { p: "None", o: "F7", m: "ModR/M (/2)", s: "None", d: "None", i: "None" } },
+    { mnem: "TEST reg, reg", hex: "85 /r", cat: "Logic", cycles: "1", flags: "ZF,SF,PF,CF=0,OF=0", desc: "Non-destructive bitwise AND. Sets Zero Flag if result is 0.", enc: { p: "None", o: "85", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "BT reg, imm8", hex: "0F BA /4 [ib]", cat: "Logic", cycles: "4", flags: "CF", desc: "Bit Test: copies selected bit index into Carry Flag.", enc: { p: "None", o: "0F BA", m: "ModR/M (/4)", s: "None", d: "None", i: "ib" } },
+    { mnem: "BTS reg, imm8", hex: "0F BA /5 [ib]", cat: "Logic", cycles: "4", flags: "CF", desc: "Bit Test and Set: copies bit into Carry Flag and sets bit to 1.", enc: { p: "None", o: "0F BA", m: "ModR/M (/5)", s: "None", d: "None", i: "ib" } },
+    { mnem: "BTR reg, imm8", hex: "0F BA /6 [ib]", cat: "Logic", cycles: "4", flags: "CF", desc: "Bit Test and Reset: copies bit into Carry Flag and clears bit to 0.", enc: { p: "None", o: "0F BA", m: "ModR/M (/6)", s: "None", d: "None", i: "ib" } },
+    { mnem: "BTC reg, imm8", hex: "0F BA /7 [ib]", cat: "Logic", cycles: "4", flags: "CF", desc: "Bit Test and Complement: copies bit into Carry Flag and inverts it.", enc: { p: "None", o: "0F BA", m: "ModR/M (/7)", s: "None", d: "None", i: "ib" } },
+    { mnem: "BSF reg, reg", hex: "0F BC /r", cat: "Logic", cycles: "10", flags: "ZF", desc: "Bit Scan Forward: scans for least significant 1-bit.", enc: { p: "None", o: "0F BC", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "BSR reg, reg", hex: "0F BD /r", cat: "Logic", cycles: "10", flags: "ZF", desc: "Bit Scan Reverse: scans for most significant 1-bit.", enc: { p: "None", o: "0F BD", m: "ModR/M", s: "None", d: "None", i: "None" } },
+
+    // SHIFT & ROTATE
+    { mnem: "SHL reg, 1", hex: "D1 /4", cat: "Shift", cycles: "1", flags: "CF,OF,ZF,SF,PF", desc: "Shift logical left by 1. Multiplies unsigned integer by 2.", enc: { p: "None", o: "D1", m: "ModR/M (/4)", s: "None", d: "None", i: "None" } },
+    { mnem: "SHR reg, 1", hex: "D1 /5", cat: "Shift", cycles: "1", flags: "CF,OF,ZF,SF,PF", desc: "Shift logical right by 1. Divides unsigned integer by 2.", enc: { p: "None", o: "D1", m: "ModR/M (/5)", s: "None", d: "None", i: "None" } },
+    { mnem: "SAR reg, 1", hex: "D1 /7", cat: "Shift", cycles: "1", flags: "CF,OF,ZF,SF,PF", desc: "Shift arithmetic right by 1 (preserves sign bit).", enc: { p: "None", o: "D1", m: "ModR/M (/7)", s: "None", d: "None", i: "None" } },
+    { mnem: "ROL reg, 1", hex: "D1 /0", cat: "Shift", cycles: "1", flags: "CF,OF", desc: "Rotate left by 1 bit circular.", enc: { p: "None", o: "D1", m: "ModR/M (/0)", s: "None", d: "None", i: "None" } },
+    { mnem: "ROR reg, 1", hex: "D1 /1", cat: "Shift", cycles: "1", flags: "CF,OF", desc: "Rotate right by 1 bit circular.", enc: { p: "None", o: "D1", m: "ModR/M (/1)", s: "None", d: "None", i: "None" } },
+    { mnem: "RCL reg, 1", hex: "D1 /2", cat: "Shift", cycles: "1", flags: "CF,OF", desc: "Rotate through carry left by 1 bit.", enc: { p: "None", o: "D1", m: "ModR/M (/2)", s: "None", d: "None", i: "None" } },
+    { mnem: "RCR reg, 1", hex: "D1 /3", cat: "Shift", cycles: "1", flags: "CF,OF", desc: "Rotate through carry right by 1 bit.", enc: { p: "None", o: "D1", m: "ModR/M (/3)", s: "None", d: "None", i: "None" } },
+    { mnem: "SHLD reg, reg, imm8", hex: "0F A4 /r [ib]", cat: "Shift", cycles: "4", flags: "CF,ZF,SF,PF", desc: "Double precision shift left: shifts dest left, filling from src.", enc: { p: "None", o: "0F A4", m: "ModR/M", s: "None", d: "None", i: "ib" } },
+    { mnem: "SHRD reg, reg, imm8", hex: "0F AC /r [ib]", cat: "Shift", cycles: "4", flags: "CF,ZF,SF,PF", desc: "Double precision shift right: shifts dest right, filling from src.", enc: { p: "None", o: "0F AC", m: "ModR/M", s: "None", d: "None", i: "ib" } },
+
+    // CONTROL FLOW
+    { mnem: "JMP rel8", hex: "EB [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Unconditional short relative branch (-128..+127 bytes).", enc: { p: "None", o: "EB", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "JMP rel32", hex: "E9 [cd]", cat: "Flow", cycles: "1", flags: "None", desc: "Unconditional near relative jump (+/-2GB).", enc: { p: "None", o: "E9", m: "None", s: "None", d: "None", i: "cd" } },
+    { mnem: "JZ / JE rel8", hex: "74 [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if Zero / Equal (ZF = 1).", enc: { p: "None", o: "74", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "JNZ / JNE rel8", hex: "75 [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if Not Zero / Not Equal (ZF = 0).", enc: { p: "None", o: "75", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "JC / JB rel8", hex: "72 [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if Carry / Jump if Below (CF = 1).", enc: { p: "None", o: "72", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "JNC / JAE rel8", hex: "73 [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if No Carry / Above or Equal (CF = 0).", enc: { p: "None", o: "73", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "JS rel8", hex: "78 [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if Sign / Negative (SF = 1).", enc: { p: "None", o: "78", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "JNS rel8", hex: "79 [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if Not Sign / Non-Negative (SF = 0).", enc: { p: "None", o: "79", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "JO rel8", hex: "70 [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if Overflow (OF = 1).", enc: { p: "None", o: "70", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "JNO rel8", hex: "71 [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if No Overflow (OF = 0).", enc: { p: "None", o: "71", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "JP / JPE rel8", hex: "7A [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if Parity / Parity Even (PF = 1).", enc: { p: "None", o: "7A", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "JNP / JPO rel8", hex: "7B [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if No Parity / Parity Odd (PF = 0).", enc: { p: "None", o: "7B", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "JA / JNBE rel8", hex: "77 [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if Above (CF=0 and ZF=0).", enc: { p: "None", o: "77", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "JBE / JNA rel8", hex: "76 [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if Below or Equal (CF=1 or ZF=1).", enc: { p: "None", o: "76", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "JG / JNLE rel8", hex: "7F [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if Greater signed (ZF=0 and SF=OF).", enc: { p: "None", o: "7F", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "JGE / JNL rel8", hex: "7D [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if Greater or Equal signed (SF=OF).", enc: { p: "None", o: "7D", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "JL / JNGE rel8", hex: "7C [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if Less signed (SF != OF).", enc: { p: "None", o: "7C", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "JLE / JNG rel8", hex: "7E [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if Less or Equal signed (ZF=1 or SF!=OF).", enc: { p: "None", o: "7E", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "JCXZ / JECXZ", hex: "E3 [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if ECX is Zero (loop break).", enc: { p: "None", o: "E3", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "LOOP rel8", hex: "E2 [cb]", cat: "Flow", cycles: "1..2", flags: "None", desc: "Decrement ECX; if ECX != 0, branch to target.", enc: { p: "None", o: "E2", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "CALL rel32", hex: "E8 [cd]", cat: "Flow", cycles: "1", flags: "None", desc: "Push return address onto stack and branch to target procedure.", enc: { p: "None", o: "E8", m: "None", s: "None", d: "None", i: "cd" } },
+    { mnem: "RET", hex: "C3", cat: "Flow", cycles: "1", flags: "None", desc: "Pop return address from stack and resume execution.", enc: { p: "None", o: "C3", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "RET imm16", hex: "C2 [iw]", cat: "Flow", cycles: "2", flags: "None", desc: "Pop return address and release specified bytes from stack (stdcall cleanup).", enc: { p: "None", o: "C2", m: "None", s: "None", d: "None", i: "iw" } },
+
+    // CONDITIONAL SET
+    { mnem: "SETZ / SETE reg8", hex: "0F 94 /r", cat: "Condition", cycles: "1", flags: "None", desc: "Set byte if Zero / Equal (ZF=1).", enc: { p: "None", o: "0F 94", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "SETNZ / SETNE reg8", hex: "0F 95 /r", cat: "Condition", cycles: "1", flags: "None", desc: "Set byte if Not Zero / Not Equal (ZF=0).", enc: { p: "None", o: "0F 95", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "SETC / SETB reg8", hex: "0F 92 /r", cat: "Condition", cycles: "1", flags: "None", desc: "Set byte if Carry / Below (CF=1).", enc: { p: "None", o: "0F 92", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "SETNC / SETAE reg8", hex: "0F 93 /r", cat: "Condition", cycles: "1", flags: "None", desc: "Set byte if No Carry / Above or Equal (CF=0).", enc: { p: "None", o: "0F 93", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "SETS reg8", hex: "0F 98 /r", cat: "Condition", cycles: "1", flags: "None", desc: "Set byte if Sign / Negative (SF=1).", enc: { p: "None", o: "0F 98", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "SETNS reg8", hex: "0F 99 /r", cat: "Condition", cycles: "1", flags: "None", desc: "Set byte if Not Sign (SF=0).", enc: { p: "None", o: "0F 99", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "SETO reg8", hex: "0F 90 /r", cat: "Condition", cycles: "1", flags: "None", desc: "Set byte if Overflow (OF=1).", enc: { p: "None", o: "0F 90", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "SETNO reg8", hex: "0F 91 /r", cat: "Condition", cycles: "1", flags: "None", desc: "Set byte if No Overflow (OF=0).", enc: { p: "None", o: "0F 91", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "SETA reg8", hex: "0F 97 /r", cat: "Condition", cycles: "1", flags: "None", desc: "Set byte if Above unsigned (CF=0 and ZF=0).", enc: { p: "None", o: "0F 97", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "SETBE reg8", hex: "0F 96 /r", cat: "Condition", cycles: "1", flags: "None", desc: "Set byte if Below or Equal unsigned (CF=1 or ZF=1).", enc: { p: "None", o: "0F 96", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "SETG reg8", hex: "0F 9F /r", cat: "Condition", cycles: "1", flags: "None", desc: "Set byte if Greater signed (ZF=0 and SF=OF).", enc: { p: "None", o: "0F 9F", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "SETGE reg8", hex: "0F 9D /r", cat: "Condition", cycles: "1", flags: "None", desc: "Set byte if Greater or Equal signed (SF=OF).", enc: { p: "None", o: "0F 9D", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "SETL reg8", hex: "0F 9C /r", cat: "Condition", cycles: "1", flags: "None", desc: "Set byte if Less signed (SF != OF).", enc: { p: "None", o: "0F 9C", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "SETLE reg8", hex: "0F 9E /r", cat: "Condition", cycles: "1", flags: "None", desc: "Set byte if Less or Equal signed (ZF=1 or SF!=OF).", enc: { p: "None", o: "0F 9E", m: "ModR/M", s: "None", d: "None", i: "None" } },
+
+    // STRING OPERATIONS
+    { mnem: "MOVSB", hex: "A4", cat: "String", cycles: "3", flags: "None", desc: "Move byte from string: [EDI] = [ESI]; update ESI/EDI.", enc: { p: "None", o: "A4", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "MOVSD", hex: "A5", cat: "String", cycles: "3", flags: "None", desc: "Move doubleword from string: [EDI] = [ESI]; ESI/EDI +/- 4.", enc: { p: "None", o: "A5", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "LODSB", hex: "AC", cat: "String", cycles: "2", flags: "None", desc: "Load byte from string: AL = [ESI]; update ESI.", enc: { p: "None", o: "AC", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "LODSD", hex: "AD", cat: "String", cycles: "2", flags: "None", desc: "Load doubleword from string: EAX = [ESI]; ESI +/- 4.", enc: { p: "None", o: "AD", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "STOSB", hex: "AA", cat: "String", cycles: "3", flags: "None", desc: "Store byte to string: [EDI] = AL; update EDI.", enc: { p: "None", o: "AA", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "STOSD", hex: "AB", cat: "String", cycles: "3", flags: "None", desc: "Store doubleword to string: [EDI] = EAX; EDI +/- 4 (Fast Memset!).", enc: { p: "None", o: "AB", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "CMPSB", hex: "A6", cat: "String", cycles: "4", flags: "CF,ZF,SF,OF,AF,PF", desc: "Compare bytes in strings: [ESI] with [EDI].", enc: { p: "None", o: "A6", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "SCASB", hex: "AE", cat: "String", cycles: "3", flags: "CF,ZF,SF,OF,AF,PF", desc: "Scan string byte: compare AL with [EDI]; update EDI.", enc: { p: "None", o: "AE", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "REP prefix", hex: "F3", cat: "String", cycles: "--", flags: "None", desc: "Repeat string operation while ECX != 0.", enc: { p: "F3", o: "--", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "REPE / REPZ", hex: "F3", cat: "String", cycles: "--", flags: "None", desc: "Repeat string operation while ECX != 0 and ZF = 1.", enc: { p: "F3", o: "--", m: "None", s: "None", d: "None", i: "None" } },
+
+    // SYSTEM & PROCESSOR TRAPS
+    { mnem: "INT 3", hex: "CC", cat: "System", cycles: "13", flags: "IF,TF", desc: "Breakpoint trap interrupt for debuggers and reverse engineers.", enc: { p: "None", o: "CC", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "INT 21h", hex: "CD 21", cat: "System", cycles: "16", flags: "All", desc: "MS-DOS legacy API dispatch interrupt (AH = function number).", enc: { p: "None", o: "CD", m: "None", s: "None", d: "None", i: "21h" } },
+    { mnem: "INT 2Eh", hex: "CD 2E", cat: "System", cycles: "24", flags: "All", desc: "Win32 NT native system call interrupt gateway.", enc: { p: "None", o: "CD", m: "None", s: "None", d: "None", i: "2Eh" } },
+    { mnem: "RDTSC", hex: "0F 31", cat: "System", cycles: "9", flags: "None", desc: "Read 64-bit CPU Time-Stamp Counter into EDX:EAX (Pentium+).", enc: { p: "None", o: "0F 31", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "CPUID", hex: "0F A2", cat: "System", cycles: "14", flags: "None", desc: "Query processor signature, feature flags, and vendor string.", enc: { p: "None", o: "0F A2", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "CLI", hex: "FA", cat: "System", cycles: "7", flags: "IF=0", desc: "Clear Interrupt Flag (Ring 0 privilege required).", enc: { p: "None", o: "FA", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "STI", hex: "FB", cat: "System", cycles: "7", flags: "IF=1", desc: "Set Interrupt Flag to enable external interrupts (Ring 0 privilege required).", enc: { p: "None", o: "FB", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "HLT", hex: "F4", cat: "System", cycles: "--", flags: "None", desc: "Halt processor until next hardware interrupt occurs (Ring 0).", enc: { p: "None", o: "F4", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "CLC", hex: "F8", cat: "System", cycles: "1", flags: "CF=0", desc: "Clear Carry Flag.", enc: { p: "None", o: "F8", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "STC", hex: "F9", cat: "System", cycles: "1", flags: "CF=1", desc: "Set Carry Flag.", enc: { p: "None", o: "F9", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "CMC", hex: "F5", cat: "System", cycles: "1", flags: "CF=!CF", desc: "Complement Carry Flag (inverts CF).", enc: { p: "None", o: "F5", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "CLD", hex: "FC", cat: "System", cycles: "1", flags: "DF=0", desc: "Clear Direction Flag: string operations increment ESI/EDI.", enc: { p: "None", o: "FC", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "STD", hex: "FD", cat: "System", cycles: "1", flags: "DF=1", desc: "Set Direction Flag: string operations decrement ESI/EDI.", enc: { p: "None", o: "FD", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "INVD", hex: "0F 08", cat: "System", cycles: "15", flags: "None", desc: "Invalidate internal CPU caches without writing back (Ring 0).", enc: { p: "None", o: "0F 08", m: "None", s: "None", d: "None", i: "None" } },
+
+    // FPU & MMX
+    { mnem: "FNOP", hex: "D9 D0", cat: "FPU", cycles: "1", flags: "None", desc: "Floating-Point No Operation.", enc: { p: "None", o: "D9 D0", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "FLD ST(i)", hex: "D9 C0+i", cat: "FPU", cycles: "1", flags: "None", desc: "Push floating-point register ST(i) onto FPU stack.", enc: { p: "None", o: "D9 C0+i", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "FSTP ST(i)", hex: "DD D8+i", cat: "FPU", cycles: "1", flags: "None", desc: "Store ST(0) into ST(i) and pop FPU stack.", enc: { p: "None", o: "DD D8+i", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "FADD ST(0), ST(i)", hex: "D8 C0+i", cat: "FPU", cycles: "3", flags: "C1", desc: "Add ST(i) to ST(0).", enc: { p: "None", o: "D8 C0+i", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "FSUB ST(0), ST(i)", hex: "D8 E0+i", cat: "FPU", cycles: "3", flags: "C1", desc: "Subtract ST(i) from ST(0).", enc: { p: "None", o: "D8 E0+i", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "FMUL ST(0), ST(i)", hex: "D8 C8+i", cat: "FPU", cycles: "3", flags: "C1", desc: "Multiply ST(0) by ST(i).", enc: { p: "None", o: "D8 C8+i", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "FDIV ST(0), ST(i)", hex: "D8 F0+i", cat: "FPU", cycles: "39", flags: "C1", desc: "Divide ST(0) by ST(i).", enc: { p: "None", o: "D8 F0+i", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "FSIN", hex: "D9 FE", cat: "FPU", cycles: "65", flags: "C2", desc: "Compute trigonometric sine of ST(0) in radians.", enc: { p: "None", o: "D9 FE", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "FCOS", hex: "D9 FF", cat: "FPU", cycles: "65", flags: "C2", desc: "Compute trigonometric cosine of ST(0) in radians.", enc: { p: "None", o: "D9 FF", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "FPATAN", hex: "D9 F3", cat: "FPU", cycles: "75", flags: "C1", desc: "Partial arctangent: ST(1) = arctan(ST(1) / ST(0)) and pop.", enc: { p: "None", o: "D9 F3", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "EMMS", hex: "0F 77", cat: "FPU", cycles: "1", flags: "None", desc: "Empty MMX State: marks all FPU registers as empty after MMX.", enc: { p: "None", o: "0F 77", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "PXOR mm, mm", hex: "0F EF /r", cat: "FPU", cycles: "1", flags: "None", desc: "MMX bitwise exclusive OR between two 64-bit vector registers.", enc: { p: "None", o: "0F EF", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "PADDB mm, mm", hex: "0F FC /r", cat: "FPU", cycles: "1", flags: "None", desc: "MMX packed addition of eight 8-bit bytes with wraparound.", enc: { p: "None", o: "0F FC", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "PADDD mm, mm", hex: "0F FE /r", cat: "FPU", cycles: "1", flags: "None", desc: "MMX packed addition of two 32-bit doublewords.", enc: { p: "None", o: "0F FE", m: "ModR/M", s: "None", d: "None", i: "None" } }
   ];
 
   function renderOracleTable(filterText = '', catFilter = 'ALL') {
     const tbody = document.getElementById('oracleTbody');
     const lblCount = document.getElementById('lblOpcodeCount');
+    const lblHdrCount = document.getElementById('lblHeaderOpCount');
     if (!tbody) return;
     tbody.innerHTML = '';
 
     const q = filterText.trim().toLowerCase();
     const filtered = OPCODES_DB.filter(op => {
       const matchCat = (catFilter === 'ALL') || (op.cat.toLowerCase() === catFilter.toLowerCase());
-      const matchText = !q || op.mnem.toLowerCase().includes(q) || op.hex.toLowerCase().includes(q) || op.desc.toLowerCase().includes(q);
+      const matchText = !q || op.mnem.toLowerCase().includes(q) || op.hex.toLowerCase().includes(q) || op.desc.toLowerCase().includes(q) || op.flags.toLowerCase().includes(q);
       return matchCat && matchText;
     });
 
     if (lblCount) lblCount.textContent = `Showing ${filtered.length} of ${OPCODES_DB.length} instructions`;
+    if (lblHdrCount) lblHdrCount.textContent = `${OPCODES_DB.length} Opcodes`;
 
     if (filtered.length === 0) {
       tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">No matching x86 opcodes found in the temple archives.</td></tr>`;
@@ -1042,7 +1711,7 @@
     filtered.forEach(op => {
       const tr = document.createElement('tr');
       tr.style.cursor = 'pointer';
-      tr.title = 'Click to load into Live Assembler';
+      tr.title = 'Click to inspect encoding and format';
       tr.innerHTML = `
         <td><strong style="color:var(--gold-bright);">${op.mnem}</strong></td>
         <td><span class="badge-opcode">${op.hex}</span></td>
@@ -1051,18 +1720,36 @@
         <td style="color:var(--emerald); font-size:11px;">${op.flags}</td>
         <td style="color:var(--text-muted); font-size:11px;">${op.desc}</td>
       `;
-      tr.onclick = () => {
-        // Switch to converter tab and populate
-        document.querySelector('[data-tab="tab-converter"]').click();
-        const inputArea = document.getElementById('converterInput');
-        if (inputArea) {
-          inputArea.value = (inputArea.value.trim() ? inputArea.value.trim() + '\n' : '') + op.mnem.split(' ')[0];
-          convertInput();
-        }
-      };
+      tr.onclick = () => selectOpcodeForInspection(op);
       tbody.appendChild(tr);
     });
   }
+
+  let selectedInspectorOp = OPCODES_DB[0];
+
+  function selectOpcodeForInspection(op) {
+    selectedInspectorOp = op;
+    document.getElementById('inspectMnem').textContent = `${op.mnem} [${op.hex}]`;
+    document.getElementById('inspectDetails').textContent = `${op.cycles} cycle latency (Pentium) • Affected Flags: ${op.flags} • Cat: ${op.cat}`;
+
+    const enc = op.enc || { p: "None", o: op.hex, m: "None", s: "None", d: "None", i: "None" };
+    document.querySelector('#encPrefix .enc-val').textContent = enc.p;
+    document.querySelector('#encOpcode .enc-val').textContent = enc.o;
+    document.querySelector('#encModrm .enc-val').textContent = enc.m;
+    document.querySelector('#encSib .enc-val').textContent = enc.s;
+    document.querySelector('#encDisp .enc-val').textContent = enc.d;
+    document.querySelector('#encImm .enc-val').textContent = enc.i;
+  }
+
+  document.getElementById('btnLoadToWorkbench').onclick = () => {
+    document.querySelector('[data-tab="tab-converter"]').click();
+    const inputArea = document.getElementById('converterInput');
+    if (inputArea && selectedInspectorOp) {
+      const cleanMnem = selectedInspectorOp.mnem.split(' ')[0];
+      inputArea.value = (inputArea.value.trim() ? inputArea.value.trim() + '\n' : '') + cleanMnem;
+      convertInput();
+    }
+  };
 
   const oracleSearch = document.getElementById('oracleSearch');
   const oracleCatFilter = document.getElementById('oracleCatFilter');
@@ -1079,11 +1766,12 @@
   }
 
   renderOracleTable();
+  selectOpcodeForInspection(OPCODES_DB[0]);
 
   // ==========================================
   // 3. Live Assembler & Disassembler Engine
   // ==========================================
-  let isAssemblyMode = true; // true: ASM -> Hex; false: Hex -> ASM
+  let isAssemblyMode = true;
 
   const btnModeAsm = document.getElementById('btnModeAsm');
   const btnModeDisasm = document.getElementById('btnModeDisasm');
@@ -1096,16 +1784,17 @@
   const btnClearConverter = document.getElementById('btnClearConverter');
   const btnCopyOutput = document.getElementById('btnCopyOutput');
   const btnDownloadBin = document.getElementById('btnDownloadBin');
+  const btnSendToPEBuilder = document.getElementById('btnSendToPEBuilder');
   const lblInStats = document.getElementById('lblInStats');
   const lblOutStats = document.getElementById('lblOutStats');
   const telemetryNotice = document.getElementById('telemetryNotice');
 
-  // Register definitions & encoding helpers
   const REG32_MAP = { EAX: 0, ECX: 1, EDX: 2, EBX: 3, ESP: 4, EBP: 5, ESI: 6, EDI: 7 };
   const REG16_MAP = { AX: 0, CX: 1, DX: 2, BX: 3, SP: 4, BP: 5, SI: 6, DI: 7 };
   const REG8_MAP  = { AL: 0, CL: 1, DL: 2, BL: 3, AH: 4, CH: 5, DH: 6, BH: 7 };
 
   function parseHexNum(str) {
+    if (!str) return NaN;
     str = str.trim();
     if (str.startsWith('0x') || str.startsWith('0X')) return parseInt(str.slice(2), 16);
     if (str.endsWith('h') || str.endsWith('H')) return parseInt(str.slice(0, -1), 16);
@@ -1141,14 +1830,24 @@
     if (mnem === 'CLC') return [0xF8];
     if (mnem === 'STC') return [0xF9];
     if (mnem === 'CMC') return [0xF5];
+    if (mnem === 'CLD') return [0xFC];
+    if (mnem === 'STD') return [0xFD];
     if (mnem === 'CPUID') return [0x0F, 0xA2];
     if (mnem === 'RDTSC') return [0x0F, 0x31];
     if (mnem === 'PUSHA') return [0x60];
     if (mnem === 'POPA') return [0x61];
     if (mnem === 'PUSHFD') return [0x9C];
     if (mnem === 'POPFD') return [0x9D];
+    if (mnem === 'MOVSB') return [0xA4];
+    if (mnem === 'MOVSD') return [0xA5];
+    if (mnem === 'LODSB') return [0xAC];
+    if (mnem === 'LODSD') return [0xAD];
+    if (mnem === 'STOSB') return [0xAA];
+    if (mnem === 'STOSD') return [0xAB];
+    if (mnem === 'CMPSB') return [0xA6];
+    if (mnem === 'SCASB') return [0xAE];
 
-    // Single Register PUSH / POP / INC / DEC
+    // PUSH / POP / INC / DEC
     if (mnem === 'PUSH') {
       if (REG32_MAP[op1] !== undefined) return [0x50 + REG32_MAP[op1]];
       const imm = parseHexNum(op1);
@@ -1189,11 +1888,9 @@
     if (mnem === 'MOV') {
       if (REG32_MAP[op1] !== undefined) {
         if (REG32_MAP[op2] !== undefined) {
-          // MOV reg, reg -> 89 /r (src in reg, dst in rm)
           const modrm = 0xC0 | (REG32_MAP[op2] << 3) | REG32_MAP[op1];
           return [0x89, modrm];
         }
-        // MOV reg, imm32 -> B8+r imm32
         const imm = parseHexNum(op2);
         if (!isNaN(imm)) {
           return [
@@ -1207,7 +1904,7 @@
       }
     }
 
-    // Control flow branches (rel8)
+    // Control flow branches
     const branches = {
       JMP: 0xEB,
       JZ:  0x74,
@@ -1218,6 +1915,8 @@
       JB:  0x72,
       JNC: 0x73,
       JAE: 0x73,
+      JS:  0x78,
+      JNS: 0x79,
       LOOP: 0xE2
     };
 
@@ -1232,7 +1931,7 @@
       return [0xE8, val & 0xFF, (val >> 8) & 0xFF, (val >> 16) & 0xFF, (val >> 24) & 0xFF];
     }
 
-    // Direct DB directive
+    // Data Directives
     if (mnem === 'DB' || mnem === 'BYTE') {
       return parts.slice(1).map(p => parseHexNum(p) & 0xFF).filter(b => !isNaN(b));
     }
@@ -1258,6 +1957,10 @@
       if (b0 === 0x61) { lines.push({ off: offset, hex: '61', asm: 'POPA' }); i++; continue; }
       if (b0 === 0x9C) { lines.push({ off: offset, hex: '9C', asm: 'PUSHFD' }); i++; continue; }
       if (b0 === 0x9D) { lines.push({ off: offset, hex: '9D', asm: 'POPFD' }); i++; continue; }
+      if (b0 === 0xA4) { lines.push({ off: offset, hex: 'A4', asm: 'MOVSB' }); i++; continue; }
+      if (b0 === 0xA5) { lines.push({ off: offset, hex: 'A5', asm: 'MOVSD' }); i++; continue; }
+      if (b0 === 0xAA) { lines.push({ off: offset, hex: 'AA', asm: 'STOSB' }); i++; continue; }
+      if (b0 === 0xAB) { lines.push({ off: offset, hex: 'AB', asm: 'STOSD' }); i++; continue; }
 
       // PUSH reg32 (50..57)
       if (b0 >= 0x50 && b0 <= 0x57) {
@@ -1326,8 +2029,8 @@
         }
       }
 
-      // Branching relative (74, 75, 72, 73, EB, E2)
-      const branchMap = { 0x74: 'JZ', 0x75: 'JNZ', 0x72: 'JC', 0x73: 'JNC', 0xEB: 'JMP', 0xE2: 'LOOP' };
+      // Branching relative (74, 75, 72, 73, 78, 79, EB, E2)
+      const branchMap = { 0x74: 'JZ', 0x75: 'JNZ', 0x72: 'JC', 0x73: 'JNC', 0x78: 'JS', 0x79: 'JNS', 0xEB: 'JMP', 0xE2: 'LOOP' };
       if (branchMap[b0] && i + 1 < byteArray.length) {
         const rel = byteArray[i + 1];
         const signedRel = rel > 127 ? rel - 256 : rel;
@@ -1341,7 +2044,7 @@
         continue;
       }
 
-      // Default byte fallback
+      // Fallback raw byte
       lines.push({ off: offset, hex: b0.toString(16).padStart(2, '0').toUpperCase(), asm: `DB 0x${b0.toString(16).padStart(2, '0').toUpperCase()}` });
       i++;
     }
@@ -1369,7 +2072,6 @@
 
       formatOutput(bytes);
     } else {
-      // Disassembler Mode
       const cleanHex = raw.replace(/[^0-9a-fA-F]/g, ' ').split(/\s+/).filter(Boolean);
       const byteVals = cleanHex.map(h => parseInt(h, 16)).filter(b => !isNaN(b));
       lastGeneratedBytes = byteVals;
@@ -1425,7 +2127,6 @@
     };
   }
 
-  // BIN Blob Download
   if (btnDownloadBin) {
     btnDownloadBin.onclick = () => {
       if (!lastGeneratedBytes.length) {
@@ -1443,7 +2144,14 @@
     };
   }
 
-  // Switch Modes
+  if (btnSendToPEBuilder) {
+    btnSendToPEBuilder.onclick = () => {
+      document.querySelector('[data-tab="tab-pe"]').click();
+      document.querySelector('[data-subtab="sub-builder"]').click();
+      document.getElementById('builderTemplate').value = 'custom';
+    };
+  }
+
   if (btnModeAsm && btnModeDisasm) {
     btnModeAsm.onclick = () => {
       isAssemblyMode = true;
@@ -1472,13 +2180,13 @@
     };
   }
 
-  // Presets Dictionary
   const PRESETS = {
     prologue: `; Standard 32-bit Win32 C Calling Convention\nPUSH EBP\nMOV EBP, ESP\nSUB ESP, 0x10\nXOR EAX, EAX\nMOV ESP, EBP\nPOP EBP\nRET`,
     xorzero: `; Demoscene zeroing and small size register prep\nXOR EAX, EAX\nXOR EBX, EBX\nXOR ECX, ECX\nXOR EDX, EDX\nINC EAX\nRET`,
-    msgbox: `; Win32 MessageBoxA parameter stack setup (stdcall)\nPUSH 0x00\nPUSH 0x00402000\nPUSH 0x00402010\nPUSH 0x00\nCALL 0x00001020\nRET`,
+    msgbox: `; Win32 MessageBoxA parameter stack setup (stdcall)\nPUSH 0x40\nPUSH 0x00402010\nPUSH 0x00402028\nPUSH 0x00\nCALL 0x00001020\nRET`,
     vga: `; VGA Mode 13h (320x200x256) DOS Intro Setup\nMOV EAX, 0x0013\nINT 0x10\nPUSH 0xA000\nPOP EDX\nRET`,
     rdtsc: `; High-resolution Pentium CPU cycle benchmark\nCPUID\nRDTSC\nPUSH EDX\nPUSH EAX\nNOP\nRDTSC\nPOP EBX\nPOP ECX\nRET`,
+    loopfib: `; Fibonacci Sequence Generator Loop in ECX\nXOR EAX, EAX\nMOV EBX, 0x00000001\nMOV ECX, 0x0000000A\nADD EAX, EBX\nXCHG EAX, EBX\nLOOP 0xFB\nRET`,
     anomaly: `; [TELEMETRY CAPTURE OFFSET 0x1999FE]\nXOR EAX, EAX\nMOV EDX, 0x10199904\nMOV ECX, 0x0000007F\nTEST EDX, EDX\nJNZ 0x02\nINT 3\nRET`
   };
 
@@ -1496,20 +2204,182 @@
     });
   });
 
-  // Load initial preset
   converterInput.value = PRESETS.prologue;
   convertInput();
 
   // ==========================================
-  // 4. Bitwise Radix Altar Logic
+  // 4. Interactive Micro-CPU Step Emulator
   // ==========================================
-  let registerState = 0x00001999; // Default 1999 aesthetic seed!
+  let cpu = {
+    eax: 0, ebx: 0, ecx: 0, edx: 0, esi: 0x00402000, edi: 0x00402100,
+    ebp: 0x0012FFF0, esp: 0x0012FFF0, eip: 0x00401000,
+    zf: 1, sf: 0, cf: 0, of: 0, pf: 1,
+    cycles: 0, instrCount: 0,
+    stack: [0x00000000, 0x77E81AF4, 0x00000000, 0x00000000],
+    isRunning: false, timer: null
+  };
+
+  function updateCpuUI() {
+    const regNames = ['EAX','EBX','ECX','EDX','ESI','EDI','EBP','ESP','EIP'];
+    regNames.forEach(r => {
+      const el = document.getElementById('reg' + r);
+      if (el) {
+        const val = cpu[r.toLowerCase()];
+        el.textContent = '0x' + (val >>> 0).toString(16).toUpperCase().padStart(8, '0');
+      }
+    });
+
+    document.getElementById('cpuZF').textContent = cpu.zf;
+    document.getElementById('cpuSF').textContent = cpu.sf;
+    document.getElementById('cpuCF').textContent = cpu.cf;
+    document.getElementById('cpuOF').textContent = cpu.of;
+    document.getElementById('cpuPF').textContent = cpu.pf;
+    document.getElementById('cpuCycles').textContent = cpu.cycles;
+    document.getElementById('cpuInstrCount').textContent = cpu.instrCount;
+
+    // Render stack view
+    const stackBox = document.getElementById('stackViewBox');
+    if (stackBox) {
+      let html = '';
+      for (let s = 0; s < Math.min(cpu.stack.length, 6); s++) {
+        const addr = '0x' + (cpu.esp + s * 4).toString(16).toUpperCase().padStart(8, '0');
+        const v = '0x' + (cpu.stack[s] >>> 0).toString(16).toUpperCase().padStart(8, '0');
+        html += `[${addr}]: ${v} ${s === 0 ? '(Top of Stack)' : ''}<br>`;
+      }
+      stackBox.innerHTML = html;
+    }
+  }
+
+  function stepCpu() {
+    const lines = converterInput.value.split('\n').map(l => l.replace(/;.*$/, '').trim()).filter(Boolean);
+    if (!lines.length) return;
+
+    const currentLineIdx = cpu.instrCount % lines.length;
+    const line = lines[currentLineIdx];
+    const parts = line.split(/[,\s]+/).map(s => s.trim()).filter(Boolean);
+    const mnem = parts[0].toUpperCase();
+    const op1 = (parts[1] || '').toUpperCase();
+    const op2 = (parts[2] || '').toUpperCase();
+
+    let executedLog = `[${('0x' + cpu.eip.toString(16).toUpperCase())}] ${line}`;
+
+    if (mnem === 'NOP') {
+      cpu.cycles += 1;
+    } else if (mnem === 'XOR') {
+      if (op1 === op2 && cpu[op1.toLowerCase()] !== undefined) {
+        cpu[op1.toLowerCase()] = 0;
+        cpu.zf = 1; cpu.sf = 0; cpu.cf = 0; cpu.of = 0; cpu.pf = 1;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'MOV') {
+      if (cpu[op1.toLowerCase()] !== undefined) {
+        if (cpu[op2.toLowerCase()] !== undefined) {
+          cpu[op1.toLowerCase()] = cpu[op2.toLowerCase()];
+        } else {
+          const imm = parseHexNum(op2);
+          if (!isNaN(imm)) cpu[op1.toLowerCase()] = imm >>> 0;
+        }
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'ADD') {
+      if (cpu[op1.toLowerCase()] !== undefined) {
+        const val = cpu[op2.toLowerCase()] !== undefined ? cpu[op2.toLowerCase()] : (parseHexNum(op2) || 0);
+        cpu[op1.toLowerCase()] = (cpu[op1.toLowerCase()] + val) >>> 0;
+        cpu.zf = (cpu[op1.toLowerCase()] === 0) ? 1 : 0;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'INC') {
+      if (cpu[op1.toLowerCase()] !== undefined) {
+        cpu[op1.toLowerCase()] = (cpu[op1.toLowerCase()] + 1) >>> 0;
+        cpu.zf = (cpu[op1.toLowerCase()] === 0) ? 1 : 0;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'DEC') {
+      if (cpu[op1.toLowerCase()] !== undefined) {
+        cpu[op1.toLowerCase()] = (cpu[op1.toLowerCase()] - 1) >>> 0;
+        cpu.zf = (cpu[op1.toLowerCase()] === 0) ? 1 : 0;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'PUSH') {
+      const val = cpu[op1.toLowerCase()] !== undefined ? cpu[op1.toLowerCase()] : (parseHexNum(op1) || 0);
+      cpu.stack.unshift(val >>> 0);
+      cpu.esp = (cpu.esp - 4) >>> 0;
+      cpu.cycles += 1;
+    } else if (mnem === 'POP') {
+      if (cpu.stack.length > 0) {
+        const val = cpu.stack.shift();
+        if (cpu[op1.toLowerCase()] !== undefined) cpu[op1.toLowerCase()] = val;
+        cpu.esp = (cpu.esp + 4) >>> 0;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'RDTSC') {
+      cpu.eax = (Date.now() & 0xFFFFFFFF) >>> 0;
+      cpu.edx = 0x00000001;
+      cpu.cycles += 9;
+    } else {
+      cpu.cycles += 1;
+    }
+
+    cpu.instrCount++;
+    cpu.eip += 2;
+
+    const logBox = document.getElementById('cpuLogBox');
+    if (logBox) {
+      logBox.innerHTML = executedLog + '<br>' + logBox.innerHTML;
+    }
+
+    updateCpuUI();
+  }
+
+  document.getElementById('btnCpuStep').onclick = stepCpu;
+  document.getElementById('btnCpuReset').onclick = () => {
+    clearInterval(cpu.timer);
+    cpu.isRunning = false;
+    document.getElementById('btnCpuRun').textContent = '▶ Run Program';
+    cpu = {
+      eax: 0, ebx: 0, ecx: 0, edx: 0, esi: 0x00402000, edi: 0x00402100,
+      ebp: 0x0012FFF0, esp: 0x0012FFF0, eip: 0x00401000,
+      zf: 1, sf: 0, cf: 0, of: 0, pf: 1,
+      cycles: 0, instrCount: 0,
+      stack: [0x00000000, 0x77E81AF4, 0x00000000, 0x00000000],
+      isRunning: false, timer: null
+    };
+    document.getElementById('cpuLogBox').textContent = '// CPU Reset to default state.';
+    updateCpuUI();
+  };
+
+  document.getElementById('btnCpuRun').onclick = () => {
+    if (cpu.isRunning) {
+      clearInterval(cpu.timer);
+      cpu.isRunning = false;
+      document.getElementById('btnCpuRun').textContent = '▶ Run Program';
+    } else {
+      cpu.isRunning = true;
+      document.getElementById('btnCpuRun').textContent = '⏸ Pause';
+      cpu.timer = setInterval(() => {
+        stepCpu();
+        if (cpu.instrCount >= 32) {
+          clearInterval(cpu.timer);
+          cpu.isRunning = false;
+          document.getElementById('btnCpuRun').textContent = '▶ Run Program';
+        }
+      }, 150);
+    }
+  };
+
+  updateCpuUI();
+
+  // ==========================================
+  // 5. Bitwise Radix & IEEE-754 Altar Logic
+  // ==========================================
+  let registerState = 0x00001999;
 
   const bitGrid = document.getElementById('bitGrid');
   const valHex = document.getElementById('valHex');
   const valUint = document.getElementById('valUint');
   const valInt = document.getElementById('valInt');
   const valEndian = document.getElementById('valEndian');
+  const valAscii = document.getElementById('valAscii');
   const flagZF = document.getElementById('flagZF');
   const flagSF = document.getElementById('flagSF');
   const flagPF = document.getElementById('flagPF');
@@ -1541,7 +2411,6 @@
 
       bitGrid.appendChild(cell);
 
-      // Byte separator
       if (bit % 8 === 0 && bit !== 0) {
         const div = document.createElement('div');
         div.className = 'byte-divider';
@@ -1569,7 +2438,31 @@
     if (valInt) valInt.textContent = s32.toLocaleString();
     if (valEndian) valEndian.textContent = '0x' + swapEndian32(u32).toString(16).toUpperCase().padStart(8, '0');
 
-    // EFLAGS simulation
+    // ASCII Representation
+    if (valAscii) {
+      const b0 = (u32 >>> 24) & 0xFF;
+      const b1 = (u32 >>> 16) & 0xFF;
+      const b2 = (u32 >>> 8) & 0xFF;
+      const b3 = u32 & 0xFF;
+      const toC = b => (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
+      valAscii.textContent = `'${toC(b0)}' '${toC(b1)}' '${toC(b2)}' '${toC(b3)}'`;
+    }
+
+    // IEEE-754 Single Precision
+    const sign = (u32 >>> 31) & 1;
+    const exp = (u32 >>> 23) & 0xFF;
+    const mant = u32 & 0x7FFFFF;
+    const buf = new ArrayBuffer(4);
+    const view = new DataView(buf);
+    view.setUint32(0, u32, false);
+    const fval = view.getFloat32(0, false);
+
+    document.getElementById('fpSign').textContent = sign === 1 ? '- (1)' : '+ (0)';
+    document.getElementById('fpExp').textContent = `${exp} (Unbiased: ${exp - 127})`;
+    document.getElementById('fpMant').textContent = '0x' + mant.toString(16).toUpperCase().padStart(6, '0');
+    document.getElementById('fpVal').textContent = fval.toExponential(6);
+
+    // EFLAGS
     if (flagZF) {
       const z = (u32 === 0);
       flagZF.textContent = z ? '1 (Zero)' : '0 (Non-Zero)';
@@ -1583,7 +2476,6 @@
     }
 
     if (flagPF) {
-      // Parity of lowest byte
       let b = u32 & 0xFF;
       let count = 0;
       for (let k = 0; k < 8; k++) if ((b >> k) & 1) count++;
@@ -1593,7 +2485,6 @@
     }
   }
 
-  // Bit buttons
   document.getElementById('btnResetBits').onclick = () => { registerState = 0; updateRadixDisplay(); };
   document.getElementById('btnShl').onclick = () => { registerState = (registerState << 1) >>> 0; updateRadixDisplay(); };
   document.getElementById('btnShr').onclick = () => { registerState = (registerState >>> 1); updateRadixDisplay(); };
@@ -1601,12 +2492,636 @@
   document.getElementById('btnRor').onclick = () => { registerState = ((registerState >>> 1) | (registerState << 31)) >>> 0; updateRadixDisplay(); };
   document.getElementById('btnNot').onclick = () => { registerState = (~registerState) >>> 0; updateRadixDisplay(); };
   document.getElementById('btnEndianFlip').onclick = () => { registerState = swapEndian32(registerState); updateRadixDisplay(); };
+  document.getElementById('btnSetAllBits').onclick = () => { registerState = 0xFFFFFFFF; updateRadixDisplay(); };
 
   updateRadixDisplay();
 
   // ==========================================
-  // 5. Win32 PE Anatomy Descriptions
+  // 6. Win32 PE Dissector & Binary Builder
   // ==========================================
+  let currentLoadedPEBytes = null;
+  let parsedPEData = null;
+
+  // Programmatic Valid PE32 Generator
+  function generatePEBinary(type = 'return42', customSubsystem = 3, exitCode = 42, title = "Temple of Opcodes", msg = "Hand-Crafted in 1999") {
+    const isGui = (customSubsystem === 2) || (type === 'msgbox');
+    const totalSectors = isGui ? 4 : 3;
+    const totalBytes = totalSectors * 512;
+    const pe = new Uint8Array(totalBytes);
+    const view = new DataView(pe.buffer);
+
+    // 1. DOS Header
+    pe[0] = 0x4D; pe[1] = 0x5A; // MZ
+    view.setUint16(0x3C, 0x80, true); // e_lfanew = 0x80
+
+    // DOS Stub
+    const stubStr = "This program cannot be run in DOS mode.\r\r\n$\0\0\0";
+    const stubCode = [0x0E, 0x1F, 0xBA, 0x0E, 0x00, 0xB4, 0x09, 0xCD, 0x21, 0xB8, 0x01, 0x4C, 0xCD, 0x21];
+    for (let i = 0; i < stubCode.length; i++) pe[0x40 + i] = stubCode[i];
+    for (let i = 0; i < stubStr.length; i++) pe[0x40 + stubCode.length + i] = stubStr.charCodeAt(i);
+
+    // 2. PE Signature
+    pe[0x80] = 0x50; pe[0x81] = 0x45; pe[0x82] = 0; pe[0x83] = 0; // PE\0\0
+
+    // 3. COFF File Header (20 bytes at 0x84)
+    view.setUint16(0x84, 0x014C, true); // Machine: i386
+    view.setUint16(0x86, 2, true);      // NumSections: 2 (.text, .rdata)
+    view.setUint32(0x88, 0x386D4380, true); // TimeDateStamp: 1999-12-31
+    view.setUint16(0x94, 224, true);    // SizeOfOptionalHeader
+    view.setUint16(0x96, 0x0102, true); // Characteristics: EXECUTABLE | 32BIT
+
+    // 4. Optional Header 32 (224 bytes at 0x98)
+    const opt = 0x98;
+    view.setUint16(opt, 0x010B, true);  // Magic: PE32
+    view.setUint8(opt + 2, 6);          // MajorLinker: 6
+    view.setUint8(opt + 3, 0);          // MinorLinker: 0
+    view.setUint32(opt + 4, 0x200, true);  // SizeOfCode: 512
+    view.setUint32(opt + 8, isGui ? 0x400 : 0x200, true); // SizeOfInitializedData
+    view.setUint32(opt + 16, 0x1000, true); // AddressOfEntryPoint (RVA 0x1000)
+    view.setUint32(opt + 20, 0x1000, true); // BaseOfCode
+    view.setUint32(opt + 24, 0x2000, true); // BaseOfData
+    view.setUint32(opt + 28, 0x00400000, true); // ImageBase: 0x00400000
+    view.setUint32(opt + 32, 0x1000, true); // SectionAlignment: 4096
+    view.setUint32(opt + 36, 0x200, true);  // FileAlignment: 512
+    view.setUint16(opt + 40, 4, true);      // MajorOS: 4
+    view.setUint16(opt + 48, 4, true);      // MajorSubsystem: 4
+    view.setUint32(opt + 56, 0x3000, true); // SizeOfImage
+    view.setUint32(opt + 60, 0x200, true);  // SizeOfHeaders: 512
+    view.setUint16(opt + 68, isGui ? 2 : 3, true); // Subsystem (2=GUI, 3=Console)
+    view.setUint32(opt + 72, 0x100000, true); // StackReserve: 1MB
+    view.setUint32(opt + 76, 0x1000, true);   // StackCommit: 4KB
+    view.setUint32(opt + 80, 0x100000, true); // HeapReserve: 1MB
+    view.setUint32(opt + 84, 0x1000, true);   // HeapCommit: 4KB
+    view.setUint32(opt + 92, 16, true);       // NumberOfRvaAndSizes: 16
+
+    // Data Directories: Import Dir (Entry 1) and IAT (Entry 12)
+    view.setUint32(0xF8 + 8*1, 0x2000, true);
+    view.setUint32(0xF8 + 8*1 + 4, isGui ? 0x80 : 0x40, true);
+    view.setUint32(0xF8 + 8*12, isGui ? 0x20C0 : 0x2060, true);
+    view.setUint32(0xF8 + 8*12 + 4, isGui ? 0x40 : 0x20, true);
+
+    // 5. Section Table (at 0x178)
+    // Section 1: .text
+    const s1 = 0x178;
+    const sec1Name = ".text\0\0\0";
+    for (let i = 0; i < 8; i++) pe[s1 + i] = sec1Name.charCodeAt(i);
+    view.setUint32(s1 + 8, 0x100, true);     // VirtualSize
+    view.setUint32(s1 + 12, 0x1000, true);   // VirtualAddress
+    view.setUint32(s1 + 16, 0x200, true);    // SizeOfRawData
+    view.setUint32(s1 + 20, 0x200, true);    // PointerToRawData
+    view.setUint32(s1 + 36, 0x60000020, true);// Characteristics (CODE | EXECUTE | READ)
+
+    // Section 2: .rdata
+    const s2 = 0x178 + 40;
+    const sec2Name = (type === 'anomaly') ? ".anom\0\0\0" : ".rdata\0\0";
+    for (let i = 0; i < 8; i++) pe[s2 + i] = sec2Name.charCodeAt(i);
+    view.setUint32(s2 + 8, isGui ? 0x400 : 0x200, true);
+    view.setUint32(s2 + 12, 0x2000, true);
+    view.setUint32(s2 + 16, isGui ? 0x400 : 0x200, true);
+    view.setUint32(s2 + 20, 0x400, true);
+    view.setUint32(s2 + 36, 0x40000040, true);// Characteristics (INITIALIZED_DATA | READ)
+
+    // 6. Payload in .text (Offset 0x200) and .rdata (Offset 0x400)
+    if (isGui) {
+      // GUI MessageBoxA Code:
+      const code = [
+        0x6A, 0x40,                         // PUSH 64 (MB_ICONINFORMATION)
+        0x68, 0x10, 0x20, 0x40, 0x00,       // PUSH 0x00402010 (Title)
+        0x68, 0x28, 0x20, 0x40, 0x00,       // PUSH 0x00402028 (Text)
+        0x6A, 0x00,                         // PUSH 0 (hWnd)
+        0xFF, 0x15, 0xC8, 0x20, 0x40, 0x00, // CALL [0x004020C8] MessageBoxA
+        0x6A, exitCode & 0xFF,              // PUSH ExitCode
+        0xFF, 0x15, 0xC0, 0x20, 0x40, 0x00, // CALL [0x004020C0] ExitProcess
+        0xC3                                // RET
+      ];
+      for (let i = 0; i < code.length; i++) pe[0x200 + i] = code[i];
+
+      // Strings in .rdata
+      const rd = 0x400;
+      for (let i = 0; i < title.length; i++) pe[rd + 0x10 + i] = title.charCodeAt(i);
+      for (let i = 0; i < msg.length; i++) pe[rd + 0x28 + i] = msg.charCodeAt(i);
+
+      // Descriptors
+      view.setUint32(rd + 0x60, 0x2090, true); // OriginalFirstThunk (ILT)
+      view.setUint32(rd + 0x60 + 12, 0x20E0, true); // Name (KERNEL32)
+      view.setUint32(rd + 0x60 + 16, 0x20C0, true); // FirstThunk (IAT)
+
+      view.setUint32(rd + 0x74, 0x20A0, true); // OriginalFirstThunk (ILT)
+      view.setUint32(rd + 0x74 + 12, 0x20F0, true); // Name (USER32)
+      view.setUint32(rd + 0x74 + 16, 0x20C8, true); // FirstThunk (IAT)
+
+      // ILTs & IATs
+      view.setUint32(rd + 0x90, 0x2100, true); // ExitProcess
+      view.setUint32(rd + 0xA0, 0x2110, true); // MessageBoxA
+      view.setUint32(rd + 0xC0, 0x2100, true); // ExitProcess
+      view.setUint32(rd + 0xC8, 0x2110, true); // MessageBoxA
+
+      // DLL names
+      const k32 = "KERNEL32.dll\0";
+      const u32 = "USER32.dll\0";
+      for (let i = 0; i < k32.length; i++) pe[rd + 0xE0 + i] = k32.charCodeAt(i);
+      for (let i = 0; i < u32.length; i++) pe[rd + 0xF0 + i] = u32.charCodeAt(i);
+
+      // Function names
+      const ep = "ExitProcess\0";
+      const mb = "MessageBoxA\0";
+      for (let i = 0; i < ep.length; i++) pe[rd + 0x102 + i] = ep.charCodeAt(i);
+      for (let i = 0; i < mb.length; i++) pe[rd + 0x112 + i] = mb.charCodeAt(i);
+
+    } else {
+      // Console Return 42 Payload:
+      const code = [
+        0x6A, exitCode & 0xFF,              // PUSH ExitCode
+        0xFF, 0x15, 0x60, 0x20, 0x40, 0x00, // CALL [0x00402060] (ExitProcess)
+        0xC3                                // RET
+      ];
+      for (let i = 0; i < code.length; i++) pe[0x200 + i] = code[i];
+
+      const rd = 0x400;
+      view.setUint32(rd, 0x2030, true);      // ILT
+      view.setUint32(rd + 12, 0x2040, true); // Name
+      view.setUint32(rd + 16, 0x2060, true); // IAT
+
+      view.setUint32(rd + 0x30, 0x2050, true);
+      const k32 = "KERNEL32.dll\0";
+      for (let i = 0; i < k32.length; i++) pe[rd + 0x40 + i] = k32.charCodeAt(i);
+      const ep = "ExitProcess\0";
+      for (let i = 0; i < ep.length; i++) pe[rd + 0x52 + i] = ep.charCodeAt(i);
+      view.setUint32(rd + 0x60, 0x2050, true);
+
+      if (type === 'anomaly') {
+        const anonTelemetry = "TELEMETRY_DUMP: Node 0x7F received signal from 10.19.99.4/classified. Memory checksum valid. Echo protocol running.";
+        for (let i = 0; i < anonTelemetry.length; i++) pe[rd + 0x80 + i] = anonTelemetry.charCodeAt(i);
+      }
+    }
+
+    return pe;
+  }
+
+  // Shannon Entropy Calculator
+  function calculateEntropy(u8Array, start = 0, length = u8Array.length) {
+    if (length <= 0) return 0;
+    const end = Math.min(start + length, u8Array.length);
+    const actualLen = end - start;
+    if (actualLen <= 0) return 0;
+
+    const freq = new Array(256).fill(0);
+    for (let i = start; i < end; i++) freq[u8Array[i]]++;
+
+    let entropy = 0;
+    for (let i = 0; i < 256; i++) {
+      if (freq[i] > 0) {
+        const p = freq[i] / actualLen;
+        entropy -= p * Math.log2(p);
+      }
+    }
+    return entropy;
+  }
+
+  // Parse PE bytes
+  function parsePE(u8Array, filename = "binary.exe") {
+    if (u8Array.length < 512) {
+      throw new Error("File too small to be a valid Win32 PE binary (< 512 bytes).");
+    }
+
+    const view = new DataView(u8Array.buffer, u8Array.byteOffset, u8Array.byteLength);
+
+    // Verify DOS Magic
+    const dosMagic = String.fromCharCode(u8Array[0], u8Array[1]);
+    if (dosMagic !== "MZ") {
+      throw new Error(`Invalid DOS Header: Expected 'MZ' (0x5A4D), found '${dosMagic}'.`);
+    }
+
+    const e_lfanew = view.getUint32(0x3C, true);
+    if (e_lfanew + 4 > u8Array.length) {
+      throw new Error(`Invalid e_lfanew offset (0x${e_lfanew.toString(16)}): points past EOF.`);
+    }
+
+    // Verify PE Signature
+    const peSig = String.fromCharCode(
+      u8Array[e_lfanew], u8Array[e_lfanew + 1],
+      u8Array[e_lfanew + 2], u8Array[e_lfanew + 3]
+    );
+    if (peSig !== "PE\0\0") {
+      throw new Error(`Invalid NT Signature at offset 0x${e_lfanew.toString(16)}: Expected 'PE\0\0', found '${peSig}'.`);
+    }
+
+    // COFF Header
+    const coffOff = e_lfanew + 4;
+    const machine = view.getUint16(coffOff, true);
+    const numSections = view.getUint16(coffOff + 2, true);
+    const timestamp = view.getUint32(coffOff + 4, true);
+    const sizeOptHeader = view.getUint16(coffOff + 16, true);
+    const characteristics = view.getUint16(coffOff + 18, true);
+
+    // Optional Header 32
+    const optOff = coffOff + 20;
+    const magic = view.getUint16(optOff, true);
+    const majorLinker = view.getUint8(optOff + 2);
+    const minorLinker = view.getUint8(optOff + 3);
+    const entryPoint = view.getUint32(optOff + 16, true);
+    const imageBase = view.getUint32(optOff + 28, true);
+    const secAlign = view.getUint32(optOff + 32, true);
+    const fileAlign = view.getUint32(optOff + 36, true);
+    const sizeOfImage = view.getUint32(optOff + 56, true);
+    const sizeOfHeaders = view.getUint32(optOff + 60, true);
+    const subsystem = view.getUint16(optOff + 68, true);
+
+    // Section Table
+    const secTableOff = optOff + sizeOptHeader;
+    const sections = [];
+
+    for (let s = 0; s < numSections; s++) {
+      const sOff = secTableOff + (s * 40);
+      if (sOff + 40 > u8Array.length) break;
+
+      let name = "";
+      for (let i = 0; i < 8; i++) {
+        const c = u8Array[sOff + i];
+        if (c !== 0) name += String.fromCharCode(c);
+      }
+
+      const virtSize = view.getUint32(sOff + 8, true);
+      const rva = view.getUint32(sOff + 12, true);
+      const rawSize = view.getUint32(sOff + 16, true);
+      const rawPtr = view.getUint32(sOff + 20, true);
+      const charact = view.getUint32(sOff + 36, true);
+
+      const entropy = calculateEntropy(u8Array, rawPtr, rawSize);
+
+      sections.push({
+        name, virtSize, rva, rawSize, rawPtr, charact, entropy
+      });
+    }
+
+    // Parse Imports from .rdata or Data Directory 1
+    const imports = [];
+    const importDirRVA = view.getUint32(optOff + 96 + 8, true);
+    if (importDirRVA > 0) {
+      // Find section holding import directory
+      const importSec = sections.find(sec => importDirRVA >= sec.rva && importDirRVA < (sec.rva + sec.virtSize));
+      if (importSec) {
+        const fileOff = importSec.rawPtr + (importDirRVA - importSec.rva);
+        let curDesc = fileOff;
+
+        while (curDesc + 20 <= u8Array.length) {
+          const origFirstThunk = view.getUint32(curDesc, true);
+          const nameRVA = view.getUint32(curDesc + 12, true);
+          const firstThunk = view.getUint32(curDesc + 16, true);
+
+          if (origFirstThunk === 0 && nameRVA === 0 && firstThunk === 0) break; // Null descriptor
+
+          let dllName = "";
+          const nameFileOff = importSec.rawPtr + (nameRVA - importSec.rva);
+          if (nameFileOff < u8Array.length) {
+            for (let i = nameFileOff; i < u8Array.length && u8Array[i] !== 0; i++) {
+              dllName += String.fromCharCode(u8Array[i]);
+            }
+          }
+
+          // Walk Thunk table for function names
+          const thunkRVA = origFirstThunk || firstThunk;
+          const thunkFileOff = importSec.rawPtr + (thunkRVA - importSec.rva);
+          let tIdx = 0;
+
+          while (thunkFileOff + (tIdx * 4) + 4 <= u8Array.length) {
+            const entryVal = view.getUint32(thunkFileOff + (tIdx * 4), true);
+            if (entryVal === 0) break;
+
+            if ((entryVal & 0x80000000) === 0) { // Import by name
+              const hintFileOff = importSec.rawPtr + (entryVal - importSec.rva);
+              let fnName = "";
+              if (hintFileOff + 2 < u8Array.length) {
+                for (let i = hintFileOff + 2; i < u8Array.length && u8Array[i] !== 0; i++) {
+                  fnName += String.fromCharCode(u8Array[i]);
+                }
+              }
+              const thunkAddr = '0x' + (firstThunk + (tIdx * 4)).toString(16).toUpperCase().padStart(8, '0');
+              imports.push({ dll: dllName, fn: fnName || "(Named Import)", thunk: thunkAddr });
+            } else {
+              const ord = entryVal & 0xFFFF;
+              imports.push({ dll: dllName, fn: `Ordinal #${ord}`, thunk: '0x' + (firstThunk + (tIdx * 4)).toString(16).toUpperCase() });
+            }
+
+            tIdx++;
+            if (tIdx > 64) break;
+          }
+
+          curDesc += 20;
+        }
+      }
+    }
+
+    return {
+      filename,
+      totalSize: u8Array.length,
+      e_lfanew,
+      machine,
+      numSections,
+      timestamp,
+      sizeOptHeader,
+      characteristics,
+      magic,
+      majorLinker,
+      minorLinker,
+      entryPoint,
+      imageBase,
+      secAlign,
+      fileAlign,
+      sizeOfImage,
+      sizeOfHeaders,
+      subsystem,
+      sections,
+      imports
+    };
+  }
+
+  function displayPEData(peData, rawBytes) {
+    parsedPEData = peData;
+    currentLoadedPEBytes = rawBytes;
+
+    document.getElementById('lblPeName').textContent = peData.filename;
+    document.getElementById('lblPeSize').textContent = `(${peData.totalSize.toLocaleString()} bytes)`;
+    document.getElementById('lblDosSig').textContent = '0x5A4D ("MZ")';
+    document.getElementById('lblPeSig').textContent = '"PE\0\0"';
+    document.getElementById('lblMachine').textContent = peData.machine === 0x014C ? 'i386 (0x014C)' : `0x${peData.machine.toString(16).toUpperCase()}`;
+    
+    const subsysNames = { 1: 'Native Driver (1)', 2: 'Win32 GUI (2)', 3: 'Win32 Console (3)', 7: 'POSIX (7)' };
+    document.getElementById('lblSubsys').textContent = subsysNames[peData.subsystem] || `Subsystem ${peData.subsystem}`;
+
+    document.getElementById('peLfanew').textContent = '0x' + peData.e_lfanew.toString(16).toUpperCase().padStart(8, '0');
+    document.getElementById('peNumSections').textContent = `${peData.numSections} sections`;
+    
+    const d = new Date(peData.timestamp * 1000);
+    document.getElementById('peTimestamp').textContent = isNaN(d.getTime()) ? '1999-12-31 23:59:59 UTC' : d.toUTCString();
+    document.getElementById('peEntryPoint').textContent = '0x' + peData.entryPoint.toString(16).toUpperCase().padStart(8, '0');
+    document.getElementById('peImageBase').textContent = '0x' + peData.imageBase.toString(16).toUpperCase().padStart(8, '0');
+    document.getElementById('peSecAlign').textContent = `${peData.secAlign} bytes (0x${peData.secAlign.toString(16)})`;
+    document.getElementById('peFileAlign').textContent = `${peData.fileAlign} bytes (0x${peData.fileAlign.toString(16)})`;
+    document.getElementById('peSizeImg').textContent = `${peData.sizeOfImage} B / ${peData.sizeOfHeaders} B`;
+    document.getElementById('peLinker').textContent = `Linker v${peData.majorLinker}.${peData.minorLinker.toString().padStart(2, '0')}`;
+
+    // Populate Section Table with Entropy
+    const secTbody = document.getElementById('peSectionsTbody');
+    secTbody.innerHTML = '';
+
+    const selDump = document.getElementById('selDumpSection');
+    selDump.innerHTML = `<option value="headers">File Headers (Offset 0x0000 - 0x${(peData.sizeOfHeaders-1).toString(16).toUpperCase()})</option>`;
+
+    peData.sections.forEach((sec, idx) => {
+      const opt = document.createElement('option');
+      opt.value = String(idx);
+      opt.textContent = `Section ${sec.name} (Offset 0x${sec.rawPtr.toString(16).toUpperCase()})`;
+      selDump.appendChild(opt);
+
+      let status = "Code / Text";
+      let statusColor = "var(--emerald)";
+      if (sec.entropy > 7.2) { status = "Packed / Encrypted"; statusColor = "var(--crimson)"; }
+      else if (sec.entropy < 2.0) { status = "Sparse / Nulls"; statusColor = "var(--text-muted)"; }
+      else if (sec.name === '.rdata') { status = "Imports / RData"; statusColor = "var(--cyan)"; }
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong style="color:var(--gold-bright);">${sec.name}</strong></td>
+        <td style="color:var(--cyan);">0x${sec.rva.toString(16).toUpperCase().padStart(8,'0')}</td>
+        <td>${sec.rawSize} B</td>
+        <td>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span>${sec.entropy.toFixed(2)}</span>
+            <div class="entropy-bar-bg" style="width:70px;">
+              <div class="entropy-bar-fill" style="width:${(sec.entropy / 8.0 * 100).toFixed(0)}%;"></div>
+            </div>
+          </div>
+        </td>
+        <td style="color:${statusColor}; font-weight:bold;">${status}</td>
+      `;
+      secTbody.appendChild(tr);
+    });
+
+    // Populate Imports Table
+    const impTbody = document.getElementById('peImportsTbody');
+    impTbody.innerHTML = '';
+    if (peData.imports.length === 0) {
+      impTbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">No imported dynamic link libraries (pure self-contained or ordinal).</td></tr>`;
+    } else {
+      peData.imports.forEach(imp => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong style="color:var(--gold-bright);">${imp.dll}</strong></td>
+          <td style="color:var(--emerald);">${imp.fn}</td>
+          <td style="color:var(--cyan); font-family:var(--font-mono);">${imp.thunk}</td>
+        `;
+        impTbody.appendChild(tr);
+      });
+    }
+
+    // Disassemble EntryPoint
+    const codeSec = peData.sections.find(s => peData.entryPoint >= s.rva && peData.entryPoint < (s.rva + s.virtSize));
+    const disasmBox = document.getElementById('peDisasmBox');
+    if (codeSec) {
+      const codeStart = codeSec.rawPtr + (peData.entryPoint - codeSec.rva);
+      const codeSlice = rawBytes.slice(codeStart, Math.min(codeStart + 64, rawBytes.length));
+      const instructions = disassembleBytes(codeSlice);
+      disasmBox.textContent = instructions.map(i => `${i.off}  ${i.hex.padEnd(14,' ')}  ${i.asm}`).join('\n');
+    } else {
+      disasmBox.textContent = '// EntryPoint address outside physical sections.';
+    }
+
+    // Render Hex Dump for active selection
+    renderSelectedHexDump();
+  }
+
+  function renderSelectedHexDump() {
+    if (!currentLoadedPEBytes || !parsedPEData) return;
+    const selVal = document.getElementById('selDumpSection').value;
+    const dumpBox = document.getElementById('peHexDumpBox');
+    const lblOffset = document.getElementById('lblDumpOffset');
+
+    let start = 0;
+    let len = 512;
+
+    if (selVal === 'headers') {
+      start = 0;
+      len = Math.min(parsedPEData.sizeOfHeaders || 512, currentLoadedPEBytes.length);
+    } else {
+      const secIdx = parseInt(selVal, 10);
+      if (parsedPEData.sections[secIdx]) {
+        start = parsedPEData.sections[secIdx].rawPtr;
+        len = Math.min(parsedPEData.sections[secIdx].rawSize, 512);
+      }
+    }
+
+    lblOffset.textContent = `Range: 0x${start.toString(16).toUpperCase().padStart(8,'0')} - 0x${(start + len - 1).toString(16).toUpperCase().padStart(8,'0')}`;
+
+    let out = '';
+    for (let row = 0; row < len; row += 16) {
+      const addr = '0x' + (start + row).toString(16).toUpperCase().padStart(8, '0');
+      let hexCols = [];
+      let asciiCols = [];
+
+      for (let c = 0; c < 16; c++) {
+        if (row + c < len && (start + row + c) < currentLoadedPEBytes.length) {
+          const b = currentLoadedPEBytes[start + row + c];
+          hexCols.push(b.toString(16).toUpperCase().padStart(2, '0'));
+          asciiCols.push((b >= 32 && b <= 126) ? String.fromCharCode(b) : '.');
+        } else {
+          hexCols.push('  ');
+          asciiCols.push(' ');
+        }
+      }
+
+      out += `${addr}  ${hexCols.slice(0, 8).join(' ')}  ${hexCols.slice(8).join(' ')}  |${asciiCols.join('')}|\n`;
+    }
+
+    dumpBox.textContent = out;
+  }
+
+  document.getElementById('selDumpSection').onchange = renderSelectedHexDump;
+
+  // Preset Sample Click Handlers
+  document.getElementById('btnLoadSampleReturn42').onclick = () => {
+    const bytes = generatePEBinary('return42', 3, 42);
+    displayPEData(parsePE(bytes, "return42_console.exe"), bytes);
+  };
+
+  document.getElementById('btnLoadSampleMsgbox').onclick = () => {
+    const bytes = generatePEBinary('msgbox', 2, 0, "Temple of Opcodes", "Hand-Crafted in 1999 // Zero Bloat Ring 0");
+    displayPEData(parsePE(bytes, "hello_msgbox.exe"), bytes);
+  };
+
+  document.getElementById('btnLoadSampleDemo').onclick = () => {
+    const bytes = generatePEBinary('demoscene', 2, 0);
+    displayPEData(parsePE(bytes, "flame_intro_stub.exe"), bytes);
+  };
+
+  document.getElementById('btnLoadSampleAnom').onclick = () => {
+    const bytes = generatePEBinary('anomaly', 3, 0);
+    displayPEData(parsePE(bytes, "anomaly_10_19_99_4.exe"), bytes);
+  };
+
+  // Download loaded PE
+  document.getElementById('btnDownloadLoadedPE').onclick = () => {
+    if (!currentLoadedPEBytes) return;
+    const blob = new Blob([currentLoadedPEBytes], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (parsedPEData && parsedPEData.filename) ? parsedPEData.filename : 'binary.exe';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // File Upload & Drag-and-Drop
+  const dropzone = document.getElementById('peDropzone');
+  const fileInput = document.getElementById('peFileInput');
+
+  dropzone.onclick = () => fileInput.click();
+
+  fileInput.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) handleLoadedFile(file);
+  };
+
+  dropzone.ondragover = (e) => { e.preventDefault(); dropzone.classList.add('dragover'); };
+  dropzone.ondragleave = () => dropzone.classList.remove('dragover');
+  dropzone.ondrop = (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleLoadedFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  function handleLoadedFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const u8 = new Uint8Array(e.target.result);
+        const parsed = parsePE(u8, file.name);
+        displayPEData(parsed, u8);
+      } catch (err) {
+        alert('PE Parse Error: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // Load Initial Default Sample
+  document.getElementById('btnLoadSampleReturn42').click();
+
+  // RVA Converter Logic
+  document.getElementById('btnConvertRVA').onclick = () => {
+    if (!parsedPEData) return;
+    const rva = parseHexNum(document.getElementById('rvaInput').value);
+    if (isNaN(rva)) return;
+
+    const va = '0x' + (parsedPEData.imageBase + rva).toString(16).toUpperCase().padStart(8, '0');
+    document.getElementById('rvaResultVA').textContent = va;
+
+    const sec = parsedPEData.sections.find(s => rva >= s.rva && rva < (s.rva + s.virtSize));
+    if (sec) {
+      document.getElementById('rvaResultSec').textContent = sec.name;
+      const off = sec.rawPtr + (rva - sec.rva);
+      document.getElementById('rvaResultOffset').textContent = '0x' + off.toString(16).toUpperCase().padStart(8, '0') + ` (${off} bytes)`;
+    } else {
+      document.getElementById('rvaResultSec').textContent = '(None - Outside Sections)';
+      document.getElementById('rvaResultOffset').textContent = 'N/A';
+    }
+  };
+
+  document.getElementById('btnConvertOffset').onclick = () => {
+    if (!parsedPEData) return;
+    const off = parseHexNum(document.getElementById('offsetInput').value);
+    if (isNaN(off)) return;
+
+    const sec = parsedPEData.sections.find(s => off >= s.rawPtr && off < (s.rawPtr + s.rawSize));
+    if (sec) {
+      const rva = sec.rva + (off - sec.rawPtr);
+      document.getElementById('offResultRVA').textContent = '0x' + rva.toString(16).toUpperCase().padStart(8, '0');
+      document.getElementById('offResultVA').textContent = '0x' + (parsedPEData.imageBase + rva).toString(16).toUpperCase().padStart(8, '0');
+      document.getElementById('offResultSec').textContent = sec.name;
+    } else {
+      document.getElementById('offResultRVA').textContent = 'N/A';
+      document.getElementById('offResultVA').textContent = 'N/A';
+      document.getElementById('offResultSec').textContent = '(None - File Headers)';
+    }
+  };
+
+  // PE Builder Buttons
+  let newlyBuiltPEBytes = null;
+
+  document.getElementById('btnBuildExecutable').onclick = () => {
+    const tmpl = document.getElementById('builderTemplate').value;
+    const subsys = parseInt(document.getElementById('builderSubsystem').value, 10);
+    const code = parseInt(document.getElementById('builderExitCode').value, 10) || 0;
+    const title = document.getElementById('builderMsgTitle').value;
+    const msg = document.getElementById('builderMsgText').value;
+
+    const pe = generatePEBinary(tmpl, subsys, code, title, msg);
+    newlyBuiltPEBytes = pe;
+
+    const logBox = document.getElementById('buildOutputLog');
+    logBox.textContent = `[+] PE32 Assembly & Link Successful!\n[+] Target Subsystem: ${subsys === 2 ? 'Win32 GUI' : 'Win32 Console'}\n[+] DOS Stub: MZ Header + 16-bit real mode fallback string\n[+] NT Headers: PE Signature (0x00004550) + OptionalHeader32 (PE32)\n[+] Section Table: .text (code) + .rdata (IAT & descriptors)\n[+] Total Size: ${pe.length} bytes (1.5 KB) on disk. Ready for download!`;
+  };
+
+  document.getElementById('btnDownloadBuiltPE').onclick = () => {
+    if (!newlyBuiltPEBytes) document.getElementById('btnBuildExecutable').click();
+    const blob = new Blob([newlyBuiltPEBytes], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'temple_pe32.exe';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  document.getElementById('btnInspectBuiltPE').onclick = () => {
+    if (!newlyBuiltPEBytes) document.getElementById('btnBuildExecutable').click();
+    document.querySelector('[data-subtab="sub-dissect"]').click();
+    displayPEData(parsePE(newlyBuiltPEBytes, "temple_pe32.exe"), newlyBuiltPEBytes);
+  };
+
+  // Architectural Guide Block Interaction
   const PE_DETAILS = {
     dos: {
       title: "1. DOS MZ Header (IMAGE_DOS_HEADER)",
@@ -1621,12 +3136,12 @@
     pesig: {
       title: "3. PE Signature",
       sub: "4-byte magic signature validating portable executable format",
-      body: "Located directly at the offset designated by <code>e_lfanew</code> (typically <code>0x00E0</code> or <code>0x00F0</code>). Consists of the four ASCII characters: <code>'P', 'E', 0x00, 0x00</code> (hex value <code>0x00004550</code>). Confirms to the OS loader that the binary is a 32-bit Portable Executable."
+      body: "Located directly at the offset designated by <code>e_lfanew</code> (typically <code>0x0080</code> or <code>0x00F0</code>). Consists of the four ASCII characters: <code>'P', 'E', 0x00, 0x00</code> (hex value <code>0x00004550</code>). Confirms to the OS loader that the binary is a 32-bit Portable Executable."
     },
     coff: {
       title: "4. COFF File Header (IMAGE_FILE_HEADER)",
       sub: "20-byte hardware and layout specification",
-      body: "Defines the physical target architecture and layout parameters:<br><br>• <code>Machine</code>: <code>0x014C</code> specifies Intel 386 or later.<br>• <code>NumberOfSections</code>: Quantity of sections in the section table (typically 3 to 6).<br>• <code>TimeDateStamp</code>: Epoch timestamp indicating compilation time.<br>• <code>Characteristics</code>: Bitmask indicating executable image, 32-bit word machine, DLL, or system file."
+      body: "Defines the physical target architecture and layout parameters:<br><br>• <code>Machine</code>: <code>0x014C</code> specifies Intel 386 or later.<br>• <code>NumberOfSections</code>: Quantity of sections in the section table (typically 2 to 6).<br>• <code>TimeDateStamp</code>: Epoch timestamp indicating compilation time.<br>• <code>Characteristics</code>: Bitmask indicating executable image, 32-bit word machine, DLL, or system file."
     },
     optional: {
       title: "5. Optional Header (IMAGE_OPTIONAL_HEADER32)",
@@ -1659,7 +3174,7 @@
   });
 
   // ==========================================
-  // 6. YM2612 & SPC700 Chiptune Jukebox Engine
+  // 7. YM2612 & SPC700 Chiptune Jukebox
   // ==========================================
   let audioCtx = null;
   let isPlaying = false;
@@ -1668,6 +3183,10 @@
   let analyser = null;
   let audioTimer = null;
   let stepIdx = 0;
+
+  let fmRatioSetting = 2.0;
+  let fmIndexSetting = 180;
+  let echoFeedbackSetting = 0.28;
 
   const TRACKS = [
     {
@@ -1687,6 +3206,12 @@
       style: "128 BPM // Dark Demoscene Cyber Groove & FM Clangs",
       bpm: 128,
       scale: [110.00, 123.47, 130.81, 146.83, 164.81, 174.61, 196.00, 220.00, 246.94, 261.63, 293.66, 329.63]
+    },
+    {
+      title: "Track 04: 'Assembly Revelation (1999 Megademo)'",
+      style: "144 BPM // Hyper-Speed FM Arpeggios & Resonant Bass",
+      bpm: 144,
+      scale: [164.81, 185.00, 196.00, 220.00, 246.94, 261.63, 293.66, 329.63, 370.00, 392.00, 440.00, 493.88]
     }
   ];
 
@@ -1707,8 +3232,7 @@
     startVisualizer();
   }
 
-  // Mandate 9: Yamaha YM2612 2-Operator FM Synthesizer Node
-  function playFMSound(freq, duration, modRatio = 2.0, modIndex = 180) {
+  function playFMSound(freq, duration, customRatio = fmRatioSetting, customIndex = fmIndexSetting) {
     if (!audioCtx) return;
     const now = audioCtx.currentTime;
 
@@ -1721,32 +3245,30 @@
     carrier.frequency.setValueAtTime(freq, now);
 
     modulator.type = 'sine';
-    modulator.frequency.setValueAtTime(freq * modRatio, now);
+    modulator.frequency.setValueAtTime(freq * customRatio, now);
 
-    // FM Modulation Envelope: rapid exponential decay (iconic Genesis bite)
-    modGain.gain.setValueAtTime(modIndex, now);
+    modGain.gain.setValueAtTime(customIndex, now);
     modGain.gain.exponentialRampToValueAtTime(0.01, now + duration * 0.7);
 
     modulator.connect(modGain);
     modGain.connect(carrier.frequency);
 
-    // Output Amplitude ADSR
     envGain.gain.setValueAtTime(0.001, now);
     envGain.gain.linearRampToValueAtTime(0.4, now + 0.015);
     envGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
     carrier.connect(envGain);
 
-    // Mandate 9: SPC700 Stereo Slapback Delay Node Line
+    // SPC700 Delay
     const delayNode = audioCtx.createDelay();
-    delayNode.delayTime.value = 0.18; // 180ms delay
+    delayNode.delayTime.value = 0.18;
 
     const delayFeedback = audioCtx.createGain();
-    delayFeedback.gain.value = 0.28; // Warm feedback
+    delayFeedback.gain.value = echoFeedbackSetting;
 
     const delayFilter = audioCtx.createBiquadFilter();
     delayFilter.type = 'lowpass';
-    delayFilter.frequency.value = 2100; // Warm high-frequency roll-off
+    delayFilter.frequency.value = 2100;
 
     envGain.connect(masterGain);
     envGain.connect(delayNode);
@@ -1795,19 +3317,16 @@
     const curTrack = TRACKS[trackIdx];
     const scale = curTrack.scale;
 
-    // Bassline (Every 2 steps)
     if (stepIdx % 2 === 0) {
       const bassNote = scale[stepIdx % 4];
-      playFMSound(bassNote / 2, 0.22, 1.0, 240);
+      playFMSound(bassNote / 2, 0.22, fmRatioSetting, fmIndexSetting * 1.3);
     }
 
-    // Lead Arp
     if (stepIdx % 4 === 0 || stepIdx % 4 === 2) {
       const leadNote = scale[(stepIdx * 3) % scale.length];
-      playFMSound(leadNote, 0.18, 2.0, 160);
+      playFMSound(leadNote, 0.18, fmRatioSetting, fmIndexSetting);
     }
 
-    // Drums
     if (stepIdx % 4 === 0) playProceduralPercussion('kick');
     if (stepIdx % 2 === 1) playProceduralPercussion('hat');
 
@@ -1863,6 +3382,28 @@
     if (masterGain) masterGain.gain.value = v / 100;
   };
 
+  // FM Tuner Sliders
+  const sliderFmRatio = document.getElementById('sliderFmRatio');
+  const lblFmRatio = document.getElementById('lblFmRatio');
+  sliderFmRatio.oninput = () => {
+    fmRatioSetting = sliderFmRatio.value / 10.0;
+    lblFmRatio.textContent = fmRatioSetting.toFixed(1) + 'x';
+  };
+
+  const sliderFmIndex = document.getElementById('sliderFmIndex');
+  const lblFmIndex = document.getElementById('lblFmIndex');
+  sliderFmIndex.oninput = () => {
+    fmIndexSetting = parseInt(sliderFmIndex.value, 10);
+    lblFmIndex.textContent = fmIndexSetting;
+  };
+
+  const sliderEchoFeedback = document.getElementById('sliderEchoFeedback');
+  const lblEchoFeedback = document.getElementById('lblEchoFeedback');
+  sliderEchoFeedback.oninput = () => {
+    echoFeedbackSetting = sliderEchoFeedback.value / 100.0;
+    lblEchoFeedback.textContent = sliderEchoFeedback.value + '%';
+  };
+
   // Oscilloscope Visualizer
   function startVisualizer() {
     const canvas = document.getElementById('scopeCanvas');
@@ -1876,7 +3417,6 @@
       ctx.fillStyle = '#05080f';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Grid Lines
       ctx.strokeStyle = '#0d1829';
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -1885,7 +3425,6 @@
       ctx.stroke();
 
       if (!isPlaying || !analyser) {
-        // Idle flatline
         ctx.strokeStyle = '#1e3a5f';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -1923,7 +3462,7 @@
   }
 
   // ==========================================
-  // 7. Acolyte Guestbook Engine
+  // 8. Acolyte Guestbook Engine
   // ==========================================
   const INITIAL_GUESTBOOK = [
     { alias: "ByteMonk_99", opcode: "NOP [0x90]", msg: "Welcome to the sacred shrine of 0x90. May your interrupts always return clean.", time: "1999-10-24 18:22" },

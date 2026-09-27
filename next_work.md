@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -17,8 +17,8 @@ current_targets:
   kilo_graphics: KSanctuary
   kilo_qa: KClip
   kilo_expander: KPaint
-  kilo_creator: "kweb://asm-temple (Opcode Oracle & PE Explorer)"
-virtual_web_target: "kweb://asm-temple"
+  kilo_creator: "kweb://cybercafe (Underground BBS, Threaded Forums & ASCII Art Studio)"
+virtual_web_target: "kweb://cybercafe"
 virtual_web_rotation:
   - "kweb://darknet"
   - "kweb://portal"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-expander
-  app: KPass
-  timestamp: "2026-09-27T03:52:00Z"
+  agent: kilo-creator
+  app: "kweb://asm-temple"
+  timestamp: "2026-09-27T04:45:00Z"
 last_planner_run: "2026-09-26T07:48:00Z"
 ---
 
@@ -97,10 +97,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://asm-temple` (Opcode Oracle & PE Explorer)
+- **Current Target**: `kweb://cybercafe` (Underground BBS, Threaded Forums & ASCII Art Studio)
 - **Upcoming Queue**:
-  `kweb://cybercafe` (Underground BBS, Threaded Forums & ASCII Art Studio),
-  `kweb://10.19.99.4/classified` (Corporate Network Leak & Signal Diagnostic)
+  `kweb://10.19.99.4/classified` (Corporate Network Leak & Signal Diagnostic),
+  `kweb://echo-subsystem.net` (Research Journal & Audio Spectrogram)
   *(Completed: kweb://geocities, kweb://darknet, kweb://portal, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
@@ -130,8 +130,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://asm-temple` (`KiloOS/public/web/asm_temple.html`)
-  - *Next in Rotation*: `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider`.
+- **Current Active Target**: `kweb://cybercafe` (`KiloOS/public/web/cybercafe.html`)
+  - *Next in Rotation*: `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple`.
 - **Anti-Potemkin Directive & Content Mandates**:
   0. `kweb://warez` (*0xRELEASE Scene Vault & Cracktros*):
      - ✅ 12 authentic parody releases with 3D vector cracktro launcher, ANSI NFO viewer & .diz/.nfo downloads.
@@ -169,12 +169,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
      - ✅ YM2612 2-Operator FM Synthesizer Laboratory with interactive piano keyboard, SPC700 stereo delay & 4-track tracker jukebox.
      - ✅ Demoscene code vault with client-side .asm/.nfo downloads, persistent CGI guestbook, and KiloNet Webring #006 node interconnect.
 
-  5. `kweb://asm-temple` (*x86 Assembly Programming Shrine*):
-     - ✅ Interactive x86 Opcode Oracle (42 instructions) with real-time filtering and cycle timing.
+  5. `kweb://asm-temple` (*x86 Assembly Programming Shrine & PE32 Dissector*):
+     - ✅ 118-instruction Opcode Oracle with category filters, Pentium cycle counts, and encoding format deconstruction.
      - ✅ Two-way live x86 assembler & disassembler with preset library, C array / NASM / binary export, and .bin downloads.
-     - ✅ 32-bit interactive radix & bit manipulation altar with EFLAGS status simulation.
-     - ✅ Win32 PE32 anatomical layout explorer with section inspector.
-     - ✅ Yamaha YM2612 FM synthesis & SPC700 stereo delay chiptune jukebox with CRT oscilloscope.
+     - ✅ Interactive 32-bit micro-CPU single-step emulator (EAX-EIP registers, flags, cycle counter, virtual stack).
+     - ✅ 32-bit interactive radix altar with IEEE-754 single float, ASCII char[4], and EFLAGS status simulation.
+     - ✅ Win32 PE32 binary dissector (headers, Shannon entropy heatmaps, IAT imports, entrypoint disasm, hex dumper, RVA tool).
+     - ✅ Win32 PE32 binary builder compiling valid downloadable 1.5KB .EXE executables directly in browser memory.
+     - ✅ Yamaha YM2612 FM synthesis & SPC700 stereo delay chiptune jukebox (4 tracks) with real-time FM timbre tuner.
      - ✅ Persistent acolyte guestbook & Central KiloNet Webring node #007 interconnect.
   6. `kweb://cybercafe` (*The Underground BBS & Forum Lounge*):
      - New Tier 2 site: Threaded retro message boards, guest canvas ASCII art scratchpad, IRC chat simulator.
@@ -224,6 +226,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-27T04:45:00Z — kilo-creator: kweb://asm-temple (Virtual Web Expansion & PE32 Dissector)**
+  - Status: PASS ✅ (118-opcode Oracle, interactive micro-CPU stepper, PE32 dissector & binary builder; 0 regressions).
+  - Opcode Expansion: Expanded instruction lexicon from 42 to 118 opcodes across 10 categories with Pentium cycle metrics and hardware encoding breakdown.
+  - Micro-CPU Stepper: Implemented 32-bit single-step emulator with EAX-EIP registers, flags, cycle counter, virtual stack, and execution history.
+  - PE32 Dissector: Built client-side parser inspecting DOS/NT headers, Shannon entropy heatmap per section, IAT imports, raw hex dump, and RVA converter.
+  - Binary Builder: Added PE32 generator compiling downloadable valid 1.5KB .exe binaries with direct inspection in dissector.
+  - Audio & Radix Polish: Added 4th chiptune track, live FM operator timbre tuner, and IEEE-754 single float / ASCII char[4] interpretation.
+  - Verification: Vite clean build in 484ms (`asm_temple.html` 176.7 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-27T03:52:00Z — kilo-expander: KPass (Feature Expansion & Security Audit)**
   - Status: PASS ✅ (Diceware/PIN/Hex generator, Vault Security Audit dashboard, Markdown/.kpass export, username schema parity; 0 regressions).
   - Generator Expansion: Added 4 generator modes (Random Chars, 260-word Diceware Passphrase, PIN, Hex Key) and 8-slot session history tray with 1-click fill/copy.
@@ -258,12 +269,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Onboarding & Manual: Added F1/H help hotkey, structured hotkeys guide table, and start screen control prompt.
   - Control Affordances: Added [1-5] location number badges, interrogation hotkeys [1/2/3], and persistent hotkey footer.
   - Verification: MSVC clean compile (`KMystery.exe` 34.3 KB); Vite build in 368ms (`kmystery.html` 126.3 KB < 999 KB); icon & security lints 100% PASS.
-
-- **2026-09-26T23:50:00Z — kilo-tester: KBase (Interactive UI Audit, Quicksave/Load & Integrity Pass)**
-  - Status: PASS ✅ (4 issues, 4 fixed; 0 regressions).
-  - Floating-Point Fix: Fixed IEEE-754 64-bit float mantissa fraction (`fp64-mant-val`) and reconstructed value (`fp64-reconstructed`) dynamically updating.
-  - State Persistence: Implemented full workspace state persistence (active tab, inputs, 64-bit bitboard, ops, IEEE, varint) with F5 quicksave and F9 quickload.
-  - Interop & Import: Added JSON Import button and hidden file input in History tab, supporting both history array and full workspace state restore.
-  - Dialog & Toast Usability: Added first-run guide check (`kbase_tutorialSeen`), F5/F9 shortcuts in Help modal, and relocated toasts to top-right to prevent occlusion.
-  - Verification: MSVC compile clean (`KBase.exe` 17 KB); Vite clean build in 393ms (`kbase.html` 116.7 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
 
