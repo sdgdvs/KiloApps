@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-27T03:52:00Z — kilo-expander: KPass (Feature Expansion & Security Audit)**
+  - Status: PASS ✅ (Diceware/PIN/Hex generator, Vault Security Audit dashboard, Markdown/.kpass export, username schema parity; 0 regressions).
+  - Generator Expansion: Added 4 generator modes (Random Chars, 260-word Diceware Passphrase, PIN, Hex Key) and 8-slot session history tray with 1-click fill/copy.
+  - Schema Flexibility: Added dedicated username/account and secure notes fields across forms, storage, exports, and vault cards with 1-click user/pass copy buttons.
+  - Security Audit Dashboard: Built live health engine (0-100 score, entropy profiling) identifying duplicate reused passwords, weak credentials, and stale entries (>90d).
+  - Data Interoperability: Implemented formatted Markdown table export (`kpass_vault.md`), portable encrypted backup (`.kpass`), CSV, and JSON import/export.
+  - Win32 C Parity: Updated `KPass/main.c` with username field, Markdown export, Security Audit dialog (`Alt+A`), and updated shortcuts.
+  - Verification: MSVC clean compile (`KPass.exe` 23.5 KB); Vite clean build in 377ms (`kpass.html` 103.7 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-27T02:43:00Z — kilo-qa: KRSS (Pass 5: Tutorial & State Integrity Audit)**
   - Status: PASS ✅ (F5 quicksave/F9 quickload persistence, tutorial integrity, TINAG cleanup; 0 regressions).
   - State Persistence: Implemented comprehensive state persistence (feeds, articles, active feed, selection, filter, query, audio toggle) across web and Win32 C `krss.dat`.

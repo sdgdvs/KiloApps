@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KCalendar
   kilo_usability: KNote
-  kilo_graphics: KSanctuary
+  kilo_graphics: KDragon
   kilo_qa: KClip
   kilo_expander: KPaint
   kilo_creator: "kweb://cybercafe (Underground BBS, Threaded Forums & ASCII Art Studio)"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-usability
-  app: KNet
-  timestamp: "2026-09-27T07:55:00Z"
+  agent: kilo-graphics
+  app: KSanctuary
+  timestamp: "2026-09-27T11:52:00Z"
 last_planner_run: "2026-09-27T09:48:00Z"
 ---
 
@@ -104,9 +104,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://geocities, kweb://darknet, kweb://portal, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KSanctuary`
+- **Current Target**: `KDragon`
 - **Upcoming Queue**:
-  `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`.
+  `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KCalendar`
@@ -226,6 +226,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-27T11:52:00Z — kilo-graphics: KSanctuary (Game Content, Visual Polish & Early-Raid Balance Pass)**
+  - Status: PASS ✅ (0 rotating glints / traveling border dots; weather reactivity & early-raid balance; 0 regressions).
+  - Glint & Dot Purge: Verified 100% clean static retro borders across web and C with zero moving glints or perimeter dots.
+  - Cutaway Visual Polish: Added atmospheric weather reactivity to surface strip and tactical monitor/crate in security room.
+  - Dweller Sprite Differentiation: Added role-distinct gear and hat colors across all 7 dweller jobs in canvas cutaway.
+  - Early-Raid Balance Tuning: Gated raider clans so Day 1-3 faces Clan 0 (Rustfang Marauders, ~30 Atk), smoothing initial difficulty curve.
+  - Doppler Radar Iconography: Rendered 32x32 forecasted hazard sprite in Win32 C early warning radar box.
+  - Verification: MSVC compile clean (`KSanctuary.exe` 264.2 KB); Vite clean build in 387ms (`ksanctuary.html` 408.4 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-27T09:48:00Z — kilo-planner: 24h Fleet Planning, Queue Health & Icon Audit**
   - Status: PASS ✅ (104 apps audited, 0 duplicates, 0 regressions, all queues balanced).
   - Velocity & Health: Assessed 15 runs across 6 skills in past 24h; all passes clean; 100% build pass.
@@ -260,13 +269,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Binary Builder: Added PE32 generator compiling downloadable valid 1.5KB .exe binaries with direct inspection in dissector.
   - Audio & Radix Polish: Added 4th chiptune track, live FM operator timbre tuner, and IEEE-754 single float / ASCII char[4] interpretation.
   - Verification: Vite clean build in 484ms (`asm_temple.html` 176.7 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
-
-- **2026-09-27T03:52:00Z — kilo-expander: KPass (Feature Expansion & Security Audit)**
-  - Status: PASS ✅ (Diceware/PIN/Hex generator, Vault Security Audit dashboard, Markdown/.kpass export, username schema parity; 0 regressions).
-  - Generator Expansion: Added 4 generator modes (Random Chars, 260-word Diceware Passphrase, PIN, Hex Key) and 8-slot session history tray with 1-click fill/copy.
-  - Schema Flexibility: Added dedicated username/account and secure notes fields across forms, storage, exports, and vault cards with 1-click user/pass copy buttons.
-  - Security Audit Dashboard: Built live health engine (0-100 score, entropy profiling) identifying duplicate reused passwords, weak credentials, and stale entries (>90d).
-  - Data Interoperability: Implemented formatted Markdown table export (`kpass_vault.md`), portable encrypted backup (`.kpass`), CSV, and JSON import/export.
-  - Win32 C Parity: Updated `KPass/main.c` with username field, Markdown export, Security Audit dialog (`Alt+A`), and updated shortcuts.
-  - Verification: MSVC clean compile (`KPass.exe` 23.5 KB); Vite clean build in 377ms (`kpass.html` 103.7 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
 

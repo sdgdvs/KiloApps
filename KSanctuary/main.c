@@ -1274,10 +1274,10 @@ static void TriggerRaiderAttack(int isManual) {
     int baseAtks[] = { 30, 48, 65, 85, 110 };
 
     int clanIdx = 0;
-    if (g_state.day >= 12) clanIdx = 4;
-    else if (g_state.day >= 9) clanIdx = 3;
-    else if (g_state.day >= 6) clanIdx = 2;
-    else if (g_state.day >= 3) clanIdx = 1;
+    if (g_state.day >= 16) clanIdx = 4;
+    else if (g_state.day >= 12) clanIdx = 3;
+    else if (g_state.day >= 8) clanIdx = 2;
+    else if (g_state.day >= 4) clanIdx = 1;
 
     int variance = (rand() % 15) - 7;
     int assaultPower = baseAtks[clanIdx] + variance;
@@ -3988,9 +3988,11 @@ static void DrawHazardsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, i
     int foreH = 50;
     DrawStyledBox(hdc, x, foreY, w, foreH, COL_PANEL_BG, COL_BORDER_HI);
 
+    DrawWeatherSprite(hdc, x + 8, foreY + 9, g_state.forecastType);
+
     SelectObject(hdc, hFontBold);
     SetTextColor(hdc, COL_AMBER);
-    TextOutA(hdc, x + 8, foreY + 6, "DOPPLER RADAR EARLY WARNING FORECAST", 36);
+    TextOutA(hdc, x + 48, foreY + 6, "DOPPLER RADAR EARLY WARNING FORECAST", 36);
 
     char etaBuf[32];
     if (g_state.forecastEtaDays <= 1) strcpy(etaBuf, "INCOMING TOMORROW!");
@@ -4002,7 +4004,7 @@ static void DrawHazardsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, i
     SetTextColor(hdc, COL_TEXT_BRIGHT);
     char fProjBuf[128];
     sprintf(fProjBuf, "Projected Hazard: %s (Tier %d) - Recommend preparing appropriate countermeasures.", wNames[g_state.forecastType], g_state.forecastSeverity);
-    TextOutA(hdc, x + 8, foreY + 26, fProjBuf, (int)strlen(fProjBuf));
+    TextOutA(hdc, x + 48, foreY + 26, fProjBuf, (int)strlen(fProjBuf));
 
     // 3. Hazard Modifiers (4 Cards in 2x2 Grid)
     int modY = foreY + foreH + 8;
