@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KPass - Password Generator &amp; Vault</title>
+<title>KPass - Password Generator, Security Audit &amp; Vault</title>
 <style>
   body {
     background: #1e1e1e;
@@ -28,10 +28,11 @@
   }
   .tab {
     flex: 1;
-    padding: 12px;
+    padding: 11px 8px;
     text-align: center;
     cursor: pointer;
     font-weight: 600;
+    font-size: 13px;
     color: #888;
     transition: all 0.2s;
     user-select: none;
@@ -48,10 +49,10 @@
     border-bottom: 2px solid #e74c3c;
   }
   .tab-help {
-    padding: 12px 16px;
+    padding: 11px 14px;
     cursor: pointer;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
     color: #aaa;
     display: flex;
     align-items: center;
@@ -67,16 +68,16 @@
   }
   .content {
     flex: 1;
-    padding: 16px 20px;
+    padding: 14px 18px;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
   }
   .help-hint {
     text-align: center;
-    font-size: 12px;
-    color: #aaa;
-    margin-bottom: 8px;
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 6px;
     cursor: pointer;
     user-select: none;
     transition: color 0.2s;
@@ -85,21 +86,51 @@
     color: #e74c3c;
     text-decoration: underline;
   }
+  .mode-pills {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+    background: #181818;
+    padding: 4px;
+    border-radius: 6px;
+    border: 1px solid #333;
+  }
+  .btn-mode {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #888;
+    padding: 5px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-mode:hover {
+    color: #ddd;
+    background: #252525;
+  }
+  .btn-mode.active {
+    background: #e74c3c;
+    color: #fff;
+  }
   .display {
     background: #111;
     border: 1px solid #333;
-    padding: 12px 14px;
+    padding: 10px 14px;
     border-radius: 6px;
     font-family: 'Consolas', monospace;
-    font-size: 21px;
+    font-size: 20px;
     color: #e74c3c;
     text-align: center;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     word-break: break-all;
     cursor: pointer;
     user-select: all;
     transition: border-color 0.2s, background 0.2s;
     position: relative;
+    min-height: 28px;
   }
   .display:hover {
     border-color: #555;
@@ -115,8 +146,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
-    padding: 8px 12px;
+    margin-bottom: 10px;
+    padding: 6px 12px;
     background: #252525;
     border-radius: 6px;
     border: 1px solid #333;
@@ -143,13 +174,13 @@
   .controls {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
   .control-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
   }
   .control-row label {
     cursor: pointer;
@@ -162,15 +193,15 @@
   .presets-row {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 12px;
+    gap: 5px;
+    font-size: 11px;
     color: #888;
   }
   .btn-preset {
     background: #282828;
     border: 1px solid #444;
     color: #ccc;
-    padding: 3px 8px;
+    padding: 2px 7px;
     border-radius: 4px;
     font-size: 11px;
     cursor: pointer;
@@ -182,11 +213,11 @@
   }
   input[type="text"], input[type="password"], select {
     flex: 1;
-    padding: 8px 12px;
+    padding: 7px 10px;
     background: #222;
     border: 1px solid #444;
     color: #fff;
-    border-radius: 6px;
+    border-radius: 5px;
     font-size: 13px;
     box-sizing: border-box;
   }
@@ -198,11 +229,11 @@
     background: #333;
     color: white;
     border: 1px solid #444;
-    padding: 8px 14px;
-    border-radius: 6px;
+    padding: 7px 12px;
+    border-radius: 5px;
     cursor: pointer;
     font-weight: bold;
-    font-size: 13px;
+    font-size: 12px;
     transition: all 0.2s;
     user-select: none;
   }
@@ -213,30 +244,91 @@
   button.primary {
     background: #e74c3c;
     border-color: #e74c3c;
-    width: 100%;
-    margin-top: 6px;
   }
   button.primary:hover {
     background: #c0392b;
     border-color: #c0392b;
   }
+  .history-tray {
+    margin-top: 10px;
+    border-top: 1px solid #333;
+    padding-top: 8px;
+  }
+  .history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: #888;
+    cursor: pointer;
+    user-select: none;
+    padding: 2px 4px;
+  }
+  .history-header:hover {
+    color: #ddd;
+  }
+  .history-list {
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  .history-item {
+    background: #181818;
+    border: 1px solid #2d2d2d;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-family: 'Consolas', monospace;
+  }
+  .history-item span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 280px;
+    color: #bbb;
+  }
+  .history-item-btns {
+    display: flex;
+    gap: 4px;
+  }
+  .btn-micro {
+    padding: 2px 6px;
+    font-size: 10px;
+    border-radius: 3px;
+    background: #292929;
+    border: 1px solid #444;
+    color: #ccc;
+    cursor: pointer;
+  }
+  .btn-micro:hover {
+    background: #383838;
+    color: #fff;
+  }
+
+  /* Vault Styles */
   .vault-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 10px;
+    gap: 6px;
+    margin-bottom: 8px;
     align-items: center;
   }
   .search-wrap {
     flex: 1;
-    min-width: 150px;
+    min-width: 140px;
     position: relative;
     display: flex;
     align-items: center;
   }
   .search-wrap input {
     width: 100%;
-    padding-right: 28px;
+    padding-right: 26px;
   }
   .btn-clear-search {
     position: absolute;
@@ -255,75 +347,129 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 12px;
+    font-size: 11px;
     color: #888;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     padding: 0 4px;
   }
   .vault-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
   }
   .vault-item {
-    background: #2a2a2a;
-    padding: 10px 12px;
+    background: #282828;
+    padding: 8px 10px;
     border-radius: 6px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column;
+    gap: 4px;
     border-left: 4px solid #e74c3c;
     transition: background 0.15s;
   }
   .vault-item:hover {
     background: #303030;
   }
-  .vault-info {
-    flex: 1;
-    overflow: hidden;
+  .vault-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .vault-label-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
   }
   .vault-label { font-weight: bold; color: #fff; font-size: 13px; }
   .vault-category {
-    font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 4px;
+    font-size: 10px;
+    padding: 2px 5px;
+    border-radius: 3px;
     background: #2980b9;
     color: #fff;
-    margin-left: 6px;
     font-weight: normal;
   }
   .vault-badge {
-    font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 4px;
+    font-size: 10px;
+    padding: 2px 5px;
+    border-radius: 3px;
     background: #444;
     color: #ddd;
-    margin-left: 6px;
     font-weight: normal;
   }
+  .vault-badge.weak {
+    background: #c0392b;
+    color: #fff;
+  }
+  .vault-badge.reused {
+    background: #d35400;
+    color: #fff;
+  }
+  .vault-badge.stale {
+    background: #7f8c8d;
+    color: #fff;
+  }
   .vault-date {
-    font-size: 11px;
+    font-size: 10px;
     color: #777;
-    margin-left: 6px;
+  }
+  .vault-user-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #bbb;
+  }
+  .vault-user-text {
+    font-family: 'Consolas', monospace;
+    color: #3498db;
+    font-size: 12px;
+  }
+  .vault-pass-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
   }
   .vault-pass {
     font-family: 'Consolas', monospace;
     color: #bbb;
     font-size: 13px;
     word-break: break-all;
-    margin-top: 4px;
     cursor: pointer;
     user-select: all;
+    background: #1c1c1c;
+    padding: 3px 8px;
+    border-radius: 4px;
+    flex: 1;
+    border: 1px solid #333;
+  }
+  .vault-pass:hover {
+    border-color: #555;
+    background: #202020;
+  }
+  .vault-notes {
+    font-size: 11px;
+    color: #999;
+    background: #202020;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border-left: 2px solid #888;
+    margin-top: 2px;
+    word-break: break-word;
+    cursor: pointer;
   }
   .item-btns {
     display: flex;
-    gap: 5px;
+    gap: 4px;
     align-items: center;
   }
   .btn-sm {
-    padding: 5px 8px;
-    font-size: 12px;
+    padding: 4px 7px;
+    font-size: 11px;
     font-weight: normal;
   }
   .btn-danger {
@@ -331,6 +477,108 @@
   }
   .btn-danger:hover {
     background: #c0392b;
+  }
+
+  /* Audit Dashboard */
+  .audit-header-card {
+    background: #252525;
+    border: 1px solid #383838;
+    border-radius: 8px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .audit-score-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .audit-score-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: bold;
+    color: #fff;
+    background: #2ecc71;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  }
+  .audit-score-info h3 {
+    margin: 0 0 4px;
+    font-size: 16px;
+    color: #fff;
+  }
+  .audit-score-info p {
+    margin: 0;
+    font-size: 12px;
+    color: #aaa;
+  }
+  .audit-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .audit-metric-card {
+    background: #252525;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 8px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .audit-metric-card:hover {
+    background: #2c2c2c;
+    border-color: #555;
+  }
+  .audit-metric-val {
+    font-size: 18px;
+    font-weight: bold;
+    color: #e74c3c;
+    margin-bottom: 2px;
+  }
+  .audit-metric-label {
+    font-size: 10px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .audit-section-title {
+    font-size: 12px;
+    font-weight: bold;
+    color: #ccc;
+    margin: 8px 0 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .audit-issue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .audit-issue-item {
+    background: #232323;
+    border-left: 3px solid #e74c3c;
+    padding: 8px 10px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+  }
+  .audit-issue-item.reused {
+    border-left-color: #f39c12;
+  }
+  .audit-issue-item.stale {
+    border-left-color: #3498db;
   }
 
   /* Lock Screen */
@@ -380,7 +628,7 @@
   }
   .modal-box {
     width: 100%;
-    max-width: 440px;
+    max-width: 450px;
     background: #252525;
     border: 1px solid #3d3d3d;
     border-radius: 8px;
@@ -389,11 +637,13 @@
     line-height: 1.5;
     color: #ddd;
     box-sizing: border-box;
+    max-height: 90vh;
+    overflow-y: auto;
   }
   .modal-title {
     color: #e74c3c;
     margin-top: 0;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
     font-size: 18px;
   }
 
@@ -407,14 +657,15 @@
     color: #fff;
     border: 1px solid #444;
     border-left: 4px solid #2ecc71;
-    padding: 9px 18px;
+    padding: 8px 16px;
     border-radius: 6px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.6);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     z-index: 9999;
     opacity: 0;
-    pointer-events: none;
+    pointer-events: auto;
+    cursor: pointer;
     transition: transform 0.25s ease, opacity 0.25s ease;
   }
   #toast.show {
@@ -427,8 +678,11 @@
   <!-- Lock Screen Overlay -->
   <div id="lockScreen" role="dialog" aria-modal="true" aria-labelledby="lockTitle">
     <h1 id="lockTitle">KPass Vault Locked</h1>
-    <input type="password" id="masterPass" placeholder="Master Password" autofocus aria-label="Master Password">
-    <button class="primary" id="btnUnlock">Unlock / Setup</button>
+    <div style="position:relative; width:100%; max-width:300px; margin-bottom:15px; display:flex; align-items:center;">
+      <input type="password" id="masterPass" placeholder="Master Password" autofocus aria-label="Master Password" style="width:100%; margin-bottom:0; font-size:16px; text-align:center; padding-right:38px;">
+      <button type="button" id="btnToggleMasterPass" title="Show / Hide Master Password" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); background:transparent; border:none; color:#aaa; font-size:16px; cursor:pointer; padding:4px 6px; width:auto; max-width:none;">👁</button>
+    </div>
+    <button class="primary" id="btnUnlock">Unlock / Setup [Enter]</button>
     <div id="lockError" role="alert"></div>
     <div class="setup-msg" id="setupMsg">If this is your first time, entering a password will initialize your encrypted vault. Press Enter to unlock.</div>
   </div>
@@ -437,15 +691,17 @@
   <div id="helpOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
     <div class="modal-box">
       <h2 id="helpTitle" class="modal-title">KPass Help &amp; Shortcuts</h2>
-      <p style="margin: 0 0 8px;"><strong>Generator:</strong> Customize length (8-64) &amp; character sets, then click <em>Generate</em> or press Enter. Click the password text to quickly copy it.</p>
-      <p style="margin: 0 0 8px;"><strong>Vault:</strong> View, copy, search, categorize, and safely store credentials encrypted locally with AES-GCM 256.</p>
-      <p style="margin: 0 0 8px;"><strong>Auto-Lock:</strong> For your protection, the vault auto-locks after 1 minute of inactivity.</p>
-      <p style="margin: 0 0 8px;"><strong>Backup:</strong> Easily export or restore credentials using CSV or JSON formats.</p>
-      <div style="background:#1a1a1a; padding:10px; border-radius:4px; font-size:12px; color:#2ecc71; margin-top:10px;">
+      <p style="margin: 0 0 6px;"><strong>Generator:</strong> 4 modes: Random characters, Memorable Passphrase (Diceware), PIN code, or Hex key. Click password display to quickly copy.</p>
+      <p style="margin: 0 0 6px;"><strong>Vault:</strong> Secure credentials vault with Username, Password, Notes, and Category tracking encrypted locally using AES-GCM 256 with PBKDF2 (100,000 rounds).</p>
+      <p style="margin: 0 0 6px;"><strong>Security Audit:</strong> Real-time health scanner detecting weak passwords, reused credentials across accounts, and stale entries (&gt;90 days).</p>
+      <p style="margin: 0 0 6px;"><strong>Interoperability:</strong> Multi-format export to CSV, JSON, formatted Markdown (.md), and encrypted portable backup (.kpass).</p>
+      <p style="margin: 0 0 6px;"><strong>Auto-Lock:</strong> For your security, the vault auto-locks after 1 minute of inactivity.</p>
+      <div style="background:#1a1a1a; padding:10px; border-radius:4px; font-size:12px; color:#2ecc71; margin-top:8px;">
         <div><strong>Shortcuts:</strong></div>
-        <div>&bull; '1' / '2' = Switch Tabs | 'H' or F1 = Toggle Help | Esc = Close Modals</div>
+        <div>&bull; '1' = Generator | '2' = Vault | '3' = Security Audit | 'H' / F1 = Help</div>
         <div>&bull; Enter = Unlock / Save / Generate | Ctrl+F or '/' = Focus Search</div>
-        <div>&bull; Ctrl+S = Save Credential | Ctrl+G = Generate New Password</div>
+        <div>&bull; Ctrl+S = Save Credential | Ctrl+G = Generate | Ctrl+C = Copy Password</div>
+        <div>&bull; Alt+L = Lock Vault | Alt+J = JSON | Alt+E = CSV | Alt+M = Markdown | Alt+I = Import</div>
       </div>
       <div style="text-align: right; margin-top: 14px;">
         <button id="btnCloseHelp" style="background: #e74c3c; border-color: #e74c3c;">Close Help</button>
@@ -463,18 +719,27 @@
           <input type="text" id="editLabel" placeholder="e.g. Work Email" style="width:100%;">
         </div>
         <div>
+          <label style="display:block; font-size:12px; color:#aaa; margin-bottom:4px;">Username / Account (optional):</label>
+          <input type="text" id="editUser" placeholder="e.g. user99@retro.net" style="width:100%;">
+        </div>
+        <div>
           <label style="display:block; font-size:12px; color:#aaa; margin-bottom:4px;">Category:</label>
           <select id="editCat" style="width:100%;">
             <option value="Personal">Personal</option>
             <option value="Work">Work</option>
             <option value="Finance">Finance</option>
             <option value="Social">Social</option>
+            <option value="Games">Games</option>
             <option value="Other">Other</option>
           </select>
         </div>
         <div>
           <label style="display:block; font-size:12px; color:#aaa; margin-bottom:4px;">Password:</label>
           <input type="text" id="editPass" placeholder="Password" style="width:100%; font-family:Consolas, monospace;">
+        </div>
+        <div>
+          <label style="display:block; font-size:12px; color:#aaa; margin-bottom:4px;">Notes / Security Hint (optional):</label>
+          <input type="text" id="editNotes" placeholder="e.g. PIN, Recovery question hint" style="width:100%;">
         </div>
       </div>
       <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
@@ -497,13 +762,24 @@
   </div>
   
   <div class="tabs" role="tablist">
-    <div class="tab active" id="tabGen" role="tab" aria-selected="true" tabindex="0">Generator</div>
-    <div class="tab" id="tabVault" role="tab" aria-selected="false" tabindex="0">Vault (<span id="vaultCount">0</span>)</div>
-    <div class="tab-help" id="btnHelpToggle" role="button" tabindex="0" title="Help &amp; Shortcuts (F1)">? Help (F1)</div>
+    <div class="tab active" id="tabGen" role="tab" aria-selected="true" tabindex="0">Generator [1]</div>
+    <div class="tab" id="tabVault" role="tab" aria-selected="false" tabindex="0">Vault (<span id="vaultCount">0</span>) [2]</div>
+    <div class="tab" id="tabAudit" role="tab" aria-selected="false" tabindex="0">Audit [3]</div>
+    <div class="tab-help" id="btnHelpToggle" role="button" tabindex="0" title="Help &amp; Shortcuts (F1)">? Help [F1]</div>
   </div>
   
+  <!-- Tab 1: Generator -->
   <div class="content" id="contentGen" role="tabpanel" aria-labelledby="tabGen">
-    <div class="help-hint" id="hintHelp">Press 'H' or F1 for Help</div>
+    <div class="help-hint" id="hintHelp">Press 'H' or F1 for Help &amp; Shortcuts</div>
+    
+    <!-- Mode Pills -->
+    <div class="mode-pills" role="radiogroup" aria-label="Generator Mode">
+      <button class="btn-mode active" id="btnModeChars" role="radio" aria-checked="true">Random Chars</button>
+      <button class="btn-mode" id="btnModeDiceware" role="radio" aria-checked="false">Passphrase</button>
+      <button class="btn-mode" id="btnModePin" role="radio" aria-checked="false">PIN Code</button>
+      <button class="btn-mode" id="btnModeHex" role="radio" aria-checked="false">Hex Key</button>
+    </div>
+
     <div class="display" id="pwdDisplay" title="Click to copy password" tabindex="0">...
       <div class="display-hint">Click password to copy</div>
     </div>
@@ -517,7 +793,8 @@
       <span class="strength-text" id="lblEntropy">0 bits</span>
     </div>
 
-    <div class="controls">
+    <!-- Mode 1: Random Characters Controls -->
+    <div class="controls" id="controlsChars">
       <div class="control-row">
         <label><input type="checkbox" id="chkUpper" checked> Uppercase (A-Z)</label>
         <label><input type="checkbox" id="chkLower" checked> Lowercase (a-z)</label>
@@ -529,7 +806,7 @@
       <div class="control-row">
         <label><input type="checkbox" id="chkAmbiguous"> Exclude Ambiguous (l, 1, I, O, 0)</label>
       </div>
-      <div class="control-row" style="margin-top: 4px;">
+      <div class="control-row" style="margin-top: 2px;">
         <label style="color: #fff;">Length: <span id="lenVal" style="font-weight:bold; color:#e74c3c;">16</span></label>
         <input type="range" id="rngLen" min="8" max="64" value="16" style="flex: 1; margin: 0 10px; accent-color: #e74c3c; cursor: pointer;" aria-label="Password length">
         <div class="presets-row">
@@ -539,57 +816,189 @@
           <button class="btn-preset" data-len="32">32</button>
         </div>
       </div>
-      <div class="control-row" style="margin-top: 4px;">
-        <input type="text" id="labelInput" placeholder="Label (e.g. Work Email)" aria-label="Credential Label">
-        <select id="catInput" style="max-width: 110px;" aria-label="Credential Category">
+    </div>
+
+    <!-- Mode 2: Passphrase (Diceware) Controls -->
+    <div class="controls" id="controlsDiceware" style="display:none;">
+      <div class="control-row">
+        <label style="color: #fff;">Words: <span id="dwWordsVal" style="font-weight:bold; color:#e74c3c;">4</span></label>
+        <input type="range" id="rngDwWords" min="3" max="6" value="4" style="flex: 1; margin: 0 10px; accent-color: #e74c3c; cursor: pointer;" aria-label="Word count">
+        <div class="presets-row">
+          <button class="btn-preset" data-dw="3">3</button>
+          <button class="btn-preset" data-dw="4">4</button>
+          <button class="btn-preset" data-dw="5">5</button>
+          <button class="btn-preset" data-dw="6">6</button>
+        </div>
+      </div>
+      <div class="control-row">
+        <label>Separator:
+          <select id="selDwSep" style="max-width:90px; margin-left:6px;" aria-label="Passphrase separator">
+            <option value="-">- (Hyphen)</option>
+            <option value=".">. (Dot)</option>
+            <option value="_">_ (Underscore)</option>
+            <option value=" ">Space</option>
+            <option value="!">! (Exclamation)</option>
+            <option value="#"># (Hash)</option>
+          </select>
+        </label>
+        <label><input type="checkbox" id="chkDwCapitalize" checked> Capitalize</label>
+        <label><input type="checkbox" id="chkDwNumber" checked> Add Number</label>
+      </div>
+    </div>
+
+    <!-- Mode 3: PIN Controls -->
+    <div class="controls" id="controlsPin" style="display:none;">
+      <div class="control-row">
+        <label style="color: #fff;">Digits: <span id="pinLenVal" style="font-weight:bold; color:#e74c3c;">6</span></label>
+        <input type="range" id="rngPinLen" min="4" max="12" value="6" style="flex: 1; margin: 0 10px; accent-color: #e74c3c; cursor: pointer;" aria-label="PIN digits">
+        <div class="presets-row">
+          <button class="btn-preset" data-pin="4">4</button>
+          <button class="btn-preset" data-pin="6">6</button>
+          <button class="btn-preset" data-pin="8">8</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode 4: Hex Key Controls -->
+    <div class="controls" id="controlsHex" style="display:none;">
+      <div class="control-row">
+        <label style="color: #fff;">Hex Bytes: <span id="hexLenVal" style="font-weight:bold; color:#e74c3c;">32</span></label>
+        <input type="range" id="rngHexLen" min="16" max="64" value="32" step="8" style="flex: 1; margin: 0 10px; accent-color: #e74c3c; cursor: pointer;" aria-label="Hex length">
+        <div class="presets-row">
+          <button class="btn-preset" data-hex="16">16</button>
+          <button class="btn-preset" data-hex="32">32</button>
+          <button class="btn-preset" data-hex="64">64</button>
+        </div>
+      </div>
+      <div class="control-row">
+        <label><input type="checkbox" id="chkHexUpper"> Uppercase Hex</label>
+      </div>
+    </div>
+
+    <!-- Save to Vault Form Row -->
+    <div class="controls" style="margin-top: 6px; padding-top: 8px; border-top: 1px solid #333;">
+      <div class="control-row">
+        <input type="text" id="labelInput" placeholder="Service / Label (e.g. Email)" aria-label="Credential Label">
+        <input type="text" id="userInput" placeholder="Username / Account (optional)" aria-label="Username">
+        <select id="catInput" style="max-width: 105px;" aria-label="Credential Category">
           <option value="Personal">Personal</option>
           <option value="Work">Work</option>
           <option value="Finance">Finance</option>
           <option value="Social">Social</option>
+          <option value="Games">Games</option>
           <option value="Other">Other</option>
         </select>
-        <button id="btnSave" title="Save password to vault">Save to Vault</button>
       </div>
-      <div class="control-row" style="margin-top: 6px;">
-        <button class="primary" id="btnGen" style="flex: 1;">Generate (Enter)</button>
-        <button class="primary" id="btnCopy" style="flex: 1; background: #3498db; border-color: #3498db;">Copy Password</button>
+      <div class="control-row">
+        <input type="text" id="notesInput" placeholder="Notes / Security hint (optional)" aria-label="Notes">
+        <button id="btnSave" style="background:#27ae60; border-color:#27ae60; min-width:140px;" title="Save password to vault (Ctrl+S)">Save to Vault [Ctrl+S]</button>
+      </div>
+      <div class="control-row" style="margin-top: 4px;">
+        <button class="primary" id="btnGen" style="flex: 1;">Generate [Enter]</button>
+        <button class="primary" id="btnCopy" style="flex: 1; background: #3498db; border-color: #3498db;">Copy [Ctrl+C]</button>
+      </div>
+    </div>
+
+    <!-- Recent History Tray -->
+    <div class="history-tray">
+      <div class="history-header" id="btnToggleHistory">
+        <span>🕒 Recent Passwords (<span id="lblHistoryCount">0</span>)</span>
+        <span id="lblHistoryToggleIcon">▲</span>
+      </div>
+      <div class="history-list" id="historyList">
+        <!-- History items go here -->
       </div>
     </div>
   </div>
   
+  <!-- Tab 2: Vault -->
   <div class="content" id="contentVault" role="tabpanel" aria-labelledby="tabVault" style="display: none;">
     <div class="vault-actions">
       <div class="search-wrap">
-        <input type="text" id="vaultSearch" placeholder="Search credentials... (Ctrl+F)" aria-label="Search credentials">
+        <input type="text" id="vaultSearch" placeholder="Search service, user, notes... (Ctrl+F)" aria-label="Search credentials">
         <button class="btn-clear-search" id="btnClearSearch" title="Clear search" style="display:none;">✕</button>
       </div>
-      <select id="vaultCatFilter" style="max-width: 105px;" aria-label="Filter by category">
+      <select id="vaultCatFilter" style="max-width: 100px;" aria-label="Filter by category">
         <option value="">All Cats</option>
         <option value="Personal">Personal</option>
         <option value="Work">Work</option>
         <option value="Finance">Finance</option>
         <option value="Social">Social</option>
+        <option value="Games">Games</option>
         <option value="Other">Other</option>
       </select>
-      <select id="vaultSort" style="max-width: 105px;" aria-label="Sort vault entries">
+      <select id="vaultRiskFilter" style="max-width: 95px;" aria-label="Filter by security status">
+        <option value="">All Status</option>
+        <option value="weak">Weak Only</option>
+        <option value="reused">Reused Only</option>
+        <option value="stale">Stale (&gt;90d)</option>
+      </select>
+      <select id="vaultSort" style="max-width: 100px;" aria-label="Sort vault entries">
         <option value="date-desc">Newest</option>
         <option value="date-asc">Oldest</option>
         <option value="label-asc">A &rarr; Z</option>
         <option value="label-desc">Z &rarr; A</option>
         <option value="cat">Category</option>
+        <option value="weakest">Weakest</option>
       </select>
-      <button class="btn-sm" id="btnExportJSON" title="Export vault to JSON">JSON</button>
-      <button class="btn-sm" id="btnExportCSV" title="Export vault to CSV">CSV</button>
-      <button class="btn-sm" id="btnImport" title="Import credentials from CSV or JSON">Import</button>
-      <button class="btn-sm btn-danger" id="btnLock" title="Instantly lock vault">Lock</button>
-      <input type="file" id="fileImport" accept=".json,.csv" style="display:none;">
+    </div>
+    <div class="vault-actions" style="margin-bottom:6px;">
+      <button class="btn-sm" id="btnExportJSON" title="Export vault to JSON (Alt+J)">JSON [Alt+J]</button>
+      <button class="btn-sm" id="btnExportCSV" title="Export vault to CSV (Alt+E)">CSV [Alt+E]</button>
+      <button class="btn-sm" id="btnExportMD" title="Export vault to formatted Markdown (Alt+M)">Markdown [Alt+M]</button>
+      <button class="btn-sm" id="btnBackupKPass" title="Save encrypted backup (.kpass)">Backup (.kpass)</button>
+      <button class="btn-sm" id="btnImport" title="Import credentials from CSV, JSON or .kpass (Alt+I)">Import [Alt+I]</button>
+      <button class="btn-sm btn-danger" id="btnLock" title="Instantly lock vault (Alt+L)">Lock [Alt+L]</button>
+      <input type="file" id="fileImport" accept=".json,.csv,.kpass" style="display:none;">
     </div>
     <div class="vault-status-bar">
       <span id="lblVaultStatus">0 items in vault</span>
-      <span style="font-size:11px; color:#666;">Double-click or click password to copy</span>
+      <span style="font-size:11px; color:#666;">Click password to copy &bull; Double-click item to copy</span>
     </div>
     <div class="vault-list" id="vaultList">
       <!-- Vault items go here -->
+    </div>
+  </div>
+
+  <!-- Tab 3: Security Audit Dashboard -->
+  <div class="content" id="contentAudit" role="tabpanel" aria-labelledby="tabAudit" style="display: none;">
+    <div class="audit-header-card">
+      <div class="audit-score-wrap">
+        <div class="audit-score-circle" id="auditScoreCircle">100</div>
+        <div class="audit-score-info">
+          <h3 id="auditScoreTitle">Fortress Grade</h3>
+          <p id="auditScoreSubtitle">Your encrypted vault health score</p>
+        </div>
+      </div>
+      <button class="btn-sm" id="btnRunAudit" style="background:#2980b9; border-color:#2980b9;">Re-scan Vault</button>
+    </div>
+
+    <div class="audit-grid">
+      <div class="audit-metric-card" id="cardTotalCreds" title="Click to view all items in Vault">
+        <div class="audit-metric-val" id="valTotalCreds" style="color:#fff;">0</div>
+        <div class="audit-metric-label">Total Credentials</div>
+      </div>
+      <div class="audit-metric-card" id="cardReusedCreds" title="Click to filter reused credentials">
+        <div class="audit-metric-val" id="valReusedCreds">0</div>
+        <div class="audit-metric-label">Reused Passwords</div>
+      </div>
+      <div class="audit-metric-card" id="cardWeakCreds" title="Click to filter weak credentials">
+        <div class="audit-metric-val" id="valWeakCreds">0</div>
+        <div class="audit-metric-label">Weak / At Risk</div>
+      </div>
+      <div class="audit-metric-card" id="cardStaleCreds" title="Click to filter stale credentials">
+        <div class="audit-metric-val" id="valStaleCreds" style="color:#f39c12;">0</div>
+        <div class="audit-metric-label">Stale (&gt;90d)</div>
+      </div>
+    </div>
+
+    <div class="audit-section-title">
+      <span>Security Vulnerabilities &amp; Alerts</span>
+      <span id="lblAvgEntropy" style="font-size:11px; color:#888;">Avg Entropy: 0 bits</span>
+    </div>
+
+    <div class="audit-issue-list" id="auditIssuesList">
+      <!-- Audit issue items go here -->
     </div>
   </div>
 
@@ -597,7 +1006,7 @@
 
   <script>
     try {
-      window.parent.postMessage({ type: 'VFS_SET_WINDOW_SIZE', width: 500, height: 620 }, '*');
+      window.parent.postMessage({ type: 'VFS_SET_WINDOW_SIZE', width: 520, height: 640 }, '*');
     } catch(e) {}
 
     // Safe storage wrappers
@@ -609,6 +1018,12 @@
     }
 
     // Toast Notification System
+    const toastEl = document.getElementById('toast');
+    if (toastEl) {
+      toastEl.addEventListener('click', () => {
+        toastEl.classList.remove('show');
+      });
+    }
     function showToast(msg, isSuccess = true) {
       const toast = document.getElementById('toast');
       toast.innerText = msg;
@@ -617,11 +1032,12 @@
       clearTimeout(toast.timer);
       toast.timer = setTimeout(() => {
         toast.classList.remove('show');
-      }, 2200);
+      }, 2400);
     }
 
     // Safe clipboard helper
     function copyText(str, successMsg = "Copied to clipboard!") {
+      if (!str) return;
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(str).then(() => {
           showToast(successMsg);
@@ -649,7 +1065,7 @@
       document.body.removeChild(ta);
     }
 
-    // Crypto utilities
+    // Crypto utilities (PBKDF2 + AES-GCM 256)
     async function deriveKey(password, salt) {
       const enc = new TextEncoder();
       const keyMaterial = await crypto.subtle.importKey(
@@ -683,27 +1099,84 @@
       } catch(e) { return null; }
     }
 
+    // Curated Retro / 1999 Diceware Wordlist (260 words)
+    const RETRO_WORDS = [
+      "access", "action", "active", "aerial", "amiga", "analog", "anchor", "anthem", "apex", "apollo",
+      "arcade", "arctic", "argon", "armor", "arrow", "aspect", "astral", "atlas", "atomic", "audio",
+      "aurora", "avatar", "bandit", "banner", "barrel", "baron", "beacon", "binary", "biomer", "blade",
+      "blaster", "blaze", "blueprint", "boiler", "bolide", "boost", "boron", "buffer", "bullet", "bypass",
+      "cable", "cache", "caliper", "canyon", "carbon", "carrier", "cascade", "casio", "cavern", "celestial",
+      "center", "chasm", "chipset", "chrome", "chrono", "cipher", "circuit", "cleric", "clipper", "cloud",
+      "cluster", "cobalt", "codec", "coaxial", "comet", "compass", "console", "copper", "cortex", "cosmic",
+      "courier", "crater", "crimson", "crypto", "crystal", "cursor", "cyber", "cypher", "dagger", "danger",
+      "datagram", "dawn", "decay", "decode", "delta", "demoscene", "diesel", "digital", "diode", "direct",
+      "diskette", "display", "diver", "domain", "drifter", "driver", "dynamo", "echo", "eclipse", "electra",
+      "electron", "element", "emerald", "engine", "entropy", "epoch", "ether", "expert", "falcon", "fathom",
+      "filter", "finder", "fireball", "firewall", "flame", "flash", "flight", "floppy", "flux", "focus",
+      "forge", "format", "fortress", "fossil", "frame", "frontier", "frost", "fusion", "future", "galaxy",
+      "gamma", "gateway", "gears", "genesis", "glitch", "glide", "global", "glyph", "goggles", "granite",
+      "gravity", "grid", "gyro", "hacker", "halo", "harbor", "hazard", "helix", "helmet", "helium",
+      "horizon", "hunter", "hybrid", "hyper", "impact", "impulse", "index", "indigo", "inferno", "input",
+      "iron", "isotope", "jaguar", "jetpack", "joule", "jupiter", "kilo", "kinetic", "laser", "lattice",
+      "legacy", "legend", "lumen", "lunar", "machina", "magnet", "matrix", "memory", "mercury", "meteor",
+      "micron", "modem", "module", "monolith", "motion", "nebula", "neon", "nerve", "nether", "network",
+      "nexus", "nitro", "node", "nova", "nuclear", "oasis", "octane", "omega", "opcode", "optics",
+      "oracle", "orbit", "oscar", "output", "oxygen", "packet", "panther", "parity", "patrol", "pentium",
+      "phantom", "phase", "phoenix", "photon", "pioneer", "pipeline", "pistol", "pixel", "plasma", "polar",
+      "portal", "power", "prism", "probe", "proton", "pulse", "quantum", "radar", "radial", "radius",
+      "radon", "ranger", "raster", "reactor", "reboot", "recon", "reflex", "relic", "remote", "render",
+      "retro", "rhombus", "rift", "rigel", "robot", "rocket", "rotor", "router", "rover", "runner",
+      "saber", "saturn", "scanner", "sector", "sensor", "serpent", "shadow", "shield", "signal", "silicon",
+      "silver", "siren", "socket", "solar", "solis", "sonar", "sonic", "spark", "spatial", "spectrum",
+      "speed", "sphere", "spiral", "sprite", "starlight", "stealth", "stellar", "stratum", "subcarrier", "subnet",
+      "sulfur", "surge", "syntax", "system", "tactical", "target", "telecom", "telemetry", "temple", "temporal",
+      "tempest", "terminal", "terra", "texture", "thermal", "titan", "tracer", "tracker", "transit", "trauma",
+      "trigger", "trident", "turbo", "ultra", "uranium", "vacuum", "valence", "valve", "vapor", "vector",
+      "velocity", "venus", "vertex", "vessel", "viper", "virtual", "vision", "volt", "vortex", "voyager",
+      "warp", "wave", "widget", "wireframe", "wizard", "xenon", "zenith", "zephyr", "zero"
+    ];
+
     // App state
     let vault = [];
     let currentMasterPass = null;
     let autoLockTimer = null;
     let editingIndex = -1;
     let deletingIndex = -1;
+    let activeGenMode = 'chars'; // 'chars', 'diceware', 'pin', 'hex'
+    const recentHistory = [];
     const revealedKeys = new Set();
     const LOCK_TIMEOUT = 60000; // 1 minute
 
     const lockScreen = document.getElementById('lockScreen');
     const masterPassInput = document.getElementById('masterPass');
+    const btnToggleMasterPass = document.getElementById('btnToggleMasterPass');
     const btnUnlock = document.getElementById('btnUnlock');
     const lockError = document.getElementById('lockError');
     const setupMsg = document.getElementById('setupMsg');
     const btnLock = document.getElementById('btnLock');
 
+    if (btnToggleMasterPass) {
+        btnToggleMasterPass.addEventListener('click', () => {
+            if (masterPassInput.type === 'password') {
+                masterPassInput.type = 'text';
+                btnToggleMasterPass.innerText = '🔒';
+                btnToggleMasterPass.title = 'Hide Master Password';
+            } else {
+                masterPassInput.type = 'password';
+                btnToggleMasterPass.innerText = '👁';
+                btnToggleMasterPass.title = 'Show Master Password';
+            }
+            masterPassInput.focus();
+        });
+    }
+
     // UI elements
     const tabGen = document.getElementById('tabGen');
     const tabVault = document.getElementById('tabVault');
+    const tabAudit = document.getElementById('tabAudit');
     const contentGen = document.getElementById('contentGen');
     const contentVault = document.getElementById('contentVault');
+    const contentAudit = document.getElementById('contentAudit');
     const pwdDisplay = document.getElementById('pwdDisplay');
     const helpOverlay = document.getElementById('helpOverlay');
     const btnHelpToggle = document.getElementById('btnHelpToggle');
@@ -713,21 +1186,42 @@
     const btnCopy = document.getElementById('btnCopy');
     const btnSave = document.getElementById('btnSave');
     const labelInput = document.getElementById('labelInput');
+    const userInput = document.getElementById('userInput');
     const catInput = document.getElementById('catInput');
+    const notesInput = document.getElementById('notesInput');
     const vaultList = document.getElementById('vaultList');
     const vaultCount = document.getElementById('vaultCount');
     const vaultSearch = document.getElementById('vaultSearch');
     const btnClearSearch = document.getElementById('btnClearSearch');
     const vaultCatFilter = document.getElementById('vaultCatFilter');
+    const vaultRiskFilter = document.getElementById('vaultRiskFilter');
     const vaultSort = document.getElementById('vaultSort');
     const lblVaultStatus = document.getElementById('lblVaultStatus');
     const fileImport = document.getElementById('fileImport');
 
+    // Generator mode buttons and control containers
+    const btnModeChars = document.getElementById('btnModeChars');
+    const btnModeDiceware = document.getElementById('btnModeDiceware');
+    const btnModePin = document.getElementById('btnModePin');
+    const btnModeHex = document.getElementById('btnModeHex');
+    const controlsChars = document.getElementById('controlsChars');
+    const controlsDiceware = document.getElementById('controlsDiceware');
+    const controlsPin = document.getElementById('controlsPin');
+    const controlsHex = document.getElementById('controlsHex');
+
+    // Generator history elements
+    const btnToggleHistory = document.getElementById('btnToggleHistory');
+    const historyList = document.getElementById('historyList');
+    const lblHistoryCount = document.getElementById('lblHistoryCount');
+    const lblHistoryToggleIcon = document.getElementById('lblHistoryToggleIcon');
+
     // Edit modal elements
     const editModal = document.getElementById('editModal');
     const editLabel = document.getElementById('editLabel');
+    const editUser = document.getElementById('editUser');
     const editCat = document.getElementById('editCat');
     const editPass = document.getElementById('editPass');
+    const editNotes = document.getElementById('editNotes');
     const btnCancelEdit = document.getElementById('btnCancelEdit');
     const btnSaveEdit = document.getElementById('btnSaveEdit');
 
@@ -736,6 +1230,17 @@
     const deletePrompt = document.getElementById('deletePrompt');
     const btnCancelDelete = document.getElementById('btnCancelDelete');
     const btnConfirmDelete = document.getElementById('btnConfirmDelete');
+
+    // Audit elements
+    const auditScoreCircle = document.getElementById('auditScoreCircle');
+    const auditScoreTitle = document.getElementById('auditScoreTitle');
+    const valTotalCreds = document.getElementById('valTotalCreds');
+    const valReusedCreds = document.getElementById('valReusedCreds');
+    const valWeakCreds = document.getElementById('valWeakCreds');
+    const valStaleCreds = document.getElementById('valStaleCreds');
+    const lblAvgEntropy = document.getElementById('lblAvgEntropy');
+    const auditIssuesList = document.getElementById('auditIssuesList');
+    const btnRunAudit = document.getElementById('btnRunAudit');
 
     // Init lock screen message
     if(safeGetStorage('kpass_vault_enc')) {
@@ -750,6 +1255,8 @@
     }
     document.addEventListener('mousemove', resetAutoLock);
     document.addEventListener('keydown', resetAutoLock);
+    document.addEventListener('pointerdown', resetAutoLock);
+    document.addEventListener('touchstart', resetAutoLock);
 
     function lockVault() {
         currentMasterPass = null;
@@ -757,7 +1264,19 @@
         revealedKeys.clear();
         lockScreen.style.display = 'flex';
         masterPassInput.value = '';
+        masterPassInput.type = 'password';
+        if (btnToggleMasterPass) {
+            btnToggleMasterPass.innerText = '👁';
+            btnToggleMasterPass.title = 'Show Master Password';
+        }
         lockError.innerText = '';
+        if (safeGetStorage('kpass_vault_enc')) {
+            setupMsg.style.display = 'none';
+            btnUnlock.innerText = "Unlock Vault";
+        } else {
+            setupMsg.style.display = 'block';
+            btnUnlock.innerText = "Unlock / Setup [Enter]";
+        }
         closeModals();
         renderVault();
         updateVaultCount();
@@ -768,9 +1287,13 @@
 
     async function saveVault() {
         if(!currentMasterPass) return;
-        const jsonStr = JSON.stringify(vault);
-        const encData = await encryptData(currentMasterPass, jsonStr);
-        safeSetStorage('kpass_vault_enc', JSON.stringify(encData));
+        try {
+            const jsonStr = JSON.stringify(vault);
+            const encData = await encryptData(currentMasterPass, jsonStr);
+            safeSetStorage('kpass_vault_enc', JSON.stringify(encData));
+        } catch(e) {
+            showToast("Failed to save encrypted vault.", false);
+        }
     }
 
     btnUnlock.addEventListener('click', async () => {
@@ -817,23 +1340,41 @@
     function sanitizeEntry(item) {
         return {
             label: String(item && item.label ? item.label : '').trim(),
+            username: String(item && item.username ? item.username : '').trim(),
             category: String(item && item.category ? item.category : 'Other').trim(),
             pass: String(item && item.pass ? item.pass : '').trim(),
+            notes: String(item && item.notes ? item.notes : '').trim(),
             strength: String(item && item.strength ? item.strength : 'Saved').trim(),
             date: String(item && item.date ? item.date : new Date().toLocaleDateString()).trim()
         };
     }
 
-    function switchTab(isGen) {
-        if(isGen) {
-            tabGen.classList.add('active'); tabVault.classList.remove('active');
-            tabGen.setAttribute('aria-selected', 'true'); tabVault.setAttribute('aria-selected', 'false');
-            contentGen.style.display = 'flex'; contentVault.style.display = 'none';
-        } else {
-            tabVault.classList.add('active'); tabGen.classList.remove('active');
-            tabVault.setAttribute('aria-selected', 'true'); tabGen.setAttribute('aria-selected', 'false');
-            contentVault.style.display = 'flex'; contentGen.style.display = 'none';
+    function switchTab(tabId) {
+        tabGen.classList.remove('active');
+        tabVault.classList.remove('active');
+        tabAudit.classList.remove('active');
+        tabGen.setAttribute('aria-selected', 'false');
+        tabVault.setAttribute('aria-selected', 'false');
+        tabAudit.setAttribute('aria-selected', 'false');
+
+        contentGen.style.display = 'none';
+        contentVault.style.display = 'none';
+        contentAudit.style.display = 'none';
+
+        if(tabId === 'gen') {
+            tabGen.classList.add('active');
+            tabGen.setAttribute('aria-selected', 'true');
+            contentGen.style.display = 'flex';
+        } else if(tabId === 'vault') {
+            tabVault.classList.add('active');
+            tabVault.setAttribute('aria-selected', 'true');
+            contentVault.style.display = 'flex';
             renderVault();
+        } else if(tabId === 'audit') {
+            tabAudit.classList.add('active');
+            tabAudit.setAttribute('aria-selected', 'true');
+            contentAudit.style.display = 'flex';
+            renderAudit();
         }
         updateVaultCount();
     }
@@ -842,15 +1383,22 @@
         vaultCount.innerText = vault.length;
     }
     
-    tabGen.addEventListener('click', () => switchTab(true));
-    tabVault.addEventListener('click', () => switchTab(false));
+    tabGen.addEventListener('click', () => switchTab('gen'));
+    tabVault.addEventListener('click', () => switchTab('vault'));
+    tabAudit.addEventListener('click', () => switchTab('audit'));
+
     tabGen.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); switchTab(true); }
-        if (e.key === 'ArrowRight') { tabVault.focus(); switchTab(false); }
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); switchTab('gen'); }
+        if (e.key === 'ArrowRight') { tabVault.focus(); switchTab('vault'); }
     });
     tabVault.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); switchTab(false); }
-        if (e.key === 'ArrowLeft') { tabGen.focus(); switchTab(true); }
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); switchTab('vault'); }
+        if (e.key === 'ArrowRight') { tabAudit.focus(); switchTab('audit'); }
+        if (e.key === 'ArrowLeft') { tabGen.focus(); switchTab('gen'); }
+    });
+    tabAudit.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); switchTab('audit'); }
+        if (e.key === 'ArrowLeft') { tabVault.focus(); switchTab('vault'); }
     });
 
     function toggleHelp(show) {
@@ -877,34 +1425,46 @@
     helpOverlay.addEventListener('click', (e) => {
         if (e.target === helpOverlay) toggleHelp(false);
     });
+    editModal.addEventListener('click', (e) => {
+        if (e.target === editModal) { editModal.style.display = 'none'; editingIndex = -1; }
+    });
+    deleteModal.addEventListener('click', (e) => {
+        if (e.target === deleteModal) { deleteModal.style.display = 'none'; deletingIndex = -1; }
+    });
 
     // Edit modal listeners
     btnCancelEdit.addEventListener('click', () => { editModal.style.display = 'none'; editingIndex = -1; });
     btnSaveEdit.addEventListener('click', async () => {
         if (editingIndex < 0 || editingIndex >= vault.length) return;
         const newLabel = editLabel.value.trim();
+        const newUser = editUser.value.trim();
         const newPass = editPass.value.trim();
         const newCat = editCat.value;
+        const newNotes = editNotes.value.trim();
+
         if (!newLabel || !newPass) {
             showToast("Label and password cannot be empty.", false);
             return;
         }
-        const strInfo = evaluateStrength(newPass);
+        const strInfo = calcStrength(newPass);
         vault[editingIndex].label = newLabel;
+        vault[editingIndex].username = newUser;
         vault[editingIndex].category = newCat;
         vault[editingIndex].pass = newPass;
+        vault[editingIndex].notes = newNotes;
         vault[editingIndex].strength = strInfo.rating;
+        vault[editingIndex].date = new Date().toLocaleDateString();
+
         await saveVault();
         editModal.style.display = 'none';
         editingIndex = -1;
         renderVault();
         showToast("Credential updated!");
     });
-    editPass.addEventListener('keydown', (e) => {
-        if(e.key === 'Enter') btnSaveEdit.click();
-    });
-    editLabel.addEventListener('keydown', (e) => {
-        if(e.key === 'Enter') btnSaveEdit.click();
+    [editPass, editLabel, editUser, editNotes].forEach(input => {
+        input.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter') btnSaveEdit.click();
+        });
     });
 
     // Delete modal listeners
@@ -912,7 +1472,13 @@
     btnConfirmDelete.addEventListener('click', async () => {
         if (deletingIndex < 0 || deletingIndex >= vault.length) return;
         vault.splice(deletingIndex, 1);
-        revealedKeys.delete(deletingIndex);
+        const nextRevealed = new Set();
+        revealedKeys.forEach(idx => {
+            if (idx < deletingIndex) nextRevealed.add(idx);
+            else if (idx > deletingIndex) nextRevealed.add(idx - 1);
+        });
+        revealedKeys.clear();
+        nextRevealed.forEach(idx => revealedKeys.add(idx));
         deleteModal.style.display = 'none';
         deletingIndex = -1;
         await saveVault();
@@ -921,6 +1487,7 @@
         showToast("Entry removed from vault.");
     });
 
+    // Global Key Listener
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             if (helpOverlay.style.display === 'flex' || editModal.style.display === 'flex' || deleteModal.style.display === 'flex') {
@@ -935,10 +1502,25 @@
             }
         }
 
+        // Global Ctrl+S shortcut (works even when typing in input)
+        if (e.ctrlKey && e.key.toLowerCase() === 's') {
+            e.preventDefault();
+            if (lockScreen.style.display === 'none' && contentGen.style.display !== 'none') {
+                handleSave();
+            }
+            return;
+        }
+
         const isInput = ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName);
         if (!isInput && lockScreen.style.display === 'none') {
-            if (e.key === '1') { switchTab(true); return; }
-            if (e.key === '2') { switchTab(false); return; }
+            if (e.key === 'Enter' && contentGen.style.display !== 'none') {
+                e.preventDefault();
+                generate();
+                return;
+            }
+            if (e.key === '1') { switchTab('gen'); return; }
+            if (e.key === '2') { switchTab('vault'); return; }
+            if (e.key === '3') { switchTab('audit'); return; }
             if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
                 e.preventDefault();
                 toggleHelp();
@@ -946,27 +1528,89 @@
             }
             if (e.key === '/' || (e.ctrlKey && e.key.toLowerCase() === 'f')) {
                 e.preventDefault();
-                switchTab(false);
+                switchTab('vault');
                 vaultSearch.focus();
                 vaultSearch.select();
                 return;
             }
             if (e.ctrlKey && e.key.toLowerCase() === 'g') {
                 e.preventDefault();
-                switchTab(true);
+                switchTab('gen');
                 generate();
                 return;
             }
-            if (e.ctrlKey && e.key.toLowerCase() === 's') {
-                e.preventDefault();
+            if ((e.ctrlKey && e.key.toLowerCase() === 'c') || (!isInput && e.key.toLowerCase() === 'c')) {
                 if (contentGen.style.display !== 'none') {
-                    handleSave();
+                    e.preventDefault();
+                    btnCopy.click();
+                    return;
                 }
+            }
+            if (e.altKey && e.key.toLowerCase() === 'l') {
+                e.preventDefault();
+                lockVault();
+                return;
+            }
+            if (e.altKey && e.key.toLowerCase() === 'j') {
+                e.preventDefault();
+                document.getElementById('btnExportJSON').click();
+                return;
+            }
+            if (e.altKey && e.key.toLowerCase() === 'e') {
+                e.preventDefault();
+                document.getElementById('btnExportCSV').click();
+                return;
+            }
+            if (e.altKey && e.key.toLowerCase() === 'm') {
+                e.preventDefault();
+                document.getElementById('btnExportMD').click();
+                return;
+            }
+            if (e.altKey && e.key.toLowerCase() === 'i') {
+                e.preventDefault();
+                document.getElementById('btnImport').click();
                 return;
             }
         }
     });
 
+    // Generator Mode Switching
+    function setGenMode(mode) {
+        activeGenMode = mode;
+        [btnModeChars, btnModeDiceware, btnModePin, btnModeHex].forEach(btn => {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-checked', 'false');
+        });
+        controlsChars.style.display = 'none';
+        controlsDiceware.style.display = 'none';
+        controlsPin.style.display = 'none';
+        controlsHex.style.display = 'none';
+
+        if (mode === 'chars') {
+            btnModeChars.classList.add('active');
+            btnModeChars.setAttribute('aria-checked', 'true');
+            controlsChars.style.display = 'flex';
+        } else if (mode === 'diceware') {
+            btnModeDiceware.classList.add('active');
+            btnModeDiceware.setAttribute('aria-checked', 'true');
+            controlsDiceware.style.display = 'flex';
+        } else if (mode === 'pin') {
+            btnModePin.classList.add('active');
+            btnModePin.setAttribute('aria-checked', 'true');
+            controlsPin.style.display = 'flex';
+        } else if (mode === 'hex') {
+            btnModeHex.classList.add('active');
+            btnModeHex.setAttribute('aria-checked', 'true');
+            controlsHex.style.display = 'flex';
+        }
+        generate();
+    }
+    btnModeChars.addEventListener('click', () => setGenMode('chars'));
+    btnModeDiceware.addEventListener('click', () => setGenMode('diceware'));
+    btnModePin.addEventListener('click', () => setGenMode('pin'));
+    btnModeHex.addEventListener('click', () => setGenMode('hex'));
+
+    // Generator inputs
     const chkUpper = document.getElementById('chkUpper');
     const chkLower = document.getElementById('chkLower');
     const chkNum = document.getElementById('chkNum');
@@ -975,32 +1619,123 @@
     const rngLen = document.getElementById('rngLen');
     const lenVal = document.getElementById('lenVal');
 
+    const rngDwWords = document.getElementById('rngDwWords');
+    const dwWordsVal = document.getElementById('dwWordsVal');
+    const selDwSep = document.getElementById('selDwSep');
+    const chkDwCapitalize = document.getElementById('chkDwCapitalize');
+    const chkDwNumber = document.getElementById('chkDwNumber');
+
+    const rngPinLen = document.getElementById('rngPinLen');
+    const pinLenVal = document.getElementById('pinLenVal');
+
+    const rngHexLen = document.getElementById('rngHexLen');
+    const hexLenVal = document.getElementById('hexLenVal');
+    const chkHexUpper = document.getElementById('chkHexUpper');
+
+    function savePreferences() {
+        const prefs = {
+            mode: activeGenMode,
+            len: rngLen.value,
+            upper: chkUpper.checked,
+            lower: chkLower.checked,
+            num: chkNum.checked,
+            sym: chkSym.checked,
+            ambiguous: chkAmbiguous.checked,
+            dwWords: rngDwWords.value,
+            dwSep: selDwSep.value,
+            dwCap: chkDwCapitalize.checked,
+            dwNum: chkDwNumber.checked,
+            pinLen: rngPinLen.value,
+            hexLen: rngHexLen.value,
+            hexUpper: chkHexUpper.checked,
+            sort: vaultSort ? vaultSort.value : 'date-desc',
+            cat: catInput ? catInput.value : 'Personal'
+        };
+        safeSetStorage('kpass_prefs', JSON.stringify(prefs));
+    }
+
+    function loadPreferences() {
+        const raw = safeGetStorage('kpass_prefs');
+        if (!raw) return;
+        try {
+            const p = JSON.parse(raw);
+            if (p.len) { rngLen.value = p.len; lenVal.innerText = p.len; }
+            if (p.upper !== undefined) chkUpper.checked = !!p.upper;
+            if (p.lower !== undefined) chkLower.checked = !!p.lower;
+            if (p.num !== undefined) chkNum.checked = !!p.num;
+            if (p.sym !== undefined) chkSym.checked = !!p.sym;
+            if (p.ambiguous !== undefined) chkAmbiguous.checked = !!p.ambiguous;
+            if (p.dwWords) { rngDwWords.value = p.dwWords; dwWordsVal.innerText = p.dwWords; }
+            if (p.dwSep) selDwSep.value = p.dwSep;
+            if (p.dwCap !== undefined) chkDwCapitalize.checked = !!p.dwCap;
+            if (p.dwNum !== undefined) chkDwNumber.checked = !!p.dwNum;
+            if (p.pinLen) { rngPinLen.value = p.pinLen; pinLenVal.innerText = p.pinLen; }
+            if (p.hexLen) { rngHexLen.value = p.hexLen; hexLenVal.innerText = p.hexLen; }
+            if (p.hexUpper !== undefined) chkHexUpper.checked = !!p.hexUpper;
+            if (p.sort && vaultSort && vaultSort.querySelector(`option[value="${p.sort}"]`)) vaultSort.value = p.sort;
+            if (p.cat && catInput && catInput.querySelector(`option[value="${p.cat}"]`)) catInput.value = p.cat;
+            if (p.mode && ['chars', 'diceware', 'pin', 'hex'].includes(p.mode)) {
+                setGenMode(p.mode);
+            }
+        } catch(e) {}
+    }
+
     rngLen.addEventListener('input', () => {
         lenVal.innerText = rngLen.value;
+        savePreferences();
         generate();
     });
-    [chkUpper, chkLower, chkNum, chkSym, chkAmbiguous].forEach(chk => chk.addEventListener('change', generate));
+    [chkUpper, chkLower, chkNum, chkSym, chkAmbiguous].forEach(chk => chk.addEventListener('change', () => {
+        savePreferences();
+        generate();
+    }));
+
+    rngDwWords.addEventListener('input', () => {
+        dwWordsVal.innerText = rngDwWords.value;
+        savePreferences();
+        generate();
+    });
+    selDwSep.addEventListener('change', () => { savePreferences(); generate(); });
+    chkDwCapitalize.addEventListener('change', () => { savePreferences(); generate(); });
+    chkDwNumber.addEventListener('change', () => { savePreferences(); generate(); });
+
+    rngPinLen.addEventListener('input', () => {
+        pinLenVal.innerText = rngPinLen.value;
+        savePreferences();
+        generate();
+    });
+
+    rngHexLen.addEventListener('input', () => {
+        hexLenVal.innerText = rngHexLen.value;
+        savePreferences();
+        generate();
+    });
+    chkHexUpper.addEventListener('change', () => { savePreferences(); generate(); });
 
     // Preset buttons
     document.querySelectorAll('.btn-preset').forEach(btn => {
         btn.addEventListener('click', () => {
-            rngLen.value = btn.dataset.len;
-            lenVal.innerText = btn.dataset.len;
+            if (btn.dataset.len) {
+                rngLen.value = btn.dataset.len;
+                lenVal.innerText = btn.dataset.len;
+            } else if (btn.dataset.dw) {
+                rngDwWords.value = btn.dataset.dw;
+                dwWordsVal.innerText = btn.dataset.dw;
+            } else if (btn.dataset.pin) {
+                rngPinLen.value = btn.dataset.pin;
+                pinLenVal.innerText = btn.dataset.pin;
+            } else if (btn.dataset.hex) {
+                rngHexLen.value = btn.dataset.hex;
+                hexLenVal.innerText = btn.dataset.hex;
+            }
+            savePreferences();
             generate();
         });
     });
 
-    function evaluateStrength(pass) {
-        const lblStrength = document.getElementById('lblStrength');
-        const lblEntropy = document.getElementById('lblEntropy');
-        const barStrength = document.getElementById('barStrength');
+    function calcStrength(pass) {
         if(!pass || pass === '...') {
-            lblStrength.innerText = "Strength: -";
-            lblEntropy.innerText = "0 bits";
-            barStrength.style.width = "0%";
-            barStrength.style.backgroundColor = "#e74c3c";
-            barStrength.setAttribute('aria-valuenow', '0');
-            return { rating: "-", entropy: 0 };
+            return { rating: "-", entropy: 0, pct: 0, color: "#e74c3c" };
         }
         let pool = 0;
         if(/[A-Z]/.test(pass)) pool += 26;
@@ -1018,44 +1753,166 @@
         else if(entropy >= 60) { rating = "Strong"; color = "#2ecc71"; }
         else if(entropy >= 40) { rating = "Fair"; color = "#f39c12"; }
 
-        lblStrength.innerText = "Strength: " + rating;
-        lblEntropy.innerText = entropy + " bits";
-        barStrength.style.width = pct + "%";
-        barStrength.style.backgroundColor = color;
-        barStrength.setAttribute('aria-valuenow', String(pct));
-        return { rating, entropy };
+        return { rating, entropy, pct, color };
+    }
+
+    function evaluateStrength(pass) {
+        const lblStrength = document.getElementById('lblStrength');
+        const lblEntropy = document.getElementById('lblEntropy');
+        const barStrength = document.getElementById('barStrength');
+        const info = calcStrength(pass);
+        lblStrength.innerText = "Strength: " + info.rating;
+        lblEntropy.innerText = info.entropy + " bits";
+        barStrength.style.width = info.pct + "%";
+        barStrength.style.backgroundColor = info.color;
+        barStrength.setAttribute('aria-valuenow', String(info.pct));
+        return info;
     }
 
     function generate() {
-        let chars = "";
-        let upperChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        let lowerChars = "abcdefghijklmnopqrstuvwxyz";
-        let numChars = "0123456789";
-        let symChars = "!@#$%^&*()_+";
+        let pass = '';
+        if (activeGenMode === 'diceware') {
+            let count = parseInt(rngDwWords.value) || 4;
+            let sep = selDwSep.value;
+            let doCap = chkDwCapitalize.checked;
+            let doNum = chkDwNumber.checked;
+            let words = [];
+            let randArr = new Uint32Array(count + (doNum ? 1 : 0));
+            crypto.getRandomValues(randArr);
 
-        if (chkAmbiguous.checked) {
-            upperChars = upperChars.replace(/[IO]/g, '');
-            lowerChars = lowerChars.replace(/[lo]/g, '');
-            numChars = numChars.replace(/[01]/g, '');
+            for (let i = 0; i < count; i++) {
+                let w = RETRO_WORDS[randArr[i] % RETRO_WORDS.length];
+                if (doCap) w = w.charAt(0).toUpperCase() + w.slice(1);
+                words.push(w);
+            }
+            pass = words.join(sep);
+            if (doNum) {
+                let num = 10 + (randArr[count] % 90);
+                pass += num;
+            }
+        } else if (activeGenMode === 'pin') {
+            let count = parseInt(rngPinLen.value) || 6;
+            let randArr = new Uint32Array(count);
+            crypto.getRandomValues(randArr);
+            let digits = [];
+            for (let i = 0; i < count; i++) {
+                digits.push(randArr[i] % 10);
+            }
+            pass = digits.join('');
+        } else if (activeGenMode === 'hex') {
+            let count = parseInt(rngHexLen.value) || 32;
+            let randArr = new Uint8Array(Math.ceil(count / 2));
+            crypto.getRandomValues(randArr);
+            let hex = Array.from(randArr).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, count);
+            pass = chkHexUpper.checked ? hex.toUpperCase() : hex.toLowerCase();
+        } else {
+            // Standard Characters
+            let poolSets = [];
+            let upperChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            let lowerChars = "abcdefghijklmnopqrstuvwxyz";
+            let numChars = "0123456789";
+            let symChars = "!@#$%^&*()_+";
+
+            if (chkAmbiguous.checked) {
+                upperChars = upperChars.replace(/[IO]/g, '');
+                lowerChars = lowerChars.replace(/[lo]/g, '');
+                numChars = numChars.replace(/[01]/g, '');
+            }
+
+            if (chkUpper.checked) poolSets.push(upperChars);
+            if (chkLower.checked) poolSets.push(lowerChars);
+            if (chkNum.checked) poolSets.push(numChars);
+            if (chkSym.checked) poolSets.push(symChars);
+            if (poolSets.length === 0) {
+                chkLower.checked = true;
+                poolSets.push(lowerChars || "abcdefghjkmnpqrstuvwxyz");
+            }
+
+            let allChars = poolSets.join('');
+            let len = parseInt(rngLen.value) || 16;
+            let passChars = [];
+
+            if (len >= poolSets.length) {
+                for (let set of poolSets) {
+                    let randBuf = new Uint32Array(1);
+                    crypto.getRandomValues(randBuf);
+                    passChars.push(set[randBuf[0] % set.length]);
+                }
+            }
+
+            let remaining = len - passChars.length;
+            if (remaining > 0) {
+                let randArr = new Uint32Array(remaining);
+                crypto.getRandomValues(randArr);
+                for (let i = 0; i < remaining; i++) {
+                    passChars.push(allChars[randArr[i] % allChars.length]);
+                }
+            }
+
+            // Fisher-Yates shuffle
+            for (let i = passChars.length - 1; i > 0; i--) {
+                let randBuf = new Uint32Array(1);
+                crypto.getRandomValues(randBuf);
+                let j = randBuf[0] % (i + 1);
+                let tmp = passChars[i];
+                passChars[i] = passChars[j];
+                passChars[j] = tmp;
+            }
+            pass = passChars.join('');
         }
 
-        if (chkUpper.checked) chars += upperChars;
-        if (chkLower.checked) chars += lowerChars;
-        if (chkNum.checked) chars += numChars;
-        if (chkSym.checked) chars += symChars;
-        if (chars === "") { chars = lowerChars || "abcdefghjkmnpqrstuvwxyz"; chkLower.checked = true; }
-        
-        let pass = "";
-        let len = parseInt(rngLen.value) || 16;
-        let array = new Uint32Array(len);
-        crypto.getRandomValues(array);
-        for(let i=0; i<len; i++) {
-            pass += chars[array[i] % chars.length];
-        }
         pwdDisplay.innerHTML = escapeHtml(pass) + '<div class="display-hint">Click password to copy</div>';
-        evaluateStrength(pass);
+        const strInfo = evaluateStrength(pass);
+        addRecentHistory(pass, strInfo.rating);
     }
     btnGen.addEventListener('click', generate);
+
+    function addRecentHistory(pass, rating) {
+        if (!pass || pass === '...') return;
+        if (recentHistory.length > 0 && recentHistory[0].pass === pass) return;
+        recentHistory.unshift({
+            pass,
+            rating,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        });
+        if (recentHistory.length > 8) recentHistory.pop();
+        renderRecentHistory();
+    }
+
+    function renderRecentHistory() {
+        lblHistoryCount.innerText = recentHistory.length;
+        historyList.innerHTML = '';
+        if (recentHistory.length === 0) {
+            historyList.innerHTML = '<div style="color:#666; font-size:10px; text-align:center;">No recent passwords yet</div>';
+            return;
+        }
+        recentHistory.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'history-item';
+            row.innerHTML = `
+                <span title="${escapeHtml(item.pass)}">${escapeHtml(item.pass)}</span>
+                <div class="history-item-btns">
+                    <button class="btn-micro btn-hist-use" title="Fill into Save form">Use</button>
+                    <button class="btn-micro btn-hist-copy" title="Copy to clipboard">Copy</button>
+                </div>
+            `;
+            row.querySelector('.btn-hist-copy').addEventListener('click', () => copyText(item.pass, "Recent password copied!"));
+            row.querySelector('.btn-hist-use').addEventListener('click', () => {
+                pwdDisplay.innerHTML = escapeHtml(item.pass) + '<div class="display-hint">Click password to copy</div>';
+                evaluateStrength(item.pass);
+                labelInput.focus();
+                showToast("Password loaded into save form!");
+            });
+            historyList.appendChild(row);
+        });
+    }
+
+    let historyExpanded = true;
+    btnToggleHistory.addEventListener('click', () => {
+        historyExpanded = !historyExpanded;
+        historyList.style.display = historyExpanded ? 'flex' : 'none';
+        lblHistoryToggleIcon.innerText = historyExpanded ? '▲' : '▼';
+    });
 
     function getCurrentPassword() {
         const text = pwdDisplay.innerText;
@@ -1066,13 +1923,19 @@
         const pwd = getCurrentPassword();
         if (pwd && pwd !== '...') {
             copyText(pwd, "Password copied to clipboard!");
+            pwdDisplay.style.borderColor = '#2ecc71';
+            setTimeout(() => { pwdDisplay.style.borderColor = '#333'; }, 400);
         }
     });
     pwdDisplay.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             const pwd = getCurrentPassword();
-            if (pwd && pwd !== '...') copyText(pwd, "Password copied to clipboard!");
+            if (pwd && pwd !== '...') {
+                copyText(pwd, "Password copied to clipboard!");
+                pwdDisplay.style.borderColor = '#2ecc71';
+                setTimeout(() => { pwdDisplay.style.borderColor = '#333'; }, 400);
+            }
         }
     });
 
@@ -1087,20 +1950,32 @@
     });
 
     async function handleSave() {
+        if (!currentMasterPass) {
+            showToast("Vault is locked. Please unlock or set up master password.", false);
+            lockVault();
+            return;
+        }
         const label = labelInput.value.trim();
+        const username = userInput.value.trim();
         const pass = getCurrentPassword();
         const cat = catInput.value;
+        const notes = notesInput.value.trim();
+
         if (label && pass && pass !== '...') {
-            const strInfo = evaluateStrength(pass);
+            const strInfo = calcStrength(pass);
             vault.push({
                 label,
+                username,
                 category: cat,
                 pass,
+                notes,
                 strength: strInfo.rating,
                 date: new Date().toLocaleDateString()
             });
             await saveVault();
             labelInput.value = '';
+            userInput.value = '';
+            notesInput.value = '';
             updateVaultCount();
             showToast("Saved to Vault!");
         } else {
@@ -1108,9 +1983,12 @@
         }
     }
     btnSave.addEventListener('click', handleSave);
-    labelInput.addEventListener('keydown', (e) => {
-        if(e.key === 'Enter') handleSave();
+    [labelInput, userInput, notesInput].forEach(inp => {
+        inp.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter') handleSave();
+        });
     });
+    catInput.addEventListener('change', savePreferences);
 
     vaultSearch.addEventListener('input', () => {
         btnClearSearch.style.display = vaultSearch.value ? 'block' : 'none';
@@ -1123,7 +2001,11 @@
         renderVault();
     });
     vaultCatFilter.addEventListener('change', renderVault);
-    vaultSort.addEventListener('change', renderVault);
+    vaultRiskFilter.addEventListener('change', renderVault);
+    vaultSort.addEventListener('change', () => {
+        savePreferences();
+        renderVault();
+    });
 
     function escapeHtml(str) {
         if(!str) return '';
@@ -1139,14 +2021,40 @@
         vaultList.innerHTML = '';
         const query = vaultSearch.value.trim().toLowerCase();
         const catQuery = vaultCatFilter.value;
+        const riskQuery = vaultRiskFilter.value;
         const sortMode = vaultSort.value;
-        
-        let filtered = vault.map((item, idx) => ({ ...item, originalIndex: idx })).filter(item => {
+
+        // Precompute duplicate passwords map
+        const passCounts = new Map();
+        vault.forEach(item => {
+            if (item.pass) passCounts.set(item.pass, (passCounts.get(item.pass) || 0) + 1);
+        });
+
+        const now = Date.now();
+        const NINETY_DAYS = 90 * 24 * 60 * 60 * 1000;
+
+        let filtered = vault.map((item, idx) => ({
+            ...item,
+            originalIndex: idx,
+            isReused: (passCounts.get(item.pass) || 0) > 1,
+            isStale: item.date ? ((now - new Date(item.date).getTime()) > NINETY_DAYS) : false,
+            entropy: calcStrength(item.pass).entropy
+        })).filter(item => {
             const itemLabel = (item.label || '').toLowerCase();
+            const itemUser = (item.username || '').toLowerCase();
             const itemPass = (item.pass || '').toLowerCase();
-            const matchQ = itemLabel.includes(query) || itemPass.includes(query);
+            const itemCat = (item.category || '').toLowerCase();
+            const itemNotes = (item.notes || '').toLowerCase();
+
+            const matchQ = itemLabel.includes(query) || itemUser.includes(query) || itemPass.includes(query) || itemCat.includes(query) || itemNotes.includes(query);
             const matchCat = catQuery ? (item.category === catQuery) : true;
-            return matchQ && matchCat;
+            
+            let matchRisk = true;
+            if (riskQuery === 'weak') matchRisk = item.entropy < 50;
+            else if (riskQuery === 'reused') matchRisk = item.isReused;
+            else if (riskQuery === 'stale') matchRisk = item.isStale;
+
+            return matchQ && matchCat && matchRisk;
         });
 
         // Sorting
@@ -1156,13 +2064,14 @@
             if (sortMode === 'label-asc') return (a.label || '').localeCompare(b.label || '');
             if (sortMode === 'label-desc') return (b.label || '').localeCompare(a.label || '');
             if (sortMode === 'cat') return (a.category || '').localeCompare(b.category || '') || (a.label || '').localeCompare(b.label || '');
+            if (sortMode === 'weakest') return a.entropy - b.entropy;
             return 0;
         });
 
         lblVaultStatus.innerText = `${filtered.length} of ${vault.length} credentials shown`;
 
         if (filtered.length === 0) {
-            vaultList.innerHTML = '<div style="text-align:center;color:#777;margin-top:30px;font-size:14px;">' + 
+            vaultList.innerHTML = '<div style="text-align:center;color:#777;margin-top:28px;font-size:13px;">' + 
                 (vault.length === 0 ? 'Your vault is currently empty.' : 'No matching credentials found.') + '</div>';
             return;
         }
@@ -1172,33 +2081,80 @@
             const isRevealed = revealedKeys.has(realIndex);
             const div = document.createElement('div');
             div.className = 'vault-item';
-            div.innerHTML = `
-                <div class="vault-info">
-                    <div>
-                        <span class="vault-label"></span>
-                        <span class="vault-category"></span>
-                        <span class="vault-badge"></span>
-                        <span class="vault-date"></span>
+
+            let badgesHtml = `<span class="vault-category">${escapeHtml(item.category || 'Other')}</span>`;
+            if (item.entropy < 50) {
+                badgesHtml += `<span class="vault-badge weak">Weak</span>`;
+            } else {
+                badgesHtml += `<span class="vault-badge">${escapeHtml(item.strength || 'Saved')}</span>`;
+            }
+            if (item.isReused) {
+                badgesHtml += `<span class="vault-badge reused" title="Password reused across multiple accounts">Reused</span>`;
+            }
+            if (item.isStale) {
+                badgesHtml += `<span class="vault-badge stale" title="Older than 90 days">Stale</span>`;
+            }
+
+            let userRowHtml = '';
+            if (item.username) {
+                userRowHtml = `
+                    <div class="vault-user-row">
+                        <span>👤 <span class="vault-user-text">${escapeHtml(item.username)}</span></span>
+                        <button class="btn-micro btn-copy-user" title="Copy username">Copy User</button>
                     </div>
-                    <div class="vault-pass" title="Click to copy password" tabindex="0"></div>
+                `;
+            }
+
+            let notesRowHtml = '';
+            if (item.notes) {
+                notesRowHtml = `
+                    <div class="vault-notes" title="Click to copy notes">📝 ${escapeHtml(item.notes)}</div>
+                `;
+            }
+
+            div.innerHTML = `
+                <div class="vault-top-row">
+                    <div class="vault-label-group">
+                        <span class="vault-label">${escapeHtml(item.label || 'Untitled')}</span>
+                        ${badgesHtml}
+                    </div>
+                    <span class="vault-date">${escapeHtml(item.date || '')}</span>
                 </div>
-                <div class="item-btns">
-                    <button class="btn-sm btn-reveal" title="Toggle visibility">${isRevealed ? 'Hide' : 'Show'}</button>
-                    <button class="btn-sm btn-edit" title="Edit credential">Edit</button>
-                    <button class="btn-sm btn-copy" title="Copy password">Copy</button>
-                    <button class="btn-sm btn-danger btn-del" title="Delete entry">&times;</button>
+                ${userRowHtml}
+                <div class="vault-pass-row">
+                    <div class="vault-pass" title="Click to copy password" tabindex="0">${isRevealed ? escapeHtml(item.pass) : '••••••••••••'}</div>
+                    <div class="item-btns">
+                        <button class="btn-sm btn-reveal" title="Toggle visibility">${isRevealed ? 'Hide' : 'Show'}</button>
+                        <button class="btn-sm btn-edit" title="Edit credential">Edit</button>
+                        <button class="btn-sm btn-copy" title="Copy password">Copy</button>
+                        <button class="btn-sm btn-danger btn-del" title="Delete entry">&times;</button>
+                    </div>
                 </div>
+                ${notesRowHtml}
             `;
-            div.querySelector('.vault-label').textContent = item.label || 'Untitled';
-            div.querySelector('.vault-category').textContent = item.category || 'Other';
-            div.querySelector('.vault-badge').textContent = item.strength || 'Saved';
-            div.querySelector('.vault-date').textContent = item.date || '';
-            
+
+            // User copy
+            const copyUserBtn = div.querySelector('.btn-copy-user');
+            if (copyUserBtn) {
+                copyUserBtn.addEventListener('click', () => copyText(item.username, "Username copied!"));
+            }
+
+            // Notes copy
+            const notesEl = div.querySelector('.vault-notes');
+            if (notesEl) {
+                notesEl.addEventListener('click', () => copyText(item.notes, "Notes copied!"));
+            }
+
             const passEl = div.querySelector('.vault-pass');
-            passEl.textContent = isRevealed ? item.pass : '••••••••••••';
             passEl.addEventListener('click', () => copyText(item.pass, "Vault password copied!"));
             passEl.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); copyText(item.pass, "Vault password copied!"); }
+            });
+
+            div.addEventListener('dblclick', (e) => {
+                if (!e.target.closest('.item-btns') && !e.target.closest('.btn-copy-user') && !e.target.closest('.vault-notes')) {
+                    copyText(item.pass, "Vault password copied!");
+                }
             });
 
             div.querySelector('.btn-reveal').addEventListener('click', () => {
@@ -1213,16 +2169,26 @@
             div.querySelector('.btn-edit').addEventListener('click', () => {
                 editingIndex = realIndex;
                 editLabel.value = vault[realIndex].label || '';
+                editUser.value = vault[realIndex].username || '';
                 editCat.value = vault[realIndex].category || 'Personal';
                 editPass.value = vault[realIndex].pass || '';
+                editNotes.value = vault[realIndex].notes || '';
                 editModal.style.display = 'flex';
                 editLabel.focus();
             });
 
-            div.querySelector('.btn-copy').addEventListener('click', () => copyText(item.pass, "Vault password copied!"));
+            const itemCopyBtn = div.querySelector('.btn-copy');
+            itemCopyBtn.addEventListener('click', () => {
+                copyText(item.pass, "Vault password copied!");
+                const old = itemCopyBtn.innerText;
+                itemCopyBtn.innerText = 'Copied!';
+                setTimeout(() => { itemCopyBtn.innerText = old; }, 1400);
+            });
+
             div.querySelector('.btn-del').addEventListener('click', () => {
                 deletingIndex = realIndex;
-                deletePrompt.textContent = `Are you sure you want to delete "${vault[realIndex].label}"?`;
+                const entryLabel = vault[realIndex].label ? `"${vault[realIndex].label}"` : 'this credential';
+                deletePrompt.textContent = `Are you sure you want to delete ${entryLabel}?`;
                 deleteModal.style.display = 'flex';
                 btnConfirmDelete.focus();
             });
@@ -1231,7 +2197,175 @@
         });
     }
 
-    // Export JSON using safe Blob
+    // Security Audit Engine
+    function calculateAudit() {
+        if (!vault || vault.length === 0) {
+            return {
+                score: 100,
+                rating: "Empty Vault",
+                color: "#7f8c8d",
+                total: 0,
+                weakList: [],
+                reusedGroups: [],
+                staleList: [],
+                avgEntropy: 0
+            };
+        }
+        let totalEntropy = 0;
+        let weakList = [];
+        let passMap = new Map();
+        let staleList = [];
+        const now = Date.now();
+        const NINETY_DAYS = 90 * 24 * 60 * 60 * 1000;
+
+        vault.forEach((item, idx) => {
+            const info = calcStrength(item.pass);
+            totalEntropy += info.entropy;
+            if (info.entropy < 50 || info.rating === "Weak") {
+                weakList.push({ ...item, index: idx, entropy: info.entropy });
+            }
+            if (item.pass) {
+                if (!passMap.has(item.pass)) passMap.set(item.pass, []);
+                passMap.get(item.pass).push({ ...item, index: idx });
+            }
+            if (item.date) {
+                const entryDate = new Date(item.date).getTime();
+                if (!isNaN(entryDate) && (now - entryDate) > NINETY_DAYS) {
+                    staleList.push({ ...item, index: idx });
+                }
+            }
+        });
+
+        let reusedGroups = [];
+        passMap.forEach((items, pass) => {
+            if (items.length > 1) {
+                reusedGroups.push({ pass, count: items.length, items });
+            }
+        });
+
+        const avgEntropy = Math.round(totalEntropy / vault.length);
+        let penalties = (weakList.length * 15) + (reusedGroups.length * 20) + (staleList.length * 5);
+        let score = Math.max(10, Math.min(100, 100 - penalties));
+        let rating = "Fortress Grade";
+        let color = "#2ecc71";
+        if (score < 50) { rating = "Critical Risks"; color = "#e74c3c"; }
+        else if (score < 75) { rating = "Needs Attention"; color = "#f39c12"; }
+        else if (score < 90) { rating = "Good"; color = "#3498db"; }
+
+        return { score, rating, color, total: vault.length, weakList, reusedGroups, staleList, avgEntropy };
+    }
+
+    function renderAudit() {
+        const audit = calculateAudit();
+        auditScoreCircle.innerText = audit.score;
+        auditScoreCircle.style.backgroundColor = audit.color;
+        auditScoreTitle.innerText = audit.rating;
+        auditScoreTitle.style.color = audit.color;
+
+        valTotalCreds.innerText = audit.total;
+        valReusedCreds.innerText = audit.reusedGroups.reduce((acc, g) => acc + g.count, 0);
+        valWeakCreds.innerText = audit.weakList.length;
+        valStaleCreds.innerText = audit.staleList.length;
+        lblAvgEntropy.innerText = `Avg Entropy: ${audit.avgEntropy} bits`;
+
+        auditIssuesList.innerHTML = '';
+
+        if (audit.total === 0) {
+            auditIssuesList.innerHTML = '<div style="color:#777; text-align:center; padding:20px;">Vault is empty. Add credentials to generate a security audit.</div>';
+            return;
+        }
+
+        if (audit.weakList.length === 0 && audit.reusedGroups.length === 0 && audit.staleList.length === 0) {
+            auditIssuesList.innerHTML = '<div style="color:#2ecc71; text-align:center; padding:18px; font-weight:bold;">✅ All credentials meet high-entropy security standards! Zero reused or weak passwords detected.</div>';
+            return;
+        }
+
+        // List Reused Groups
+        audit.reusedGroups.forEach(grp => {
+            const item = document.createElement('div');
+            item.className = 'audit-issue-item reused';
+            const labels = grp.items.map(i => escapeHtml(i.label || 'Untitled')).join(', ');
+            item.innerHTML = `
+                <div>
+                    <strong style="color:#f39c12;">⚠️ Reused Password (${grp.count} accounts):</strong>
+                    <div style="color:#ccc; font-size:11px; margin-top:2px;">Shared by: ${labels}</div>
+                </div>
+                <button class="btn-micro" style="background:#e67e22; border-color:#e67e22; color:#fff;">View in Vault</button>
+            `;
+            item.querySelector('button').addEventListener('click', () => {
+                vaultRiskFilter.value = 'reused';
+                switchTab('vault');
+            });
+            auditIssuesList.appendChild(item);
+        });
+
+        // List Weak Passwords
+        audit.weakList.forEach(w => {
+            const item = document.createElement('div');
+            item.className = 'audit-issue-item';
+            item.innerHTML = `
+                <div>
+                    <strong style="color:#e74c3c;">⛔ Weak Password:</strong>
+                    <span style="color:#fff; margin-left:4px;">${escapeHtml(w.label || 'Untitled')}</span>
+                    <span style="color:#888; font-size:11px; margin-left:6px;">(${w.entropy} bits)</span>
+                </div>
+                <button class="btn-micro" style="background:#c0392b; border-color:#c0392b; color:#fff;">Regenerate</button>
+            `;
+            item.querySelector('button').addEventListener('click', () => {
+                labelInput.value = w.label;
+                userInput.value = w.username || '';
+                catInput.value = w.category || 'Personal';
+                switchTab('gen');
+                generate();
+                showToast(`Ready to generate new password for ${w.label}!`);
+            });
+            auditIssuesList.appendChild(item);
+        });
+
+        // List Stale Passwords
+        audit.staleList.forEach(s => {
+            const item = document.createElement('div');
+            item.className = 'audit-issue-item stale';
+            item.innerHTML = `
+                <div>
+                    <strong style="color:#3498db;">ℹ️ Stale Credential (&gt;90d):</strong>
+                    <span style="color:#fff; margin-left:4px;">${escapeHtml(s.label || 'Untitled')}</span>
+                    <span style="color:#888; font-size:11px; margin-left:6px;">(Last updated: ${escapeHtml(s.date || '')})</span>
+                </div>
+                <button class="btn-micro" style="background:#2980b9; border-color:#2980b9; color:#fff;">View in Vault</button>
+            `;
+            item.querySelector('button').addEventListener('click', () => {
+                vaultRiskFilter.value = 'stale';
+                switchTab('vault');
+            });
+            auditIssuesList.appendChild(item);
+        });
+    }
+
+    btnRunAudit.addEventListener('click', () => {
+        renderAudit();
+        showToast("Audit refreshed!");
+    });
+
+    // Metric cards click handlers
+    document.getElementById('cardTotalCreds').addEventListener('click', () => {
+        vaultRiskFilter.value = '';
+        switchTab('vault');
+    });
+    document.getElementById('cardReusedCreds').addEventListener('click', () => {
+        vaultRiskFilter.value = 'reused';
+        switchTab('vault');
+    });
+    document.getElementById('cardWeakCreds').addEventListener('click', () => {
+        vaultRiskFilter.value = 'weak';
+        switchTab('vault');
+    });
+    document.getElementById('cardStaleCreds').addEventListener('click', () => {
+        vaultRiskFilter.value = 'stale';
+        switchTab('vault');
+    });
+
+    // Export JSON
     document.getElementById('btnExportJSON').addEventListener('click', () => {
         if(vault.length === 0) { showToast("Vault is empty!", false); return; }
         const jsonStr = JSON.stringify(vault, null, 2);
@@ -1240,21 +2374,61 @@
         showToast("Exported to kpass_vault.json");
     });
 
-    // Export CSV using safe Blob
+    // Export CSV
     document.getElementById('btnExportCSV').addEventListener('click', () => {
         if(vault.length === 0) { showToast("Vault is empty!", false); return; }
-        let csv = "label,category,pass,strength,date\r\n";
+        let csv = "label,username,category,pass,strength,date,notes\r\n";
         vault.forEach(i => {
             const l = (i.label || '').replace(/"/g, '""');
+            const u = (i.username || '').replace(/"/g, '""');
             const c = (i.category || '').replace(/"/g, '""');
             const p = (i.pass || '').replace(/"/g, '""');
             const s = (i.strength || '').replace(/"/g, '""');
             const d = (i.date || '').replace(/"/g, '""');
-            csv += `"${l}","${c}","${p}","${s}","${d}"\r\n`;
+            const n = (i.notes || '').replace(/"/g, '""');
+            csv += `"${l}","${u}","${c}","${p}","${s}","${d}","${n}"\r\n`;
         });
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         downloadBlob(blob, "kpass_vault.csv");
         showToast("Exported to kpass_vault.csv");
+    });
+
+    // Export Markdown (Data Interoperability)
+    document.getElementById('btnExportMD').addEventListener('click', () => {
+        if(vault.length === 0) { showToast("Vault is empty!", false); return; }
+        let md = `# KPass Vault Export\r\n\r\n`;
+        md += `*Exported on: ${new Date().toLocaleDateString()} | Total Credentials: ${vault.length}*\r\n\r\n`;
+        md += `| Service / Label | Username / Login | Password | Category | Strength | Last Updated | Notes |\r\n`;
+        md += `| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\r\n`;
+        vault.forEach(i => {
+            const l = (i.label || '-').replace(/\|/g, '\\|');
+            const u = (i.username || '-').replace(/\|/g, '\\|');
+            const p = (i.pass || '-').replace(/\|/g, '\\|');
+            const c = (i.category || 'Other').replace(/\|/g, '\\|');
+            const s = (i.strength || '-').replace(/\|/g, '\\|');
+            const d = (i.date || '-').replace(/\|/g, '\\|');
+            const n = (i.notes || '-').replace(/\|/g, '\\|');
+            md += `| **${l}** | \`${u}\` | \`${p}\` | ${c} | ${s} | ${d} | ${n} |\r\n`;
+        });
+        const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
+        downloadBlob(blob, "kpass_vault.md");
+        showToast("Exported to kpass_vault.md");
+    });
+
+    // Portable Encrypted Backup (.kpass)
+    document.getElementById('btnBackupKPass').addEventListener('click', () => {
+        const storedEnc = safeGetStorage('kpass_vault_enc');
+        if(!storedEnc) { showToast("Vault is not initialized!", false); return; }
+        const backupObj = {
+            app: "KPass",
+            version: 2,
+            encrypted: storedEnc,
+            exportedAt: new Date().toISOString(),
+            count: vault.length
+        };
+        const blob = new Blob([JSON.stringify(backupObj, null, 2)], { type: 'application/json' });
+        downloadBlob(blob, `kpass_backup_${Date.now()}.kpass`);
+        showToast("Encrypted backup saved to .kpass file!");
     });
 
     function downloadBlob(blob, filename) {
@@ -1320,11 +2494,49 @@
             const text = event.target.result;
             let imported = [];
             const fileName = file.name.toLowerCase();
-            if(fileName.endsWith('.json')) {
+
+            if (fileName.endsWith('.kpass')) {
+                // Portable Encrypted Backup
+                try {
+                    const raw = JSON.parse(text);
+                    if (raw && raw.encrypted) {
+                        if (!currentMasterPass) {
+                            showToast("Vault is locked. Unlock before importing.", false);
+                            return;
+                        }
+                        const encObj = typeof raw.encrypted === 'string' ? JSON.parse(raw.encrypted) : raw.encrypted;
+                        const decryptedStr = await decryptData(currentMasterPass, encObj);
+                        if (decryptedStr === null) {
+                            showToast("Failed to decrypt .kpass: Incorrect Master Password.", false);
+                            return;
+                        }
+                        const parsed = JSON.parse(decryptedStr);
+                        if (Array.isArray(parsed)) {
+                            imported = parsed.map(sanitizeEntry).filter(item => item.label || item.pass);
+                        }
+                    } else {
+                        throw new Error("Invalid .kpass structure");
+                    }
+                } catch(err) {
+                    return showToast("Invalid or corrupted .kpass backup", false);
+                }
+            } else if(fileName.endsWith('.json')) {
                 try {
                     const raw = JSON.parse(text);
                     if(Array.isArray(raw)) {
                         imported = raw.map(sanitizeEntry).filter(item => item.label || item.pass);
+                    } else if (raw && raw.encrypted) {
+                        // Also handle JSON wrapped backup
+                        if (!currentMasterPass) {
+                            showToast("Vault is locked. Unlock before importing.", false);
+                            return;
+                        }
+                        const encObj = typeof raw.encrypted === 'string' ? JSON.parse(raw.encrypted) : raw.encrypted;
+                        const decryptedStr = await decryptData(currentMasterPass, encObj);
+                        if (decryptedStr !== null) {
+                            const parsed = JSON.parse(decryptedStr);
+                            if (Array.isArray(parsed)) imported = parsed.map(sanitizeEntry).filter(item => item.label || item.pass);
+                        }
                     } else {
                         throw new Error("Invalid format");
                     }
@@ -1333,38 +2545,57 @@
                 }
             } else if(fileName.endsWith('.csv')) {
                 const rows = parseCSV(text);
-                if (rows.length > 1) {
-                    // Check if row 0 is header
-                    const headers = rows[0].map(h => h.toLowerCase().trim());
-                    let labelIdx = headers.indexOf('label');
-                    if(labelIdx === -1) labelIdx = headers.indexOf('name');
-                    if(labelIdx === -1) labelIdx = headers.indexOf('title');
-                    if(labelIdx === -1) labelIdx = 0;
+                if (rows.length > 0) {
+                    const firstRow = rows[0].map(h => (h || '').toLowerCase().trim());
+                    let labelIdx = -1, passIdx = -1, catIdx = -1, userIdx = -1, strIdx = -1, dateIdx = -1, notesIdx = -1;
 
-                    let catIdx = headers.indexOf('category');
-                    if(catIdx === -1) catIdx = headers.indexOf('folder');
-                    if(catIdx === -1) catIdx = 1;
+                    firstRow.forEach((h, idx) => {
+                        if (labelIdx === -1 && ['label', 'name', 'title', 'service', 'account', 'website', 'url'].includes(h)) labelIdx = idx;
+                        else if (passIdx === -1 && ['pass', 'password', 'secret', 'key'].includes(h)) passIdx = idx;
+                        else if (catIdx === -1 && ['category', 'cat', 'folder', 'group'].includes(h)) catIdx = idx;
+                        else if (userIdx === -1 && ['username', 'user', 'login', 'email'].includes(h)) userIdx = idx;
+                        else if (strIdx === -1 && ['strength'].includes(h)) strIdx = idx;
+                        else if (dateIdx === -1 && ['date', 'created'].includes(h)) dateIdx = idx;
+                        else if (notesIdx === -1 && ['notes', 'note', 'comment', 'extra'].includes(h)) notesIdx = idx;
+                    });
 
-                    let passIdx = headers.indexOf('pass');
-                    if(passIdx === -1) passIdx = headers.indexOf('password');
-                    if(passIdx === -1) passIdx = 2;
+                    let startRow = 1;
+                    if (labelIdx === -1 && passIdx === -1) {
+                        startRow = 0;
+                        labelIdx = 0;
+                        passIdx = rows[0].length > 1 ? 1 : 0;
+                    } else {
+                        if (labelIdx === -1) labelIdx = 0;
+                        if (passIdx === -1) {
+                            for (let i = 0; i < rows[0].length; i++) {
+                                if (i !== labelIdx && i !== userIdx && i !== catIdx && i !== notesIdx) {
+                                    passIdx = i;
+                                    break;
+                                }
+                            }
+                            if (passIdx === -1) passIdx = 1;
+                        }
+                    }
 
-                    let strIdx = headers.indexOf('strength');
-                    let dateIdx = headers.indexOf('date');
-
-                    for(let i = 1; i < rows.length; i++) {
+                    for(let i = startRow; i < rows.length; i++) {
                         const r = rows[i];
-                        const label = (r[labelIdx] || '').trim();
+                        let label = (r[labelIdx] || '').trim();
                         const pass = (r[passIdx] || '').trim();
-                        if(!label && !pass) continue;
-                        const category = catIdx >= 0 && r[catIdx] ? r[catIdx].trim() : 'Other';
-                        const strength = strIdx >= 0 && r[strIdx] ? r[strIdx].trim() : evaluateStrength(pass).rating;
-                        const date = dateIdx >= 0 && r[dateIdx] ? r[dateIdx].trim() : new Date().toLocaleDateString();
-                        imported.push({ label, category, pass, strength, date });
+                        const username = userIdx >= 0 && r[userIdx] ? r[userIdx].trim() : '';
+                        if (!label && !pass) continue;
+                        const category = catIdx >= 0 && r[catIdx] && r[catIdx].trim() ? r[catIdx].trim() : 'Other';
+                        const strength = strIdx >= 0 && r[strIdx] && r[strIdx].trim() ? r[strIdx].trim() : calcStrength(pass).rating;
+                        const date = dateIdx >= 0 && r[dateIdx] && r[dateIdx].trim() ? r[dateIdx].trim() : new Date().toLocaleDateString();
+                        const notes = notesIdx >= 0 && r[notesIdx] ? r[notesIdx].trim() : '';
+                        imported.push({ label, username, category, pass, notes, strength, date });
                     }
                 }
             }
             if(imported.length > 0) {
+                if(!currentMasterPass) {
+                    showToast("Vault is locked. Unlock before importing.", false);
+                    return;
+                }
                 vault = vault.concat(imported);
                 await saveVault();
                 renderVault();
@@ -1378,7 +2609,9 @@
         fileImport.value = ''; // Reset
     });
 
+    loadPreferences();
     generate();
+    showToast("Welcome to KPass! Press F1 for Help & Shortcuts");
   </script>
 </body>
 </html>
