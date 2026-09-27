@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KCalendar
   kilo_usability: KNote
   kilo_graphics: KDragon
-  kilo_qa: KClip
+  kilo_qa: KCipher
   kilo_expander: KPaint
   kilo_creator: "kweb://cybercafe (Underground BBS, Threaded Forums & ASCII Art Studio)"
 virtual_web_target: "kweb://cybercafe"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-graphics
-  app: KSanctuary
-  timestamp: "2026-09-27T11:52:00Z"
+  agent: kilo-qa
+  app: KClip
+  timestamp: "2026-09-27T13:55:00Z"
 last_planner_run: "2026-09-27T09:48:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KClip`
+- **Current Target**: `KCipher`
 - **Upcoming Queue**:
-  `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KMystery`, `KQuest`, `KSanctuary` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS)*.
+  `KTodo`, `KTrader`, `KType`, `KVault`, `KMystery`, `KQuest`, `KSanctuary`, `KClip` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, KClip)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KPaint`
@@ -226,6 +226,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-27T13:55:00Z — kilo-qa: KClip (Pass 5: Tutorial & State Integrity Audit)**
+  - Status: PASS ✅ (0 regressions; clean builds; Pass 5 tutorial & state integrity verified).
+  - State Persistence: Persisted full workstation state (active filter, search query, view mode, clips, settings) with QuotaExceeded handling and Win32 C `kclip.dat` magic/bounds validation.
+  - Tutorial Integrity: Added `kclip_tutorialSeen` and `kclip_tutorial.dat` splash & tour gating; never interrupts restored save states.
+  - Overlay & Modal Hotkeys: Synchronized startup checkboxes across splash, tutorial, and help dialogs; Esc, Enter, and Space hotkeys wired cleanly.
+  - Toast Occlusion: Re-anchored notifications to non-occluding bottom-right dock above status bar with instant click-to-dismiss.
+  - TINAG & Lore Compliance: Purged pre-climax meta-narrative references ("Autonomous Fleet") from user-facing copy in C and HTML.
+  - Verification: MSVC compile clean (`KClip.exe` 16.0 KB); Vite build in 383ms (`kclip.html` 102.1 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-27T11:52:00Z — kilo-graphics: KSanctuary (Game Content, Visual Polish & Early-Raid Balance Pass)**
   - Status: PASS ✅ (0 rotating glints / traveling border dots; weather reactivity & early-raid balance; 0 regressions).
   - Glint & Dot Purge: Verified 100% clean static retro borders across web and C with zero moving glints or perimeter dots.
@@ -260,13 +269,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - UI Safety & Polish: Added confirmation on delete, fixed currency symbol sync, and rounded amounts to 2 decimal places.
   - Search & HiDPI: Expanded search filter to match amounts/dates and scaled category pie chart for retina displays.
   - Verification: MSVC compile clean (`KBudget.exe` 165.4 KB); Vite build in 390ms (`kbudget.html` 54.5 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-27T04:45:00Z — kilo-creator: kweb://asm-temple (Virtual Web Expansion & PE32 Dissector)**
-  - Status: PASS ✅ (118-opcode Oracle, interactive micro-CPU stepper, PE32 dissector & binary builder; 0 regressions).
-  - Opcode Expansion: Expanded instruction lexicon from 42 to 118 opcodes across 10 categories with Pentium cycle metrics and hardware encoding breakdown.
-  - Micro-CPU Stepper: Implemented 32-bit single-step emulator with EAX-EIP registers, flags, cycle counter, virtual stack, and execution history.
-  - PE32 Dissector: Built client-side parser inspecting DOS/NT headers, Shannon entropy heatmap per section, IAT imports, raw hex dump, and RVA converter.
-  - Binary Builder: Added PE32 generator compiling downloadable valid 1.5KB .exe binaries with direct inspection in dissector.
-  - Audio & Radix Polish: Added 4th chiptune track, live FM operator timbre tuner, and IEEE-754 single float / ASCII char[4] interpretation.
-  - Verification: Vite clean build in 484ms (`asm_temple.html` 176.7 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
 

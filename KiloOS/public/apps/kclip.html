@@ -718,11 +718,11 @@
       color: var(--text-muted);
     }
 
-    /* Notification Toast */
+    /* Notification Toast (Non-occluding bottom-right dock) */
     .toast {
       position: fixed;
-      top: 48px;
-      right: 20px;
+      bottom: 34px;
+      right: 16px;
       background: var(--surface);
       border: 1px solid var(--primary);
       border-left: 4px solid var(--primary);
@@ -734,7 +734,7 @@
       box-shadow: 0 4px 15px rgba(0,0,0,0.6);
       z-index: 2000;
       opacity: 0;
-      transform: translateY(-8px);
+      transform: translateY(8px);
       transition: all 0.2s ease;
       cursor: pointer;
       pointer-events: auto;
@@ -1033,7 +1033,7 @@
     </div>
     <div style="display: flex; align-items: center; gap: 10px;">
       <button class="status-help-pill" id="btnStatusHelp" title="Keyboard Shortcuts & User Guide">[F1 / H] Help &amp; Shortcuts</button>
-      <span>KClip v1.0.0 | Project Echo #99 | KiloApps Fleet</span>
+      <span>KClip v1.0.0 | Project Echo #99 | KiloOS Systems</span>
     </div>
   </footer>
 
@@ -1051,7 +1051,7 @@
           <div style="font-size: 32px; margin-bottom: 8px;">📋⚡💾</div>
           <h2 style="color: var(--primary); margin-bottom: 4px;">KClip 1999</h2>
           <p style="color: var(--text-muted); font-size: 13px;">
-            The High-Speed Clipboard History, Transformation & Snippet Engine.
+            The High-Speed Clipboard History, Transformation &amp; Snippet Engine.
           </p>
           <div style="display: inline-block; margin-top: 8px; padding: 4px 10px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-mono); font-size: 11px; color: var(--gold);">
             KiloOS Systems Utility Suite: Node #99
@@ -1063,9 +1063,15 @@
           entire workspace with sovereign F5 QuickSave and F9 QuickLoad.
         </p>
       </div>
-      <div class="modal-footer">
-        <button class="btn" id="btnSplashHelp">📖 Help & Shortcuts</button>
-        <button class="btn btn-primary" id="btnSplashStart">🚀 Launch Workstation</button>
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <label style="font-size: 11px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+          <input type="checkbox" id="checkSplashTutorialSeen" checked> Don't show again on launch
+        </label>
+        <div style="display: flex; gap: 6px;">
+          <button class="btn" id="btnSplashTour">🎓 Quick Tutorial</button>
+          <button class="btn" id="btnSplashHelp">📖 Help &amp; Shortcuts</button>
+          <button class="btn btn-primary" id="btnSplashStart">🚀 Enter Workstation</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1082,16 +1088,21 @@
       <div class="modal-body">
         <p><strong>Welcome to KClip!</strong> Here is how to master your clipboard workflow:</p>
         <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
-          <li><strong>📋 Capture & Paste:</strong> Press <em>Capture Clip</em> or paste directly into KClip with <code>Ctrl+V</code>. You can also type quick clips in the top bar.</li>
+          <li><strong>📋 Capture &amp; Paste:</strong> Press <em>Capture Clip</em> or paste directly into KClip with <code>Ctrl+V</code>. You can also type quick clips in the top bar.</li>
           <li><strong>⭐ Pin Protection:</strong> Click the pin button or press <code>P</code> on any clip. Pinned clips are permanently preserved when clearing unpinned history.</li>
           <li><strong>⚡ Real-time Transforms:</strong> Use the Transform bar to instantly convert between UPPERCASE, lowercase, JSON formatting, Base64, and URL encoding.</li>
           <li><strong>⚡ Quick Snippets:</strong> Access pre-made templates (ISO timestamps, GUIDs, C/HTML boilerplate) via the <em>Snippets</em> button.</li>
           <li><strong>💾 Sovereign Persistence:</strong> Press <code>F5</code> anytime to Quicksave or <code>F9</code> to Quickload. Your state is preserved in local sovereign storage.</li>
         </ul>
       </div>
-      <div class="modal-footer">
-        <button class="btn" id="btnTutorialSnippets">⚡ Snippets Library</button>
-        <button class="btn btn-primary" id="btnFinishTutorial">Got it, Let's Go!</button>
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <label style="font-size: 11px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+          <input type="checkbox" id="checkTutorialModalSeen" checked> Mark tutorial as seen
+        </label>
+        <div style="display: flex; gap: 6px;">
+          <button class="btn" id="btnTutorialSnippets">⚡ Snippets Library</button>
+          <button class="btn btn-primary" id="btnFinishTutorial">Got it, Let's Go!</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1191,7 +1202,13 @@
           C/JS source code snippets, and Project Echo classified transmissions.
         </p>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <button class="btn btn-sm" id="btnHelpTutorial">🎓 View Interactive Tutorial</button>
+          <label style="font-size: 11px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+            <input type="checkbox" id="checkTutorialSeen"> Don't show startup splash
+          </label>
+        </div>
         <button class="btn btn-primary" id="btnDismissHelp">Close</button>
       </div>
     </div>
@@ -1989,6 +2006,9 @@
             timestamp: Date.now(),
             clips: state.clips,
             selectedClipId: state.selectedClipId,
+            activeFilter: state.activeFilter,
+            searchQuery: state.searchQuery,
+            viewMode: state.viewMode,
             settings: {
               theme: state.theme,
               scanlines: state.scanlines,
@@ -2003,7 +2023,8 @@
             showToast('Workstation QuickSaved! [F5] 💾');
           }
         } catch (e) {
-          showToast('Storage quota exceeded');
+          const msg = (e && e.name === 'QuotaExceededError') ? 'Storage quota exceeded' : 'Save failed';
+          showToast(msg);
         }
       }
 
@@ -2011,13 +2032,27 @@
         try {
           const raw = localStorage.getItem(STORAGE_KEY);
           if (!raw) {
-            if (isQuick) showToast('No saved state found to load.');
+            if (isQuick) showToast('No saved state found. Press F5 to save first.');
             return false;
           }
           const data = JSON.parse(raw);
           if (data && Array.isArray(data.clips)) {
             state.clips = data.clips;
             state.selectedClipId = data.selectedClipId;
+            if (data.activeFilter) {
+              state.activeFilter = data.activeFilter;
+              document.querySelectorAll('.filter-pills .pill').forEach(function(p) {
+                p.classList.toggle('active', p.dataset.cat === state.activeFilter);
+              });
+            }
+            if (data.searchQuery !== undefined) {
+              state.searchQuery = data.searchQuery;
+              const sInput = document.getElementById('inputSearch');
+              if (sInput) sInput.value = state.searchQuery;
+            }
+            if (data.viewMode) {
+              applyViewMode(data.viewMode);
+            }
             if (data.settings) {
               applyTheme(data.settings.theme || 'cyber');
               setScanlines(!!data.settings.scanlines);
@@ -2129,6 +2164,28 @@
         }
       }
 
+      function applyViewMode(mode) {
+        state.viewMode = (mode === 'hex') ? 'hex' : 'text';
+        const tabText = document.getElementById('tabViewText');
+        const tabHex = document.getElementById('tabViewHex');
+        const editor = document.getElementById('clipEditor');
+        const hexViewer = document.getElementById('hexViewerContainer');
+        if (tabText && tabHex && editor && hexViewer) {
+          if (state.viewMode === 'hex') {
+            tabHex.classList.add('active');
+            tabText.classList.remove('active');
+            editor.style.display = 'none';
+            hexViewer.style.display = 'block';
+            hexViewer.textContent = generateHexDump(editor.value);
+          } else {
+            tabText.classList.add('active');
+            tabHex.classList.remove('active');
+            editor.style.display = 'block';
+            hexViewer.style.display = 'none';
+          }
+        }
+      }
+
       // --- 12. MODAL CONTROLS ---
       function openModal(id) {
         const m = document.getElementById(id);
@@ -2158,9 +2215,6 @@
       function closeModal(id) {
         const m = document.getElementById(id);
         if (m) {
-          if (id === 'modalTutorial') {
-            localStorage.setItem('kclip_tutorialSeen', 'true');
-          }
           m.style.display = 'none';
           m.classList.remove('active');
           m.removeAttribute('aria-modal');
@@ -2170,21 +2224,68 @@
 
       function closeAllModals() {
         document.querySelectorAll('.modal-backdrop').forEach(function(m) {
-          if (m.id === 'modalTutorial') {
-            localStorage.setItem('kclip_tutorialSeen', 'true');
-          }
           m.style.display = 'none';
           m.classList.remove('active');
           m.removeAttribute('aria-modal');
         });
       }
 
-      // --- 13. ONBOARDING & FIRST-RUN SPLASH ---
-      function checkFirstRun() {
-        const tutorialSeen = localStorage.getItem('kclip_tutorialSeen');
-        if (!tutorialSeen) {
+      function dismissSplash(goTo = null) {
+        const cb = document.getElementById('checkSplashTutorialSeen');
+        const remember = cb ? cb.checked : true;
+        if (remember) {
+          localStorage.setItem('kclip_tutorialSeen', 'true');
+          const helpCb = document.getElementById('checkTutorialSeen');
+          if (helpCb) helpCb.checked = true;
+          const tutCb = document.getElementById('checkTutorialModalSeen');
+          if (tutCb) tutCb.checked = true;
+        }
+        closeModal('modalSplash');
+        if (goTo === 'help') {
+          openModal('modalHelp');
+        } else if (goTo === 'tutorial') {
           openModal('modalTutorial');
         } else {
+          playSoundEffect('click');
+        }
+      }
+
+      function dismissTutorial(openTemplates = false) {
+        const cb = document.getElementById('checkTutorialModalSeen');
+        const remember = cb ? cb.checked : true;
+        if (remember) {
+          localStorage.setItem('kclip_tutorialSeen', 'true');
+          const helpCb = document.getElementById('checkTutorialSeen');
+          if (helpCb) helpCb.checked = true;
+          const splashCb = document.getElementById('checkSplashTutorialSeen');
+          if (splashCb) splashCb.checked = true;
+        }
+        closeModal('modalTutorial');
+        if (openTemplates) {
+          openModal('modalTemplates');
+        } else {
+          playSoundEffect('click');
+        }
+      }
+
+      // --- 13. ONBOARDING & FIRST-RUN SPLASH ---
+      function checkFirstRun() {
+        let tutorialSeen = false;
+        let hasSavedState = false;
+        try {
+          tutorialSeen = localStorage.getItem('kclip_tutorialSeen') === 'true';
+          hasSavedState = !!localStorage.getItem(STORAGE_KEY);
+        } catch (e) {}
+
+        const cbSplash = document.getElementById('checkSplashTutorialSeen');
+        const cbTutorial = document.getElementById('checkTutorialModalSeen');
+        const cbHelp = document.getElementById('checkTutorialSeen');
+        if (cbSplash) cbSplash.checked = tutorialSeen;
+        if (cbTutorial) cbTutorial.checked = tutorialSeen;
+        if (cbHelp) cbHelp.checked = tutorialSeen;
+
+        // Ensure tutorial/splash prompts fire only on fresh sessions, never interrupting restored save states
+        if (!tutorialSeen && !hasSavedState) {
           openModal('modalSplash');
         }
       }
@@ -2418,28 +2519,81 @@
         // Modal Close Buttons
         document.getElementById('btnCloseTemplates')?.addEventListener('click', function() { closeModal('modalTemplates'); });
         document.getElementById('btnDismissTemplates')?.addEventListener('click', function() { closeModal('modalTemplates'); });
-        document.getElementById('btnCloseTutorial')?.addEventListener('click', function() {
-          localStorage.setItem('kclip_tutorialSeen', 'true');
-          closeModal('modalTutorial');
-        });
-        document.getElementById('btnFinishTutorial')?.addEventListener('click', function() {
-          localStorage.setItem('kclip_tutorialSeen', 'true');
-          closeModal('modalTutorial');
-        });
-        document.getElementById('btnTutorialSnippets')?.addEventListener('click', function() {
-          localStorage.setItem('kclip_tutorialSeen', 'true');
-          closeModal('modalTutorial');
-          openModal('modalTemplates');
-        });
-        document.getElementById('btnCloseSplash')?.addEventListener('click', function() { closeModal('modalSplash'); });
-        document.getElementById('btnSplashStart')?.addEventListener('click', function() { closeModal('modalSplash'); });
-        document.getElementById('btnSplashHelp')?.addEventListener('click', function() {
-          closeModal('modalSplash');
-          openModal('modalHelp');
-        });
+        document.getElementById('btnCloseTutorial')?.addEventListener('click', function() { dismissTutorial(false); });
+        document.getElementById('btnFinishTutorial')?.addEventListener('click', function() { dismissTutorial(false); });
+        document.getElementById('btnTutorialSnippets')?.addEventListener('click', function() { dismissTutorial(true); });
+        document.getElementById('btnCloseSplash')?.addEventListener('click', function() { dismissSplash(); });
+        document.getElementById('btnSplashStart')?.addEventListener('click', function() { dismissSplash(); });
+        document.getElementById('btnSplashTour')?.addEventListener('click', function() { dismissSplash('tutorial'); });
+        document.getElementById('btnSplashHelp')?.addEventListener('click', function() { dismissSplash('help'); });
         document.getElementById('btnHelp')?.addEventListener('click', function() { openModal('modalHelp'); });
         document.getElementById('btnCloseHelp')?.addEventListener('click', function() { closeModal('modalHelp'); });
         document.getElementById('btnDismissHelp')?.addEventListener('click', function() { closeModal('modalHelp'); });
+        document.getElementById('btnHelpTutorial')?.addEventListener('click', function() {
+          closeModal('modalHelp');
+          openModal('modalTutorial');
+        });
+
+        // Tutorial Checkboxes Sync
+        const checkTut = document.getElementById('checkTutorialSeen');
+        if (checkTut) {
+          checkTut.addEventListener('change', function(e) {
+            if (e.target.checked) {
+              localStorage.setItem('kclip_tutorialSeen', 'true');
+            } else {
+              localStorage.removeItem('kclip_tutorialSeen');
+            }
+            const splashCb = document.getElementById('checkSplashTutorialSeen');
+            if (splashCb) splashCb.checked = e.target.checked;
+            const tutModalCb = document.getElementById('checkTutorialModalSeen');
+            if (tutModalCb) tutModalCb.checked = e.target.checked;
+          });
+        }
+        const splashCb = document.getElementById('checkSplashTutorialSeen');
+        if (splashCb) {
+          splashCb.addEventListener('change', function(e) {
+            if (e.target.checked) {
+              localStorage.setItem('kclip_tutorialSeen', 'true');
+            } else {
+              localStorage.removeItem('kclip_tutorialSeen');
+            }
+            const helpCb = document.getElementById('checkTutorialSeen');
+            if (helpCb) helpCb.checked = e.target.checked;
+            const tutModalCb = document.getElementById('checkTutorialModalSeen');
+            if (tutModalCb) tutModalCb.checked = e.target.checked;
+          });
+        }
+        const tutModalCb = document.getElementById('checkTutorialModalSeen');
+        if (tutModalCb) {
+          tutModalCb.addEventListener('change', function(e) {
+            if (e.target.checked) {
+              localStorage.setItem('kclip_tutorialSeen', 'true');
+            } else {
+              localStorage.removeItem('kclip_tutorialSeen');
+            }
+            const helpCb = document.getElementById('checkTutorialSeen');
+            if (helpCb) helpCb.checked = e.target.checked;
+            const splashCb = document.getElementById('checkSplashTutorialSeen');
+            if (splashCb) splashCb.checked = e.target.checked;
+          });
+        }
+
+        // Modal Backdrop Dismissal
+        document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
+          backdrop.addEventListener('click', function(e) {
+            if (e.target === backdrop) {
+              if (backdrop.id === 'modalSplash') {
+                dismissSplash();
+              } else if (backdrop.id === 'modalTutorial') {
+                dismissTutorial(false);
+              } else {
+                closeModal(backdrop.id);
+              }
+            }
+          });
+        });
+
+        // Settings Modal Open & Close
         document.getElementById('btnSettings')?.addEventListener('click', function() {
           const themeSel = document.getElementById('selectTheme');
           const scanChk = document.getElementById('checkScanlines');
@@ -2453,18 +2607,6 @@
         });
         document.getElementById('btnCloseSettings')?.addEventListener('click', function() { closeModal('modalSettings'); });
         document.getElementById('btnCancelSettings')?.addEventListener('click', function() { closeModal('modalSettings'); });
-
-        // Modal Backdrop Dismissal
-        document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
-          backdrop.addEventListener('click', function(e) {
-            if (e.target === backdrop) {
-              if (backdrop.id === 'modalTutorial') {
-                localStorage.setItem('kclip_tutorialSeen', 'true');
-              }
-              closeModal(backdrop.id);
-            }
-          });
-        });
 
         // Settings Modal Save
         document.getElementById('btnSaveSettings')?.addEventListener('click', function() {
@@ -2539,7 +2681,15 @@
           // Modal Dismissal with Escape
           if (e.key === 'Escape') {
             if (isAnyModalOpen()) {
-              closeAllModals();
+              const modalSplash = document.getElementById('modalSplash');
+              const modalTutorial = document.getElementById('modalTutorial');
+              if (modalSplash && (modalSplash.style.display === 'flex' || modalSplash.classList.contains('active'))) {
+                dismissSplash();
+              } else if (modalTutorial && (modalTutorial.style.display === 'flex' || modalTutorial.classList.contains('active'))) {
+                dismissTutorial(false);
+              } else {
+                closeAllModals();
+              }
               return;
             }
             // If no modal open, clear search input
@@ -2564,27 +2714,27 @@
               const modalHelp = document.getElementById('modalHelp');
               const modalSettings = document.getElementById('modalSettings');
 
-              if (modalSplash && modalSplash.style.display === 'flex') {
+              if (modalSplash && (modalSplash.style.display === 'flex' || modalSplash.classList.contains('active'))) {
                 e.preventDefault();
-                closeModal('modalSplash');
+                dismissSplash();
                 return;
               }
-              if (modalTutorial && modalTutorial.style.display === 'flex') {
+              if (modalTutorial && (modalTutorial.style.display === 'flex' || modalTutorial.classList.contains('active'))) {
                 e.preventDefault();
-                closeModal('modalTutorial');
+                dismissTutorial(false);
                 return;
               }
-              if (modalTemplates && modalTemplates.style.display === 'flex') {
+              if (modalTemplates && (modalTemplates.style.display === 'flex' || modalTemplates.classList.contains('active'))) {
                 e.preventDefault();
                 closeModal('modalTemplates');
                 return;
               }
-              if (modalHelp && modalHelp.style.display === 'flex') {
+              if (modalHelp && (modalHelp.style.display === 'flex' || modalHelp.classList.contains('active'))) {
                 e.preventDefault();
                 closeModal('modalHelp');
                 return;
               }
-              if (modalSettings && modalSettings.style.display === 'flex' && e.key === 'Enter') {
+              if (modalSettings && (modalSettings.style.display === 'flex' || modalSettings.classList.contains('active')) && e.key === 'Enter') {
                 e.preventDefault();
                 document.getElementById('btnSaveSettings')?.click();
                 return;

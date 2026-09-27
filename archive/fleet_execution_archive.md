@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-27T04:45:00Z — kilo-creator: kweb://asm-temple (Virtual Web Expansion & PE32 Dissector)**
+  - Status: PASS ✅ (118-opcode Oracle, interactive micro-CPU stepper, PE32 dissector & binary builder; 0 regressions).
+  - Opcode Expansion: Expanded instruction lexicon from 42 to 118 opcodes across 10 categories with Pentium cycle metrics and hardware encoding breakdown.
+  - Micro-CPU Stepper: Implemented 32-bit single-step emulator with EAX-EIP registers, flags, cycle counter, virtual stack, and execution history.
+  - PE32 Dissector: Built client-side parser inspecting DOS/NT headers, Shannon entropy heatmap per section, IAT imports, raw hex dump, and RVA converter.
+  - Binary Builder: Added PE32 generator compiling downloadable valid 1.5KB .exe binaries with direct inspection in dissector.
+  - Audio & Radix Polish: Added 4th chiptune track, live FM operator timbre tuner, and IEEE-754 single float / ASCII char[4] interpretation.
+  - Verification: Vite clean build in 484ms (`asm_temple.html` 176.7 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-27T03:52:00Z — kilo-expander: KPass (Feature Expansion & Security Audit)**
   - Status: PASS ✅ (Diceware/PIN/Hex generator, Vault Security Audit dashboard, Markdown/.kpass export, username schema parity; 0 regressions).
   - Generator Expansion: Added 4 generator modes (Random Chars, 260-word Diceware Passphrase, PIN, Hex Key) and 8-slot session history tray with 1-click fill/copy.

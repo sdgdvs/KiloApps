@@ -487,7 +487,7 @@ static void ShowHelpDialog(void) {
         "  * F5: QuickSave current state (kclip.dat)\n"
         "  * F9: QuickLoad saved state\n"
         "  * Arrow Keys: Navigate clip history\n\n"
-        "(C) 1999 KiloApps Autonomous Fleet - App #99 Milestone",
+        "(C) 1999 KiloOS Systems Suite - App #99 Milestone",
         "KClip Help & Reference",
         MB_OK | MB_ICONINFORMATION
     );
@@ -526,21 +526,62 @@ static void LoadState(void) {
         NULL
     );
     if (hFile != INVALID_HANDLE_VALUE) {
-        DWORD bytesRead;
+        DWORD bytesRead = 0;
         DWORD magic = 0;
         ReadFile(hFile, &magic, sizeof(magic), &bytesRead, NULL);
         if (magic == 0x4B434C50) {
-            ReadFile(hFile, &g_clipCount, sizeof(g_clipCount), &bytesRead, NULL);
-            ReadFile(hFile, &g_selectedClip, sizeof(g_selectedClip), &bytesRead, NULL);
-            ReadFile(hFile, g_clips, sizeof(ClipItem) * g_clipCount, &bytesRead, NULL);
-            CloseHandle(hFile);
-            UpdateUI();
-            MessageBoxA(g_hwnd, "State quickloaded successfully [F9]!", "KClip QuickLoad", MB_OK | MB_ICONINFORMATION);
-            return;
+            int clipCount = 0;
+            int selectedClip = 0;
+            ReadFile(hFile, &clipCount, sizeof(clipCount), &bytesRead, NULL);
+            ReadFile(hFile, &selectedClip, sizeof(selectedClip), &bytesRead, NULL);
+            if (clipCount >= 0 && clipCount <= MAX_CLIPS) {
+                g_clipCount = clipCount;
+                ReadFile(hFile, g_clips, sizeof(ClipItem) * g_clipCount, &bytesRead, NULL);
+                if (selectedClip >= 0 && selectedClip < g_clipCount) {
+                    g_selectedClip = selectedClip;
+                } else {
+                    g_selectedClip = (g_clipCount > 0) ? 0 : -1;
+                }
+                CloseHandle(hFile);
+                UpdateUI();
+                MessageBoxA(g_hwnd, "State quickloaded successfully from kclip.dat [F9]!", "KClip QuickLoad", MB_OK | MB_ICONINFORMATION);
+                return;
+            }
         }
         CloseHandle(hFile);
     }
-    MessageBoxA(g_hwnd, "No valid kclip.dat save file found.", "KClip QuickLoad", MB_OK | MB_ICONWARNING);
+    MessageBoxA(g_hwnd, "No valid kclip.dat save file found. Press F5 to save first.", "KClip QuickLoad", MB_OK | MB_ICONWARNING);
+}
+
+static void CheckFirstRunTutorial(HWND hwnd) {
+    DWORD attribState = GetFileAttributesA("kclip.dat");
+    if (attribState != INVALID_FILE_ATTRIBUTES) return;
+
+    DWORD attribTut = GetFileAttributesA("kclip_tutorial.dat");
+    if (attribTut != INVALID_FILE_ATTRIBUTES) return;
+
+    MessageBoxA(hwnd,
+        "Welcome to KClip - Retro Clipboard & Snippet Workstation v1.0.0!\n\n"
+        "Features:\n"
+        "- Left Pane: Multi-item Clipboard Stack & Filtered Clips\n"
+        "- Right Pane: Live Text Inspector, Hex Viewer & Transforms\n"
+        "- Pin Protection: Retain essential clips indefinitely\n\n"
+        "Keyboard Shortcuts:\n"
+        "- F1: Show Help & Keybindings Guide\n"
+        "- F5: QuickSave State (kclip.dat)\n"
+        "- F9: QuickLoad State (kclip.dat)\n"
+        "- Esc: Exit Application\n\n"
+        "Press OK to enter the workstation.",
+        "KClip - Quick-Start Onboarding",
+        MB_OK | MB_ICONINFORMATION);
+
+    HANDLE hTut = CreateFileA("kclip_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hTut != INVALID_HANDLE_VALUE) {
+        char val = 1;
+        DWORD written = 0;
+        WriteFile(hTut, &val, 1, &written, NULL);
+        CloseHandle(hTut);
+    }
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -704,8 +745,25 @@ void MainEntry(void) {
     ShowWindow(g_hwnd, SW_SHOW);
     UpdateWindow(g_hwnd);
 
+    CheckFirstRunTutorial(g_hwnd);
+
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN) {
+            if (msg.wParam == VK_F1) {
+                ShowHelpDialog();
+                continue;
+            } else if (msg.wParam == VK_F5) {
+                SaveState();
+                continue;
+            } else if (msg.wParam == VK_F9) {
+                LoadState();
+                continue;
+            } else if (msg.wParam == VK_ESCAPE) {
+                PostMessage(g_hwnd, WM_CLOSE, 0, 0);
+                continue;
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }
