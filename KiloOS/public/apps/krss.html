@@ -839,7 +839,7 @@
     /* Toast Notification */
     .toast {
       position: fixed;
-      bottom: 30px;
+      top: 48px;
       right: 20px;
       background: var(--card-bg);
       border: 1px solid var(--border-focus);
@@ -849,9 +849,10 @@
       font-size: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.5);
       z-index: 2000;
-      pointer-events: none;
+      pointer-events: auto;
+      cursor: pointer;
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(-8px);
       transition: opacity 0.2s, transform 0.2s;
     }
 
@@ -1015,7 +1016,7 @@
           <div class="reader-empty-icon">📰</div>
           <div style="font-size: 15px; font-weight: 700; color: var(--text);">No Article Selected</div>
           <div style="font-size: 12px; max-width: 320px;">
-            Choose a feed from the left pane and select a headline to read dispatches, ARG transcripts, and retro news.
+            Choose a feed from the left pane and select a headline to read dispatches, telemetry intercepts, and retro news.
           </div>
         </div>
 
@@ -1055,7 +1056,7 @@
       <div class="splash-title">KRSS v1.0.0</div>
       <div class="splash-desc">
         Sovereign Web 1.0 RSS, Atom & OPML Syndication Terminal.<br>
-        Aggregating retro dispatches, classified ARG transmissions, and live feeds within KiloOS.
+        Aggregating retro dispatches, classified system telemetry, and live feeds within KiloOS.
       </div>
 
       <div class="splash-features">
@@ -1068,7 +1069,7 @@
           <div>Full round-trip import and export of OPML 2.0 subscription trees and JSON feeds.</div>
         </div>
         <div class="splash-feature-item">
-          <div class="splash-feature-title">🌌 Project Echo ARG Lore</div>
+          <div class="splash-feature-title">🌌 Project Echo Intercepts</div>
           <div>Preloaded classified intercepts connecting to KMatrix, KHex, KSynth, and KNet.</div>
         </div>
         <div class="splash-feature-item">
@@ -1077,13 +1078,17 @@
         </div>
       </div>
 
-      <div style="display:flex; justify-content:center; gap:10px;">
+      <div style="display:flex; justify-content:center; gap:10px; margin-bottom:12px;">
         <button class="btn btn-primary" id="btnSplashEnter" style="padding:8px 20px; font-size:13px;">
           🚀 Open Reader (Enter)
         </button>
         <button class="btn" id="btnSplashTour">
           ⚡ Quick Tour & Reference
         </button>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:center; gap:6px; font-size:11px; color:var(--text-muted);">
+        <input type="checkbox" id="checkSplashTutorialSeen" checked>
+        <label for="checkSplashTutorialSeen" style="cursor:pointer;">Don't show this welcome splash on future sessions</label>
       </div>
     </div>
   </div>
@@ -1109,7 +1114,7 @@
           <select id="selectFeedCategory" class="form-control">
             <option value="Tech & Computing">Tech & Computing</option>
             <option value="Fleet Dispatches">Fleet Dispatches</option>
-            <option value="ARG Lore">ARG Lore</option>
+            <option value="Signal Intercepts">Signal Intercepts</option>
             <option value="Gaming & Demos">Gaming & Demos</option>
             <option value="Culture & News">Culture & News</option>
             <option value="Personal Feeds">Personal Feeds</option>
@@ -1272,6 +1277,10 @@
         playTone(380, 'sine', 0.08, 0.04);
         setTimeout(() => playTone(540, 'triangle', 0.1, 0.04), 60);
         setTimeout(() => playTone(720, 'sine', 0.12, 0.04), 120);
+      } else if (name === 'load') {
+        playTone(720, 'sine', 0.08, 0.04);
+        setTimeout(() => playTone(540, 'triangle', 0.1, 0.04), 60);
+        setTimeout(() => playTone(380, 'sine', 0.12, 0.04), 120);
       } else if (name === 'toast') {
         playTone(850, 'sine', 0.07, 0.03);
       }
@@ -1289,7 +1298,7 @@
     let searchQuery = '';
     let zoomLevel = 14; // pixels
 
-    // --- Default Preloaded Retro Feeds & ARG Transmissions ---
+    // --- Default Preloaded Retro Feeds & Telemetry Transmissions ---
     const DEFAULT_FEEDS = [
       {
         id: 1,
@@ -1454,14 +1463,14 @@
       {
         id: 401,
         feedId: 4,
-        title: "The MP3 Revolution: College Networks Swamped by Napster and Digital Audio",
+        title: "The MP3 Revolution: College Networks Swamped by Trapster and Digital Audio",
         author: "Staff Reporter",
         date: "1999-10-18 16:40",
         url: "kweb://cabled/article-mp3",
-        snippet: "Campus dorm bandwidth is ground to a halt as Shawn Fanning's Napster peer-to-peer software spreads across universities...",
+        snippet: "Campus dorm bandwidth is ground to a halt as Shawn Fanning's Trapster peer-to-peer software spreads across universities...",
         content: `<h3>Digital Audio Tidal Wave Shakes Record Labels</h3>
-<p><b>CAMBRIDGE, Mass. &mdash;</b> Across university campuses from MIT to Stanford, university network administrators are installing packet shapers and bandwidth quotas. The reason? A 19-year-old developer's software known as Napster.</p>
-<p>By enabling direct peer-to-peer indexing of MP3 audio files, Napster has turned every college dorm room into a localized broadcast station. Combined with portable hardware like the Diamond Rio PMP300, consumer listening habits are permanently shifting away from physical CD jewel cases.</p>`,
+<p><b>CAMBRIDGE, Mass. &mdash;</b> Across university campuses from MIT to Stanford, university network administrators are installing packet shapers and bandwidth quotas. The reason? A 19-year-old developer's software known as Trapster.</p>
+<p>By enabling direct peer-to-peer indexing of MP3 audio files, Trapster has turned every college dorm room into a localized broadcast station. Combined with portable hardware like the Diamond Rio PMP300, consumer listening habits are permanently shifting away from physical CD jewel cases.</p>`,
         isRead: false,
         isStarred: false
       },
@@ -1532,6 +1541,17 @@
           }
           if (parsed.activeFeedId !== undefined) activeFeedId = parsed.activeFeedId;
           if (parsed.activeFilter !== undefined) activeFilter = parsed.activeFilter;
+          if (parsed.selectedArticleId !== undefined) selectedArticleId = parsed.selectedArticleId;
+          if (parsed.searchQuery !== undefined) {
+            searchQuery = parsed.searchQuery;
+            const searchInput = document.getElementById('inputSearch');
+            if (searchInput) searchInput.value = searchQuery;
+          }
+          if (parsed.soundEnabled !== undefined) {
+            soundEnabled = !!parsed.soundEnabled;
+            const soundBtn = document.getElementById('btnToggleSound');
+            if (soundBtn) soundBtn.textContent = soundEnabled ? '🔊 SFX' : '🔇 Muted';
+          }
           if (parsed.theme) applyTheme(parsed.theme);
           if (parsed.zoomLevel) {
             zoomLevel = Math.max(10, Math.min(26, parsed.zoomLevel));
@@ -1587,6 +1607,9 @@
           articles: articles,
           activeFeedId: activeFeedId,
           activeFilter: activeFilter,
+          selectedArticleId: selectedArticleId,
+          searchQuery: searchQuery,
+          soundEnabled: soundEnabled,
           theme: document.body.getAttribute('data-theme') || 'dark',
           zoomLevel: zoomLevel,
           sidebarCollapsed: pane ? pane.classList.contains('collapsed') : false
@@ -1597,7 +1620,8 @@
           showToast("Workstation State Quicksaved [F5] ✅");
         }
       } catch (e) {
-        showToast("Error saving state: " + e.message, "danger");
+        const msg = (e.name === 'QuotaExceededError') ? "Storage quota exceeded." : e.message;
+        showToast("Error saving state: " + msg, "danger");
       }
     }
 
@@ -1606,9 +1630,13 @@
       el.textContent = msg;
       el.className = 'toast show';
       if (type === 'danger') el.style.borderColor = 'var(--danger)';
+      else if (type === 'warning') el.style.borderColor = 'var(--warning)';
       else el.style.borderColor = 'var(--border-focus)';
       playSoundEffect('toast');
       clearTimeout(el._timer);
+      el.onclick = () => {
+        el.className = 'toast';
+      };
       el._timer = setTimeout(() => {
         el.className = 'toast';
       }, 3000);
@@ -2221,6 +2249,34 @@
       document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
     }
 
+    function handleQuickload() {
+      const success = loadWorkstationState();
+      renderFeedsList();
+      renderArticlesList();
+      if (success) {
+        playSoundEffect('load');
+        showToast("Workstation State Restored [F9] 📂");
+      } else {
+        showToast("No saved state found. Press F5 to save first.", "warning");
+      }
+    }
+
+    function dismissSplash(goToHelp = false) {
+      const splashCb = document.getElementById('checkSplashTutorialSeen');
+      const shouldRemember = splashCb ? splashCb.checked : true;
+      if (shouldRemember) {
+        localStorage.setItem(TUTORIAL_KEY, 'true');
+        const helpCb = document.getElementById('checkTutorialSeen');
+        if (helpCb) helpCb.checked = true;
+      }
+      closeModal('modalSplash');
+      if (goToHelp) {
+        openModal('modalHelp');
+      } else {
+        playSoundEffect('select');
+      }
+    }
+
     // --- Event Listeners Wiring ---
     function setupEventListeners() {
       // Header Buttons
@@ -2233,12 +2289,7 @@
         openModal('modalOpml');
       };
       document.getElementById('btnSaveState').onclick = () => saveWorkstationState(false);
-      document.getElementById('btnLoadState').onclick = () => {
-        loadWorkstationState();
-        renderFeedsList();
-        renderArticlesList();
-        showToast("Workstation State Restored [F9] 📂");
-      };
+      document.getElementById('btnLoadState').onclick = handleQuickload;
 
       document.getElementById('selectTheme').onchange = (e) => {
         applyTheme(e.target.value);
@@ -2478,7 +2529,7 @@
         a.href = url;
         a.download = 'krss-subscriptions.opml';
         a.click();
-        URL.revokeObjectURL(url);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
         showToast("Downloaded krss-subscriptions.opml.");
       };
 
@@ -2495,7 +2546,7 @@
         a.href = url;
         a.download = 'krss-state.json';
         a.click();
-        URL.revokeObjectURL(url);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
         showToast("Exported krss-state.json.");
       };
 
@@ -2504,23 +2555,31 @@
       document.getElementById('btnHelpClose').onclick = () => closeModal('modalHelp');
       document.getElementById('checkTutorialSeen').onchange = (e) => {
         localStorage.setItem(TUTORIAL_KEY, e.target.checked ? 'true' : 'false');
+        const splashCb = document.getElementById('checkSplashTutorialSeen');
+        if (splashCb) splashCb.checked = e.target.checked;
       };
+      const splashCb = document.getElementById('checkSplashTutorialSeen');
+      if (splashCb) {
+        splashCb.onchange = (e) => {
+          localStorage.setItem(TUTORIAL_KEY, e.target.checked ? 'true' : 'false');
+          const helpCb = document.getElementById('checkTutorialSeen');
+          if (helpCb) helpCb.checked = e.target.checked;
+        };
+      }
 
       // Splash Modal
-      document.getElementById('btnSplashEnter').onclick = () => {
-        closeModal('modalSplash');
-        playSoundEffect('select');
-      };
-      document.getElementById('btnSplashTour').onclick = () => {
-        closeModal('modalSplash');
-        openModal('modalHelp');
-      };
+      document.getElementById('btnSplashEnter').onclick = () => dismissSplash(false);
+      document.getElementById('btnSplashTour').onclick = () => dismissSplash(true);
 
       // Backdrop dismissal on all modals
       document.querySelectorAll('.modal-overlay').forEach(modal => {
         modal.addEventListener('click', (e) => {
           if (e.target === modal) {
-            closeModal(modal.id);
+            if (modal.id === 'modalSplash') {
+              dismissSplash(false);
+            } else {
+              closeModal(modal.id);
+            }
           }
         });
       });
@@ -2541,6 +2600,10 @@
         }
 
         if (e.key === 'Escape') {
+          const splash = document.getElementById('modalSplash');
+          if (splash && splash.classList.contains('active')) {
+            dismissSplash(false);
+          }
           closeAllModals();
         } else if (e.key === 'F1' || e.key === '?' || e.key === 'h' || e.key === 'H') {
           e.preventDefault();
@@ -2567,10 +2630,7 @@
           saveWorkstationState(false);
         } else if (e.key === 'F9') {
           e.preventDefault();
-          loadWorkstationState();
-          renderFeedsList();
-          renderArticlesList();
-          showToast("Workstation State Restored [F9] 📂");
+          handleQuickload();
         } else if (e.key >= '1' && e.key <= '9') {
           const idx = parseInt(e.key, 10) - 1;
           const filtered = getFilteredArticles();
@@ -2615,8 +2675,7 @@
           const splash = document.getElementById('modalSplash');
           if (splash && splash.classList.contains('active')) {
             e.preventDefault();
-            closeModal('modalSplash');
-            playSoundEffect('select');
+            dismissSplash(false);
           }
         }
       });
@@ -2625,10 +2684,13 @@
     // --- Onboarding & Splash Logic ---
     function checkFirstRunSplash() {
       const seen = localStorage.getItem(TUTORIAL_KEY) === 'true';
+      const hasSavedState = !!localStorage.getItem(STORAGE_KEY);
       const checkbox = document.getElementById('checkTutorialSeen');
+      const splashCheckbox = document.getElementById('checkSplashTutorialSeen');
       if (checkbox) checkbox.checked = seen;
+      if (splashCheckbox) splashCheckbox.checked = seen;
 
-      if (!seen) {
+      if (!seen && !hasSavedState) {
         openModal('modalSplash');
       }
     }

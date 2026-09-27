@@ -215,7 +215,7 @@ static void InitDefaultFeedsAndArticles(void) {
     k_strcpy(a->date, "1999-10-18 16:40");
     k_strcpy(a->author, "Staff Reporter");
     k_strcpy(a->url, "kweb://cabled/article-mp3");
-    k_strcpy(a->content, "College dorms are saturated with peer-to-peer traffic as Napster gains tens of thousands of new users daily. Portable players like the Rio PMP300 are selling out faster than manufacturers can ship flash chips.");
+    k_strcpy(a->content, "College dorms are saturated with peer-to-peer traffic as Trapster gains tens of thousands of new users daily. Portable players like the Rio PMP300 are selling out faster than manufacturers can ship flash chips.");
     a->isRead = 1; a->isStarred = 0;
 
     // Feed 4 Articles (Gaming 1999)
@@ -324,6 +324,8 @@ static void SaveState(void) {
         WriteFile(hFile, g_feeds, sizeof(RSSFeed) * g_feedCount, &written, NULL);
         WriteFile(hFile, &g_articleCount, sizeof(int), &written, NULL);
         WriteFile(hFile, g_articles, sizeof(RSSArticle) * g_articleCount, &written, NULL);
+        WriteFile(hFile, &g_selectedFeed, sizeof(int), &written, NULL);
+        WriteFile(hFile, &g_selectedArticle, sizeof(int), &written, NULL);
         CloseHandle(hFile);
         MessageBoxA(g_hwnd, "KRSS state saved to krss.dat (F5).", "Quicksave Success", MB_OK | MB_ICONINFORMATION);
     }
@@ -333,17 +335,64 @@ static void LoadState(void) {
     HANDLE hFile = CreateFileA("krss.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD read = 0;
-        ReadFile(hFile, &g_feedCount, sizeof(int), &read, NULL);
-        ReadFile(hFile, g_feeds, sizeof(RSSFeed) * g_feedCount, &read, NULL);
-        ReadFile(hFile, &g_articleCount, sizeof(int), &read, NULL);
-        ReadFile(hFile, g_articles, sizeof(RSSArticle) * g_articleCount, &read, NULL);
+        int feedCount = 0;
+        int articleCount = 0;
+        ReadFile(hFile, &feedCount, sizeof(int), &read, NULL);
+        if (feedCount > 0 && feedCount <= MAX_FEEDS) {
+            g_feedCount = feedCount;
+            ReadFile(hFile, g_feeds, sizeof(RSSFeed) * g_feedCount, &read, NULL);
+        }
+        ReadFile(hFile, &articleCount, sizeof(int), &read, NULL);
+        if (articleCount >= 0 && articleCount <= MAX_ARTICLES) {
+            g_articleCount = articleCount;
+            ReadFile(hFile, g_articles, sizeof(RSSArticle) * g_articleCount, &read, NULL);
+        }
+        int selFeed = 0, selArt = -1;
+        if (ReadFile(hFile, &selFeed, sizeof(int), &read, NULL) && read == sizeof(int)) {
+            if (selFeed >= 0 && selFeed < g_feedCount) g_selectedFeed = selFeed;
+        }
+        if (ReadFile(hFile, &selArt, sizeof(int), &read, NULL) && read == sizeof(int)) {
+            if (selArt >= -1 && selArt < g_articleCount) g_selectedArticle = selArt;
+        }
         CloseHandle(hFile);
         UpdateFeedsUI();
         UpdateArticlesUI();
-        DisplaySelectedArticle();
+        if (g_selectedArticle >= 0 && g_selectedArticle < g_articleCount) {
+            DisplaySelectedArticle();
+        }
         MessageBoxA(g_hwnd, "KRSS state restored from krss.dat (F9).", "Quickload Success", MB_OK | MB_ICONINFORMATION);
     } else {
         MessageBoxA(g_hwnd, "No saved state (krss.dat) found. Press F5 to save.", "Quickload Info", MB_OK | MB_ICONINFORMATION);
+    }
+}
+
+static void CheckFirstRunTutorial(HWND hwnd) {
+    DWORD attribState = GetFileAttributesA("krss.dat");
+    if (attribState != INVALID_FILE_ATTRIBUTES) return;
+
+    DWORD attribTut = GetFileAttributesA("krss_tutorial.dat");
+    if (attribTut != INVALID_FILE_ATTRIBUTES) return;
+
+    MessageBoxA(hwnd,
+        "Welcome to KRSS - Retro Syndication Standard v1.0.0!\n\n"
+        "• Left Pane: Select RSS Feed Channels\n"
+        "• Top Right: Browse Article Headlines\n"
+        "• Lower Right: Full Article Reading View\n\n"
+        "Keyboard Controls:\n"
+        "• F1 / H: Documentation & Shortcuts\n"
+        "• F5: Quicksave State (krss.dat)\n"
+        "• F9: Quickload State (krss.dat)\n"
+        "• Esc: Exit application\n\n"
+        "Press OK to enter the workstation.",
+        "KRSS - First-Run Quick Tour",
+        MB_OK | MB_ICONINFORMATION);
+
+    HANDLE hTut = CreateFileA("krss_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hTut != INVALID_HANDLE_VALUE) {
+        char val = 1;
+        DWORD written = 0;
+        WriteFile(hTut, &val, 1, &written, NULL);
+        CloseHandle(hTut);
     }
 }
 
@@ -525,6 +574,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             } else if (wParam == 'R' || wParam == 'r') {
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_REFRESH, 0), 0);
                 return 0;
+            } else if (wParam == VK_ESCAPE) {
+                PostMessage(hwnd, WM_CLOSE, 0, 0);
+                return 0;
             }
             break;
         }
@@ -584,6 +636,8 @@ void MainEntry(void) {
 
     ShowWindow(g_hwnd, SW_SHOW);
     UpdateWindow(g_hwnd);
+
+    CheckFirstRunTutorial(g_hwnd);
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {

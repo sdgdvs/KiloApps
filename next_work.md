@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KBudget
   kilo_usability: KNet
   kilo_graphics: KSanctuary
-  kilo_qa: KRSS
+  kilo_qa: KClip
   kilo_expander: KPass
   kilo_creator: "kweb://asm-temple (Opcode Oracle & PE Explorer)"
 virtual_web_target: "kweb://asm-temple"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-graphics
-  app: KStellar
-  timestamp: "2026-09-27T01:55:00Z"
+  agent: kilo-qa
+  app: KRSS
+  timestamp: "2026-09-27T02:43:00Z"
 last_planner_run: "2026-09-26T07:48:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KRSS`
+- **Current Target**: `KClip`
 - **Upcoming Queue**:
-  `KClip`, `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KMystery`, `KQuest`, `KSanctuary`, `KSubmarine`, `KHash` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
+  `KCipher`, `KTodo`, `KTrader`, `KType`, `KVault`, `KMystery`, `KQuest`, `KSanctuary`, `KSubmarine`, `KHash`, `KRSS` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KPass`
@@ -224,6 +224,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-27T02:43:00Z — kilo-qa: KRSS (Pass 5: Tutorial & State Integrity Audit)**
+  - Status: PASS ✅ (F5 quicksave/F9 quickload persistence, tutorial integrity, TINAG cleanup; 0 regressions).
+  - State Persistence: Implemented comprehensive state persistence (feeds, articles, active feed, selection, filter, query, audio toggle) across web and Win32 C `krss.dat`.
+  - Tutorial Integrity: Added `krss_tutorialSeen` / `krss_tutorial.dat` splash and tour gating; never interrupts restored save states.
+  - TINAG & Parody Compliance: Replaced all un-diegetic ARG labels with diegetic telemetry relays; fictionalized Napster references to Trapster.
+  - Toast & Modals: Re-anchored toasts to top-right margin with click-to-dismiss to prevent control occlusion; Esc/Space modal hotkeys.
+  - Verification: MSVC compile clean (`KRSS.exe` 18.5 KB); Vite clean build in 2.29s (`krss.html` 96.4 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-27T01:55:00Z — kilo-graphics: KStellar (Game Content, Glint/Dot Removal & 3-Class Combat Balance)**
   - Status: PASS ✅ (Specular glints and border dots purged; 4th commodity & 3 enemy ship classes added; 0 regressions).
   - Glint & Dot Removal: Replaced animated spinning dashed borders on phenomena with solid glowing rings; purged orbital dot from planet SVG and radar ring in Win32 C.
@@ -258,13 +266,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Mode 13h Demoscene Screen: 60 FPS 320x200 VGA canvas running TinyTunnel, Plasma99, FireBuffer, and Starfield3D with 4 retro palettes.
   - FM Audio Lab: Added 12-key playable piano keyboard, operator ratio/depth sliders, and SPC700 stereo delay alongside 4-track chiptune jukebox.
   - Verification: Clean Vite build in 340ms (`neon_rider.html` 117.4 KB < 999 KB ceiling); security lint & check_icons 100% PASS.
-
-- **2026-09-26T21:55:00Z — kilo-expander: KRead (Deep Feature Expansion: Outline, RSVP Reader, Auto-Scroll & Markdown)**
-  - Status: PASS ✅ (Document outline tree, RSVP speed reader, hands-free auto-scroll, formatted markdown view, JSON annotations import/export).
-  - Document Outline & TOC: Auto-scans markdown headings (#, ##, ===, ---, ALL CAPS) to build interactive drawer tree with jump-to-section.
-  - RSVP Speed Reader: Built Rapid Serial Visual Presentation chamber with Optical Recognition Point (ORP) fixation highlight & 120-900 WPM pacing.
-  - Hands-Free Auto-Scroll: Added smooth auto-scroll engine with adjustable speed (1-10 px/tick), auto-pause on wheel/hover, and pill status widget.
-  - Markdown & Search: Added Raw vs Formatted Markdown reader toggle; multi-tab global search filter indexing across open documents.
-  - Interop & ARG: JSON annotation import/merge, clean standalone HTML export; added diegetic Chronos '99 subcarrier log across web & Win32 C.
-  - Verification: MSVC compile clean (`KRead.exe` 26.5 KB < 999 KB); Vite build in 381ms (`kread.html` 143 KB < 999 KB); check_icons & security lint 100% PASS.
 

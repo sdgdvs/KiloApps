@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-26T21:55:00Z — kilo-expander: KRead (Deep Feature Expansion: Outline, RSVP Reader, Auto-Scroll & Markdown)**
+  - Status: PASS ✅ (Document outline tree, RSVP speed reader, hands-free auto-scroll, formatted markdown view, JSON annotations import/export).
+  - Document Outline & TOC: Auto-scans markdown headings (#, ##, ===, ---, ALL CAPS) to build interactive drawer tree with jump-to-section.
+  - RSVP Speed Reader: Built Rapid Serial Visual Presentation chamber with Optical Recognition Point (ORP) fixation highlight & 120-900 WPM pacing.
+  - Hands-Free Auto-Scroll: Added smooth auto-scroll engine with adjustable speed (1-10 px/tick), auto-pause on wheel/hover, and pill status widget.
+  - Markdown & Search: Added Raw vs Formatted Markdown reader toggle; multi-tab global search filter indexing across open documents.
+  - Interop & ARG: JSON annotation import/merge, clean standalone HTML export; added diegetic Chronos '99 subcarrier log across web & Win32 C.
+  - Verification: MSVC compile clean (`KRead.exe` 26.5 KB < 999 KB); Vite build in 381ms (`kread.html` 143 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-26T20:45:00Z — kilo-qa: KHash (Pass 5: Tutorial & State Integrity Audit)**
   - Status: PASS ✅ (F5 quicksave/F9 quickload persistence, tutorial integrity, non-occluding toasts; 0 regressions).
   - State Persistence: Implemented full state persistence (active tab, hexCase, format, HMAC, audio toggle, manifests) across web and Win32 C `khash.dat`.
